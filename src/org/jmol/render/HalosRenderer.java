@@ -94,7 +94,7 @@ public class HalosRenderer extends ShapeRenderer {
   }
 
   boolean render1(Atom atom) {
-    short colixFill = (mad == -2 ? 0 : C.getColixTranslucent3(colix, true, 0.5f));
+    short colixFill = (mad == -2 ? 0 : C.getColixTranslucent3(colix, true, 0.5d));
     boolean needTranslucent = (mad != -2);
     if (!g3d.setC(colix)) {
       needTranslucent = true;
@@ -103,11 +103,11 @@ public class HalosRenderer extends ShapeRenderer {
         return needTranslucent;      
     }
     int z = atom.sZ;
-    float d = mad;
+    double d = mad;
     if (d < 0) { //unsized selection
       d = atom.sD;
       if (d == 0) {
-        float ellipsemax = (atom.isVisible(JC.SHAPE_ELLIPSOIDS) ? atom.getADPMinMax(true) : 0);
+        double ellipsemax = (atom.isVisible(JC.SHAPE_ELLIPSOIDS) ? atom.getADPMinMax(true) : 0);
         if (ellipsemax > 0)
           d = vwr.tm.scaleToScreen(z, (int) Math.floor(ellipsemax * 2000));
         if (d == 0) {
@@ -117,10 +117,10 @@ public class HalosRenderer extends ShapeRenderer {
     } else {
       d = vwr.tm.scaleToScreen(z, mad);
     }
-//    System.out.println(atom + "scaleToScreen(" + z + "," + mad +")=" + d);
+//System.out.println(atom + "scaleToScreen(" + z + "," + mad +")=" + d);
     if (isAntialiased)
       d /= 2;
-    float more = (d / 2);
+    double more = (d / 2);
     if (mad == -2)
       more /= 2;
     if (more < 8)

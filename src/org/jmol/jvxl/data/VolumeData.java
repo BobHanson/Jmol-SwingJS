@@ -66,7 +66,7 @@
  * is a JVXL file:
  * 
  * line1:  (int)-nSurfaces  (int)edgeFractionBase (int)edgeFractionRange  
- * (nSurface lines): (float)cutoff (int)nBytesData (int)nBytesFractions
+ * (nSurface lines): (double)cutoff (int)nBytesData (int)nBytesFractions
  * 
  * definition1
  * edgedata1
@@ -115,13 +115,13 @@ package org.jmol.jvxl.data;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.M3;
-import javajs.util.P3;
-import javajs.util.P4;
+import javajs.util.M3d;
+import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 import javajs.util.T3i;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import org.jmol.jvxl.readers.SurfaceReader;
 import org.jmol.util.Escape;
@@ -132,86 +132,86 @@ public class VolumeData {
   public SurfaceReader sr; // used for delivering point-specific values, particularly when mapping
   public boolean doIterate = true;
 
-  public final P3 volumetricOrigin = new P3();
-  public final float[] origin = new float[3];
-  public final V3[] volumetricVectors = new V3[3];
+  public final P3d volumetricOrigin = new P3d();
+  public final double[] origin = new double[3];
+  public final V3d[] volumetricVectors = new V3d[3];
   public final int[] voxelCounts = new int[3];
   public int nPoints;
-  private float[][][] voxelData;
+  private double[][][] voxelData;
 
   
-  public float[][][] getVoxelData() {
+  public double[][][] getVoxelData() {
     return voxelData;
   }
 
   
-  public void setVoxelDataAsArray(float[][][] voxelData) {
+  public void setVoxelDataAsArray(double[][][] voxelData) {
     this.voxelData = voxelData;
     if (voxelData != null)
       sr = null;
   }
 
-  private Map<Integer, Float> voxelMap; // alternative to voxelData for sparse (plane interesected) data
-  public final float[] volumetricVectorLengths = new float[3];
-  private float maxVectorLength;
-  private float minToPlaneDistance;
+  private Map<Integer, Double> voxelMap; // alternative to voxelData for sparse (plane interesected) data
+  public final double[] volumetricVectorLengths = new double[3];
+  private double maxVectorLength;
+  private double minToPlaneDistance;
   private int yzCount;
 
-  public final V3[] unitVolumetricVectors = new V3[3];
-  private final M3 volumetricMatrix = new M3();
-  private final M3 inverseMatrix = new M3();
-  private P4 thePlane;
+  public final V3d[] unitVolumetricVectors = new V3d[3];
+  private final M3d volumetricMatrix = new M3d();
+  private final M3d inverseMatrix = new M3d();
+  private P4d thePlane;
 
   public boolean hasPlane() {
     return (thePlane != null);
   }
 
-  private float thePlaneNormalMag;
-  private final P3 ptXyzTemp = new P3();
+  private double thePlaneNormalMag;
+  private final P3d ptXyzTemp = new P3d();
   public String xmlData;
 
   public VolumeData() {
-    volumetricVectors[0] = new V3();
-    volumetricVectors[1] = new V3();
-    volumetricVectors[2] = new V3();
-    unitVolumetricVectors[0] = new V3();
-    unitVolumetricVectors[1] = new V3();
-    unitVolumetricVectors[2] = new V3();
+    volumetricVectors[0] = new V3d();
+    volumetricVectors[1] = new V3d();
+    volumetricVectors[2] = new V3d();
+    unitVolumetricVectors[0] = new V3d();
+    unitVolumetricVectors[1] = new V3d();
+    unitVolumetricVectors[2] = new V3d();
   }
 
-  public P4 mappingPlane;
-  float mappingPlaneNormalMag;
+  public P4d mappingPlane;
+  double mappingPlaneNormalMag;
 
-  public void setMappingPlane(P4 plane) {
+  public void setMappingPlane(P4d plane) {
     //if(true)return;
     mappingPlane = plane;
     if (plane == null)
       return;
-    mappingPlaneNormalMag = (float) Math.sqrt(plane.x * plane.x + plane.y
+    mappingPlaneNormalMag = (double) Math.sqrt(plane.x * plane.x + plane.y
         * plane.y + plane.z * plane.z);
   }
 
-  public float distanceToMappingPlane(T3 pt) {
+  public double distanceToMappingPlane(T3d pt) {
     return (mappingPlane.x * pt.x + mappingPlane.y * pt.y + mappingPlane.z
         * pt.z + mappingPlane.w)
         / mappingPlaneNormalMag;
   }
 
   
-  public void setVolumetricOrigin(float x, float y, float z) {
+  public void setVolumetricOrigin(double x, double y, double z) {
     //System.out.println("vd setvo " + x + " " + y + " " + z + " " + this);
     volumetricOrigin.set(x, y, z);
   }
 
   
-  public float[] getOriginFloat() {
+  public double[] getOriginFloat() {
     return origin;
   }
 
-  public float minGrid;
-  public float maxGrid;
-  public float voxelVolume;
-  public V3[] oabc;
+  public double minGrid;
+  public double maxGrid;
+  public double voxelVolume;
+  public V3d[] oabc;
 
   public int getYzCount() {
 
@@ -229,12 +229,12 @@ public class VolumeData {
   }
 
   
-  public float[] getVolumetricVectorLengths() {
+  public double[] getVolumetricVectorLengths() {
     return volumetricVectorLengths;
   }
 
   
-  public void setVolumetricVector(int i, float x, float y, float z) {
+  public void setVolumetricVector(int i, double x, double y, double z) {
     volumetricVectors[i].x = x;
     volumetricVectors[i].y = y;
     volumetricVectors[i].z = z;
@@ -254,7 +254,7 @@ public class VolumeData {
     return nPointsX * nPointsY * nPointsZ;
   }
 
-  public float getVoxelDataAt(int pt) {
+  public double getVoxelDataAt(int pt) {
     int ix = pt / yzCount;
     pt -= ix * yzCount;
     int iy = pt / voxelCounts[2];
@@ -266,7 +266,7 @@ public class VolumeData {
     return x * yzCount + y * voxelCounts[2] + z;
   }
 
-  public void getPoint(int ipt, P3 pt) {
+  public void getPoint(int ipt, P3d pt) {
     int ix = ipt / yzCount;
     ipt -= ix * yzCount;
     int iy = ipt / voxelCounts[2];
@@ -274,7 +274,7 @@ public class VolumeData {
     voxelPtToXYZ(ix, iy, iz, pt);
   }
 
-  public void setVoxelData(int pt, float value) {
+  public void setVoxelData(int pt, double value) {
     int ix = pt / yzCount;
     pt -= ix * yzCount;
     int iy = pt / voxelCounts[2];
@@ -283,7 +283,7 @@ public class VolumeData {
   }
 
   public void setVoxelMap() {
-    voxelMap = new Hashtable<Integer, Float>();
+    voxelMap = new Hashtable<Integer, Double>();
     getYzCount();
   }
 
@@ -300,42 +300,42 @@ public class VolumeData {
   }
 
   
-  public void transform(V3 v1, V3 v2) {
+  public void transform(V3d v1, V3d v2) {
     volumetricMatrix.rotate2(v1, v2);
   }
 
   
-  public void setPlaneParameters(P4 plane) {
+  public void setPlaneParameters(P4d plane) {
     thePlane = plane;
-    thePlaneNormalMag = (float) Math.sqrt(plane.x * plane.x + plane.y * plane.y
+    thePlaneNormalMag = (double) Math.sqrt(plane.x * plane.x + plane.y * plane.y
         + plane.z * plane.z);
   }
 
   
-  public float calcVoxelPlaneDistance(int x, int y, int z) {
+  public double calcVoxelPlaneDistance(int x, int y, int z) {
     voxelPtToXYZ(x, y, z, ptXyzTemp);
     return distancePointToPlane(ptXyzTemp);
   }
 
-  public float getToPlaneParameter() {
-    return (float) (Math.sqrt(thePlane.x * thePlane.x + thePlane.y * thePlane.y
+  public double getToPlaneParameter() {
+    return (double) (Math.sqrt(thePlane.x * thePlane.x + thePlane.y * thePlane.y
         + thePlane.z * thePlane.z) * minToPlaneDistance);
   }
 
-  public boolean isNearPlane(int x, int y, int z, float toPlaneParameter) {
+  public boolean isNearPlane(int x, int y, int z, double toPlaneParameter) {
     voxelPtToXYZ(x, y, z, ptXyzTemp);
     return ((thePlane.x * ptXyzTemp.x + thePlane.y * ptXyzTemp.y + thePlane.z
         * ptXyzTemp.z + thePlane.w) < toPlaneParameter);
   }
 
   
-  public float distancePointToPlane(T3 pt) {
+  public double distancePointToPlane(T3d pt) {
     return (thePlane.x * pt.x + thePlane.y * pt.y + thePlane.z * pt.z + thePlane.w)
         / thePlaneNormalMag;
   }
 
   
-  public void voxelPtToXYZ(int x, int y, int z, T3 pt) {
+  public void voxelPtToXYZ(int x, int y, int z, T3d pt) {
     pt.scaleAdd2(x, volumetricVectors[0], volumetricOrigin);
     pt.scaleAdd2(y, volumetricVectors[1], pt);
     pt.scaleAdd2(z, volumetricVectors[2], pt);
@@ -345,7 +345,7 @@ public class VolumeData {
     maxVectorLength = 0;
     voxelVolume = 1;
     for (int i = 0; i < 3; i++) {
-      float d = volumetricVectorLengths[i] = volumetricVectors[i].length();
+      double d = volumetricVectorLengths[i] = volumetricVectors[i].length();
       if (d == 0)
         return false;
       if (d > maxVectorLength)
@@ -358,32 +358,33 @@ public class VolumeData {
     origin[0] = volumetricOrigin.x;
     origin[1] = volumetricOrigin.y;
     origin[2] = volumetricOrigin.z;
-    oabc = new V3[4];
-    oabc[0] = V3.newV(volumetricOrigin);
+    oabc = new V3d[4];
+    oabc[0] = V3d.newV(volumetricOrigin);
     for (int i = 0; i < 3; i++) {
-      V3 v = oabc[i + 1] = new V3();
+      V3d v = oabc[i + 1] = new V3d();
       v.scaleAdd2(voxelCounts[i] - 1, volumetricVectors[i], v);
     }
     return setMatrix();
   }
 
   
-  public void xyzToVoxelPt(float x, float y, float z, T3i pt3i) {
+  public void xyzToVoxelPt(double x, double y, double z, T3i pt3i) {
     ptXyzTemp.set(x, y, z);
     ptXyzTemp.sub(volumetricOrigin);
     inverseMatrix.rotate(ptXyzTemp);
-    pt3i.set(Math.round(ptXyzTemp.x), Math.round(ptXyzTemp.y), Math
-        .round(ptXyzTemp.z));
+    pt3i.set((int) Math.round(ptXyzTemp.x), 
+        (int) Math.round(ptXyzTemp.y), 
+        (int) Math.round(ptXyzTemp.z));
   }
 
   public boolean isPeriodic;
 
   
-  public float lookupInterpolatedVoxelValue(T3 point, boolean getSource) {
+  public double lookupInterpolatedVoxelValue(T3d point, boolean getSource) {
     if (mappingPlane != null)
       return distanceToMappingPlane(point);
     if (sr != null) {
-      float v = sr.getValueAtPoint(point, getSource);
+      double v = sr.getValueAtPoint(point, getSource);
       return (isSquared ? v * v : v);
     }
     ptXyzTemp.sub2(point, volumetricOrigin);
@@ -395,32 +396,32 @@ public class VolumeData {
     int yUpper = indexUpper(ptXyzTemp.y, yLower, iMax);
     int zLower = indexLower(ptXyzTemp.z, iMax = voxelCounts[2] - 1);
     int zUpper = indexUpper(ptXyzTemp.z, zLower, iMax);
-    float v1 = getFractional2DValue(mantissa(ptXyzTemp.x - xLower),
+    double v1 = getFractional2DValue(mantissa(ptXyzTemp.x - xLower),
         mantissa(ptXyzTemp.y - yLower), getVoxelValue(xLower, yLower, zLower),
         getVoxelValue(xUpper, yLower, zLower), getVoxelValue(xLower, yUpper,
             zLower), getVoxelValue(xUpper, yUpper, zLower));
-    float v2 = getFractional2DValue(mantissa(ptXyzTemp.x - xLower),
+    double v2 = getFractional2DValue(mantissa(ptXyzTemp.x - xLower),
         mantissa(ptXyzTemp.y - yLower), getVoxelValue(xLower, yLower, zUpper),
         getVoxelValue(xUpper, yLower, zUpper), getVoxelValue(xLower, yUpper,
             zUpper), getVoxelValue(xUpper, yUpper, zUpper));
     return v1 + mantissa(ptXyzTemp.z - zLower) * (v2 - v1);
   }
 
-  private float mantissa(float f) {
-    return (isPeriodic ? f - (float) Math.floor(f) : f);
+  private double mantissa(double f) {
+    return (isPeriodic ? f - (double) Math.floor(f) : f);
   }
 
-  public float getVoxelValue(int x, int y, int z) {
+  public double getVoxelValue(int x, int y, int z) {
     if (voxelMap == null)
       return voxelData[x][y][z];
-    Float f = voxelMap.get(Integer.valueOf(getPointIndex(x, y, z)));
-    return (f == null ? Float.NaN : f.floatValue());
+    Double f = voxelMap.get(Integer.valueOf(getPointIndex(x, y, z)));
+    return (f == null ? Double.NaN : f.doubleValue());
   }
 
-  public static float getFractional2DValue(float fx, float fy, float x11,
-                                           float x12, float x21, float x22) {
-    float v1 = x11 + fx * (x12 - x11);
-    float v2 = x21 + fx * (x22 - x21);
+  public static double getFractional2DValue(double fx, double fy, double x11,
+                                           double x12, double x21, double x22) {
+    double v1 = x11 + fx * (x12 - x11);
+    double v2 = x21 + fx * (x22 - x21);
     return v1 + fy * (v2 - v1);
   }
 
@@ -434,7 +435,7 @@ public class VolumeData {
    * @param xMax
    * @return lower index in range
    */
-  private int indexLower(float x, int xMax) {
+  private int indexLower(double x, int xMax) {
     if (isPeriodic && xMax > 0) {
       while (x < 0)
         x += xMax;
@@ -448,26 +449,26 @@ public class VolumeData {
     return (floor > xMax ? xMax : floor);
   }
 
-  private int indexUpper(float x, int xLower, int xMax) {
+  private int indexUpper(double x, int xLower, int xMax) {
     return (!isPeriodic && x < 0 || xLower == xMax ? xLower : xLower + 1);
   }
 
-  void offsetCenter(P3 center) {
-    P3 pt = new P3();
-    pt.scaleAdd2((voxelCounts[0] - 1) / 2f, volumetricVectors[0], pt);
-    pt.scaleAdd2((voxelCounts[1] - 1) / 2f, volumetricVectors[1], pt);
-    pt.scaleAdd2((voxelCounts[2] - 1) / 2f, volumetricVectors[2], pt);
+  void offsetCenter(P3d center) {
+    P3d pt = new P3d();
+    pt.scaleAdd2((voxelCounts[0] - 1) / 2d, volumetricVectors[0], pt);
+    pt.scaleAdd2((voxelCounts[1] - 1) / 2d, volumetricVectors[1], pt);
+    pt.scaleAdd2((voxelCounts[2] - 1) / 2d, volumetricVectors[2], pt);
     volumetricOrigin.sub2(center, pt);
   }
 
   
-  public void setDataDistanceToPlane(P4 plane) {
+  public void setDataDistanceToPlane(P4d plane) {
     //TODO REMOVE THIS METHOD.
     setPlaneParameters(plane);
     int nx = voxelCounts[0];
     int ny = voxelCounts[1];
     int nz = voxelCounts[2];
-    voxelData = new float[nx][ny][nz];
+    voxelData = new double[nx][ny][nz];
     for (int x = 0; x < nx; x++)
       for (int y = 0; y < ny; y++)
         for (int z = 0; z < nz; z++)
@@ -477,8 +478,8 @@ public class VolumeData {
   private boolean isSquared;
 
   
-  public void filterData(boolean isSquared, float invertCutoff) {
-    boolean doInvert = (!Float.isNaN(invertCutoff));
+  public void filterData(boolean isSquared, double invertCutoff) {
+    boolean doInvert = (!Double.isNaN(invertCutoff));
     if (sr != null) {
       this.isSquared = isSquared;
       return;
@@ -499,21 +500,21 @@ public class VolumeData {
   }
 
   
-  public void capData(P4 plane, float cutoff) {
+  public void capData(P4d plane, double cutoff) {
     if (voxelData == null)
       return;
     int nx = voxelCounts[0];
     int ny = voxelCounts[1];
     int nz = voxelCounts[2];
-    V3 normal = V3.new3(plane.x, plane.y, plane.z);
+    V3d normal = V3d.new3(plane.x, plane.y, plane.z);
     normal.normalize();
-    float f = 1f;
+    double f = 1d;
     for (int x = 0; x < nx; x++)
       for (int y = 0; y < ny; y++)
         for (int z = 0; z < nz; z++) {
-          float value = voxelData[x][y][z] - cutoff;
+          double value = voxelData[x][y][z] - cutoff;
           voxelPtToXYZ(x, y, z, ptXyzTemp);
-          float d = (ptXyzTemp.x * normal.x + ptXyzTemp.y * normal.y
+          double d = (ptXyzTemp.x * normal.x + ptXyzTemp.y * normal.y
               + ptXyzTemp.z * normal.z + plane.w - cutoff)
               / f;
           if (d >= 0 || d > value)
@@ -545,24 +546,24 @@ public class VolumeData {
    * @param z
    * @param v
    */
-  public void setVoxelMapValue(int x, int y, int z, float v) {
+  public void setVoxelMapValue(int x, int y, int z, double v) {
     if (voxelMap == null)
       return;
-    voxelMap.put(Integer.valueOf(getPointIndex(x, y, z)), Float.valueOf(v));
+    voxelMap.put(Integer.valueOf(getPointIndex(x, y, z)), Double.valueOf(v));
   }
 
-  private final V3 edgeVector = new V3();
+  private final V3d edgeVector = new V3d();
 
-  private P3 ptTemp = new P3();
+  private P3d ptTemp = new P3d();
 
-  public float calculateFractionalPoint(float cutoff, P3 pointA, P3 pointB,
-                                        float valueA, float valueB, P3 pt) {
-    float d = (valueB - valueA);
-    float fraction = (cutoff - valueA) / d;
+  public double calculateFractionalPoint(double cutoff, P3d pointA, P3d pointB,
+                                        double valueA, double valueB, P3d pt) {
+    double d = (valueB - valueA);
+    double fraction = (cutoff - valueA) / d;
     edgeVector.sub2(pointB, pointA);
     pt.scaleAdd2(fraction, edgeVector, pointA);
     if (sr == null || !doIterate || valueB == valueA || fraction < 0.01f
-        || fraction > 0.99f || (edgeVector.length()) < 0.01f)
+        || fraction > 0.99d || (edgeVector.length()) < 0.01f)
       return cutoff;
     // Do a nonlinear interpolation here and get a better value
     // such is the case for atomic orbitals.
@@ -572,20 +573,20 @@ public class VolumeData {
     // In that case we invalidate the point.
     int n = 0;
     ptTemp.setT(pt);
-    float v = lookupInterpolatedVoxelValue(ptTemp, false);
-    float v0 = Float.NaN;
+    double v = lookupInterpolatedVoxelValue(ptTemp, false);
+    double v0 = Double.NaN;
 
     while (++n < 10) {
-      float fnew = (v - valueA) / d;
+      double fnew = (v - valueA) / d;
       if (fnew < 0 || fnew > 1)
         break;
-      float diff = (cutoff - v) / d / 2;
+      double diff = (cutoff - v) / d / 2;
       fraction += diff;
       if (fraction < 0 || fraction > 1)
         break;
       pt.setT(ptTemp);
       v0 = v;
-      if (Math.abs(diff) < 0.005f)
+      if (Math.abs(diff) < 0.005d)
         break;
       ptTemp.scaleAdd2(diff, edgeVector, pt);
       v = lookupInterpolatedVoxelValue(ptTemp, false);

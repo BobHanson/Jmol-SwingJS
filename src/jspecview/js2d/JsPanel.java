@@ -400,7 +400,7 @@ public class JsPanel implements JSVPanel {
   }
 
 	@Override
-	public void processTwoPointGesture(float[][][] touches) {
+	public void processTwoPointGesture(double[][][] touches) {
 		if (mouse != null)
 			mouse.processTwoPointGesture(touches);
 	}

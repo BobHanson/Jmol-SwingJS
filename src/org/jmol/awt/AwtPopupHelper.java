@@ -60,7 +60,7 @@ public class AwtPopupHelper implements
   }
   //  @Override
   //  public void finalize() {
-  //    System.out.println("SwingPopup Finalize " + this);
+  //System.out.println("SwingPopup Finalize " + this);
   //  }
 
   private Map<Object, SC> htSources = new Hashtable<Object, SC>();

@@ -52,20 +52,21 @@ package org.jmol.symmetry;
  *
  */
 
-import javajs.util.M4;
+import javajs.util.M4d;
+import javajs.util.M4d;
 
 class HallRotation {
   String rotCode;
   //int order;
-  M4 seitzMatrix = new M4();
-  M4 seitzMatrixInv = new M4();
+  M4d seitzMatrix = new M4d();
+  M4d seitzMatrixInv = new M4d();
   
   private HallRotation (String code, String matrixData) {
     rotCode = code;
     //order = code.charAt(0) - '0';
-    float[] data = new float[16];
-    float[] dataInv = new float[16];
-    data[15] = dataInv[15] = 1f;
+    double[] data = new double[16];
+    double[] dataInv = new double[16];
+    data[15] = dataInv[15] = 1d;
     
     for (int i = 0, ipt = 0; ipt < 11; i++) {
       int value = 0;

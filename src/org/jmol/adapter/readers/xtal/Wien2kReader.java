@@ -110,26 +110,26 @@ public class Wien2kReader extends AtomSetCollectionReader {
         name = name.substring(name.indexOf("_") + 1);
       setSpaceGroupName(name);
     }
-    float factor = (rd().toLowerCase().indexOf("ang") >= 0 ? 1f : ANGSTROMS_PER_BOHR);
+    double factor = (rd().toLowerCase().indexOf("ang") >= 0 ? 1d : ANGSTROMS_PER_BOHR);
     rd();
-    float a = parseFloatRange(line, 0,10) * factor;
-    float b = parseFloatRange(line, 10,20) * factor;
-    float c = parseFloatRange(line, 20,30) * factor;
+    double a = parseDoubleRange(line, 0,10) * factor;
+    double b = parseDoubleRange(line, 10,20) * factor;
+    double c = parseDoubleRange(line, 20,30) * factor;
     int l = line.length();
-    float alpha = (l >= 40 ? parseFloatRange(line, 30,40) : 0);
-    float beta = (l >= 50 ? parseFloatRange(line, 40,50) : 0);
-    float gamma = (l >= 60 ? parseFloatRange(line, 50,60) : 0);
+    double alpha = (l >= 40 ? parseDoubleRange(line, 30,40) : 0);
+    double beta = (l >= 50 ? parseDoubleRange(line, 40,50) : 0);
+    double gamma = (l >= 60 ? parseDoubleRange(line, 50,60) : 0);
     if (isrhombohedral) {
-      float ar = (float) Math.sqrt(a * a /3 + c * c / 9) ;
-      alpha = beta = gamma = (float) (Math.acos( (2*c * c  - 3 * a * a) 
-          / (2 * c * c + 6 * a * a)) * 180f / Math.PI);
+      double ar = Math.sqrt(a * a /3 + c * c / 9) ;
+      alpha = beta = gamma = (Math.acos( (2*c * c  - 3 * a * a) 
+          / (2 * c * c + 6 * a * a)) * 180d / Math.PI);
       a = b = c = ar;
     }
-    if (Float.isNaN(alpha) || alpha == 0)
+    if (Double.isNaN(alpha) || alpha == 0)
       alpha = 90;
-    if (Float.isNaN(beta) || beta == 0)
+    if (Double.isNaN(beta) || beta == 0)
       beta = 90;
-    if (Float.isNaN(gamma) || gamma == 0)
+    if (Double.isNaN(gamma) || gamma == 0)
       gamma = 90; 
     setUnitCell(a, b, c, alpha, beta, gamma);  
   }
@@ -168,13 +168,13 @@ public class Wien2kReader extends AtomSetCollectionReader {
   }
 
   private void addAtom() {
-    float a = parseFloatRange(line, 12,22);
-    float b = parseFloatRange(line, 25,35);
-    float c = parseFloatRange(line, 38,48);
+    double a = parseDoubleRange(line, 12,22);
+    double b = parseDoubleRange(line, 25,35);
+    double c = parseDoubleRange(line, 38,48);
 /*    if (false && isrhombohedral) {
-      float ar = a;
-      float br = b;
-      float cr = c;
+      double ar = a;
+      double br = b;
+      double cr = c;
       a = ar * 2 / 3 - br * 1 / 3 - cr * 1 / 3;
       b = ar * 1 / 3 + br * 1 / 3 - cr * 2 / 3;
       c = ar * 1 / 3 + br * 1 / 3 + cr * 1 / 3;        
@@ -200,7 +200,7 @@ public class Wien2kReader extends AtomSetCollectionReader {
     rd();
     String xyz = "";
     // 1 0 0 0.0000000
-    float trans = parseFloatStr(line.substring(6));
+    double trans = parseDoubleStr(line.substring(6));
     for (int i = 0; i < 6; i++) {
       if (line.charAt(i) == '-')
         xyz += "-";

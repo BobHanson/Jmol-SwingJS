@@ -63,13 +63,13 @@ public class PqrReader extends PdbReader {
   @Override
   protected void setAdditionalAtomParameters(Atom atom) {
     if (gromacsWideFormat) {
-      atom.partialCharge = parseFloatRange(line, 60, 68);
-      atom.radius = fixRadius(parseFloatRange(line, 68, 76));
+      atom.partialCharge = parseDoubleRange(line, 60, 68);
+      atom.radius = fixRadius(parseDoubleRange(line, 68, 76));
     } else {
       String[] tokens = getTokens();
       int pt = tokens.length - 2 - (line.length() > 75 ? 1 : 0);
-      atom.partialCharge = parseFloatStr(tokens[pt++]);
-      atom.radius = fixRadius(parseFloatStr(tokens[pt]));
+      atom.partialCharge = parseDoubleStr(tokens[pt++]);
+      atom.radius = fixRadius(parseDoubleStr(tokens[pt]));
     }
   }
 }

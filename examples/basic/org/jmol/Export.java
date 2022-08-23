@@ -171,7 +171,7 @@ class MyStatusListener implements JmolStatusListener {
    * @see org.jmol.api.JmolStatusListener#functionXY(java.lang.String, int, int)
    */
   @Override
-  public float[][] functionXY(String functionName, int nx, int ny) {
+  public double[][] functionXY(String functionName, int nx, int ny) {
     return null;
   }
 
@@ -179,7 +179,7 @@ class MyStatusListener implements JmolStatusListener {
    * @see org.jmol.api.JmolStatusListener#functionXY(java.lang.String, int, int)
    */
   @Override
-  public float[][][] functionXYZ(String functionName, int nx, int ny, int nz) {
+  public double[][][] functionXYZ(String functionName, int nx, int ny, int nz) {
     return null;
   }
 

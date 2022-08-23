@@ -36,7 +36,7 @@ import java.util.Map;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 /*
  * TLS output reader -- data only; no atoms
@@ -104,13 +104,13 @@ public class TlsDataOnlyReader extends AtomSetCollectionReader {
         /*
         ORIGIN    11.6283   8.2746  10.6813
         */
-        P3 origin = new P3();
+        P3d origin = new P3d();
         tlsGroup.put("origin", origin);
-        origin.set(parseFloatStr(tokens[1]), parseFloatStr(tokens[2]),
-            parseFloatStr(tokens[3]));
-        if (Float.isNaN(origin.x) || Float.isNaN(origin.y)
-            || Float.isNaN(origin.z)) {
-          origin.set(Float.NaN, Float.NaN, Float.NaN);
+        origin.set((double) parseDoubleStr(tokens[1]), (double) parseDoubleStr(tokens[2]),
+            (double) parseDoubleStr(tokens[3]));
+        if (Double.isNaN(origin.x) || Double.isNaN(origin.y)
+            || Double.isNaN(origin.z)) {
+          origin.set(Double.NaN, Double.NaN, Double.NaN);
           tlsAddError("invalid origin: " + line);
         }
       } else if (tokens[0].equals("T") || tokens[0].equals("L")
@@ -122,13 +122,13 @@ public class TlsDataOnlyReader extends AtomSetCollectionReader {
          */
         char tensorType = tokens[0].charAt(0);
         String[] nn = (tensorType == 'S' ? Snn : TLnn);
-        float[][] tensor = new float[3][3];
+        double[][] tensor = new double[3][3];
         tlsGroup.put("t" + tensorType, tensor);
 
         for (int i = 1; i < tokens.length; i++) {
           int ti = nn[i].charAt(0) - '1';
           int tj = nn[i].charAt(1) - '1';
-          tensor[ti][tj] = parseFloatStr(tokens[++i]);
+          tensor[ti][tj] = parseDoubleStr(tokens[++i]);
           if (ti < tj)
             tensor[tj][ti] = tensor[ti][tj];
         }
@@ -136,8 +136,8 @@ public class TlsDataOnlyReader extends AtomSetCollectionReader {
           tensor[0][0] = -tensor[0][0];
         for (int i = 0; i < 3; i++)
           for (int j = 0; j < 3; j++)
-            if (Float.isNaN(tensor[i][j])) {
-              tlsAddError("invalid tensor: " + Escape.escapeFloatAA(tensor, false));
+            if (Double.isNaN(tensor[i][j])) {
+              tlsAddError("invalid tensor: " + Escape.escapeDoubleAA(tensor, false));
             }
       }
     }

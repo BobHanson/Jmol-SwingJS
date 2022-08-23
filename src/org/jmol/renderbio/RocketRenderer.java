@@ -1,7 +1,7 @@
 package org.jmol.renderbio;
 
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.c.STR;
@@ -22,8 +22,8 @@ public class RocketRenderer {
   private int startIndexPending;
   private int endIndexPending;
 
-  private V3 vtemp;
-  private P3 screenA, screenB, screenC;
+  private V3d vtemp;
+  private P3d screenA, screenB, screenC;
   private short colix;
   private short mad;
   private RocketsRenderer rr;
@@ -37,10 +37,10 @@ public class RocketRenderer {
   }
   
   RocketRenderer set(RocketsRenderer rr) {
-    screenA = new P3();
-    screenB = new P3();
-    screenC = new P3();
-    vtemp = new V3();
+    screenA = new P3d();
+    screenB = new P3d();
+    screenC = new P3d();
+    vtemp = new V3d();
     this.rr = rr;
     vwr = rr.vwr;
     tm = rr.vwr.tm;
@@ -92,7 +92,7 @@ public class RocketRenderer {
   private void renderPending() {
     if (!tPending)
       return;
-    P3[] segments = proteinstructurePending.getSegments();
+    P3d[] segments = proteinstructurePending.getSegments();
     boolean renderArrowHead = (renderArrowHeads && endIndexPending == proteinstructurePending.nRes - 1);
     if (proteinstructurePending instanceof Helix)
       renderPendingRocketSegment(endIndexPending, segments[startIndexPending],
@@ -114,13 +114,13 @@ public class RocketRenderer {
    * @param pointEnd
    * @param renderArrowHead
    */
-  private void renderPendingRocketSegment(int i, P3 pointStart,
-                                          P3 pointBeforeEnd, P3 pointEnd,
+  private void renderPendingRocketSegment(int i, P3d pointStart,
+                                          P3d pointBeforeEnd, P3d pointEnd,
                                           boolean renderArrowHead) {
     if (g3d.setC(colix)) {
       tm.transformPt3f(pointStart, screenA);
       tm.transformPt3f((renderArrowHead ? pointBeforeEnd : pointEnd), screenB);
-      int zMid = (int) Math.floor((screenA.z + screenB.z) / 2f);
+      int zMid = (int) Math.floor((screenA.z + screenB.z) / 2d);
       int diameter = ((int) vwr.tm.scaleToScreen(zMid, mad));
       if (!renderArrowHead || pointStart != pointBeforeEnd)
         g3d.fillCylinderBits(GData.ENDCAPS_FLAT, diameter, screenA, screenB);
@@ -137,7 +137,7 @@ public class RocketRenderer {
       }
       if (startIndexPending == endIndexPending)
         return;
-      P3 t = screenB;
+      P3d t = screenB;
       screenB = screenC;
       screenC = t;
     }
@@ -161,32 +161,32 @@ public class RocketRenderer {
     { 1, 4, 5, 3 }
   };
   
-  private P3 ptC, ptTip;
-  private P3[] corners, screenCorners;
-  private V3 vW, vH;
+  private P3d ptC, ptTip;
+  private P3d[] corners, screenCorners;
+  private V3d vW, vH;
   private MeshSurface meshSurface;
 
-  private void renderPendingSheetPlank(P3 ptStart, P3 pointBeforeEnd, P3 ptEnd,
+  private void renderPendingSheetPlank(P3d ptStart, P3d pointBeforeEnd, P3d ptEnd,
                                        boolean renderArrowHead) {
     if (!g3d.setC(colix))
       return;
     if (corners == null) {
-      ptC = new P3();
-      ptTip = new P3();
-      vW = new V3();
-      vH = new V3();
-      screenCorners = new P3[8];
-      corners = new P3[8];
+      ptC = new P3d();
+      ptTip = new P3d();
+      vW = new V3d();
+      vH = new V3d();
+      screenCorners = new P3d[8];
+      corners = new P3d[8];
       for (int i = 8; --i >= 0;) {
-        corners[i] = new P3();
-        screenCorners[i] = new P3();
+        corners[i] = new P3d();
+        screenCorners[i] = new P3d();
       }
     }
     if (renderArrowHead) {
-      setBox(1.25f, 0.333f, pointBeforeEnd);
-      ptTip.scaleAdd2(-0.5f, vH, ptEnd);
+      setBox(1.25d, 0.333f, pointBeforeEnd);
+      ptTip.scaleAdd2(-0.5d, vH, ptEnd);
       for (int i = 4; --i >= 0;) {
-        P3 corner = corners[i];
+        P3d corner = corners[i];
         corner.setT(ptC);
         if ((i & 1) != 0)
           corner.add(vW);
@@ -198,7 +198,7 @@ public class RocketRenderer {
       renderPart(arrowHeadFaces);
       ptEnd = pointBeforeEnd;
     }
-    setBox(1f, 0.25f, ptStart);
+    setBox(1d, 0.25d, ptStart);
     vtemp.sub2(ptEnd, ptStart);
     if (vtemp.lengthSquared() == 0)
       return;
@@ -206,14 +206,14 @@ public class RocketRenderer {
     renderPart(boxFaces);
   }
   
-  private void setBox(float w, float h, P3 pt) {
-    ((Sheet) proteinstructurePending).setBox(w, h, pt, vW, vH, ptC, mad / 1000f);
+  private void setBox(double w, double h, P3d pt) {
+    ((Sheet) proteinstructurePending).setBox(w, h, pt, vW, vH, ptC, mad / 1000d);
   }
 
-  private void buildBox(P3 pointCorner, V3 scaledWidthVector,
-                        V3 scaledHeightVector, V3 lengthVector) {
+  private void buildBox(P3d pointCorner, V3d scaledWidthVector,
+                        V3d scaledHeightVector, V3d lengthVector) {
     for (int i = 8; --i >= 0;) {
-      P3 corner = corners[i];
+      P3d corner = corners[i];
       corner.setT(pointCorner);
       if ((i & 1) != 0)
         corner.add(scaledWidthVector);

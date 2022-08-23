@@ -69,7 +69,7 @@ class PixelatorShaded extends Pixelator {
       t[0] = p;
       t[1] = p >> 8;
       t[2] = p >> 16;
-      float f = (float)(zDepth - z) / (zDepth - zSlab);
+      double f = (double)(zDepth - z) / (zDepth - zSlab);
       if (zShadePower > 1)
         for (int i = 0; i < zShadePower; i++)
           f *= f;

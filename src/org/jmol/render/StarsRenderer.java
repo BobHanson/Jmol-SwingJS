@@ -42,7 +42,7 @@ public class StarsRenderer extends ShapeRenderer {
     if (stars.mads == null)
       return false;
     boolean needTranslucent = false;
-    mar = (int) (vwr.getFloat(T.starwidth) * 1000);
+    mar = (int) (vwr.getDouble(T.starwidth) * 1000);
     if (mar == 0 && (g3d.isAntialiased() || isExport))
       mar = 50;
     Atom[] atoms = ms.at;

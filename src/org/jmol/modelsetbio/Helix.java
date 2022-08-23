@@ -26,9 +26,9 @@ package org.jmol.modelsetbio;
 
 import org.jmol.c.STR;
 
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 public class Helix extends ProteinStructure {
 
@@ -50,15 +50,15 @@ public class Helix extends ProteinStructure {
   public void calcAxis() {
     if (axisA != null)
       return;
-    P3[] points = new P3[nRes + 1];
+    P3d[] points = new P3d[nRes + 1];
     for (int i = 0; i <= nRes; i++)
-      apolymer.getLeadMidPoint(monomerIndexFirst + i, points[i] = new P3());
-    axisA = new P3();
-    axisUnitVector = new V3();
-    Measure.calcBestAxisThroughPoints(points, points.length, axisA, axisUnitVector,
+      apolymer.getLeadMidPoint(monomerIndexFirst + i, points[i] = new P3d());
+    axisA = new P3d();
+    axisUnitVector = new V3d();
+    MeasureD.calcBestAxisThroughPoints(points, points.length, axisA, axisUnitVector,
         vectorProjection, 4);  
-    axisB = P3.newP(points[nRes]);
-    Measure.projectOntoAxis(axisB, axisA, axisUnitVector, vectorProjection);
+    axisB = P3d.newP(points[nRes]);
+    MeasureD.projectOntoAxis(axisB, axisA, axisUnitVector, vectorProjection);
     //System.out.println("draw width 1.0 " + axisA + " " + axisB + " //" + apolymer.monomers[monomerIndexFirst] + " " + apolymer.monomers[monomerIndexFirst + nRes - 1]);
   }
 

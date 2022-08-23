@@ -310,7 +310,7 @@ public final class C {
     return HOTPINK;
   }
 
-  private static int getTranslucentFlag(float translucentLevel) {
+  private static int getTranslucentFlag(double translucentLevel) {
     // 0.0 to 1.0 ==> MORE translucent   
     //                 1/8  1/4 3/8 1/2 5/8 3/4 7/8 8/8
     //     t            32  64  96  128 160 192 224 255 or 256
@@ -324,7 +324,7 @@ public final class C {
       return TRANSLUCENT_SCREENED;
 //    if (translucentLevel < 0) //screened
   //    translucentLevel = 128;//return TRANSLUCENT_SCREENED;
-    if (Float.isNaN(translucentLevel) || translucentLevel >= 255
+    if (Double.isNaN(translucentLevel) || translucentLevel >= 255
         || translucentLevel == 1.0)
       return TRANSPARENT;
     int iLevel = (int) Math.floor(translucentLevel < 1 ? translucentLevel * 256
@@ -381,7 +381,7 @@ public final class C {
 
   public final static short getColixTranslucent3(short colix,
                                                  boolean isTranslucent,
-                                                 float translucentLevel) {
+                                                 double translucentLevel) {
     colix &= ~TRANSLUCENT_MASK;
     if (colix == INHERIT_ALL)
       colix = INHERIT_COLOR;
@@ -394,10 +394,10 @@ public final class C {
         getColixTranslucencyLevel(colixFrom));
   }
 
-  public static float getColixTranslucencyFractional(short colix) {
+  public static double getColixTranslucencyFractional(short colix) {
     int translevel = getColixTranslucencyLevel(colix);
-    return (translevel == -1 ? 0.5f : translevel == 0 ? 0
-        : translevel == 255 ? 1 : translevel / 256f);
+    return (translevel == -1 ? 0.5d : translevel == 0 ? 0
+        : translevel == 255 ? 1 : translevel / 256d);
   }
 
   public static String getColixTranslucencyLabel(short colix) {
@@ -463,7 +463,7 @@ public final class C {
 
   public static short getColixTranslucent(int argb) {
     int a = (argb >> 24) & 0xFF;
-    return (a == 0xFF ? getColix(argb) : getColixTranslucent3(getColix(argb), true, a / 255f));
+    return (a == 0xFF ? getColix(argb) : getColixTranslucent3(getColix(argb), true, a / 255d));
   }  
 
   public static short getBgContrast(int argb) {

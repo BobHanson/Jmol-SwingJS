@@ -31,8 +31,8 @@ import org.jmol.jvxl.calc.MarchingCubes;
 import org.jmol.jvxl.data.JvxlData;
 import org.jmol.jvxl.data.VolumeData;
 import org.jmol.jvxl.readers.Parameters;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 //import org.jmol.util.Logger;
 
@@ -53,15 +53,15 @@ public class SimpleMarchingCubes extends MarchingCubes {
 
   private boolean doCalcArea;
   private boolean doSaveSurfacePoints;
-  private float calculatedArea = Float.NaN;
-  private float calculatedVolume = Float.NaN;
-  private Lst<P3> surfacePoints;  
+  private double calculatedArea = Double.NaN;
+  private double calculatedVolume = Double.NaN;
+  private Lst<P3d> surfacePoints;  
   private VoxelDataCreator vdc;
 
 
   public SimpleMarchingCubes(VoxelDataCreator vdc, VolumeData volumeData,
       Parameters params, JvxlData jvxlData, 
-      Lst<P3> surfacePointsReturn, float[] areaVolumeReturn) {
+      Lst<P3d> surfacePointsReturn, double[] areaVolumeReturn) {
 
     // when just creating a JVXL file all you really need are:
     //
@@ -83,7 +83,7 @@ public class SimpleMarchingCubes extends MarchingCubes {
     doCalcArea = (areaVolumeReturn != null);
     surfacePoints = surfacePointsReturn;
     if (surfacePoints == null && doCalcArea)
-      surfacePoints = new  Lst<P3>();
+      surfacePoints = new  Lst<P3d>();
     doSaveSurfacePoints = (surfacePoints != null);
     jvxlData.jvxlEdgeData = getEdgeData();
     jvxlData.nPointsX = volumeData.voxelCounts[0];
@@ -96,14 +96,14 @@ public class SimpleMarchingCubes extends MarchingCubes {
     }    
   }
 
-  protected float getValue(@SuppressWarnings("unused") int i,
+  protected double getValue(@SuppressWarnings("unused") int i,
                            int x, int y, int z,
-                           int pt, float[] tempValues) {
+                           int pt, double[] tempValues) {
     if (bsValues.get(pt)) {
       return tempValues[pt % yzCount];
     }
     bsValues.set(pt);
-    float value = vdc.getValue(x, y, z);
+    double value = vdc.getValue(x, y, z);
     tempValues[pt % yzCount] = value;
     if (isInside(value, cutoff, isCutoffAbsolute)) {
       bsVoxels.set(pt);
@@ -111,12 +111,12 @@ public class SimpleMarchingCubes extends MarchingCubes {
     return value;
   }
 
-  protected int newVertex(P3 pointA, V3 edgeVector, float f) {
+  protected int newVertex(P3d pointA, V3d edgeVector, double f) {
     // you could do something with this point if you wanted to
     // here we save it for the surface area/volume calculation
 
     if (doSaveSurfacePoints) {
-      P3 pt = new P3();
+      P3d pt = new P3d();
       pt.scaleAdd2(f, edgeVector, pointA);
       surfacePoints.addLast(pt);
     }
@@ -129,9 +129,9 @@ public class SimpleMarchingCubes extends MarchingCubes {
       super.processTriangles(insideMask);
   }
 
-  private V3 vTemp = new V3();
-  private V3 vAC = new V3();
-  private V3 vAB = new V3();
+  private V3d vTemp = new V3d();
+  private V3d vAC = new V3d();
+  private V3d vAB = new V3d();
 
   @Override
   protected void addTriangle(int ia, int ib, int ic, int edgeType) {
@@ -140,14 +140,14 @@ public class SimpleMarchingCubes extends MarchingCubes {
     // you would do it here.    
     // In this example we are just computing the area and volume
    
-    P3 pta = surfacePoints.get(edgePointIndexes[ia]);
-    P3 ptb = surfacePoints.get(edgePointIndexes[ib]);
-    P3 ptc = surfacePoints.get(edgePointIndexes[ic]);
+    P3d pta = surfacePoints.get(edgePointIndexes[ia]);
+    P3d ptb = surfacePoints.get(edgePointIndexes[ib]);
+    P3d ptc = surfacePoints.get(edgePointIndexes[ic]);
     
     vAB.sub2(ptb, pta);
     vAC.sub2(ptc, pta);
     vTemp.cross(vAB, vAC);
-    float area = vTemp.length() / 2;
+    double area = vTemp.length() / 2;
     calculatedArea += area;
     
     vAB.setT(ptb);

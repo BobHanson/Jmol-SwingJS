@@ -23,7 +23,7 @@ class AwtFont {
       fontMap.put(TextAttribute.WEIGHT, TextAttribute.WEIGHT_BOLD);
     if (isItalic)
       fontMap.put(TextAttribute.POSTURE, TextAttribute.POSTURE_OBLIQUE);
-    fontMap.put(TextAttribute.SIZE, Float.valueOf(fontSize));
+    fontMap.put(TextAttribute.SIZE, Double.valueOf(fontSize));
     return new java.awt.Font(fontMap);
   }
 

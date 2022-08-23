@@ -16,9 +16,9 @@ import org.jmol.util.JmolMolecule;
 import javajs.api.GenericCifDataParser;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.M4d;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 /**
  * see https://github.com/COMCIFS/TopoCif
@@ -132,7 +132,7 @@ public class TopoCifParser implements Parser {
   int linkCount;
   int atomCount;
 
-  T3 temp1 = new P3(), temp2 = new P3();
+  T3d temp1 = new P3d(), temp2 = new P3d();
 
   private int ac0 = -1, bc0;
 
@@ -147,7 +147,7 @@ public class TopoCifParser implements Parser {
    * symmetry operations for this space group
    * 
    */
-  M4[] ops;
+  M4d[] ops;
 
   /**
    * base atom index to be added to any atom bitsets
@@ -612,7 +612,7 @@ public class TopoCifParser implements Parser {
     // finalize all topol_atom symmetries
     Lst<String> symops = reader.symops;
     int nOps = symops.size();
-    ops = new M4[nOps];
+    ops = new M4d[nOps];
     for (int i = 0; i < nOps; i++) {
       ops[i] = SymmetryOperation.getMatrixFromXYZ("!" + symops.get(i));
     }
@@ -760,7 +760,7 @@ public class TopoCifParser implements Parser {
     }
 
     boolean checkDistance = reader.doPackUnitCell;
-    float distance;
+    double distance;
     // finish up with bonds
     Bond[] bonds = reader.asc.bonds;
     for (int i = reader.asc.bondCount; --i >= bc0;) {
@@ -849,7 +849,7 @@ public class TopoCifParser implements Parser {
     return nlinks;
   }
 
-  static boolean isEqualD(T3 p1, T3 p2, double d) {
+  static boolean isEqualD(T3d p1, T3d p2, double d) {
     return (Double.isNaN(d) || Math.abs(p1.distance(p2) - d) < ERROR_TOLERANCE);
   }
 
@@ -868,8 +868,8 @@ public class TopoCifParser implements Parser {
     return (f == null ? Integer.MIN_VALUE : reader.parseIntStr(f));
   }
 
-  private float getFloat(String f) {
-    return (f == null ? Float.NaN : reader.parseFloatStr(f));
+  private double getFloat(String f) {
+    return (f == null ? Double.NaN : reader.parseDoubleStr(f));
   }
 
   private interface TPoint {
@@ -885,7 +885,6 @@ public class TopoCifParser implements Parser {
     String label;
     String specialDetails;
 
-    @SuppressWarnings("unused")
     int idx;
     boolean hasAtoms;
 
@@ -926,7 +925,7 @@ public class TopoCifParser implements Parser {
     String nodeID;
     String linkID;
     int symop = 0;
-    private P3 trans = new P3();
+    private P3d trans = new P3d();
     String line;
 
     // derived
@@ -958,11 +957,11 @@ public class TopoCifParser implements Parser {
 
     boolean setAtom(int[] a, String line) {
       this.line = line;
-      if (Float.isNaN(x) != Float.isNaN(y) || Float.isNaN(y) != Float.isNaN(z))
+      if (Double.isNaN(x) != Double.isNaN(y) || Double.isNaN(y) != Double.isNaN(z))
         return false;
       idx = atomCount++;
-      if (Float.isNaN(x)) {
-        trans = P3.new3(a[0], a[1], a[2]);
+      if (Double.isNaN(x)) {
+        trans = P3d.new3(a[0], a[1], a[2]);
       } else {
         symop = 0;
       }
@@ -976,7 +975,7 @@ public class TopoCifParser implements Parser {
       isFinalized = true;
       Atom a = getAtomFromName(atomLabel);
       setElementSymbol(this, elementSymbol);
-      if (a == null && Float.isNaN(x)) {
+      if (a == null && Double.isNaN(x)) {
         // no associated atom
         throw new Exception("_topol_atom: no atom " + atomLabel
             + " line=" + line);
@@ -1000,14 +999,14 @@ public class TopoCifParser implements Parser {
       }
 
       // transfer fields and set the symmetry op [tx ty tz]
-      if (a != null && Float.isNaN(x)) {
+      if (a != null && Double.isNaN(x)) {
         setTAtom(a, this);
         applySymmetry(this, ops, symop, trans);
       }
 
       // add this atom to the AtomSetCollection
       atomName = atomLabel;
-//      System.out.println("TAtom adding " + this);
+//System.out.println("TAtom adding " + this);
       
       if (node != null) {
         node.addAtom(this);
@@ -1083,7 +1082,7 @@ public class TopoCifParser implements Parser {
    * @param op
    * @param t
    */
-  static void applySymmetry(Atom a, M4[] ops, int op, T3 t) {
+  static void applySymmetry(Atom a, M4d[] ops, int op, T3d t) {
     if (op >= 0) {
       if (op >= 1 || t.x != 0 || t.y != 0 || t.z != 0) {
         if (op >= 1)
@@ -1093,7 +1092,7 @@ public class TopoCifParser implements Parser {
     }
   }
 
-  final static P3 ZERO = new P3();
+  final static P3d ZERO = new P3d();
   private class TNode extends Atom implements TPoint {
 
     public String id;
@@ -1101,13 +1100,13 @@ public class TopoCifParser implements Parser {
     String netID;
     String label;
     int symop = 0;
-    P3 trans = new P3();
+    P3d trans = new P3d();
 
     Lst<TAtom> tatoms;
     BS bsAtoms = null;
 
     int linkSymop = 0;
-    P3 linkTrans = new P3();
+    P3d linkTrans = new P3d();
     TNet net;
     private boolean isFinalized;
     int idx;
@@ -1130,7 +1129,7 @@ public class TopoCifParser implements Parser {
      * @param op
      * @param trans
      */
-    TNode(int idx, Atom atom, TNet net, int op, P3 trans) {
+    TNode(int idx, Atom atom, TNet net, int op, P3d trans) {
       super();
       this.idx = idx;
       this.atom = atom;
@@ -1156,12 +1155,12 @@ public class TopoCifParser implements Parser {
     boolean setNode(int[] a, String line) {
       this.line = line;
       if (tatoms == null) {
-        if (Float.isNaN(x) != Float.isNaN(y)
-            || Float.isNaN(y) != Float.isNaN(z))
+        if (Double.isNaN(x) != Double.isNaN(y)
+            || Double.isNaN(y) != Double.isNaN(z))
           return false;
         idx = atomCount++;
-        if (Float.isNaN(x)) {
-          trans = P3.new3(a[0], a[1], a[2]);
+        if (Double.isNaN(x)) {
+          trans = P3d.new3(a[0], a[1], a[2]);
         } else {
           symop = 0;
         }
@@ -1183,13 +1182,13 @@ public class TopoCifParser implements Parser {
       tatoms.addLast(atom);
     }
 
-    void finalizeNode(M4[] ops) throws Exception {
+    void finalizeNode(M4d[] ops) throws Exception {
       if (isFinalized)
         return;
       isFinalized = true;
       if (net == null)
         net = getNetFor(netID, null, true);
-      boolean haveXYZ = !Float.isNaN(x);
+      boolean haveXYZ = !Double.isNaN(x);
       Atom a;
       if (tatoms == null) {
         a = null;
@@ -1203,7 +1202,7 @@ public class TopoCifParser implements Parser {
         }
 //        setElementSymbol(this, a.elementSymbol);
       } else {
-        if (Float.isNaN(x))
+        if (Double.isNaN(x))
           setCentroid();
         if (tatoms.size() == 1) {
           TAtom ta = tatoms.get(0);
@@ -1312,15 +1311,15 @@ public class TopoCifParser implements Parser {
     String[] nodeIds = new String[2];
     String[] nodeLabels = new String[2];
     int[] symops = new int[2];
-    P3[] translations = new P3[2];
+    P3d[] translations = new P3d[2];
 
     String netID;
     String netLabel;
     String type = "";
     int multiplicity;
     int topoOrder;
-    float voronoiAngle;
-    float cartesianDistance;
+    double voronoiAngle;
+    double cartesianDistance;
 
     // derived:
 
@@ -1350,8 +1349,8 @@ public class TopoCifParser implements Parser {
         nodeIds[1] = nodeIds[0];
       typeBondOrder = getBondType(type, topoOrder);
       // only a relative lattice change is necessary here.
-      translations[0] = P3.new3(t1[0], t1[1], t1[2]);
-      translations[1] = P3.new3(t2[0], t2[1], t2[2]);
+      translations[0] = P3d.new3(t1[0], t1[1], t1[2]);
+      translations[1] = P3d.new3(t2[0], t2[1], t2[2]);
       System.out.println("TopoCifParser.setLink " + this);
       return true;
     }
@@ -1428,9 +1427,9 @@ public class TopoCifParser implements Parser {
       finalized = true;
     }
 
-    public String getMolecularFormula() {
-      return (mf == null ? (mf = getMF(tatoms)) : mf);
-    }
+//    public String getMolecularFormula() {
+//      return (mf == null ? (mf = getMF(tatoms)) : mf);
+//    }
 
     /**
      * 
@@ -1443,7 +1442,7 @@ public class TopoCifParser implements Parser {
       String id = nodeIds[index];
       String atomLabel = nodeLabels[index];
       int op = symops[index];
-      P3 trans = translations[index];
+      P3d trans = translations[index];
 
       // first check is for a node based on id
       TNode node = getNodeWithSym(id, atomLabel, op, trans);
@@ -1500,7 +1499,7 @@ public class TopoCifParser implements Parser {
      * @return found node or null
      */
     private TNode getNodeWithSym(String nodeID, String nodeLabel, int op,
-                                 P3 trans) {
+                                 P3d trans) {
       if (nodeID != null)
         return findNode(nodeID, op, trans);
       for (int i = nodes.size(); --i >= 0;) {
@@ -1527,9 +1526,9 @@ public class TopoCifParser implements Parser {
         info.put("nodeId1", nodeIds[0]);
       if (nodeIds[1] != null)
         info.put("nodeId2", nodeIds[1]);
-      info.put("distance", Float.valueOf(cartesianDistance));
-      if (!Float.isNaN(distance))
-        info.put("distance", Float.valueOf(distance));
+      info.put("distance", Double.valueOf(cartesianDistance));
+      if (!Double.isNaN(distance))
+        info.put("distance", Double.valueOf(distance));
       info.put("symops1", Integer.valueOf(symops[0] + 1));
       info.put("symops2", Integer.valueOf(symops[1] + 1));
       info.put("translation1", translations[0]);
@@ -1537,7 +1536,7 @@ public class TopoCifParser implements Parser {
       info.put("multiplicity", Integer.valueOf(multiplicity));
       if (type != null)
         info.put("type", type);
-      info.put("voronoiSolidAngle", Float.valueOf(voronoiAngle));
+      info.put("voronoiSolidAngle", Double.valueOf(voronoiAngle));
       // derived
       info.put("atomIndex1", Integer.valueOf(i0 + linkNodes[0].index));
       info.put("atomIndex2", Integer.valueOf(i0 + linkNodes[1].index));
@@ -1580,7 +1579,7 @@ public class TopoCifParser implements Parser {
     return (atomLabel == null ? null : reader.asc.getAtomFromName(atomLabel));
   }
 
-  float calculateDistance(P3 p1, P3 p2) {
+  double calculateDistance(P3d p1, P3d p2) {
     temp1.setT(p1);
     temp2.setT(p2);
     sym.toCartesian(temp1, true);
@@ -1662,7 +1661,7 @@ public class TopoCifParser implements Parser {
    * @param trans match for linkTrans
    * @return the node, or null if no such node was found
    */
-  public TNode findNode(String nodeID, int op, P3 trans) {
+  public TNode findNode(String nodeID, int op, P3d trans) {
     for (int i = nodes.size(); --i >= 0;) {
       TNode n = nodes.get(i);
       if (n.id.equals(nodeID)

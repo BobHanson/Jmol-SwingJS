@@ -37,7 +37,7 @@ import javajs.util.PT;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.util.Logger;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 public class GamessUSReader extends GamessReader {
 
@@ -254,12 +254,12 @@ public class GamessUSReader extends GamessReader {
       //It does however put the nuclear charge in the last column
       if (atomName.charAt(0) == 'Z')
         atomName = line.substring(2, 3);
-      else if (parseFloatRange(line, 67, 73) == 0)
+      else if (parseDoubleRange(line, 67, 73) == 0)
         continue;
-      float x = parseFloatRange(line, 8, 25);
-      float y = parseFloatRange(line, 25, 40);
-      float z = parseFloatRange(line, 40, 56);
-      if (Float.isNaN(x) || Float.isNaN(y) || Float.isNaN(z))
+      double x = parseDoubleRange(line, 8, 25);
+      double y = parseDoubleRange(line, 25, 40);
+      double z = parseDoubleRange(line, 40, 56);
+      if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z))
         break;
       Atom atom = asc.addNewAtom();
       atom.atomName = atomName + (++acInFirstModel);
@@ -287,10 +287,10 @@ public class GamessUSReader extends GamessReader {
     int n = 0;
     while (rd() != null
         && (atomName = parseTokenRange(line, 1, 11)) != null) {
-      float x = parseFloatRange(line, 17, 37);
-      float y = parseFloatRange(line, 37, 57);
-      float z = parseFloatRange(line, 57, 77);
-      if (Float.isNaN(x) || Float.isNaN(y) || Float.isNaN(z))
+      double x = parseDoubleRange(line, 17, 37);
+      double y = parseDoubleRange(line, 37, 57);
+      double z = parseDoubleRange(line, 57, 77);
+      if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z))
         break;
       Atom atom = asc.addNewAtom();
       setAtomCoordXYZ(atom, x * ANGSTROMS_PER_BOHR, y * ANGSTROMS_PER_BOHR, z * ANGSTROMS_PER_BOHR);
@@ -318,10 +318,10 @@ public class GamessUSReader extends GamessReader {
     int n = 0;
     while (rd() != null
         && (atomName = parseTokenRange(line, 1, 11)) != null) {
-      float x = parseFloatRange(line, 16, 31);
-      float y = parseFloatRange(line, 31, 46);
-      float z = parseFloatRange(line, 46, 61);
-      if (Float.isNaN(x) || Float.isNaN(y) || Float.isNaN(z))
+      double x = parseDoubleRange(line, 16, 31);
+      double y = parseDoubleRange(line, 31, 46);
+      double z = parseDoubleRange(line, 46, 61);
+      if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z))
         break;
       Atom atom = asc.addNewAtom();
       setAtomCoordXYZ(atom, x, y, z);
@@ -369,10 +369,10 @@ public class GamessUSReader extends GamessReader {
                   continue;
               else
                     atomName = parseTokenRange(line, 1, 2); 
-              float x = parseFloatRange(line, 16, 31);
-              float y = parseFloatRange(line, 31, 46);
-              float z = parseFloatRange(line, 46, 61);
-              if (Float.isNaN(x) || Float.isNaN(y) || Float.isNaN(z))
+              double x = parseDoubleRange(line, 16, 31);
+              double y = parseDoubleRange(line, 31, 46);
+              double z = parseDoubleRange(line, 46, 61);
+              if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z))
                     break;
               Atom atom = asc.addNewAtom();
               atom.atomName = atomName + (++n);
@@ -452,7 +452,7 @@ ATOM         MULL.POP.    CHARGE          LOW.POP.     CHARGE
     int startAtom = asc.getLastAtomSetAtomIndex();
     int endAtom = asc.ac;
     for (int i = startAtom; i < endAtom && rd() != null; ++i)
-      atoms[i].partialCharge = parseFloatStr(PT.getTokens(prevline)[poploc]);
+      atoms[i].partialCharge = parseDoubleStr(PT.getTokens(prevline)[poploc]);
   }
  /*
            ---------------------
@@ -476,8 +476,8 @@ ATOM         MULL.POP.    CHARGE          LOW.POP.     CHARGE
     if ("DX".equals(tokens[0]) && "DY".equals(tokens[1])
         && "DZ".equals(tokens[2])) {
       tokens = PT.getTokens(rd());
-      V3 dipole = V3.new3(parseFloatStr(tokens[0]),
-          parseFloatStr(tokens[1]), parseFloatStr(tokens[2]));
+      V3d dipole = V3d.new3((double) parseDoubleStr(tokens[0]),
+          (double) parseDoubleStr(tokens[1]), (double) parseDoubleStr(tokens[2]));
       Logger.info("Molecular dipole for model "
           + asc.atomSetCount + " = " + dipole);
       asc.setCurrentModelInfo("dipole", dipole);

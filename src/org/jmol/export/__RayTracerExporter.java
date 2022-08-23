@@ -28,10 +28,10 @@ package org.jmol.export;
 
 import java.util.Map;
 
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.M3d;
+import javajs.util.M4d;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 import org.jmol.modelset.Atom;
 import org.jmol.util.GData;
@@ -74,36 +74,36 @@ abstract class __RayTracerExporter extends ___Exporter {
   }
   
   @Override
-  protected void outputVertex(T3 pt, T3 offset) {
+  protected void outputVertex(T3d pt, T3d offset) {
     setTempVertex(pt, offset, tempP1);
     tm.transformPt3f(tempP1, tempP1);
     output(tempP1);
   }
 
-  abstract protected void outputCircle(int x, int y, int z, float radius, short colix,
+  abstract protected void outputCircle(int x, int y, int z, double radius, short colix,
                                        boolean doFill);
 
-  abstract protected void outputCylinder(P3 screenA, P3 screenB, float radius,
+  abstract protected void outputCylinder(P3d screenA, P3d screenB, double radius,
                                          short colix, boolean withCaps);
              
-  abstract protected void outputCylinderConical(P3 screenA,
-                                                P3 screenB, float radius1,
-                                                float radius2, short colix);
+  abstract protected void outputCylinderConical(P3d screenA,
+                                                P3d screenB, double radius1,
+                                                double radius2, short colix);
 
-  abstract protected void outputEllipsoid(P3 center, float radius, double[] coef, short colix);
+  abstract protected void outputEllipsoid(P3d center, double radius, double[] coef, short colix);
   
-  abstract protected void outputSphere(float x, float y, float z, float radius,
+  abstract protected void outputSphere(double x, double y, double z, double radius,
                                     short colix);
   
   abstract protected void outputTextPixel(int x, int y, int z, int argb);
   
-  abstract protected void outputTriangle(T3 ptA, T3 ptB, T3 ptC, short colix);
+  abstract protected void outputTriangle(T3d ptA, T3d ptB, T3d ptC, short colix);
 
-  abstract protected void outputCone(P3 screenBase, P3 screenTip, float radius,
+  abstract protected void outputCone(P3d screenBase, P3d screenTip, double radius,
                                      short colix, boolean isBarb);
 
-  protected P3 getScreenNormal(T3 pt, T3 normal, float factor) {
-    if (Float.isNaN(normal.x)) {
+  protected P3d getScreenNormal(T3d pt, T3d normal, double factor) {
+    if (Double.isNaN(normal.x)) {
       tempP3.set(0, 0, 0);
       return tempP3;
     }
@@ -123,20 +123,20 @@ abstract class __RayTracerExporter extends ___Exporter {
   // called by Export3D:
 
   @Override
-  void drawAtom(Atom atom, float radius) {
-    outputSphere(atom.sX, atom.sY, atom.sZ, atom.sD / 2f, atom.colixAtom);
+  void drawAtom(Atom atom, double radius) {
+    outputSphere(atom.sX, atom.sY, atom.sZ, atom.sD / 2d, atom.colixAtom);
   }
 
   @Override
   void drawCircle(int x, int y, int z,
                          int diameter, short colix, boolean doFill) {
     //draw circle
-    float radius = diameter / 2f;
+    double radius = diameter / 2d;
     outputCircle(x, y, z, radius, colix, doFill);
   }
 
   @Override
-  boolean drawEllipse(P3 ptAtom, P3 ptX, P3 ptY,
+  boolean drawEllipse(P3d ptAtom, P3d ptX, P3d ptY,
                       short colix, boolean doFill) {
     // IDTF only for now
     return false;
@@ -145,7 +145,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   @Override
   void drawPixel(short colix, int x, int y, int z, int scale) {
     //measures, meshRibbon, dots
-    outputSphere(x, y, z, 0.75f * scale, colix);
+    outputSphere(x, y, z, 0.75d * scale, colix);
   }
 
   @Override
@@ -154,13 +154,13 @@ abstract class __RayTracerExporter extends ___Exporter {
   }
     
   @Override
-  void fillConeScreen(short colix, byte endcap, int screenDiameter, P3 screenBase,
-                P3 screenTip, boolean isBarb) {
-    outputCone(screenBase, screenTip, screenDiameter / 2f, colix, isBarb);
+  void fillConeScreen(short colix, byte endcap, int screenDiameter, P3d screenBase,
+                P3d screenTip, boolean isBarb) {
+    outputCone(screenBase, screenTip, screenDiameter / 2d, colix, isBarb);
   }
 
   @Override
-  void drawCylinder(P3 screenA, P3 screenB, short colix1,
+  void drawCylinder(P3d screenA, P3d screenB, short colix1,
                            short colix2, byte endcaps, int madBond,
                            int bondOrder) {
     // from drawBond and fillCylinder here
@@ -175,11 +175,11 @@ abstract class __RayTracerExporter extends ___Exporter {
     if (endcaps != GData.ENDCAPS_SPHERICAL)
       return;
     
-    float radius = vwr.tm.scaleToScreen((int) screenA.z, madBond) / 2f;
+    double radius = vwr.tm.scaleToScreen((int) screenA.z, madBond) / 2d;
     if (radius <= 1)
       return;
     outputSphere(screenA.x, screenA.y, screenA.z, radius, colix1);
-    radius = vwr.tm.scaleToScreen((int) screenB.z, madBond) / 2f;
+    radius = vwr.tm.scaleToScreen((int) screenB.z, madBond) / 2d;
     if (radius <= 1)
       return;
     outputSphere(screenB.x, screenB.y, screenB.z, radius, colix2);
@@ -194,10 +194,10 @@ abstract class __RayTracerExporter extends ___Exporter {
    * @param colix
    * @param endcaps
    */
-  protected void fillConicalCylinder(P3 screenA, P3 screenB,
+  protected void fillConicalCylinder(P3d screenA, P3d screenB,
                                     int madBond, short colix, 
                                     byte endcaps) {
-    float radius1 = vwr.tm.scaleToScreen((int) screenA.z, madBond) / 2f;
+    double radius1 = vwr.tm.scaleToScreen((int) screenA.z, madBond) / 2d;
     if (radius1 == 0)
       return;
     if (radius1 < 1)
@@ -206,7 +206,7 @@ abstract class __RayTracerExporter extends ___Exporter {
       outputSphere(screenA.x, screenA.y, screenA.z, radius1, colix);
       return;
     }
-    float radius2 = vwr.tm.scaleToScreen((int) screenB.z, madBond) / 2f;
+    double radius2 = vwr.tm.scaleToScreen((int) screenB.z, madBond) / 2d;
     if (radius2 == 0)
       return;
     if (radius2 < 1)
@@ -216,12 +216,12 @@ abstract class __RayTracerExporter extends ___Exporter {
 
   @Override
   void fillCylinderScreenMad(short colix, byte endcaps, int diameter, 
-                               P3 screenA, P3 screenB) {
+                               P3d screenA, P3d screenB) {
     if (diameter == 0)
       return;
     if (diameter < 1)
       diameter = 1;
-    float radius = diameter / 2f;
+    double radius = diameter / 2d;
     if (screenA.distance(screenB) == 0) {
       outputSphere(screenA.x, screenA.y, screenA.z, radius, colix);
       return;
@@ -235,27 +235,27 @@ abstract class __RayTracerExporter extends ___Exporter {
   }
 
   @Override
-  void fillCylinderScreen(short colix, byte endcaps, int screenDiameter, P3 screenA, 
-                                 P3 screenB, P3 ptA, P3 ptB, float radius) {
+  void fillCylinderScreen(short colix, byte endcaps, int screenDiameter, P3d screenA, 
+                                 P3d screenB, P3d ptA, P3d ptB, double radius) {
           // vectors, polyhedra
     fillCylinderScreenMad(colix, endcaps, screenDiameter, screenA, screenB);
   }
 
   @Override
-  void fillSphere(short colix, int diameter, P3 pt) {
-    outputSphere(pt.x, pt.y, pt.z, diameter / 2f, colix);
+  void fillSphere(short colix, int diameter, P3d pt) {
+    outputSphere(pt.x, pt.y, pt.z, diameter / 2d, colix);
   }
   
   @Override
-  protected void fillTriangle(short colix, T3 ptA, T3 ptB, T3 ptC, boolean twoSided) {
+  protected void fillTriangle(short colix, T3d ptA, T3d ptB, T3d ptC, boolean twoSided) {
     outputTriangle(ptA, ptB, ptC, colix);
   }
 
   @Override
-  void fillEllipsoid(P3 center, P3[] points, short colix, int x,
-                       int y, int z, int diameter, M3 toEllipsoidal,
-                       double[] coef, M4 deriv, P3[] octantPoints) {
-    float radius = diameter / 2f;
+  void fillEllipsoid(P3d center, P3d[] points, short colix, int x,
+                       int y, int z, int diameter, M3d toEllipsoidal,
+                       double[] coef, M4d deriv, P3d[] octantPoints) {
+    double radius = diameter / 2d;
     if (radius == 0)
       return;
     if (radius < 1)

@@ -27,17 +27,17 @@ class IsoFxyzReader extends IsoFxyReader {
   
   IsoFxyzReader(){}
   
-  private float[][][] data;
+  private double[][][] data;
 
   @Override
   protected void setup(boolean isMapData) {
     if (params.functionInfo.size() > 5)
-      data = (float[][][]) params.functionInfo.get(5);
+      data = (double[][][]) params.functionInfo.get(5);
     setupType("functionXYZ");
   }
 
   @Override
-  public float getValue(int x, int y, int z, int xyz) {
+  public double getValue(int x, int y, int z, int xyz) {
     return (data == null ? evaluateValue(x, y, z) : data[x][y][z]);
   }
 

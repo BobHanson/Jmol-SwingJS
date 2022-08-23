@@ -64,9 +64,9 @@ public class VaspChgcarReader extends VaspPoscarReader {
 //  @Override
 //  protected boolean checkLine() throws Exception {
 //    String[] atomSym = getTokens();
-//    float scale = parseFloatStr(rd());
-//    float[] unitCellData = new float[9];
-//    fillFloatArray(null, 0, unitCellData);
+//    double scale = parseDoubleStr(rd());
+//    double[] unitCellData = new double[9];
+//    fillDoubleArray(null, 0, unitCellData);
 //    for (int i = 0; i < 9; i++)
 //      unitCellData[i] *= scale;
 //    addPrimitiveLatticeVector(0, unitCellData, 0);

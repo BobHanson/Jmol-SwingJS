@@ -31,11 +31,12 @@ import java.util.Map;
 
 import org.jmol.api.SymmetryInterface;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.M4;
-import javajs.util.P3;
+import javajs.util.M4d;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -150,7 +151,7 @@ class SpaceGroup {
       if (data instanceof Lst<?>)
         sg = createSGFromList(name, (Lst<?>) data); 
       else
-        sg = determineSpaceGroupNA(name, (float[]) data);
+        sg = determineSpaceGroupNA(name, (double[]) data);
       if (sg == null)
         sg = createSpaceGroupN(modDim <= 0 ? name: "x1,x2,x3,x4,x5,x6,x7,x8,x9".substring(0, modDim * 3 + 8));
     }
@@ -162,7 +163,7 @@ class SpaceGroup {
   /**
    * 
    * @param name
-   * @param data Lst<SymmetryOperation> or Lst<M4>
+   * @param data Lst<SymmetryOperation> or Lst<M4d>
    * @return a new SpaceGroup if successful or null
    */
   private static SpaceGroup createSGFromList(String name, Lst<?> data) {
@@ -178,7 +179,7 @@ class SpaceGroup {
         int iop = sg.addOp(op, op.xyz, false);
         sg.operations[iop].setTimeReversal(op.timeReversal);
       } else {
-        sg.addSymmetrySM("xyz matrix:" + operation, (M4) operation);
+        sg.addSymmetrySM("xyz matrix:" + operation, (M4d) operation);
       }
     }
     SpaceGroup sgn = sg.getDerivedSpaceGroup();
@@ -198,7 +199,7 @@ class SpaceGroup {
     setFinalOperationsForAtoms(3, null, 0, 0, false);
   }
 
-  void setFinalOperationsForAtoms(int dim, P3[] atoms, int atomIndex, int count,
+  void setFinalOperationsForAtoms(int dim, P3d[] atoms, int atomIndex, int count,
                                   boolean doNormalize) {
     //from AtomSetCollection.applySymmetry only
     if (hallInfo == null && latticeParameter != 0) {
@@ -230,8 +231,8 @@ class SpaceGroup {
       op = finalOperations[0] = new SymmetryOperation(operations[0], 0, true);
       if (op.sigma == null)
         SymmetryOperation.normalizeOperationToCentroid(dim, op, atoms, atomIndex, count);
-      P3 atom = atoms[atomIndex];
-      P3 c = P3.newP(atom);
+      P3d atom = atoms[atomIndex];
+      P3d c = P3d.newP(atom);
       op.rotTrans(c);
       if (c.distance(atom) > 0.0001f) {
         // not cartesian, but this is OK here
@@ -259,10 +260,12 @@ class SpaceGroup {
   }
 
   int getOperationCount() {
+    if (finalOperations == null)
+      setFinalOperations();
     return finalOperations.length;
   }
 
-  M4 getOperation(int i) {
+  M4d getOperation(int i) {
     return finalOperations[i];
   }
 
@@ -272,21 +275,20 @@ class SpaceGroup {
   }
 
   static Object getInfo(SpaceGroup sg, String spaceGroup,
-                        SymmetryInterface cellInfo, boolean asMap, boolean andNonstandard) {
+                        double[] params, boolean asMap, boolean andNonstandard) {
     try {
     if (sg != null && sg.index >= SG.length) {
       SpaceGroup sgDerived = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
       if (sgDerived != null)
         sg = sgDerived;
     }
-    if (cellInfo != null) {
+    if (params != null) {
       if (sg == null) {
         if (spaceGroup.indexOf("[") >= 0)
           spaceGroup = spaceGroup.substring(0, spaceGroup.indexOf("[")).trim();
         if (spaceGroup.equals("unspecified!"))
           return "no space group identified in file";
-        sg = SpaceGroup.determineSpaceGroupNA(spaceGroup,
-            cellInfo.getUnitCellParams());
+        sg = SpaceGroup.determineSpaceGroupNA(spaceGroup, params);
       }
     } else if (spaceGroup.equalsIgnoreCase("ALL")) {
       return SpaceGroup.dumpAll(asMap);
@@ -515,7 +517,7 @@ class SpaceGroup {
       latticeParameter = -latticeParameter;
   }
   
-  private final static SpaceGroup createSpaceGroupN(String name) {
+  final static SpaceGroup createSpaceGroupN(String name) {
     getSpaceGroups();
     name = name.trim();
     SpaceGroup sg = determineSpaceGroupN(name);
@@ -542,6 +544,7 @@ class SpaceGroup {
       init(false);
       return -1;
     }
+    xyz0 = PT.rep(xyz0, " ", "");
     boolean isSpecial = (xyz0.charAt(0) == '=');
     if (isSpecial)
       xyz0 = xyz0.substring(1);
@@ -644,11 +647,12 @@ class SpaceGroup {
       latticeType = h.latticeCode;
       break;
     }
-    M4 mat1 = new M4();
-    M4 operation = new M4();
-    M4[] newOps = new M4[7];
+    M4d mat1 = new M4d();
+    M4d operation = new M4d();
+    M4d[] newOps = new M4d[7];
     for (int i = 0; i < 7; i++)
-      newOps[i] = new M4();
+      newOps[i] = new M4d();
+    operationCount = 1;
     // prior to Jmol 11.7.36/11.6.23 this was setting nOps within the loop
     // and setIdentity() outside the loop. That caused a multiplication of
     // operations, not a resetting of them each time.
@@ -661,7 +665,7 @@ class SpaceGroup {
       int nOps = operationCount;
       
       for (int j = 1; j <= nRot; j++) {
-        M4 m = newOps[j];
+        M4d m = newOps[j];
         m.mul2(mat1, newOps[0]);
         newOps[0].setM4(m);
         for (int k = 0; k < nOps; k++) {
@@ -678,7 +682,7 @@ class SpaceGroup {
       Logger.error("Operator mismatch " + operationCount + " for " + this);
   }
 
-  int addSymmetrySM(String xyz, M4 operation) {
+  int addSymmetrySM(String xyz, M4d operation) {
     int iop = addOperation(xyz, 0, false);
     //System.out.println("spacegroup addding " + iop + " " + xyz);
     if (iop >= 0) {
@@ -688,25 +692,25 @@ class SpaceGroup {
     return iop;
   }
 
-  private final static SpaceGroup determineSpaceGroupN(String name) {
-    return determineSpaceGroup(name, 0f, 0f, 0f, 0f, 0f, 0f, -1);
+  final static SpaceGroup determineSpaceGroupN(String name) {
+    return determineSpaceGroup(name, 0d, 0d, 0d, 0d, 0d, 0d, -1);
   }
 
   private final static SpaceGroup determineSpaceGroupNS(String name, SpaceGroup sg) {
-    return determineSpaceGroup(name, 0f, 0f, 0f, 0f, 0f, 0f, sg.index);
+    return determineSpaceGroup(name, 0d, 0d, 0d, 0d, 0d, 0d, sg.index);
   }
 
   final static SpaceGroup determineSpaceGroupNA(String name,
-                                                     float[] unitCellParams) {
-    return (unitCellParams == null ? determineSpaceGroup(name, 0f, 0f, 0f, 0f, 0f, 0f, -1)
+                                                     double[] unitCellParams) {
+    return (unitCellParams == null ? determineSpaceGroup(name, 0d, 0d, 0d, 0d, 0d, 0d, -1)
         : determineSpaceGroup(name, unitCellParams[0], unitCellParams[1],
         unitCellParams[2], unitCellParams[3], unitCellParams[4],
         unitCellParams[5], -1));
   }
 
-  private final static SpaceGroup determineSpaceGroup(String name, float a, float b,
-                                                float c, float alpha,
-                                                float beta, float gamma,
+  private final static SpaceGroup determineSpaceGroup(String name, double a, double b,
+                                                double c, double alpha,
+                                                double beta, double gamma,
                                                 int lastIndex) {
 
     int i = determineSpaceGroupIndex(name, a, b, c, alpha, beta, gamma,
@@ -718,10 +722,12 @@ class SpaceGroup {
   private final static int NAME_HM = 3;
   private final static int NAME_HALL = 5;
 
-  private final static int determineSpaceGroupIndex(String name, float a,
-                                                    float b, float c,
-                                                    float alpha, float beta,
-                                                    float gamma, int lastIndex) {
+  private final static int determineSpaceGroupIndex(String name, double a,
+                                                    double b, double c,
+                                                    double alpha, double beta,
+                                                    double gamma, int lastIndex) {
+    if (name.indexOf("x") >= 0)
+      return -1;
 
     getSpaceGroups();
     if (lastIndex < 0)
@@ -838,7 +844,9 @@ class SpaceGroup {
         // no extension or unknown extension, so we look for unique axis
         for (i = 0; i < lastIndex; i++)
           if (((s = SG[i]).hmSymbolAbbr.equalsIgnoreCase(abbr) 
-              || s.hmSymbolAbbrShort.equalsIgnoreCase(abbr)) 
+              || s.hmSymbolAbbrShort.equalsIgnoreCase(abbr)
+              || s.intlTableNumber.equals(abbr)
+              ) 
               && (!checkBilbao || s.isBilbao))
             switch (s.ambiguityType) {
             case '\0':
@@ -873,7 +881,7 @@ class SpaceGroup {
     return -1;
   }
    
-   private final static char determineUniqueAxis(float a, float b, float c, float alpha, float beta, float gamma) {
+   private final static char determineUniqueAxis(double a, double b, double c, double alpha, double beta, double gamma) {
      if (a == b)
        return (b == c ? '\0' : 'c');
      if (b == c)
@@ -971,7 +979,7 @@ class SpaceGroup {
     lastInfo = info;
     name = hallSymbol + " [" + hmSymbolFull + "] #" + intlTableNumber;
 
-    //    System.out.println(intlTableNumber + (intlTableNumberExt.equals("") ? "" : ":" + intlTableNumberExt) + "\t"
+    //System.out.println(intlTableNumber + (intlTableNumberExt.equals("") ? "" : ":" + intlTableNumberExt) + "\t"
     //      + hmSymbol + "\t" + hmSymbolAbbr + "\t" + hmSymbolAbbrShort + "\t"
     //    + hallSymbol);
   }
@@ -1590,7 +1598,7 @@ class SpaceGroup {
     "151;6;d3^3;p 31 1 2;p 31 2 (0 0 4)",  
     "152;6;d3^4;p 31 2 1;p 31 2\"",  
     "153;6;d3^5;p 32 1 2;p 32 2 (0 0 2)",  
-    "154:_1;6;d3^6;p 32 2 1;p 32 2\"",    
+    "154;6;d3^6;p 32 2 1;p 32 2\"",    
     "154:_2;6;d3^6;p 32 2 1;p 32 2\" (0 0 4);-b",   //  NOTE: MSA quartz.cif gives different operators for this -- 
     "155:h;18;d3^7;r 3 2:h;r 3 2\"",  
     "155:r;6;d3^7;r 3 2:r;p 3* 2",  
@@ -1695,17 +1703,17 @@ class SpaceGroup {
    *        lattice parameter that is time reversal
    * @return true if successful
    */
-  boolean addLatticeVectors(Lst<float[]> lattvecs) {
+  boolean addLatticeVectors(Lst<double[]> lattvecs) {
     if (latticeOp >= 0 || lattvecs.size() == 0)
       return false;
     int nOps = latticeOp = operationCount;
     boolean isMagnetic = (lattvecs.get(0).length == modDim + 4);
     int magRev = -2;
     for (int j = 0; j < lattvecs.size(); j++) {
-      float[] data = lattvecs.get(j);
+      double[] data = lattvecs.get(j);
       if (isMagnetic) {
         magRev = (int) data[modDim + 3];
-        data = AU.arrayCopyF(data, modDim + 3);
+        data = AU.arrayCopyD(data, modDim + 3);
       }
       if (data.length > modDim + 3)
         return false;
@@ -1714,7 +1722,7 @@ class SpaceGroup {
         newOp.modDim = modDim;
         SymmetryOperation op = operations[i];
         newOp.divisor = op.divisor;
-        newOp.linearRotTrans = AU.arrayCopyF(op.linearRotTrans, -1);
+        newOp.linearRotTrans = AU.arrayCopyD(op.linearRotTrans, -1);
         newOp.setFromMatrix(data, false);
         if (magRev != -2)
           newOp.setTimeReversal(op.timeReversal * magRev);
@@ -1725,16 +1733,16 @@ class SpaceGroup {
     return true;
   }
 
-  int getSiteMultiplicity(P3 pt, UnitCell unitCell) {
+  int getSiteMultiplicity(P3d pt, UnitCell unitCell) {
     int n = finalOperations.length;
-    Lst<P3> pts = new Lst<P3>();
+    Lst<P3d> pts = new Lst<P3d>();
     for (int i = n; --i >= 0;) {
-      P3 pt1 = P3.newP(pt);
+      P3d pt1 = P3d.newP(pt);
       finalOperations[i].rotTrans(pt1);
       unitCell.unitize(pt1);
       for (int j = pts.size(); --j >= 0;) {
-        P3 pt0 = pts.get(j);
-        if (pt1.distanceSquared(pt0) < 0.000001f) {
+        P3d pt0 = pts.get(j);
+        if (pt1.distanceSquared(pt0) < JC.UC_TOLERANCE2) {// was 0.000001f) {
           pt1 = null;
           break;
         }      
@@ -1752,12 +1760,12 @@ class SpaceGroup {
     }
   }
 
-  public M4 getRawOperation(int i) {
-    SymmetryOperation op = new SymmetryOperation(null, 0, false);
-    op.setMatrixFromXYZ(operations[i].xyzOriginal, 0, false);
-    op.doFinalize();
-    return op;
-  }
+//  public M4d getRawOperation(int i) {
+//    SymmetryOperation op = new SymmetryOperation(null, 0, false);
+//    op.setMatrixFromXYZ(operations[i].xyzOriginal, 0, false);
+//    op.doFinalize();
+//    return op;
+//  }
 
   Object info;
   public String getNameType(String type, SymmetryInterface uc) {
@@ -1775,7 +1783,7 @@ class SpaceGroup {
       return ret;
     // find the space group using canonical Seitz
     if (info == null)
-      info = getInfo(this,hmSymbol, uc, true, false);
+      info = getInfo(this, hmSymbol, uc.getUnitCellParams(), true, false);
     if (info instanceof String)
       return null;
     @SuppressWarnings("unchecked")
@@ -1796,12 +1804,12 @@ class SpaceGroup {
         return SG[i];
     return null;
   }
- 
-  public static String getID(int i) {
-    getSpaceGroups();
-    return SG[i].asString();
-  }
 
+  public void checkHallOperators() {
+    if (nHallOperators != null && nHallOperators.intValue() != operationCount)
+      generateAllOperators(hallInfo);
+  }
+ 
 //  private int[] latticeOps;
 //  public int[] getAllLatticeOps() {
 //    // presumes all lattice operations are listed at end of operations list

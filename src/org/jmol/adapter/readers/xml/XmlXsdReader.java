@@ -98,7 +98,7 @@ public class XmlXsdReader extends XmlReader {
       String xyz = atts.get("xyz");
       if (xyz != null) {
         tokens = PT.getTokens(xyz.replace(',',' '));
-        atom.set(parseFloatStr(tokens[0]), parseFloatStr(tokens[1]), parseFloatStr(tokens[2]));
+        atom.set(parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]));
       }
       boolean isBackbone = "1".equals(atts.get("isbackboneatom"));
       if (isBackbone)
@@ -123,7 +123,7 @@ public class XmlXsdReader extends XmlReader {
   @Override
   void processEndElement(String localName) {
     if ("atom3d".equalsIgnoreCase(localName)) {
-      if (atom.elementSymbol != null && !Float.isNaN(atom.z)) {
+      if (atom.elementSymbol != null && !Double.isNaN(atom.z)) {
         parent.setAtomCoord(atom);
         asc.addAtomWithMappedName(atom);
       }

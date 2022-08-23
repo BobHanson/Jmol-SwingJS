@@ -31,7 +31,7 @@ import java.util.Map;
 import javajs.util.BS;
 
 import javajs.util.CU;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 /*
@@ -94,7 +94,7 @@ class ObjReader extends PmeshReader {
   protected boolean readVertices() throws Exception {
     // also reads polygons
     pmeshError = "pmesh ERROR: invalid vertex/face list";
-    P3 pt = new P3();
+    P3d pt = new P3d();
     int color = 0;
     int ia, ib, ic, id = 0;
     int i = 0;
@@ -116,8 +116,8 @@ class ObjReader extends PmeshReader {
       switch (line.charAt(0)) {
       case 'v':
         next[0] = 2;
-        pt.set(PT.parseFloatNext(line, next), PT.parseFloatNext(line, next),
-            PT.parseFloatNext(line, next));
+        pt.set(PT.parseDoubleNext(line, next), PT.parseDoubleNext(line, next),
+            PT.parseDoubleNext(line, next));
         boolean addHt = false;
         if (htPymol == null) {
           i = nVertices;

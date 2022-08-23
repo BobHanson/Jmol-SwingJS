@@ -42,12 +42,12 @@ public class XmlQEReader extends XmlReader {
   public XmlQEReader() {
   }
   
-  private float a;
-  private float b;
-  private float c;
-  //private float alpha;
-  //private float beta;
-  //private float gamma;
+  private double a;
+  private double b;
+  private double c;
+  //private double alpha;
+  //private double beta;
+  //private double gamma;
   
 //  private String[] myAttributes = { "SPECIES", "TAU" };
 //  
@@ -115,7 +115,7 @@ public class XmlQEReader extends XmlReader {
 
       if ("cell_dimensions".equals(localName)) {
         parent.setFractionalCoordinates(true);
-        float[] data = getTokensFloat(chars.toString(), null, 6);
+        double[] data = getTokensDouble(chars.toString(), null, 6);
         a = data[0];
         b = (data[1] == 0 ? a : data[1]);
         c = (data[2] == 0 ? a : data[2]);
@@ -127,7 +127,7 @@ public class XmlQEReader extends XmlReader {
 
       if ("at".equals(localName)) {
         // probably wrong -- only cubic
-        float[] m = getTokensFloat(chars.toString(), null, 9);
+        double[] m = getTokensDouble(chars.toString(), null, 9);
         for (int i = 0; i < 9; i += 3) {
           m[i] *= a;
           m[i + 1] *= b;

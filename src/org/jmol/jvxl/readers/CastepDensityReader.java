@@ -27,7 +27,7 @@ import java.io.BufferedReader;
 
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 class CastepDensityReader extends PeriodicVolumeFileReader {
 
@@ -72,8 +72,8 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
       // skip front stuff
     }
     for (int i = 0; i < 3; ++i) {
-      V3 voxelVector = volumetricVectors[i];
-      voxelVector.set(parseFloatStr(line), parseFloat(), parseFloat());
+      V3d voxelVector = volumetricVectors[i];
+      voxelVector.set(parseDoubleStr(line), parseDouble(), parseDouble());
       rd();
     }
     nSurfaces = parseIntStr(rd());
@@ -84,7 +84,7 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
     nFilePoints = (nPointsX++) * (nPointsY++) * (nPointsZ++);
     volumetricOrigin.set(0, 0, 0);
     for (int i = 0; i < 3; i++) {
-      volumetricVectors[i].scale(1f/(voxelCounts[i] - 1));
+      volumetricVectors[i].scale(1d/(voxelCounts[i] - 1));
       if (isAnisotropic)
         setVectorAnisotropy(volumetricVectors[i]);
     }
@@ -112,7 +112,7 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
         if (x % dsf == 0 && y % dsf == 0 && z % dsf == 0) {
           if (nSkip > 0)
             skipPoints(nSkip);
-          voxelData[x / dsf][y / dsf][z / dsf] = recordData(parseFloat());
+          voxelData[x / dsf][y / dsf][z / dsf] = recordData(parseDouble());
         }
         rd();
       }
@@ -123,7 +123,7 @@ class CastepDensityReader extends PeriodicVolumeFileReader {
         int z = parseInt() - 1;
         if (nSkip > 0)
           skipPoints(nSkip);
-        voxelData[x][y][z] = recordData(parseFloat());
+        voxelData[x][y][z] = recordData(parseDouble());
         rd();
       }
     }

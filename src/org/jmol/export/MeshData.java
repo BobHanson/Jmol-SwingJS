@@ -4,9 +4,9 @@ package org.jmol.export;
 import org.jmol.util.MeshSurface;
 
 import javajs.util.AU;
-import javajs.util.P3;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 /**
  * Class to generate mesh data (faces, vertices, and normals) for several kinds
@@ -79,16 +79,16 @@ class MeshData {
     for (int i = 0; i < n; i++) {
       faces[i] = new int[] { i, (i + 1) % n, n };
     }
-    P3[] vertexes = new P3[vertexCount];
-    P3[] normals = new P3[vertexCount];
+    P3d[] vertexes = new P3d[vertexCount];
+    P3d[] normals = new P3d[vertexCount];
     for (int i = 0; i < n; i++) {
-      float x = (float) (Math.cos(i * ndeg / 180. * Math.PI));
-      float y = (float) (Math.sin(i * ndeg / 180. * Math.PI));
-      vertexes[i] = P3.new3(x, y, 0);
-      normals[i] = P3.new3(0, 0, 1);
+      double x = (double) (Math.cos(i * ndeg / 180. * Math.PI));
+      double y = (double) (Math.sin(i * ndeg / 180. * Math.PI));
+      vertexes[i] = P3d.new3(x, y, 0);
+      normals[i] = P3d.new3(0, 0, 1);
     }
-    vertexes[n] = P3.new3(0, 0, 0);
-    normals[n] = P3.new3(0, 0, 1);
+    vertexes[n] = P3d.new3(0, 0, 0);
+    normals[n] = P3d.new3(0, 0, 1);
     return MeshSurface.newMesh(false, vertexes, 0, faces, normals, 0);
   }
 
@@ -100,14 +100,14 @@ class MeshData {
    * @param pt3 Vertex 3.
    * @return The data.
    */
-  static MeshSurface getTriangleData(T3 pt1, T3 pt2,
-                                              T3 pt3) {
-    T3[] vertexes = new T3[] { pt1, pt2, pt3 };
-    V3 v1 = V3.newVsub(pt3, pt1);
-    V3 v2 = V3.newVsub(pt2, pt1);
+  static MeshSurface getTriangleData(T3d pt1, T3d pt2,
+                                              T3d pt3) {
+    T3d[] vertexes = new T3d[] { pt1, pt2, pt3 };
+    V3d v1 = V3d.newVsub(pt3, pt1);
+    V3d v2 = V3d.newVsub(pt2, pt1);
     v2.cross(v2, v1);
     v2.normalize();
-    V3[] normals = new V3[] { v2, v2, v2 };
+    V3d[] normals = new V3d[] { v2, v2, v2 };
     int[][] faces = { { 0, 1, 2 } };
     return MeshSurface.newMesh(false, vertexes, 0, faces, normals, 0);
   }
@@ -120,17 +120,17 @@ class MeshData {
   static MeshSurface getConeData() {
     int ndeg = 10;
     int n = 360 / ndeg;
-    P3[] vertices = new P3[n + 1];
+    P3d[] vertices = new P3d[n + 1];
     int[][] faces = AU.newInt2(n);
     for (int i = 0; i < n; i++)
       faces[i] = new int[] { i, (i + 1) % n, n };
     double d = ndeg / 180. * Math.PI;
     for (int i = 0; i < n; i++) {
-      float x = (float) (Math.cos(i * d));
-      float y = (float) (Math.sin(i * d));
-      vertices[i] = P3.new3(x, y, 0);
+      double x = (double) (Math.cos(i * d));
+      double y = (double) (Math.sin(i * d));
+      vertices[i] = P3d.new3(x, y, 0);
     }
-    vertices[n] = P3.new3(0, 0, 1);
+    vertices[n] = P3d.new3(0, 0, 1);
     return MeshSurface.newMesh(false, vertices, 0, faces, vertices, 0);
   }
 
@@ -161,18 +161,18 @@ class MeshData {
         faces[++fpt] = new int[] { (i + 1) % n, (i + 1) % n + n, i + n };
       }
     }
-    P3[] vertexes = new P3[vertexCount];
-    P3[] normals = new P3[vertexCount];
+    P3d[] vertexes = new P3d[vertexCount];
+    P3d[] normals = new P3d[vertexCount];
     for (int i = 0; i < n; i++) {
-      float x = (float) (Math.cos(i * ndeg / 180. * Math.PI));
-      float y = (float) (Math.sin(i * ndeg / 180. * Math.PI));
-      vertexes[i] = P3.new3(x, y, 0);
-      normals[i] = P3.new3(x, y, 0);
+      double x = (double) (Math.cos(i * ndeg / 180. * Math.PI));
+      double y = (double) (Math.sin(i * ndeg / 180. * Math.PI));
+      vertexes[i] = P3d.new3(x, y, 0);
+      normals[i] = P3d.new3(x, y, 0);
     }
     for (int i = 0; i < n; i++) {
-      float x = (float) (Math.cos((i + 0.5) * ndeg / 180 * Math.PI));
-      float y = (float) (Math.sin((i + 0.5) * ndeg / 180 * Math.PI));
-      vertexes[i + n] = P3.new3(x, y, 1);
+      double x = (double) (Math.cos((i + 0.5) * ndeg / 180 * Math.PI));
+      double y = (double) (Math.sin((i + 0.5) * ndeg / 180 * Math.PI));
+      vertexes[i + n] = P3d.new3(x, y, 1);
       normals[i + n] = normals[i];
     }
     if (inSide)

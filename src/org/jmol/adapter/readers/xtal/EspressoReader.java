@@ -19,7 +19,7 @@ import org.jmol.adapter.smarter.Atom;
 
 public class EspressoReader extends AtomSetCollectionReader {
 
-  private float[] cellParams;
+  private double[] cellParams;
   private Double totEnergy;
   private boolean endFlag;
  
@@ -55,11 +55,11 @@ public class EspressoReader extends AtomSetCollectionReader {
     return true;
   }
 
-  private float aPar;
+  private double aPar;
 
   private void readAparam() throws Exception {
     // lattice parameter (alat)  =       5.3033  a.u.
-    aPar = parseFloatStr(getTokens()[4]) * ANGSTROMS_PER_BOHR;
+    aPar = parseDoubleStr(getTokens()[4]) * ANGSTROMS_PER_BOHR;
   }
 
   /*
@@ -107,7 +107,7 @@ public class EspressoReader extends AtomSetCollectionReader {
      */
 
     if (andAPar && line.contains("="))
-      aPar = parseFloatStr(line.substring(line.indexOf("=") + 1))
+      aPar = parseDoubleStr(line.substring(line.indexOf("=") + 1))
       * ANGSTROMS_PER_BOHR;
 
     //Can you look at the example HAP_fullopt_40_r1.fullopt from the 2nd model on the representation is correct 
@@ -116,12 +116,12 @@ public class EspressoReader extends AtomSetCollectionReader {
     //     very nicely cleans it up in just one step.
     //PC this is not true as it happens for every 0single jobs and even for single SCF calculations
 
-    cellParams = new float[9];
+    cellParams = new double[9];
     for (int n = 0, i = 0; n < 3; n++) {
       String[] tokens = PT.getTokens(rd());
-      cellParams[i++] = parseFloatStr(tokens[i0]) * aPar;
-      cellParams[i++] = parseFloatStr(tokens[i0 + 1]) * aPar;
-      cellParams[i++] = parseFloatStr(tokens[i0 + 2]) * aPar;
+      cellParams[i++] = parseDoubleStr(tokens[i0]) * aPar;
+      cellParams[i++] = parseDoubleStr(tokens[i0 + 1]) * aPar;
+      cellParams[i++] = parseDoubleStr(tokens[i0 + 2]) * aPar;
     }
   }
 
@@ -186,9 +186,9 @@ public class EspressoReader extends AtomSetCollectionReader {
       atom.atomName = tokens[(isBohr || tokens.length == 4 || !firstStr ? 0 : 1)];
       int i1 = (isBohr || tokens.length == 4 || !firstStr ? 1
           : tokens.length - 4);
-      float x = parseFloatStr(tokens[i1++]);
-      float y = parseFloatStr(tokens[i1++]);
-      float z = parseFloatStr(tokens[i1++]);
+      double x = parseDoubleStr(tokens[i1++]);
+      double y = parseDoubleStr(tokens[i1++]);
+      double z = parseDoubleStr(tokens[i1++]);
       atom.set(x, y, z);
       if (isBohr) {
         atom.scale(ANGSTROMS_PER_BOHR);
@@ -216,7 +216,7 @@ public class EspressoReader extends AtomSetCollectionReader {
 
   private void setEnergy() {
 
-    asc.setAtomSetEnergy("" + totEnergy, totEnergy.floatValue());
+    asc.setAtomSetEnergy("" + totEnergy, totEnergy.doubleValue());
     asc.setInfo("Energy", totEnergy);
     asc.setAtomSetName("E = " + totEnergy + " Ry");
   }

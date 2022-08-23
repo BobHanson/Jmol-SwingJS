@@ -15,7 +15,7 @@ public abstract class QuantumPlaneCalculation extends QuantumCalculation {
    * @param planes   a set of four planes that shifts as the progressive
    *                 Marching Cubes process moves along
    */
-  public abstract void setPlanes(float[][] planes);
+  public abstract void setPlanes(double[][] planes);
   
   /**
    * Fill this plane with data based on the current set of raw data planes. 
@@ -26,7 +26,7 @@ public abstract class QuantumPlaneCalculation extends QuantumCalculation {
    * @param plane
    */
   
-  public abstract void calcPlane(int x, float[] plane);
+  public abstract void calcPlane(int x, double[] plane);
   
   /**
    * 
@@ -41,7 +41,7 @@ public abstract class QuantumPlaneCalculation extends QuantumCalculation {
    * @param f   fractional way from A to B
    * @return    computed value
    */
-  public abstract float process(int vA, int vB, float f);
+  public abstract double process(int vA, int vB, double f);
   
   /**
    * Get that value that represents "no value" so that it can be
@@ -49,8 +49,8 @@ public abstract class QuantumPlaneCalculation extends QuantumCalculation {
    *         
    * @return NO_VALUE
    */
-  public abstract float getNoValue();
+  public abstract double getNoValue();
 
-  public abstract void getPlane(int x, float[] yzPlane);
+  public abstract void getPlane(int x, double[] yzPlane);
 
 }

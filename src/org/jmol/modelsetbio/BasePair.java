@@ -14,7 +14,7 @@ public class BasePair {
   public static BasePair add(Map<String, Object> info, NucleicMonomer g1,
                          NucleicMonomer g2) {
     if (g1 == null || g2 == null)
-      return null; // can happen if one of DSSR pair is not a monomer (HPA in 4fe5) 
+      return null; // can happen if one of DSSR pair is not a monomer (HPA in 4de5) 
     BasePair bp = new BasePair();
     bp.info = info;
     (bp.g1 = g1).addBasePair(bp);

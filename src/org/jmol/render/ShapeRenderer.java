@@ -36,7 +36,7 @@ import org.jmol.viewer.Viewer;
 public abstract class ShapeRenderer {
 
   //public void finalize() {
-  //  System.out.println("ShapeRenderer " + shapeID + " " + this + " finalized");
+  //System.out.println("ShapeRenderer " + shapeID + " " + this + " finalized");
   //}
   
   public Viewer vwr;

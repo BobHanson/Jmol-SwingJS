@@ -40,7 +40,7 @@ import org.jmol.util.Logger;
 import org.jmol.util.Normix;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.T3;
+import javajs.util.T3d;
 
 /*
  * Compiled Graphical Object -- ala PyMOL
@@ -200,17 +200,17 @@ public class CGOMesh extends DrawMesh {
     Lst<Object> stack = new Lst<Object>();
     int[] next = new int[] {pt + 14};
     for (int i = 0; i < 4; i++)
-      data.addLast(Float.valueOf(PT.parseFloatNext(eps, next)));
+      data.addLast(Double.valueOf(PT.parseDoubleNext(eps, next)));
     pt = eps.indexOf("%%EndProlog");
     if (pt < 0)
       return false;
     next[0] = pt + 11;
     int len = eps.length();
     while (true) {
-      float f = PT.parseFloatChecked(eps, len, next, false);
+      double f = PT.parseDoubleChecked(eps, len, next, false);
       if (next[0] >= len)
         break;
-      if (Float.isNaN(f)) {
+      if (Double.isNaN(f)) {
         String s = PT.parseTokenChecked(eps, len, next);
         if (s.startsWith("%%")) // no spaces here
           continue;
@@ -222,7 +222,7 @@ public class CGOMesh extends DrawMesh {
           stack.clear();
         }
       } else {
-         stack.addLast(Float.valueOf(f));
+         stack.addLast(Double.valueOf(f));
       }
     }
     return true;
@@ -241,17 +241,17 @@ public class CGOMesh extends DrawMesh {
         continue;
         //$FALL-THROUGH$
       case T.integer:
-        data.addLast(Float.valueOf(t.intValue));
+        data.addLast(Double.valueOf(t.intValue));
         break;
       case T.decimal:
         data.addLast(t.value);
         break;
       case T.point3f:
       case T.bitset:
-        T3 pt = (tok == T.point3f ? (T3) t.value : vwr.ms.getAtomSetCenter((BS) t.value));
-        data.addLast(Float.valueOf(pt.x));
-        data.addLast(Float.valueOf(pt.y));
-        data.addLast(Float.valueOf(pt.z));
+        T3d pt = (tok == T.point3f ? (T3d) t.value : vwr.ms.getAtomSetCenter((BS) t.value));
+        data.addLast(Double.valueOf(pt.x));
+        data.addLast(Double.valueOf(pt.y));
+        data.addLast(Double.valueOf(pt.z));
         break;
       default:
         if (!addKey(data, st[j].value.toString())) {
@@ -367,7 +367,7 @@ public class CGOMesh extends DrawMesh {
    *        pointer to PRECEDING item
    * @param pt
    */
-  public void getPoint(int i, T3 pt) {
+  public void getPoint(int i, T3d pt) {
     pt.set(getFloat(i++), getFloat(i++), getFloat(i));
   }
 
@@ -385,10 +385,10 @@ public class CGOMesh extends DrawMesh {
    * 
    * @param i
    *        pointer to THIS value
-   * @return float
+   * @return double
    */
-  public float getFloat(int i) {
-    return ((Number) cmds.get(i)).floatValue();
+  public double getFloat(int i) {
+    return ((Number) cmds.get(i)).doubleValue();
   }
 
 }

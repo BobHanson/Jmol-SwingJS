@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javajs.util.DF;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -145,7 +145,7 @@ public class GlobalSettings {
     setB("showUnitcell", false); // maintained by Uccage
     setI("slab", 100); // maintained by TransformManager
     setB("slabEnabled", false); // maintained by TransformManager     
-    setF("slabrange", 0f); // maintained by TransformManager
+    setF("slabrange", 0d); // maintained by TransformManager
     setI("spinX", 0); // maintained by TransformManager
     setI("spinY", TransformManager.DEFAULT_SPIN_Y);
     setI("spinZ", 0); // maintained by TransformManager
@@ -292,7 +292,7 @@ public class GlobalSettings {
     setB("hideNavigationPoint", hideNavigationPoint);
     setB("hiddenLinesDashed", hiddenLinesDashed);
     setB("highResolution", highResolutionFlag);
-    setF("hoverDelay", hoverDelayMs / 1000f);
+    setF("hoverDelay", hoverDelayMs / 1000d);
     setB("imageState", imageState);
     setI("infoFontSize", infoFontSize);
     setB("isosurfaceKey", isosurfaceKey);
@@ -345,6 +345,7 @@ public class GlobalSettings {
     setI("platformSpeed", platformSpeed);
     setF("pointGroupLinearTolerance", pointGroupLinearTolerance);
     setF("pointGroupDistanceTolerance", pointGroupDistanceTolerance);
+//    setI("pointGroupMaxAtoms", pointGroupMaxAtoms);
     setB("preserveState", preserveState);
     setO("propertyColorScheme", propertyColorScheme);
     setO("quaternionFrame", quaternionFrame);
@@ -455,10 +456,10 @@ public class GlobalSettings {
   // is to be loaded without reference to the orientation saved in the file.
   boolean axesOrientationRasmol = false;
   short bondRadiusMilliAngstroms = JC.DEFAULT_BOND_MILLIANGSTROM_RADIUS;
-  float bondTolerance = JC.DEFAULT_BOND_TOLERANCE;
+  double bondTolerance = JC.DEFAULT_BOND_TOLERANCE;
   String defaultDirectory = "";
   boolean defaultStructureDSSP = true; // Jmol 12.1.15
-  final P3 ptDefaultLattice = new P3();
+  final P3d ptDefaultLattice = new P3d();
   public String defaultLoadScript = "";
   public String defaultLoadFilter = "";
   public String defaultDropScript = JC.DEFAULT_DRAG_DROP_SCRIPT;
@@ -476,7 +477,7 @@ public class GlobalSettings {
 //  String edsUrlFormatDiff = "http://eds.bmc.uu.se/eds/dfs/%c2%c3/%file/%file_diff.omap";
 //  String edsUrlCutoff = "http://eds.bmc.uu.se/eds/dfs/%c2%c3/%file/%file.sfdat";
   // not implemented String edsUrlOptions = "within 2.0 {*}";
-  float minBondDistance = JC.DEFAULT_MIN_BOND_DISTANCE;
+  double minBondDistance = JC.DEFAULT_MIN_BOND_DISTANCE;
   int minPixelSelRadius = 6;
   boolean pdbAddHydrogens = false; // true to add hydrogen atoms
   boolean pdbGetHeader = false; // true to get PDB header in auxiliary info
@@ -488,7 +489,7 @@ public class GlobalSettings {
   boolean zeroBasedXyzRasmol = false;
   boolean legacyAutoBonding = false;
   boolean legacyHAddition = false;
-  public boolean legacyJavaFloat = false; // float/double issue with crystallographic symmetry before Jmol 14.2.5
+  public boolean legacyJavaFloat = false; // double/double issue with crystallographic symmetry before Jmol 14.2.5
   /**
    * setting doublePrecision will also toggle legacyJavaFloat to doublePrecision
    * in order to avoid any rounding 
@@ -520,7 +521,7 @@ public class GlobalSettings {
   int minimizationSteps = 100;
   boolean minimizationRefresh = true;
   boolean minimizationSilent = false;
-  float minimizationCriterion = 0.001f;
+  double minimizationCriterion = 0.001;
 
   //rendering
 
@@ -554,17 +555,17 @@ public class GlobalSettings {
   boolean partialDots = false;
   boolean bondModeOr = false;
   boolean hbondsBackbone = false;
-  float hbondsAngleMinimum = 90f;
-  float hbondNODistanceMaximum = 3.25f; // O----N
-  float hbondHXDistanceMaximum = 2.5f;  // O--H
+  double hbondsAngleMinimum = 90d;
+  double hbondNODistanceMaximum = 3.25d; // O----N
+  double hbondHXDistanceMaximum = 2.5d;  // O--H
   boolean hbondsRasmol = true; // 12.0.RC3
   boolean hbondsSolid = false;
   public byte modeMultipleBond = JC.MULTIBOND_NOTSMALL;
   boolean showHydrogens = true;
   boolean showMultipleBonds = true;
   boolean ssbondsBackbone = false;
-  float multipleBondSpacing = -1; // 0.35?
-  float multipleBondRadiusFactor = 0; // 0.75?
+  double multipleBondSpacing = -1; // 0.35?
+  double multipleBondRadiusFactor = 0; // 0.75?
   boolean multipleBondBananas = false;
   boolean nboCharges = true;
   
@@ -572,7 +573,7 @@ public class GlobalSettings {
 
   boolean cartoonBaseEdges = false;
   boolean cartoonRockets = false;
-  float cartoonBlockHeight = 0.5f;
+  double cartoonBlockHeight = 0.5d;
   boolean cartoonBlocks = false;
   boolean cartoonSteps = false;
   boolean cartoonFancy = false;
@@ -588,7 +589,7 @@ public class GlobalSettings {
   int ribbonAspectRatio = 16;
   boolean ribbonBorder = false;
   boolean rocketBarrels = false;
-  float sheetSmoothing = 1; // 0: traceAlpha on alphas for helix, 1 on midpoints
+  double sheetSmoothing = 1; // 0: traceAlpha on alphas for helix, 1 on midpoints
   boolean traceAlpha = true;
   boolean translucent = true;
   boolean twistedSheets = false;
@@ -608,26 +609,26 @@ public class GlobalSettings {
   boolean atomPicking = true;
   boolean autoFps = false;
   public int axesMode = T.axeswindow;
-  float axesScale = 2;
-  float axesOffset = 0;
-  float starWidth = 0.05f;
+  double axesScale = 2;
+  double axesOffset = 0;
+  double starWidth = 0.05d;
   boolean bondPicking = false;
   String dataSeparator = "~~~";
   boolean debugScript = false;
-  float defaultDrawArrowScale = 0.5f;
+  double defaultDrawArrowScale = 0.5d;
   String defaultLabelXYZ = "%a";
   String defaultLabelPDB = "%m%r";
-  float defaultTranslucent = 0.5f;
+  double defaultTranslucent = 0.5d;
   int delayMaximumMs = 0;
-  float dipoleScale = 1f;
-  float drawFontSize = JC.DRAW_DEFAULT_FONTSIZE;
+  double dipoleScale = 1d;
+  double drawFontSize = JC.DRAW_DEFAULT_FONTSIZE;
   boolean disablePopupMenu = false;
   boolean dragSelected = false;
   boolean drawHover = false;
   boolean drawPicking = false;
   boolean dsspCalcHydrogen = true;
   public String energyUnits = "kJ";
-  float exportScale = 0f;
+  double exportScale = 0d;
   String helpPath = JC.DEFAULT_HELP_PATH;
   boolean fontScaling = false;
   boolean fontCaching = true;
@@ -636,35 +637,36 @@ public class GlobalSettings {
   boolean hideNameInPopup = false;
   int hoverDelayMs = 500;
   public int labelPointerWidth = 2; // BH 2022.01.22
-  float loadAtomDataTolerance = 0.01f;
+  double loadAtomDataTolerance = 0.01d;
   public boolean logCommands = false;
   public boolean logGestures = false;
   public String measureDistanceUnits = "nanometers";
   boolean measurementLabels = true;
   boolean messageStyleChime = false;
   boolean monitorEnergy = false;
-  public float modulationScale = 1;
+  public double modulationScale = 1;
   boolean multiProcessor = true;
-  float particleRadius = 20;
+  double particleRadius = 20;
   int pickingSpinRate = 10;
   String pickLabel = "";
-  float pointGroupDistanceTolerance = 0.2f;
-  float pointGroupLinearTolerance = 8.0f;
+  double pointGroupDistanceTolerance = 0.2d;
+  double pointGroupLinearTolerance = 8.0d;
+//  int pointGroupMaxAtoms = 250;
   public boolean preserveState = true;
   String propertyColorScheme = "roygb";
   String quaternionFrame = "p"; // was c prior to Jmol 11.7.47
   boolean saveProteinStructureState = true;
   boolean showModVecs = false;
   boolean showUnitCellDetails = true;
-  float solventProbeRadius = 1.2f;
+  double solventProbeRadius = 1.2d;
   int scriptDelay = 0;
   boolean selectAllModels = true;
   boolean statusReporting = true;
   int strandCountForStrands = 5;
   int strandCountForMeshRibbon = 7;
   int strutSpacing = 6;
-  float strutLengthMaximum = 7.0f;
-  float strutDefaultRadius = JC.DEFAULT_STRUT_RADIUS;
+  double strutLengthMaximum = 7.0d;
+  double strutDefaultRadius = JC.DEFAULT_STRUT_RADIUS;
   boolean strutsMultiple = false; //on a single position    
   //boolean useArcBall = false;
   boolean useMinimizationThread = true;
@@ -680,12 +682,12 @@ public class GlobalSettings {
    * 
    */
   public boolean noDelay = false;
-  float vectorScale = 1f;
+  double vectorScale = 1d;
   boolean vectorSymmetry = false; // Jmol 12.3.2
   boolean vectorsCentered = false; // Jmol 14.1.14
   int vectorTrail = 0; // Jmol 14.4.4
-  float vibrationPeriod = 1f;
-  float vibrationScale = 1f;
+  double vibrationPeriod = 1d;
+  double vibrationScale = 1d;
   boolean wireframeRotation = false;
 
   // window
@@ -694,7 +696,7 @@ public class GlobalSettings {
   boolean navigationMode = false;
   //boolean navigateSurface = false;
   boolean navigationPeriodic = false;
-  float navigationSpeed = 5;
+  double navigationSpeed = 5;
   boolean showNavigationPointAlways = false;
   String stereoState = null;
   boolean modelKitMode = false;
@@ -713,7 +715,7 @@ public class GlobalSettings {
   boolean ellipsoidBall = true;
 
   int ellipsoidDotCount = 200;
-  float ellipsoidAxisDiameter = 0.02f;
+  double ellipsoidAxisDiameter = 0.02d;
 
   //testing
 
@@ -776,9 +778,9 @@ public class GlobalSettings {
       setO(name, Integer.valueOf(value));
   }
 
-  public void setF(String name, float value) {
-    if (!Float.isNaN(value))
-      setO(name, Float.valueOf(value));
+  public void setF(String name, double value) {
+    if (!Double.isNaN(value))
+      setO(name, Double.valueOf(value));
   }
 
   public void setO(String name, Object value) {
@@ -858,7 +860,7 @@ public class GlobalSettings {
    * @param name
    * @param nullAsString
    *        returns "" if not found
-   * @return a Integer, Float, String, BitSet, or Variable, or null
+   * @return a Integer, Double, String, BitSet, or Variable, or null
    */
   Object getParameter(String name, boolean nullAsString) {
     Object v = getParam(name, false);
@@ -884,16 +886,16 @@ public class GlobalSettings {
   Object getParam(String name, boolean asVariable) {
     name = name.toLowerCase();
     if (name.equals("_memory")) {
-      float bTotal = 0;
-      float bFree = 0;
+      double bTotal = 0;
+      double bFree = 0;
       /**
        * @j2sIgnore
        * 
        */
       {
         Runtime runtime = Runtime.getRuntime();
-        bTotal = runtime.totalMemory() / 1000000f;
-        bFree = runtime.freeMemory() / 1000000f;
+        bTotal = runtime.totalMemory() / 1000000d;
+        bFree = runtime.freeMemory() / 1000000d;
       }
       String value = DF.formatDecimal(bTotal - bFree, 1) + "/"
           + DF.formatDecimal(bTotal, 1);
@@ -917,14 +919,14 @@ public class GlobalSettings {
   }
 
   // static because we don't plan to be changing these
-  Map<STR, float[]> structureList = new Hashtable<STR, float[]>();
+  Map<STR, double[]> structureList = new Hashtable<STR, double[]>();
 
   {
-    structureList.put(STR.TURN, new float[] { // turn
+    structureList.put(STR.TURN, new double[] { // turn
         30, 90, -15, 95, });
-    structureList.put(STR.SHEET, new float[] { // sheet
+    structureList.put(STR.SHEET, new double[] { // sheet
         -180, -10, 70, 180, -180, -45, -180, -130, 140, 180, 90, 180, });
-    structureList.put(STR.HELIX, new float[] { // helix
+    structureList.put(STR.HELIX, new double[] { // helix
         -160, 0, -100, 45, });
   }
 
@@ -933,12 +935,12 @@ public class GlobalSettings {
 
   public int bondingVersion = Elements.RAD_COV_IONIC_OB1_100_1;
 
-  public void setStructureList(float[] list, STR type) {
+  public void setStructureList(double[] list, STR type) {
     haveSetStructureList = true;
     structureList.put(type, list);
   }
 
-  public Map<STR, float[]> getStructureList() {
+  public Map<STR, double[]> getStructureList() {
     return structureList;
   }
 
@@ -983,7 +985,7 @@ public class GlobalSettings {
       //    more settable Jmol variables    
       + ";ambient;bonds;colorrasmol;diffuse;fractionalrelative;frank;hetero;hidenotselected"
       + ";hoverlabel;hydrogen;languagetranslation;measurementunits;navigationdepth;navigationslab"
-      + ";picking;pickingstyle;propertycolorschemeoverload;radius;rgbblue;rgbgreen;rgbred"
+      + ";picking;pickingstyle;propertycolorscheme;radius;rgbblue;rgbgreen;rgbred"
       + ";scaleangstromsperinch;selectionhalos;showscript;showselections;solvent;strandcount"
       + ";spinx;spiny;spinz;spinfps;navx;navy;navz;navfps;"
       + CBK.getNameList()
@@ -993,8 +995,9 @@ public class GlobalSettings {
       + ";dodrop;hovered;historylevel;imagestate;iskiosk;useminimizationthread"
       + ";checkcir;resolverresolver;showkeystrokes;saveproteinstructurestate;testflag1;testflag2;testflag3;testflag4"
       // removed in Jmol 14.29.18
-      + ";selecthetero;selecthydrogen;"
-      
+      + ";selecthetero;selecthydrogen"
+      // removed in Jmol 14.32.68
+      + ";pointgrouplineartolerance;pointgroupdistancetolerance"//;pointgroupmmaxatoms"
       + ";")
       .toLowerCase();
 

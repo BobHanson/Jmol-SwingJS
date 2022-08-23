@@ -28,12 +28,12 @@ package org.jmol.export;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.M3d;
+import javajs.util.M4d;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 import javajs.util.BS;
 
@@ -50,7 +50,7 @@ import org.jmol.util.Logger;
  */
 abstract public class __CartesianExporter extends ___Exporter {
 
-  protected A4 viewpoint = new A4();
+  protected A4d viewpoint = new A4d();
   protected boolean canCapCylinders;
   protected boolean noColor;
 
@@ -59,7 +59,7 @@ abstract public class __CartesianExporter extends ___Exporter {
     lineWidthMad = 100;
   }
 
-  protected P3 getModelCenter() {
+  protected P3d getModelCenter() {
     // "center" is the center of rotation, not
     // necessary the screen center or the center of the model. 
     // When the user uses ALT-CTRL-drag, Jmol is applying an 
@@ -77,12 +77,12 @@ abstract public class __CartesianExporter extends ___Exporter {
     return referenceCenter;
   }
 
-  protected P3 getCameraPosition() {
+  protected P3d getCameraPosition() {
 
     // used for VRML/X3D only
 
-    P3 ptCamera = new P3();
-    P3 pt = P3.new3(screenWidth / 2, screenHeight / 2, 0);
+    P3d ptCamera = new P3d();
+    P3d pt = P3d.new3(screenWidth / 2, screenHeight / 2, 0);
     tm.unTransformPoint(pt, ptCamera);
     ptCamera.sub(center);
     // this is NOT QUITE correct when the model has been shifted with CTRL-ALT
@@ -101,7 +101,7 @@ abstract public class __CartesianExporter extends ___Exporter {
 
   }
 
-  private void setTempPoints(P3 ptA, P3 ptB, boolean isCartesian) {
+  private void setTempPoints(P3d ptA, P3d ptB, boolean isCartesian) {
     if (isCartesian) {
       // really first order -- but actual coord
       tempP1.setT(ptA);
@@ -112,10 +112,10 @@ abstract public class __CartesianExporter extends ___Exporter {
     }
   }
 
-  protected int getCoordinateMap(T3[] vertices, int[] coordMap, BS bsValid) {
+  protected int getCoordinateMap(T3d[] vertices, int[] coordMap, BS bsValid) {
     int n = 0;
     for (int i = 0; i < coordMap.length; i++) {
-      if (bsValid != null && !bsValid.get(i) || Float.isNaN(vertices[i].x)) {
+      if (bsValid != null && !bsValid.get(i) || Double.isNaN(vertices[i].x)) {
         if (bsValid != null)
           bsValid.clear(i);
         continue;
@@ -125,13 +125,13 @@ abstract public class __CartesianExporter extends ___Exporter {
     return n;
   }
 
-  protected int[] getNormalMap(T3[] normals, int nNormals,
+  protected int[] getNormalMap(T3d[] normals, int nNormals,
                                BS bsValid, Lst<String> vNormals) {
     Map<String, Integer> htNormals = new Hashtable<String, Integer>();
     int[] normalMap = new int[nNormals];
     for (int i = 0; i < nNormals; i++) {
       String s;
-      if (bsValid != null && !bsValid.get(i) || Float.isNaN(normals[i].x)){
+      if (bsValid != null && !bsValid.get(i) || Double.isNaN(normals[i].x)){
         if (bsValid != null)
           bsValid.clear(i);
         continue;
@@ -160,25 +160,25 @@ abstract public class __CartesianExporter extends ___Exporter {
   // called from IDtf, Vrml, Xed when outputting a surface
   protected abstract void outputFace(int[] is, int[] coordMap, int faceVertexMax);
 
-  abstract protected void outputCircle(P3 pt1, P3 pt2, float radius,
+  abstract protected void outputCircle(P3d pt1, P3d pt2, double radius,
                                        short colix, boolean doFill);
 
-  abstract protected void outputCone(P3 ptBase, P3 ptTip,
-                                     float radius, short colix);
+  abstract protected void outputCone(P3d ptBase, P3d ptTip,
+                                     double radius, short colix);
 
-  abstract protected boolean outputCylinder(P3 ptCenter, P3 pt1,
-                                            P3 pt2, short colix1,
-                                            byte endcaps, float radius,
-                                            P3 ptX, P3 ptY, boolean checkRadius);
+  abstract protected boolean outputCylinder(P3d ptCenter, P3d pt1,
+                                            P3d pt2, short colix1,
+                                            byte endcaps, double radius,
+                                            P3d ptX, P3d ptY, boolean checkRadius);
 
-  abstract protected void outputEllipsoid(P3 center, P3[] points,
+  abstract protected void outputEllipsoid(P3d center, P3d[] points,
                                           short colix);
 
-  abstract protected void outputSphere(P3 ptCenter, float f, short colix, boolean checkRadius);
+  abstract protected void outputSphere(P3d ptCenter, double f, short colix, boolean checkRadius);
 
-  abstract protected void outputTextPixel(P3 pt, int argb);
+  abstract protected void outputTextPixel(P3d pt, int argb);
 
-  abstract protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3,
+  abstract protected void outputTriangle(T3d pt1, T3d pt2, T3d pt3,
                                          short colix);
 
   // these are called by Export3D:
@@ -203,11 +203,11 @@ abstract public class __CartesianExporter extends ___Exporter {
   }
 
   @Override
-  void drawAtom(Atom atom, float radius) {
+  void drawAtom(Atom atom, double radius) {
     if (Logger.debugging)
       outputComment("atom " + atom);
     short colix = atom.colixAtom;
-    outputSphere(atom, radius == 0 ? atom.madAtom / 2000f : radius, colix, C.isColixTranslucent(colix));
+    outputSphere(atom, radius == 0 ? atom.madAtom / 2000d : radius, colix, C.isColixTranslucent(colix));
   }
 
   @Override
@@ -215,20 +215,20 @@ abstract public class __CartesianExporter extends ___Exporter {
     // draw circle
     tempP3.set(x, y, z);
     tm.unTransformPoint(tempP3, tempP1);
-    float radius = vwr.tm.unscaleToScreen(z, diameter) / 2;
+    double radius = vwr.tm.unscaleToScreen(z, diameter) / 2;
     tempP3.set(x, y, z + 1);
     tm.unTransformPoint(tempP3, tempP3);
     outputCircle(tempP1, tempP3, radius, colix, doFill);
   }
 
   @Override
-  boolean drawEllipse(P3 ptCenter, P3 ptX, P3 ptY, short colix,
+  boolean drawEllipse(P3d ptCenter, P3d ptX, P3d ptY, short colix,
                       boolean doFill) {
     tempV1.sub2(ptX, ptCenter);
     tempV2.sub2(ptY, ptCenter);
     tempV2.cross(tempV1, tempV2);
     tempV2.normalize();
-    tempV2.scale(doFill ? 0.002f : 0.005f);
+    tempV2.scale(doFill ? 0.002f : 0.005d);
     tempP1.sub2(ptCenter, tempV2);
     tempP2.add2(ptCenter, tempV2);
     return outputCylinder(ptCenter, tempP1, tempP2, colix,
@@ -254,12 +254,12 @@ abstract public class __CartesianExporter extends ___Exporter {
 
   @Override
   void fillConeScreen(short colix, byte endcap, int screenDiameter,
-                      P3 screenBase, P3 screenTip, boolean isBarb) {
+                      P3d screenBase, P3d screenTip, boolean isBarb) {
     tm.unTransformPoint(screenBase, tempP1);
     tm.unTransformPoint(screenTip, tempP2);
-    float radius = vwr.tm.unscaleToScreen(screenBase.z, screenDiameter) / 2;
-    if (radius < 0.05f)
-      radius = 0.05f;
+    double radius = vwr.tm.unscaleToScreen(screenBase.z, screenDiameter) / 2;
+    if (radius < 0.05d)
+      radius = 0.05d;
     outputCone(tempP1, tempP2, radius, colix);
   }
 
@@ -268,10 +268,10 @@ abstract public class __CartesianExporter extends ___Exporter {
    * bond order -2 -- multiple bond, Cartesian 
    */
   @Override
-  void drawCylinder(P3 ptA, P3 ptB, short colix1, short colix2,
+  void drawCylinder(P3d ptA, P3d ptB, short colix1, short colix2,
                     byte endcaps, int mad, int bondOrder) {
     setTempPoints(ptA, ptB, bondOrder < 0);
-    float radius = mad / 2000f;
+    double radius = mad / 2000d;
     if (Logger.debugging)
       outputComment("bond " + ptA + " " + ptB);
     if (colix1 == colix2 || noColor) {
@@ -298,41 +298,41 @@ abstract public class __CartesianExporter extends ___Exporter {
 
   @Override
   void fillCylinderScreenMad(short colix, byte endcaps, int mad,
-                             P3 screenA, P3 screenB) {
-    float radius = mad / 2000f;
+                             P3d screenA, P3d screenB) {
+    double radius = mad / 2000d;
     setTempPoints(screenA, screenB, false);
     outputCylinder(null, tempP1, tempP2, colix, endcaps, radius, null, null, true);
   }
 
   @Override
   void fillCylinderScreen(short colix, byte endcaps, int screenDiameter,
-                          P3 screenA, P3 screenB, P3 ptA, P3 ptB, float radius) {
+                          P3d screenA, P3d screenB, P3d ptA, P3d ptB, double radius) {
     if (ptA != null) {
-      drawCylinder(ptA, ptB, colix, colix, endcaps, Math.round(radius * 2000f), -1);
+      drawCylinder(ptA, ptB, colix, colix, endcaps, (int) Math.round(radius * 2000d), -1);
       return;
     }    
     // vectors, polyhedra
     // was (int) in older version
-    int mad = Math.round(vwr.tm.unscaleToScreen((screenA.z + screenB.z) / 2,
+    int mad = (int) Math.round(vwr.tm.unscaleToScreen((screenA.z + screenB.z) / 2,
         screenDiameter) * 1000);
     fillCylinderScreenMad(colix, endcaps, mad, screenA, screenB);
   }
 
   @Override
-  void fillEllipsoid(P3 center, P3[] points, short colix, int x,
-                     int y, int z, int diameter, M3 toEllipsoidal,
-                     double[] coef, M4 deriv, P3[] octantPoints) {
+  void fillEllipsoid(P3d center, P3d[] points, short colix, int x,
+                     int y, int z, int diameter, M3d toEllipsoidal,
+                     double[] coef, M4d deriv, P3d[] octantPoints) {
     outputEllipsoid(center, points, colix);
   }
 
   @Override
-  void fillSphere(short colix, int diameter, P3 pt) {
+  void fillSphere(short colix, int diameter, P3d pt) {
     tm.unTransformPoint(pt, tempP1);
     outputSphere(tempP1, vwr.tm.unscaleToScreen(pt.z, diameter) / 2, colix, true);
   }
 
   @Override
-  protected void fillTriangle(short colix, T3 ptA, T3 ptB, T3 ptC,
+  protected void fillTriangle(short colix, T3d ptA, T3d ptB, T3d ptC,
                               boolean twoSided) {
     
     // fillTriangleTwoSided
@@ -364,20 +364,20 @@ abstract public class __CartesianExporter extends ___Exporter {
    * @param tempP2  
    * @param tempP3  
    */
-  protected void outputSolidPlate(P3 tempP1, P3 tempP2, P3 tempP3, @SuppressWarnings("unused") short colix) {
+  protected void outputSolidPlate(P3d tempP1, P3d tempP2, P3d tempP3, @SuppressWarnings("unused") short colix) {
     // VRML/STL only
   }
 
-  protected M4 sphereMatrix = new M4();
+  protected M4d sphereMatrix = new M4d();
 
-  protected void setSphereMatrix(T3 center, float rx, float ry, float rz,
-                                 A4 a, M4 sphereMatrix) {
+  protected void setSphereMatrix(T3d center, double rx, double ry, double rz,
+                                 A4d a, M4d sphereMatrix) {
     if (a != null) {
-      M3 m = new M3();
+      M3d m = new M3d();
       m.m00 = rx;
       m.m11 = ry;
       m.m22 = rz;
-      M3 mq = new M3().setAA(a);
+      M3d mq = new M3d().setAA(a);
       mq.mul(m);
       sphereMatrix.setToM3(mq);
     } else {

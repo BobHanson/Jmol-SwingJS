@@ -30,7 +30,7 @@ import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Edge;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 
 import java.util.Hashtable;
@@ -207,7 +207,7 @@ public class Sticks extends Shape {
 
   @Override
   public boolean checkObjectHovered(int x, int y, BS bsVisible) {
-    P3 pt = new P3();
+    P3d pt = new P3d();
     Bond bond = findPickedBond(x, y, bsVisible, pt, closestAtom);
     if (bond == null)
       return false;
@@ -219,7 +219,7 @@ public class Sticks extends Shape {
   @Override
   public Map<String, Object> checkObjectClicked(int x, int y, int modifiers,
                                     BS bsVisible, boolean drawPicking) {
-    P3 pt = new P3();
+    P3d pt = new P3d();
     Bond bond = findPickedBond(x, y, bsVisible, pt, closestAtom);
     if (bond == null)
       return null;
@@ -249,7 +249,7 @@ public class Sticks extends Shape {
    * @param closestAtom 
    * @return picked bond or null
    */
-  private Bond findPickedBond(int x, int y, BS bsVisible, P3 pt, int[] closestAtom) {
+  private Bond findPickedBond(int x, int y, BS bsVisible, P3d pt, int[] closestAtom) {
     int dmin2 = MAX_BOND_CLICK_DISTANCE_SQUARED;
     if (vwr.gdata.isAntialiased()) {
       x <<= 1;
@@ -257,7 +257,7 @@ public class Sticks extends Shape {
       dmin2 <<= 1;
     }
     Bond pickedBond = null;
-    P3 v = new P3();
+    P3d v = new P3d();
     Bond[] bonds = ms.bo;
     for (int i = ms.bondCount; --i >= 0;) {
       Bond bond = bonds[i];
@@ -270,13 +270,13 @@ public class Sticks extends Shape {
       v.ave(atom1, atom2);
       int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
       if (d2 >= 0 && Math.abs(atom1.sY - atom2.sY) + Math.abs(atom1.sX - atom2.sX)> XY_THREASHOLD  ) {
-        float f = 1f * (ptXY.x - atom1.sX) / (atom2.sX - atom1.sX);
-        if (f < 0.4f || f > 0.6f)
+        double f = 1d * (ptXY.x - atom1.sX) / (atom2.sX - atom1.sX);
+        if (f < 0.4d || f > 0.6d)
           continue;
         dmin2 = d2;
         pickedBond = bond;
         if (closestAtom != null)
-          closestAtom[0] = (f < 0.5f ? atom1.i : atom2.i);
+          closestAtom[0] = (f < 0.5d ? atom1.i : atom2.i);
         pt.setT(v);
       }
     }

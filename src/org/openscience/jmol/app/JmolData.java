@@ -72,7 +72,7 @@ public class JmolData {
 //      if (jmolApp.info.containsKey("noDisplay"))
 //        jmolApp.info.put("noGraphics", Boolean.TRUE);
 //      else
-//        System.out.println("Add -n (no GRAPHICS) for faster performance if you are not creating images.");
+//System.out.println("Add -n (no GRAPHICS) for faster performance if you are not creating images.");
     }
     new JmolData(jmolApp);
   }

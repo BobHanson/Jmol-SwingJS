@@ -349,10 +349,10 @@ public class QCSchemaUnits {
   }
 
 //  static {
-//    System.out.println(getUnitConversion("Angstroms", "cm"));
-//    System.out.println(getUnitConversion("Angstroms", "bohr"));
-//    System.out.println(getUnitConversion("bohr", "Angstroms"));
-//    System.out.println(getUnitConversion("AX", "bohr"));
-//    System.out.println(getUnitConversion("bohr", "AX"));
+//System.out.println(getUnitConversion("Angstroms", "cm"));
+//System.out.println(getUnitConversion("Angstroms", "bohr"));
+//System.out.println(getUnitConversion("bohr", "Angstroms"));
+//System.out.println(getUnitConversion("AX", "bohr"));
+//System.out.println(getUnitConversion("bohr", "AX"));
 //  }
 }

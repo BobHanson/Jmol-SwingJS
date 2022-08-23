@@ -27,12 +27,12 @@ import org.jmol.modelset.Atom;
 import org.jmol.modelset.Text;
 import org.jmol.shape.Hover;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 public class HoverRenderer extends ShapeRenderer {
   
-  private float[] tempXY = new float[3];
-  private P3 ptTemp;
+  private double[] tempXY = new double[3];
+  private P3d ptTemp;
 
   @Override
   protected boolean render() {
@@ -40,7 +40,7 @@ public class HoverRenderer extends ShapeRenderer {
     if (tm.isNavigating())
       return false;
     if (ptTemp == null)
-      ptTemp = new P3();
+      ptTemp = new P3d();
     Hover hover = (Hover) shape;
     boolean antialias = g3d.isAntialiased();
     Text text = hover.hoverText;

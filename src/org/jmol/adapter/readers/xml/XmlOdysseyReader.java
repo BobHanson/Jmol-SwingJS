@@ -27,7 +27,7 @@ package org.jmol.adapter.readers.xml;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.api.JmolAdapter;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 /**
@@ -74,8 +74,8 @@ public class XmlOdysseyReader extends XmlReader {
       if (atts.containsKey("xyz")) {
         String xyz = atts.get("xyz");
         String[] tokens = PT.getTokens(xyz);
-        atom.set(parseFloatStr(tokens[0]), parseFloatStr(tokens[1]),
-            parseFloatStr(tokens[2]));
+        atom.set(parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]),
+            parseDoubleStr(tokens[2]));
       }
       if (atts.containsKey("element")) {
         atom.elementSymbol = atts.get("element");
@@ -106,16 +106,16 @@ public class XmlOdysseyReader extends XmlReader {
     }
     if ("boundary".equals(localName)) {
       String[] boxDim = PT.getTokens(atts.get("box"));
-      float x = parseFloatStr(boxDim[0]);
-      float y = parseFloatStr(boxDim[1]);
-      float z = parseFloatStr(boxDim[2]);
+      double x = parseDoubleStr(boxDim[0]);
+      double y = parseDoubleStr(boxDim[1]);
+      double z = parseDoubleStr(boxDim[2]);
       parent.setUnitCellItem(0, x);
       parent.setUnitCellItem(1, y);
       parent.setUnitCellItem(2, z);
       parent.setUnitCellItem(3, 90);
       parent.setUnitCellItem(4, 90);
       parent.setUnitCellItem(5, 90);
-      P3 pt = P3.new3(-x / 2, -y / 2, -z / 2);
+      P3d pt = P3d.new3(-x / 2, -y / 2, -z / 2);
       //asc.setCurrentModelInfo("periodicOriginXyz", pt);
       Atom[] atoms = asc.atoms;
       for (int i = asc.ac; --i >= 0;) {
@@ -160,7 +160,7 @@ public class XmlOdysseyReader extends XmlReader {
   @Override
   void processEndElement(String localName) {
     if ("atom".equals(localName)) {
-      if (atom.elementSymbol != null && !Float.isNaN(atom.z)) {
+      if (atom.elementSymbol != null && !Double.isNaN(atom.z)) {
         asc.addAtomWithMappedName(atom);
       }
       atom = null;

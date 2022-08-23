@@ -33,7 +33,7 @@ import javax.swing.JOptionPane;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
@@ -545,7 +545,7 @@ public class ScriptManager implements JmolScriptManager {
    * 
    */
   @Override
-  public void openFileAsync(String fname, int flags) {
+  public void openFileAsync(String fname, int flags, String type) {
     boolean scriptOnly = ((flags & SCRIPT_ONLY) != 0);
     if (!scriptOnly && (flags & CHECK_DIMS) != 0 && FileManager.isEmbeddable(fname)) 
       checkResize(fname);
@@ -571,7 +571,10 @@ public class ScriptManager implements JmolScriptManager {
       if (fname.endsWith("jvxl")) {
         cmd = "isosurface ";
       } else if (!fname.toLowerCase().endsWith(".spt")) {
-        String type = getDragDropFileTypeName(fname);
+        if (type == null)
+          type = getDragDropFileTypeName(fname);
+        else if (!type.endsWith("::"))
+          type += "::";
         if (type == null) {
           try {
             BufferedInputStream bis = vwr.getBufferedInputStream(fname);
@@ -742,7 +745,7 @@ public class ScriptManager implements JmolScriptManager {
    *        list of point positions for the added hydrogens?
    */
   @Override
-  public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts,
+  public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3d[] pts,
                                Map<String, Object> htParams)
       throws Exception {
     int iatom = bsAtoms.nextSetBit(0);
@@ -781,8 +784,8 @@ public class ScriptManager implements JmolScriptManager {
     sb.appendI(pts.length).append("\n").append(JC.ADD_HYDROGEN_TITLE)
         .append("#noautobond").append("\n");
     for (int i = 0; i < pts.length; i++)
-      sb.append("H ").appendF(pts[i].x).append(" ").appendF(pts[i].y)
-          .append(" ").appendF(pts[i].z).append(" - - - - ").appendI(++atomno)
+      sb.append("H ").appendD(pts[i].x).append(" ").appendD(pts[i].y)
+          .append(" ").appendD(pts[i].z).append(" - - - - ").appendI(++atomno)
           .appendC('\n');
 
     vwr.openStringInlineParamsAppend(sb.toString(), htParams, true);

@@ -3,6 +3,7 @@ package org.jmol.util;
 import java.util.Hashtable;
 
 import javajs.util.AU;
+import javajs.util.PT;
 
 /**
  * A class to allow for more complex vibrations and associated phenomena, such
@@ -268,7 +269,7 @@ public class Modulation {
     }
 
     if (isSpin) {
-      float[] f = ms.axesLengths;
+      double[] f = ms.axesLengths;
       if (f == null)
         System.out.println("Modulation.java axis error");
       switch (axis) {
@@ -294,12 +295,12 @@ public class Modulation {
         ms.z += v;
         break;
       case 'U':
-        ms.addUTens(utens, (float) v);
+        ms.addUTens(utens, v);
         break;
       default:
-        if (Float.isNaN(ms.vOcc))
+        if (Double.isNaN(ms.vOcc))
           ms.vOcc = 0;
-        ms.vOcc += (float) v;
+        ms.vOcc += v;
       }
     }
   }
@@ -346,8 +347,8 @@ public class Modulation {
       }
     }
     legendre = l;
-//    System.out.println(PT.toJSON(null, legendre));
-//    System.out.println("----");
+//System.out.println(PT.toJSON(null, legendre));
+//System.out.println("----");
   }
   
 //  synchronized void calcLegendre0(int m) {
@@ -368,5 +369,9 @@ public class Modulation {
 //      pn = p;
 //    }
 //  }
+
+  public String toString() {
+    return "[Modulation " + type + " " + PT.toJSON(null, params) + "]";
+  }
 
 }

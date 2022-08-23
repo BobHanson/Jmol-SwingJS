@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.Rdr;
 
 import javax.swing.JDialog;
@@ -51,7 +51,7 @@ public class Platform implements GenericPlatform {
   ///// Display 
 
   @Override
-  public void convertPointFromScreen(Object display, P3 ptTemp) {
+  public void convertPointFromScreen(Object display, P3d ptTemp) {
     Display.convertPointFromScreen(display, ptTemp);
   }
 

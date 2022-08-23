@@ -1,7 +1,7 @@
 package org.jmol.awtjs2d;
 
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 /**
  * methods required by Jmol that access java.awt.Component
@@ -55,10 +55,7 @@ class Display {
 //  static void setTransparentCursor(Object canvas) {
 //    /**
 //     * @j2sNative
-//     * 
-//     */
-//    {
-//      System.out.println(canvas);
+//System.out.println(canvas);
 //    }
 //  }
 
@@ -87,7 +84,7 @@ class Display {
     return "null";
   }
 
-  public static void convertPointFromScreen(Object canvas, P3 ptTemp) {    
+  public static void convertPointFromScreen(Object canvas, P3d ptTemp) {    
     /**
      * @j2sNative
      * 

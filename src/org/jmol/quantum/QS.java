@@ -130,7 +130,7 @@ public class QS {
     return (id >= 0 && id < MAXID ? tags[id] : "" + id);
   }
 
-  final public static String getMOString(float[] lc) {
+  final public static String getMOString(double[] lc) {
     SB sb = new SB();
     if (lc.length == 2)
       return "" + (int)(lc[0] < 0 ? -lc[1] : lc[1]);
@@ -138,7 +138,7 @@ public class QS {
     for (int i = 0; i < lc.length; i += 2) {
       if (i > 0)
         sb.append(", ");
-      sb.appendF(lc[i]).append(" ").appendI((int) lc[i + 1]);
+      sb.appendD(lc[i]).append(" ").appendI((int) lc[i + 1]);
     }
     sb.appendC(']');
     return sb.toString();

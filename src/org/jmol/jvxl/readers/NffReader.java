@@ -32,7 +32,7 @@ import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.util.Logger;
 
 import javajs.util.CU;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 /* simple Neutral File Format reader 
  * 
@@ -88,7 +88,8 @@ class NffReader extends PolygonFileReader {
           vertexMap.clear();
           continue;
         case 'f':
-          color = CU.colorTriadToFFRGB(parseFloatStr(tokens[1]), parseFloatStr(tokens[2]), parseFloatStr(tokens[3]));
+          color = CU.colorTriadToFFRGB((float) parseDoubleStr(tokens[1]), 
+              (float) parseDoubleStr(tokens[2]), (float) parseDoubleStr(tokens[3]));
           continue;
         case 'p':
           if (line.equals("pp 3")) {
@@ -109,14 +110,14 @@ class NffReader extends PolygonFileReader {
 
   private final Map<String, Integer> vertexMap = new Hashtable<String, Integer>();
   
-  private final P3 pt = new P3();
+  private final P3d pt = new P3d();
     
   private int getVertex() throws Exception {
     Integer i = vertexMap.get(rd());
     if (i == null) {
       String[] tokens = getTokens();
-      pt.set(parseFloatStr(tokens[0]), parseFloatStr(tokens[1]), parseFloatStr(tokens[2]));
-      if (!Float.isNaN(params.scale))
+      pt.set(parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]));
+      if (!Double.isNaN(params.scale))
         pt.scale(params.scale);
       if (isAnisotropic)
         setVertexAnisotropy(pt);

@@ -91,9 +91,9 @@ public abstract class SpartanInputReader extends BasisFunctionReader {
     //0.01429412  0.10442561  0.99443018  0.00000000  0.00000000  0.00000000  0.00000000  1.00000000
     //ENDMOLSTATE
     setTransform(
-        parseFloatStr(tokens[0]), parseFloatStr(tokens[1]), parseFloatStr(tokens[2]),
-        parseFloatStr(tokens[4]), parseFloatStr(tokens[5]), parseFloatStr(tokens[6]),
-        parseFloatStr(tokens[8]), parseFloatStr(tokens[9]), parseFloatStr(tokens[10])
+        parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]),
+        parseDoubleStr(tokens[4]), parseDoubleStr(tokens[5]), parseDoubleStr(tokens[6]),
+        parseDoubleStr(tokens[8]), parseDoubleStr(tokens[9]), parseDoubleStr(tokens[10])
     );
   }
   

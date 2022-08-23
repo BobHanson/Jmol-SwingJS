@@ -30,7 +30,7 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
@@ -119,8 +119,10 @@ public class GenNBOReader extends MOReader {
     is47File = (line1.indexOf("$GENNBO") >= 0 || line1.indexOf("$NBO") >= 0); // GENNBO 6
     if (is47File) {
       if (line1.indexOf("BOHR") >= 0) {
-        fileOffset = new P3();
-        fileScaling = P3.new3(ANGSTROMS_PER_BOHR,ANGSTROMS_PER_BOHR,ANGSTROMS_PER_BOHR);
+        fileOffset = new P3d();
+        fileScaling = P3d.new3((double) ANGSTROMS_PER_BOHR,
+            (double) ANGSTROMS_PER_BOHR,
+            (double) ANGSTROMS_PER_BOHR);
       }
       readData47();
       return;
@@ -250,7 +252,7 @@ public class GenNBOReader extends MOReader {
   }
 
   private String getFileData(String ext) throws Exception {
-    String fileName = FileManager.stripTypePrefix((String) htParams.get("fullPathName"));
+    String fileName = filePath;//FileManager.stripTypePrefix((String) htParams.get("fullPathName"));
     int pt = fileName.lastIndexOf(".");
     if (pt < 0)
       pt = fileName.length();
@@ -457,9 +459,9 @@ public class GenNBOReader extends MOReader {
       int[] nptr = getIntData();
       // read basis functions
       shells = new  Lst<int[]>();
-      gaussians = AU.newFloat2(gaussianCount);
+      gaussians = AU.newDouble2(gaussianCount);
       for (int i = 0; i < gaussianCount; i++)
-        gaussians[i] = new float[6];
+        gaussians[i] = new double[6];
       nOrbitals = 0;
       int ptCenter = 0;
       String l = line;
@@ -589,11 +591,11 @@ public class GenNBOReader extends MOReader {
       if (line.indexOf("$END") >= 0)
         break;
       line = line.substring(line.indexOf("=") + 1);
-      float[] temp = fillFloatArray(line, 0, new float[gaussianCount]);
+      double[] temp = fillDoubleArray(line, 0, new double[gaussianCount]);
       for (int i = 0; i < gaussianCount; i++) {
-        gaussians[i][j] = temp[i];
+        gaussians[i][j] = (double) temp[i];
         if (j > 1)
-          gaussians[i][5] += temp[i];
+          gaussians[i][5] += (double) temp[i];
       }
     }
     // GenNBO lists S, P, D, F, G orbital coefficients separately
@@ -670,9 +672,9 @@ public class GenNBOReader extends MOReader {
 
     // read basis functions
     shells = new  Lst<int[]>();
-    gaussians = AU.newFloat2(gaussianCount);
+    gaussians = AU.newDouble2(gaussianCount);
     for (int i = 0; i < gaussianCount; i++)
-      gaussians[i] = new float[6];
+      gaussians[i] = new double[6];
     rd(); // ----------
     nOrbitals = 0;
     for (int i = 0; i < shellCount; i++) {
@@ -853,15 +855,15 @@ public class GenNBOReader extends MOReader {
             // must skip "beta  spin"
           }
           Map<String, Object> mo = orbitals.get(i);
-          float[] coefs = new float[nAOs];
+          double[] coefs = new double[nAOs];
           if (isAO) {
             coefs[i % nAOs] = 1;
           } else if (i >= nAOs && hasNoBeta){
-            coefs = (float[]) orbitals.get(i % nAOs).get("coefficients");
+            coefs = (double[]) orbitals.get(i % nAOs).get("coefficients");
           } else {
             for (int j = 0; j < nAOs; j++) {
-              coefs[j] = PT.parseFloatChecked(data, len, next, false);
-              if (Float.isNaN(coefs[j]))
+              coefs[j] = PT.parseDoubleChecked(data, len, next, false);
+              if (Double.isNaN(coefs[j]))
                 System.out.println("oops = IsoExt ");
             }
           }
@@ -894,12 +896,12 @@ public class GenNBOReader extends MOReader {
   private static void getNBOOccupanciesStatic(Lst<Map<String, Object>> orbitals,
                                               int nAOs, int pt, String data,
                                               int len, int[] next) {
-    float[] occupancies = new float[nAOs];
+    double[] occupancies = new double[nAOs];
     for (int j = 0; j < nAOs; j++)
-      occupancies[j] = PT.parseFloatChecked(data, len, next, false);
+      occupancies[j] = PT.parseDoubleChecked(data, len, next, false);
     for (int i = 0; i < nAOs; i++) {
       Map<String, Object> mo = orbitals.get(pt + i);
-      mo.put("occupancy", Float.valueOf(occupancies[i]));
+      mo.put("occupancy", Double.valueOf(occupancies[i]));
     }
   }
 
@@ -947,20 +949,20 @@ public class GenNBOReader extends MOReader {
           discardLinesUntilContains2("BETA", "beta");
       }
       Map<String, Object> mo = orbitals.get(i);
-      float[] coefs = new float[nAOs];
+      double[] coefs = new double[nAOs];
       if (isAO) {
         coefs[pt % nAOs] = 1;
       } else if (pt >= nNOs && hasNoBeta){
-        coefs = (float[]) orbitals.get(pt % nNOs).get("coefficients");
+        coefs = (double[]) orbitals.get(pt % nNOs).get("coefficients");
       } else {
         if (line == null) {
-          while (rd() != null && Float.isNaN(parseFloatStr(line))) {
+          while (rd() != null && Double.isNaN(parseDoubleStr(line))) {
             filterMO(); //switch a/b
           }
         } else {
           line = null;
         }
-        fillFloatArray(line, 0, coefs);
+        fillDoubleArray(line, 0, coefs);
         line = null;
       }
       mo.put("coefficients", coefs);
@@ -980,11 +982,11 @@ public class GenNBOReader extends MOReader {
    * @throws Exception
    */
   private void readNBO37Occupancies(int pt) throws Exception {
-    float[] occupancies = new float[nNOs];
-    fillFloatArray(null, 0, occupancies);
+    double[] occupancies = new double[nNOs];
+    fillDoubleArray(null, 0, occupancies);
     for (int i = 0; i < nNOs; i++) {
       Map<String, Object> mo = orbitals.get(nOrbitals0 + pt - nNOs + i);
-      mo.put("occupancy", Float.valueOf(occupancies[i]));
+      mo.put("occupancy", Double.valueOf(occupancies[i]));
     }
   }
 
@@ -1001,7 +1003,7 @@ public class GenNBOReader extends MOReader {
       if (addOccupancy)
         mo.put(
             "occupancy",
-            Float.valueOf(alphaBeta ? 1 : type.indexOf("*") >= 0
+            Double.valueOf(alphaBeta ? 1 : type.indexOf("*") >= 0
                 || type.indexOf("(ry)") >= 0 ? 0 : 2));
     }
   }

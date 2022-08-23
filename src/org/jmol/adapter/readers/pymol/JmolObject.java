@@ -30,21 +30,20 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.jmol.atomdata.RadiusData;
-import javajs.util.BS;
 import org.jmol.modelset.MeasurementData;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Point3fi;
-
-import javajs.util.Lst;
-import javajs.util.SB;
-import javajs.util.P3;
-
-import javajs.util.PT;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.ShapeManager;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.SB;
 
 /**
  * a class to store rendering information prior to finishing file loading,
@@ -64,7 +63,7 @@ class JmolObject {
 
   String jmolName;
   int argb;
-  float translucency = 0;
+  double translucency = 0;
   boolean visible = true;
   RadiusData rd;
   public String cacheID;
@@ -183,7 +182,7 @@ class JmolObject {
     case T.scene:
       sm.vwr.stm.saveScene(jmolName, (Map<String, Object>) info);
       sm.vwr.stm.saveOrientation(jmolName,
-          (float[]) ((Map<String, Object>) info).get("pymolView"));
+          (double[]) ((Map<String, Object>) info).get("pymolView"));
       return;
     case JC.SHAPE_LABELS:
       sm.loadShape(id);
@@ -276,7 +275,7 @@ class JmolObject {
         String only = (String) ((Object[]) info)[1];
         only = " only";
         BS bsCarve = (BS) ((Object[]) info)[2];
-        float carveDistance = ((Float) ((Object[]) info)[3]).floatValue();
+        double carveDistance = ((Number) ((Object[]) info)[3]).doubleValue();
         // not implementing "not only" yet because if we did that, since we have so
         // many sets of atoms, we could have real problems here.
         String resolution = "";
@@ -286,15 +285,15 @@ class JmolObject {
         }
         boolean haveMep = PT.isOneOf(sID, mepList);
         String model = m.getModelNumberDotted(modelIndex);
-        //        BS bsIgnore = sm.vwr.getAtomsWithinRadius(0.1f, bsAtoms, true, 
-        //            new RadiusData(null, 0.1f, EnumType.ABSOLUTE, null));
+        //        BS bsIgnore = sm.vwr.getAtomsWithinRadius(0.1d, bsAtoms, true, 
+        //            new RadiusData(null, 0.1d, EnumType.ABSOLUTE, null));
         //        bsIgnore.andNot(bsAtoms);
         //        String ignore = " ignore " + Escape.eBS(bsIgnore);
         String ignore = "";
         String type = (size < 0 ? " sasurface " : " solvent ");
         sb.append(" model ").append(model).append(resolution)
             .append(" select ").append(Escape.eBS(bsAtoms)).append(only)
-            .append(ignore).append(type).appendF(Math.abs(size / 1000f));
+            .append(ignore).append(type).appendD(Math.abs(size / 1000d));
         if (!haveMep) {
           if (argb == 0)
             sb.append(" map property color");
@@ -315,8 +314,8 @@ class JmolObject {
       Lst<Object> mep = (Lst<Object>) info;
       sID = mep.get(mep.size() - 2).toString();
       String mapID = mep.get(mep.size() - 1).toString();
-      float min = PyMOLReader.floatAt(PyMOLReader.listAt(mep, 3), 0);
-      float max = PyMOLReader.floatAt(PyMOLReader.listAt(mep, 3), 2);
+      double min = PyMOLReader.floatAt(PyMOLReader.listAt(mep, 3), 0);
+      double max = PyMOLReader.floatAt(PyMOLReader.listAt(mep, 3), 2);
       sb = new SB();
       sb.append(";isosurface ID ").append(PT.esc(sID)).append(" map ").append(PT.esc(cacheID)).append(" ")
           .append(PT.esc(mapID)).append(
@@ -337,11 +336,11 @@ class JmolObject {
           .append(" color ").append(Escape.escapeColor(argb)).append("  ").append(PT.esc(cacheID)).append(" ")
           .append(PT.esc(sID)).append(" mesh nofill frontonly");
       Lst<Object> list = PyMOLReader.sublistAt(mesh, 2, 0);
-      float within = PyMOLReader.floatAt(list, 11);  
+      double within = PyMOLReader.floatAt(list, 11);  
       list = PyMOLReader.listAt(list, 12);
       if (within > 0) {
-        P3 pt = new P3();
-        sb.append(";isosurface slab within ").appendF(within).append(" [ ");
+        P3d pt = new P3d();
+        sb.append(";isosurface slab within ").appendD(within).append(" [ ");
         for (int j = list.size() - 3; j >= 0; j -= 3) {
           PyMOLReader.pointAt(list, j, pt);
           sb.append(Escape.eP(pt));
@@ -372,7 +371,7 @@ class JmolObject {
       sm.setShapePropertyBs(id, color, Integer.valueOf(argb), bsAtoms);
     if (translucency > 0) {
       sm.setShapePropertyBs(id, "translucentLevel",
-          Float.valueOf(translucency), bsAtoms);
+          Double.valueOf(translucency), bsAtoms);
       sm.setShapePropertyBs(id, "translucency", "translucent", bsAtoms);
     } else if (colors != null)
       sm.setShapePropertyBs(id, "colors", colors, bsAtoms);
@@ -387,11 +386,11 @@ class JmolObject {
     return (iAtom < 0 ? -1 : m.at[iAtom].mi);
   }
 
-  void setColors(short[] colixes, float translucency) {
-    colors = new Object[] {colixes, Float.valueOf(translucency) };
+  void setColors(short[] colixes, double translucency) {
+    colors = new Object[] {colixes, Double.valueOf(translucency) };
   }
   
-  void setSize(float size) {
+  void setSize(double size) {
     this.size = (int) (size * 1000);
   }
 

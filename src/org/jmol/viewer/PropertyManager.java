@@ -62,14 +62,14 @@ import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.Base64;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 /**
  * 
@@ -372,23 +372,23 @@ public class PropertyManager implements JmolPropertyManager {
             ? extractProperty(v.get(pt), args, ptr, null, true)
             : "");
       }
-      if (property instanceof M3) {
-        M3 m = (M3) property;
-        float[][] f = new float[][] { new float[] { m.m00, m.m01, m.m02 },
-            new float[] { m.m10, m.m11, m.m12 },
-            new float[] { m.m20, m.m21, m.m22 } };
+      if (property instanceof M3d) {
+        M3d m = (M3d) property;
+        double[][] f = new double[][] { new double[] { m.m00, m.m01, m.m02 },
+            new double[] { m.m10, m.m11, m.m12 },
+            new double[] { m.m20, m.m21, m.m22 } };
         if (pt < 0)
           pt += 3;
         return (pt >= 0 && pt < 3 ? extractProperty(f, args, --ptr, null, true)
             : "");
       }
-      if (property instanceof M4) {
-        M4 m = (M4) property;
-        float[][] f = new float[][] {
-            new float[] { m.m00, m.m01, m.m02, m.m03 },
-            new float[] { m.m10, m.m11, m.m12, m.m13 },
-            new float[] { m.m20, m.m21, m.m22, m.m23 },
-            new float[] { m.m30, m.m31, m.m32, m.m33 } };
+      if (property instanceof M4d) {
+        M4d m = (M4d) property;
+        double[][] f = new double[][] {
+            new double[] { m.m00, m.m01, m.m02, m.m03 },
+            new double[] { m.m10, m.m11, m.m12, m.m13 },
+            new double[] { m.m20, m.m21, m.m22, m.m23 },
+            new double[] { m.m30, m.m31, m.m32, m.m33 } };
         if (pt < 0)
           pt += 4;
         return (pt >= 0 && pt < 4 ? extractProperty(f, args, --ptr, null, true)
@@ -406,12 +406,6 @@ public class PropertyManager implements JmolPropertyManager {
           pt += dlist.length;
         return (pt >= 0 && pt < dlist.length ? Double.valueOf(dlist[pt]) : "");
       }
-      if (AU.isAF(property)) {
-        float[] flist = (float[]) property;
-        if (pt < 0)
-          pt += flist.length;
-        return (pt >= 0 && pt < flist.length ? Float.valueOf(flist[pt]) : "");
-      }
       if (AU.isAII(property)) {
         int[][] iilist = (int[][]) property;
         if (pt < 0)
@@ -420,8 +414,8 @@ public class PropertyManager implements JmolPropertyManager {
             ? extractProperty(iilist[pt], args, ptr, null, true)
             : "");
       }
-      if (AU.isAFF(property)) {
-        float[][] fflist = (float[][]) property;
+      if (AU.isADD(property)) {
+        double[][] fflist = (double[][]) property;
         if (pt < 0)
           pt += fflist.length;
         return (pt >= 0 && pt < fflist.length
@@ -874,7 +868,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_STATE_INFO:
       return vwr.getStateInfo3(myParam.toString(), 0, 0);
     case PROP_TRANSFORM_INFO:
-      return M3.newM3(vwr.tm.matrixRotate);
+      return M3d.newM3(vwr.tm.matrixRotate);
     case PROP_DOM_INFO:
       return getAnnotationInfo(myParam, T.domains);
     case PROP_VAL_INFO:
@@ -1067,7 +1061,7 @@ public class PropertyManager implements JmolPropertyManager {
       if (mi.properties != null) {
         model.put("modelProperties", mi.properties);
       }
-      Float energy = (Float) m.getInfo(i, "Energy");
+      Number energy = (Number) m.getInfo(i, "Energy");
       if (energy != null) {
         model.put("energy", energy);
       }
@@ -1200,6 +1194,8 @@ public class PropertyManager implements JmolPropertyManager {
     String uc = type.toUpperCase();
     if (PT.isOneOf(uc, ";CIF;QCJSON;XSF;PWMAT;"))
       return getModel(uc, bs, null, null);
+    if (uc.equals("PWSLAB"))
+      return getModel("PWMAT", bs, new Object[] { "slab"}, null);
     if (uc.equals("CIFP1"))
       return getModel("CIF", bs, new Object[] { "P1"}, null);
     if (uc.equals("CML"))
@@ -1263,14 +1259,14 @@ public class PropertyManager implements JmolPropertyManager {
     boolean isOK = true;
     if (ms.trajectory != null && !allTrajectories)
       ms.trajectory.selectDisplayed(bsModels);
-    Quat q = (doTransform ? vwr.tm.getRotationQ() : null);
+    Qd q = (doTransform ? vwr.tm.getRotationQ() : null);
     if (isXYZ) {
       LabelToken[] tokensXYZ = LabelToken.compile(vwr,
           (asXYZRN ? "%-2e _XYZ_ %4.2[vdw] 1 [%n]%r.%a#%i\n" : "%-2e _XYZ_\n"),
           '\0', null);
       LabelToken[] tokensVib = (asXYZVIB ? LabelToken.compile(vwr,
           "%-2e _XYZ_ %12.5vx %12.5vy %12.5vz\n", '\0', null) : null);
-      P3 ptTemp = new P3();
+      P3d ptTemp = new P3d();
       for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels
           .nextSetBit(i + 1)) {
         BS bsTemp = BSUtil.copy(bsAtoms);
@@ -1482,7 +1478,7 @@ public class PropertyManager implements JmolPropertyManager {
 
   public Lst<Map<String, Object>> getAllAtomInfo(BS bs) {
     Lst<Map<String, Object>> V = new  Lst<Map<String, Object>>();
-    P3 ptTemp = new P3();
+    P3d ptTemp = new P3d();
     int imodel = -1;
     SymmetryInterface ucell = null;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
@@ -1496,28 +1492,28 @@ public class PropertyManager implements JmolPropertyManager {
     return V;
   }
 
-  private Map<String, Object> getAtomInfoLong(int i, P3 ptTemp, SymmetryInterface ucell) {
+  private Map<String, Object> getAtomInfoLong(int i, P3d ptTemp, SymmetryInterface ucell) {
     ModelSet ms = vwr.ms;
     Atom atom = ms.at[i];
     Map<String, Object> info = new Hashtable<String, Object>();
     ms.getAtomIdentityInfo(i, info, ptTemp);
     info.put("element", ms.getElementName(i));
     info.put("elemno", Integer.valueOf(ms.at[i].getElementNumber()));
-    info.put("x", Float.valueOf(atom.x));
-    info.put("y", Float.valueOf(atom.y));
-    info.put("z", Float.valueOf(atom.z));
+    info.put("x", Double.valueOf(atom.x));
+    info.put("y", Double.valueOf(atom.y));
+    info.put("z", Double.valueOf(atom.z));
     if (ucell != null) {
       ptTemp.setT(atom);
       ucell.toFractional(ptTemp, true);
-      info.put("fx", Float.valueOf(ptTemp.x));
-      info.put("fy", Float.valueOf(ptTemp.y));
-      info.put("fz", Float.valueOf(ptTemp.z));
+      info.put("fx", Double.valueOf(ptTemp.x));
+      info.put("fy", Double.valueOf(ptTemp.y));
+      info.put("fz", Double.valueOf(ptTemp.z));
     }
-    info.put("coord", P3.newP(atom));
+    info.put("coord", P3d.newP(atom));
     if (ms.vibrations != null && ms.vibrations[i] != null)
       ms.vibrations[i].getInfo(info);
     info.put("bondCount", Integer.valueOf(atom.getCovalentBondCount()));
-    info.put("radius", Float.valueOf((float) (atom.getRasMolRadius() / 120.0)));
+    info.put("radius", Double.valueOf((double) (atom.getRasMolRadius() / 120.0)));
     info.put("model", atom.getModelNumberForLabel());
     String shape = atom.atomPropertyString(vwr, T.shape);
     if (shape != null)
@@ -1525,7 +1521,7 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("visible", Boolean.valueOf(atom.checkVisible()));
     info.put("clickabilityFlags", Integer.valueOf(atom.clickabilityFlags));
     info.put("visibilityFlags", Integer.valueOf(atom.shapeVisibilityFlags));
-    info.put("spacefill", Float.valueOf(atom.getRadius()));
+    info.put("spacefill", Double.valueOf(atom.getRadius()));
     String strColor = Escape.escapeColor(vwr
         .gdata.getColorArgbOrGray(atom.colixAtom));
     if (strColor != null)
@@ -1535,10 +1531,10 @@ public class PropertyManager implements JmolPropertyManager {
     if (isTranslucent)
       info.put("translucent", Boolean.valueOf(isTranslucent));
     info.put("formalCharge", Integer.valueOf(atom.getFormalCharge()));
-    info.put("partialCharge", Float.valueOf(atom.getPartialCharge()));
-    float d = atom.getSurfaceDistance100() / 100f;
+    info.put("partialCharge", Double.valueOf(atom.getPartialCharge()));
+    double d = atom.getSurfaceDistance100() / 100d;
     if (d >= 0)
-      info.put("surfaceDistance", Float.valueOf(d));
+      info.put("surfaceDistance", Double.valueOf(d));
     if (ms.am[atom.mi].isBioModel) {
       info.put("resname", atom.getGroup3(false));
       char insCode = atom.group.getInsertionCode();
@@ -1572,7 +1568,7 @@ public class PropertyManager implements JmolPropertyManager {
     if (bsOrArray instanceof String) {
       bsOrArray = vwr.getAtomBitSet(bsOrArray);
     }
-    P3 ptTemp = new P3();
+    P3d ptTemp = new P3d();
     if (bsOrArray instanceof BS[]) {
       bs1 = ((BS[]) bsOrArray)[0];
       BS bs2 = ((BS[]) bsOrArray)[1];
@@ -1599,7 +1595,7 @@ public class PropertyManager implements JmolPropertyManager {
     return v;
   }
 
-  private Map<String, Object> getBondInfo(int i, P3 ptTemp) {
+  private Map<String, Object> getBondInfo(int i, P3d ptTemp) {
     Bond bond = vwr.ms.bo[i];
     Atom atom1 = bond.atom1;
     Atom atom2 = bond.atom2;
@@ -1612,11 +1608,11 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("atom1", infoA);
     info.put("atom2", infoB);
     info.put("jmol_order", "0x" + Integer.toHexString(bond.getBondType()));
-    info.put("order", Float.valueOf(Edge
+    info.put("order", Double.valueOf(Edge
         .getBondOrderNumberFromOrder(bond.getBondType())));
     info.put("type", Edge.getBondOrderNameFromOrder(bond.getBondType()));
-    info.put("radius", Float.valueOf((float) (bond.mad / 2000.)));
-    info.put("length_Ang", Float.valueOf(atom1.distance(atom2)));
+    info.put("radius", Double.valueOf((double) (bond.mad / 2000.)));
+    info.put("length_Ang", Double.valueOf(atom1.distance(atom2)));
     info.put("visible", Boolean.valueOf(bond.shapeVisibilityFlags != 0));
     String strColor = Escape.escapeColor(vwr.gdata.getColorArgbOrGray(bond.colix));
     if (strColor != null)
@@ -1650,7 +1646,7 @@ public class PropertyManager implements JmolPropertyManager {
     Model model = vwr.ms.am[modelIndex];
     int nChains = model.getChainCount(true);
     Lst<Map<String, Lst<Map<String, Object>>>> infoChains = new  Lst<Map<String, Lst<Map<String, Object>>>>();
-    P3 ptTemp = new P3();
+    P3d ptTemp = new P3d();
         for (int i = 0; i < nChains; i++) {
       Chain chain = model.getChainAt(i);
       Lst<Map<String, Object>> infoChain = new  Lst<Map<String, Object>>();
@@ -1733,20 +1729,20 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("displayModelName", (am.cmi >= 0 ? vwr.getModelName(am.cmi) : ""));
     info.put("animationFps", Integer.valueOf(am.animationFps));
     info.put("animationReplayMode", T.nameOf(am.animationReplayMode));
-    info.put("firstFrameDelay", Float.valueOf(am.firstFrameDelay));
-    info.put("lastFrameDelay", Float.valueOf(am.lastFrameDelay));
+    info.put("firstFrameDelay", Double.valueOf(am.firstFrameDelay));
+    info.put("lastFrameDelay", Double.valueOf(am.lastFrameDelay));
     info.put("animationOn", Boolean.valueOf(am.animationOn));
     info.put("animationPaused", Boolean.valueOf(am.animationPaused));
     return info;
   }
 
   private Map<String, Object> getBoundBoxInfo() {
-    P3[] pts = vwr.ms.getBoxInfo(null, 1).getBoundBoxPoints(true);
+    P3d[] pts = vwr.ms.getBoxInfo(null, 1).getBoundBoxPoints(true);
     Map<String, Object> info = new Hashtable<String, Object>();
-    info.put("center", P3.newP(pts[0]));
-    info.put("vector", V3.newV(pts[1]));
-    info.put("corner0", P3.newP(pts[2]));
-    info.put("corner1", P3.newP(pts[3]));
+    info.put("center", P3d.newP(pts[0]));
+    info.put("vector", V3d.newV(pts[1]));
+    info.put("corner0", P3d.newP(pts[2]));
+    info.put("corner1", P3d.newP(pts[3]));
     return info;
   }
 
@@ -1884,15 +1880,15 @@ public class PropertyManager implements JmolPropertyManager {
     } else {
       // plot property x y z....
       bsAtoms = (BS) parameters[0];
-      float[] dataX = (float[]) parameters[1];
-      float[] dataY = (float[]) parameters[2];
-      float[] dataZ = (float[]) parameters[3];
+      double[] dataX = (double[]) parameters[1];
+      double[] dataY = (double[]) parameters[2];
+      double[] dataZ = (double[]) parameters[3];
       boolean haveY = (dataY != null);
       boolean haveZ = (dataZ != null);
-      P3 minXYZ = (P3) parameters[4];
-      P3 maxXYZ = (P3) parameters[5];
-      P3 factors = (P3) parameters[6];
-      P3 center = (P3) parameters[7];
+      P3d minXYZ = (P3d) parameters[4];
+      P3d maxXYZ = (P3d) parameters[5];
+      P3d factors = (P3d) parameters[6];
+      P3d center = (P3d) parameters[7];
       String format = (String) parameters[8];
       String[] properties = (String[]) parameters[9];
       boolean isPDBFormat = (factors != null && format == null);
@@ -1941,7 +1937,7 @@ public class PropertyManager implements JmolPropertyManager {
       }
       String strExtra = "";
       Atom atomLast = null;
-      P3 ptTemp = new P3();
+      P3d ptTemp = new P3d();
       if (!isPDBFormat) {
         if (format == null)
           format = "%-5i %-10s %-13.5f "
@@ -1951,10 +1947,10 @@ public class PropertyManager implements JmolPropertyManager {
       }
       for (int i = bsAtoms.nextSetBit(0), n = 0; i >= 0; i = bsAtoms
           .nextSetBit(i + 1), n++) {
-        float x = dataX[n];
-        float y = (haveY ? dataY[n] : 0f);
-        float z = (haveZ ? dataZ[n] : 0f);
-        if (Float.isNaN(x) || Float.isNaN(y) || Float.isNaN(z))
+        double x = dataX[n];
+        double y = (haveY ? dataY[n] : 0d);
+        double z = (haveZ ? dataZ[n] : 0d);
+        if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z))
           continue;
         Atom a = atoms[i];
         if (isPDBFormat) {
@@ -1963,9 +1959,9 @@ public class PropertyManager implements JmolPropertyManager {
           if (isPDB)
             bsWritten.set(i);
           out.append(PT.sprintf(
-              "%-8.2f%-8.2f%-10.2f    %6.3f          %2s    %s\n", "ssF",
+              "%-8.2d%-8.2d%-10.2d    %6.3f          %2s    %s\n", "ssF",
               new Object[] { a.getElementSymbolIso(false).toUpperCase(),
-                  strExtra, new float[] { x, y, z, 0f } }));
+                  strExtra, new double[] { x, y, z, 0d } }));
           if (atomLast != null
               && atomLast.group.getBioPolymerIndexInModel() == a.group
                   .getBioPolymerIndexInModel())
@@ -1978,19 +1974,19 @@ public class PropertyManager implements JmolPropertyManager {
               format,
               "isF",
               new Object[] { Integer.valueOf(a.getAtomNumber()),
-                  a.getAtomName(), new float[] { x, y, z } }));
+                  a.getAtomName(), new double[] { x, y, z } }));
         } else if (haveY) {
           out.append(PT.sprintf(
               format,
               "isF",
               new Object[] { Integer.valueOf(a.getAtomNumber()),
-                  a.getAtomName(), new float[] { x, y } }));
+                  a.getAtomName(), new double[] { x, y } }));
         } else {
           out.append(PT.sprintf(
               format,
               "isF",
               new Object[] { Integer.valueOf(a.getAtomNumber()),
-                  a.getAtomName(), new float[] { x } }));
+                  a.getAtomName(), new double[] { x } }));
         }
         atomLast = a;
       }

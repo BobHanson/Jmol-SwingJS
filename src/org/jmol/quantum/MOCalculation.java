@@ -27,7 +27,7 @@ import java.util.Map;
 
 import javajs.api.Interface;
 import javajs.util.Lst;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import javajs.util.BS;
 import org.jmol.jvxl.data.VolumeData;
@@ -94,7 +94,7 @@ import org.jmol.util.Logger;
 
 public class MOCalculation extends QuantumCalculation {
 
-  public final static double ROOT3 = 1.73205080756887729f;
+  public final static double ROOT3 = 1.73205080756887729d;
 
   private final static double CUT = -50;
   
@@ -111,13 +111,13 @@ public class MOCalculation extends QuantumCalculation {
   
   private String calculationType;
   private Lst<int[]> shells;
-  public float[][] gaussians;
+  public double[][] gaussians;
   //Hashtable aoOrdersDF;
   private SlaterData[] slaters;
-  private float[] moCoefficients;
+  private double[] moCoefficients;
   private int moCoeff;
   public int gaussianPtr;
-  //private float coefMax = Integer.MAX_VALUE;
+  //private double coefMax = Integer.MAX_VALUE;
   
   public final static int NORM_NONE = 0;
   public final static int NORM_STANDARD = 1;
@@ -128,9 +128,9 @@ public class MOCalculation extends QuantumCalculation {
 
   private int[][] dfCoefMaps;
 
-  private float[] linearCombination;
+  private double[] linearCombination;
 
-  private float[][] coefs;
+  private double[][] coefs;
 
   private double moFactor = 1;
   public boolean havePoints;
@@ -143,16 +143,16 @@ public class MOCalculation extends QuantumCalculation {
 
   public boolean setupCalculation(Map<String, Object> moData, boolean isSlaters, 
                                   VolumeData volumeData, BS bsSelected,
-                        T3[] xyz, Atom[] atoms,
+                        T3d[] xyz, Atom[] atoms,
                         int firstAtomOffset, 
-                        int[][] dfCoefMaps, float[] moCoefficients,
-                        float[] linearCombination, boolean isSquaredLinear, 
-                        float[][] coefs, T3[] points) {
+                        int[][] dfCoefMaps, double[] moCoefficients,
+                        double[] linearCombination, boolean isSquaredLinear, 
+                        double[][] coefs, T3d[] points) {
     
     String calculationType = (String) moData.get("calculationType");
     @SuppressWarnings("unchecked")
     Lst<int[]> shells = (Lst<int[]>) moData.get("shells");
-    float[][] gaussians = (float[][]) moData.get("gaussians");
+    double[][] gaussians = (double[][]) moData.get("gaussians");
     Object slaters = moData.get("slaters");
     // G H I must be explicitly enabled by the reader
     // so that we don't accidentally show non-validated results
@@ -175,7 +175,7 @@ public class MOCalculation extends QuantumCalculation {
     countsXYZ = volumeData.getVoxelCounts();
     initialize(countsXYZ[0], countsXYZ[1], countsXYZ[2], points);
     voxelData = volumeData.getVoxelData();
-    voxelDataTemp = (isSquaredLinear ? new float[nX][nY][nZ] : voxelData);
+    voxelDataTemp = (isSquaredLinear ? new double[nX][nY][nZ] : voxelData);
     setupCoordinates(volumeData.getOriginFloat(), 
         volumeData.getVolumetricVectorLengths(), 
         bsSelected, xyz, atoms, points, false);
@@ -200,7 +200,7 @@ public class MOCalculation extends QuantumCalculation {
   }
 
   @Override
-  public void initialize(int nX, int nY, int nZ, T3[] points) {
+  public void initialize(int nX, int nY, int nZ, T3d[] points) {
     initialize0(nX, nY, nZ, points);
     CX = new double[this.nX];
     CY = new double[this.nY];
@@ -263,7 +263,7 @@ public class MOCalculation extends QuantumCalculation {
 //        c = 0;
 //        for (int i = 0; i < nShells; i++)
 //          c += normalizeShell(i);
-//        //System.out.println("sum[c^2] = " + c + "\t" + Math.sqrt(c));
+//System.out.println("sum[c^2] = " + c + "\t" + Math.sqrt(c));
 //        c = Math.sqrt(c);
 //        atomIndex = firstAtomOffset - 1;
 //        moCoeff = 0;
@@ -310,7 +310,7 @@ public class MOCalculation extends QuantumCalculation {
 //    gaussianPtr = shell[2] - 1;
 //    nGaussians = shell[3];
 //    doShowShellType = doDebug;
-//    //System.out.println(iShell + " basistype is " + basisType);
+//System.out.println(iShell + " basistype is " + basisType);
 //    if (!setCoeffs(basisType, false))
 //      return 0;
 //    for (int i = map.length; --i >= 0;)
@@ -398,11 +398,11 @@ public class MOCalculation extends QuantumCalculation {
     return false;
   }
 
-  private void addValuesSquared(float occupancy) {
+  private void addValuesSquared(double occupancy) {
     for (int ix = nX; --ix >= 0;) {
       for (int iy = nY; --iy >= 0;) {
         for (int iz = nZ; --iz >= 0;) {
-          float value = voxelDataTemp[ix][iy][iz];
+          double value = voxelDataTemp[ix][iy][iz];
           if (value == 0)
             continue;
           voxelData[ix][iy][iz] += value * value * occupancy;
@@ -478,7 +478,7 @@ public class MOCalculation extends QuantumCalculation {
       break;
     case NORM_STANDARD:
       // (8 alpha^3/pi^3)^0.25 exp(-alpha r^2)
-      norm = 0.712705470f; // (8/pi^3)^0.25 = (2/pi)^3/4
+      norm = 0.712705470d; // (8/pi^3)^0.25 = (2/pi)^3/4
       normalizeAlpha = true;
       break;
     case NORM_NWCHEM:
@@ -511,7 +511,7 @@ public class MOCalculation extends QuantumCalculation {
           setMinMax(ix);
         for (int iy = yMax; --iy >= yMin;) {
           double eXY = eX * EY[iy];
-          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          double[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
           for (int iz = zMax; --iz >= zMin;)
             vd[(havePoints ? 0 : iz)] += eXY * EZ[iz];
        }
@@ -533,7 +533,7 @@ public class MOCalculation extends QuantumCalculation {
       break;
     case NORM_STANDARD:
       // (128 alpha^5/pi^3)^0.25 [x|y|z]exp(-alpha r^2)
-      norm = 1.42541094f;
+      norm = 1.42541094d;
       normalizeAlpha = true;
       break;
     case NORM_NWCHEM:
@@ -570,8 +570,8 @@ public class MOCalculation extends QuantumCalculation {
       norm1 = norm2 = 1;
       break;
     case NORM_STANDARD:
-      norm1 = 0.712705470f;
-      norm2 = 1.42541094f;
+      norm1 = 0.712705470d;
+      norm2 = 1.42541094d;
       doNormalize = true;
       break;
     case NORM_NWCHEM:
@@ -632,7 +632,7 @@ public class MOCalculation extends QuantumCalculation {
       for (int iy = yMax; --iy >= yMin;) {
         double eXY = eX * EY[iy];
         double cXY = cX + CY[iy];
-        float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+        double[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
         for (int iz = zMax; --iz >= zMin;) {
           vd[(havePoints ? 0 : iz)] += (cXY + CZ[iz]) * eXY * EZ[iz];
         }
@@ -708,7 +708,7 @@ public class MOCalculation extends QuantumCalculation {
           double axx_x2__ayy_y2__axy_xy = axx_x2 + (CY[iy] + axy_x) * Y[iy];
           double axz_x__ayz_y = axz_x + DYZ[iy];
           double eXY = eX * EY[iy];
-          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          double[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
           for (int iz = zMax; --iz >= zMin;) {
             vd[(havePoints ? 0 : iz)] += (axx_x2__ayy_y2__axy_xy + (CZ[iz] + axz_x__ayz_y) * Z[iz])
                 * eXY * EZ[iz];
@@ -817,7 +817,7 @@ public class MOCalculation extends QuantumCalculation {
 
           cyy = norm2 * y * y;
           cxy = norm1 * x * y;
-          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          double[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
 
           for (int iz = zMax; --iz >= zMin;) {
             z = Z[iz];
@@ -827,7 +827,7 @@ public class MOCalculation extends QuantumCalculation {
             cyz = norm1 * y * z;
 
             vd[(havePoints ? 0 : iz)] += (
-                ad0 * norm5 * (czz - 0.5f * (cxx + cyy)) 
+                ad0 * norm5 * (czz - 0.5d * (cxx + cyy)) 
                 + ad1p * cxz 
                 + ad1n * cyz 
                 + ad2p * norm3 * (cxx - cyy) 
@@ -844,7 +844,7 @@ public class MOCalculation extends QuantumCalculation {
      * We have two data structures for each slater, using the WebMO format: 
      * 
      * int[] slaterInfo[] = {iatom, a, b, c, d}
-     * float[] slaterData[] = {zeta, coef}
+     * double[] slaterData[] = {zeta, coef}
      * 
      * where
      * 
@@ -873,7 +873,7 @@ public class MOCalculation extends QuantumCalculation {
     if (moCoeff >= moCoefficients.length)
       return false;
     double coef = slater.coef * moCoefficients[moCoeff++];
-    //coefMax = 0.2f;
+    //coefMax = 0.2d;
     if (coef == 0) { //|| coefMax != Integer.MAX_VALUE && Math.abs(coef) > coefMax) {
       atomIndex = -1;
       return true;
@@ -885,7 +885,7 @@ public class MOCalculation extends QuantumCalculation {
     int b = slater.y;
     int c = slater.z;
     int d = slater.r;
-    //  System.out.println("MOCALC " + slaterIndex + " atomNo=" + (atomIndex+1) + "\tx^" + a + " y^"+ b + " z^" + c + " r^" + d + "\tzeta=" + (-minuszeta) + "\tcoef=" + coef);
+    //System.out.println("MOCALC " + slaterIndex + " atomNo=" + (atomIndex+1) + "\tx^" + a + " y^"+ b + " z^" + c + " r^" + d + "\tzeta=" + (-minuszeta) + "\tcoef=" + coef);
           //+ " minmax " + xMin + " " + xMax + " " + yMin + " " + yMax + " " + zMin + " " + zMax
     if (a == -2) /* if dz2 */
       for (int ix = xMax; --ix >= xMin;) {
@@ -895,7 +895,7 @@ public class MOCalculation extends QuantumCalculation {
         for (int iy = yMax; --iy >= yMin;) {
           double dy2 = Y2[iy];
           double dx2y2 = dx2 + dy2;
-          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          double[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
           for (int iz = zMax; --iz >= zMin;) {
             double dz2 = Z2[iz];
             double r2 = dx2y2 + dz2;
@@ -929,7 +929,7 @@ public class MOCalculation extends QuantumCalculation {
           double dy2 = Y2[iy];
           double dx2y2 = dx2 + dy2;
           double dx2my2 = coef * (dx2 - dy2);
-          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          double[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
           for (int iz = zMax; --iz >= zMin;) {
             double dz2 = Z2[iz];
             double r2 = dx2y2 + dz2;
@@ -986,7 +986,7 @@ public class MOCalculation extends QuantumCalculation {
             vdy *= Y[iy];
             break;
           }
-          float[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
+          double[] vd = voxelDataTemp[ix][(havePoints ? 0 : iy)]; 
           for (int iz = zMax; --iz >= zMin;) {
             double dz2 = Z2[iz];
             double r2 = dx2y2 + dz2;
@@ -1094,10 +1094,10 @@ public class MOCalculation extends QuantumCalculation {
     for (int ix = nX; --ix >= 0;)
       for (int iy = nY; --iy >= 0;)
         for (int iz = nZ; --iz >= 0;) {
-          float x = voxelData[ix][iy][iz];
+          double x = voxelData[ix][iy][iz];
           integration += x * x;
         }
-    float volume = stepBohr[0] * stepBohr[1] * stepBohr[2]; 
+    double volume = stepBohr[0] * stepBohr[1] * stepBohr[2]; 
         // / bohr_per_angstrom / bohr_per_angstrom / bohr_per_angstrom;
     integration *= volume;
     Logger.info("Integrated density = " + integration);

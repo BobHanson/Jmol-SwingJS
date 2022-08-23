@@ -58,7 +58,7 @@
  * is a JVXL file:
  * 
  * line1:  (int)-nSurfaces  (int)edgeFractionBase (int)edgeFractionRange  
- * (nSurface lines): (float)cutoff (int)nBytesData (int)nBytesFractions
+ * (nSurface lines): (double)cutoff (int)nBytesData (int)nBytesFractions
  * 
  * definition1
  * edgedata1
@@ -99,22 +99,22 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.api.GenericBinaryDocument;
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.AU;
 import javajs.util.CU;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.P4;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.Rdr;
 import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 import javajs.util.BS;
 import org.jmol.jvxl.api.MeshDataServer;
@@ -131,7 +131,6 @@ import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
-import org.jmol.util.TempArray;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
@@ -176,22 +175,22 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   private boolean explicitContours;
   private int atomIndex;
   private int moNumber;
-  private float[] moLinearCombination;
+  private double[] moLinearCombination;
   private int colorType;
   private short defaultColix;
   private short meshColix;
-  private P3 center;
-  private float scale3d;
+  private P3d center;
+  private double scale3d;
   private boolean isPhaseColored;
   private boolean isColorExplicit;
   private String scriptAppendix = "";
 
   protected SurfaceGenerator sg;
 
-  private float withinDistance2;
+  private double withinDistance2;
   private boolean isWithinNot;
-  private Lst<P3> withinPoints;
-  private float[] cutoffRange;
+  private Lst<P3d> withinPoints;
+  private double[] cutoffRange;
 
   //private boolean allowContourLines;
   boolean allowMesh = true;
@@ -245,7 +244,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       for (int i = meshCount; --i >= 0;) {
         if (isomeshes[i] != null
             && "#inherit;".equals(isomeshes[i].colorCommand))
-          isomeshes[i].remapColors(vwr, null, Float.NaN);
+          isomeshes[i].remapColors(vwr, null, Double.NaN);
       }
       return;
     }
@@ -270,11 +269,11 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         Object[] data = (Object[]) value;
         short[] colixes = (short[]) data[0];
         int[] atomMap = null;
-        //float[] atrans = (float[]) data[1];
+        //double[] atrans = (double[]) data[1];
         if (colixes != null) {
           for (int i = 0; i < colixes.length; i++) {
             short colix = colixes[i];
-            float f = 0;//(atrans == null ? 0 : atrans[pt]);
+            double f = 0;//(atrans == null ? 0 : atrans[pt]);
             if (f > 0.01f)
               colix = C.getColixTranslucent3(colix, true, f);
             colixes[i] = colix;
@@ -301,7 +300,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
     if ("pointSize" == propertyName) {
       if (thisMesh != null) {
-        thisMesh.volumeRenderPointSize = ((Float) value).floatValue();
+        thisMesh.volumeRenderPointSize = ((Number) value).doubleValue();
       }
       return;
     }
@@ -360,7 +359,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
     if ("moveIsosurface" == propertyName) {
       if (thisMesh != null && !thisMesh.isModelConnected) {
-        thisMesh.updateCoordinates((M4) value, null);
+        thisMesh.updateCoordinates((M4d) value, null);
         thisMesh.altVertices = null;
       }
       return;
@@ -372,7 +371,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         if (meshes[i].modelIndex == m
             && (meshes[i].connectedAtoms != null || meshes[i].isModelConnected))
           ((IsosurfaceMesh) meshes[i]).updateCoordinates(
-              (M4) ((Object[]) value)[2], (BS) ((Object[]) value)[1]);
+              (M4d) ((Object[]) value)[2], (BS) ((Object[]) value)[1]);
       return;
     }
 
@@ -388,7 +387,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if ("lcaoCartoon" == propertyName || "lonePair" == propertyName
         || "radical" == propertyName) {
       // z x center rotationAxis (only one of x, y, or z is nonzero; in radians)
-      V3[] info = (V3[]) value;
+      V3d[] info = (V3d[]) value;
       if (!explicitID) {
         setPropertySuper("thisID", null, null);
       }
@@ -419,7 +418,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
 
     if ("offset" == propertyName) {
-      P3 offset = P3.newP((P3) value);
+      P3d offset = P3d.newP((P3d) value);
       if (offset.equals(JC.center))
         offset = null;
       if (thisMesh != null) {
@@ -430,9 +429,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
 
     if ("rotate" == propertyName) {
-      P4 pt4 = (P4) value;
+      P4d pt4 = (P4d) value;
       if (thisMesh != null) {
-        thisMesh.rotateTranslate(Quat.newP4(pt4), null, true);
+        thisMesh.rotateTranslate(Qd.newP4(pt4), null, true);
         thisMesh.altVertices = null;
       }
       return;
@@ -444,10 +443,10 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
     if ("displayWithin" == propertyName) {
       Object[] o = (Object[]) value;
-      displayWithinDistance2 = ((Float) o[0]).floatValue();
+      displayWithinDistance2 = ((Number) o[0]).doubleValue();
       isDisplayWithinNot = (displayWithinDistance2 < 0);
       displayWithinDistance2 *= displayWithinDistance2;
-      displayWithinPoints = (Lst<P3>) o[3];
+      displayWithinPoints = (Lst<P3d>) o[3];
       if (displayWithinPoints.size() == 0)
         displayWithinPoints = ms.getAtomPointVector((BS) o[2]);
       return;
@@ -479,7 +478,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
 
     if ("cutoffRange" == propertyName) {
-      cutoffRange = (float[]) value;
+      cutoffRange = (double[]) value;
       return;
     }
 
@@ -531,8 +530,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
     if ("probes" == propertyName) {
       if (sg != null) {
-        sg.params.probes = (P3[]) value;
-        sg.params.probeValues = new float[sg.params.probes.length];
+        sg.params.probes = (P3d[]) value;
+        sg.params.probeValues = new double[sg.params.probes.length];
       }
       return;
     }
@@ -572,7 +571,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (thisMesh != null)
         thisMesh.atomIndex = atomIndex;
     } else if ("center" == propertyName) {
-      center.setT((P3) value);
+      center.setT((P3d) value);
     } else if ("colorRGB" == propertyName) {
       int rgb = ((Integer) value).intValue();
       if (rgb == T.symop) {
@@ -618,15 +617,15 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         moNumber = ((Integer) value).intValue();
         moLinearCombination = null;
       } else {
-        moLinearCombination = (float[]) value;
+        moLinearCombination = (double[]) value;
         moNumber = 0;
       }
       if (!isColorExplicit)
         isPhaseColored = true;
       if (sg == null || !sg.params.isMapped) {
-        M4 mat4 = ms.am[currentMesh.modelIndex].mat4;
+        M4d mat4 = ms.am[currentMesh.modelIndex].mat4;
         if (mat4 != null) {
-          M4 minv = M4.newM4(mat4);
+          M4d minv = M4d.newM4(mat4);
           minv.invert();
           setPropI("modelInvRotation", minv, null);
         }
@@ -640,7 +639,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       // lighting = (pocket.booleanValue() ? JmolConstants.FULLYLIT
       //     : JmolConstants.FRONTLIT);
     } else if ("scale3d" == propertyName) {
-      scale3d = ((Float) value).floatValue();
+      scale3d = ((Number) value).doubleValue();
       if (thisMesh != null) {
         thisMesh.scale3d = thisMesh.jvxlData.scale3d = scale3d;
         thisMesh.altVertices = null;
@@ -652,10 +651,10 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       value = title;
     } else if ("withinPoints" == propertyName) {
       Object[] o = (Object[]) value;
-      withinDistance2 = ((Float) o[0]).floatValue();
+      withinDistance2 = ((Number) o[0]).doubleValue();
       isWithinNot = (withinDistance2 < 0);
       withinDistance2 *= withinDistance2;
-      withinPoints = (Lst<P3>) o[3];
+      withinPoints = (Lst<P3d>) o[3];
       if (withinPoints.size() == 0)
         withinPoints = ms.getAtomPointVector((BS) o[2]);
     } else if (("nci" == propertyName || "orbital" == propertyName)
@@ -699,7 +698,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
     if ("colorDensity" == propertyName) {
       if (value != null && currentMesh != null)
-        currentMesh.volumeRenderPointSize = ((Float) value).floatValue();
+        currentMesh.volumeRenderPointSize = ((Number) value).doubleValue();
       return;
     }
     /*
@@ -797,7 +796,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       short colix = (thisMesh.isColorSolid ? thisMesh.colix : 0);
       setProperty("init", null, null);
       setProperty("map", Boolean.FALSE, null);
-      setProperty("property", new float[ms.ac], null);
+      setProperty("property", new double[ms.ac], null);
       if (colix != 0) {
         thisMesh.colorCommand = "color isosurface "
             + C.getHexCode(colix);
@@ -856,7 +855,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (m == null || data.length < 4)
         return false;
       data[3] = Integer.valueOf(m.modelIndex);
-      m.getMeshSlicer().getIntersection(0, (P4) data[1], null, (Lst<P3[]>) data[2], null, null, null, false, false, T.plane, false);
+      m.getMeshSlicer().getIntersection(0, (P4d) data[1], null, (Lst<P3d[]>) data[2], null, null, null, false, false, T.plane, false);
       return true;
     }
     if (property == "getBoundingBox") {
@@ -866,10 +865,10 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         return false;
       data[2] = m.jvxlData.boundingBox;
       if (m.mat4 != null) {
-        P3[] d = new P3[2];
-        d[0] = P3.newP(m.jvxlData.boundingBox[0]);
-        d[1] = P3.newP(m.jvxlData.boundingBox[1]);
-        V3 v = new V3();
+        P3d[] d = new P3d[2];
+        d[0] = P3d.newP(m.jvxlData.boundingBox[0]);
+        d[1] = P3d.newP(m.jvxlData.boundingBox[1]);
+        V3d v = new V3d();
         m.mat4.getTranslation(v);
         d[0].add(v);
         d[1].add(v);
@@ -888,11 +887,11 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         m = (IsosurfaceMesh) getMesh(id);
         if (m == null || m.vs == null)
           return false;
-        P3 p = P3.newP(m.jvxlData.boundingBox[0]);
+        P3d p = P3d.newP(m.jvxlData.boundingBox[0]);
         p.add(m.jvxlData.boundingBox[1]);
-        p.scale(0.5f);
+        p.scale(0.5d);
         if (m.mat4 != null) {
-          V3 v = new V3();
+          V3d v = new V3d();
           m.mat4.getTranslation(v);
           p.add(v);
         }
@@ -921,13 +920,13 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       String s = "";
       if (!jvxlData.isValid)
         return "invalid! (no atoms selected?)";
-      if (!Float.isNaN(jvxlData.integration))
+      if (!Double.isNaN(jvxlData.integration))
         s += "integration " + jvxlData.integration;
       if (shapeID == JC.SHAPE_ISOSURFACE || shapeID == JC.SHAPE_MO  || shapeID == JC.SHAPE_NBO)
         s += " with cutoff=" + jvxlData.cutoff;
       if (shapeID == JC.SHAPE_MO || shapeID == JC.SHAPE_NBO)
         return s;
-      if (jvxlData.dataMin != Float.MAX_VALUE)
+      if (jvxlData.dataMin != Double.MAX_VALUE)
         s += " min=" + jvxlData.dataMin + " max=" + jvxlData.dataMax;
       
       s += "; " + JC.shapeClassBases[shapeID].toLowerCase() + " count: "
@@ -937,8 +936,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if (property == "dataRange")
       return getDataRange(m);
     if (property == "dataRangeStr") {
-      float[] dataRange = getDataRange(m);
-      return (dataRange != null && dataRange[0] != Float.MAX_VALUE
+      double[] dataRange = getDataRange(m);
+      return (dataRange != null && dataRange[0] != Double.MAX_VALUE
           && dataRange[0] != dataRange[1] ? "\nisosurface"
           + " full data range " + dataRange[0] + " to " + dataRange[1]
           + " with color scheme spanning " + dataRange[2] + " to " + dataRange[3]
@@ -957,9 +956,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       return Integer.valueOf(n == Integer.MIN_VALUE ? 0 : Math.abs(m.nSets));
     }
     if (property == "area") // could be Float or double[]
-      return (m == null ? Float.valueOf(Float.NaN) : calculateVolumeOrArea(m, true));
+      return (m == null ? Double.valueOf(Double.NaN) : calculateVolumeOrArea(m, true));
     if (property == "volume") // could be Float or double[]
-      return (m == null ? Float.valueOf(Float.NaN) : calculateVolumeOrArea(m, false));
+      return (m == null ? Double.valueOf(Double.NaN) : calculateVolumeOrArea(m, false));
     if (m == null)
       return null;//"no current isosurface";
     if (property == "output") {
@@ -967,9 +966,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         m.jvxlData.jvxlFileTitle + "\n" + (m.jvxlData.sbOut == null ? "" : m.jvxlData.sbOut.toString()));
     }
     if (property == "cutoff")
-      return Float.valueOf(jvxlData.cutoff);
+      return Double.valueOf(jvxlData.cutoff);
     if (property == "minMaxInfo")
-      return new float[] { jvxlData.dataMin, jvxlData.dataMax };
+      return new double[] { jvxlData.dataMin, jvxlData.dataMax };
     if (property == "plane")
       return jvxlData.jvxlPlane;
     if (property == "contours")
@@ -1013,7 +1012,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     return null;
   }
 
-  private float[] getDataRange(IsosurfaceMesh mesh) {
+  private double[] getDataRange(IsosurfaceMesh mesh) {
     return (mesh == null ? null : mesh.getDataRange());
   }
 
@@ -1030,9 +1029,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     meshData.nSets = mesh.nSets;
     meshData.vertexSets = mesh.vertexSets;
     if (!isArea && mesh.jvxlData.colorDensity) {
-      float f = mesh.jvxlData.voxelVolume;
+      double f = mesh.jvxlData.voxelVolume;
       f *= (mesh.bsSlabDisplay == null ? mesh.vc : mesh.bsSlabDisplay.cardinality());
-      return  mesh.calculatedVolume = Float.valueOf(f); 
+      return  mesh.calculatedVolume = Double.valueOf(f); 
     }
     Object ret = MeshData.calculateVolumeOrArea(meshData, mesh.jvxlData.thisSet, isArea, false);
     if (mesh.nSets <= 0)
@@ -1221,13 +1220,13 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     try {
       if (s.indexOf("array") == 0) {
         String[] pts = PT.split(s.substring(6, s.length() - 1), ",");
-        return TempArray.getSlabObjectType(T.boundbox,
-            new P3[] { (P3) Escape.uP(pts[0]), (P3) Escape.uP(pts[1]),
-                (P3) Escape.uP(pts[2]), (P3) Escape.uP(pts[3]) }, isCap, null);
+        return MeshSurface.getSlabObjectType(T.boundbox,
+            new P3d[] { (P3d) Escape.uP(pts[0]), (P3d) Escape.uP(pts[1]),
+                (P3d) Escape.uP(pts[2]), (P3d) Escape.uP(pts[3]) }, isCap, null);
       }
       Object plane = Escape.uP(s);
-      if (plane instanceof P4)
-        return TempArray.getSlabObjectType(T.plane, plane, isCap, null);
+      if (plane instanceof P4d)
+        return MeshSurface.getSlabObjectType(T.plane, plane, isCap, null);
     } catch (Exception e) {
       //
     }
@@ -1244,7 +1243,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     atomIndex = -1;
     //allowContourLines = true; //but not for f(x,y) or plane, which use mesh
     bsDisplay = null;
-    center = P3.new3(Float.NaN, 0, 0);
+    center = P3d.new3(Double.NaN, 0, 0);
     colix = C.ORANGE;
     connections = null;
     cutoffRange = null;
@@ -1333,27 +1332,27 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
   private int nLCAO = 0;
 
-  private void drawLcaoCartoon(V3 z, V3 x, V3 rotAxis, int nElectrons) {
+  private void drawLcaoCartoon(V3d z, V3d x, V3d rotAxis, int nElectrons) {
     String lcaoCartoon = sg.setLcao();
     //really rotRadians is just one of these -- x, y, or z -- not all
-    float rotRadians = rotAxis.x + rotAxis.y + rotAxis.z;
+    double rotRadians = rotAxis.x + rotAxis.y + rotAxis.z;
     defaultColix = C.getColix(sg.params.colorPos);
     short colixNeg = C.getColix(sg.params.colorNeg);
-    V3 y = new V3();
+    V3d y = new V3d();
     boolean isReverse = (lcaoCartoon.length() > 0 && lcaoCartoon.charAt(0) == '-');
     if (isReverse)
       lcaoCartoon = lcaoCartoon.substring(1);
     int sense = (isReverse ? -1 : 1);
     y.cross(z, x);
     if (rotRadians != 0) {
-      A4 a = new A4();
+      A4d a = new A4d();
       if (rotAxis.x != 0)
         a.setVA(x, rotRadians);
       else if (rotAxis.y != 0)
         a.setVA(y, rotRadians);
       else
         a.setVA(z, rotRadians);
-      M3 m = new M3().setAA(a);
+      M3d m = new M3d().setAA(a);
       m.rotate(x);
       m.rotate(y);
       m.rotate(z);
@@ -1437,20 +1436,20 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     return;
   }
 
-  private P4 lcaoDir = new P4();
+  private P4d lcaoDir = new P4d();
 
-  private void createLcaoLobe(V3 lobeAxis, float factor, int nElectrons) {
+  private void createLcaoLobe(V3d lobeAxis, double factor, int nElectrons) {
     initState();
     if (Logger.debugging) {
       Logger.debug("creating isosurface ID " + thisMesh.thisID);
     }
     if (lobeAxis == null) {
-      setProperty("sphere", Float.valueOf(factor / 2f), null);
+      setProperty("sphere", Double.valueOf(factor / 2d), null);
     } else {
       lcaoDir.x = lobeAxis.x * factor;
       lcaoDir.y = lobeAxis.y * factor;
       lcaoDir.z = lobeAxis.z * factor;
-      lcaoDir.w = 0.7f;
+      lcaoDir.w = 0.7d;
       setProperty(nElectrons == 2 ? "lp" : nElectrons == 1 ? "rad" : "lobe", 
           lcaoDir, null);
     }
@@ -1620,19 +1619,19 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   }
 
   @Override
-  public P3[] calculateGeodesicSurface(BS bsSelected,
-                                            float envelopeRadius) {
+  public P3d[] calculateGeodesicSurface(BS bsSelected,
+                                            double envelopeRadius) {
     return vwr.calculateSurface(bsSelected, envelopeRadius);
   }
 
   /////////////  VertexDataServer interface methods ////////////////
 
   @Override
-  public int getSurfacePointIndexAndFraction(float cutoff, boolean isCutoffAbsolute,
+  public int getSurfacePointIndexAndFraction(double cutoff, boolean isCutoffAbsolute,
                                   int x, int y, int z, P3i offset, int vA,
-                                  int vB, float valueA, float valueB,
-                                  T3 pointA, V3 edgeVector,
-                                  boolean isContourType, float[] fReturn) {
+                                  int vB, double valueA, double valueB,
+                                  T3d pointA, V3d edgeVector,
+                                  boolean isContourType, double[] fReturn) {
     return 0;
   }
 
@@ -1641,7 +1640,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   private String newFileName;
 
   @Override
-  public int addVertexCopy(T3 vertexXYZ, float value, int assocVertex, boolean asCopy) {
+  public int addVertexCopy(T3d vertexXYZ, double value, int assocVertex, boolean asCopy) {
     if (cutoffRange != null && (value < cutoffRange[0] || value > cutoffRange[1]))
       return -1;
     return (withinPoints != null && !Mesh.checkWithin(vertexXYZ, withinPoints, withinDistance2, isWithinNot) ? -1
@@ -1732,12 +1731,12 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       info.put("volume", mesh.calculatedVolume);
     if (mesh.calculatedArea != null)
       info.put("area", mesh.calculatedArea);
-    if (!Float.isNaN(mesh.ptCenter.x))
+    if (!Double.isNaN(mesh.ptCenter.x))
       info.put("center", mesh.ptCenter);
     if (mesh.mat4 != null)
       info.put("mat4", mesh.mat4);
     if (mesh.scale3d != 0)
-      info.put("scale3d", Float.valueOf(mesh.scale3d));
+      info.put("scale3d", Double.valueOf(mesh.scale3d));
     info.put("xyzMin", mesh.jvxlData.boundingBox[0]);
     info.put("xyzMax", mesh.jvxlData.boundingBox[1]);
     String s = JvxlCoder.jvxlGetInfo(mesh.jvxlData);
@@ -1756,13 +1755,13 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   }
 
   @Override
-  public float[] getPlane(int x) {
+  public double[] getPlane(int x) {
     // only for surface readers
     return null;
   }
   
   @Override
-  public float getValue(int x, int y, int z, int ptyz) {
+  public double getValue(int x, int y, int z, int ptyz) {
     return 0;
   }
   
@@ -1789,7 +1788,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   private void hoverKey(int x, int y) {
     try {
       String s;
-      float f = 1 - 1.0f * (y - keyXy[1]) / (keyXy[3] - keyXy[1]);
+      double f = 1 - 1.0d * (y - keyXy[1]) / (keyXy[3] - keyXy[1]);
       if (thisMesh.showContourLines) {
         Lst<Object>[] vContours = thisMesh.getContours();
         if (vContours == null) {
@@ -1804,11 +1803,11 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
           if (i < 0 || i > vContours.length)
             return;
           s = ""
-              + ((Float) vContours[i].get(JvxlCoder.CONTOUR_VALUE))
-                  .floatValue();
+              + ((Number) vContours[i].get(JvxlCoder.CONTOUR_VALUE))
+                  .doubleValue();
         }
       } else {
-        float g = thisMesh.colorEncoder.quantize(f, true);
+        double g = thisMesh.colorEncoder.quantize(f, true);
         f = thisMesh.colorEncoder.quantize(f, false);
         s = "" + g + " - " + f;
       }
@@ -1847,11 +1846,11 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       IsosurfaceMesh m = isomeshes[i];
       if (!isPickable(m, bsVisible))
         continue;
-      T3[] centers = (pickFront ? m.vs : m.getCenters());
+      T3d[] centers = (pickFront ? m.vs : m.getCenters());
       if (centers == null)
         continue;
       for (int j = centers.length; --j >= 0; ) {
-          T3 v = centers[j];
+          T3d v = centers[j];
           if (v == null)
             continue;
           int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
@@ -1876,7 +1875,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     pickedMesh = isomeshes[imesh];
     setPropertySuper("thisID", pickedMesh.thisID, null);
     int iFace = pickedVertex = (pickFront ? jminz : jmaxz);
-    P3 ptRet = new P3();
+    P3d ptRet = new P3d();
     ptRet.setT((pickFront ? pickedMesh.vs[pickedVertex] : ((IsosurfaceMesh)pickedMesh).centers[iFace]));
     pickedModel = (short) pickedMesh.modelIndex;
     Map<String, Object> map = getPickedPoint(ptRet, pickedModel);
@@ -1945,7 +1944,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   //    
   //    // set the directed angle and rotate normal into yz plane,
   //    // less 20 degrees for the normal upward sloping view
-  //    float angle = Measure.computeTorsion(JmolConstants.axisNY, 
+  //    double angle = Measure.computeTorsion(JmolConstants.axisNY, 
   //        JmolConstants.center, JmolConstants.axisZ, toPts, true);
   //    vwr.navigateAxis(JmolConstants.axisZ, angle);        
   //    toPt.setT(vNorm);
@@ -1971,8 +1970,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
   //  private boolean getClosestNormal(IsosurfaceMesh m, Point3f toPt, Point3f ptRet, Vector3f normalRet) {
   //    Point3f[] centers = m.getCenters();
-  //    float d;
-  //    float dmin = Float.MAX_VALUE;
+  //    double d;
+  //    double dmin = Double.MAX_VALUE;
   //    int imin = -1;
   //    for (int i = centers.length; --i >= 0; ) {
   //      if ((d = centers[i].distance(toPt)) >= dmin)
@@ -1989,7 +1988,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
   //  private void getClosestPoint(IsosurfaceMesh m, int imin, Point3f toPt, Point3f ptRet,
   //                               Vector3f normalRet) {
   //    Point4f plane = m.getFacePlane(imin, normalRet);
-  //    float dist = Measure.distanceToPlane(plane, toPt);
+  //    double dist = Measure.distanceToPlane(plane, toPt);
   //    normalRet.scale(-dist);
   //    ptRet.setT(toPt);
   //    ptRet.add(normalRet);
@@ -2029,7 +2028,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
           Lst<Object> vc = vs[j];
           int n = vc.size() - 1;
           for (int k = JvxlCoder.CONTOUR_POINTS; k < n; k++) {
-            T3 v = (T3) vc.get(k);
+            T3d v = (T3d) vc.get(k);
             int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
             if (d2 >= 0) {
               dmin2 = d2;
@@ -2044,10 +2043,10 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
           return pickedContour.get(JvxlCoder.CONTOUR_VALUE).toString()
               + (Logger.debugging ? " " + pickedJ : "");
       } else if (m.jvxlData.jvxlPlane != null && m.vvs != null) {
-        T3[] vertices = (m.mat4 == null && m.scale3d == 0 ? m.vs : m
+        T3d[] vertices = (m.mat4 == null && m.scale3d == 0 ? m.vs : m
             .getOffsetVertices(m.jvxlData.jvxlPlane));
         for (int k = m.vc; --k >= ilast;) {
-          T3 v = vertices[k];
+          T3d v = vertices[k];
           int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
           if (d2 >= 0) {
             dmin2 = d2;
@@ -2065,7 +2064,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
             int[] p = m.pis[k];
             if (p != null)
               for (int l = 0; l < 3; l++) {
-                T3 v = m.vs[p[l]];
+                T3d v = m.vs[p[l]];
                 int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
                 if (d2 >= 0) {
                   dmin2 = d2;
@@ -2077,7 +2076,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
           }
         } else {
           for (int k = m.vc; --k >= ilast;) {
-            T3 v = m.vs[k];
+            T3d v = m.vs[k];
             int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
             if (d2 >= 0) {
               dmin2 = d2;

@@ -28,13 +28,13 @@ package org.jmol.export;
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.Lst;
-import javajs.util.M4;
-import javajs.util.Measure;
+import javajs.util.M4d;
+import javajs.util.MeasureD;
 import javajs.util.OC;
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 import javajs.util.BS;
 
@@ -67,7 +67,7 @@ public class _StlExporter extends _VrmlExporter {
   private String header;
   private OC oc;
   private ByteArrayOutputStream bos;
-  private M4 m4;
+  private M4d m4;
 
   public _StlExporter() {
     super();
@@ -93,8 +93,8 @@ public class _StlExporter extends _VrmlExporter {
       oc.write(header.getBytes(), 0, 80);
       oc.write(new byte[4], 0, 4);
     }
-    lstMatrix = new Lst<M4>();
-    m4 = new M4();
+    lstMatrix = new Lst<M4d>();
+    m4 = new M4d();
     m4.setIdentity();
     lstMatrix.addLast(m4);
     outputInitialTransform();
@@ -110,13 +110,13 @@ public class _StlExporter extends _VrmlExporter {
     endloop
   endfacet
    */
-  Lst<M4> lstMatrix;
+  Lst<M4d> lstMatrix;
   
   
   @Override
   protected void pushMatrix() {
     lstMatrix.addLast(m4);
-    m4 = M4.newM4(m4);
+    m4 = M4d.newM4(m4);
   }
 
   @Override
@@ -139,21 +139,21 @@ public class _StlExporter extends _VrmlExporter {
     // not used!
   }
 
-  private M4 m4a = new M4();
+  private M4d m4a = new M4d();
 
   @Override
-  protected void outputRotation(A4 a) {
+  protected void outputRotation(A4d a) {
     m4a.setToAA(a);
     m4.mul(m4a);
   }
 
   @Override
-  protected void outputAttrPt(String attr, T3 pt) {
+  protected void outputAttrPt(String attr, T3d pt) {
     outputAttr(attr, pt.x, pt.y, pt.z);
   }
 
   @Override
-  protected void outputAttr(String attr, float x, float y, float z) {
+  protected void outputAttr(String attr, double x, double y, double z) {
     m4a.setIdentity();
     if (attr == "scale") {
       m4a.m00 = x;
@@ -170,11 +170,11 @@ public class _StlExporter extends _VrmlExporter {
   private int nTri;
 
   @Override
-  protected void outputGeometry(T3[] vertices, T3[] normals, short[] colixes,
+  protected void outputGeometry(T3d[] vertices, T3d[] normals, short[] colixes,
                                 int[][] indices, short[] polygonColixes,
                                 int nVertices, int nPolygons,
                                 BS bsPolygons, int faceVertexMax,
-                                Lst<Short> colorList, Map<Short, Integer> htColixes, P3 offset) {
+                                Lst<Short> colorList, Map<Short, Integer> htColixes, P3d offset) {
     for (int i = 0; i < nPolygons; i++) {
       if (bsPolygons != null && !bsPolygons.get(i))
         continue;
@@ -186,15 +186,15 @@ public class _StlExporter extends _VrmlExporter {
 
   }
 
-  private void writeFacet(T3[] vertices, int[] face, int i, int j, int k) {
+  private void writeFacet(T3d[] vertices, int[] face, int i, int j, int k) {
     tempQ1.setT(vertices[face[i]]);
     tempQ2.setT(vertices[face[j]]);
     tempQ3.setT(vertices[face[k]]);
     m4.rotTrans(tempQ1);
     m4.rotTrans(tempQ2);
     m4.rotTrans(tempQ3);
-    Measure.calcNormalizedNormal(tempQ1, tempQ2, tempQ3, tempV1, tempV2);
-    if (Float.isNaN(tempV1.x)) {
+    MeasureD.calcNormalizedNormal(tempQ1, tempQ2, tempQ3, tempV1, tempV2);
+    if (Double.isNaN(tempV1.x)) {
       return; // just a line -- can happen in cartoon meshes
     }
     writePoint("facet normal", tempV1);
@@ -226,7 +226,7 @@ public class _StlExporter extends _VrmlExporter {
   }
 
   @Override
-  protected void outputCircle(P3 pt1, P3 pt2, float radius, short colix,
+  protected void outputCircle(P3d pt1, P3d pt2, double radius, short colix,
                             boolean doFill) {
     // not implemented for solids
   }
@@ -238,7 +238,7 @@ public class _StlExporter extends _VrmlExporter {
 
   ///////////////  raw ASCII/binary write methods
   
-  private void writePoint(String s, T3 p) {
+  private void writePoint(String s, T3d p) {
     if (isDebug)
       out.append(s);
     writeFloat(p.x);
@@ -248,11 +248,11 @@ public class _StlExporter extends _VrmlExporter {
       out.append("\n");
   }
 
-  private void writeFloat(float f) {
+  private void writeFloat(double f) {
     if (isDebug)
       out.append(" " + f);
     else
-      oc.writeInt(Float.floatToIntBits(f));
+      oc.writeInt(Float.floatToIntBits((float) f));
   }
 
 //@SuppressWarnings("unused")
@@ -264,16 +264,15 @@ public class _StlExporter extends _VrmlExporter {
 //  try {
 //    for (int j = 0; j < 20; j++)
 //      doc.readInt();
-//    System.out.println(doc.readInt());
+//System.out.println(doc.readInt());
 //    for (int j = 0; j < 10; j++) {
 //      for (int k = 0; k < 12; k++) {
-//        float f = doc.readFloat();
-//        System.out.println(j + " " + f + "\t"
+//        double f = doc.readFloat();
+//System.out.println(j + " " + f + "\t"
 //            + Integer.toHexString(Float.floatToIntBits(f)));
 //        if (k % 3 == 2)
-//          System.out.println("");
-//      }
-//      System.out.println(j + " " + doc.readShort() + "\n");
+//System.out.println("");
+//System.out.println(j + " " + doc.readShort() + "\n");
 //    }
 //  } catch (Exception e) {
 //    // ignore

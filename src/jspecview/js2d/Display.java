@@ -3,7 +3,7 @@ package jspecview.js2d;
 
 import org.jmol.api.PlatformViewer;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 
 /**
@@ -34,10 +34,7 @@ class Display {
   static boolean hasFocus(Object canvas) {
 //    /**
 //     * @j2sNative
-//     * 
-//     */
-//    {
-//      System.out.println(canvas);
+//System.out.println(canvas);
 //    }
     return true;
   }
@@ -45,10 +42,7 @@ class Display {
   static void requestFocusInWindow(Object canvas) {
 //    /**
 //     * @j2sNative
-//     * 
-//     */
-//    {
-//      System.out.println(canvas);
+//System.out.println(canvas);
 //    }
   }
 
@@ -79,20 +73,14 @@ class Display {
   static void setTransparentCursor(Object canvas) {
 //    /**
 //     * @j2sNative
-//     * 
-//     */
-//    {
-//      System.out.println(canvas);
+//System.out.println(canvas);
 //    }
   }
 
   static void setCursor(int c, Object canvas) {
 //    /**
 //     * @j2sNative
-//     * 
-//     */
-//    {
-//      System.out.println("" + c + canvas);
+//System.out.println("" + c + canvas);
 //    }
   }
 
@@ -116,13 +104,10 @@ class Display {
     return "null";
   }
 
-  public static void convertPointFromScreen(Object canvas, P3 ptTemp) {
+  public static void convertPointFromScreen(Object canvas, P3d ptTemp) {
 //    /**
 //     * @j2sNative
-//     * 
-//     */
-//    {
-//      System.out.println("" + canvas + ptTemp);
+//System.out.println("" + canvas + ptTemp);
 //    }
   }
 

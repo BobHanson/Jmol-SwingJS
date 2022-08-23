@@ -43,12 +43,12 @@ import javajs.util.PT;
 public class XmlChemDrawReader extends XmlReader {
 
   boolean optimize2D;
-  private float minX = Float.MAX_VALUE;
-  private float minY = Float.MAX_VALUE;
-  private float minZ = Float.MAX_VALUE;
-  private float maxZ = -Float.MAX_VALUE;
-  private float maxY = -Float.MAX_VALUE;
-  private float maxX = -Float.MAX_VALUE;
+  private double minX = Double.MAX_VALUE;
+  private double minY = Double.MAX_VALUE;
+  private double minZ = Double.MAX_VALUE;
+  private double maxZ = -Double.MAX_VALUE;
+  private double maxY = -Double.MAX_VALUE;
+  private double maxX = -Double.MAX_VALUE;
   private boolean is3D;
   
   private Lst<Object[]> bonds = new Lst<Object[]>();
@@ -160,9 +160,9 @@ public class XmlChemDrawReader extends XmlReader {
   private void setAtom(String key) {
     String xyz = atts.get(key);
     String[] tokens = PT.getTokens(xyz);
-    float x = parseFloatStr(tokens[0]);
-    float y = -parseFloatStr(tokens[1]);
-    float z = (key == "xyz" ? parseFloatStr(tokens[2]) : 0);
+    double x = parseDoubleStr(tokens[0]);
+    double y = -parseDoubleStr(tokens[1]);
+    double z = (key == "xyz" ? parseDoubleStr(tokens[2]) : 0);
     if (x < minX)
       minX = x;
     if (x > maxX)
@@ -219,7 +219,7 @@ public class XmlChemDrawReader extends XmlReader {
         continue;
       for (int j = asc.bsAtoms.nextSetBit(0); j >= 0; j = asc.bsAtoms.nextSetBit(j + 1)) {
         Atom a = asc.atoms[j];
-        if (Math.abs(a.x - pt.x) < 0.1f && Math.abs(a.y - pt.y) < 0.1f) {
+        if (Math.abs(a.x - pt.x) < 0.1d && Math.abs(a.y - pt.y) < 0.1d) {
           if (pt == a1) {
             b.atomIndex1 = (a1 = a).index;
           } else {
@@ -235,7 +235,7 @@ public class XmlChemDrawReader extends XmlReader {
   private void center() {
     if (minX > maxX)
       return;
-    float sum = 0;
+    double sum = 0;
     int n = 0;
     if (is3D) {
       for (int i = asc.bondCount; --i >= 0;) {
@@ -246,14 +246,14 @@ public class XmlChemDrawReader extends XmlReader {
         }
       }
     }
-    float f = 1;
+    double f = 1;
     if (sum > 0) {
-      f = 1.45f * n / sum;
+      f = 1.45d * n / sum;
     }
 
-    float cx = (maxX + minX) / 2;
-    float cy = (maxY + minY) / 2;
-    float cz = (maxZ + minZ) / 2;
+    double cx = (maxX + minX) / 2;
+    double cy = (maxY + minY) / 2;
+    double cz = (maxZ + minZ) / 2;
     for (int i = asc.ac; --i >= 0;) {
       Atom a = asc.atoms[i];
       a.x = (a.x - cx) * f;

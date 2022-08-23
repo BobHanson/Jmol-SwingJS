@@ -24,7 +24,7 @@
 
 package org.jmol.util;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 
 /**
@@ -38,7 +38,7 @@ import javajs.util.P3;
  * associated modelIndex (for measurement points)
  * 
  */
-public class Point3fi extends P3 implements Cloneable {
+public class Point3fi extends P3d implements Cloneable {
   /**
    * model index -- may be to a trajectory
    */

@@ -11,7 +11,7 @@ import java.awt.image.MemoryImageSource;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 /**
@@ -78,12 +78,12 @@ class Display {
 
   }
 
-  public static void convertPointFromScreen(Object display, P3 ptTemp) {
+  public static void convertPointFromScreen(Object display, P3d ptTemp) {
     Point xyTemp = new Point();
     xyTemp.x = (int) ptTemp.x;
     xyTemp.y = (int) ptTemp.y;
     SwingUtilities.convertPointFromScreen(xyTemp, (Component) display);
-    ptTemp.set(xyTemp.x, xyTemp.y, Float.NaN);
+    ptTemp.set(xyTemp.x, xyTemp.y, Double.NaN);
   }
 
 

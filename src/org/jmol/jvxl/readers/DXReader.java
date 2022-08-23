@@ -89,13 +89,13 @@ class DXReader extends ApbsReader {
 //        Logger.info("DXReader: setting counts to " + voxelCounts[0] + " "
 //            + voxelCounts[1] + " " + voxelCounts[2]);
 //      } else if (tokens[i].equals("origin")) {
-//        volumetricOrigin.set(parseFloatStr(tokens[++i]),
-//            parseFloatStr(tokens[++i]), parseFloatStr(tokens[++i]));
+//        volumetricOrigin.set(parseDoubleStr(tokens[++i]),
+//            parseDoubleStr(tokens[++i]), parseDoubleStr(tokens[++i]));
 //        Logger.info("DXReader: setting origin to " + volumetricOrigin);
 //      } else if (tokens[i].equals("delta")) {
 //        for (int j = 0; j < 3; j++, i++) {
-//          volumetricVectors[j].set(parseFloatStr(tokens[++i]),
-//              parseFloatStr(tokens[++i]), parseFloatStr(tokens[++i]));
+//          volumetricVectors[j].set(parseDoubleStr(tokens[++i]),
+//              parseDoubleStr(tokens[++i]), parseDoubleStr(tokens[++i]));
 //          Logger.info("DXReader: setting volumetricVector " + j + " to " + volumetricVectors[j]);
 //        }
 //        --i;
@@ -141,7 +141,7 @@ class DXReader extends ApbsReader {
 //
 //  protected void setCutoffAutomatic() {
 //    if (params.thePlane == null && params.cutoffAutomatic) {
-//      params.cutoff = 0.5f;
+//      params.cutoff = 0.5d;
 //      Logger.info(
 //          "DXReader: setting cutoff to default value of " + params.cutoff);
 //    }

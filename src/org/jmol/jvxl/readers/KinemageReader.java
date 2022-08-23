@@ -29,7 +29,7 @@ import java.io.BufferedReader;
 import org.jmol.util.Logger;
 
 import javajs.util.CU;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 /*
@@ -56,8 +56,8 @@ class KinemageReader extends PmeshReader {
   private final static int POINTS_HETS = 4;
   
   private int nDots = 0;
-  private float vMin = -Float.MAX_VALUE;
-  private float vMax = Float.MAX_VALUE;
+  private double vMin = -Double.MAX_VALUE;
+  private double vMax = Double.MAX_VALUE;
   private int pointType;
   private String findString;
 
@@ -158,8 +158,8 @@ class KinemageReader extends PmeshReader {
       return -1;
     }
     String[] tokens = PT.getTokens(line.substring(line.indexOf("}") + 1));
-    float value = assignValueFromGapColorForKin(tokens[0]);
-    if (Float.isNaN(value))
+    double value = assignValueFromGapColorForKin(tokens[0]);
+    if (Double.isNaN(value))
       return -1;
     if (checkType && pointType != POINTS_ALL) {      
       switch (tokens[i - 1].charAt(1)) {
@@ -185,8 +185,8 @@ class KinemageReader extends PmeshReader {
     }
     retColor[0] = getColor(tokens[0]);
     tokens = PT.getTokens(tokens[i].replace(',', ' '));
-    P3 pt = P3.new3(PT.parseFloat(tokens[0]), PT
-        .parseFloat(tokens[1]), PT.parseFloat(tokens[2]));
+    P3d pt = P3d.new3(PT.parseDouble(tokens[0]), PT
+        .parseDouble(tokens[1]), PT.parseDouble(tokens[2]));
     if (isAnisotropic)
       setVertexAnisotropy(pt);
     return addVertexCopy(pt, value, nVertices++, false);
@@ -201,7 +201,7 @@ class KinemageReader extends PmeshReader {
   }
   
   /*
-  char* assignGapColorForKin(float gap, int class) 
+  char* assignGapColorForKin(double gap, int class) 
   {
      char *colorValue = "";
      if (class == 4)     { colorValue = "greentint "; } hbond
@@ -226,19 +226,19 @@ class KinemageReader extends PmeshReader {
      * @param color
      * @return value or NaN if outsided desired range
      */
-    private float assignValueFromGapColorForKin(String color) {
-       float value = (
-         color.equals("greentint") ? 4f
-           : color.equals("blue") ? 0.35f
-           : color.equals("sky") ? 0.25f
-           : color.equals("sea") ? 0.15f
-           : color.equals("green") ? 0.0f
-           : color.equals("yellowtint") ? -0.1f
-           : color.equals("yellow") ? -0.2f
-           : color.equals("orange") ? -0.3f
-           : color.equals("red") ? -0.4f
-           : -0.5f);
-       return (value >= vMin && value <= vMax ? value : Float.NaN);
+    private double assignValueFromGapColorForKin(String color) {
+       double value = (
+         color.equals("greentint") ? 4d
+           : color.equals("blue") ? 0.35d
+           : color.equals("sky") ? 0.25d
+           : color.equals("sea") ? 0.15d
+           : color.equals("green") ? 0.0d
+           : color.equals("yellowtint") ? -0.1d
+           : color.equals("yellow") ? -0.2d
+           : color.equals("orange") ? -0.3d
+           : color.equals("red") ? -0.4d
+           : -0.5d);
+       return (value >= vMin && value <= vMax ? value : Double.NaN);
     }
 
   

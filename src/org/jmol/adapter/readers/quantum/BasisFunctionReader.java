@@ -112,8 +112,8 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
     @Override
     @SuppressWarnings("unchecked")
     public int compare(Object a, Object b) {
-      float ea = ((Float) ((Map<String, Object>)a).get("energy")).floatValue();
-      float eb = ((Float) ((Map<String, Object>)b).get("energy")).floatValue();
+      double ea = ((Number) ((Map<String, Object>)a).get("energy")).doubleValue();
+      double eb = ((Number) ((Map<String, Object>)b).get("energy")).doubleValue();
       return (ea < eb ? -1 : ea > eb ? 1 : 0);
     }
   }

@@ -137,7 +137,7 @@ public class Cif2DataParser extends CifDataParser {
 //
 // - Implemented
 //  - Delivers proper JSON strings for lists. 
-//  - Numerical values are converted to integer or float type.
+//  - Numerical values are converted to integer or double type.
 //  - Trailing uncertainties (nn) removed.
 //
 //
@@ -379,9 +379,9 @@ public class Cif2DataParser extends CifDataParser {
           s = s.substring(0, pt);
         try {
           if (isFloat) {
-            float f = Float.parseFloat(s);
+            double f = Double.parseDouble(s);
             if (asObject)
-              return Float.valueOf(f);
+              return Double.valueOf(f);
             s = "" + f;
             if (s.indexOf(".") < 0 && s.indexOf("E") < 0)
               s += ".0";
@@ -442,8 +442,8 @@ public class Cif2DataParser extends CifDataParser {
    * @return double[] array
    */
   public static double[] getArrayFromStringList(String s, int n) {
-    float[] f = new float[n];
-    PT.parseFloatArrayInfested(PT.getTokens(s.replace(',', ' ').replace('[', ' ')), f);
+    double[] f = new double[n];
+    PT.parseDoubleArrayInfested(PT.getTokens(s.replace(',', ' ').replace('[', ' ')), f);
     double[] d = new double[n];
     for (int i = 0; i < n; i++)
       d[i] = f[i];
@@ -460,8 +460,8 @@ public class Cif2DataParser extends CifDataParser {
    * @return int[] array
    */
   public static int[] getIntArrayFromStringList(String s, int n) {
-    float[] f = new float[n];
-    PT.parseFloatArrayInfested(PT.getTokens(s.replace(',', ' ').replace('[', ' ')), f);
+    double[] f = new double[n];
+    PT.parseDoubleArrayInfested(PT.getTokens(s.replace(',', ' ').replace('[', ' ')), f);
     int[] a = new int[n];
     for (int i = 0; i < n; i++)
       a[i] = (int) f[i];

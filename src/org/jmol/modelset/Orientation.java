@@ -1,7 +1,7 @@
 package org.jmol.modelset;
 
-import javajs.util.M3;
-import javajs.util.P3;
+import javajs.util.M3d;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 import org.jmol.script.T;
@@ -12,36 +12,36 @@ public class Orientation {
 
   public String saveName;
 
-  private M3 rotationMatrix = new M3();
-  private float xTrans, yTrans;
-  private float zoom, rotationRadius;
-  private P3 center = new P3();
-  private P3 navCenter = new P3();
-  private float xNav = Float.NaN;
-  private float yNav = Float.NaN;
-  private float navDepth = Float.NaN;
-  private float cameraDepth = Float.NaN;
-  private float cameraX = Float.NaN;
-  private float cameraY = Float.NaN;
+  private M3d rotationMatrix = new M3d();
+  private double xTrans, yTrans;
+  private double zoom, rotationRadius;
+  private P3d center = new P3d();
+  private P3d navCenter = new P3d();
+  private double xNav = Double.NaN;
+  private double yNav = Double.NaN;
+  private double navDepth = Double.NaN;
+  private double cameraDepth = Double.NaN;
+  private double cameraX = Double.NaN;
+  private double cameraY = Double.NaN;
   private boolean windowCenteredFlag;
   private boolean navigationMode;
   //boolean navigateSurface;
   private String moveToText;
 
-  private float[] pymolView;
+  private double[] pymolView;
 
   private Viewer vwr;
   
-  public Orientation(Viewer vwr, boolean asDefault, float[] pymolView) {
+  public Orientation(Viewer vwr, boolean asDefault, double[] pymolView) {
     this.vwr = vwr;
     if (pymolView != null) {
       this.pymolView = pymolView;
-      moveToText = "moveTo -1.0 PyMOL " + Escape.eAF(pymolView);
+      moveToText = "moveTo -1.0 PyMOL " + Escape.eAD(pymolView);
       return;
     }
     vwr.finalizeTransformParameters();
     if (asDefault) {
-      M3 rot = (M3) vwr.ms.getInfoM("defaultOrientationMatrix");
+      M3d rot = (M3d) vwr.ms.getInfoM("defaultOrientationMatrix");
       if (rot == null)
         rotationMatrix.setScale(1);
       else
@@ -54,7 +54,7 @@ public class Orientation {
     zoom = vwr.tm.getZoomSetting();
     center.setT(vwr.tm.fixedRotationCenter);
     windowCenteredFlag = vwr.tm.isWindowCentered();
-    rotationRadius = vwr.getFloat(T.rotationradius);
+    rotationRadius = vwr.getDouble(T.rotationradius);
     navigationMode = vwr.getBoolean(T.navigationmode);
     //navigateSurface = vwr.getNavigateSurface();
     moveToText = vwr.tm.getMoveToText(-1, false);
@@ -62,7 +62,7 @@ public class Orientation {
       xNav = vwr.tm.getNavigationOffsetPercent('X');
       yNav = vwr.tm.getNavigationOffsetPercent('Y');
       navDepth = vwr.tm.navigationDepthPercent;
-      navCenter = P3.newP(vwr.tm.navigationCenter);
+      navCenter = P3d.newP(vwr.tm.navigationCenter);
     }
     if (vwr.tm.camera.z != 0) { // PyMOL mode
       cameraDepth = vwr.tm.getCameraDepth();
@@ -76,13 +76,13 @@ public class Orientation {
         + PT.esc(saveName.substring(12)) + ";\n" : moveToText);
   }
   
-  public boolean restore(float timeSeconds, boolean isAll) {
+  public boolean restore(double timeSeconds, boolean isAll) {
     if (isAll) {
       vwr.setBooleanProperty("windowCentered", windowCenteredFlag);
       vwr.setBooleanProperty("navigationMode", navigationMode);
       //vwr.setBooleanProperty("navigateSurface", navigateSurface);
       if (pymolView == null)
-        vwr.moveTo(vwr.eval, timeSeconds, center, null, Float.NaN, rotationMatrix, zoom, xTrans,
+        vwr.moveTo(vwr.eval, timeSeconds, center, null, Double.NaN, rotationMatrix, zoom, xTrans,
             yTrans, rotationRadius, navCenter, xNav, yNav, navDepth, cameraDepth, cameraX, cameraY);
       else
         vwr.tm.moveToPyMOL(vwr.eval, timeSeconds, pymolView);

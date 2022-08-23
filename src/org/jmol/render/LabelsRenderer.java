@@ -33,7 +33,7 @@ import org.jmol.util.Font;
 import org.jmol.util.Point3fi;
 import org.jmol.viewer.JC;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 
 public class LabelsRenderer extends FontLineShapeRenderer {
@@ -44,13 +44,13 @@ public class LabelsRenderer extends FontLineShapeRenderer {
 
   protected int ascent;
   protected int descent;
-  protected float sppm;
-  protected float[] xy = new float[3];
+  protected double sppm;
+  protected double[] xy = new double[3];
   private P3i screen = new P3i();
 
   int fidPrevious;
 
-  protected P3 pTemp = new P3();
+  protected P3d pTemp = new P3d();
 
   protected short bgcolix;
   protected short labelColix;
@@ -72,9 +72,9 @@ public class LabelsRenderer extends FontLineShapeRenderer {
 
   private int zBox;
 
-  private float[] boxXY;
+  private double[] boxXY;
 
-  private float scalePixelsPerMicron;
+  private double scalePixelsPerMicron;
 
   private int mode;
 
@@ -92,7 +92,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     short backgroundColixContrast = vwr.cm.colixBackgroundContrast;
     int backgroundColor = vwr.getBackgroundArgb();
     sppm = vwr.getScalePixelsPerAngstrom(true);
-    scalePixelsPerMicron = (vwr.getBoolean(T.fontscaling) ? sppm * 10000f : 0);
+    scalePixelsPerMicron = (vwr.getBoolean(T.fontscaling) ? sppm * 10000d : 0);
     imageFontScaling = vwr.imageFontScaling;
     int iGroup = -1;
     minZ[0] = Integer.MAX_VALUE;
@@ -139,9 +139,9 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         zBox = 1;
 
       Text text = labels.getLabel(i);
-      boxXY = (!isExport || vwr.creatingImage ? labels.getBox(i) : new float[5]);
+      boxXY = (!isExport || vwr.creatingImage ? labels.getBox(i) : new double[5]);
       if (boxXY == null)
-        labels.putBox(i, boxXY = new float[5]);
+        labels.putBox(i, boxXY = new double[5]);
       text = renderLabelOrMeasure(text, label);
       if (text != null) {
         labels.putLabel(i, text);

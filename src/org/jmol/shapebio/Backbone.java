@@ -85,7 +85,7 @@ public class Backbone extends BioShapeCollection {
           bioShape.monomers[i].setShapeVisibility(vf, isVisible);
           Atom atomA = ms.at[index1];
           if (rd != null) {
-            if (Float.isNaN(rd.values[index1]) || Float.isNaN(rd.values[index2]))
+            if (Double.isNaN(rd.values[index1]) || Double.isNaN(rd.values[index2]))
               continue;
             mad = (short) ((rd.values[index1] + rd.values[index2]) * 1000); // average
             isVisible = (mad != 0);

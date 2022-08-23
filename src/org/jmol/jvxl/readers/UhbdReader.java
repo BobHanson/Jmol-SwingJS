@@ -41,7 +41,7 @@ class UhbdReader extends VolumeFileReader {
 
   //  This code is based on
   //
-  //  http://sourceforge.net/p/apbs/code/ci/9527462a39126fb6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c
+  //  http://sourceforge.net/p/apbs/code/ci/9527462a39126db6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c
   //
   //    Vio_printf(sock, "%72s\n", title);
   //    Vio_printf(sock, "%12.5e%12.5e%7d%7d%7d%7d%7d\n", 1.0, 0.0, -1, 0, nz, 1, nz);
@@ -85,7 +85,7 @@ class UhbdReader extends VolumeFileReader {
     //                                                        POTENTIAL (kT/e)
     jvxlFileHeaderBuffer = SB.newS(line);
     jvxlFileHeaderBuffer.append("UHBD format ").append(line).append("\n");
-    jvxlFileHeaderBuffer.append("see http://sourceforge.net/p/apbs/code/ci/9527462a39126fb6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c\n");
+    jvxlFileHeaderBuffer.append("see http://sourceforge.net/p/apbs/code/ci/9527462a39126db6cd880924b3cc4880ec4b78a9/tree/src/mg/vgrid.c\n");
     rd(); // ignored
     // 1.00000e+00 0.00000e+00     -1      0    161      1    161
     rd();
@@ -93,10 +93,10 @@ class UhbdReader extends VolumeFileReader {
     voxelCounts[0] = parseIntStr(line.substring(0, 7));
     voxelCounts[1] = parseIntStr(line.substring(7,14));
     voxelCounts[2] = parseIntStr(line.substring(14, 21));
-    float dx = parseFloatStr(line.substring(21, 33));    
-    volumetricOrigin.set(parseFloatStr(line.substring(33, 45)), 
-        parseFloatStr(line.substring(45,57)), 
-        parseFloatStr(line.substring(57, 69)));
+    double dx = parseDoubleStr(line.substring(21, 33));    
+    volumetricOrigin.set(parseDoubleStr(line.substring(33, 45)), 
+        parseDoubleStr(line.substring(45,57)), 
+        parseDoubleStr(line.substring(57, 69)));
     volumetricVectors[0].set(0, 0, dx);
     volumetricVectors[1].set(0, dx, 0);
     volumetricVectors[2].set(dx, 0, 0);
@@ -110,7 +110,7 @@ class UhbdReader extends VolumeFileReader {
   int pt;    
   
   @Override
-  protected float nextVoxel() throws Exception {
+  protected double nextVoxel() throws Exception {
     if (voxelCount % planeCount == 0) {
       rd();
       //      1    161    161
@@ -122,7 +122,7 @@ class UhbdReader extends VolumeFileReader {
       pt = 0;
     }
     voxelCount++;
-    float voxelValue = parseFloatStr(line.substring(pt, pt + 13));
+    double voxelValue = parseDoubleStr(line.substring(pt, pt + 13));
     pt += 13;
     return voxelValue;
   }

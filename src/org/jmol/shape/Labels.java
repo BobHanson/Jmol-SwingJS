@@ -37,7 +37,7 @@ import org.jmol.util.Font;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 import org.jmol.viewer.ActionManager;
@@ -56,7 +56,7 @@ public class Labels extends AtomShape {
   public int[] offsets;
 
   private Map<Integer, Text> atomLabels = new Hashtable<Integer, Text>();
-  private Map<Integer, float[]> labelBoxes;
+  private Map<Integer, double[]> labelBoxes;
 
   public BS bsFontSet;
   public BS bsBgColixSet;
@@ -122,8 +122,8 @@ public class Labels extends AtomShape {
     if ("scalereference" == propertyName) {
       if (strings == null)
         return;
-      float val = ((Float) value).floatValue();
-      float scalePixelsPerMicron = (val == 0 ? 0 : 10000f / val);
+      double val = ((Number) value).doubleValue();
+      double scalePixelsPerMicron = (val == 0 ? 0 : 10000d / val);
       int n = Math.min(ac, strings.length);
       for (int i = bs.nextSetBit(0); i >= 0
           && i < n; i = bs.nextSetBit(i + 1)) {
@@ -219,7 +219,7 @@ public class Labels extends AtomShape {
       bsFontSet = BS.newN(ac);
 
     if ("fontsize" == propertyName) {
-      int fontsize = ((Integer) value).intValue();
+      int fontsize = ((Number) value).intValue();
       if (fontsize < 0) {
         fids = null;
         return;
@@ -266,7 +266,7 @@ public class Labels extends AtomShape {
         checkColixLength((short) -1, ac);
         for (int i = bs.nextSetBit(0); i >= 0
             && i < ac; i = bs.nextSetBit(i + 1))
-          setPymolOffset(i, (float[]) value);
+          setPymolOffset(i, (double[]) value);
       }
       return;
     }
@@ -446,7 +446,7 @@ public class Labels extends AtomShape {
    * @param i
    * @param value
    */
-  private void setPymolOffset(int i, float[] value) {
+  private void setPymolOffset(int i, double[] value) {
     // from PyMOL reader or from set labeloffset [...]
     Text text = getLabel(i);
     if (text == null) {
@@ -466,8 +466,8 @@ public class Labels extends AtomShape {
 
   private final static LabelToken[][] nullToken = new LabelToken[][] { null };
   private boolean isScaled;
-  private float scalePixelsPerMicron;
-  private P3 ptTemp = new P3();
+  private double scalePixelsPerMicron;
+  private P3d ptTemp = new P3d();
 
   private void setScaling() {
     isActive = true;
@@ -475,7 +475,7 @@ public class Labels extends AtomShape {
       bsSizeSet = BS.newN(ms.ac);
     isScaled = vwr.getBoolean(T.fontscaling);
     scalePixelsPerMicron = (isScaled
-        ? vwr.getScalePixelsPerAngstrom(false) * 10000f
+        ? vwr.getScalePixelsPerAngstrom(false) * 10000d
         : 0);
   }
 
@@ -572,13 +572,13 @@ public class Labels extends AtomShape {
     return atomLabels.get(Integer.valueOf(i));
   }
 
-  public void putBox(int i, float[] boxXY) {
+  public void putBox(int i, double[] boxXY) {
     if (labelBoxes == null)
-      labelBoxes = new Hashtable<Integer, float[]>();
+      labelBoxes = new Hashtable<Integer, double[]>();
     labelBoxes.put(Integer.valueOf(i), boxXY);
   }
 
-  public float[] getBox(int i) {
+  public double[] getBox(int i) {
     if (labelBoxes == null)
       return null;
     return labelBoxes.get(Integer.valueOf(i));
@@ -741,23 +741,23 @@ public class Labels extends AtomShape {
   private int findNearestLabel(int x, int y) {
     if (labelBoxes == null)
       return -1;
-    float dmin = Float.MAX_VALUE;
+    double dmin = Double.MAX_VALUE;
     int imin = -1;
-    float zmin = Float.MAX_VALUE;
-    float afactor = (vwr.antialiased ? 2 : 1);
+    double zmin = Double.MAX_VALUE;
+    double afactor = (vwr.antialiased ? 2 : 1);
     Atom[] atoms = ms.at;
-    for (Map.Entry<Integer, float[]> entry : labelBoxes.entrySet()) {
+    for (Map.Entry<Integer, double[]> entry : labelBoxes.entrySet()) {
       if (!atoms[entry.getKey().intValue()]
           .isVisible(vf | Atom.ATOM_INFRAME_NOTHIDDEN))
         continue;
-      float[] boxXY = entry.getValue();
-      float dx = (x - boxXY[0]) * afactor;
-      float dy = (y - boxXY[1]) * afactor;
+      double[] boxXY = entry.getValue();
+      double dx = (x - boxXY[0]) * afactor;
+      double dy = (y - boxXY[1]) * afactor;
       if (dx <= 0 || dy <= 0 || dx >= boxXY[2] || dy >= boxXY[3]
           || boxXY[4] > zmin)
         continue;
       zmin = boxXY[4];
-      float d = Math.min(Math.abs(dx - boxXY[2] / 2),
+      double d = Math.min(Math.abs(dx - boxXY[2] / 2),
           Math.abs(dy - boxXY[3] / 2));
       if (d <= dmin) {
         dmin = d;

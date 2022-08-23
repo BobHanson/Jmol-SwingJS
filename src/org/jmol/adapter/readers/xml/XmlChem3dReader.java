@@ -80,8 +80,8 @@ public class XmlChem3dReader extends XmlReader {
       if (atts.containsKey("cartcoords")) {
         String xyz = atts.get("cartcoords");
         tokens = PT.getTokens(xyz);
-        atom.set(parseFloatStr(tokens[0]), parseFloatStr(tokens[1]),
-            parseFloatStr(tokens[2]));
+        atom.set(parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]),
+            parseDoubleStr(tokens[2]));
       }
       return;
     }
@@ -100,33 +100,33 @@ public class XmlChem3dReader extends XmlReader {
       String[] tokens2 = PT.getTokens(atts.get("calcatoms"));
       for (int i = parseIntStr(tokens[0]); --i >= 0;)
         asc.mapPartialCharge(tokens2[i + 1],
-            parseFloatStr(tokens[i + 1]));
+            parseDoubleStr(tokens[i + 1]));
     }
 
     if ("griddata".equals(localName)) {
       int nPointsX = parseIntStr(atts.get("griddatxdim"));
       int nPointsY = parseIntStr(atts.get("griddatydim"));
       int nPointsZ = parseIntStr(atts.get("griddatzdim"));
-      float xStep = parseFloatStr(atts.get("griddatxsize")) / (nPointsX);
-      float yStep = parseFloatStr(atts.get("griddatysize")) / (nPointsY);
-      float zStep = parseFloatStr(atts.get("griddatzsize")) / (nPointsZ);
+      double xStep = (double) parseDoubleStr(atts.get("griddatxsize")) / (nPointsX);
+      double yStep = (double) parseDoubleStr(atts.get("griddatysize")) / (nPointsY);
+      double zStep = (double) parseDoubleStr(atts.get("griddatzsize")) / (nPointsZ);
       tokens = PT.getTokens(atts.get("griddatorigin"));
-      float ox = parseFloatStr(tokens[0]);
-      float oy = parseFloatStr(tokens[1]);
-      float oz = parseFloatStr(tokens[2]);
+      double ox = (double) parseDoubleStr(tokens[0]);
+      double oy = (double) parseDoubleStr(tokens[1]);
+      double oz = (double) parseDoubleStr(tokens[2]);
       tokens = PT.getTokens(atts.get("griddatdata"));
       int pt = 1;
-      float[][][] voxelData = new float[nPointsX][nPointsY][nPointsZ];
-      float sum = 0;
+      double[][][] voxelData = new double[nPointsX][nPointsY][nPointsZ];
+      double sum = 0;
       for (int z = 0; z < nPointsZ; z++)
         for (int y = 0; y < nPointsY; y++)
           for (int x = 0; x < nPointsX; x++) {
-            float f = parseFloatStr(tokens[pt++]);
+            double f = (double) parseDoubleStr(tokens[pt++]);
             voxelData[x][y][z] = f;
             sum += f * f;
           }
       // normalizing!
-      sum = (float) (1 / Math.sqrt(sum));
+      sum = (double) (1 / Math.sqrt(sum));
       for (int z = 0; z < nPointsZ; z++)
         for (int y = 0; y < nPointsY; y++)
           for (int x = 0; x < nPointsX; x++) {
@@ -142,7 +142,7 @@ public class XmlChem3dReader extends XmlReader {
       vd.setVoxelDataAsArray(voxelData);
       if (moData == null) {
         moData = new Hashtable<String, Object>();
-        moData.put("defaultCutoff", Float.valueOf((float) 0.01));
+        moData.put("defaultCutoff", Double.valueOf((double) 0.01));
         moData.put("haveVolumeData", Boolean.TRUE);
         moData.put("calculationType", "Chem3D");
         orbitals = new  Lst<Map<String, Object>>();
@@ -164,7 +164,7 @@ public class XmlChem3dReader extends XmlReader {
   void processEndElement(String localName) {
     //System.out.println("xmlchem3d: end " + localName);
     if ("atom".equals(localName)) {
-      if (atom.elementSymbol != null && !Float.isNaN(atom.z)) {
+      if (atom.elementSymbol != null && !Double.isNaN(atom.z)) {
         parent.setAtomCoord(atom);
         asc.addAtomWithMappedName(atom);
       }

@@ -30,7 +30,7 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -60,20 +60,20 @@ public class Text {
   public String[] lines;
   
   public Object image;
-  public float imageScale = 1;
+  public double imageScale = 1;
 
   public int barPixels;
 
-  public float barDistance;
+  public double barDistance;
 
   public Text() {
     // public for reflection
     // requires .newLabel or .newEcho
-    boxXY =  new float[5];
+    boxXY =  new double[5];
   }
 
   static public Text newLabel(Viewer vwr, Font font, String text,
-                              short colix, short bgcolix, int align, float scalePixelsPerMicron) {
+                              short colix, short bgcolix, int align, double scalePixelsPerMicron) {
     // for labels and hover
     Text t = new Text();
     t.vwr = vwr;
@@ -94,7 +94,7 @@ public class Text {
   
   public static Text newEcho(Viewer vwr, Font font, String target,
                       short colix, int valign, int align,
-                      float scalePixelsPerMicron) {
+                      double scalePixelsPerMicron) {
     Text t = new Text();
     t.isEcho = true;
     t.vwr = vwr;
@@ -107,7 +107,7 @@ public class Text {
   }
   
   private void set(Font font, short colix, int align,
-                   float scalePixelsPerMicron) {
+                   double scalePixelsPerMicron) {
     this.scalePixelsPerMicron = scalePixelsPerMicron;
     //this.isEcho = isEcho;
     this.colix = colix;
@@ -159,7 +159,7 @@ public class Text {
     recalc();
   }
 
-  public void setScale(float scale) {
+  public void setScale(double scale) {
     imageScale = scale;
     recalc();
   }
@@ -175,7 +175,7 @@ public class Text {
     recalc();
   }
 
-  public void setFontScale(float scale) {
+  public void setFontScale(double scale) {
     if (fontScale == scale)
       return;
     fontScale = scale;
@@ -209,8 +209,8 @@ public class Text {
     boxHeight = textHeight + (fontScale >= 2 ? 16 : 8);
   }
 
-  public void setPosition(float scalePixelsPerMicron, float imageFontScaling,
-                          boolean isAbsolute, float[] boxXY) {
+  public void setPosition(double scalePixelsPerMicron, double imageFontScaling,
+                          boolean isAbsolute, double[] boxXY) {
     if (boxXY == null)
       boxXY = this.boxXY;
     else
@@ -225,15 +225,15 @@ public class Text {
       recalc();
     } else {
       if (textUnformatted != null && textUnformatted.startsWith("%SCALE")) {
-        float[] ret = new float[2];
+        double[] ret = new double[2];
         text = vwr.getScaleText(textUnformatted.substring(6).trim(), vwr.antialiased, (xyz == null ? 15 : 8), ret);
         barPixels = (int) (ret[0] * imageFontScaling);
         barDistance = ret[1];
         recalc();
       }
     }
-    float dx = offsetX * imageFontScaling;
-    float dy = offsetY * imageFontScaling;
+    double dx = offsetX * imageFontScaling;
+    double dy = offsetY * imageFontScaling;
     xAdj = (fontScale >= 2 ? 8 : 4);
     yAdj = ascent - lineHeight + xAdj;
     if (!isEcho || pymolOffset != null) {
@@ -241,9 +241,9 @@ public class Text {
       boxXY[1] = movableY;
       if (pymolOffset != null && pymolOffset[0] != 2 && pymolOffset[0] != 3) {
         // [1,2,3] are in Angstroms, not screen pixels
-        float pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
-        float pz = pymolOffset[3];
-        float dz = (pz < 0 ? -1 : 1) * Math.max(pz == 0 ? 0.5f : 0, Math.abs(pz) - 1)
+        double pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
+        double pz = pymolOffset[3];
+        double dz = (pz < 0 ? -1 : 1) * Math.max(pz == 0 ? 0.5d : 0, Math.abs(pz) - 1)
             * pixelsPerAngstrom;
         z -= (int) dz;
         pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
@@ -320,11 +320,11 @@ public class Text {
     //if (!isAbsolute)
     y0 = boxY + yAdj;
     if (isMeasure && align != JC.TEXT_ALIGN_CENTER)
-      y0 += ascent + (lines.length - 1)/2f * lineHeight;
+      y0 += ascent + (lines.length - 1)/2d * lineHeight;
   }
 
-  private float getPymolXYOffset(float off, int width, float ppa) {
-    float f = (off < -1 ? -1 : off > 1 ? 0 : (off - 1) / 2);
+  private double getPymolXYOffset(double off, int width, double ppa) {
+    double f = (off < -1 ? -1 : off > 1 ? 0 : (off - 1) / 2);
     // offset
     // -3     -2
     // -2     -1
@@ -339,13 +339,13 @@ public class Text {
     return f * width + off * ppa;
   }
 
-  private void setPos(float scale) {
-    float xLeft, xCenter, xRight;
+  private void setPos(double scale) {
+    double xLeft, xCenter, xRight;
     boolean is3dEcho = (xyz != null);
     if (valign == JC.ECHO_XY || valign == JC.ECHO_XYZ) {
-      float x = (movableXPercent != Integer.MAX_VALUE ? movableXPercent
+      double x = (movableXPercent != Integer.MAX_VALUE ? movableXPercent
           * windowWidth / 100 : is3dEcho ? movableX : movableX * scale);
-      float offsetX = this.offsetX * scale;
+      double offsetX = this.offsetX * scale;
       xLeft = xRight = xCenter = x + offsetX + barPixels;
     } else {
       xLeft = 5 * scale;
@@ -381,7 +381,7 @@ public class Text {
       boxXY[1] = windowHeight;
       break;
     default:
-      float y = (movableYPercent != Integer.MAX_VALUE ? movableYPercent
+      double y = (movableYPercent != Integer.MAX_VALUE ? movableYPercent
           * windowHeight / 100 : is3dEcho ? movableY : movableY * scale);
       boxXY[1] = (is3dEcho ? y : (windowHeight - y)) + offsetY * scale;
    }
@@ -395,9 +395,9 @@ public class Text {
       boxXY[1] -= ascent / 2;
   }
 
-  public static void setBoxXY(float boxWidth, float boxHeight, float xOffset,
-                               float yOffset, float[] boxXY, boolean isAbsolute) {
-    float xBoxOffset, yBoxOffset;
+  public static void setBoxXY(double boxWidth, double boxHeight, double xOffset,
+                               double yOffset, double[] boxXY, boolean isAbsolute) {
+    double xBoxOffset, yBoxOffset;
 
     // these are based on a standard |_ grid, so y is reversed.
     
@@ -463,13 +463,13 @@ public class Text {
     return w;
   }
 
-  private float xAdj, yAdj;
+  private double xAdj, yAdj;
 
-  private float y0;
+  private double y0;
 
-  public P3 pointerPt; // for echo
+  public P3d pointerPt; // for echo
 
-  public void setXYA(float[] xy, int i) {
+  public void setXYA(double[] xy, int i) {
     if (i == 0) {
       xy[2] = boxX;
       switch (align) {
@@ -498,18 +498,18 @@ public class Text {
   public void appendFontCmd(SB s) {
     s.append("  " + Shape.getFontCommand("echo", font));
     if (scalePixelsPerMicron > 0)
-      s.append(" " + (10000f / scalePixelsPerMicron)); // Angstroms per pixel
+      s.append(" " + (10000d / scalePixelsPerMicron)); // Angstroms per pixel
   }
 
   public boolean isMeasure;
   public boolean isEcho;
-  public P3 xyz;
+  public P3d xyz;
   public String target;
   public String script;
   public short colix;
   public short bgcolix;
   public int pointer;
-  public float fontScale;
+  public double fontScale;
 
   public int align;
   public int valign;
@@ -524,32 +524,32 @@ public class Text {
 
   // PyMOL-type offset
   // [mode, screenoffsetx,y,z (applied after tranform), positionOffsetx,y,z (applied before transform)]
-  public float[] pymolOffset;
+  public double[] pymolOffset;
 
   protected int windowWidth;
   protected int windowHeight;
   public boolean adjustForWindow;
-  public float boxWidth;
-  public float boxHeight;
-  public float boxX;
-  public float boxY;
+  public double boxWidth;
+  public double boxHeight;
+  public double boxX;
+  public double boxY;
 
   public int modelIndex = -1;
   public boolean visible = true;
   public boolean hidden = false;
 
-  public float[] boxXY;
+  public double[] boxXY;
 
-  public float scalePixelsPerMicron;
+  public double scalePixelsPerMicron;
 
   public int barPixelsXYZ;
 
-  public void setScalePixelsPerMicron(float scalePixelsPerMicron) {
+  public void setScalePixelsPerMicron(double scalePixelsPerMicron) {
     fontScale = 0;//fontScale * this.scalePixelsPerMicron / scalePixelsPerMicron;
     this.scalePixelsPerMicron = scalePixelsPerMicron;
   }
 
-  public void setXYZ(P3 xyz, boolean doAdjust) {
+  public void setXYZ(P3d xyz, boolean doAdjust) {
     this.xyz = xyz;
     if (xyz == null)
       this.zSlab = Integer.MIN_VALUE;
@@ -559,12 +559,12 @@ public class Text {
     }
   }
 
-  public void setTranslucent(float level, boolean isBackground) {
+  public void setTranslucent(double level, boolean isBackground) {
     if (isBackground) {
       if (bgcolix != 0)
-        bgcolix = C.getColixTranslucent3(bgcolix, !Float.isNaN(level), level);
+        bgcolix = C.getColixTranslucent3(bgcolix, !Double.isNaN(level), level);
     } else {
-      colix = C.getColixTranslucent3(colix, !Float.isNaN(level), level);
+      colix = C.getColixTranslucent3(colix, !Double.isNaN(level), level);
     }
   }
 
@@ -639,21 +639,21 @@ public class Text {
     return true;
   }
 
-  public void setBoxOffsetsInWindow(float margin, float vMargin, float vTop) {
+  public void setBoxOffsetsInWindow(double margin, double vMargin, double vTop) {
     // not labels
 
     // these coordinates are (0,0) in top left
     // (user coordinates are (0,0) in bottom left)
-    float bw = boxWidth + margin;
-    float x = boxX;
+    double bw = boxWidth + margin;
+    double x = boxX;
     if (x + bw > windowWidth)
       x = windowWidth - bw;
     if (x < margin)
       x = margin;
     boxX = x;
 
-    float bh = boxHeight;
-    float y = vTop;
+    double bh = boxHeight;
+    double y = vTop;
     if (y + bh > windowHeight)
       y = windowHeight - bh;
     if (y < vMargin)
@@ -661,7 +661,7 @@ public class Text {
     boxY = y;
   }
 
-  public void setWindow(int width, int height, float scalePixelsPerMicron) {
+  public void setWindow(int width, int height, double scalePixelsPerMicron) {
     windowWidth = width;
     windowHeight = height;
     if (pymolOffset == null && this.scalePixelsPerMicron < 0
@@ -714,9 +714,9 @@ public class Text {
    * @param pTemp
    * @param sppm
    */
-  public void getPymolScreenOffset(P3 atomPt, P3i screen, int zSlab, P3 pTemp,
-                                   float sppm) {
-    float mode = pymolOffset[0];
+  public void getPymolScreenOffset(P3d atomPt, P3i screen, int zSlab, P3d pTemp,
+                                   double sppm) {
+    double mode = pymolOffset[0];
     if (atomPt != null && (Math.abs(mode) % 2) == 1)
       pTemp.setT(atomPt);
     else

@@ -30,7 +30,7 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P4;
+import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -54,11 +54,11 @@ public class MolecularOrbital extends Isosurface {
   // these are globals, stored here and only passed on when the they are needed. 
 
   private String moTranslucency;
-  private Float moTranslucentLevel;
-  private P4 moPlane;
-  private Float moCutoff;
-  private Float moResolution;
-  private Float moScale;
+  private Double moTranslucentLevel;
+  private P4d moPlane;
+  private Double moCutoff;
+  private Double moResolution;
+  private Double moScale;
   private Integer moColorPos;
   private Integer moColorNeg;
   private Integer moMonteCarloCount;
@@ -76,7 +76,7 @@ public class MolecularOrbital extends Isosurface {
   private int myColorPt;
   private String strID;
   private int moNumber;
-  private float[] moLinearCombination;
+  private double[] moLinearCombination;
   private Map<String, Map<String, Object>> htModels;
   private Map<String, Object> thisModel;
 
@@ -103,7 +103,7 @@ public class MolecularOrbital extends Isosurface {
       thisModel = htModels.get(strID);
       moNumber = (!thisModel.containsKey("moNumber") ? 0 : ((Integer) thisModel
           .get("moNumber")).intValue());
-      moLinearCombination = (float[]) thisModel.get("moLinearCombination");
+      moLinearCombination = (double[]) thisModel.get("moLinearCombination");
       moSquareData = (moLinearCombination != null ? null : (Boolean) thisModel.get("moSquareData"));
       moSquareLinear = (moLinearCombination == null ? null : (Boolean) thisModel.get("moSquareLinear"));
       return;
@@ -224,7 +224,7 @@ public class MolecularOrbital extends Isosurface {
         moLinearCombination = null;
       } else {
         moNumber = 0;
-        moLinearCombination = (float[]) value;
+        moLinearCombination = (double[]) value;
         thisModel.put("moNumber", Integer.valueOf(0));
         thisModel.put("moLinearCombination", moLinearCombination);
       }
@@ -426,14 +426,14 @@ public class MolecularOrbital extends Isosurface {
         String units = (String) mo.get("energyUnits");
         if (units == null)
           units = "";
-        Float occ = (Float) mo.get("occupancy");
+        Double occ = (Double) mo.get("occupancy");
         if (occ != null)
-          type = "occupancy " + occ.floatValue() + " " + type;
+          type = "occupancy " + occ.doubleValue() + " " + type;
         String sym = (String) mo.get("symmetry");
         if (sym != null)
           type += sym;
         String energy = "" + mo.get("energy");
-        if (Float.isNaN(PT.parseFloat(energy)))
+        if (Double.isNaN(PT.parseDouble(energy)))
           sb.append(PT.sprintf("model %-2s; %s %-2i # %s\n", "ssis",
               new Object[] { ms.getModelNumberDotted(m), moType, Integer.valueOf(i + 1),
                   type }));
@@ -464,17 +464,17 @@ public class MolecularOrbital extends Isosurface {
       return false;
     nboType = (String) thisModel.get("nboType");
     moTranslucency = (String) thisModel.get("moTranslucency");
-    moTranslucentLevel = (Float) thisModel.get("moTranslucentLevel");
-    moPlane = (P4) thisModel.get("moPlane");
-    moCutoff = (Float) thisModel.get("moCutoff");
+    moTranslucentLevel = (Double) thisModel.get("moTranslucentLevel");
+    moPlane = (P4d) thisModel.get("moPlane");
+    moCutoff = (Double) thisModel.get("moCutoff");
     if (moCutoff == null)
-      moCutoff = (Float) sg.params.moData.get("defaultCutoff");
+      moCutoff = (Double) sg.params.moData.get("defaultCutoff");
     if (moCutoff == null) {
-      moCutoff = Float.valueOf(Parameters.defaultQMOrbitalCutoff);
+      moCutoff = Double.valueOf(Parameters.defaultQMOrbitalCutoff);
     }
-    thisModel.put("moCutoff", Float.valueOf(moCutoff.floatValue()));
-    moResolution = (Float) thisModel.get("moResolution");
-    moScale = (Float) thisModel.get("moScale");
+    thisModel.put("moCutoff", Double.valueOf(moCutoff.doubleValue()));
+    moResolution = (Double) thisModel.get("moResolution");
+    moScale = (Double) thisModel.get("moScale");
     moColorPos = (Integer) thisModel.get("moColorPos");
     moColorNeg = (Integer) thisModel.get("moColorNeg");
     moSquareData = (Boolean) thisModel.get("moSquareData");
@@ -487,13 +487,13 @@ public class MolecularOrbital extends Isosurface {
       thisModel.put("randomSeed", moRandomSeed = Integer.valueOf(
           ((int) -System.currentTimeMillis())% 10000));
     moNumber = ((Integer) thisModel.get("moNumber")).intValue();
-    moLinearCombination = (float[]) thisModel.get("moLinearCombination");
+    moLinearCombination = (double[]) thisModel.get("moLinearCombination");
     Object b = thisModel.get("moIsPositiveOnly");
     moIsPositiveOnly = (b != null && ((Boolean) (b)).booleanValue());
     return true;
   }
 
-  private void setOrbital(int moNumber, float[] linearCombination) {
+  private void setOrbital(int moNumber, double[] linearCombination) {
     setPropI("reset", strID, null);
     if (moDebug)
       setPropI("debug", Boolean.TRUE, null);
@@ -505,11 +505,11 @@ public class MolecularOrbital extends Isosurface {
     if (moPlane != null) {
       setPropI("plane", moPlane, null);
       if (moCutoff != null) {
-        float max = moCutoff.floatValue();        
+        double max = moCutoff.doubleValue();        
         if (moSquareData == Boolean.TRUE || moSquareLinear == Boolean.TRUE)
           max = max * max;
-        setPropI("red", Float.valueOf(-max), null);
-        setPropI("blue", Float.valueOf(max), null);
+        setPropI("red", Double.valueOf(-max), null);
+        setPropI("blue", Double.valueOf(max), null);
       }
     } else {
       if (moCutoff != null)

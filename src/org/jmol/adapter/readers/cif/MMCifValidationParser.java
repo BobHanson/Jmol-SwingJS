@@ -47,7 +47,7 @@ public class MMCifValidationParser {
     mapAtomResIDs(modelMap);
 
     // Returns a Lst<Object> of property data in the form 
-    // name(String), data(float[]), modelIndex (Integer), isGroup (Boolean);
+    // name(String), data(double[]), modelIndex (Integer), isGroup (Boolean);
 
     SV svMap = (SV) reader.validation;
     Lst<Object> retProps = reader.vwr.getAnnotationParser(false).catalogValidations(
@@ -169,11 +169,11 @@ public class MMCifValidationParser {
     String note = "Validations loaded:";
     for (int i = 0, n = propList.size(); i < n;) {
       String key = (String) propList.get(i++);
-      float[] f = (float[]) propList.get(i++);
+      double[] f = (double[]) propList.get(i++);
       int model = ((Integer) propList.get(i++)).intValue();
       boolean isGroup = ((Boolean) propList.get(i++)).booleanValue();
       int count = 0;
-      float max = 0;
+      double max = 0;
       int reslast = -1;
       int i0 = reader.asc.getAtomSetAtomIndex(model);
       for (int j = f.length; --j >= 0;)
@@ -190,7 +190,7 @@ public class MMCifValidationParser {
           max = Math.max(f[j], max);
         }
       note += "\n  property_" + key + " (" + (isGroup ? "residues: ": "atoms: ") + count 
-          + (max == 1 ? "" : ", max: " + ((int) (max * 100)) / 100f) + ")";
+          + (max == 1 ? "" : ", max: " + ((int) (max * 100)) / 100d) + ")";
       reader.asc.setAtomProperties(key, f, model, isGroup);
     }
     return note;

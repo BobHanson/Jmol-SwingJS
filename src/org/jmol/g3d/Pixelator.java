@@ -59,8 +59,8 @@ class Pixelator {
   
   void addPixel(int offset, int z, int p) {
 //    if (offset == 5) {
-//     System.out.println("pixelator " + Integer.toHexString(p) + " " + z);
-//     System.out.println("---");
+//System.out.println("pixelator " + Integer.toHexString(p) + " " + z);
+//System.out.println("---");
 //    }
     zb[offset] = z;
     pb[offset] = p;
@@ -69,7 +69,7 @@ class Pixelator {
   public void addImagePixel(byte shade, int tLog, int offset, int z, int argb,
                             int bgargb) {
 //    if (zb != g.zbuf)
-//      System.out.println("OH");
+//System.out.println("OH");
     if (z < zb[offset]) {
       switch (shade) {
       case 0:

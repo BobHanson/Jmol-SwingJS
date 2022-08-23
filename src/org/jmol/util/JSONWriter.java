@@ -222,7 +222,7 @@ public class JSONWriter {
   }
   
   public void arrayAdd(Object o) {
-    writeObject(o instanceof Float && ((Float)o).isNaN() || o instanceof Double && ((Double)o).isNaN() ? "NaN" : o);
+    writeObject(o instanceof Double && ((Double)o).isNaN() ? "NaN" : o);
   }
   
   public void arrayClose(boolean andIndent) {

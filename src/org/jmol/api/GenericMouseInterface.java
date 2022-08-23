@@ -8,6 +8,6 @@ public interface GenericMouseInterface {
 
   void dispose();
 
-	void processTwoPointGesture(float[][][] touches);
+	void processTwoPointGesture(double[][][] touches);
 
 }

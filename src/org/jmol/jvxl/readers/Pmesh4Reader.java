@@ -30,7 +30,7 @@ import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.util.Logger;
 
 import javajs.util.CU;
-import javajs.util.P4;
+import javajs.util.P4d;
 
 /*
  * 
@@ -78,7 +78,7 @@ class Pmesh4Reader extends PolygonFileReader {
   private String pmeshError;
   private String type;
   private int color;
-  float transparency;
+  double transparency;
   private int nX;
   private int nY;
 
@@ -129,7 +129,7 @@ class Pmesh4Reader extends PolygonFileReader {
   }
 
   private void readColor() throws Exception {
-    color = CU.colorTriadToFFRGB(getFloat(), getFloat(), getFloat());
+    color = CU.colorTriadToFFRGB((float) getFloat(), (float) getFloat(), (float) getFloat());
     transparency = getFloat();
   }
 
@@ -138,7 +138,7 @@ class Pmesh4Reader extends PolygonFileReader {
     iToken = Integer.MAX_VALUE;
     pmeshError = type + " ERROR: invalid vertex list";
     for (int i = 0; i < nVertices; i++) {
-      P4 pt = P4.new4(getFloat(), getFloat(), getFloat(), getFloat());
+      P4d pt = P4d.new4(getFloat(), getFloat(), getFloat(), getFloat());
       //if (isAnisotropic)
         //setVertexAnisotropy(pt);
       if (Logger.debugging)
@@ -178,8 +178,8 @@ class Pmesh4Reader extends PolygonFileReader {
     return parseIntStr(nextToken());
   }
 
-  private float getFloat() throws Exception {
-    return parseFloatStr(nextToken());
+  private double getFloat() throws Exception {
+    return parseDoubleStr(nextToken());
   }
 
 }

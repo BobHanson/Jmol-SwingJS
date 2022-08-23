@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.jmol.adapter.smarter.Atom;
-import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
@@ -41,10 +40,10 @@ import javajs.api.GenericCifDataParser;
 import javajs.util.BS;
 import javajs.util.CifDataParser;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 /**
  * A true line-free CIF file reader for CIF files.
@@ -206,7 +205,7 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private boolean continueWith(String key) {
-    boolean ret = (key != null && !key.equals("_shelx_hkl_file"));
+    boolean ret = (key != null && (ac == 0 || !key.equals("_shelx_hkl_file")));
     return ret;
   }
 
@@ -283,6 +282,7 @@ public class CifReader extends AtomSetCollectionReader {
         modDim = parseIntStr(data);
         if (modr != null)
           modr.setModDim(modDim);
+      } else if (skipKey(key)) {
       } else if (key.startsWith("_cell_") && key.indexOf("_commen_") < 0) {
         processCellParameter();
       } else if (key.startsWith("_atom_sites_fract_tran")) {
@@ -333,10 +333,21 @@ public class CifReader extends AtomSetCollectionReader {
         pdbID = data;
       } else if (key.startsWith("_topol_")){
         getTopologyParser().ProcessRecord(key, data);
+      } else {
+        // see MMCifReader or MSRdr
+        processSubclassEntry();
       }
     }
     return true;
   }
+
+  private boolean skipKey(String key) {
+    return key.startsWith("_shelx_")
+    || key.startsWith("_reflns_")
+    || key.startsWith("_diffrn_");
+  }
+
+
 
   private void addModelTitle(String key) {
     if (asc.atomSetCount > titleAtomSet)
@@ -444,7 +455,7 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean haveGlobalDummy;
   protected void newModel(int modelNo) throws Exception {
     if (modelNo < 0) {
-      if (modelNumber == 1 && asc.ac == 0 && nAtoms == 0 && !haveGlobalDummy) {
+      if (modelNumber == 1 && asc.ac == 0 && nAtoms == 0 && !haveGlobalDummy && !skipping) {
         modelNumber = 0;
         haveModel = false;
         haveGlobalDummy = true;
@@ -469,7 +480,7 @@ public class CifReader extends AtomSetCollectionReader {
         modelNumber--;
         haveModel = false;
         asc.removeCurrentAtomSet();
-      } else {
+      } else if (asc.iSet >= 0) {
         applySymmetryAndSetTrajectory();
       }
  }
@@ -498,14 +509,14 @@ public class CifReader extends AtomSetCollectionReader {
     for (int i = asc.ac; --i >= 0;) {
       Atom a = asc.atoms[i];
       String sym = a.typeSymbol;
-      float[] data;
+      double[] data;
       if (sym != null && (data = htOxStates.get(sym)) != null) {
-        float charge = data[0];
-        float radius = data[1];
-        if (!Float.isNaN(charge)) {
-          a.formalCharge = Math.round(charge);
+        double charge = data[0];
+        double radius = data[1];
+        if (!Double.isNaN(charge)) {
+          a.formalCharge = (int) Math.round(charge);
         }
-        if (!Float.isNaN(radius)) {
+        if (!Double.isNaN(radius)) {
           a.bondingRadius = radius;
         }
       }
@@ -718,10 +729,10 @@ public class CifReader extends AtomSetCollectionReader {
       // or   0.5+x,0.5+y,z,+1
       //
       latticeType = "Magnetic";
-      lattvecs = new Lst<float[]>();
+      lattvecs = new Lst<double[]>();
       for (int i = 0; i < magCenterings.size(); i++) {
         String s = magCenterings.get(i);
-        float[] f = new float[modDim + 4];
+        double[] f = new double[modDim + 4];
         if (s.indexOf("x1") >= 0)
           for (int j = 1; j <= modDim + 3; j++)
             s = PT.rep(s, "x" + j, "");
@@ -731,7 +742,7 @@ public class CifReader extends AtomSetCollectionReader {
           s = tokens[j].trim();
           if (s.length() == 0)
             continue;
-          if ((f[j] = PT.parseFloatFraction(s)) != 0)
+          if ((f[j] = PT.parseDoubleFraction(s)) != 0)
             n++;
         }
         if (n >= 2) // needs to have an x y or z as well as a +/-1;
@@ -739,7 +750,7 @@ public class CifReader extends AtomSetCollectionReader {
       }
       magCenterings = null;
     } else if (latticeType != null && "ABCFI".indexOf(latticeType) >= 0) {
-      lattvecs = new Lst<float[]>();
+      lattvecs = new Lst<double[]>();
       try {
         ms.addLatticeVector(lattvecs, latticeType);
       } catch (Exception e) {
@@ -765,7 +776,7 @@ public class CifReader extends AtomSetCollectionReader {
   private void processCellParameter() throws Exception {
     for (int i = 6; --i >= 0;)
       if (key.equals(JmolAdapter.cellParamNames[i])) {
-        float p = parseFloatStr(data);
+        double p = parseDoubleStr(data);
         if (rotateHexCell && i == 5 && p == 120)
           p = -1;
         setUnitCellItem(i, p);
@@ -807,8 +818,8 @@ public class CifReader extends AtomSetCollectionReader {
      _atom_sites.fract_transf_vector[3]      0.00000 
 
      */
-    float v = parseFloatStr(data);
-    if (Float.isNaN(v))
+    double v = parseDoubleStr(data);
+    if (Double.isNaN(v))
       return;
     //could enable EM box: unitCellParams[0] = 1;
     for (int i = 0; i < TransformFields.length; i++) {
@@ -837,7 +848,11 @@ public class CifReader extends AtomSetCollectionReader {
     key = (String) cifParser.getTokenPeeked();
     if (!continueWith(key))
       return false;
-    data = cifParser.getNextToken();
+    if (skipKey(key)) {
+      data = cifParser.skipNextToken();
+    } else {
+      data = cifParser.getNextToken();
+    }
     if (debugging && data != null && data.length() > 0 && data.charAt(0) != '\0')
       Logger.debug(">> " + key  + " " + data);
     if (data == null) {
@@ -1007,12 +1022,12 @@ public class CifReader extends AtomSetCollectionReader {
   // atom type data
   ////////////////////////////////////////////////////////////////
 
-  private Map<String, float[]> htOxStates;
+  private Map<String, double[]> htOxStates;
   private Lst<Object[]> bondTypes = new Lst<Object[]>();
 
   private String disorderAssembly = ".";
   private String lastDisorderAssembly;
-  private Lst<float[]> lattvecs;
+  private Lst<double[]> lattvecs;
   private Lst<String> magCenterings;
   protected int maxSerial;
 
@@ -1036,13 +1051,13 @@ public class CifReader extends AtomSetCollectionReader {
       String sym = getField(ATOM_TYPE_SYMBOL);
       if (sym == null)
         continue;
-      float oxno = parseFloatStr(getField(ATOM_TYPE_OXIDATION_NUMBER));
-      float radius = parseFloatStr(getField(ATOM_TYPE_RADIUS_BOND));
-      if (Float.isNaN(oxno) && Float.isNaN(radius))
+      double oxno = parseDoubleStr(getField(ATOM_TYPE_OXIDATION_NUMBER));
+      double radius = parseDoubleStr(getField(ATOM_TYPE_RADIUS_BOND));
+      if (Double.isNaN(oxno) && Double.isNaN(radius))
         continue;
         if (htOxStates == null)
-          htOxStates = new Hashtable<String, float[]>();
-        htOxStates.put(sym, new float[] {oxno, radius});
+          htOxStates = new Hashtable<String, double[]>();
+        htOxStates.put(sym, new double[] {oxno, radius});
     }
   }
 
@@ -1204,7 +1219,7 @@ public class CifReader extends AtomSetCollectionReader {
       "*_label_atom_id" // 73 mCIF dev 
       };
 
-//  final private static String singleAtomID = atomFields[CC_COMP_ID];
+  //  final private static String singleAtomID = atomFields[CC_COMP_ID];
 
   /* to: hansonr@stolaf.edu
    * from: Zukang Feng zfeng@rcsb.rutgers.edu
@@ -1217,7 +1232,8 @@ public class CifReader extends AtomSetCollectionReader {
 
   /**
    * reads atom data in any order
-   * @param isLigand 
+   * 
+   * @param isLigand
    * 
    * @return TRUE if successful; FALS if EOF encountered
    * @throws Exception
@@ -1265,16 +1281,40 @@ public class CifReader extends AtomSetCollectionReader {
           continue;
       }
       Atom atom = null;
-      if (haveCoord) {
-        atom = new Atom();
-      } else {
-        if (fieldProperty(key2col[ANISO_LABEL]) != NONE
-            || fieldProperty(key2col[ANISO_MMCIF_ID]) != NONE
-            || fieldProperty(key2col[MOMENT_LABEL]) != NONE) {
-          if ((atom = asc.getAtomFromName(field)) == null)
-            continue; // atom has been filtered out
+      if (isMMCIF) {
+        if (haveCoord) {
+          atom = new Atom();
         } else {
-          continue;
+          if (fieldProperty(key2col[ANISO_LABEL]) != NONE
+              || fieldProperty(key2col[ANISO_MMCIF_ID]) != NONE
+              || fieldProperty(key2col[MOMENT_LABEL]) != NONE) {
+            if ((atom = asc.getAtomFromName(field)) == null)
+              continue; // atom has been filtered out
+          } else {
+            continue;
+          }
+        }
+      } else {
+        // check for atom reference before atom definition
+        int f = NONE;
+        if ((f = fieldProperty(key2col[LABEL])) != NONE
+            || (f = fieldProperty(key2col[CC_ATOM_ID])) != NONE
+            || (f = fieldProperty(key2col[LABEL_ATOM_ID])) != NONE
+            || (f = fieldProperty(key2col[ANISO_LABEL])) != NONE
+            || (f = fieldProperty(key2col[ANISO_MMCIF_ID])) != NONE
+            || (f = fieldProperty(key2col[MOMENT_LABEL])) != NONE
+            ) {
+          atom = asc.getAtomFromName(field);
+        }
+        if (atom == null) {
+          atom = new Atom();
+          if (f != NONE) {
+            if (asc.iSet < 0) {
+              nextAtomSet();
+              asc.newAtomSet();
+            }
+            asc.atomSymbolicMap.put(field, atom);
+          }
         }
       }
       String componentId = null;
@@ -1316,7 +1356,7 @@ public class CifReader extends AtomSetCollectionReader {
         case LABEL:
         case LABEL_ATOM_ID:
           atom.atomName = field;
-          break;          
+          break;
         case AUTH_ATOM_ID:
           haveAuth = true;
           authAtom = field;
@@ -1344,45 +1384,45 @@ public class CifReader extends AtomSetCollectionReader {
           authSeq = field;
           break;
         case CC_ATOM_X_IDEAL:
-          float x = parseFloatStr(field);
-          if (readIdeal && !Float.isNaN(x))
+          double x = parseDoubleStr(field);
+          if (readIdeal && !Double.isNaN(x))
             atom.x = x;
           break;
         case CC_ATOM_Y_IDEAL:
-          float y = parseFloatStr(field);
-          if (readIdeal && !Float.isNaN(y))
+          double y = parseDoubleStr(field);
+          if (readIdeal && !Double.isNaN(y))
             atom.y = y;
           break;
         case CC_ATOM_Z_IDEAL:
-          float z = parseFloatStr(field);
-          if (readIdeal && !Float.isNaN(z))
+          double z = parseDoubleStr(field);
+          if (readIdeal && !Double.isNaN(z))
             atom.z = z;
           break;
         case CC_ATOM_X:
         case CARTN_X:
         case FRACT_X:
-          atom.x = parseFloatStr(field);
+          atom.x = parseDoubleStr(field);
           break;
         case CC_ATOM_Y:
         case CARTN_Y:
         case FRACT_Y:
-          atom.y = parseFloatStr(field);
+          atom.y = parseDoubleStr(field);
           break;
         case CC_ATOM_Z:
         case CARTN_Z:
         case FRACT_Z:
-          atom.z = parseFloatStr(field);
+          atom.z = parseDoubleStr(field);
           break;
         case CC_ATOM_CHARGE:
           atom.formalCharge = parseIntStr(field);
           break;
         case OCCUPANCY:
-          float floatOccupancy = parseFloatStr(field);
-          if (!Float.isNaN(floatOccupancy))
-            atom.foccupancy = floatOccupancy;
+          double doubleOccupancy = parseDoubleStr(field);
+          if (!Double.isNaN(doubleOccupancy))
+            atom.foccupancy = doubleOccupancy;
           break;
         case B_ISO:
-          atom.bfactor = parseFloatStr(field) * (isMMCIF ? 1 : 100f);
+          atom.bfactor = parseDoubleStr(field) * (isMMCIF ? 1 : 100d);
           break;
         case INS_CODE:
           atom.insertionCode = firstChar;
@@ -1410,7 +1450,7 @@ public class CifReader extends AtomSetCollectionReader {
           //see http://www.iucr.org/iucr-top/cif/cifdic_html/
           //            1/cif_core.dic/Iatom_site_calc_flag.html
           if ("dum".equals(field)) {
-            atom.x = Float.NaN;
+            atom.x = Double.NaN;
             continue; //skip 
           }
           break;
@@ -1423,7 +1463,8 @@ public class CifReader extends AtomSetCollectionReader {
           if (field.equalsIgnoreCase("Uiso")) {
             int j = key2col[U_ISO_OR_EQUIV];
             if (j != NONE)
-              asc.setU(atom, 7, parseFloatStr((String) cifParser.getColumnData(j)));
+              asc.setU(atom, 7,
+                  parseDoubleStr((String) cifParser.getColumnData(j)));
           }
           break;
         case ANISO_U11:
@@ -1439,7 +1480,7 @@ public class CifReader extends AtomSetCollectionReader {
         case ANISO_MMCIF_U13:
         case ANISO_MMCIF_U23:
           // Ortep Type 8: D = 2pi^2, C = 2, a*b*
-          asc.setU(atom, (col2key[i] - ANISO_U11) % 6, parseFloatStr(field));
+          asc.setU(atom, (col2key[i] - ANISO_U11) % 6, parseDoubleStr(field));
           break;
         case ANISO_B11:
         case ANISO_B22:
@@ -1449,7 +1490,7 @@ public class CifReader extends AtomSetCollectionReader {
         case ANISO_B23:
           // Ortep Type 4: D = 1/4, C = 2, a*b*
           asc.setU(atom, 6, 4);
-          asc.setU(atom, (col2key[i] - ANISO_B11) % 6, parseFloatStr(field));
+          asc.setU(atom, (col2key[i] - ANISO_B11) % 6, parseDoubleStr(field));
           break;
         case ANISO_BETA_11:
         case ANISO_BETA_22:
@@ -1459,7 +1500,8 @@ public class CifReader extends AtomSetCollectionReader {
         case ANISO_BETA_23:
           //Ortep Type 0: D = 1, c = 2 -- see org.jmol.symmetry/UnitCell.java
           asc.setU(atom, 6, 0);
-          asc.setU(atom, (col2key[i] - ANISO_BETA_11) % 6, parseFloatStr(field));
+          asc.setU(atom, (col2key[i] - ANISO_BETA_11) % 6,
+              parseDoubleStr(field));
           break;
         case MOMENT_PRELIM_X:
         case MOMENT_PRELIM_Y:
@@ -1468,10 +1510,10 @@ public class CifReader extends AtomSetCollectionReader {
         case MOMENT_Y:
         case MOMENT_Z:
           isMagCIF = true;
-          V3 pt = atom.vib;
+          V3d pt = atom.vib;
           if (pt == null)
             atom.vib = pt = new Vibration().setType(Vibration.TYPE_SPIN);
-          float v = parseFloatStr(field);
+          double v = parseDoubleStr(field);
           switch (tok) {
           case MOMENT_PRELIM_X:
           case MOMENT_X:
@@ -1492,9 +1534,10 @@ public class CifReader extends AtomSetCollectionReader {
       }
       if (!haveCoord)
         continue;
-      if (Float.isNaN(atom.x) || Float.isNaN(atom.y) || Float.isNaN(atom.z)) {
-        Logger.warn("atom " + atom.atomName
-            + " has invalid/unknown coordinates");
+      if (Double.isNaN(atom.x) || Double.isNaN(atom.y)
+          || Double.isNaN(atom.z)) {
+        Logger
+            .warn("atom " + atom.atomName + " has invalid/unknown coordinates");
         continue;
       }
       // auth_xxx are optional; label_xxx are required
@@ -1517,13 +1560,13 @@ public class CifReader extends AtomSetCollectionReader {
         continue;
       if (id != null && seqID > 0) {
         // co-op vibration vector when we have both id and seqID
-        V3 pt = atom.vib;
+        V3d pt = atom.vib;
         if (pt == null)
-          pt = asc.addVibrationVector(atom.index, 0, Float.NaN, T.seqid);
+          pt = asc.addVibrationVector(atom.index, 0, Double.NaN, T.seqid);
         pt.x = seqID;
       }
       if (modDim > 0 && siteMult != 0)
-        atom.vib = V3.new3(siteMult, 0, Float.NaN);
+        atom.vib = V3d.new3(siteMult, 0, Double.NaN);
     }
     asc.setCurrentModelInfo("isCIF", Boolean.TRUE);
     if (isMMCIF)
@@ -1720,6 +1763,8 @@ public class CifReader extends AtomSetCollectionReader {
               field = field.replace(';', ' ');
               symops.addLast(field);
               setSymmetryOperator(field);
+              if (modulated && modDim == 0)
+                modDim = getModulationReader().modDim;
             }
           break;
         case SYM_MAGN_CENTERING:
@@ -1794,8 +1839,8 @@ public class CifReader extends AtomSetCollectionReader {
       String name2 = getField(GEOM_BOND_ATOM_SITE_LABEL_2);
       int order = getBondOrder(getField(CCDC_GEOM_BOND_TYPE));
       String sdist = getField(GEOM_BOND_DISTANCE);
-      float distance = parseFloatStr(sdist);
-      if (distance == 0 || Float.isNaN(distance)) {
+      double distance = parseDoubleStr(sdist);
+      if (distance == 0 || Double.isNaN(distance)) {
         if (!iHaveFractionalCoordinates) {
           // maybe this is a simple Cartesian file with coordinates and bonds
           Atom a = getAtomFromNameCheckCase(name1);
@@ -1808,7 +1853,7 @@ public class CifReader extends AtomSetCollectionReader {
         }
         continue;
       }
-      float dx = 0;
+      double dx = 0;
       int pt = sdist.indexOf('(');
       if (pt >= 0) {
         char[] data = sdist.toCharArray();
@@ -1820,14 +1865,14 @@ public class CifReader extends AtomSetCollectionReader {
             break;
           data[j] = (--n < 0 ? '0' : sdx.charAt(n));
         }
-        dx = parseFloatStr(String.valueOf(data));
-        if (Float.isNaN(dx)) {
+        dx = parseDoubleStr(String.valueOf(data));
+        if (Double.isNaN(dx)) {
           Logger.info("error reading uncertainty for " + line);
-          dx = 0.015f;
+          dx = 0.015;
         }
         // TODO -- this is the full +/- (dx) in x.xxx(dx) -- is that too large?
       } else {
-        dx = 0.015f;
+        dx = 0.015;
       }
       // This field is from Materials Studio. See supplemental material for
       // http://pubs.rsc.org/en/Content/ArticleLanding/2012/CC/c2cc34714h
@@ -1836,8 +1881,8 @@ public class CifReader extends AtomSetCollectionReader {
       // this 5-model file can be read using one model at a time: load "c2cc34714h.txt" 3
       // but it is far from perfect, and still the best way is load "c2cc34714h.txt" 3 packed
       bondCount++;
-      bondTypes.addLast(new Object[] { name1, name2, Float.valueOf(distance),
-          Float.valueOf(dx), Integer.valueOf(order) });
+      bondTypes.addLast(new Object[] { name1, name2, Double.valueOf(distance),
+          Double.valueOf(dx), Integer.valueOf(order) });
     }
     if (bondCount > 0) {
       Logger.info(bondCount + " bonds read");
@@ -1874,10 +1919,10 @@ public class CifReader extends AtomSetCollectionReader {
     return a;
   }
 
-  private float[] atomRadius;
+  private double[] atomRadius;
   private BS[] bsConnected;
   private BS[] bsSets;
-  final private P3 ptOffset = new P3();
+  final private P3d ptOffset = new P3d();
   private BS bsMolecule;
   private BS bsExclude;
   private int firstAtom;
@@ -1919,7 +1964,7 @@ public class CifReader extends AtomSetCollectionReader {
     // if molecular, we need atom connection lists and radii
 
     if (isMolecular) {
-      atomRadius = new float[ac];
+      atomRadius = new double[ac];
       for (int i = firstAtom; i < ac; i++) {
         int elemnoWithIsotope = JmolAdapter.getElementNumber(atoms[i]
             .getElementSymbol());
@@ -1996,7 +2041,7 @@ public class CifReader extends AtomSetCollectionReader {
     bsExclude = null;
   }
 
-  private void fixAtomForBonding(P3 pt, int i) {
+  private void fixAtomForBonding(P3d pt, int i) {
     pt.setT(atoms[i]);//pt = (pt == null ? atoms[i] : P3.newP(atoms[i]));
     if (iHaveFractionalCoordinates)
       symmetry.toCartesian(pt, true);
@@ -2024,8 +2069,8 @@ public class CifReader extends AtomSetCollectionReader {
       if (bsBondDuplicates.get(i))
         continue;
       Object[] o = bondTypes.get(i);
-      float distance = ((Float) o[2]).floatValue();
-      float dx = ((Float) o[3]).floatValue();
+      double distance = ((Number) o[2]).doubleValue();
+      double dx = ((Number) o[3]).doubleValue();
       int order = ((Integer) o[4]).intValue();
       Atom a1 = getAtomFromNameCheckCase((String) o[0]);
       Atom a2 = getAtomFromNameCheckCase((String) o[1]);
@@ -2073,7 +2118,7 @@ public class CifReader extends AtomSetCollectionReader {
                 && atoms[k].elementNumber != 1
                 && (!checkAltLoc || atoms[k].altLoc == '\0' || atoms[k].altLoc == atoms[i].altLoc)) {
               if (!bsConnected[i].get(k)
-                  && checkBondDistance(atoms[i], atoms[k], 1.1f, 0))
+                  && checkBondDistance(atoms[i], atoms[k], 1.1d, 0))
                 addNewBond(i, k, 1);
             }
         }
@@ -2095,10 +2140,10 @@ public class CifReader extends AtomSetCollectionReader {
     // not overlaying another atom -- if that happens
     // go ahead and move it, but mark it as excluded.
 
-    float bondTolerance = vwr.getFloat(T.bondtolerance);
+    double bondTolerance = vwr.getDouble(T.bondtolerance);
     BS bsBranch = new BS();
-    P3 cart1 = new P3();
-    P3 cart2 = new P3();
+    P3d cart1 = new P3d();
+    P3d cart2 = new P3d();
     int nFactor = 2; // 1 was not enough. (see data/cif/triclinic_issue.cif)
     for (int i = firstAtom; i < ac; i++)
       if (!bsMolecule.get(i) && !bsExclude.get(i))
@@ -2119,7 +2164,7 @@ public class CifReader extends AtomSetCollectionReader {
                   if (ii + firstAtom == k)
                     continue;
                   fixAtomForBonding(cart2, ii + firstAtom);
-                  if (cart2.distance(cart1) < 0.1f) {
+                  if (cart2.distance(cart1) < 0.1d) {
                     bsExclude.set(k);
                     break;
                   }
@@ -2131,11 +2176,11 @@ public class CifReader extends AtomSetCollectionReader {
     return false;
   }
 
-  private boolean checkBondDistance(Atom a, Atom b, float distance, float dx) {
+  private boolean checkBondDistance(Atom a, Atom b, double distance, double dx) {
     if (iHaveFractionalCoordinates)
       return  symmetry.checkDistance(a, b, distance, dx, 0, 0, 0, ptOffset);
-    float d = a.distance(b);
-    return (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1f); // same as in Symmetry
+    double d = a.distance(b);
+    return (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1d); // same as in Symmetry
   }
 
   /**

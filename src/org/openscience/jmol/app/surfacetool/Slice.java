@@ -26,54 +26,54 @@
 package org.openscience.jmol.app.surfacetool;
 
 
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.V3d;
 
 class Slice {
 
-  final P4 leftPlane = new P4(); // definition of the left plane, using Jmol format
-  final P4 middle = new P4();//plane representing center of slice.
-  final P4 rightPlane = new P4(); // definition of the left plane
-  float angleXY; // 0<=anglexy< PI/2 radians
-  float anglefromZ;// 0<=anglefromZ < PI/2 radians
-  float position; // distance of slice middle from origin
-  float thickness; // thickness of slice
-  final P3 boundBoxNegCorner = new P3();
-  final P3 boundBoxPosCorner = new P3();
-  final P3 boundBoxCenter = new P3();
-  float diagonal;
+  final P4d leftPlane = new P4d(); // definition of the left plane, using Jmol format
+  final P4d middle = new P4d();//plane representing center of slice.
+  final P4d rightPlane = new P4d(); // definition of the left plane
+  double angleXY; // 0<=anglexy< PI/2 radians
+  double anglefromZ;// 0<=anglefromZ < PI/2 radians
+  double position; // distance of slice middle from origin
+  double thickness; // thickness of slice
+  final P3d boundBoxNegCorner = new P3d();
+  final P3d boundBoxPosCorner = new P3d();
+  final P3d boundBoxCenter = new P3d();
+  double diagonal;
 
   /**
    * @param length
-   *        (float) length of vector from origin
+   *        (double) length of vector from origin
    * @param angleXY
-   *        (float) angle of vector projection in XY plane (radians)
+   *        (double) angle of vector projection in XY plane (radians)
    * @param anglefromZ
-   *        (float) angle of vector from Z axis (radians)
+   *        (double) angle of vector from Z axis (radians)
    * @param result
    *        (Point4f) meeting the Jmol definition of a plane.
    */
-  static void makePlane(float length, float angleXY, float anglefromZ,
-                        P4 result) {
-    result.set4((float) (Math.cos(angleXY) * Math.sin(anglefromZ)),
-        (float) (Math.sin(angleXY) * Math.sin(anglefromZ)),
-        (float) (Math.cos(anglefromZ)), -length);
+  static void makePlane(double length, double angleXY, double anglefromZ,
+                        P4d result) {
+    result.set4((double) (Math.cos(angleXY) * Math.sin(anglefromZ)),
+        (double) (Math.sin(angleXY) * Math.sin(anglefromZ)),
+        (double) (Math.cos(anglefromZ)), -length);
   }
 
   /**
    * Sets the right plane and left plane bounding a slice.
    * 
    * @param angleXY
-   *        (float)angle in radians from X-axis to projection in XY plane
+   *        (double)angle in radians from X-axis to projection in XY plane
    * @param anglefromZ
-   *        (float)angle in radians from z-axis to vector
+   *        (double)angle in radians from z-axis to vector
    * @param position
-   *        (float) position from origin of slice center along vector in
+   *        (double) position from origin of slice center along vector in
    *        molecular units
    * @param thickness
-   *        (float) thickness of slice in molecular units.
+   *        (double) thickness of slice in molecular units.
    * @param boundBoxCenter
    *        (Point3f) center of the boundbox in molecular coordinates
    * @param boundBoxVec
@@ -86,20 +86,20 @@ class Slice {
    *        intuitive for the vwr as this is typically close to the center of
    *        the viewed object.
    */
-  void setSlice(float angleXY, float anglefromZ, float position,
-                float thickness, P3 boundBoxCenter, V3 boundBoxVec,
+  void setSlice(double angleXY, double anglefromZ, double position,
+                double thickness, P3d boundBoxCenter, V3d boundBoxVec,
                 boolean useMolecular) {
     if (angleXY >= 0 && angleXY < Math.PI) {
       this.angleXY = angleXY;
     } else {
-      float fix = (float) (Math.floor(angleXY / Math.PI));
-      this.angleXY = (float) (angleXY - fix * Math.PI);
+      double fix = (double) (Math.floor(angleXY / Math.PI));
+      this.angleXY = (double) (angleXY - fix * Math.PI);
     }
     if (anglefromZ >= 0 && anglefromZ < Math.PI) {
       this.anglefromZ = anglefromZ;
     } else {
       double fix = Math.floor(anglefromZ / Math.PI);
-      this.anglefromZ = (float) (anglefromZ - fix * Math.PI);
+      this.anglefromZ = (double) (anglefromZ - fix * Math.PI);
     }
     this.position = position;
     this.thickness = thickness;
@@ -110,9 +110,9 @@ class Slice {
     makePlane(position, angleXY, anglefromZ, middle);
     if (!useMolecular) {
       //correct for the offset between the boundbox center and the origin
-      P3 pt = P3.new3(middle.x, middle.y, middle.z);
+      P3d pt = P3d.new3(middle.x, middle.y, middle.z);
       pt.scaleAdd2(-middle.w, pt, boundBoxCenter);
-      Measure.getPlaneThroughPoint(pt, V3.new3(middle.x, middle.y,
+      MeasureD.getPlaneThroughPoint(pt, V3d.new3(middle.x, middle.y,
           middle.z), middle);
     }
     leftPlane.set4(middle.x, middle.y, middle.z, middle.w);
@@ -138,7 +138,7 @@ class Slice {
       Vector3f planeVec = Vector3f.new3(plane);
       Vector3f startVec = Vector3f.new3(start);
       Vector3f endVec = Vector3f.new3(end);
-      float d = (planeVec.lengthSquared() - planeVec.dot(startVec))
+      double d = (planeVec.lengthSquared() - planeVec.dot(startVec))
           / (planeVec.dot(endVec) - planeVec.dot(startVec));
       if (d > 0 && d < 1) {
         intersection.x = start.x + d * (end.x - start.x);
@@ -158,13 +158,13 @@ class Slice {
     return this;
   }
 
-  P4 getMiddle() {
+  P4d getMiddle() {
     return middle;
   }
 
   /*	private Point3f[] calcPlaneVert(Plane plane) {
   		Point3f[] result = new Point3f[4];
-  		float scale = (float) (0.5 * diagonal);
+  		double scale = (double) (0.5 * diagonal);
   		Vector3f tempVec = new Vector3f();
   		tempVec = vecScale(scale, vecAdd(plane.basis[0], plane.basis[1]));
   		result[0] = vectoPoint(vecAdd(tempVec, plane));

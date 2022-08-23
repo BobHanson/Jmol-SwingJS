@@ -23,8 +23,8 @@
 package org.jmol.bspt;
 
 
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 /**
  * A leaf of Point3f objects in the bsp tree
@@ -32,7 +32,7 @@ import javajs.util.T3;
  * @author Miguel, miguel@jmol.org
  */
 class Leaf extends Element {
-  T3[] tuples;
+  T3d[] tuples;
     
   /**
    * @param bspt 
@@ -43,7 +43,7 @@ class Leaf extends Element {
   Leaf(Bspt bspt, Leaf leaf, int countToKeep) {
     this.bspt = bspt;
     count = 0;
-    tuples = new P3[Bspt.leafCountMax];
+    tuples = new P3d[Bspt.leafCountMax];
     if (leaf == null)
       return;
     for (int i = countToKeep; i < Bspt.leafCountMax; ++i) {
@@ -55,11 +55,11 @@ class Leaf extends Element {
 
   void sort(int dim) {
     for (int i = count; --i > 0; ) { // this is > not >=
-      T3 champion = tuples[i];
-      float championValue = Node.getDimensionValue(champion, dim);
+      T3d champion = tuples[i];
+      double championValue = Node.getDimensionValue(champion, dim);
       for (int j = i; --j >= 0; ) {
-        T3 challenger = tuples[j];
-        float challengerValue = Node.getDimensionValue(challenger, dim);
+        T3d challenger = tuples[j];
+        double challengerValue = Node.getDimensionValue(challenger, dim);
         if (challengerValue > championValue) {
           tuples[i] = challenger;
           tuples[j] = champion;
@@ -71,7 +71,7 @@ class Leaf extends Element {
   }
 
   @Override
-  Element addTuple(int level, T3 tuple) {
+  Element addTuple(int level, T3d tuple) {
     if (count < Bspt.leafCountMax) {
       tuples[count++] = tuple;
       return this;

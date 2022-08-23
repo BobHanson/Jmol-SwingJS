@@ -35,8 +35,8 @@ import org.jmol.api.JmolViewer;
 import org.jmol.c.CBK;
 import org.jmol.script.SV;
 import org.jmol.util.Logger;
+import org.jmol.viewer.StatusManager;
 import org.jmol.viewer.Viewer;
-import org.openscience.jmol.app.jmolpanel.JmolPanel;
 import org.openscience.jmol.app.jsonkiosk.BannerFrame;
 import org.openscience.jmol.app.jsonkiosk.JsonNioClient;
 import org.openscience.jmol.app.jsonkiosk.JsonNioServer;
@@ -123,77 +123,81 @@ version=12.3.3_dev
  * 
  * @see JsonNioService
  * 
- *      Listens over a port on the local host for instructions on what to
- *      display. Instructions come in over the port as JSON strings.
+ * Listens over a port on the local host for instructions on what to display.
+ * Instructions come in over the port as JSON strings.
  * 
- *      This class uses the Naga asynchronous socket network I/O package (NIO),
- *      the JSON.org JSON package and Jmol.
+ * This class uses the Naga asynchronous socket network I/O package (NIO), the
+ * JSON.org JSON package and Jmol.
  * 
  *      http://code.google.com/p/naga/
  * 
- *      Initial versions of this code, including the JSON-base protocol were
- *      created by Adam Williams, U-Mass Amherst see
- *      http://MolecularPlayground.org and
+ * Initial versions of this code, including the JSON-base protocol were created
+ * by Adam Williams, U-Mass Amherst see http://MolecularPlayground.org and
  *      org.openscience.jmol.molecularplayground.MPJmolApp.java
  * 
  *      Sent from Jmol (via outSocket):
  * 
- *      version 1: {"magic" : "JmolApp", "role" : "out"} (socket initialization
- *      for messages TO jmol) {"magic" : "JmolApp", "role" : "in"} (socket
- *      initialization for messages FROM jmol)
+ * version 1:
+ *   {"magic" : "JmolApp", "role" : "out"}  (socket initialization for messages TO jmol)
+ *   {"magic" : "JmolApp", "role" : "in"}   (socket initialization for messages FROM jmol)
  * 
  * 
- *      version 2 (not implemented?: {"type" : "login", "source" : "Jmol"}
- *      (socket initialization for messages TO/FROM jmol) both versions: {"type"
- *      : "script", "event" : "done"} (script completed)
+ * version 2 (not implemented?:
+ *   {"type" : "login", "source" : "Jmol"}  (socket initialization for messages TO/FROM jmol)
+ * both versions:
+ *   {"type" : "script", "event" : "done"}  (script completed)
  * 
  *      Sent to Jmol (via inSocket):
  * 
  *      {"type" : "banner", "mode" : "ON" or "OFF" } (set banner for kiosk)
- *      {"type" : "banner", "text" : bannerText } (set banner for kiosk) {"type"
- *      : "command", "command" : command, "var": vname, "data":vdata} (script
- *      command request, with optional definition of a Jmol user variable prior
- *      to execution) {"type" : "content", "id" : id } (load content request)
+ *   {"type" : "banner", "text" : bannerText }      (set banner for kiosk)
+ *   {"type" : "command", "command" : command, "var": vname, "data":vdata}
+ *       (script command request, with optional definition of a Jmol user variable prior to execution)
+ *   {"type" : "content", "id" : id }            (load content request)
  *      {"type" : "move", "style" : (see below) } (mouse command request)
- *      {"type" : "quit" } (shut down request) {"type" : "sync", "sync" : (see
- *      below) } (sync command request) {"type" : "touch", (a raw touch event)
- *      "eventType" : eventType, "touchID" : touchID, "iData" : idata, "time" :
- *      time, "x" : x, "y" : y, "z" : z }
+ *   {"type" : "quit" }                          (shut down request)
+ *   {"type" : "sync", "sync" : (see below) }    (sync command request)
+ *   {"type" : "touch",                          (a raw touch event)
+ *        "eventType" : eventType,
+ *        "touchID"   : touchID,
+ *        "iData"     : idata,
+ *        "time"      : time,
+ *        "x" : x, "y" : y, "z" : z }
  * 
- *      For details on the "touch" type, see
- *      org.jmol.viewer.ActionManagerMT::processEvent Content is assumed to be
- *      in a location determined by the Jmol variable nioContentPath, with %ID%
- *      being replaced by some sort of ID number of tag provided by the other
- *      half of the system. That file contains more JSON code:
+ *   For details on the "touch" type, see org.jmol.viewer.ActionManagerMT::processEvent
+ *   Content is assumed to be in a location determined by the Jmol variable
+ *   nioContentPath, with %ID% being replaced by some sort of ID number of tag provided by
+ *   the other half of the system. That file contains more JSON code:
  * 
  *      {"startup_script" : scriptFileName, "banner_text" : text }
  * 
- *      An additional option "banner" : "off" turns off the title banner. The
- *      startup script must be in the same directory as the .json file,
- *      typically as a .spt file
+ *   An additional option "banner" : "off" turns off the title banner.
+ *   The startup script must be in the same directory as the .json file, typically as a .spt file
  * 
  *      Move commands include:
  * 
- *      {"type" : "move", "style" : "rotate", "x" : deltaX, "y", deltaY }
- *      {"type" : "move", "style" : "translate", "x" : deltaX, "y", deltaY }
+ *      {"type" : "move", "style" : "rotate", "x" : deltaX, "y" : deltaY }
+ *      {"type" : "move", "style" : "translate", "x" : deltaX, "y" : deltaY }
  *      {"type" : "move", "style" : "zoom", "scale" : scale } (1.0 = 100%)
  *      {"type" : "sync", "sync" : syncText }
  * 
- *      Note that all these moves utilize the Jmol sync functionality originally
- *      intended for applets. So any valid sync command may be used with the
- *      "sync" style. These include essentially all the actions that a user can
- *      make with a mouse, including the following, where the notation <....>
- *      represents a number of a given type. These events interrupt any
- *      currently running script, just as with typical mouse actions.
+ *   Note that all these moves utilize the Jmol sync functionality originally intended for
+ *   applets. So any valid sync command may be used with the "sync" style. These include 
+ *   essentially all the actions that a user can make with a mouse, including the
+ *   following, where the notation <....> represents a number of a given type. These
+ *   events interrupt any currently running script, just as with typical mouse actions.
  * 
- *      "centerAt <int:x> <int:y> <float:ptx> <float:pty> <float:ptz>" -- set
- *      {ptx,pty,ptz} at screen (x,y)
+ *   "centerAt <int:x> <int:y> <float:ptx> <float:pty> <float:ptz>"
+ *      -- set {ptx,pty,ptz} at screen (x,y)
  *      "rotateMolecule <float:deltaX> <float:deltaY>"
- *      "rotateXYBy <float:deltaX> <float:deltaY>" "rotateZBy <int:degrees>"
+ *   "rotateXYBy <float:deltaX> <float:deltaY>"
+ *   "rotateZBy <int:degrees>"
  *      "rotateZBy <int:degrees> <int:x> <int:y>" (with center reset)
  *      "rotateArcBall <int:x> <int:y> <float:factor>"
- *      "spinXYBy <int:x> <int:y> <float:speed>" -- a "flick" gesture
- *      "translateXYBy <float:deltaX, float:deltaY>" "zoomBy <int:pixels>"
+ *   "spinXYBy <int:x> <int:y> <float:speed>"
+ *      -- a "flick" gesture
+ *   "translateXYBy <float:deltaX, float:deltaY>"
+ *   "zoomBy <int:pixels>"
  *      "zoomByFactor <float:factor>"
  *      "zoomByFactor <float:factor> <int:x> <int:y>" (with center reset)
  * 
@@ -272,7 +276,7 @@ public class MPJmolApp implements JsonNioClient {
           .equals("true");
       Logger.info("startJsonNioKiosk: contentDisabled=" + contentDisabled);
 
-      service = JmolPanel.getJsonNioServer();
+      service = new JsonNioService();
       if (service == null) {
         Logger.info("Cannot start JsonNioServer");
         System.exit(1);
@@ -363,6 +367,8 @@ public class MPJmolApp implements JsonNioClient {
       vwr.setJmolCallbackListener(this);
       // turn off all file-writing capabilities
       vwr.setBooleanProperty("isKiosk", true);
+      vwr.setSyncDriver(StatusManager.SYNC_ENABLE);
+      vwr.setSyncDriver(StatusManager.SYNC_SLAVE);
     }
 
     @Override
@@ -433,14 +439,25 @@ public class MPJmolApp implements JsonNioClient {
   private String terminatorMessage = "NEXT_SCRIPT";
   private String resetMessage = "RESET_SCRIPT";
 
+  private final String MYTYPES = 
+      "reply....." + // 0
+      "command..." + // 10
+      "banner...." + // 20
+      "content..." + // 30
+      "move......" + // 40
+      "sync......" + // 50
+      "touch....." + // 60
+      "";
+  
   @Override
   public void processNioMessage(byte[] packet) throws Exception {
     setEnabled();
     Map<String, Object> json = JsonNioService.toMap(packet);
-    switch (JsonNioService.getString(json, "type")) {
-    case "reply":
+    String s = JsonNioService.getString(json, "type");
+    switch (MYTYPES.indexOf(s)) {
+    case 0://"reply":
       break;
-    case "command":
+    case 10://"command":
       if (contentDisabled)
         break;
       if (json.containsKey("var") && json.containsKey("data"))
@@ -448,7 +465,7 @@ public class MPJmolApp implements JsonNioClient {
             SV.getVariable(json.get("data")));
       sendScript(json.get("command").toString());
       break;
-    case "banner":
+    case 20://"banner":
       if (contentDisabled)
         break;
       setBanner((json.containsKey("text") ? (String) json.get("text")
@@ -456,7 +473,7 @@ public class MPJmolApp implements JsonNioClient {
               : ""),
           false);
       break;
-    case "content":
+    case 30://"content":
       if (contentDisabled) {
         nioRunContent(true);
         break;
@@ -502,12 +519,11 @@ public class MPJmolApp implements JsonNioClient {
       setBanner(getString(contentJSON, "banner").equals("off") ? null
           : getString(contentJSON, "banner_text"), true);
       break;
-    case "move":
-    case "sync":
-    case "touch":
-      if (motionDisabled)
-        break;
-      ((JmolPanel) vwr.display).nioSync(json, touchHandler);
+    case 40://"move":
+    case 50://"sync":
+    case 60://"touch":
+      if (!motionDisabled)
+        touchHandler.nioSync(vwr, json);
       break;
     }
   }

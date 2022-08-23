@@ -121,7 +121,7 @@ public class PopulationDisplay extends JPanel {
     // Fades from white to blue as population increase
 
     double val = (1.0 - p) * 255.0;
-    int ival = Math.round(Math.round(val));
+    int ival = (int) Math.round(Math.round(val));
     return "[" + ival + "," + ival + ",255]";
   }
 

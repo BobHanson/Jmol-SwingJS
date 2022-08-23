@@ -56,7 +56,7 @@ public class XmlArgusReader extends XmlReader {
   private final static int BOND = 3;
   private final static int TRANSFORMMAT = 4;
 
-  private float[] trans;
+  private double[] trans;
   private int ptTrans;
   
   public XmlArgusReader() {
@@ -96,14 +96,14 @@ public class XmlArgusReader extends XmlReader {
     }    
     if ("transformmat".equals(localName)) {
       elementContext = TRANSFORMMAT;
-      trans = new float[16];
+      trans = new double[16];
       return;
     }
   }
 
   private int parseBondToken(String str) {
-    float floatOrder = parseFloatStr(str);
-    if (Float.isNaN(floatOrder) && str.length() >= 1) {
+    double floatOrder = parseDoubleStr(str);
+    if (Double.isNaN(floatOrder) && str.length() >= 1) {
       str = str.toUpperCase();
       switch (str.charAt(0)) {
       case 'S':
@@ -138,7 +138,7 @@ public class XmlArgusReader extends XmlReader {
       return;
     }
     if ("atom".equals(localName)) {
-      if (atom.elementSymbol != null && !Float.isNaN(atom.z)) {
+      if (atom.elementSymbol != null && !Double.isNaN(atom.z)) {
         parent.setAtomCoord(atom);
         asc.addAtomWithMappedName(atom);
       }
@@ -173,12 +173,12 @@ public class XmlArgusReader extends XmlReader {
     }
     if (atom != null && elementContext == ATOM) {
       if ("x".equals(localName)) {
-        atom.x = parseFloatStr(chars.toString());
+        atom.x = parseDoubleStr(chars.toString());
       } else if ("y".equals(localName)) {
-        atom.y = parseFloatStr(chars.toString());
+        atom.y = parseDoubleStr(chars.toString());
         return;
       } else if ("z".equals(localName)) {
-        atom.z = parseFloatStr(chars.toString());
+        atom.z = parseDoubleStr(chars.toString());
         return;
       } else if ("atsym".equals(localName)) {
         atom.elementSymbol = chars.toString();
@@ -203,7 +203,7 @@ public class XmlArgusReader extends XmlReader {
     }
     
     if (elementContext == TRANSFORMMAT) {
-      trans[ptTrans++] = parseFloatStr(chars.toString());
+      trans[ptTrans++] = parseDoubleStr(chars.toString());
       setKeepChars(false);
       return;
     }

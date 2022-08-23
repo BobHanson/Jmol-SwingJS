@@ -30,9 +30,9 @@ import org.jmol.modelset.Model;
 import org.jmol.modelset.Structure;
 
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import org.jmol.script.T;
 
@@ -64,11 +64,11 @@ public abstract class BioPolymer implements Structure {
   // we probably should have better names for these things
   // holds center points between alpha carbons or sugar phosphoruses
 
-  protected P3[] leadMidpoints;
-  protected P3[] leadPoints;
-  protected P3[] controlPoints;
+  protected P3d[] leadMidpoints;
+  protected P3d[] leadPoints;
+  protected P3d[] controlPoints;
   // holds the vector that runs across the 'ribbon'
-  protected V3[] wingVectors;
+  protected V3d[] wingVectors;
 
   protected int[] leadAtomIndices;
 
@@ -142,7 +142,7 @@ public abstract class BioPolymer implements Structure {
     return i;
   }
 
-  final P3 getLeadPoint(int monomerIndex) {
+  final P3d getLeadPoint(int monomerIndex) {
     return monomers[monomerIndex].getLeadAtom();
   }
 
@@ -152,15 +152,15 @@ public abstract class BioPolymer implements Structure {
 //    midPoint.setT(getLeadPoint(groupIndex));
 //  }
 
-  private final P3 getInitiatorPoint() {
+  private final P3d getInitiatorPoint() {
     return monomers[0].getInitiatorAtom();
   }
 
-  private final P3 getTerminatorPoint() {
+  private final P3d getTerminatorPoint() {
     return monomers[monomerCount - 1].getTerminatorAtom();
   }
 
-  void getLeadMidPoint(int i, P3 midPoint) {
+  void getLeadMidPoint(int i, P3d midPoint) {
     if (i == monomerCount) {
       --i;
     } else if (i > 0) {
@@ -173,7 +173,7 @@ public abstract class BioPolymer implements Structure {
 
   // this might change in the future ... if we calculate a wing point
   // without an atom for an AlphaPolymer
-  final P3 getWingPoint(int polymerIndex) {
+  final P3d getWingPoint(int polymerIndex) {
     return monomers[polymerIndex].getWingAtom();
   }
 
@@ -199,19 +199,19 @@ public abstract class BioPolymer implements Structure {
     // amino polymer only
   }
 
-  public P3[] getLeadMidpoints() {
+  public P3d[] getLeadMidpoints() {
     if (leadMidpoints == null)
       calcLeadMidpointsAndWingVectors();
     return leadMidpoints;
   }
 
-  P3[] getLeadPoints() {
+  P3d[] getLeadPoints() {
     if (leadPoints == null)
       calcLeadMidpointsAndWingVectors();
     return leadPoints;
   }
 
-  public P3[] getControlPoints(boolean isTraceAlpha, float sheetSmoothing,
+  public P3d[] getControlPoints(boolean isTraceAlpha, double sheetSmoothing,
                                     boolean invalidate) {
     if (invalidate)
       invalidControl = true;
@@ -219,16 +219,16 @@ public abstract class BioPolymer implements Structure {
         : getControlPoints2(sheetSmoothing));
   }
 
-  protected float sheetSmoothing;
+  protected double sheetSmoothing;
 
-  private P3[] getControlPoints2(float sheetSmoothing) {
+  private P3d[] getControlPoints2(double sheetSmoothing) {
     if (!invalidControl && sheetSmoothing == this.sheetSmoothing)
       return controlPoints;
     getLeadPoints();
-    V3 v = new V3();
+    V3d v = new V3d();
     if (controlPoints == null)
-      controlPoints = new P3[monomerCount + 1];
-    if (!Float.isNaN(sheetSmoothing))
+      controlPoints = new P3d[monomerCount + 1];
+    if (!Double.isNaN(sheetSmoothing))
       this.sheetSmoothing = sheetSmoothing;
     for (int i = 0; i < monomerCount; i++)
       controlPoints[i] = getControlPoint(i, v);
@@ -244,11 +244,11 @@ public abstract class BioPolymer implements Structure {
    * @param v
    * @return the leadPoint unless a protein sheet residue (see AlphaPolymer)
    */
-  protected P3 getControlPoint(int i, V3 v) {
+  protected P3d getControlPoint(int i, V3d v) {
     return leadPoints[i];
   }
 
-  public final V3[] getWingVectors() {
+  public final V3d[] getWingVectors() {
     if (leadMidpoints == null) // this is correct ... test on leadMidpoints
       calcLeadMidpointsAndWingVectors();
     return wingVectors; // wingVectors might be null ... before autocalc
@@ -262,9 +262,9 @@ public abstract class BioPolymer implements Structure {
 
   private final void calcLeadMidpointsAndWingVectors() {
     if (leadMidpoints == null) {
-      leadMidpoints = new P3[monomerCount + 1];
-      leadPoints = new P3[monomerCount + 1];
-      wingVectors = new V3[monomerCount + 1];
+      leadMidpoints = new P3d[monomerCount + 1];
+      leadPoints = new P3d[monomerCount + 1];
+      wingVectors = new V3d[monomerCount + 1];
       sheetSmoothing = PT.FLOAT_MIN_SAFE;
     }
     if (reversed == null)
@@ -272,15 +272,15 @@ public abstract class BioPolymer implements Structure {
     else
       reversed.clearAll();
     twistedSheets = model.ms.vwr.getBoolean(T.twistedsheets);
-    V3 vectorA = new V3();
-    V3 vectorB = new V3();
-    V3 vectorC = new V3();
-    V3 vectorD = new V3();
+    V3d vectorA = new V3d();
+    V3d vectorB = new V3d();
+    V3d vectorC = new V3d();
+    V3d vectorD = new V3d();
 
-    P3 leadPointPrev, leadPoint;
+    P3d leadPointPrev, leadPoint;
     leadMidpoints[0] = getInitiatorPoint();
     leadPoints[0] = leadPoint = getLeadPoint(0);
-    V3 previousVectorD = null;
+    V3d previousVectorD = null;
     //proteins:
     //       C        O (wing)
     //        \       |
@@ -298,7 +298,7 @@ public abstract class BioPolymer implements Structure {
         return;
       }
       leadPoints[i] = leadPoint;
-      P3 midpoint = new P3();
+      P3d midpoint = new P3d();
       midpoint.ave(leadPoint, leadPointPrev);
       leadMidpoints[i] = midpoint;
       if (hasWingPoints) {
@@ -312,7 +312,7 @@ public abstract class BioPolymer implements Structure {
           reversed.set(i);
           vectorD.scale(-1);
         }
-        previousVectorD = wingVectors[i] = V3.newV(vectorD);
+        previousVectorD = wingVectors[i] = V3d.newV(vectorD);
         //System.out.println("draw v" + i + " vector " + midpoint + " " + vectorD); 
       }
     }
@@ -322,7 +322,7 @@ public abstract class BioPolymer implements Structure {
         wingVectors[1] = unitVectorX;
       } else {
         // auto-calculate wing vectors based upon lead atom positions only
-        V3 previousVectorC = null;
+        V3d previousVectorC = null;
         for (int i = 1; i < monomerCount; ++i) {
           // perfect for traceAlpha on; reasonably OK for traceAlpha OFF
           vectorA.sub2(leadMidpoints[i], leadPoints[i]);
@@ -336,7 +336,7 @@ public abstract class BioPolymer implements Structure {
                 && previousVectorC.angle(vectorC) > Math.PI / 2)
               vectorC.scale(-1);
           }
-          previousVectorC = wingVectors[i] = V3.newV(vectorC);
+          previousVectorC = wingVectors[i] = V3d.newV(vectorC);
         }
       }
     }
@@ -344,7 +344,7 @@ public abstract class BioPolymer implements Structure {
     wingVectors[monomerCount] = wingVectors[monomerCount - 1];
   }
 
-  private final V3 unitVectorX = V3.new3(1, 0, 0);
+  private final V3d unitVectorX = V3d.new3(1, 0, 0);
 
   public void findNearestAtomIndex(int xMouse, int yMouse, Atom[] closest,
                                    short[] mads, int myVisibilityFlag,
@@ -387,23 +387,23 @@ public abstract class BioPolymer implements Structure {
   }
 
   public int getPolymerPointsAndVectors(int last, BS bs,
-                                        Lst<P3[]> vList,
+                                        Lst<P3d[]> vList,
                                         boolean isTraceAlpha,
-                                        float sheetSmoothing) {
-    P3[] points = getControlPoints(isTraceAlpha, sheetSmoothing, false);
-    V3[] vectors = getWingVectors();
+                                        double sheetSmoothing) {
+    P3d[] points = getControlPoints(isTraceAlpha, sheetSmoothing, false);
+    V3d[] vectors = getWingVectors();
     int count = monomerCount;
     for (int j = 0; j < count; j++)
       if (bs.get(monomers[j].leadAtomIndex)) {
-        vList.addLast(new P3[] { points[j], P3.newP(vectors[j]) });
+        vList.addLast(new P3d[] { points[j], P3d.newP(vectors[j]) });
         last = j;
       } else if (last != Integer.MAX_VALUE - 1) {
-        vList.addLast(new P3[] { points[j], P3.newP(vectors[j]) });
+        vList.addLast(new P3d[] { points[j], P3d.newP(vectors[j]) });
         last = Integer.MAX_VALUE - 1;
       }
     if (last + 1 < count)
-      vList.addLast(new P3[] { points[last + 1],
-          P3.newP(vectors[last + 1]) });
+      vList.addLast(new P3d[] { points[last + 1],
+          P3d.newP(vectors[last + 1]) });
     return last;
   }
 
@@ -449,8 +449,8 @@ public abstract class BioPolymer implements Structure {
    * @param qtype
    * @return calculated value
    */
-  protected float calculateRamachandranHelixAngle(int m, char qtype) {
-    return Float.NaN;
+  protected double calculateRamachandranHelixAngle(int m, char qtype) {
+    return Double.NaN;
   }
 
   public boolean isNucleic() {

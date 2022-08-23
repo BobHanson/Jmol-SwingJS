@@ -26,8 +26,8 @@ package org.jmol.bspt;
 
 
 import javajs.util.AU;
-import javajs.util.P3;
-
+import javajs.util.P3d;
+import javajs.util.P3d;
 import javajs.util.BS;
 
 /**
@@ -64,7 +64,7 @@ public final class Bspf {
     cubeIterators = new CubeIterator[0];
   }
 
-  public void addTuple(int bsptIndex, P3 tuple) {
+  public void addTuple(int bsptIndex, P3d tuple) {
     if (bsptIndex >= bspts.length) {
       bspts = (Bspt[]) AU.arrayCopyObject(bspts, bsptIndex + 1);
       bsptsValid = AU.arrayCopyBool(bsptsValid, bsptIndex + 1);
@@ -113,7 +113,7 @@ public final class Bspf {
       return bspts[bsptIndex].allocateCubeIterator();
   }
 
-  public synchronized void initialize(int modelIndex, P3[] atoms, BS modelAtomBitSet) {
+  public synchronized void initialize(int modelIndex, P3d[] atoms, BS modelAtomBitSet) {
     if (bspts[modelIndex] != null)
       bspts[modelIndex].reset();
     for (int i = modelAtomBitSet.nextSetBit(0); i >= 0; i = modelAtomBitSet.nextSetBit(i + 1))

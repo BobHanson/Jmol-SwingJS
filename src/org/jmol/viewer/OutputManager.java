@@ -468,7 +468,7 @@ abstract class OutputManager {
       sb = new SB();
       for (int i = 0; i < nVibes; i++) {
         for (int j = 0; j < 20; j++) {
-          vwr.tm.setVibrationT(j / 20f + 0.2501f);
+          vwr.tm.setVibrationT(j / 20d + 0.25d);
           if (!writeFrame(++n, rootExt, params, sb))
             return "ERROR WRITING FILE SET: \n" + info;
         }
@@ -588,7 +588,7 @@ abstract class OutputManager {
    * @param fileName
    * @param type
    *        one of: PDB PQR FILE PLOT
-   * @param modelIndex
+   * @param modelIndex for PLOT or PDB or PQR only
    * @param plotParameters
    * @return "OK..." or "" or null
    * 
@@ -601,14 +601,13 @@ abstract class OutputManager {
     if (out == null)
       return "";
     fileName = fullPath[0];
-    String pathName = (type.equals("FILE") ? vwr.fm.getFullPathName(false)
+    String pathName = (type.equals("FILE") ? (String) vwr.getParameter("_modelFile")
         : null);
-    boolean getCurrentFile = (pathName != null && (pathName.equals("string")
+    boolean getStringData = (pathName != null && (pathName.equals("string")
         || pathName.equals("String[]") || pathName.equals("JSNode")));
-    boolean asBytes = (pathName != null && !getCurrentFile);
+    boolean asBytes = (pathName != null && !getStringData);
     if (asBytes) {
-      pathName = vwr.getModelSetPathName();
-      if (pathName == null)
+      if (vwr.getModelSetPathName() == null)
         return null; // zapped
     }
     // The OutputStringBuilder allows us to create strings or byte arrays
@@ -621,7 +620,7 @@ abstract class OutputManager {
         : type.startsWith("PLOT")
             ? vwr.getPdbData(modelIndex, type.substring(5), null,
                 plotParameters, out, true)
-            : getCurrentFile
+            : getStringData
                 ? out.append(vwr.getCurrentFileAsString("write")).toString()
                 : (String) vwr.fm.getFileAsBytes(pathName, out));
     out.closeChannel();

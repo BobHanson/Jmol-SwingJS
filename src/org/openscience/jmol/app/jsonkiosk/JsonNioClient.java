@@ -24,7 +24,12 @@
 
 package org.openscience.jmol.app.jsonkiosk;
 
+import java.util.Map;
+
 import org.jmol.viewer.Viewer;
+
+import javajs.util.P3d;
+
 
 /**
  * a client of a JsonNioService -- just needs notices of the service shutting
@@ -32,6 +37,17 @@ import org.jmol.viewer.Viewer;
  * 
  */
 public interface JsonNioClient {
+
+  final static public String TYPES = "reply....." + // 0
+      "quit......" + // 10
+      "command..." + // 20
+      "move......" + // 30
+      "rotate...." + // 40
+      "translate." + // 50
+      "zoom......" + // 60
+      "sync......" + // 70
+      "touch....." + // 80
+      "";
 
   static class TouchHandler {
     public final static float swipeCutoff = 100;
@@ -67,6 +83,102 @@ public interface JsonNioClient {
       // No commands for 5 seconds = unpause/restore Jmol
       if (isPaused && now - latestMoveTime > 5000)
         pauseScript(vwr, false);
+    }
+
+    public void syncScript(Viewer vwr, String script) {
+      vwr.syncScript(script, "~", 0);
+  }
+
+    /**
+     * process touch or gesture commands driven by hardware. From
+     * MolecularPlayground.
+     * 
+     * @param vwr
+     * @param json
+     * @throws Exception
+     */
+    public void nioSync(Viewer vwr, Map<String, Object> json)
+        throws Exception {
+      //    "reply....." +  // 0
+      //        "quit......" +  // 10
+      //        "command..." +  // 20
+      //        "move......" +  // 30
+      //        "rotate...." +  // 40
+      //        "translate." +  // 50
+      //        "zoom......" +  // 60
+      //        "sync......" +  // 70
+      //        "touch....." +  // 80
+
+      switch (TYPES.indexOf(JsonNioService.getString(json, "type"))) {
+      case 30://"move":
+        long now = latestMoveTime = System.currentTimeMillis();
+        switch (TYPES.indexOf(JsonNioService.getString(json, "style"))) {
+        case 40://"rotate":
+          float dx = (float) JsonNioService.getDouble(json, "x");
+          float dy = (float) JsonNioService.getDouble(json, "y");
+          float dxdy = dx * dx + dy * dy;
+          boolean isFast = (dxdy > TouchHandler.swipeCutoff);
+          boolean disallowSpinGesture = vwr.getBooleanProperty("isNavigating")
+              || !vwr.getBooleanProperty("allowGestures");
+          if (disallowSpinGesture || isFast
+              || now - swipeStartTime > TouchHandler.swipeDelayMs) {
+            // it's been a while since the last swipe....
+            // ... send rotation in all cases
+            String msg = null;
+            if (disallowSpinGesture) {
+              // just rotate
+            } else if (isFast) {
+              if (++nFast > TouchHandler.swipeCount) {
+                // critical number of fast motions reached
+                // start spinning
+                swipeStartTime = now;
+                msg = "Mouse: spinXYBy " + (int) dx + " " + (int) dy + " "
+                    + (Math.sqrt(dxdy) * TouchHandler.swipeFactor
+                        / (now - previousMoveTime));
+              }
+            } else if (nFast > 0) {
+              // slow movement detected -- turn off spinning
+              // and reset the number of fast actions
+              nFast = 0;
+              msg = "Mouse: spinXYBy 0 0 0";
+            }
+            if (msg == null)
+              msg = "Mouse: rotateXYBy " + dx + " " + dy;
+            syncScript(vwr, msg);
+          }
+          previousMoveTime = now;
+          break;
+        case 50://"translate":
+          if (!isPaused)
+            pauseScript(vwr, true);
+          syncScript(vwr, "Mouse: translateXYBy " + JsonNioService.getString(json, "x")
+              + " " + JsonNioService.getString(json, "y"));
+          break;
+        case 60://"zoom":
+          if (!isPaused)
+            pauseScript(vwr, true);
+          float zoomFactor = (float) (JsonNioService.getDouble(json, "scale")
+              / (vwr.tm.zmPct / 100.0f));
+          syncScript(vwr, "Mouse: zoomByFactor " + zoomFactor);
+          break;
+        }
+        break;
+      case 70://"sync":
+        //sync -3000;sync slave;sync 3000 '{"type":"sync","sync":"rotateZBy 30"}'
+        syncScript(vwr, "Mouse: " + JsonNioService.getString(json, "sync"));
+        break;
+      case 80://"touch":
+        // raw touch event
+        vwr.acm.processMultitouchEvent(0,
+            JsonNioService.getInt(json, "eventType"),
+            JsonNioService.getInt(json, "touchID"),
+            JsonNioService.getInt(json, "iData"),
+            P3d.new3(JsonNioService.getDouble(json, "x"),
+                JsonNioService.getDouble(json, "y"),
+                JsonNioService.getDouble(json, "z")),
+            JsonNioService.getLong(json, "time"));
+        break;
+      }
     }
 
   }

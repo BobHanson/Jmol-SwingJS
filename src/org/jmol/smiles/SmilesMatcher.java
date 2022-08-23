@@ -37,7 +37,7 @@ import org.jmol.viewer.JC;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 /**
@@ -388,12 +388,12 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    */
   @Override
   public String polyhedronToSmiles(Node center, int[][] faces, int atomCount,
-                                   P3[] points, int flags, String details)
+                                   P3d[] points, int flags, String details)
       throws Exception {
     SmilesAtom[] atoms = new SmilesAtom[atomCount];
     for (int i = 0; i < atomCount; i++) {
       atoms[i] = new SmilesAtom();
-      P3 pt = (points == null ? null : points[i]);
+      P3d pt = (points == null ? null : points[i]);
       if (pt instanceof Node) {
         atoms[i].elementNumber = ((Node) pt).getElementNumber();
         atoms[i].bioAtomName = ((Node) pt).getAtomName();
@@ -431,7 +431,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     String s = null;
     SmilesGenerator g = new SmilesGenerator();
     if (points != null)
-      g.polySmilesCenter = (P3) center;
+      g.polySmilesCenter = (P3d) center;
     clearExceptions();
     s = g.getSmiles(this, atoms, atomCount, BSUtil.newBitSet2(0, atomCount),
         null, flags | JC.SMILES_GEN_EXPLICIT_H_ALL | JC.SMILES_NO_AROMATIC
@@ -621,10 +621,10 @@ public class SmilesMatcher implements SmilesMatcherInterface {
           molecule.patternAtoms, nAtoms, bs, JC.SMILES_TYPE_SMARTS |JC.SMILES_FIRST_MATCH_ONLY|JC.SMILES_IGNORE_STEREOCHEMISTRY);
       int[][] map2 = getCorrelationMaps(s, 
           at, bsAtoms.cardinality(), bsAtoms, JC.SMILES_TYPE_SMARTS |JC.SMILES_FIRST_MATCH_ONLY|JC.SMILES_IGNORE_STEREOCHEMISTRY);
-//      System.out.println(s);
-//      System.out.println(jme);
-//      System.out.println(PT.toJSON(null,  map));
-//      System.out.println(PT.toJSON(null,  map2));
+//System.out.println(s);
+//System.out.println(jme);
+//System.out.println(PT.toJSON(null,  map));
+//System.out.println(PT.toJSON(null,  map2));
       return new int[][] {map[0], map2[0]};
     } catch (Exception e) {
       e.printStackTrace();

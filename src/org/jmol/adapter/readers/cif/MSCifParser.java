@@ -24,7 +24,9 @@
 package org.jmol.adapter.readers.cif;
 
 
-import javajs.util.M3;
+//import java.util.Arrays;
+
+import javajs.util.M3d;
 import javajs.util.Matrix;
 import javajs.util.PT;
 
@@ -68,10 +70,10 @@ public class MSCifParser extends MSRdr {
   private final static int FWV_DISP_LABEL = 12;
   private final static int FWV_DISP_AXIS = 13;
   private final static int FWV_DISP_SEQ_ID = 14;
-  private final static int FWV_DISP_COS = 15;
-  private final static int FWV_DISP_SIN = 16;
-  private final static int FWV_DISP_MODULUS = 17;
-  private final static int FWV_DISP_PHASE = 18;
+  private final static int FPARAM_DISP_COS = 15;
+  private final static int FPARAM_DISP_SIN = 16;
+  private final static int FPARAM_DISP_MODULUS = 17;
+  private final static int FPARAM_DISP_PHASE = 18;
   private final static int DISP_SPEC_LABEL = 19;
   private final static int DISP_SAW_AX = 20;
   private final static int DISP_SAW_AY = 21;
@@ -80,35 +82,35 @@ public class MSCifParser extends MSRdr {
   private final static int DISP_SAW_W = 24;
   private final static int FWV_OCC_LABEL = 25;
   private final static int FWV_OCC_SEQ_ID = 26;
-  private final static int FWV_OCC_COS = 27;
-  private final static int FWV_OCC_SIN = 28;
-  private final static int FWV_OCC_MODULUS = 29;
-  private final static int FWV_OCC_PHASE = 30;
+  private final static int FPARAM_OCC_COS = 27;
+  private final static int FPARAM_OCC_SIN = 28;
+  private final static int FPARAM_OCC_MODULUS = 29;
+  private final static int FPARAM_OCC_PHASE = 30;
   private final static int OCC_SPECIAL_LABEL = 31;
   private final static int OCC_CRENEL_C = 32;
   private final static int OCC_CRENEL_W = 33;
   private final static int FWV_U_LABEL = 34;
   private final static int FWV_U_TENS = 35;
   private final static int FWV_U_SEQ_ID = 36;
-  private final static int FWV_U_COS = 37;
-  private final static int FWV_U_SIN = 38;
-  private final static int FWV_U_MODULUS = 39;
-  private final static int FWV_U_PHASE = 40;
+  private final static int FPARAM_U_COS = 37;
+  private final static int FPARAM_U_SIN = 38;
+  private final static int FPARAM_U_MODULUS = 39;
+  private final static int FPARAM_U_PHASE = 40;
   private final static int FD_ID = 41;
   private final static int FO_ID = 42;
   private final static int FU_ID = 43;
-  private final static int FDP_ID = 44;
-  private final static int FOP_ID = 45;
-  private final static int FUP_ID = 46;
+  private final static int FDPARAM_ID = 44;
+  private final static int FOPARAM_ID = 45;
+  private final static int FUPARAM_ID = 46;
   private final static int JANA_OCC_ABS_LABEL = 47;
   private final static int JANA_OCC_ABS_O_0 = 48;
   private final static int FWV_SPIN_LABEL = 49;
   private final static int FWV_SPIN_AXIS = 50;
   private final static int FWV_SPIN_SEQ_ID = 51;
-  private final static int FWV_SPIN_COS = 52;
-  private final static int FWV_SPIN_SIN = 53;
-  private final static int FWV_SPIN_MODULUS = 54;
-  private final static int FWV_SPIN_PHASE = 55;
+  private final static int FPARAM_SPIN_COS = 52;
+  private final static int FPARAM_SPIN_SIN = 53;
+  private final static int FPARAM_SPIN_MODULUS = 54;
+  private final static int FPARAM_SPIN_PHASE = 55;
   private final static int SPIN_SPEC_LABEL = 56;
   private final static int SPIN_SAW_AX = 57;
   private final static int SPIN_SAW_AY = 58;
@@ -228,7 +230,7 @@ public class MSCifParser extends MSRdr {
 
   static final String SEP = "_";
 
-  private M3 comSSMat;
+  private M3d comSSMat;
   public void processEntry() throws Exception {
     CifReader cr = (CifReader) this.cr;
     if (cr.key.equals("_cell_commen_t_section_1")) {
@@ -238,12 +240,12 @@ public class MSCifParser extends MSRdr {
     if (cr.key.startsWith("_cell_commen_supercell_matrix")) {
       isCommensurate = true;
       if (comSSMat == null)
-        comSSMat = M3.newM3(null);
+        comSSMat = M3d.newM3((M3d) null);
       String[] tokens = PT.split(cr.key, "_");
       int r = cr.parseIntStr(tokens[tokens.length - 2]);
       int c = cr.parseIntStr(tokens[tokens.length - 1]);
       if (r > 0 && c > 0)
-        comSSMat.setElement(r - 1, c - 1, cr.parseFloatStr(cr.data)); 
+        comSSMat.setElement(r - 1, c - 1, cr.parseDoubleStr(cr.data)); 
     }
   }
 
@@ -292,7 +294,7 @@ public class MSCifParser extends MSRdr {
       double w = Double.NaN;
       String fid = null;
       int n = cr.cifParser.getColumnCount();
-      String sep = SEP;
+      String sep = SEP; // _
       for (int i = 0; i < n; ++i) {
         switch (tok = fieldProperty(cr, i)) {
         case FWV_ID:
@@ -317,9 +319,9 @@ public class MSCifParser extends MSRdr {
         case FWV_OCC_SEQ_ID:
         case FWV_SPIN_SEQ_ID:
         case FWV_U_SEQ_ID:
-        case FDP_ID:
-        case FOP_ID:
-        case FUP_ID:
+        case FDPARAM_ID:
+        case FOPARAM_ID:
+        case FUPARAM_ID:
           switch (tok) {
           case WV_ID:
             type_id = "W_";
@@ -331,17 +333,18 @@ public class MSCifParser extends MSRdr {
             fid = "?" + field;
             pt[2] = 1;
             continue;
-          case FDP_ID:
-          case FOP_ID:
-          case FUP_ID:
+          case FDPARAM_ID:
+          case FOPARAM_ID:
+          case FUPARAM_ID:
             atomLabel = axis = "*";
             //$FALL-THROUGH$
           case FWV_DISP_SEQ_ID:
           case FWV_OCC_SEQ_ID:
           case FWV_SPIN_SEQ_ID:
           case FWV_U_SEQ_ID:
-            type_id = Character.toUpperCase(modulationFields[tok].charAt(11))
-                + "_";
+            type_id = modulationFields[tok].substring(11, 12).toUpperCase();
+//            type_id = Character.toUpperCase(modulationFields[tok].charAt(11))
+//                + "_";
             break;
           }
           type_id += sep + field;
@@ -400,7 +403,7 @@ public class MSCifParser extends MSRdr {
           q = Cif2DataParser.getArrayFromStringList(field, modDim);
           break;
         default:
-          float f = cr.parseFloatStr(field);
+          double f = parseDouble(field);
           switch (tok) {
           case LEG_DISP_COEF:
           case LEG_OCC_COEF:
@@ -409,11 +412,11 @@ public class MSCifParser extends MSRdr {
             if (f != 0)
               pt[2] = 0;
             break;
-          case FWV_OCC_SIN:
           case OCC_CRENEL_C:
-          case FWV_DISP_SIN:
-          case FWV_SPIN_SIN:
-          case FWV_U_SIN:
+          case FPARAM_OCC_SIN:
+          case FPARAM_DISP_SIN:
+          case FPARAM_SPIN_SIN:
+          case FPARAM_U_SIN:
           case DEPR_FU_SIN:
           case DEPR_FD_SIN:
           case DEPR_FO_SIN:
@@ -441,33 +444,33 @@ public class MSCifParser extends MSRdr {
               q = new double[modDim];
             q[2] = f;
             break;
-          case FWV_DISP_MODULUS:
-          case FWV_OCC_MODULUS:
-          case FWV_SPIN_MODULUS:
-          case FWV_U_MODULUS:
+          case FPARAM_DISP_MODULUS:
+          case FPARAM_OCC_MODULUS:
+          case FPARAM_SPIN_MODULUS:
+          case FPARAM_U_MODULUS:
             pt[0] = f;
             pt[2] = 1;
             break;
           case LEG_OCC_ORDER:
           case DEPR_FO_COS:
-          case FWV_OCC_COS:
             axis = "0";
             //$FALL-THROUGH$
           case LEG_DISP_ORDER:
           case LEG_U_ORDER:
           case WV_Y:
           case FWV_Y:
-          case FWV_DISP_PHASE:
-          case FWV_OCC_PHASE:
-          case FWV_SPIN_PHASE:
-          case FWV_U_PHASE:
+          case FPARAM_OCC_COS:
+          case FPARAM_DISP_PHASE:
+          case FPARAM_OCC_PHASE:
+          case FPARAM_SPIN_PHASE:
+          case FPARAM_U_PHASE:
           case OCC_CRENEL_W:
           case DISP_SAW_AY:
           case SPIN_SAW_AY:
           case JANA_OCC_ABS_O_0:
-          case FWV_DISP_COS:
-          case FWV_SPIN_COS:
-          case FWV_U_COS:
+          case FPARAM_DISP_COS:
+          case FPARAM_SPIN_COS:
+          case FPARAM_U_COS:
           case DEPR_FD_COS:
           case DEPR_FU_COS:
             pt[1] = f;
@@ -502,7 +505,7 @@ public class MSCifParser extends MSRdr {
           }
         if (!ok)
           continue;
-        addMod("F_coefs_", fid, q);
+        addMod(key, "F_coefs_", fid, q);
         // we have a Q-coef, so we ignore any x y z also in this block
         pt[0] = Double.NaN;
       }      
@@ -513,27 +516,28 @@ public class MSCifParser extends MSRdr {
         }
       if (!ok)
         continue;
-      switch (type_id.charAt(0)) {
+      char tchar = type_id.charAt(0);
+      switch (tchar) {
       case 'C':
       case 'D':
       case 'O':
       case 'M':
       case 'U':
       case 'J':
-        if (atomLabel == null || axis == null)
+        if (atomLabel == null || axis == null && tchar != 'O')
           continue;
         if (type_id.equals("D_S") || type_id.equals("M_T")) {
           // saw tooth displacement  center/width/Axyz
           if (Double.isNaN(c) || Double.isNaN(w))
             continue;
           if (pt[0] != 0)
-            addMod(type_id + "#x;" + atomLabel, fid,
+            addMod(key, type_id + "#x;" + atomLabel, fid,
                 new double[] { c, w, pt[0] });
           if (pt[1] != 0)
-            addMod(type_id + "#y;" + atomLabel, fid,
+            addMod(key, type_id + "#y;" + atomLabel, fid,
                 new double[] { c, w, pt[1] });
           if (pt[2] != 0)
-            addMod(type_id + "#z;" + atomLabel, fid,
+            addMod(key, type_id + "#z;" + atomLabel, fid,
                 new double[] { c, w, pt[2] });
           continue;
         }
@@ -543,18 +547,19 @@ public class MSCifParser extends MSRdr {
           else
             axis += (int) pt[1];
         }
-        type_id += "#" + axis + ";" + atomLabel;
+        // occupation can have null axis, so we indicate it as "*"
+        type_id += "#" + (axis == null ? "*" : axis) + ";" + atomLabel;
         break;
       }
-      addMod(type_id, fid, pt);
+      addMod(key, type_id, fid, pt);
     }
     return 1;
   }
   
-  private void addMod(String id, String fid, double[] params) {
-    if (fid != null)
-      id += fid;
-    addModulation(null, id, params, -1);
+  private void addMod(@SuppressWarnings("unused") String key, String id, String fid, double[] params) {
+    String k = (fid == null ? id : id + fid);
+//System.out.println("!mscifp addMod id=" + id + " fid=" + fid + " key = " + k + " " + Arrays.toString(params) + " for " + key);
+    addModulation(null, k, params, -1);
   }
 
   //loop_
@@ -604,7 +609,7 @@ public class MSCifParser extends MSRdr {
 
 //  private void addTwin(String id, Matrix m) {
 //    //TODO implement twinning
-//    System.out.println("twin " + id + " = " + m);    
+//System.out.println("twin " + id + " = " + m);    
 //  }
 
   private Matrix getSparseMatrix(CifReader cr, String term, int i, int dim) {
@@ -621,9 +626,26 @@ public class MSCifParser extends MSRdr {
       int r = cr.parseIntStr(tokens[tokens.length - 2]);
       int c = cr.parseIntStr(tokens[tokens.length - 1]);
       if (r > 0 && c > 0)
-        a[r - 1][c - 1] = cr.parseFloatStr(field);
+        a[r - 1][c - 1] = parseDouble(field);
     }
     return m;
+  }
+
+  private double parseDouble(String field) {
+    double d = cr.parseDoubleStr(field);
+    return fixDouble(d);
+  }
+
+//  private void fixDoubleA(double[] pt) {
+//    for (int i = pt.length; --i >= 0;)
+//      pt[i] = fixDouble(pt[i]);
+//  }
+
+  private double fixDouble(double d) {
+    // was fixFloat(float[] pt  -- removed in Jmol 15.32.53
+    // this is fine -- we are just removing the lower-order bits; 
+    // none of these numbers will have much precision
+    return d;//Math.round(d * 10000000000.) / 10000000000.;
   }
 
   private int fieldProperty(CifReader cr, int i) {

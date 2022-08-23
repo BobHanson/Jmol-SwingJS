@@ -45,7 +45,7 @@ package org.jmol.g3d;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 
 import javajs.util.BS;
@@ -63,24 +63,24 @@ final class LineRenderer extends PrecisionRenderer {
   }
 
   private BS lineBits;
-  private float slope;
+  private double slope;
   private boolean lineTypeX;
   private int nBits;
   //  private int nCached = 0;
   //  private int nFound = 0;
   //int test = 5;
-  private Map<Float, BS> lineCache = new Hashtable<Float, BS>();
-  private Float slopeKey;
+  private Map<Double, BS> lineCache = new Hashtable<Double, BS>();
+  private Double slopeKey;
 
-  void setLineBits(float dx, float dy) {
+  void setLineBits(double dx, double dy) {
     // from cylinder
-    slope = (dx != 0 ? dy / dx : dy >= 0 ? Float.MAX_VALUE : -Float.MAX_VALUE);
+    slope = (dx != 0 ? dy / dx : dy >= 0 ? Double.MAX_VALUE : -Double.MAX_VALUE);
     lineTypeX = (slope <= 1 && slope >= -1);
     nBits = (lineTypeX ? g3d.width : g3d.height);
 
     // get cached line bits or create new ones
 
-    slopeKey = Float.valueOf(slope);
+    slopeKey = Double.valueOf(slope);
     if (lineCache.containsKey(slopeKey)) {
       lineBits = lineCache.get(slopeKey);
       //    if (Logger.debugging) {
@@ -94,12 +94,12 @@ final class LineRenderer extends PrecisionRenderer {
     dy = Math.abs(dy);
     dx = Math.abs(dx);
     if (dy > dx) {
-      float t = dx;
+      double t = dx;
       dx = dy;
       dy = t;
     }
     int twoDError = 0;
-    float twoDx = dx + dx, twoDy = dy + dy;
+    double twoDx = dx + dx, twoDy = dy + dy;
     for (int i = 0; i < nBits; i++) {
       twoDError += twoDy;
       if (twoDError > dx) {
@@ -331,16 +331,16 @@ final class LineRenderer extends PrecisionRenderer {
     }
   }
 
-  void plotLineDeltaABitsFloat(int[] shades1, int[] shades2, int shadeIndex, P3 ptA,
-                          P3 ptB, int screenMask, boolean clipped) {
+  void plotLineDeltaABitsFloat(int[] shades1, int[] shades2, int shadeIndex, P3d ptA,
+                          P3d ptB, int screenMask, boolean clipped) {
     // from cylinder -- cartoonRockets - somewhat higher precision, because
     // particularly for draw, we can have very short distances.
-    int x = Math.round(ptA.x);
-    int y = Math.round(ptA.y);
-    int z = Math.round(ptA.z);
-    int bx = Math.round(ptB.x);
-    int by = Math.round(ptB.y);
-    int bz = Math.round(ptB.z);
+    int x = (int) Math.round(ptA.x);
+    int y = (int) Math.round(ptA.y);
+    int z = (int) Math.round(ptA.z);
+    int bx = (int) Math.round(ptB.x);
+    int by = (int) Math.round(ptB.y);
+    int bz = (int) Math.round(ptB.z);
     int dx = bx - x;
     int dy = by - y;
 
@@ -389,7 +389,7 @@ final class LineRenderer extends PrecisionRenderer {
       yOffsetIncrement = (dx >= 0 ? 1 : -1);
       setRastABFloat(ptA.y, ptA.z, ptB.y, ptB.z);
     }
-    float zCurrent = z;
+    double zCurrent = z;
     int argb = argb1;
     int argbUp = argb1Up;
     int argbDn = argb1Dn;
@@ -503,7 +503,7 @@ final class LineRenderer extends PrecisionRenderer {
       yOffsetIncrement = (dx >= 0 ? 1 : -1);
       setRastAB(ptA.y, ptA.z, ptB.y, ptB.z);
     }
-    float zCurrent = z;
+    double zCurrent = z;
     int argb = argb1;
     int argbUp = argb1Up;
     int argbDn = argb1Dn;
@@ -724,9 +724,9 @@ final class LineRenderer extends PrecisionRenderer {
       if ((cc1 & cc2) != 0)
         return VISIBILITY_OFFSCREEN;
 
-      float dx = x2t - x1t;
-      float dy = y2t - y1t;
-      float dz = z2t - z1t;
+      double dx = x2t - x1t;
+      double dy = y2t - y1t;
+      double dz = z2t - z1t;
       if (cc1 != 0) { //cohen-sutherland line clipping
         if ((cc1 & GData.xLT) != 0) {
           y1t += (int) ((-x1t * dy) / dx);

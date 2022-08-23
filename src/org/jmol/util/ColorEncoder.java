@@ -27,18 +27,21 @@ import javajs.util.AU;
 import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.PT;
+import javajs.util.Rdr;
 
+import java.io.IOException;
 import java.util.Hashtable;
 
 import java.util.Map;
 
 
 import org.jmol.script.T;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.jmol.c.PAL;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 /*
  * 
@@ -74,6 +77,10 @@ import javajs.util.P3;
     }
   }
     
+  public void clearCache() {
+    schemes.clear();
+  }
+  
   private final static int GRAY = 0xFF808080;
   
 
@@ -128,7 +135,7 @@ import javajs.util.P3;
     if (name.equalsIgnoreCase(BYELEMENT_PREFIX)) 
         return BYELEMENT_JMOL;
     int ipt = getSchemeIndex(name);
-    return (ipt >= 0 ? colorSchemes[ipt] : name.toLowerCase());
+    return (ipt >= 0 ? colorSchemes[ipt] : name.indexOf("/") >= 0? name : name.toLowerCase());
   }
   
   // these are only implemented in the MASTER colorEncoder
@@ -149,8 +156,8 @@ import javajs.util.P3;
   public int currentPalette = ROYGB;
   public int currentSegmentCount = 1;
   public boolean isTranslucent = false;
-  public float lo;
-  public float hi;
+  public double lo;
+  public double hi;
   public boolean isReversed;
 
 
@@ -274,42 +281,136 @@ import javajs.util.P3;
 
   /**
    * 
-   * @param colorScheme    name or name= or name=[x......] [x......] ....
+   * @param colorScheme
+   *        name or name= or name=[x......] [x......] ....
    * @param defaultToRoygb
    * @param isOverloaded
    * @return paletteID
    */
-  public int createColorScheme(String colorScheme,
-                                          boolean defaultToRoygb,
-                                          boolean isOverloaded) {
+  public int createColorScheme(String colorScheme, boolean defaultToRoygb,
+                               boolean isOverloaded) {
     // main method for creating a new scheme or modifying an old one
-    // ScriptmathProcessor.evaluateColor
-    // makeColorScheme
-    // setColorScheme
-    // ColorManager.getColorSchemeList
-    // ColorManager.setColorScheme
-    // ColorManager.setCurrentColorRange
-    
-    colorScheme = colorScheme.toLowerCase();
-    if (colorScheme.equals("inherit"))
+
+    if (colorScheme.equalsIgnoreCase("inherit"))
       return INHERIT;
-    
+
     // check for "name = [x...] [x...] ..." 
     // or "[x...] [x...] ..."
-    int pt = Math.max(colorScheme.indexOf("=")
-        , colorScheme.indexOf("["));
-    if (pt >= 0) {
-      String name = PT.replaceAllCharacters(colorScheme
-          .substring(0, pt), " =", "");
+    int pte = colorScheme.lastIndexOf("=");
+    int pts = colorScheme.indexOf("/"); // https...
+    int pt = Math.max(pte, colorScheme.indexOf("["));
+    String name = fixName(colorScheme);
+    int ipt = getSchemeIndex(name);
+    if ((pt < 0 || pts > 0) && ipt == CUSTOM ) {
+      // no = or [ without / or has /; just a name -- must be loaded 
+      int[] scale;
+      String s = colorScheme;
+      scale = schemes.get(name);
+      if (scale == null) {
+        try {
+          boolean isNot = (s.charAt(1) == '~');
+          if (isNot)
+            s = s.substring(1);
+          byte[] b = null;
+          while (true) {
+            if (s.indexOf("/") < 0) {
+              if (s.indexOf(".") < 0)
+                s += ".lut.txt";
+              String[] data = new String[1];
+              try {
+                Logger.info("ColorEncoder opening colorschemes/" + s);
+                Rdr.readAllAsString(
+                    FileManager.getBufferedReaderForResource(vwr, new C(),
+                        "org/jmol/util/", "colorschemes/" + s),
+                    -1, false, data, 0);
+              } catch (IOException e) {
+                Logger.info("ColorEncoder " + e);
+                break;
+              }
+              s = data[0];
+            } else {
+              s = PT.rep(s, " ", "%20");
+              Logger.info("ColorEncoder opening " + s);
+              Object o = vwr.fm.getFileAsBytes(s, null);
+              if (o instanceof String) {
+                Logger.info("ColorEncoder " + o);
+                break;
+              }
+              b = (byte[]) o;
+              Logger.info("ColorEncoder read " + b.length + " bytes");
+              int i0 = 0;
+              int n = b.length;
+              if (n == 3 * 256 + 32 || n == 3 * 256 + 32 + 2) // JSmol bug adds CR LF to binary from string
+                i0 = 32;
+              if (n - i0 == 3 * 256 ||  n - i0 == 3 * 256 + 2) {
+                scale = new int[256];
+                n = 256 + i0;
+                for (int i = 0; i < 256; i++) {
+                  scale[i] = CU.rgb(b[i + i0] & 0xFF, b[i + i0 + 256] & 0xFF,
+                      b[i + i0 + 512] & 0xFF);
+                }
+              } else {
+                s = new String(b);
+              }
+            }
+            if (scale == null) {
+              String[] lines = PT.split(s.trim(), "\n");
+              int n = lines.length;
+              scale = new int[n];
+              boolean isInt = (n > 0 && lines[0].indexOf(".") < 0);
+              for (int i = 0; i < n; i++) {
+                String[] tokens = PT.getTokens(lines[i]);
+                if (tokens.length < 3) {
+                  scale = null;
+                  break;
+                }
+                int len = tokens.length;
+                if (isInt) {
+                  scale[i] = CU.rgb(PT.parseInt(tokens[len - 3]),
+                      PT.parseInt(tokens[len - 2]),
+                      PT.parseInt(tokens[len - 1]));
+                } else {
+                  scale[i] = CU.colorTriadToFFRGB(
+                      PT.parseFloat(tokens[len - 3]),
+                      PT.parseFloat(tokens[len - 2]),
+                      PT.parseFloat(tokens[len - 1]));
+
+                }
+              }
+            }
+            if (scale != null && isNot) {
+              for (int i = 0, n = scale.length
+                  - 1, n2 = (n + 1) >> 1; i < n2; i++) {
+                int v = scale[i];
+                scale[i] = scale[n - i];
+                scale[n - i] = v;
+              }
+            }
+            break;
+          }
+        } catch (Exception e) {
+          Logger.info("ColorEncoder " + e);
+          scale = null;
+        }
+      }
+      if (scale == null)
+        scale = new int[] { -1 };
+      schemes.put(colorScheme, scale);
+      setThisScheme(colorScheme, scale);
+      return CUSTOM;
+    } else if (pt >= 0) {
+      colorScheme = colorScheme.toLowerCase();
+      name = PT.replaceAllCharacters(colorScheme.substring(0, pt), " =",
+          "");
       if (name.length() > 0)
         isOverloaded = true;
       int n = 0;
       if (colorScheme.length() > pt + 1 && !colorScheme.contains("[")) {
         // also allow xxx=red,blue,green
-        
+
         colorScheme = "[" + colorScheme.substring(pt + 1).trim() + "]";
         colorScheme = PT.rep(colorScheme.replace('\n', ' '), "  ", " ");
-        colorScheme = PT.rep(colorScheme, ", ", ",").replace(' ',',');
+        colorScheme = PT.rep(colorScheme, ", ", ",").replace(' ', ',');
         colorScheme = PT.rep(colorScheme, ",", "][");
       }
       pt = -1;
@@ -318,51 +419,48 @@ import javajs.util.P3;
       // if just "name=", then we overload it with no scale -- which will clear it
       if (n == 0)
         return makeColorScheme(name, null, isOverloaded);
-      
+
       // create the scale -- error returns ROYGB
-      
+
       int[] scale = new int[n];
       n = 0;
       while ((pt = colorScheme.indexOf("[", pt + 1)) >= 0) {
         int pt2 = colorScheme.indexOf("]", pt);
         if (pt2 < 0)
           pt2 = colorScheme.length() - 1;
-        int c = CU.getArgbFromString(colorScheme.substring(pt,
-            pt2 + 1));
+        int c = CU.getArgbFromString(colorScheme.substring(pt, pt2 + 1));
         if (c == 0) // try without the brackets
-          c = CU.getArgbFromString(colorScheme.substring(pt + 1, pt2).trim());        
+          c = CU.getArgbFromString(colorScheme.substring(pt + 1, pt2).trim());
         if (c == 0) {
-          Logger.error("error in color value: "
-              + colorScheme.substring(pt, pt2 + 1));
+          Logger.error(
+              "error in color value: " + colorScheme.substring(pt, pt2 + 1));
           return ROYGB;
         }
         scale[n++] = c;
       }
-      
+
       // set the user scale if that is what this is
-      
+
       if (name.equals("user")) {
         setUserScale(scale);
         return USER;
       }
-      
+
       // otherwise, make a new scheme for it with the specified scale, which will NOT be null
-      
+
       return makeColorScheme(name, scale, isOverloaded);
     }
-    
+
     // wasn't a definition. 
-    
-    colorScheme = fixName(colorScheme);
-    int ipt = getSchemeIndex(colorScheme);
-    if (schemes.containsKey(colorScheme)) {
-      setThisScheme(colorScheme, schemes.get(colorScheme));
+
+    int[] scale = schemes.get(name);
+    if (scale != null) {
+      setThisScheme(name, scale);
       return ipt; // -1 means custom -- use "thisScale", otherwise a scheme number
     }
-    
+
     // return a positive value for a known scheme or ROYGB if a default is ok, or MAX_VALUE
-    return (ipt != CUSTOM ? ipt : defaultToRoygb ? ROYGB 
-        : Integer.MAX_VALUE);
+    return (ipt != CUSTOM ? ipt : defaultToRoygb ? ROYGB : Integer.MAX_VALUE);
   }
 
   public void setUserScale(int[] scale) {
@@ -424,16 +522,16 @@ import javajs.util.P3;
 
   }
   
-  public short getColorIndexFromPalette(float val, float lo,
-                                                     float hi, int palette,
+  public short getColorIndexFromPalette(double val, double lo,
+                                                     double hi, int palette,
                                                      boolean isTranslucent) {
     short colix = C.getColix(getArgbFromPalette(val, lo, hi, palette));
     if (isTranslucent) {
-      float f = (hi - val) / (hi - lo); 
+      double f = (hi - val) / (hi - lo); 
       if (f > 1)
         f = 1; // transparent
-      else if (f < 0.125f) // never fully opaque
-        f = 0.125f;
+      else if (f < 0.125d) // never fully opaque
+        f = 0.125d;
       colix = C.getColixTranslucent3(colix, true, f);
     }
     return colix;
@@ -475,8 +573,8 @@ import javajs.util.P3;
     }
   }
   
-  public int getArgbFromPalette(float val, float lo, float hi, int palette) {
-    if (Float.isNaN(val))
+  public int getArgbFromPalette(double val, double lo, double hi, int palette) {
+    if (Double.isNaN(val))
       return GRAY;
     int n = getPaletteColorCount(palette);
     switch (palette) {
@@ -535,17 +633,17 @@ import javajs.util.P3;
   
   // nonstatic methods:
   
-  public int getArgb(float val) {
+  public int getArgb(double val) {
     return (isReversed ? getArgbFromPalette(-val, -hi, -lo, currentPalette)
         : getArgbFromPalette(val, lo, hi, currentPalette));
   }
   
-  public int getArgbMinMax(float val, float min, float max) {
+  public int getArgbMinMax(double val, double min, double max) {
     return (isReversed ? getArgbFromPalette(-val, -max, -min, currentPalette)
         : getArgbFromPalette(val, min, max, currentPalette));
   }
   
-  public short getColorIndex(float val) {
+  public short getColorIndex(double val) {
     return (isReversed ? getColorIndexFromPalette(-val, -hi, -lo, currentPalette, isTranslucent)
         : getColorIndexFromPalette(val, lo, hi, currentPalette, isTranslucent));
   }
@@ -553,10 +651,10 @@ import javajs.util.P3;
   public Map<String, Object> getColorKey() {
     Map<String, Object> info = new Hashtable<String, Object>();
     int segmentCount = getPaletteColorCount(currentPalette);
-    Lst<P3> colors = new  Lst<P3>();//segmentCount);
-    float[] values = new float[segmentCount + 1];
-    float quantum = (hi - lo) / segmentCount;
-    float f = quantum * (isReversed ? -0.5f : 0.5f);
+    Lst<P3d> colors = new  Lst<P3d>();//segmentCount);
+    double[] values = new double[segmentCount + 1];
+    double quantum = (hi - lo) / segmentCount;
+    double f = quantum * (isReversed ? -0.5d : 0.5d);
 
     for (int i = 0; i < segmentCount; i++) {
       values[i] = (isReversed ? hi - i * quantum : lo + i * quantum);
@@ -565,8 +663,8 @@ import javajs.util.P3;
     values[segmentCount] = (isReversed ? lo : hi);
     info.put("values", values);
     info.put("colors", colors);
-    info.put("min", Float.valueOf(lo));
-    info.put("max", Float.valueOf(hi));
+    info.put("min", Double.valueOf(lo));
+    info.put("max", Double.valueOf(hi));
     info.put("reversed", Boolean.valueOf(isReversed));
     info.put("name", getCurrentColorSchemeName());
     return info;
@@ -589,8 +687,8 @@ import javajs.util.P3;
       currentPalette = createColorScheme(colorScheme, true, false);
   }
 
-  public void setRange(float lo, float hi, boolean isReversed) {
-    if (hi == Float.MAX_VALUE) {
+  public void setRange(double lo, double hi, boolean isReversed) {
+    if (hi == Double.MAX_VALUE) {
       lo = 1; 
       hi = getPaletteColorCount(currentPalette) + 1;
     }
@@ -684,13 +782,13 @@ import javajs.util.P3;
    * @param isLowEnd
    * @return quantized value
    */
-  public float quantize(float x, boolean isLowEnd) {
+  public double quantize(double x, boolean isLowEnd) {
     int n = getPaletteColorCount(currentPalette);
-    x = (((int) (x * n)) + (isLowEnd ? 0f : 1f)) / n;
+    x = (((int) (x * n)) + (isLowEnd ? 0d : 1d)) / n;
     return (x <= 0 ? lo : x >= 1 ? hi : lo + (hi - lo) * x);
   }
   
-  public final static int quantize4(float val, float lo, float hi, int segmentCount) {
+  public final static int quantize4(double val, double lo, double hi, int segmentCount) {
     /* oy! Say you have an array with 10 values, so segmentCount=10
      * then we expect 0,1,2,...,9  EVENLY
      * If f = fractional distance from lo to hi, say 0.0 to 10.0 again,
@@ -731,24 +829,24 @@ import javajs.util.P3;
      * Bob Hanson, 5/2006
      * 
      */
-    float range = hi - lo;
-    if (range <= 0 || Float.isNaN(val))
+    double range = hi - lo;
+    if (range <= 0 || Double.isNaN(val))
       return segmentCount / 2;
-    float t = val - lo;
+    double t = val - lo;
     if (t <= 0)
       return 0;
-    float quanta = range / segmentCount;
-    int q = (int)(t / quanta + 0.0001f);  //was 0.5f!
+    double quanta = range / segmentCount;
+    int q = (int)(t / quanta + 0.0001f);  //was 0.5d!
     if (q >= segmentCount)
       q = segmentCount - 1;
     return q;
   }
 
-  private final static int colorIndex(float q, int segmentCount) {
+  private final static int colorIndex(double q, int segmentCount) {
     return (int) Math.floor(q <= 0 || q >= segmentCount ? 0 : q);
   }
 
-  private final static int colorIndexRepeat(float q, int segmentCount) {
+  private final static int colorIndexRepeat(double q, int segmentCount) {
     int i = (int) Math.floor(q <= 0 ? 0 : q);
     return i % segmentCount;
   }

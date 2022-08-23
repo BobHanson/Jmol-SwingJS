@@ -235,13 +235,13 @@ public class MolReader extends AtomSetCollectionReader {
       rd();
       int len = line.length();
       String elementSymbol;
-      float x, y, z;
+      double x, y, z;
       int charge = 0;
       int isotope = 0;
       int iAtom = Integer.MIN_VALUE;
-      x = parseFloatRange(line, 0, 10);
-      y = parseFloatRange(line, 10, 20);
-      z = parseFloatRange(line, 20, 30);
+      x = parseDoubleRange(line, 0, 10);
+      y = parseDoubleRange(line, 10, 20);
+      z = parseDoubleRange(line, 20, 30);
       // CTFile doc for V3000:
       // The “dimensional code” is maintained more explicitly. 
       // Thus “3D” really means 3D,
@@ -399,7 +399,7 @@ public class MolReader extends AtomSetCollectionReader {
     // "> yyy <xxx> zzz" becomes "yyy <xxx> zzz"
     String dataName = PT.trim(line, "> <").toLowerCase();
     String data = "";
-    float[] fdata = null;
+    double[] fdata = null;
     // officially, we need a terminating blank line, and $$$$ could be data,
     // but here we do not allow $$$$ due to Jmol legacy writing of JMOL_PARTIAL_CHARGES
     while (rd() != null && !line.equals("$$$$") && line.length() > 0)     
@@ -412,13 +412,13 @@ public class MolReader extends AtomSetCollectionReader {
     int ndata = 0;
     if (dataName.toUpperCase().contains("_PARTIAL_CHARGES")) {
       try {
-        fdata = PT.parseFloatArray(data);
+        fdata = PT.parseDoubleArray(data);
         for (int i = asc.getLastAtomSetAtomIndex(), n = asc.ac; i < n; i++)
           atoms[i].partialCharge = 0;
         int pt = 0;
         for (int i = (int) fdata[pt++]; --i >= 0;) {
           int atomIndex = (int) fdata[pt++] + iatom0 - 1;
-          float partialCharge = fdata[pt++];
+          double partialCharge = fdata[pt++];
           atoms[atomIndex].partialCharge = partialCharge;
           ndata++;
         }
@@ -451,7 +451,7 @@ public class MolReader extends AtomSetCollectionReader {
   }
 
   public void addMolAtom(int iAtom, int isotope, String elementSymbol,
-                         int charge, float x, float y, float z) {
+                         int charge, double x, double y, double z) {
     switch (isotope) {
     case 0:
       break;

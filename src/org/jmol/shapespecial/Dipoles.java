@@ -29,10 +29,10 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
@@ -50,23 +50,23 @@ import org.jmol.util.Logger;
 public class Dipoles extends Shape {
 
   final static short DEFAULT_MAD = 10;
-  final static float DEFAULT_OFFSETSIDE = 0.40f;
+  final static double DEFAULT_OFFSETSIDE = 0.40d;
 
   public int dipoleCount = 0;
   public Dipole[] dipoles = new Dipole[4];
 
   private Dipole currentDipole;
   private Dipole tempDipole;
-  private P3 startCoord = new P3();
-  private P3 endCoord = new P3();
-  private float dipoleValue;
+  private P3d startCoord = new P3d();
+  private P3d endCoord = new P3d();
+  private double dipoleValue;
   private boolean isUserValue;
   private boolean isBond;
   private boolean iHaveTwoEnds;
   private int atomIndex1;
   private int atomIndex2;
   private short colix;
-  private V3 calculatedDipole;
+  private V3d calculatedDipole;
   private String wildID;
   private short mad;  
 
@@ -154,21 +154,21 @@ public class Dipoles extends Shape {
     }
 
     if ("width" == propertyName) {
-      mad = tempDipole.mad = (short) (((Float) value).floatValue() * 1000);
+      mad = tempDipole.mad = (short) (((Number) value).doubleValue() * 1000);
       if (currentDipole == null)
         setPropertyTok(T.wireframe, isBond, mad, 0); //
       return;
     }
 
     if ("offset" == propertyName) {
-      float offset = tempDipole.offsetAngstroms = ((Float) value).floatValue();
+      double offset = tempDipole.offsetAngstroms = ((Number) value).doubleValue();
       if (currentDipole == null)
         setPropertyTok(T.axes, isBond, 0, offset);
       return;
     }
 
     if ("offsetPt" == propertyName) {
-      tempDipole.offsetPt = (P3) value;
+      tempDipole.offsetPt = (P3d) value;
       if (currentDipole != null) {
         currentDipole.setOffsetPt(tempDipole.offsetPt);
       }
@@ -179,15 +179,15 @@ public class Dipoles extends Shape {
       int offsetPercent = tempDipole.offsetPercent = ((Integer) value)
           .intValue();
       if (tempDipole.dipoleValue != 0)
-        tempDipole.offsetAngstroms = offsetPercent / 100f
+        tempDipole.offsetAngstroms = offsetPercent / 100d
             * tempDipole.dipoleValue;
       if (currentDipole == null)
-        setPropertyTok(T.percent, isBond, 0, offsetPercent / 100f);
+        setPropertyTok(T.percent, isBond, 0, offsetPercent / 100d);
       return;
     }
 
     if ("offsetSide" == propertyName) {
-      float offsetSide = ((Float) value).floatValue();
+      double offsetSide = ((Number) value).doubleValue();
       setPropertyTok(T.sidechain, isBond, 0, offsetSide);
       return;
     }
@@ -227,7 +227,7 @@ public class Dipoles extends Shape {
       BS bsAtoms = (BS) value;
       endCoord = null;
       startCoord = ms.getAtomSetCenter(bsAtoms);
-      tempDipole.set2Value(startCoord, P3.new3(0, 0, 0), dipoleValue);
+      tempDipole.set2Value(startCoord, P3d.new3(0, 0, 0), dipoleValue);
       if (bsAtoms.cardinality() == 1)
         atomIndex1 = bsAtoms.nextSetBit(0);
       return;
@@ -277,25 +277,25 @@ public class Dipoles extends Shape {
     }
 
     if ("startCoord" == propertyName) {
-      startCoord.setT((P3) value);
-      tempDipole.set2Value(startCoord, P3.new3(0, 0, 0), dipoleValue);
+      startCoord.setT((P3d) value);
+      tempDipole.set2Value(startCoord, P3d.new3(0, 0, 0), dipoleValue);
       return;
     }
 
     if ("endCoord" == propertyName) {
       iHaveTwoEnds = true;
-      endCoord.setT((P3) value);
+      endCoord.setT((P3d) value);
       tempDipole.set2Value(startCoord, endCoord, dipoleValue);
       dumpDipoles("endCoord");
       return;
     }
 
     if ("value" == propertyName) {
-      dipoleValue = ((Float) value).floatValue();
+      dipoleValue = ((Number) value).doubleValue();
       isUserValue = true;
       tempDipole.setValue(dipoleValue);
       if (tempDipole.offsetPercent != 0)
-        tempDipole.offsetAngstroms = tempDipole.offsetPercent / 100f
+        tempDipole.offsetAngstroms = tempDipole.offsetPercent / 100d
             * tempDipole.dipoleValue;
       return;
     }
@@ -326,7 +326,7 @@ public class Dipoles extends Shape {
   }
 
   private void getMolecular(BS bsMolecule) {
-    V3 v = (bsMolecule == null ? calculatedDipole : null);
+    V3d v = (bsMolecule == null ? calculatedDipole : null);
     if (v == null && bsMolecule == null) {
       v = vwr.getModelDipole();
       Logger.info("file molecular dipole = " + v + " "
@@ -340,10 +340,10 @@ public class Dipoles extends Shape {
     if (v == null) {
       Logger
           .warn("No molecular dipole found for this model; setting to {0 0 0}");
-      v = new V3();
+      v = new V3d();
     }
     tempDipole.bsMolecule = bsMolecule;
-    tempDipole.setPtVector(P3.new3(0, 0, 0), V3.new3(-v.x, -v.y, -v.z));
+    tempDipole.setPtVector(P3d.new3(0, 0, 0), V3d.new3(-v.x, -v.y, -v.z));
     if (tempDipole.lstDipoles != null) {
       getAllMolecularDipoles(bsMolecule);
     }    
@@ -358,20 +358,20 @@ public class Dipoles extends Shape {
     for (int i = mols.length; --i >= 0;) {
       JmolMolecule m = mols[i];
       if (m.atomList.intersects(bsAtoms)) {
-        V3 v = null;
+        V3d v = null;
         try {
           v = vwr.calculateMolecularDipole(m.atomList);
         } catch (Exception e) {
         }
         if (v == null)
           continue;
-        P3 center = ms.getAtomSetCenter(m.atomList);
+        P3d center = ms.getAtomSetCenter(m.atomList);
         tempDipole.lstDipoles.addLast(new Object[] {v, center, m.atomList});        
       }
     }
   }
 
-  private void setPropertyTok(int tok, boolean bondOnly, int iValue, float fValue) {
+  private void setPropertyTok(int tok, boolean bondOnly, int iValue, double fValue) {
     if (currentDipole != null)
       setPropertyFor(tok, currentDipole, iValue, fValue);
     else {
@@ -384,7 +384,7 @@ public class Dipoles extends Shape {
     }
   }
 
-  private void setPropertyFor(int tok, Dipole dipole, int iValue, float fValue) {
+  private void setPropertyFor(int tok, Dipole dipole, int iValue, double fValue) {
     switch (tok) {
     case T.on:
       dipole.visible = true;
@@ -457,7 +457,7 @@ public class Dipoles extends Shape {
   }
 
   private void getBondDipoles() {
-    float[] partialCharges = ms.getPartialCharges();
+    double[] partialCharges = ms.getPartialCharges();
     if (partialCharges == null)
       return;
     clear(true);
@@ -466,8 +466,8 @@ public class Dipoles extends Shape {
       Bond bond = bonds[i];
       if (!bond.isCovalent())
         continue;
-      float c1 = partialCharges[bond.atom1.i];
-      float c2 = partialCharges[bond.atom2.i];
+      double c1 = partialCharges[bond.atom1.i];
+      double c2 = partialCharges[bond.atom2.i];
       if (c1 != c2)
         setDipoleAtoms(bond.atom1, bond.atom2, c1, c2);
     }
@@ -498,11 +498,11 @@ public class Dipoles extends Shape {
     currentDipole.modelIndex = vwr.am.cmi;
   }
 
-  final private static float E_ANG_PER_DEBYE = 0.208194f;
+  final private static double E_ANG_PER_DEBYE = 0.208194d;
 
-  private void setDipoleAtoms(Atom atom1, Atom atom2, float c1, float c2) {
+  private void setDipoleAtoms(Atom atom1, Atom atom2, double c1, double c2) {
     Dipole dipole = findAtomDipole(atom1, atom2, true);
-    float value = (c1 - c2) / 2f * atom1.distance(atom2) / E_ANG_PER_DEBYE;
+    double value = (c1 - c2) / 2d * atom1.distance(atom2) / E_ANG_PER_DEBYE;
     if (value < 0) {
       dipole.set2AtomValue(atom2, atom1, -value);
     } else {
@@ -640,7 +640,7 @@ public class Dipoles extends Shape {
   public Object getShapeDetail() {
     Lst<Map<String, Object>> V = new  Lst<Map<String,Object>>();
     Map<String, Object> atomInfo;
-    P3 ptTemp = new P3();
+    P3d ptTemp = new P3d();
     for (int i = 0; i < dipoleCount; i++) {
       Map<String, Object> info = new Hashtable<String, Object>();
       Dipole dipole = dipoles[i];
@@ -658,7 +658,7 @@ public class Dipoles extends Shape {
         ms.getAtomIdentityInfo(dipole.atoms[1].i, atomInfo, ptTemp);
         atoms.addLast(atomInfo);
         info.put("atoms", atoms);
-        info.put("magnitude", Float.valueOf(dipole.vector.length()));
+        info.put("magnitude", Double.valueOf(dipole.vector.length()));
       }
       V.addLast(info);
     }

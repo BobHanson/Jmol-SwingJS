@@ -45,7 +45,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.HelpFormatter;
 import org.jmol.jvxl.readers.SurfaceGenerator;
 import org.jmol.util.Logger;
-import javajs.util.P4;
+import javajs.util.P4d;
 import javajs.util.PT;
 
 public class Jvxl {
@@ -59,15 +59,15 @@ public class Jvxl {
     String mapFile = null;
     String outputFile = null;
 
-    float cutoff = Float.NaN;
+    double cutoff = Double.NaN;
     boolean isPositiveOnly = false;
 
-    P4 plane = null;
+    P4d plane = null;
 
     boolean bicolor = false;
     boolean reverseColor = false;
-    float min = Float.NaN;
-    float max = Float.NaN;
+    double min = Double.NaN;
+    double max = Double.NaN;
 
     Options options = new Options();
     options.addOption("h", "help", false, "give this help page");
@@ -238,21 +238,21 @@ public class Jvxl {
         isPositiveOnly = true;
         s = s.substring(1);
       }
-      cutoff = PT.parseFloat(s);
+      cutoff = PT.parseDouble(s);
     }
 
     if (line.hasOption("n")) {
       if (bicolor)
         Logger.warn("--min option ignored; incompatible with --bicolor");
       else
-        min = PT.parseFloat(line.getOptionValue("n"));
+        min = PT.parseDouble(line.getOptionValue("n"));
     }
 
     if (line.hasOption("x")) {
       if (bicolor)
         Logger.warn("--max option ignored; incompatible with --bicolor");
       else
-        max = PT.parseFloat(line.getOptionValue("x"));
+        max = PT.parseDouble(line.getOptionValue("x"));
     }
 
     //    if (line.hasOption("P")) {
@@ -270,8 +270,8 @@ public class Jvxl {
     sg.version = VERSION;
     if (blockData)
       sg.setProp("blockData", Boolean.TRUE, null);
-    if (!Float.isNaN(cutoff))
-      sg.setProp(isPositiveOnly ? "cutoffPositive" : "cutoff", Float.valueOf(
+    if (!Double.isNaN(cutoff))
+      sg.setProp(isPositiveOnly ? "cutoffPositive" : "cutoff", Double.valueOf(
           cutoff), null);
     if (bicolor)
       sg.setProp("sign", null, null);
@@ -312,10 +312,10 @@ public class Jvxl {
      // ce.setColorScheme(colorScheme, false);
      // sg.setProp("colorScheme", ce);
    // }
-    if (!Float.isNaN(min))
-      sg.setProp("red", Float.valueOf(min), null);
-    if (!Float.isNaN(max))
-      sg.setProp("blue", Float.valueOf(max), null);
+    if (!Double.isNaN(min))
+      sg.setProp("red", Double.valueOf(min), null);
+    if (!Double.isNaN(max))
+      sg.setProp("blue", Double.valueOf(max), null);
     if (mapFile != null) {
       Object t = FileReader
       .getBufferedReaderOrErrorMessageFromName(mapFile);
@@ -349,26 +349,26 @@ public class Jvxl {
     }
   }
   
-  static P4 getPlane(String str) {
+  static P4d getPlane(String str) {
     if (str.equalsIgnoreCase("xy"))
-      return P4.new4(0, 0, 1, 0);
+      return P4d.new4(0, 0, 1, 0);
     if (str.equalsIgnoreCase("xz"))
-      return P4.new4(0, 1, 0, 0);
+      return P4d.new4(0, 1, 0, 0);
     if (str.equalsIgnoreCase("yz"))
-      return P4.new4(1, 0, 0, 0);
+      return P4d.new4(1, 0, 0, 0);
     if (str.indexOf("x=") == 0) {
-      return P4.new4(1, 0, 0, -PT.parseFloat(str.substring(2)));
+      return P4d.new4(1, 0, 0, -PT.parseDouble(str.substring(2)));
     }
     if (str.indexOf("y=") == 0) {
-      return P4.new4(0, 1, 0, -PT.parseFloat(str.substring(2)));
+      return P4d.new4(0, 1, 0, -PT.parseDouble(str.substring(2)));
     }
     if (str.indexOf("z=") == 0) {
-      return P4.new4(0, 0, 1, -PT.parseFloat(str.substring(2)));
+      return P4d.new4(0, 0, 1, -PT.parseDouble(str.substring(2)));
     }
     if (str.indexOf("{") == 0) {
       str = str.replace(',', ' ');
       int[] next = new int[1];
-      return P4.new4(PT.parseFloatNext(str, next), PT.parseFloatNext(str,
+      return P4d.new4(PT.parseFloatNext(str, next), PT.parseFloatNext(str,
           next), PT.parseFloatNext(str, next), PT.parseFloatNext(str, next));
     }
     return null;

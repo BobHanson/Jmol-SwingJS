@@ -432,7 +432,7 @@ public class SimpleMarchingCubesOld {
 //      
 //      // we allow for NaN values -- missing triangles
 //      
-//      if (Float.isNaN(valueA) || Float.isNaN(valueB))
+//      if (Double.isNaN(valueA) || Double.isNaN(valueB))
 //        isNaN = true;
 //      
 //      // the exact point position -- not important for just

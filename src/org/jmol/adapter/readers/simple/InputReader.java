@@ -36,12 +36,15 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.api.JmolAdapter;
 import org.jmol.util.Logger;
 
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.V3;
+import javajs.util.Qd;
+import javajs.util.Qd;
+import javajs.util.V3d;
+import javajs.util.V3d;
 
 public class InputReader extends AtomSetCollectionReader {
   /*
@@ -201,7 +204,7 @@ public class InputReader extends AtomSetCollectionReader {
   private String[] tokens;
   private boolean isJmolZformat;
   private Lst<String[]> lineBuffer = new Lst<String[]>();
-  private Map<String, Float> symbolicMap = new Hashtable<String, Float>();
+  private Map<String, Double> symbolicMap = new Hashtable<String, Double>();
   private boolean isMopac;
   private boolean isHeader = true;
   private boolean firstLine = true;
@@ -360,8 +363,8 @@ public class InputReader extends AtomSetCollectionReader {
       a.elementNumber = (short) getValue(1);
       map.put(tokens[0], a);
     }
-    float[] bonds = fillFloatArray(null, 0, new float[nBonds * 2]);
-    float[] orders = fillFloatArray(null, 0, new float[nBonds]);
+    double[] bonds = fillDoubleArray(null, 0, new double[nBonds * 2]);
+    double[] orders = fillDoubleArray(null, 0, new double[nBonds]);
     for (int i = 0, pt = 0; i < nBonds; i++)
       asc.addBond(new Bond(map.get("" + (int) bonds[pt++]).index, map.get(""
           + (int) bonds[pt++]).index, (int) orders[i]));
@@ -431,8 +434,8 @@ public class InputReader extends AtomSetCollectionReader {
   private void getSymbolic() {
     if (symbolicMap.containsKey(tokens[0]))
       return;
-    float f = parseFloatStr(tokens[1]);
-    symbolicMap.put(tokens[0], Float.valueOf(f));
+    double f = (double) parseDoubleStr(tokens[1]);
+    symbolicMap.put(tokens[0], Double.valueOf(f));
     Logger.info("symbolic " + tokens[0] + " = " + f);
   }
 
@@ -557,29 +560,29 @@ public class InputReader extends AtomSetCollectionReader {
         || (ic = (tokens.length < 7 ? -2 : getAtomIndex(5))) == -1) {
       return null;
     }
-    float d = getValue(2);
-    float theta1 = getValue(4);
-    float theta2 = (tokens.length < 7 ? Float.MAX_VALUE : getValue(6));
+    double d = getValue(2);
+    double theta1 = getValue(4);
+    double theta2 = (tokens.length < 7 ? Double.MAX_VALUE : getValue(6));
     if (tokens.length == 8 && !isJmolZformat && !isMopac && bondOrder == 1)
       // Gaussian indicator of alternative angle representation
       d = -Math.abs(d);
     return atom = setAtom(atom, ia, ib, ic, d, theta1, theta2);
   }
 
-  private float getSymbolic(String key) {
+  private double getSymbolic(String key) {
     boolean isNeg = key.startsWith("-");
-    Float F = symbolicMap.get(isNeg ? key.substring(1) : key);
+    Double F = symbolicMap.get(isNeg ? key.substring(1) : key);
     if (F == null)
-      return Float.NaN;
-    float f = F.floatValue();
+      return Double.NaN;
+    double f = F.doubleValue();
     return (isNeg ? -f : f);
   }
 
-  private float getValue(int i) throws Exception {
-    float f = getSymbolic(tokens[i]);
-    if (Float.isNaN(f)) {
-      f = parseFloatStr(tokens[i]);
-      if (Float.isNaN(f))
+  private double getValue(int i) throws Exception {
+    double f = getSymbolic(tokens[i]);
+    if (Double.isNaN(f)) {
+      f = parseDoubleStr(tokens[i]);
+      if (Double.isNaN(f))
         throw new Exception("Bad Z-matrix value: " + tokens[i]);
     }
     return f;
@@ -617,47 +620,50 @@ public class InputReader extends AtomSetCollectionReader {
     return ia;
   }
 
-  private final P3 pt0 = new P3();
-  private final V3 v1 = new V3();
-  private final V3 v2 = new V3();
-  private final P4 plane1 = new P4();
-  private final P4 plane2 = new P4();
+  private final P3d pt0 = new P3d();
+  private final V3d v1 = new V3d();
+  private final V3d v2 = new V3d();
+  private final P4d plane1 = new P4d();
+  private final P4d plane2 = new P4d();
 
-  protected Atom setAtom(Atom atom, int ia, int ib, int ic, float d,
-                         float theta1, float theta2) {
-    if (Float.isNaN(theta1) || Float.isNaN(theta2))
+  protected Atom setAtom(Atom atom, int ia, int ib, int ic, double d,
+                         double theta1, double theta2) {
+    if (Double.isNaN(theta1) || Double.isNaN(theta2))
       return null;
-    pt0.setT(vAtoms.get(ia));
-    v1.sub2(vAtoms.get(ib), pt0);
+    Atom a = vAtoms.get(ia);
+    Atom b = vAtoms.get(ib);
+    v1.set((double) (b.x - a.x), (double) (b.y - a.y), (double) (b.z - a.z));
     v1.normalize();
-    if (theta2 == Float.MAX_VALUE) {
+    if (theta2 == Double.MAX_VALUE) {
       // just the first angle being set
       v2.set(0, 0, 1);
-      (Quat.newVA(v2, theta1)).transform2(v1, v2);
+      (Qd.newVA(v2, (double) theta1)).transform2(v1, v2);
     } else if (d >= 0) {
       // theta2 is a dihedral angle
       // just do two quaternion rotations
-      v2.sub2(vAtoms.get(ic), pt0);
+      Atom c = vAtoms.get(ic);
+      v2.set((double) (c.x - a.x), (double) (c.y - a.y), (double) (c.z - a.z));
       v2.cross(v1, v2);
-      (Quat.newVA(v2, theta1)).transform2(v1, v2);
-      (Quat.newVA(v1, -theta2)).transform2(v2, v2);
+      (Qd.newVA(v2, (double) theta1)).transform2(v1, v2);
+      (Qd.newVA(v1, -(double) theta2)).transform2(v2, v2);
     } else {
       // d < 0
       // theta1 and theta2 are simple angles atom-ia-ib and atom-ia-ic 
       // get vector that is intersection of two planes and go from there
-      Measure.getPlaneThroughPoint(setAtom(atom, ia, ib, ic, -d, theta1, 0),
-          v1, plane1);
-      Measure.getPlaneThroughPoint(setAtom(atom, ia, ic, ib, -d, theta2, 0),
-          v1, plane2);
-      Lst<Object> list = Measure.getIntersectionPP(plane1, plane2);
+      setAtom(atom, ia, ib, ic, -d, theta1, 0);
+      pt0.set((double) a.x, (double) a.y, (double) a.z);
+      MeasureD.getPlaneThroughPoint(pt0, v1, plane1);
+      setAtom(atom, ia, ic, ib, -d, theta2, 0);
+      pt0.set((double) a.x, (double) a.y, (double) a.z);
+      MeasureD.getPlaneThroughPoint(pt0, v1, plane2);
+      Lst<Object> list = MeasureD.getIntersectionPP(plane1, plane2);
       if (list.size() == 0)
         return null;
-      pt0.setT((P3) list.get(0));
-      d = (float) Math.sqrt(d * d - pt0.distanceSquared(vAtoms.get(ia)))
-          * Math.signum(theta1) * Math.signum(theta2);
-      v2.setT((V3) list.get(1));
+      pt0.setT((P3d) list.get(0));
+      d = Math.sqrt(d * d - pt0.x * a.x - pt0.y * a.y - pt0.z * a.z) * Math.signum(theta1) * Math.signum(theta2);
+      v2.setT((V3d) list.get(1));
     }
-    atom.scaleAdd2(d, v2, pt0);
+    atom.set(d * v2.x + pt0.x, d * v2.y + pt0.y, d * v2.z + pt0.z);
     return atom;
   }
 }

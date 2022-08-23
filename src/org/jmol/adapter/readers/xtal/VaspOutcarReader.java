@@ -162,9 +162,9 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
       asc.newAtomSet();
       setAtomSetInfo();
     }
-    float[] f = new float[3];
+    double[] f = new double[3];
     for (int i = 0; i < 3; i++)
-      addExplicitLatticeVector(i, fillFloatArray(fixMinus(rd()), 0, f), 0);
+      addExplicitLatticeVector(i, fillDoubleArray(fixMinus(rd()), 0, f), 0);
   }
 
   private String fixMinus(String line) {
@@ -266,7 +266,7 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
     if (gibbsEnergy == null)
       return;
     asc.setAtomSetEnergy("" + gibbsEnergy,
-        gibbsEnergy.floatValue());
+        gibbsEnergy.doubleValue());
     asc.setCurrentModelInfo("Energy", gibbsEnergy);
     asc.setCurrentModelInfo("Entropy", gibbsEntropy);
     asc.setInfo("Energy", gibbsEnergy);
@@ -277,7 +277,7 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
   }
 
   private Double electronEne, kinEne, totEne;
-  private float temp;
+  private double temp;
 
   private void readMdyn() throws Exception {
     String[] tokens = getTokens();
@@ -286,7 +286,7 @@ public class VaspOutcarReader extends AtomSetCollectionReader {
     electronEne = Double.valueOf(Double.parseDouble(tokens[4]));
     tokens = PT.getTokens(rd());
     kinEne = Double.valueOf(Double.parseDouble(tokens[4]));
-    temp = parseFloatStr(tokens[6]);
+    temp = parseDoubleStr(tokens[6]);
     readLines(3);
     tokens = PT.getTokens(rd());
     totEne = Double.valueOf(Double.parseDouble(tokens[4]));

@@ -2,9 +2,9 @@ package org.jmol.util;
 
 import java.util.Map;
 
-import javajs.util.P3;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 /**
  * A class to allow for more complex vibrations and associated 
@@ -17,7 +17,7 @@ import javajs.util.V3;
  * 
  */
 
-public class Vibration extends V3 {
+public class Vibration extends V3d {
 
   protected final static double twoPI = 2 * Math.PI;
 
@@ -29,7 +29,7 @@ public class Vibration extends V3 {
    * modDim will be > 0 for modulation
    */
   public int modDim = TYPE_VIBRATION;
-  public float modScale = Float.NaN; // modulation only
+  public double modScale = Double.NaN; // modulation only
 
   /**
    * @param pt 
@@ -38,21 +38,21 @@ public class Vibration extends V3 {
    * @param modulationScale 
    * @return pt
    */
-  public T3 setCalcPoint(T3 pt, T3 t456, float scale, float modulationScale) {
+  public T3d setCalcPoint(T3d pt, T3d t456, double scale, double modulationScale) {
     switch (modDim) {
 //    case TYPE_DISPLACEMENT:
 //      break;
     case TYPE_SPIN:
       break;
     default:
-      pt.scaleAdd2((float) (Math.cos(t456.x * twoPI) * scale), this, pt);    
+      pt.scaleAdd2((double) (Math.cos(t456.x * twoPI) * scale), this, pt);    
       break;
     }
     return pt;
   }
 
   public void getInfo(Map<String, Object> info) {
-    info.put("vibVector", V3.newV(this));
+    info.put("vibVector", V3d.newV(this));
     info.put("vibType", (
       //  modDim == TYPE_DISPLACEMENT ? "displacement" 
       modDim == TYPE_SPIN ? "spin" 
@@ -68,7 +68,7 @@ public class Vibration extends V3 {
     return v;
   }
 
-  public void setXYZ(T3 vib) {
+  public void setXYZ(T3d vib) {
     setT(vib);
   }
 
@@ -82,7 +82,7 @@ public class Vibration extends V3 {
   }
 
   /**
-   * @param isTemp used only in ModulationSet
+   * @param isTemp used only in ModulationSet when calculating actual display offset
    * @return Integer.MIN_VALUE if not applicable, occupancy if enabled, -occupancy if not enabled
    */
   public int getOccupancy100(boolean isTemp) {
@@ -90,28 +90,28 @@ public class Vibration extends V3 {
   }
 
   public boolean showTrace;
-  private P3[] trace = null;
+  private P3d[] trace = null;
   public int tracePt;
   
   public void startTrace(int n) {
-    trace = new P3[n];
+    trace = new P3d[n];
     tracePt = n;
   }
   
-  public P3[] addTracePt(int n, Point3fi ptNew) {
+  public P3d[] addTracePt(int n, Point3fi ptNew) {
     if (trace == null || n == 0 || n != trace.length)
       startTrace(n);
     if (ptNew != null && n > 2) {
       if (--tracePt <= 0) {
-        P3 p0 = trace[trace.length - 1];
+        P3d p0 = trace[trace.length - 1];
         for (int i = trace.length; --i >= 1;)
           trace[i] = trace[i-1];
         trace[1] = p0;
         tracePt = 1;
       }
-      P3 p = trace[tracePt];
+      P3d p = trace[tracePt];
       if (p == null)
-        p = trace[tracePt] = new P3();
+        p = trace[tracePt] = new P3d();
       p.setT(ptNew);
     }      
     return trace;

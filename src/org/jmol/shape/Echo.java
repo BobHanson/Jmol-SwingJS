@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 import javajs.util.BS;
@@ -178,8 +178,8 @@ public class Echo extends TextShape {
 
     if ("scalereference" == propertyName) {
       if (currentObject != null) {
-        float val = ((Float) value).floatValue();
-        currentObject.setScalePixelsPerMicron(val == 0 ? 0 : 10000f / val);
+        double val = ((Number) value).doubleValue();
+        currentObject.setScalePixelsPerMicron(val == 0 ? 0 : 10000d / val);
       }
       return;
     }
@@ -187,7 +187,7 @@ public class Echo extends TextShape {
     if ("point" == propertyName) {
       if (currentObject != null) {
         Text t = currentObject;
-        t.pointerPt = (value == null ? null : (P3) value); // could be an atom.
+        t.pointerPt = (value == null ? null : (P3d) value); // could be an atom.
         t.pointer = (value == null ? JC.LABEL_POINTER_NONE
             : JC.LABEL_POINTER_ON);
       }
@@ -197,16 +197,16 @@ public class Echo extends TextShape {
     if ("xyz" == propertyName) {
       if (currentObject != null && vwr.getBoolean(T.fontscaling))
         currentObject.setScalePixelsPerMicron(
-            vwr.getScalePixelsPerAngstrom(false) * 10000f);
+            vwr.getScalePixelsPerAngstrom(false) * 10000d);
       // continue on to Object2d setting
     }
 
     if ("scale" == propertyName) {
       if (currentObject != null) {
-        (currentObject).setScale(((Float) value).floatValue());
+        (currentObject).setScale(((Number) value).doubleValue());
       } else if (isAll) {
         for (Text t : objects.values())
-          t.setScale(((Float) value).floatValue());
+          t.setScale(((Number) value).doubleValue());
       }
       return;
     }
@@ -271,9 +271,9 @@ public class Echo extends TextShape {
 
     if ("xypos" == propertyName) {
       if (currentObject != null) {
-        P3 pt = (P3) value;
+        P3d pt = (P3d) value;
         currentObject.setXYZ(null, true);
-        if (pt.z == Float.MAX_VALUE) {
+        if (pt.z == Double.MAX_VALUE) {
           currentObject.setMovableX((int) pt.x);
           currentObject.setMovableY((int) pt.y);
         } else {
@@ -286,16 +286,16 @@ public class Echo extends TextShape {
 
     if ("xyz" == propertyName) {
       if (currentObject != null) {
-        currentObject.setXYZ((P3) value, true);
+        currentObject.setXYZ((P3d) value, true);
         if (currentObject.pymolOffset == null)
-          currentObject.pymolOffset = new float[] { -1, 2, 0, 0, 0, 0, 0 };        
+          currentObject.pymolOffset = new double[] { -1, 2, 0, 0, 0, 0, 0 };        
       }
       return;
     }
 
     if ("offset" == propertyName) {
       if (currentObject != null) {
-        currentObject.pymolOffset = (float[]) value;
+        currentObject.pymolOffset = (double[]) value;
       }
       return;
     }

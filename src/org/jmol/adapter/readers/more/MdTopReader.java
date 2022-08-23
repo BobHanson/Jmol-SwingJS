@@ -228,7 +228,7 @@ public class MdTopReader extends ForceFieldReader {
       return;
     Atom[] atoms = asc.atoms;
     for (int i = ac; --i >= 0;)
-      atoms[i].partialCharge = parseFloatStr(data[i]);
+      atoms[i].partialCharge = parseDoubleStr(data[i]);
   }
 
   private void getResiduePointers() throws Exception {
@@ -271,9 +271,9 @@ public class MdTopReader extends ForceFieldReader {
   }
 
   private void getMasses() throws Exception {
-    /*    float[] data = new float[ac];
+    /*    double[] data = new double[ac];
         readLine();
-        getTokensFloat(getDataBlock(), data, ac);
+        getTokensDouble(getDataBlock(), data, ac);
     */
   }
 

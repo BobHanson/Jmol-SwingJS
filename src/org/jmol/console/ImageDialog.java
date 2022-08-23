@@ -182,7 +182,7 @@ public class ImageDialog extends JDialog implements GenericImageDialog, WindowLi
     @Override
     public void paintComponent(Graphics g) {
       System.out.println(image.getClass().getName());
-//      System.out.println(((BufferedImage)image).getRGB(0,  0));
+//System.out.println(((BufferedImage)image).getRGB(0,  0));
       g.setColor(Color.white);
       g.fillRect(0,  0,  image.getWidth(null), image.getHeight(null));
       g.drawImage(image, 0, 0, null);

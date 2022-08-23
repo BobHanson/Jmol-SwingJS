@@ -24,7 +24,7 @@
 
 package org.jmol.renderspecial;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import javajs.util.BS;
 import org.jmol.script.T;
@@ -77,9 +77,9 @@ protected void renderConvex(short colix, BS visibilityMap, int nPoints) {
     renderDots(nPoints);
   }
   
-  private P3 facePt1 = new P3();
-  private P3 facePt2 = new P3();
-  private P3 facePt3 = new P3();
+  private P3d facePt1 = new P3d();
+  private P3d facePt2 = new P3d();
+  private P3d facePt3 = new P3d();
   
   private void renderSurface(BS points) {
     if (faceMap == null)

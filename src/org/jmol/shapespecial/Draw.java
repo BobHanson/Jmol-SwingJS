@@ -40,13 +40,13 @@ import org.jmol.util.Font;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
 
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.P4;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
@@ -102,13 +102,13 @@ public void initShape() {
     myType = "draw";
   }
   
-  private P3[] ptList;
-  private V3 offset = new V3();
+  private P3d[] ptList;
+  private V3d offset = new V3d();
   private int nPoints;
   private int diameter;
-  private float width;
-  private float newScale;
-  private float length;
+  private double width;
+  private double newScale;
+  private double length;
   private boolean isCurve;
   private boolean isArc;
   private boolean isArrow;
@@ -131,14 +131,14 @@ public void initShape() {
   private boolean makePoints;
   //private int nidentifiers;
   //private int nbitsets;
-  private P4 plane;
+  private P4d plane;
   private BS bsAllModels;
   private Lst<Object> polygon;
   
   private Lst<Object[]> vData;
   private String intersectID;
   
-  private Lst<P3[]> lineData;
+  private Lst<P3d[]> lineData;
   public int defaultFontId0 = -1;
   public int defaultFontId = -1;
   private int thisFontID = -1;
@@ -169,7 +169,7 @@ public void initShape() {
     }
     
     if ("length" == propertyName) {
-      length = ((Float) value).floatValue();
+      length = ((Number) value).doubleValue();
       return;
     }
 
@@ -194,7 +194,7 @@ public void initShape() {
         return;
       MeshSurface ms = new MeshSurface();
       ms.vs = m.vs;
-      ms.vvs = new float[m.vc];
+      ms.vvs = new double[m.vc];
       ms.vc = m.vc;
       ms.pis = m.pis;
       ms.pc = m.pc;
@@ -203,15 +203,15 @@ public void initShape() {
     }
 
     if ("lineData" == propertyName) {
-      lineData = new Lst<P3[]>();
+      lineData = new Lst<P3d[]>();
       if (indicatedModelIndex < 0)
         indicatedModelIndex = vwr.am.cmi;
-      float[] fdata = (float[]) value;
+      double[] fdata = (double[]) value;
       int n = fdata.length / 6;
       for (int i = 0, pt = 0; i < n; i++)
-        lineData.addLast(new P3[] {
-            P3.new3(fdata[pt++], fdata[pt++], fdata[pt++]),
-            P3.new3(fdata[pt++], fdata[pt++], fdata[pt++]) });
+        lineData.addLast(new P3d[] {
+            P3d.new3(fdata[pt++], fdata[pt++], fdata[pt++]),
+            P3d.new3(fdata[pt++], fdata[pt++], fdata[pt++]) });
       return;
     }
 
@@ -226,13 +226,13 @@ public void initShape() {
     }
 
     if ("planedef" == propertyName) {
-      plane = (P4) value;
+      plane = (P4d) value;
       if (intersectID != null || slabData != null)
         return;
       if (isCircle || isArc)
         isPlane = true;
       vData.addLast(new Object[] { Integer.valueOf(PT_COORD),
-          P3.new3(Float.NaN, Float.NaN, Float.NaN) });
+          P3d.new3(Double.NaN, Double.NaN, Double.NaN) });
       return;
     }
 
@@ -319,14 +319,14 @@ public void initShape() {
     }
 
     if ("points" == propertyName) {
-      newScale = ((Integer) value).floatValue() / 100;
+      newScale = ((Integer) value).doubleValue() / 100;
       if (newScale == 0)
         newScale = 1;
       return;
     }
 
     if ("scale" == propertyName) {
-      newScale = ((Integer) value).floatValue() / 100;
+      newScale = ((Integer) value).doubleValue() / 100;
       if (newScale == 0)
         newScale = 0.01f; // very tiny but still sizable;
       if (thisMesh != null) {
@@ -338,12 +338,12 @@ public void initShape() {
     }
 
     if ("diameter" == propertyName) {
-      diameter = ((Float) value).intValue();
+      diameter = ((Number) value).intValue();
       return;
     }
 
     if ("width" == propertyName) {
-      width = ((Float) value).floatValue();
+      width = ((Number) value).doubleValue();
       return;
     }
 
@@ -377,7 +377,7 @@ public void initShape() {
     }
 
     if ("offset" == propertyName) {
-      offset = V3.newV((P3) value);
+      offset = V3d.newV((P3d) value);
       if (thisMesh != null)
         thisMesh.offset(offset);
       return;
@@ -390,7 +390,7 @@ public void initShape() {
       vData.addLast(new Object[] { Integer.valueOf(PT_BITSET), bsAtoms });
       //nbitsets++;
       if (isCircle && diameter == 0 && width == 0)
-        width = ms.calcRotationRadiusBs(bsAtoms) * 2.0f;
+        width = ms.calcRotationRadiusBs(bsAtoms) * 2.0d;
       return;
     }
 
@@ -433,7 +433,7 @@ public void initShape() {
       }
       thisMesh.isValid = (isValid ? setDrawing((int[]) value) : false);
       if (thisMesh.isValid) {
-        if (thisMesh.vc > 2 && length != Float.MAX_VALUE && newScale == 1)
+        if (thisMesh.vc > 2 && length != Double.MAX_VALUE && newScale == 1)
           newScale = length;
         scale(thisMesh, newScale);
         thisMesh.initialize(T.fullylit, null, null);
@@ -502,7 +502,7 @@ private void initDraw() {
    isFixed = isReversed = isRotated45 = isCrossed = noHead = isBarb = false;
    isPerpendicular = isVertices = isVector = false;
    isValid = true;
-   length = Float.MAX_VALUE;
+   length = Double.MAX_VALUE;
    lineData = null;
    newScale = 0;
    //nidentifiers = nbitsets = 0;
@@ -549,7 +549,7 @@ private void initDraw() {
     if (property.equals("font")) {
       if (defaultFontId < 0) {
         setProperty("font", vwr.gdata.getFont3DFSS(JC.DEFAULT_FONTFACE,
-            JC.DEFAULT_FONTSTYLE, vwr.getFloat(T.drawfontsize)), null);
+            JC.DEFAULT_FONTSTYLE, vwr.getDouble(T.drawfontsize)), null);
         defaultFontId0 = defaultFontId;
       }
       return Font.getFont3D(index < 0 || m.fontID < 0 ? defaultFontId : m.fontID);
@@ -562,7 +562,7 @@ private void initDraw() {
     return getPropMC(property, index);
   }
 
-  private T3 getSpinCenter(String axisID, int vertexIndex, int modelIndex) {
+  private T3d getSpinCenter(String axisID, int vertexIndex, int modelIndex) {
     String id;
     int pt = axisID.indexOf("[");
     int pt2;
@@ -585,7 +585,7 @@ private void initDraw() {
     // < 0 and no ptCenters or modelIndex < 0 -- center point
     // < 0 center for modelIndex
     if (vertexIndex == Integer.MAX_VALUE)
-      return P3.new3(m.index + 1, meshCount, m.vc);
+      return P3d.new3(m.index + 1, meshCount, m.vc);
     if (vertexIndex != Integer.MIN_VALUE) 
       vertexIndex = m.getVertexIndexFromNumber(vertexIndex);
     return (vertexIndex >= 0 ? m.vs[vertexIndex] : m.ptCenters == null
@@ -593,7 +593,7 @@ private void initDraw() {
         ? m.ptCenter : m.ptCenters[modelIndex]);
   }
    
-  private V3 getSpinAxis(String axisID, int modelIndex) {
+  private V3d getSpinAxis(String axisID, int modelIndex) {
     DrawMesh m = (DrawMesh) getMesh(axisID);
     return (m == null || m.vs == null ? null 
         : m.ptCenters == null || modelIndex < 0 ? m.axis : m.axes[modelIndex]);
@@ -607,7 +607,7 @@ private void initDraw() {
     thisMesh.width = width;
     if (plane != null) {
       if (intersectID != null) {
-        Lst<P3[]> vData = new Lst<P3[]>();
+        Lst<P3d[]> vData = new Lst<P3d[]>();
         Object[] data = new Object[] { intersectID, plane, vData, null };
         vwr.shm.getShapePropertyData(JC.SHAPE_ISOSURFACE, "intersectPlane",
             data);
@@ -653,7 +653,7 @@ private void initDraw() {
         if (polygon.size() == 0)
           return false;
         thisMesh.isDrawPolygon = true;
-        thisMesh.vs = (P3[]) polygon.get(0);
+        thisMesh.vs = (P3d[]) polygon.get(0);
         thisMesh.pis = (int[][]) polygon.get(1);
         thisMesh.drawVertexCount = thisMesh.vc = thisMesh.vs.length;
         thisMesh.pc = (thisMesh.pis == null ? -1 : thisMesh.pis.length);
@@ -676,7 +676,7 @@ private void initDraw() {
       // multiple copies, one for each model involved
       thisMesh.modelIndex = -1;
       thisMesh.setPolygonCount(modelCount);
-      thisMesh.ptCenters = new P3[modelCount];
+      thisMesh.ptCenters = new P3d[modelCount];
       thisMesh.modelFlags = new BS();
       thisMesh.drawTypes = new EnumDrawType[modelCount];
       thisMesh.drawVertexCounts = new int[modelCount];
@@ -742,10 +742,10 @@ private void initDraw() {
       vData.addLast(new Object[] { key, pts });
     for (int i = 0, n = pts.size(); i < n; i++) {
       Object o = pts.get(i);
-      P3 pt;
-      if (o instanceof P3) {
+      P3d pt;
+      if (o instanceof P3d) {
         // from Draw HKL
-        pt = (P3) o;
+        pt = (P3d) o;
       } else {
         SV v = (SV) o;
         switch (v.tok) {
@@ -770,12 +770,12 @@ private void initDraw() {
     }
   }
 
-  private void addPoint(T3 newPt, int iModel) {
+  private void addPoint(T3d newPt, int iModel) {
     if (makePoints) {
       if (newPt == null || iModel >= 0 && !bsAllModels.get(iModel))
         return;
-      ptList[nPoints] = P3.newP(newPt);
-      if (newPt.z == Float.MAX_VALUE || newPt.z == -Float.MAX_VALUE)
+      ptList[nPoints] = P3d.newP(newPt);
+      if (newPt.z == Double.MAX_VALUE || newPt.z == -Double.MAX_VALUE)
         thisMesh.haveXyPoints = true;
     } else if (iModel >= 0) {
       bsAllModels.set(iModel);
@@ -796,7 +796,7 @@ private void initDraw() {
     // we also provide a flag CROSSED to uncross them
     this.makePoints = (n >= 0);
     if (makePoints) {
-      ptList = new P3[Math.max(5,n)];
+      ptList = new P3d[Math.max(5,n)];
       if (bsAllModels == null)
         bsAllModels = vwr.getVisibleFramesBitSet();
     }
@@ -819,7 +819,7 @@ private void initDraw() {
           int[] p = thisMesh.pis[modelIndex] = new int[nVertices];
           for (int j = 0; j < nPoints; j++) {
             info = vData.get(++i);
-            p[j] = thisMesh.addV((P3) info[1], false);
+            p[j] = thisMesh.addV((P3d) info[1], false);
           }
           for (int j = nPoints; j < 3; j++) {
             p[j] = n0 + nPoints - 1;
@@ -830,7 +830,7 @@ private void initDraw() {
         }
         break;
       case PT_COORD:
-        addPoint((P3) info[1], (makePoints ? iModel : -1));
+        addPoint((P3d) info[1], (makePoints ? iModel : -1));
         break;
       case PT_BITSET:
         // (atom set) references must be filtered for relevant model
@@ -884,8 +884,8 @@ private void initDraw() {
           if (iModel < 0 || j == iModel) {
             Object point = modelBasedPoints.get(j);
             bsAllModels.set(j);
-            if (point instanceof P3) {
-              addPoint((P3) point, j);
+            if (point instanceof P3d) {
+              addPoint((P3d) point, j);
             } else if (point instanceof BS) {
               bs = (BS) point;
               if (bsModel != null)
@@ -900,14 +900,14 @@ private void initDraw() {
       }
     }
     if (makePoints && isCrossed && nPoints == 4) {
-      P3 pt = ptList[1];
+      P3d pt = ptList[1];
       ptList[1] = ptList[2];
       ptList[2] = pt;
     }
     return (nPoints > 0);
   }
 
-  private final V3 vAB = new V3();
+  private final V3d vAB = new V3d();
 
   private void setPolygon(int nPoly) {
     int nVertices = nPoints;
@@ -944,27 +944,27 @@ private void initDraw() {
       isPerpendicular = false;
       if (nVertices == 3 && isPlane)
         isPlane = false;
-      length = Float.MAX_VALUE;
+      length = Double.MAX_VALUE;
       if (isVector)
         thisMesh.diameter = 0;
     } else if (nVertices == 2 && isVector) {
       ptList[1].add(ptList[0]);
     }
-    float dist = 0;
+    double dist = 0;
     if (isArc || plane != null && isCircle) {
       if (plane != null) {
-        dist = Measure.distanceToPlane(plane, ptList[0]);
-        V3 vAC = V3.new3(-plane.x, -plane.y, -plane.z);
+        dist = MeasureD.distanceToPlane(plane, ptList[0]);
+        V3d vAC = V3d.new3(-plane.x, -plane.y, -plane.z);
         vAC.normalize();
         if (dist < 0)
           vAC.scale(-1);
         if (isCircle) {
-          vAC.scale(0.005f);
+          vAC.scale(0.005d);
           ptList[0].sub(vAC);
           vAC.scale(2);
         }
         vAC.add(ptList[0]);
-        ptList[1] = P3.newP(vAC);
+        ptList[1] = P3d.newP(vAC);
         drawType = (isArrow ? EnumDrawType.ARROW
             : isArc ? EnumDrawType.ARC : EnumDrawType.CIRCULARPLANE);
       }
@@ -975,14 +975,14 @@ private void initDraw() {
           // fractionalAxisOffset}
         } else if (nVertices == 3) {
           // draw arc {center} {pt2} {angleOffset theta fractionalAxisOffset}
-          ptList[3] = P3.newP(ptList[2]);
+          ptList[3] = P3d.newP(ptList[2]);
           ptList[2] = randomPoint();
         } else {
           if (nVertices == 2) {
             // draw arc {center} {pt2}
             ptList[2] = randomPoint();
           }
-          ptList[3] = P3.new3(0, 360, 0);
+          ptList[3] = P3d.new3(0, 360, 0);
         }
         if (plane != null)
           ptList[3].z *= dist;
@@ -990,13 +990,13 @@ private void initDraw() {
       }
       plane = null;
     } else if (drawType == EnumDrawType.POINT) {
-      P3 pt;
-      P3 center = new P3();
-      V3 normal = new V3();
+      P3d pt;
+      P3d center = new P3d();
+      V3d normal = new V3d();
       if (nVertices == 2 && plane != null) {
-        ptList[1] = P3.newP(ptList[0]);
-        V3 vTemp = new V3();
-        Measure.getPlaneProjection(ptList[1], plane, ptList[1], vTemp);
+        ptList[1] = P3d.newP(ptList[0]);
+        V3d vTemp = new V3d();
+        MeasureD.getPlaneProjection(ptList[1], plane, ptList[1], vTemp);
         nVertices = -2;
         if (isArrow)
           drawType = EnumDrawType.ARROW;
@@ -1004,20 +1004,20 @@ private void initDraw() {
       }
       if (nVertices == 3 && isPlane && !isPerpendicular) {
         // three points define a plane
-        pt = P3.newP(ptList[1]);
+        pt = P3d.newP(ptList[1]);
         pt.sub(ptList[0]);
-        pt.scale(0.5f);
-        ptList[3] = P3.newP(ptList[2]);
+        pt.scale(0.5d);
+        ptList[3] = P3d.newP(ptList[2]);
         ptList[2].add(pt);
         ptList[3].sub(pt);
         nVertices = 4;
       } else if (nVertices >= 3 && !isPlane && isPerpendicular) {
         // normal to plane
-        Measure.calcNormalizedNormal(ptList[0], ptList[1], ptList[2], normal,
+        MeasureD.calcNormalizedNormal(ptList[0], ptList[1], ptList[2], normal,
             vAB);
-        center = new P3();
-        Measure.calcAveragePointN(ptList, nVertices, center);
-        dist = (length == Float.MAX_VALUE ? ptList[0].distance(center)
+        center = new P3d();
+        MeasureD.calcAveragePointN(ptList, nVertices, center);
+        dist = (length == Double.MAX_VALUE ? ptList[0].distance(center)
             : length);
         normal.scale(dist);
         ptList[0].setT(center);
@@ -1025,29 +1025,29 @@ private void initDraw() {
         nVertices = 2;
       } else if (nVertices == 2 && isPerpendicular) {
         // perpendicular line to line or plane to line
-        Measure.calcAveragePoint(ptList[0], ptList[1], center);
-        dist = (length == Float.MAX_VALUE ? ptList[0].distance(center)
+        MeasureD.calcAveragePoint(ptList[0], ptList[1], center);
+        dist = (length == Double.MAX_VALUE ? ptList[0].distance(center)
             : length);
-        if (isPlane && length != Float.MAX_VALUE)
-          dist /= 2f;
+        if (isPlane && length != Double.MAX_VALUE)
+          dist /= 2d;
         if (isPlane && isRotated45)
           dist *= 1.4142f;
-        Measure.getNormalToLine(ptList[0], ptList[1], normal);
+        MeasureD.getNormalToLine(ptList[0], ptList[1], normal);
         normal.scale(dist);
         if (isPlane) {
-          ptList[2] = P3.newP(center);
+          ptList[2] = P3d.newP(center);
           ptList[2].sub(normal);
-          pt = P3.newP(center);
+          pt = P3d.newP(center);
           pt.add(normal);
           // pt
           // |
           // 0-------+--------1
           // |
           // 2
-          Measure.calcNormalizedNormal(ptList[0], ptList[1], ptList[2], normal,
+          MeasureD.calcNormalizedNormal(ptList[0], ptList[1], ptList[2], normal,
               vAB);
           normal.scale(dist);
-          ptList[3] = P3.newP(center);
+          ptList[3] = P3d.newP(center);
           ptList[3].add(normal);
           ptList[1].sub2(center, normal);
           ptList[0].setT(pt);
@@ -1059,10 +1059,10 @@ private void initDraw() {
           // 3 2
 
           if (isRotated45) {
-            Measure.calcAveragePoint(ptList[0], ptList[1], ptList[0]);
-            Measure.calcAveragePoint(ptList[1], ptList[2], ptList[1]);
-            Measure.calcAveragePoint(ptList[2], ptList[3], ptList[2]);
-            Measure.calcAveragePoint(ptList[3], pt, ptList[3]);
+            MeasureD.calcAveragePoint(ptList[0], ptList[1], ptList[0]);
+            MeasureD.calcAveragePoint(ptList[1], ptList[2], ptList[1]);
+            MeasureD.calcAveragePoint(ptList[2], ptList[3], ptList[2]);
+            MeasureD.calcAveragePoint(ptList[3], pt, ptList[3]);
           }
           nVertices = 4;
         } else {
@@ -1071,10 +1071,10 @@ private void initDraw() {
         }
         if (isArrow && nVertices != -2)
           isArrow = false;
-      } else if (nVertices == 2 && length != Float.MAX_VALUE) {
-        Measure.calcAveragePoint(ptList[0], ptList[1], center);
+      } else if (nVertices == 2 && length != Double.MAX_VALUE) {
+        MeasureD.calcAveragePoint(ptList[0], ptList[1], center);
         normal.sub2(ptList[1], center);
-        normal.scale(0.5f / normal.length() * (length == 0 ? 0.01f : length));
+        normal.scale(0.5d / normal.length() * (length == 0 ? 0.01f : length));
         if (length == 0)
           center.setT(ptList[0]);
         ptList[0].sub2(center, normal);
@@ -1122,7 +1122,7 @@ private void initDraw() {
     return;
   }
 
-  private void scale(Mesh mesh, float newScale) {
+  private void scale(Mesh mesh, double newScale) {
     DrawMesh dmesh = (DrawMesh) mesh;
     /*
      * allows for Draw to scale object
@@ -1132,17 +1132,17 @@ private void initDraw() {
     if (newScale == 0 || dmesh.vc == 0 && dmesh.connectedAtoms == null
         || dmesh.scale == newScale)
       return;
-    float f = newScale / dmesh.scale;
+    double f = newScale / dmesh.scale;
     dmesh.scale = newScale;
     dmesh.isScaleSet = true;
     if (dmesh.isRenderScalable())
       return; // done in renderer
-    V3 diff = new V3();
+    V3d diff = new V3d();
     int iptlast = -1;
     int ipt = 0;
     try {
       for (int i = dmesh.pc; --i >= 0;) {
-        T3 center = (dmesh.isVector ? dmesh.vs[0]
+        T3d center = (dmesh.isVector ? dmesh.vs[0]
             : dmesh.ptCenters == null ? dmesh.ptCenter : dmesh.ptCenters[i]);
         if (center == null)
           return;
@@ -1167,14 +1167,14 @@ private void initDraw() {
   }
 
   private final static void setAxes(DrawMesh m) {
-    m.axis = V3.new3(0, 0, 0);
-    m.axes = new V3[m.pc > 0 ? m.pc : 1];
+    m.axis = V3d.new3(0, 0, 0);
+    m.axes = new V3d[m.pc > 0 ? m.pc : 1];
     if (m.vs == null)
       return;
     int n = 0;
     for (int i = m.pc; --i >= 0;) {
       int[] p = m.pis[i];
-      m.axes[i] = new V3();
+      m.axes[i] = new V3d();
       if (p == null || p.length == 0) {
       } else if (m.drawVertexCount == 2 || m.drawVertexCount < 0
           && m.drawVertexCounts[i] == 2) {
@@ -1182,7 +1182,7 @@ private void initDraw() {
             m.vs[p[1]]);
         n++;
       } else {
-        Measure.calcNormalizedNormal(m.vs[p[0]],
+        MeasureD.calcNormalizedNormal(m.vs[p[0]],
             m.vs[p[1]],
             m.vs[p[2]], m.axes[i], m.vAB);
         n++;
@@ -1191,7 +1191,7 @@ private void initDraw() {
     }
     if (n == 0)
       return;
-    m.axis.scale(1f / n);
+    m.axis.scale(1d / n);
   }
 
   @Override
@@ -1222,7 +1222,7 @@ private void initDraw() {
   private final static int MAX_OBJECT_CLICK_DISTANCE_SQUARED = 10 * 10;
 
   private final P3i ptXY = new P3i();
-  private float defaultFontSize = JC.DRAW_DEFAULT_FONTSIZE;
+  private double defaultFontSize = JC.DRAW_DEFAULT_FONTSIZE;
   
   @Override
   public Map<String, Object> checkObjectClicked(int x, int y, int action,
@@ -1235,7 +1235,7 @@ private void initDraw() {
       return null;
     if (!findPickedObject(x, y, false, bsVisible))
       return null;
-    T3 v = pickedMesh.vs[pickedMesh.pis[pickedModel][pickedVertex]];
+    T3d v = pickedMesh.vs[pickedMesh.pis[pickedModel][pickedVertex]];
     int modelIndex = pickedMesh.modelIndex;
     BS bs = ((DrawMesh) pickedMesh).modelFlags;
     if (modelIndex < 0 && BSUtil.cardinalityOf(bs) == 1)
@@ -1333,11 +1333,11 @@ private void initDraw() {
     if (vwr.acm.userActionEnabled(action) 
         && !vwr.acm.userAction(action, new Object[] { mesh.thisID, new int[] {x, y, iVertex} } ))
       return;
-    P3 pt = new P3();
+    P3d pt = new P3d();
     int ptVertex = vertexes[iVertex];
-    P3 coord = P3.newP(mesh.altVertices == null ? mesh.vs[ptVertex] : (P3) mesh.altVertices[ptVertex]);
-    P3 newcoord = new P3();
-    V3 move = new V3();
+    P3d coord = P3d.newP(mesh.altVertices == null ? mesh.vs[ptVertex] : (P3d) mesh.altVertices[ptVertex]);
+    P3d newcoord = new P3d();
+    V3d move = new V3d();
     vwr.tm.transformPt3f(coord, pt);
     pt.x = x;
     pt.y = y;
@@ -1397,8 +1397,8 @@ private void initDraw() {
               : m.pis[iModel].length); --iVertex >= 0;) {
             try {
               int iv = m.pis[iModel][iVertex];
-              T3 pt = (m.altVertices == null ? m.vs[iv]
-                  : (P3) m.altVertices[iv]);
+              T3d pt = (m.altVertices == null ? m.vs[iv]
+                  : (P3d) m.altVertices[iv]);
               int d2 = coordinateInRange(x, y, pt, dmin2, ptXY);
               if (d2 >= 0) {
                 pickedMesh = m;
@@ -1456,9 +1456,9 @@ private void initDraw() {
         && (dmesh.haveXyPoints || dmesh.connectedAtoms != null
             || dmesh.drawType == EnumDrawType.CIRCLE
             || dmesh.drawType == EnumDrawType.ARC))
-      str.append(" scale ").appendF(dmesh.scale);
+      str.append(" scale ").appendD(dmesh.scale);
     if (dmesh.width != 0)
-      str.append(" diameter ").appendF(
+      str.append(" diameter ").appendD(
           (dmesh.drawType == EnumDrawType.CYLINDER ? Math.abs(dmesh.width)
               : dmesh.drawType == EnumDrawType.CIRCULARPLANE
                   ? Math.abs(dmesh.width * dmesh.scale)
@@ -1469,7 +1469,7 @@ private void initDraw() {
       str.append("  lineData [");
       int n = dmesh.lineData.size();
       for (int j = 0; j < n;) {
-        P3[] pts = dmesh.lineData.get(j);
+        P3d[] pts = dmesh.lineData.get(j);
         String s = Escape.eP(pts[0]);
         str.append(s.substring(1, s.length() - 1));
         str.append(",");
@@ -1553,7 +1553,7 @@ private void initDraw() {
       }
     }
     if (dmesh.mat4 != null) {
-      V3 v = new V3();
+      V3d v = new V3d();
       dmesh.mat4.getTranslation(v);
       str.append(" offset ").append(Escape.eP(v));
     }
@@ -1589,11 +1589,11 @@ private void initDraw() {
         iModel = 0; // arrows and curves may not have multiple model representations
       boolean adjustPt = (mesh.isVector && mesh.drawType != EnumDrawType.ARC);
       for (int i = 0; i < nVertices; i++) {
-        T3 pt = mesh.vs[mesh.pis[iModel][i]];
-        if (pt.z == Float.MAX_VALUE || pt.z == -Float.MAX_VALUE) {
+        T3d pt = mesh.vs[mesh.pis[iModel][i]];
+        if (pt.z == Double.MAX_VALUE || pt.z == -Double.MAX_VALUE) {
           str += (i == 0 ? " " : " ,") + "[" + (int) pt.x + " " + (int) pt.y + (pt.z < 0 ? " %]" : "]");
         } else if (adjustPt && i == 1){
-          P3 pt1 = P3.newP(pt);
+          P3d pt1 = P3d.newP(pt);
           pt1.sub(mesh.vs[mesh.pis[iModel][0]]);
           str += " " + Escape.eP(pt1);
         } else {
@@ -1621,8 +1621,8 @@ private void initDraw() {
       if (mesh.diameter > 0)
         info.put("diameter", Integer.valueOf(mesh.diameter));
       if (mesh.width != 0)
-        info.put("width", Float.valueOf(mesh.width));
-      info.put("scale", Float.valueOf(mesh.scale));
+        info.put("width", Double.valueOf(mesh.width));
+      info.put("scale", Double.valueOf(mesh.scale));
       if (mesh.drawType == EnumDrawType.MULTIPLE) {
         Lst<Map<String, Object>> m = new  Lst<Map<String,Object>>();
         int modelCount = ms.mc;
@@ -1637,14 +1637,14 @@ private void initDraw() {
           mInfo.put("vertexCount", Integer.valueOf(nPoints));
           if (nPoints > 1)
             mInfo.put("axis", mesh.axes[k]);
-          Lst<T3> v = new  Lst<T3>();
+          Lst<T3d> v = new  Lst<T3d>();
           for (int ipt = 0; ipt < nPoints; ipt++)
             v.addLast(mesh.vs[mesh.pis[k][ipt]]);
           mInfo.put("vertices", v);
           if (mesh.drawTypes[k] == EnumDrawType.LINE) {
-            float d = mesh.vs[mesh.pis[k][0]]
+            double d = mesh.vs[mesh.pis[k][0]]
                 .distance(mesh.vs[mesh.pis[k][1]]);
-            mInfo.put("length_Ang", Float.valueOf(d));
+            mInfo.put("length_Ang", Double.valueOf(d));
           }
           m.addLast(mInfo);
         }
@@ -1654,12 +1654,12 @@ private void initDraw() {
         info.put("center", mesh.ptCenter);
         if (mesh.drawVertexCount > 1)
           info.put("axis", mesh.axis);
-        Lst<T3> v = new  Lst<T3>();
+        Lst<T3d> v = new  Lst<T3d>();
         for (int j = 0; j < mesh.vc; j++)
           v.addLast(mesh.vs[j]);
         info.put("vertices", v);
         if (mesh.drawType == EnumDrawType.LINE)
-          info.put("length_Ang", Float.valueOf(mesh.vs[0]
+          info.put("length_Ang", Double.valueOf(mesh.vs[0]
               .distance(mesh.vs[1])));
       }
       V.addLast(info);
@@ -1686,8 +1686,8 @@ private void initDraw() {
     return s.toString();
   }
 
-  public static P3 randomPoint() {
-    return P3.new3((float) Math.random(), (float) Math.random(), (float) Math.random());
+  public static P3d randomPoint() {
+    return P3d.new3(Math.random(), Math.random(), Math.random());
   }
 
   public enum EnumDrawType {

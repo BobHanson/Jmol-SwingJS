@@ -35,11 +35,11 @@ import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.P3;
+import javajs.util.M3d;
+import javajs.util.M4d;
+import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 public class Export3D implements JmolRendererInterface {
 
@@ -130,7 +130,7 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
-  public void drawAtom(Atom atom, float radius) {
+  public void drawAtom(Atom atom, double radius) {
     exporter.drawAtom(atom, radius);
   }
 
@@ -256,10 +256,10 @@ public class Export3D implements JmolRendererInterface {
       exporter.drawCircle(x, y, z, diameter, colix, doFill);
   }
 
-  private P3 ptA = new P3();
-  private P3 ptB = new P3();
-  private P3 ptC = new P3();
-  private P3 ptD = new P3();
+  private P3d ptA = new P3d();
+  private P3d ptB = new P3d();
+  private P3d ptC = new P3d();
+  private P3d ptD = new P3d();
   /*
    * private Point3f ptE = new Point3f(); private Point3f ptF = new Point3f();
    * private Point3f ptG = new Point3f(); private Point3f ptH = new Point3f();
@@ -308,7 +308,7 @@ public class Export3D implements JmolRendererInterface {
    *        a javax.vecmath.Point3f ... floats are casted to ints
    */
   @Override
-  public void fillSphereBits(int diameter, P3 center) {
+  public void fillSphereBits(int diameter, P3d center) {
     if (diameter != 0)
       exporter.fillSphere(colix, diameter, center);
   }
@@ -457,7 +457,7 @@ public class Export3D implements JmolRendererInterface {
    */
 
   @Override
-  public void drawDashedLineBits(int run, int rise, P3 pointA, P3 pointB) {
+  public void drawDashedLineBits(int run, int rise, P3d pointA, P3d pointB) {
     // axes and such -- ignored dashed for exporters
     // axes, bbcage only
     exporter.fillCylinderScreenMad(colix, GData.ENDCAPS_FLAT,
@@ -485,20 +485,20 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
-  public void drawLineBits(short colixA, short colixB, P3 pointA, P3 pointB) {
+  public void drawLineBits(short colixA, short colixB, P3d pointA, P3d pointB) {
     fillCylinderBits2(colixA, colixB, GData.ENDCAPS_FLAT,
         exporter.lineWidthMad, pointA, pointB);
   }
 
   @Override
-  public void drawLineAB(P3 pointA, P3 pointB) {
+  public void drawLineAB(P3d pointA, P3d pointB) {
     // draw quadrilateral and hermite, stars
     exporter.fillCylinderScreenMad(colix, GData.ENDCAPS_FLAT,
         exporter.lineWidthMad, pointA, pointB);
   }
 
   @Override
-  public void drawBond(P3 atomA, P3 atomB, short colixA, short colixB,
+  public void drawBond(P3d atomA, P3d atomB, short colixA, short colixB,
                        byte endcaps, short mad, int bondOrder) {
     // from SticksRenderer to allow for a direct
     // writing of single bonds -- just for efficiency here 
@@ -524,12 +524,12 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
-  public void fillCylinderScreen3I(byte endcaps, int diameter, P3 pointA,
-                                   P3 pointB, P3 pt0f, P3 pt1f, float radius) {
+  public void fillCylinderScreen3I(byte endcaps, int diameter, P3d pointA,
+                                   P3d pointB, P3d pt0d, P3d pt1f, double radius) {
     // from Draw arrow and NucleicMonomer
     if (diameter <= 0)
       return;
-    exporter.fillCylinderScreen(colix, endcaps, diameter, pointA, pointB, pt0f, pt1f,
+    exporter.fillCylinderScreen(colix, endcaps, diameter, pointA, pointB, pt0d, pt1f,
         radius);
   }
 
@@ -558,7 +558,7 @@ public class Export3D implements JmolRendererInterface {
 //  }
 
   @Override
-  public void fillCylinderBits(byte endcaps, int diameter, P3 pointA, P3 pointB) {
+  public void fillCylinderBits(byte endcaps, int diameter, P3d pointA, P3d pointB) {
     if (diameter <= 0)
       return;
     // diameter is in screen coordinates.
@@ -570,22 +570,22 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
-  public void fillConeScreen3f(byte endcap, int screenDiameter, P3 pointBase,
-                              P3 screenTip, boolean isBarb) {
+  public void fillConeScreen3f(byte endcap, int screenDiameter, P3d pointBase,
+                              P3d screenTip, boolean isBarb) {
     // cartoons, rockets
     exporter.fillConeScreen(colix, endcap, screenDiameter, pointBase,
         screenTip, isBarb);
   }
 
   @Override
-  public void drawHermite4(int tension, P3 s0, P3 s1, P3 s2, P3 s3) {
+  public void drawHermite4(int tension, P3d s0, P3d s1, P3d s2, P3d s3) {
     // strands
     hermite3d.renderHermiteRope(false, tension, 0, 0, 0, s0, s1, s2, s3);
   }
 
   @Override
   public void fillHermite(int tension, int diameterBeg, int diameterMid,
-                          int diameterEnd, P3 s0, P3 s1, P3 s2, P3 s3) {
+                          int diameterEnd, P3d s0, P3d s1, P3d s2, P3d s3) {
     hermite3d.renderHermiteRope(true, tension, diameterBeg, diameterMid,
         diameterEnd, s0, s1, s2, s3);
   }
@@ -605,19 +605,19 @@ public class Export3D implements JmolRendererInterface {
           screenC.y, screenC.z);
   }
 
-  public void drawLineBits(P3 screenA, P3 screenB, short colixA, short colixB) {
+  public void drawLineBits(P3d screenA, P3d screenB, short colixA, short colixB) {
     exporter.drawCylinder(screenA, screenB, colixA, colixB, GData.ENDCAPS_FLAT, exporter.lineWidthMad, 1);
   }
 
   @Override
   public void fillCylinderBits2(short colixA, short colixB, byte endcaps,
-                                int mad, P3 screenA, P3 screenB) {
+                                int mad, P3d screenA, P3d screenB) {
     exporter.drawCylinder(screenA, screenB, colixA, colixB, endcaps, mad, 1);
   }
 
   @Override
-  public void fillTriangle3CNBits(P3 pA, short colixA, short nA, P3 pB,
-                                  short colixB, short nB, P3 pC, short colixC,
+  public void fillTriangle3CNBits(P3d pA, short colixA, short nA, P3d pB,
+                                  short colixB, short nB, P3d pC, short colixC,
                                   short nC, boolean twoSided) {
     // draw polygon, polyhedron, geosurface
     if (colixA != colixB || colixB != colixC) {
@@ -643,20 +643,20 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
-  public void fillTriangleTwoSided(short normix, P3 a, P3 b, P3 c) {
+  public void fillTriangleTwoSided(short normix, P3d a, P3d b, P3d c) {
     // polyhedra (collapsed)
     exporter.fillTriangle(colix, a, b, c, true);
   }
 
   @Override
-  public void fillTriangle3f(P3 pointA, P3 pointB, P3 pointC, boolean setNoisy) {
+  public void fillTriangle3f(P3d pointA, P3d pointB, P3d pointC, boolean setNoisy) {
     // rockets (not cartesian)
     exporter.fillTriangle(colix, pointA, pointB, pointC, false);
   }
 
   @Override
-  public void fillTriangle3i(P3 screenA, P3 screenB, P3 screenC, T3 ptA0,
-                             T3 ptB0, T3 ptC0, boolean doShade) {
+  public void fillTriangle3i(P3d screenA, P3d screenB, P3d screenC, T3d ptA0,
+                             T3d ptB0, T3d ptC0, boolean doShade) {
     // cartoon only, for nucleic acid bases
       exporter.fillTriangle(colix, screenA, screenB, screenC, true);
   }
@@ -668,7 +668,7 @@ public class Export3D implements JmolRendererInterface {
    */
 
   @Override
-  public void fillQuadrilateral(P3 pointA, P3 pointB, P3 pointC, P3 pointD, boolean isSolid) {
+  public void fillQuadrilateral(P3d pointA, P3d pointB, P3d pointC, P3d pointD, boolean isSolid) {
     // fillTextRect
     // hermite, rockets, cartoons, labels
     exporter.fillTriangle(colix, pointA, pointB, pointC, false);
@@ -681,15 +681,15 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
-  public void fillEllipsoid(P3 center, P3[] points, int x, int y, int z,
-                            int diameter, M3 mToEllipsoidal, double[] coef,
-                            M4 mDeriv, int selectedOctant, P3[] octantPoints) {
+  public void fillEllipsoid(P3d center, P3d[] points, int x, int y, int z,
+                            int diameter, M3d mToEllipsoidal, double[] coef,
+                            M4d mDeriv, int selectedOctant, P3d[] octantPoints) {
     exporter.fillEllipsoid(center, points, colix, x, y, z, diameter,
         mToEllipsoidal, coef, mDeriv, octantPoints);
   }
 
   @Override
-  public boolean drawEllipse(P3 ptAtom, P3 ptX, P3 ptY, boolean fillArc,
+  public boolean drawEllipse(P3d ptAtom, P3d ptX, P3d ptY, boolean fillArc,
                              boolean wireframeOnly) {
     return exporter.drawEllipse(ptAtom, ptX, ptY, colix, fillArc);
   }
@@ -768,7 +768,7 @@ public class Export3D implements JmolRendererInterface {
 
   @Override
   public void renderCrossHairs(int[] minMax, int screenWidth, int screenHeight,
-                               P3 navigationOffset, float navigationDepthPercent) {
+                               P3d navigationOffset, double navigationDepthPercent) {
   }
 
   @Override
@@ -800,9 +800,9 @@ public class Export3D implements JmolRendererInterface {
   }
 
   @Override
-  public void drawHermite7(boolean fill, boolean border, int tension, P3 s0,
-                           P3 s1, P3 s2, P3 s3, P3 s4, P3 s5, P3 s6,
-                           P3 s7, int aspectRatio, short colixBack) {
+  public void drawHermite7(boolean fill, boolean border, int tension, P3d s0,
+                           P3d s1, P3d s2, P3d s3, P3d s4, P3d s5, P3d s6,
+                           P3d s7, int aspectRatio, short colixBack) {
     if (colixBack == 0 || webGL) {
       hermite3d.renderHermiteRibbon(fill, border, tension, s0, s1, s2, s3, s4,
           s5, s6, s7, aspectRatio, 0);

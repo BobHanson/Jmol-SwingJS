@@ -29,7 +29,7 @@ import org.jmol.shape.Axes;
 import org.jmol.util.GData;
 import org.jmol.viewer.StateManager;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 
 public class AxesRenderer extends CageRenderer {
@@ -39,11 +39,11 @@ public class AxesRenderer extends CageRenderer {
                                   "X", "Y", "Z", null, null, null,
                                   "X", null, "Z", null, "(Y)", null};
 
-  private final P3 originScreen = new P3();
+  private final P3d originScreen = new P3d();
   
   private short[] colixes = new short[3];
 
-  private P3 pt000;
+  private P3d pt000;
 
   private final static String[] axesTypes = {"a", "b", "c", "x", "y", "z"};
 
@@ -77,17 +77,19 @@ public class AxesRenderer extends CageRenderer {
     if (vwr.areAxesTainted())
       axes.reinitShape();
     font3d = vwr.gdata.getFont3DScaled(axes.font3d, imageFontScaling);
-    isUnitCell &= (ms.unitCells != null);
+    isUnitCell = isUnitCell && (unitcell != null && ms.unitCells != null);
     String axisType = (isUnitCell ? axes.axisType : null);
     boolean isabcxyz = (isXY && isUnitCell && axes.axes2 != null);
     isPolymer = isUnitCell && unitcell.isPolymer();
     isSlab = isUnitCell && unitcell.isSlab();
 
-    float scale = axes.scale;
+    double scale = axes.scale;
     if (isabcxyz) {
       // both abc and xyz
-      render1(axes, mad10, false, axisType, isUnitCell, 2, null);
-      vwr.setBooleanProperty("axesmolecular", true);
+      if ("xyzabc".equals(axes.axes2))
+        render1(axes, mad10, false, axisType, isUnitCell, 2, null);
+      if (!"abc".equals(axes.axes2))
+        vwr.setBooleanProperty("axesmolecular", true);
       axes.initShape();
       render1(axes, mad10, true, null, false, scale, axes.axes2);
       vwr.setBooleanProperty("axesunitcell", true);
@@ -97,9 +99,9 @@ public class AxesRenderer extends CageRenderer {
     return true;
   }
   
-  private final P3 ptTemp = new P3();
+  private final P3d ptTemp = new P3d();
   private void render1(Axes axes,int mad10, boolean isXY,
-                       String axisType, boolean isUnitCell, float scale, String labels2) {
+                       String axisType, boolean isUnitCell, double scale, String labels2) {
     boolean isDataFrame = vwr.isJmolDataFrame();
     pt000 = (isDataFrame ? pt0 : axes.originPoint);
     int nPoints = 6;
@@ -123,7 +125,7 @@ public class AxesRenderer extends CageRenderer {
     int diameter = mad10;
     boolean drawTicks = false;
     ptTemp.setT(originScreen);
-    boolean checkAxisType = (labels2 == null && axisType != null && (isXY || vwr.getFloat(T.axesoffset) != 0 || axes.fixedOrigin != null));
+    boolean checkAxisType = (labels2 == null && axisType != null && (isXY || vwr.getDouble(T.axesoffset) != 0 || axes.fixedOrigin != null));
     if (isXY) {
       if (mad10 >= 20) {
         // width given in angstroms as mAng.
@@ -155,14 +157,14 @@ public class AxesRenderer extends CageRenderer {
         pt0i.y += offy;
       }
       ptTemp.set(pt0i.x, pt0i.y, pt0i.z);
-      float zoomDimension = vwr.getScreenDim();
-      float scaleFactor = zoomDimension / 10f * scale;
+      double zoomDimension = vwr.getScreenDim();
+      double scaleFactor = zoomDimension / 10d * scale;
       if (g3d.isAntialiased())
         scaleFactor *= 2;
-      if (isUnitCell && isXY)
+      if ((isUnitCell || "abc".equals(axes.axes2)) && isXY)
         scaleFactor /= 2;
       for (int i = 0; i < 3; i++) {
-        P3 pt = p3Screens[i];
+        P3d pt = p3Screens[i];
         tm.rotatePoint(axes.getAxisPoint(i, false, pointT), pt);
         pt.z *= -1;
         pt.scaleAdd2(scaleFactor, pt, ptTemp);
@@ -179,8 +181,8 @@ public class AxesRenderer extends CageRenderer {
       for (int i = nPoints; --i >= 0;)
         tm.transformPtNoClip(axes.getAxisPoint(i, !isDataFrame, pointT), p3Screens[i]);
     }
-    float xCenter = ptTemp.x;
-    float yCenter = ptTemp.y;
+    double xCenter = ptTemp.x;
+    double yCenter = ptTemp.y;
     colixes[0] = vwr.getObjectColix(StateManager.OBJ_AXIS1);
     colixes[1] = vwr.getObjectColix(StateManager.OBJ_AXIS2);
     colixes[2] = vwr.getObjectColix(StateManager.OBJ_AXIS3);
@@ -229,20 +231,20 @@ public class AxesRenderer extends CageRenderer {
       g3d.setSlab(slab);
   }
 
-  private void renderLabel(String str, float x, float y, float z, float xCenter, float yCenter) {
+  private void renderLabel(String str, double x, double y, double z, double xCenter, double yCenter) {
     int strAscent = font3d.getAscent();
     int strWidth = font3d.stringWidth(str);
-    float dx = x - xCenter;
-    float dy = y - yCenter;
+    double dx = x - xCenter;
+    double dy = y - yCenter;
     if ((dx != 0 || dy != 0)) {
-      float dist = (float) Math.sqrt(dx * dx + dy * dy);
-      dx = (strWidth * 0.75f * dx / dist);
-      dy = (strAscent * 0.75f * dy / dist);
+      double dist = Math.sqrt(dx * dx + dy * dy);
+      dx = (strWidth * 0.75d * dx / dist);
+      dy = (strAscent * 0.75d * dy / dist);
       x += dx;
       y += dy;
     }
-    double xStrBaseline = Math.floor(x - strWidth / 2f);
-    double yStrBaseline = Math.floor(y + strAscent / 2f);
+    double xStrBaseline = Math.floor(x - strWidth / 2d);
+    double yStrBaseline = Math.floor(y + strAscent / 2d);
     g3d.drawString(str, font3d, (int) xStrBaseline, (int) yStrBaseline, (int) z, (int) z, (short) 0);
   }
 }

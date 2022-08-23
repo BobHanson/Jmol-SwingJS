@@ -47,7 +47,7 @@ public interface JmolStatusListener extends JmolCallbackListener {
    * @param y
    * @return 2D array or null
    */
-  public float[][] functionXY(String functionName, int x, int y);
+  public double[][] functionXY(String functionName, int x, int y);
   
   /**
    * for isosurface FUNCTIONXYZ 
@@ -58,7 +58,7 @@ public interface JmolStatusListener extends JmolCallbackListener {
    * @param nz
    * @return 3D array or null
    */
-  public float[][][] functionXYZ(String functionName, int nx, int ny, int nz);
+  public double[][][] functionXYZ(String functionName, int nx, int ny, int nz);
 
   /**
    * Starting with Jmol 11.8.RC5, for a context where the Jmol application

@@ -23,11 +23,11 @@
  */
 package org.jmol.viewer;
 
-import javajs.util.M4;
-import javajs.util.P4;
-import javajs.util.T3;
-import javajs.util.T4;
-import javajs.util.V3;
+import javajs.util.M4d;
+import javajs.util.P4d;
+import javajs.util.T3d;
+import javajs.util.T4d;
+import javajs.util.V3d;
 
 import javajs.util.BS;
 
@@ -44,13 +44,13 @@ public class TransformManager4D extends TransformManager {
     
   private int mouseMode = MODE_4D_WZ;
 
-  private M4 m2_rotate;
-  private final M4 m3_toScreen = new M4();
-  private float zOffset;
-  private final T3 v1 = new V3();
-  private final M4 m4 = new M4();
-  private T4 p4 = new P4();
-  private final V3 zero = new V3();
+  private M4d m2_rotate;
+  private final M4d m3_toScreen = new M4d();
+  private double zOffset;
+  private final T3d v1 = new V3d();
+  private final M4d m4 = new M4d();
+  private T4d p4 = new P4d();
+  private final V3d zero = new V3d();
     
   @Override
   public void resetRotation() {
@@ -60,7 +60,7 @@ public class TransformManager4D extends TransformManager {
   }
 
   @Override
-  protected void rotateXYBy(float xDelta, float yDelta, BS bsAtoms) {
+  protected void rotateXYBy(double xDelta, double yDelta, BS bsAtoms) {
     // from mouse action
     
     rotate3DBall(xDelta, yDelta, bsAtoms);
@@ -89,8 +89,8 @@ public class TransformManager4D extends TransformManager {
     }
   }
 
-  protected void rotate4DBall(float xDelta, float yDelta, float zDelta) {
-    float scale = 50f;
+  protected void rotate4DBall(double xDelta, double yDelta, double zDelta) {
+    double scale = 50d;
     setAsBallRotation(m4, scale, xDelta, yDelta, zDelta);
     m2_rotate.mul2(m4, m2_rotate);
   }
@@ -105,16 +105,16 @@ public class TransformManager4D extends TransformManager {
    * @param dz
    * @author Andrew Hanson -- see http://www.cse.ohio-state.edu/~hwshen/888_su02/hanson_note.pdf
    */
-  public void setAsBallRotation(M4 m, float scale, float dx, float dy, float dz) {
-    float dxyz2 = dx * dx + dy * dy + dz * dz;
-    float sxyz = (float) Math.sqrt(dxyz2);
-    float th =  sxyz / scale;
-    float c = (float) Math.cos(th);
-    float s = (float) Math.sin(th);
-    float nx = dx / sxyz;
-    float ny = dy / sxyz;
-    float nz = dz / sxyz;
-    float c1 = c - 1;
+  public void setAsBallRotation(M4d m, double scale, double dx, double dy, double dz) {
+    double dxyz2 = dx * dx + dy * dy + dz * dz;
+    double sxyz = (double) Math.sqrt(dxyz2);
+    double th =  sxyz / scale;
+    double c = (double) Math.cos(th);
+    double s = (double) Math.sin(th);
+    double nx = dx / sxyz;
+    double ny = dy / sxyz;
+    double nz = dz / sxyz;
+    double c1 = c - 1;
     
     m.m00 = 1 + c1 * nx * nx;
     m.m11 = 1 + c1 * ny * ny;
@@ -132,7 +132,7 @@ public class TransformManager4D extends TransformManager {
 
   private void checkM2() {
     if (m2_rotate == null)
-      m2_rotate = M4.newMV(matrixRotate, zero);
+      m2_rotate = M4d.newMV(matrixRotate, zero);
   }
 
   @Override
@@ -155,14 +155,14 @@ public class TransformManager4D extends TransformManager {
     // negate y (for screen) and z (for zbuf)
     m3_toScreen.m11 = m3_toScreen.m22 = -scalePixelsPerAngstrom;
 
-    System.out.println(m2_rotate);
+    //System.out.println(m2_rotate);
 
     zOffset = modelCenterOffset;
   }
 
   @Override
-  protected void getScreenTemp(T3 ptXYZ) {
-    if (doTransform4D && ptXYZ instanceof T4) {
+  protected void getScreenTemp(T3d ptXYZ) {
+    if (doTransform4D && ptXYZ instanceof T4d) {
       p4.add2(ptXYZ, v1);                      // 3D centering
       m2_rotate.rotate(p4);                    // 4D rotation
       fScrPt.setT(p4);              // 3D truncation

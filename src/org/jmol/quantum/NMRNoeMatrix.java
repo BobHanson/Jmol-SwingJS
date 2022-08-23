@@ -256,7 +256,7 @@ public class NMRNoeMatrix {
   public static NMRNoeMatrix createMatrix(Viewer viewer, BS bsMol,
                                           String[] labelArray, NOEParams params) {
     
-//    System.out.println("NMRNoeMatrix creation for " + bsMol);
+//System.out.println("NMRNoeMatrix creation for " + bsMol);
 //
     BS bsH = null;
     try {
@@ -379,7 +379,7 @@ public class NMRNoeMatrix {
     }
     params.tainted = false;
 //    if (isNew)
-//      System.out.println(toString());
+//System.out.println(toString());
   }
 
   /**
@@ -389,7 +389,7 @@ public class NMRNoeMatrix {
    *        the number of atoms to be added
    */
   public void initArrays(int n) {
-//    System.out.println("NMRNoeMatrix initialized for " + n + " H atoms");
+//System.out.println("NMRNoeMatrix initialized for " + n + " H atoms");
     nHAtoms = n;
     atoms = new NOEAtom[nHAtoms];
     atomCounter = 0;
@@ -777,8 +777,8 @@ public class NMRNoeMatrix {
     } catch (Exception e) {
       System.out.println(e.toString());
     }
-    //    System.out.println(params.getNMRfreqMHz());
-    //    System.out.println(params.getCorrelationTimeTauPS());
+    //System.out.println(params.getNMRfreqMHz());
+    //System.out.println(params.getCorrelationTimeTauPS());
   }
 
   private void readAtomsFromFile(File file) {

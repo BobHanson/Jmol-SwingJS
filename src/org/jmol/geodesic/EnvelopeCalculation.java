@@ -29,9 +29,9 @@ import org.jmol.util.Geodesic;
 import org.jmol.util.Normix;
 
 import javajs.util.AU;
-import javajs.util.M3;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.M3d;
+import javajs.util.P3d;
+import javajs.util.V3d;
 import org.jmol.viewer.JC;
 
 import org.jmol.api.AtomIndexIterator;
@@ -169,7 +169,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     return this;
   }
 
-  private float maxRadius = 0;
+  private double maxRadius = 0;
   private boolean modelZeroBased;
   private boolean disregardNeighbors = false;
   private BS bsMySelected;
@@ -223,7 +223,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     dotsConvexMax = Math.max(dotsConvexMax, index);
   }
 
-  private float radiusP, diameterP;
+  private double radiusP, diameterP;
 
   public void newSet() {
     dotsConvexMax = 0;
@@ -244,7 +244,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
    * @param bs
    * @param m
    */
-  public void reCalculate(BS bs, M3 m) {
+  public void reCalculate(BS bs, M3d m) {
     if (atomData.radiusData != null) {
       calculate(null, maxRadius, bs, bsIgnore, disregardNeighbors,
           onlySelectedDots, isSurface, multiModel);
@@ -252,7 +252,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     }
     if (dotsConvexMaps == null || dotsConvexMax == 0)
       return;
-    V3 pt = new V3();
+    V3d pt = new V3d();
     if (bsTemp == null)
       bsTemp = Normix.newVertexBitSet();
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
@@ -288,11 +288,11 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
    * @param multiModel
    */
   @Override
-  public void calculate(RadiusData rd, float maxRadius, BS bsSelected,
+  public void calculate(RadiusData rd, double maxRadius, BS bsSelected,
                         BS bsIgnore, boolean disregardNeighbors,
                         boolean onlySelectedDots, boolean isSurface,
                         boolean multiModel) {
-    // was: this.setRadius = (setRadius == Float.MAX_VALUE &&
+    // was: this.setRadius = (setRadius == Double.MAX_VALUE &&
     // !useVanderwaalsRadius ? SURFACE_DISTANCE_FOR_CALCULATION : setRadius);
 
     if (rd == null) {
@@ -306,7 +306,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
       this.multiModel = multiModel;
       this.isSurface = isSurface;
     }
-    if (rd.value == Float.MAX_VALUE)
+    if (rd.value == Double.MAX_VALUE)
       rd.value = JC.ENC_CALC_MAX_DIST;
     atomData.modelIndex = (multiModel ? -1 : 0);
     modelZeroBased = !multiModel;
@@ -316,7 +316,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     ac = atomData.ac;
     if (mads != null)
       for (int i = 0; i < ac; i++)
-        atomData.atomRadius[i] = mads[i] / 1000f;
+        atomData.atomRadius[i] = mads[i] / 1000d;
 
     bsMySelected = (onlySelectedDots && bsSelected != null ? BSUtil
         .copy(bsSelected) : bsIgnore != null ? BSUtil.setAll(ac) : null);
@@ -342,17 +342,17 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     setDotsConvexMax();
   }
 
-  public float getRadius(int atomIndex) {
+  public double getRadius(int atomIndex) {
     return atomData.atomRadius[atomIndex];
   }
 
-  private P3[] currentPoints;
+  private P3d[] currentPoints;
 
   @Override
-  public P3[] getPoints() {
+  public P3d[] getPoints() {
     if (dotsConvexMaps == null) {
       calculate(new RadiusData(null, JC.ENC_CALC_MAX_DIST, EnumType.ABSOLUTE,
-          null), Float.MAX_VALUE, bsMySelected, null, false, false, false,
+          null), Double.MAX_VALUE, bsMySelected, null, false, false, false,
           false);
     }
     if (currentPoints != null)
@@ -362,7 +362,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     for (int i = dotsConvexMax; --i >= 0;)
       if (dotsConvexMaps[i] != null)
         nPoints += dotsConvexMaps[i].cardinalityN(dotCount);
-    P3[] points = new P3[nPoints];
+    P3d[] points = new P3d[nPoints];
     if (nPoints == 0)
       return points;
     nPoints = 0;
@@ -373,7 +373,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
           iDot = dotCount;
         while (--iDot >= 0)
           if (dotsConvexMaps[i].get(iDot)) {
-            P3 pt = new P3();
+            P3d pt = new P3d();
             pt.scaleAdd2(atomData.atomRadius[i],
                 Geodesic.getVertexVector(iDot), atomData.xyz[i]);
             points[nPoints++] = pt;
@@ -401,16 +401,16 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
       return bsSurface;
     }
   */
-  public float getAppropriateRadius(int atomIndex) {
+  public double getAppropriateRadius(int atomIndex) {
     return (mads != null ? (atomIndex >= mads.length ? 0
-        : mads[atomIndex] / 1000f) : atomData.atomRadius[atomIndex]);
+        : mads[atomIndex] / 1000d) : atomData.atomRadius[atomIndex]);
   }
 
   private int indexI;
-  private P3 centerI;
-  private float radiusI;
-  private float radiiIP2;
-  private final P3 pointT = new P3();
+  private P3d centerI;
+  private double radiusI;
+  private double radiiIP2;
+  private final P3d pointT = new P3d();
 
   private void setAtomI(int indexI) {
     this.indexI = indexI;
@@ -474,20 +474,20 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     }
   }
 
-  private P3 centerT;
+  private P3d centerT;
 
   //level = 3 for both
-  private final P3[] vertexTest = new P3[12];
+  private final P3d[] vertexTest = new P3d[12];
   {
     for (int i = 0; i < 12; i++)
-      vertexTest[i] = new P3();
+      vertexTest[i] = new P3d();
   }
 
   private static int[] power4 = { 1, 4, 16, 64, 256 };
 
   private void calcConvexBits() {
     geodesicMap.setBits(0, geodesicCount);
-    float combinedRadii = radiusI + radiusP;
+    double combinedRadii = radiusI + radiusP;
     if (neighborCount == 0)
       return;
     int faceTest;
@@ -506,7 +506,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
       p2 = faces[3 * p4 * (4 * f + 1)];
       p3 = faces[3 * p4 * (4 * f + 2)];
       for (int j = 0; j < neighborCount; j++) {
-        float maxDist = neighborPlusProbeRadii2[j];
+        double maxDist = neighborPlusProbeRadii2[j];
         centerT = neighborCenters[j];
         ok1 = vertexTest[p1].distanceSquared(centerT) >= maxDist;
         ok2 = vertexTest[p2].distanceSquared(centerT) >= maxDist;
@@ -536,7 +536,7 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
         case 0:
           //face partially occluded
           for (int j = 0; j < neighborCount; j++) {
-            float maxDist = neighborPlusProbeRadii2[j];
+            double maxDist = neighborPlusProbeRadii2[j];
             centerT = neighborCenters[j];
             pointT.scaleAdd2(combinedRadii, Geodesic.getVertexVector(vect),
                 centerI);
@@ -565,9 +565,9 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
 
   private int neighborCount;
   private int[] neighborIndices = new int[16];
-  private P3[] neighborCenters = new P3[16];
-  private float[] neighborPlusProbeRadii2 = new float[16];
-  private float[] neighborRadii2 = new float[16];
+  private P3d[] neighborCenters = new P3d[16];
+  private double[] neighborPlusProbeRadii2 = new double[16];
+  private double[] neighborRadii2 = new double[16];
 
   private AtomIndexIterator getNeighbors(AtomIndexIterator iter) {
     neighborCount = 0;
@@ -576,19 +576,19 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     vwr.setIteratorForAtom(iter, indexI, radiusI + diameterP + maxRadius);
     while (iter.hasNext()) {
       int indexN = iter.next();
-      float neighborRadius = atomData.atomRadius[indexN];
+      double neighborRadius = atomData.atomRadius[indexN];
       if (centerI.distance(atomData.xyz[indexN]) > radiusI + radiusP
           + radiusP + neighborRadius)
         continue;
       if (neighborCount == neighborIndices.length) {
         neighborIndices = AU.doubleLengthI(neighborIndices);
-        neighborCenters = (P3[]) AU.doubleLength(neighborCenters);
-        neighborPlusProbeRadii2 = AU.doubleLengthF(neighborPlusProbeRadii2);
-        neighborRadii2 = AU.doubleLengthF(neighborRadii2);
+        neighborCenters = (P3d[]) AU.doubleLength(neighborCenters);
+        neighborPlusProbeRadii2 = AU.doubleLengthD(neighborPlusProbeRadii2);
+        neighborRadii2 = AU.doubleLengthD(neighborRadii2);
       }
       neighborCenters[neighborCount] = atomData.xyz[indexN];
       neighborIndices[neighborCount] = indexN;
-      float r = neighborRadius + radiusP;
+      double r = neighborRadius + radiusP;
       neighborPlusProbeRadii2[neighborCount] = r * r;
       neighborRadii2[neighborCount] = neighborRadius * neighborRadius;
       ++neighborCount;
@@ -607,9 +607,9 @@ public final class EnvelopeCalculation implements JmolEnvCalc {
     dotsConvexMax = dotsConvexMaps.length;
     if (mads != null)
       mads = (short[]) AU.deleteElements(mads, firstAtomDeleted, nAtomsDeleted);
-    atomData.atomRadius = (float[]) AU.deleteElements(atomData.atomRadius,
+    atomData.atomRadius = (double[]) AU.deleteElements(atomData.atomRadius,
         firstAtomDeleted, nAtomsDeleted);
-    atomData.xyz = (P3[]) AU.deleteElements(atomData.xyz,
+    atomData.xyz = (P3d[]) AU.deleteElements(atomData.xyz,
         firstAtomDeleted, nAtomsDeleted);
     atomData.ac -= nAtomsDeleted;
     ac = atomData.ac;

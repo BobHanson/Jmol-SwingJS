@@ -464,8 +464,8 @@ all support for previous versions removed
         <include name="**/*.html" />
       </fileset>
     </copy>
-    	    <echo message="Creating Jmol.jar -- if this fails, check to see that build/Jmol.jar is not open." />
-    <jar destfile="build/Jmol.jar"
+    	    <echo message="Creating JmolD.jar -- if this fails, check to see that build/JmolD.jar is not open." />
+    <jar destfile="build/JmolD.jar"
          manifest="manifest/application.txt">
       <fileset dir="${classes.dir}" >
         <exclude name="**/.*" />
@@ -492,11 +492,11 @@ all support for previous versions removed
     </jar>
     <antcall target="sign-jar-file">
       <param name="sign-jar-file-dir" value="build" />
-      <param name="sign-jar-file-name"  value="Jmol.jar" />
+      <param name="sign-jar-file-name"  value="JmolD.jar" />
     </antcall>
   	
-    	    <echo message="Creating JmolData.jar -- if this fails, check to see that build/Jmol.jar is not open." />
-    <jar destfile="build/JmolData.jar"
+    	    <echo message="Creating JmolDataD.jar -- if this fails, check to see that build/JmolD.jar is not open." />
+    <jar destfile="build/JmolDataD.jar"
          manifest="manifest/applicationData.txt">
       <fileset dir="${classes.dir}" >
         <exclude name="**/Test*.class" />
@@ -534,14 +534,14 @@ all support for previous versions removed
     </jar>
     <antcall target="sign-jar-file">
       <param name="sign-jar-file-dir" value="build" />
-      <param name="sign-jar-file-name"  value="JmolData.jar" />
+      <param name="sign-jar-file-name"  value="JmolDataD.jar" />
     </antcall>
 
     <copy todir="build">
       <fileset dir=".">
-        <include name="jmol" />
-        <include name="jmol.bat" />
-        <include name="jmol.sh" />
+        <include name="jmolD" />
+        <include name="jmolD.bat" />
+        <include name="jmolD.sh" />
       </fileset>
     </copy>
 
@@ -567,18 +567,6 @@ all support for previous versions removed
       <param name="sign-jar-file-dir" value="build" />
       <param name="sign-jar-file-name"  value="Jvxl.jar" />
     </antcall>
-  	<!--
-    <jar destfile="ChimeToJmol.jar"
-         manifest="manifest/chimetojmol.txt">
-      <fileset dir="${classes.dir}" >
-        <include name="org/openscience/chimetojmol/*" />
-      </fileset>
-    </jar>
-    <antcall target="sign-jar-file">
-      <param name="sign-jar-file-dir" value="build" />
-      <param name="sign-jar-file-name" value="ChimeToJmol.jar" />
-    </antcall>
-    -->
   </else></if>
   </target>
 
@@ -839,38 +827,6 @@ all support for previous versions removed
 < ! - - <pathelement path="build/JmolApplet0_Spectrum.jar" />
         <fileset dir="build" includes="JmolApplet0_i18n_*.jar" />   - - >
       </indexjars>
-    </jar>
-	<echo message="creating JmolLib.jar" level="info" />
-    <jar destfile="build/JmolLib.jar"
-         manifest="manifest/jmolLib.txt" index="true" >
-      <fileset dir="${applet.classes.dir}" >
-	        <include name="**/*" />
-        <exclude name="JmolSmiles*" />
-        <exclude name="org/jmol/applet/**/*" />
-        <exclude name="org/jmol/appletjs/**/*" />
-        <exclude name="org/jmol/awt/**/*" />
-        <exclude name="org/jmol/awtjs/**/*" />
-        <exclude name="org/jmol/awtjs2d/**/*" />
-        <exclude name="org/jmol/console/**/*" />
-        <exclude name="org/jmol/consolejs/**/*" />
-        <exclude name="org/jmol/dialog/**/*" />
-        <exclude name="org/jmol/export/**/*" />
-        <exclude name="org/jmol/exportjs/**/*" />
-        <exclude name="org/jmol/modelkit/**/*" />
-        <exclude name="org/jmol/multitouch/jni/*" />
-        <exclude name="org/jmol/multitouch/sparshui/*" />
-        <exclude name="org/jmol/popup/**/*" />
-        <exclude name="org/openscience/**/*" />
-      	< ! - - just need sparshUI gestureType.class - - >
-        <exclude name="com/sparshui/client/*" />
-        <exclude name="com/sparshui/common/**/**/*" />
-        <exclude name="com/sparshui/cpp/*" />
-        <exclude name="com/sparshui/gestures/*" />
-        <exclude name="com/sparshui/inputdevice/*" />
-        <exclude name="com/sparshui/server/*" />
-        <exclude name="com/json/**/*" />
-        <exclude name="JmolApplet*" />
-      </fileset>
     </jar>
 
   </else></if>
@@ -1186,26 +1142,25 @@ all support for previous versions removed
     <mkdir dir="build/dist/jmol-${version}"/>
     <copy todir="build/dist/jmol-${version}" >
       <fileset dir="build">
-        <include name="Jmol.jar" />
-        <include name="JmolData.jar" />
-        <include name="JmolLib.jar" />
+        <include name="JmolD.jar" />
+        <include name="JmolDataD.jar" />
         <include name="JSpecView.jar" />
         <include name="jspecview.properties" />
       </fileset>
       <fileset dir=".">
-        <include name="jmol" />
-        <include name="jmol.sh" />
-        <include name="jmol.mac" />
-        <include name="jmol.bat" />
+        <include name="jmolD" />
+        <include name="jmolD.sh" />
+        <!-- include name="jmolD.mac" / -->
+        <include name="jmolD.bat" />
         <include name="*.txt" />
       </fileset>
     </copy>
     <copy file="src/org/jmol/viewer/Jmol.properties" tofile="build/dist/jmol-${version}/CHANGES.txt" />
     <chmod perm="ugo+rx">
       <fileset dir="build/dist/jmol-${version}">
-        <include name="jmol"/>
-        <include name="jmol.sh"/>
-        <include name="jmol.bat"/>
+        <include name="jmolD"/>
+        <include name="jmolD.sh"/>
+        <include name="jmolD.bat"/>
       </fileset>
     </chmod>
 
@@ -1226,11 +1181,11 @@ all support for previous versions removed
     <tar tarfile="build/dist/jmol-${version}-binary.tar.gz"
          compression="gzip" >
       <tarfileset dir="build/dist"
-                  excludes="*/jmol,*/jmol.sh"
+                  excludes="*/jmol,*/jmol.sh,*/jmolD,*/jmolD.sh"
                   includes="jmol-${version}/**" />
       <tarfileset dir="build/dist"
                   mode="755"
-    	    includes="jmol-${version}/jmol,jmol-${version}/jmol.sh" />
+    	    includes="jmol-${version}/jmol,jmol-${version}/jmol.sh,jmol-${version}/jmolD,jmol-${version}/jmolD.sh" />
     </tar>
 
     <!-- then build source distribution -->
@@ -1302,15 +1257,15 @@ all support for previous versions removed
     <tar tarfile="build/dist/jmol-${version}-full.tar.gz"
          compression="gzip" >
       <tarfileset dir="build/dist"
-                  excludes="*/jmol,*/jmol.sh"
+                  excludes="*/jmol,*/jmol.sh,*/jmolD,*/jmolD.sh"
                   includes="jmol-${version}/**" />
       <tarfileset dir="build/dist/jmol-${version}"
                   mode="755"
-                  includes="jmol,jmol.sh" />
+                  includes="jmol,jmol.sh,jmolD,jmolD.sh" />
     </tar>
 
     <!-- Copy other files to have a complete distribution -->
-  	<copy file="build/Jmol.jar" tofile="build/dist/Jmol.jar" />
+  	<copy file="build/JmolD.jar" tofile="build/dist/JmolD.jar" />
     <copy file="tools/pom.xml.template" tofile="build/dist/pom.xml.template" />
     <jar jarfile="build/dist/jmol-${version}-javadoc.jar">
       <fileset dir="build/javadoc" />
@@ -1368,7 +1323,7 @@ all support for previous versions removed
     <tar tarfile="build/dist/jmolapisio-${version}.tar.gz"
          compression="gzip" >
       <tarfileset dir="build/dist"
-                  excludes="*/jmol,*/jmol.sh"
+                  excludes="*/jmol,*/jmol.sh,*/jmolD,*/jmolD.sh"
                   includes="jmolapisio-${version}/**" />
     </tar>
   </target>
@@ -1440,7 +1395,7 @@ all support for previous versions removed
   </target>
   
   <target name="run" id="run" depends="main">
-    <java fork="true" jar="build/Jmol.jar" />
+    <java fork="true" jar="build/JmolD.jar" />
   </target>
 
   <!-- ********************************
@@ -1628,7 +1583,7 @@ all support for previous versions removed
   <target name="test" id="test" depends="main,compile-tests">
     <junit printsummary="yes" haltonfailure="yes">
       <classpath>
-        <pathelement location="build/Jmol.jar" />
+        <pathelement location="build/JmolD.jar" />
         <pathelement location="${tests.dir}/Tests.jar" />
         <pathelement location="./jars/junit.jar" />
       </classpath>
@@ -1646,7 +1601,7 @@ all support for previous versions removed
            debug="off" deprecation="on"
            optimize="off" source="1.8" encoding="UTF8">
       <classpath>
-        <pathelement location="build/Jmol.jar" />
+        <pathelement location="build/JmolD.jar" />
         <pathelement location="./jars/junit.jar" />
       </classpath>
     </javac>
@@ -1710,18 +1665,6 @@ all support for previous versions removed
     <ant antfile="tools/build-i18n.xml" target="spotless-i18n"/>
   </target>
 
-  <!-- target name="dotnet" depends="applet-jar">
-    <exec executable="${ikvm.home}/ikvmc.exe">
-      <arg value="-target:library"/>
-      <arg value="-out:build/JmolLib.dll"/>
-      <arg value="-debug"/>
-      <arg value="build/JmolLib.jar"/>
-      < ! - - arg value="${lib.dir}/${vecmath.jar}"/  - - >
-    </exec>
-  </target>   -->
-	
-
-	
 	
 	
 	  <!--

@@ -47,7 +47,7 @@ public class Frank extends Shape {
   public int frankAscent;
   public int frankDescent;
   int x, y, dx, dy;
-  private float scaling;
+  private double scaling;
   public Font font3d;
 
 
@@ -107,7 +107,7 @@ public class Frank extends Shape {
     frankAscent = font3d.getAscent();
   }
 
-  public void getFont(float imageFontScaling) {
+  public void getFont(double imageFontScaling) {
     if (imageFontScaling != scaling) {
       scaling = imageFontScaling;
       font3d = vwr.gdata.getFont3DScaled(baseFont3d, imageFontScaling);

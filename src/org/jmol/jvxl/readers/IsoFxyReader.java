@@ -27,8 +27,8 @@ package org.jmol.jvxl.readers;
 import org.jmol.jvxl.data.JvxlCoder;
 
 import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.P4;
+import javajs.util.T3d;
+import javajs.util.P4d;
 
 class IsoFxyReader extends AtomDataReader {
   
@@ -48,14 +48,14 @@ class IsoFxyReader extends AtomDataReader {
     volumeData.sr = (params.func == null ? null : this);
   }
 
-  private float[][] data;
+  private double[][] data;
   private boolean isPlanarMapping;
   private Object[] func;
   
   @Override
   protected void setup(boolean isMapData) {
     if (params.functionInfo.size() > 5)
-      data = (float[][]) params.functionInfo.get(5);
+      data = (double[][]) params.functionInfo.get(5);
     setupType("functionXY");
   }
 
@@ -79,9 +79,9 @@ class IsoFxyReader extends AtomDataReader {
       setVolumeDataADR(); 
       return;
     }
-    volumetricOrigin.setT((T3) params.functionInfo.get(1));
+    volumetricOrigin.setT((T3d) params.functionInfo.get(1));
     for (int i = 0; i < 3; i++) {
-      P4 info = (P4) params.functionInfo.get(i + 2);
+      P4d info = (P4d) params.functionInfo.get(i + 2);
       voxelCounts[i] = Math.abs((int) info.x);
       volumetricVectors[i].set(info.y, info.z, info.w);      
     }
@@ -97,21 +97,21 @@ class IsoFxyReader extends AtomDataReader {
   }
 
   @Override
-  public float[] getPlane(int x) {
-    float[] plane = getPlaneSR(x);
+  public double[] getPlane(int x) {
+    double[] plane = getPlaneSR(x);
     setPlane(x, plane);
     return plane;
   }
 
-  private void setPlane(int x, float[] plane) {
+  private void setPlane(int x, double[] plane) {
       for (int y = 0, ptyz = 0; y < nPointsY; ++y)
         for (int z = 0; z < nPointsZ; ++z)
           plane[ptyz++] = getValue(x, y, z, 0);
   }
 
   @Override
-  public float getValue(int x, int y, int z, int pxyz) {
-    float value;
+  public double getValue(int x, int y, int z, int pxyz) {
+    double value;
     if (data == null) {
       value = evaluateValue(x, y, z);
     } else {
@@ -121,11 +121,11 @@ class IsoFxyReader extends AtomDataReader {
     return (isPlanarMapping ? value : value - ptTemp.z);
   }
     
-  private final float[] values = new float[3];
+  private final double[] values = new double[3];
 
   
   @Override
-  public float getValueAtPoint(T3 pt, boolean getSource) {
+  public double getValueAtPoint(T3d pt, boolean getSource) {
     if (params.func == null)
       return 0;
     values[0] = pt.x;
@@ -134,7 +134,7 @@ class IsoFxyReader extends AtomDataReader {
     return sg.atomDataServer.evalFunctionFloat(func[0], func[1], values);
   }
 
-  protected float evaluateValue(int x, int y, int z) {
+  protected double evaluateValue(int x, int y, int z) {
     volumeData.voxelPtToXYZ(x, y, z, ptTemp);
     return getValueAtPoint(ptTemp, false);
   }

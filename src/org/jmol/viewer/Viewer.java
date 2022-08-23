@@ -123,18 +123,18 @@ import javajs.util.CU;
 import javajs.util.DF;
 import javajs.util.JSJSONParser;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M4;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.P4;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.Rdr;
 import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 import javajs.util.ZipTools;
 
 /*
@@ -712,7 +712,7 @@ public class Viewer extends JmolViewer
     this.gRight = gRight;
   }
 
-  public float imageFontScaling = 1;
+  public double imageFontScaling = 1;
 
   public String getMenu(String type) {
     getPopupMenu();
@@ -757,9 +757,9 @@ public class Viewer extends JmolViewer
     if (!isExport && !isImageWrite
         && (width > 0 || wasAntialiased != antialiased))
       setShapeProperty(JC.SHAPE_LABELS, "clearBoxes", null);
-    imageFontScaling = (antialiased ? 2f : 1f)
+    imageFontScaling = (antialiased ? 2d : 1d)
         * (isReset || tm.scale3D || width <= 0 ? 1
-            : (g.zoomLarge == (height > width) ? height : width) * 1f
+            : (g.zoomLarge == (height > width) ? height : width) * 1d
                 / getScreenDim());
     if (width > 0) {
       dimScreen.width = width;
@@ -1087,7 +1087,7 @@ public class Viewer extends JmolViewer
   */
 
   private int prevFrame = Integer.MIN_VALUE;
-  private float prevMorphModel;
+  private double prevMorphModel;
 
   /**
    * @param isVib
@@ -1099,7 +1099,7 @@ public class Viewer extends JmolViewer
       // force reset (reading vibrations)
       prevFrame = Integer.MIN_VALUE;
     }
-    tm.setVibrationPeriod(Float.NaN);
+    tm.setVibrationPeriod(Double.NaN);
     int firstIndex = am.firstFrameIndex;
     int lastIndex = am.lastFrameIndex;
 
@@ -1133,7 +1133,7 @@ public class Viewer extends JmolViewer
       g.setI("_currentFileNumber", fileNo);
       g.setI("_currentModelNumberInFile", modelNo);
     }
-    float currentMorphModel = am.currentMorphModel;
+    double currentMorphModel = am.currentMorphModel;
     g.setI("_currentFrame", currentFrame);
     g.setI("_morphCount", am.morphCount);
     g.setF("_currentMorphFrame", currentMorphModel);
@@ -1381,7 +1381,7 @@ public class Viewer extends JmolViewer
   */
 
   public void setStatusMeasuring(String status, int intInfo, String strMeasure,
-                                 float value) {
+                                 double value) {
 
     // status           intInfo 
 
@@ -1413,9 +1413,9 @@ public class Viewer extends JmolViewer
     String ff = (String) getP("_minimizationForceField");
     sm.notifyMinimizationStatus((String) getP("_minimizationStatus"),
         step instanceof String ? Integer.valueOf(0) : (Integer) step,
-        (Float) getP("_minimizationEnergy"),
-        (step.toString().equals("0") ? Float.valueOf(0)
-            : (Float) getP("_minimizationEnergyDiff")),
+        (Double) getP("_minimizationEnergy"),
+        (step.toString().equals("0") ? Double.valueOf(0)
+            : (Double) getP("_minimizationEnergyDiff")),
         ff);
   }
 
@@ -1860,14 +1860,14 @@ public class Viewer extends JmolViewer
   @SuppressWarnings("unused")
   public Object getGLmolView() {
     TransformManager tm = this.tm;
-    T3 center = tm.fixedRotationCenter;
-    Quat q = tm.getRotationQ();
-    float xtrans = tm.xTranslationFraction;
-    float ytrans = tm.yTranslationFraction;
-    float scale = tm.scalePixelsPerAngstrom;
-    float zoom = tm.zmPctSet;
-    float cd = tm.cameraDistance;
-    float pc = tm.screenPixelCount;
+    T3d center = tm.fixedRotationCenter;
+    Qd q = tm.getRotationQ();
+    double xtrans = tm.xTranslationFraction;
+    double ytrans = tm.yTranslationFraction;
+    double scale = tm.scalePixelsPerAngstrom;
+    double zoom = tm.zmPctSet;
+    double cd = tm.cameraDistance;
+    double pc = tm.screenPixelCount;
     boolean pd = tm.perspectiveDepth;
     int width = tm.width;
     int height = tm.height;
@@ -1884,7 +1884,7 @@ public class Viewer extends JmolViewer
     }
   }
 
-  public void setRotationRadius(float angstroms, boolean doAll) {
+  public void setRotationRadius(double angstroms, boolean doAll) {
     if (doAll)
       angstroms = tm.setRotationRadius(angstroms, false);
     // only set the rotationRadius if this is NOT a dataframe
@@ -1903,7 +1903,7 @@ public class Viewer extends JmolViewer
         doScale);
   }
 
-  public void setNewRotationCenter(P3 center) {
+  public void setNewRotationCenter(P3d center) {
     // eval CENTER command
     if (!isJmolDataFrame())
       tm.setNewRotationCenter(center, true);
@@ -1917,48 +1917,48 @@ public class Viewer extends JmolViewer
       refresh(REFRESH_REPAINT, "Viewer:navigate()");
   }
 
-  public void move(JmolScriptEvaluator eval, V3 dRot, float dZoom, V3 dTrans,
-                   float dSlab, float floatSecondsTotal, int fps) {
+  public void move(JmolScriptEvaluator eval, V3d dRot, double dZoom, V3d dTrans,
+                   double dSlab, double doubleSecondsTotal, int fps) {
     // from Eval
-    tm.move(eval, dRot, dZoom, dTrans, dSlab, floatSecondsTotal, fps);
-    moveUpdate(floatSecondsTotal);
+    tm.move(eval, dRot, dZoom, dTrans, dSlab, doubleSecondsTotal, fps);
+    moveUpdate(doubleSecondsTotal);
   }
 
-  public void moveTo(JmolScriptEvaluator eval, float floatSecondsTotal,
-                     P3 center, V3 rotAxis, float degrees, M3 rotationMatrix,
-                     float zoom, float xTrans, float yTrans,
-                     float rotationRadius, P3 navCenter, float xNav, float yNav,
-                     float navDepth, float cameraDepth, float cameraX,
-                     float cameraY) {
+  public void moveTo(JmolScriptEvaluator eval, double doubleSecondsTotal,
+                     P3d center, V3d rotAxis, double degrees, M3d rotationMatrix,
+                     double zoom, double xTrans, double yTrans,
+                     double rotationRadius, P3d navCenter, double xNav, double yNav,
+                     double navDepth, double cameraDepth, double cameraX,
+                     double cameraY) {
     // from StateManager -- -1 for time --> no repaint
     if (!haveDisplay)
-      floatSecondsTotal = 0;
+      doubleSecondsTotal = 0;
     setTainted(true);
-    tm.moveTo(eval, floatSecondsTotal, center, rotAxis, degrees, rotationMatrix,
+    tm.moveTo(eval, doubleSecondsTotal, center, rotAxis, degrees, rotationMatrix,
         zoom, xTrans, yTrans, rotationRadius, navCenter, xNav, yNav, navDepth,
         cameraDepth, cameraX, cameraY);
   }
 
-  public void moveUpdate(float floatSecondsTotal) {
-    if (floatSecondsTotal > 0)
+  public void moveUpdate(double doubleSecondsTotal) {
+    if (doubleSecondsTotal > 0)
       requestRepaintAndWait("moveUpdate");
-    else if (floatSecondsTotal == 0)
+    else if (doubleSecondsTotal == 0)
       setSync();
   }
 
-  public void navigatePt(P3 center) {
+  public void navigatePt(P3d center) {
     // isosurface setHeading
     tm.setNavigatePt(center);
     setSync();
   }
 
-  public void navigateAxis(V3 rotAxis, float degrees) {
+  public void navigateAxis(V3d rotAxis, double degrees) {
     // isosurface setHeading
     tm.navigateAxis(rotAxis, degrees);
     setSync();
   }
 
-  public void navTranslatePercent(float x, float y) {
+  public void navTranslatePercent(double x, double y) {
     if (isJmolDataFrame())
       return;
     tm.navTranslatePercentOrTo(0, x, y);
@@ -1972,7 +1972,7 @@ public class Viewer extends JmolViewer
     refresh(REFRESH_SYNC, sm.syncingMouse ? "Mouse: zoomBy " + pixels : "");
   }
 
-  void zoomByFactor(float factor, int x, int y) {
+  void zoomByFactor(double factor, int x, int y) {
     // MouseManager.mouseWheel
     //if (mouseEnabled)
     tm.zoomByFactor(factor, x, y);
@@ -1982,7 +1982,7 @@ public class Viewer extends JmolViewer
                 + (x == Integer.MAX_VALUE ? "" : " " + x + " " + y));
   }
 
-  void rotateXYBy(float degX, float degY) {
+  void rotateXYBy(double degX, double degY) {
     // mouseSinglePressDrag
     //if (mouseEnabled)
     tm.rotateXYBy(degX, degY, null);
@@ -1990,7 +1990,7 @@ public class Viewer extends JmolViewer
         sm.syncingMouse ? "Mouse: rotateXYBy " + degX + " " + degY : "");
   }
 
-  public void spinXYBy(int xDelta, int yDelta, float speed) {
+  public void spinXYBy(int xDelta, int yDelta, double speed) {
     //if (mouseEnabled)
     tm.spinXYBy(xDelta, yDelta, speed);
     if (xDelta == 0 && yDelta == 0)
@@ -2012,7 +2012,7 @@ public class Viewer extends JmolViewer
             : "");
   }
 
-  void rotateSelected(float deltaX, float deltaY, BS bsSelected) {
+  void rotateSelected(double deltaX, double deltaY, BS bsSelected) {
     // bsSelected null comes from sync. 
     if (isJmolDataFrame())
       return;
@@ -2054,10 +2054,10 @@ public class Viewer extends JmolViewer
     refresh(REFRESH_REPAINT, "Viewer:rotateFront()");
   }
 
-  public void translate(char xyz, float x, char type, BS bsAtoms) {
-    float xy = (type == '\0' ? x
+  public void translate(char xyz, double x, char type, BS bsAtoms) {
+    double xy = (type == '\0' ? x
         : type == '%' ? tm.percentToPixels(xyz, x)
-            : tm.angstromsToPixels(x * (type == 'n' ? 10f : 1f)));
+            : tm.angstromsToPixels(x * (type == 'n' ? 10d : 1d)));
     if (bsAtoms != null) {
       if (x == 0)
         return;
@@ -2110,7 +2110,7 @@ public class Viewer extends JmolViewer
   }
 
   //  @Override
-  //  public M4 getUnscaledTransformMatrix() {
+  //  public M4d getUnscaledTransformMatrix() {
   //    // unused
   //    return tm.getUnscaledTransformMatrix();
   //  }
@@ -2125,9 +2125,9 @@ public class Viewer extends JmolViewer
         g.zShadePower);
   }
 
-  public float getScalePixelsPerAngstrom(boolean asAntialiased) {
+  public double getScalePixelsPerAngstrom(boolean asAntialiased) {
     return tm.scalePixelsPerAngstrom
-        * (asAntialiased || !antialiased ? 1f : 0.5f);
+        * (asAntialiased || !antialiased ? 1d : 0.5d);
   }
 
   public void setSpin(String key, int value) {
@@ -2137,26 +2137,26 @@ public class Viewer extends JmolViewer
     int i = "x;y;z;fps;X;Y;Z;FPS".indexOf(key);
     switch (i) {
     case 0:
-      tm.setSpinXYZ(value, Float.NaN, Float.NaN);
+      tm.setSpinXYZ(value, Double.NaN, Double.NaN);
       break;
     case 2:
-      tm.setSpinXYZ(Float.NaN, value, Float.NaN);
+      tm.setSpinXYZ(Double.NaN, value, Double.NaN);
       break;
     case 4:
-      tm.setSpinXYZ(Float.NaN, Float.NaN, value);
+      tm.setSpinXYZ(Double.NaN, Double.NaN, value);
       break;
     case 6:
     default:
       tm.setSpinFps(value);
       break;
     case 10:
-      tm.setNavXYZ(value, Float.NaN, Float.NaN);
+      tm.setNavXYZ(value, Double.NaN, Double.NaN);
       break;
     case 12:
-      tm.setNavXYZ(Float.NaN, value, Float.NaN);
+      tm.setNavXYZ(Double.NaN, value, Double.NaN);
       break;
     case 14:
-      tm.setNavXYZ(Float.NaN, Float.NaN, value);
+      tm.setNavXYZ(Double.NaN, Double.NaN, value);
       break;
     case 16:
       tm.setNavFps(value);
@@ -2189,10 +2189,10 @@ public class Viewer extends JmolViewer
         bs = bsA();
       if (bs.isEmpty())
         return (type == T.volume ? "0"
-            : type == T.unitcell || type == T.best ? null : new Quat());
+            : type == T.unitcell || type == T.best ? null : new Qd());
       Object q = ms.getBoundBoxOrientation(type, bs);
       return (name == "best" && type != T.volume
-          ? ((Quat) q).div(tm.getRotationQ())
+          ? ((Qd) q).div(tm.getRotationQ())
           : q);
     case T.name:
       return stm.getSavedOrientationText(name);
@@ -2205,7 +2205,7 @@ public class Viewer extends JmolViewer
   // delegated to ColorManager
   // ///////////////////////////////////////////////////////////////
 
-  public float[] getCurrentColorRange() {
+  public double[] getCurrentColorRange() {
     return cm.getPropertyColorRange();
   }
 
@@ -2223,13 +2223,13 @@ public class Viewer extends JmolViewer
   }
 
   @Override
-  public void setVectorScale(float scale) {
+  public void setVectorScale(double scale) {
     g.setF("vectorScale", scale);
     g.vectorScale = scale;
   }
 
   @Override
-  public void setVibrationScale(float scale) {
+  public void setVibrationScale(double scale) {
     // Eval
     // public legacy in JmolViewer
     tm.setVibrationScale(scale);
@@ -2239,7 +2239,7 @@ public class Viewer extends JmolViewer
   }
 
   @Override
-  public void setVibrationPeriod(float period) {
+  public void setVibrationPeriod(double period) {
     // Eval
     tm.setVibrationPeriod(period);
     period = Math.abs(period);
@@ -2353,11 +2353,17 @@ public class Viewer extends JmolViewer
     return getStateCreator().getLightingState(true);
   }
 
-  public P3 getColorPointForPropertyValue(float val) {
+  public P3d getColorPointForPropertyValue(double val) {
     // x = {atomno=3}.partialcharge.color
     return CU.colorPtFromInt(gdata.getColorArgbOrGray(cm.ce.getColorIndex(val)),
         null);
   }
+
+//  public P3d getColorPointForPropertyValue(double val) {
+//    // x = {atomno=3}.partialcharge.color
+//    return CU.colorPtFromIntD(gdata.getColorArgbOrGray(cm.ce.getColorIndex((double) val)),
+//        null);
+//  }
 
   // ///////////////////////////////////////////////////////////////
   // delegated to SelectionManager
@@ -2461,7 +2467,7 @@ public class Viewer extends JmolViewer
    */
   private GenericMouseInterface mouse;
 
-  public void processTwoPointGesture(float[][][] touches) {
+  public void processTwoPointGesture(double[][][] touches) {
     mouse.processTwoPointGesture(touches);
   }
 
@@ -2597,7 +2603,12 @@ public class Viewer extends JmolViewer
    */
   @Override
   public void openFileAsyncSpecial(String fileName, int flags) {
-    getScriptManager().openFileAsync(fileName, flags);
+    getScriptManager().openFileAsync(fileName, flags, null);
+  }
+
+  @Override
+  public void openFileAsyncSpecialType(String fileName, int flags, String type) {
+    getScriptManager().openFileAsync(fileName, flags, type);
   }
 
   /**
@@ -3175,6 +3186,7 @@ public class Viewer extends JmolViewer
                                              boolean isAppend) {
     // loadInline, openStringInline
 
+    htParams = setLoadParameters(htParams, isAppend);
     String type = getModelAdapter().getFileTypeName(htParams.get("filter"));
     if (type == null 
         && (type = getModelAdapter().getFileTypeName(Rdr.getBR(strModel)))
@@ -3184,7 +3196,6 @@ public class Viewer extends JmolViewer
       return "cannot open script inline";
     }
 
-    htParams = setLoadParameters(htParams, isAppend);
     SB loadScript = (SB) htParams.get("loadScript");
     boolean isLoadCommand = htParams.containsKey("isData");
     if (loadScript == null)
@@ -3443,7 +3454,7 @@ public class Viewer extends JmolViewer
   // It was never documented.
   // Removed in Jmol 13.0.RC4
 
-  //  public float getVolume(BitSet bs, String type) {
+  //  public double getVolume(BitSet bs, String type) {
   //    // Eval.calculate(), math function volume({atomExpression},"type")
   //    if (bs == null)
   //      bs = getSelectionSet();
@@ -3458,22 +3469,22 @@ public class Viewer extends JmolViewer
     ms.calculateStraightnessAll();
   }
 
-  public P3[] calculateSurface(BS bsSelected, float envelopeRadius) {
+  public P3d[] calculateSurface(BS bsSelected, double envelopeRadius) {
     if (bsSelected == null)
       bsSelected = bsA();
-    if (envelopeRadius == Float.MAX_VALUE || envelopeRadius == -1)
+    if (envelopeRadius == Double.MAX_VALUE || envelopeRadius == -1)
       ms.addStateScript(
           "calculate surfaceDistance "
-              + (envelopeRadius == Float.MAX_VALUE ? "FROM" : "WITHIN"),
+              + (envelopeRadius == Double.MAX_VALUE ? "FROM" : "WITHIN"),
           null, bsSelected, null, "", false, true);
     return ms.calculateSurface(bsSelected, envelopeRadius);
   }
 
-  public Map<STR, float[]> getStructureList() {
+  public Map<STR, double[]> getStructureList() {
     return g.getStructureList();
   }
 
-  public void setStructureList(float[] list, STR type) {
+  public void setStructureList(double[] list, STR type) {
     // none, turn, sheet, helix
     g.setStructureList(list, type);
     ms.setStructureList(getStructureList());
@@ -3522,13 +3533,13 @@ public class Viewer extends JmolViewer
 
   @Override
   public void setIteratorForAtom(AtomIndexIterator iterator, int atomIndex,
-                                 float distance) {
+                                 double distance) {
     ms.setIteratorForAtom(iterator, -1, atomIndex, distance, null);
   }
 
   @Override
   public void setIteratorForPoint(AtomIndexIterator iterator, int modelIndex,
-                                  T3 pt, float distance) {
+                                  T3d pt, double distance) {
     ms.setIteratorForPoint(iterator, modelIndex, pt, distance);
   }
 
@@ -3641,7 +3652,7 @@ public class Viewer extends JmolViewer
       return;
     openStringInlineParamsAppend(getModelkit(false).getDefaultModel(), htParams,
         true);
-    setRotationRadius(5.0f, true);
+    setRotationRadius(5.0d, true);
     setStringProperty("picking", "assignAtom_C");
     setStringProperty("picking", "assignBond_p");
   }
@@ -3710,15 +3721,15 @@ public class Viewer extends JmolViewer
     return (c == null ? "not applicable" : c.getUnitCellInfo(true));
   }
 
-  public float getUnitCellInfo(int infoType) {
+  public double getUnitCellInfo(int infoType) {
     SymmetryInterface symmetry = getCurrentUnitCell();
-    return (symmetry == null ? Float.NaN
-        : symmetry.getUnitCellInfoType(infoType));
+    return (symmetry == null ? Double.NaN
+        : (double) symmetry.getUnitCellInfoType(infoType));
   }
 
   /**
    * 
-   * convert string abc;offset or M3 or M4 to origin and three vectors -- a, b,
+   * convert string abc;offset or M3d or M4d to origin and three vectors -- a, b,
    * c. The string can be preceded by ! for "reverse of". For example,
    * "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, but it still needs a
    * semicolon: "a/2,b/2,c;"
@@ -3726,10 +3737,10 @@ public class Viewer extends JmolViewer
    * @param iModel
    * 
    * @param def
-   *        a string or an M3 or M4
+   *        a string or an M3d or M4d
    * @return vectors [origin a b c]
    */
-  public T3[] getV0abc(int iModel, Object def) {
+  public T3d[] getV0abc(int iModel, Object def) {
     SymmetryInterface uc = (iModel < 0 ? getCurrentUnitCell()
         : getUnitCell(iModel));
     return (uc == null ? null : uc.getV0abc(def, null));
@@ -3759,14 +3770,14 @@ public class Viewer extends JmolViewer
     return ucLast;
   }
 
-  public void getPolymerPointsAndVectors(BS bs, Lst<P3[]> vList) {
+  public void getPolymerPointsAndVectors(BS bs, Lst<P3d[]> vList) {
     ms.getPolymerPointsAndVectors(bs, vList, g.traceAlpha, g.sheetSmoothing);
   }
 
-  public String getHybridizationAndAxes(int atomIndex, V3 z, V3 x,
+  public String getHybridizationAndAxes(int atomIndex, V3d z, V3d x,
                                         String lcaoType) {
     return ms.getHybridizationAndAxes(atomIndex, 0, z, x, lcaoType, true, true,
-        false);
+        false, null);
   }
 
   public BS getAllAtoms() {
@@ -3797,17 +3808,17 @@ public class Viewer extends JmolViewer
   }
 
   @Override
-  public P3 getBoundBoxCenter() {
+  public P3d getBoundBoxCenter() {
     return ms.getBoundBoxCenter(am.cmi);
   }
 
-  public void calcBoundBoxDimensions(BS bs, float scale) {
+  public void calcBoundBoxDimensions(BS bs, double scale) {
     ms.calcBoundBoxDimensions(bs, scale);
     axesAreTainted = true;
   }
 
   @Override
-  public V3 getBoundBoxCornerVector() {
+  public V3d getBoundBoxCornerVector() {
     return ms.getBoundBoxCornerVector();
   }
 
@@ -3890,18 +3901,18 @@ public class Viewer extends JmolViewer
    * @param ignoreOffset
    *        TODO
    */
-  public void toCartesian(T3 pt, boolean ignoreOffset) {
+  public void toCartesian(T3d pt, boolean ignoreOffset) {
     toCartesianUC(null, pt, ignoreOffset);
   }
 
-  public void toCartesianUC(SymmetryInterface unitCell, T3 pt,
+  public void toCartesianUC(SymmetryInterface unitCell, T3d pt,
                             boolean ignoreOffset) {
     if (unitCell == null)
       unitCell = getCurrentUnitCell();
     if (unitCell != null) {
       unitCell.toCartesian(pt, ignoreOffset);
-      if (!g.legacyJavaFloat)
-        PT.fixPtFloats(pt, PT.CARTESIAN_PRECISION);
+//      if (!g.legacyJavaFloat)
+//        PT.fixPtFloats(pt, PT.CARTESIAN_PRECISION);
     }
   }
 
@@ -3912,18 +3923,18 @@ public class Viewer extends JmolViewer
    *        set true for relative to {0 0 0}; otherwise relative to origin of
    *        UNITCELL {x y z}
    */
-  public void toFractional(T3 pt, boolean ignoreOffset) {
+  public void toFractional(T3d pt, boolean ignoreOffset) {
     toFractionalUC(null, pt, ignoreOffset);
   }
 
-  public void toFractionalUC(SymmetryInterface unitCell, T3 pt,
+  public void toFractionalUC(SymmetryInterface unitCell, T3d pt,
                              boolean ignoreOffset) {
     if (unitCell == null)
       unitCell = getCurrentUnitCell();
     if (unitCell != null) {
       unitCell.toFractional(pt, ignoreOffset);
-      if (!g.legacyJavaFloat)
-        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
+//      if (!g.legacyJavaFloat)
+//        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
     }
   }
 
@@ -3937,7 +3948,7 @@ public class Viewer extends JmolViewer
    * @param offset
    *        a lattice offset, or null to apply the current offset
    */
-  public void toUnitCell(P3 pt, P3 offset) {
+  public void toUnitCell(P3d pt, P3d offset) {
     SymmetryInterface unitCell = getCurrentUnitCell();
     if (unitCell != null)
       unitCell.toUnitCell(pt, offset);
@@ -3949,7 +3960,7 @@ public class Viewer extends JmolViewer
     ms.setModelCage(am.cmi, (SymmetryInterface) data[1]);
   }
 
-  public void addUnitCellOffset(P3 pt) {
+  public void addUnitCellOffset(P3d pt) {
     SymmetryInterface unitCell = getCurrentUnitCell();
     if (unitCell == null)
       return;
@@ -3978,19 +3989,19 @@ public class Viewer extends JmolViewer
   }
 
   @Override
-  public void setBondTolerance(float bondTolerance) {
+  public void setBondTolerance(double bondTolerance) {
     g.setF("bondTolerance", bondTolerance);
     g.bondTolerance = bondTolerance;
   }
 
   @Override
-  public void setMinBondDistance(float minBondDistance) {
+  public void setMinBondDistance(double minBondDistance) {
     // PreferencesDialog
     g.setF("minBondDistance", minBondDistance);
     g.minBondDistance = minBondDistance;
   }
 
-  public BS getAtomsNearPt(float distance, P3 coord, BS bs) {
+  public BS getAtomsNearPt(double distance, P3d coord, BS bs) {
     if (bs == null)
       bs = new BS();
     ms.getAtomsWithin(distance, coord, bs, -1);
@@ -4109,8 +4120,8 @@ public class Viewer extends JmolViewer
   }
 
   public void setCurrentColorRange(String label) {
-    float[] data = (float[]) getDataObj(label, null,
-        JmolDataManager.DATA_TYPE_AF);
+    double[] data = (double[]) getDataObj(label, null,
+        JmolDataManager.DATA_TYPE_AD);
     BS bs = (data == null ? null
         : (BS) ((Object[]) getDataObj(label, null,
             JmolDataManager.DATA_TYPE_UNKNOWN))[2]);
@@ -4134,17 +4145,17 @@ public class Viewer extends JmolViewer
    * 
    *        data[0] -- label
    * 
-   *        data[1] -- string or float[] or float[][] or float[][][]
+   *        data[1] -- string or double[] or double[][] or double[][][]
    * 
    *        data[2] -- selection bitset or int[] atomMap when field > 0
    * 
    *        data[3] -- arrayDepth
-   *        0(String),1(float[]),2(float[][]),3(float[][][]) or -1 to indidate
+   *        0(String),1(double[]),2(double[][]),3(double[][][]) or -1 to indidate
    *        that it is set by data type
    * 
    *        data[4] -- Boolean.TRUE == saveInState
    * 
-   * @param dataType
+   * @param atomCount
    * 
    *        see JmolDataManager interface
    * 
@@ -4175,10 +4186,10 @@ public class Viewer extends JmolViewer
    * 
    *        if 0, reference is to tokens, not characters
    */
-  public void setData(String key, Object[] data, int dataType, int matchField,
+  public void setData(String key, Object[] data, int atomCount, int matchField,
                       int matchFieldColumnCount, int dataField,
                       int dataFieldColumnCount) {
-    getDataManager().setData(key, lastData = data, dataType, ms.ac, matchField,
+    getDataManager().setData(key, lastData = data, atomCount, ms.ac, matchField,
         matchFieldColumnCount, dataField, dataFieldColumnCount);
   }
 
@@ -4199,12 +4210,12 @@ public class Viewer extends JmolViewer
    * 
    *         data[0] -- label (same as key)
    * 
-   *         data[1] -- string or float[] or float[][] or float[][][]
+   *         data[1] -- string or double[] or double[][] or double[][][]
    * 
    *         data[2] -- selection bitset or int[] atomMap when field > 0
    * 
    *         data[3] -- arrayDepth
-   *         0(String),1(float[]),2(float[][]),3(float[][][]) or -1 to indicate
+   *         0(String),1(double[]),2(double[][]),3(double[][][]) or -1 to indicate
    *         that it is set by data type
    * 
    *         data[4] -- Boolean.TRUE == saveInState
@@ -4214,7 +4225,7 @@ public class Viewer extends JmolViewer
         : getDataManager().getData(key, bsSelected, dataType));
   }
 
-  //  public float getDataFloatAt(String label, int atomIndex) {
+  //  public double getDataFloatAt(String label, int atomIndex) {
   //    return getDataManager().getDataFloatAt(label, atomIndex);
   //  }
 
@@ -5163,13 +5174,13 @@ public class Viewer extends JmolViewer
     }
   }
 
-  public P3[] getAdditionalHydrogens(BS bsAtoms, Lst<Atom> vConnections,
+  public P3d[] getAdditionalHydrogens(BS bsAtoms, Lst<Atom> vConnections,
                                      int flags) {
     if (bsAtoms == null)
       bsAtoms = bsA();
     int[] nTotal = new int[1];
-    P3[][] pts = ms.calculateHydrogens(bsAtoms, nTotal, vConnections, flags);
-    P3[] points = new P3[nTotal[0]];
+    P3d[][] pts = ms.calculateHydrogens(bsAtoms, nTotal, vConnections, flags);
+    P3d[] points = new P3d[nTotal[0]];
     for (int i = 0, pt = 0; i < pts.length; i++)
       if (pts[i] != null)
         for (int j = 0; j < pts[i].length; j++)
@@ -5255,7 +5266,7 @@ public class Viewer extends JmolViewer
    * @param pt
    *        optional pt to set "hovered" to
    */
-  public void hoverOnPt(int x, int y, String text, String id, T3 pt) {
+  public void hoverOnPt(int x, int y, String text, String id, T3d pt) {
     // from draw for drawhover on
     if (eval != null && isScriptExecuting())
       return;
@@ -5377,11 +5388,11 @@ public class Viewer extends JmolViewer
     return haveDisplay && g.drawHover;
   }
 
-  private P3 ptTemp;
+  private P3d ptTemp;
 
   public String getAtomInfo(int atomOrPointIndex) {
     if (ptTemp == null)
-      ptTemp = new P3();
+      ptTemp = new P3d();
     // only for MeasurementTable and actionManager
     return (atomOrPointIndex >= 0
         ? ms.getAtomInfo(atomOrPointIndex, null, ptTemp)
@@ -5394,7 +5405,7 @@ public class Viewer extends JmolViewer
     if (mode == Atom.ID_CHIME)
       return getChimeMessenger().getInfoXYZ(atom);
     if (ptTemp == null)
-      ptTemp = new P3();
+      ptTemp = new P3d();
     return atom.getIdentityXYZ(ptTemp, mode);
   }
 
@@ -5424,28 +5435,50 @@ public class Viewer extends JmolViewer
     return (!g.disablePopupMenu && getPopupMenu() != null);
   }
 
-  public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
+  /**
+   * Allows a handler to set Jmol variable doDrop=false to cancel
+   * and also set the file type if desired.
+   * 
+   * @param mode
+   * @param x
+   * @param y
+   * @param fileName
+   * @param retType
+   * @return true if we should still handle this. 
+   */
+  public boolean setStatusDragDropped(int mode, int x, int y, String fileName, String[] retType) {
     if (mode == 0) {
       g.setO("_fileDropped", fileName);
       g.setUserVariable("doDrop", SV.vT);
+      g.setUserVariable("dropFileType", SV.newS(""));
+      g.setUserVariable("dropFileName", SV.newS(fileName));
     }
-    boolean handled = sm.setStatusDragDropped(mode, x, y, fileName);
+    // we should handle this if it wasn't handled or the handler did not set doDrop = false
+    boolean handled = sm.setStatusDragDropped(mode, x, y, fileName, retType);
+    String type = getP("dropFileType").toString();
+    if (type.length() > 0 && retType != null) {
+      retType[0] = type;
+    }
     return (!handled || getP("doDrop").toString().equals("true"));
   }
 
-  /*
+  /**
    * resizeCallback is called whenever the applet gets a resize notification
    * from the browser
    * 
-   * jmolSetCallback("resizeCallback", "myResizeCallback") function
-   * myResizeCallback(width, height) {}
+   * jmolSetCallback("resizeCallback", "myResizeCallback") 
+   * 
+   * function myResizeCallback(width, height) {}
+   * 
+   * @param width 
+   * @param height 
    */
 
   public void setStatusResized(int width, int height) {
     sm.setStatusResized(width, height);
   }
 
-  /*
+  /**
    * scriptCallback is the primary way to monitor script status. In addition, it
    * serves to for passing information to the user over the status line of the
    * browser as well as to the console. Note that console messages are also sent
@@ -5475,6 +5508,8 @@ public class Viewer extends JmolViewer
    * "pick one more atom in order to spin..." for example
    * Viewer.evalStringWaitStatus -- see above -2, 0 only if error, >=1 at
    * termination Viewer.reportSelection "xxx atoms selected"
+   * 
+   * @param strStatus 
    */
 
   public void scriptStatus(String strStatus) {
@@ -5492,7 +5527,7 @@ public class Viewer extends JmolViewer
         strErrorMessageUntranslated);
   }
 
-  /*
+  /**
    * syncCallback traps script synchronization messages and allows for
    * cancellation (by returning "") or modification
    * 
@@ -5501,6 +5536,7 @@ public class Viewer extends JmolViewer
    * newScript }
    * 
    * StatusManager.syncSend Viewer.setSyncTarget Viewer.syncScript
+   * 
    */
 
   @Override
@@ -5651,6 +5687,8 @@ public class Viewer extends JmolViewer
       return g.percentVdwAtom;
     case T.pickingspinrate:
       return g.pickingSpinRate;
+//    case T.pointgroupmaxatoms:
+//      return g.pointGroupMaxAtoms;
     case T.ribbonaspectratio:
       return g.ribbonAspectRatio;
     case T.showscript:
@@ -5919,7 +5957,7 @@ public class Viewer extends JmolViewer
   }
 
   @Override
-  public float getFloat(int tok) {
+  public double getDouble(int tok) {
     switch (tok) {
     case T.atoms:
       return g.particleRadius;
@@ -6002,7 +6040,8 @@ public class Viewer extends JmolViewer
       setIntPropertyTok(key, tok, SV.newV(T.string, value).asInt());
       break;
     case T.floatparam:
-      setFloatPropertyTok(key, tok, PT.parseFloat(value));
+      if (!"NaN".equals(value))
+        setFloatPropertyTok(key, tok, PT.parseDouble(value));
       break;
     default:
       setStringPropertyTok(key, tok, value);
@@ -6229,8 +6268,8 @@ public class Viewer extends JmolViewer
   }
 
   @Override
-  public void setFloatProperty(String key, float value) {
-    if (Float.isNaN(value) || key == null || key.length() == 0)
+  public void setFloatProperty(String key, double value) {
+    if (key == null || key.length() == 0)
       return;
     if (key.charAt(0) == '_') {
       g.setF(key, value);
@@ -6247,12 +6286,17 @@ public class Viewer extends JmolViewer
     case T.intparam:
       setIntPropertyTok(key, tok, (int) value);
       break;
+    case T.floatparam:
+      if (Double.isNaN(value))
+        return;
+      //$FALL-THROUGH$
     default:
       setFloatPropertyTok(key, tok, value);
     }
   }
 
-  private void setFloatPropertyTok(String key, int tok, float value) {
+  private void setFloatPropertyTok(String key, int tok, double value) {
+    // ensure that the value passed here is not NaN
     switch (tok) {
     case T.cartoonblockheight:
       // 14.11.0
@@ -6261,7 +6305,7 @@ public class Viewer extends JmolViewer
     case T.modulationscale:
       // 14.0.1
       ms.setModulation(null, false, null, false);
-      g.modulationScale = value = Math.max(0.1f, value);
+      g.modulationScale = value = Math.max(0.1d, value);
       ms.setModulation(null, true, null, false);
       break;
     case T.particleradius:
@@ -6325,7 +6369,7 @@ public class Viewer extends JmolViewer
       setSpin("Z", (int) value);
       break;
     case T.navfps:
-      if (Float.isNaN(value))
+      if (Double.isNaN(value))
         return;
       setSpin("FPS", (int) value);
       break;
@@ -6443,7 +6487,7 @@ public class Viewer extends JmolViewer
       break;
     default:
       if (!g.htNonbooleanParameterValues.containsKey(key.toLowerCase())) {
-        g.setUserVariable(key, SV.newF(value));
+        g.setUserVariable(key, SV.newD(value));
         return;
       }
     }
@@ -6476,6 +6520,9 @@ public class Viewer extends JmolViewer
 
   private void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
+//    case T.pointgroupmaxatoms:
+//      g.pointGroupMaxAtoms = value;
+//      break;
     case T.undomax:
       // 14.32.25
       stm.setUndoMax(value);
@@ -6676,7 +6723,7 @@ public class Viewer extends JmolViewer
     return (value < min ? min : value > max ? max : value);
   }
 
-  private static float checkFloatRange(float value, float min, float max) {
+  private static double checkFloatRange(double value, double min, double max) {
     return (value < min ? min : value > max ? max : value);
   }
 
@@ -7425,13 +7472,13 @@ public class Viewer extends JmolViewer
         : g.isosurfacePropertySmoothing ? 1 : 0);
   }
 
-  public void setNavigationDepthPercent(float percent) {
+  public void setNavigationDepthPercent(double percent) {
     tm.setNavigationDepthPercent(percent);
     refresh(REFRESH_REPAINT, "set navigationDepth");
   }
 
   public boolean getShowNavigationPoint() {
-    if (!g.navigationMode/* || !tm.canNavigate()*/)
+    if (!g.navigationMode)
       return false;
     return (tm.isNavigating() && !g.hideNavigationPoint
         || g.showNavigationPointAlways || getInMotion(true));
@@ -7469,7 +7516,7 @@ public class Viewer extends JmolViewer
     reset(true);
   }
 
-  private void setAxesScale(int tok, float val) {
+  private void setAxesScale(int tok, double val) {
     val = checkFloatRange(val, -100, 100);
     if (tok == T.axesoffset)
       g.axesOffset = val;
@@ -7561,10 +7608,10 @@ public class Viewer extends JmolViewer
     g.autoBond = TF;
   }
 
-  public int[] makeConnections(float minDistance, float maxDistance, int order,
+  public int[] makeConnections(double minDistance, double maxDistance, int order,
                                int connectOperation, BS bsA, BS bsB, BS bsBonds,
                                boolean isBonds, boolean addGroup,
-                               float energy) {
+                               double energy) {
     // eval
     clearModelDependentObjects();
     // removed in 12.3.2 and 12.2.1; cannot remember why this was important
@@ -7586,7 +7633,7 @@ public class Viewer extends JmolViewer
     clearModelDependentObjects();
     ms.deleteAllBonds();
     boolean isLegacy = isStateScript && g.legacyAutoBonding;
-    ms.autoBondBs4(null, null, null, null, getMadBond(), isLegacy);
+    ms.autoBondBs4(null, null, null, null, getMadBond(), isLegacy, null);
     addStateScript((isLegacy
         ? "set legacyAutoBonding TRUE;connect;set legacyAutoBonding FALSE;"
         : "connect;"), false, true);
@@ -7600,7 +7647,7 @@ public class Viewer extends JmolViewer
   public void setPercentVdwAtom(int value) {
     g.setI("percentVdwAtom", value);
     g.percentVdwAtom = value;
-    rd.value = value / 100f;
+    rd.value = value / 100d;
     rd.factorType = EnumType.FACTOR;
     rd.vdwType = VDW.AUTO;
     shm.setShapeSizeBs(JC.SHAPE_BALLS, 0, rd, null);
@@ -7730,12 +7777,12 @@ public class Viewer extends JmolViewer
   // temp manager
   // //////////////////////////////////////////////////////////////
 
-  public P3[] allocTempPoints(int size) {
+  public P3d[] allocTempPoints(int size) {
     // rockets cartoons renderer only
     return tempArray.allocTempPoints(size);
   }
 
-  public void freeTempPoints(P3[] tempPoints) {
+  public void freeTempPoints(P3d[] tempPoints) {
     // rockets, cartoons render only
     tempArray.freeTempPoints(tempPoints);
   }
@@ -7761,7 +7808,7 @@ public class Viewer extends JmolViewer
   // //////////////////////////////////////////////////////////////
   // font stuff
   // //////////////////////////////////////////////////////////////
-  public Font getFont3D(String fontFace, String fontStyle, float fontSize) {
+  public Font getFont3D(String fontFace, String fontStyle, double fontSize) {
     return gdata.getFont3DFSS(fontFace, fontStyle, fontSize);
   }
 
@@ -7769,7 +7816,7 @@ public class Viewer extends JmolViewer
   // Access to atom properties for clients
   // //////////////////////////////////////////////////////////////
 
-  public Quat[] getAtomGroupQuaternions(BS bsAtoms, int nMax) {
+  public Qd[] getAtomGroupQuaternions(BS bsAtoms, int nMax) {
     return ms.getAtomGroupQuaternions(bsAtoms, nMax, getQuaternionFrame());
   }
 
@@ -7777,7 +7824,7 @@ public class Viewer extends JmolViewer
   // stereo support
   // //////////////////////////////////////////////////////////////
 
-  public void setStereoMode(int[] twoColors, STER stereoMode, float degrees) {
+  public void setStereoMode(int[] twoColors, STER stereoMode, double degrees) {
     setFloatProperty("stereoDegrees", degrees);
     setBooleanPropertyTok("greyscaleRendering", T.greyscalerendering, stereoMode.isBiColor());
     if (twoColors != null)
@@ -7868,9 +7915,9 @@ public class Viewer extends JmolViewer
     return false;
   }
 
-  public boolean rotateAxisAngleAtCenter(JmolScriptEvaluator eval, P3 rotCenter,
-                                         V3 rotAxis, float degreesPerSecond,
-                                         float endDegrees, boolean isSpin,
+  public boolean rotateAxisAngleAtCenter(JmolScriptEvaluator eval, P3d rotCenter,
+                                         V3d rotAxis, double degreesPerSecond,
+                                         double endDegrees, boolean isSpin,
                                          BS bsSelected) {
     // Eval: rotate FIXED
     boolean isOK = tm.rotateAxisAngleAtCenter(eval, rotCenter, rotAxis,
@@ -7880,19 +7927,19 @@ public class Viewer extends JmolViewer
     return isOK;
   }
 
-  public boolean rotateAboutPointsInternal(JmolScriptEvaluator eval, P3 point1,
-                                           P3 point2, float degreesPerSecond,
-                                           float endDegrees, boolean isSpin,
-                                           BS bsSelected, V3 translation,
-                                           Lst<P3> finalPoints,
-                                           float[] dihedralList, M4 m4) {
+  public boolean rotateAboutPointsInternal(JmolScriptEvaluator eval, P3d point1,
+                                           P3d point2, double degreesPerSecond,
+                                           double endDegrees, boolean isSpin,
+                                           BS bsSelected, V3d translation,
+                                           Lst<P3d> finalPoints,
+                                           double[] dihedralList, M4d m4) {
     // Eval: rotate INTERNAL
 
     if (eval == null)
       eval = this.eval;
 
     if (headless) {
-      if (isSpin && endDegrees == Float.MAX_VALUE)
+      if (isSpin && endDegrees == Double.MAX_VALUE)
         return false;
       isSpin = false;
     }
@@ -7905,7 +7952,7 @@ public class Viewer extends JmolViewer
     return isOK;
   }
 
-  public void startSpinningAxis(T3 pt1, T3 pt2, boolean isClockwise) {
+  public void startSpinningAxis(T3d pt1, T3d pt2, boolean isClockwise) {
     // Draw.checkObjectClicked ** could be difficult
     // from draw object click
     if (tm.spinOn || tm.navOn) {
@@ -7914,15 +7961,15 @@ public class Viewer extends JmolViewer
       return;
     }
     tm.rotateAboutPointsInternal(null, pt1, pt2, g.pickingSpinRate,
-        Float.MAX_VALUE, isClockwise, true, null, false, null, null, null,
+        Double.MAX_VALUE, isClockwise, true, null, false, null, null, null,
         null);
   }
 
-  public V3 getModelDipole() {
+  public V3d getModelDipole() {
     return ms.getModelDipole(am.cmi);
   }
 
-  public V3 calculateMolecularDipole(BS bsAtoms) throws Exception {
+  public V3d calculateMolecularDipole(BS bsAtoms) throws Exception {
     try {
       return ms.calculateMolecularDipole(am.cmi, bsAtoms);
     } catch (JmolAsyncException e) {
@@ -7932,14 +7979,14 @@ public class Viewer extends JmolViewer
     }
   }
 
-  public void setDefaultLattice(P3 p) {
+  public void setDefaultLattice(P3d p) {
     // Eval -- handled separately
-    if (!Float.isNaN(p.x + p.y + p.z))
+    if (!Double.isNaN(p.x + p.y + p.z))
       g.ptDefaultLattice.setT(p);
     g.setO("defaultLattice", Escape.eP(p));
   }
 
-  public P3 getDefaultLattice() {
+  public P3d getDefaultLattice() {
     return g.ptDefaultLattice;
   }
 
@@ -8010,8 +8057,8 @@ public class Viewer extends JmolViewer
     return ms.getFrameTitle(am.cmi);
   }
 
-  public void setAtomProperty(BS bs, int tok, int iValue, float fValue,
-                              String sValue, float[] values, String[] list) {
+  public void setAtomProperty(BS bs, int tok, int iValue, double fValue,
+                              String sValue, double[] values, String[] list) {
     if (tok == T.vanderwaals)
       shm.deleteVdwDependentShapes(bs);
     clearMinimization();
@@ -8046,13 +8093,12 @@ public class Viewer extends JmolViewer
     sm.setStatusStructureModified(atom.i, atom.mi, MODIFY_SET_COORD,
         "setAtomCoords", n, bs);
     ms.setAtomCoords(bs, tokType, xyzValues);
-    checkMinimization();
-    sm.setStatusAtomMoved(bs);
+    setStatusAtomMoved(true, bs);
     sm.setStatusStructureModified(atom.i, atom.mi, -MODIFY_SET_COORD, "OK", n,
         bs);
   }
 
-  public void setAtomCoordsRelative(T3 offset, BS bs) {
+  public void setAtomCoordsRelative(T3d offset, BS bs) {
     // Eval
     if (bs == null)
       bs = bsA();
@@ -8068,13 +8114,13 @@ public class Viewer extends JmolViewer
     ms.setAtomCoordsRelative(offset, bs);
     checkMinimization();
     if (doNotify) {
-      sm.setStatusAtomMoved(bs);
+      setStatusAtomMoved(false, bs);
       sm.setStatusStructureModified(atom.i, atom.mi, -MODIFY_SET_COORD, "OK", n,
           bs);
     }
   }
 
-  public void invertAtomCoord(P3 pt, P4 plane, BS bs, int ringAtomIndex,
+  public void invertAtomCoord(P3d pt, P4d plane, BS bs, int ringAtomIndex,
                               boolean isClick) {
     // Eval
     if (ringAtomIndex >= 0) {
@@ -8121,8 +8167,7 @@ public class Viewer extends JmolViewer
     sm.setStatusStructureModified(atom.i, atom.mi, MODIFY_SET_COORD,
         "invertAtomCoords", n, bs);
     ms.invertSelected(pt, plane, ringAtomIndex, bs);
-    checkMinimization();
-    sm.setStatusAtomMoved(bs);
+    setStatusAtomMoved(true, bs);
     sm.setStatusStructureModified(atom.i, atom.mi, -MODIFY_SET_COORD, "OK", n,
         bs);
     if (isClick)
@@ -8130,18 +8175,17 @@ public class Viewer extends JmolViewer
           false);
   }
 
-  public void invertSelected(P3 pt, P4 plane, int iAtom, BS bsAtoms) {
+  public void invertSelected(P3d pt, P4d plane, int iAtom, BS bsAtoms) {
     // Eval
     if (bsAtoms == null)
       bsAtoms = bsA();
     if (bsAtoms.cardinality() == 0)
       return;
     ms.invertSelected(pt, plane, iAtom, bsAtoms);
-    checkMinimization();
-    sm.setStatusAtomMoved(bsAtoms);
+    setStatusAtomMoved(true, bsAtoms);
   }
 
-  public void moveAtoms(M4 m4, M3 mNew, M3 rotation, V3 translation, P3 center,
+  public void moveAtoms(M4d m4, M3d mNew, M3d rotation, V3d translation, P3d center,
                         boolean isInternal, BS bsAtoms,
                         boolean translationOnly) {
     // from TransformManager exclusively
@@ -8149,13 +8193,12 @@ public class Viewer extends JmolViewer
       return;
     ms.moveAtoms(m4, mNew, rotation, translation, bsAtoms, center, isInternal,
         translationOnly);
-    checkMinimization();
-    sm.setStatusAtomMoved(bsAtoms);
+    setStatusAtomMoved(true, bsAtoms);
   }
 
   private boolean movingSelected;
   private boolean showSelected;
-  private P3 ptScreen = new P3(), ptScreenNew = new P3(), ptNew = new P3();
+  private P3d ptScreen = new P3d(), ptScreenNew = new P3d(), ptNew = new P3d();
 
   public synchronized void moveSelected(int deltaX, int deltaY, int deltaZ,
                                         int x, int y, BS bsSelected,
@@ -8203,9 +8246,9 @@ public class Viewer extends JmolViewer
             -MODIFY_SET_COORD, "FAILED", 1, bsSelected);
       } else {
         if (isTranslation) {
-          P3 ptCenter = ms.getAtomSetCenter(bsSelected);
+          P3d ptCenter = ms.getAtomSetCenter(bsSelected);
           tm.finalizeTransformParameters();
-          float f = (g.antialiasDisplay ? 2 : 1);
+          double f = (g.antialiasDisplay ? 2 : 1);
           tm.transformPt3f(ptCenter, ptScreen);
           if (deltaZ != Integer.MIN_VALUE)
             ptScreenNew.set(ptScreen.x, ptScreen.y, ptScreen.z + deltaZ);
@@ -8216,9 +8259,9 @@ public class Viewer extends JmolViewer
           SymmetryInterface uc = getOperativeSymmetry();
           if (uc != null) {
             getModelkit(false).cmdAssignMoveAtoms(bsSelected, iatom,
-                ptNew);
+                ptNew, true);
           }
-          if (!Float.isNaN(ptNew.x)) {
+          if (!Double.isNaN(ptNew.x)) {
             ptNew.sub(ptCenter);
             setAtomCoordsRelative(ptNew, bsSelected);
           }
@@ -8286,20 +8329,20 @@ public class Viewer extends JmolViewer
 
   /**
    * fills an array with data -- if nX < 0 and this would involve JavaScript,
-   * then this reads a full set of Double[][] in one function call. Otherwise it
+   * then this reads a full set of double[][] in one function call. Otherwise it
    * reads the values using individual function calls, which each return Double.
    * 
    * If the functionName begins with "file:" then data are read from a file
    * specified after the colon. The sign of nX is not relevant in that case. The
    * file may contain mixed numeric and non-numeric values; the non-numeric
-   * values will be skipped by Parser.parseFloatArray
+   * values will be skipped by Parser.parseDoubleArray
    * 
    * @param functionName
    * @param nX
    * @param nY
-   * @return nX by nY array of floating values
+   * @return nX by nY array of doubleing values
    */
-  public float[][] functionXY(String functionName, int nX, int nY) {
+  public double[][] functionXY(String functionName, int nX, int nY) {
     String data = null;
     if (functionName.indexOf("file:") == 0)
       data = getFileAsString3(functionName.substring(5), false, null);
@@ -8307,24 +8350,24 @@ public class Viewer extends JmolViewer
       return sm.functionXY(functionName, nX, nY);
     nX = Math.abs(nX);
     nY = Math.abs(nY);
-    float[][] fdata;
+    double[][] fdata;
     if (data == null) {
-      fdata = (float[][]) getDataObj(functionName, null,
-          JmolDataManager.DATA_TYPE_AFF);
+      fdata = (double[][]) getDataObj(functionName, null,
+          JmolDataManager.DATA_TYPE_ADD);
       if (fdata != null)
         return fdata;
       data = "";
     }
-    fdata = new float[nX][nY];
-    float[] f = new float[nX * nY];
-    Parser.parseStringInfestedFloatArray(data, null, f);
+    fdata = new double[nX][nY];
+    double[] f = new double[nX * nY];
+    Parser.parseStringInfestedDoubleArray(data, null, f);
     for (int i = 0, n = 0; i < nX; i++)
       for (int j = 0; j < nY; j++)
         fdata[i][j] = f[n++];
     return fdata;
   }
 
-  public float[][][] functionXYZ(String functionName, int nX, int nY, int nZ) {
+  public double[][][] functionXYZ(String functionName, int nX, int nY, int nZ) {
     String data = null;
     if (functionName.indexOf("file:") == 0)
       data = getFileAsString3(functionName.substring(5), false, null);
@@ -8333,17 +8376,17 @@ public class Viewer extends JmolViewer
     nX = Math.abs(nX);
     nY = Math.abs(nY);
     nZ = Math.abs(nZ);
-    float[][][] xyzdata;
+    double[][][] xyzdata;
     if (data == null) {
-      xyzdata = (float[][][]) getDataObj(functionName, null,
-          JmolDataManager.DATA_TYPE_AFF);
+      xyzdata = (double[][][]) getDataObj(functionName, null,
+          JmolDataManager.DATA_TYPE_ADD);
       if (xyzdata != null)
         return xyzdata;
       data = "";
     }
-    xyzdata = new float[nX][nY][nZ];
-    float[] f = new float[nX * nY * nZ];
-    Parser.parseStringInfestedFloatArray(data, null, f);
+    xyzdata = new double[nX][nY][nZ];
+    double[] f = new double[nX * nY * nZ];
+    Parser.parseStringInfestedDoubleArray(data, null, f);
     for (int i = 0, n = 0; i < nX; i++)
       for (int j = 0; j < nY; j++)
         for (int k = 0; k < nZ; k++)
@@ -8616,7 +8659,7 @@ public class Viewer extends JmolViewer
     case 2:
       sm.syncSend(TF ? SYNC_GRAPHICS_MESSAGE : SYNC_NO_GRAPHICS_MESSAGE, "*",
           0);
-      if (Float.isNaN(tm.stereoDegrees))
+      if (Double.isNaN(tm.stereoDegrees))
         setFloatProperty("stereoDegrees",
             TransformManager.DEFAULT_STEREO_DEGREES);
       if (TF) {
@@ -8700,18 +8743,18 @@ public class Viewer extends JmolViewer
   }
 
   BS bsUserVdws;
-  float[] userVdws;
+  double[] userVdws;
   int[] userVdwMars;
 
   void setUserVdw(VDW mode) {
     userVdwMars = new int[Elements.elementNumberMax];
-    userVdws = new float[Elements.elementNumberMax];
+    userVdws = new double[Elements.elementNumberMax];
     bsUserVdws = new BS();
     if (mode == VDW.USER)
       mode = VDW.JMOL;
     for (int i = 1; i < Elements.elementNumberMax; i++) {
       userVdwMars[i] = Elements.getVanderwaalsMar(i, mode);
-      userVdws[i] = userVdwMars[i] / 1000f;
+      userVdws[i] = userVdwMars[i] / 1000d;
     }
   }
 
@@ -8867,7 +8910,7 @@ public class Viewer extends JmolViewer
       sm.showImage(echoName, image);
     } else if (echoName.startsWith("\0")) {
       if (image != null) {
-        setWindowDimensions(new float[] { apiPlatform.getImageWidth(image),
+        setWindowDimensions(new double[] { apiPlatform.getImageWidth(image),
             apiPlatform.getImageHeight(image) });
       }
     } else {
@@ -9122,8 +9165,8 @@ public class Viewer extends JmolViewer
    * @param flags
    * @throws Exception
    */
-  public void minimize(JmolScriptEvaluator eval, int steps, float crit,
-                       BS bsSelected, BS bsFixed, float rangeFixed, int flags)
+  public void minimize(JmolScriptEvaluator eval, int steps, double crit,
+                       BS bsSelected, BS bsFixed, double rangeFixed, int flags)
       throws Exception {
 
     boolean isSilent = (flags & MIN_SILENT) == MIN_SILENT;
@@ -9237,10 +9280,10 @@ public class Viewer extends JmolViewer
 
   private void setHydrogens(BS bsAtoms) {
     int[] nTotal = new int[1];
-    P3[][] hatoms = ms.calculateHydrogens(bsAtoms, nTotal, null,
+    P3d[][] hatoms = ms.calculateHydrogens(bsAtoms, nTotal, null,
         AtomCollection.CALC_H_IGNORE_H | AtomCollection.CALC_H_QUICK);
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
-      P3[] pts = hatoms[i];
+      P3d[] pts = hatoms[i];
       if (pts == null || pts.length == 0)
         continue;
       Atom a = ms.at[i];
@@ -9248,7 +9291,7 @@ public class Viewer extends JmolViewer
       for (int j = 0, pt = 0, n = a.getBondCount(); j < n; j++) {
         Atom h = b[j].getOtherAtom(a);
         if (h.getAtomicAndIsotopeNumber() == 1) {
-          P3 p = pts[pt++];
+          P3d p = pts[pt++];
           ms.setAtomCoord(h.i, p.x, p.y, p.z);
         }
       }
@@ -9272,19 +9315,19 @@ public class Viewer extends JmolViewer
     return bs;
   }
 
-  //  void rotateArcBall(int x, int y, float factor) {
+  //  void rotateArcBall(int x, int y, double factor) {
   //    tm.rotateArcBall(x, y, factor);
   //    refresh(REFRESH_SYNC, sm.syncingMouse ? "Mouse: rotateArcBall " + x + " "
   //        + y + " " + factor : "");
   //  }
 
   void getAtomicPropertyState(SB commands, byte type, BS bs, String name,
-                              float[] data) {
-    getStateCreator().getAtomicPropertyStateBuffer(commands, type, bs, name,
+                              double[] data) {
+    getStateCreator().getAtomicPropertyStateBufferD(commands, type, bs, name,
         data);
   }
 
-  public P3[][] getCenterAndPoints(Lst<Object[]> atomSets, boolean addCenter) {
+  public P3d[][] getCenterAndPoints(Lst<Object[]> atomSets, boolean addCenter) {
     return ms.getCenterAndPoints(atomSets, addCenter);
   }
 
@@ -9713,7 +9756,7 @@ public class Viewer extends JmolViewer
     return (haveDisplay ? TimeoutThread.showTimeout(timeouts, name) : "");
   }
 
-  public float[] getOrCalcPartialCharges(BS bsSelected, BS bsIgnore)
+  public double[] getOrCalcPartialCharges(BS bsSelected, BS bsIgnore)
       throws JmolAsyncException {
     if (bsSelected == null)
       bsSelected = bsA();
@@ -9731,7 +9774,7 @@ public class Viewer extends JmolViewer
     if (bsSelected.isEmpty())
       return;
     //    // this forces an array if it does not exist 
-    //    setAtomProperty(BSUtil.newAndSetBit(pt), T.partialcharge, 0, 1f, null,
+    //    setAtomProperty(BSUtil.newAndSetBit(pt), T.partialcharge, 0, 1d, null,
     //        null, null);
     Logger.info("Calculating MMFF94 partial charges for "
         + bsSelected.cardinality() + " atoms");
@@ -9750,6 +9793,7 @@ public class Viewer extends JmolViewer
     ligandModelSet = null;
     ligandModels = null;
     ms.clearCache();
+    cm.ce.clearCache();
   }
 
   /**
@@ -9827,7 +9871,7 @@ public class Viewer extends JmolViewer
     //    if (!ms.isAtomInLastModel(bsAtoms.nextSetBit(0)))
     //      return bsB;
     Lst<Atom> vConnections = new Lst<Atom>();
-    P3[] pts = getAdditionalHydrogens(bsAtoms, vConnections,
+    P3d[] pts = getAdditionalHydrogens(bsAtoms, vConnections,
         flags | (doAll ? AtomCollection.CALC_H_DOALL : 0));
     boolean wasAppendNew = false;
     wasAppendNew = g.appendNew;
@@ -9848,7 +9892,7 @@ public class Viewer extends JmolViewer
     return bsB;
   }
 
-  public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts,
+  public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3d[] pts,
                                Map<String, Object> htParams)
       throws Exception {
     if (getScriptManager() == null)
@@ -9857,7 +9901,7 @@ public class Viewer extends JmolViewer
   }
 
   @Override
-  public float evalFunctionFloat(Object func, Object params, float[] values) {
+  public double evalFunctionFloat(Object func, Object params, double[] values) {
     return (getScriptManager() == null ? 0
         : eval.evalFunctionFloat(func, params, values));
   }
@@ -9937,7 +9981,7 @@ public class Viewer extends JmolViewer
     return (eval == null ? null : eval.setObjectPropSafe(id, tokCommand));
   }
 
-  public void setDihedrals(float[] dihedralList, BS[] bsBranches, float rate) {
+  public void setDihedrals(double[] dihedralList, BS[] bsBranches, double rate) {
     if (bsBranches == null)
       bsBranches = ms.getBsBranches(dihedralList);
     ms.setDihedrals(dihedralList, bsBranches, rate);
@@ -10024,7 +10068,7 @@ public class Viewer extends JmolViewer
     return ms.fixFormalCharges(bs == null ? bsA() : bs);
   }
 
-  public void setModulation(BS bs, boolean isOn, P3 t1, boolean isQ) {
+  public void setModulation(BS bs, boolean isOn, P3d t1, boolean isQ) {
     if (isQ)
       g.setO("_modt", Escape.eP(t1));
     ms.setModulation(bs == null ? getAllAtoms() : bs, isOn, t1, isQ);
@@ -10134,7 +10178,7 @@ public class Viewer extends JmolViewer
         type, am.cmi);
   }
 
-  public Lst<Float> getAtomValidation(String type, Atom atom) {
+  public Lst<Double> getAtomValidation(String type, Atom atom) {
     return getAnnotationParser(false).getAtomValidation(this, type, atom);
   }
 
@@ -10231,7 +10275,7 @@ public class Viewer extends JmolViewer
     return Interface.getSymmetry(this, "ms");
   }
 
-  public void setWindowDimensions(float[] dims) {
+  public void setWindowDimensions(double[] dims) {
     resizeInnerPanel((int) dims[0], (int) dims[1]);
   }
 
@@ -10397,9 +10441,9 @@ public class Viewer extends JmolViewer
    *        is an {i j k} offset from cell 555
    * @return string, Object[], or Lst<Object[]>
    */
-  public Object getSymmetryInfo(int iatom, String xyz, int iOp, P3 translation,
-                                P3 pt1, P3 pt2, int type, String desc,
-                                float scaleFactor, int nth, int options) {
+  public Object getSymmetryInfo(int iatom, String xyz, int iOp, P3d translation,
+                                P3d pt1, P3d pt2, int type, String desc,
+                                double scaleFactor, int nth, int options) {
     try {
       return getSymTemp().getSymmetryInfoAtom(ms, iatom, xyz, iOp, translation,
           pt1, pt2, desc, type, scaleFactor, nth, options);
@@ -10565,18 +10609,28 @@ public class Viewer extends JmolViewer
     }
   }
 
-  public Object findSpaceGroup(BS bsAtoms, String opXYZ, boolean asString) {
+  /**
+   * 
+   * @param bsAtoms
+   * @param xyzList if present, a semicolon-separated list of operators
+   * @param unitCell 
+   * @param asString
+   * @param isAssign from ModelKit
+   * @return either an array of space group identifiers or, if asString, "", or null
+   * 
+   */
+  public Object findSpaceGroup(BS bsAtoms, String xyzList, double[] unitCell, boolean asString, boolean isAssign) {
     Object ret = null;
-    if (opXYZ == null) {
-      if (bsAtoms == null)
-        bsAtoms = getThisModelAtoms();
+    if (bsAtoms == null && xyzList == null || isAssign)
+      bsAtoms = getThisModelAtoms();
+    if (xyzList == null) {
       if (!bsAtoms.isEmpty()) {
         SymmetryInterface uc = getCurrentUnitCell();
         ret = (uc == null ? null
-            : uc.findSpaceGroup(this, bsAtoms, opXYZ, asString));
+            : uc.findSpaceGroup(this, bsAtoms, null, unitCell, asString, isAssign));
       }
     } else {
-      ret = getSymTemp().findSpaceGroup(this, null, opXYZ, asString);
+      ret = getSymTemp().findSpaceGroup(this, bsAtoms, xyzList, unitCell, asString, isAssign);
     }
     return (ret == null && asString ? "" : ret);
   }
@@ -10614,15 +10668,15 @@ public class Viewer extends JmolViewer
     return getModelUndeletedAtomsBitSet(getVisibleFramesBitSet().nextSetBit(0));
   }
 
-  public Lst<P3> getSymmetryEquivPoints(P3 pt, String flags) {
+  public Lst<P3d> getSymmetryEquivPoints(P3d pt, String flags) {
     SymmetryInterface uc = getCurrentUnitCell();
-    return (uc == null ? new Lst<P3>() : uc.getEquivPoints(null, pt, flags));
+    return (uc == null ? new Lst<P3d>() : uc.getEquivPoints(null, pt, flags));
   }
 
-  public Lst<?> getSymmetryEquivPointList(Lst<P3> pts, String flags) {
+  public Lst<?> getSymmetryEquivPointList(Lst<P3d> pts, String flags) {
     SymmetryInterface uc = getCurrentUnitCell();
     if (uc == null)
-      return new Lst<P3>();
+      return new Lst<P3d>();
     uc.getEquivPointList(pts, 0, flags.toLowerCase());
     return pts;
   }
@@ -10691,8 +10745,8 @@ public class Viewer extends JmolViewer
       if (name.length() == 0)
         return text;
       Object v = evaluateExpression(name);
-      if (v instanceof P3)
-        v = Escape.eP((P3) v);
+      if (v instanceof P3d)
+        v = Escape.eP((P3d) v);
       text = text.substring(0, i0 - 2) + v.toString() + text.substring(i + 1);
     }
     if (isEscaped) {
@@ -10705,30 +10759,34 @@ public class Viewer extends JmolViewer
   /**
    * Depending upon the measure text, we need to indicate
    * |-------| 1 A or 0.1 A for example.
-   * @param units 
+   * @param units possibly //angstroms or //nm or "", not null
    * @param isAntialiased 
    * @param min 
-   * @param ret return bar length in pixels
+   * @param ret return bar length in pixels, or null to just return units for StateCreator
    * @return text
    */
-  public String getScaleText(String units, boolean isAntialiased, int min, float[] ret) {
+  public String getScaleText(String units, boolean isAntialiased, int min, double[] ret) {
     String u = Measurement
-        .fixUnits(units.length() > 0 ? units.toLowerCase() : g.measureDistanceUnits.equals("vdw") ? "angstroms"
+        .fixUnits(units.length() > 0 ? ((units.startsWith("//") ? units.substring(2) : units).toLowerCase())
+          : g.measureDistanceUnits.equals("vdw") ? "angstroms"
             : g.measureDistanceUnits);
+    //System.out.println(g.measureDistanceUnits);
     if (Measurement.fromUnits(1, u) == 0) {
       // unrecognized units
       u = Measurement.fixUnits(g.measureDistanceUnits);
     }
-    float d = tm.modelRadius * tm.scaleDefaultPixelsPerAngstrom
+    if (ret == null)
+      return u;
+    double d = tm.modelRadius * tm.scaleDefaultPixelsPerAngstrom
         / tm.scalePixelsPerAngstrom / 4;
-    float af = (!tm.perspectiveDepth && isAntialiased ? 2f : 1f);
-    float f = (tm.perspectiveDepth ? 1f/tm.getPerspectiveFactor((tm.getCameraDepth() - 0.5f) * getScreenDim()) : 1) / af;   
+    double af = (!tm.perspectiveDepth && isAntialiased ? 2d : 1d);
+    double f = (tm.perspectiveDepth ? 1d/tm.getPerspectiveFactor((tm.getCameraDepth() - 0.5d) * getScreenDim()) : 1) / af;   
     int m = 0, p = 0;
-    float e = 0, mp = 0;
+    double e = 0, mp = 0;
     while (p < min) {
       e = Measurement.toUnits(d, u, false);
       m = (int) Math.floor(Math.log10(e));
-      mp = (float) Math.pow(10, m);
+      mp = Math.pow(10, m);
       e = Measurement.fromUnits(mp + 0.000001f, u);
       p = (int) (e * tm.scalePixelsPerAngstrom * f);
       if (p < min) {
@@ -10746,5 +10804,10 @@ public class Viewer extends JmolViewer
     return getModelkit(false).cmdAssignSpaceGroup(bs, type, modelIndex);
   }
 
-
+  public void setStatusAtomMoved(boolean andCheckMinimize, BS bs) {
+    if (andCheckMinimize)
+      checkMinimization();
+      sm.setStatusAtomMoved(bs);
+  }
+  
 }

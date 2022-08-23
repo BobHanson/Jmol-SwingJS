@@ -37,7 +37,7 @@ import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.data.JvxlData;
 import org.jmol.jvxl.data.VolumeData;
 import org.jmol.jvxl.readers.Parameters;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 public class ASimpleJvxlWriter {
 
@@ -64,9 +64,9 @@ public class ASimpleJvxlWriter {
     VoxelDataCreator vdc;
     volumeData = new VolumeData();
     volumeData.setVolumetricOrigin(0, 0, 0);
-    volumeData.setVolumetricVector(0, 1f, 0f, 0f);
-    volumeData.setVolumetricVector(1, 0f, 1f, 0f);
-    volumeData.setVolumetricVector(2, 0f, 0f, 1f);
+    volumeData.setVolumetricVector(0, 1d, 0d, 0d);
+    volumeData.setVolumetricVector(1, 0d, 1d, 0d);
+    volumeData.setVolumetricVector(2, 0d, 0d, 1d);
     volumeData.setVoxelCounts(nX, nY, nZ);
 
     vdc = new VoxelDataCreator(volumeData);
@@ -75,8 +75,8 @@ public class ASimpleJvxlWriter {
     // areaVolumeReturn and surfacePointsReturn are optional
     // -- set to null for faster calculation of JVXL data
     
-    float[] areaVolumeReturn = new float[2]; // or null;
-    Lst<P3> surfacePointsReturn = new  Lst<P3>(); // or null;
+    double[] areaVolumeReturn = new double[2]; // or null;
+    Lst<P3d> surfacePointsReturn = new  Lst<P3d>(); // or null;
 
     params.isXLowToHigh = false;
     writeFile(outputFile + "A", jvxlGetData(null, params,
@@ -98,8 +98,8 @@ public class ASimpleJvxlWriter {
 
   public static String jvxlGetData(VoxelDataCreator vdc, Parameters params,
                                    VolumeData volumeData, String[] title,
-                                   Lst<P3> surfacePointsReturn,
-                                   float[] areaVolumeReturn) {
+                                   Lst<P3d> surfacePointsReturn,
+                                   double[] areaVolumeReturn) {
     
     JvxlData jvxlData = new JvxlData();
     new SimpleMarchingCubes(vdc, volumeData, params,

@@ -75,9 +75,9 @@ public class TinkerReader extends FoldingXyzReader {
 //      lines.addLast(tokens);
 //      Atom atom = asc.addNewAtom();
 //      setElementAndIsotope(atom, tokens[1]);
-//      atom.x = parseFloatStr(tokens[2]);
-//      atom.y = parseFloatStr(tokens[3]);
-//      atom.z = parseFloatStr(tokens[4]);
+//      atom.x = parseDoubleStr(tokens[2]);
+//      atom.y = parseDoubleStr(tokens[3]);
+//      atom.z = parseDoubleStr(tokens[4]);
 //      types += tokens[5] + "\n";
 //    }
 //    // add the atom types

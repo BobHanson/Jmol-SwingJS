@@ -134,12 +134,12 @@ MRC header: mapc,mapr,maps: 2,1,3
     xyzStart[2] = parseInt();
     n2 = (int) (parseInt() - xyzStart[2] + 1);
     
-    a = parseFloatStr(getLine());
-    b = parseFloat();
-    c = parseFloat();
-    alpha = parseFloat();
-    beta = parseFloat();
-    gamma = parseFloat();
+    a = parseDoubleStr(getLine());
+    b = parseDouble();
+    c = parseDouble();
+    alpha = parseDouble();
+    beta = parseDouble();
+    gamma = parseDouble();
 
     getLine();     //"ZYX"
     
@@ -165,7 +165,7 @@ MRC header: mapc,mapr,maps: 2,1,3
   private int nRead;
   
   @Override
-  protected float nextVoxel() throws Exception {
+  protected double nextVoxel() throws Exception {
     if (linePt >= line.length()) {
       rd();
       //System.out.println(nRead + " " + line);
@@ -179,7 +179,7 @@ MRC header: mapc,mapr,maps: 2,1,3
     }
     if (line == null)
       return 0;
-    float val = parseFloatRange(line, linePt, linePt+12);
+    double val = parseDoubleRange(line, linePt, linePt+12);
     linePt += 12;
     nRead++;
     //System.out.println("val " + val);

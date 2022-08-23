@@ -112,7 +112,7 @@ public class GamessUKReader extends GamessReader {
       if (line.charAt(14) == ' ')
         continue;
       String[] tokens = getTokens();
-      int atomicNumber = (int) parseFloatStr(tokens[2]);
+      int atomicNumber = (int) parseDoubleStr(tokens[2]);
       Atom atom = setAtomCoordScaled(null, tokens, 3, ANGSTROMS_PER_BOHR);
       atom.elementSymbol = getElementSymbol(atomicNumber);
       setAtom(atom, atomicNumber, tokens[1], null);
@@ -187,16 +187,16 @@ public class GamessUKReader extends GamessReader {
 
    */
   private Lst<String> symmetries;
-  private Lst<Float> occupancies;
+  private Lst<Double> occupancies;
    
    private void readOrbitalSymmetryAndOccupancy() throws Exception {
      readLines(4);
      symmetries = new  Lst<String>();
-     occupancies = new  Lst<Float>();
+     occupancies = new  Lst<Double>();
      while (rd() != null && line.indexOf("====") < 0) {
        String[] tokens = PT.getTokens(line.substring(20));
        symmetries.addLast(tokens[0] + " " + tokens[1]);
-       occupancies.addLast(Float.valueOf(parseFloatStr(tokens[5])));
+       occupancies.addLast(Double.valueOf((double) parseDoubleStr(tokens[5])));
      }
    }
 

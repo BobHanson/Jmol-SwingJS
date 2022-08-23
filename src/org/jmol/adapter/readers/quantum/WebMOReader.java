@@ -251,7 +251,7 @@ public class WebMOReader extends MopacSlaterReader {
      */
 
     Lst<int[]> sdata = new  Lst<int[]>();
-    Lst<float[]> gdata = new  Lst<float[]>();
+    Lst<double[]> gdata = new  Lst<double[]>();
     int atomNo = 1;
     int gaussianPtr = 0;
 
@@ -272,16 +272,16 @@ public class WebMOReader extends MopacSlaterReader {
       for (int i = 0; i < nGaussians; i++) {
         String[] strData = PT.getTokens(rd());
         int nData = strData.length;
-        float[] data = new float[nData];
+        double[] data = new double[nData];
         for (int d = 0; d < nData; d++) {
-          data[d] = parseFloatStr(strData[d]);
+          data[d] = (double) parseDoubleStr(strData[d]);
         }
         gdata.addLast(data);
         gaussianPtr++;
       }
       sdata.addLast(slater);
     }
-    float[][] garray = AU.newFloat2(gaussianPtr);
+    double[][] garray = AU.newDouble2(gaussianPtr);
     for (int i = 0; i < gaussianPtr; i++) {
       garray[i] = gdata.get(i);
     }
@@ -306,7 +306,7 @@ public class WebMOReader extends MopacSlaterReader {
         continue;
       addSlater(parseIntStr(tokens[0]), parseIntStr(tokens[1]),
           parseIntStr(tokens[2]), parseIntStr(tokens[3]), parseIntStr(tokens[4]),
-          parseFloatStr(tokens[5]), parseFloatStr(tokens[6]));
+          parseDoubleStr(tokens[5]), (double) parseDoubleStr(tokens[6]));
     }
     scaleSlaters = false;
     setSlaters(false);
@@ -331,8 +331,8 @@ public class WebMOReader extends MopacSlaterReader {
     }
     Map<String, Object> mo = new Hashtable<String, Object>();
     Lst<String> data = new  Lst<String>();
-    float energy = parseFloatStr(rd());
-    float occupancy = parseFloatStr(rd());
+    double energy = (double) parseDoubleStr(rd());
+    double occupancy = (double) parseDoubleStr(rd());
     while (getLine()) {
       String[] tokens = getTokens();
       if (tokens.length == 0) {
@@ -340,12 +340,12 @@ public class WebMOReader extends MopacSlaterReader {
       }
       data.addLast(tokens[1]);
     }
-    float[] coefs = new float[data.size()];
+    double[] coefs = new double[data.size()];
     for (int i = data.size(); --i >= 0;) {
-      coefs[i] = parseFloatStr(data.get(i));
+      coefs[i] = (double) parseDoubleStr(data.get(i));
     }
-    mo.put("energy", Float.valueOf(energy));
-    mo.put("occupancy", Float.valueOf(occupancy));
+    mo.put("energy", Double.valueOf(energy));
+    mo.put("occupancy", Double.valueOf(occupancy));
     mo.put("coefficients", coefs);
     orbitals.addLast(mo);
     nOrbitals++;

@@ -32,21 +32,20 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.MSInterface;
 import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
-
-import javajs.util.A4;
-import javajs.util.M3;
-import javajs.util.P3;
-import javajs.util.Quat;
-import javajs.util.Rdr;
-import javajs.util.Lst;
-import javajs.util.Matrix;
-import javajs.util.PT;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import org.jmol.util.Logger;
 import org.jmol.util.Modulation;
+
+import javajs.util.A4d;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.M3d;
+import javajs.util.Matrix;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.Qd;
+import javajs.util.Rdr;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 /**
  * A reader for Jana M50+M40 file pairs.
@@ -59,7 +58,7 @@ import org.jmol.util.Modulation;
 
 public class JanaReader extends AtomSetCollectionReader {
 
-  private Lst<float[]> lattvecs;
+  private Lst<double[]> lattvecs;
   private int thisSub;
   private String modAxes;
   private boolean haveM40Data;
@@ -126,7 +125,7 @@ public class JanaReader extends AtomSetCollectionReader {
         break;
       case LATT:
         if (lattvecs == null)
-          lattvecs = new Lst<float[]>();
+          lattvecs = new Lst<double[]>();
         if (!ms.addLatticeVector(lattvecs, line.substring(8)))
           appendLoadNote(line + " not supported");
         break;
@@ -158,8 +157,8 @@ public class JanaReader extends AtomSetCollectionReader {
         }
         m = new Matrix(null, n, n);
         double[][] a = m.getArray();
-        float[] data = new float[n * n];
-        fillFloatArray(null, 0, data);
+        double[] data = new double[n * n];
+        fillDoubleArray(null, 0, data);
         for (int i = 0, pt = 0; i < n; i++)
           for (int j = 0; j < n; j++, pt++)
              a[i][j] = data[pt];
@@ -203,7 +202,7 @@ public class JanaReader extends AtomSetCollectionReader {
 
   private void cell() throws Exception {
     for (int ipt = 0; ipt < 6; ipt++)
-      setUnitCellItem(ipt, parseFloat());
+      setUnitCellItem(ipt, parseDouble());
   }
 
   private void ndim() throws Exception {
@@ -217,11 +216,11 @@ public class JanaReader extends AtomSetCollectionReader {
   private void qi() throws Exception {
     double[] pt = new double[modDim];
     pt[qicount] = 1;
-    double[] a = new double[] {parseFloat(), parseFloat(), parseFloat()};
+    double[] a = new double[] {parseDouble(), parseDouble(), parseDouble()};
     // get qr record as well
     parseTokenStr(rd());
     for (int i = 0; i < 3; i++)
-      a[i] += parseFloat();
+      a[i] += parseDouble();
     ms.addModulation(null, "W_" + (++qicount), a, -1);
     ms.addModulation(null, "F_" + qicount + "_coefs_", pt, -1);
   }
@@ -306,12 +305,12 @@ public class JanaReader extends AtomSetCollectionReader {
   private String molName;
   private Lst<Atom> molAtoms;
   private Lst<Integer> molTtypes;
-  private Lst<P3> modelMolecule;
+  private Lst<P3d> modelMolecule;
   private boolean molHasTLS;
-  private M3 matR;
-  private P3 rho;
+  private M3d matR;
+  private P3d rho;
   private boolean firstPosition;
-  private V3 vR, v0Cart;
+  private V3d vR, v0Cart;
   private boolean isLegendre;
 
 
@@ -413,7 +412,7 @@ public class JanaReader extends AtomSetCollectionReader {
       atom.atomName = name;
       boolean isRefAtom = name.equals(refAtomName);
       atom.foccupancy = floats[2];
-      boolean isJanaMolecule = Float.isNaN(atom.foccupancy);
+      boolean isJanaMolecule = Double.isNaN(atom.foccupancy);
       if (isJanaMolecule) {
         // new "molecule" group
         //refType = getInt(10, 11);
@@ -427,16 +426,16 @@ public class JanaReader extends AtomSetCollectionReader {
               "Jmol cannot process M40 files with molecule positions based on point-group symmetry.");
         }
         refAtomName = null;
-        if (Float.isNaN(floats[4]))
+        if (Double.isNaN(floats[4]))
           refAtomName = getStr(28, 37);
         else
-          rho = P3.new3(floats[3], floats[4], floats[5]);
+          rho = P3d.new3(floats[3], floats[4], floats[5]);
         molName = name;
         molAtoms.clear();
         molTtypes.clear();
         molHasTLS = false;
         firstPosition = true;
-        modelMolecule = new Lst<P3>();
+        modelMolecule = new Lst<P3d>();
         continue;
       }
       boolean isExcluded = false;
@@ -449,7 +448,7 @@ public class JanaReader extends AtomSetCollectionReader {
         }
         setAtomCoordXYZ(atom, floats[3], floats[4], floats[5]);
         if (isRefAtom) {
-          rho = P3.newP(atom);
+          rho = P3d.newP(atom);
           if (isExcluded)
             continue;
         }
@@ -520,7 +519,7 @@ public class JanaReader extends AtomSetCollectionReader {
         String[] tokens = getTokens();
         double[] pt = new double[modDim];
         for (int i = 0; i < modDim; i++)
-          pt[i] = parseFloatStr(tokens[i + 2]);
+          pt[i] = parseDoubleStr(tokens[i + 2]);
         ms.addModulation(null, "F_" + parseIntStr(tokens[1]) + "_coefs_", pt, -1);
       }
     readM40Floats();
@@ -553,8 +552,8 @@ public class JanaReader extends AtomSetCollectionReader {
     
     boolean isImproper = (getInt(9, 11) == -1); // "sign" of rotation
     int systType = getInt(13, 14);
-    P3 rm = (systType == 0 ? null : new P3());
-    P3 rp = (systType == 0 ? null : new P3());
+    P3d rm = (systType == 0 ? null : new P3d());
+    P3d rp = (systType == 0 ? null : new P3d());
 
     // Type of the local coordinate system. 
     // 0 if the basic crystallographic setting is used. 
@@ -568,7 +567,7 @@ public class JanaReader extends AtomSetCollectionReader {
 
     // read the modulation --  phi, chi, psi, and vTrans will be stored in atom.anisoBorU
     
-    float[][] rotData = readAtomRecord(pos, rm, rp, true);
+    double[][] rotData = readAtomRecord(pos, rm, rp, true);
 
     String name = pos.atomName;
     int n = molAtoms.size();
@@ -577,20 +576,20 @@ public class JanaReader extends AtomSetCollectionReader {
 
     // set the molecular modulation reference point offset from the model reference point
     
-    V3 vTrans = V3.new3(pos.anisoBorU[3], pos.anisoBorU[4], pos.anisoBorU[5]);
+    V3d vTrans = V3d.new3(pos.anisoBorU[3], pos.anisoBorU[4], pos.anisoBorU[5]);
     
     // calculate the rotation, either Euler ZYZ or Cartesian XYZ
     
     //  isAxial: X Y Z (X first)
     // notAxial: Z X Z
-    Quat phi = Quat.newAA(A4.newVA(V3.new3(0, 0, 1),
-        (float) (pos.anisoBorU[0] / 180 * Math.PI)));
-    Quat chi = Quat.newAA(A4.newVA(
-        isAxial ? V3.new3(0, 1, 0) : V3.new3(1, 0, 0),
-        (float) (pos.anisoBorU[1] / 180 * Math.PI)));
-    Quat psi = Quat.newAA(A4.newVA(
-        isAxial ? V3.new3(1, 0, 0) : V3.new3(0, 0, 1),
-        (float) (pos.anisoBorU[2] / 180 * Math.PI)));
+    Qd phi = Qd.newAA(A4d.newVA(V3d.new3(0, 0, 1),
+        (pos.anisoBorU[0] / 180 * Math.PI)));
+    Qd chi = Qd.newAA(A4d.newVA(
+        isAxial ? V3d.new3(0, 1, 0) : V3d.new3(1, 0, 0),
+        (pos.anisoBorU[1] / 180 * Math.PI)));
+    Qd psi = Qd.newAA(A4d.newVA(
+        isAxial ? V3d.new3(1, 0, 0) : V3d.new3(0, 0, 1),
+        (pos.anisoBorU[2] / 180 * Math.PI)));
     matR = phi.mulQ(chi).mulQ(psi).getMatrix();
     if (isImproper)
       matR.scale(-1);
@@ -607,7 +606,7 @@ public class JanaReader extends AtomSetCollectionReader {
       script += ", " + newName;
       if (firstPosition) {
         newName += ext;
-        modelMolecule.addLast(P3.newP(a));
+        modelMolecule.addLast(P3d.newP(a));
       } else {
         a = asc.newCloneAtom(a);
         newName = newName.substring(0, newName.lastIndexOf("_")) + ext;
@@ -633,9 +632,9 @@ public class JanaReader extends AtomSetCollectionReader {
       // 
       // (vR will be used only in setRigidBodyPhase) 
       
-      V3 v0 = V3.newVsub(modelMolecule.get(i), rho);
-      getSymmetry().toCartesian(v0Cart = V3.newV(v0), true);
-      vR = V3.newV(v0); 
+      V3d v0 = V3d.newVsub(modelMolecule.get(i), rho);
+      getSymmetry().toCartesian(v0Cart = V3d.newV(v0), true);
+      vR = V3d.newV(v0); 
       cartesianProduct(vR, null);
       
       a.setT(rho);
@@ -661,7 +660,7 @@ public class JanaReader extends AtomSetCollectionReader {
    * @param vA
    * @param vB
    */
-  private void cartesianProduct(T3 vA, T3 vB) {
+  private void cartesianProduct(T3d vA, T3d vB) {
     symmetry.toCartesian(vA, true);
     if (vB == null) // proper or improper rotation
       matR.rotate2(vA, vA);
@@ -688,7 +687,7 @@ public class JanaReader extends AtomSetCollectionReader {
    * 
    * @throws Exception
    */
-  private float[][] readAtomRecord(Atom atom, P3 rm, P3 rp, boolean isPos)
+  private double[][] readAtomRecord(Atom atom, P3d rm, P3d rp, boolean isPos)
       throws Exception {
     String label = ";" + atom.atomName;
     int tType = (isPos ? -1 : getInt(13, 14));
@@ -740,7 +739,7 @@ public class JanaReader extends AtomSetCollectionReader {
     // read occupancy modulation
 
     double[] pt;
-    float o_0 = (nOcc > 0 && !haveSpecialOcc ? parseFloatStr(rd()) : 1);
+    double o_0 = (nOcc > 0 && !haveSpecialOcc ? parseDoubleStr(rd()) : 1);
 
     // We add a J_O record that saves the original (unadjusted) o_0 and o_site
     //
@@ -754,11 +753,11 @@ public class JanaReader extends AtomSetCollectionReader {
           o_0, 0 }, -1);
     atom.foccupancy *= o_0;
     int wv = 0;
-    float a1, a2;
+    double a1, a2;
     isLegendre = false;
     for (int j = 0; j < nOcc; j++) {
       if (haveSpecialOcc) {
-        float[][] data = readM40FloatLines(2, 1);
+        double[][] data = readM40FloatLines(2, 1);
         a2 = data[0][0]; // width (first line)
         a1 = data[1][0]; // center (second line)
       } else {
@@ -777,8 +776,8 @@ public class JanaReader extends AtomSetCollectionReader {
     for (int j = 0; j < nDisp; j++) {
       if (haveSpecialDisp) {
         readM40Floats();
-        float c = floats[3]; // center
-        float w = floats[4]; // width
+        double c = floats[3]; // center
+        double w = floats[4]; // width
         for (int k = 0; k < 3; k++)
           if (floats[k] != 0)
             ms.addModulation(null, "D_S#" + XYZ[k] + label, new double[] { c,
@@ -791,7 +790,7 @@ public class JanaReader extends AtomSetCollectionReader {
 
     // collect rotational displacive parameters
 
-    float[][] rotData = (isPos && nDisp > 0 ? readM40FloatLines(nDisp, 6)
+    double[][] rotData = (isPos && nDisp > 0 ? readM40FloatLines(nDisp, 6)
         : null);
 
     // finally read Uij sines and cosines
@@ -809,7 +808,7 @@ public class JanaReader extends AtomSetCollectionReader {
             Logger.error("JanaReader -- not interpreting SpecialUij flag: "
                 + line);
           } else if (isLegendre) {
-            float[][] data = readM40FloatLines(1, 6);
+            double[][] data = readM40FloatLines(1, 6);
             int order = j + 1;
             double coeff = 0;
             for (int k = 0, p = 0; k < 6; k++, p += 3) {
@@ -819,7 +818,7 @@ public class JanaReader extends AtomSetCollectionReader {
                     new double[] { coeff, order, 0 }, -1);
             }
           } else {
-            float[][] data = readM40FloatLines(2, 6);
+            double[][] data = readM40FloatLines(2, 6);
             for (int k = 0, p = 0; k < 6; k++, p += 3) {
               double csin = data[1][k];
               double ccos = data[0][k];
@@ -854,7 +853,7 @@ public class JanaReader extends AtomSetCollectionReader {
       for (int i = 0; i < 2; i++) {
         int order = (j * 2 + i + 1);
         for (int k = 0; k < 3; ++k) {
-          float coeff = floats[3 * i + k];
+          double coeff = floats[3 * i + k];
           if (coeff == 0) {
             continue;
           }
@@ -869,12 +868,12 @@ public class JanaReader extends AtomSetCollectionReader {
     }
     ensureFourier(j);
     for (int k = 0; k < 3; ++k) {
-      float csin = floats[k];
-      float ccos = floats[k + 3];
+      double csin = floats[k];
+      double ccos = floats[k + 3];
       if (csin == 0 && ccos == 0) {
         if (!isPos)
           continue;
-        csin = 1e-10f;
+        csin = 1e-10d;
       }
       String axis = XYZ[k % 3];
       if (modAxes != null && modAxes.indexOf(axis.toUpperCase()) < 0)
@@ -899,7 +898,7 @@ public class JanaReader extends AtomSetCollectionReader {
     }
   }
 
-  private float[] floats = new float[6];
+  private double[] floats = new double[6];
   
   private String readM40Floats() throws Exception {
     if ((line = rd()) == null || line.indexOf("-------") >= 0) 
@@ -913,12 +912,12 @@ public class JanaReader extends AtomSetCollectionReader {
   private void parseM40Floats() {
     int ptLast = line.length() - 9;
     for (int i = 0, pt = 0; i < 6; i++, pt += 9) {
-      floats[i] = (pt <= ptLast ? parseFloatStr(line.substring(pt, pt + 9)) : Float.NaN);
+      floats[i] = (pt <= ptLast ? (double) parseDoubleStr(line.substring(pt, pt + 9)) : Double.NaN);
     }
   }
 
-  private float[][] readM40FloatLines(int nLines, int nFloats) throws Exception {
-    float[][] data = new float[nLines][nFloats];
+  private double[][] readM40FloatLines(int nLines, int nFloats) throws Exception {
+    double[][] data = new double[nLines][nFloats];
     for (int i = 0; i < nLines; i++) {
       readM40Floats();
       if (line.indexOf("Legendre") == 19)
@@ -1057,7 +1056,7 @@ public class JanaReader extends AtomSetCollectionReader {
    *        block of [nDisp][6] rotational parameters
    * 
    */
-  private void setRigidBodyRotations(String label, float[][] params) {
+  private void setRigidBodyRotations(String label, double[][] params) {
 
     // process each contribution as a separate set of x y z modulations
 
@@ -1065,9 +1064,9 @@ public class JanaReader extends AtomSetCollectionReader {
     for (int i = 0; i < n; i++) {
       ensureFourier(i);
       String key = "D_" + (i + 1);
-      float[] data = params[i];
-      V3 vsin = V3.new3(data[0], data[1], data[2]);
-      V3 vcos = V3.new3(data[3], data[4], data[5]);
+      double[] data = params[i];
+      V3d vsin = V3d.new3(data[0], data[1], data[2]);
+      V3d vcos = V3d.new3(data[3], data[4], data[5]);
 
       // sines and cosines vectors into cartesians, 
       // cross with rotation vector, and back to fractional
@@ -1086,8 +1085,8 @@ public class JanaReader extends AtomSetCollectionReader {
 
       // set back into T3 vector mode for processing
 
-      vsin.set((float) vx[0], (float) vy[0], (float) vz[0]);
-      vcos.set((float) vx[1], (float) vy[1], (float) vz[1]);
+      vsin.set(vx[0], vy[0], vz[0]);
+      vcos.set(vx[1], vy[1], vz[1]);
 
       // now take combined translation and rotation
       // to Cartesian, rotate by matR, then back to fractional
@@ -1113,7 +1112,7 @@ public class JanaReader extends AtomSetCollectionReader {
    * @param ccos
    * @return new array
    */
-  private double[] combineModulation(String key, float csin, float ccos) {
+  private double[] combineModulation(String key, double csin, double ccos) {
     double[] v = ms.getMod(key);
     return new double[] {v[0] + csin,  v[1] + ccos, 0};
   }
@@ -1125,7 +1124,7 @@ public class JanaReader extends AtomSetCollectionReader {
    * @param csin
    * @param ccos
    */
-  private void setMolecularModulation(String key, float csin, float ccos) {
+  private void setMolecularModulation(String key, double csin, double ccos) {
     ms.addModulation(null, key, setRigidBodyPhase(key, new double[] {csin, ccos, 0}), -1);
   }
 

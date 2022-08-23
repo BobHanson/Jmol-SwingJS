@@ -28,7 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 import javajs.util.MessagePackReader;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -207,11 +207,11 @@ public class MMTFReader extends MMCifReader {
     int[] atomId =    (int[]) decode("atomIdList");
     boolean haveSerial = (atomId != null);
     char[] altloc = (char[]) decode("altLocList"); // rldecode32
-    float[] occ = (float[]) decode("occupancyList");
-    float[] x = (float[]) decode("xCoordList");//getFloatsSplit("xCoord", 1000f);
-    float[] y = (float[]) decode("yCoordList");
-    float[] z = (float[]) decode("zCoordList");
-    float[] bf = (float[]) decode("bFactorList");
+    double[] occ = (double[]) decode("occupancyList");
+    double[] x = (double[]) decode("xCoordList");//getFloatsSplit("xCoord", 1000d);
+    double[] y = (double[]) decode("yCoordList");
+    double[] z = (double[]) decode("zCoordList");
+    double[] bf = (double[]) decode("bFactorList");
     String[] nameList = (useAuthorChainID ? authAsymList : labelAsymList);
     int iModel = -1;
     int iChain = 0;
@@ -349,7 +349,7 @@ public class MMTFReader extends MMCifReader {
 
   private void setMMTFSymmetry() {
     setSpaceGroupName((String) map.get("spaceGroup"));
-    float[] o = (float[]) map.get("unitCell");
+    double[] o = (double[]) map.get("unitCell");
     if (o != null)
       for (int i = 0; i < 6; i++)
         setUnitCellItem(i, o[i]);
@@ -372,7 +372,7 @@ public class MMTFReader extends MMCifReader {
       info.put("molecule", Integer.valueOf(iMolecule));
       Lst<String> assemb = new Lst<String>();
       Lst<String> ops = new Lst<String>();
-      info.put("biomts", new Lst<M4>());
+      info.put("biomts", new Lst<M4d>());
       info.put("chains", new Lst<String>());
       info.put("assemblies", assemb);
       info.put("operators", ops);
@@ -400,7 +400,7 @@ public class MMTFReader extends MMCifReader {
         // now save the 4x4 matrix transform for this operation
 
         String id = "" + (++opCount);
-        addMatrix(id, M4.newA16((float[]) t.get("matrix")), false);
+        addMatrix(id, M4d.newA16((double[]) t.get("matrix")), false);
         ops.addLast(id);
       }
     }

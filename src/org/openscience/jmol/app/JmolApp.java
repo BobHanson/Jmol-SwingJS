@@ -73,7 +73,7 @@ public class JmolApp implements JmolAppAPI {
   public boolean isSilent;
   public Map<String, Object> info = new Hashtable<String, Object>();
   public Point jmolPosition;
-  public float autoAnimationDelay = 0.2f; // sec
+  public double autoAnimationDelay = 0.2d; // sec
 
   private String modelFilename;
   private String scriptFilename;
@@ -277,7 +277,7 @@ public class JmolApp implements JmolAppAPI {
     }
 
     if (line.hasOption("a")) {
-      autoAnimationDelay = PT.parseFloat(line.getOptionValue("a"));
+      autoAnimationDelay = PT.parseDouble(line.getOptionValue("a"));
       if (autoAnimationDelay > 10)
         autoAnimationDelay /= 1000;
       Logger.info(

@@ -47,7 +47,7 @@ import org.jmol.viewer.binding.JmolBinding;
 
 import javajs.util.AU;
 import javajs.util.BS;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 public class ActionManager implements EventManager {
@@ -116,7 +116,7 @@ public class ActionManager implements EventManager {
    * @param time
    */
   public void processMultitouchEvent(int groupID, int eventType, int touchID, int iData,
-                           P3 pt, long time) {
+                           P3d pt, long time) {
     // see subclass
   }
 
@@ -588,26 +588,26 @@ public class ActionManager implements EventManager {
   private final static long MAX_DOUBLE_CLICK_MILLIS = 700;
   protected final static long MININUM_GESTURE_DELAY_MILLISECONDS = 10;
   private final static int SLIDE_ZOOM_X_PERCENT = 98;
-  public final static float DEFAULT_MOUSE_DRAG_FACTOR = 1f;
-  public final static float DEFAULT_MOUSE_WHEEL_FACTOR = 1.15f;
-  public final static float DEFAULT_GESTURE_SWIPE_FACTOR = 1f;
+  public final static double DEFAULT_MOUSE_DRAG_FACTOR = 1d;
+  public final static double DEFAULT_MOUSE_WHEEL_FACTOR = 1.15d;
+  public final static double DEFAULT_GESTURE_SWIPE_FACTOR = 1d;
 
 
   public final static int XY_RANGE = 10; // BH 2019.04.21 was 0
 
-  private float gestureSwipeFactor = DEFAULT_GESTURE_SWIPE_FACTOR;
-  protected float mouseDragFactor = DEFAULT_MOUSE_DRAG_FACTOR;
-  protected float mouseWheelFactor = DEFAULT_MOUSE_WHEEL_FACTOR;
+  private double gestureSwipeFactor = DEFAULT_GESTURE_SWIPE_FACTOR;
+  protected double mouseDragFactor = DEFAULT_MOUSE_DRAG_FACTOR;
+  protected double mouseWheelFactor = DEFAULT_MOUSE_WHEEL_FACTOR;
 
-  void setGestureSwipeFactor(float factor) {
+  void setGestureSwipeFactor(double factor) {
     gestureSwipeFactor = factor;
   }
 
-  void setMouseDragFactor(float factor) {
+  void setMouseDragFactor(double factor) {
     mouseDragFactor = factor;
   }
 
-  void setMouseWheelFactor(float factor) {
+  void setMouseWheelFactor(double factor) {
     mouseWheelFactor = factor;
   }
 
@@ -1355,7 +1355,7 @@ public class ActionManager implements EventManager {
 
     if (vwr.getBoolean(T.allowgestures)) {
       if (bnd(dragAction, ACTION_swipe)) {
-        float speed = getExitRate();
+        double speed = getExitRate();
         if (speed > 0)
           vwr.spinXYBy(dragGesture.getDX(4, 2), dragGesture.getDY(4, 2),
               speed * 30 * gestureSwipeFactor);
@@ -1410,7 +1410,7 @@ public class ActionManager implements EventManager {
     if (isBond)
       clickedCount = 1;
 
-    if (nearestPoint != null && Float.isNaN(nearestPoint.x))
+    if (nearestPoint != null && Double.isNaN(nearestPoint.x))
       return;
     int nearestAtomIndex = findNearestAtom(x, y, nearestPoint, clickedCount > 0);
 
@@ -1440,8 +1440,8 @@ public class ActionManager implements EventManager {
     if (vwr.getBoolean(T.navigationmode)
         && apm == PICKING_NAVIGATE
         && bnd(clickAction, ACTION_pickNavigate)) {
-      vwr.navTranslatePercent(x * 100f / vwr.getScreenWidth() - 50f, y
-          * 100f / vwr.getScreenHeight() - 50f);
+      vwr.navTranslatePercent(x * 100d / vwr.getScreenWidth() - 50d, y
+          * 100d / vwr.getScreenHeight() - 50d);
       return;
     }
 
@@ -1520,7 +1520,7 @@ public class ActionManager implements EventManager {
       if (key.indexOf(mkey) != 0 || !AU.isAS(obj = ht.get(key)))
         continue;
       String script = ((String[]) obj)[1];
-      P3 nearestPoint = null;
+      P3d nearestPoint = null;
       if (script.indexOf("_ATOM") >= 0) {
         int iatom = findNearestAtom(x, y, null, true);
         script = PT.rep(script, "_ATOM", "({"
@@ -1533,7 +1533,7 @@ public class ActionManager implements EventManager {
           && (script.indexOf("_POINT") >= 0 || script.indexOf("_OBJECT") >= 0 || script
               .indexOf("_BOND") >= 0)) {
         Map<String, Object> t = vwr.checkObjectClicked(x, y, mouseAction);
-        if (t != null && (nearestPoint = (P3) t.get("pt")) != null) {
+        if (t != null && (nearestPoint = (P3d) t.get("pt")) != null) {
           boolean isBond = t.get("type").equals("bond");
           if (isBond)
             script = PT.rep(script, "_BOND", "[{"
@@ -1591,7 +1591,7 @@ public class ActionManager implements EventManager {
     return (isZoom || isSlideZoom);
   }
 
-  private float getExitRate() {
+  private double getExitRate() {
     long dt = dragGesture.getTimeDifference(2);
     return (isMultiTouch ? (dt > (MININUM_GESTURE_DELAY_MILLISECONDS << 3) ? 0 :
       dragGesture.getSpeedPixelsPerMillisecond(2, 1)) 
@@ -1638,19 +1638,19 @@ public class ActionManager implements EventManager {
    * @param isX
    * @return desired scaled rotation, in degrees
    */
-  protected float getDegrees(float delta, boolean isX) {
+  protected double getDegrees(double delta, boolean isX) {
     return delta / Math.min(500, isX ? vwr.getScreenWidth() 
         : vwr.getScreenHeight()) * 180 * mouseDragFactor;
   }
 
   private boolean isZoomArea(int x) {
     return x > vwr.getScreenWidth() * (vwr.tm.stereoDoubleFull || vwr.tm.stereoDoubleDTI ? 2 : 1)
-        * SLIDE_ZOOM_X_PERCENT / 100f;
+        * SLIDE_ZOOM_X_PERCENT / 100d;
   }
 
   private Point3fi getPoint(Map<String, Object> t) {
     Point3fi pt = new Point3fi();
-    pt.setT((P3) t.get("pt"));
+    pt.setT((P3d) t.get("pt"));
     pt.mi = (short) ((Integer) t.get("modelIndex")).intValue();
     return pt;
   }
@@ -1766,7 +1766,7 @@ public class ActionManager implements EventManager {
     if (dz == 0)
       return;
     setMotion(GenericPlatform.CURSOR_ZOOM, true);
-    vwr.zoomByFactor((float) Math.pow(mouseWheelFactor, dz), x, y);
+    vwr.zoomByFactor(Math.pow(mouseWheelFactor, dz), x, y);
     moved.setCurrent(current, 0);
     vwr.setInMotion(true);
     zoomTrigger = true;
@@ -2159,15 +2159,15 @@ class Gesture {
     return mp1.time - mp0.time;
   }
 
-  public float getSpeedPixelsPerMillisecond(int nPoints, int nPointsPrevious) {
+  public double getSpeedPixelsPerMillisecond(int nPoints, int nPointsPrevious) {
     nPoints = getPointCount2(nPoints, nPointsPrevious);
     if (nPoints < 2)
       return 0;
     MotionPoint mp1 = getNode(ptNext - 1 - nPointsPrevious);
     MotionPoint mp0 = getNode(ptNext - nPoints - nPointsPrevious);
-    float dx = ((float) (mp1.x - mp0.x)) / vwr.getScreenWidth() * 360;
-    float dy = ((float) (mp1.y - mp0.y)) / vwr.getScreenHeight() * 360;
-    return (float) Math.sqrt(dx * dx + dy * dy) / (mp1.time - mp0.time);
+    double dx = ((double) (mp1.x - mp0.x)) / vwr.getScreenWidth() * 360;
+    double dy = ((double) (mp1.y - mp0.y)) / vwr.getScreenHeight() * 360;
+    return Math.sqrt(dx * dx + dy * dy) / (mp1.time - mp0.time);
   }
 
   int getDX(int nPoints, int nPointsPrevious) {

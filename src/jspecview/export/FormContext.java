@@ -202,7 +202,7 @@ class FormContext {
 		int ptr;
 		for (int i = 0; i < formTokens.size() && strError == null; i++) {
 			FormToken vt = formTokens.get(i);
-			// System.out.println(i + " " + vt.ptr + " " + vt.cmdType + " " +
+			//System.out.println(i + " " + vt.ptr + " " + vt.cmdType + " " +
 			// vt.cmdPtr + " "
 			// + vt.endPtr + vt.data);
 			switch (vt.cmdType) {

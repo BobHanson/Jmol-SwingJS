@@ -31,8 +31,8 @@ public class AtomType {
   String smartsCode;
   int mmType;
   int hType;
-  float formalCharge;
-  float fcadj;
+  double formalCharge;
+  double fcadj;
   
   /**
    * MMFF special bond types 2, 3, 4, 9, 30, 37, 39, 54, 57, 58, 63, 64, 67, 75, 78,
@@ -71,7 +71,7 @@ public class AtomType {
    */
   int val;
   
-  AtomType(int elemNo, int mmType, int hType, float formalCharge, int val, String descr, String smartsCode) {
+  AtomType(int elemNo, int mmType, int hType, double formalCharge, int val, String descr, String smartsCode) {
     this.elemNo = elemNo;
     this.mmType = mmType;
     this.hType = hType;

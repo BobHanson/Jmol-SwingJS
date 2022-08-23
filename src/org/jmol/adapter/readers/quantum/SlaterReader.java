@@ -53,7 +53,7 @@ abstract class SlaterReader extends MOReader {
    * We build two data structures for each slater: 
    * 
    * int[] slaterInfo[] = {iatom, a, b, c, d}
-   * float[] slaterData[] = {zeta, coef}
+   * double[] slaterData[] = {zeta, coef}
    * 
    * where
    * 
@@ -71,7 +71,7 @@ abstract class SlaterReader extends MOReader {
    * @param coef
    */
   protected final void addSlater(int iAtom, int a, int b, int c, int d, 
-                        double zeta, float coef) {
+                        double zeta, double coef) {
     //System.out.println ("SlaterReader " + slaters.size() + ": " + iAtom + " " + a + " " + b +  " " + c + " " + d + " " + zeta + " " + coef);
     getSlaters().addLast(new SlaterData(iAtom, a, b, c, d, zeta, coef));
   }
@@ -139,8 +139,8 @@ abstract class SlaterReader extends MOReader {
     // now sort the coefficients as well
     for (int i = orbitals.size(); --i >= 0; ) {
       Map<String, Object> mo = orbitals.get(i);
-      float[] coefs = (float[]) mo.get("coefficients");
-      float[] sorted = new float[pointers.length];
+      double[] coefs = (double[]) mo.get("coefficients");
+      double[] sorted = new double[pointers.length];
       for (int j = 0; j < pointers.length; j++) {
         int k = pointers[j];
         if (k < coefs.length)
@@ -169,8 +169,8 @@ abstract class SlaterReader extends MOReader {
   class OrbitalSorter implements Comparator<Map<String, Object>> {
     @Override
     public int compare(Map<String, Object> mo1, Map<String, Object> mo2) {
-      float e1 = ((Float) mo1.get("energy")).floatValue();
-      float e2 = ((Float) mo2.get("energy")).floatValue();
+      double e1 = ((Number) mo1.get("energy")).doubleValue();
+      double e2 = ((Number) mo2.get("energy")).doubleValue();
       return ( e1 < e2 ? -1 : e2 < e1 ? 1 : 0);
     }    
   }

@@ -46,7 +46,7 @@ public class MeasurementData implements JmolMeasurementClient {
   
   private JmolMeasurementClient client;
   private Lst<String> measurementStrings;
-  private Lst<Float> measurements;
+  private Lst<Double> measurements;
 
   public Lst<Object> points;
   public boolean mustBeConnected;
@@ -64,10 +64,10 @@ public class MeasurementData implements JmolMeasurementClient {
   public String thisID;
   public Text text;
   public String units;
-  public float fixedValue;
+  public double fixedValue;
    
   private Atom[] atoms;
-  private float[] minArray;
+  private double[] minArray;
   private ModelSet ms;
   
   private boolean allowSelf; // for properties
@@ -97,7 +97,7 @@ public class MeasurementData implements JmolMeasurementClient {
                  TickInfo tickInfo,
                  boolean mustBeConnected, boolean mustNotBeConnected,
                  Boolean intramolecular, boolean isAll, 
-                 int mad, short colix, Text text, float value) {
+                 int mad, short colix, Text text, double value) {
     this.ms = vwr.ms;
     this.tokAction = tokAction;
     if (points.size() >= 2 && points.get(0) instanceof BS && points.get(1) instanceof BS) {
@@ -132,22 +132,22 @@ public class MeasurementData implements JmolMeasurementClient {
    */
   @Override
   public void processNextMeasure(Measurement m) {
-    float value = m.getMeasurement(null);
+    double value = m.getMeasurement(null);
     // here's where we check vdw
     if (htMin != null && !m.isMin(htMin) || radiusData != null && !m.isInRange(radiusData, value))
       return;
     if (measurementStrings == null && measurements == null) {
-      float f = minArray[iFirstAtom];
+      double f = minArray[iFirstAtom];
       m.value = value;
       value = m.fixValue(units, false);
-      minArray[iFirstAtom] = (1/f == Float.NEGATIVE_INFINITY ? value : Math.min(f, value));
+      minArray[iFirstAtom] = (1/f == Double.NEGATIVE_INFINITY ? value : Math.min(f, value));
       return;
     }
     
     if (measurementStrings != null)
       measurementStrings.addLast(m.getStringUsing(vwr, strFormat, units));
     else
-      measurements.addLast(Float.valueOf(m.getMeasurement(null)));   
+      measurements.addLast(Double.valueOf(m.getMeasurement(null)));   
   }
 
   /**
@@ -162,15 +162,15 @@ public class MeasurementData implements JmolMeasurementClient {
    */
   public Object getMeasurements(boolean asFloatArray, boolean asMinArray) {
     if (asMinArray) {
-      minArray = new float[((BS) points.get(0)).cardinality()];
+      minArray = new double[((BS) points.get(0)).cardinality()];
       for (int i = 0; i < minArray.length; i++)
-        minArray[i] = -0f;
+        minArray[i] = -0d;
       define(null, ms);
       return minArray;      
     }
     if (asFloatArray) {
       allowSelf = true;
-      measurements = new Lst<Float>();
+      measurements = new Lst<Double>();
       define(null, ms);
       return measurements;
     }

@@ -67,7 +67,7 @@
  * is a JVXL file:
  * 
  * line1:  (int)-nSurfaces  (int)edgeFractionBase (int)edgeFractionRange  
- * (nSurface lines): (float)cutoff (int)nBytesData (int)nBytesFractions
+ * (nSurface lines): (double)cutoff (int)nBytesData (int)nBytesFractions
  * 
  * definition1
  * edgedata1
@@ -115,8 +115,8 @@ package org.jmol.atomdata;
 
 
 
-import javajs.util.M4;
-import javajs.util.P3;
+import javajs.util.M4d;
+import javajs.util.P3d;
 
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
@@ -155,15 +155,15 @@ public class AtomData {
   // if modelIndex < 0, this gets filled with the model of the first atom
   // for now we do NOT include indexes to model for each atom, because we do not need them.
   
-  public float hAtomRadius;
+  public double hAtomRadius;
   
   public int[] atomIndex;
   public Atom[] atoms;
-  public P3[] xyz;
-  public float[] atomRadius;
+  public P3d[] xyz;
+  public double[] atomRadius;
   public int[] atomicNumber;
   public int[] atomMolecule;
-  public P3[][] hAtoms;
+  public P3d[][] hAtoms;
   public int ac;
   public int hydrogenAtomCount;
   public int adpMode;
@@ -174,14 +174,14 @@ public class AtomData {
    * @param mat
    * @param bs
    */
-  public void transformXYZ(M4 mat, BS bs) {
-    P3[] p = new P3[xyz.length];
+  public void transformXYZ(M4d mat, BS bs) {
+    P3d[] p = new P3d[xyz.length];
     if (bs == null)
       bs = BSUtil.newBitSet2(0, xyz.length);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       if (xyz[i] == null)
         continue;
-      p[i] = P3.newP(xyz[i]);
+      p[i] = P3d.newP(xyz[i]);
       mat.rotTrans(p[i]);
     }
     xyz = p;

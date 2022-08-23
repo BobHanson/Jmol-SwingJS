@@ -30,9 +30,9 @@ import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import javajs.util.BS;
 import org.jmol.util.BSUtil;
@@ -168,6 +168,8 @@ public class SmilesSearch extends JmolMolecule {
       flags |= JC.SMILES_TYPE_OPENSMILES;
     if (strFlags.indexOf("BIO") >= 0)
       flags |= JC.SMILES_GEN_BIO;
+    if (strFlags.indexOf("NOBRANCH") >= 0)
+      flags |= JC.SMILES_GEN_NO_BRANCHES;
 
     if (strFlags.indexOf("HYDROGEN2") >= 0)
         flags |= JC.SMILES_GEN_EXPLICIT_H2_ONLY;
@@ -944,7 +946,7 @@ public class SmilesSearch extends JmolMolecule {
       throws InvalidSmilesException {
 
 //      if (!this.isRingCheck) {
-//          System.out.println("testing " + patternAtom + " " + jmolAtom);
+//System.out.println("testing " + patternAtom + " " + jmolAtom);
 //        }
 
 
@@ -1253,10 +1255,10 @@ public class SmilesSearch extends JmolMolecule {
           break;
 
         if (!ignoreAtomClass || isSmarts) {
-          // :<n> atom class  -- will be Float.NaN, and Float.NaN is not equal to any number
-          if (!Float.isNaN(patternAtom.atomClass)
+          // :<n> atom class  -- will be Double.NaN, and Double.NaN is not equal to any number
+          if (!Double.isNaN(patternAtom.atomClass)
               && patternAtom.atomClass != targetAtom
-                  .getFloatProperty("property_atomclass"))
+                  .getDoubleProperty("property_atomclass"))
             break;
         }
         
@@ -1586,8 +1588,8 @@ public class SmilesSearch extends JmolMolecule {
       if (haveTopo)
         setTopoCoordinates((SmilesAtom) dbAtom1, (SmilesAtom) dbAtom2,
             (SmilesAtom) dbAtom1a, (SmilesAtom) dbAtom2a, bondType);
-      float d = SmilesMeasure.setTorsionData((T3) dbAtom1a, (T3) dbAtom1,
-          (T3) dbAtom2, (T3) dbAtom2a, v, isAtropisomer);
+      double d = SmilesMeasure.setTorsionData((T3d) dbAtom1a, (T3d) dbAtom1,
+          (T3d) dbAtom2, (T3d) dbAtom2a, v, isAtropisomer);
       if (isAtropisomer) {
         // just looking for d value that is positive (0 to 180)
         // the dihedral, from front to back, will be positive:  0 to 180 range 
@@ -1595,7 +1597,7 @@ public class SmilesSearch extends JmolMolecule {
         d *= dir1 * (bondType == Edge.TYPE_ATROPISOMER ? 1 : -1) * (indexOrder ? 1 : -1)* ATROPIC_SWITCH * -1;
         if (Logger.debugging)
           Logger.info("atrop dihedral " + d + " " + sAtom1 + " " + sAtom2 + " " +  b);
-        if (d < 1.0f) // don't count a fraction of a degree as sufficient
+        if (d < 1.0d) // don't count a fraction of a degree as sufficient
           return false;
       } else {
         // for \C=C\, (dir1*dir2 == -1), dot product should be negative
@@ -1665,7 +1667,7 @@ public class SmilesSearch extends JmolMolecule {
       boolean ok2 = dbAtom2.getBondedAtomIndex(bond.atropType[1]) == dbAtom2a.index;
       int dir = (bond.order == Edge.TYPE_ATROPISOMER ? 1 : -1) * (ok1 == ok2 ? 1 : -1);
       dbAtom1a.set(-1, 1, 0);
-      dbAtom2a.set(1, 1, dir / 2.0f * ATROPIC_SWITCH * -1);
+      dbAtom2a.set(1, 1, dir / 2.0d * ATROPIC_SWITCH * -1);
       //System.out.println(Arrays.toString(bond.atropType) + " " + bond.order + " " + dbAtom1a + " " + dbAtom1 + " " + dbAtom2 + " " + dbAtom2a + " " + dir);
       return;
     }
@@ -1755,9 +1757,9 @@ public class SmilesSearch extends JmolMolecule {
     // and switch Y positions of 3 and 4 if necessary
     //  
     if ((dir1 * dir2 > 0) == (Math.abs(dir1) % 2 == Math.abs(dir2) % 2)) {
-      float y = ((P3) atoms[0]).y;
-      ((P3) atoms[0]).y = ((P3) atoms[1]).y;
-      ((P3) atoms[1]).y = y;
+      double y = ((P3d) atoms[0]).y;
+      ((P3d) atoms[0]).y = ((P3d) atoms[1]).y;
+      ((P3d) atoms[1]).y = y;
     }
   }
 

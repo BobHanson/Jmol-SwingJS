@@ -31,7 +31,7 @@ import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import java.util.Hashtable;
 
@@ -47,9 +47,9 @@ import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.V3d;
 
 public class JvxlXmlReader extends VolumeFileReader {
 
@@ -209,8 +209,8 @@ public class JvxlXmlReader extends VolumeFileReader {
     String s;
     String data = xr.getXmlData("jvxlSurfaceInfo", null, true, true);
     isXLowToHigh = XmlReader.getXmlAttrib(data, "isXLowToHigh").equals("true");
-    jvxlCutoff = parseFloatStr(XmlReader.getXmlAttrib(data, "cutoff"));
-    if (!Float.isNaN(jvxlCutoff))
+    jvxlCutoff = parseDoubleStr(XmlReader.getXmlAttrib(data, "cutoff"));
+    if (!Double.isNaN(jvxlCutoff))
       Logger.info("JVXL read: cutoff " + jvxlCutoff);
     int nContourData = parseIntStr(XmlReader.getXmlAttrib(data, "nContourData"));
     haveContourData = (nContourData > 0);
@@ -226,8 +226,8 @@ public class JvxlXmlReader extends VolumeFileReader {
         s = XmlReader.getXmlAttrib(data, "contourValues");
         if (s.length() > 0) {
           s = s.replace('[',' ').replace(']',' ');
-          jvxlData.contourValues = params.contoursDiscrete = parseFloatArrayStr(s);
-          Logger.info("JVXL read: contourValues " + Escape.eAF(jvxlData.contourValues));            
+          jvxlData.contourValues = params.contoursDiscrete = parseDoubleArrayStr(s);
+          Logger.info("JVXL read: contourValues " + Escape.eAD(jvxlData.contourValues));            
         }
         s = XmlReader.getXmlAttrib(data, "contourColors");
         if (s.length() > 0) {
@@ -262,10 +262,10 @@ public class JvxlXmlReader extends VolumeFileReader {
     //isJvxlPrecisionColor is for information only -- will be superceded by encoding attribute of jvxlColorData
     jvxlData.isJvxlPrecisionColor = XmlReader.getXmlAttrib(data, "precisionColor").equals("true");
     jvxlData.jvxlDataIsColorDensity = params.colorDensity = (params.colorRgb == Integer.MIN_VALUE && XmlReader.getXmlAttrib(data, "colorDensity").equals("true"));
-    if (jvxlData.jvxlDataIsColorDensity && Float.isNaN(params.pointSize)) {
+    if (jvxlData.jvxlDataIsColorDensity && Double.isNaN(params.pointSize)) {
       s = XmlReader.getXmlAttrib(data, "pointSize");
       if (s.length() > 0)
-        jvxlData.pointSize = params.pointSize = parseFloatStr(s);
+        jvxlData.pointSize = params.pointSize = parseDoubleStr(s);
     }
     s = XmlReader.getXmlAttrib(data, "allowVolumeRender");
       jvxlData.allowVolumeRender = params.allowVolumeRender = (s.length() == 0 || s.equalsIgnoreCase("true"));
@@ -274,22 +274,22 @@ public class JvxlXmlReader extends VolumeFileReader {
       params.thePlane = null;
       params.mapLattice = null;
       try {
-        params.thePlane = (P4) Escape.uP(s);
+        params.thePlane = (P4d) Escape.uP(s);
         s = XmlReader.getXmlAttrib(data, "maplattice");
         Logger.info("JVXL read: plane " + params.thePlane);
         if (s.indexOf("{") >= 0) {
-          params.mapLattice = (P3) Escape.uP(s);
+          params.mapLattice = (P3d) Escape.uP(s);
           Logger.info("JVXL read: mapLattice " + params.mapLattice);
         }
         if (params.scale3d == 0)
-          params.scale3d = parseFloatStr(XmlReader.getXmlAttrib(data, "scale3d"));
-        if (Float.isNaN(params.scale3d))
+          params.scale3d = parseDoubleStr(XmlReader.getXmlAttrib(data, "scale3d"));
+        if (Double.isNaN(params.scale3d))
           params.scale3d = 0;
       } catch (Exception e) {
         if (params.thePlane == null) {
           Logger
               .error("JVXL Error reading plane definition -- setting to 0 0 1 0  (z=0)");
-          params.thePlane = P4.new4(0, 0, 1, 0);
+          params.thePlane = P4d.new4(0, 0, 1, 0);
         } else {
           Logger
           .error("JVXL Error reading mapLattice definition -- ignored");
@@ -303,7 +303,7 @@ public class JvxlXmlReader extends VolumeFileReader {
       edgeDataCount = parseIntStr(XmlReader.getXmlAttrib(data, "nBytesUncompressedEdgeData"));
       s = XmlReader.getXmlAttrib(data, "fixedLattice");
       if (s.indexOf("{") >= 0)
-        jvxlData.fixedLattice = (P3) Escape.uP(s);
+        jvxlData.fixedLattice = (P3d) Escape.uP(s);
         
     }
     excludedVertexCount = parseIntStr(XmlReader.getXmlAttrib(data, "nExcludedVertexes"));
@@ -319,8 +319,8 @@ public class JvxlXmlReader extends VolumeFileReader {
     jvxlData.color = XmlReader.getXmlAttrib(data, "color");
     if (jvxlData.color.length() == 0 || jvxlData.color.indexOf("null") >= 0)
       jvxlData.color = "orange";
-    jvxlData.translucency = parseFloatStr(XmlReader.getXmlAttrib(data, "translucency"));
-    if (Float.isNaN(jvxlData.translucency))
+    jvxlData.translucency = parseDoubleStr(XmlReader.getXmlAttrib(data, "translucency"));
+    if (Double.isNaN(jvxlData.translucency))
       jvxlData.translucency = 0;
     s = XmlReader.getXmlAttrib(data, "meshColor");
     if (s.length() > 0)
@@ -361,27 +361,27 @@ public class JvxlXmlReader extends VolumeFileReader {
     if (params.colorBySign)
       params.isBicolorMap = true;
     boolean insideOut = XmlReader.getXmlAttrib(data, "insideOut").equals("true");
-    float dataMin = Float.NaN;
-    float dataMax = Float.NaN;
-    float red = Float.NaN;
-    float blue = Float.NaN;
+    double dataMin = Double.NaN;
+    double dataMax = Double.NaN;
+    double red = Double.NaN;
+    double blue = Double.NaN;
     if (jvxlDataIsColorMapped) {
-      dataMin = parseFloatStr(XmlReader.getXmlAttrib(data, "dataMinimum"));
-      dataMax = parseFloatStr(XmlReader.getXmlAttrib(data, "dataMaximum"));
-      red = parseFloatStr(XmlReader.getXmlAttrib(data, "valueMappedToRed"));
-      blue = parseFloatStr(XmlReader.getXmlAttrib(data, "valueMappedToBlue"));
-      if (Float.isNaN(dataMin)) {
-        dataMin = red = -1f;
-        dataMax = blue = 1f;
+      dataMin = parseDoubleStr(XmlReader.getXmlAttrib(data, "dataMinimum"));
+      dataMax = parseDoubleStr(XmlReader.getXmlAttrib(data, "dataMaximum"));
+      red = parseDoubleStr(XmlReader.getXmlAttrib(data, "valueMappedToRed"));
+      blue = parseDoubleStr(XmlReader.getXmlAttrib(data, "valueMappedToBlue"));
+      if (Double.isNaN(dataMin)) {
+        dataMin = red = -1d;
+        dataMax = blue = 1d;
       }
     }
     jvxlSetColorRanges(dataMin, dataMax, red, blue, insideOut);
   }
 
-  protected void jvxlSetColorRanges(float dataMin, float dataMax, float red,
-                                    float blue, boolean insideOut) {
+  protected void jvxlSetColorRanges(double dataMin, double dataMax, double red,
+                                    double blue, boolean insideOut) {
     if (jvxlDataIsColorMapped) {
-      if (!Float.isNaN(dataMin) && !Float.isNaN(dataMax)) {
+      if (!Double.isNaN(dataMin) && !Double.isNaN(dataMax)) {
         if (dataMax == 0 && dataMin == 0) {
           //set standard -1/1; bit of a hack
           dataMin = -1;
@@ -393,7 +393,7 @@ public class JvxlXmlReader extends VolumeFileReader {
             + params.mappedDataMax);
       }
       if (!params.rangeDefined)
-        if (!Float.isNaN(red) && !Float.isNaN(blue)) {
+        if (!Double.isNaN(red) && !Double.isNaN(blue)) {
           if (red == 0 && blue == 0) {
             //set standard -1/1; bit of a hack
             red = -1;
@@ -404,8 +404,8 @@ public class JvxlXmlReader extends VolumeFileReader {
           params.isColorReversed = (red > blue);
           params.rangeDefined = true;
         } else {
-          params.valueMappedToRed = 0f;
-          params.valueMappedToBlue = 1f;
+          params.valueMappedToRed = 0d;
+          params.valueMappedToBlue = 1d;
           params.rangeDefined = true;
         }
       Logger.info("JVXL read: color red/blue: " + params.valueMappedToRed + "/"
@@ -443,7 +443,7 @@ public class JvxlXmlReader extends VolumeFileReader {
     if (params.thePlane != null) {
       volumeData.setDataDistanceToPlane(params.thePlane);
       setVolumeDataV(volumeData);
-      params.cutoff = 0f;
+      params.cutoff = 0d;
       jvxlData.setSurfaceInfo(params.thePlane, params.mapLattice, 0, "");
       jvxlData.scale3d = params.scale3d;
       return true;
@@ -522,26 +522,26 @@ public class JvxlXmlReader extends VolumeFileReader {
   }
 
   @Override
-  protected float getSurfacePointAndFraction(float cutoff,
+  protected double getSurfacePointAndFraction(double cutoff,
                                              boolean isCutoffAbsolute,
-                                             float valueA, float valueB,
-                                             T3 pointA,
-                                             V3 edgeVector,
-                                             int x, int y, int z, int vA, int vB, float[] fReturn, T3 ptReturn) {
+                                             double valueA, double valueB,
+                                             T3d pointA,
+                                             V3d edgeVector,
+                                             int x, int y, int z, int vA, int vB, double[] fReturn, T3d ptReturn) {
     if (edgeDataCount <= 0)
       return getSPFv(cutoff, isCutoffAbsolute, valueA,
           valueB, pointA, edgeVector, x, y, z, vA, vB, fReturn, ptReturn);
     ptReturn.scaleAdd2(fReturn[0] = jvxlGetNextFraction(edgeFractionBase,
-        edgeFractionRange, 0.5f), edgeVector, pointA);
-    if (Float.isNaN(valueMin))
+        edgeFractionRange, 0.5d), edgeVector, pointA);
+    if (Double.isNaN(valueMin))
       setValueMinMax();      
-    return (valueCount == 0 || includeValueNaN && Float.isNaN(fReturn[0]) 
+    return (valueCount == 0 || includeValueNaN && Double.isNaN(fReturn[0]) 
         ? fReturn[0] : getNextValue());
   }
 
-  private float getNextValue() {
-    float fraction = Float.NaN;
-    while (colorPtr < valueCount && Float.isNaN(fraction)) {
+  private double getNextValue() {
+    double fraction = Double.NaN;
+    while (colorPtr < valueCount && Double.isNaN(fraction)) {
       if (jvxlData.isJvxlPrecisionColor) {
         // this COULD be an option for mapped surfaces; 
         // necessary for planes; used for vertex/triangle 2.0 style
@@ -556,7 +556,7 @@ public class JvxlXmlReader extends VolumeFileReader {
         // my original encoding scheme
         // low precision only allows for mapping relative to the defined color range
         fraction = JvxlCoder.jvxlFractionFromCharacter(jvxlColorDataRead
-            .charAt(colorPtr++), colorFractionBase, colorFractionRange, 0.5f);
+            .charAt(colorPtr++), colorFractionBase, colorFractionRange, 0.5d);
       }
       break;
     }
@@ -569,10 +569,10 @@ public class JvxlXmlReader extends VolumeFileReader {
       valueCount /= 2;
     includeValueNaN = (valueCount != jvxlEdgeDataRead.length());
     valueMin = (!jvxlData.isJvxlPrecisionColor ? params.valueMappedToRed
-        : params.mappedDataMin == Float.MAX_VALUE ? defaultMappedDataMin
+        : params.mappedDataMin == Double.MAX_VALUE ? defaultMappedDataMin
             : params.mappedDataMin);
     valueRange = (!jvxlData.isJvxlPrecisionColor ? params.valueMappedToBlue
-        : params.mappedDataMin == Float.MAX_VALUE ? defaultMappedDataMax
+        : params.mappedDataMin == Double.MAX_VALUE ? defaultMappedDataMax
             : params.mappedDataMax)
         - valueMin;
     haveReadColorData = true;
@@ -580,13 +580,13 @@ public class JvxlXmlReader extends VolumeFileReader {
 
   private boolean includeValueNaN = true;
   private int valueCount;
-  private float valueMin = Float.NaN;
-  private float valueRange = Float.NaN;
+  private double valueMin = Double.NaN;
+  private double valueRange = Double.NaN;
   private int fractionPtr;
   private int colorPtr;
   private String strFractionTemp = "";
 
-  private float jvxlGetNextFraction(int base, int range, float fracOffset) {
+  private double jvxlGetNextFraction(int base, int range, double fracOffset) {
     if (fractionPtr >= strFractionTemp.length()) {
       if (!endOfData)
         Logger.error("end of file reading compressed fraction data");
@@ -615,7 +615,7 @@ public class JvxlXmlReader extends VolumeFileReader {
     // remove those points from the color string. 
 
     short[] colixes = meshData.vcs;
-    float[] vertexValues = meshData.vvs;
+    double[] vertexValues = meshData.vvs;
     /*
      * haveReadColorData?
      = (isJvxl ? jvxlColorDataRead : "");
@@ -633,7 +633,7 @@ public class JvxlXmlReader extends VolumeFileReader {
       n = Math.min(n, vertexCount);
       String[] tokens = PT.getTokens(jvxlColorDataRead.substring(nextc[0]));
       boolean haveTranslucent = false;
-      float trans = jvxlData.translucency;
+      double trans = jvxlData.translucency;
       int lastColor = 0;
       for (int i = 0; i < n; i++)
         // colix will be one of 8 shades of translucent if A in ARGB is not FF.
@@ -654,7 +654,7 @@ public class JvxlXmlReader extends VolumeFileReader {
         }
       if (haveTranslucent && trans == 0){
         // set to show in pass2
-        jvxlData.translucency = 0.5f;
+        jvxlData.translucency = 0.5d;
       }
       return "-";
     }    
@@ -670,11 +670,11 @@ public class JvxlXmlReader extends VolumeFileReader {
     Logger.info("mapping red-->blue for " + params.valueMappedToRed + " to "
         + params.valueMappedToBlue + " colorPrecision:"
         + jvxlData.isJvxlPrecisionColor);
-    boolean getValues = (Float.isNaN(valueMin));
+    boolean getValues = (Double.isNaN(valueMin));
     if (getValues)
       setValueMinMax();
-    float contourPlaneMinimumValue = Float.MAX_VALUE;
-    float contourPlaneMaximumValue = -Float.MAX_VALUE;
+    double contourPlaneMinimumValue = Double.MAX_VALUE;
+    double contourPlaneMaximumValue = -Double.MAX_VALUE;
     if (colixes == null || colixes.length < vertexCount)
       meshData.vcs = colixes = new short[vertexCount];
     //hasColorData = true;
@@ -687,9 +687,9 @@ public class JvxlXmlReader extends VolumeFileReader {
     }
     int vertexIncrement = meshData.vertexIncrement;
     // here's the problem: we are assuming here that vertexCount == nPointsRead
-    boolean needContourMinMax = (params.mappedDataMin == Float.MAX_VALUE);
+    boolean needContourMinMax = (params.mappedDataMin == Double.MAX_VALUE);
     for (int i = 0; i < vertexCount; i += vertexIncrement) {
-      float value;
+      double value;
       if (getValues)
         value = vertexValues[i] = getNextValue();
       else
@@ -708,7 +708,7 @@ public class JvxlXmlReader extends VolumeFileReader {
     if (jvxlData.colorScheme != null) {
       boolean setContourValue = (marchingSquares != null && params.isContoured);
       for (int i = 0; i < vertexCount; i += vertexIncrement) {
-        float value = vertexValues[i];
+        double value = vertexValues[i];
         //note: these are just default colorings
         //orbital color had a bug through 11.2.6/11.3.6
         if (setContourValue) {
@@ -801,33 +801,33 @@ public class JvxlXmlReader extends VolumeFileReader {
    * @throws Exception
    * 
    */
-  public P3[] jvxlDecodeVertexData(String data, boolean asArray)
+  public P3d[] jvxlDecodeVertexData(String data, boolean asArray)
       throws Exception {
     int vertexCount = parseIntStr(XmlReader.getXmlAttrib(data, "count"));
     if (!asArray)
       Logger.info("Reading " + vertexCount + " vertices");
     int ptCount = vertexCount * 3;
-    P3[] vertices = (asArray ? new P3[vertexCount] : null);
-    float fraction;
+    P3d[] vertices = (asArray ? new P3d[vertexCount] : null);
+    double fraction;
     String vData = XmlReader.getXmlAttrib(data, "data");
     String encoding = getEncoding(data);
     if ("none".equals(encoding)) {
       if (vData.length() == 0)
         vData = xr.getXmlData("jvxlVertexData", data, false, false);
-      float[] fdata = PT.parseFloatArray(vData);
+      double[] fdata = PT.parseDoubleArray(vData);
       // first point is count -- ignored.
       if (fdata[0] != vertexCount * 3)
         Logger.info("JvxlXmlReader: vertexData count=" + ((int)fdata[0]) + "; expected " + (vertexCount * 3));
       for (int i = 0, pt = 1; i < vertexCount; i++) {
-        P3 p = P3.new3(fdata[pt++], fdata[pt++], fdata[pt++]);
+        P3d p = P3d.new3(fdata[pt++], fdata[pt++], fdata[pt++]);
         if (asArray)
           vertices[i] = p;
         else
           addVertexCopy(p, 0, i, false);
       }
     } else {
-      P3 min = xr.getXmlPoint(data, "min");
-      P3 range = xr.getXmlPoint(data, "max");
+      P3d min = xr.getXmlPoint(data, "min");
+      P3d range = xr.getXmlPoint(data, "max");
       range.sub(min);
       int colorFractionBase = jvxlData.colorFractionBase;
       int colorFractionRange = jvxlData.colorFractionRange;
@@ -835,7 +835,7 @@ public class JvxlXmlReader extends VolumeFileReader {
       if (s.length() == 0)
         s = xr.getXmlData("jvxlVertexData", data, false, false);
       for (int i = 0, pt = -1; i < vertexCount; i++) {
-        P3 p = new P3();
+        P3d p = new P3d();
         fraction = JvxlCoder.jvxlFractionFromCharacter2(s.charAt(++pt), s
             .charAt(pt + ptCount), colorFractionBase, colorFractionRange);
         p.x = min.x + fraction * range.x;
@@ -971,8 +971,8 @@ public class JvxlXmlReader extends VolumeFileReader {
     while ((pt = data.indexOf("<jvxlContour", pt + 1)) >= 0) {
       Lst<Object> v = new  Lst<Object>();
       String s = xr.getXmlData("jvxlContour", data.substring(pt), true, false);
-      float value = parseFloatStr(XmlReader.getXmlAttrib(s, "value"));
-      values.append(" ").appendF(value);
+      double value = parseDoubleStr(XmlReader.getXmlAttrib(s, "value"));
+      values.append(" ").appendD(value);
       int color = getColor(XmlReader.getXmlAttrib(s, "color"));
       short colix = C.getColix(color);
       colors.append(" ").append(Escape.escapeColor(color));
@@ -990,11 +990,11 @@ public class JvxlXmlReader extends VolumeFileReader {
       jvxlData.vContours = AU.createArrayOfArrayList(n);
       // 3D contour values and colors
       jvxlData.contourColixes = params.contourColixes = new short[n];
-      jvxlData.contourValues = params.contoursDiscrete = new float[n];
+      jvxlData.contourValues = params.contoursDiscrete = new double[n];
       for (int i = 0; i < n; i++) {
         jvxlData.vContours[i] = vs.get(i);
-        jvxlData.contourValues[i] = ((Float) jvxlData.vContours[i].get(2))
-            .floatValue();
+        jvxlData.contourValues[i] = ((Double) jvxlData.vContours[i].get(2))
+            .doubleValue();
         jvxlData.contourColixes[i] = ((short[]) jvxlData.vContours[i].get(3))[0];
       }
       jvxlData.contourColors = C.getHexCodes(jvxlData.contourColixes);

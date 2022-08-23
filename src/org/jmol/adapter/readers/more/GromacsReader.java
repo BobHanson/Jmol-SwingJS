@@ -29,7 +29,7 @@ import org.jmol.adapter.smarter.Atom;
 
 
 import org.jmol.util.Logger;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 public class GromacsReader extends AtomSetCollectionReader {
   
@@ -75,10 +75,10 @@ public class GromacsReader extends AtomSetCollectionReader {
       atom.sequenceNumber = parseIntRange(line, 0, 5);
       setAtomName(atom, parseTokenRange(line, 5, 9).trim(), line.substring(11, 15).trim());
       atom.atomSerial = parseIntRange(line, 15, 20);
-      atom.x = parseFloatRange(line, 20, 28) * 10;
-      atom.y = parseFloatRange(line, 28, 36) * 10;
-      atom.z = parseFloatRange(line, 36, 44) * 10;
-      if (Float.isNaN(atom.x) || Float.isNaN(atom.y) || Float.isNaN(atom.z)) {
+      atom.x = parseDoubleRange(line, 20, 28) * 10;
+      atom.y = parseDoubleRange(line, 28, 36) * 10;
+      atom.z = parseDoubleRange(line, 36, 44) * 10;
+      if (Double.isNaN(atom.x) || Double.isNaN(atom.y) || Double.isNaN(atom.z)) {
         Logger.warn("line cannot be read for GROMACS atom data: " + line);
         atom.set(0, 0, 0);
       }
@@ -90,10 +90,10 @@ public class GromacsReader extends AtomSetCollectionReader {
       asc.addAtom(atom);
       if (len < 69) 
         continue;
-      float vx = parseFloatRange(line, 44, 52) * 10;
-      float vy = parseFloatRange(line, 52, 60) * 10;
-      float vz = parseFloatRange(line, 60, 68) * 10;
-      if (Float.isNaN(vx) || Float.isNaN(vy) || Float.isNaN(vz))
+      double vx = parseDoubleRange(line, 44, 52) * 10;
+      double vy = parseDoubleRange(line, 52, 60) * 10;
+      double vz = parseDoubleRange(line, 60, 68) * 10;
+      if (Double.isNaN(vx) || Double.isNaN(vy) || Double.isNaN(vz))
         continue;
       asc.addVibrationVector(atom.index, vx, vy, vz);
     }
@@ -128,13 +128,13 @@ public class GromacsReader extends AtomSetCollectionReader {
     String[] tokens = getTokens();
     if (tokens.length < 3 || !doApplySymmetry)
       return;
-    float a = 10 * parseFloatStr(tokens[0]);
-    float b = 10 * parseFloatStr(tokens[1]);
-    float c = 10 * parseFloatStr(tokens[2]);
+    double a = 10 * parseDoubleStr(tokens[0]);
+    double b = 10 * parseDoubleStr(tokens[1]);
+    double c = 10 * parseDoubleStr(tokens[2]);
     setUnitCell(a, b, c, 90, 90, 90);
     setSpaceGroupName("P1");
     Atom[] atoms = asc.atoms;
-    P3 pt = P3.new3(0.5f, 0.5f, 0.5f);
+    P3d pt = P3d.new3(0.5, 0.5, 0.5);
     for (int i = asc.ac; --i >= 0;) {
       setAtomCoord(atoms[i]);
       atoms[i].add(pt);

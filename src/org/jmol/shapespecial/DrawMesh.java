@@ -31,8 +31,8 @@ import org.jmol.util.BSUtil;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 public class DrawMesh extends Mesh {
 
@@ -44,7 +44,7 @@ public class DrawMesh extends Mesh {
    */
   public DrawMesh(Viewer vwr, String thisID, short colix, int index) {
     drawType = EnumDrawType.NONE;
-    axis = V3.new3 (1, 0, 0);
+    axis = V3d.new3 (1, 0, 0);
     bsMeshesVisible =  new BS ();
     mesh1(vwr, thisID, colix, index);
   }
@@ -53,17 +53,17 @@ public class DrawMesh extends Mesh {
   public BS modelFlags;
   public EnumDrawType drawType;
   EnumDrawType[] drawTypes;
-  P3 ptCenters[];
-  V3 axis;
-  V3 axes[];
+  P3d ptCenters[];
+  V3d axis;
+  V3d axes[];
   int drawVertexCount;
   int[] drawVertexCounts;
   boolean isFixed;
   public boolean isVector;
-  public float drawArrowScale;
+  public double drawArrowScale;
   public boolean noHead;
   public boolean isBarb;
-  public float scale = 1;
+  public double scale = 1;
   public boolean isScaleSet;
 
   public int fontID = -1;
@@ -85,7 +85,7 @@ public class DrawMesh extends Mesh {
   }
 
   final void setCenter(int iModel) {
-    P3 center = P3.new3(0, 0, 0);
+    P3d center = P3d.new3(0, 0, 0);
     int iptlast = -1;
     int ipt = 0;
     int n = 0;
@@ -103,7 +103,7 @@ public class DrawMesh extends Mesh {
         n++;
       }
       if (n > 0 && (i == iModel || i == 0)) {
-        center.scale(1.0f / n);
+        center.scale(1.0d / n);
         if (mat4 != null)
           mat4.rotTrans(center);
         break;
@@ -116,7 +116,7 @@ public class DrawMesh extends Mesh {
     }
   }
 
-  void offset(V3 offset) {
+  void offset(V3d offset) {
     rotateTranslate(null, offset, false);
     setCenters();
   }
@@ -128,8 +128,8 @@ public class DrawMesh extends Mesh {
     pis = (int[][]) AU.deleteElements(pis, modelIndex, 1);
     drawTypes = (EnumDrawType[]) AU.deleteElements(drawTypes, modelIndex, 1);
     drawVertexCounts = (int[]) AU.deleteElements(drawVertexCounts, modelIndex, 1);
-    ptCenters = (P3[]) AU.deleteElements(ptCenters, modelIndex, 1);
-    axes = (V3[]) AU.deleteElements(axes, modelIndex, 1);
+    ptCenters = (P3d[]) AU.deleteElements(ptCenters, modelIndex, 1);
+    axes = (V3d[]) AU.deleteElements(axes, modelIndex, 1);
     BS bs = BSUtil.newAndSetBit(modelIndex);
     BSUtil.deleteBits(modelFlags, bs);
     //no! title = (String[]) ArrayUtil.deleteElements(title, modelIndex, 1);

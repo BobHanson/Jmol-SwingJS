@@ -30,10 +30,10 @@ import org.jmol.util.Font;
 
 import javajs.util.Lst;
 import javajs.util.SB;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import org.jmol.util.Logger;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
@@ -94,14 +94,14 @@ public abstract class Shape {
   abstract public void setProperty(String propertyName, Object value, BS bsSelected);
 
   //public Shape () {
-  //  System.out.println("Shape " + this + " constructed");
+  //System.out.println("Shape " + this + " constructed");
   //}
   
   //public void finalize() {
-  //  System.out.println("Shape " + shapeID + " " + this + " finalized");
+  //System.out.println("Shape " + shapeID + " " + this + " finalized");
   //}
   
-  public static final float RADIUS_MAX = 4;
+  public static final double RADIUS_MAX = 4;
   public Viewer vwr; //public for now for Backbone
   public ModelSet ms;
   public int shapeID;
@@ -113,7 +113,7 @@ public abstract class Shape {
   // Sticks, Dipoles, BioShape
   // MeshCollection: Draw, CGO, Isosurface, LcaoCartoon, MolecularOrbital, Pmesh 
 
-  protected float translucentLevel;
+  protected double translucentLevel;
   public boolean translucentAllowed = true;
   public boolean isBioShape;
   public BS bsSizeSet;
@@ -210,7 +210,7 @@ public abstract class Shape {
       return;
     }
     if (propertyName == "translucentLevel") {
-      translucentLevel = ((Float) value).floatValue();
+      translucentLevel = ((Number) value).doubleValue();
       return;
     }
 
@@ -284,7 +284,7 @@ public abstract class Shape {
    * @param pointMin
    * @param pointMax
    */
-  public void checkBoundsMinMax(P3 pointMin, P3 pointMax) {
+  public void checkBoundsMinMax(P3d pointMin, P3d pointMax) {
   }
 
   public void setAtomClickability() {
@@ -329,7 +329,7 @@ public abstract class Shape {
     return false;
   }
 
-  protected int coordinateInRange(int x, int y, T3 vertex, int dmin2, P3i ptXY) {
+  protected int coordinateInRange(int x, int y, T3d vertex, int dmin2, P3i ptXY) {
     vwr.tm.transformPtScr(vertex, ptXY);
     int d2 = (x - ptXY.x) * (x - ptXY.x) + (y - ptXY.y) * (y - ptXY.y);
     return (d2 < dmin2 ? d2 : -1);

@@ -2,7 +2,7 @@ package org.jmol.scriptext;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import javajs.util.BS;
 import org.jmol.script.SV;
@@ -56,15 +56,19 @@ public abstract class ScriptExt {
     return e.paramAsStr(i);
   }
 
-  protected P3 centerParameter(int i) throws ScriptException {
+  protected P3d centerParameter(int i) throws ScriptException {
     return e.centerParameter(i, null);
   }
 
-  protected float floatParameter(int i) throws ScriptException {
+  protected double floatParameter(int i) throws ScriptException {
     return e.floatParameter(i);
   }
 
-  protected P3 getPoint3f(int i, boolean allowFractional) throws ScriptException {
+  protected double doubleParameter(int i) throws ScriptException {
+    return e.doubleParameter(i);
+  }
+
+  protected P3d getPoint3f(int i, boolean allowFractional) throws ScriptException {
     return e.getPoint3f(i, allowFractional, true);
   }
 
@@ -121,15 +125,15 @@ public abstract class ScriptExt {
    * 
    * @throws ScriptException
    */
-  protected float getColorTrans(ScriptEval eval, int i, boolean allowNone, int ret[]) throws ScriptException {
-    float translucentLevel = Float.MAX_VALUE;
+  protected double getColorTrans(ScriptEval eval, int i, boolean allowNone, int ret[]) throws ScriptException {
+    double translucentLevel = Double.MAX_VALUE;
     if (eval.theTok != T.color)
       --i;
     switch (tokAt(i + 1)) {
     case T.translucent:
       i++;
       translucentLevel = (isFloatParameter(i + 1) ? eval.getTranslucentLevel(++i)
-          : vwr.getFloat(T.defaulttranslucent));
+          : vwr.getDouble(T.defaulttranslucent));
       break;
     case T.opaque:
       i++;
@@ -141,7 +145,7 @@ public abstract class ScriptExt {
     } else if (tokAt(i + 1) == T.none) {
       ret[0] = 0;
       eval.iToken = i + 1;
-    } else if (translucentLevel == Float.MAX_VALUE) {
+    } else if (translucentLevel == Double.MAX_VALUE) {
       invArg();
     } else {
       ret[0] = Integer.MIN_VALUE;
@@ -151,7 +155,7 @@ public abstract class ScriptExt {
   }
 
   protected void finalizeObject(int shapeID, int colorArgb,
-                                float translucentLevel, int intScale,
+                                double translucentLevel, int intScale,
                                 boolean doSet, Object data,
                                 int iptDisplayProperty, BS bs)
          throws ScriptException {
@@ -160,7 +164,7 @@ public abstract class ScriptExt {
        }
        if (colorArgb != Integer.MIN_VALUE)
          e.setShapePropertyBs(shapeID, "color", Integer.valueOf(colorArgb), bs);
-       if (translucentLevel != Float.MAX_VALUE)
+       if (translucentLevel != Double.MAX_VALUE)
          e.setShapeTranslucency(shapeID, "", "translucent", translucentLevel, bs);
        if (intScale != 0) {
          setShapeProperty(shapeID, "scale", Integer.valueOf(intScale));
@@ -185,8 +189,8 @@ public abstract class ScriptExt {
     return faces;
   }
 
-  protected P3[] getAllPoints(int index, int nmin) throws ScriptException {
-    P3[] points = null;
+  protected P3d[] getAllPoints(int index, int nmin) throws ScriptException {
+    P3d[] points = null;
     BS bs = null;
     try {
       switch (e.tokAt(index)) {
@@ -212,8 +216,8 @@ public abstract class ScriptExt {
 
   }
 
-  protected P3[] bsToArray(BS bs) {
-    P3[] p = new P3[bs.cardinality()];
+  protected P3d[] bsToArray(BS bs) {
+    P3d[] p = new P3d[bs.cardinality()];
     for (int i = bs.nextSetBit(0), pt = 0; i >= 0; i = bs.nextSetBit(i + 1))
       p[pt++] = vwr.ms.at[i];
     return p;

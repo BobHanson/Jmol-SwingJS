@@ -682,19 +682,22 @@ public class FileManager implements BytePoster {
         return bis;
       if (Rdr.isPngZipStream(bis))
         bis = ZipTools.getPngZipStream(bis, true);
+      Object o = null;
       if (Rdr.isZipS(bis)) {
         if (allowZipStream)
           return ZipTools.newZipInputStream(bis);
-        Object o = ZipTools.getZipFileDirectory(bis, subFileList, 1,
+        o = ZipTools.getZipFileDirectory(bis, subFileList, 1,
             forceInputStream);
-        return (o instanceof String ? Rdr.getBR((String) o) : o);
-      }
-      if (Rdr.isTar(bis)) {
-        Object o = ZipTools.getZipFileDirectory(bis, subFileList, 1,
+      } else if (Rdr.isTar(bis)) {
+        o = ZipTools.getZipFileDirectory(bis, subFileList, 1,
             forceInputStream);
-        return (o instanceof String ? Rdr.getBR((String) o) : o);
+      } 
+
+      if (o != null) {
+        if (!(o instanceof BufferedInputStream))
+          return (o instanceof String ? Rdr.getBR((String) o) : o);          
+        bis = ZipTools.getUnzippedInputStream((BufferedInputStream) o);
       }
-      
       return (forceInputStream ? bis : Rdr.getBufferedReader(bis, null));
     } catch (Exception ioe) {
       return ioe.toString();

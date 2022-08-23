@@ -8,10 +8,10 @@ import org.jmol.viewer.Viewer;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.SB;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.V3;
-import javajs.util.T3;
+import javajs.util.M4d;
+import javajs.util.P3d;
+import javajs.util.V3d;
+import javajs.util.T3d;
 
 public class MeshSurface {
   
@@ -30,7 +30,7 @@ public class MeshSurface {
   }
 
 
-  public V3[] oabc;
+  public V3d[] oabc;
 
   public String meshType;
 
@@ -41,11 +41,11 @@ public class MeshSurface {
   /**
    * vertices
    */
-  public T3[] vs;
+  public T3d[] vs;
   /**
    * vertex values
    */
-  public float[] vvs;
+  public double[] vvs;
   public int[] vertexSource;
   public BS surfaceAtoms;
   
@@ -58,7 +58,7 @@ public class MeshSurface {
    * polygon indexes
    */
   public int[][] pis;
-  //public float[] polygonTranslucencies;
+  //public double[] polygonTranslucencies;
 
   public boolean colorsExplicit;
 
@@ -68,8 +68,8 @@ public class MeshSurface {
   public short colixBack;
 
   public boolean isColorSolid = true;
-  public P3 offset;
-  public T3[] altVertices;
+  public P3d offset;
+  public T3d[] altVertices;
 
   /**
    * polygon color index "colix" array
@@ -79,12 +79,12 @@ public class MeshSurface {
    * vertex color index "colix" array
    */
   public short[] vcs;
-  public T3[] normals; // for export only or for cartoons
-  public V3[] normalsTemp; // for cartoons
+  public T3d[] normals; // for export only or for cartoons
+  public V3d[] normalsTemp; // for cartoons
   public int normalCount; // for export only
   public int normixCount;
   public BS bsPolygons;
-  public M4 mat4;
+  public M4d mat4;
   public BS[] surfaceSet;
   public int[] vertexSets;
   public int nSets = 0;
@@ -94,9 +94,9 @@ public class MeshSurface {
   public MeshSurface() {
   }
 
-  public static MeshSurface newMesh(boolean isAlt, T3[] vertices,
+  public static MeshSurface newMesh(boolean isAlt, T3d[] vertices,
                                     int vertexCount, int[][] polygonIndexes,
-                                    T3[] normals, int nNormals) {
+                                    T3d[] normals, int nNormals) {
     MeshSurface ms = new MeshSurface();
     ms.pis = polygonIndexes;
     if (isAlt)
@@ -113,7 +113,7 @@ public class MeshSurface {
   /**
    * @return The vertices.
    */
-  public T3[] getVertices() {
+  public T3d[] getVertices() {
     return (altVertices == null ? vs : altVertices);
   }
 
@@ -132,12 +132,12 @@ public class MeshSurface {
     this.colixBack = colix;
   }
 
-  public int addV(T3 vertex, boolean asCopy) { //used by mps and surfaceGenerator
+  public int addV(T3d vertex, boolean asCopy) { //used by mps and surfaceGenerator
     if (vc == 0)
-      vs = new T3[SEED_COUNT];
+      vs = new T3d[SEED_COUNT];
     else if (vc == vs.length)
-      vs = (T3[]) AU.doubleLength(vs);
-    vs[vc] = (asCopy ? P3.newP(vertex) : vertex);
+      vs = (T3d[]) AU.doubleLength(vs);
+    vs[vc] = (asCopy ? P3d.newP(vertex) : vertex);
     return vc++;
   }
 
@@ -158,11 +158,11 @@ public class MeshSurface {
       pis = AU.newInt2(polygonCount);
   }
 
-  public int addVCVal(T3 vertex, float value, boolean asCopy) {
+  public int addVCVal(T3d vertex, double value, boolean asCopy) {
     if (vc == 0)
-      vvs = new float[SEED_COUNT];
+      vvs = new double[SEED_COUNT];
     else if (vc >= vvs.length)
-      vvs = AU.doubleLengthF(vvs);
+      vvs = AU.doubleLengthD(vvs);
     vvs[vc] = value;
     return addV(vertex, asCopy);
   }
@@ -171,9 +171,8 @@ public class MeshSurface {
                               int iContour, int color) {
     return (vs == null
         || vvs != null
-        && (Float.isNaN(vvs[vertexA]) || Float.isNaN(vvs[vertexB]) || Float
-            .isNaN(vvs[vertexC])) || Float.isNaN(vs[vertexA].x)
-        || Float.isNaN(vs[vertexB].x) || Float.isNaN(vs[vertexC].x) ? -1
+        && (Double.isNaN(vvs[vertexA]) || Double.isNaN(vvs[vertexB]) || Double.isNaN(vvs[vertexC])) || Double.isNaN(vs[vertexA].x)
+        || Double.isNaN(vs[vertexB].x) || Double.isNaN(vs[vertexC].x) ? -1
         : addPolygonV3(vertexA, vertexB, vertexC, check, iContour, color, null));
   }
 
@@ -237,8 +236,8 @@ public class MeshSurface {
     iA = polygon[0];
     iB = polygon[1];
     iC = polygon[2];
-    return (vvs == null || !Float.isNaN(vvs[iA]) && !Float.isNaN(vvs[iB])
-        && !Float.isNaN(vvs[iC]) ? polygon : null);
+    return (vvs == null || !Double.isNaN(vvs[iA]) && !Double.isNaN(vvs[iB])
+        && !Double.isNaN(vvs[iC]) ? polygon : null);
   }
 
   public int polygonCount0;
@@ -262,7 +261,7 @@ public class MeshSurface {
   }
 
 //  public void setSlab(BS bsDisplay, BS bsGhost, String type, String color,
-//                      float translucency) {
+//                      double translucency) {
 //    bsSlabDisplay = bsDisplay;
 //    bsSlabGhost = bsGhost;
 //    slabMeshType = (type.equalsIgnoreCase("mesh") ? T.mesh : T.fill);
@@ -283,7 +282,7 @@ public class MeshSurface {
 
 //  public void resetTransPolygons() {
 //    boolean isTranslucent = C.isColixTranslucent(colix);
-//    float translucentLevel = C.getColixTranslucencyFractional(colix);
+//    double translucentLevel = C.getColixTranslucencyFractional(colix);
 //    for (int i = 0; i < pc; i++)
 //      if (bsTransPolygons.get(i)) {
 //        if (!setABC(i))
@@ -301,7 +300,7 @@ public class MeshSurface {
 
   public void resetSlab() {
     if (slicer != null)
-      slicer.slabPolygons(TempArray.getSlabObjectType(T.none, null, false, null), false);
+      slicer.slabPolygons(MeshSurface.getSlabObjectType(T.none, null, false, null), false);
   }
 
   public void slabPolygonsList(Lst<Object[]> slabInfo, boolean allowCap) {
@@ -314,7 +313,7 @@ public class MeshSurface {
   /**
    * @param unitCellVectors
    */
-  protected void slabBrillouin(P3[] unitCellVectors) {
+  protected void slabBrillouin(P3d[] unitCellVectors) {
     // isosurfaceMesh only
     return;
   }
@@ -323,7 +322,7 @@ public class MeshSurface {
   public int mergePolygonCount0;
   public boolean isMerged;
 
-  public float getResolution() {
+  public double getResolution() {
     return 0; // overridden in IsosurfaceMesh
   }
   /**
@@ -343,18 +342,18 @@ public class MeshSurface {
     for (int i = 0, fpt = 0; i < nFaces; i++) {
       faces[i] = new int[] { f[fpt++], f[fpt++], f[fpt++] };
     }
-    V3[] vectors = new V3[vertexCount];
+    V3d[] vectors = new V3d[vertexCount];
     for (int i = 0; i < vertexCount; i++)
       vectors[i] = Geodesic.getVertexVector(i);
     return newMesh(true, vectors, 0, faces, vectors, 0);
   }
 
-  public void setBox(P3 xyzMin, P3 xyzMax) {
-    xyzMin.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
-    xyzMax.set(-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
+  public void setBox(P3d xyzMin, P3d xyzMax) {
+    xyzMin.set(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+    xyzMax.set(-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE);
     for (int i = 0; i < vc; i++) {
-      T3 p = vs[i];
-      if (!Float.isNaN(p.x))
+      T3d p = vs[i];
+      if (!Double.isNaN(p.x))
         BoxInfo.addPoint(p, xyzMin, xyzMax, 0);
     }
   }
@@ -362,11 +361,20 @@ public class MeshSurface {
   /**
    * @param boundBoxPoints  
    */
-  public void setBoundingBox(P3[] boundBoxPoints) {
+  public void setBoundingBox(P3d[] boundBoxPoints) {
     // isosurfaceMesh only
   }
 
-  public static float getSphericalInterpolationFraction(double r,
+  public static Object[] getSlabObjectType(int tok, Object data, boolean isCap, Object colorData) {
+    return new Object[] { Integer.valueOf(tok), data, Boolean.valueOf(isCap), colorData };
+  }
+
+  public static Object[] getSlabWithinRange(double min, double max) {
+    return new Object[] { Integer.valueOf(T.range), 
+        new Double[] {Double.valueOf(min), Double.valueOf(max)}, Boolean.FALSE, null };
+  }
+
+  public static double getSphericalInterpolationFraction(double r,
                                                         double valueA,
                                                         double valueB, double d) {
     double ra = Math.abs(r + valueA) / d;
@@ -376,7 +384,7 @@ public class MeshSurface {
     double q = ra2 - rb * rb + 1;
     double p = 4 * (r * r - ra2);
     double factor = (ra < rb ? 1 : -1);
-    return (float) (((q) + factor * Math.sqrt(q * q + p)) / 2);
+    return (((q) + factor * Math.sqrt(q * q + p)) / 2);
   }
 
 }

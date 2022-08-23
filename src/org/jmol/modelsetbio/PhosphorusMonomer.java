@@ -24,9 +24,9 @@
 package org.jmol.modelsetbio;
 
 
-import javajs.util.P3;
-import javajs.util.Quat;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.Qd;
+import javajs.util.V3d;
 
 import org.jmol.c.STR;
 import org.jmol.modelset.Chain;
@@ -39,7 +39,7 @@ public class PhosphorusMonomer extends Monomer {
 
   private final static byte[] phosphorusOffsets = { P };
 
-  private static float MAX_ADJACENT_PHOSPHORUS_DISTANCE = 8.0f;
+  private static double MAX_ADJACENT_PHOSPHORUS_DISTANCE = 8.0d;
  
   @Override
   public final boolean isNucleic() {return true;}
@@ -111,37 +111,37 @@ public class PhosphorusMonomer extends Monomer {
       return true;
     // 1PN8 73:d and 74:d are 7.001 angstroms apart
     // but some P atoms are up to 7.4 angstroms apart
-    float distance =
+    double distance =
       getLeadAtom().distance(possiblyPreviousMonomer.getLeadAtom());
     return distance <= MAX_ADJACENT_PHOSPHORUS_DISTANCE;
   }
 
   @Override
-  public Quat getQuaternion(char qType) {
+  public Qd getQuaternion(char qType) {
     return getQuaternionP();
   }
   
-  protected Quat getQuaternionP() {
+  protected Qd getQuaternionP() {
     //vA = ptP(i+1) - ptP
     //vB = ptP(i-1) - ptP
     int i = monomerIndex;
     if (i <= 0 || i >= bioPolymer.monomerCount - 1)
       return null;
-    P3 ptP = bioPolymer.monomers[i].getAtomFromOffsetIndex(P);
-    P3 ptA, ptB;
+    P3d ptP = bioPolymer.monomers[i].getAtomFromOffsetIndex(P);
+    P3d ptA, ptB;
     ptA = bioPolymer.monomers[i + 1].getAtomFromOffsetIndex(P);
     ptB = bioPolymer.monomers[i - 1].getAtomFromOffsetIndex(P);
     if (ptP == null || ptA == null || ptB == null)
       return null;
-    V3 vA = new V3();
-    V3 vB = new V3();
+    V3d vA = new V3d();
+    V3d vB = new V3d();
     vA.sub2(ptA, ptP);
     vB.sub2(ptB, ptP);
-    return Quat.getQuaternionFrameV(vA, vB, null, false);
+    return Qd.getQuaternionFrameV(vA, vB, null, false);
   }
 
   @Override
-  P3 getQuaternionFrameCenter(char qType) {
+  P3d getQuaternionFrameCenter(char qType) {
     return getAtomFromOffsetIndex(P);
   }
   

@@ -30,8 +30,8 @@ public class MagresReader extends AtomSetCollectionReader {
 
   private int currentBlock = BLOCK_NONE;
 
-  private float[] cellParams;
-  //private static float maxIso = 10000; // the old code was checking for this.
+  private double[] cellParams;
+  //private static double maxIso = 10000; // the old code was checking for this.
   
   private Map<String, String> magresUnits = new Hashtable<String, String>();
   private Lst<Tensor> interactionTensors = new Lst<Tensor>();
@@ -213,9 +213,9 @@ public class MagresReader extends AtomSetCollectionReader {
    */
   private boolean readCellParams() throws Exception {
     String[] tokens = getTokens();   
-    cellParams = new float[9];
+    cellParams = new double[9];
     for (int i = 0; i < 9; i++)
-      cellParams[i] = parseFloatStr(tokens[i + 1]);
+      cellParams[i] = parseDoubleStr(tokens[i + 1]);
     addExplicitLatticeVector(0, cellParams, 0);
     addExplicitLatticeVector(1, cellParams, 3);
     addExplicitLatticeVector(2, cellParams, 6);
@@ -237,16 +237,16 @@ public class MagresReader extends AtomSetCollectionReader {
     String units = magresUnits.get("atom");
     if (units == null)
       return true;
-    float f = (units.startsWith("A") ? 1 : ANGSTROMS_PER_BOHR);
+    double f = (units.startsWith("A") ? 1 : ANGSTROMS_PER_BOHR);
     String[] tokens = getTokens();
     Atom atom = new Atom();
     int pt = 1;
     atom.elementSymbol = tokens[pt++];
     atom.atomName = getAtomName(tokens[pt++], tokens[pt++]);
     asc.addAtomWithMappedName(atom);
-    float x = parseFloatStr(tokens[pt++]) * f;
-    float y = parseFloatStr(tokens[pt++]) * f;
-    float z = parseFloatStr(tokens[pt++]) * f;
+    double x = parseDoubleStr(tokens[pt++]) * f;
+    double y = parseDoubleStr(tokens[pt++]) * f;
+    double z = parseDoubleStr(tokens[pt++]) * f;
     atom.set(x, y, z);
     setAtomCoord(atom);
     return true;
@@ -283,10 +283,10 @@ public class MagresReader extends AtomSetCollectionReader {
     if (tokens.length == 10) {
       // raw vector - you get ONE
       magresUnits.remove(type);
-      float[] data = new float[9];
+      double[] data = new double[9];
       for (int i = 0; i < 9;)
-        data[i] = parseFloatStr(tokens[++i]);
-      Logger.info("Magres reader creating magres_" + type + ": " + Escape.eAF(data));
+        data[i] = parseDoubleStr(tokens[++i]);
+      Logger.info("Magres reader creating magres_" + type + ": " + Escape.eAD(data));
       asc.setCurrentModelInfo("magres_" + type, data);
     }
     String atomName1 = getAtomName(tokens[1], tokens[2]);

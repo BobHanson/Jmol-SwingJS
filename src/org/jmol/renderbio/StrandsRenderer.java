@@ -25,7 +25,7 @@
 package org.jmol.renderbio;
 
 
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import org.jmol.shapebio.BioShape;
 import org.jmol.shapebio.Strands;
@@ -33,8 +33,8 @@ import org.jmol.shapebio.Strands;
 public class StrandsRenderer extends BioShapeRenderer {
 
   protected int strandCount = 1;
-  protected float strandSeparation;
-  protected float baseStrandOffset;
+  protected double strandSeparation;
+  protected double baseStrandOffset;
 
   @Override
   protected void renderBioShape(BioShape bioShape) {
@@ -51,16 +51,16 @@ public class StrandsRenderer extends BioShapeRenderer {
     if (wingVectors == null)
       return false;
     strandCount = (shape instanceof Strands ? vwr.getStrandCount(((Strands) shape).shapeID) : 10);
-    strandSeparation = (strandCount <= 1) ? 0 : 1f / (strandCount - 1);
+    strandSeparation = (strandCount <= 1) ? 0 : 1d / (strandCount - 1);
     baseStrandOffset = ((strandCount & 1) == 0 ? strandSeparation / 2
         : strandSeparation);
     return true;
   }
 
   protected void renderStrands() {
-    P3[] screens;
+    P3d[] screens;
     for (int i = strandCount >> 1; --i >= 0;) {
-      float f = (i * strandSeparation) + baseStrandOffset;
+      double f = (i * strandSeparation) + baseStrandOffset;
       screens = calcScreens(f, mads);
       renderStrand(screens);
       vwr.freeTempPoints(screens);
@@ -69,13 +69,13 @@ public class StrandsRenderer extends BioShapeRenderer {
       vwr.freeTempPoints(screens);
     }
     if (strandCount % 2 == 1) {
-      screens = calcScreens(0f, mads);
+      screens = calcScreens(0d, mads);
       renderStrand(screens);
       vwr.freeTempPoints(screens);
     }
   }
 
-  private void renderStrand(P3[] screens) {
+  private void renderStrand(P3d[] screens) {
     for (int i = bsVisible.nextSetBit(0); i >= 0; i = bsVisible.nextSetBit(i + 1))
       renderHermiteCylinder(screens, i);
   }

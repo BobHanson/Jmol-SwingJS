@@ -314,27 +314,27 @@ public class XmlCmlReader extends XmlReader {
           coords3D = true;
           breakOutAtomTokens(val);
           for (int i = tokenCount; --i >= 0;)
-            atomArray[i].x = parseFloatStr(tokens[i]);
+            atomArray[i].x = parseDoubleStr(tokens[i]);
           if ((val = atts.get("y3")) != null) {
             breakOutAtomTokens(val);
             for (int i = tokenCount; --i >= 0;)
-              atomArray[i].y = parseFloatStr(tokens[i]);
+              atomArray[i].y = parseDoubleStr(tokens[i]);
           }
           if ((val = atts.get("z3")) != null) {
             breakOutAtomTokens(val);
             for (int i = tokenCount; --i >= 0;)
-              atomArray[i].z = parseFloatStr(tokens[i]);
+              atomArray[i].z = parseDoubleStr(tokens[i]);
           }
         } else {
           if ((val = atts.get("x2")) != null) {
             breakOutAtomTokens(val);
             for (int i = tokenCount; --i >= 0;)
-              atomArray[i].x = parseFloatStr(tokens[i]);
+              atomArray[i].x = parseDoubleStr(tokens[i]);
           }
           if ((val = atts.get("y2")) != null) {
             breakOutAtomTokens(val);
             for (int i = tokenCount; --i >= 0;)
-              atomArray[i].y = parseFloatStr(tokens[i]);
+              atomArray[i].y = parseDoubleStr(tokens[i]);
           }
         }
         if ((val = atts.get("elementtype")) != null) {
@@ -395,13 +395,13 @@ public class XmlCmlReader extends XmlReader {
         if ((val = atts.get("xfract")) != null
             && (parent.iHaveUnitCell || !atts.containsKey("x3"))) {
           parent.setFractionalCoordinates(true);
-          atom.set(parseFloatStr(val), parseFloatStr(atts.get("yfract")),
-              parseFloatStr(atts.get("zfract")));
+          atom.set(parseDoubleStr(val), parseDoubleStr(atts.get("yfract")),
+              parseDoubleStr(atts.get("zfract")));
         } else if ((val = atts.get("x3")) != null) {
-          atom.set(parseFloatStr(val), parseFloatStr(atts.get("y3")),
-              parseFloatStr(atts.get("z3")));
+          atom.set(parseDoubleStr(val), parseDoubleStr(atts.get("y3")),
+              parseDoubleStr(atts.get("z3")));
         } else if ((val = atts.get("x2")) != null) {
-          atom.set(parseFloatStr(val), parseFloatStr(atts.get("y2")), 0);
+          atom.set(parseDoubleStr(val), parseDoubleStr(atts.get("y2")), 0);
         }
         if ((val = atts.get("elementtype")) != null) {
           String sym = val;
@@ -498,11 +498,11 @@ public class XmlCmlReader extends XmlReader {
         if (tokens.length != 3 || cellParameterType == null) {
         } else if (cellParameterType.equals("length")) {
           for (int i = 0; i < 3; i++)
-            parent.setUnitCellItem(i, parseFloatStr(tokens[i]));
+            parent.setUnitCellItem(i, parseDoubleStr(tokens[i]));
           break;
         } else if (cellParameterType.equals("angle")) {
           for (int i = 0; i < 3; i++)
-            parent.setUnitCellItem(i + 3, parseFloatStr(tokens[i]));
+            parent.setUnitCellItem(i + 3, parseDoubleStr(tokens[i]));
           break;
         }
         // if here, then something is wrong
@@ -534,7 +534,7 @@ public class XmlCmlReader extends XmlReader {
       }
       break;
     case LATTICE_VECTOR:
-      float[] values = getTokensFloat(chars.toString(), null, 3);
+      double[] values = getTokensDouble(chars.toString(), null, 3);
       parent.addExplicitLatticeVector(latticeVectorPtr, values, 0);
       latticeVectorPtr = (latticeVectorPtr + 1) % 3;
       setKeepChars(false);
@@ -606,7 +606,7 @@ public class XmlCmlReader extends XmlReader {
       if (name.equals("scalar")) {
         state = MOLECULE_ATOM;
         if ("jmol:charge".equals(scalarDictRef)) {
-          atom.partialCharge = parseFloatStr(chars.toString());
+          atom.partialCharge = parseDoubleStr(chars.toString());
         } else if (scalarDictRef != null
             && "_atom_site_label".equals(scalarDictValue)) {
           if (atomIdNames == null)
@@ -621,11 +621,11 @@ public class XmlCmlReader extends XmlReader {
     case MOLECULE_ATOM_BUILTIN:
       state = MOLECULE_ATOM;
       if (scalarDictValue.equals("x3"))
-        atom.x = parseFloatStr(chars.toString());
+        atom.x = parseDoubleStr(chars.toString());
       else if (scalarDictValue.equals("y3"))
-        atom.y = parseFloatStr(chars.toString());
+        atom.y = parseDoubleStr(chars.toString());
       else if (scalarDictValue.equals("z3"))
-        atom.z = parseFloatStr(chars.toString());
+        atom.z = parseDoubleStr(chars.toString());
       else if (scalarDictValue.equals("elementType"))
         atom.elementSymbol = chars.toString();
       setKeepChars(false);
@@ -726,14 +726,14 @@ public class XmlCmlReader extends XmlReader {
   private void checkUnitCellItem(String[] tags, String value) {
     for (int i = tags.length; --i >= 0;)
       if (value.equals(tags[i])) {
-        parent.setUnitCellItem(i, parseFloatStr(chars.toString()));
+        parent.setUnitCellItem(i, parseDoubleStr(chars.toString()));
         return;
       }
   }
 
   private void addAtom(Atom atom) {
     if ((atom.elementSymbol == null && atom.elementNumber < 0)
-        || Float.isNaN(atom.z))
+        || Double.isNaN(atom.z))
       return;
     parent.setAtomCoord(atom);
     if (htModelAtomMap != null)
@@ -745,8 +745,8 @@ public class XmlCmlReader extends XmlReader {
   }
 
   private int parseBondToken(String str) {
-    float floatOrder = parseFloatStr(str);
-    if (Float.isNaN(floatOrder) && str.length() >= 1) {
+    double floatOrder = parseDoubleStr(str);
+    if (Double.isNaN(floatOrder) && str.length() >= 1) {
       str = str.toUpperCase();
       switch (str.charAt(0)) {
       case 'S':

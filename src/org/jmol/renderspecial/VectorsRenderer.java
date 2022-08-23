@@ -26,9 +26,9 @@
 package org.jmol.renderspecial;
 
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import org.jmol.api.JmolModulationSet;
 import org.jmol.modelset.Atom;
@@ -42,24 +42,24 @@ import org.jmol.util.Vibration;
 
 public class VectorsRenderer extends ShapeRenderer {
 
-  private final static float arrowHeadOffset = -0.2f;
+  private final static double arrowHeadOffset = -0.2d;
   private final Point3fi ptTemp = new Point3fi();
-  private final P3 pointVectorStart = new P3();
+  private final P3d pointVectorStart = new P3d();
   private final Point3fi pointVectorEnd = new Point3fi();
-  private final P3 pointArrowHead = new P3();
-  private final P3 screenVectorStart = new P3();
-  private final P3 screenVectorEnd = new P3();
-  private final P3 screenArrowHead = new P3();
-  private final V3 headOffsetVector = new V3();
-  private final P3 pTemp3 = new P3();
+  private final P3d pointArrowHead = new P3d();
+  private final P3d screenVectorStart = new P3d();
+  private final P3d screenVectorEnd = new P3d();
+  private final P3d screenArrowHead = new P3d();
+  private final V3d headOffsetVector = new V3d();
+  private final P3d pTemp3 = new P3d();
   
   
   private int diameter;
-  //float headWidthAngstroms;
+  //double headWidthAngstroms;
   private int headWidthPixels;
-  private float vectorScale;
+  private double vectorScale;
   private boolean vectorSymmetry;
-  private float headScale;
+  private double headScale;
   private boolean drawShaft;
   private Vibration vibTemp;
   private boolean vectorsCentered;
@@ -68,8 +68,8 @@ public class VectorsRenderer extends ShapeRenderer {
   private boolean drawCap;
   private boolean showModVecs;
   private int vectorTrail;
-  private P3 ptTemp4;
-  private P3 ptTemp2;
+  private P3d ptTemp4;
+  private P3d ptTemp2;
 
 
   @Override
@@ -82,7 +82,7 @@ public class VectorsRenderer extends ShapeRenderer {
       return false;
     short[] colixes = vectors.colixes;
     boolean needTranslucent = false;
-    vectorScale = vwr.getFloat(T.vectorscale);
+    vectorScale = vwr.getDouble(T.vectorscale);
     vectorTrail = vwr.getInt(T.vectortrail);
     if (vectorScale < 0)
       vectorScale = 1;
@@ -159,7 +159,7 @@ public class VectorsRenderer extends ShapeRenderer {
       vib = (Vibration) mod2;
     drawCap = true;
     if (!isMod) {
-      float len = vib.length();
+      double len = vib.length();
       // to have the vectors move when vibration is turned on
       if (Math.abs(len * vectorScale) < 0.01)
         return false;
@@ -180,14 +180,14 @@ public class VectorsRenderer extends ShapeRenderer {
       pointVectorEnd.setT(ptTemp);
       if (mod.isEnabled()) {
         if (vibrationOn) {
-          vwr.tm.getVibrationPoint(vib, pointVectorEnd, Float.NaN);
+          vwr.tm.getVibrationPoint(vib, pointVectorEnd, Double.NaN);
         }
-        mod.addTo(pointVectorStart, Float.NaN);
+        mod.addTo(pointVectorStart, Double.NaN);
       } else {
         mod.addTo(pointVectorEnd, 1);
       }
       headOffsetVector.sub2(pointVectorEnd, pointVectorStart);
-      float len = headOffsetVector.length();
+      double len = headOffsetVector.length();
       drawCap = (len + arrowHeadOffset > 0.001f);
       drawShaft = (len > 0.01f);
       headOffsetVector.scale(headScale / headOffsetVector.length());
@@ -200,10 +200,10 @@ public class VectorsRenderer extends ShapeRenderer {
       //        v = vibTemp;
       //        vibTemp.set(0,  0,  0);
       //        v.setTempPoint(vibTemp, null, 1, vwr.g.modulationScale);
-      //        vwr.tm.getVibrationPoint(vib, v, Float.NaN);
+      //        vwr.tm.getVibrationPoint(vib, v, Double.NaN);
       //      }
-      pointVectorEnd.scaleAdd2(0.5f * vectorScale, vib, ptTemp);
-      pointVectorStart.scaleAdd2(-0.5f * vectorScale, vib, ptTemp);
+      pointVectorEnd.scaleAdd2(0.5d * vectorScale, vib, ptTemp);
+      pointVectorStart.scaleAdd2(-0.5d * vectorScale, vib, ptTemp);
     } else {
       pointVectorEnd.scaleAdd2(vectorScale, vib, ptTemp);
       pointArrowHead.add2(pointVectorEnd, headOffsetVector);
@@ -239,15 +239,15 @@ public class VectorsRenderer extends ShapeRenderer {
   private void renderVector(Atom atom, Vibration vib) {
     if (vib != null && vectorTrail > 0) {// show trace
       if (ptTemp4 == null) {
-        ptTemp4 = new P3();
-        ptTemp2 = new P3();
+        ptTemp4 = new P3d();
+        ptTemp2 = new P3d();
       }
       int d = Math.max(1, diameter >> 2);
-      P3[] pts = vib.addTracePt(vectorTrail, vibrationOn ? pointVectorEnd : null);
+      P3d[] pts = vib.addTracePt(vectorTrail, vibrationOn ? pointVectorEnd : null);
       tm.transformPtScrT3(atom, ptTemp4);
       if (pts != null)
         for (int i = pts.length, p = vectorTrail; --i >= 0;) {
-          P3 pt = pts[--p];
+          P3d pt = pts[--p];
           if (pt == null)
             break;
           tm.transformPtScrT3(pt, ptTemp2);

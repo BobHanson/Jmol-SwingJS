@@ -41,11 +41,12 @@ import org.jmol.util.Tensor;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
+import javajs.util.V3d;
 
 public class Ellipsoids extends AtomShape {
 
@@ -139,7 +140,7 @@ public class Ellipsoids extends AtomShape {
   private BS selectedAtoms;
   private Lst<Ellipsoid> ellipsoidSet;
   
-  private float scale;
+  private double scale;
 
   @Override
   public int getIndexFromName(String thisID) {
@@ -236,7 +237,7 @@ public class Ellipsoids extends AtomShape {
   public void setProperty(String propertyName, Object value, BS bs) {
     //System.out.println(propertyName + " " + value + " " + bs);
     if (propertyName == "thisID") {
-      scale = Float.NaN;
+      scale = Double.NaN;
       if (initEllipsoids(value) && ellipsoidSet.size() == 0) {
         String id = (String) value;
         Ellipsoid e = Ellipsoid.getEmptyEllipsoid(id, vwr.am.cmi);
@@ -294,7 +295,7 @@ public class Ellipsoids extends AtomShape {
       if (selectedAtoms != null)
         bs = selectedAtoms;
       if (isOn) {
-        setSize(Float.isNaN(scale) ? Integer.MAX_VALUE : (int) (scale * 100), bs);
+        setSize(Double.isNaN(scale) ? Integer.MAX_VALUE : (int) (scale * 100), bs);
       }
       for (Ellipsoid e : atomEllipsoids.values()) {
         Tensor t = e.tensor;
@@ -336,7 +337,7 @@ public class Ellipsoids extends AtomShape {
     }
 
     if ("scale" == propertyName) {
-      scale = ((Float) value).floatValue();
+      scale = ((Number) value).doubleValue();
       setSize((int) (scale * 100), bs);
       return;
     }
@@ -368,7 +369,7 @@ public class Ellipsoids extends AtomShape {
   //    P3 ptCenter = new P3();
   //    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
   //      ptCenter.add(points[i]);
-  //    ptCenter.scale(1.0f/n);
+  //    ptCenter.scale(1.0d/n);
   //    double Sxx = 0, Syy = 0, Szz = 0, Sxy = 0, Sxz = 0, Syz = 0;
   //    P3 pt = new P3();
   //    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
@@ -386,7 +387,7 @@ public class Ellipsoids extends AtomShape {
   //    N[1][1] = Sxx + Szz;
   //    N[2][2] = Sxx + Syy;
   //    Eigen eigen = Eigen.newM(N);
-  //    ellipsoid.setEigen(ptCenter, eigen, 1f / n / 3);
+  //    ellipsoid.setEigen(ptCenter, eigen, 1d / n / 3);
   //  }
 
   private void setProp(Ellipsoid e, int mode, Object value) {
@@ -395,10 +396,10 @@ public class Ellipsoids extends AtomShape {
     switch (mode) {
     case 0: // axes
       e.setTensor(((Tensor) Interface.getUtil("Tensor", vwr, "script"))
-          .setFromAxes((V3[]) value));
+          .setFromAxes((V3d[]) value));
       break;
     case 1: // center
-      e.setCenter((P3) value);
+      e.setCenter((P3d) value);
       break;
     case 2: // color
       e.colix = C.getColixO(value);
@@ -423,10 +424,10 @@ public class Ellipsoids extends AtomShape {
       e.options = ((String) value).toLowerCase();
       break;
     case 8: // scale
-      if (value instanceof Float) {
-        e.setScale(((Float) value).floatValue(), false);
+      if (value instanceof Double) {
+        e.setScale(((Number) value).doubleValue(), false);
       } else {
-        e.scaleAxes((float[]) value);
+        e.scaleAxes((double[]) value);
       }
       break;
     case 9: // translucency
@@ -454,7 +455,7 @@ public class Ellipsoids extends AtomShape {
   }
 
   private void getStateID(SB sb) {
-    V3 v1 = new V3();
+    V3d v1 = new V3d();
     for (Ellipsoid ellipsoid : simpleEllipsoids.values()) {
       Tensor t = ellipsoid.tensor;
       if (!ellipsoid.isValid || t == null)

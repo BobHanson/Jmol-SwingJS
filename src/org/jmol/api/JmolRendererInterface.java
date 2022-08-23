@@ -8,11 +8,11 @@ import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
 
-import javajs.util.M3;
-import javajs.util.M4;
-import javajs.util.P3;
+import javajs.util.M3d;
+import javajs.util.M4d;
+import javajs.util.P3d;
 import javajs.util.P3i;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import org.jmol.viewer.Viewer;
 
@@ -24,15 +24,15 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
 
   public abstract boolean checkTranslucent(boolean isAlphaTranslucent);
 
-  public abstract void drawAtom(Atom atom, float radius);
+  public abstract void drawAtom(Atom atom, double radius);
 
-  public abstract void drawBond(P3 atomA, P3 atomB, short colixA,
+  public abstract void drawBond(P3d atomA, P3d atomB, short colixA,
                                 short colixB, byte endcaps, short mad, int bondOrder);
 
-  public abstract void drawDashedLineBits(int run, int rise, P3 screenA,
-                                      P3 screenB);
+  public abstract void drawDashedLineBits(int run, int rise, P3d screenA,
+                                      P3d screenB);
 
-  public abstract boolean drawEllipse(P3 ptAtom, P3 ptX, P3 ptY,
+  public abstract boolean drawEllipse(P3d ptAtom, P3d ptX, P3d ptY,
                                       boolean fillArc, boolean wireframeOnly);
 
   /**
@@ -51,13 +51,13 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
   public abstract void drawFilledCircle(short colixRing, short colixFill,
                                         int diameter, int x, int y, int z);
 
-  public abstract void drawHermite4(int tension, P3 s0, P3 s1,
-                                   P3 s2, P3 s3);
+  public abstract void drawHermite4(int tension, P3d s0, P3d s1,
+                                   P3d s2, P3d s3);
 
   public abstract void drawHermite7(boolean fill, boolean border, int tension,
-                                   P3 s0, P3 s1, P3 s2,
-                                   P3 s3, P3 s4, P3 s5,
-                                   P3 s6, P3 s7, int aspectRatio, short colixBack);
+                                   P3d s0, P3d s1, P3d s2,
+                                   P3d s3, P3d s4, P3d s5,
+                                   P3d s6, P3d s7, int aspectRatio, short colixBack);
 
   public abstract void drawImage(Object image, int x, int y, int z, int zslab,
                                  short bgcolix, int width, int height);
@@ -65,7 +65,7 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
   public abstract void drawLine(short colixA, short colixB, int x1, int y1,
                                 int z1, int x2, int y2, int z2);
 
-  public abstract void drawLineAB(P3 pointA, P3 pointB);
+  public abstract void drawLineAB(P3d pointA, P3d pointB);
 
   public abstract void drawLineXYZ(int x1, int y1, int z1, int x2, int y2, int z2);
 
@@ -141,38 +141,38 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
                                     P3i screenC, short colixC, int check);
 
   public abstract void fillConeScreen3f(byte endcap, int screenDiameter,
-                                     P3 screenBase, P3 screenTip, boolean isBarb);
+                                     P3d screenBase, P3d screenTip, boolean isBarb);
 
   public abstract void fillCylinder(byte endcaps, int diameter,
                                     P3i screenA, P3i screenB);
 
   public abstract void fillCylinderBits(byte endcaps, int diameter,
-                                        P3 screenA, P3 screenB);
+                                        P3d screenA, P3d screenB);
 
   public abstract void fillCylinderScreen3I(byte endcaps, 
-                                            int diameter, P3 s0f, P3 s1f, 
-                                          P3 pt0f, P3 pt1f, float radius);
+                                            int diameter, P3d s0d, P3d s1f, 
+                                          P3d pt0d, P3d pt1f, double radius);
 
   public abstract void fillCylinderBits2(short colixA, short colixB, byte endcaps,
-                                       int diameter, P3 screenA, P3 screenB);
+                                       int diameter, P3d screenA, P3d screenB);
 
   public abstract void fillCylinderXYZ(short colixA, short colixB, byte endcaps,
                                     int diameter, int xA, int yA, int zA,
                                     int xB, int yB, int zB);
 
-  public abstract void fillEllipsoid(P3 center, P3[] points, int x,
+  public abstract void fillEllipsoid(P3d center, P3d[] points, int x,
                                      int y, int z, int diameter,
-                                     M3 mToEllipsoidal, double[] coef,
-                                     M4 mDeriv, int selectedOctant,
-                                     P3[] octantPoints);
+                                     M3d mToEllipsoidal, double[] coef,
+                                     M4d mDeriv, int selectedOctant,
+                                     P3d[] octantPoints);
 
   public abstract void fillHermite(int tension, int diameterBeg,
                                    int diameterMid, int diameterEnd,
-                                   P3 s0, P3 s1, P3 s2,
-                                   P3 s3);
+                                   P3d s0, P3d s1, P3d s2,
+                                   P3d s3);
 
-  public abstract void fillQuadrilateral(P3 screenA, P3 screenB,
-                                         P3 screenC, P3 screenD, boolean isSolid);
+  public abstract void fillQuadrilateral(P3d screenA, P3d screenB,
+                                         P3d screenC, P3d screenD, boolean isSolid);
 
   /**
    * fills background rectangle for label
@@ -202,7 +202,7 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
    * @param center
    *        a javax.vecmath.Point3f ... floats are casted to ints
    */
-  public abstract void fillSphereBits(int diameter, P3 center);
+  public abstract void fillSphereBits(int diameter, P3d center);
 
   /**
    * fills a solid sphere
@@ -234,13 +234,13 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
                                     short colixB, short normixB,
                                     P3i screenC, short colixC, short normixC);
 
-  public abstract void fillTriangle3f(P3 screenA, P3 screenB,
-                                    P3 screenC, boolean setNoisy);
+  public abstract void fillTriangle3f(P3d screenA, P3d screenB,
+                                    P3d screenC, boolean setNoisy);
 
-  public abstract void fillTriangle3i(P3 screenA, P3 screenB,
-                                    P3 screenC, T3 ptA, T3 ptB, T3 ptC, boolean doShade);
+  public abstract void fillTriangle3i(P3d screenA, P3d screenB,
+                                    P3d screenC, T3d ptA, T3d ptB, T3d ptC, boolean doShade);
 
-  public abstract void fillTriangleTwoSided(short normix, P3 a, P3 b, P3 c);
+  public abstract void fillTriangleTwoSided(short normix, P3d a, P3d b, P3d c);
 
   public abstract String finalizeOutput();
 
@@ -268,8 +268,8 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
 
   public abstract void renderCrossHairs(int[] minMax, int screenWidth,
                                         int screenHeight,
-                                        P3 navigationOffset,
-                                        float navigationDepthPercent);
+                                        P3d navigationOffset,
+                                        double navigationDepthPercent);
 
   /**
    * sets current color from colix color index
@@ -284,11 +284,11 @@ public interface JmolRendererInterface extends JmolGraphicsInterface {
 
   public abstract void volumeRender4(int diam, int x, int y, int z);
 
-  public abstract void fillTriangle3CNBits(P3 pA, short colixA, short nA,
-                                           P3 pB, short colixB, short nB,
-                                           P3 pC, short colixC, short nC, boolean twoSided);
+  public abstract void fillTriangle3CNBits(P3d pA, short colixA, short nA,
+                                           P3d pB, short colixB, short nB,
+                                           P3d pC, short colixC, short nC, boolean twoSided);
 
-  public abstract void drawLineBits(short colixA, short colixB, P3 pointA, P3 pointB);
+  public abstract void drawLineBits(short colixA, short colixB, P3d pointA, P3d pointB);
 
 
 }

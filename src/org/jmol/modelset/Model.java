@@ -33,8 +33,8 @@ import javajs.util.BS;
 
 
 import javajs.util.AU;
-import javajs.util.M4;
-import javajs.util.P3;
+import javajs.util.M4d;
+import javajs.util.P3d;
 import javajs.util.SB;
 
 import org.jmol.util.BSUtil;
@@ -86,7 +86,7 @@ public class Model {
   /**
    * mat4 tracks the rotation/translation of the full model using  rotateSelected or translateSelected 
    */
-  public M4 mat4;
+  public M4d mat4;
   
   public int modelIndex; // our 0-based reference
   int fileIndex; // 0-based file reference
@@ -104,7 +104,7 @@ public class Model {
   public Properties properties;
   public SymmetryInterface biosymmetry;
   Map<String, Integer> dataFrames;
-  P3 translation;
+  P3d translation;
 
   int dataSourceFrame = -1;
 
@@ -142,7 +142,7 @@ public class Model {
   public final BS bsAtoms = new BS();
   public final BS bsAtomsDeleted = new BS();
 
-  float defaultRotationRadius;
+  double defaultRotationRadius;
   public long frameDelay;
   public int selectedTrajectory = -1;
 

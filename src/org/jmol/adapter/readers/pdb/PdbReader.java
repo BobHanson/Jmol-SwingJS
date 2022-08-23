@@ -39,8 +39,8 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 
 import javajs.util.Lst;
-import javajs.util.M4;
-import javajs.util.P3;
+import javajs.util.M4d;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -493,11 +493,11 @@ public class PdbReader extends AtomSetCollectionReader {
     Atom[] atoms = asc.atoms;
     boolean isResidual = false;
      for (int i = asc.ac; --i >= 0;) {
-      float[] anisou = tlsU.get(atoms[i]);
+      double[] anisou = tlsU.get(atoms[i]);
       if (anisou == null)
         continue;
-      float resid = anisou[7] - (anisou[0] + anisou[1] + anisou[2])/3f;
-      if (resid < 0 || Float.isNaN(resid)) {
+      double resid = anisou[7] - (anisou[0] + anisou[1] + anisou[2])/3;
+      if (resid < 0 || Double.isNaN(resid)) {
         isResidual = true; // can't be total
         break;
       }
@@ -505,13 +505,13 @@ public class PdbReader extends AtomSetCollectionReader {
      
      Logger.info("TLS analysis suggests Bfactors are " + (isResidual ? "" : "NOT") + " residuals");
 
-     for (Map.Entry<Atom, float[]> entry : tlsU.entrySet()) {
-       float[] anisou = entry.getValue();
-       float resid = anisou[7];
+     for (Map.Entry<Atom, double[]> entry : tlsU.entrySet()) {
+       double[] anisou = entry.getValue();
+       double resid = anisou[7];
        if (resid == 0)
          continue;
        if (!isResidual)
-         resid -= (anisou[0] + anisou[1] + anisou[2])/3f;         
+         resid -= (anisou[0] + anisou[1] + anisou[2])/3;         
        anisou[0] += resid;
        anisou[1] += resid;
        anisou[2] += resid;
@@ -519,10 +519,10 @@ public class PdbReader extends AtomSetCollectionReader {
        
        // check for equal: 
        
-       Logger.info("TLS-U:  " + Escape.eAF(anisou));
+       Logger.info("TLS-U:  " + Escape.eAD(anisou));
        anisou = (entry.getKey().anisoBorU);
        if (anisou != null)
-         Logger.info("ANISOU: " + Escape.eAF(anisou));       
+         Logger.info("ANISOU: " + Escape.eAD(anisou));       
      }
      tlsU = null;
   }
@@ -617,7 +617,7 @@ public class PdbReader extends AtomSetCollectionReader {
   private void setBiomoleculeAtomCounts() {
     for (int i = vBiomolecules.size(); --i >= 0;) {
       Map<String, Object> biomolecule = vBiomolecules.get(i);
-      Lst<M4> biomts = (Lst<M4>) biomolecule.get("biomts");
+      Lst<M4d> biomts = (Lst<M4d>) biomolecule.get("biomts");
       Lst<String> biomtchains = (Lst<String>) biomolecule.get("chains");
       int nTransforms = biomts.size();
       int nAtoms = 0;
@@ -663,7 +663,7 @@ public class PdbReader extends AtomSetCollectionReader {
 
 
  private boolean remark350() throws Exception {
-    Lst<M4> biomts = null;
+    Lst<M4d> biomts = null;
     Lst<String> biomtchains = null;
     vBiomolecules = new Lst<Map<String, Object>>();
     biomtChainAtomCounts = new int[255];
@@ -673,7 +673,7 @@ public class PdbReader extends AtomSetCollectionReader {
     boolean needLine = true;
     Map<String, Object> info = null;
     int nBiomt = 0;
-    M4 mIdent = M4.newM4(null);
+    M4d mIdent = M4d.newM4(null);
     while (true) {
       if (needLine)
         readHeader(true);
@@ -694,7 +694,7 @@ public class PdbReader extends AtomSetCollectionReader {
               id.length() == 3 ? id : Integer.valueOf(parseIntStr(id)));
           info.put("title", title);
           info.put("chains", biomtchains = new Lst<String>());
-          info.put("biomts", biomts = new Lst<M4>());
+          info.put("biomts", biomts = new Lst<M4d>());
           vBiomolecules.addLast(info);
           nBiomt = 0;
           //continue; need to allow for next IF, in case this is a reconstruction
@@ -730,18 +730,18 @@ public class PdbReader extends AtomSetCollectionReader {
 
         if (line.startsWith("REMARK 350   BIOMT1 ")) {
           nBiomt++;
-          float[] mat = new float[16];
+          double[] mat = new double[16];
           for (int i = 0; i < 12;) {
             String[] tokens = getTokens();
-            mat[i++] = parseFloatStr(tokens[4]);
-            mat[i++] = parseFloatStr(tokens[5]);
-            mat[i++] = parseFloatStr(tokens[6]);
-            mat[i++] = parseFloatStr(tokens[7]);
+            mat[i++] = parseDoubleStr(tokens[4]);
+            mat[i++] = parseDoubleStr(tokens[5]);
+            mat[i++] = parseDoubleStr(tokens[6]);
+            mat[i++] = parseDoubleStr(tokens[7]);
             if (i == 4 || i == 8)
               readHeader(true);
           }
           mat[15] = 1;
-          M4 m4 = new M4();
+          M4d m4 = new M4d();
           m4.setA(mat);
           if (m4.equals(mIdent)) {
             biomts.add(0, m4);
@@ -934,7 +934,7 @@ public class PdbReader extends AtomSetCollectionReader {
     return atom;
   }
   
-  protected void processAtom2(Atom atom, int serial, float x, float y, float z, int charge) {
+  protected void processAtom2(Atom atom, int serial, double x, double y, double z, int charge) {
     atom.atomSerial = serial;
     if (serial > maxSerial)
       maxSerial = serial;
@@ -993,11 +993,11 @@ public class PdbReader extends AtomSetCollectionReader {
     if (!filterPDBAtom(atom, fileAtomIndex++))
       return;
     int charge = 0;
-    float x, y, z;
+    double x, y, z;
     if (gromacsWideFormat) {
-      x = parseFloatRange(line, 30, 40);
-      y = parseFloatRange(line, 40, 50);
-      z = parseFloatRange(line, 50, 60);
+      x = parseDoubleRange(line, 30, 40);
+      y = parseDoubleRange(line, 40, 50);
+      z = parseDoubleRange(line, 50, 60);
     } else {
       //calculate the charge from cols 79 & 80 (1-based): 2+, 3-, etc
       if (lineLength >= 80) {
@@ -1015,9 +1015,9 @@ public class PdbReader extends AtomSetCollectionReader {
             charge = -charge;
         }
       }
-      x = parseFloatRange(line, 30, 38);
-      y = parseFloatRange(line, 38, 46);
-      z = parseFloatRange(line, 46, 54);
+      x = parseDoubleRange(line, 30, 38);
+      y = parseDoubleRange(line, 38, 46);
+      z = parseDoubleRange(line, 46, 54);
     }    
     processAtom2(atom, serial, x, y, z, charge);
   }
@@ -1061,26 +1061,26 @@ public class PdbReader extends AtomSetCollectionReader {
    * @param atom
    */
   protected void setAdditionalAtomParameters(Atom atom) {
-    float floatOccupancy;    
+    double floatOccupancy;    
     if (gromacsWideFormat) {
-      floatOccupancy = parseFloatRange(line, 60, 68);
-      atom.bfactor = fixRadius(parseFloatRange(line, 68, 76));
+      floatOccupancy = parseDoubleRange(line, 60, 68);
+      atom.bfactor = fixRadius(parseDoubleRange(line, 68, 76));
     } else {
       /****************************************************************
        * read the occupancy from cols 55-60 (1-based) 
        * --should be in the range 0.00 - 1.00
        ****************************************************************/
     
-      floatOccupancy = parseFloatRange(line, 54, 60);
+      floatOccupancy = parseDoubleRange(line, 54, 60);
 
       /****************************************************************
        * read the bfactor from cols 61-66 (1-based)
        ****************************************************************/
-        atom.bfactor = parseFloatRange(line, 60, 66);
+        atom.bfactor = parseDoubleRange(line, 60, 66);
         
     }
     
-    atom.foccupancy = (Float.isNaN(floatOccupancy) ? 1 : floatOccupancy);
+    atom.foccupancy = (Double.isNaN(floatOccupancy) ? 1 : floatOccupancy);
     
   }
 
@@ -1392,12 +1392,12 @@ public class PdbReader extends AtomSetCollectionReader {
     currentGroup3 = null;
   }
 
-  private float cryst1;
+  private double cryst1;
   private String fileSgName;
   private void cryst1() throws Exception {
-    float a = cryst1 = getFloat(6, 9);
+    double a = cryst1 = getFloat(6, 9);
     if (a == 1)
-      a = Float.NaN; // 1 for a means no unit cell
+      a = Double.NaN; // 1 for a means no unit cell
     setUnitCell(a, getFloat(15, 9), getFloat(24, 9), getFloat(33,
         7), getFloat(40, 7), getFloat(47, 7));
     if (isbiomol)
@@ -1407,8 +1407,8 @@ public class PdbReader extends AtomSetCollectionReader {
     fileSgName = sgName;
   }
 
-  private float getFloat(int ich, int cch) throws Exception {
-    return parseFloatRange(line, ich, ich+cch);
+  private double getFloat(int ich, int cch) throws Exception {
+    return parseDoubleRange(line, ich, ich+cch);
   }
 
   private void scale(int n) throws Exception {
@@ -1547,7 +1547,7 @@ public class PdbReader extends AtomSetCollectionReader {
 //  * The anisotropic temperature factors are stored in the same coordinate frame as the atomic coordinate records. 
 
   private void anisou() {
-    float[] data = new float[8];
+    double[] data = new double[8];
     data[6] = 1; //U not B
     String serial = line.substring(6, 11).trim();
     if (!haveMappedSerials && asc.ac > 0) {
@@ -1565,13 +1565,13 @@ public class PdbReader extends AtomSetCollectionReader {
       return;
     }
     for (int i = 28, pt = 0; i < 70; i += 7, pt++)
-      data[pt] = parseFloatRange(line, i, i + 7);
+      data[pt] = parseDoubleRange(line, i, i + 7);
     for (int i = 0; i < 6; i++) {
-      if (Float.isNaN(data[i])) {
+      if (Double.isNaN(data[i])) {
         Logger.error("Bad ANISOU record: " + line);
         return;
       }
-      data[i] /= 10000f;
+      data[i] /= 10000;
     }
     asc.setAnisoBorU(atom, data, 12); // was 8 12.3.16
     // new type 12 - cartesian already
@@ -1770,18 +1770,18 @@ public class PdbReader extends AtomSetCollectionReader {
            * Parse tightly packed numbers e.g. -999.1234-999.1234-999.1234
            * assuming there are 4 places to the right of each decimal point
            */
-          P3 origin = new P3();
+          P3d origin = new P3d();
           tlsGroup.put("origin", origin);
           if (tokens.length == 8) {
-            origin.set(parseFloatStr(tokens[5]), parseFloatStr(tokens[6]),
-                parseFloatStr(tokens[7]));
+            origin.set((double) parseDoubleStr(tokens[5]), (double) parseDoubleStr(tokens[6]),
+                (double) parseDoubleStr(tokens[7]));
           } else {
             int n = line.length();
-            origin.set(parseFloatRange(line, n - 27, n - 18),
-                parseFloatRange(line, n - 18, n - 9), parseFloatRange(line, n - 9, n));
+            origin.set((double) parseDoubleRange(line, n - 27, n - 18),
+                (double) parseDoubleRange(line, n - 18, n - 9), (double) parseDoubleRange(line, n - 9, n));
           }
-          if (Float.isNaN(origin.x) || Float.isNaN(origin.y) || Float.isNaN(origin.z)) {
-            origin.set(Float.NaN, Float.NaN, Float.NaN);
+          if (Double.isNaN(origin.x) || Double.isNaN(origin.y) || Double.isNaN(origin.z)) {
+            origin.set(Double.NaN, Double.NaN, Double.NaN);
             tlsAddError("invalid origin: " + line);
           }
         } else if (tokens[1].equalsIgnoreCase("TENSOR")) {
@@ -1797,19 +1797,19 @@ public class PdbReader extends AtomSetCollectionReader {
                   tensorType, ' ').replace(':', ' ');
           //System.out.println("Tensor data = " + s);
           tokens = PT.getTokens(s);
-          float[][] data = new float[3][3];
+          double[][] data = new double[3][3];
           tlsGroup.put("t" + tensorType, data);
           for (int i = 0; i < tokens.length; i++) {
             int ti = tokens[i].charAt(0) - '1';
             int tj = tokens[i].charAt(1) - '1';
-            data[ti][tj] = parseFloatStr(tokens[++i]);
+            data[ti][tj] = parseDoubleStr(tokens[++i]);
             if (ti < tj)
               data[tj][ti] = data[ti][tj];
           }
           for (int i = 0; i < 3; i++)
             for (int j = 0; j < 3; j++)
-              if (Float.isNaN(data[i][j]))
-                tlsAddError("invalid tensor: " + Escape.escapeFloatAA(data, false));
+              if (Double.isNaN(data[i][j]))
+                tlsAddError("invalid tensor: " + Escape.escapeDoubleAA(data, false));
           //System.out.println("Tensor t" + tensorType + " = " + Escape.escape(tensor));
           if (tensorType == 'S' && ++iGroup == nGroups) {
             Logger.info(nGroups + " TLS groups read");
@@ -1858,9 +1858,9 @@ public class PdbReader extends AtomSetCollectionReader {
     //      .chains     String
     //      .residues   int[2]
     //   .origin        P3
-    //   .tT            float[3][3]
-    //   .tL            float[3][3]
-    //   .tS            float[3][3]
+    //   .tT            double[3][3]
+    //   .tL            double[3][3]
+    //   .tS            double[3][3]
     //
     // ultimately, each atom gets an associated TLS-U and TLS-R org.jmol.util.Tensor
     // that can be visualized using 
@@ -1875,7 +1875,7 @@ public class PdbReader extends AtomSetCollectionReader {
     Lst<Map<String, Object>> groups = ( Lst<Map<String, Object>>) tlsGroupInfo
         .get("groups");
     int index0 = asc.getAtomSetAtomIndex(iModel);
-    float[] data = new float[asc.getAtomSetAtomCount(iModel)];
+    double[] data = new double[asc.getAtomSetAtomCount(iModel)];
     int indexMax = index0 + data.length;
     Atom[] atoms = asc.atoms;
     int nGroups = groups.size();
@@ -1940,20 +1940,20 @@ public class PdbReader extends AtomSetCollectionReader {
     return (isTrue ? -1 : atom2);
   }
 
-  private final float[] dataT = new float[8];
+  private final double[] dataT = new double[8];
 
-  private static final float RAD_PER_DEG = (float) (Math.PI / 180);
-  private static final float _8PI2_ = (float) (8 * Math.PI * Math.PI);
-  private Map<Atom, float[]>tlsU;
+  private static final double RAD_PER_DEG = (Math.PI / 180);
+  private static final double _8PI2_ = (8 * Math.PI * Math.PI);
+  private Map<Atom, double[]>tlsU;
   
   private void setTlsTensor(Atom atom, Map<String, Object> group, SymmetryInterface symmetry) {
-    P3 origin = (P3) group.get("origin");
-    if (Float.isNaN(origin.x))
+    P3d origin = (P3d) group.get("origin");
+    if (Double.isNaN(origin.x))
       return;
     
-    float[][] T = (float[][]) group.get("tT");
-    float[][] L = (float[][]) group.get("tL");
-    float[][] S = (float[][]) group.get("tS");
+    double[][] T = (double[][]) group.get("tT");
+    double[][] L = (double[][]) group.get("tL");
+    double[][] S = (double[][]) group.get("tS");
 
     if (T == null || L == null || S == null)
       return;
@@ -1961,16 +1961,16 @@ public class PdbReader extends AtomSetCollectionReader {
     // just factor degrees-to-radians into x, y, and z rather
     // than create all new matrices
 
-    float x = (atom.x - origin.x) * RAD_PER_DEG;
-    float y = (atom.y - origin.y) * RAD_PER_DEG;
-    float z = (atom.z - origin.z) * RAD_PER_DEG;
+    double x = (atom.x - origin.x) * RAD_PER_DEG;
+    double y = (atom.y - origin.y) * RAD_PER_DEG;
+    double z = (atom.z - origin.z) * RAD_PER_DEG;
 
-    float xx = x * x;
-    float yy = y * y;
-    float zz = z * z;
-    float xy = x * y;
-    float xz = x * z;
-    float yz = y * z;
+    double xx = x * x;
+    double yy = y * y;
+    double zz = z * z;
+    double xy = x * y;
+    double xz = x * z;
+    double yz = y * z;
 
     /*
      * 
@@ -1986,9 +1986,9 @@ public class PdbReader extends AtomSetCollectionReader {
     dataT[5] = T[1][2];
     dataT[6] = 12; // (non)ORTEP type 12 -- macromolecular Cartesian
 
-    float[] anisou = new float[8];
+    double[] anisou = new double[8];
 
-    float bresidual = (Float.isNaN(atom.bfactor) ? 0 : atom.bfactor / _8PI2_);
+    double bresidual = (Double.isNaN(atom.bfactor) ? 0 : atom.bfactor / _8PI2_);
 
     anisou[0] /*u11*/= dataT[0] + L[1][1] * zz + L[2][2] * yy - 2 * L[1][2]
         * yz + 2 * S[1][0] * z - 2 * S[2][0] * y;
@@ -2005,7 +2005,7 @@ public class PdbReader extends AtomSetCollectionReader {
     anisou[6] = 12; // macromolecular Cartesian
     anisou[7] = bresidual;
     if (tlsU == null)
-      tlsU = new Hashtable<Atom, float[]>();
+      tlsU = new Hashtable<Atom, double[]>();
      tlsU.put(atom, anisou);
 
     // symmetry is set to [1 1 1 90 90 90] -- Cartesians, not actual unit cell
@@ -2020,8 +2020,8 @@ public class PdbReader extends AtomSetCollectionReader {
         tlsGroupID).appendC('\t').append(error).appendC('\n');
   }
 
-  protected static float fixRadius(float r) {    
-    return (r < 0.9f ? 1 : r);
+  protected static double fixRadius(double r) {    
+    return (double) (r < 0.9 ? 1 : r);
     // based on parameters in http://pdb2pqr.svn.sourceforge.net/viewvc/pdb2pqr/trunk/pdb2pqr/dat/
     // AMBER forcefield, H atoms may be given 0 (on O) or 0.6 (on N) for radius
     // PARSE forcefield, lots of H atoms may be given 0 radius

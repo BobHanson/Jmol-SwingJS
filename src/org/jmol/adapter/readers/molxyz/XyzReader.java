@@ -117,7 +117,7 @@ public class XyzReader extends AtomSetCollectionReader {
         // accepts  sym x y z c vx vy vz
         // accepts  sym x y z c vx vy vz atomno
         if (tokens[4].indexOf(".") >= 0) {
-          atom.partialCharge = parseFloatStr(tokens[4]);
+          atom.partialCharge = parseDoubleStr(tokens[4]);
         } else {
           int charge = parseIntStr(tokens[4]);
           if (charge != Integer.MIN_VALUE)
@@ -127,7 +127,7 @@ public class XyzReader extends AtomSetCollectionReader {
         case 5:
           continue;
         case 6:
-          atom.radius = parseFloatStr(tokens[5]);
+          atom.radius = (double) parseDoubleStr(tokens[5]);
           continue;
         case 9:
           atom.atomSerial = parseIntStr(tokens[8]);
@@ -136,10 +136,10 @@ public class XyzReader extends AtomSetCollectionReader {
         //$FALL-THROUGH$:
       default:
         // or       sym x y z vx vy vz
-        float vx = parseFloatStr(tokens[vpt++]);
-        float vy = parseFloatStr(tokens[vpt++]);
-        float vz = parseFloatStr(tokens[vpt++]);
-        if (Float.isNaN(vx) || Float.isNaN(vy) || Float.isNaN(vz))
+        double vx = parseDoubleStr(tokens[vpt++]);
+        double vy = parseDoubleStr(tokens[vpt++]);
+        double vz = parseDoubleStr(tokens[vpt++]);
+        if (Double.isNaN(vx) || Double.isNaN(vy) || Double.isNaN(vz))
           continue;
         asc.addVibrationVector(atom.index, vx, vy, vz);
       }

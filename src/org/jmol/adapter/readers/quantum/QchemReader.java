@@ -221,7 +221,7 @@ public class QchemReader extends MOReader {
     Atom[] atoms = asc.atoms;
     int ac = asc.getLastAtomSetAtomCount();
     for (int i = 0; i < ac && rd() != null; ++i)
-      atoms[i].partialCharge = parseFloatStr(getTokens()[2]);
+      atoms[i].partialCharge = parseDoubleStr(getTokens()[2]);
   }
   
   private void readEnergy() {
@@ -229,7 +229,7 @@ public class QchemReader extends MOReader {
     String tokens[] = getTokens();
     String energyKey = "E("+tokens[0]+")";
     String energyString = tokens[tokens.length-1]; // value is last one
-    asc.setAtomSetEnergy(energyString, parseFloatStr(energyString));
+    asc.setAtomSetEnergy(energyString, parseDoubleStr(energyString));
     asc.setAtomSetName(energyKey + " = " + energyString);
     asc.setModelInfoForSet("name", energyKey+" "+energyString, ac);
   }
@@ -318,12 +318,12 @@ $end
       }
     }
     // now rearrange the gaussians (direct copy from GaussianReader)
-    gaussians = AU.newFloat2(gaussianCount);
+    gaussians = AU.newDouble2(gaussianCount);
     for (int i = 0; i < gaussianCount; i++) {
       tokens = gdata.get(i);
-      gaussians[i] = new float[tokens.length];
+      gaussians[i] = new double[tokens.length];
       for (int j = 0; j < tokens.length; j++)
-        gaussians[i][j] = parseFloatStr(tokens[j]);
+        gaussians[i][j] = (double) parseDoubleStr(tokens[j]);
     }
     if (debugging) {
       Logger.debug(shellCount + " slater shells read");
@@ -632,7 +632,7 @@ $end
   
   private int readMOs(boolean restricted, MOInfo[] moInfos) throws Exception {
     Map<String, Object>[] mos = AU.createArrayOfHashtable(6); // max 6 MO's per line
-    float[][] mocoef = AU.newFloat2(6); // coefficients for each MO
+    double[][] mocoef = AU.newDouble2(6); // coefficients for each MO
     int[] moid = new int[6]; // mo numbers
     String[] tokens, energy;
     int nMOs = 0;
@@ -643,7 +643,7 @@ $end
       energy = PT.getTokens(rd().substring(13));
       for (int i = 0; i < nMO; i++) {
         moid[i] = parseIntStr(tokens[i]) - 1;
-        mocoef[i] = new float[nBasis];
+        mocoef[i] = new double[nBasis];
         mos[i] = new Hashtable<String, Object>();
       }
       for (int i = 0, pt = 0; i < nBasis; i++) {
@@ -681,19 +681,19 @@ $end
           break;
         }
         for (int j = tokens.length - nMO, k = 0; k < nMO; j++, k++)
-          mocoef[k][pt] = parseFloatStr(tokens[j]);
+          mocoef[k][pt] = (double) parseDoubleStr(tokens[j]);
         pt++;
       }
       // we have all the info we need 
       for (int i = 0; i < nMO; i++) {
         MOInfo moInfo = moInfos[moid[i]];
-        mos[i].put("energy", Float.valueOf(energy[i]));
+        mos[i].put("energy", Double.valueOf(energy[i]));
         mos[i].put("coefficients", mocoef[i]);
         String label = alphaBeta;
         int ne = moInfo.ne;
         if (restricted)
           ne = alphas[moid[i]].ne + betas[moid[i]].ne;
-        mos[i].put("occupancy", Float.valueOf(ne));
+        mos[i].put("occupancy", Double.valueOf(ne));
         switch (ne) {
         case 2:
           label = "AB";

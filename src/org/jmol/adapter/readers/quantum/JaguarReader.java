@@ -44,7 +44,7 @@ import java.util.Map;
 public class JaguarReader extends MOReader {
 
   private int moCount = 0;
-  private float lumoEnergy = Float.MAX_VALUE;
+  private double lumoEnergy = Double.MAX_VALUE;
 
   /**
    * @return true if need to read new line
@@ -86,7 +86,7 @@ public class JaguarReader extends MOReader {
       return true;
     }
     if (line.startsWith(" LUMO energy:")) {
-      lumoEnergy = parseFloatStr(line.substring(13));
+      lumoEnergy = parseDoubleStr(line.substring(13));
       return true;
     }
     if (line.indexOf("final wvfn") >= 0) {
@@ -134,7 +134,7 @@ public class JaguarReader extends MOReader {
         continue;
       String[] tokens = getTokens();
       for (int i = 1; i < tokens.length; i++)
-        asc.atoms[iAtom++].partialCharge = parseFloatStr(tokens[i]);
+        asc.atoms[iAtom++].partialCharge = parseDoubleStr(tokens[i]);
     }
   }
 
@@ -161,13 +161,13 @@ public class JaguarReader extends MOReader {
 
    */
   
-  private final static float ROOT3 = 1.73205080756887729f;
+  private final static double ROOT3 = 1.73205080756887729d;
   
   private void readUnnormalizedBasis() throws Exception {
     String lastAtom = "";
     int iAtom = 0;
     int[][] sdata = new int[moCount][4];
-    Lst<float[]>[] sgdata = AU.createArrayOfArrayList(moCount);
+    Lst<double[]>[] sgdata = AU.createArrayOfArrayList(moCount);
     String[] tokens;
     gaussianCount = 0;
 
@@ -189,21 +189,21 @@ public class JaguarReader extends MOReader {
           sdata[iFunc][1] = iType;
           sdata[iFunc][2] = 0; //pointer
           sdata[iFunc][3] = 0; //count
-          sgdata[iFunc] = new  Lst<float[]>();
+          sgdata[iFunc] = new  Lst<double[]>();
         }
-        float factor = 1;//(iType == 3 ? 1.73205080756887729f : 1);
+        double factor = 1;//(iType == 3 ? 1.73205080756887729d : 1);
         //System.out.println("slater: " + iAtom + " " + iType + " " + gaussianCount + " " + nGaussians);
-        sgdata[iFunc].addLast(new float[] { parseFloatStr(tokens[6]),
-            parseFloatStr(tokens[8]) * factor });
+        sgdata[iFunc].addLast(new double[] { (double) parseDoubleStr(tokens[6]),
+            (double) (parseDoubleStr(tokens[8]) * factor) });
         gaussianCount += jCont;
         for (int i = jCont - 1; --i >= 0;) {
           tokens = PT.getTokens(rd());
-          sgdata[iFunc].addLast(new float[] { parseFloatStr(tokens[6]),
-              parseFloatStr(tokens[8]) * factor });
+          sgdata[iFunc].addLast(new double[] { (double) parseDoubleStr(tokens[6]),
+              (double) (parseDoubleStr(tokens[8]) * factor) });
         }
       }
     }
-    float[][] garray = AU.newFloat2(gaussianCount);
+    double[][] garray = AU.newDouble2(gaussianCount);
     Lst<int[]> sarray = new  Lst<int[]>();
     gaussianCount = 0;
     for (int i = 0; i < moCount; i++)
@@ -256,7 +256,7 @@ public class JaguarReader extends MOReader {
     int iFunc = 0;
     int iFuncLast = -1;
     Lst<int[]> sarray = new  Lst<int[]>();
-    Lst<float[]> gdata = new  Lst<float[]>();
+    Lst<double[]> gdata = new  Lst<double[]>();
     gaussianCount = 0;
     int[] sdata = null;
     discardLinesUntilContains("--------");
@@ -298,14 +298,14 @@ public class JaguarReader extends MOReader {
         iFuncLast = iFunc;
       }
       gaussianCount++;
-      float z = parseFloatStr(tokens[4]);
-      float rCoef = parseFloatStr(tokens[5]);
+      double z = parseDoubleStr(tokens[4]);
+      double rCoef = parseDoubleStr(tokens[5]);
       if (id.equals("XX"))
         rCoef *= ROOT3;
-      gdata.add(gPtr, new float[] { z, rCoef, iFunc});
+      gdata.add(gPtr, new double[] { (double) z, (double) rCoef, iFunc});
     }
 
-    float[][] garray = AU.newFloat2(gaussianCount);
+    double[][] garray = AU.newDouble2(gaussianCount);
     for (int i = gdata.size(); --i >= 0;)
       garray[i] = gdata.get(i);
     moData.put("shells", shells = sarray);
@@ -351,26 +351,26 @@ public class JaguarReader extends MOReader {
       String[] eigenValues = getTokens();
       int n = eigenValues.length - 1;
       fillDataBlock(dataBlock, 0);
-      float occ = 2;
+      double occ = 2;
       for (int iOrb = 0; iOrb < n; iOrb++) {
-        float[] coefs = new float[moCount];
+        double[] coefs = new double[moCount];
         Map<String, Object> mo = new Hashtable<String, Object>();
-        float energy = parseFloatStr(eigenValues[iOrb + 1]);
-        mo.put("energy", Float.valueOf(energy));
+        double energy = parseDoubleStr(eigenValues[iOrb + 1]);
+        mo.put("energy", Double.valueOf(energy));
         if (Math.abs(energy - lumoEnergy) < 0.0001) {
           moData.put("HOMO", Integer.valueOf(nMo));
-          lumoEnergy = Float.MAX_VALUE;
+          lumoEnergy = Double.MAX_VALUE;
           occ = 0;
         }
         //TODO: SOMO? 
-        mo.put("occupancy", Float.valueOf(occ));
+        mo.put("occupancy", Double.valueOf(occ));
         nMo++;
         for (int i = 0, pt =0; i < moCount; i++) {
           //String type = dataBlock[i][2];
           //char ch = type.charAt(0);
           //if (!isQuantumBasisSupported(ch))
             //continue;
-          coefs[pt++] = parseFloatStr(dataBlock[i][iOrb + 3]);
+          coefs[pt++] = parseDoubleStr(dataBlock[i][iOrb + 3]);
         }
         mo.put("coefficients", coefs);
         setMO(mo);

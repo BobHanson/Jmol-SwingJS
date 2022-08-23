@@ -18,7 +18,7 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 
 public class AbinitReader extends AtomSetCollectionReader {
 
-  private float[] znucl;
+  private double[] znucl;
   private boolean inputOnly;
 
   @Override
@@ -68,19 +68,19 @@ public class AbinitReader extends AtomSetCollectionReader {
       nType = parseIntStr(tokens[1]);
   }
 
-  private float[] typeArray;
+  private double[] typeArray;
 
   private void readTypesequence() throws Exception {
-    fillFloatArray(line.substring(12),  0, typeArray = new float[nAtom]);
+    fillDoubleArray(line.substring(12),  0, typeArray = new double[nAtom]);
   }
 
   private void readAtomSpecies() throws Exception {
-    znucl = new float[nType];
+    znucl = new double[nType];
     //- pspini: atom type   1  psp file is Al.psp
     for (int i = 0; i < nType; i++) { //is this ntype or sequence type ?
       discardLinesUntilContains("zion");
       String[] tokens = getTokens();
-      znucl[i] = parseFloatStr(tokens[tokens[0] == "-" ? 1 : 0]);
+      znucl[i] = parseDoubleStr(tokens[tokens[0] == "-" ? 1 : 0]);
     }
   }
 
@@ -88,7 +88,7 @@ public class AbinitReader extends AtomSetCollectionReader {
   private void readSpaceGroup() throws Exception {
   }
 
-  float[] cellLattice;
+  double[] cellLattice;
 
   private void readIntiallattice() throws Exception {
     //    Real(R)+Recip(G) space primitive vectors, cartesian coordinates (Bohr,Bohr^-1):
@@ -97,15 +97,15 @@ public class AbinitReader extends AtomSetCollectionReader {
     //    R(3)=  0.0000000  0.0000000 16.0314917  G(3)=  0.0000000  0.0000000  0.0623772
     //    Unit cell volume ucvol=  9.3402532E+03 bohr^3
 
-    float f = 0;
-    cellLattice = new float[9];
+    double f = 0;
+    cellLattice = new double[9];
     for (int i = 0; i < 9; i++) {
       if (i % 3 == 0) {
         line = rd().substring(6);
-        f = parseFloatStr(line);
+        f = parseDoubleStr(line);
       }
       cellLattice[i] = f * ANGSTROMS_PER_BOHR;
-      f = parseFloat();      
+      f = parseDouble();      
     }
     applySymmetry();
   }
@@ -144,7 +144,7 @@ public class AbinitReader extends AtomSetCollectionReader {
     }
     discardLinesUntilContains("z");
     if (znucl == null)
-      fillFloatArray(line.substring(12), 0, znucl = new float[nType]);
+      fillDoubleArray(line.substring(12), 0, znucl = new double[nType]);
     Atom[] atoms = asc.atoms;
     for (int i = 0; i < nAtom; i++)
       atoms[i + i0].elementNumber = (short) znucl[(int) typeArray[i] - 1];

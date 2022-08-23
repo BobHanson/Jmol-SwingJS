@@ -184,7 +184,7 @@ class NBOConfig  {
 
   protected static Color orbColor1, orbColor2, backgroundColor;
   protected static String orbColorJmol1, orbColorJmol2;
-  protected static float opacityOp;
+  protected static double opacityOp;
   protected static boolean nboView;
   protected static boolean useWireMesh;
   protected static boolean showAtNum;
@@ -298,7 +298,7 @@ class NBOConfig  {
     opacity.addChangeListener(new ChangeListener() {
       @Override
       public void stateChanged(ChangeEvent e) {
-        opacityOp = (float) opacity.getValue() / 10;
+        opacityOp = (double) opacity.getValue() / 10;
         setOrbitalDisplayOptions();
       }
     });
@@ -415,19 +415,19 @@ class NBOConfig  {
     if (options.equals("default") || options.equals("nboView")) {
       orbColor1 = Color.cyan;
       orbColor2 = Color.yellow;
-      opacityOp = 0.7f;
+      opacityOp = 0.7d;
       useWireMesh = false;
     } else if (options.equals("jmol")) {
       orbColor1 = Color.blue;
       orbColor2 = Color.red;
-      opacityOp = 1f;
+      opacityOp = 1d;
       useWireMesh = true;
     } else {
       // color1, color2, useMesh
       String[] toks = options.split(",");
       orbColor1 = new Color(Integer.parseInt(toks[0]));
       orbColor2 = new Color(Integer.parseInt(toks[1]));
-      opacityOp = Float.parseFloat(toks[2]);
+      opacityOp = Double.parseDouble(toks[2]);
       useWireMesh = toks[3].contains("true");
     }
     return options;

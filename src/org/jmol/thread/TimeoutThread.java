@@ -58,7 +58,7 @@ public class TimeoutThread extends JmolThread {
   @Override
   public String toString() {
     return "timeout name=" + name + " executions=" + status + " mSec=" + sleepTime 
-    + " secRemaining=" + (targetTime - System.currentTimeMillis())/1000f + " script=" + script;      
+    + " secRemaining=" + (targetTime - System.currentTimeMillis())/1000d + " script=" + script;      
   }
   
   @Override

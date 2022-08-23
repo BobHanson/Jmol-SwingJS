@@ -51,9 +51,9 @@ import org.jmol.util.Escape;
 import org.jmol.util.Font;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshCapper;
+import org.jmol.util.MeshSurface;
 import org.jmol.util.Parser;
 import org.jmol.util.SimpleUnitCell;
-import org.jmol.util.TempArray;
 import org.jmol.util.Triangulator;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.JmolAsyncException;
@@ -61,14 +61,14 @@ import org.jmol.viewer.JmolAsyncException;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.M4;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
+import javajs.util.M4d;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 public class IsoExt extends ScriptExt {
 
@@ -150,7 +150,7 @@ public class IsoExt extends ScriptExt {
       case T.integer:
       case T.decimal:
         propertyName = "value";
-        propertyValue = Float.valueOf(floatParameter(i));
+        propertyValue = Double.valueOf(floatParameter(i));
         break;
       case T.bitset:
         if (tokAt(i + 1) == T.bitset) {
@@ -174,7 +174,7 @@ public class IsoExt extends ScriptExt {
       case T.leftbrace:
       case T.point3f:
         // {X, Y, Z}
-        P3 pt = getPoint3f(i, true);
+        P3d pt = getPoint3f(i, true);
         i = eval.iToken;
         propertyName = (iHaveAtoms || iHaveCoord ? "endCoord" : "startCoord");
         propertyValue = pt;
@@ -206,13 +206,13 @@ public class IsoExt extends ScriptExt {
         break;
       case T.offset:
         if (isFloatParameter(i + 1)) {
-          float v = floatParameter(++i);
+          double v = floatParameter(++i);
           if (eval.theTok == T.integer) {
             propertyName = "offsetPercent";
             propertyValue = Integer.valueOf((int) v);
           } else {
             propertyName = "offset";
-            propertyValue = Float.valueOf(v);
+            propertyValue = Double.valueOf(v);
           }
         } else {
           propertyName = "offsetPt";
@@ -222,15 +222,15 @@ public class IsoExt extends ScriptExt {
         break;
       case T.offsetside:
         propertyName = "offsetSide";
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         break;
       case T.val:
         propertyName = "value";
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         break;
       case T.width:
         propertyName = "width";
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         break;
       default:
         if (eval.theTok == T.times || T.tokAttr(eval.theTok, T.identifier)) {
@@ -273,15 +273,15 @@ public class IsoExt extends ScriptExt {
     boolean isSavedState = false;
     boolean isIntersect = false;
     boolean isFrame = false;
-    P4 plane;
-    P3[] pts = null;
+    P4d plane;
+    P3d[] pts = null;
     int tokIntersectBox = 0;
-    float translucentLevel = Float.MAX_VALUE;
+    double translucentLevel = Double.MAX_VALUE;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
     int intScale = 0;
     String swidth = "";
     int iptDisplayProperty = 0;
-    P3 center = null;
+    P3d center = null;
     String thisId = initIsosurface(JC.SHAPE_DRAW);
     boolean idSeen = (thisId != null);
     boolean isWild = (idSeen && getShapeProperty(JC.SHAPE_DRAW, "ID") == null);
@@ -291,7 +291,7 @@ public class IsoExt extends ScriptExt {
     int iOn = -1;
     boolean isBest = false;
     int tok = 0;
-    P3 lattice = null;
+    P3d lattice = null;
     for (int i = eval.iToken; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
@@ -375,7 +375,7 @@ public class IsoExt extends ScriptExt {
             if (tokIntersectBox == T.unitcell)
               tokIntersectBox = T.lattice;
             ++i;
-            lattice = (P3) eval
+            lattice = (P3d) eval
                 .checkHKL(eval.getPointOrPlane(++i, ScriptParam.MODE_P3));
             i = eval.iToken;
           }
@@ -386,23 +386,23 @@ public class IsoExt extends ScriptExt {
         if (bs != null) {
           if (isBest) {
             uc = vwr.getSymTemp().getUnitCell(
-                (P3[]) vwr.getOrientation(T.unitcell, "array", bs), false,
+                (P3d[]) vwr.getOrientation(T.unitcell, "array", bs), false,
                 null);
           }
         } else if (isBest) {
           uc = vwr.getSymTemp().getUnitCell(
-              (P3[]) vwr.getOrientation(T.unitcell, "array", null), false,
+              (P3d[]) vwr.getOrientation(T.unitcell, "array", null), false,
               null);
         } else if (tok == T.unitcell && uc == null) {
           uc = vwr.getCurrentUnitCell();
         }
         if (lattice == null) {
           pts = getBoxPoints(uc != null ? T.unitcell : tok, uc, bs,
-              intScale / 100f);
+              intScale / 100d);
         } else {
-          Lst<P3> cpts = Measure.getLatticePoints(uc.getLatticeCentering(),
+          Lst<P3d> cpts = MeasureD.getLatticePoints(uc.getLatticeCentering(),
               (int) lattice.x, (int) lattice.y, (int) lattice.z);
-          pts = new P3[cpts.size()];
+          pts = new P3d[cpts.size()];
           for (int j = 0; j < cpts.size(); j++) {
             pts[j] = cpts.get(j);
               uc.toCartesian(pts[j], true);
@@ -440,7 +440,7 @@ public class IsoExt extends ScriptExt {
           if (eval.theTok == T.hkl) {
             havePoints = true;
             setShapeProperty(JC.SHAPE_DRAW, "plane", null);
-            Lst<P3> list = new Lst<P3>();
+            Lst<P3d> list = new Lst<P3d>();
             plane = eval.hklParameter(++i, list, true);
             i = eval.iToken;
             propertyName = "coords";
@@ -457,13 +457,13 @@ public class IsoExt extends ScriptExt {
           if (!chk && tok != T.line && pts == null) {
             uc = vwr.getCurrentUnitCell();
             tokIntersectBox = (uc == null ? T.boundbox : T.unitcell);
-            pts = getBoxPoints(tokIntersectBox, uc, null, intScale / 100f);
+            pts = getBoxPoints(tokIntersectBox, uc, null, intScale / 100d);
             isIntersect = true;
           }
         }
         // best or intersection
         plane = null;
-        P3[] linePts = null;
+        P3d[] linePts = null;
         switch (tok) {
         case T.plane:
           plane = eval.planeParameter(i, isBest);
@@ -477,7 +477,7 @@ public class IsoExt extends ScriptExt {
           if (isBest) {
             linePts = bsToArray(eval.getAtomsStartingAt(++i));
           } else if (eval.isCenterParameter(i + 1)) {
-            linePts = new P3[] { centerParameter(++i),
+            linePts = new P3d[] { centerParameter(++i),
                 centerParameter(eval.iToken + 1) };
           } else {
             linePts = eval.getPointArray(++i, 2, false);
@@ -491,12 +491,12 @@ public class IsoExt extends ScriptExt {
         if (chk)
           break;
         if (tok == T.line) {
-          linePts = Measure.getBestLineThroughPoints(linePts, -1);
+          linePts = MeasureD.getBestLineThroughPoints(linePts, -1);
           if (tokIntersectBox != 0) {
-            V3 v = V3.newVsub(linePts[1], linePts[0]);
+            V3d v = V3d.newVsub(linePts[1], linePts[0]);
             v.scale(1 / v.length());
             linePts = (isProjection
-                ? Measure.getProjectedLineSegment(pts, -1, linePts[0], v, null)
+                ? MeasureD.getProjectedLineSegment(pts, -1, linePts[0], v, null)
                 : vwr.getTriangulator().intersectLine(pts, -1, linePts[0], v));
             if (linePts == null || linePts[1] == null)
               return;
@@ -506,7 +506,7 @@ public class IsoExt extends ScriptExt {
                 Integer.valueOf(intScale));
             isInitialized = true;
           }
-          Lst<P3> l = new Lst<P3>();
+          Lst<P3d> l = new Lst<P3d>();
           l.addLast(linePts[0]);
           l.addLast(linePts[1]);
           setShapeProperty(JC.SHAPE_DRAW, "coords", l);
@@ -519,8 +519,8 @@ public class IsoExt extends ScriptExt {
           propertyName = "planedef";
         } else if (tokIntersectBox == T.lattice) {
           propertyName = "polygon";
-          Lst<P3> cpts = Measure.getPointsOnPlane(pts, plane);
-          pts = cpts.toArray(new P3[cpts.size()]);
+          Lst<P3d> cpts = MeasureD.getPointsOnPlane(pts, plane);
+          pts = cpts.toArray(new P3d[cpts.size()]);
           Lst<Object> v = new Lst<Object>();
           v.addLast(pts);
           v.addLast(null);
@@ -535,10 +535,15 @@ public class IsoExt extends ScriptExt {
         break;
       case T.pointgroup:
         // draw pointgroup [array  of points] CENTER xx
+        // draw pointgroup {atoms} CENTER xx
         // draw pointgroup SPACEGROUP
         // draw pointgroup [C2|C3|Cs|Ci|etc.] [n] [scale x]
         pts = (eval.isArrayParameter(++i) ? eval.getPointArray(i, -1, false)
             : null);
+        if (pts == null && eval.isAtomExpression(i)) {
+          bs = eval.atomExpressionAt(i);
+          pts = vwr.ms.getAtomPointVector(bs).toArray(new P3d[bs.cardinality()]);
+        }
         if (pts != null) {
           i = eval.iToken + 1;
           if (tokAt(i) == T.center) {
@@ -559,7 +564,7 @@ public class IsoExt extends ScriptExt {
           if (chk)
             return;
           vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "points", data);
-          pts = (P3[]) data[1];
+          pts = (P3d[]) data[1];
           if (pts == null)
             invArg();
           type = "";
@@ -569,12 +574,12 @@ public class IsoExt extends ScriptExt {
           break;
         case T.spacegroup:
           if (center == null)
-            center = new P3();
-          Lst<P3> crpts = vwr.ms.generateCrystalClass(vwr.bsA().nextSetBit(0),
-              P3.new3(Float.NaN, Float.NaN, Float.NaN));
+            center = new P3d();
+          Lst<P3d> crpts = vwr.ms.generateCrystalClass(vwr.bsA().nextSetBit(0),
+              P3d.new3(Double.NaN, Double.NaN, Double.NaN));
           if (pts != null)
             invArg();
-          pts = new P3[crpts.size()];
+          pts = new P3d[crpts.size()];
           for (int j = crpts.size(); --j >= 0;)
             pts[j] = crpts.get(j);
           i++;
@@ -584,7 +589,7 @@ public class IsoExt extends ScriptExt {
           type = eval.optParameterAsString(i);
           break;
         }
-        float scale = (intScale == 0 ? 1 : intScale / 100f);
+        double scale = (intScale == 0 ? 1 : intScale / 100d);
         int index = 0;
         if (type.length() > 0) {
           if (isFloatParameter(++i))
@@ -599,7 +604,7 @@ public class IsoExt extends ScriptExt {
       case T.connect:
         connections = new int[4];
         iConnect = 4;
-        float[] farray = eval.floatParameterSet(++i, 4, 4);
+        double[] farray = eval.doubleParameterSet(++i, 4, 4);
         i = eval.iToken;
         for (int j = 0; j < 4; j++)
           connections[j] = (int) farray[j];
@@ -641,7 +646,7 @@ public class IsoExt extends ScriptExt {
         Lst<Object> v = new Lst<Object>();
         int nVertices = 0;
         int nTriangles = 0;
-        P3[] points = null;
+        P3d[] points = null;
         Lst<SV> vpolygons = null;
         int[][] polygons = null;
         if (eval.isArrayParameter(++i)) {
@@ -653,8 +658,8 @@ public class IsoExt extends ScriptExt {
               faces = getIntArray2(i);
             } else {
               faces = AU.newInt2(1);
-              faces[0] = (int[]) eval.expandFloatArray(
-                  eval.floatParameterSet(i, -1, Integer.MAX_VALUE), -1, false);
+              faces[0] = (int[]) eval.expandDoubleArray(
+                  eval.doubleParameterSet(i, -1, Integer.MAX_VALUE), -1, false);
             }
             points = getAllPoints(e.iToken + 1, 3);
             try {
@@ -678,7 +683,7 @@ public class IsoExt extends ScriptExt {
         if (points == null) {
           // draw POLYGON nPoints pt1 pt2 pt3...
           nVertices = Math.max(0, intParameter(i));
-          points = new P3[nVertices];
+          points = new P3d[nVertices];
           for (int j = 0; j < nVertices; j++)
             points[j] = centerParameter(++eval.iToken);
         }
@@ -712,9 +717,9 @@ public class IsoExt extends ScriptExt {
           // read array of arrays of triangle vertex pointers
           polygons = AU.newInt2(nTriangles);
           for (int j = 0; j < nTriangles; j++) {
-            float[] f = (vpolygons == null
-                ? eval.floatParameterSet(++eval.iToken, 3, 4)
-                : SV.flistValue(vpolygons.get(j), 0));
+            double[] f = (vpolygons == null
+                ? eval.doubleParameterSet(++eval.iToken, 3, 4)
+                : SV.dlistValue(vpolygons.get(j), 0));
             if (f.length < 3 || f.length > 4)
               invArg();
             polygons[j] = new int[] { (int) f[0], (int) f[1], (int) f[2],
@@ -735,10 +740,10 @@ public class IsoExt extends ScriptExt {
         String xyz = null;
         int iSym = Integer.MAX_VALUE;
         plane = null;
-        P3 target = null;
+        P3d target = null;
         BS bsAtoms = null;
         int options = 0;
-        P3 trans = null;
+        P3d trans = null;
         if (tok == T.symop) {
           iSym = 0;
           switch (tokAt(++i)) {
@@ -753,7 +758,7 @@ public class IsoExt extends ScriptExt {
             if (!eval.isCenterParameter(i)) {
               iSym = intParameter(i++);
               if (eval.isArrayParameter(i)) {
-                trans = P3.newA(eval.floatParameterSet(i, 3, 3));
+                trans = P3d.newA(eval.doubleParameterSet(i, 3, 3));
                 i = ++eval.iToken;
               }
             }
@@ -778,7 +783,7 @@ public class IsoExt extends ScriptExt {
             ? eval.getToken(++i).intValue
             : -1);
         if (tokAt(i + 1) == T.unitcell) {
-          target = new P3();
+          target = new P3d();
           options = T.offset;
           i++;
           eval.iToken = i;
@@ -800,9 +805,9 @@ public class IsoExt extends ScriptExt {
             if (options != 0) {
               // options is T.offset, and target is an {i j k} offset from cell 555
               Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-                  target, T.point, null, intScale / 100f, nth, options);
-              if (o instanceof P3)
-                target = (P3) o;
+                  target, T.point, null, intScale / 100d, nth, options);
+              if (o instanceof P3d)
+                target = (P3d) o;
               else
                 s = "";
             }
@@ -810,7 +815,7 @@ public class IsoExt extends ScriptExt {
               thisId = "sym";
             if (s == null)
               s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-                  target, T.draw, thisId, intScale / 100f, nth, options);
+                  target, T.draw, thisId, intScale / 100d, nth, options);
           }
           eval.runBufferedSafely(
               s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete",
@@ -830,9 +835,9 @@ public class IsoExt extends ScriptExt {
           if (isFrame) {
             eval.checkLast(eval.iToken);
             if (!chk)
-              eval.runScript(Escape.drawQuat(Quat.newP4((P4) propertyValue),
+              eval.runScript(Escape.drawQuat(Qd.newP4((P4d) propertyValue),
                   (thisId == null ? "frame" : thisId), " " + swidth,
-                  (center == null ? new P3() : center), intScale / 100f));
+                  (center == null ? new P3d() : center), intScale / 100d));
             return;
           }
           propertyName = "planedef";
@@ -845,7 +850,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.linedata:
         propertyName = "lineData";
-        propertyValue = eval.floatParameterSet(++i, 0, Integer.MAX_VALUE);
+        propertyValue = eval.doubleParameterSet(++i, 0, Integer.MAX_VALUE);
         i = eval.iToken;
         havePoints = true;
         break;
@@ -906,7 +911,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.font:
         // must be LAST set of parameters
-        float fontSize = floatParameter(++i);
+        double fontSize = floatParameter(++i);
         String fontFace = (tokAt(i + 1) == T.identifier ? paramAsStr(++i)
             : null);
         String fontStyle = (tokAt(i + 1) == T.identifier ? paramAsStr(++i)
@@ -929,12 +934,12 @@ public class IsoExt extends ScriptExt {
         propertyName = "vector";
         break;
       case T.length:
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         propertyName = "length";
         break;
       case T.decimal:
         // $drawObject
-        propertyValue = Float.valueOf(floatParameter(i));
+        propertyValue = Double.valueOf(floatParameter(i));
         propertyName = "length";
         break;
       case T.modelindex:
@@ -950,7 +955,7 @@ public class IsoExt extends ScriptExt {
         }
         break;
       case T.scale:
-        intScale = Math.round(
+        intScale = (int) Math.round(
             floatParameter(++i) * (getToken(i).tok == T.integer ? 1 : 100));
         continue;
       case T.id:
@@ -967,7 +972,7 @@ public class IsoExt extends ScriptExt {
         propertyValue = Boolean.TRUE;
         break;
       case T.offset:
-        P3 pt = getPoint3f(++i, true);
+        P3d pt = getPoint3f(++i, true);
         i = eval.iToken;
         propertyName = "offset";
         propertyValue = pt;
@@ -976,7 +981,7 @@ public class IsoExt extends ScriptExt {
         propertyName = "crossed";
         break;
       case T.width:
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         propertyName = "width";
         swidth = propertyName + " " + propertyValue;
         break;
@@ -1017,10 +1022,10 @@ public class IsoExt extends ScriptExt {
       case T.radius:
       case T.diameter:
         boolean isRadius = (eval.theTok == T.radius);
-        float f = floatParameter(++i);
+        double f = floatParameter(++i);
         if (isRadius)
           f *= 2;
-        propertyValue = Float.valueOf(f);
+        propertyValue = Double.valueOf(f);
         propertyName = (isRadius || tokAt(i) == T.decimal ? "width"
             : "diameter");
         swidth = propertyName
@@ -1029,7 +1034,7 @@ public class IsoExt extends ScriptExt {
       case T.dollarsign:
         // $drawObject[m]
         if ((tokAt(i + 2) == T.leftsquare || isFrame)) {
-          P3 pto = center = centerParameter(i);
+          P3d pto = center = centerParameter(i);
           i = eval.iToken;
           propertyName = "coord";
           propertyValue = pto;
@@ -1120,7 +1125,7 @@ public class IsoExt extends ScriptExt {
       String title = null;
       int moNumber = ((Integer) getShapeProperty(iShape, "moNumber"))
           .intValue();
-      float[] linearCombination = (float[]) getShapeProperty(iShape,
+      double[] linearCombination = (double[]) getShapeProperty(iShape,
           "moLinearCombination");
       Boolean squared = (Boolean) getShapeProperty(iShape, "moSquareData");
       Boolean linearSquared = (linearCombination == null ? null
@@ -1151,7 +1156,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.density:
         linearSquared = Boolean.TRUE;
-        linearCombination = new float[] { 1 };
+        linearCombination = new double[] { 1 };
         offset = moNumber = 0;
         break;
       case T.integer:
@@ -1162,7 +1167,7 @@ public class IsoExt extends ScriptExt {
         }
         linearCombination = moCombo(propertyList);
         if (linearCombination == null && moNumber < 0)
-          linearCombination = new float[] { -100, -moNumber };
+          linearCombination = new double[] { -100, -moNumber };
         ignoreSquared = true;
         break;
       case T.minus:
@@ -1212,15 +1217,15 @@ public class IsoExt extends ScriptExt {
         break;
       case T.scale:
         propertyName = "scale";
-        propertyValue = Float.valueOf(floatParameter(i + 1));
+        propertyValue = Double.valueOf(floatParameter(i + 1));
         break;
       case T.cutoff:
         if (tokAt(i + 1) == T.plus) {
           propertyName = "cutoffPositive";
-          propertyValue = Float.valueOf(floatParameter(i + 2));
+          propertyValue = Double.valueOf(floatParameter(i + 2));
         } else {
           propertyName = "cutoff";
-          propertyValue = Float.valueOf(floatParameter(i + 1));
+          propertyValue = Double.valueOf(floatParameter(i + 1));
         }
         break;
       case T.debug:
@@ -1232,7 +1237,7 @@ public class IsoExt extends ScriptExt {
       case T.pointsperangstrom:
       case T.resolution:
         propertyName = "resolution";
-        propertyValue = Float.valueOf(floatParameter(i + 1));
+        propertyValue = Double.valueOf(floatParameter(i + 1));
         break;
       case T.squared:
         if (linearCombination == null)
@@ -1263,7 +1268,7 @@ public class IsoExt extends ScriptExt {
           // NBO "C1-C2"
         }
         if (eval.isArrayParameter(i)) {
-          linearCombination = eval.floatParameterSet(i, 1, Integer.MAX_VALUE);
+          linearCombination = eval.doubleParameterSet(i, 1, Integer.MAX_VALUE);
           if (tokAt(eval.iToken + 1) == T.squared) {
             ignoreSquared = false;
             linearSquared = Boolean.TRUE;
@@ -1376,12 +1381,12 @@ public class IsoExt extends ScriptExt {
     return nboNumber;
   }
 
-  private float[] moCombo(Lst<Object[]> propertyList) {
+  private double[] moCombo(Lst<Object[]> propertyList) {
     if (tokAt(e.iToken + 1) != T.squared)
       return null;
     addShapeProperty(propertyList, "squareLinear", Boolean.TRUE);
     e.iToken++;
-    return new float[0];
+    return new double[0];
   }
 
   private int moOffset(int index) throws ScriptException {
@@ -1398,7 +1403,7 @@ public class IsoExt extends ScriptExt {
   }
 
   @SuppressWarnings("unchecked")
-  private void setMoData(Lst<Object[]> propertyList, int moNumber, float[] lc,
+  private void setMoData(Lst<Object[]> propertyList, int moNumber, double[] lc,
                          int offset, boolean isNegOffset, int modelIndex,
                          String title, String nboType, boolean isBeta)
       throws ScriptException {
@@ -1426,7 +1431,7 @@ public class IsoExt extends ScriptExt {
     Lst<Map<String, Object>> mos = null;
     Map<String, Object> mo;
     int nOrb = 0;
-    Float f = null;
+    Number f = null;
     if (lc == null || lc.length < 2) {
       if (lc != null && lc.length == 1)
         offset = 0;
@@ -1458,15 +1463,15 @@ public class IsoExt extends ScriptExt {
           moNumber = nOrb;
           for (int i = 0; i < nOrb; i++) {
             mo = mos.get(i);
-            if ((f = (Float) mo.get("occupancy")) != null) {
-              if (f.floatValue() < 0.5f) {
+            if ((f = (Number) mo.get("occupancy")) != null) {
+              if (f.doubleValue() < 0.5d) {
                 // go for LUMO = first unoccupied
                 moNumber = i;
                 break;
               }
               continue;
-            } else if ((f = (Float) mo.get("energy")) != null) {
-              if (f.floatValue() > 0) {
+            } else if ((f = (Number) mo.get("energy")) != null) {
+              if (f.doubleValue() > 0) {
                 // go for LUMO = first positive
                 moNumber = i;
                 break;
@@ -1489,29 +1494,29 @@ public class IsoExt extends ScriptExt {
     moData.put("lastMoNumber", Integer.valueOf(moNumber));
     moData.put("lastMoCount", Integer.valueOf(1));
     if (isNegOffset && lc == null)
-      lc = new float[] { -100, moNumber };
+      lc = new double[] { -100, moNumber };
     if (lc != null && lc.length < 2) {
       mo = mos.get(moNumber - 1);
-      if ((f = (Float) mo.get("energy")) == null) {
-        lc = new float[] { 100, moNumber };
+      if ((f = (Number) mo.get("energy")) == null) {
+        lc = new double[] { 100, moNumber };
       } else {
 
         // constuct set of equivalent energies and square this
 
-        float energy = f.floatValue();
+        double energy = f.doubleValue();
         BS bs = BS.newN(nOrb);
         int n = 0;
         boolean isAllElectrons = (lc.length == 1 && lc[0] == 1);
         for (int i = 0; i < nOrb; i++) {
-          if ((f = (Float) mos.get(i).get("energy")) == null)
+          if ((f = (Number) mos.get(i).get("energy")) == null)
             continue;
-          float e = f.floatValue();
+          double e = f.doubleValue();
           if (isAllElectrons ? e <= energy : e == energy) {
             bs.set(i + 1);
             n += 2;
           }
         }
-        lc = new float[n];
+        lc = new double[n];
         for (int i = 0, pt = 0; i < n; i += 2) {
           lc[i] = 1;
           lc[i + 1] = (pt = bs.nextSetBit(pt + 1));
@@ -1560,13 +1565,13 @@ public class IsoExt extends ScriptExt {
     boolean haveIntersection = false;
     boolean isFrontOnly = false;
     String nbotype = null;
-    float[] data = null;
+    double[] data = null;
     String cmd = null;
     BS thisSet = null;
     int nFiles = 0;
     int nX, nY, nZ, ptX, ptY;
-    float sigma = Float.NaN;
-    float cutoff = Float.NaN;
+    double sigma = Double.NaN;
+    double cutoff = Double.NaN;
     int ptWithin = 0;
     Boolean smoothing = null;
     int smoothingPower = Integer.MAX_VALUE;
@@ -1574,11 +1579,11 @@ public class IsoExt extends ScriptExt {
     BS bsSelect = null;
     BS bsIgnore = null;
     SB sbCommand = new SB();
-    P3 pt;
-    P4 plane = null;
-    P3 lattice = null;
+    P3d pt;
+    P4d plane = null;
+    P3d lattice = null;
     boolean fixLattice = false;
-    P3[] pts = null;
+    P3d[] pts = null;
     int color = 0;
     String str = null;
     int modelIndex = (chk ? 0 : Integer.MIN_VALUE);
@@ -1593,7 +1598,7 @@ public class IsoExt extends ScriptExt {
     String translucency = null;
     String colorScheme = null;
     String mepOrMlp = null;
-    M4[] symops = null;
+    M4d[] symops = null;
     short[] discreteColixes = null;
     Lst<Object[]> propertyList = new Lst<Object[]>();
     boolean defaultMesh = false;
@@ -1636,10 +1641,10 @@ public class IsoExt extends ScriptExt {
         propertyValue = getToken(i++).value;
         break;
       case T.symop:
-        float[][] ff = floatArraySet(i + 2, intParameter(i + 1), 16);
-        symops = new M4[ff.length];
+        double[][] ff = floatArraySet(i + 2, intParameter(i + 1), 16);
+        symops = new M4d[ff.length];
         for (int j = symops.length; --j >= 0;)
-          symops[j] = M4.newA16(ff[j]);
+          symops[j] = M4d.newA16(ff[j]);
         i = eval.iToken;
         break;
       case T.symmetry:
@@ -1678,7 +1683,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.scale3d:
         propertyName = "scale3d";
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         break;
       case T.period:
         sbCommand.append(" periodic");
@@ -1690,16 +1695,16 @@ public class IsoExt extends ScriptExt {
         propertyName = eval.theToken.value.toString();
         sbCommand.append(" ").appendO(eval.theToken.value);
         propertyValue = centerParameter(++i);
-        sbCommand.append(" ").append(Escape.eP((P3) propertyValue));
+        sbCommand.append(" ").append(Escape.eP((P3d) propertyValue));
         i = eval.iToken;
         break;
       case T.boundbox:
         if (eval.fullCommand.indexOf("# BBOX=") >= 0) {
           String[] bbox = PT
               .split(PT.getQuotedAttribute(eval.fullCommand, "# BBOX"), ",");
-          pts = new P3[] { (P3) Escape.uP(bbox[0]), (P3) Escape.uP(bbox[1]) };
+          pts = new P3d[] { (P3d) Escape.uP(bbox[0]), (P3d) Escape.uP(bbox[1]) };
         } else if (eval.isCenterParameter(i + 1)) {
-          pts = new P3[] { getPoint3f(i + 1, true),
+          pts = new P3d[] { getPoint3f(i + 1, true),
               getPoint3f(eval.iToken + 1, true) };
           i = eval.iToken;
         } else {
@@ -1725,10 +1730,10 @@ public class IsoExt extends ScriptExt {
         } else if (tokAt(eval.iToken + 1) == T.expressionBegin
             || tokAt(eval.iToken + 1) == T.bitset) {
           bs = atomExpressionAt(++eval.iToken);
-          bs.and(vwr.ms.getAtomsWithinRadius(5.0f, bsSelect, false, null, null));
+          bs.and(vwr.ms.getAtomsWithinRadius(5.0d, bsSelect, false, null, null));
         } else {
           // default is "within(5.0, selected) and not within(molecule,selected)"
-          bs = vwr.ms.getAtomsWithinRadius(5.0f, bsSelect, true, null, null);
+          bs = vwr.ms.getAtomsWithinRadius(5.0d, bsSelect, true, null, null);
           bs.andNot(vwr.ms.getAtoms(T.molecule, bsSelect));
         }
         bs.andNot(bsSelect);
@@ -1777,8 +1782,8 @@ public class IsoExt extends ScriptExt {
         } else {
           ptWithin = i;
         }
-        float distance;
-        P3 ptc = null;
+        double distance;
+        P3d ptc = null;
         bs = null;
         Object[] ret = new Object[1];
         if (tokAt(i + 1) == T.expressionBegin) {
@@ -1809,20 +1814,20 @@ public class IsoExt extends ScriptExt {
           if (bs != null && modelIndex >= 0)
             bs = vwr.restrictToModel(bs, modelIndex);
           if (ptc == null)
-            ptc = (bs == null ? new P3() : vwr.ms.getAtomSetCenter(bs));
+            ptc = (bs == null ? new P3d() : vwr.ms.getAtomSetCenter(bs));
           pts = getWithinDistanceVector(propertyList, distance, ptc, bs,
               isDisplay);
-          sbCommand.append(" within ").appendF(distance).append(" ")
+          sbCommand.append(" within ").appendD(distance).append(" ")
               .append(bs == null ? Escape.eP(ptc) : Escape.eBS(bs));
         }
         continue;
       case T.parameters:
         propertyName = "parameters";
         // if > 1 parameter, then first is assumed to be the cutoff. 
-        float[] fparams = eval.floatParameterSet(++i, 1, 10);
+        double[] fparams = eval.doubleParameterSet(++i, 1, 10);
         i = eval.iToken;
         propertyValue = fparams;
-        sbCommand.append(" parameters ").append(Escape.eAF(fparams));
+        sbCommand.append(" parameters ").append(Escape.eAD(fparams));
         break;
       case T.property:
       case T.variable:
@@ -1831,7 +1836,7 @@ public class IsoExt extends ScriptExt {
         int tokProperty = tokAt(i + 1);
         if (mepOrMlp == null) { // not mlp or mep
           if (!surfaceObjectSeen && !isMapped && !planeSeen) {
-            addShapeProperty(propertyList, "sasurface", Float.valueOf(0));
+            addShapeProperty(propertyList, "sasurface", Double.valueOf(0));
             //if (surfaceObjectSeen)
             sbCommand.append(" vdw");
             surfaceObjectSeen = true;
@@ -1863,11 +1868,11 @@ public class IsoExt extends ScriptExt {
         sbCommand.append(" ").append(str);
 
         if (str.toLowerCase().indexOf("property_") == 0) {
-          data = new float[vwr.ms.ac];
+          data = new double[vwr.ms.ac];
           if (chk)
             continue;
-          data = (float[]) vwr.getDataObj(str, null,
-              JmolDataManager.DATA_TYPE_AF);
+          data = (double[]) vwr.getDataObj(str, null,
+              JmolDataManager.DATA_TYPE_AD);
           if (data == null)
             invArg();
           addShapeProperty(propertyList, propertyName, data);
@@ -1875,20 +1880,20 @@ public class IsoExt extends ScriptExt {
         }
 
         int ac = vwr.ms.ac;
-        data = new float[ac];
+        data = new double[ac];
 
         if (isVariable) {
           String vname = paramAsStr(++i);
           if (vname.length() == 0) {
-            data = eval.floatParameterSet(i, ac, ac);
+            data = eval.doubleParameterSet(i, ac, ac);
           } else {
-            data = new float[ac];
+            data = new double[ac];
             if (!chk)
-              Parser.parseStringInfestedFloatArray(
+              Parser.parseStringInfestedDoubleArray(
                   "" + eval.getParameter(vname, T.string, true), null, data);
           }
           if (!chk/* && (surfaceObjectSeen)*/)
-            sbCommand.append(" \"\" ").append(Escape.eAF(data));
+            sbCommand.append(" \"\" ").append(Escape.eAD(data));
         } else {
           getToken(++i);
           if (!chk) {
@@ -1896,7 +1901,7 @@ public class IsoExt extends ScriptExt {
             Atom[] atoms = vwr.ms.at;
             vwr.autoCalculate(tokProperty, null);
             if (tokProperty != T.color) {
-              pt = new P3();
+              pt = new P3d();
               for (int iAtom = ac; --iAtom >= 0;)
                 data[iAtom] = atoms[iAtom].atomPropertyFloat(vwr, tokProperty,
                     pt);
@@ -1905,10 +1910,10 @@ public class IsoExt extends ScriptExt {
           if (tokProperty == T.color)
             colorScheme = "inherit";
           if (tokAt(i + 1) == T.within) {
-            float d = floatParameter(i = i + 2);
+            double d = floatParameter(i = i + 2);
             sbCommand.append(" within " + d);
             addShapeProperty(propertyList, "propertyDistanceMax",
-                Float.valueOf(d));
+                Double.valueOf(d));
           }
         }
         propertyValue = data;
@@ -1958,8 +1963,8 @@ public class IsoExt extends ScriptExt {
         if (eval.getToken(++i).tok == T.bitset) {
           thisSet = (BS) eval.theToken.value;
         } else {
-          thisSet = (BS) eval.expandFloatArray(
-              eval.floatParameterSet(i, 1, Integer.MAX_VALUE), 1, true);
+          thisSet = (BS) eval.expandDoubleArray(
+              eval.doubleParameterSet(i, 1, Integer.MAX_VALUE), 1, true);
         }
         i = eval.iToken;
         break;
@@ -1973,7 +1978,7 @@ public class IsoExt extends ScriptExt {
       case T.center:
         propertyName = "center";
         propertyValue = centerParameter(++i);
-        sbCommand.append(" center " + Escape.eP((P3) propertyValue));
+        sbCommand.append(" center " + Escape.eP((P3d) propertyValue));
         i = eval.iToken;
         break;
       case T.sign:
@@ -1989,9 +1994,9 @@ public class IsoExt extends ScriptExt {
             propertyName = "colorDensity";
             sbCommand.append(" color density");
             if (isFloatParameter(i + 1)) {
-              float ptSize = floatParameter(++i);
+              double ptSize = floatParameter(++i);
               sbCommand.append(" " + ptSize);
-              propertyValue = Float.valueOf(ptSize);
+              propertyValue = Double.valueOf(ptSize);
             }
             break;
           }
@@ -2037,11 +2042,11 @@ public class IsoExt extends ScriptExt {
               sbCommand.append(" all");
               continue;
             }
-            float min = floatParameter(++i);
-            float max = floatParameter(++i);
-            addShapeProperty(propertyList, "red", Float.valueOf(min));
-            addShapeProperty(propertyList, "blue", Float.valueOf(max));
-            sbCommand.append(" ").appendF(min).append(" ").appendF(max);
+            double min = floatParameter(++i);
+            double max = floatParameter(++i);
+            addShapeProperty(propertyList, "red", Double.valueOf(min));
+            addShapeProperty(propertyList, "blue", Double.valueOf(max));
+            sbCommand.append(" ").appendD(min).append(" ").appendD(max);
             continue;
           }
           if (eval.isColorParam(i + 1)) {
@@ -2091,7 +2096,7 @@ public class IsoExt extends ScriptExt {
           return;
         //if (surfaceObjectSeen)
         sbCommand.append(" ").appendO(rd);
-        if (Float.isNaN(rd.value))
+        if (Double.isNaN(rd.value))
           rd.value = 100;
         propertyValue = rd;
         propertyName = "radius";
@@ -2110,11 +2115,11 @@ public class IsoExt extends ScriptExt {
         propertyValue = eval.planeParameter(i, isBest);
         i = eval.iToken;
         //if (surfaceObjectSeen)
-        sbCommand.append(" plane ").append(Escape.eP4((P4) propertyValue));
+        sbCommand.append(" plane ").append(Escape.eP4((P4d) propertyValue));
         break;
       case T.scale:
         propertyName = "scale";
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         sbCommand.append(" scale ").appendO(propertyValue);
         break;
       case T.all:
@@ -2132,16 +2137,16 @@ public class IsoExt extends ScriptExt {
         propertyValue = eval.getPoint4f(i);
         propertyName = "ellipsoid";
         i = eval.iToken;
-        sbCommand.append(" ellipsoid ").append(Escape.eP4((P4) propertyValue));
+        sbCommand.append(" ellipsoid ").append(Escape.eP4((P4d) propertyValue));
         break;
       //        } catch (Exception e) {
       //        }
       //        try {
       //          propertyName = "ellipsoid";
-      //          propertyValue = eval.floatParameterSet(i, 6, 6);
+      //          propertyValue = eval.doubleParameterSet(i, 6, 6);
       //          i = eval.iToken;
       //          sbCommand.append(" ellipsoid ").append(
-      //              Escape.eAF((float[]) propertyValue));
+      //              Escape.eAD((double[]) propertyValue));
       //          break;
       //        } catch (Exception e) {
       //        }
@@ -2167,7 +2172,7 @@ public class IsoExt extends ScriptExt {
         propertyName = "plane";
         propertyValue = eval.hklParameter(++i, null, true);
         i = eval.iToken;
-        sbCommand.append(" plane ").append(Escape.eP4((P4) propertyValue));
+        sbCommand.append(" plane ").append(Escape.eP4((P4d) propertyValue));
         break;
       case T.lcaocartoon:
         surfaceObjectSeen = true;
@@ -2191,8 +2196,8 @@ public class IsoExt extends ScriptExt {
           modelIndex = vwr.ms.at[atomIndex].mi;
           addShapeProperty(propertyList, "modelIndex",
               Integer.valueOf(modelIndex));
-          V3[] axes = { new V3(), new V3(), V3.newV(vwr.ms.at[atomIndex]),
-              new V3() };
+          V3d[] axes = { new V3d(), new V3d(), V3d.newV(vwr.ms.at[atomIndex]),
+              new V3d() };
           if (!lcaoType.equalsIgnoreCase("s")
               && vwr.getHybridizationAndAxes(atomIndex, axes[0], axes[1],
                   lcaoType) == null)
@@ -2216,7 +2221,7 @@ public class IsoExt extends ScriptExt {
         boolean isNegOffset = (tokAt(i + 1) == T.minus);
         if (isNegOffset)
           i++;
-        float[] linearCombination = null;
+        double[] linearCombination = null;
         switch (tokAt(++i)) {
         case T.nada:
           eval.bad();
@@ -2224,7 +2229,7 @@ public class IsoExt extends ScriptExt {
         case T.density:
           sbCommand.append("[1] squared ");
           addShapeProperty(propertyList, "squareLinear", Boolean.TRUE);
-          linearCombination = new float[] { 1 };
+          linearCombination = new double[] { 1 };
           offset = moNumber = 0;
           i++;
           break;
@@ -2252,7 +2257,7 @@ public class IsoExt extends ScriptExt {
           break;
         default:
           if (eval.isArrayParameter(i)) {
-            linearCombination = eval.floatParameterSet(i, 1, Integer.MAX_VALUE);
+            linearCombination = eval.doubleParameterSet(i, 1, Integer.MAX_VALUE);
             i = eval.iToken;
           }
         }
@@ -2261,7 +2266,7 @@ public class IsoExt extends ScriptExt {
           addShapeProperty(propertyList, "squareLinear", Boolean.TRUE);
           sbCommand.append(" squared");
           if (linearCombination == null)
-            linearCombination = new float[0];
+            linearCombination = new double[0];
         } else if (tokAt(i + 1) == T.point) {
           ++i;
           int monteCarloCount = intParameter(++i);
@@ -2358,7 +2363,7 @@ public class IsoExt extends ScriptExt {
       case T.anisotropy:
         propertyName = "anisotropy";
         propertyValue = getPoint3f(++i, false);
-        sbCommand.append(" anisotropy").append(Escape.eP((P3) propertyValue));
+        sbCommand.append(" anisotropy").append(Escape.eP((P3d) propertyValue));
         i = eval.iToken;
         break;
       case T.area:
@@ -2372,15 +2377,15 @@ public class IsoExt extends ScriptExt {
           sbCommand.append(" phase \"_orb\"");
           addShapeProperty(propertyList, "phase", "_orb");
         }
-        float[] nlmZprs = new float[7];
+        double[] nlmZprs = new double[7];
         nlmZprs[0] = intParameter(++i);
         nlmZprs[1] = intParameter(++i);
         nlmZprs[2] = intParameter(++i);
-        nlmZprs[3] = (isFloatParameter(i + 1) ? floatParameter(++i) : 6f);
+        nlmZprs[3] = (isFloatParameter(i + 1) ? floatParameter(++i) : 6d);
         //if (surfaceObjectSeen)
         sbCommand.append(" atomicOrbital ").appendI((int) nlmZprs[0])
             .append(" ").appendI((int) nlmZprs[1]).append(" ")
-            .appendI((int) nlmZprs[2]).append(" ").appendF(nlmZprs[3]);
+            .appendI((int) nlmZprs[2]).append(" ").appendD(nlmZprs[3]);
         if (tokAt(i + 1) == T.point) {
           i += 2;
           nlmZprs[4] = intParameter(i);
@@ -2389,7 +2394,7 @@ public class IsoExt extends ScriptExt {
               : ((int) -System.currentTimeMillis()) % 10000);
           //if (surfaceObjectSeen)
           sbCommand.append(" points ").appendI((int) nlmZprs[4]).appendC(' ')
-              .appendF(nlmZprs[5]).appendC(' ').appendI((int) nlmZprs[6]);
+              .appendD(nlmZprs[5]).appendC(' ').appendI((int) nlmZprs[6]);
         }
         propertyName = "hydrogenOrbital";
         propertyValue = nlmZprs;
@@ -2415,22 +2420,22 @@ public class IsoExt extends ScriptExt {
         if (!isIsosurface)
           invArg();
         isCavity = true;
-        float cavityRadius = (isFloatParameter(i + 1) ? floatParameter(++i)
-            : 1.2f);
-        float envelopeRadius = (isFloatParameter(i + 1) ? floatParameter(++i)
-            : 10f);
+        double cavityRadius = (isFloatParameter(i + 1) ? floatParameter(++i)
+            : 1.2d);
+        double envelopeRadius = (isFloatParameter(i + 1) ? floatParameter(++i)
+            : 10d);
         if (chk)
           continue;
-        if (envelopeRadius > 50f) {
+        if (envelopeRadius > 50d) {
           eval.integerOutOfRange(0, 50);
           return;
         }
-        sbCommand.append(" cavity ").appendF(cavityRadius).append(" ")
-            .appendF(envelopeRadius);
+        sbCommand.append(" cavity ").appendD(cavityRadius).append(" ")
+            .appendD(envelopeRadius);
         addShapeProperty(propertyList, "envelopeRadius",
-            Float.valueOf(envelopeRadius));
+            Double.valueOf(envelopeRadius));
         addShapeProperty(propertyList, "cavityRadius",
-            Float.valueOf(cavityRadius));
+            Double.valueOf(cavityRadius));
         propertyName = "cavity";
         break;
       case T.contour:
@@ -2439,9 +2444,9 @@ public class IsoExt extends ScriptExt {
         sbCommand.append(" contour");
         switch (tokAt(i + 1)) {
         case T.discrete:
-          propertyValue = eval.floatParameterSet(i + 2, 1, Integer.MAX_VALUE);
+          propertyValue = eval.doubleParameterSet(i + 2, 1, Integer.MAX_VALUE);
           sbCommand.append(" discrete ")
-              .append(Escape.eAF((float[]) propertyValue));
+              .append(Escape.eAD((double[]) propertyValue));
           i = eval.iToken;
           break;
         case T.increment:
@@ -2469,17 +2474,17 @@ public class IsoExt extends ScriptExt {
         sbCommand.append(" cutoff ");
         if (tokAt(++i) == T.plus) {
           propertyName = "cutoffPositive";
-          propertyValue = Float.valueOf(cutoff = floatParameter(++i));
+          propertyValue = Double.valueOf(cutoff = floatParameter(++i));
           sbCommand.append("+").appendO(propertyValue);
         } else if (isFloatParameter(i)) {
           propertyName = "cutoff";
-          propertyValue = Float.valueOf(cutoff = floatParameter(i));
+          propertyValue = Double.valueOf(cutoff = floatParameter(i));
           sbCommand.appendO(propertyValue);
         } else {
           propertyName = "cutoffRange";
-          propertyValue = eval.floatParameterSet(i, 2, 2);
-          addShapeProperty(propertyList, "cutoff", Float.valueOf(0));
-          sbCommand.append(Escape.eAF((float[]) propertyValue));
+          propertyValue = eval.doubleParameterSet(i, 2, 2);
+          addShapeProperty(propertyList, "cutoff", Double.valueOf(0));
+          sbCommand.append(Escape.eAD((double[]) propertyValue));
           i = eval.iToken;
         }
         break;
@@ -2494,7 +2499,7 @@ public class IsoExt extends ScriptExt {
         propertyValue = eval.getPoint4f(++i);
         //if (surfaceObjectSeen)
         sbCommand.append(" eccentricity ")
-            .append(Escape.eP4((P4) propertyValue));
+            .append(Escape.eP4((P4d) propertyValue));
         i = eval.iToken;
         break;
       case T.ed:
@@ -2561,11 +2566,11 @@ public class IsoExt extends ScriptExt {
         //if (!surfaceObjectSeen)
         sbCommand.append(" inline");
         vxy.addLast(name); // (0) = name
-        P3 pt3 = getPoint3f(++i, false);
+        P3d pt3 = getPoint3f(++i, false);
         //if (!surfaceObjectSeen)
         sbCommand.append(" ").append(Escape.eP(pt3));
         vxy.addLast(pt3); // (1) = {origin}
-        P4 pt4;
+        P4d pt4;
         ptX = ++eval.iToken;
         vxy.addLast(pt4 = eval.getPoint4f(ptX)); // (2) = {ni ix iy iz}
         //if (!surfaceObjectSeen)
@@ -2584,8 +2589,8 @@ public class IsoExt extends ScriptExt {
         if (nX == 0 || nY == 0 || nZ == 0)
           invArg();
         if (!chk) {
-          float[][] fdata = null;
-          float[][][] xyzdata = null;
+          double[][] fdata = null;
+          double[][][] xyzdata = null;
           if (isFxyz) {
             if (isInline) {
               nX = Math.abs(nX);
@@ -2593,8 +2598,8 @@ public class IsoExt extends ScriptExt {
               nZ = Math.abs(nZ);
               xyzdata = floatArraySetXYZ(++eval.iToken, nX, nY, nZ);
             } else if (isXYZV) {
-              xyzdata = (float[][][]) vwr.getDataObj(name, null,
-                  JmolDataManager.DATA_TYPE_AFFF);
+              xyzdata = (double[][][]) vwr.getDataObj(name, null,
+                  JmolDataManager.DATA_TYPE_ADDD);
             } else {
               xyzdata = vwr.functionXYZ(name, nX, nY, nZ);
             }
@@ -2613,7 +2618,7 @@ public class IsoExt extends ScriptExt {
                       + xyzdata[0][0].length + "] is not of size [" + nX + "]["
                       + nY + "][" + nZ + "]");
             }
-            vxy.addLast(xyzdata); // (5) = float[][][] data
+            vxy.addLast(xyzdata); // (5) = double[][][] data
             //if (!surfaceObjectSeen)
             sbCommand.append(" ").append(Escape.e(xyzdata));
           } else {
@@ -2622,8 +2627,8 @@ public class IsoExt extends ScriptExt {
               nY = Math.abs(nY);
               fdata = floatArraySet(++eval.iToken, nX, nY);
             } else if (isXYZ) {
-              fdata = (float[][]) vwr.getDataObj(name, null,
-                  JmolDataManager.DATA_TYPE_AFF);
+              fdata = (double[][]) vwr.getDataObj(name, null,
+                  JmolDataManager.DATA_TYPE_ADD);
               nX = (fdata == null ? 0 : fdata.length);
               nY = 3;
             } else {
@@ -2654,7 +2659,7 @@ public class IsoExt extends ScriptExt {
                         + fdata[j].length + " " + nY + ".");
               }
             }
-            vxy.addLast(fdata); // (5) = float[][] data
+            vxy.addLast(fdata); // (5) = double[][] data
             //if (!surfaceObjectSeen)
             sbCommand.append(" ").append(Escape.e(fdata));
           }
@@ -2663,7 +2668,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.val:
         boolean isBS = e.isAtomExpression(++i);
-        P3[] probes = getAllPoints(i, 1);
+        P3d[] probes = getAllPoints(i, 1);
         sbCommand.append(" value "
             + (isBS ? e.atomExpressionAt(i).toString() : Escape.eAP(probes)));
         propertyName = "probes";
@@ -2698,7 +2703,7 @@ public class IsoExt extends ScriptExt {
         propertyValue = eval.getPoint4f(++i);
         i = eval.iToken;
         //if (!surfaceObjectSeen)
-        sbCommand.append(" lobe ").append(Escape.eP4((P4) propertyValue));
+        sbCommand.append(" lobe ").append(Escape.eP4((P4d) propertyValue));
         surfaceObjectSeen = true;
         break;
       case T.lonepair:
@@ -2708,7 +2713,7 @@ public class IsoExt extends ScriptExt {
         propertyValue = eval.getPoint4f(++i);
         i = eval.iToken;
         //if (!surfaceObjectSeen)
-        sbCommand.append(" lp ").append(Escape.eP4((P4) propertyValue));
+        sbCommand.append(" lp ").append(Escape.eP4((P4d) propertyValue));
         surfaceObjectSeen = true;
         break;
       case T.mapproperty:
@@ -2721,10 +2726,10 @@ public class IsoExt extends ScriptExt {
           addShapeProperty(propertyList, "bsSolvent",
               (haveRadius || haveIntersection ? new BS()
                   : eval.lookupIdentifierValue("solvent")));
-          addShapeProperty(propertyList, "sasurface", Float.valueOf(0));
+          addShapeProperty(propertyList, "sasurface", Double.valueOf(0));
         }
         if (sbCommand.length() == 0) {
-          plane = (P4) getShapeProperty(JC.SHAPE_ISOSURFACE, "plane");
+          plane = (P4d) getShapeProperty(JC.SHAPE_ISOSURFACE, "plane");
           if (plane == null) {
             if (getShapeProperty(JC.SHAPE_ISOSURFACE, "contours") != null) {
               addShapeProperty(propertyList, "nocontour", null);
@@ -2759,7 +2764,7 @@ public class IsoExt extends ScriptExt {
         propertyValue = eval.getPoint4f(++i);
         i = eval.iToken;
         //if (!surfaceObjectSeen)
-        sbCommand.append(" radical ").append(Escape.eP4((P4) propertyValue));
+        sbCommand.append(" radical ").append(Escape.eP4((P4d) propertyValue));
         break;
       case T.modelbased:
         propertyName = "fixed";
@@ -2770,21 +2775,21 @@ public class IsoExt extends ScriptExt {
       case T.sasurface:
       case T.solvent:
         onlyOneModel = eval.theToken.value;
-        float radius;
+        double radius;
         if (tok == T.molecular) {
           propertyName = "molecular";
           sbCommand.append(" molecular");
-          radius = (isFloatParameter(i + 1) ? floatParameter(++i) : 1.4f);
+          radius = (isFloatParameter(i + 1) ? floatParameter(++i) : 1.4d);
         } else {
           addShapeProperty(propertyList, "bsSolvent",
               eval.lookupIdentifierValue("solvent"));
           propertyName = (tok == T.sasurface ? "sasurface" : "solvent");
           sbCommand.append(" ").appendO(eval.theToken.value);
           radius = (isFloatParameter(i + 1) ? floatParameter(++i)
-              : vwr.getFloat(T.solventproberadius));
+              : vwr.getDouble(T.solventproberadius));
         }
-        sbCommand.append(" ").appendF(radius);
-        propertyValue = Float.valueOf(radius);
+        sbCommand.append(" ").appendD(radius);
+        propertyValue = Double.valueOf(radius);
         if (tokAt(i + 1) == T.full) {
           addShapeProperty(propertyList, "doFullMolecular", null);
           //if (!surfaceObjectSeen)
@@ -2823,7 +2828,7 @@ public class IsoExt extends ScriptExt {
       case T.pointsperangstrom:
       case T.resolution:
         propertyName = "resolution";
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         sbCommand.append(" resolution ").appendO(propertyValue);
         break;
       case T.reversecolor:
@@ -2834,13 +2839,13 @@ public class IsoExt extends ScriptExt {
       case T.rmsd:
       case T.sigma:
         propertyName = "sigma";
-        propertyValue = Float.valueOf(sigma = floatParameter(++i));
+        propertyValue = Double.valueOf(sigma = floatParameter(++i));
         sbCommand.append(" sigma ").appendO(propertyValue);
         break;
       case T.geosurface:
         // geosurface [radius]
         propertyName = "geodesic";
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         //if (!surfaceObjectSeen)
         sbCommand.append(" geosurface ").appendO(propertyValue);
         surfaceObjectSeen = true;
@@ -2848,7 +2853,7 @@ public class IsoExt extends ScriptExt {
       case T.sphere:
         // sphere [radius]
         propertyName = "sphere";
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         //if (!surfaceObjectSeen)
         sbCommand.append(" sphere ").appendO(propertyValue);
         surfaceObjectSeen = true;
@@ -2878,7 +2883,7 @@ public class IsoExt extends ScriptExt {
       case T.leftsquare:
       case T.spacebeforesquare:
       case T.varray:
-        // [ float, filename, float, filename, ...]
+        // [ double, filename, double, filename, ...]
         if (filesData != null || isWild)
           invArg();
         Lst<Object> list = eval.listParameter4(i, 2, Integer.MAX_VALUE, true);
@@ -2887,14 +2892,14 @@ public class IsoExt extends ScriptExt {
         if (n == 0 || n * 2 != list.size())
           invArg();
         String[] files = new String[n];
-        float[] factors = new float[n];
+        double[] factors = new double[n];
         sbCommand.append("[");
         try {
           for (int j = 0, ptf = 0; j < n; j++) {
-            factors[j] = ((Float) list.get(ptf++)).floatValue();
+            factors[j] = ((Number) list.get(ptf++)).doubleValue();
             files[j] = e.checkFileExists("ISOSURFACE_" + j + "_", false,
                 (String) list.get(ptf++), i, false);
-            sbCommand.appendF(factors[j]);
+            sbCommand.appendD(factors[j]);
             sbCommand.append(" /*file*/").append(PT.esc(files[j]));
           }
           sbCommand.append("]");
@@ -2947,7 +2952,7 @@ public class IsoExt extends ScriptExt {
         }
         
         if (filename.startsWith("*") || filename.startsWith("=")) {
-          boolean haveCutoff = (!Float.isNaN(cutoff) || !Float.isNaN(sigma));
+          boolean haveCutoff = (!Double.isNaN(cutoff) || !Double.isNaN(sigma));
           boolean isFull = (filename.indexOf("/full") >= 0);
           if (isFull)
             filename = PT.rep(filename, "/full", "");
@@ -2955,7 +2960,7 @@ public class IsoExt extends ScriptExt {
             filename = "*" + filename.substring(0, filename.indexOf("/diff"));
           if (filename.startsWith("**")) {
             if (!haveCutoff)
-              addShapeProperty(propertyList, "sigma", Float.valueOf(sigma = 3));
+              addShapeProperty(propertyList, "sigma", Double.valueOf(sigma = 3));
             if (!isSign) {
               isSign = true;
               sbCommand.append(" sign");
@@ -2978,7 +2983,7 @@ public class IsoExt extends ScriptExt {
               modelIndex = vwr.am.cmi;
             bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
             if (bs.nextSetBit(0) >= 0) {
-              pts = getWithinDistanceVector(propertyList, 2.0f, null, bs,
+              pts = getWithinDistanceVector(propertyList, 2.0d, null, bs,
                   false);
               sbCommand.append(" within 2.0 ").append(Escape.eBS(bs));
             }
@@ -2993,23 +2998,23 @@ public class IsoExt extends ScriptExt {
             defaultMesh = true;
         }
         int p = (filename == null ? -1 : filename.indexOf("#-"));
-        if (Float.isNaN(sigma) && Float.isNaN(cutoff)) {
+        if (Double.isNaN(sigma) && Double.isNaN(cutoff)) {
           if ((p = filename.indexOf("#-cutoff=")) >= 0) {
-            addShapeProperty(propertyList, "cutoff", Float.valueOf(cutoff = Float.parseFloat(filename.substring(p + 9))));            
+            addShapeProperty(propertyList, "cutoff", Double.valueOf(cutoff = Double.parseDouble(filename.substring(p + 9))));            
             sbCommand.append(" cutoff " + cutoff);
           } else if ((p = filename.indexOf("#-sigma=")) >= 0) {
-            addShapeProperty(propertyList, "sigma", Float.valueOf(sigma = Float.parseFloat(filename.substring(p + 8))));            
+            addShapeProperty(propertyList, "sigma", Double.valueOf(sigma = Double.parseDouble(filename.substring(p + 8))));            
             sbCommand.append(" sigma " + sigma);
           }
         }
-        if (!Float.isNaN(sigma))
+        if (!Double.isNaN(sigma))
           showString("using sigma = " + sigma);
-        else if (!Float.isNaN(cutoff))
+        else if (!Double.isNaN(cutoff))
           showString("using cutoff = " + cutoff);
         if (firstPass && vwr.getP("_fileType").equals("Pdb")
-            && Float.isNaN(sigma) && Float.isNaN(cutoff)) {
+            && Double.isNaN(sigma) && Double.isNaN(cutoff)) {
           // negative sigma just indicates that 
-          addShapeProperty(propertyList, "sigma", Float.valueOf(-1));
+          addShapeProperty(propertyList, "sigma", Double.valueOf(-1));
           sbCommand.append(" sigma -1.0");
         }
         if (filename.length() == 0) {
@@ -3083,7 +3088,7 @@ public class IsoExt extends ScriptExt {
           break;
         default:
           propertyValue = new int[] {
-              (int) eval.floatParameterSet(i, 1, 1)[0] };
+              (int) eval.doubleParameterSet(i, 1, 1)[0] };
           break;
         }
         i = eval.iToken;
@@ -3102,7 +3107,7 @@ public class IsoExt extends ScriptExt {
         if (tokAt(i + 1) == T.plus)
           i++;
         propertyName = "extendGrid";
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         sbCommand.append(" unitcell " + propertyValue);
         break;
       case T.lattice:
@@ -3135,7 +3140,7 @@ public class IsoExt extends ScriptExt {
         }
         /* I have no idea why this is here....
         if (planeSeen && !surfaceObjectSeen) {
-          addShapeProperty(propertyList, "nomap", Float.valueOf(0));
+          addShapeProperty(propertyList, "nomap", Double.valueOf(0));
           surfaceObjectSeen = true;
         }
         */
@@ -3166,12 +3171,12 @@ public class IsoExt extends ScriptExt {
         surfaceObjectSeen = true;
         addShapeProperty(propertyList, "bsSolvent",
             (haveRadius ? new BS() : eval.lookupIdentifierValue("solvent")));
-        addShapeProperty(propertyList, "sasurface", Float.valueOf(0));
+        addShapeProperty(propertyList, "sasurface", Double.valueOf(0));
       }
       if (planeSeen && !surfaceObjectSeen && !isMapped) {
         // !isMapped mp.added 6/14/2012 12.3.30
         // because it was preventing planes from being mapped properly
-        addShapeProperty(propertyList, "nomap", Float.valueOf(0));
+        addShapeProperty(propertyList, "nomap", Double.valueOf(0));
         surfaceObjectSeen = true;
       }
       if (thisSet != null)
@@ -3184,7 +3189,7 @@ public class IsoExt extends ScriptExt {
         ColorEncoder ce = vwr.cm.getColorEncoder(colorScheme);
         if (ce != null) {
           ce.isTranslucent = isColorSchemeTranslucent;
-          ce.hi = Float.MAX_VALUE;
+          ce.hi = Double.MAX_VALUE;
           addShapeProperty(propertyList, "remapColor", ce);
         }
       }
@@ -3212,11 +3217,11 @@ public class IsoExt extends ScriptExt {
       }
       if (haveIntersection && !haveSlab) {
         if (!surfaceObjectSeen)
-          addShapeProperty(propertyList, "sasurface", Float.valueOf(0));
+          addShapeProperty(propertyList, "sasurface", Double.valueOf(0));
         if (!isMapped) {
           addShapeProperty(propertyList, "map", Boolean.TRUE);
           addShapeProperty(propertyList, "select", bs);
-          addShapeProperty(propertyList, "sasurface", Float.valueOf(0));
+          addShapeProperty(propertyList, "sasurface", Double.valueOf(0));
         }
         addShapeProperty(propertyList, "slab", getCapSlabObject(-100, false));
       }
@@ -3253,16 +3258,16 @@ public class IsoExt extends ScriptExt {
     Object volume = null;
     if (doCalcArea) {
       area = getShapeProperty(iShape, "area");
-      if (area instanceof Float)
-        vwr.setFloatProperty("isosurfaceArea", ((Float) area).floatValue());
+      if (area instanceof Double)
+        vwr.setFloatProperty("isosurfaceArea", ((Number) area).doubleValue());
       else
         vwr.g.setUserVariable("isosurfaceArea",
             SV.getVariableAD((double[]) area));
     }
     if (doCalcVolume) {
       volume = (doCalcVolume ? getShapeProperty(iShape, "volume") : null);
-      if (volume instanceof Float)
-        vwr.setFloatProperty("isosurfaceVolume", ((Float) volume).floatValue());
+      if (volume instanceof Double)
+        vwr.setFloatProperty("isosurfaceVolume", ((Number) volume).doubleValue());
       else
         vwr.g.setUserVariable("isosurfaceVolume",
             SV.getVariableAD((double[]) volume));
@@ -3278,8 +3283,8 @@ public class IsoExt extends ScriptExt {
                 : " select " + Escape.eBS(bsSelect) + " ") + cmd);
         s = (String) getShapeProperty(iShape, "ID");
         if (s != null && !eval.tQuiet && !isSilent) {
-          cutoff = ((Float) getShapeProperty(iShape, "cutoff")).floatValue();
-          if (Float.isNaN(cutoff) && !Float.isNaN(sigma))
+          cutoff = ((Number) getShapeProperty(iShape, "cutoff")).doubleValue();
+          if (Double.isNaN(cutoff) && !Double.isNaN(sigma))
             Logger.error("sigma not supported");
           s += " created " + getShapeProperty(iShape, "message");
         }
@@ -3287,7 +3292,7 @@ public class IsoExt extends ScriptExt {
       String sarea, svol;
       if (doCalcArea || doCalcVolume) {
         sarea = (doCalcArea ? "isosurfaceArea = "
-            + (area instanceof Float ? "" + area : Escape.eAD((double[]) area))
+            + (area instanceof Double ? "" + area : Escape.eAD((double[]) area))
             : null);
         svol = (doCalcVolume
             ? "isosurfaceVolume = " + (volume instanceof Float ? "" + volume
@@ -3352,9 +3357,9 @@ public class IsoExt extends ScriptExt {
         isosurface(JC.SHAPE_LCAOCARTOON);
         return;
       case T.rotate:
-        float degx = 0;
-        float degy = 0;
-        float degz = 0;
+        double degx = 0;
+        double degy = 0;
+        double degz = 0;
         switch (getToken(++i).tok) {
         case T.x:
           degx = floatParameter(++i) * JC.radiansPerDegree;
@@ -3369,7 +3374,7 @@ public class IsoExt extends ScriptExt {
           invArg();
         }
         propertyName = "rotationAxis";
-        propertyValue = V3.new3(degx, degy, degz);
+        propertyValue = V3d.new3(degx, degy, degz);
         break;
       case T.on:
       case T.display:
@@ -3430,7 +3435,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.scale:
         propertyName = "scale";
-        propertyValue = Float.valueOf(floatParameter(++i));
+        propertyValue = Double.valueOf(floatParameter(++i));
         break;
       case T.lonepair:
       case T.lp:
@@ -3493,14 +3498,14 @@ public class IsoExt extends ScriptExt {
     BS bsB = null;
     BS bs = null;
     RadiusData rd = null;
-    float[] params = null;
+    double[] params = null;
     boolean colorDensity = false;
     SB sbCommand = new SB();
     int minSet = Integer.MAX_VALUE;
     int displayType = T.plane;
     int contactType = T.nada;
-    float distance = Float.NaN;
-    float saProbeRadius = Float.NaN;
+    double distance = Double.NaN;
+    double saProbeRadius = Double.NaN;
     boolean localOnly = true;
     Boolean intramolecular = null;
     Object userSlabObject = null;
@@ -3571,17 +3576,17 @@ public class IsoExt extends ScriptExt {
         sbCommand.append(" density");
         if (isFloatParameter(i + 1)) {
           if (params == null)
-            params = new float[1];
+            params = new double[1];
           params[0] = -Math.abs(floatParameter(++i));
           sbCommand.append(" " + -params[0]);
         }
         break;
       case T.resolution:
-        float resolution = floatParameter(++i);
+        double resolution = floatParameter(++i);
         if (resolution > 0) {
-          sbCommand.append(" resolution ").appendF(resolution);
+          sbCommand.append(" resolution ").appendD(resolution);
           setShapeProperty(JC.SHAPE_CONTACT, "resolution",
-              Float.valueOf(resolution));
+              Double.valueOf(resolution));
         }
         break;
       case T.model:
@@ -3593,7 +3598,7 @@ public class IsoExt extends ScriptExt {
       case T.within:
       case T.distance:
         distance = floatParameter(++i);
-        sbCommand.append(" within ").appendF(distance);
+        sbCommand.append(" within ").appendD(distance);
         break;
       case T.plus:
       case T.integer:
@@ -3635,10 +3640,10 @@ public class IsoExt extends ScriptExt {
         displayType = tok;
         sbCommand.append(" ").appendO(eval.theToken.value);
         if (tok == T.sasurface)
-          sbCommand.append(" ").appendF(saProbeRadius);
+          sbCommand.append(" ").appendD(saProbeRadius);
         break;
       case T.parameters:
-        params = eval.floatParameterSet(++i, 1, 10);
+        params = eval.doubleParameterSet(++i, 1, 10);
         i = eval.iToken;
         break;
       case T.define:
@@ -3667,7 +3672,7 @@ public class IsoExt extends ScriptExt {
       if (contactType == T.vanderwaals && rd == null)
         rd = new RadiusData(null, 0, EnumType.OFFSET, VDW.AUTO);
       RadiusData rd1 = (rd == null
-          ? new RadiusData(null, 0.26f, EnumType.OFFSET, VDW.AUTO)
+          ? new RadiusData(null, 0.26d, EnumType.OFFSET, VDW.AUTO)
           : rd);
       if (displayType == T.nci && bsB == null && intramolecular != null
           && intramolecular.booleanValue())
@@ -3692,16 +3697,16 @@ public class IsoExt extends ScriptExt {
         setShapeProperty(JC.SHAPE_CONTACT, "minset", Integer.valueOf(minSet));
         sbCommand.append(" minSet ").appendI(minSet);
         if (params == null)
-          params = new float[] { 0.5f, 2 };
+          params = new double[] { 0.5d, 2 };
       }
 
       if (intramolecular != null) {
-        params = (params == null ? new float[2] : AU.ensureLengthA(params, 2));
+        params = (params == null ? new double[2] : AU.ensureLengthD(params, 2));
         params[1] = (intramolecular.booleanValue() ? 1 : 2);
       }
 
       if (params != null)
-        sbCommand.append(" parameters ").append(Escape.eAF(params));
+        sbCommand.append(" parameters ").append(Escape.eAD(params));
 
       // now adjust for type -- HBOND or HYDROPHOBIC or MISC
       // these are just "standard shortcuts" they are not necessary at all
@@ -3709,7 +3714,7 @@ public class IsoExt extends ScriptExt {
           new Object[] { Integer.valueOf(contactType),
               Integer.valueOf(displayType), Boolean.valueOf(colorDensity),
               Boolean.valueOf(colorByType), bsA, bsB, rd,
-              Float.valueOf(saProbeRadius), params, Integer.valueOf(modelIndex),
+              Double.valueOf(saProbeRadius), params, Integer.valueOf(modelIndex),
               sbCommand.toString() });
       if (colorpt > 0)
         eval.setMeshDisplayProperty(JC.SHAPE_CONTACT, colorpt, 0);
@@ -3730,7 +3735,7 @@ public class IsoExt extends ScriptExt {
         for (int i = 0; i < vs.length; i++)
           v += (isFull ? vs[i] : Math.abs(vs[i])); // no abs value for full -- some are negative
       } else {
-        v = ((Float) volume).floatValue();
+        v = ((Number) volume).doubleValue();
       }
       v = (Math.round(v * 1000) / 1000.);
       if (colorDensity || displayType != T.trim) {
@@ -3758,7 +3763,7 @@ public class IsoExt extends ScriptExt {
     boolean isInitialized = false;
     int modelIndex = -1;
     Lst<Object> data = null;
-    float translucentLevel = Float.MAX_VALUE;
+    double translucentLevel = Double.MAX_VALUE;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
     int intScale = 0;
     for (int i = eval.iToken; i < slen; ++i) {
@@ -3786,7 +3791,7 @@ public class IsoExt extends ScriptExt {
           intScale = intParameter(i);
           continue;
         case T.decimal:
-          intScale = Math.round(floatParameter(i) * 100);
+          intScale = (int) Math.round(floatParameter(i) * 100);
           continue;
         }
         error(ScriptError.ERROR_numberExpected);
@@ -3850,9 +3855,9 @@ public class IsoExt extends ScriptExt {
    * @param fileName
    * @return calculated atom potentials
    */
-  private float[] getAtomicPotentials(BS bsSelected, BS bsIgnore,
+  private double[] getAtomicPotentials(BS bsSelected, BS bsIgnore,
                                       String fileName) {
-    float[] potentials = new float[vwr.ms.ac];
+    double[] potentials = new double[vwr.ms.ac];
     MepCalculation m = (MepCalculation) Interface
         .getOption("quantum.MlpCalculation", vwr, "script");
     m.set(vwr);
@@ -3872,22 +3877,22 @@ public class IsoExt extends ScriptExt {
       throws ScriptException {
     if (i < 0) {
       // standard range -100 to 0
-      return TempArray.getSlabWithinRange(i, 0);
+      return MeshSurface.getSlabWithinRange(i, 0);
     }
     ScriptEval eval = e;
     Object data = null;
     int tok0 = tokAt(i);
     boolean isSlab = (tok0 == T.slab);
     int tok = tokAt(i + 1);
-    P4 plane = null;
-    P3[] pts = null;
-    float d, d2;
+    P4d plane = null;
+    P3d[] pts = null;
+    double d, d2;
     BS bs = null;
     Short slabColix = null;
     Integer slabMeshType = null;
     if (tok == T.translucent) {
-      float slabTranslucency = (isFloatParameter(++i + 1) ? floatParameter(++i)
-          : 0.5f);
+      double slabTranslucency = (isFloatParameter(++i + 1) ? floatParameter(++i)
+          : 0.5d);
       if (eval.isColorParam(i + 1)) {
         slabColix = Short.valueOf(
             C.getColixTranslucent3(C.getColix(eval.getArgbParam(i + 1)),
@@ -3919,7 +3924,7 @@ public class IsoExt extends ScriptExt {
     case T.dollarsign:
       // do we need distance here? "-" here?
       i++;
-      data = new Object[] { Float.valueOf(1), paramAsStr(++i) };
+      data = new Object[] { Double.valueOf(1), paramAsStr(++i) };
       tok = T.mesh;
       break;
     case T.within:
@@ -3928,20 +3933,20 @@ public class IsoExt extends ScriptExt {
       if (tokAt(++i) == T.range) {
         d = floatParameter(++i);
         d2 = floatParameter(++i);
-        data = new Object[] { Float.valueOf(d), Float.valueOf(d2) };
+        data = new Object[] { Double.valueOf(d), Double.valueOf(d2) };
         tok = T.range;
       } else if (isFloatParameter(i)) {
         // isosurface SLAB WITHIN distance {atomExpression}|[point array]
         d = floatParameter(i);
         if (eval.isCenterParameter(++i)) {
           Object[] ret = new Object[1];
-          P3 pt = eval.centerParameter(i, ret);
+          P3d pt = eval.centerParameter(i, ret);
           if (chk || !(ret[0] instanceof BS)) {
-            pts = new P3[] { pt };
+            pts = new P3d[] { pt };
           } else {
             Atom[] atoms = vwr.ms.at;
             bs = (BS) ret[0];
-            pts = new P3[bs.cardinality()];
+            pts = new P3d[bs.cardinality()];
             for (int k = 0, j = bs.nextSetBit(0); j >= 0; j = bs
                 .nextSetBit(j + 1), k++)
               pts[k] = atoms[j];
@@ -3953,7 +3958,7 @@ public class IsoExt extends ScriptExt {
           eval.iToken = i;
           invArg();
         }
-        data = new Object[] { Float.valueOf(d), pts, bs };
+        data = new Object[] { Double.valueOf(d), pts, bs };
       } else {
         data = eval.getPointArray(i, 4, false);
         tok = T.boundbox;
@@ -3979,24 +3984,24 @@ public class IsoExt extends ScriptExt {
             unitCell.getCartesianOffset());
         int iType = (int) unitCell
             .getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS);
-        V3 v1 = null;
-        V3 v2 = null;
+        V3d v1 = null;
+        V3d v2 = null;
         switch (iType) {
         case 3:
           break;
         case 1: // polymer
-          v2 = V3.newVsub(pts[2], pts[0]);
-          v2.scale(1000f);
+          v2 = V3d.newVsub(pts[2], pts[0]);
+          v2.scale(1000d);
           //$FALL-THROUGH$
         case 2: // slab
           // "a b c" is really "z y x"
-          v1 = V3.newVsub(pts[1], pts[0]);
-          v1.scale(1000f);
+          v1 = V3d.newVsub(pts[1], pts[0]);
+          v1.scale(1000d);
           pts[0].sub(v1);
-          pts[1].scale(2000f);
+          pts[1].scale(2000d);
           if (iType == 1) {
             pts[0].sub(v2);
-            pts[2].scale(2000f);
+            pts[2].scale(2000d);
           }
           break;
         }
@@ -4022,23 +4027,23 @@ public class IsoExt extends ScriptExt {
         if (!isFloatParameter(i + 1))
           return Integer.valueOf((int) d);
         d2 = floatParameter(++i);
-        data = new Object[] { Float.valueOf(d), Float.valueOf(d2) };
+        data = new Object[] { Double.valueOf(d), Double.valueOf(d2) };
         tok = T.range;
         break;
       }
       // isosurface SLAB [plane]
       plane = eval.planeParameter(++i, false);
-      float off = (isFloatParameter(eval.iToken + 1)
+      double off = (isFloatParameter(eval.iToken + 1)
           ? floatParameter(++eval.iToken)
-          : Float.NaN);
-      if (!Float.isNaN(off))
+          : Double.NaN);
+      if (!Double.isNaN(off))
         plane.w -= off;
       data = plane;
       tok = T.plane;
     }
     Object colorData = (slabMeshType == null ? null
         : new Object[] { slabMeshType, slabColix });
-    return TempArray.getSlabObjectType(tok, data, !isSlab, colorData);
+    return MeshSurface.getSlabObjectType(tok, data, !isSlab, colorData);
   }
 
   private String setColorOptions(SB sb, int index, int iShape, int nAllowed)
@@ -4049,13 +4054,13 @@ public class IsoExt extends ScriptExt {
     if (eval.theTok == T.translucent) {
       translucency = "translucent";
       if (nAllowed < 0) {
-        float value = (isFloatParameter(index + 1) ? floatParameter(++index)
-            : Float.MAX_VALUE);
+        double value = (isFloatParameter(index + 1) ? floatParameter(++index)
+            : Double.MAX_VALUE);
         eval.setShapeTranslucency(iShape, null, "translucent", value, null);
         if (sb != null) {
           sb.append(" translucent");
-          if (value != Float.MAX_VALUE)
-            sb.append(" ").appendF(value);
+          if (value != Double.MAX_VALUE)
+            sb.append(" ").appendD(value);
         }
       } else {
         eval.setMeshDisplayProperty(iShape, index, eval.theTok);
@@ -4097,21 +4102,21 @@ public class IsoExt extends ScriptExt {
           "function " + fname + "(" + xyz + ") { return " + ret + "}", false);
       Lst<SV> params = new Lst<SV>();
       for (int i = 0; i < xyz.length(); i += 2)
-        params.addLast(SV.newF(0).setName(xyz.substring(i, i + 1)));
+        params.addLast(SV.newD(0).setName(xyz.substring(i, i + 1)));
       return new Object[] { e.aatoken[0][1].value, params };
     } catch (Exception ex) {
       return null;
     }
   }
 
-  private P3[] getWithinDistanceVector(Lst<Object[]> propertyList,
-                                       float distance, P3 ptc, BS bs,
+  private P3d[] getWithinDistanceVector(Lst<Object[]> propertyList,
+                                       double distance, P3d ptc, BS bs,
                                        boolean isShow) {
-    Lst<P3> v = new Lst<P3>();
-    P3[] pts = new P3[2];
+    Lst<P3d> v = new Lst<P3d>();
+    P3d[] pts = new P3d[2];
     if (bs == null) {
-      P3 pt1 = P3.new3(distance, distance, distance);
-      P3 pt0 = P3.newP(ptc);
+      P3d pt1 = P3d.new3(distance, distance, distance);
+      P3d pt0 = P3d.newP(ptc);
       pt0.sub(pt1);
       pt1.add(ptc);
       pts[0] = pt0;
@@ -4125,11 +4130,11 @@ public class IsoExt extends ScriptExt {
         v.addLast(vwr.ms.at[bs.nextSetBit(0)]);
     }
     if (v.size() == 1 && !isShow) {
-      addShapeProperty(propertyList, "withinDistance", Float.valueOf(distance));
+      addShapeProperty(propertyList, "withinDistance", Double.valueOf(distance));
       addShapeProperty(propertyList, "withinPoint", v.get(0));
     }
     addShapeProperty(propertyList, (isShow ? "displayWithin" : "withinPoints"),
-        new Object[] { Float.valueOf(distance), pts, bs, v });
+        new Object[] { Double.valueOf(distance), pts, bs, v });
     return pts;
   }
 
@@ -4140,7 +4145,7 @@ public class IsoExt extends ScriptExt {
     propertyList.addLast(new Object[] { key, value });
   }
 
-  private float[][][] floatArraySetXYZ(int i, int nX, int nY, int nZ)
+  private double[][][] floatArraySetXYZ(int i, int nX, int nY, int nZ)
       throws ScriptException {
     ScriptEval eval = e;
     int tok = tokAt(i++);
@@ -4148,7 +4153,7 @@ public class IsoExt extends ScriptExt {
       tok = tokAt(i++);
     if (tok != T.leftsquare || nX <= 0)
       invArg();
-    float[][][] fparams = AU.newFloat3(nX, -1);
+    double[][][] fparams = AU.newDouble3(nX, -1);
     int n = 0;
     while (tok != T.rightsquare) {
       tok = getToken(i).tok;
@@ -4173,14 +4178,14 @@ public class IsoExt extends ScriptExt {
     return fparams;
   }
 
-  private float[][] floatArraySet(int i, int nX, int nY)
+  private double[][] floatArraySet(int i, int nX, int nY)
       throws ScriptException {
     int tok = tokAt(i++);
     if (tok == T.spacebeforesquare)
       tok = tokAt(i++);
     if (tok != T.leftsquare)
       invArg();
-    float[][] fparams = AU.newFloat2(nX);
+    double[][] fparams = AU.newDouble2(nX);
     int n = 0;
     while (tok != T.rightsquare) {
       tok = getToken(i).tok;
@@ -4193,7 +4198,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.leftsquare:
         i++;
-        float[] f = new float[nY];
+        double[] f = new double[nY];
         fparams[n++] = f;
         for (int j = 0; j < nY; j++) {
           f[j] = floatParameter(i++);
@@ -4254,8 +4259,8 @@ public class IsoExt extends ScriptExt {
     return true;
   }
 
-  private P3[] getBoxPoints(int type, SymmetryInterface uc, BS bsAtoms,
-                                     float scale) {
+  private P3d[] getBoxPoints(int type, SymmetryInterface uc, BS bsAtoms,
+                                     double scale) {
     switch (type) {
     case T.unitcell:
       return (uc == null ? null : uc.getCanonicalCopy(scale, true));

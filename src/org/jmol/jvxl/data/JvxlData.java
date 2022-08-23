@@ -71,8 +71,8 @@ import javajs.util.BS;
 
 import javajs.util.Lst;
 import javajs.util.SB;
-import javajs.util.P3;
-import javajs.util.P4;
+import javajs.util.P3d;
+import javajs.util.P4d;
 
 
 /*
@@ -98,7 +98,7 @@ public class JvxlData {
   public String jvxlVolumeDataXml;
   public BS[] jvxlExcluded = new BS[4];
   
-  public P4 jvxlPlane;
+  public P4d jvxlPlane;
 
   public boolean isJvxlPrecisionColor;
   public boolean jvxlDataIsColorMapped;
@@ -121,12 +121,12 @@ public class JvxlData {
   public boolean isCutoffAbsolute;
   public boolean isModelConnected;
   public boolean vertexDataOnly;
-  public float mappedDataMin;
-  public float mappedDataMax;
-  public float valueMappedToRed;
-  public float valueMappedToBlue;
-  public float cutoff;
-  public float pointsPerAngstrom; 
+  public double mappedDataMin;
+  public double mappedDataMax;
+  public double valueMappedToRed;
+  public double valueMappedToBlue;
+  public double cutoff;
+  public double pointsPerAngstrom; 
   public int nPointsX, nPointsY, nPointsZ;
   public long nBytes;
   public int nContours;
@@ -141,23 +141,23 @@ public class JvxlData {
   public Lst<Object>[] vContours;
   public short[] contourColixes;
   public String contourColors;
-  public float[] contourValues;
-  public float[] contourValuesUsed;
+  public double[] contourValues;
+  public double[] contourValuesUsed;
   public int thisContour = -1;
-  public float scale3d;
+  public double scale3d;
 
   public short minColorIndex = -1;
   public short maxColorIndex = 0;
 
   public String[] title;
   public String version;
-  public P3[] boundingBox;
+  public P3d[] boundingBox;
   public int excludedTriangleCount;
   public int excludedVertexCount;
   public boolean colorDensity;
-  public float pointSize;
+  public double pointSize;
   public String moleculeXml;
-  public float dataMin, dataMax;
+  public double dataMin, dataMax;
   public int saveVertexCount;
   
   // added Jmol 12.1.50
@@ -166,7 +166,7 @@ public class JvxlData {
   public int[] vertexColors;
   public String color;
   public String meshColor;
-  public float translucency;
+  public double translucency;
   public String colorScheme;
   public String rendering;
   public int slabValue = Integer.MIN_VALUE;
@@ -174,11 +174,11 @@ public class JvxlData {
   public int diameter;
   public String slabInfo;
   public boolean allowVolumeRender;
-  public float voxelVolume;
-  public P3 mapLattice;
-  public P3 fixedLattice;
+  public double voxelVolume;
+  public P3d mapLattice;
+  public P3d fixedLattice;
   public String baseColor;
-  public float integration = Float.NaN;
+  public double integration = Double.NaN;
   public SB sbOut;
 
   public void clear() {
@@ -190,12 +190,12 @@ public class JvxlData {
     color = null;
     colorScheme = null;
     colorDensity = false;
-    pointSize = Float.NaN;
+    pointSize = Double.NaN;
     contourValues = null;
     contourValuesUsed = null;
     contourColixes = null;
     contourColors = null;
-    integration = Float.NaN;
+    integration = Double.NaN;
     isSlabbable = false;
     isValid = true;
     mapLattice = null;
@@ -216,7 +216,7 @@ public class JvxlData {
     voxelVolume = 0;
   }
 
-  public void setSurfaceInfo(P4 thePlane, P3 mapLattice, int nSurfaceInts, String surfaceData) {
+  public void setSurfaceInfo(P4d thePlane, P3d mapLattice, int nSurfaceInts, String surfaceData) {
     jvxlSurfaceData = surfaceData;
     if (jvxlSurfaceData.indexOf("--") == 0)
       jvxlSurfaceData = jvxlSurfaceData.substring(2);
@@ -225,10 +225,10 @@ public class JvxlData {
     this.nSurfaceInts = nSurfaceInts;
   }
 
-  public void setSurfaceInfoFromBitSet(BS bs, P4 thePlane) {
+  public void setSurfaceInfoFromBitSet(BS bs, P4d thePlane) {
     setSurfaceInfoFromBitSetPts(bs, thePlane, null);
   }
-  public void setSurfaceInfoFromBitSetPts(BS bs, P4 thePlane, P3 mapLattice) {
+  public void setSurfaceInfoFromBitSetPts(BS bs, P4d thePlane, P3d mapLattice) {
     SB sb = new SB();
     int nSurfaceInts = (thePlane != null ? 0 : JvxlCoder.jvxlEncodeBitSetBuffer(bs,
         nPointsX * nPointsY * nPointsZ, sb));
@@ -240,14 +240,14 @@ public class JvxlData {
     this.nBytes = nBytes;
   }
 
-  public static String updateSurfaceData(String edgeData, float[] vertexValues,
+  public static String updateSurfaceData(String edgeData, double[] vertexValues,
                                          int vertexCount, int vertexIncrement,
                                          char isNaN) {
     if (edgeData.length() == 0)
       return "";
     char[] chars = edgeData.toCharArray();
     for (int i = 0, ipt = 0; i < vertexCount; i += vertexIncrement, ipt++)
-      if (Float.isNaN(vertexValues[i]))
+      if (Double.isNaN(vertexValues[i]))
         chars[ipt] = isNaN;
     return String.copyValueOf(chars);
   }

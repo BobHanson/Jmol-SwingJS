@@ -166,7 +166,7 @@ public class GhemicalMMReader extends AtomSetCollectionReader {
       if (atomIndex != i)
         throw new Exception("bad atom index in !Charges" +
                             "expected: " + i + " saw:" + atomIndex);
-      atoms[i].partialCharge = parseFloat();
+      atoms[i].partialCharge = parseDouble();
     }
   }
 }

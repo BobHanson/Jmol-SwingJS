@@ -67,7 +67,7 @@ import org.jmol.script.T;
 import org.jmol.util.Logger;
 
 import javajs.util.SB;
-import javajs.util.P3;
+import javajs.util.P3d;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -135,28 +135,28 @@ ActionListener, ChangeListener, Runnable {
   /**
    * Precision of the vibration scale slider
    */
-  private static final float AMPLITUDE_PRECISION = 0.01f;
+  private static final double AMPLITUDE_PRECISION = 0.01f;
   /**
    * Maximum value for vibration scale. Should be in preferences?
    */
-  private static final float AMPLITUDE_MAX = 1;
+  private static final double AMPLITUDE_MAX = 1;
   /**
    * Initial value of vibration scale. Should be in preferences?
    */
-  private static final float AMPLITUDE_VALUE = 0.5f;
+  private static final double AMPLITUDE_VALUE = 0.5d;
 
   /**
    * Precision of the vibration period slider in seconds.
    */
-  private static final float PERIOD_PRECISION = 0.001f;
+  private static final double PERIOD_PRECISION = 0.001f;
   /**
    * Maximum value for the vibration period in seconds. Should be in preferences?
    */
-  private static final float PERIOD_MAX = 1; // in seconds
+  private static final double PERIOD_MAX = 1; // in seconds
   /**
    * Initial value for the vibration period in seconds. Should be in preferences?
    */
-  private static final float PERIOD_VALUE = 0.5f;
+  private static final double PERIOD_VALUE = 0.5d;
 
   /**
    * Maximum value for vector radius.
@@ -170,15 +170,15 @@ ActionListener, ChangeListener, Runnable {
   /**
    * Precision of the vector scale slider
    */
-  private static final float SCALE_PRECISION = 0.01f;
+  private static final double SCALE_PRECISION = 0.01f;
   /**
    * Maximum value for vector scale. Should be in preferences?
    */
-  private static final float SCALE_MAX = 2.0f;
+  private static final double SCALE_MAX = 2.0d;
   /**
    * Initial value of vector scale. Should be in preferences?
    */
-  private static final float SCALE_VALUE = 1.0f;
+  private static final double SCALE_VALUE = 1.0d;
 
  
   
@@ -560,10 +560,10 @@ ActionListener, ChangeListener, Runnable {
           for (int i = 0, n = vwr.ms.ac; i < n;  i++) {
             if (vwr.ms.at[i].mi == modelIndex) {
               natoms++;
-              P3 p = vwr.ms.at[i];
+              P3d p = vwr.ms.at[i];
               // should really be getElementSymbol(i) in stead
               str.append(vwr.ms.at[i].getAtomName()).append("\t");
-              str.appendF(p.x).append("\t").appendF(p.y).append("\t").appendF(p.z).append("\n");
+              str.appendD(p.x).append("\t").appendD(p.y).append("\t").appendD(p.z).append("\n");
               // not sure how to get the vibration vector and charge here...
             }
           }

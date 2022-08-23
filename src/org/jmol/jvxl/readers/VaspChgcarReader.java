@@ -33,7 +33,7 @@ import javajs.util.SB;
 
 class VaspChgcarReader extends PeriodicVolumeFileReader {
 
-  private float volume;
+  private double volume;
 
   VaspChgcarReader(){
   }
@@ -76,13 +76,13 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
     jvxlFileHeaderBuffer = new SB();
     jvxlFileHeaderBuffer.append("Vasp CHGCAR format\n\n\n");
     rd(); // atoms
-    float scale = parseFloatStr(rd());
-    float[] data = new float[15];
+    double scale = parseDoubleStr(rd());
+    double[] data = new double[15];
     data[0] = -1;
     for (int i = 0, pt = 6; i < 3; ++i)
-      volumetricVectors[i].set(data[pt++] = parseFloatStr(rd()) * scale,
-          data[pt++] = parseFloat() * scale, data[pt++] = parseFloat() * scale);
-    volume = (float) SimpleUnitCell.newA(data).volume;
+      volumetricVectors[i].set(data[pt++] = parseDoubleStr(rd()) * scale,
+          data[pt++] = parseDouble() * scale, data[pt++] = parseDouble() * scale);
+    volume = (double) SimpleUnitCell.newA(data).volume;
     // v0 here will be the slowest, not the fastest
     while (rd().length() > 2) {
     }    
@@ -90,14 +90,14 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
     String[] counts = getTokens();
     for (int i = 0; i < 3; ++i) {
       volumetricVectors[i]
-          .scale(1f / ((voxelCounts[i] = parseIntStr(counts[i]) + 1) - 1));
+          .scale(1d / ((voxelCounts[i] = parseIntStr(counts[i]) + 1) - 1));
       if (isAnisotropic)
         setVectorAnisotropy(volumetricVectors[i]);
     }
     swapXZ();
     volumetricOrigin.set(0, 0, 0);
-    if (params.thePlane == null && (params.cutoffAutomatic || !Float.isNaN(params.sigma))) {
-      params.cutoff = 0.5f;
+    if (params.thePlane == null && (params.cutoffAutomatic || !Double.isNaN(params.sigma))) {
+      params.cutoff = 0.5d;
       Logger.info("Cutoff set to " + params.cutoff);
     }
   }
@@ -105,12 +105,12 @@ class VaspChgcarReader extends PeriodicVolumeFileReader {
   private int pt, nPerLine;
   
   @Override
-  protected float nextVoxel() throws Exception {
+  protected double nextVoxel() throws Exception {
     if (pt++ % nPerLine == 0 && nData > 0) {
       rd();
       next[0] = 0;
     }
-    return parseFloat() / volume;
+    return parseDouble() / volume;
   }
 
   @Override

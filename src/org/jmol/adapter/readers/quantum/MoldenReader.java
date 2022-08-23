@@ -113,13 +113,13 @@ public class MoldenReader extends MopacSlaterReader {
       // ANGS assumed here
       next[0] = 0;
       for (int i = 0; i < 6; i++)
-        setUnitCellItem(i, parseFloat());
+        setUnitCellItem(i, parseDouble());
       rd();
       return true;
     }
     if (line.startsWith("[CELLAXES]")) {
-      float[] f = new float[9];
-      fillFloatArray(null, 0, f);
+      double[] f = new double[9];
+      fillDoubleArray(null, 0, f);
       addExplicitLatticeVector(0, f, 0);
       addExplicitLatticeVector(1, f, 3);
       addExplicitLatticeVector(2, f, 6);
@@ -183,7 +183,7 @@ public class MoldenReader extends MopacSlaterReader {
     if (isAU && coordUnit.indexOf("AU") < 0)
       Logger.error("Molden atom line does not indicate units ANGS, AU, or FRACTIONAL -- AU assumed: " + line); 
     setFractionalCoordinates(isFractional);
-    float f = (isAU ? ANGSTROMS_PER_BOHR : 1);
+    double f = (isAU ? ANGSTROMS_PER_BOHR : 1);
     while (rd() != null && line.indexOf('[') < 0) {    
       String [] tokens = getTokens();
       if (tokens.length < 6)
@@ -197,7 +197,7 @@ public class MoldenReader extends MopacSlaterReader {
   private BS bsAtomOK = new BS();
   private BS bsBadIndex = new BS();
   private int[] nSPDF;
-  private boolean haveEnergy = true;
+  protected boolean haveEnergy = true;
   
   boolean readSlaterBasis() throws Exception {
     /*
@@ -216,10 +216,10 @@ public class MoldenReader extends MopacSlaterReader {
       String[] tokens = getTokens();
       if (tokens.length < 7)
         continue;
-      double zeta = parseFloatStr(tokens[5]) * stoFactor;
+      double zeta = parseDoubleStr(tokens[5]) * stoFactor;
       addSlater(parseIntStr(tokens[0]), parseIntStr(tokens[1]),
           parseIntStr(tokens[2]), parseIntStr(tokens[3]), parseIntStr(tokens[4]),
-          zeta, parseFloatStr(tokens[6]));
+          zeta, (double) parseDoubleStr(tokens[6]));
       nCoef++;
     }
     setSlaters(false);
@@ -245,7 +245,7 @@ public class MoldenReader extends MopacSlaterReader {
       s   10 1.00
      */
     shells = new  Lst<int[]>();
-    Lst<float[]> gdata = new  Lst<float[]>();
+    Lst<double[]> gdata = new  Lst<double[]>();
     int atomIndex = 0;
     int gaussianPtr = 0;
     nCoef = 0;
@@ -285,10 +285,10 @@ public class MoldenReader extends MopacSlaterReader {
           // or two (sp) contraction coefficient(s)
           String[] primTokens = PT.getTokens(rd());
           int nTokens = primTokens.length;
-          float orbData[] = new float[nTokens];
+          double orbData[] = new double[nTokens];
 
           for (int d = 0; d < nTokens; d++)
-            orbData[d] = parseFloatStr(primTokens[d]);
+            orbData[d] = (double) parseDoubleStr(primTokens[d]);
           gdata.addLast(orbData);
           gaussianPtr++;
         }
@@ -299,7 +299,7 @@ public class MoldenReader extends MopacSlaterReader {
       rd();
     }
 
-    float[][] garray = AU.newFloat2(gaussianPtr);
+    double[][] garray = AU.newDouble2(gaussianPtr);
     for (int i = 0; i < gaussianPtr; i++) {
       garray[i] = gdata.get(i);
     }
@@ -348,15 +348,15 @@ public class MoldenReader extends MopacSlaterReader {
     while (tokens != null && tokens.length > 0 && tokens[0].indexOf('[') < 0) {
       Map<String, Object> mo = new Hashtable<String, Object>();
       Lst<String> data = new Lst<String>();
-      float energy = Float.NaN;
-      float occupancy = Float.NaN;
+      double energy = Double.NaN;
+      double occupancy = Double.NaN;
       String symmetry = null;
       String key;
       while (parseIntStr(key = tokens[0]) == Integer.MIN_VALUE) {
         if (key.startsWith("Ene")) {
-          energy = parseFloatStr(tokens[1]);
+          energy = parseDoubleStr(tokens[1]);
         } else if (key.startsWith("Occup")) {
-          occupancy = parseFloatStr(tokens[1]);
+          occupancy = parseDoubleStr(tokens[1]);
         } else if (key.startsWith("Sym")) {
           symmetry = tokens[1];
         } else if (key.startsWith("Spin")) {
@@ -390,20 +390,20 @@ public class MoldenReader extends MopacSlaterReader {
         data.addLast("0");
       }
       
-      float[] coefs = new float[nCoef];
+      double[] coefs = new double[nCoef];
       for (int i = data.size(); --i >= 0;)
-        coefs[i] = parseFloatStr(data.get(i));
+        coefs[i] = parseDoubleStr(data.get(i));
       String l = line;
       line = "" + symmetry;
       if (filterMO()) {
         mo.put("coefficients", coefs);
-        if (Float.isNaN(energy)) {
+        if (Double.isNaN(energy)) {
           haveEnergy = false;
         } else {
-          mo.put("energy", Float.valueOf(energy));
+          mo.put("energy", Double.valueOf(energy));
         }
-        if (!Float.isNaN(occupancy))
-          mo.put("occupancy", Float.valueOf(occupancy));
+        if (!Double.isNaN(occupancy))
+          mo.put("occupancy", Double.valueOf(occupancy));
         if (symmetry != null)
           mo.put("symmetry", symmetry);
         if (alphaBeta.length() > 0)
@@ -454,7 +454,7 @@ public class MoldenReader extends MopacSlaterReader {
   }
 
   @SuppressWarnings("unchecked")
-  private void sortMOs() {
+  protected void sortMOs() {
     Object[] list = orbitals.toArray(new Object[orbitals.size()]);
     Arrays.sort(list, new MOEnergySorter());
     orbitals.clear();
@@ -505,7 +505,7 @@ public class MoldenReader extends MopacSlaterReader {
  //   int iFreq = 0;
     while (rd() != null && line.indexOf('[') < 0) {
       String f = getTokens()[0];
-//      bsOK.set(iFreq++, parseFloatStr(f) != 0);
+//      bsOK.set(iFreq++, parseDoubleStr(f) != 0);
       frequencies.addLast(f);
     }
     int nFreqs = frequencies.size();
@@ -528,9 +528,9 @@ public class MoldenReader extends MopacSlaterReader {
       for (int i = 0; i < modelAtomCount; i++) {
         tokens = PT.getTokens(rd());
         asc.addVibrationVector(i + i0,
-            parseFloatStr(tokens[0]) * ANGSTROMS_PER_BOHR,
-            parseFloatStr(tokens[1]) * ANGSTROMS_PER_BOHR,
-            parseFloatStr(tokens[2]) * ANGSTROMS_PER_BOHR);
+            parseDoubleStr(tokens[0]) * ANGSTROMS_PER_BOHR,
+            parseDoubleStr(tokens[1]) * ANGSTROMS_PER_BOHR,
+            parseDoubleStr(tokens[2]) * ANGSTROMS_PER_BOHR);
       }
     }
     return true;
@@ -600,7 +600,7 @@ max-force
   private void readAtomSet(String atomSetName, boolean isBohr, boolean asClone) throws Exception {
     if (asClone && desiredModelNumber < 0)
       asc.cloneFirstAtomSet(0);
-    float f = (isBohr ? ANGSTROMS_PER_BOHR : 1);
+    double f = (isBohr ? ANGSTROMS_PER_BOHR : 1);
     asc.setAtomSetName(atomSetName);
     if (asc.ac == 0) {
       while (rd() != null && line.indexOf('[') < 0) {    

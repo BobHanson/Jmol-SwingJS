@@ -135,8 +135,8 @@ public abstract class AtomShape extends Shape {
       isActive = true;
       Object[] data = (Object[]) value;
       short[] colixes = (short[]) data[0];
-      float[] atrans = (float[]) data[1];
-      float[] sizes = (float[]) data[2];
+      double[] atrans = (double[]) data[1];
+      double[] sizes = (double[]) data[2];
       RadiusData rd = new RadiusData(null, 0, RadiusData.EnumType.FACTOR,
           VDW.AUTO);
       if (bsColixSet == null)
@@ -152,7 +152,7 @@ public abstract class AtomShape extends Shape {
         short colix = (colixes == null ? 0 : colixes[pt]);
         //if (colix == 0)
           //colix = C.INHERIT_ALL;  IS 0 already
-        float f = (atrans == null ? 0 : atrans[pt]);
+        double f = (atrans == null ? 0 : atrans[pt]);
         if (f > 0.01f)
           colix = C.getColixTranslucent3(colix, true, f);
         setColixAndPalette(colix, PAL.UNKNOWN.id, i);

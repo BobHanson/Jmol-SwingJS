@@ -35,8 +35,8 @@ import javajs.util.BS;
 import org.jmol.script.SV;
 import org.jmol.util.BoxInfo;
 
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 import org.jmol.viewer.Viewer;
 
 /**
@@ -44,6 +44,9 @@ import org.jmol.viewer.Viewer;
  * (Mosty) we try to not change this (much), whereas the varius 
  * "public" methods of Viewer, ModelSet, and other classes are public
  * only for internal cross-package access, not for external use.
+ * 
+ * Note, this interface was changed to all double
+ * 
  *
  **/
 
@@ -149,8 +152,7 @@ abstract public class JmolViewer {
 
   //abstract public int getZoomPercent(); //deprecated
 
-
-  abstract public float getFloat(int tok);
+  abstract public double getDouble(int tok);
   abstract public int getInt(int tok);
   abstract public boolean getBoolean(int tok);
 
@@ -384,8 +386,8 @@ abstract public class JmolViewer {
   abstract public void showUrl(String urlString);
 
   abstract public void calcAtomsMinMax(BS bs, BoxInfo boxInfo);
-  abstract public P3 getBoundBoxCenter();
-  abstract public V3 getBoundBoxCornerVector();
+  abstract public P3d getBoundBoxCenter();
+  abstract public V3d getBoundBoxCornerVector();
   abstract public int getMeasurementCount();
   abstract public String getMeasurementStringValue(int i);
   abstract public int[] getMeasurementCountPlusIndices(int i);
@@ -467,7 +469,7 @@ abstract public class JmolViewer {
 
   abstract public void setBooleanProperty(String propertyName, boolean value);
   abstract public void setIntProperty(String propertyName, int value);
-  abstract public void setFloatProperty(String propertyName, float value);
+  abstract public void setFloatProperty(String propertyName, double value);
   abstract public void setStringProperty(String propertyName, String value);
 
   abstract public void setShowHydrogens(boolean showHydrogens);
@@ -475,8 +477,8 @@ abstract public class JmolViewer {
   abstract public void setPerspectiveDepth(boolean perspectiveDepth);
   abstract public void setAutoBond(boolean autoBond);
   abstract public void setMarBond(short marBond);
-  abstract public void setBondTolerance(float bondTolerance);
-  abstract public void setMinBondDistance(float minBondDistance);
+  abstract public void setBondTolerance(double bondTolerance);
+  abstract public void setMinBondDistance(double minBondDistance);
   abstract public void setAxesOrientationRasmol(boolean axesMessedUp);
   abstract public void setPercentVdwAtom(int percentVdwAtom);
   
@@ -492,11 +494,11 @@ abstract public class JmolViewer {
   //vwr.script("measures delete " + (i + 1));
   abstract public void clearMeasurements();
   //vwr.script("measures delete");
-  abstract public void setVectorScale(float vectorScaleValue);
+  abstract public void setVectorScale(double vectorScaleValue);
   //vwr.script("vector scale " + vectorScaleValue);
-  abstract public void setVibrationScale(float vibrationScaleValue);
+  abstract public void setVibrationScale(double vibrationScaleValue);
   //vwr.script("vibration scale " + vibrationScaleValue);
-  abstract public void setVibrationPeriod(float vibrationPeriod);
+  abstract public void setVibrationPeriod(double vibrationPeriod);
   //vwr.script("vibration " + vibrationPeriod);
   abstract public void selectAll();
   //vwr.script("select all");
@@ -513,7 +515,9 @@ abstract public class JmolViewer {
   abstract public JmolAdapter getModelAdapter();
 
   abstract public void openFileAsyncSpecial(String fileName, int flags);
-  
+
+  abstract public void openFileAsyncSpecialType(String fileName, int flags, String type);
+
   public void openFileAsync(String fileName) {
     openFileAsyncSpecial(fileName, 0);    
   }
@@ -616,7 +620,8 @@ abstract public class JmolViewer {
   abstract public void setMenu(String menuFile, boolean isFile);
   public void dispose() {
     // TODO
-    
   }
+  
+
 }
 

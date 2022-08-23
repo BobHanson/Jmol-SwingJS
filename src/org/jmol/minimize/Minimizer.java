@@ -26,7 +26,7 @@ package org.jmol.minimize;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import java.util.Hashtable;
 
@@ -141,8 +141,8 @@ public class Minimizer {
     Object val;
     if (crit <= 0) {
       val = vwr.getP("minimizationCriterion");
-      if (val != null && val instanceof Float)
-        crit = ((Float) val).floatValue();
+      if (val != null && val instanceof Double)
+        crit = ((Double) val).doubleValue();
     }
     this.crit = Math.max(crit, 0.0001);
     if (steps == Integer.MAX_VALUE) {
@@ -271,7 +271,7 @@ public class Minimizer {
       constraints = null;
       return;
     }
-    double value = ((Float) o[1]).doubleValue();
+    double value = ((Double) o[1]).doubleValue();
     if (constraints == null) {
       constraints = new  Lst<MMConstraint>();
       constraintMap = new Hashtable<String, MMConstraint>();
@@ -674,7 +674,7 @@ public class Minimizer {
       restoreCoordinates();
   }
   
-  private P3 p = new P3();
+  private P3d p = new P3d();
   
   void updateAtomXYZ() {
     if (steps <= 0)
@@ -682,8 +682,8 @@ public class Minimizer {
     if (bsBasis == null) {
       for (int i = 0; i < ac; i++) {
         MinAtom minAtom = minAtoms[i];
-        minAtom.atom.set((float) minAtom.coord[0], (float) minAtom.coord[1],
-            (float) minAtom.coord[2]);
+        minAtom.atom.set(minAtom.coord[0], minAtom.coord[1],
+            minAtom.coord[2]);
       }
     } else {
       Atom a;
@@ -694,9 +694,9 @@ public class Minimizer {
           continue;
         MinAtom minAtom = minAtoms[i];
         if (bsBasis.get((a = minAtom.atom).i)) { 
-          p.set((float) minAtom.coord[0], (float) minAtom.coord[1],
-              (float) minAtom.coord[2]);
-          vwr.getModelkit(false).moveConstrained(a.i, p, true);
+          p.set(minAtom.coord[0], minAtom.coord[1],
+              minAtom.coord[2]);
+          vwr.getModelkit(false).moveConstrained(a.i, p, true, true);
         }
       }
       // now transfer back all atom coordinates

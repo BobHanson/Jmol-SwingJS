@@ -43,12 +43,12 @@ import org.jmol.util.MeshSurface;
 import org.jmol.util.SimpleUnitCell;
 
 import javajs.util.CU;
-import javajs.util.M4;
-import javajs.util.P3;
+import javajs.util.M4d;
+import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.PT;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 import org.jmol.viewer.Viewer;
 import javajs.util.BS;
 import org.jmol.jvxl.data.JvxlCoder;
@@ -71,7 +71,7 @@ public class IsosurfaceMesh extends Mesh {
   Object info;
   
   @Override
-  public float getResolution() {
+  public double getResolution() {
     return 1/jvxlData.pointsPerAngstrom;
   }
 
@@ -125,9 +125,9 @@ public class IsosurfaceMesh extends Mesh {
   }
 
   private Map<Integer, Integer> assocGridPointMap;
-  private Map<Integer, V3> assocGridPointNormals;
+  private Map<Integer, V3d> assocGridPointNormals;
 
-  int addVertexCopy(T3 vertex, float value, int assocVertex,
+  int addVertexCopy(T3d vertex, double value, int assocVertex,
                     boolean associateNormals, boolean asCopy) {
     int vPt = addVCVal(vertex, value, asCopy);
     switch (assocVertex) {
@@ -154,7 +154,7 @@ public class IsosurfaceMesh extends Mesh {
   }
 
   @Override
-  public void setTranslucent(boolean isTranslucent, float iLevel) {
+  public void setTranslucent(boolean isTranslucent, double iLevel) {
     colix = C.getColixTranslucent3(colix, isTranslucent, iLevel);
     if (vcs != null)
       for (int i = vc; --i >= 0;)
@@ -175,7 +175,7 @@ public class IsosurfaceMesh extends Mesh {
 
 
   @Override
-  protected void sumVertexNormals(T3[] vertices, V3[] vectorSums) {
+  protected void sumVertexNormals(T3d[] vertices, V3d[] vectorSums) {
     sumVertexNormals2(this, vertices, vectorSums);
     /* 
      * OK, so if there is an associated grid point (because the 
@@ -190,13 +190,13 @@ public class IsosurfaceMesh extends Mesh {
      */
     if (assocGridPointMap != null && vectorSums.length > 0 && !isMerged) {
       if (assocGridPointNormals == null)
-        assocGridPointNormals = new Hashtable<Integer, V3>();
+        assocGridPointNormals = new Hashtable<Integer, V3d>();
       for (Map.Entry<Integer, Integer> entry : assocGridPointMap.entrySet()) {
         // keys are indices into vertices[]
         // values are unique identifiers for a grid point
         Integer gridPoint = entry.getValue();
         if (!assocGridPointNormals.containsKey(gridPoint))
-          assocGridPointNormals.put(gridPoint, V3.new3(0, 0, 0));
+          assocGridPointNormals.put(gridPoint, V3d.new3(0, 0, 0));
         assocGridPointNormals.get(gridPoint).add(vectorSums[entry.getKey().intValue()]);
       }
       for (Map.Entry<Integer, Integer> entry : assocGridPointMap.entrySet())
@@ -204,20 +204,20 @@ public class IsosurfaceMesh extends Mesh {
     }
   }
 
-  P3[] centers;
+  P3d[] centers;
 
-  P3[] getCenters() {
+  P3d[] getCenters() {
     if (centers != null)
       return centers;
-    centers = new P3[pc];
+    centers = new P3d[pc];
     for (int i = 0; i < pc; i++) {
       int[] p = pis[i];
       if (p == null)
         continue;
-      P3 pt = centers[i] = P3.newP(vs[p[0]]);
+      P3d pt = centers[i] = P3d.newP(vs[p[0]]);
       pt.add(vs[p[1]]);
       pt.add(vs[p[2]]);
-      pt.scale(1 / 3f);
+      pt.scale(1 / 3d);
     }
     return centers;
   }
@@ -268,24 +268,24 @@ public class IsosurfaceMesh extends Mesh {
       vContours[i] = new  Lst<Object>();
     }
     if (jvxlData.contourValuesUsed == null) {
-      float dv = (jvxlData.valueMappedToBlue - jvxlData.valueMappedToRed)
+      double dv = (jvxlData.valueMappedToBlue - jvxlData.valueMappedToRed)
           / (n + 1);
       // n + 1 because we want n lines between n + 1 slices
       for (int i = 0; i < n; i++) {
-        float value = jvxlData.valueMappedToRed + (i + 1) * dv;
+        double value = jvxlData.valueMappedToRed + (i + 1) * dv;
         get3dContour(this, vContours[i], value, jvxlData.contourColixes[i]);
       }
       Logger.info(n + " contour lines; separation = " + dv);
     } else {
       for (int i = 0; i < n; i++) {
-        float value = jvxlData.contourValuesUsed[i];
+        double value = jvxlData.contourValuesUsed[i];
         get3dContour(this, vContours[i], value, jvxlData.contourColixes[i]);
       }
     }
     jvxlData.contourColixes = new short[n];
-    jvxlData.contourValues = new float[n];
+    jvxlData.contourValues = new double[n];
     for (int i = 0; i < n; i++) {
-      jvxlData.contourValues[i] = ((Float) vContours[i].get(2)).floatValue();
+      jvxlData.contourValues[i] = ((Number) vContours[i].get(2)).doubleValue();
       jvxlData.contourColixes[i] = ((short[]) vContours[i].get(3))[0];
     }
     return jvxlData.vContours = vContours;
@@ -296,7 +296,7 @@ public class IsosurfaceMesh extends Mesh {
     return mw.write(this, isBinary);
   }
 
-  private static void get3dContour(IsosurfaceMesh m, Lst<Object> v, float value, short colix) {
+  private static void get3dContour(IsosurfaceMesh m, Lst<Object> v, double value, short colix) {
     BS bsContour = BS.newN(m.pc);
     SB fData = new SB();
     int color = C.getArgb(colix);
@@ -308,32 +308,32 @@ public class IsosurfaceMesh extends Mesh {
   }
 
   public static void setContourVector(Lst<Object> v, int nPolygons,
-                                      BS bsContour, float value,
+                                      BS bsContour, double value,
                                       short colix, int color, SB fData) {
     v.add(JvxlCoder.CONTOUR_NPOLYGONS, Integer.valueOf(nPolygons));
     v.add(JvxlCoder.CONTOUR_BITSET, bsContour);
-    v.add(JvxlCoder.CONTOUR_VALUE, Float.valueOf(value));
+    v.add(JvxlCoder.CONTOUR_VALUE, Double.valueOf(value));
     v.add(JvxlCoder.CONTOUR_COLIX, new short[] { colix });
     v.add(JvxlCoder.CONTOUR_COLOR, new int[] { color });
     v.add(JvxlCoder.CONTOUR_FDATA, fData);
   }
 
   public static void addContourPoints(Lst<Object> v, BS bsContour, int i,
-                                      SB fData, T3[] vertices,
-                                      float[] vertexValues, int iA, int iB,
-                                      int iC, float value) {
-    P3 pt1 = null;
-    P3 pt2 = null;
+                                      SB fData, T3d[] vertices,
+                                      double[] vertexValues, int iA, int iB,
+                                      int iC, double value) {
+    P3d pt1 = null;
+    P3d pt2 = null;
     int type = 0;
     // check AB
-    float f1 = checkPt(vertexValues, iA, iB, value);
-    if (!Float.isNaN(f1)) {
+    double f1 = checkPt(vertexValues, iA, iB, value);
+    if (!Double.isNaN(f1)) {
       pt1 = getContourPoint(vertices, iA, iB, f1);
       type |= 1;
     }
     // check BC only if v not found only at B already in testing AB
-    float f2 = (f1 == 1 ? Float.NaN : checkPt(vertexValues, iB, iC, value));
-    if (!Float.isNaN(f2)) {
+    double f2 = (f1 == 1 ? Double.NaN : checkPt(vertexValues, iB, iC, value));
+    if (!Double.isNaN(f2)) {
       pt2 = getContourPoint(vertices, iB, iC, f2);
       if (type == 0) {
         pt1 = pt2;
@@ -351,8 +351,8 @@ public class IsosurfaceMesh extends Mesh {
       //$FALL-THROUGH$
     case 2:
       // check CA only if v not found only at C already in testing BC
-      f2 = (f2 == 1 ? Float.NaN : checkPt(vertexValues, iC, iA, value));
-      if (!Float.isNaN(f2)) {
+      f2 = (f2 == 1 ? Double.NaN : checkPt(vertexValues, iC, iA, value));
+      if (!Double.isNaN(f2)) {
         pt2 = getContourPoint(vertices, iC, iA, f2);
         type |= 4;
       }
@@ -402,29 +402,29 @@ public class IsosurfaceMesh extends Mesh {
    * @param v
    * @return fraction along the edge or NaN
    */
-  private static float checkPt(float[] vertexValues, int i, int j, float v) {
-    float v1, v2;
+  private static double checkPt(double[] vertexValues, int i, int j, double v) {
+    double v1, v2;
     return (v == (v1 = vertexValues[i]) ? 0 : v == (v2 = vertexValues[j]) ? 1
-        : (v1 < v) == (v < v2) ? (v - v1) / (v2 - v1) : Float.NaN);
+        : (v1 < v) == (v < v2) ? (v - v1) / (v2 - v1) : Double.NaN);
   }
 
-  private static P3 getContourPoint(T3[] vertices, int i, int j,
-                                         float f) {
-    P3 pt = new P3();
+  private static P3d getContourPoint(T3d[] vertices, int i, int j,
+                                         double f) {
+    P3d pt = new P3d();
     pt.sub2(vertices[j], vertices[i]);
     pt.scaleAdd2(f, pt, vertices[i]);
     return pt;
   }
 
-  float[] contourValues;
+  double[] contourValues;
   short[] contourColixes;
   public ColorEncoder colorEncoder;
   
   BS bsVdw;
   public boolean colorPhased;
-  public float[] probeValues;
+  public double[] probeValues;
 
-  public void setDiscreteColixes(float[] values, short[] colixes) {
+  public void setDiscreteColixes(double[] values, short[] colixes) {
     if (values != null)
       jvxlData.contourValues = values;
     if (values == null || values.length == 0)
@@ -438,7 +438,7 @@ public class IsosurfaceMesh extends Mesh {
     if (vs == null || vvs == null || values == null)
       return;
     int n = values.length;
-    float vMax = values[n - 1];
+    double vMax = values[n - 1];
     colorCommand = null;
     boolean haveColixes = (colixes != null && colixes.length > 0);
     isColorSolid = (haveColixes && jvxlData.jvxlPlane != null);
@@ -460,7 +460,7 @@ public class IsosurfaceMesh extends Mesh {
       if (p == null)
         continue;
       pcs[i] = defaultColix;
-      float v = (vvs[p[0]] + vvs[p[1]] + vvs[p[2]]) / 3;
+      double v = (vvs[p[0]] + vvs[p[1]] + vvs[p[2]]) / 3;
       for (int j = n; --j >= 0;) {
         if (v >= values[j] && v < vMax) {
           pcs[i] = (haveColixes ? colixes[j % colixes.length] : 0);
@@ -481,7 +481,7 @@ public class IsosurfaceMesh extends Mesh {
     ht.put("values",
         (jvxlData.contourValuesUsed == null ? jvxlData.contourValues
             : jvxlData.contourValuesUsed));
-    Lst<P3> colors = new  Lst<P3>();
+    Lst<P3d> colors = new  Lst<P3d>();
     if (jvxlData.contourColixes != null) {
       // set in SurfaceReader.colorData()
       for (int i = 0; i < jvxlData.contourColixes.length; i++) {
@@ -682,7 +682,7 @@ public class IsosurfaceMesh extends Mesh {
       colix = C.ORANGE;
     colix = C.getColixTranslucent3(colix, jvxlData.translucency != 0,
         jvxlData.translucency);
-    float translucencyLevel = (jvxlData.translucency == 0 ? Float.NaN
+    double translucencyLevel = (jvxlData.translucency == 0 ? Double.NaN
         : jvxlData.translucency);
     if (jvxlData.meshColor != null)
       meshColix = C.getColixS(jvxlData.meshColor);
@@ -699,7 +699,7 @@ public class IsosurfaceMesh extends Mesh {
         boolean isTranslucent = colorScheme.startsWith("translucent ");
         if (isTranslucent) {
           colorScheme = colorScheme.substring(12);
-          translucencyLevel = Float.NaN;
+          translucencyLevel = Double.NaN;
         }
         colorEncoder.setColorScheme(colorScheme, isTranslucent);
         remapColors(null, null, translucencyLevel);
@@ -735,20 +735,20 @@ public class IsosurfaceMesh extends Mesh {
    * @param ce
    * @param translucentLevel
    */
-  void remapColors(Viewer vwr, ColorEncoder ce, float translucentLevel) {
+  void remapColors(Viewer vwr, ColorEncoder ce, double translucentLevel) {
     if (ce == null)
       ce = colorEncoder;
     if (ce == null)
       ce = colorEncoder = new ColorEncoder(null, vwr);
     colorEncoder = ce;
     setColorCommand();
-    if (Float.isNaN(translucentLevel)) {
+    if (Double.isNaN(translucentLevel)) {
       translucentLevel = C.getColixTranslucencyLevel(colix);
     } else {
       colix = C.getColixTranslucent3(colix, true, translucentLevel);
     }
-    float min = ce.lo;
-    float max = ce.hi;
+    double min = ce.lo;
+    double max = ce.hi;
     boolean inherit = (vertexSource != null && ce.currentPalette == ColorEncoder.INHERIT);
     vertexColorMap = null;
     pcs = null;
@@ -783,7 +783,7 @@ public class IsosurfaceMesh extends Mesh {
       return;
     }
     jvxlData.isColorReversed = ce.isReversed;
-    if (max != Float.MAX_VALUE) {
+    if (max != Double.MAX_VALUE) {
       jvxlData.valueMappedToRed = min;
       jvxlData.valueMappedToBlue = max;
     }
@@ -794,7 +794,7 @@ public class IsosurfaceMesh extends Mesh {
     boolean isTranslucent = C.isColixTranslucent(colix);
     if (ce.isTranslucent) {
       if (!isTranslucent)
-        colix = C.getColixTranslucent3(colix, true, 0.5f);
+        colix = C.getColixTranslucent3(colix, true, 0.5d);
       // still, if the scheme is translucent, we don't want to color the vertices translucent
       isTranslucent = false;
     }
@@ -806,8 +806,8 @@ public class IsosurfaceMesh extends Mesh {
     Lst<Object>[] contours = getContours();
     if (contours != null) {
       for (int i = contours.length; --i >= 0;) {
-        float value = ((Float) contours[i].get(JvxlCoder.CONTOUR_VALUE))
-            .floatValue();
+        double value = ((Number) contours[i].get(JvxlCoder.CONTOUR_VALUE))
+            .doubleValue();
         short[] colix = ((short[]) contours[i].get(JvxlCoder.CONTOUR_COLIX));
         colix[0] = ce.getColorIndex(value);
         int[] color = ((int[]) contours[i].get(JvxlCoder.CONTOUR_COLOR));
@@ -830,23 +830,23 @@ public class IsosurfaceMesh extends Mesh {
     initialize(lighting, null, null);
     if (colorEncoder != null || jvxlData.isBicolorMap) {
       vcs = null;
-      remapColors(vwr, null, Float.NaN);
+      remapColors(vwr, null, Double.NaN);
     }
   }
 
   @Override
-  public P3[] getBoundingBox() {
+  public P3d[] getBoundingBox() {
     return jvxlData.boundingBox;
   }
 
   @Override
-  public void setBoundingBox(P3[] pts) {
+  public void setBoundingBox(P3d[] pts) {
     jvxlData.boundingBox = pts;
   }
   
   //private void dumpData() {
   //for (int i =0;i<10;i++) {
-  //  System.out.println("P["+i+"]="+polygonIndexes[i][0]+" "+polygonIndexes[i][1]+" "+polygonIndexes[i][2]+" "+ polygonIndexes[i][3]+" "+vertices[i]);
+  //System.out.println("P["+i+"]="+polygonIndexes[i][0]+" "+polygonIndexes[i][1]+" "+polygonIndexes[i][2]+" "+ polygonIndexes[i][3]+" "+vertices[i]);
   //}
   //}
   
@@ -861,9 +861,9 @@ public class IsosurfaceMesh extends Mesh {
         + (m == null || m.pc == 0 ? 0 : m.bsSlabDisplay == null ? m.pc
             : m.bsSlabDisplay.cardinality());
     if (vs == null)
-      vs = new P3[0];
-    vs = (T3[]) AU.ensureLength(vs, nV);
-    vvs = AU.ensureLengthA(vvs, nV);
+      vs = new P3d[0];
+    vs = (T3d[]) AU.ensureLength(vs, nV);
+    vvs = AU.ensureLengthD(vvs, nV);
     boolean haveSources = (vertexSource != null && (m == null || m.vertexSource != null));
     vertexSource = AU.ensureLengthI(vertexSource, nV);
     int[][] newPolygons = AU.newInt2(nP);
@@ -917,11 +917,11 @@ public class IsosurfaceMesh extends Mesh {
     SimpleUnitCell.setMinMaxLatticeParameters((int) unitCell.getUnitCellInfoType(SimpleUnitCell.INFO_DIMENSIONS), minXYZ, maxXYZ, 0);
     int nCells = (maxXYZ.x - minXYZ.x) * (maxXYZ.y - minXYZ.y)
         * (maxXYZ.z - minXYZ.z);
-    P3 latticeOffset = new P3();
+    P3d latticeOffset = new P3d();
     int vc0 = vc;
     int vcNew = nCells * vc;
     vs = AU.arrayCopyPt(vs, vcNew);
-    vvs = (vvs == null ? null : AU.ensureLengthA(vvs, vcNew));
+    vvs = (vvs == null ? null : AU.ensureLengthD(vvs, vcNew));
     int pc0 = pc;
     int pcNew = nCells * pc;
     pis = AU.arrayCopyII(pis, pcNew);
@@ -936,7 +936,7 @@ public class IsosurfaceMesh extends Mesh {
           unitCell.toCartesian(latticeOffset, false);
           for (int i = 0; i < vc0; i++) {
             normixes[vc] = normixes[i];
-            P3 v = P3.newP(vs[i]);
+            P3d v = P3d.newP(vs[i]);
             v.add(latticeOffset);
             addVCVal(v, vvs[i], false);
           }
@@ -949,22 +949,22 @@ public class IsosurfaceMesh extends Mesh {
             addPolygon(p, null);
           }
         }
-    P3 xyzMin = new P3();
-    P3 xyzMax = new P3();
+    P3d xyzMin = new P3d();
+    P3d xyzMax = new P3d();
     setBox(xyzMin, xyzMax);
-    jvxlData.boundingBox = new P3[] { xyzMin, xyzMax };    
+    jvxlData.boundingBox = new P3d[] { xyzMin, xyzMax };    
 
   }
 
   @Override
-  protected float getMinDistance2ForVertexGrouping() {
+  protected double getMinDistance2ForVertexGrouping() {
     if (jvxlData.boundingBox != null && jvxlData.boundingBox[0] != null) {
-      float d2 = jvxlData.boundingBox[1]
+      double d2 = jvxlData.boundingBox[1]
           .distanceSquared(jvxlData.boundingBox[0]);
       if (d2 < 5)
-        return 1e-10f;
+        return 1e-10d;
     }
-    return 1e-8f;
+    return 1e-8d;
   }
 
   @Override
@@ -985,7 +985,7 @@ public class IsosurfaceMesh extends Mesh {
    * @param m
    * @param bs
    */
-  public void updateCoordinates(M4 m, BS bs) {
+  public void updateCoordinates(M4d m, BS bs) {
     boolean doUpdate = (bs == null || isModelConnected);
     if (!doUpdate)
       for (int i = 0; i < connectedAtoms.length; i++)
@@ -999,28 +999,28 @@ public class IsosurfaceMesh extends Mesh {
       mat4 = vwr.ms.am[modelIndex].mat4;
     } else {
       if (mat4 == null)
-        mat4 = M4.newM4(null);
+        mat4 = M4d.newM4(null);
       mat4.mul2(m, mat4);
     }
     recalcAltVertices = true;
   }
 
-  float[] getDataMinMax() { 
-    float min = Float.MAX_VALUE;
-    float max = -Float.MAX_VALUE;
+  double[] getDataMinMax() { 
+    double min = Double.MAX_VALUE;
+    double max = -Double.MAX_VALUE;
     for (int i = vvs.length; --i >= 0;) {
-      float v = vvs[i];
+      double v = vvs[i];
       if (v < min)
         min = v;
       if (v > max)
         max = v;      
     }
-    return new float[] { min, max };
+    return new double[] { min, max };
   }
   
-  float[] getDataRange() {
+  double[] getDataRange() {
     return (jvxlData.jvxlPlane != null
-        && colorEncoder == null ? null : new float[] {
+        && colorEncoder == null ? null : new double[] {
         jvxlData.mappedDataMin,
         jvxlData.mappedDataMax,
         (jvxlData.isColorReversed ? jvxlData.valueMappedToBlue
@@ -1036,13 +1036,13 @@ public class IsosurfaceMesh extends Mesh {
         isAll);
     if (isAll) {
       BS bs = new BS();
-      T3[] valid = getValidVertices(bs);
+      T3d[] valid = getValidVertices(bs);
       if (valid != null) {
         info.put("allVertices", info.get("vertices"));
         info.put("vertices", valid);
         Object values = info.get("vertexValues");
         if (values != null) {
-          float[] v = getValidValues(bs);
+          double[] v = getValidValues(bs);
           info.put("allValues",  values);
           info.put("vertexValues", v);
         }
@@ -1051,17 +1051,17 @@ public class IsosurfaceMesh extends Mesh {
     return info;
   }
 
-  public float[] getValidValues(BS bs) {
+  public double[] getValidValues(BS bs) {
     if (bs == null)
       getInvalidBS(bs = new BS());
     int n = vc - bs.cardinality();
-    float[] v = new float[n];
+    double[] v = new double[n];
     for (int pt = 0, i = bs.nextClearBit(0); i >= 0 && i < vc; i = bs.nextClearBit(i + 1))
       v[pt++] = vvs[i];
     return v;
   }
 
-  public T3[] getValidVertices(BS bs) {
+  public T3d[] getValidVertices(BS bs) {
     boolean allowNull = (bs != null);
     if (bs == null)
       bs = new BS();
@@ -1070,7 +1070,7 @@ public class IsosurfaceMesh extends Mesh {
     if (n == vc && allowNull) {
       return null;
     }
-    T3[] pa = new P3[n];
+    T3d[] pa = new P3d[n];
     for (int pt = 0, i = bs.nextClearBit(0); i >= 0
         && pt < n; i = bs.nextClearBit(i + 1)) {
       pa[pt++] = vs[i];

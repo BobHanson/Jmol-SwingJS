@@ -32,10 +32,10 @@ import javajs.util.Lst;
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.util.GData;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 
-import javajs.util.V3;
+import javajs.util.V3d;
 
 
 /**
@@ -60,8 +60,8 @@ import javajs.util.V3;
  */
 public class HermiteRenderer implements G3DRenderer {
 
-  private static V3 vAB = new V3();
-  private static V3 vAC = new V3();
+  private static V3d vAB = new V3d();
+  private static V3d vAC = new V3d();
 
   /* really a private class to g3d and export3d */
 
@@ -82,28 +82,28 @@ public class HermiteRenderer implements G3DRenderer {
   private final P3i[] pLeft = new P3i[16];
   private final P3i[] pRight = new P3i[16];
 
-  private final float[] sLeft = new float[16];
-  private final float[] sRight = new float[16];
+  private final double[] sLeft = new double[16];
+  private final double[] sRight = new double[16];
 
-  private final P3[] pTopLeft = new P3[16];
-  private final P3[] pTopRight = new P3[16];
-  private final P3[] pBotLeft = new P3[16];
-  private final P3[] pBotRight = new P3[16];
+  private final P3d[] pTopLeft = new P3d[16];
+  private final P3d[] pTopRight = new P3d[16];
+  private final P3d[] pBotLeft = new P3d[16];
+  private final P3d[] pBotRight = new P3d[16];
   {
     for (int i = 16; --i >= 0; ) {
       pLeft[i] = new P3i();
       pRight[i] = new P3i();
 
-      pTopLeft[i] = new P3();
-      pTopRight[i] = new P3();
-      pBotLeft[i] = new P3();
-      pBotRight[i] = new P3();
+      pTopLeft[i] = new P3d();
+      pTopRight[i] = new P3d();
+      pBotLeft[i] = new P3d();
+      pBotRight[i] = new P3d();
     }
   }
 
   public void renderHermiteRope(boolean fill, int tension,
                      int diameterBeg, int diameterMid, int diameterEnd,
-                     P3 p0, P3 p1, P3 p2, P3 p3) {
+                     P3d p0, P3d p1, P3d p2, P3d p3) {
     int z1 = (int) p1.z;
     int z2 = (int) p2.z;
     if (p0.z == 1 ||z1 == 1 ||z2 == 1 ||p3.z == 1)
@@ -139,11 +139,11 @@ public class HermiteRenderer implements G3DRenderer {
           // mth 2003 10 13
           // I tried drawing short cylinder segments here,
           // but drawing spheres was faster
-          float s = sLeft[sp];
+          double s = sLeft[sp];
           if (fill) {
-            int d =(s < 0.5f
+            int d =(s < 0.5d
                     ? diameterBeg + (int)(dDiameterFirstHalf * s)
-                    : diameterMid + (int)(dDiameterSecondHalf * (s - 0.5f)));
+                    : diameterMid + (int)(dDiameterSecondHalf * (s - 0.5d)));
             g3d.fillSphereI(d, a);
           } else {
             g3d.plotPixelClippedP3i(a);
@@ -168,24 +168,24 @@ public class HermiteRenderer implements G3DRenderer {
       pRight[sp+1] = pRight[sp];
       sRight[sp+1] = sRight[sp];
       pRight[sp] = pMid;
-      sRight[sp] = (float)s;
+      sRight[sp] = (double)s;
       ++sp;
       pLeft[sp].setT(pMid);
-      sLeft[sp] = (float)s;
+      sLeft[sp] = (double)s;
     } while (sp >= 0);
   }
 
-  private final P3 a1 = new P3();
-  private final P3 a2 = new P3();
-  private final P3 b1 = new P3();
-  private final P3 b2 = new P3();
-  private final P3 c1 = new P3();
-  private final P3 c2 = new P3();
-  private final P3 d1 = new P3();
-  private final P3 d2 = new P3();
-  private final V3 T1 = new V3();
-  private final V3 T2 = new V3();
-  private final V3 depth1 = new V3();
+  private final P3d a1 = new P3d();
+  private final P3d a2 = new P3d();
+  private final P3d b1 = new P3d();
+  private final P3d b2 = new P3d();
+  private final P3d c1 = new P3d();
+  private final P3d c2 = new P3d();
+  private final P3d d1 = new P3d();
+  private final P3d d2 = new P3d();
+  private final V3d T1 = new V3d();
+  private final V3d T2 = new V3d();
+  private final V3d depth1 = new V3d();
   private final boolean[] needToFill = new boolean[16];
 
   /**
@@ -207,11 +207,11 @@ public class HermiteRenderer implements G3DRenderer {
   public void renderHermiteRibbon(boolean fill, boolean border,
                                   int tension,
                                   //top strand segment
-                                  P3 p0, P3 p1, P3 p2,
-                                  P3 p3,
+                                  P3d p0, P3d p1, P3d p2,
+                                  P3d p3,
                                   //bottom strand segment
-                                  P3 p4, P3 p5, P3 p6,
-                                  P3 p7, int aspectRatio, int fillType) {
+                                  P3d p4, P3d p5, P3d p6,
+                                  P3d p7, int aspectRatio, int fillType) {
     if (p0.z == 1 || p1.z == 1 || p2.z == 1 || p3.z == 1 || p4.z == 1
         || p5.z == 1 || p6.z == 1 || p7.z == 1)
       return;
@@ -223,7 +223,7 @@ public class HermiteRenderer implements G3DRenderer {
     boolean isRev = (tension < 0);
     if (isRev)
       tension = -tension;
-    float ratio = 1f / aspectRatio;
+    double ratio = 1d / aspectRatio;
     int x1 = (int) p1.x, y1 = (int) p1.y, z1 = (int) p1.z;
     int x2 = (int) p2.x, y2 = (int) p2.y, z2 = (int) p2.z;
     int xT1 = ((x2 - (int) p0.x) * tension) / 8;
@@ -252,16 +252,16 @@ public class HermiteRenderer implements G3DRenderer {
     int sp = 0;
     boolean closeEnd = false;
     do {
-      P3 a = pTopLeft[sp];
-      P3 b = pTopRight[sp];
+      P3d a = pTopLeft[sp];
+      P3d b = pTopRight[sp];
       double dxTop = b.x - a.x;
       double dxTop2 = dxTop * dxTop;
       if (dxTop2 < 10) {
         double dyTop = b.y - a.y;
         double dyTop2 = dyTop * dyTop;
         if (dyTop2 < 10) {
-          P3 c = pBotLeft[sp];
-          P3 d = pBotRight[sp];
+          P3d c = pBotLeft[sp];
+          P3d d = pBotRight[sp];
           double dxBot = d.x - c.x;
           double dxBot2 = dxBot * dxBot;
           if (dxBot2 < 8) {
@@ -335,14 +335,14 @@ public class HermiteRenderer implements G3DRenderer {
       if (sp >= 15)
         break;
       int spNext = sp + 1;
-      P3 pMidTop = pTopRight[spNext];
-      pMidTop.x = (float) (h1 * x1 + h2 * x2 + h3 * xT1 + h4 * xT2);
-      pMidTop.y = (float) (h1 * y1 + h2 * y2 + h3 * yT1 + h4 * yT2);
-      pMidTop.z = (float) (h1 * z1 + h2 * z2 + h3 * zT1 + h4 * zT2);
-      P3 pMidBot = pBotRight[spNext];
-      pMidBot.x = (float) (h1 * x5 + h2 * x6 + h3 * xT5 + h4 * xT6);
-      pMidBot.y = (float) (h1 * y5 + h2 * y6 + h3 * yT5 + h4 * yT6);
-      pMidBot.z = (float) (h1 * z5 + h2 * z6 + h3 * zT5 + h4 * zT6);
+      P3d pMidTop = pTopRight[spNext];
+      pMidTop.x = (double) (h1 * x1 + h2 * x2 + h3 * xT1 + h4 * xT2);
+      pMidTop.y = (double) (h1 * y1 + h2 * y2 + h3 * yT1 + h4 * yT2);
+      pMidTop.z = (double) (h1 * z1 + h2 * z2 + h3 * zT1 + h4 * zT2);
+      P3d pMidBot = pBotRight[spNext];
+      pMidBot.x = (double) (h1 * x5 + h2 * x6 + h3 * xT5 + h4 * xT6);
+      pMidBot.y = (double) (h1 * y5 + h2 * y6 + h3 * yT5 + h4 * yT6);
+      pMidBot.z = (double) (h1 * z5 + h2 * z6 + h3 * zT5 + h4 * zT6);
 
       pTopRight[spNext] = pTopRight[sp];
       pTopRight[sp] = pMidTop;
@@ -350,11 +350,11 @@ public class HermiteRenderer implements G3DRenderer {
       pBotRight[sp] = pMidBot;
 
       sRight[spNext] = sRight[sp];
-      sRight[sp] = (float) s;
+      sRight[sp] = (double) s;
       needToFill[spNext] = needToFill[sp];
       pTopLeft[spNext].setT(pMidTop);
       pBotLeft[spNext].setT(pMidBot);
-      sLeft[spNext] = (float) s;
+      sLeft[spNext] = (double) s;
       ++sp;
     } while (sp >= 0);
     if (closeEnd) {
@@ -366,7 +366,7 @@ public class HermiteRenderer implements G3DRenderer {
     }
   }
  
-  private static int isFront(P3 a, P3 b, P3 c) {
+  private static int isFront(P3d a, P3d b, P3d c) {
     vAB.sub2(b, a);
     vAC.sub2(c, a);
     vAB.cross(vAB, vAC);
@@ -388,24 +388,24 @@ public class HermiteRenderer implements G3DRenderer {
    */
   private void renderParallelPair(boolean fill, int tension,
                 //top strand segment
-                P3 p0, P3 p1, P3 p2, P3 p3,
+                P3d p0, P3d p1, P3d p2, P3d p3,
                 //bottom strand segment
-                P3 p4, P3 p5, P3 p6, P3 p7) {
+                P3d p4, P3d p5, P3d p6, P3d p7) {
     
     // only used for meshRibbon, so fill = false 
-    P3[] endPoints = {p2, p1, p6, p5};
+    P3d[] endPoints = {p2, p1, p6, p5};
     // stores all points for top+bottom strands of 1 segment
-    Lst<P3> points = new Lst<P3>();
+    Lst<P3d> points = new Lst<P3d>();
     int whichPoint = 0;
 
     int numTopStrandPoints = 2; //first and last points automatically included
-    float numPointsPerSegment = 5.0f;//use 5 for mesh
+    double numPointsPerSegment = 5.0d;//use 5 for mesh
 
     //if (fill)
-      //numPointsPerSegment = 10.0f;
+      //numPointsPerSegment = 10.0d;
 
-    float interval = (1.0f / numPointsPerSegment);
-    float currentInt = 0.0f;
+    double interval = (1.0d / numPointsPerSegment);
+    double currentInt = 0.0d;
 
     int x1 = (int) p1.x, y1 = (int) p1.y, z1 = (int) p1.z;
     int x2 = (int) p2.x, y2 = (int) p2.y, z2 = (int) p2.z;
@@ -450,13 +450,13 @@ public class HermiteRenderer implements G3DRenderer {
            // mth 2003 10 13
            // I tried drawing short cylinder segments here,
            // but drawing spheres was faster
-           float s = sLeft[sp];
+           double s = sLeft[sp];
 
            g3d.fillSphereI(3, a);
            //draw outside edges of mesh
 
-           if (s < 1.0f - currentInt) { //if first point over the interval
-             P3 temp = new P3();
+           if (s < 1.0d - currentInt) { //if first point over the interval
+             P3d temp = new P3d();
              temp.set(a.x, a.y, a.z);
              points.addLast(temp); //store it
              currentInt += interval; // increase to next interval
@@ -483,10 +483,10 @@ public class HermiteRenderer implements G3DRenderer {
            pRight[sp + 1] = pRight[sp];
            sRight[sp + 1] = sRight[sp];
            pRight[sp] = pMid;
-           sRight[sp] = (float) s;
+           sRight[sp] = (double) s;
            ++sp;
            pLeft[sp].setT(pMid);
-           sLeft[sp] = (float) s;
+           sLeft[sp] = (double) s;
          }
        } while (sp >= 0);
        points.addLast(endPoints[whichPoint++]);

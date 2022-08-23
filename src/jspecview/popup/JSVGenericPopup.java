@@ -49,7 +49,7 @@ abstract public class JSVGenericPopup extends GenericPopup implements
   private final static int UPDATE_SHOW = 2;
 
   // public void finalize() {
-  // System.out.println("JmolPopup " + this + " finalize");
+  //System.out.println("JmolPopup " + this + " finalize");
   // }
 
   protected JSViewer vwr;

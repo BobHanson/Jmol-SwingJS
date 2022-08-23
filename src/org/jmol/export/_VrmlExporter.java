@@ -29,15 +29,15 @@ package org.jmol.export;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.Measure;
-import javajs.util.P3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.Quat;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.Qd;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 import javajs.util.BS;
 
@@ -73,7 +73,7 @@ public class _VrmlExporter extends __CartesianExporter {
   }
   
   @Override
-  protected void output(T3 pt) {
+  protected void output(T3d pt) {
     output(round(pt));
   }
   
@@ -95,7 +95,7 @@ public class _VrmlExporter extends __CartesianExporter {
     output("Background { skyColor [" + rgbFractionalFromColix(backgroundColix)
         + "] } \n");
     // next is an approximation only
-    float angle = getViewpoint();
+    double angle = getViewpoint();
     output("Viewpoint{fieldOfView " + angle);
     output(" position ");
     // remove export scaling for from Viewpoint so on-screen version is good.
@@ -124,11 +124,11 @@ public class _VrmlExporter extends __CartesianExporter {
     outputChildStart();
   }
   
-  protected float getViewpoint() {
+  protected double getViewpoint() {
     viewpoint.setM(vwr.tm.matrixRotate);
     tempP1.set(viewpoint.x, viewpoint.y, (viewpoint.angle == 0 ? 1
         : viewpoint.z));
-    return (float) (apertureAngle * Math.PI / 180);
+    return (double) (apertureAngle * Math.PI / 180);
   }  
  
   @Override
@@ -162,31 +162,31 @@ public class _VrmlExporter extends __CartesianExporter {
     output("}\n");
   }
 
-  protected void outputAttrPt(String attr, T3 pt) {
+  protected void outputAttrPt(String attr, T3d pt) {
     output(" " + attr + " " + pt.x + " " + pt.y + " " + pt.z);
   }
 
-  protected void outputAttr(String attr, float x, float y, float z) {
+  protected void outputAttr(String attr, double x, double y, double z) {
     output(" " + attr + " " + round(x) + " " + round(y) + " " + round(z));
   }
   
-  protected void outputRotation(A4 a) {
+  protected void outputRotation(A4d a) {
     output(" rotation " + a.x + " " + a.y + " " + a.z + " " + a.angle);
   }
 
-  protected void outputTransRot(P3 pt1, P3 pt2, int x, int y, int z) {
+  protected void outputTransRot(P3d pt1, P3d pt2, int x, int y, int z) {
     tempV1.ave(pt2, pt1);
     outputAttrPt("translation", tempV1);
     tempV1.sub(pt1);
     tempV1.normalize();
     tempV2.set(x, y, z);
     tempV2.add(tempV1);
-    outputRotation(A4.newVA(tempV2, (float) Math.PI));
+    outputRotation(A4d.newVA(tempV2, (double) Math.PI));
   }
 
-  protected void outputQuaternionFrame(P3 ptCenter, P3 ptX, P3 ptY, P3 ptZ,
-                                       float xScale, float yScale,
-                                       float zScale) {
+  protected void outputQuaternionFrame(P3d ptCenter, P3d ptX, P3d ptY, P3d ptZ,
+                                       double xScale, double yScale,
+                                       double zScale) {
 
     //Hey, hey -- quaternions to the rescue!
     // Just send three points to Quaternion to define a plane and return
@@ -194,14 +194,14 @@ public class _VrmlExporter extends __CartesianExporter {
 
     tempQ1.setT(ptX);
     tempQ2.setT(ptY);
-    A4 a = Quat.getQuaternionFrame(ptCenter, tempQ1, tempQ2).toAxisAngle4f();
-    if (!Float.isNaN(a.x)) {
+    A4d a = Qd.getQuaternionFrame(ptCenter, tempQ1, tempQ2).toA4d();
+    if (!Double.isNaN(a.x)) {
       tempQ1.set(a.x, a.y, a.z);
       outputRotation(a);
     }
-    float sx =  (ptX.distance(ptCenter) * xScale);
-    float sy =  (ptY.distance(ptCenter) * yScale);
-    float sz =  (ptZ.distance(ptCenter) * zScale);
+    double sx =  (ptX.distance(ptCenter) * xScale);
+    double sy =  (ptY.distance(ptCenter) * yScale);
+    double sz =  (ptZ.distance(ptCenter) * zScale);
     outputAttr("scale", sx, sy, sz);
   }
 
@@ -254,7 +254,7 @@ public class _VrmlExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputCircle(P3 pt1, P3 pt2, float radius, short colix,
+  protected void outputCircle(P3d pt1, P3d pt2, double radius, short colix,
                             boolean doFill) {
     // not in _StlExport
     // not fixed -- still duplicated in X3d
@@ -264,7 +264,7 @@ public class _VrmlExporter extends __CartesianExporter {
         tempV1.ave(pt1, pt2);
         outputAttr("translation", tempV1.x, tempV1.y, tempV1.z);
         output(" children [ Billboard{axisOfRotation 0 0 0 children [ Transform{rotation 1 0 0 1.5708");
-          float height = (pt1.distance(pt2));
+          double height = (pt1.distance(pt2));
           outputAttr("scale", radius, height, radius);
           outputCylinderChildScaled(colix, GData.ENDCAPS_FLAT);
         output("}] }]\n");
@@ -285,8 +285,8 @@ public class _VrmlExporter extends __CartesianExporter {
             output(" Shape{");
               output("geometry Extrusion{beginCap FALSE convex FALSE endCap FALSE creaseAngle 1.57");
                 output(" crossSection [");
-                float rpd = 3.1415926f / 180;
-                float scale = 0.02f / radius;
+                double rpd = 3.1415926d / 180;
+                double scale = 0.02f / radius;
                 for (int i = 0; i <= 360; i += 10) {
                   output(round(Math.cos(i * rpd) * scale) + " ");
                   output(round(Math.sin(i * rpd) * scale) + " ");
@@ -309,9 +309,9 @@ public class _VrmlExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputCone(P3 ptBase, P3 ptTip, float radius,
+  protected void outputCone(P3d ptBase, P3d ptTip, double radius,
                             short colix) {
-    float height = (ptBase.distance(ptTip));
+    double height = (ptBase.distance(ptTip));
     pushMatrix();
       outputTransRot(ptBase, ptTip, 0, 1, 0);
       outputAttr("scale", radius, height, radius);
@@ -342,26 +342,26 @@ public class _VrmlExporter extends __CartesianExporter {
       if (addBase)
         faces[fpt++] = new int[] { i, (i + 1) % n, n + 1 };   
     }
-    P3[] vertexes = new P3[vertexCount];
+    P3d[] vertexes = new P3d[vertexCount];
     for (int i = 0; i < n; i++) {
-      float x = (float) (Math.cos(i * ndeg / 180. * Math.PI)); 
-      float y = (float) (Math.sin(i * ndeg / 180. * Math.PI)); 
-      vertexes[i] = P3.new3(x, -0.5f, y);
+      double x = (double) (Math.cos(i * ndeg / 180. * Math.PI)); 
+      double y = (double) (Math.sin(i * ndeg / 180. * Math.PI)); 
+      vertexes[i] = P3d.new3(x, -0.5d, y);
     }    
-    vertexes[n++] = P3.new3(0, 0.5f, 0);
+    vertexes[n++] = P3d.new3(0, 0.5d, 0);
     if (addBase)
-      vertexes[n++] = P3.new3(0, -0.5f, 0);
+      vertexes[n++] = P3d.new3(0, -0.5d, 0);
     outputGeometry(vertexes, null, null, faces, null, vertexCount, faces.length, null, 3,
         null, null, null);
   }
 
   @Override
-  protected boolean outputCylinder(P3 ptCenter, P3 pt1, P3 pt2, short colix,
-                                   byte endcaps, float radius, P3 ptX, P3 ptY,
+  protected boolean outputCylinder(P3d ptCenter, P3d pt1, P3d pt2, short colix,
+                                   byte endcaps, double radius, P3d ptX, P3d ptY,
                                    boolean checkRadius) {
-    float height = (pt1.distance(pt2));
+    double height = (pt1.distance(pt2));
     if (radius < 0.01f || height == 0)
-      return false; // nucleic edges are 0.005f
+      return false; // nucleic edges are 0.005d
     pushMatrix();
     if (ptX == null) {
       outputTransRot(pt1, pt2, 0, 1, 0);
@@ -370,13 +370,13 @@ public class _VrmlExporter extends __CartesianExporter {
       // arcs of ellipsoid rendering only
       outputAttrPt("translation", ptCenter);
       outputQuaternionFrame(ptCenter, ptY, pt1, ptX, 2, 2, 2);
-      pt1.set(0, 0, -0.5f);
-      pt2.set(0, 0, 0.5f);
+      pt1.set(0, 0, -0.5d);
+      pt2.set(0, 0, 0.5d);
     }
     outputCloseTag();
     outputCylinderChildScaled(colix, endcaps);
     popMatrix();
-    if (radius > 0.1f)
+    if (radius > 0.1d)
       switch (endcaps) {
       case GData.ENDCAPS_SPHERICAL:
         outputSphere(pt1, radius * 1.01f, colix, checkRadius);
@@ -432,20 +432,20 @@ public class _VrmlExporter extends __CartesianExporter {
         faces[fpt++] = new int[] { i + n, (i + n + 1) % n + n, vertexCount - 1 };
       }
     }
-    P3[] vertexes = new P3[vertexCount];
+    P3d[] vertexes = new P3d[vertexCount];
     for (int i = 0; i < n; i++) {
-      float x = (float) (Math.cos(i * ndeg / 180. * Math.PI)); 
-      float y = (float) (Math.sin(i * ndeg / 180. * Math.PI)); 
-      vertexes[i] = P3.new3(x, 0.5f, y);
+      double x = (double) (Math.cos(i * ndeg / 180. * Math.PI)); 
+      double y = (double) (Math.sin(i * ndeg / 180. * Math.PI)); 
+      vertexes[i] = P3d.new3(x, 0.5d, y);
     }
     for (int i = 0; i < n; i++) {
-      float x = (float) (Math.cos((i + 0.5) * ndeg / 180 * Math.PI)); 
-      float y = (float) (Math.sin((i + 0.5) * ndeg / 180 * Math.PI)); 
-      vertexes[i + n] = P3.new3(x, -0.5f, y);
+      double x = (double) (Math.cos((i + 0.5) * ndeg / 180 * Math.PI)); 
+      double y = (double) (Math.sin((i + 0.5) * ndeg / 180 * Math.PI)); 
+      vertexes[i + n] = P3d.new3(x, -0.5d, y);
     }
     if (addEndcaps) {
-      vertexes[vertexCount - 2] = P3.new3(0, 0.5f, 0);
-      vertexes[vertexCount - 1] = P3.new3(0, -0.5f, 0);
+      vertexes[vertexCount - 2] = P3d.new3(0, 0.5d, 0);
+      vertexes[vertexCount - 1] = P3d.new3(0, -0.5d, 0);
     }
     outputGeometry(vertexes, null, null, faces, null, vertexCount, faces.length, null, 3,
         null, null, null);
@@ -454,7 +454,7 @@ public class _VrmlExporter extends __CartesianExporter {
   private Map<String, Boolean> htSpheresRendered = new Hashtable<String, Boolean>();
 
   @Override
-  protected void outputSphere(P3 ptCenter, float radius, short colix, boolean checkRadius) {
+  protected void outputSphere(P3d ptCenter, double radius, short colix, boolean checkRadius) {
     String check = round(ptCenter) + (checkRadius ? " " + (int) (radius * 100) : "");
     if (htSpheresRendered.get(check) != null)
       return;
@@ -463,12 +463,12 @@ public class _VrmlExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputEllipsoid(P3 ptCenter, P3[] points, short colix) {
-    outputSphereChildScaled(ptCenter, 1.0f, points, colix);
+  protected void outputEllipsoid(P3d ptCenter, P3d[] points, short colix) {
+    outputSphereChildScaled(ptCenter, 1.0d, points, colix);
   }
 
-  private void outputSphereChildScaled(P3 ptCenter, float radius,
-                                         P3[] points, short colix) {
+  private void outputSphereChildScaled(P3d ptCenter, double radius,
+                                         P3d[] points, short colix) {
 
     // Hey, hey -- quaternions to the rescue!
     // Just send three points to Quaternion to define a plane and return
@@ -499,7 +499,7 @@ public class _VrmlExporter extends __CartesianExporter {
   private void outputSphereGeometry() {
     //was output(" Shape{geometry Sphere{radius " + radius + "}");
     
-    V3[] vertices = Geodesic.getVertexVectors();
+    V3d[] vertices = Geodesic.getVertexVectors();
     int nVertices = 162;
     short[] faceList = Geodesic.getFaceVertexes(2);
     int nFaces = faceList.length / 3;
@@ -511,26 +511,26 @@ public class _VrmlExporter extends __CartesianExporter {
         nFaces, null, 3, null, null, null);    
   }
 
-  private T3[] plateVertices;
+  private T3d[] plateVertices;
   private int[][] plateIndices;
   private short[] plateColixes;
 
   @Override
-  protected void outputSolidPlate(P3 tempP1, P3 tempP2, P3 tempP3, short colix) {
+  protected void outputSolidPlate(P3d tempP1, P3d tempP2, P3d tempP3, short colix) {
     // nucleic plates
     //  0   1    2
     // 
     //  3   4    5
     if (plateVertices == null) {
-      plateVertices = new P3[6];
+      plateVertices = new P3d[6];
       for (int i = 0; i < 6; i++)
-        plateVertices[i] = new P3();
+        plateVertices[i] = new P3d();
       //plateColixes = new short[8];
       plateIndices = new int[][] { { 0, 1, 2 }, { 5, 4, 3 }, { 0, 3, 1 },
           { 1, 3, 4 }, { 1, 4, 2 }, { 2, 4, 5 }, { 2, 5, 0 }, { 0, 5, 3 } };
     }
-    Measure.calcNormalizedNormal(tempP1, tempP2, tempP3, tempV1, tempV2);
-    tempV1.scale(0.2f);
+    MeasureD.calcNormalizedNormal(tempP1, tempP2, tempP3, tempV1, tempV2);
+    tempV1.scale(0.2d);
     plateVertices[0].setT(tempP1);
     plateVertices[1].setT(tempP2);
     plateVertices[2].setT(tempP3);
@@ -547,17 +547,17 @@ public class _VrmlExporter extends __CartesianExporter {
   }
 
 
-  protected P3 tempQ1 = new P3();
-  protected P3 tempQ2 = new P3();
-  protected P3 tempQ3 = new P3();
+  protected P3d tempQ1 = new P3d();
+  protected P3d tempQ2 = new P3d();
+  protected P3d tempQ3 = new P3d();
 
   @Override
-  protected void outputSurface(T3[] vertices, T3[] normals, short[] colixes,
+  protected void outputSurface(T3d[] vertices, T3d[] normals, short[] colixes,
                                int[][] indices, short[] polygonColixes,
                                int nVertices, int nPolygons, int nTriangles,
                                BS bsPolygons, int faceVertexMax, short colix,
                                Lst<Short> colorList,
-                               Map<Short, Integer> htColixes, P3 offset) {
+                               Map<Short, Integer> htColixes, P3d offset) {
     outputShapeStart();
     outputDefChildFaceSet(null);
     outputGeometry(vertices, normals, colixes, indices, polygonColixes,
@@ -568,12 +568,12 @@ public class _VrmlExporter extends __CartesianExporter {
     outputShapeClose();
   }
 
-  protected void outputGeometry(T3[] vertices, T3[] normals,
+  protected void outputGeometry(T3d[] vertices, T3d[] normals,
                                 short[] colixes, int[][] indices,
                                 short[] polygonColixes,
                                 int nVertices, int nPolygons, BS bsPolygons,
                                 int faceVertexMax,
-                                Lst<Short> colorList, Map<Short, Integer> htColixes, P3 offset) {
+                                Lst<Short> colorList, Map<Short, Integer> htColixes, P3d offset) {
      if (polygonColixes == null) 
        output("  creaseAngle 0.5  \n");
      else
@@ -664,9 +664,9 @@ public class _VrmlExporter extends __CartesianExporter {
    }
 
   private int[][] oneFace;
-  private P3[] threeVertices;
+  private P3d[] threeVertices;
   @Override
-  protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3, short colix) {  
+  protected void outputTriangle(T3d pt1, T3d pt2, T3d pt3, short colix) {  
     
     // TODO  -- this is a problem - not a closed surface
     
@@ -679,10 +679,10 @@ public class _VrmlExporter extends __CartesianExporter {
     output("}\n");
   }
 
-  private void outputTriangleGeometry(T3 pt1, T3 pt2, T3 pt3, @SuppressWarnings("unused") short colix) {
+  private void outputTriangleGeometry(T3d pt1, T3d pt2, T3d pt3, @SuppressWarnings("unused") short colix) {
     if (oneFace == null) {
       oneFace = new int[][] {new int[] { 0, 1, 2 }};
-      threeVertices = new P3[] { tempP1, tempP2, tempP3 };
+      threeVertices = new P3d[] { tempP1, tempP2, tempP3 };
     }
     threeVertices[0].setT(pt1);
     threeVertices[1].setT(pt2);
@@ -691,7 +691,7 @@ public class _VrmlExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputTextPixel(P3 pt, int argb) {
+  protected void outputTextPixel(P3d pt, int argb) {
     // labels and images only -- ignore here
 //    String color = rgbFractionalFromArgb(argb);
 //    output("Transform{translation ");
@@ -708,7 +708,7 @@ public class _VrmlExporter extends __CartesianExporter {
 //    output("}\n");
   }
 
-  protected float fontSize;
+  protected double fontSize;
   protected String fontFace;
   protected String fontStyle;
   protected String fontChild;
@@ -757,7 +757,7 @@ public class _VrmlExporter extends __CartesianExporter {
     fontFace = font3d.fontFace.toUpperCase();
     fontFace = (fontFace.equals("MONOSPACED") ? "TYPEWRITER" 
         : fontFace.equals("SERIF") ? "SERIF" : "Arial");
-    fontSize = font3d.fontSize * 0.015f;
+    fontSize = font3d.fontSize * 0.015d;
     fontChild = getDef("T" + colix + fontFace + fontStyle + fontSize + "_" + text);
   }
 

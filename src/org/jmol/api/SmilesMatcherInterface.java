@@ -3,7 +3,7 @@ package org.jmol.api;
 
 
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
@@ -26,7 +26,7 @@ public interface SmilesMatcherInterface {
 
   public abstract String reverseChirality(String smiles) throws Exception;
 
-  public abstract String polyhedronToSmiles(Node center, int[][] faces, int atomCount, P3[] points, int flags, String details) throws Exception;
+  public abstract String polyhedronToSmiles(Node center, int[][] faces, int atomCount, P3d[] points, int flags, String details) throws Exception;
 
   
   // Internal -- Jmol use only -- 

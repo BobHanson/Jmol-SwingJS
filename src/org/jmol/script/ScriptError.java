@@ -48,7 +48,7 @@ public abstract class ScriptError implements JmolScriptEvaluator {
     errorOrWarn(ERROR_integerOutOfRange, "" + min, "" + max, null, true);
   }
 
-  protected void numberOutOfRange(float min, float max) throws ScriptException {
+  protected void numberOutOfRange(double min, double max) throws ScriptException {
     errorOrWarn(ERROR_numberOutOfRange, "" + min, "" + max, null, true);
   }
 

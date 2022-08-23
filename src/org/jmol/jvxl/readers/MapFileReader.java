@@ -27,15 +27,15 @@ import java.io.BufferedReader;
 
 
 import org.jmol.util.Logger;
-import javajs.util.P3;
+import javajs.util.P3d;
 import org.jmol.util.SimpleUnitCell;
 
 // DSN6, MRC, and XPLOR readers
 
 abstract class MapFileReader extends VolumeFileReader {
 
-  protected float dmin = Float.MAX_VALUE;
-  protected float dmax, dmean, drange;
+  protected double dmin = Double.MAX_VALUE;
+  protected double dmax, dmean, drange;
 
   MapFileReader(){}
   
@@ -49,7 +49,7 @@ abstract class MapFileReader extends VolumeFileReader {
     isAngstroms = true;
 // undocumented; for debugging, I think
 //    adjustment = center;
-//    if (adjustment == null || Float.isNaN(adjustment.x))
+//    if (adjustment == null || Double.isNaN(adjustment.x))
 //      adjustment = new P3();
   }
 
@@ -75,15 +75,15 @@ abstract class MapFileReader extends VolumeFileReader {
 
   protected int mapc, mapr, maps;
   protected int n0, n1, n2, mode;
-  protected float[] xyzStart = new float[3];
+  protected double[] xyzStart = new double[3];
   protected int na, nb, nc;
-  protected float a, b, c, alpha, beta, gamma;
-  protected P3 origin = new P3();
+  protected double a, b, c, alpha, beta, gamma;
+  protected P3d origin = new P3d();
   //protected P3 adjustment = new P3();
-  protected P3[] vectors = new P3[3];
+  protected P3d[] vectors = new P3d[3];
   protected int xIndex = -1, yIndex, zIndex;
 
-  protected P3 p3 = new P3();  
+  protected P3d p3 = new P3d();  
 
   protected void checkInsideOut(int mapc, int mapr, int maps) {
     if (params.thePlane == null)
@@ -105,7 +105,7 @@ abstract class MapFileReader extends VolumeFileReader {
         + maps);
     Logger.info("grid parameters: originX,Y,Z: " + origin);
 
-    SimpleUnitCell unitCell = SimpleUnitCell.newA(new float[] { a / na, b / nb,
+    SimpleUnitCell unitCell = SimpleUnitCell.newA(new double[] { a / na, b / nb,
         c / nc, alpha, beta, gamma });
 
     /*
@@ -151,9 +151,9 @@ abstract class MapFileReader extends VolumeFileReader {
      This is because our x is the slowest running variable.
     */
 
-    vectors[0] = P3.new3(1, 0, 0);
-    vectors[1] = P3.new3(0, 1, 0);
-    vectors[2] = P3.new3(0, 0, 1);
+    vectors[0] = P3d.new3(1, 0, 0);
+    vectors[1] = P3d.new3(0, 1, 0);
+    vectors[2] = P3d.new3(0, 0, 1);
     unitCell.toCartesian(vectors[0], false);
     unitCell.toCartesian(vectors[1], false);
     unitCell.toCartesian(vectors[2], false);
@@ -243,7 +243,7 @@ abstract class MapFileReader extends VolumeFileReader {
   
   protected void setCutoffAutomatic() {
     if (params.thePlane == null && params.cutoffAutomatic) {
-      params.cutoff = -1f;
+      params.cutoff = -1d;
       Logger.info("MapReader: setting cutoff to default value of "
           + params.cutoff
           + (boundingBox == null ? " (no BOUNDBOX parameter)\n" : "\n"));

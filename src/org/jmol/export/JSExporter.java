@@ -34,8 +34,8 @@ import org.jmol.util.Font;
 import org.jmol.util.GData;
 
 import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 /**
  * A class to output WebGL graphics. 
@@ -101,8 +101,8 @@ public class JSExporter extends __CartesianExporter {
    * @param pt2 
    * @param o 
    */
-  private void jsCylinder(Object applet, String id, boolean isNew, P3 pt1,
-                          P3 pt2, Object[] o) {
+  private void jsCylinder(Object applet, String id, boolean isNew, P3d pt1,
+                          P3d pt2, Object[] o) {
     // implemented in JavaScript only
   }
   
@@ -113,7 +113,7 @@ public class JSExporter extends __CartesianExporter {
    * @param pt 
    * @param o 
    */
-  private void jsSphere(Object applet, String id, boolean isNew, T3 pt,
+  private void jsSphere(Object applet, String id, boolean isNew, T3d pt,
                         Object[] o) {
     // implemented in JavaScript only
   }
@@ -132,7 +132,7 @@ public class JSExporter extends __CartesianExporter {
    * @param vertexColors
    * @param polygonColors
    */
-  protected void jsSurface(Object applet, T3[] vertices, T3[] normals,
+  protected void jsSurface(Object applet, T3d[] vertices, T3d[] normals,
                            int[][] indices, int nVertices, int nPolygons,
                            int nFaces, BS bsPolygons, int faceVertexMax,
                            int color, int[] vertexColors, int[] polygonColors) {
@@ -146,7 +146,7 @@ public class JSExporter extends __CartesianExporter {
    * @param pt2
    * @param pt3
    */
-  void jsTriangle(Object applet, int color, T3 pt1, T3 pt2, T3 pt3) {
+  void jsTriangle(Object applet, int color, T3d pt1, T3d pt2, T3d pt3) {
     // implemented in JavaScript only
   }
 
@@ -170,9 +170,9 @@ public class JSExporter extends __CartesianExporter {
   }
 
 @Override
-  protected void outputSphere(P3 ptCenter, float radius, short colix,
+  protected void outputSphere(P3d ptCenter, double radius, short colix,
                               boolean checkRadius) {
-    int iRad = Math.round(radius * 100);
+    int iRad = (int) Math.round(radius * 100);
     String check = round(ptCenter) + (checkRadius ? " " + iRad : "");
     if (htSpheresRendered.get(check) != null)
       return;
@@ -183,21 +183,21 @@ public class JSExporter extends __CartesianExporter {
       o = htObjects.get(ret[0]);
     else
       htObjects.put(ret[0],
-          o = new Object[] { getColor(colix), Float.valueOf(radius) });
+          o = new Object[] { getColor(colix), Double.valueOf(radius) });
     jsSphere(html5Applet, ret[0], !found, ptCenter, o);
   }
 
   private String[] ret = new String[1];
 
   @Override
-  protected boolean outputCylinder(P3 ptCenter, P3 pt1, P3 pt2, short colix,
-                                   byte endcaps, float radius, P3 ptX, P3 ptY,
+  protected boolean outputCylinder(P3d ptCenter, P3d pt1, P3d pt2, short colix,
+                                   byte endcaps, double radius, P3d ptX, P3d ptY,
                                    boolean checkRadius) {
     // ptX and ptY are ellipse major and minor axes
     // not implemented yet
     if (ptX != null)
       return false;
-    float length = pt1.distance(pt2);
+    double length = pt1.distance(pt2);
     boolean found = useTable.getDefRet(
         "C" + colix + "_" + Math.round(length * 100) + "_" + radius + "_"
             + endcaps, ret);
@@ -207,25 +207,25 @@ public class JSExporter extends __CartesianExporter {
     else
       htObjects.put(
           ret[0],
-          o = new Object[] { getColor(colix), Float.valueOf(length),
-              Float.valueOf(radius) });
+          o = new Object[] { getColor(colix), Double.valueOf(length),
+              Double.valueOf(radius) });
     jsCylinder(html5Applet, ret[0], !found, pt1, pt2, o);
     return true;
   }
 
   @Override
-  protected void outputCircle(P3 pt1, P3 pt2, float radius, short colix,
+  protected void outputCircle(P3d pt1, P3d pt2, double radius, short colix,
                               boolean doFill) {
     // TODO Auto-generated method stub
   }
 
   @Override
-  protected void outputEllipsoid(P3 center, P3[] points, short colix) {
+  protected void outputEllipsoid(P3d center, P3d[] points, short colix) {
     // TODO Auto-generated method stub
   }
 
   @Override
-  protected void outputCone(P3 ptBase, P3 ptTip, float radius, short colix) {
+  protected void outputCone(P3d ptBase, P3d ptTip, double radius, short colix) {
     outputCylinder(null, ptBase, ptTip, colix, GData.ENDCAPS_NONE, radius,
         null, null, false);
   }
@@ -235,13 +235,13 @@ public class JSExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputSurface(T3[] vertices, T3[] normals,
+  protected void outputSurface(T3d[] vertices, T3d[] normals,
                                short[] vertexColixes, int[][] indices,
                                short[] polygonColixes, int nVertices,
                                int nPolygons, int nTriangles, BS bsPolygons,
                                int faceVertexMax, short colix,
                                Lst<Short> colorList,
-                               Map<Short, Integer> htColixes, P3 offset) {
+                               Map<Short, Integer> htColixes, P3d offset) {
     int[] vertexColors = getColors(vertexColixes);
     int[] polygonColors = getColors(polygonColixes);
     jsSurface(html5Applet, vertices, normals, indices, nVertices, nPolygons, nTriangles,
@@ -250,12 +250,12 @@ public class JSExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void outputTriangle(T3 pt1, T3 pt2, T3 pt3, short colix) {
+  protected void outputTriangle(T3d pt1, T3d pt2, T3d pt3, short colix) {
     jsTriangle(html5Applet, gdata.getColorArgbOrGray(colix), pt1, pt2, pt3);
   }
 
   @Override
-  protected void outputTextPixel(P3 pt, int argb) {
+  protected void outputTextPixel(P3d pt, int argb) {
     // TODO
 
   }
@@ -266,7 +266,7 @@ public class JSExporter extends __CartesianExporter {
   }
 
   @Override
-  protected void output(T3 pt) {
+  protected void output(T3d pt) {
     // used by some exporters to output a list of vertices
     // n/a
   }

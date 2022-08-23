@@ -90,7 +90,7 @@ public class CubeReader extends AtomSetCollectionReader {
   }
   
   private void readAtoms() throws Exception {
-    float f = (isAngstroms ? 1 : ANGSTROMS_PER_BOHR);
+    double f = (isAngstroms ? 1 : ANGSTROMS_PER_BOHR);
     for (int i = 0; i < ac; ++i) {
       String[] tokens = PT.getTokens(rd());
       //allowing atomicAndIsotope for JVXL format

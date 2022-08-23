@@ -42,8 +42,8 @@ import org.jmol.util.JmolMolecule;
 import org.jmol.util.Vibration;
 
 import javajs.util.BS;
-import javajs.util.M4;
-import javajs.util.P3;
+import javajs.util.M4d;
+import javajs.util.P3d;
 import javajs.util.P3i;
 
 public class ShapeManager {
@@ -142,7 +142,7 @@ public class ShapeManager {
     return shapes[shapeID] = shape;
   }
 
-  public void notifyAtomPositionsChanged(int baseModel, BS bs, M4 mat) {
+  public void notifyAtomPositionsChanged(int baseModel, BS bs, M4d mat) {
     Integer Imodel = Integer.valueOf(baseModel);
     BS bsModelAtoms = vwr.getModelUndeletedAtomsBitSet(baseModel);
     for (int i = 0; i < JC.SHAPE_MAX; i++)
@@ -296,7 +296,7 @@ public class ShapeManager {
       shapes[JC.SHAPE_CONTACT].setProperty("deleteVdw", null, bs);
   }
   
-  public float getAtomShapeValue(int tok, Group group, int atomIndex) {
+  public double getAtomShapeValue(int tok, Group group, int atomIndex) {
     int iShape = JC.shapeTokenIndex(tok);
     if (iShape < 0 || shapes[iShape] == null) 
       return 0;
@@ -306,7 +306,7 @@ public class ShapeManager {
         return 0;
       mad = shapes[iShape].getSizeG(group);
     }
-    return mad / 2000f;
+    return mad / 2000d;
   }
 
   public void replaceGroup(Group g0, Group g1) {
@@ -430,8 +430,8 @@ public class ShapeManager {
       vwr.finalizeTransformParameters();
     if (bsTranslateSelected != null) {
       // translateSelected operation
-      P3 ptCenter = ms.getAtomSetCenter(bsTranslateSelected);
-      P3 pt = new P3();
+      P3d ptCenter = ms.getAtomSetCenter(bsTranslateSelected);
+      P3d pt = new P3d();
       tm.transformPt3f(ptCenter, pt);
       pt.add(tm.ptOffset);
       tm.unTransformPoint(pt, pt);
@@ -443,7 +443,7 @@ public class ShapeManager {
     BS bsOK = bsRenderableAtoms;
     ms.getAtomsInFrame(bsOK);
     Vibration[] vibrationVectors = ms.vibrations;
-    boolean vibs = (vibrationVectors != null && tm.vibrationOn);
+    boolean vibsOn = (vibrationVectors != null && tm.vibrationOn);
     boolean checkOccupancy = (ms.bsModulated != null && ms.occupancies != null);
     Atom[] atoms = ms.at;
     int occ;
@@ -455,7 +455,7 @@ public class ShapeManager {
       // PDB objects such as cartoons and traces, which 
       // use Cartesian coordinates, not screen coordinates
       Atom atom = atoms[i];
-      P3i screen = (vibs && atom.hasVibration() ? tm.transformPtVib(atom,
+      P3i screen = (vibsOn && atom.hasVibration() ? tm.transformPtVib(atom,
           vibrationVectors[i]) : tm.transformPt(atom));
       if (screen.z == 1 && tm.internalSlab && tm.xyzIsSlabbedInternal(atom)) {
         bsSlabbed.set(i);
@@ -465,11 +465,11 @@ public class ShapeManager {
       atom.sZ = screen.z;
       int d = Math.abs(atom.madAtom);
       if (d == Atom.MAD_GLOBAL)
-        d = (int) (vwr.getFloat(T.atoms) * 2000);
+        d = (int) (vwr.getDouble(T.atoms) * 2000);
       atom.sD = (short) vwr.tm.scaleToScreen(screen.z, d);
       if (checkOccupancy
           && vibrationVectors[i] != null
-          && (occ = vibrationVectors[i].getOccupancy100(vibs)) != Integer.MIN_VALUE) {
+          && (occ = vibrationVectors[i].getOccupancy100(vibsOn)) != Integer.MIN_VALUE) {
         //System.out.println(atom + " " + occ);
         haveMods = true;
         atom.setShapeVisibility(Atom.ATOM_VISSET, false);

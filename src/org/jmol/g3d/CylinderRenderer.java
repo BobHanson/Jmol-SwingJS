@@ -25,7 +25,7 @@
 package org.jmol.g3d;
 
 import javajs.util.AU;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 
 import org.jmol.util.GData;
@@ -58,8 +58,8 @@ class CylinderRenderer {
   private int[] shadesB;
   private int xA, yA, zA, xAend, yAend, zAend;
   private int dxB, dyB, dzB;
-  private float xAf, yAf, zAf;
-  private float dxBf, dyBf, dzBf;
+  private double xAf, yAf, zAf; 
+  private double dxBf, dyBf, dzBf;
   private boolean tEvenDiameter;
   //private int evenCorrection;
   private int diameter;
@@ -70,12 +70,12 @@ class CylinderRenderer {
   private short colixEndcap;
   private int endcapShadeIndex;
 
-  private float radius, radius2, cosTheta, cosPhi, sinPhi;
+  private double radius, radius2, cosTheta, cosPhi, sinPhi;
 
   private boolean clipped;
 
   private int rasterCount;
-  private float[][] xyztRaster = new float[][] {new float[32], new float[32], new float[32], new float[32] };
+  private double[][] xyztRaster = new double[][] {new double[32], new double[32], new double[32], new double[32] };
   private int[][] xyzfRaster = new int[][] {new int[32], new int[32], new int[32], new int[32]};
 
 
@@ -168,9 +168,9 @@ class CylinderRenderer {
   }
 
   
-  private P3 ptA0, ptB0;
+  private P3d ptA0, ptB0;
   
-  void renderBitsFloat(short colixA, short colixB, int screen, byte endcaps, int diameter, P3 ptA, P3 ptB) {
+  void renderBitsFloat(short colixA, short colixB, int screen, byte endcaps, int diameter, P3d ptA, P3d ptB) {
     Graphics3D g = this.g3d;
 // checked already
 //    if (diameter == 0 || diameter == 1) {
@@ -178,19 +178,19 @@ class CylinderRenderer {
 //      return;
 //    }
     if (ptA0 == null) {
-      ptA0 = new P3();
-      ptB0 = new P3();
+      ptA0 = new P3d();
+      ptB0 = new P3d();
     }
     ptA0.setT(ptA);
     // dipole cross, cartoonRockets, draw mesh nofill or width = -1
     // oops -- problem here if diameter < 0 is that we may have already clipped it!
     int r = diameter / 2 + 1;
-    int ixA = Math.round(ptA.x);
-    int iyA = Math.round(ptA.y);
-    int izA = Math.round(ptA.z);
-    int ixB = Math.round(ptB.x);
-    int iyB = Math.round(ptB.y);
-    int izB = Math.round(ptB.z);
+    int ixA = (int) Math.round(ptA.x);
+    int iyA = (int) Math.round(ptA.y);
+    int izA = (int) Math.round(ptA.z);
+    int ixB = (int) Math.round(ptB.x);
+    int iyB = (int) Math.round(ptB.y);
+    int izB = (int) Math.round(ptB.z);
     int codeMinA = g.clipCode3(ixA - r, iyA - r, izA - r);
     int codeMaxA = g.clipCode3(ixA + r, iyA + r, izA + r);
     int codeMinB = g.clipCode3(ixB - r, iyB - r, izB - r);
@@ -390,10 +390,10 @@ class CylinderRenderer {
     this.zAf += dzBf;
   }
 
-  private float xTip, yTip, zTip;
+  private double xTip, yTip, zTip;
   
-  void renderConeOld(short colix, byte endcap, int diameter, float xa, float ya,
-                  float za, float xtip, float ytip, float ztip, boolean doFill, boolean isBarb) {
+  void renderConeOld(short colix, byte endcap, int diameter, double xa, double ya,
+                  double za, double xtip, double ytip, double ztip, boolean doFill, boolean isBarb) {
     dxBf = (xtip) - (xAf = xa);
     dyBf = (ytip) - (yAf = ya);
     dzBf = (ztip) - (zAf = za);
@@ -428,19 +428,19 @@ class CylinderRenderer {
     if (!isBarb && endcaps == GData.ENDCAPS_FLAT)
       renderFlatEndcap(false, true, xyzfRaster);
     g3d.setZMargin(5);
-    float[] xr = xyztRaster[0];
-    float[] yr = xyztRaster[1];
-    float[] zr = xyztRaster[2];
+    double[] xr = xyztRaster[0];
+    double[] yr = xyztRaster[1];
+    double[] zr = xyztRaster[2];
     int[] fr = xyzfRaster[3];
     int[] sA = shadesA;
     boolean doOpen = (endCapHidden && argbEndcap != 0);
     for (int i = rasterCount; --i >= 0;) {
-      float x = xr[i];
-      float y = yr[i];
-      float z = zr[i];
+      double x = xr[i];
+      double y = yr[i];
+      double z = zr[i];
       int fpz = fr[i] >> (8);
-      float xUp = xAf + x, yUp = yAf + y, zUp = zAf - z;
-      float xDn = xAf - x, yDn = yAf - y, zDn = zAf + z;
+      double xUp = xAf + x, yUp = yAf + y, zUp = zAf - z;
+      double xDn = xAf - x, yDn = yAf - y, zDn = zAf + z;
       int argb = sA[0];
       if (doOpen) {
         g3d.plotPixelClippedArgb(argbEndcap, (int) xUp, (int) yUp,
@@ -484,29 +484,29 @@ class CylinderRenderer {
   }
 
   private void calcPoints(int count, boolean isPrecise) {
-    calcRotatedPoint(0f, 0, isPrecise, xyzfRaster, xyztRaster);
-    calcRotatedPoint(0.5f, 1, isPrecise, xyzfRaster, xyztRaster);
+    calcRotatedPoint(0d, 0, isPrecise, xyzfRaster, xyztRaster);
+    calcRotatedPoint(0.5d, 1, isPrecise, xyzfRaster, xyztRaster);
     if ((rasterCount = count) == 3)
-      calcRotatedPoint(1f, 2, isPrecise, xyzfRaster, xyztRaster);
+      calcRotatedPoint(1d, 2, isPrecise, xyzfRaster, xyztRaster);
   }
 
-  private void calcCosSin(float dx, float dy, float dz) {
-    float mag2d2 = dx * dx + dy * dy;
+  private void calcCosSin(double dx, double dy, double dz) {
+    double mag2d2 = dx * dx + dy * dy;
     if (mag2d2 == 0) {
       cosTheta = 1;
       cosPhi = 1;
       sinPhi = 0;
     } else {
-      float mag2d = (float) Math.sqrt(mag2d2);
-      float mag3d = (float) Math.sqrt(mag2d2 + dz * dz);
+      double mag2d = (double) Math.sqrt(mag2d2);
+      double mag3d = (double) Math.sqrt(mag2d2 + dz * dz);
       cosTheta = dz / mag3d;
       cosPhi = dx / mag2d;
       sinPhi = dy / mag2d;
     }
   }
 
-  private void calcRotatedPoint(float t, int i, boolean isPrecision,
-                                int[][] xyzf, float[][] xyzt) {
+  private void calcRotatedPoint(double t, int i, boolean isPrecision,
+                                int[][] xyzf, double[][] xyzt) {
     xyzt[3][i] = t;
     double tPI = t * Math.PI;
     double xT = Math.sin(tPI) * cosTheta;
@@ -517,9 +517,9 @@ class CylinderRenderer {
     double zR = (z2 > 0 ? Math.sqrt(z2) : 0);
 
     if (isPrecision) {
-      xyzt[0][i] = (float) xR;
-      xyzt[1][i] = (float) yR;
-      xyzt[2][i] = (float) zR;
+      xyzt[0][i] = (double) xR;
+      xyzt[1][i] = (double) yR;
+      xyzt[2][i] = (double) zR;
     } else if (tEvenDiameter) {
       xyzf[0][i] = (int) (xR - 0.5);
       xyzf[1][i] = (int) (yR - 0.5);
@@ -529,26 +529,26 @@ class CylinderRenderer {
       xyzf[1][i] = (int) (yR);
       xyzf[2][i] = (int) (zR + 0.5);
     }
-    xyzf[3][i] = shader.getShadeFp8((float) xR, (float) yR, (float) zR);
+    xyzf[3][i] = shader.getShadeFp8((double) xR, (double) yR, (double) zR);
   }
 
-  private int allocRaster(boolean isPrecision, int[][] xyzf, float[][] xyzt) {
+  private int allocRaster(boolean isPrecision, int[][] xyzf, double[][] xyzt) {
     if (rasterCount >= xyzf[0].length)
     while (rasterCount >= xyzf[0].length) {
       for (int i = 4; --i >= 0;)
         xyzf[i] = AU.doubleLengthI(xyzf[i]);
-        xyzt[3] = AU.doubleLengthF(xyzt[3]);
+        xyzt[3] = AU.doubleLengthD(xyzt[3]);
     }
     if (isPrecision)
       while (rasterCount >= xyzt[0].length) {
         for (int i = 3; --i >= 0;)
-          xyzt[i] = AU.doubleLengthF(xyzt[i]);
+          xyzt[i] = AU.doubleLengthD(xyzt[i]);
       }
     return rasterCount++;
   }
 
  private void interpolate(int iLower, int iUpper, 
-                          int[][] xyzf, float[][] xyzt) {
+                          int[][] xyzf, double[][] xyzt) {
    int[] x = xyzf[0];
    int[] y = xyzf[1];
     
@@ -564,10 +564,10 @@ class CylinderRenderer {
     x = xyzf[0];
     y = xyzf[1];
     int[] f = xyzf[3];
-    float tLower = xyzt[3][iLower];
-    float tUpper = xyzt[3][iUpper];
+    double tLower = xyzt[3][iLower];
+    double tUpper = xyzt[3][iUpper];
     for (int j = 4; --j >= 0;) {
-      float tMid = (tLower + tUpper) / 2;
+      double tMid = (tLower + tUpper) / 2;
       calcRotatedPoint(tMid, iMid, false, xyzf, xyzt);
       if ((x[iMid] == x[iLower])
           && (y[iMid] == y[iLower])) {
@@ -587,30 +587,30 @@ class CylinderRenderer {
     y[iMid] = y[iUpper];
   }
 
-  private void interpolatePrecisely(int iLower, int iUpper, int[][] xyzf, float[][] xyzt) {
-    float[] x = xyzt[0];
-    float[] y = xyzt[1];
+  private void interpolatePrecisely(int iLower, int iUpper, int[][] xyzf, double[][] xyzt) {
+    double[] x = xyzt[0];
+    double[] y = xyzt[1];
     
     int dx = (int) Math.floor(x[iUpper])
         - (int) Math.floor(x[iLower]);
     if (dx < 0)
       dx = -dx;
-    float dy = (int) Math.floor(y[iUpper])
+    double dy = (int) Math.floor(y[iUpper])
         - (int) Math.floor(y[iLower]);
     if (dy < 0)
       dy = -dy;
     if ((dx + dy) <= 1)
       return;
-    float[] t = xyzt[3];
-    float tLower = t[iLower];
-    float tUpper = t[iUpper];
+    double[] t = xyzt[3];
+    double tLower = t[iLower];
+    double tUpper = t[iUpper];
     int iMid = allocRaster(true, xyzf, xyzt);
     x = xyzt[0];
     y = xyzt[1];
     t = xyzt[3];
     int[] f = xyzf[3];
     for (int j = 4; --j >= 0;) {
-      float tMid = (tLower + tUpper) / 2;
+      double tMid = (tLower + tUpper) / 2;
       calcRotatedPoint(tMid, iMid, true, xyzf, xyzt);
       if (((int) Math.floor(x[iMid]) == (int) Math
           .floor(x[iLower]))
@@ -639,9 +639,9 @@ class CylinderRenderer {
     if (isPrecise) {
       if (dzBf == 0 || colixEndcap == 0 || !g3d.setC(colixEndcap))
         return;
-      float xTf = xAf;
-      float yTf = yAf;
-      float zTf = zAf;
+      double xTf = xAf;
+      double yTf = yAf;
+      double zTf = zAf;
       if (isCylinder && dzBf < 0) {
         xTf += dxBf;
         yTf += dyBf;
@@ -732,18 +732,18 @@ class CylinderRenderer {
 
   private void calcArgbEndcap(boolean tCylinder, boolean isFloat) {
     tEvenDiameter = ((diameter & 1) == 0);
-    radius = diameter / 2.0f;
+    radius = diameter / 2.0d;
     radius2 = radius * radius;
     endCapHidden = false;
-    float dzf = (isFloat ? dzBf : (float) dzB);
+    double dzf = (isFloat ? dzBf : (double) dzB);
     if (endcaps == GData.ENDCAPS_SPHERICAL || dzf == 0)
       return;
     xEndcap = xAend = xA;
     yEndcap = yAend = yA;
     zEndcap = zAend = zA;
     int[] shadesEndcap;
-    float dxf = (isFloat ? dxBf : (float) dxB);
-    float dyf = (isFloat ? dyBf : (float) dyB);
+    double dxf = (isFloat ? dxBf : (double) dxB);
+    double dyf = (isFloat ? dyBf : (double) dyB);
     if (dzf >= 0 || !tCylinder) {
       endcapShadeIndex = shader.getShadeIndex(-dxf, -dyf, dzf);
       if (colixA == 0) {

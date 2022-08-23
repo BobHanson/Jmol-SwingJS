@@ -22,7 +22,7 @@
  */
 package org.jmol.bspt;
 
-import javajs.util.T3;
+import javajs.util.T3d;
 
 /**
  * Iterator used for finding all points within a box or a hemi-box
@@ -42,17 +42,17 @@ public class CubeIterator {
   private int sp;
   private int leafIndex;
   private Leaf leaf;
-  private float radius;  
-  //private float[] centerValues; causes grief with JavaScript
-  private float cx, cy, cz;
-  private float dx, dy, dz;
+  private double radius;  
+  //private double[] centerValues; causes grief with JavaScript
+  private double cx, cy, cz;
+  private double dx, dy, dz;
 
   // when set, only the hemisphere sphere .GE. the point
   // (on the first dim) is returned
   private boolean tHemisphere;
 
   CubeIterator(Bspt bspt) {
-    //centerValues = new float[bspt.dimMax];
+    //centerValues = new double[bspt.dimMax];
     set(bspt);
   }
 
@@ -69,7 +69,7 @@ public class CubeIterator {
    * @param radius
    * @param hemisphereOnly 
    */
-  public void initialize(T3 center, float radius, boolean hemisphereOnly) {
+  public void initialize(T3d center, double radius, boolean hemisphereOnly) {
     //this.center = center;
     this.radius = radius;
     tHemisphere = false;
@@ -113,7 +113,7 @@ public class CubeIterator {
    *
    * @return Tuple
    */
-  public T3 nextElement() {
+  public T3d nextElement() {
     return leaf.tuples[leafIndex++];
   }
 
@@ -122,9 +122,9 @@ public class CubeIterator {
    * the value of the distance squared. To get the distance
    * just take the sqrt.
    *
-   * @return float
+   * @return double
    */
-  public float foundDistance2() {
+  public double foundDistance2() {
     return dx * dx + dy * dy + dz * dz;
   }
   
@@ -138,7 +138,7 @@ public class CubeIterator {
     Element ele = stack[--sp];
     while (ele instanceof Node) {
       Node node = (Node)ele;
-      float minValue;
+      double minValue;
       switch (node.dim) {
       case 0:
         minValue = cx;
@@ -151,7 +151,7 @@ public class CubeIterator {
         minValue = cz;
         break;
       }
-      float maxValue = minValue + radius;
+      double maxValue = minValue + radius;
       if (! tHemisphere || node.dim != 0)
         minValue -= radius;
       if (minValue <= node.maxLeft && maxValue >= node.minLeft) {
@@ -176,7 +176,7 @@ public class CubeIterator {
    * @param t
    * @return boolean
    */
-  private boolean isWithinRadius(T3 t) {
+  private boolean isWithinRadius(T3d t) {
     dx = t.x - cx;
     return ((!tHemisphere || dx >= 0)        
         && (dx = Math.abs(dx)) <= radius

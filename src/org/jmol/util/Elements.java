@@ -170,17 +170,17 @@ public class Elements {
   // Thomas Prohaska  Published Online: 2016-02-24 | DOI: https://doi.org/10.1515/pac-2015-0305
   // https://www.degruyter.com/view/j/pac.2016.88.issue-3/pac-2015-0305/pac-2015-0305.xml
 
-   public final static float[] atomicMass = {
+   public final static double[] atomicMass = {
     0, 
-    /* 1 H */ 1.008f, 4.002f, 
-    /* 2 Li */ 6.9675f, 9.012f,      10.8135f, 12.0106f, 14.006f, 15.999f, 18.998f, 20.1797f, 
-    /* 3 Na */ 22.989f, 24.307f,     26.981f, 28.084f, 30.973f, 32.059f, 35.4515f, 39.948f, 
-    /* 4 K */ 39.0983f, 40.078f, 44.955f, 47.867f, 50.9415f, 51.9961f, 54.938f, 55.845f, 58.933f, 58.6934f, 63.546f, 65.38f, 69.723f, 72.63f, 74.921f, 78.971f, 79.904f, 83.798f, 
-    /* 5 Rb */ 85.4678f, 87.62f, 88.905f, 91.224f, 92.906f, 95.95f, 98.91f, 101.07f, 102.905f, 106.42f, 107.8682f, 112.414f, 114.818f, 118.71f, 121.76f, 127.6f, 126.904f, 131.293f, 
-    /* 6 Cs, Ba, actinides */132.905f, 137.327f, 138.905f, 140.116f, 140.907f, 144.242f, 144.9f,  150.36f, 151.964f, 157.25f, 158.925f, 162.5f, 164.93f, 167.259f, 168.934f, 173.054f, 174.9668f,
-    /* 6 Hf */  178.49f,180.947f,183.84f,186.207f,190.23f,192.217f,195.084f,196.966f,200.592f,204.3835f,207.2f,208.98f,210f, 210f, 222f,    
-    /* 7 Fr, Ra, lanthanides */ 223f, 226.03f, 227.03f, 232.0377f, 231.035f, 238.028f, 237.05f, 239.1f, 243.1f, 247.1f, 247.1f, 252.1f, 252.1f, 257.1f, 256.1f, 259.1f, 260.1f, 
-    /* 7 Rf - Mt */ 261f, 262f, 263f, 262f, 265f, 268f
+    /* 1 H */ 1.008d, 4.002d, 
+    /* 2 Li */ 6.9675d, 9.012d,      10.8135d, 12.0106d, 14.006d, 15.999d, 18.998d, 20.1797d, 
+    /* 3 Na */ 22.989d, 24.307d,     26.981d, 28.084d, 30.973d, 32.059d, 35.4515d, 39.948d, 
+    /* 4 K */ 39.0983d, 40.078d, 44.955d, 47.867d, 50.9415d, 51.9961d, 54.938d, 55.845d, 58.933d, 58.6934d, 63.546d, 65.38d, 69.723d, 72.63d, 74.921d, 78.971d, 79.904d, 83.798d, 
+    /* 5 Rb */ 85.4678d, 87.62d, 88.905d, 91.224d, 92.906d, 95.95d, 98.91d, 101.07d, 102.905d, 106.42d, 107.8682d, 112.414d, 114.818d, 118.71d, 121.76d, 127.6d, 126.904d, 131.293d, 
+    /* 6 Cs, Ba, actinides */132.905d, 137.327d, 138.905d, 140.116d, 140.907d, 144.242d, 144.9d,  150.36d, 151.964d, 157.25d, 158.925d, 162.5d, 164.93d, 167.259d, 168.934d, 173.054d, 174.9668d,
+    /* 6 Hd */  178.49d,180.947d,183.84d,186.207d,190.23d,192.217d,195.084d,196.966d,200.592d,204.3835d,207.2d,208.98d,210d, 210d, 222d,    
+    /* 7 Fr, Ra, lanthanides */ 223d, 226.03d, 227.03d, 232.0377d, 231.035d, 238.028d, 237.05d, 239.1d, 243.1d, 247.1d, 247.1d, 252.1d, 252.1d, 257.1d, 256.1d, 259.1d, 260.1d, 
+    /* 7 Rd - Mt */ 261d, 262d, 263d, 262d, 265d, 268d
     };
 
 
@@ -205,7 +205,7 @@ public class Elements {
      return isotopeMass[elementNumber & 0x7F];
    }
 
-   public static float getAtomicMass(int i) {
+   public static double getAtomicMass(int i) {
      return (i < 1 || i >= atomicMass.length ? 0 : atomicMass[i]);
    }
    
@@ -717,14 +717,14 @@ public class Elements {
    * @param charge
    * @return a bonding radius, either ionic or covalent
    */
-  public static float getBondingRadius(int atomicNumberAndIsotope,
+  public static double getBondingRadius(int atomicNumberAndIsotope,
                                             int charge) {
     int atomicNumber = atomicNumberAndIsotope & 127;
     return (charge > 0 && bsCations.get(atomicNumber) ? getBondingRadFromTable(
         atomicNumber, charge, cationLookupTable) : charge < 0
         && bsAnions.get(atomicNumber) ? getBondingRadFromTable(atomicNumber,
         charge, anionLookupTable) : defaultBondingMars[(atomicNumber << 1)
-        + bondingVersion] / 1000f);
+        + bondingVersion] / 1000d);
   }
 
   /**
@@ -733,9 +733,9 @@ public class Elements {
    * @param atomicNumberAndIsotope
    * @return BODR covalent data, generally.
    */
-  public static float getCovalentRadius(int atomicNumberAndIsotope) {
+  public static double getCovalentRadius(int atomicNumberAndIsotope) {
     return defaultBondingMars[((atomicNumberAndIsotope & 127) << 1)
-        + covalentVersion] / 1000f;
+        + covalentVersion] / 1000d;
 
   }
   
@@ -1119,7 +1119,7 @@ public class Elements {
       bsCations.set(cationLookupTable[i]>>4);
   }
 
-  public static float getBondingRadFromTable(int atomicNumber, int charge, short[] table) {
+  public static double getBondingRadFromTable(int atomicNumber, int charge, short[] table) {
     // when found, return the corresponding value in ionicMars
     // if atom is not found, just return covalent radius
     // if atom is found, but charge is not found, return next lower charge
@@ -1133,7 +1133,7 @@ public class Elements {
       else if (iVal < ionic)
         iMin = iMid + 1;
       else
-        return table[(iMid << 1) + 1] / 1000f;
+        return table[(iMid << 1) + 1] / 1000d;
     }
     // find closest with same element and charge <= this charge
     if (iVal > ionic) 
@@ -1141,14 +1141,14 @@ public class Elements {
     iVal = table[iMid << 1];
     if (atomicNumber != (iVal >> 4)) 
       iMid++; // must be same element and not a negative charge;
-    return table[(iMid << 1) + 1] / 1000f;
+    return table[(iMid << 1) + 1] / 1000d;
   }
 
   public static int getVanderwaalsMar(int atomicAndIsotopeNumber, VDW type) {
     return vanderwaalsMars[((atomicAndIsotopeNumber & 127) << 2) + (type.pt % 4)];
   }
 
-  public static float getHydrophobicity(int i) {
+  public static double getHydrophobicity(int i) {
     return (i < 1 || i >= Elements.hydrophobicities.length ? 0 : Elements.hydrophobicities[i]);
   }
 
@@ -1168,28 +1168,28 @@ public class Elements {
   // Hydrophobicity of amino acid residues in globular proteins. 
   // Science, 229(4716):834-838.
 
-  private final static float[] hydrophobicities = {
-                0f,
-      /* Ala*/  0.62f,
-      /* Arg*/ -2.53f,
-      /* Asn*/ -0.78f,
-      /* Asp*/ -0.90f,
-      /* Cys*/  0.29f,
-      /* Gln*/ -0.85f,
-      /* Glu*/ -0.74f,
-      /* Gly*/  0.48f,
-      /* His*/ -0.40f,
-      /* Ile*/  1.38f,
-      /* Leu*/  1.06f,
-      /* Lys*/ -1.50f,
-      /* Met*/  0.64f,
-      /* Phe*/  1.19f,
-      /* Pro*/  0.12f,
-      /* Ser*/ -0.18f,
-      /* Thr*/ -0.05f,
-      /* Trp*/  0.81f,
-      /* Tyr*/  0.26f,
-      /* Val*/  1.08f
+  private final static double[] hydrophobicities = {
+                0d,
+      /* Ala*/  0.62d,
+      /* Arg*/ -2.53d,
+      /* Asn*/ -0.78d,
+      /* Asp*/ -0.90d,
+      /* Cys*/  0.29d,
+      /* Gln*/ -0.85d,
+      /* Glu*/ -0.74d,
+      /* Gly*/  0.48d,
+      /* His*/ -0.40d,
+      /* Ile*/  1.38d,
+      /* Leu*/  1.06d,
+      /* Lys*/ -1.50d,
+      /* Met*/  0.64d,
+      /* Phe*/  1.19d,
+      /* Pro*/  0.12d,
+      /* Ser*/ -0.18d,
+      /* Thr*/ -0.05d,
+      /* Trp*/  0.81d,
+      /* Tyr*/  0.26d,
+      /* Val*/  1.08d
   };
 
 
@@ -1208,64 +1208,64 @@ public class Elements {
     }
   }
 
-  private static float[] electroNegativities = {
+  private static double[] electroNegativities = {
     // from http://chemwiki.ucdavis.edu/Physical_Chemistry/Physical_Properties_of_Matter/Atomic_and_Molecular_Properties/Allred-Rochow_Electronegativity
     0,
-    2.2f,//H
+    2.2d,//H
     0,//He
-    0.97f,//Li
-    1.47f,//Be
-    2.01f,//B
-    2.5f,//C
-    3.07f,//N
-    3.5f,//O
-    4.1f,//F
-    0f,//
-    1.01f,//Na
-    1.23f,//Mg
-    1.47f,//Al
-    1.74f,//Si
-    2.06f,//P
-    2.44f,//S
-    2.83f,//Cl
-    0f,//
-    0.91f,//K
-    1.04f,//Ca
-    1.2f,//Sc
-    1.32f,//Ti
-    1.45f,//V
-    1.56f,//Cr
-    1.6f,//Mn
-    1.64f,//Fe
-    1.7f,//Co
-    1.75f,//Ni
-    1.75f,//Cu
-    1.66f,//Zn
-    1.82f,//Ga
-    2.02f,//Ge
-    2.2f,//As
-    2.48f,//Se
-    2.74f,//Br
-    0f,//
-    0.89f,//Rb
-    0.99f,//Sr
-    1.11f,//Y
-    1.22f,//Zr
-    1.23f,//Nb
-    1.3f,//Mo
-    1.36f,//Te
-    1.42f,//Ru
-    1.45f,//Rh
-    1.35f,//Pd
-    1.42f,//Ag
-    1.46f,//Cd
-    1.49f,//In
-    1.72f,//Sn
-    1.82f,//Sb
-    2.01f,//Te
-    2.21f//I    
+    0.97d,//Li
+    1.47d,//Be
+    2.01d,//B
+    2.5d,//C
+    3.07d,//N
+    3.5d,//O
+    4.1d,//F
+    0d,//
+    1.01d,//Na
+    1.23d,//Mg
+    1.47d,//Al
+    1.74d,//Si
+    2.06d,//P
+    2.44d,//S
+    2.83d,//Cl
+    0d,//
+    0.91d,//K
+    1.04d,//Ca
+    1.2d,//Sc
+    1.32d,//Ti
+    1.45d,//V
+    1.56d,//Cr
+    1.6d,//Mn
+    1.64d,//Fe
+    1.7d,//Co
+    1.75d,//Ni
+    1.75d,//Cu
+    1.66d,//Zn
+    1.82d,//Ga
+    2.02d,//Ge
+    2.2d,//As
+    2.48d,//Se
+    2.74d,//Br
+    0d,//
+    0.89d,//Rb
+    0.99d,//Sr
+    1.11d,//Y
+    1.22d,//Zr
+    1.23d,//Nb
+    1.3d,//Mo
+    1.36d,//Te
+    1.42d,//Ru
+    1.45d,//Rh
+    1.35d,//Pd
+    1.42d,//Ag
+    1.46d,//Cd
+    1.49d,//In
+    1.72d,//Sn
+    1.82d,//Sb
+    2.01d,//Te
+    2.21d//I    
   };
-  public static float getAllredRochowElectroNeg(int elemno) {
+  public static double getAllredRochowElectroNeg(int elemno) {
     return (elemno > 0 && elemno < electroNegativities.length ? electroNegativities[elemno] : 0);
   }
   

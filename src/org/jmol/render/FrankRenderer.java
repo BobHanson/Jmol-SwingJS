@@ -50,7 +50,7 @@ public class FrankRenderer extends ShapeRenderer {
     if (vwr.frankOn && !vwr.noFrankEcho)
       return vwr.noFrankEcho;
     vwr.noFrankEcho = true;
-    float imageFontScaling = vwr.imageFontScaling;
+    double imageFontScaling = vwr.imageFontScaling;
     frank.getFont(imageFontScaling);
     int dx = (int) (frank.frankWidth + Frank.frankMargin * imageFontScaling);
     int dy = frank.frankDescent;

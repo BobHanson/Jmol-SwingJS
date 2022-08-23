@@ -149,7 +149,7 @@ public abstract class Edge implements SimpleEdge {
    * used for formatting labels and in the connect PARTIAL command
    * 
    * @param order
-   * @return a string representation to preserve float n.m
+   * @return a string representation to preserve double n.m
    */
   public final static String getBondOrderNumberFromOrder(int order) {
     order &= ~BOND_NEW;
@@ -268,7 +268,7 @@ public abstract class Edge implements SimpleEdge {
     return order & 7;
   }
 
-  public final static int getBondOrderFromFloat(float fOrder) {
+  public final static int getBondOrderFromFloat(double fOrder) {
     switch ((int) (fOrder * 10)) {
     case 10:
       return BOND_COVALENT_SINGLE;

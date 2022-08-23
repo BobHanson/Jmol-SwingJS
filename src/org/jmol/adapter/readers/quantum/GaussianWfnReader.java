@@ -102,7 +102,7 @@ EXPONENTS  0.2068882D+04 0.3106496D+03 0.7068303D+02 0.1986108D+02 0.6299305D+01
       tokens = getTokens(readLine()); 
       Atom atom = asc.addNewAtom();
       atom.elementSymbol = tokens[0];
-      setAtomCoord(atom, parseFloat(tokens[4]), parseFloat(tokens[5]), parseFloat(tokens[6]));
+      setAtomCoord(atom, parseDouble(tokens[4]), parseDouble(tokens[5]), parseDouble(tokens[6]));
     }
   }
 
@@ -118,14 +118,14 @@ EXPONENTS  0.2068882D+04 0.3106496D+03 0.7068303D+02 0.1986108D+02 0.6299305D+01
     return a;
   }
   
-  private float[] getFloatArray(int n, int pt) {
-    float[] a = new float[n];
+  private double[] getFloatArray(int n, int pt) {
+    double[] a = new double[n];
     String[] tokens;
     int nValues = 0;
     while (nValues < n) {
       tokens = getTokens(readLine());
       for (int i = pt; i < tokens.length; i++)
-        a[nValues++] = parseFloat(tokens[i]);
+        a[nValues++] = parseDouble(tokens[i]);
     }
     return a;
   }
@@ -137,7 +137,7 @@ EXPONENTS  0.2068882D+04 0.3106496D+03 0.7068303D+02 0.1986108D+02 0.6299305D+01
     shellCount = 0;
     int[] centers = getIntArray(nPrimitive, 2);
     int[] types = getIntArray(nPrimitive, 2);
-    float[] exponents = getFloatArray(nPrimitive, 1);
+    double[] exponents = getFloatArray(nPrimitive, 1);
     int lastAtom = -1;
     for (i = 0; i < nPrimitive; i++) {
       what here?

@@ -28,7 +28,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 import org.jmol.api.GenericPlatform;
@@ -49,8 +49,8 @@ public abstract class TextShape extends Shape {
   Font currentFont;
   Object currentColor;
   Object currentBgColor;
-  float currentTranslucentLevel;
-  float currentBgTranslucentLevel;
+  double currentTranslucentLevel;
+  double currentBgTranslucentLevel;
   protected String thisID;
   
   boolean isHover;
@@ -255,7 +255,7 @@ public abstract class TextShape extends Shape {
         if (obj.script != null)
           vwr.evalStringQuiet(obj.script);
         Map<String, Object> map = new Hashtable<String, Object>();
-        map.put("pt", (obj.xyz == null ? new P3() : obj.xyz));
+        map.put("pt", (obj.xyz == null ? new P3d() : obj.xyz));
         int modelIndex = obj.modelIndex;
         if (modelIndex < 0)
           modelIndex = 0;

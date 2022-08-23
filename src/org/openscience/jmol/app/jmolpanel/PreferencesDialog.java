@@ -88,8 +88,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
   boolean openFilePreview;
   boolean clearHistory;
   int fontScale = 1;
-  float minBondDistance;
-  float bondTolerance;
+  double minBondDistance;
+  double bondTolerance;
   short marBond;
   int percentVdwAtom;
   int bondingVersion;
@@ -450,7 +450,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     btPanel.add(btLabel, BorderLayout.NORTH);
 
     btSlider = new JSlider(SwingConstants.HORIZONTAL, 0, 100,
-        (int) (100 * vwr.getFloat(T.bondtolerance)));
+        (int) (100 * vwr.getDouble(T.bondtolerance)));
     btSlider.putClientProperty("JSlider.isFilled", Boolean.TRUE);
     btSlider.setPaintTicks(true);
     btSlider.setMajorTickSpacing(20);
@@ -497,7 +497,7 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     bdPanel.add(bdLabel, BorderLayout.NORTH);
 
     bdSlider = new JSlider(SwingConstants.HORIZONTAL, 0, 100,
-        (int) (100 * vwr.getFloat(T.minbonddistance)));
+        (int) (100 * vwr.getDouble(T.minbonddistance)));
     bdSlider.putClientProperty("JSlider.isFilled", Boolean.TRUE);
     bdSlider.setPaintTicks(true);
     bdSlider.setMajorTickSpacing(20);
@@ -586,8 +586,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     // Bond panel controls:
     abYes.setSelected(vwr.getBoolean(T.autobond));
     bwSlider.setValue(vwr.getMadBond() / 2);
-    bdSlider.setValue((int) (100 * vwr.getFloat(T.minbonddistance)));
-    btSlider.setValue((int) (100 * vwr.getFloat(T.bondtolerance)));
+    bdSlider.setValue((int) (100 * vwr.getDouble(T.minbonddistance)));
+    btSlider.setValue((int) (100 * vwr.getDouble(T.bondtolerance)));
 
   }
 
@@ -641,11 +641,11 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     vwr.setIntProperty("PercentVdwAtom", percentVdwAtom);
     currentProperties.put("percentVdwAtom", "" + percentVdwAtom);
 
-    bondTolerance = btSlider.getValue() / 100f;
+    bondTolerance = btSlider.getValue() / 100d;
     vwr.setFloatProperty("bondTolerance", bondTolerance);
     currentProperties.put("bondTolerance", "" + bondTolerance);
 
-    minBondDistance = bdSlider.getValue() / 100f;
+    minBondDistance = bdSlider.getValue() / 100d;
     vwr.setFloatProperty("minBondDistance", minBondDistance);
     currentProperties.put("minBondDistance", "" + minBondDistance);
 
@@ -672,8 +672,8 @@ public class PreferencesDialog extends JDialog implements ActionListener {
     clearHistory = getBoolean("clearHistory");
     antialiasDisplay = getBoolean("antialiasDisplay");
     measureAngstroms = getBoolean("measureAngstroms");
-    minBondDistance = Float.parseFloat(getProp("minBondDistance"));
-    bondTolerance = Float.parseFloat(getProp("bondTolerance"));
+    minBondDistance = Double.parseDouble(getProp("minBondDistance"));
+    bondTolerance = Double.parseDouble(getProp("bondTolerance"));
     marBond = Short.parseShort(getProp("marBond"));
     percentVdwAtom = Integer.parseInt(getProp("percentVdwAtom"));
     bondingVersion = Integer.parseInt(getProp("bondingVersion"));

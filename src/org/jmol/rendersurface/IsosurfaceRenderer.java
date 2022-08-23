@@ -37,10 +37,10 @@ import javajs.util.Lst;
 import org.jmol.util.Normix;
 import org.jmol.viewer.JC;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 public class IsosurfaceRenderer extends MeshRenderer {
 
@@ -48,7 +48,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
   protected boolean isBicolorMap;
   protected short backgroundColix;
   protected int nError = 0;
-  protected float[] vertexValues;
+  protected double[] vertexValues;
   protected IsosurfaceMesh imesh;
   private Isosurface isosurface;
   private boolean isNavigationMode;
@@ -166,9 +166,9 @@ public class IsosurfaceRenderer extends MeshRenderer {
       meshSlabValue = imesh.jvxlData.slabValue; 
       if (meshSlabValue != Integer.MIN_VALUE  
           && imesh.jvxlData.isSlabbable) {
-        P3[] points = imesh.jvxlData.boundingBox;
-        float z0 = Float.MAX_VALUE;
-        float z1 = PT.FLOAT_MIN_SAFE;
+        P3d[] points = imesh.jvxlData.boundingBox;
+        double z0 = Double.MAX_VALUE;
+        double z1 = PT.FLOAT_MIN_SAFE;
         for (int i = points.length; --i >= 0;) {
           pt2f.setT(points[i]);
           tm.transformPt3f(pt2f, pt2f);
@@ -177,7 +177,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
           if (pt2f.z > z1)
             z1 = pt2f.z;
         }
-        thisSlabValue = Math.round(z0 + (z1 - z0) * (100f - meshSlabValue)/100);
+        thisSlabValue = (int) Math.round(z0 + (z1 - z0) * (100d - meshSlabValue)/100);
         frontOnly &= (meshSlabValue >= 100);
         isShell &= (meshSlabValue >= 100);
       }
@@ -228,22 +228,22 @@ public class IsosurfaceRenderer extends MeshRenderer {
     if (r < 1)
       r = 1;
     if (!isRadical) {
-      V3 v1 = new V3();
-      V3 v2 = new V3();
+      V3d v1 = new V3d();
+      V3d v2 = new V3d();
       pt1f.setT(vertices[0]);
       tm.transformPt3f(pt1f, pt1f);
       v1.sub2(pt2f, pt1f);
       v2.set(v1.x, v1.y, v1.z + 1);
       v2.cross(v2,v1);
       v2.normalize();
-      float f = vwr.tm.scaleToScreen((int)pt1f.z, 100);
+      double f = vwr.tm.scaleToScreen((int)pt1f.z, 100);
       v2.scale(f);
       pt1f.add2(pt2f, v2);
       pt2f.sub(v2);
-      screens[0].set(Math.round(pt1f.x),Math.round(pt1f.y),Math.round(pt1f.z));
+      screens[0].set((int) Math.round(pt1f.x),(int) Math.round(pt1f.y),(int) Math.round(pt1f.z));
       g3d.fillSphereI(r, screens[0]);
     }
-    screens[1].set(Math.round(pt2f.x),Math.round(pt2f.y),Math.round(pt2f.z));
+    screens[1].set((int) Math.round(pt2f.x),(int) Math.round(pt2f.y),(int) Math.round(pt2f.z));
     g3d.fillSphereI(r, screens[1]);
   }
   
@@ -267,9 +267,9 @@ public class IsosurfaceRenderer extends MeshRenderer {
       int n = v.size() - 1;
       int diam = getDiameter();
       for (int j = JvxlCoder.CONTOUR_POINTS; j < n; j++) {
-        T3 pt1 = (T3) v.get(j);
-        T3 pt2 = (T3) v.get(++j);
-        if (Float.isNaN(pt1.x) || Float.isNaN(pt2.x))
+        T3d pt1 = (T3d) v.get(j);
+        T3d pt2 = (T3d) v.get(++j);
+        if (Double.isNaN(pt1.x) || Double.isNaN(pt2.x))
           break;
         tm.transformPtScrT3(pt1, pt1f);
         tm.transformPtScrT3(pt2, pt2f);
@@ -299,7 +299,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
       } else {
         diam = vwr.getScreenDim() / (volumeRender ? 50 : 100);        
       }
-      int ptSize = Math.round(Float.isNaN(mesh.volumeRenderPointSize) ? 150 : mesh.volumeRenderPointSize * 1000);
+      int ptSize = (int) Math.round(Double.isNaN(mesh.volumeRenderPointSize) ? 150 : mesh.volumeRenderPointSize * 1000);
       if (diam < 1)
         diam = 1;
       int cX = (showNumbers ? vwr.getScreenWidth() / 2 : 0);
@@ -308,7 +308,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
         vwr.gdata.setFontBold("Monospaced", 24);
       for (int i = (!imesh.hasGridPoints || imesh.firstRealVertex < 0 ? 0
           : imesh.firstRealVertex); i < vertexCount; i += incr) {
-        if (vertexValues != null && Float.isNaN(vertexValues[i]) || frontOnly
+        if (vertexValues != null && Double.isNaN(vertexValues[i]) || frontOnly
             && !isVisibleNormix(normixes[i]) 
             || imesh.jvxlData.thisSet != null
             && !imesh.jvxlData.thisSet.get(mesh.vertexSets[i]) || !mesh.isColorSolid
@@ -337,17 +337,17 @@ public class IsosurfaceRenderer extends MeshRenderer {
       }
       if (incr == 3) {
         g3d.setC(isTranslucent ? C.getColixTranslucent3(
-            C.GRAY, true, 0.5f) : C.GRAY);
+            C.GRAY, true, 0.5d) : C.GRAY);
         for (int i = 1; i < vertexCount; i += 3)
           g3d.fillCylinder(GData.ENDCAPS_SPHERICAL, diam / 4, screens[i],
               screens[i + 1]);
         g3d.setC(isTranslucent ? C.getColixTranslucent3(
-            C.YELLOW, true, 0.5f) : C.YELLOW);
+            C.YELLOW, true, 0.5d) : C.YELLOW);
         for (int i = 1; i < vertexCount; i += 3)
           g3d.fillSphereI(diam, screens[i]);
 
         g3d.setC(isTranslucent ? C.getColixTranslucent3(
-            C.BLUE, true, 0.5f) : C.BLUE);
+            C.BLUE, true, 0.5d) : C.BLUE);
         for (int i = 2; i < vertexCount; i += 3) {
           g3d.fillSphereI(diam, screens[i]);
         }
@@ -464,7 +464,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
                 screens[iB]);
         //} else if (iShowTriangles) {
           //g3d.fillTriangle(screens[iA], colixA, nA, screens[iB], colixB, nB,
-            //  screens[iC], colixC, nC, 0.1f);
+            //  screens[iC], colixC, nC, 0.1d);
         } else if (mesh.colorsExplicit) {
             vwr.gdata.setColor(polygon[MeshSurface.P_EXPLICIT_COLOR]);
             colixA = C.copyColixTranslucency(mesh.colix, (short) C.LAST_AVAILABLE_COLIX); 
@@ -530,16 +530,16 @@ public class IsosurfaceRenderer extends MeshRenderer {
     if (!g3d.setC(C.copyColixTranslucency(mesh.colix, C.WHITE)))
       return;
     vwr.gdata.setFontBold("Monospaced", 24);
-    V3[] vertexVectors = Normix.getVertexVectors();
+    V3d[] vertexVectors = Normix.getVertexVectors();
     for (int i = vertexCount; --i >= 0;) {
-      if (vertexValues != null && Float.isNaN(vertexValues[i]))
+      if (vertexValues != null && Double.isNaN(vertexValues[i]))
         continue;
       pt1f.setT(vertices[i]);
       short n = mesh.normixes[i];
       // -n is an intensity2sided and does not correspond to a true normal
       // index
       if (n >= 0) {
-        pt2f.scaleAdd2(0.3f, vertexVectors[n], pt1f);
+        pt2f.scaleAdd2(0.3d, vertexVectors[n], pt1f);
         tm.transformPtScrT3(pt2f, pt2f);
         pt1f.set(screens[i].x, screens[i].y, screens[i].z);
         g3d.drawLineAB(pt1f, pt2f);

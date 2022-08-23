@@ -23,13 +23,14 @@
 package org.jmol.bspt;
 
 import javajs.util.BS;
+
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Point3fi;
 
 import javajs.util.Lst;
-import javajs.util.P3;
-import javajs.util.T3;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 public class PointIterator {
 
@@ -39,7 +40,7 @@ public class PointIterator {
    * @param distance
    *        0 for closest only
    * @param pt
-   *        if not null and pt.x == Float.NaN, this is an internal comparison,
+   *        if not null and pt.x == Double.NaN, this is an internal comparison,
    *        to return a "cleaned" list of points
    * @param ap3
    *        the list of points, required
@@ -51,17 +52,17 @@ public class PointIterator {
    *        null, "", int[], Lst<T3>, or P3
    * @return T.nada, T.string, T.array, T.list, T.point
    */
-  public static int withinDistPoints(float distance, P3 pt, P3[] ap3, P3[] ap31,
+  public static int withinDistPoints(double distance, P3d pt, P3d[] ap3, P3d[] ap31,
                                      BS bsSelected, Object[] ret) {
-    Lst<T3> pts = new Lst<T3>();
+    Lst<T3d> pts = new Lst<T3d>();
     Bspt bspt = new Bspt(3, 0);
     CubeIterator iter;
-    if (pt != null && Float.isNaN(pt.x)) {
+    if (pt != null && Double.isNaN(pt.x)) {
       // internal comparison
       Point3fi[] pt3 = new Point3fi[ap3.length];
       Point3fi p;
       for (int i = pt3.length; --i >= 0;) {
-        P3 p3 = ap3[i];
+        P3d p3 = ap3[i];
         if (p3 == null)
           return T.nada;
         if (bsSelected == null) {
@@ -82,7 +83,7 @@ public class PointIterator {
         for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
             .nextSetBit(i + 1)) {
           iter.initialize(ap31[i], distance, false);
-          float d2 = distance * distance;
+          double d2 = distance * distance;
           while (iter.hasMoreElements()) {
             if (iter.nextElement().distanceSquared(ap31[i]) <= d2) {
               bsp.set(i);
@@ -96,7 +97,7 @@ public class PointIterator {
       bsp = BSUtil.newBitSet2(0, ap3.length);
       for (int i = pt3.length; --i >= 0;) {
         iter.initialize(p = pt3[i], distance, false);
-        float d2 = distance * distance;
+        double d2 = distance * distance;
         int n = 0;
         while (iter.hasMoreElements()) {
           Point3fi pt2 = (Point3fi) iter.nextElement();
@@ -105,17 +106,17 @@ public class PointIterator {
         }
       }
       for (int i = bsp.nextSetBit(0); i >= 0; i = bsp.nextSetBit(i + 1))
-        pts.addLast(P3.newP(pt3[i]));
+        pts.addLast(P3d.newP(pt3[i]));
       ret[0] = pts;
       return T.list;
     }
     if (distance == 0) {
       // closest
       if (ap31 == null) {
-        float d2 = Float.MAX_VALUE;
-        P3 pt3 = null;
+        double d2 = Double.MAX_VALUE;
+        P3d pt3 = null;
         for (int i = ap3.length; --i >= 0;) {
-          P3 pta = ap3[i];
+          P3d pta = ap3[i];
           distance = pta.distanceSquared(pt);
           if (distance < d2) {
             pt3 = pta;
@@ -127,11 +128,11 @@ public class PointIterator {
       }
       int[] ptsOut = new int[ap31.length];
       for (int i = ptsOut.length; --i >= 0;) {
-        float d2 = Float.MAX_VALUE;
+        double d2 = Double.MAX_VALUE;
         int imin = -1;
         pt = ap31[i];
         for (int j = ap3.length; --j >= 0;) {
-          P3 pta = ap3[j];
+          P3d pta = ap3[j];
           distance = pta.distanceSquared(pt);
           if (distance < d2) {
             imin = j;
@@ -147,9 +148,9 @@ public class PointIterator {
       bspt.addTuple(ap3[i]);
     iter = bspt.allocateCubeIterator();
     iter.initialize(pt, distance, false);
-    float d2 = distance * distance;
+    double d2 = distance * distance;
     while (iter.hasMoreElements()) {
-      T3 pt2 = iter.nextElement();
+      T3d pt2 = iter.nextElement();
       if (pt2.distanceSquared(pt) <= d2)
         pts.addLast(pt2);
     }

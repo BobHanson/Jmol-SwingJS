@@ -9,12 +9,12 @@ import org.jmol.script.T;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.Measure;
+import javajs.util.MeasureD;
 import javajs.util.SB;
-import javajs.util.P3;
-import javajs.util.P4;
-import javajs.util.V3;
-import javajs.util.T3;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.V3d;
+import javajs.util.T3d;
 
 public class MeshSlicer {
 
@@ -25,8 +25,8 @@ public class MeshSlicer {
   protected MeshSurface m;
   MeshSlicer set(MeshSurface meshSurface) {
     m = meshSurface;
-    values = new float[2];
-    fracs = new float[2];
+    values = new double[2];
+    fracs = new double[2];
     sources = new int[3];
     return this;
   }
@@ -36,13 +36,13 @@ public class MeshSlicer {
   private boolean doGhost;
   private int iD, iE;
   private int[] sources;
-  private P3[] pts;
-  V3 norm;
-  private float dPlane;  
-  float[] values;
-  float[] fracs;
+  private P3d[] pts;
+  V3d norm;
+  private double dPlane;  
+  double[] values;
+  double[] fracs;
   private MeshCapper capper;
-  private float wPlane;
+  private double wPlane;
   
   
   /**
@@ -121,42 +121,42 @@ public class MeshSlicer {
     switch (slabType) {
     case T.brillouin:
       sb.append("brillouin");
-      slabBrillouin((P3[]) slabbingObject);
+      slabBrillouin((P3d[]) slabbingObject);
       break;
     case T.decimal:
       getIntersection(0, null, null, null, null, (BS) slabbingObject, null,
           andCap, false, T.decimal, isGhost);
       break;
     case T.plane:
-      P4 plane = (P4) slabbingObject;
+      P4d plane = (P4d) slabbingObject;
       sb.append(Escape.eP4(plane));
       getIntersection(0, plane, null, null, null, null, null, andCap, false,
           T.plane, isGhost);
       break;
     case T.unitcell:
     case T.boundbox:
-      P3[] box = (P3[]) slabbingObject;
+      P3d[] box = (P3d[]) slabbingObject;
       sb.append("within ").append(Escape.eAP(box));
-      P4[] faces = getBoxFacesFromOABC(box);
+      P4d[] faces = getBoxFacesFromOABC(box);
       for (int i = 0; i < faces.length; i++) {
         getIntersection(0, faces[i], null, null, null, null, null, andCap,
             false, T.plane, isGhost);
       }
       break;
     case T.data:
-      getIntersection(0, null, null, null, (float[]) slabbingObject, null,
+      getIntersection(0, null, null, null, (double[]) slabbingObject, null,
           null, false, false, T.min, isGhost);
       break;
     case T.within:
     case T.range:
     case T.mesh:
       Object[] o = (Object[]) slabbingObject;
-      float distance = ((Float) o[0]).floatValue();
+      double distance = ((Number) o[0]).doubleValue();
       switch (slabType) {
       case T.within:
-        P3[] points = (P3[]) o[1];
+        P3d[] points = (P3d[]) o[1];
         BS bs = (BS) o[2];
-        sb.append("within ").appendF(distance)
+        sb.append("within ").appendD(distance)
             .append(bs == null ? Escape.e(points) : Escape.e(bs));
         getIntersection(distance, null, points, null, null, null, null, andCap,
             false, T.distance, isGhost);
@@ -166,9 +166,9 @@ public class MeshSlicer {
         // if y.y < x.x then this effectively means "NOT within range y.y x.x"
         if (m.vvs == null)
           return false;
-        float distanceMax = ((Float) o[1]).floatValue();
-        sb.append("within range ").appendF(distance).append(" ")
-            .appendF(distanceMax);
+        double distanceMax = ((Number) o[1]).doubleValue();
+        sb.append("within range ").appendD(distance).append(" ")
+            .appendD(distanceMax);
         bs = (distanceMax < distance ? BSUtil.copy(m.bsSlabDisplay) : null);
         getIntersection(distance, null, null, null, null, null, null, andCap,
             false, T.min, isGhost);
@@ -200,19 +200,19 @@ public class MeshSlicer {
     return true;
   }
 
-  private P4[] getBoxFacesFromOABC(P3[] oabc) {
-      P4[] faces = new P4[6];
-      V3 vNorm = new V3();
-      V3 vAB = new V3();
-      P3 pta = new P3();
-      P3 ptb = new P3();
-      P3 ptc = new P3();
-      P3[] vertices = BoxInfo.getVerticesFromOABC(oabc);
+  private P4d[] getBoxFacesFromOABC(P3d[] oabc) {
+      P4d[] faces = new P4d[6];
+      V3d vNorm = new V3d();
+      V3d vAB = new V3d();
+      P3d pta = new P3d();
+      P3d ptb = new P3d();
+      P3d ptc = new P3d();
+      P3d[] vertices = BoxInfo.getVerticesFromOABC(oabc);
       for (int i = 0; i < 6; i++) {
         pta.setT(vertices[BoxInfo.facePoints[i][0]]);
         ptb.setT(vertices[BoxInfo.facePoints[i][1]]);
         ptc.setT(vertices[BoxInfo.facePoints[i][2]]);
-        faces[i] = Measure.getPlaneThroughPoints(pta, ptb, ptc, vNorm, vAB, new P4());
+        faces[i] = MeasureD.getPlaneThroughPoints(pta, ptb, ptc, vNorm, vAB, new P4d());
       }
       return faces;
     }
@@ -241,17 +241,17 @@ public class MeshSlicer {
    * @param isGhost
    *        translucent slab, so we mark slabbed triangles
    */
-  public void getIntersection(float distance, P4 plane, P3[] ptCenters,
-                              Lst<P3[]> vData, float[] fData, BS bsSource,
+  public void getIntersection(double distance, P4d plane, P3d[] ptCenters,
+                              Lst<P3d[]> vData, double[] fData, BS bsSource,
                               MeshSurface meshSurface, boolean andCap,
                               boolean doClean, int tokType, boolean isGhost) {
     MeshSurface m = this.m;
     boolean isSlab = (vData == null);
-    P3[] p = null;
+    P3d[] p = null;
     pts = ptCenters;
     if (plane != null) {
-      norm = V3.newV(plane);
-      dPlane = (float) Math.sqrt(norm.dot(norm));
+      norm = V3d.newV(plane);
+      dPlane = (double) Math.sqrt(norm.dot(norm));
       wPlane = plane.w;
       if (dPlane == 0) {
         norm.z = dPlane = 1;
@@ -263,7 +263,7 @@ public class MeshSlicer {
       if (tokType == T.decimal && bsSource != null) {
         if (m.vertexSource == null)
           return;
-        fData = new float[m.vc];
+        fData = new double[m.vc];
         for (int i = 0; i < m.vc; i++) {
           fData[i] = m.vertexSource[i];
           if (fData[i] == -1)
@@ -275,7 +275,7 @@ public class MeshSlicer {
     }
     if (m.pc == 0) {
       for (int i = m.mergeVertexCount0; i < m.vc; i++) {
-        if (Float.isNaN(fData[i])
+        if (Double.isNaN(fData[i])
             || checkSlab(tokType, m.vs[i], fData[i], distance, bsSource) > 0)
           m.bsSlabDisplay.clear(i);
       }
@@ -291,8 +291,8 @@ public class MeshSlicer {
     double absD = Math.abs(distance);
     Map<String, Integer> mapEdge = new Hashtable<String, Integer>();
     BS bsD = BS.newN(m.vc);
-    float[] d = new float[m.vc];
-    float d1 = 0, d2 = 0, d3 = 0, valA, valB, valC;
+    double[] d = new double[m.vc];
+    double d1 = 0, d2 = 0, d3 = 0, valA, valB, valC;
     for (int i = m.mergePolygonCount0, iLast = m.pc; i < iLast; i++) {
       int[] face = m.setABC(i);
       if (face == null)
@@ -304,9 +304,9 @@ public class MeshSlicer {
       int ia = m.iA;
       int ib = m.iB;
       int ic = m.iC;
-      T3 vA = m.vs[ia];
-      T3 vB = m.vs[ib];
-      T3 vC = m.vs[ic];
+      T3d vA = m.vs[ia];
+      T3d vB = m.vs[ib];
+      T3d vC = m.vs[ic];
       valA = fData[ia];
       valB = fData[ib];
       valC = fData[ic];
@@ -376,10 +376,10 @@ public class MeshSlicer {
       case 6:
         // BC on same side
         if (ptCenters == null)
-          p = new P3[] { interpolatePoint(vA, vB, -d1, d2, valA, valB, 0),
+          p = new P3d[] { interpolatePoint(vA, vB, -d1, d2, valA, valB, 0),
               interpolatePoint(vA, vC, -d1, d3, valA, valC, 1) };
         else
-          p = new P3[] {
+          p = new P3d[] {
               interpolateSphere(vA, vB, -d1, -d2, absD, valA, valB, 0),
               interpolateSphere(vA, vC, -d1, -d3, absD, valA, valC, 1) };
         break;
@@ -387,10 +387,10 @@ public class MeshSlicer {
       case 5:
         //AC on same side
         if (ptCenters == null)
-          p = new P3[] { interpolatePoint(vB, vA, -d2, d1, valB, valA, 1),
+          p = new P3d[] { interpolatePoint(vB, vA, -d2, d1, valB, valA, 1),
               interpolatePoint(vB, vC, -d2, d3, valB, valC, 0) };
         else
-          p = new P3[] {
+          p = new P3d[] {
               interpolateSphere(vB, vA, -d2, -d1, absD, valB, valA, 1),
               interpolateSphere(vB, vC, -d2, -d3, absD, valB, valC, 0) };
         break;
@@ -398,10 +398,10 @@ public class MeshSlicer {
       case 4:
         //AB on same side need A-C, B-C
         if (ptCenters == null)
-          p = new P3[] { interpolatePoint(vC, vA, -d3, d1, valC, valA, 0),
+          p = new P3d[] { interpolatePoint(vC, vA, -d3, d1, valC, valA, 0),
               interpolatePoint(vC, vB, -d3, d2, valC, valB, 1) };
         else
-          p = new P3[] {
+          p = new P3d[] {
               interpolateSphere(vC, vA, -d3, -d1, absD, valC, valA, 0),
               interpolateSphere(vC, vB, -d3, -d2, absD, valC, valB, 1) };
         break;
@@ -576,7 +576,7 @@ public class MeshSlicer {
       for (int i = 0; i < m.vc; i++)
         if (bsv.get(i))
           map[i] = n++;
-      T3[] vTemp = new P3[n];
+      T3d[] vTemp = new P3d[n];
       n = 0;
       for (int i = 0; i < m.vc; i++)
         if (bsv.get(i))
@@ -596,7 +596,7 @@ public class MeshSlicer {
     }
   }
 
-  private boolean getDE(float[] fracs, int fD, int i1, int i2, int i3,
+  private boolean getDE(double[] fracs, int fD, int i1, int i2, int i3,
                         boolean toss23) {
 
     //          0 (1) 0
@@ -636,13 +636,13 @@ public class MeshSlicer {
     return true;
   }
 
-  private static int setPoint(float[] fracs, int i, int i0, int i1) {
+  private static int setPoint(double[] fracs, int i, int i0, int i1) {
     return (fracs[i] == 0 ? i0 : fracs[i] == 1 ? i1 : -1);
   }
 
-  private float checkSlab(int tokType, T3 v, float val, float distance,
+  private double checkSlab(int tokType, T3d v, double val, double distance,
                                  BS bs) {
-    float d;
+    double d;
     switch (tokType) {
     case T.decimal:
       return (val >= 0 && bs.get((int) val) ? 1 : -1);
@@ -658,7 +658,7 @@ public class MeshSlicer {
     //case T.sphere:
     //case T.distance:
     default:
-      float dmin = Integer.MAX_VALUE;
+      double dmin = Integer.MAX_VALUE;
       for (int i = pts.length; --i >= 0;) {
         d = pts[i].distance(v);
         if (d < dmin)
@@ -692,27 +692,27 @@ public class MeshSlicer {
     }
   */
 
-  private P3 interpolateSphere(T3 v1, T3 v2, float d1, float d2, double absD,
-                               float val1, float val2, int i) {
+  private P3d interpolateSphere(T3d v1, T3d v2, double d1, double d2, double absD,
+                               double val1, double val2, int i) {
     return interpolateFraction(v1, v2,
         MeshSurface.getSphericalInterpolationFraction(absD, d1, d2, v1.distance(v2)), val1,
         val2, i);
   }
 
-  private P3 interpolatePoint(T3 v1, T3 v2, float d1, float d2,
-                                     float val1, float val2, int i) {
+  private P3d interpolatePoint(T3d v1, T3d v2, double d1, double d2,
+                                     double val1, double val2, int i) {
     return interpolateFraction(v1, v2, d1 / (d1 + d2), val1, val2, i);
   }
 
-  private P3 interpolateFraction(T3 v1, T3 v2, float f, float val1,
-                                        float val2, int i) {
+  private P3d interpolateFraction(T3d v1, T3d v2, double f, double val1,
+                                        double val2, int i) {
     if (f < 0.0001)
       f = 0;
     else if (f > 0.9999)
       f = 1;
     fracs[i] = f;
     values[i] = (val2 - val1) * f + val1;
-    return P3.new3(v1.x + (v2.x - v1.x) * f, v1.y + (v2.y - v1.y) * f, v1.z
+    return P3d.new3(v1.x + (v2.x - v1.x) * f, v1.y + (v2.y - v1.y) * f, v1.z
         + (v2.z - v1.z) * f);
   }
 
@@ -723,38 +723,38 @@ public class MeshSlicer {
    * @param unitCellPoints
    * 
    */
-  protected void slabBrillouin(P3[] unitCellPoints) {
+  protected void slabBrillouin(P3d[] unitCellPoints) {
     MeshSurface m = this.m;
-    T3[] vectors = (unitCellPoints == null ? m.oabc : unitCellPoints);
+    T3d[] vectors = (unitCellPoints == null ? m.oabc : unitCellPoints);
     if (vectors == null)
       return;
 
     // define 26 k-points around the origin
 
-    P3[] pts = new P3[27];
-    pts[0] = P3.newP(vectors[0]);
+    P3d[] pts = new P3d[27];
+    pts[0] = P3d.newP(vectors[0]);
     int pt = 0;
     for (int i = -1; i <= 1; i++)
       for (int j = -1; j <= 1; j++)
         for (int k = -1; k <= 1; k++)
           if (i != 0 || j != 0 || k != 0) {
-            pts[++pt] = P3.newP(pts[0]);
+            pts[++pt] = P3d.newP(pts[0]);
             pts[pt].scaleAdd2(i, vectors[1], pts[pt]);
             pts[pt].scaleAdd2(j, vectors[2], pts[pt]);
             pts[pt].scaleAdd2(k, vectors[3], pts[pt]);
           }
 
-//    System.out.println("draw line1 {0 0 0} color red"
+//System.out.println("draw line1 {0 0 0} color red"
 //        + Escape.eP(m.spanningVectors[1]));
-//    System.out.println("draw line2 {0 0 0} color green"
+//System.out.println("draw line2 {0 0 0} color green"
 //        + Escape.eP(m.spanningVectors[2]));
-//    System.out.println("draw line3 {0 0 0} color blue"
+//System.out.println("draw line3 {0 0 0} color blue"
 //        + Escape.eP(m.spanningVectors[3]));
 
-    P3 ptTemp = new P3();
-    P4 planeGammaK = new P4();
-    V3 vGammaToKPoint = new V3();
-    V3 vTemp = new V3();
+    P3d ptTemp = new P3d();
+    P4d planeGammaK = new P4d();
+    V3d vGammaToKPoint = new V3d();
+    V3d vTemp = new V3d();
     BS bsMoved = new BS();
     Map<String, Integer> mapEdge = new Hashtable<String, Integer>();
     m.bsSlabGhost = new BS();
@@ -767,7 +767,7 @@ public class MeshSlicer {
 
     for (int i = 1; i < 27; i++) {
       vGammaToKPoint.setT(pts[i]);
-      Measure.getBisectingPlane(pts[0], vGammaToKPoint, ptTemp, vTemp,
+      MeasureD.getBisectingPlane(pts[0], vGammaToKPoint, ptTemp, vTemp,
           planeGammaK);
       getIntersection(1, planeGammaK, null, null, null, null, null, false,
           false, T.plane, true);
@@ -846,7 +846,7 @@ public class MeshSlicer {
     m.setBoundingBox(bi.getBoundBoxPoints(false));
   }
   
-  int addIntersectionVertex(T3 vertex, float value, int source,
+  int addIntersectionVertex(T3d vertex, double value, int source,
                                     int set, Map<String, Integer> mapEdge,
                                     int i1, int i2) {
     String key = getKey(i1, i2);

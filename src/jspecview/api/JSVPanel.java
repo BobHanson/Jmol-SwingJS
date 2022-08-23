@@ -40,7 +40,7 @@ public interface JSVPanel extends JSVViewPanel {
 
 	public boolean processMouseEvent(int id, int x, int y, int modifiers, long time);
 
-	public void processTwoPointGesture(float[][][] touches);
+	public void processTwoPointGesture(double[][][] touches);
 
 	public void showMenu(int x, int y);
 

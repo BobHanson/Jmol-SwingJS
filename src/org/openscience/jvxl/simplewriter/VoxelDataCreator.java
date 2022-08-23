@@ -2,7 +2,7 @@ package org.openscience.jvxl.simplewriter;
 
 
 import org.jmol.jvxl.data.VolumeData;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 public class VoxelDataCreator {
 
@@ -23,7 +23,7 @@ public class VoxelDataCreator {
       int nX = counts[0];
       int nY = counts[1];
       int nZ = counts[2];
-      float[][][] voxelData = new float[nX][nY][nZ];
+      double[][][] voxelData = new double[nX][nY][nZ];
       volumeData.setVoxelDataAsArray(voxelData);
       // whatever method here that is desired;
       // it is not necessary to create a whole block.
@@ -39,9 +39,9 @@ public class VoxelDataCreator {
           }
     }    
 
-    P3 pt = new P3();
+    P3d pt = new P3d();
 
-    public float getValue(int x, int y, int z) {
+    public double getValue(int x, int y, int z) {
       volumeData.voxelPtToXYZ(x, y, z, pt);
       return pt.x * pt.x + pt.y * pt.y - pt.z * pt.z;  // for instance
     }

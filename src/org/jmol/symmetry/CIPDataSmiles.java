@@ -2,7 +2,7 @@ package org.jmol.symmetry;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.Measure;
+import javajs.util.MeasureD;
 
 import org.jmol.smiles.SmilesAtom;
 import org.jmol.smiles.SmilesBond;
@@ -114,11 +114,11 @@ public class CIPDataSmiles extends CIPData {
     if (jn == null)
       return CIPChirality.NO_CHIRALITY;
     center.stereo.setTopoCoordinates(center, null, null, jn, false);
-    float angle = Measure.computeTorsion(jn[0].getXYZ(), jn[1].getXYZ(),
+    double angle = MeasureD.computeTorsion(jn[0].getXYZ(), jn[1].getXYZ(),
         jn[2].getXYZ(), jn[3].getXYZ(), true);
-    //    System.out.println(a.atomIndex + " " + b.atomIndex + " " + c.atomIndex + " " + d.atomIndex);
-    //    System.out.println(jn[0].getIndex() + " " + jn[1].getIndex() + " " + jn[2].getIndex() + " " + jn[3].getIndex());
-    //    System.out.println(angle);
+    //System.out.println(a.atomIndex + " " + b.atomIndex + " " + c.atomIndex + " " + d.atomIndex);
+    //System.out.println(jn[0].getIndex() + " " + jn[1].getIndex() + " " + jn[2].getIndex() + " " + jn[3].getIndex());
+    //System.out.println(angle);
     // positive and both on the inside or both on the outside
     return ((angle > 0) == ((a.atom.getIndex() == jn[0].getIndex())
         && (d.atom.getIndex() == jn[3].getIndex()) || (a.atom.getIndex() == jn[1]

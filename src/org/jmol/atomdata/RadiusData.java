@@ -67,7 +67,7 @@
  * is a JVXL file:
  * 
  * line1:  (int)-nSurfaces  (int)edgeFractionBase (int)edgeFractionRange  
- * (nSurface lines): (float)cutoff (int)nBytesData (int)nBytesFractions
+ * (nSurface lines): (double)cutoff (int)nBytesData (int)nBytesFractions
  * 
  * definition1
  * edgedata1
@@ -126,11 +126,11 @@ public class RadiusData {
   //private static final String[] typeNames = new String[] { "=", "+", "*", "." };
   public EnumType factorType = EnumType.ABSOLUTE;
   public VDW vdwType = VDW.AUTO;
-  public float value = Float.NaN;
-  public float valueExtended = 0;
-  public float[] values;
+  public double value = Double.NaN;
+  public double valueExtended = 0;
+  public double[] values;
   
-  public RadiusData(float[] values, float value, EnumType factorType, VDW vdwType) {
+  public RadiusData(double[] values, double value, EnumType factorType, VDW vdwType) {
     if (values != null) {
       this.values = values;
       this.value = Integer.MAX_VALUE;
@@ -146,15 +146,15 @@ public class RadiusData {
 
   @Override
   public String toString() {
-    if (Float.isNaN(value))
+    if (Double.isNaN(value))
       return "";
     SB sb = new SB();
     switch (factorType) {
     case ABSOLUTE:
-      sb.appendF(value);
+      sb.appendD(value);
       break;
     case OFFSET:
-      sb.append(value > 0 ? "+" : "").appendF(value);
+      sb.append(value > 0 ? "+" : "").appendD(value);
       break;
     case FACTOR:
       sb.appendI((int) (value * 100)).append("%");

@@ -27,7 +27,7 @@ package org.openscience.jmol.app.webexport;
 import org.jmol.i18n.GT;
 
 import javajs.util.CU;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 class Widgets { 
   
@@ -127,7 +127,7 @@ class Widgets {
     
     @Override
     String getJavaScript(int appletID, JmolInstance instance) {
-      P3 ptRGB = CU.colorPtFromInt(instance.bgColor, null);
+      P3d ptRGB = CU.colorPtFromInt(instance.bgColor, null);
       return "<table><tbody><tr><td>"
           + GT.escapeHTML(GT.$("background color:"))
           + "</td><td style='min-width:70px;'><script type='text/javascript'>"

@@ -25,7 +25,7 @@ public class XcrysdenReader extends AtomSetCollectionReader {
 
   private int nAtoms;
   private boolean animation = false;
-  private float[] unitCellData = new float[9];
+  private double[] unitCellData = new double[9];
   private int animationStep;
 
 
@@ -53,7 +53,7 @@ public class XcrysdenReader extends AtomSetCollectionReader {
   
   private void readUnitCell() throws Exception {
     setSymmetry();
-    fillFloatArray(null, 0, unitCellData);
+    fillDoubleArray(null, 0, unitCellData);
     setUnitCell();
   }
 

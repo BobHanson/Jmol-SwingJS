@@ -25,22 +25,24 @@ package org.jmol.render;
 
 
 
-import javajs.util.AU;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.P3i;
-import javajs.util.P4;
-import javajs.util.T3;
-import javajs.util.V3;
-
 import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
+import org.jmol.shapespecial.Draw;
 import org.jmol.util.C;
 import org.jmol.util.GData;
 import org.jmol.util.MeshSurface;
 import org.jmol.util.SimpleUnitCell;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.M4d;
+import javajs.util.P3d;
+import javajs.util.P3d;
+import javajs.util.P3i;
+import javajs.util.P4d;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 /**
  * an abstract class subclasssed by BioShapeRenderer, DrawRenderer, and IsosurfaceRenderer
@@ -48,19 +50,20 @@ import org.jmol.util.SimpleUnitCell;
 public abstract class MeshRenderer extends ShapeRenderer {
 
   protected Mesh mesh;
-  protected T3[] vertices;
+  protected T3d[] vertices;
   protected short[] normixes;
   protected P3i[] screens;
-  protected P3[] p3Screens;
-  protected V3[] transformedVectors;
+  protected P3d[] p3Screens;
+  protected V3d[] transformedVectors;
   protected int vertexCount;
   
-  protected float imageFontScaling;
-  protected float scalePixelsPerMicron;
+  protected double imageFontScaling;
+  protected double scalePixelsPerMicron;
   protected int diameter;
-  protected float width;
+  protected double width;
   
 
+  protected boolean allowDashed = true;
   protected boolean isTranslucent;
   protected boolean frontOnly;
   protected boolean isShell;
@@ -70,11 +73,11 @@ public abstract class MeshRenderer extends ShapeRenderer {
   protected boolean isGhostPass;
   //protected boolean isPrecision; // DRAW, bioshape
 
-  protected P4 thePlane;
-  protected P3 latticeOffset = new P3();
+  protected P4d thePlane;
+  protected P3d latticeOffset = new P3d();
 
-  protected final P3 pt1f = new P3();
-  protected final P3 pt2f = new P3();
+  protected final P3d pt1f = new P3d();
+  protected final P3d pt2f = new P3d();
 
   protected P3i pt1i = new P3i();
   protected P3i pt2i = new P3i();
@@ -100,39 +103,47 @@ public abstract class MeshRenderer extends ShapeRenderer {
         if (vertices[i] != null)
           tm.transformPtScr(vertices[i], screens[i]);
       //if (isPrecision) 
+      if (mesh.haveXyPoints) {
+        for (int i = vertexCount; --i >= 0;)
+          if (vertices[i] != null)
+            tm.transformPtScrT32D(vertices[i], p3Screens[i]);
+      } else {
         for (int i = vertexCount; --i >= 0;)
           if (vertices[i] != null)
             tm.transformPtScrT3(vertices[i], p3Screens[i]);
-
+      } 
+       
       render2(isExport);
     } else {
-      P3 vTemp = new P3();
       SymmetryInterface unitcell = mesh.getUnitCell();
       if (unitcell != null) {
+        P3d p2 = new P3d();
         if (mesh.symops != null) {
+          P3d vTemp = new P3d();
           if (mesh.symopNormixes == null)
             mesh.symopNormixes = AU.newShort2(mesh.symops.length);
-          P3[] verticesTemp = null;
+          P3d[] verticesTemp = null;
           int max = mesh.symops.length;
           short c = mesh.colix;
           for (int j = max; --j >= 0;) {
-            M4 m = mesh.symops[j];
+            M4d m = mesh.symops[j];
             if (m == null)
               continue;
             if (mesh.colorType == T.symop)
               mesh.colix = mesh.symopColixes[j];
             short[] normals = mesh.symopNormixes[j];
             boolean needNormals = (normals == null);
-            verticesTemp = (needNormals ? new P3[vertexCount] : null);
+            verticesTemp = (needNormals ? new P3d[vertexCount] : null);
             for (int i = vertexCount; --i >= 0;) {
               vTemp.setT(vertices[i]);
               unitcell.toFractional(vTemp, true);
               m.rotTrans(vTemp);
               unitcell.toCartesian(vTemp, true);
-              tm.transformPtScr(vTemp, screens[i]);
+              vTemp.putP(p2);
+              tm.transformPtScr(p2, screens[i]);
               if (needNormals) {
-                verticesTemp[i] = vTemp;
-                vTemp = new P3();
+                verticesTemp[i] = p2;
+                p2 = new P3d();
               }
             }
             if (needNormals)
@@ -154,8 +165,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
                 latticeOffset.set(tx, ty, tz);
                 unitcell.toCartesian(latticeOffset, false);
                 for (int i = vertexCount; --i >= 0;) {
-                  vTemp.add2(vertices[i], latticeOffset);
-                  tm.transformPtScr(vTemp, screens[i]);
+                  p2.add2(vertices[i], latticeOffset);
+                  tm.transformPtScr(p2, screens[i]);
                 }
                 render2(isExport);
               }
@@ -199,7 +210,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
     if (!doRender || isGhostPass && !(doRender = g3d.setC(mesh.slabColix))) {
       vertices = mesh.vs;
       if (needTranslucent)
-        g3d.setC(C.getColixTranslucent3(C.BLACK, true, 0.5f));
+        g3d.setC(C.getColixTranslucent3(C.BLACK, true, 0.5d));
       return true;
     }
     if (mesh.isModelConnected)
@@ -241,7 +252,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
     if (isGhostPass)
       return true;
     if (volumeRender && !isTranslucent)
-      colix = C.getColixTranslucent3(colix, true, 0.8f);
+      colix = C.getColixTranslucent3(colix, true, 0.8d);
     this.colix = colix;
     if (C.isColixLastAvailable(colix))
       vwr.gdata.setColor(mesh.color);
@@ -455,8 +466,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
     return (normix < 0 || transformedVectors[normix].z >= 0);
   }
 
-  private void drawTriangleBits(P3 screenA, short colixA, P3 screenB, short colixB,
-                                P3 screenC, short colixC, int check, int diam) {
+  private void drawTriangleBits(P3d screenA, short colixA, P3d screenB, short colixB,
+                                P3d screenC, short colixC, int check, int diam) {
     if (!antialias && diam == 1) {
      vwr.gdata.drawTriangleBits(g3d, screenA, colixA, screenB, colixB, screenC, colixC,
           check);
@@ -504,7 +515,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
     return check;
   }
 
-  protected void drawEdge(int iA, int iB, boolean fill, T3 vA, T3 vB, P3i sA,
+  protected void drawEdge(int iA, int iB, boolean fill, T3d vA, T3d vB, P3i sA,
                           @SuppressWarnings("unused") P3i sB) {
     byte endCap = (iA != iB && !fill ? GData.ENDCAPS_NONE : width < 0
         || width == -0.0 || iA != iB && isTranslucent ? GData.ENDCAPS_FLAT
@@ -532,7 +543,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
     } else {
       pt1f.ave(vA, vB);
       tm.transformPtScr(pt1f, pt1i);
-      if (width < 0) {
+      if (allowDashed && width < 0) {
+        // not draw cylinder
         diameter = -1;
       } else {
         int mad = (int) Math.floor(Math.abs(width) * 1000);
@@ -541,12 +553,13 @@ public abstract class MeshRenderer extends ShapeRenderer {
     }
     if (diameter == 0)
       diameter = 1;
-    tm.transformPt3f(vA, pt1f);
-    tm.transformPt3f(vB, pt2f);
+    // allows for 2D possibility for lines
+    tm.transformPt2Df(vA, pt1f);
+    tm.transformPt2Df(vB, pt2f);
     if (diameter == -1) {
       g3d.drawLineAB(pt1f, pt2f);
     } else if (diameter < 0) {
-      int idash = (int) -diameter;
+      int idash = -diameter;
       g3d.drawDashedLineBits(idash<<1, idash, pt1f, pt2f);
     } else {
       g3d.fillCylinderBits(endCap, diameter, pt1f, pt2f);

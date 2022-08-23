@@ -87,9 +87,9 @@ public class ServerToClientProtocol extends ClientProtocol {
   public int getGroupID(TouchPoint touchPoint) throws IOException {
     byte[] tempFloat = new byte[4];
     // Send the x and y coordinates
-    Converter.floatToByteArray(tempFloat, 0, touchPoint.getLocation().getX());
+    Converter.floatToByteArray(tempFloat, 0, (float) touchPoint.getLocation().getX());
     _bufferOut.write(tempFloat);
-    Converter.floatToByteArray(tempFloat, 0, touchPoint.getLocation().getY());
+    Converter.floatToByteArray(tempFloat, 0, (float) touchPoint.getLocation().getY());
     _bufferOut.write(tempFloat);
     sendBuffer(MessageType.GET_GROUP_ID);
 

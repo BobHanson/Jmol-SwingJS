@@ -114,7 +114,7 @@ class MrcBinaryReader extends MapFileReader {
     byte[] extra = new byte[100];
     byte[] map = new byte[4];
     byte[] machst = new byte[4];
-    float rmsDeviation;
+    double rmsDeviation;
     int nlabel;
 
     n0 = binarydoc.readInt(); // CCP4 "extent[0-2]"
@@ -262,8 +262,8 @@ class MrcBinaryReader extends MapFileReader {
     jvxlFileHeaderBuffer.append("MRC DATA ").append(nlabel > 0 ? labels[0]: "").append("\n");
     jvxlFileHeaderBuffer.append("see http://ami.scripps.edu/software/mrctools/mrc_specification.php\n");
 
-    if (params.thePlane == null && (params.cutoffAutomatic || !Float.isNaN(params.sigma))) {
-      float sigma = (params.sigma < 0 || Float.isNaN(params.sigma) ? 1 : params.sigma);
+    if (params.thePlane == null && (params.cutoffAutomatic || !Double.isNaN(params.sigma))) {
+      double sigma = (params.sigma < 0 || Double.isNaN(params.sigma) ? 1 : params.sigma);
       params.cutoff = rmsDeviation * sigma + dmean;
       s = "cutoff set to " + params.cutoff + " (mean + rmsDeviation*sigma = " + dmean + " + " + rmsDeviation + "*" + sigma + ")";
       Logger.info(s);
@@ -273,8 +273,8 @@ class MrcBinaryReader extends MapFileReader {
   }
   
   @Override
-  protected float nextVoxel() throws Exception {
-    float voxelValue;
+  protected double nextVoxel() throws Exception {
+    double voxelValue;
     /*
      *     4 MODE     data type :
          0        image : signed 8-bit bytes range -128 to 127

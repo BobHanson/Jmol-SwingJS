@@ -26,9 +26,9 @@ package org.jmol.modelsetbio;
 
 import org.jmol.c.STR;
 
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.V3;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 public class Sheet extends ProteinStructure {
 
@@ -52,25 +52,25 @@ public class Sheet extends ProteinStructure {
       axisA = apolymer.getLeadPoint(monomerIndexFirst);
       axisB = apolymer.getLeadPoint(monomerIndexFirst + 1);
     } else {
-      axisA = new P3();
+      axisA = new P3d();
       apolymer.getLeadMidPoint(monomerIndexFirst + 1, axisA);
-      axisB = new P3();
+      axisB = new P3d();
       apolymer.getLeadMidPoint(monomerIndexFirst + nRes - 1, axisB);
     }
 
-    axisUnitVector = new V3();
+    axisUnitVector = new V3d();
     axisUnitVector.sub2(axisB, axisA);
     axisUnitVector.normalize();
 
-    P3 tempA = new P3();
+    P3d tempA = new P3d();
     apolymer.getLeadMidPoint(monomerIndexFirst, tempA);
     if (notHelixOrSheet(monomerIndexFirst - 1))
-      Measure
+      MeasureD
           .projectOntoAxis(tempA, axisA, axisUnitVector, vectorProjection);
-    P3 tempB = new P3();
+    P3d tempB = new P3d();
     apolymer.getLeadMidPoint(monomerIndexFirst + nRes, tempB);
     if (notHelixOrSheet(monomerIndexFirst + nRes))
-      Measure
+      MeasureD
           .projectOntoAxis(tempB, axisA, axisUnitVector, vectorProjection);
     axisA = tempA;
     axisB = tempB;
@@ -82,15 +82,15 @@ public class Sheet extends ProteinStructure {
           && !apolymer.monomers[i].isSheet());
   }
 
-  V3 widthUnitVector;
-  V3 heightUnitVector;
+  V3d widthUnitVector;
+  V3d heightUnitVector;
 
   void calcSheetUnitVectors() {
     if (!(apolymer instanceof AminoPolymer))
       return;
     if (widthUnitVector == null) {
-      V3 vectorCO = new V3();
-      V3 vectorCOSum = new V3();
+      V3d vectorCO = new V3d();
+      V3d vectorCOSum = new V3d();
       AminoMonomer amino = (AminoMonomer) apolymer.monomers[monomerIndexFirst];
       vectorCOSum.sub2(amino.getCarbonylOxygenAtom(), amino
           .getCarbonylCarbonAtom());
@@ -98,7 +98,7 @@ public class Sheet extends ProteinStructure {
         amino = (AminoMonomer) apolymer.monomers[i];
         vectorCO.sub2(amino.getCarbonylOxygenAtom(), amino
             .getCarbonylCarbonAtom());
-        if (vectorCOSum.angle(vectorCO) < (float) Math.PI / 2)
+        if (vectorCOSum.angle(vectorCO) < Math.PI / 2)
           vectorCOSum.add(vectorCO);
         else
           vectorCOSum.sub(vectorCO);
@@ -111,7 +111,7 @@ public class Sheet extends ProteinStructure {
     }
   }
 
-  public void setBox(float w, float h, P3 pt, V3 vW, V3 vH, P3 ptC, float scale) {
+  public void setBox(double w, double h, P3d pt, V3d vW, V3d vH, P3d ptC, double scale) {
     if (heightUnitVector == null)
       calcSheetUnitVectors();
     vW.setT(widthUnitVector);

@@ -32,7 +32,7 @@ import java.util.Map;
 import javajs.util.AU;
 import javajs.util.BC;
 import javajs.util.MessagePackReader;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.SB;
 
 import org.jmol.util.Logger;
@@ -65,12 +65,12 @@ class BCifDensityReader extends MapFileReader {
     nSurfaces = 1; 
   }
 
-  protected P3 readCifP3(String key, P3 p3) {
+  protected P3d readCifP3(String key, P3d p3) {
     if (p3 == null)
-      p3 = new P3();
-    float x = getCifFloat(key + "[0]");
-    if (Float.isNaN(x)) {
-      p3.x = Float.NaN;
+      p3 = new P3d();
+    double x = getCifFloat(key + "[0]");
+    if (Double.isNaN(x)) {
+      p3.x = Double.NaN;
     } else {
       p3.x = x;
       p3.y = getCifFloat(key + "[1]");
@@ -119,17 +119,17 @@ class BCifDensityReader extends MapFileReader {
 //    Map<String, Object> encoding = (Map<String, Object>) ((Object[]) map
 //        .get("encoding"))[0];
 //    Object o = encoding.get("offsetEncoding");
-//    System.out.println(encoding + " " + f);
+//System.out.println(encoding + " " + f);
 //    return null;
 //  }
 
   @SuppressWarnings("unchecked")
-  protected float getCifFloat(String key) {
+  protected double getCifFloat(String key) {
     Map<String, Object> map = (Map<String, Object>) thisData.get(key);
     byte[] data = (byte[]) map.get("data");
     int encoding = ((Integer) ((Map<String, Object>) ((Object[]) map
         .get("encoding"))[0]).get("type")).intValue();
-    float f = Float.NaN; 
+    double f = Double.NaN; 
     try {
       switch (encoding) {
       case 3:
@@ -145,22 +145,22 @@ class BCifDensityReader extends MapFileReader {
     } catch (Exception e) {
       e.printStackTrace();
     }
-//    System.out.println(encoding + " " + f);
+//System.out.println(encoding + " " + f);
     return f;
   }
 
   @SuppressWarnings("unchecked")
-  protected float[] readCifFloats(String key, float[] values) {
+  protected double[] readCifFloats(String key, double[] values) {
     Map<String, Object> map = (Map<String, Object>) thisData.get(key);
     byte[] data = (byte[]) map.get("data");
     Map<String, Object> encoding = (Map<String, Object>) ((Object[]) map
         .get("encoding"))[0];
-    float min = ((Float) encoding.get("min")).floatValue();
-    float max = ((Float) encoding.get("max")).floatValue();
+    double min = ((Double) encoding.get("min")).doubleValue();
+    double max = ((Double) encoding.get("max")).doubleValue();
     int numSteps = ((Integer) encoding.get("numSteps")).intValue();
     String kind = (String) encoding.get("kind");
     if ("IntervalQuantization".equals(kind)) {
-      float delta = (max - min) / (numSteps - 1);
+      double delta = (max - min) / (numSteps - 1);
       for (int i = data.length; --i >= 0;) {
         // Java byte[], not uint[]
         values[i] = min + delta * ((data[i] + 256) % 256);
@@ -174,9 +174,9 @@ class BCifDensityReader extends MapFileReader {
   private int pt;
 
   
-  float checkSum;
+  double checkSum;
   
-  protected float[] values;
+  protected double[] values;
   
   public Map<String, Object> cifData, thisData;
   private boolean isDiff;
@@ -216,25 +216,25 @@ class BCifDensityReader extends MapFileReader {
     //    _volume_data_3d_info.axis_order[1]                0 
     //    _volume_data_3d_info.axis_order[2]                2 
 
-    P3 axis_order = readCifP3("_volume_data_3d_info_axis_order", null);
+    P3d axis_order = readCifP3("_volume_data_3d_info_axis_order", null);
 
     //    _volume_data_3d_info.origin[0]                    0.6 
     //    _volume_data_3d_info.origin[1]                    0.5 
     //    _volume_data_3d_info.origin[2]                    0.69697
 
-    P3 fracOrigin = readCifP3("_volume_data_3d_info_origin", null);
+    P3d fracOrigin = readCifP3("_volume_data_3d_info_origin", null);
 
     //    _volume_data_3d_info.dimensions[0]                0.4 
     //    _volume_data_3d_info.dimensions[1]                0.5 
     //    _volume_data_3d_info.dimensions[2]                0.30303
 
-    P3 fracDimensions = readCifP3("_volume_data_3d_info_dimensions", null);
+    P3d fracDimensions = readCifP3("_volume_data_3d_info_dimensions", null);
 
     //    _volume_data_3d_info.sample_count[0]              32 
     //    _volume_data_3d_info.sample_count[1]              38 
     //    _volume_data_3d_info.sample_count[2]              40
 
-    P3 sampleCounts = readCifP3("_volume_data_3d_info_sample_count", p3);
+    P3d sampleCounts = readCifP3("_volume_data_3d_info_sample_count", p3);
 
     mapc = (int) axis_order.x + 1; // fastest "column"  2 --> y
     mapr = (int) axis_order.y + 1; // intermediat "row" 1 --> x
@@ -272,9 +272,9 @@ class BCifDensityReader extends MapFileReader {
     b = p3.y;
     c = p3.z;
 
-    float fa = getXYZ(fracDimensions, crs2abc[0]);
-    float fb = getXYZ(fracDimensions, crs2abc[1]);
-    float fc = getXYZ(fracDimensions, crs2abc[2]);
+    double fa = getXYZ(fracDimensions, crs2abc[0]);
+    double fb = getXYZ(fracDimensions, crs2abc[1]);
+    double fc = getXYZ(fracDimensions, crs2abc[2]);
 
     // fraction is in terms of a and in the units of na
     
@@ -299,17 +299,17 @@ class BCifDensityReader extends MapFileReader {
     beta = p3.y;
     gamma = p3.z;
 
-    values = readCifFloats("_volume_data_3d_values", new float[na * nb * nc]);
+    values = readCifFloats("_volume_data_3d_values", new double[na * nb * nc]);
 
     //  _volume_data_3d_info.spacegroup_number            19   
     //    _volume_data_3d_info.sample_rate                  1 
 
     getVectorsAndOrigin();
     
-    if (params.thePlane == null && (params.cutoffAutomatic || !Float.isNaN(params.sigma))) {
-      float sigma = (params.sigma < 0 || Float.isNaN(params.sigma) ? 1 : params.sigma);
+    if (params.thePlane == null && (params.cutoffAutomatic || !Double.isNaN(params.sigma))) {
+      double sigma = (params.sigma < 0 || Double.isNaN(params.sigma) ? 1 : params.sigma);
       dmean = getCifFloat("_volume_data_3d_info_mean_sampled");
-      float rmsDeviation = getCifFloat("_volume_data_3d_info_sigma_sampled");
+      double rmsDeviation = getCifFloat("_volume_data_3d_info_sigma_sampled");
       params.cutoff = rmsDeviation * sigma + dmean;
       Logger.info("Cutoff set to (mean + rmsDeviation*" + sigma + " = " + params.cutoff + ")\n");
     }
@@ -321,7 +321,7 @@ class BCifDensityReader extends MapFileReader {
     jvxlFileHeaderBuffer.append("BCifDensity reader type=" + header + "\n");
   }
   
-  private float getXYZ(P3 a, float x) {
+  private double getXYZ(P3d a, double x) {
     switch ((int) x) {
     case 0:
       return a.x;
@@ -334,8 +334,8 @@ class BCifDensityReader extends MapFileReader {
   }
 
   @Override
-  protected float nextVoxel() throws Exception {
-    float v = values[pt++];
+  protected double nextVoxel() throws Exception {
+    double v = values[pt++];
     checkSum += v;
     return v;
   }

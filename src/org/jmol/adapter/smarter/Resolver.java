@@ -30,16 +30,16 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javajs.api.GenericBinaryDocument;
-import javajs.util.LimitedLineReader;
-import javajs.util.PT;
-import javajs.util.Rdr;
-
 import org.jmol.api.Interface;
 import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
+
+import javajs.api.GenericBinaryDocument;
+import javajs.util.LimitedLineReader;
+import javajs.util.PT;
+import javajs.util.Rdr;
 
 
 public class Resolver {
@@ -51,7 +51,7 @@ public class Resolver {
     "more.", ";AFLOW;BinaryDcd;Gromacs;Jcampdx;MdCrd;MdTop;Mol2;TlsDataOnly;",
     "quantum.", ";Adf;Csf;Dgrid;GamessUK;GamessUS;Gaussian;GaussianFchk;GaussianWfn;Jaguar;" +
                  "Molden;MopacGraphf;GenNBO;NWChem;Psi;Qchem;QCJSON;" +
-                 "WebMO;MO;", // MO is for XmlMolpro 
+                 "WebMO;Orca;MO;", // MO is for XmlMolpro 
     "pdb.", ";Pdb;Pqr;P2n;JmolData;",
     "pymol.", ";PyMOL;",
     "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;FAH;",
@@ -84,7 +84,7 @@ public class Resolver {
    */
   public static String getFileType(BufferedReader br) {
     try {
-      return determineAtomSetCollectionReader(br, false);
+      return determineAtomSetCollectionReader(br, null);
     } catch (Exception e) {
       return null;
     }
@@ -121,7 +121,7 @@ public class Resolver {
       else
         Logger.info("The Resolver assumes " + readerName);
     } else {
-      readerName = determineAtomSetCollectionReader(readerOrDocument, true);
+      readerName = determineAtomSetCollectionReader(readerOrDocument, htParams);
       if (readerName.charAt(0) == '\n') {
         type = (String) htParams.get("defaultType");
         if (type != null) {
@@ -177,9 +177,10 @@ public class Resolver {
 
     String set;
     int pt;
-    for (int i = readerSets.length; --i >= 0;)
+    for (int i = readerSets.length; --i >= 0;) {
       if ((pt = (set = readerSets[i--]).toLowerCase().indexOf(type)) >= 0)
         return set.substring(pt + 1, set.indexOf(";", pt + 2));
+    }
     return null;
   }
   
@@ -224,32 +225,33 @@ public class Resolver {
    * involved -- molecular dynamics coordinate files, for instance (mdcrd).
    * 
    * @param readerOrDocument
-   * @param returnLines
+   * @param htParams
    * @return readerName or a few lines, if requested, or null
    * @throws Exception
    */
   private static String determineAtomSetCollectionReader(Object readerOrDocument,
-                                                         boolean returnLines)
+                                                         Map<String, Object> htParams)
       throws Exception {
 
     // We must do this in a very specific order. DON'T MESS WITH THIS!
 
     String readerName;
-
     if (readerOrDocument instanceof GenericBinaryDocument) {
       GenericBinaryDocument doc = (GenericBinaryDocument) readerOrDocument;
       readerName = getBinaryType(doc.getInputStream());
-      return (readerName == null ? "binary file type not recognized" : readerName);
+      return (readerName == null ? "binary file type not recognized"
+          : readerName);
     }
     if (readerOrDocument instanceof InputStream) {
       readerName = getBinaryType((InputStream) readerOrDocument);
       if (readerName != null)
         return readerName;
-      readerOrDocument = Rdr.getBufferedReader(new BufferedInputStream((InputStream) readerOrDocument), null);
+      readerOrDocument = Rdr.getBufferedReader(
+          new BufferedInputStream((InputStream) readerOrDocument), null);
     }
 
-    LimitedLineReader llr = new LimitedLineReader(
-        (BufferedReader) readerOrDocument, 16384);
+    BufferedReader rdr = (BufferedReader) readerOrDocument;
+    LimitedLineReader llr = new LimitedLineReader(rdr, 16384);
 
     String leader = llr.getHeader(LEADER_CHAR_MAX).trim();
 
@@ -272,10 +274,12 @@ public class Resolver {
       return (readerName.equals("Xml") ? getXmlType(llr.getHeader(0))
           : readerName);
     }
-   
+
     // now allow identification in first 16 lines
     // excluding those starting with "#"
 
+    String msg;
+    boolean isJSONMap = (leader.charAt(0) == '{');
     String[] lines = new String[16];
     int nLines = 0;
     for (int i = 0; i < lines.length; ++i) {
@@ -296,18 +300,34 @@ public class Resolver {
 
     // Test 5. check content of initial 16K bytes of file 
 
-    if ((readerName = checkHeaderContains(llr.getHeader(0))) != null)
+    if ((readerName = checkHeaderContains(llr.getHeader(0))) != null) {
       return readerName;
+    }
 
     // Test 6. check special file formats (pass 2) 
 
     if ((readerName = checkSpecial2(lines)) != null)
       return readerName;
 
+    if (isJSONMap) {
+      // unfortunately, we need to read this data fully from the reader.
+      //
+      String json = rdr.readLine();
+      if ((readerName = checkJSONContains(json)) != null) {
+        if (htParams != null)
+          htParams.put("fileData", json);
+        return readerName;
+      }
+      msg = (htParams == null ? null
+          : json.substring(0, Math.min(100, json.length())));
+    } else {
+      msg = (htParams == null ? null
+          : "\n" + lines[0] + "\n" + lines[1] + "\n" + lines[2] + "\n");
+    }
+
     // Failed to identify file type
 
-    return (returnLines ? "\n" + lines[0] + "\n" + lines[1] + "\n" + lines[2]
-        + "\n" : null);
+    return msg;
   }
 
   ////////////////////////////////////////////////////////////////
@@ -469,7 +489,7 @@ public class Resolver {
       if (tokens.length == 0)
         continue;
       if (tokens[0].startsWith("atom") && tokens.length > 4
-          && Float.isNaN(PT.parseFloat(tokens[4]))
+          && Double.isNaN(PT.parseDouble(tokens[4]))
           || tokens[0].startsWith("multipole") && tokens.length >= 6
           || tokens[0].startsWith("lattice_vector") && tokens.length >= 4)
         return true;
@@ -497,7 +517,7 @@ public class Resolver {
   }
 
   private static boolean isFloat(String s) {
-    return !Float.isNaN(PT.parseFloat(s));
+    return !Double.isNaN(PT.parseDouble(s));
   }
 
 
@@ -581,18 +601,18 @@ public class Resolver {
       // so the typical MOL file, with more parameters, will fail getting the spin
     String l = lines[i];
     if (l.length() < 3)
-    	return false;
+      return false;
       int spin = PT.parseInt(l.substring(2).trim());
       int charge = PT.parseInt(l.substring(0, 2).trim());
       // and if it does not, then we get the next lines of info
       if ((l = lines[i + 1]).length() < 2)
-    	  return false;
+        return false;
       int atom1 = PT.parseInt(l.substring(0, 2).trim());
       if (spin < 0 || spin > 5 || atom1 <= 0 || charge == Integer.MIN_VALUE || charge > 5)
         return false;
       // hard to believe we would get here for a MOL file
-      float[] atomline = AtomSetCollectionReader.getTokensFloat(l, null, 5);
-      return !Float.isNaN(atomline[1]) && !Float.isNaN(atomline[2]) && !Float.isNaN(atomline[3]) && Float.isNaN(atomline[4]);
+      double[] atomline = AtomSetCollectionReader.getTokensDouble(l, null, 5);
+      return !Double.isNaN(atomline[1]) && !Double.isNaN(atomline[2]) && !Double.isNaN(atomline[3]) && Double.isNaN(atomline[4]);
   }
   
   private static boolean checkWien2k(String[] lines) {
@@ -684,13 +704,16 @@ public class Resolver {
   private final static String[] vaspOutcarLineStartRecords = 
   { "VaspOutcar", " vasp.", " INCAR:" };
 
+  private final static String[] orcaInputLineStartRecords = 
+  { "Orca", "* xyz", "*xyz" };
+
   private final static String[][] lineStartsWithRecords =
   { mmcifLineStartRecords, cifLineStartRecords,
     pdbLineStartRecords, cgdLineStartRecords, shelxLineStartRecords, 
     ghemicalMMLineStartRecords, jaguarLineStartRecords, 
     mdlLineStartRecords, spartanSmolLineStartRecords, csfLineStartRecords, 
     mol2Records, mdTopLineStartRecords, hyperChemLineStartRecords,
-    vaspOutcarLineStartRecords
+    vaspOutcarLineStartRecords, orcaInputLineStartRecords
     };
 
  
@@ -700,24 +723,40 @@ public class Resolver {
 
   private static String checkHeaderContains(String header) throws Exception {
     for (int i = 0; i < headerContainsRecords.length; ++i) {
-      String[] recordTags = headerContainsRecords[i];
-      for (int j = 1; j < recordTags.length; ++j) {
-        String recordTag = recordTags[j];
-        if (header.indexOf(recordTag) < 0)
-          continue;
-        String type = recordTags[0];
-        if (!type.equals("Xml"))
-          return type;
-        if (header.indexOf("/AFLOWDATA/") >= 0 || header.indexOf("-- Structure PRE --") >= 0)
-          return "AFLOW";
-        // for XML check for an error message from a server -- certainly not XML
-        // but new CML format includes xmlns:xhtml="http://www.w3.org/1999/xhtml" in <cml> tag.
-        return (header.indexOf("<!DOCTYPE HTML PUBLIC") < 0
-              && header.indexOf("XHTML") < 0 
-              && (header.indexOf("xhtml") < 0 || header.indexOf("<cml") >= 0) 
-              ? getXmlType(header) 
-            : null);
-      }
+      String fileType = checkHeaderRecords(header, headerContainsRecords[i]);
+      if (fileType != null)
+        return fileType;
+    }
+    return null;
+  }
+
+  private static String checkJSONContains(String header) throws Exception {
+    for (int i = 0; i < jsonContainsRecords.length; ++i) {
+      String fileType = checkHeaderRecords(header, jsonContainsRecords[i]);
+      if (fileType != null)
+        return fileType;
+    }
+    return null;
+  }
+
+  private static String checkHeaderRecords(String header, String[] recordTags) throws Exception {
+    
+    for (int j = 1; j < recordTags.length; ++j) {
+      String recordTag = recordTags[j];
+      if (header.indexOf(recordTag) < 0)
+        continue;
+      String type = recordTags[0];
+      if (!type.equals("Xml"))
+        return type;
+      if (header.indexOf("/AFLOWDATA/") >= 0 || header.indexOf("-- Structure PRE --") >= 0)
+        return "AFLOW";
+      // for XML check for an error message from a server -- certainly not XML
+      // but new CML format includes xmlns:xhtml="http://www.w3.org/1999/xhtml" in <cml> tag.
+      return (header.indexOf("<!DOCTYPE HTML PUBLIC") < 0
+            && header.indexOf("XHTML") < 0 
+            && (header.indexOf("xhtml") < 0 || header.indexOf("<cml") >= 0) 
+            ? getXmlType(header) 
+          : null);
     }
     return null;
   }
@@ -834,6 +873,15 @@ public class Resolver {
   private final static String[] qcJsonContainsRecords = 
   { "QCJSON", "\"QCJSON" };
 
+  private final static String[] optimadeContainsRecords = 
+  { "Optimade", "\"cartesian_site_positions\":", "\"api_version\":", "optimade"};
+
+  private final static String[] jsonArrayContainsRecords = 
+  { "JSON", "\"atomArray\":[", "\"atomArray\" : ["};
+
+  private final static String[] orcaContainsRecords = 
+  { "Orca", "* O   R   C   A *" };
+
   /*
   private final static String[] gaussianWfnRecords =
   { "GaussianWfn", "MO ORBITALS" };
@@ -863,8 +911,11 @@ public class Resolver {
     espressoContainsRecords, siestaContainsRecords, xcrysDenContainsRecords,
     mopacArchiveContainsRecords,abinitContainsRecords,gaussianFchkContainsRecords,
     inputContainsRecords, aflowContainsRecords, magCifContainsRecords, 
-    qcJsonContainsRecords    
+    qcJsonContainsRecords, optimadeContainsRecords, orcaContainsRecords, jsonArrayContainsRecords
   };
+
+  private final static String[][] jsonContainsRecords =
+  { optimadeContainsRecords };
   
   ////////////////////////////////////////////////////////////////
   // Test 6. check second time for special file types
@@ -883,7 +934,6 @@ public class Resolver {
       return s;
     return null;
   }
-  
   
   private static boolean checkFAH(String[] lines) {
     String s = lines[0].trim() + lines[2].trim();

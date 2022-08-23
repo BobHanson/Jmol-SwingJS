@@ -22,7 +22,7 @@ public class SimpleTreeNode implements JSVTreeNode {
 	  	this.text = text;
 	    this.panelNode = panelNode;
 	    children = new Lst<SimpleTreeNode>();
-	   // System.out.println("adding " + text);
+	   //System.out.println("adding " + text);
 	  }
 
 		@Override

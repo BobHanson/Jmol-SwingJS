@@ -30,11 +30,11 @@ import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
 
-import javajs.util.Measure;
+import javajs.util.MeasureD;
 import javajs.util.SB;
-import javajs.util.P3;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 final class IsoShapeReader extends VolumeDataReader {
   // final because we are initiating static fields using static{}
@@ -42,8 +42,8 @@ final class IsoShapeReader extends VolumeDataReader {
   private int psi_n = 2;
   private int psi_l = 1;
   private int psi_m = 1;
-  private float psi_Znuc = 1; // hydrogen
-  private float sphere_radiusAngstroms;
+  private double psi_Znuc = 1; // hydrogen
+  private double sphere_radiusAngstroms;
   private int monteCarloCount;
   private Random random;
 
@@ -53,11 +53,11 @@ final class IsoShapeReader extends VolumeDataReader {
   void init(SurfaceGenerator sg) {
     initVDR(sg);
     Object o = sg.getReaderData();
-    if (o instanceof Float) {
-      sphere_radiusAngstroms = ((Float) o).floatValue();      
+    if (o instanceof Double) {
+      sphere_radiusAngstroms = ((Double) o).doubleValue();      
     } else {
       sphere_radiusAngstroms = 0;
-      float[] data = (float[]) o;
+      double[] data = (double[]) o;
       psi_n = (int) data[0];
       psi_l = (int) data[1];
       psi_m = (int) data[2];
@@ -73,24 +73,24 @@ final class IsoShapeReader extends VolumeDataReader {
 
   private final static double A0 = 0.52918; //x10^-10 meters
   private final static double ROOT2 = 1.414214;
-  private static final float ATOMIC_ORBITAL_ZERO_CUT_OFF = 1e-7f;
+  private static final double ATOMIC_ORBITAL_ZERO_CUT_OFF = 1e-7d;
 
-  private float radius;
-  private final P3 ptPsi = new P3();
+  private double radius;
+  private final P3d ptPsi = new P3d();
 
   @Override
   protected void setup(boolean isMapData) {
     volumeData.sr = this; // we will provide point data for mapping
     precalculateVoxelData = false;
     isQuiet = true;
-    if (Float.isNaN(center.x))
+    if (Double.isNaN(center.x))
       center.set(0, 0, 0);
     String type = "sphere";
     switch (dataType) {
     case Parameters.SURFACE_ATOMICORBITAL:
       calcFactors(psi_n, psi_l, psi_m);
       autoScaleOrbital();
-      ptsPerAngstrom = 5f;
+      ptsPerAngstrom = 5d;
       maxGrid = 40;
       type = "hydrogen-like orbital";
       if (monteCarloCount > 0) {
@@ -113,17 +113,17 @@ final class IsoShapeReader extends VolumeDataReader {
       allowNegative = false;
       calcFactors(psi_n, psi_l, psi_m);
       psi_normalization = 1;
-      radius = 1.1f * eccentricityRatio * eccentricityScale;
+      radius = 1.1d * eccentricityRatio * eccentricityScale;
       if (eccentricityScale > 0 && eccentricityScale < 1)
         radius /= eccentricityScale;
-      ptsPerAngstrom = 10f;
+      ptsPerAngstrom = 10d;
       maxGrid = 21;
       type = "lobe";
       break;
     case Parameters.SURFACE_ELLIPSOID3:
       type = "ellipsoid(thermal)";
-      radius = 3.0f * sphere_radiusAngstroms;
-      ptsPerAngstrom = 10f;
+      radius = 3.0d * sphere_radiusAngstroms;
+      ptsPerAngstrom = 10d;
       maxGrid = 22;
       break;
     case Parameters.SURFACE_GEODESIC:
@@ -137,8 +137,8 @@ final class IsoShapeReader extends VolumeDataReader {
       //$FALL-THROUGH$
     case Parameters.SURFACE_SPHERE:
     default:
-      radius = 1.2f * sphere_radiusAngstroms * eccentricityScale;
-      ptsPerAngstrom = 10f;
+      radius = 1.2d * sphere_radiusAngstroms * eccentricityScale;
+      ptsPerAngstrom = 10d;
       maxGrid = 22;
       break;
     }
@@ -158,13 +158,13 @@ final class IsoShapeReader extends VolumeDataReader {
   }
 
   @Override
-  public float getValue(int x, int y, int z, int ptyz) {
+  public double getValue(int x, int y, int z, int ptyz) {
     volumeData.voxelPtToXYZ(x, y, z, ptPsi);    
     return getValueAtPoint(ptPsi, false);
   }
 
   @Override
-  public float getValueAtPoint(T3 pt, boolean getSource) {
+  public double getValueAtPoint(T3d pt, boolean getSource) {
     ptTemp.sub2(pt, center);
     if (isEccentric)
       eccentricityMatrixInverse.rotate(ptTemp);
@@ -179,19 +179,19 @@ final class IsoShapeReader extends VolumeDataReader {
         return sphere_radiusAngstroms
             -
 
-            (float) Math.sqrt(ptTemp.x * ptTemp.x + ptTemp.y * ptTemp.y
+            (double) Math.sqrt(ptTemp.x * ptTemp.x + ptTemp.y * ptTemp.y
                 + ptTemp.z * ptTemp.z)
-            / (float) (Math.sqrt(params.anisoB[0] * ptTemp.x * ptTemp.x
+            / (double) (Math.sqrt(params.anisoB[0] * ptTemp.x * ptTemp.x
                 + params.anisoB[1] * ptTemp.y * ptTemp.y + params.anisoB[2]
                 * ptTemp.z * ptTemp.z + params.anisoB[3] * ptTemp.x * ptTemp.y
                 + params.anisoB[4] * ptTemp.x * ptTemp.z + params.anisoB[5]
                 * ptTemp.y * ptTemp.z));
       }
       return sphere_radiusAngstroms
-          - (float) Math.sqrt(ptTemp.x * ptTemp.x + ptTemp.y * ptTemp.y
+          - (double) Math.sqrt(ptTemp.x * ptTemp.x + ptTemp.y * ptTemp.y
               + ptTemp.z * ptTemp.z);
     }
-    float value = (float) hydrogenAtomPsi(ptTemp);
+    double value = (double) hydrogenAtomPsi(ptTemp);
     if (Math.abs(value) < ATOMIC_ORBITAL_ZERO_CUT_OFF)
       value = 0;
     return (allowNegative || value >= 0 ? value : 0);
@@ -201,12 +201,12 @@ final class IsoShapeReader extends VolumeDataReader {
     jvxlFileHeaderBuffer = new SB();
     jvxlFileHeaderBuffer.append(line1);
     if (sphere_radiusAngstroms > 0) {
-      jvxlFileHeaderBuffer.append(" rad=").appendF(sphere_radiusAngstroms);
+      jvxlFileHeaderBuffer.append(" rad=").appendD(sphere_radiusAngstroms);
     } else {
       jvxlFileHeaderBuffer.append(" n=").appendI(psi_n).append(", l=").appendI(
-          psi_l).append(", m=").appendI(psi_m).append(" Znuc=").appendF(psi_Znuc)
-          .append(" res=").appendF(ptsPerAngstrom).append(" rad=")
-          .appendF(radius);
+          psi_l).append(", m=").appendI(psi_m).append(" Znuc=").appendD(psi_Znuc)
+          .append(" res=").appendD(ptsPerAngstrom).append(" rad=")
+          .appendD(radius);
     }
     jvxlFileHeaderBuffer.append(isAnisotropic ? " anisotropy=(" + anisotropy[0]
         + "," + anisotropy[1] + "," + anisotropy[2] + ")\n" : "\n");
@@ -214,7 +214,7 @@ final class IsoShapeReader extends VolumeDataReader {
         jvxlFileHeaderBuffer);
   }
 
-  private final static float[] fact = new float[20];
+  private final static double[] fact = new double[20];
   static {
     fact[0] = 1;
     for (int i = 1; i < 20; i++)
@@ -242,20 +242,20 @@ final class IsoShapeReader extends VolumeDataReader {
   private double aoMax;
   private double aoMax2;
   private double angMax2;
-  private V3 planeU;
-  private V3 planeV;
-  private P3 planeCenter;
-  private float planeRadius;
+  private V3d planeU;
+  private V3d planeV;
+  private P3d planeCenter;
+  private double planeRadius;
   
   private void autoScaleOrbital() {
     aoMax = 0;
-    float rmax = 0;
+    double rmax = 0;
     aoMax2 = 0;
-    float rmax2 = 0;
+    double rmax2 = 0;
     double d;
     if (params.distance == 0) {
       for (int ir = 0; ir < 1000; ir++) {
-        float r = ir / 10f;
+        double r = ir / 10d;
         d = Math.abs(radialPart(r));
         if (Logger.debugging)
           Logger.debug("R\t" + r + "\t" + d);
@@ -279,7 +279,7 @@ final class IsoShapeReader extends VolumeDataReader {
 
     if (monteCarloCount >= 0) {
       angMax2 = 0;
-      for (float ang = 0; ang < 180; ang += 1) {
+      for (double ang = 0; ang < 180; ang += 1) {
         double th = ang / (2 * Math.PI);
         d = Math.abs(angularPart(th, 0, 0));
         if (Logger.debugging)
@@ -311,9 +311,9 @@ final class IsoShapeReader extends VolumeDataReader {
       if (params.isSquared)
         min = Math.sqrt(min / 2);
     }
-    float r0 = 0;
+    double r0 = 0;
     for (int ir = 1000; --ir >= 0; ir -= 1) {
-      float r = ir / 10f;
+      double r = ir / 10d;
       d = Math.abs(radialPart(r));
       if (d >= min) {
         r0 = r;
@@ -322,7 +322,7 @@ final class IsoShapeReader extends VolumeDataReader {
     }
     radius = r0 + (monteCarloCount == 0 ? 1 : 0);
     if (isAnisotropic) {
-      float aMax = 0;
+      double aMax = 0;
       for (int i = 3; --i >= 0;)
         if (anisotropy[i] > aMax)
           aMax = anisotropy[i];
@@ -332,26 +332,26 @@ final class IsoShapeReader extends VolumeDataReader {
         + " for cutoff " + params.cutoff);
     if (params.thePlane != null && monteCarloCount > 0) {
       // get two perpendicular unit vectors in the plane.
-      planeCenter = new P3();
-      planeU = new V3();
-      Measure.getPlaneProjection(center, params.thePlane, planeCenter, planeU);
+      planeCenter = new P3d();
+      planeU = new V3d();
+      MeasureD.getPlaneProjection(center, params.thePlane, planeCenter, planeU);
       planeU.set(params.thePlane.x, params.thePlane.y, params.thePlane.z);
       planeU.normalize();
-      planeV = V3.new3(1, 0, 0);
-      if (Math.abs(planeU.dot(planeV)) > 0.5f)
+      planeV = V3d.new3(1, 0, 0);
+      if (Math.abs(planeU.dot(planeV)) > 0.5d)
         planeV.set(0, 1, 0);
       planeV.cross(planeU, planeV);
       planeU.cross(planeU, planeV);
       aoMax2 = 0;
       d = center.distance(planeCenter);
       if (d < radius) {
-        planeRadius = (float) Math.sqrt(radius * radius - d * d);
+        planeRadius = (double) Math.sqrt(radius * radius - d * d);
         int ir = (int) (planeRadius * 10);
         for (int ix = -ir; ix <= ir; ix++)
           for (int iy = -ir; iy <= ir; iy++) {
             ptPsi.setT(planeU);
-            ptPsi.scale(ix / 10f);
-            ptPsi.scaleAdd2(iy / 10f, planeV, ptPsi);
+            ptPsi.scale(ix / 10d);
+            ptPsi.scaleAdd2(iy / 10d, planeV, ptPsi);
             d = hydrogenAtomPsi(ptPsi);
             // we need an approximation  of the max value here
             d = Math.abs(hydrogenAtomPsi(ptPsi));
@@ -376,7 +376,7 @@ final class IsoShapeReader extends VolumeDataReader {
 
   private double rnl;
 
-  private double hydrogenAtomPsi(P3 pt) {
+  private double hydrogenAtomPsi(P3d pt) {
     // ref: http://www.stolaf.edu/people/hansonr/imt/concept/schroed.pdf
     double x2y2 = pt.x * pt.x + pt.y * pt.y;
     rnl = radialPart(Math.sqrt(x2y2 + pt.z * pt.z));
@@ -418,8 +418,8 @@ final class IsoShapeReader extends VolumeDataReader {
       return;
     boolean isS = (psi_m == 0 && psi_l == 0);
     surfaceDone = true;
-    float value;
-    float rave = 0;
+    double value;
+    double rave = 0;
     nTries = 0;
     for (int i = 0; i < monteCarloCount; nTries++) {
       // we do Pshemak's idea here -- force P(r2R2), then pick a random
@@ -450,7 +450,7 @@ final class IsoShapeReader extends VolumeDataReader {
         double y = r * Math.sin(theta) * sinPhi;
         double z = r * cosPhi;
         //x = r; y = r2R2/aoMax2 * 10; z = 0;
-        ptPsi.set((float) x, (float) y, (float) z);
+        ptPsi.set((double) x, (double) y, (double) z);
         ptPsi.add(center);
         value = getValueAtPoint(ptPsi, false);
       } else {
@@ -500,9 +500,9 @@ final class IsoShapeReader extends VolumeDataReader {
 
   private void createGeodesic() {
     MeshSurface ms = MeshSurface.getSphereData(4);
-    T3[] pts = ms.altVertices;
+    T3d[] pts = ms.altVertices;
     for (int i = 0; i < pts.length; i++) {
-      P3 pt = P3.newP(pts[i]);
+      P3d pt = P3d.newP(pts[i]);
       pt.scale(params.distance);
       pt.add(center);
       addVC(pt, 0, i, false);

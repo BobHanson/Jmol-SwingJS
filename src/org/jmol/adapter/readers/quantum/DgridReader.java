@@ -96,7 +96,7 @@ public class DgridReader extends SlaterReader {
     }
   }
 
-  Map<String, Float> htExponents = new Hashtable<String, Float>();
+  Map<String, Double> htExponents = new Hashtable<String, Double>();
   private void readSlaterBasis() throws Exception {
      /*
 :                           +--------------------------+
@@ -125,7 +125,7 @@ public class DgridReader extends SlaterReader {
         code += "_" + ch++;
       }
       String exp = line.substring(34);
-      htExponents.put(code, Float.valueOf(parseFloatStr(exp)));
+      htExponents.put(code, Double.valueOf(parseDoubleStr(exp)));
     }
   }
 
@@ -171,7 +171,7 @@ sym: A1                 1 1s            2 1s            3 1s            4 1s    
       rd();
       while (line != null && line.length() >= 20) {
         int iOrb = parseIntRange(line, 0, 10);
-        float energy = parseFloatRange(line, 10, 20);
+        double energy = parseDoubleRange(line, 10, 20);
         SB cData = new SB();
         cData.append(line.substring(20));
         while (rd() != null && line.length() >= 10) {
@@ -179,17 +179,17 @@ sym: A1                 1 1s            2 1s            3 1s            4 1s    
             break;
           cData.append(line);
         }
-        float[] list = new float[slaters.size()];
+        double[] list = new double[slaters.size()];
         tokens = PT.getTokens(cData.toString());
         if (tokens.length != nFuncs)
           Logger
               .error("DgridReader: number of coefficients (" + tokens.length + ") does not equal number of functions (" + nFuncs + ")");
         for (int i = 0; i < tokens.length; i++) {
           int pt = ptSlater[i];
-          list[pt] = parseFloatStr(tokens[i]);
+          list[pt] = parseDoubleStr(tokens[i]);
         }
         Map<String, Object> mo = new Hashtable<String, Object>();
-        mo.put("energy", Float.valueOf(energy));
+        mo.put("energy", Double.valueOf(energy));
         mo.put("coefficients", list);
         mo.put("symmetry", symmetry + "_" + iOrb);
         setMO(mo);
@@ -215,8 +215,8 @@ sym: A1                 1 1s            2 1s            3 1s            4 1s    
     rd();
     for (int i = 0; i < orbitals.size(); i++) {
       rd();
-      float occupancy = parseFloatRange(line, 31, 45) + parseFloatRange(line, 47, 61);
-      orbitals.get(i).put("occupancy", Float.valueOf(occupancy));
+      double occupancy = parseDoubleRange(line, 31, 45) + parseDoubleRange(line, 47, 61);
+      orbitals.get(i).put("occupancy", Double.valueOf(occupancy));
     }
     sortOrbitals();
     //System.out.println(Escape.escape(list, false));
@@ -271,12 +271,12 @@ sym: A1                 1 1s            2 1s            3 1s            4 1s    
     String code = atomSymbol + xyz.substring(0, 2);
     if (type != ' ')
       code += "_" + type;
-    Float f = htExponents.get(code);
-    float zeta = 0;
+    Double f = htExponents.get(code);
+    double zeta = 0;
     if (f == null)
       Logger.error("Exponent for " + code + " not found");
     else
-      zeta = f.floatValue();
+      zeta = f.doubleValue();
     //System.out.println("DgridReader [" + iAtom + " " 
         //+ x + " " + y + " " + z + " " + r + "]" + " " + alpha);
     return new SlaterData(iAtom, x, y, z, r, zeta, 1);

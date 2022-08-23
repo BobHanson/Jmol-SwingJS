@@ -25,11 +25,11 @@ package org.jmol.shape;
 
 
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 import org.jmol.api.SymmetryInterface;
 
@@ -41,45 +41,45 @@ import org.jmol.viewer.JC;
 
 public class Axes extends FontLineShape {
 
-  public P3 axisXY = new P3();
-  public float scale;
+  public P3d axisXY = new P3d();
+  public double scale;
   
-  public P3 fixedOrigin;
-  public final P3 originPoint = new P3();
+  public P3d fixedOrigin;
+  public final P3d originPoint = new P3d();
   
   /**
    * [x, y, z, -x, -y, -z] or [a, b, c, -a, -b, -c]
    */
-  final public P3[] axisPoints = new P3[6];
+  final public P3d[] axisPoints = new P3d[6];
   public String[] labels;
   public String axisType; //a b c ab, ac, bc
   public String axes2;
   
   {
     for (int i = 6; --i >= 0; )
-      axisPoints[i] = new P3();
+      axisPoints[i] = new P3d();
   }
 
-  private final static float MIN_AXIS_LEN = 1.5f;
+  private final static double MIN_AXIS_LEN = 1.5d;
 
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
     if ("position" == propertyName) {
-      boolean doSetScale = (axisXY.z == 0 && ((P3) value).z != 0);
-      axisXY = (P3) value;
+      boolean doSetScale = (axisXY.z == 0 && ((P3d) value).z != 0);
+      axisXY = (P3d) value;
       setScale(doSetScale ? 1 : scale); 
       // z = 0 for no set xy position (default)
-      // z = -Float.MAX_VALUE for percent
-      // z = Float.MAX_VALUE for positioned
+      // z = -Double.MAX_VALUE for percent
+      // z = Double.MAX_VALUE for positioned
       return;
     }
     if ("origin" == propertyName) {
-      if (value == null || ((P3) value).length() == 0) {
+      if (value == null || ((P3d) value).length() == 0) {
         fixedOrigin = null;
       } else {
         if (fixedOrigin == null)
-          fixedOrigin = new P3();
-        fixedOrigin.setT((P3) value);
+          fixedOrigin = new P3d();
+        fixedOrigin.setT((P3d) value);
       }
       reinitShape();
       return;
@@ -108,8 +108,8 @@ public class Axes extends FontLineShape {
     setPropFLS(propertyName, value);
   }
 
-  private final P3 pt0 = new P3();
-  public final P3 fixedOriginUC = new P3();
+  private final P3d pt0 = new P3d();
+  public final P3d fixedOriginUC = new P3d();
 
   @Override
   public void initShape() {
@@ -126,16 +126,16 @@ public class Axes extends FontLineShape {
       originPoint.setT(fixedOrigin != null ? fixedOrigin
           : axesMode == T.axeswindow ? vwr.getBoundBoxCenter() : pt0);
       // We must divide by 2 because that is the default for non-unitcell axis types.
-      setScale(vwr.getFloat(T.axesscale) / 2f);
+      setScale(vwr.getDouble(T.axesscale) / 2d);
       return;
     }
     // have unit cell
-    T3 fset = unitcell.getUnitCellMultiplier();
+    T3d fset = unitcell.getUnitCellMultiplier();
     unitcell = unitcell.getUnitCellMultiplied();
-    float voffset = vwr.getFloat(T.axesoffset);
+    double voffset = vwr.getDouble(T.axesoffset);
     fixedOriginUC.set(voffset, voffset, voffset);
-    P3 offset = unitcell.getCartesianOffset();
-    P3[] vertices = unitcell.getUnitCellVerticesNoOffset();
+    P3d offset = unitcell.getCartesianOffset();
+    P3d[] vertices = unitcell.getUnitCellVerticesNoOffset();
     originPoint.add2(offset, vertices[0]);
     if (voffset != 0)
       unitcell.toCartesian(fixedOriginUC, false);
@@ -144,7 +144,7 @@ public class Axes extends FontLineShape {
     if (voffset != 0) {
       originPoint.add(fixedOriginUC);
     }
-    float scale = this.scale = vwr.getFloat(T.axesscale) / 2f;
+    double scale = this.scale = vwr.getDouble(T.axesscale) / 2d;
     if (fset != null && fset.z > 0)
       scale *= Math.abs(fset.z);
     axisPoints[0].scaleAdd2(scale, vertices[4], originPoint);
@@ -167,12 +167,12 @@ public class Axes extends FontLineShape {
    * @param ptTemp 
    * @return actual point if not a data frame and not an XY request; otherwise return 1/2 vector along unit cell
    */
-  public P3 getAxisPoint(int i, boolean unscaled, P3 ptTemp) {
+  public P3d getAxisPoint(int i, boolean unscaled, P3d ptTemp) {
     if (unscaled) {
       ptTemp.setT(axisPoints[i]);
     } else {
       ptTemp.sub2(axisPoints[i], originPoint);
-      ptTemp.scale(0.5f);
+      ptTemp.scale(0.5d);
     }
     return ptTemp; 
   }
@@ -187,13 +187,13 @@ public class Axes extends FontLineShape {
     return null;
   }
 
-  V3 corner = new V3();
+  V3d corner = new V3d();
   
-  void setScale(float scale) {
+  void setScale(double scale) {
     this.scale = scale;
     corner.setT(vwr.getBoundBoxCornerVector());
     for (int i = 6; --i >= 0;) {
-      P3 axisPoint = axisPoints[i];
+      P3d axisPoint = axisPoints[i];
       axisPoint.setT(JC.unitAxisVectors[i]);
       // we have just set the axisPoint to be a unit on a single axis
    
@@ -215,7 +215,7 @@ public class Axes extends FontLineShape {
   }
   
   public String getAxesState(SB sb) {
-    sb.append("  axes scale ").appendF(vwr.getFloat(T.axesscale)).append(";\n"); 
+    sb.append("  axes scale ").appendD(vwr.getDouble(T.axesscale)).append(";\n"); 
     if (fixedOrigin != null)
       sb.append("  axes center ")
           .append(Escape.eP(fixedOrigin)).append(";\n");

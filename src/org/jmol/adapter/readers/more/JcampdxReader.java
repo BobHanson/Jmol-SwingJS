@@ -151,7 +151,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
       break;
     case 36:// $MOLFILE
       acdMolFile = mpr.readACDMolFile();
-      processModelData(acdMolFile, title + " (assigned)", "MOL", "mol", "", 0.01f, Float.NaN, true);
+      processModelData(acdMolFile, title + " (assigned)", "MOL", "mol", "", 0.01f, Double.NaN, true);
       if (asc.errorMessage != null) {
         continuing = false;
         return false;
@@ -189,8 +189,8 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
 
   @Override
   public void processModelData(String data, String id, String type,
-                               String base, String last, float modelScale,
-                               float vibScale, boolean isFirst) throws Exception {
+                               String base, String last, double modelScale,
+                               double vibScale, boolean isFirst) throws Exception {
     int model0 = asc.iSet;
     AtomSetCollection model = null;
     while (true) {
@@ -223,16 +223,16 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
             setBonding(model, ibase);
         }
       }
-      if (!Float.isNaN(vibScale)) {
+      if (!Double.isNaN(vibScale)) {
         Logger.info("JcampdxReader applying vibration scaling of " + vibScale + " to "
             + model.ac + " atoms");
         Atom[] atoms = model.atoms;
         for (int i = model.ac; --i >= 0;) {
-          if (atoms[i].vib != null && !Float.isNaN(atoms[i].vib.z))
+          if (atoms[i].vib != null && !Double.isNaN(atoms[i].vib.z))
             atoms[i].vib.scale(vibScale);
         }
       }
-      if (!Float.isNaN(modelScale)) {
+      if (!Double.isNaN(modelScale)) {
         Logger.info("JcampdxReader applying model scaling of " + modelScale + " to "
             + model.ac + " atoms");
         Atom[] atoms = model.atoms;

@@ -420,7 +420,7 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
   }
 
   @Override
-  public void processTwoPointGesture(float[][][] touches) {
+  public void processTwoPointGesture(double[][][] touches) {
     // n/a
   }
 

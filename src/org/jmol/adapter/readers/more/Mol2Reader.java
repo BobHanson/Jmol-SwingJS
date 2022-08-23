@@ -184,8 +184,8 @@ public class Mol2Reader extends ForceFieldReader {
         atom.elementSymbol = atom.getElementSymbol();
       }
       atom.atomName = name + '\0' + atomType;
-      atom.set(parseFloatStr(tokens[2]), parseFloatStr(tokens[3]),
-          parseFloatStr(tokens[4]));
+      atom.set(parseDoubleStr(tokens[2]), parseDoubleStr(tokens[3]),
+          parseDoubleStr(tokens[4]));
       // apparently "NO_CHARGES" is not strictly enforced
       //      if (iHaveCharges)
       if (tokens.length > 6) {
@@ -201,7 +201,7 @@ public class Mol2Reader extends ForceFieldReader {
       if (tokens.length > 7)
         atom.group3 = tokens[7];
       if (tokens.length > 8) {
-        atom.partialCharge = parseFloatStr(tokens[8]);
+        atom.partialCharge = parseDoubleStr(tokens[8]);
         if (atom.partialCharge == (int) atom.partialCharge)
           atom.formalCharge = (int) atom.partialCharge;
       }
@@ -309,7 +309,7 @@ public class Mol2Reader extends ForceFieldReader {
     if (ignoreFileUnitCell)
       return;
     for (int i = 0; i < 6; i++)
-      setUnitCellItem(i, parseFloatStr(tokens[i]));
+      setUnitCellItem(i, parseDoubleStr(tokens[i]));
     Atom[] atoms = asc.atoms;
     for (int i = 0; i < ac; ++i)
       setAtomCoord(atoms[nAtoms + i]);

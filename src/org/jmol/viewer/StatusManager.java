@@ -29,7 +29,7 @@ import java.util.Map.Entry;
 
 import javajs.util.Lst;
 import javajs.util.PT;
-import javajs.util.T3;
+import javajs.util.T3d;
 
 import org.jmol.api.GenericImageDialog;
 import org.jmol.api.Interface;
@@ -327,10 +327,7 @@ public class StatusManager {
       Object[] args = _args;
       _args = o;
       o[0] = callback.name();
-      try {
-        vwr.eval.runScript(cmd);
-      } catch (ScriptException e) {
-      }
+        vwr.evalStringQuietSync(cmd, true, false);
       o[0] = cmd;
       _args = args;
     }
@@ -437,12 +434,12 @@ public class StatusManager {
           new Object[] {sJmol, strInfo, Integer.valueOf(iatom) });
   }
   
-  synchronized void setStatusObjectHovered(String id, String strInfo, T3 pt) {
+  synchronized void setStatusObjectHovered(String id, String strInfo, T3d pt) {
     String sJmol = getJmolScriptCallback(CBK.HOVER);
     boolean isEnabled =  notifyEnabled(CBK.HOVER);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.HOVER, 
-          new Object[] {sJmol, strInfo, Integer.valueOf(-1), id, Float.valueOf(pt.x), Float.valueOf(pt.y), Float.valueOf(pt.z) });
+          new Object[] {sJmol, strInfo, Integer.valueOf(-1), id, Double.valueOf(pt.x), Double.valueOf(pt.y), Double.valueOf(pt.z) });
   }
   
   private Map<String, GenericImageDialog> imageMap;
@@ -530,7 +527,7 @@ public class StatusManager {
 
   synchronized void setStatusFrameChanged(int fileNo, int modelNo, int firstNo,
                                           int lastNo, int currentFrame,
-                                          float currentMorphModel, String entryName) {
+                                          double currentMorphModel, String entryName) {
     if (vwr.ms == null) 
       return;
     boolean animating = vwr.am.animationOn;
@@ -544,20 +541,20 @@ public class StatusManager {
           new Object[] {
               sJmol,
               new int[] { frameNo, fileNo, modelNo, firstNo, lastNo,
-                  currentFrame }, entryName, Float.valueOf(currentMorphModel) });
+                  currentFrame }, entryName, Double.valueOf(currentMorphModel) });
     if (!animating && !vwr.isJSNoAWT)
       vwr.checkMenuUpdate();
   }
 
   synchronized boolean setStatusDragDropped(int mode, int x, int y,
-                                            String fileName) {
+                                            String fileName, String[] retType) {
     setStatusChanged("dragDrop", 0, "", false);
     String sJmol = getJmolScriptCallback(CBK.DRAGDROP);
     boolean isEnabled = notifyEnabled(CBK.DRAGDROP);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.DRAGDROP,
           new Object[] { sJmol, Integer.valueOf(mode), Integer.valueOf(x),
-              Integer.valueOf(y), fileName });
+              Integer.valueOf(y), fileName, retType == null ? new String[1] : retType });
     return isEnabled;
   }
 
@@ -573,7 +570,7 @@ public class StatusManager {
           new Object[] { sJmol, strEcho, Integer.valueOf(isScriptQueued ? 1 : 0) });
   }
 
-  synchronized void setStatusMeasuring(String status, int intInfo, String strMeasure, float value) {
+  synchronized void setStatusMeasuring(String status, int intInfo, String strMeasure, double value) {
     setStatusChanged(status, intInfo, strMeasure, false);
     String sJmol = null;
     if(status.equals("measureCompleted")) { 
@@ -586,7 +583,7 @@ public class StatusManager {
     boolean isEnabled =  notifyEnabled(CBK.MEASURE);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.MEASURE,
-          new Object[] { sJmol, strMeasure,  Integer.valueOf(intInfo), status , Float.valueOf(value)});
+          new Object[] { sJmol, strMeasure,  Integer.valueOf(intInfo), status , Double.valueOf(value)});
   }
   
   synchronized void notifyError(String errType, String errMsg,
@@ -601,7 +598,7 @@ public class StatusManager {
   
   
   synchronized void notifyMinimizationStatus(String minStatus, Integer minSteps, 
-                                             Float minEnergy, Float minEnergyDiff, String ff) {
+                                             Double minEnergy, Double minEnergyDiff, String ff) {
     String sJmol = getJmolScriptCallback(CBK.MINIMIZATION);
     boolean isEnabled = notifyEnabled(CBK.MINIMIZATION);
     if (isEnabled || sJmol != null)
@@ -672,7 +669,7 @@ public class StatusManager {
       if (mouseCommand != null)
         syncSend(mouseCommand, "*", 0);
     } else if (!syncingScripts)
-      syncSend("!" + vwr.tm.getMoveToText(minSyncRepeatMs / 1000f, false), "*", 0);
+      syncSend("!" + vwr.tm.getMoveToText(minSyncRepeatMs / 1000d, false), "*", 0);
   }
 
   private boolean drivingSync;
@@ -780,13 +777,13 @@ public class StatusManager {
       cbl.notifyCallback(CBK.MESSAGE, null);
   }
 
-  float[][] functionXY(String functionName, int nX, int nY) {
-    return (jsl == null ? new float[Math.abs(nX)][Math.abs(nY)] :
+  double[][] functionXY(String functionName, int nX, int nY) {
+    return (jsl == null ? new double[Math.abs(nX)][Math.abs(nY)] :
       jsl.functionXY(functionName, nX, nY));
   }
   
-  float[][][] functionXYZ(String functionName, int nX, int nY, int nZ) {
-    return (jsl == null ? new float[Math.abs(nX)][Math.abs(nY)][Math.abs(nY)] :
+  double[][][] functionXYZ(String functionName, int nX, int nY, int nZ) {
+    return (jsl == null ? new double[Math.abs(nX)][Math.abs(nY)][Math.abs(nY)] :
       jsl.functionXYZ(functionName, nX, nY, nZ));
   }
   
@@ -958,7 +955,7 @@ public class StatusManager {
    */
   synchronized public void notifyAudioStatus(Map<String, Object> htParams) {
     String status = (String) htParams.get("status");
-    System.out.println(status);
+//System.out.println(status);
     String script = (String) htParams.get(status);
     if (script != null)
       vwr.script(script);
@@ -1073,11 +1070,11 @@ public class StatusManager {
       case 0: //zoombyfactor
         switch (tokens.length) {
         case 3:
-          vwr.zoomByFactor(PT.parseFloat(tokens[2]),
+          vwr.zoomByFactor(PT.parseDouble(tokens[2]),
               Integer.MAX_VALUE, Integer.MAX_VALUE);
           return;
         case 5:
-          vwr.zoomByFactor(PT.parseFloat(tokens[2]), javajs.util.PT
+          vwr.zoomByFactor(PT.parseDouble(tokens[2]), javajs.util.PT
               .parseInt(tokens[3]), PT.parseInt(tokens[4]));
           return;
         }
@@ -1101,24 +1098,24 @@ public class StatusManager {
         }
         break;
       case 45: // rotatexyby
-        vwr.rotateXYBy(PT.parseFloat(tokens[2]), PT
-            .parseFloat(tokens[3]));
+        vwr.rotateXYBy(PT.parseDouble(tokens[2]), PT
+            .parseDouble(tokens[3]));
         return;
       case 60: // translatexyby
         vwr.translateXYBy(PT.parseInt(tokens[2]), javajs.util.PT
             .parseInt(tokens[3]));
         return;
       case 75: // rotatemolecule
-        vwr.rotateSelected(PT.parseFloat(tokens[2]), PT
-            .parseFloat(tokens[3]), null);
+        vwr.rotateSelected(PT.parseDouble(tokens[2]), PT
+            .parseDouble(tokens[3]), null);
         return;
       case 90:// spinxyby
         vwr.spinXYBy(PT.parseInt(tokens[2]), PT.parseInt(tokens[3]),
-            PT.parseFloat(tokens[4]));
+            PT.parseDouble(tokens[4]));
         return;
       case 105: // rotatearcball
         vwr.rotateXYBy(PT.parseInt(tokens[2]), javajs.util.PT
-            .parseInt(tokens[3]));//, PT.parseFloat(tokens[4]));
+            .parseInt(tokens[3]));//, PT.parseDouble(tokens[4]));
         return;
       }
     } catch (Exception e) {

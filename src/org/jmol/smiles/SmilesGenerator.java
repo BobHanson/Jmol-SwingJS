@@ -24,14 +24,14 @@
 
 package org.jmol.smiles;
 
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
 import javajs.util.AU;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.SB;
 
 import javajs.util.BS;
@@ -66,7 +66,6 @@ public class SmilesGenerator {
   private final int MODE_COMP_ALLOW_BIO      = 1;
   private final int MODE_COMP_ALLOW_OUTSIDE  = 2;
   private final int MODE_COMP_FORCE_BRACKETS = 4;
-  private final int MODE_COMP_ALLOW_BRANCHES = 8;
   
   private Lst<Integer> specialPoints = null;
   private int ptAtom, ptSp2Atom0;
@@ -113,7 +112,7 @@ public class SmilesGenerator {
   private boolean aromaticDouble;
   private boolean noStereo;
   private boolean openSMILES;
-  public P3 polySmilesCenter;
+  public P3d polySmilesCenter;
   private SmilesStereo smilesStereo;
   private boolean isPolyhedral;
   private Lst<BS> aromaticRings;
@@ -122,6 +121,7 @@ public class SmilesGenerator {
   private boolean is2D;
   private boolean haveSmilesAtoms;
   private boolean isBio;
+  private boolean noBranches;
 
   // generation of SMILES strings
 
@@ -204,6 +204,8 @@ public class SmilesGenerator {
     isPolyhedral = ((flags
         & JC.SMILES_GEN_POLYHEDRAL) == JC.SMILES_GEN_POLYHEDRAL);
     is2D = ((flags & JC.SMILES_2D) == JC.SMILES_2D);
+    noBranches = ((flags & JC.SMILES_GEN_NO_BRANCHES) == JC.SMILES_GEN_NO_BRANCHES);
+
     return getSmilesComponent(atoms[ipt], bsSelected, MODE_COMP_ALLOW_BIO);
   }
 
@@ -407,7 +409,7 @@ public class SmilesGenerator {
     SB sb = new SB();
     // The idea hear is to allow a hypervalent atom to be listed first
     for (int i = bsToDo.nextSetBit(0); i >= 0; i = bsToDo.nextSetBit(i + 1)) {
-      if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral) {
+      if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral || noBranches) {
         if (atom == null)
           sb.append(".");
         getSmilesAt(sb, atoms[i], allowConnectionsToOutsideWorld, false,
@@ -498,7 +500,7 @@ public class SmilesGenerator {
                     break;
                 }
                 inserts.add(++pt, a);
-                System.out.println("ins " + rnum + " at " + k + "/" + i + " " + insert + " " +  Arrays.toString(a));
+//System.out.println("ins " + rnum + " at " + k + "/" + i + " " + insert + " " +  Arrays.toString(a));
                 break;
               }
           }
@@ -781,8 +783,8 @@ public class SmilesGenerator {
     // first look through the bonds for the best 
     // continuation -- bond0 -- and count hydrogens
     // and create a list of bonds to process.
-    if (bonds != null)
-      for (int i = bonds.length; --i >= 0;) {
+    if (bonds != null) {
+      for (int i = 0, nb = bonds.length; i < nb; i++) {
         Edge bond = bonds[i];
         if (!bond.isCovalent())
           continue;
@@ -810,6 +812,7 @@ public class SmilesGenerator {
           v.addLast(bonds[i]);
         }
       }
+    }
 
     // order of listing is critical for stereochemistry:
     //
@@ -1062,9 +1065,9 @@ public class SmilesGenerator {
     int charge = atom.getFormalCharge();
     int isotope = atom.getIsotopeNumber();
     int valence = atom.getValence();
-    float osclass = (openSMILES
-        ? ((Node) atom).getFloatProperty("property_atomclass")
-        : Float.NaN);
+    double osclass = (openSMILES
+        ? ((Node) atom).getDoubleProperty("property_atomclass")
+        : Double.NaN);
     String atomName = atom.getAtomName();
     String groupType = ((Node) atom).getBioStructureTypeName();
     // for bioSMARTS we provide the connecting atom if 
@@ -1195,7 +1198,7 @@ public class SmilesGenerator {
     return false;
   }
 
-  void sortPolyBonds(SimpleNode atom, SimpleNode refAtom, P3 center) {
+  void sortPolyBonds(SimpleNode atom, SimpleNode refAtom, P3d center) {
     if (smilesStereo == null)
       try {
         smilesStereo = SmilesStereo.newStereo(null);
@@ -1247,7 +1250,7 @@ public class SmilesGenerator {
           continue;
         bond2 = v.get(j);
         a2 = bond2.getOtherNode(atom);
-        if (SmilesStereo.isDiaxial(atom, atom, a1, a2, vTemp, -0.95f)) {
+        if (SmilesStereo.isDiaxial(atom, atom, a1, a2, vTemp, -0.95d)) {
           switch (++naxial) {
           case 1:
             a01 = a1;
@@ -1351,11 +1354,11 @@ public class SmilesGenerator {
     return SmilesStereo.getStereoFlag(atom, stereo, stereoFlag, vTemp, is2D);
   }
 
-  private void setStereoTemp(SimpleNode[] stereo, SimpleNode a, float z) {
+  private void setStereoTemp(SimpleNode[] stereo, SimpleNode a, double z) {
     for (int i = 0; i < 4; i++) {
       if (stereo[i] == a) {
         SmilesAtom b = new SmilesAtom();
-        P3 c = a.getXYZ();
+        P3d c = a.getXYZ();
         b.set(c.x, c.y, z);
         stereo[i] = b;
         break;

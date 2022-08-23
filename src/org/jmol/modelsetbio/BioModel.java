@@ -437,7 +437,7 @@ public final class BioModel extends Model {
     getRasmolHydrogenBonds(bs, bs, null, false, Integer.MAX_VALUE, false, null, dsspVersion);
   }
 
-  public void getAtomicDSSRData(float[] dssrData, String dataType) {
+  public void getAtomicDSSRData(double[] dssrData, String dataType) {
     if (auxiliaryInfo.containsKey("dssr"))
       vwr.getAnnotationParser(true).getAtomicDSSRData(ms, modelIndex, dssrData, dataType);
   }

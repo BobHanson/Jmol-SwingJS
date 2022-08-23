@@ -1,34 +1,34 @@
 package org.jmol.symmetry;
 
-import javajs.util.Lst;
-import javajs.util.M4;
-import javajs.util.P3;
-import javajs.util.P3i;
-import javajs.util.T3;
-
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Logger;
 import org.jmol.util.Point3fi;
 
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.M4d;
+import javajs.util.P3d;
+import javajs.util.P3i;
+import javajs.util.T3d;
+
 public class UnitCellIterator implements AtomIndexIterator {
 
   private Atom[] atoms;
-  private T3 center;
-  private T3 translation;
+  private T3d center;
+  private T3d translation;
   private int nFound;
-  private float maxDistance2;
-  private float distance2;
+  private double maxDistance2;
+  private double distance2;
   private SymmetryInterface unitCell;
   private P3i minXYZ, maxXYZ, t;
-  private P3 p;
+  private P3d p;
   private int ipt = Integer.MIN_VALUE;
-  private Lst<P3[]> unitList;
+  private Lst<P3d[]> unitList;
   private boolean done;
   private int nAtoms;
   private int listPt;
@@ -49,11 +49,11 @@ public class UnitCellIterator implements AtomIndexIterator {
    * @return this
    */
   public UnitCellIterator set(SymmetryInterface unitCell, Atom atom,
-                              Atom[] atoms, BS bsAtoms, float distance) {
+                              Atom[] atoms, BS bsAtoms, double distance) {
     this.unitCell = unitCell;
     this.atoms = atoms;
     addAtoms(bsAtoms);
-    p = new P3();
+    p = new P3d();
     if (distance > 0)
       setCenter(atom, distance);
     return this;
@@ -61,26 +61,26 @@ public class UnitCellIterator implements AtomIndexIterator {
 
   @Override
   public void setModel(ModelSet modelSet, int modelIndex, int zeroBase,
-                       int atomIndex, T3 center, float distance, RadiusData rd) {
+                       int atomIndex, T3d center, double distance, RadiusData rd) {
     // not implemented for UnitCell iterator
   }
 
   @Override
-  public void setCenter(T3 center, float distance) {
+  public void setCenter(T3d center, double distance) {
     if (distance == 0)
       return;
     maxDistance2 = distance * distance;
     this.center = center;
-    translation = new P3();
-    T3[] pts = BoxInfo.unitCubePoints;
-    P3 min = P3.new3(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
-    P3 max = P3.new3(-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
-    p = new P3();
-    P3 ptC = new P3();
+    translation = new P3d();
+    T3d[] pts = BoxInfo.unitCubePoints;
+    P3d min = P3d.new3(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+    P3d max = P3d.new3(-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE);
+    p = new P3d();
+    P3d ptC = new P3d();
     ptC.setT(center);
     unitCell.toFractional(ptC, true);
     for (int i = 0; i < 8; i++) {
-      p.scaleAdd2(-2f, pts[i], pts[7]);
+      p.scaleAdd2(-2d, pts[i], pts[7]);
       p.scaleAdd2(distance, p, center);
       unitCell.toFractional(p, true);
       if (min.x > p.x)
@@ -111,29 +111,33 @@ public class UnitCellIterator implements AtomIndexIterator {
     done = (bsAtoms == null);
     if (done)
       return;
-    unitList = new Lst<P3[]>();
+    unitList = new Lst<P3d[]>();
     String cat = "";
-    M4[] ops = unitCell.getSymmetryOperations();
+    M4d[] ops = unitCell.getSymmetryOperations();
     int nOps = ops.length;
+    P3d pt = new P3d();
+    P3d pa = new P3d();
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       for (int j = 0; j < nOps; j++) {
-        P3 pt = new P3();
-        pt.setT(a);
         if (j > 0) {
+          pt.setT(a);
           unitCell.toFractional(pt, false);
           ops[j].rotTrans(pt);
           unitCell.unitize(pt);
           unitCell.toCartesian(pt, false);
+          pt.putP(pa);
         } else {
-          unitCell.toUnitCell(pt, null);
+          pa.setT(a);
+          unitCell.toUnitCell(pa, null);
         }
-        String key = "_" + (int) (pt.x * 100) + "_" + (int) (pt.y * 100) + "_"
-            + (int) (pt.z * 100) + "_";
+        String key = "_" + (int) (pa.x * 100) + "_" + (int) (pa.y * 100) + "_"
+            + (int) (pa.z * 100) + "_";
         if (cat.indexOf(key) >= 0)
           continue;
         cat += key;
-        unitList.addLast(new P3[] { a, pt });
+        unitList.addLast(new P3d[] { a, pa });
+        pa = new P3d();
       }
     }
     nAtoms = unitList.size();
@@ -147,7 +151,7 @@ public class UnitCellIterator implements AtomIndexIterator {
     while ((ipt < nAtoms || nextCell())) {
       p.add2(unitList.get(listPt = ipt++)[1], translation);
       if ((distance2 = p.distanceSquared(center)) < maxDistance2
-          && distance2 > 0.1f) {
+          && distance2 > 0.1d) {
         nFound++;
         return true;
       }
@@ -185,12 +189,12 @@ public class UnitCellIterator implements AtomIndexIterator {
   }
 
   @Override
-  public float foundDistance2() {
-    return (nFound > 0 ? distance2 : Float.MAX_VALUE);
+  public double foundDistance2() {
+    return (nFound > 0 ? distance2 : Double.MAX_VALUE);
   }
 
   @Override
-  public P3 getPosition() {
+  public P3d getPosition() {
     Atom a = getAtom();
     if (Logger.debugging)
       Logger.info("draw ID p_" + nFound + " " + p + " //" + a + " " + t);

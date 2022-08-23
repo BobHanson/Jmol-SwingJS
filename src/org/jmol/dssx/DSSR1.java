@@ -26,7 +26,7 @@ package org.jmol.dssx;
 import java.util.Map;
 
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 import javajs.util.BS;
@@ -313,7 +313,7 @@ public class DSSR1 extends AnnotationParser {
     if (!doCache) {
       key = PT.rep(key, "NOCACHE", "").trim();
     }
-//    System.out.println("testing DSSR1");
+//System.out.println("testing DSSR1");
     BS bs = null;// (doCache ? (BS) annotationCache.get(key) : null);
 //    if (bs != null)
 //      return bs;
@@ -417,7 +417,7 @@ public class DSSR1 extends AnnotationParser {
           continue;
         }
         bs.clearAll();
-        float energy = 0;
+        double energy = 0;
         vHBonds.addLast(new HBond(ms.at[a1], ms.at[a2], Edge.BOND_H_REGULAR,
             (short) 1, C.INHERIT_ALL, energy));
       }
@@ -456,7 +456,7 @@ public class DSSR1 extends AnnotationParser {
   
   @SuppressWarnings("unchecked")
   @Override
-  public void getAtomicDSSRData(ModelSet ms, int modelIndex, float[] dssrData, String dataType) {
+  public void getAtomicDSSRData(ModelSet ms, int modelIndex, double[] dssrData, String dataType) {
     Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex, "dssr");
     Lst<Object> list;
     if (info == null || (list = (Lst<Object>) info.get(dataType)) == null)
@@ -478,13 +478,13 @@ public class DSSR1 extends AnnotationParser {
 
   @SuppressWarnings("unchecked")
   @Override
-  public P3[] getDSSRFrame(Map<String, Object> nt) {
+  public P3d[] getDSSRFrame(Map<String, Object> nt) {
     Map<String, Object> frame = (Map<String, Object>) nt.get("frame");
     if (frame == null)
       return null;
-    P3[] oxyz = new P3[4];
+    P3d[] oxyz = new P3d[4];
     for (int i = 4; --i >= 0;)
-      oxyz[i] = new P3();
+      oxyz[i] = new P3d();
     getPoint(frame, "origin", oxyz[0]);
     getPoint(frame, "x_axis", oxyz[1]);
     getPoint(frame, "y_axis", oxyz[2]);
@@ -493,11 +493,11 @@ public class DSSR1 extends AnnotationParser {
   }
 
   @SuppressWarnings("unchecked")
-  private void getPoint(Map<String, Object> frame, String item, P3 pt) {
-    Lst<Float> xyz = (Lst<Float>) frame.get(item);
-    pt.x = xyz.get(0).floatValue();
-    pt.y = xyz.get(1).floatValue();
-    pt.z = xyz.get(2).floatValue();    
+  private void getPoint(Map<String, Object> frame, String item, P3d pt) {
+    Lst<Double> xyz = (Lst<Double>) frame.get(item);
+    pt.x = xyz.get(0).doubleValue();
+    pt.y = xyz.get(1).doubleValue();
+    pt.z = xyz.get(2).doubleValue();    
   }
 
 //  "purine"  :

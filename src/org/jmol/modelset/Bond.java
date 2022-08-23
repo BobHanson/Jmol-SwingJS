@@ -103,7 +103,7 @@ public class Bond extends Edge {
     return (order & BOND_AROMATIC_MASK) != 0;
   }
 
-  public float getEnergy() {
+  public double getEnergy() {
     // hbonds only
     return 0;
   }
@@ -122,7 +122,7 @@ public class Bond extends Edge {
     atom1 = atom2 = null;
   }
 
-  public void setTranslucent(boolean isTranslucent, float translucentLevel) {
+  public void setTranslucent(boolean isTranslucent, double translucentLevel) {
     colix = C.getColixTranslucent3(colix, isTranslucent, translucentLevel);
   }
   

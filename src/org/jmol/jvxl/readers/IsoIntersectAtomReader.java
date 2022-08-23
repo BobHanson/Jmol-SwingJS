@@ -28,7 +28,7 @@ package org.jmol.jvxl.readers;
 
 import javajs.util.BS;
 
-import javajs.util.T3;
+import javajs.util.T3d;
 
 class IsoIntersectAtomReader extends AtomDataReader {
 
@@ -60,7 +60,7 @@ class IsoIntersectAtomReader extends AtomDataReader {
       return false;
     initializeVolumetricData();
     volumeData.setUnitVectors();
-    thisPlaneB = new float[volumeData.getYzCount()];
+    thisPlaneB = new double[volumeData.getYzCount()];
     voxelSource = new int[volumeData.nPoints];
     vl0 = volumeData.volumetricVectorLengths[0];
     vl1 = volumeData.volumetricVectorLengths[1];
@@ -92,24 +92,24 @@ class IsoIntersectAtomReader extends AtomDataReader {
       bsSelected.or(bsB);
       doUseIterator = true; // just means we want a map
       getAtoms(bsSelected, doAddHydrogens, true, true, false, false, false,
-          Float.NaN, null);      
+          Double.NaN, null);      
       for (int i = bsA.nextSetBit(0); i >= 0; i = bsA.nextSetBit(i + 1))
         myBsA.set(myIndex[i]);
       for (int i = bsB.nextSetBit(0); i >= 0; i = bsB.nextSetBit(i + 1))
         myBsB.set(myIndex[i]);
       setHeader("VDW intersection surface", params.calculationType);
       setRanges(params.solvent_ptsPerAngstrom, params.solvent_gridMax, 0);
-      margin = 5f;
+      margin = 5d;
     } else {
       setVolumeData();
     }
     isProgressive = isXLowToHigh = true;
   }
 
-  private float[] thisPlaneB;
+  private double[] thisPlaneB;
 
   @Override
-  public float[] getPlane(int x) {
+  public double[] getPlane(int x) {
     if (yzCount == 0) {
       initPlanes();
     }
@@ -118,11 +118,11 @@ class IsoIntersectAtomReader extends AtomDataReader {
     thisPlane= yzPlanes[x % 2];
     if(contactPair == null) {
       thisAtomSet = bsAtomMinMax[0][x];
-      resetPlane(Float.MAX_VALUE);
+      resetPlane(Double.MAX_VALUE);
       markSphereVoxels(0, params.distance);
       thisPlane = thisPlaneB;
       thisAtomSet = bsAtomMinMax[1][x];
-      resetPlane(Float.MAX_VALUE);
+      resetPlane(Double.MAX_VALUE);
       markSphereVoxels(0, params.distance);
     } else {
       markPlaneVoxels(contactPair.myAtoms[0], contactPair.radii[0]);
@@ -141,22 +141,22 @@ class IsoIntersectAtomReader extends AtomDataReader {
 
   private boolean setVoxels() {
     for (int i = 0; i < yzCount; i++) {
-      float va = thisPlane[i];
-      float vb = thisPlaneB[i];
-      float v = getValueAB(va, vb);
-      if (Float.isNaN(v))
+      double va = thisPlane[i];
+      double vb = thisPlaneB[i];
+      double v = getValueAB(va, vb);
+      if (Double.isNaN(v))
         return false;
       thisPlane[i] = v;
     }
     return true;
   }
 
-  private final float[] values = new float[2];
+  private final double[] values = new double[2];
   
-  private float getValueAB(float va, float vb) {
-    if (va == Float.MAX_VALUE || vb == Float.MAX_VALUE
-        || Float.isNaN(va) || Float.isNaN(vb))
-      return Float.MAX_VALUE;
+  private double getValueAB(double va, double vb) {
+    if (va == Double.MAX_VALUE || vb == Double.MAX_VALUE
+        || Double.isNaN(va) || Double.isNaN(vb))
+      return Double.MAX_VALUE;
     switch (funcType) {
     case TYPE_SUM:
       return (va + vb);
@@ -173,19 +173,19 @@ class IsoIntersectAtomReader extends AtomDataReader {
   }
   
   @Override
-  public float getValueAtPoint(T3 pt, boolean getSource) {
+  public double getValueAtPoint(T3d pt, boolean getSource) {
     // mapping sasurface/vdw 
     return getValueAB(getValueAtPoint2(pt, myBsA), getValueAtPoint2(pt, myBsB));
   }
   
-  private float getValueAtPoint2(T3 pt, BS bs) {
-    float value = Float.MAX_VALUE;
+  private double getValueAtPoint2(T3d pt, BS bs) {
+    double value = Double.MAX_VALUE;
     for (int iAtom = bs.nextSetBit(0); iAtom >= 0; iAtom = bs.nextSetBit(iAtom + 1)) {
-      float r = pt.distance(atomXyzTruncated[iAtom]) - atomRadius[iAtom];
+      double r = pt.distance(atomXyzTruncated[iAtom]) - atomRadius[iAtom];
       if (r < value)
         value = r;
     }
-    return (value == Float.MAX_VALUE ? Float.NaN : value);
+    return (value == Double.MAX_VALUE ? Double.NaN : value);
   }
 
 }

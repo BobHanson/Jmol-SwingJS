@@ -94,8 +94,8 @@ class JaguarReader extends VolumeFileReader {
     }
     String[] tokens = PT.getTokensAt(atomLine, 0);
     if (tokens.length == 4 && tokens[0].equals("origin=")) {
-      volumetricOrigin.set(parseFloatStr(tokens[1]), parseFloatStr(tokens[2]),
-          parseFloatStr(tokens[3]));
+      volumetricOrigin.set(parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]),
+          parseDoubleStr(tokens[3]));
       VolumeFileReader
           .checkAtomLine(isXLowToHigh, isAngstroms, "0", "0 " + tokens[1]
               + " " + tokens[2] + " " + tokens[3], jvxlFileHeaderBuffer);
@@ -111,8 +111,8 @@ class JaguarReader extends VolumeFileReader {
     voxelCounts[0] = parseIntStr(tokens[1]);
     voxelCounts[1] = parseIntStr(tokens[2]);
     voxelCounts[2] = parseIntStr(tokens[3]);
-    float factor = (isAngstroms ? 1 : ANGSTROMS_PER_BOHR);
-    float d = extents[0] / (voxelCounts[0] - 1);
+    double factor = (isAngstroms ? 1 : ANGSTROMS_PER_BOHR);
+    double d = extents[0] / (voxelCounts[0] - 1);
     volumetricVectors[0].set(d * factor, 0, 0);
     jvxlFileHeaderBuffer.append(voxelCounts[0] + " " + d + " 0.0 0.0\n");
 
@@ -133,7 +133,7 @@ class JaguarReader extends VolumeFileReader {
 
   }
 
-  private float[] extents = new float[3];
+  private double[] extents = new double[3];
   
   /**
    * read the extentx=, extenty=, extentz= lines and cache them
@@ -144,6 +144,6 @@ class JaguarReader extends VolumeFileReader {
    */
   private void readExtents(int voxelVectorIndex) throws Exception {
     String[] tokens = PT.getTokens(rd());
-    extents[voxelVectorIndex] = parseFloatStr(tokens[voxelVectorIndex + 1]);
+    extents[voxelVectorIndex] = parseDoubleStr(tokens[voxelVectorIndex + 1]);
   }
 }

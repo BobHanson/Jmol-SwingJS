@@ -196,20 +196,20 @@ public class SpartanSmolReader extends SpartanInputReader {
         && bondData != null)
       spartanArchive.addBonds(bondData, 0);
     if (moData != null) {
-      Float n = (Float) asc.atomSetInfo.get("HOMO_N");
+      Number n = (Number) asc.atomSetInfo.get("HOMO_N");
       if (n != null) {
         int i = n.intValue();
         moData.put("HOMO", Integer.valueOf(i));
         // TODO: This would take some work -- SOMO, degenerate HOMO etc.
         //for (int j = orbitals.size(); --j >= 0;)
-          //orbitals.get(j).put("occupancy", Float.valueOf(j > i ? 0 : 2));
+          //orbitals.get(j).put("occupancy", Double.valueOf(j > i ? 0 : 2));
 
       }
     }
   }
 
   private void readMyTransform() throws Exception {
-    float[] mat;
+    double[] mat;
     String binaryCodes = rd();
     // last 16x4 bytes constitutes the 4x4 matrix, using doubles
     String[] tokens = PT.getTokens(binaryCodes.trim());
@@ -218,7 +218,7 @@ public class SpartanSmolReader extends SpartanInputReader {
     byte[] bytes = new byte[tokens.length];
     for (int i = 0; i < tokens.length; i++)
       bytes[i] = (byte) PT.parseIntRadix(tokens[i], 16);
-    mat = new float[16];
+    mat = new double[16];
     for (int i = 16, j = bytes.length - 8; --i >= 0; j -= 8)
       mat[i] = BC.bytesToDoubleToFloat(bytes, j, false);
     setTransform(mat[0], mat[1], mat[2], mat[4], mat[5], mat[6], mat[8],
@@ -296,7 +296,7 @@ public class SpartanSmolReader extends SpartanInputReader {
     return modelName;
   }
 
-  public void setEnergy(float value) {    
+  public void setEnergy(double value) {    
     asc.setAtomSetName(constraints + (constraints.length() == 0 ? "" : " ") + "Energy=" + value + " KJ");
   }
 

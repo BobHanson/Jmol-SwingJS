@@ -29,10 +29,10 @@ package org.jmol.thread;
 import javajs.util.BS;
 import org.jmol.script.T;
 import javajs.util.Lst;
-import javajs.util.M4;
+import javajs.util.M4d;
 
 import org.jmol.util.Logger;
-import javajs.util.P3;
+import javajs.util.P3d;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
@@ -42,21 +42,21 @@ public class SpinThread extends JmolThread {
    * 
    */
   private TransformManager transformManager;
-  private float endDegrees;
-  private Lst<P3> endPositions;
-  private float[] dihedralList;
-  private float nDegrees;
+  private double endDegrees;
+  private Lst<P3d> endPositions;
+  private double[] dihedralList;
+  private double nDegrees;
   private BS bsAtoms;
   private boolean isNav;
   private boolean isGesture;
-  private float myFps;
-  private float angle;
+  private double myFps;
+  private double angle;
   private boolean haveNotified;
   private int index;
   //private boolean navigatingSurface;
   private BS[] bsBranches;
   private boolean isDone = false;
-  private M4 m4;
+  private M4d m4;
   
   public SpinThread() {}
   
@@ -67,10 +67,10 @@ public class SpinThread extends JmolThread {
     setViewer(vwr, "SpinThread");
     Object[] options = (Object[]) params;
 
-    //f//loat endDegrees, List<P3> endPositions, float[] dihedralList, BS bsAtoms, boolean isNav,
+    //f//loat endDegrees, List<P3> endPositions, double[] dihedralList, BS bsAtoms, boolean isNav,
     //boolean isGesture) {
 
-    //Float.valueOf(endDegrees), endPositions, dihedralList,
+    //Double.valueOf(endDegrees), endPositions, dihedralList,
     //bsAtoms, Boolean.valueOf(isGesture)} );
 
     //        spinThread = new SpinThread(this, vwr, NULL 
@@ -79,9 +79,9 @@ public class SpinThread extends JmolThread {
     if (options == null) {
       isNav = true;
     } else {
-      endDegrees = ((Float) options[0]).floatValue();
-      endPositions = (Lst<P3>) options[1];
-      dihedralList = (float[]) options[2];
+      endDegrees = ((Number) options[0]).doubleValue();
+      endPositions = (Lst<P3d>) options[1];
+      dihedralList = (double[]) options[2];
       if (dihedralList != null)
         bsBranches = vwr.ms.getBsBranches(dihedralList);
       bsAtoms = (BS) options[3];
@@ -135,7 +135,7 @@ public class SpinThread extends JmolThread {
           break;
         }
         //navigatingSurface = vwr.getNavigateSurface();
-        boolean refreshNeeded = (endDegrees >= 1e10f ? true : isNav ? //navigatingSurface ||
+        boolean refreshNeeded = (endDegrees >= 1e10d ? true : isNav ? //navigatingSurface ||
         transformManager.navX != 0 || transformManager.navY != 0
             || transformManager.navZ != 0
             : transformManager.isSpinInternal
@@ -174,11 +174,11 @@ public class SpinThread extends JmolThread {
         while (!checkInterrupted(transformManager.spinThread) && !vwr.getRefreshing())
           if (!runSleep(10, CHECK1))
             return;
-        if (bsAtoms != null || vwr.g.waitForMoveTo && endDegrees != Float.MAX_VALUE)
+        if (bsAtoms != null || vwr.g.waitForMoveTo && endDegrees != Double.MAX_VALUE)
             vwr.requestRepaintAndWait("spin thread");
         else
           vwr.refresh(Viewer.REFRESH_REPAINT, "SpinThread");
-        if (endDegrees >= 1e10f ? nDegrees/endDegrees > 0.99 
+        if (endDegrees >= 1e10d ? nDegrees/endDegrees > 0.99 
             : !isNav && endDegrees >= 0 ? nDegrees >= endDegrees - 0.001
             : -nDegrees <= endDegrees + 0.001) {
           isDone = true;
@@ -211,9 +211,9 @@ public class SpinThread extends JmolThread {
 
   private void doTransform() {
     if (dihedralList != null) {
-      float f = 1f / myFps / endDegrees;
+      double f = 1d / myFps / endDegrees;
       vwr.setDihedrals(dihedralList, bsBranches, f);
-      nDegrees += 1f / myFps;
+      nDegrees += 1d / myFps;
     } else if (isNav) {
       transformManager.setNavigationOffsetRelative();//navigatingSurface);
     } else if (transformManager.isSpinInternal

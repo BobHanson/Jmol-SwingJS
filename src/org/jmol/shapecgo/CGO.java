@@ -42,7 +42,7 @@ public class CGO extends MeshCollection {
   CGOMesh[] cmeshes = new CGOMesh[4];
   private CGOMesh cgoMesh;
   private boolean useColix; // not implemented?
-  private float newScale; // not implemented
+  private double newScale; // not implemented
   private int indicatedModelIndex = Integer.MIN_VALUE;
 
   
@@ -184,7 +184,7 @@ public class CGO extends MeshCollection {
     return cgoMesh.set(data);
   }
 
-  private void scale(Mesh mesh, float newScale) {
+  private void scale(Mesh mesh, double newScale) {
     // TODO
     
   }

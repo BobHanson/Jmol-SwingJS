@@ -27,7 +27,7 @@ package org.jmol.jvxl.readers;
 import java.util.List;
 import java.util.Map;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 
 
@@ -52,12 +52,12 @@ class CifDensityReader extends BCifDensityReader {
   }
 
   @Override
-  protected P3 readCifP3(String key, P3 p3) {
+  protected P3d readCifP3(String key, P3d p3) {
     if (p3 == null)
-      p3 = new P3();
-    float x = getCifFloat(key + "[0]");
-    if (Float.isNaN(x)) {
-      p3.x = Float.NaN;
+      p3 = new P3d();
+    double x = getCifFloat(key + "[0]");
+    if (Double.isNaN(x)) {
+      p3.x = Double.NaN;
     } else {
       p3.x = x;
       p3.y = getCifFloat(key + "[1]");
@@ -80,14 +80,14 @@ class CifDensityReader extends BCifDensityReader {
   }
   
   @Override
-  protected float getCifFloat(String key) {
+  protected double getCifFloat(String key) {
     Object o = thisData.get(key);
-    float x = Float.NaN;
+    double x = Double.NaN;
     if (o != null) {
       if (o instanceof String) {
-        x = PT.parseFloat((String) o);
+        x = PT.parseDouble((String) o);
       } else if (o instanceof Number) {
-        x = ((Number) o).floatValue();
+        x = ((Number) o).doubleValue();
       }
     }
     return x;
@@ -95,10 +95,10 @@ class CifDensityReader extends BCifDensityReader {
 
   @Override
   @SuppressWarnings("unchecked")
-  protected float[] readCifFloats(String key, float[] values) {
+  protected double[] readCifFloats(String key, double[] values) {
     List<Object> list = (List<Object>) thisData.get(key);
     for (int i = 0, n = values.length; i < n; i++)
-      values[i] = PT.parseFloat((String) list.get(i));
+      values[i] = PT.parseDouble((String) list.get(i));
     return values;
   }
 }
@@ -110,7 +110,7 @@ class CifDensityReader extends BCifDensityReader {
 //#
 //_density_server_result.server_version     0.9.4 
 //_density_server_result.datetime_utc       '2018-01-11 13:05:27' 
-//_density_server_result.guid               6b9aaa27-a562-4e00-a888-6f500847868f 
+//_density_server_result.guid               6b9aaa27-a562-4e00-a888-6d500847868f 
 //_density_server_result.is_empty           no 
 //_density_server_result.has_error          no 
 //_density_server_result.error              . 
@@ -165,7 +165,7 @@ class CifDensityReader extends BCifDensityReader {
 //#
 //_density_server_result.server_version     0.9.4 
 //_density_server_result.datetime_utc       '2018-01-11 13:49:16' 
-//_density_server_result.guid               d7da5dff-3343-4082-a96f-95fd979d8567 
+//_density_server_result.guid               d7da5dff-3343-4082-a96d-95fd979d8567 
 //_density_server_result.is_empty           no 
 //_density_server_result.has_error          no 
 //_density_server_result.error              . 
@@ -271,7 +271,7 @@ class CifDensityReader extends BCifDensityReader {
 //#
 //_density_server_result.server_version     0.9.4 
 //_density_server_result.datetime_utc       '2018-01-11 13:49:16' 
-//_density_server_result.guid               d7da5dff-3343-4082-a96f-95fd979d8567 
+//_density_server_result.guid               d7da5dff-3343-4082-a96d-95fd979d8567 
 //_density_server_result.is_empty           no 
 //_density_server_result.has_error          no 
 //_density_server_result.error              . 

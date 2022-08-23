@@ -9,7 +9,7 @@ import java.util.Map;
 import org.jmol.modelset.Atom;
 
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 import org.jmol.viewer.Viewer;
 
@@ -59,11 +59,11 @@ public interface JmolScriptManager {
 
   boolean isQueueProcessing();
 
-  void openFileAsync(String fileName, int flags);
+  void openFileAsync(String fileName, int flags, String type);
 
   String evalFile(String strFilename);
 
-  BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3[] pts,
+  BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3d[] pts,
                         Map<String, Object> htParams)
       throws Exception;
 

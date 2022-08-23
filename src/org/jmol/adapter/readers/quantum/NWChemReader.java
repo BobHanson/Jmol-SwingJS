@@ -24,23 +24,21 @@
 
 package org.jmol.adapter.readers.quantum;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.PT;
-
 import java.util.Hashtable;
-import java.util.Properties;
-
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolAdapter;
-import javajs.util.BS;
 import org.jmol.quantum.QS;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.PT;
 
 /**
  * A reader for NWChem 4.6
@@ -224,7 +222,7 @@ public class NWChemReader extends MOReader {
         equivalentAtomSets);
     setNames(energyKey + " = " + energyValue,
         null, equivalentAtomSets);
-    asc.setAtomSetEnergy(value, parseFloatStr(value));
+    asc.setAtomSetEnergy(value, parseDoubleStr(value));
     haveEnergy = true;
   }
 
@@ -314,7 +312,7 @@ public class NWChemReader extends MOReader {
    * @throws Exception If an error occurs.
    **/
   private void readAtoms(String thisLine) throws Exception {
-    float scale = (thisLine.indexOf("angstroms") < 0 ? ANGSTROMS_PER_BOHR : 1);
+    double scale = (thisLine.indexOf("angstroms") < 0 ? ANGSTROMS_PER_BOHR : 1);
     readLines(3); // skip blank line, titles and dashes
     String tokens[];
     haveEnergy = false;
@@ -355,45 +353,45 @@ public class NWChemReader extends MOReader {
   */
   // NB one could consider removing the previous read structure since that
   // must have been the input structure for the optimizition?
-  /**
-   * Reads the energy gradients section into a new AtomSet.
-   * 
-   * <p>
-   * One could consider not adding a new AtomSet for this, but just adding the
-   * gradient vectors to the last AtomSet read (if that was indeed the same
-   * nuclear arrangement).
-   * 
-   * @throws Exception
-   *         If an error occurs.
-   **/
-  private void readGradients() throws Exception {
-    readLines(3); // skip blank line, titles and dashes
-    String tokens[];
-    asc.newAtomSet();
-    if (equivalentAtomSets > 1) {
-      Properties p = (Properties) asc.getAtomSetAuxiliaryInfoValue(
-          asc.iSet - 1, "modelProperties");
-      if (p != null)
-        asc.setCurrentModelInfo("modelProperties", p.clone());
-    }
-    asc.setAtomSetModelProperty("vector", "gradient");
-    asc.setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY, "Task "
-        + taskNumber + SmarterJmolAdapter.PATH_SEPARATOR + "Gradients");
-    float f = ANGSTROMS_PER_BOHR;
-    while (rd() != null && line.length() > 0) {
-      tokens = getTokens(); // get the tokens in the line
-      if (tokens.length < 8)
-        break; // make sure I have enough tokens
-      Atom atom = setAtomCoordScaled(null, tokens, 2, f);
-      atom.atomName = fixTag(tokens[1]);
-
-      // Keep gradients in a.u. (larger value that way)
-      // need to multiply with -1 so the direction is in the direction the
-      // atom needs to move to lower the energy
-      asc.addVibrationVector(atom.index, -parseFloatStr(tokens[5]),
-          -parseFloatStr(tokens[6]), -parseFloatStr(tokens[7]));
-    }
-  }
+//  /**
+//   * Reads the energy gradients section into a new AtomSet.
+//   * 
+//   * <p>
+//   * One could consider not adding a new AtomSet for this, but just adding the
+//   * gradient vectors to the last AtomSet read (if that was indeed the same
+//   * nuclear arrangement).
+//   * 
+//   * @throws Exception
+//   *         If an error occurs.
+//   **/
+//  private void readGradients() throws Exception {
+//    readLines(3); // skip blank line, titles and dashes
+//    String tokens[];
+//    asc.newAtomSet();
+//    if (equivalentAtomSets > 1) {
+//      Properties p = (Properties) asc.getAtomSetAuxiliaryInfoValue(
+//          asc.iSet - 1, "modelProperties");
+//      if (p != null)
+//        asc.setCurrentModelInfo("modelProperties", p.clone());
+//    }
+//    asc.setAtomSetModelProperty("vector", "gradient");
+//    asc.setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY, "Task "
+//        + taskNumber + SmarterJmolAdapter.PATH_SEPARATOR + "Gradients");
+//    double f = ANGSTROMS_PER_BOHR;
+//    while (rd() != null && line.length() > 0) {
+//      tokens = getTokens(); // get the tokens in the line
+//      if (tokens.length < 8)
+//        break; // make sure I have enough tokens
+//      Atom atom = setAtomCoordScaled(null, tokens, 2, f);
+//      atom.atomName = fixTag(tokens[1]);
+//
+//      // Keep gradients in a.u. (larger value that way)
+//      // need to multiply with -1 so the direction is in the direction the
+//      // atom needs to move to lower the energy
+//      asc.addVibrationVector(atom.index, -parseDoubleStr(tokens[5]),
+//          -parseDoubleStr(tokens[6]), -parseDoubleStr(tokens[7]));
+//    }
+//  }
 
   // SAMPLE FREQUENCY OUTPUT
   // First the structure. The atom column has real element names (not the tags)
@@ -581,7 +579,7 @@ public class NWChemReader extends MOReader {
           return;
         tokens = getTokens();
       } while (tokens[0].indexOf(".") >= 0);
-      atoms[i].partialCharge = parseIntStr(tokens[2]) - parseFloatStr(tokens[3]);
+      atoms[i].partialCharge = parseIntStr(tokens[2]) - parseDoubleStr(tokens[3]);
     }
   }
 
@@ -745,7 +743,7 @@ public class NWChemReader extends MOReader {
       while (line != null && line.length() > 3) {
         String[] tokens = getTokens();
         Object[] o = new Object[] { tokens[1],
-            new float[] { parseFloatStr(tokens[2]), parseFloatStr(tokens[3]) } };
+            new double[] { parseDoubleStr(tokens[2]), parseDoubleStr(tokens[3]) } };
         shellData.addLast(o);
         rd();
       }
@@ -754,7 +752,7 @@ public class NWChemReader extends MOReader {
 
     int nD = (isD6F10 ? 6 : 5);
     int nF = (isD6F10 ? 10 : 7);
-    Lst<float[]> gdata = new  Lst<float[]>();
+    Lst<double[]> gdata = new  Lst<double[]>();
     for (int i = 0; i < atomTypes.size(); i++) {
       atomData = atomInfo.get(atomTypes.get(i));
       int nShells = atomData.size();
@@ -785,11 +783,11 @@ public class NWChemReader extends MOReader {
         slater[3] = nGaussians;
         shells.addLast(slater);
         for (int ifunc = 0; ifunc < nGaussians; ifunc++)
-          gdata.addLast((float[]) shellData.get(ifunc)[1]);
+          gdata.addLast((double[]) shellData.get(ifunc)[1]);
         gaussianCount += nGaussians;
       }
     }
-    gaussians = AU.newFloat2(gaussianCount);
+    gaussians = AU.newDouble2(gaussianCount);
     for (int i = 0; i < gaussianCount; i++)
       gaussians[i] = gdata.get(i);
     Logger.info(gaussianCount + " Gaussians read");
@@ -872,27 +870,27 @@ public class NWChemReader extends MOReader {
         line = line.replace('=', ' ');
         //  Vector    9  Occ=2.000000D+00  E=-1.152419D+00  Symmetry=a1
         String[] tokens = getTokens();
-        float occupancy = parseFloatStr(tokens[3]);
-        float energy = parseFloatStr(tokens[5]);
+        double occupancy = parseDoubleStr(tokens[3]);
+        double energy = parseDoubleStr(tokens[5]);
         String symmetry = (tokens.length > 7 ? tokens[7] : null);
         Map<String, Object> mo = new Hashtable<String, Object>();
-        mo.put("occupancy", Float.valueOf(occupancy));
-        mo.put("energy", Float.valueOf(energy));
+        mo.put("occupancy", Double.valueOf(occupancy));
+        mo.put("energy", Double.valueOf(energy));
         if (symmetry != null)
           mo.put("symmetry", symmetry);
-        float[] coefs = null;
+        double[] coefs = null;
         setMO(mo);
         mo.put("type", alphaBeta + (++moCount));
-        coefs = new float[nBasisFunctions];
+        coefs = new double[nBasisFunctions];
         mo.put("coefficients", coefs);
         i += 3;
         //    68      2.509000   5 C  py               39     -2.096777   3 C  pz        
         while ((line = list.get(++i)) != null && line.length() > 3) {
           tokens = getTokens();
-          coefs[parseIntStr(tokens[0]) - 1] = parseFloatStr(tokens[1]);
+          coefs[parseIntStr(tokens[0]) - 1] = parseDoubleStr(tokens[1]);
           int pt = tokens.length / 2;
           if (pt == 5 || pt == 6)
-            coefs[parseIntStr(tokens[pt]) - 1] = parseFloatStr(tokens[pt + 1]);
+            coefs[parseIntStr(tokens[pt]) - 1] = parseDoubleStr(tokens[pt + 1]);
         }
       }
     }
@@ -969,10 +967,10 @@ public class NWChemReader extends MOReader {
 //          data[i].addLast(line.substring(pt, pt + fieldSize).trim());
 //
 //      for (int iMo = 0; iMo < nThisLine; iMo++) {
-//        float[] coefs = new float[data[iMo].size()];
+//        double[] coefs = new double[data[iMo].size()];
 //        int iCoeff = 0;
 //        while (iCoeff < coefs.length) {
-//          coefs[iCoeff] = parseFloatStr(data[iMo].get(iCoeff));
+//          coefs[iCoeff] = parseDoubleStr(data[iMo].get(iCoeff));
 //          iCoeff++;
 //        }
 //        mos[iMo].put("coefficients", coefs);

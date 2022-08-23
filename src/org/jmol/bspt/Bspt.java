@@ -24,7 +24,8 @@ package org.jmol.bspt;
 
 
 
-import javajs.util.T3;
+import javajs.util.T3d;
+import javajs.util.T3d;
 
 
 //import org.jmol.util.Logger;
@@ -106,7 +107,7 @@ public final class Bspt {
    * 
    * @param tuple
    */
-  public void addTuple(T3 tuple) {
+  public void addTuple(T3d tuple) {
     eleRoot = eleRoot.addTuple(0, tuple);
   }
 

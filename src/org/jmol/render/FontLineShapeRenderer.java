@@ -30,12 +30,12 @@ import org.jmol.script.T;
 import org.jmol.util.Font;
 import org.jmol.util.GData;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.PT;
 
 import org.jmol.util.SimpleUnitCell;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 public abstract class FontLineShapeRenderer extends ShapeRenderer {
 
@@ -55,8 +55,8 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
   protected int[] dashDots;
   protected boolean asLineOnly;
  
-  protected float imageFontScaling;
-  protected P3 tickA, tickB, tickAs, tickBs;
+  protected double imageFontScaling;
+  protected P3d tickA, tickB, tickAs, tickBs;
   protected Font font3d;
 
   final protected P3i pt0i = new P3i();
@@ -64,12 +64,12 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
   protected final P3i s1 = new P3i();
   protected final P3i s2 = new P3i();
 
-  final protected P3 pointT = new P3();
-  final protected P3 pointT2 = new P3();
-  final protected P3 pointT3 = new P3();
-  final protected V3 vectorT = new V3();
-  final protected V3 vectorT2 = new V3();
-  final protected V3 vectorT3 = new V3();
+  final protected P3d pointT = new P3d();
+  final protected P3d pointT2 = new P3d();
+  final protected P3d pointT3 = new P3d();
+  final protected V3d vectorT = new V3d();
+  final protected V3d vectorT2 = new V3d();
+  final protected V3d vectorT3 = new V3d();
 
   //final Rectangle box = new Rectangle();
 
@@ -78,8 +78,8 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
   protected boolean draw000 = true;
   protected int width;
   protected byte endcap = GData.ENDCAPS_SPHERICAL;
-  protected P3 pt0 = new P3();
-  protected P3 pt1 = new P3();
+  protected P3d pt0 = new P3d();
+  protected P3d pt1 = new P3d();
 
   //protected void clearBox() {
   //  box.setBounds(0, 0, 0, 0);
@@ -91,7 +91,7 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
     switch (exportType) {
     case GData.EXPORT_CARTESIAN:
       diameter = (isMad10 ? mad10OrPixels 
-          : (int) Math.floor(vwr.tm.unscaleToScreen(z, mad10OrPixels * 2/10f) * 1000));
+          : (int) Math.floor(vwr.tm.unscaleToScreen(z, mad10OrPixels * 2/10d) * 1000));
       break;
     default:
       if (isMad10) {
@@ -107,7 +107,7 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
     return diameter;
   }  
 
-  protected void renderLine(P3 p0, P3 p1, int diameter, 
+  protected void renderLine(P3d p0, P3d p1, int diameter, 
                             boolean drawTicks) {
     // used by Bbcage, Uccage, and axes
     if (diameter < 0)
@@ -125,15 +125,15 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
 
   protected void checkTickTemps() {
     if (tickA == null) {
-      tickA = new P3();
-      tickB = new P3();
-      tickAs = new P3();
-      tickBs = new P3();
+      tickA = new P3d();
+      tickB = new P3d();
+      tickAs = new P3d();
+      tickBs = new P3d();
     }
   }
 
   protected void drawTicks(int diameter, boolean withLabels) {
-    if (Float.isNaN(tickInfo.first))
+    if (Double.isNaN(tickInfo.first))
       tickInfo.first = 0;
     drawTicks2(tickInfo.ticks.x, 8, diameter, (!withLabels ? null : tickInfo.tickLabelFormats == null ? 
             new String[] { "%0.2f" } : tickInfo.tickLabelFormats));
@@ -141,7 +141,7 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
     drawTicks2(tickInfo.ticks.z, 2, diameter, null);
   }
 
-  private void drawTicks2(float dx, int length,
+  private void drawTicks2(double dx, int length,
                          int diameter, String[] formats) {
 
     if (dx == 0)
@@ -162,13 +162,13 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
     if (vectorT2.length() < 50)
       return;
 
-    float signFactor = tickInfo.signFactor;
+    double signFactor = tickInfo.signFactor;
     vectorT.sub2(tickB, tickA);
-    float d0 = vectorT.length();
+    double d0 = vectorT.length();
     if (tickInfo.scale != null) {
-      if (Float.isNaN(tickInfo.scale.x)) { // unitcell
-        float a = vwr.getUnitCellInfo(SimpleUnitCell.INFO_A);
-        if (!Float.isNaN(a))
+      if (Double.isNaN(tickInfo.scale.x)) { // unitcell
+        double a = vwr.getUnitCellInfo(SimpleUnitCell.INFO_A);
+        if (!Double.isNaN(a))
           vectorT.set(vectorT.x / a, vectorT.y
               / vwr.getUnitCellInfo(SimpleUnitCell.INFO_B), vectorT.z
               / vwr.getUnitCellInfo(SimpleUnitCell.INFO_C));
@@ -178,25 +178,25 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
       }
     }
     // d is in scaled units
-    float d = vectorT.length() + 0.0001f * dx;
+    double d = vectorT.length() + 0.0001f * dx;
     if (d < dx)
       return;
-    float f = dx / d * d0 / d;
+    double f = dx / d * d0 / d;
     vectorT.scale(f);
-    float dz = (tickBs.z - tickAs.z) / (d / dx);
+    double dz = (tickBs.z - tickAs.z) / (d / dx);
     // TODO: z-value error: ONLY APPROXIMATE
     // vectorT is now the length of the spacing between ticks
     // but we may have an offset.
     d += tickInfo.first;
-    float p = ((int) Math.floor(tickInfo.first / dx)) * dx - tickInfo.first;
+    double p = ((int) Math.floor(tickInfo.first / dx)) * dx - tickInfo.first;
     pointT.scaleAdd2(p / dx, vectorT, tickA);
     p += tickInfo.first;
-    float z = tickAs.z;
+    double z = tickAs.z;
     if (diameter < 0)
       diameter = 1;
     vectorT2.set(-vectorT2.y, vectorT2.x, 0);
     vectorT2.scale(length / vectorT2.length());
-    P3 ptRef = tickInfo.reference; // not implemented
+    P3d ptRef = tickInfo.reference; // not implemented
     if (ptRef == null) {
       pointT3.setT(vwr.getBoundBoxCenter());
       if (vwr.g.axesMode == T.axeswindow) {
@@ -206,8 +206,8 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
       pointT3.setT(ptRef);
     }
     tm.transformPtScr(pointT3, pt2i);
-    //too annoying! float tx = vectorT2.x * ((ptA.screenX + ptB.screenX) / 2 - pt2.x);
-    //float ty = vectorT2.y * ((ptA.screenY + ptB.screenY) / 2 - pt2.y);
+    //too annoying! double tx = vectorT2.x * ((ptA.screenX + ptB.screenX) / 2 - pt2.x);
+    //double ty = vectorT2.y * ((ptA.screenY + ptB.screenY) / 2 - pt2.y);
     //if (tx + ty < -0.1)
       //vectorT2.scale(-1);
     //if (!isOut)
@@ -228,7 +228,7 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
             (x = (int) Math.floor(pointT2.x + vectorT2.x)),
             (y = (int) Math.floor(pointT2.y + vectorT2.y)), (int) z, diameter);
         if (drawLabel && (draw000 || p != 0)) {
-          val[0] = Float.valueOf((p == 0 ? 0 : p * signFactor));
+          val[0] = Double.valueOf((p == 0 ? 0 : p * signFactor));
           String s = PT.sprintf(formats[i % formats.length], "f", val);
           drawString(x, y, (int) z, 4, rightJustify, centerX, centerY,
               (int) Math.floor(pointT2.y), s);
@@ -305,19 +305,19 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
     if (array == null || width < 0)
       return;
     // for sticks and measures
-    float f = array[0];
-    float dx = xB - xA;
-    float dy = yB - yA;
-    float dz = zB - zA;
+    double f = array[0];
+    double dx = xB - xA;
+    double dy = yB - yA;
+    double dz = zB - zA;
     int n = 0;
     boolean isNdots = (array == ndots);
     boolean isDots = (isNdots || array == sixdots);
     if (isDots) {
       if (s1 == null)
         s1 = new P3i();
-      float d2 = (dx * dx + dy * dy)  / (width * width);
+      double d2 = (dx * dx + dy * dy)  / (width * width);
       if (isNdots) {
-        f = (float) (Math.sqrt(d2) / 1.5);
+        f = (Math.sqrt(d2) / 1.5);
         n = (int) f + 2;
       } else if (d2 < 8) {
         array = twodots;

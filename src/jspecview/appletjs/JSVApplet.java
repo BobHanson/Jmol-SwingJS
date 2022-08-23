@@ -579,7 +579,7 @@ public class JSVApplet implements JSVAppletInterface,
 	}
 
 	@Override
-	public boolean setStatusDragDropped(int mode, int x, int y, String fileName) {
+	public boolean setStatusDragDropped(int mode, int x, int y, String fileName, String[] retType) {
 		// TODO Auto-generated method stub
 		return true;
 	}
@@ -638,8 +638,14 @@ public class JSVApplet implements JSVAppletInterface,
 		app.vwr.openFileAsyncSpecial(fileName, flags);
 	}
 
+  @Override
+  public void openFileAsyncSpecialType(String fileName, int flags,
+                                       String type) {
+    openFileAsyncSpecial(fileName, flags);
+  }
+
 	@Override
-	public void processTwoPointGesture(float[][][] touches) {
+	public void processTwoPointGesture(double[][][] touches) {
 		app.vwr.processTwoPointGesture(touches);
 	}
 

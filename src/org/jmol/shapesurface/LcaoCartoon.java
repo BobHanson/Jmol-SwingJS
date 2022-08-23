@@ -29,7 +29,7 @@ package org.jmol.shapesurface;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
-import javajs.util.V3;
+import javajs.util.V3d;
 
 import javajs.util.BS;
 
@@ -56,12 +56,12 @@ public class LcaoCartoon extends Isosurface {
   private String lcaoID;
   private BS thisSet;
   private boolean isMolecular;
-  private V3 rotationAxis;
+  private V3d rotationAxis;
 
   //persistent
-  private Float lcaoScale;
+  private Double lcaoScale;
   private boolean lcaoTranslucent;
-  private float lcaoTranslucentLevel;
+  private double lcaoTranslucentLevel;
   private Integer lcaoColorPos;
   private Integer lcaoColorNeg;
   boolean isLonePair;
@@ -110,12 +110,12 @@ public class LcaoCartoon extends Isosurface {
     }
 
     if ("rotationAxis" == propertyName) {
-      rotationAxis = (V3) value;
+      rotationAxis = (V3d) value;
       return;
     }
 
     if ("scale" == propertyName) {
-      lcaoScale = (Float) value;
+      lcaoScale = (Double) value;
       //pass through
     }
 
@@ -132,7 +132,7 @@ public class LcaoCartoon extends Isosurface {
     }
 
     if ("translucentLevel" == propertyName) {
-      lcaoTranslucentLevel = ((Float) value).floatValue();
+      lcaoTranslucentLevel = ((Double) value).doubleValue();
       //pass through
     }
 
@@ -294,8 +294,8 @@ public class LcaoCartoon extends Isosurface {
       setPropI("cap", cappingObject, null);
     setPropI("lcaoType", thisType, null);
     setPropI("atomIndex", Integer.valueOf(iAtom), null);
-    V3[] axes = { new V3(), new V3(),
-        V3.newV(ms.at[iAtom]), new V3() };
+    V3d[] axes = { new V3d(), new V3d(),
+        V3d.newV(ms.at[iAtom]), new V3d() };
     if (rotationAxis != null)
       axes[3].setT(rotationAxis);
     if (isMolecular) {
@@ -320,7 +320,7 @@ public class LcaoCartoon extends Isosurface {
     if (isCpk) {
       short colix = ms.at[iAtom].colixAtom;
       if (C.isColixTranslucent(colix)) {
-        setPropI("translucentLevel", Float.valueOf(C.getColixTranslucencyLevel(colix)), null);
+        setPropI("translucentLevel", Double.valueOf(C.getColixTranslucencyLevel(colix)), null);
         setPropI("translucency", "translucent", null);
       }
     } else if (lcaoTranslucent)
@@ -342,7 +342,7 @@ public class LcaoCartoon extends Isosurface {
   public String getShapeState() {
     SB sb = new SB();
     if (lcaoScale != null)
-      appendCmd(sb, "lcaoCartoon scale " + lcaoScale.floatValue());
+      appendCmd(sb, "lcaoCartoon scale " + lcaoScale.doubleValue());
     if (lcaoColorNeg != null)
       appendCmd(sb, "lcaoCartoon color "
           + Escape.escapeColor(lcaoColorNeg.intValue()) + " "

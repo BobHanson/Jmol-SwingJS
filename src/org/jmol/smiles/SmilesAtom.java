@@ -34,14 +34,14 @@ import org.jmol.viewer.JC;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.P3;
+import javajs.util.P3d;
 
 //import org.jmol.util.Logger;
 
 /**
  * This class represents an atom in a <code>SmilesMolecule</code>.
  */
-public class SmilesAtom extends P3 implements Node {
+public class SmilesAtom extends P3d implements Node {
 
   //Jmol allows * in SMILES as a wild card
   static final String UNBRACKETED_SET = "B, C, N, O, P, S, F, Cl, Br, I, *,"; 
@@ -189,7 +189,7 @@ public class SmilesAtom extends P3 implements Node {
   private Node matchingNode;
   boolean hasSubpattern;
   int mapIndex = -1; // in  CCC we have atoms 0, 1, and 2
-  float atomClass = Float.NaN; // OpenSMILES atom class is an integer
+  double atomClass = Double.NaN; // OpenSMILES atom class is an integer
   String symbol;
   private boolean isTopoAtom;
   private int missingHydrogenCount;
@@ -777,7 +777,7 @@ public class SmilesAtom extends P3 implements Node {
    * @return label
    */
   static String getAtomLabel(int atomicNumber, int isotopeNumber, int valence,
-                             int charge, float osclass, int nH, boolean isAromatic,
+                             int charge, double osclass, int nH, boolean isAromatic,
                              String stereo, boolean is2D) {
     String sym = Elements.elementSymbolFromNumber(atomicNumber);
     if (atomicNumber == 1 
@@ -786,7 +786,7 @@ public class SmilesAtom extends P3 implements Node {
       valence = Integer.MAX_VALUE;
     }
     boolean simple = (valence != Integer.MAX_VALUE && isotopeNumber <= 0 
-        && charge == 0 && Float.isNaN(osclass) && (stereo == null || stereo.length() == 0)); 
+        && charge == 0 && Double.isNaN(osclass) && (stereo == null || stereo.length() == 0)); 
     int norm = getDefaultCount(atomicNumber, false);
     if (is2D && nH == 0) {
       if (simple && atomicNumber == 6)
@@ -802,7 +802,7 @@ public class SmilesAtom extends P3 implements Node {
         + (nH > 1 ? "H" + nH : nH == 1 ? "H" : "")
         + (charge < 0 && charge != Integer.MIN_VALUE ? "" + charge 
             : charge > 0 ? "+" + charge : "") 
-        + (Float.isNaN(osclass) ? "" : ":" + (int) osclass)
+        + (Double.isNaN(osclass) ? "" : ":" + (int) osclass)
         + "]");
   }
 
@@ -862,14 +862,14 @@ public class SmilesAtom extends P3 implements Node {
   }
 
   @Override
-  public float getFloatProperty(String property) {
+  public double getDoubleProperty(String property) {
     if (property == "property_atomclass") // == is OK here.  
       return atomClass;
-    return Float.NaN;
+    return Double.NaN;
   }
 
   @Override
-  public float getMass() {
+  public double getMass() {
     // TODO
     return atomicMass;
   }
@@ -891,7 +891,7 @@ public class SmilesAtom extends P3 implements Node {
 
 
   @Override
-  public P3 getXYZ() {
+  public P3d getXYZ() {
     return this;
   }
 

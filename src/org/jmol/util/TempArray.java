@@ -25,9 +25,8 @@ package org.jmol.util;
 
 
 import org.jmol.c.STR;
-import org.jmol.script.T;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.P3i;
 
 public class TempArray {
@@ -83,7 +82,7 @@ public class TempArray {
   ////////////////////////////////////////////////////////////////
   private final static int freePointsSize = 6;
   private final int[] lengthsFreePoints = new int[freePointsSize];
-  private final P3[][] freePoints = new P3[freePointsSize][];
+  private final P3d[][] freePoints = new P3d[freePointsSize][];
 
   private void clearTempPoints() {
     for (int i = 0; i < freePointsSize; i++) {
@@ -92,20 +91,20 @@ public class TempArray {
     }
   }
   
-  public P3[] allocTempPoints(int size) {
-    P3[] tempPoints;
+  public P3d[] allocTempPoints(int size) {
+    P3d[] tempPoints;
     int iFit = findBestFit(size, lengthsFreePoints);
     if (iFit > 0) {
       tempPoints = freePoints[iFit];
     } else {
-      tempPoints = new P3[size];
+      tempPoints = new P3d[size];
       for (int i = size; --i >= 0;)
-        tempPoints[i] = new P3();
+        tempPoints[i] = new P3d();
     }
     return tempPoints;
   }
 
-  public void freeTempPoints(P3[] tempPoints) {
+  public void freeTempPoints(P3d[] tempPoints) {
     for (int i = 0; i < freePoints.length; i++)
       if (freePoints[i] == tempPoints) {
         lengthsFreePoints[i] = tempPoints.length;
@@ -183,15 +182,4 @@ public class TempArray {
       freeEnum[iFree] = tempEnum;
   }
 
-
-  // admittedly an odd place for these two; just avoidng making a new class just for them.
-  
-  public static Object[] getSlabWithinRange(float min, float max) {
-    return new Object[] { Integer.valueOf(T.range), 
-        new Float[] {Float.valueOf(min), Float.valueOf(max)}, Boolean.FALSE, null };
-  }
-
-  public static Object[] getSlabObjectType(int tok, Object data, boolean isCap, Object colorData) {
-    return new Object[] { Integer.valueOf(tok), data, Boolean.valueOf(isCap), colorData };
-  }
 }

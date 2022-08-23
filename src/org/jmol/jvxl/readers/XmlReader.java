@@ -27,7 +27,7 @@ package org.jmol.jvxl.readers;
 
 import java.io.BufferedReader;
 
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
@@ -172,12 +172,12 @@ public class XmlReader {
     return (pt1 <= 0 ? "" : data.substring(pt, pt1));
   }
 
-  public P3 getXmlPoint(String data, String key) {
+  public P3d getXmlPoint(String data, String key) {
     String spt = getXmlAttrib(data, key).replace('(', '{').replace(')', '}');
     Object value = Escape.uP(spt);
-    if (value instanceof P3)
-      return (P3) value;
-    return new P3();
+    if (value instanceof P3d)
+      return (P3d) value;
+    return new P3d();
   }
 
   /**

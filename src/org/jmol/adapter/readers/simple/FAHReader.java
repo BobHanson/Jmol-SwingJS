@@ -90,7 +90,7 @@ import javajs.util.PT;
       return true;
     }
   
-    float factor = 1;
+    double factor = 1;
   
     int[] pt = new int[1];
   
@@ -125,7 +125,7 @@ import javajs.util.PT;
         pt[0] = line.indexOf(":");
         units = PT.getQuotedStringNext(line, pt);
         if (units != null && (units.equalsIgnoreCase("NM") || units.toUpperCase().indexOf("NANOMETER") >= 0)) {
-          factor = 0.1f;
+          factor = 0.1d;
         }
         Logger.info("FAHReader units are " + units + " factor = " + factor);
       }
@@ -185,9 +185,9 @@ import javajs.util.PT;
         line = line.trim();
         String[] tokens = line.substring(1, line.length() - 1).split(",");
   
-        float x = parseFloatStr(tokens[0]) * factor;
-        float y = parseFloatStr(tokens[1]) * factor;
-        float z = parseFloatStr(tokens[2]) * factor;
+        double x = parseDoubleStr(tokens[0]) * factor;
+        double y = parseDoubleStr(tokens[1]) * factor;
+        double z = parseDoubleStr(tokens[2]) * factor;
         Atom atom = (iatom >= atomCount ? asc.addAtom(new Atom()) : atoms[iatom]);
         atom.set(x, y, z);
         iatom++;
@@ -213,7 +213,7 @@ import javajs.util.PT;
           }
         }
       }
-      if (d < 0.5f) {
+      if (d < 0.5d) {
         for (int i = asc.ac; --i >= 0;) {
           asc.atoms[i].scale(10);
         }
@@ -229,7 +229,7 @@ import javajs.util.PT;
     }
   
     private void getTopData() {
-      String fileName = FileManager.stripTypePrefix((String) htParams.get("fullPathName"));
+      String fileName = filePath;//FileManager.stripTypePrefix((String) htParams.get("fullPathName"));
       int pt = fileName.lastIndexOf(".");
       if (pt < 0)
         pt = fileName.length();
