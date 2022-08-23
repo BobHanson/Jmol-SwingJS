@@ -3,6 +3,9 @@
  * $Date: 2007-04-05 09:07:28 -0500 (Thu, 05 Apr 2007) $
  * $Revision: 7326 $
  *
+ * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
+ * for use in SwingJS via transpilation into JavaScript using Java2Script.
+ *
  * Copyright (C) 2003-2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -70,7 +73,7 @@ public class Quat {
 
   public static Quat newM(M3d mat) {
     Quat q = new Quat();
-    q.setM(mat.toM3());
+    q.setM(M3d.newM3(mat));
     return q;
   }
 
@@ -161,7 +164,11 @@ public class Quat {
       aa.y = 1;
     setM(new M3().setAA(aa));
   }
-  
+  private void setM(M3d mat) {
+    // temporary only TODO
+    setM(mat.toM3());
+  }
+
   private void setM(M3 mat) {
 
     /*
@@ -343,11 +350,15 @@ public class Quat {
     return getQuaternionFrameV(vA, vB, null, false);
   }
 
-  public static final Quat getQuaternionFramed3d(P3d center, T3d t1,
+  public static final Quat getQuaternionFrame(P3d center, T3d t1,
                                               T3d t2) {
      return getQuaternionFrame(center.asP3(), t1, t2);
   }
 
+  public static final Quat getQuaternionFrame(P3d center, T3 x, T3 xy) {
+    return getQuaternionFrame(center.asP3(), x, xy);
+  }
+  
   public static final Quat getQuaternionFrame(P3 center, T3 x, T3 xy) {
     V3 vA = V3.newV(x);
     V3 vB = V3.newV(xy);
@@ -423,17 +434,11 @@ public class Quat {
 
   private M3d m3d;
   
-  public M3 getMatrix() {
-    if (mat == null) {
+  public M3d getMatrix() {
+    if (mat == null)
       setMatrix();
-      m3d = null;
-    }
-    return mat;
-  }
-
-  public M3d getMatrixd() {
     if (m3d == null)
-      m3d = M3d.newM3(getMatrix());
+      m3d = M3d.newM3(mat);
     return m3d;
   }
 

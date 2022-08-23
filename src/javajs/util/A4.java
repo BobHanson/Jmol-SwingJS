@@ -16,6 +16,12 @@
 */
 package javajs.util;
 
+import java.io.Serializable;
+
+import javajs.api.JSONEncodable;
+
+
+
 /**
  * A 4 element axis angle represented by single precision floating point
  * x,y,z,angle components. An axis angle is a rotation of angle (radians) about
@@ -29,11 +35,26 @@ package javajs.util;
  * for unique constructor and method names
  * for the optimization of compiled JavaScript using Java2Script
  */
-public class A4 extends P3 {
+public class A4 implements JSONEncodable, Serializable {
 
   /*
    * I assumed that the length of the axis vector is not significant.
    */
+
+  /**
+   * The x coordinate.
+   */
+  public float x;
+
+  /**
+   * The y coordinate.
+   */
+  public float y;
+
+  /**
+   * The z coordinate.
+   */
+  public float z;
 
   /**
    * The angle.
@@ -106,7 +127,9 @@ public class A4 extends P3 {
    * @since Java 3D 1.2
    */
   public final void setVA(V3 axis, float angle) {
-    setT(axis);
+    x = axis.x;
+    y = axis.y;
+    z = axis.z;
     this.angle = angle;
   }
 
@@ -123,7 +146,9 @@ public class A4 extends P3 {
    *        the angle
    */
   public final void set4(float x, float y, float z, float angle) {
-    set(x, y ,z);
+    this.x = x;
+    this.y = y;
+    this.z = z;
     this.angle = angle;
   }
 
@@ -134,7 +159,9 @@ public class A4 extends P3 {
    *        the axis angle to be copied
    */
   public final void setAA(A4 a) {
-    setT(a);
+    x = a.x;
+    y = a.y;
+    z = a.z;
     angle = a.angle;
   }
 
@@ -147,11 +174,6 @@ public class A4 extends P3 {
    *        the matrix3f
    */
   public final void setM(M3 m1) {
-    setFromMat(m1.m00, m1.m01, m1.m02, m1.m10, m1.m11, m1.m12, m1.m20, m1.m21,
-        m1.m22);
-  }
-
-  public final void setM(M3d m1) {
     setFromMat(m1.m00, m1.m01, m1.m02, m1.m10, m1.m11, m1.m12, m1.m20, m1.m21,
         m1.m22);
   }
@@ -213,18 +235,18 @@ public class A4 extends P3 {
 
   /**
    * Returns a string that contains the values of this AxisAngle4f. The form is
-   * {x,y,z,angle}.
+   * (x,y,z,angle).
    * 
    * @return the String representation
    */
   @Override
   public String toString() {
-    return "{" + x + ", " + y + ", " + z + ", " + angle + "}";
+    return "(" + x + ", " + y + ", " + z + ", " + angle + ")";
   }
 
   @Override
   public String toJSON() {
-    return "[" + x + "," + y + "," + z + "," + (angle * 180.0 / Math.PI) + "]";
+    return "[" + x + "," + y + "," + z + "," + (float) (angle * 180.0 / Math.PI) + "]";
   }
 
 }
