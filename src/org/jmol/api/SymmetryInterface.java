@@ -263,6 +263,4 @@ public interface SymmetryInterface {
   AtomIndexIterator getIterator(Viewer vwr, Atom atom, BS bstoms, double radius);
 
 
-  void toFractionalF(P3 p, boolean b);
-
 }
