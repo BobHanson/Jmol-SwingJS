@@ -28,9 +28,9 @@ package org.jmol.api;
 import javajs.util.BS;
 
 import javajs.util.Lst;
-import javajs.util.P3;
 import javajs.util.P3d;
-import javajs.util.V3;
+import javajs.util.P3d;
+import javajs.util.V3d;
 
 public interface JmolAdapterAtomIterator {
   
@@ -50,21 +50,19 @@ public interface JmolAdapterAtomIterator {
 
 	abstract public int getFormalCharge();
 
-	abstract public float getPartialCharge();
+	abstract public double getPartialCharge();
 
 	abstract public Lst<Object> getTensors();
 
-	abstract public float getRadius();
+	abstract public double getRadius();
 
-  abstract public V3 getVib();
+  abstract public V3d getVib();
 
-	abstract public P3 getXYZ();
+	abstract public P3d getXYZ();
 
-  abstract public P3d getXYZd();
-
-  abstract public float getBfactor();
+  abstract public double getBfactor();
 	
-	abstract public float getOccupancy();
+	abstract public double getOccupancy();
 
 	abstract public boolean getIsHetero();
 
@@ -82,6 +80,6 @@ public interface JmolAdapterAtomIterator {
 
   abstract public int getSeqID();
 
-  float getBondRadius();
+  double getBondRadius();
 
 }
