@@ -17,14 +17,14 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.A4;
+import javajs.util.A4d;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.OC;
-import javajs.util.P3;
+import javajs.util.P3d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.SB;
 
 public class BioExt {
@@ -60,7 +60,7 @@ public class BioExt {
           ProteinStructure ps;
           ProteinStructure psLast = null;
           int n = 0;
-          P3 ptTemp = new P3();
+          P3d ptTemp = new P3d();
           for (int im = 0; im < bp.monomerCount; im++) {
             if (bs.get(bp.monomers[im].leadAtomIndex)) {
               Map<String, Object> monomerInfo = bp.monomers[im]
@@ -114,7 +114,7 @@ public class BioExt {
     for (int i = ms.mc; --i >= 0;)
       if (ms.am[i].isBioModel) {
         BioModel m = (BioModel) ms.am[i];
-        P3 ptTemp = new P3();
+        P3d ptTemp = new P3d();
         for (int p = 0; p < m.bioPolymerCount; p++)
           getPdbData(m.bioPolymers[p], 'S', qtype, mStep, 2, null, null, false,
               false, false, null, null, null, new BS(), ptTemp);
@@ -128,7 +128,7 @@ public class BioExt {
                           int derivType, BS bsAtoms, BS bsSelected,
                           boolean bothEnds, boolean isDraw, boolean addHeader,
                           LabelToken[] tokens, OC pdbATOM, SB pdbCONECT,
-                          BS bsWritten, P3 ptTemp) {
+                          BS bsWritten, P3d ptTemp) {
     boolean calcRamachandranStraightness = (qtype == 'C' || qtype == 'P');
     boolean isRamachandran = (ctype == 'R'
         || ctype == 'S' && calcRamachandranStraightness);
@@ -208,7 +208,7 @@ public class BioExt {
         pdbATOM.append("  NHX_______ NHY_______ NHZ_______");
       pdbATOM.append("\n\n");
     }
-    float factor = (ctype == 'R' ? 1f : 10f);
+    double factor = (ctype == 'R' ? 1d : 10d);
     bothEnds = false;//&= !isDraw && !isRamachandran;
     for (int j = 0; j < (bothEnds ? 2 : 1); j++, factor *= -1)
       for (int i = 0; i < (mStep < 1 ? 1 : mStep); i++)
@@ -253,23 +253,23 @@ public class BioExt {
                        boolean calcRamachandranStraightness,
                        boolean useQuaternionStraightness,
                        boolean writeRamachandranStraightness,
-                       boolean quaternionStraightness, float factor,
+                       boolean quaternionStraightness, double factor,
                        boolean isAmino, boolean isRelativeAlias,
                        LabelToken[] tokens, OC pdbATOM, SB pdbCONECT,
-                       BS bsWritten, P3 ptTemp) {
+                       BS bsWritten, P3d ptTemp) {
     String prefix = (derivType > 0 ? "dq" + (derivType == 2 ? "2" : "") : "q");
-    Quat q;
+    Qd q;
     Atom aprev = null;
-    Quat qprev = null;
-    Quat dq = null;
-    Quat dqprev = null;
-    Quat qref = null;
+    Qd qprev = null;
+    Qd dq = null;
+    Qd dqprev = null;
+    Qd qref = null;
     Atom atomLast = null;
-    float x = 0, y = 0, z = 0, w = 0;
+    double x = 0, y = 0, z = 0, w = 0;
     String strExtra = "";
-    float val1 = Float.NaN;
-    float val2 = Float.NaN;
-    P3 pt = (isDraw ? new P3() : null);
+    double val1 = Double.NaN;
+    double val2 = Double.NaN;
+    P3d pt = (isDraw ? new P3d() : null);
 
     int dm = (mStep <= 1 ? 1 : mStep);
     for (int m = m0; m < p.monomerCount; m += dm) {
@@ -279,25 +279,25 @@ public class BioExt {
         String id = monomer.getUniqueID();
         if (isRamachandran) {
           if (ctype == 'S')
-            monomer.setGroupParameter(T.straightness, Float.NaN);
+            monomer.setGroupParameter(T.straightness, Double.NaN);
           x = monomer.getGroupParameter(T.phi);
           y = monomer.getGroupParameter(T.psi);
           z = monomer.getGroupParameter(T.omega);
           if (z < -90)
             z += 360;
           z -= 180; // center on 0
-          if (Float.isNaN(x) || Float.isNaN(y) || Float.isNaN(z)) {
+          if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)) {
             if (bsAtoms != null)
               bsAtoms.clear(a.i);
             continue;
           }
-          float angledeg = (writeRamachandranStraightness
+          double angledeg = (writeRamachandranStraightness
               ? p.calculateRamachandranHelixAngle(m, qtype)
               : 0);
-          float straightness = (calcRamachandranStraightness
+          double straightness = (calcRamachandranStraightness
               || writeRamachandranStraightness
                   ? getStraightness(
-                      (float) Math.cos(angledeg / 2 / 180 * Math.PI))
+                      Math.cos(angledeg / 2 / 180 * Math.PI))
                   : 0);
           if (ctype == 'S') {
             monomer.setGroupParameter(T.straightness, straightness);
@@ -312,14 +312,14 @@ public class BioExt {
             // standard dihedral/Jmol definitions for anticlockwise positive
             // angles
             AminoMonomer aa = (AminoMonomer) monomer;
-            pt.set(-x, x, 0.5f);
+            pt.set(-x, x, 0.5d);
             pdbATOM.append("draw ID \"phi").append(id).append("\" ARROW ARC ")
                 .append(Escape.eP(aa.getNitrogenAtom())).append(Escape.eP(a))
                 .append(Escape.eP(aa.getCarbonylCarbonAtom()))
                 .append(Escape.eP(pt)).append(" \"phi = ")
                 .append(String.valueOf(Math.round(x))).append("\" color ")
                 .append(qColor[2]).append("\n");
-            pt.set(0, y, 0.5f);
+            pt.set(0, y, 0.5d);
             pdbATOM.append("draw ID \"psi").append(id).append("\" ARROW ARC ")
                 .append(Escape.eP(a))
                 .append(Escape.eP(aa.getCarbonylCarbonAtom()))
@@ -343,12 +343,12 @@ public class BioExt {
                 .append(" color ").append(qColor[2]).append("\n");
             continue;
           }
-          if (Float.isNaN(angledeg)) {
+          if (Double.isNaN(angledeg)) {
             strExtra = "";
             if (writeRamachandranStraightness)
               continue;
           } else {
-            q = Quat.newVA(P3.new3(1, 0, 0), angledeg);
+            q = Qd.newVA(P3d.new3(1, 0, 0), angledeg);
             strExtra = getQInfo(q);
             if (writeRamachandranStraightness) {
               z = angledeg;
@@ -363,16 +363,16 @@ public class BioExt {
           q = monomer.getQuaternion(qtype);
           if (q != null) {
             q.setRef(qref);
-            qref = Quat.newQ(q);
+            qref = Qd.newQ(q);
           }
           if (derivType == 2)
-            monomer.setGroupParameter(T.straightness, Float.NaN);
+            monomer.setGroupParameter(T.straightness, Double.NaN);
           if (q == null) {
             qprev = null;
             qref = null;
           } else if (derivType > 0) {
             Atom anext = a;
-            Quat qnext = q;
+            Qd qnext = q;
             if (qprev == null) {
               q = null;
               dqprev = null;
@@ -499,17 +499,17 @@ public class BioExt {
             w = q.q1;
             break;
           }
-          P3 ptCenter = monomer.getQuaternionFrameCenter(qtype);
+          P3d ptCenter = monomer.getQuaternionFrameCenter(qtype);
           if (ptCenter == null)
-            ptCenter = new P3();
+            ptCenter = new P3d();
           if (isDraw) {
             if (bsSelected != null && !bsSelected.get(a.getIndex()))
               continue;
             int deg = (int) Math.floor(Math.acos(w) * 360 / Math.PI);
             if (derivType == 0) {
-              pdbATOM.append(Escape.drawQuat(q, prefix, id, ptCenter, 1f));
+              pdbATOM.append(Escape.drawQuat(q, prefix, id, ptCenter, 1d));
               if (qtype == 'n' && isAmino) {
-                P3 ptH = ((AminoMonomer) monomer).getNitrogenHydrogenPoint();
+                P3d ptH = ((AminoMonomer) monomer).getNitrogenHydrogenPoint();
                 if (ptH != null)
                   pdbATOM.append("draw ID \"").append(prefix).append("nh")
                       .append(id).append("\" width 0.1 ").append(Escape.eP(ptH))
@@ -535,9 +535,9 @@ public class BioExt {
           if (qtype == 'n' && isAmino) {
             strExtra += PT.sprintf("  %10.5p %10.5p %10.5p", "p", new Object[] {
                 ((AminoMonomer) monomer).getNitrogenHydrogenPoint() });
-          } else if (derivType == 2 && !Float.isNaN(val1)) {
+          } else if (derivType == 2 && !Double.isNaN(val1)) {
             strExtra += PT.sprintf(" %10.5f %10.5f", "F",
-                new Object[] { new float[] { val1, val2 } });
+                new Object[] { new double[] { val1, val2 } });
           }
         }
         if (pdbATOM == null)// || bsSelected != null && !bsSelected.get(a.getIndex()))
@@ -548,7 +548,7 @@ public class BioExt {
         pdbATOM.append(
             PT.sprintf("%8.2f%8.2f%8.2f      %6.3f          %2s    %s\n", "ssF",
                 new Object[] { a.getElementSymbolIso(false).toUpperCase(),
-                    strExtra, new float[] { x * factor, y * factor, z * factor,
+                    strExtra, new double[] { x * factor, y * factor, z * factor,
                         w * factor } }));
         if (atomLast != null
             && atomLast.group.getBioPolymerIndexInModel() == a.group
@@ -563,18 +563,18 @@ public class BioExt {
     }
   }
 
-  private static String getQInfo(Quat q) {
-    A4 axis = q.toAxisAngle4f();
+  private static String getQInfo(Qd q) {
+    A4d axis = q.toA4d();
     return PT.sprintf("%10.6f%10.6f%10.6f%10.6f  %6.2f  %10.5f %10.5f %10.5f",
-        "F", new Object[] { new float[] { q.q0, q.q1, q.q2, q.q3,
-            (float) (axis.angle * 180 / Math.PI), axis.x, axis.y, axis.z } });
+        "F", new Object[] { new double[] { q.q0, q.q1, q.q2, q.q3,
+            (axis.angle * 180 / Math.PI), axis.x, axis.y, axis.z } });
   }
 
-  static String drawQuat(Quat q, String prefix, String id, P3 ptCenter,
-                         float scale) {
+  static String drawQuat(Qd q, String prefix, String id, P3d ptCenter,
+                         double scale) {
     String strV = " VECTOR " + Escape.eP(ptCenter) + " ";
     if (scale == 0)
-      scale = 1f;
+      scale = 1d;
     return "draw " + prefix + "x" + id + strV
         + Escape.eP(q.getVectorScaled(0, scale)) + " color red\n" + "draw "
         + prefix + "y" + id + strV + Escape.eP(q.getVectorScaled(1, scale))
@@ -592,7 +592,7 @@ public class BioExt {
    * @return calculated straightness
    * 
    */
-  private static float get3DStraightness(String id, Quat dq, Quat dqnext) {
+  private static double get3DStraightness(String id, Qd dq, Qd dqnext) {
     // 
     // Normal-only simple dot-product straightness = dq1.normal.DOT.dq2.normal
     //
@@ -607,8 +607,8 @@ public class BioExt {
    * @param dqnext
    * @return straightness
    */
-  private static float getQuaternionStraightness(String id, Quat dq,
-                                                 Quat dqnext) {
+  private static double getQuaternionStraightness(String id, Qd dq,
+                                                 Qd dqnext) {
     // 
     // Dan Kohler's quaternion straightness = 1 - acos(|dq1.dq2|)/(PI/2)
     //
@@ -618,8 +618,8 @@ public class BioExt {
     return getStraightness(dq.dot(dqnext));
   }
 
-  private static float getStraightness(float cosHalfTheta) {
-    return (float) (1 - 2 * Math.acos(Math.abs(cosHalfTheta)) / Math.PI);
+  private static double getStraightness(double cosHalfTheta) {
+    return (1 - 2 * Math.acos(Math.abs(cosHalfTheta)) / Math.PI);
   }
 
   void getPdbDataM(BioModel m, Viewer vwr, String type, char ctype,
@@ -652,7 +652,7 @@ public class BioExt {
             + "unScaledXyz = xyz * {0.1 0.1 0.1} + {0 0 0} plotScale = {100 100 100}\n");
     }
 
-    P3 ptTemp = new P3();
+    P3d ptTemp = new P3d();
     for (int p = 0; p < m.bioPolymerCount; p++)
       getPdbData(m.bioPolymers[p], ctype, qtype, mStep, derivType, m.bsAtoms,
           bsSelected, bothEnds, isDraw, p == 0, tokens, out, pdbCONECT,
@@ -668,8 +668,8 @@ public class BioExt {
   int calculateAllstruts(Viewer vwr, ModelSet ms, BS bs1, BS bs2) {
     vwr.setModelVisibility();
     // select only ONE model
-    ms.makeConnections2(0, Float.MAX_VALUE, Edge.BOND_STRUT, T.delete, bs1, bs2,
-        null, false, false, 0);
+    ms.makeConnections2(0, Double.MAX_VALUE, Edge.BOND_STRUT, T.delete, bs1, bs2,
+        null, false, false, 0, null);
     int iAtom = bs1.nextSetBit(0);
     if (iAtom < 0)
       return 0;
@@ -697,9 +697,9 @@ public class BioExt {
     if (vCA.size() == 0)
       return 0;
     Lst<Atom[]> struts = calculateStruts(ms, bs1, bs2, vCA,
-        vwr.getFloat(T.strutlengthmaximum), vwr.getInt(T.strutspacing),
+        vwr.getDouble(T.strutlengthmaximum), vwr.getInt(T.strutspacing),
         vwr.getBoolean(T.strutsmultiple));
-    short mad = (short) (vwr.getFloat(T.strutdefaultradius) * 2000);
+    short mad = (short) (vwr.getDouble(T.strutdefaultradius) * 2000);
     for (int i = 0; i < struts.size(); i++) {
       Atom[] o = struts.get(i);
       ms.bondAtoms(o[0], o[1], Edge.BOND_STRUT, mad, null, 0, false, true);
@@ -753,10 +753,10 @@ public class BioExt {
    * 
    */
   private static Lst<Atom[]> calculateStruts(ModelSet modelSet, BS bs1, BS bs2,
-                                             Lst<Atom> vCA, float thresh,
+                                             Lst<Atom> vCA, double thresh,
                                              int delta, boolean allowMultiple) {
     Lst<Atom[]> vStruts = new Lst<Atom[]>(); // the output vector
-    float thresh2 = thresh * thresh; // use distance squared for speed
+    double thresh2 = thresh * thresh; // use distance squared for speed
 
     int n = vCA.size(); // the set of alpha carbons
     int nEndMin = 3;
@@ -795,7 +795,7 @@ public class BioExt {
     //
     // ipt = i * (2 * n - i - 1) / 2 + j - i - 1
 
-    float[] d2 = new float[n * (n - 1) / 2];
+    double[] d2 = new double[n * (n - 1) / 2];
     for (int i = 0; i < n; i++) {
       a1 = vCA.get(i);
       for (int j = i + 1; j < n; j++) {
@@ -807,7 +807,7 @@ public class BioExt {
         int polymerIndex2 = a2.group.getBioPolymerIndexInModel();
         if (polymerIndex1 == polymerIndex2 && Math.abs(resno2 - resno1) < delta)
           bsNearbyResidues.set(ipt);
-        float d = d2[ipt] = a1.distanceSquared(a2);
+        double d = d2[ipt] = a1.distanceSquared(a2);
         if (d >= thresh2)
           bsNotAvailable.set(ipt);
       }
@@ -856,8 +856,8 @@ public class BioExt {
       int jN = 0;
       int iC = 0;
       int jC = 0;
-      float minN = Float.MAX_VALUE;
-      float minC = Float.MAX_VALUE;
+      double minN = Double.MAX_VALUE;
+      double minC = Double.MAX_VALUE;
       for (int j = 0; j < n; j++)
         for (int k = 0; k < nEndMin * 2; k++) {
           int i = biopolymerStartsEnds[b][k] - 1;
@@ -937,7 +937,7 @@ public class BioExt {
    * @return true if even partially successful
    */
   boolean mutate(Viewer vwr, BS bs, String group, String[] sequence,
-                 String helixType, float[] phipsi) {
+                 String helixType, double[] phipsi) {
     boolean addH = vwr.getBoolean(T.pdbaddhydrogens);
     if (sequence == null)
       return mutateAtom(vwr, bs.nextSetBit(0), group, addH);
@@ -1103,7 +1103,7 @@ public class BioExt {
    * @param phipsi 
    * @param isTurn 
    */
-  private static void createHelix(Viewer vwr, int nRes, int[] gly, float[] phipsi, boolean isTurn) {
+  private static void createHelix(Viewer vwr, int nRes, int[] gly, double[] phipsi, boolean isTurn) {
     String script = PT.rep(PT.rep(PT.rep(PT.rep(helixScript, 
         "$NRES", "" + nRes), 
         "$PHIPSI", PT.toJSON(null, phipsi)), 
@@ -1124,29 +1124,29 @@ public class BioExt {
   // unfortunately, I did not record the sources for these.
   
   final static Object[] alphaTypes = { 
-      "alpha", new float[] { -65, -40 },
-      "3-10", new float[] { -74, -4 }, 
-      "pi", new float[] { -57.1F, -69.7F },
-      "alpha-l", new float[] { 57.1F, 4 }, 
-      "helix-ii", new float[] { -79, 150 },
-      "collagen", new float[] { -51, 153 }, 
-      "beta", new float[] { -140, 130 }, // http://www.cryst.bbk.ac.uk/PPS95/course/9_quaternary/3_geometry/torsion.html
-      "beta-120", new float[] { -120, 120 }, 
-      "beta-135", new float[] { -135, 135 }, 
-      "extended", new float[] { 180, 180 }, 
-      "turn-i", new float[] { -60, -30, -90, 0 }, 
-      "turn-ii", new float[] { -60, 120, 80, 0 }, 
-      "turn-iii", new float[] { -60, -30, -60, -30 }, 
-      "turn-i'", new float[] { 60, 30, 90, 0 }, 
-      "turn-ii'", new float[] { 60, -120, -80, 0 }, 
-      "turn-iii'", new float[] { 60, 30, 60, 30 }
+      "alpha", new double[] { -65, -40 },
+      "3-10", new double[] { -74, -4 }, 
+      "pi", new double[] { -57.1F, -69.7F },
+      "alpha-l", new double[] { 57.1F, 4 }, 
+      "helix-ii", new double[] { -79, 150 },
+      "collagen", new double[] { -51, 153 }, 
+      "beta", new double[] { -140, 130 }, // http://www.cryst.bbk.ac.uk/PPS95/course/9_quaternary/3_geometry/torsion.html
+      "beta-120", new double[] { -120, 120 }, 
+      "beta-135", new double[] { -135, 135 }, 
+      "extended", new double[] { 180, 180 }, 
+      "turn-i", new double[] { -60, -30, -90, 0 }, 
+      "turn-ii", new double[] { -60, 120, 80, 0 }, 
+      "turn-iii", new double[] { -60, -30, -60, -30 }, 
+      "turn-i'", new double[] { 60, 30, 90, 0 }, 
+      "turn-ii'", new double[] { 60, -120, -80, 0 }, 
+      "turn-iii'", new double[] { 60, 30, 60, 30 }
   };
 
-  public float[] getPhiPsiForHelixType(String t) {
+  public double[] getPhiPsiForHelixType(String t) {
     t = t.toLowerCase().trim().replace(' ', '-');
     for (int i = alphaTypes.length - 2; i >= 0; i -= 2) {
       if (t.equals(alphaTypes[i]))
-        return (float[]) alphaTypes[i + 1];
+        return (double[]) alphaTypes[i + 1];
     }
     return null;
   }
@@ -1275,7 +1275,7 @@ public class BioExt {
     //res1.chain.model.freeze();
     //ms.recalculatePolymers(bsExclude);      
     //} catch (Exception e) {
-    // System.out.println("" + e);
+    //System.out.println("" + e);
     // }
     vwr.fm.setFileInfo(info);
     return true;
@@ -1323,13 +1323,13 @@ public class BioExt {
     switch (a.getBondCount() * 10 + a.getCovalentHydrogenCount()) {
       case 32: // terminal
         a.setFormalCharge(1);
-        P3[] p = vwr.getAdditionalHydrogens(BSUtil.newAndSetBit(a.i), null,
+        P3d[] p = vwr.getAdditionalHydrogens(BSUtil.newAndSetBit(a.i), null,
             AtomCollection.CALC_H_ALLOW_H);
         if (p.length == 1) {
           Lst<Atom> vConnections = new Lst<Atom>();
           vConnections.add(a);
           Atom b = vwr.ms.addAtom(a.mi, a.group, 1, "H3", null, 0, a.getSeqID(), 0, p[0],
-              null, Float.NaN, null, 0, 0, 1, 0, null, a.isHetero(), (byte) 0, null, Float.NaN);
+              null, Double.NaN, null, 0, 0, 1, 0, null, a.isHetero(), (byte) 0, null, Double.NaN);
           vwr.ms.bondAtoms(a, b, Edge.BOND_COVALENT_SINGLE, 
               vwr.ms.getDefaultMadFromOrder(Edge.BOND_COVALENT_SINGLE), null, 0, true, false);
           b.setMadAtom(vwr,  vwr.rd);

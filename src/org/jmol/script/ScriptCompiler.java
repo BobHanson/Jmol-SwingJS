@@ -1023,6 +1023,10 @@ public class ScriptCompiler extends ScriptTokenParser {
 
   private int getPrefixToken() {
     ident = script.substring(ichToken, ichToken + cchToken);
+    if (ident.equals("NaN")) {
+      addTokenToPrefix(SV.vNaN);
+      return T.decimal;
+    }
     identLC = ident.toLowerCase();
     boolean isUserVar = lastToken.tok != T.per && !isDotDot
         && isContextVariable(identLC);
@@ -1249,6 +1253,7 @@ public class ScriptCompiler extends ScriptTokenParser {
               //$FALL-THROUGH$
             case T.data:
             case T.file:
+            case T.spacegroup:
             case T.inline:
             case T.model:
             case T.smiles:
@@ -1355,15 +1360,13 @@ public class ScriptCompiler extends ScriptTokenParser {
           T.o(T.identifier, script.substring(ichToken, ichToken + cchToken)));
       return CONTINUE;
     }
-    Number value;
-    if ((value = lookingAtExponential()) != null) {
+    Number value = lookingAtExponential();
+    if (value != null) {
       addNumber(T.decimal, Integer.MAX_VALUE, value);
       return CONTINUE;
     }
     if (lookingAtDecimal()) {
-      String s = script.substring(ichToken, ichToken + cchToken);
-      boolean isDouble = (cchToken > 10);
-      value = Double.valueOf(isDouble ? Double.parseDouble(s) : Float.parseFloat(s));
+      value = Double.valueOf(script.substring(ichToken, ichToken + cchToken));
       int intValue = (ScriptParam
           .getFloatEncodedInt(script.substring(ichToken, ichToken + cchToken)));
       addNumber(T.decimal, intValue, value);
@@ -1460,6 +1463,9 @@ public class ScriptCompiler extends ScriptTokenParser {
   private int parseKnownToken() {
 
     int tok = getPrefixToken();
+    // check for "NaN" same as NaN
+    if (tok == T.decimal)
+      return CONTINUE;
 
     // specific token-based issues depend upon where we are in the command
 

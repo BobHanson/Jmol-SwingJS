@@ -42,17 +42,17 @@ import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.Base64;
 import javajs.util.Lst;
-import javajs.util.M3;
-import javajs.util.M34;
-import javajs.util.M4;
-import javajs.util.Measure;
-import javajs.util.P3;
-import javajs.util.P4;
+import javajs.util.M34d;
+import javajs.util.M3d;
+import javajs.util.M4d;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Quat;
+import javajs.util.Qd;
 import javajs.util.SB;
-import javajs.util.T3;
-import javajs.util.V3;
+import javajs.util.T3d;
+import javajs.util.V3d;
 
 
 /**
@@ -63,7 +63,8 @@ public class SV extends T implements JSONEncodable {
 
   public final static SV vT = newSV(on, 1, "true");
   public final static SV vF = newSV(off, 0, "false");
-
+  public final static SV vNaN = newSV(decimal, Integer.MAX_VALUE, Double.valueOf(Double.NaN));
+  
   public int index = Integer.MAX_VALUE;    
 
   public String myName;
@@ -82,14 +83,16 @@ public class SV extends T implements JSONEncodable {
     return sv;
   }
   
-  public static SV newF(float f) {
-    SV sv = new SV();
-    sv.tok = decimal;
-    sv.value = Float.valueOf(f);
-    return sv;
-  }
+//  public static SV newF(float f) {
+//    SV sv = new SV();
+//    sv.tok = decimal;
+//    sv.value = Double.valueOf(f);
+//    return sv;
+//  }
   
   public static SV newD(double d) {
+    if (d != d)
+      return vNaN;
     SV sv = new SV();
     sv.tok = decimal;
     sv.value = Double.valueOf(d);
@@ -175,13 +178,13 @@ public class SV extends T implements JSONEncodable {
     return (x instanceof SV
         || x instanceof Boolean
         || x instanceof Integer
-        || x instanceof Float
+        || x instanceof Double
         || x instanceof String
-        || x instanceof T3    // stored as point3f
+        || x instanceof T3d    // stored as point3f
         || x instanceof BS
-        || x instanceof P4    // stored as point4f
-        || x instanceof Quat // stored as point4f
-        || x instanceof M34
+        || x instanceof P4d    // stored as point4f
+        || x instanceof Qd // stored as point4f
+        || x instanceof M34d
         || x instanceof Map<?, ?>  // stored as Map<String, ScriptVariable>
         || x instanceof Lst<?>
         || x instanceof BArray
@@ -207,15 +210,13 @@ public class SV extends T implements JSONEncodable {
        return x instanceof SV[] 
            || x instanceof int[] 
            || x instanceof byte[] 
-           || x instanceof float[]
            || x instanceof double[] 
            || x instanceof String[]
-           || x instanceof T3[]
+           || x instanceof T3d[]
            || x instanceof int[][] 
-           || x instanceof float[][] 
            || x instanceof String[][] 
            || x instanceof double[][] 
-           || x instanceof Float[]
+           || x instanceof Double[]
            || x instanceof Object[];
     }
   }
@@ -243,8 +244,8 @@ public class SV extends T implements JSONEncodable {
       return getBoolean(((Boolean) x).booleanValue());
     if (x instanceof Integer)
       return newI(((Integer) x).intValue());
-    if (x instanceof Float)
-      return newV(decimal, x);
+//    if (x instanceof Float)
+//      return newV(decimal, x);
     if (x instanceof Double)
       return newV(decimal, x);
     if (x instanceof String) {
@@ -253,13 +254,13 @@ public class SV extends T implements JSONEncodable {
         return (SV) x;
       return newV(string, x);
     }
-    if (x instanceof P3)
+    if (x instanceof P3d)
       return newV(point3f, x);
-    if (x instanceof V3) // point3f is not mutable anyway
-      return newV(point3f, P3.newP((V3) x));
+    if (x instanceof V3d) // point3f is not mutable anyway
+      return newV(point3f, P3d.newP((V3d) x));
     if (x instanceof BS)
       return newV(bitset, x);
-    if (x instanceof P4)
+    if (x instanceof P4d)
       return newV(point4f, x);
     // note: for quaternions, we save them {q1, q2, q3, q0} 
     // While this may seem odd, it is so that for any point4 -- 
@@ -267,10 +268,12 @@ public class SV extends T implements JSONEncodable {
     // first three coordinates to determine the relavent axis
     // the fourth then gives us offset to {0,0,0} (plane), 
     // rotation angle (axisangle), and cos(theta/2) (quaternion).
-    if (x instanceof Quat)
-      return newV(point4f, ((Quat) x).toPoint4f());
-    if (x instanceof M34)
-      return newV(x instanceof M4 ? matrix4f : matrix3f, x);
+    if (x instanceof Qd)
+      return newV(point4f, ((Qd) x).toP4d());
+    if (x instanceof M34d)
+      return newV(x instanceof M4d ? matrix4f : matrix3f, x);
+    if (x instanceof M34d)
+      return newV(x instanceof M4d ? matrix4f : matrix3f, x);
     if (x instanceof Map)
       return getVariableMap((Map<String, ?>)x);
     if (x instanceof Lst)
@@ -287,8 +290,8 @@ public class SV extends T implements JSONEncodable {
       return getVariableAI((int[]) x);
     if (AU.isAB(x))
       return getVariableAB((byte[]) x);
-    if (AU.isAF(x))
-      return getVariableAF((float[]) x);
+//    if (AU.isAF(x))
+//      return getVariableAF((float[]) x);
     if (AU.isAD(x))
       return getVariableAD((double[]) x);
     if (AU.isAS(x))
@@ -296,16 +299,16 @@ public class SV extends T implements JSONEncodable {
     //NOTE: isAP(x) does not return TRUE for Atom[] in JavaScript
     // only occurrence of this was for Polyhedron.getInfo()
     if (AU.isAP(x))
-      return getVariableAP((T3[]) x);
+      return getVariableAP((T3d[]) x);
     if (AU.isAII(x))
       return getVariableAII((int[][]) x);
-    if (AU.isAFF(x))
-      return getVariableAFF((float[][]) x);
+//    if (AU.isAFF(x))
+//      return getVariableAFF((float[][]) x);
     if (AU.isASS(x))
       return getVariableASS((String[][]) x);
     if (AU.isADD(x))
       return getVariableADD((double[][]) x);
-    if (AU.isAFloat(x))
+    if (AU.isADouble(x))
       return newV(listf, x);
     return newJSVar(x);
   }
@@ -362,7 +365,7 @@ public class SV extends T implements JSONEncodable {
       return (itest ? vT : vF);
     case 1:
       return (inum > Integer.MAX_VALUE || inum != Math.floor(inum)
-          ? SV.newF(inum) : newI((int) inum));
+          ? SV.newD(inum) : newI((int) inum));
     case 2:
       Lst<SV> v = new javajs.util.Lst<SV>();
       for (int i = 0, n = array.length; i < n; i++)
@@ -442,7 +445,7 @@ public class SV extends T implements JSONEncodable {
     return newV(varray, objects);
   }
 
-  static SV getVariableAP(T3[] p) {
+  static SV getVariableAP(T3d[] p) {
     Lst<SV> objects = new  Lst<SV>();
     for (int i = 0; i < p.length; i++)
       objects.addLast(newV(point3f, p[i]));
@@ -480,7 +483,7 @@ public class SV extends T implements JSONEncodable {
   static SV getVariableAF(float[] f) {
     Lst<SV> objects = new  Lst<SV>();
     for (int i = 0; i < f.length; i++)
-      objects.addLast(newV(decimal, Float.valueOf(f[i])));
+      objects.addLast(newV(decimal, Double.valueOf(f[i])));
     return newV(varray, objects);
   }
 
@@ -520,7 +523,7 @@ public class SV extends T implements JSONEncodable {
       intValue += n;
       return true;
     case decimal:
-      value = Float.valueOf(((Number) value).floatValue() + n);
+      value = Double.valueOf(((Number) value).doubleValue() + n);
       return true;
     default:
       return false;
@@ -535,9 +538,10 @@ public class SV extends T implements JSONEncodable {
     return iValue(this);
   }
 
-  public float asFloat() {
-    return fValue(this);
+  public double asDouble() {
+    return dValue(this);
   }
+
 
   public String asString() {
     return sValue(this);
@@ -545,7 +549,7 @@ public class SV extends T implements JSONEncodable {
 
   // math-related Token static methods
 
-  final static P3 pt0 = new P3();
+  final static P3d pt0 = new P3d();
 
   /**
    * 
@@ -589,11 +593,11 @@ public class SV extends T implements JSONEncodable {
       break;
     case string:
       if (((String) x.value).indexOf(".") >= 0)
-        return Float.valueOf(toFloat((String) x.value));
-      iValue = (int) toFloat((String) x.value);
+        return Double.valueOf(toDouble((String) x.value));
+      iValue = (int) toDouble((String) x.value);
       break;
     case point3f:
-      return Float.valueOf(((T3) x.value).length());
+      return Double.valueOf(((T3d) x.value).length());
     default:
       iValue = 0;
     }
@@ -615,7 +619,7 @@ public class SV extends T implements JSONEncodable {
     case decimal:
     case string:
     case varray:
-      return fValue(x) != 0;
+      return dValue(x) != 0;
     case bitset:
     case barray:
       return iValue(x) != 0;
@@ -623,7 +627,7 @@ public class SV extends T implements JSONEncodable {
     case point4f:
     case matrix3f:
     case matrix4f:
-      return Math.abs(fValue(x)) > 0.0001f;
+      return Math.abs(dValue(x)) > 0.0001f;
     case hash:
       return !((SV) x).getMap().isEmpty();
     default:
@@ -647,7 +651,7 @@ public class SV extends T implements JSONEncodable {
     case matrix3f:
     case matrix4f:
     case quaternion:
-      return (int) fValue(x);
+      return (int) dValue(x);
     case bitset:
       return bsSelectToken(x).cardinality();
     case barray:
@@ -659,17 +663,6 @@ public class SV extends T implements JSONEncodable {
 
   public static double dValue(T x) {
     switch (x == null ? nada : x.tok) {
-    default:
-      return fValue(x);
-    case decimal:
-      return ((Number) x.value).doubleValue();
-    case string:
-      return toDouble(sValue(x));
-    }
-  }
-
-  public static float fValue(T x) {
-    switch (x == null ? nada : x.tok) {
     case on:
       return 1;
     case off:
@@ -677,28 +670,28 @@ public class SV extends T implements JSONEncodable {
     case integer:
       return x.intValue;
     case decimal:
-      return ((Number) x.value).floatValue();
+      return ((Number) x.value).doubleValue();
     case varray:
       int i = x.intValue;
       if (i == Integer.MAX_VALUE)
         return ((SV)x).getList().size();
       //$FALL-THROUGH$
     case string:
-      return toFloat(sValue(x));
+      return toDouble(sValue(x));
     case bitset:
     case barray:
       return iValue(x);
     case point3f:
-      return ((P3) x.value).length();
+      return ((P3d) x.value).length();
     case point4f:
-      return Measure.distanceToPlane((P4) x.value, pt0);
+      return MeasureD.distanceToPlane((P4d) x.value, pt0);
     case matrix3f:
-      P3 pt = new P3();
-      ((M3) x.value).rotate(pt);
+      P3d pt = new P3d();
+      ((M3d) x.value).rotate(pt);
       return pt.length();
     case matrix4f:
-      P3 pt1 = new P3();
-      ((M4) x.value).rotTrans(pt1);
+      P3d pt1 = new P3d();
+      ((M4d) x.value).rotTrans(pt1);
       return pt1.length();
     default:
       return 0;
@@ -746,9 +739,9 @@ public class SV extends T implements JSONEncodable {
         return "";
       return "" + s.charAt(i - 1);
     case point3f:
-      return Escape.eP((T3) x.value);
+      return Escape.eP((T3d) x.value);
     case point4f:
-      return Escape.eP4((P4) x.value);
+      return Escape.eP4((P4d) x.value);
     case matrix3f:
     case matrix4f:
       return Escape.e(x.value);
@@ -873,35 +866,29 @@ public class SV extends T implements JSONEncodable {
     return false;
   }
 
-  public static P3 ptValue(SV x) {
+  public static P3d ptValue(SV x) {
     switch (x.tok) {
     case point3f:
-      return (P3) x.value;
+      return (P3d) x.value;
     case string:
       Object o = Escape.uP((String) x.value);
-      if (o instanceof P3)
-        return (P3) o;
+      if (o instanceof P3d)
+        return (P3d) o;
     }
     return null;
   }  
 
-  public static P4 pt4Value(SV x) {
+  public static P4d pt4Value(SV x) {
     switch (x.tok) {
     case point4f:
-      return (P4) x.value;
+      return (P4d) x.value;
     case string:
       Object o = Escape.uP((String) x.value);
-      if (!(o instanceof P4))
+      if (!(o instanceof P4d))
         break;
-      return (P4) o;
+      return (P4d) o;
     }
     return null;
-  }
-
-  private static float toFloat(String s) {
-    return (s.equalsIgnoreCase("true") ? 1 
-        : s.length() == 0 || s.equalsIgnoreCase("false") ? 0 
-        : PT.parseFloatStrict(PT.trim(s," \t\n")));
   }
 
   private static double toDouble(String s) {
@@ -1026,32 +1013,32 @@ public class SV extends T implements JSONEncodable {
         int row = (i1 - col) / 10;
         if (col > 0 && col <= len && row <= len) {
           if (tokenIn.tok == matrix3f)
-            return newV(decimal, Float.valueOf(((M3) tokenIn.value).getElement(
+            return newV(decimal, Double.valueOf(((M3d) tokenIn.value).getElement(
                 row - 1, col - 1)));
           return newV(decimal,
-              Float.valueOf(((M4) tokenIn.value).getElement(row - 1, col - 1)));
+              Double.valueOf(((M4d) tokenIn.value).getElement(row - 1, col - 1)));
         }
         return newV(string, "");
       }
       if (Math.abs(i1) > len)
         return newV(string, "");
-      float[] data = new float[len];
+      double[] data = new double[len];
       if (len == 3) {
         if (i1 < 0)
-          ((M3) tokenIn.value).getColumn(-1 - i1, data);
+          ((M3d) tokenIn.value).getColumn(-1 - i1, data);
         else
-          ((M3) tokenIn.value).getRow(i1 - 1, data);
+          ((M3d) tokenIn.value).getRow(i1 - 1, data);
       } else {
         if (i1 < 0)
-          ((M4) tokenIn.value).getColumn(-1 - i1, data);
+          ((M4d) tokenIn.value).getColumn(-1 - i1, data);
         else
-          ((M4) tokenIn.value).getRow(i1 - 1, data);
+          ((M4d) tokenIn.value).getRow(i1 - 1, data);
       }
       if (isOne)
-        return getVariableAF(data);
+        return getVariableAD(data);
       if (i2 < 1 || i2 > len)
         return newV(string, "");
-      return newV(decimal, Float.valueOf(data[i2 - 1]));
+      return newV(decimal, Double.valueOf(data[i2 - 1]));
     }
 
     // "testing"[0] gives "g"
@@ -1149,9 +1136,9 @@ public class SV extends T implements JSONEncodable {
         int row = pt1;
         if (col > 0 && col <= len && row <= len) {
           if (tok == matrix3f)
-            ((M3) value).setElement(row - 1, col - 1, fValue(var));
+            ((M3d) value).setElement(row - 1, col - 1, dValue(var));
           else
-            ((M4) value).setElement(row - 1, col - 1, fValue(var));
+            ((M4d) value).setElement(row - 1, col - 1, dValue(var));
           return;
         }
       }
@@ -1159,19 +1146,19 @@ public class SV extends T implements JSONEncodable {
           && var.tok == varray) {
         Lst<SV> sv = var.getList();
         if (sv.size() == len) {
-          float[] data = new float[len];
+          double[] data = new double[len];
           for (int i = 0; i < len; i++)
-            data[i] = fValue(sv.get(i));
+            data[i] = dValue(sv.get(i));
           if (pt1 > 0) {
             if (tok == matrix3f)
-              ((M3) value).setRowA(pt1 - 1, data);
+              ((M3d) value).setRowA(pt1 - 1, data);
             else
-              ((M4) value).setRowA(pt1 - 1, data);
+              ((M4d) value).setRowA(pt1 - 1, data);
           } else {
             if (tok == matrix3f)
-              ((M3) value).setColumnA(-1 - pt1, data);
+              ((M3d) value).setColumnA(-1 - pt1, data);
             else
-              ((M4) value).setColumnA(-1 - pt1, data);
+              ((M4d) value).setColumnA(-1 - pt1, data);
           }
           break;
         }
@@ -1262,17 +1249,17 @@ public class SV extends T implements JSONEncodable {
       return s;
     if (v == null)
       v = Escape.uABsM(s);
-    if (v instanceof P3)
+    if (v instanceof P3d)
       return (newV(point3f, v));
-    if (v instanceof P4)
+    if (v instanceof P4d)
       return newV(point4f, v);
     if (v instanceof BS) {
       if (s != null && s.indexOf("[{") == 0)
         v = BondSet.newBS((BS) v, null);
       return newV(bitset, v);
     }
-    if (v instanceof M34)
-      return (newV(v instanceof M3 ? matrix3f : matrix4f, v));
+    if (v instanceof M34d)
+      return (newV(v instanceof M3d ? matrix3f : matrix4f, v));
     return o;
   }
 
@@ -1286,7 +1273,7 @@ public class SV extends T implements JSONEncodable {
     boolean isArray = (var.tok == varray);
     int[] vd = (strFormat.indexOf("d") >= 0 || strFormat.indexOf("i") >= 0 ? new int[1]
         : null);
-    float[] vf = (strFormat.indexOf("f") >= 0 ? new float[1] : null);
+    double[] vf = (strFormat.indexOf("f") >= 0 ? new double[1] : null);
     double[] ve = (strFormat.indexOf("e") >= 0 ? new double[1] : null);
     boolean getS = (strFormat.indexOf("s") >= 0);
     boolean getP = ((strFormat.indexOf("p") >= 0 || strFormat.indexOf("P") >= 0) && (isArray || var.tok == point3f));
@@ -1302,7 +1289,7 @@ public class SV extends T implements JSONEncodable {
   }
 
   private static String sprintf(String strFormat, SV var, Object[] of, 
-                                int[] vd, float[] vf, double[] ve, boolean getS, boolean getP, boolean getQ) {
+                                int[] vd, double[] vf, double[] ve, boolean getS, boolean getP, boolean getQ) {
     if (var.tok == hash) {
       int pt = strFormat.indexOf("[");
       if (pt >= 0) {
@@ -1314,9 +1301,9 @@ public class SV extends T implements JSONEncodable {
     if (vd != null)
       vd[0] = iValue(var);
     if (vf != null)
-      vf[0] = fValue(var);
+      vf[0] = dValue(var);
     if (ve != null)
-      ve[0] = fValue(var);
+      ve[0] = dValue(var);
     if (getS)
       of[3] = sValue(var);
     if (getP)
@@ -1469,6 +1456,8 @@ public class SV extends T implements JSONEncodable {
   public static boolean areEqual(SV x1, SV x2) {
     if (x1 == null || x2 == null)
       return false;
+    if (x1.value != null && x1.value == x2.value)
+        return true;
     if (x1.tok == x2.tok) {
       switch (x1.tok) {
       case integer:
@@ -1485,16 +1474,16 @@ public class SV extends T implements JSONEncodable {
       case context:
         return x1.equals(x2);
       case point3f:
-        return (((P3) x1.value).distance((P3) x2.value) < 0.000001);
+        return (((P3d) x1.value).distance((P3d) x2.value) < 0.000001);
       case point4f:
-        return (((P4) x1.value).distance4((P4) x2.value) < 0.000001);
+        return (((P4d) x1.value).distance4((P4d) x2.value) < 0.000001);
       case matrix3f:
-        return ((M3) x1.value).equals(x2.value);
+        return ((M3d) x1.value).equals(x2.value);
       case matrix4f:
-        return ((M4) x1.value).equals(x2.value);
+        return ((M4d) x1.value).equals(x2.value);
       }
     }
-    return (Math.abs(fValue(x1) - fValue(x2)) < 0.000001);
+    return (x1.isNaN() ? x2.isNaN() : Math.abs(dValue(x1) - dValue(x2)) < 1e-15);
   }
 
   /**
@@ -1528,8 +1517,8 @@ public class SV extends T implements JSONEncodable {
       if (x.tok != y.tok) {
         if (x.tok == decimal || x.tok == integer || y.tok == decimal
             || y.tok == integer) {
-          float fx = fValue(x);
-          float fy = fValue(y);
+          double fx = dValue(x);
+          double fy = dValue(y);
           return (fx < fy ? -1 : fx > fy ? 1 : 0);
         }
         if (x.tok == string || y.tok == string)
@@ -1557,8 +1546,8 @@ public class SV extends T implements JSONEncodable {
         }
         //$FALL-THROUGH$
       default:
-        float fx = fValue(x);
-        float fy = fValue(y);
+        double fx = dValue(x);
+        double fy = dValue(y);
         return (fx < fy ? -1 : fx > fy ? 1 : 0);
       }
     } 
@@ -1691,46 +1680,45 @@ public class SV extends T implements JSONEncodable {
     }
     return n;
   }
-  public static float[][] fflistValue(T x, int nMin) {
+  public static double[][] ddlistValue(T x, int nMin) {
     if (x.tok != varray) {
-      return new float[][] { new float[] {fValue(x)} };
+      return new double[][] { new double[] {dValue(x)} };
     }
     Lst<SV> sv = ((SV) x).getList();
     int svlen = sv.size();
-    float[][] list;
-    list = AU.newFloat2(svlen);
+    double[][] list = AU.newDouble2(svlen);
     if (nMin == 0)
       nMin = list.length;
     for (int i = list.length; --i >= 0;)
-      list[i] = flistValue(i >= svlen ? null : sv.get(i), 0);
+      list[i] = dlistValue(i >= svlen ? null : sv.get(i), 0);
     return list;
   }
 
-  public static float[] flistValue(T x, int nMin) {
+  public static double[] dlistValue(T x, int nMin) {
     if (x == null || x.tok != varray)
-      return new float[] { fValue(x) };
+      return new double[] { dValue(x) };
     Lst<SV> sv = ((SV) x).getList();
-    float[] list;
-    list = new float[Math.max(nMin, sv.size())];
+    double[] list;
+    list = new double[Math.max(nMin, sv.size())];
     if (nMin == 0)
       nMin = list.length;
     for (int i = Math.min(sv.size(), nMin); --i >= 0;)
-      list[i] = fValue(sv.get(i));
+      list[i] = dValue(sv.get(i));
     return list;
   }
 
   public SV toArray() {
     int dim;
     Lst<SV> o2;
-    M3 m3 = null;
-    M4 m4 = null;
+    M3d m3 = null;
+    M4d m4 = null;
     switch (tok) {
     case matrix3f:
-      m3 = (M3) value;
+      m3 = (M3d) value;
       dim = 3;
       break;
     case matrix4f:
-      m4 = (M4) value;
+      m4 = (M4d) value;
       dim = 4;
       break;
     case varray:
@@ -1742,12 +1730,12 @@ public class SV extends T implements JSONEncodable {
     }
     o2 = new  Lst<SV>();
     for (int i = 0; i < dim; i++) {
-      float[] a = new float[dim];
+      double[] a = new double[dim];
       if (m3 == null)
         m4.getRow(i, a);
       else
         m3.getRow(i, a);
-      o2.addLast(getVariableAF(a));
+      o2.addLast(getVariableAD(a));
     }
     return newV(varray, o2);
   }
@@ -1950,6 +1938,10 @@ public class SV extends T implements JSONEncodable {
     return "{"
         + (property instanceof SV ? PT.esc(key) + " : " + format(new SV[] { null, (SV) property },
             0) : PT.toJSON(key, property)) + "}";
+  }
+
+  public boolean isNaN() {
+    return (this == vNaN || "NaN".equals(value));
   }
 
 }
