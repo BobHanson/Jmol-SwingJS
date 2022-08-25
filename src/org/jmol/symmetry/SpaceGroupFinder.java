@@ -45,7 +45,7 @@ public class SpaceGroupFinder {
   private final static double //SLOP02 = 0.02f, 
       SLOP001 = 0.001, SLOP0001= 0.0001;  // 0.001 was too tight for labradorite Si // 0.0001 was too tight here. 
 
-  private static int GROUP_COUNT; // 530
+  private static int GROUP_COUNT; // 531
   private static int OP_COUNT; // 882
   private static BS[] bsOpGroups;
   private static BS[] bsGroupOps;

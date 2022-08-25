@@ -26,6 +26,7 @@ package org.jmol.adapter.smarter;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -254,7 +255,8 @@ public class Resolver {
     LimitedLineReader llr = new LimitedLineReader(rdr, 16384);
 
     String leader = llr.getHeader(LEADER_CHAR_MAX).trim();
-
+    if (leader.length() == 0)
+      throw new EOFException("File contains no data.");
     // Test 1. check magic number for embedded Jmol script or PNGJ
 
     // PNG or BCD-encoded JPG or JPEG

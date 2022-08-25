@@ -700,7 +700,7 @@ public class ScriptManager implements JmolScriptManager {
     return null;
   }
 
-  private static int prevCovalentVersion = 1;
+  private static int prevCovalentVersion = 0;
 
   public static void setStateScriptVersion(Viewer vwr, String version) {
     if (version != null) {

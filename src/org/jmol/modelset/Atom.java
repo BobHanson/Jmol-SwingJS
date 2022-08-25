@@ -1280,12 +1280,8 @@ public class Atom extends Point3fi implements Node {
         case T.psi:
           return getFractionalCoord(!vwr.g.legacyJavaFloat, 'Y', false, ptTemp);
         case T.omega:
-          if (group.chain.model.isJmolDataFrame
-              && group.chain.model.jmolFrameType
-                  .equals("plot ramachandran")) {
-            double omega = getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', false, ptTemp) - 180;
-            return (omega < -180 ? 360 + omega : omega);
-          }
+          double omega = getFractionalCoord(!vwr.g.legacyJavaFloat, 'Z', false, ptTemp) - 180;
+          return (omega < -180 ? 360 + omega : omega);
         }
       }
       return group.getGroupParameter(tokWhat);

@@ -1275,7 +1275,8 @@ public class FileManager implements BytePoster {
       return "Obj";
     if (line.indexOf("# object with") == 0)
       return "Nff";
-    if (line.indexOf("BEGIN_DATAGRID_3D") >= 0
+    if (line.indexOf("PRIMVEC") >= 0 // only problem here is that the file may not actually have any 3D data
+        || line.indexOf("BEGIN_DATAGRID_3D") >= 0
         || line.indexOf("BEGIN_BANDGRID_3D") >= 0)
       return "Xsf";
     if (line.indexOf("tiles in x, y") >= 0)

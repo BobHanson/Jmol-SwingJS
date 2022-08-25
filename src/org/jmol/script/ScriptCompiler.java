@@ -273,7 +273,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     haveENDIF = false;
     script = cleanScriptComments(script);
     ichToken = script.indexOf(JC.STATE_VERSION_STAMP);
-    isStateScript = (ichToken >= 0);
+    isStateScript = (ichToken == 0);
     if (isStateScript) {
       ptSemi = script.indexOf(";", ichToken);
       if (ptSemi >= ichToken)
