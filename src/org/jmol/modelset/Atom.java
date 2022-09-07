@@ -434,9 +434,16 @@ public class Atom extends Point3fi implements Node {
     if (isDeleted())
       return -1;
     int n = valence;
-    if (n == 0 && bonds != null)
-      for (int i = bonds.length; --i >= 0;)
+    if (n == 0 && bonds != null) {
+      int npartial = 0;
+      for (int i = bonds.length; --i >= 0;) {
         n += bonds[i].getValence();
+        if (bonds[i].is(Edge.BOND_AROMATIC))
+          npartial++;
+      }
+      if (n == 2 && npartial != 0)
+        n++;
+    }
     return n;
   }
 
