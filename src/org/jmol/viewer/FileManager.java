@@ -419,7 +419,7 @@ public class FileManager implements BytePoster {
     BufferedInputStream bis = null;
     Object ret = null;
     String errorMessage = null;
-    allowCached |= fileName.startsWith("cache://");
+    allowCached = allowCached || name.startsWith("cache://");
     byte[] cacheBytes = (allowCached && outputBytes == null ? cacheBytes = getPngjOrDroppedBytes(
         fullName, name) : null);
     try {
