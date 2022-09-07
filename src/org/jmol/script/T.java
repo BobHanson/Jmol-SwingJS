@@ -751,7 +751,6 @@ public class T {
 
   // xxx(a,b)
   
-  public final static int load         = 1 | 2 << 9 | mathfunc | scriptCommand;
   public final static int script       = 2 | 2 << 9 | mathfunc | scriptCommand;
   public final static int substructure = 3 | 2 << 9 | mathfunc | intproperty | strproperty;
   public final static int search       = 4 | 2 << 9 | mathfunc;
@@ -779,14 +778,22 @@ public class T {
   
   // xxx(a,b,c)
   
-  public final static int prompt       = 3 | 3 << 9 | mathfunc | mathExpressionCommand;
-  public final static int random       = 4 | 3 << 9 | mathfunc;
-  public final static int select       = 5 | 3 << 9 | mathfunc | mathproperty | atomExpressionCommand;
+  public final static int prompt       = 1 | 3 << 9 | mathfunc | mathExpressionCommand;
+  public final static int random       = 2 | 3 << 9 | mathfunc;
+  public final static int load         = 3 | 3 << 9 | mathfunc | scriptCommand;
 
   // ___.xxx(a,b,c)
   
+  public final static int select       = 1 | 3 << 9 | mathfunc | mathproperty | atomExpressionCommand;
+
+  //xxx(a,b,c,d)
+  
   public final static int hkl          = 1 | 4 << 9 | mathfunc;
-  public final static int symop        = 2 | 4 << 9 | mathfunc | mathproperty | intproperty; 
+
+  
+  // ___.xxx(a,b,c,d)
+  
+  public final static int symop        = 1 | 4 << 9 | mathfunc | mathproperty | intproperty; 
 
   // set parameters 
   
