@@ -808,6 +808,7 @@ public class Parameters {
   boolean insideOut;
   boolean dataXYReversed;
   public double cutoff = Double.MAX_VALUE;
+  public double[] cutoffRange;
   public double sigma = Double.MAX_VALUE; // for MrcReader
   boolean cutoffAutomatic = true;
   public boolean isCutoffAbsolute;

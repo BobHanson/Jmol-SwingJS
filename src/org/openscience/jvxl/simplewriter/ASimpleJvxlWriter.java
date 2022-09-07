@@ -106,6 +106,7 @@ public class ASimpleJvxlWriter {
         jvxlData, surfacePointsReturn, areaVolumeReturn);
     jvxlData.isXLowToHigh = params.isXLowToHigh;
     jvxlData.cutoff = params.cutoff;
+    jvxlData.cutoffRange = params.cutoffRange;
     jvxlData.isCutoffAbsolute = params.isCutoffAbsolute;
     jvxlData.version = "ASimpleJvxlWriter -- version 2.2";
     return JvxlCoder.jvxlGetFile(volumeData, jvxlData, title);

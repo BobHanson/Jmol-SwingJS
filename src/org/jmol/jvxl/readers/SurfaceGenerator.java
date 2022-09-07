@@ -323,6 +323,7 @@ public class SurfaceGenerator {
       // not all readers will take this, so we assign
       // cutoff to the value as well.
       params.cutoff = params.sigma = ((Double) value).doubleValue();
+      params.cutoffRange = null;
       //params.isPositiveOnly = false;
       params.cutoffAutomatic = false;
       return true;
@@ -330,6 +331,14 @@ public class SurfaceGenerator {
 
     if ("cutoff" == propertyName) {
       params.cutoff = ((Double) value).doubleValue();
+      params.cutoffRange = null;
+      params.isPositiveOnly = false;
+      params.cutoffAutomatic = false;
+      return true;
+    }
+
+    if ("cutoffRange" == propertyName) {
+      params.cutoffRange = (double[]) value;
       params.isPositiveOnly = false;
       params.cutoffAutomatic = false;
       return true;
@@ -337,13 +346,16 @@ public class SurfaceGenerator {
 
     if ("parameters" == propertyName) {
       params.parameters = AU.ensureLengthD((double[]) value, 2);
-      if (params.parameters.length > 0 && params.parameters[0] != 0)
+      if (params.parameters.length > 0 && params.parameters[0] != 0) {
         params.cutoff = params.parameters[0];
+        params.cutoffRange = null;
+      }
       return true;
     }
 
     if ("cutoffPositive" == propertyName) {
       params.cutoff = ((Double) value).doubleValue();
+      params.cutoffRange = null;
       params.isPositiveOnly = true;
       params.isCutoffAbsolute = false;
       return true;
@@ -1033,6 +1045,7 @@ public class SurfaceGenerator {
     if (!surfaceReader.createIsosurface(false)) {
       Logger.error("Could not create isosurface");
       params.cutoff = Double.NaN;
+      params.cutoffRange = null;
       surfaceReader.closeReader();
       return;
     }
@@ -1103,6 +1116,7 @@ public class SurfaceGenerator {
       boolean isSquared = params.isSquared;
       params.isSquared = false;
       params.cutoff = 0;
+      params.cutoffRange = null;
       surfaceReader.volumeData.setMappingPlane(params.thePlane);
       surfaceReader.createIsosurface(!params.isPeriodic);//but don't read volume data yet
       surfaceReader.volumeData.setMappingPlane(null);
@@ -1188,8 +1202,10 @@ public class SurfaceGenerator {
       // [BufferedFileReader[], double[]] -> [VolumeFileReader[], double[]]
       Object[] a = (Object[]) ((Object[]) value)[0];
       VolumeFileReader[] b = new VolumeFileReader[a.length];
-      for (int i = 0; i < a.length; i++)
+      for (int i = 0; i < a.length; i++) {
+        this.fileType = fileType;
         b[i] = (VolumeFileReader) setFileData(vwr, a[i]);
+      }
       ((Object[]) value)[0] = b;
       readerData = value;
       return newReader("IsoIntersectGridReader");

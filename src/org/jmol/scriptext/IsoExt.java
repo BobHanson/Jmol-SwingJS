@@ -1593,6 +1593,7 @@ public class IsoExt extends ScriptExt {
     boolean isColorSchemeTranslucent = false;
     boolean isInline = false;
     boolean isSign = false;
+    boolean colorDensity = false;
     Object onlyOneModel = null;
     Object[] filesData = null;
     String translucency = null;
@@ -1993,6 +1994,7 @@ public class IsoExt extends ScriptExt {
             i++;
             propertyName = "colorDensity";
             sbCommand.append(" color density");
+            colorDensity = true;
             if (isFloatParameter(i + 1)) {
               double ptSize = floatParameter(++i);
               sbCommand.append(" " + ptSize);
@@ -2480,12 +2482,14 @@ public class IsoExt extends ScriptExt {
           propertyName = "cutoff";
           propertyValue = Double.valueOf(cutoff = floatParameter(i));
           sbCommand.appendO(propertyValue);
-        } else {
+        } else if (colorDensity){
           propertyName = "cutoffRange";
           propertyValue = eval.doubleParameterSet(i, 2, 2);
           addShapeProperty(propertyList, "cutoff", Double.valueOf(0));
           sbCommand.append(Escape.eAD((double[]) propertyValue));
           i = eval.iToken;
+        } else {
+          invArg();
         }
         break;
       case T.downsample:

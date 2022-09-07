@@ -126,6 +126,7 @@ public class JvxlData {
   public double valueMappedToRed;
   public double valueMappedToBlue;
   public double cutoff;
+  public double[] cutoffRange;
   public double pointsPerAngstrom; 
   public int nPointsX, nPointsY, nPointsZ;
   public long nBytes;

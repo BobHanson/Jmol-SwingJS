@@ -326,6 +326,7 @@ public abstract class SurfaceReader implements VertexDataServer {
   protected boolean jvxlDataIs2dContour;
   protected boolean jvxlDataIsColorDensity;
   protected double jvxlCutoff;
+  protected double[] jvxlCutoffRange;
   protected int jvxlNSurfaceInts;
   protected char cJvxlEdgeNaN = '\0';
 
@@ -355,6 +356,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     if (params.showTiming)
       Logger.startTimer("isosurface creation");
     jvxlData.cutoff = Double.NaN;
+    jvxlData.cutoffRange = null;
     if (!readAndSetVolumeParameters(justForPlane))
       return false;
     if (!justForPlane && !Double.isNaN(params.sigma) && !allowSigma) {
@@ -420,6 +422,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     jvxlData.dataMin = dataMin;
     jvxlData.dataMax = dataMax;
     jvxlData.cutoff = (isJvxl ? jvxlCutoff : params.cutoff);
+    jvxlData.cutoffRange = (isJvxl ? jvxlCutoffRange : params.cutoffRange);
     jvxlData.isCutoffAbsolute = params.isCutoffAbsolute;
     jvxlData.isModelConnected = params.isModelConnected;
     jvxlData.pointsPerAngstrom = 1d / volumeData.volumetricVectorLengths[0];

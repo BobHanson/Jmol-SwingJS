@@ -477,11 +477,6 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       return;
     }
 
-    if ("cutoffRange" == propertyName) {
-      cutoffRange = (double[]) value;
-      return;
-    }
-
     if ("fixLattice" == propertyName) {
       if (thisMesh != null)
         thisMesh.fixLattice();
@@ -660,6 +655,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     } else if (("nci" == propertyName || "orbital" == propertyName)
         && sg != null) {
       sg.params.testFlags = (vwr.getBoolean(T.testflag2) ? 2 : 0);
+    } else if ("cutoffRange" == propertyName) {
+      cutoffRange = (double[]) value;
     }
 
     // surface Export3D only (return TRUE) or shared (return FALSE)
@@ -922,8 +919,12 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         return "invalid! (no atoms selected?)";
       if (!Double.isNaN(jvxlData.integration))
         s += "integration " + jvxlData.integration;
-      if (shapeID == JC.SHAPE_ISOSURFACE || shapeID == JC.SHAPE_MO  || shapeID == JC.SHAPE_NBO)
-        s += " with cutoff=" + jvxlData.cutoff;
+      if (shapeID == JC.SHAPE_ISOSURFACE || shapeID == JC.SHAPE_MO  || shapeID == JC.SHAPE_NBO) {
+        if (jvxlData.cutoffRange == null)
+          s += " with cutoff=" + jvxlData.cutoff;
+        else
+          s += " with cutoffRange=" + Escape.eAD(jvxlData.cutoffRange);
+      }
       if (shapeID == JC.SHAPE_MO || shapeID == JC.SHAPE_NBO)
         return s;
       if (jvxlData.dataMin != Double.MAX_VALUE)
@@ -967,6 +968,8 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
     if (property == "cutoff")
       return Double.valueOf(jvxlData.cutoff);
+    if (property == "cutoffRange")
+      return jvxlData.cutoffRange;
     if (property == "minMaxInfo")
       return new double[] { jvxlData.dataMin, jvxlData.dataMax };
     if (property == "plane")

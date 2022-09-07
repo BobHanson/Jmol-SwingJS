@@ -206,12 +206,18 @@ public class JvxlXmlReader extends VolumeFileReader {
   }
 
   protected void jvxlReadSurfaceInfo() throws Exception {
-    String s;
     String data = xr.getXmlData("jvxlSurfaceInfo", null, true, true);
     isXLowToHigh = XmlReader.getXmlAttrib(data, "isXLowToHigh").equals("true");
-    jvxlCutoff = parseDoubleStr(XmlReader.getXmlAttrib(data, "cutoff"));
-    if (!Double.isNaN(jvxlCutoff))
-      Logger.info("JVXL read: cutoff " + jvxlCutoff);
+    String s = XmlReader.getXmlAttrib(data, "cutoff");
+    if (s.indexOf(" ") < 0) {
+      jvxlCutoff = parseDoubleStr(s);
+      if (!Double.isNaN(jvxlCutoff))
+        Logger.info("JVXL read: cutoff " + jvxlCutoff);
+    } else {
+      jvxlCutoff = 0;
+      jvxlCutoffRange = parseDoubleArrayStr(s);
+        Logger.info("JVXL read: cutoff " + Escape.eAD(jvxlCutoffRange));
+    }
     int nContourData = parseIntStr(XmlReader.getXmlAttrib(data, "nContourData"));
     haveContourData = (nContourData > 0);
     params.isContoured = jvxlData.isModelConnected = XmlReader.getXmlAttrib(data, "contoured").equals("true");

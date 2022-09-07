@@ -47,7 +47,7 @@ public class JvxlCoder {
   //TODO -- need to escapeXml for text data
   
   final public static String JVXL_VERSION1 = "2.0";
-  final public static String JVXL_VERSION_XML = "2.3";
+  final public static String JVXL_VERSION_XML = "2.4";
   
   
   // 1.4 adds -nContours to indicate contourFromZero for MEP data mapped onto planes
@@ -57,6 +57,7 @@ public class JvxlCoder {
   // 2.1 adds JvxlXmlReader
   // 2.2 adds color density Jmol 12.0.15/12.1.13
   // 2.3 adds discrete colors for vertex-only data (encoding="none")
+  // 2.4 adds cutoff range
   
   /**
    * 
@@ -274,7 +275,7 @@ public class JvxlCoder {
     addAttrib(attribs, "\n  isModelConnected", "" + jvxlData.isModelConnected);
     if (!vertexDataOnly) {
       // informational only:
-      addAttrib(attribs, "\n  cutoff", "" + jvxlData.cutoff);
+      addAttrib(attribs, "\n  cutoff", (jvxlData.cutoffRange == null ? "" + jvxlData.cutoff  : jvxlData.cutoffRange[0] + " " + jvxlData.cutoffRange[1]));
       addAttrib(attribs, "\n  isCutoffAbsolute", "" + jvxlData.isCutoffAbsolute);
       addAttrib(attribs, "\n  pointsPerAngstrom", "" + jvxlData.pointsPerAngstrom);
       int n = jvxlData.jvxlSurfaceData.length() 
