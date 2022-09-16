@@ -339,6 +339,7 @@ public class SurfaceGenerator {
 
     if ("cutoffRange" == propertyName) {
       params.cutoffRange = (double[]) value;
+      params.cutoff = params.cutoffRange[0];
       params.isPositiveOnly = false;
       params.cutoffAutomatic = false;
       return true;

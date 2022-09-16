@@ -350,7 +350,7 @@ public class MeshData extends MeshSurface {
     for (int i = 0; i < n; i++)
       v[i] /= factor;
     if (justOne)
-      return Double.valueOf((double) v[0]);
+      return Double.valueOf(v[0]);
     //System.out.println("MeshData calcVolume " + Escape.e(v));
     if (thisSet != null) {
       thisSet.and(BSUtil.newBitSet2(0, v.length));

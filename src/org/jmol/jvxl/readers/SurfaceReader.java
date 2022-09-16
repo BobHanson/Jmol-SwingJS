@@ -421,8 +421,8 @@ public abstract class SurfaceReader implements VertexDataServer {
     jvxlData.boundingBox = new P3d[] { xyzMin, xyzMax };
     jvxlData.dataMin = dataMin;
     jvxlData.dataMax = dataMax;
-    jvxlData.cutoff = (isJvxl ? jvxlCutoff : params.cutoff);
     jvxlData.cutoffRange = (isJvxl ? jvxlCutoffRange : params.cutoffRange);
+    jvxlData.cutoff = (jvxlCutoffRange != null ? jvxlData.cutoffRange[0] : isJvxl ? jvxlCutoff : params.cutoff);
     jvxlData.isCutoffAbsolute = params.isCutoffAbsolute;
     jvxlData.isModelConnected = params.isModelConnected;
     jvxlData.pointsPerAngstrom = 1d / volumeData.volumetricVectorLengths[0];
@@ -928,7 +928,7 @@ public abstract class SurfaceReader implements VertexDataServer {
       for (int i = 0; i < n; i++) {
         double v = (values == null ? valueRed + (i + 1) * dv : values[i]);
         jvxlData.contourValuesUsed[i] = v;
-        colors[i] = C.getColixTranslucent(params.colorEncoder.getArgb((double) v));
+        colors[i] = C.getColixTranslucent(params.colorEncoder.getArgb(v));
       }
       //TODO -- this strips translucency
       jvxlData.contourColors = C.getHexCodes(colors);

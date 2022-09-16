@@ -213,12 +213,17 @@ abstract class VolumeFileReader extends SurfaceFileReader {
     if (params.thePlane != null) {
       params.cutoff = 0d;
     } else if (isJvxl) {
-      params.cutoff = (params.isBicolorMap || params.colorBySign ? 0.01f : 0.5d);
+      params.cutoff = (params.isBicolorMap || params.colorBySign ? 0.01f : getJVXLCutoff());
     }
     nDataPoints = 0;
     next[0] = 0;
     line = "";
     jvxlNSurfaceInts = 0;
+  }
+
+  protected double getJVXLCutoff() {
+    // old JVXLReader only
+    return 0.5;
   }
 
   @Override

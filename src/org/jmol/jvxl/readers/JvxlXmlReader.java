@@ -174,6 +174,11 @@ public class JvxlXmlReader extends VolumeFileReader {
    cJvxlEdgeNaN = (char) (edgeFractionBase + edgeFractionRange);
   }
 
+  @Override
+  protected double getJVXLCutoff() {
+    return params.cutoff;
+  }
+
   protected void readVector(int voxelVectorIndex) throws Exception {
     String data = xr.getXmlData("jvxlVolumeVector", tempDataXml, true, true);
     tempDataXml = tempDataXml.substring(tempDataXml.indexOf(data) + data.length());
@@ -214,10 +219,11 @@ public class JvxlXmlReader extends VolumeFileReader {
       if (!Double.isNaN(jvxlCutoff))
         Logger.info("JVXL read: cutoff " + jvxlCutoff);
     } else {
-      jvxlCutoff = 0;
       jvxlCutoffRange = parseDoubleArrayStr(s);
-        Logger.info("JVXL read: cutoff " + Escape.eAD(jvxlCutoffRange));
+      jvxlCutoff = jvxlCutoffRange[0];
+      Logger.info("JVXL read: cutoff " + Escape.eAD(jvxlCutoffRange));
     }
+    params.cutoff = jvxlCutoff;
     int nContourData = parseIntStr(XmlReader.getXmlAttrib(data, "nContourData"));
     haveContourData = (nContourData > 0);
     params.isContoured = jvxlData.isModelConnected = XmlReader.getXmlAttrib(data, "contoured").equals("true");

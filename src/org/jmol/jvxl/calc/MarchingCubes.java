@@ -97,6 +97,8 @@ public class MarchingCubes extends TriangleData {
   protected SB edgeData = new SB();
   
   private boolean excludePartialCubes = true; // original way
+
+  private boolean isDensityRange;
   
   public MarchingCubes() {
     // as triangleServer  
@@ -131,6 +133,7 @@ public class MarchingCubes extends TriangleData {
     isContoured = params.thePlane == null && params.isContoured && !colorDensity;
     cutoff = params.cutoff;
     isCutoffAbsolute = params.isCutoffAbsolute;
+    isDensityRange = (params.cutoffRange != null);
     contourType = params.contourType;
     isSquared = params.isSquared;
     isXLowToHigh = params.isXLowToHigh;
@@ -382,7 +385,7 @@ public class MarchingCubes extends TriangleData {
       break;
     case MODE_JVXL:
       isInside = (allInside || bsVoxels.get(pti));
-      v = vertexValues[i] = (bsExcludedVertices.get(pti) ? Double.NaN
+      v = vertexValues[i] = ((isDensityRange ? !isInside : bsExcludedVertices.get(pti)) ? Double.NaN
           : isInside ? 1 : 0);
       break;
     default:
