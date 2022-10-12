@@ -9451,7 +9451,7 @@ public class Viewer extends JmolViewer
     if (bsAtoms == null) {
       Atom atom = ms.at[atomIndex];
       bsAtoms = BSUtil.newAndSetBit(atomIndex);
-      Bond[] bonds = (isModelKitOpen()
+      Bond[] bonds = (this.getOperativeSymmetry() == null || isModelKitOpen()
           && !modelkit.hasConstraint(atomIndex, true, false) ? atom.bonds
               : null);
       if (bonds != null)

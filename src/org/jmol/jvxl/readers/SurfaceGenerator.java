@@ -337,6 +337,15 @@ public class SurfaceGenerator {
       return true;
     }
 
+    if ("cutoffPositive" == propertyName) {
+      params.cutoff = ((Double) value).doubleValue();
+      params.cutoffRange = null;
+      params.isPositiveOnly = true;
+      params.isCutoffAbsolute = false;
+      params.cutoffAutomatic = false;
+      return true;
+    }
+
     if ("cutoffRange" == propertyName) {
       params.cutoffRange = (double[]) value;
       params.cutoff = params.cutoffRange[0];
@@ -351,14 +360,6 @@ public class SurfaceGenerator {
         params.cutoff = params.parameters[0];
         params.cutoffRange = null;
       }
-      return true;
-    }
-
-    if ("cutoffPositive" == propertyName) {
-      params.cutoff = ((Double) value).doubleValue();
-      params.cutoffRange = null;
-      params.isPositiveOnly = true;
-      params.isCutoffAbsolute = false;
       return true;
     }
 

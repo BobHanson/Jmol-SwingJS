@@ -943,7 +943,7 @@ public class XtalSymmetry {
       int cpt = spt + iCellOpPt;
       for (int i = i0; i < atomMax; i++) {
         Atom a = asc.atoms[i];
-        if (a.ignoreSymmetry || bsAtoms != null && !bsAtoms.get(i))
+        if (bsAtoms != null && !bsAtoms.get(i))
           continue;
 
         if (ms == null) {
@@ -1044,6 +1044,20 @@ public class XtalSymmetry {
             sym.getSpaceGroupOperation(iSym).rotate(atom1.vib);
             atom1.vib.scale(spinOp);
           }
+          if (atom1.isNegDisorder) {
+            // special negative disorder group in CifReader
+            if (disorderMap == null)
+              disorderMap = new Hashtable<Integer, Character>();
+            Integer key = Integer.valueOf(iSym *1000 + atom1.altLoc);
+            Character ch = disorderMap.get(key);
+            if (ch == null) {
+              if (disorderMapMax == 'Z')
+                disorderMapMax = '@';
+              char dc = (char) (++disorderMapMax);
+              disorderMap.put(key, ch = new Character(dc));
+            }
+            atom1.altLoc = ch.charValue();
+          }
           atom1.atomSite = atomSite;
           if (code != null)
             atom1.altLoc = subSystemId;
@@ -1097,6 +1111,9 @@ public class XtalSymmetry {
     }
     return pt;
   }
+  
+  private Map<Integer, Character> disorderMap;
+  private int disorderMapMax = '@';
 
   @SuppressWarnings("unchecked")
   private void duplicateAtomProperties(int nTimes) {

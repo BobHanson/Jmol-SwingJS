@@ -1436,8 +1436,37 @@ public class CifReader extends AtomSetCollectionReader {
           break;
         case DISORDER_GROUP:
           if (firstChar == '-' && field.length() > 1) {
+            // disorder group -1
+
+// email exchange with Brian McMahon 22.10.11
+//            see
+//            https://journals.iucr.org/c/issues/2015/01/00/fa3356/ (in the below I
+//            take PART to be the same as
+//            _atom_site_disorder_group):
+//
+//            "The use of PART numbers, introduced in SHELXL93, has proved invaluable
+//            in the refinement of disordered structures. Two atoms are considered to
+//            be bonded if they have the same PART number or if one of them is in
+//            PART 0. The resulting connectivity table is used for the generation of
+//            H atoms (HFIX and AFIX), for setting up restraints such as DELU, SIMU,
+//            RIGU, CHIV, BUMP and SAME, and for generating tables of geometric
+//            parameters (BOND, CONF, HTAB). Usually, most of the atoms are in
+//            PART 0, but, for example, a molecule or side chain dis­ordered over
+//            three positions could use PART 1, PART 2 and PART 3. If the PART
+//            number is negative, bonds are not generated to symmetry-equivalent
+//            atoms. It should be noted that positive PART numbers 1, 2, 3 etc.
+//            correspond to the alternative location indicators A, B, C etc. in
+//            PDB format. However, this notation is difficult to use when there
+//            is a disorder within a disorder."
+
+            // atom.basLoc provides the base altloc "n" of "-n"
+            // as symmetry is applied, if basLoc is found, then 
+            // the cloned atom is given an incremented altloc
+            // this only works with C2 and m; with higher-order symmetry, this
+            // will dump all the symmetry-related groups into the same configuration=2
+            
             atom.altLoc = field.charAt(1);
-            atom.ignoreSymmetry = true;
+            atom.isNegDisorder = true;
           } else {
             atom.altLoc = firstChar;
           }
