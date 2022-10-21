@@ -24,9 +24,11 @@
 
 package org.jmol.adapter.smarter;
 
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
@@ -88,7 +90,7 @@ public class XtalSymmetry {
   private double symmetryRange;
   private double packingError;
   private String filterSymop;
-  private SB bondsFound = new SB();
+  private Set<String> bondsFound = new HashSet<String>();
   
   private int ndims = 3;
   private int firstAtom;
@@ -871,6 +873,7 @@ public class XtalSymmetry {
     reset();
   }
 
+  @SuppressWarnings("cast")
   private int symmetryAddAtoms(int transX, int transY, int transZ,
                                int baseCount, int pt, int iCellOpPt,
                                P3d[] cartesians, MSInterface ms, BS excludedOps,
@@ -910,6 +913,7 @@ public class XtalSymmetry {
     if (checkRangeNoSymmetry)
       baseCount = noSymmetryCount;
     int atomMax = firstAtom + noSymmetryCount;
+    int bondAtomMin = (asc.firstAtomToBond < 0 ? atomMax : asc.firstAtomToBond);
     P3d pttemp = new P3d();
     String code = null;
     double d0 = (checkOps ? 0.01f : 0.0001f);
@@ -1051,10 +1055,9 @@ public class XtalSymmetry {
             Integer key = Integer.valueOf(iSym *1000 + atom1.altLoc);
             Character ch = disorderMap.get(key);
             if (ch == null) {
-              if (disorderMapMax == 'Z')
-                disorderMapMax = '@';
-              char dc = (char) (++disorderMapMax);
-              disorderMap.put(key, ch = new Character(dc));
+              if (disorderMapMax == 0 || disorderMapMax == 'Z')
+                disorderMapMax = (int) '@'; // necessary for legacy java2script JSmol
+              disorderMap.put(key, ch = new Character((char) (++disorderMapMax)));
             }
             atom1.altLoc = ch.charValue();
           }
@@ -1101,9 +1104,9 @@ public class XtalSymmetry {
             ia1 = ia2;
             ia2 = i;
           }
-          if (ia1 != ia2 && (ia1 >= atomMax || ia2 >= atomMax)
-              && bondsFound.indexOf(key = "-" + ia1 + "," + ia2) < 0) {
-            bondsFound.append(key);
+          if ((ia1 != ia2 && (ia1 >= bondAtomMin || ia2 >= bondAtomMin))
+              && !bondsFound.contains(key = "-" + ia1 + "," + ia2)) {
+            bondsFound.add(key);
             asc.addNewBondWithOrder(ia1, ia2, bond.order);//.distance = d;
           }
         }
@@ -1113,7 +1116,7 @@ public class XtalSymmetry {
   }
   
   private Map<Integer, Character> disorderMap;
-  private int disorderMapMax = '@';
+  private int disorderMapMax;
 
   @SuppressWarnings("unchecked")
   private void duplicateAtomProperties(int nTimes) {

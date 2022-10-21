@@ -734,6 +734,8 @@ public class AtomSetCollection {
 
   public int vibScale;
 
+  public int firstAtomToBond = -1; // topology dic only
+
   public void setInfo(String key, Object value) {
     if (value == null)
       atomSetInfo.remove(key);

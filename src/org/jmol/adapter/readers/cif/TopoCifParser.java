@@ -343,6 +343,7 @@ public class TopoCifParser implements Parser {
       return false;
     }
     if (ac0 < 0) {
+      reader.asc.firstAtomToBond = reader.asc.getAtomSetAtomIndex(reader.asc.iSet);
       ac0 = reader.asc.ac;
       bc0 = reader.asc.bondCount;
     }

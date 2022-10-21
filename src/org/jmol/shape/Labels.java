@@ -512,9 +512,13 @@ public class Labels extends AtomShape {
       text = Text.newLabel(vwr, null, label, C.INHERIT_ALL, (short) 0, 0,
           scalePixelsPerMicron);
       putLabel(i, text);
-    } else if (text != null && label != null) {
-      text.setText(label);
-      text.textUnformatted = strLabel;
+    } else if (text != null) {
+      if (label == null) {
+        putLabel(i, null);        
+      } else {
+        text.setText(label);
+        text.textUnformatted = strLabel;
+      }
     }
     if (!doAll)
       return;

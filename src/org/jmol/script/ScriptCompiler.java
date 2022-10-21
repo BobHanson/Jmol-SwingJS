@@ -273,7 +273,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     haveENDIF = false;
     script = cleanScriptComments(script);
     ichToken = script.indexOf(JC.STATE_VERSION_STAMP);
-    isStateScript = (ichToken == 0);
+    isStateScript = (ichToken >= 0 && ichToken < 10); // leaves a bit of room for Proteopedia's "exit;\n" hack
     if (isStateScript) {
       ptSemi = script.indexOf(";", ichToken);
       if (ptSemi >= ichToken)
