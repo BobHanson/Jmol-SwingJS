@@ -35,22 +35,19 @@ import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.PT;
 
-
-
-
-
-
 /**
- * an independent class utilizing only org.jmol.api.JmolNode, not org.jmol.modelset.Atom
- * for use in finding molecules in models and SMILES strings
+ * an independent class utilizing only org.jmol.api.JmolNode, not
+ * org.jmol.modelset.Atom for use in finding molecules in models and SMILES
+ * strings
  * 
  */
 public class JmolMolecule {
-  
-  public JmolMolecule() {}
-  
+
+  public JmolMolecule() {
+  }
+
   public Node[] nodes;
-  
+
   public int moleculeIndex;
   public int modelIndex;
   public int indexInModel;
@@ -68,20 +65,24 @@ public class JmolMolecule {
 
   /**
    * Creates an array of JmolMolecules from a set of atoms in the form of simple
-   * JmolNodes. Allows for appending onto an already established set of
-   * branches (from BioPolymer).
+   * JmolNodes. Allows for appending onto an already established set of branches
+   * (from BioPolymer).
+   * 
    * @param atoms
-   *          set of atoms to check
+   *        set of atoms to check
    * @param bsModelAtoms
-   *          per-model atom list, or null
-   * @param biobranches 
-   *          pre-defined connections, like bonds but not to be followed internally
-   * @param bsExclude TODO
+   *        per-model atom list, or null
+   * @param biobranches
+   *        pre-defined connections, like bonds but not to be followed
+   *        internally
+   * @param bsExclude
+   *        TODO
    * @return an array of JmolMolecules
    */
   public final static JmolMolecule[] getMolecules(Node[] atoms,
                                                   BS[] bsModelAtoms,
-                                                  Lst<BS> biobranches, BS bsExclude) {
+                                                  Lst<BS> biobranches,
+                                                  BS bsExclude) {
     BS bsToTest = null;
     BS bsBranch = new BS();
     int thisModelIndex = -1;
@@ -90,24 +91,25 @@ public class JmolMolecule {
     JmolMolecule[] molecules = new JmolMolecule[4];
     if (bsExclude == null)
       bsExclude = new BS();
-    
+
     for (int i = 0; i < atoms.length; i++)
       if (!bsExclude.get(i) && !bsBranch.get(i)) {
         Node a = atoms[i];
         if (a == null || a.isDeleted()) {
           bsExclude.set(i);
           continue;
-        }          
+        }
         int modelIndex = a.getModelIndex();
         if (modelIndex != thisModelIndex) {
           thisModelIndex = modelIndex;
           indexInModel = 0;
           bsToTest = bsModelAtoms[modelIndex];
         }
-        bsBranch = getBranchBitSet(atoms, i, bsToTest, biobranches, -1, true, true);
+        bsBranch = getBranchBitSet(atoms, i, bsToTest, biobranches, -1, true,
+            true);
         if (bsBranch.nextSetBit(0) >= 0) {
-          molecules = addMolecule(molecules, moleculeCount++, atoms, i, bsBranch,
-              modelIndex, indexInModel++, bsExclude);
+          molecules = addMolecule(molecules, moleculeCount++, atoms, i,
+              bsBranch, modelIndex, indexInModel++, bsExclude);
         }
       }
     return allocateArray(molecules, moleculeCount);
@@ -136,23 +138,22 @@ public class JmolMolecule {
    *        TODO
    * @return a bitset of atoms along this branch
    */
-  public static BS getBranchBitSet(Node[] atoms, int atomIndex,
-                                       BS bsToTest, Lst<BS> biobranches,
-                                       int atomIndexNot, boolean allowCyclic,
-                                       boolean allowBioResidue) {
+  public static BS getBranchBitSet(Node[] atoms, int atomIndex, BS bsToTest,
+                                   Lst<BS> biobranches, int atomIndexNot,
+                                   boolean allowCyclic,
+                                   boolean allowBioResidue) {
     BS bs = BS.newN(atoms.length);
     if (atomIndex < 0)
       return bs;
     if (atomIndexNot >= 0)
       bsToTest.clear(atomIndexNot);
-    return (getCovalentlyConnectedBitSet(atoms, atoms[atomIndex],
-        bsToTest, allowCyclic, allowBioResidue, biobranches, bs) ? bs : new BS());
+    return (getCovalentlyConnectedBitSet(atoms, atoms[atomIndex], bsToTest,
+        allowCyclic, allowBioResidue, biobranches, bs, null, null) ? bs : new BS());
   }
 
   public final static JmolMolecule[] addMolecule(JmolMolecule[] molecules,
-                                                 int iMolecule,
-                                                 Node[] atoms, int iAtom,
-                                                 BS bsBranch,
+                                                 int iMolecule, Node[] atoms,
+                                                 int iAtom, BS bsBranch,
                                                  int modelIndex,
                                                  int indexInModel,
                                                  BS bsExclude) {
@@ -163,19 +164,21 @@ public class JmolMolecule {
         modelIndex, indexInModel);
     return molecules;
   }
-  
-  public static String getMolecularFormulaAtoms(Node[] atoms, BS bsSelected,double[] wts, boolean isEmpirical) {
+
+  public static String getMolecularFormulaAtoms(Node[] atoms, BS bsSelected,
+                                                double[] wts,
+                                                boolean isEmpirical) {
     JmolMolecule m = new JmolMolecule();
     m.nodes = atoms;
     m.atomList = bsSelected;
     return m.getMolecularFormula(false, wts, isEmpirical);
   }
-  
+
   public String getMolecularFormula(boolean includeMissingHydrogens,
                                     double[] wts, boolean isEmpirical) {
     return getMolecularFormulaImpl(includeMissingHydrogens, wts, isEmpirical);
   }
-  
+
   public String getMolecularFormulaImpl(boolean includeMissingHydrogens,
                                         double[] wts, boolean isEmpirical) {
     if (mf != null)
@@ -215,8 +218,8 @@ public class JmolMolecule {
         altElementMax = Math.max(altElementMax, n);
       }
       if (includeMissingHydrogens) {
-        int nH = Math.max(0, node.getImplicitHydrogenCount()) + 
-            Math.max(node.getExplicitHydrogenCount(), 0);
+        int nH = Math.max(0, node.getImplicitHydrogenCount())
+            + Math.max(node.getExplicitHydrogenCount(), 0);
         if (nH > 0) {
           if (elementCounts[1] == 0)
             nElements++;
@@ -278,9 +281,9 @@ public class JmolMolecule {
     return mf;
   }
 
-  
-  private static JmolMolecule initialize(Node[] nodes, int moleculeIndex, int firstAtomIndex, BS atomList, int modelIndex,
-      int indexInModel) {
+  private static JmolMolecule initialize(Node[] nodes, int moleculeIndex,
+                                         int firstAtomIndex, BS atomList,
+                                         int modelIndex, int indexInModel) {
     JmolMolecule jm = new JmolMolecule();
     jm.nodes = nodes;
     jm.firstAtomIndex = firstAtomIndex;
@@ -292,13 +295,13 @@ public class JmolMolecule {
     return jm;
   }
 
-  private static boolean getCovalentlyConnectedBitSet(Node[] atoms,
-                                                      Node atom,
+  private static boolean getCovalentlyConnectedBitSet(Node[] atoms, Node atom,
                                                       BS bsToTest,
                                                       boolean allowCyclic,
                                                       boolean allowBioResidue,
                                                       Lst<BS> biobranches,
-                                                      BS bsResult) {
+                                                      BS bsResult,
+                                                      Node origAtom, Node prevAtom) {
     int atomIndex = atom.getIndex();
     if (!bsToTest.get(atomIndex))
       return allowCyclic;
@@ -318,7 +321,7 @@ public class JmolMolecule {
               continue;
             bsToTest.set(j);
             getCovalentlyConnectedBitSet(atoms, atom1, bsToTest, allowCyclic,
-                allowBioResidue, biobranches, bsResult);
+                allowBioResidue, biobranches, bsResult, origAtom, atom);
             bsToTest.clear(j);
           }
           break;
@@ -334,17 +337,24 @@ public class JmolMolecule {
 
     for (int i = bonds.length; --i >= 0;) {
       Edge bond = bonds[i];
-      if (bond != null && bond.isCovalent()
-          && !getCovalentlyConnectedBitSet(atoms, (Node) bond.getOtherNode(atom),
-              bsToTest, allowCyclic, allowBioResidue, biobranches, bsResult))
-        return false;
+      if (bond != null && bond.isCovalent()) {
+        Node n = (Node) bond.getOtherNode(atom);
+        if (n == prevAtom)
+          continue;
+        if (n == origAtom)
+          return false;
+        if (!getCovalentlyConnectedBitSet(atoms, n, bsToTest,
+            allowCyclic, allowBioResidue, biobranches, bsResult, origAtom, atom))
+          return false;
+      }
     }
     return true;
   }
-  
-  private static JmolMolecule[] allocateArray(JmolMolecule[] molecules, int len) {
-    return (len == molecules.length ? molecules : (JmolMolecule[]) AU
-        .arrayCopyObject(molecules, len));
+
+  private static JmolMolecule[] allocateArray(JmolMolecule[] molecules,
+                                              int len) {
+    return (len == molecules.length ? molecules
+        : (JmolMolecule[]) AU.arrayCopyObject(molecules, len));
   }
 
   public static BS getBitSetForMF(Atom[] at, BS bsAtoms, String mf) {
@@ -353,8 +363,8 @@ public class JmolMolecule {
     boolean isDigit;
     mf = PT.rep(PT.clean(mf + "Z"), " ", "");
     for (int i = 0, pt = 0, pt0 = 0, n = mf.length(); i < n; i++) {
-      if ((isDigit = Character.isDigit((ch = mf.charAt(i)))) || i > 0
-          && Character.isUpperCase(ch)) {
+      if ((isDigit = Character.isDigit((ch = mf.charAt(i))))
+          || i > 0 && Character.isUpperCase(ch)) {
         pt0 = i;
         String s = mf.substring(pt, pt0).trim();
         if (isDigit)
@@ -378,6 +388,32 @@ public class JmolMolecule {
         return new BS();
     return bs;
   }
-  
 
-}  
+  public static BS getBranchesForInversion(Node[] at, int atomIndex,
+                                           BS bsToTest) {
+    BS bs = new BS();
+    Node a = at[atomIndex];
+    Edge[] bonds = a.getEdges();
+    for (int i = a.getBondCount(); --i >= 0;) {
+      if (bonds[i].getBondType() == Edge.BOND_COVALENT_SINGLE)
+        bs.set(bonds[i].getOtherNode(a).getIndex());
+    }
+    if (bs.cardinality() < 3) {
+      bs.clearAll();
+    } else {
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        if (at[i].getCovalentBondCount() == 1)
+          continue;
+        BS bs0 = BS.copy(bsToTest);
+        bs0.clear(atomIndex);
+        BS bs1 = BS.newN(at.length);
+        if (!getCovalentlyConnectedBitSet(at, at[i], bs0,
+            true, true, null, bs1, at[atomIndex], at[atomIndex])) {
+          bs.clear(i);
+        }
+      }
+    }
+    return bs;
+  }
+
+}

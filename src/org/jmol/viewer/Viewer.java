@@ -8124,9 +8124,7 @@ public class Viewer extends JmolViewer
                               boolean isClick) {
     // Eval
     if (ringAtomIndex >= 0) {
-      // invert ring [r50 here just sets the max ring size to 50
-      bs = getAtomBitSet("connected(atomIndex=" + ringAtomIndex
-          + ") and !within(SMARTS,'[r50,R]')");
+      bs = JmolMolecule.getBranchesForInversion(ms.at, ringAtomIndex, ms.getMoleculeBitSetForAtom(ringAtomIndex));
       int nb = bs.cardinality();
       switch (nb) {
       case 0:
