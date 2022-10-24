@@ -5239,8 +5239,8 @@ public class Viewer extends JmolViewer
         || !slm.isInSelectionSubset(atomIndex))
       return;
     String label = (isLabel ? GT.$("Drag to move label")
-        : isModelKitOpen()
-            ? (String) modelkit.setProperty("hoverLabel",
+        : isModelKitOpen() || isRotateBond()
+            ? (String) getModelkit(false).setProperty("hoverLabel",
                 Integer.valueOf(atomIndex))
             : null);
 
@@ -5254,6 +5254,11 @@ public class Viewer extends JmolViewer
         Integer.valueOf(hoverAtomIndex = atomIndex));
     refresh(REFRESH_SYNC_MASK, "hover on atom");
   }
+
+  public boolean isRotateBond() {
+    return (acm.getBondPickingMode() == ActionManager.PICKING_ROTATE_BOND);
+  }
+
 
   /**
    * Hover over an arbitrary point.
@@ -8293,6 +8298,7 @@ public class Viewer extends JmolViewer
       bs.set(b.atom1.i);
     }
     highlight(bs);
+    getModelkit(false);
     setModelkitProperty("bondIndex", Integer.valueOf(index));
     setModelkitProperty("screenXY", new int[] { x, y });
     String text = (String) setModelkitProperty("hoverLabel",
@@ -10763,7 +10769,7 @@ public class Viewer extends JmolViewer
    * @param ret return bar length in pixels, or null to just return units for StateCreator
    * @return text
    */
-  public String getScaleText(String units, boolean isAntialiased, int min, double[] ret) {
+  public String getScaleText(String units, boolean isAntialiased, double min, double[] ret) {
     String u = Measurement
         .fixUnits(units.length() > 0 ? ((units.startsWith("//") ? units.substring(2) : units).toLowerCase())
           : g.measureDistanceUnits.equals("vdw") ? "angstroms"
@@ -10777,10 +10783,13 @@ public class Viewer extends JmolViewer
       return u;
     double d = tm.modelRadius * tm.scaleDefaultPixelsPerAngstrom
         / tm.scalePixelsPerAngstrom / 4;
-    double af = (!tm.perspectiveDepth && isAntialiased ? 2d : 1d);
-    double f = (tm.perspectiveDepth ? 1d/tm.getPerspectiveFactor((tm.getCameraDepth() - 0.5d) * getScreenDim()) : 1) / af;   
+    double af = (isAntialiased ? 2 : 1);
+    // I think this perspectivedepth calc is not necessary and should have used the reference plane anyway
+    double f = (false && tm.perspectiveDepth ? 1d/tm.getPerspectiveFactor((tm.getCameraDepth() - .5d) * getScreenDim()) : 1) / af;   
     int m = 0, p = 0;
     double e = 0, mp = 0;
+    // seems to work
+    min = min * imageFontScaling / 2;
     while (p < min) {
       e = Measurement.toUnits(d, u, false);
       m = (int) Math.floor(Math.log10(e));
@@ -10790,11 +10799,15 @@ public class Viewer extends JmolViewer
       if (p < min) {
         d *= 10;
       }
+      //System.out.println("viewer p min " + p + " " + min + " " + tm.scalePixelsPerAngstrom + " " + f);
     }
     String se = (m >= 0 ? " " + (int) mp + " "
         : " 0." + "000000000".substring(0, -1 - m) + "1 ");
     ret[0] = p;
     ret[1] = e;
+//    System.out.println("Viewer.getScaleText sppa " + tm.scalePixelsPerAngstrom + " " + getScreenDim() + 
+//        " imageFontScaling " + imageFontScaling +
+//        " = p,e,af,f,mp,m " + p + " " + e + " " + af + " " + f + " " + mp + " " + m);
     return se + u;
   }
 

@@ -57,6 +57,7 @@ class TextRenderer {
       calcBarPixelsXYZ(tm, text, pTemp, false);
     text.setPosition(scalePixelsPerMicron, imageFontScaling, isAbsolute, boxXY);
     int barPixels = (tm != null && text.valign == JC.ECHO_XYZ ? calcBarPixelsXYZ(tm, text, pTemp, false) : text.barPixels);
+    
     // draw the box if necessary; colix has been set
     if (text.image == null) {
       // text colix will be opaque, but we need to render it in translucent pass 
@@ -124,11 +125,11 @@ class TextRenderer {
     int i = 1;
     int x1 = xoff + (int) temp[0] - barPixels - i - ia * 2;
     int x2 = xoff + (int) temp[0] - i - ia * 2;
-    int h = (text.lineHeight)/3;
+    int h = (text.lineHeight)/2;
     int y = (int) temp[1] - i;
-    g3d.fillTextRect(x1, y-h/2-2-ia, z, text.zSlab, x2-x1, 2*ia);
-    g3d.fillTextRect(x1, y-h*3/2, z, text.zSlab, 2*ia, h*3/2);
-    g3d.fillTextRect(x2, y-h*3/2, z, text.zSlab, 2*ia, h*3/2);
+    g3d.fillTextRect(x1, y-h/2-ia, z, text.zSlab, x2-x1, 2*ia);
+    g3d.fillTextRect(x1, y-h*2/2, z, text.zSlab, 2*ia, h*2/2);
+    g3d.fillTextRect(x2, y-h*2/2, z, text.zSlab, 2*ia, h*2/2);
 //
 //    g3d.drawLinePixels(sA, sB, text.z, text.zSlab);
 //    sA.y = y + h;
@@ -154,7 +155,7 @@ class TextRenderer {
     double offsetY = y1 - y0;
 
     // Set picking label and then drag!
-    //System.out.println(offsetX  +"/" + w + " " + offsetY + "/" + h);
+
     if (offsetX <= 0 && -offsetX <= w
       && offsetY <= 0 && -offsetY <= h)
       return;

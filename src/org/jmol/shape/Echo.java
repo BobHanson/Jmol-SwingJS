@@ -240,32 +240,42 @@ public class Echo extends TextShape {
     }
 
     if ("xpos" == propertyName) {
-      if (currentObject != null)
+      if (currentObject != null) {
+        currentObject.setXYZ(null, true);
         currentObject.setMovableX(((Integer) value).intValue());
+      }
       return;
     }
 
     if ("ypos" == propertyName) {
-      if (currentObject != null)
+      if (currentObject != null) {
+        currentObject.setXYZ(null, true);
         currentObject.setMovableY(((Integer) value).intValue());
+      }
       return;
     }
 
     if ("%xpos" == propertyName) {
-      if (currentObject != null)
+      if (currentObject != null) {
+        currentObject.setXYZ(null, true);
         currentObject.setMovableXPercent(((Integer) value).intValue());
+      }
       return;
     }
 
     if ("%ypos" == propertyName) {
-      if (currentObject != null)
+      if (currentObject != null) {
+        currentObject.setXYZ(null, true);
         currentObject.setMovableYPercent(((Integer) value).intValue());
+      }
       return;
     }
 
     if ("%zpos" == propertyName) {
-      if (currentObject != null)
+      if (currentObject != null) {
+        currentObject.setXYZ(null, true);
         currentObject.setMovableZPercent(((Integer) value).intValue());
+      }
       return;
     }
 

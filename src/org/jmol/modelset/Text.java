@@ -227,7 +227,7 @@ public class Text {
       if (textUnformatted != null && textUnformatted.startsWith("%SCALE")) {
         double[] ret = new double[2];
         text = vwr.getScaleText(textUnformatted.substring(6).trim(), vwr.antialiased, (xyz == null ? 15 : 8), ret);
-        barPixels = (int) (ret[0] * imageFontScaling);
+        barPixels = (int) (ret[0] * (vwr.antialiased ? 2 : 1));
         barDistance = ret[1];
         recalc();
       }
@@ -304,7 +304,6 @@ public class Text {
           break;
         }
       // don't apply an X-offset if this is a scale and set on a point
-      //System.out.println(dx + " Text " + dy + " " + boxWidth + " " + boxHeight);
       setBoxXY(boxWidth, boxHeight, dx, dy, boxXY, isAbsolute);
     } else {
       setPos(fontScale);
@@ -551,11 +550,13 @@ public class Text {
 
   public void setXYZ(P3d xyz, boolean doAdjust) {
     this.xyz = xyz;
-    if (xyz == null)
+    if (xyz == null) {
       this.zSlab = Integer.MIN_VALUE;
+      pymolOffset = null;
+    }
     if (doAdjust) {
       valign = (xyz == null ? JC.ECHO_XY : JC.ECHO_XYZ);
-     adjustForWindow = (xyz == null);
+      adjustForWindow = (xyz == null);
     }
   }
 
