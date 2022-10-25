@@ -3615,6 +3615,9 @@ public class Viewer extends JmolViewer
         mouse.clear();
         clearTimeouts();
         acm.clear();
+        if (!zapModelKit)
+          setPickingMode(null, ActionManager.PICKING_IDENTIFY);
+        g.modelKitMode = zapModelKit;
       }
       stm.clear(g);
       tempArray.clear();
@@ -5239,7 +5242,7 @@ public class Viewer extends JmolViewer
         || !slm.isInSelectionSubset(atomIndex))
       return;
     String label = (isLabel ? GT.$("Drag to move label")
-        : isModelKitOpen() || isRotateBond()
+        : isModelKitOpen() || isModelkitPickingRotateBond()
             ? (String) getModelkit(false).setProperty("hoverLabel",
                 Integer.valueOf(atomIndex))
             : null);
@@ -5255,7 +5258,18 @@ public class Viewer extends JmolViewer
     refresh(REFRESH_SYNC_MASK, "hover on atom");
   }
 
-  public boolean isRotateBond() {
+  private boolean isModelkitPickingActive() {
+    if (acm.getAtomPickingMode() == ActionManager.PICKING_ASSIGN_ATOM)
+      return true;
+    switch (acm.getBondPickingMode()) {
+    case ActionManager.PICKING_ROTATE_BOND:
+    case ActionManager.PICKING_ASSIGN_BOND:
+      return true;
+    }
+    return false;
+  }
+  
+  public boolean isModelkitPickingRotateBond() {
     return (acm.getBondPickingMode() == ActionManager.PICKING_ROTATE_BOND);
   }
 
@@ -5286,6 +5300,11 @@ public class Viewer extends JmolViewer
     if (!hoverEnabled)
       return;
     shm.loadShape(JC.SHAPE_HOVER);
+    if (gdata.antialiasEnabled) {
+      //because hover rendering is done in FIRST pass only
+      x <<= 1;
+      y <<= 1;
+    }
     setShapeProperty(JC.SHAPE_HOVER, "xy", P3i.new3(x, y, 0));
     setShapeProperty(JC.SHAPE_HOVER, "target", null);
     setShapeProperty(JC.SHAPE_HOVER, "specialLabel", null);
@@ -5297,8 +5316,7 @@ public class Viewer extends JmolViewer
 
   void hoverOff() {
     try {
-      if (isModelKitOpen()
-          && acm.getBondPickingMode() != ActionManager.PICKING_ROTATE_BOND)
+      if ((isModelKitOpen() || modelkit != null && modelkit.wasRotating()) && !isModelkitPickingRotateBond())
         highlight(null);
       if (!hoverEnabled)
         return;
@@ -5342,6 +5360,7 @@ public class Viewer extends JmolViewer
   public void setPickingMode(String strMode, int pickingMode) {
     if (!haveDisplay)
       return;
+    int mode = acm.getAtomPickingMode();
     showSelected = false;
     String option = null;
     if (strMode != null) {
@@ -5355,8 +5374,13 @@ public class Viewer extends JmolViewer
     if (pickingMode < 0)
       pickingMode = ActionManager.PICKING_IDENTIFY;
     acm.setPickingMode(pickingMode);
-    g.setO("picking",
-        ActionManager.getPickingModeName(acm.getAtomPickingMode()));
+    String name = ActionManager.getPickingModeName(acm.getAtomPickingMode());
+    g.setO("picking", name);
+    if (modelkit != null) {
+      modelkit.setProperty("pickingMode", name);
+      if (pickingMode != mode && pickingMode == ActionManager.PICKING_IDENTIFY)
+        setModelKitMode(false);
+    }
     if (option == null || option.length() == 0)
       return;
     option = Character.toUpperCase(option.charAt(0))
@@ -5724,8 +5748,7 @@ public class Viewer extends JmolViewer
   }
 
   public int getHoverDelay() {
-    return (isModelKitOpen() ? 20 : g.hoverDelayMs);
-
+    return (isModelKitOpen() || isModelkitPickingActive() ? 20 : g.hoverDelayMs);
   }
 
   @Override
@@ -5950,7 +5973,8 @@ public class Viewer extends JmolViewer
 
   boolean getBondsPickable() {
     return (g.bondPicking || isModelKitOpen()
-        && getModelkitProperty("isMolecular") == Boolean.TRUE);
+        && getModelkitProperty("isMolecular") == Boolean.TRUE
+        || isModelkitPickingActive());
   }
 
   private boolean isModelKitOpen() {
@@ -7397,17 +7421,15 @@ public class Viewer extends JmolViewer
       if (isChange)
         sm.setStatusModelKit(1);
       g.modelKitMode = true;
-      if (ms.ac == 0)
+      if (ms.ac == 0) {
         zap(false, true, true);
-      else if (am.cmi >= 0 && getModelUndeletedAtomsBitSet(am.cmi).isEmpty()) {
+      } else if (am.cmi >= 0 && getModelUndeletedAtomsBitSet(am.cmi).isEmpty()) {
         Map<String, Object> htParams = new Hashtable<String, Object>();
         htParams.put("appendToModelIndex", Integer.valueOf(am.cmi));
         loadDefaultModelKitModel(htParams);
       }
     } else {
       acm.setPickingMode(ActionManager.PICKING_MK_RESET);
-      setStringProperty("pickingStyle", "toggle");
-      setBooleanPropertyTok("bondPicking", T.bondpicking, false);
       if (isChange) {
         sm.setStatusModelKit(0);
       }
@@ -8298,9 +8320,9 @@ public class Viewer extends JmolViewer
       bs.set(b.atom1.i);
     }
     highlight(bs);
-    getModelkit(false);
-    setModelkitProperty("bondIndex", Integer.valueOf(index));
+    getModelkit(false); 
     setModelkitProperty("screenXY", new int[] { x, y });
+    setModelkitProperty("bondIndex", Integer.valueOf(index));
     String text = (String) setModelkitProperty("hoverLabel",
         Integer.valueOf(-2 - index));
     if (text != null)

@@ -57,11 +57,6 @@ public class Ellipsoids extends AtomShape {
     Ellipsoid e = findPickedObject(x, y, false, bsModels);
     if (e == null)
       return false;
-    if (vwr.gdata.antialiasEnabled) {
-      //because hover rendering is done in FIRST pass only
-      x <<= 1;
-      y <<= 1;
-    }      
     vwr.hoverOnPt(x, y, e.label, e.id, e.center);
     return true;
   }

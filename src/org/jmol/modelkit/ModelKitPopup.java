@@ -55,11 +55,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
   private static final int MAX_LABEL = 32;
 
-  static final String ATOM_MENU = "atomMenu";
-  static final String BOND_MENU = "bondMenu";
-  static final String XTAL_MENU = "xtalMenu";
-  static final String OPTIONS_MENU = "optionsMenu";
-
   /**
    * set by MODELKIT [DISPLAY/HIDE]
    */
@@ -103,7 +98,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
 
   @Override
   public void jpiUpdateComputedMenus() {
-    htMenus.get(XTAL_MENU).setEnabled(modelkit.setHasUnitCell());
+    htMenus.get(ModelKit.XTAL_MODE).setEnabled(modelkit.setHasUnitCell());
     if (modelkit.checkNewModel()) {
       haveOperators = false;
       updateOperatorMenu();
@@ -240,19 +235,20 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
    */
   public String setActiveMenu(String name) {
     // TODO -- if the hovering is working, this should not be necessary
-    String active = (name.indexOf(XTAL_MENU) >= 0 ? XTAL_MENU
-        : name.indexOf(ATOM_MENU) >= 0 ? ATOM_MENU
-            : name.indexOf(BOND_MENU) >= 0 ? BOND_MENU : null);
+    String active = (name.indexOf(ModelKit.XTAL_MODE) >= 0 ? ModelKit.XTAL_MODE
+        : name.indexOf(ModelKit.ATOM_MODE) >= 0 ? ModelKit.ATOM_MODE
+            : name.indexOf(ModelKit.BOND_MODE) >= 0 ? ModelKit.BOND_MODE : null);
+//    System.out.println("MKP setActiveMenu " + name + " " + active);
     if (active != null) {
       activeMenu = active;
-      if ((active == XTAL_MENU) == (modelkit
+      if ((active == ModelKit.XTAL_MODE) == (modelkit
           .getMKState() == ModelKit.STATE_MOLECULAR))
-        modelkit.setMKState(active == XTAL_MENU ? ModelKit.STATE_XTALVIEW
+        modelkit.setMKState(active == ModelKit.XTAL_MODE ? ModelKit.STATE_XTALVIEW
             : ModelKit.STATE_MOLECULAR);
       vwr.refresh(Viewer.REFRESH_REPAINT, "modelkit");
-      if (active == BOND_MENU && prevBondCheckBox == null)
+      if (active == ModelKit.BOND_MODE && prevBondCheckBox == null)
         prevBondCheckBox = htMenus.get("assignBond_pP!RD");
-    } else if (name.indexOf(OPTIONS_MENU) >= 0) {
+    } else if (name.indexOf(ModelKit.OPTIONS_MODE) >= 0) {
         htMenus.get("undo").setEnabled(vwr.undoMoveAction(T.undomove, T.count) > 0);
         htMenus.get("redo").setEnabled(vwr.undoMoveAction(T.redomove, T.count) > 0);
     }
@@ -271,11 +267,12 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     if (source == null || !selected)
       return;
     String name = source.getName();
+//    System.out.println("ModelKitPopup updating for show " + updatingForShow);
     if (!updatingForShow && setActiveMenu(name) != null) {
       exitBondRotation();
       String text = source.getText();
       // don't turn this into a Java 8 switch -- we need this to still compile in Java 6 for legacy Jmol
-      if (activeMenu == BOND_MENU) {
+      if (activeMenu == ModelKit.BOND_MODE) {
         if (name.equals(bondRotationName)) {
           bondRotationCheckBox = source;
         } else {
@@ -324,7 +321,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       return null;
     menuSetLabel(item, element);
     item.setActionCommand("assignAtom_" + element + "P!:??");
-    modelkit.setHoverLabel(ATOM_MENU, "Click or click+drag for " + element);
     return "set picking assignAtom_" + element;
   }
 
@@ -385,8 +381,10 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       String key = entry.getKey();
       SC item = entry.getValue();
       if (key.startsWith(thisBondType) || key.startsWith(thisAtomType)) {
+        updatingForShow = true;
         item.setSelected(false);
         item.setSelected(true);
+        updatingForShow = false;
       }
 
     }

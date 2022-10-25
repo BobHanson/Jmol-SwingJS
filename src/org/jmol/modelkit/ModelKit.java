@@ -250,11 +250,22 @@ public class ModelKit {
   int[] screenXY = new int[2]; // for tracking mouse-down on bond
 
   boolean showSymopInfo = true;
-  
+ 
+  /**
+   * set to TRUE after rotation has been turned off in order to turn highlight off in viewer.hoverOff()
+   */
+  boolean wasRotating;
+   
   /**
    * when TRUE, add H atoms to C when added to the modelSet. 
    */
   boolean addXtalHydrogens = true;
+
+  static final String OPTIONS_MODE = "optionsMenu";
+  static final String XTAL_MODE = "xtalMenu";
+  static final String BOND_MODE = "bondMenu";
+  static final String ATOM_MODE = "atomMenu";
+
   
   /**
    * Except for H atoms, do not allow changes to elements just by clicking them. 
@@ -422,7 +433,11 @@ public class ModelKit {
 
     // from Viewer and CmdExt
 
+    //System.out.println("MK.setProperty " + key + " " + value);
     try {
+      if (vwr == null) // clearing
+        return null;
+      
       key = key.toLowerCase().intern();
 
       // boolean get/set
@@ -493,13 +508,36 @@ public class ModelKit {
         }
         return symop;
       }
+      
+      if (key == "pickingmode") {
+        if ("identify".equals(value)) {
+          if (isRotateBond) {
+            vwr.setBooleanProperty("bondPicking", false);
+            vwr.highlight(null);
+          }
+          wasRotating = isRotateBond;
+          isRotateBond = false;
+          vwr.acm.exitMeasurementMode("modelkit");
+        }
+        return null;
+      }
 
       if (key == "atomtype") {
+        wasRotating = isRotateBond;
+        isRotateBond = false;
         if (value != null) {
           pickAtomAssignType = (String) value;
-          isPickAtomAssignCharge = (pickAtomAssignType.equals("pl")
-              || pickAtomAssignType.equals("mi"));
-          if (!isPickAtomAssignCharge && !"X".equals(pickAtomAssignType)) {
+          isPickAtomAssignCharge = (pickAtomAssignType.equalsIgnoreCase("pl")
+              || pickAtomAssignType.equalsIgnoreCase("mi"));
+          if (isPickAtomAssignCharge) {
+            setHoverLabel(ATOM_MODE,
+                getText(pickAtomAssignType.equalsIgnoreCase("mi") ? "decCharge"
+                    : "incCharge"));
+          } else if ("X".equals(pickAtomAssignType)) {
+            setHoverLabel(ATOM_MODE, getText("delAtom"));
+          } else {
+            setHoverLabel(ATOM_MODE,
+                "Click or click+drag for " + pickAtomAssignType);
             lastElementType = pickAtomAssignType;
           }
         }
@@ -509,8 +547,13 @@ public class ModelKit {
       if (key == "bondtype") {
         if (value != null) {
           String s = ((String) value).substring(0, 1).toLowerCase();
-          if (" 012345pm".indexOf(s) > 0)
+          if (" 0123456pm".indexOf(s) > 0) {
             pickBondAssignType = s.charAt(0);
+            setHoverLabel(BOND_MODE,
+                getText(pickBondAssignType == 'm' ? "decBond"
+                    : pickBondAssignType == 'p' ? "incBond" 
+                        : "bondTo" + s));
+          }
           isRotateBond = false;
         }
         return "" + pickBondAssignType;
@@ -546,6 +589,7 @@ public class ModelKit {
       if (key == "screenxy") {
         if (value != null) {
           screenXY = (int[]) value;
+          vwr.acm.exitMeasurementMode("modelkit");
         }
         return screenXY;
       }
@@ -747,6 +791,8 @@ public class ModelKit {
       atomFix = ms.at[bondAtomIndex1];
       atomMove = ms.at[bondAtomIndex2];
     }
+    if (forceFull)
+      bsRotateBranch = null;
     V3d v1 = V3d.new3(atomMove.sX - atomFix.sX, atomMove.sY - atomFix.sY, 0);
     v1.scale(1d/v1.length());
     V3d v2 = V3d.new3(deltaX, deltaY, 0);
@@ -765,6 +811,7 @@ public class ModelKit {
 
     vwr.rotateAboutPointsInternal(null, atomFix, atomMove, 0, degrees, false, bs,
         null, null, null, null);
+    
   }
 
   /**
@@ -879,6 +926,8 @@ public class ModelKit {
   }
 
   void exitBondRotation(String text) {
+    // from ModelKitPopup only
+    wasRotating = isRotateBond;
     isRotateBond = false;
     if (text != null)
       bondHoverLabel = text;
@@ -982,17 +1031,17 @@ public class ModelKit {
   }
 
   void resetAtomPickType() {
-    pickAtomAssignType = lastElementType;
+    setProperty("atomType", lastElementType);
   }
 
   void setHoverLabel(String activeMenu, String text) {
     if (text == null)
       return;
-    if (activeMenu == ModelKitPopup.BOND_MENU) {
+    if (activeMenu == BOND_MODE) {
       bondHoverLabel = text;
-    } else if (activeMenu == ModelKitPopup.ATOM_MENU) {
+    } else if (activeMenu == ATOM_MODE) {
       atomHoverLabel = text;
-    } else if (activeMenu == ModelKitPopup.XTAL_MENU) {
+    } else if (activeMenu == XTAL_MODE) {
       xtalHoverLabel = atomHoverLabel = text;
     }
   }
@@ -1031,7 +1080,7 @@ public class ModelKit {
                           boolean addHsAndBond, boolean isClick, BS bsAtoms) {
     
     if (isClick) {  
-      if (isVwrRotateBond()) {
+      if (vwr.isModelkitPickingRotateBond()) {
         bondAtomIndex1 = atomIndex;
         return -1;
       }
@@ -1062,7 +1111,7 @@ public class ModelKit {
 
     BS bs = new BS();
     boolean wasH = (atom.getElementNumber() == 1);
-    int atomicNumber = (type.equals("X") ? -1 : type.equals("Xx") ? 0 : PT.isUpperCase(type.charAt(0))
+    int atomicNumber = ("PlMiX".indexOf(type) >= 0 ? -1 : type.equals("Xx") ? 0 : PT.isUpperCase(type.charAt(0))
         ? Elements.elementNumberFromSymbol(type, true)
         : -1);
 
@@ -1243,7 +1292,7 @@ public class ModelKit {
    * @param isRotate
    */
   private void setBondIndex(int index, boolean isRotate) {
-    if (!isRotate && isVwrRotateBond()) {
+    if (!isRotate && vwr.isModelkitPickingRotateBond()) {
       vwr.setModelKitRotateBondIndex(index);
       return;
     }
@@ -1262,7 +1311,7 @@ public class ModelKit {
     isRotateBond = isRotate;
     bondAtomIndex1 = vwr.ms.bo[index].getAtomIndex1();
     bondAtomIndex2 = vwr.ms.bo[index].getAtomIndex2();
-    menu.setActiveMenu(ModelKitPopup.BOND_MENU);
+    menu.setActiveMenu(BOND_MODE);
   }
 
 
@@ -1383,7 +1432,7 @@ public class ModelKit {
   private boolean processAtomClick(int atomIndex) {
     switch (getMKState()) {
     case STATE_MOLECULAR:
-      return isVwrRotateBond();
+      return vwr.isModelkitPickingRotateBond();
     case STATE_XTALVIEW:
       centerAtomIndex = atomIndex;
       if (getSymViewState() == STATE_SYM_NONE)
@@ -1511,7 +1560,7 @@ public class ModelKit {
             //$FALL-THROUGH$
           case 1:
             if (!isRotateBond)
-              menu.setActiveMenu(ModelKitPopup.ATOM_MENU);
+              menu.setActiveMenu(ATOM_MODE);
             if (atomHoverLabel.indexOf("charge") >= 0) {
               int ch = vwr.ms.at[atomIndex].getFormalCharge();
               ch += (atomHoverLabel.indexOf("increase") >= 0 ? 1 :-1);
@@ -1549,10 +1598,6 @@ public class ModelKit {
       }
     }
     return ret;
-  }
-
-  private boolean isVwrRotateBond() {
-    return (vwr.acm.getBondPickingMode() == ActionManager.PICKING_ROTATE_BOND);
   }
 
   private String promptUser(String msg, String def) {
@@ -2105,7 +2150,7 @@ public class ModelKit {
     boolean isOccSet = (bsOcc.cardinality() > 1);
     if ((n = moveConstrained(iatom, p, !isOccSet, allowProjection)) == 0 || Double.isNaN(p.x)
         || !isOccSet) {
-      if (n > 0)
+//      if (n > 0)
         vwr.setStatusAtomMoved(true, bsOcc);
       return n;
     }
@@ -2170,8 +2215,7 @@ public class ModelKit {
     } catch (Exception e) {
       System.err.println("Modelkit err" + e);
       return 0;
-    }
-    finally {    
+    } finally {    
       setMKState(state);
     }
   }
@@ -2300,7 +2344,7 @@ public class ModelKit {
   }
 
   private Constraint[] atomConstraints;
-
+  
   private static int GET = 0;
   private static int GET_CREATE = 1;
   private static int GET_DELETE = 2;
@@ -2499,6 +2543,52 @@ public class ModelKit {
     }
     // return the number of atoms moved
     return nAtoms;
+  }
+
+  static String getText(String key) {
+    switch (("invSter delAtom dragBon dragAto dragMin dragMol dragMMo incChar decChar "
+        // 72..............................................120
+        + "rotBond bondTo0 bondTo1 bondTo2 bondTo3 incBond decBond").indexOf(key.substring(0, 7))) {
+    case 0:
+      return GT.$("invert ring stereochemistry");
+    case 8:
+      return GT.$("delete atom");
+    case 16:
+      return GT.$("drag to bond");
+    case 24:
+      return GT.$("drag atom");
+    case 32:
+      return GT.$("drag atom (and minimize)");
+    case 40:
+      return GT.$("drag molecule (ALT to rotate)");
+    case 48:
+      return GT.$("drag and minimize molecule (docking)");
+    case 56:
+      return GT.$("increase charge");
+    case 64:
+      return GT.$("decrease charge");
+    case 72:
+      return GT.$("rotate bond");
+    case 80:
+      return GT.$("delete bond");
+    case 88:
+      return GT.$("single");
+    case 96:
+      return GT.$("double");
+    case 104:
+      return GT.$("triple");
+    case 112:
+      return GT.$("increase order");
+    case 120:
+      return GT.$("decrease order");
+    }
+    return key;
+  }
+
+  public boolean wasRotating() {
+    boolean b = wasRotating;
+    wasRotating = false;
+    return b;
   }
 
 }

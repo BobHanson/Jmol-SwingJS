@@ -1276,11 +1276,6 @@ private void initDraw() {
       return false;
     if (!findPickedObject(x, y, false, bsVisible))
       return false;
-    if (vwr.gdata.antialiasEnabled) {
-      //because hover rendering is done in FIRST pass only
-      x <<= 1;
-      y <<= 1;
-    }      
     String s = (pickedMesh.title == null ? pickedMesh.thisID
         : pickedMesh.title[0]);
     if (s.length() > 1 && s.charAt(0) == '>')

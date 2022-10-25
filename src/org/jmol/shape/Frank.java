@@ -85,11 +85,6 @@ public class Frank extends Shape {
   public boolean checkObjectHovered(int x, int y, BS bsVisible) {
     if (!vwr.getShowFrank() || !wasClicked(x, y) || !vwr.menuEnabled())
       return false;
-    if (vwr.gdata.antialiasEnabled && !vwr.isSingleThreaded) {
-      //because hover rendering is done in FIRST pass only
-      x <<= 1;
-      y <<= 1;
-    }      
     vwr.hoverOnPt(x, y, GT.$("Click for menu..."), null, null);
     return true;
   }

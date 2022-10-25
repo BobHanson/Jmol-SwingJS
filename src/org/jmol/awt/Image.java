@@ -35,17 +35,13 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
-import java.awt.image.DirectColorModel;
 import java.awt.image.DataBufferInt;
+import java.awt.image.DirectColorModel;
 import java.awt.image.MemoryImageSource;
-import java.awt.image.PixelGrabber;
 import java.awt.image.Raster;
 import java.awt.image.SinglePixelPackedSampleModel;
 import java.net.URL;
 import java.util.Map;
-
-import javajs.img.BMPDecoder;
-import javajs.util.AU;
 
 import javax.swing.JPanel;
 
@@ -54,6 +50,9 @@ import org.jmol.api.Interface;
 import org.jmol.api.PlatformViewer;
 import org.jmol.console.ImageDialog;
 import org.jmol.viewer.Viewer;
+
+import javajs.img.BMPDecoder;
+import javajs.util.AU;
 
 /**
  * methods required by Jmol that access java.awt.Image
@@ -156,18 +155,32 @@ class Image {
     return ((java.awt.Image) image).getHeight(null);
   }
 
-  static int[] grabPixels(Object imageobj, int width, int height, int[] pixels) {
-    
-    java.awt.Image image = (java.awt.Image) imageobj;
-    PixelGrabber pixelGrabber = (pixels == null ? new PixelGrabber(image, 0,
-        0, width, height, true) : new PixelGrabber(image, 0, 0, width, height, pixels, 0,
-            width));
-    try {
-      pixelGrabber.grabPixels();
-    } catch (InterruptedException e) {
-      return null;
+  static int[] grabPixels(Object imageobj, int width, int height,
+                          int[] pixels) {
+    // keep this simple!
+    BufferedImage image = (BufferedImage) imageobj;
+    int iw = image.getWidth();
+    int[] data = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+    if (iw == width && image.getHeight() == height) {
+      return data;
     }
-    return (int[]) pixelGrabber.getPixels();
+    if (pixels == null)
+      pixels = new int[width * height];
+    for (int i = 0, p = 0, d = 0, n = iw - width; i < height; i++, d += n) {
+      for (int j = 0; j < width; j++) {
+        pixels[p++] = data[d++];
+      }
+    }
+    return pixels;
+    //    PixelGrabber pixelGrabber = (pixels == null
+    //        ? new PixelGrabber(image, 0, 0, width, height, true)
+    //        : new PixelGrabber(image, 0, 0, width, height, pixels, 0, width));
+    //    try {
+    //      pixelGrabber.grabPixels();
+    //    } catch (InterruptedException e) {
+    //      return null;
+    //    }
+    //    return (int[]) pixelGrabber.getPixels();
   }
 
   static int[] drawImageToBuffer(Object gOffscreen, Object imageOffscreen,

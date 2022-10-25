@@ -730,7 +730,6 @@ public class ActionManager implements EventManager {
     startHoverWatcher(false);
     if (predragBinding != null)
       b = predragBinding;
-    vwr.setPickingMode(null, PICKING_IDENTIFY);
     vwr.setPickingStyle(null, rootPickingStyle);
     isAltKeyReleased = true;
   }
@@ -1028,6 +1027,9 @@ public class ActionManager implements EventManager {
     case PICKING_DRAG_MINIMIZE_MOLECULE:
       isBound = bnd(dragAction, ACTION_dragMinimize, ACTION_dragZ, ACTION_rotateSelected);
       break;
+    default:
+      isBound = (bondPickingMode == PICKING_ROTATE_BOND);
+      break;
     }
     if (isBound) {
       dragAtomIndex = vwr.findNearestAtomIndexMovable(x, y, true);
@@ -1042,8 +1044,7 @@ public class ActionManager implements EventManager {
         mp.addPoint(dragAtomIndex, null, false);
       }
       int[] xy = (int[]) vwr.getModelkitProperty("screenXY");
-        mkBondPressed = (xy != null && pressed.inRange(10, xy[0], xy[1]));
-        
+      mkBondPressed = (xy != null && pressed.inRange(10, xy[0], xy[1]));  
       return;
     }
     if (bnd(pressAction, ACTION_popupMenu)) {
@@ -1084,13 +1085,13 @@ public class ActionManager implements EventManager {
 
     if (checkUserAction(dragWheelAction, x, y, deltaX, deltaY, time, mode))
       return;
-    int bi = (vwr.g.modelKitMode ? vwr.getModelkit(false).getRotateBondIndex()
+    int bi = (bondPickingMode == PICKING_ROTATE_BOND ? vwr.getModelkit(false).getRotateBondIndex()
         : -1);
     if (bi >= 0) {
       if (dragAtomIndex >= 0 || mkBondPressed
           || bnd(dragWheelAction, ACTION_rotateBranch)) {
         if (dragAtomIndex >= 0) {
-          if (measurementQueued == null || measurementQueued.numSet == 0) {
+          if (measurementQueued == null || measurementQueued.numSet == 0 || mp == null) {
             vwr.setPendingMeasurement(vwr.getModelkit(false).setBondMeasure(bi,
                 measurementQueued = mp = getMP()));
           } else {
@@ -1418,13 +1419,19 @@ public class ActionManager implements EventManager {
       doPopup(x, y);
       return;
     }
-    if (clickedCount == 0 && apm != PICKING_ASSIGN_ATOM) {
+    if (clickedCount == 0 && apm != PICKING_ASSIGN_ATOM && !vwr.isModelkitPickingRotateBond()) {
       // mouse move
       if (mp == null)
         return;
       if (nearestPoint != null
-          || mp.getIndexOf(nearestAtomIndex) == 0)
+          || mp.getIndexOf(nearestAtomIndex) == 0) {
+        try {
         mp.addPoint(nearestAtomIndex, nearestPoint, false);
+        } catch (Exception e) {
+          exitMeasurementMode(null);
+          return;
+        }
+      }
       if (mp.haveModified)
         vwr.setPendingMeasurement(mp);
       vwr.refresh(Viewer.REFRESH_SYNC_MASK, "measurementPending");
@@ -1712,7 +1719,7 @@ public class ActionManager implements EventManager {
     measurementQueued = getMP();
   }
 
-  void exitMeasurementMode(String refreshWhy) {
+  public void exitMeasurementMode(String refreshWhy) {
     if (mp == null)
       return;
     vwr.setPendingMeasurement(mp = null);

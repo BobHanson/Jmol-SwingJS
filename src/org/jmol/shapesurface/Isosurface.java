@@ -1779,11 +1779,6 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     String s = findValue(x, y, false, bsVisible);
     if (s == null)
       return false;
-    if (vwr.gdata.antialiasEnabled) {
-      //because hover rendering is done in FIRST pass only
-      x <<= 1;
-      y <<= 1;
-    }      
     vwr.hoverOnPt(x, y, s, pickedMesh.thisID, pickedPt);
     return true;
   }
@@ -1813,10 +1808,6 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         double g = thisMesh.colorEncoder.quantize(f, true);
         f = thisMesh.colorEncoder.quantize(f, false);
         s = "" + g + " - " + f;
-      }
-      if (vwr.gdata.isAntialiased()) {
-        x <<= 1;
-        y <<= 1;
       }
       vwr.hoverOnPt(x, y, s, null, null);
     } catch (Exception e) {

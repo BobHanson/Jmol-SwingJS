@@ -9,7 +9,6 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import org.jmol.util.SimpleUnitCell;
 
 import javajs.util.BS;
 import javajs.util.CU;
