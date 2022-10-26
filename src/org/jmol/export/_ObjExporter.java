@@ -431,7 +431,9 @@ public class _ObjExporter extends __CartesianExporter {
       debugPrint("End initializeOutput (error in super):");
       return false;
     }
-
+    if (fileName == null) {
+      throw new NullPointerException("Cannot output two files (OBJ and MTL) to string");
+    }
 //    pixelSize = 0.5d / scalePixelsPerAngstrom;
 
     // Get the root path

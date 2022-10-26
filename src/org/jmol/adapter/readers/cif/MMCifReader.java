@@ -751,12 +751,12 @@ public class MMCifReader extends CifReader {
    */
   private boolean processStructConfLoopBlock() throws Exception {
     if (ignoreStructure) {
-      cifParser.skipLoop(false);
+      skipLoop(false);
       return false;
     }
     parseLoopParametersFor(FAMILY_STRUCTCONF, structConfFields);
     if (!checkAllFieldsPresent(structConfFields, -1, true)) {
-      cifParser.skipLoop(true);
+      skipLoop(true);
       return false;
     }
     while (cifParser.getData()) {
@@ -818,12 +818,12 @@ public class MMCifReader extends CifReader {
    */
   private boolean processStructSheetRangeLoopBlock() throws Exception {
     if (ignoreStructure) {
-      cifParser.skipLoop(false);
+      skipLoop(false);
       return false;
     }
     parseLoopParametersFor(FAMILY_SHEET, structSheetRangeFields);
     if (!checkAllFieldsPresent(structSheetRangeFields, -1, true)) {
-      cifParser.skipLoop(true);
+      skipLoop(true);
       return false;
     }
     while (cifParser.getData())
@@ -1228,7 +1228,7 @@ public class MMCifReader extends CifReader {
     if (iHaveDesiredModel && asc.atomSetCount > 0 && !isAssembly) {
       done = true;
       if (cifParser != null) {
-        cifParser.skipLoop(false);
+        skipLoop(false);
         // but only this atom loop
         skipping = false;
       }

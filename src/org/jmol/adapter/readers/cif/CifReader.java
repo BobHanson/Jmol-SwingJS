@@ -244,7 +244,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (isLoop) {
       if (skipping && !isMMCIF) {
         cifParser.getTokenPeeked();
-        cifParser.skipLoop(false);
+        skipLoop(false);
       } else {
         processLoopBlock();
       }
@@ -884,7 +884,7 @@ public class CifReader extends AtomSetCollectionReader {
       case 0:
         break;
       case -1:
-        cifParser.skipLoop(false);
+        skipLoop(false);
         //$FALL-THROUGH$
       case 1:
         return;
@@ -909,7 +909,7 @@ public class CifReader extends AtomSetCollectionReader {
         || key.startsWith("_symmetry_ssg_equiv")) {
       if (ignoreFileSymmetryOperators) {
         Logger.warn("ignoring file-based symmetry operators");
-        cifParser.skipLoop(false);
+        skipLoop(false);
       } else {
         processSymmetryOperationsLoopBlock();
       }
@@ -933,7 +933,7 @@ public class CifReader extends AtomSetCollectionReader {
       addMore();
       return;
     }
-    cifParser.skipLoop(false);
+    skipLoop(false);
   }
 
   protected boolean processSubclassLoopBlock() throws Exception {
@@ -1266,7 +1266,7 @@ public class CifReader extends AtomSetCollectionReader {
       // no coordinates, but valuable information
     } else {
       // it is a different kind of _atom_site loop block
-      cifParser.skipLoop(false);
+      skipLoop(false);
       return false;
     }
     int modelField = key2col[MODEL_NO];
@@ -1751,7 +1751,7 @@ public class CifReader extends AtomSetCollectionReader {
         break;
     if (n < 0) {
       Logger.warn("required " + FAMILY_SGOP + " key not found");
-      cifParser.skipLoop(false);
+      skipLoop(false);
       return;
     }
     n = 0;
@@ -1859,7 +1859,7 @@ public class CifReader extends AtomSetCollectionReader {
         && stateScriptVersionInt < 140403);
     parseLoopParameters(geomBondFields);
     if (bondLoopBug || !checkAllFieldsPresent(geomBondFields, 2, true)) {
-      cifParser.skipLoop(false);
+      skipLoop(false);
       return;
     }
     int bondCount = 0;
@@ -2267,5 +2267,9 @@ public class CifReader extends AtomSetCollectionReader {
     return key.equals("\0");
   }
 
+  protected void skipLoop(boolean doReport) throws Exception {
+    if (isLoop)
+      cifParser.skipLoop(doReport);
+  }
 
 }

@@ -1313,7 +1313,7 @@ public class CmdExt extends ScriptExt {
       if (!isCoords) {
         for (int i = 0; i < vAtomSets.size(); ++i) {
           Object[] bss = vAtomSets.get(i);
-          if (isFrames)
+          if (isFrames) 
             vAtomSets2.addLast(bss = new BS[] { BSUtil.copy((BS) bss[0]), (BS) bss[1] });
           ((BS) bss[0]).and(bsFrom);
         }
@@ -4073,6 +4073,7 @@ public class CmdExt extends ScriptExt {
     case T.drawing:
     case T.frame:
     case T.image:
+    case T.obj:
     case T.scene:
     case T.vibration:
     case T.identifier:
@@ -4344,7 +4345,12 @@ public class CmdExt extends ScriptExt {
         eparams.put("fullPath", fullPath);
       eparams.put("width", Integer.valueOf(width));
       eparams.put("height", Integer.valueOf(height));
-      data = vwr.generateOutputForExport(eparams);
+      try {
+        data = vwr.generateOutputForExport(eparams);
+      } catch (Exception e) {
+        data = e.toString();// failed to write -- could be complex OBJ/MTL file
+        return data;
+      }
       if (data == null || data.length() == 0)
         return "";
       if (showOnly)
