@@ -5242,7 +5242,7 @@ public class Viewer extends JmolViewer
         || !slm.isInSelectionSubset(atomIndex))
       return;
     String label = (isLabel ? GT.$("Drag to move label")
-        : isModelKitOpen() || isModelkitPickingRotateBond()
+        : isModelKitOpen() || isModelkitPickingActive()
             ? (String) getModelkit(false).setProperty("hoverLabel",
                 Integer.valueOf(atomIndex))
             : null);
@@ -5977,7 +5977,7 @@ public class Viewer extends JmolViewer
         || isModelkitPickingActive());
   }
 
-  private boolean isModelKitOpen() {
+  boolean isModelKitOpen() {
     return g.modelKitMode && modelkit != null && !modelkit.isHidden();
   }
 

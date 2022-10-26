@@ -1532,8 +1532,9 @@ public class ModelKit {
       break;
     case STATE_MOLECULAR:
       Atom[] atoms = vwr.ms.at;
+      boolean isBondedAtom = (atomIndex == bondAtomIndex1 || atomIndex == bondAtomIndex2);
       if (isRotateBond) {
-        if (atomIndex == bondAtomIndex1 || atomIndex == bondAtomIndex2) {
+        if (isBondedAtom) {
           msg = "rotate branch " + atoms[atomIndex].getAtomName();
           branchAtomIndex = atomIndex;
           bsRotateBranch = null;
@@ -1544,7 +1545,7 @@ public class ModelKit {
           //          resetBondFields("gethover");
         }
       }
-      if (bondIndex < 0) {
+      if (bondIndex < 0 || atomIndex >= 0 && !isBondedAtom) {
         if (atomHoverLabel.length() <= 2) {
           msg = atomHoverLabel = "Click to change to " + atomHoverLabel
               + " or drag to add " + atomHoverLabel;
@@ -1554,11 +1555,12 @@ public class ModelKit {
         }
       } else {
         if (msg == null) {
-          switch (bsHighlight.cardinality()) {
+          switch (isRotateBond ? bsHighlight.cardinality() : atomIndex >= 0 ? 1 : -1) {
           case 0:
             vwr.highlight(BSUtil.newAndSetBit(atomIndex));
             //$FALL-THROUGH$
           case 1:
+          case 2:
             if (!isRotateBond)
               menu.setActiveMenu(ATOM_MODE);
             if (atomHoverLabel.indexOf("charge") >= 0) {
@@ -1570,7 +1572,7 @@ public class ModelKit {
             }
             msg = atoms[atomIndex].getAtomName() + ": " + msg;
             break;
-          case 2:
+          case -1:
             msg = bondHoverLabel + getBondLabel(atoms);
             break;
           }

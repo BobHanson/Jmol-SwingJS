@@ -1499,7 +1499,7 @@ public class ActionManager implements EventManager {
   }
 
   private void doPopup(int x, int y) {
-    vwr.popupMenu(x, y, vwr.getBoolean(T.modelkitmode) ? 'm' : 'j');
+    vwr.popupMenu(x, y, vwr.isModelKitOpen() ? 'm' : 'j');
   }
 
   private void pickLabel(int iatom) {

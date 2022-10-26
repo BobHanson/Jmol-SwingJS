@@ -140,9 +140,9 @@ abstract public class JmolPopup extends JmolGenericPopup {
       if (nFrankList > 1) {
         thisy -= nFrankList * MENUITEM_HEIGHT;
         menuShowPopup(frankPopup, thisx, thisy);
-        return false;
+        return true;
       }
-      return true;
+      return false;
   }
 
   @Override

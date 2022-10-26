@@ -40,7 +40,7 @@ public class FrankRenderer extends ShapeRenderer {
     Frank frank = (Frank) shape;
     boolean allowKeys = vwr.getBooleanProperty("allowKeyStrokes");
     boolean modelKitMode = vwr.getBoolean(T.modelkitmode);
-    colix = (modelKitMode ? C.MAGENTA : vwr.isSignedApplet ? (allowKeys
+    colix = (modelKitMode && !vwr.getModelkit(false).isHidden() ? C.MAGENTA : vwr.isSignedApplet ? (allowKeys
         || (Viewer.isJS || Viewer.isSwingJS) && !vwr.isWebGL ? C.ORANGE : C.RED) : allowKeys ? C.BLUE
         : C.GRAY);
     if (isExport
