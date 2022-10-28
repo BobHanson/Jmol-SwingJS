@@ -3615,9 +3615,6 @@ public class Viewer extends JmolViewer
         mouse.clear();
         clearTimeouts();
         acm.clear();
-        if (!zapModelKit)
-          setPickingMode(null, ActionManager.PICKING_IDENTIFY);
-        g.modelKitMode = zapModelKit;
       }
       stm.clear(g);
       tempArray.clear();
@@ -3636,6 +3633,8 @@ public class Viewer extends JmolViewer
           g.removeParam("_pngjFile");
         if (zapModelKit && g.modelKitMode) {
           loadDefaultModelKitModel(null);
+        } else {
+          setPickingMode(null, ActionManager.PICKING_IDENTIFY);
         }
         undoMoveAction(T.undomove, -2);
       }
@@ -3651,7 +3650,7 @@ public class Viewer extends JmolViewer
   }
 
   private void loadDefaultModelKitModel(Map<String, Object> htParams) {
-    if (modelkit.isHidden() || getOperativeSymmetry() != null)
+    if (getModelkit(false).isHidden() || getOperativeSymmetry() != null)
       return;
     openStringInlineParamsAppend(getModelkit(false).getDefaultModel(), htParams,
         true);
@@ -7432,6 +7431,8 @@ public class Viewer extends JmolViewer
       acm.setPickingMode(ActionManager.PICKING_MK_RESET);
       if (isChange) {
         sm.setStatusModelKit(0);
+      } else if (!value) {
+        getModelkit(false).setProperty("hideMenu", null);
       }
     }
   }

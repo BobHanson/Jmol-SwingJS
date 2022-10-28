@@ -442,6 +442,10 @@ public class ModelKit {
 
       // boolean get/set
 
+      if (key == "hidemenu") {
+        menu.hidePopup();
+        return null;
+      }
       if (key == "constraint") {
         constraint = null;
         clearAtomConstraints();
@@ -489,6 +493,8 @@ public class ModelKit {
       if (key == "hidden") {
         if (value != null) {
           menu.hidden = isTrue(value);
+          if (menu.hidden)
+            menu.hidePopup();
           vwr.setBooleanProperty("modelkitMode", true);
         }
         return Boolean.valueOf(menu.hidden);
