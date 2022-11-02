@@ -5241,7 +5241,7 @@ public class Viewer extends JmolViewer
         || !slm.isInSelectionSubset(atomIndex))
       return;
     String label = (isLabel ? GT.$("Drag to move label")
-        : isModelKitOpen() || isModelkitPickingActive()
+        : isModelKitOpen() || isModelkitPickingActive() // force modelkit
             ? (String) getModelkit(false).setProperty("hoverLabel",
                 Integer.valueOf(atomIndex))
             : null);
@@ -5271,7 +5271,6 @@ public class Viewer extends JmolViewer
   public boolean isModelkitPickingRotateBond() {
     return (acm.getBondPickingMode() == ActionManager.PICKING_ROTATE_BOND);
   }
-
 
   /**
    * Hover over an arbitrary point.
@@ -5972,7 +5971,7 @@ public class Viewer extends JmolViewer
 
   boolean getBondsPickable() {
     return (g.bondPicking || isModelKitOpen()
-        && getModelkitProperty("isMolecular") == Boolean.TRUE
+        && getModelkitPropertySafely("isMolecular") == Boolean.TRUE
         || isModelkitPickingActive());
   }
 
@@ -7406,8 +7405,8 @@ public class Viewer extends JmolViewer
     g.modelKitMode = value;
     g.setB("modelkitmode", value); // in case there is a callback before this completes
     highlight(null);
-    if (isChange && modelkit != null) {
-      getModelkit(false).setProperty("constraint", null);
+    if (isChange) {
+      setModelkitPropertySafely("constraint", null);
     }
     if (value) {
       setNavigationMode(false);
@@ -8232,12 +8231,10 @@ public class Viewer extends JmolViewer
                                         int modifiers) {
     // called by actionManager
     // cannot synchronize this -- it's from the mouse and the event queue
-    if (deltaZ == 0)
+    if (deltaZ == 0 || isJmolDataFrame())
       return;
-    if (x == Integer.MIN_VALUE)
-      setModelKitRotateBondIndex(Integer.MIN_VALUE);
-    if (isJmolDataFrame())
-      return;
+    if (x == Integer.MIN_VALUE && modelkit != null)
+      setModelkitPropertySafely("rotateBondIndex", Integer.valueOf(Integer.MIN_VALUE));
     if (deltaX == Integer.MIN_VALUE) {
       showSelected = true;
       movableBitSet = setMovableBitSet(null, !asAtoms);
@@ -8304,7 +8301,7 @@ public class Viewer extends JmolViewer
    * from Sticks
    * 
    * @param index
-   * @param closestAtomIndex
+   * @param closestAtomIndex - ignored
    * @param x
    * @param y
    */
@@ -8322,9 +8319,9 @@ public class Viewer extends JmolViewer
     }
     highlight(bs);
     getModelkit(false); 
-    setModelkitProperty("screenXY", new int[] { x, y });
-    setModelkitProperty("bondIndex", Integer.valueOf(index));
-    String text = (String) setModelkitProperty("hoverLabel",
+    setModelkitPropertySafely("screenXY", new int[] { x, y });
+    setModelkitPropertySafely("bondIndex", Integer.valueOf(index));
+    String text = (String) setModelkitPropertySafely("hoverLabel",
         Integer.valueOf(-2 - index));
     if (text != null)
       hoverOnPt(x, y, text, null, null);
@@ -8344,7 +8341,7 @@ public class Viewer extends JmolViewer
       shm.loadShape(JC.SHAPE_HALOS);
       setCursor(GenericPlatform.CURSOR_HAND);
     }
-    setModelkitProperty("highlight", bs);
+    setModelkitPropertySafely("highlight", bs);
     setShapeProperty(JC.SHAPE_HALOS, "highlight", bs);
   }
 
@@ -9204,7 +9201,7 @@ public class Viewer extends JmolViewer
 
     // only allow crystal symmetry constraints 
     if (isModelKitOpen())
-      modelkit.setProperty("constraint", null);
+      setModelkitPropertySafely("constraint", null);
     String ff = g.forceField;
     BS bsInFrame = getFrameAtoms();
     if (bsSelected == null)
@@ -10423,11 +10420,11 @@ public class Viewer extends JmolViewer
    * @param name
    * @return value
    */
-  public Object getModelkitProperty(String name) {
+  public Object getModelkitPropertySafely(String name) {
     return (modelkit == null ? null : modelkit.getProperty(name));
   }
 
-  public Object setModelkitProperty(String key, Object value) {
+  public Object setModelkitPropertySafely(String key, Object value) {
     return (modelkit == null ? null : modelkit.setProperty(key, value));
   }
 
@@ -10481,18 +10478,7 @@ public class Viewer extends JmolViewer
       return null;
     }
   }
-
-  /**
-   * 
-   * @param i
-   *        Integer.MIN_VALUE initializes the bond index
-   */
-  public void setModelKitRotateBondIndex(int i) {
-    if (modelkit != null) {
-      modelkit.setProperty("rotateBondIndex", Integer.valueOf(i));
-    }
-  }
-
+  
   private Map<String, Object> macros;
 
   /**
@@ -10808,7 +10794,7 @@ public class Viewer extends JmolViewer
         / tm.scalePixelsPerAngstrom / 4;
     double af = (isAntialiased ? 2 : 1);
     // I think this perspectivedepth calc is not necessary and should have used the reference plane anyway
-    double f = (false && tm.perspectiveDepth ? 1d/tm.getPerspectiveFactor((tm.getCameraDepth() - .5d) * getScreenDim()) : 1) / af;   
+    double f = 1 / af;//(false && tm.perspectiveDepth ? 1d/tm.getPerspectiveFactor((tm.getCameraDepth() - .5d) * getScreenDim()) : 1) / af;   
     int m = 0, p = 0;
     double e = 0, mp = 0;
     // seems to work
@@ -10842,6 +10828,10 @@ public class Viewer extends JmolViewer
     if (andCheckMinimize)
       checkMinimization();
       sm.setStatusAtomMoved(bs);
+  }
+
+  public boolean isModelKitOption(char type, String value) {
+    return modelkit != null && modelkit.checkOption(type, value);
   }
   
 }

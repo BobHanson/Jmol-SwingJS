@@ -781,7 +781,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_UNITCELL_INFO :
       return getUnitCellInfo();
     case PROP_MODELKIT_INFO:
-      return vwr.getModelkitProperty(myParam.toString());
+      return vwr.getModelkitPropertySafely(myParam.toString());
     case PROP_APPLET_INFO:
       return getAppletInfo();
     case PROP_ANIMATION_INFO:

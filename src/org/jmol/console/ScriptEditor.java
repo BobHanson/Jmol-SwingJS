@@ -478,6 +478,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
     return false;
   }
 
+  @SuppressWarnings("unchecked")
   private void saveZip(boolean isAs) {
     if (isAs) {
     // TODO
@@ -485,7 +486,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
       String script = editor.getText().trim();
       if (script.startsWith("load "))
         script = script.substring(script.indexOf(";") +  1);
-      map = vwr.fm.getFileAsMap(zipFileName, null);
+      map = (Map<String, Object>) vwr.fm.getFileAsMap(zipFileName, null, false);
       if (map == null)
         return;
       map.put("movie.spt", script);

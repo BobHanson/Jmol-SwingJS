@@ -72,22 +72,20 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
+import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
 import javajs.util.OC;
-import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
 import javajs.util.Rdr;
 import javajs.util.SB;
-import javajs.util.T3d;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -2594,6 +2592,7 @@ public class MathExt {
     return l;
   }
 
+  @SuppressWarnings("unchecked")
   private boolean evaluateLoad(ScriptMathProcessor mp, SV[] args,
                                boolean isFile)
       throws ScriptException {
@@ -2607,7 +2606,7 @@ public class MathExt {
     if (args.length < 1 || args.length > 3)
       return false;
     String file = FileManager.fixDOSName(SV.sValue(args[0]));
-    boolean asBytes = (args.length > 1 && args[1].tok == T.on);
+    boolean asMap = (args.length > 1 && args[1].tok == T.on);
     boolean async = (vwr.async
         || args.length > 2 && args[args.length - 1].tok == T.on);
     int nBytesMax = (args.length > 1 && args[1].tok == T.integer
@@ -2615,8 +2614,8 @@ public class MathExt {
         : -1);
     boolean asJSON = (args.length > 1
         && args[1].asString().equalsIgnoreCase("JSON"));
-    if (asBytes)
-      return mp.addXMap(vwr.fm.getFileAsMap(file, null));
+    if (asMap)
+      return mp.addXMap((Map<String, Object>) vwr.fm.getFileAsMap(file, null, false));
     boolean isQues = file.startsWith("?");
     if (Viewer.isJS && (isQues || async)) {
       if (isFile && isQues)
@@ -4202,24 +4201,36 @@ public class MathExt {
     return mp.addXBs(bsret);
   }
 
+  @SuppressWarnings("unchecked")
   private boolean evaluateWrite(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
-    switch (args.length) {
+    int n = args.length;
+    boolean asBytes = false;
+    if (n == 2 && args[1].tok == T.on) {
+      n = 1;
+      asBytes = true;
+    }
+    switch (n) {
     case 0:
       return false;
     case 1:
+      // write("PNGJ")       // map
+      // write("PNGJ", true) // byte array
       String type = args[0].asString().toUpperCase();
       if (type.equals("PNGJ")) {
-        return mp.addXMap(vwr.fm.getFileAsMap(null, "PNGJ"));
+        Object o = vwr.fm.getFileAsMap(null, "PNGJ", asBytes);
+        return (asBytes ? mp.addX(SV.newV(T.barray, new BArray((byte[]) o))) : mp.addXMap((Map<String, Object>) o));
       }
       if (PT.isOneOf(type, ";ZIP;ZIPALL;JMOL;")) {
         Map<String, Object> params = new Hashtable<String, Object>();
         OC oc = new OC();
         params.put("outputChannel", oc);
         vwr.createZip(null, type, params);
-        BufferedInputStream bis = Rdr.getBIS(oc.toByteArray());
+        byte[] bytes = oc.toByteArray();
+        if (asBytes)
+          return mp.addX(SV.newV(T.barray, new BArray(bytes)));
         params = new Hashtable<String, Object>();
-        vwr.readFileAsMap(bis, params, null);
+        vwr.readFileAsMap(Rdr.getBIS(bytes), params, null);
         return mp.addXMap(params);
       }
       break;

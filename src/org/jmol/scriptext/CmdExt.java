@@ -4761,7 +4761,7 @@ public class CmdExt extends ScriptExt {
       return;
     case T.modelkitmode:
       if (!chk && slen == 3) {
-        msg = "" + vwr.getModelkitProperty(eval.stringParameter(2));
+        msg = "" + vwr.getModelkitPropertySafely(eval.stringParameter(2));
         len = 3;
       }
       break;
@@ -5919,6 +5919,7 @@ public class CmdExt extends ScriptExt {
    * @throws ScriptException
    */
   private void modelkit() throws ScriptException {
+    
     // modelkit [ON(nada)/OFF/DISPLAY/HIDE]
     //    
     //  MODELKIT CENTER point or atoms (point can be fractional by adding "/1" to at least one coord)
@@ -5978,9 +5979,14 @@ public class CmdExt extends ScriptExt {
     switch (tok) {
     case T.undo:
     case T.redo:
-      e.cmdUndoRedo(tok == T.undo ? T.undomove : T.redomove);
+      if (chk)
+        e.cmdUndoRedo(tok == T.undo ? T.undomove : T.redomove);
       return;
     case T.off:
+      // don't continue if the model kit does not exist and this is MODELKIT OFF by itself
+      if (slen == 2 && vwr.getModelkitPropertySafely("exists") == null)
+        return;
+      //$FALL-THROUGH$
     case T.nada:
     case T.on:
       if (!chk)
@@ -6069,18 +6075,6 @@ public class CmdExt extends ScriptExt {
         key = paramAsStr(++i);
         value = (tokAt(++i) == T.nada ? "true" : paramAsStr(i));
         break;
-      case T.mode:
-        value = paramAsStr(++i).toLowerCase();
-        if (!PT.isOneOf((String) value, ModelKit.MODE_OPTIONS))
-          invArg();
-        break;
-      case T.unitcell:
-        value = paramAsStr(++i).toLowerCase();
-        if (!PT.isOneOf((String) value, ModelKit.UNITCELL_OPTIONS)) {
-          unitcell(2, true);
-          return;
-        }
-        break;
       case T.symop:
         switch (tokAt(++i)) {
         case T.string:
@@ -6104,12 +6098,6 @@ public class CmdExt extends ScriptExt {
           break;
         }
         break;
-      case T.symmetry:
-        // undocumented -- deprecated -- use SET SYMMETRY
-        value = paramAsStr(++i).toLowerCase();
-        if (!PT.isOneOf((String) value, ModelKit.SYMMETRY_OPTIONS))
-          invArg();
-        break;
       case T.offset:
         value = paramAsStr(i + 1);
         if (value.equals("none")) {
@@ -6123,17 +6111,35 @@ public class CmdExt extends ScriptExt {
         value = e.atomCenterOrCoordinateParameter(++i, null);
         i = e.iToken;
         break;
+      case T.mode:
+        value = paramAsStr(++i).toLowerCase();
+        if (!vwr.isModelKitOption('M', (String) value))
+          invArg();
+        break;
+      case T.unitcell:
+        value = paramAsStr(++i).toLowerCase();
+        if (!vwr.isModelKitOption('U', (String) value)) {
+          unitcell(2, true);
+          return;
+        }
+        break;
+      case T.symmetry:
+        // undocumented -- deprecated -- use SET SYMMETRY
+        value = paramAsStr(++i).toLowerCase();
+        if (!vwr.isModelKitOption('S', (String) value))
+          invArg();
+        break;
       default:
-        if (PT.isOneOf(key, ModelKit.BOOLEAN_OPTIONS)) {
+        if (vwr.isModelKitOption('B', key)) {
           value = Boolean.valueOf((tok = tokAt(++i)) == T.nada || tok == T.on);
           break;
         }
-        if (PT.isOneOf(key, ModelKit.MODE_OPTIONS)) {
+        if (vwr.isModelKitOption('M', key)) {
           value = key;
           key = "mode";
           break;
         }
-        if (PT.isOneOf(key, ModelKit.UNITCELL_OPTIONS)) {
+        if (vwr.isModelKitOption('U', key)) {
           value = key;
           key = "unitcell";
           break;

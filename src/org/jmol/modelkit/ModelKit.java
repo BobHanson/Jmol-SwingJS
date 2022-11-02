@@ -188,14 +188,26 @@ public class ModelKit {
   
   private ModelKitPopup menu;
 
-  // scripting options
+  // scripting options -- nonstatic due to legacy autoloading class for ModelKit.xxx
   
-  //  { "xtalModeMenu", "mkmode_molecular mkmode_view mkmode_edit" }, 
-  public static final String MODE_OPTIONS = ";view;edit;molecular;";
-  public static final String SYMMETRY_OPTIONS = ";none;applylocal;retainlocal;applyfull;";
-  public static final String UNITCELL_OPTIONS = ";packed;extend;";
-  public static final String BOOLEAN_OPTIONS = ";autobond;hidden;showsymopinfo;clicktosetelement;addhydrogen;addhydrogens;";
-  public static final String SET_OPTIONS = ";element;";
+  public boolean checkOption(char type, String value) {
+    String check = null;
+    switch (type) {
+    case 'M':
+      check = ";view;edit;molecular;";
+      break;
+    case 'S':
+      check = ";none;applylocal;retainlocal;applyfull;";
+      break;
+    case 'U':
+      check = ";packed;extend;";
+      break;
+    case 'B':
+      check = ";autobond;hidden;showsymopinfo;clicktosetelement;addhydrogen;addhydrogens;";
+      break;
+      }
+    return (check != null && PT.isOneOf(value, check));
+  }
 
   ////////////// modelkit state //////////////
   
@@ -217,85 +229,109 @@ public class ModelKit {
   final static int STATE_UNITCELL_PACKED /* 0b00000000000*/ = 0x000;
   final static int STATE_UNITCELL_EXTEND /* 0b00100000000*/ = 0x100;
 
+  final static String OPTIONS_MODE = "optionsMenu";
+  final static String XTAL_MODE = "xtalMenu";
+  final static String BOND_MODE = "bondMenu";
+  final static String ATOM_MODE = "atomMenu";
+
   private static final P3d Pt000 = new P3d();
 
   int state = STATE_MOLECULAR & STATE_SYM_NONE & STATE_SYM_APPLYFULL
       & STATE_UNITCELL_EXTEND; // 0x00
   
-  double rotationDeg;
-
-  String atomHoverLabel = "C", bondHoverLabel = GT.$("increase order"), xtalHoverLabel;
-
-  boolean hasUnitCell;
-  String[] allOperators;
-  int currentModelIndex = -1;
+  private String atomHoverLabel = "C", bondHoverLabel = GT.$("increase order");
   
-  boolean alertedNoEdit;
+  private String[] allOperators;
+  private int currentModelIndex = -1;
   
   protected ModelSet lastModelSet;
 
-  String pickAtomAssignType = "C";
-  String lastElementType = "C";
-  char pickBondAssignType = 'p'; // increment up
-  boolean isPickAtomAssignCharge; // pl or mi
+  private String lastElementType = "C";
 
-  BS bsHighlight = new BS();
+  private BS bsHighlight = new BS();
 
-  int bondIndex = -1, bondAtomIndex1 = -1, bondAtomIndex2 = -1;
+  private int bondIndex = -1, bondAtomIndex1 = -1, bondAtomIndex2 = -1;
 
-  BS bsRotateBranch;
-  int branchAtomIndex;
-  boolean isRotateBond;
+  private BS bsRotateBranch;
+  private int branchAtomIndex;
 
-  int[] screenXY = new int[2]; // for tracking mouse-down on bond
+  /**
+   * settable property maintained here
+   */
+  private int[] screenXY = new int[2]; // for tracking mouse-down on bond
 
-  boolean showSymopInfo = true;
- 
+
+  private boolean isPickAtomAssignCharge; // pl or mi
+
+  /**
+   * set true when bond rotation is active
+   */
+  private boolean isRotateBond;
+  
+  /**
+   * a settable property value; not implemented
+   */
+  private boolean showSymopInfo = true;
+
+  /**
+   * A value set by the popup menu; questionable design
+   */
+  private boolean hasUnitCell;
+  
+  /**
+   * alerting that ModelKit crystal editing mode has not been implemented --
+   * this is no longer necessary.
+   */
+  private boolean alertedNoEdit;
+  
+
   /**
    * set to TRUE after rotation has been turned off in order to turn highlight off in viewer.hoverOff()
    */
-  boolean wasRotating;
+  private boolean wasRotating;
    
   /**
    * when TRUE, add H atoms to C when added to the modelSet. 
    */
-  boolean addXtalHydrogens = true;
+  private boolean addXtalHydrogens = true;
 
-  static final String OPTIONS_MODE = "optionsMenu";
-  static final String XTAL_MODE = "xtalMenu";
-  static final String BOND_MODE = "bondMenu";
-  static final String ATOM_MODE = "atomMenu";
-
-  
   /**
    * Except for H atoms, do not allow changes to elements just by clicking them. 
    * This protects against doing that inadvertently when editing.
    * 
    */
-  boolean clickToSetElement = true; 
+  private boolean clickToSetElement = true; 
   
   /**
    * set to true for proximity-based autobonding (prior to 14.32.4/15.2.4 the default was TRUE
    */
-  boolean autoBond = false;
-  
-  
-  P3d centerPoint, spherePoint, viewOffset;
-  double centerDistance;
-  Object symop;
-  int centerAtomIndex = -1, secondAtomIndex = -1, atomIndexSphere = -1;
-  String drawData;
-  String drawScript;
-  int iatom0;
+  private boolean autoBond = false;
 
-  String bondRotationName = ".modelkitMenu.bondMenu.rotateBondP!RD";
+  private P3d centerPoint, spherePoint;
+
+  String pickAtomAssignType = "C";
+  char pickBondAssignType = 'p'; // increment up
+  P3d viewOffset;
+
+  private double centerDistance;
   
-  String lastCenter = "0 0 0", lastOffset = "0 0 0";
+  private Object symop;
+  private int centerAtomIndex = -1, secondAtomIndex = -1;
+  
+  private String drawData;
+  private String drawScript;
+  private int iatom0;
+
+  private String lastCenter = "0 0 0", lastOffset = "0 0 0";
 
   private Atom a0, a3;
 
   private Constraint constraint;
 
+  // not implemented
+  private String xtalHoverLabel;
+  private int atomIndexSphere = -1;
+  
 
   public ModelKit() {
   }
@@ -398,6 +434,9 @@ public class ModelKit {
   public Object getProperty(String name) {
     
     name = name.toLowerCase().intern();
+    
+    if (name == "exists")
+      return Boolean.TRUE;
 
     if (name == "constraint") {
       return constraint;
@@ -415,7 +454,6 @@ public class ModelKit {
       return getinfo();
     }
 
-    
     return setProperty(name, null);
   }
   
@@ -431,21 +469,42 @@ public class ModelKit {
    */
   public synchronized Object setProperty(String key, Object value) {
 
-    // from Viewer and CmdExt
+    // from ModelKit, Viewer, and CmdExt
 
-    //System.out.println("MK.setProperty " + key + " " + value);
+//    System.out.println("MK.setProperty " + key + " " + value);
     try {
+      
       if (vwr == null) // clearing
         return null;
       
       key = key.toLowerCase().intern();
 
-      // boolean get/set
+      // test first due to frequency
+
+      if (key == "hoverlabel") {
+        // from hoverOn no setting of this, only getting
+        return getHoverLabel(((Integer) value).intValue());
+      }
+
+      // set only
+      
+      if (key == "branchatomclicked") {
+        if (isRotateBond && !vwr.acm.isHoverable())
+          setBranchAtom(((Integer) value).intValue(), true);
+        return null;
+      }
+
+      if (key == "branchatomdragged") {
+        if (isRotateBond)
+          setBranchAtom(((Integer) value).intValue(), true);
+        return null;
+      }
 
       if (key == "hidemenu") {
         menu.hidePopup();
         return null;
       }
+      
       if (key == "constraint") {
         constraint = null;
         clearAtomConstraints();
@@ -471,6 +530,84 @@ public class ModelKit {
         //        setProperty("bondType", "p");
         return null;
       }
+
+      if (key == "pickingmode") {
+        if ("identify".equals(value)) {
+          if (isRotateBond) {
+            vwr.setBooleanProperty("bondPicking", false);
+            vwr.highlight(null);
+          }
+          wasRotating = isRotateBond;
+          isRotateBond = false;
+          vwr.acm.exitMeasurementMode("modelkit");
+        }
+        return null;
+      }
+
+      if (key == "bondatomindex") {
+        int i = ((Integer) value).intValue();
+        if (i != bondAtomIndex2)
+          bondAtomIndex1 = i;
+
+        bsRotateBranch = null;
+        return null;
+      }
+
+      if (key == "highlight") {
+        if (value == null)
+          bsHighlight = new BS();
+        else
+          bsHighlight = (BS) value;
+        return null;
+      }
+
+      if (key == "mode") { // view, edit, or molecular
+        boolean isEdit = ("edit".equals(value));
+        setMKState("view".equals(value) ? STATE_XTALVIEW
+            : isEdit ? STATE_XTALEDIT : STATE_MOLECULAR);
+        if (isEdit)
+          addXtalHydrogens = false;
+        return null;
+      }
+
+      if (key == "symmetry") {
+        setDefaultState(STATE_XTALEDIT);
+        key = ((String) value).toLowerCase().intern();
+        setSymEdit(key == "applylocal" ? STATE_SYM_APPLYLOCAL
+            : key == "retainlocal" ? STATE_SYM_RETAINLOCAL
+                : key == "applyfull" ? STATE_SYM_APPLYFULL : 0);
+        showXtalSymmetry();
+        return null;
+      }
+
+      if (key == "unitcell") { // packed or extend
+        boolean isPacked = "packed".equals(value);
+        setUnitCell(isPacked ? STATE_UNITCELL_PACKED : STATE_UNITCELL_EXTEND);
+        viewOffset = (isPacked ? Pt000 : null);
+        return null;
+      }
+
+      if (key == "center") {
+        setDefaultState(STATE_XTALVIEW);
+        centerPoint = (P3d) value;
+        lastCenter = centerPoint.x + " " + centerPoint.y + " " + centerPoint.z;
+        centerAtomIndex = (centerPoint instanceof Atom ? ((Atom) centerPoint).i
+            : -1);
+        atomIndexSphere = -1;
+        secondAtomIndex = -1;
+        processAtomClick(centerAtomIndex);
+        return null;
+      }
+
+      if (key == "scriptassignbond") {
+        // from ActionManger only
+        appRunScript("modelkit assign bond [{" + value + "}] \""
+            + pickBondAssignType + "\"");
+        return null;
+      }
+
+
+      // boolean get/set
 
       if (key == "addhydrogen" || key == "addhydrogens") {
         if (value != null)
@@ -509,25 +646,18 @@ public class ModelKit {
       if (key == "symop") {
         setDefaultState(STATE_XTALVIEW);
         if (value != null) {
+          // get only, but with a value argument
+
+          if (key == "hoverlabel") {
+            // from hoverOn no setting of this, only getting
+            return getHoverLabel(((Integer) value).intValue());
+          }
           symop = value;
           showSymop(symop);
         }
         return symop;
       }
       
-      if (key == "pickingmode") {
-        if ("identify".equals(value)) {
-          if (isRotateBond) {
-            vwr.setBooleanProperty("bondPicking", false);
-            vwr.highlight(null);
-          }
-          wasRotating = isRotateBond;
-          isRotateBond = false;
-          vwr.acm.exitMeasurementMode("modelkit");
-        }
-        return null;
-      }
-
       if (key == "atomtype") {
         wasRotating = isRotateBond;
         isRotateBond = false;
@@ -600,76 +730,6 @@ public class ModelKit {
         return screenXY;
       }
 
-      // set only (always returning null):
-
-      if (key == "bondatomindex") {
-        int i = ((Integer) value).intValue();
-        if (i != bondAtomIndex2)
-          bondAtomIndex1 = i;
-
-        bsRotateBranch = null;
-        return null;
-      }
-
-      if (key == "highlight") {
-        if (value == null)
-          bsHighlight = new BS();
-        else
-          bsHighlight = (BS) value;
-        return null;
-      }
-
-      if (key == "mode") { // view, edit, or molecular
-        boolean isEdit = ("edit".equals(value));
-        setMKState("view".equals(value) ? STATE_XTALVIEW
-            : isEdit ? STATE_XTALEDIT : STATE_MOLECULAR);
-        if (isEdit)
-          addXtalHydrogens = false;
-        return null;
-      }
-
-      if (key == "symmetry") {
-        setDefaultState(STATE_XTALEDIT);
-        key = ((String) value).toLowerCase().intern();
-        setSymEdit(key == "applylocal" ? STATE_SYM_APPLYLOCAL
-            : key == "retainlocal" ? STATE_SYM_RETAINLOCAL
-                : key == "applyfull" ? STATE_SYM_APPLYFULL : 0);
-        showXtalSymmetry();
-        return null;
-      }
-
-      if (key == "unitcell") { // packed or extend
-        boolean isPacked = "packed".equals(value);
-        setUnitCell(isPacked ? STATE_UNITCELL_PACKED : STATE_UNITCELL_EXTEND);
-        viewOffset = (isPacked ? Pt000 : null);
-        return null;
-      }
-
-      if (key == "center") {
-        setDefaultState(STATE_XTALVIEW);
-        centerPoint = (P3d) value;
-        lastCenter = centerPoint.x + " " + centerPoint.y + " " + centerPoint.z;
-        centerAtomIndex = (centerPoint instanceof Atom ? ((Atom) centerPoint).i
-            : -1);
-        atomIndexSphere = -1;
-        secondAtomIndex = -1;
-        processAtomClick(centerAtomIndex);
-        return null;
-      }
-
-      if (key == "scriptassignbond") {
-        // from ActionManger only
-        appRunScript("modelkit assign bond [{" + value + "}] \""
-            + pickBondAssignType + "\"");
-        return null;
-      }
-
-      // get only, but with a value argument
-
-      if (key == "hoverlabel") {
-        // no setting of this, only getting
-        return getHoverLabel(((Integer) value).intValue());
-      }
 
       // not yet implemented
 
@@ -721,7 +781,7 @@ public class ModelKit {
         return null;
       }
 
-      System.err.println("ModelKitPopup.setProperty? " + key + " " + value);
+      System.err.println("ModelKit.setProperty? " + key + " " + value);
 
     } catch (Exception e) {
       return "?";
@@ -1299,7 +1359,7 @@ public class ModelKit {
    */
   private void setBondIndex(int index, boolean isRotate) {
     if (!isRotate && vwr.isModelkitPickingRotateBond()) {
-      vwr.setModelKitRotateBondIndex(index);
+      setProperty("rotateBondIndex", Integer.valueOf(index));
       return;
     }
     
@@ -1538,18 +1598,11 @@ public class ModelKit {
       break;
     case STATE_MOLECULAR:
       Atom[] atoms = vwr.ms.at;
-      boolean isBondedAtom = (atomIndex == bondAtomIndex1 || atomIndex == bondAtomIndex2);
+      boolean isBondedAtom = (atomIndex == bondAtomIndex1
+          || atomIndex == bondAtomIndex2);
       if (isRotateBond) {
-        if (isBondedAtom) {
-          msg = "rotate branch " + atoms[atomIndex].getAtomName();
-          branchAtomIndex = atomIndex;
-          bsRotateBranch = null;
-        } else {
-          msg = "rotate bond"  + getBondLabel(atoms);
-          bsRotateBranch = null;
-          branchAtomIndex = -1;
-          //          resetBondFields("gethover");
-        }
+        setBranchAtom(atomIndex, false);
+        msg = (branchAtomIndex >= 0 ? "rotate branch " + atoms[atomIndex].getAtomName() : "rotate bond" + getBondLabel(atoms));
       }
       if (bondIndex < 0 || atomIndex >= 0 && !isBondedAtom) {
         if (atomHoverLabel.length() <= 2) {
@@ -1561,7 +1614,8 @@ public class ModelKit {
         }
       } else {
         if (msg == null) {
-          switch (isRotateBond ? bsHighlight.cardinality() : atomIndex >= 0 ? 1 : -1) {
+          switch (isRotateBond ? bsHighlight.cardinality()
+              : atomIndex >= 0 ? 1 : -1) {
           case 0:
             vwr.highlight(BSUtil.newAndSetBit(atomIndex));
             //$FALL-THROUGH$
@@ -1571,7 +1625,7 @@ public class ModelKit {
               menu.setActiveMenu(ATOM_MODE);
             if (atomHoverLabel.indexOf("charge") >= 0) {
               int ch = vwr.ms.at[atomIndex].getFormalCharge();
-              ch += (atomHoverLabel.indexOf("increase") >= 0 ? 1 :-1);
+              ch += (atomHoverLabel.indexOf("increase") >= 0 ? 1 : -1);
               msg = atomHoverLabel + " to " + (ch > 0 ? "+" : "") + ch;
             } else {
               msg = atomHoverLabel;
@@ -1589,6 +1643,22 @@ public class ModelKit {
     return msg;
   }
   
+  /**
+   * @param atomIndex 
+   * @param isClick  
+   */
+  private void setBranchAtom(int atomIndex, boolean isClick) {
+    boolean isBondedAtom = (atomIndex == bondAtomIndex1
+        || atomIndex == bondAtomIndex2);
+    if (isBondedAtom) {
+      branchAtomIndex = atomIndex;
+      bsRotateBranch = null;
+    } else {
+      bsRotateBranch = null;
+      branchAtomIndex = -1;
+    }
+  }
+
   private String getBondLabel(Atom[] atoms) {
     return " for " + atoms[Math.min(bondAtomIndex1, bondAtomIndex2)].getAtomName() 
      + "-" + atoms[Math.max(bondAtomIndex1, bondAtomIndex2)].getAtomName();
@@ -1720,7 +1790,7 @@ public class ModelKit {
     try {
       if (isDelete) {
         if (isClick) {
-          vwr.setModelKitRotateBondIndex(-1);
+          setProperty("rotateBondIndex", Integer.valueOf(-1));
         }
         getConstraint(null, atomIndex, GET_DELETE);
       }

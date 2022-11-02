@@ -763,35 +763,54 @@ public class FileManager implements BytePoster {
     return ((byte[]) bytes).length + " bytes";
   }
 
-  public Map<String, Object> getFileAsMap(String name, String type) {
-    Map<String, Object> bdata = new Hashtable<String, Object>();
+  /**
+   * create a PNG or ZIP file and return it as a map or, optionally, as a byte[]
+   * @param name
+   * @param type
+   * @param asBytes true to return byte[] instead of a map
+   * @return Map or byte[]
+   */
+  public Object getFileAsMap(String name, String type, boolean asBytes) {
+    Map<String, Object> bdata = (asBytes ? null : new Hashtable<String, Object>());
     Object t;
     if (name == null) {
-      // return the current state as a PNGJ or ZIPDATA
+      // return the current state as a PNGJ or ZIPDATA from write() command
       String[] errMsg = new String[1];
       byte[] bytes = vwr.getImageAsBytes(type, -1, -1, -1, errMsg);
       if (errMsg[0] != null) {
+        if (asBytes)
+          return new byte[0];
         bdata.put("_ERROR_", errMsg[0]);
         return bdata;
       }
+      if (asBytes)
+        return new byte[0];
       t = Rdr.getBIS(bytes);
     } else {
       String[] data = new String[2];
       t = getFullPathNameOrError(name, true, data);
       if (t instanceof String) {
+        if (asBytes)
+          return new byte[0];
         bdata.put("_ERROR_", t);
         return bdata;
       }
       if (!checkSecurity(data[0])) {
+        if (asBytes)
+          return new byte[0];
         bdata.put("_ERROR_", "java.io. Security exception: cannot read file "
             + data[0]);
         return bdata;
       }
     }
     try {
-      ZipTools.readFileAsMap((BufferedInputStream) t, bdata, name);
-      
+      if (asBytes) {
+        return Rdr.streamToBytes((BufferedInputStream) t);
+      }
+      ZipTools.readFileAsMap((BufferedInputStream) t, bdata, name);      
     } catch (Exception e) {
+      if (asBytes)
+        return new byte[0];
       bdata.clear();
       bdata.put("_ERROR_", "" + e);
     }

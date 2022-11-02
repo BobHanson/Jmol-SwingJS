@@ -27,10 +27,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.T3d;
-
 import org.jmol.api.GenericImageDialog;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAppConsoleInterface;
@@ -39,13 +35,16 @@ import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolDialogInterface;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.c.CBK;
-import javajs.util.BS;
 import org.jmol.script.SV;
-import org.jmol.script.ScriptException;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.JmolAudio;
 import org.jmol.util.Logger;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.PT;
+import javajs.util.T3d;
 
 /**
  * 

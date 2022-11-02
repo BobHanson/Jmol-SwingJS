@@ -533,12 +533,12 @@ public class ActionManager implements EventManager {
     String script = ";set modelkitMode " + vwr.getBoolean(T.modelkitmode)
         + ";set picking " + getPickingModeName(apm);
     if (apm == PICKING_ASSIGN_ATOM)
-      script += "_" + vwr.getModelkitProperty("atomType");
+      script += "_" + vwr.getModelkitPropertySafely("atomType");
     script += ";";
     if (bondPickingMode != PICKING_OFF)
       script += "set picking " + getPickingModeName(bondPickingMode);
     if (bondPickingMode == PICKING_ASSIGN_BOND)
-      script += "_" + vwr.getModelkitProperty("bondType");
+      script += "_" + vwr.getModelkitPropertySafely("bondType");
     script += ";";
     return script;
   }
@@ -875,6 +875,17 @@ public class ActionManager implements EventManager {
   private int pressAction;
   private int dragAction;
   private int clickAction;
+  
+  /**
+   * This value is set if a mouse move has been detected.
+   * 
+   */
+
+  private boolean hoverable;
+  
+  public boolean isHoverable() {
+    return hoverable;
+  }
 
   private void setMouseActions(int count, int buttonMods, boolean isRelease) {
     pressAction = Binding.getMouseAction(count, buttonMods,
@@ -905,6 +916,10 @@ public class ActionManager implements EventManager {
       x = x << 1;
     switch (mode) {
     case Event.MOVED:
+      if (!hoverable) {
+        Logger.info("ActionManager: mouse move detected");
+        hoverable = true;
+      }
       setCurrent(time, x, y, buttonMods);
       moved.setCurrent(current, 0);
       if (mp != null || hoverActive) {
@@ -1033,18 +1048,18 @@ public class ActionManager implements EventManager {
     }
     if (isBound) {
       dragAtomIndex = vwr.findNearestAtomIndexMovable(x, y, true);
-      if (dragAtomIndex >= 0
-          && (apm == PICKING_ASSIGN_ATOM || apm == PICKING_INVERT_STEREO)
-//          && vwr.ms.isAtomInLastModel(dragAtomIndex)
-          ) {
-        if (bondPickingMode == PICKING_ROTATE_BOND) {          
-          vwr.setModelkitProperty("bondAtomIndex", Integer.valueOf(dragAtomIndex));
-        }
+      int bi = (bondPickingMode == PICKING_ROTATE_BOND ? vwr.getModelkit(false).getRotateBondIndex()
+          : -1);
+     if (dragAtomIndex >= 0
+          && (bi >= 0 || apm == PICKING_ASSIGN_ATOM || apm == PICKING_INVERT_STEREO)) {
         enterMeasurementMode(dragAtomIndex);
         mp.addPoint(dragAtomIndex, null, false);
+        if (bi >= 0) {
+          updateModelkitBranch(bi, true);
+        }
       }
-      int[] xy = (int[]) vwr.getModelkitProperty("screenXY");
-      mkBondPressed = (xy != null && pressed.inRange(10, xy[0], xy[1]));  
+      int[] xy = (int[]) vwr.getModelkitPropertySafely("screenXY");
+      mkBondPressed = (xy != null && pressed.inRange(10, xy[0], xy[1]));
       return;
     }
     if (bnd(pressAction, ACTION_popupMenu)) {
@@ -1091,12 +1106,7 @@ public class ActionManager implements EventManager {
       if (dragAtomIndex >= 0 || mkBondPressed
           || bnd(dragWheelAction, ACTION_rotateBranch)) {
         if (dragAtomIndex >= 0) {
-          if (measurementQueued == null || measurementQueued.numSet == 0 || mp == null) {
-            vwr.setPendingMeasurement(vwr.getModelkit(false).setBondMeasure(bi,
-                measurementQueued = mp = getMP()));
-          } else {
-            measurementQueued.refresh(null);
-          }
+          updateModelkitBranch(bi, false);
         }
         vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null, false,
             false, dragAtomIndex >= 0 ? 0 : Event.VK_SHIFT);
@@ -1256,6 +1266,16 @@ public class ActionManager implements EventManager {
     }
   }
 
+  private void updateModelkitBranch(int bondIndex, boolean isClick) {
+    vwr.setModelkitPropertySafely(isClick? "branchAtomClicked" : "branchAtomDragged", Integer.valueOf(dragAtomIndex));
+    if (measurementQueued == null || measurementQueued.numSet == 0 || mp == null) {
+      vwr.setPendingMeasurement(vwr.getModelkit(false).setBondMeasure(bondIndex,
+          measurementQueued = mp = getMP()));
+    } else {
+      measurementQueued.refresh(null);
+    }
+  }
+
   /**
    * change actual coordinates of selected atoms from set dragSeleted TRUE or
    * set PICKING DRAGSELECTED
@@ -1324,7 +1344,7 @@ public class ActionManager implements EventManager {
         exitMeasurementMode(null);
         return;
       } else if (bondPickingMode == PICKING_ROTATE_BOND) {
-        vwr.setModelkitProperty("bondAtomIndex", Integer.valueOf(dragAtomIndex));
+        vwr.setModelkitPropertySafely("bondAtomIndex", Integer.valueOf(dragAtomIndex));
         exitMeasurementMode(null);
         return;
       }
@@ -1406,6 +1426,9 @@ public class ActionManager implements EventManager {
         isBond = "bond".equals(map.get("type"));
         isIsosurface = "isosurface".equals(map.get("type"));
         nearestPoint = getPoint(map);
+        if (isBond && vwr.isModelkitPickingRotateBond()) {
+          vwr.highlightBond(((Integer) map.get("index")).intValue(), -1, x, y);          
+        }
       }
     }
     if (isBond)
@@ -1964,13 +1987,10 @@ public class ActionManager implements EventManager {
   }
 
   private void bondPicked(int index) {    
-    if (bondPickingMode == PICKING_ASSIGN_BOND) {
-      vwr.undoMoveActionClear(-1, T.save, true);
-    }
-    
     switch (bondPickingMode) {
     case PICKING_ASSIGN_BOND:
-      vwr.setModelkitProperty("scriptAssignBond", Integer.valueOf(index));
+      vwr.undoMoveActionClear(-1, T.save, true);
+      vwr.setModelkitPropertySafely("scriptAssignBond", Integer.valueOf(index));
       break;
     case PICKING_ROTATE_BOND:
       // done separately
