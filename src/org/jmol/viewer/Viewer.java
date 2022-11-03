@@ -5386,7 +5386,7 @@ public class Viewer extends JmolViewer
         break;
       case ActionManager.PICKING_DELETE_BOND:
       case ActionManager.PICKING_IDENTIFY_BOND:
-        modelkit.setProperty("bondpickingmode", strMode);
+        modelkit.setProperty("bondpickingmode", strMode.toLowerCase());
         break;
       }
     }
