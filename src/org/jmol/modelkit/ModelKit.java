@@ -531,15 +531,20 @@ public class ModelKit {
         return null;
       }
 
-      if (key == "pickingmode") {
-        if ("identify".equals(value)) {
-          if (isRotateBond) {
-            vwr.setBooleanProperty("bondPicking", false);
-            vwr.highlight(null);
-          }
-          wasRotating = isRotateBond;
-          isRotateBond = false;
+      if (key == "atompickingmode") {
+        if (PT.isOneOf((String) value, ";identify;off;")) {
+          exitBondRotation(null);
+          vwr.setBooleanProperty("bondPicking", false);
           vwr.acm.exitMeasurementMode("modelkit");
+        }
+        return null;
+      }
+      
+      if (key == "bondpickingmode") {
+        if (value.equals("deletebond")) {
+          exitBondRotation(getText("bondTo0"));
+        } else if (value.equals("identifybond")) {
+          exitBondRotation("");
         }
         return null;
       }
@@ -671,9 +676,10 @@ public class ModelKit {
                     : "incCharge"));
           } else if ("X".equals(pickAtomAssignType)) {
             setHoverLabel(ATOM_MODE, getText("delAtom"));
+          } else if (pickAtomAssignType.equals("Xx")){
+            setHoverLabel(ATOM_MODE, getText("dragBond"));
           } else {
-            setHoverLabel(ATOM_MODE,
-                "Click or click+drag for " + pickAtomAssignType);
+            setHoverLabel(ATOM_MODE, "Click or click+drag for " + pickAtomAssignType);
             lastElementType = pickAtomAssignType;
           }
         }
@@ -992,13 +998,11 @@ public class ModelKit {
   }
 
   void exitBondRotation(String text) {
-    // from ModelKitPopup only
     wasRotating = isRotateBond;
     isRotateBond = false;
     if (text != null)
       bondHoverLabel = text;
     vwr.highlight(null);
-    vwr.setPickingMode(null, ActionManager.PICKING_ASSIGN_BOND);
   }
 
   void resetBondFields() {
@@ -1100,14 +1104,14 @@ public class ModelKit {
     setProperty("atomType", lastElementType);
   }
 
-  void setHoverLabel(String activeMenu, String text) {
+  void setHoverLabel(String mode, String text) {
     if (text == null)
       return;
-    if (activeMenu == BOND_MODE) {
+    if (mode == BOND_MODE) {
       bondHoverLabel = text;
-    } else if (activeMenu == ATOM_MODE) {
+    } else if (mode == ATOM_MODE) {
       atomHoverLabel = text;
-    } else if (activeMenu == XTAL_MODE) {
+    } else if (mode == XTAL_MODE) {
       xtalHoverLabel = atomHoverLabel = text;
     }
   }
@@ -1598,13 +1602,14 @@ public class ModelKit {
       break;
     case STATE_MOLECULAR:
       Atom[] atoms = vwr.ms.at;
-      boolean isBondedAtom = (atomIndex == bondAtomIndex1
-          || atomIndex == bondAtomIndex2);
+//      boolean isBondedAtom = (atomIndex == bondAtomIndex1
+//          || atomIndex == bondAtomIndex2);
       if (isRotateBond) {
         setBranchAtom(atomIndex, false);
-        msg = (branchAtomIndex >= 0 ? "rotate branch " + atoms[atomIndex].getAtomName() : "rotate bond" + getBondLabel(atoms));
+        msg = (branchAtomIndex >= 0 ? "rotate branch " + atoms[atomIndex].getAtomName() : "rotate bond for " + getBondLabel(atoms));
       }
-      if (bondIndex < 0 || atomIndex >= 0 && !isBondedAtom) {
+      if (bondIndex < 0// || atomIndex >= 0 && !isBondedAtom
+          ) {
         if (atomHoverLabel.length() <= 2) {
           msg = atomHoverLabel = "Click to change to " + atomHoverLabel
               + " or drag to add " + atomHoverLabel;
@@ -1621,10 +1626,14 @@ public class ModelKit {
             //$FALL-THROUGH$
           case 1:
           case 2:
-            if (!isRotateBond)
+            Atom a = vwr.ms.at[atomIndex];
+            if (!isRotateBond) {
               menu.setActiveMenu(ATOM_MODE);
+              if (vwr.acm.getAtomPickingMode() == ActionManager.PICKING_IDENTIFY)
+                return null;
+            }
             if (atomHoverLabel.indexOf("charge") >= 0) {
-              int ch = vwr.ms.at[atomIndex].getFormalCharge();
+              int ch = a.getFormalCharge();
               ch += (atomHoverLabel.indexOf("increase") >= 0 ? 1 : -1);
               msg = atomHoverLabel + " to " + (ch > 0 ? "+" : "") + ch;
             } else {
@@ -1633,7 +1642,8 @@ public class ModelKit {
             msg = atoms[atomIndex].getAtomName() + ": " + msg;
             break;
           case -1:
-            msg = bondHoverLabel + getBondLabel(atoms);
+            msg = (bondHoverLabel.length() == 0 ? "" : bondHoverLabel + " for ") 
+              + getBondLabel(atoms);
             break;
           }
         }
@@ -1660,7 +1670,7 @@ public class ModelKit {
   }
 
   private String getBondLabel(Atom[] atoms) {
-    return " for " + atoms[Math.min(bondAtomIndex1, bondAtomIndex2)].getAtomName() 
+    return atoms[Math.min(bondAtomIndex1, bondAtomIndex2)].getAtomName() 
      + "-" + atoms[Math.max(bondAtomIndex1, bondAtomIndex2)].getAtomName();
    }
 
@@ -1799,11 +1809,11 @@ public class ModelKit {
         // just assigning a charge, deleting an atom, or changing its element 
         if (atom == null)
           return;
-        vwr.sm.setStatusStructureModified(atomIndex, mi, 1, cmd, 1, bsEquiv);
+        vwr.sm.setStatusStructureModified(atomIndex, mi, Viewer.MODIFY_ASSIGN_ATOM, cmd, 1, bsEquiv);
         assignAtom(atomIndex, type, autoBond, !isXtal, true, bsEquiv);
         if (!PT.isOneOf(type, ";Mi;Pl;X;"))
           vwr.ms.setAtomNamesAndNumbers(atomIndex, -ac, null, true);
-        vwr.sm.setStatusStructureModified(atomIndex, mi, -1, "OK", 1, bsEquiv);
+        vwr.sm.setStatusStructureModified(atomIndex, mi, -Viewer.MODIFY_ASSIGN_ATOM, "OK", 1, bsEquiv);
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
         return;
       }
@@ -1871,7 +1881,7 @@ public class ModelKit {
           if (!isConnected) {
             vConnections.clear();
           }
-          vwr.sm.setStatusStructureModified(atomIndex, mi, 3, cmd, 1, null);
+          vwr.sm.setStatusStructureModified(atomIndex, mi, Viewer.MODIFY_SET_COORD, cmd, 1, null);
         }
         if (pt != null || points != null) {
           BS bsM = vwr.getThisModelAtoms();
@@ -1925,7 +1935,7 @@ public class ModelKit {
         if (atomIndex >= 0)
           assignAtom(atomIndex, ".", false, !isXtal, isClick, null);
         vwr.ms.setAtomNamesAndNumbers(atomIndexNew, -ac, null, true);
-        vwr.sm.setStatusStructureModified(atomIndexNew, mi, -3, "OK", 1, bs);
+        vwr.sm.setStatusStructureModified(atomIndexNew, mi, -Viewer.MODIFY_SET_COORD, "OK", 1, bs);
         return;
       }
       // potentially many new atoms here, from MODELKIT ADD 
@@ -1971,17 +1981,17 @@ public class ModelKit {
       int ac = vwr.ms.ac;
       BS bsAtoms = BSUtil.newAndSetBit(a1.i);
       bsAtoms.set(vwr.ms.bo[bondIndex].atom2.i);
-      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, Viewer.MODIFY_MAKE_BOND,
+      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, Viewer.MODIFY_ASSIGN_BOND,
           cmd, 1, bsAtoms);
       //boolean ok = 
       assignBond(bondIndex, type, bsAtoms);
       vwr.ms.setAtomNamesAndNumbers(a1.i, -ac, null, true);
 //fails to refresh in JavaScript if we don't do this here      if (!ok || type == '0')
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");      
-      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -Viewer.MODIFY_MAKE_BOND, "" + type, 1, bsAtoms);
+      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -Viewer.MODIFY_ASSIGN_BOND, "" + type, 1, bsAtoms);
     } catch (Exception ex) {
       Logger.error("assignBond failed");
-      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -2, "ERROR " + ex, 1, null);
+      vwr.sm.setStatusStructureModified(bondIndex, modelIndex, -Viewer.MODIFY_ASSIGN_BOND, "ERROR " + ex, 1, null);
     } finally {
       setMKState(state);
     }
@@ -2021,9 +2031,7 @@ public class ModelKit {
     }
     try {
       if (bondOrder == 0) {
-        BS bs = new BS();
-        bs.set(bond.index);
-        vwr.ms.deleteBonds(bs, false);
+        vwr.deleteBonds(BSUtil.newAndSetBit(bond.index));
       } else {
         bond.setOrder(bondOrder | Edge.BOND_NEW);
         if (bond.atom1.getElementNumber() != 1
@@ -2054,16 +2062,17 @@ public class ModelKit {
       int modelIndex = atoms[index].mi;
       BS bs = BSUtil.newAndSetBit(index);
       bs.set(index2);
-      BS bsBonds = vwr.ms.getBondsForSelectedAtoms(bs, false);
-      vwr.sm.setStatusStructureModified(-1, modelIndex, Viewer.MODIFY_MAKE_BOND, cmd, 1, bs);
+      BS bsBond = vwr.ms.getBondsForSelectedAtoms(bs, false);
+      vwr.sm.setStatusStructureModified(-1, modelIndex, Viewer.MODIFY_ASSIGN_BOND, cmd, 1, bs);
       vwr.ms.connect(connections);
       int ac = vwr.ms.ac;
+      // now adjust hydrogens
       // note that vwr.ms changes during the assignAtom command 
       assignAtom(index, ".", true, true, false, null);
       assignAtom(index2, ".", true, true, false, null);
       vwr.ms.setAtomNamesAndNumbers(index, -ac, null, true);
-      bsBonds = vwr.ms.getBondsForSelectedAtoms(bs, false);
-      vwr.sm.setStatusStructureModified(bsBonds.nextSetBit(0), modelIndex, -Viewer.MODIFY_MAKE_BOND, "OK", 1, bs);
+      bsBond = vwr.ms.getBondsForSelectedAtoms(bs, false);
+      vwr.sm.setStatusStructureModified(bsBond.nextSetBit(0), modelIndex, -Viewer.MODIFY_ASSIGN_BOND, "OK", 1, bs);
       if (type != '1') {
         bs = vwr.getBondsForSelectedAtoms(bs);
         int bondIndex = bs.nextSetBit(0);
@@ -2228,7 +2237,6 @@ public class ModelKit {
     boolean isOccSet = (bsOcc.cardinality() > 1);
     if ((n = moveConstrained(iatom, p, !isOccSet, allowProjection)) == 0 || Double.isNaN(p.x)
         || !isOccSet) {
-//      if (n > 0)
         vwr.setStatusAtomMoved(true, bsOcc);
       return n;
     }

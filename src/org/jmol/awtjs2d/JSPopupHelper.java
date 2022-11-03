@@ -99,7 +99,8 @@ import org.jmol.popup.PopupHelper;
   @Override
   public void menuAddButtonGroup(SC item) {
     if (item == null) {
-      buttonGroup = null;
+      if (buttonGroup != null && buttonGroup.getButtonCount() > 0)
+        buttonGroup = null;
       return;
     }
     if (buttonGroup == null)

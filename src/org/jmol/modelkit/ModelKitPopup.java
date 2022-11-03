@@ -30,6 +30,7 @@ import org.jmol.i18n.GT;
 import org.jmol.popup.JmolGenericPopup;
 import org.jmol.popup.PopupResource;
 import org.jmol.script.T;
+import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.Viewer;
 
 /**
@@ -267,12 +268,13 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     if (source == null || !selected)
       return;
     String name = source.getName();
+    String mode;
 //    System.out.println("ModelKitPopup updating for show " + updatingForShow);
-    if (!updatingForShow && setActiveMenu(name) != null) {
+    if (!updatingForShow && (mode = setActiveMenu(name)) != null) {
       exitBondRotation();
       String text = source.getText();
       // don't turn this into a Java 8 switch -- we need this to still compile in Java 6 for legacy Jmol
-      if (activeMenu == ModelKit.BOND_MODE) {
+      if (mode == ModelKit.BOND_MODE) {
         if (name.equals(bondRotationName)) {
           bondRotationCheckBox = source;
         } else {
@@ -288,6 +290,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     // called by subclasses
     
     modelkit.exitBondRotation(prevBondCheckBox == null ? null : prevBondCheckBox.getText());
+    vwr.setPickingMode(null, ActionManager.PICKING_ASSIGN_BOND);
     if (bondRotationCheckBox != null)
       bondRotationCheckBox.setSelected(false);
     if (prevBondCheckBox != null)
@@ -322,6 +325,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     menuSetLabel(item, element);
     item.setActionCommand("assignAtom_" + element + "P!:??");
     return "set picking assignAtom_" + element;
+    
   }
 
   @Override
@@ -344,7 +348,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
           continue;
         menuSetLabel(item, "??");
         item.setActionCommand("_??P!:");
-        item.setSelected(false);
       }
       appRunScript("set picking assignAtom_C");
       return;
@@ -369,6 +372,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   protected boolean appRunSpecialCheckBox(SC item, String basename,
                                           String script, boolean TF) {
     if (basename.indexOf("assignAtom_Xx") == 0) {
+      // drag to bond
       modelkit.resetAtomPickType();
     }
     return super.appRunSpecialCheckBox(item, basename, script, TF);
@@ -378,8 +382,8 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     String thisBondType = "assignBond_"+modelkit.pickBondAssignType;
     String thisAtomType = "assignAtom_" + modelkit.pickAtomAssignType + "P"; 
     for (Map.Entry<String, SC> entry : htCheckbox.entrySet()) {
-      String key = entry.getKey();
       SC item = entry.getValue();
+      String key = item.getActionCommand();
       if (key.startsWith(thisBondType) || key.startsWith(thisAtomType)) {
         updatingForShow = true;
         item.setSelected(false);

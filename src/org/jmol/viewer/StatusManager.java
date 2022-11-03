@@ -376,6 +376,7 @@ public class StatusManager {
                                          int mode, String msg, int n, BS bsAtoms) {
     if (atomIndex >= 0 && bsAtoms == null)
       bsAtoms = BSUtil.newAndSetBit(atomIndex);
+    //System.out.println("SM.setstatusStructureMod " + atomIndex + " " + mode);
     String sJmol = getJmolScriptCallback(CBK.STRUCTUREMODIFIED);
     boolean isEnabled =  notifyEnabled(CBK.STRUCTUREMODIFIED);
     if (isEnabled || sJmol != null)

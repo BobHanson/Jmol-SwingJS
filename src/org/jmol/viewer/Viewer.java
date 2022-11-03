@@ -4757,7 +4757,7 @@ public class Viewer extends JmolViewer
 
   public String evalStringQuietSync(String strScript, boolean isQuiet,
                                     boolean allowSyncScript) {
-
+    //System.out.println("Viewer.evalsqs " + strScript);
     return (getScriptManager() == null ? null
         : scm.evalStringQuietSync(strScript, isQuiet, allowSyncScript));
   }
@@ -5263,7 +5263,9 @@ public class Viewer extends JmolViewer
     switch (acm.getBondPickingMode()) {
     case ActionManager.PICKING_ROTATE_BOND:
     case ActionManager.PICKING_ASSIGN_BOND:
-      return true;
+    case ActionManager.PICKING_DELETE_BOND:
+    case ActionManager.PICKING_IDENTIFY_BOND:
+      return g.bondPicking;
     }
     return false;
   }
@@ -5375,9 +5377,18 @@ public class Viewer extends JmolViewer
     String name = ActionManager.getPickingModeName(acm.getAtomPickingMode());
     g.setO("picking", name);
     if (modelkit != null) {
-      modelkit.setProperty("pickingMode", name);
-      if (pickingMode != mode && pickingMode == ActionManager.PICKING_IDENTIFY)
-        setModelKitMode(false);
+      modelkit.setProperty("atompickingmode", name);
+      acm.setPickingMode(pickingMode);
+      switch (pickingMode) {
+      case ActionManager.PICKING_IDENTIFY:
+        if (pickingMode != mode)
+          setModelKitMode(false);
+        break;
+      case ActionManager.PICKING_DELETE_BOND:
+      case ActionManager.PICKING_IDENTIFY_BOND:
+        modelkit.setProperty("bondpickingmode", strMode);
+        break;
+      }
     }
     if (option == null || option.length() == 0)
       return;
@@ -5388,6 +5399,7 @@ public class Viewer extends JmolViewer
       getModelkit(false).setProperty("atomType", option);
       break;
     case ActionManager.PICKING_ASSIGN_BOND:
+      setBooleanPropertyTok("bondPicking", T.bondpicking, true);
       getModelkit(false).setProperty("bondType", option);
       break;
     default:
@@ -5970,9 +5982,9 @@ public class Viewer extends JmolViewer
   }
 
   boolean getBondsPickable() {
-    return (g.bondPicking || isModelKitOpen()
-        && getModelkitPropertySafely("isMolecular") == Boolean.TRUE
-        || isModelkitPickingActive());
+    return (g.bondPicking || isModelkitPickingActive()
+        || isModelKitOpen()
+        && getModelkitPropertySafely("isMolecular") == Boolean.TRUE);
   }
 
   boolean isModelKitOpen() {
@@ -8804,12 +8816,13 @@ public class Viewer extends JmolViewer
     return getDataManager().getDefaultVdwNameOrData(type, bs);
   }
 
-  public final static int MODIFY_DELETE_ATOMS = 1;
-  public final static int MODIFY_DELETE_BONDS = 2;
+  public final static int MODIFY_ASSIGN_ATOM = 1; // MODELKIT ASSIGN ATOM ... 
+  public final static int MODIFY_DELETE_BONDS = 2;// SET PICKING deleteBond or MODELKIT ASSIGN BOND 0 
   public final static int MODIFY_SET_COORD = 3;
   public final static int MODIFY_DELETE_ATOM = 4;
   public final static int MODIFY_DELETE_MODEL = 5;
-  public final static int MODIFY_MAKE_BOND = 6;
+  public final static int MODIFY_ASSIGN_BOND = 6;  // MODELKIT ASSIGN BOND ...
+  public final static int MODIFY_DELETE_ATOMS = 7; // changed from 1 for Jmol 14.32.80 and 15.2.80
 
   public int deleteAtoms(BS bsAtoms, boolean fullModels) {
     int atomIndex = (bsAtoms == null ? -1 : bsAtoms.nextSetBit(0));
@@ -8889,6 +8902,7 @@ public class Viewer extends JmolViewer
     ms.deleteBonds(bsDeleted, false);
     sm.setStatusStructureModified(-1, modelIndex, -MODIFY_DELETE_BONDS, "OK",
         bsDeleted.cardinality(), bsDeleted);
+    highlight(null);
   }
 
   public void deleteModelAtoms(int modelIndex, int firstAtomIndex, int nAtoms,
@@ -9704,7 +9718,7 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * Run a script using the script function script("xxxxxx") using direct script
+   * Run a script immediately using the script function script("xxxxxx") using direct script
    * tokens for script ( "xxxxxxx" )
    *
    */

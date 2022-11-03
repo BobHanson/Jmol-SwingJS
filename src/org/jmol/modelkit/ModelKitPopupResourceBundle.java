@@ -54,11 +54,11 @@ public class ModelKitPopupResourceBundle extends PopupResource {
     { MENU_NAME, "atomMenu bondMenu xtalMenu optionsMenu" },
     { "optionsMenu", "new center addh minimize hmin " +
         " - undo redo - SIGNEDsaveFile SIGNEDsaveState exit!Persist" },
-    { ModelKit.ATOM_MODE , "assignAtom_XP!RD assignAtom_XxP!RD dragAtomP!RD dragMinimizeP!RD dragMoleculeP!RD dragMinimizeMoleculeP!RD " +
-        "invertStereoP!RD - assignAtom_CP!RD assignAtom_HP!RD assignAtom_NP!RD assignAtom_OP!RD assignAtom_FP!RD assignAtom_ClP!RD assignAtom_BrP!RD " +
+    { ModelKit.ATOM_MODE , "assignAtom_XxP!RD dragAtomP!RD dragMinimizeP!RD dragMoleculeP!RD dragMinimizeMoleculeP!RD " +
+        "invertStereoP!RD -  assignAtom_XP!RD assignAtom_CP!RD assignAtom_HP!RD assignAtom_NP!RD assignAtom_OP!RD assignAtom_FP!RD assignAtom_ClP!RD assignAtom_BrP!RD " +
         "_??P!RD _??P!RD _??P!RD " +
         "moreAtomMenu assignAtom_plP!RD assignAtom_miP!RD" },
-    { "moreAtomMenu", "clearQPersist - _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD " },
+    { "moreAtomMenu", "clearQPersist , _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD " },
     { ModelKit.BOND_MODE, "assignBond_0P!RD assignBond_1P!RD assignBond_2P!RD assignBond_3P!RD assignBond_pP!RD assignBond_mP!RD rotateBondP!RD" },
     { ModelKit.XTAL_MODE, "xtalModePersistMenu xtalSelPersistMenu xtalSelOpPersistMenu operator xtalPackingPersistMenu xtalEditOptPersistMenu xtalOptionsPersistMenu" },
     { "xtalModePersistMenu", "mkmode_molecular mkmode_view mkmode_edit" }, 

@@ -10,8 +10,15 @@ public class ButtonGroup {
     id = Component.newID("bg");
   }
   
+  private int count;
+  
   public void add(SC item) {
+    count++;
     ((AbstractButton) item).htmlName = this.id;
+  }
+  
+  public int getButtonCount() {
+    return count;
   }
 
 }

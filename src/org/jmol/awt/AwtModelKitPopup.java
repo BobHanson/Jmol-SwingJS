@@ -47,15 +47,20 @@ public class AwtModelKitPopup extends ModelKitPopup {
                          final PopupResource popupResourceBundle) {
 
     final AwtSwingComponent c = (AwtSwingComponent) subMenu;
-    c.deferred = true;
+    c.deferred = (item.indexOf("more") < 0);
+    if (!c.deferred && item.indexOf("Computed") < 0)
+      addMenuItems(id, item, subMenu, popupResourceBundle);
+
     c.jm.addMenuListener(new MenuListener() {
 
       @Override
       public void menuSelected(MenuEvent e) {
         if (c.deferred) {
           c.deferred = false;
-          if (item.indexOf("Computed") < 0)
+          if (item.indexOf("Computed") < 0) {
+            helper.menuAddButtonGroup(null);
             addMenuItems(id, item, subMenu, popupResourceBundle);
+          }
           updateAwtMenus(item);        
         }
       }

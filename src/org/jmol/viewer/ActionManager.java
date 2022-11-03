@@ -81,6 +81,17 @@ public class ActionManager implements EventManager {
     dragGesture = new Gesture(20, vwr);
   }
 
+  /**
+   * This value is set if a mouse move has been detected.
+   * 
+   */
+
+  private boolean hoverable;
+  
+  public boolean isHoverable() {
+    return hoverable;
+  }
+
   protected Thread hoverWatcherThread;
 
   public void checkHover() {
@@ -498,10 +509,12 @@ public class ActionManager implements EventManager {
       vwr.setStringProperty("pickingStyle", "toggle");
       vwr.setBooleanProperty("bondPicking", false);
       break;
-    case PICKING_IDENTIFY_BOND:
     case PICKING_ROTATE_BOND:
     case PICKING_ASSIGN_BOND:
     case PICKING_DELETE_BOND:
+      vwr.getModelkit(false);
+      //$FALL-THROUGH$
+    case PICKING_IDENTIFY_BOND:
       vwr.setBooleanProperty("bondPicking", true);
       bondPickingMode = pickingMode;
 //      return;
@@ -876,17 +889,6 @@ public class ActionManager implements EventManager {
   private int dragAction;
   private int clickAction;
   
-  /**
-   * This value is set if a mouse move has been detected.
-   * 
-   */
-
-  private boolean hoverable;
-  
-  public boolean isHoverable() {
-    return hoverable;
-  }
-
   private void setMouseActions(int count, int buttonMods, boolean isRelease) {
     pressAction = Binding.getMouseAction(count, buttonMods,
         isRelease ? Event.RELEASED : Event.PRESSED);
@@ -1333,7 +1335,7 @@ public class ActionManager implements EventManager {
     // necessary for reactivating
 //    if (dragRelease)
 //      vwr.setModelKitRotateBondIndex(Integer.MIN_VALUE);
-    if (dragAtomIndex >= 0) {
+    if (dragAtomIndex >= 0 && !vwr.isModelkitPickingRotateBond()) {
       if (apm == PICKING_DRAG_MINIMIZE
           || apm == PICKING_DRAG_MINIMIZE_MOLECULE)
         minimize(true);
@@ -1482,6 +1484,7 @@ public class ActionManager implements EventManager {
           || bondPickingMode == PICKING_ASSIGN_BOND ? ACTION_assignNew
           : ACTION_deleteBond)) {
         bondPicked(((Integer) map.get("index")).intValue());
+        vwr.refresh(Viewer.REFRESH_REPAINT, "bondpicked");
         return;
       }
     } else if (isIsosurface) {

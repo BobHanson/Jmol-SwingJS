@@ -85,7 +85,7 @@ public abstract class GenericPopup implements GenericMenuInterface {
 
   abstract protected void appUpdateForShow();
 
-  protected PopupHelper helper;
+  public PopupHelper helper;
 
   protected String strMenuStructure;
 
@@ -431,12 +431,13 @@ public abstract class GenericPopup implements GenericMenuInterface {
       SC item = entry.getValue();
       String basename = key.substring(0, key.indexOf(":"));
       boolean b = appGetBooleanProperty(basename);
+      boolean updateShow = updatingForShow;
       updatingForShow = true;
       if (item.isSelected() != b) {
         item.setSelected(b);
         isTainted = true;
       }
-      updatingForShow = false;
+      updatingForShow = updateShow;
     }
   }
 

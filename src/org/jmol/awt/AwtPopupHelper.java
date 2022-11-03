@@ -94,11 +94,13 @@ public class AwtPopupHelper implements
   @Override
   public void menuAddButtonGroup(SC item) {
     if (item == null) {
-      buttonGroup = null;
+      if (buttonGroup != null && buttonGroup.getButtonCount() > 0)
+        buttonGroup = null;
       return;
     }
-    if (buttonGroup == null)
+    if (buttonGroup == null) {
       buttonGroup = new ButtonGroup();
+    }
     buttonGroup.add(((AwtSwingComponent) item).ab);
   }
 
