@@ -602,16 +602,17 @@ abstract class WebPanel extends JPanel implements ActionListener,
           throw IOe;
         }
         Lst<String> filesToCopy = new Lst<String>();
+        Lst<String> filesToCopyUTF = (Lst<String>) new ArrayList<String>();
         String localPath = localAppletPath.getText();
         if (localPath.equals(".") || remoteAppletPath.getText().equals(".")) {
           try{
             String jmolJarDirPath=jmolJarPath().substring(0, jmolJarPath().lastIndexOf("/"));
             filesToCopy.addLast(jmolJarDirPath+"/jsmol.zip");
+            filesToCopyUTF.addLast(jmolJarDirPath+"/jsmol.zip");
           }catch (java.io.UnsupportedEncodingException e){
             LogPanel.log(GT.$("There was an error in the text encoding so the path to jsmol.zip is unknown."));
           }
         }
-        Lst<String> filesToCopyUTF = (Lst<String>) new ArrayList<String>();
         FileManager.getFileReferences(script, filesToCopy, filesToCopyUTF);
         ArrayList<String> copiedFileNames = new  ArrayList<String>();
         int nFiles = filesToCopy.size();
