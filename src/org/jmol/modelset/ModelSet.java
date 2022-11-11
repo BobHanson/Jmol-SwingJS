@@ -1007,6 +1007,7 @@ public class ModelSet extends BondCollection {
     modelNumbers = mergeModelSet.modelNumbers;
     frameTitles = mergeModelSet.frameTitles;
     haveChirality = mergeModelSet.haveChirality;
+    boxInfo.setBoundBox(mergeModelSet.boxInfo.bbCorner0, mergeModelSet.boxInfo.bbCorner1, true, 1);
     if (msInfo != null)
       msInfo.remove("models");
     mergeAtomArrays(mergeModelSet);

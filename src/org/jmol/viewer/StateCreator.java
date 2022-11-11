@@ -281,7 +281,7 @@ public class StateCreator extends JmolStateCreator {
             if (bond.atom1.group.isAdded(index))
               index = -1 - index;
             sb.appendI(index).appendC('\t').appendI(bond.atom2.i).appendC('\t')
-                .appendI(bond.order & ~Edge.BOND_NEW).appendC('\t')
+                .appendI(bond.order & Edge.BOND_RENDER_MASK).appendC('\t')
                 .appendD(bond.mad / 1000d).appendC('\t')
                 .appendD(bond.getEnergy()).appendC('\t')
                 .append(Edge.getBondOrderNameFromOrder(bond.order))

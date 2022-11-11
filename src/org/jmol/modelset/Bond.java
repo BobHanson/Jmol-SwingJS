@@ -156,7 +156,7 @@ public class Bond extends Edge {
   }
   
   public boolean is(int bondType) {
-    return (order & ~BOND_NEW) == bondType;
+    return (order & BOND_RENDER_MASK) == bondType;
   }
 
   @Override

@@ -1608,6 +1608,7 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("atom1", infoA);
     info.put("atom2", infoB);
     info.put("jmol_order", "0x" + Integer.toHexString(bond.getBondType()));
+    info.put("edge_type", Integer.valueOf(bond.getBondType()));
     info.put("order", Double.valueOf(Edge
         .getBondOrderNumberFromOrder(bond.getBondType())));
     info.put("type", Edge.getBondOrderNameFromOrder(bond.getBondType()));

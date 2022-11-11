@@ -452,7 +452,7 @@ abstract public class BondCollection extends AtomCollection {
         Bond bond = bo[i];
         if (bsAromatic.get(i))
           bond.setOrder(Edge.BOND_AROMATIC);
-        switch (bond.order & ~Edge.BOND_NEW) {
+        switch (bond.order & Edge.BOND_RENDER_MASK) {
         case Edge.BOND_AROMATIC:
           if (!assignAromaticMustBeSingle(bond.atom1) && !assignAromaticMustBeSingle(bond.atom2)) {
             bsAromatic.set(i);

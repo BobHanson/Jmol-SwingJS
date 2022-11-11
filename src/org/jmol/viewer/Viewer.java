@@ -1411,12 +1411,24 @@ public class Viewer extends JmolViewer
   public void notifyMinimizationStatus() {
     Object step = getP("_minimizationStep");
     String ff = (String) getP("_minimizationForceField");
-    sm.notifyMinimizationStatus((String) getP("_minimizationStatus"),
+    String minStatus = (String) getP("_minimizationStatus");
+    boolean starting = "starting".equals(minStatus);
+    boolean done = "done".equals(minStatus) || "failed".equals(minStatus);
+    BS bsAtoms = (starting || done ? minimizer.bsAtoms : null);
+    int atomIndex = (starting || done ? bsAtoms.nextSetBit(0) : -1);
+    int modelIndex = (atomIndex >= 0 ? getModelForAtomIndex(atomIndex).modelIndex : -1);
+    if (starting && atomIndex >= 0) {
+      sm.setStatusStructureModified(atomIndex, modelIndex, MODIFY_SET_COORD, "minimize:" + minStatus, bsAtoms.cardinality(), bsAtoms);
+    }
+    sm.notifyMinimizationStatus(minStatus,
         step instanceof String ? Integer.valueOf(0) : (Integer) step,
         (Double) getP("_minimizationEnergy"),
         (step.toString().equals("0") ? Double.valueOf(0)
             : (Double) getP("_minimizationEnergyDiff")),
         ff);
+    if (done && atomIndex >= 0) {
+      sm.setStatusStructureModified(atomIndex, modelIndex, -MODIFY_SET_COORD, "minimize:" + minStatus, bsAtoms.cardinality(), bsAtoms);
+    }  
   }
 
   /*

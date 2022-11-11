@@ -398,7 +398,7 @@ public class JmolMolecule {
       if (bonds[i].getBondType() == Edge.BOND_COVALENT_SINGLE)
         bs.set(bonds[i].getOtherNode(a).getIndex());
     }
-    if (bs.cardinality() < 3) {
+    if (bs.cardinality() < 2) {
       bs.clearAll();
     } else {
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {

@@ -35,29 +35,32 @@ public abstract class Edge implements SimpleEdge {
    *
    */
   
-  // 1111 1111 1100 0000 0000
-  // 9876 5432 1098 7654 3210
-  // || CIP stereochemistry mask (unk)  3 << 18  0xC0000
-  // |  CIP stereochemistry Z           2 << 18  0x80000
-  //  | CIP stereochemistry E           1 << 18  0x40000
-  //   | new connection                 1 << 17  0x20000
-  //    | render as single              1 << 16  0x10000
-  //    |   PyMOL render single         2 << 15  0x18000 + covalent order 
-  //    | | PyMOL render multiple       3 << 15  0x18000 + covalent order 
-  //      | strut                       1 << 15  0x08000
-  //    |  nnm m            | atropisomer        0x10001 + (nnmm << 11)
-  //       ||| | Hydrogen bond          F << 11  0x03800
-  //            |Stereo                 1 << 10  0x00400   
-  //             |Aromatic              1 << 9   0x00200
-  //              |Sulfur-Sulfur        1 << 8   0x00100
-  //                ||| Partial n       7 << 5   0x00E00
-  //                   | |||| Partial m          0x0001F
-  //                      ||| Covalent order     0x00007
-  //            ||| |||| |||| Covalent           0x003FF
-  // 0000 0000 0000 0001 0001 UNSPECIFIED
-  // 0000 1111 1111 1111 1111 ANY
-  // 0001 1111 1111 1111 1111 NULL
+  //.1 1111 1111 1100 0000 0000
+  //.0 9876 5432 1098 7654 3210
+  //
+  //.. ...| |||| |||| |||| |||| render mask         0x01FFFF
+  //.. ||.. CIP stereochemistry mask (unk)  3 << 18  0xC0000
+  //.. |... CIP stereochemistry Z           2 << 18  0x80000
+  //.. .|.. CIP stereochemistry E           1 << 18  0x40000
+  //.. ..|. new connection                  1 << 17  0x20000
+  //.. ...| render as single                1 << 16  0x10000
+  //.. ...| .... PyMOL render single        2 << 15  0x18000 + covalent order 
+  //.. ...| |... PyMOL render multiple      3 << 15  0x18000 + covalent order 
+  //.. .... |... strut                      1 << 15  0x08000
+  //.. ...| .nnm m... .... ...| atropisomer          0x10001 + (nnmm << 11)
+  //.. .... .||| |... Hydrogen bond         F << 11  0x03800
+  //.. .... .... .||| |||| |||| Covalent             0x003FF
+  //.. .... .... .|.. Stereo                1 << 10  0x00400   
+  //.. .... .... ..|. Aromatic              1 << 9   0x00200
+  //.. .... .... ...| Sulfur-Sulfur         1 << 8   0x00100
+  //.. .... .... .... |||. Partial n        7 << 5   0x00E00
+  //.. .... .... .... ...| |||| Partial m            0x0001F
+  //.. .... .... .... .... .||| Covalent order       0x00007
+  //.0 0000 0000 0000 0001 0001 UNSPECIFIED
+  //.0 0000 1111 1111 1111 1111 ANY
+  //.0 0001 1111 1111 1111 1111 NULL
 
+  public final static int BOND_RENDER_MASK     = 0x1FFFF;
   public final static int BOND_RENDER_SINGLE   = 0x10000;
 
   public final static int TYPE_ATROPISOMER     = 0x10001;
@@ -152,7 +155,7 @@ public abstract class Edge implements SimpleEdge {
    * @return a string representation to preserve double n.m
    */
   public final static String getBondOrderNumberFromOrder(int order) {
-    order &= ~BOND_NEW;
+    order &= BOND_RENDER_MASK;
     switch (order) {
     case BOND_ORDER_NULL:
     case BOND_ORDER_ANY:
@@ -192,7 +195,7 @@ public abstract class Edge implements SimpleEdge {
   }
 
   public final static String getBondOrderNameFromOrder(int order) {
-    order &= ~BOND_NEW;
+    order &= BOND_RENDER_MASK;
     switch (order) {
     case BOND_ORDER_ANY:
     case BOND_ORDER_NULL:
@@ -252,13 +255,13 @@ public abstract class Edge implements SimpleEdge {
   }
 
   public final static int getPartialBondOrder(int order) {
-    return ((order & ~BOND_NEW) >> 5);
+    return ((order & BOND_RENDER_MASK) >> 5);
   }
 
   protected final static int getCovalentBondOrder(int order) {
     if ((order & BOND_COVALENT_MASK) == 0)
       return 0;
-    order &= ~BOND_NEW; 
+    order &= BOND_RENDER_MASK; 
     if ((order & BOND_PARTIAL_MASK) != 0)
       return getPartialBondOrder(order);
     if ((order & BOND_SULFUR_MASK) != 0)
@@ -307,7 +310,7 @@ public abstract class Edge implements SimpleEdge {
   
   @Override
   public int getBondType() {
-    return order & ~BOND_NEW;
+    return order & BOND_RENDER_MASK;
   }
 
   private enum EnumBondOrder {

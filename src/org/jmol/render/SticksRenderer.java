@@ -146,7 +146,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
     a = atomA0 = bond.atom1;
     b = atomB0 = bond.atom2;
 
-    int order = bond.order & ~Edge.BOND_NEW;
+    int order = bond.order & Edge.BOND_RENDER_MASK;
     if (bondsBackbone) {
       if (ssbondsBackbone && (order & Edge.BOND_SULFUR_MASK) != 0) {
         // for ssbonds, always render the sidechain,
@@ -210,7 +210,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
 
     // set the rendered bond order
 
-    bondOrder = order & ~Edge.BOND_NEW;
+    bondOrder = order & Edge.BOND_RENDER_MASK;
     if ((bondOrder & Edge.BOND_PARTIAL_MASK) == 0) {
       if ((bondOrder & Edge.BOND_SULFUR_MASK) != 0)
         bondOrder &= ~Edge.BOND_SULFUR_MASK;

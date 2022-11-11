@@ -50,8 +50,8 @@ public class PDBWriter implements JmolWriter {
   @Override
   public String write(BS bs) {
     String type = oc.getType();
-      isPQR |= (type != null && type.indexOf("PQR") >= 0);
-      doTransform |= (type != null && type.indexOf("-coord true") >= 0);
+    isPQR |= (type != null && type.indexOf("PQR") >= 0);
+    doTransform |= (type != null && type.indexOf("-coord true") >= 0);
     Atom[] atoms = vwr.ms.at;
     Model[] models = vwr.ms.am;
     String occTemp = "%6.2Q%6.2b          ";
@@ -65,9 +65,8 @@ public class PDBWriter implements JmolWriter {
           .append("\nREMARK   1 " + "created " + (new Date()))
           .append("\nREMARK   1 Forcefield Used: unknown\nREMARK   1")
           .append("\nREMARK   5")
-          .append(
-              "\nREMARK   6 Total charge on this protein: " + charge
-                  + " e\nREMARK   6\n");
+          .append("\nREMARK   6 Total charge on this protein: " + charge
+              + " e\nREMARK   6\n");
     }
 
     int iModel = atoms[bs.nextSetBit(0)].mi;
@@ -119,25 +118,31 @@ public class PDBWriter implements JmolWriter {
           || sa.length() >= 4 || PT.isDigit(sa.charAt(0)));
       boolean isHetero = a.isHetero();
       if (!isBiomodel)
-        tokens = (leftJustify ? LabelToken.compile(vwr,
-            "HETATM%5.-5i %-4.4a%1AUNK %1c   1%1E   _XYZ_" + occTemp, '\0',
-            null) : LabelToken.compile(vwr,
-            "HETATM%5.-5i  %-3.3a%1AUNK %1c   1%1E   _XYZ_" + occTemp, '\0',
-            null)
+        tokens = (leftJustify
+            ? LabelToken.compile(vwr,
+                "HETATM%5.-5i %-4.4a%1AUNK %1c   1%1E   _XYZ_" + occTemp, '\0',
+                null)
+            : LabelToken.compile(vwr,
+                "HETATM%5.-5i  %-3.3a%1AUNK %1c   1%1E   _XYZ_" + occTemp, '\0',
+                null)
 
         );
       else if (isHetero)
-        tokens = (leftJustify ? LabelToken.compile(vwr,
-            "HETATM%5.-5i %-4.4a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp, '\0',
-            null) : LabelToken.compile(vwr,
-            "HETATM%5.-5i  %-3.3a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp,
-            '\0', null));
+        tokens = (leftJustify
+            ? LabelToken.compile(vwr,
+                "HETATM%5.-5i %-4.4a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp,
+                '\0', null)
+            : LabelToken.compile(vwr,
+                "HETATM%5.-5i  %-3.3a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp,
+                '\0', null));
       else
-        tokens = (leftJustify ? LabelToken.compile(vwr,
-            "ATOM  %5.-5i %-4.4a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp, '\0',
-            null) : LabelToken.compile(vwr,
-            "ATOM  %5.-5i  %-3.3a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp,
-            '\0', null));
+        tokens = (leftJustify
+            ? LabelToken.compile(vwr,
+                "ATOM  %5.-5i %-4.4a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp,
+                '\0', null)
+            : LabelToken.compile(vwr,
+                "ATOM  %5.-5i  %-3.3a%1A%3.3n %1c%4.-4R%1E   _XYZ_" + occTemp,
+                '\0', null));
       String XX = a.getElementSymbolIso(false).toUpperCase();
       XX = pdbKey(a.group.getBioPolymerIndexInModel())
           + pdbKey(a.group.groupIndex)
@@ -158,52 +163,52 @@ public class PDBWriter implements JmolWriter {
     modelPt = -1;
     iModelLast = -1;
     String conectKey = "" + (isMultipleModels ? modelPt : 0);
-   isBiomodel = false;
+    isBiomodel = false;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      if (isMultipleModels && a.mi != iModelLast) {
+      if (a.mi != iModelLast) {
+        Model m =  models[a.mi];
         iModelLast = a.mi;
-        isBiomodel = models[iModelLast].isBioModel;
+        isBiomodel = m.isBioModel;
         modelPt++;
       }
       boolean isHetero = (!isBiomodel || a.isHetero());
       boolean isCysS = !isHetero && (a.getElementNumber() == 16);
       if (isHetero || isMultipleBondPDB || isCysS) {
         Bond[] bonds = a.bonds;
-        if (bonds != null)
-          for (int j = 0; j < bonds.length; j++) {
-            int iThis = a.getAtomNumber();
-            Atom a2 = bonds[j].getOtherAtom(a);
-            if (!bs.get(a2.i))
-              continue;
-            int n = bonds[j].getCovalentOrder();
-            if (n == 1
-                && (isMultipleBondPDB && !isHetero && !isCysS || isCysS
-                    && a2.getElementNumber() != 16))
-              continue;
-            int iOther = a2.getAtomNumber();
-            switch (n) {
-            case 2:
-            case 3:
-              if (iOther < iThis)
-                continue; // only one entry in this case -- pseudo-PmapDB style
-              //$FALL-THROUGH$
-            case 1:
-              Integer inew = map.get(conectKey + "."
-                  + Integer.valueOf(iThis));
-              Integer inew2 = map.get(conectKey + "."
-                  + Integer.valueOf(iOther));
-              if (inew == null || inew2 == null)
-                break;
-              oc.append("CONECT").append(
-                  PT.formatStringS("%5s", "s", "" + inew));
-              String s = PT.formatStringS("%5s", "s", "" + inew2);
-              for (int k = 0; k < n; k++)
-                oc.append(s);
-              oc.append("\n");
+        if (bonds == null)
+          continue;
+        for (int j = 0; j < bonds.length; j++) {
+          Bond b = bonds[j];
+          int iThis = a.getAtomNumber();
+          Atom a2 = b.getOtherAtom(a);
+          if (!bs.get(a2.i))
+            continue;
+          int n = b.getCovalentOrder();
+          if (n == 1 && (isMultipleBondPDB && !isHetero && !isCysS
+              || isCysS && a2.getElementNumber() != 16))
+            continue;
+          int iOther = a2.getAtomNumber();
+          switch (n) {
+          case 2:
+          case 3:
+            if (iOther < iThis)
+              continue; // only one entry in this case -- pseudo-PmapDB style
+            //$FALL-THROUGH$
+          case 1:
+            Integer inew = map.get(conectKey + "." + Integer.valueOf(iThis));
+            Integer inew2 = map.get(conectKey + "." + Integer.valueOf(iOther));
+            if (inew == null || inew2 == null)
               break;
-            }
+            oc.append("CONECT").append(PT.formatStringS("%5s", "s", "" + inew));
+            String s = PT.formatStringS("%5s", "s", "" + inew2);
+            for (int k = 0; k < n; k++)
+              oc.append(s);
+            oc.append("\n");
+            break;
           }
+        }
+
       }
     }
     return toString();

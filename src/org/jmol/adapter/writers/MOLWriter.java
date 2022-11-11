@@ -303,7 +303,7 @@ public class MOLWriter {
     int order = b.getValence();
     if (order > 3)
       order = 1;
-    switch (b.order & ~Edge.BOND_NEW) {
+    switch (b.order & Edge.BOND_RENDER_MASK) {
     case Edge.BOND_AROMATIC:
       order = (asJSON ? -3 : 4);
       break;
