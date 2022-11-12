@@ -602,7 +602,7 @@ abstract class WebPanel extends JPanel implements ActionListener,
           throw IOe;
         }
         Lst<String> filesToCopy = new Lst<String>();
-        Lst<String> filesToCopyUTF = (Lst<String>) new ArrayList<String>();
+        Lst<String> filesToCopyUTF = new Lst<String>();
         String localPath = localAppletPath.getText();
         if (localPath.equals(".") || remoteAppletPath.getText().equals(".")) {
           try{
