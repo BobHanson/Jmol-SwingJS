@@ -25,8 +25,10 @@
 package javajs.util;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javajs.api.JSONEncodable;
 
@@ -867,7 +869,11 @@ public class PT {
 			if (info instanceof Map) {
 				sb.append("{ ");
 				String sep = "";
-				for (String key : ((Map<String, ?>) info).keySet()) {
+				Set<String> keys = ((Map<String, ?>) info).keySet();
+        String[] skeys = keys.toArray(new String[keys.size()]);
+        Arrays.sort(skeys);
+				for (int i = 0, n = skeys.length; i < n; i++) {
+				  String key = skeys[i];
           if (key == null)
             key = "null";
 					sb.append(sep).append(packageJSON(key, toJSON(null, ((Map<?, ?>) info).get(key))));

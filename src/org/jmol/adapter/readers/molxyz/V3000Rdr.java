@@ -68,9 +68,8 @@ public class V3000Rdr {
   private void readAtoms(int ac) throws Exception {
     mr.discardLinesUntilContains("BEGIN ATOM");
     for (int i = 0; i < ac; ++i) {
-      rd();
-      checkLineContinuation();
-      String[] tokens = mr.getTokens();
+      rdContinuation();
+      String[] tokens = PT.getTokens(line);
       int iAtom = mr.parseIntStr(tokens[2]);
       String elementSymbol = tokens[3];
       if (elementSymbol.equals("*"))
@@ -102,10 +101,9 @@ public class V3000Rdr {
     if (bondCount == 0)
       mr.asc.setNoAutoBond();
     for (int i = 0; i < bondCount; ++i) {
-      rd();
       int stereo = 0;
-      checkLineContinuation();
-      String[] tokens = mr.getTokens();
+      rdContinuation();
+      String[] tokens = PT.getTokens(line);
       int order = mr.parseIntStr(tokens[3]);
       String iAtom1 = tokens[4];
       String iAtom2 = tokens[5];
@@ -137,7 +135,7 @@ public class V3000Rdr {
       if (!line.contains("BEGIN SGROUP"))
         continue;
       String atoms, name, data;
-      while (!rd().contains("END SGROUP")) {
+      while (!rdContinuation().contains("END SGROUP")) {
         if (userData == null)
           userData = new Hashtable<String, String[]>();
         if ((atoms = getField("ATOMS")) == null
@@ -214,12 +212,12 @@ public class V3000Rdr {
     return (line = mr.rd());
   }
 
-  private void checkLineContinuation() throws Exception {
-    while (line.endsWith("-")) {
-      String s = line;
-      rd();
-      line = s + line;
-    }
+  private String rdContinuation() throws Exception {
+	    rd();
+	    while (line.endsWith("-")) {
+	      line = line.substring(0, line.length() - 1) + rd().substring(7);
+	    }
+	    return line;
   }
 
 }

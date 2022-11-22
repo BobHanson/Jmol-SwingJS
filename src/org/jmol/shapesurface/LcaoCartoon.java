@@ -64,6 +64,7 @@ public class LcaoCartoon extends Isosurface {
   private double lcaoTranslucentLevel;
   private Integer lcaoColorPos;
   private Integer lcaoColorNeg;
+  private boolean lcaoReverseColor;
   boolean isLonePair;
   boolean isRadical;
   private Object cappingObject;
@@ -133,6 +134,11 @@ public class LcaoCartoon extends Isosurface {
 
     if ("translucentLevel" == propertyName) {
       lcaoTranslucentLevel = ((Double) value).doubleValue();
+      //pass through
+    }
+
+    if ("reversecolor" == propertyName) {
+      lcaoReverseColor = (value == Boolean.TRUE);
       //pass through
     }
 
@@ -288,6 +294,7 @@ public class LcaoCartoon extends Isosurface {
       setPropI("colorRGB", lcaoColorNeg, null);
       setPropI("colorRGB", lcaoColorPos, null);
     }
+    setPropI("reversecolor", Boolean.valueOf(lcaoReverseColor), null);
     if (slabbingObject != null)
       setPropI("slab", slabbingObject, null);
     if (cappingObject != null)
@@ -312,9 +319,14 @@ public class LcaoCartoon extends Isosurface {
       if (thisType.indexOf("-") == 0)
         axes[0].scale(-1);
     }
+    String type = thisType;
+    boolean isAnti = (type.indexOf("anti-sp") >= 0);
+    if (isAnti) {
+      type = type.substring(5);
+    }
     if (isMolecular || isCpk
         || thisType.equalsIgnoreCase("s")
-        || vwr.getHybridizationAndAxes(iAtom, axes[0], axes[1], thisType) != null) {
+        || vwr.getHybridizationAndAxes(iAtom, axes[0], axes[1], type) != null) {
       setPropI((isRadical ? "radical" : isLonePair ? "lonePair" : "lcaoCartoon"), axes, null);
     }
     if (isCpk) {
@@ -343,6 +355,8 @@ public class LcaoCartoon extends Isosurface {
     SB sb = new SB();
     if (lcaoScale != null)
       appendCmd(sb, "lcaoCartoon scale " + lcaoScale.doubleValue());
+    if (lcaoReverseColor)
+      appendCmd(sb, "lcaoCartoon reverse");
     if (lcaoColorNeg != null)
       appendCmd(sb, "lcaoCartoon color "
           + Escape.escapeColor(lcaoColorNeg.intValue()) + " "
@@ -362,6 +376,7 @@ public class LcaoCartoon extends Isosurface {
     lcaoColorNeg = lc.lcaoColorNeg;
     lcaoTranslucent = lc.lcaoTranslucent;
     lcaoTranslucentLevel = lc.lcaoTranslucentLevel;
+    lcaoReverseColor = lc.lcaoReverseColor;
     super.merge(shape);
   }
   

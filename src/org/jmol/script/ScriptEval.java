@@ -911,7 +911,7 @@ public class ScriptEval extends ScriptExpr {
   private Object evaluate(Object expr, boolean asVariable, boolean compileOnly) {
     try {
       if (expr instanceof String) {
-        if (compileScript(null, "e_x_p_r_e_s_s_i_o_n = " + expr, false)) {
+        if (compileScript(null, (compileOnly ? "w_h_e_r_e" : "e_x_p_r_e_s_s_i_o_n") + " = " + expr, false)) {
           if (compileOnly)
             return aatoken[0];
           setStatement(aatoken[0], 1);

@@ -3400,6 +3400,16 @@ public class IsoExt extends ScriptExt {
         propertyValue = atomExpressionAt(i);
         i = eval.iToken;
         break;
+      case T.reverse:
+        propertyName = "reversecolor";
+        propertyValue = Boolean.TRUE;
+        if (tokAt(i + 1) == T.on) {
+          ++i;
+        } else if (tokAt(i + 1) == T.off) {
+          propertyValue = Boolean.FALSE;          
+          ++i;
+        }
+        break;        
       case T.color:
         translucency = setColorOptions(null, i + 1, JC.SHAPE_LCAOCARTOON, -2);
         if (translucency != null)

@@ -238,14 +238,16 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
   abstract public Map<String, Object> getAtomSetCollectionAuxiliaryInfo(Object atomSetCollection);
   
   /**
-   * Get number of atomSets in the file.
+   * Get number of atomSets in the file or specific model index in file
+   * 
    *
    * <p>NOTE WARNING:
    * <br>Not yet implemented everywhere, it is in the smarterJmolAdapter
    * @param atomSetCollection The client file
+   * @param modelIndex 
    * @return The number of atomSets in the file
    */
-  abstract public int getAtomSetCount(Object atomSetCollection);
+  abstract public int getAtomSetCount(Object atomSetCollection, int modelIndex);
 
   /**
    * Get the number identifying each atomSet.

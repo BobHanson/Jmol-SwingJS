@@ -395,7 +395,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (!sg.setProp("lcaoCartoonCenter", info[2], null))
         drawLcaoCartoon(info[0], info[1], info[3],
             ("lonePair" == propertyName ? 2
-                : "radical" == propertyName ? 1 : 0));
+                : "radical" == propertyName ? 1 : 0), thisMesh == null ? false : thisMesh.reverseColor);
       return;
     }
 
@@ -407,6 +407,12 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if ("ignore" == propertyName) {
       if (iHaveBitSets)
         return;
+    }
+
+    if ("reversecolor" == propertyName) {
+      if (thisMesh != null)
+        thisMesh.reverseColor = (value == Boolean.TRUE);
+      return;
     }
 
     if ("meshcolor" == propertyName) {
@@ -1335,17 +1341,29 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
   private int nLCAO = 0;
 
-  private void drawLcaoCartoon(V3d z, V3d x, V3d rotAxis, int nElectrons) {
+  private void drawLcaoCartoon(V3d z, V3d x, V3d rotAxis, int nElectrons, boolean reverseColor) {
     String lcaoCartoon = sg.setLcao();
+    boolean addAnti = (lcaoCartoon.indexOf("anti-sp") >= 0);
+    if (addAnti) {
+      // anti-sp3a becomes sp3a, with small added back lobe
+      // -anti-sp3a becomes -sp3a with small added back lobe
+      lcaoCartoon = lcaoCartoon.substring(5);
+    }
+
     //really rotRadians is just one of these -- x, y, or z -- not all
     double rotRadians = rotAxis.x + rotAxis.y + rotAxis.z;
     defaultColix = C.getColix(sg.params.colorPos);
     short colixNeg = C.getColix(sg.params.colorNeg);
+    if (reverseColor) {
+      short c = colixNeg;
+      colixNeg = defaultColix;
+      defaultColix = c;
+    }
     V3d y = new V3d();
     boolean isReverse = (lcaoCartoon.length() > 0 && lcaoCartoon.charAt(0) == '-');
     if (isReverse)
       lcaoCartoon = lcaoCartoon.substring(1);
-    int sense = (isReverse ? -1 : 1);
+    double sense = (isReverse ? -1 : 1);
     y.cross(z, x);
     if (rotRadians != 0) {
       A4d a = new A4d();
@@ -1373,7 +1391,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (nElectrons > 0) 
         return;
       setProperty("thisID", id + "b", null);
-      createLcaoLobe(x, -sense, nElectrons);
+      createLcaoLobe(x, -sense, 0);
       thisMesh.colix = colixNeg;
       linkedMesh = thisMesh.linkedMesh = meshA;
       return;
@@ -1385,19 +1403,19 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (nElectrons > 0) 
         return;
       setProperty("thisID", id + "b", null);
-      createLcaoLobe(y, -sense, nElectrons);
+      createLcaoLobe(y, -sense, 0);
       thisMesh.colix = colixNeg;
       linkedMesh = thisMesh.linkedMesh = meshA;
       return;
     }
+    Mesh meshA = thisMesh;
     if (lcaoCartoon.equals("pz")) {
-      thisMesh.thisID += "a";
-      Mesh meshA = thisMesh;
+      meshA.thisID += "a";
       createLcaoLobe(z, sense, nElectrons);
       if (nElectrons > 0) 
         return;
       setProperty("thisID", id + "b", null);
-      createLcaoLobe(z, -sense, nElectrons);
+      createLcaoLobe(z, -sense, 0);
       thisMesh.colix = colixNeg;
       linkedMesh = thisMesh.linkedMesh = meshA;
       return;
@@ -1407,6 +1425,13 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         || lcaoCartoon.indexOf("d") == 0 
         || lcaoCartoon.indexOf("lp") == 0) {
       createLcaoLobe(z, sense, nElectrons);
+      if (addAnti && nElectrons == 0) {
+        meshA.thisID += "a";
+        setProperty("thisID", id + "b", null);
+        createLcaoLobe(z, -sense/2, 0);
+        thisMesh.colix = colixNeg;
+        linkedMesh = thisMesh.linkedMesh = meshA;
+      }
       return;
     }
     if (lcaoCartoon.equals("pzb")) {

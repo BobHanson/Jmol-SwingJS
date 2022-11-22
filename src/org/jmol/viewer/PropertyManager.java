@@ -451,7 +451,7 @@ public class PropertyManager implements JmolPropertyManager {
           isCaseSensitive = true;
           whereArgs = (T[]) ((Object[]) arg.value)[1];
           key = arg.myName;
-          asArray = (key.indexOf(";") >= 0);
+          asArray = (key.indexOf(';') >= 0 || key.indexOf('[') >= 0|| key.indexOf('.') >= 0);
           if (key.contains("**")) {
             boolean isAll = keys.size() == 0;
             String newKey = "";
@@ -530,6 +530,7 @@ public class PropertyManager implements JmolPropertyManager {
         boolean isWild = (asArray || key.startsWith("*") || key.endsWith("*")
             || havePunctuation);
         boolean wasV2 = (v2 != null);
+        
         if (isWild) {
           if (!wasV2)
             v2 = new Lst<Object>();
@@ -560,8 +561,55 @@ public class PropertyManager implements JmolPropertyManager {
             for (int i = tokens.length; --i >= 0;)
               getMapSubset(h, tokens[i], mapNew, asArray ? v2 : null);
           } else {
-            for (int i = 0; i < keys.size(); i++)
-              getMapSubset(h, keys.get(i), mapNew, asArray ? v2 : null);
+            //ignore ignore use select("[x,y]"...)
+            //boolean doGroup = (wasV2 && asArray && keys.size() > 1);
+            //int v2len00 = (asArray ? v2.size() : 0);
+            for (int i = 0; i < keys.size(); i++) {
+              key = keys.get(i);
+              String index = null;
+              int pta = key.indexOf('[');
+              if (pta > 0 && key.endsWith("]")) {
+                index = key.substring(pta + 1, key.length() - 1);
+                key = key.substring(0, pta);
+                index = PT.trim(index,  "'\"");
+              } else if ((pta = key.indexOf(".")) >= 0) {
+                index = key.substring(pta + 1);
+                key = key.substring(0, pta);                
+              }
+              int v2len0 = v2.size();
+              getMapSubset(h, key, mapNew, asArray ? v2 : null);
+              if (index != null) {
+                for (int j = v2.size(); --j >= v2len0;) {
+                  Object v = v2.get(j);
+                  if (v instanceof SV) {
+                    SV sv = (SV) v;
+                    Map<String, SV> m = sv.getMap();
+                    if (m != null) {
+                      v = m.get(index);
+                    } else {
+                      int p = PT.parseInt(index);
+                      Lst<SV> l = sv.getList();
+                      if (p >= 0 && p < l.size())
+                        v = l.get(p);
+                      else
+                        v = null;
+                    }
+                    if (v == null)
+                      v2.remove(j);
+                    else
+                      v2.set(j, v);
+                  }
+                }
+              }
+            }
+// this is what select("[x,y]...") is for
+//            int n = v2.size();
+//            if (doGroup && n > v2len00) {
+//              Lst<Object> v2a = new Lst<Object>();
+//              for (int p = n - v2len00; --p >= 0;)
+//                v2a.addLast(v2.remove(v2len00));
+//              v2.addLast(SV.getVariableList(v2a));
+//            }
           }
           if (asMap && !wasV2)
             return mapNew;
@@ -668,8 +716,9 @@ public class PropertyManager implements JmolPropertyManager {
           } else {
             // allow for (A*,B) to be same as A*;B
             select += ext;
-            Object[] o = new Object[] { getKeys(select),
-                vwr.compileExpr(key.substring(pt + 6 + ext.length()).trim()) };
+            String exp = key.substring(pt + 6 + ext.length()).trim();
+            T[] list = vwr.compileExpr(exp);
+            Object[] o = new Object[] { getKeys(select), list };
             argsNew[i] = SV.newV(T.select, o);
 
             argsNew[i].index = index;
@@ -1513,7 +1562,7 @@ public class PropertyManager implements JmolPropertyManager {
     if (ms.vibrations != null && ms.vibrations[i] != null)
       ms.vibrations[i].getInfo(info);
     info.put("bondCount", Integer.valueOf(atom.getCovalentBondCount()));
-    info.put("radius", Double.valueOf((double) (atom.getRasMolRadius() / 120.0)));
+    info.put("radius", Double.valueOf((atom.getRasMolRadius() / 120.0)));
     info.put("model", atom.getModelNumberForLabel());
     String shape = atom.atomPropertyString(vwr, T.shape);
     if (shape != null)
@@ -1612,7 +1661,7 @@ public class PropertyManager implements JmolPropertyManager {
     info.put("order", Double.valueOf(Edge
         .getBondOrderNumberFromOrder(bond.getBondType())));
     info.put("type", Edge.getBondOrderNameFromOrder(bond.getBondType()));
-    info.put("radius", Double.valueOf((double) (bond.mad / 2000.)));
+    info.put("radius", Double.valueOf(bond.mad / 2000.));
     info.put("length_Ang", Double.valueOf(atom1.distance(atom2)));
     info.put("visible", Boolean.valueOf(bond.shapeVisibilityFlags != 0));
     String strColor = Escape.escapeColor(vwr.gdata.getColorArgbOrGray(bond.colix));

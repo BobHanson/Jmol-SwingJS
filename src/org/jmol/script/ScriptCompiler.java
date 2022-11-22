@@ -148,6 +148,7 @@ public class ScriptCompiler extends ScriptTokenParser {
   private Lst<T> vPush = new Lst<T>();
   private int pushCount;
   private ScriptFlowContext forceFlowContext;
+  private boolean isWhere;
 
   synchronized ScriptContext compile(String filename, String script,
                                      boolean isPredefining, boolean isSilent,
@@ -156,6 +157,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     this.filename = filename;
     this.isSilent = isSilent;
     this.script = script;
+    this.isWhere = script.startsWith("w_h_e_r_e = ");
     logMessages = (!isSilent && !isPredefining && debugScript);
     preDefining = (filename == "#predefine");
     boolean doFull = true;
@@ -1075,6 +1077,11 @@ public class ScriptCompiler extends ScriptTokenParser {
       }
       if (theToken != null)
         switch (lastToken.tok) {
+        default:
+          // literal w_h_e_r_e expression keeps given identifier
+          if (!isWhere) 
+            break;
+          //$FALL-THROUGH$
         case T.per:
         case T.leftsquare:
         case T.comma:

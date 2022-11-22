@@ -957,7 +957,7 @@ public class ModelSet extends BondCollection {
    * @return BitSet of new atoms
    */
   public BS addHydrogens(Lst<Atom> vConnections, P3d[] pts) {
-    int modelIndex = mc - 1;
+    int modelIndex = vConnections.get(0).mi;
     BS bs = new BS();
     if (isTrajectory(modelIndex) || am[modelIndex].getGroupCount() > 1) {
       // can't add atoms to a trajectory or a system with multiple groups!

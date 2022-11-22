@@ -2266,6 +2266,8 @@ public class MathExt {
       x1 = null;
     }
     if (x1 == null) {
+      if (format == null)
+        return false;
       int pt = (isLabel ? -1 : SV.getFormatType(format));
       if (pt >= 0 && args.length != 2)
         return false;

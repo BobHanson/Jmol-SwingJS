@@ -78,6 +78,7 @@ public class Mesh extends MeshSurface {
   public boolean visible = true;
   public int lighting = T.frontlit;
   public int colorType; // could be T.symop
+  public boolean reverseColor; // lcaocartoon only
 
   public boolean haveXyPoints;
   public int diameter;

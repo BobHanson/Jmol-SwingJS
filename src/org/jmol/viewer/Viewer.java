@@ -9928,7 +9928,7 @@ public class Viewer extends JmolViewer
     if (pts.length > 0) {
       clearModelDependentObjects();
       try {
-        bsB = (isQuick ? ms.addHydrogens(vConnections, pts)
+        bsB = (isQuick && vConnections.get(0).mi == ms.mc - 1 ? ms.addHydrogens(vConnections, pts)
             : addHydrogensInline(bsAtoms, vConnections, pts, null));
       } catch (Exception e) {
         System.out.println(e.toString());

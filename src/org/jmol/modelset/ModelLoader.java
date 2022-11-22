@@ -280,12 +280,12 @@ public final class ModelLoader {
   }
 
   private void createModelSet(JmolAdapter adapter, Object asc,
-                              BS bsNew) {
+                              BS bs2D) {
     int nAtoms = (adapter == null ? 0 : adapter.getAtomCount(asc));
     if (nAtoms > 0)
       Logger.info("reading " + nAtoms + " atoms");
     adapterModelCount = (adapter == null ? 1 : adapter
-        .getAtomSetCount(asc));
+        .getAtomSetCount(asc, -1));
     // cannot append a trajectory into a previous model
     appendToModelIndex = (ms.msInfo == null ? null : ((Integer) ms.msInfo.get("appendToModelIndex")));
     appendNew = !isMutate && (!merging || adapter == null || adapterModelCount > 1
@@ -304,8 +304,9 @@ public final class ModelLoader {
     if (merging)
       mergeTrajAndVib(modelSet0, ms);
     initializeAtomBondModelCounts(nAtoms);
-    if (bsNew != null && (doMinimize || is2D)) {
-      bsNew.setBits(baseAtomIndex, baseAtomIndex + nAtoms);
+    if (bs2D != null && (doMinimize || is2D)) {
+      // 2D minimization is ONLY for first model
+      bs2D.setBits(baseAtomIndex, baseAtomIndex + adapter.getAtomSetCount(asc, 0));
     }
     if (adapter == null) {
       setModelNameNumberProperties(0, -1, "", 1, null, null, null);
@@ -1419,8 +1420,10 @@ public final class ModelLoader {
 
   private void applyStereochemistry() {
 
+    int atomCount = ms.ac;//ms.am[ms.at[0].mi].bsAtoms.cardinality();
+    
     // 1) initialize average bond lengths
-    set2DLengths(baseAtomIndex, ms.ac);
+    set2DLengths(baseAtomIndex, atomCount);
     
     V3d v = new V3d();
     
@@ -1449,13 +1452,13 @@ public final class ModelLoader {
     
     // 2) implicit stereochemistry 
     
-    set2dZ(baseAtomIndex, ms.ac, v);
+    set2dZ(baseAtomIndex, atomCount, v);
 
     // 3) explicit stereochemistry
     
     if (vStereo != null) {
       BS bsToTest = new BS();
-      bsToTest.setBits(baseAtomIndex, ms.ac);
+      bsToTest.setBits(baseAtomIndex, atomCount);
       for (int i = vStereo.size(); --i >= 0;) {
         Bond b = vStereo.get(i);
         double dz2 = (b.order == Edge.BOND_STEREO_NEAR ? 3 : -3);
