@@ -152,8 +152,14 @@ public class MolReader extends AtomSetCollectionReader {
           Bond b = asc.bonds[i];
           if (asc.atoms[b.atomIndex2].elementSymbol.equals("H")
               && b.order != JmolAdapter.ORDER_STEREO_NEAR
-              && b.order != JmolAdapter.ORDER_STEREO_FAR) {
+              && b.order != JmolAdapter.ORDER_STEREO_FAR
+              && asc.atoms[b.atomIndex1].elementSymbol.equals("C")
+              ) {
             asc.bsAtoms.clear(b.atomIndex2);
+          } else if (asc.atoms[b.atomIndex1].elementSymbol.equals("H")
+              && asc.atoms[b.atomIndex2].elementSymbol.equals("C")
+              ) {
+            asc.bsAtoms.clear(b.atomIndex1);
           }
         }
       }

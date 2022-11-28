@@ -247,7 +247,7 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
    * @param modelIndex 
    * @return The number of atomSets in the file
    */
-  abstract public int getAtomSetCount(Object atomSetCollection, int modelIndex);
+  abstract public int getAtomSetCount(Object atomSetCollection);
 
   /**
    * Get the number identifying each atomSet.
@@ -285,13 +285,13 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
   abstract public Map<String, Object>  getAtomSetAuxiliaryInfo(Object atomSetCollection, int atomSetIndex);
 
   /**
-   * Get the estimated number of atoms contained in the file.
+   * Get the number of atoms contained in the file.
    *
-   * <p>Just return -1 if you don't know (or don't want to figure it out)
    * @param atomSetCollection The client file
+   * @param atomSetIndex if -1, then count for the whole collection, else for this set
    * @return The estimated number of atoms in the file
    */
-  abstract public int getAtomCount(Object atomSetCollection);
+  abstract public int getAtomCount(Object atomSetCollection, int atomSetIndex);
 
   /**
    * Get the hydrogen atom count -- for ligand files

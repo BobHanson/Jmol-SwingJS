@@ -3418,6 +3418,10 @@ public class ModelSet extends BondCollection {
     int mi0 = -1;
     if (isModelKit) {
       // from ModelKit --- baseAtomIndex will be <= 0
+      while (iFirst < ac && isDeleted(at[iFirst]))
+        iFirst++;
+      if (iFirst >= ac)
+        return;
       mi0 = at[iFirst].mi;
       iFirst = am[mi0].firstAtomIndex;
     }

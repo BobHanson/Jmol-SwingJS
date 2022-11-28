@@ -141,7 +141,7 @@ public final class ModelLoader {
   public boolean isTrajectory; 
   private boolean isPyMOLsession;
   private boolean doMinimize;
-  private boolean doAddHydrogens;
+  private boolean doAddPDBHydrogens;
 
   private String fileHeader;
   private BioResolver jbr;
@@ -174,7 +174,7 @@ public final class ModelLoader {
     if (isTrajectory)
       ms.trajectory = newTrajectory(ms, steps);
     isPyMOLsession = ms.getMSInfoB("isPyMOL");
-    doAddHydrogens = (jbr != null && !isTrajectory && !isPyMOLsession
+    doAddPDBHydrogens = (jbr != null && !isTrajectory && !isPyMOLsession
         && !ms.getMSInfoB("pdbNoHydrogens") && (ms
         .getMSInfoB("pdbAddHydrogens") || vwr.getBoolean(T.pdbaddhydrogens)));
     if (info != null) {
@@ -281,11 +281,11 @@ public final class ModelLoader {
 
   private void createModelSet(JmolAdapter adapter, Object asc,
                               BS bs2D) {
-    int nAtoms = (adapter == null ? 0 : adapter.getAtomCount(asc));
+    int nAtoms = (adapter == null ? 0 : adapter.getAtomCount(asc, -1));
     if (nAtoms > 0)
       Logger.info("reading " + nAtoms + " atoms");
     adapterModelCount = (adapter == null ? 1 : adapter
-        .getAtomSetCount(asc, -1));
+        .getAtomSetCount(asc));
     // cannot append a trajectory into a previous model
     appendToModelIndex = (ms.msInfo == null ? null : ((Integer) ms.msInfo.get("appendToModelIndex")));
     appendNew = !isMutate && (!merging || adapter == null || adapterModelCount > 1
@@ -306,7 +306,7 @@ public final class ModelLoader {
     initializeAtomBondModelCounts(nAtoms);
     if (bs2D != null && (doMinimize || is2D)) {
       // 2D minimization is ONLY for first model
-      bs2D.setBits(baseAtomIndex, baseAtomIndex + adapter.getAtomSetCount(asc, 0));
+      bs2D.setBits(baseAtomIndex, baseAtomIndex + adapter.getAtomCount(asc, 0));
     }
     if (adapter == null) {
       setModelNameNumberProperties(0, -1, "", 1, null, null, null);
@@ -355,7 +355,7 @@ public final class ModelLoader {
       applyStereochemistry();
     }
 
-    if (doAddHydrogens)
+    if (doAddPDBHydrogens)
       jbr.finalizeHydrogens();
 
     if (adapter != null) {
@@ -469,7 +469,7 @@ public final class ModelLoader {
         Object value = entry.getValue();
         // no deletions yet...
         BS bs = ms.getModelAtomBitSetIncludingDeleted(i, true);
-        if (doAddHydrogens) {
+        if (doAddPDBHydrogens) {
           boolean isGroup = (groupList != null && PT.isOneOf(key,  groupList));
           value = jbr.fixPropertyValue(bs, value, isGroup);
         }
@@ -510,7 +510,7 @@ public final class ModelLoader {
       ms.at = new Atom[nAtoms];
       ms.bo = new Bond[250 + nAtoms]; // was "2 *" -- WAY overkill.
     }
-    if (doAddHydrogens)
+    if (doAddPDBHydrogens)
       jbr.initializeHydrogenAddition();
     if (trajectoryCount > 1)
       ms.mc += trajectoryCount - 1;
@@ -795,8 +795,8 @@ public final class ModelLoader {
     boolean addH = false;
     boolean isLegacyHAddition = false;//vwr.getBoolean(T.legacyhaddition);
     JmolAdapterAtomIterator iterAtom = adapter.getAtomIterator(asc);
-    int nAtoms = adapter.getAtomCount(asc);
-    ms.setCapacity(adapter.getAtomCount(asc));
+    int nAtoms = adapter.getAtomCount(asc, -1);
+    ms.setCapacity(adapter.getAtomCount(asc, -1));
     int nRead = 0;
     Model[] models = ms.am;
     if (ms.mc > 0)
@@ -822,7 +822,7 @@ public final class ModelLoader {
         model.isOrderly = (appendToModelIndex == null);
         isPdbThisModel = model.isBioModel;
         iLast = modelIndex;
-        addH = isPdbThisModel && doAddHydrogens;
+        addH = isPdbThisModel && doAddPDBHydrogens;
         if (jbr != null)
           jbr.setHaveHsAlready(false);
       }

@@ -35,10 +35,12 @@ import org.jmol.api.JmolAdapterBondIterator;
 import org.jmol.api.JmolAdapterStructureIterator;
 import org.jmol.api.JmolFilesReaderInterface;
 import org.jmol.script.SV;
+import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericBinaryDocument;
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.P3d;
 import javajs.util.PT;
@@ -394,8 +396,8 @@ public class SmarterJmolAdapter extends JmolAdapter {
   }
 
   @Override
-  public int getAtomSetCount(Object asc, int modelIndex) {
-    return (modelIndex < 0 ? ((AtomSetCollection)asc).atomSetCount : ((AtomSetCollection)asc).getAtomSetAtomCount(modelIndex));
+  public int getAtomSetCount(Object asc) {
+    return ((AtomSetCollection)asc).atomSetCount;
   }
 
   @Override
@@ -430,9 +432,16 @@ public class SmarterJmolAdapter extends JmolAdapter {
 
 
   @Override
-  public int getAtomCount(Object asc) {
-    AtomSetCollection a = (AtomSetCollection)asc; 
-    return (a.bsAtoms == null ? a.ac : a.bsAtoms.cardinality());
+  public int getAtomCount(Object asc, int atomSetIndex) {
+    AtomSetCollection a = (AtomSetCollection)asc;
+    if (atomSetIndex < 0)
+      return (a.bsAtoms == null ? a.ac : a.bsAtoms.cardinality());
+    if (a.bsAtoms == null)
+      return a.getAtomSetAtomCount(atomSetIndex);
+    BS b = BSUtil.copy(a.bsAtoms);
+    int i0 = a.getAtomSetAtomIndex(atomSetIndex);
+    b.and(BSUtil.newBitSet2(i0, i0 + a.getAtomSetAtomCount(atomSetIndex)));
+    return b.cardinality();
   }
 
   @Override

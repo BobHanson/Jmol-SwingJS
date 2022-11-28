@@ -834,7 +834,7 @@ public class PT {
      return info instanceof Number || info instanceof Boolean;
   }
 
-	@SuppressWarnings({ "unused", "unchecked", "null" })
+	@SuppressWarnings({ "unused", "null" })
 	public static String toJSON(String infoType, Object info) {
 		if (info == null)
 			return packageJSON(infoType, null);
@@ -869,16 +869,16 @@ public class PT {
 			if (info instanceof Map) {
 				sb.append("{ ");
 				String sep = "";
-				Set<String> keys = ((Map<String, ?>) info).keySet();
-        String[] skeys = keys.toArray(new String[keys.size()]);
-        Arrays.sort(skeys);
-				for (int i = 0, n = skeys.length; i < n; i++) {
-				  String key = skeys[i];
+        Set<?> keys = ((Map<?, ?>) info).keySet();
+        Object[] okeys = keys.toArray();
+        Arrays.sort(okeys);
+        for (int i = 0, n = okeys.length; i < n; i++) {
+          String key = okeys[i].toString();
           if (key == null)
             key = "null";
-					sb.append(sep).append(packageJSON(key, toJSON(null, ((Map<?, ?>) info).get(key))));
-					sep = ",";
-				}
+          sb.append(sep).append(packageJSON(key, toJSON(null, ((Map<?, ?>) info).get(okeys[i]))));
+          sep = ",";
+        }
 				sb.append(" }");
 				break;
 			}
@@ -1795,67 +1795,4 @@ public class PT {
         / parseDouble(s.substring(pt + 1)));
   }
 
-  /**
-   * The issue here is that a simple casting of (double) floatValue
-   * incorrectly "unrounds" the number rather than padding with 0s. 
-   * 
-   * The only solution I could come up with was to go through a String. 
-   * 
-   * This is not relevant in JavaScript
-   * 
-   * @param f
-   * @return true double value
-   */
-  public static double toDouble(float f) {
-    /** 
-     * @j2sNative
-     * 
-     * return f;
-     */
-    {
-      return Double.valueOf("" + f).doubleValue();
-    }
-  }
-  
-  public static void fixPtDoubles(T3d pt, double f) {
-    //this will equate float and double as long as -256 <= x <= 256
-    pt.x = Math.round(pt.x * f) / f;
-    pt.y = Math.round(pt.y * f) / f;
-    pt.z = Math.round(pt.z * f) / f;
-  }
-
-  //static {
-//    
-//  double d = 790.8999998888;
-//  float x  = 790.8999998888f;
-//  for (int i = 0; i < 50; i++) {
-//System.out.println(x + " " + d);
-//System.out.println(Math.round(x * 100000) / 100000f);
-//System.out.println(Math.round(d * 100000) / 100000.);
-//System.out.println(Math.round(x * 10000) / 10000f);
-//System.out.println(Math.round(d * 10000) / 10000.);
-//  x+=1; 
-//  d+=1;
-//System.out.println(100.123456789f);
-//}
-
-//  static {
-//    long t;
-//    char c = '0';
-//    t = System.currentTimeMillis();
-//    for (int i = 0; i < 10000000; i++) {
-//      boolean b = PT.isUpperCase(c);
-//System.out.println(System.currentTimeMillis() - t);
-//
-//    t = System.currentTimeMillis();
-//    for (int i = 0; i < 10000000; i++) {
-//      boolean b = Character.isUpperCase(c);
-//System.out.println(System.currentTimeMillis() - t);
-//    
-//    t = System.currentTimeMillis();
-//    for (int i = 0; i < 10000000; i++) {
-//      boolean b = PT.isUpperCase(c);
-//System.out.println(System.currentTimeMillis() - t);
-//System.out.println("PT test");
-//  }
 }

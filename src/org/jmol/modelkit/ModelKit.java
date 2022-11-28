@@ -1172,6 +1172,7 @@ public class ModelKit {
     if (atom == null)
       return -1;
     vwr.ms.clearDB(atomIndex);
+
     if (type == null)
       type = "C";
 
@@ -1215,17 +1216,19 @@ public class ModelKit {
     
     // 2) delete noncovalent bonds and attached hydrogens for that atom.
 
-    vwr.ms.removeUnnecessaryBonds(atom, isDelete);
+    if (!wasH)
+      vwr.ms.removeUnnecessaryBonds(atom, isDelete);
 
     // 3) adjust distance from previous atom.
 
     double dx = 0;
-    if (atom.getCovalentBondCount() == 1)
-      if (wasH) {
-        dx = 1.50d;
-      } else if (!wasH && atomicNumber == 1) {
+    if (atom.getCovalentBondCount() == 1) {
+      if (atomicNumber == 1) {
         dx = 1.0d;
+      } else {
+        dx = 1.5d;
       }
+    }
     if (dx != 0) {
       V3d v = V3d.newVsub(atom, vwr.ms.at[atom.getBondedAtomIndex(0)]);
       double d = v.length();
@@ -1933,7 +1936,7 @@ public class ModelKit {
         assignAtom(atomIndexNew, type, false, atomIndex >= 0 && !isXtal, true,
             null);
         if (atomIndex >= 0)
-          assignAtom(atomIndex, ".", false, !isXtal, isClick, null);
+          assignAtom(atomIndex, ".", false, !isXtal && !"H".equals(type), isClick, null);
         vwr.ms.setAtomNamesAndNumbers(atomIndexNew, -ac, null, true);
         vwr.sm.setStatusStructureModified(atomIndexNew, mi, -Viewer.MODIFY_SET_COORD, "OK", 1, bs);
         return;
