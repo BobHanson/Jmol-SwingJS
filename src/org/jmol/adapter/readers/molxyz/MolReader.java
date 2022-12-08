@@ -92,10 +92,12 @@ public class MolReader extends AtomSetCollectionReader {
    * fix charges for RN(=O)(O), =N(O)*, =N
    */
   private boolean fixN;
+  private boolean noHydrogens;
 
   @Override
   public void initializeReader() throws Exception {
-    optimize2D = checkFilterKey("2D");
+    noHydrogens = checkFilterKey("NOH");
+    optimize2D = checkFilterKey("2D") && !noHydrogens;
     fixN = checkFilterKey("FIXN");
   }
 
@@ -159,6 +161,7 @@ public class MolReader extends AtomSetCollectionReader {
           } else if (asc.atoms[b.atomIndex1].elementSymbol.equals("H")
               && asc.atoms[b.atomIndex2].elementSymbol.equals("C")
               ) {
+            // includes backward C-H wedge/hash here, which makes no sense.
             asc.bsAtoms.clear(b.atomIndex1);
           }
         }
@@ -221,7 +224,7 @@ public class MolReader extends AtomSetCollectionReader {
     if (rd() == null)
       return;
     if (line.indexOf("V3000") >= 0) {
-      optimize2D = is2D;
+      optimize2D = is2D && !noHydrogens;
       vr = ((V3000Rdr) getInterface("org.jmol.adapter.readers.molxyz.V3000Rdr")).set(this);
       discardLinesUntilContains("COUNTS");
       vr.readAtomsAndBonds(getTokens());

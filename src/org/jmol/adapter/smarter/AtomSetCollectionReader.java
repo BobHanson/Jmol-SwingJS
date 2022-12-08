@@ -1249,6 +1249,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     // MOL and JME - sets for ALL MODELS, but just for ModelLoader.
     // It is quite possible that multiple 2D models cannot be loaded as 3D
     asc.setInfo("is2D", Boolean.TRUE);
+    if (checkFilterKey("NOH"))
+      asc.setInfo("noHydrogen",
+          Boolean.TRUE);
     if (!checkFilterKey("NOMIN"))
       asc.setInfo("doMinimize",
           Boolean.TRUE);

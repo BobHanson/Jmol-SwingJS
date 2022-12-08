@@ -29,13 +29,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.P3d;
-import javajs.util.SB;
-
-import javajs.util.BS;
-
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
@@ -45,6 +38,13 @@ import org.jmol.util.Node;
 import org.jmol.util.SimpleEdge;
 import org.jmol.util.SimpleNode;
 import org.jmol.viewer.JC;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3d;
+import javajs.util.SB;
+import javajs.util.T3d;
 
 /**
  * Double bond, allene, square planar and tetrahedral stereochemistry only
@@ -445,7 +445,7 @@ public class SmilesGenerator {
       dumpRingKeys(sb, htRings);
       throw new InvalidSmilesException("//* ?ring error? *//\n" + sb);
     }
-    String s = insertParts(sb);
+    String s = sb.toString();//insertParts(sb);//experimenting with late addition of "." parts into structure
     if (s.indexOf("^-") >= 0) {
       String s0 = s;
       try {
@@ -470,7 +470,7 @@ public class SmilesGenerator {
   private String insertParts(SB sb) {
     String s = sb.toString();
     if (specialPoints != null && nPairsMax > 0) {
-      System.out.println(specialPoints.toString().replace('-','\n'));
+      //System.out.println(specialPoints.toString().replace('-','\n'));
       int[] sp = new int[specialPoints.size()];
       for (int i = sp.length; --i >= 0;) {
         sp[i] = specialPoints.get(i).intValue();
@@ -507,7 +507,7 @@ public class SmilesGenerator {
           iend = pos - 1;
         }
       }
-      System.out.println(inserts.size());
+      //System.out.println(inserts.size());
     }
     return s;
   }
@@ -1337,10 +1337,10 @@ public class SmilesGenerator {
         if (atom == b.getAtom(0)) {
           switch (b.getBondType()) {
           case Edge.BOND_STEREO_NEAR:
-            setStereoTemp(stereo, c = b.getAtom(1), dir);
+            c = setStereoTemp(null, stereo, b.getAtom(1), dir);
             break;
           case Edge.BOND_STEREO_FAR:
-            setStereoTemp(stereo, c = b.getAtom(1), -dir);
+            c = setStereoTemp(null, stereo, b.getAtom(1), -dir);
             break;
           }
         }
@@ -1348,22 +1348,33 @@ public class SmilesGenerator {
       if (c == null)
         return "";
       if (stereoFlag == 3) {
-        stereo[stereoFlag++] = c;
+        stereo[stereoFlag++] = setStereoTemp(atom, stereo, c, 0);
       }
     }
     return SmilesStereo.getStereoFlag(atom, stereo, stereoFlag, vTemp, is2D);
   }
 
-  private void setStereoTemp(SimpleNode[] stereo, SimpleNode a, double z) {
+  private static SimpleNode setStereoTemp(SimpleNode atom, SimpleNode[] stereo,
+                                          SimpleNode a, double z) {
+    SmilesAtom b = new SmilesAtom();
     for (int i = 0; i < 4; i++) {
-      if (stereo[i] == a) {
-        SmilesAtom b = new SmilesAtom();
-        P3d c = a.getXYZ();
-        b.set(c.x, c.y, z);
-        stereo[i] = b;
-        break;
+      boolean isA = (stereo[i] == a);
+      if (atom == null) {
+        if (isA) {
+          P3d c = a.getXYZ();
+          b.set(c.x, c.y, z);
+          return stereo[i] = b;
+        }
+      } else if (i < 3) {
+          b.add((T3d) stereo[i]);
       }
     }
+    if (atom == null)
+      return null;
+    // A + (A-b0 + A-b1 + A-b2)/3 = 2A - (b0 + b1 + b2)/3 
+    b.scale(-1/3d);
+    b.scaleAdd(2, (T3d) atom, b);
+    return b;
   }
 
   private int chainCheck;

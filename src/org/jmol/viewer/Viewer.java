@@ -3852,7 +3852,7 @@ public class Viewer extends JmolViewer
 
   @Override
   public Map<String, Object> getModelSetAuxiliaryInfo() {
-    return ms.getAuxiliaryInfo(null);
+    return ms.getModelSetAuxiliaryInfo(null);
   }
 
   @Override
@@ -9244,7 +9244,8 @@ public class Viewer extends JmolViewer
     }
 
     if (isQuick) {
-      getAuxiliaryInfoForAtoms(bsSelected).put("dimension", "3D");
+      if (!bsSelected.isEmpty())
+        getModelForAtomIndex(bsSelected.nextSetBit(0)).auxiliaryInfo.put("dimension", "3D");
       bsInFrame = bsSelected;
     }
 
@@ -10287,9 +10288,9 @@ public class Viewer extends JmolViewer
         : jcm);
   }
 
-  public Map<String, Object> getAuxiliaryInfoForAtoms(Object atomExpression) {
+  public Map<String, Object> getModelSetAuxiliaryInfoForAtoms(Object atomExpression) {
     return ms
-        .getAuxiliaryInfo(ms.getModelBS(getAtomBitSet(atomExpression), false));
+        .getModelSetAuxiliaryInfo(ms.getModelBS(getAtomBitSet(atomExpression), false));
   }
 
   private JSJSONParser jsonParser;

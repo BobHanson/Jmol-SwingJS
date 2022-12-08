@@ -150,6 +150,7 @@ public final class ModelLoader {
   private P3d modulationTUV;
   private boolean highPrecision;
   private boolean isSupercell;
+  private boolean noH;
   
   
 
@@ -196,8 +197,9 @@ public final class ModelLoader {
       modulationTUV = (mod == Boolean.TRUE ? null : (P3d) mod);
     }
     noAutoBond = ms.getMSInfoB("noAutoBond");
+    noH = ms.getMSInfoB("noHydrogen");
     is2D = ms.getMSInfoB("is2D");
-    doMinimize = (is2D || ms.getMSInfoB("minimize3D")) && ms.getMSInfoB("doMinimize");
+    doMinimize = (is2D && !noH || ms.getMSInfoB("minimize3D")) && ms.getMSInfoB("doMinimize");
     adapterTrajectoryCount = (isTrajectory ? ms.trajectory.steps.size() : 0);
     ms.someModelsHaveSymmetry = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_SYMMETRY));
     someModelsHaveUnitcells = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_UNITCELLS));
@@ -304,7 +306,7 @@ public final class ModelLoader {
     if (merging)
       mergeTrajAndVib(modelSet0, ms);
     initializeAtomBondModelCounts(nAtoms);
-    if (bs2D != null && (doMinimize || is2D)) {
+    if (!noH && bs2D != null && (doMinimize || is2D)) {
       // 2D minimization is ONLY for first model
       bs2D.setBits(baseAtomIndex, baseAtomIndex + adapter.getAtomCount(asc, 0));
     }
@@ -526,7 +528,7 @@ public final class ModelLoader {
   }
 
   private void mergeGroups() {
-    Map<String, Object> info = modelSet0.getAuxiliaryInfo(null);
+    Map<String, Object> info = modelSet0.getModelSetAuxiliaryInfo(null);
     String[] mergeGroup3Lists = (String[]) info.get("group3Lists");
     int[][] mergeGroup3Counts = (int[][]) info.get("group3Counts");
     if (mergeGroup3Lists != null) {

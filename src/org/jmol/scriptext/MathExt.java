@@ -24,7 +24,6 @@
 
 package org.jmol.scriptext;
 
-import java.io.BufferedInputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;

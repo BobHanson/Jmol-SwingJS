@@ -45,6 +45,7 @@ import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.P3d;
 import javajs.util.PT;
+import net.sf.jniinchi.INCHI_BOND_STEREO;
 import net.sf.jniinchi.INCHI_BOND_TYPE;
 import net.sf.jniinchi.INCHI_PARITY;
 import net.sf.jniinchi.INCHI_STEREOTYPE;
@@ -170,9 +171,23 @@ public class InChIJNI implements JmolInChI {
     for (int i = bsBonds.nextSetBit(0); i >= 0; i = bsBonds.nextSetBit(i + 1)) {
       Bond bond = bonds[i];
       INCHI_BOND_TYPE order = getOrder(bond.getCovalentOrder());
-      if (order != null)
-        mol.addBond(new JniInchiBond(atoms[map[bond.getAtomIndex1()]],
-            atoms[map[bond.getAtomIndex2()]], order));
+      JniInchiBond b;
+      if (order != null) {
+        INCHI_BOND_STEREO stereo;
+        switch (bond.getBondType()) {
+        case Edge.BOND_STEREO_FAR:
+          stereo = INCHI_BOND_STEREO.SINGLE_1DOWN;
+          break;
+        case Edge.BOND_STEREO_NEAR:
+          stereo = INCHI_BOND_STEREO.SINGLE_1UP;
+          break;
+        default:
+            stereo = INCHI_BOND_STEREO.NONE;
+            break;
+        }
+        mol.addBond(b = new JniInchiBond(atoms[map[bond.getAtomIndex1()]],
+            atoms[map[bond.getAtomIndex2()]], order, stereo));
+      }
     }
     return mol;
   }

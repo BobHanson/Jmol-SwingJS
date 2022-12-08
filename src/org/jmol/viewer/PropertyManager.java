@@ -838,7 +838,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_ATOM_INFO:
       return getAllAtomInfo(vwr.getAtomBitSet(myParam));
     case PROP_AUXILIARY_INFO:
-      return vwr.getAuxiliaryInfoForAtoms(myParam);
+      return vwr.getModelSetAuxiliaryInfoForAtoms(myParam);
     case PROP_BOND_INFO:
       return getAllBondInfo(myParam);
     case PROP_BOUNDBOX_INFO:

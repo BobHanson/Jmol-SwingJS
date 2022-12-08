@@ -3557,7 +3557,7 @@ public class ModelSet extends BondCollection {
    * @param bsModels
    * @return Map
    */
-  public Map<String, Object> getAuxiliaryInfo(BS bsModels) {
+  public Map<String, Object> getModelSetAuxiliaryInfo(BS bsModels) {
     Map<String, Object> info = msInfo;
     if (info == null)
       info = new Hashtable<String, Object>();
