@@ -27,10 +27,13 @@ package org.jmol.adapter.readers.molxyz;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.PT;
-
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.adapter.smarter.Bond;
+import org.jmol.api.JmolAdapter;
+
+import javajs.util.BS;
+import javajs.util.PT;
 
 /**
  * A reader for Accelrys V3000 files.
@@ -40,9 +43,12 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
  * <p>
  */
 public class V3000Rdr {
+
   private MolReader mr;
   private String line;
 
+  private BS bsXx;
+  
   public V3000Rdr() {
     // for reflection
   }
@@ -74,15 +80,21 @@ public class V3000Rdr {
       String elementSymbol = tokens[3];
       if (elementSymbol.equals("*"))
         continue;
-      double x = mr.parseDoubleStr(tokens[4]);
-      double y = mr.parseDoubleStr(tokens[5]);
-      double z = mr.parseDoubleStr(tokens[6]);
+      int pt = 3;
+      if (elementSymbol.charAt(0) == '"') {
+        while (!tokens[pt].endsWith("\"")) {
+          pt++;
+        }
+      }
+      double x = mr.parseDoubleStr(tokens[++pt]);
+      double y = mr.parseDoubleStr(tokens[++pt]);
+      double z = mr.parseDoubleStr(tokens[++pt]);
       int charge = 0;
       int isotope = 0;
       if (mr.is2D && z != 0)
         mr.is2D = mr.optimize2D = false;
 
-      for (int j = 7; j < tokens.length; j++) {
+      for (int j = ++pt; j < tokens.length; j++) {
         String s = tokens[j].toUpperCase();
         if (s.startsWith("CHG="))
           charge = mr.parseIntAt(tokens[j], 4);
@@ -91,7 +103,15 @@ public class V3000Rdr {
       }
       if (isotope > 1 && elementSymbol.equals("H"))
         isotope = 1 - isotope;
-      mr.addMolAtom(iAtom, isotope, elementSymbol, charge, x, y, z);
+      Atom a = mr.addMolAtom(iAtom, isotope, elementSymbol, charge, x, y, z);
+      a.elementNumber = (short) JmolAdapter.getElementNumber(elementSymbol);
+      if (a.elementNumber == 0) {
+        // ChemDraw will store labels this way, possibly in quotes
+        System.err.println("V3000: Could not read elementSymbol for " + line);
+        if (bsXx == null)
+          bsXx = new BS();
+        bsXx.set(a.index);
+      }
     }
     mr.discardLinesUntilContains("END ATOM");
   }
@@ -115,13 +135,27 @@ public class V3000Rdr {
           tokens = PT.getTokens(endpts);
           int n = mr.parseIntStr(tokens[0]);
           int o = mr.fixOrder(order, 0);
-          for (int k = 1; k <= n; k++)
-            mr.asc.addNewBondFromNames(iAtom1, tokens[k], o);
+          for (int k = 1; k <= n; k++) {
+            Bond b = mr.asc.addNewBondFromNames(iAtom1, tokens[k], o);
+            if (bsXx != null) {
+              bsXx.clear(b.atomIndex1);
+              bsXx.clear(b.atomIndex2);
+            }
+          }
         }
       } else {
         stereo = mr.parseIntStr(cfg);
       }
-      mr.addMolBond(iAtom1, iAtom2, order, stereo);
+      Bond b = mr.addMolBond(iAtom1, iAtom2, order, stereo);
+      if (bsXx != null) {
+        bsXx.clear(b.atomIndex1);
+        bsXx.clear(b.atomIndex2);
+      }
+    }
+    if (bsXx != null && !bsXx.isEmpty()) {
+      if (mr.bsDeleted == null)
+        mr.bsDeleted = new BS();
+      mr.bsDeleted.or(bsXx);
     }
     mr.discardLinesUntilContains("END BOND");
   }

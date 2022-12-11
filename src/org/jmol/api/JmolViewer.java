@@ -37,6 +37,8 @@ import org.jmol.util.BoxInfo;
 
 import javajs.util.P3d;
 import javajs.util.V3d;
+
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 /**
@@ -283,6 +285,10 @@ abstract public class JmolViewer {
   
   static public String getJmolVersion() {
     return Viewer.getJmolVersion();
+  }
+
+  static public String getJmolVersionNoDate() {
+    return JC.version;
   }
 
   /**
@@ -621,7 +627,7 @@ abstract public class JmolViewer {
   public void dispose() {
     // TODO
   }
-  
+
 
 }
 

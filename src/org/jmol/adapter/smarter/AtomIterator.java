@@ -26,11 +26,10 @@ package org.jmol.adapter.smarter;
 
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterAtomIterator;
-import javajs.util.BS;
 import org.jmol.script.T;
 
+import javajs.util.BS;
 import javajs.util.Lst;
-import javajs.util.P3d;
 import javajs.util.P3d;
 import javajs.util.V3d;
 
@@ -90,7 +89,7 @@ class AtomIterator implements JmolAdapterAtomIterator {
 	
 	@Override
   public int getElementNumber() {
-		return (atom.elementNumber > 0 ? atom.elementNumber : JmolAdapter
+    return (atom.elementNumber > 0 ? atom.elementNumber : JmolAdapter
 				.getElementNumber(atom.getElementSymbol()));
 	}
 
@@ -109,7 +108,7 @@ class AtomIterator implements JmolAdapterAtomIterator {
 	
 	@Override
   public double getPartialCharge() {
-		return (double) atom.partialCharge;
+		return atom.partialCharge;
 	}
 
 	
@@ -148,13 +147,13 @@ class AtomIterator implements JmolAdapterAtomIterator {
 	
 	@Override
   public double getBfactor() {
-		return (double) atom.bfactor;
+		return atom.bfactor;
 	}
 
 	
 	@Override
   public double getOccupancy() {
-		return (double) (atom.foccupancy * 100);
+		return (atom.foccupancy * 100);
 	}
 
 	

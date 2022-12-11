@@ -187,6 +187,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean doCheckUnitCell;
   protected boolean getHeader;
   protected boolean isSequential;
+  public boolean optimize2D;
+  public boolean noHydrogens;
+  public boolean is2D;
+
   public boolean isMolecular; // only for CIF so that it can read multiple unit cells
   protected int templateAtomCount;
   public int modelNumber;
@@ -1078,6 +1082,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     allow_a_len_1 =checkFilterKey("TOPOS");
     slabXY = checkFilterKey("SLABXY");
     polymerX = !slabXY && checkFilterKey("POLYMERX");
+    noHydrogens = checkFilterKey("NOH");
+    optimize2D = checkFilterKey("2D") && !noHydrogens;
 
     if (filter == null)
       return;

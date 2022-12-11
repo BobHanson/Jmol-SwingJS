@@ -613,6 +613,10 @@ public class AtomSetCollection {
       }
       return;
     }
+    addBondNoCheck(bond);
+  }
+  
+  public void addBondNoCheck(Bond bond) {
     if (bondCount == bonds.length)
       bonds = (Bond[]) AU.arrayCopyObject(bonds, bondCount + 1024);
     bonds[bondCount++] = bond;

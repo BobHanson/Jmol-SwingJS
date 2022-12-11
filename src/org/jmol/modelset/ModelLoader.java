@@ -1086,19 +1086,25 @@ public final class ModelLoader {
         Map<String, Object> info = ms.getModelAuxiliaryInfo(m);
         isMOL2D = (info != null && "2D".equals(info.get("dimension")));
       }
-      bond = ms.bondMutually(atom1, atom2, (isMOL2D ? order : 1), ms.getDefaultMadFromOrder(1), 0);
-      if (vStereo == null) {
-        vStereo = new  Lst<Bond>();
+      bond = ms.bondMutually(atom1, atom2,
+          (isMOL2D ? order : Edge.BOND_AROMATIC_SINGLE),
+          ms.getDefaultMadFromOrder(1), 0);
+      if (isMOL2D) {
+        if (vStereo == null) {
+          vStereo = new Lst<Bond>();
+        }
+        vStereo.addLast(bond);
       }
-      vStereo.addLast(bond);
     } else {
-      bond = ms.bondMutually(atom1, atom2, order, ms.getDefaultMadFromOrder(order), 0);
+      bond = ms.bondMutually(atom1, atom2, order,
+          ms.getDefaultMadFromOrder(order), 0);
       if (bond.isAromatic()) {
         ms.someModelsHaveAromaticBonds = true;
       }
     }
     if (ms.bondCount == ms.bo.length) {
-      ms.bo = (Bond[]) AU.arrayCopyObject(ms.bo, ms.bondCount + BondCollection.BOND_GROWTH_INCREMENT);
+      ms.bo = (Bond[]) AU.arrayCopyObject(ms.bo,
+          ms.bondCount + BondCollection.BOND_GROWTH_INCREMENT);
     }
     ms.setBond(ms.bondCount++, bond);
     return bond;
@@ -1465,7 +1471,7 @@ public final class ModelLoader {
         Bond b = vStereo.get(i);
         double dz2 = (b.order == Edge.BOND_STEREO_NEAR ? 3 : -3);
         b.order = 1;
-        if (b.atom2.z != b.atom1.z && (dz2 < 0) == (b.atom2.z < b.atom1.z))
+        if (b.atom1.getBondCount() < 6 && b.atom2.z != b.atom1.z && (dz2 < 0) == (b.atom2.z < b.atom1.z))
           dz2 /= 3;
         //double dz1 = dz2/3;
         //b.atom1.z += dz1;

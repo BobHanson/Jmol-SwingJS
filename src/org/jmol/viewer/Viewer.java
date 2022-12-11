@@ -9243,9 +9243,9 @@ public class Viewer extends JmolViewer
       bsSelected = getAtomBitSet("cell=555");
     }
 
+    if (!bsSelected.isEmpty())
+      getModelForAtomIndex(bsSelected.nextSetBit(0)).auxiliaryInfo.put("dimension", "3D");
     if (isQuick) {
-      if (!bsSelected.isEmpty())
-        getModelForAtomIndex(bsSelected.nextSetBit(0)).auxiliaryInfo.put("dimension", "3D");
       bsInFrame = bsSelected;
     }
 
@@ -9343,7 +9343,8 @@ public class Viewer extends JmolViewer
         Atom h = b[j].getOtherAtom(a);
         if (h.getAtomicAndIsotopeNumber() == 1) {
           P3d p = pts[pt++];
-          ms.setAtomCoord(h.i, p.x, p.y, p.z);
+          if (p != null)
+            ms.setAtomCoord(h.i, p.x, p.y, p.z);
         }
       }
     }

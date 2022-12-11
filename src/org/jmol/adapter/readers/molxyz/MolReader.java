@@ -79,25 +79,20 @@ public class MolReader extends AtomSetCollectionReader {
    * $END MOL
    */
 
-  boolean optimize2D;
   private boolean haveAtomSerials;
   protected boolean allow2D = true;
   private int iatom0;
   private V3000Rdr vr;
   private int atomCount;
   private String[] atomData;
-  boolean is2D;
-  private BS bsDeleted;
+  public BS bsDeleted;
   /**
    * fix charges for RN(=O)(O), =N(O)*, =N
    */
   private boolean fixN;
-  private boolean noHydrogens;
 
   @Override
   public void initializeReader() throws Exception {
-    noHydrogens = checkFilterKey("NOH");
-    optimize2D = checkFilterKey("2D") && !noHydrogens;
     fixN = checkFilterKey("FIXN");
   }
 
@@ -382,9 +377,7 @@ public class MolReader extends AtomSetCollectionReader {
         if (iso == 17 && sym.equals("C")) {
           atom.elementSymbol = "N";
         } else if (iso == 5 && sym.equals("H")) {
-          if (bsDeleted == null)
-            bsDeleted = new BS();
-          bsDeleted.set(atom.index);
+          deleteAtom(atom);
         } else {
           atom.elementSymbol = "" + iso + sym;
         }
@@ -393,6 +386,12 @@ public class MolReader extends AtomSetCollectionReader {
       // ignore error here
     }
     rd();
+  }
+
+  public void deleteAtom(Atom atom) {
+    if (bsDeleted == null)
+      bsDeleted = new BS();
+    bsDeleted.set(atom.index);
   }
 
   /**
@@ -459,7 +458,7 @@ public class MolReader extends AtomSetCollectionReader {
     }
   }
 
-  public void addMolAtom(int iAtom, int isotope, String elementSymbol,
+  public Atom addMolAtom(int iAtom, int isotope, String elementSymbol,
                          int charge, double x, double y, double z) {
     switch (isotope) {
     case 0:
@@ -489,6 +488,7 @@ public class MolReader extends AtomSetCollectionReader {
       atom.atomSerial = iAtom;
       asc.addAtomWithMappedSerialNumber(atom);
     }
+    return atom;
   }
 
   int fixOrder(int order, int stereo) {
@@ -530,13 +530,12 @@ public class MolReader extends AtomSetCollectionReader {
     return order;
   }
 
-  public void addMolBond(String iAtom1, String iAtom2, int order, int stereo) {
+  public Bond addMolBond(String iAtom1, String iAtom2, int order, int stereo) {
     order = fixOrder(order, stereo);
     if (haveAtomSerials)
-     asc.addNewBondFromNames(iAtom1, iAtom2, order);
-    else
-      asc.addNewBondWithOrder(iatom0 + parseIntStr(iAtom1) - 1, iatom0
-          + parseIntStr(iAtom2) - 1, order);
+      return asc.addNewBondFromNames(iAtom1, iAtom2, order);
+    return asc.addNewBondWithOrder(iatom0 + parseIntStr(iAtom1) - 1,
+        iatom0 + parseIntStr(iAtom2) - 1, order);
   }
 
 }
