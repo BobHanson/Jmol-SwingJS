@@ -363,6 +363,10 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     display = new DisplayPanel(this);
     vwrOptions.put("display", display);
     JmolStatusListener userStatusListener = (JmolStatusListener) vwrOptions.get("statusListener");
+    if (userStatusListener != null && userStatusListener.getClass() == StatusListener.class) {
+      // don't pass on Jmol's standard listener as user's
+      userStatusListener = null;
+    }
     myStatusListener = new StatusListener(this, display);
     myStatusListener.userStatusListener = userStatusListener;
     vwrOptions.put("statusListener", myStatusListener);

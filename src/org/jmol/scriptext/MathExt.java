@@ -1750,8 +1750,8 @@ public class MathExt {
             return mp.addXBs(JmolMolecule.getBitSetForMF(vwr.ms.at, bs, flags));
           }
           if (isMF || isCF) {
-            return mp.addXStr(JmolMolecule.getMolecularFormulaAtoms(vwr.ms.at,
-                bs, (isMF ? null : vwr.ms.getCellWeights(bs)), isON));
+            boolean isEmpirical = isON;
+            return mp.addXStr(vwr.getFormulaForAtoms(bs, (isMF ? "MF" : "CELLFORMULA"), isEmpirical));
           }
           if (isSequence || isSeq) {
             boolean isHH = (argLast.asString().equalsIgnoreCase("H"));

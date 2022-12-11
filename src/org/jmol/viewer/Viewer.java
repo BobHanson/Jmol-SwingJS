@@ -10861,5 +10861,17 @@ public class Viewer extends JmolViewer
   public boolean isModelKitOption(char type, String value) {
     return modelkit != null && modelkit.checkOption(type, value);
   }
+
+  /**
+   * Get formula -- MF or CELLFORMULA, possibly empirical
+   * @param bs
+   * @param type
+   * @param isEmpirical
+   * @return formula as H xx C xx X xx...
+   */
+  public String getFormulaForAtoms(BS bs, String type, boolean isEmpirical) {
+    return JmolMolecule.getMolecularFormulaAtoms(ms.at, bs, 
+        ("CELLFORMULA".equals(type) ? ms.getCellWeights(bs) : null), isEmpirical);
+  }
   
 }
