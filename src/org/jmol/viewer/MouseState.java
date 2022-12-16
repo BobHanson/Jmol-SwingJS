@@ -35,6 +35,7 @@ public class MouseState {
   public long time = -1;
   
   public String name;
+  public int keybuf;
   
   MouseState(String name) {
     this.name = name;

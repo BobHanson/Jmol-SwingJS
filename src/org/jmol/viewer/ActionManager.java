@@ -630,9 +630,6 @@ public class ActionManager implements EventManager {
   private final MouseState pressed = new MouseState("pressed");
   private final MouseState dragged = new MouseState("dragged");
 
-  boolean isDraggedIsShiftDown() {
-    return (dragged.modifiers & Binding.SHIFT) != 0;
-  }
   protected void setCurrent(long time, int x, int y, int mods) {
     vwr.hoverOff();
     current.set(time, x, y, mods);
@@ -802,6 +799,7 @@ public class ActionManager implements EventManager {
       moved.modifiers |= Binding.ALT;
       break;
     case Event.VK_SHIFT:
+      moved.keybuf = 0;
       dragged.modifiers |= Binding.SHIFT;
       moved.modifiers |= Binding.SHIFT;
       break;
@@ -851,28 +849,58 @@ public class ActionManager implements EventManager {
       moved.modifiers &= ~Binding.ALT;
       if (dragSelectedMode)
         vwr.moveSelected(Integer.MAX_VALUE, 0, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false, moved.modifiers);
+            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false,
+            moved.modifiers);
       isAltKeyReleased = true;
       break;
     case Event.VK_SHIFT:
       moved.modifiers &= ~Binding.SHIFT;
+      if (moved.keybuf > 0 && vwr.isModelKitOpen())
+        checkKeyBuf(0);
       break;
     case Event.VK_CONTROL:
       moved.modifiers &= ~Binding.CTRL;
     }
     if (moved.modifiers == 0)
       vwr.setCursor(GenericPlatform.CURSOR_DEFAULT);
-    if (!vwr.getBoolean(T.navigationmode))
-      return;
-    //if (vwr.getBooleanProperty("showKeyStrokes", false))
-    //vwr.evalStringQuiet("!set echo bottom left;echo;");
-    switch (key) {
-    case Event.VK_UP:
-    case Event.VK_DOWN:
-    case Event.VK_LEFT:
-    case Event.VK_RIGHT:
-      vwr.navigate(0, 0);
-      break;
+    if (vwr.isModelKitOpen()) {
+      dragAtomIndex = vwr.findNearestAtomIndex(current.x, current.y);
+      if (dragAtomIndex >= 0) {
+        checkKeyBuf(key);
+        return;
+      }
+    }
+    if (vwr.getBoolean(T.navigationmode)) {
+      //if (vwr.getBooleanProperty("showKeyStrokes", false))
+      //vwr.evalStringQuiet("!set echo bottom left;echo;");
+      switch (key) {
+      case Event.VK_UP:
+      case Event.VK_DOWN:
+      case Event.VK_LEFT:
+      case Event.VK_RIGHT:
+        vwr.navigate(0, 0);
+        break;
+      }
+    }
+    moved.keybuf = 0;
+  }
+
+  private void checkKeyBuf(int key) {
+    boolean shiftDown = ((moved.modifiers & Binding.SHIFT) != 0);
+    if (key != 0) {
+      if (moved.keybuf == 0 || moved.keybuf > 0x100) {
+        // N (continue) or n (assign)
+        moved.keybuf = key;
+        if (shiftDown)
+          return;
+      } else {
+        // NI as <I><N>
+        moved.keybuf += (key << 8);
+      }
+    }
+    if (moved.keybuf > 0) {
+      assignNew(moved.keybuf);
+      moved.keybuf = 0;
     }
   }
 
@@ -924,6 +952,7 @@ public class ActionManager implements EventManager {
       }
       setCurrent(time, x, y, buttonMods);
       moved.setCurrent(current, 0);
+      moved.keybuf = 0;
       if (mp != null || hoverActive) {
         clickAction = Binding.getMouseAction(clickedCount, buttonMods,
             Event.MOVED);
@@ -1350,7 +1379,7 @@ public class ActionManager implements EventManager {
         exitMeasurementMode(null);
         return;
       }
-      assignNew();
+      assignNew(-1);
       return;
     }
     dragAtomIndex = -1;
@@ -1982,9 +2011,15 @@ public class ActionManager implements EventManager {
     vwr.setStatusAtomPicked(atomIndex, null, null, false);
   }
 
-  private void assignNew() {
-    if (!vwr.getModelkit(false).handleAssignNew(pressed, dragged, mp, dragAtomIndex)) {
-      exitMeasurementMode("bond dropped");      
+  private void assignNew(int key) {
+    if (key < 0) {
+      if (!vwr.getModelkit(false).handleAssignNew(pressed, dragged, mp,
+          dragAtomIndex, key)) {
+        exitMeasurementMode("bond dropped");
+      }
+    } else {
+      vwr.getModelkit(false).handleAssignNew(current, current, null, dragAtomIndex,
+          key);
     }
     exitMeasurementMode(null);
   }

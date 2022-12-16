@@ -893,10 +893,11 @@ public class ModelKit {
    * @param dragged
    * @param mp
    * @param dragAtomIndex
+   * @param key from a key press
    * @return true if we should do a refresh now
    */
   public boolean handleAssignNew(MouseState pressed, MouseState dragged,
-                                 MeasurementPending mp, int dragAtomIndex) {
+                                 MeasurementPending mp, int dragAtomIndex, int key) {
 
     // From ActionManager
     
@@ -910,11 +911,13 @@ public class ModelKit {
       dragged.y = pressed.y;
     }
 
-    if (handleDragAtom(pressed, dragged, mp.countPlusIndices))
+    if (mp != null && handleDragAtom(pressed, dragged, mp.countPlusIndices))
       return true;
+    String atomType = (key < 0 ? pickAtomAssignType : keyToElement(key));
+    if (atomType == null)
+      return false;
     boolean isCharge = isPickAtomAssignCharge;
-    String atomType = pickAtomAssignType;
-    if (mp.count == 2) {
+    if (mp != null && mp.count == 2) {
       vwr.undoMoveActionClear(-1, T.save, true);
       if (((Atom) mp.getAtom(1)).isBonded((Atom) mp.getAtom(2))) {
         appRunScript("modelkit assign bond " + mp.getMeasurementScript(" ", false) + "'p'");
@@ -958,6 +961,22 @@ public class ModelKit {
     return true;
   }
   
+  /**
+   * Convert key sequence from ActionManager into an element symbol.
+   * 
+   * Element is (char 1) (char 2) or just (char 1)
+   * 
+   * @param key  (char 2 << 8) + (char 1), all caps
+   * @return valid element symbol or null
+   */
+  private static String keyToElement(int key) {
+    int ch1 = (key & 0xFF);
+    int ch2 = (key >> 8) & 0xFF;
+    String element = "" + (char) ch1 + (ch2 == 0 ? "" : ("" + (char) ch2).toLowerCase());
+    int n = Elements.elementNumberFromSymbol(element, true);
+    return (n == 0 ? null : element); 
+  }
+
 
   ///////// from ModelKitPopup /////////
   

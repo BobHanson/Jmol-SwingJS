@@ -20,7 +20,7 @@ public interface SmilesMatcherInterface {
 
   public abstract String getLastException();
 
-  public abstract String getMolecularFormula(String pattern, boolean isSearch) throws Exception;
+  public abstract String getMolecularFormula(String pattern, boolean isSearch, boolean isEmpirical) throws Exception;
 
   public abstract String getRelationship(String smiles1, String smiles2) throws Exception;
 

@@ -117,7 +117,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   }
 
   @Override
-  public String getMolecularFormula(String pattern, boolean isSmarts)
+  public String getMolecularFormula(String pattern, boolean isSmarts, boolean isEmpirical)
       throws Exception {
     clearExceptions();
     // note: Jmol may undercount the number of hydrogen atoms
@@ -138,7 +138,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     SmilesSearch search = SmilesParser.newSearch("/nostereo/"+pattern, isSmarts, true);
     search.createTopoMap(null);
     search.nodes = search.targetAtoms;
-    return search.getMolecularFormula(!isSmarts, null, false);
+    return search.getMolecularFormula(!isSmarts, null, isEmpirical);
   }
 
   private void clearExceptions() {
@@ -234,8 +234,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     if (smiles1 == null || smiles2 == null || smiles1.length() == 0
         || smiles2.length() == 0)
       return "";
-    String mf1 = getMolecularFormula(smiles1, false);
-    String mf2 = getMolecularFormula(smiles2, false);
+    String mf1 = getMolecularFormula(smiles1, false, false);
+    String mf2 = getMolecularFormula(smiles2, false, false);
     if (!mf1.equals(mf2))
       return "none";
     boolean check;

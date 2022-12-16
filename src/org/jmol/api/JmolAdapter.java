@@ -244,7 +244,6 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
    * <p>NOTE WARNING:
    * <br>Not yet implemented everywhere, it is in the smarterJmolAdapter
    * @param atomSetCollection The client file
-   * @param modelIndex 
    * @return The number of atomSets in the file
    */
   abstract public int getAtomSetCount(Object atomSetCollection);

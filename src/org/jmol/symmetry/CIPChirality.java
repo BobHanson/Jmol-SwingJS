@@ -723,7 +723,7 @@ public class CIPChirality {
     boolean haveAlkenes = preFilterAtomList(data.atoms, bsToDo, data.bsEnes);
     if (!data.bsEnes.isEmpty()) 
       data.getEneKekule();
-    Logger.info("bsKekule:" + data.bsKekuleAmbiguous);
+    logInfo("bsKekule:" + data.bsKekuleAmbiguous);
 
     // set atom chiralities
 
@@ -761,8 +761,8 @@ public class CIPChirality {
     }
 
     if (Logger.debugging) {
-      Logger.info("Kekule ambiguous = " + data.bsKekuleAmbiguous);
-      Logger.info("small rings = " + PT.toJSON(null, data.lstSmallRings));
+      logInfo("Kekule ambiguous = " + data.bsKekuleAmbiguous);
+      logInfo("small rings = " + PT.toJSON(null, data.lstSmallRings));
     }
 
   }
@@ -967,7 +967,7 @@ public class CIPChirality {
       if (cipAtom.setNode()) {
         for (currentRule = RULE_1a; currentRule <= RULE_6; currentRule++) {
           //          if (Logger.debugging)
-          //            Logger.info("-Rule " + getRuleName(currentRule)
+          //            logInfo("-Rule " + getRuleName(currentRule)
           //                + " CIPChirality for " + cipAtom + "-----"); // Logger
           int nPrioritiesPrev = cipAtom.nPriorities;
           switch (currentRule) {
@@ -1022,7 +1022,7 @@ public class CIPChirality {
             if (Logger.debuggingHigh && cipAtom.h1Count < 2) {
               for (int i = 0; i < cipAtom.bondCount; i++) { // Logger
                 if (cipAtom.atoms[i] != null) // Logger
-                  Logger.info(cipAtom.atoms[i] + " " + cipAtom.priorities[i]); // Logger
+                  logInfo(cipAtom.atoms[i] + " " + cipAtom.priorities[i]); // Logger
               }
             }
 
@@ -1079,7 +1079,7 @@ public class CIPChirality {
               // since there are no descriptors on N, we won't catch this there. 
             }
             if (Logger.debugging)
-              Logger.info(atom + " " + JC.getCIPChiralityName(rs) + " by Rule "
+              logInfo(atom + " " + JC.getCIPChiralityName(rs) + " by Rule "
                   + getRuleName(currentRule)
                   + "\n----------------------------------"); // Logger
             return rs;
@@ -1122,7 +1122,7 @@ public class CIPChirality {
       return UNDETERMINED;
     int c = setBondChirality(a, parents[0], parents[1], b, isAxial);
     if (Logger.debugging)
-      Logger.info("get Bond Chirality " + JC.getCIPChiralityName(c) + " " + bond);
+      logInfo("get Bond Chirality " + JC.getCIPChiralityName(c) + " " + bond);
     return c;
   }
 
@@ -1221,7 +1221,7 @@ public class CIPChirality {
       a.setCIPChirality(c | ((ruleA - 1) << JC.CIP_CHIRALITY_NAME_OFFSET));
       b.setCIPChirality(c | ((ruleB - 1) << JC.CIP_CHIRALITY_NAME_OFFSET));
       if (Logger.debugging)
-        Logger.info(a + "-" + b + " " + JC.getCIPChiralityName(c));
+        logInfo(a + "-" + b + " " + JC.getCIPChiralityName(c));
     }
     return c;
   }
@@ -1566,12 +1566,13 @@ public class CIPChirality {
         sphere = parent.sphere + 1;
       if (sphere == 1) {
         rootSubstituent = this;
-        htPathPoints = new Hashtable<Integer, Integer>();
-      } else if (parent != null) {
+      } else if (parent != null && parent.htPathPoints != null) {
         rootSubstituent = parent.rootSubstituent;
         htPathPoints = (Map<Integer, Integer>) ((Hashtable<Integer, Integer>) parent.htPathPoints)
             .clone();
       }
+      if (htPathPoints == null)
+        htPathPoints = new Hashtable<Integer, Integer>();
       bsPath = (parent == null ? new BS() : (BS) parent.bsPath.clone());
 
       if (isDuplicate)
@@ -1603,7 +1604,7 @@ public class CIPChirality {
         if (sphere < MAX_PATH) // Logger
           myPath = (parent != null ? parent.myPath + "-" : "") + this; // Logger
         if (Logger.debuggingHigh)
-          Logger.info("new CIPAtom " + myPath);
+          logInfo("new CIPAtom " + myPath);
       }
       return this;
     }
@@ -1814,7 +1815,7 @@ public class CIPChirality {
       SimpleEdge[] bonds = atom.getEdges();
       int nBonds = bonds.length;
       if (Logger.debuggingHigh)
-        Logger.info("set " + this);
+        logInfo("set " + this);
       int pt = 0;
       for (int i = 0; i < nBonds; i++) {
         SimpleEdge bond = bonds[i];
@@ -1866,10 +1867,7 @@ public class CIPChirality {
         break;
 
       }
-      if (pt < 4)
-        for (; pt < atoms.length; pt++)
-          atoms[pt] = new CIPAtom().create(null, this, false, true, false);
-
+      fillAtoms(pt);
       // Do an initial very shallow atom-only Rule 1 sort using a.compareTo(b)
 
       try {
@@ -1880,13 +1878,21 @@ public class CIPChirality {
       return true;
     }
 
+    private void fillAtoms(int pt) {
+      if (pt < 4)
+        for (; pt < atoms.length; pt++)
+          if (atoms[pt] == null)
+            atoms[pt] = new CIPAtom().create(null, this, false, true, false);
+    }
+
     /**
      * Set all ene-related fields upon finding the second atom.
      * 
      */
     private void setEne() {
       parent.alkeneChild = null;
-      alkeneParent = (parent.alkeneParent == null ? parent
+      alkeneParent = (parent.alkeneParent == null 
+          ? parent
           : parent.alkeneParent);
       alkeneParent.alkeneChild = this;
       nextSP2 = parent;
@@ -1914,7 +1920,7 @@ public class CIPChirality {
                     boolean isAlkene, boolean isParentBond) {
       if (i >= atoms.length) {
         if (Logger.debugging)
-          Logger.info(" too many bonds on " + atom);
+          logInfo(" too many bonds on " + atom);
         return null;
       }
       if (other.getElementNumber() == 1 && other.getIsotopeNumber() == 0) {
@@ -1922,7 +1928,7 @@ public class CIPChirality {
           if (parent == null) {
             // For top level, we do not allow two 1H atoms.
             if (Logger.debuggingHigh)
-              Logger.info(" second H atom found on " + atom);
+              logInfo(" second H atom found on " + atom);
             return null;
           }
         }
@@ -1981,12 +1987,12 @@ public class CIPChirality {
       int[] newPriorities = new int[4];
 
       if (Logger.debuggingHigh && h1Count < 2) {
-        Logger.info(root + "---sortSubstituents---" + this);
+        logInfo(root + "---sortSubstituents---" + this);
         for (int i = 0; i < 4; i++) { // Logger
-          Logger.info(getRuleName(currentRule) + ": " + this + "[" + i + "]="
+          logInfo(getRuleName(currentRule) + ": " + this + "[" + i + "]="
               + atoms[i].myPath + " " + Integer.toHexString(priorities[i])); // Logger
         }
-        Logger.info("---" + nPriorities);
+        logInfo("---" + nPriorities);
       }
 
       int loser;
@@ -1996,16 +2002,20 @@ public class CIPChirality {
         for (int j = i + 1; j < 4; j++) {          
           CIPAtom b = atoms[loser = j];
           int score = TIED;
-
+            
           // Check:
           
           // (a) if one of the atoms is a phantom atom (P-92.1.4.1); if not, then
-          // (b) if the prioritiy has already been set; if not, then
+          // (b) if the priority has already been set; if not, then
           // (c) if the current rule decides; if not, then
           // (d) if the tie can be broken in the next sphere
-          switch (b.atom == null || priorities[i] < priorities[j] ? A_WINS
-              : aLoses || a.atom == null || priorities[j] < priorities[i] ? B_WINS
-                  : (score = a.checkCurrentRule(b)) != TIED  && score != IGNORE || ignoreTies ? score
+          switch (b.atom == null 
+              || priorities[i] < priorities[j] ? A_WINS
+              : aLoses 
+              || a.atom == null 
+              || priorities[j] < priorities[i] ? B_WINS
+                  : (score = a.checkCurrentRule(b)) != TIED  && score != IGNORE 
+                  || ignoreTies ? score
                           : sign(a.breakTie(b, sphere + 1))) {
           case B_WINS:
             loser = i;
@@ -2038,12 +2048,12 @@ public class CIPChirality {
       atoms = newAtoms;
       nPriorities = bsTemp.cardinality();
       if (Logger.debuggingHigh && atoms[2].atom != null && atoms[2].elemNo != 1) { // Logger
-        Logger.info(dots() + atom + " nPriorities = " + nPriorities);
+        logInfo(dots() + atom + " nPriorities = " + nPriorities);
         for (int i = 0; i < 4; i++) { // Logger
-          Logger.info(dots() + myPath + "[" + i + "]=" + atoms[i] + " "
+          logInfo(dots() + myPath + "[" + i + "]=" + atoms[i] + " "
               + priorities[i] + " " + Integer.toHexString(priorities[i])); // Logger
         }
-        Logger.info(dots() + "-------" + nPriorities);
+        logInfo(dots() + "-------" + nPriorities);
       }
 
       // We are done if the number of priorities equals the bond count.
@@ -2313,7 +2323,7 @@ public class CIPChirality {
      * We carry out this step only as a tie in the sphere AFTER the final atom
      * of the alkene or even-cumulene.
      * 
-     * If the this atom and the comparison atom b are on the same parent, then
+     * If this atom and the comparison atom b are on the same parent, then
      * this is simply a request to break their tie based on Rule 3; otherwise
      * two paths are being checked for one being seqCis and one being seqTrans.
      * 
@@ -2321,10 +2331,14 @@ public class CIPChirality {
      * @return 0 (TIED), -1 (A_WINS), or 1 (B_WINS)
      */
     private int compareRule3(CIPAtom b) {
-      return isDuplicate || b.isDuplicate || !parent.isAlkeneAtom2
+      if (isDuplicate || b.isDuplicate 
+          || !parent.isAlkeneAtom2
           || !b.parent.isAlkeneAtom2 || !parent.alkeneParent.isEvenEne
-          || !b.parent.alkeneParent.isEvenEne || parent == b.parent ? TIED
-          : Integer.compare(parent.auxEZ, b.parent.auxEZ);
+          || !b.parent.alkeneParent.isEvenEne)
+        return TIED;
+      int ret = Integer.compare(parent.auxEZ,  b.parent.auxEZ);
+      System.out.println("RULE 3 " + ret + " for " + parent + "," + this + " " + b.parent + "," + b);
+      return ret;
     }
 
     /**
@@ -2405,7 +2419,7 @@ public class CIPChirality {
         return listRS[currentRule == RULE_5 ? STEREO_R : 0];
       BS bs;
       listRS = new BS[] { null, bs = rank4bAndRead(null), rank4bAndRead(bs)};
-      Logger.info("getBest " + currentRule + " " + this + " " + listRS[STEREO_R] + listRS[STEREO_S] + " " + myPath);      
+      logInfo("getBest " + currentRule + " " + this + " " + listRS[STEREO_R] + listRS[STEREO_S] + " " + myPath);      
       bs = compareLikeUnlike(listRS[STEREO_R], listRS[STEREO_S]);
       return listRS[0] = (currentRule == RULE_5 || bs == null ? listRS[STEREO_R] : bs);
     }
@@ -2429,7 +2443,7 @@ public class CIPChirality {
       root.rule4Ref = NO_CHIRALITY;
       for (int i = 0, n = chiralAtoms.size(); i < n; i++) {
         if (Logger.debugging)
-          Logger.info("" + ref + " " + this + " " + chiralAtoms.get(i).chiralPath);
+          logInfo("" + ref + " " + this + " " + chiralAtoms.get(i).chiralPath);
         if (chiralAtoms.get(i).rule4Type == ref)
           list.set(i);
       }
@@ -2660,7 +2674,7 @@ public class CIPChirality {
                 // normal even-ene seqcis/seqtrans
                 auxEZ = alkeneChild.auxEZ = rs;
                 if (Logger.debuggingHigh)
-                  Logger.info("alkene type " + this + " " + (auxEZ == STEREO_E ? "E" : "Z"));
+                  logInfo("alkene type " + this + " " + (auxEZ == STEREO_E ? "E" : "Z"));
               } else if (!isBranch) {
                 // Normalize M/P and Z/E to R/S
                 switch (rs) {
@@ -2714,7 +2728,7 @@ public class CIPChirality {
       if (node1 == null)
         bsNeedRule.setBitTo(RULE_4a, nRS > 0);
       if (c != '~') {
-        Logger.info("creating aux " + c + " for " + this + (myPath.length() == 0 ? "" : " = " + myPath));
+        logInfo("creating aux " + c + " for " + this + (myPath.length() == 0 ? "" : " = " + myPath));
       }
       return (this.isChiralPath = isChiralPath);
     }
@@ -2758,7 +2772,7 @@ public class CIPChirality {
       CIPAtom winner2 = (winner1 == null || winner1.atom == null ? null
           : getAuxEneEndWinner(end2, end2.nextSP2, retRule2));
       if (Logger.debuggingHigh)
-        Logger.info(this + " alkene end winners " + winner1 + winner2);
+        logInfo(this + " alkene end winners " + winner1 + winner2);
       return getEneChirality(winner1, end1, end2, winner2, isAxial, false);
     }
     
@@ -2776,8 +2790,9 @@ public class CIPChirality {
     private CIPAtom getAuxEneEndWinner(CIPAtom end, CIPAtom prevSP2,
                                        int[] retRule) {
       CIPAtom atom1 = (CIPAtom) end.clone();
-      if (atom1.parent != prevSP2)
+      if (atom1.parent != prevSP2) {
         atom1.addReturnPath(prevSP2, end);
+      }
       CIPAtom a;
       for (int rule = RULE_1a; rule <= RULE_6; rule++) {
         if (atom1.auxSort(rule)) {
@@ -2804,28 +2819,38 @@ public class CIPChirality {
      */
     private void addReturnPath(CIPAtom newParent, CIPAtom fromAtom) {
       Lst<CIPAtom> path = new Lst<CIPAtom>();
-      CIPAtom thisAtom = this, newSub, oldParent = fromAtom, oldSub = newParent;
+      CIPAtom thisAtom = this;
+      CIPAtom newSub;
+      CIPAtom oldParent = fromAtom;
+      CIPAtom oldSub = newParent;
       // create path back to root
       while (oldParent.parent != null && oldParent.parent.atoms[0] != null) { // COUNT_LINE
         if (Logger.debuggingHigh)
-          Logger.info("path:" + oldParent.parent + "->" + oldParent);
+          logInfo("path:" + oldParent.parent + "->" + oldParent);
         path.addLast(oldParent = oldParent.parent);
       }
+      if (oldParent.parent != null && newParent != null)
+        path.add(oldParent.parent);
       path.addLast(null);
       for (int i = 0, n = path.size(); i < n; i++) {
         oldParent = path.get(i);
-        newSub = (oldParent == null ? new CIPAtom().create(null, this,
-            isAlkene, true, false) : (CIPAtom) oldParent.clone());
+        newSub = (oldParent == null ? 
+            new CIPAtom().create(null, this, thisAtom.isAlkene, true, false) 
+            : (CIPAtom) oldParent.clone());
         newSub.nPriorities = 0;
         newSub.sphere = thisAtom.sphere + 1;
+        if (thisAtom.atoms[0] == null)
+          thisAtom.atoms[0] = oldSub;
         thisAtom.replaceParentSubstituent(oldSub, newParent, newSub);
         if (i > 0 && thisAtom.isAlkene && !thisAtom.isAlkeneAtom2) {
           // reverse senses of alkenes
           if (newParent.isAlkeneAtom2) {
-            newParent.isAlkeneAtom2 = false;
-            thisAtom.alkeneParent = newParent;
+            if (newParent.alkeneChild == null || newParent.alkeneChild.atom == thisAtom.atom) {
+              newParent.isAlkeneAtom2 = false;
+              newParent.alkeneParent = null;
+              thisAtom.setEne();
+            }
           }
-          thisAtom.setEne();
         }
         newParent = thisAtom;
         thisAtom = newSub;
@@ -2845,11 +2870,13 @@ public class CIPChirality {
     private void replaceParentSubstituent(CIPAtom oldSub, CIPAtom newParent,
                                           CIPAtom newSub) {
       for (int i = 0; i < 4; i++)
-        if (atoms[i] == oldSub || newParent == null && atoms[i].atom == null) {
+        if (atoms[i] == oldSub 
+        || newParent == null && atoms[i].atom == null) {
           if (Logger.debuggingHigh)
-            Logger.info("reversed: " + newParent + "->" + this + "->" + newSub);
+            logInfo("reversed: " + newParent + "->" + this + "->" + newSub);
           parent = newParent;
           atoms[i] = newSub;
+          fillAtoms(++i);
           Arrays.sort(atoms);
           break;
         }
@@ -2904,5 +2931,9 @@ public class CIPChirality {
 
     }
   }
-  
+
+  public void logInfo(String msg) {
+    Logger.info(msg);
+  }
+
 }

@@ -271,7 +271,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     String mode;
 //    System.out.println("ModelKitPopup updating for show " + updatingForShow);
     if (!updatingForShow && (mode = setActiveMenu(name)) != null) {
-      exitBondRotation();
       String text = source.getText();
       // don't turn this into a Java 8 switch -- we need this to still compile in Java 6 for legacy Jmol
       if (mode == ModelKit.BOND_MODE) {
@@ -334,7 +333,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
     if (gained && !modelkit.processSymop(name, true)) {
       setActiveMenu(name);
     }
-    exitBondRotation();
   }
 
   @Override
@@ -375,12 +373,17 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
       // drag to bond
       modelkit.resetAtomPickType();
     }
+    if (TF && !updatingForShow && basename.indexOf("Bond") < 0) {
+      updatingForShow = true;
+      exitBondRotation();
+      updatingForShow = false;
+    }
     return super.appRunSpecialCheckBox(item, basename, script, TF);
   }
 
   public void updateCheckBoxesForModelKit(@SuppressWarnings("unused") String menuName) {
+    String thisAtomType = "assignAtom_" + modelkit.pickAtomAssignType + "P";
     String thisBondType = "assignBond_"+modelkit.pickBondAssignType;
-    String thisAtomType = "assignAtom_" + modelkit.pickAtomAssignType + "P"; 
     for (Map.Entry<String, SC> entry : htCheckbox.entrySet()) {
       SC item = entry.getValue();
       String key = item.getActionCommand();
@@ -390,7 +393,6 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
         item.setSelected(true);
         updatingForShow = false;
       }
-
     }
   }
 

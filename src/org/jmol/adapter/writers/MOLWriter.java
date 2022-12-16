@@ -1,6 +1,7 @@
 package org.jmol.adapter.writers;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -44,13 +45,47 @@ public class MOLWriter {
     return this;
   }
 
-  public boolean addMolFile(int iModel, SB mol, BS bsAtoms, BS bsBonds,
+  public boolean addMolFile(String title, int iModel, SB mol, BS bsAtoms, BS bsBonds,
                             boolean asV3000, boolean asJSON,
-                            boolean noAromatic, Qd q) {
-   int nAtoms = bsAtoms.cardinality();
-   int nBonds = bsBonds.cardinality();
-   if (!asV3000 && !asJSON && (nAtoms > 999 || nBonds > 999))
-     return false;
+                            boolean noAromatic, Qd q, boolean is2d) {
+    int nAtoms = bsAtoms.cardinality();
+    int nBonds = bsBonds.cardinality();
+    if (!asV3000 && !asJSON && (nAtoms > 999 || nBonds > 999))
+      return false;    
+    if (!asJSON) {
+      if (title.length() > 80)
+        title = title.substring(0, 77) + "...";
+      mol.append(title);
+      String version = Viewer.getJmolVersion();
+      mol.append("\n__Jmol-").append(version.substring(0, 2));
+      int cMM, cDD, cYYYY, cHH, cmm;
+      /**
+       * @j2sNative
+       * 
+       *            var c = new Date(); cMM = c.getMonth(); cDD = c.getDate();
+       *            cYYYY = c.getFullYear(); cHH = c.getHours(); cmm =
+       *            c.getMinutes();
+       */
+      {
+        Calendar c = Calendar.getInstance();
+        cMM = c.get(Calendar.MONTH);
+        cDD = c.get(Calendar.DAY_OF_MONTH);
+        cYYYY = c.get(Calendar.YEAR);
+        cHH = c.get(Calendar.HOUR_OF_DAY);
+        cmm = c.get(Calendar.MINUTE);
+      }
+      PT.rightJustify(mol, "_00", "" + (1 + cMM));
+      PT.rightJustify(mol, "00", "" + cDD);
+      mol.append(("" + cYYYY).substring(2, 4));
+      PT.rightJustify(mol, "00", "" + cHH);
+      PT.rightJustify(mol, "00", "" + cmm);
+      mol.append(is2d ? "2" : "3").append("D 1   1.00000     0.00000     0");
+      //       This line has the format:
+      //  IIPPPPPPPPMMDDYYHHmmddSSssssssssssEEEEEEEEEEEERRRRRR
+      //  A2<--A8--><---A10-->A2I2<--F10.5-><---F12.5--><-I6->
+      mol.append("\nJmol version ").append(Viewer.getJmolVersion())
+          .append(" EXTRACT: ").append(Escape.eBS(bsAtoms)).append("\n");
+    }    
    boolean asSDF = (iModel >= 0);
    @SuppressWarnings("unchecked")
    Map<String, Object> molData = (asSDF
@@ -94,9 +129,10 @@ public class MOLWriter {
      mol.append("],\"b\":[");
    }
    for (int i = bsBonds.nextSetBit(0), n = 0; i >= 0; i = bsBonds
-       .nextSetBit(i + 1))
+       .nextSetBit(i + 1)) {
      getBondRecordMOL(mol, ++n, ms.bo[i], atomMap, asV3000, asJSON,
-         noAromatic);
+         noAromatic, is2d);
+   }
    if (asV3000) {
      mol.append("M  V30 END BOND\nM  V30 END CTAB\n");
    }
@@ -296,13 +332,32 @@ public class MOLWriter {
   }
 
   private void getBondRecordMOL(SB mol, int n, Bond b, int[] atomMap,
-                                boolean asV3000, boolean asJSON, boolean noAromatic) {
+                                boolean asV3000, boolean asJSON,
+                                boolean noAromatic, boolean is2d) {
     //  1  2  1  0
     int a1 = atomMap[b.atom1.i];
     int a2 = atomMap[b.atom2.i];
     int order = b.getValence();
+    String cfg = "";
     if (order > 3)
       order = 1;
+    if (is2d) {
+      if (asJSON) {
+        //TODO?? ChemDoodle? Examples
+      } else {
+        switch (b.order) {
+        case Edge.BOND_STEREO_NEAR:
+          cfg = (asV3000 ? "  CFG=1" : "  1");
+          break;
+        case Edge.BOND_STEREO_FAR:
+          cfg = (asV3000 ? "  CFG=6" : "  3");
+          break;
+        default:
+          cfg = "  0";
+          break;
+        }
+      }
+    }
     switch (b.order & Edge.BOND_RENDER_MASK) {
     case Edge.BOND_AROMATIC:
       order = (asJSON ? -3 : 4);
@@ -311,18 +366,18 @@ public class MOLWriter {
       order = (asJSON ? -3 : 5);
       break;
     case Edge.BOND_AROMATIC_SINGLE:
-      order = (asJSON || noAromatic ? 1: 6);
+      order = (asJSON || noAromatic ? 1 : 6);
       break;
     case Edge.BOND_AROMATIC_DOUBLE:
-      order = (asJSON || noAromatic  ? 2: 7);
+      order = (asJSON || noAromatic ? 2 : 7);
       break;
     case Edge.BOND_PARTIAL01:
-      order = (asJSON ? -1: 8);
+      order = (asJSON ? -1 : 8);
       break;
     }
     if (asV3000) {
       mol.append("M  V30 ").appendI(n).append(" ").appendI(order).append(" ")
-          .appendI(a1).append(" ").appendI(a2).appendC('\n');
+          .appendI(a1).append(" ").appendI(a2).append(cfg).appendC('\n');
     } else if (asJSON) {
       if (n != 1)
         mol.append(",");
@@ -332,14 +387,14 @@ public class MOLWriter {
         if (order < 0) {
           mol.appendD(-order / 2d);
         } else {
-          mol.appendI(order);   
+          mol.appendI(order);
         }
       }
       mol.append("}");
     } else {
       PT.rightJustify(mol, "   ", "" + a1);
       PT.rightJustify(mol, "   ", "" + a2);
-      mol.append("  ").appendI(order).append("  0  0  0\n");
+      mol.append("  ").appendI(order).append(cfg).append("\n");
     }
   }
 

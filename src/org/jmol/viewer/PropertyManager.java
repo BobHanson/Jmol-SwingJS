@@ -24,7 +24,6 @@
 package org.jmol.viewer;
 
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
@@ -1230,7 +1229,7 @@ public class PropertyManager implements JmolPropertyManager {
 
   /**
    * 
-   * V3000, SDF, MOL, JSON, CD, XYZ, XYZVIB, XYZRN, CML, PDB, PQR, QCJSON, PWMAT, XSF
+   * V3000, SDF, MOL, JSON, CD (ChemDoodle), XYZ, XYZVIB, XYZRN, CML, PDB, PQR, QCJSON, PWMAT, XSF
    * 
    * MOL67 is MOL with bonds of type 6 or 7 (aromatic single/double)
    * 
@@ -1260,125 +1259,99 @@ public class PropertyManager implements JmolPropertyManager {
     boolean asJSON = uc.equals("JSON") || uc.equals("CD");
     SB mol = new SB();
     ModelSet ms = vwr.ms;
-    BS bsAtoms = BSUtil.copy(bs);
-    BS bsModels = vwr.ms.getModelBS(bsAtoms, true);
-    if (!isXYZ && !asJSON) {
-      String title = vwr.ms.getFrameTitle(bsModels.nextSetBit(0));      
-      title = (title != null ? title.replace('\n',' ') : isModelKit ? "Jmol Model Kit" : FileManager.fixDOSName(vwr.fm.getFullPathName(false)));
-      if (title.length() > 80)
-        title = title.substring(0, 77) + "...";
-      mol.append(title);
-      String version = Viewer.getJmolVersion();
-      mol.append("\n__Jmol-").append(version.substring(0, 2));
-      int cMM, cDD, cYYYY, cHH, cmm;
-      /**
-       * @j2sNative
-       * 
-       *            var c = new Date(); cMM = c.getMonth(); cDD = c.getDate();
-       *            cYYYY = c.getFullYear(); cHH = c.getHours(); cmm =
-       *            c.getMinutes();
-       */
-      {
-        Calendar c = Calendar.getInstance();
-        cMM = c.get(Calendar.MONTH);
-        cDD = c.get(Calendar.DAY_OF_MONTH);
-        cYYYY = c.get(Calendar.YEAR);
-        cHH = c.get(Calendar.HOUR_OF_DAY);
-        cmm = c.get(Calendar.MINUTE);
-      }
-      PT.rightJustify(mol, "_00", "" + (1 + cMM));
-      PT.rightJustify(mol, "00", "" + cDD);
-      mol.append(("" + cYYYY).substring(2, 4));
-      PT.rightJustify(mol, "00", "" + cHH);
-      PT.rightJustify(mol, "00", "" + cmm);
-      mol.append("3D 1   1.00000     0.00000     0");
-      //       This line has the format:
-      //  IIPPPPPPPPMMDDYYHHmmddSSssssssssssEEEEEEEEEEEERRRRRR
-      //  A2<--A8--><---A10-->A2I2<--F10.5-><---F12.5--><-I6->
-      mol.append("\nJmol version ").append(Viewer.getJmolVersion())
-          .append(" EXTRACT: ").append(Escape.eBS(bs)).append("\n");
-    }
+    BS bsModels = vwr.ms.getModelBS(bs, true);
+    int modelIndex = bsModels.nextSetBit(0);
+    boolean is2D = "2D".equals(vwr.ms.am[modelIndex].auxiliaryInfo.get("dimension"));
     Atom[] atoms = ms.at;
+    BS bsAtoms = BSUtil.copy(bs);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
       if (doTransform && atoms[i].isDeleted())
         bsAtoms.clear(i);
-    BS bsBonds = getCovalentBondsForAtoms(ms.bo, ms.bondCount, bsAtoms);
     if (!asXYZVIB && bsAtoms.isEmpty())
       return "";
+    BS bsBonds = getCovalentBondsForAtoms(ms.bo, ms.bondCount, bsAtoms);
     boolean isOK = true;
     if (ms.trajectory != null && !allTrajectories)
       ms.trajectory.selectDisplayed(bsModels);
     Qd q = (doTransform ? vwr.tm.getRotationQ() : null);
     if (isXYZ) {
-      LabelToken[] tokensXYZ = LabelToken.compile(vwr,
-          (asXYZRN ? "%-2e _XYZ_ %4.2[vdw] 1 [%n]%r.%a#%i\n" : "%-2e _XYZ_\n"),
-          '\0', null);
-      LabelToken[] tokensVib = (asXYZVIB ? LabelToken.compile(vwr,
-          "%-2e _XYZ_ %12.5vx %12.5vy %12.5vz\n", '\0', null) : null);
-      P3d ptTemp = new P3d();
-      for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels
-          .nextSetBit(i + 1)) {
-        BS bsTemp = BSUtil.copy(bsAtoms);
-        bsTemp.and(ms.getModelAtomBitSetIncludingDeleted(i, false));
-        if (bsTemp.isEmpty())
-          continue;
-        mol.appendI(bsTemp.cardinality()).appendC('\n');
-        Properties props = ms.am[i].properties;
-        mol.append("Model[" + (i + 1) + "]: ");
-        if (ms.frameTitles[i] != null && ms.frameTitles[i].length() > 0) {
-          mol.append(ms.frameTitles[i].replace('\n', ' '));
-        } else if (props == null) {
-          mol.append("Jmol " + Viewer.getJmolVersion());
-        } else {
-          SB sb = new SB();
-          Enumeration<?> e = props.propertyNames();
-          String path = null;
-          while (e.hasMoreElements()) {
-            String propertyName = (String) e.nextElement();
-            if (propertyName.equals(".PATH"))
-              path = props.getProperty(propertyName);
-            else
-              sb.append(";").append(propertyName).append("=")
-                  .append(props.getProperty(propertyName));
-          }
-          if (path != null)
-            sb.append(";PATH=").append(path);
-          path = sb.substring(sb.length() > 0 ? 1 : 0);
-          mol.append(path.replace('\n', ' '));
-        }
-        mol.appendC('\n');
-        Object[] o = new Object[] { ptTemp };
-        for (int j = bsTemp.nextSetBit(0); j >= 0; j = bsTemp.nextSetBit(j + 1)) {
-          String s = LabelToken.formatLabelAtomArray(vwr, atoms[j], (asXYZVIB
-              && ms.getVibration(j, false) != null ? tokensVib : tokensXYZ),
-              '\0', null, ptTemp);
-          ms.getPointTransf(i, atoms[j], q, ptTemp);
-          s = PT.rep(s, "_XYZ_", PT.sprintf("%12.5p %12.5p %12.5p", "p", o));
-          mol.append(s);
-        }
-      }
+      writeXYZ(mol, bsAtoms, bsModels, q, asXYZVIB, asXYZRN);
     } else {
+      String title = vwr.ms.getFrameTitle(bsModels.nextSetBit(0));      
+      title = (title != null ? title.replace('\n',' ') : isModelKit ? "Jmol Model Kit" : FileManager.fixDOSName(vwr.fm.getFullPathName(false)));
       MOLWriter mw = ((MOLWriter) Interface.getInterface("org.jmol.adapter.writers.MOLWriter", vwr, "write")).setViewer(vwr);
       if (asSDF) {
-        String header = mol.toString();
         mol = new SB();
         for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels
             .nextSetBit(i + 1)) {
-          mol.append(header);
           BS bsTemp = BSUtil.copy(bsAtoms);
           bsTemp.and(ms.getModelAtomBitSetIncludingDeleted(i, false));
           bsBonds = getCovalentBondsForAtoms(ms.bo, ms.bondCount, bsTemp);
-          if (!(isOK = mw.addMolFile(i, mol, bsTemp, bsBonds, false, false, noAromatic, q)))
+          if (!(isOK = mw.addMolFile(title, i, mol, bsTemp, bsBonds, false, false, noAromatic, q, is2D)))
             break;
         }
       } else {
-        isOK = mw.addMolFile(-1, mol, bsAtoms, bsBonds, asV3000, asJSON, noAromatic, q);
+        isOK = mw.addMolFile(title, -1, mol, bsAtoms, bsBonds, asV3000, asJSON, noAromatic, q, is2D);
       }
     } 
     return (isOK ? mol.toString()
         : "ERROR: Too many atoms or bonds -- use V3000 format.");
   }
 
+  private void writeXYZ(SB mol, BS bsAtoms, BS bsModels, Qd q,
+                        boolean asXYZVIB, boolean asXYZRN) {
+    ModelSet ms = vwr.ms;
+    Atom[] atoms = ms.at;
+    LabelToken[] tokensXYZ = LabelToken.compile(vwr,
+        (asXYZRN ? "%-2e _XYZ_ %4.2[vdw] 1 [%n]%r.%a#%i\n" : "%-2e _XYZ_\n"),
+        '\0', null);
+    LabelToken[] tokensVib = (asXYZVIB ? LabelToken.compile(vwr,
+        "%-2e _XYZ_ %12.5vx %12.5vy %12.5vz\n", '\0', null) : null);
+    P3d ptTemp = new P3d();
+    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels
+        .nextSetBit(i + 1)) {
+      BS bsTemp = BSUtil.copy(bsAtoms);
+      bsTemp.and(ms.getModelAtomBitSetIncludingDeleted(i, false));
+      if (bsTemp.isEmpty())
+        continue;
+      mol.appendI(bsTemp.cardinality()).appendC('\n');
+      Properties props = ms.am[i].properties;
+      mol.append("Model[" + (i + 1) + "]: ");
+      if (ms.frameTitles[i] != null && ms.frameTitles[i].length() > 0) {
+        mol.append(ms.frameTitles[i].replace('\n', ' '));
+      } else if (props == null) {
+        mol.append("Jmol " + Viewer.getJmolVersion());
+      } else {
+        SB sb = new SB();
+        Enumeration<?> e = props.propertyNames();
+        String path = null;
+        while (e.hasMoreElements()) {
+          String propertyName = (String) e.nextElement();
+          if (propertyName.equals(".PATH"))
+            path = props.getProperty(propertyName);
+          else
+            sb.append(";").append(propertyName).append("=")
+                .append(props.getProperty(propertyName));
+        }
+        if (path != null)
+          sb.append(";PATH=").append(path);
+        path = sb.substring(sb.length() > 0 ? 1 : 0);
+        mol.append(path.replace('\n', ' '));
+      }
+      mol.appendC('\n');
+      Object[] o = new Object[] { ptTemp };
+      for (int j = bsTemp.nextSetBit(0); j >= 0; j = bsTemp.nextSetBit(j + 1)) {
+        String s = LabelToken.formatLabelAtomArray(vwr, atoms[j], (asXYZVIB
+            && ms.getVibration(j, false) != null ? tokensVib : tokensXYZ),
+            '\0', null, ptTemp);
+        ms.getPointTransf(i, atoms[j], q, ptTemp);
+        s = PT.rep(s, "_XYZ_", PT.sprintf("%12.5p %12.5p %12.5p", "p", o));
+        mol.append(s);
+      }
+    }
+  }
+
+    
   /**
    * 
    * EXPERIMENTAL

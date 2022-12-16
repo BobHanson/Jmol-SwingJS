@@ -793,11 +793,11 @@ public class MathExt {
           return mp.addXStr(ret);
         }
         String mf1 = (bs1 == null
-            ? vwr.getSmilesMatcher().getMolecularFormula(smiles1, false)
+            ? vwr.getSmilesMatcher().getMolecularFormula(smiles1, false, false)
             : JmolMolecule.getMolecularFormulaAtoms(vwr.ms.at, bs1, null,
                 false));
         String mf2 = (bs2 == null
-            ? vwr.getSmilesMatcher().getMolecularFormula(smiles2, false)
+            ? vwr.getSmilesMatcher().getMolecularFormula(smiles2, false, false)
             : JmolMolecule.getMolecularFormulaAtoms(vwr.ms.at, bs2, null,
                 false));
         if (!mf1.equals(mf2))
@@ -1534,6 +1534,8 @@ public class MathExt {
     // {*}.find("SMARTS", "CCCC")
     // "CCCC".find("SMARTS", "CC")
     // "CCCC".find("SMILES", "MF")
+    // "CCCC".find("SMILES", "MF", true) // empirical formula, including implicit
+    // {2.1}.find("SMILES", "MF", true) // empirical formula, including implicit
     // {2.1}.find("CCCC",{1.1}) // find pattern "CCCC" in {2.1} with conformation given by {1.1}
     // {*}.find("ccCCN","BONDS")
     // {*}.find("SMILES","H")
@@ -1679,7 +1681,7 @@ public class MathExt {
           if (bs2 != null)
             return false;
           if (flags.equalsIgnoreCase("mf")) {
-            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, isSMARTS);
+            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, isSMARTS, isON);
           } else {
             String pattern = flags;
             // "SMARTS",flags,asMap, allMappings
@@ -1861,7 +1863,11 @@ public class MathExt {
           if (flags.indexOf("INCHI") >= 0) {
             return mp.addXStr(vwr.getInchi(bs, null, "SMILES/" + flags));
           }
-          if (asBonds) {
+          if (flags.equals("MF")) {
+            smiles = (String) e.getSmilesExt().getSmilesMatches("", null, bs,
+                bsMatch3D, JC.SMILES_TYPE_SMILES, true, false);
+            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, false, isON);
+          } else if (asBonds) {
             // this will return a single match
             int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
                 vwr.ms.at, vwr.ms.ac, bs,
