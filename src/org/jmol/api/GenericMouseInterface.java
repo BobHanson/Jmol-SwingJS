@@ -1,6 +1,8 @@
 package org.jmol.api;
 
-public interface GenericMouseInterface {
+import java.awt.event.KeyListener;
+
+public interface GenericMouseInterface extends KeyListener {
 
   boolean processEvent(int id, int x, int y, int modifiers, long time);
 
@@ -10,4 +12,5 @@ public interface GenericMouseInterface {
 
 	void processTwoPointGesture(double[][][] touches);
 
+  void processKeyEvent(Object event);
 }

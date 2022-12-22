@@ -662,4 +662,9 @@ public class JSVApplet implements JSVAppletInterface,
 		return s;
 	}
 
+  @Override
+  public void processKeyEvent(Object event) {
+    app.vwr.processKeyEvent(event);
+  }
+
 }

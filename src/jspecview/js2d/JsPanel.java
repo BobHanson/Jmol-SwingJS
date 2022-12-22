@@ -399,6 +399,11 @@ public class JsPanel implements JSVPanel {
   	return mouse != null && mouse.processEvent(id, x, y, modifiers, time);
   }
 
+  @Override
+  public void processKeyEvent(Object event) {
+    mouse.processKeyEvent(event);
+  }
+
 	@Override
 	public void processTwoPointGesture(double[][][] touches) {
 		if (mouse != null)

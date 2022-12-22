@@ -119,7 +119,8 @@ public class GenericMouse implements GenericMouseInterface {
 				| Event.MOUSE_WHEEL);
 	}
 	
-	public void keyTyped(KeyEvent ke) {
+	@Override
+  public void keyTyped(KeyEvent ke) {
 		if (pd == null)
 			return;
 		char ch = ke.getKeyChar();
@@ -133,12 +134,14 @@ public class GenericMouse implements GenericMouseInterface {
 			ke.consume();
 	}
 
-	public void keyPressed(KeyEvent ke) {
+	@Override
+  public void keyPressed(KeyEvent ke) {
 		if (pd != null && pd.keyPressed(ke.getKeyCode(), ke.getModifiers()))
 			ke.consume();
 	}
 
-	public void keyReleased(KeyEvent ke) {
+	@Override
+  public void keyReleased(KeyEvent ke) {
 		if (pd != null)
 			pd.keyReleased(ke.getKeyCode());
 	}
@@ -237,5 +240,11 @@ public class GenericMouse implements GenericMouseInterface {
 		jsvp = null;
 		disposed = true;
 	}
+
+  @Override
+  public void processKeyEvent(Object event) {
+    // JavaScript only
+    
+  }
 
 }

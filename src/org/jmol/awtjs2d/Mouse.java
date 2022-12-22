@@ -32,10 +32,10 @@ import org.jmol.api.GenericMouseInterface;
 import org.jmol.awtjs.Event;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.PT;
 import javajs.util.V3d;
-import org.jmol.viewer.Viewer;
 
 /**
  * JavaScript interface from JmolJSmol.js via handleOldJvm10Event (for now)
@@ -213,6 +213,7 @@ public class Mouse implements GenericMouseInterface {
     wheeled(e.getWhen(), e.getWheelRotation(), e.getModifiers());
   }
 
+  @Override
   public void keyTyped(KeyEvent ke) {
     ke.consume();
     if (!vwr.menuEnabled())
@@ -276,16 +277,35 @@ public class Mouse implements GenericMouseInterface {
     addKeyBuffer(ke.getModifiers() == Event.SHIFT_MASK ? Character.toUpperCase(ch) : ch);
   }
 
+  @Override
   public void keyPressed(KeyEvent ke) {
     if (vwr.isApplet)
       ke.consume();
     manager.keyPressed(ke.getKeyCode(), ke.getModifiers());
   }
 
+  @Override
   public void keyReleased(KeyEvent ke) {
     ke.consume();
     manager.keyReleased(ke.getKeyCode());
   }
+  
+  @Override
+  public void processKeyEvent(Object event) {
+    KeyEvent e = (KeyEvent) event; 
+    switch (e.getID()) {
+    case KeyEvent.KEY_PRESSED:
+      keyPressed(e);
+      break;
+    case KeyEvent.KEY_RELEASED:
+      keyReleased(e);
+      break;
+    case KeyEvent.KEY_TYPED:
+      keyTyped(e);
+      break;
+    }
+   }
+
 
   private String keyBuffer = "";
 

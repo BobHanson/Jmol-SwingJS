@@ -24,16 +24,12 @@
 package org.jmol.awt;
 
 import java.awt.Component;
-
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-
-import javajs.util.PT;
 
 import org.jmol.api.EventManager;
 import org.jmol.api.GenericMouseInterface;
@@ -43,6 +39,8 @@ import org.jmol.script.T;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.PT;
 
 /**
  * formerly org.jmol.viewer.MouseManager14
@@ -54,7 +52,7 @@ import org.jmol.viewer.Viewer;
  */
 
 class Mouse implements MouseWheelListener, MouseListener,
-    MouseMotionListener, KeyListener, GenericMouseInterface {
+    MouseMotionListener, GenericMouseInterface {
 
   private Viewer vwr;
   private EventManager manager;
@@ -406,5 +404,21 @@ class Mouse implements MouseWheelListener, MouseListener,
     // n/a
     
   }
+
+  @Override
+  public void processKeyEvent(Object event) {
+    KeyEvent e = (KeyEvent) event; 
+    switch (e.getID()) {
+    case KeyEvent.KEY_PRESSED:
+      keyPressed(e);
+      break;
+    case KeyEvent.KEY_RELEASED:
+      keyReleased(e);
+      break;
+    case KeyEvent.KEY_TYPED:
+      keyTyped(e);
+      break;
+    }
+   }
 
 }

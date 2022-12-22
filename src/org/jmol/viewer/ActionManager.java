@@ -863,7 +863,7 @@ public class ActionManager implements EventManager {
     }
     if (moved.modifiers == 0)
       vwr.setCursor(GenericPlatform.CURSOR_DEFAULT);
-    if (vwr.isModelKitOpen()) {
+    if (key >= 65 && vwr.isModelKitOpen()) {
       dragAtomIndex = vwr.findNearestAtomIndex(current.x, current.y);
       if (dragAtomIndex >= 0) {
         checkKeyBuf(key);
@@ -887,8 +887,9 @@ public class ActionManager implements EventManager {
 
   private void checkKeyBuf(int key) {
     boolean shiftDown = ((moved.modifiers & Binding.SHIFT) != 0);
+    System.out.println("AM " + key + " " + shiftDown);
     if (key != 0) {
-      if (moved.keybuf == 0 || moved.keybuf > 0x100) {
+      if (moved.keybuf == 0) {
         // N (continue) or n (assign)
         moved.keybuf = key;
         if (shiftDown)

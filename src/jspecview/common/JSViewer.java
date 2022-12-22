@@ -1761,6 +1761,11 @@ public class JSViewer implements PlatformViewer, BytePoster {
       selectedPanel.processTwoPointGesture(touches);
   }
 
+  public void processKeyEvent(Object event) {
+    if (!isClosed())
+      selectedPanel.processKeyEvent(event);
+  }
+
   public JSVAppletObject getApplet() {
     return html5Applet;
   }

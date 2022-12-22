@@ -86,6 +86,11 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
   }
 
   @Override
+  public void processKeyEvent(Object event) {
+    viewer.processKeyEvent(event);
+  }
+
+  @Override
   public void setDisplay(Object canvas) {
     viewer.setDisplay(canvas);
   }

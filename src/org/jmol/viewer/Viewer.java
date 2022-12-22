@@ -2489,6 +2489,10 @@ public class Viewer extends JmolViewer
     return mouse.processEvent(id, x, y, modifiers, time);
   }
 
+  public void processKeyEvent(Object event) {
+    mouse.processKeyEvent(event);
+  }
+
   // ///////////////////////////////////////////////////////////////
   // delegated to ActionManager
   // ///////////////////////////////////////////////////////////////
