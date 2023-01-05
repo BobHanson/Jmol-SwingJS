@@ -445,7 +445,7 @@ public class SmilesGenerator {
       dumpRingKeys(sb, htRings);
       throw new InvalidSmilesException("//* ?ring error? *//\n" + sb);
     }
-    String s = sb.toString();//insertParts(sb);//experimenting with late addition of "." parts into structure
+    String s = sb.toString();
     if (s.indexOf("^-") >= 0) {
       String s0 = s;
       try {
@@ -463,51 +463,6 @@ public class SmilesGenerator {
         e.printStackTrace();
         s = s0;
       }
-    }
-    return s;
-  }
-
-  private String insertParts(SB sb) {
-    String s = sb.toString();
-    if (specialPoints != null && nPairsMax > 0) {
-      //System.out.println(specialPoints.toString().replace('-','\n'));
-      int[] sp = new int[specialPoints.size()];
-      for (int i = sp.length; --i >= 0;) {
-        sp[i] = specialPoints.get(i).intValue();
-      }
-      Lst<int[]> inserts = new Lst<int[]>();
-      int iend = sb.length();
-      for(int i = sp.length; --i >= 1;) {
-        if (sp[i] == 0) {
-          int pos = -sp[i + 1];
-          int v = sp[i + 2];
-//          -13, 0, 
-//          -14, 100002, 
-//          -14, 10001, 
-//          -15, 10002, 
-          if (v > PAIR_END) {
-            int rnum = v - PAIR_END;
-            int ptBN = -sp[i + 5];
-            int ptN = (sb.charCodeAt(ptBN) == 48 + rnum ? ptBN : ptBN + 1);
-            String insert = sb.substring2(pos, ptBN) + sb.substring2(ptN + 1, iend);
-            for (int k = i; --k >= 0;)
-              if (sp[k] == rnum) {
-                int[] a = new int[] {k, i + 1, pos, ptBN, ptN + 1, iend};
-                int pt = inserts.size();
-                while (--pt >= 0) {
-                  int[] ia = inserts.get(pt);
-                  if (ia[0] < k)
-                    break;
-                }
-                inserts.add(++pt, a);
-//System.out.println("ins " + rnum + " at " + k + "/" + i + " " + insert + " " +  Arrays.toString(a));
-                break;
-              }
-          }
-          iend = pos - 1;
-        }
-      }
-      //System.out.println(inserts.size());
     }
     return s;
   }
@@ -1181,7 +1136,7 @@ public class SmilesGenerator {
     if ((bondPrev.order & Edge.TYPE_ATROPISOMER) == Edge.TYPE_ATROPISOMER) {
       return "^-";
     }
-    int border = bondPrev.getCovalentOrder();
+    int border = Math.max(bondPrev.isPartial() ? 1 : 0, bondPrev.getCovalentOrder());
     return (!isAromatic || !bsAromatic.get(prevIndex) ? SmilesBond
         .getBondOrderString(border) : border == 1
         && !isSameAromaticRing(atomIndex, prevIndex) ? 

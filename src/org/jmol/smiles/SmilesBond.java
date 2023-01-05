@@ -275,6 +275,11 @@ public class SmilesBond extends Edge {
   }
 
   @Override
+  public boolean isPartial() {
+    return false;
+  }
+
+  @Override
   public boolean isCovalent() {
     return order != TYPE_BIO_CROSSLINK;
   }

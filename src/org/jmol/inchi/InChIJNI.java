@@ -170,8 +170,9 @@ public class InChIJNI implements JmolInChI {
     Bond[] bonds = vwr.ms.bo;
     for (int i = bsBonds.nextSetBit(0); i >= 0; i = bsBonds.nextSetBit(i + 1)) {
       Bond bond = bonds[i];
-      INCHI_BOND_TYPE order = getOrder(bond.getCovalentOrder());
-      JniInchiBond b;
+      // partial bonds (as in ferrocene) become at least 1
+      // but oddly still do not get generated, probably because the carbons are then too strange?
+      INCHI_BOND_TYPE order = getOrder(Math.max(bond.isPartial() ? 1 : 0, bond.getCovalentOrder()));
       if (order != null) {
         INCHI_BOND_STEREO stereo;
         switch (bond.getBondType()) {
@@ -189,8 +190,9 @@ public class InChIJNI implements JmolInChI {
             stereo = INCHI_BOND_STEREO.NONE;
             break;
         }
-        mol.addBond(b = new JniInchiBond(atoms[map[bond.getAtomIndex1()]],
-            atoms[map[bond.getAtomIndex2()]], order, stereo));
+        JniInchiBond b = new JniInchiBond(atoms[map[bond.getAtomIndex1()]],
+            atoms[map[bond.getAtomIndex2()]], order, stereo);
+        mol.addBond(b);
       }
     }
     return mol;
@@ -225,7 +227,7 @@ public class InChIJNI implements JmolInChI {
       int n = 0;
       while (ai.hasNext() && n < atoms.length) {
         P3d p = ai.getXYZ();
-        JniInchiAtom a = new JniInchiAtom((double) p.x, (double) p.y, (double) p.z,
+        JniInchiAtom a = new JniInchiAtom(p.x, p.y, p.z,
             Elements.elementSymbolFromNumber(ai.getElementNumber()));
         a.setCharge(ai.getFormalCharge());
         mol.addAtom(a);
@@ -312,7 +314,7 @@ public class InChIJNI implements JmolInChI {
 
       };
       atoms.addLast(n);
-      n.set((double) a.getX(), (double) a.getY(), (double) a.getZ());
+      n.set(a.getX(), a.getY(), a.getZ());
       n.setIndex(na++);
       n.setCharge(a.getCharge());
       n.setSymbol(a.getElementType());

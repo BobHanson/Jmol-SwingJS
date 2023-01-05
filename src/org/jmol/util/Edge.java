@@ -143,6 +143,8 @@ public abstract class Edge implements SimpleEdge {
   @Override
   abstract public boolean isCovalent();
 
+  abstract public boolean isPartial();
+
   abstract public boolean isHydrogen();
 
   public static int getArgbHbondType(int order) {

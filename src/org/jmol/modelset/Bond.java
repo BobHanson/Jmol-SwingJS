@@ -95,6 +95,7 @@ public class Bond extends Edge {
     return (order & BOND_STEREO_MASK) != 0;
   }
 
+  @Override
   public boolean isPartial() {
     return (order & BOND_PARTIAL_MASK) != 0;
   }
