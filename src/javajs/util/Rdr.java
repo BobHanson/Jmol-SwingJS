@@ -527,4 +527,20 @@ public class Rdr implements GenericLineReader {
           );
   }
 
+  /**
+   * Just looking for non-printable characters.
+   * 
+   * @param bis
+   * @param n length to scan
+   * @return true if non-printable characters found
+   */
+  public static boolean isBinary(BufferedInputStream bis, int n) {
+    byte[] bytes = getMagic(bis, n);
+    for (int i = bytes.length; --i >= 0;) {
+      if (bytes[i] < 9) // TAB
+        return true;
+    }
+    return false;
+  }
+
 }

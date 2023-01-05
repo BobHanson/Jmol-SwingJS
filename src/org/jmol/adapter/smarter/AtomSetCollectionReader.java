@@ -148,8 +148,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public M3d primitiveToCrystal;
 
   public AtomSetCollection asc;
-  protected BufferedReader reader;
-  protected GenericBinaryDocument binaryDoc;
+  public BufferedReader reader;
+  public GenericBinaryDocument binaryDoc;
   protected String readerName;
   public Map<String, Object> htParams;
   public Lst<P3d[]> trajectorySteps;

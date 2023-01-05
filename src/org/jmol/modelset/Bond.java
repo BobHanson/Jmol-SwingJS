@@ -91,15 +91,15 @@ public class Bond extends Edge {
     return isOrderH(order);
   }
 
-  boolean isStereo() {
+  public boolean isStereo() {
     return (order & BOND_STEREO_MASK) != 0;
   }
 
-  boolean isPartial() {
+  public boolean isPartial() {
     return (order & BOND_PARTIAL_MASK) != 0;
   }
 
-  boolean isAromatic() {
+  public boolean isAromatic() {
     return (order & BOND_AROMATIC_MASK) != 0;
   }
 
@@ -109,8 +109,9 @@ public class Bond extends Edge {
   }
   
   public int getValence() {
-    return (!isCovalent() ? 0
-        : isPartial() || is(BOND_AROMATIC) ? 1
+    return (!isCovalent() || isPartial() ? 0
+        : //isPartial() || 
+        is(BOND_AROMATIC) ? 1
         : order & 7);
   }
 
@@ -229,6 +230,11 @@ public class Bond extends Edge {
   @Override
   public SimpleNode getAtom(int i) {
     return (i == 1 ? atom2 : atom1);
+  }
+
+  public boolean isCovalentNotPartial() {
+    return ((order & Edge.BOND_COVALENT_MASK) != 0
+        && (order & Edge.BOND_PARTIAL_MASK) == 0);
   }
 
 }

@@ -181,6 +181,10 @@ public class InChIJNI implements JmolInChI {
         case Edge.BOND_STEREO_NEAR:
           stereo = INCHI_BOND_STEREO.SINGLE_1UP;
           break;
+        case Edge.BOND_STEREO_EITHER:
+          // this will generate a stereo ?
+          stereo = INCHI_BOND_STEREO.SINGLE_1EITHER;
+          break;
         default:
             stereo = INCHI_BOND_STEREO.NONE;
             break;

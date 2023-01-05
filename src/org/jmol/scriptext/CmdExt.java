@@ -2023,7 +2023,7 @@ public class CmdExt extends ScriptExt {
         // I know -- should have required the COLOR keyword
         //}
         String cmd = paramAsStr(i);
-        if ((bo = ScriptParam.getBondOrderFromString(cmd)) == Edge.BOND_ORDER_NULL)
+        if ((bo = Edge.getBondOrderFromString(cmd)) == Edge.BOND_ORDER_NULL)
           invArg();
         // must be bond type
         if (haveType)
@@ -2033,7 +2033,7 @@ public class CmdExt extends ScriptExt {
         case Edge.BOND_PARTIAL01:
           switch (tokAt(i + 1)) {
           case T.decimal:
-            bo = ScriptParam.getPartialBondOrderFromFloatEncodedInt(st[++i].intValue);
+            bo = Edge.getPartialBondOrderFromFloatEncodedInt(st[++i].intValue);
             break;
           case T.integer:
             bo = (short) intParameter(++i);

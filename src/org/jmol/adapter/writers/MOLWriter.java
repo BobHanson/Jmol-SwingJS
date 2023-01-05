@@ -346,11 +346,14 @@ public class MOLWriter {
         //TODO?? ChemDoodle? Examples
       } else {
         switch (b.order) {
+        case Edge.BOND_STEREO_EITHER:
+          cfg = (asV3000 ? "  CFG=3" : "  4");
+          break;
         case Edge.BOND_STEREO_NEAR:
           cfg = (asV3000 ? "  CFG=1" : "  1");
           break;
         case Edge.BOND_STEREO_FAR:
-          cfg = (asV3000 ? "  CFG=6" : "  3");
+          cfg = (asV3000 ? "  CFG=2" : "  3");
           break;
         default:
           cfg = "  0";

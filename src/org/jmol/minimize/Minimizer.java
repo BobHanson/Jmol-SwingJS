@@ -373,7 +373,7 @@ public class Minimizer {
       minAtoms[i].set();
     bsMinFixed = null;
     if (bsFixed != null) {
-      bsMinFixed = new BS();
+        bsMinFixed = new BS();
       for (int i = bsAtoms.nextSetBit(0), pt = 0; i >= 0; i = bsAtoms
           .nextSetBit(i + 1), pt++)
         if (bsFixed.get(i))
@@ -395,7 +395,7 @@ public class Minimizer {
         i1 = i2;
         i2 = ii;
       }
-      int bondOrder = bond.getCovalentOrder();
+      int bondOrder = (bond.isPartial() ? 0 : bond.getCovalentOrder());
       switch (bondOrder) {
       case 0:
         // hydrogen bond

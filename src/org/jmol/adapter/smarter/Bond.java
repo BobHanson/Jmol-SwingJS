@@ -44,11 +44,6 @@ public class Bond extends AtomSetObject {
     this.order = order;
   }
 
-
-  public Bond() {
-    // for later completion
-  }
-  
   @Override
   public String toString() {
     return "[Bond "+atomIndex1 +" " + atomIndex2 + " " + order+"]";

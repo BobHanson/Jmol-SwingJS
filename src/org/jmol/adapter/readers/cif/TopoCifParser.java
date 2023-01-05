@@ -1338,7 +1338,7 @@ public class TopoCifParser implements Parser {
     private String mf;
 
     public TLink() {
-      super();
+      super(0,0,0);
       @SuppressWarnings("unused")
       int i = 0;
     }

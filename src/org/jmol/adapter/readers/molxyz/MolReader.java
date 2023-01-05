@@ -504,6 +504,9 @@ public class MolReader extends AtomSetCollectionReader {
       case 3: // DOWN, V3000
       case 6: // DOWN
         return JmolAdapter.ORDER_STEREO_FAR;
+      case 2: // either, V3000
+      case 4: // either
+        return JmolAdapter.ORDER_STEREO_EITHER;
       }
       break;
     case 2:

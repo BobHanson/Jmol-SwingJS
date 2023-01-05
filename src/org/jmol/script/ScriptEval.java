@@ -3181,11 +3181,11 @@ public class ScriptEval extends ScriptExpr {
         invArg();
       break;
     default:
-      if ((order = getBondOrderFromString(paramAsStr(1))) == Edge.BOND_ORDER_NULL)
+      if ((order = Edge.getBondOrderFromString(paramAsStr(1))) == Edge.BOND_ORDER_NULL)
         invArg();
       // generic partial can be indicated by "partial n.m"
       if (order == Edge.BOND_PARTIAL01 && tokAt(2) == T.decimal) {
-        order = getPartialBondOrderFromFloatEncodedInt(st[2].intValue);
+        order = Edge.getPartialBondOrderFromFloatEncodedInt(st[2].intValue);
       }
     }
     setShapeProperty(JC.SHAPE_STICKS, "bondOrder", Integer.valueOf(order));
@@ -5444,7 +5444,7 @@ public class ScriptEval extends ScriptExpr {
         case T.string:
           if (nFrames == 2)
             invArg();
-          int iFrame = (theTok == T.string ? getFloatEncodedInt((String) theToken.value)
+          int iFrame = (theTok == T.string ? Edge.getFloatEncodedInt((String) theToken.value)
               : theToken.intValue);
           if (iFrame < 0 && nFrames == 1) {
             isHyphen = true;
@@ -7292,7 +7292,7 @@ public class ScriptEval extends ScriptExpr {
           modelNumber = PT.parseInt(modelDotted);
           useModelNumber = true;
         } else {
-          modelNumber = getFloatEncodedInt(modelDotted);
+          modelNumber = Edge.getFloatEncodedInt(modelDotted);
         }
         if (chk)
           return;

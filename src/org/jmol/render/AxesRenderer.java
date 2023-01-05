@@ -76,7 +76,7 @@ public class AxesRenderer extends CageRenderer {
     imageFontScaling = vwr.imageFontScaling;
     if (vwr.areAxesTainted())
       axes.reinitShape();
-    font3d = vwr.gdata.getFont3DScaled(axes.font3d, imageFontScaling);
+    font3d = vwr.gdata.getFont3DScaled(axes.font3d, imageFontScaling);    
     isUnitCell = isUnitCell && (unitcell != null && ms.unitCells != null);
     String axisType = (isUnitCell ? axes.axisType : null);
     boolean isabcxyz = (isXY && isUnitCell && axes.axes2 != null);
@@ -90,7 +90,7 @@ public class AxesRenderer extends CageRenderer {
         render1(axes, mad10, false, axisType, isUnitCell, 2, null);
       if (!"abc".equals(axes.axes2))
         vwr.setBooleanProperty("axesmolecular", true);
-      axes.initShape();
+      axes.reinitShape();
       render1(axes, mad10, true, null, false, scale, axes.axes2);
       vwr.setBooleanProperty("axesunitcell", true);
     } else {

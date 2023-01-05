@@ -4,36 +4,44 @@ import javajs.util.Lst;
 
 class UFFVDWCalc extends Calculation {
     
-    @Override
-    void setData(Lst<Object[]> calc, int ia, int ib, double dd) {
-      a = calcs.minAtoms[ia];
-      b = calcs.minAtoms[ib];
-      
-      FFParam parA = (FFParam) calcs.getParameter(a.sType);
-      FFParam parB = (FFParam) calcs.getParameter(b.sType);
+  @Override
+  void setData(Lst<Object[]> calc, int ia, int ib, double dd) {
+    a = calcs.minAtoms[ia];
+    b = calcs.minAtoms[ib];
 
-      double Xa = parA.dVal[CalculationsUFF.PAR_X];
-      double Da = parA.dVal[CalculationsUFF.PAR_D];
-      if (parB == null || parB.dVal == null)
-        System.out.println("OHOH");
-      double Xb = parB.dVal[CalculationsUFF.PAR_X];
-      double Db = parB.dVal[CalculationsUFF.PAR_D];
+    FFParam parA = (FFParam) calcs.getParameter(a.sType);
+    FFParam parB = (FFParam) calcs.getParameter(b.sType);
 
-      //this calculations only need to be done once for each pair, 
-      //we do them now and save them for later use
-      double Dab = Calculations.KCAL_TO_KJ * Math.sqrt(Da * Db);
-
-      // 1-4 scaling
-      // This isn't mentioned in the UFF paper, but is common for other methods
-      //       if (a.IsOneFour(b))
-      //         kab *= 0.5;
-
-      // Xab is xij in equation 20 -- the expected vdw distance
-      double Xab = Math.sqrt(Xa * Xb);
-      calc.addLast(new Object[] {
-          new int[] { ia, ib },
-          new double[] { Xab, Dab } });
+    double Xa, Da, Xb, Db;
+    if (parA == null || parA.dVal == null) {
+      System.out.println("OHOH");
+      Xa = Da = 0;
+    } else {
+      Xa = parA.dVal[CalculationsUFF.PAR_X];
+      Da = parA.dVal[CalculationsUFF.PAR_D];
     }
+    if (parB == null || parB.dVal == null) {
+      System.out.println("OHOH");
+      Xb = Db = 0;
+    } else {
+      Xb = parB.dVal[CalculationsUFF.PAR_X];
+      Db = parB.dVal[CalculationsUFF.PAR_D];
+    }
+
+    //this calculations only need to be done once for each pair, 
+    //we do them now and save them for later use
+    double Dab = Calculations.KCAL_TO_KJ * Math.sqrt(Da * Db);
+
+    // 1-4 scaling
+    // This isn't mentioned in the UFF paper, but is common for other methods
+    //       if (a.IsOneFour(b))
+    //         kab *= 0.5;
+
+    // Xab is xij in equation 20 -- the expected vdw distance
+    double Xab = Math.sqrt(Xa * Xb);
+    calc.addLast(
+        new Object[] { new int[] { ia, ib }, new double[] { Xab, Dab } });
+  }
 
     @Override
     double compute(Object[] dataIn) {

@@ -1131,7 +1131,7 @@ abstract public class ScriptParam extends ScriptError {
       // model/frame number encoded
       break;
     case T.string:
-      iFrame = getFloatEncodedInt(stringParameter(index));
+      iFrame = Edge.getFloatEncodedInt(stringParameter(index));
       break;
     default:
       invArg();
@@ -1207,63 +1207,6 @@ abstract public class ScriptParam extends ScriptError {
     if (i > 0)
       return vwr.ms.getAtomPointVector(((ScriptExpr) this).atomExpressionAt(i));
     return null;
-  }
-
-  /**
-   * Encodes a string such as "2.10" as an integer instead of a double so as to
-   * distinguish "2.1" from "2.10" used for model numbers and partial bond
-   * orders. 2147483647 is maxvalue, so this allows loading simultaneously up to
-   * 2147 files, each with 999999 models (or trajectories)
-   * 
-   * @param strDecimal
-   * @return double encoded as an integer
-   */
-  static int getFloatEncodedInt(String strDecimal) {
-    int pt = strDecimal.indexOf(".");
-    if (pt < 1 || strDecimal.charAt(0) == '-' || strDecimal.endsWith(".")
-        || strDecimal.contains(".0"))
-      return Integer.MAX_VALUE;
-    int i = 0;
-    int j = 0;
-    if (pt > 0) {
-      try {
-        i = Integer.parseInt(strDecimal.substring(0, pt));
-        if (i < 0)
-          i = -i;
-      } catch (NumberFormatException e) {
-        i = -1;
-      }
-    }
-    if (pt < strDecimal.length() - 1)
-      try {
-        j = Integer.parseInt(strDecimal.substring(pt + 1));
-      } catch (NumberFormatException e) {
-        // not a problem
-      }
-    i = i * 1000000 + j;
-    return (i < 0 || i > Integer.MAX_VALUE ? Integer.MAX_VALUE : i);
-  }
-
-  /**
-   * reads standard n.m double-as-integer n*1000000 + m and returns (n % 7) << 5
-   * + (m % 0x1F)
-   * 
-   * @param bondOrderInteger
-   * @return Bond order partial mask
-   */
-  public static int getPartialBondOrderFromFloatEncodedInt(int bondOrderInteger) {
-    return (((bondOrderInteger / 1000000) % 7) << 5)
-        + ((bondOrderInteger % 1000000) & 0x1F);
-  }
-
-  public static int getBondOrderFromString(String s) {
-    return (s.indexOf(' ') < 0 ? Edge.getBondOrderFromString(s)
-        : s.toLowerCase().indexOf("partial ") == 0 ? getPartialBondOrderFromString(s
-            .substring(8).trim()) : Edge.BOND_ORDER_NULL);
-  }
-
-  private static int getPartialBondOrderFromString(String s) {
-    return getPartialBondOrderFromFloatEncodedInt(getFloatEncodedInt(s));
   }
 
   public boolean isColorParam(int i) {

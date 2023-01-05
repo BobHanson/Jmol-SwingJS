@@ -24,6 +24,7 @@
 
 package org.jmol.util;
 
+import javajs.util.PT;
 
 public abstract class Edge implements SimpleEdge {
 
@@ -76,8 +77,9 @@ public abstract class Edge implements SimpleEdge {
 
 
   public final static int BOND_STEREO_MASK   = 0x400; // 1 << 10
-  public final static int BOND_STEREO_NEAR   = 0x401; // for JME reader and SMILES
-  public final static int BOND_STEREO_FAR    = 0x411; // for JME reader and SMILES
+  public final static int BOND_STEREO_NEAR   = 0x401; // for JME reader and SMILES and XMLChemDraw reader
+  public final static int BOND_STEREO_FAR    = 0x411; // for JME reader and SMILES and XMLChemDraw reader
+  public final static int BOND_STEREO_EITHER = 0x421; // for JME reader and SMILES and XMLChemDraw reader
   public final static int BOND_AROMATIC_MASK   = 0x200; // 1 << 9
   public final static int BOND_AROMATIC_SINGLE = 0x201; // same as single
   public final static int BOND_AROMATIC_DOUBLE = 0x202; // same as double
@@ -259,6 +261,8 @@ public abstract class Edge implements SimpleEdge {
   }
 
   protected final static int getCovalentBondOrder(int order) {
+    if ((order & BOND_STEREO_MASK) != 0)
+      return 1;
     if ((order & BOND_COVALENT_MASK) == 0)
       return 0;
     order &= BOND_RENDER_MASK; 
@@ -296,18 +300,95 @@ public abstract class Edge implements SimpleEdge {
     return BOND_ORDER_NULL;
   }
 
-  public static int getBondOrderFromString(String name) {
-    int order = EnumBondOrder.getCodeFromName(name);
-    try {
-      if (order == BOND_ORDER_NULL && name.length() == 14
-          && name.toLowerCase().startsWith("atropisomer_"))
-        order = getAtropismOrder(Integer.parseInt(name.substring(12, 13)), Integer.parseInt(name.substring(13, 14)));
-    } catch (NumberFormatException e) {
-      // BOND_ORDER_NULL
+  /**
+   * Encode name such as 1 2 3 2.1 3.1 single double triple atropisomer_12 or
+   * "partial 1.3"
+   * 
+   * @param s
+   * @return encoded form of bond
+   */
+  public static int getBondOrderFromString(String s) {
+    if (s.indexOf(' ') < 0) {
+      if (s.indexOf(".") >= 0) {
+        s = "partial " + s;
+      } else {
+        if (PT.isOneOf(s, ";1;2;3;4;5;6;")) {
+          return s.charAt(0) - '0';
+        }
+        // single double triple...
+        int order = EnumBondOrder.getCodeFromName(s);
+        if (order != BOND_ORDER_NULL
+            || !s.toLowerCase().startsWith("atropisomer_") || s.length() != 14)
+          return order;
+        try {
+          // atropoisomer_12 or atropisomer_21 stereochemistry
+          order = getAtropismOrder(Integer.parseInt(s.substring(12, 13)),
+              Integer.parseInt(s.substring(13, 14)));
+        } catch (NumberFormatException e) {
+          // BOND_ORDER_NULL
+        }
+        return order;
+      }
     }
-    return order;
+    if (s.toLowerCase().indexOf("partial ") != 0)
+      return BOND_ORDER_NULL;
+    s = s.substring(8).trim();
+    return getPartialBondOrderFromFloatEncodedInt(getFloatEncodedInt(s));
   }
-  
+
+  /**
+   * reads standard n.m double-as-integer (n*1000000 + m) 
+   * and returns partial bond order as (n % 7) << 5 + (m % 0x1F)
+   * 
+   * @param bondOrderInteger
+   * @return partial bond order encoded as an integer
+   */
+  public static int getPartialBondOrderFromFloatEncodedInt(int bondOrderInteger) {
+    return (((bondOrderInteger / 1000000) % 7) << 5)
+        + ((bondOrderInteger % 1000000) & 0x1F);
+  }
+
+  /**
+   * Encodes a string such as "2.10" as an integer instead of a double so as to
+   * distinguish "2.1" from "2.10".
+   * 
+   * For n.m, returns n * 1000000 + m.
+   * 
+   * 2147483647 is maxvalue, so this allows an encoding of up to 
+   * n = 2147 and m = 999999
+   * 
+   * Used in Jmol for model numbers and partial bond orders. 
+   * 
+   * @param strDecimal
+   * @return double encoded as an integer
+   */
+  public static int getFloatEncodedInt(String strDecimal) {
+    int pt = strDecimal.indexOf(".");
+    if (pt < 1 || strDecimal.charAt(0) == '-' || strDecimal.endsWith(".")
+        || strDecimal.contains(".0"))
+      return Integer.MAX_VALUE;
+    int i = 0;
+    int j = 0;
+    if (pt > 0) {
+      try {
+        i = Integer.parseInt(strDecimal.substring(0, pt));
+        if (i < 0)
+          i = -i;
+      } catch (NumberFormatException e) {
+        i = -1;
+      }
+    }
+    if (pt < strDecimal.length() - 1)
+      try {
+        j = Integer.parseInt(strDecimal.substring(pt + 1));
+      } catch (NumberFormatException e) {
+        // not a problem
+      }
+    i = i * 1000000 + j;
+    return (i < 0 || i > Integer.MAX_VALUE ? Integer.MAX_VALUE : i);
+  }
+
+
   @Override
   public int getBondType() {
     return order & BOND_RENDER_MASK;

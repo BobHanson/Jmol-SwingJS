@@ -840,7 +840,10 @@ public class XmlCmlReader extends XmlReader {
       return;
     parent.setSpaceGroupName(localSpaceGroupName);
     parent.iHaveSymmetryOperators = iHaveSymmetryOperators;
-    parent.applySymmetryAndSetTrajectory();
+    if (parent == this)
+      super.applySymmetryAndSetTrajectory();
+    else
+      parent.applySymmetryAndSetTrajectory();
   }
 
   @Override

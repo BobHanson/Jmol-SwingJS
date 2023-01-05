@@ -3324,7 +3324,7 @@ public class Viewer extends JmolViewer
           } catch (Exception e) {
           }
         } else {
-          addHydrogens(bsNew, MIN_SILENT | MIN_QUICK | MIN_XX);
+          addHydrogens(bsNew, MIN_SILENT | MIN_QUICK);// | MIN_XX);
         }
         // no longer necessary? -- this is the JME/SMILES data:
         if (jmolScript != null)

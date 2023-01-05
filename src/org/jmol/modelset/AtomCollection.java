@@ -1779,7 +1779,7 @@ abstract public class AtomCollection {
         // vRef is a pseudo-random vector
         // z is along the bond
         for (int i = attached[0].getBondCount(); --i >= 0;) {
-          if (attached[0].bonds[i].isCovalent()
+          if (attached[0].bonds[i].isCovalentNotPartial()
               && attached[0].getBondedAtomIndex(i) != atom.i) {
             x.sub2(attached[0], attached[0].bonds[i].getOtherAtom(attached[0]));
             x.cross(z, x);
@@ -1859,7 +1859,7 @@ abstract public class AtomCollection {
           Atom a = null;
           isCumulated = !isCumulated;
           for (int i = 0; i < bonds.length; i++)
-            if (bonds[i].isCovalent()) {
+            if (bonds[i].isCovalentNotPartial()) {
               a = bonds[i].getOtherAtom(a0);
               if (a != atom) {
                 vTemp.sub2(a, a0);
@@ -2213,7 +2213,7 @@ abstract public class AtomCollection {
       Bond[] bonds = atom.bonds;
       int n = 0;
       for (int i = 0; i < bonds.length; i++)
-        if (bonds[i].isCovalent()) {
+        if (bonds[i].isCovalentNotPartial()) {
           Atom a = bonds[i].getOtherAtom(atom);
           if (!isQuick || a.getAtomicAndIsotopeNumber() != 1)
             attached[n++] = a;
@@ -2359,7 +2359,7 @@ abstract public class AtomCollection {
           int n = 0;
           Atom b;
           for (int j = bonds.length; --j >= 0 && n < 3;)
-            if (bonds[j].isCovalent()
+            if (bonds[j].isCovalentNotPartial()
                 && (b = bonds[j].getOtherAtom(a)).getElementNumber() == 1)
               hs[n++ % 2] = b.i;
           if (n == 2) {

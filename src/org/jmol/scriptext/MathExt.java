@@ -1087,7 +1087,7 @@ public class MathExt {
         if (type.equalsIgnoreCase("hbond"))
           order = Edge.BOND_HYDROGEN_MASK;
         else
-          order = ScriptParam.getBondOrderFromString(type);
+          order = Edge.getBondOrderFromString(type);
         if (order == Edge.BOND_ORDER_NULL)
           return false;
         break;

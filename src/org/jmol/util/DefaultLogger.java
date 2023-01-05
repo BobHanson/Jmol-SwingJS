@@ -36,34 +36,37 @@ public class DefaultLogger implements LoggerInterface {
   /**
    * Method to output a log.
    * 
-   * @param out Output stream.
-   * @param level Log level.
-   * @param txt Text to log.
-   * @param e Exception.
+   * @param out
+   *        Output stream.
+   * @param level
+   *        Log level.
+   * @param txt
+   *        Text to log.
+   * @param e
+   *        Exception.
    */
-  protected void log(PrintStream out, int level, String txt, Throwable e) {
+  protected String log(PrintStream out, int level, String txt, Throwable e) {
     if (out == System.err)
       System.out.flush();
     if ((out != null) && ((txt != null) || (e != null))) {
       txt = (txt != null ? txt : "");
-      out.println(
-          (Logger.logLevel() ? "[" + Logger.getLevel(level) + "] " : "") +
-          txt +
-          (e != null ? ": " + e.toString() : ""));
+      txt = (Logger.logLevel() ? "[" + Logger.getLevel(level) + "] " : "") + txt
+          + (e != null ? ": " + e.toString() : "");
+      out.println(txt);
       if (e != null) {
         StackTraceElement[] elements = e.getStackTrace();
         if (elements != null) {
           for (int i = 0; i < elements.length; i++) {
             out.println(
-                elements[i].getClassName() + " - " +
-                elements[i].getLineNumber() + " - " +
-                elements[i].getMethodName());
+                elements[i].getClassName() + " - " + elements[i].getLineNumber()
+                    + " - " + elements[i].getMethodName());
           }
         }
       }
     }
     if (out == System.err)
       System.err.flush();
+    return txt;
   }
 
   /* (non-Javadoc)

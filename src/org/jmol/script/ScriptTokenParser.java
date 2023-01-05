@@ -914,7 +914,7 @@ abstract class ScriptTokenParser {
           break;
       Object o = getToken().value;
       String strOrder = (o instanceof String ? (String) o : " ");
-      int intType = ScriptParam.getBondOrderFromString(strOrder);
+      int intType = Edge.getBondOrderFromString(strOrder);
       if (intType == Edge.BOND_ORDER_NULL) {
         returnToken();
       } else {

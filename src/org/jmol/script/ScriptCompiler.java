@@ -31,6 +31,7 @@ import org.jmol.i18n.GT;
 import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
 import org.jmol.util.CommandHistory;
+import org.jmol.util.Edge;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
@@ -1374,7 +1375,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     }
     if (lookingAtDecimal()) {
       value = Double.valueOf(script.substring(ichToken, ichToken + cchToken));
-      int intValue = (ScriptParam
+      int intValue = (Edge
           .getFloatEncodedInt(script.substring(ichToken, ichToken + cchToken)));
       addNumber(T.decimal, intValue, value);
       return CONTINUE;

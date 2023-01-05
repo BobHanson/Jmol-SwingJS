@@ -90,22 +90,19 @@ import javajs.util.SB;
  * 
  */
 
-public class XmlReader extends AtomSetCollectionReader {
+abstract public class XmlReader extends AtomSetCollectionReader {
 
   protected Atom atom;
   protected Bond bond;
   //protected String[] domAttributes;
-  protected XmlReader parent; // XmlReader itself; to be assigned by the subReader
+  public XmlReader parent = this; // was much more complicated. Now much simpler. 
+  // No longer: XmlReader itself; to be assigned by the subReader
   public Map<String, String> atts;
 
   /////////////// file reader option //////////////
 
   @Override
   public void initializeReader() throws Exception {
-    initCML();
-  }
-
-  protected void initCML() {
     atts = new Hashtable<String, String>();
     setMyError(parseXML());
     continuing = false;
@@ -157,13 +154,17 @@ public class XmlReader extends AtomSetCollectionReader {
   private XmlReader thisReader = null;
 
   private String selectReaderAndGo(Object saxReader) {
-    asc = new AtomSetCollection(readerName, this, null, null);
     String className = null;
     int pt = readerName.indexOf("(");
     String name = (pt < 0 ? readerName : readerName.substring(0, pt));
     className = Resolver.getReaderClassBase(name);
-    if ((thisReader = (XmlReader) getInterface(className)) == null)
-      return "File reader was not found: " + className;
+    if (className.equals(getClass().getName())) {
+      thisReader = parent = this;
+    } else {
+      asc = new AtomSetCollection(readerName, this, null, null);
+      if ((thisReader = (XmlReader) getInterface(className)) == null)
+        return "File reader was not found: " + className;
+    }
     try {
       thisReader.processXml(this, saxReader);
     } catch (Exception e) {
@@ -185,11 +186,14 @@ public class XmlReader extends AtomSetCollectionReader {
     processXml2(parent, saxReader);
   }
 
-  protected void processXml2(XmlReader parent, Object saxReader) throws Exception {
+  protected void processXml2(XmlReader parent, Object saxReader)
+      throws Exception {
     this.parent = parent;
-    asc = parent.asc;
-    reader = parent.reader;
-    atts = parent.atts;
+    if (parent != this) {
+      asc = parent.asc;
+      reader = parent.reader;
+      atts = parent.atts;
+    }
     if (saxReader == null) {
       //domAttributes = getDOMAttributes();
       attribs = new Object[1];
@@ -212,16 +216,17 @@ public class XmlReader extends AtomSetCollectionReader {
        * 
        * @j2sNative
        * 
-       * isjs = true;
+       *            isjs = true;
        * 
        */
       {
         walkDOMTree();
       }
       if (isjs) {
-                  this.domObj[0] = this.createDomNodeJS("xmlReader",o);
-                  this.walkDOMTree(); this.createDomNodeJS("xmlReader",null);
-        
+        this.domObj[0] = this.createDomNodeJS("xmlReader", o);
+        this.walkDOMTree();
+        this.createDomNodeJS("xmlReader", null);
+
       }
     } else {
       ((XmlHandler) Interface.getOption("adapter.readers.xml.XmlHandler", vwr,
@@ -242,7 +247,7 @@ public class XmlReader extends AtomSetCollectionReader {
     // that are added this way.
     
     @SuppressWarnings("unused")
-    Object applet = parent.vwr.html5Applet;
+    Object applet = (parent == null ? this : parent).vwr.html5Applet;
     Object d = null;
     /**
      * note that there is no need to actually load it into the document
@@ -284,7 +289,7 @@ public class XmlReader extends AtomSetCollectionReader {
   @Override
   public void applySymmetryAndSetTrajectory() {
     try {
-      if (parent == null)
+      if (parent == null || parent == this)
         applySymTrajASCR();
       else
         parent.applySymmetryAndSetTrajectory();
@@ -501,7 +506,7 @@ public class XmlReader extends AtomSetCollectionReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
-    if (thisReader != null)
+    if (thisReader != null && thisReader != this)
       thisReader.finalizeSubclassReader();
     thisReader = null;
   }

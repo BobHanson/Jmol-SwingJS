@@ -20,12 +20,13 @@ import javajs.util.SB;
  */
 public class CMLWriter implements JmolWriter {
 
-  private Viewer vwr;
-  private OC oc;
-  private int atomsMax;
-  private boolean addBonds;
-  private boolean doTransform;
-  private boolean allTrajectories;
+
+  protected Viewer vwr;
+  protected OC oc;
+  protected int atomsMax;
+  protected boolean addBonds;
+  protected boolean doTransform;
+  protected boolean allTrajectories;
 
   public CMLWriter() {
     // for JavaScript dynamic loading
@@ -67,9 +68,6 @@ public class CMLWriter implements JmolWriter {
     int nAtoms = bs.cardinality();
     if (nAtoms == 0)
       return "";
-    // creating an instance prevents pre-loading by JavaScript
-    if (Viewer.isJS)
-      Interface.getInterface("javajs.util.XmlUtil", vwr, "file");
     openTag(sb, "molecule");
     openTag(sb, "atomArray");
     BS bsAtoms = new BS();
@@ -81,7 +79,7 @@ public class CMLWriter implements JmolWriter {
       String name = atom.getAtomName();
       PT.rep(name, "\"", "''");
       bsAtoms.set(atom.i);
-      appendTag(sb, "atom", new String[] { "id",
+      appendEmptyTag(sb, "atom", new String[] { "id",
           "a" + (atom.i + 1), "title", atom.getAtomName(), "elementType",
           atom.getElementSymbol(), "x3", "" + atom.x, "y3", "" + atom.y, "z3",
           "" + atom.z });
@@ -100,34 +98,56 @@ public class CMLWriter implements JmolWriter {
         String order = Edge.getCmlBondOrder(bond.order);
         if (order == null)
           continue;
-        appendTag(sb, "bond", new String[] { "atomRefs2",
+        appendEmptyTag(sb, "bond", new String[] { "atomRefs2",
             "a" + (bond.atom1.i + 1) + " a" + (bond.atom2.i + 1),
             "order", order, });
       }
       closeTag(sb, "bondArray");
     }
     closeTag(sb, "molecule");
-    return sb.toString();
+      oc.append(sb.toString());
+    return toString();
   }
 
-  static private void openTag(SB sb, String name) {
+  public static void openDocument(SB sb) {
+    sb.append("<?xml version=\"1.0\"?>\n");
+  }
+  static protected void openTag(SB sb, String name) {
     sb.append("<").append(name).append(">\n");
   }
 
-  static private void appendTag(SB sb, String name, String[] attributes) {
+  static protected void startOpenTag(SB sb, String name) {
     sb.append("<").append(name);
-    for (int i = 0; i < attributes.length; i++) {
-      sb.append(" ").append(attributes[i]).append("=\"").append(attributes[++i])
-          .append("\"");
-    }
+  }
+  
+  static protected void terminateTag(SB sb) {
+    sb.append(">\n");
+  }
+
+  static protected void terminateEmptyTag(SB sb) {
     sb.append("/>\n");
   }
 
-  static private void closeTag(SB sb, String name) {
-    sb.append("</").append(name).append(">\n");
+  static protected void appendEmptyTag(SB sb, String name, String[] attributes) {
+    startOpenTag(sb, name);
+    addAttributes(sb, attributes);
+    terminateEmptyTag(sb);
   }
 
-  
+  static protected void addAttributes(SB sb, String[] attributes) {
+    for (int i = 0; i < attributes.length; i++) {
+      addAttribute(sb, attributes[i], attributes[++i]);
+    }
+  }
+
+  static protected void addAttribute(SB sb, String key, String val) {
+    //System.out.println("CMLW addAttribute " + key + "=" + val);
+    sb.append(" ").append(key).append("=").append(PT.esc(val));
+  }
+
+  static protected void closeTag(SB sb, String name) {
+    sb.append("</").append(name).append(">\n");
+  }  
 
   @Override
   public String toString() {

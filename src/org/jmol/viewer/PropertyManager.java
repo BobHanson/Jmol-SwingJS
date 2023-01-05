@@ -1361,7 +1361,7 @@ public class PropertyManager implements JmolPropertyManager {
    * @param type 
    * @param bs 
    * @param data to pass to reader
-   * @param out
+   * @param out currently only for PDB case, in which return is ignored
    * @return file data
    */
   private String getModel(String type, BS bs, Object[] data, OC out) {

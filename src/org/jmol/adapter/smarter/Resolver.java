@@ -49,7 +49,7 @@ public class Resolver {
   private final static String[] readerSets = new String[] {
     "cif.", ";Cif;Cif2;MMCif;MMTF;MagCif",
     "molxyz.", ";Mol3D;Mol;Xyz;",
-    "more.", ";AFLOW;BinaryDcd;Gromacs;Jcampdx;MdCrd;MdTop;Mol2;TlsDataOnly;",
+    "more.", ";AFLOW;BinaryDcd;CDX;Gromacs;Jcampdx;MdCrd;MdTop;Mol2;TlsDataOnly;",
     "quantum.", ";Adf;Csf;Dgrid;GamessUK;GamessUS;Gaussian;GaussianFchk;GaussianWfn;Jaguar;" +
                  "Molden;MopacGraphf;GenNBO;NWChem;Psi;Qchem;QCJSON;" +
                  "WebMO;Orca;MO;", // MO is for XmlMolpro 
@@ -147,8 +147,9 @@ public class Resolver {
     htParams.put("ptFile", Integer.valueOf(ptFile));
     if (ptFile <= 0)
       htParams.put("readerName", readerName);
-    if (readerName.indexOf("Xml") == 0)
-      readerName = "Xml";
+// BH removed 2022.01.03 -- no longer necessary
+//    if (readerName.indexOf("Xml") == 0)
+//      readerName = "Xml";
     return getReader(readerName, htParams);
   }
 
@@ -172,6 +173,9 @@ public class Resolver {
   }
 
   private final static String getReaderFromType(String type) {
+    if (type.endsWith("(XML)")) {
+      type = "Xml" + type.substring(0, type.length() - 5);
+    }
     type = ";" + type.toLowerCase() + ";";
     if (";zmatrix;cfi;c;vfi;v;mnd;jag;adf;gms;g;gau;mp;nw;orc;pqs;qc;".indexOf(type) >= 0)
       return "Input";
@@ -336,8 +340,21 @@ public class Resolver {
   // Test 2. check to see if first few bytes (trimmed) start with any of these strings
   ////////////////////////////////////////////////////////////////
 
+  private static byte[] cdxMagic = new byte[] { 'V', 'j', 'C', 'D' };
+  
   public static String getBinaryType(InputStream inputStream) {
-    return (Rdr.isPickleS(inputStream) ? "PyMOL" : (Rdr.getMagic(inputStream, 1)[0] & 0xDE) == 0xDE ? "MMTF" : null);
+    return (Rdr.isPickleS(inputStream) ? "PyMOL" : (Rdr.getMagic(inputStream, 1)[0] & 0xDE) == 0xDE ? "MMTF" : 
+      bytesMatch(Rdr.getMagic(inputStream, 4), cdxMagic) ? "CDX" : null);
+  }
+
+  private static boolean bytesMatch(byte[] a, byte[] b) {
+    if (b.length > a.length)
+      return false;
+    for (int i = b.length; --i >= 0;) {
+      if (a[i] != b[i])
+        return false;
+    }
+    return true;
   }
 
   private static String checkFileStart(String leader) {

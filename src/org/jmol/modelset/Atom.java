@@ -452,11 +452,12 @@ public class Atom extends Point3fi implements Node {
     if (bonds == null)
       return 0;
     int n = 0;
-    Bond b;
-    for (int i = bonds.length; --i >= 0; )
-      if (((b = bonds[i]).order & Edge.BOND_COVALENT_MASK) != 0
+    for (int i = bonds.length; --i >= 0; ) {
+      Bond b = bonds[i];
+      if (b.isCovalentNotPartial() 
           && !b.getOtherAtom(this).isDeleted())
         ++n;
+    }
     return n;
   }
 
@@ -465,12 +466,13 @@ public class Atom extends Point3fi implements Node {
     if (bonds == null)
       return 0;
     int n = 0;
-    for (int i = bonds.length; --i >= 0; ) {
-      if ((bonds[i].order & Edge.BOND_COVALENT_MASK) == 0)
-        continue;
-      Atom a = bonds[i].getOtherAtom(this);
-      if (a.valence >= 0 && a.getElementNumber() == 1)
-        ++n;
+    for (int i = bonds.length; --i >= 0;) {
+      Bond b = bonds[i];
+      if (b.isCovalentNotPartial()) {
+        Atom a = bonds[i].getOtherAtom(this);
+        if (a.valence >= 0 && a.getElementNumber() == 1)
+          ++n;
+      }
     }
     return n;
   }

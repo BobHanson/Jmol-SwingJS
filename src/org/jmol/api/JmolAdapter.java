@@ -66,6 +66,7 @@ public abstract class JmolAdapter {
   public final static int ORDER_HBOND           = Edge.BOND_H_REGULAR;
   public final static int ORDER_STEREO_NEAR     = Edge.BOND_STEREO_NEAR; 
   public final static int ORDER_STEREO_FAR      = Edge.BOND_STEREO_FAR; 
+  public final static int ORDER_STEREO_EITHER   = Edge.BOND_STEREO_EITHER; 
   public final static int ORDER_PARTIAL01       = Edge.BOND_PARTIAL01;
   public final static int ORDER_PARTIAL12       = Edge.BOND_PARTIAL12;
   public final static int ORDER_PARTIAL23       = Edge.BOND_PARTIAL23;

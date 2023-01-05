@@ -229,6 +229,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
     switch (bondOrder) {
     case Edge.BOND_STEREO_NEAR:
     case Edge.BOND_STEREO_FAR:
+    case Edge.BOND_STEREO_EITHER:
       bondOrder = 1;
       //$FALL-THROUGH$
     case 1:

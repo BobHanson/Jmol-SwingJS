@@ -17,6 +17,7 @@ import org.jmol.scriptext.MathExt;
 import org.jmol.scriptext.ScriptExt;
 import org.jmol.scriptext.SmilesExt;
 import org.jmol.util.BSUtil;
+import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.viewer.JC;
@@ -2566,7 +2567,7 @@ abstract class ScriptExpr extends ScriptParam {
         } else if (v instanceof Integer) {
           fixed[j] = T.tv(T.integer, ((Integer) v).intValue(), v);
         } else if (v instanceof Double) {
-          fixed[j] = T.tv(T.decimal, getFloatEncodedInt("" + v), v);
+          fixed[j] = T.tv(T.decimal, Edge.getFloatEncodedInt("" + v), v);
         } else if (v instanceof String) {
           if (!forceString && !isExpression) {
             if ((tok != T.set || j > 1 && st[1].tok != T.echo && !"labelfor".equalsIgnoreCase(st[1].value.toString()))
