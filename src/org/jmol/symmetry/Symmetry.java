@@ -1088,4 +1088,14 @@ public class Symmetry implements SymmetryInterface {
     atom2.add3(x, y, z);
   }
 
+  @Override
+  public boolean isWithinUnitCell(P3d pt, double x, double y, double z) {
+    return unitCell.isWithinUnitCell(x, y, z, pt);
+  }
+
+  @Override
+  public boolean checkPeriodic(P3d pt) {
+    return unitCell.checkPeriodic(pt);
+  }
+
 }

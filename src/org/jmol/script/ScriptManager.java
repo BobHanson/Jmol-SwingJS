@@ -789,7 +789,8 @@ public class ScriptManager implements JmolScriptManager {
           .appendC('\n');
 
     vwr.openStringInlineParamsAppend(sb.toString(), htParams, true);
-    vwr.runScript(sbConnect.toString());
+    if (sbConnect.length() > 0)
+      vwr.runScript(sbConnect.toString());
     BS bsB = vwr.getModelUndeletedAtomsBitSet(modelIndex);
     bsB.andNot(bsA);
     vwr.g.appendNew = wasAppendNew;

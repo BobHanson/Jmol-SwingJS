@@ -211,7 +211,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    * @param pt
    */
   public void unitize(T3d pt) {
-	  unitizeDim(dimension, pt);
+    unitizeDim(dimension, pt);
   }
 
   /**

@@ -3670,6 +3670,8 @@ public class MathExt {
     // x = y.symop(n,...,"cif2")
     // return a <symop> <translation> as nn [a b c] suitable for CIF2 inclusion
 
+    // x = symop(.....)
+    // use this model atoms
     SV x1 = (isProperty ? mp.getX() : null);
     boolean isPoint = false;
     if (x1 != null && x1.tok != T.bitset && !(isPoint = (x1.tok == T.point3f)))
@@ -3696,6 +3698,7 @@ public class MathExt {
     int iOp = Integer.MIN_VALUE;
     int apt = 0;
     P3d pt2 = null;
+    BS bs1 = null;
     switch (args[0].tok) {
     case T.string:
       xyz = SV.sValue(args[0]);
@@ -3708,6 +3711,14 @@ public class MathExt {
     case T.integer:
       iOp = args[0].asInt();
       apt++;
+      break;
+    case T.bitset:
+      if (!isPoint) {
+        // @x.symop(@y, @z,....)
+        // @x.symop(@y,....)
+        bs1 = (args.length == 1 || args[1].tok != T.bitset ? bsAtoms : null);
+        bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.getModelForAtomIndex(bsAtoms.nextSetBit(0)).modelIndex);
+      }
       break;
     }
     invariant = (xyz != null && xyz.equalsIgnoreCase("invariant"));
@@ -3748,6 +3759,10 @@ public class MathExt {
       apt++;
     if ((pt2 = (narg > apt ? mp.ptValue(args[apt], bsAtoms) : null)) != null)
       apt++;
+    if (pt1 != null && pt2 == null && bs1 != null && !bs1.isEmpty()) {
+      pt2 = pt1;
+      pt1 = P3d.newP(vwr.ms.at[bs1.nextSetBit(0)]);
+    }
     int nth = (pt2 != null && args.length > apt && iOp == Integer.MIN_VALUE
         && args[apt].tok == T.integer ? args[apt].intValue : -1);
     if (nth >= 0) // 0 here means "give me all of them"

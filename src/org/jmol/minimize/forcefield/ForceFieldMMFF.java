@@ -886,7 +886,7 @@ public class ForceFieldMMFF extends ForceField {
       Bond[] bonds = a.bonds;
       if (bonds != null)
         for (int j = bonds.length; --j >= 0;)
-          if (bonds[j].isCovalentNotPartial())
+          if (bonds[j].isCovalentNotPartial0())
             bsConnected.set(bonds[j].getOtherAtom(a).i);
     }
 

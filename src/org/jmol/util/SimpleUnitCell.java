@@ -24,8 +24,6 @@
 
 package org.jmol.util;
 
-import org.jmol.api.SymmetryInterface;
-
 import javajs.util.AU;
 import javajs.util.M4d;
 import javajs.util.P3d;
@@ -537,7 +535,7 @@ public class SimpleUnitCell {
       pt.x = unitizeXRnd(pt.x);
     }
   }
-
+  
   public static double unitizeX(double x) {
     // introduced in Jmol 11.7.36
     x = (x - Math.floor(x));
@@ -573,19 +571,38 @@ public class SimpleUnitCell {
    * @param pt 
    * @return true if in [0, 1)
    */
-  public static boolean checkPeriodic(P3d pt) {
-    return (pt.x >= -SLOP2 && pt.x < 1 - SLOP2
-        && pt.y >= -SLOP2 && pt.y < 1 - SLOP2
-        && pt.z >= -SLOP2 && pt.z < 1 - SLOP2
-        );
+  public boolean checkPeriodic(P3d pt) {
+    switch (dimension) {
+    case 3:
+      if (pt.z < -SLOP2 || pt.z > 1 - SLOP2)
+        return false;
+      //$FALL-THROUGH$
+    case 2:
+      if (pt.y < -SLOP2 || pt.y > 1 - SLOP2)
+        return false;
+      //$FALL-THROUGH$
+    case 1:
+    if (pt.x < -SLOP2 || pt.x > 1 - SLOP2)
+      return false;
+    }
+    return true;
   }
 
-  public static boolean checkUnitCell(SymmetryInterface uc, P3d cell, P3d ptTemp) {
-    uc.toFractional(ptTemp, false);
-    // {1 1 1} here is the original cell
-    return (ptTemp.x >= cell.x - 1d - SLOP && ptTemp.x <= cell.x + SLOP
-        && ptTemp.y >= cell.y - 1d - SLOP && ptTemp.y <= cell.y + SLOP
-        && ptTemp.z >= cell.z - 1d - SLOP && ptTemp.z <= cell.z + SLOP);
+  public boolean isWithinUnitCell(double a, double b, double c, P3d pt) {
+    switch (dimension) {
+    case 3:
+      if (pt.z < c - 1d - SLOP || pt.z > c + SLOP)
+        return false;
+      //$FALL-THROUGH$
+    case 2:
+      if (pt.y < b - 1d - SLOP || pt.y > b + SLOP)
+        return false;
+      //$FALL-THROUGH$
+    case 1:
+    if (pt.x < a - 1d - SLOP || pt.x > a + SLOP)
+      return false;
+    }
+    return true;
   }
 
   ////// lattice methods //////

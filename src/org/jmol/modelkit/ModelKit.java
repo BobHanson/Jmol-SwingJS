@@ -537,6 +537,9 @@ public class ModelKit {
           vwr.setBooleanProperty("bondPicking", false);
           vwr.acm.exitMeasurementMode("modelkit");
         }
+        if ("dragatom".equals(value)) {
+          setHoverLabel(ATOM_MODE, getText("dragAtom"));
+        }
         return null;
       }
       
@@ -679,7 +682,7 @@ public class ModelKit {
           } else if (pickAtomAssignType.equals("Xx")){
             setHoverLabel(ATOM_MODE, getText("dragBond"));
           } else {
-            setHoverLabel(ATOM_MODE, "Click or click+drag for " + pickAtomAssignType);
+            setHoverLabel(ATOM_MODE, "Click or click+drag to bond or for a new " + pickAtomAssignType);
             lastElementType = pickAtomAssignType;
           }
         }
@@ -919,10 +922,11 @@ public class ModelKit {
     boolean isCharge = isPickAtomAssignCharge;
     if (mp != null && mp.count == 2) {
       vwr.undoMoveActionClear(-1, T.save, true);
+      String atoms = mp.getMeasurementScript(" ", false);
       if (((Atom) mp.getAtom(1)).isBonded((Atom) mp.getAtom(2))) {
-        appRunScript("modelkit assign bond " + mp.getMeasurementScript(" ", false) + "'p'");
+        appRunScript("modelkit assign bond " + atoms + "'p'");
       } else {
-        appRunScript("modelkit connect " + mp.getMeasurementScript(" ", false));
+        appRunScript("modelkit connect " + atoms);
       }
     } else {
       if (atomType.equals("Xx")) {
@@ -1228,7 +1232,7 @@ public class ModelKit {
       return -1; // uninterpretable
     }
 
-    if (!addHsAndBond)
+    if (!addHsAndBond && !isDelete)
       return atomicNumber;
 
     // type = "." is for connect
@@ -1813,7 +1817,7 @@ public class ModelKit {
       uc.getEquivPointList(points, nIgnored, packing + (newPoint && atomIndex < 0 ? "newpt" : ""));
     }
     BS bsEquiv = (atom == null ? null : vwr.ms.getSymmetryEquivAtoms(bs));
-    BS bs0 = BSUtil.copy(bsEquiv);
+    BS bs0 = (bsEquiv == null ? null : uc == null ? BSUtil.newAndSetBit(atomIndex) : BSUtil.copy(bsEquiv));
     int mi = (atom == null ? vwr.am.cmi : atom.mi);
     int ac = vwr.ms.ac;
     int state = getMKState();
@@ -1935,7 +1939,7 @@ public class ModelKit {
 //        htParams.put("fixedElement", type);
       bs = vwr.addHydrogensInline(bs, vConnections, pts, htParams);
       if (bd > 0 && !isConnected && vConnections.isEmpty()) {
-        appRunScript("connect " + (bd - 0.1d) + " " + (bd + 0.01f) + " " + bs0 + " " + bs);
+        connectAtoms(bd, 1, bs0, bs);
       }
 
       // bs now points to the new atoms
@@ -1988,7 +1992,16 @@ public class ModelKit {
     }
   }
 
+  private void connectAtoms(double bd, int bondOrder, BS bs1, BS bs2) {
+    vwr.makeConnections((bd - 0.01d), (bd + 0.01d), bondOrder, T.modifyorcreate, bs1, bs2, new BS(), false, false, 0);
+  }
+
   public void cmdAssignBond(int bondIndex, char type, String cmd) {
+    assignBondAndType(bondIndex, getBondOrder(type, vwr.ms.bo[bondIndex]), type, cmd);
+  }
+    
+    
+  public void assignBondAndType(int bondIndex, int bondOrder, char type, String cmd) {
     
     // from CmdExt
     
@@ -1996,8 +2009,6 @@ public class ModelKit {
     int state = getMKState();
     try {
       setMKState(STATE_MOLECULAR);
-      if (type == '-')
-        type = pickBondAssignType;
       Atom a1 = vwr.ms.bo[bondIndex].atom1;
       modelIndex = a1.mi;
       int ac = vwr.ms.ac;
@@ -2006,7 +2017,7 @@ public class ModelKit {
       vwr.sm.setStatusStructureModified(bondIndex, modelIndex, Viewer.MODIFY_ASSIGN_BOND,
           cmd, 1, bsAtoms);
       //boolean ok = 
-      assignBond(bondIndex, type, bsAtoms);
+      assignBond(bondIndex, bondOrder, bsAtoms);
       vwr.ms.setAtomNamesAndNumbers(a1.i, -ac, null, true);
 //fails to refresh in JavaScript if we don't do this here      if (!ok || type == '0')
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "setBondOrder");      
@@ -2023,14 +2034,38 @@ public class ModelKit {
    * Original ModelKit functionality -- assign a bond.
    * 
    * @param bondIndex
-   * @param type
+   * @param bondOrder
    * @param bsAtoms 
    * @return bit set of atoms to modify
    */
-  private boolean assignBond(int bondIndex, char type, BS bsAtoms) {
-    int bondOrder = type - '0';
+  private boolean assignBond(int bondIndex, int bondOrder, BS bsAtoms) {
     Bond bond = vwr.ms.bo[bondIndex];
     vwr.ms.clearDB(bond.atom1.i);
+    if (bondOrder < 0)
+      return false;
+    try {
+      if (bondOrder == 0) {
+        vwr.deleteBonds(BSUtil.newAndSetBit(bond.index));
+      } else {
+        bond.setOrder(bondOrder | Edge.BOND_NEW);
+        if (bond.atom1.getElementNumber() != 1
+            && bond.atom2.getElementNumber() != 1) {
+          vwr.ms.removeUnnecessaryBonds(bond.atom1, false);
+          vwr.ms.removeUnnecessaryBonds(bond.atom2, false);
+        }
+      }
+    } catch (Exception e) {
+      Logger.error("Exception in seBondOrder: " + e.toString());
+    }
+    if (bondOrder != 0 && addXtalHydrogens)
+      vwr.addHydrogens(bsAtoms, Viewer.MIN_SILENT);
+    return true;
+  }
+
+  private int getBondOrder(char type, Bond bond) {
+    if (type == '-')
+      type = pickBondAssignType;
+    int bondOrder = type - '0';
     switch (type) {
     case '0':
     case '1':
@@ -2049,58 +2084,38 @@ public class ModelKit {
         bondOrder = 3;
       break;
     default:
-      return false;
+      return -1;
     }
-    try {
-      if (bondOrder == 0) {
-        vwr.deleteBonds(BSUtil.newAndSetBit(bond.index));
-      } else {
-        bond.setOrder(bondOrder | Edge.BOND_NEW);
-        if (bond.atom1.getElementNumber() != 1
-            && bond.atom2.getElementNumber() != 1) {
-          vwr.ms.removeUnnecessaryBonds(bond.atom1, false);
-          vwr.ms.removeUnnecessaryBonds(bond.atom2, false);
-        }
-      }
-    } catch (Exception e) {
-      Logger.error("Exception in seBondOrder: " + e.toString());
-    }
-    if (type != '0' && addXtalHydrogens)
-      vwr.addHydrogens(bsAtoms, Viewer.MIN_SILENT);
-    return true;
+    return bondOrder;
   }
 
+  /**
+   * @param index 
+   * @param index2 
+   * @param type 
+   * @param cmd  
+   */
   public void cmdAssignConnect(int index, int index2, char type, String cmd) {
-    // TODO: connect equivalent atoms?
     // from CmdExt
     Atom[] atoms = vwr.ms.at;
+    Atom a, b;
     if (index < 0 || index2 < 0 || index >= atoms.length || index2 >= atoms.length
-        || atoms[index] == null || atoms[index2] == null)
+        || (a = atoms[index]) == null || (b = atoms[index2]) == null)
       return;
     int state = getMKState();
     try {
-      double[][] connections = AU.newDouble2(1);
-      connections[0] = new double[] { index, index2 };
-      int modelIndex = atoms[index].mi;
-      BS bs = BSUtil.newAndSetBit(index);
-      bs.set(index2);
-      BS bsBond = vwr.ms.getBondsForSelectedAtoms(bs, false);
-      vwr.sm.setStatusStructureModified(-1, modelIndex, Viewer.MODIFY_ASSIGN_BOND, cmd, 1, bs);
-      vwr.ms.connect(connections);
-      int ac = vwr.ms.ac;
-      // now adjust hydrogens
-      // note that vwr.ms changes during the assignAtom command 
-      assignAtom(index, ".", true, true, false, null);
-      assignAtom(index2, ".", true, true, false, null);
-      vwr.ms.setAtomNamesAndNumbers(index, -ac, null, true);
-      bsBond = vwr.ms.getBondsForSelectedAtoms(bs, false);
-      vwr.sm.setStatusStructureModified(bsBond.nextSetBit(0), modelIndex, -Viewer.MODIFY_ASSIGN_BOND, "OK", 1, bs);
+      Bond bond = null;
       if (type != '1') {
+        BS bs = new BS();
+        bs.set(index);
+        bs.set(index2);
         bs = vwr.getBondsForSelectedAtoms(bs);
-        int bondIndex = bs.nextSetBit(0);
-        cmdAssignBond(bondIndex, type, cmd);
+        bond = vwr.ms.bo[bs.nextSetBit(0)];
       }
-      vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignConnect");
+      int bondOrder = getBondOrder(type, bond);
+      BS bs1 = vwr.ms.getSymmetryEquivAtoms(BSUtil.newAndSetBit(index));
+      BS bs2 = vwr.ms.getSymmetryEquivAtoms(BSUtil.newAndSetBit(index2));
+      connectAtoms(a.distance(b), bondOrder, bs1, bs2);
     } catch (Exception e) {
       // ignore?
     } finally {
@@ -2124,15 +2139,19 @@ public class ModelKit {
    * MODELKIT ADD @3 ...
    * 
    * @param type
-   * @param pts one or more new points
-   * @param bsAtoms the atoms to process, presumably from different sites
-   * @param packing  "packed" or ""
-   * @param cmd the command generating this call
-   * @param isClick 
+   * @param pts
+   *        one or more new points
+   * @param bsAtoms
+   *        the atoms to process, presumably from different sites
+   * @param packing
+   *        "packed" or ""
+   * @param cmd
+   *        the command generating this call
+   * @param isClick
    * @return the number of atoms added
    */
-  public int cmdAssignAddAtoms(String type, P3d[] pts, BS bsAtoms, String packing,
-                               String cmd, boolean isClick) {
+  public int cmdAssignAddAtoms(String type, P3d[] pts, BS bsAtoms,
+                               String packing, String cmd, boolean isClick) {
     try {
       vwr.pushHoldRepaintWhy("modelkit");
       boolean isPoint = (bsAtoms == null);
@@ -2141,11 +2160,17 @@ public class ModelKit {
         return 0;
       SymmetryInterface uc = vwr.getOperativeSymmetry();
       if (uc == null) {
+        // when no unit cell, this is just a way to add multiple points at the same time. 
+
         if (isPoint) {
           for (int i = 0; i < pts.length; i++)
-            assignAtoms(pts[i], true, -1, type, cmd, false, null, 1, -1, null, null, "");
+            assignAtoms(pts[i], true, -1, type, cmd, false, null, 1, -1, null,
+                null, "");
+          return pts.length;
         }
-        return (isPoint ? pts.length : 0);
+        assignAtoms(pts[0], true, atomIndex, type, cmd, false, null, 1, -1,
+            null, null, "");
+        return 1;
       }
       BS bsM = vwr.getThisModelAtoms();
       int n = bsM.cardinality();
@@ -2159,16 +2184,17 @@ public class ModelKit {
       if (pts != null && pts.length == 1) {
         pf = P3d.newP(pts[0]);
         uc.toFractional(pf, true);
-      }       
+        isPoint = true;
+      }
       for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
-          P3d p = P3d.newP(vwr.ms.at[i]);
-          uc.toFractional(p, true);
-          if (pf != null && pf.distanceSquared(p) < JC.UC_TOLERANCE2) {
-            site = vwr.ms.at[i].getAtomSite();
-            if (type == null || pts == null)
-              type = vwr.ms.at[i].getElementSymbolIso(true);
-          }
-          list.addLast(p);
+        P3d p = P3d.newP(vwr.ms.at[i]);
+        uc.toFractional(p, true);
+        if (pf != null && pf.distanceSquared(p) < JC.UC_TOLERANCE2) {
+          site = vwr.ms.at[i].getAtomSite();
+          if (type == null || pts == null)
+            type = vwr.ms.at[i].getElementSymbolIso(true);
+        }
+        list.addLast(p);
       }
       int nIgnored = list.size();
       packing = "fromfractional;tocartesian;" + packing;
@@ -2176,10 +2202,11 @@ public class ModelKit {
         atomicNo = Elements.elementNumberFromSymbol(type, true);
       if (isPoint) {
         // new atom, but connected to an current atom (multiple versions
-        BS bsEquiv = (bsAtoms == null ? null : vwr.ms.getSymmetryEquivAtoms(bsAtoms));
+        BS bsEquiv = (bsAtoms == null ? null
+            : vwr.ms.getSymmetryEquivAtoms(bsAtoms));
         for (int i = 0; i < pts.length; i++) {
-            assignAtoms(P3d.newP(pts[i]), true, atomIndex, stype, null, false, bsEquiv, atomicNo, site, uc,
-                list, packing);
+          assignAtoms(P3d.newP(pts[i]), true, atomIndex, stype, null, false,
+              bsEquiv, atomicNo, site, uc, list, packing);
         }
       } else {
         // not a new point
@@ -2192,8 +2219,8 @@ public class ModelKit {
             continue;
           sites.set(site);
           stype = (type == null ? a.getElementSymbolIso(true) : stype);
-          assignAtoms(P3d.newP(a), false, -1, stype, null, false, null, atomicNo, site, uc,
-              list, packing);
+          assignAtoms(P3d.newP(a), false, -1, stype, null, false, null,
+              atomicNo, site, uc, list, packing);
           for (int j = list.size(); --j >= nIgnored;)
             list.removeItemAt(j);
         }

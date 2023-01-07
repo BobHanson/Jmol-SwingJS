@@ -110,9 +110,8 @@ public class Bond extends Edge {
   }
   
   public int getValence() {
-    return (!isCovalent() || isPartial() ? 0
-        : //isPartial() || 
-        is(BOND_AROMATIC) ? 1
+    return (!isCovalent() || order == BOND_PARTIAL01 ? 0
+        : is(BOND_AROMATIC) ? 1
         : order & 7);
   }
 
@@ -233,9 +232,9 @@ public class Bond extends Edge {
     return (i == 1 ? atom2 : atom1);
   }
 
-  public boolean isCovalentNotPartial() {
+  public boolean isCovalentNotPartial0() {
     return ((order & Edge.BOND_COVALENT_MASK) != 0
-        && (order & Edge.BOND_PARTIAL_MASK) == 0);
+        && order != Edge.BOND_PARTIAL01);
   }
 
 }

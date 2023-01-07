@@ -93,7 +93,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
   }
 
   @Override
-  public void setProperty(String propertyName, Object value, BS bsIgnored) {
+  public void setProperty(String propertyName, Object value, BS bsAtoms) {
     // the following can be used with "select measures ({bitset})"
 
     Measurement mt;
@@ -123,9 +123,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       if (mPending == null)
         return;
       if (mPending.count > 1)
-        vwr.setStatusMeasuring("measurePending", mPending
-            .count, getMessage(mPending, false),
-            mPending.value);
+        vwr.setStatusMeasuring("measurePending", mPending.count,
+            getMessage(mPending, false), mPending.value);
       return;
     }
 
@@ -189,7 +188,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       if (md.isAll && md.points.size() == 2 && md.points.get(0) instanceof BS) {
         int type = Measurement.nmrType(vwr.getDistanceUnits(md.strFormat));
         switch (type) {
-          case Measurement.NMR_JC:
+        case Measurement.NMR_JC:
           //case Measurement.NMR_DC:
           md.htMin = vwr.getNMRCalculation().getMinDistances(md);
         }
@@ -247,6 +246,24 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       return;
     }
 
+    if ("deleteAtoms" == propertyName) {
+      for (int i = measurementCount; --i >= 0;) {
+        out: for (int iatom = bsAtoms.nextSetBit(0); iatom >= 0; iatom = bsAtoms
+            .nextSetBit(iatom + 1)) {
+          mt = measurements.get(i);
+          int[] indices = mt.countPlusIndices;
+          for (int j = 1; j <= indices[0]; j++) {
+            if (indices[j] == iatom) {
+              deleteI(i);
+              break out;
+            }
+          }
+
+        }
+      }
+      return;
+    }
+
     if ("deleteModelAtoms" == propertyName) {
       //atoms = (Atom[]) ((Object[]) value)[1];
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
@@ -287,8 +304,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       if (value instanceof String) {
         doAction(null, (String) value, T.hide);
       } else {
-        showHideM(new Measurement().setPoints(ms, (int[]) value, null,
-            null), true);
+        showHideM(new Measurement().setPoints(ms, (int[]) value, null, null),
+            true);
       }
       return;
     }
@@ -301,8 +318,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       if (value instanceof String) {
         doAction(null, (String) value, T.show);
       } else {
-        showHideM(new Measurement().setPoints(ms, (int[]) value, null,
-            null), false);
+        showHideM(new Measurement().setPoints(ms, (int[]) value, null, null),
+            false);
       }
       return;
     }

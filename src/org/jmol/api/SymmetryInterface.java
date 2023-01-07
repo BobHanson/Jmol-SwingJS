@@ -262,5 +262,9 @@ public interface SymmetryInterface {
 
   AtomIndexIterator getIterator(Viewer vwr, Atom atom, BS bstoms, double radius);
 
+  boolean isWithinUnitCell(P3d pt, double x, double y, double z);
+
+  boolean checkPeriodic(P3d pt);
+
 
 }
