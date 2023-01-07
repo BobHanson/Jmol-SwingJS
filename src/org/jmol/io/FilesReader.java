@@ -79,14 +79,14 @@ public class FilesReader implements JmolFilesReaderInterface {
    * 
    * @param i
    *        the reader index
-   * @param forceBinary
+   * @param forceInputStream
    * @return a BufferedReader or null in the case of an error
    * 
    */
   @Override
-  public Object getBufferedReaderOrBinaryDocument(int i, boolean forceBinary) {
+  public Object getBufferedReaderOrBinaryDocument(int i, boolean forceInputStream) {
     if (dataReaders != null)
-      return (forceBinary ? null : dataReaders[i].getBufferedReader()); // no binary strings
+      return (forceInputStream ? null : dataReaders[i].getBufferedReader()); // no binary strings
     String name = fullPathNamesIn[i];
 //    String[] subFileList = null;
 //    htParams.remove("subFileList");
@@ -97,7 +97,7 @@ public class FilesReader implements JmolFilesReaderInterface {
     if (name.contains("#_DOCACHE_"))
       return FileReader.getChangeableReader(vwr, namesAsGivenIn[i], name);
     Object t = fm.getUnzippedReaderOrStreamFromName(name, null, false,
-        forceBinary, false, true, htParams);
+        forceInputStream, false, true, htParams);
     if (t instanceof BufferedInputStream && Rdr.isZipS((BufferedInputStream) t)) {
 //      if (subFileList != null)
 //        htParams.put("subFileList", subFileList);
