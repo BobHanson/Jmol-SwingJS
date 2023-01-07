@@ -396,6 +396,8 @@ public class XmlChemDrawReader extends XmlReader {
     if (disp == null) {
       if (s == null) {
         order = 1;
+      } else if (s.equals("1.5")) {
+          order = JmolAdapter.ORDER_AROMATIC;
       } else {
         if (s.indexOf(".") > 0 && !"Dash".equals(disp2)) {
           // partial only works with "dash" setting for second line
