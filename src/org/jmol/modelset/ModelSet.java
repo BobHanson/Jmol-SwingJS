@@ -2261,7 +2261,8 @@ public class ModelSet extends BondCollection {
         if (uc == null)
           continue;
         ptTemp.setT(at[i]);
-        if (SimpleUnitCell.checkUnitCell(uc, pt, ptTemp))
+        uc.toFractional(ptTemp, false);
+        if (uc.isWithinUnitCell(ptTemp, pt.x, pt.y, pt.z))
           bs.set(i);
       }
       return bs;
@@ -2333,7 +2334,7 @@ public class ModelSet extends BondCollection {
         if (at[i] != null) {
           ptTemp1.setT(at[i]);
           uc1.toFractional(ptTemp1, false);
-          if (SimpleUnitCell.checkPeriodic(ptTemp1))
+          if (uc1.checkPeriodic(ptTemp1))
             bs.set(i);
         }
       }
@@ -2631,7 +2632,7 @@ public class ModelSet extends BondCollection {
               || checkDistance
               && !isInRange(atomA, atomB, minD, maxD, minDIsFrac, maxDIsFrac,
                   isFractional)
-              || isAromatic && !allowAromaticBond(bondAB)
+              || isAromatic && (bondAB != null && !allowAromaticBond(bondAB))
               )
             continue;
           if (bondAB == null) {
@@ -3184,6 +3185,7 @@ public class ModelSet extends BondCollection {
       if (doNull)
         at[i] = null;
     }
+    BS bsAtoms = BSUtil.copy(bs);
     for (int i = 0; i < mc; i++) {
       Model m = am[i];
       m.resetDSSR(false);
@@ -3200,6 +3202,9 @@ public class ModelSet extends BondCollection {
       m.isOrderly = (m.act == m.bsAtoms.length()); 
     }
     deleteBonds(bsBonds, false);
+    Shape me = vwr.shm.getShape(JC.SHAPE_MEASURES);
+    if (me != null)
+      me.setProperty("deleteAtoms", null, bsAtoms);
     validateBspf(false);
   }
 

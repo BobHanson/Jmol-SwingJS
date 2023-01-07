@@ -195,7 +195,7 @@ public class Measurement {
    * 
    * @param sep
    * @param withModelIndex is needed for points only
-   * @return measure ((1}) ({2})....
+   * @return ((1}) ({2})....
    */
   public String getMeasurementScript(String sep, boolean withModelIndex) {
     SB sb = new SB();

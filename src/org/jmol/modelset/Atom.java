@@ -441,7 +441,7 @@ public class Atom extends Point3fi implements Node {
         if (bonds[i].is(Edge.BOND_AROMATIC))
           npartial++;
       }
-      if (n == 2 && npartial != 0)
+      if (n > 0 && n < 3 && npartial != 0)
         n++;
     }
     return n;
@@ -454,7 +454,20 @@ public class Atom extends Point3fi implements Node {
     int n = 0;
     for (int i = bonds.length; --i >= 0; ) {
       Bond b = bonds[i];
-      if (b.isCovalentNotPartial() 
+      if (b.isCovalentNotPartial0() 
+          && !b.getOtherAtom(this).isDeleted())
+        ++n;
+    }
+    return n;
+  }
+
+  public int getCovalentOrPartialBondCount() {
+    if (bonds == null)
+      return 0;
+    int n = 0;
+    for (int i = bonds.length; --i >= 0; ) {
+      Bond b = bonds[i];
+      if (b.isCovalent() 
           && !b.getOtherAtom(this).isDeleted())
         ++n;
     }
@@ -468,7 +481,7 @@ public class Atom extends Point3fi implements Node {
     int n = 0;
     for (int i = bonds.length; --i >= 0;) {
       Bond b = bonds[i];
-      if (b.isCovalentNotPartial()) {
+      if (b.isCovalentNotPartial0()) {
         Atom a = bonds[i].getOtherAtom(this);
         if (a.valence >= 0 && a.getElementNumber() == 1)
           ++n;

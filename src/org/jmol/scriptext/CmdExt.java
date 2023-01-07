@@ -5480,12 +5480,12 @@ public class CmdExt extends ScriptExt {
           i++;
         }
       }
-      if (chk)
-        return;
       boolean refTop = (tokAt(i + 1) == T.top); 
       if (refTop)
         i++;
       eval.iToken = i;
+      if (chk)
+        break;
       if (hkl instanceof P3d) {
         hkl = P4d.new4(hkl.x, hkl.y, hkl.z, 0);
       } else if (Double.isNaN(zoffset)) {
@@ -5502,18 +5502,16 @@ public class CmdExt extends ScriptExt {
         oabc[3].scale(-zscale);
       }
 
-      V3d vtd = new V3d();
-      vtd.setT(vt);
       if (!Double.isNaN(zoffset) && zoffset != 0) {
         // o ---pdist-----vt-------> p
         // o - offset--o'---------> p
         if (zoffPercent) {
           zoffset = (zoffset/100 * oabc[3].length());
         }
-        oabc[0].scaleAdd2(zoffset, vtd, oabc[0]);
+        oabc[0].scaleAdd2(zoffset, vt, oabc[0]);
       }
       if (refTop)
-        oabc[0].scaleAdd2(-oabc[3].length(), vtd, oabc[0]);
+        oabc[0].scaleAdd2(-oabc[3].length(), vt, oabc[0]);
       ucname = "surface" + ((int) hkl.x)  + ((int) hkl.y)  + ((int) hkl.z);
       break;
     case T.scale:
@@ -5521,6 +5519,8 @@ public class CmdExt extends ScriptExt {
       pt = (tok == T.scale ? eval.getPointOrPlane(++i, ScriptParam.MODE_P3 | ScriptParam.MODE_P_ALLOW_FRACTIONAL)
           : eval.checkHKL(eval.getFractionalPoint(++i)));
       i = eval.iToken;
+      if (chk)
+        break;
       oabc = sym.getUnitCellVectors();
       oabc[1].scale(Math.abs(pt.x));
       oabc[2].scale(Math.abs(pt.y));
@@ -5529,9 +5529,11 @@ public class CmdExt extends ScriptExt {
       ucname = "supercell";
       break;
     case T.fill:
-      pt = SimpleUnitCell.ptToIJK(eval.checkHKL(eval.getFractionalPoint(++i)), 1);
+      pt = eval.getFractionalPoint(++i);
       i = eval.iToken;
-
+      if (chk)
+        break;
+      pt = SimpleUnitCell.ptToIJK(eval.checkHKL(pt), 1);
       break;
     case T.string:
     case T.identifier:
@@ -5609,17 +5611,21 @@ public class CmdExt extends ScriptExt {
       id = eval.objectNameParameter(++i);
       break;
     case T.boundbox:
+      eval.iToken = i;
+      if (chk)
+        break;
       P3d o = P3d.newPd(vwr.getBoundBoxCenter());
       pt = vwr.getBoundBoxCornerVector();
-      o.sub(P3d.newPd(pt));
+      o.sub(pt);
       oabc = new P3d[] { o, P3d.new3(pt.x * 2, 0, 0), P3d.new3(0, pt.y * 2, 0),
           P3d.new3(0, 0, pt.z * 2) };
       pt = null;
-      eval.iToken = i;
       break;
     case T.transform:
       if (tokAt(++i) != T.matrix4f)
         invArg();
+      if (chk)
+        break;
       newUC = new Object[] { getToken(i).value };
       break;
     case T.matrix3f:
@@ -5632,8 +5638,10 @@ public class CmdExt extends ScriptExt {
       case T.bitset:
       case T.expressionBegin:
         pt = vwr.ms.getAtomSetCenter(atomExpressionAt(i));
-        vwr.toFractional(pt, true);
         i = eval.iToken;
+        if (chk)
+          break;
+        vwr.toFractional(pt, true);
         break;
       default:
         if (eval.isCenterParameter(i)) {
@@ -5651,18 +5659,20 @@ public class CmdExt extends ScriptExt {
     case T.bitset:
     case T.expressionBegin:
       int iAtom = atomExpressionAt(i).nextSetBit(0);
+      i = eval.iToken;
       if (!chk)
         vwr.am.setUnitCellAtomIndex(iAtom);
       if (iAtom < 0)
         return;
-      i = eval.iToken;
       break;
     case T.offset:
       isOffset = true;
       if (eval.isAtomExpression(i + 1)) {
         pt = eval.centerParameter(++i, null);
-        vwr.toFractional(pt, false);
         i = eval.iToken;
+        if (chk)
+          break;
+        vwr.toFractional(pt, false);
         break;
       }
       //$FALL-THROUGH$
@@ -5672,13 +5682,15 @@ public class CmdExt extends ScriptExt {
         if (isOffset)
           invArg();       
       } else {
+        i = eval.iToken;
+        if (chk)
+          break;
         if (!isOffset && pt.x < 555) {
           pt = SimpleUnitCell.ptToIJK(eval.checkHKL(pt), 1);
         } else {
           pt = P4d.new4(pt.x, pt.y, pt.z, (isOffset ? 1 : 0));
         }
       }
-      i = eval.iToken;
       break;
     case T.decimal:
     case T.integer:
@@ -5694,10 +5706,7 @@ public class CmdExt extends ScriptExt {
       if (eval.isArrayParameter(i)) {
         // Origin vA vB vC
         // these are VECTORS, though
-        P3d[] pts = eval.getPointArray(i, 4, false);
-        oabc = new P3d[4];
-        for (i = 4; --i >=0;)
-          oabc[i] = P3d.newPd(pts[i]);
+        oabc = eval.getPointArray(i, 4, false);
         i = eval.iToken;
       } else if (slen > i + 1) {
         pt = eval.getFractionalPoint(i);
@@ -5866,16 +5875,14 @@ public class CmdExt extends ScriptExt {
     }
     if (u == null)
       invArg();
-    P3d ud = P3d.newPd(u);
-    P3d vd = P3d.newPd(v);
-    oabc[1] = ud;
-    oabc[2] = vd;
+    oabc[1] = u;
+    oabc[2] = v;
     // odd number of negatives -- reverse
     boolean doReverse = ((((h < 0 ? 1 : 0) + (k < 0 ? 1 : 0) + (l < 0 ? 1 : 0))
         % 2) == 1);
     P3d w = oabc[3];
-    P3d a = P3d.newP(ud);
-    P3d b = P3d.newP(vd);
+    P3d a = P3d.newP(u);
+    P3d b = P3d.newP(v);
     if (h == 0 && k == 0) {
       // 001
       // no a,b intercept
@@ -5901,7 +5908,7 @@ public class CmdExt extends ScriptExt {
       oabc[1] = oabc[2];
       oabc[2] = a;
     }
-    w.cross(vd, ud);
+    w.cross(v, u);
     w.normalize();
     w.scale(dist0);
     return oabc;
@@ -6306,7 +6313,7 @@ public class CmdExt extends ScriptExt {
       type = null;
       //$FALL-THROUGH$
     case T.add:
-      if (pt == null && bsAtoms == null && pts == null)
+      if (pt == null && bs == null && pts == null)
         invArg();
       if (pts == null && pt != null) {
         pts = new P3d[] { pt };
