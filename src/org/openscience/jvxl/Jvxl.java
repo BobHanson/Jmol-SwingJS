@@ -368,8 +368,8 @@ public class Jvxl {
     if (str.indexOf("{") == 0) {
       str = str.replace(',', ' ');
       int[] next = new int[1];
-      return P4d.new4(PT.parseFloatNext(str, next), PT.parseFloatNext(str,
-          next), PT.parseFloatNext(str, next), PT.parseFloatNext(str, next));
+      return P4d.new4(PT.parseDoubleNext(str, next), PT.parseDoubleNext(str,
+          next), PT.parseDoubleNext(str, next), PT.parseDoubleNext(str, next));
     }
     return null;
   }

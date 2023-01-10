@@ -238,7 +238,7 @@ class IsoMOReader extends AtomDataReader {
       double o = (obj == null ? 0 : obj.doubleValue());
       line = PT.formatStringS(line, "O", obj != null 
           && params.qm_moLinearCombination == null && ++rep != 0
-          ? (o == (int) o ? "" + (int) o : PT.formatF(o, 0, 4, false, false))
+          ? (o == (int) o ? "" + (int) o : PT.formatD(o, 0, 4, false, false))
           : "");
     }
     if (line.indexOf("%T") >= 0)

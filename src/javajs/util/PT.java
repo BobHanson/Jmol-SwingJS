@@ -251,86 +251,9 @@ public class PT {
     return (ich == ichMax);
   }
 
-  public static float[] parseFloatArray(String str) {
-    return parseFloatArrayNext(str, new int[1], null, null, null);
-  }
-
-  public static int parseFloatArrayInfested(String[] tokens, float[] data) {
-    int len = data.length;
-    int nTokens = tokens.length;
-    int n = 0;
-    int max = 0;
-    for (int i = 0; i >= 0 && i < len && n < nTokens; i++) {
-      float f;
-      while (Double.isNaN(f = parseFloat(tokens[n++])) 
-          && n < nTokens) {
-      }
-      if (!Double.isNaN(f))
-        data[(max = i)] = f;
-      if (n == nTokens)
-        break;
-    }
-    return max + 1;
-  }
-
-  /**
-   * @param str
-   * @param next
-   * @param f
-   * @param strStart or null
-   * @param strEnd   or null
-   * @return array of float values
-   * 
-   */
-  public static float[] parseFloatArrayNext(String str, int[] next, float[] f,
-                                            String strStart, String strEnd) {
-    int n = 0;
-    int pt = next[0];
-    if (pt >= 0) {
-      if (strStart != null) {
-        int p = str.indexOf(strStart, pt);
-        if (p >= 0)
-          next[0] = p + strStart.length();
-      }
-      str = str.substring(next[0]);
-      pt = (strEnd == null ? -1 : str.indexOf(strEnd));
-      if (pt < 0)
-        pt = str.length();
-      else
-        str = str.substring(0, pt);
-      next[0] += pt + 1;
-      String[] tokens = getTokens(str);
-      if (f == null)
-        f = new float[tokens.length];
-      n = parseFloatArrayInfested(tokens, f);
-    }
-    if (f == null)
-      return new float[0];
-    for (int i = n; i < f.length; i++)
-      f[i] = Float.NaN;
-    return f;
-  }
-
-  public static float parseFloatRange(String str, int ichMax, int[] next) {
-    int cch = str.length();
-    if (ichMax > cch)
-      ichMax = cch;
-    if (next[0] < 0 || next[0] >= ichMax)
-      return Float.NaN;
-    return parseFloatChecked(str, ichMax, next, false);
-  }
-
   public static float parseFloatNext(String str, int[] next) {
     int cch = (str == null ? -1 : str.length());
     return (next[0] < 0 || next[0] >= cch ? Float.NaN : parseFloatChecked(str, cch, next, false));
-  }
-
-  public static float parseFloatStrict(String str) {
-    // checks trailing characters and does not allow "1E35" to be float
-    int cch = str.length();
-    if (cch == 0)
-      return Float.NaN;
-    return parseFloatChecked(str, cch, new int[] {0}, true);
   }
 
   public static float parseFloat(String str) {
@@ -449,35 +372,6 @@ public class PT {
       --ichLast;
     return (ichLast < ich ? "" : str.substring(ich, ichLast + 1));
   }
-
-//  public static double dVal(String s) throws NumberFormatException {
-//    /**
-//     * @j2sNative
-//     * 
-//     * if(s==null)
-//     *   throw new NumberFormatException("null");
-//     * var d=parseFloat(s);
-//     * if(isNaN(d))
-//     *  throw new NumberFormatException("Not a Number : "+s);
-//     * return d 
-//     * 
-//     */
-//    {
-//      return Double.valueOf(s).doubleValue();
-//    }
-//  }
-//
-//  public static float fVal(String s) throws NumberFormatException {
-//    /**
-//     * @j2sNative
-//     * 
-//     * return this.dVal(s);
-//     */
-//    {
-//      
-//      return Float.parseFloat(s);
-//    }
-//  }
 
   public static int parseIntRange(String str, int ichMax, int[] next) {
     int cch = str.length();
@@ -689,11 +583,6 @@ public class PT {
       str = str.replace(strFrom, strTo);
     } while (!isOnce && str.indexOf(strFrom) >= 0);
     return str;
-  }
-
-  public static String formatF(double value, int width, int precision,
-                              boolean alignLeft, boolean zeroPad) {
-    return formatS(DF.formatDecimal(value, precision), width, 0, alignLeft, zeroPad);
   }
 
   public static String formatD(double value, int width, int precision,

@@ -371,9 +371,9 @@ import javajs.util.P3d;
                       PT.parseInt(tokens[len - 1]));
                 } else {
                   scale[i] = CU.colorTriadToFFRGB(
-                      PT.parseFloat(tokens[len - 3]),
-                      PT.parseFloat(tokens[len - 2]),
-                      PT.parseFloat(tokens[len - 1]));
+                      PT.parseDouble(tokens[len - 3]),
+                      PT.parseDouble(tokens[len - 2]),
+                      PT.parseDouble(tokens[len - 1]));
 
                 }
               }
@@ -743,7 +743,7 @@ import javajs.util.P3d;
       return ce.paletteWB;
     int[] b = new int[JC.argbsRoygbScale.length];
     for (int i = 0; i < b.length; i++) {
-      float xff = (1f / b.length * (b.length - i));        
+      double xff = (1f / b.length * (b.length - i));        
       b[i] = CU.colorTriadToFFRGB(xff, xff, xff);
     }
     return ce.paletteWB = b;
@@ -753,13 +753,13 @@ import javajs.util.P3d;
     if (n < 2)
       n = JC.argbsRoygbScale.length;
     int[] b = new int[n];
-    float[] rgb1 = new float[3];
-    float[] rgb2 = new float[3];
-    CU.toRGB3f(color1, rgb1);
-    CU.toRGB3f(color2, rgb2);
-    float dr = (rgb2[0] - rgb1[0]) / (n - 1);
-    float dg = (rgb2[1] - rgb1[1]) / (n - 1);
-    float db = (rgb2[2] - rgb1[2]) / (n - 1);
+    double[] rgb1 = new double[3];
+    double[] rgb2 = new double[3];
+    CU.toRGB3(color1, rgb1);
+    CU.toRGB3(color2, rgb2);
+    double dr = (rgb2[0] - rgb1[0]) / (n - 1);
+    double dg = (rgb2[1] - rgb1[1]) / (n - 1);
+    double db = (rgb2[2] - rgb1[2]) / (n - 1);
     for (int i = 0; i < n; i++)
       b[i] = CU.colorTriadToFFRGB(rgb1[0] + dr * i, rgb1[1] + dg * i,
           rgb1[2] + db * i);
@@ -770,7 +770,7 @@ import javajs.util.P3d;
       return ce.paletteBW;
     int[] b = new int[JC.argbsRoygbScale.length];
     for (int i = 0; i < b.length; i++) {
-      float xff = (1f / b.length * i); 
+      double xff = (1f / b.length * i); 
       b[i] = CU.colorTriadToFFRGB(xff, xff, xff);
     }
     return ce.paletteBW = b;

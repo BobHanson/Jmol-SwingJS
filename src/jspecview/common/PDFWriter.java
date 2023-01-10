@@ -149,7 +149,10 @@ public class PDFWriter implements GenericGraphics, JSVPdfWriter {
 
   @Override
 	public void setGraphicsColor(Object g, GenericColor c) {
-	  CU.toRGB3f(c.getRGB(), rgb);
+    int p = c.getRGB();
+    rgb[0] = (p >> 16) & 0xFF;
+    rgb[1] = (p >> 8) & 0xFF;
+    rgb[2] = (p & 0xFF);
 		pdf.setColor(rgb, true);
 		pdf.setColor(rgb, false);
 	}
