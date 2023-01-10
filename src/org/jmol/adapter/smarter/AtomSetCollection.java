@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
@@ -219,8 +220,7 @@ public class AtomSetCollection {
 
     // append to bsAtoms if necessary (CIF reader molecular mode)
     if (collection.bsAtoms != null) {
-      if (bsAtoms == null)
-        bsAtoms = new BS();
+      getBSAtoms(0);
       for (int i = collection.bsAtoms
           .nextSetBit(0); i >= 0; i = collection.bsAtoms.nextSetBit(i + 1))
         bsAtoms.set(existingAtomsCount + i);
@@ -1206,6 +1206,43 @@ public class AtomSetCollection {
   public void checkNoEmptyModel() {
     while (atomSetCount > 0 && atomSetAtomCounts[atomSetCount - 1] == 0)
       atomSetCount--;
+  }
+
+  /**
+   * Create bsAtoms if it is null, and set bits if desired.
+   * 
+   * @param n  if created only, -1 to set all atoms, 0 for no setting, otherwise, set [0,n)
+   * @return bsAtoms
+   */
+  public BS getBSAtoms(int n) {
+    if (bsAtoms == null) {
+      bsAtoms = new BS();
+      if (n != 0) 
+        bsAtoms.setBits(0, (n < 0 ? ac : n));
+    }
+    return bsAtoms;
+  }
+
+  public void fix2Stereo() {
+    getBSAtoms(-1);
+    for (int i = bondCount; --i >= 0;) {
+      Bond b = bonds[i];
+      if (atoms[b.atomIndex2].elementSymbol.equals("H")
+          && b.order != JmolAdapter.ORDER_STEREO_NEAR
+          && b.order != JmolAdapter.ORDER_STEREO_FAR
+          && atoms[b.atomIndex1].elementSymbol.equals("C")
+          ) {
+        bsAtoms.clear(b.atomIndex2);
+      } else if (atoms[b.atomIndex1].elementSymbol.equals("H")
+          && atoms[b.atomIndex2].elementSymbol.equals("C")
+          ) {
+        // includes backward C-H wedge/hash here, which makes no sense.
+        bsAtoms.clear(b.atomIndex1);
+      }
+    }
+
+    // TODO
+    
   }
 
 

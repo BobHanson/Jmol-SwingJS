@@ -1081,12 +1081,10 @@ public class MSRdr implements MSInterface {
     if (!cr.doApplySymmetry)
       return;
     AtomSetCollection asc = cr.asc;
-    BS bs = asc.bsAtoms;
     SymmetryInterface sym = getDefaultUnitCell();
     Atom[] atoms = asc.atoms;
     P3d pt = new P3d();
-    if (bs == null)
-      bs = asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
+    BS bs = asc.getBSAtoms(-1);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       boolean isOK = (!isCommensurate || modAverage || a.foccupancy >= 0.5d);

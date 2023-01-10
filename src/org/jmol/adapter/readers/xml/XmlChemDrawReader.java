@@ -158,13 +158,14 @@ public class XmlChemDrawReader extends XmlReader {
       if (n != orderedAttachedBonds.size()) {
         System.err.println("cannot fix attachments for " + text);
       }
-      for (int i = n; --i >= 0;) {
+      for (int i = 0; i < n; i++) {
         CDNode a = orderedExternalPoints.get(i);
         CDBond b = (CDBond) orderedAttachedBonds.get(i)[1];
-        boolean isEnd = (b.atomIndex2 == this.index);
-        CDNode aExternal = b.getOtherNode(this);
-        CDNode aInternal = a;
-        asc.addBondNoCheck(new Bond((isEnd ? aExternal.index : aInternal.index), (isEnd ? aInternal.index : aExternal.index), b.order));
+        if (b.atomIndex2 == this.index) {
+          b.atomIndex2 = a.index;
+        } else {
+          b.atomIndex1 = a.index;          
+        }
       }
     }
     
@@ -190,7 +191,7 @@ public class XmlChemDrawReader extends XmlReader {
 
     @Override
     public String toString() {
-      return super.toString() + " " + id1 + " " + id2;
+      return super.toString() + " id1=" + id1 + " id2=" + id2;
     }
 
   }
@@ -223,6 +224,11 @@ public class XmlChemDrawReader extends XmlReader {
    * temporary holder of style chunks within text objects
    */
   private String textBuffer;
+  
+  /**
+   * true when this reader is being used after CDX conversion
+   */
+  public boolean isCDX;
   
   @Override
   public void processStartElement(String localName, String nodeName) {
@@ -509,13 +515,15 @@ public class XmlChemDrawReader extends XmlReader {
     fixConnections();
     fixInvalidAtoms();
     centerAndScale();
+    parent.appendLoadNote((isCDX ? "CDX: " : "CDXML: ") + (is2D ? "2D" : "3D"));
     asc.setInfo("minimize3D", Boolean.valueOf(!is2D && !noHydrogens));
-    set2D();
     asc.setInfo("is2D", Boolean.valueOf(is2D));
-    if (is2D)
+    if (is2D) {
+      optimize2D = !noHydrogens && !noMinimize;
       asc.setModelInfoForSet("dimension", "2D", asc.iSet);
+      set2D();
+    }
     // parent will be null for 
-    parent.appendLoadNote("ChemDraw CDXML: " + (is2D ? "2D" : "3D"));
   }
 
   /**
