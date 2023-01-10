@@ -1539,7 +1539,7 @@ public class TopoCifParser implements Parser {
       // derived
       info.put("atomIndex1", Integer.valueOf(i0 + linkNodes[0].index));
       info.put("atomIndex2", Integer.valueOf(i0 + linkNodes[1].index));
-      if (bsAtoms != null && bsAtoms.cardinality() > 0)
+      if (bsAtoms != null && !bsAtoms.isEmpty())
         info.put("representedAtoms", bsAtoms);
       info.put("topoOrder", Integer.valueOf(topoOrder));
       info.put("order", Integer.valueOf(typeBondOrder));

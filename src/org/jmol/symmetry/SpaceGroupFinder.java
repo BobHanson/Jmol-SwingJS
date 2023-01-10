@@ -233,7 +233,7 @@ public class SpaceGroupFinder {
       opsChecked.set(0);
       boolean hasC1 = false;
       for (int iop = bsOps.nextSetBit(1); iop > 0
-          && bsGroups.cardinality() > 0; iop = bsOps.nextSetBit(iop + 1)) {
+          && !bsGroups.isEmpty(); iop = bsOps.nextSetBit(iop + 1)) {
         SymmetryOperation op = (sg == null ? getOp(iop)
             : (SymmetryOperation) sg.getOperation(iop));
         if (sg == null) {
@@ -430,7 +430,7 @@ public class SpaceGroupFinder {
     System.out.println("finishing check for basis for " + n + " operations");
     for (int iop = uncheckedOps.nextSetBit(0); iop >= 0; iop = uncheckedOps
         .nextSetBit(iop + 1)) {
-//      if (bs.cardinality() == 0)
+//      if (bs.isEmpty())
 //        return;
 // added
       bs.or(bsPoints);
@@ -777,7 +777,7 @@ public class SpaceGroupFinder {
    */
   public SymmetryInterface checkSupercell(Viewer vwr, SymmetryInterface uc,
                                           BS bsPoints, int abc, P3d scaling) {
-    if (bsPoints.cardinality() == 0)
+    if (bsPoints.isEmpty())
       return uc;
     int minF = Integer.MAX_VALUE, maxF = Integer.MIN_VALUE;
     int[] counts = new int[MAX_COUNT + 1];

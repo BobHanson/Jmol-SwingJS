@@ -648,7 +648,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
   private boolean checkID(String thisID) {
     this.thisID = thisID;
-      return (findPolyBS(null).cardinality() > 0);
+      return (!findPolyBS(null).isEmpty());
    }
 
   /**

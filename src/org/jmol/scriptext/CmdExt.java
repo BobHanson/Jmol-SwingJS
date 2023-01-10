@@ -4891,13 +4891,13 @@ public class CmdExt extends ScriptExt {
         // not show symop "xxxxx" "type"
         Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
         pt1 = eval.centerParameter(2 + (iop == 0 ? 0 : 1), ret);
-        if (ret[0] != null && ((BS)ret[0]).cardinality() == 0) {
+        if (ret[0] != null && ((BS)ret[0]).isEmpty()) {
           len = slen;
           break;
         }
         ret[0] = null;
         pt2 = eval.centerParameter(++eval.iToken, ret);
-        if (ret[0] != null && ((BS)ret[0]).cardinality() == 0) {
+        if (ret[0] != null && ((BS)ret[0]).isEmpty()) {
           len = slen;
           break;
         }
@@ -6215,7 +6215,7 @@ public class CmdExt extends ScriptExt {
         case 2:
           // assign BOND ({3 4}) ...
           bs = vwr.ms.getBondsForSelectedAtoms(bs, false);
-          if (bs.cardinality() > 0) {
+          if (!bs.isEmpty()) {
             // bonded already
             index = bs.nextSetBit(0);
           } else {

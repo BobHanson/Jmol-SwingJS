@@ -67,7 +67,7 @@ public class InChIJNI implements JmolInChI {
   @Override
   public String getInchi(Viewer vwr, BS atoms, String molData, String options) {
     try {
-      if (atoms == null ? molData == null : atoms.cardinality() == 0)
+      if (atoms == null ? molData == null : atoms.isEmpty())
         return "";
       boolean getKey = false;
       if (options == null)
