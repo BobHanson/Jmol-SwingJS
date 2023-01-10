@@ -35,6 +35,7 @@ public class CDXReader extends XmlChemDrawReader {
 
   @Override
   protected void processXml2(XmlReader parent, Object saxReader) throws Exception {
+    isCDX = true;
     // convert binary document to reader!
     // parent is null here because we started with the class already
     String xml = CDXMLWriter.fromCDX(binaryDoc);

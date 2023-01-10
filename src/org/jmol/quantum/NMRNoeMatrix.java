@@ -260,7 +260,7 @@ public class NMRNoeMatrix {
 //
     BS bsH = null;
     try {
-      bsH = (bsMol.cardinality() == 0 ? new BS() : viewer.getSmartsMatch("[H]",
+      bsH = (bsMol.isEmpty() ? new BS() : viewer.getSmartsMatch("[H]",
           bsMol));
     } catch (Exception e1) {
       // not possible - the SMARTS expression is valid.

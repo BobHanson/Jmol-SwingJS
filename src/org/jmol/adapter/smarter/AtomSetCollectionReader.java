@@ -189,6 +189,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean isSequential;
   public boolean optimize2D;
   public boolean noHydrogens;
+  public boolean noMinimize;
   public boolean is2D;
 
   public boolean isMolecular; // only for CIF so that it can read multiple unit cells
@@ -1083,7 +1084,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     slabXY = checkFilterKey("SLABXY");
     polymerX = !slabXY && checkFilterKey("POLYMERX");
     noHydrogens = checkFilterKey("NOH");
-    optimize2D = checkFilterKey("2D") && !noHydrogens;
+    noMinimize = checkFilterKey("NOMIN");
+    optimize2D = checkFilterKey("2D") && !noHydrogens && !noMinimize;
 
     if (filter == null)
       return;
@@ -1255,13 +1257,19 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     // MOL and JME - sets for ALL MODELS, but just for ModelLoader.
     // It is quite possible that multiple 2D models cannot be loaded as 3D
     asc.setInfo("is2D", Boolean.TRUE);
-    if (checkFilterKey("NOH"))
+    asc.getBSAtoms(-1);
+    if (noHydrogens) {
       asc.setInfo("noHydrogen",
           Boolean.TRUE);
-    if (!checkFilterKey("NOMIN"))
+    } else if (optimize2D) {
+      asc.fix2Stereo();
       asc.setInfo("doMinimize",
           Boolean.TRUE);
-    appendLoadNote("This model is 2D. Its 3D structure will be generated.");
+      appendLoadNote("This model is 2D. Its 3D structure was generated.");
+    } else {
+      appendLoadNote("This model is 2D. Its 3D structure has not been generated; use LOAD \"\" FILTER \"2D\" to optimize 3D.");
+      addJmolScript("select thismodel;wireframe only");
+    }
   }
 
   public boolean doGetVibration(int vibrationNumber) {

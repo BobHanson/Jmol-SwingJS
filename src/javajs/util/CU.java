@@ -398,9 +398,9 @@ public class CU {
             .length() - 1), ",");
         if (tokens.length != 3)
           return 0;
-        float red = PT.parseFloat(tokens[0]);
-        float grn = PT.parseFloat(tokens[1]);
-        float blu = PT.parseFloat(tokens[2]);
+        double red = PT.parseDouble(tokens[0]);
+        double grn = PT.parseDouble(tokens[1]);
+        double blu = PT.parseDouble(tokens[2]);
         return colorTriadToFFRGB(red, grn, blu);
       }
       switch (len) {
@@ -429,7 +429,7 @@ public class CU {
     return (boxedArgb == null ? 0 : boxedArgb.intValue());
   }
 
-  public static int colorTriadToFFRGB(float x, float y, float z) {
+  public static int colorTriadToFFRGB(double x, double y, double z) {
     if (x <= 1 && y <= 1 && z <= 1) {
       if (x > 0)
         x = x * 256 - 1;
@@ -469,10 +469,10 @@ public class CU {
 //  }
 
   public static int colorPtToFFRGB(T3d pt) {
-    return colorTriadToFFRGB((float) pt.x, (float) pt.y, (float) pt.z);
+    return colorTriadToFFRGB(pt.x, pt.y, pt.z);
   }
 
-  public static void toRGB3f(int c, float[] f) {
+  public static void toRGB3(int c, double[] f) {
     f[0] = ((c >> 16) & 0xFF) / 255f; // red
     f[1] = ((c >> 8) & 0xFF) / 255f;
     f[2] = (c & 0xFF) / 255f;

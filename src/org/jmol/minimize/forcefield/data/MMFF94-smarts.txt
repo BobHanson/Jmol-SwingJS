@@ -2,37 +2,17 @@
 
 #BH 5/17/2016 -- for OpenSMARTS convention requiring $(...) in [...] 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#0         1         2         3         4         5         6
+#0123456789012345678901234567890123456789012345678901234567890123456789
+#Mg 12 99  0  24  0 DIPOSITIVE MAGNESIUM CATI [MgD0]
+#atom symbol
+#...atomic number
+#......mmType 
+#..........HType 
+#.............formalCharge*12 
+#.................valence
+#...................Description
+#............................................ Smiles
 
 
 Li  3 92  0  12  0 LITHIUM CATION            [LiD0]
@@ -171,18 +151,12 @@ F   9 89  0 -12  0 FLUORIDE ANION            [FD0]
 Na 11 93  0  12  0 SODIUM CATION             [NaD0]
 Mg 12 99  0  24  0 DIPOSITIVE MAGNESIUM CATI [MgD0]
 Si 14 19  5   0  4 SILICON                   [SiD4]
+
 P  15 25 71   0  4 GENERAL TETRACRD P        [PD4]
-
-
-
-
 P  15 26 71   0  3 TRICOORDINATE P           [PD3]
 P  15 75 71   0  3 P DOUBLY BONDED TO C      [$([PD2]=C)]
+
 S  16 18  0   0  4 SULFONAMIDE S             [$([SD4]([OD1,ND2])[OD1,ND2]),$([SD3](=C)([OD1,ND2])[OD1,ND2])]
-
-
-
-
 S  16 17 71   0  4 SULFOXIDE S (also S(=O)[N [$([SD3]([OD1,ND2])([#6,#7D3,#8D2])[#6,#7D3,#8D2])]
 S  16 73  0   0  3 SULFUR IN SULFINATE       [$([SD3]([OD1,SD1])[OD1])]
 

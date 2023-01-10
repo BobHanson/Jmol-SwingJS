@@ -134,33 +134,10 @@ public class MolReader extends AtomSetCollectionReader {
     if (fixN) {
       addJmolScript("{search('[Nv4+0,nv4+0]')}.formalCharge=1;{search('{[Ov1-0]}[Nv4+1,nv4+1]')}.formalCharge=-1;");
     }
-    if (is2D && !optimize2D)
-      appendLoadNote("This model is 2D. Its 3D structure has not been generated; use LOAD \"\" FILTER \"2D\" to optimize 3D.");
-    if (optimize2D || bsDeleted != null) {
-      if (asc.bsAtoms == null) {
-        asc.bsAtoms = new BS();
-        asc.bsAtoms.setBits(0, asc.ac);
-      }
-      if (bsDeleted != null)
-        asc.bsAtoms.andNot(bsDeleted);
-      if (optimize2D) {
-        set2D();
-        for (int i = asc.bondCount; --i >= 0;) {
-          Bond b = asc.bonds[i];
-          if (asc.atoms[b.atomIndex2].elementSymbol.equals("H")
-              && b.order != JmolAdapter.ORDER_STEREO_NEAR
-              && b.order != JmolAdapter.ORDER_STEREO_FAR
-              && asc.atoms[b.atomIndex1].elementSymbol.equals("C")
-              ) {
-            asc.bsAtoms.clear(b.atomIndex2);
-          } else if (asc.atoms[b.atomIndex1].elementSymbol.equals("H")
-              && asc.atoms[b.atomIndex2].elementSymbol.equals("C")
-              ) {
-            // includes backward C-H wedge/hash here, which makes no sense.
-            asc.bsAtoms.clear(b.atomIndex1);
-          }
-        }
-      }
+    if (is2D)
+      set2D();
+    if (bsDeleted != null) {
+        asc.getBSAtoms(-1).andNot(bsDeleted);
     }
     isTrajectory = false;
     finalizeReaderASCR();

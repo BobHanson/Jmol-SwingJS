@@ -646,9 +646,7 @@ public class TopoCifParser implements Parser {
     }
     if (net == null)
       return;
-    BS bsAtoms = reader.asc.bsAtoms;
-    if (bsAtoms == null)
-      bsAtoms = reader.asc.bsAtoms = BSUtil.newBitSet2(0, reader.asc.ac);
+    BS bsAtoms = reader.asc.getBSAtoms(-1);
     Atom[] atoms = reader.asc.atoms;
     for (int i = reader.asc.ac; --i >= 0;) {
       Atom a = atoms[i];
@@ -674,7 +672,7 @@ public class TopoCifParser implements Parser {
     // create the excluded atoms set -- atoms of bsAtoms that are linked 
     BS bsExclude = shiftBits(bsAtoms, bsConnected);
     // If we have a network, remove all unconnected atoms.
-    if (bsConnected.cardinality() > 0) {
+    if (!bsConnected.isEmpty()) {
       reader.asc.bsAtoms = bsAtoms;
       reader.asc.atomSetInfo.put("bsExcludeBonding", bsExclude);
     }
@@ -1541,7 +1539,7 @@ public class TopoCifParser implements Parser {
       // derived
       info.put("atomIndex1", Integer.valueOf(i0 + linkNodes[0].index));
       info.put("atomIndex2", Integer.valueOf(i0 + linkNodes[1].index));
-      if (bsAtoms != null && bsAtoms.cardinality() > 0)
+      if (bsAtoms != null && !bsAtoms.isEmpty())
         info.put("representedAtoms", bsAtoms);
       info.put("topoOrder", Integer.valueOf(topoOrder));
       info.put("order", Integer.valueOf(typeBondOrder));

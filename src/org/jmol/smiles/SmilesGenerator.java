@@ -421,7 +421,7 @@ public class SmilesGenerator {
       while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld, true,
           forceBrackets, false)) != null) {
       }
-    while (bsToDo.cardinality() > 0 || !htRings.isEmpty()) {
+    while (!bsToDo.isEmpty() || !htRings.isEmpty()) {
       Iterator<Object[]> e = htRings.values().iterator();
       if (e.hasNext()) {
         atom = atoms[((Integer) e.next()[1]).intValue()];

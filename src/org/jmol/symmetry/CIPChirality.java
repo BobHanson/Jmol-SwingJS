@@ -707,7 +707,7 @@ public class CIPChirality {
    */
   public void getChiralityForAtoms(CIPData data) {
 
-    if (data.bsAtoms.cardinality() == 0)
+    if (data.bsAtoms.isEmpty())
       return;
     
     this.data = data;

@@ -3306,7 +3306,7 @@ public class Viewer extends JmolViewer
       BS bsNew = new BS();
       mm.createModelSet(fullPathName, fileName, loadScript, atomSetCollection,
           bsNew, isAppend);
-      if (bsNew.cardinality() > 0) {
+      if (!bsNew.isEmpty()) {
         // is a 2D dataset, as from JME
         String jmolScript = (String) ms.getInfoM("jmolscript");
         if (ms.getMSInfoB("doMinimize")) {
@@ -8210,7 +8210,7 @@ public class Viewer extends JmolViewer
           bs.clear(imax);
         }
       }
-      if (isClick && bs.cardinality() > 0)
+      if (isClick && !bs.isEmpty())
         undoMoveActionClear(ringAtomIndex, AtomCollection.TAINT_COORD, true);
     }
     int n = bs.cardinality();
@@ -8232,7 +8232,7 @@ public class Viewer extends JmolViewer
     // Eval
     if (bsAtoms == null)
       bsAtoms = bsA();
-    if (bsAtoms.cardinality() == 0)
+    if (bsAtoms.isEmpty())
       return;
     ms.invertSelected(pt, plane, iAtom, bsAtoms);
     setStatusAtomMoved(true, bsAtoms);
@@ -9261,7 +9261,7 @@ public class Viewer extends JmolViewer
 
     BS bsMotionFixed = BSUtil
         .copy(bsFixed == null ? slm.getMotionFixedAtoms() : bsFixed);
-    boolean haveFixed = (bsMotionFixed.cardinality() > 0);
+    boolean haveFixed = (!bsMotionFixed.isEmpty());
     if (haveFixed)
       bsSelected.andNot(bsMotionFixed);
 
@@ -9322,7 +9322,9 @@ public class Viewer extends JmolViewer
       if (isQuick) {
         g.forceField = "MMFF";
         setHydrogens(bsSelected);
-        showString("Minimized by Jmol", false);
+        String ffUsed = getMinimizer(false).getForceFieldUsed();
+        if (ffUsed != null)
+          showString("Minimized by Jmol using " + ffUsed, false);
       }
     } catch (JmolAsyncException e) {
       if (eval != null)

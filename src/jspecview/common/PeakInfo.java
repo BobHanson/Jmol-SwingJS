@@ -55,10 +55,10 @@ public class PeakInfo {
     atomKey = "," + atoms + ",";
     title = PT.getQuotedAttribute(s, "title");
     _match = PT.getQuotedAttribute(s, "_match"); // PEAK command creates this
-    xMax = PT.parseFloat(PT.getQuotedAttribute(s, "xMax"));
-    xMin = PT.parseFloat(PT.getQuotedAttribute(s, "xMin"));
-    yMax = PT.parseFloat(PT.getQuotedAttribute(s, "yMax"));
-    yMin = PT.parseFloat(PT.getQuotedAttribute(s, "yMin"));
+    xMax = PT.parseDouble(PT.getQuotedAttribute(s, "xMax"));
+    xMin = PT.parseDouble(PT.getQuotedAttribute(s, "xMin"));
+    yMax = PT.parseDouble(PT.getQuotedAttribute(s, "yMax"));
+    yMin = PT.parseDouble(PT.getQuotedAttribute(s, "yMin"));
   }
 
   public boolean isClearAll() {

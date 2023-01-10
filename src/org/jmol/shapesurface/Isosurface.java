@@ -594,7 +594,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
         BS bsSets;
         if (value instanceof BS) {
           bsSets = ((BS) value);
-          if (bsSets.cardinality() == 0)
+          if (bsSets.isEmpty())
             bsSets = null;
         } else {
           bsSets = new BS();
@@ -1119,7 +1119,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       cmd += " ATOMINDEX " + imesh.atomIndex;
     appendCmd(sb, cmd);
     String id = myType + " ID " + PT.esc(imesh.thisID);
-    if (imesh.jvxlData.thisSet != null && imesh.jvxlData.thisSet.cardinality() > 0) {
+    if (imesh.jvxlData.thisSet != null && !imesh.jvxlData.thisSet.isEmpty()) {
       appendCmd(sb, id + (imesh.jvxlData.thisSet.cardinality() == 1 ? " set " + (imesh.jvxlData.thisSet.nextSetBit(0)+1)
       : " subset " + imesh.jvxlData.thisSet));
     }

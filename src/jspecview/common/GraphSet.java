@@ -2962,9 +2962,9 @@ class GraphSet implements XYScaleConverter {
 			String xMax = PT.getQuotedAttribute(peak, "xMax");
 			if (xMin == null || xMax == null)
 				return;
-			float x1 = PT.parseFloat(xMin);
-			float x2 = PT.parseFloat(xMax);
-			if (Float.isNaN(x1) || Float.isNaN(x2))
+			double x1 = PT.parseDouble(xMin);
+			double x2 = PT.parseDouble(xMax);
+			if (Double.isNaN(x1) || Double.isNaN(x2))
 				return;
 			pd.addHighlight(this, x1, x2, spec, 200, 140, 140, 100);
 			spec.setSelectedPeak(peakInfo);

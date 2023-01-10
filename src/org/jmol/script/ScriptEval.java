@@ -6547,7 +6547,7 @@ public class ScriptEval extends ScriptExpr {
         && (endDegrees == 0 || degreesPerSecond == 0)) {
       // need a token rotation
       endDegrees = 0.01f;
-      rate = (degreesPerSecond == PT.FLOAT_MIN_SAFE ? 0.01f
+      rate = (degreesPerSecond == PT.FLOAT_MIN_SAFE ? 0.01d
           : degreesPerSecond < 0 ?
           // -n means number of seconds, not degreesPerSecond
           -endDegrees / degreesPerSecond

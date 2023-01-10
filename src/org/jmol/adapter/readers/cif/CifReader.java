@@ -2030,17 +2030,16 @@ public class CifReader extends AtomSetCollectionReader {
       // Set bsAtoms to control which atoms and 
       // bonds are delivered by the iterators.
 
-      if (asc.bsAtoms == null)
-        asc.bsAtoms = new BS();
-      asc.bsAtoms.clearBits(firstAtom, ac);
-      asc.bsAtoms.or(bsMolecule);
-      asc.bsAtoms.andNot(bsExclude);
+      BS bs = asc.getBSAtoms(0);
+      bs.clearBits(firstAtom, ac);
+      bs.or(bsMolecule);
+      bs.andNot(bsExclude);
 
       // Set atom positions to be Cartesians and clear out unit cell
       // so that the model displays without it.
 
       for (int i = firstAtom; i < ac; i++) {
-        if (asc.bsAtoms.get(i))
+        if (bs.get(i))
           symmetry.toCartesian(atoms[i], true);
         else if (debugging)
           Logger.debug(molecularType + " removing " + i + " "

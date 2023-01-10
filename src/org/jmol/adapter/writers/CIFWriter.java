@@ -74,7 +74,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       }
       // pass message back to WRITE via vwr.errorMessageUntranslated
       vwr.setErrorMessage(null, " (" + bsOut.cardinality() + " atoms)");
-      if (bsOut.cardinality() == 0)
+      if (bsOut.isEmpty())
         return "";
 
       SB sb = new SB();
