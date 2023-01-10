@@ -1261,7 +1261,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (noHydrogens) {
       asc.setInfo("noHydrogen",
           Boolean.TRUE);
-    } else if (optimize2D) {
+      optimize2D = false;
+    } 
+    if (optimize2D) {
       asc.fix2Stereo();
       asc.setInfo("doMinimize",
           Boolean.TRUE);
