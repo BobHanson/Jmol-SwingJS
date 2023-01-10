@@ -260,7 +260,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
           defaultLoadScript = (value.length() > 0 ? value : null);
           break;
         case DEFAULTNMRNORMALIZATION:
-          nmrMaxY = PT.parseFloat(value);
+          nmrMaxY = (float) PT.parseDouble(value);
           break;
         case AUTOINTEGRATE:
           autoIntegrate = Parameters.isTrue(value);
@@ -348,7 +348,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
             isOK = false;
           break;
         case STACKOFFSETY:
-          execOverlayOffsetY(PT.parseInt("" + PT.parseFloat(value)));
+          execOverlayOffsetY(PT.parseInt("" + PT.parseDouble(value)));
           break;
         case TEST:
           si.siExecTest(value);
@@ -592,13 +592,13 @@ public class JSViewer implements PlatformViewer, BytePoster {
       return false;
     }
     if (!isClosed()) {
-      float x1 = PT.parseFloat(n > 1 ? tokens.get(1) : "");
-      float x2 = PT.parseFloat(n > 2 ? tokens.get(2) : "");
+      double x1 =(n > 1 ? PT.parseDouble(tokens.get(1)) : Double.NaN);
+      double x2 = (n > 2 ? PT.parseDouble(tokens.get(2)) : Double.NaN);
       int r = getRGB(n > 3 ? tokens.get(3) : "100");
       int g = getRGB(n > 4 ? tokens.get(4) : "100");
       int b = getRGB(n > 5 ? tokens.get(5) : "100");
       int a = getRGB(n > 6 ? tokens.get(6) : "100");
-      if (Float.isNaN(x1) || Float.isNaN(x2)) {
+      if (Double.isNaN(x1) || Double.isNaN(x2)) {
         pd().removeAllHighlights();
       } else {
         pd().removeHighlight(x1, x2);
@@ -613,8 +613,8 @@ public class JSViewer implements PlatformViewer, BytePoster {
   }
 
   private int getRGB(String s) {
-    float f = PT.parseFloat(s);
-    return (int) (Float.isNaN(f) ? -1 : f > 1 ? f : f * 255);
+    double f = PT.parseDouble(s);
+    return (int) (Double.isNaN(f) ? -1 : f > 1 ? f : f * 255);
   }
 
   private boolean execZoom(String value) {
@@ -1546,7 +1546,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
 
     int max = 0;
     for (int i = 0; i < panelNodes.size(); i++) {
-      float f = PT.parseFloat(panelNodes.get(i).id);
+      double f = PT.parseDouble(panelNodes.get(i).id);
       if (f >= max + 1)
         max = (int) Math.floor(f);
     }
@@ -1676,8 +1676,8 @@ public class JSViewer implements PlatformViewer, BytePoster {
       String soffset = selectedPanel.getInput(
           "Enter a vertical offset in percent for stacked plots", "Overlay", ""
               + recentStackPercent);
-      float f = PT.parseFloat(soffset);
-      if (Float.isNaN(f))
+      double f = PT.parseDouble(soffset);
+      if (Double.isNaN(f))
         return;
       offset = (int) f;
     }

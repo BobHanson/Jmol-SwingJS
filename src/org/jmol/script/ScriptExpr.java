@@ -2338,7 +2338,7 @@ abstract class ScriptExpr extends ScriptParam {
 
   private void setBitsetProperty(BS bs, int tok, int iValue, double fValue,
                                  T tokenValue) throws ScriptException {
-    if (chk || bs.cardinality() == 0)
+    if (chk || bs.isEmpty())
       return;
     String[] list = null;
     String sValue = null;

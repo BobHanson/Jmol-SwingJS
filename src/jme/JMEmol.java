@@ -703,7 +703,7 @@ public class JMEmol {
       // atoms
       for (int i = 1; i <= natoms; i++) {
         if (abg[i] > 0 && abg[i] < 7) {
-          g.setColor(JME.psColor[abg[i]]);
+          g.setColor(jme.psColor[abg[i]]);
           g.fillOval((int) (x[i] - cs / 2.), (int) (y[i] - cs / 2.), cs, cs);
         }
       }
@@ -716,7 +716,7 @@ public class JMEmol {
           continue;
         if (abg[atom1] != abg[atom2])
           continue;
-        g.setColor(JME.psColor[abg[atom1]]);
+        g.setColor(jme.psColor[abg[atom1]]);
         dx = x[atom2] - x[atom1];
         dy = y[atom2] - y[atom1];
         dd = Math.sqrt(dx * dx + dy * dy);
@@ -748,7 +748,7 @@ public class JMEmol {
 
       if (doColoring == 1) {
         if (abg[atom1] != 0 && abg[atom1] == abg[atom2])
-          g.setColor(JME.psColor[abg[atom1]]);
+          g.setColor(jme.psColor[abg[atom1]]);
       }
 
       if (stereob[i] == XUP || stereob[i] == XDOWN) // kvoli spicke vazby 
@@ -923,16 +923,16 @@ public class JMEmol {
       int ystart = (int) Math.round(y[i] + h / 2 - 1); // o 1 vyssie
       g.setColor(jme.canvasBg);
       if (doColoring == -1 && abg[i] != 0)
-        g.setColor(JME.psColor[abg[i]]);
+        g.setColor(jme.psColor[abg[i]]);
       g.fillRect(xstart - 1, ystart - h + 2, w + 1, h - 1);
       if (doColoring == 1) {
         // !!! nefarbi single carbons, co s tym ???
         if (abg[i] != 0)
-          g.setColor(JME.psColor[abg[i]]);
+          g.setColor(jme.psColor[abg[i]]);
         else
           g.setColor(Color.black);
       } else
-        g.setColor(JME.color[an[i]]);
+        g.setColor(jme.color[an[i]]);
       if (jme.bwMode)
         g.setColor(Color.black);
       g.drawString(z, xstart, ystart);
@@ -4890,7 +4890,7 @@ public class JMEmol {
 
   // ----------------------------------------------------------------------------
   String getAtomLabel(int i) {
-    String z = JME.zlabel[an[i]]; // aj C kvoli ramcekom 
+    String z = jme.zlabel[an[i]]; // aj C kvoli ramcekom 
     if (an[i] == JME.AN_X)
       z = label[i];
     return z;

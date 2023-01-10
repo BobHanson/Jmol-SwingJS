@@ -1617,7 +1617,7 @@ public class ScriptMathProcessor {
         bs = BSUtil.copy(bs);
         bs.and(bsRestrict);
       }
-      Object o = (bs.cardinality() == 0 ? null : eval.getBitsetProperty(bs, null, T.xyz, null,
+      Object o = (bs.isEmpty() ? null : eval.getBitsetProperty(bs, null, T.xyz, null,
           null, x.value, null, false, Integer.MAX_VALUE, false));
 //      if (o != null && !(o instanceof P3))
 //System.out.println("ScriptMathProc OHOH");

@@ -100,8 +100,8 @@ public class JME extends JPanel
   boolean showAtomNumbers = false; // only when starting with a molecule
   // scaling pri depict, nacitanie molekul (jme + mol)
 
-  static final Color color[] = new Color[23];
-  static final String zlabel[] = new String[23];
+  final Color color[] = new Color[23];
+  final String zlabel[] = new String[23];
 
   // files na nacitanie (2002.06)
   String smiles = null;
@@ -249,7 +249,7 @@ public class JME extends JPanel
   JMEmol mols[] = new JMEmol[99]; // when multipart, nealokuje !! 
   JMEmol smol; // save
   //static Color[] psColor;
-  static Color[] psColor = new Color[7];
+  Color[] psColor = new Color[7];
   List<JMEmol> molStack = new ArrayList<JMEmol>();
   int stackPointer = -1;
   boolean doTags = false; // compatibility with JMEPro
@@ -275,6 +275,8 @@ public class JME extends JPanel
       myFrame = frame;
       frame.add("Center", this);
       frame.addKeyListener(this);
+      addMouseListener(this);
+      addMouseMotionListener(this);
       application = true;
     }
     this.embedded = embedded;
@@ -287,7 +289,7 @@ public class JME extends JPanel
     psColor[4] = new Color(102, 255, 255);
     psColor[5] = new Color(51, 204, 255);
     psColor[6] = new Color(255, 153, 255);
-    init();
+    initialize();
     start();
   }
 
@@ -346,11 +348,8 @@ public class JME extends JPanel
   }
 
   // ----------------------------------------------------------------------------
-  private void init() {
+  private void initialize() {
     // tu su veci co suvisia s grafikou
-
-    addMouseListener(this);
-    addMouseMotionListener(this);
 
     dimension = getSize(); // potrebne pre centrovanie nacitanej molekuly
 
@@ -1170,7 +1169,7 @@ public class JME extends JPanel
   }
 
   // ----------------------------------------------------------------------------
-  static void atomicData() {
+  void atomicData() {
     for (int i = 0; i < 23; i++) {
       color[i] = Color.orange;
       zlabel[i] = "X";
@@ -2140,7 +2139,7 @@ public class JME extends JPanel
       mol.findBondCenters();
     }
     if (lastAction > 0) {
-      doMenu = false;
+      //doMenu = false;
       mol.valenceState();
       // nevola sa vzdy ked treba !!!!!
       mol.cleanPolarBonds(); // nie je to privela action ??? nie az pri canon
@@ -2178,7 +2177,7 @@ public class JME extends JPanel
       mol.move(movex, movey);
       lastAction = LA_MOVE;
     }
-    doMenu = false;
+    //doMenu = false;
     repaint();
     xold = x;
     yold = y;
@@ -2233,7 +2232,7 @@ public class JME extends JPanel
         mols[m].touchedAtom = 0;
         mols[m].touchedBond = 0;
       }
-      doMenu = false;
+      //doMenu = false;
       repaint();
     }
 
@@ -2537,8 +2536,6 @@ public class JME extends JPanel
 
   @Override
   public void keyTyped(KeyEvent e) {
-    System.out.println(e);
-
   }
 
   @Override
@@ -2548,15 +2545,10 @@ public class JME extends JPanel
 
   @Override
   public void keyReleased(KeyEvent e) {
-    System.out.println(e);
-    // TODO
-
   }
 
   @Override
   public void mouseClicked(MouseEvent e) {
-    // TODO
-
   }
 
   @Override
