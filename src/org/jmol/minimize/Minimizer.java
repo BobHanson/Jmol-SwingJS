@@ -739,4 +739,9 @@ public class Minimizer {
         ff.getPartialCharges(), null);
   }
 
+
+  public String getForceFieldUsed() {
+    return (pFF == null ? null : pFF.name);
+  }
+
 }

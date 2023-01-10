@@ -286,7 +286,7 @@ public class ForceFieldMMFF extends ForceField {
 
   protected Map<Object, Object> getParameters(boolean isQuick) throws JmolAsyncException {
     getAtomTypes();
-    String resourceName = (isQuick ? "mmff94.par.txt" : "mmff94_2d.par.txt");
+    String resourceName = (isQuick ? "mmff94_2d.par.txt" : "mmff94.par.txt");
 
     Hashtable<Object, Object> data = new Hashtable<Object, Object>();
     if (Logger.debugging)

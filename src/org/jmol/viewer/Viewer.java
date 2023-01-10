@@ -9322,7 +9322,9 @@ public class Viewer extends JmolViewer
       if (isQuick) {
         g.forceField = "MMFF";
         setHydrogens(bsSelected);
-        showString("Minimized by Jmol", false);
+        String ffUsed = getMinimizer(false).getForceFieldUsed();
+        if (ffUsed != null)
+          showString("Minimized by Jmol using " + ffUsed, false);
       }
     } catch (JmolAsyncException e) {
       if (eval != null)
