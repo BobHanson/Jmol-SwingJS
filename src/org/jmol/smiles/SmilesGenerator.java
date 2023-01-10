@@ -1269,17 +1269,20 @@ public class SmilesGenerator {
   }
 
   private String checkStereoPairs(SimpleNode atom, int atomIndex,
-                                  SimpleNode[] stereo, int stereoFlag, boolean isFirst) {
+                                  SimpleNode[] stereo, int stereoFlag,
+                                  boolean isFirst) {
     if (stereoFlag == 10 || stereoFlag < (is2D ? 3 : 4))
       return "";
-    if (explicitHydrogen == 0 && atomIndex >= 0 && stereoFlag == 4
-        && (atom.getElementNumber()) == 6) {
-      // do a quick check for two of the same group for tetrahedral carbon only
-      String s = "";
-      for (int i = 0; i < 4; i++) {
-        if ((s = addStereoCheck(0, atomIndex, stereo[i], s,
-            BSUtil.newAndSetBit(atomIndex))) == null) {
-          return "";
+    if (explicitHydrogen == 0 && atomIndex >= 0 && stereoFlag == 4) {
+      if (atom.getElementNumber() <= 17) {
+        // anything up to Cl. 
+        // do a quick check for two of the same group for tetrahedral sulfurcarbon only
+        String s = "";
+        for (int i = 0; i < 4; i++) {
+          if ((s = addStereoCheck(0, atomIndex, stereo[i], s,
+              BSUtil.newAndSetBit(atomIndex))) == null) {
+            return "";
+          }
         }
       }
     }
