@@ -953,7 +953,7 @@ public class PT {
    * @param strFormat   .... %width.precisionKEY....
    * @param key      any string to match
    * @param strT     replacement string or null
-   * @param floatT   replacement float or Float.NaN
+   * @param floatT   replacement double or Double.NaN
    * @param doubleT  replacement double or Double.NaN -- for exponential
    * @param doOne    mimic sprintf    
    * @return         formatted string
@@ -1068,7 +1068,7 @@ public class PT {
    * @param list
    *        a listing of what sort of data will be found in Object[] values, in
    *        order: s string, f float, i integer, d double, p point3f, q
-   *        quaternion/point4f, S String[], F float[], I int[], and D double[]
+   *        quaternion/point4f, S String[], F double[], I int[], and D double[]
    * @param values
    *        Object[] containing above types
    * @return formatted string
@@ -1088,15 +1088,15 @@ public class PT {
             strFormat = formatString(strFormat, "s", (String) values[o],
                 Double.NaN, Double.NaN, true);
             break;
-          case 'f':
-            strFormat = formatString(strFormat, "f", null,
-                ((Number) values[o]).doubleValue(), Double.NaN, true);
-            break;
           case 'i':
             strFormat = formatString(strFormat, "d", "" + values[o], Double.NaN,
                 Double.NaN, true);
             strFormat = formatString(strFormat, "i", "" + values[o], Double.NaN,
                 Double.NaN, true);
+            break;
+          case 'f':
+            strFormat = formatString(strFormat, "f", null,
+                ((Number) values[o]).doubleValue(), Double.NaN, true);
             break;
           case 'd':
             strFormat = formatString(strFormat, "e", null, Double.NaN,
@@ -1423,7 +1423,6 @@ public class PT {
   }
 
   public static double parseDoubleStrict(String str) {
-    // checks trailing characters and does not allow "1E35" to be float
     int cch = str.length();
     if (cch == 0)
       return Double.NaN;
