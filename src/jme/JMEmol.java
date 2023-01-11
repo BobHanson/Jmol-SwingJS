@@ -341,67 +341,100 @@ public class JMEmol {
     //System.out.println("ab"+line);
     int natomsx = Integer.valueOf(line.substring(0, 3).trim()).intValue();
     int nbondsx = Integer.valueOf(line.substring(3, 6).trim()).intValue();
+    int[] mapToAtom = new int[natomsx + 1];
+    String[][] atomInfo = new String[natomsx + 1][];
     //System.out.println("atoms bonds "+natomsx + " "+nbondsx);
     for (int i = 1; i <= natomsx; i++) {
-      createAtom();
       line = nextData(st, separator);
-      //System.out.println("atomline"+line);
-      x[i] = Double.valueOf(line.substring(0, 10).trim()).doubleValue();
-      y[i] = -Double.valueOf(line.substring(10, 20).trim()).doubleValue();
-      // symbol 32-34 dolava centrovany (v String 31-33)
       int endsymbol = 34;
       if (line.length() < 34)
         endsymbol = line.length();
       String symbol = line.substring(31, endsymbol).trim();
-      //String q = line.substring(36,39);
-      setAtom(i, symbol); // sets an[i]
-
-      // atom mapping - 61 - 63 
-      if (line.length() >= 62) {
-        String s = line.substring(60, 63).trim();
-        if (s.length() > 0) {
-          // 2007.03 fix not to put there 0
-          int mark = Integer.valueOf(s).intValue();
-          if (mark > 0) {
-            touchedAtom = i;
-            jme.currentMark = mark;
-            mark();
-            touchedAtom = 0; // not to frame atom
-          }
-        }
-      }
-      //System.out.println("atom "+i+" "+an[i]+" "+x[i]+" "+y[i]);
+      String x = line.substring(0, 10).trim();
+      String y = line.substring(10, 20).trim();
+      String s = (line.length() >= 63 ? line.substring(60, 63).trim() : "");
+      atomInfo[i] = new String[] { symbol, x, y, (s.length() == 0 ? null : s) };
+      mapToAtom[i] = i;
     }
-    for (int i = 1; i <= nbondsx; i++) {
-      createBond();
+    for (int pt = 0, i = 1; i <= nbondsx; i++) {
       line = nextData(st, separator);
       //System.out.println("bond"+line);
-      va[i] = Integer.valueOf(line.substring(0, 3).trim()).intValue();
-      vb[i] = Integer.valueOf(line.substring(3, 6).trim()).intValue();
-      int nasvx = Integer.valueOf(line.substring(6, 9).trim()).intValue();
+      int a = Integer.valueOf(line.substring(0, 3).trim()).intValue();
+      int b = Integer.valueOf(line.substring(3, 6).trim()).intValue();
+      int order = Integer.valueOf(line.substring(6, 9).trim()).intValue();
+      int stereo = (line.length() > 11 ? Integer.valueOf(line.substring(9, 12).trim()).intValue() : 0);
+      if (!jme.loadHydrogensOnCarbon && stereo == 0) {
+        String labela = atomInfo[a][0];
+        String labelb = atomInfo[b][0];
+        boolean isHa = ("H".equals(labela) && "C".equals(labelb));
+        boolean isHb = ("C".equals(labela) && "H".equals(labelb));
+        if (isHa) {
+          atomInfo[a] = null;
+          continue;
+        }
+        if (isHb) {
+          atomInfo[b] = null;
+          continue;
+        }
+      }
+      pt++;
+      createBond();
+      va[pt] = a;
+      vb[pt] = b;
+      int nasvx = order;
       if (nasvx == 1)
-        nasv[i] = SINGLE;
+        nasv[pt] = SINGLE;
       else if (nasvx == 2)
-        nasv[i] = DOUBLE;
+        nasv[pt] = DOUBLE;
       else if (nasvx == 3)
-        nasv[i] = TRIPLE;
+        nasv[pt] = TRIPLE;
       // aromatic ???
       else
-        nasv[i] = QUERY;
-      int stereo = 0;
-      if (line.length() > 11)
-        stereo = Integer.valueOf(line.substring(9, 12).trim()).intValue();
+        nasv[pt] = QUERY;
       // ??? treba s nasvx
       if (nasvx == SINGLE && stereo == 1) {
-        nasv[i] = SINGLE;
-        stereob[i] = UP;
+        nasv[pt] = SINGLE;
+        stereob[pt] = UP;
       }
       if (nasvx == SINGLE && stereo == 6) {
-        nasv[i] = SINGLE;
-        stereob[i] = DOWN;
+        nasv[pt] = SINGLE;
+        stereob[pt] = DOWN;
       }
-      //System.out.println("bons "+i+" "+va[i]+" "+vb[i]+" "+nasv[i]);
+      //System.out.println("bons "+i+" "+va[pt]+" "+vb[pt]+" "+nasv[pt]);
     }
+
+    for (int i = 1; i <= natomsx; i++) {
+      if (atomInfo[i] == null) {
+        continue;
+      }
+      String[] sxym = atomInfo[i];
+      createAtom();
+      int pt = mapToAtom[i] = natoms;
+      //System.out.println("atomline"+line);
+      x[pt] = Double.valueOf(sxym[1]).doubleValue();
+      y[pt] = -Double.valueOf(sxym[2]).doubleValue();
+      // symbol 32-34 dolava centrovany (v String 31-33)
+      //String q = line.substring(36,39);
+      setAtom(pt, sxym[0]);
+      String s = sxym[3];
+      // atom mapping - 61 - 63 
+      if (s != null) {
+        // 2007.03 fix not to put there 0
+        int mark = Integer.valueOf(s).intValue();
+        if (mark > 0) {
+          touchedAtom = pt;
+          jme.currentMark = mark;
+          mark();
+          touchedAtom = 0; // not to frame atom
+        }
+      }
+    }
+
+    for (int i = 1; i <= nbonds; i++) {
+      va[i] = mapToAtom[va[i]];
+      vb[i] = mapToAtom[vb[i]];
+    }
+
     fillFields();
     scaling();
     center(); // calls findBondCenters();

@@ -184,6 +184,7 @@ public class GuiMap {
     labels.put("transform", GT.$("Tr&ansform..."));
     labels.put("definecenter", GT.$("Define &Center"));
     labels.put("tools", GT.$("&Tools"));
+    labels.put("twoDEditor", GT.$("2-D &Editor"));
     labels.put("gauss", GT.$("&Gaussian..."));
     labels.put("viewMeasurementTable", GT.$("&Measurements") + "...");
     labels.put("distanceUnitsMenu", GT.$("Distance &Units"));
@@ -284,6 +285,8 @@ public class GuiMap {
   }
 
   public JMenuItem newJMenuItem(String key) {
+    if (key.indexOf("Editor") >= 0)
+      System.out.println("???? GUIMAP" + key);
     return new KeyJMenuItem(key, getLabel(key), map);
   }
 

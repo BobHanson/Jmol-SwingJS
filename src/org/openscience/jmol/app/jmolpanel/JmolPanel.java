@@ -152,6 +152,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected StatusListener myStatusListener;
   protected SurfaceTool surfaceTool;
   protected MeasurementTable measurementTable;
+  protected JmolJME jmolJME;
 
   protected Map<String, Action> commands;
   protected Map<String, JMenuItem> menuItems;
@@ -159,6 +160,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   // --- action implementations -----------------------------------
 
+  protected TwoDEditorAction twoDEditorAction = new TwoDEditorAction();
   protected ExportAction exportAction = new ExportAction();
   protected PovrayAction povrayAction = new PovrayAction();
   protected ToWebAction toWebAction = new ToWebAction();
@@ -203,6 +205,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected static final String openpdbAction = "openpdb";
   protected static final String openmolAction = "openmol";
   protected static final String newAction = "new";
+  protected static final String twoDEditorActionProperty = "twoDEditor";
   protected static final String exportActionProperty = "export";
   protected static final String closeAction = "close";
   protected static final String exitAction = "exit";
@@ -300,7 +303,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         (addAtomChooser ? new AtomSetChooserAction() : null),
         viewMeasurementTableAction,
         (allowGaussian ? new GaussianAction() : null), /*new NBOAction(),*/
-        new ResizeAction(), surfaceToolAction };
+        new ResizeAction(), surfaceToolAction, twoDEditorAction };
 
     List<Action> actions = new ArrayList<Action>();
     actions.addAll(Arrays.asList(defaultActions));
@@ -636,6 +639,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   void dispose(JFrame f, boolean saveSize) {
     // Save window positions and status in the history
+    if (jmolJME != null)
+      jmolJME.dispose();
     if (webExport != null)
       WebExport.cleanUp();
     if (saveSize)
@@ -1449,6 +1454,27 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       System.exit(0);
     }
   }
+
+  public class TwoDEditorAction extends AbstractAction {
+
+    public TwoDEditorAction() {
+      super(twoDEditorActionProperty);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      if (jmolJME == null) {
+        jmolJME = (JmolJME) Interface.getInterface(
+            "org.openscience.jmol.app.jmolpanel.JmolJME", vwr,
+            "2dEditorAction");
+        jmolJME.setViewer(null, vwr);
+      }
+      jmolJME.setFrameVisible(true);
+      jmolJME.fromJmol();
+    }
+
+  }
+
 
   final static String[] imageChoices = { "JPEG", "PNG", "GIF", "PPM", "PDF" };
   final static String[] imageExtensions = { "jpg", "png", "gif", "ppm", "pdf" };

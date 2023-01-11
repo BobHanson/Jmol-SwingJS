@@ -1261,7 +1261,7 @@ public class PropertyManager implements JmolPropertyManager {
     ModelSet ms = vwr.ms;
     BS bsModels = vwr.ms.getModelBS(bs, true);
     int modelIndex = bsModels.nextSetBit(0);
-    boolean is2D = "2D".equals(vwr.ms.am[modelIndex].auxiliaryInfo.get("dimension"));
+    boolean is2D = "2D".equals(vwr.getModelInfo("dimension"));
     Atom[] atoms = ms.at;
     BS bsAtoms = BSUtil.copy(bs);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))

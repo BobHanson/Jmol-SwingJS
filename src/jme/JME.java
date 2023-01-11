@@ -35,6 +35,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
+import org.jmol.viewer.Viewer;
+
 import javajs.util.Rdr;
 
 // ----------------------------------------------------------------------------
@@ -42,7 +44,7 @@ import javajs.util.Rdr;
 public class JME extends JPanel
     implements MouseListener, KeyListener, MouseMotionListener {
 
-  private JFrame myFrame;
+  protected JFrame myFrame;
 
   Point aboutBoxPoint = new Point(500, 10);
   Point smilesBoxPoint = new Point(200, 50);
@@ -52,7 +54,7 @@ public class JME extends JPanel
   // editor state
   int action;
   int active_an;
-  boolean application = false;
+  protected boolean application = false;
   //static String separator = System.getProperties().getProperty("line.separator");
   static String separator = "\n";
 
@@ -67,37 +69,38 @@ public class JME extends JPanel
   FontMetrics fontMet, fontBoldMet, fontSmallMet;
   int fontSize; // use in depict
   // tieto parametere sa naplnaju v init (aby sa vynulovali pri starte)
-  boolean bwMode = false;
-  boolean runsmi = false; // traba to, alebo sa automaticky setne v param smi ??
+  protected boolean bwMode = false;
+  protected boolean runsmi = false; // traba to, alebo sa automaticky setne v param smi ??
   String depictcgi = null;
   String depictservlet = null;
 
-  boolean canonize = true;
-  boolean stereo = true;
-  boolean multipart = false; // vzdy aj pri reaction
-  boolean xButton = true;
-  boolean rButton = false;
-  boolean showHydrogens = true;
-  boolean query = false;
-  boolean reaction = false;
-  boolean autoez = false;
-  boolean writesmi = false;
-  boolean writemi = false;
-  boolean writemol = false;
-  boolean number = false;
-  boolean star = false;
-  boolean autonumber = false;
-  boolean jmeh = false;
-  boolean depict = false;
-  boolean depictBorder = false;
-  boolean keepHydrogens = true;
+  protected boolean canonize = true;
+  protected boolean stereo = true;
+  protected boolean multipart = false; // vzdy aj pri reaction
+  protected boolean xButton = true;
+  protected boolean rButton = false;
+  protected boolean showHydrogens = true;
+  protected boolean loadHydrogensOnCarbon = false;
+  protected boolean query = false;
+  protected boolean reaction = false;
+  protected boolean autoez = false;
+  protected boolean writesmi = false;
+  protected boolean writemi = false;
+  protected boolean writemol = false;
+  protected boolean number = false;
+  protected boolean star = false;
+  protected boolean autonumber = false;
+  protected boolean jmeh = false;
+  protected boolean depict = false;
+  protected boolean depictBorder = false;
+  protected boolean keepHydrogens = true;
   Color canvasBg = Color.white;
   String atomColors = null; // atom coloring
   String atomBgColors = null; // background coloring
   double depictScale = 1.; // ked scaling viacero mols, alebo reaction
-  boolean nocenter = false;
-  boolean polarnitro = false;
-  boolean showAtomNumbers = false; // only when starting with a molecule
+  protected boolean nocenter = false;
+  protected boolean polarnitro = false;
+  protected boolean showAtomNumbers = false; // only when starting with a molecule
   // scaling pri depict, nacitanie molekul (jme + mol)
 
   final Color color[] = new Color[23];
@@ -113,8 +116,8 @@ public class JME extends JPanel
   Image topMenu, leftMenu, infoArea, molecularArea;
 
   // pre repaint()
-  boolean doMenu = true; // ci draw menu pri repaint()
-  boolean movePossible; // not to move when dragg in menu
+  protected boolean doMenu = true; // ci draw menu pri repaint()
+  protected boolean movePossible; // not to move when dragg in menu
 
   // actions 2 riadky s ACTIONX a atomy s ACTIONA
   static final int ACTIONX = 12;
@@ -225,10 +228,10 @@ public class JME extends JPanel
   static final int LA_GROUP = 3;
   static final int LA_MOVE = 5;
   static final int LA_FAILED = 9; // failed to create bond or ring
-  boolean newMolecule = false; // enable to start new molecule
+  protected boolean newMolecule = false; // enable to start new molecule
   int xold, yold; // position of mousePressed, updated in mouseDragged
-  boolean afterClear = false; // info pre undo
-  boolean mouseShift = false; // kvoli numbering
+  protected boolean afterClear = false; // info pre undo
+  protected boolean mouseShift = false; // kvoli numbering
 
   MultiBox smilesBox = null, atomxBox = null, aboutBox = null;
   QueryBox queryBox;
@@ -237,7 +240,7 @@ public class JME extends JPanel
   nonaromatic, ring, nonring;
   JButton anyBond, aromaticBond, ringBond, nonringBond, sdBond;
   JComboBox<String> choiced, choiceh;
-  boolean dyMode = true;
+  protected boolean dyMode = true;
   String molText = null;
   //JMEmol mol = new JMEmol(this); // sposobovalo problemy v NS
   JMEmol mol;
@@ -252,32 +255,31 @@ public class JME extends JPanel
   Color[] psColor = new Color[7];
   List<JMEmol> molStack = new ArrayList<JMEmol>();
   int stackPointer = -1;
-  boolean doTags = false; // compatibility with JMEPro
-  boolean webme = false; // compatibility with JMEPro
+  protected boolean doTags = false; // compatibility with JMEPro
+  protected boolean webme = false; // compatibility with JMEPro
   public int[] apointx, apointy, bpointx, bpointy; // coordinates for webme
-  boolean revertStereo = false; // down stereo bond (only 1 action)
-  boolean relativeStereo = false;
-  boolean allHs = false;
+  protected boolean revertStereo = false; // down stereo bond (only 1 action)
+  protected boolean relativeStereo = false;
+  protected boolean allHs = false;
   // for key marking 2009.04
-  boolean markUsed = true;
+  protected boolean markUsed = true;
   int currentMark = 1;
 
   // images
   Image infoImage, clearImage, deleteImage, deleterImage, chargeImage;
   Image templatesImage, rtemplatesImage, undoImage, endImage, smiImage,
       smitImage, smartsImage, stereoImage, stereoxImage;
-  private boolean embedded;
+  protected boolean embedded;
 
   // ----------------------------------------------------------------------------
 
+  public JME() {
+   this(null, true); 
+  }
+  
   public JME(JFrame frame, boolean embedded) {
     if (frame != null) {
-      myFrame = frame;
-      frame.add("Center", this);
-      frame.addKeyListener(this);
-      addMouseListener(this);
-      addMouseMotionListener(this);
-      application = true;
+      setFrame(frame);
     }
     this.embedded = embedded;
 
@@ -293,14 +295,23 @@ public class JME extends JPanel
     start();
   }
 
+  public void setFrame(JFrame frame) {
+    myFrame = frame;
+    frame.add("Center", this);
+    frame.addKeyListener(this);
+    addMouseListener(this);
+    addMouseMotionListener(this);
+    application = true;
+  }
+
   // ----------------------------------------------------------------------------
   public static void main(String args[]) {
-    JFrame frame = new JFrame("Jmol/JME 2D Molecular Editor");
+    JFrame frame = new JFrame("JME 2D Molecular Editor");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     newJME(args, frame, false);
   }
 
-  private static JME newJME(String[] args, JFrame frame, boolean embedded) {
+  protected static JME newJME(String[] args, JFrame frame, boolean embedded) {
     JME jme = new JME(frame, embedded);
     //frame.setSize(24*18,24*16); // urcuje dimensions pre aplikaciu
     int w = 24 * 18;
@@ -348,7 +359,7 @@ public class JME extends JPanel
   }
 
   // ----------------------------------------------------------------------------
-  private void initialize() {
+  protected void initialize() {
     // tu su veci co suvisia s grafikou
 
     dimension = getSize(); // potrebne pre centrovanie nacitanej molekuly
@@ -429,7 +440,7 @@ public class JME extends JPanel
   }
 
   // ----------------------------------------------------------------------------
-  //  private Color parseHexColor(String hex) {
+  //  protected Color parseHexColor(String hex) {
   //    Color c = Color.white;
   //    try {
   //      if (!hex.startsWith("#"))
@@ -1929,7 +1940,7 @@ public class JME extends JPanel
     return status;
   }
 
-  private boolean doAction() {
+  protected boolean doAction() {
     if (mol.touchedAtom > 0) {
       // atom clicked
       doMouseAtomAction();
@@ -1944,7 +1955,7 @@ public class JME extends JPanel
     return true;
   }
 
-  private void doNewMoleculeAction(int x, int y) {
+  protected void doNewMoleculeAction(int x, int y) {
     nmols++;
     actualMolecule = nmols;
     mols[nmols] = new JMEmol(this);
@@ -2007,7 +2018,7 @@ public class JME extends JPanel
     }
   }
 
-  private void doMouseBondAction() {
+  protected void doMouseBondAction() {
     if (action == ACTION_DELETE) {
       mol.save();
       mol.deleteBond(mol.touchedBond);
@@ -2054,7 +2065,7 @@ public class JME extends JPanel
     }
   }
 
-  private boolean doMouseAtomAction() {
+  protected boolean doMouseAtomAction() {
     if (action == ACTION_DELETE) {
       mol.save();
       mol.deleteAtom(mol.touchedAtom);
@@ -2197,6 +2208,7 @@ public class JME extends JPanel
     x -= sd;
     y -= sd * 2;
 
+    myFrame.requestFocusInWindow();
     boolean repaintFlag = false;
     int newActual = 0;
     // necekuje, ci sa nedotyka 2 molekul naraz, ale to by bolo asi zbytocne
@@ -2494,7 +2506,7 @@ public class JME extends JPanel
   // --------------------------------------------------------------------------
   // called when number key clicked and marking active
   // updates actual mark which will be used for marking
-  private void updateMark(int n) {
+  protected void updateMark(int n) {
     // need to know when new number and when combination of 2 presses i.e. 12
     if (autonumber) {
       if (n == 0) {
@@ -2956,7 +2968,7 @@ class QueryBox extends JFrame {
   }
 
   // ----------------------------------------------------------------------------
-  private void resetAll() {
+  protected void resetAll() {
     resetAtomList();
     resetAtomType();
     jme.choiceh.setSelectedIndex(0);
@@ -2971,7 +2983,7 @@ class QueryBox extends JFrame {
   }
 
   // ----------------------------------------------------------------------------
-  private void resetAtomList() {
+  protected void resetAtomList() {
     jme.c.setBackground(bgc);
     jme.n.setBackground(bgc);
     jme.o.setBackground(bgc);
@@ -2984,14 +2996,14 @@ class QueryBox extends JFrame {
   }
 
   // ----------------------------------------------------------------------------
-  private void resetAtomType() {
+  protected void resetAtomType() {
     jme.any.setBackground(bgc);
     jme.anyec.setBackground(bgc);
     jme.halogen.setBackground(bgc);
   }
 
   // ----------------------------------------------------------------------------
-  private void resetBondType() {
+  protected void resetBondType() {
     jme.anyBond.setBackground(bgc);
     jme.aromaticBond.setBackground(bgc);
     //sdBond.setBackground(bgc);
@@ -3001,7 +3013,7 @@ class QueryBox extends JFrame {
   }
 
   // ----------------------------------------------------------------------------
-  private void changeColor(JButton b) {
+  protected void changeColor(JButton b) {
     if (b.getBackground() == bgc)
       b.setBackground(Color.orange);
     else
@@ -3009,7 +3021,7 @@ class QueryBox extends JFrame {
   }
 
   // ----------------------------------------------------------------------------
-  private void doSmarts() {
+  protected void doSmarts() {
     String smarts = "";
     boolean showaA = false;
 
