@@ -35,8 +35,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import org.jmol.viewer.Viewer;
-
 import javajs.util.Rdr;
 
 // ----------------------------------------------------------------------------
@@ -44,7 +42,7 @@ import javajs.util.Rdr;
 public class JME extends JPanel
     implements MouseListener, KeyListener, MouseMotionListener {
 
-  protected JFrame myFrame;
+  public JFrame myFrame;
 
   Point aboutBoxPoint = new Point(500, 10);
   Point smilesBoxPoint = new Point(200, 50);
@@ -56,10 +54,10 @@ public class JME extends JPanel
   int active_an;
   protected boolean application = false;
   //static String separator = System.getProperties().getProperty("line.separator");
-  static String separator = "\n";
+  final static String separator = "\n";
 
   // customization
-  static final String version = "2013.01";
+  static final String version = "2023.01";
   String infoText = "JME Molecular Editor by Peter Ertl, Novartis";
   int sd = 24;
   int arrowWidth = 24 * 2;
@@ -243,7 +241,7 @@ public class JME extends JPanel
   protected boolean dyMode = true;
   String molText = null;
   //JMEmol mol = new JMEmol(this); // sposobovalo problemy v NS
-  JMEmol mol;
+  protected JMEmol mol;
   int nmols = 0;
   int actualMolecule = 0;
   int saved = 0; // ktora molekula je saved pri multipart
@@ -982,6 +980,8 @@ public class JME extends JPanel
       rButton = false;
     else if (parameters.indexOf("rbutton") > -1)
       rButton = true;
+    if (parameters.indexOf("loadhydrogensoncarbon") > -1) // BH
+      loadHydrogensOnCarbon = true; // BH
     if (parameters.indexOf("nohydrogens") > -1)
       showHydrogens = false;
     else if (parameters.indexOf("hydrogens") > -1)

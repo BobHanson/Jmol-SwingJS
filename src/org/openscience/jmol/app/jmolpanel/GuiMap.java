@@ -285,8 +285,6 @@ public class GuiMap {
   }
 
   public JMenuItem newJMenuItem(String key) {
-    if (key.indexOf("Editor") >= 0)
-      System.out.println("???? GUIMAP" + key);
     return new KeyJMenuItem(key, getLabel(key), map);
   }
 

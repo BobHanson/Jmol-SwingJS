@@ -26,19 +26,23 @@ package org.openscience.jmol.app.jmolpanel;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ContainerEvent;
-import java.awt.event.ContainerListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
+import org.jmol.adapter.smarter.AtomSetCollection;
+import org.jmol.adapter.writers.CDXMLWriter;
+import org.jmol.api.JmolAdapter;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.Rdr;
 import jme.JME;
 
 public class JmolJME extends JME implements WindowListener {
@@ -65,6 +69,42 @@ public class JmolJME extends JME implements WindowListener {
         }
         
       });
+      p.add(b = new JButton("replace 3D model"));
+      b.addActionListener(new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          to3D(false);
+        }
+        
+      });
+      p.add(b = new JButton("add 3D model"));
+      b.addActionListener(new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          to3D(true);
+        }
+        
+      });
+      p.add(b = new JButton("to MOL"));
+      b.addActionListener(new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          toMOL();
+        }
+        
+      });
+      p.add(b = new JButton("to CDXML"));
+      b.addActionListener(new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          toCDXML();
+        }
+        
+      });
       p.add(b = new JButton("close"));
       b.addActionListener(new ActionListener() {
 
@@ -74,29 +114,12 @@ public class JmolJME extends JME implements WindowListener {
         }
         
       });
-      p.add(b = new JButton("replace model"));
-      b.addActionListener(new ActionListener() {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          toJmol(false);
-        }
-        
-      });
-      p.add(b = new JButton("new model"));
-      b.addActionListener(new ActionListener() {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          toJmol(true);
-        }
-        
-      });
       frame.add("South", p);
       frame.setBounds(300, 300, 600, 400);
       frame.addWindowListener(this);
       setFrame(frame);
     }
+    frame.setResizable(true);
     frame.setVisible(true);
   }
 
@@ -114,8 +137,7 @@ public class JmolJME extends JME implements WindowListener {
 
   @Override
   public void windowClosed(WindowEvent e) {
-    // TODO
-    
+    myFrame.setVisible(false);
   }
 
   @Override
@@ -184,13 +206,35 @@ public class JmolJME extends JME implements WindowListener {
     JOptionPane.showMessageDialog(this, msg, "Sorry, can't do that.", JOptionPane.INFORMATION_MESSAGE);
   }
 
-  public void toJmol(boolean isNew) {
+  public void to3D(boolean isAppend) {
     String mol = getMolFromSmiles(smiles(), true);
-    vwr.loadInline(mol);
+    vwr.openStringInlineParamsAppend(mol, null, isAppend);
   }
 
   public void setFrameVisible(boolean b) {
     myFrame.setVisible(b);
   }
+
+  protected void toMOL() {
+    String mol = molFile();
+    toFile("?jmol.mol", mol);
+  }
+
+  private void toFile(final String name, final String mol) {
+    new Thread(new Runnable() {
+
+      @Override
+      public void run() {
+        vwr.writeTextFile(name, mol);
+      }
+    }).start();
+  }
+
+  protected void toCDXML() {
+    String mol = molFile();
+    String xml = CDXMLWriter.fromString(vwr, "Mol", mol);
+    toFile("?jmol.cdxml", xml);
+  }
+
 
 }

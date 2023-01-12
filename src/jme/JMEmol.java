@@ -11,13 +11,15 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
+import org.jmol.viewer.PropertyManager;
+
 // --------------------------------------------------------------------------
 public class JMEmol {
 
   JME jme; // parent
   // --- vlastne data pre molekulu
-  int natoms = 0;
-  int nbonds = 0;
+  public int natoms = 0;
+  public int nbonds = 0;
   // atom and bond storage starting with value of 20
   int an[] = new int[20];
   int q[] = new int[20];
@@ -57,7 +59,7 @@ public class JMEmol {
   static final int SINGLE = 1, DOUBLE = 2, TRIPLE = 3, AROMATIC = 5, QUERY = 9;
   static final int QB_ANY = 11, QB_AROMATIC = 12, QB_RING = 13, QB_NONRING = 14;
   private static final int UP = 1, DOWN = 2, XUP = 3, XDOWN = 4, EZ = 10;
-  static final int RBOND = 25;
+  public static final int RBOND = 25;
   private static final int TOUCH_LIMIT = 50;
   private static final int MAX_BONDS_ON_ATOM = 6;
   static boolean TESTDRAW = false;
@@ -65,6 +67,9 @@ public class JMEmol {
   // ----------------------------------------------------------------------------
   JMEmol(JME jme) {
     this.jme = jme;
+  }
+
+  private void init() {
     natoms = 0;
     nbonds = 0;
     nmarked = 0;
@@ -323,28 +328,41 @@ public class JMEmol {
   }
 
   // ----------------------------------------------------------------------------
-  JMEmol(JME jme, String molFile) {
+  JMEmol(JME jme, String molFileData) {
     // MDL mol file
     this(jme);
+    if (molFileData != null)
+      processMolFileData(molFileData);
+  }
+  
+  protected void processMolFileData(String molFileData) {
+    init(); // in case this did not come from constructor
     String line = "";
     //System.err.println("molfile in >>>\n"+molFile);
     // osetrene zacatie s null line
     //char c = molFile.charAt(0);
-    String separator = findSeparator(molFile);
-    StringTokenizer st = new StringTokenizer(molFile, separator, true);
+    String separator = findSeparator(molFileData);
+    StringTokenizer st = new StringTokenizer(molFileData, separator, true);
     //System.out.println(st.countTokens());
 
     for (int i = 1; i <= 4; i++) {
       line = nextData(st, separator);
       //System.out.println(i+" "+line);
     }
-    //System.out.println("ab"+line);
+    // BH 2023.01.09 modification to first cache all the atom information
+    // so that we can be selective in which atoms to create
+    // loadHydrogensOnCarbon == false:
+    // - H on heteroatoms are all accepted
+    // - H on carbon atoms that are in bonds that are wedges or hashes are accepted
+    // - all other H atoms are removed.
+    
     int natomsx = Integer.valueOf(line.substring(0, 3).trim()).intValue();
     int nbondsx = Integer.valueOf(line.substring(3, 6).trim()).intValue();
     int[] mapToAtom = new int[natomsx + 1];
+    // remove atom i by setting atomInfo[i] to null
     String[][] atomInfo = new String[natomsx + 1][];
-    //System.out.println("atoms bonds "+natomsx + " "+nbondsx);
     for (int i = 1; i <= natomsx; i++) {
+      // just cache the string data for now
       line = nextData(st, separator);
       int endsymbol = 34;
       if (line.length() < 34)
@@ -358,7 +376,6 @@ public class JMEmol {
     }
     for (int pt = 0, i = 1; i <= nbondsx; i++) {
       line = nextData(st, separator);
-      //System.out.println("bond"+line);
       int a = Integer.valueOf(line.substring(0, 3).trim()).intValue();
       int b = Integer.valueOf(line.substring(3, 6).trim()).intValue();
       int order = Integer.valueOf(line.substring(6, 9).trim()).intValue();
@@ -400,7 +417,6 @@ public class JMEmol {
         nasv[pt] = SINGLE;
         stereob[pt] = DOWN;
       }
-      //System.out.println("bons "+i+" "+va[pt]+" "+vb[pt]+" "+nasv[pt]);
     }
 
     for (int i = 1; i <= natomsx; i++) {
@@ -4647,7 +4663,7 @@ public class JMEmol {
   }
 
   // --------------------------------------------------------------------------
-  String createMolFile(String smiles) {
+  String createMolFile(String title) {
     if (natoms == 0)
       return ""; // 2008.12
 
@@ -4656,13 +4672,13 @@ public class JMEmol {
 //
     String s = "";
     //header
-    s = smiles;
+    s = title;
     if (s.length() > 79)
       s = s.substring(0, 76) + "...";
     s += JME.separator;
     // since 2006.01 added one space to header line (two newlines causes problems in tokenizer)
-    s += "JME " + JME.version + " " + new Date() + JME.separator + " "
-        + JME.separator;
+    s += PropertyManager.getSDFDateLine("JME " + JME.version, true);
+    s += "JME " + JME.version + " " + new Date() + JME.separator;
     //counts line
     s += iformat(natoms, 3) + iformat(nbonds, 3);
     s += "  0  0  0  0  0  0  0  0999 V2000" + JME.separator;
@@ -5488,5 +5504,7 @@ public class JMEmol {
     return pn;
   }
   // ----------------------------------------------------------------------------
+
+
 }
 // ----------------------------------------------------------------------------

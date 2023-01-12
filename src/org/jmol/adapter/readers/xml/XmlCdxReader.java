@@ -64,7 +64,7 @@ import javajs.util.PT;
  * 
  */
 
-public class XmlChemDrawReader extends XmlReader {
+public class XmlCdxReader extends XmlReader {
 
   private double minX = Double.MAX_VALUE;
   private double minY = Double.MAX_VALUE;
@@ -196,7 +196,7 @@ public class XmlChemDrawReader extends XmlReader {
 
   }
 
-  public XmlChemDrawReader() {
+  public XmlCdxReader() {
   }
 
   @Override

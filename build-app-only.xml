@@ -164,6 +164,7 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
         <include name="javajs/export/**" />
         <include name="javajs/img/**" />
         <include name="javajs/util/**" />
+        <include name="jme/**" />
         <include name="**/org/gennbo/**" />
         <include name="**/org/apache/**" />
         <include name="**/org/qcschema/**" />

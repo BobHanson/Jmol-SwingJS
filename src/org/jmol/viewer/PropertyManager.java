@@ -24,6 +24,7 @@
 package org.jmol.viewer;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
@@ -2079,6 +2080,37 @@ public class PropertyManager implements JmolPropertyManager {
             + (Math.abs(charge) > 1 ? "" + Math.abs(charge) : "");
    }
     return PT.join(tokens, ' ', 0);
+  }
+
+  public static String getSDFDateLine(String version, boolean is2d) {
+    SB mol = SB.newS((version + "         ").substring(0, 9));
+    int cMM, cDD, cYYYY, cHH, cmm;
+    /**
+     * @j2sNative
+     * 
+     *            var c = new Date(); cMM = c.getMonth(); cDD = c.getDate();
+     *            cYYYY = c.getFullYear(); cHH = c.getHours(); cmm =
+     *            c.getMinutes();
+     */
+    {
+      Calendar c = Calendar.getInstance();
+      cMM = c.get(Calendar.MONTH);
+      cDD = c.get(Calendar.DAY_OF_MONTH);
+      cYYYY = c.get(Calendar.YEAR);
+      cHH = c.get(Calendar.HOUR_OF_DAY);
+      cmm = c.get(Calendar.MINUTE);
+    }
+    PT.rightJustify(mol, "_00", "" + (1 + cMM));
+    PT.rightJustify(mol, "00", "" + cDD);
+    mol.append(("" + cYYYY).substring(2, 4));
+    PT.rightJustify(mol, "00", "" + cHH);
+    PT.rightJustify(mol, "00", "" + cmm);
+    mol.append(is2d ? "2" : "3").append("D 1   1.00000     0.00000     0");
+    //       This line has the format:
+    //  IIPPPPPPPPMMDDYYHHmmddSSssssssssssEEEEEEEEEEEERRRRRR
+    //  A2<--A8--><---A10-->A2I2<--F10.5-><---F12.5--><-I6->
+    mol.append("\n");
+    return mol.toString();
   }
 
 

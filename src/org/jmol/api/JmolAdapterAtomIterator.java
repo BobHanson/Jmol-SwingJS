@@ -82,4 +82,7 @@ public interface JmolAdapterAtomIterator {
 
   double getBondRadius();
 
+  public int getElement();
+
+  public int getIsotope();
 }

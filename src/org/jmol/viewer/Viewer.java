@@ -5027,8 +5027,8 @@ public class Viewer extends JmolViewer
           } catch (Exception e) {
           }
         }
-        //http://cactus.nci.nih.gov/chemical/structure/C%28O%29CCC/file?format=sdf
-        format = PT.rep(g.smilesUrlFormat, "get3d=true", "get3d=false");
+        //http://cactus.nci.nih.gov/chemical/structure/C%28O%29CCC/file?format=sdf&get3d=true
+        format = PT.rep(g.smilesUrlFormat, "get3d", "get2d");
         return PT.formatStringS(format, "FILE", PT.escapeUrl(id));
       }
       //$FALL-THROUGH$
@@ -5158,7 +5158,7 @@ public class Viewer extends JmolViewer
    * @param forceCheck
    */
   private void checkCIR(boolean forceCheck) {
-    if (cirChecked && !forceCheck)
+    if (cirChecked && !forceCheck || g.resolverResolver == null)
       return;
     try {
       g.removeParam("_cirStatus");

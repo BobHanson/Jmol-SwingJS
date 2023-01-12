@@ -1,6 +1,6 @@
 package org.jmol.adapter.readers.more;
 
-import org.jmol.adapter.readers.xml.XmlChemDrawReader;
+import org.jmol.adapter.readers.xml.XmlCdxReader;
 import org.jmol.adapter.readers.xml.XmlReader;
 import org.jmol.adapter.writers.CDXMLWriter;
 
@@ -31,7 +31,7 @@ import javajs.util.Rdr;
  * @version 1.0
  */
 
-public class CDXReader extends XmlChemDrawReader {
+public class CDXReader extends XmlCdxReader {
 
   @Override
   protected void processXml2(XmlReader parent, Object saxReader) throws Exception {
