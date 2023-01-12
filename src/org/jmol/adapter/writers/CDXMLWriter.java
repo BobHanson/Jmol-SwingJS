@@ -2,15 +2,25 @@ package org.jmol.adapter.writers;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Stack;
 
+import org.jmol.adapter.smarter.AtomSetCollection;
+import org.jmol.adapter.smarter.SmarterJmolAdapter;
+import org.jmol.api.JmolAdapter;
+import org.jmol.api.JmolAdapterAtomIterator;
+import org.jmol.api.JmolAdapterBondIterator;
+import org.jmol.util.Edge;
 import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericBinaryDocument;
 import javajs.util.BS;
 import javajs.util.BinaryDocument;
 import javajs.util.OC;
+import javajs.util.P3d;
 import javajs.util.PT;
+import javajs.util.Rdr;
 import javajs.util.SB;
 
 /**
@@ -27,6 +37,17 @@ public class CDXMLWriter extends CMLWriter {
   private Stack<String> objects = new Stack<String>();
   private SB sb = new SB();
   private int sbpt;
+  private int id;
+  private final static double STANDARD_BOND_LENGTH = 14.4d;
+  private final static String[] cdxAttributes = {  
+      "HashSpacing", "2.50",
+      "MarginWidth", "1.60",
+      "LineWidth", "0.60",
+      "BoldWidth", "2",
+      "BondLength", "14.40",
+      "BondSpacing", "18"          
+  };
+  
 
   public CDXMLWriter() {
     // for JavaScript dynamic loading
@@ -49,13 +70,102 @@ public class CDXMLWriter extends CMLWriter {
     return new CDXMLWriter().cdxToCdxml(binaryDoc);
   }
 
+  public static String fromASC(AtomSetCollection asc) {
+    return new CDXMLWriter().ascToCdxml(asc);
+  }
+
+  private String ascToCdxml(AtomSetCollection asc) {
+    JmolAdapter a = new SmarterJmolAdapter();
+    JmolAdapterAtomIterator atomIterator = a.getAtomIterator(asc);
+    JmolAdapterBondIterator bondIterator = a.getBondIterator(asc);
+    openDocument(sb);
+    appendHeader(sb); // includes <CDXML
+    openTag(sb, "page");
+    id = 0;
+    openID(sb, "fragment");
+    terminateTag(sb);
+    Hashtable<Object, Integer> indexToID = new Hashtable<Object, Integer>();
+    while (atomIterator.hasNext()) {
+      openID(sb, "n");
+      indexToID.put(atomIterator.getUniqueID(), Integer.valueOf(id));
+      P3d xyz = atomIterator.getXYZ();
+      int ele = atomIterator.getElement();
+      int iso = atomIterator.getIsotope();
+      int charge = atomIterator.getFormalCharge();
+      addAttribute(sb, "p", cdxCoord(xyz.x, 200) + " " + cdxCoord(-xyz.y, 400));
+      if (ele != 6)
+        addAttribute(sb, "Element", "" + ele);
+      if (iso != 0)
+        addAttribute(sb, "Isotope", "" + iso);
+      if (charge != 0)
+        addAttribute(sb, "Charge", "" + charge);      
+      terminateEmptyTag(sb);
+    }
+    while (bondIterator.hasNext()) {
+      openID(sb, "b");
+      Object id1 = bondIterator.getAtomUniqueID1();
+      Object id2 = bondIterator.getAtomUniqueID2();
+      String order = "1";
+      String display = null;
+      String display2 = null;
+      int bo = bondIterator.getEncodedOrder();
+      switch (bo) {
+      case Edge.BOND_AROMATIC:
+        order = "1.5";
+        display2 = "Dash";
+        break;
+      case Edge.BOND_AROMATIC_DOUBLE:
+        order = "2";
+        break;
+      default:
+        if ((bo & 0x07) != 0)
+          order = "" + (bo & 0x07);
+        break;
+      }
+      switch (bo) {
+      case Edge.BOND_STEREO_NEAR:
+        order = "1";
+        display = "WedgeBegin";
+        break;
+      case Edge.BOND_STEREO_FAR:
+        order = "1";
+        display = "WedgedHashBegin";
+        break;
+      case Edge.BOND_STEREO_EITHER:
+        order = "1";
+        display = "Wavy";
+        break;
+      }
+      addAttribute(sb, "B", indexToID.get(id1).toString());
+      addAttribute(sb, "E", indexToID.get(id2).toString());
+      if (!order.equals("1"))
+        addAttribute(sb, "Order", order);
+      if (display != null)
+        addAttribute(sb, "Display", display);
+      if (display2 != null)
+        addAttribute(sb, "Display2", display2);
+      terminateEmptyTag(sb);
+    }
+    closeTag(sb, "fragment");
+    closeTag(sb, "page");
+    closeTag(sb, "CDXML");
+    return sb.toString();
+  }
+
+  private static String cdxCoord(double x, int off) {
+    return "" + (off + Math.round(x / 1.45d * STANDARD_BOND_LENGTH * 100)/100d);
+  }
+
+  private void openID(SB sb, String name) {
+    startOpenTag(sb, name);
+    addAttribute(sb, "id", "" + ++id);
+  }
+
   private String cdxToCdxml(GenericBinaryDocument doc) throws Exception {
     this.doc = doc;
     try {
       openDocument(sb);
-      sb.append(
-          "<!DOCTYPE CDXML SYSTEM \"http://www.cambridgesoft.com/xml/cdxml.dtd\" >\n");
-      sb.append("<CDXML BondLength=\"14.40\">\n");
+      appendHeader(sb);
       doc.setStreamData(null, false);// little-endian
       doc.seek(22); // header
       processObject(doc.readShort());
@@ -66,6 +176,14 @@ public class CDXMLWriter extends CMLWriter {
       return null;
     }
     return sb.toString();
+  }
+
+  private static void appendHeader(SB sb) {
+    sb.append(
+        "<!DOCTYPE CDXML SYSTEM \"http://www.cambridgesoft.com/xml/cdxml.dtd\" >\n");
+    startOpenTag(sb, "CDXML");
+    addAttributes(sb, cdxAttributes);
+    terminateTag(sb);
   }
 
   /*
@@ -787,6 +905,22 @@ public class CDXMLWriter extends CMLWriter {
   private final static int kCDXBondDisplay_WavyWedgeEnd = 12;
   private final static int kCDXBondDisplay_Dot = 13;
   private final static int kCDXBondDisplay_DashDot = 14;
+
+  public static String fromString(Viewer vwr, String type, String mol) {
+    HashMap<String, Object> htParams = new HashMap<String, Object>();
+    htParams.put("filter", "filetype=" + type);
+    Object o;
+    try {
+      o = vwr.getModelAdapter().getAtomSetCollectionFromReader("", Rdr.getBR(mol), htParams);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
+    if (o instanceof String) {
+      return null;
+    }
+    return fromASC((AtomSetCollection) o);
+  }
 
   // private final static int kCDXBondDoublePosition_AutoCenter = 0x0000;
   // private final static int kCDXBondDoublePosition_AutoRight = 0x0001;

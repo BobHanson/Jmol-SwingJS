@@ -791,7 +791,7 @@ public class Resolver {
       return "XmlChem3d";
     }
     if (header.indexOf("CDXML") >= 0) {
-      return "XmlChemDraw";
+      return "XmlCdx";
     }
     if (header.indexOf("arguslab") >= 0) {
       return "XmlArgus";

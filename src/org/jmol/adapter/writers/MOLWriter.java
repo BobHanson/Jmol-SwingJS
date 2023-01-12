@@ -1,7 +1,6 @@
 package org.jmol.adapter.writers;
 
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -13,6 +12,7 @@ import org.jmol.script.T;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
+import org.jmol.viewer.PropertyManager;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
@@ -55,35 +55,10 @@ public class MOLWriter {
     if (!asJSON) {
       if (title.length() > 80)
         title = title.substring(0, 77) + "...";
-      mol.append(title);
+      mol.append(title).append("\n");
       String version = Viewer.getJmolVersion();
-      mol.append("\n__Jmol-").append(version.substring(0, 2));
-      int cMM, cDD, cYYYY, cHH, cmm;
-      /**
-       * @j2sNative
-       * 
-       *            var c = new Date(); cMM = c.getMonth(); cDD = c.getDate();
-       *            cYYYY = c.getFullYear(); cHH = c.getHours(); cmm =
-       *            c.getMinutes();
-       */
-      {
-        Calendar c = Calendar.getInstance();
-        cMM = c.get(Calendar.MONTH);
-        cDD = c.get(Calendar.DAY_OF_MONTH);
-        cYYYY = c.get(Calendar.YEAR);
-        cHH = c.get(Calendar.HOUR_OF_DAY);
-        cmm = c.get(Calendar.MINUTE);
-      }
-      PT.rightJustify(mol, "_00", "" + (1 + cMM));
-      PT.rightJustify(mol, "00", "" + cDD);
-      mol.append(("" + cYYYY).substring(2, 4));
-      PT.rightJustify(mol, "00", "" + cHH);
-      PT.rightJustify(mol, "00", "" + cmm);
-      mol.append(is2d ? "2" : "3").append("D 1   1.00000     0.00000     0");
-      //       This line has the format:
-      //  IIPPPPPPPPMMDDYYHHmmddSSssssssssssEEEEEEEEEEEERRRRRR
-      //  A2<--A8--><---A10-->A2I2<--F10.5-><---F12.5--><-I6->
-      mol.append("\nJmol version ").append(Viewer.getJmolVersion())
+      mol.append(PropertyManager.getSDFDateLine("__Jmol-" + version, is2d));
+      mol.append("Jmol version ").append(version)
           .append(" EXTRACT: ").append(Escape.eBS(bsAtoms)).append("\n");
     }    
    boolean asSDF = (iModel >= 0);

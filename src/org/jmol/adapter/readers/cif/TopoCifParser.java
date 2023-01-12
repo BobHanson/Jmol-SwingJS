@@ -9,7 +9,6 @@ import org.jmol.adapter.smarter.Bond;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.symmetry.SymmetryOperation;
-import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
 

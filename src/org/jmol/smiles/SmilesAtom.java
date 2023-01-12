@@ -221,7 +221,8 @@ public class SmilesAtom extends P3d implements Node {
     if (explicitHydrogenCount != Integer.MIN_VALUE)
       return true;
     // Determining max count
-    int count = getDefaultCount(elementNumber, isAromatic);
+    int charge = getFormalCharge();
+    int count = getDefaultHCount(elementNumber, isAromatic, charge == Integer.MIN_VALUE ? 0 : charge);
     if (count < 0) {
       missingHydrogenCount = 0;
       return (count == -1);
@@ -264,11 +265,10 @@ public class SmilesAtom extends P3d implements Node {
     return true;
   }
 
-  static int getDefaultCount(int elementNumber, boolean isAromatic) {
+  static int getDefaultHCount(int elementNumber, boolean isAromatic, int charge) {
     // not a complete set...
     // B, C, N, O, P, S, F, Cl, Br, and I
     // B (3), C (4), N (3,5), O (2), P (3,5), S (2,4,6), and 1 for the halogens
-
     switch (elementNumber) {
     case 0:
     case -1: // A a
@@ -277,14 +277,14 @@ public class SmilesAtom extends P3d implements Node {
     case 1:
       return 1;
     case 6: // C
-      return (isAromatic ? 3 : 4);
+      return (isAromatic ? 3 : 4) + (charge == 0 ? 0 : 1);
     case 8: // O
     case 16: // S
-      return 2;
+      return 2 + charge;
     case 7: // N
       // note -- it is necessary to indicate explicitly
       // single bonds to aromatic n if a proper MF is desired
-      return (isAromatic ? 2 : 3);
+      return (isAromatic ? 2 : 3) + charge;
     case 5: // B
     case 15: // P
       return 3;
@@ -292,12 +292,11 @@ public class SmilesAtom extends P3d implements Node {
     case 17: // Cl
     case 35: // Br
     case 53: // I
-      return 1;
+      return 1 + charge;
     default:
       // unbracketed atom
       return 0; 
     }
-    //return -2;
   }
 
   /**
@@ -787,7 +786,7 @@ public class SmilesAtom extends P3d implements Node {
     }
     boolean simple = (valence != Integer.MAX_VALUE && isotopeNumber <= 0 
         && charge == 0 && Double.isNaN(osclass) && (stereo == null || stereo.length() == 0)); 
-    int norm = getDefaultCount(atomicNumber, false);
+    int norm = getDefaultHCount(atomicNumber, false, charge == Integer.MIN_VALUE ? 0 : charge);
     if (is2D && nH == 0) {
       if (simple && atomicNumber == 6)
         return sym;    
@@ -800,8 +799,8 @@ public class SmilesAtom extends P3d implements Node {
         + sym
         + (stereo == null ? "" : stereo)
         + (nH > 1 ? "H" + nH : nH == 1 ? "H" : "")
-        + (charge < 0 && charge != Integer.MIN_VALUE ? "" + charge 
-            : charge > 0 ? "+" + charge : "") 
+        + (charge == Integer.MIN_VALUE || charge ==0 ? "" : charge < 0 ? "" + charge 
+            : "+" + charge) 
         + (Double.isNaN(osclass) ? "" : ":" + (int) osclass)
         + "]");
   }

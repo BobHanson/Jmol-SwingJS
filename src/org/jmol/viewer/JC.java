@@ -231,7 +231,7 @@ public final class JC {
       "https://www.ebi.ac.uk/emdb/api/search/fitted_pdbs:%file?fl=emdb_id,map_contour_level_value&wt=csv", // to get the EMDB id from the PDB id
       "emdbmapserver",
       "https://www.ebi.ac.uk/pdbe/densities/emd/emd-%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif",
-      "resolverResolver", "https://chemapps.stolaf.edu/resolver" };
+      "xxxxresolverResolver", "https://chemapps.stolaf.edu/resolver" };
 
   private final static String defaultOptimadeFieldsStr = 
         ",chemical_formula_descriptive"

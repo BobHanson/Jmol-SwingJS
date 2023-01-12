@@ -184,6 +184,7 @@ public class GuiMap {
     labels.put("transform", GT.$("Tr&ansform..."));
     labels.put("definecenter", GT.$("Define &Center"));
     labels.put("tools", GT.$("&Tools"));
+    labels.put("twoDEditor", GT.$("2-D &Editor"));
     labels.put("gauss", GT.$("&Gaussian..."));
     labels.put("viewMeasurementTable", GT.$("&Measurements") + "...");
     labels.put("distanceUnitsMenu", GT.$("Distance &Units"));

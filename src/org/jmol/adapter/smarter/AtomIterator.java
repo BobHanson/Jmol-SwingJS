@@ -204,4 +204,14 @@ class AtomIterator implements JmolAdapterAtomIterator {
 		return atom;
 	}
 
+	@Override
+  public int getElement() {  
+    return getElementNumber() & 0x7F;
+  }
+
+  @Override
+  public int getIsotope() {
+    return getElementNumber() >> 7;
+  }
+
 }
