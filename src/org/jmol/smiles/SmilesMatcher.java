@@ -571,6 +571,29 @@ public class SmilesMatcher implements SmilesMatcherInterface {
 
   @Override
   public int[][] getMapForJME(String jme, Atom[] at, BS bsAtoms) {
+    try {
+      SmilesSearch molecule = jmeToMolecule(jme);
+      BS bs = BSUtil.newBitSet2(0, molecule.ac);
+      String s = getSmiles(molecule.patternAtoms, molecule.ac, bs, null,
+          JC.SMILES_TYPE_SMARTS | JC.SMILES_IGNORE_STEREOCHEMISTRY);
+      int[][] map = getCorrelationMaps(s, molecule.patternAtoms, molecule.ac, bs,
+          JC.SMILES_TYPE_SMARTS | JC.SMILES_FIRST_MATCH_ONLY
+              | JC.SMILES_IGNORE_STEREOCHEMISTRY);
+      int[][] map2 = getCorrelationMaps(s, at, bsAtoms.cardinality(), bsAtoms,
+          JC.SMILES_TYPE_SMARTS | JC.SMILES_FIRST_MATCH_ONLY
+              | JC.SMILES_IGNORE_STEREOCHEMISTRY);
+      //System.out.println(s);
+      //System.out.println(jme);
+      //System.out.println(PT.toJSON(null,  map));
+      //System.out.println(PT.toJSON(null,  map2));
+      return new int[][] { map[0], map2[0] };
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  public static SmilesSearch jmeToMolecule(String jme) throws InvalidSmilesException {
     SmilesSearch molecule = new SmilesSearch();
     String[] tokens = PT.getTokens(jme);
     int nAtoms = PT.parseInt(tokens[0]);
@@ -582,9 +605,10 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       int ic = sa.indexOf("+");
       int charge = 0;
       if (ic >= 0) {
-       charge = (ic == sa.length() - 1 ? 1 : PT.parseInt(sa.substring(ic + 1)));
+        charge = (ic == sa.length() - 1 ? 1
+            : PT.parseInt(sa.substring(ic + 1)));
       } else if ((ic = sa.indexOf("-")) >= 0) {
-        charge= PT.parseInt(sa.substring(ic));
+        charge = PT.parseInt(sa.substring(ic));
       }
       a.setCharge(charge);
       a.setSymbol(ic < 0 ? sa : sa.substring(0, ic));
@@ -605,31 +629,28 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         break;
       case 3:
         order = Edge.BOND_COVALENT_TRIPLE;
-        break;        
+        break;
       }
       new SmilesBond(a1, a2, order, false).index = i;
-      
-    }
 
-    String s = "";
-    try {
-      molecule.isSmarts = true;
-      molecule.set();
-      BS bs = BSUtil.newBitSet2(0, nAtoms);
-      s = getSmiles(molecule.patternAtoms, molecule.ac, bs, null, JC.SMILES_TYPE_SMARTS|JC.SMILES_IGNORE_STEREOCHEMISTRY);
-      int[][] map = getCorrelationMaps(s, 
-          molecule.patternAtoms, nAtoms, bs, JC.SMILES_TYPE_SMARTS |JC.SMILES_FIRST_MATCH_ONLY|JC.SMILES_IGNORE_STEREOCHEMISTRY);
-      int[][] map2 = getCorrelationMaps(s, 
-          at, bsAtoms.cardinality(), bsAtoms, JC.SMILES_TYPE_SMARTS |JC.SMILES_FIRST_MATCH_ONLY|JC.SMILES_IGNORE_STEREOCHEMISTRY);
-//System.out.println(s);
-//System.out.println(jme);
-//System.out.println(PT.toJSON(null,  map));
-//System.out.println(PT.toJSON(null,  map2));
-      return new int[][] {map[0], map2[0]};
-    } catch (Exception e) {
-      e.printStackTrace();
     }
-    return null;
+    molecule.isSmarts = true;
+    molecule.set();
+    return molecule;
+  }
+
+  @Override
+  public String getSmilesFromJME(String jme) {
+    try {
+      SmilesSearch molecule = jmeToMolecule(jme);
+      BS bs = BSUtil.newBitSet2(0, molecule.ac);
+      String s;
+      s = getSmiles(molecule.patternAtoms, molecule.ac, bs, null,
+          JC.SMILES_TYPE_SMILES);
+      return s;
+    } catch (Exception e) {
+      return null;
+    }
   }
 
 }

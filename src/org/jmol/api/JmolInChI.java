@@ -6,6 +6,14 @@ import javajs.util.BS;
 
 public interface JmolInChI {
 
-  String getInchi(Viewer vwr, BS atoms, String molData, String options);
+  /**
+   * 
+   * @param vwr
+   * @param atoms
+   * @param molData can be String or InputStream
+   * @param options
+   * @return
+   */
+  String getInchi(Viewer vwr, BS atoms, Object molData, String options);
 
 }

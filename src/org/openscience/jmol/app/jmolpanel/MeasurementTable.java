@@ -54,6 +54,7 @@ public class MeasurementTable extends JDialog {
   int selectedMeasurementRow = -1;
   JButton deleteButton;
   JButton deleteAllButton;
+  private JPanel container;
 
   /**
    * Constructor
@@ -66,7 +67,12 @@ public class MeasurementTable extends JDialog {
     super(parentFrame, GT.$("Measurements"), false);
     this.vwr = vwr;
 
-    JPanel container = new JPanel();
+  }
+
+  private void createGUI() {
+    if (container != null)
+      return;
+    container = new JPanel();
     container.setLayout(new BorderLayout());
 
     container.add(constructMeasurementTable(),BorderLayout.CENTER);
@@ -83,8 +89,16 @@ public class MeasurementTable extends JDialog {
     getContentPane().add(container);
     pack();
     centerDialog();
-  }
 
+  }
+  
+  @Override
+  public void setVisible(boolean tf) {
+    if (tf)
+      createGUI();
+    super.setVisible(tf);
+  }
+  
   JComponent constructMeasurementTable() {
     measurementTableModel = new MeasurementTableModel();
     measurementTable = new JTable(measurementTableModel);
@@ -181,11 +195,13 @@ public class MeasurementTable extends JDialog {
   }
 
   public void activate() {
+    createGUI();
     updateMeasurementTableData();
     setVisible(true);
   }
 
   void updateMeasurementTableData() {
+    createGUI();
     deleteAllButton.setEnabled(vwr.getMeasurementCount() > 0);
     measurementTableModel.fireTableDataChanged();
   }

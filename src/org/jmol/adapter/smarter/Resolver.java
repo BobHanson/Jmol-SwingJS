@@ -59,7 +59,7 @@ public class Resolver {
     "spartan.", ";Spartan;SpartanSmol;Odyssey;",
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
              "VaspPoscar;Wien2k;Xcrysden;PWmat;Optimade;",
-    "xml.",  ";XmlChemDraw;XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
+    "xml.",  ";XmlCdx;XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
   };
   
 
@@ -110,8 +110,8 @@ public class Resolver {
     String readerName;
     fullName = FileManager.fixDOSName(fullName);
     String errMsg = null;
-    if (type == null) {
-      type = SmarterJmolAdapter.getFileTypefromFilter((String) htParams.get("filter"));
+    if (type == null && htParams != null) {
+      type = Resolver.getFileTypefromFilter((String) htParams.get("filter"));
     }      
     if (type != null) {
       readerName = getReaderFromType(type);
@@ -124,7 +124,7 @@ public class Resolver {
     } else {
       readerName = determineAtomSetCollectionReader(readerOrDocument, htParams);
       if (readerName.charAt(0) == '\n') {
-        type = (String) htParams.get("defaultType");
+        type = (htParams == null ? null : (String) htParams.get("defaultType"));
         if (type != null) {
           // allow for MDTOP to specify default MDCRD
           type = getReaderFromType(type);
@@ -234,10 +234,12 @@ public class Resolver {
    * @return readerName or a few lines, if requested, or null
    * @throws Exception
    */
-  private static String determineAtomSetCollectionReader(Object readerOrDocument,
+  public static String determineAtomSetCollectionReader(Object readerOrDocument,
                                                          Map<String, Object> htParams)
       throws Exception {
 
+    
+    
     // We must do this in a very specific order. DON'T MESS WITH THIS!
 
     String readerName;
@@ -1006,6 +1008,11 @@ public class Resolver {
         return "VaspPoscar";        
     }
     return null;
+  }
+
+  public static String getFileTypefromFilter(String filter) {
+    int pt = (filter == null ? -1 : filter.toLowerCase().indexOf("filetype"));
+    return (pt < 0 ? null : filter.substring(pt + 8, (filter+ ";").indexOf(";", pt)).replace('=', ' ').trim());
   }
 
 }

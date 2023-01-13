@@ -74,7 +74,7 @@ public class InChIJS implements JmolInChI {
   }
 
   @Override
-  public String getInchi(Viewer vwr, BS atoms, String molData, String options) {
+  public String getInchi(Viewer vwr, BS atoms, Object molData, String options) {
     if (atoms == null ? molData == null : atoms.isEmpty())
       return "";
     String ret = "";
@@ -86,7 +86,7 @@ public class InChIJS implements JmolInChI {
         options = "-" + options;
       if (molData == null)
         molData = vwr.getModelExtract(atoms,  false,  false, "MOL");
-      if (molData.startsWith("InChI=")) {
+      if (molData instanceof String && ((String) molData).startsWith("InChI=")) {
         /**
          * @j2sNative
          *  ret = (Jmol.inchiToInchiKey ? Jmol.inchiToInchiKey(molData) : "");

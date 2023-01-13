@@ -8,10 +8,18 @@ import java.awt.Graphics;
 // StringTokenizer
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.jmol.api.JmolAdapter;
+import org.jmol.api.JmolAdapterAtomIterator;
+import org.jmol.api.JmolAdapterBondIterator;
+import org.jmol.util.Edge;
 import org.jmol.viewer.PropertyManager;
+
+import javajs.util.P3d;
 
 // --------------------------------------------------------------------------
 public class JMEmol {
@@ -327,130 +335,148 @@ public class JMEmol {
     complete(); // este raz, zachytit zmeny
   }
 
+  public JMEmol(JME jme, JmolAdapterAtomIterator atomIterator,
+      JmolAdapterBondIterator bondIterator) {
+    this(jme);
+    init();
+    Map<Object, Integer> atomMap = new Hashtable<Object, Integer>();
+    while (atomIterator.hasNext()) {
+      createAtom();
+      atomMap.put(atomIterator.getUniqueID(), Integer.valueOf(natoms));
+      P3d pt = atomIterator.getXYZ();
+      //System.out.println("atomline"+line);
+      x[natoms] = pt.x;
+      y[natoms] = -pt.y;
+      q[natoms] = atomIterator.getFormalCharge();
+      setAtom(natoms, JmolAdapter.getElementSymbol(atomIterator.getElement()));
+    }
+    while (bondIterator.hasNext()) {
+      createBond();
+      int i = nbonds;
+      va[i] = atomMap.get(bondIterator.getAtomUniqueID1()).intValue();
+      vb[i] = atomMap.get(bondIterator.getAtomUniqueID2()).intValue();
+      int bo = bondIterator.getEncodedOrder();
+      switch (bo) {
+      case Edge.BOND_STEREO_NEAR:
+        nasv[i] = SINGLE;
+        stereob[i] = UP;
+        break;
+      case Edge.BOND_STEREO_FAR:
+        nasv[i] = SINGLE;
+        stereob[i] = DOWN;
+        break;
+      case Edge.BOND_COVALENT_SINGLE:
+      case Edge.BOND_AROMATIC_SINGLE:
+        nasv[i] = SINGLE;
+        break;
+      case Edge.BOND_COVALENT_DOUBLE:
+      case Edge.BOND_AROMATIC_DOUBLE:
+        nasv[i] = DOUBLE;
+        break;
+      case Edge.BOND_COVALENT_TRIPLE:
+        nasv[i] = TRIPLE;
+        break;
+      case Edge.BOND_AROMATIC:
+      case Edge.BOND_STEREO_EITHER:
+      default:
+        if ((bo & 0x07) != 0)
+          nasv[i] = (bo & 0x07);
+        break;
+      }
+    }
+    fillFields();
+    scaling();
+    center(); // calls findBondCenters();
+    complete(); // ok
+
+    //valenceState(); // dolezite aj pre call v negrafickom mode
+    deleteHydrogens();
+    complete(); // este raz, zachytit zmeny
+  }
+
+
   // ----------------------------------------------------------------------------
-  JMEmol(JME jme, String molFileData) {
+  JMEmol(JME jme, String molFile) {
     // MDL mol file
     this(jme);
-    if (molFileData != null)
-      processMolFileData(molFileData);
-  }
-  
-  protected void processMolFileData(String molFileData) {
-    init(); // in case this did not come from constructor
+    if (molFile == null)
+      return;
     String line = "";
     //System.err.println("molfile in >>>\n"+molFile);
     // osetrene zacatie s null line
     //char c = molFile.charAt(0);
-    String separator = findSeparator(molFileData);
-    StringTokenizer st = new StringTokenizer(molFileData, separator, true);
+    String separator = findSeparator(molFile);
+    StringTokenizer st = new StringTokenizer(molFile, separator, true);
     //System.out.println(st.countTokens());
 
     for (int i = 1; i <= 4; i++) {
       line = nextData(st, separator);
       //System.out.println(i+" "+line);
     }
-    // BH 2023.01.09 modification to first cache all the atom information
-    // so that we can be selective in which atoms to create
-    // loadHydrogensOnCarbon == false:
-    // - H on heteroatoms are all accepted
-    // - H on carbon atoms that are in bonds that are wedges or hashes are accepted
-    // - all other H atoms are removed.
-    
+    //System.out.println("ab"+line);
     int natomsx = Integer.valueOf(line.substring(0, 3).trim()).intValue();
     int nbondsx = Integer.valueOf(line.substring(3, 6).trim()).intValue();
-    int[] mapToAtom = new int[natomsx + 1];
-    // remove atom i by setting atomInfo[i] to null
-    String[][] atomInfo = new String[natomsx + 1][];
+    //System.out.println("atoms bonds "+natomsx + " "+nbondsx);
     for (int i = 1; i <= natomsx; i++) {
-      // just cache the string data for now
+      createAtom();
       line = nextData(st, separator);
+      //System.out.println("atomline"+line);
+      x[i] = Double.valueOf(line.substring(0, 10).trim()).doubleValue();
+      y[i] = -Double.valueOf(line.substring(10, 20).trim()).doubleValue();
+      // symbol 32-34 dolava centrovany (v String 31-33)
       int endsymbol = 34;
       if (line.length() < 34)
         endsymbol = line.length();
       String symbol = line.substring(31, endsymbol).trim();
-      String x = line.substring(0, 10).trim();
-      String y = line.substring(10, 20).trim();
-      String s = (line.length() >= 63 ? line.substring(60, 63).trim() : "");
-      atomInfo[i] = new String[] { symbol, x, y, (s.length() == 0 ? null : s) };
-      mapToAtom[i] = i;
-    }
-    for (int pt = 0, i = 1; i <= nbondsx; i++) {
-      line = nextData(st, separator);
-      int a = Integer.valueOf(line.substring(0, 3).trim()).intValue();
-      int b = Integer.valueOf(line.substring(3, 6).trim()).intValue();
-      int order = Integer.valueOf(line.substring(6, 9).trim()).intValue();
-      int stereo = (line.length() > 11 ? Integer.valueOf(line.substring(9, 12).trim()).intValue() : 0);
-      if (!jme.loadHydrogensOnCarbon && stereo == 0) {
-        String labela = atomInfo[a][0];
-        String labelb = atomInfo[b][0];
-        boolean isHa = ("H".equals(labela) && "C".equals(labelb));
-        boolean isHb = ("C".equals(labela) && "H".equals(labelb));
-        if (isHa) {
-          atomInfo[a] = null;
-          continue;
-        }
-        if (isHb) {
-          atomInfo[b] = null;
-          continue;
+      //String q = line.substring(36,39);
+      setAtom(i, symbol); // sets an[i]
+
+      // atom mapping - 61 - 63 
+      if (line.length() >= 62) {
+        String s = line.substring(60, 63).trim();
+        if (s.length() > 0) {
+          // 2007.03 fix not to put there 0
+          int mark = Integer.valueOf(s).intValue();
+          if (mark > 0) {
+            touchedAtom = i;
+            jme.currentMark = mark;
+            mark();
+            touchedAtom = 0; // not to frame atom
+          }
         }
       }
-      pt++;
+      //System.out.println("atom "+i+" "+an[i]+" "+x[i]+" "+y[i]);
+    }
+    for (int i = 1; i <= nbondsx; i++) {
       createBond();
-      va[pt] = a;
-      vb[pt] = b;
-      int nasvx = order;
+      line = nextData(st, separator);
+      //System.out.println("bond"+line);
+      va[i] = Integer.valueOf(line.substring(0, 3).trim()).intValue();
+      vb[i] = Integer.valueOf(line.substring(3, 6).trim()).intValue();
+      int nasvx = Integer.valueOf(line.substring(6, 9).trim()).intValue();
       if (nasvx == 1)
-        nasv[pt] = SINGLE;
+        nasv[i] = SINGLE;
       else if (nasvx == 2)
-        nasv[pt] = DOUBLE;
+        nasv[i] = DOUBLE;
       else if (nasvx == 3)
-        nasv[pt] = TRIPLE;
+        nasv[i] = TRIPLE;
       // aromatic ???
       else
-        nasv[pt] = QUERY;
+        nasv[i] = QUERY;
+      int stereo = 0;
+      if (line.length() > 11)
+        stereo = Integer.valueOf(line.substring(9, 12).trim()).intValue();
       // ??? treba s nasvx
       if (nasvx == SINGLE && stereo == 1) {
-        nasv[pt] = SINGLE;
-        stereob[pt] = UP;
+        nasv[i] = SINGLE;
+        stereob[i] = UP;
       }
       if (nasvx == SINGLE && stereo == 6) {
-        nasv[pt] = SINGLE;
-        stereob[pt] = DOWN;
+        nasv[i] = SINGLE;
+        stereob[i] = DOWN;
       }
+      //System.out.println("bons "+i+" "+va[i]+" "+vb[i]+" "+nasv[i]);
     }
-
-    for (int i = 1; i <= natomsx; i++) {
-      if (atomInfo[i] == null) {
-        continue;
-      }
-      String[] sxym = atomInfo[i];
-      createAtom();
-      int pt = mapToAtom[i] = natoms;
-      //System.out.println("atomline"+line);
-      x[pt] = Double.valueOf(sxym[1]).doubleValue();
-      y[pt] = -Double.valueOf(sxym[2]).doubleValue();
-      // symbol 32-34 dolava centrovany (v String 31-33)
-      //String q = line.substring(36,39);
-      setAtom(pt, sxym[0]);
-      String s = sxym[3];
-      // atom mapping - 61 - 63 
-      if (s != null) {
-        // 2007.03 fix not to put there 0
-        int mark = Integer.valueOf(s).intValue();
-        if (mark > 0) {
-          touchedAtom = pt;
-          jme.currentMark = mark;
-          mark();
-          touchedAtom = 0; // not to frame atom
-        }
-      }
-    }
-
-    for (int i = 1; i <= nbonds; i++) {
-      va[i] = mapToAtom[va[i]];
-      vb[i] = mapToAtom[vb[i]];
-    }
-
     fillFields();
     scaling();
     center(); // calls findBondCenters();

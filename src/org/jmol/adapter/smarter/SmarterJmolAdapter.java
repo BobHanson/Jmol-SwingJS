@@ -24,11 +24,13 @@
 
 package org.jmol.adapter.smarter;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterAtomIterator;
 import org.jmol.api.JmolAdapterBondIterator;
@@ -66,20 +68,29 @@ public class SmarterJmolAdapter extends JmolAdapter {
   /**
    * Just get the resolved file type; if a file, does NOT close the reader
    * 
-   * @param ascOrReader 
+   * @param ascOrReader
    * @return a file type or null
    * 
    */
   @Override
   public String getFileTypeName(Object ascOrReader) {
     if (ascOrReader instanceof String)
-      return getFileTypefromFilter((String) ascOrReader);
-    if (ascOrReader instanceof AtomSetCollection)
-      return ((AtomSetCollection)ascOrReader).fileTypeName;
+      return Resolver.getFileTypefromFilter((String) ascOrReader);
+    if (ascOrReader instanceof AtomSetCollection) {
+      return ((AtomSetCollection) ascOrReader).fileTypeName;
+    }
     if (ascOrReader instanceof BufferedReader)
-      return Resolver.getFileType((BufferedReader)ascOrReader);
-    if (ascOrReader instanceof InputStream)
-      return Resolver.getBinaryType((InputStream) ascOrReader);
+      return Resolver.getFileType((BufferedReader) ascOrReader);
+    if (ascOrReader instanceof BufferedInputStream) {
+      String type = Resolver.getBinaryType((BufferedInputStream) ascOrReader);
+      if (type == null)
+        try {
+          type = Resolver.getFileType(Rdr.getBufferedReader((BufferedInputStream) ascOrReader, null));
+        } catch (Exception e) {
+          // TODO
+        }
+      return type;
+    }
     return null;
   }
 
@@ -128,14 +139,27 @@ public class SmarterJmolAdapter extends JmolAdapter {
 
   @Override
   public Object getAtomSetCollectionFromReader(String fname,
-                                            Object readerOrDocument, Map<String, Object> htParams) throws Exception {
+                                               Object readerOrDocument,
+                                               Map<String, Object> htParams)
+      throws Exception {
     Object ret = Resolver.getAtomCollectionReader(fname, null, readerOrDocument,
         htParams, -1);
     if (ret instanceof AtomSetCollectionReader) {
+      if (readerOrDocument instanceof BufferedInputStream) {
+        BufferedInputStream bis = (BufferedInputStream) readerOrDocument;
+        if (Resolver.getBinaryType(bis) != null) {
+          readerOrDocument = ((GenericBinaryDocument) Interface
+              .getInterface("javajs.util.BinaryDocument", null, "JmolAdapter"))
+                  .setStream(bis, false);
+        } else {
+          readerOrDocument = Rdr.getBufferedReader(bis, null);
+        }
+      }
+
       ((AtomSetCollectionReader) ret).setup(fname, htParams, readerOrDocument);
       return ((AtomSetCollectionReader) ret).readData();
     }
-    return "" + ret;    
+    return "" + ret;
   }
 
   /**
@@ -472,11 +496,6 @@ public class SmarterJmolAdapter extends JmolAdapter {
       ((BufferedReader) bufferedReader).close();
       else
         ((GenericBinaryDocument) bufferedReader).close();
-  }
-
-  public static String getFileTypefromFilter(String filter) {
-    int pt = (filter == null ? -1 : filter.toLowerCase().indexOf("filetype"));
-    return (pt < 0 ? null : filter.substring(pt + 8, (filter+ ";").indexOf(";", pt)).replace('=', ' ').trim());
   }
 
 }

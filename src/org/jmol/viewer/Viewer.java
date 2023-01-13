@@ -10632,22 +10632,23 @@ public class Viewer extends JmolViewer
    * @param options
    * @return InChI or InChIKey
    */
-  public String getInchi(BS atoms, String molData, String options) {
+  public String getInchi(BS atoms, Object molData, String options) {
     try {
       JmolInChI inch = (JmolInChI) this.apiPlatform.getInChI();
       if (atoms == null && molData == null) {
         // JavaScript initialization only
         return "";
       }
-      if (molData != null) {
-        if (molData.startsWith("$") || molData.startsWith(":")) {
-          molData = getFileAsString4(molData, -1, false, false, true, "script");
-        } else if (!molData.startsWith("InChI=") && molData.indexOf(" ") < 0) {
+      if (molData instanceof String) {
+        String data = (String) molData;
+        if (data.startsWith("$") || data.startsWith(":")) {
+          molData = getFileAsString4(data, -1, false, false, true, "script");
+        } else if (!data.startsWith("InChI=") && data.indexOf(" ") < 0) {
           // assume SMILES
           // setLoadFormat will correct any special characters in the 
           // SMILES CIR call. 
-          molData = (String) setLoadFormat("$" + molData, '$', false);
-          molData = getFileAsString4(molData, -1, false, false, true, "script");
+          data = (String) setLoadFormat("$" + molData, '$', false);
+          molData = getFileAsString4(data, -1, false, false, true, "script");
         }
       }
       return inch.getInchi(this, atoms, molData, options);
@@ -10879,5 +10880,5 @@ public class Viewer extends JmolViewer
     return JmolMolecule.getMolecularFormulaAtoms(ms.at, bs, 
         ("CELLFORMULA".equals(type) ? ms.getCellWeights(bs) : null), isEmpirical);
   }
-  
+
 }

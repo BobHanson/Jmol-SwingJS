@@ -58,4 +58,6 @@ public interface SmilesMatcherInterface {
 
   Node[] getAtoms(String target) throws Exception;
 
+  public String getSmilesFromJME(String jmeFile);
+
 }

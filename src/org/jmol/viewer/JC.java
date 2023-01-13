@@ -207,7 +207,8 @@ public final class JC {
       "https://www.ebi.ac.uk/chebi/saveStructure.do?defaultImage=true&chebiId=%file%2D%",
       "ligand", "https://files.rcsb.org/ligands/download/%FILE.cif", "mp",
       "https://www.materialsproject.org/materials/mp-%FILE/cif#_DOCACHE_", // e.g. https://materialsproject.org/rest/v1/materials/mp-24972/cif 
-      "nci", "https://cactus.nci.nih.gov/chemical/structure", "pdb",
+      "nci", "https://cactus.nci.nih.gov/chemical/structure/", 
+      "pdb",
       "https://files.rcsb.org/download/%FILE.pdb", // new Jmol 14.4.4 3/2016
       "pdb0", "https://files.rcsb.org/download/%FILE.pdb", // used in JSmol
       "pdbe", "https://www.ebi.ac.uk/pdbe/entry-files/download/%FILE.cif",
@@ -231,7 +232,10 @@ public final class JC {
       "https://www.ebi.ac.uk/emdb/api/search/fitted_pdbs:%file?fl=emdb_id,map_contour_level_value&wt=csv", // to get the EMDB id from the PDB id
       "emdbmapserver",
       "https://www.ebi.ac.uk/pdbe/densities/emd/emd-%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif",
-      "xxxxresolverResolver", "https://chemapps.stolaf.edu/resolver" };
+      "xxxxresolverResolver", "https://chemapps.stolaf.edu/resolver",
+      "smiles2d", "https://cirx.chemicalcreatures.com/chemical/structure/%FILE/file?format=sdf&get3d=false",
+      "smiles3d", "https://cirx.chemicalcreatures.com/chemical/structure/%FILE/file?format=sdf&get3d=true",
+      };
 
   private final static String defaultOptimadeFieldsStr = 
         ",chemical_formula_descriptive"
@@ -247,7 +251,7 @@ public final class JC {
    * and "optimade" is in the URL. Obviously not exactly correct.
    * 
    * @param url
-   * @return
+   * @return optimade query
    */
   static String fixOptimadeCall(String url) {
     int pt = url.indexOf("response_fields=") + 16;
@@ -295,7 +299,7 @@ public final class JC {
       databases.put(databaseArray[i].toLowerCase(), databaseArray[i + 1]);
   }
 
-  static String resolveDataBase(String database, String id, String format) {
+  public static String resolveDataBase(String database, String id, String format) {
     if (format == null) {
       if ((format = databases.get(database.toLowerCase())) == null)
         return null;
