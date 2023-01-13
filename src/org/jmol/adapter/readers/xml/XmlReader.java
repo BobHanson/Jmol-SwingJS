@@ -118,7 +118,6 @@ abstract public class XmlReader extends AtomSetCollectionReader {
 
   private String parseXML() {
     org.xml.sax.XMLReader saxReader = null;
-
     /**
      * @j2sNative
      * 
@@ -205,7 +204,16 @@ abstract public class XmlReader extends AtomSetCollectionReader {
        * 
        * @j2sNative
        * 
-       *            o = this.reader.lock.lock; if (o.$in) data = o.$in.buf;
+       *            o = this.reader.lock.lock; 
+       *            if (o && o.$in) {
+       *              data = o.$in.buf;
+       *            } else if (this.reader.$in.$in.$in.fd) {
+       *              // may need to adjust this;
+       *              o = this.reader.$in.$in;
+       *              data = o.$in.fd._file.秘bytes; 
+       *            } else {
+       *              data = (o=this.reader.$in.$in).$in.buf;
+       *            }
        */
       {
       }

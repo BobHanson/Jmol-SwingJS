@@ -416,8 +416,11 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
   
   private void drop3D(String fname) {
     String mol = vwr.getFileAsString(fname);
-    String smiles = vwr.getInchi(null, mol, "smiles");
-    loadSmilesCleanly(smiles);
+    loadSmilesCleanly(getSmiles(mol));
+  }
+
+  private String getSmiles(String mol) {
+    return vwr.getInchi(null, mol, "smiles");
   }
 
   @Override
