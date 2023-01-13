@@ -24,7 +24,6 @@
 
 package org.jmol.smiles;
 
-//import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -59,15 +58,10 @@ import javajs.util.T3d;
  */
 public class SmilesGenerator {
 
-  private static final int ATOM_START = 10001;
-  private static final int ATOM_END   = 10002;
-  private static final int PAIR_END = 100000;
-
   private final int MODE_COMP_ALLOW_BIO      = 1;
   private final int MODE_COMP_ALLOW_OUTSIDE  = 2;
   private final int MODE_COMP_FORCE_BRACKETS = 4;
   
-  private Lst<Integer> specialPoints = null;
   private int ptAtom, ptSp2Atom0;
   
 
@@ -120,7 +114,6 @@ public class SmilesGenerator {
   private int iHypervalent;
   private boolean is2D;
   private boolean haveSmilesAtoms;
-  private boolean isBio;
   private boolean noBranches;
 
   // generation of SMILES strings
@@ -211,7 +204,6 @@ public class SmilesGenerator {
 
   private String getBioSmiles(BS bsSelected, String comment, int flags)
       throws InvalidSmilesException {
-    isBio = true;
     addAtomComment = ((flags & JC.SMILES_GEN_ATOM_COMMENT) == JC.SMILES_GEN_ATOM_COMMENT);
     boolean allowUnmatchedRings = ((flags & 
         JC.SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS) == JC.SMILES_GEN_BIO_ALLOW_UNMATCHED_RINGS);
@@ -300,7 +292,7 @@ public class SmilesGenerator {
           for (int j = 0; j < vLinks.size(); j += 3) {
             sb.append(":");
             s = getRingCache(vLinks.get(j).intValue(), vLinks.get(j + 1)
-                .intValue(), htRingsSequence, null, 0);
+                .intValue(), htRingsSequence);
             sb.append(s);
             len += 1 + s.length();
           }
@@ -373,8 +365,6 @@ public class SmilesGenerator {
         & MODE_COMP_ALLOW_OUTSIDE) != 0);
     boolean forceBrackets = ((mode & MODE_COMP_FORCE_BRACKETS) != 0);
 
-    if (allowBioResidues && !topologyOnly)
-      specialPoints = new Lst<Integer>();
     atom = checkFirstAtom(atom);
 
     bsSelected = JmolMolecule.getBranchBitSet(atoms, atom.getIndex(),
@@ -386,7 +376,6 @@ public class SmilesGenerator {
         && iHypervalent < 0; i = bsSelected.nextSetBit(i + 1)) {
       if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral) {
         iHypervalent = i;
-        specialPoints = null;
       }
     }
     bsIncludingH = BSUtil.copy(bsSelected);
@@ -429,10 +418,6 @@ public class SmilesGenerator {
           break;
       } else {
         atom = atoms[bsToDo.nextSetBit(0)];
-      }
-      if (specialPoints != null) {
-        specialPoints.addLast(Integer.valueOf(-sb.length()));
-        specialPoints.addLast(Integer.valueOf(0));
       }
       sb.append(".");
       prevSp2Atoms = alleneStereo = null;
@@ -817,7 +802,8 @@ public class SmilesGenerator {
             : ((Node) a).getCovalentHydrogenCount());
         int order = bond.getCovalentOrder();
         // single-connected atoms such as OH or (=O) or CH3 first up
-        boolean isEndPoint = htRings.containsKey(getRingKey(a.getIndex(), atomIndex));
+        boolean isEndPoint = htRings
+            .containsKey(getRingKey(a.getIndex(), atomIndex));
         if (isEndPoint)
           continue;
         boolean check = (bondNext != null || i < nBonds - 1);
@@ -829,7 +815,7 @@ public class SmilesGenerator {
         }
       }
     }
-      
+
     Node atomNext = (bondNext == null ? null
         : (Node) bondNext.getOtherNode(atom));
     int orderNext = (bondNext == null ? 0 : bondNext.getCovalentOrder());
@@ -921,39 +907,25 @@ public class SmilesGenerator {
       // only for first hypervalent atom; we are not allowing any branches here
       atat = sortInorganic(atom, v, vTemp);
     }
-    int nv = v.size();
-    bsEnds.clearAll();
-    bsEnds.setBits(0, nv);
-    for (int k = 0; k < 2; k++) {
-      // do endings first, so we can insert them into the string
-      for (int i = bsEnds.nextSetBit(0); i >= 0; i = bsEnds.nextSetBit(i + 1)) {
+    for (int i = 0; i < v.size(); i++) {
         Edge bond = v.get(i);
-        if (bond == bondNext) {
-          bsEnds.clear(i);
+      if (bond == bondNext)
           continue;
-        }
         SimpleNode a = bond.getOtherNode(atom);
         int ia = a.getIndex();
-        String key = getRingKey(atomIndex, ia);
-        if (k == 0 && !htRings.containsKey(key))
-          continue;
-        bsEnds.clear(i);
-        String sbond = getBondOrder(bond, atomIndex, ia, isAromatic);
+      strPrev = getBondOrder(bond, atomIndex, ia, isAromatic);
         chBond = getBondStereochemistry(bond, atom);
         if (!deferStereo && chBond != '\0') {
-          sbond = "" + chBond;
+          strPrev = "" + chBond;
         }
-        if (!isBranch && specialPoints != null)
-          specialPoints.addLast(Integer.valueOf(-sb.length()));
-        sbRings.append(sbond);
-        sbRings.append(
-            getRingCache(atomIndex, ia, htRings, key, isBranch ? -1 : sb.length()));
+      sbRings.append(strPrev);
+      sbRings.append(getRingCache(atomIndex, ia, htRings));
         if (stereoFlag < 7)
           stereo[stereoFlag++] = a;
         if (sp2Atoms != null && nSp2Atoms < 5)
           sp2Atoms[nSp2Atoms++] = a;
       }
-    }
+
     // Reorder the stereo[] and sp2Atoms[] arrays because 
     // they may be out of order with respect to bonds and rings.
 
@@ -1036,10 +1008,6 @@ public class SmilesGenerator {
         && atomName.length() != 0) {
       addBracketedBioName(sb, (Node) atom, "." + atomName, false);
     } else {
-      if (specialPoints != null && !isBranch) {
-        specialPoints.addLast(Integer.valueOf(-sb.length()));
-        specialPoints.addLast(Integer.valueOf(ATOM_START));
-      }
       sb.append(SmilesAtom.getAtomLabel(atomicNumber, isotope,
           (forceBrackets ? -1 : valence), charge, osclass, nH, isAromatic,
           atat != null ? atat
@@ -1048,10 +1016,6 @@ public class SmilesGenerator {
                       alleneStereo == null ? atomIndex : -1, stereo, stereoFlag,
                       prevIndex == -1),
           is2D));
-      if (specialPoints != null && !isBranch) {
-        specialPoints.addLast(Integer.valueOf(-sb.length()));
-        specialPoints.addLast(Integer.valueOf(ATOM_END));
-      }
     }
 
     // add the rings...
@@ -1353,16 +1317,19 @@ public class SmilesGenerator {
     if (bsDone != null)
       bsDone.set(atomIndex);
     int n = ((Node)atom).getAtomicAndIsotopeNumber();
+    if (n == 1 && explicitHydrogen == 0)
+      return "H";
     int nx = atom.getCovalentBondCount();
-    int nh = (n == 6 && explicitHydrogen != 0 ? ((Node) atom).getCovalentHydrogenCount() : 0);
+    int nhcov = ((Node) atom).getCovalentHydrogenCount();
+    int nh = (n == 6 && explicitHydrogen != 0 ? nhcov : 0);
     // only carbon or singly-connected atoms are checked
-    // for C we use nh -- CH3, for example.
+    // for C or Si we use nh -- CH3, for example.
     // for other atoms, we use number of bonds.
     // just checking for tetrahedral CH3)
-    if (n == 6 ? nx != 4 : n == 1 || nx > 1)
+    if (n == 6 || n == 16 ? nx != 4 : n == 1 || nx > 1)
       return s + (++chainCheck);
     String sa = ";" + level + "/" + n + "/" + nh + "/" + nx + (level == 0 ? "," : "_");
-    if (n == 6) {
+    if (n == 6 || n == 16) {
       switch (nh) {
       case 1:
         return s + sa + (++chainCheck);
@@ -1376,8 +1343,9 @@ public class SmilesGenerator {
         int nunique = (nh == 2 ? 0 : 3);
         for (int j = atom.getBondCount(); --j >= 0;) {
           SimpleNode a2 = edges[j].getOtherNode(atom);
+          //System.out.println(level + " " + atom + " " + a2);
           int i2 = a2.getIndex();
-          if (bsDone.get(i2) || !edges[j].isCovalent() || a2.getElementNumber() == 1)
+          if (bsDone.get(i2) || !edges[j].isCovalent())
             continue;
           bsDone.set(i2);
           sa2 = addStereoCheck(level + 1, atom.getIndex(), a2, "", (BS) bsDone.clone());
@@ -1385,8 +1353,9 @@ public class SmilesGenerator {
             nunique--;
           s2 += sa2;
         }
-        if (nunique == 3)
+        if (nunique == 3) {
           return s + sa + (++chainCheck);
+        }
         sa = (sa + s2).replace(',','_');
         if (level > 0)
           return s + sa;
@@ -1396,7 +1365,7 @@ public class SmilesGenerator {
       }
     }
     if (s.indexOf(sa) >= 0) {
-      if (nh == 3) {
+      if (nhcov == 3) {
         // must check isotopes for CH3
         int ndt = 0;
         for (int j = 0; j < nx && ndt < 3; j++) {
@@ -1413,33 +1382,18 @@ public class SmilesGenerator {
     return s + sa;
   }
 
-  private String getRingCache(int i0, int i1, Map<String, Object[]> ht, String key, int pt) {
-    Lst<Integer> sp = (pt > 0 ? specialPoints : null);
-    if (key == null)
-      key = getRingKey(i0, i1);
+  private String getRingCache(int i0, int i1, Map<String, Object[]> ht) {
+    String key = getRingKey(i0, i1);
     Object[] o = ht.get(key);
     String s = (o == null ? null : (String) o[0]);
     if (s == null) {
-      int np;
-      if (nPairs == nPairsMax || bsToDo.get(i1)) {
-        nPairs = np = bsRingKeys.nextClearBit(nPairs + 1);
-      } else {
-        // this is a link to something prior to it in the chain -- closing the ring on the branching atom
-        // make sure this is unique, as it may be reordered
-        np = ++nPairsMax;
-      }
-      bsRingKeys.set(np);
-      if (np > 9)
-        sp = specialPoints = null;
-      if (sp != null)
-        sp.addLast(Integer.valueOf(np));
-      nPairsMax = Math.max(np, nPairsMax);
-      s = getRingPointer(np);
+      bsRingKeys.set(++nPairs);
+      nPairsMax = Math.max(nPairs, nPairsMax);
       ht.put(key,
-          new Object[] { s, Integer.valueOf(i1),
-              Integer.valueOf(np) });
+          new Object[] { s = getRingPointer(nPairs), Integer.valueOf(i1),
+              Integer.valueOf(nPairs) });
       if (Logger.debugging)
-        Logger.debug("adding for " + i0 + " ring key " + np + ": " + key);
+        Logger.debug("adding for " + i0 + " ring key " + nPairs + ": " + key);
     } else {
       ht.remove(key);
       // let the ring count go up to 9 before resetting if all rings are closed;
@@ -1447,8 +1401,6 @@ public class SmilesGenerator {
       // otherwise If it runs over 9 ever, then just reset it to 10
       // otherwise if it hits 9, then reset it to 0
       int nPair = ((Integer) o[2]).intValue();
-      if (sp != null)
-        sp.addLast(Integer.valueOf(nPair + PAIR_END));
       bsRingKeys.clear(nPair);
       if (bsRingKeys.nextSetBit(0) < 0 && (nPairsMax == 2 || nPairsMax == 99)) {
         nPairsMax = nPairs = (nPairsMax == 99 ? 10 : 0);

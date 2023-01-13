@@ -20,6 +20,7 @@ package org.jmol.inchi;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.Hashtable;
 import java.util.Map;
@@ -65,7 +66,7 @@ public class InChIJNI implements JmolInChI {
   }
 
   @Override
-  public String getInchi(Viewer vwr, BS atoms, String molData, String options) {
+  public String getInchi(Viewer vwr, BS atoms, Object molData, String options) {
     try {
       if (atoms == null ? molData == null : atoms.isEmpty())
         return "";
@@ -81,8 +82,8 @@ public class InChIJNI implements JmolInChI {
         inchi = options.substring(10);
         options = lc = "";
       }
-      if (molData != null && molData.startsWith("InChI=")) {
-        inchi = molData;
+      if (molData instanceof String && ((String) molData).startsWith("InChI=")) {
+        inchi = (String) molData;
         if (!getSmiles) {
           options = lc.replace("structure", "");
           getKey = true;
@@ -106,7 +107,7 @@ public class InChIJNI implements JmolInChI {
           if (atoms == null) {
             in.setStructure(struc = newJniInchiStructure(vwr, molData));
           } else {
-            in.setStructure(struc = newJniInchiStructure(vwr, atoms));
+            in.setStructure(struc = newJniInchiStructureBS(vwr, atoms));
           }
           if (getStructure) {
             return toString(struc);
@@ -147,7 +148,7 @@ public class InChIJNI implements JmolInChI {
    * @param bsAtoms
    * @return a structure for JniInput
    */
-  private static JniInchiStructure newJniInchiStructure(Viewer vwr,
+  private static JniInchiStructure newJniInchiStructureBS(Viewer vwr,
                                                         BS bsAtoms) {
     JniInchiStructure mol = new JniInchiStructure();
     JniInchiAtom[] atoms = new JniInchiAtom[bsAtoms.cardinality()];
@@ -203,14 +204,19 @@ public class InChIJNI implements JmolInChI {
    * supports single, double, aromatic_single and aromatic_double.
    * 
    * @param vwr
-   * @param molData
+   * @param molData String or InputStream
    * @return a structure for JniInput
    */
   private static JniInchiStructure newJniInchiStructure(Viewer vwr,
-                                                        String molData) {
+                                                        Object molData) {
     JniInchiStructure mol = new JniInchiStructure();
-    BufferedReader r = new BufferedReader(new StringReader(molData));
+    Object r = null;
     try {
+      if (molData instanceof String) {
+        r = new BufferedReader(new StringReader((String) molData));
+      } else if (molData instanceof InputStream){
+        r = molData;
+      }
       Map<String, Object> htParams = new Hashtable<String, Object>();
       JmolAdapter adapter = vwr.getModelAdapter();
       Object atomSetReader = adapter.getAtomSetCollectionReader("String", null,
@@ -242,7 +248,11 @@ public class InChIJNI implements JmolInChI {
       }
     } finally {
       try {
-        r.close();
+        if (r instanceof BufferedReader) {
+          ((BufferedReader) r).close();
+        } else {
+          ((InputStream) r).close();
+        }
       } catch (IOException e) {
       }
     }

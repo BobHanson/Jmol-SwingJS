@@ -58,7 +58,7 @@ public class JME extends JPanel
 
   // customization
   static final String version = "2023.01";
-  String infoText = "JME Molecular Editor by Peter Ertl, Novartis";
+  protected String infoText = "JME Molecular Editor by Peter Ertl, Novartis";
   int sd = 24;
   int arrowWidth = 24 * 2;
   static Color bgColor = Color.lightGray;
@@ -78,7 +78,6 @@ public class JME extends JPanel
   protected boolean xButton = true;
   protected boolean rButton = false;
   protected boolean showHydrogens = true;
-  protected boolean loadHydrogensOnCarbon = false;
   protected boolean query = false;
   protected boolean reaction = false;
   protected boolean autoez = false;
@@ -241,13 +240,13 @@ public class JME extends JPanel
   protected boolean dyMode = true;
   String molText = null;
   //JMEmol mol = new JMEmol(this); // sposobovalo problemy v NS
-  protected JMEmol mol;
-  int nmols = 0;
+  public JMEmol mol;
+  public int nmols = 0;
   int actualMolecule = 0;
   int saved = 0; // ktora molekula je saved pri multipart
   String template = null; // template as jme string
   JMEmol tmol = null; // template molecule
-  JMEmol mols[] = new JMEmol[99]; // when multipart, nealokuje !! 
+  protected JMEmol mols[] = new JMEmol[99]; // when multipart, nealokuje !! 
   JMEmol smol; // save
   //static Color[] psColor;
   Color[] psColor = new Color[7];
@@ -306,11 +305,7 @@ public class JME extends JPanel
   public static void main(String args[]) {
     JFrame frame = new JFrame("JME 2D Molecular Editor");
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    newJME(args, frame, false);
-  }
-
-  protected static JME newJME(String[] args, JFrame frame, boolean embedded) {
-    JME jme = new JME(frame, embedded);
+    JME jme = new JME(frame, false);
     //frame.setSize(24*18,24*16); // urcuje dimensions pre aplikaciu
     int w = 24 * 18;
     int h = 24 * 16;
@@ -339,7 +334,6 @@ public class JME extends JPanel
         System.err.println("File " + fileName + " could not be read");
       }
     }
-    return jme;
   }
 
   // --------------------------------------------------------------------------
@@ -462,12 +456,6 @@ public class JME extends JPanel
     dimension = getSize();
     if (jmeString != null) {
       readMolecule(jmeString);
-      // co s coloring multipart a reactions ???
-      // only 1 coloring scheme (atoms || bg) may be applied
-      if (atomBgColors != null && mol != null)
-        mol.setAtomColors(atomBgColors, true);
-      if (atomColors != null && mol != null)
-        mol.setAtomColors(atomColors, false);
     } else if (molString != null)
       readMolFile(molString); // coloring tam
     //else if (smiles != null) readSmiles(smiles);
@@ -700,6 +688,8 @@ public class JME extends JPanel
       alignMolecules(lastReactant + 1, firstProduct - 1, 2);
       alignMolecules(firstProduct, nmols, 3);
     }
+    
+    setMol(false);
     repaint();
   }
 
@@ -840,7 +830,6 @@ public class JME extends JPanel
   // --------------------------------------------------------------------------
   public String molFile() {
     // creates mol file, multipart sd file or reaction (rxn file)
-    String smiles = smiles(); // now, otherwise for multipart cuts them
     String s = "";
     if (reaction) {
       int part[][] = getReactionParts();
@@ -854,11 +843,15 @@ public class JME extends JPanel
       for (int i = 1; i <= part[3][0]; i++)
         s += "$MOL" + separator + mols[part[3][i]].createMolFile(smiles);
     } else { // viac molekul do 1 mol file
+      //String smiles = smiles(); // now, otherwise for multipart cuts them
+      //if (smiles.length() > 0) {
       if (nmols > 1)
         mol = new JMEmol(this, mols, nmols);
-      s = mol.createMolFile(smiles);
+      if (mol.natoms > 0)
+        s = mol.createMolFile("");
       if (nmols > 1)
         mol = mols[actualMolecule];
+      // }
     }
     return s;
   }
@@ -894,35 +887,44 @@ public class JME extends JPanel
     } else { // single molecule - ak multipart automaticky urobi multipart
       reaction = false;
       mol = new JMEmol(this, s);
-
-      if (mol == null || mol.natoms == 0) {
-        // 2008.12
-        //info("ERROR - problems in reading/processing molecule !");
-        //System.err.println("ERROR while processing\n"+s);
-        return;
-      }
-      // coloring tu, inak pri multiupart problemy
-      if (atomBgColors != null && mol != null)
-        mol.setAtomColors(atomBgColors, true);
-      if (atomColors != null && mol != null)
-        mol.setAtomColors(atomColors, false);
-      // ak multipart, urobi viac molekul
-      int nparts = mol.checkMultipart(false);
-      if (nparts == 1) {
-        mols[++nmols] = mol;
-      } else {
-        multipart = true;
-        for (int p = 1; p <= nparts; p++)
-          mols[++nmols] = new JMEmol(this, mol, p); // aj vycentruje
-      }
-      actualMolecule = 1;
-      mol = mols[actualMolecule]; // odstrani povodnu multipart mol
-      //newMolecule = false;
-      smol = null; // kvoli undo
-      alignMolecules(1, nparts, 0);
+      setMol(true);
     }
 
     repaint();
+  }
+
+  protected boolean setMol(boolean checkMultipart) {
+    if (mol == null || mol.natoms == 0) {
+      // 2008.12
+      //info("ERROR - problems in reading/processing molecule !");
+      //System.err.println("ERROR while processing\n"+s);
+      return true;
+    }
+    
+    // coloring tu, inak pri multiupart problemy
+    if (atomBgColors != null && mol != null)
+      mol.setAtomColors(atomBgColors, true);
+    if (atomColors != null && mol != null)
+      mol.setAtomColors(atomColors, false);
+    
+    if (!checkMultipart)
+      return false;
+    
+    // ak multipart, urobi viac molekul
+    int nparts = mol.checkMultipart(false);
+    if (nparts == 1) {
+      mols[++nmols] = mol;
+    } else {
+      multipart = true;
+      for (int p = 1; p <= nparts; p++)
+        mols[++nmols] = new JMEmol(this, mol, p); // aj vycentruje
+    }
+    actualMolecule = 1;
+    mol = mols[actualMolecule]; // odstrani povodnu multipart mol
+    //newMolecule = false;
+    smol = null; // kvoli undo
+    alignMolecules(1, nparts, 0);
+    return true;
   }
 
   // --------------------------------------------------------------------------
@@ -980,8 +982,6 @@ public class JME extends JPanel
       rButton = false;
     else if (parameters.indexOf("rbutton") > -1)
       rButton = true;
-    if (parameters.indexOf("loadhydrogensoncarbon") > -1) // BH
-      loadHydrogensOnCarbon = true; // BH
     if (parameters.indexOf("nohydrogens") > -1)
       showHydrogens = false;
     else if (parameters.indexOf("hydrogens") > -1)

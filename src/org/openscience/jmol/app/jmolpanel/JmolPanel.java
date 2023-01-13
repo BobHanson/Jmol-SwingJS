@@ -160,7 +160,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   // --- action implementations -----------------------------------
 
-  protected TwoDEditorAction twoDEditorAction = new TwoDEditorAction();
+  protected TwoDEditorAction twoDEditorAction = new TwoDEditorAction(this);
   protected ExportAction exportAction = new ExportAction();
   protected PovrayAction povrayAction = new PovrayAction();
   protected ToWebAction toWebAction = new ToWebAction();
@@ -1457,8 +1457,11 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   public class TwoDEditorAction extends AbstractAction {
 
-    public TwoDEditorAction() {
+    private JmolPanel jmolPanel;
+
+    public TwoDEditorAction(JmolPanel jmolPanel) {
       super(twoDEditorActionProperty);
+      this.jmolPanel = jmolPanel;
     }
 
     @Override
@@ -1467,7 +1470,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         jmolJME = (JmolJME) Interface.getInterface(
             "org.openscience.jmol.app.jmolpanel.JmolJME", vwr,
             "2dEditorAction");
-        jmolJME.setViewer(null, vwr);
+        jmolJME.setViewer(null, vwr, jmolPanel.getTopLevelAncestor());
       }
       jmolJME.setFrameVisible(true);
       jmolJME.fromJmol();

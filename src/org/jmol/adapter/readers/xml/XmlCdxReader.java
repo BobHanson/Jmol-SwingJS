@@ -38,7 +38,7 @@ import javajs.util.Lst;
 import javajs.util.PT;
 
 /**
- * A reader for ChemDraw CDXML files.
+ * A reader for CambridgeSoft CDXML files.
  * 
  * See
  * https://www.cambridgesoft.com/services/documentation/sdk/chemdraw/cdx/IntroCDXML.htm

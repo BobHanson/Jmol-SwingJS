@@ -79,7 +79,7 @@ public class FileDropper implements DropTargetListener {
         doDrop(evt);
       }
     }));
-    Component display = (Component) vwr.display;
+    Component display = (vwr == null ? (Component) dropListener : (Component) vwr.display);
     display.setDropTarget(new DropTarget(display, this));
     display.setEnabled(true);
     //System.out.println("File dropper enabled for " + display);
