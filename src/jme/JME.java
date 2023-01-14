@@ -21,6 +21,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -110,7 +111,7 @@ public class JME extends JPanel
 
   // pouziva v double bufferingu
   Dimension dimension;
-  Image topMenu, leftMenu, infoArea, molecularArea;
+  BufferedImage topMenu, leftMenu, infoArea, molecularArea;
 
   // pre repaint()
   protected boolean doMenu = true; // ci draw menu pri repaint()
@@ -1152,19 +1153,19 @@ public class JME extends JPanel
         imagew = 1;
       if (imageh < 1)
         imageh = 1;
-      molecularArea = createImage(imagew, imageh);
+      molecularArea = (BufferedImage) createImage(imagew, imageh);
       drawMolecularArea(g);
       if (depict)
         return;
 
-      topMenu = createImage(d.width, sd * 2);
+      topMenu = (BufferedImage) createImage(d.width, sd * 2);
       drawTopMenu(g);
       imageh = d.height - sd * 2;
       if (imageh < 1)
         imageh = 1;
-      leftMenu = createImage(sd, imageh);
+      leftMenu = (BufferedImage) createImage(sd, imageh);
       drawLeftMenu(g);
-      infoArea = createImage(imagew, sd);
+      infoArea = (BufferedImage) createImage(imagew, sd);
       drawInfo(g);
     } else { // robi len cast obrazku
       drawMolecularArea(g);
@@ -1225,11 +1226,16 @@ public class JME extends JPanel
 
   // ----------------------------------------------------------------------------
   void drawMolecularArea(Graphics g) {
-    Graphics2D og = (Graphics2D) molecularArea.getGraphics();
+    paintMolecularArea(molecularArea);
+    g.drawImage(molecularArea, sd, sd * 2, this);
+  }
+
+  protected void paintMolecularArea(BufferedImage img) {
+    Graphics2D og = (Graphics2D) img.getGraphics();
     og.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
         RenderingHints.VALUE_ANTIALIAS_ON);
-    int imgWidth = dimension.width - sd;
-    int imgHeight = dimension.height - sd * 3;
+    int imgWidth = img.getWidth();
+    int imgHeight = img.getHeight();
     og.setColor(canvasBg);
     og.fillRect(0, 0, imgWidth, imgHeight);
 
@@ -1275,8 +1281,6 @@ public class JME extends JPanel
         og.drawString(molText, xstart, ystart);
       }
     }
-
-    g.drawImage(molecularArea, sd, sd * 2, this);
   }
 
   // ----------------------------------------------------------------------------

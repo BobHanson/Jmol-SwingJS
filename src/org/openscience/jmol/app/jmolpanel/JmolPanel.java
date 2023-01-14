@@ -1473,7 +1473,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         jmolJME.setViewer(null, vwr, jmolPanel.getTopLevelAncestor());
       }
       jmolJME.setFrameVisible(true);
-      jmolJME.fromJmol();
+      jmolJME.from3D();
     }
 
   }

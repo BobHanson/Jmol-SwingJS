@@ -3,6 +3,7 @@ package jme;
 // -------------------------------------------------------------------------- 
 // 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 // StringTokenizer
@@ -61,8 +62,10 @@ public class JMEmol {
   private boolean linearAdding = false; // pre ACTION_TBU (lepsie ???)
   int nchain; // pomocna variable pre CHAIN (aktualna dlzka pri rubber)
   boolean stopChain = false;
-  boolean needRecentering = false;
+  public boolean needRecentering = false;
 
+  double minx, maxx, miny, maxy;
+  
   // static constants
   static final int SINGLE = 1, DOUBLE = 2, TRIPLE = 3, AROMATIC = 5, QUERY = 9;
   static final int QB_ANY = 11, QB_AROMATIC = 12, QB_RING = 13, QB_NONRING = 14;
@@ -739,7 +742,7 @@ public class JMEmol {
   }
 
   // ----------------------------------------------------------------------------
-  void draw(Graphics g) {
+  public void draw(Graphics g) {
     int atom1, atom2;
     double xa, ya, xb, yb, dx, dy, dd, sina = 1., cosa = 1.;
     double sirka2s, sirka2c;
@@ -1176,19 +1179,9 @@ public class JMEmol {
 
   // ----------------------------------------------------------------------------
   void centerPoint(double center[]) {
+    getMinMax();
     // returns x and y of the centre of the molecule
     // also x and y dimensions (for depict)
-    double minx = 9999., maxx = -9999., miny = 9999., maxy = -9999.;
-    for (int i = 1; i <= natoms; i++) {
-      if (x[i] < minx)
-        minx = x[i];
-      if (x[i] > maxx)
-        maxx = x[i];
-      if (y[i] < miny)
-        miny = y[i];
-      if (y[i] > maxy)
-        maxy = y[i];
-    }
     center[0] = (minx + (maxx - minx) / 2.);
     center[1] = (miny + (maxy - miny) / 2.);
     // for scaling in depict
@@ -1198,6 +1191,41 @@ public class JMEmol {
       center[2] = RBOND;
     if (center[3] < RBOND)
       center[3] = RBOND;
+  }
+
+  protected void getMinMax() {
+    minx = miny = Double.MAX_VALUE;
+    maxx = maxy =-Double.MAX_VALUE;
+   for (int i = 1; i <= natoms; i++) {
+     if (x[i] < minx)
+       minx = x[i];
+     if (x[i] > maxx)
+       maxx = x[i];
+     if (y[i] < miny)
+       miny = y[i];
+     if (y[i] > maxy)
+       maxy = y[i];
+   }
+  }
+  
+  /**
+   * shift to an origin and return a dimension 
+   * @param marginPixelsX
+   * @param marginPixelsY
+   * @return pixel dimension of framed model
+   */
+  public Dimension shiftToXY(double marginPixelsX, double marginPixelsY) {
+    if (natoms == 0)
+      return new Dimension();
+    getMinMax();
+    marginPixelsX /= jme.depictScale;
+    marginPixelsY /= jme.depictScale;
+    needRecentering = false;
+    for (int i = 1; i <= natoms; i++) {
+      x[i] = x[i] - minx + marginPixelsX;
+      y[i] = y[i] - miny + marginPixelsY;
+    }
+    return new Dimension((int) ((marginPixelsX * 2 + (maxx - minx)) * jme.depictScale), (int) ((marginPixelsY * 2 + (maxy - miny)) * jme.depictScale));
   }
 
   // ----------------------------------------------------------------------------
@@ -5531,6 +5559,18 @@ public class JMEmol {
   }
   // ----------------------------------------------------------------------------
 
+  public double[][] saveXY() {
+    double[] x = new double[natoms + 1]; 
+    double[] y = new double[natoms + 1];
+    System.arraycopy(this.x, 1, x, 1, natoms);
+    System.arraycopy(this.y, 1, y, 1, natoms);
+    return new double[][] { x, y };
+  }
+
+  public void restoreXY(double[][] xy) {
+    System.arraycopy(xy[0], 1, x, 1, natoms);
+    System.arraycopy(xy[1], 1, y, 1, natoms);
+  }
 
 }
 // ----------------------------------------------------------------------------

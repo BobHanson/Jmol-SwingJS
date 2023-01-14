@@ -102,7 +102,7 @@ class AtomIterator implements JmolAdapterAtomIterator {
 	
 	@Override
   public int getFormalCharge() {
-		return atom.formalCharge;
+		return (atom.formalCharge == Integer.MIN_VALUE ? 0 : atom.formalCharge);
 	}
 
 	

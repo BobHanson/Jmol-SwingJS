@@ -54,6 +54,7 @@ import net.sf.jniinchi.JniInchiAtom;
 import net.sf.jniinchi.JniInchiBond;
 import net.sf.jniinchi.JniInchiInput;
 import net.sf.jniinchi.JniInchiInputInchi;
+import net.sf.jniinchi.JniInchiOutput;
 import net.sf.jniinchi.JniInchiOutputStructure;
 import net.sf.jniinchi.JniInchiStereo0D;
 import net.sf.jniinchi.JniInchiStructure;
@@ -112,7 +113,11 @@ public class InChIJNI implements JmolInChI {
           if (getStructure) {
             return toString(struc);
           }
-          inchi = JniInchiWrapper.getInchi(in).getInchi();
+          JniInchiOutput out = JniInchiWrapper.getInchi(in);
+          String msg = out.getMessage();
+          if (msg != null)
+            System.err.println(msg);
+          inchi = out.getInchi();
         }
       }
       if (getSmiles || getStructure) {
@@ -123,7 +128,7 @@ public class InChIJNI implements JmolInChI {
             : getStructure(struc));
       }
       return (getKey ? JniInchiWrapper.getInchiKey(inchi).getKey() : inchi);
-    } catch (Exception e) {
+    } catch (Throwable e) {
 
       System.out.println(e);
 
@@ -231,21 +236,46 @@ public class InChIJNI implements JmolInChI {
       JmolAdapterBondIterator bi = adapter.getBondIterator(asc);
       JniInchiAtom[] atoms = new JniInchiAtom[asc.getAtomSetAtomCount(0)];
       int n = 0;
+      Map<Object, Integer> atomMap = new Hashtable<Object, Integer>();
       while (ai.hasNext() && n < atoms.length) {
         P3d p = ai.getXYZ();
-        JniInchiAtom a = new JniInchiAtom(p.x, p.y, p.z,
-            Elements.elementSymbolFromNumber(ai.getElementNumber()));
+        int atno = ai.getElementNumber();
+        if (atno <= 0) {          
+        System.err.println("InChIJNI atom " + p + " index " + ai.getUniqueID() + " is not a valid element");
+        return null;
+        }
+        String sym = Elements.elementSymbolFromNumber(atno);
+        JniInchiAtom a = new JniInchiAtom(p.x, p.y, p.z, sym);
         a.setCharge(ai.getFormalCharge());
         mol.addAtom(a);
+        atomMap.put(ai.getUniqueID(), Integer.valueOf(n));
         atoms[n++] = a;
       }
+      int nb = 0;
       while (bi.hasNext()) {
         INCHI_BOND_TYPE order = getOrder(bi.getEncodedOrder());
-        if (order != null)
-          mol.addBond(new JniInchiBond(
-              atoms[((Integer) bi.getAtomUniqueID1()).intValue()],
-              atoms[((Integer) bi.getAtomUniqueID2()).intValue()], order));
+        if (order != null) {
+          Integer id1 = atomMap.get(bi.getAtomUniqueID1());
+          Integer id2 = atomMap.get(bi.getAtomUniqueID2());
+          if (id1 == null || id2 == null) {
+            System.err.println("InChIJNI bond " + nb + "has null atom " 
+          + (id1 == null ? bi.getAtomUniqueID1() : "") + " " 
+                + (id2 == null ? bi.getAtomUniqueID2() : ""));
+            return null;
+          }
+          JniInchiAtom a = atoms[id1.intValue()];
+          JniInchiAtom b = atoms[id2.intValue()];
+          if (a == null || b == null) {
+            System.err.println("InChIJNI bond " + nb + "has null atom: " + a + "/" + b + " for ids " + id1 + " " + id2 + " and " + n + " atoms");
+            return null;
+          }
+          mol.addBond(new JniInchiBond(a, b, order));
+          nb++;
+        }
       }
+    } catch (Throwable t){
+      t.printStackTrace();
+      System.err.println(t.toString());
     } finally {
       try {
         if (r instanceof BufferedReader) {
