@@ -24,6 +24,7 @@
 package org.openscience.jmol.app.jmolpanel;
 
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -31,11 +32,15 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -44,13 +49,14 @@ import javax.swing.JPanel;
 
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.Resolver;
+import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.adapter.writers.CDXMLWriter;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterAtomIterator;
 import org.jmol.api.JmolAdapterBondIterator;
 import org.jmol.api.JmolDropEditor;
+import org.jmol.api.JmolViewer;
 import org.jmol.awt.FileDropper;
-import org.jmol.smiles.SmilesMatcher;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -61,8 +67,12 @@ import jme.JMEmol;
 public class JmolJME extends JME implements WindowListener, JmolDropEditor {
 
   Viewer vwr;
+  private Container parentWindow;
   private String fileName;
-  private Container window;
+  /**
+   * allows working headlessly if no frame is defined
+   */
+  private boolean headless = true;
   
   public JmolJME() {
     super(null, true);
@@ -70,8 +80,9 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
   }
   
   public void setViewer(JFrame frame, Viewer vwr, Container parent) {
-    window = parent;
+    parentWindow = parent;
     this.vwr = vwr;
+    headless  = vwr.headless;
     setDropTarget(new DropTarget(this, new FileDropper(null, null, this)));
 
     if (frame == null) {
@@ -101,7 +112,7 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-          fromJmol();
+          from3D();
         }
 
       });
@@ -143,15 +154,24 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
         }
 
       });
-      p.add(b = new JButton("close"));
+      p.add(b = new JButton("to PNG"));
       b.addActionListener(new ActionListener() {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-          myFrame.setVisible(false);
+          toPNG(null);
         }
 
       });
+//      p.add(b = new JButton("close"));
+//      b.addActionListener(new ActionListener() {
+//
+//        @Override
+//        public void actionPerformed(ActionEvent e) {
+//          myFrame.setVisible(false);
+//        }
+//
+//      });
       frame.add("South", pp);
       frame.setBounds(300, 300, 600, 400);
       frame.addWindowListener(this);
@@ -161,6 +181,29 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
     frame.setVisible(true);
   }
 
+  public void toPNG(String filename) {
+    try {
+      BufferedImage img = getImage(30, 10);
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      ImageIO.write(img, "PNG", bos);
+      toFile(filename == null ? "?jmol.png" : filename, bos.toByteArray(), "png");
+    } catch (IOException e1) {
+      sorry("Something went wrong: " + e1);            
+    }
+  }
+
+  public BufferedImage getImage(int marginX, int marginY) {
+    double[][] xy = mol.saveXY();
+    Dimension d = mol.shiftToXY(marginX, marginY);
+    BufferedImage img = new BufferedImage(d.width, d.height, BufferedImage.TYPE_INT_ARGB);
+    boolean needRecenter = mol.needRecentering;
+    mol.needRecentering = false;
+    paintMolecularArea(img);
+    mol.needRecentering = needRecenter;
+    mol.restoreXY(xy);
+    return img;
+  }
+  
   private String getTitle() {
     return "Jmol/JME 2D Molecular Editor" + (fileName == null ? "" : " " + fileName);
   }
@@ -179,7 +222,8 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
 
   @Override
   public void windowClosed(WindowEvent e) {
-    myFrame.setVisible(false);
+    if (myFrame != null)
+      myFrame.setVisible(false);
   }
 
   @Override
@@ -207,10 +251,15 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
   }
 
   public void dispose() {
-    myFrame.dispose();
+    // dereference externals
+    vwr = null;
+    if (myFrame != null)
+      myFrame.dispose();
+    myFrame = null;
+    parentWindow = null;
   }
 
-  public void fromJmol() {
+  public void from3D() {
     if (vwr.getFrameAtoms().isEmpty())
       return;
     Map<String, Object> info = vwr.getCurrentModelAuxInfo();
@@ -230,6 +279,7 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
       if (mol == null) {
         sorry("Something went wrong.");
       }
+      clear();
       readMolFile(mol);
     } catch (Exception e) {
       sorry(e.toString());
@@ -271,14 +321,16 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
     return vwr.getFileAsString(url);
   }
 
-  private void sorry(String msg) {
+  void sorry(String msg) {
     System.err.println(msg);
-    JOptionPane.showMessageDialog(this, msg, "Sorry, can't do that.", JOptionPane.INFORMATION_MESSAGE);
+    if (!headless)
+      JOptionPane.showMessageDialog(this, msg, "Sorry, can't do that.", JOptionPane.INFORMATION_MESSAGE);
   }
 
-  private void say(String msg) {
+  void say(String msg) {
     System.out.println(msg);
     infoText = msg;
+//    if (!headless)
 //    JOptionPane.showMessageDialog(this, msg, "Hmm.", JOptionPane.INFORMATION_MESSAGE);
   }
 
@@ -292,34 +344,27 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
     String mol = getMolFromSmiles(smiles, true);
     Map<String, Object> htParams = new Hashtable<String, Object>();
     vwr.openStringInlineParamsAppend(mol, htParams, isAppend);
-    window.requestFocus();
-    vwr.refresh(Viewer.REFRESH_REPAINT, "JmolJME");
-    
+    if (!headless) {
+      parentWindow.requestFocus();
+      vwr.refresh(Viewer.REFRESH_REPAINT, "JmolJME");
+    }
+
   }
 
   public void setFrameVisible(boolean b) {
-    myFrame.setVisible(b);
+    if (myFrame != null)
+      myFrame.setVisible(b);
   }
 
   protected void toMOL() {
     String mol = molFile();
-    toFile("?jmol.mol", mol);
-  }
-
-  private void toFile(final String name, final String mol) {
-    new Thread(new Runnable() {
-
-      @Override
-      public void run() {
-        vwr.writeTextFile(name, mol);
-      }
-    }).start();
+    toFile("?jmol.mol", mol, "txt");
   }
 
   protected void toCDXML() {
     String mol = molFile();
     String xml = CDXMLWriter.fromString(vwr, "Mol", mol);
-    toFile("?jmol.cdxml", xml);
+    toFile("?jmol.cdxml", xml, "txt");
   }
 
   /**
@@ -329,6 +374,10 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
    */
   @Override
   public void loadFile(String fname) {
+    read2Dor3DFile(fname);
+  }
+  
+  private void read2Dor3DFile(String fname) {
     try {
       setFileName(fname);
       // from file dropper
@@ -337,12 +386,13 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
       String type = vwr.getModelAdapter().getFileTypeName(bis);
       bis.close();
       if ("Jme".equals(type)) {
+        clear();
         readMolecule(vwr.getFileAsString(fname));
         mol.center();
         return;
       }
       Map<String, Object> htParams = new Hashtable<String, Object>();
-      htParams.put("filter", "NOH;fileType=" + type);
+      htParams.put("filter", "NOH;NO3D;fileType=" + type);
       htParams.put("binary", Boolean.valueOf(isBinary));
       vwr.setLoadParameters(htParams, false);
       bis = new BufferedInputStream(new FileInputStream(fname));
@@ -352,10 +402,11 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
         AtomSetCollection asc = (AtomSetCollection) ret;
         Map<String, Object> info = asc.getAtomSetAuxiliaryInfo(0);
         boolean is2D = "2D".equals(info.get("dimension"));
+        clear();
         if (is2D) {
-          drop2D(fname, asc);
+          read2D(fname, asc);
         } else {
-          drop3D(fname);
+          read3D(fname);
         }
         mol.center();
       } else {
@@ -368,13 +419,13 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
     repaint();
     System.out.println("JJME " + fname);
   }
-  
+
   private void setFileName(String fname) {
     // TODO
     this.fileName = fname;
   }
 
-  private void drop2D(String fname, AtomSetCollection asc) {
+  private void read2D(String fname, AtomSetCollection asc) {
     this.fileName = fname;
     reaction = false;
      JmolAdapter a = vwr.getModelAdapter();
@@ -414,7 +465,7 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
 
     
   
-  private void drop3D(String fname) {
+  private void read3D(String fname) {
     String mol = vwr.getFileAsString(fname);
     loadSmilesCleanly(getSmiles(mol));
   }
@@ -459,4 +510,36 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
     }
   }
 
+  private void toFile(String name, final Object bytesOrString, final String type) {
+    boolean useThread = (name.indexOf("?") >= 0);
+    if (useThread && headless) {
+        sorry("Filenames must not contain '?' in headless mode - '?' replaced with '_'");
+        name = name.replace('?', '_');
+        useThread = false;
+    }
+    final String finalName = name;
+    Runnable r = new Runnable() {
+
+      @Override
+      public void run() {
+        System.out.println("JmolJME writing file " + finalName);
+        vwr.writeFile(finalName, bytesOrString, type);
+      }
+    };
+    if (useThread) {
+      new Thread(r).start();
+    } else {
+      r.run();
+    }
+  }
+
+  public static void main(String[] args) {
+    Viewer vwr = (Viewer) JmolViewer.allocateViewer(null, new SmarterJmolAdapter());
+    JmolJME jjme = new JmolJME();
+    jjme.vwr = vwr;
+    jjme.headless = true;
+    String mol = vwr.getFileAsString("c:/temp/jmetest.mol");
+    jjme.readMolFile(mol); 
+    jjme.toPNG("c:/temp/test.png");
+  }
 }

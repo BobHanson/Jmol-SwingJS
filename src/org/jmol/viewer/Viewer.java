@@ -8633,10 +8633,14 @@ public class Viewer extends JmolViewer
 
   @Override
   public String writeTextFile(String fileName, String data) {
+    return writeFile(fileName, data, "txt");
+  }
+
+  public String writeFile(String fileName, Object data, String type) {
     Map<String, Object> params = new Hashtable<String, Object>();
     params.put("fileName", fileName);
-    params.put("type", "txt");
-    params.put("text", data);
+    params.put("type", type);
+    params.put((data instanceof String ? "text" : "bytes"), data);
     return outputToFile(params);
   }
 
