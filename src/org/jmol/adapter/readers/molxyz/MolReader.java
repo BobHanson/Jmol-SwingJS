@@ -86,10 +86,14 @@ public class MolReader extends AtomSetCollectionReader {
   private int atomCount;
   private String[] atomData;
   public BS bsDeleted;
+  public boolean haveNonzeroZ;
   /**
    * fix charges for RN(=O)(O), =N(O)*, =N
    */
   private boolean fixN;
+  private boolean is3D;
+  private int nDouble;
+  private int nH, nC;
 
   @Override
   public void initializeReader() throws Exception {
@@ -134,13 +138,38 @@ public class MolReader extends AtomSetCollectionReader {
     if (fixN) {
       addJmolScript("{search('[Nv4+0,nv4+0]')}.formalCharge=1;{search('{[Ov1-0]}[Nv4+1,nv4+1]')}.formalCharge=-1;");
     }
-    if (is2D)
-      set2D();
+    check2D3D();
     if (bsDeleted != null) {
         asc.getBSAtoms(-1).andNot(bsDeleted);
     }
     isTrajectory = false;
     finalizeReaderASCR();
+  }
+
+  /**
+   * Make some attempt to account for missing 2D/3D information or wrong information
+   * @throws Exception 
+   */
+  private void check2D3D() throws Exception {
+    if (haveNonzeroZ) {
+      if (is2D) {
+        is2D = optimize2D = false;
+      }
+    } else if (!is2D && !is3D) {
+      // all z values zero and no 2D or 3D flag
+      if (nC > 0 && nH == 0 && nDouble != 0) {
+        // JME does not write the 2D/3D line correctly
+        // double bonds with carbons and no hydrogens
+        // assume is 2D
+        is2D = true;
+      }
+    }
+    if (is2D) {
+      if (!allow2D) {
+          throw new Exception("File is 2D, not 3D");
+      }
+      set2D();
+    }
   }
 
   private void processMolSdHeader() throws Exception {
@@ -172,11 +201,12 @@ public class MolReader extends AtomSetCollectionReader {
     if (line == null)
       return;
     header += line + "\n";
-    is2D = (line.length() >= 22 && line.substring(20, 22).equals("2D"));
-    if (is2D) {
-      if (!allow2D)
-        throw new Exception("File is 2D, not 3D");
-    }
+    // default will be to have this be 3D, but we will also check
+    
+    String dim = (line.length() >= 22 ? line.substring(20, 22) : null);
+    is2D = "2D".equals(dim);
+    is3D = "3D".equals(dim);
+    
     // Line 3: A line for comments. If no comment is entered, a blank line 
     // must be present.
     rd();
@@ -228,8 +258,6 @@ public class MolReader extends AtomSetCollectionReader {
       // Thus “3D” really means 3D,
       // although “2D” will be interpreted as 3D if 
       // any non-zero Z-coordinates are found.
-      if (is2D && z != 0)
-        is2D = optimize2D = false;
       if (len < 34) {
         // deal with older Mol format where nothing after the symbol is used
         elementSymbol = line.substring(31).trim();
@@ -278,8 +306,10 @@ public class MolReader extends AtomSetCollectionReader {
       iAtom1 = line.substring(0, 3).trim();
       iAtom2 = line.substring(3, 6).trim();
       int order = parseIntRange(line, 6, 9);
-      if (is2D && order == 1 && line.length() >= 12)
+      if ((is2D || !is3D) && order == 1 && line.length() >= 12)
         stereo = parseIntRange(line, 9, 12);
+      if (stereo != 0 && !is3D)
+        is2D = true;
       order = fixOrder(order, stereo);
       if (haveAtomSerials)
         asc.addNewBondFromNames(iAtom1, iAtom2, order);
@@ -437,6 +467,11 @@ public class MolReader extends AtomSetCollectionReader {
 
   public Atom addMolAtom(int iAtom, int isotope, String elementSymbol,
                          int charge, double x, double y, double z) {
+    if ("H".equals(elementSymbol))
+      nH++;
+    else if ("C".equals(elementSymbol))
+      nC++;
+    haveNonzeroZ |= (Math.abs(z) > 0.001d);
     switch (isotope) {
     case 0:
       break;
@@ -452,8 +487,6 @@ public class MolReader extends AtomSetCollectionReader {
     default:
       elementSymbol = isotope + elementSymbol;
     }
-    if (optimize2D && z != 0)
-      optimize2D = false;
     Atom atom = new Atom();
     atom.elementSymbol = elementSymbol;
     atom.formalCharge = charge;
@@ -477,17 +510,21 @@ public class MolReader extends AtomSetCollectionReader {
     case 1:
       switch (stereo) {
       case 1: // UP
+        is2D = true;
         return JmolAdapter.ORDER_STEREO_NEAR;
       case 3: // DOWN, V3000
       case 6: // DOWN
+        is2D = true;
         return JmolAdapter.ORDER_STEREO_FAR;
       case 2: // either, V3000
       case 4: // either
+        is2D = true;
         return JmolAdapter.ORDER_STEREO_EITHER;
       }
       break;
     case 2:
     case 3:
+      nDouble++;
       break;
     case 4:
       return JmolAdapter.ORDER_AROMATIC;

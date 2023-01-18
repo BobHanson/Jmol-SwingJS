@@ -70,9 +70,16 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
   private Container parentWindow;
   private String fileName;
   /**
-   * allows working headlessly if no frame is defined
+   * allows working headlessly if no frame is defined; set false if a frame is
+   * present
    */
   private boolean headless = true;
+  
+  /**
+   * debug flag; set to false to see an actual 2D structure before SMILES-based
+   * cleaning.
+   */
+  private boolean allowClean = true;
   
   public JmolJME() {
     super(null, true);
@@ -480,6 +487,8 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
   }
 
   void doClean() {
+    if (!allowClean)
+      return;
     String smiles = vwr.getInchi(null, molFile(), "smiles");
     loadSmilesCleanly(smiles);
   }

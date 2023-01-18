@@ -91,9 +91,6 @@ public class V3000Rdr {
       double z = mr.parseDoubleStr(tokens[++pt]);
       int charge = 0;
       int isotope = 0;
-      if (mr.is2D && z != 0)
-        mr.is2D = mr.optimize2D = false;
-
       for (int j = ++pt; j < tokens.length; j++) {
         String s = tokens[j].toUpperCase();
         if (s.startsWith("CHG="))

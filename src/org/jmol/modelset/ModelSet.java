@@ -2955,8 +2955,8 @@ public class ModelSet extends BondCollection {
       min2 = hbondMinRasmol * hbondMinRasmol;
     }
     double max2 = dmax * dmax;
-    double minAttachedAngle = (vwr.getDouble(T.hbondsangleminimum)
-        * Math.PI / 180);
+    double minAttachedAngle = (vwr.getDouble(T.hbondsangleminimum) * Math.PI
+        / 180);
     int nNew = 0;
     double d2 = 0;
     V3d v1 = new V3d();
@@ -3001,22 +3001,20 @@ public class ModelSet extends BondCollection {
         Atom atomNear = at[iter.next()];
         int elementNumberNear = atomNear.getElementNumber();
         if (atomNear == atom
-            || (isH ? elementNumberNear == 1 : elementNumberNear != 7 && elementNumberNear != 8)
+            || (isH ? elementNumberNear == 1
+                : elementNumberNear != 7 && elementNumberNear != 8)
             || (d2 = iter.foundDistance2()) < min2 || d2 > max2
-            || firstIsCO && bsCO.get(atomNear.i) 
-            || atom.isBonded(atomNear)) {
+            || firstIsCO && bsCO.get(atomNear.i) || atom.isBonded(atomNear)) {
           continue;
         }
-        if (minAttachedAngle > 0) {
-          v1.sub2(atom, atomNear);
-          if ((D = checkMinAttachedAngle(atom, minAttachedAngle, v1, v2,
-              haveHAtoms)) == null)
-            continue;
-          v1.scale(-1);
-          if ((C = checkMinAttachedAngle(atomNear, minAttachedAngle, v1, v2,
-              haveHAtoms)) == null)
-            continue;
-        }
+        v1.sub2(atom, atomNear);
+        if ((D = checkMinAttachedAngle(atom, minAttachedAngle, v1, v2,
+            haveHAtoms)) == null)
+          continue;
+        v1.scale(-1);
+        if ((C = checkMinAttachedAngle(atomNear, minAttachedAngle, v1, v2,
+            haveHAtoms)) == null)
+          continue;
         double energy = 0;
         short bo;
         if (isH && !Double.isNaN(C.x) && !Double.isNaN(D.x)) {

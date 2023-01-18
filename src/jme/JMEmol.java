@@ -4731,8 +4731,8 @@ public class JMEmol {
       s = s.substring(0, 76) + "...";
     s += JME.separator;
     // since 2006.01 added one space to header line (two newlines causes problems in tokenizer)
-    s += PropertyManager.getSDFDateLine("JME " + JME.version, true);
-    s += "JME " + JME.version + " " + new Date() + JME.separator;
+    s += PropertyManager.getSDFDateLine("JME" + JME.version, true)
+        + "JME " + JME.version + " " + new Date() + JME.separator;
     //counts line
     s += iformat(natoms, 3) + iformat(nbonds, 3);
     s += "  0  0  0  0  0  0  0  0999 V2000" + JME.separator;
@@ -4849,8 +4849,8 @@ public class JMEmol {
     if (s.length() > 79)
       s = s.substring(0, 76) + "...";
     s += JME.separator;
-    s += "JME " + JME.version + " " + new Date() + JME.separator + " "
-        + JME.separator;
+    s += PropertyManager.getSDFDateLine("JME" + JME.version, true)
+        + "JME " + JME.version + " " + new Date()  + JME.separator;
     //counts line
     s += "  0  0  0  0  0  0  0  0  0  0999 V3000" + JME.separator;
     s += mv30 + "BEGIN CTAB" + JME.separator;

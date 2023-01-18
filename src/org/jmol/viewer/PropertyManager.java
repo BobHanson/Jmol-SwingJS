@@ -2083,7 +2083,7 @@ public class PropertyManager implements JmolPropertyManager {
   }
 
   public static String getSDFDateLine(String version, boolean is2d) {
-    SB mol = SB.newS((version + "         ").substring(0, 9));
+    SB mol = SB.newS((version + "          ").substring(0, 10));
     int cMM, cDD, cYYYY, cHH, cmm;
     /**
      * @j2sNative
@@ -2100,7 +2100,7 @@ public class PropertyManager implements JmolPropertyManager {
       cHH = c.get(Calendar.HOUR_OF_DAY);
       cmm = c.get(Calendar.MINUTE);
     }
-    PT.rightJustify(mol, "_00", "" + (1 + cMM));
+    PT.rightJustify(mol, "00", "" + (1 + cMM));
     PT.rightJustify(mol, "00", "" + cDD);
     mol.append(("" + cYYYY).substring(2, 4));
     PT.rightJustify(mol, "00", "" + cHH);

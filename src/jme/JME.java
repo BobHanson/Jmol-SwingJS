@@ -30,6 +30,7 @@ import java.util.StringTokenizer;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -45,9 +46,9 @@ public class JME extends JPanel
 
   public JFrame myFrame;
 
-  Point aboutBoxPoint = new Point(500, 10);
-  Point smilesBoxPoint = new Point(200, 50);
-  Point atomxBoxPoint = new Point(150, 420);
+  Point aboutBoxPoint = null;//new Point(500, 10);
+  Point smilesBoxPoint = null;//new Point(200, 50);
+  Point atomxBoxPoint = null;//new Point(150, 420);
   JTextField atomicSymbol = new JTextField("H"); // pouziva sa v JME
 
   // editor state
@@ -58,8 +59,8 @@ public class JME extends JPanel
   final static String separator = "\n";
 
   // customization
-  static final String version = "2023.01";
-  protected String infoText = "JME Molecular Editor by Peter Ertl, Novartis";
+  static final String version = "2023.01.02";
+  protected String infoText = "JME Molecular Editor by Peter Ertl, Peter Bienfait, and Robert Hanson";
   int sd = 24;
   int arrowWidth = 24 * 2;
   static Color bgColor = Color.lightGray;
@@ -127,7 +128,7 @@ public class JME extends JPanel
   static final int ACTION_MARK = 105;
   static final int ACTION_DELGROUP = 106;
   static final int ACTION_SMI = 101;
-  static final int ACTION_END = 111;
+//  static final int ACTION_END = 111;
   static final int ACTION_QRY = 107;
   static final int ACTION_UNDO = 110;
   static final int ACTION_REACP = 109;
@@ -295,6 +296,7 @@ public class JME extends JPanel
 
   public void setFrame(JFrame frame) {
     myFrame = frame;
+    frame.setName("JME"); // for embedding in <div id="testApplet-JME-div">
     frame.add("Center", this);
     frame.addKeyListener(this);
     addMouseListener(this);
@@ -1443,14 +1445,14 @@ public class JME extends JPanel
         // set na action_mark
         currentMark = 1; // starts from 1
         break;
-      case ACTION_END:
-        if (embedded) {
-          if (myFrame != null)
-            myFrame.setVisible(false);
-          return;
-        }
-        System.exit(0);
-        break;
+//      case ACTION_END:
+//        if (embedded) {
+//          if (myFrame != null)
+//            myFrame.setVisible(false);
+//          return;
+//        }
+//        System.exit(0);
+//        break;
       case ACTION_REACP:
         // save ???
         action = action_old;
@@ -1585,8 +1587,8 @@ public class JME extends JPanel
     if (square == ACTION_AN_R && !rButton)
       return;
 
-    if (square == ACTION_END && !application)
-      return;
+//    if (square == ACTION_END && !application)
+//      return;
     if (square == ACTION_QRY && !query)
       return;
     if (square == ACTION_STEREO && !stereo)
@@ -1625,9 +1627,9 @@ public class JME extends JPanel
           g.fillRect(xstart + sd - 10, ystart + 8, 2, 3);
         }
         break;
-      case ACTION_END:
-        squareText(g, xstart, ystart, "END");
-        break;
+//      case ACTION_END:
+//        squareText(g, xstart, ystart, "END");
+//        break;
       case ACTION_QRY:
         g.setColor(Color.orange);
         g.fillRect(xstart + 4, ystart + 4, sd - 8, sd - 8); // head
@@ -1902,8 +1904,8 @@ public class JME extends JPanel
 
       // vyradene empty buttons
       int action = ybutton * 100 + xbutton;
-      if (!application && action == ACTION_END)
-        return true;
+//      if (!application && action == ACTION_END)
+//        return true;
       if (!query && action == ACTION_QRY)
         return true;
       if (!stereo && action == ACTION_STEREO)
@@ -2591,13 +2593,13 @@ public class JME extends JPanel
 }
 
 // ****************************************************************************
-class MultiBox extends JFrame implements KeyListener {
+class MultiBox extends JDialog implements KeyListener {
   JTextField smilesText;
   JME jme; // parent of MultiBox
   // ----------------------------------------------------------------------------
 
   MultiBox(int box, JME jme) {
-    super();
+    super(jme.myFrame);
     this.jme = jme;
     setFont(jme.fontSmall);
     setBackground(JME.bgColor);
@@ -2610,9 +2612,7 @@ class MultiBox extends JFrame implements KeyListener {
       createAtomxBox();
     else
       createAboutBox();
-
-    pack();
-    setVisible(true);
+   setVisible(true);
   }
 
   // ----------------------------------------------------------------------------
@@ -2623,22 +2623,28 @@ class MultiBox extends JFrame implements KeyListener {
     setBackground(JME.bgColor);
     add(new JLabel("JSME Molecular Editor" + " v" + JME.version,
         SwingConstants.CENTER));
-    add(new JLabel("Peter Ertl and Bruno BienFait", SwingConstants.CENTER));
-    //add(new JLabel("peter.ertl@novartis.com",Label.CENTER));
+    add(new JLabel("Peter Ertl, Bruno BienFait, and Robert Hanson", SwingConstants.CENTER));
     JPanel p = new JPanel();
     JButton b = new JButton("Close");
     b.addActionListener(new ActionListener() {
 
       @Override
       public void actionPerformed(ActionEvent e) {
-        jme.aboutBoxPoint = jme.aboutBox.getLocationOnScreen();
+//        jme.aboutBoxPoint = jme.aboutBox.getLocationOnScreen();
         jme.aboutBox.setVisible(false);
       }
 
     });
     p.add(b);
     add(p);
-    setLocation(jme.aboutBoxPoint);
+    pack();
+    setLocationRelativeTo(jme.myFrame);
+    // BH just center it
+//    if (jme.aboutBoxPoint == null) {
+//      jme.aboutBoxPoint = getLocation();
+//    }
+//
+    //setLocation(jme.aboutBoxPoint);
   }
 
   // ----------------------------------------------------------------------------
@@ -2663,12 +2669,26 @@ class MultiBox extends JFrame implements KeyListener {
     p.add(b);
     if (jme.runsmi) {
       b = new JButton("Submit");
-      p.add(b);
+      b.addActionListener(new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          
+        }
+        
+      });
+      p.add(b);  
     }
     add("South", p);
     smilesText.setText(smilesText.getText().trim()); // odstrani "      "
     setResizable(true);
-    setLocation(jme.smilesBoxPoint);
+    pack();
+    if (jme.smilesBoxPoint == null) {
+      setLocationRelativeTo(jme.myFrame);
+      jme.smilesBoxPoint = getLocation();
+    } else {
+      setLocation(jme.smilesBoxPoint);
+    }
   }
 
   // ----------------------------------------------------------------------------
@@ -2685,7 +2705,7 @@ class MultiBox extends JFrame implements KeyListener {
 
   // ----------------------------------------------------------------------------
   void createAtomxBox() {
-    setTitle("nonstandard atom");
+   setTitle("nonstandard atom");
     setLayout(new BorderLayout(2, 0)); // 2, 0 gaps
     JPanel p = new JPanel();
     p.add(new JLabel("atomic SMILES", SwingConstants.CENTER));
@@ -2697,7 +2717,7 @@ class MultiBox extends JFrame implements KeyListener {
     jme.atomicSymbol = new JTextField(as, 8);
     add("Center", jme.atomicSymbol);
     p = new JPanel();
-    JButton b = new JButton("Close ");
+    JButton b = new JButton("Close");
     b.addActionListener(new ActionListener() {
 
       @Override
@@ -2709,7 +2729,13 @@ class MultiBox extends JFrame implements KeyListener {
     });
     p.add(b);
     add("South", p);
-    setLocation(jme.atomxBoxPoint);
+    pack();
+    if (jme.atomxBoxPoint == null) {
+      setLocationRelativeTo(jme.myFrame);
+      jme.atomxBoxPoint = getLocation();
+    } else {
+      setLocation(jme.atomxBoxPoint);
+    }
   }
   /**
    * @param e 
@@ -2758,6 +2784,8 @@ class QueryBox extends JFrame {
   // --- JButtony etc su definovane ako static aby sa zachovala ich hodnota po
   //     novom stlacenie QRY (aby sa window dostalo hore)
   // ----------------------------------------------------------------------------
+  private JButton resetButton;
+  private JButton closeButton;
 
   QueryBox(JME jme) {
     super("Atom/Bond Query");
@@ -2775,9 +2803,9 @@ class QueryBox extends JFrame {
     boolean first = true;
 
     if (first) {
-      jme.any = new JButton("Any");
-      jme.anyec = new JButton("Any except C");
-      jme.halogen = new JButton("Halogen");
+      jme.any = newJButton("Any");
+      jme.anyec = newJButton("Any except C");
+      jme.halogen = newJButton("Halogen");
     }
     p1.add(jme.any);
     p1.add(jme.anyec);
@@ -2794,15 +2822,15 @@ class QueryBox extends JFrame {
     //p3.setLayout(new GridLayout(1,0));
     p3.setLayout(new FlowLayout(FlowLayout.LEFT, 3, 1));
     if (first) {
-      jme.c = new JButton("C");
-      jme.n = new JButton("N");
-      jme.o = new JButton("O");
-      jme.s = new JButton("S");
-      jme.p = new JButton("P");
-      jme.f = new JButton("F");
-      jme.cl = new JButton("Cl");
-      jme.br = new JButton("Br");
-      jme.i = new JButton("I");
+      jme.c = newJButton("C");
+      jme.n = newJButton("N");
+      jme.o = newJButton("O");
+      jme.s = newJButton("S");
+      jme.p = newJButton("P");
+      jme.f = newJButton("F");
+      jme.cl = newJButton("Cl");
+      jme.br = newJButton("Br");
+      jme.i = newJButton("I");
     }
     p3.add(jme.c);
     p3.add(jme.n);
@@ -2852,16 +2880,16 @@ class QueryBox extends JFrame {
     p6.setLayout(new FlowLayout(FlowLayout.LEFT, 3, 1));
     p6.add(new JLabel("Atom is :"));
     if (first)
-      jme.aromatic = new JButton("Aromatic");
+      jme.aromatic = newJButton("Aromatic");
     p6.add(jme.aromatic);
     if (first)
-      jme.nonaromatic = new JButton("Nonaromatic");
+      jme.nonaromatic = newJButton("Nonaromatic");
     p6.add(jme.nonaromatic);
     if (first)
-      jme.ring = new JButton("Ring");
+      jme.ring = newJButton("Ring");
     p6.add(jme.ring);
     if (first)
-      jme.nonring = new JButton("Nonring");
+      jme.nonring = newJButton("Nonring");
     p6.add(jme.nonring);
     add(p6);
 
@@ -2870,17 +2898,17 @@ class QueryBox extends JFrame {
     p9.setLayout(new FlowLayout(FlowLayout.LEFT, 3, 1));
     p9.add(new JLabel("Bond is :"));
     if (first)
-      jme.anyBond = new JButton("Any");
+      jme.anyBond = newJButton("Any");
     p9.add(jme.anyBond);
     if (first)
-      jme.aromaticBond = new JButton("Aromatic");
+      jme.aromaticBond = newJButton("Aromatic");
     p9.add(jme.aromaticBond);
-    // if (first) sdBond = new JButton("- or ="); p9.add(sdBond);
+    // if (first) sdBond = newJButton("- or ="); p9.add(sdBond);
     if (first)
-      jme.ringBond = new JButton("Ring");
+      jme.ringBond = newJButton("Ring");
     p9.add(jme.ringBond);
     if (first)
-      jme.nonringBond = new JButton("Nonring");
+      jme.nonringBond = newJButton("Nonring");
     p9.add(jme.nonringBond);
     add(p9);
 
@@ -2890,8 +2918,8 @@ class QueryBox extends JFrame {
     if (first)
       text = new JTextField("*", 20);
     p8.add(text);
-    p8.add(new JButton("Reset"));
-    p8.add(new JButton("Close"));
+    p8.add(resetButton = newJButton("Reset"));
+    p8.add(closeButton = newJButton("Close"));
     add(p8);
     setResizable(false);
 
@@ -2912,64 +2940,75 @@ class QueryBox extends JFrame {
     setVisible(true);
   }
 
-  // ----------------------------------------------------------------------------
-  @Override
-  public boolean action(Event e, Object arg) {
-    if (arg.equals("Close")) {
-      jme.point = getLocationOnScreen();
-      setVisible(false);
-    } else if (arg.equals("Reset")) {
-      resetAll();
-      changeColor(jme.any); // Any on
-      doSmarts();
-    } else if (e.target instanceof JButton) {
-      resetBondType(); // set to any ???
-      if (e.target == jme.any) {
-        resetAtomList();
-        resetAtomType();
-      } else if (e.target == jme.anyec) {
-        resetAtomList();
-        resetAtomType();
-      } else if (e.target == jme.halogen) {
-        resetAtomList();
-        resetAtomType();
-      } else if (e.target == jme.ring) {
-        jme.nonring.setBackground(bgc);
-      } else if (e.target == jme.nonring) {
-        jme.ring.setBackground(bgc);
-        jme.aromatic.setBackground(bgc);
-      } else if (e.target == jme.aromatic) {
-        jme.nonaromatic.setBackground(bgc);
-        jme.nonring.setBackground(bgc);
-      } else if (e.target == jme.nonaromatic) {
-        jme.aromatic.setBackground(bgc);
-      } else if (e.target == jme.anyBond || e.target == jme.aromaticBond
-          || e.target == jme.ringBond || e.target == jme.nonringBond) {
-        resetAll();
-        isBondQuery = true;
-      } else { // atom z listu pressed (moze by aj posledny vynulovany
-        resetAtomType();
-      }
-      changeColor((JButton) (e.target));
-      doSmarts();
-    } else if (e.target instanceof JComboBox) {
-      resetBondType();
-      JComboBox<?> choice = (JComboBox<?>) (e.target);
-      if (choice.getSelectedIndex() == 0)
-        choice.setBackground(bgc);
-      else
-        choice.setBackground(Color.orange);
-      doSmarts();
-    }
 
-    // v JME menu nastavi na query (ak bolo medzitym ine)
-    if (jme.action != JME.ACTION_QRY) {
-      jme.action = JME.ACTION_QRY;
-      jme.repaint();
-    }
-
-    return true;
+  private JButton newJButton(String text) {
+    JButton b = new JButton(text);
+    b.addActionListener(queryAction);
+    return b;
   }
+
+  // ----------------------------------------------------------------------------
+  ActionListener queryAction = new ActionListener() {
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      Object b = e.getSource();
+      if (b == closeButton) {
+        jme.point = getLocationOnScreen();
+        setVisible(false);
+      } else if (b == resetButton) {
+        resetAll();
+        changeColor(jme.any); // Any on
+        doSmarts();
+      } else if (b instanceof JButton) {
+        resetBondType(); // set to any ???
+        if (b == jme.any) {
+          resetAtomList();
+          resetAtomType();
+        } else if (b == jme.anyec) {
+          resetAtomList();
+          resetAtomType();
+        } else if (b == jme.halogen) {
+          resetAtomList();
+          resetAtomType();
+        } else if (b == jme.ring) {
+          jme.nonring.setBackground(bgc);
+        } else if (b == jme.nonring) {
+          jme.ring.setBackground(bgc);
+          jme.aromatic.setBackground(bgc);
+        } else if (b == jme.aromatic) {
+          jme.nonaromatic.setBackground(bgc);
+          jme.nonring.setBackground(bgc);
+        } else if (b == jme.nonaromatic) {
+          jme.aromatic.setBackground(bgc);
+        } else if (b == jme.anyBond || b == jme.aromaticBond
+            || b == jme.ringBond || b == jme.nonringBond) {
+          resetAll();
+          isBondQuery = true;
+        } else { // atom z listu pressed (moze by aj posledny vynulovany
+          resetAtomType();
+        }
+        changeColor((JButton) b);
+        doSmarts();
+      } else if (b instanceof JComboBox) {
+        resetBondType();
+        JComboBox<?> choice = (JComboBox<?>) b;
+        if (choice.getSelectedIndex() == 0)
+          choice.setBackground(bgc);
+        else
+          choice.setBackground(Color.orange);
+        doSmarts();
+      }
+
+      // v JME menu nastavi na query (ak bolo medzitym ine)
+      if (jme.action != JME.ACTION_QRY) {
+        jme.action = JME.ACTION_QRY;
+        jme.repaint();
+      }
+
+    }
+  };
+  
 
   // ----------------------------------------------------------------------------
   protected void resetAll() {
