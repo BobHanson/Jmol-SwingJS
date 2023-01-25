@@ -9548,10 +9548,13 @@ public class Viewer extends JmolViewer
     setShapeProperty(JC.SHAPE_MEASURES, "delete", Integer.valueOf(i));
   }
 
+  /**
+   * NOT getting aromatic smiles
+   */
   @Override
   public String getSmiles(BS bs) throws Exception {
     return getSmilesOpt(bs, -1, -1,
-        (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0),
+        JC.SMILES_NO_AROMATIC | (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0),
         null);
   }
 
@@ -9560,7 +9563,7 @@ public class Viewer extends JmolViewer
     return getSmilesOpt(bs, -1, -1,
         JC.SMILES_TYPE_OPENSMILES
             | (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0),
-        "/openstrict///");
+        "/open///");
   }
 
   public String getBioSmiles(BS bs) throws Exception {

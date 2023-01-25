@@ -35,8 +35,6 @@ import javajs.util.SB;
 import javajs.util.T3d;
 
 import javajs.util.BS;
-
-import org.jmol.modelset.Bond;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
@@ -95,7 +93,7 @@ public class SmilesSearch extends JmolMolecule {
    */
   
   boolean patternAromatic; 
-  boolean haveTopo;  
+  boolean haveSmilesTarget;  
   boolean isTopology;
   boolean patternBioSequence;
   SmilesSearch[] subSearches;
@@ -171,8 +169,6 @@ public class SmilesSearch extends JmolMolecule {
       flags |= JC.SMILES_TYPE_OPENSMILES;
     if (strFlags.indexOf("BIO") >= 0)
       flags |= JC.SMILES_GEN_BIO;
-    if (strFlags.indexOf("NOBRANCH") >= 0)
-      flags |= JC.SMILES_GEN_NO_BRANCHES;
 
     if (strFlags.indexOf("HYDROGEN2") >= 0)
         flags |= JC.SMILES_GEN_EXPLICIT_H2_ONLY;
@@ -536,7 +532,7 @@ public class SmilesSearch extends JmolMolecule {
     search.bsSelected = bsSelected;
     search.selectedAtomCount = selectedAtomCount;
     search.htNested = htNested;
-    search.haveTopo = haveTopo;
+    search.haveSmilesTarget = haveSmilesTarget;
     search.bsCheck = bsCheck;
     search.isSmarts = true;
     search.bsAromatic = bsAromatic;
@@ -1184,27 +1180,21 @@ public class SmilesSearch extends JmolMolecule {
         if (patternAtom.atomType != null
             && !patternAtom.atomType.equals(targetAtom.getAtomType()))
           break;
-
-        // Check aromatic
-        // aromaticAmbiguous could be [#6] or [D3]
-        if (!noAromatic && !patternAtom.aromaticAmbiguous) {
-          boolean ta;
-          if (patternAtom.isAromatic != (ta = bsAromatic.get(iTarget))) {
-            //target is ambiguous, and pattern is not. This is OK 
-            // for pattern "could be aromatic" O, N, -C=
-            if (!ta || !haveTopo || na == 6 && !patternAtom.hasDoubleBond)
-              break;
-          }
-        }
-
+        
         // could  be *
         // <n> Check isotope
         // smiles indicates [13C] or [12C]
         // must match perfectly -- [12C] matches only explicit C-12, not
         // "unlabeled" C
         if ((n = patternAtom.getAtomicMass()) != Integer.MIN_VALUE
-            && (n >= 0 && n != (na = targetAtom.getIsotopeNumber())
-                || n < 0 && na != 0 && -n != na))
+            && (n >= 0 && n != (na = targetAtom.getIsotopeNumber()) || n < 0
+                && na != 0 && -n != na))
+          break;
+
+        // Check aromatic
+        // aromaticAmbiguous could be [#6] or [D3]
+        if (!noAromatic && !patternAtom.aromaticAmbiguous
+            && patternAtom.isAromatic != bsAromatic.get(iTarget))
           break;
 
         // <+/-> Check charge
@@ -1238,8 +1228,8 @@ public class SmilesSearch extends JmolMolecule {
 
         // d<n> degree
         if (patternAtom.nonhydrogenDegree > 0
-            && patternAtom.nonhydrogenDegree != targetAtom
-                .getCovalentBondCount() - targetAtom.getCovalentHydrogenCount())
+            && patternAtom.nonhydrogenDegree != targetAtom.getCovalentBondCount()
+                - targetAtom.getCovalentHydrogenCount())
           break;
 
         // v<n> valence
@@ -1439,13 +1429,6 @@ public class SmilesSearch extends JmolMolecule {
         }
         break;
       case Edge.BOND_COVALENT_DOUBLE:
-        if (haveTopo && noAromatic && order != patternOrder) {
-          if (((SmilesAtom) targetAtoms[iAtom1]).isAromatic
-              && ((SmilesAtom) targetAtoms[iAtom2]).isAromatic) {
-            bondFound = true;
-            break;
-          }
-        }
       case Edge.BOND_COVALENT_TRIPLE:
       case Edge.BOND_COVALENT_QUADRUPLE:
         bondFound = (order == patternOrder);
@@ -1604,7 +1587,7 @@ public class SmilesSearch extends JmolMolecule {
       Node dbAtom2a = sAtomDirected2.getMatchingAtom();
       if (dbAtom1a == null || dbAtom2a == null)
         return false;
-      if (haveTopo)
+      if (haveSmilesTarget)
         setTopoCoordinates((SmilesAtom) dbAtom1, (SmilesAtom) dbAtom2,
             (SmilesAtom) dbAtom1a, (SmilesAtom) dbAtom2a, bondType);
       double d = SmilesMeasure.setTorsionData((T3d) dbAtom1a, (T3d) dbAtom1,
@@ -1869,11 +1852,6 @@ public class SmilesSearch extends JmolMolecule {
         if (firstAtom) {
           int order = 1;
           switch (sBond.order) {
-          case SmilesBond.TYPE_ANY:            
-            if (!sBond.atom1.isAromatic || !sBond.atom2.isAromatic) {
-              break;
-            }
-            //$FALL-THROUGH$
           case Edge.BOND_COVALENT_SINGLE:
           case Edge.BOND_COVALENT_DOUBLE:
           case Edge.BOND_COVALENT_TRIPLE:
@@ -1940,8 +1918,7 @@ public class SmilesSearch extends JmolMolecule {
    * @param bsAromatic
    * @throws InvalidSmilesException
    */
-  void normalizeAromaticity(BS bsAromatic)
-      throws InvalidSmilesException {
+  void normalizeAromaticity(BS bsAromatic) throws InvalidSmilesException {
     SmilesAtom[] atoms = this.patternAtoms;
     SmilesSearch ss = new SmilesSearch();
     ss.noAromatic = noAromatic;
@@ -1954,15 +1931,16 @@ public class SmilesSearch extends JmolMolecule {
     bsAromatic.or(ss.bsAromatic);
     if (!bsAromatic.isEmpty()) {
       Lst<BS> lst = vRings[3]; // aromatic rings
-      for (int i = lst.size(); --i >= 0;) {
-        BS bs = lst.get(i);
-        for (int j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1)) {
-          SmilesAtom a = atoms[j];
-          if (a.isAromatic || a.elementNumber == -2 || a.elementNumber == 0)
-            continue;
-          a.setSymbol(a.symbol.toLowerCase());
+      if (lst != null)
+        for (int i = lst.size(); --i >= 0;) {
+          BS bs = lst.get(i);
+          for (int j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1)) {
+            SmilesAtom a = atoms[j];
+            if (a.isAromatic || a.elementNumber == -2 || a.elementNumber == 0)
+              continue;
+            a.setSymbol(a.symbol.toLowerCase());
+          }
         }
-      }
     }
   }
 
