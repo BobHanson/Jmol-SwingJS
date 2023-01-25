@@ -1126,7 +1126,7 @@ public class FileManager implements BytePoster {
       vwr.setStringProperty("defaultDirectoryLocal", path);
   }
 
-  public static String getLocalPathForWritingFile(Viewer vwr, String file) {
+  public static String getLocalPathForWritingFile(Viewer vwr, String file, boolean forDialog) {
     if (file.startsWith("http://") || file.startsWith("https://"))
       return file;
     file = PT.rep(file, "?", "");
@@ -1136,7 +1136,7 @@ public class FileManager implements BytePoster {
       return file;
     GenericFileInterface dir = null;
     try {
-      dir = getLocalDirectory(vwr, false);
+      dir = getLocalDirectory(vwr, forDialog);
     } catch (Exception e) {
       // access control for unsigned applet
     }

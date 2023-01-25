@@ -298,6 +298,12 @@ public class CDXMLWriter extends CMLWriter {
     case kCDXProp_ChemicalWarning:
       addAttribute(sb, "Warning", readString(len));
       break;
+    case kCDXProp_Atom_BondOrdering: // 0x0431 An ordering of the bonds to this node used for stereocenters fragments and named alternative groups with more than one attachment. (CDXObjectIDArray)
+      addAttribute(sb, "BondOrdering", readArray());
+      break;
+    case kCDXProp_Frag_ConnectionOrder: // 0x0505 An ordered list of attachment points within a fragment. (CDXObjectIDArray)
+      addAttribute(sb, "ConnectionOrder", readArray());
+      break;
     case kCDXProp_Node_Attachments: // 0x0432 For multicenter attachment nodes or variable attachment nodes a list of IDs of the nodes which are multiply or variably attached to this node. (CDXObjectIDArrayWithCounts)
       addAttribute(sb, "Attachments", readArray());
       break;
@@ -630,7 +636,7 @@ public class CDXMLWriter extends CMLWriter {
   // private final static int kCDXProp_Atom_HDot = 0x042E; // 0x042E Signifies the presence of an implicit hydrogen with stereochemistry specified equivalent to an explicit H atom with a wedged bond. (CDXBooleanImplied)
   // private final static int kCDXProp_Atom_HDash = 0x042F; // 0x042F Signifies the presence of an implicit hydrogen with stereochemistry specified equivalent to an explicit H atom with a hashed bond. (CDXBooleanImplied)
   // private final static int kCDXProp_Atom_Geometry = 0x0430; // 0x0430 The geometry of the bonds about this atom. (INT8)
-  // private final static int kCDXProp_Atom_BondOrdering = 0x0431; // 0x0431 An ordering of the bonds to this node used for stereocenters fragments and named alternative groups with more than one attachment. (CDXObjectIDArray)
+  private final static int kCDXProp_Atom_BondOrdering = 0x0431; // 0x0431 An ordering of the bonds to this node used for stereocenters fragments and named alternative groups with more than one attachment. (CDXObjectIDArray)
   private final static int kCDXProp_Node_Attachments = 0x0432; // 0x0432 For multicenter attachment nodes or variable attachment nodes a list of IDs of the nodes which are multiply or variably attached to this node. (CDXObjectIDArrayWithCounts)
   private final static int kCDXProp_Atom_GenericNickname = 0x0433; // 0x0433 The name of the generic nickname. (CDXString)
   // private final static int kCDXProp_Atom_AltGroupID = 0x0434; // 0x0434 The ID of the alternative group object that describes this node. (CDXObjectID)
@@ -653,7 +659,7 @@ public class CDXMLWriter extends CMLWriter {
   // private final static int kCDXProp_Mole_Relative = 0x0502; // 0x0502 Indicates that the molecule has known relative stereochemistry but unknown absolute configuration. (CDXBoolean)
   // private final static int kCDXProp_Mole_Formula = 0x0503; // 0x0503 The molecular formula representation of a molecule object. (CDXFormula)
   // private final static int kCDXProp_Mole_Weight = 0x0504; // 0x0504 The average molecular weight of a molecule object. (FLOAT64)
-  // private final static int kCDXProp_Frag_ConnectionOrder = 0x0505; // 0x0505 An ordered list of attachment points within a fragment. (CDXObjectIDArray)
+  private final static int kCDXProp_Frag_ConnectionOrder = 0x0505; // 0x0505 An ordered list of attachment points within a fragment. (CDXObjectIDArray)
 
   //Bond properties.   
   private final static int kCDXProp_Bond_Order = 0x0600; // 0x0600 The order of a bond object. (INT16)

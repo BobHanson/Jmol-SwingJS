@@ -1397,6 +1397,8 @@ public class PT {
          value *= decimalScaleD[-exponent - 1];
        else if (exponent != 0)
          value *= Math.pow(10, exponent);
+     } else {
+         next[0] = ich; // the exponent code finds its own ichNextParse
      }
      // believe it or not, Safari reports the long-equivalent of the 
      // double value here, then later the double value, after no operation!

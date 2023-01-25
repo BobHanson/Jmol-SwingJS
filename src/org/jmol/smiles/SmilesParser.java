@@ -527,7 +527,7 @@ public class SmilesParser {
                 ch2 = '\0';
             // guess at some ambiguous SEARCH strings:
             if (ch2 != '\0'
-                && "NA CA BA PA SC AC".indexOf(pattern.substring(index,
+                && "NA CA BA PA SC AC Na Ca Ba Pa Sc Ac".indexOf(pattern.substring(index,
                     index + 2)) >= 0) {
               //System.out.println("Note: " + ch + ch2 + " NOT interpreted as an element");
               ch2 = '\0';
@@ -590,7 +590,9 @@ public class SmilesParser {
     switch (bond.order) {
     case SmilesBond.TYPE_UNKNOWN:
       bond.order = (bond0.order != SmilesBond.TYPE_UNKNOWN ? bond0.order
-          : isSmarts || currentAtom.isAromatic && bond0.atom1.isAromatic ? SmilesBond.TYPE_ANY
+          : isSmarts 
+          || currentAtom.isAromatic && bond0.atom1.isAromatic 
+          ? SmilesBond.TYPE_ANY
               : Edge.BOND_COVALENT_SINGLE);
       break;
     case Edge.BOND_STEREO_NEAR:

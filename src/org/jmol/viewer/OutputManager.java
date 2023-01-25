@@ -650,7 +650,7 @@ abstract class OutputManager {
       fileName = fileName.substring(1);
     useDialog |= (vwr.isApplet && fileName.indexOf("http:") != 0
         && fileName.indexOf("https:") != 0);
-    fileName = FileManager.getLocalPathForWritingFile(vwr, fileName);
+    fileName = FileManager.getLocalPathForWritingFile(vwr, fileName, useDialog);
     if (useDialog)
       fileName = vwr.dialogAsk(
           quality == Integer.MIN_VALUE ? "Save" : "Save Image", fileName,

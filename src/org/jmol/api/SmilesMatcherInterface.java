@@ -60,4 +60,7 @@ public interface SmilesMatcherInterface {
 
   public String getSmilesFromJME(String jmeFile);
 
+  int[] hasStructure(String smarts, String[] smilesSet, int flags)
+      throws Exception;
+
 }

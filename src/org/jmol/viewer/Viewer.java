@@ -393,6 +393,18 @@ public class Viewer extends JmolViewer
     return getSmilesMatcher().getSubstructureSet(smarts, atoms, atoms.length,
         null, JC.SMILES_TYPE_SMARTS);
   }
+  
+  public boolean hasStructure(String pattern, String smiles, boolean isSmarts) {
+    try {
+      int[] ret = getSmilesMatcher().hasStructure(pattern,  new String[] { smiles }, 
+          (isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES) | JC.SMILES_FIRST_MATCH_ONLY);
+      return ret[0] == 1;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+  
+
 
   /**
    * 

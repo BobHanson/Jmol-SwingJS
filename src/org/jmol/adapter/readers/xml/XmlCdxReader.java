@@ -24,7 +24,9 @@
 package org.jmol.adapter.readers.xml;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.jmol.adapter.smarter.Atom;
@@ -74,11 +76,17 @@ public class XmlCdxReader extends XmlReader {
   private double maxX = -Double.MAX_VALUE;
 
   /**
-   * ChemDraw can mess up 3D completely with octahedral stereochemistry; setting
-   * filter "no3D" ensures the raw 2D structure is returned.
+   * setting filter "no3D" ensures the raw 2D structure is returned even though
+   * there may be 3D coordinates, since a common option for the xyz attribute is
+   * simply the same as 2D with a crude z offset.
    */
   private boolean no3D;
-  
+
+  /**
+   * CDNode extends Atom in order to maintain information about fragments,
+   * connectivity, and validity
+   * 
+   */
   class CDNode extends Atom {
 
     String warning;
@@ -86,24 +94,65 @@ public class XmlCdxReader extends XmlReader {
     int intID;
     boolean isValid = true;
     boolean isConnected;
-    boolean isFragment;
-//    boolean isNickname;
     boolean isExternalPt;
     String nodeType;
-    String fragment;
+
+    boolean isFragment; // could also be a Nickname
+    /**
+     * fragment ID for the fragment containing this node
+     */
+    String outerFragmentID;
+
+    /**
+     * fragment ID of this fragment node
+     */
+    String innerFragmentID;
+
     public String text;
     CDNode parentNode;
-    Lst<CDNode> orderedExternalPoints; // ordered by ID
-    Lst<Object[]> orderedAttachedBonds;
-    CDBond internalBond;
+    /**
+     * list of connection bonds, ordered by ID
+     */
+    Lst<Object[]> orderedConnectionBonds;
+    /**
+     * for an external point, the actual atom associated with it in the fragment  
+     */
+    CDNode internalAtom;
+    /**
+     * for a fragment, the list of external points for a fragment, ordered by sequence in the label
+     */
+    Lst<CDNode> orderedExternalPoints;
+
+    /**
+     * 0x0432 For multicenter attachment nodes or variable attachment nodes a
+     * list of IDs of the nodes which are multiply or variably attached to this
+     * node array of attachment id values;
+     * 
+     * for example, in ferrocene, we are attaching to all of the carbon atoms if
+     * this node is the special point that indicates that attachment
+     */
     private String[] attachments;
+    /**
+     * 0x0431 BondOrdering An ordering of the bonds to this node used for
+     * stereocenters fragments and named alternative groups with more than one
+     * attachment.
+     * 
+     */
+    private String[] bondOrdering;
+    /**
+     * 0x0505 ConnectionOrder An ordered list of attachment points within a
+     * fragment.
+     * 
+     */
+    private String[] connectionOrder;
+
     public boolean hasMultipleAttachments;
     CDNode attachedAtom;
     private boolean isGeneric;
 
-    CDNode(String id, String nodeType, String fragment, CDNode parent) {
+    CDNode(String id, String nodeType, String fragmentID, CDNode parent) {
       this.id = id;
-      this.fragment = fragment;
+      this.outerFragmentID = fragmentID;
       this.atomSerial = intID = Integer.parseInt(id);
       this.nodeType = nodeType;
       this.parentNode = parent;
@@ -112,86 +161,166 @@ public class XmlCdxReader extends XmlReader {
       isGeneric = "GenericNickname".equals(nodeType);
     }
 
+    public void setInnerFragmentID(String id) {
+      innerFragmentID = id;
+    }
+
+    void setBondOrdering(String[] bondOrdering) {
+      this.bondOrdering = bondOrdering;
+    }
+
+    void setConnectionOrder(String[] connectionOrder) {
+      this.connectionOrder = connectionOrder;
+    }
+
     void setMultipleAttachments(String[] attachments) {
       this.attachments = attachments;
       hasMultipleAttachments = true;
     }
+
     /**
      * keep these in order
      * 
-     * @param node
+     * @param externalPoint
      */
-    void addExternalPoint(CDNode node) {
+    void addExternalPoint(CDNode externalPoint) {
       if (orderedExternalPoints == null)
         orderedExternalPoints = new Lst<CDNode>();
       int i = orderedExternalPoints.size();
-      while (--i >= 0 && orderedExternalPoints.get(i).intID >= node.intID) {
+      while (--i >= 0 && orderedExternalPoints.get(i).intID >= externalPoint.internalAtom.intID) {
         // continue;
       }
-      orderedExternalPoints.add(++i, node);
+      orderedExternalPoints.add(++i, externalPoint);
+    }
+
+    public void setInternalAtom(CDNode a) {
+      internalAtom = a;
+      if (parentNode == null) {
+        // hmm
+      } else {
+        parentNode.addExternalPoint(this);
+      }
     }
 
     void addAttachedAtom(CDBond bond, int pt) {
-      if (orderedAttachedBonds == null)
-        orderedAttachedBonds = new Lst<Object[]>();
-      int i = orderedAttachedBonds.size();
-      while (--i >= 0 && ((Integer) orderedAttachedBonds.get(i)[0]).intValue() > pt) {
+      if (orderedConnectionBonds == null)
+        orderedConnectionBonds = new Lst<Object[]>();
+      int i = orderedConnectionBonds.size();
+      while (--i >= 0
+          && ((Integer) orderedConnectionBonds.get(i)[0]).intValue() > pt) {
         // continue;
       }
-      orderedAttachedBonds.add(++i, new Object[] { Integer.valueOf(pt), bond });
+      orderedConnectionBonds.add(++i, new Object[] { Integer.valueOf(pt), bond });
     }
-    
+
     void fixAttachments() {
       if (hasMultipleAttachments && attachedAtom != null) {
+        // something like Ferrocene
         int order = Edge.getBondOrderFromString("partial");
         int a1 = attachedAtom.index;
         for (int i = attachments.length; --i >= 0;) {
-          Atom a = asc.getAtomFromName(attachments[i]);
+          CDNode a = (CDNode) objectsByID.get(attachments[i]);
           if (a != null)
             asc.addBondNoCheck(new Bond(a1, a.index, order));
         }
       }
-      
+
       if (orderedExternalPoints == null || text == null)
         return;
+      // fragments and Nicknames
       int n = orderedExternalPoints.size();
-      if (n != orderedAttachedBonds.size()) {
-        System.err.println("cannot fix attachments for " + text);
+      if (n != orderedConnectionBonds.size()) {
+        System.err.println(
+            "XmlCdxReader cannot fix attachments for fragment " + text);
+        return;
       }
-      for (int i = 0; i < n; i++) {
-        CDNode a = orderedExternalPoints.get(i);
-        CDBond b = (CDBond) orderedAttachedBonds.get(i)[1];
-        if (b.atomIndex2 == this.index) {
-          b.atomIndex2 = a.index;
-        } else {
-          b.atomIndex1 = a.index;          
+      System.out.println(
+          "XmlCdxReader attaching fragment " + outerFragmentID + " " + text);
+      if (bondOrdering == null) {
+        bondOrdering = new String[n];
+        for (int i = 0; i < n; i++) {
+          bondOrdering[i] = ((CDBond)orderedConnectionBonds.get(i)[1]).id;
         }
       }
+      if (connectionOrder == null) {
+        connectionOrder = new String[n];      
+        for (int i = 0; i < n; i++) {
+          connectionOrder[i] = orderedExternalPoints.get(i).id;
+        }
+      }
+      
+        for (int i = 0; i < n; i++) {
+          CDBond b = (CDBond) objectsByID.get(bondOrdering[i]);
+          CDNode pt = (CDNode) objectsByID.get(connectionOrder[i]);
+          // When there is 
+          CDNode a = pt.internalAtom;
+//          System.out.println("internal a->pt " 
+//          + V3d.newVsub(pt, a) + "\n" + a + "\n" + pt);
+          updateExternalBond(b, a);
+        }
+//      
+//      // fallback to original id-ordered plan; probably n == 1
+//      for (int i = 0; i < n; i++) {
+//        CDNode a = orderedExternalPoints.get(i);
+//        CDBond b = (CDBond) orderedAttachedBonds.get(i)[1];
+//        updateExternalBond(b, a);
+//      }
     }
-    
+
+    /**
+     * Replace the fragment connection (to this fragment node) in bond b with
+     * the internal atom a.
+     * 
+     * @param bond2f
+     * @param intAtom
+     */
+    private void updateExternalBond(CDBond bond2f, CDNode intAtom) {
+      if (bond2f.atomIndex2 == index) {
+        bond2f.atomIndex2 = intAtom.index;
+//        System.out.println("other to intpt " 
+//            + V3d.newVsub(asc.atoms[bond2f.atomIndex1], asc.atoms[bond2f.atomIndex2])
+//            + "\n" + asc.atoms[bond2f.atomIndex2] + "\n" + asc.atoms[bond2f.atomIndex1]);
+      } else if (bond2f.atomIndex1 == index) {
+        bond2f.atomIndex1 = intAtom.index;
+//        System.out.println("other to intpt " 
+//            + V3d.newVsub(asc.atoms[bond2f.atomIndex2], asc.atoms[bond2f.atomIndex1])
+//            + "\n" + asc.atoms[bond2f.atomIndex1] + "\n" + asc.atoms[bond2f.atomIndex2]);
+//
+      } else {
+        System.err
+            .println("XmlCdxReader attachment failed! " + intAtom + " " + bond2f);
+      }
+      
+    }
+
     @Override
     public String toString() {
-      return id + " " + elementSymbol + " " + elementNumber + " index=" + index + " ext=" + isExternalPt + " frag=" + isFragment + " " + elementSymbol + " " + x + " " + y;
+      return "[CDNode " + id + " " + elementSymbol + " " + elementNumber + " index=" + index
+          + " ext=" + isExternalPt + " frag=" + isFragment + " " + elementSymbol
+          + " " + x + " " + y +"]";
     }
 
   }
 
   class CDBond extends Bond {
-    String id1, id2;
+    String id, id1, id2;
 
-    CDBond(String id1, String id2, int order) {
-      super(asc.getAtomFromName(id1).index, asc.getAtomFromName(id2).index, order);
+    CDBond(String id, String id1, String id2, int order) {
+      super(((CDNode) objectsByID.get(id1)).index,
+          ((CDNode) objectsByID.get(id2)).index, order);
+      this.id = id;
       this.id1 = id1;
       this.id2 = id2;
     }
-    
+
     CDNode getOtherNode(CDNode a) {
-      return (CDNode) asc.atoms[atomIndex1 == a.index ? atomIndex2 : atomIndex1];
+      return (CDNode) asc.atoms[atomIndex1 == a.index ? atomIndex2
+          : atomIndex1];
     }
 
     @Override
     public String toString() {
-      return super.toString() + " id1=" + id1 + " id2=" + id2;
+      return "[CDBond " + id + " id1=" + id1 + " id2=" + id2 + super.toString() + "]";
     }
 
   }
@@ -210,36 +339,42 @@ public class XmlCdxReader extends XmlReader {
       no3D = parent.checkFilterKey("NO3D");
       noHydrogens = parent.noHydrogens;
       processXml2(parent, saxReader);
-      this.filter = parent.filter;      
+      this.filter = parent.filter;
     }
   }
 
   private Stack<String> fragments = new Stack<String>();
-  private String thisFragment;
+  private String thisFragmentID;
   private CDNode thisNode;
   private Stack<CDNode> nodes = new Stack<CDNode>();
   private List<CDNode> nostereo = new ArrayList<CDNode>();
+  Map<String, Object> objectsByID = new HashMap<String, Object>();
 
   /**
    * temporary holder of style chunks within text objects
    */
   private String textBuffer;
-  
+
   /**
    * true when this reader is being used after CDX conversion
    */
   public boolean isCDX;
-  
+
   @Override
   public void processStartElement(String localName, String nodeName) {
     String id = atts.get("id");
     if ("fragment".equals(localName)) {
-      fragments.push(thisFragment = id);
+      objectsByID.put(id, setFragment(id));
       return;
     }
 
     if ("n".equals(localName)) {
-      setNode(id);
+      objectsByID.put(id, setNode(id));
+      return;
+    }
+
+    if ("b".equals(localName)) {
+      objectsByID.put(id, setBond(id));
       return;
     }
 
@@ -251,23 +386,33 @@ public class XmlCdxReader extends XmlReader {
       setKeepChars(true);
     }
 
-    if ("b".equals(localName)) {
-      setBond();
-      return;
-    }
+  }
 
+  private CDNode setFragment(String id) {
+    fragments.push(thisFragmentID = id);
+    CDNode fragmentNode = (thisNode == null || !thisNode.isFragment ? null
+        : thisNode);
+    if (fragmentNode != null) {
+      fragmentNode.setInnerFragmentID(id);
+    }
+    String s = atts.get("connectionorder");
+    if (s != null) {
+      System.out.println(id + " ConnectionOrder is " + s);
+      thisNode.setConnectionOrder(PT.split(s.trim(), " "));
+    }
+    return fragmentNode;
   }
 
   @Override
   void processEndElement(String localName) {
     if ("fragment".equals(localName)) {
-      thisFragment = fragments.pop();
+      thisFragmentID = fragments.pop();
       return;
     }
     if ("n".equals(localName)) {
       thisNode = (nodes.size() == 0 ? null : nodes.pop());
       return;
-    } 
+    }
     if ("s".equals(localName)) {
       textBuffer += chars.toString();
     }
@@ -282,7 +427,8 @@ public class XmlCdxReader extends XmlReader {
               "XmlChemDrawReader: Problem with \"" + textBuffer + "\"");
         }
         if (thisNode.warning != null)
-          parent.appendLoadNote("Warning: " + textBuffer + " " + thisNode.warning);
+          parent.appendLoadNote(
+              "Warning: " + textBuffer + " " + thisNode.warning);
       }
       textBuffer = "";
     }
@@ -300,18 +446,21 @@ public class XmlCdxReader extends XmlReader {
    * enhanced z values.
    * 
    * @param id
+   * @return thisNode
    */
-  private void setNode(String id) {
+  private CDNode setNode(String id) {
     String nodeType = atts.get("nodetype");
     if (asc.bsAtoms == null)
       asc.bsAtoms = new BS();
     if (thisNode != null)
       nodes.push(thisNode);
     if ("_".equals(nodeType)) {
+      // internal Jmol code for ignored node
       atom = thisNode = null;
-      return;
+      return null;
     }
-    atom = thisNode = new CDNode(id, nodeType, thisFragment, thisNode);
+
+    atom = thisNode = new CDNode(id, nodeType, thisFragmentID, thisNode);
     asc.addAtomWithMappedSerialNumber(atom);
     asc.bsAtoms.set(atom.index);
 
@@ -322,24 +471,24 @@ public class XmlCdxReader extends XmlReader {
     }
 
     String element = atts.get("element");
-    String s =  atts.get("genericnickname");
+    String s = atts.get("genericnickname");
     if (s != null) {
       element = s;
     }
-    
+
     atom.elementNumber = (short) (!checkWarningOK(w) ? 0
-            : element == null ? 6 : parseIntStr(element));
-    element = JmolAdapter.getElementSymbol(atom.elementNumber);    
+        : element == null ? 6 : parseIntStr(element));
+    element = JmolAdapter.getElementSymbol(atom.elementNumber);
     s = atts.get("isotope");
     if (s != null)
       element = s + element;
     setElementAndIsotope(atom, element);
-    
+
     s = atts.get("charge");
     if (s != null) {
       atom.formalCharge = parseIntStr(s);
     }
-    
+
     boolean hasXYZ = (atts.containsKey("xyz"));
     boolean hasXY = (atts.containsKey("p"));
     if (hasXYZ && (!no3D || !hasXY)) {
@@ -349,20 +498,27 @@ public class XmlCdxReader extends XmlReader {
     } else if (atts.containsKey("p")) {
       setAtom("p");
     }
-    
+
     s = atts.get("attachments");
     if (s != null) {
+      System.out.println(id + " Attachments is " + s);
       thisNode.setMultipleAttachments(PT.split(s.trim(), " "));
     }
 
+    s = atts.get("bondordering");
+    if (s != null) {
+      System.out.println(id + " BondOrdering is " + s);
+      thisNode.setBondOrdering(PT.split(s.trim(), " "));
+    }
+
     if (Logger.debugging)
-      Logger.info(
-        "XmlChemDraw id=" + id + " " + element + " " + atom);
+      Logger.info("XmlChemDraw id=" + id + " " + element + " " + atom);
+
+    return thisNode;
   }
 
   private boolean checkWarningOK(String warning) {
-    return (warning == null
-        || warning.indexOf("valence") >= 0 
+    return (warning == null || warning.indexOf("valence") >= 0
         || warning.indexOf("very close") >= 0
         || warning.indexOf("two identical colinear bonds") >= 0);
   }
@@ -380,14 +536,17 @@ public class XmlCdxReader extends XmlReader {
    * 
    * Order -- the bond order
    * 
-   * Display  -- wedges and such
+   * Display -- wedges and such
    * 
    * Display2 -- only important here for partial bonds
    * 
    * bonds to multiple attachments are not actually made.
    * 
+   * @param id
+   * @return the bond
+   * 
    */
-  private void setBond() {
+  private CDBond setBond(String id) {
     String atom1 = atts.get("b");
     String atom2 = atts.get("e");
     String a = atts.get("beginattach");
@@ -403,7 +562,7 @@ public class XmlCdxReader extends XmlReader {
       if (s == null) {
         order = 1;
       } else if (s.equals("1.5")) {
-          order = JmolAdapter.ORDER_AROMATIC;
+        order = JmolAdapter.ORDER_AROMATIC;
       } else {
         if (s.indexOf(".") > 0 && !"Dash".equals(disp2)) {
           // partial only works with "dash" setting for second line
@@ -427,11 +586,11 @@ public class XmlCdxReader extends XmlReader {
     if (order == Edge.BOND_ORDER_NULL) {
       // dative, ionic, hydrogen, threecenter
       System.err.println("XmlChemDrawReader ignoring bond type " + s);
-      return;
+      return null;
     }
-    CDBond b = (invertEnds ? new CDBond(atom2, atom1, order) : new CDBond(atom1, atom2, order));
-    
-    
+    CDBond b = (invertEnds ? new CDBond(id, atom2, atom1, order)
+        : new CDBond(id, atom1, atom2, order));
+
     CDNode node1 = (CDNode) asc.atoms[b.atomIndex1];
     CDNode node2 = (CDNode) asc.atoms[b.atomIndex2];
 
@@ -444,13 +603,11 @@ public class XmlCdxReader extends XmlReader {
 
     if (node1.hasMultipleAttachments) {
       node1.attachedAtom = node2;
-      return;
-    }
-    else if (node2.hasMultipleAttachments) {
+      return b;
+    } else if (node2.hasMultipleAttachments) {
       node2.attachedAtom = node1;
-      return;
+      return b;
     }
-    
 
     if (node1.isFragment && beginAttach == 0)
       beginAttach = 1;
@@ -463,24 +620,23 @@ public class XmlCdxReader extends XmlReader {
       (invertEnds ? node1 : node2).addAttachedAtom(b, endAttach);
     }
     if (node1.isExternalPt) {
-      node1.internalBond = b;
-      node2.parentNode.addExternalPoint(node2);
+      node1.setInternalAtom(node2);
     }
     if (node2.isExternalPt) {
-      node2.internalBond = b;
-      node1.parentNode.addExternalPoint(node1);
+      node2.setInternalAtom(node1);
     }
-    
+
     asc.addBondNoCheck(b);
 
+    return b;
   }
 
   /**
-   * Set the 2D or pseudo-3D coordinates of the atoms. ChemDraw 
-   * pseudo-3D is just a z-layering of chunks of the molecule. Nothing really useful. 
-   * These coordinates are ignored if there are any atoms also with 2D coordinates or
+   * Set the 2D or pseudo-3D coordinates of the atoms. ChemDraw pseudo-3D is
+   * just a z-layering of chunks of the molecule. Nothing really useful. These
+   * coordinates are ignored if there are any atoms also with 2D coordinates or
    * for FILTER "NO3D". So, pretty much, the z coordinates are never used.
-   *  
+   * 
    * @param key
    */
   private void setAtom(String key) {
@@ -527,24 +683,25 @@ public class XmlCdxReader extends XmlReader {
   }
 
   /**
-   * First fix all the attachments, tying together the atoms identified as ExternalConnectionPoints
-   * with atoms of bonds indicating "BeginAttach" or "EndAttach". 
+   * First fix all the attachments, tying together the atoms identified as
+   * ExternalConnectionPoints with atoms of bonds indicating "BeginAttach" or
+   * "EndAttach".
    * 
-   * Then flag all unconnected atoms and also remove any wedges or hashes that are
-   * associated with bonds to atoms that also have wavy bonds.  
+   * Then flag all unconnected atoms and also remove any wedges or hashes that
+   * are associated with bonds to atoms that also have wavy bonds.
    */
   private void fixConnections() {
-    
+
     // fix attachments for fragments
-    
+
     for (int i = asc.ac; --i >= 0;) {
       CDNode a = (CDNode) asc.atoms[i];
       if (a.isFragment || a.hasMultipleAttachments)
         a.fixAttachments();
     }
-    
+
     // indicate all atoms that are connected
-    
+
     for (int i = 0, n = asc.bondCount; i < n; i++) {
       Bond b = asc.bonds[i];
       if (b == null) {
@@ -562,9 +719,9 @@ public class XmlCdxReader extends XmlReader {
   }
 
   /**
-   * Adjust the scale to have an average bond length of 1.45 Angstroms. 
-   * This is just to get the structure in the range of other structures
-   * rather than being huge. 
+   * Adjust the scale to have an average bond length of 1.45 Angstroms. This is
+   * just to get the structure in the range of other structures rather than
+   * being huge.
    * 
    */
   private void centerAndScale() {
@@ -609,13 +766,12 @@ public class XmlCdxReader extends XmlReader {
     for (int i = asc.ac; --i >= 0;) {
       CDNode a = (CDNode) asc.atoms[i];
       a.atomSerial = Integer.MIN_VALUE;
-      if (a.isFragment || a.isExternalPt
-          || !a.isConnected && (!a.isValid || a.elementNumber == 6 || a.elementNumber == 0)) {
-//        System.out.println("removing atom " + a.id + " " + a.nodeType);
+      if (a.isFragment || a.isExternalPt || !a.isConnected
+          && (!a.isValid || a.elementNumber == 6 || a.elementNumber == 0)) {
+        //        System.out.println("removing atom " + a.id + " " + a.nodeType);
         asc.bsAtoms.clear(a.index);
       }
     }
   }
-
 
 }

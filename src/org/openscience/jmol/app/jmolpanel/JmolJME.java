@@ -35,6 +35,7 @@ import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Hashtable;
@@ -70,9 +71,16 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
   private Container parentWindow;
   private String fileName;
   /**
-   * allows working headlessly if no frame is defined
+   * allows working headlessly if no frame is defined; set false if a frame is
+   * present
    */
   private boolean headless = true;
+  
+  /**
+   * debug flag; set to false to see an actual 2D structure before SMILES-based
+   * cleaning.
+   */
+  private boolean allowClean = true;
   
   public JmolJME() {
     super(null, true);
@@ -381,7 +389,9 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
     try {
       setFileName(fname);
       // from file dropper
-      BufferedInputStream bis = new BufferedInputStream(new FileInputStream(fname));
+      File f = new File(fname);
+      System.out.println("JmolJME reading file " + f.getAbsolutePath());
+      BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f));
       boolean isBinary = (Resolver.getBinaryType(bis) != null);
       String type = vwr.getModelAdapter().getFileTypeName(bis);
       bis.close();
@@ -395,7 +405,7 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
       htParams.put("filter", "NOH;NO3D;fileType=" + type);
       htParams.put("binary", Boolean.valueOf(isBinary));
       vwr.setLoadParameters(htParams, false);
-      bis = new BufferedInputStream(new FileInputStream(fname));
+      bis = new BufferedInputStream(new FileInputStream(f));
       Object ret = vwr.getModelAdapter().getAtomSetCollectionFromReader(fname,
           bis, htParams);
       if (ret instanceof AtomSetCollection) {
@@ -480,6 +490,8 @@ public class JmolJME extends JME implements WindowListener, JmolDropEditor {
   }
 
   void doClean() {
+    if (!allowClean)
+      return;
     String smiles = vwr.getInchi(null, molFile(), "smiles");
     loadSmilesCleanly(smiles);
   }

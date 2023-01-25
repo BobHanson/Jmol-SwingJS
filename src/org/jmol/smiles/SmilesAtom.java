@@ -195,6 +195,8 @@ public class SmilesAtom extends P3d implements Node {
   private int missingHydrogenCount;
   private int cipChirality;
 
+  boolean hasDoubleBond;
+
   public SmilesAtom setTopoAtom(int iComponent, int ptAtom, String symbol,
       int charge, int patternIndex) {
     component = iComponent;
@@ -535,6 +537,9 @@ public class SmilesAtom extends P3d implements Node {
     //if (Logger.debugging)
     //Logger.debug("adding bond " + bondCount + " to " + this + ": " + bond.atom1 + " " + bond.atom2);
     bonds[bondCount] = bond;
+    if (bond.order == 2) {
+      hasDoubleBond = true;
+    }
     bondCount++;
   }
 
@@ -545,8 +550,11 @@ public class SmilesAtom extends P3d implements Node {
       subAtoms = (SmilesAtom[]) AU.arrayCopyObject(subAtoms, subAtoms.length);
     for (int i = 0; i < bonds.length; i++) {
       SmilesBond b = bonds[i];
-      if (isBioAtom && b.getBondType() == SmilesBond.TYPE_AROMATIC)
+      if (isBioAtom && b.getBondType() == SmilesBond.TYPE_AROMATIC) {
         b.order = SmilesBond.TYPE_BIO_CROSSLINK;
+      } else if (b.order == 2) {
+        b.atom1.hasDoubleBond = b.atom2.hasDoubleBond = true;
+      }
       if (b.atom1.index > b.atom2.index) {
         // it is possible, particularly for a connection to a an atom 
         // with a branch:   C1(CCCN1)
@@ -780,12 +788,13 @@ public class SmilesAtom extends P3d implements Node {
                              String stereo, boolean is2D) {
     String sym = Elements.elementSymbolFromNumber(atomicNumber);
     if (atomicNumber == 1 
-        || isAromatic && !(sym = sym.toLowerCase()).equals("c")) {
+        || isAromatic && !(sym = sym.toLowerCase()).equals("c") && !sym.equals("o") && !sym.equals("s")) {
       // force [n]
       valence = Integer.MAX_VALUE;
     }
     boolean simple = (valence != Integer.MAX_VALUE && isotopeNumber <= 0 
-        && charge == 0 && Double.isNaN(osclass) && (stereo == null || stereo.length() == 0)); 
+        && charge == 0 && Double.isNaN(osclass) 
+        && (stereo == null || stereo.length() == 0)); 
     int norm = getDefaultHCount(atomicNumber, false, charge == Integer.MIN_VALUE ? 0 : charge);
     if (is2D && nH == 0) {
       if (simple && atomicNumber == 6)
@@ -849,7 +858,7 @@ public class SmilesAtom extends P3d implements Node {
       s = s.toLowerCase();
     String s2 = "";
     for (int i = 0; i < bondCount; i++)
-      s2 += bonds[i].getOtherAtom(this).index + ", ";
+      s2 += bonds[i].getOtherAtom(this).index + ";bo=" + bonds[i].getCovalentOrder() + ", ";
     
     return "[" + s + '.' + index
         + (matchingIndex >= 0 ? "(" + matchingNode + ")" : "")
