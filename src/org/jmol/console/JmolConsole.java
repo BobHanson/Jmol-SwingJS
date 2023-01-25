@@ -111,7 +111,7 @@ public abstract class JmolConsole extends GenericConsole implements ActionListen
   
   @Override
   protected String nextFileName(String stub, int nTab) {
-    String sname = FileManager.getLocalPathForWritingFile(vwr, stub);
+    String sname = FileManager.getLocalPathForWritingFile(vwr, stub, false);
     if (sname == null)
       return null;
     String root = sname.substring(0, sname.lastIndexOf("/") + 1);

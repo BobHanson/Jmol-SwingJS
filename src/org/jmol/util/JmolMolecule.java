@@ -176,13 +176,24 @@ public class JmolMolecule {
 
   public String getMolecularFormula(boolean includeMissingHydrogens,
                                     double[] wts, boolean isEmpirical) {
-    return getMolecularFormulaImpl(includeMissingHydrogens, wts, isEmpirical);
+    getMFArray(includeMissingHydrogens, wts, isEmpirical);
+    if (elementCounts[0] < 0)
+      return "?";
+    String mf = "";
+    String sep = "";
+    int nX;
+    for (int i = 1; i <= elementNumberMax; i++) {
+      nX = elementCounts[i];
+      if (nX != 0) {
+        mf += sep + Elements.elementSymbolFromNumber(i) + " " + nX;
+        sep = " ";
+      }
+    }
+    return mf;
   }
 
-  public String getMolecularFormulaImpl(boolean includeMissingHydrogens,
+  public int[] getMFArray(boolean includeMissingHydrogens,
                                         double[] wts, boolean isEmpirical) {
-    if (mf != null)
-      return mf;
     // get element and atom counts
     if (atomList == null) {
       atomList = new BS();
@@ -231,8 +242,10 @@ public class JmolMolecule {
     if (wts != null)
       for (int i = 1; i <= elementNumberMax; i++) {
         int c = elementCounts[i] / 8;
-        if (c * 8 != elementCounts[i])
-          return "?";
+        if (c * 8 != elementCounts[i]) {
+          elementCounts[0] = -1;
+          return elementCounts;
+        }
         elementCounts[i] = c;
       }
     if (isEmpirical) {
@@ -260,25 +273,7 @@ public class JmolMolecule {
         }
       }
     }
-    String mf = "";
-    String sep = "";
-    int nX;
-    for (int i = 1; i <= elementNumberMax; i++) {
-      nX = elementCounts[i];
-      if (nX != 0) {
-        mf += sep + Elements.elementSymbolFromNumber(i) + " " + nX;
-        sep = " ";
-      }
-    }
-    for (int i = 1; i <= altElementMax; i++) {
-      nX = altElementCounts[i];
-      if (nX != 0) {
-        mf += sep + Elements.elementSymbolFromNumber(
-            Elements.altElementNumberFromIndex(i)) + " " + nX;
-        sep = " ";
-      }
-    }
-    return mf;
+    return elementCounts;
   }
 
   private static JmolMolecule initialize(Node[] nodes, int moleculeIndex,

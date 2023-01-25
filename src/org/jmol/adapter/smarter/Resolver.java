@@ -118,9 +118,9 @@ public class Resolver {
       if (readerName == null)
         readerName = getReaderFromType("Xml" + type);
       if (readerName == null)
-        errMsg = "unrecognized file format type " + type;
+        errMsg = "unrecognized file format type " + type + " file=" + fullName;
       else
-        Logger.info("The Resolver assumes " + readerName);
+        Logger.info("The Resolver assumes " + readerName + " file=" + fullName);
     } else {
       readerName = determineAtomSetCollectionReader(readerOrDocument, htParams);
       if (readerName.charAt(0) == '\n') {

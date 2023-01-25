@@ -108,6 +108,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   private final static int MODE_ARRAY        = 0x02;
   private final static int MODE_MAP          = 0x03;
   private static final int MODE_ATROP        = 0x04;
+  private final static int MODE_BOOLEAN      = 0x05;
 
   private boolean okMF = true;
 
@@ -215,6 +216,54 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         a[j] = ((SmilesAtom) search.targetAtoms[a[j]]).mapIndex;
     }
     return array;
+  }
+
+
+  /**
+   * Look for pattern in each smilesSet string.
+   * 
+   * @pattern to look for, probably SMARTS
+   * @smilesSet array of target strings
+   * @flags
+   * @return int array of same length as smiles set with 1 = match found, 0 =
+   *         not found, and -1 meaning a parsing or searching error.
+   * 
+   */
+  @Override
+  public int[] hasStructure(String pattern, String[] smilesSet, int flags)
+      throws Exception {
+    int[] ret = new int[smilesSet.length];
+    if ((flags & JC.SMILES_TYPE_SMILES) != JC.SMILES_TYPE_SMILES) {
+      // accept SMILES/SMARTS flags default as SMARTS
+      flags = flags | JC.SMILES_TYPE_SMARTS;
+    }
+    clearExceptions();
+    pattern = SmilesParser.cleanPattern(pattern);
+    try {
+      // Note that additional flags are set when the pattern is parsed.
+      SmilesSearch search = SmilesParser.newSearch(pattern, true, false);
+      for (int i = 0; i < smilesSet.length; i++) {
+        String smiles = SmilesParser.cleanPattern(smilesSet[i]);
+        SmilesSearch searchTarget = SmilesParser.newSearch(smiles, false, true); /// smiles chirality is fixed here
+        searchTarget
+            .setFlags(searchTarget.flags | SmilesParser.getFlags(pattern));
+        try {
+          ret[i] = (matchPattern(search, null, 0, null, null, false,
+              flags | JC.SMILES_FIRST_MATCH_ONLY, MODE_BOOLEAN,
+              searchTarget) == Boolean.TRUE ? 1 : 0);
+        } catch (Exception e) {
+          ret[i] = -1; // failed
+          e.printStackTrace();
+        }
+      }
+    } catch (Exception e) {
+      if (Logger.debugging)
+        e.printStackTrace();
+      if (InvalidSmilesException.getLastError() == null)
+        clearExceptions();
+      throw new InvalidSmilesException(InvalidSmilesException.getLastError());
+    }
+    return ret;
   }
 
   @Override
@@ -476,90 +525,116 @@ public class SmilesMatcher implements SmilesMatcherInterface {
           & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
       // Note that additional flags are set when the pattern is parsed.
       SmilesSearch search = SmilesParser.newSearch(pattern, isSmarts, false);
-      boolean isTopo = ((flags
-          & JC.SMILES_GEN_TOPOLOGY) == JC.SMILES_GEN_TOPOLOGY);
-
-      if (searchTarget != null) {
-        search.haveTopo = true;
-        bsAromatic = new BS();
+      if (searchTarget != null)
         searchTarget.setFlags(searchTarget.flags | SmilesParser.getFlags(pattern));
-        searchTarget.createTopoMap(bsAromatic);
-        atoms = searchTarget.targetAtoms;
-        ac = searchTarget.targetAtoms.length;
-        if (isSmarts) {
-          int[] a1 = searchTarget.elementCounts;
-          int[] a2 = search.elementCounts;
-          // skip 0 here -- it is wild cards a, [...], *
-          for (int i = Math.max(searchTarget.elementNumberMax, search.elementNumberMax); i > 0; i--) {
-            if (a1[i] < a2[i]) {
-              okMF = false;
-              break;
-            }
-          }
-        } else {
-          String mf = (isTopo ? null : search.getMolecularFormulaImpl(true, null, false));
-          String s = searchTarget.getMolecularFormulaImpl(true, null, false);
-          okMF = (mf == null || mf.equals(s));
-          if (!okMF) {
-            System.out.println("\n" + pattern + "\n" + mf + " \n" + s );
-            s = searchTarget.getMolecularFormulaImpl(true, null, false);
-          }
-        }
-        searchTarget.mf = search.mf = null;
-      }
-      if (okMF) {
-        if (!isSmarts && !search.patternAromatic) {
-          if (bsAromatic == null)
-            bsAromatic = new BS();
-          search.normalizeAromaticity(bsAromatic);
-          search.isNormalized = true;
-        }
-        search.targetAtoms = atoms;
-        search.targetAtomCount = ac;
-        search.setSelected(bsSelected);
-        if (ac != 0 && (bsSelected == null || !bsSelected.isEmpty())) {
-          boolean is3D = !(atoms[0] instanceof SmilesAtom);
-          search.getSelections();
-          if (!doTestAromatic)
-            search.bsAromatic = bsAromatic;
-          search.setRingData(null, null, is3D || doTestAromatic);
-          search.exitFirstMatch = ((flags
-              & JC.SMILES_FIRST_MATCH_ONLY) == JC.SMILES_FIRST_MATCH_ONLY);
-          search.mapUnique = ((flags
-              & JC.SMILES_MAP_UNIQUE) == JC.SMILES_MAP_UNIQUE);
-        }
-      }
-      switch (mode) {
-      case MODE_BITSET:
-        search.asVector = false;
-        return (okMF ? search.search() : new BS());
-      case MODE_ARRAY:
-        if (!okMF)
-          return new BS[0];//Lst<BS>();
-        search.asVector = true;
-        Lst<BS> vb = (Lst<BS>) search.search();
-        return vb.toArray(new BS[vb.size()]);
-      case MODE_ATROP:
-        if (!okMF)
-          return "";
-        search.exitFirstMatch = true;
-        search.setAtropicity = true;
-        search.search();
-        return search.atropKeys;
-      case MODE_MAP:
-        if (!okMF)
-          return new int[0][0];
-        search.getMaps = true;
-        search.setFlags(flags | search.flags); // important for COMPARE command - no stereochem
-        Lst<int[]> vl = (Lst<int[]>) search.search();
-        return vl.toArray(AU.newInt2(vl.size()));
-      }
+      return matchPattern(search, atoms, ac, bsSelected, bsAromatic, doTestAromatic, flags, mode, searchTarget);
     } catch (Exception e) {
       if (Logger.debugging)
         e.printStackTrace();
       if (InvalidSmilesException.getLastError() == null)
         clearExceptions();
       throw new InvalidSmilesException(InvalidSmilesException.getLastError());
+    }
+  }
+
+  private Object matchPattern(SmilesSearch search, Node[] atoms, int ac,
+                              BS bsSelected, BS bsAromatic,
+                              boolean doTestAromatic, int flags, int mode,
+                              SmilesSearch searchTarget) throws InvalidSmilesException {
+    boolean isSmarts = ((flags
+        & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
+    boolean isTopo = ((flags
+        & JC.SMILES_GEN_TOPOLOGY) == JC.SMILES_GEN_TOPOLOGY);
+
+    if (searchTarget != null) {
+      search.haveTopo = true;
+      bsAromatic = new BS();
+      searchTarget.createTopoMap(bsAromatic);
+      atoms = searchTarget.targetAtoms;
+      ac = searchTarget.targetAtoms.length;
+      if (isSmarts) {
+        int[] a1 = searchTarget.elementCounts;
+        int[] a2 = search.elementCounts;
+        // skip 0 here -- it is wild cards a, [...], *
+        int n = searchTarget.elementNumberMax;
+        if (n == search.elementNumberMax) {
+          for (int i = 1; i <= n; i++) {
+            if (a1[i] < a2[i]) {
+              okMF = false;
+              break;
+            }
+          }
+        } else {
+          okMF = false;
+        }         
+      } else {
+        int[] mf = search.getMFArray(true, null, false);
+        int[] mft = searchTarget.getMFArray(true, null, false);
+        int n = searchTarget.elementNumberMax;
+        if (n == search.elementNumberMax) {
+          for (int i = 1; i <= n; i++) {
+            if (mf[i] != mft[i]) {
+              okMF = false;
+              break;
+            }
+          }
+        } else {
+          okMF = false;
+        }         
+      }
+    }
+    if (okMF) {
+      if (!isSmarts && !search.patternAromatic) {
+        if (bsAromatic == null)
+          bsAromatic = new BS();
+        search.normalizeAromaticity(bsAromatic);
+        search.isNormalized = true;
+      }
+      search.targetAtoms = atoms;
+      search.targetAtomCount = ac;
+      search.setSelected(bsSelected);
+      if (ac != 0 && (bsSelected == null || !bsSelected.isEmpty())) {
+        boolean is3D = !(atoms[0] instanceof SmilesAtom);
+        search.getSelections();
+        if (!doTestAromatic)
+          search.bsAromatic = bsAromatic;
+        search.setRingData(null, null, is3D || doTestAromatic);
+        search.exitFirstMatch = ((flags
+            & JC.SMILES_FIRST_MATCH_ONLY) == JC.SMILES_FIRST_MATCH_ONLY);
+        search.mapUnique = ((flags
+            & JC.SMILES_MAP_UNIQUE) == JC.SMILES_MAP_UNIQUE);
+      }
+    }
+    switch (mode) {
+    case MODE_BITSET:
+      search.asVector = false;
+      return (okMF ? search.search() : new BS());
+    case MODE_ARRAY:
+      if (!okMF)
+        return new BS[0];//Lst<BS>();
+      search.asVector = true;
+      Lst<BS> vb = (Lst<BS>) search.search();
+      return vb.toArray(new BS[vb.size()]);
+    case MODE_ATROP:
+      if (!okMF)
+        return "";
+      search.exitFirstMatch = true;
+      search.setAtropicity = true;
+      search.search();
+      return search.atropKeys;
+    case MODE_MAP:
+      if (!okMF)
+        return new int[0][0];
+      search.getMaps = true;
+      search.setFlags(flags | search.flags); // important for COMPARE command - no stereochem
+      @SuppressWarnings("unchecked") Lst<int[]> vl = (Lst<int[]>) search.search();
+      return vl.toArray(AU.newInt2(vl.size()));
+    case MODE_BOOLEAN:
+      if (!okMF)
+        return Boolean.FALSE;
+      search.retBoolean = true;
+      search.setFlags(flags | search.flags); // important for COMPARE command - no stereochem
+      return search.search();
     }
     return null;
   }
@@ -644,13 +719,12 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     try {
       SmilesSearch molecule = jmeToMolecule(jme);
       BS bs = BSUtil.newBitSet2(0, molecule.ac);
-      String s;
-      s = getSmiles(molecule.patternAtoms, molecule.ac, bs, null,
+      return getSmiles(molecule.patternAtoms, molecule.ac, bs, null,
           JC.SMILES_TYPE_SMILES);
-      return s;
     } catch (Exception e) {
       return null;
     }
   }
+
 
 }

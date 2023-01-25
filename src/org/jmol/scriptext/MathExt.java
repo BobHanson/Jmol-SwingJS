@@ -1541,6 +1541,7 @@ public class MathExt {
     // {1.1}.find("SMARTS", {2.1})
     // smiles1.find("SMILES", smiles2)
     // smiles1.find("SMILES", smiles2)
+    // smarts.find("SMARTS", [smiles1, smiles2,...])
 
     SV x1 = mp.getX();
     boolean isList = (x1.tok == T.varray);
@@ -1611,8 +1612,8 @@ public class MathExt {
       }
     }
 
-    boolean isSmiles = !isList && !isStr && sFind.equalsIgnoreCase("SMILES");
-    boolean isSMARTS = !isList && !isStr && sFind.equalsIgnoreCase("SMARTS");
+    boolean isSmiles = !isStr && sFind.equalsIgnoreCase("SMILES");
+    boolean isSMARTS = !isStr && sFind.equalsIgnoreCase("SMARTS");
     boolean isChemical = !isList && !isStr
         && sFind.equalsIgnoreCase("CHEMICAL");
     boolean isMF = !isList && !isStr && sFind.equalsIgnoreCase("MF");
@@ -1623,7 +1624,7 @@ public class MathExt {
         && sFind.equalsIgnoreCase("INCHIKEY");
     boolean isStructureMap = (!isSmiles && !isSMARTS && tok0 == T.bitset
         && flags.toLowerCase().indexOf("map") >= 0);
-    boolean isEquivalent = ((x1.tok == T.bitset || x1.tok == T.point3f
+    boolean isEquivalent = !isSmiles && !isSMARTS && ((x1.tok == T.bitset || x1.tok == T.point3f
         || x1.tok == T.varray) && sFind.toLowerCase().startsWith("equivalent"));
 
     try {
@@ -1669,9 +1670,11 @@ public class MathExt {
         boolean isAll = (asBonds || isON);
         Object ret = null;
         switch (x1.tok) {
+        case T.varray:
         case T.string:
-          if (smiles == null)
-            smiles = SV.sValue(x1);
+          if (smiles == null && !isList) {
+              smiles = SV.sValue(x1);
+          }
           if ((isSmiles || isSMARTS) && args.length == 1) {
             return false;
           }
@@ -1696,10 +1699,12 @@ public class MathExt {
             boolean justOne = (!asMap
                 && (!allMappings || !isSMARTS && !isChirality));
             try {
-              ret = e.getSmilesExt().getSmilesMatches(pattern, smiles, null,
+              ret = e.getSmilesExt().getSmilesMatches(pattern, (isList ? SV.strListValue(x1) : smiles), null,
                   null,
                   isSMARTS ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
                   !asMap, !allMappings);
+              if (isList)
+                return mp.addXObj(ret);
             } catch (Exception ex) {
               System.out.println(ex.getMessage());
               return mp.addXInt(-1);

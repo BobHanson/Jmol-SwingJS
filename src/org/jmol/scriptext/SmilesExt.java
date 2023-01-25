@@ -169,7 +169,7 @@ public class SmilesExt {
    * @return Object
    * @throws ScriptException
    */
-  public Object getSmilesMatches(String pattern, String smiles, BS bsSelected,
+  public Object getSmilesMatches(String pattern, Object smiles, BS bsSelected,
                                  BS bsMatch3D, int flags, boolean asOneBitset,
                                  boolean firstMatchOnly)
       throws ScriptException {
@@ -200,16 +200,20 @@ public class SmilesExt {
         if (smiles == null) {
           b = e.vwr.getSubstructureSetArray(pattern, bsSelected, flags);
         } else if (pattern.equals("chirality")) {
-          return e.vwr.calculateChiralityForSmiles(smiles);
+          return e.vwr.calculateChiralityForSmiles((String) smiles);
         } else {
           boolean isSmarts = ((flags
               & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
           boolean ignoreElements = ((flags
               & JC.SMILES_GEN_TOPOLOGY) == JC.SMILES_GEN_TOPOLOGY);
-          int[][] map = e.vwr.getSmilesMatcher().find(pattern, smiles,
-              (isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES)
-                  | (firstMatchOnly ? JC.SMILES_FIRST_MATCH_ONLY : 0)
-                  | (ignoreElements ? JC.SMILES_GEN_TOPOLOGY : 0));
+          flags = (isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES)
+              | (firstMatchOnly ? JC.SMILES_FIRST_MATCH_ONLY : 0)
+              | (ignoreElements ? JC.SMILES_GEN_TOPOLOGY : 0);
+          if (!(smiles instanceof String)) {
+            return e.vwr.getSmilesMatcher().hasStructure(pattern, (String[]) smiles, flags);
+          }
+          int[][] map = e.vwr.getSmilesMatcher().find(pattern, (String) smiles,
+              flags);
           if (!asOneBitset)
             return (!firstMatchOnly ? map
                 : map.length == 0 ? new int[0] : map[0]);

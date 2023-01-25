@@ -27,6 +27,7 @@ package org.jmol.adapter.readers.more;
 import javajs.util.Lst;
 
 import org.jmol.adapter.smarter.Atom;
+import org.jmol.adapter.smarter.Bond;
 import org.jmol.util.Logger;
 
 /**
@@ -72,6 +73,10 @@ public class MdTopReader extends ForceFieldReader {
       getPointers();
     else if (line.equals("ATOM_NAME"))
       getAtomNames();
+    else if (line.equals("BONDS_INC_HYDROGEN"))
+      readBonds();
+    else if (line.equals("BONDS_WITHOUT_HYDROGEN"))
+      readBonds();
     else if (line.equals("CHARGE"))
       getCharges();
     else if (line.equals("RESIDUE_LABEL"))
@@ -84,9 +89,23 @@ public class MdTopReader extends ForceFieldReader {
       getMasses();
     return false;
   }
+
+  String[] bonds1, bonds2;
   
+  private void readBonds() throws Exception {
+    if (bonds1 == null) {
+      bonds1 = getDataBlock();
+      return;
+    } 
+    if (bonds2 == null) {
+      bonds2 = getDataBlock();
+    }    
+  }
+
   @Override
   protected void finalizeSubclassReader() throws Exception {
+    createBonds(bonds1);
+    createBonds(bonds2);
     finalizeReaderASCR();
     Atom[] atoms = asc.atoms;
     Atom atom;
@@ -123,6 +142,17 @@ public class MdTopReader extends ForceFieldReader {
     Logger.info("Total number of atoms used=" + nAtoms);
     setModelPDB(true);
     htParams.put("defaultType", "mdcrd");
+  }
+
+  private void createBonds(String[] bonds) {
+    if (bonds == null)
+      return;
+    for (int i = 0; i < bonds.length;i++) {
+      int a1 = Integer.parseInt(bonds[i++])/3;
+      int a2 = Integer.parseInt(bonds[i++])/3;
+      if (a1 < asc.ac && a2 < asc.ac)
+        asc.addBond(new Bond(a1, a2, 1));
+    }
   }
 
   private String[] getDataBlock() throws Exception {

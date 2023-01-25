@@ -102,8 +102,8 @@ public class JME extends JPanel
   protected boolean showAtomNumbers = false; // only when starting with a molecule
   // scaling pri depict, nacitanie molekul (jme + mol)
 
-  final Color color[] = new Color[23];
-  final String zlabel[] = new String[23];
+  final static Color color[] = new Color[23];
+  final static String zlabel[] = new String[23];
 
   // files na nacitanie (2002.06)
   String smiles = null;
@@ -1183,7 +1183,7 @@ public class JME extends JPanel
   }
 
   // ----------------------------------------------------------------------------
-  void atomicData() {
+  static void atomicData() {
     for (int i = 0; i < 23; i++) {
       color[i] = Color.orange;
       zlabel[i] = "X";

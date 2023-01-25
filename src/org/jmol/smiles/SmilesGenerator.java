@@ -697,9 +697,9 @@ public class SmilesGenerator {
     boolean includeHs = (atomIndex == iHypervalent
         || explicitHydrogen != 0 && !bsIgnoreHydrogen.get(atomIndex));
     boolean explicitHs = isExplicitOnly(atom);
+    boolean isAromatic = bsAromatic.get(atomIndex);
     boolean isExtension = (!bsSelected.get(atomIndex));
     int prevIndex = (prevAtom == null ? -1 : prevAtom.getIndex());
-    boolean isAromatic = bsAromatic.get(atomIndex);
     // prevSp2Atoms is for allene ABC=C=CDE
     SimpleNode[] sp2Atoms = prevSp2Atoms;
     boolean havePreviousSp2Atoms = (sp2Atoms != null);
@@ -1058,8 +1058,14 @@ public class SmilesGenerator {
   }
 
   private boolean isExplicitOnly(SimpleNode atom) {
-    // imine hack here
-    return (atom.getElementNumber() == 7 || atom.getElementNumber() == 6 && atom.getIsotopeNumber() == 17);
+    // imine hack here "17C"
+    //  -- {thismodel}.inchi("SMILES/imine") will convert InChI N to [17C] or [17c] 
+    //      with [5H] to preserve stereochemistry when loading.  
+    // -- MolReader will convert [17C,17c] to imine N automatically 
+    // and remove any [5H] 
+
+    return (atom.getElementNumber() == 7 && atom.getCovalentBondCount() == 2 
+        || atom.getElementNumber() == 6 && atom.getIsotopeNumber() == 17);
   }
 
   private SimpleNode[] atemp;
