@@ -102,19 +102,18 @@ final public class MeasureD {
   public static T3d[] computeHelicalAxis(P3d a, P3d b, Qd dq) {
     
     //                b
-    //           |   /|
-    //           |  / |
-    //           | /  |
-    //           |/   c
-    //         b'+   / \
-    //           |  /   \      Vcb = Vab . n
-    //         n | /     \d    Vda = (Vcb - Vab) / 2
-    //           |/theta  \
+    //           |   /|\
+    //           |  / | \
+    //           | /  |  \
+    //           |/   c   \
+    //         b'+   / \   |
+    //           |  /   \  |     Vcb = Vab . n
+    //         n | /     \d|    Vda = (Vcb - Vab) / 2
+    //           |/theta  \|
     //         a'+---------a
     //                r 
 
-    V3d vab = new V3d();
-    vab.sub2(b, a);
+    V3d vab = V3d.newVsub(b, a);
     /*
      * testing here to see if directing the normal makes any difference -- oddly
      * enough, it does not. When n = -n and theta = -theta vab.n is reversed,
@@ -125,7 +124,7 @@ final public class MeasureD {
     double theta = dq.getTheta();
     V3d n = dq.getNormal();
     double v_dot_n = vab.dot(n);
-    if (Math.abs(v_dot_n) < 0.0001f)
+    if (Math.abs(v_dot_n) < 0.0001)
       v_dot_n = 0;
     V3d va_prime_d = new V3d();
     va_prime_d.cross(vab, n);
@@ -137,7 +136,7 @@ final public class MeasureD {
       v_dot_n = PT.FLOAT_MIN_SAFE; // allow for perpendicular axis to vab
     vcb.scale(v_dot_n);
     vda.sub2(vcb, vab);
-    vda.scale(0.5f);
+    vda.scale(0.5d);
     va_prime_d.scale(theta == 0 ? 0 : (vda.length() / Math.tan(theta
         / 2 / 180 * Math.PI)));
     V3d r = V3d.newV(va_prime_d);
@@ -152,12 +151,12 @@ final public class MeasureD {
     P3d pt_b_prime = P3d.newP(pt_a_prime);
     pt_b_prime.add(n);
     theta = computeTorsion(a, pt_a_prime, pt_b_prime, b, true);
-    if (Double.isNaN(theta) || r.length() < 0.0001f)
+    if (Double.isNaN(theta) || r.length() < 0.0001)
       theta = dq.getThetaDirectedV(n); // allow for r = 0
     // anything else is an array
-    double residuesPerTurn = Math.abs(theta == 0 ? 0 : 360f / theta);
+    double residuesPerTurn = Math.abs(theta == 0 ? 0 : 360d / theta);
     double pitch = Math.abs(v_dot_n == PT.FLOAT_MIN_SAFE ? 0 : n.length()
-        * (theta == 0 ? 1 : 360f / theta));
+        * (theta == 0 ? 1 : 360.0 / theta));
     return new T3d[] { pt_a_prime, n, r, P3d.new3(theta, pitch, residuesPerTurn), pt_b_prime };
   }
 
