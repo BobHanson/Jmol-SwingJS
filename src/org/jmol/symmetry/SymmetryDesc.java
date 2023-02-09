@@ -529,8 +529,10 @@ public class SymmetryDesc {
     T3d[] info = MeasureD.computeHelicalAxis(pta00, pt0, qF);
     // new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
     P3d pa1 = P3d.newPd(info[0]);
-    P3d ax1 = P3d.newPd(info[1]);
+    P3d ax1 = P3d.newPd(info[1]);    
     int ang1 = (int) Math.abs(PT.approxD(((P3d) info[3]).x, 1));
+    // one of the issues here is that the axes calc always returns a
+    // positive angle
     double pitch1 = SymmetryOperation.approxD(((P3d) info[3]).y);
 
     if (haveInversion) {
@@ -730,8 +732,12 @@ public class SymmetryDesc {
       ptemp.add2(pa1, vtemp);
       ang2 = (int) Math
           .round(MeasureD.computeTorsion(pta00, pa1, ptemp, p0, true));
-      if (SymmetryOperation.approxD(ang2) != 0)
+      if (SymmetryOperation.approxD(ang2) != 0) {
         ang1 = ang2;
+        if (ang1 < 0)
+          ang1 = 360 + ang1;
+      }
+
     }
     // time to get the description
 
@@ -753,6 +759,7 @@ public class SymmetryDesc {
         } else if (pitch1 != 0) {
           type = info1 = (360 / ang) + "-fold screw axis";
           ptemp.setT(ax1);
+          System.out.println(ax1.length() + " " + ptemp.length());
           uc.toFractional(ptemp, false);
           info1 += "|translation: " + strCoord(op, ptemp, op.isBio);
         } else {
@@ -825,6 +832,18 @@ public class SymmetryDesc {
     }
 
     String cmds = null;
+    boolean isOK = true;
+    boolean isScrew = (isRotation && !haveInversion && pitch1 != 0);
+    if (!isScrew) {
+      // not a screw axis
+      isOK = checkHandedness(uc, ax1);
+      if (!isOK) {
+        ang1 = -ang1;
+        if (ang1 < 0)
+          ang1 = 360 + ang1;
+        ax1.scale(-1);
+      }
+    }
 
     // check for drawing
 
@@ -866,8 +885,6 @@ public class SymmetryDesc {
 
         // draw the lines associated with a rotation
 
-        
-        
         if (pitch1 != 0 && !haveInversion) {
           // screw axis
           opType = drawid + "screw";
@@ -877,32 +894,15 @@ public class SymmetryDesc {
           drawLine(draw1, drawid + "rotLine2", 0.1, pt0, ptemp, "red");
           ptr.scaleAdd2(0.5d, vtemp, pa1);
         } else {
-          
+
           // check here for correct direction
-          
+
           ptr.setT(pa1);
 
-          double a, b, c;
-          ptemp.set(1, 0, 0);
-          uc.toCartesian(ptemp, false);
-          a = approx0d(ptemp.dot(ax1));
-          ptemp.set(0, 1, 0);
-          uc.toCartesian(ptemp, false);
-          b = approx0d(ptemp.dot(ax1));
-          ptemp.set(0, 0, 1);
-          uc.toCartesian(ptemp, false);
-          c = approx0d(ptemp.dot(ax1));
-          boolean isOK = (a == 0 ? (b == 0 ? c > 0 : b > 0)
-              : c == 0 ? a > 0 : (b == 0 ? c > 0 : a * b * c > 0));
           if (!isOK) {
             if (!isSpecial)
-              pa1.add2(pa1, vtemp);
-            vtemp.scale(-1);
-            ang = -ang;
-          }        
-          if (ang < 0)
-            ang = 360 + ang;
-          
+              pa1.sub2(pa1, vtemp);
+          }
           if (haveInversion) {
             // rotation-inversion
             opType = drawid + "rotinv";
@@ -917,7 +917,7 @@ public class SymmetryDesc {
                 color = "cyan";
               } else {
                 ptemp.scaleAdd2(-1, vtemp, pa1);
-//                drawVector(draw1, drawid, "rotVector2", "", pa1, ptemp, "red");
+                //                drawVector(draw1, drawid, "rotVector2", "", pa1, ptemp, "red");
                 drawLine(draw1, drawid + "rotLine1", 0.1, pta00, ipt, "red");
                 drawLine(draw1, drawid + "rotLine2", 0.1, ptinv, ipt, "red");
               }
@@ -965,8 +965,8 @@ public class SymmetryDesc {
           ptemp.scaleAdd2(0.5d, vtemp, pa1);
           pa1.scaleAdd2(-0.45d, vtemp, pa1);
         }
-        drawVector(draw1, drawid, "rotVector1", "vector", THICK_LINE, pa1, vtemp,
-            isTimeReversed ? "gray" : color);
+        drawVector(draw1, drawid, "rotVector1", "vector", THICK_LINE, pa1,
+            vtemp, isTimeReversed ? "gray" : color);
 
       } else if (isMirrorPlane) {
 
@@ -974,8 +974,8 @@ public class SymmetryDesc {
 
         ptemp.sub2(ptref, pta00);
         if (pta00.distance(ptref) > 0.2)
-          drawVector(draw1, drawid, "planeVector", "vector", THIN_LINE, pta00, ptemp,
-              isTimeReversed ? "gray" : "cyan");
+          drawVector(draw1, drawid, "planeVector", "vector", THIN_LINE, pta00,
+              ptemp, isTimeReversed ? "gray" : "cyan");
 
         // faint inverted frame if mirror trans is not null
 
@@ -1024,14 +1024,14 @@ public class SymmetryDesc {
             .append(Escape.eP(ipt));
         if (isInversionOnly) {
           ptemp.sub2(ptinv, pta00);
-          drawVector(draw1, drawid, "invArrow", "vector", THIN_LINE, pta00, ptemp,
-              isTimeReversed ? "gray" : "cyan");
+          drawVector(draw1, drawid, "invArrow", "vector", THIN_LINE, pta00,
+              ptemp, isTimeReversed ? "gray" : "cyan");
         } else {
           draw1.append(" color cyan");
           if (!isSpecial) {
             ptemp.sub2(pt0, ptinv);
-            drawVector(draw1, drawid, "invArrow", "vector", THIN_LINE, ptinv, ptemp,
-                isTimeReversed ? "gray" : "cyan");
+            drawVector(draw1, drawid, "invArrow", "vector", THIN_LINE, ptinv,
+                ptemp, isTimeReversed ? "gray" : "cyan");
           }
           if (options != T.offset) {
             // n-bar: draw a faint frame showing the inversion
@@ -1056,7 +1056,8 @@ public class SymmetryDesc {
       if (trans != null) {
         if (ptref == null)
           ptref = P3d.newP(pta00);
-        drawVector(draw1, drawid, "transVector", "vector", (isTranslationOnly ? THICK_LINE : THIN_LINE), ptref, trans,
+        drawVector(draw1, drawid, "transVector", "vector",
+            (isTranslationOnly ? THICK_LINE : THIN_LINE), ptref, trans,
             isTimeReversed && !haveInversion && !isMirrorPlane && !isRotation
                 ? "darkGray"
                 : "gold");
@@ -1092,7 +1093,8 @@ public class SymmetryDesc {
       //      if (haveCentering)
       //      draw1.append(drawid).append(
       //        "cellOffsetVector arrow @p0 @set2 color grey");
-      if (!isSpecial && options != T.offset && ptTarget == null && !haveTranslation) {
+      if (!isSpecial && options != T.offset && ptTarget == null
+          && !haveTranslation) {
         draw1.append(drawid)
             .append("offsetFrameX diameter 0.20 @{set2.xyz} @{set2.xyz + ")
             .append(Escape.eP(vt1)).append("*0.9} color red");
@@ -1115,12 +1117,12 @@ public class SymmetryDesc {
 
     if (trans == null)
       ftrans = null;
-    if (isRotation && !haveInversion && pitch1 != 0) {
-        // screw
-        trans = V3d.newV(ax1);
-        ptemp.setT(trans);
-        uc.toFractional(ptemp, false);
-        ftrans = V3d.newV(ptemp);
+    if (isScrew) {
+      // screw
+      trans = V3d.newV(ax1);
+      ptemp.setT(trans);
+      uc.toFractional(ptemp, false);
+      ftrans = V3d.newV(ptemp);
     }
     if (isMirrorPlane) {
       ang1 = 0;
@@ -1199,6 +1201,7 @@ public class SymmetryDesc {
         ret[i] = (plane == null ? approx0(ax1) : null);
         break;
       case RET_ROTANGLE:
+
         ret[i] = (ang1 != 0 ? Integer.valueOf(ang1) : null);
         break;
       case RET_MATRIX:
@@ -1248,6 +1251,21 @@ public class SymmetryDesc {
     }
 
     return ret;
+  }
+
+  private static boolean checkHandedness(SymmetryInterface uc, P3d ax1) {
+    double a, b, c;
+    ptemp.set(1, 0, 0);
+    uc.toCartesian(ptemp, false);
+    a = approx0d(ptemp.dot(ax1));
+    ptemp.set(0, 1, 0);
+    uc.toCartesian(ptemp, false);
+    b = approx0d(ptemp.dot(ax1));
+    ptemp.set(0, 0, 1);
+    uc.toCartesian(ptemp, false);
+    c = approx0d(ptemp.dot(ax1));
+    return (a == 0 ? (b == 0 ? c > 0 : b > 0)
+        : c == 0 ? a > 0 : (b == 0 ? c > 0 : a * b * c > 0));
   }
 
   private static void drawLine(SB s, String id, double diameter, P3d pt0, P3d pt1,

@@ -590,13 +590,15 @@ public class Viewer extends JmolViewer
     }
     mm = new ModelManager(this);
     shm = new ShapeManager(this);
-    tempArray = new TempArray();
     am = new AnimationManager(this);
+    tempArray = new TempArray();
     o = info.get("repaintManager");
-    if (o == null)
-      o = Interface.getOption("render.RepaintManager", this, "setOptions");
-    if (isJS || o != null && !o.equals(""))
-      (rm = (JmolRepaintManager) o).set(this, shm);
+    if (!"NONE".equals(o)) {
+      if (o == null)
+        o = Interface.getOption("render.RepaintManager", this, "setOptions");
+      if (isJS || o != null && !o.equals(""))
+        (rm = (JmolRepaintManager) o).set(this, shm);
+    }
     // again we through a JS error if in async mode
     ms = new ModelSet(this, null);
     initialize(true, false);
@@ -9548,10 +9550,13 @@ public class Viewer extends JmolViewer
     setShapeProperty(JC.SHAPE_MEASURES, "delete", Integer.valueOf(i));
   }
 
+  /**
+   * NOT getting aromatic smiles
+   */
   @Override
   public String getSmiles(BS bs) throws Exception {
     return getSmilesOpt(bs, -1, -1,
-        (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0),
+        JC.SMILES_NO_AROMATIC | (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0),
         null);
   }
 
@@ -9560,7 +9565,7 @@ public class Viewer extends JmolViewer
     return getSmilesOpt(bs, -1, -1,
         JC.SMILES_TYPE_OPENSMILES
             | (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0),
-        "/openstrict///");
+        "/open///");
   }
 
   public String getBioSmiles(BS bs) throws Exception {

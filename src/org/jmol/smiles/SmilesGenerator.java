@@ -493,6 +493,8 @@ public class SmilesGenerator {
     search.targetAtoms = atoms;
     search.setSelected(bsSelected);
     search.setFlags(flags);
+    if (!search.needRingData && haveDoubleBonds(atoms, bsSelected))
+      search.needRingData = true;
     search.targetAtomCount = ac;
     search.ringDataMax = 7;
     search.flags = flags;
@@ -501,6 +503,24 @@ public class SmilesGenerator {
     bsAromatic = search.bsAromatic;
     ringSets = search.ringSets;
     aromaticRings = vRings[3];
+  }
+
+  private boolean haveDoubleBonds(Node[] atoms, BS bsSelected) {
+    for (int i = 0; i < atoms.length; i++)
+      if (bsSelected == null || bsSelected.get(i)) {
+        Node n = atoms[i];
+        if (n.getElementNumber() == 1) {
+          continue;
+        }
+        int nb = n.getBondCount();
+        Edge[] edges = n.getEdges();
+        for (int j = 0; j < nb; j++) {
+          if (edges[j].isCovalent()
+              && edges[j].getBondType() != Edge.BOND_COVALENT_SINGLE)
+            return true;
+        }
+      }
+    return false;
   }
 
   /**

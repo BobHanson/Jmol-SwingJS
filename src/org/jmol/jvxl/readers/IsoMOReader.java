@@ -209,7 +209,7 @@ class IsoMOReader extends AtomDataReader {
       line = PT.formatStringS(line, "E",
           energy != null && ++rep != 0 ? "" + energy : "");
     } else if (energy != null) {
-        String s = PT.formatStringF(line, "E", energy.doubleValue());
+        String s = PT.formatStringD(line, "E", energy.doubleValue());
         if (s != line) {
           line = s;
           rep++;

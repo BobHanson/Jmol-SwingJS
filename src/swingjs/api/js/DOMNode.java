@@ -36,10 +36,10 @@ public interface DOMNode {
 	 *            reject.apply$O(reason)})};
 	 * 
 	 *          Promise.prototype.$finally = function(r)
-	 *            {this.finally(function(){r.run$()})};
+	 *            {this["finally"](function(){r.run$()})};
 	 * 
 	 *          Promise.prototype.$catch = function(err)
-	 *            {this.catch(function(){err.accept$S("" + err)})};
+	 *            {this["catch"](function(){err.accept$S("" + err)})};
 	 */
 	public interface Promise {
 		public Promise then(JSFunction resolve, JSFunction reject);

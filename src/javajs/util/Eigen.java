@@ -27,6 +27,8 @@
 
 package javajs.util;
 
+import java.util.Arrays;
+
 import javajs.api.EigenInterface;
 
 

@@ -189,7 +189,7 @@ abstract public class ForceField {
         if (calc.loggingEnabled)
           calc.appendLogData(calc.getAtomList("F I N A L  G E O M E T R Y"));
         if (done) {
-          String s = PT.formatStringF(
+          String s = PT.formatStringD(
               "\n    " + name + " STEEPEST DESCENT HAS CONVERGED: E = %8.5f " + minimizer.units + "/mol after " + currentStep + " steps", "f",
               toUserUnits(e1));
           calc.appendLogData(s);

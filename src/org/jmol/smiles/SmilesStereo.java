@@ -561,7 +561,7 @@ public class SmilesStereo {
     this.v = v;
     this.search = search;
     jmolAtoms = search.targetAtoms;
-    boolean haveTopo = search.haveTopo;
+    boolean haveTopo = search.haveSmilesTarget;
     boolean invertStereochemistry = search.invertStereochemistry;
 
     if (Logger.debugging)

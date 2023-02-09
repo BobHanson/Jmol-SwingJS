@@ -547,7 +547,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         & JC.SMILES_GEN_TOPOLOGY) == JC.SMILES_GEN_TOPOLOGY);
 
     if (searchTarget != null) {
-      search.haveTopo = true;
+      search.haveSmilesTarget = true;
       bsAromatic = new BS();
       searchTarget.createTopoMap(bsAromatic);
       atoms = searchTarget.targetAtoms;
@@ -558,6 +558,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         // skip 0 here -- it is wild cards a, [...], *
         int n = searchTarget.elementNumberMax;
         if (n == search.elementNumberMax) {
+        	// includes H
           for (int i = 1; i <= n; i++) {
             if (a1[i] < a2[i]) {
               okMF = false;
@@ -572,7 +573,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         int[] mft = searchTarget.getMFArray(true, null, false);
         int n = searchTarget.elementNumberMax;
         if (n == search.elementNumberMax) {
-          for (int i = 1; i <= n; i++) {
+          // does NOT include H
+          for (int i = 2; i <= n; i++) {
             if (mf[i] != mft[i]) {
               okMF = false;
               break;
@@ -598,7 +600,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         search.getSelections();
         if (!doTestAromatic)
           search.bsAromatic = bsAromatic;
-        search.setRingData(null, null, is3D || doTestAromatic);
+        search.setRingData(null, null, is3D || doTestAromatic || search.patternAromatic);
         search.exitFirstMatch = ((flags
             & JC.SMILES_FIRST_MATCH_ONLY) == JC.SMILES_FIRST_MATCH_ONLY);
         search.mapUnique = ((flags

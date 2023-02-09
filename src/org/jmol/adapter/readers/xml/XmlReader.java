@@ -207,6 +207,7 @@ abstract public class XmlReader extends AtomSetCollectionReader {
        *            o = this.reader.lock.lock; 
        *            if (o && o.$in) {
        *              data = o.$in.buf;
+       *            } else if ((o=this.reader.$in.str) != null) {
        *            } else if (this.reader.$in.$in.$in.fd) {
        *              // may need to adjust this;
        *              o = this.reader.$in.$in;
