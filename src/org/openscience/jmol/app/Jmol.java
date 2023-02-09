@@ -41,6 +41,8 @@ import org.openscience.jmol.app.jmolpanel.Splash;
 import org.openscience.jmol.app.jsonkiosk.JsonNioService;
 import org.openscience.jmol.app.jsonkiosk.KioskFrame;
 
+import javajs.util.MeasureD;
+
 /**
  * This application is produced in both Java and JavaScript using 
  * java2script/SwingJS.
@@ -172,6 +174,6 @@ public class Jmol extends JmolPanel {
     return window;
   }
 
-
+ static { MeasureD.test();}
   
 }

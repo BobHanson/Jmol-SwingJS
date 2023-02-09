@@ -110,6 +110,7 @@ import org.openscience.jmol.app.webexport.WebExport;
 import javajs.async.AsyncFileChooser;
 import javajs.util.JSJSONParser;
 import javajs.util.PT;
+import jme.JMEJmol;
 
 public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient {
 
@@ -152,7 +153,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected StatusListener myStatusListener;
   protected SurfaceTool surfaceTool;
   protected MeasurementTable measurementTable;
-  protected JmolJME jmolJME;
+  protected JMEJmol jmolJME;
 
   protected Map<String, Action> commands;
   protected Map<String, JMenuItem> menuItems;
@@ -160,7 +161,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   // --- action implementations -----------------------------------
 
-  protected TwoDEditorAction twoDEditorAction = new TwoDEditorAction(this);
+  protected TwoDEditorAction twoDEditorAction = new TwoDEditorAction();
   protected ExportAction exportAction = new ExportAction();
   protected PovrayAction povrayAction = new PovrayAction();
   protected ToWebAction toWebAction = new ToWebAction();
@@ -1457,20 +1458,15 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   public class TwoDEditorAction extends AbstractAction {
 
-    private JmolPanel jmolPanel;
-
-    public TwoDEditorAction(JmolPanel jmolPanel) {
+    public TwoDEditorAction() {
       super(twoDEditorActionProperty);
-      this.jmolPanel = jmolPanel;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
       if (jmolJME == null) {
-        jmolJME = (JmolJME) Interface.getInterface(
-            "org.openscience.jmol.app.jmolpanel.JmolJME", vwr,
-            "2dEditorAction");
-        jmolJME.setViewer(null, vwr, jmolPanel.getTopLevelAncestor());
+        jmolJME = new JMEJmol();
+        jmolJME.setViewer(null, vwr, getTopLevelAncestor(), "jmol");
       }
       jmolJME.setFrameVisible(true);
       jmolJME.from3D();

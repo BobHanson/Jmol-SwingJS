@@ -590,13 +590,15 @@ public class Viewer extends JmolViewer
     }
     mm = new ModelManager(this);
     shm = new ShapeManager(this);
-    tempArray = new TempArray();
     am = new AnimationManager(this);
+    tempArray = new TempArray();
     o = info.get("repaintManager");
-    if (o == null)
-      o = Interface.getOption("render.RepaintManager", this, "setOptions");
-    if (isJS || o != null && !o.equals(""))
-      (rm = (JmolRepaintManager) o).set(this, shm);
+    if (!"NONE".equals(o)) {
+      if (o == null)
+        o = Interface.getOption("render.RepaintManager", this, "setOptions");
+      if (isJS || o != null && !o.equals(""))
+        (rm = (JmolRepaintManager) o).set(this, shm);
+    }
     // again we through a JS error if in async mode
     ms = new ModelSet(this, null);
     initialize(true, false);

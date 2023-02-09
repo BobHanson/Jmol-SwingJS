@@ -26,6 +26,8 @@
  */
 package javajs.util;
 
+import java.util.Arrays;
+
 import javajs.api.EigenInterface;
 import javajs.api.Interface;
 
@@ -949,13 +951,6 @@ final public class MeasureD {
     System.out.println("found " + p2 + " rmsd = " + f);
   }
   
-  
-  
-  static public void test() {
-    for (int i = 0; i < 10; i++)
-      testRnd();
-    System.exit(0);
-  }
 
   /**
    * Based on a set of centering points, returns the list of points on a given
@@ -1006,6 +1001,28 @@ final public class MeasureD {
     for (int i = n; --i >= 0;)
       cpts.removeItemAt(0);
     return cpts;
+  }
+
+  public static void main(String[] args) {
+    test();
+  }
+  
+  public static void test() {
+    P3d[] a = new P3d[] { P3d.new3( 0, 0, 0 ),  P3d.new3( 1, 0, 0 ),  P3d.new3( 0, 2, 0 ) };
+    P3d[] b = new P3d[] { P3d.new3( 0, 0, 0 ),  P3d.new3( 0, 1, 0 ),  P3d.new3( -2, 0, 0 ) };
+    Lst<P3d> apts = new Lst<>();
+    for (int i = 0; i < a.length; i++)
+      apts.add(a[i]);
+    Lst<P3d> bpts = new Lst<>();
+    for (int i = 0; i < b.length; i++)
+      bpts.add(b[i]);
+    P3d[] ca = getCenterAndPoints(apts);
+    P3d[] cb = getCenterAndPoints(bpts);
+    double[] rmsd = new double[2];
+    Qd q = calculateQuaternionRotation(new P3d[][] {ca, cb}, rmsd);
+    M3d m = q.getMatrix();
+    System.out.println(Arrays.toString(rmsd));
+    System.out.println(m);
   }
 
 }

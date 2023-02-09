@@ -32,7 +32,7 @@ public class Interface {
 
   /**
    * @param name
-   * @param vwr
+   * @param vwr not used - may be null
    * @param state
    * @return instance
    */

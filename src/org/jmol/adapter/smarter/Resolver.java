@@ -33,9 +33,7 @@ import java.util.StringTokenizer;
 
 import org.jmol.api.Interface;
 import org.jmol.util.Logger;
-import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
-import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericBinaryDocument;
 import javajs.util.LimitedLineReader;
@@ -108,7 +106,7 @@ public class Resolver {
                                         Map<String, Object> htParams, int ptFile)
       throws Exception {
     String readerName;
-    fullName = FileManager.fixDOSName(fullName);
+    fullName = fixDOSName(fullName);
     String errMsg = null;
     if (type == null && htParams != null) {
       type = Resolver.getFileTypefromFilter((String) htParams.get("filter"));
@@ -164,7 +162,7 @@ public class Resolver {
     String className = null;
     String err = null;
     className = getReaderClassBase(readerName);
-    if ((rdr = (AtomSetCollectionReader) Interface.getInterface(className, (Viewer) htParams.get("vwr"), "reader")) == null) {
+    if ((rdr = (AtomSetCollectionReader) Interface.getInterface(className, null, "reader")) == null) {
       err = JC.READER_NOT_FOUND  + className;
       Logger.error(err);
       return err;
@@ -1013,6 +1011,10 @@ public class Resolver {
   public static String getFileTypefromFilter(String filter) {
     int pt = (filter == null ? -1 : filter.toLowerCase().indexOf("filetype"));
     return (pt < 0 ? null : filter.substring(pt + 8, (filter+ ";").indexOf(";", pt)).replace('=', ' ').trim());
+  }
+
+  public static String fixDOSName(String fileName) {
+    return (fileName.indexOf(":\\") >= 0 ? fileName.replace('\\', '/') : fileName);
   }
 
 }
