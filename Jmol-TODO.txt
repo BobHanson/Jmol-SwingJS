@@ -1,3 +1,8 @@
+This TODO file is ancient. 
+
+
+
+
 TODO: remove HTML5 dependency on synchronous file loading (check SCRIPT command for problems)
 
 TODO: curved arrows overextend and with width settings do not truncate shaft properly
