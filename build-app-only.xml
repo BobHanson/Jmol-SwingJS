@@ -20,11 +20,15 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
 
   <!-- pull developer-specific settings from their home directory -->
   <property file="${user.home}/.jmol.build.properties" />
+    <property name="site.dir" value="site" />
+    <property name="dist.dir" value="dist" />
+
   <!-- compile options -->
   <property name="build.sysclasspath" value="ignore" />
   <property name="debug" value="on" />
   <property name="deprecation" value="off" />
   <property name="optimization" value="off" />
+
 	<copy todir="" >
 	  <fileset dir="src/org/jmol/viewer/">
 	    <include name="Jmol.properties" />
@@ -182,6 +186,10 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
   	<copy file="build/JmolD.jar" tofile="dist/Jmol.jar" />
   	<copy file="build/JmolD.jar" tofile="dist/JmolD.jar" />
   	
+    <zip basedir="${site.dir}" 
+    	 includes="**/*"
+   	     destfile="${dist.dir}/Jmol-SwingJS.zip" 
+    />
   	
     <echo message="Creating JmolDataD.jar -- if this fails, check to see that build/JmolD.jar is not open." />
 	<jar destfile="build/JmolDataD.jar"
@@ -201,7 +209,9 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
 	<include name="javajs/export/**" />
 	<include name="javajs/img/**" />
 	<include name="javajs/util/**" />
+    <include name="jme/**" />
 	<include name="**/jspecview/**" />
+	<include name="**/org/actelion/**" />
 	<include name="**/org/gennbo/**" />
 	<include name="**/org/apache/**" />
 	<include name="**/org/qcschema/**" />

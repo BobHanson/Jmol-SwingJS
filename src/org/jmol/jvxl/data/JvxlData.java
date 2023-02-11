@@ -219,8 +219,10 @@ public class JvxlData {
 
   public void setSurfaceInfo(P4d thePlane, P3d mapLattice, int nSurfaceInts, String surfaceData) {
     jvxlSurfaceData = surfaceData;
-    if (jvxlSurfaceData.indexOf("--") == 0)
-      jvxlSurfaceData = jvxlSurfaceData.substring(2);
+// BH 2023.02.10 This next bit causes a bitset starting at bit 10, which starts with "--" to fail.
+// history goes back to 2012 at least; that is as far back as I can go at SourceForge. 
+//    if (jvxlSurfaceData.indexOf("--") == 0)
+//      jvxlSurfaceData = jvxlSurfaceData.substring(2);
     jvxlPlane = thePlane;
     this.mapLattice = mapLattice;
     this.nSurfaceInts = nSurfaceInts;
