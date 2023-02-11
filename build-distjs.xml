@@ -2,14 +2,23 @@
  
    <property name="site.path" value="site/" />
    <property name="dist.path" value="dist/" />
-   <property name="jmolapp.zip" value="${dist.path}jmol-app.zip" />	  	  	
+   <property name="Jmol-SwingJS.zip" value="${dist.path}Jmol-SwingJS.zip" />	  	  	
 
 
    <target name="todist" id="todist">
 
-   	<echo> Zipping up ${jmolapp.zip} </echo>
-  	<zip destfile="${jmolapp.zip}" basedir="${site.path}" 
-  		includes="swingjs/j2s/_**/*,swingjs/j2s/org/jmol/**,swingjs/j2s/org/openscience/jmol/**,swingjs/j2s/javajs/awt/**" 
+   	<echo> Zipping up ${Jmol-SwingJS.zip} </echo>
+  	<zip destfile="${Jmol-SwingJS.zip}" basedir="${site.path}" 
+  	  		includes="
+  			swingjs/*.html,
+  			swingjs/j2s/_**/*,
+			swingjs/j2s/jme/**,
+			swingjs/j2s/org/jspecview/**,
+  			swingjs/j2s/org/jmol/**,
+  			swingjs/j2s/org/openscience/jmol/**,
+  			swingjs/j2s/javajs/awt/**"
+  			excludes="
+   			"
   	/>
    	
    	
