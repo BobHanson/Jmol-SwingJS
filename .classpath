@@ -10,5 +10,6 @@
 	<classpathentry kind="lib" path="jars/junit.jar"/>
 	<classpathentry kind="lib" path="jars/naga-3_0.jar"/>
 	<classpathentry kind="lib" path="jars/commons-cli-1.2.jar"/>
+	<classpathentry kind="lib" path="jars/JME-SwingJS.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
