@@ -3,6 +3,7 @@ package jspecview.application;
 import java.util.Enumeration;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 
 import jspecview.api.JSVTreeNode;
 import jspecview.common.PanelNode;
@@ -18,7 +19,7 @@ public class AwtTreeNode extends
 		public int index;
 
 		@Override
-    public Enumeration<JSVTreeNode> children() {
+    public Enumeration<TreeNode> children() {
       return super.children();
 		}
 		

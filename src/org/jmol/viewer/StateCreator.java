@@ -494,8 +494,8 @@ public class StateCreator extends JmolStateCreator {
       Model m = models[i];
       int pt = commands.indexOf(m.loadState);
       if (pt < 0 || pt != commands.lastIndexOf(m.loadState))
-        commands.append(models[i].loadState);
-      if (models[i].isModelKit) {
+        commands.append(m.loadState);
+      if (m.isModelKit) {
         BS bs = ms.getModelAtomBitSetIncludingDeleted(i, false);
         if (ms.tainted != null) {
           if (ms.tainted[AtomCollection.TAINT_COORD] != null)

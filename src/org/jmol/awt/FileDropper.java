@@ -178,7 +178,8 @@ public class FileDropper implements DropTargetListener {
   public void drop(DropTargetDropEvent dtde) {
     if (Logger.debugging)
       Logger.debug("Drop detected...");
-    System.out.println("FileDropper " + dtde.getDropTargetContext().getComponent());
+    System.out
+        .println("FileDropper " + dtde.getDropTargetContext().getComponent());
     Transferable t = dtde.getTransferable();
     boolean isAccepted = false;
     if (t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
@@ -192,23 +193,23 @@ public class FileDropper implements DropTargetListener {
           Logger.error("transfer failed");
         }
         // if o is still null we had an exception
-        if (o instanceof List) {
-          List<File> fileList = (List<File>) o;
-          final int length = fileList.size();
-          if (length == 1) {
-            String fileName = fileList.get(0).getAbsolutePath().trim();
-            if (fileName.endsWith(".bmp"))
-              break; // try another flavor -- Mozilla bug
-            dtde.getDropTargetContext().dropComplete(true);
-            Point loc = dtde.getLocation();
-            loadFile(fileName, loc.x, loc.y);
-            return;
-          }
+        if (!(o instanceof List)) {
+          break;
+        }
+        List<File> fileList = (List<File>) o;
+        final int length = fileList.size();
+        if (length == 1) {
+          String fileName = fileList.get(0).getAbsolutePath().trim();
+          if (fileName.endsWith(".bmp"))
+            break; // try another flavor -- Mozilla bug
           dtde.getDropTargetContext().dropComplete(true);
-          loadFiles(fileList);
+          Point loc = dtde.getLocation();
+          loadFile(fileName, loc.x, loc.y);
           return;
         }
-        break;
+        dtde.getDropTargetContext().dropComplete(true);
+        loadFiles(fileList);
+        return;
       }
     }
 
@@ -221,15 +222,15 @@ public class FileDropper implements DropTargetListener {
     for (int i = 0; i < df.length; ++i) {
       DataFlavor flavor = df[i];
       Object o = null;
-      if (true) {
         Logger.info("df " + i + " flavor " + flavor);
         Logger.info("  class: " + flavor.getRepresentationClass().getName());
         Logger.info("  mime : " + flavor.getMimeType());
-      }
-
-      if (flavor.getMimeType().startsWith("text/uri-list")
-          && flavor.getRepresentationClass().getName().equals(
-              "java.lang.String")) {
+    }
+    for (int i = 0; i < df.length; ++i) {
+      DataFlavor flavor = df[i];
+      Object o = null;
+      if (flavor.getMimeType().startsWith("text/uri-list") && flavor
+          .getRepresentationClass().getName().equals("java.lang.String")) {
 
         /*
          * This is one of the (many) flavors that KDE provides: df 2 flavour
@@ -300,8 +301,8 @@ public class FileDropper implements DropTargetListener {
           if (content.startsWith("file:/")) {
             loadFile(content, 0, 0);
           } else {
-            PropertyChangeEvent pce = new PropertyChangeEvent(this,
-                "inline", fd_oldFileName, content);
+            PropertyChangeEvent pce = new PropertyChangeEvent(this, "inline",
+                fd_oldFileName, content);
             fd_propSupport.firePropertyChange(pce);
           }
           dtde.getDropTargetContext().dropComplete(true);

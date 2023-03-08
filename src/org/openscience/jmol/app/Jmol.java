@@ -174,6 +174,4 @@ public class Jmol extends JmolPanel {
     return window;
   }
 
- static { MeasureD.test();}
-  
 }

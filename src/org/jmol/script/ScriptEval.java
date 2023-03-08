@@ -2124,7 +2124,11 @@ public class ScriptEval extends ScriptExpr {
     // note that we will never know the actual file name
     // so we construct one and point to it in the scriptContext
     // with a key to this point in the script. 
-    
+    String[] fullPathNameOrError = vwr.getFullPathNameOrError(filename);
+    filename = fullPathNameOrError[0];
+    if (fullPathNameOrError[1] != null)
+      errorStr(ScriptError.ERROR_fileNotFoundException, filename
+          + ":" + fullPathNameOrError[1]);    
     if (vwr.fm.cacheGet(filename, false) != null) {
       cancelFileThread();
       return filename;
@@ -4774,7 +4778,7 @@ public class ScriptEval extends ScriptExpr {
 
     boolean isVariable = false;
     if (filenames == null) {
-      if (filename.equals("string") && vwr.am.cmi >= 0) {
+      if (vwr.am.cmi >= 0 && ("::" + filename).endsWith("::string")) {
         filename = vwr.getCurrentFileAsString(null);
         loadScript = new SB().append("load inline ");
         isInline = true;
@@ -4995,7 +4999,6 @@ public class ScriptEval extends ScriptExpr {
       // on first pass, a ScriptInterruption will be thrown; 
       // on the second pass, we will have the file name, which will be cache://localLoad_n__m
     }
-
     String[] fullPathNameOrError = vwr.getFullPathNameOrError(filename);
     filename = fullPathNameOrError[0];
     if (fullPathNameOrError[1] != null)
