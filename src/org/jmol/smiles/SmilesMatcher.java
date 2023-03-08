@@ -138,12 +138,11 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     //   H 5 C 4 N 2   (incorrect)
     SmilesSearch search = SmilesParser.newSearch("/nostereo/"+pattern, isSmarts, true);
     search.createTopoMap(null);
-    search.nodes = search.targetAtoms;
+    search.nodes = search.target.nodes;
     return search.getMolecularFormula(!isSmarts, null, isEmpirical);
   }
 
   private void clearExceptions() {
-    okMF = true;
     InvalidSmilesException.clear();
   }
 
@@ -213,7 +212,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     for (int i = array.length; --i >= 0;) {
       int[] a = array[i];
       for (int j = a.length; --j >= 0;)
-        a[j] = ((SmilesAtom) search.targetAtoms[a[j]]).mapIndex;
+        a[j] = ((SmilesAtom) search.target.nodes[a[j]]).mapIndex;
     }
     return array;
   }
@@ -248,6 +247,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         searchTarget
             .setFlags(searchTarget.flags | SmilesParser.getFlags(pattern));
         try {
+          clearExceptions();
           ret[i] = (matchPattern(search, null, 0, null, null, false,
               flags | JC.SMILES_FIRST_MATCH_ONLY, MODE_BOOLEAN,
               searchTarget) == Boolean.TRUE ? 1 : 0);
@@ -273,7 +273,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     target = SmilesParser.cleanPattern(target);
     SmilesSearch search = SmilesParser.newSearch(target, false, true);
     search.createTopoMap(new BS());
-    return search.targetAtoms;
+    return search.target.nodes;
   }
 
 
@@ -335,16 +335,17 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * 
    * @param pattern
    *        SMILES or SMARTS pattern.
-   * @param atoms
+   * @param nodes
    * @param ac
    * @param bsSelected
    * @return BitSet indicating which atoms match the pattern.
    */
 
   @Override
-  public BS getSubstructureSet(String pattern, Node[] atoms, int ac, BS bsSelected, int flags) throws Exception {
+  public BS getSubstructureSet(Object pattern, Object target, int ac, BS bsSelected, int flags) throws Exception {
+    Node[] atoms = (target instanceof SmilesSearch ? null : (Node[]) target);
     return (BS) matchPriv(pattern, atoms, ac, bsSelected, null, true,
-        flags | SmilesParser.getFlags(pattern), MODE_BITSET, null);
+        flags | SmilesParser.getFlags(pattern.toString()), MODE_BITSET, (atoms == null ? (SmilesSearch) target : null));
   }
 
   /**
@@ -361,9 +362,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     int flags = (JC.SMILES_TYPE_SMARTS | JC.SMILES_AROMATIC_MMFF94);
     search = sp.parse("");
     search.exitFirstMatch = false;
-    search.targetAtoms = atoms;
-    search.targetAtomCount = Math.abs(ac);
-    search.setSelected(bsSelected);
+    search.target.setAtoms(atoms, Math.abs(ac), bsSelected);
     search.flags = flags;
     search.getRingData(vRings, true, true);
     search.asVector = false;
@@ -514,19 +513,21 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         flags, MODE_MAP, null);
   }
 
-  @SuppressWarnings({ "unchecked" })
-  private Object matchPriv(String pattern, Node[] atoms, int ac, BS bsSelected,
+  private Object matchPriv(Object pattern, Node[] atoms, int ac, BS bsSelected,
                            BS bsAromatic, boolean doTestAromatic, int flags,
                            int mode, SmilesSearch searchTarget)
       throws Exception {
     clearExceptions();
     try {
+      boolean isCompiled = (pattern instanceof SmilesSearch);
+      if (isCompiled)
+        flags |= JC.SMILES_TYPE_SMARTS;
       boolean isSmarts = ((flags
           & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
       // Note that additional flags are set when the pattern is parsed.
-      SmilesSearch search = SmilesParser.newSearch(pattern, isSmarts, false);
+      SmilesSearch search = (isCompiled ? (SmilesSearch) pattern : SmilesParser.newSearch(pattern == null ? null : pattern.toString(), isSmarts, false));
       if (searchTarget != null)
-        searchTarget.setFlags(searchTarget.flags | SmilesParser.getFlags(pattern));
+        searchTarget.setFlags(searchTarget.flags | SmilesParser.getFlags(pattern.toString()));
       return matchPattern(search, atoms, ac, bsSelected, bsAromatic, doTestAromatic, flags, mode, searchTarget);
     } catch (Exception e) {
       if (Logger.debugging)
@@ -540,49 +541,55 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   private Object matchPattern(SmilesSearch search, Node[] atoms, int ac,
                               BS bsSelected, BS bsAromatic,
                               boolean doTestAromatic, int flags, int mode,
-                              SmilesSearch searchTarget) throws InvalidSmilesException {
+                              SmilesSearch searchTarget)
+      throws InvalidSmilesException {
     boolean isSmarts = ((flags
         & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
-    boolean isTopo = ((flags
-        & JC.SMILES_GEN_TOPOLOGY) == JC.SMILES_GEN_TOPOLOGY);
-
+    //    boolean isTopo = ((flags
+    //        & JC.SMILES_GEN_TOPOLOGY) == JC.SMILES_GEN_TOPOLOGY);
+    //
+    okMF = true;
     if (searchTarget != null) {
-      search.haveSmilesTarget = true;
-      bsAromatic = new BS();
-      searchTarget.createTopoMap(bsAromatic);
-      atoms = searchTarget.targetAtoms;
-      ac = searchTarget.targetAtoms.length;
-      if (isSmarts) {
-        int[] a1 = searchTarget.elementCounts;
-        int[] a2 = search.elementCounts;
-        // skip 0 here -- it is wild cards a, [...], *
-        int n = searchTarget.elementNumberMax;
-        if (n == search.elementNumberMax) {
-        	// includes H
-          for (int i = 1; i <= n; i++) {
-            if (a1[i] < a2[i]) {
-              okMF = false;
-              break;
-            }
-          }
-        } else {
-          okMF = false;
-        }         
+      if (searchTarget.targetSet) {
+        search.setTarget(searchTarget);
       } else {
-        int[] mf = search.getMFArray(true, null, false);
-        int[] mft = searchTarget.getMFArray(true, null, false);
-        int n = searchTarget.elementNumberMax;
-        if (n == search.elementNumberMax) {
-          // does NOT include H
-          for (int i = 2; i <= n; i++) {
-            if (mf[i] != mft[i]) {
-              okMF = false;
-              break;
+        search.haveSmilesTarget = true;
+        bsAromatic = new BS();
+        searchTarget.createTopoMap(bsAromatic);
+        atoms = searchTarget.target.nodes;
+        ac = searchTarget.target.nodes.length;
+        if (isSmarts) {
+          int[] a1 = searchTarget.elementCounts;
+          int[] a2 = search.elementCounts;
+          // skip 0 here -- it is wild cards a, [...], *
+          int n = searchTarget.elementNumberMax;
+          if (n == search.elementNumberMax) {
+            // includes H
+            for (int i = 1; i <= n; i++) {
+              if (a1[i] < a2[i]) {
+                okMF = false;
+                break;
+              }
             }
+          } else {
+            okMF = false;
           }
         } else {
-          okMF = false;
-        }         
+          int[] mf = search.getMFArray(true, null, false);
+          int[] mft = searchTarget.getMFArray(true, null, false);
+          int n = searchTarget.elementNumberMax;
+          if (n == search.elementNumberMax) {
+            // does NOT include H
+            for (int i = 2; i <= n; i++) {
+              if (mf[i] != mft[i]) {
+                okMF = false;
+                break;
+              }
+            }
+          } else {
+            okMF = false;
+          }
+        }
       }
     }
     if (okMF) {
@@ -592,15 +599,16 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         search.normalizeAromaticity(bsAromatic);
         search.isNormalized = true;
       }
-      search.targetAtoms = atoms;
-      search.targetAtomCount = ac;
-      search.setSelected(bsSelected);
-      if (ac != 0 && (bsSelected == null || !bsSelected.isEmpty())) {
-        boolean is3D = !(atoms[0] instanceof SmilesAtom);
+      if (!search.targetSet)
+        search.target.setAtoms(atoms, ac, bsSelected);
+      if (search.targetSet || ac != 0 && (bsSelected == null || !bsSelected.isEmpty())) {
+        boolean is3D = search.targetSet || !(atoms[0] instanceof SmilesAtom);
         search.getSelections();
         if (!doTestAromatic)
-          search.bsAromatic = bsAromatic;
-        search.setRingData(null, null, is3D || doTestAromatic || search.patternAromatic);
+          search.target.bsAromatic = bsAromatic;
+        if (!search.target.hasRingData(flags))
+          search.setRingData(null, null,
+              is3D || doTestAromatic || search.patternAromatic);
         search.exitFirstMatch = ((flags
             & JC.SMILES_FIRST_MATCH_ONLY) == JC.SMILES_FIRST_MATCH_ONLY);
         search.mapUnique = ((flags
@@ -629,7 +637,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
         return new int[0][0];
       search.getMaps = true;
       search.setFlags(flags | search.flags); // important for COMPARE command - no stereochem
-      @SuppressWarnings("unchecked") Lst<int[]> vl = (Lst<int[]>) search.search();
+      @SuppressWarnings("unchecked")
+      Lst<int[]> vl = (Lst<int[]>) search.search();
       return vl.toArray(AU.newInt2(vl.size()));
     case MODE_BOOLEAN:
       if (!okMF)
@@ -726,6 +735,20 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     } catch (Exception e) {
       return null;
     }
+  }
+
+  @Override
+  public Object compileSmartsPattern(String pattern) throws Exception {
+    pattern = SmilesParser.cleanPattern(pattern);
+    return SmilesParser.newSearch(pattern, true, false);
+  }
+
+  @Override
+  public Object compileSearchTarget(Node[] atoms, int atomCount, BS bsSelected) {
+    SmilesSearch ss = new SmilesSearch();
+    ss.target.setAtoms(atoms, atomCount, bsSelected);
+    ss.targetSet = true;
+    return ss;
   }
 
 

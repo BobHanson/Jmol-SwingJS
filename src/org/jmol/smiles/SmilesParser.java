@@ -128,6 +128,8 @@ public class SmilesParser {
     if (pattern == null)
       throw new InvalidSmilesException("expression must not be null");
     SmilesSearch search = new SmilesSearch();
+    if (isSmarts && !isTarget)
+      search.pattern0 = pattern; // for toString() only
     if (pattern.indexOf("$(select") >= 0) // must do this before cleaning
       pattern = parseNested(search, pattern, "select");
     int[] ret = new int[1];
@@ -279,6 +281,7 @@ public class SmilesParser {
     search.setTop(parent);
     search.isSmarts = isSmarts;
     search.pattern = pattern;
+    search.pattern0 = parent.pattern0;
     search.setFlags(flags);
     if (pattern.indexOf("$(") >= 0)
       pattern = parseNested(search, pattern, "");
@@ -576,7 +579,7 @@ public class SmilesParser {
       SmilesBond bond0 = connections.get(r);
       if (bond0 == null) {
         connections.put(r, bond);
-        search.top.ringCount++;
+        search.target.ringCount++;
         return;
       }
       connections.remove(r);
@@ -1566,6 +1569,15 @@ public class SmilesParser {
     extractFlags(pattern, ret);
     return ret[0];
   }
-
-
+  
+  public static void main(String[] args) {
+    try {
+      String s = new SmilesParser(true, false).parse("*aaaaC*").toString();
+      System.out.println(s);
+    } catch (InvalidSmilesException e) {
+      // TODO
+    }
+    
+  }
+  
 }

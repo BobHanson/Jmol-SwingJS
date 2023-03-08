@@ -2,12 +2,12 @@ package org.jmol.api;
 
 
 
-import javajs.util.Lst;
-import javajs.util.P3d;
-
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.Node;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3d;
 
 public interface SmilesMatcherInterface {
 
@@ -31,7 +31,7 @@ public interface SmilesMatcherInterface {
   
   // Internal -- Jmol use only -- 
   
-  public abstract BS getSubstructureSet(String pattern, Node[] atoms,
+  public abstract BS getSubstructureSet(Object pattern, Object target,
                                             int ac, BS bsSelected,
                                             int flags) throws Exception;
 
@@ -58,9 +58,13 @@ public interface SmilesMatcherInterface {
 
   Node[] getAtoms(String target) throws Exception;
 
-  public String getSmilesFromJME(String jmeFile);
+  String getSmilesFromJME(String jmeFile);
 
   int[] hasStructure(String smarts, String[] smilesSet, int flags)
       throws Exception;
+
+  Object compileSmartsPattern(String pattern) throws Exception;
+
+  Object compileSearchTarget(Node[] atoms, int atomCount, BS bitSet);
 
 }

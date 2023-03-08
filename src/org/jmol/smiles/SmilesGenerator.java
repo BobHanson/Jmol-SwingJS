@@ -490,37 +490,17 @@ public class SmilesGenerator {
   private void generateRingData() throws InvalidSmilesException {
     // we are not actually running this search, just getting preliminary data    
     SmilesSearch search = SmilesParser.newSearch("[r500]", true, true);
-    search.targetAtoms = atoms;
-    search.setSelected(bsSelected);
+    search.target.setAtoms(atoms, ac, bsSelected);
     search.setFlags(flags);
-    if (!search.needRingData && haveDoubleBonds(atoms, bsSelected))
+    if (!search.needRingData && search.target.hasDoubleBonds())
       search.needRingData = true;
-    search.targetAtomCount = ac;
     search.ringDataMax = 7;
     search.flags = flags;
     Lst<BS>[] vRings = AU.createArrayOfArrayList(4);
     search.setRingData(null, vRings, true);
-    bsAromatic = search.bsAromatic;
-    ringSets = search.ringSets;
+    bsAromatic = search.target.bsAromatic;
+    ringSets = search.target.ringSets;
     aromaticRings = vRings[3];
-  }
-
-  private boolean haveDoubleBonds(Node[] atoms, BS bsSelected) {
-    for (int i = 0; i < atoms.length; i++)
-      if (bsSelected == null || bsSelected.get(i)) {
-        Node n = atoms[i];
-        if (n.getElementNumber() == 1) {
-          continue;
-        }
-        int nb = n.getBondCount();
-        Edge[] edges = n.getEdges();
-        for (int j = 0; j < nb; j++) {
-          if (edges[j].isCovalent()
-              && edges[j].getBondType() != Edge.BOND_COVALENT_SINGLE)
-            return true;
-        }
-      }
-    return false;
   }
 
   /**

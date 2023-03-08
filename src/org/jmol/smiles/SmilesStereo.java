@@ -52,7 +52,7 @@ public class SmilesStereo {
   int atomCount;
   private String details;
   private SmilesSearch search;
-  private Node[] jmolAtoms;
+  private Node[] targetAtoms;
 //  private String directives;
   final public static int DEFAULT = 0;
   final public static int POLYHEDRAL = 1;           // Jmol polySMILES
@@ -345,12 +345,12 @@ public class SmilesStereo {
     sAtom0.set(0, 0, 0);
     
     int[] map;
-    if (jmolAtoms == null) {
+    if (targetAtoms == null) {
       map = new int[] { 0, 1, 2, 3 };
     } else {
-      sAtom0 = (SmilesAtom) jmolAtoms[pAtom.getMatchingAtomIndex()];
+      sAtom0 = (SmilesAtom) targetAtoms[pAtom.getMatchingAtomIndex()];
       sAtom0.set(0, 0, 0);
-      SmilesAtom a2 = (SmilesAtom) (chClass == ALLENE ? jmolAtoms[sAtom2.getMatchingAtomIndex()]
+      SmilesAtom a2 = (SmilesAtom) (chClass == ALLENE ? targetAtoms[sAtom2.getMatchingAtomIndex()]
           : null);
       map = getMappedTopoAtoms(sAtom0, a2, cAtoms, chiralOrder == 0 ? new int[cAtoms.length] : null);
 
@@ -509,7 +509,7 @@ public class SmilesStereo {
   }
 
   private Node getJmolAtom(int i) {
-    return (i < 0 || i >= jmolAtoms.length ? null : jmolAtoms[i]);
+    return (i < 0 || i >= targetAtoms.length ? null : targetAtoms[i]);
   }
 
   /**
@@ -560,7 +560,7 @@ public class SmilesStereo {
   boolean checkStereoChemistry(SmilesSearch search, VTemp v) {
     this.v = v;
     this.search = search;
-    jmolAtoms = search.targetAtoms;
+    targetAtoms = search.target.nodes;
     boolean haveTopo = search.haveSmilesTarget;
     boolean invertStereochemistry = search.invertStereochemistry;
 

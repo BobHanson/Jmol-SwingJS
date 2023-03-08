@@ -751,6 +751,7 @@ public class T {
 
   // xxx(a,b)
   
+  public final static int pattern      = 1 | 2 << 9 | mathfunc;
   public final static int script       = 2 | 2 << 9 | mathfunc | scriptCommand;
   public final static int substructure = 3 | 2 << 9 | mathfunc | intproperty | strproperty;
   public final static int search       = 4 | 2 << 9 | mathfunc;
@@ -2118,6 +2119,7 @@ public class T {
         "opaque",
         "options",
         "partialCharge",
+        "pattern",
         "phi",
         "pivot",
         "plane",
@@ -3191,6 +3193,7 @@ public class T {
         opaque,                             // "opaque"
         options,                            // "options"
         partialcharge,                      // "partialCharge"
+        pattern,                            // "pattern"
         phi,                                // "phi"
         pivot,                              // "pivot"
         plane,                              // "plane"

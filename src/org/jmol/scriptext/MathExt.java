@@ -228,6 +228,7 @@ public class MathExt {
       return evaluateModulation(mp, args);
     case T.replace:
       return evaluateReplace(mp, args);
+    case T.pattern:
     case T.search:
     case T.smiles:
     case T.substructure:
@@ -3615,22 +3616,50 @@ public class MathExt {
     // print {*}.search(...)
     // x = {*}.smiles(options)
     // x = {*}.smiles("inchi/smilesoptions") --> {*}.inchi("smiles/options")
-    if (args.length == 0 || isSelector && args.length > 1)
+    // compiled:
+    // x = search({*})
+    // y = pattern('CCCC')
+    // atoms = {*}.search(y)
+    // print search(x, y)
+
+    if (args.length == 0 || isSelector && (tok == T.pattern || args.length > 1))
       return false;
+    Object objTarget = (tok == T.search && !isSelector && args[0].tok == T.search ? args[0].value : null);
+    if (objTarget != null && args.length < 2)
+      return false;
+    boolean compileSearch = (tok == T.search && !isSelector && args[0].tok == T.bitset);
+    Object objPattern = (args[0].tok == T.pattern ? args[0].value
+        : objTarget != null && args[1].tok == T.pattern
+            ? args[1].value
+            : null);
+    if (objTarget != null && objPattern == null)
+      return false;
+    String pattern = (compileSearch ? null : SV.sValue(args[0]));
     BS bs = new BS();
-    String pattern = SV.sValue(args[0]);
-    if (pattern.length() > 0)
+    if (compileSearch || pattern.length() > 0)
       try {
+        if (compileSearch) {
+          return mp.addX(SV.newV(T.search,
+              vwr.getSmilesMatcher().compileSearchTarget(vwr.ms.at, vwr.ms.ac, SV.getBitSet(args[0], false))));
+        }
+        if (objTarget != null)
+          return mp.addXBs(vwr.getSmilesMatcher().getSubstructureSet(
+              objPattern, objTarget, 0, null, JC.SMILES_TYPE_SMARTS));
+        if (tok == T.pattern) {
+          return mp.addX(SV.newV(T.pattern,
+              vwr.getSmilesMatcher().compileSmartsPattern(pattern)));
+        }
         BS bsSelected = (isSelector ? (BS) mp.getX().value
             : args.length == 2 && args[1].tok == T.bitset ? (BS) args[1].value
                 : vwr.getModelUndeletedAtomsBitSet(-1));
-        bs = vwr.getSmilesMatcher().getSubstructureSet(pattern, vwr.ms.at,
-            vwr.ms.ac, bsSelected,
+        bs = vwr.getSmilesMatcher().getSubstructureSet(
+            (objPattern == null ? pattern : objPattern), vwr.ms.at, vwr.ms.ac,
+            bsSelected,
             (tok == T.smiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
       }
-    return mp.addXBs(bs);
+    return (tok != T.pattern && mp.addXBs(bs));
   }
 
   @SuppressWarnings("unchecked")
