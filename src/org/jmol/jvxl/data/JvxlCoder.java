@@ -25,6 +25,7 @@ package org.jmol.jvxl.data;
 
 
 
+import java.util.Arrays;
 import java.util.Map;
 
 import javajs.util.Lst;
@@ -587,36 +588,49 @@ public class JvxlCoder {
       jvxlData.jvxlColorData = "";
       return;
     }
-    boolean writePrecisionColor = jvxlData.isJvxlPrecisionColor;
-    boolean doTruncate = jvxlData.isTruncated;
     int colorFractionBase = jvxlData.colorFractionBase;
     int colorFractionRange = jvxlData.colorFractionRange;
-    double valueBlue = jvxlData.valueMappedToBlue;
-    double valueRed = jvxlData.valueMappedToRed;
     int vertexCount = (jvxlData.saveVertexCount > 0 ? jvxlData.saveVertexCount
         : jvxlData.vertexCount);
     if(vertexCount > vertexValues.length)
       System.out.println("JVXLCODER ERROR");
-    double min = jvxlData.mappedDataMin;
-    double max = jvxlData.mappedDataMax;
+    boolean isPrecisionColor = jvxlData.isJvxlPrecisionColor;
+    double min = (isPrecisionColor ? jvxlData.mappedDataMin : jvxlData.valueMappedToRed);
+    double max = (isPrecisionColor ? jvxlData.mappedDataMax : jvxlData.valueMappedToBlue);
+    jvxlData.jvxlColorData = jvxlEncodeColorData(vertexValues, min, max, colorFractionBase, colorFractionRange, 
+        jvxlData.isTruncated, // encode only the sign, as 0.999 or -0.999
+        isPrecisionColor);
+  }
+
+  /**
+   * 
+   * @param vertexValues
+   * @param min
+   * @param max
+   * @param colorFractionBase
+   * @param colorFractionRange
+   * @param doTruncate
+   * @param isPrecisionColor  create a value with 1/8100 precision (otherwise just 1/90)
+   * @return String encoding of the values
+   */
+  public static String jvxlEncodeColorData(double[] vertexValues, double min, double max, 
+                                            int colorFractionBase, int colorFractionRange, 
+                                            boolean doTruncate, boolean isPrecisionColor) {    
     SB list1 = new SB();
     SB list2 = new SB();
-    if (vertexValues.length < vertexCount)
-      System.out.println("JVXLCOLOR OHOHO");  
-    for (int i = 0; i < vertexCount; i++) {
+    for (int i = 0, n = vertexValues.length; i < n; i++) {
       double value = vertexValues[i];
       if (Double.isNaN(value))
         value = min;
       if (doTruncate)
         value = (value > 0 ? 0.999d : -0.999d);
-      if (writePrecisionColor)
+      if (isPrecisionColor)
         jvxlAppendCharacter2(value, min, max, colorFractionBase,
             colorFractionRange, list1, list2);
       else
-        list1.appendC(jvxlValueAsCharacter(value, valueRed, valueBlue,
-            colorFractionBase, colorFractionRange));
+        list1.appendC(jvxlValueAsCharacter(value, min, max, colorFractionBase, colorFractionRange));
     }
-    jvxlData.jvxlColorData = list1.appendSB(list2).appendC('\n').toString();
+    return list1.appendSB(list2).appendC('\n').toString();
   }
 
   /* ******************************************************************
@@ -885,7 +899,7 @@ public class JvxlCoder {
   ////////// character - fraction encoding and decoding
   
   // NEVER change the numbers for these next defaults
-  
+ 
   final public static int defaultEdgeFractionBase = 35; //#$%.......
   final public static int defaultEdgeFractionRange = 90;
   final public static int defaultColorFractionBase = 35;
@@ -1425,4 +1439,38 @@ public class JvxlCoder {
 
   */
 
+  
+  public static void main(String[] args) {
+    // -min xxx.xxx  -max xxx.xxx  -values "[v1,v2,v3,...]"
+    // values can also just be white-space separated
+    // using base 35, range 90
+    double min = Double.NaN;
+    double max = Double.NaN;
+    String[] svals = null;
+    
+    for (int i = 0; i < args.length; i++) {
+      if (args[i].equals("-min"))
+        min = Double.parseDouble(args[++i]);
+      else if (args[i].equals("-max"))
+        max = Double.parseDouble(args[++i]);
+      else if (args[i].equals("-values"))
+        svals = args[++i].replaceAll("[\\[\\,\\]]", " ").trim().split("\\s+");
+    }
+    int nvalues = svals.length;
+    double[] vals = new double[nvalues];
+    for (int i = 0; i < nvalues; i++)
+      vals[i] = Double.parseDouble(svals[i]);
+    if (Double.isNaN(min)) {
+      min = Double.MAX_VALUE;
+      max = -Double.MAX_VALUE;
+      for (int i = 0; i < nvalues; i++) {
+        if (vals[i] < min)
+          min = vals[i];
+        if (vals[i] > max)
+          max = vals[i];
+      }
+    }
+    System.out.println(Arrays.toString(vals));
+    System.out.println(jvxlEncodeColorData(vals, min, max, 35, 90, false, true));
+  }
 }
