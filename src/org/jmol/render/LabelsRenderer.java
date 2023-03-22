@@ -76,7 +76,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
 
   private double scalePixelsPerMicron;
 
-  private int mode;
+  protected int mode;
 
   @Override
   protected boolean render() {

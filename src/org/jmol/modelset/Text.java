@@ -623,12 +623,14 @@ public class Text {
   }
 
   public boolean setAlignmentLCR(String align) {
-    if ("left".equals(align))
-      return setAlignment(JC.TEXT_ALIGN_LEFT);
-    if ("center".equals(align))
-      return setAlignment(JC.TEXT_ALIGN_CENTER);
-    if ("right".equals(align))
-      return setAlignment(JC.TEXT_ALIGN_RIGHT);
+    if (align != null) {
+      if ("left".equals(align))
+        return setAlignment(JC.TEXT_ALIGN_LEFT);
+      if ("center".equals(align))
+        return setAlignment(JC.TEXT_ALIGN_CENTER);
+      if ("right".equals(align))
+        return setAlignment(JC.TEXT_ALIGN_RIGHT);
+    }
     return false;
   }
 

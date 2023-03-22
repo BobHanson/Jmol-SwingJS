@@ -595,7 +595,7 @@ public class PropertyManager implements JmolPropertyManager {
                         v = null;
                     }
                     if (v == null)
-                      v2.remove(j);
+                      v2.removeItemAt(j);
                     else
                       v2.set(j, v);
                   }

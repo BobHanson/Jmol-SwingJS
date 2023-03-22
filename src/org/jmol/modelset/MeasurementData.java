@@ -45,6 +45,9 @@ public class MeasurementData implements JmolMeasurementClient {
    */
   
   private JmolMeasurementClient client;
+  
+  public BS bsSelected;
+
   private Lst<String> measurementStrings;
   private Lst<Double> measurements;
 
@@ -92,20 +95,23 @@ public class MeasurementData implements JmolMeasurementClient {
   /*
    * the general constructor. tokAction is not used here
    */
-  public MeasurementData set(int tokAction, Map<String, Integer> htMin, 
-                             RadiusData radiusData, String property, String strFormat, String units,
-                 TickInfo tickInfo,
-                 boolean mustBeConnected, boolean mustNotBeConnected,
-                 Boolean intramolecular, boolean isAll, 
-                 int mad, short colix, Text text, double value) {
+  public MeasurementData set(int tokAction, Map<String, Integer> htMin,
+                             RadiusData radiusData, String property,
+                             String strFormat, String units, TickInfo tickInfo,
+                             boolean mustBeConnected,
+                             boolean mustNotBeConnected, Boolean intramolecular,
+                             boolean isAll, int mad, short colix, Text text,
+                             double value, BS bsSelected) {
     this.ms = vwr.ms;
     this.tokAction = tokAction;
-    if (points.size() >= 2 && points.get(0) instanceof BS && points.get(1) instanceof BS) {
+    if (points.size() >= 2 && points.get(0) instanceof BS
+        && points.get(1) instanceof BS) {
       justOneModel = BSUtil.haveCommon(
           vwr.ms.getModelBS((BS) points.get(0), false),
-          vwr.ms.getModelBS((BS) points.get(1), false)); 
+          vwr.ms.getModelBS((BS) points.get(1), false));
     }
     //this.rangeMinMax = rangeMinMax;
+    this.bsSelected = bsSelected;
     this.htMin = htMin;
     this.radiusData = radiusData;
     this.property = property;
@@ -114,7 +120,7 @@ public class MeasurementData implements JmolMeasurementClient {
     this.tickInfo = tickInfo;
     this.mustBeConnected = mustBeConnected;
     this.mustNotBeConnected = mustNotBeConnected;
-    this.intramolecular = intramolecular;    
+    this.intramolecular = intramolecular;
     this.isAll = isAll;
     this.mad = mad;
     this.colix = colix;
@@ -131,7 +137,7 @@ public class MeasurementData implements JmolMeasurementClient {
    * 
    */
   @Override
-  public void processNextMeasure(Measurement m) {
+  public void processNextMeasure(MeasurementData md, Measurement m) {
     double value = m.getMeasurement(null);
     // here's where we check vdw
     if (htMin != null && !m.isMin(htMin) || radiusData != null && !m.isInRange(radiusData, value))
@@ -252,7 +258,7 @@ public class MeasurementData implements JmolMeasurementClient {
           && (!mustNotBeConnected || !m.isConnected(atoms, thispt))
           && (intramolecular == null || m.isIntramolecular(atoms, thispt) == intramolecular.booleanValue())
           )
-        client.processNextMeasure(m);
+        client.processNextMeasure(this, m);
       return;
     }
     BS bs = (BS) points.get(thispt);

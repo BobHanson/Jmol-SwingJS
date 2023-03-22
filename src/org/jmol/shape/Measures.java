@@ -54,6 +54,11 @@ import java.util.Map;
 public class Measures extends AtomShape implements JmolMeasurementClient {
 
   private BS bsSelected;
+  
+  public BS getSelected() {
+    return bsSelected;
+  }
+  
   private String strFormat;
   private boolean mustBeConnected = false;
   private boolean mustNotBeConnected = false;
@@ -148,7 +153,10 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       }
       return;
     }
-
+    if ("selectall" == propertyName) {
+      bsSelected = BSUtil.newBitSet2(0,  measurementCount);
+      return;
+    }
     if ("setFormats" == propertyName) {
       setFormats((String) value);
       return;
@@ -203,6 +211,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       if (md.isAll) {
         if (tickInfo != null)
           define(md, T.delete);
+        if (md.bsSelected != null)
+          bsSelected = md.bsSelected;
         define(md, md.tokAction);
         setIndices();
         return;
@@ -235,6 +245,10 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         }
         toggle(m);
         break;
+      case T.select:
+        bsSelected = new BS();
+        processNextMeasure(md, m);
+       break;
       case T.opToggle:
         toggle(m);
       }
@@ -296,7 +310,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     }
 
     if ("reformatDistances" == propertyName) {
-      reformatDistances();
+      reformatDistances(value == null);
       return;
     }
 
@@ -379,6 +393,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       return getAllInfo();
     if ("infostring".equals(property))
       return getAllInfoAsString();
+    if ("selected".equals(property)) 
+      return (bsSelected == null ? new BS() : BSUtil.copy(bsSelected));
     return null;
   }
 
@@ -409,9 +425,21 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
   private void setFormats(String format) {
     if (format != null && format.length() == 0)
       format = null;
-    for (int i = measurements.size(); --i >= 0;)
-      if (bsSelected == null || bsSelected.get(i))
-        measurements.get(i).formatMeasurementAs(format, null, false);
+    boolean isDefault = "default".equals(format);
+    if (isDefault || Measurement.isUnits(format)) {
+      if (isDefault)
+        format = null;
+      for (int i = measurements.size(); --i >= 0;)
+        if (bsSelected == null || bsSelected.get(i)) {
+          Measurement m = measurements.get(i);
+          m.units = format;
+          m.formatMeasurement(null);
+        }
+    } else {
+      for (int i = measurements.size(); --i >= 0;)
+        if (bsSelected == null || bsSelected.get(i))
+          measurements.get(i).formatMeasurementAs(format, null, false);
+    }
   }
   
   private void showHide(boolean isHide) {
@@ -438,8 +466,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       defineAll(-1, m, false, true, false);
     setIndices();
   }
-
-  private void toggleOn(int[] indices) {
+  
+private void toggleOn(int[] indices) {
     radiusData = null;
     htMin = null;
     //toggling one that is hidden should be interpreted as DEFINE
@@ -450,7 +478,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     if (i >= 0)
       bsSelected.set(i);
     setIndices();
-    reformatDistances();
+    reformatDistances(false);
   }
 
   private void deleteM(Measurement m) {
@@ -503,7 +531,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
           .getAtom(i));
     }
     define((new MeasurementData().init(null, vwr, points)).set(tokAction, htMin, radiusData, m.property, strFormat, null, tickInfo,
-        mustBeConnected, mustNotBeConnected, intramolecular, true, 0, (short) 0, null, Double.NaN),
+        mustBeConnected, mustNotBeConnected, intramolecular, true, 0, (short) 0, null, Double.NaN, null),
         (isDelete ? T.delete : T.define));
   }
 
@@ -520,20 +548,42 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
   
   private void define(MeasurementData md, int tokAction) {
     this.tokAction = tokAction;
+    if (md.bsSelected != null) {
+      for (int i = measurementCount; --i >= 0;)
+        if (md.bsSelected.get(i))
+          processNextMeasure(md, measurements.get(i));
+      return;
+    }
+    if (tokAction == T.select)
+      bsSelected = new BS();
     md.define(this, ms);
+    // continues with iterative call to processNextMeasure(m)
   }
 
   @Override
-  public void processNextMeasure(Measurement m) {
+  public void processNextMeasure(MeasurementData md, Measurement m) {
     // a callback from Measurement.define
     // all atom bitsets have been iterated
     int iThis = find(m);
+    if (md.tokAction == T.select) {
+      if (iThis < 0 || !isInRange(Double.NaN, m))
+    	  return;
+       bsSelected.set(iThis);
+    }
     if (iThis >= 0) {
       if (tokAction == T.delete) {
-        deleteI(iThis);
-      } else if (strFormat != null) {
-        measurements.get(iThis).formatMeasurementAs(strFormat,
-            null, true);
+        if (isInRange(Double.NaN, m))
+          deleteI(iThis);
+      } else if (md.tokAction == T.select) {
+        Measurement mThis = measurements.get(iThis);
+        mThis.setFromMD(md, true);
+        if (strFormat != null && md.strFormat == null) {
+          mThis.formatMeasurementAs(strFormat, md.units, true);
+        } else if (md.units != null) {
+          mThis.strFormat = null; 
+          mThis.units = (md.units.equals("default") ? null : md.units);
+          mThis.formatMeasurement(null);
+        }
       } else {
         measurements.get(iThis).isHidden = (tokAction == T.off);
       }
@@ -543,10 +593,14 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     }
   }
 
+  private boolean isInRange(double val, Measurement m) {
+    return !(htMin != null && !m.isMin(htMin) 
+        || radiusData != null && !m.isInRange(radiusData, val == val ? val : m.getMeasurement(null)));
+  }
+
   private void defineMeasurement(int i, Measurement m, boolean doSelect) {
     double value = m.getMeasurement(null);
-    if (htMin != null && !m.isMin(htMin) 
-        || radiusData != null && !m.isInRange(radiusData, value))
+    if (!isInRange(value, m))
       return;
     if (i == Integer.MIN_VALUE)
       i = find(m);
@@ -587,6 +641,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     measurements.removeItemAt(i);
     measurementCount--;
     vwr.setStatusMeasuring("measureDeleted", i, msg, 0);
+    bsSelected = null;
   }
 
   private void doAction(MeasurementData md, String id, int tok) {
@@ -625,9 +680,9 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     }
   }
 
-  private void reformatDistances() {
+  private void reformatDistances(boolean isDefault) {
     for (int i = measurementCount; --i >= 0; )
-      measurements.get(i).reformatDistanceIfSelected();    
+      measurements.get(i).reformatDistanceIfSelected(isDefault);    
   }
   
   private Lst<Map<String, Object>> getAllInfo() {
@@ -684,7 +739,6 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     return info;
   }
 
-  @Override
   public String getInfoAsString(int index) {
     return measurements.get(index).getInfoAsString(null);
   }

@@ -287,7 +287,7 @@ public class StateManager {
    */
   public String popStack(int type) {
     Lst<String> stack = getStack(type);
-    String state = (stack.size() > 0 ? stack.remove(stack.size() - 1) : null);
+    String state = (stack.size() > 0 ? stack.removeItemAt(stack.size() - 1) : null);
     //System.out.println("STM pop " + stack.size() + " " + (state != null) + " " + (type == T.undo));
     if (state != null) {
       appendState(getStack(type == T.undo ? T.redo : T.undo));

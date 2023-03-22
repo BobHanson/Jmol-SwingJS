@@ -342,8 +342,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
       if (mystatus.indexOf("Picked") >= 0 || mystatus.indexOf("Sequence") >= 0) // picking mode
         sendConsoleMessage(strInfo);
       else if (mystatus.indexOf("Completed") >= 0)
-        sendConsoleEcho(strInfo.substring(strInfo.lastIndexOf(",") + 2,
-            strInfo.length() - 1));
+        sendConsoleEcho(strInfo);
       break;
     case MESSAGE:
       sendConsoleMessage(data == null ? null : strInfo);

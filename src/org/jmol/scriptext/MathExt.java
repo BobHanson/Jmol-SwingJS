@@ -2760,7 +2760,7 @@ public class MathExt {
           : new RadiusData(null, vdw, EnumType.FACTOR, VDW.AUTO));
       Object obj = (vwr.newMeasurementData(null, points))
           .set(0, null, rd, property, strFormat, units, null, isAllConnected,
-              isNotConnected, null, true, 0, (short) 0, null, Double.NaN)
+              isNotConnected, null, true, 0, (short) 0, null, Double.NaN, null)
           .getMeasurements(asFloatArray, asMinArray);
       return mp.addXObj(obj);
     case T.angle:

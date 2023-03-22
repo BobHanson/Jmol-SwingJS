@@ -7790,9 +7790,11 @@ public class Viewer extends JmolViewer
   public void setUnits(String units, boolean isDistance) {
     // stateManager
     // Eval
-    g.setUnits(units);
+    boolean isDefault = "default".equals(units);
+    if (!isDistance || !isDefault)
+      g.setUnits(units);
     if (isDistance) {
-      setShapeProperty(JC.SHAPE_MEASURES, "reformatDistances", null);
+      setShapeProperty(JC.SHAPE_MEASURES, "reformatDistances", units);
     }
   }
 

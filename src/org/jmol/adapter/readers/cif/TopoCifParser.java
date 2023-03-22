@@ -627,7 +627,7 @@ public class TopoCifParser implements Parser {
     }
     for (int i = links.size(); --i >= 0;) {
       if (!links.get(i).finalized)
-        links.remove(i);
+        links.removeItemAt(i);
     }
 
     if (reader.doApplySymmetry) {

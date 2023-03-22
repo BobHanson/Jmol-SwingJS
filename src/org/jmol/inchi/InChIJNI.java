@@ -180,25 +180,8 @@ public class InChIJNI implements JmolInChI {
       // but oddly still do not get generated, probably because the carbons are then too strange?
       INCHI_BOND_TYPE order = getOrder(Math.max(bond.isPartial() ? 1 : 0, bond.getCovalentOrder()));
       if (order != null) {
-        INCHI_BOND_STEREO stereo;
-        switch (bond.getBondType()) {
-        case Edge.BOND_STEREO_FAR:
-          stereo = INCHI_BOND_STEREO.SINGLE_1DOWN;
-          break;
-        case Edge.BOND_STEREO_NEAR:
-          stereo = INCHI_BOND_STEREO.SINGLE_1UP;
-          break;
-        case Edge.BOND_STEREO_EITHER:
-          // this will generate a stereo ?
-          stereo = INCHI_BOND_STEREO.SINGLE_1EITHER;
-          break;
-        default:
-            stereo = INCHI_BOND_STEREO.NONE;
-            break;
-        }
-        JniInchiBond b = new JniInchiBond(atoms[map[bond.getAtomIndex1()]],
-            atoms[map[bond.getAtomIndex2()]], order, stereo);
-        mol.addBond(b);
+        mol.addBond(new JniInchiBond(atoms[map[bond.getAtomIndex1()]],
+            atoms[map[bond.getAtomIndex2()]], order, getStereo(bond.getBondType())));
       }
     }
     return mol;
@@ -209,7 +192,8 @@ public class InChIJNI implements JmolInChI {
    * supports single, double, aromatic_single and aromatic_double.
    * 
    * @param vwr
-   * @param molData String or InputStream
+   * @param molData
+   *        String or InputStream
    * @return a structure for JniInput
    */
   private static JniInchiStructure newJniInchiStructure(Viewer vwr,
@@ -219,7 +203,7 @@ public class InChIJNI implements JmolInChI {
     try {
       if (molData instanceof String) {
         r = new BufferedReader(new StringReader((String) molData));
-      } else if (molData instanceof InputStream){
+      } else if (molData instanceof InputStream) {
         r = molData;
       }
       Map<String, Object> htParams = new Hashtable<String, Object>();
@@ -240,9 +224,10 @@ public class InChIJNI implements JmolInChI {
       while (ai.hasNext() && n < atoms.length) {
         P3d p = ai.getXYZ();
         int atno = ai.getElementNumber();
-        if (atno <= 0) {          
-        System.err.println("InChIJNI atom " + p + " index " + ai.getUniqueID() + " is not a valid element");
-        return null;
+        if (atno <= 0) {
+          System.err.println("InChIJNI atom " + p + " index " + ai.getUniqueID()
+              + " is not a valid element");
+          return null;
         }
         String sym = Elements.elementSymbolFromNumber(atno);
         JniInchiAtom a = new JniInchiAtom(p.x, p.y, p.z, sym);
@@ -253,27 +238,30 @@ public class InChIJNI implements JmolInChI {
       }
       int nb = 0;
       while (bi.hasNext()) {
-        INCHI_BOND_TYPE order = getOrder(bi.getEncodedOrder());
+        int jmolOrder = bi.getEncodedOrder();
+        INCHI_BOND_TYPE order = getOrder(jmolOrder);
         if (order != null) {
           Integer id1 = atomMap.get(bi.getAtomUniqueID1());
           Integer id2 = atomMap.get(bi.getAtomUniqueID2());
           if (id1 == null || id2 == null) {
-            System.err.println("InChIJNI bond " + nb + "has null atom " 
-          + (id1 == null ? bi.getAtomUniqueID1() : "") + " " 
+            System.err.println("InChIJNI bond " + nb + "has null atom "
+                + (id1 == null ? bi.getAtomUniqueID1() : "") + " "
                 + (id2 == null ? bi.getAtomUniqueID2() : ""));
             return null;
           }
           JniInchiAtom a = atoms[id1.intValue()];
           JniInchiAtom b = atoms[id2.intValue()];
           if (a == null || b == null) {
-            System.err.println("InChIJNI bond " + nb + "has null atom: " + a + "/" + b + " for ids " + id1 + " " + id2 + " and " + n + " atoms");
+            System.err
+                .println("InChIJNI bond " + nb + "has null atom: " + a + "/" + b
+                    + " for ids " + id1 + " " + id2 + " and " + n + " atoms");
             return null;
           }
-          mol.addBond(new JniInchiBond(a, b, order));
+          mol.addBond(new JniInchiBond(a, b, order, getStereo(jmolOrder)));
           nb++;
         }
       }
-    } catch (Throwable t){
+    } catch (Throwable t) {
       t.printStackTrace();
       System.err.println(t.toString());
     } finally {
@@ -289,8 +277,25 @@ public class InChIJNI implements JmolInChI {
     return mol;
   }
 
-  private static INCHI_BOND_TYPE getOrder(int order) {
-    switch (order) {
+  private static INCHI_BOND_STEREO getStereo(int jmolOrder) {
+    switch (jmolOrder) {
+    case Edge.BOND_STEREO_FAR:
+      return INCHI_BOND_STEREO.SINGLE_1DOWN;
+    case Edge.BOND_STEREO_NEAR:
+      return INCHI_BOND_STEREO.SINGLE_1UP;
+    case Edge.BOND_STEREO_EITHER:
+      // this will generate a stereo ?
+      return INCHI_BOND_STEREO.SINGLE_1EITHER;
+    default:
+      return INCHI_BOND_STEREO.NONE;
+    }
+  }
+
+  private static INCHI_BOND_TYPE getOrder(int jmolOrder) {
+    switch (jmolOrder) {
+    case Edge.BOND_STEREO_EITHER:
+    case Edge.BOND_STEREO_FAR:
+    case Edge.BOND_STEREO_NEAR:
     case Edge.BOND_COVALENT_SINGLE:
       return INCHI_BOND_TYPE.SINGLE;
     case Edge.BOND_COVALENT_DOUBLE:

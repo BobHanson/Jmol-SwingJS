@@ -458,6 +458,7 @@ public class MSRdr implements MSInterface {
 
     sigma = new Matrix(null, modDim, 3);
     qs = null;
+    qlist100 = null; // BH 2023.03.15 added
 
     modMatrices = new Matrix[] { sigma, null };
 
@@ -651,6 +652,8 @@ public class MSRdr implements MSInterface {
     int fn = Math.max(0, cr.parseIntAt(key, 2));        
     if (fn == 0) {
       if (qlist100 == null) {
+        // BH 2023.03.15 qlist100 was not being nulled between structures
+        // see z034DL74QTM.cif
         qlist100 = new double[modDim];
         qlist100[0] = 1;
       }

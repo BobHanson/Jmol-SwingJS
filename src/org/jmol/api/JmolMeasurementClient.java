@@ -25,9 +25,10 @@
 package org.jmol.api;
 
 import org.jmol.modelset.Measurement;
+import org.jmol.modelset.MeasurementData;
 
 public interface JmolMeasurementClient {
 
-  public abstract void processNextMeasure(Measurement m);
+  public abstract void processNextMeasure(MeasurementData measurementData, Measurement m);
   
 }

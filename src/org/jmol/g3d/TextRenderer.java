@@ -200,7 +200,7 @@ class TextRenderer {
     mapWidth = width;
     size = mapWidth * height;
   }
-
+  
   private synchronized static TextRenderer getPlotText3D(int x, int y, Graphics3D g3d,
                                                String text, Font font3d,
                                                boolean antialias) {

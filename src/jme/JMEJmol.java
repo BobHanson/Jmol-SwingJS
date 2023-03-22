@@ -228,15 +228,29 @@ public class JMEJmol extends JME implements WindowListener {
 				}
 
 			});
+      p.add(b = new JButton("InChI"));
+      b.addActionListener(new ActionListener() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+          toInChI();
+        }
+
+      });
 		}
 		frame.add("South", pp);
-		frame.setBounds(300, 300, 600, 400);
+		frame.setBounds(300, 300, 700, 400);
 
 		frame.addWindowListener(this);
 		return frame;
 	}
 
-	/**
+	protected void toInChI() {
+	  String mol = molFile();
+	  String inchi = vwr.getInchi(null, mol, null);
+	  JOptionPane.showInputDialog(this, "Standard InChI", null, JOptionPane.INFORMATION_MESSAGE, null, null, inchi);
+  }
+  /**
 	 * Check for smarts in this structure.
 	 * 
 	 * For this search we want the most general (c1ccccn1) as the target, 
@@ -618,7 +632,7 @@ public class JMEJmol extends JME implements WindowListener {
 	@Override
 	protected void readSmiles(String data) {
 		try {
-			readMolFile(getParser().SMILEStoMOL(data));
+			readMolFile(getOclAdapter().SMILEStoMOL(data));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

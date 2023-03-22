@@ -1003,8 +1003,10 @@ public class StateCreator extends JmolStateCreator {
         String s = m.getDistanceFormatForState();
         if (s != null)
           sb.append(" ").append(PT.esc(s));
+      } 
+      if (!isProperty) {
+        sb.append("; # " + shape.getInfoAsString(i));
       }
-      //sb.append("; # " + shape.getInfoAsString(i));
       app(commands, sb.toString());
     }
     app(commands, Shape.getFontCommand("measures", font3d));

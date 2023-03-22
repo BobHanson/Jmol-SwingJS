@@ -229,15 +229,6 @@ public abstract class AtomShape extends Shape {
     }
   }
 
-  /**
-   * @param i  
-   * @return script, but only for Measures
-   */
-  public String getInfoAsString(int i) {
-    // only in Measures
-    return null;
-  }
-
   @Override
   public String getShapeState() {
    // implemented in StateCreator, not here

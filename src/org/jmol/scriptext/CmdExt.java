@@ -57,6 +57,7 @@ import org.jmol.script.ScriptInterruption;
 import org.jmol.script.ScriptMathProcessor;
 import org.jmol.script.ScriptParam;
 import org.jmol.script.T;
+import org.jmol.shape.Measures;
 import org.jmol.util.BSUtil;
 import org.jmol.util.BZone;
 import org.jmol.util.BoxInfo;
@@ -1527,6 +1528,10 @@ public class CmdExt extends ScriptExt {
         if (!chk)
           vwr.clearAllMeasurements();
         return;
+      case T.selected:
+        if (!chk)
+          showMeasureCount(true);
+        return;
       }
     vwr.shm.loadShape(JC.SHAPE_MEASURES);
     switch (tokAt(1)) {
@@ -1593,6 +1598,7 @@ public class CmdExt extends ScriptExt {
     boolean isAllConnected = false;
     boolean isNotConnected = false;
     boolean isRange = true;
+    boolean isRefreshID = false;
     RadiusData rd = null;
     Boolean intramolecular = null;
     int tokAction = T.opToggle;
@@ -1603,6 +1609,7 @@ public class CmdExt extends ScriptExt {
 
     Lst<Object> points = new Lst<Object>();
     BS bs = new BS();
+    BS bsSelected = null;
     Object target = null;
     TickInfo tickInfo = null;
     int nBitSets = 0;
@@ -1611,6 +1618,9 @@ public class CmdExt extends ScriptExt {
     String alignment = null;
     for (int i = 1; i < slen; ++i) {
       switch (getToken(i).tok) {
+      default:
+        error(ScriptError.ERROR_expressionOrIntegerExpected);
+        break;
       case T.id:
         if (i != 1)
           invArg();
@@ -1620,8 +1630,28 @@ public class CmdExt extends ScriptExt {
         eval.errorStr(ScriptError.ERROR_keywordExpected,
             "ALL, ALLCONNECTED, DELETE");
         break;
-      default:
-        error(ScriptError.ERROR_expressionOrIntegerExpected);
+      case T.select:
+        tokAction = T.select;
+        if (tokAt(i + 1) == T.all && slen == i + 2) {
+          if (!chk) {
+            vwr.setShapeProperty(JC.SHAPE_MEASURES, "selectall", null);
+            showMeasureCount(true);
+          }
+          return;
+        }
+        break;
+      case T.selected:
+        if (points.size() > 0 || nBitSets > 0 || id != null)
+          invArg();
+        tokAction = T.select;
+        if (chk) {
+          bsSelected = new BS();
+        } else {
+          bsSelected = (BS) vwr.getShapeProperty(JC.SHAPE_MEASURES, "selected");
+          if (bsSelected.cardinality() == 0)
+            return;
+        }
+        isAll = true;
         break;
       case T.opNot:
         if (tokAt(i + 1) != T.connected)
@@ -1671,7 +1701,7 @@ public class CmdExt extends ScriptExt {
         rangeMinMax[ptFloat] = doubleParameter(i);
         break;
       case T.delete:
-        if (tokAction != T.opToggle)
+        if (tokAction != T.opToggle && tokAction != T.select)
           invArg();
         tokAction = T.delete;
         break;
@@ -1752,7 +1782,7 @@ public class CmdExt extends ScriptExt {
       case T.leftbrace:
       case T.point3f:
       case T.dollarsign:
-        if (atomIndex >= 0)
+        if (atomIndex >= 0 || bsSelected != null)
           invArg();
         Object[] ret = new Object[1];
         target = eval.centerParameter(i, ret);
@@ -1776,12 +1806,12 @@ public class CmdExt extends ScriptExt {
         property = paramAsStr(i);
         break;
       case T.val:
-          value = doubleParameter(++i);
-          break;
+        value = doubleParameter(++i);
+        break;
       case T.string:
         // measures "%a1 %a2 %v %u"
         String s = stringParameter(i);
-        if (Measurement.isUnits(s)) {
+        if (Measurement.isUnits(s) || s.equals("default")) {
           units = s;
         } else {
           strFormat = s;
@@ -1795,7 +1825,8 @@ public class CmdExt extends ScriptExt {
       }
     }
     if (rd != null && (ptFloat >= 0 || nAtoms != 2)
-        || nAtoms < 2 && id == null && (tickInfo == null || nAtoms == 1))
+        || tokAction != T.select && bsSelected == null && nAtoms < 2
+            && id == null && (tickInfo == null || nAtoms == 1))
       eval.bad();
     if (strFormat != null && strFormat.indexOf(nAtoms + ":") != 0)
       strFormat = nAtoms + ":" + strFormat;
@@ -1809,9 +1840,9 @@ public class CmdExt extends ScriptExt {
     if (chk)
       return;
 
-    boolean isRefreshID = (id != null && target == null
-        && tokAction == T.opToggle);
-    if (target != null || tickInfo != null || isRefreshID) {
+    isRefreshID = (id != null && target == null && tokAction == T.opToggle);
+    if (target != null || bsSelected != null || tickInfo != null
+        || isRefreshID) {
       if (rd == null)
         rd = new RadiusData(rangeMinMax, 0, null, null);
       if (tickInfo != null)
@@ -1832,9 +1863,12 @@ public class CmdExt extends ScriptExt {
         text.setAlignmentLCR(alignment);
       }
       setShapeProperty(JC.SHAPE_MEASURES, "measure",
-          vwr.newMeasurementData(id, points).set(tokAction, null, rd, property, strFormat,
-              units, tickInfo, isAllConnected, isNotConnected, intramolecular,
-              isAll, mad, colix, text, value));
+          vwr.newMeasurementData(id, points).set(tokAction, null, rd, property,
+              strFormat, units, tickInfo, isAllConnected, isNotConnected,
+              intramolecular, isAll, mad, colix, text, value, bsSelected));
+      if (tokAction == T.select) {
+        showMeasureCount(false);
+      }
       return;
     }
     Object propertyValue = (id == null ? countPlusIndexes : id);
@@ -1850,10 +1884,22 @@ public class CmdExt extends ScriptExt {
       break;
     default:
       setShapeProperty(JC.SHAPE_MEASURES,
-          (strFormat == null ? "toggle" : "toggleOn"), propertyValue);
+          (strFormat == null && units == null ? "toggle" : "toggleOn"),
+          propertyValue);
       if (strFormat != null)
         setShapeProperty(JC.SHAPE_MEASURES, "setFormats", strFormat);
     }
+  }
+
+  private void showMeasureCount(boolean isFull) {
+    BS bs = (BS) vwr.getShapeProperty(JC.SHAPE_MEASURES, "selected");
+    int n = bs.cardinality();
+    if (isFull) {
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        showString(((Measures) vwr.shm.getShape(JC.SHAPE_MEASURES)).getInfoAsString(i));
+      }
+    }
+    showString(n + (n == 1 ? " measure" : " measures") + " selected");
   }
 
   /**

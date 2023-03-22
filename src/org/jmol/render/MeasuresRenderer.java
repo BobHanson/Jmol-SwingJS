@@ -113,6 +113,7 @@ public class MeasuresRenderer extends LabelsRenderer {
         labelColix = colix;
       g3d.setC(colix);
       colixA = colixB = colix;
+      mode = (g3d.isAntialiased() ? TextRenderer.MODE_IS_ANTIALIASED : 0);
       renderMeasurement(showMeasurementLabels);
       //checkAtoms("m3");
     }
@@ -164,6 +165,7 @@ public class MeasuresRenderer extends LabelsRenderer {
       } else if (m.text != null) {
         m.text.setText(s);
         m.text.colix = labelColix;
+        m.text.setFontScale(imageFontScaling);
       }
     }
     if (m.mad == 0) {

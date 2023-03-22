@@ -49,8 +49,8 @@ public class Measurement {
    * 
    */
   
-  public String thisID;
   public ModelSet ms;
+  public String thisID;
   public int index;
   public boolean isVisible = true;
   public boolean isHidden = false;
@@ -68,8 +68,8 @@ public class Measurement {
   public double value;
   public String property;
   
-  String strFormat;
-  String units;
+  public String strFormat;
+  public String units;
   
   public Text text;
 
@@ -232,12 +232,14 @@ public class Measurement {
     }
   }
 
-  public void reformatDistanceIfSelected() {
+  public void reformatDistanceIfSelected(boolean isDefault) {
     if (count == 2 && vwr.slm.isSelected(countPlusIndices[1])
         && vwr.slm.isSelected(countPlusIndices[2])) {
       int pt;
       if (useDefaultLabel && strFormat != null && (pt = strFormat.indexOf("//")) >= 0)
         strFormat = strFormat.substring(0, pt);
+      if (isDefault)
+        this.units = null;
       formatMeasurement(null);
     }
   }
@@ -255,14 +257,10 @@ public class Measurement {
     if (units == null) {
       units = this.units;
       if (units == null) {
-        if (pt >= 0) {
-        units = strFormat.substring(pt + 2);
-        strFormat = strFormat.substring(0, pt);
-        } else {
-            units = (property == null ? vwr.g.measureDistanceUnits : "");
-        }
+        units = (pt >= 0 ? strFormat.substring(pt + 2) : property == null ? vwr.g.measureDistanceUnits : "");
       } 
-    } else if (pt >= 0){
+    } 
+    if (pt >= 0){
       strFormat = strFormat.substring(0, pt);
     }
     strFormat += "//" + units;
@@ -337,7 +335,6 @@ public class Measurement {
   private void checkJ(String units) {
     if (property != null || units != null || this.units != null)
       return;
-//    if (units == null && (units = this.units) == null)
       units = vwr.g.measureDistanceUnits;
     if ("+hz".equals(units)) {
       property = "property_J";
@@ -371,10 +368,11 @@ public class Measurement {
       label = (strFormat.length() > 2 && strFormat.indexOf(s) == 0 ? strFormat
           : null);
     }
+    useDefaultLabel = false;
     if (label == null) {
       strFormat = null;
       label = vwr.getDefaultMeasurementLabel(countPlusIndices[0]);
-      useDefaultLabel = true;
+      useDefaultLabel = (units == null);
     }
     if (label.indexOf(s) == 0)
       label = label.substring(2);
@@ -640,31 +638,29 @@ public class Measurement {
   public void setFromMD(MeasurementData md, boolean andText) {
     if (md.thisID != null) {
       thisID = md.thisID;
-      mad = md.mad;
-      if (md.colix != 0)
-        colix = md.colix;
-      strFormat = md.strFormat;
-      text = md.text;
+      if (md.text != null && md.text.text != null)
+        text = md.text;
     }
-    units = md.units;
+    units = ("default".equals(md.units) ? null : md.units);
     property = md.property;
     fixedValue = md.fixedValue;
-    if (!andText)
-      return;
     if (md.colix != 0)
       colix = md.colix;
     if (md.mad != 0)
       mad = md.mad;
     if (md.strFormat != null) {
-      strFormat = strFormat.substring(0, 2)
+        strFormat = (strFormat == null ? md.strFormat : strFormat.substring(0, 2))
           + md.strFormat.substring(2);
+//      strFormat = md.strFormat;
     }
     if (md.text != null) {
       if (text == null) {
         text = md.text;
       } else {
-        if (md.text.font != null)
-          text.font = md.text.font;
+        if (md.text.font != null) {
+          text.setFont(md.text.font, false);
+          text.fontScale = md.text.font.fontSize / md.text.font.fontSizeNominal;
+        }
         text.text = null;
         if (md.text.align != 0)
           text.align = md.text.align;

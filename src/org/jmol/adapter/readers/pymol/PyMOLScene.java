@@ -1052,7 +1052,7 @@ class PyMOLScene implements JmolSceneGenerator {
           (int) floatSetting(PyMOL.label_font_id),
           (double) floatSetting(PyMOL.label_size));
       md.set(T.define, null, null, null, strFormat, "angstroms", null, false, false, null,
-          false, (int) (rad * 2000), colix, text, Double.NaN);
+          false, (int) (rad * 2000), colix, text, Double.NaN, null);
       addJmolObject(JC.SHAPE_MEASURES, bs, md);
     }
     return true;
