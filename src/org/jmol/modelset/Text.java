@@ -179,7 +179,7 @@ public class Text {
     if (fontScale == scale)
       return;
     fontScale = scale;
-    if (fontScale != 0)
+    if (fontScale != 0 && font != null)
       setFont(vwr.gdata.getFont3DScaled(font, scale), true);
   }
 
