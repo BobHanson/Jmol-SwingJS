@@ -143,6 +143,7 @@ public class CifReader extends AtomSetCollectionReader {
   protected Map<String, String> htGroup1;
   protected int nAtoms0;
   private int titleAtomSet = 1;
+  private boolean addAtomLabelNumbers;
 
   @Override
   public void initializeReader() throws Exception {
@@ -192,9 +193,12 @@ public class CifReader extends AtomSetCollectionReader {
      */
     cifParser = getCifDataParser();
     line = "";
-    while (continueWith(key = (String) cifParser.peekToken()))
+    while (continueWith(key = (String) cifParser.peekToken())) {
+      if (cifParser.getFileHeader().startsWith("# primitive CIF file created by Jmol"))
+        addAtomLabelNumbers = true;
       if (!readAllData())
         break;
+    }
     if (appendedData != null) {
       cifParser = ((GenericCifDataParser) getInterface("javajs.util.CifDataParser"))
           .set(null, Rdr.getBR(appendedData), debugging);
@@ -208,8 +212,6 @@ public class CifReader extends AtomSetCollectionReader {
     boolean ret = (key != null && (ac == 0 || !key.equals("_shelx_hkl_file")));
     return ret;
   }
-
-
 
   protected GenericCifDataParser getCifDataParser() {
     // overridden in Cif2Reader
@@ -311,6 +313,7 @@ public class CifReader extends AtomSetCollectionReader {
         processLoopBlock();
 //        readSingleAtom();
       } else if (key.startsWith("_symmetry_space_group_name_h-m")
+          || key.equals("_space_group_it_number")
           || key.startsWith("_symmetry_space_group_name_hall")
           || key.startsWith("_space_group_name") || key.contains("_ssg_name")
           || key.contains("_magn_name") || key.contains("_bns_name") // PRELIM
@@ -1304,6 +1307,11 @@ public class CifReader extends AtomSetCollectionReader {
             || (f = fieldProperty(key2col[ANISO_MMCIF_ID])) != NONE
             || (f = fieldProperty(key2col[MOMENT_LABEL])) != NONE
             ) {
+          if (addAtomLabelNumbers) {
+            // well, Jmol 14.30 did not produce valid CIF files in that it 
+            // did not ensure that _atom_site_label was unique :(
+            field = field + (asc.ac + 1);
+          }
           atom = asc.getAtomFromName(field);
         }
         if (atom == null) {

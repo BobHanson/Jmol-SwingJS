@@ -692,7 +692,7 @@ public class FileManager implements BytePoster {
       } else if (Rdr.isTar(bis)) {
         o = ZipTools.getZipFileDirectory(bis, subFileList, 1,
             forceInputStream);
-      } else if (Rdr.isBinary(bis, 16)) {
+      } else if (Rdr.isBinary(bis, 32)) {
         return bis;
       }
 

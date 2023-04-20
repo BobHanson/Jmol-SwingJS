@@ -224,7 +224,7 @@ public class JMEJmol extends JME implements WindowListener {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					toBorderedPNG(null, 10, 10);
+					toBorderedPNG("?", 10, 10);
 				}
 
 			});

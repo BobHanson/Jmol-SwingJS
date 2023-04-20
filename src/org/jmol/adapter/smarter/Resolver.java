@@ -56,7 +56,7 @@ public class Resolver {
     "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;FAH;",
     "spartan.", ";Spartan;SpartanSmol;Odyssey;",
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
-             "VaspPoscar;Wien2k;Xcrysden;PWmat;Optimade;",
+             "VaspPoscar;Wien2k;Xcrysden;PWmat;Optimade;Cmdf;",
     "xml.",  ";XmlCdx;XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
   };
   
@@ -342,9 +342,13 @@ public class Resolver {
 
   private static byte[] cdxMagic = new byte[] { 'V', 'j', 'C', 'D' };
   
+  private static byte[] cmdfMagic = new byte[] { 'C', 'M', 'D', 'F' };
+
   public static String getBinaryType(InputStream inputStream) {
+    byte[] magic4 = null;
     return (Rdr.isPickleS(inputStream) ? "PyMOL" : (Rdr.getMagic(inputStream, 1)[0] & 0xDE) == 0xDE ? "MMTF" : 
-      bytesMatch(Rdr.getMagic(inputStream, 4), cdxMagic) ? "CDX" : null);
+      bytesMatch((magic4 = Rdr.getMagic(inputStream, 4)), cdxMagic) ? "CDX" : 
+        bytesMatch(magic4, cmdfMagic) ? "Cmdf" : null);
   }
 
   private static boolean bytesMatch(byte[] a, byte[] b) {
@@ -697,7 +701,7 @@ public class Resolver {
   { "Cgd", "EDGE ", "edge " };
 
   private final static String[] shelxLineStartRecords =
-  { "Shelx", "TITL ", "ZERR ", "LATT ", "SYMM ", "CELL " };
+  { "Shelx", "TITL ", "ZERR ", "LATT ", "SYMM ", "CELL ", "TITL\t" };
 
   private final static String[] ghemicalMMLineStartRecords =
   { "GhemicalMM", "!Header mm1gp", "!Header gpr" };

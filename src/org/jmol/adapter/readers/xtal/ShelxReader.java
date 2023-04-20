@@ -87,6 +87,10 @@ public class ShelxReader extends AtomSetCollectionReader {
       return true;
     }
 
+    if (command.equals("NOTE")) {
+      isCmdf = true;
+      return true;
+    }
     if (!doProcessLines || lineLength < 3)
       return true;
 
@@ -126,7 +130,6 @@ public class ShelxReader extends AtomSetCollectionReader {
       break;
     case 1: // CELL
       cell();
-      setSymmetryOperator("x,y,z");
       break;
     case 2: // SPGR
       setSpaceGroupName(PT.parseTrimmedAt(line, 4));
@@ -154,7 +157,13 @@ public class ShelxReader extends AtomSetCollectionReader {
     asc.getXSymmetry().setLatticeParameter(parseIntStr(tokens[1]));
   }
 
+  boolean haveXYZ;
+  
   private void parseSymmRecord() throws Exception {
+    if (!haveXYZ) {
+      setSymmetryOperator("x,y,z");
+      haveXYZ = true;
+    }
     setSymmetryOperator(line.substring(4).trim());
   }
 
@@ -228,35 +237,42 @@ public class ShelxReader extends AtomSetCollectionReader {
   private void assumeAtomRecord() throws Exception {
     // this line gives an atom, because any line not starting with
     // a SHELX command is an atom
-    String atomName = tokens[0];
-    int elementIndex = parseIntStr(tokens[1]);
-    double x = parseDoubleStr(tokens[2]);
-    double y = parseDoubleStr(tokens[3]);
-    double z = parseDoubleStr(tokens[4]);
+    double x = Double.NaN, y = Double.NaN, z = Double.NaN;
+    int elementIndex = -1;
+    String atomName = null;
+    try {
+      atomName = tokens[0];
+      elementIndex = parseIntStr(tokens[1]) - 1;
+      x = parseDoubleStr(tokens[2]);
+      y = parseDoubleStr(tokens[3]);
+      z = parseDoubleStr(tokens[4]);
+    } catch (Exception e) {
+      // must have a NaN
+    }
     if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z)) {
       Logger.error("skipping line " + line);
       return;
     }
-      
-    elementIndex--;
+
     Atom atom = asc.addNewAtom();
     atom.atomName = atomName;
-    if (sfacElementSymbols != null && elementIndex >= 0 && elementIndex < sfacElementSymbols.length)
-        atom.elementSymbol = sfacElementSymbols[elementIndex];
+    if (sfacElementSymbols != null && elementIndex >= 0
+        && elementIndex < sfacElementSymbols.length)
+      atom.elementSymbol = sfacElementSymbols[elementIndex];
     setAtomCoordXYZ(atom, x, y, z);
-    
+
     if (tokens.length == 12) {
       double[] data = new double[8];
-      data[0] = parseDoubleStr(tokens[6]);  //U11
-      data[1] = parseDoubleStr(tokens[7]);  //U22
-      data[2] = parseDoubleStr(tokens[8]);  //U33
+      data[0] = parseDoubleStr(tokens[6]); //U11
+      data[1] = parseDoubleStr(tokens[7]); //U22
+      data[2] = parseDoubleStr(tokens[8]); //U33
       data[3] = parseDoubleStr(tokens[11]); //U12
       data[4] = parseDoubleStr(tokens[10]); //U13
-      data[5] = parseDoubleStr(tokens[9]);  //U23
+      data[5] = parseDoubleStr(tokens[9]); //U23
       for (int i = 0; i < 6; i++)
         if (Double.isNaN(data[i])) {
-            Logger.error("Bad anisotropic Uij data: " + line);
-            return;
+          Logger.error("Bad anisotropic Uij data: " + line);
+          return;
         }
       asc.setAnisoBorU(atom, data, 8);
       // Ortep Type 8: D = 2pi^2, C = 2, a*b*  
