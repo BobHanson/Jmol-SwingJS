@@ -3201,14 +3201,16 @@ public class ScriptEval extends ScriptExpr {
     double scale = 1;
     if (tokAt(index) == T.scale) {
       scale = floatParameter(++index);
-      if (!chk && scale == 0)
-        invArg();
       index++;
       if (index == slen) {
         if (!chk)
           vwr.ms.setBoundBox(null, null, true, scale);
         return;
       }
+    } else if (tokAt(index) == T.reset) {
+      if (!chk)
+        vwr.ms.setBoundBox(null, null, true, 0);
+      return;
     }
     boolean byCorner = (tokAt(index) == T.corners);
     if (byCorner)
@@ -3221,7 +3223,8 @@ public class ScriptEval extends ScriptExpr {
       if (byCorner || isCenterParameter(index)) {
         // boundbox CORNERS {expressionOrPoint1} {expressionOrPoint2}
         // boundbox {expressionOrPoint1} {vector}
-        P3d pt2 = (byCorner ? centerParameter(index, ret) : getPoint3f(index, true, true));
+        P3d pt2 = (byCorner ? centerParameter(index, ret)
+            : getPoint3f(index, true, true));
         index = iToken + 1;
         if (!chk)
           vwr.ms.setBoundBox(pt1, pt2, byCorner, scale);
@@ -4808,7 +4811,8 @@ public class ScriptEval extends ScriptExpr {
           type = filename.substring(0, pt + 2);
           filename = filename.substring(pt + 2);
         }
-        filename = type
+        if (!isMutate)
+          filename = type
             + checkFileExists("LOAD" + (isAppend ? "_APPEND_" : "_"), isAsync,
                 filename, filePt, !isAppend && pc != pcResume);
 
@@ -5991,6 +5995,9 @@ public class ScriptEval extends ScriptExpr {
     case T.function:
       vwr.clearFunctions();
       return;
+    case T.boundbox:
+      vwr.ms.setBoundBox(null, null, true, 0);
+      return;
     case T.structure:
       BS bsModified = new BS();
       runScript(vwr.ms.getDefaultStructure(vwr.bsA(), bsModified));
@@ -6111,7 +6118,7 @@ public class ScriptEval extends ScriptExpr {
       }
 
     BS bsAtoms = null, bsBest = null;
-    double degreesPerSecond = PT.FLOAT_MIN_SAFE;
+    double degreesPerSecond = JC.FLOAT_MIN_SAFE;
     int nPoints = 0;
     double endDegrees = Double.MAX_VALUE;
     boolean isMolecular = false;
@@ -6190,7 +6197,7 @@ public class ScriptEval extends ScriptExpr {
           // rotate spin ... [degreesPerSecond]
           // rotate spin ... [endDegrees] [degreesPerSecond]
           // rotate spin BRANCH <DihedralList> [seconds]
-          if (degreesPerSecond == PT.FLOAT_MIN_SAFE) {
+          if (degreesPerSecond == JC.FLOAT_MIN_SAFE) {
             degreesPerSecond = floatParameter(i);
           } else if (endDegrees == Double.MAX_VALUE) {
             endDegrees = degreesPerSecond;
@@ -6203,7 +6210,7 @@ public class ScriptEval extends ScriptExpr {
           // rotate ... [endDegrees] [degreesPerSecond]
           if (endDegrees == Double.MAX_VALUE) {
             endDegrees = floatParameter(i);
-          } else if (degreesPerSecond == PT.FLOAT_MIN_SAFE) {
+          } else if (degreesPerSecond == JC.FLOAT_MIN_SAFE) {
             degreesPerSecond = floatParameter(i);
             isSpin = true;
           } else {
@@ -6429,7 +6436,7 @@ public class ScriptEval extends ScriptExpr {
       isDegreesPerSecond = (degreesPerSecond > 0);
       isSeconds = !isDegreesPerSecond;
     }
-    double rate = (degreesPerSecond == PT.FLOAT_MIN_SAFE ? 10
+    double rate = (degreesPerSecond == JC.FLOAT_MIN_SAFE ? 10
         : endDegrees == Double.MAX_VALUE ? degreesPerSecond
             : isDegreesPerSecond ? degreesPerSecond
                 : isSeconds ? (endDegrees < 0 ? -1 : 1) * Math.abs(endDegrees / degreesPerSecond)
@@ -6550,7 +6557,7 @@ public class ScriptEval extends ScriptExpr {
         && (endDegrees == 0 || degreesPerSecond == 0)) {
       // need a token rotation
       endDegrees = 0.01f;
-      rate = (degreesPerSecond == PT.FLOAT_MIN_SAFE ? 0.01d
+      rate = (degreesPerSecond == JC.FLOAT_MIN_SAFE ? 0.01d
           : degreesPerSecond < 0 ?
           // -n means number of seconds, not degreesPerSecond
           -endDegrees / degreesPerSecond
@@ -8697,7 +8704,7 @@ public class ScriptEval extends ScriptExpr {
       return;
     boolean isTranslucent = (theTok == T.translucent);
     if (isTranslucent || theTok == T.opaque) {
-      if (translucentLevel == PT.FLOAT_MIN_SAFE)
+      if (translucentLevel == JC.FLOAT_MIN_SAFE)
         invArg();
       translucency = paramAsStr(index++);
       if (isTranslucent && isFloatParameter(index))

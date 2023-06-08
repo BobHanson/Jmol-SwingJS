@@ -537,6 +537,7 @@ abstract public class JmolViewer {
 
   abstract public void renderScreenImage(Object g, int width, int height);
   abstract public String evalFile(String strFilename);
+  abstract public String evalFileArgs(String scriptFilename, String scriptArguments);
   abstract public String evalString(String strScript);
 
   abstract public String openStringInline(String strModel);
@@ -624,10 +625,7 @@ abstract public class JmolViewer {
   abstract public int getModelIndexFromId(String id);
   
   abstract public void setMenu(String menuFile, boolean isFile);
-  public void dispose() {
-    // TODO
-  }
-
+  abstract public void dispose();
 
 }
 

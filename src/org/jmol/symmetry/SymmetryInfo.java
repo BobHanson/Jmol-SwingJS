@@ -107,7 +107,14 @@ class SymmetryInfo {
     }
     if (unitCellParams == null)
       unitCellParams = (double[]) info.get("unitCellParams");
-    return (SimpleUnitCell.isValid(unitCellParams) ? unitCellParams : null);
+    unitCellParams = (SimpleUnitCell.isValid(unitCellParams) ? unitCellParams : null);
+    if (unitCellParams == null) {
+      coordinatesAreFractional = false;
+      symmetryOperations = null;
+      cellRange = null;
+      infoStr = "";
+    }
+    return unitCellParams;
   }
 }
 

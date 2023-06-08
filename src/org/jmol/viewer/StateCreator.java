@@ -782,7 +782,7 @@ public class StateCreator extends JmolStateCreator {
       app(commands, "set navigationMode true");
     app(commands, vwr.ms.getBoundBoxCommand(false));
     app(commands, "center " + Escape.eP(tm.fixedRotationCenter));
-    commands.append(vwr.getOrientation(T.name, null, null).toString());
+    commands.append(vwr.getOrientation(T.name, null, null, null).toString());
 
     app(commands, moveToText);
 // stereo mode should not be in the state - just a display option
@@ -1724,7 +1724,7 @@ public class StateCreator extends JmolStateCreator {
           else if (Double.isNaN(v.modScale))
             s.appendD(v.x).append(" ").appendD(v.y).append(" ").appendD(v.z);
           else
-            s.appendD(PT.FLOAT_MIN_SAFE).append(" ").appendD(PT.FLOAT_MIN_SAFE).append(" ").appendD(v.modScale);
+            s.appendD(JC.FLOAT_MIN_SAFE).append(" ").appendD(JC.FLOAT_MIN_SAFE).append(" ").appendD(v.modScale);
           break;
         case AtomCollection.TAINT_SITE:
           s.appendI(atoms[i].getAtomSite());

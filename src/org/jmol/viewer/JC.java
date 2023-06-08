@@ -1491,4 +1491,9 @@ public final class JC {
     return globalBooleans[g];
   }
 
+  /**
+   * was a minimum for float as double, but now just Double.MIN_VALUE
+   */
+  public final static double FLOAT_MIN_SAFE = Double.MIN_VALUE; // was 2E-45f; 
+
 }

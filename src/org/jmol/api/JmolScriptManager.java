@@ -63,6 +63,8 @@ public interface JmolScriptManager {
 
   String evalFile(String strFilename);
 
+  String evalFileArgs(String strFilename, String args);
+
   BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3d[] pts,
                         Map<String, Object> htParams)
       throws Exception;

@@ -1065,7 +1065,7 @@ abstract public class ScriptParam extends ScriptError {
         invArg();
       return Qd.newP4(p4);
     case T.best:
-      return (chk ? null : (Qd) vwr.getOrientation(T.best, (divideByCurrent ? "best" : ""), bsAtoms));
+      return (chk ? null : (Qd) vwr.getOrientation(T.best, (divideByCurrent ? "best" : ""), bsAtoms, null));
     default:
       return Qd.newP4(getPoint4f(i));
     }

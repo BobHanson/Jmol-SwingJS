@@ -5,12 +5,12 @@ import java.util.Map;
 
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
+import org.jmol.viewer.JC;
 
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.Matrix;
 import javajs.util.P3d;
-import javajs.util.PT;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -373,7 +373,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
     if (Logger.debuggingHigh)
       Logger.debug("MODSET create " + id + " r0=" + Escape.eP(r0) + " tau="
-          + tau);
+          + tau.toString().replace('\n', ' '));
 
     return this;
   }
@@ -434,12 +434,17 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     for (int i = mods.size(); --i >= 0;)
       mods.get(i).apply(this, arI);
     // rotate by R3 rotation
+    if (Logger.debuggingHigh)
+      Logger.info("ModulationSet pre-rotation " + id + " " + this.length() + " " + this);
+
     gammaE.rotate(this);
     if (mxyz != null){
       gammaE.rotate(mxyz);
       if (spinOp < 0)
         mxyz.scale(spinOp);
     }
+    if (Logger.debuggingHigh)
+      Logger.info("ModulationSet post-rotation " + id + " " + this);
     return this;
   }
 
@@ -647,7 +652,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     if (vib == null)
       return;
     if (vib.modDim == Vibration.TYPE_SPIN) {
-      if (v.x == PT.FLOAT_MIN_SAFE && v.y == PT.FLOAT_MIN_SAFE) {
+      if (v.x == JC.FLOAT_MIN_SAFE && v.y == JC.FLOAT_MIN_SAFE) {
         // written by StateCreator -- for modulated magnetic moments
         // 957 Fe Fe_1_#957 1.4E-45 1.4E-45 0.3734652 ;
         vib.modScale = v.z;

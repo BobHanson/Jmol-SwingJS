@@ -131,7 +131,6 @@ import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.P3d;
 import javajs.util.P4d;
-import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.V3d;
 
@@ -448,7 +447,7 @@ public class Parameters {
     dataType = (isGeodesic ? SURFACE_GEODESIC : SURFACE_SPHERE);
     distance = radius;
     setEccentricity(P4d.new4(0, 0, 1, 1));
-    cutoff = PT.FLOAT_MIN_SAFE;
+    cutoff = JC.FLOAT_MIN_SAFE;
     isCutoffAbsolute = false;
     isSilent = !logMessages;
     script = getScriptParams() + " SPHERE " + radius + ";";
@@ -458,7 +457,7 @@ public class Parameters {
     dataType = SURFACE_ELLIPSOID2;
     distance = 1d;
     setEccentricity(v);
-    cutoff = PT.FLOAT_MIN_SAFE;
+    cutoff = JC.FLOAT_MIN_SAFE;
     isCutoffAbsolute = false;
     isSilent = !logMessages;
     //script = " center " + Escape.escape(center)
@@ -472,7 +471,7 @@ public class Parameters {
     //for (int i = 0; i < 6; i++)System.out.print(bList[i] + " ");System.out.println( " in Parameters setEllipsoid" + center);
     dataType = SURFACE_ELLIPSOID3;
     distance = 0.3d * (Double.isNaN(scale) ? 1d : scale);
-    cutoff = PT.FLOAT_MIN_SAFE;
+    cutoff = JC.FLOAT_MIN_SAFE;
     isCutoffAbsolute = false;
     isSilent = !logMessages;
     if (Double.isNaN(center.x))
@@ -611,7 +610,7 @@ public class Parameters {
   void setFunctionXY(Lst<Object> value) {
     dataType = SURFACE_FUNCTIONXY;
     functionInfo = value;
-    cutoff = PT.FLOAT_MIN_SAFE;
+    cutoff = JC.FLOAT_MIN_SAFE;
     isEccentric = isAnisotropic = false;
   }
 
@@ -619,7 +618,7 @@ public class Parameters {
     dataType = SURFACE_FUNCTIONXYZ;
     functionInfo = value;
     if (cutoff == Double.MAX_VALUE)
-      cutoff = PT.FLOAT_MIN_SAFE;
+      cutoff = JC.FLOAT_MIN_SAFE;
     isEccentric = isAnisotropic = false;
   }
 

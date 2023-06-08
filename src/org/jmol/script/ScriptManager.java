@@ -317,7 +317,14 @@ public class ScriptManager implements JmolScriptManager {
           "script " + PT.esc(strFilename.substring(0, ptWait)), "", false,
           false);
     }
-    return addScript("script " + PT.esc(strFilename), false);
+    return evalFileArgs(strFilename, null);
+  }
+  
+  @Override
+  public String evalFileArgs(String strFilename, String args) {
+    // app -s flag and app -A flag
+    return addScript("script " + PT.esc(strFilename) + (args == null ? "" : "(" + args + ")"), false);
+    
   }
 
   private int scriptIndex;

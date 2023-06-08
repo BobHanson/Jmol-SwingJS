@@ -24,8 +24,6 @@
 package org.jmol.adapter.readers.cif;
 
 
-//import java.util.Arrays;
-
 import javajs.util.M3d;
 import javajs.util.Matrix;
 import javajs.util.PT;
@@ -302,13 +300,14 @@ public class MSCifParser extends MSRdr {
           // by pulling it out, the field is not added twice.
           pt[0] = pt[1] = pt[2] = 0;
           type_id = "F_";
-          fid = field;
+          fid = "id" + field;
           sep = "";
           break;
         case WV_ID:
           cr.haveCellWaveVector = true;
+          type_id = "W_" + field;
           sep = "";
-          //$FALL-THROUGH$
+          break;
         case FD_ID:
         case FO_ID:
         case FU_ID:
@@ -323,20 +322,18 @@ public class MSCifParser extends MSRdr {
         case FOPARAM_ID:
         case FUPARAM_ID:
           switch (tok) {
-          case WV_ID:
-            type_id = "W_";
-            sep = "";
-            break;
           case FD_ID:
           case FO_ID:
           case FU_ID:
-            fid = "?" + field;
+            fid = "?id" + field;
             pt[2] = 1;
+            sep = "_";
             continue;
           case FDPARAM_ID:
           case FOPARAM_ID:
           case FUPARAM_ID:
             atomLabel = axis = "*";
+            sep = "_";
             //$FALL-THROUGH$
           case FWV_DISP_SEQ_ID:
           case FWV_OCC_SEQ_ID:
@@ -347,7 +344,7 @@ public class MSCifParser extends MSRdr {
 //                + "_";
             break;
           }
-          type_id += sep + field;
+          type_id += sep + "id" + field;
           break;
         case JANA_OCC_ABS_LABEL:
           type_id = "J_O";
@@ -356,7 +353,7 @@ public class MSCifParser extends MSRdr {
           atomLabel = field;
           break;
         case OCC_SPECIAL_LABEL:
-          type_id = "O_0";
+          type_id = "O_id0";
           axis = "0";
           atomLabel = field;
           break;

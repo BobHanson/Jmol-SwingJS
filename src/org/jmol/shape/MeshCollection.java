@@ -408,7 +408,18 @@ public abstract class MeshCollection extends Shape {
       data[1] = m.vs;
       data[2] = m.getVisibleVertexBitSet();
       return true;
-
+    }
+    if (property == "points") {
+      Mesh m = getMesh((String) data[0]);
+      if (m == null)
+        return false;
+      BS bs = m.getVisibleVertexBitSet();
+      P3d[] pts = new P3d[bs.cardinality()];
+      for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        pts[p++] = (P3d) m.vs[i];
+      }
+      data[1] = pts;
+      return true;
     }
     if (property == "checkID") {
       String key = (String) data[0];

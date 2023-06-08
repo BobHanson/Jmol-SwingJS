@@ -2812,7 +2812,8 @@ public class CmdExt extends ScriptExt {
     boolean addHydrogen = false;
     boolean isSilent = false;
     BS bsFixed = null;
-    boolean noRange = false;
+    boolean selectedOnly = false;
+    boolean groupOnly = false;
     Minimizer minimizer = vwr.getMinimizer(false);
     // may be null
     for (int i = 1; i < slen; i++)
@@ -2864,7 +2865,21 @@ public class CmdExt extends ScriptExt {
       case T.fixed:
         if (i != 1)
           invArg();
-        bsFixed = atomExpressionAt(++i);
+        if (slen == ++i) {
+          if (!chk) {
+            BS bs = (BS) vwr.getMinimizer(true).getProperty("fixed", 0);
+            if (bs == null) {
+              e.showString("no atoms are fixed for minimization");
+            } else {
+              n = bs.cardinality();
+              e.showString(n + (n == 1 ? " atom is" : " atoms are" ) 
+                  + " fixed for minimization: "+ bs + "\nunfix them with MINIMIZE FIX NONE");
+              
+            }
+          }
+          return;
+        }
+        bsFixed = atomExpressionAt(i);
         if (bsFixed.nextSetBit(0) < 0)
           bsFixed = null;
         i = e.iToken;
@@ -2873,9 +2888,11 @@ public class CmdExt extends ScriptExt {
         if (i + 1 == slen)
           return;
         continue;
+      case T.group:
+        groupOnly = true;
       case T.bitset:
       case T.expressionBegin:
-        noRange = true;
+        selectedOnly = true;
         //$FALL-THROUGH$
       case T.select:
         if (e.theTok == T.select)
@@ -2884,7 +2901,7 @@ public class CmdExt extends ScriptExt {
         i = e.iToken;
         if (tokAt(i + 1) == T.only) {
           i++;
-          noRange = true;
+          selectedOnly = true;
         }
         continue;
       case T.silent:
@@ -2901,7 +2918,8 @@ public class CmdExt extends ScriptExt {
       try {
         vwr.minimize(e, steps, crit, bsSelected, bsFixed, 0, 
             (addHydrogen ? Viewer.MIN_ADDH : 0)
-            | (noRange ? Viewer.MIN_NO_RANGE : 0) 
+            | (selectedOnly ? Viewer.MIN_SELECT_ONLY : 0) 
+            | (groupOnly ? Viewer.MIN_GROUP_SELECT : 0) 
             | (isSilent ? Viewer.MIN_SILENT: 0));
       } catch (Exception e1) {
         // actually an async exception
@@ -3081,7 +3099,8 @@ public class CmdExt extends ScriptExt {
     // ~ introduces single-letter sequences
     boolean isOneLetter = sequence.startsWith("~");
     boolean isFile = (!isOneLetter && !isCreate
-        && (sequence.indexOf(".") >= 0 || sequence.indexOf("-") < 0));
+        && (sequence.indexOf(".") >= 0 || sequence.indexOf("-") < 0 
+        && sequence.length() > 3 && sequence.startsWith("==")));
     String[] list;
     if (isFile) {
       list = new String[] { sequence };
@@ -5263,7 +5282,7 @@ public class CmdExt extends ScriptExt {
       len = 3;
       if (!chk && slen == len) {
         msg = paramAsStr(2);
-        msg = vwr.getOrientation(T.getTokFromName(msg.equals("box") ? "volume" : msg.equals("rotation") ? "best" : msg), "best", null).toString();
+        msg = vwr.getOrientation(T.getTokFromName(msg.equals("box") ? "volume" : msg.equals("rotation") ? "best" : msg), "best", null, null).toString();
       }
       break;
     case T.rotation:
@@ -5276,7 +5295,7 @@ public class CmdExt extends ScriptExt {
     case T.translation:
     case T.moveto:
       if (!chk)
-        msg = vwr.getOrientation(tok, null, null).toString();
+        msg = vwr.getOrientation(tok, null, null, null).toString();
       break;
     case T.orientation:
       len = 2;
@@ -5288,11 +5307,11 @@ public class CmdExt extends ScriptExt {
       case T.moveto:
       case T.nada:
         if (!chk)
-          msg = vwr.getOrientation(tok, null, null).toString();
+          msg = vwr.getOrientation(tok, null, null, null).toString();
         break;
       default:
         name = eval.optParameterAsString(2);
-        msg = vwr.getOrientation(T.name, name, null).toString();
+        msg = vwr.getOrientation(T.name, name, null, null).toString();
       }
       len = slen;
       break;

@@ -74,12 +74,11 @@ import javajs.util.V3d;
  */
 public class CifReader extends AtomSetCollectionReader {
 
-
   protected static final String CELL_TYPE_MAGNETIC_PARENT = "parent";
   protected static final String CELL_TYPE_MAGNETIC_STANDARD = "standard";
 
   /**
-   * Allows checking specific blocks 
+   * Allows checking specific blocks
    * 
    * e.g. topoCifParser
    * 
@@ -87,19 +86,23 @@ public class CifReader extends AtomSetCollectionReader {
   interface Parser {
 
     Parser setReader(CifReader cifReader);
+
     boolean processBlock(String key) throws Exception;
+
     boolean finalizeReader() throws Exception;
+
     void finalizeSymmetry(boolean haveSymmetry) throws Exception;
+
     void ProcessRecord(String key, String data) throws Exception;
 
   }
 
   Parser subParser; // TopoCifParser
-  
+
   private static final String titleRecords = "__citation_title__publ_section_title__active_magnetic_irreps_details__";
 
   private MSCifParser modr; // Modulated Structure subreader
-//  private MagCifRdr magr;// Magnetic CIF subreader - not necessary
+  //  private MagCifRdr magr;// Magnetic CIF subreader - not necessary
 
   // no need for reflection here -- the CIF reader is already
   // protected by reflection
@@ -107,7 +110,7 @@ public class CifReader extends AtomSetCollectionReader {
   GenericCifDataParser cifParser;
 
   private boolean isAFLOW;
-  
+
   private boolean filterAssembly;
   private boolean allowRotations = true;
   private boolean readIdeal = true;
@@ -144,6 +147,7 @@ public class CifReader extends AtomSetCollectionReader {
   protected int nAtoms0;
   private int titleAtomSet = 1;
   private boolean addAtomLabelNumbers;
+  private boolean ignoreGeomBonds;
 
   @Override
   public void initializeReader() throws Exception {
@@ -154,6 +158,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (conf != null)
       configurationPtr = parseIntStr(conf);
     isMolecular = checkFilterKey("MOLECUL") && !checkFilterKey("BIOMOLECULE"); // molecular; molecule
+    ignoreGeomBonds = checkFilterKey("IGNOREGEOMBOND");
     isPrimitive = checkFilterKey("PRIMITIVE");
     readIdeal = !checkFilterKey("NOIDEAL");
     filterAssembly = checkFilterKey("$");
@@ -172,8 +177,6 @@ public class CifReader extends AtomSetCollectionReader {
     continuing = false;
   }
 
-  
- 
   protected void initSubclass() {
     // for MMCifReader
   }
@@ -194,14 +197,16 @@ public class CifReader extends AtomSetCollectionReader {
     cifParser = getCifDataParser();
     line = "";
     while (continueWith(key = (String) cifParser.peekToken())) {
-      if (cifParser.getFileHeader().startsWith("# primitive CIF file created by Jmol"))
+      if (cifParser.getFileHeader()
+          .startsWith("# primitive CIF file created by Jmol"))
         addAtomLabelNumbers = true;
       if (!readAllData())
         break;
     }
     if (appendedData != null) {
-      cifParser = ((GenericCifDataParser) getInterface("javajs.util.CifDataParser"))
-          .set(null, Rdr.getBR(appendedData), debugging);
+      cifParser = ((GenericCifDataParser) getInterface(
+          "javajs.util.CifDataParser")).set(null, Rdr.getBR(appendedData),
+              debugging);
       while ((key = (String) cifParser.peekToken()) != null)
         if (!readAllData())
           break;
@@ -221,7 +226,7 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean readAllData() throws Exception {
     if (key.startsWith("data_")) {
       isLigand = false;
-      if (asc.atomSetCount == 0)  
+      if (asc.atomSetCount == 0)
         iHaveDesiredModel = false;
       if (iHaveDesiredModel)
         return false;
@@ -264,8 +269,8 @@ public class CifReader extends AtomSetCollectionReader {
      * tokenizer.getTokenPeeked(); continue; }
      */
     if (key.indexOf("_") != 0) {
-      Logger.warn(key.startsWith("save_") ? 
-          "CIF reader ignoring save_" : "CIF ERROR ? should be an underscore: " + key);
+      Logger.warn(key.startsWith("save_") ? "CIF reader ignoring save_"
+          : "CIF ERROR ? should be an underscore: " + key);
       cifParser.getTokenPeeked();
     } else if (!getData()) {
       return true;
@@ -307,11 +312,11 @@ public class CifReader extends AtomSetCollectionReader {
           if (lastSpaceGroupName != null)
             setSpaceGroupName(lastSpaceGroupName);
         } else if (key.equals("_audit_creation_date")) {
-            symmetry = null;
+          symmetry = null;
         }
       } else if (key.startsWith("_chem_comp_atom") || key.startsWith("_atom")) {
         processLoopBlock();
-//        readSingleAtom();
+        //        readSingleAtom();
       } else if (key.startsWith("_symmetry_space_group_name_h-m")
           || key.equals("_space_group_it_number")
           || key.startsWith("_symmetry_space_group_name_hall")
@@ -319,8 +324,8 @@ public class CifReader extends AtomSetCollectionReader {
           || key.contains("_magn_name") || key.contains("_bns_name") // PRELIM
       ) {
         processSymmetrySpaceGroupName();
-      } else if (key.startsWith("_space_group_transform") 
-          || key.startsWith("_parent_space_group") 
+      } else if (key.startsWith("_space_group_transform")
+          || key.startsWith("_parent_space_group")
           || key.startsWith("_space_group_magn_transform")) {
         processUnitCellTransform();
       } else if (key.contains("_database_code")) {
@@ -334,7 +339,7 @@ public class CifReader extends AtomSetCollectionReader {
         rotateHexCell = (isAFLOW && (intTableNo >= 143 && intTableNo <= 194)); // trigonal or hexagonal
       } else if (key.equals("_entry_id")) {
         pdbID = data;
-      } else if (key.startsWith("_topol_")){
+      } else if (key.startsWith("_topol_")) {
         getTopologyParser().ProcessRecord(key, data);
       } else {
         // see MMCifReader or MSRdr
@@ -349,8 +354,6 @@ public class CifReader extends AtomSetCollectionReader {
     || key.startsWith("_reflns_")
     || key.startsWith("_diffrn_");
   }
-
-
 
   private void addModelTitle(String key) {
     if (asc.atomSetCount > titleAtomSet)
@@ -367,24 +370,23 @@ public class CifReader extends AtomSetCollectionReader {
    * (magnetic CIF only)
    * 
    * Process the unit cell transformation as indicated by _parent_space_group or
-   *  _space_group_magn (or older _magentic_space_group)
+   * _space_group_magn (or older _magentic_space_group)
    * 
    */
   private void processUnitCellTransform() {
     data = PT.replaceAllCharacters(data, " ", "");
-    
+
     // old:
-      
-      
+
     // _magnetic_space_group.transform_from_parent_Pp_abc  '-1/3a+1/3b-2/3c,-a-b,-4/3a+4/3b+4/3c;0,0,0'
     // _magnetic_space_group.transform_to_standard_Pp_abc  'a-c,-b,-2a+c;0,0,0'
-      
+
     // new: 
     // _parent_space_group.child_transform_Pp_abc   '-1/3a+1/3b-2/3c,-a-b,-4/3a+4/3b+4/3c;0,0,0'
     // _space_group_magn.transform_BNS_Pp_abc    '-a-c,-b,c;0,0,0'
-      
+
     //  related:
-        
+
     // _space_group_magn.transform_OG_Pp_abc     '-a-c,-b,1/2c;0,0,0'   -- no interest to us
     // _parent_space_group.transform_Pp_abc   'a,b,c;0,0,0'             -- no interest to us
 
@@ -402,8 +404,10 @@ public class CifReader extends AtomSetCollectionReader {
    * 
    * Add a cell type such as "conventional"
    * @param type
-   * @param data if starting with "!" then "opposite of"
-   * @param isFrom TRUE for SUPERCELL or "_from_parent" or "child_transform"
+   * @param data
+   *        if starting with "!" then "opposite of"
+   * @param isFrom
+   *        TRUE for SUPERCELL or "_from_parent" or "child_transform"
    */
   private void addCellType(String type, String data, boolean isFrom) {
     if (htCellTypes == null)
@@ -420,53 +424,56 @@ public class CifReader extends AtomSetCollectionReader {
     }
   }
 
-//  /**
-//   * No need for anything other than the atom name and symbol; coordinates will
-//   * be (0 0 0), and no other information is needed.
-//   */
-//  private void readSingleAtom() {
-//    Atom atom = new Atom();
-//    atom.set(0, 0, 0);
-//    atom.atomName = cifParser.fullTrim(data);
-//    atom.getElementSymbol();
-//    asc.addAtom(atom);
-//  }
-//
+  //  /**
+  //   * No need for anything other than the atom name and symbol; coordinates will
+  //   * be (0 0 0), and no other information is needed.
+  //   */
+  //  private void readSingleAtom() {
+  //    Atom atom = new Atom();
+  //    atom.set(0, 0, 0);
+  //    atom.atomName = cifParser.fullTrim(data);
+  //    atom.getElementSymbol();
+  //    asc.addAtom(atom);
+  //  }
+  //
   private MSCifParser getModulationReader() throws Exception {
     return (modr == null ? initializeMSCIF() : modr);
   }
 
   private MSCifParser initializeMSCIF() throws Exception {
     if (modr == null)
-      ms = modr = (MSCifParser) getInterface("org.jmol.adapter.readers.cif.MSCifParser");
+      ms = modr = (MSCifParser) getInterface(
+          "org.jmol.adapter.readers.cif.MSCifParser");
     modulated = (modr.initialize(this, modDim) > 0);
     return modr;
   }
 
-//  private MagCifRdr getMagCifReader() throws Exception {
-//    return (magr == null ? initializeMagCIF() : magr);
-//  }
+  //  private MagCifRdr getMagCifReader() throws Exception {
+  //    return (magr == null ? initializeMagCIF() : magr);
+  //  }
 
-//  private MagCifRdr initializeMagCIF() throws Exception {
-//    if (magr == null)
-//      magr = (MagCifRdr) getInterface("org.jmol.adapter.readers.cif.MagCifRdr");
-//    return magr;
-//  }
+  //  private MagCifRdr initializeMagCIF() throws Exception {
+  //    if (magr == null)
+  //      magr = (MagCifRdr) getInterface("org.jmol.adapter.readers.cif.MagCifRdr");
+  //    return magr;
+  //  }
 
   public Map<String, Integer> modelMap;
 
   private boolean haveGlobalDummy;
+
   protected void newModel(int modelNo) throws Exception {
     if (modelNo < 0) {
-      if (modelNumber == 1 && asc.ac == 0 && nAtoms == 0 && !haveGlobalDummy && !skipping) {
+      if (modelNumber == 1 && asc.ac == 0 && nAtoms == 0 && !haveGlobalDummy
+          && !skipping) {
         modelNumber = 0;
         haveModel = false;
         haveGlobalDummy = true;
         asc.removeCurrentAtomSet();
-      }      
+      }
       modelNo = ++modelNumber;
     }
-    
+
     skipping = !doGetModel(modelNumber = modelNo, null);
     if (skipping) {
       if (!isMMCIF)
@@ -480,13 +487,13 @@ public class CifReader extends AtomSetCollectionReader {
     if (isCourseGrained)
       asc.setCurrentModelInfo("courseGrained", Boolean.TRUE);
     if (nAtoms0 > 0 && nAtoms0 == asc.ac) {
-        modelNumber--;
-        haveModel = false;
-        asc.removeCurrentAtomSet();
-      } else if (asc.iSet >= 0) {
-        applySymmetryAndSetTrajectory();
-      }
- }
+      modelNumber--;
+      haveModel = false;
+      asc.removeCurrentAtomSet();
+    } else if (asc.iSet >= 0) {
+      applySymmetryAndSetTrajectory();
+    }
+  }
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
@@ -526,8 +533,6 @@ public class CifReader extends AtomSetCollectionReader {
     }
   }
 
-
-
   protected void addHeader() {
     String header = cifParser.getFileHeader();
     if (header.length() > 0) {
@@ -542,7 +547,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   protected boolean finalizeSubclass() throws Exception {
     // overridden by MMCifReader and calling TopoCifReader
-    return (subParser == null ? false : subParser.finalizeReader());    // see TopoCifParser
+    return (subParser == null ? false : subParser.finalizeReader()); // see TopoCifParser
   }
 
   @Override
@@ -570,8 +575,7 @@ public class CifReader extends AtomSetCollectionReader {
     boolean doCheckBonding = doCheckUnitCell && !isMMCIF;
     if (isMMCIF && asc.iSet >= 0) {
       int modelIndex = asc.iSet;
-      asc.setCurrentModelInfo(
-          "PDB_CONECT_firstAtom_count_max",
+      asc.setCurrentModelInfo("PDB_CONECT_firstAtom_count_max",
           new int[] { asc.getAtomSetAtomIndex(modelIndex),
               asc.getAtomSetAtomCount(modelIndex), maxSerial });
     }
@@ -596,8 +600,8 @@ public class CifReader extends AtomSetCollectionReader {
       throws Exception {
     // called by applySymTrajASCR
     // just for modulated, audit block, and magnetic structures
-    SymmetryInterface sym = (haveSymmetry ? asc.getXSymmetry()
-        .getBaseSymmetry() : null);
+    SymmetryInterface sym = (haveSymmetry ? asc.getXSymmetry().getBaseSymmetry()
+        : null);
     if (sym != null && sym.getSpaceGroup() == null) {
       if (!isBinary) // ignore this for MMTF
         appendLoadNote("Invalid or missing space group operations!");
@@ -625,7 +629,7 @@ public class CifReader extends AtomSetCollectionReader {
       htAudit.put(auditBlockCode, sym);
     }
     if (subParser != null)
-       subParser.finalizeSymmetry(haveSymmetry);
+      subParser.finalizeSymmetry(haveSymmetry);
 
   }
 
@@ -719,8 +723,9 @@ public class CifReader extends AtomSetCollectionReader {
     }
     data = cifParser.toUnicode(data);
     setSpaceGroupName(lastSpaceGroupName = (key.indexOf("h-m") > 0 ? "HM:"
-        : modulated ? "SSG:" : key.indexOf("bns") >= 0 ? "BNS:" : key
-            .indexOf("hall") >= 0 ? "Hall:" : "")
+        : modulated ? "SSG:"
+            : key.indexOf("bns") >= 0 ? "BNS:"
+                : key.indexOf("hall") >= 0 ? "Hall:" : "")
         + data);
   }
 
@@ -767,7 +772,7 @@ public class CifReader extends AtomSetCollectionReader {
       for (int i = 0; i < lattvecs.size(); i++)
         appendLoadNote(PT.toJSON(null, lattvecs.get(i)));
     }
-    
+
     latticeType = null;
   }
 
@@ -804,9 +809,9 @@ public class CifReader extends AtomSetCollectionReader {
      SCALE1       .024414  0.000000  -.000328        0.00000
      SCALE2      0.000000   .053619  0.000000        0.00000
      SCALE3      0.000000  0.000000   .044409        0.00000
-
+    
      * CIF:
-
+    
      _atom_sites.fract_transf_matrix[1][1]   .024414 
      _atom_sites.fract_transf_matrix[1][2]   0.000000 
      _atom_sites.fract_transf_matrix[1][3]   -.000328 
@@ -819,7 +824,7 @@ public class CifReader extends AtomSetCollectionReader {
      _atom_sites.fract_transf_vector[1]      0.00000 
      _atom_sites.fract_transf_vector[2]      0.00000 
      _atom_sites.fract_transf_vector[3]      0.00000 
-
+    
      */
     double v = parseDoubleStr(data);
     if (Double.isNaN(v))
@@ -856,8 +861,9 @@ public class CifReader extends AtomSetCollectionReader {
     } else {
       data = cifParser.getNextToken();
     }
-    if (debugging && data != null && data.length() > 0 && data.charAt(0) != '\0')
-      Logger.debug(">> " + key  + " " + data);
+    if (debugging && data != null && data.length() > 0
+        && data.charAt(0) != '\0')
+      Logger.debug(">> " + key + " " + data);
     if (data == null) {
       Logger.warn("CIF ERROR ? end of file; data missing: " + key);
       return false;
@@ -926,7 +932,8 @@ public class CifReader extends AtomSetCollectionReader {
       processAtomTypeLoopBlock();
       return;
     }
-    if ((isMolecular || !doApplySymmetry) && key.startsWith("_geom_bond")) {
+    if ((isMolecular || !doApplySymmetry && !ignoreGeomBonds)
+        && key.startsWith("_geom_bond")) {
       processGeomBondLoopBlock();
       return;
     }
@@ -950,18 +957,17 @@ public class CifReader extends AtomSetCollectionReader {
     if (subParser == null) {
       subParser = ((Parser) javajs.api.Interface
           .getInterface("org.jmol.adapter.readers.cif.TopoCifParser"));
-              subParser = subParser.setReader(this);
+      subParser = subParser.setReader(this);
     }
     return subParser;
   }
-
-
 
   private void addMore() {
     String str;
     int n = 0;
     try {
-      while ((str = (String) cifParser.peekToken()) != null && str.charAt(0) == '_') {
+      while ((str = (String) cifParser.peekToken()) != null
+          && str.charAt(0) == '_') {
         cifParser.getTokenPeeked();
         n++;
       }
@@ -1058,9 +1064,9 @@ public class CifReader extends AtomSetCollectionReader {
       double radius = parseDoubleStr(getField(ATOM_TYPE_RADIUS_BOND));
       if (Double.isNaN(oxno) && Double.isNaN(radius))
         continue;
-        if (htOxStates == null)
-          htOxStates = new Hashtable<String, double[]>();
-        htOxStates.put(sym, new double[] {oxno, radius});
+      if (htOxStates == null)
+        htOxStates = new Hashtable<String, double[]>();
+      htOxStates.put(sym, new double[] { oxno, radius });
     }
   }
 
@@ -1145,14 +1151,14 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte LABEL_COMP_ID = 72;
   final private static byte LABEL_ATOM_ID = 73;
   final protected static String FAMILY_ATOM = "_atom_site";
-  final private static String[] atomFields = { 
+  final private static String[] atomFields = { //
       "*_type_symbol",  //0
-      "*_label",        //
-      "*_auth_atom_id",// 
+      "*_label", //
+      "*_auth_atom_id", // 
       "*_fract_x", //
       "*_fract_y", //
       "*_fract_z", //
-      "*_cartn_x",//
+      "*_cartn_x", //
       "*_cartn_y", //
       "*_cartn_z", //
       "*_occupancy", //
@@ -1220,7 +1226,7 @@ public class CifReader extends AtomSetCollectionReader {
       "*_label_seq_id", // 
       "*_label_comp_id", // 72 mmCIF dev 
       "*_label_atom_id" // 73 mCIF dev 
-      };
+  };
 
   //  final private static String singleAtomID = atomFields[CC_COMP_ID];
 
@@ -1446,33 +1452,33 @@ public class CifReader extends AtomSetCollectionReader {
           if (firstChar == '-' && field.length() > 1) {
             // disorder group -1
 
-// email exchange with Brian McMahon 22.10.11
-//            see
-//            https://journals.iucr.org/c/issues/2015/01/00/fa3356/ (in the below I
-//            take PART to be the same as
-//            _atom_site_disorder_group):
-//
-//            "The use of PART numbers, introduced in SHELXL93, has proved invaluable
-//            in the refinement of disordered structures. Two atoms are considered to
-//            be bonded if they have the same PART number or if one of them is in
-//            PART 0. The resulting connectivity table is used for the generation of
-//            H atoms (HFIX and AFIX), for setting up restraints such as DELU, SIMU,
-//            RIGU, CHIV, BUMP and SAME, and for generating tables of geometric
-//            parameters (BOND, CONF, HTAB). Usually, most of the atoms are in
-//            PART 0, but, for example, a molecule or side chain dis­ordered over
-//            three positions could use PART 1, PART 2 and PART 3. If the PART
-//            number is negative, bonds are not generated to symmetry-equivalent
-//            atoms. It should be noted that positive PART numbers 1, 2, 3 etc.
-//            correspond to the alternative location indicators A, B, C etc. in
-//            PDB format. However, this notation is difficult to use when there
-//            is a disorder within a disorder."
+            // email exchange with Brian McMahon 22.10.11
+            //            see
+            //            https://journals.iucr.org/c/issues/2015/01/00/fa3356/ (in the below I
+            //            take PART to be the same as
+            //            _atom_site_disorder_group):
+            //
+            //            "The use of PART numbers, introduced in SHELXL93, has proved invaluable
+            //            in the refinement of disordered structures. Two atoms are considered to
+            //            be bonded if they have the same PART number or if one of them is in
+            //            PART 0. The resulting connectivity table is used for the generation of
+            //            H atoms (HFIX and AFIX), for setting up restraints such as DELU, SIMU,
+            //            RIGU, CHIV, BUMP and SAME, and for generating tables of geometric
+            //            parameters (BOND, CONF, HTAB). Usually, most of the atoms are in
+            //            PART 0, but, for example, a molecule or side chain dis­ordered over
+            //            three positions could use PART 1, PART 2 and PART 3. If the PART
+            //            number is negative, bonds are not generated to symmetry-equivalent
+            //            atoms. It should be noted that positive PART numbers 1, 2, 3 etc.
+            //            correspond to the alternative location indicators A, B, C etc. in
+            //            PDB format. However, this notation is difficult to use when there
+            //            is a disorder within a disorder."
 
             // atom.basLoc provides the base altloc "n" of "-n"
             // as symmetry is applied, if basLoc is found, then 
             // the cloned atom is given an incremented altloc
             // this only works with C2 and m; with higher-order symmetry, this
             // will dump all the symmetry-related groups into the same configuration=2
-            
+
             atom.altLoc = field.charAt(1);
             atom.isNegDisorder = true;
           } else {
@@ -1613,7 +1619,8 @@ public class CifReader extends AtomSetCollectionReader {
     return true;
   }
 
-  protected boolean addCifAtom(Atom atom, String id, String componentId, String strChain) {
+  protected boolean addCifAtom(Atom atom, String id, String componentId,
+                               String strChain) {
     if (atom.elementSymbol == null && atom.atomName != null)
       atom.getElementSymbol();
     if (!filterCIFAtom(atom, componentId))
@@ -1622,7 +1629,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (isMMCIF && !processSubclassAtom(atom, componentId, strChain))
       return false;
     if (asc.iSet < 0)
-      nextAtomSet();    
+      nextAtomSet();
     asc.addAtomWithMappedName(atom);
     if (id != null) {
       asc.atomSymbolicMap.put(id, atom);
@@ -1630,8 +1637,6 @@ public class CifReader extends AtomSetCollectionReader {
     ac++;
     return true;
   }
-
-
 
   /**
    * @param modelField
@@ -1692,7 +1697,7 @@ public class CifReader extends AtomSetCollectionReader {
     while (cifParser.getData()) {
       String title = getField(CITATION_TITLE);
       if (!isNull(title))
-          appendLoadNote("TITLE: " + cifParser.toUnicode(title));
+        appendLoadNote("TITLE: " + cifParser.toUnicode(title));
     }
   }
 
@@ -1769,8 +1774,8 @@ public class CifReader extends AtomSetCollectionReader {
       int nn = cifParser.getColumnCount();
       int timeRev = (fieldProperty(key2col[SYM_MAGN_REV]) == NONE
           && fieldProperty(key2col[SYM_MAGN_SSG_REV]) == NONE
-          && fieldProperty(key2col[SYM_MAGN_REV_PRELIM]) == NONE ? 0 : field
-          .equals("-1") ? -1 : 1);
+          && fieldProperty(key2col[SYM_MAGN_REV_PRELIM]) == NONE ? 0
+              : field.equals("-1") ? -1 : 1);
       for (int i = 0, tok; i < nn; ++i) {
         switch (tok = fieldProperty(i)) {
         case SYM_SSG_EQ_XYZ:
@@ -1849,7 +1854,7 @@ public class CifReader extends AtomSetCollectionReader {
   final private static String[] geomBondFields = {
       "_geom_bond_atom_site_label_1", "_geom_bond_atom_site_label_2",
       "_geom_bond_distance", "_ccdc_geom_bond_type"
-  //  "_geom_bond_site_symmetry_2",
+      //  "_geom_bond_site_symmetry_2",
   };
 
   /**
@@ -1883,34 +1888,17 @@ public class CifReader extends AtomSetCollectionReader {
           Atom a = getAtomFromNameCheckCase(name1);
           Atom b = getAtomFromNameCheckCase(name2);
           if (a == null || b == null) {
-            System.err.println("ATOM_SITE atom for name " + (a != null ? name2 : b != null ? name1 : name1 + " and " + name2) + " not found");
-              continue;
+            System.err.println("ATOM_SITE atom for name "
+                + (a != null ? name2
+                    : b != null ? name1 : name1 + " and " + name2)
+                + " not found");
+            continue;
           }
           asc.addNewBondWithOrder(a.index, b.index, order);
         }
         continue;
       }
-      double dx = 0;
-      int pt = sdist.indexOf('(');
-      if (pt >= 0) {
-        char[] data = sdist.toCharArray();
-        // 3.567(12) --> 0.012
-        String sdx = sdist.substring(pt + 1, sdist.length() - 1);
-        int n = sdx.length();
-        for (int j = pt; --j >= 0;) {
-          if (data[j] == '.' && --j < 0)
-            break;
-          data[j] = (--n < 0 ? '0' : sdx.charAt(n));
-        }
-        dx = parseDoubleStr(String.valueOf(data));
-        if (Double.isNaN(dx)) {
-          Logger.info("error reading uncertainty for " + line);
-          dx = 0.015;
-        }
-        // TODO -- this is the full +/- (dx) in x.xxx(dx) -- is that too large?
-      } else {
-        dx = 0.015;
-      }
+      double dx = getStandardDeviation(sdist);
       // This field is from Materials Studio. See supplemental material for
       // http://pubs.rsc.org/en/Content/ArticleLanding/2012/CC/c2cc34714h
       // http://www.rsc.org/suppdata/cc/c2/c2cc34714h/c2cc34714h.txt
@@ -1933,6 +1921,27 @@ public class CifReader extends AtomSetCollectionReader {
   /////////////////////////////////////
   //  bonding and molecular 
   /////////////////////////////////////
+
+  private double getStandardDeviation(String sdist) {
+    int pt = sdist.indexOf('(');
+    if (pt >= 0) {
+      char[] data = sdist.toCharArray();
+      // 3.567(12) --> 0.012
+      String sdx = sdist.substring(pt + 1, data.length - 1);
+      int n = sdx.length();
+      for (int j = pt; --j >= 0;) {
+        if (data[j] == '.' && --j < 0)
+          break;
+        data[j] = (--n < 0 ? '0' : data[pt + 1 + n]);
+      }
+      double dx = parseDoubleStr(String.valueOf(data));
+      if (!Double.isNaN(dx)) {
+        return dx;
+      }
+    }
+    Logger.info("error reading uncertainty for " + sdist + " on line " + line);
+    return 0.015;
+  }
 
   /**
    * From GEOM_BOND, check first for an exact match. If that is not found, add
@@ -2003,8 +2012,8 @@ public class CifReader extends AtomSetCollectionReader {
     if (isMolecular) {
       atomRadius = new double[ac];
       for (int i = firstAtom; i < ac; i++) {
-        int elemnoWithIsotope = JmolAdapter.getElementNumber(atoms[i]
-            .getElementSymbol());
+        int elemnoWithIsotope = JmolAdapter
+            .getElementNumber(atoms[i].getElementSymbol());
         atoms[i].elementNumber = (short) elemnoWithIsotope;
         int charge = (atoms[i].formalCharge == Integer.MIN_VALUE ? 0
             : atoms[i].formalCharge);
@@ -2038,7 +2047,7 @@ public class CifReader extends AtomSetCollectionReader {
       // Set bsAtoms to control which atoms and 
       // bonds are delivered by the iterators.
 
-      BS bs = asc.getBSAtoms(0);
+      BS bs = asc.getBSAtoms(asc.bsAtoms == null ? firstAtom : 0);
       bs.clearBits(firstAtom, ac);
       bs.or(bsMolecule);
       bs.andNot(bsExclude);
@@ -2117,7 +2126,7 @@ public class CifReader extends AtomSetCollectionReader {
       int iatom1 = a1.index;
       int iatom2 = a2.index;
       if (doInit) {
-        String key = ";" + iatom1 + ";" +  iatom2 + ";" + distance;
+        String key = ";" + iatom1 + ";" + iatom2 + ";" + distance;
         if (list.indexOf(key) >= 0) {
           bsBondDuplicates.set(i);
           continue;
@@ -2133,7 +2142,8 @@ public class CifReader extends AtomSetCollectionReader {
       for (int j = bs1.nextSetBit(0); j >= 0; j = bs1.nextSetBit(j + 1)) {
         for (int k = bs2.nextSetBit(0); k >= 0; k = bs2.nextSetBit(k + 1)) {
           if ((!isMolecular || !bsConnected[j + firstAtom].get(k))
-              && checkBondDistance(atoms[j + firstAtom], atoms[k + firstAtom], distance, dx))
+              && checkBondDistance(atoms[j + firstAtom], atoms[k + firstAtom],
+                  distance, dx))
             addNewBond(j + firstAtom, k + firstAtom, order);
         }
       }
@@ -2142,7 +2152,6 @@ public class CifReader extends AtomSetCollectionReader {
     if (!iHaveFractionalCoordinates)
       return false;
 
-    
     // do a quick check for H-X bonds if we have GEOM_BOND
 
     if (bondTypes.size() > 0 && !haveH)
@@ -2150,9 +2159,9 @@ public class CifReader extends AtomSetCollectionReader {
         if (atoms[i].elementNumber == 1) {
           boolean checkAltLoc = (atoms[i].altLoc != '\0');
           for (int k = firstAtom; k < ac; k++)
-            if (k != i
-                && atoms[k].elementNumber != 1
-                && (!checkAltLoc || atoms[k].altLoc == '\0' || atoms[k].altLoc == atoms[i].altLoc)) {
+            if (k != i && atoms[k].elementNumber != 1
+                && (!checkAltLoc || atoms[k].altLoc == '\0'
+                    || atoms[k].altLoc == atoms[i].altLoc)) {
               if (!bsConnected[i].get(k)
                   && checkBondDistance(atoms[i], atoms[k], 1.1d, 0))
                 addNewBond(i, k, 1);
@@ -2168,7 +2177,7 @@ public class CifReader extends AtomSetCollectionReader {
         if (atoms[i].atomSite + firstAtom == i && !bsMolecule.get(i))
           setBs(atoms, i, bsConnected, bsMolecule);
 
-     // Now look through unchecked atoms for ones that
+    // Now look through unchecked atoms for ones that
     // are within bonding distance of the "molecular" set
     // in any one of the 27 adjacent cells in 444 - 666.
     // If an atom is found, move it along with its "branch"
@@ -2185,9 +2194,9 @@ public class CifReader extends AtomSetCollectionReader {
       if (!bsMolecule.get(i) && !bsExclude.get(i))
         for (int j = bsMolecule.nextSetBit(0); j >= 0; j = bsMolecule
             .nextSetBit(j + 1))
-          if (symmetry.checkDistance(atoms[j], atoms[i], atomRadius[i]
-              + atomRadius[j] + bondTolerance, 0, nFactor, nFactor, nFactor,
-              ptOffset)) {
+          if (symmetry.checkDistance(atoms[j], atoms[i],
+              atomRadius[i] + atomRadius[j] + bondTolerance, 0, nFactor,
+              nFactor, nFactor, ptOffset)) {
             setBs(atoms, i, bsConnected, bsBranch);
             for (int k = bsBranch.nextSetBit(0); k >= 0; k = bsBranch
                 .nextSetBit(k + 1)) {
@@ -2212,9 +2221,10 @@ public class CifReader extends AtomSetCollectionReader {
     return false;
   }
 
-  private boolean checkBondDistance(Atom a, Atom b, double distance, double dx) {
+  private boolean checkBondDistance(Atom a, Atom b, double distance,
+                                    double dx) {
     if (iHaveFractionalCoordinates)
-      return  symmetry.checkDistance(a, b, distance, dx, 0, 0, 0, ptOffset);
+      return symmetry.checkDistance(a, b, distance, dx, 0, 0, 0, ptOffset);
     double d = a.distance(b);
     return (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1d); // same as in Symmetry
   }

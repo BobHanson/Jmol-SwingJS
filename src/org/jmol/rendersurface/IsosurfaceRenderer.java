@@ -38,7 +38,6 @@ import org.jmol.util.Normix;
 import org.jmol.viewer.JC;
 
 import javajs.util.P3d;
-import javajs.util.PT;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -168,7 +167,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
           && imesh.jvxlData.isSlabbable) {
         P3d[] points = imesh.jvxlData.boundingBox;
         double z0 = Double.MAX_VALUE;
-        double z1 = PT.FLOAT_MIN_SAFE;
+        double z1 = JC.FLOAT_MIN_SAFE;
         for (int i = points.length; --i >= 0;) {
           pt2f.setT(points[i]);
           tm.transformPt3f(pt2f, pt2f);

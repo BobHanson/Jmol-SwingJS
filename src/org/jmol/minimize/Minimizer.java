@@ -116,6 +116,8 @@ public class Minimizer {
       break;
     case 40:
       bsFixedDefault = (BS) value;
+      if (bsFixedDefault != null && bsFixedDefault.cardinality() == 0)
+        bsFixedDefault = null;
       break;
     case 50:
       stopMinimization(true);
@@ -171,7 +173,10 @@ public class Minimizer {
           + " criterion = " + crit + ")"
                 + " silent=" + isSilent 
                 + " quick=" + isQuick 
-                + " fixed=" + haveFixed 
+                + " fixed=" + haveFixed
+                + " bsSelected=" + bsSelected
+                + " bsFixed=" + bsFixed
+                + " bsFixedDefault=" + bsFixedDefault
                 + " Xx=" + (bsXx != null)
               + " ...");
       if (bsSelected.nextSetBit(0) < 0) {
@@ -250,6 +255,9 @@ public class Minimizer {
   public Object getProperty(String propertyName, int param) {
     if (propertyName.equals("log")) {
       return (pFF == null ? "" : pFF.getLogData());
+    }
+    if (propertyName.equals("fixed")) {
+      return bsFixedDefault;
     }
     return null;
   }

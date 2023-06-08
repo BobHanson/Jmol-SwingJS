@@ -81,6 +81,7 @@ public class JmolApp implements JmolAppAPI {
   private String script2 = "";
   private boolean scanInput;
   private String menuFile;
+  private String scriptArguments;
 
   //private JmolViewer vwr;
   //private JmolAdapter modelAdapter;
@@ -149,6 +150,9 @@ public class JmolApp implements JmolAppAPI {
 
     options.addOption("a", "autoanimationdelay", true, GT.$(
         "delay time in seconds for press-and-hold operation of toolbar animation buttons (default 0.2; numbers > 10 assumed to be milliseconds; set to 0 to disable)"));
+
+    options.addOption("A", "scriptarguments", true, GT.$(
+        "script arguments, separated by commas; placed in _ARGUMENTS variable"));
 
     options.addOption("b", "backgroundtransparent", false,
         GT.$("transparent background"));
@@ -282,6 +286,13 @@ public class JmolApp implements JmolAppAPI {
         autoAnimationDelay /= 1000;
       Logger.info(
           "setting autoAnimationDelay to " + autoAnimationDelay + " seconds");
+    }
+
+    if (line.hasOption("A")) {
+      scriptArguments = line.getOptionValue("A");
+      int pt = scriptArguments.indexOf("(");
+      Logger.info(
+          "setting arguments to " + scriptArguments);
     }
 
     // Process more command line arguments
@@ -557,7 +568,7 @@ public class JmolApp implements JmolAppAPI {
         scan.close();
         runScript(script.toString(), isJmolData, vwr);
       } else {
-        vwr.evalFile(scriptFilename);
+        vwr.evalFileArgs(scriptFilename, scriptArguments);
       }
     }
     // then command script

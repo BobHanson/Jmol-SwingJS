@@ -31,10 +31,10 @@ import org.jmol.modelset.Structure;
 
 import javajs.util.Lst;
 import javajs.util.P3d;
-import javajs.util.PT;
 import javajs.util.V3d;
 
 import org.jmol.script.T;
+import org.jmol.viewer.JC;
 
 
 /**
@@ -265,7 +265,7 @@ public abstract class BioPolymer implements Structure {
       leadMidpoints = new P3d[monomerCount + 1];
       leadPoints = new P3d[monomerCount + 1];
       wingVectors = new V3d[monomerCount + 1];
-      sheetSmoothing = PT.FLOAT_MIN_SAFE;
+      sheetSmoothing = JC.FLOAT_MIN_SAFE;
     }
     if (reversed == null)
       reversed = BS.newN(monomerCount);

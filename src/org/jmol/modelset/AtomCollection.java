@@ -101,8 +101,8 @@ abstract public class AtomCollection {
   
   // the maximum BondingRadius seen in this set of atoms
   // used in autobonding
-  protected double maxBondingRadius = PT.FLOAT_MIN_SAFE;
-  private double maxVanderwaalsRadius = PT.FLOAT_MIN_SAFE;
+  protected double maxBondingRadius = JC.FLOAT_MIN_SAFE;
+  private double maxVanderwaalsRadius = JC.FLOAT_MIN_SAFE;
 
   private boolean hasBfactorRange;
   private int bfactor100Lo;
@@ -354,7 +354,7 @@ abstract public class AtomCollection {
   
   public double getMaxVanderwaalsRadius() {
     //Dots
-    if (maxVanderwaalsRadius == PT.FLOAT_MIN_SAFE)
+    if (maxVanderwaalsRadius == JC.FLOAT_MIN_SAFE)
       findMaxRadii();
     return maxVanderwaalsRadius;
   }

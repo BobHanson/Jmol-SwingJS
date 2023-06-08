@@ -51,6 +51,7 @@ import org.jmol.util.BoxInfo;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
+// future ref import org.jmol.util.Geodesic;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import org.jmol.util.Point3fi;
@@ -1223,6 +1224,12 @@ public class ModelSet extends BondCollection {
   }
 
   public void setBoundBox(T3d pt1, T3d pt2, boolean byCorner, double scale) {
+    if (scale == 0 && msInfo != null) {
+      msInfo.remove("boundbox");
+      defaultBBox = null;
+      isBbcageDefault = false;
+      calcBoundBoxDimensions(null, scale = 1);
+    }
     isBbcageDefault = false;
     bboxModels = null;
     bboxAtoms = null;
@@ -2681,7 +2688,7 @@ public class ModelSet extends BondCollection {
       return 0;
     if (mad == 0)
       mad = 1;
-    if (maxBondingRadius == PT.FLOAT_MIN_SAFE)
+    if (maxBondingRadius == JC.FLOAT_MIN_SAFE)
       findMaxRadii();
     double bondTolerance = vwr.getDouble(T.bondtolerance);
     double minBondDistance = vwr.getDouble(T.minbonddistance);
@@ -2812,7 +2819,7 @@ public class ModelSet extends BondCollection {
     if (mad == 0)
       mad = 1;
     // null values for bitsets means "all"
-    if (maxBondingRadius == PT.FLOAT_MIN_SAFE)
+    if (maxBondingRadius == JC.FLOAT_MIN_SAFE)
       findMaxRadii();
     double bondTolerance = vwr.getDouble(T.bondtolerance);
     double minBondDistance = vwr.getDouble(T.minbonddistance);
@@ -3648,26 +3655,47 @@ public class ModelSet extends BondCollection {
    * @param type
    *        volume, best, x, y, z, unitcell
    * @param bsAtoms
+   * @param points
+   *        optionally use points, as from $isosurface1, ignoring bsAtoms
    * @return quaternion for best rotation or, for volume, string with volume
    *         \t{dx dy dz}
    */
-  public Object getBoundBoxOrientation(int type, BS bsAtoms) {
+  public Object getBoundBoxOrientation(int type, BS bsAtoms, P3d[] points) {
     double dx = 0, dy = 0, dz = 0;
     Qd q = null, qBest = null;
     int j0 = bsAtoms.nextSetBit(0);
     double vMin = 0;
     if (j0 >= 0) {
-      int n = (vOrientations == null ? 0 : vOrientations.length);
-      if (n == 0) {
-        V3d[] av = new V3d[15 * 15 * 15];
-        n = 0;
+      if (vOrientations == null) {
+        int n = 0;
         P4d p4 = new P4d();
+
+        // TODO: develop an efficient trigonal simplex for minimizing the boundbox using a geodesic
+//        V3d z = V3d.new3(0, 0, 1);
+//        Geodesic.createGeodesic(4);
+//        n = Geodesic.getVertexCount(4);
+//        vOrientations = new Qd[1321];
+//        int p = 0;
+//        for (int i = n; --i >= 0;) {
+//          V3d v = Geodesic.getVertexVector(i);
+//          p4.set4(v.x, v.y, v.z, 0);
+//          q = Qd.newP4(p4);
+//          if (q.getThetaDirectedV(z) > 0) {
+//            System.out.println(p + " " + q.getThetaDirectedV(z) + " " + q);
+//            vOrientations[p++] = q;    
+//          }
+//        }
+        V3d[] av = new V3d[15 * 15 * 15];
         for (int i = -7; i <= 7; i++)
           for (int j = -7; j <= 7; j++)
             for (int k = 0; k <= 14; k++, n++)
               if ((av[n] = V3d.new3(i / 7d, j / 7d, k / 14d)).length() > 1)
                 --n;
         vOrientations = new Qd[n];
+        for (int i = n; --i >= 0;) {
+          p4.set4(av[i].x, av[i].y, av[i].z, 0);
+          vOrientations[i] = Qd.newP4(p4);
+        }
         for (int i = n; --i >= 0;) {
           double cos = Math.sqrt(1 - av[i].lengthSquared());
           if (Double.isNaN(cos))
@@ -3682,11 +3710,18 @@ public class ModelSet extends BondCollection {
       double v;
       BoxInfo b = new BoxInfo();
       b.setMargin(type == T.volume ? 0 : 0.1d);
-      for (int i = 0; i < n; i++) {
+      for (int i = vOrientations.length; --i >= 0;) {
         q = vOrientations[i];
         b.reset();
-        for (int j = j0; j >= 0; j = bsAtoms.nextSetBit(j + 1))
-          b.addBoundBoxPoint(q.transform2(at[j], pt));
+        if (points == null) {
+          for (int j = j0; j >= 0; j = bsAtoms.nextSetBit(j + 1)) {
+            T3d p = q.transform2(at[j], pt);
+            b.addBoundBoxPoint(p);
+          }
+        } else {
+          for (int j = points.length; --j >= 0;)
+            b.addBoundBoxPoint(q.transform2(points[j], pt));
+        }
         switch (type) {
         default:
         case T.volume:
@@ -3718,7 +3753,8 @@ public class ModelSet extends BondCollection {
         return qBest;
       case T.unitcell:
         P3d[] pts = bBest.getBoundBoxVertices();
-        pts = new P3d[] {pts[0], pts[BoxInfo.X], pts[BoxInfo.Y], pts[BoxInfo.Z]};
+        pts = new P3d[] { pts[0], pts[BoxInfo.X], pts[BoxInfo.Y],
+            pts[BoxInfo.Z] };
         qBest = qBest.inv();
         for (int i = 0; i < 4; i++) {
           qBest.transform2(pts[i], pts[i]);
@@ -3759,8 +3795,10 @@ public class ModelSet extends BondCollection {
         break;
       }
     }
-    return (type == T.volume ? vMin + "\t{" + dx + " " + dy + " " + dz + "}\t" + bsAtoms
-        : type == T.unitcell ? null : q == null || q.getTheta() == 0 ? new Qd() : q);
+    return (type == T.volume
+        ? vMin + "\t{" + dx + " " + dy + " " + dz + "}\t" + bsAtoms
+        : type == T.unitcell ? null
+            : q == null || q.getTheta() == 0 ? new Qd() : q);
   }
 
   public SymmetryInterface getUnitCellForAtom(int index) {
@@ -4442,6 +4480,24 @@ public class ModelSet extends BondCollection {
       bsSymmetry.or(bs);
       bsSymmetry.andNot(bsAU);
     }
+  }
+
+  public BS getConnectingAtoms(BS bsAtoms, BS bsFixed) {
+    BS bs = new BS();
+    BS bsAttached = new BS();
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      Atom a = at[i];
+      Bond[] bonds = a.bonds;
+      for (int k = 0, j = a.getBondCount(); --j >= 0;) {
+        if (bonds[j].isCovalent() && !bsAtoms.get(k = bonds[j].getOtherAtom(a).i)) {
+          bs.set(i);
+          bsAttached.set(k);
+        }
+      }
+    }
+    bsAtoms.or(bsAttached);
+    bsFixed.or(bsAttached);
+    return bs;
   }
 
 

@@ -313,7 +313,8 @@ public class MMCifReader extends CifReader {
     Map<Object, Integer> map = null;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       Atom a = atoms[i];
-      double pt = (a.vib == null ? a.sequenceNumber : a.vib.x);
+      // 2023.04.28 this should be just sequenceNumber, because we are reading _struct_conn.ptnr1_auth_asym_id
+      double pt = a.sequenceNumber;//(a.vib == null ? a.sequenceNumber : a.vib.x);
       if (pt != seqid) {
         seqid = pt;
         if (comp != null)
@@ -337,7 +338,7 @@ public class MMCifReader extends CifReader {
       comp = null;
       for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
         Atom a = atoms[i];
-        double pt = (a.vib == null ? a.sequenceNumber : a.vib.x);
+        double pt = a.sequenceNumber;//(a.vib == null ? a.sequenceNumber : a.vib.x);
         if (pt != seqid) {
           seqid = pt;
           String ckey = a.chainID + a.group3 + seqid;
@@ -1021,8 +1022,6 @@ public class MMCifReader extends CifReader {
   // bond data
   ////////////////////////////////////////////////////////////////
 
-  // _STRUCT_CONN is only processed in the presence of _CHEM_CONN (2015 updated cif from EBI)
-  
   final private static byte STRUCT_CONN_ASYM1 = 0;
   final private static byte STRUCT_CONN_SEQ1  = 1;
   final private static byte STRUCT_CONN_COMP1 = 2;

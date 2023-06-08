@@ -210,10 +210,8 @@ public class Geodesic {
     return faceVertexesArrays[level];
   }
 
-  ////////////// private methods ///////////////
-  
   synchronized public static void createGeodesic(int lvl) {
-    if (lvl < currentLevel)
+    if (lvl <= currentLevel)
       return;
     currentLevel = lvl;
     // from getVertexCount()
@@ -224,10 +222,10 @@ public class Geodesic {
     vertexVectors = new V3d[12];
     vertexVectors[0] = V3d.new3(0, 0, halfRoot5);
     for (int i = 0; i < 5; ++i) {
-      vertexVectors[i + 1] = V3d.new3((double) Math.cos(i * oneFifth),
-          (double) Math.sin(i * oneFifth), 0.5d);
-      vertexVectors[i + 6] = V3d.new3((double) Math.cos(i * oneFifth
-          + oneTenth), (double) Math.sin(i * oneFifth + oneTenth), -0.5d);
+      vertexVectors[i + 1] = V3d.new3(Math.cos(i * oneFifth),
+          Math.sin(i * oneFifth), 0.5d);
+      vertexVectors[i + 6] = V3d.new3(Math.cos(i * oneFifth
+          + oneTenth), Math.sin(i * oneFifth + oneTenth), -0.5d);
     }
     vertexVectors[11] = V3d.new3(0, 0, -halfRoot5);
     for (int i = 12; --i >= 0;)

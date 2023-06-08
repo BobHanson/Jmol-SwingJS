@@ -144,7 +144,7 @@ public class Modulation {
       if (a2 != 0)
         v += a2 * Math.cos(theta);
       if (Logger.debuggingHigh)
-        Logger.info("MOD " + ms.id + " " + Escape.e(qCoefs) + " axis=" + axis
+        Logger.info("MOD " + ms.id + " " + t[0][0] + " " + Escape.e(qCoefs) + " axis=" + axis
             + " v=" + v + " csin,ccos=" + a1 + "," + a2 + " / theta=" + theta);
       break;
     case TYPE_U_LEGENDRE:

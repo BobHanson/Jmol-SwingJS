@@ -2235,7 +2235,7 @@ public class TransformManager {
   }
 
   public void setVibrationT(double t) {
-    vibrationT.x = t;
+    vibrationT.x = vibrationT.y = vibrationT.z = t;
     if (vibrationScale == 0)
       vibrationScale = vwr.g.vibrationScale;
   }
@@ -2251,12 +2251,12 @@ public class TransformManager {
         vibrationThread = null;
       }
       this.vibrationOn = false;
-      vibrationT.x = 0;
+      vibrationT.x = vibrationT.y = vibrationT.z = 0;
       return;
     }
     if (vwr.ms.mc < 1) {
       this.vibrationOn = false;
-      vibrationT.x = 0;
+      vibrationT.x = vibrationT.y = vibrationT.z = 0;
       return;
     }
     if (vibrationThread == null) {

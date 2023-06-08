@@ -146,7 +146,7 @@ abstract public class ForceField {
     calc.setPreliminary(stepMax > 0);
     e0 = energyFull(false, false);
     s = PT.sprintf(" Initial " + name + " E = %10.3f " + minimizer.units + "/mol criterion = %8.6f max steps = " + stepMax, 
-        "ff", new Object[] {Double.valueOf(toUserUnits(e0)), Double.valueOf(toUserUnits(criterion)) });
+        "dd", new Object[] {Double.valueOf(toUserUnits(e0)), Double.valueOf(toUserUnits(criterion)) });
     minimizer.report(s, false);
     calc.appendLogData(s);
   }

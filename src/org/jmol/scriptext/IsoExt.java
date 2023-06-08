@@ -351,6 +351,15 @@ public class IsoExt extends ScriptExt {
             case T.plane:
             case T.line:
               break;
+            case T.dollarsign:
+              Object[] data = new Object[] { eval.objectNameParameter(i + 3), null };
+              if (chk)
+                return;
+              vwr.shm.getShapePropertyData(JC.SHAPE_ISOSURFACE, "points", data);
+              pts = (P3d[]) data[1];
+              if (pts == null)
+                invArg();
+              i+= 2;
             default:
               isBest = true;
               i++;
@@ -386,12 +395,12 @@ public class IsoExt extends ScriptExt {
         if (bs != null) {
           if (isBest) {
             uc = vwr.getSymTemp().getUnitCell(
-                (P3d[]) vwr.getOrientation(T.unitcell, "array", bs), false,
+                (P3d[]) vwr.getOrientation(T.unitcell, "array", bs, null), false,
                 null);
           }
         } else if (isBest) {
           uc = vwr.getSymTemp().getUnitCell(
-              (P3d[]) vwr.getOrientation(T.unitcell, "array", null), false,
+              (P3d[]) vwr.getOrientation(T.unitcell, "array", null, pts), false,
               null);
         } else if (tok == T.unitcell && uc == null) {
           uc = vwr.getCurrentUnitCell();

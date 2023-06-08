@@ -25,14 +25,15 @@
 package org.jmol.modelsetbio;
 
 import java.util.Arrays;
-
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
-
-import javajs.util.BS;
+import org.jmol.api.JmolAdapter;
+import org.jmol.api.JmolAdapterAtomIterator;
+import org.jmol.api.JmolAdapterStructureIterator;
+import org.jmol.c.STR;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
@@ -46,20 +47,17 @@ import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Logger;
-
-import javajs.util.AU;
-import javajs.util.MeasureD;
-import javajs.util.PT;
-import javajs.util.SB;
-import javajs.util.P3d;
-import javajs.util.P4d;
-import javajs.util.V3d;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
-import org.jmol.api.JmolAdapter;
-import org.jmol.api.JmolAdapterAtomIterator;
-import org.jmol.api.JmolAdapterStructureIterator;
-import org.jmol.c.STR;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.P4d;
+import javajs.util.PT;
+import javajs.util.SB;
+import javajs.util.V3d;
 
 /**
  * a class used by ModelLoader to handle all loading
@@ -89,15 +87,15 @@ public final class BioResolver implements Comparator<String[]> {
   private ModelSet ms;
 
   private BS bsAddedMask;
-  private int lastSetH = Integer.MIN_VALUE;
-  private int maxSerial = 0;
+//  private int lastSetH = Integer.MIN_VALUE;
+  //private int maxSerial = 0;
   private boolean haveHsAlready;
 
   public BioResolver setLoader(ModelLoader modelLoader) {
     ml = modelLoader;
     bsAddedMask = null;
-    lastSetH = Integer.MIN_VALUE;
-    maxSerial = 0;
+//    lastSetH = Integer.MIN_VALUE;
+    //maxSerial = 0;
     haveHsAlready = false;
     if (modelLoader == null) {
       ms = null;
@@ -691,12 +689,12 @@ public final class BioResolver implements Comparator<String[]> {
     if (!bsAddedHydrogens.get(iAtom))
       return;
     Atom[] atoms = ms.at;
-    if (lastSetH == Integer.MIN_VALUE || atoms[iAtom].mi != atoms[lastSetH].mi) 
-      maxSerial = ((int[]) ms.getInfo(atoms[lastSetH = iAtom].mi, "PDB_CONECT_firstAtom_count_max"))[2];
+//    if (lastSetH == Integer.MIN_VALUE || atoms[iAtom].mi != atoms[lastSetH].mi) 
+//      maxSerial = ((int[]) ms.getInfo(atoms[lastSetH = iAtom].mi, "PDB_CONECT_firstAtom_count_max"))[2];
     bsAddedHydrogens.clear(iAtom);
     ms.setAtomName(iAtom, name, false);
     atoms[iAtom].setT(pt);
-    ms.setAtomNumber(iAtom, ++maxSerial, false);
+//2023.04.08 error -- maxSerial is for groups, not atoms    ms.setAtomNumber(iAtom, ++maxSerial, false);
     atoms[iAtom].atomSymmetry = atoms[iTo].atomSymmetry;
     ml.undeleteAtom(iAtom);
 

@@ -3232,7 +3232,7 @@ public class MathExt {
       } else {
         String s = SV.sValue(args[0]);
         Object v = Escape.uP(s.equalsIgnoreCase("best")
-            ? vwr.getOrientation(T.best, "best", null).toString()
+            ? vwr.getOrientation(T.best, "best", null, null).toString()
             : s);
         if (!(v instanceof P4d))
           return false;

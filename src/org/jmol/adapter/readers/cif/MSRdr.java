@@ -1,6 +1,5 @@
 package org.jmol.adapter.readers.cif;
 
-//import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -31,7 +30,7 @@ import javajs.util.T3d;
 /**
  * generalized modulated structure reader class for CIF and Jana
  * 
- * -- includes Fourier, Crenel, Sawtooth; displacement, occupancy, and Uij
+ * -- includes Fourier, Crenel, Sawtooth, Legendre; displacement, occupancy, and Uij
  * 
  * -- handles up to 6 modulation wave vectors
  * 
@@ -64,6 +63,7 @@ import javajs.util.T3d;
 //
 //    n=0 is Crenel, 
 //    n>0 is a specific Fourier or cell wave index, (W_1, F_1, F_2, etc.)
+//    L indicates Legendre (D_L)
 //    S indicates displacement sawtooth (D_S)
 //    T indicates magnetic moment sawtooth (M_T)
 //    "_coefs" used only in F_1_coefs_ indicates coefficients of W_i for a Fourier vector 
@@ -145,8 +145,8 @@ import javajs.util.T3d;
 //  Bi 1 ? ? -0.082(2) -0.208(2)
 //  Bi 2 ? ? -0.098(3) -0.116(3)
 
-//O_1#0;Bi@0 [-0.0820000022649765,-0.20800000429153442,0.0]
-//O_2#0;Bi@0 [-0.09799999743700027,-0.11600000411272049,0.0]
+//O_id1#0;Bi@0 [-0.0820000022649765,-0.20800000429153442,0.0]
+//O_id2#0;Bi@0 [-0.09799999743700027,-0.11600000411272049,0.0]
 
 //  loop_
 //  _atom_site_U_Fourier_atom_site_label
@@ -602,7 +602,7 @@ public class MSRdr implements MSInterface {
           p[i] = params[i];
         double[] qcoefs = getQCoefs(key);
         if (qcoefs == null) {
-          System.err.println("Missing cell wave vector for atom wave vector for " + key + " "
+          System.err.println("MSRdr missing cell wave vector for atom wave vector for " + key + " "
                   + Escape.e(params));
           break;
         }
@@ -623,7 +623,7 @@ public class MSRdr implements MSInterface {
       double[] pt = htModulation.get(key);
       if (pt != null) {
         // look for corresponding crenel so that we can combine them.
-        String key1 = "O_0#0" + key.substring(key.indexOf(";"));
+        String key1 = "O_id0#0" + key.substring(key.indexOf(";"));
         double[] pt1 = htModulation.get(key1);
         if (pt1 == null) {
           Logger.error("Crenel " + key1 + " not found for legendre modulation " + key);
@@ -649,8 +649,10 @@ public class MSRdr implements MSInterface {
 
   @Override
   public double[] getQCoefs(String key) {
-    int fn = Math.max(0, cr.parseIntAt(key, 2));        
+    // adds "id"
+    int fn = Math.max(0, cr.parseIntAt(key, 4));        
     if (fn == 0) {
+      System.err.println("MSRdr missing cell wave vector for atom wave vector for " + key);
       if (qlist100 == null) {
         // BH 2023.03.15 qlist100 was not being nulled between structures
         // see z034DL74QTM.cif
@@ -663,7 +665,7 @@ public class MSRdr implements MSInterface {
     // it is not clear that anything puts it after it, but leaving that as an option.
     double[] p = getMod("F_" + fn + "_coefs_");
     if (p == null) {
-      p = getMod("F_coefs_" + fn);
+      p = getMod("F_coefs_id" + fn);
     }
     return p;
   }

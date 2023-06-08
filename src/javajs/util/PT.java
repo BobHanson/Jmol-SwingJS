@@ -3,6 +3,9 @@
  * $Date: 2007-04-26 16:57:51 -0500 (Thu, 26 Apr 2007) $
  * $Revision: 7502 $
  *
+ * Some portions of this file have been modified by Robert Hanson hansonr.at.stolaf.edu 2012-2017
+ * for use in SwingJS via transpilation into JavaScript using Java2Script.
+ *
  * Copyright (C) 2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -27,8 +30,8 @@ package javajs.util;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import javajs.api.JSONEncodable;
 
@@ -52,7 +55,7 @@ public class PT {
     return parseIntChecked(str, cch, next);
   }
 
-  private static int parseIntChecked(String str, int ichMax, int[] next) {
+  public static int parseIntChecked(String str, int ichMax, int[] next) {
     boolean digitSeen = false;
     int value = 0;
     int ich = next[0];
@@ -84,8 +87,8 @@ public class PT {
     return (ich >= 0 && ((ch = str.charAt(ich)) == ' ' || ch == '\t' || ch == '\n'));
   }
 
-  public final static double[] tensScale = { 10d, 100d, 1000d, 10000d, 100000d, 1000000d };
-  public final static double[] decimalScaleD = { 
+  private final static double[] tensScaleD = { 10d, 100d, 1000d, 10000d, 100000d, 1000000d };
+  private final static double[] decimalScaleD = { 
   0.1d, 
   0.01d, 
   0.001d, 
@@ -269,11 +272,6 @@ public class PT {
     lines[pt] = text.substring(i, len);
     return lines;
   }
-
-  /**
-   * was a minimum for float as double, but now just Double.MIN_VALUE
-   */
-  public final static double FLOAT_MIN_SAFE = Double.MIN_VALUE; // was 2E-45f; 
 
   public static String getQuotedStringAt(String line, int ipt0) {
     int[] next = new int[] { ipt0 };
@@ -598,9 +596,10 @@ public class PT {
 				sb.append("[");
 				int n = AU.getLength(info);
 				Object o = null;
-        /** @j2sNative 
-         *  o = info[0];
-         *  typeof o != "number" && typeof 0 != "boolean" && (o = null);
+        /** 
+         * @j2sNative 
+         * o = info[0];
+         * typeof o != "number" && typeof 0 != "boolean" && (o = null);
          */
         {}
         if (o != null) {
@@ -953,7 +952,7 @@ public class PT {
    * @param strFormat   .... %width.precisionKEY....
    * @param key      any string to match
    * @param strT     replacement string or null
-   * @param floatT   replacement double or Double.NaN
+   * @param floatT   replacement float or Float.NaN
    * @param doubleT  replacement double or Double.NaN -- for exponential
    * @param doOne    mimic sprintf    
    * @return         formatted string
@@ -1023,7 +1022,7 @@ public class PT {
           continue;
         }
         ich += len;
-        if (!Double.isNaN(floatT)) // 'f'
+        if (!Float.isNaN(floatT)) // 'f'
           strLabel += formatD(floatT, width,  (st.equals("f") || st.equals("p") ? precision : -1 - precision), alignLeft,
               zeroPad);
         else if (strT != null)  // 'd' 'i' or 's'
@@ -1107,6 +1106,7 @@ public class PT {
             break;
           case 'p':
           case 'P':
+        	  // here PT for Jmol-SwingJS differs in that T3 is not a supported class
             {
               T3d pVal = (T3d) values[o];
               strFormat = formatString(strFormat, (c == 'p' ? "p" : "P"), null, Float.NaN, pVal.x, true);
@@ -1115,6 +1115,7 @@ public class PT {
             }
             break;
           case 'q':
+        	  // T4 is not supported in Jmol-SwingJS
             {
               T4d qVal = (T4d) values[o];
               strFormat = formatString(strFormat, "q", null, Float.NaN, qVal.x, true);
@@ -1130,9 +1131,15 @@ public class PT {
               strFormat = formatString(strFormat, "s", sVal[i], Float.NaN, Double.NaN, true);
             break;
           case 'F':
-            float[] fVal = (float[]) values[o];
-            for (int i = 0; i < fVal.length; i++)
-              strFormat = formatString(strFormat, "f", null, fVal[i], Double.NaN, true);
+            if (values[o] instanceof double[]) {
+              double[] dVal = (double[]) values[o];
+              for (int i = 0; i < dVal.length; i++)
+                strFormat = formatString(strFormat, "f", null, Float.NaN, dVal[i], true);
+            } else {
+              float[] fVal = (float[]) values[o];
+              for (int i = 0; i < fVal.length; i++)
+                strFormat = formatString(strFormat, "f", null, Float.NaN, fVal[i], true);
+            }
             break;
           case 'I':
             int[] iVal = (int[]) values[o];
@@ -1190,7 +1197,7 @@ public class PT {
 
   /**
    * 
-   * fdup      duplicates p or q formats for formatCheck
+   *  duplicates p or q formats for formatCheck
    *           and the format() function.
    * 
    * @param f
@@ -1376,8 +1383,8 @@ public class PT {
        int exponent = parseIntChecked(str, ichMax, next);
        if (exponent == Integer.MIN_VALUE)
          return Double.NaN;
-       if (exponent > 0 && exponent <= tensScale.length)
-         value *= tensScale[exponent - 1];
+       if (exponent > 0 && exponent <= tensScaleD.length)
+         value *= tensScaleD[exponent - 1];
        else if (exponent < 0 && -exponent <= decimalScaleD.length)
          value *= decimalScaleD[-exponent - 1];
        else if (exponent != 0)
@@ -1410,6 +1417,7 @@ public class PT {
   }
 
   public static double parseDoubleStrict(String str) {
+	    // checks trailing characters and does not allow "1E35" to be float
     int cch = str.length();
     if (cch == 0)
       return Double.NaN;

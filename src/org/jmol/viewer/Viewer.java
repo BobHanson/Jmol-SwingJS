@@ -1802,7 +1802,8 @@ public class Viewer extends JmolViewer
   public void reset(boolean includingSpin) {
     // Eval.reset()
     // initializeModel
-    ms.calcBoundBoxDimensions(null, 1);
+    ms.setBoundBox(null, null, true, 0);
+//    ms.calcBoundBoxDimensions(null, 1);
     axesAreTainted = true;
     tm.homePosition(includingSpin);
     if (ms.setCrystallographicDefaults())
@@ -2202,7 +2203,7 @@ public class Viewer extends JmolViewer
    * @param bs
    * @return String or Quat or P3[]
    */
-  public Object getOrientation(int type, String name, BS bs) {
+  public Object getOrientation(int type, String name, BS bs, P3d[] points) {
     switch (type) {
     case T.volume:
     case T.unitcell:
@@ -2216,7 +2217,7 @@ public class Viewer extends JmolViewer
       if (bs.isEmpty())
         return (type == T.volume ? "0"
             : type == T.unitcell || type == T.best ? null : new Qd());
-      Object q = ms.getBoundBoxOrientation(type, bs);
+      Object q = ms.getBoundBoxOrientation(type, bs, points);
       return (name == "best" && type != T.volume
           ? ((Qd) q).div(tm.getRotationQ())
           : q);
@@ -3331,10 +3332,10 @@ public class Viewer extends JmolViewer
             stereo.and(bsNew);
             if (stereo.nextSetBit(0) >= 0) {
               bsNew.or(
-                  addHydrogens(stereo, MIN_NO_RANGE | MIN_SILENT | MIN_QUICK));
+                  addHydrogens(stereo, MIN_SELECT_ONLY | MIN_SILENT | MIN_QUICK));
             }
             minimize(eval, Integer.MAX_VALUE, 0, bsNew, null, 0,
-                MIN_ADDH | MIN_NO_RANGE | MIN_SILENT | MIN_QUICK | MIN_XX);
+                MIN_ADDH | MIN_SELECT_ONLY | MIN_SILENT | MIN_QUICK | MIN_XX);
           } catch (Exception e) {
           }
         } else {
@@ -4753,9 +4754,14 @@ public class Viewer extends JmolViewer
 
   @Override
   public String evalFile(String strFilename) {
+    return evalFileArgs(strFilename, null);
+  }
+
+  @Override
+  public String evalFileArgs(String strFilename, String args) {
     // from JmolApp and test suite only
     return (allowScripting && getScriptManager() != null
-        ? scm.evalFile(strFilename)
+        ? scm.evalFileArgs(strFilename, args)
         : null);
   }
 
@@ -9220,14 +9226,17 @@ public class Viewer extends JmolViewer
   }
 
   public static final int MIN_SILENT = 1;
-  public static final int MIN_HAVE_FIXED = 2;
-  public static final int MIN_QUICK = 4;
-  public static final int MIN_ADDH = 8;
-  public static final int MIN_NO_RANGE = 16;
-  public static final int MIN_XX = 32;
+  public static final int MIN_SELECTED = 2;
+  public static final int MIN_HAVE_FIXED = 4;
+  public static final int MIN_QUICK = 8;
+  public static final int MIN_ADDH = 16;
+  public static final int MIN_SELECT_ONLY = 32;
+  public static final int MIN_GROUP_SELECT = 64;
+  public static final int MIN_XX = 128;
 
   /**
-   * 
+   * From the MINIMIZE command and other sources. 
+   *  
    * @param eval
    * @param steps
    *        Integer.MAX_VALUE --> use defaults
@@ -9243,55 +9252,81 @@ public class Viewer extends JmolViewer
                        BS bsSelected, BS bsFixed, double rangeFixed, int flags)
       throws Exception {
 
-    boolean isSilent = (flags & MIN_SILENT) == MIN_SILENT;
-    boolean isQuick = (flags & MIN_QUICK) == MIN_QUICK;
-    boolean hasRange = (flags & MIN_NO_RANGE) == 0;
-    boolean addHydrogen = (flags & MIN_ADDH) == MIN_ADDH;
+    boolean addHydrogen = (flags & MIN_ADDH) != 0;
+    boolean isSilent = (flags & MIN_SILENT) != 0;
+    boolean isQuick = (flags & MIN_QUICK) != 0;
+
+    boolean groupSelected = (flags & MIN_GROUP_SELECT) != 0; // SELECTED GROUP
+    boolean selectedOnly = groupSelected || (flags & MIN_SELECT_ONLY) != 0; // SELECTED ONLY or no SELECTED or SELECTED GROUP
+    boolean isSelectionExplicit = (bsSelected != null);  // could be MINIMIZE or MINIMIZESELECTED
+    boolean isFixExplicit = (bsFixed != null); // MINIMIZE FIX
+
     // We only work on atoms that are in frame
 
     // only allow crystal symmetry constraints 
     if (isModelKitOpen())
       setModelkitPropertySafely("constraint", null);
     String ff = g.forceField;
+    
     BS bsInFrame = getFrameAtoms();
-    if (bsSelected == null)
-      bsSelected = getThisModelAtoms();
+
+    // When the SELECT option is given without ONLY or FIX, 
+    // we go ahead and fix whatever is not selected and then make selected ALL
+
+    if (!isQuick && !addHydrogen && isSelectionExplicit && !isFixExplicit && !selectedOnly) {
+      BS bs = BSUtil.copy(bsInFrame);
+      bsFixed = BSUtil.copy(bs);
+      bsFixed.andNot(bsSelected);
+      bsSelected = bs;      
+      isFixExplicit = true;
+    }
+    
+    if (!isSelectionExplicit)
+      bsSelected = getThisModelAtoms(); // first model only
     else if (!isQuick)
       bsSelected.and(bsInFrame);
-
     if (bsSelected.isEmpty())
       return;
+    BS bsBasis;
+    if (isSelectionExplicit) {
+      flags |= MIN_SELECTED;
+      bsBasis = null;
+    } else {
+      bsBasis = ms.am[ms.at[bsSelected.nextSetBit(0)].mi].bsAsymmetricUnit;
+    }
 
-    BS bsBasis = ms.am[ms.at[bsSelected.nextSetBit(0)].mi].bsAsymmetricUnit;
     if (bsBasis != null) {
       bsSelected = getAtomBitSet("cell=555");
     }
 
     if (!bsSelected.isEmpty())
-      getModelForAtomIndex(bsSelected.nextSetBit(0)).auxiliaryInfo.put("dimension", "3D");
+      getModelForAtomIndex(bsSelected.nextSetBit(0)).auxiliaryInfo
+          .put("dimension", "3D");
     if (isQuick) {
       bsInFrame = bsSelected;
     }
-
-    if (rangeFixed <= 0)
-      rangeFixed = JC.MINIMIZE_FIXED_RANGE;
 
     // we allow for a set of atoms to be fixed, 
     // but that is only used by default
 
     BS bsMotionFixed = BSUtil
-        .copy(bsFixed == null ? slm.getMotionFixedAtoms() : bsFixed);
-    boolean haveFixed = (!bsMotionFixed.isEmpty());
+        .copy(isFixExplicit ? bsFixed : slm.getMotionFixedAtoms());
+    boolean haveFixed = !bsMotionFixed.isEmpty();
     if (haveFixed)
       bsSelected.andNot(bsMotionFixed);
 
-    // We always fix any atoms that
-    // are in the visible frame set and are within 5 angstroms
+    // If there is an asymmetric unit basis, set nearby atoms to all atoms in the model.
+    // If there are no fixed atoms from symmetry and "only" has not been used with "select",
+    // fix any atoms that are in the visible frame set 
+    // and are within 5 angstroms
     // and are not already selected
+    // unless we have explicitly said "only"
 
     BS bsNearby = (bsBasis != null ? getThisModelAtoms()
-        : hasRange && !haveFixed ? new BS()
-            : ms.getAtomsWithinRadius(rangeFixed, bsSelected, true, null, null));
+        : selectedOnly || !haveFixed ? new BS()
+            : ms.getAtomsWithinRadius(
+                (rangeFixed <= 0 ? JC.MINIMIZE_FIXED_RANGE : rangeFixed),
+                bsSelected, true, null, null));
     bsNearby.andNot(bsSelected);
     if (haveFixed) {
       bsMotionFixed.and(bsNearby);
@@ -9299,6 +9334,7 @@ public class Viewer extends JmolViewer
       bsMotionFixed = bsNearby;
     }
     bsMotionFixed.and(bsInFrame);
+    
     flags |= ((haveFixed ? MIN_HAVE_FIXED : 0)
         | (getBooleanProperty("minimizationSilent") ? MIN_SILENT : 0));
     if (isQuick && getBoolean(T.testflag2))
@@ -9332,6 +9368,11 @@ public class Viewer extends JmolViewer
               + "); use 'set minimizationMaxAtoms' to increase this limit",
           "minimization: too many atoms");
       return;
+    }
+    if (groupSelected) {
+      BS bs = ms.getConnectingAtoms(bsSelected, bsMotionFixed);
+      bsSelected.andNot(bs);
+      bsMotionFixed.or(bs);
     }
     try {
 
