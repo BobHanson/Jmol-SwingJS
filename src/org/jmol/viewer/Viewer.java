@@ -5757,6 +5757,8 @@ public class Viewer extends JmolViewer
       return g.labelPointerWidth;
     case T.meshscale:
       return g.meshScale;
+    case T.minimizationreportsteps:
+      return g.minimizationReportSteps;
     case T.minpixelselradius:
       return g.minPixelSelRadius;
     case T.percentvdwatom:
@@ -6599,6 +6601,10 @@ public class Viewer extends JmolViewer
 //    case T.pointgroupmaxatoms:
 //      g.pointGroupMaxAtoms = value;
 //      break;
+    case T.minimizationreportsteps:
+        // 16.1.15 and 16.1.16
+        g.minimizationReportSteps = Math.min(Math.max(value, 1), 20);
+      break;
     case T.undomax:
       // 14.32.25
       stm.setUndoMax(value);

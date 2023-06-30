@@ -94,6 +94,7 @@ abstract public class ForceField {
 
   
   Minimizer minimizer;
+  private int nth = 10;
 
   abstract public void clear();
   abstract public boolean setModel(BS bsElements, int elemnoMax) throws JmolAsyncException;
@@ -190,7 +191,7 @@ abstract public class ForceField {
       // where symmetry may impose restrictions on where
       // an atom is allowed to reside, dE may be positive for some steps.
       
-      if (done || currentStep % 10 == 0 || stepMax <= currentStep) {
+      if (done || currentStep % nth == 0 || stepMax <= currentStep) {
         String s = PT.sprintf(name + " Step %-4d E = %10.6f    dE = %8.6f ",
             "Fi", new Object[] {new double[] { toUserUnits(e1), toUserUnits(dE) },
             Integer.valueOf(currentStep) });
@@ -511,4 +512,7 @@ abstract public class ForceField {
     e0 = energyFull(false, false);
   }
 
+  public void setNth(int n) {
+    nth = n;
+  }
 }

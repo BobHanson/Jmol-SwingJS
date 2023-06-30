@@ -77,6 +77,7 @@ public class GlobalSettings {
       legacyAutoBonding = g.legacyAutoBonding;
       legacyHAddition = g.legacyHAddition;
       legacyJavaFloat = g.legacyJavaFloat;
+      minimizationReportSteps = g.minimizationReportSteps;
       doublePrecision = g.doublePrecision;
       bondingVersion = g.bondingVersion;
       platformSpeed = g.platformSpeed;
@@ -316,6 +317,7 @@ public class GlobalSettings {
     setB("messageStyleChime", messageStyleChime);
     setF("minBondDistance", minBondDistance);
     setI("minPixelSelRadius", minPixelSelRadius);
+    setI("minimizationReportSteps", minimizationReportSteps);
     setI("minimizationSteps", minimizationSteps);
     setB("minimizationRefresh", minimizationRefresh);
     setB("minimizationSilent", minimizationSilent);
@@ -345,7 +347,6 @@ public class GlobalSettings {
     setI("platformSpeed", platformSpeed);
     setF("pointGroupLinearTolerance", pointGroupLinearTolerance);
     setF("pointGroupDistanceTolerance", pointGroupDistanceTolerance);
-//    setI("pointGroupMaxAtoms", pointGroupMaxAtoms);
     setB("preserveState", preserveState);
     setO("propertyColorScheme", propertyColorScheme);
     setO("quaternionFrame", quaternionFrame);
@@ -484,7 +485,6 @@ public class GlobalSettings {
   boolean pdbSequential = false; // true for no bonding check
   int percentVdwAtom = JC.DEFAULT_PERCENT_VDW_ATOM;
   int smallMoleculeMaxAtoms = 40000;
-  int minimizationMaxAtoms = 200;
   boolean smartAromatic = true;
   boolean zeroBasedXyzRasmol = false;
   boolean legacyAutoBonding = false;
@@ -522,6 +522,8 @@ public class GlobalSettings {
   boolean minimizationRefresh = true;
   boolean minimizationSilent = false;
   double minimizationCriterion = 0.001;
+  int minimizationMaxAtoms = 200;
+  int minimizationReportSteps = 10;
 
   //rendering
 
@@ -998,7 +1000,7 @@ public class GlobalSettings {
       + ";selecthetero;selecthydrogen"
       // removed in Jmol 14.32.68
       + ";pointgrouplineartolerance;pointgroupdistancetolerance"//;pointgroupmmaxatoms"
-      + ";")
+      + ";minimizationreportsteps;")
       .toLowerCase();
 
   Object getAllVariables() {

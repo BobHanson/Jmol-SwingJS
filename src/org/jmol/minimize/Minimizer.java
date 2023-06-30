@@ -558,6 +558,7 @@ public class Minimizer {
         vwr.setStringProperty("_minimizationForceField", ff);
     }
     report(" forcefield is " + ff, false);
+    pFF.setNth(vwr.getInt(T.minimizationreportsteps));
     return pFF;
   }
   

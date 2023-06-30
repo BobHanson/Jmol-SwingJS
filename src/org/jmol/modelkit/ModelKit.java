@@ -86,10 +86,12 @@ public class ModelKit {
     public final static int TYPE_PLANE    = 5;
     public final static int TYPE_LOCKED   = 6;
     public final static int TYPE_GENERAL  = 7;
-//    public final static int TYPE_SYMMETRY = 8;
+    public final static int TYPE_LATTICE_FACE = 8;
+    public final static int TYPE_LATTICE_EDGE = 9;
+    public final static int TYPE_LATTICE_POINT = 10;
 
     int type;
-    
+
     private P3d pt;
     private P3d offset;
     private P4d plane;
@@ -112,6 +114,7 @@ public class ModelKit {
         unitVector = V3d.newV((T3d) params[1]);
         unitVector.normalize();
         break;
+      case TYPE_LATTICE_FACE:
       case TYPE_PLANE:
         plane = (P4d) params[0];
         break;
@@ -151,8 +154,10 @@ public class ModelKit {
       case TYPE_GENERAL:
         return;
       case TYPE_LOCKED:
+      case TYPE_LATTICE_POINT:
         ptNew.x = Double.NaN;
         return;
+      case TYPE_LATTICE_EDGE:
       case TYPE_VECTOR:
         if (pt == null) { // generic constraint 
           d = MeasureD.projectOntoAxis(p, offset, unitVector, v);
@@ -163,6 +168,7 @@ public class ModelKit {
         }
         d = MeasureD.projectOntoAxis(ptNew, offset, unitVector, v);        
         break;
+      case TYPE_LATTICE_FACE:
       case TYPE_PLANE:
         if (pt == null) { // generic constraint 
           if (Math.abs(MeasureD.getPlaneProjection(p, plane, v, v)) > 0.01f) {
@@ -748,7 +754,7 @@ public class ModelKit {
         P3d atom = vwr.ms.getAtom(iatom);
         return (atom == null ? null
             : vwr.getSymmetryInfo(iatom, null, -1, null, atom, atom, T.array,
-                null, 0, 0, 0));
+                null, 0, 0, 0, null));
       }
 
       if (key == "distance") {
@@ -1205,7 +1211,8 @@ public class ModelKit {
 
     BS bs = new BS();
     boolean wasH = (atom.getElementNumber() == 1);
-    int atomicNumber = ("PlMiX".indexOf(type) >= 0 ? -1 : type.equals("Xx") ? 0 : PT.isUpperCase(type.charAt(0))
+    // added P as first char here allows setpicking assignatom_P to work
+    int atomicNumber = ("PPlMiX".indexOf(type) > 0 ? -1 : type.equals("Xx") ? 0 : PT.isUpperCase(type.charAt(0))
         ? Elements.elementNumberFromSymbol(type, true)
         : -1);
 
@@ -1828,7 +1835,7 @@ public class ModelKit {
         if (isClick) {
           setProperty("rotateBondIndex", Integer.valueOf(-1));
         }
-        getConstraint(null, atomIndex, GET_DELETE);
+        setConstraint(null, atomIndex, GET_DELETE);
       }
       if (pt == null && points == null) {
         // no new position
@@ -2313,7 +2320,7 @@ public class ModelKit {
       // check for locked atoms
       BS bseq = vwr.ms.getSymmetryEquivAtoms(bs);
       SymmetryInterface sg = vwr.getCurrentUnitCell();
-      if (getConstraint(sg, bseq.nextSetBit(0), GET_CREATE).type == Constraint.TYPE_LOCKED) {
+      if (setConstraint(sg, bseq.nextSetBit(0), GET_CREATE).type == Constraint.TYPE_LOCKED) {
         return 0;
       }
       if (bsFixed != null)
@@ -2418,7 +2425,7 @@ public class ModelKit {
   }
   
   public boolean hasConstraint(int iatom, boolean ignoreGeneral, boolean addNew) {
-    Constraint c = getConstraint(vwr.getOperativeSymmetry(), iatom, addNew ? GET_CREATE : GET); 
+    Constraint c = setConstraint(vwr.getOperativeSymmetry(), iatom, addNew ? GET_CREATE : GET); 
     return (c != null && (!ignoreGeneral || c.type != Constraint.TYPE_GENERAL));
   }
 
@@ -2441,7 +2448,7 @@ public class ModelKit {
     Atom a = vwr.ms.at[iatom];
     Constraint c = constraint;
     if (c == null) {
-      c = getConstraint(sym, iatom, GET_CREATE);
+      c = setConstraint(sym, iatom, GET_CREATE);
       if (c.type == Constraint.TYPE_LOCKED) {
         iatom = -1;
       } else {
@@ -2480,6 +2487,9 @@ public class ModelKit {
 
   private Constraint[] atomConstraints;
   
+  private BS atomLatticeConstraints;
+  private Constraint[] latticeConstraints = new Constraint[6];
+  
   private static int GET = 0;
   private static int GET_CREATE = 1;
   private static int GET_DELETE = 2;
@@ -2493,7 +2503,7 @@ public class ModelKit {
    *        GET, GET_CREATE, or GET_DELETE
    * @return a Constraint, or possibly null if not createNew
    */
-  private Constraint getConstraint(SymmetryInterface sym, int ia, int mode) {
+  private Constraint setConstraint(SymmetryInterface sym, int ia, int mode) {
     if (ia < 0)
       return null;
     Atom a = vwr.ms.getBasisAtom(ia);
@@ -2524,7 +2534,7 @@ public class ModelKit {
     for (int i = ops.length; --i >= 0;) {
       Object[] line2 = null;
       Object c = sym.getSymmetryInfoAtom(vwr.ms, iatom, null, ops[i], null, a,
-          null, "invariant", T.array, 0, -1, 0);
+          null, "invariant", T.array, 0, -1, 0, null);
       if (c instanceof String) {
         // this would be a translation
         return locked;
@@ -2597,13 +2607,31 @@ public class ModelKit {
     return atomConstraints[iatom] = c;
   }
 
+  private static int FACE_AB0 = 0;
+  private static int FACE_BC0 = 1;
+  private static int FACE_CA0 = 2;
+  private static int FACE_AB1 = 3;
+  private static int FACE_BC1 = 4;
+  private static int FACE_CA1 = 5;
+  
+  private void setLatticeConstraints() {
+    if (latticeConstraints[0] != null)
+      return;
+    latticeConstraints[FACE_AB0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 0, 1, 0)});
+    latticeConstraints[FACE_AB1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 0, 1, 1)});
+    latticeConstraints[FACE_BC0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(1, 0, 0, 0)});
+    latticeConstraints[FACE_BC1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(1, 0, 0, 1)});
+    latticeConstraints[FACE_CA0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 1, 0, 0)});
+    latticeConstraints[FACE_CA1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 1, 0, 1)});
+  }
+
   public void addLockedAtoms(BS bs) {
     SymmetryInterface sg = vwr.getOperativeSymmetry();
     if (sg == null)
       return;
     BS bsm = vwr.getThisModelAtoms();
     for (int i = bsm.nextSetBit(0); i >= 0; i = bsm.nextSetBit(i + 1)) {
-      if (getConstraint(sg, i, GET_CREATE).type == Constraint.TYPE_LOCKED) {
+      if (setConstraint(sg, i, GET_CREATE).type == Constraint.TYPE_LOCKED) {
         bs.set(i);
       }
     }
@@ -2621,7 +2649,7 @@ public class ModelKit {
       if (bsAU.get(bai)) {
         continue;
       }
-      if (getConstraint(sg, bai, GET_CREATE).type == Constraint.TYPE_LOCKED) {
+      if (setConstraint(sg, bai, GET_CREATE).type == Constraint.TYPE_LOCKED) {
         return 0;
       }
       bsAU.set(bai);
@@ -2645,7 +2673,7 @@ public class ModelKit {
       vt.sub2(p, center);
       m.rotate(vt);
       p.add2(center, vt);
-      getConstraint(sg, i, GET_CREATE).constrain(a, p, false);
+      setConstraint(sg, i, GET_CREATE).constrain(a, p, false);
       if (Double.isNaN(p.x))
         return 0;
     }

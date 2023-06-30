@@ -942,8 +942,9 @@ public class T {
   public final static int infofontsize                   = intparam | 17;
   public final static int isosurfacepropertysmoothingpower=intparam | 18;
   public final static int labelpointerwidth              = intparam | 19;
-  public final static int loglevel                       = intparam | 21;
-  public final static int meshscale                      = intparam | 22;
+  public final static int loglevel                       = intparam | 20;
+  public final static int meshscale                      = intparam | 21;
+  public final static int minimizationreportsteps        = intparam | 22;
   public final static int minimizationsteps              = intparam | 23;
   public final static int minimizationmaxatoms           = intparam | 24;
   public final static int minpixelselradius              = intparam | 25;
@@ -2535,6 +2536,7 @@ public class T {
        "lighting",
        "logLevel",
        "meshScale",
+       "minimizationReportSteps",
        "minimizationSteps",
        "minPixelSelRadius",
        "percentVdwAtom",
@@ -3609,6 +3611,7 @@ public class T {
         lighting,                           //        "lighting"
         loglevel,                           //        "logLevel"
         meshscale,                          //        "meshScale"
+        minimizationreportsteps,            //        "minimizationReportSteps"
         minimizationsteps,                  //        "minimizationSteps"
         minpixelselradius,                  //        "minPixelSelRadius"
         percentvdwatom,                     //        "percentVdwAtom"
