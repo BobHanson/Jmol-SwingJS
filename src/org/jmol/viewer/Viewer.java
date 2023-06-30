@@ -1404,6 +1404,7 @@ public class Viewer extends JmolViewer
     // measurePending   atom count
     // measureDeleted   -1 (all) or index
     // measureSequence  -2
+    // refreshed        -3
     sm.setStatusMeasuring(status, intInfo, strMeasure, value);
   }
 
@@ -8397,6 +8398,7 @@ public class Viewer extends JmolViewer
 
   public void refreshMeasures(boolean andStopMinimization) {
     setShapeProperty(JC.SHAPE_MEASURES, "refresh", null);
+    setStatusMeasuring("refreshed", -3, "", 0);
     if (andStopMinimization)
       stopMinimization();
   }
@@ -9256,9 +9258,9 @@ public class Viewer extends JmolViewer
     boolean isSilent = (flags & MIN_SILENT) != 0;
     boolean isQuick = (flags & MIN_QUICK) != 0;
 
+    boolean isSelectionExplicit = (bsSelected != null);  // could be MINIMIZE {...} or MINIMIZE SELECT {...}
     boolean groupSelected = (flags & MIN_GROUP_SELECT) != 0; // SELECTED GROUP
     boolean selectedOnly = groupSelected || (flags & MIN_SELECT_ONLY) != 0; // SELECTED ONLY or no SELECTED or SELECTED GROUP
-    boolean isSelectionExplicit = (bsSelected != null);  // could be MINIMIZE or MINIMIZESELECTED
     boolean isFixExplicit = (bsFixed != null); // MINIMIZE FIX
 
     // We only work on atoms that are in frame
@@ -9281,23 +9283,28 @@ public class Viewer extends JmolViewer
       isFixExplicit = true;
     }
     
-    if (!isSelectionExplicit)
+    if (!isSelectionExplicit) {
       bsSelected = getThisModelAtoms(); // first model only
-    else if (!isQuick)
+      if (selectedOnly)
+        bsSelected.and(bsA());
+    } else if (!isQuick) {
       bsSelected.and(bsInFrame);
+    }
     if (bsSelected.isEmpty())
       return;
-    BS bsBasis;
+    BS bsBasis = null;
     if (isSelectionExplicit) {
       flags |= MIN_SELECTED;
-      bsBasis = null;
-    } else {
+    } 
+    if (!selectedOnly)
       bsBasis = ms.am[ms.at[bsSelected.nextSetBit(0)].mi].bsAsymmetricUnit;
-    }
 
     if (bsBasis != null) {
-      bsSelected = getAtomBitSet("cell=555");
+      ff = "UFF";
     }
+//    if (bsBasis != null) {
+//      bsSelected = getAtomBitSet("cell=555");
+//    }
 
     if (!bsSelected.isEmpty())
       getModelForAtomIndex(bsSelected.nextSetBit(0)).auxiliaryInfo
@@ -10565,10 +10572,10 @@ public class Viewer extends JmolViewer
    */
   public Object getSymmetryInfo(int iatom, String xyz, int iOp, P3d translation,
                                 P3d pt1, P3d pt2, int type, String desc,
-                                double scaleFactor, int nth, int options) {
+                                double scaleFactor, int nth, int options, int[] opList) {
     try {
       return getSymTemp().getSymmetryInfoAtom(ms, iatom, xyz, iOp, translation,
-          pt1, pt2, desc, type, scaleFactor, nth, options);
+          pt1, pt2, desc, type, scaleFactor, nth, options, opList);
     } catch (Exception e) {
       System.out.println("Exception in Viewer.getSymmetryInfo: " + e);
       if (!isJS)

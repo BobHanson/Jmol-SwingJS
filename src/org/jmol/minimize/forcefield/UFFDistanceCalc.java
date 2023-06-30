@@ -17,18 +17,18 @@ class UFFDistanceCalc extends Calculation {
     // Otherwise, this is equation 6 from the UFF paper.
 
     kb = CalculationsUFF.KCAL332 * calcs.parA.dVal[CalculationsUFF.PAR_Z] * calcs.parB.dVal[CalculationsUFF.PAR_Z] / (r0 * r0 * r0);
-    calc.addLast(new Object[] { new int[] { ia, ib },
-        new double[] { r0, kb, bondOrder } });
+    calc.addLast(new Object[] { iData = new int[] { ia, ib},
+        new double[] { kb, r0, bondOrder }, isLoggable(2) });
   }
 
   @Override
   double compute(Object[] dataIn) {
     getPointers(dataIn);
-    r0 = dData[0];
-    kb = dData[1];     
+    kb = dData[0];
+    r0 = dData[1];
     calcs.setPairVariables(this);
 
-    // Er = 0.5 k (r - r0)^2
+       // Er = 0.5 k (r - r0)^2
     
     delta = rab - r0;     // we pre-compute the r0 below
     energy = kb * delta * delta; // 0.5 factor was precalculated
@@ -37,8 +37,8 @@ class UFFDistanceCalc extends Calculation {
       dE = 2.0 * kb * delta;
       calcs.addForces(this, 2);
     }
-    
-    if (calcs.logging)
+   
+    if (calcs.logging && dataIn[2] == Boolean.TRUE)
       calcs.appendLogData(calcs.getDebugLine(Calculations.CALC_DISTANCE, this));
     
     return energy;

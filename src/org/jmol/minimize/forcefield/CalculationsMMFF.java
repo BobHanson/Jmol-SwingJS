@@ -24,9 +24,6 @@
 
 package org.jmol.minimize.forcefield;
 
-import javajs.util.Lst;
-import javajs.util.PT;
-
 import java.util.Map;
 
 import org.jmol.minimize.MMConstraint;
@@ -34,8 +31,10 @@ import org.jmol.minimize.MinAngle;
 import org.jmol.minimize.MinAtom;
 import org.jmol.minimize.MinBond;
 import org.jmol.minimize.MinObject;
-import org.jmol.minimize.MinPosition;
 import org.jmol.minimize.MinTorsion;
+
+import javajs.util.Lst;
+import javajs.util.PT;
 
 /**
  * @author  Bob Hanson  5/10/12 - 5/15/12
@@ -56,9 +55,9 @@ class CalculationsMMFF extends Calculations {
   
   CalculationsMMFF(ForceField ff, Map<Object, Object> ffParams, 
       MinAtom[] minAtoms, MinBond[] minBonds, 
-      MinAngle[] minAngles, MinTorsion[] minTorsions, MinPosition[] minPositions,
+      MinAngle[] minAngles, MinTorsion[] minTorsions,
       Lst<MMConstraint> constraints) {
-    super(ff, minAtoms, minBonds, minAngles, minTorsions, minPositions, constraints);
+    super(ff, minAtoms, minBonds, minAngles, minTorsions, constraints);
     mmff = (ForceFieldMMFF) ff;
     this.ffParams = ffParams;
     bondCalc = new MMFFDistanceCalc().set(this);
@@ -242,8 +241,8 @@ class CalculationsMMFF extends Calculations {
           "%11s  %-5s %-5s %-5s  %8.3f  %8.3f     %8.3f   %8.3f", 
           "ssssFI", new Object[] { MinObject.decodeKey(c.key), minAtoms[c.ia].sType, minAtoms[c.ib].sType, 
               minAtoms[c.ic].sType,
-          new double[] { (double)(c.theta * RAD_TO_DEG), c.dData[1] /*THETA0*/, 
-              (double)c.dData[0]/*Kijk*/, energy },
+          new double[] { (c.theta * RAD_TO_DEG), c.dData[1] /*THETA0*/, 
+              c.dData[0]/*Kijk*/, energy },
           new int[] { minAtoms[c.ia].atom.getAtomNumber(), minAtoms[c.ib].atom.getAtomNumber(),
               minAtoms[c.ic].atom.getAtomNumber()} });
       case CALC_TORSION:

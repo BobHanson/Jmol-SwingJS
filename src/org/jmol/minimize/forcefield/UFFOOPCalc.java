@@ -191,17 +191,20 @@ import javajs.util.Lst;
 
       koop /= 3.0;
 
+      iData = new int[] { ia, ib, ic, id };
+      Boolean loggable = isLoggable(4);
       // A-BCD 
-      calc.addLast(new Object[] { new int[] { ia, ib, ic, id },
-          new double[] { koop, a0, a1, a2, koop * 10 } });
+      
+      calc.addLast(new Object[] { iData,
+          new double[] { koop, a0, a1, a2, koop * 10 }, loggable });
 
       // C-BDA
       calc.addLast(new Object[] { new int[] { ic, ib, id, ia },
-          new double[] { koop, a0, a1, a2, koop * 10 } });
+          new double[] { koop, a0, a1, a2, koop * 10 }, loggable });
 
       // D-BAC
       calc.addLast(new Object[] { new int[] { id, ib, ia, ic },
-          new double[] { koop, a0, a1, a2, koop * 10 } });
+          new double[] { koop, a0, a1, a2, koop * 10 }, loggable });
     }
 
     @Override
@@ -230,7 +233,7 @@ import javajs.util.Lst;
         calcs.addForces(this, 4);
       }
 
-      if (calcs.logging)
+      if (calcs.logging  && dataIn[2] == Boolean.TRUE)
         calcs.appendLogData(calcs.getDebugLine(Calculations.CALC_OOP, this));
 
       return energy;

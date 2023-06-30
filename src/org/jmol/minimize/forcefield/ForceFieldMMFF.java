@@ -261,7 +261,7 @@ public class ForceFieldMMFF extends ForceField {
     if (!fixTypes())
       return false;
     calc = new CalculationsMMFF(this, ffParams, minAtoms, minBonds, 
-        minAngles, minTorsions, minPositions, minimizer.constraints);
+        minAngles, minTorsions, minimizer.constraints);
     calc.setLoggingEnabled(true);
     return calc.setupCalculations();
   }

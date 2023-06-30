@@ -86,4 +86,8 @@ abstract class Calculation {
       break;
     }
   }
+
+  public Boolean isLoggable(int n) {
+    return calcs.ff.minimizer.isLoggable(iData, n);
+  }
 }

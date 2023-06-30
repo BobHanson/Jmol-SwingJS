@@ -352,14 +352,16 @@ public class IsoExt extends ScriptExt {
             case T.line:
               break;
             case T.dollarsign:
-              Object[] data = new Object[] { eval.objectNameParameter(i + 3), null };
+              Object[] data = new Object[] { eval.objectNameParameter(i + 3),
+                  null };
               if (chk)
                 return;
               vwr.shm.getShapePropertyData(JC.SHAPE_ISOSURFACE, "points", data);
               pts = (P3d[]) data[1];
               if (pts == null)
                 invArg();
-              i+= 2;
+              i += 2;
+              //$FALL-THROUGH$
             default:
               isBest = true;
               i++;
@@ -395,8 +397,8 @@ public class IsoExt extends ScriptExt {
         if (bs != null) {
           if (isBest) {
             uc = vwr.getSymTemp().getUnitCell(
-                (P3d[]) vwr.getOrientation(T.unitcell, "array", bs, null), false,
-                null);
+                (P3d[]) vwr.getOrientation(T.unitcell, "array", bs, null),
+                false, null);
           }
         } else if (isBest) {
           uc = vwr.getSymTemp().getUnitCell(
@@ -414,7 +416,7 @@ public class IsoExt extends ScriptExt {
           pts = new P3d[cpts.size()];
           for (int j = 0; j < cpts.size(); j++) {
             pts[j] = cpts.get(j);
-              uc.toCartesian(pts[j], true);
+            uc.toCartesian(pts[j], true);
           }
         }
         isBest = false;
@@ -551,7 +553,8 @@ public class IsoExt extends ScriptExt {
             : null);
         if (pts == null && eval.isAtomExpression(i)) {
           bs = eval.atomExpressionAt(i);
-          pts = vwr.ms.getAtomPointVector(bs).toArray(new P3d[bs.cardinality()]);
+          pts = vwr.ms.getAtomPointVector(bs)
+              .toArray(new P3d[bs.cardinality()]);
         }
         if (pts != null) {
           i = eval.iToken + 1;
@@ -753,6 +756,7 @@ public class IsoExt extends ScriptExt {
         BS bsAtoms = null;
         int options = 0;
         P3d trans = null;
+        int[] opList = null;
         if (tok == T.symop) {
           iSym = 0;
           switch (tokAt(++i)) {
@@ -765,16 +769,24 @@ public class IsoExt extends ScriptExt {
           case T.integer:
           default:
             if (!eval.isCenterParameter(i)) {
-              iSym = intParameter(i++);
               if (eval.isArrayParameter(i)) {
-                trans = P3d.newA(eval.doubleParameterSet(i, 3, 3));
-                i = ++eval.iToken;
+                double[] params = eval.doubleParameterSet(i, 1, Integer.MAX_VALUE);
+                opList = new int[params.length];
+                for (int j = opList.length; --j >= 0;)
+                  opList[j] = (int) params[j];
+                i = eval.iToken + 1;
+              } else {
+                iSym = intParameter(i++);
+                if (eval.isArrayParameter(i)) {
+                  trans = P3d.newA(eval.doubleParameterSet(i, 3, 3));
+                  i = eval.iToken + 1;
+                }
               }
             }
             Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
             if (eval.isCenterParameter(i))
               center = eval.centerParameter(i, ret);
-            if (eval.isCenterParameter(eval.iToken + 1))
+            if (opList == null && eval.isCenterParameter(eval.iToken + 1))
               target = eval.centerParameter(++eval.iToken, ret);
             if (chk)
               return;
@@ -804,8 +816,7 @@ public class IsoExt extends ScriptExt {
         }
 
         eval.checkLast(eval.iToken);
-        if (!chk) {
-          String s = "";
+        if (!chk) {          String s = "";
           if (bsAtoms == null && vwr.am.cmi >= 0)
             bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
           if (bsAtoms != null) {
@@ -814,7 +825,7 @@ public class IsoExt extends ScriptExt {
             if (options != 0) {
               // options is T.offset, and target is an {i j k} offset from cell 555
               Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-                  target, T.point, null, intScale / 100d, nth, options);
+                  target, T.point, null, intScale / 100d, nth, options, opList);
               if (o instanceof P3d)
                 target = (P3d) o;
               else
@@ -824,7 +835,7 @@ public class IsoExt extends ScriptExt {
               thisId = "sym";
             if (s == null)
               s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-                  target, T.draw, thisId, intScale / 100d, nth, options);
+                  target, T.draw, thisId, intScale / 100d, nth, options, opList);
           }
           eval.runBufferedSafely(
               s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete",

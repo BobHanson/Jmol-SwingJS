@@ -243,6 +243,10 @@ final public class CommandHistory {
       return;
     if (command.endsWith(NOHISTORYLINE_FLAG))
       return;
+    if (nextCommand > 0 && command.equals(commandList.get(nextCommand - 1))) {
+      cursorPos = nextCommand;
+      return;
+    }
     if (nextCommand >= maxSize) {
       commandList.removeItemAt(0);
       nextCommand = maxSize - 1;

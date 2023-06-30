@@ -1091,7 +1091,7 @@ public class PT {
             strFormat = formatString(strFormat, "s", (String) values[o], Float.NaN, Double.NaN, true);
             break;
           case 'f':
-            strFormat = formatString(strFormat, "f", null, ((Float) values[o]).floatValue(), Double.NaN,
+            strFormat = formatString(strFormat, "f", null, ((Number) values[o]).floatValue(), Double.NaN,
                 true);
             break;
           case 'i':
@@ -1099,9 +1099,9 @@ public class PT {
             strFormat = formatString(strFormat, "i", "" + values[o], Float.NaN, Double.NaN, true);
             break;
           case 'd':
-            strFormat = formatString(strFormat, "e", null, Float.NaN, ((Double) values[o]).doubleValue(),
+            strFormat = formatString(strFormat, "e", null, Float.NaN, ((Number) values[o]).doubleValue(),
                 true);
-            strFormat = formatString(strFormat, "f", null, Float.NaN, ((Double) values[o]).doubleValue(),
+            strFormat = formatString(strFormat, "f", null, Float.NaN, ((Number) values[o]).doubleValue(),
                 true);
             break;
           case 'p':
@@ -1157,6 +1157,7 @@ public class PT {
         }
         return rep(strFormat, "%%", "%");
       } catch (Exception e) {
+        e.printStackTrace();
         //
       }
     System.out.println("TextFormat.sprintf error " + list + " " + strFormat);

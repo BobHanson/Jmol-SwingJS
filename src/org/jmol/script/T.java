@@ -526,7 +526,6 @@ public class T {
   public final static int reverse   = 5 | mathproperty;
   public final static int size             = 6 | mathproperty;
   public final static int type      = 8 | mathproperty;
-  public final static int boundbox  = 9 | mathproperty | deprecatedparam | shapeCommand | defaultON;
   public final static int xyz       =10 | mathproperty | atomproperty | settable;
   public final static int fracxyz   =11 | mathproperty | atomproperty | settable;
   public final static int screenxyz =12 | mathproperty | atomproperty | settable;
@@ -722,8 +721,9 @@ public class T {
 
     // xxx(a)
   
-  public final static int acos         = 2 | 1 << 9 | mathfunc;
-  public final static int bondcount    = 3 | 1 << 9 | mathfunc | intproperty;
+  public final static int acos         = 1 | 1 << 9 | mathfunc;
+  public final static int bondcount    = 2 | 1 << 9 | mathfunc | intproperty;
+  public final static int boundbox     = 3 | 1 << 9 | mathfunc | mathproperty | deprecatedparam | shapeCommand | defaultON;
   public final static int sin          = 4 | 1 << 9 | mathfunc;
   public final static int cos          = 5 | 1 << 9 | mathfunc;
   public final static int sqrt         = 6 | 1 << 9 | mathfunc;

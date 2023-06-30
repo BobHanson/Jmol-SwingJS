@@ -52,7 +52,7 @@ public class MinAtom {
 
   @Override
   public String toString() {
-    return "#" + index + " " + sType;
+    return "#" + index + "@" + atom.i + " " + sType + " " + coord[0] + "," + coord[1] + "," + coord[2];
   }
 
   MinAtom(int index, Atom atom, double[] coord, int ac) {

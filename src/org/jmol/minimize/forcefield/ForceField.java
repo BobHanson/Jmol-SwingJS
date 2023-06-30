@@ -28,13 +28,9 @@ package org.jmol.minimize.forcefield;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-import javajs.util.PT;
-
-import javajs.util.BS;
 import org.jmol.minimize.MinAngle;
 import org.jmol.minimize.MinAtom;
 import org.jmol.minimize.MinBond;
-import org.jmol.minimize.MinPosition;
 import org.jmol.minimize.MinTorsion;
 import org.jmol.minimize.Minimizer;
 import org.jmol.minimize.Util;
@@ -42,6 +38,9 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JmolAsyncException;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.BS;
+import javajs.util.PT;
 
 abstract public class ForceField {
 
@@ -89,8 +88,7 @@ abstract public class ForceField {
   MinBond[] minBonds;
   MinAngle[] minAngles;
   MinTorsion[] minTorsions;
-  MinPosition[] minPositions;
-  BS bsFixed;
+  BS bsMinFixed;
   
   double trustRadius = 0.3; // don't move further than 0.3 Angstroms
 
@@ -106,13 +104,13 @@ abstract public class ForceField {
     this.minAngles = minimizer.minAngles;
     this.minTorsions = minimizer.minTorsions;
 //    this.minPositions = minimizer.minPositions; // not implemented
-    this.bsFixed = minimizer.bsMinFixed;
+    this.bsMinFixed = minimizer.bsMinFixed;
     minAtomCount = minAtoms.length;
     minBondCount = minBonds.length;
   }
   
   public void setConstraints(Minimizer m) {
-    this.bsFixed = m.bsMinFixed;
+    this.bsMinFixed = m.bsMinFixed;
     calc.setConstraints(m.constraints);
     coordSaved = null;
   }
@@ -144,7 +142,7 @@ abstract public class ForceField {
       calc.appendLogData(calc.getAtomList("S T E E P E S T   D E S C E N T"));
     dE = 0;
     calc.setPreliminary(stepMax > 0);
-    e0 = energyFull(false, false);
+    recalculateEnergy();
     s = PT.sprintf(" Initial " + name + " E = %10.3f " + minimizer.units + "/mol criterion = %8.6f max steps = " + stepMax, 
         "dd", new Object[] {Double.valueOf(toUserUnits(e0)), Double.valueOf(toUserUnits(criterion)) });
     minimizer.report(s, false);
@@ -157,7 +155,13 @@ abstract public class ForceField {
   }
   
   //Vector3d dir = new Vector3d();
-  public boolean steepestDescentTakeNSteps(int n) {
+  /**
+   * 
+   * @param n always 1 in Jmol
+   * @param doUpdateAtoms 
+   * @return true if successful
+   */
+  public boolean steepestDescentTakeNSteps(int n, boolean doUpdateAtoms) {
     if (stepMax == 0)
       return false;
     boolean isPreliminary = true;
@@ -165,9 +169,13 @@ abstract public class ForceField {
       currentStep++;
       calc.setSilent(true);
       for (int i = 0; i < minAtomCount; i++)
-        if (bsFixed == null || !bsFixed.get(i))
+        if (bsMinFixed == null || !bsMinFixed.get(i))
           setForcesUsingNumericalDerivative(minAtoms[i], ENERGY);
       linearSearch();
+
+      if (doUpdateAtoms)
+        minimizer.updateAtomXYZ();
+
       calc.setSilent(false);
 
       if (calc.loggingEnabled)
@@ -177,6 +185,11 @@ abstract public class ForceField {
       dE = e1 - e0;
       boolean done = Util.isNear3(e1, e0, criterion);
 
+      // note that for pseudo-periodic systems 
+      // such as =ams/marcosite 1 {444 666 1}
+      // where symmetry may impose restrictions on where
+      // an atom is allowed to reside, dE may be positive for some steps.
+      
       if (done || currentStep % 10 == 0 || stepMax <= currentStep) {
         String s = PT.sprintf(name + " Step %-4d E = %10.6f    dE = %8.6f ",
             "Fi", new Object[] {new double[] { toUserUnits(e1), toUserUnits(dE) },
@@ -252,7 +265,8 @@ abstract public class ForceField {
     atom.force[1] = -getDE(atom, terms, 1, delta);
     atom.force[2] = -getDE(atom, terms, 2, delta);
     //if (atom.atom.getAtomIndex() == 2)
-      //System.out.println(" atom + " + atom.atom.getAtomIndex() + " force=" + atom.force[0] + " " + atom.force[1] + " " + atom.force[2] );
+//     System.out.println("FF.setFUND atom + " + atom 
+//         + "\n force=" + atom.force[0] + " " + atom.force[1] + " " + atom.force[2] );
     return;
   }
 
@@ -261,8 +275,6 @@ abstract public class ForceField {
     atom.coord[i] += delta;
     double e = getEnergies(terms, false);
     atom.coord[i] -= delta;
-    //if (atom.atom.getAtomIndex() == 2)
-      //System.out.println ((i==0 ? "\n" : "") + "atom 3: " + atom.atom.getInfo() + " " + i + " " + (e - e0) + " " + (Point3f)atom.atom + "{" + atom.coord[0] + " " + atom.coord[1] + " " + atom.coord[2] + "} delta=" + delta);
     return (e - e0) / delta;
   }
 
@@ -380,11 +392,11 @@ abstract public class ForceField {
     double trustRadius2 = trustRadius * trustRadius;
 
     double e1 = energyFull(false, true);
-
-    for (int iStep = 0; iStep < 10; iStep++) {
+    int nSteps = (minimizer.bsBasis == null ? 10 : 2);
+    for (int iStep = 0; iStep < nSteps; iStep++) {
       saveCoordinates();
       for (int i = 0; i < minAtomCount; ++i) {
-        if (bsFixed == null || !bsFixed.get(i)) {
+        if (bsMinFixed == null || !bsMinFixed.get(i)) {
           double[] force = minAtoms[i].force;
           double[] coord = minAtoms[i].coord;
           double f2 = (force[0] * force[0] + force[1] * force[1]
@@ -494,6 +506,9 @@ abstract public class ForceField {
   protected BufferedReader getBufferedReader(String resourceName) throws IOException {
     return FileManager.getBufferedReaderForResource(minimizer.vwr, this,
         "org/jmol/minimize/forcefield/", "data/" + resourceName);
+  }
+  public void recalculateEnergy() {
+    e0 = energyFull(false, false);
   }
 
 }

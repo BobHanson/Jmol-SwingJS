@@ -66,8 +66,8 @@ public class Util {
     double ab2 = distance2(a, b);
     double bc2 = distance2(b, c);
     double ac2 = distance2(a, c);
-    return (isNearZero2(ab2, 1e-3) || isNearZero2(bc2, 1e-3) ? 0 :
-        Math.acos((ab2 + bc2 - ac2 ) / 2 / Math.sqrt(ab2 * bc2)));
+    return ((isNearZero2(ab2, 1e-3) || isNearZero2(bc2, 1e-3) ? 0
+        : Math.acos(Math.min(Math.max((ab2 + bc2 - ac2)/2/ Math.sqrt(ab2 * bc2), -1), 1))));
   }
   
   public static boolean isApprox(V3d a, V3d b, double precision) {

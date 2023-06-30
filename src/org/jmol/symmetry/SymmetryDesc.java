@@ -1418,7 +1418,9 @@ public class SymmetryDesc {
       if (xyz == null) {
         SymmetryOperation[] ops = (SymmetryOperation[]) uc
             .getSymmetryOperations();
-        if (ops == null || op == 0 || Math.abs(op) > ops.length)
+        if (ops == null || Math.abs(op) > ops.length)
+          return nullRet;
+        if (op == 0) 
           return nullRet;
         iop = Math.abs(op) - 1;
         xyz = (translation == null ? ops[iop].xyz : ops[iop].getxyzTrans(ptemp.setP(translation)));
@@ -1640,10 +1642,11 @@ public class SymmetryDesc {
    * @param scaleFactor
    * @param nth
    * @param options 0 or T.offset
+   * @param opList TODO
    * @return "" or a bitset of matching atoms, or 
    */
   Object getSymopInfo(int iAtom, String xyz, int op, P3d translation, P3d pt, P3d pt2,
-                      String id, int type, double scaleFactor, int nth, int options) {
+                      String id, int type, double scaleFactor, int nth, int options, int[] opList) {
     if (type == 0)
       type = getType(id);
     Object ret = (type == T.atoms ? new BS() : "");
@@ -1659,12 +1662,12 @@ public class SymmetryDesc {
 
     // generally get the result from getSymmetryInfo
     
-    if (type != T.draw || op != Integer.MAX_VALUE) {
+    if (type != T.draw || op != Integer.MAX_VALUE && opList == null) {
       return getSymmetryInfo(uc, iModel, iAtom, uc, xyz,
           op, translation, pt, pt2, id, type, scaleFactor, nth, options);
     }
     
-    // draw SPACEGROUP
+    // draw SPACEGROUP or draw SYMOP [...] @a
     
     String s = "";
     M4d[] ops = uc.getSymmetryOperations();
@@ -1672,9 +1675,20 @@ public class SymmetryDesc {
       if (id == null)
         id = "sg";
       int n = ops.length;
-      for (op = 1; op <= n; op++)
-        s += (String) getSymmetryInfo(uc, iModel, iAtom,
-            uc, xyz, op, translation, pt, pt2, id + op, T.draw, scaleFactor, nth, options);
+      if (pt != null && pt2 == null)  {
+        if (opList == null)
+          opList = uc.getInvariantSymops(pt,  null);
+        n = opList.length;
+        for (int i = 0; i < n; i++) {
+          op = opList[i];
+          s += (String) getSymmetryInfo(uc, iModel, iAtom,
+              uc, xyz, op, translation, pt, pt2, id + op, T.draw, scaleFactor, nth, options);
+        }
+      } else {
+        for (op = 1; op <= n; op++)
+          s += (String) getSymmetryInfo(uc, iModel, iAtom,
+              uc, xyz, op, translation, pt, pt2, id + op, T.draw, scaleFactor, nth, options);
+      }
     }
     return s;
   }

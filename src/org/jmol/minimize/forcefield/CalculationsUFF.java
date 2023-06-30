@@ -24,8 +24,6 @@
 
 package org.jmol.minimize.forcefield;
 
-import javajs.util.Lst;
-
 import java.util.Map;
 
 import org.jmol.minimize.MMConstraint;
@@ -33,8 +31,9 @@ import org.jmol.minimize.MinAngle;
 import org.jmol.minimize.MinAtom;
 import org.jmol.minimize.MinBond;
 import org.jmol.minimize.MinObject;
-import org.jmol.minimize.MinPosition;
 import org.jmol.minimize.MinTorsion;
+
+import javajs.util.Lst;
 
 /*
  * Java implementation by Bob Hanson 3/2008
@@ -78,9 +77,8 @@ class CalculationsUFF extends Calculations {
 
   CalculationsUFF(ForceField ff, Map<Object, Object> ffParams,
       MinAtom[] minAtoms, MinBond[] minBonds, MinAngle[] minAngles,
-      MinTorsion[] minTorsions, MinPosition[] minPositions,
-      Lst<MMConstraint> constraints) {
-    super(ff, minAtoms, minBonds, minAngles, minTorsions, minPositions,
+      MinTorsion[] minTorsions, Lst<MMConstraint> constraints) {
+    super(ff, minAtoms, minBonds, minAngles, minTorsions,
         constraints);
     this.ffParams = ffParams;
     bondCalc = new UFFDistanceCalc().set(this);

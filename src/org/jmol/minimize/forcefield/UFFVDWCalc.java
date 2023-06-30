@@ -4,11 +4,14 @@ import javajs.util.Lst;
 
 class UFFVDWCalc extends Calculation {
     
+  private final static double MAX_VDW_DIST2 = 50;
+
   @Override
   void setData(Lst<Object[]> calc, int ia, int ib, double dd) {
     a = calcs.minAtoms[ia];
     b = calcs.minAtoms[ib];
-
+    if (a.atom.distanceSquared(b.atom) > MAX_VDW_DIST2)
+      return;
     FFParam parA = (FFParam) calcs.getParameter(a.sType);
     FFParam parB = (FFParam) calcs.getParameter(b.sType);
 
@@ -40,7 +43,7 @@ class UFFVDWCalc extends Calculation {
     // Xab is xij in equation 20 -- the expected vdw distance
     double Xab = Math.sqrt(Xa * Xb);
     calc.addLast(
-        new Object[] { new int[] { ia, ib }, new double[] { Xab, Dab } });
+        new Object[] { iData = new int[] { ia, ib }, new double[] { Xab, Dab }, isLoggable(2) });
   }
 
     @Override
@@ -65,7 +68,7 @@ class UFFVDWCalc extends Calculation {
         calcs.addForces(this, 2);
       }
       
-      if (calcs.logging)
+      if (calcs.logging && dataIn[2] == Boolean.TRUE)
         calcs.appendLogData(calcs.getDebugLine(Calculations.CALC_VDW, this));
       
       return energy;

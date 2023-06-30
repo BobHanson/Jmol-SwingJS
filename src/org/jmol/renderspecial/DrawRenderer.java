@@ -519,6 +519,8 @@ public class DrawRenderer extends MeshRenderer {
         //just the first line of the title -- nothing fancy here.
         if (!haveFont || dmesh.fontID != lastFID) {
           f = (Font) vwr.shm.getShapePropertyIndex(JC.SHAPE_DRAW, "font", i);
+          if (f == null)
+            f = f0;
           lastFID = f.fid;
           vwr.gdata.setFont(imageFontScaling == 1 ? f : vwr.gdata.getFont3DFSS(f.fontFace, f.fontStyle, f.fontSize * imageFontScaling));
           haveFont = true;

@@ -168,6 +168,8 @@ class PointGroup {
 
   private boolean localEnvOnly;
 
+  private boolean isLinear;
+
 
   /**
    * Determine the point group of a set of points or atoms, allowing additionally
@@ -281,8 +283,8 @@ class PointGroup {
     try {
 
       findInversionCenter();
-
-      if (isLinear(points)) {
+      isLinear = isLinear(points);
+      if (isLinear) {
         if (haveInversionCenter) {
           name = "D(infinity)h";
         } else {
@@ -1084,7 +1086,7 @@ class PointGroup {
           offset = 0.1d;
         if (nAxes[i] == 0)
           continue;
-        String label = axes[i][0].getLabel();
+        String label = (!isLinear ? axes[i][0].getLabel() : "C_infinity");
         offset += 0.25d;
         double scale = scaleFactor * radius + offset;
         boolean isProper = (i >= firstProper);
@@ -1101,7 +1103,7 @@ class PointGroup {
                 j + 1).append(" width 0.05 scale ").appendD(scale).append(" ").append(
                 Escape.eP(v));
             v.scaleAdd2(-2, op.normalOrAxis, v);
-            boolean isPA = (principalAxis != null && op.index == principalAxis.index);
+            boolean isPA = (!isLinear && principalAxis != null && op.index == principalAxis.index);
             sb.append(Escape.eP(v)).append(
                 "\"").append(label).append(isPA ? "*" : "").append("\" color ").append(
                 isPA ? "red" : op.type == OPERATION_IMPROPER_AXIS ? "blue"

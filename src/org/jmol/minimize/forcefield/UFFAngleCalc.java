@@ -60,8 +60,8 @@ class UFFAngleCalc extends Calculation {
     double ka = (CalculationsUFF.KCAL644) * (zi * zk / (Math.pow(rac, 5.0)))
         * (3.0 * rab * rbc * (1.0 - cosT0 * cosT0) - rac * rac * cosT0);
     calc.addLast(new Object[] {
-        new int[] { ia, ib, ic, coordination },
-        new double[] { ka, theta0 * Calculations.RAD_TO_DEG, c0 - c2, c1, 2 * c2, preliminaryMagnification * ka } });
+        iData = new int[] { ia, ib, ic, coordination },
+        new double[] { ka, theta0 * Calculations.RAD_TO_DEG, c0 - c2, c1, 2 * c2, preliminaryMagnification * ka }, isLoggable(3)});
   }
 
   @Override
@@ -119,7 +119,7 @@ class UFFAngleCalc extends Calculation {
       calcs.addForces(this, 3);
     }
     
-    if (calcs.logging)
+    if (calcs.logging && dataIn[2] == Boolean.TRUE)
       calcs.appendLogData(calcs.getDebugLine(Calculations.CALC_ANGLE, this));
     
     return energy;

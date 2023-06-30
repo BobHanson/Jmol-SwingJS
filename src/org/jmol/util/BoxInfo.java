@@ -26,8 +26,10 @@
 package org.jmol.util;
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javajs.util.P3d;
-import javajs.util.T3d;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -345,7 +347,7 @@ public class BoxInfo {
   P3d ptTemp = new P3d();
   public void addBoundBoxPointD(T3d pt) {
     isScaleSet = false;
-    ptTemp.set((double) pt.x, (double) pt.y, (double) pt.z); 
+    ptTemp.set(pt.x, pt.y, pt.z); 
     addPoint(ptTemp, bbCorner0, bbCorner1, margin);
   }
 
@@ -421,8 +423,36 @@ public class BoxInfo {
   public double getMaxDim() {
     return bbVector.length() * 2;
   }
-
   
+  /**
+   * for {*}.boundbox("info"|"volume"|"center"|null)
+   * 
+   * @param what
+   * @return Double or Map or null
+   */
+  public Object getInfo(String what) {
+    Double vol = Double
+        .valueOf(Math.abs(8 * bbVector.x * bbVector.y * bbVector.z));
+    if ("volume".equals(what)) {
+      return vol;
+    }
+    P3d c = P3d.newPd(bbCenter);
+    if ("center".equals(what)) {
+      return c;
+    }
+    if (what == null || "info".equals(what)) {
+      Map<String, Object> m = new HashMap<String, Object>();
+      m.put("center", c);
+      V3d v = V3d.newVsub(bbCorner1, bbCorner0);
+      m.put("dimensions", v);
+      m.put("girth", Double.valueOf(v.x + v.y + v.z));
+      m.put("area", Double.valueOf(2 * (v.x * v.y + v.x * v.z + v.z * v.y)));
+      m.put("volume", vol);
+      return m;
+    }
+    return null;
+  }
+
   @Override
   public String toString() {
     return "" + bbCorner0 + bbCorner1;

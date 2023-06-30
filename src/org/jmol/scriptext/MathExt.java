@@ -162,8 +162,9 @@ public class MathExt {
     case T.connected:
     case T.polyhedra:
       return evaluateConnected(mp, args, tok, op.intValue);
+    case T.boundbox:
     case T.unitcell:
-      return evaluateUnitCell(mp, args, op.tok == T.propselector);
+      return evaluateUnitCell(mp, args, op.tok == T.propselector, op.intValue);
     case T.contact:
       return evaluateContact(mp, args);
     case T.data:
@@ -396,8 +397,10 @@ public class MathExt {
   }
 
   private boolean evaluateUnitCell(ScriptMathProcessor mp, SV[] args,
-                                   boolean isSelector)
+                                   boolean isSelector, int tok)
       throws ScriptException {
+    // {xxx}.boundbox()
+    // {xxx}.boundbox(volume)
     // optional last parameter: scale
     // unitcell("-a,-b,c;0,0,0.50482") (polar groups can have irrational translations along z)
     // unitcell(uc)
@@ -410,7 +413,8 @@ public class MathExt {
     // {1.1}.unitcell(ucconv, "primitive","BCC"|"FCC")
     // {1.1}.unitcell(ucprim, "conventional","BCC"|"FCC")
 
-    BS x1 = (isSelector ? SV.getBitSet(mp.getX(), true) : null);
+    BS x1 = (isSelector ? SV.getBitSet(mp.getX(), true) 
+        : tok == T.boundbox ? vwr.getAllAtoms() : null);
     int iatom = ((x1 == null ? vwr.getAllAtoms() : x1).nextSetBit(0));
     int lastParam = args.length - 1;
     double scale = 1;
@@ -424,21 +428,29 @@ public class MathExt {
     int tok0 = (lastParam < 0 ? T.nada : args[0].tok);
     T3d[] ucnew = null;
     Lst<SV> uc = null;
+    String arg0 = null;
     switch (tok0) {
     case T.varray:
       uc = args[0].getList();
       break;
     case T.string:
-      String s = args[0].asString();
-      if (s.indexOf("a=") == 0) {
-        ucnew = new P3d[4];
-        for (int i = 0; i < 4; i++)
-          ucnew[i] = new P3d();
-        SimpleUnitCell.setOabc(s, null, ucnew);
-      } else if (s.indexOf(",") >= 0) {
-        return mp.addXObj(vwr.getV0abc(-1, s));
+      arg0 = args[0].asString();
+      if (tok == T.unitcell) {
+        if (arg0.indexOf("a=") == 0) {
+          ucnew = new P3d[4];
+          for (int i = 0; i < 4; i++)
+            ucnew[i] = new P3d();
+          SimpleUnitCell.setOabc(arg0, null, ucnew);
+        } else if (arg0.indexOf(",") >= 0) {
+          return mp.addXObj(vwr.getV0abc(-1, arg0));
+        }
       }
       break;
+    }
+    if (tok == T.boundbox) {
+      // arg0: "center", "volume", "info" or null
+      BoxInfo b = vwr.ms.getBoxInfo(x1, 1);
+      return mp.addXObj(b.getInfo(arg0));
     }
     SymmetryInterface u = null;
     boolean haveUC = (uc != null);
@@ -511,7 +523,7 @@ public class MathExt {
         stype = "I";
       else if (stype.length() == 0)
         stype = (String) vwr.getSymmetryInfo(iatom, null, 0, null, null, null,
-            T.lattice, null, 0, -1, 0);
+            T.lattice, null, 0, -1, 0, null);
       if (stype == null || stype.length() == 0)
         return false;
       if (u == null)
@@ -1465,7 +1477,7 @@ public class MathExt {
           : mp.addXObj(Escape.escapeHelical(type, tok, pta, ptb, data)));
     }
     BS bs = (args[0].value instanceof BS ? (BS) args[0].value
-        : vwr.ms.getAtoms(T.resno, new Integer(args[0].asInt())));
+        : vwr.ms.getAtoms(T.resno, Integer.valueOf(args[0].asInt())));
     switch (tok) {
     case T.point:
     case T.axis:
@@ -1588,7 +1600,7 @@ public class MathExt {
         if (((String) x1.value).startsWith("InChI=")) {
           if (sFind.equalsIgnoreCase("SMILES")) {
             return mp.addXStr(
-                vwr.getInchi(null, (String) x1.value, "SMILES" + flags));
+                vwr.getInchi(null, x1.value, "SMILES" + flags));
           }
         }
         isStr = true;
@@ -1600,7 +1612,7 @@ public class MathExt {
         } else if (((String) x1.value).startsWith("InChI=")) {
           // InChI.find("SMARTS", ....);
           if (sFind.equals("SMARTS")) {
-            smiles = vwr.getInchi(null, (String) x1.value, "SMILES");
+            smiles = vwr.getInchi(null, x1.value, "SMILES");
           } else {
             isStr = true;
           }
@@ -3886,7 +3898,7 @@ public class MathExt {
 
     return (haveAtom && apt == args.length
         && mp.addXObj(vwr.getSymmetryInfo(iatom, xyz, iOp, trans, pt1, pt2,
-            T.array, desc, 0, nth, 0)));
+            T.array, desc, 0, nth, 0, null)));
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)
@@ -4410,7 +4422,7 @@ public class MathExt {
           String key = (svi == null ? o.toString() : svi.asString());
           Integer ii = htPivot.get(key);
           htPivot.put(key,
-              (ii == null ? new Integer(1) : new Integer(ii.intValue() + 1)));
+              (ii == null ? Integer.valueOf(1) : Integer.valueOf(ii.intValue() + 1)));
           break;
         case T.min:
         case T.max:

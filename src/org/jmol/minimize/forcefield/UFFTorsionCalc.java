@@ -103,8 +103,8 @@ void setData(Lst<Object[]> calc, int[] t) {
     if (Util.isNearZero(V)) // don't bother calcuating this torsion
       return;
 
-    calc.addLast(new Object[] { new int[] { ia, ib, ic, id, n },
-        new double[] { V, cosNPhi0 } });
+    calc.addLast(new Object[] { iData = new int[] { ia, ib, ic, id, n },
+        new double[] { V, cosNPhi0 }, isLoggable(4) });
   }
 
   
@@ -124,7 +124,7 @@ void setData(Lst<Object[]> calc, int[] t) {
       calcs.addForces(this, 4);
     }
     
-    if (calcs.logging)
+    if (calcs.logging && dataIn[2] == Boolean.TRUE)
       calcs.appendLogData(calcs.getDebugLine(Calculations.CALC_TORSION, this));
     
     return energy;

@@ -62,7 +62,6 @@ public class Minimizer {
   public MinBond[] minBonds;
   public MinAngle[] minAngles;
   public MinTorsion[] minTorsions;
-  public MinPosition[] minPositions;
   
   public BS bsMinFixed;
   private int ac;
@@ -132,8 +131,22 @@ public class Minimizer {
   public boolean minimize(int steps, double crit, BS bsSelected, BS bsFixed,
                           BS bsBasis, int flags, String ff)
       throws JmolAsyncException {
+    if (bsBasis != null) {
+      if (bsFixed == null)
+        bsFixed = new BS();
+      bsFixed.or(vwr.getMotionFixedAtoms());
+      bsBasis.andNot(bsFixed);
+      bsFixed.or(bsSelected);
+      bsFixed.andNot(bsBasis);
+      if (bsBasis.isEmpty()) {
+        report(" symmetry-based minimization failed -- all atoms are fully constrained", false);
+        return false;
+      }
+      int n = bsBasis.cardinality();
+      report(" symmetry-based minimization for " + n + " atom" + (n == 1 ? ": " : "s: ") + bsBasis, false);
+    }
     this.bsBasis = bsBasis;
-    trustRadius = (bsBasis == null ? 0.3 : 0.03);
+    trustRadius = (bsBasis == null ? 0.3 : 0.01);
     isSilent = ((flags & Viewer.MIN_SILENT) == Viewer.MIN_SILENT);
     isQuick = (ff.indexOf("2D") >= 0
         || (flags & Viewer.MIN_QUICK) == Viewer.MIN_QUICK);
@@ -367,6 +380,7 @@ public class Minimizer {
       //pFF.log("could not setup force field " + ff);
       Logger.error(GT.o(GT.$("could not setup force field {0}"), ff));
       if (ff.startsWith("MMFF")) {
+        report(" MMFF not applicable", false);
         getForceField("UFF");
         //pFF.log("could not setup force field " + ff);
         return setModel(bsElements);        
@@ -379,13 +393,14 @@ public class Minimizer {
   private void setAtomPositions() {
     for (int i = 0; i < ac; i++)
       minAtoms[i].set();
-    bsMinFixed = null;
-    if (bsFixed != null) {
-        bsMinFixed = new BS();
-      for (int i = bsAtoms.nextSetBit(0), pt = 0; i >= 0; i = bsAtoms
-          .nextSetBit(i + 1), pt++)
-        if (bsFixed.get(i))
-          bsMinFixed.set(pt);
+    if (bsFixed == null) {
+      bsMinFixed = null;
+    } else {
+      bsMinFixed = new BS();
+      for (int i = 0; i < ac; i++) {
+        if (bsFixed.get(minAtoms[i].atom.i))
+          bsMinFixed.set(i);
+      }
     }
   }
 
@@ -542,7 +557,7 @@ public class Minimizer {
       if (!isQuick)
         vwr.setStringProperty("_minimizationForceField", ff);
     }
-    //Logger.info("minimize: forcefield = " + pFF);
+    report(" forcefield is " + ff, false);
     return pFF;
   }
   
@@ -620,16 +635,15 @@ public class Minimizer {
       return false;
     boolean doRefresh = (!isSilent && vwr.getBooleanProperty("minimizationRefresh"));
     vwr.setStringProperty("_minimizationStatus", "running");
-    boolean going = pFF.steepestDescentTakeNSteps(1);
+    boolean going = pFF.steepestDescentTakeNSteps(1, bsBasis != null);
     int currentStep = pFF.getCurrentStep();
     vwr.setIntProperty("_minimizationStep", currentStep);
+    if (doRefresh) {
+      vwr.refresh(Viewer.REFRESH_SYNC_MASK, "minimization step " + currentStep);
+    }
     reportEnergy();
     vwr.setFloatProperty("_minimizationEnergyDiff", pFF.toUserUnits(pFF.getEnergyDiff()));
     vwr.notifyMinimizationStatus();
-    if (doRefresh) {
-      updateAtomXYZ();
-      vwr.refresh(Viewer.REFRESH_SYNC_MASK, "minimization step " + currentStep);
-    }
     return going;
   }
 
@@ -684,35 +698,42 @@ public class Minimizer {
   
   private P3d p = new P3d();
   
-  void updateAtomXYZ() {
+  public void updateAtomXYZ() {
     if (steps <= 0)
       return;
     if (bsBasis == null) {
       for (int i = 0; i < ac; i++) {
         MinAtom minAtom = minAtoms[i];
-        minAtom.atom.set(minAtom.coord[0], minAtom.coord[1],
-            minAtom.coord[2]);
+        minAtom.atom.set(minAtom.coord[0], minAtom.coord[1], minAtom.coord[2]);
       }
     } else {
       Atom a;
-      // only accept the minimization for the basis atoms
+      // only accept the minimization for the basis atoms (which won't be fixed)
       // ModelKit will transfer the corresponding symmetry changes to the other atoms
+      boolean doUpdateMinAtoms = false;
       for (int i = 0; i < ac; i++) {
-        if (bsFixed != null && bsFixed.get(i))
-          continue;
         MinAtom minAtom = minAtoms[i];
-        if (bsBasis.get((a = minAtom.atom).i)) { 
-          p.set(minAtom.coord[0], minAtom.coord[1],
-              minAtom.coord[2]);
-          vwr.getModelkit(false).moveConstrained(a.i, p, true, true);
+        if (bsMinFixed != null && bsMinFixed.get(i))
+          continue;
+        a = minAtom.atom;
+        p.set(minAtom.coord[0], minAtom.coord[1], minAtom.coord[2]);
+        //System.out.println("MIN moving " + p.distance(a) + " " + minAtom);
+        if (vwr.getModelkit(false).moveConstrained(a.i, p, true, true) > 0) {
+          doUpdateMinAtoms = true;
         }
       }
       // now transfer back all atom coordinates
-      for (int i = 0; i < ac; i++) {
-        MinAtom minAtom = minAtoms[i];
-        minAtom.coord[0] = (a = minAtom.atom).x;
-        minAtom.coord[1] = a.y;
-        minAtom.coord[2] = a.z;
+      if (doUpdateMinAtoms) {
+        for (int i = 0; i < ac; i++) {
+          MinAtom minAtom = minAtoms[i];
+//          p.set(minAtom.coord[0], minAtom.coord[1], minAtom.coord[2]);
+          minAtom.coord[0] = (a = minAtom.atom).x;
+          minAtom.coord[1] = a.y;
+          minAtom.coord[2] = a.z;
+//          double d = a.distance(p);
+//          if (d > 0.001)
+//            System.out.println("MIN: " + a + " " + d);
+        }
       }
     }
     vwr.refreshMeasures(false);
@@ -750,6 +771,18 @@ public class Minimizer {
 
   public String getForceFieldUsed() {
     return (pFF == null ? null : pFF.name);
+  }
+
+  public Boolean isLoggable(int[] iData, int n) {
+    if (bsBasis == null)
+      return Boolean.TRUE;
+    if (iData == null)
+      return bsBasis.get(minAtoms[n].atom.i) ? Boolean.TRUE : Boolean.FALSE;
+    for (int i = 0; i < n; i++) {
+      if (bsBasis.get(minAtoms[iData[i]].atom.i))
+        return Boolean.TRUE;
+    }
+    return Boolean.FALSE;
   }
 
 }

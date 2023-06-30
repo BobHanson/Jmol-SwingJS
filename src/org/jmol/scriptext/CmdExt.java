@@ -1451,7 +1451,7 @@ public class CmdExt extends ScriptExt {
         pt1.add2(center, q.getNormal());
         endDegrees = q.getTheta();
         if (endDegrees == 0 && doTranslate) {
-          if (translation.length() > 0.01f)
+          if (translation.length() > 0.01d)
             endDegrees = 1e10d;
           else if (isFrames)
             continue;
@@ -2816,7 +2816,7 @@ public class CmdExt extends ScriptExt {
     boolean groupOnly = false;
     Minimizer minimizer = vwr.getMinimizer(false);
     // may be null
-    for (int i = 1; i < slen; i++)
+    for (int i = 1; i < slen; i++) {
       switch (getToken(i).tok) {
       case T.addhydrogens:
         addHydrogen = true;
@@ -2888,8 +2888,13 @@ public class CmdExt extends ScriptExt {
         if (i + 1 == slen)
           return;
         continue;
+      case T.only:
+      case T.selected:
+        selectedOnly = true;
+        break;
       case T.group:
         groupOnly = true;
+        break;
       case T.bitset:
       case T.expressionBegin:
         selectedOnly = true;
@@ -2914,6 +2919,7 @@ public class CmdExt extends ScriptExt {
         invArg();
         break;
       }
+    }
     if (!chk)
       try {
         vwr.minimize(e, steps, crit, bsSelected, bsFixed, 0, 
@@ -4973,7 +4979,7 @@ public class CmdExt extends ScriptExt {
           : null);
       checkLength((len = ++eval.iToken) + filterLen);
       if (!chk) {
-        Object o = vwr.getSymmetryInfo(vwr.getAllAtoms().nextSetBit(0), xyz, iop, null, pt1, pt2, 0, type, 0, nth, 0);
+        Object o = vwr.getSymmetryInfo(vwr.getAllAtoms().nextSetBit(0), xyz, iop, null, pt1, pt2, 0, type, 0, nth, 0, null);
         msg = (o == null ? "" : o instanceof Map ? SV.getVariable(o).asString() : o.toString());
       }
       break;
@@ -5653,7 +5659,7 @@ public class CmdExt extends ScriptExt {
             if (stype == null)
               stype = (String) vwr.getSymmetryInfo(
                   vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null, null,
-                  T.lattice, null, 0, -1, 0);
+                  T.lattice, null, 0, -1, 0, null);
             if (sym == null)
               sym = vwr.getSymTemp();
             sym.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),
@@ -5862,8 +5868,9 @@ public class CmdExt extends ScriptExt {
     double dist0 = plane.w;
     P4d p0 = P4d.new4(plane.x, plane.y, plane.z, 0);
     int max = Math.max(Math.max(h, k), l);
-    Lst<P3d> cpts = MeasureD.getLatticePoints(uc.getLatticeCentering(), (h == 0 ? 0 : max), (k == 0 ? 0 : max), (l == 0 ? 0 : max));
-    for (int j = 0; j < cpts.size(); j++) {
+    Lst<P3d> cpts = MeasureD.getLatticePoints(uc.getLatticeCentering(),
+        (h == 0 ? 0 : max), (k == 0 ? 0 : max), (l == 0 ? 0 : max));
+    for (int j = cpts.size(); --j >= 0;) {
       uc.toCartesian(cpts.get(j), true);
     }
     cpts = MeasureD.getPointsOnPlane(cpts.toArray(new P3d[cpts.size()]), p0);
@@ -5872,70 +5879,79 @@ public class CmdExt extends ScriptExt {
     double dmin = Double.MAX_VALUE, dmin2 = Double.MAX_VALUE;
     P3d v = null, v1 = null;
     double da = amin, damin = Double.MAX_VALUE, d;
+    boolean okAng, isNew, isLinear;
     for (int i = cpts.size(); --i >= 0;) {
       P3d pt = cpts.get(i);
       d = pt.length();
-      boolean checkv1 = false;
-      boolean isnew = false;
-//      boolean checkAngle = false;
+      isNew = isLinear = false;
+      //      boolean checkAngle = false;
       // check for 0 or linear
-      if (d < 0.01f || v != null && ((da = Math.abs(MeasureD.computeTorsion(v, zero, plane, pt, true))) > -amin))
+      if (d < 0.01d || v != null && ((da = Math
+          .abs(MeasureD.computeTorsion(v, zero, plane, pt, true))) > -amin))
         continue;
+      isLinear = (da < 1);
       if (v == null) {
         // load v
         v = pt;
         dmin = d;
-      } else if (d < dmin - 0.01f) {
-        isnew = true;
+        continue;
+      }
+      if (d < dmin - 0.01d) {
+        isNew = true;
         damin = Double.MAX_VALUE;
         da = Double.MAX_VALUE;
-        checkv1 = true;
-      } else if (d < dmin2 - 0.01f) {
+      } else if (d < dmin2 - 0.01d) {
         damin = Double.MAX_VALUE;
         // new v1
-        checkv1 = true;
-      } else if (d < dmin2 + 0.01f) {
+      } else if (d >= dmin2 + 0.01d) {
         // hexagonal
-        checkv1 = true;
-    //        checkAngle = true;
-  }
-      if (checkv1) {
-        boolean okAng = (da > 89);
-        if (isnew || d < dmin + 0.1d && (pt.x >= -0.01f && pt.y <= 0.01f) && okAng && (damin == Double.MAX_VALUE || damin < 89)) {
-          // special first-quadrant check
+        //        checkAngle = true;
+      } else {
+        continue;
+      }
+      if (isNew || (okAng = (da > 89)) && d < dmin + 0.1d
+          && (pt.x >= -0.01d && pt.y <= 0.01d)
+          && (damin == Double.MAX_VALUE || damin < 89)) {
+        // special first-quadrant check
+        if (isLinear) {
+          // discard v1
+          v1 = null;
+          dmin2 = Double.MAX_VALUE;
+        } else {
+          // replace v2 with v
           v1 = v;
           dmin2 = dmin;
-          v = pt;
-          dmin = d;
-          if (!isnew && da < damin)
-            damin = da;
-        } else if (d < dmin2 + 0.1d && okAng) {
-          v1 = pt;
-          dmin2 = d;
-          if (da < damin)
-            damin = da;
         }
+        v = pt;
+        dmin = d;
+        if (!isNew && da < damin)
+          damin = da;
+      } else if (okAng && d < dmin2 + 0.1d) {
+        v1 = pt;
+        dmin2 = d;
+        if (da < damin)
+          damin = da;
       }
     }
     if (v == null)
       invArg();
     P3d u = null;
-    if (v1 != null) {
+    if (v1 == null) {
+      for (int i = cpts.size(); --i >= 0;) {
+        P3d pt = cpts.get(i);
+        da = MeasureD.computeTorsion(v, zero, plane, pt, true);
+        if (da < -89.9d && da > amin + 0.01d) {
+          amin = da;
+          u = pt;
+        }
+      }
+    } else {
       da = MeasureD.computeTorsion(v, zero, plane, v1, true);
-      if (da > 0) {
+      if (da > 1) {
         u = v;
         v = v1;
       } else {
         u = v1;
-      }
-    } else {
-      for (int i = cpts.size(); --i >= 0;) {
-        P3d pt = cpts.get(i);
-        da = MeasureD.computeTorsion(v, zero, plane, pt, true);
-        if (da < -89.9d && da > amin + 0.01f) {
-          amin = da;
-          u = pt;
-        }
       }
     }
     if (u == null)

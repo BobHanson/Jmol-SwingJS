@@ -26,18 +26,16 @@ package org.jmol.minimize.forcefield;
 
 import java.util.Map;
 
-import javajs.util.BS;
-
 import org.jmol.minimize.MMConstraint;
 import org.jmol.minimize.MinAngle;
 import org.jmol.minimize.MinAtom;
 import org.jmol.minimize.MinBond;
 import org.jmol.minimize.MinObject;
-import org.jmol.minimize.MinPosition;
 import org.jmol.minimize.MinTorsion;
 import org.jmol.minimize.Util;
 
 import javajs.util.AU;
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -82,7 +80,7 @@ abstract class Calculations {
   MinBond[] minBonds;
   MinAngle[] minAngles;
   MinTorsion[] minTorsions;
-  private MinPosition[] minPositions;
+//  private MinPosition[] minPositions;
 //  private Lst<MMConstraint> constraints;
   private MMConstraint[][] constraintsByType;
   private boolean haveConstraints;
@@ -91,14 +89,14 @@ abstract class Calculations {
 
   Calculations(ForceField ff, 
       MinAtom[] minAtoms, MinBond[] minBonds,
-      MinAngle[] minAngles, MinTorsion[] minTorsions, MinPosition[] minPositions,
+      MinAngle[] minAngles, MinTorsion[] minTorsions,
       Lst<MMConstraint> constraints) {
     this.ff = ff;
     this.minAtoms = minAtoms;
     this.minBonds = minBonds;
     this.minAngles = minAngles;
     this.minTorsions = minTorsions;
-    this.minPositions = minPositions;
+//    this.minPositions = minPositions;
     ac = minAtoms.length;
     bondCount = minBonds.length;
     angleCount = minAngles.length;
@@ -409,6 +407,8 @@ abstract class Calculations {
         + "---------BONDED ATOMS--------\n"
         + trailer);
     for (int i = 0; i < ac; i++) {
+      if (ff.minimizer.isLoggable(null, i) == Boolean.FALSE)
+        continue;
       MinAtom atom = minAtoms[i];
       int[] others = atom.getBondedAtomIndexes();
       int[] iVal = new int[others.length + 2];
@@ -500,16 +500,16 @@ abstract class Calculations {
 //      return TextFormat.sprintf(
 //          "%3d  %-5s %8.3f    %8.3f    %8.3f    %8.3f    %8.3f",
 //          "sFI", new Object[] { minAtoms[c.ia].sType, 
-//          new double[] { (double)c.dData[0], (double)c.dData[1], (double)c.dData[2], (double)c.dData[3], 
-//              (double)c.delta, energy },
+//          new double[] { c.dData[0], c.dData[1], c.dData[2], c.dData[3], 
+//              c.delta, energy },
 //          new int[] { minAtoms[c.ia].atom.getAtomNumber() }});
     case CALC_DISTANCE:
       return PT.sprintf(
           "%3d %3d  %-5s %-5s  %4.2f%8.3f   %8.3f     %8.3f   %8.3f   %8.3f",
           "ssFI", new Object[] { minAtoms[c.ia].sType, minAtoms[c.ib].sType, 
-          new double[] { 0, (double)c.rab, 
-              (double)c.dData[1], (double)c.dData[0], 
-              (double)c.delta, energy },
+          new double[] { 0, c.rab, 
+              c.dData[1], c.dData[0], 
+              c.delta, energy },
           new int[] { minAtoms[c.ia].atom.getAtomNumber(), minAtoms[c.ib].atom.getAtomNumber() }});
     case CALC_ANGLE:
     case CALC_STRETCH_BEND:
@@ -517,8 +517,8 @@ abstract class Calculations {
           "%3d %3d %3d  %-5s %-5s %-5s  %8.3f  %8.3f     %8.3f   %8.3f", 
           "sssFI", new Object[] { minAtoms[c.ia].sType, minAtoms[c.ib].sType, 
               minAtoms[c.ic].sType,
-          new double[] { (double)(c.theta * RAD_TO_DEG), c.dData[1] /*THETA0*/, 
-              (double)c.dData[0]/*Kijk*/, energy },
+          new double[] { (c.theta * RAD_TO_DEG), c.dData[1] /*THETA0*/, 
+              c.dData[0]/*Kijk*/, energy },
           new int[] { minAtoms[c.ia].atom.getAtomNumber(), minAtoms[c.ib].atom.getAtomNumber(),
               minAtoms[c.ic].atom.getAtomNumber()} });
       case CALC_TORSION:
@@ -534,19 +534,19 @@ abstract class Calculations {
       return PT.sprintf("%3d %3d %3d %3d  %-5s %-5s %-5s %-5s  %8.3f   %8.3f     %8.3f",
           "ssssFI", new Object[] { minAtoms[c.ia].sType, minAtoms[c.ib].sType, 
               minAtoms[c.ic].sType, minAtoms[c.id].sType,
-          new double[] { (double)(c.theta * RAD_TO_DEG), 
-              (double)c.dData[0]/*koop*/, energy },
+          new double[] { (c.theta * RAD_TO_DEG), 
+              c.dData[0]/*koop*/, energy },
           new int[] { minAtoms[c.ia].atom.getAtomNumber(), minAtoms[c.ib].atom.getAtomNumber(),
               minAtoms[c.ic].atom.getAtomNumber(), minAtoms[c.id].atom.getAtomNumber() } });
     case CALC_VDW:
       return PT.sprintf("%3d %3d  %-5s %-5s %6.3f  %8.3f  %8.3f", 
           "ssFI", new Object[] { minAtoms[c.iData[0]].sType, minAtoms[c.iData[1]].sType,
-          new double[] { (double)c.rab, (double)c.dData[0]/*kab*/, energy},
+          new double[] { c.rab, c.dData[0]/*kab*/, energy},
           new int[] { minAtoms[c.ia].atom.getAtomNumber(), minAtoms[c.ib].atom.getAtomNumber() } });
     case CALC_ES:
       return PT.sprintf("%3d %3d  %-5s %-5s %6.3f  %8.3f  %8.3f  %8.3f  %8.3f", 
           "ssFI", new Object[] { minAtoms[c.iData[0]].sType, minAtoms[c.iData[1]].sType,
-          new double[] { (double)c.rab, (double)c.dData[0]/*q1*/, (double)c.dData[1]/*q2*/, (double)c.dData[2]/*f*/, energy },
+          new double[] { c.rab, c.dData[0]/*q1*/, c.dData[1]/*q2*/, c.dData[2]/*f*/, energy },
           new int[] { minAtoms[c.ia].atom.getAtomNumber(), minAtoms[c.ib].atom.getAtomNumber() } });
     }
     return "";

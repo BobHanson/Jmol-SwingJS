@@ -729,9 +729,9 @@ public class Symmetry implements SymmetryInterface {
   public Object getSymmetryInfoAtom(ModelSet modelSet, int iatom, String xyz,
                                     int op, P3d translation, P3d pt, P3d pt2,
                                     String id, int type, double scaleFactor,
-                                    int nth, int options) {
+                                    int nth, int options, int[] opList) {
     return getDesc(modelSet).getSymopInfo(iatom, xyz, op, translation, pt, pt2,
-        id, type, scaleFactor, nth, options);
+        id, type, scaleFactor, nth, options, opList);
   }
 
   @Override

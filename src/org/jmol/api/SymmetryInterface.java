@@ -226,7 +226,7 @@ public interface SymmetryInterface {
    * @return a variety of object types
    */
   Object getSymmetryInfoAtom(ModelSet ms, int iatom, String xyz, int op,
-                                    P3d translation, P3d pt, P3d pt2, String id, int type, double scaleFactor, int nth, int options);
+                                    P3d translation, P3d pt, P3d pt2, String id, int type, double scaleFactor, int nth, int options, int[] oplist);
 
   P3d toSupercell(P3d fpt);
 
@@ -265,6 +265,5 @@ public interface SymmetryInterface {
   boolean isWithinUnitCell(P3d pt, double x, double y, double z);
 
   boolean checkPeriodic(P3d pt);
-
 
 }

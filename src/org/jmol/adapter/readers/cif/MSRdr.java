@@ -603,7 +603,8 @@ public class MSRdr implements MSInterface {
         double[] qcoefs = getQCoefs(key);
         if (qcoefs == null) {
           System.err.println("MSRdr missing cell wave vector for atom wave vector for " + key + " "
-                  + Escape.e(params));
+                  + Escape.e(params) + 
+                  getQCoefs(key));
           break;
         }
         addAtomModulation(atomName, axis, type, p, utens, qcoefs);
@@ -663,7 +664,7 @@ public class MSRdr implements MSInterface {
     }     
     // BH 2020.09.16 the addition of 2018.05.30 puts fn just after f_. 
     // it is not clear that anything puts it after it, but leaving that as an option.
-    double[] p = getMod("F_" + fn + "_coefs_");
+    double[] p = getMod("F_id" + fn + "_coefs_");
     if (p == null) {
       p = getMod("F_coefs_id" + fn);
     }
