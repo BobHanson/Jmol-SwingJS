@@ -209,7 +209,6 @@ abstract public class ForceField {
         }
         return false;
       }
-      //System.out.println(isPreliminary + " " + getNormalizedDE() + " " + currentStep);
       if (isPreliminary && getNormalizedDE() >= 2) {
         // looking back at this after some time, I don't exactly see why I wanted
         // this to stay in preliminary mode unless |DE| >= 2 * crit. 
@@ -262,9 +261,6 @@ abstract public class ForceField {
     atom.force[0] = -getDE(atom, terms, 0, delta);
     atom.force[1] = -getDE(atom, terms, 1, delta);
     atom.force[2] = -getDE(atom, terms, 2, delta);
-    //if (atom.atom.getAtomIndex() == 2)
-//     System.out.println("FF.setFUND atom + " + atom 
-//         + "\n force=" + atom.force[0] + " " + atom.force[1] + " " + atom.force[2] );
     return;
   }
 
@@ -388,10 +384,10 @@ abstract public class ForceField {
 
     double step = 0.75 * trustRadius;
     double trustRadius2 = trustRadius * trustRadius;
-
     double e1 = energyFull(false, true);
     int nSteps = 10;
-    for (int iStep = 0; iStep < nSteps; iStep++) {
+    boolean isDone = false;
+    for (int iStep = 0; iStep < nSteps && !isDone; iStep++) {
       saveCoordinates();
       for (int i = 0; i < minAtomCount; ++i) {
         if (bsMinFixed == null || !bsMinFixed.get(i)) {
@@ -399,8 +395,9 @@ abstract public class ForceField {
           double[] coord = minAtoms[i].coord;
           double f2 = (force[0] * force[0] + force[1] * force[1]
               + force[2] * force[2]);
-          if (f2 > trustRadius2 / step / step) {
-            f2 = trustRadius / Math.sqrt(f2) / step;
+          double f = trustRadius2 / step / step / f2;
+          if (1 > f) {
+            f2 = Math.sqrt(f);
             force[0] *= f2;
             force[1] *= f2;
             force[2] *= f2;
@@ -418,11 +415,12 @@ abstract public class ForceField {
           }
         }
       }
-      if (doUpdateAtoms)
+      if (doUpdateAtoms) {
+        // only necessary if symmetry constraints might adjust positions
         minimizer.updateAtomXYZ();
+      }
       double e2 = energyFull(false, true);
-      if (Util.isNear3(e2, e1, 1.0e-3))
-        break;
+      isDone = Util.isNear3(e2, e1, 1.0e-3);
       if (e2 > e1) {
         step *= 0.1;
         restoreCoordinates();

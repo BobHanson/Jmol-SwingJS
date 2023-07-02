@@ -169,7 +169,7 @@ public class Minimizer {
     try {
       setEnergyUnits();
 
-      // if the user indicated minimize ... FIX ... or we don't have any defualt,
+      // if the user indicated minimize ... FIX ... or we don't have any default,
       // use the bsFixed coming in here, which is set to "nearby and in frame" in that case. 
       // and if something is fixed, then AND it with "nearby and in frame" as well.
       if (!haveFixed && bsFixedDefault != null)
