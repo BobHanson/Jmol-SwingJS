@@ -462,11 +462,6 @@ public class Minimizer {
             vAngles.addLast(new MinAngle(new int[] { ia, ib, ic, i,
                 minAtoms[ib].getBondIndex(j)}));
             minAtoms[ia].bsVdw.clear(ic);
-/*            System.out.println (" " 
-                + minAtoms[ia].getIdentity() + " -- " 
-                + minAtoms[ib].getIdentity() + " -- " 
-                + minAtoms[ic].getIdentity());
-*/
           }
       }
       if (minAtoms[ia].nBonds > 1) {
@@ -477,12 +472,6 @@ public class Minimizer {
                 .addLast(new MinAngle(new int[] { ic, ia, ib, minAtoms[ia].getBondIndex(j),
                     i}));
             minAtoms[ic].bsVdw.clear(ib);
-/*
-            System.out.println ("a " 
-                + minAtoms[ic].getIdentity() + " -- " 
-                + minAtoms[ia].getIdentity() + " -- " 
-                + minAtoms[ib].getIdentity());
-*/            
           }
       }
     }
@@ -510,11 +499,6 @@ public class Minimizer {
                 angle[ForceField.ABI_IJ], angle[ForceField.ABI_JK],
                 minAtoms[ic].getBondIndex(j) }));
               minAtoms[Math.min(ia, id)].bs14.set(Math.max(ia, id));
-/*            System.out.println("t " + minAtoms[ia].getIdentity() + " -- "
-                + minAtoms[ib].getIdentity() + " -- "
-                + minAtoms[ic].getIdentity() + " -- "
-                + minAtoms[id].getIdentity());
-*/
           }
         }
       }
@@ -527,11 +511,6 @@ public class Minimizer {
                 angle[ForceField.ABI_JK], angle[ForceField.ABI_IJ],
                 minAtoms[ia].getBondIndex(j) }));
             minAtoms[Math.min(ic, id)].bs14.set(Math.max(ic, id));
-/*            System.out.println("t " + minAtoms[ic].getIdentity() + " -- "
-                + minAtoms[ib].getIdentity() + " -- "
-                + minAtoms[ia].getIdentity() + " -- "
-                + minAtoms[id].getIdentity());
-*/
           }
         }
       }
@@ -623,7 +602,7 @@ public class Minimizer {
       reportEnergy();
       saveCoordinates();
     } catch (Exception e) {
-      e.printStackTrace();
+      //e.printStackTrace();
       Logger.error("minimization error vwr=" + vwr + " pFF = " + pFF);
       return false;
     }
@@ -721,7 +700,7 @@ public class Minimizer {
         p.set(minAtom.coord[0], minAtom.coord[1], minAtom.coord[2]);
         if (vwr.getModelkit(false).moveConstrained(a.i, p, true, true) > 0) {
           doUpdateMinAtoms = true;
-        } 
+        }
       }
       // now transfer back all atom coordinates
       if (doUpdateMinAtoms) {

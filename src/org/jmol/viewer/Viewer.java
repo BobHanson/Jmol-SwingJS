@@ -9307,7 +9307,7 @@ public class Viewer extends JmolViewer
       return;
 
     BS bsBasis = (isModelkit || !selectedOnly
-        ? ms.am[ms.at[bsSelected.nextSetBit(0)].mi].bsAsymmetricUnit
+        ? BSUtil.copy(ms.am[ms.at[bsSelected.nextSetBit(0)].mi].bsAsymmetricUnit)
         : null);
     if (isModelkit && bsBasis == null) {
       scriptStatusMsg(

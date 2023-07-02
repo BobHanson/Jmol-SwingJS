@@ -49,7 +49,6 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.MouseState;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3d;
@@ -487,7 +486,6 @@ public class ModelKit {
 
     // from ModelKit, Viewer, and CmdExt
 
-//    System.out.println("MK.setProperty " + key + " " + value);
     try {
       
       if (vwr == null) // clearing
@@ -2812,16 +2810,6 @@ public class ModelKit {
 //    }
 
     
-//  function minimizeXtal() {
-//  load append var x {444 666 1};
-//  frame last;
-//  minimize;
-//  var pts = {thisModel & symop=1555}.xyz.all;
-//  zap {thisModel};
-//  frame @m;
-//  modelkit moveto @au @pts;
-//}
-    
     boolean wasThread = vwr.getBoolean(T.useminimizationthread);
     boolean wasAppend = vwr.getBoolean(T.appendnew);
     vwr.setBooleanProperty("useMinimizationThread", false);
@@ -2837,7 +2825,7 @@ public class ModelKit {
       if (vwr.loadModelFromFile(null, "<temp>", null, null, true, htParams, null, null, 0," ") != null)
         return;
       int modelIndex = vwr.ms.mc - 1;
-      BS bsBasis2 = vwr.ms.am[modelIndex].bsAsymmetricUnit;
+      BS bsBasis2 = BSUtil.copy(vwr.ms.am[modelIndex].bsAsymmetricUnit);
       vwr.setCurrentModelIndex(modelIndex);
       vwr.minimize(eval, steps, crit, BSUtil.copy(bsBasis2), null, 0, flags & ~Viewer.MIN_MODELKIT);
       P3d[] pts = new P3d[bsBasis2.cardinality()];
