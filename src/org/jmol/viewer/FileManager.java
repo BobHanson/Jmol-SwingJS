@@ -132,7 +132,7 @@ public class FileManager implements BytePoster {
     fullPathName = fileInfo[0];
     fileName = fileInfo[Math.min(1,  fileInfo.length - 1)];
     nameAsGiven = fileInfo[Math.min(2, fileInfo.length - 1)];
-    if (!nameAsGiven.equals(JC.ZAP_TITLE)) {
+    if (!nameAsGiven.equals(JC.ZAP_TITLE) && !nameAsGiven.equals("string")) {
       lastNameAsGiven = nameAsGiven;
       lastFullPathName = fullPathName;
       
@@ -146,7 +146,8 @@ public class FileManager implements BytePoster {
 
   public String getFullPathName(boolean orPrevious) {
     String f =(fullPathName != null ? fullPathName : nameAsGiven);
-    return (!orPrevious || !f.equals(JC.ZAP_TITLE) ? f : lastFullPathName != null ? lastFullPathName : lastNameAsGiven);
+    return (!orPrevious || !f.equals(JC.ZAP_TITLE) && !f.equals("string") ? f 
+    		: lastFullPathName != null ? lastFullPathName : lastNameAsGiven);
   }
 
   private String lastFileType;

@@ -172,10 +172,7 @@ abstract public class ForceField {
       for (int i = 0; i < minAtomCount; i++)
         if (bsMinFixed == null || !bsMinFixed.get(i))
           setForcesUsingNumericalDerivative(minAtoms[i], ENERGY);
-      linearSearch();
-
-      if (doUpdateAtoms)
-        minimizer.updateAtomXYZ();
+      linearSearch(doUpdateAtoms);
 
       calc.setSilent(false);
 
@@ -387,13 +384,13 @@ abstract public class ForceField {
   // end convergence criteria reached, stop
   // }
 
-  private void linearSearch() {
+  private void linearSearch(boolean doUpdateAtoms) {
 
     double step = 0.75 * trustRadius;
     double trustRadius2 = trustRadius * trustRadius;
 
     double e1 = energyFull(false, true);
-    int nSteps = (minimizer.bsBasis == null ? 10 : 2);
+    int nSteps = 10;
     for (int iStep = 0; iStep < nSteps; iStep++) {
       saveCoordinates();
       for (int i = 0; i < minAtomCount; ++i) {
@@ -421,6 +418,8 @@ abstract public class ForceField {
           }
         }
       }
+      if (doUpdateAtoms)
+        minimizer.updateAtomXYZ();
       double e2 = energyFull(false, true);
       if (Util.isNear3(e2, e1, 1.0e-3))
         break;

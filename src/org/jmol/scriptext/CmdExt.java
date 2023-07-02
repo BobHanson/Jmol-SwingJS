@@ -170,7 +170,7 @@ public class CmdExt extends ScriptExt {
       mapProperty();
       break;
     case T.minimize:
-      minimize();
+      minimize(false);
       break;
     case T.modelkitmode:
       modelkit();
@@ -2805,7 +2805,7 @@ public class CmdExt extends ScriptExt {
     invArg();
   }
 
-  private void minimize() throws ScriptException {
+  private void minimize(boolean isModelkit) throws ScriptException {
     BS bsSelected = null;
     int steps = Integer.MAX_VALUE;
     double crit = 0;
@@ -2816,10 +2816,13 @@ public class CmdExt extends ScriptExt {
     boolean groupOnly = false;
     Minimizer minimizer = vwr.getMinimizer(false);
     // may be null
-    for (int i = 1; i < slen; i++) {
+    for (int i = (isModelkit ? 2 : 1); i < slen; i++) {
       switch (getToken(i).tok) {
-      case T.addhydrogens:
-        addHydrogen = true;
+      case T.criterion:
+        crit = doubleParameter(++i);
+        continue;
+      case T.energy:
+        steps = 0;
         continue;
       case T.cancel:
       case T.stop:
@@ -2856,12 +2859,6 @@ public class CmdExt extends ScriptExt {
           vwr.getMinimizer(true).setProperty("constraint",
               new Object[] { aList, Double.valueOf(targetValue) });
         return;
-      case T.criterion:
-        crit = doubleParameter(++i);
-        continue;
-      case T.energy:
-        steps = 0;
-        continue;
       case T.fixed:
         if (i != 1)
           invArg();
@@ -2888,6 +2885,9 @@ public class CmdExt extends ScriptExt {
         if (i + 1 == slen)
           return;
         continue;
+      case T.addhydrogens:
+        addHydrogen = true;
+        continue;
       case T.only:
       case T.selected:
         selectedOnly = true;
@@ -2895,6 +2895,12 @@ public class CmdExt extends ScriptExt {
       case T.group:
         groupOnly = true;
         break;
+      case T.silent:
+        isSilent = true;
+        break;
+      case T.step:
+        steps = intParameter(++i);
+        continue;
       case T.bitset:
       case T.expressionBegin:
         selectedOnly = true;
@@ -2909,21 +2915,18 @@ public class CmdExt extends ScriptExt {
           selectedOnly = true;
         }
         continue;
-      case T.silent:
-        isSilent = true;
-        break;
-      case T.step:
-        steps = intParameter(++i);
-        continue;
       default:
         invArg();
         break;
       }
     }
+    if (isModelkit && (addHydrogen || selectedOnly || groupOnly))
+      invArg();
     if (!chk)
       try {
         vwr.minimize(e, steps, crit, bsSelected, bsFixed, 0, 
             (addHydrogen ? Viewer.MIN_ADDH : 0)
+            | (isModelkit ? Viewer.MIN_MODELKIT : 0) 
             | (selectedOnly ? Viewer.MIN_SELECT_ONLY : 0) 
             | (groupOnly ? Viewer.MIN_GROUP_SELECT : 0) 
             | (isSilent ? Viewer.MIN_SILENT: 0));
@@ -6013,7 +6016,8 @@ public class CmdExt extends ScriptExt {
     //  MODELKIT CENTER point or atoms (point can be fractional by adding "/1" to at least one coord)
     //
     //  -- action options include alternatives to the given commands (assign is undocumented)
-    //  
+    //
+    //  modelkit MINIMIZE
     //  modelkit ASSIGN ATOM [symbol|pl|mi] point
     //  modelkit ASSIGN ATOM @1 [symbol|pl|mi]
     //  modelkit ASSIGN ATOM @1 [symbol|pl|mi] point
@@ -6083,6 +6087,9 @@ public class CmdExt extends ScriptExt {
         return;
       i = ++e.iToken;
       break;
+    case T.minimize:
+      minimize(true);
+      return;
     case T.rotate:
     case T.rotateSelected:
       e.cmdRotate(false, true);
@@ -6357,7 +6364,12 @@ public class CmdExt extends ScriptExt {
         ++e.iToken;
       }
     } else if (isMove) {
-      pt = getPoint3f(i, true);
+      if (e.isArrayParameter(i)) {
+        pts = e.getPointArray(i, -1, false);
+      } else {
+        pt = getPoint3f(i, true);
+      }
+      i = e.iToken;
     } else if (isSpacegroup) {
       type = e.optParameterAsString(i);
       if (tokAt(e.iToken + 1) == T.packed) {
@@ -6410,7 +6422,7 @@ public class CmdExt extends ScriptExt {
       break;
     case T.moveto:
       // do not allow projection using this command
-      int nm = vwr.getModelkit(false).cmdAssignMoveAtoms(bs, index, pt, true);
+      int nm = vwr.getModelkit(false).cmdAssignMoveAtoms(bs, index, pt, pts, true);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;

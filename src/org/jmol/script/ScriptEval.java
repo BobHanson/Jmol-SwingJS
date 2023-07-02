@@ -4413,11 +4413,8 @@ public class ScriptEval extends ScriptExpr {
         tok = T.getTokFromName(modelName);
         break;
       }
+      // load APPEND
       // load MENU
-      // load DATA "xxx" ...(data here)...END "xxx"
-      // load DATA "append_and/or_orientation xxx" ...(data here)...END "append_and/or_orientation xxx"
-      // load DATA "@varName"
-      // load APPEND (moves pointer forward)
       // load XYZ
       // load VXYZ
       // load VIBRATION
@@ -4427,15 +4424,22 @@ public class ScriptEval extends ScriptExpr {
       // load HISTORY
       // load NBO
       switch (tok) {
-      case T.var:
-        String var = paramAsStr(++i);
-        filename = "@" + var;
-        Object o = getVarParameter(var, false);
-        if (o instanceof Map<?, ?>) {
-          checkLength(3);
-          loadPNGJVar(filename, o, htParams);
-          return;
+      case T.append:
+        // we are looking out for state scripts after model 1.1 deletion.
+        modelName = optParameterAsString(++i);
+        int ami = PT.parseInt(modelName);
+        isAppend = (!isStateScript || vwr.ms.mc > 0);
+        if (isAppend)
+          loadScript.append(" append");
+        if (ami >= 0) {
+          modelName = optParameterAsString(++i);
+          if (isAppend) {
+            loadScript.append(" " + ami);
+            appendNew = false;
+            htParams.put("appendToModelIndex", Integer.valueOf(ami));
+          }
         }
+        tok = T.getTokFromName(modelName);
         break;
       case T.nbo:
       case T.history:
@@ -4469,23 +4473,6 @@ public class ScriptEval extends ScriptExpr {
         tok = T.getTokFromName(modelName);
         htParams.put("appendToModelIndex", Integer.valueOf(vwr.am.cmi));
         break;
-      case T.append:
-        // we are looking out for state scripts after model 1.1 deletion.
-        modelName = optParameterAsString(++i);
-        int ami = PT.parseInt(modelName);
-        isAppend = (!isStateScript || vwr.ms.mc > 0);
-        if (isAppend)
-          loadScript.append(" append");
-        if (ami >= 0) {
-          modelName = optParameterAsString(++i);
-          if (isAppend) {
-            loadScript.append(" " + ami);
-            appendNew = false;
-            htParams.put("appendToModelIndex", Integer.valueOf(ami));
-          }
-        }
-        tok = T.getTokFromName(modelName);
-        break;
       case T.audio:
         isAudio = true;
         i++;
@@ -4508,6 +4495,11 @@ public class ScriptEval extends ScriptExpr {
           isAppend = true;
         }
       }
+      
+      // load [[APPEND]] VAR
+      // load DATA "xxx" ...(data here)...END "xxx"
+      // load DATA "append_and/or_orientation xxx" ...(data here)...END "append_and/or_orientation xxx"
+      // load DATA "@varName"
       // LOAD [[APPEND]] FILE
       // LOAD [[APPEND]] INLINE
       // LOAD [[APPEND]] SMILES
@@ -4517,6 +4509,16 @@ public class ScriptEval extends ScriptExpr {
       // LOAD [[APPEND]] "fileNameInQuotes"
 
       switch (tok) {
+      case T.var:
+        String var = paramAsStr(++i);
+        filename = "@" + var;
+        Object o = getVarParameter(var, false);
+        if (o instanceof Map<?, ?>) {
+          checkLength(3);
+          loadPNGJVar(filename, o, htParams);
+          return;
+        }
+        break;
       case T.file:
         i++;
         loadScript.append(" " + modelName);
@@ -4813,8 +4815,8 @@ public class ScriptEval extends ScriptExpr {
         }
         if (!isMutate)
           filename = type
-            + checkFileExists("LOAD" + (isAppend ? "_APPEND_" : "_"), isAsync,
-                filename, filePt, !isAppend && pc != pcResume);
+              + checkFileExists("LOAD" + (isAppend ? "_APPEND_" : "_"), isAsync,
+                  filename, filePt, !isAppend && pc != pcResume);
 
         if (filename.startsWith("cache://"))
           localName = null;

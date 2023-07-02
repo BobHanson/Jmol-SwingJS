@@ -1241,7 +1241,9 @@ public class ScriptCompiler extends ScriptTokenParser {
         break out;
       case T.load:
         boolean isAppend = (tokAt(1) == T.append);
-        if (nTokens == 1 || isAppend && (nTokens == 2 || nTokens == 3 && tokAt(2) == T.integer)) {
+        if (nTokens == 1 
+            || isAppend 
+              && (nTokens == 2 || nTokens == 3 && tokAt(2) == T.integer)) {
           if (isAppend && nTokens == 2 && PT.isDigit(charAt(ichToken))) 
                 break out;
           boolean isDataBase = Viewer.isDatabaseCode(charAt(ichToken));
@@ -1249,7 +1251,6 @@ public class ScriptCompiler extends ScriptTokenParser {
             String strFormat = script.substring(ichToken, ichToken + cchToken);
             T token = T.getTokenFromName(strFormat.toLowerCase());
             switch (token == null ? T.nada : token.tok) {
-            case T.var:
             case T.menu:
             case T.orientation:
             case T.append:
@@ -1259,6 +1260,7 @@ public class ScriptCompiler extends ScriptTokenParser {
               if (nTokens != 1)
                 return ERROR;
               //$FALL-THROUGH$
+            case T.var:
             case T.data:
             case T.file:
             case T.spacegroup:

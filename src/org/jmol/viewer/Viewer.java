@@ -5803,6 +5803,8 @@ public class Viewer extends JmolViewer
   @Override
   public boolean getBoolean(int tok) {
     switch (tok) {
+    case T.useminimizationthread:
+      return g.useMinimizationThread;
     case T.nbocharges:
       return g.nboCharges;
     case T.hiddenlinesdashed:
@@ -8339,7 +8341,7 @@ public class Viewer extends JmolViewer
           SymmetryInterface uc = getOperativeSymmetry();
           if (uc != null) {
             getModelkit(false).cmdAssignMoveAtoms(bsSelected, iatom,
-                ptNew, true);
+                ptNew, null, true);
           }
           if (!Double.isNaN(ptNew.x)) {
             ptNew.sub(ptCenter);
@@ -9241,10 +9243,11 @@ public class Viewer extends JmolViewer
   public static final int MIN_SELECT_ONLY = 32;
   public static final int MIN_GROUP_SELECT = 64;
   public static final int MIN_XX = 128;
+  public static final int MIN_MODELKIT = 256;
 
   /**
-   * From the MINIMIZE command and other sources. 
-   *  
+   * From the MINIMIZE command and other sources.
+   * 
    * @param eval
    * @param steps
    *        Integer.MAX_VALUE --> use defaults
@@ -9260,12 +9263,16 @@ public class Viewer extends JmolViewer
                        BS bsSelected, BS bsFixed, double rangeFixed, int flags)
       throws Exception {
 
+    boolean isSelectionExplicit = (bsSelected != null); // could be MINIMIZE {...} or MINIMIZE SELECT {...} or MINIMIZE ONLY {...}
+    if (isSelectionExplicit) {
+      flags |= MIN_SELECTED;
+    }
     boolean addHydrogen = (flags & MIN_ADDH) != 0;
+    boolean isModelkit = (flags & MIN_MODELKIT) != 0;
     boolean isSilent = (flags & MIN_SILENT) != 0;
     boolean isQuick = (flags & MIN_QUICK) != 0;
-
-    boolean isSelectionExplicit = (bsSelected != null);  // could be MINIMIZE {...} or MINIMIZE SELECT {...}
     boolean groupSelected = (flags & MIN_GROUP_SELECT) != 0; // SELECTED GROUP
+
     boolean selectedOnly = groupSelected || (flags & MIN_SELECT_ONLY) != 0; // SELECTED ONLY or no SELECTED or SELECTED GROUP
     boolean isFixExplicit = (bsFixed != null); // MINIMIZE FIX
 
@@ -9274,23 +9281,23 @@ public class Viewer extends JmolViewer
     // only allow crystal symmetry constraints 
     if (isModelKitOpen())
       setModelkitPropertySafely("constraint", null);
-    String ff = g.forceField;
-    
+
     BS bsInFrame = getFrameAtoms();
 
     // When the SELECT option is given without ONLY or FIX, 
     // we go ahead and fix whatever is not selected and then make selected ALL
 
-    if (!isQuick && !addHydrogen && isSelectionExplicit && !isFixExplicit && !selectedOnly) {
+    if (!isQuick && !addHydrogen && isSelectionExplicit && !isFixExplicit
+        && !selectedOnly) {
       BS bs = BSUtil.copy(bsInFrame);
       bsFixed = BSUtil.copy(bs);
       bsFixed.andNot(bsSelected);
-      bsSelected = bs;      
+      bsSelected = bs;
       isFixExplicit = true;
     }
-    
+
     if (!isSelectionExplicit) {
-      bsSelected = getThisModelAtoms(); // first model only
+      bsSelected = getThisModelAtoms(); // this model only
       if (selectedOnly)
         bsSelected.and(bsA());
     } else if (!isQuick) {
@@ -9298,96 +9305,102 @@ public class Viewer extends JmolViewer
     }
     if (bsSelected.isEmpty())
       return;
-    BS bsBasis = null;
-    if (isSelectionExplicit) {
-      flags |= MIN_SELECTED;
-    } 
-    if (!selectedOnly)
-      bsBasis = ms.am[ms.at[bsSelected.nextSetBit(0)].mi].bsAsymmetricUnit;
 
-    if (bsBasis != null) {
-      ff = "UFF";
+    BS bsBasis = (isModelkit || !selectedOnly
+        ? ms.am[ms.at[bsSelected.nextSetBit(0)].mi].bsAsymmetricUnit
+        : null);
+    if (isModelkit && bsBasis == null) {
+      scriptStatusMsg(
+          "MODELKIT MINIMIZE is only applicable to crystal structures.",
+          "minimization: not a crystal structure");
+      return;
+
     }
-//    if (bsBasis != null) {
-//      bsSelected = getAtomBitSet("cell=555");
-//    }
 
-    if (!bsSelected.isEmpty())
+    try {
+
+      if (isModelkit) {
+        getModelkit(false).cmdMinimize(eval, bsBasis, steps, crit, flags);
+        return;
+      }
+      
+      String ff = (bsBasis == null ? g.forceField : "UFF");
+
       getModelForAtomIndex(bsSelected.nextSetBit(0)).auxiliaryInfo
           .put("dimension", "3D");
-    if (isQuick) {
-      bsInFrame = bsSelected;
-    }
-
-    // we allow for a set of atoms to be fixed, 
-    // but that is only used by default
-
-    BS bsMotionFixed = BSUtil
-        .copy(isFixExplicit ? bsFixed : slm.getMotionFixedAtoms());
-    boolean haveFixed = !bsMotionFixed.isEmpty();
-    if (haveFixed)
-      bsSelected.andNot(bsMotionFixed);
-
-    // If there is an asymmetric unit basis, set nearby atoms to all atoms in the model.
-    // If there are no fixed atoms from symmetry and "only" has not been used with "select",
-    // fix any atoms that are in the visible frame set 
-    // and are within 5 angstroms
-    // and are not already selected
-    // unless we have explicitly said "only"
-
-    BS bsNearby = (bsBasis != null ? getThisModelAtoms()
-        : selectedOnly || !haveFixed ? new BS()
-            : ms.getAtomsWithinRadius(
-                (rangeFixed <= 0 ? JC.MINIMIZE_FIXED_RANGE : rangeFixed),
-                bsSelected, true, null, null));
-    bsNearby.andNot(bsSelected);
-    if (haveFixed) {
-      bsMotionFixed.and(bsNearby);
-    } else {
-      bsMotionFixed = bsNearby;
-    }
-    bsMotionFixed.and(bsInFrame);
-    
-    flags |= ((haveFixed ? MIN_HAVE_FIXED : 0)
-        | (getBooleanProperty("minimizationSilent") ? MIN_SILENT : 0));
-    if (isQuick && getBoolean(T.testflag2))
-      return;
-    if (isQuick) {
-      {
-        // carry out a preliminary UFF no-hydrogen calculation
-        // to clean up benzene rings and amides.
-        try {
-          if (!isSilent)
-            Logger.info("Minimizing " + bsSelected.cardinality() + " atoms");
-          getMinimizer(true).minimize(steps, crit, bsSelected, bsMotionFixed,
-              null, flags, "UFF");
-        } catch (Exception e) {
-          Logger.error("Minimization error: " + e.toString());
-          e.printStackTrace();
-        }
-
+      if (isQuick) {
+        bsInFrame = bsSelected;
       }
-    }
-    if (addHydrogen) {
-      BS bsH = addHydrogens(bsSelected, flags);
-      if (!isQuick)
-        bsSelected.or(bsH);
-    }
 
-    int n = bsSelected.cardinality();
-    if (ff.equals("MMFF") && n > g.minimizationMaxAtoms) {
-      scriptStatusMsg(
-          "Too many atoms for minimization (" + n + ">" + g.minimizationMaxAtoms
-              + "); use 'set minimizationMaxAtoms' to increase this limit",
-          "minimization: too many atoms");
-      return;
-    }
-    if (groupSelected) {
-      BS bs = ms.getConnectingAtoms(bsSelected, bsMotionFixed);
-      bsSelected.andNot(bs);
-      bsMotionFixed.or(bs);
-    }
-    try {
+      // we allow for a set of atoms to be fixed, 
+      // but that is only used by default
+
+      BS bsMotionFixed = BSUtil
+          .copy(isFixExplicit ? bsFixed : slm.getMotionFixedAtoms());
+      boolean haveFixed = !bsMotionFixed.isEmpty();
+      if (haveFixed)
+        bsSelected.andNot(bsMotionFixed);
+
+      // If there is an asymmetric unit basis, set nearby atoms to all atoms in the model.
+      // If there are no fixed atoms from symmetry and "only" has not been used with "select",
+      // fix any atoms that are in the visible frame set 
+      // and are within 5 angstroms
+      // and are not already selected
+      // unless we have explicitly said "only"
+
+      BS bsNearby = (bsBasis != null ? getThisModelAtoms()
+          : selectedOnly || !haveFixed ? new BS()
+              : ms.getAtomsWithinRadius(
+                  (rangeFixed <= 0 ? JC.MINIMIZE_FIXED_RANGE : rangeFixed),
+                  bsSelected, true, null, null));
+      bsNearby.andNot(bsSelected);
+      if (haveFixed) {
+        bsMotionFixed.and(bsNearby);
+      } else {
+        bsMotionFixed = bsNearby;
+      }
+      bsMotionFixed.and(bsInFrame);
+
+      flags |= ((haveFixed ? MIN_HAVE_FIXED : 0)
+          | (getBooleanProperty("minimizationSilent") ? MIN_SILENT : 0));
+      if (isQuick && getBoolean(T.testflag2))
+        return;
+      if (isQuick) {
+        {
+          // carry out a preliminary UFF no-hydrogen calculation
+          // to clean up benzene rings and amides.
+          try {
+            if (!isSilent)
+              Logger.info("Minimizing " + bsSelected.cardinality() + " atoms");
+            getMinimizer(true).minimize(steps, crit, bsSelected, bsMotionFixed,
+                null, flags, "UFF");
+          } catch (Exception e) {
+            Logger.error("Minimization error: " + e.toString());
+            e.printStackTrace();
+          }
+
+        }
+      }
+      if (addHydrogen) {
+        BS bsH = addHydrogens(bsSelected, flags);
+        if (!isQuick)
+          bsSelected.or(bsH);
+      }
+
+      int n = bsSelected.cardinality();
+      if (ff.equals("MMFF") && n > g.minimizationMaxAtoms) {
+        scriptStatusMsg(
+            "Too many atoms for minimization (" + n + ">"
+                + g.minimizationMaxAtoms
+                + "); use 'set minimizationMaxAtoms' to increase this limit",
+            "minimization: too many atoms");
+        return;
+      }
+      if (groupSelected) {
+        BS bs = ms.getConnectingAtoms(bsSelected, bsMotionFixed);
+        bsSelected.andNot(bs);
+        bsMotionFixed.or(bs);
+      }
 
       if (!isSilent)
         Logger.info("Minimizing " + bsSelected.cardinality() + " atoms");
@@ -9401,6 +9414,7 @@ public class Viewer extends JmolViewer
           showString("Minimized by Jmol using " + ffUsed, false);
       }
     } catch (JmolAsyncException e) {
+      // thrown if a minimization forcefield resource has not been loaded yet and all loading is asynchronous
       if (eval != null)
         eval.loadFileResourceAsync(e.getFileName());
     } catch (Exception e) {

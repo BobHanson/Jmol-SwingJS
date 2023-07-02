@@ -759,7 +759,7 @@ public class SymmetryDesc {
         } else if (pitch1 != 0) {
           type = info1 = (360 / ang) + "-fold screw axis";
           ptemp.setT(ax1);
-          System.out.println(ax1.length() + " " + ptemp.length());
+          //System.out.println(ax1.length() + " " + ptemp.length());
           uc.toFractional(ptemp, false);
           info1 += "|translation: " + strCoord(op, ptemp, op.isBio);
         } else {

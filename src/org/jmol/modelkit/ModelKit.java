@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.JmolScriptEvaluator;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.i18n.GT;
 import org.jmol.modelset.Atom;
@@ -143,7 +144,16 @@ public class ModelKit {
       }      
     }
 
-    
+    /**
+     * 
+     * @param ptOld
+     * @param ptNew new point, possibly with x set to NaN
+     * @param allowProjection
+     *        if false: this is just a test of the atom already being on the element;
+     *        in which case ptNew.x will be set to NaN if the test fails;
+     *        if true: this is not a test and if the setting is allowed, set ptNew.x to NaN.
+     *        
+     */
     public void constrain(P3d ptOld, P3d ptNew, boolean allowProjection) {
       V3d v = new V3d();
       P3d p = P3d.newP(ptOld);
@@ -2256,13 +2266,26 @@ public class ModelKit {
    *        atom index
    * @param p
    *        new position for this atom, which may be modified
+   * @param pts 
    * @param allowProjection always true here
    * @return number of atoms moved
    */
-  public int cmdAssignMoveAtoms(BS bsSelected, int iatom, P3d p, boolean allowProjection) {
+  public int cmdAssignMoveAtoms(BS bsSelected, int iatom, P3d p, P3d[] pts, boolean allowProjection) {
     SymmetryInterface sym = vwr.getOperativeSymmetry();
     if (sym == null)
       return 0;
+    int n = 0;
+    if (pts != null) {
+      if (bsSelected.cardinality() != pts.length)
+        return 0;
+      BS bs = new BS();
+      for (int ip = 0, i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected.nextSetBit(i + 1)) {
+        bs.clearAll();
+        bs.set(i);
+        n += cmdAssignMoveAtoms(bs, i, pts[ip++], null, true);        
+      }
+      return n;
+    }
     int nAtoms = bsSelected.cardinality();
     if (bsSelected.intersects(vwr.getMotionFixedAtoms()) || nAtoms > 1
         && (constraint != null || sym.getSpaceGroupOperationCount() > 1)) {
@@ -2274,8 +2297,6 @@ public class ModelKit {
       // not handled - must be P1
       return 0;
     }
-
-    int n = 0;
     BS bsOcc = new BS();
     boolean checkOcc = false;
     // pick up occupancies
@@ -2397,7 +2418,7 @@ public class ModelKit {
       if (Math.abs(d - p0.distance(p2)) > 0.001f)
         return false;
       points[k++] = p2;
-    }
+    } 
     fa.setT(points[0]);
     sg.toFractional(fa, true);
     // check for sure that all new positions are also OK
@@ -2607,24 +2628,24 @@ public class ModelKit {
     return atomConstraints[iatom] = c;
   }
 
-  private static int FACE_AB0 = 0;
-  private static int FACE_BC0 = 1;
-  private static int FACE_CA0 = 2;
-  private static int FACE_AB1 = 3;
-  private static int FACE_BC1 = 4;
-  private static int FACE_CA1 = 5;
-  
-  private void setLatticeConstraints() {
-    if (latticeConstraints[0] != null)
-      return;
-    latticeConstraints[FACE_AB0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 0, 1, 0)});
-    latticeConstraints[FACE_AB1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 0, 1, 1)});
-    latticeConstraints[FACE_BC0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(1, 0, 0, 0)});
-    latticeConstraints[FACE_BC1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(1, 0, 0, 1)});
-    latticeConstraints[FACE_CA0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 1, 0, 0)});
-    latticeConstraints[FACE_CA1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 1, 0, 1)});
-  }
-
+//  private static int FACE_AB0 = 0;
+//  private static int FACE_BC0 = 1;
+//  private static int FACE_CA0 = 2;
+//  private static int FACE_AB1 = 3;
+//  private static int FACE_BC1 = 4;
+//  private static int FACE_CA1 = 5;
+//  
+//  private void setLatticeConstraints() {
+//    if (latticeConstraints[0] != null)
+//      return;
+//    latticeConstraints[FACE_AB0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 0, 1, 0)});
+//    latticeConstraints[FACE_AB1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 0, 1, 1)});
+//    latticeConstraints[FACE_BC0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(1, 0, 0, 0)});
+//    latticeConstraints[FACE_BC1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(1, 0, 0, 1)});
+//    latticeConstraints[FACE_CA0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 1, 0, 0)});
+//    latticeConstraints[FACE_CA1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 1, 0, 1)});
+//  }
+//
   public void addLockedAtoms(BS bs) {
     SymmetryInterface sg = vwr.getOperativeSymmetry();
     if (sg == null)
@@ -2752,6 +2773,83 @@ public class ModelKit {
     boolean b = wasRotating;
     wasRotating = false;
     return b;
+  }
+
+  /**
+   * Minimize a unit cell with full symmetry constraints.
+   * 
+   * The model will be loaded with a 27-cell packing, 
+   * but only the basis atoms themselves will be loaded.
+   * 
+   * @param bsBasis
+   * @param steps
+   * @param crit
+   * @param flags
+   * @throws Exception
+   */
+  public void cmdMinimize(JmolScriptEvaluator eval, BS bsBasis, int steps, double crit, int flags) throws Exception {
+
+//    function minimizeXtal() {
+//      if (within("unitCell") == 0) return;
+//      var m = {thisModel};
+//      var au = {thisModel & symop=1555};
+//      if (!0+au)
+//        au = {thisModel};
+//      var x = write("cif");
+//      var usethread = useMinimizationThread;
+//      var apnew = appendNew;
+//      set useMinimizationThread false;
+//      set appendNew true;
+//      load append var x {444 666 1};
+//      frame last;
+//      minimize;
+//      set useMinimizationThread @usethread;
+//      set appendNew @apnew;
+//      var pts = {thisModel & symop=1555}.xyz.all;
+//      zap {thisModel};
+//      frame @m;
+//      modelkit moveto @au @pts;
+//    }
+
+    
+//  function minimizeXtal() {
+//  load append var x {444 666 1};
+//  frame last;
+//  minimize;
+//  var pts = {thisModel & symop=1555}.xyz.all;
+//  zap {thisModel};
+//  frame @m;
+//  modelkit moveto @au @pts;
+//}
+    
+    boolean wasThread = vwr.getBoolean(T.useminimizationthread);
+    boolean wasAppend = vwr.getBoolean(T.appendnew);
+    vwr.setBooleanProperty("useMinimizationThread", false);
+    vwr.setBooleanProperty("appendNew", true);
+    try {
+      String cif = vwr.getModelExtract(bsBasis, false, false, "cif");
+      // TODO what about Async exception?
+      Map<String, Object> htParams = new Hashtable<String, Object>();
+      htParams.put("eval", eval);
+      htParams.put("lattice", P3d.new3(444, 666, 1));
+      htParams.put("fileData",  cif);
+      htParams.put("loadScript", new SB());
+      if (vwr.loadModelFromFile(null, "<temp>", null, null, true, htParams, null, null, 0," ") != null)
+        return;
+      int modelIndex = vwr.ms.mc - 1;
+      BS bsBasis2 = vwr.ms.am[modelIndex].bsAsymmetricUnit;
+      vwr.setCurrentModelIndex(modelIndex);
+      vwr.minimize(eval, steps, crit, BSUtil.copy(bsBasis2), null, 0, flags & ~Viewer.MIN_MODELKIT);
+      P3d[] pts = new P3d[bsBasis2.cardinality()];
+      for (int p = 0, i = bsBasis2.nextSetBit(0); i >= 0; i = bsBasis2.nextSetBit(i + 1))
+        pts[p++] = P3d.newP(vwr.ms.at[i].getXYZ());
+      vwr.deleteModels(modelIndex, null);
+      vwr.setCurrentModelIndex(modelIndex - 1);
+      cmdAssignMoveAtoms(bsBasis, bsBasis.nextSetBit(0), null, pts, true);
+    } finally {
+      vwr.setBooleanProperty("useMinimizationThread", wasThread);
+      vwr.setBooleanProperty("appendNew", wasAppend);
+    }
   }
 
 }

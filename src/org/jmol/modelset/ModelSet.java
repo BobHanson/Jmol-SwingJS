@@ -710,11 +710,14 @@ public class ModelSet extends BondCollection {
     if (msInfo != null)
       msInfo.remove("models");
 
-    // clear references to this frame if it is a dataFrame
 
-    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
+    BS bsAtomsToDelete = new BS();
+    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) {
+      // clear references to this frame if it is a dataFrame
       clearDataFrameReference(i);
-
+      bsAtomsToDelete.or(am[i].bsAtoms);
+    }
+    
     BS bsDeleted;
     if (nModelsDeleted == mc) {
       bsDeleted = getModelAtomBitSetIncludingDeleted(-1, true);
@@ -734,10 +737,11 @@ public class ModelSet extends BondCollection {
     boolean allOrderly = true;
     boolean isOneOfSeveral = false;
     BS files = new BS();
+    int firstAtom = bsAtomsToDelete.nextSetBit(0);
     for (int i = 0; i < mc; i++) {
       Model m = am[i];
       if (i < mc - 1)
-        allOrderly &= m.isOrderly;//isOrderly(m);
+        allOrderly &= (m.isOrderly || m.bsAtoms.length() <= firstAtom);//isOrderly(m);
       if (bsModels.get(i)) { // get a good count now
         if (m.fileIndex >= 0)
           files.set(m.fileIndex);

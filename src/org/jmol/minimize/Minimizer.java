@@ -131,6 +131,9 @@ public class Minimizer {
   public boolean minimize(int steps, double crit, BS bsSelected, BS bsFixed,
                           BS bsBasis, int flags, String ff)
       throws JmolAsyncException {
+    isSilent = ((flags & Viewer.MIN_SILENT) == Viewer.MIN_SILENT);
+    isQuick = (ff.indexOf("2D") >= 0
+        || (flags & Viewer.MIN_QUICK) == Viewer.MIN_QUICK);
     if (bsBasis != null) {
       if (bsFixed == null)
         bsFixed = new BS();
@@ -143,13 +146,10 @@ public class Minimizer {
         return false;
       }
       int n = bsBasis.cardinality();
-      report(" symmetry-based minimization for " + n + " atom" + (n == 1 ? ": " : "s: ") + bsBasis, false);
+      report(" symmetry-based minimization for " + n + " atom" + (n == 1 ? "" : "s"), false);
     }
     this.bsBasis = bsBasis;
     trustRadius = (bsBasis == null ? 0.3 : 0.01);
-    isSilent = ((flags & Viewer.MIN_SILENT) == Viewer.MIN_SILENT);
-    isQuick = (ff.indexOf("2D") >= 0
-        || (flags & Viewer.MIN_QUICK) == Viewer.MIN_QUICK);
     boolean haveFixed = ((flags
         & Viewer.MIN_HAVE_FIXED) == Viewer.MIN_HAVE_FIXED);
     BS bsXx = ((flags & Viewer.MIN_XX) == Viewer.MIN_XX ? new BS() : null);
@@ -623,6 +623,7 @@ public class Minimizer {
       reportEnergy();
       saveCoordinates();
     } catch (Exception e) {
+      e.printStackTrace();
       Logger.error("minimization error vwr=" + vwr + " pFF = " + pFF);
       return false;
     }
@@ -718,22 +719,17 @@ public class Minimizer {
           continue;
         a = minAtom.atom;
         p.set(minAtom.coord[0], minAtom.coord[1], minAtom.coord[2]);
-        //System.out.println("MIN moving " + p.distance(a) + " " + minAtom);
         if (vwr.getModelkit(false).moveConstrained(a.i, p, true, true) > 0) {
           doUpdateMinAtoms = true;
-        }
+        } 
       }
       // now transfer back all atom coordinates
       if (doUpdateMinAtoms) {
         for (int i = 0; i < ac; i++) {
           MinAtom minAtom = minAtoms[i];
-//          p.set(minAtom.coord[0], minAtom.coord[1], minAtom.coord[2]);
           minAtom.coord[0] = (a = minAtom.atom).x;
           minAtom.coord[1] = a.y;
           minAtom.coord[2] = a.z;
-//          double d = a.distance(p);
-//          if (d > 0.001)
-//            System.out.println("MIN: " + a + " " + d);
         }
       }
     }
