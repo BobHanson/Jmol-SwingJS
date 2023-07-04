@@ -1619,8 +1619,6 @@ public class ScriptMathProcessor {
       }
       Object o = (bs.isEmpty() ? null : eval.getBitsetProperty(bs, null, T.xyz, null,
           null, x.value, null, false, Integer.MAX_VALUE, false));
-//      if (o != null && !(o instanceof P3))
-//System.out.println("ScriptMathProc OHOH");
       return (P3d) o;
     case T.string:
       pt = Escape.uP(SV.sValue(x));
@@ -1799,6 +1797,7 @@ public class ScriptMathProcessor {
       if (!isAtoms && x2.value instanceof BondSet)
         return addX(x2);
       BS bs = (BS) x2.value;
+      // return just value for @3.xxx
       if (isAtoms && bs.cardinality() == 1 && (op.intValue & T.minmaxmask) == 0)
         op.intValue |= T.min;
       Object val = eval.getBitsetProperty(bs, null, op.intValue, null,

@@ -51,30 +51,30 @@ import javajs.util.T3d;
 //  model, atom, and type of modulation. This is done so that
 //  the data can be collected in any order. Hashtable keys are of the form:
 //  
-//    type_id#axis;atomLabel@model
+//    <type>_id<id>#<axis>;<atomLabel>@<model>
 //  
 //  where 
 //  
-//  type = W|F|D|J|M|O|U (wave vector, Fourier index, displacement, magnetic moment, occupancy, anisotropy);
+//  <type> = W|F|D|J|M|O|U (wave vector, Fourier index, displacement, magnetic moment, occupancy, anisotropy);
 //  
-//  id = n|S|T|"_coefs_" 
+//  <id> = n|S|T|"_coefs_" 
 //
 //  where 
 //
 //    n=0 is Crenel, 
-//    n>0 is a specific Fourier or cell wave index, (W_1, F_1, F_2, etc.)
-//    L indicates Legendre (D_L)
-//    S indicates displacement sawtooth (D_S)
-//    T indicates magnetic moment sawtooth (M_T)
-//    "_coefs" used only in F_1_coefs_ indicates coefficients of W_i for a Fourier vector 
+//    n>0 is a specific Fourier or cell wave index, (W_1, F_id1, F_id2, etc.)
+//    L indicates Legendre (D_idL)
+//    S indicates displacement sawtooth (D_idS)
+//    T indicates magnetic moment sawtooth (M_idT)
+//    "_coefs" used only in F_id1_coefs_ indicates coefficients of W_i for a Fourier vector 
 //  
-//  axis (optional) = 0|x|y|z|Uij 
+//  <axis> (optional) = 0|x|y|z|Uij 
 //
 //  where 0 indicates irrelevant, Uij indicates a specific anisotropic parameter U11, U12, etc.
 //  
-//  atomLabel is only for D, M, and O
+//  <atomLabel> is only for D, M, and O
 //
-//  model is the model number, starting with 0.
+//  <model> is the model number, starting with 0.
 //
 //  double[] data are typically two or three parameters, such as
 //  [cos,sin], [width,center], [sigma1,sigma2,sigma3], etc.
@@ -603,8 +603,7 @@ public class MSRdr implements MSInterface {
         double[] qcoefs = getQCoefs(key);
         if (qcoefs == null) {
           System.err.println("MSRdr missing cell wave vector for atom wave vector for " + key + " "
-                  + Escape.e(params) + 
-                  getQCoefs(key));
+                  + Escape.e(params));
           break;
         }
         addAtomModulation(atomName, axis, type, p, utens, qcoefs);
@@ -651,9 +650,10 @@ public class MSRdr implements MSInterface {
   @Override
   public double[] getQCoefs(String key) {
     // adds "id"
-    int fn = Math.max(0, cr.parseIntAt(key, 4));        
-    if (fn == 0) {
-      System.err.println("MSRdr missing cell wave vector for atom wave vector for " + key);
+    int fn = cr.parseIntAt(key, 4);
+    if (fn < 0)
+      System.err.println("warning only -- MSRdr missing cell wave vector for atom wave vector for " + key + " 1 assumed");
+    if (fn <= 0) {
       if (qlist100 == null) {
         // BH 2023.03.15 qlist100 was not being nulled between structures
         // see z034DL74QTM.cif
@@ -662,10 +662,9 @@ public class MSRdr implements MSInterface {
       }
       return qlist100;
     }     
-    // BH 2020.09.16 the addition of 2018.05.30 puts fn just after f_. 
-    // it is not clear that anything puts it after it, but leaving that as an option.
     double[] p = getMod("F_id" + fn + "_coefs_");
     if (p == null) {
+      // case of  loop_ _atom_site_Fourier_wave_vector_seq_id
       p = getMod("F_coefs_id" + fn);
     }
     return p;
@@ -673,9 +672,9 @@ public class MSRdr implements MSInterface {
 
   @Override
   public char getModType(String key) {
-    // key = "type_id"
+    // key = "<type char>_id<id char>"
     char type = key.charAt(0);
-    char id = key.charAt(2);
+    char id = key.charAt(4);
     return  (id == 'S' ? Modulation.TYPE_DISP_SAWTOOTH
         : id == 'T' ? Modulation.TYPE_SPIN_SAWTOOTH
         : id == 'L' ? (type == 'D' ? Modulation.TYPE_DISP_LEGENDRE
@@ -871,17 +870,10 @@ public class MSRdr implements MSInterface {
    * 
    * @param a
    */
-  private void /*double*/ modulateAtom(Atom a) {
+  private void modulateAtom(Atom a) {
 
     // Modulation is based on an atom's first symmetry operation.
     // (Special positions should generate the same atom regardless of which operation is employed.)
-
-//    if (modCoord && htSubsystems != null) {
-//      // I think this does nothing.....
-//      P3d ptc = P3d.newP(a);
-//      SymmetryInterface spt = getSymmetry(a);
-//      spt.toCartesian(ptc, true);
-//    }
 
     Lst<Modulation> list = htAtomMods.get(a.atomName);
     if (list == null && a.altLoc != '\0' && htSubsystems != null) {
@@ -976,16 +968,6 @@ public class MSRdr implements MSInterface {
     // the vibration itself.
     
     a.vib = ms;
-
-    // BH: removed 7/2014; not documented and not useful
-//    // set property_modT to be Math.floor (q.r/|q|) -- really only for d=1
-//
-//    if (!modVib && a.foccupancy == 0)
-//      return Double.NaN;
-//    double t = q1Norm.dot(a);
-//    if (Math.abs(t - (int) t) > 0.001f)
-//      t = (int) Math.floor(t);
-//    return (int) t;
   }
 
   private P3d getAtomR0(Atom atom) {
