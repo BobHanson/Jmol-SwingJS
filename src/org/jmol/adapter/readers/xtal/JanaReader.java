@@ -222,7 +222,7 @@ public class JanaReader extends AtomSetCollectionReader {
     for (int i = 0; i < 3; i++)
       a[i] += parseDouble();
     ms.addModulation(null, "W_" + (++qicount), a, -1);
-    ms.addModulation(null, "F_id" + qicount + "_coefs_", pt, -1);
+    ms.addModulation(null, "F_" + qicount + "_coefs_", pt, -1);
   }
 
   private void symmetry() throws Exception {
@@ -520,7 +520,7 @@ public class JanaReader extends AtomSetCollectionReader {
         double[] pt = new double[modDim];
         for (int i = 0; i < modDim; i++)
           pt[i] = parseDoubleStr(tokens[i + 2]);
-        ms.addModulation(null, "F_id" + parseIntStr(tokens[1]) + "_coefs_", pt, -1);
+        ms.addModulation(null, "F_" + parseIntStr(tokens[1]) + "_coefs_", pt, -1);
       }
     readM40Floats();
   }
@@ -749,7 +749,7 @@ public class JanaReader extends AtomSetCollectionReader {
     // divided by the number of operators giving this site.
 
     if (o_0 != 1)
-      ms.addModulation(null, "J_idO#0" + label, new double[] { atom.foccupancy,
+      ms.addModulation(null, "J_O#0" + label, new double[] { atom.foccupancy,
           o_0, 0 }, -1);
     atom.foccupancy *= o_0;
     int wv = 0;
@@ -768,7 +768,7 @@ public class JanaReader extends AtomSetCollectionReader {
       }
       pt = new double[] { a1, a2, 0 };
       if (a1 != 0 || a2 != 0)
-        ms.addModulation(null, "O_id" + wv + "#0" + label, pt, -1);
+        ms.addModulation(null, "O_" + wv + "#0" + label, pt, -1);
     }
 
     // read displacement modulation
@@ -780,11 +780,11 @@ public class JanaReader extends AtomSetCollectionReader {
         double w = floats[4]; // width
         for (int k = 0; k < 3; k++)
           if (floats[k] != 0)
-            ms.addModulation(null, "D_idS#" + XYZ[k] + label, new double[] { c,
+            ms.addModulation(null, "D_S#" + XYZ[k] + label, new double[] { c,
                 w, floats[k] }, -1);
       } else {
         // Fourier or Legendre displacements
-        addSinCos(j, "D_id", label, isPos);
+        addSinCos(j, "D_", label, isPos);
       }
     }
 
@@ -801,7 +801,7 @@ public class JanaReader extends AtomSetCollectionReader {
       for (int j = 0; j < nUij; j++) {
         if (tType == 1) {
           // Fourier displacements
-          addSinCos(j, "U_id", label, false);
+          addSinCos(j, "U_", label, false);
         } else {
           if (haveSpecialUij) {
             //TODO
@@ -814,7 +814,7 @@ public class JanaReader extends AtomSetCollectionReader {
             for (int k = 0, p = 0; k < 6; k++, p += 3) {
               if ((coeff = data[0][k]) != 0)
                 ms.addModulation(null,
-                    "U_idL" + order + "#" + U_LIST.substring(p, p + 3) + label,
+                    "U_L" + order + "#" + U_LIST.substring(p, p + 3) + label,
                     new double[] { coeff, order, 0 }, -1);
             }
           } else {
@@ -823,7 +823,7 @@ public class JanaReader extends AtomSetCollectionReader {
               double csin = data[1][k];
               double ccos = data[0][k];
               ms.addModulation(null,
-                  "U_id" + (j + 1) + "#" + U_LIST.substring(p, p + 3) + label,
+                  "U_" + (j + 1) + "#" + U_LIST.substring(p, p + 3) + label,
                   new double[] { csin, ccos, 0 }, -1);
             }
           }
@@ -884,17 +884,17 @@ public class JanaReader extends AtomSetCollectionReader {
   }
 
   /**
-   * Make sure that F_idn record is present.
+   * Make sure that F_n record is present.
    * 
    * @param j
    */
   private void ensureFourier(int j) {
     double[] pt;
-    if (j > 0 && ms.getMod("F_id" + (++j) + "_coefs_") == null && (pt = ms.getMod("F_id1_coefs_")) != null) {
+    if (j > 0 && ms.getMod("F_" + (++j) + "_coefs_") == null && (pt = ms.getMod("F_1_coefs_")) != null) {
       double[] p = new double[modDim];
       for (int i = modDim; --i >= 0;)
         p[i] = pt[i] * j;
-      ms.addModulation(null, "F_id" + j + "_coefs_", p, -1);
+      ms.addModulation(null, "F_" + j + "_coefs_", p, -1);
     }
   }
 
@@ -1063,7 +1063,7 @@ public class JanaReader extends AtomSetCollectionReader {
     int n = params.length;
     for (int i = 0; i < n; i++) {
       ensureFourier(i);
-      String key = "D_id" + (i + 1);
+      String key = "D_" + (i + 1);
       double[] data = params[i];
       V3d vsin = V3d.new3(data[0], data[1], data[2]);
       V3d vcos = V3d.new3(data[3], data[4], data[5]);

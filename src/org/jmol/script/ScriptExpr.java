@@ -1006,7 +1006,7 @@ abstract class ScriptExpr extends ScriptParam {
         rpn.addXNum(instruction);
         break;
       case T.bitset:
-        BS bs1 = BSUtil.copy((BS) value);
+        BS bs1 = (value instanceof BondSet ? (BondSet) value : BSUtil.copy((BS) value));
         rpn.addXBs(bs1);
         break;
       case T.point3f:
@@ -1653,7 +1653,7 @@ abstract class ScriptExpr extends ScriptParam {
         return bs;
       bsNew = (tok == T.atoms ? (isAtoms ? bs : vwr.ms.getAtoms(T.bonds, bs))
           : (isAtoms
-              ? (BS) BondSet.newBS(vwr.getBondsForSelectedAtoms(bs), null)
+              ? (BS) BondSet.newBS(vwr.getBondsForSelectedAtoms(bs))
               : bs));
       int i;
       switch (minmaxtype) {
@@ -1679,7 +1679,7 @@ abstract class ScriptExpr extends ScriptParam {
       case 0:
       case T.min: // single value
       case T.all:
-        return getCmdExt().getBitsetIdent(bs, null, tokenValue, useAtomMap,
+        return getCmdExt().getBitsetIdent(bs, "", tokenValue, useAtomMap,
             index, isExplicitlyAll);
       }
       return "";

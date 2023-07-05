@@ -267,22 +267,35 @@ public class CmdExt extends ScriptExt {
     return true;
   }
 
+    /**
+     * @param bs 
+     * @param label 
+     * @param tokenValue unused 
+     * @param useAtomMap 
+     * @param index 
+     * @param isExplicitlyAll 
+     * @return String or, if multiple or explicitly ALL, String[]
+     */
     public Object getBitsetIdent(BS bs, String label, Object tokenValue,
                                boolean useAtomMap, int index,
                                boolean isExplicitlyAll) {
-      return getBitsetIdentFull(bs, label, tokenValue, useAtomMap, index, isExplicitlyAll, null);
+      return getBitsetIdentFull(bs, label, useAtomMap, index, isExplicitlyAll, null);
   }
   
   @SuppressWarnings("static-access")
-  public Object getBitsetIdentFull(BS bs, String label, Object tokenValue,
+  public Object getBitsetIdentFull(BS bs, String label, 
                                boolean useAtomMap, int index,
                                boolean isExplicitlyAll, String[] sout) {
-    boolean isAtoms = !(tokenValue instanceof BondSet);
+    boolean isAtoms = !(bs instanceof BondSet);
     if (isAtoms) {
       if (label == null)
         label = vwr.getStandardLabelFormat(0);
       else if (label.length() == 0)
         label = "%[label]";
+    } else if (label != null && label.length() == 0) {
+        label = null;
+    } else if ("%U".equals(label)) {
+      label = "[%a1 #%i1] %4.3LENGTH [%a2 #%i2] #%#";
     }
     int pt = (label == null ? -1 : label.indexOf("%"));
     boolean haveIndex = (index != Integer.MAX_VALUE);
@@ -294,11 +307,8 @@ public class CmdExt extends ScriptExt {
     ModelSet modelSet = vwr.ms;
     int n = 0;
     LabelToken labeler = modelSet.getLabeler();
-    int[] indices = (isAtoms || !useAtomMap ? null : ((BondSet) tokenValue)
-        .associatedAtoms);
-// BH 2021.01.27 not nec, and > 0 should have been >= 0 anyway
-//    if (indices == null && label != null && label.indexOf("%D") > 0)
-//      indices = vwr.ms.getAtomIndices(bs);
+    int[] indices = (isAtoms || !useAtomMap ? null 
+        : ((BondSet) bs).getAssociatedAtoms(modelSet));
     boolean asIdentity = (label == null || label.length() == 0);
     Map<String, Object> htValues = (isAtoms || asIdentity ? null : LabelToken
         .getBondLabelValues());

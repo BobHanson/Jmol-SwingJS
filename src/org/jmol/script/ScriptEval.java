@@ -3531,7 +3531,7 @@ public class ScriptEval extends ScriptExpr {
       break;
     default:
       if (slen == 4 && tokAt(2) == T.bonds)
-        bs = BondSet.newBS(BSUtil.newBitSet2(0, vwr.ms.bondCount), null);
+        bs = BondSet.newBS(BSUtil.newBitSet2(0, vwr.ms.bondCount));
       else
         bs = atomExpressionAt(i);
     }
@@ -3721,7 +3721,7 @@ public class ScriptEval extends ScriptExpr {
             inTok = T.bitset;
             bsOrList = atomExpressionAt(i);
             if (isBondSet)
-              bsOrList = BondSet.newBS((BS) bsOrList, null);
+              bsOrList = BondSet.newBS((BS) bsOrList);
             isOK = (((BS) bsOrList).nextSetBit(0) >= 0);
           } else {
             Lst<SV> what = parameterExpressionList(-i, 1, false);
@@ -8662,6 +8662,7 @@ public class ScriptEval extends ScriptExpr {
     if (index < 0) {
       bs = atomExpressionAt(-index);
       index = iToken + 1;
+      
       if (isBondSet) {
         doClearBondSet = true;
         shapeType = JC.SHAPE_STICKS;

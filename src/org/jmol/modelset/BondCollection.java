@@ -726,8 +726,12 @@ abstract public class BondCollection extends AtomCollection {
     case T.bonds:
       BS bsBonds = (BS) specInfo;
       for (int i = bsBonds.nextSetBit(0); i >= 0; i = bsBonds.nextSetBit(i + 1)) {
-        bs.set(bo[i].atom1.i);
-        bs.set(bo[i].atom2.i);
+        if (i < bondCount) {
+          bs.set(bo[i].atom1.i);
+          bs.set(bo[i].atom2.i);
+        } else {
+          bsBonds.clear(i);
+        }
       }
       return bs;
     case T.isaromatic:

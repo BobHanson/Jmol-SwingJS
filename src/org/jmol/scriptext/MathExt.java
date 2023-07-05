@@ -1140,8 +1140,7 @@ public class MathExt {
       BS bsBonds = new BS();
       vwr.makeConnections(fmin, fmax, order, T.identify, atoms1, atoms2,
           bsBonds, isBonds, false, 0);
-      return mp.addX(SV.newV(T.bitset, BondSet.newBS(bsBonds,
-          vwr.ms.getAtomIndices(vwr.ms.getAtoms(T.bonds, bsBonds)))));
+      return mp.addX(SV.newV(T.bitset, BondSet.newBS(bsBonds)));
     }
     return mp.addXBs(vwr.ms.getAtomsConnected(min, max, order, atoms1));
   }
@@ -1820,7 +1819,7 @@ public class MathExt {
                       : null);
                   if (names != null)
                     names = (String[]) e.getCmdExt().getBitsetIdentFull(bsAll,
-                        key, null, false, Integer.MAX_VALUE, false, names);
+                        key, false, Integer.MAX_VALUE, false, names);
                   Atom[] at = vwr.ms.at;
                   for (int pt = 0, i = bs.nextSetBit(0); i >= 0; i = bs
                       .nextSetBit(i + 1)) {

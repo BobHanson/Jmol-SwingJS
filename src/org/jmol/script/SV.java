@@ -979,8 +979,7 @@ public class SV extends T implements JSONEncodable {
     switch (tokenIn.tok) {
     case bitset:
       if (tokenIn.value instanceof BondSet) {
-        bs = BondSet.newBS((BS) tokenIn.value,
-            ((BondSet) tokenIn.value).associatedAtoms);
+        bs = BondSet.newBS((BS) tokenIn.value);
         len = bs.cardinality();
       } else {
         bs = BSUtil.copy((BS) tokenIn.value);
@@ -1255,7 +1254,7 @@ public class SV extends T implements JSONEncodable {
       return newV(point4f, v);
     if (v instanceof BS) {
       if (s != null && s.indexOf("[{") == 0)
-        v = BondSet.newBS((BS) v, null);
+        v = BondSet.newBS((BS) v);
       return newV(bitset, v);
     }
     if (v instanceof M34d)

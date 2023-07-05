@@ -9,7 +9,6 @@ import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.MSInterface;
 import org.jmol.api.SymmetryInterface;
-import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
@@ -51,7 +50,7 @@ import javajs.util.T3d;
 //  model, atom, and type of modulation. This is done so that
 //  the data can be collected in any order. Hashtable keys are of the form:
 //  
-//    <type>_id<id>#<axis>;<atomLabel>@<model>
+//    <type>_<id>#<axis>;<atomLabel>@<model>
 //  
 //  where 
 //  
@@ -62,11 +61,11 @@ import javajs.util.T3d;
 //  where 
 //
 //    n=0 is Crenel, 
-//    n>0 is a specific Fourier or cell wave index, (W_1, F_id1, F_id2, etc.)
-//    L indicates Legendre (D_idL)
-//    S indicates displacement sawtooth (D_idS)
-//    T indicates magnetic moment sawtooth (M_idT)
-//    "_coefs" used only in F_id1_coefs_ indicates coefficients of W_i for a Fourier vector 
+//    n>0 is a specific Fourier or cell wave index, (W_1, F_1, F_2, etc.)
+//    L indicates Legendre (D_L)
+//    S indicates displacement sawtooth (D_S)
+//    T indicates magnetic moment sawtooth (M_T)
+//    "_coefs" used only in F_1_coefs_ indicates coefficients of W_i for a Fourier vector 
 //  
 //  <axis> (optional) = 0|x|y|z|Uij 
 //
@@ -145,8 +144,8 @@ import javajs.util.T3d;
 //  Bi 1 ? ? -0.082(2) -0.208(2)
 //  Bi 2 ? ? -0.098(3) -0.116(3)
 
-//O_id1#0;Bi@0 [-0.0820000022649765,-0.20800000429153442,0.0]
-//O_id2#0;Bi@0 [-0.09799999743700027,-0.11600000411272049,0.0]
+//O_1#0;Bi@0 [-0.0820000022649765,-0.20800000429153442,0.0]
+//O_2#0;Bi@0 [-0.09799999743700027,-0.11600000411272049,0.0]
 
 //  loop_
 //  _atom_site_U_Fourier_atom_site_label
@@ -375,8 +374,10 @@ public class MSRdr implements MSInterface {
    */
   private String checkKey(String key, boolean checkQ) {
     int pt = key.indexOf(atModel);
-    return (pt < 0 || key.indexOf("_pos#") >= 0 || key.indexOf("*;*") >= 0 || checkQ
-        && key.indexOf("?") >= 0 ? null : key.substring(0, pt));
+    return (pt < 0 || key.indexOf("_pos#") >= 0 
+        || key.indexOf("*;*") >= 0 
+        || checkQ && key.indexOf("?") >= 0 ? null 
+            : key.substring(0, pt));
   }
 
   /**
@@ -623,7 +624,7 @@ public class MSRdr implements MSInterface {
       double[] pt = htModulation.get(key);
       if (pt != null) {
         // look for corresponding crenel so that we can combine them.
-        String key1 = "O_id0#0" + key.substring(key.indexOf(";"));
+        String key1 = "O_0#0" + key.substring(key.indexOf(";"));
         double[] pt1 = htModulation.get(key1);
         if (pt1 == null) {
           Logger.error("Crenel " + key1 + " not found for legendre modulation " + key);
@@ -649,8 +650,10 @@ public class MSRdr implements MSInterface {
 
   @Override
   public double[] getQCoefs(String key) {
-    // adds "id"
-    int fn = cr.parseIntAt(key, 4);
+    char id = key.charAt(2);
+    // Sawtooth (D_S and M_T), Legendre (D_L and M_L), Crenel (O_0) do not have fourier indices
+    // but what about wave vector?
+    int fn = ("STL0".indexOf(id) >= 0 ? 0 : cr.parseIntAt(key, 2));
     if (fn < 0)
       System.err.println("warning only -- MSRdr missing cell wave vector for atom wave vector for " + key + " 1 assumed");
     if (fn <= 0) {
@@ -662,24 +665,25 @@ public class MSRdr implements MSInterface {
       }
       return qlist100;
     }     
-    double[] p = getMod("F_id" + fn + "_coefs_");
+    double[] p = getMod("F_" + fn + "_coefs_");
     if (p == null) {
       // case of  loop_ _atom_site_Fourier_wave_vector_seq_id
-      p = getMod("F_coefs_id" + fn);
+      p = getMod("F_coefs_" + fn);
     }
     return p;
   }
 
   @Override
   public char getModType(String key) {
-    // key = "<type char>_id<id char>"
+    // key = "<type char>_<id char>"
     char type = key.charAt(0);
-    char id = key.charAt(4);
-    return  (id == 'S' ? Modulation.TYPE_DISP_SAWTOOTH
-        : id == 'T' ? Modulation.TYPE_SPIN_SAWTOOTH
-        : id == 'L' ? (type == 'D' ? Modulation.TYPE_DISP_LEGENDRE
-            : Modulation.TYPE_U_LEGENDRE)
-        : id == '0' ? Modulation.TYPE_OCC_CRENEL
+    char id = key.charAt(2);
+    return  (
+          type == 'D' && id == 'S' ? Modulation.TYPE_DISP_SAWTOOTH
+        : type == 'D' && id == 'L' ? Modulation.TYPE_DISP_LEGENDRE
+        : type == 'O' && id == '0' ? Modulation.TYPE_OCC_CRENEL
+        : type == 'M' && id == 'T' ? Modulation.TYPE_SPIN_SAWTOOTH
+        : type == 'U' && id == 'L' ? Modulation.TYPE_U_LEGENDRE
         : type == 'D' ? Modulation.TYPE_DISP_FOURIER
         : type == 'O' ? Modulation.TYPE_OCC_FOURIER
         : type == 'M' ? Modulation.TYPE_SPIN_FOURIER
@@ -707,7 +711,6 @@ public class MSRdr implements MSInterface {
         qs[i] = toP3(getMod("W_" + (i + 1)));
       }
     }
-//System.out.println("calculating QCoef for " + Escape.toReadable("qs", qs) + " " + Escape.toReadable("p", p));
     P3d pt = toP3(p);
     // test n * q
     for (int i = 0; i < modDim; i++)
@@ -1044,7 +1047,6 @@ public class MSRdr implements MSInterface {
         expandMinMax(pt, sym, minXYZ, maxXYZ);
       }
     }
-    //System.out.println("msreader min max " + minXYZ + " " + maxXYZ);
   }
 
   private void expandMinMax(P3d pt, SymmetryInterface sym, P3d minXYZ, P3d maxXYZ) {

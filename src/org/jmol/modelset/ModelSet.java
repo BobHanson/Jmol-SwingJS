@@ -2590,7 +2590,7 @@ public class ModelSet extends BondCollection {
       createOnly = true;
       break;
     }
-    boolean anyOrNoId = (!identifyOnly || matchAny);
+    boolean anyOrNoId = matchAny;
     boolean notAnyAndNoId = (!identifyOnly && !matchAny);
 
     defaultCovalentMad = vwr.getMadBond();
@@ -2611,7 +2611,7 @@ public class ModelSet extends BondCollection {
     Atom atomB = null;
     char altloc = '\0';
     short newOrder = (short) (order | Edge.BOND_NEW);
-    boolean isAromatic = ((order & Edge.BOND_AROMATIC_MASK) != 0);
+    boolean isAromaticOnly = (order != Edge.BOND_ORDER_ANY && (order & Edge.BOND_AROMATIC_MASK) != 0);
     try {
       for (int i = bsA.nextSetBit(0); i >= 0; i = bsA.nextSetBit(i + 1)) {
         if (isBonds) {
@@ -2643,7 +2643,7 @@ public class ModelSet extends BondCollection {
               || checkDistance
               && !isInRange(atomA, atomB, minD, maxD, minDIsFrac, maxDIsFrac,
                   isFractional)
-              || isAromatic && (bondAB != null && !allowAromaticBond(bondAB))
+              || isAromaticOnly && (bondAB != null && !allowAromaticBond(bondAB))
               )
             continue;
           if (bondAB == null) {

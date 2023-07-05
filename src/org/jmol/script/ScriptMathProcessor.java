@@ -951,10 +951,10 @@ public class ScriptMathProcessor {
       }
       return addXDouble(-x2.asDouble());
     case T.opNot:
-      if (chk)
+       if (chk)
         return addXBool(true);
       switch (x2.tok) {
-      case T.point4f: // quaternion
+      case T.point4f: // quaterniopNon
         return addXPt4((Qd.newP4((P4d) x2.value)).inv().toP4d());
       case T.matrix3f:
         m = M3d.newM3((M3d) x2.value);
@@ -963,8 +963,10 @@ public class ScriptMathProcessor {
       case T.matrix4f:
         return addXM4(M4d.newM4((M4d) x2.value).invert());
       case T.bitset:
-        return addXBs(BSUtil.copyInvert((BS) x2.value,
-            (x2.value instanceof BondSet ? vwr.ms.bondCount : vwr.ms.ac)));
+        boolean isBond = x2.value instanceof BondSet;
+        BS bs = BSUtil.copyInvert((BS) x2.value,
+            (isBond ? vwr.ms.bondCount : vwr.ms.ac));
+        return addXBs(isBond ? BondSet.newBS(bs) : bs);
       default:
         return addXBool(!x2.asBoolean());
       }
@@ -1011,7 +1013,7 @@ public class ScriptMathProcessor {
       case T.count:
       case T.size:
         if (iv == T.length && x2.value instanceof BondSet)
-          break;
+          break; 
         return addXInt(SV.sizeOf(x2));
       case T.lines:
         switch (x2.tok) {
@@ -1078,7 +1080,6 @@ public class ScriptMathProcessor {
     M3d m;
     String s;
     double f;
-
     switch (op.tok) {
     case T.opAND:
     case T.opAnd:
@@ -1092,7 +1093,7 @@ public class ScriptMathProcessor {
         case T.bitset:
           bs = BSUtil.copy(bs);
           bs.and((BS) x2.value);
-          return addXBs(bs);
+          return addXBs(x1.value instanceof BondSet ? BondSet.newBS(bs) : bs);
         }
         break;
       }
@@ -1100,27 +1101,32 @@ public class ScriptMathProcessor {
     case T.opOr:
       switch (x1.tok) {
       case T.bitset:
-        BS bs = BSUtil.copy((BS) x1.value);
+        BS bs = null;
         switch (x2.tok) {
         case T.bitset:
+          bs = BSUtil.copy((BS) x1.value);
           bs.or((BS) x2.value);
-          return addXBs(bs);
+          break;
         case T.integer:
+          bs = BSUtil.copy((BS) x1.value);
           int x = x2.asInt();
-          if (x < 0)
-            break;
-          bs.set(x);
-          return addXBs(bs);
+          if (x >= 0) {
+            bs.set(x);
+          }
+          break;
         case T.varray:
+          bs = BSUtil.copy((BS) x1.value);
           Lst<SV> sv = (Lst<SV>) x2.value;
           for (int i = sv.size(); --i >= 0;) {
             int b = sv.get(i).asInt();
             if (b >= 0)
               bs.set(b);
           }
-          return addXBs(bs);
+          break;
         }
-        break;
+        if (bs == null) 
+       	  break;
+        return addXBs(x1.value instanceof BondSet ? BondSet.newBS(bs) : bs);
       case T.varray:
         return addX(SV.concatList(x1, x2, false));
       }
@@ -1129,7 +1135,7 @@ public class ScriptMathProcessor {
       if (x1.tok == T.bitset && x2.tok == T.bitset) {
         BS bs = BSUtil.copy((BS) x1.value);
         bs.xor((BS) x2.value);
-        return addXBs(bs);
+        return addXBs(x1.value instanceof BondSet ? BondSet.newBS(bs) : bs);
       }
       boolean a = x1.asBoolean();
       boolean b = x2.asBoolean();
@@ -1309,8 +1315,7 @@ public class ScriptMathProcessor {
         }
         if (pt4 != null)
           // q * m --> q
-          return addXPt4(
-              (Qd.newP4(pt4).mulQ(Qd.newM((M3d) x2.value))).toP4d());
+          return addXPt4((Qd.newP4(pt4).mulQ(Qd.newM((M3d) x2.value))).toP4d());
         break;
       case T.matrix4f:
         // pt4 * m4
@@ -1407,8 +1412,8 @@ public class ScriptMathProcessor {
           // quaternion multiplication
           // note that Point4f is {x,y,z,w} so we use that for
           // quaternion notation as well here.
-          return addXPt4(Qd.newP4((P4d) x1.value)
-              .mulQ(Qd.newP4((P4d) x2.value)).toP4d());
+          return addXPt4(
+              Qd.newP4((P4d) x1.value).mulQ(Qd.newP4((P4d) x2.value)).toP4d());
         return addXPt4(Qd.newP4((P4d) x1.value).mul(x2.asDouble()).toP4d());
       }
       return addXDouble(x1.asDouble() * x2.asDouble());
@@ -1429,13 +1434,12 @@ public class ScriptMathProcessor {
         break;
       case T.point3f:
         pt = P3d.newP((P3d) x1.value);
-        return addXPt(
-            (f2 = x2.asDouble()) == 0 ? P3d.new3(Double.NaN, Double.NaN, Double.NaN)
-                : P3d.new3(pt.x / f2, pt.y / f2, pt.z / f2));
+        return addXPt((f2 = x2.asDouble()) == 0
+            ? P3d.new3(Double.NaN, Double.NaN, Double.NaN)
+            : P3d.new3(pt.x / f2, pt.y / f2, pt.z / f2));
       case T.point4f:
         return addXPt4(x2.tok == T.point4f
-            ? Qd.newP4((P4d) x1.value).div(Qd.newP4((P4d) x2.value))
-                .toP4d()
+            ? Qd.newP4((P4d) x1.value).div(Qd.newP4((P4d) x2.value)).toP4d()
             : (f2 = x2.asDouble()) == 0
                 ? P4d.new4(Double.NaN, Double.NaN, Double.NaN, Double.NaN)
                 : Qd.newP4((P4d) x1.value).mul(1 / f2).toP4d());
@@ -1611,7 +1615,7 @@ public class ScriptMathProcessor {
       return (P3d) x.value;
     case T.bitset:
       BS bs = (BS) x.value;
-      if (bs.isEmpty())
+      if (bs.isEmpty() || bs instanceof BondSet)
         break;
       if (bsRestrict != null) {
         bs = BSUtil.copy(bs);
@@ -1691,7 +1695,7 @@ public class ScriptMathProcessor {
   }
 
   private boolean getBoundBox(SV x2) {
-    if (x2.tok != T.bitset)
+    if (x2.tok != T.bitset || x2.value instanceof BondSet)
       return false;
     BoxInfo b = vwr.ms.getBoxInfo((BS) x2.value, 1);
     P3d[] pts = b.getBoundBoxPoints(true);
@@ -1802,8 +1806,7 @@ public class ScriptMathProcessor {
         op.intValue |= T.min;
       Object val = eval.getBitsetProperty(bs, null, op.intValue, null,
           null, null, op.value, false, x2.index, true);
-      return (isAtoms ? addXObj(val) : addX(SV.newV(T.bitset, BondSet.newBS(
-          (BS) val, vwr.ms.getAtomIndices(bs)))));
+      return (isAtoms ? addXObj(val) : addXBs(BondSet.newBS((BS) val)));
     }
     return false;
   }

@@ -300,7 +300,7 @@ public class MSCifParser extends MSRdr {
           // by pulling it out, the field is not added twice.
           pt[0] = pt[1] = pt[2] = 0;
           type_id = "F_";
-          fid = "id" + field;
+          fid = field;
           sep = "";
           break;
         case WV_ID:
@@ -333,18 +333,17 @@ public class MSCifParser extends MSRdr {
           case FOPARAM_ID:
           case FUPARAM_ID:
             atomLabel = axis = "*";
-            sep = "_";
-            //$FALL-THROUGH$
+            sep = "_id";
+            type_id = modulationFields[tok].substring(11, 12).toUpperCase();
+          break;
           case FWV_DISP_SEQ_ID:
           case FWV_OCC_SEQ_ID:
           case FWV_SPIN_SEQ_ID:
           case FWV_U_SEQ_ID:
             type_id = modulationFields[tok].substring(11, 12).toUpperCase();
-//            type_id = Character.toUpperCase(modulationFields[tok].charAt(11))
-//                + "_";
             break;
           }
-          type_id += sep + "id" + field;
+          type_id += sep + field;
           break;
         case JANA_OCC_ABS_LABEL:
           type_id = "J_O";
@@ -353,7 +352,7 @@ public class MSCifParser extends MSRdr {
           atomLabel = field;
           break;
         case OCC_SPECIAL_LABEL:
-          type_id = "O_id0";
+          type_id = "O_0";
           axis = "0";
           atomLabel = field;
           break;

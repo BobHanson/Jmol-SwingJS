@@ -1437,7 +1437,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       BS bs = lookingAtBitset();
       if (bs != null) {
         addTokenToPrefix(
-            T.o(T.bitset, isBondOrMatrix ? BondSet.newBS(bs, null) : bs));
+            T.o(T.bitset, isBondOrMatrix ? BondSet.newBS(bs) : bs));
         return CONTINUE;
       }
       if (isBondOrMatrix) {

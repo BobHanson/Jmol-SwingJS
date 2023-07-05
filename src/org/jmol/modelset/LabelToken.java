@@ -401,7 +401,7 @@ public class LabelToken {
     }
     if (ich < cch && htValues != null)
       for (String key: htValues.keySet())
-        if (strFormat.indexOf(key) == ich)
+        if (strFormat.indexOf(key, ich) == ich)
           return ich + (lt.key = key).length();
     if (ich < cch)
       switch (ch = strFormat.charAt(ich++)) {
