@@ -4932,32 +4932,40 @@ public class Viewer extends JmolViewer
       return name;
     case 'h':
       // legacy resolver https://
-      checkCIR(false);
+      if (g.checkCIR)
+        checkCIR(false);
       return g.nihResolverFormat
           + name.substring(name.indexOf("/structure") + 10);
     case '=':
       if (name.startsWith("==")) {
         id = id.substring(1);
+        if (id.equals("?")
+            && (id = getDBID("chemical component from RCSB")) == null)
+          return null;
         type = '#';
-      } else if (id.indexOf("/") > 0) {
-        // =xxxx/....
-        try {
-          int pt = id.indexOf("/");
-          String database = id.substring(0, pt);
-          id = JC.resolveDataBase(database, id.substring(pt + 1), null);
-          if (id != null && id.startsWith("'"))
-            id = evaluateExpression(id).toString();
-          return (id == null || id.length() == 0 ? name : id);
-        } catch (Exception e) {
-          return name;
-        }
       } else {
-        if (id.endsWith(".mmtf")) {
-          id = id.substring(0, id.indexOf(".mmtf"));
-          return JC.resolveDataBase("mmtf", id.toUpperCase(), null);
+        if (id.equals("?") && (id = getDBID("PDB ID from RCSB")) == null)
+          return null;
+        if (id.indexOf("/") > 0) {
+          // =xxxx/....
+          try {
+            int pt = id.indexOf("/");
+            String database = id.substring(0, pt);
+            id = JC.resolveDataBase(database, id.substring(pt + 1), null);
+            if (id != null && id.startsWith("'"))
+              id = evaluateExpression(id).toString();
+            return (id == null || id.length() == 0 ? name : id);
+          } catch (Exception e) {
+            return name;
+          }
         }
-        format = g.loadFormat;
       }
+      if (id.endsWith(".mmtf")) {
+        id = id.substring(0, id.indexOf(".mmtf"));
+        return JC.resolveDataBase("mmtf", id.toUpperCase(), null);
+      }
+      format = g.loadFormat;
+
       //$FALL-THROUGH$
     case '#': // ligand
       if (format == null)
@@ -4965,6 +4973,8 @@ public class Viewer extends JmolViewer
       return JC.resolveDataBase(null, id, format);
     case '*':
       // European Bioinformatics Institute
+      if (id.equals("?") && (id = getDBID("PDB ID from EBI")) == null)
+        return null;
       int pt = name.lastIndexOf("/");
       if (name.startsWith("*dom/")) {
         //  *dom/.../.../.../xxxx
@@ -5001,7 +5011,9 @@ public class Viewer extends JmolViewer
       return JC.resolveDataBase(pdbe, id, null);
     case ':': // PubChem
       format = g.pubChemFormat;
-      if (id.equals("")) {
+      if (id.equals("?") && (id = getDBID("structure from PubChem")) == null)
+        return null;
+      if (id == "") {
         try {
           id = "smiles:" + getOpenSmiles(bsA());
         } catch (Exception e) {
@@ -5033,6 +5045,8 @@ public class Viewer extends JmolViewer
       return PT.formatStringS(format, "FILE", id);
     case '$':
       checkCIR(false);
+      if (id.equals("?") && (id = getDBID("structure from NCI/CADD")) == null)
+        return null;
       if (name.equals("$")) {
         try {
           id = getOpenSmiles(bsA());
@@ -5169,6 +5183,10 @@ public class Viewer extends JmolViewer
       break;
     }
     return id;
+  }
+
+  private String getDBID(String type) {
+    return prompt("load a " + type, null, null, false);
   }
 
   boolean cirChecked;
@@ -5837,8 +5855,6 @@ public class Viewer extends JmolViewer
       return g.cartoonSteps;
     case T.cartoonblocks:
       return g.cartoonBlocks;
-    case T.checkcir:
-      return g.checkCIR;
     case T.bondmodeor:
       return g.bondModeOr;
     case T.cartoonbaseedges:
@@ -5853,6 +5869,8 @@ public class Viewer extends JmolViewer
       return g.cartoonRockets;
     case T.chaincasesensitive:
       return g.chainCaseSensitive || chainCaseSpecified;
+    case T.checkcir:
+      return g.checkCIR;
     case T.ciprule6full:
       return g.cipRule6Full;
     case T.debugscript:

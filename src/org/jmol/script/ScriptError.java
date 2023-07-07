@@ -168,6 +168,7 @@ public abstract class ScriptError implements JmolScriptEvaluator {
   public final static int ERROR_writeWhat = 54;
   final static int ERROR_multipleModelsNotOK = 55;
   public final static int ERROR_cannotSet = 56;
+  public final static int ERROR_operationCanceled = 57;
 
   /**
    * @param iError
@@ -305,6 +306,9 @@ public abstract class ScriptError implements JmolScriptEvaluator {
       break;
     case ERROR_numberOutOfRange:
       msg = GT.$("decimal number out of range ({0} - {1})");
+      break;
+    case ERROR_operationCanceled:
+      msg = GT.$("operation canceled");
       break;
     case ERROR_objectNameExpected:
       msg = GT.$("object name expected after '$'");

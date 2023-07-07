@@ -2128,6 +2128,7 @@ public class ScriptEval extends ScriptExpr {
     if (!filename.startsWith("?")) {
       String[] fullPathNameOrError = vwr.getFullPathNameOrError(filename);
       filename = fullPathNameOrError[0];
+      
       if (fullPathNameOrError[1] != null)
         errorStr(ScriptError.ERROR_fileNotFoundException,
             filename + ":" + fullPathNameOrError[1]);
@@ -4821,7 +4822,8 @@ public class ScriptEval extends ScriptExpr {
           filename = type
               + checkFileExists("LOAD" + (isAppend ? "_APPEND_" : "_"), isAsync,
                   filename, filePt, !isAppend && pc != pcResume);
-
+        if (filename.equals("null"))
+          error(ERROR_operationCanceled);
         if (filename.startsWith("cache://"))
           localName = null;
         // on first pass, a ScriptInterruption will be thrown; 
@@ -5011,6 +5013,8 @@ public class ScriptEval extends ScriptExpr {
     }
     String[] fullPathNameOrError = vwr.getFullPathNameOrError(filename);
     filename = fullPathNameOrError[0];
+    if (filename == null)
+      return null;
     if (fullPathNameOrError[1] != null)
       errorStr(ScriptError.ERROR_fileNotFoundException, filename
           + ":" + fullPathNameOrError[1]);

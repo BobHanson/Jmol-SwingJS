@@ -965,6 +965,8 @@ public class FileManager implements BytePoster {
       return names;
     }
     name = vwr.resolveDatabaseFormat(name);
+    if (name == null)
+      return new String[] { null };
     if (name.indexOf(":") < 0 && name.indexOf("/") != 0)
       name = addDirectory(vwr.getDefaultDirectory(), name);
     if (appletDocumentBaseURL == null) {
