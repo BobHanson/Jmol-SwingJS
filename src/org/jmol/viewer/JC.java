@@ -30,6 +30,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
+import org.jmol.i18n.GT;
 import org.jmol.script.T;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
@@ -1495,5 +1496,21 @@ public final class JC {
    * was a minimum for float as double, but now just Double.MIN_VALUE
    */
   public final static double FLOAT_MIN_SAFE = Double.MIN_VALUE; // was 2E-45f; 
+
+  public static String getMenuScript(String type) {
+    if (type == "openPDB") {
+      return "var x__id__ = _modelTitle; if (x__id__.length != 4) { x__id__ = '1crn'};x__id__ = prompt('"
+          + GT.$("Enter a four-digit PDB model ID or \"=\" and a three-digit ligand ID")
+          + "',x__id__);if (!x__id__) { quit }; load @{'=' + x__id__}";
+
+    }
+    if (type == "openMOL") {
+      return "var x__id__ = _smilesString; if (!x__id__) { x__id__ = 'tylenol'};x__id__ = prompt('"
+          + GT.$("Enter the name or identifier (SMILES, InChI, CAS) of a compound. Preface with \":\" to load from PubChem; otherwise Jmol will use the NCI/NIH Resolver.")
+          + "',x__id__);if (!x__id__) { quit }; load @{(x__id__[1]==':' ? x__id__ : '$' + x__id__)}";
+
+    }
+    return null;
+  }
 
 }

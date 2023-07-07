@@ -1197,11 +1197,12 @@ abstract public class ScriptParam extends ScriptError {
       Lst<P3d> data = new Lst<P3d>();
       P3d pt;
       Lst<SV> pts = ((SV) t).getList();
-      for (int j = 0; j < pts.size(); j++)
-        if ((pt = SV.ptValue(pts.get(j))) != null)
-          data.addLast(pt);
-        else
+      for (int j = 0; j < pts.size(); j++) {
+        SV v = pts.get(j);
+        if ((pt = (v.tok == T.bitset ? vwr.ms.getAtomSetCenter(SV.getBitSet(v, false)) : SV.ptValue(v))) == null)
           return null;
+        data.addLast(pt);
+      }
       return data;
     }
     if (i > 0)

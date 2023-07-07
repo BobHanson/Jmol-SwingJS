@@ -73,7 +73,7 @@ public class MainPopupResourceBundle extends PopupResource {
 
       {   "fileMenu", "loadMenu saveMenu exportMenu SIGNEDJAVAcaptureMenuSPECIAL " },
           
-      {   "loadMenu", "SIGNEDloadFile SIGNEDloadUrl SIGNEDloadPdb SIGNEDloadScript - "
+      {   "loadMenu", "SIGNEDloadFile SIGNEDloadUrl SIGNEDloadPdb SIGNEDloadMol SIGNEDloadScript - "
           + "reload SIGNEDloadFileUnitCell" },       
       {   "saveMenu", "writeFileTextVARIABLE writeState writeHistory SIGNEDwriteJmol SIGNEDwriteIsosurface "} ,      
       {   "exportMenu", "SIGNEDNOGLwriteGif SIGNEDNOGLwriteJpg SIGNEDNOGLwritePng " +
@@ -464,7 +464,8 @@ public class MainPopupResourceBundle extends PopupResource {
         "vectorOn", null,
         "spinOn", null,
         "on", null,
-        "SIGNEDloadPdb", GT.$("Open from PDB"),      
+        "SIGNEDloadPdb", GT.$("Get PDB file"),
+        "SIGNEDloadMol", GT.$("Get MOL file"),
         "SIGNEDloadFile", GT.$("Open local file"),      
         "SIGNEDloadScript", GT.$("Open script"),      
         "SIGNEDloadUrl", GT.$("Open URL"),      
@@ -931,7 +932,8 @@ public class MainPopupResourceBundle extends PopupResource {
       { "showState", "console on;show state" },
       
       { "reload", "load \"\"" },
-      { "SIGNEDloadPdb", "load ?PdbId?" },      
+      { "SIGNEDloadPdb", JC.getMenuScript("openPDB") },      
+      { "SIGNEDloadMol", JC.getMenuScript("openMOL") },      
       { "SIGNEDloadFile", "load ?" },      
       { "SIGNEDloadUrl", "load http://?" },      
       { "SIGNEDloadFileUnitCell", "load ? {1 1 1}" },      

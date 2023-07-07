@@ -1679,7 +1679,7 @@ abstract class ScriptExpr extends ScriptParam {
       case 0:
       case T.min: // single value
       case T.all:
-        return getCmdExt().getBitsetIdent(bs, "", tokenValue, useAtomMap,
+        return getCmdExt().getBitsetIdent(bs, null, tokenValue, useAtomMap,
             index, isExplicitlyAll);
       }
       return "";

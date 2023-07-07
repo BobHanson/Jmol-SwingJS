@@ -750,6 +750,7 @@ public class MathExt {
     // compare([{bitset} or {positions}],[{bitset} or {positions}] [,"stddev"])
     // compare({bitset},{bitset}[,"SMARTS"|"SMILES"],smilesString [,"stddev"])
     // returns matrix4f for rotation/translation or stddev
+    // compare({bitset},{bitset},"ISOMER", true)  14.32.12 (tautomer)
     // compare({bitset},{bitset},"ISOMER")  12.1.5
     // compare({bitset},{bitset},smartsString, "BONDS") 13.1.17
     // compare({bitset},{bitset},"SMILES", "BONDS") 13.3.9
@@ -770,7 +771,8 @@ public class MathExt {
     boolean isTautomer = isIsomer && isTrue;
     boolean isBonds = sOpt.equalsIgnoreCase("BONDS");
     boolean isPoints = (args[0].tok == T.varray && args[1].tok == T.varray);
-    boolean isSmiles = (!isPoints && !isIsomer && narg > (isStdDev ? 3 : 2));
+    Lst<SV> abmap = (narg >= 3 ? args[2].getList() : null);
+    boolean isSmiles = (abmap == null && !isPoints && !isIsomer && narg > (isStdDev ? 3 : 2));
     BS bs1 = (args[0].tok == T.bitset ? (BS) args[0].value : null);
     BS bs2 = (args[1].tok == T.bitset ? (BS) args[1].value : null);
     String smiles1 = (bs1 == null ? SV.sValue(args[0]) : "");
@@ -955,23 +957,24 @@ public class MathExt {
                 : ret.size() > 0 ? mp.addXAII(ret.get(0)) : mp.addXStr(""));
           }
         }
-      }
-      if (isPoints) {
+      } else {
         // A, B
         // A, B, stddev
         // A, B, int[] map
         // A, B, int[] map, stddev
-        ptsA = e.getPointVector(args[0], 3);
-        ptsB = e.getPointVector(args[1], 3);
-        Lst<SV> a = (narg >= 3 ? args[2].getList() : null);
-        if (a != null) {
+        // A or B can be bitset or point list
+        ptsA = e.getPointVector(args[0], 0);
+        ptsB = e.getPointVector(args[1], 0);
+        if (ptsA == null || ptsB == null)
+          return false;
+        if (abmap != null) {
           narg--;
-          int n = a.size();
-          if (n != ptsA.size() || n != ptsB.size())
+          int n = abmap.size();
+          if (n > ptsA.size() || n != ptsB.size())
             return false;
           Lst<P3d> list = new Lst<P3d>();
           for (int i = 0; i < n; i++)
-            list.addLast(ptsA.get(a.get(i).intValue));
+            list.addLast(ptsA.get(abmap.get(i).intValue - 1));
           ptsA = list;
         }
         switch (narg) {
@@ -984,7 +987,7 @@ public class MathExt {
         default:
           return false;
         }
-        if (ptsA != null && ptsB != null && ptsA.size() == ptsB.size()) {
+        if (ptsA.size() == ptsB.size()) {
           Interface.getInterface("javajs.util.Eigen", vwr, "script");
           stddev = ScriptParam.getTransformMatrix4(ptsA, ptsB, m, null);
         }

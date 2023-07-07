@@ -91,6 +91,7 @@ import org.jmol.i18n.GT;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.HistoryFile;
 import org.openscience.jmol.app.Jmol;
@@ -1405,9 +1406,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     public OpenPdbAction() {
       super(openpdbAction);
-      script = "var x__id__ = _modelTitle; if (x__id__.length != 4) { x__id__ = '1crn'};x__id__ = prompt('"
-          + GT.$("Enter a four-digit PDB model ID or \"=\" and a three-digit ligand ID")
-          + "',x__id__);if (!x__id__) { quit }; load @{'=' + x__id__}";
+      script = JC.getMenuScript("openPDB");
     }
   }
 
@@ -1415,9 +1414,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     public OpenMolAction() {
       super(openmolAction);
-      script = "var x__id__ = _smilesString; if (!x__id__) { x__id__ = 'tylenol'};x__id__ = prompt('"
-          + GT.$("Enter the name or identifier (SMILES, InChI, CAS) of a compound. Preface with \":\" to load from PubChem; otherwise Jmol will use the NCI/NIH Resolver.")
-          + "',x__id__);if (!x__id__) { quit }; load @{(x__id__[1]==':' ? x__id__ : '$' + x__id__)}";
+      script = JC.getMenuScript("openMOL");
     }
 
   }

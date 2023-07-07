@@ -2120,15 +2120,18 @@ public class ScriptEval extends ScriptExpr {
    * @throws ScriptException
    */
   public String loadFileAsync(String prefix, String filename, int i,
-                              boolean doClear) throws ScriptException {
+                              boolean doClear)
+      throws ScriptException {
     // note that we will never know the actual file name
     // so we construct one and point to it in the scriptContext
     // with a key to this point in the script. 
-    String[] fullPathNameOrError = vwr.getFullPathNameOrError(filename);
-    filename = fullPathNameOrError[0];
-    if (fullPathNameOrError[1] != null)
-      errorStr(ScriptError.ERROR_fileNotFoundException, filename
-          + ":" + fullPathNameOrError[1]);    
+    if (!filename.startsWith("?")) {
+      String[] fullPathNameOrError = vwr.getFullPathNameOrError(filename);
+      filename = fullPathNameOrError[0];
+      if (fullPathNameOrError[1] != null)
+        errorStr(ScriptError.ERROR_fileNotFoundException,
+            filename + ":" + fullPathNameOrError[1]);
+    }
     if (vwr.fm.cacheGet(filename, false) != null) {
       cancelFileThread();
       return filename;
@@ -2149,14 +2152,15 @@ public class ScriptEval extends ScriptExpr {
       cancelFileThread();
       //no, problems with isosurface "?" map "?": popContext(false, false);
       vwr.queueOnHold = false;
-      if ("#CANCELED#".equals(cacheName) || "#CANCELED#".equals(vwr.fm.cacheGet(cacheName, false)))
+      if ("#CANCELED#".equals(cacheName)
+          || "#CANCELED#".equals(vwr.fm.cacheGet(cacheName, false)))
         evalError("#CANCELED#", null);
       return cacheName;
     }
     thisContext.htFileCache.put(key,
         cacheName = prefix + System.currentTimeMillis());
-//    if (fileLoadThread != null && i >= 0)
-//      evalError("#CANCELED#", null);
+    //    if (fileLoadThread != null && i >= 0)
+    //      evalError("#CANCELED#", null);
     if (doClear)
       vwr.cacheFileByName(prefix + "*", false);
     fileLoadThread = new FileLoadThread(this, vwr, filename, key, cacheName);

@@ -293,9 +293,9 @@ public class CmdExt extends ScriptExt {
       else if (label.length() == 0)
         label = "%[label]";
     } else if (label != null && label.length() == 0) {
-        label = null;
-    } else if ("%U".equals(label)) {
       label = "[%a1 #%i1] %4.3LENGTH [%a2 #%i2] #%#";
+    } else if ("%U".equals(label)) {
+      label = "";
     }
     int pt = (label == null ? -1 : label.indexOf("%"));
     boolean haveIndex = (index != Integer.MAX_VALUE);
