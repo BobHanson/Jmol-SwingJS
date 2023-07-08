@@ -5186,7 +5186,7 @@ public class Viewer extends JmolViewer
   }
 
   private String getDBID(String type) {
-    return prompt("load a " + type, null, null, false);
+    return prompt("load a " + type, "", null, false);
   }
 
   boolean cirChecked;
