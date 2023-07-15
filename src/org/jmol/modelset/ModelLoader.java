@@ -36,6 +36,7 @@ import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterAtomIterator;
 import org.jmol.api.JmolAdapterBondIterator;
 import org.jmol.api.JmolDataManager;
+import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.VDW;
@@ -1182,8 +1183,9 @@ public final class ModelLoader {
         if (isFractional) {
           // it is possible for atoms to have specific unit cells, not just models
           // this happens for commensurately modulated composite compounds
-          c = atoms[i].getUnitCell();
-          c.toCartesian(c.toSupercell(atoms[i]), false);
+          JmolModulationSet m = ms.getModulation(i);
+          SymmetryInterface uca = (m == null ? c : atoms[i].getUnitCell());
+          uca.toCartesian(uca.toSupercell(atoms[i]), false);
 //          if (roundCoords)
 //            PT.fixPtFloats(atoms[i], PT.CARTESIAN_PRECISION);
         }

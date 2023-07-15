@@ -1429,9 +1429,12 @@ public class Viewer extends JmolViewer
     String minStatus = (String) getP("_minimizationStatus");
     boolean starting = "starting".equals(minStatus);
     boolean done = "done".equals(minStatus) || "failed".equals(minStatus);
-    BS bsAtoms = (starting || done ? minimizer.bsAtoms : null);
-    int atomIndex = (starting || done ? bsAtoms.nextSetBit(0) : -1);
-    int modelIndex = (atomIndex >= 0 ? getModelForAtomIndex(atomIndex).modelIndex : -1);
+    boolean includeAtoms = (minimizer != null && (done || starting));
+    if (minimizer == null)
+      System.err.println("Viewer.notifyMin null");
+    BS bsAtoms = (includeAtoms ? minimizer.bsAtoms : null);
+    int atomIndex = (bsAtoms == null ? -1 : bsAtoms.nextSetBit(0));
+    int modelIndex = (atomIndex >= 0 ? getModelIndexForAtom(atomIndex) : -1);
     if (starting && atomIndex >= 0) {
       sm.setStatusStructureModified(atomIndex, modelIndex, MODIFY_SET_COORD, "minimize:" + minStatus, bsAtoms.cardinality(), bsAtoms);
     }
@@ -2061,7 +2064,7 @@ public class Viewer extends JmolViewer
     if (bsSelected == null)
       bsSelected = bsA();
     bsSelected = BSUtil.copy(bsSelected);
-    BSUtil.andNot(bsSelected, getMotionFixedAtoms());
+    BSUtil.andNot(bsSelected, getMotionFixedAtoms(bsSelected.nextSetBit(0)));
     if (checkMolecule && !g.allowMoveAtoms)
       bsSelected = ms.getMoleculeBitSet(bsSelected);
     return movableBitSet = bsSelected;
@@ -3335,7 +3338,7 @@ public class Viewer extends JmolViewer
               bsNew.or(
                   addHydrogens(stereo, MIN_SELECT_ONLY | MIN_SILENT | MIN_QUICK));
             }
-            minimize(eval, Integer.MAX_VALUE, 0, bsNew, null, 0,
+            minimize(eval, Integer.MAX_VALUE, 0, bsNew, null, null, 0,
                 MIN_ADDH | MIN_SELECT_ONLY | MIN_SILENT | MIN_QUICK | MIN_XX);
           } catch (Exception e) {
           }
@@ -3785,9 +3788,18 @@ public class Viewer extends JmolViewer
     return (iAtom >= 0 ? ms.getUnitCellForAtom(iAtom) : getUnitCell(am.cmi));
   }
 
-  private SymmetryInterface getUnitCell(int m) {
-    if (m >= 0)
-      return ms.getUnitCell(m);
+  /**
+   * Return current unit cell for the specified model. 
+   * If modelIndex is negative, only return a unit cell if all visible unit cells
+   * are the equivalent.
+   * 
+   * @param modelIndex
+   * @return unit cell ONLY if it is the same for all models
+   * 
+   */
+  private SymmetryInterface getUnitCell(int modelIndex) {
+    if (modelIndex >= 0)
+      return ms.getUnitCell(modelIndex);
     BS models = getVisibleFramesBitSet();
     SymmetryInterface ucLast = null;
     for (int i = models.nextSetBit(0); i >= 0; i = models.nextSetBit(i + 1)) {
@@ -3868,6 +3880,10 @@ public class Viewer extends JmolViewer
 
   public Model getModelForAtomIndex(int iatom) {
     return ms.am[ms.at[iatom].mi];
+  }
+
+  public int getModelIndexForAtom(int iatom) {
+    return ms.at[iatom].mi;
   }
 
   @Override
@@ -6195,10 +6211,12 @@ public class Viewer extends JmolViewer
       return;
     case T.forcefield:
       // 12.3.25
-      g.forceField = value = ("UFF".equalsIgnoreCase(value) ? "UFF"
-          : "UFF2D".equalsIgnoreCase(value) ? "UFF2D"
-              : "MMFF2D".equalsIgnoreCase(value) ? "MMFF2D" : "MMFF");
-      minimizer = null;
+      if (!g.forceField.equals(value)) {
+        g.forceField = value = ("UFF".equalsIgnoreCase(value) ? "UFF"
+            : "UFF2D".equalsIgnoreCase(value) ? "UFF2D"
+                : "MMFF2D".equalsIgnoreCase(value) ? "MMFF2D" : "MMFF");
+        minimizer = null;
+      }
       break;
     case T.nmrurlformat:
       // 12.3.3
@@ -8342,7 +8360,7 @@ public class Viewer extends JmolViewer
       
       if (bsSelected.isEmpty()) {
         bsSelected.set(iatom);
-        sm.setStatusStructureModified(iatom, getModelForAtomIndex(iatom).modelIndex, 
+        sm.setStatusStructureModified(iatom, getModelIndexForAtom(iatom), 
             -MODIFY_SET_COORD, "FAILED", 1, bsSelected);
       } else {
         if (isTranslation) {
@@ -8358,7 +8376,7 @@ public class Viewer extends JmolViewer
           tm.unTransformPoint(ptScreenNew, ptNew);
           SymmetryInterface uc = getOperativeSymmetry();
           if (uc != null) {
-            getModelkit(false).cmdAssignMoveAtoms(bsSelected, iatom,
+            getModelkit(false).cmdAssignMoveAtoms(bsSelected, null, null, iatom,
                 ptNew, null, true);
           }
           if (!Double.isNaN(ptNew.x)) {
@@ -9246,7 +9264,7 @@ public class Viewer extends JmolViewer
     if (!g.monitorEnergy)
       return;
     try {
-      minimize(null, 0, 0, getFrameAtoms(), null, 0, MIN_SILENT);
+      minimize(null, 0, 0, getFrameAtoms(), null, null, 0, MIN_SILENT);
     } catch (Exception e) {
     }
     echoMessage(getP("_minimizationForceField") + " Energy = "
@@ -9278,7 +9296,7 @@ public class Viewer extends JmolViewer
    * @throws Exception
    */
   public void minimize(JmolScriptEvaluator eval, int steps, double crit,
-                       BS bsSelected, BS bsFixed, double rangeFixed, int flags)
+                       BS bsSelected, BS bsFixed, BS bsInFrame, double rangeFixed, int flags)
       throws Exception {
 
     boolean isSelectionExplicit = (bsSelected != null); // could be MINIMIZE {...} or MINIMIZE SELECT {...} or MINIMIZE ONLY {...}
@@ -9286,7 +9304,7 @@ public class Viewer extends JmolViewer
       flags |= MIN_SELECTED;
     }
     boolean addHydrogen = (flags & MIN_ADDH) != 0;
-    boolean isModelkit = (flags & MIN_MODELKIT) != 0;
+    boolean isModelkitCmd = (flags & MIN_MODELKIT) != 0;
     boolean isSilent = (flags & MIN_SILENT) != 0;
     boolean isQuick = (flags & MIN_QUICK) != 0;
     boolean groupSelected = (flags & MIN_GROUP_SELECT) != 0; // SELECTED GROUP
@@ -9300,7 +9318,7 @@ public class Viewer extends JmolViewer
     if (isModelKitOpen())
       setModelkitPropertySafely("constraint", null);
 
-    BS bsInFrame = getFrameAtoms();
+    if (bsInFrame == null) bsInFrame = getFrameAtoms();
 
     // When the SELECT option is given without ONLY or FIX, 
     // we go ahead and fix whatever is not selected and then make selected ALL
@@ -9324,10 +9342,10 @@ public class Viewer extends JmolViewer
     if (bsSelected.isEmpty())
       return;
 
-    BS bsBasis = (isModelkit || !selectedOnly
+    BS bsBasis = (isModelkitCmd || !selectedOnly
         ? BSUtil.copy(ms.am[ms.at[bsSelected.nextSetBit(0)].mi].bsAsymmetricUnit)
         : null);
-    if (isModelkit && bsBasis == null) {
+    if (isModelkitCmd && bsBasis == null) {
       scriptStatusMsg(
           "MODELKIT MINIMIZE is only applicable to crystal structures.",
           "minimization: not a crystal structure");
@@ -9337,8 +9355,10 @@ public class Viewer extends JmolViewer
 
     try {
 
-      if (isModelkit) {
-        getModelkit(false).cmdMinimize(eval, bsBasis, steps, crit, flags);
+      if (isModelkitCmd) {
+        // initial only, from command, refers to true atom set, not temp
+        // the model kit will call this method back with isModelkitCmd = false
+        getModelkit(false).cmdMinimize(eval, bsBasis, steps, crit, rangeFixed, flags);
         return;
       }
       
@@ -9365,11 +9385,12 @@ public class Viewer extends JmolViewer
       // and are within 5 angstroms
       // and are not already selected
       // unless we have explicitly said "only"
-
-      BS bsNearby = (bsBasis != null ? getThisModelAtoms()
+      BS bsNearby = (bsBasis != null && isModelkitCmd ? getThisModelAtoms()
           : selectedOnly || !haveFixed ? new BS()
               : ms.getAtomsWithinRadius(
-                  (rangeFixed <= 0 ? JC.MINIMIZE_FIXED_RANGE : rangeFixed),
+                  (rangeFixed <= 0 ? 
+                      JC.MINIMIZE_FIXED_RANGE 
+                      : rangeFixed),
                   bsSelected, true, null, null));
       bsNearby.andNot(bsSelected);
       if (haveFixed) {
@@ -9471,11 +9492,14 @@ public class Viewer extends JmolViewer
     slm.setMotionFixedAtoms(bs);
   }
 
-  public BS getMotionFixedAtoms() {
+  public BS getMotionFixedAtoms(int iatom) {
     BS bs = BSUtil.copy(slm.getMotionFixedAtoms());
-    if (modelkit != null
-        || getOperativeSymmetry() != null && getModelkit(false) != null)
-      modelkit.addLockedAtoms(bs);
+    if (iatom < 0)
+      iatom = getModelUndeletedAtomsBitSet(
+          getVisibleFramesBitSet().nextSetBit(0)).nextSetBit(0);
+    if (iatom >= 0 && (modelkit != null
+        || getOperativeSymmetry() != null && getModelkit(false) != null))
+      modelkit.addLockedAtoms(iatom, bs);
     return bs;
   }
 
@@ -10351,12 +10375,20 @@ public class Viewer extends JmolViewer
 
   void dragMinimizeAtom(final int iAtom) {
     stopMinimization();
-    BS bs = (getMotionFixedAtoms().isEmpty()
+    
+    
+    int flags = 0;
+    if (getOperativeSymmetry() != null) {
+      flags = MIN_MODELKIT;
+    }
+    
+    
+    BS bs = (flags != 0 ? null : (getMotionFixedAtoms(iAtom).isEmpty()
         ? ms.getAtoms((ms.isAtomPDB(iAtom) ? T.group : T.molecule),
             BSUtil.newAndSetBit(iAtom))
-        : BSUtil.setAll(ms.ac));
+        : BSUtil.setAll(ms.ac)));
     try {
-      minimize(null, Integer.MAX_VALUE, 0, bs, null, 0, 0);
+      minimize(eval, Integer.MAX_VALUE, 0, bs, null, null, 0, flags);
     } catch (Exception e) {
       if (!async)
         return;

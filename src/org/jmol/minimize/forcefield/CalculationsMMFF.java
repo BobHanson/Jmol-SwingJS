@@ -123,7 +123,7 @@ class CalculationsMMFF extends Calculations {
 
   @Override
   protected boolean isLinear(int i) {
-    return MinAtom.isLinear(minAtoms[i]);
+    return mmff.isLinear(minAtoms[i]);
   }
 
   private static boolean isInvertible(MinAtom a) {

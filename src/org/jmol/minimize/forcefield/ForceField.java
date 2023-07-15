@@ -417,7 +417,7 @@ abstract public class ForceField {
       }
       if (doUpdateAtoms) {
         // only necessary if symmetry constraints might adjust positions
-        minimizer.updateAtomXYZ();
+        minimizer.updateAtomXYZ(false);
       }
       double e2 = energyFull(false, true);
       isDone = Util.isNear3(e2, e1, 1.0e-3);

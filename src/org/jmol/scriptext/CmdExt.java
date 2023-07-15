@@ -2825,11 +2825,16 @@ public class CmdExt extends ScriptExt {
     boolean selectedOnly = false;
     boolean groupOnly = false;
     Minimizer minimizer = vwr.getMinimizer(false);
+    double range = 0;
+    
     // may be null
     for (int i = (isModelkit ? 2 : 1); i < slen; i++) {
       switch (getToken(i).tok) {
       case T.criterion:
         crit = doubleParameter(++i);
+        continue;
+      case T.range:
+        range = doubleParameter(++i);
         continue;
       case T.energy:
         steps = 0;
@@ -2934,7 +2939,7 @@ public class CmdExt extends ScriptExt {
       invArg();
     if (!chk)
       try {
-        vwr.minimize(e, steps, crit, bsSelected, bsFixed, 0, 
+        vwr.minimize(e, steps, crit, bsSelected, bsFixed, null, range, 
             (addHydrogen ? Viewer.MIN_ADDH : 0)
             | (isModelkit ? Viewer.MIN_MODELKIT : 0) 
             | (selectedOnly ? Viewer.MIN_SELECT_ONLY : 0) 
@@ -6291,7 +6296,7 @@ public class CmdExt extends ScriptExt {
     // single model only
     if (vwr.am.cmi < 0)
       invArg();
-    BS bsAtoms = vwr.getThisModelAtoms();
+    BS bsModelAtoms = vwr.getThisModelAtoms();
     BS bs = null;
     if (isBond) {
       if(tokAt(i) == T.integer) {
@@ -6299,12 +6304,12 @@ public class CmdExt extends ScriptExt {
       } else if (getToken(i).value instanceof BondSet) {
         index = ((BS) getToken(i).value).nextSetBit(0);        
       } else {
-        bs = expFor(i, bsAtoms);
+        bs = expFor(i, bsModelAtoms);
         index = bs.nextSetBit(0);
         switch (bs.cardinality()) {
         case 1:
           // assign BOND @3 @4 ...
-          bs = expFor(i = ++e.iToken, bsAtoms);
+          bs = expFor(i = ++e.iToken, bsModelAtoms);
           index2 = bs.nextSetBit(0);
           if (index2 < 0)
             invArg();
@@ -6330,7 +6335,7 @@ public class CmdExt extends ScriptExt {
       i = ++e.iToken;
     } else if (mode == T.packed) {
       // new Jmol 14.32.73
-      bs = bsAtoms;
+      bs = bsModelAtoms;
     } else if (mode == T.atoms && tokAt(i) == T.string || mode == T.add) {    
       // new Jmol 14.29.28
       // assign ATOM "C" {0 0 0}
@@ -6340,7 +6345,7 @@ public class CmdExt extends ScriptExt {
       // assign CONNECT @3 @4
       // assign DELETE @1
       // assign MOVETO @1
-      bs = expFor(i, bsAtoms);
+      bs = expFor(i, bsModelAtoms);
       index = bs.nextSetBit(0);
       if (index < 0) {
         return;
@@ -6351,7 +6356,7 @@ public class CmdExt extends ScriptExt {
     P3d pt = null;
     if (isAdd) {
       if (e.isAtomExpression(i)) {
-        bs = expFor(++e.iToken, bsAtoms);
+        bs = expFor(++e.iToken, bsModelAtoms);
         i = e.iToken;
         type = e.optParameterAsString(i + 1);
         i = e.iToken;        
@@ -6394,7 +6399,7 @@ public class CmdExt extends ScriptExt {
       // N/A
     } else if (index2 < 0) {      
       // assign CONNECT @3 @4
-      bs = expFor(i, bsAtoms);
+      bs = expFor(i, bsModelAtoms);
       index2 = bs.nextSetBit(0);
       type = e.optParameterAsString(++e.iToken);
     }
@@ -6432,7 +6437,7 @@ public class CmdExt extends ScriptExt {
       break;
     case T.moveto:
       // do not allow projection using this command
-      int nm = vwr.getModelkit(false).cmdAssignMoveAtoms(bs, index, pt, pts, true);
+      int nm = vwr.getModelkit(false).cmdAssignMoveAtoms(bs, null, null, index, pt, pts, true);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
@@ -6440,7 +6445,7 @@ public class CmdExt extends ScriptExt {
       if (e.doReport())
         e.showString(vwr.assignSpaceGroup(bs, type, -1));
       if (isPacked) {
-        int n = vwr.getModelkit(false).cmdAssignAddAtoms(null, null, bsAtoms, "packed", e.fullCommand, false);
+        int n = vwr.getModelkit(false).cmdAssignAddAtoms(null, null, bsModelAtoms, "packed", e.fullCommand, false);
         if (e.doReport())
           e.report(GT.i(GT.$("{0} atoms added"), n), false);
       }

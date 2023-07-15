@@ -594,7 +594,7 @@ public class NBOParser {
           bondCounts[a2] += order;
         }
         vwr.ms.bondAtoms(vwr.ms.at[a1], vwr.ms.at[a2], order, (short) mad,
-            bsAtoms, 0, true, true);
+            null, 0, true, true);
       }
     } else if (matrix != null) {
       for (int i = 0; i < atomCount - 1; i++) {

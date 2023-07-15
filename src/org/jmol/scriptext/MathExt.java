@@ -1646,7 +1646,7 @@ public class MathExt {
       if (isEquivalent) {
         switch (x1.tok) {
         case T.bitset:
-          return mp.addXBs(vwr.ms.getSymmetryEquivAtoms((BS) x1.value));
+          return mp.addXBs(vwr.ms.getSymmetryEquivAtoms((BS) x1.value, null, null));
         case T.point3f:
           return mp.addXList(
               vwr.getSymmetryEquivPoints((P3d) x1.value, sFind + flags));
@@ -3762,7 +3762,7 @@ public class MathExt {
         // @x.symop(@y, @z,....)
         // @x.symop(@y,....)
         bs1 = (args.length == 1 || args[1].tok != T.bitset ? bsAtoms : null);
-        bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.getModelForAtomIndex(bsAtoms.nextSetBit(0)).modelIndex);
+        bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.getModelIndexForAtom(bsAtoms.nextSetBit(0)));
       }
       break;
     }

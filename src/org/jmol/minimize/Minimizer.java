@@ -24,16 +24,10 @@
 
 package org.jmol.minimize;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.P3d;
-
 import java.util.Hashtable;
-
 import java.util.Map;
 
 import org.jmol.i18n.GT;
-import javajs.util.BS;
 import org.jmol.minimize.forcefield.ForceField;
 import org.jmol.minimize.forcefield.ForceFieldMMFF;
 import org.jmol.minimize.forcefield.ForceFieldUFF;
@@ -41,18 +35,25 @@ import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.ModelSet;
+import org.jmol.script.T;
 import org.jmol.thread.JmolThread;
 import org.jmol.util.BSUtil;
-import org.jmol.util.Escape;
 import org.jmol.util.Edge;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-
-import org.jmol.script.T;
 import org.jmol.viewer.JmolAsyncException;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3d;
+
 public class Minimizer {
 
+  public static int staticID = 0;
+  
+  public int id;
   public Viewer vwr;
   public Atom[] atoms;
   public Bond[] bonds;
@@ -88,6 +89,7 @@ public class Minimizer {
   private boolean isSilent;
  
   public Minimizer() {
+    id = (++staticID) * 100;
   }
 
   
@@ -131,13 +133,14 @@ public class Minimizer {
   public boolean minimize(int steps, double crit, BS bsSelected, BS bsFixed,
                           BS bsBasis, int flags, String ff)
       throws JmolAsyncException {
+    id++;
     isSilent = ((flags & Viewer.MIN_SILENT) == Viewer.MIN_SILENT);
     isQuick = (ff.indexOf("2D") >= 0
         || (flags & Viewer.MIN_QUICK) == Viewer.MIN_QUICK);
     if (bsBasis != null) {
       if (bsFixed == null)
         bsFixed = new BS();
-      bsFixed.or(vwr.getMotionFixedAtoms());
+      bsFixed.or(vwr.getMotionFixedAtoms(bsBasis.nextSetBit(0)));
       bsBasis.andNot(bsFixed);
       bsFixed.or(bsSelected);
       bsFixed.andNot(bsBasis);
@@ -174,7 +177,7 @@ public class Minimizer {
       // and if something is fixed, then AND it with "nearby and in frame" as well.
       if (!haveFixed && bsFixedDefault != null)
         bsFixed.and(bsFixedDefault);
-      if (minimizationOn)
+      if (minimizing)
         return false;
       ForceField pFF0 = pFF;
       getForceField(ff);
@@ -182,7 +185,7 @@ public class Minimizer {
         Logger.error(GT.o(GT.$("Could not get class for force field {0}"), ff));
         return false;
       }
-      Logger.info("minimize: initializing " + pFF.name + " (steps = " + steps
+      Logger.info("minimize: " + id + " initializing " + pFF.name + " (steps = " + steps
           + " criterion = " + crit + ")"
                 + " silent=" + isSilent 
                 + " quick=" + isQuick 
@@ -204,10 +207,10 @@ public class Minimizer {
         if (atoms[i].getElementNumber() == 0) {
           if (bsXx == null) {
             bsAtoms.clear(i);
-            Logger.info("minimize: Ignoring Xx for atomIndex=" + i);
+            Logger.info("minimize: " + id + " Ignoring Xx for atomIndex=" + i);
           } else {
             bsXx.set(i);
-            Logger.info("minimize: Setting Xx to fluorine for atomIndex=" + i);
+            Logger.info("minimize: " + id + " Setting Xx to fluorine for atomIndex=" + i);
             atoms[i].setAtomicAndIsotopeNumber(9); // Xx -> fluorine
           }
         }
@@ -223,7 +226,7 @@ public class Minimizer {
       if (!sameAtoms)
         pFF.clear();
       if ((!sameAtoms || !BSUtil.areEqual(bsFixed, this.bsFixed))
-          && !setupMinimization()) {
+          && !setupMinimization(bsFixed)) {
         clear();
         return false;
       }
@@ -232,9 +235,6 @@ public class Minimizer {
         BSUtil.andNot(bsTaint, bsFixed);
         vwr.ms.setTaintedAtoms(bsTaint, AtomCollection.TAINT_COORD);
       }
-      if (bsFixed != null)
-        this.bsFixed = bsFixed;
-      setAtomPositions();
 
       if (constraints != null)
         for (int i = constraints.size(); --i >= 0;)
@@ -344,7 +344,7 @@ public class Minimizer {
     units = (s.equalsIgnoreCase("kcal") ? "kcal" : "kJ");
   }
 
-  private boolean setupMinimization() throws JmolAsyncException {
+  private boolean setupMinimization(BS bsFixed) throws JmolAsyncException {
 
     coordSaved = null;
     atomMap = new int[atoms.length];
@@ -362,16 +362,19 @@ public class Minimizer {
           atom.z }, ac);
       minAtoms[pt].sType = atom.getAtomName();
     }
+    if (bsFixed != null)
+      this.bsFixed = bsFixed;
+    setAtomPositions();
 
     Logger.info(GT.i(GT.$("{0} atoms will be minimized."), ac));
-    Logger.info("minimize: getting bonds...");
+    Logger.info("minimize:  " + id + " getting bonds...");
     bonds = vwr.ms.bo;
     rawBondCount = vwr.ms.bondCount;
     getBonds();
-    Logger.info("minimize: getting angles...");
+    Logger.info("minimize:  " + id + " getting angles...");
     getAngles();
-    Logger.info("minimize: getting torsions...");
-    getTorsions();
+    Logger.info("minimize:  " + id + " getting torsions...");
+    getTorsions(ff.startsWith("MMFF"));
     return setModel(bsElements);
   }
   
@@ -393,7 +396,7 @@ public class Minimizer {
   private void setAtomPositions() {
     for (int i = 0; i < ac; i++)
       minAtoms[i].set();
-    if (bsFixed == null) {
+    if (bsFixed == null || bsFixed.cardinality() == 0) {
       bsMinFixed = null;
     } else {
       bsMinFixed = new BS();
@@ -479,7 +482,7 @@ public class Minimizer {
     Logger.info(minAngles.length + " angles");
   }
 
-  public void getTorsions() {
+  public void getTorsions(boolean isMMFF) {
     Lst<MinTorsion> vTorsions = new  Lst<MinTorsion>();
     int id;
     // extend all angles a-b-c by one, but only
@@ -498,6 +501,7 @@ public class Minimizer {
             vTorsions.addLast(new MinTorsion(new int[] { ia, ib, ic, id, 
                 angle[ForceField.ABI_IJ], angle[ForceField.ABI_JK],
                 minAtoms[ic].getBondIndex(j) }));
+            if (isMMFF)
               minAtoms[Math.min(ia, id)].bs14.set(Math.max(ia, id));
           }
         }
@@ -510,7 +514,8 @@ public class Minimizer {
             vTorsions.addLast(new MinTorsion(new int[] { ic, ib, ia, id, 
                 angle[ForceField.ABI_JK], angle[ForceField.ABI_IJ],
                 minAtoms[ia].getBondIndex(j) }));
-            minAtoms[Math.min(ic, id)].bs14.set(Math.max(ic, id));
+            if (isMMFF)
+              minAtoms[Math.min(ic, id)].bs14.set(Math.max(ic, id));
           }
         }
       }
@@ -545,10 +550,10 @@ public class Minimizer {
    * Minimization thead support
    ****************************************************************/
 
-  private boolean minimizationOn;
+  private boolean minimizing;
   
   public boolean minimizationOn() {
-    return minimizationOn;
+    return minimizing;
   }
 
   private MinimizationThread minimizationThread;
@@ -560,7 +565,7 @@ public class Minimizer {
   }
 
   private void setMinimizationOn(boolean minimizationOn) {
-    this.minimizationOn = minimizationOn;
+    this.minimizing = minimizationOn;
     if (!minimizationOn) {
       if (minimizationThread != null) {
         minimizationThread = null;
@@ -582,6 +587,12 @@ public class Minimizer {
     reportEnergy();
     vwr.setStringProperty("_minimizationStatus", "calculate");
     vwr.notifyMinimizationStatus();
+    if (bsBasis != null) {
+      //report(pFF.getLogData(), true);
+      // to delete this model
+      vwr.getModelkit(false).minimizeEnd(null, true);
+    }
+
   }
   
   private void reportEnergy() {
@@ -591,7 +602,7 @@ public class Minimizer {
   
   public boolean startMinimization() {
    try {
-      Logger.info("minimize: startMinimization");
+      Logger.info("minimize:  " + id + " startMinimization");
       vwr.setIntProperty("_minimizationStep", 0);
       vwr.setStringProperty("_minimizationStatus", "starting");
       vwr.setFloatProperty("_minimizationEnergy", 0);
@@ -606,13 +617,13 @@ public class Minimizer {
       Logger.error("minimization error vwr=" + vwr + " pFF = " + pFF);
       return false;
     }
-    minimizationOn = true;
+    minimizing = true;
     return true;
   }
 
   
   public boolean stepMinimization() {
-    if (!minimizationOn)
+    if (!minimizing)
       return false;
     boolean doRefresh = (!isSilent && vwr.getBooleanProperty("minimizationRefresh"));
     vwr.setStringProperty("_minimizationStatus", "running");
@@ -629,8 +640,10 @@ public class Minimizer {
   }
 
   
-  public void endMinimization() {
-    updateAtomXYZ();
+  public void endMinimization(boolean normalFinish) {
+    System.out.println("minimization: " + id + " end minimizing=" + minimizing + " normal=" + normalFinish);
+    if (!minimizing)
+      return;
     setMinimizationOn(false);
     if (pFF == null) {
       System.out.println("pFF was null");
@@ -638,6 +651,8 @@ public class Minimizer {
       boolean failed = pFF.detectExplosion();
       if (failed)
         restoreCoordinates();
+      else
+        updateAtomXYZ(true);
       vwr.setIntProperty("_minimizationStep", pFF.getCurrentStep());
       reportEnergy();
       vwr.setStringProperty("_minimizationStatus", (failed ? "failed" : "done"));
@@ -645,7 +660,7 @@ public class Minimizer {
       vwr.refresh(Viewer.REFRESH_SYNC_MASK, "minimize:done"
           + (failed ? " EXPLODED" : "OK"));
     }
-    Logger.info("minimize: endMinimization");
+    Logger.info("minimize:  " + id + " endMinimization complete");
   }
 
   double[][] coordSaved;
@@ -664,23 +679,23 @@ public class Minimizer {
     for (int i = 0; i < ac; i++) 
       for (int j = 0; j < 3; j++)
         minAtoms[i].coord[j] = coordSaved[i][j];
-    updateAtomXYZ();
+    updateAtomXYZ(true);
   }
 
   public void stopMinimization(boolean coordAreOK) {
-    if (!minimizationOn)
+    if (!minimizing)
       return;
-    setMinimizationOn(false);
     if (coordAreOK)
-      endMinimization();
+      endMinimization(false);
     else
       restoreCoordinates();
+    setMinimizationOn(false);
   }
   
   private P3d p = new P3d();
   
-  public void updateAtomXYZ() {
-    if (steps <= 0)
+  public void updateAtomXYZ(boolean isEnd) {
+    if (steps <= 0 || pFF != null && pFF.getCurrentStep() == 0)
       return;
     if (bsBasis == null) {
       for (int i = 0; i < ac; i++) {
@@ -692,27 +707,33 @@ public class Minimizer {
       // only accept the minimization for the basis atoms (which won't be fixed)
       // ModelKit will transfer the corresponding symmetry changes to the other atoms
       boolean doUpdateMinAtoms = false;
+      MinAtom minAtom = minAtoms[0];
       for (int i = 0; i < ac; i++) {
-        MinAtom minAtom = minAtoms[i];
+        minAtom = minAtoms[i];
         if (bsMinFixed != null && bsMinFixed.get(i))
           continue;
         a = minAtom.atom;
         p.set(minAtom.coord[0], minAtom.coord[1], minAtom.coord[2]);
-        if (vwr.getModelkit(false).moveConstrained(a.i, p, true, true) > 0) {
+        
+        if (vwr.getModelkit(false).moveMinConstrained(a.i, p, bsAtoms) > 0) {
           doUpdateMinAtoms = true;
         }
       }
       // now transfer back all atom coordinates
       if (doUpdateMinAtoms) {
         for (int i = 0; i < ac; i++) {
-          MinAtom minAtom = minAtoms[i];
+          minAtom = minAtoms[i];
           minAtom.coord[0] = (a = minAtom.atom).x;
           minAtom.coord[1] = a.y;
           minAtom.coord[2] = a.z;
         }
       }
+      vwr.getModelkit(false).minimizeEnd(bsBasis, isEnd);
     }
-    vwr.refreshMeasures(false);
+    if (isEnd) {
+        //report(pFF.getLogData(), true);
+      vwr.refreshMeasures(false);
+    }
   }
 
   private void minimizeWithoutThread() {
@@ -721,7 +742,7 @@ public class Minimizer {
       return;
     while (stepMinimization()) {
     }
-    endMinimization();
+    endMinimization(true);
   }
   
   public void report(String msg, boolean isEcho) {
@@ -761,4 +782,8 @@ public class Minimizer {
     return Boolean.FALSE;
   }
 
+  @Override
+  public String toString() {
+    return "[minimizer " + id + " step " + (pFF == null ? 0 : pFF.getCurrentStep()) + " atoms=" + ac + "]";
+  }
 }

@@ -149,7 +149,7 @@ import javajs.util.Lst;
       case 6: // carbon could be a carbonyl, which is considerably stronger
         // added b.sType == "C_2+" for cations 12.0.RC9
         // added b.typ "C_2" check for H-connected 12.0.RC13
-        if (b.sType == "C_2" && b.hCount > 1
+        if (b.sType == "C_2" && b.getHCount() > 1
             || b.sType == "C_2+" || a.sType == "O_2" || c.sType == "O_2" || d.sType == "O_2") {
           koop += CalculationsUFF.KCAL44;
           break;

@@ -33,22 +33,26 @@ import org.jmol.modelset.Atom;
 
 public class MinAtom {
 
+  public Atom atom;
   int index;
   public String sType;
-  public Atom atom;
-  public AtomType ffAtomType;
-  public int ffType;
-  public Integer vdwKey;
   public double[] coord = new double[3];
   public double[] force = new double[3];
   private Lst<MinBond> bonds = new  Lst<MinBond>();
   public int nBonds;
-  public int hCount;
-  public double partialCharge;
-  public BS bsVdw = new BS();
-  public BS bs14 = new BS();
-
   int[] bondedAtoms;
+  public BS bsVdw = new BS();
+
+
+  // UFF only
+  private int hCount = -1;
+
+  // MMFF only
+  public double partialCharge;
+  public AtomType ffAtomType;
+  public int ffType;
+  public Integer vdwKey;
+  public BS bs14 = new BS();
 
   @Override
   public String toString() {
@@ -61,7 +65,6 @@ public class MinAtom {
     this.coord = coord;
     bsVdw.setBits(index + 1, ac);
     bsVdw.clear(index);
-    hCount = atom.getCovalentHydrogenCount();
   }
 
   void set() {
@@ -101,14 +104,10 @@ public class MinAtom {
     return bonds.get(j).index;
   }
 
-  public static boolean isLinear(MinAtom minAtom) {
-    switch (minAtom.ffType) {
-    case 4:
-    case 53:
-    case 61:
-      return true; 
-    }
-    return false;
+  public int getHCount() {
+    if (hCount < 0)
+      hCount = atom.getCovalentHydrogenCount();
+    return hCount;
   }
 
 }

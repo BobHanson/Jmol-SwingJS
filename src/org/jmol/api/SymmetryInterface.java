@@ -223,6 +223,7 @@ public interface SymmetryInterface {
    * @param scaleFactor
    * @param nth TODO
    * @param options could be T.offset
+   * @param oplist 
    * @return a variety of object types
    */
   Object getSymmetryInfoAtom(ModelSet ms, int iatom, String xyz, int op,

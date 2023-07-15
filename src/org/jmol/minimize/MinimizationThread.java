@@ -72,7 +72,7 @@ public class MinimizationThread extends JmolThread {
         mode = (this.minimizer.stepMinimization() ? MAIN : FINISH);
         break;
       case FINISH:
-        this.minimizer.endMinimization();
+        this.minimizer.endMinimization(true);
         vwr.startHoverWatcher(true);
         return;
       }

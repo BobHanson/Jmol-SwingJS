@@ -3837,7 +3837,7 @@ public class ModelSet extends BondCollection {
 
   public int[] getSymmetryInvariant(int iatom) {
     // get first atom with this atom's atomSite
-    Atom a = getBasisAtom(iatom);
+    Atom a = getBasisAtom(iatom, true);
     if (a == null)
       return new int[0];
     return getUnitCellForAtom(a.i).getInvariantSymops(a, null);
@@ -4410,36 +4410,65 @@ public class ModelSet extends BondCollection {
       q.transform2(pTemp, pTemp);
   }
 
-  public BS getSymmetryEquivAtoms(BS bs) {
-    bs = BS.copy(bs);
-    BS bsNew = BS.copy(bs);
-    int iAtom = bs.nextSetBit(0);
-    SymmetryInterface uc = getUnitCellForAtom(iAtom);
-    if (uc != null) {
-      BS bsAtoms = BSUtil.copy(vwr.getModelUndeletedAtomsBitSet(at[iAtom].mi));
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        Atom a = at[i];
-        int site = a.getAtomSite();
-        if (site > 0) {
-          for (int j = bsAtoms.nextSetBit(0); j >= 0; j = bsAtoms
-              .nextSetBit(j + 1)) {
-            if (at[j].getAtomSite() == site) {
-              bsNew.set(j);
-              bsAtoms.clear(j);
-              bs.clear(j);
-            }
-          }
-        } else {
-          // ?? is this possible?
-        }
+  /**
+   * Return a bitset of equivalent atoms
+   * 
+   * @param bsAtoms
+   * @param sym
+   * @param bsModelAtoms
+   * @return bitset of equivalent atoms
+   */
+  public BS getSymmetryEquivAtoms(BS bsAtoms, SymmetryInterface sym,
+                                  BS bsModelAtoms) {
+    bsAtoms = BS.copy(bsAtoms);
+    BS bsEquiv = BS.copy(bsAtoms);
+    int iAtom = bsAtoms.nextSetBit(0);
+    if (sym == null)
+      sym = getUnitCellForAtom(iAtom);
+    if (sym != null) {
+      if (bsModelAtoms == null)
+        bsModelAtoms = vwr.getModelUndeletedAtomsBitSet(at[iAtom].mi);
+      BS bsRemaining = BSUtil.copy(bsModelAtoms);
+      // clear bsAtoms and bsModelAtoms as we go
+      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+          .nextSetBit(i + 1)) {
+        getSymmetryEquivAtomsForAtom(i, bsAtoms, bsRemaining, bsEquiv);
       }
     }
-    return bsNew;
+    return bsEquiv;
   }
 
-  public Atom getBasisAtom(int iatom) {
+  /**
+   * Set a bitset of the equivalent atoms of an atom.
+   * 
+   * @param i
+   * @param bsAtoms optional bitset of atoms remaining of original set of atoms
+   * @param bsCheck bitset atoms to check; if bsAtoms is not null, also cleared of found atoms 
+   * @param bsEquiv bitset to return
+   */
+  public void getSymmetryEquivAtomsForAtom(int i, BS bsAtoms, BS bsCheck,
+                                            BS bsEquiv) {
+    Atom a = at[i];
+    int site = a.getAtomSite();
+    if (site > 0) {
+      for (int j = bsCheck.nextSetBit(0); j >= 0; j = bsCheck
+          .nextSetBit(j + 1)) {
+        if (at[j].getAtomSite() == site) {
+          bsEquiv.set(j);
+          if (bsAtoms != null) {
+            bsAtoms.clear(j);
+            bsCheck.clear(j);
+          }
+        }
+      }
+    } else {
+      // ?? is this possible?
+    }
+  }
+
+  public Atom getBasisAtom(int iatom, boolean doCheck) {
     Atom a = at[iatom];
-    if (getUnitCellForAtom(iatom) != null) {
+    if (!doCheck || getUnitCellForAtom(iatom) != null) {
       int site = a.atomSite;
       if (site > 0) {
         BS au = am[a.mi].bsAsymmetricUnit;

@@ -186,7 +186,7 @@ public class ForceFieldUFF extends ForceField {
     BS bs = (BS) v;
     if (isAromatic && bs.nextSetBit(0) >= 0) {
       if (bsAromatic == null)
-        bsAromatic = (BS) minimizer.vwr.evaluateExpression(tokenTypes[TOKEN_AROMATIC]);
+        bsAromatic = (bsElements.get(6) ? (BS) minimizer.vwr.evaluateExpression(tokenTypes[TOKEN_AROMATIC]) : new BS());
       bs.and(bsAromatic);
     }
     if (Logger.debugging && bs.nextSetBit(0) >= 0)

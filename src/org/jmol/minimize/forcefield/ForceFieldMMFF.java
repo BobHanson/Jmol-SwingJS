@@ -1320,7 +1320,7 @@ public class ForceFieldMMFF extends ForceField {
            int crd = atom.getCovalentBondCount();
            switch (crd) {
            case 2:
-             if (MinAtom.isLinear(b))
+             if (isLinear(b))
                theta0 = 180;
              else if (elemno == 8)
                theta0 = 105;
@@ -1374,7 +1374,7 @@ public class ForceFieldMMFF extends ForceField {
 
       // rule (a) page 631: no linear systems
 
-      if (MinAtom.isLinear(b) || MinAtom.isLinear(c))
+      if (isLinear(b) || isLinear(c))
         return null;
 
       MinBond bondBC = minBonds[o.data[TBI_BC]];
@@ -1508,6 +1508,16 @@ public class ForceFieldMMFF extends ForceField {
     }
   }
  
+  boolean isLinear(MinAtom a) {
+      switch (a.ffType) {
+      case 4:
+      case 53:
+      case 61:
+        return true; 
+      }
+      return false;
+  }
+
   private double getR0(MinBond b) {
     return (b.ddata == null ? ((double[]) ffParams.get(b.key)) : b.ddata)[1];   
   }
