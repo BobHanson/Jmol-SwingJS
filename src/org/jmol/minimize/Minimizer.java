@@ -58,7 +58,10 @@ public class Minimizer {
   public Atom[] atoms;
   public Bond[] bonds;
   public int rawBondCount;
-  
+  public BS bsAtoms;
+
+  public Lst<MMConstraint> constraints;
+
   public MinAtom[] minAtoms;
   public MinBond[] minBonds;
   public MinAngle[] minAngles;
@@ -69,8 +72,6 @@ public class Minimizer {
   private int bondCount;
   private int[] atomMap; 
  
-  public double[] partialCharges;
-  
   private int steps = 50;
   private double crit = 1e-3;
 
@@ -79,12 +80,11 @@ public class Minimizer {
   private ForceField pFF;
   private String ff = "UFF";
   private BS bsTaint, bsSelected;
-  public BS bsAtoms;
   private BS bsFixedDefault;
   private BS bsFixed;
-  
-  public Lst<MMConstraint> constraints;
-  public BS bsBasis;
+
+  private boolean modelkitMinimizing;
+  private BS bsBasis;
   
   private boolean isSilent;
  
@@ -137,6 +137,7 @@ public class Minimizer {
     isSilent = ((flags & Viewer.MIN_SILENT) == Viewer.MIN_SILENT);
     isQuick = (ff.indexOf("2D") >= 0
         || (flags & Viewer.MIN_QUICK) == Viewer.MIN_QUICK);
+    modelkitMinimizing = (bsBasis != null && vwr.getModelkitPropertySafely("minimizing") == Boolean.TRUE);
     if (bsBasis != null) {
       if (bsFixed == null)
         bsFixed = new BS();
@@ -225,8 +226,8 @@ public class Minimizer {
         sameAtoms = false;
       if (!sameAtoms)
         pFF.clear();
-      if ((!sameAtoms || !BSUtil.areEqual(bsFixed, this.bsFixed))
-          && !setupMinimization(bsFixed)) {
+      boolean isSame = (sameAtoms && BSUtil.areEqual(bsFixed, this.bsFixed));
+      if (!setupMinimization(bsFixed, isSame)) {
         clear();
         return false;
       }
@@ -235,7 +236,6 @@ public class Minimizer {
         BSUtil.andNot(bsTaint, bsFixed);
         vwr.ms.setTaintedAtoms(bsTaint, AtomCollection.TAINT_COORD);
       }
-
       if (constraints != null)
         for (int i = constraints.size(); --i >= 0;)
           constraints.get(i).set(steps, bsAtoms, atomMap);
@@ -325,7 +325,6 @@ public class Minimizer {
     minBonds = null;
     minAngles = null;
     minTorsions = null;
-    partialCharges = null;
     coordSaved = null;
     atomMap = null;
     bsTaint = null;
@@ -344,8 +343,12 @@ public class Minimizer {
     units = (s.equalsIgnoreCase("kcal") ? "kcal" : "kJ");
   }
 
-  private boolean setupMinimization(BS bsFixed) throws JmolAsyncException {
-
+  private boolean setupMinimization(BS bsFixed, boolean isSame)
+      throws JmolAsyncException {
+    if (isSame) {
+      setAtomPositions();
+      return true;
+    }
     coordSaved = null;
     atomMap = new int[atoms.length];
     minAtoms = new MinAtom[ac];
@@ -358,14 +361,12 @@ public class Minimizer {
       int atomicNo = atoms[i].getElementNumber();
       elemnoMax = Math.max(elemnoMax, atomicNo);
       bsElements.set(atomicNo);
-      minAtoms[pt] = new MinAtom(pt, atom, new double[] { atom.x, atom.y,
-          atom.z }, ac);
+      minAtoms[pt] = new MinAtom(pt, atom,
+          new double[] { atom.x, atom.y, atom.z }, ac);
       minAtoms[pt].sType = atom.getAtomName();
     }
     if (bsFixed != null)
       this.bsFixed = bsFixed;
-    setAtomPositions();
-
     Logger.info(GT.i(GT.$("{0} atoms will be minimized."), ac));
     Logger.info("minimize:  " + id + " getting bonds...");
     bonds = vwr.ms.bo;
@@ -636,6 +637,11 @@ public class Minimizer {
     reportEnergy();
     vwr.setFloatProperty("_minimizationEnergyDiff", pFF.toUserUnits(pFF.getEnergyDiff()));
     vwr.notifyMinimizationStatus();
+    if (doRefresh) {
+      if (!modelkitMinimizing)
+        updateAtomXYZ(false);
+      vwr.refresh(3, "minimization step " + currentStep);
+    }
     return going;
   }
 
@@ -693,15 +699,16 @@ public class Minimizer {
   }
   
   private P3d p = new P3d();
-  
+
   public void updateAtomXYZ(boolean isEnd) {
     if (steps <= 0 || pFF != null && pFF.getCurrentStep() == 0)
       return;
-    if (bsBasis == null) {
+    if (!modelkitMinimizing) {
       for (int i = 0; i < ac; i++) {
         MinAtom minAtom = minAtoms[i];
         minAtom.atom.set(minAtom.coord[0], minAtom.coord[1], minAtom.coord[2]);
       }
+      isEnd = true;
     } else {
       Atom a;
       // only accept the minimization for the basis atoms (which won't be fixed)

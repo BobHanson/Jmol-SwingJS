@@ -355,7 +355,7 @@ public final class ModelLoader {
     // only now can we access all of the atom's properties
 
     if (is2D && doMinimize) {
-      applyStereochemistry();
+      setupMinimization();
     }
 
     if (doAddPDBHydrogens)
@@ -1085,7 +1085,7 @@ public final class ModelLoader {
       if (m != lastModel) {
         lastModel = m;
         Map<String, Object> info = ms.getModelAuxiliaryInfo(m);
-        isMOL2D = (info != null && "2D".equals(info.get("dimension")));
+        isMOL2D = (is2D || info != null && "2D".equals(info.get("dimension")));
       }
       bond = ms.bondMutually(atom1, atom2,
           (isMOL2D ? order : Edge.BOND_AROMATIC_SINGLE),
@@ -1428,12 +1428,10 @@ public final class ModelLoader {
     }
   }
 
-  private void applyStereochemistry() {
+  private void setupMinimization() {
 
-    int atomCount = ms.ac;//ms.am[ms.at[0].mi].bsAtoms.cardinality();
-    
     // 1) initialize average bond lengths
-    set2DLengths(baseAtomIndex, atomCount);
+    initialize2DMin();
     
     V3d v = new V3d();
     
@@ -1462,13 +1460,12 @@ public final class ModelLoader {
     
     // 2) implicit stereochemistry 
     
-    set2dZ(baseAtomIndex, atomCount, v);
+    set2dZ(v);
 
     // 3) explicit stereochemistry
     
     if (vStereo != null) {
-      BS bsToTest = new BS();
-      bsToTest.setBits(baseAtomIndex, atomCount);
+      BS bsToTest = BSUtil.newBitSet2(baseAtomIndex, vwr.ms.ac);
       for (int i = vStereo.size(); --i >= 0;) {
         Bond b = vStereo.get(i);
         double dz2 = (b.order == Edge.BOND_STEREO_NEAR ? 3 : -3);
@@ -1487,14 +1484,22 @@ public final class ModelLoader {
       }
       vStereo = null;
     } 
-    is2D = false;
+    is2D = false;    
   }
 
-  private void set2DLengths(int iatom1, int iatom2) {
+  private void initialize2DMin() {
     double scaling = 0;
     int n = 0;
-    for (int i = iatom1; i < iatom2; i++) {
+    int lastModel = -1;
+    int i0 = baseAtomIndex;
+    int i1 = vwr.ms.ac;
+    for (int i = i0; i < i1; i++) {
       Atom a = ms.at[i];
+      int m = a.getModelIndex();
+      if (m != lastModel) {
+        lastModel = m;
+        ms.setInfo(m, "dimension", "3D");
+      }
       Bond[] bonds = a.bonds;
       if (bonds == null)
         continue;
@@ -1510,13 +1515,15 @@ public final class ModelLoader {
     }
     if (n == 0)
       return;
-    scaling = 1.45d / (scaling/n);
-    for (int i = iatom1; i < iatom2; i++) {
+    scaling = 1.45d / (scaling / n);
+    for (int i = i0; i < i1; i++) {
       ms.at[i].scale(scaling);
     }
   }
 
-  private void set2dZ(int iatom1, int iatom2, V3d v) {
+  private void set2dZ(V3d v) {
+    int iatom1 = baseAtomIndex;
+    int iatom2 = vwr.ms.ac;
     BS atomlist = BS.newN(iatom2);
     BS bsBranch = new BS();
     V3d v0 = V3d.new3(0, 1, 0);
@@ -1547,8 +1554,7 @@ public final class ModelLoader {
     BS bs = BS.newN(ms.ac);
     if (atomIndex < 0)
       return bs;
-    BS bsToTest = new BS();
-    bsToTest.or(bs0);
+    BS bsToTest = BSUtil.copy(bs0);
     if (atomIndexNot >= 0)
       bsToTest.clear(atomIndexNot);
     setBranch2dZ(ms.at[atomIndex], bs, bsToTest, v, v0, v1, dir);

@@ -461,6 +461,9 @@ public class ModelKit {
       return Boolean.valueOf(getMKState() == STATE_MOLECULAR);
     }
 
+    if (name == "minimizing")
+      return Boolean.valueOf(minBasis != null);
+    
     if (name == "alloperators") {
       return allOperators;
     }

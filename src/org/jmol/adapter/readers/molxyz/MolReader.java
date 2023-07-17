@@ -204,8 +204,8 @@ public class MolReader extends AtomSetCollectionReader {
     // default will be to have this be 3D, but we will also check
     
     String dim = (line.length() >= 22 ? line.substring(20, 22) : null);
-    is2D = "2D".equals(dim);
     is3D = "3D".equals(dim);
+    is2D = !is3D && ("2D".equals(dim) || line.startsWith("JME "));
     
     // Line 3: A line for comments. If no comment is entered, a blank line 
     // must be present.
