@@ -94,7 +94,8 @@ public class JMEJmol extends JME implements WindowListener {
 	private boolean allowClean = true;
 	private SmilesMatcher smilesMatcher;
 	String[] args = new String[0];
-
+ private boolean cleaning = false;
+  
   public JMEJmol() {
     super(null, true, new String[0]);
   }
@@ -104,28 +105,29 @@ public class JMEJmol extends JME implements WindowListener {
 		setRemoveHsC();
 	}
 
-	public void setViewer(JFrame frame, Viewer vwr, Container parent, String frameType) {
-		// from JmolPanel
-		parentWindow = parent;
-		this.vwr = vwr;
-		if (parent == null && frame == null)
-			headless = vwr.headless;
-		if (!headless) {
-			if (frame == null) {
-				frame = getJmolFrame(frameType, (parent == null));
-			}
-			setFrame(frame);
-		}
-		initialize(args);
-		if (parent != null) {
-	    if (vwr != null)
-	      vwr.getInchi(null, null, null); // initialize InChI
-	    SwingUtilities.invokeLater(() -> {
-	      start(new String[0]);
-	    });
+  public void setViewer(JFrame frame, Viewer vwr, Container parent,
+                        String frameType) {
+    // from JmolPanel
+    parentWindow = parent;
+    this.vwr = vwr;
+    if (parent == null && frame == null && !"search".equals(frameType))
+      headless = vwr.headless;
+    if (!headless) {
+      if (frame == null) {
+        frame = getJmolFrame(frameType, (parent == null));
+      }
+      setFrame(frame);
+    }
+    initialize(args);
+    if (parent != null) {
+      if (vwr != null)
+        vwr.getInchi(null, null, null); // initialize InChI
+      SwingUtilities.invokeLater(() -> {
+        start(new String[0]);
+      });
 
-		}
-	}
+    }
+  }
 
 	private JFrame getJmolFrame(String type, boolean exit0) {
 
@@ -259,7 +261,8 @@ public class JMEJmol extends JME implements WindowListener {
 	 * 
 	 * 
 	 * @param pattern
-	 * @return
+   * @param isSmarts 
+	 * @return true if viewer has structure
 	 */
 	public boolean hasStructure(String pattern, boolean isSmarts) {
 		String smiles = super.smiles();
@@ -281,9 +284,11 @@ public class JMEJmol extends JME implements WindowListener {
 	 * 
 	 * 
 	 * Return null for some sort of SMILES initialization error
+	 * @param smarts 
 	 * 
 	 * @param smilesSet
-	 * @return
+	 * @param isSmarts 
+	 * @return int array of 1 or 0
 	 */
 	public int[] findMatchingStructures(String smarts, String[] smilesSet, boolean isSmarts) {
 		try {
@@ -364,11 +369,12 @@ public class JMEJmol extends JME implements WindowListener {
 		}
 	}
 
-	@Override
+	@SuppressWarnings("unused")
+  @Override
 	public String smiles() {
 		if (activeMol.natoms == 0)
 			return "";
-		if (JMEUtil.isSwingJS) {
+		if (/** @j2sNative true ||*/ false) {
 			return super.smiles();
 		} 
 		String mol = molFile();
@@ -465,7 +471,7 @@ public class JMEJmol extends JME implements WindowListener {
 	 * Just making sure we do not try to open a dialog if headless.
 	 * 
 	 * @param filename
-	 * @return
+	 * @return filename with "_" if headless
 	 */
 	private String fixOutFilename(String filename) {
 		return (!headless ? filename : filename.replace('?', '_'));
@@ -663,8 +669,6 @@ public class JMEJmol extends JME implements WindowListener {
 		loadSmilesCleanly(smiles);
 	}
 
-	private boolean cleaning = false;
-
 	/**
 	 * SMILES to InChI to MOL
 	 * 
@@ -860,7 +864,6 @@ public class JMEJmol extends JME implements WindowListener {
 	
 	public static void main(String[] args) {
 		JFrame frame = null;
-		JMEJmol jjme = new JMEJmol(new String[] { JME.NO_INIT });
 	    Map<String, Object> info = new Hashtable<String, Object>();
 	    info.put("isApp",Boolean.TRUE);
 	    info.put("headless",Boolean.TRUE);
@@ -868,35 +871,48 @@ public class JMEJmol extends JME implements WindowListener {
 	    info.put("noDisplay", Boolean.TRUE);
 	    info.put("repaintManager", "NONE");
 		Viewer vwr = new Viewer(info);
+    JMEJmol jjme = new JMEJmol(new String[] { JME.NO_INIT });
 		jjme.vwr = vwr;
+
 		String type = null;
 		
+		boolean dostart = true;
 		if (args.length > 0) {
 			if (args[0].equals("headless")) {
-				jjme.initialize(args);
+        jjme.initialize(args);
 				jjme.options("headless");
-				return;
-			}
-			if (args[0].equals("search")) {
+				dostart = false;
+			} else if (args[0].equals("search")) {
+        jjme.initialize(args);
 				type = "search";
 			} else if (args[0].equals("test")) {
 				switch (args[1]) {
 				case "headless":
 					jjme.initialize(args);
 					testJMEHeadless(jjme);
-					return;
+					dostart = false;
+					break;
 				case "data":
 					jjme.initialize(args);
 					testJmolData(jjme, args);
-					return;
+					dostart = false;
+					break;
 				case "jmol":
 					type = "jmol";
 					break;
 				}
 			}
 		}
-		startJmolJME(frame, jjme, type);
+		if (dostart)
+		  startJmolJME(frame, jjme, type);
+    /**
+     * @j2sNative
+     * 
+     * return jjme;
+     */
 
+		
+		
 		// testJmolData(args);
 		// testJMEHeadless(jjme);
 	}
@@ -905,6 +921,8 @@ public class JMEJmol extends JME implements WindowListener {
 		JFrame embeddingFrame = null;
 		if ("jmol".equals(type)) {
 			embeddingFrame = new JFrame();
+		} else if ("search".equals(type)) {
+		  // don't create frame
 		} else if (frame == null) {
 			frame = new JFrame("JmolJME Molecular Editor");
 			frame.setName("JME"); // for embedding in <div id="testApplet-JME-div">
