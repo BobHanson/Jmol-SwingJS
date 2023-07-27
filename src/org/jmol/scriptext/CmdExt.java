@@ -6103,6 +6103,8 @@ public class CmdExt extends ScriptExt {
       i = ++e.iToken;
       break;
     case T.minimize:
+      if (vwr.am.cmi < 0)
+        e.errorStr(ScriptError.ERROR_multipleModelsDisplayedNotOK, "MODELKIT MINIMIZE");
       minimize(true);
       return;
     case T.rotate:

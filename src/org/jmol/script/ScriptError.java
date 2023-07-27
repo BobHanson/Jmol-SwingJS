@@ -283,7 +283,7 @@ public abstract class ScriptError implements JmolScriptEvaluator {
       msg = GT.$("Only one molecular orbital is available in this file");
       break;
     case ERROR_multipleModelsDisplayedNotOK:
-      msg = GT.$("{0} require that only one model be displayed");
+      msg = GT.$("{0} requires that only one model be displayed");
       break;
     case ERROR_multipleModelsNotOK:
       msg = GT.$("{0} requires that only one model be loaded");

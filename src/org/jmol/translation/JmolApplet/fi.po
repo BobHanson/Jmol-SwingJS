@@ -2051,7 +2051,7 @@ msgstr "TIedosto sisältää vain yhden molekyyliorbitaalin"
 
 #: org/jmol/script/ScriptError.java:285
 #, java-format
-msgid "{0} require that only one model be displayed"
+msgid "{0} requires that only one model be displayed"
 msgstr "{0} edellyttää vain yhden mallin näyttämistä"
 
 #: org/jmol/script/ScriptError.java:288

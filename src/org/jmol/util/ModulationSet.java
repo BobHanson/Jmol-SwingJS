@@ -143,12 +143,6 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
    */
   public double vOcc = Double.NaN;
   
-  /**
-   * final occupancy value -- absolute; in range [0,1]
-   * (useful?) 
-   */
-  private double occValue = Double.NaN;
-  
   // values set in setModTQ
   
   private P3d qtOffset = new P3d();
@@ -483,7 +477,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
         qtOffset = null;
       calculate(qtOffset, isQ);
       if (!Double.isNaN(vOcc))
-        occValue = getOccupancy(true);
+        getOccupancy(true);
     }
     if (isOn) {
       addTo(a, 1);
@@ -697,8 +691,9 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
   @Override
   public boolean isNonzero() {
-    return x != 0 || y != 0 || z != 0 || mxyz != null
-        && (mxyz.x != 0 || mxyz.y != 0 || mxyz.z != 0);
+    return x != 0 || y != 0 || z != 0 
+        || mxyz != null && (mxyz.x != 0 || mxyz.y != 0 || mxyz.z != 0)
+        || occAbsolute;
   }
 
   /**
@@ -765,7 +760,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       // disabled for double presision
       //occ = (occ > 0.49 && occ < 0.50 ? 0.489 : Math.min(1, Math.max(0, occ)));
     }
-    return occValue = occ;
+    return occ;
   }
 
 }

@@ -1430,8 +1430,6 @@ public class Viewer extends JmolViewer
     boolean starting = "starting".equals(minStatus);
     boolean done = "done".equals(minStatus) || "failed".equals(minStatus);
     boolean includeAtoms = (minimizer != null && (done || starting));
-    if (minimizer == null)
-      System.err.println("Viewer.notifyMin null");
     BS bsAtoms = (includeAtoms ? minimizer.bsAtoms : null);
     int atomIndex = (bsAtoms == null ? -1 : bsAtoms.nextSetBit(0));
     int modelIndex = (atomIndex >= 0 ? getModelIndexForAtom(atomIndex) : -1);

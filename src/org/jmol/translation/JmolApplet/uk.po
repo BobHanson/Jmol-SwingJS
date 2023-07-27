@@ -2058,7 +2058,7 @@ msgstr "У цьому файлі визначено лише одну молек
 
 #: org/jmol/script/ScriptError.java:285
 #, java-format
-msgid "{0} require that only one model be displayed"
+msgid "{0} requires that only one model be displayed"
 msgstr "Для {0} потрібно, щоб було показано лише одну модель"
 
 #: org/jmol/script/ScriptError.java:288

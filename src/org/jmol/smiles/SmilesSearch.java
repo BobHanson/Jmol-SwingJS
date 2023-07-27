@@ -78,6 +78,7 @@ public class SmilesSearch extends JmolMolecule {
     }
 
     public void setAtoms(Node[] atoms, int ac, BS bs) {
+      hasRingData = false;
       this.nodes = atoms;
       this.ac = ac;
       selectedAtomCount = (bs == null ? ac: bs.cardinality());

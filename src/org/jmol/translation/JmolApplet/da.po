@@ -2048,7 +2048,7 @@ msgstr "Kun en enkelt molekylærbital er tilgængelig i denne fil"
 
 #: org/jmol/script/ScriptError.java:285
 #, java-format
-msgid "{0} require that only one model be displayed"
+msgid "{0} requires that only one model be displayed"
 msgstr "{0} kræver at kun en model vises"
 
 #: org/jmol/script/ScriptError.java:288

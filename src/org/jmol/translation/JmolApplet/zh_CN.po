@@ -2044,7 +2044,7 @@ msgstr "在这个文件中只有一个分子轨域(MO)可用"
 
 #: org/jmol/script/ScriptError.java:285
 #, java-format
-msgid "{0} require that only one model be displayed"
+msgid "{0} requires that only one model be displayed"
 msgstr "{0} 要求只显示一个模型"
 
 #: org/jmol/script/ScriptError.java:288

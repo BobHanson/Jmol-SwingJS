@@ -2327,7 +2327,6 @@ public class ModelKit {
       }
     }
     boolean isOccSet = (bsOcc.cardinality() > 1);
-//    boolean isMoved = false;
     if ((n = moveConstrained(iatom, bsFixed, bsModelAtoms, p, !isOccSet, allowProjection)) == 0 || Double.isNaN(p.x)
         || !isOccSet) {
         vwr.setStatusAtomMoved(false, bsOcc);
@@ -2408,7 +2407,7 @@ public class ModelKit {
       modelSyms = new SymmetryInterface[vwr.ms.mc];
       for (int imodel = modelSyms.length; --imodel >= 0;) {
         SymmetryInterface sym = vwr.ms.getUnitCell(imodel);
-        if (sym.getSymmetryOperations() != null)
+        if (sym == null || sym.getSymmetryOperations() != null)
           modelSyms[imodel] = sym;
       }
     }
@@ -2485,11 +2484,7 @@ public class ModelKit {
   
   public void clearAtomConstraints() {
     modelSyms = null;
-    if (minBasisAtoms != null) {
-      for (int i = minBasisAtoms.length; --i >= 0;)
-        minBasisAtoms[i] = null;              
-    }
-      minBasisAtoms = null;
+    minBasisAtoms = null;
     if (atomConstraints != null) {
       for (int i = atomConstraints.length; --i >= 0;)
         atomConstraints[i] = null;        
@@ -2903,6 +2898,8 @@ public class ModelKit {
       if (vwr.loadModelFromFile(null, "<temp>", null, null, true, htParams,
           null, null, 0, " ") != null)
         return;
+      
+      
       vwr.am.setFrame(minBasisModel);
       int modelIndex = vwr.ms.mc - 1;
       BS bsBasis2 = BSUtil.copy(vwr.ms.am[modelIndex].bsAsymmetricUnit);
@@ -2911,7 +2908,7 @@ public class ModelKit {
       minBasisModelAtoms = vwr.getModelUndeletedAtomsBitSet(minBasisModel);
       minTempModelAtoms = vwr.getModelUndeletedAtomsBitSet(modelIndex);
       minTempFixed = BSUtil.copy(minTempModelAtoms);
-      minTempFixed.andNot(bsBasis2);//vwr.ms.getAtoms(T.cell, P3d.new3(1, 1, 1)));
+      minTempFixed.andNot(bsBasis2);
       minTempFixed.or(vwr.getMotionFixedAtoms(bsBasis2.nextSetBit(0)));
       vwr.minimize(eval, steps, crit, BSUtil.copy(bsBasis2), minTempFixed,
           minTempModelAtoms, rangeFixed, flags & ~Viewer.MIN_MODELKIT);
@@ -2950,8 +2947,10 @@ public class ModelKit {
     minTempModelAtoms = null;
     minBasisModelAtoms = null;
     minBasisAtoms = null;
+    modelSyms = null;
     vwr.deleteModels(vwr.ms.mc - 1, null);
     vwr.setSelectionSet(minSelectionSaved);
+    vwr.setCurrentModelIndex(minBasisModel);
   }
 
 }

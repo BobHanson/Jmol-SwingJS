@@ -2049,7 +2049,7 @@ msgstr "Hanya satu petala molekul tersedia dalam fail ini"
 
 #: org/jmol/script/ScriptError.java:285
 #, java-format
-msgid "{0} require that only one model be displayed"
+msgid "{0} requires that only one model be displayed"
 msgstr "{0} perlukan hanya satu model dipaparkan"
 
 #: org/jmol/script/ScriptError.java:288

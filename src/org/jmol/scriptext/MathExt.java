@@ -1556,7 +1556,7 @@ public class MathExt {
     // {1.1}.find("SMARTS", {2.1})
     // smiles1.find("SMILES", smiles2)
     // smiles1.find("SMILES", smiles2)
-    // smarts.find("SMARTS", [smiles1, smiles2,...])
+    // [smiles1, smiles2,...].find("SMARTS", pattern)
 
     SV x1 = mp.getX();
     boolean isList = (x1.tok == T.varray);

@@ -335,9 +335,10 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * 
    * @param pattern
    *        SMILES or SMARTS pattern.
-   * @param nodes
+   * @param target
    * @param ac
    * @param bsSelected
+   * @param flags
    * @return BitSet indicating which atoms match the pattern.
    */
 
@@ -562,8 +563,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
           int[] a1 = searchTarget.elementCounts;
           int[] a2 = search.elementCounts;
           // skip 0 here -- it is wild cards a, [...], *
-          int n = searchTarget.elementNumberMax;
-          if (n == search.elementNumberMax) {
+          int n = search.elementNumberMax;
+          if (n <= searchTarget.elementNumberMax) {
             // includes H
             for (int i = 1; i <= n; i++) {
               if (a1[i] < a2[i]) {
@@ -623,7 +624,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       if (!okMF)
         return new BS[0];//Lst<BS>();
       search.asVector = true;
-      Lst<BS> vb = (Lst<BS>) search.search();
+      @SuppressWarnings("unchecked") Lst<BS> vb = (Lst<BS>) search.search();
       return vb.toArray(new BS[vb.size()]);
     case MODE_ATROP:
       if (!okMF)

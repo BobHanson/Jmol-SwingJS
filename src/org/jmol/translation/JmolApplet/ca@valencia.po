@@ -2097,7 +2097,7 @@ msgstr "Només hi ha un orbital molecular disponible en este fitxer"
 
 #: org/jmol/script/ScriptEvaluator.java:3009
 #, java-format
-msgid "{0} require that only one model be displayed"
+msgid "{0} requires that only one model be displayed"
 msgstr "l''orde {0} requereix que només es mostre un model"
 
 #: org/jmol/script/ScriptEvaluator.java:3012

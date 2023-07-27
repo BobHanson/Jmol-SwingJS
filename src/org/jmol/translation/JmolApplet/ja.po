@@ -2051,7 +2051,7 @@ msgstr "このファイルでは一つの分子軌道しか利用できません
 
 #: org/jmol/script/ScriptError.java:285
 #, java-format
-msgid "{0} require that only one model be displayed"
+msgid "{0} requires that only one model be displayed"
 msgstr "{0} はモデルが1つだけ表示されている必要があります"
 
 #: org/jmol/script/ScriptError.java:288

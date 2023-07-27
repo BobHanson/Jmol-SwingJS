@@ -2036,7 +2036,7 @@ msgstr "단 하나의 분자궤도가 있습니다"
 
 #: org/jmol/script/ScriptError.java:285
 #, java-format
-msgid "{0} require that only one model be displayed"
+msgid "{0} requires that only one model be displayed"
 msgstr "{0}(은)는 단 하나의 모델만 표시됨"
 
 #: org/jmol/script/ScriptError.java:288

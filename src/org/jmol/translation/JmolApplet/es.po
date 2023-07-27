@@ -2027,7 +2027,7 @@ msgstr "En este archivo sólo hay un orbital molecular"
 
 #: org/jmol/script/ScriptError.java:285
 #, java-format
-msgid "{0} require that only one model be displayed"
+msgid "{0} requires that only one model be displayed"
 msgstr "{0} requieren que sólo se esté mostrando un modelo"
 
 #: org/jmol/script/ScriptError.java:288

@@ -2054,7 +2054,7 @@ msgstr "Une seule orbite moléculaire est disponible dans ce fichier"
 
 #: org/jmol/script/ScriptError.java:285
 #, java-format
-msgid "{0} require that only one model be displayed"
+msgid "{0} requires that only one model be displayed"
 msgstr "{0} requière qu'un seul modèle soit affiché"
 
 #: org/jmol/script/ScriptError.java:288
