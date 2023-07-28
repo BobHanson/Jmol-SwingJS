@@ -218,54 +218,6 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   }
 
 
-  /**
-   * Look for pattern in each smilesSet string.
-   * 
-   * @pattern to look for, probably SMARTS
-   * @smilesSet array of target strings
-   * @flags
-   * @return int array of same length as smiles set with 1 = match found, 0 =
-   *         not found, and -1 meaning a parsing or searching error.
-   * 
-   */
-  @Override
-  public int[] hasStructure(String pattern, String[] smilesSet, int flags)
-      throws Exception {
-    int[] ret = new int[smilesSet.length];
-    if ((flags & JC.SMILES_TYPE_SMILES) != JC.SMILES_TYPE_SMILES) {
-      // accept SMILES/SMARTS flags default as SMARTS
-      flags = flags | JC.SMILES_TYPE_SMARTS;
-    }
-    clearExceptions();
-    pattern = SmilesParser.cleanPattern(pattern);
-    try {
-      // Note that additional flags are set when the pattern is parsed.
-      SmilesSearch search = SmilesParser.newSearch(pattern, true, false);
-      for (int i = 0; i < smilesSet.length; i++) {
-        String smiles = SmilesParser.cleanPattern(smilesSet[i]);
-        SmilesSearch searchTarget = SmilesParser.newSearch(smiles, false, true); /// smiles chirality is fixed here
-        searchTarget
-            .setFlags(searchTarget.flags | SmilesParser.getFlags(pattern));
-        try {
-          clearExceptions();
-          ret[i] = (matchPattern(search, null, 0, null, null, false,
-              flags | JC.SMILES_FIRST_MATCH_ONLY, MODE_BOOLEAN,
-              searchTarget) == Boolean.TRUE ? 1 : 0);
-        } catch (Exception e) {
-          ret[i] = -1; // failed
-          e.printStackTrace();
-        }
-      }
-    } catch (Exception e) {
-      if (Logger.debugging)
-        e.printStackTrace();
-      if (InvalidSmilesException.getLastError() == null)
-        clearExceptions();
-      throw new InvalidSmilesException(InvalidSmilesException.getLastError());
-    }
-    return ret;
-  }
-
   @Override
   public Node[] getAtoms(String target)
       throws Exception {
@@ -750,6 +702,54 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     ss.target.setAtoms(atoms, atomCount, bsSelected);
     ss.targetSet = true;
     return ss;
+  }
+
+  /**
+   * Look for pattern in each smilesSet string.
+   * 
+   * @pattern to look for, probably SMARTS
+   * @smilesSet array of target strings
+   * @flags
+   * @return int array of same length as smiles set with 1 = match found, 0 =
+   *         not found, and -1 meaning a parsing or searching error.
+   * 
+   */
+  @Override
+  public int[] hasStructure(String pattern, String[] smilesSet, int flags)
+      throws Exception {
+    int[] ret = new int[smilesSet.length];
+    if ((flags & JC.SMILES_TYPE_SMILES) != JC.SMILES_TYPE_SMILES) {
+      // accept SMILES/SMARTS flags default as SMARTS
+      flags = flags | JC.SMILES_TYPE_SMARTS;
+    }
+    clearExceptions();
+    pattern = SmilesParser.cleanPattern(pattern);
+    try {
+      // Note that additional flags are set when the pattern is parsed.
+      SmilesSearch search = SmilesParser.newSearch(pattern, true, false);
+      for (int i = 0; i < smilesSet.length; i++) {
+        String smiles = SmilesParser.cleanPattern(smilesSet[i]);
+        SmilesSearch searchTarget = SmilesParser.newSearch(smiles, false, true); /// smiles chirality is fixed here
+        searchTarget
+            .setFlags(searchTarget.flags | SmilesParser.getFlags(pattern));
+        try {
+          clearExceptions();
+          ret[i] = (matchPattern(search, null, 0, null, null, false,
+              flags | JC.SMILES_FIRST_MATCH_ONLY, MODE_BOOLEAN,
+              searchTarget) == Boolean.TRUE ? 1 : 0);
+        } catch (Exception e) {
+          ret[i] = -1; // failed
+          e.printStackTrace();
+        }
+      }
+    } catch (Exception e) {
+      if (Logger.debugging)
+        e.printStackTrace();
+      if (InvalidSmilesException.getLastError() == null)
+        clearExceptions();
+      throw new InvalidSmilesException(InvalidSmilesException.getLastError());
+    }
+    return ret;
   }
 
 

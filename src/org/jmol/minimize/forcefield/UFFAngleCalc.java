@@ -75,6 +75,7 @@ class UFFAngleCalc extends Calculation {
     double a2 = dData[4];
     calcs.setAngleVariables(this);
 
+    // note that theta == 0 for occupational superposition
     //problem here for square planar cis or trans
     if ((coordination == 4 || coordination == 6) && 
         (theta > 2.35619 || theta < 0.785398)) // 135o, 45o
