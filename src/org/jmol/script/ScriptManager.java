@@ -824,10 +824,13 @@ public class ScriptManager implements JmolScriptManager {
 
   @Override
   public void evalCallback(String strScript, Object[] params, boolean doWait) {
+    // note that the isScriptQueued last parameter TRUE here
+    // is just for JavaScript executing a jmolScript: callback
+    // so that it displays on the console.
     if (doWait) {
-      evalStringWaitParamsStatusQueued("String", strScript, params, "", true, false);
+      evalStringWaitParamsStatusQueued("String", strScript, params, "", true, true);
     } else {
-      evalStringParamsQuietSync(strScript, params, true, false);
+      evalStringParamsQuietSync(strScript, params, true, true);
     }
   }
 
