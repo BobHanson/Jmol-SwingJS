@@ -87,28 +87,17 @@ public class ScriptQueueThread extends JmolThread {
     if (queue.size() == 0)
       return false;
     //Logger.info("SCRIPT QUEUE BUSY" +  scriptQueue.size());
-    Lst<Object> scriptItem = scriptManager.getScriptItem(false, startedByCommandThread);
+     Lst<Object> scriptItem = scriptManager.getScriptItem(false,
+        startedByCommandThread);
     if (scriptItem == null)
-      return false; 
-    String script = (String) scriptItem.get(0);
-    String statusList = (String) scriptItem.get(1);
-    String returnType = (String) scriptItem.get(2);
-    //boolean isScriptFile = ((Boolean) scriptItem.get(3)).booleanValue();
-    boolean isQuiet = ((Boolean) scriptItem.get(3)).booleanValue();
+      return false;
     if (Logger.debugging) {
-      Logger.debug("Queue[" + pt + "][" + queue.size()
-          + "] scripts; running: " + script);
+      Logger.debug("Queue[" + pt + "][" + queue.size() + "] scripts; running: "
+          + scriptItem.get(0));
     }
-    //System.out.println("removing: " + scriptItem + " " + script);
     queue.removeItemAt(0);
-    //System.out.println("removed: " + scriptItem);
-//    if (isScriptFile) {
-//      script = "script " + PT.esc(script);
-//      isScriptFile = false;
-//    }
-    vwr.evalStringWaitStatusQueued(returnType, script, statusList, isQuiet, true);
+    scriptManager.runScriptFromThread(scriptItem);
     if (queue.size() == 0) {// might have been cleared with an exit
-      //Logger.info("SCRIPT QUEUE READY", 0);
       return false;
     }
     return true;

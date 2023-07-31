@@ -3878,19 +3878,19 @@ public class ModelSet extends BondCollection {
     return bsBranches;
   }
 
-  public void recalculatePositionDependentQuantities(BS bs, M4d mat) {
+  public void recalculatePositionDependentQuantities(BS bsAtoms, M4d mat) {
     if ((vwr.shm.getShape(JC.SHAPE_POLYHEDRA) != null))
       vwr.shm.getShapePropertyData(JC.SHAPE_POLYHEDRA, "move", new Object[] {
-          bs, mat });
+          bsAtoms, mat });
     if (haveStraightness)
       calculateStraightnessAll();
     recalculateLeadMidpointsAndWingVectors(-1);
-    BS bsModels = getModelBS(bs, false);
+    BS bsModels = getModelBS(bsAtoms, false);
     for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) {
-      sm.notifyAtomPositionsChanged(i, bs, mat);
+      sm.notifyAtomPositionsChanged(i, bsAtoms, mat);
       if (mat != null) {
         Model m = am[i];
-        if (m.isContainedIn(bs)) {
+        if (m.isContainedIn(bsAtoms)) {
           if (m.mat4 == null)
             m.mat4 = M4d.newM4(null);
           m.mat4.mul2(mat, m.mat4);
@@ -4134,7 +4134,7 @@ public class ModelSet extends BondCollection {
     BS bs = new BS();
     if (conformationIndex >= 0)
       for (int i = mc; --i >= 0;) {
-        if (i != modelIndex && modelIndex >= 0)
+        if (modelIndex >= 0 && i != modelIndex)
           continue;
         Model m = am[i];
         BS bsAtoms = vwr.getModelUndeletedAtomsBitSet(modelIndex);
@@ -4304,7 +4304,7 @@ public class ModelSet extends BondCollection {
   public BS setConformation(BS bsAtoms) {
     if (haveBioModels)
       bioModelset.setAllConformation(bsAtoms);
-    return bsAtoms;
+    return BSUtil.copy(bsAtoms);
   }
 
   @SuppressWarnings("unchecked")

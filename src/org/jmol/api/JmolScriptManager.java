@@ -49,8 +49,6 @@ public interface JmolScriptManager {
                                            String statusList,
                                            boolean isQuiet, boolean isQueued);
 
-  String addScript(String strScript, boolean isQuiet);
-
   boolean checkHalt(String str, boolean isInsert);
 
   BS getAtomBitSetEval(JmolScriptEvaluator eval, Object atomExpression);
@@ -68,6 +66,8 @@ public interface JmolScriptManager {
   BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3d[] pts,
                         Map<String, Object> htParams)
       throws Exception;
+
+  void evalCallback(String cmd, Object[] params, boolean doWait);
 
 }
 

@@ -101,12 +101,11 @@ public class ScriptManager implements JmolScriptManager {
     interruptQueueThreads();
   }
 
-  @Override
-  public String addScript(String strScript, boolean isQuiet) {
-    return (String) addScr("String", strScript, "", isQuiet);
+  private String addScript(String strScript, Object[] params, boolean isQuiet) {
+    return (String) addScr("String", strScript, params, "", isQuiet);
   }
 
-  private Object addScr(String returnType, String strScript, String statusList,
+  private Object addScr(String returnType, String strScript, Object[] params, String statusList, 
                         boolean isQuiet) {
     /**
      * @j2sNative this.useCommandWatcherThread = false;
@@ -123,7 +122,7 @@ public class ScriptManager implements JmolScriptManager {
     if (commandWatcherThread != null && strScript.indexOf("/*SPLIT*/") >= 0) {
       String[] scripts = PT.split(strScript, "/*SPLIT*/");
       for (int i = 0; i < scripts.length; i++)
-        addScr(returnType, scripts[i], statusList, isQuiet);
+        addScr(returnType, scripts[i], params, statusList, isQuiet);
       return "split into " + scripts.length + " sections for processing";
     }
     boolean useCommandThread = (commandWatcherThread != null
@@ -137,6 +136,7 @@ public class ScriptManager implements JmolScriptManager {
     //    scriptItem.addLast(Boolean.FALSE);
     scriptItem.addLast(isQuiet ? Boolean.TRUE : Boolean.FALSE);
     scriptItem.addLast(Integer.valueOf(useCommandThread ? -1 : 1));
+    scriptItem.addLast(params);
     scriptQueue.addLast(scriptItem);
     //if (Logger.debugging)
     //  Logger.info("ScriptManager queue size=" + scriptQueue.size() + " scripts; added: " 
@@ -323,7 +323,7 @@ public class ScriptManager implements JmolScriptManager {
   @Override
   public String evalFileArgs(String strFilename, String args) {
     // app -s flag and app -A flag
-    return addScript("script " + PT.esc(strFilename) + (args == null ? "" : "(" + args + ")"), false);
+    return addScript("script " + PT.esc(strFilename) + (args == null ? "" : "(" + args + ")"), null, false);
     
   }
 
@@ -334,6 +334,13 @@ public class ScriptManager implements JmolScriptManager {
   public Object evalStringWaitStatusQueued(String returnType, String strScript,
                                            String statusList, boolean isQuiet,
                                            boolean isQueued) {
+    return evalStringWaitParamsStatusQueued(returnType, strScript, null, statusList, isQuiet, isQueued);
+  }
+  
+  private Object evalStringWaitParamsStatusQueued(String returnType, String strScript,
+                                               Object[] params,
+                                               String statusList,
+                                               boolean isQuiet, boolean isQueued) {
     // from the scriptManager or scriptWait()
     if (strScript == null)
       return null;
@@ -370,7 +377,7 @@ public class ScriptManager implements JmolScriptManager {
       isScriptQueued = isQueued;
       if (!isQuiet)
         vwr.setScriptStatus(null, strScript, -2 - (++scriptIndex), null);
-      eval.evaluateCompiledScript(vwr.isSyntaxCheck, vwr.isSyntaxAndFileCheck,
+      eval.evaluateCompiledScript(params, vwr.isSyntaxCheck, vwr.isSyntaxAndFileCheck,
           historyDisabled, vwr.listCommands, outputBuffer, isQueued);
     } else {
       vwr.scriptStatus(strErrorMessage);
@@ -442,6 +449,12 @@ public class ScriptManager implements JmolScriptManager {
   @Override
   public String evalStringQuietSync(String strScript, boolean isQuiet,
                                     boolean allowSyncScript) {
+    return evalStringParamsQuietSync(strScript, null, isQuiet, allowSyncScript);
+  }
+    
+  private String evalStringParamsQuietSync(String strScript, Object[] params, boolean isQuiet,
+                                      boolean allowSyncScript) {
+
     // central point for all incoming script processing
     // all menu items, all mouse movement -- everything goes through this method
     // by setting syncScriptTarget = ">" the user can direct that all scripts
@@ -453,7 +466,7 @@ public class ScriptManager implements JmolScriptManager {
       vwr.syncScript(strScript + " #NOSYNC;", null, 0);
     if (eval.isPaused() && strScript.charAt(0) != '!')
       strScript = '!' + PT.trim(strScript, "\n\r\t ");
-    boolean isInsert = (strScript.length() > 0 && strScript.charAt(0) == '!');
+    boolean isInsert = (params == null && strScript.length() > 0 && strScript.charAt(0) == '!');
     if (isInsert)
       strScript = strScript.substring(1);
     String msg = checkScriptExecution(strScript, isInsert);
@@ -466,9 +479,9 @@ public class ScriptManager implements JmolScriptManager {
       return "!" + strScript;
     }
     vwr.setInsertedCommand("");
-    if (isQuiet)
+    if (isQuiet && params == null)
       strScript += JC.SCRIPT_EDITOR_IGNORE;
-    return addScript(strScript,
+    return addScript(strScript, params,
         isQuiet && !vwr.getBoolean(T.messagestylechime));
   }
 
@@ -807,6 +820,25 @@ public class ScriptManager implements JmolScriptManager {
         bsA.or(bsB);
     }
     return bsB;
+  }
+
+  @Override
+  public void evalCallback(String strScript, Object[] params, boolean doWait) {
+    if (doWait) {
+      evalStringWaitParamsStatusQueued("String", strScript, params, "", true, false);
+    } else {
+      evalStringParamsQuietSync(strScript, params, true, false);
+    }
+  }
+
+  public void runScriptFromThread(Lst<Object> scriptItem) {
+    String script = (String) scriptItem.get(0);
+    String statusList = (String) scriptItem.get(1);
+    String returnType = (String) scriptItem.get(2);
+    boolean isQuiet = ((Boolean) scriptItem.get(3)).booleanValue();
+    Object[] params = (Object[]) scriptItem.get(5);
+    evalStringWaitParamsStatusQueued(returnType, script, params, statusList, isQuiet,
+        true);
   }
 
 }

@@ -397,7 +397,7 @@ public class ScriptEval extends ScriptExpr {
   }
 
   @Override
-  public void evaluateCompiledScript(boolean isCmdLine_c_or_C_Option,
+  public void evaluateCompiledScript(Object[] params, boolean isCmdLine_c_or_C_Option,
                                      boolean isCmdLine_C_Option,
                                      boolean historyDisabled,
                                      boolean listCommands, SB outputBuffer,
@@ -418,7 +418,7 @@ public class ScriptEval extends ScriptExpr {
     vwr.pushHoldRepaintWhy("runEval");
     setScriptExtensions();
     vwr.hasSelected = false;
-    executeCommands(false, true);
+    executeCommands(params, false, true);
     this.isCmdLine_C_Option = tempOpen;
     if(isStateScript)
       ScriptManager.setStateScriptVersion(vwr, null); // set by compiler
@@ -432,11 +432,19 @@ public class ScriptEval extends ScriptExpr {
         && vwr.haveDisplay && outputBuffer == null && allowJSThreads);
   }
 
-  private int executeCommands(boolean isTry, boolean reportCompletion) {
+  private int executeCommands(Object[] params, boolean isTry, boolean reportCompletion) {
     boolean haveError = false;
     try {
+      if (params != null) {
+        pushContext(null, "runCallback");
+        contextPath += " >> " + params[0] + "callback ";
+        setScriptArguments(SV.getVariableAO(params).getList(), true);
+      }
       if (!dispatchCommands(false, false, isTry))
         return EXEC_ASYNC;
+      if (params != null) {
+        popContext(false, false);
+      }
     } catch (Error er) {
       er.printStackTrace();
       vwr.handleError(er, false);
@@ -584,7 +592,7 @@ public class ScriptEval extends ScriptExpr {
       restoreScriptContext(sc, true, false, false);
       pcResume = sc.pc;
     }
-    switch (executeCommands(thisContext != null && thisContext.isTryCatch,
+    switch (executeCommands(null, thisContext != null && thisContext.isTryCatch,
         scriptLevel <= 0)) {
     case EXEC_ASYNC:
       break;
@@ -592,7 +600,7 @@ public class ScriptEval extends ScriptExpr {
     case EXEC_OK:
       postProcessTry(null);
       if (executing)
-        executeCommands(true, false);
+        executeCommands(null, true, false);
       break;
     }
     pcResume = -1;
@@ -871,8 +879,6 @@ public class ScriptEval extends ScriptExpr {
     executing = exec0;
     return o;
   }
-
-  
   
   public void runBufferedSafely(String script, SB outputBuffer) {
     if (outputBuffer == null)
@@ -1186,7 +1192,7 @@ public class ScriptEval extends ScriptExpr {
       contextVariables.put("_breakval", SV.newI(Integer.MAX_VALUE));
       contextVariables.put("_errorval", SV.newS(""));
       Map<String, SV> cv = contextVariables;
-      switch(executeCommands(true, false)) {
+      switch(executeCommands(null, true, false)) {
       case EXEC_ASYNC:
         // do this later
         break;
@@ -1702,6 +1708,7 @@ public class ScriptEval extends ScriptExpr {
     if (isThrown || thisContext != null || chk
         || msg.indexOf(JC.NOTE_SCRIPT_FILE) >= 0)
       return;
+    isFuncReturn = false;
     Logger.error("eval ERROR: " + s + "\n" + toString());
     if (vwr.autoExit)
       vwr.exitJmol();
@@ -1710,7 +1717,7 @@ public class ScriptEval extends ScriptExpr {
   @SuppressWarnings("unchecked")
   public static String statementAsString(Viewer vwr, T[] statement,
                                          int iTok, boolean doLogMessages) {
-    if (statement.length == 0)
+    if (statement == null || statement.length == 0)
       return "";
     SB sb = new SB();
     int tok = statement[0].tok;
@@ -2587,7 +2594,7 @@ public class ScriptEval extends ScriptExpr {
       }
       break;
     case T.javascript:
-      cmdScript(T.javascript, null, null);
+      cmdScript(T.javascript, null, null, null);
       break;
     case T.load:
       cmdLoad();
@@ -2657,7 +2664,7 @@ public class ScriptEval extends ScriptExpr {
       cmdSave();
       break;
     case T.script:
-      cmdScript(T.script, null, null);
+      cmdScript(T.script, null, null, null);
       break;
     case T.select:
       cmdSelect(1);
@@ -4403,7 +4410,7 @@ public class ScriptEval extends ScriptExpr {
         // do not contain a full state script
         if (modelName.endsWith(".spt") || modelName.endsWith(".png")
             || modelName.endsWith(".pngj")) {
-          cmdScript(0, modelName, null);
+          cmdScript(0, modelName, null, null);
           return;
         }
       }
@@ -4978,7 +4985,7 @@ public class ScriptEval extends ScriptExpr {
           runScript("load \"" + filename + "\"");
           return;
         }
-        cmdScript(0, filename, null);
+        cmdScript(0, filename, null, null);
         return;
       }
       if (vwr.async && errMsg.startsWith(JC.READER_NOT_FOUND)) {
@@ -5058,7 +5065,7 @@ public class ScriptEval extends ScriptExpr {
     String modelName = "cache://VAR_" + varName;
     vwr.cacheFileByName("cache://VAR_*",false);
     vwr.cachePut(modelName, out.toByteArray());
-    cmdScript(0, modelName, null);
+    cmdScript(0, modelName, null, null);
   }
 
   private String getLoadFilesList(int i, SB loadScript, SB sOptions,
@@ -6730,7 +6737,7 @@ public class ScriptEval extends ScriptExpr {
     errorStr2(ERROR_what, "SAVE", saveList);
   }
   
-  public void cmdScript(int tok, String filename, String theScript)
+  public void cmdScript(int tok, String filename, String theScript, Lst<SV> params)
       throws ScriptException {
     if (tok == T.javascript) {
       checkLength(2);
@@ -6750,7 +6757,6 @@ public class ScriptEval extends ScriptExpr {
     String localPath = null;
     String remotePath = null;
     String scriptPath = null;
-    Lst<SV> params = null;
     if (tok == T.macro) {
       i = -2;
     }
@@ -6862,8 +6868,6 @@ public class ScriptEval extends ScriptExpr {
       vwr.setMenu(theScript, false);
       return;
     }
-
-    
     
     boolean wasSyntaxCheck = chk;
     boolean wasScriptCheck = isCmdLine_c_or_C_Option;
@@ -6880,15 +6884,7 @@ public class ScriptEval extends ScriptExpr {
       boolean saveLoadCheck = isCmdLine_C_Option;
       isCmdLine_C_Option &= loadCheck;
       executionStepping |= doStep;
-
-      if (contextVariables == null)
-        contextVariables = new Hashtable<String, SV>();
-      contextVariables.put("_arguments",
-          (params == null ? SV.getVariableAI(new int[] {})
-              : SV.getVariableList(params)));
-      contextVariables.put("_argcount",
-          SV.newI(params == null ? 0 : params.size()));
-      
+      setScriptArguments(params, false);
       if (isCheck)
         listCommands = true;
       boolean timeMsg = vwr.getBoolean(T.showtiming);
@@ -9763,8 +9759,20 @@ public class ScriptEval extends ScriptExpr {
     return true;
   }
 
-  
-  
+  /**
+   * @param params
+   * @param isCallback unused to date  
+   */
+  private void setScriptArguments(Lst<SV> params, boolean isCallback) {
+    if (contextVariables == null)
+      contextVariables = new Hashtable<String, SV>();
+    contextVariables.put("_arguments",
+        (params == null ? SV.getVariableAI(new int[] {})
+            : SV.getVariableList(params)));
+    contextVariables.put("_argcount",
+        SV.newI(params == null ? 0 : params.size()));
+  }
+
   @Override
   public String toString() {
     SB str = new SB();
@@ -9785,5 +9793,6 @@ public class ScriptEval extends ScriptExpr {
     str.append("END\n");
     return str.toString();
   }
+
 
 }

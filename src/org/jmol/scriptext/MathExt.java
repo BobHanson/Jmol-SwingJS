@@ -142,8 +142,7 @@ public class MathExt {
       return evaluateArray(mp, args,
           tok == T.array && op.tok == T.propselector);
     case T._args:
-      return mp.addXObj(vwr.sm.getParameter(
-          args.length == 0 ? Integer.MIN_VALUE : args[0].intValue));
+      return evaluateCallbackParam(mp, args);
     case T.axisangle:
     case T.quaternion:
       return evaluateQuaternion(mp, args, tok);
@@ -251,6 +250,15 @@ public class MathExt {
       return evaluateWrite(mp, args);
     }
     return false;
+  }
+
+  private boolean evaluateCallbackParam(ScriptMathProcessor mp, SV[] args) {
+    @SuppressWarnings("unchecked")
+    Lst<SV> params = (Lst<SV>) mp.getCallbackParameters();
+    if (args.length == 0)
+      return mp.addXList(params);
+    int pt = args[0].intValue;
+    return mp.addX(params == null || --pt < 0 || pt >= params.size() ? null : params.get(pt));
   }
 
   private boolean evaluateSpacegroup(ScriptMathProcessor mp, SV[] args) {

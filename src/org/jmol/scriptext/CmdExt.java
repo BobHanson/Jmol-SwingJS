@@ -231,7 +231,7 @@ public class CmdExt extends ScriptExt {
       return;
     }
     showString("running " + macro);
-    e.cmdScript(T.macro, macro, null);
+    e.cmdScript(T.macro, macro, null, null);
   }
 
   /**
@@ -973,7 +973,7 @@ public class CmdExt extends ScriptExt {
         s = "capture " + (isTransparent ? "transparent " : "") + PT.esc(fileName) 
             + (looping ? " LOOP;": ";")
              + s + ";capture end;";
-        e.cmdScript(0, null, s);
+        e.cmdScript(0, null, s, null);
         return;
       }
       mode = T.movie;
@@ -1490,36 +1490,36 @@ public class CmdExt extends ScriptExt {
     // if (!chk && vwr.getDisplayModelIndex() <= -2)
     // error(ERROR_backgroundModelError, "\"CONFIGURATION\"");
     BS bsAtoms = null;
-    BS bsSelected = vwr.bsA();
+    BS bsSelected = (chk ? null : vwr.bsA());
     if (slen == 1) {
       if (chk)
         return;
       // configuration
       bsAtoms = vwr.ms.setConformation(bsSelected);
-      vwr.ms.addStateScript("select", null, bsSelected, null, "configuration",
+      vwr.ms.addStateScript("select", null, bsSelected, null, ";configuration",
           true, false);
     } else {
       int n;
+      BS bs = null;
       if (isFloatParameter(1)) {
         n = intParameter(e.checkLast(1));
         if (chk)
           return;
-        bsAtoms = vwr.ms.getConformation(vwr.am.cmi, n - 1, true, null);
         vwr.addStateScript("configuration " + n + ";", true, false);
       } else {
-        bsAtoms = atomExpressionAt(1);
+        bs = bsAtoms = atomExpressionAt(1);
+        n = intParameter(e.checkLast(e.iToken + 1));
         if (chk)
           return;
-        n = intParameter(e.checkLast(e.iToken + 1));
         vwr.addStateScript("configuration " + Escape.eBS(bsAtoms) + " " + n + ";", true, false);
-        bsAtoms = vwr.ms.getConformation(vwr.am.cmi, n - 1, true, bsAtoms);
       }
+      bsAtoms = vwr.ms.getConformation(vwr.am.cmi, n - 1, true, bs);
     }
     setShapeProperty(JC.SHAPE_STICKS, "type",
         Integer.valueOf(Edge.BOND_HYDROGEN_MASK));
     e.setShapeSizeBs(JC.SHAPE_STICKS, 0, bsAtoms);
     vwr.autoHbond(bsAtoms, bsAtoms, true);
-    vwr.selectStatus(bsAtoms, false, 0, e.tQuiet, false);
+    vwr.selectStatus(bsAtoms, false, 0, !e.doReport(), false);
   }
 
   @SuppressWarnings("static-access")

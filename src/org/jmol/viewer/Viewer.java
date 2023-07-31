@@ -11020,4 +11020,9 @@ public class Viewer extends JmolViewer
         ("CELLFORMULA".equals(type) ? ms.getCellWeights(bs) : null), isEmpirical);
   }
 
+  public void evalCallback(String cmd, Object[] params, boolean doWait) {
+    if (getScriptManager() != null)
+      scm.evalCallback(cmd, params, doWait);
+  }
+
 }

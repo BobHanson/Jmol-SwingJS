@@ -34,6 +34,8 @@ import javajs.util.P3d;
 import javajs.util.V3d;
 
 import org.jmol.script.T;
+import org.jmol.shapebio.BioShape;
+import org.jmol.shapebio.BioShapeCollection;
 import org.jmol.viewer.JC;
 
 
@@ -179,9 +181,23 @@ public abstract class BioPolymer implements Structure {
 
   public void setConformation(BS bsSelected) {
     Atom[] atoms = model.ms.at;
+    boolean updated = false;
     for (int i = monomerCount; --i >= 0;)
-      monomers[i].updateOffsetsForAlternativeLocations(atoms, bsSelected);
-    recalculateLeadMidpointsAndWingVectors();
+      if (monomers[i].updateOffsetsForAlternativeLocations(atoms, bsSelected))
+        updated = true;
+    if (updated) {
+      recalculateLeadMidpointsAndWingVectors();
+      for (int i = JC.SHAPE_MIN_SECONDARY; i < JC.SHAPE_MAX_SECONDARY; i++) {
+        BioShapeCollection s = (BioShapeCollection) model.ms.vwr.shm.shapes[i];
+        if (s == null)
+          continue;
+        for (int b = s.bioShapes.length; --b >= 0;) {
+          BioShape bi = s.bioShapes[b];
+          if (bi.bioPolymer == this)
+            bi.falsifyMesh();
+        }
+      }
+    }
   }
 
   private boolean invalidLead;

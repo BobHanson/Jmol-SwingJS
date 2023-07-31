@@ -77,7 +77,7 @@ public interface JmolScriptEvaluator {
 
   double evalFunctionFloat(Object func, Object params, double[] values);
 
-  void evaluateCompiledScript(boolean isSyntaxCheck,
+  void evaluateCompiledScript(Object[] params, boolean isSyntaxCheck,
                               boolean isSyntaxAndFileCheck,
                               boolean historyDisabled, boolean listCommands,
                               SB outputBuffer, boolean allowThreads);

@@ -569,6 +569,7 @@ public class BioModelSet {
   }
 
   public void setAllConformation(BS bsAtoms) {
+    vwr.ms.recalculatePositionDependentQuantities(bsAtoms, null);
     BS bsModels = ms.getModelBS(bsAtoms, false);
     for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
       if (ms.am[i].isBioModel) {

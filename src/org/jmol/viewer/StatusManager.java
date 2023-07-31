@@ -258,8 +258,7 @@ public class StatusManager {
     String callbackFunction = (callbackObject instanceof String ? (String) callbackObject : null);
     if (cbk != null) {
       String callback = CBK.getCallback(callbackType).name();
-      Logger.info("StatusManager callback set for " + callbackType + " f="
-          + callbackFunction + " cb=" + callback);
+      Logger.info("StatusManager " + callback + "callback set f=" + callbackFunction);
       boolean isSync = (callbackFunction != null
           && callbackFunction.startsWith("SYNC:"));
       if (isSync) {
@@ -308,27 +307,22 @@ public class StatusManager {
     return jmolScriptCallbacks.get(callback.name());
   }
 
-  private Object[] _args = null;
-
-  public Object getParameter(int i) {
-    if (_args == null || i == Integer.MIN_VALUE)
-      return _args;
-// NO - don't allow (0) to be "last argument" in order to allow for future expansions
-//    if (i < 0)
-//      i += _args.length;
-    return (--i < 0 || i >= _args.length ? null : _args[i]);
-  }
-  
+  /**
+   * 
+   * @param isEnabled
+   * @param callback
+   * @param o         the arguments to pass
+   * @param doWait    generally TRUE, but FALSE for AnimFrameCallback, as otherwise delays are messed up.
+   */
   private void fireJmolScriptCallback(boolean isEnabled, CBK callback,
-                                      Object[] o) {
+                                      Object[] o, boolean doWait) {
+    String name =  callback.name();
     if (o[0] != null) {
-      String cmd = (String) o[0];
-      Object[] args = _args;
-      _args = o;
-      o[0] = callback.name();
-        vwr.evalStringQuietSync(cmd, true, false);
-      o[0] = cmd;
-      _args = args;
+      Object[] params = new Object[o.length];
+        System.arraycopy(o, 0, params, 0, o.length);
+      String cmd = "try{\n" +  params[0] + "\n}";
+      params[0] = name;
+      vwr.evalCallback(cmd, params, doWait);
     }
     if (jmolScriptCallbacks.containsKey("SYNC:" + callback.name()))
       o[0] = "SYNC";
@@ -341,7 +335,7 @@ public class StatusManager {
     String sJmol = (isReady ? getJmolScriptCallback(CBK.APPLETREADY) : null);
     boolean isEnabled =  notifyEnabled(CBK.APPLETREADY);
     if (isEnabled || sJmol != null)
-      fireJmolScriptCallback(isEnabled, CBK.APPLETREADY, new Object[] { sJmol, htmlName, Boolean.valueOf(isReady), null });
+      fireJmolScriptCallback(isEnabled, CBK.APPLETREADY, new Object[] { sJmol, htmlName, Boolean.valueOf(isReady), null }, true);
   }
 
   synchronized void setStatusAtomMoved(BS bsMoved) {    
@@ -350,7 +344,7 @@ public class StatusManager {
     boolean isEnabled =  notifyEnabled(CBK.ATOMMOVED);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.ATOMMOVED,
-          new Object[] { sJmol, bsMoved, Integer.valueOf(bsMoved.cardinality()) });   
+          new Object[] { sJmol, bsMoved, Integer.valueOf(bsMoved.cardinality()) }, true);   
   }
 
   /**
@@ -369,21 +363,20 @@ public class StatusManager {
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.SELECT,
           new Object[] { sJmol, atoms, Integer.valueOf(atoms.cardinality()), 
-              Integer.valueOf(atoms.nextSetBit(0)), Integer.valueOf(atoms.length()) });
+              Integer.valueOf(atoms.nextSetBit(0)), Integer.valueOf(atoms.length()) }, true);
   }
 
   public void setStatusStructureModified(int atomIndex, int modelIndex,
                                          int mode, String msg, int n, BS bsAtoms) {
     if (atomIndex >= 0 && bsAtoms == null)
       bsAtoms = BSUtil.newAndSetBit(atomIndex);
-    //System.out.println("SM.setstatusStructureMod " + atomIndex + " " + mode);
     String sJmol = getJmolScriptCallback(CBK.STRUCTUREMODIFIED);
     boolean isEnabled =  notifyEnabled(CBK.STRUCTUREMODIFIED);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.STRUCTUREMODIFIED,
           new Object[] { sJmol, Integer.valueOf(mode),
               Integer.valueOf(atomIndex), Integer.valueOf(modelIndex), msg,
-              Integer.valueOf(n), bsAtoms });
+              Integer.valueOf(n), bsAtoms }, true);
   }
   
 
@@ -400,7 +393,7 @@ public class StatusManager {
     boolean isEnabled =  notifyEnabled(CBK.PICK);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.PICK,
-          new Object[] { sJmol, strInfo, Integer.valueOf(atomIndex), map });
+          new Object[] { sJmol, strInfo, Integer.valueOf(atomIndex), map }, true);
   }
 
   synchronized int setStatusClicked(int x, int y, int action, int clickCount, int mode) {
@@ -410,7 +403,7 @@ public class StatusManager {
     boolean isEnabled =  notifyEnabled(CBK.CLICK);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.CLICK,
-        new Object[] { sJmol, Integer.valueOf(x), Integer.valueOf(y), Integer.valueOf(action), Integer.valueOf(clickCount), m });
+        new Object[] { sJmol, Integer.valueOf(x), Integer.valueOf(y), Integer.valueOf(action), Integer.valueOf(clickCount), m }, true);
     return m[0];
   }
 
@@ -419,7 +412,7 @@ public class StatusManager {
     boolean isEnabled =  notifyEnabled(CBK.RESIZE);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.RESIZE,
-          new Object[] { sJmol, Integer.valueOf(width), Integer.valueOf(height) }); 
+          new Object[] { sJmol, Integer.valueOf(width), Integer.valueOf(height) }, true); 
   }
 
   boolean haveHoverCallback() {
@@ -431,7 +424,7 @@ public class StatusManager {
     boolean isEnabled =  notifyEnabled(CBK.HOVER);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.HOVER, 
-          new Object[] {sJmol, strInfo, Integer.valueOf(iatom) });
+          new Object[] {sJmol, strInfo, Integer.valueOf(iatom) }, true);
   }
   
   synchronized void setStatusObjectHovered(String id, String strInfo, T3d pt) {
@@ -439,7 +432,7 @@ public class StatusManager {
     boolean isEnabled =  notifyEnabled(CBK.HOVER);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.HOVER, 
-          new Object[] {sJmol, strInfo, Integer.valueOf(-1), id, Double.valueOf(pt.x), Double.valueOf(pt.y), Double.valueOf(pt.z) });
+          new Object[] {sJmol, strInfo, Integer.valueOf(-1), id, Double.valueOf(pt.x), Double.valueOf(pt.y), Double.valueOf(pt.z) }, true);
   }
   
   private Map<String, GenericImageDialog> imageMap;
@@ -456,7 +449,7 @@ public class StatusManager {
     String sJmol = getJmolScriptCallback(CBK.IMAGE);
     boolean isEnabled =  notifyEnabled(CBK.IMAGE);
     if (isEnabled || sJmol != null)
-      fireJmolScriptCallback(isEnabled, CBK.IMAGE, new Object[] { sJmol, title, image });
+      fireJmolScriptCallback(isEnabled, CBK.IMAGE, new Object[] { sJmol, title, image }, true);
     if (Boolean.TRUE.equals(image)) {
       if (imageMap == null)
         return;
@@ -510,7 +503,7 @@ public class StatusManager {
                   errorMsg, Integer.valueOf(ptLoad),
                   vwr.getP("_modelNumber"),
                   vwr.getModelNumberDotted(vwr.ms.mc - 1),
-                  isAsync });
+                  isAsync }, true);
     }
   }
 
@@ -521,7 +514,7 @@ public class StatusManager {
     boolean isEnabled = notifyEnabled(CBK.MODELKIT);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.MODELKIT,
-          new Object[] { sJmol, state });
+          new Object[] { sJmol, state }, true);
   }
 
 
@@ -541,7 +534,7 @@ public class StatusManager {
           new Object[] {
               sJmol,
               new int[] { frameNo, fileNo, modelNo, firstNo, lastNo,
-                  currentFrame }, entryName, Double.valueOf(currentMorphModel) });
+                  currentFrame }, entryName, Double.valueOf(currentMorphModel) }, false);
     if (!animating && !vwr.isJSNoAWT)
       vwr.checkMenuUpdate();
   }
@@ -554,20 +547,25 @@ public class StatusManager {
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.DRAGDROP,
           new Object[] { sJmol, Integer.valueOf(mode), Integer.valueOf(x),
-              Integer.valueOf(y), fileName, retType == null ? new String[1] : retType });
+              Integer.valueOf(y), fileName, retType == null ? new String[1] : retType }, true);
     return isEnabled;
   }
-
+  
+  private boolean echoing = false;
+  
   synchronized void setScriptEcho(String strEcho,
                                   boolean isScriptQueued) {
-    if (strEcho == null)
+    if (strEcho == null || echoing)
       return;
+    echoing = true;
     setStatusChanged("scriptEcho", 0, strEcho, false);
     String sJmol = getJmolScriptCallback(CBK.ECHO);
     boolean isEnabled =  notifyEnabled(CBK.ECHO);
-    if (isEnabled || sJmol != null)
+    if (isEnabled || sJmol != null) {
       fireJmolScriptCallback(isEnabled, CBK.ECHO,
-          new Object[] { sJmol, strEcho, Integer.valueOf(isScriptQueued ? 1 : 0) });
+          new Object[] { sJmol, strEcho, Integer.valueOf(isScriptQueued ? 1 : 0) }, true);
+    }
+    echoing = false;
   }
 
   synchronized void setStatusMeasuring(String status, int intInfo, String strMeasure, double value) {
@@ -583,7 +581,7 @@ public class StatusManager {
     boolean isEnabled =  notifyEnabled(CBK.MEASURE);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.MEASURE,
-          new Object[] { sJmol, strMeasure,  Integer.valueOf(intInfo), status , Double.valueOf(value)});
+          new Object[] { sJmol, strMeasure,  Integer.valueOf(intInfo), status , Double.valueOf(value)}, true);
   }
   
   synchronized void notifyError(String errType, String errMsg,
@@ -593,7 +591,7 @@ public class StatusManager {
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.ERROR,
           new Object[] { sJmol, errType, errMsg, vwr.getShapeErrorState(),
-              errMsgUntranslated });
+              errMsgUntranslated }, true);
   }
   
   
@@ -603,7 +601,7 @@ public class StatusManager {
     boolean isEnabled = notifyEnabled(CBK.MINIMIZATION);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.MINIMIZATION,
-          new Object[] { sJmol, minStatus, minSteps, minEnergy, minEnergyDiff, ff });
+          new Object[] { sJmol, minStatus, minSteps, minEnergy, minEnergyDiff, ff }, true);
   }
   
   synchronized void setScriptStatus(String strStatus, String statusMessage,
@@ -640,7 +638,7 @@ public class StatusManager {
         strErrorMessageUntranslated };
     boolean isEnabled = notifyEnabled(CBK.SCRIPT);
     if (isEnabled || sJmol != null)
-      fireJmolScriptCallback(isEnabled, CBK.SCRIPT, data);
+      fireJmolScriptCallback(isEnabled, CBK.SCRIPT, data, true);
     processScript(data);
   }
 
@@ -955,7 +953,6 @@ public class StatusManager {
    */
   synchronized public void notifyAudioStatus(Map<String, Object> htParams) {
     String status = (String) htParams.get("status");
-//System.out.println(status);
     String script = (String) htParams.get(status);
     if (script != null)
       vwr.script(script);
@@ -965,7 +962,7 @@ public class StatusManager {
     boolean isEnabled = notifyEnabled(CBK.AUDIO);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.AUDIO,
-          new Object[] { sJmol, htParams, status });
+          new Object[] { sJmol, htParams, status }, true);
   }
   
   

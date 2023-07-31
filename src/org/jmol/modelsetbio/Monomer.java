@@ -41,7 +41,7 @@ import javajs.util.P3d;
 import org.jmol.viewer.JC;
 import org.jmol.script.T;
 
-
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -308,7 +308,8 @@ public abstract class Monomer extends Group {
     return (structure instanceof ProteinStructure ? ((ProteinStructure)structure).type.getBioStructureTypeName(false) : "");
   }
 
-  final void updateOffsetsForAlternativeLocations(Atom[] atoms, BS bsSelected) {
+  final boolean updateOffsetsForAlternativeLocations(Atom[] atoms, BS bsSelected) {
+      boolean updated = false;
       for (int offsetIndex = offsets.length; --offsetIndex >= 0;) {
         int offset = offsets[offsetIndex] & 0xFF;
         if (offset == 255)
@@ -337,10 +338,12 @@ public abstract class Monomer extends Group {
           offsets[offsetIndex] = (byte) offsetNew;
           //System.out.println("Chain.udateOffsetsForAlternativeLocation " + atoms[iNew] + " was " + atom);
           atoms[iNew].nBackbonesDisplayed = atom.nBackbonesDisplayed;
+          updated = true;
           break;
         }
       }
       setLeadAtomIndex();
+      return updated;
   }
     
   final void getMonomerSequenceAtoms(BS bsInclude, BS bsResult) {
