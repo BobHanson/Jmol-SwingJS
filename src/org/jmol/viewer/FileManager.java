@@ -521,25 +521,18 @@ public class FileManager implements BytePoster {
                                                             String resourceName)
       throws IOException {
 
-    URL url;
-    /**
-     * @j2sNative
-     * 
-     */
-    {
-      url = resourceClass.getClass().getResource(resourceName);
-      if (url == null) {
-        System.err.println("Couldn't find file: " + classPath + resourceName);
-        throw new IOException();
-      }
-      if (vwr == null || !vwr.async)
-        return Rdr.getBufferedReader(
-            new BufferedInputStream((InputStream) url.getContent()), null);
+    URL url = resourceClass.getClass().getResource(resourceName);
+    if (url == null) {
+      System.err.println("Couldn't find file: " + classPath + resourceName);
+      throw new IOException();
     }
+    if (vwr == null || !vwr.async)
+      return Rdr.getBufferedReader(
+          new BufferedInputStream((InputStream) url.getContent()), null);
     // applet only
-    resourceName = (url == null 
+    resourceName = (url == null
         ? vwr.vwrOptions.get("codePath") + classPath + resourceName
-            : url.getFile());
+        : url.getFile());
     if (vwr.async) {
       // if we are running asynchronously, this will be a problem. 
       Object bytes = vwr.fm.cacheGet(resourceName, false);

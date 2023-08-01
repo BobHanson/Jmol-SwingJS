@@ -62,7 +62,7 @@ class AwtFile extends File implements GenericFileInterface {
       } else if (post != null) {
         type = "application/x-www-form-urlencoded";
       }
-      conn.setRequestProperty("User-Agent", Viewer.getJmolVersion());
+//      conn.setRequestProperty("User-Agent", Viewer.getJmolVersion());
       if (type != null) {
         conn.setRequestProperty("Content-Type", type);
         conn.setDoOutput(true);

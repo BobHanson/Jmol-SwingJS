@@ -415,7 +415,8 @@ public class ScriptEval extends ScriptExpr {
     executionStopped = executionPaused = false;
     executionStepping = false;
     executing = true;
-    vwr.pushHoldRepaintWhy("runEval");
+    vwr.pushHoldRepaintWhy("runEval" + (params == null ? "" : "+params"));
+    // this push will be popped in executeCommands. 
     setScriptExtensions();
     vwr.hasSelected = false;
     executeCommands(params, false, true);
@@ -481,7 +482,7 @@ public class ScriptEval extends ScriptExpr {
                   : "ScriptException"), errorMessage, errorMessageUntranslated);
       haveError = true;
     }
-    if (haveError || !isJS || !allowJSThreads) {
+    if (haveError || !isJS || !allowJSThreads || params != null) {
       vwr.setTainted(true);
       vwr.popHoldRepaint("executeCommands" + " "
           + (scriptLevel > 0 ? JC.REPAINT_IGNORE : ""));
