@@ -110,10 +110,11 @@ public class ScriptContext {
    */
   public SV getVariable(String var) {
     ScriptContext context = this;
+    SV v;
     while (context != null && !context.isFunction) {
       if (context.vars != null
-          && context.vars.containsKey(var))
-        return context.vars.get(var);
+          && (v = context.vars.get(var)) != null)
+        return v;
       context = context.parentContext;
     }
     return null;

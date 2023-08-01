@@ -110,18 +110,46 @@ abstract public class ScriptParam extends ScriptError {
   public SV getContextVariableAsVariable(String var, boolean isLocal) {
     if (var.equals("expressionBegin"))
       return null;
-    if (var.equalsIgnoreCase("_caller")) {
-      ScriptContext sc = thisContext;
-      while (sc != null) {
-        if (sc.isFunction)
-          return SV.newV(T.hash, sc.vars);
-        sc = sc.parentContext;
+    if (var.charAt(0) == '_') {
+      boolean isCallers = var.equalsIgnoreCase("_callers");
+      if (isCallers || var.equalsIgnoreCase("_caller")) {
+        ScriptContext sc = thisContext;
+        Hashtable<String, Object> h0 = new Hashtable<String, Object>(),
+            h = null, h1;
+        while (sc != null) {
+          if (sc.isFunction) {
+            if (h == null) {
+              h = h0;
+            } else {
+              h1 = new Hashtable<String, Object>();
+              h.put("_caller", SV.newV(T.hash, h1));
+              h = h1;
+            }
+            h.putAll(sc.vars);
+            h.put("_name", SV.newS(sc.functionName));
+            if (!isCallers)
+              break;
+          }
+          sc = sc.parentContext;
+        }
+        return SV.newV(T.hash, h0);
       }
-      return SV.newV(T.hash, new Hashtable<String, Object>());
+      if (var.equalsIgnoreCase("_name")) {
+        ScriptContext sc = thisContext;
+        while (sc != null) {
+          if (sc.isFunction) {
+            return SV.newS(SV.sValue(sc.statement[0]));
+          }
+          sc = sc.parentContext;
+        }
+        return SV.newS("");
+      }
     }
     var = var.toLowerCase();
-    return (contextVariables != null && contextVariables.containsKey(var) ? contextVariables
-        .get(var) : isLocal || thisContext == null ? null : thisContext.getVariable(var));
+    SV v = (contextVariables == null ? null : contextVariables.get(var));
+    if (v == null && !isLocal && thisContext != null)
+      v = thisContext.getVariable(var);
+    return (v != null && v.tok == T.array ? v.arrayToList(v) : v);
   }
   
   public String paramAsStr(int i) throws ScriptException {
@@ -1572,6 +1600,40 @@ abstract public class ScriptParam extends ScriptError {
     return retStddev[1];
   }
 
+  /**
+   * @param params
+   * @param isCallback unused to date  
+   */
+  protected void setScriptArguments(Object params, boolean isCallback) {
+    if (contextVariables == null)
+      contextVariables = new Hashtable<String, SV>();
+    contextVariables.put("_arguments",
+        (params == null ? SV.getVariableAI(new int[] {})
+            : isCallback ? SV.newV(T.array,  params) : SV.getVariableList((Lst<?>)params)));
+    contextVariables.put("_argcount",
+        SV.newI(params == null ? 0 : isCallback ? ((Object[]) params).length : ((Lst<?>)params).size()));
+  }
+
+  public SV getCallbackParameter(int n) {
+    SV v = (contextVariables == null ? null
+        : contextVariables.get("_arguments"));
+    if (v == null && (thisContext == null
+        || (v = thisContext.getVariable("_arguments")) == null))
+      return null;
+    if (v.tok == T.array) {
+      if (n == Integer.MIN_VALUE) {
+        return v.arrayToList(v);
+      }
+      Object[] params = (Object[]) v.value;
+      return (--n < 0 || n >= params.length ? null
+          : (SV) (params[n] = SV.getVariable(params[n])));
+    }
+    Lst<SV> list = v.getList();
+    return (n == Integer.MIN_VALUE ? v 
+        : --n < 0 || n >= list.size() ? 
+            SV.newV(T.varray,  new Lst<SV>()) : list.get(n));
+  }
+  
 
 
 }

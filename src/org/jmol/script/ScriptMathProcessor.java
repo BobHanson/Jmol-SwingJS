@@ -1810,11 +1810,5 @@ public class ScriptMathProcessor {
     }
     return false;
   }
-
-  public Object getCallbackParameters() {
-    Object o = eval.getVarParameter("_arguments", false);
-    return (o instanceof String ? null : o);
-  }
-
   
 }

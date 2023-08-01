@@ -252,13 +252,15 @@ public class MathExt {
     return false;
   }
 
+  /**
+   * Process the _args() or _args(n) request.
+   * 
+   * @param mp
+   * @param args
+   * @return true
+   */
   private boolean evaluateCallbackParam(ScriptMathProcessor mp, SV[] args) {
-    @SuppressWarnings("unchecked")
-    Lst<SV> params = (Lst<SV>) mp.getCallbackParameters();
-    if (args.length == 0)
-      return mp.addXList(params);
-    int pt = args[0].intValue;
-    return mp.addX(params == null || --pt < 0 || pt >= params.size() ? null : params.get(pt));
+    return mp.addX(e.getCallbackParameter(args.length == 0 ? Integer.MIN_VALUE : args[0].asInt()));
   }
 
   private boolean evaluateSpacegroup(ScriptMathProcessor mp, SV[] args) {

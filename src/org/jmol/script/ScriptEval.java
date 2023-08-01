@@ -439,7 +439,7 @@ public class ScriptEval extends ScriptExpr {
       if (params != null) {
         pushContext(null, "runCallback");
         contextPath += " >> " + params[0] + "callback ";
-        setScriptArguments(SV.getVariableAO(params).getList(), true);
+        setScriptArguments(params, true);
       }
       if (!dispatchCommands(false, false, isTry))
         return EXEC_ASYNC;
@@ -9760,20 +9760,6 @@ public class ScriptEval extends ScriptExpr {
     return true;
   }
 
-  /**
-   * @param params
-   * @param isCallback unused to date  
-   */
-  private void setScriptArguments(Lst<SV> params, boolean isCallback) {
-    if (contextVariables == null)
-      contextVariables = new Hashtable<String, SV>();
-    contextVariables.put("_arguments",
-        (params == null ? SV.getVariableAI(new int[] {})
-            : SV.getVariableList(params)));
-    contextVariables.put("_argcount",
-        SV.newI(params == null ? 0 : params.size()));
-  }
-
   @Override
   public String toString() {
     SB str = new SB();
@@ -9794,6 +9780,7 @@ public class ScriptEval extends ScriptExpr {
     str.append("END\n");
     return str.toString();
   }
+
 
 
 }

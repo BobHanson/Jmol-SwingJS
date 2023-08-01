@@ -94,8 +94,15 @@ public class Minimizer {
 
   
   public Minimizer setProperty(String propertyName, Object value) {
-    switch (("ff        " + "cancel    " + "clear     " + "constraint"
-        +    "fixed     " + "stop      " + "vwr    ").indexOf(propertyName)) {
+    switch ((
+        "ff        " + // 0
+        "cancel    " + // 10
+        "clear     " + // 20
+        "constraint" + // 30
+        "fixed     " + // 40
+        "stop      " + // 50
+        "vwr    "
+        ).indexOf(propertyName)) {
     case 0:
       // UFF or MMFF
       if (!ff.equals(value)) {
@@ -661,7 +668,7 @@ public class Minimizer {
         updateAtomXYZ(true);
       vwr.setIntProperty("_minimizationStep", pFF.getCurrentStep());
       reportEnergy();
-      vwr.setStringProperty("_minimizationStatus", (failed ? "failed" : "done"));
+      vwr.setStringProperty("_minimizationStatus", (failed ? "failed" : normalFinish ? "done" : "stopped"));
       vwr.notifyMinimizationStatus();
       vwr.refresh(Viewer.REFRESH_SYNC_MASK, "minimize:done"
           + (failed ? " EXPLODED" : "OK"));

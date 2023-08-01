@@ -1722,6 +1722,8 @@ public class SV extends T implements JSONEncodable {
       break;
     case varray:
       return this;
+    case array:
+      return arrayToList(new SV());
     default:
       o2 = new Lst<SV>();
       o2.addLast(this);
@@ -1739,6 +1741,19 @@ public class SV extends T implements JSONEncodable {
     return newV(varray, o2);
   }
 
+  public SV arrayToList(SV target) {
+    if (tok != array || target == null)
+      return null;
+    Object[] ao = (Object[]) value;
+    Lst<SV> v = new  Lst<SV>();
+    for (int i = 0, n = ao.length; i < n; i++) {
+      v.addLast(getVariable(ao[i]));
+    }
+    target.tok = varray;
+    target.value = v;
+    return target;
+  }
+
   @SuppressWarnings("unchecked")
   SV mapValue(String key) {
     switch (tok) {
@@ -1753,7 +1768,16 @@ public class SV extends T implements JSONEncodable {
 
   @SuppressWarnings("unchecked")
   public Lst<SV> getList() {
-    return (tok == varray ? (Lst<SV>) value : null);
+    switch (tok) {
+    case varray:
+      return (Lst<SV>) value;
+    case array:
+      tok = varray;
+      value = toArray().value;
+      return (Lst<SV>) value;
+    default:
+      return null;
+    }
   }
 
   public static boolean isScalar(SV x) {
