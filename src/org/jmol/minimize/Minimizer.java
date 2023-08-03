@@ -713,7 +713,8 @@ public class Minimizer {
     if (!modelkitMinimizing) {
       for (int i = 0; i < ac; i++) {
         MinAtom minAtom = minAtoms[i];
-        minAtom.atom.set(minAtom.coord[0], minAtom.coord[1], minAtom.coord[2]);
+        if (bsFixed == null || !bsFixed.get(minAtom.atom.i))
+          minAtom.atom.set(minAtom.coord[0], minAtom.coord[1], minAtom.coord[2]);
       }
       isEnd = true;
     } else {

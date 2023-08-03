@@ -8353,6 +8353,8 @@ public class Viewer extends JmolViewer
       modelkit.actionRotateBond(deltaX, deltaY, x, y,
           (modifiers & Event.VK_SHIFT) != 0);
     } else {
+      if (bsSelected == null)
+        bsSelected = bsA();
       int iatom = bsSelected.nextSetBit(0);
       bsSelected = setMovableBitSet(bsSelected, !asAtoms);
       
@@ -9434,9 +9436,8 @@ public class Viewer extends JmolViewer
         return;
       }
       if (groupSelected) {
-        BS bs = ms.getConnectingAtoms(bsSelected, bsMotionFixed);
-        bsSelected.andNot(bs);
-        bsMotionFixed.or(bs);
+        bsMotionFixed.or(ms.getConnectingAtoms(bsSelected, bsMotionFixed));
+        bsSelected.andNot(bsMotionFixed);
       }
 
       if (!isSilent)

@@ -197,7 +197,7 @@ public class CifReader extends AtomSetCollectionReader {
     cifParser = getCifDataParser();
     line = "";
     while (continueWith(key = (String) cifParser.peekToken())) {
-      if (cifParser.getFileHeader()
+      if (!addAtomLabelNumbers && cifParser.getFileHeader()
           .startsWith("# primitive CIF file created by Jmol"))
         addAtomLabelNumbers = true;
       if (!readAllData())
@@ -916,7 +916,8 @@ public class CifReader extends AtomSetCollectionReader {
     }
     if (key.startsWith(FAMILY_SGOP) || key.startsWith("_symmetry_equiv_pos")
         || key.startsWith("_symmetry_ssg_equiv")) {
-      if (ignoreFileSymmetryOperators) {
+      // 2023.08.03 disallow x,y,z when modDim > 0
+      if (ignoreFileSymmetryOperators || modDim > 0 && key.indexOf("ssg") < 0) {
         Logger.warn("ignoring file-based symmetry operators");
         skipLoop(false);
       } else {
@@ -1306,19 +1307,25 @@ public class CifReader extends AtomSetCollectionReader {
       } else {
         // check for atom reference before atom definition
         int f = NONE;
-        if ((f = fieldProperty(key2col[LABEL])) != NONE
+        int f0 = NONE;
+        if ((f0 = f = fieldProperty(key2col[LABEL])) != NONE
             || (f = fieldProperty(key2col[CC_ATOM_ID])) != NONE
             || (f = fieldProperty(key2col[LABEL_ATOM_ID])) != NONE
             || (f = fieldProperty(key2col[ANISO_LABEL])) != NONE
             || (f = fieldProperty(key2col[ANISO_MMCIF_ID])) != NONE
-            || (f = fieldProperty(key2col[MOMENT_LABEL])) != NONE
-            ) {
-          if (addAtomLabelNumbers) {
+            || (f = fieldProperty(key2col[MOMENT_LABEL])) != NONE) {
+          atom = asc.getAtomFromName(field);
+          if (f0 != NONE && (addAtomLabelNumbers || atom != null)) {
+            field = field + (asc.ac + 1);
+            System.err.println(
+                "CifReader found duplicate atom_site_label! New label is " + field);
+            // user request to allow this to be automatic. 
+            // note, however, that this will only work if atom_site_label is the FIRST 
+            // reference to this atom
             // well, Jmol 14.30 did not produce valid CIF files in that it 
             // did not ensure that _atom_site_label was unique :(
-            field = field + (asc.ac + 1);
+            atom = null;
           }
-          atom = asc.getAtomFromName(field);
         }
         if (atom == null) {
           atom = new Atom();
@@ -1939,7 +1946,7 @@ public class CifReader extends AtomSetCollectionReader {
         return dx;
       }
     }
-    Logger.info("error reading uncertainty for " + sdist + " on line " + line);
+    Logger.info("CifReader error reading uncertainty for " + sdist + " (set to 0.015) on line " + line);
     return 0.015;
   }
 

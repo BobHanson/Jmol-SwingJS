@@ -59,11 +59,14 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
           || (fset = uc.getUnitCellMultiplier()) != null
               && (fset.z == 1 ? !fset.equals(fset0) : fset.z != 0));
       SymmetryInterface ucm = uc.getUnitCellMultiplied();
-      isP1 = (isP1 || ucm != uc || fractionalOffset || uc.getSpaceGroupOperationCount() < 2);
+      isP1 = (isP1 || ucm != uc || fractionalOffset
+          || uc.getSpaceGroupOperationCount() < 2);
       uc = ucm;
 
       // only write the asymmetric unit set
-      BS modelAU = (!haveUnitCell ? bs : isP1 ? uc.removeDuplicates(vwr.ms, bs, false) : vwr.ms.am[mi].bsAsymmetricUnit);
+      BS modelAU = (!haveUnitCell ? bs
+          : isP1 ? uc.removeDuplicates(vwr.ms, bs, false)
+              : vwr.ms.am[mi].bsAsymmetricUnit);
       BS bsOut;
       if (modelAU == null) {
         bsOut = bs;
@@ -127,40 +130,49 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
         }
       }
 
-      
       // write the atoms 
-      
+
       Atom[] atoms = vwr.ms.at;
       String elements = "";
 
-      
+      boolean haveOccupancy = false;
+      double[] occ = (haveUnitCell ? vwr.ms.occupancies : null);
+      if (occ != null) {
+        for (int i = bsOut.nextSetBit(0); i >= 0; i = bsOut.nextSetBit(i + 1)) {
+          if (occ[i] != 1) {
+            haveOccupancy = true;
+            break;
+          }
+        }
+      }
       int sbLength = sb.length();
-      
+
       sb.append("\n" + "\nloop_" + "\n_atom_site_label"
           + "\n_atom_site_type_symbol" + "\n_atom_site_fract_x"
           + "\n_atom_site_fract_y" + "\n_atom_site_fract_z");
-      if (!haveUnitCell)
+      if (haveOccupancy) {
+        sb.append("\n_atom_site_occupancy");
+      } else if (!haveUnitCell)
         sb.append("\n_atom_site_Cartn_x" + "\n_atom_site_Cartn_y"
             + "\n_atom_site_Cartn_z");
       sb.append("\n");
 
       SB jmol_atom = new SB();
-      jmol_atom.append("\n" + "\nloop_" + "\n_jmol_atom_index" + "\n_jmol_atom_name"
-          + "\n_jmol_atom_site_label\n");
+      jmol_atom.append("\n" + "\nloop_" + "\n_jmol_atom_index"
+          + "\n_jmol_atom_name" + "\n_jmol_atom_site_label\n");
 
       int nAtoms = 0;
       P3d p = new P3d();
       int[] elemNums = new int[130];
-      for (int i = bsOut.nextSetBit(0); i >= 0; i = bsOut
-          .nextSetBit(i + 1)) {
+      for (int i = bsOut.nextSetBit(0); i >= 0; i = bsOut.nextSetBit(i + 1)) {
         Atom a = atoms[i];
         p.setT(a);
         if (haveUnitCell) {
           uc.toFractional(p, !isP1);
         }
-        
-//        if (isP1 && !SimpleUnitCell.checkPeriodic(p))
-//          continue;
+
+        //        if (isP1 && !SimpleUnitCell.checkPeriodic(p))
+        //          continue;
         nAtoms++;
         String name = a.getAtomName();
         String sym = a.getElementSymbol();
@@ -172,7 +184,9 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
         sb.append(PT.formatS(label, 5, 0, true, false)).append(" ")
             .append(PT.formatS(sym, 3, 0, true, false)).append(cleanF(p.x))
             .append(cleanF(p.y)).append(cleanF(p.z));
-        if (!haveUnitCell)
+        if (haveOccupancy) 
+          sb.append(" ").append(cleanF(occ[i]/100));
+        else if (!haveUnitCell)
           sb.append(cleanF(a.x)).append(cleanF(a.y)).append(cleanF(a.z));
         sb.append("\n");
 
