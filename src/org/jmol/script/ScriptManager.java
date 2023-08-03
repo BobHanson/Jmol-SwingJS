@@ -367,7 +367,8 @@ public class ScriptManager implements JmolScriptManager {
     vwr.setErrorMessage(null, null);
     // 14.11.0 need to use a new eval for each Jmol.scriptWait() or else we can
     // run into the problem when that is used in a callback that eval.aatokens is overridden
-    ScriptEval eval = (isQueued ? this.eval : newScriptEvaluator());
+    ScriptEval eval = (isQueued && params == null ? this.eval : newScriptEvaluator());
+    
     boolean isOK = eval.compileScriptString(strScript, isQuiet);
     String strErrorMessage = eval.getErrorMessage();
     String strErrorMessageUntranslated = eval.getErrorMessageUntranslated();
@@ -385,7 +386,7 @@ public class ScriptManager implements JmolScriptManager {
           strErrorMessageUntranslated);
       if (eval.isStateScript())
         setStateScriptVersion(vwr, null); // set by compiler
-    }
+    }    
     if (strErrorMessage != null && vwr.autoExit)
       vwr.exitJmol();
     if (vwr.isSyntaxCheck) {
