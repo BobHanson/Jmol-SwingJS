@@ -172,11 +172,11 @@ public class BilbaoReader extends AtomSetCollectionReader {
       line = line.substring(ptPre + 5);
     int intTableNo = parseIntStr(line);
     if (intTableNo == 0) {
-      setSpaceGroupName("bilbao:" + line.substring(2));
+      setSpaceGroupName(line.substring(2));
     } else {
       while (intTableNo < 0 && rdLine() != null)
         intTableNo = parseIntStr(line);
-      setSpaceGroupName("bilbao:" + intTableNo);
+      setSpaceGroupName("" + intTableNo);
     }
     double[] data = new double[6];
     fillDoubleArray(rdLine(), 0, data);
@@ -201,6 +201,27 @@ public class BilbaoReader extends AtomSetCollectionReader {
     line = null;
     readDisplacements(fAmp);
   }
+  
+  @Override
+  public void setSpaceGroupName(String name) {
+    if (!ignoreFileSpaceGroupName) {
+      name = "bilbao:" + name;
+    } else if (sgName.startsWith(":")){
+      int pt = name.indexOf(':');
+      if (pt < 0)
+        pt = name.length();
+      name = name.substring(0, pt);
+      SB s = (SB) htParams.get("loadScript");
+      if (s != null) {
+        pt = s.indexOf("spacegroup \":");
+        if (pt > 0)
+          s.insert(pt + 12, name);
+      }
+      name += sgName;
+      ignoreFileSpaceGroupName = false;
+    }
+    super.setSpaceGroupName(name);
+  }
 
   private void readDisplacements(double fAmp) throws Exception {
     /*
@@ -212,8 +233,8 @@ public class BilbaoReader extends AtomSetCollectionReader {
         rdLine();
       String[] tokens = PT.split(line, "x|x");
       if (getSym || !tokens[0].contains("_"))
-        asc.atoms[i0 + i].vib = V3d.new3((double) parseDoubleStr(tokens[1]),
-            (double) parseDoubleStr(tokens[2]), (double) parseDoubleStr(tokens[3]));
+        asc.atoms[i0 + i].vib = V3d.new3(parseDoubleStr(tokens[1]),
+            parseDoubleStr(tokens[2]), parseDoubleStr(tokens[3]));
       line = null;
     }
     applySymmetryAndSetTrajectory();

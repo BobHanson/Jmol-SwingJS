@@ -4797,7 +4797,9 @@ public class ScriptEval extends ScriptExpr {
     boolean isVariable = false;
     if (filenames == null) {
       if (vwr.am.cmi >= 0 && ("::" + filename).endsWith("::string")) {
-        filename = vwr.getCurrentFileAsString(null);
+        // at this point it could be zapped, in which case
+        // getCurrentFileAsString would use "zapped" file name
+        filename = getCurrentModelFileAsString("null");
         loadScript = new SB().append("load inline ");
         isInline = true;
       }
@@ -9168,7 +9170,7 @@ public class ScriptEval extends ScriptExpr {
         .fm.getFullPathName(true) : "test.xyz");
     if (filename == null)
       invArg();
-    if (withType) {
+    if (withType && !"string".equals(filename) && !JC.ZAP_TITLE.equals(filename)) {
       String ft = vwr.fm.getFileType();
       if (ft != null && ft.length() > 0)
         filename = ft + "::" + filename;
@@ -9781,6 +9783,10 @@ public class ScriptEval extends ScriptExpr {
     return str.toString();
   }
 
-
+  public String getCurrentModelFileAsString(String fname) {
+    if (fname == null)
+      fname = (String) vwr.getParameter("_modelFile");
+    return ((""+fname).equals("null") ? vwr.ms.getInlineData(vwr.am.cmi) : vwr.getFileAsString(fname));
+  }
 
 }
