@@ -212,45 +212,85 @@ public final class BioModel extends Model {
 
   /**
    * @param conformationIndex0
-   * @param doSet 
+   * @param doSet
    * @param bsAtoms
    * @param bsRet
    * @return true;
    */
-  public boolean getConformation(int conformationIndex0, boolean doSet, BS bsAtoms, BS bsRet) {
-    if (conformationIndex0 >= 0) {
-      int nAltLocs = altLocCount;
-      if (nAltLocs > 0) {
-        Atom[] atoms = ms.at;
-        Group g = null;
-        char ch = '\0';
-        int conformationIndex = conformationIndex0;
-        BS bsFound = new BS();
-        for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
-            Atom atom = atoms[i];
-            char altloc = atom.altloc;
-            // ignore (include) atoms that have no designation
-            if (altloc == '\0')
-              continue;
-            if (atom.group != g) {
-              g = atom.group;
-              ch = '\0';
-              conformationIndex = conformationIndex0;
-              bsFound.clearAll();
-            }
-            // count down until we get the desired index into the list
-            if (conformationIndex >= 0 && altloc != ch && !bsFound.get(altloc)) {
-              ch = altloc;
-              conformationIndex--;
-              bsFound.set(altloc);
-            }
-            if (conformationIndex >= 0 || altloc != ch)
-              bsAtoms.clear(i);
-          }
+  public boolean getConformation(int conformationIndex0, boolean doSet,
+                                 BS bsAtoms, BS bsRet) {
+    if (conformationIndex0 == 0 || altLocCount == 0)
+      return true;
+    boolean isFirst = (conformationIndex0 < 0);
+    Atom[] atoms = ms.at;
+    boolean isSpace = (conformationIndex0 == -32);
+    char thisAltLoc = (isFirst && !isSpace ? (char) -conformationIndex0 : '\0');
+    if (isFirst) {
+      int lastAtom = -1;
+      String lastName = null, name;
+      int lastChain = Integer.MIN_VALUE, chain;
+      char lastIns = '\0', ins;
+      int lastRes = Integer.MIN_VALUE, res;
+      boolean haveLoc = true;
+      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+          .nextSetBit(i + 1)) {
+        Atom atom = atoms[i];
+        chain = atom.getChainID();
+        res = atom.getResno();
+        ins = atom.getInsertionCode();
+        name = atom.getAtomName();
+        if (res != lastRes || ins != lastIns || chain != lastChain
+            || name != lastName) {
+          // new atom type
+          if (!haveLoc && lastAtom >= 0)
+            bsAtoms.set(lastAtom);
+          haveLoc = false;
+          if (!isSpace)
+            lastAtom = i;
+        }
+        if (atom.altloc == thisAltLoc) {
+          haveLoc = true;
+        } else {
+          bsAtoms.clear(i);
+        }
+        lastChain = chain;
+        lastRes = res;
+        lastName = name;
+        lastIns = ins;
+      }
+      if (!haveLoc)
+        bsAtoms.set(lastAtom);
+    } else {
+      conformationIndex0--;
+      Group g = null;
+      char ch = '\0';
+      int conformationIndex = conformationIndex0;
+      BS bsFound = new BS();
+      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+          .nextSetBit(i + 1)) {
+        Atom atom = atoms[i];
+        char altloc = atom.altloc;
+        // ignore (include) atoms that have no designation
+        if (altloc == '\0')
+          continue;
+        if (atom.group != g) {
+          g = atom.group;
+          ch = '\0';
+          conformationIndex = conformationIndex0;
+          bsFound.clearAll();
+        }
+        // count down until we get the desired index into the list
+        if (conformationIndex >= 0 && altloc != ch && !bsFound.get(altloc)) {
+          ch = altloc;
+          conformationIndex--;
+          bsFound.set(altloc);
+        }
+        if (conformationIndex >= 0 || altloc != ch)
+          bsAtoms.clear(i);
       }
     }
     if (bsAtoms.nextSetBit(0) >= 0) {
-      bsRet.or(bsAtoms);      
+      bsRet.or(bsAtoms);
       if (doSet)
         for (int j = bioPolymerCount; --j >= 0;)
           bioPolymers[j].setConformation(bsAtoms);

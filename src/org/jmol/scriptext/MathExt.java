@@ -942,7 +942,7 @@ public class MathExt {
               return false;
             pattern = "/noaromatic" + (allMaps || bestMap ? "/" : " nostereo/")
                 + e.getSmilesExt().getSmilesMatches((hMaps ? "H" : ""), null,
-                    bs1, null, JC.SMILES_TYPE_SMILES, true, false);
+                    bs1, null, JC.SMILES_TYPE_SMILES | JC.SMILES_GEN_ALL_COMPONENTS, true, false);
           } else {
             allMaps = true;
           }

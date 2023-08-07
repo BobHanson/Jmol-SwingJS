@@ -6109,7 +6109,7 @@ public class ScriptEval extends ScriptExpr {
      * out in the internal molecular coordinate frame, not the fixed room frame.
      * 
      * In the case of rotateSelected, all rotations are molecular and the
-     * absense of the MOLECULAR keyword indicates to rotate about the geometric
+     * absence of the MOLECULAR keyword indicates to rotate about the geometric
      * center of the molecule, not {0 0 0}
      * 
      * Fractional coordinates may be indicated:
@@ -6417,6 +6417,13 @@ public class ScriptEval extends ScriptExpr {
           m4 = (M4d) theToken.value;
         }
         if (m4 != null) {
+          // remove point if selection was first
+          // we never want to apply this matrix to 
+          // points and then also translate from center of points
+          points[0] = null;
+          bsAtoms = bsBest;
+          ptsB = null;
+          nPoints = 0;
           // translation and rotation are calculated
           translation = new V3d();
           m4.getTranslation(translation);

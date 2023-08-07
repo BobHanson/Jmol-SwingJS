@@ -960,7 +960,7 @@ abstract public class AtomCollection {
     if (bondingRadii == null) {
       bondingRadii = new double[at.length];
     } else if (bondingRadii.length < at.length) {
-      bondingRadii = (double[]) AU.ensureLength(bondingRadii, at.length);
+      bondingRadii = AU.ensureLengthD(bondingRadii, at.length);
     }
     bondingRadii[atomIndex] = radius;
     taintAtom(atomIndex, TAINT_BONDINGRADIUS);

@@ -115,6 +115,7 @@ public class SmilesGenerator {
   private boolean is2D;
   private boolean haveSmilesAtoms;
   private boolean noBranches;
+  private boolean allComponents;
 
   // generation of SMILES strings
 
@@ -198,7 +199,7 @@ public class SmilesGenerator {
         & JC.SMILES_GEN_POLYHEDRAL) == JC.SMILES_GEN_POLYHEDRAL);
     is2D = ((flags & JC.SMILES_2D) == JC.SMILES_2D);
     noBranches = ((flags & JC.SMILES_GEN_NO_BRANCHES) == JC.SMILES_GEN_NO_BRANCHES);
-
+    allComponents = ((flags & JC.SMILES_GEN_ALL_COMPONENTS) == JC.SMILES_GEN_ALL_COMPONENTS);
     return getSmilesComponent(atoms[ipt], bsSelected, MODE_COMP_ALLOW_BIO);
   }
 
@@ -360,96 +361,110 @@ public class SmilesGenerator {
   private String getSmilesComponent(Node atom, BS bs, int mode)
       throws InvalidSmilesException {
 
+    String ret = "";
+
     boolean allowBioResidues = ((mode & MODE_COMP_ALLOW_BIO) != 0);
     boolean allowConnectionsToOutsideWorld = ((mode
         & MODE_COMP_ALLOW_OUTSIDE) != 0);
     boolean forceBrackets = ((mode & MODE_COMP_FORCE_BRACKETS) != 0);
 
-    atom = checkFirstAtom(atom);
+    while (true) {
+      if (atom == null)
+        atom = atoms[bs.nextSetBit(0)];
 
-    bsSelected = JmolMolecule.getBranchBitSet(atoms, atom.getIndex(),
-        BSUtil.copy(bs), null, -1, true, allowBioResidues);
-    bs.andNot(bsSelected);
-    iHypervalent = -1; // this needs to be a bitset
+      atom = checkFirstAtom(atom);
 
-    for (int i = bsSelected.nextSetBit(0); i >= 0
-        && iHypervalent < 0; i = bsSelected.nextSetBit(i + 1)) {
-      if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral) {
-        iHypervalent = i;
-      }
-    }
-    bsIncludingH = BSUtil.copy(bsSelected);
-    if (explicitHydrogen == 0) {
-      for (int j = bsSelected.nextSetBit(0); j >= 0; j = bsSelected
-          .nextSetBit(j + 1)) {
-        Node a = atoms[j];
-        if (a.getAtomicAndIsotopeNumber() == 1 && a.getBondCount() > 0
-            && a.getBondedAtomIndex(0) != iHypervalent
-            && !isExplicitOnly(atoms[a.getBondedAtomIndex(0)]))
-          bsSelected.clear(j);
-      }
-    }
-    bsAromatic = new BS();
-    if (!topologyOnly && bsSelected.cardinality() > 2) {
-      generateRingData();
-      setBondDirections();
-    }
-    bsToDo = BSUtil.copy(bsSelected);
-    SB sb = new SB();
-    // The idea hear is to allow a hypervalent atom to be listed first
-    for (int i = bsToDo.nextSetBit(0); i >= 0; i = bsToDo.nextSetBit(i + 1)) {
-      if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral || noBranches) {
-        if (atom == null)
-          sb.append(".");
-        getSmilesAt(sb, atoms[i], allowConnectionsToOutsideWorld, false,
-            forceBrackets, false);
-        atom = null;
-      }
-    }
-    if (atom != null)
-      while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld, true,
-          forceBrackets, false)) != null) {
-      }
-    while (!bsToDo.isEmpty() || !htRings.isEmpty()) {
-      Iterator<Object[]> e = htRings.values().iterator();
-      if (e.hasNext()) {
-        atom = atoms[((Integer) e.next()[1]).intValue()];
-        if (!bsToDo.get(atom.getIndex()))
-          break;
-      } else {
-        atom = atoms[bsToDo.nextSetBit(0)];
-      }
-      sb.append(".");
-      prevSp2Atoms = alleneStereo = null;
-      prevAtom = null;
-      while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld, true,
-          forceBrackets, false)) != null) {
-      }
-    }
-    if (!htRings.isEmpty()) {
-      dumpRingKeys(sb, htRings);
-      throw new InvalidSmilesException("//* ?ring error? *//\n" + sb);
-    }
-    String s = sb.toString();
-    if (s.indexOf("^-") >= 0) {
-      String s0 = s;
-      try {
-        String keys = sm.getAtropisomerKeys(s, atoms, ac, bsSelected,
-            bsAromatic, flags);
-        for (int i = 1; i < keys.length();) {
-          int pt = s.indexOf("^-");
-          if (pt < 0)
-            break;
-          s = s.substring(0, pt + 1) + keys.substring(i, i + 3).trim()
-              + s.substring(pt + 1);
-          i += 3;
+      bsSelected = JmolMolecule.getBranchBitSet(atoms, atom.getIndex(),
+          BSUtil.copy(bs), null, -1, true, allowBioResidues);
+      bs.andNot(bsSelected);
+      iHypervalent = -1; // this needs to be a bitset
+
+      for (int i = bsSelected.nextSetBit(0); i >= 0
+          && iHypervalent < 0; i = bsSelected.nextSetBit(i + 1)) {
+        if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral) {
+          iHypervalent = i;
         }
-      } catch (Exception e) {
-        e.printStackTrace();
-        s = s0;
       }
+      bsIncludingH = BSUtil.copy(bsSelected);
+      if (explicitHydrogen == 0) {
+        for (int j = bsSelected.nextSetBit(0); j >= 0; j = bsSelected
+            .nextSetBit(j + 1)) {
+          Node a = atoms[j];
+          if (a.getAtomicAndIsotopeNumber() == 1 && a.getBondCount() > 0
+              && a.getBondedAtomIndex(0) != iHypervalent
+              && !isExplicitOnly(atoms[a.getBondedAtomIndex(0)]))
+            bsSelected.clear(j);
+        }
+      }
+      bsAromatic = new BS();
+      if (!topologyOnly && bsSelected.cardinality() > 2) {
+        generateRingData();
+        setBondDirections();
+      }
+      bsToDo = BSUtil.copy(bsSelected);
+      SB sb = new SB();
+      // The idea hear is to allow a hypervalent atom to be listed first
+      for (int i = bsToDo.nextSetBit(0); i >= 0; i = bsToDo.nextSetBit(i + 1)) {
+        if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral || noBranches) {
+          if (atom == null)
+            sb.append(".");
+          getSmilesAt(sb, atoms[i], allowConnectionsToOutsideWorld, false,
+              forceBrackets, false);
+          atom = null;
+        }
+      }
+      if (atom != null)
+        while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld,
+            true, forceBrackets, false)) != null) {
+        }
+      while (!bsToDo.isEmpty() || !htRings.isEmpty()) {
+        Iterator<Object[]> e = htRings.values().iterator();
+        if (e.hasNext()) {
+          atom = atoms[((Integer) e.next()[1]).intValue()];
+          if (!bsToDo.get(atom.getIndex()))
+            break;
+        } else {
+          atom = atoms[bsToDo.nextSetBit(0)];
+        }
+        sb.append(".");
+        prevSp2Atoms = alleneStereo = null;
+        prevAtom = null;
+        while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld,
+            true, forceBrackets, false)) != null) {
+        }
+      }
+      if (!htRings.isEmpty()) {
+        dumpRingKeys(sb, htRings);
+        throw new InvalidSmilesException("//* ?ring error? *//\n" + sb);
+      }
+      String s = sb.toString();
+      if (s.indexOf("^-") >= 0) {
+        String s0 = s;
+        try {
+          String keys = sm.getAtropisomerKeys(s, atoms, ac, bsSelected,
+              bsAromatic, flags);
+          for (int i = 1; i < keys.length();) {
+            int pt = s.indexOf("^-");
+            if (pt < 0)
+              break;
+            s = s.substring(0, pt + 1) + keys.substring(i, i + 3).trim()
+                + s.substring(pt + 1);
+            i += 3;
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
+          s = s0;
+        }
+      }
+      ret += s;
+
+      int ipt = bs.nextSetBit(0);
+      if (ipt < 0 || !allComponents)
+        break;
+      ret += ".";
+      atom = null;
     }
-    return s;
+    return ret;
   }
 
   /**

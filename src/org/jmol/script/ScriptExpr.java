@@ -1422,7 +1422,7 @@ abstract class ScriptExpr extends ScriptParam {
       case T.subsystem:
       case T.configuration:
         // these are all-inclusive; no need to do a by-atom comparison
-        return BSUtil.copy(vwr.ms.getConformation(-1, ival - 1, false, null));
+        return BSUtil.copy(vwr.ms.getConformation(-1, ival, false, null));
       case T.symop:
         propertyBitSet = atom.atomSymmetry;
         if (propertyBitSet == null)

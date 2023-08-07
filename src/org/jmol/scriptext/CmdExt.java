@@ -1392,8 +1392,8 @@ public class CmdExt extends ScriptExt {
         if (bsFrom != null && strSmiles != null && ("H".equals(strSmiles)
             || "*".equals(strSmiles) || "".equals(strSmiles)))
           try {
-            strSmiles = vwr.getSmilesOpt(bsFrom, -1, -1,
-                ("H".equals(strSmiles) ? JC.SMILES_GEN_EXPLICIT_H_ALL : 0),
+            strSmiles = vwr.getSmilesOpt(bsAtoms1 == null ? bsFrom : bsAtoms1, -1, -1,
+                JC.SMILES_GEN_ALL_COMPONENTS | ("H".equals(strSmiles) ? JC.SMILES_GEN_EXPLICIT_H_ALL : 0),
                 null);
           } catch (Exception ex) {
             eval.evalError(ex.getMessage(), null);
@@ -1414,12 +1414,12 @@ public class CmdExt extends ScriptExt {
           stddev = eval.getSmilesExt().mapPolyhedra(bs1.nextSetBit(0),
               bs2.nextSetBit(0), isSmiles, m4);
         } else {
-          stddev = eval.getSmilesExt().getSmilesCorrelation(bsFrom, bsTo,
+          showString("COMPARE using SMILES " + strSmiles);
+          stddev = eval.getSmilesExt().getSmilesCorrelation(bsAtoms1 == null ? bsFrom : bsAtoms1, bsAtoms2 == null ? bsTo : bsAtoms2,
               strSmiles, null, null, m4, null, false, null, center, false,
               JC.SMILES_IGNORE_STEREOCHEMISTRY
                   | (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));
         }
-        //System.out.println("compare:\n" + m4);
         if (Double.isNaN(stddev)) {
           showString("structures do not match from " + bsFrom + " to " + bsTo);
           return;
@@ -1499,21 +1499,24 @@ public class CmdExt extends ScriptExt {
       vwr.ms.addStateScript("select", null, bsSelected, null, ";configuration",
           true, false);
     } else {
-      int n;
+      int n = Integer.MIN_VALUE;
       BS bs = null;
-      if (isFloatParameter(1)) {
+      if (tokAt(1) == T.string) {
+        n = -1000 - (stringParameter(e.checkLast(1)) + " ").codePointAt(0);
+      } else if (tokAt(1) == T.integer) {
         n = intParameter(e.checkLast(1));
-        if (chk)
-          return;
-        vwr.addStateScript("configuration " + n + ";", true, false);
       } else {
         bs = bsAtoms = atomExpressionAt(1);
-        n = intParameter(e.checkLast(e.iToken + 1));
-        if (chk)
-          return;
-        vwr.addStateScript("configuration " + Escape.eBS(bsAtoms) + " " + n + ";", true, false);
+        if (tokAt(e.iToken) == T.string) {
+          n = -1000 - (stringParameter(e.checkLast(e.iToken + 1)) + " ").codePointAt(0);
+        } else {
+          n = intParameter(e.checkLast(e.iToken + 1));
+        }
       }
-      bsAtoms = vwr.ms.getConformation(vwr.am.cmi, n - 1, true, bs);
+      if (chk)
+        return;
+      vwr.addStateScript("configuration " + (bs == null ? "" : Escape.eBS(bsAtoms) + " ") + n + ";", true, false);
+      bsAtoms = vwr.ms.getConformation(vwr.am.cmi, n, true, bs);
     }
     setShapeProperty(JC.SHAPE_STICKS, "type",
         Integer.valueOf(Edge.BOND_HYDROGEN_MASK));

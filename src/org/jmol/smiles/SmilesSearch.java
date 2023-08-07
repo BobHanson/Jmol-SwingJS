@@ -333,6 +333,9 @@ public class SmilesSearch extends JmolMolecule {
     if (strFlags.indexOf("MMFF94") >= 0)
       flags |= JC.SMILES_AROMATIC_MMFF94;
 
+
+    if (strFlags.indexOf("ALLCOMPONENTS") >= 0)
+      flags |= JC.SMILES_GEN_ALL_COMPONENTS;
     if (strFlags.indexOf("TOPOLOGY") >= 0)
       flags |= JC.SMILES_GEN_TOPOLOGY;
     if (strFlags.indexOf("NOATOMCLASS") >= 0)
