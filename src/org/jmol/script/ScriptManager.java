@@ -347,6 +347,8 @@ public class ScriptManager implements JmolScriptManager {
     String str = checkScriptExecution(strScript, false);
     if (str != null)
       return str;
+    if (vwr.checkConsoleScript(strScript))
+      return null;
     SB outputBuffer = (statusList == null || statusList.equals("output")
         ? new SB()
         : null);

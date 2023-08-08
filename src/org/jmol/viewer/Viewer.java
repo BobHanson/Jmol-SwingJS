@@ -969,16 +969,6 @@ public class Viewer extends JmolViewer
                                                         String statusList,
                                                         boolean isQuiet,
                                                         boolean isQueued) {
-
-    if (isJS && isApplet) {
-      if (strScript.indexOf("JSCONSOLE") == 0) {
-        jmolObject.showInfo(html5Applet, strScript.indexOf("CLOSE") < 0);
-        if (strScript.indexOf("CLEAR") >= 0)
-          jmolObject.clearConsole(html5Applet);
-        return null;
-      }
-
-    }
     return (getScriptManager() == null ? null
         : scm.evalStringWaitStatusQueued(returnType, strScript, statusList,
             isQuiet, isQueued));
@@ -11024,6 +11014,18 @@ public class Viewer extends JmolViewer
   public void evalCallback(String cmd, Object[] params, boolean doWait) {
     if (getScriptManager() != null)
       scm.evalCallback(cmd, params, doWait);
+  }
+
+  public boolean checkConsoleScript(String strScript) {
+    if (isJS && isApplet) {
+      if (strScript.indexOf("JSCONSOLE") == 0) {
+        jmolObject.showInfo(html5Applet, strScript.indexOf("CLOSE") < 0);
+        if (strScript.indexOf("CLEAR") >= 0)
+          jmolObject.clearConsole(html5Applet);
+        return true;
+      }
+    }
+    return false;
   }
 
 }
