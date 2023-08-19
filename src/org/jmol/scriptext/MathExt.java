@@ -163,7 +163,7 @@ public class MathExt {
       return evaluateConnected(mp, args, tok, op.intValue);
     case T.boundbox:
     case T.unitcell:
-      return evaluateUnitCell(mp, args, op.tok == T.propselector, op.intValue);
+      return evaluateUnitCell(mp, args, op.tok == T.propselector, op.tok == T.propselector ? op.intValue : op.tok);
     case T.contact:
       return evaluateContact(mp, args);
     case T.data:

@@ -757,7 +757,8 @@ public class IsoExt extends ScriptExt {
         int options = 0;
         P3d trans = null;
         int[] opList = null;
-        if (tok == T.symop) {
+        boolean isSymop = (tok == T.symop);
+        if (isSymop) {
           iSym = 0;
           switch (tokAt(++i)) {
           case T.string:
@@ -800,7 +801,7 @@ public class IsoExt extends ScriptExt {
           bsAtoms = (eval.isAtomExpression(i) ? atomExpressionAt(i) : null);
           i = eval.iToken;
         }
-        int nth = (target != null && tokAt(i + 1) == T.integer
+        int nth = ((!isSymop || target != null) && tokAt(i + 1) == T.integer
             ? eval.getToken(++i).intValue
             : -1);
         if (tokAt(i + 1) == T.unitcell) {

@@ -1680,6 +1680,8 @@ public class SymmetryDesc {
           opList = uc.getInvariantSymops(pt,  null);
         n = opList.length;
         for (int i = 0; i < n; i++) {
+          if (nth > 0 && nth != i + 1)
+            continue;
           op = opList[i];
           s += (String) getSymmetryInfo(uc, iModel, iAtom,
               uc, xyz, op, translation, pt, pt2, id + op, T.draw, scaleFactor, nth, options);
