@@ -1184,6 +1184,7 @@ public class ActionManager implements EventManager {
               (bnd(dragWheelAction, ACTION_dragZ) ? -deltaY
                   : Integer.MIN_VALUE),
               bs);
+          vwr.checkCoordinatesChanged();
         }
         // NAH! if (atomPickingMode == PICKING_DRAG_MINIMIZE_MOLECULE && (dragGesture.getPointCount() % 5 == 0))
         //  minimize(false);
