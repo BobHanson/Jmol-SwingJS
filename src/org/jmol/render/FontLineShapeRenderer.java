@@ -110,10 +110,12 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
   protected void renderLine(P3d p0, P3d p1, int diameter, 
                             boolean drawTicks) {
     // used by Bbcage, Uccage, and axes
+    
+    
     if (diameter < 0)
       g3d.drawDashedLineBits(8, 4, p0, p1);
     else
-      g3d.fillCylinderBits(endcap, diameter, p0, p1);
+      g3d.fillCylinderBits(endcap, (exportType == GData.EXPORT_CARTESIAN ? -diameter : diameter), p0, p1);
     if (!drawTicks || tickInfo == null)
       return;
     // AtomA and AtomB molecular coordinates must be set previously

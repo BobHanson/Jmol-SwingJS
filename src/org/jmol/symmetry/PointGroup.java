@@ -907,6 +907,8 @@ class PointGroup {
         pt.scale(0.5d);
         v1.sub2(a1, center);
         v2.sub2(a2, center);
+        v1.normalize();
+        v2.normalize();
         if (!isParallel(v1, v2)) {
           v3.cross(v1, v2);
           v3.normalize();

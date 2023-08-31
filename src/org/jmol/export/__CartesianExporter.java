@@ -313,8 +313,8 @@ abstract public class __CartesianExporter extends ___Exporter {
     }    
     // vectors, polyhedra
     // was (int) in older version
-    int mad = (int) Math.round(vwr.tm.unscaleToScreen((screenA.z + screenB.z) / 2,
-        screenDiameter) * 1000);
+    int mad = (screenDiameter < 0 ? -screenDiameter * 10 : (int) Math.round(vwr.tm.unscaleToScreen((screenA.z + screenB.z) / 2,
+        screenDiameter)) * 1000);
     fillCylinderScreenMad(colix, endcaps, mad, screenA, screenB);
   }
 
@@ -363,6 +363,7 @@ abstract public class __CartesianExporter extends ___Exporter {
    * @param tempP1  
    * @param tempP2  
    * @param tempP3  
+   * @param colix 
    */
   protected void outputSolidPlate(P3d tempP1, P3d tempP2, P3d tempP3, @SuppressWarnings("unused") short colix) {
     // VRML/STL only

@@ -559,7 +559,7 @@ public class Export3D implements JmolRendererInterface {
 
   @Override
   public void fillCylinderBits(byte endcaps, int diameter, P3d pointA, P3d pointB) {
-    if (diameter <= 0)
+    if (diameter == 0)
       return;
     // diameter is in screen coordinates.
     if (isCartesian) {

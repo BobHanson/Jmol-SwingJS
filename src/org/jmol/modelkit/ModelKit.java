@@ -2888,6 +2888,9 @@ public class ModelKit {
     minBasisModel = vwr.am.cmi;
     minSelectionSaved = vwr.bsA();
     try {
+      // trying this, but I think it is mistaken, 
+    	// because it is for the wrong atom set 
+    	// minBasisFixed = vwr.getMotionFixedAtoms(bsBasis.nextSetBit(0));
       String cif = vwr.getModelExtract(bsBasis, false, false, "cif");
       // TODO what about Async exception?
       Map<String, Object> htParams = new Hashtable<String, Object>();

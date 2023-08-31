@@ -1414,9 +1414,11 @@ public class CmdExt extends ScriptExt {
           stddev = eval.getSmilesExt().mapPolyhedra(bs1.nextSetBit(0),
               bs2.nextSetBit(0), isSmiles, m4);
         } else {
-          showString("COMPARE using SMILES " + strSmiles);
+          showString("COMPARE using " + (isSmiles ? "SMILES ":"SMARTS ") + strSmiles);
+          Lst<P3d> ptsA = new Lst<P3d>();
+          Lst<P3d> ptsB = new Lst<P3d>();          
           stddev = eval.getSmilesExt().getSmilesCorrelation(bsAtoms1 == null ? bsFrom : bsAtoms1, bsAtoms2 == null ? bsTo : bsAtoms2,
-              strSmiles, null, null, m4, null, false, null, center, false,
+              strSmiles, ptsA, ptsB, m4, null, false, null, center, false,
               JC.SMILES_IGNORE_STEREOCHEMISTRY
                   | (isSmiles ? JC.SMILES_TYPE_SMILES : JC.SMILES_TYPE_SMARTS));
         }
@@ -5885,8 +5887,13 @@ public class CmdExt extends ScriptExt {
     double dist0 = plane.w;
     P4d p0 = P4d.new4(plane.x, plane.y, plane.z, 0);
     int max = Math.max(Math.max(h, k), l);
-    Lst<P3d> cpts = MeasureD.getLatticePoints(uc.getLatticeCentering(),
-        (h == 0 ? 0 : max), (k == 0 ? 0 : max), (l == 0 ? 0 : max));
+    // had 0 for h or k or l 0, but that can miss some
+    // possibilities when max is large. Maybe there is 
+    // a better range here, but I'm not seeing it.
+    //
+   Lst<P3d> cpts = MeasureD.getLatticePoints(uc.getLatticeCentering(),
+//        (h == 0 ? 0 : max), (k == 0 ? 0 : max), (l == 0 ? 0 : max));
+       max, max, max);
     for (int j = cpts.size(); --j >= 0;) {
       uc.toCartesian(cpts.get(j), true);
     }
