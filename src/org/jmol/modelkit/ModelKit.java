@@ -2560,7 +2560,6 @@ public class ModelKit {
       n = assignMoveAtom(iatom, ptNew, bsFixed, bsModelAtoms);
     }
     ptNew.x = Double.NaN; // indicate handled
-    vwr.checkCoordinatesChanged();
     return n;
   }
 
