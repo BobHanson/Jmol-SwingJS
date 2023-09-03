@@ -202,6 +202,10 @@ public class GaussianReader extends MOReader {
       energyUnits = "";
       calculationType = line.substring(line.indexOf(":") + 1).trim();
       return true;
+    }  else if (line.startsWith(" Basis read from chk")){
+      energyUnits = "";
+      calculationType = line.substring(line.lastIndexOf("\"") + 1).trim();
+      return true;
     }
     if (line.startsWith(" AO basis set")) {
       readBasis();
