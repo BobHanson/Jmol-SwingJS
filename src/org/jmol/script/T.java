@@ -1144,7 +1144,6 @@ public class T {
 
   public final static int absolute      = misc  | 2;
   public final static int addhydrogens  = misc  | 4;
-  public final static int adjust        = misc  | 6;
   public final static int align         = misc  | 8;
   public final static int allconnected  = misc  | 10;
   public final static int angstroms     = misc  | 12;

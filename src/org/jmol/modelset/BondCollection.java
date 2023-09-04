@@ -35,6 +35,9 @@ import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
 import org.jmol.viewer.JC;
 import javajs.util.BS;
+import javajs.util.MeasureD;
+import javajs.util.V3d;
+
 import org.jmol.script.T;
 
 abstract public class BondCollection extends AtomCollection {
@@ -55,6 +58,8 @@ abstract public class BondCollection extends AtomCollection {
 
   public boolean haveHiddenBonds;
   
+  protected V3d v1 = new V3d();
+  protected V3d v2 = new V3d();
 
   protected final static int BOND_GROWTH_INCREMENT = 250;
   protected final static int MAX_BONDS_LENGTH_TO_CACHE = 5;
@@ -430,10 +435,11 @@ abstract public class BondCollection extends AtomCollection {
   /**
    * algorithm discussed above.
    * 
-   * @param isUserCalculation   if set, don't reset the base aromatic bitset
-   *                            and do report changes to STICKS as though this
-   *                            were a bondOrder command.
-   * @param bsBonds  passed to us by autoBond routine
+   * @param isUserCalculation
+   *        if set, don't reset the base aromatic bitset and do report changes
+   *        to STICKS as though this were a bondOrder command.
+   * @param bsBonds
+   *        passed to us by autoBond routine
    */
   public void assignAromaticBondsBs(boolean isUserCalculation, BS bsBonds) {
     // bsAromatic tracks what was originally in the file, but
@@ -449,43 +455,45 @@ abstract public class BondCollection extends AtomCollection {
     boolean isAll = (bsBonds == null);
     int i0 = (isAll ? bondCount - 1 : bsBonds.nextSetBit(0));
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsBonds.nextSetBit(i + 1))) {
-        Bond bond = bo[i];
-        if (bsAromatic.get(i))
-          bond.setOrder(Edge.BOND_AROMATIC);
-        switch (bond.order & Edge.BOND_RENDER_MASK) {
-        case Edge.BOND_AROMATIC:
-          if (!assignAromaticMustBeSingle(bond.atom1) && !assignAromaticMustBeSingle(bond.atom2)) {
-            bsAromatic.set(i);
-            break;
-          }
-            bond.order = Edge.BOND_AROMATIC_SINGLE;
-          //$FALL-THROUGH$
-        case Edge.BOND_AROMATIC_SINGLE:
-          bsAromaticSingle.set(i);
-          break;
-        case Edge.BOND_AROMATIC_DOUBLE:
-          bsAromaticDouble.set(i);
+      Bond bond = bo[i];
+      if (bsAromatic.get(i))
+        bond.setOrder(Edge.BOND_AROMATIC);
+      switch (bond.order & Edge.BOND_RENDER_MASK) {
+      case Edge.BOND_AROMATIC:
+        if (!assignAromaticMustBeSingle(bond.atom1)
+            && !assignAromaticMustBeSingle(bond.atom2)) {
+          bsAromatic.set(i);
           break;
         }
+        bond.order = Edge.BOND_AROMATIC_SINGLE;
+        //$FALL-THROUGH$
+      case Edge.BOND_AROMATIC_SINGLE:
+        bsAromaticSingle.set(i);
+        break;
+      case Edge.BOND_AROMATIC_DOUBLE:
+        bsAromaticDouble.set(i);
+        break;
       }
+    }
     // main recursive loop
     Bond bond;
     isAll = (bsBonds == null);
     i0 = (isAll ? bondCount - 1 : bsBonds.nextSetBit(0));
     BS bsTest = new BS();
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsBonds.nextSetBit(i + 1))) {
-        bond = bo[i];
-        if (!bond.is(Edge.BOND_AROMATIC)
-            || bsAromaticDouble.get(i) || bsAromaticSingle.get(i))
-          continue;
-        bsTest.set(i);
-        if (bond.atom1.getElementNumber() == 8 || bond.atom2.getElementNumber() == 8) {
-          if (!assignAromaticDouble(bond))
-            assignAromaticSingle(bond);
-        } else {
-          bsTest.set(i);
-        }
+      bond = bo[i];
+      if (!bond.is(Edge.BOND_AROMATIC) || bsAromaticDouble.get(i)
+          || bsAromaticSingle.get(i))
+        continue;
+      bsTest.set(i);
+      if (bond.atom1.getElementNumber() == 8
+          || bond.atom2.getElementNumber() == 8) {
+        if (!assignAromaticDouble(bond))
+          assignAromaticSingle(bond);
+//?        } else {
+//          bsTest.set(i);
       }
+    }
     // now test non-O atoms
     for (int i = bsTest.nextSetBit(0); i >= 0; i = bsTest.nextSetBit(i + 1))
       if (!assignAromaticDouble(bond = bo[i]))
@@ -493,30 +501,31 @@ abstract public class BondCollection extends AtomCollection {
     // all done: do the actual assignments and clear arrays.
     BS bsModels = new BS();
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsBonds.nextSetBit(i + 1))) {
-        bond = bo[i];
-        if (bsAromaticDouble.get(i)) {
-          if (!bond.is(Edge.BOND_AROMATIC_DOUBLE)) {
-            bsAromatic.set(i);
-            bsModels.set(bond.atom1.mi);
-            bond.setOrder(Edge.BOND_AROMATIC_DOUBLE);
-          }
-        } else if (bsAromaticSingle.get(i) || bond.isAromatic()) {
-          if (!bond.is(Edge.BOND_AROMATIC_SINGLE)) {
-            bsAromatic.set(i);
-            bond.setOrder(Edge.BOND_AROMATIC_SINGLE);
-          }
+      bond = bo[i];
+      if (bsAromaticDouble.get(i)) {
+        if (!bond.is(Edge.BOND_AROMATIC_DOUBLE)) {
+          bsAromatic.set(i);
+          bsModels.set(bond.atom1.mi);
+          bond.setOrder(isLinear(bond, v1, v2) ? Edge.BOND_COVALENT_TRIPLE : Edge.BOND_AROMATIC_DOUBLE);
+        }
+      } else if (bsAromaticSingle.get(i) || bond.isAromatic()) {
+        if (!bond.is(Edge.BOND_AROMATIC_SINGLE)) {
+          bsAromatic.set(i);
+          bond.setOrder(Edge.BOND_AROMATIC_SINGLE);
         }
       }
+    }
     Model[] models = ((ModelSet) this).am;
     for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1))
       if (models[i].isBioModel)
         models[i].isPdbWithMultipleBonds = true;
+
     
     assignAromaticNandO(bsBonds);
 
     bsAromaticSingle = null;
     bsAromaticDouble = null;
-    
+
     ///////
     // This was in the former method in ModelSet, which was not accessible:
     //
@@ -524,11 +533,35 @@ abstract public class BondCollection extends AtomCollection {
     // should be part of the state of the model. They will 
     // appear in the state as bondOrder commands.    
     //if (isUserCalculation)
-      //shapeManager.setShapeSizeBs(JC.SHAPE_STICKS, Integer.MIN_VALUE, null, bsAromatic);
+    //shapeManager.setShapeSizeBs(JC.SHAPE_STICKS, Integer.MIN_VALUE, null, bsAromatic);
     ///////
 
-    
   }
+  
+  private boolean isLinear(Bond b, V3d v1, V3d v2) {
+    if (b.order == Edge.BOND_COVALENT_TRIPLE)
+      return true;
+    if (b.atom1.getCovalentBondCount() != 2 || b.atom2.getCovalentBondCount() != 2)
+      return false;
+    Edge[] edges = b.atom1.getEdges();
+    for (int i = edges.length; -i >= 0;) {
+      if (edges[i] != b && edges[i].isCovalent()) {
+        if (MeasureD.computeAngle((Atom) edges[i].getOtherNode(b.atom1), b.atom1, b.atom2, v1, v2, true) < 175)
+            return false;
+        break;
+      }
+    }
+    edges = b.atom2.getEdges();
+    for (int i = edges.length; -i >= 0;) {
+      if (edges[i] != b && edges[i].isCovalent()) {
+        if (MeasureD.computeAngle((Atom) edges[i].getOtherNode(b.atom2), b.atom2, b.atom1, v1, v2, true) < 175)
+            return false;
+        break;
+      }
+    }
+    return true;
+  }
+
 
   /**
    * try to assign AROMATICDOUBLE to this bond. Each atom needs to be
@@ -659,16 +692,16 @@ abstract public class BondCollection extends AtomCollection {
     default:
       return true;
     }
-    int nAtoms = atom.getValence();
+    int valence = atom.getValenceAromatic(false);
     switch (n) {
     case 6: // C
-      return (nAtoms == 4);
+      return (valence == 4);
     case 7: // N
-      return (atom.group.getNitrogenAtom() == atom || nAtoms == 3 && atom.getFormalCharge() < 1);
+      return (atom.group.getNitrogenAtom() == atom || valence == 3 && atom.getFormalCharge() < 1);
     case 8: // O
-      return (atom.group.getCarbonylOxygenAtom() != atom && nAtoms == 2 && atom.getFormalCharge() < 1);
+      return (atom.group.getCarbonylOxygenAtom() != atom && valence == 2 && atom.getFormalCharge() < 1);
     case 16: // S
-      return (atom.group.groupID == JC.GROUPID_CYSTEINE || nAtoms == 2 && atom.getFormalCharge() < 1);
+      return (atom.group.groupID == JC.GROUPID_CYSTEINE || valence == 2 && atom.getFormalCharge() < 1);
     }
     return false;
   }

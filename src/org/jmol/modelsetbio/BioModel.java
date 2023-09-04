@@ -219,13 +219,18 @@ public final class BioModel extends Model {
    */
   public boolean getConformation(int conformationIndex0, boolean doSet,
                                  BS bsAtoms, BS bsRet) {
-    if (conformationIndex0 == 0 || altLocCount == 0)
+    if (altLocCount == 0) {
+      if (conformationIndex0 == 0)
+        bsRet.or(bsAtoms);
       return true;
-    boolean isFirst = (conformationIndex0 < 0);
+    }
+    boolean isFirst = (conformationIndex0 <= 0);
     Atom[] atoms = ms.at;
     boolean isSpace = (conformationIndex0 == -32);
+    boolean isNone = (conformationIndex0 == 0);
     char thisAltLoc = (isFirst && !isSpace ? (char) -conformationIndex0 : '\0');
     if (isFirst) {
+      // config=n where n <= 0   atom-based
       int lastAtom = -1;
       String lastName = null, name;
       int lastChain = Integer.MIN_VALUE, chain;
@@ -242,16 +247,25 @@ public final class BioModel extends Model {
         if (res != lastRes || ins != lastIns || chain != lastChain
             || name != lastName) {
           // new atom type
-          if (!haveLoc && lastAtom >= 0)
+          if (!haveLoc && lastAtom >= 0) {
+            // we have a pointer for a lastAtom, but don't have the location
             bsAtoms.set(lastAtom);
+          }
           haveLoc = false;
-          if (!isSpace)
+          if (isNone) {
             lastAtom = i;
+            thisAltLoc = atom.altloc;
+          } else if (!isSpace){
+            lastAtom = i;
+          }
         }
         if (atom.altloc == thisAltLoc) {
           haveLoc = true;
         } else {
           bsAtoms.clear(i);
+          if (isNone) {
+            bsAtoms.clear(lastAtom);
+          }
         }
         lastChain = chain;
         lastRes = res;
@@ -261,6 +275,7 @@ public final class BioModel extends Model {
       if (!haveLoc)
         bsAtoms.set(lastAtom);
     } else {
+      // config=n where n > 0   residue-based
       conformationIndex0--;
       Group g = null;
       char ch = '\0';

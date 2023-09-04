@@ -2044,7 +2044,6 @@ public class CmdExt extends ScriptExt {
         }
         vwr.addStateScript("connect PDB;", false, true);
         return;
-      case T.adjust:
       case T.auto:
       case T.create:
       case T.modify:

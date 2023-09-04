@@ -297,7 +297,8 @@ public abstract class MOReader extends BasisFunctionReader {
       orbitals = new Lst<Map<String, Object>>();
       alphaBeta = "";
     }
-    haveNboOrbitals = true;
+    // Jmol 16.2.37/38 -- since Jmol 11.9, this had been = true, which meant only BETA orbitals were delivered by default.
+    haveNboOrbitals = getNBOs;
     orbitalsRead = true;
     Map<String, Object>[] mos = null;
     Lst<String>[] data = null;

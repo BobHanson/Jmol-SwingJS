@@ -431,6 +431,19 @@ public class Atom extends Point3fi implements Node {
    */
   @Override
   public int getValence() {
+    return (isDeleted() ? -1 : valence > 0 ? valence : getValenceAromatic(true));
+  }
+
+  /**
+   * Calculate the number of bonds for this atom, counting double as 2. 
+   * Partial bonds may increment the count.
+   * 
+   * Allow for aromatic-bonded C-O when calculating to return only 1 here.
+   *  
+   * @param checkAromatic
+   * return the total bond order for this atom
+   */
+  int getValenceAromatic(boolean checkAromatic) {
     if (isDeleted())
       return -1;
     int n = valence;
@@ -438,7 +451,7 @@ public class Atom extends Point3fi implements Node {
       int npartial = 0;
       for (int i = bonds.length; --i >= 0;) {
         n += bonds[i].getValence();
-        if (bonds[i].is(Edge.BOND_AROMATIC))
+        if (checkAromatic && bonds[i].is(Edge.BOND_AROMATIC))
           npartial++;
       }
       if (n > 0 && n < 3 && npartial != 0)

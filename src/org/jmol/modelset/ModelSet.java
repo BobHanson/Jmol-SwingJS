@@ -2965,8 +2965,6 @@ public class ModelSet extends BondCollection {
         / 180);
     int nNew = 0;
     double d2 = 0;
-    V3d v1 = new V3d();
-    V3d v2 = new V3d();
     if (showRebondTimes && Logger.debugging)
       Logger.startTimer("hbond");
     P3d C = null;
@@ -4129,58 +4127,58 @@ public class ModelSet extends BondCollection {
   public BS getConformation(int modelIndex, int conformationIndex,
                             boolean doSet, BS bsSelected) {
     BS bs = new BS();
-    if (conformationIndex != 0)
-      for (int i = mc; --i >= 0;) {
-        if (modelIndex >= 0 && i != modelIndex)
-          continue;
-        Model m = am[i];
-        BS bsAtoms = vwr.getModelUndeletedAtomsBitSet(modelIndex);
-        if (bsSelected != null)
-          bsAtoms.and(bsSelected);
-        if (bsAtoms.nextSetBit(0) < 0)
-          continue;
-        if (conformationIndex > m.altLocCount) {
-          if (conformationIndex == 1)
-            bs.or(bsAtoms);
-          continue;
-        }
-        int c0;
-        if (am[i].isBioModel) {
-          if (conformationIndex < -1000) {
-            c0 = 1000 + conformationIndex;
-            String altLocs = getAltLocListInModel(i);
-            if (c0 != -32 && altLocs.indexOf((char) -c0) < 0)
-              c0 = Integer.MIN_VALUE;
-          } else if (conformationIndex < 0) {
-            String altLocs = getAltLocListInModel(i);
-            c0 = -1 - conformationIndex;
-            c0 = (c0 >= altLocs.length() ? Integer.MIN_VALUE : -(int) altLocs.charAt(c0));
-          } else {
-            c0 = conformationIndex;
-          }
-          if (c0 == Integer.MIN_VALUE)
-            continue;
-          ((BioModel) am[i]).getConformation(c0, doSet, bsAtoms, bs);
-        } else {
-          int nAltLocs = getAltLocCountInModel(i);
-          String altLocs = getAltLocListInModel(i);
-          BS bsTemp = new BS();
-          if (conformationIndex < -1000) {
-            char c = (char) (-1000 - conformationIndex);
-            c0 = altLocs.indexOf(c);
-          } else {
-            c0 = Math.abs(conformationIndex) - 1;
-          }
-          if (c0 < 0 || c0 >= nAltLocs) {
-            continue;
-          }
-          for (int c = nAltLocs; --c >= 0;)
-            if (c != c0)
-              bsAtoms.andNot(getAtomBitsMDa(T.spec_alternate,
-                  altLocs.substring(c, c + 1), bsTemp));
-        }
-        bs.or(bsAtoms);
+    for (int i = mc; --i >= 0;) {
+      if (modelIndex >= 0 && i != modelIndex)
+        continue;
+      Model m = am[i];
+      BS bsAtoms = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+      if (bsSelected != null)
+        bsAtoms.and(bsSelected);
+      if (bsAtoms.nextSetBit(0) < 0)
+        continue;
+      if (conformationIndex > m.altLocCount) {
+        if (conformationIndex == 1)
+          bs.or(bsAtoms);
+        continue;
       }
+      int c0;
+      if (am[i].isBioModel) {
+        if (conformationIndex < -1000) {
+          c0 = 1000 + conformationIndex;
+          String altLocs = getAltLocListInModel(i);
+          if (c0 != -32 && altLocs.indexOf((char) -c0) < 0)
+            c0 = Integer.MIN_VALUE;
+        } else if (conformationIndex < 0) {
+          String altLocs = getAltLocListInModel(i);
+          c0 = -1 - conformationIndex;
+          c0 = (c0 >= altLocs.length() ? Integer.MIN_VALUE
+              : -(int) altLocs.charAt(c0));
+        } else {
+          c0 = conformationIndex;
+        }
+        if (c0 == Integer.MIN_VALUE)
+          continue;
+        ((BioModel) am[i]).getConformation(c0, doSet, bsAtoms, bs);
+      } else {
+        int nAltLocs = getAltLocCountInModel(i);
+        String altLocs = getAltLocListInModel(i);
+        BS bsTemp = new BS();
+        if (conformationIndex < -1000) {
+          char c = (char) (-1000 - conformationIndex);
+          c0 = altLocs.indexOf(c);
+        } else {
+          c0 = Math.abs(conformationIndex) - 1;
+        }
+        if (c0 < 0 || c0 >= nAltLocs) {
+          continue;
+        }
+        for (int c = nAltLocs; --c >= 0;)
+          if (c != c0)
+            bsAtoms.andNot(getAtomBitsMDa(T.spec_alternate,
+                altLocs.substring(c, c + 1), bsTemp));
+      }
+      bs.or(bsAtoms);
+    }
     return bs;
   }
 
