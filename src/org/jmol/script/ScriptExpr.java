@@ -1113,7 +1113,8 @@ abstract class ScriptExpr extends ScriptParam {
           if (v.tok == T.varray)
             return getComparison(v, tokWhat, tokOp, strOp, data);
           comparisonInt = v.intValue;
-          val = (isStringProperty ? SV.sValue(v) : SV.nValue(v));
+          val = (isStringProperty || tokWhat == T.configuration && v.tok != T.integer ? SV.sValue(v) : SV.nValue(v));
+          t = v;
         }          
       }
     }
@@ -1142,7 +1143,9 @@ abstract class ScriptExpr extends ScriptParam {
         tokValue = T.integer;
         isIntProperty = true;
       } else if (!isStringProperty) {
-        if (tokWhat == T.structure || tokWhat == T.substructure
+        if (tokWhat == T.configuration) {
+          val = Integer.valueOf(t.tok == T.integer ? t.intValue : -1000 - (val + " ").codePointAt(0));
+        } else if (tokWhat == T.structure || tokWhat == T.substructure
             || tokWhat == T.element)
           isStringProperty = !(isIntProperty = (comparisonInt != Integer.MAX_VALUE));
         else
