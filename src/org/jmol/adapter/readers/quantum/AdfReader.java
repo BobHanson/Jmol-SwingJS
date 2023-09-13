@@ -291,7 +291,7 @@ public class AdfReader extends SlaterReader {
             && line.indexOf("====") < 0) {
         }
       } else {
-        discardLinesUntilContains("Mode:");
+        discardLinesUntilContains2("Mode:", "====");
       }
       if (line == null || line.indexOf(".") < 0)
         return;
@@ -312,6 +312,7 @@ public class AdfReader extends SlaterReader {
       readLines(nXX);
       fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0, null);
     }
+    return;
   }
   
   protected void readSymmetries() throws Exception {
