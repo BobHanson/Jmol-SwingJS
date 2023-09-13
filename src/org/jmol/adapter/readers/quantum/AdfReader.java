@@ -75,7 +75,6 @@ public class AdfReader extends SlaterReader {
   protected Map<String, SymmetryData> htSymmetries;
   protected Lst<SymmetryData> vSymmetries;
   protected String energy;
-  protected String bondingEnergy;
   protected int nXX = 0;
   protected String symLine;
   protected boolean isADF;
@@ -91,18 +90,18 @@ public class AdfReader extends SlaterReader {
     if (line
         .indexOf("Irreducible Representations, including subspecies") >= 0) {
       readSymmetries();
-      line = null;
+      return true;
     }
     if (line
         .indexOf("S F O s  ***  (Symmetrized Fragment Orbitals)  ***") >= 0) {
       readSlaterBasis(); // Cartesians
-      line = null;
+      return true;
     }
 
     if (line.indexOf("current energy") >= 0) {
       String[] tokens = PT.getTokens(line);
       energy = tokens[2];
-      // no return true???
+      return true;
     }
 
     if (isADF ? 
@@ -127,7 +126,9 @@ public class AdfReader extends SlaterReader {
     if (line.indexOf("Total Bonding Energy:") >= 0) {
       String[] tokens = PT
           .getTokens(line.substring(line.indexOf("Total Bonding Energy:")));
-      bondingEnergy = tokens[3];
+      String bondingEnergy = tokens[3];
+      asc.setModelInfoForSet("bondingEnergy",  Double.valueOf(bondingEnergy), asc.iSet);
+      asc.setAtomSetModelProperty("bondingEnergy", bondingEnergy);
       return true;
     }
     if (line.indexOf(isADF ? "Vibrations" : "Normal Modes") >= 0) {
