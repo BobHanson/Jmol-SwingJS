@@ -970,7 +970,7 @@ public class SV extends T implements JSONEncodable {
       // we just create a new token with the
       // same bitset and now indicate either
       // the selected value or "ALL" (max_value)
-      return newSV(tokenIn.tok, (isOne ? i1 : i2), tokenIn.value);
+      return (isOne && tokenIn.tok == T.string ? tokenIn : newSV(tokenIn.tok, (isOne ? i1 : i2), tokenIn.value));
     }
     int len = 0;
     boolean isInputSelected = (tokenIn instanceof SV && ((SV) tokenIn).index != Integer.MAX_VALUE);
@@ -1581,6 +1581,7 @@ public class SV extends T implements JSONEncodable {
    * Script variables are pushed after cloning, because the name comes with them
    * when we do otherwise they are not mutable anyway. We do want to have actual
    * references to points, lists, and associative arrays
+   * 
    * @param mapKey
    * @param value
    *        null to pop
@@ -1589,24 +1590,39 @@ public class SV extends T implements JSONEncodable {
    */
   public SV pushPop(SV mapKey, SV value) {
     if (mapKey == null) {
+      if (tok == string) {
+        if (value == null) {
+          // pop
+          String v = (String) this.value;
+          int n = v.length() - 1;
+          if (n < 0) {
+            return newS("");
+          }
+          String s = v.substring(n);
+          this.value = v.substring(0, n);
+          return newS(s);
+        }
+        this.value = this.value + sValue(value);
+        return this;
+      }
       Map<String, SV> m = getMap();
       if (m == null) {
         Lst<SV> x = getList();
         if (value == null || x == null) {
           // array.pop()
-          return (x == null || x.size() == 0 ? newS("") : x.removeItemAt(x
-              .size() - 1));
+          return (x == null || x.size() == 0 ? newS("")
+              : x.removeItemAt(x.size() - 1));
         }
         // array.push(value)
         x.addLast(newI(0).setv(value));
       } else {
         if (value == null) {
           // assocArray.pop()
-          m.clear();   // new Jmol 14.18
+          m.clear(); // new Jmol 14.18
         } else {
           Map<String, SV> m1 = value.getMap();
           if (m1 != null)
-            m.putAll(m1);  // new Jmol 14.18
+            m.putAll(m1); // new Jmol 14.18
           // assocArray.push(value)
         }
       }

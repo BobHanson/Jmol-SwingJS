@@ -50,7 +50,7 @@ public class Resolver {
     "more.", ";AFLOW;BinaryDcd;CDX;Gromacs;Jcampdx;MdCrd;MdTop;Mol2;TlsDataOnly;",
     "quantum.", ";Adf;Csf;Dgrid;GamessUK;GamessUS;Gaussian;GaussianFchk;GaussianWfn;Jaguar;" +
                  "Molden;MopacGraphf;GenNBO;NWChem;Psi;Qchem;QCJSON;" +
-                 "WebMO;Orca;MO;", // MO is for XmlMolpro 
+                 "WebMO;Orca;MO;Ams;", // MO is for XmlMolpro 
     "pdb.", ";Pdb;Pqr;P2n;JmolData;",
     "pymol.", ";PyMOL;",
     "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;FAH;",
@@ -175,7 +175,7 @@ public class Resolver {
       type = "Xml" + type.substring(0, type.length() - 5);
     }
     type = ";" + type.toLowerCase() + ";";
-    if (";zmatrix;cfi;c;vfi;v;mnd;jag;adf;gms;g;gau;mp;nw;orc;pqs;qc;".indexOf(type) >= 0)
+    if (";zmatrix;cfi;c;vfi;v;mnd;jag;gms;g;gau;mp;nw;orc;pqs;qc;".indexOf(type) >= 0)
       return "Input";
 
     String set;
@@ -854,7 +854,10 @@ public class Resolver {
 
   private final static String[] adfContainsRecords =
   { "Adf", "Amsterdam Density Functional" };
-  
+ 
+  private final static String[] amsContainsRecords =
+  { "Ams", "Amsterdam Modeling Suite"};
+
   private final static String[] psiContainsRecords =
   { "Psi", "    PSI  3", "PSI3:"};
  
@@ -934,7 +937,8 @@ public class Resolver {
     espressoContainsRecords, siestaContainsRecords, xcrysDenContainsRecords,
     mopacArchiveContainsRecords,abinitContainsRecords,gaussianFchkContainsRecords,
     inputContainsRecords, aflowContainsRecords, magCifContainsRecords, 
-    qcJsonContainsRecords, optimadeContainsRecords, orcaContainsRecords, jsonArrayContainsRecords
+    qcJsonContainsRecords, optimadeContainsRecords, orcaContainsRecords, jsonArrayContainsRecords,
+    amsContainsRecords
   };
 
   private final static String[][] jsonContainsRecords =

@@ -2391,7 +2391,10 @@ public class MathExt {
     // array.split(sep)
     // array.split("\t",true)
     // array.split("",true) (CSV)
-
+    
+    // string.push
+    // string.pop
+    
     int len = args.length;
     SV x1 = mp.getX();
     boolean isArray1 = (x1.tok == T.varray);

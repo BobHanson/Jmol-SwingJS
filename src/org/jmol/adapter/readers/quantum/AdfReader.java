@@ -61,6 +61,10 @@ import java.util.Map;
  *    that the atomic Slater description uses Cartesian orbitals,
  *    but the MO refers to spherical orbitals. 
  *
+ *<p> Added note (Diego Garay) -- 07/2023
+ *    Fixed support for geometry optimizations and frequencies, as 
+ *    only the first model (initial geometry) was being parsed for
+ *    recent versions of ADF 
  *
  * @author Bradley A. Smith (yeldar@home.com)
  * @version 1.0
@@ -68,44 +72,65 @@ import java.util.Map;
 public class AdfReader extends SlaterReader {
 
   
-  private Map<String, SymmetryData> htSymmetries;
-  private Lst<SymmetryData> vSymmetries;
-  private String energy = null;
-  private int nXX = 0;
-  private String symLine;
+  protected Map<String, SymmetryData> htSymmetries;
+  protected Lst<SymmetryData> vSymmetries;
+  protected String energy;
+  protected String bondingEnergy;
+  protected int nXX = 0;
+  protected String symLine;
+  protected boolean isADF;
   
   @Override
+  public void initializeReader() {
+    isADF = true;
+  }
+  
+
+  @Override
   protected boolean checkLine() throws Exception {
-    
-    if (line.indexOf("Irreducible Representations, including subspecies") >= 0) {
+    if (line
+        .indexOf("Irreducible Representations, including subspecies") >= 0) {
       readSymmetries();
-      return true;
+      line = null;
     }
-    if (line.indexOf("S F O s  ***  (Symmetrized Fragment Orbitals)  ***") >= 0) {
+    if (line
+        .indexOf("S F O s  ***  (Symmetrized Fragment Orbitals)  ***") >= 0) {
       readSlaterBasis(); // Cartesians
-      return true;
+      line = null;
     }
-    if (line.indexOf(" Coordinates (Cartesian, in Input Orientation)") >= 0
-        || line.indexOf("G E O M E T R Y  ***") >= 0) {
+
+    if (line.indexOf("current energy") >= 0) {
+      String[] tokens = PT.getTokens(line);
+      energy = tokens[2];
+      // no return true???
+    }
+
+    if (isADF ? 
+        line.indexOf(" Coordinates (Cartesian)") >= 0
+        || line.indexOf("G E O M E T R Y  ***") >= 0
+        : line.indexOf("Formula:") >= 0) {
       if (!doGetModel(++modelNumber, null))
         return checkLastModel();
       readCoordinates();
       return true;
     }
-    if (line.indexOf(" ======  Eigenvectors (rows) in BAS representation") >= 0) {
+    if (line
+        .indexOf(" ======  Eigenvectors (rows) in BAS representation") >= 0) {
       if (doReadMolecularOrbitals)
         readMolecularOrbitals(PT.getTokens(symLine)[1]);
       return true;
     }
-    if (!doProcessLines)
-      return true;
-    
-    if (line.indexOf("Energy:") >= 0) {
-      String[] tokens = PT.getTokens(line.substring(line.indexOf("Energy:")));
-      energy = tokens[1];
+    if (!doProcessLines) {
       return true;
     }
-    if (line.indexOf("Vibrations") >= 0) {
+
+    if (line.indexOf("Total Bonding Energy:") >= 0) {
+      String[] tokens = PT
+          .getTokens(line.substring(line.indexOf("Total Bonding Energy:")));
+      bondingEnergy = tokens[3];
+      return true;
+    }
+    if (line.indexOf(isADF ? "Vibrations" : "Normal Modes") >= 0) {
       readFrequencies();
       return true;
     }
@@ -113,11 +138,36 @@ public class AdfReader extends SlaterReader {
       symLine = line;
       return true;
     }
-    if (line.indexOf(" ======  Eigenvectors (rows) in BAS representation") >= 0) {
+    if (line
+        .indexOf(" ======  Eigenvectors (rows) in BAS representation") >= 0) {
       readMolecularOrbitals(PT.getTokens(symLine)[1]);
       return true;
     }
+
+    if (!isADF && line.startsWith(" Old frequency:")) {
+      readOldFrequency();
+      return true;
+    }
     return true;
+  }
+
+  protected void readOldFrequency() {
+    String[] tokens = PT.getTokens(line);
+    double frqOld = PT.parseDouble(tokens[2].replace(",", ""));
+    double frqNew = PT.parseDouble(tokens[4]);
+    int finalModel = modelNumber + vibrationNumber;
+    for (int i = modelNumber; i < finalModel; i++) {
+      String cname = (String) asc.getAtomSetAuxiliaryInfoValue(i, "name");
+      String frqPrev = cname.replace(" cm^-1", "");
+      String frqOldFmt = PT.formatStringD("%.3f", "f", frqOld);
+      if (frqOldFmt.equals(frqPrev)) {
+        String frqNewFmt = PT.formatStringD("%.3f", "f", frqNew);
+        cname += " (now " + frqNewFmt + " cm^-1)";
+        asc.setAtomSetModelPropertyForSet("name", cname, i);
+        asc.setAtomSetModelPropertyForSet("modelName", cname, i);
+        break;
+      }
+    }
   }
 
   /**
@@ -125,35 +175,50 @@ public class AdfReader extends SlaterReader {
    *
    * @exception Exception  if an I/O error occurs
    */
-  private void readCoordinates() throws Exception {
+  protected void readCoordinates() throws Exception {
 
-    /*
-     * 
- Coordinates (Cartesian)
- =======================
-
-   Atom                      bohr                                 angstrom                 Geometric Variables
-                   X           Y           Z              X           Y           Z       (0:frozen, *:LT par.)
- --------------------------------------------------------------------------------------------------------------
-   1 XX         .000000     .000000     .000000        .000000     .000000     .000000      0       0       0
-
-
-OR
-
-
- ATOMS
- =====                            X Y Z                    CHARGE
-                                (Angstrom)             Nucl     +Core       At.Mass
-                       --------------------------    ----------------       -------
-    1  Ni              0.0000    0.0000    0.0000     28.00     28.00       57.9353
-
-     * 
-     */
-    boolean isGeometry = (line.indexOf("G E O M E T R Y") >= 0);
+	  // ADF:
+	  
+      // Coordinates (Cartesian)
+	  // =======================
+	  //
+	  //   Atom                      bohr                                 angstrom                 Geometric Variables
+	  //                   X           Y           Z              X           Y           Z       (0:frozen, *:LT par.)
+	  // --------------------------------------------------------------------------------------------------------------
+	  //   1 XX         .000000     .000000     .000000        .000000     .000000     .000000      0       0       0
+	  //
+	  //
+	  //OR
+	  //
+	  //
+	  // ATOMS
+	  // =====                            X Y Z                    CHARGE
+	  //                                (Angstrom)             Nucl     +Core       At.Mass
+	  //                      --------------------------    ----------------       -------
+	  //    1  Ni              0.0000    0.0000    0.0000     28.00     28.00       57.9353
+	  //
+	 
+	  // AMS:
+	  
+	  // --------
+	  // Geometry
+	  // --------
+	  // Formula: Mo12O40P
+	  // Atoms
+	  //  Index Symbol   x (angstrom)   y (angstrom)   z (angstrom)
+	  //       1     Mo     0.11453909    -2.53514597     2.53514597       adf.R=1.992
+      //
+	  
+    boolean isGeometry = (!isADF || line.indexOf("G E O M E T R Y") >= 0);
     asc.newAtomSet();
-    asc.setAtomSetName("" + energy); // start with an empty name
-    discardLinesUntilContains("----");
+    String modelName = "model " + String.valueOf(modelNumber);
+    if (energy != null)
+      modelName = modelName + " e=" + energy + " a.u.";
+    asc.setAtomSetName(modelName);
+
+    String startGeomDelimiter = (isADF ? "----" : "Index Symbol");
     int pt0 = (isGeometry ? 2 : 5);
+    discardLinesUntilContains(startGeomDelimiter);
     nXX = 0;
     String[] tokens;
     while (rd() != null && !line.startsWith(" -----")) {
@@ -173,58 +238,82 @@ OR
     }
   }
 
+  // ADF
+  // Vibrations and Normal Modes  ***  (cartesian coordinates, NOT mass-weighted)  ***
+  // ===========================
+  // 
+  // The headers on the normal mode eigenvectors below give the Frequency in cm-1
+  // (a negative value means an imaginary frequency, no output for (almost-)zero frequencies)
+  //
+  //
+  // 940.906                      1571.351                      1571.351
+  // ------------------------      ------------------------      ------------------------
+  // 1.XX          .000    .000    .000          .000    .000    .000          .000    .000    .000
+  // 2.N           .000    .000    .115          .008    .067    .000         -.067    .008    .000
+  // 3.H           .104    .180   -.534          .323   -.037   -.231          .580   -.398    .098
+  // 4.H          -.208    .000   -.534          .017   -.757    .030         -.140   -.092   -.249
+  // 5.H           .104   -.180   -.534         -.453   -.131    .201          .485    .378    .151
+  //
+  //
+  // ====================================
 
-  /*
-   Vibrations and Normal Modes  ***  (cartesian coordinates, NOT mass-weighted)  ***
-   ===========================
-   
-   The headers on the normal mode eigenvectors below give the Frequency in cm-1
-   (a negative value means an imaginary frequency, no output for (almost-)zero frequencies)
+  // AMS:
 
+  //------------
+  //Normal Modes
+  //------------
+  //
+  //Number of removed rigid normal modes: 6
+  //
+  //Mode:     7      Frequency (cm-1):       28.4703     Intensity (km/mol):        0.0000     Irrep: A2
+  //Index  Atom      ---- Displacements (x/y/z) ----
+  //    1     Xx      -0.000355   0.127075   0.127261
+  //    2     Xx       0.000355   0.127075  -0.127261
+  //    3     Xx      -0.000355  -0.127075  -0.127261
+  //
 
-   940.906                      1571.351                      1571.351
-   ------------------------      ------------------------      ------------------------
-   1.XX          .000    .000    .000          .000    .000    .000          .000    .000    .000
-   2.N           .000    .000    .115          .008    .067    .000         -.067    .008    .000
-   3.H           .104    .180   -.534          .323   -.037   -.231          .580   -.398    .098
-   4.H          -.208    .000   -.534          .017   -.757    .030         -.140   -.092   -.249
-   5.H           .104   -.180   -.534         -.453   -.131    .201          .485    .378    .151
-
-
-   ====================================
-   */
   /**
    * Reads a set of vibrations.
    *
-   * @exception Exception  if an I/O error occurs
+   * @exception Exception
+   *            if an I/O error occurs
    */
-  private void readFrequencies() throws Exception {
+  protected void readFrequencies() throws Exception {
     rd();
+    if (!isADF) {
+      discardLinesUntilContains("Number of removed rigid");
+    }
     while (rd() != null) {
-      while (rd() != null && line.indexOf(".") < 0
-          && line.indexOf("====") < 0) {
+      // note: in AMS this was reading to EOF. Is there never anything after frequencies?
+      if (isADF) {
+        while (rd() != null && line.indexOf(".") < 0
+            && line.indexOf("====") < 0) {
+        }
+      } else {
+        discardLinesUntilContains("Mode:");
       }
       if (line == null || line.indexOf(".") < 0)
         return;
-      String[] frequencies = getTokens();
-      rd(); // -------- -------- --------
+      String[] freqdata = getTokens();
+      rd(); // -------- -------- -------- or Index  Atom...
       int iAtom0 = asc.ac;
       int ac = asc.getLastAtomSetAtomCount();
-      int frequencyCount = frequencies.length;
+      int frequencyCount = (isADF ? freqdata.length : 1);
       boolean[] ignore = new boolean[frequencyCount];
       for (int i = 0; i < frequencyCount; ++i) {
         ignore[i] = !doGetVibration(++vibrationNumber);
         if (ignore[i])
           continue;
+        String frequency = freqdata[isADF ? i : 4];
         asc.cloneLastAtomSet();
-        asc.setAtomSetFrequency(vibrationNumber, null, null, frequencies[i], null);
+        asc.setAtomSetFrequency(vibrationNumber, null, null, frequency, null);
       }
       readLines(nXX);
       fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0, null);
     }
   }
   
-  private void readSymmetries() throws Exception {
+  protected void readSymmetries() throws Exception {
     /*
  Irreducible Representations, including subspecies
  -------------------------------------------------
@@ -248,7 +337,7 @@ OR
     }
   }
 
-  private class SymmetryData {
+  protected class SymmetryData {
     int index;
     String sym;
     int nSFO;
@@ -257,14 +346,14 @@ OR
     Map<String, Object>[] mos;
     int[] basisFunctions;
     public SymmetryData(int index, String sym) {
-      Logger.info("ADF reader creating SymmetryData " + sym + " " + index);
+      Logger.info((isADF ? "ADF" : "AMS") + " reader creating SymmetryData " + sym + " " + index);
       this.index = index;
       this.sym = sym;
     }
     
   }
   
-  private void readSlaterBasis() throws Exception {
+  protected void readSlaterBasis() throws Exception {
     if (vSymmetries == null)
       return;
     int nBF = 0;
@@ -358,7 +447,7 @@ OR
     }
   }
 
-  private void readMolecularOrbitals(String sym) throws Exception {
+  protected void readMolecularOrbitals(String sym) throws Exception {
     /*
     ======  Eigenvectors (rows) in BAS representation
 
@@ -463,7 +552,7 @@ OR
     setMOs("eV");
   }
 
-  private void addMo(String sym, int moPt, double occ, double energy) {
+  protected void addMo(String sym, int moPt, double occ, double energy) {
     SymmetryData sd = htSymmetries.get(sym);
     if (sd == null) {
       for (Map.Entry<String, SymmetryData> entry : htSymmetries.entrySet())

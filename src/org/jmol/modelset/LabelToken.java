@@ -156,7 +156,7 @@ public class LabelToken {
       T.geosurface, T.halo, T.meshRibbon, T.ribbon,
       T.rocket, T.star, T.strands, T.trace,
 
-      T.adpmax, T.adpmin, T.atomid, T.bondcount, T.color,
+      T.adpmax, T.adpmin, T.atoms, T.atomid, T.bondcount, T.color,
       T.groupid, T.covalentradius, T.file, T.format, T.label,
       T.mass, T.modelindex, T.eta, T.omega, T.polymer, T.property,
       T.radius, T.selected, T.shape, T.sequence,
@@ -496,6 +496,9 @@ public class LabelToken {
 
       // special cases only for labels 
 
+      case T.atoms:
+        strT = atom.atomPropertyString(vwr, T.atoms);
+        break;
       case T.atomindex:
         strT = "" + (indices == null ? atom.i : indices[atom.i]);
         break;

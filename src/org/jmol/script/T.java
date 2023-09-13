@@ -181,7 +181,7 @@ public class T {
    *   x       x                     mathop
    *   x       x           x         comparator
    *                            xxxx unique id (0 to 15)
-   *                        xxxx     precedence
+   *                   xxxx          precedence
    *
    *                        
    * 
@@ -436,57 +436,55 @@ public class T {
   public final static int basemodel              = predefinedset | 48; // specific to JCAMP-MOL files
 
   
+  private final static int PREC_OFFSET = 9;
   static int getPrecedence(int tokOperator) {
-    return ((tokOperator >> 4) & 0xF);  
+    return ((tokOperator >> PREC_OFFSET) & 0xF);  
   }
 
 
-  public final static int leftparen    = 0 | mathop | 1 << 4;
-  public final static int rightparen   = 1 | mathop | 1 << 4;
+  public final static int leftparen    = 0 | mathop | 1 << PREC_OFFSET;
+  public final static int rightparen   = 1 | mathop | 1 << PREC_OFFSET;
 
-  public final static int opIf         = 1 | mathop | 2 << 4 | setparam;   // set ?
-  public final static int colon        = 2 | mathop | 2 << 4;
+  public final static int opIf         = 1 | mathop | 2 << PREC_OFFSET | setparam;   // set ?
+  public final static int colon        = 2 | mathop | 2 << PREC_OFFSET;
 
-  public final static int comma        = 0 | mathop | 3 << 4;
+  public final static int comma        = 0 | mathop | 3 << PREC_OFFSET;
 
-  public final static int leftsquare   = 0 | mathop | 4 << 4;
-  public final static int rightsquare  = 1 | mathop | 4 << 4;
+  public final static int leftsquare   = 0 | mathop | 4 << PREC_OFFSET;
+  public final static int rightsquare  = 1 | mathop | 4 << PREC_OFFSET;
 
-  public final static int opOr         = 0 | mathop | 5 << 4;
-  public final static int opXor        = 1 | mathop | 5 << 4;
-  public final static int opToggle = 2 | mathop | 5 << 4;
+  public final static int opOr         = 0 | mathop | 5 << PREC_OFFSET;
+  public final static int opXor        = 1 | mathop | 5 << PREC_OFFSET;
+  public final static int opToggle     = 2 | mathop | 5 << PREC_OFFSET;
+  public final static int opAnd        = 0 | mathop | 6 << PREC_OFFSET;
+  public final static int opNot        = 0 | mathop | 7 << PREC_OFFSET;
+  public final static int opAND        = 0 | mathop | 8 << PREC_OFFSET;
 
-  public final static int opAnd        = 0 | mathop | 6 << 4;
- 
-  public final static int opNot        = 0 | mathop | 7 << 4;
-
-  public final static int opAND        = 0 | mathop | 8 << 4;
-
-  public final static int opGT         = 0 | comparator | 9 << 4;
-  public final static int opGE         = 1 | comparator | 9 << 4;
-  public final static int opLE         = 2 | comparator | 9 << 4;
-  public final static int opLT         = 3 | comparator | 9 << 4;
-  public final static int opEQ         = 4 | comparator | 9 << 4;
-  public final static int opNE         = 5 | comparator | 9 << 4;
-  public final static int opLIKE       = 6 | comparator | 9 << 4;
+  public final static int opGT         = 0 | comparator | 9 << PREC_OFFSET;
+  public final static int opGE         = 1 | comparator | 9 << PREC_OFFSET;
+  public final static int opLE         = 2 | comparator | 9 << PREC_OFFSET;
+  public final static int opLT         = 3 | comparator | 9 << PREC_OFFSET;
+  public final static int opEQ         = 4 | comparator | 9 << PREC_OFFSET;
+  public final static int opNE         = 5 | comparator | 9 << PREC_OFFSET;
+  public final static int opLIKE       = 6 | comparator | 9 << PREC_OFFSET;
    
-  public final static int minus        = 0 | mathop | 10 << 4;
-  public final static int plus         = 1 | mathop | 10 << 4;
+  public final static int minus        = 0 | mathop | 10 << PREC_OFFSET;
+  public final static int plus         = 1 | mathop | 10 << PREC_OFFSET;
  
-  public final static int divide         = 0 | mathop | 11 << 4;
-  public final static int times          = 1 | mathop | 11 << 4;
-  public final static int percent = 2 | mathop | 11 << 4;
-  public final static int leftdivide     = 3 | mathop | 11 << 4;  //   quaternion1 \ quaternion2
+  public final static int divide       = 0 | mathop | 11 << PREC_OFFSET;
+  public final static int times        = 1 | mathop | 11 << PREC_OFFSET;
+  public final static int percent      = 2 | mathop | 11 << PREC_OFFSET;
+  public final static int leftdivide   = 3 | mathop | 11 << PREC_OFFSET;  //   quaternion1 \ quaternion2
   
-  public final static int unaryMinus   = 0 | mathop | 12 << 4;
-  public final static int minusMinus   = 1 | mathop | 12 << 4;
-  public final static int plusPlus     = 2 | mathop | 12 << 4;
-  public final static int timestimes   = 3 | mathop | 12 << 4;
+  public final static int unaryMinus   = 0 | mathop | 12 << PREC_OFFSET;
+  public final static int minusMinus   = 1 | mathop | 12 << PREC_OFFSET;
+  public final static int plusPlus     = 2 | mathop | 12 << PREC_OFFSET;
+  public final static int timestimes   = 3 | mathop | 12 << PREC_OFFSET;
   
   
-  public final static int propselector = 1 | mathop | 13 << 4;
+  public final static int propselector = 1 | mathop | 13 << PREC_OFFSET;
 
-  public final static int andequals    = 2 | mathop | 13 << 4;
+  public final static int andequals    = 2 | mathop | 13 << PREC_OFFSET;
 
   // these atom and math properties are invoked after a ".":
   // x.atoms
@@ -519,7 +517,7 @@ public class T {
   
   // ___.xxx math properties and all atom properties 
     
-  public final static int atoms     = 1 | mathproperty;
+  public final static int atoms     = 1 | mathproperty | strproperty;
   public final static int bonds     = 2 | mathproperty | deprecatedparam;
   public final static int length           = 3 | mathproperty;
   public final static int lines            = 4 | mathproperty;

@@ -946,6 +946,7 @@ public class Atom extends Point3fi implements Node {
   public final static int ID_ALL  = 2;
   public final static int ID_XTAL = 3;
   public final static int ID_CHIME = 4;
+  public final static int ID_ATOMS = 5;
   
   public String getIdentityXYZ(P3d pt, int mode) {
     pt = (mode == ID_XTAL || group.chain.model.isJmolDataFrame ? getFractionalCoordPt(!group.chain.model.ms.vwr.g.legacyJavaFloat, false, pt) : this);
@@ -960,7 +961,8 @@ public class Atom extends Point3fi implements Node {
   String getIdentity(int mode) {
     SB info = new SB();
     String group3 = getGroup3(true);
-    if (group3 != null && group3.length() > 0 && (!group3.equals("UNK") || group.chain.model.isBioModel)) {
+    if (group3 != null && group3.length() > 0
+        && (!group3.equals("UNK") || group.chain.model.isBioModel)) {
       info.append("[");
       info.append(group3);
       info.append("]");
@@ -975,27 +977,29 @@ public class Atom extends Point3fi implements Node {
           s = PT.esc(s);
         info.append(s);
       }
-      if (mode != ID_ALL)
+      if (mode != ID_ALL && mode != ID_ATOMS)
         return info.toString();
       info.append(".");
     }
-       info.append(getAtomName());
-       if (info.length() == 0) {
+    info.append(getAtomName());
+    if (info.length() == 0) {
       // since atomName cannot be null, this is unreachable
       info.append(getElementSymbolIso(false));
       info.append(" ");
       info.appendI(getAtomNumber());
     }
-    if (altloc != '\0') {
-      info.append("%");
-      info.appendC(altloc);
+    if (mode == ID_ALL) {
+      if (altloc != '\0') {
+        info.append("%");
+        info.appendC(altloc);
+      }
+      if (group.chain.model.ms.mc > 1 && !group.chain.model.isJmolDataFrame) {
+        info.append("/");
+        info.append(getModelNumberForLabel());
+      }
+      info.append(" #");
+      info.appendI(getAtomNumber());
     }
-    if (group.chain.model.ms.mc > 1 && !group.chain.model.isJmolDataFrame) {
-      info.append("/");
-      info.append(getModelNumberForLabel());
-    }
-    info.append(" #");
-    info.appendI(getAtomNumber());
     return info.toString();
   }
 
@@ -1401,6 +1405,8 @@ public class Atom extends Point3fi implements Node {
     char ch;
     String s;
     switch (tokWhat) {
+    case T.atoms:
+      return getIdentity(ID_ATOMS);
     case T.altloc:
       ch = altloc;
       return (ch == '\0' ? "" : "" + ch);

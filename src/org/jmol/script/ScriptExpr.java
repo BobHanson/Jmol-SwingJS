@@ -508,6 +508,7 @@ abstract class ScriptExpr extends ScriptParam {
           rpn.addOp(T.tokenRightParen);
         }
         break;
+      case T.atoms:
       case T.atomname:
       case T.atomtype:
       case T.branch:
@@ -1651,10 +1652,13 @@ abstract class ScriptExpr extends ScriptParam {
     double[][] ffdata = null;
     switch (tok) {
     case T.atoms:
+      if (isAtoms)
+        break;
+      //$FALL-THROUGH$
     case T.bonds:
       if (chk)
         return bs;
-      bsNew = (tok == T.atoms ? (isAtoms ? bs : vwr.ms.getAtoms(T.bonds, bs))
+      bsNew = (tok == T.atoms ? vwr.ms.getAtoms(T.bonds, bs)
           : (isAtoms
               ? (BS) BondSet.newBS(vwr.getBondsForSelectedAtoms(bs))
               : bs));
