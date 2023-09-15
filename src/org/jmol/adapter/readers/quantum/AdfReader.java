@@ -292,13 +292,7 @@ public class AdfReader extends SlaterReader {
     }
     while (rd() != null) {
       // note: in AMS this was reading to EOF. Is there never anything after frequencies?
-      if (isADF) {
-        while (rd() != null && line.indexOf(".") < 0
-            && line.indexOf("====") < 0) {
-        }
-      } else {
-        discardLinesUntilContains2("Mode:", "====");
-      }
+      discardLinesUntilContains2(isADF ? "." : "Mode:", "====");
       if (line == null || line.indexOf(".") < 0)
         return;
       String[] freqdata = getTokens();
@@ -318,7 +312,6 @@ public class AdfReader extends SlaterReader {
       readLines(nXX);
       fillFrequencyData(iAtom0, ac, ac, ignore, true, 0, 0, null, 0, null);
     }
-    return;
   }
   
   protected void readSymmetries() throws Exception {
