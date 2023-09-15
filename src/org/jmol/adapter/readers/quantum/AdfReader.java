@@ -78,6 +78,7 @@ public class AdfReader extends SlaterReader {
   protected int nXX = 0;
   protected String symLine;
   protected boolean isADF;
+  private int lastModel = -1;
   
   @Override
   public void initializeReader() {
@@ -111,6 +112,10 @@ public class AdfReader extends SlaterReader {
       if (!doGetModel(++modelNumber, null))
         return checkLastModel();
       readCoordinates();
+      return true;
+    }
+    if (line.startsWith("Atomic charges")) {
+      readCharges();
       return true;
     }
     if (line
@@ -212,6 +217,7 @@ public class AdfReader extends SlaterReader {
 	  
     boolean isGeometry = (!isADF || line.indexOf("G E O M E T R Y") >= 0);
     asc.newAtomSet();
+    lastModel = asc.iSet;
     String modelName = "model " + String.valueOf(modelNumber);
     if (energy != null)
       modelName = modelName + " e=" + energy + " a.u.";
@@ -571,4 +577,33 @@ public class AdfReader extends SlaterReader {
     mo.put("symmetry", sd.sym + "_" + moPt);
     setMO(mo);
   }  
+  
+//  --------------
+//  Atomic charges
+//  --------------
+//    Index   Atom    Charge
+//        1      O   -0.6748
+//        2      H    0.3374
+//        3      H    0.3374
+
+
+  private void readCharges() throws Exception {
+    if (lastModel < 0)
+      return;
+    rd();
+    rd();
+    int n = asc.getAtomSetAtomCount(lastModel);
+    double[] charges = new double[n]; 
+    for (int i = 0; i < n; i++) {
+      rd();
+      String[] tokens = getTokens();
+      int iatom = parseIntStr(tokens[0]);
+      charges[iatom - 1] = parseDoubleStr(tokens[2]);
+    }
+    for (int p = 0, i = asc.getAtomSetAtomIndex(lastModel); i < asc.ac; i++, p = (p + 1)%n) {
+      asc.atoms[i].partialCharge = charges[p];      
+    }
+  }
+
+
 }
