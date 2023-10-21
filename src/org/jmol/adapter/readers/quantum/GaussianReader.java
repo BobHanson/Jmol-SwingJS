@@ -451,14 +451,24 @@ public class GaussianReader extends MOReader {
         .indexOf("5D") > 0));
     boolean doSphericalF = (calculationType != null && (calculationType
         .indexOf("7F") > 0));
+    // From the manual of Gaussian (https://gaussian.com/basissets/)
+    // Visited on 21-Oct-2023:
+    // "7F and 10F: Use 7 or 10 f functions (pure vs. Cartesian f functions), 
+    // respectively. These keywords also apply to all higher functions (g and 
+    // beyond)."
+    /*
     boolean doSphericalG = (calculationType != null && (calculationType
         .indexOf("9G") > 0));
     boolean doSphericalH = (calculationType != null && (calculationType
         .indexOf("11H") > 0));
     boolean doSphericalI = (calculationType != null && (calculationType
         .indexOf("13I") > 0));
-    boolean doSphericalHighL = (doSphericalG ||doSphericalH ||doSphericalI);
-    boolean doSpherical = (doSphericalD ||doSphericalF || doSphericalHighL);
+    */
+    boolean doSphericalG = doSphericalF;
+    boolean doSphericalH = doSphericalF;
+    boolean doSphericalI = doSphericalF;
+    boolean doSphericalHighL = (doSphericalG || doSphericalH ||doSphericalI);
+    boolean doSpherical = (doSphericalD || doSphericalF || doSphericalHighL);
     boolean isGeneral = (line.indexOf("general basis input") >= 0);
     if (isGeneral) {
       while (rd() != null && line.length() > 0) {
@@ -470,8 +480,11 @@ public class GaussianReader extends MOReader {
           slater[0] = ac;
           tokens = getTokens();
           String oType = tokens[0];
-          if (doSphericalF && oType.indexOf("F") >= 0 || doSphericalD
-              && oType.indexOf("D") >= 0)
+          if ((doSphericalF && oType.indexOf("F") >= 0)
+              || (doSphericalD && oType.indexOf("D") >= 0)
+              || (doSphericalG && oType.indexOf("G") >= 0)
+              || (doSphericalH && oType.indexOf("H") >= 0)
+              || (doSphericalI && oType.indexOf("I") >= 0))
             slater[1] = BasisFunctionReader.getQuantumShellTagIDSpherical(oType);
           else
             slater[1] = BasisFunctionReader.getQuantumShellTagID(oType);

@@ -82,7 +82,7 @@ public class QS {
 //  I_CARTESIAN("I","XXXXXX",12,11);
 
   public static boolean isQuantumBasisSupported(char ch) {
-    return ("SPLDF".indexOf(Character.toUpperCase(ch)) >= 0);
+    return ("SPLDFGHI".indexOf(Character.toUpperCase(ch)) >= 0);
   }
   
 
