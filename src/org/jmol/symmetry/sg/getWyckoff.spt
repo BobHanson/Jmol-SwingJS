@@ -53,10 +53,12 @@ function createJSONFiles(n, forceNew) {
 	// forceNew option true to overwrite local files; false to use them if they are there.
 
 	var allSettings = []; 
+	var allOps = [];
 	for (var i = 1; i <= 230; i++) {
 		if (n < 0 && i < -n || n > 0 && i != n) {
 			continue;
 		}
+		_getAllOps(i, allOps);
 		var adata = _createJSONArray(i, forceNew, allSettings);
 		var thedata = adata.format("JSON");
 		var fname = targetDir + "json/ita_" + i + ".json";
@@ -66,10 +68,27 @@ function createJSONFiles(n, forceNew) {
 		var thedata = allSettings.format("JSON");
 		var fname = targetDir + "json/ita_all.json";
 		write var thedata @fname;
-		print "done -- " + allSettings.length + " settings";
+		var thedata = allOps.format("JSON");
+		var fname = targetDir + "json/ops_all.json";
+		write var thedata @fname;
+		print "done -- " + allSettings.length + " settings and " + allOps.length + " operations";
 	}
 }
 
+function _getAllOps(sg, allOps) {
+	var y = _getITADataHTM(sg, 1, "gp_full", "", forceNew).split('<td align="center"');
+	for (var i = 8; i < y.length; i += 4) {
+		var xyz = y[i].split("&nbsp;")[3].trim();
+		if (!xyz) {
+			i -= 3;
+			continue;
+		}
+		var m = y[i].split("<pre>")[2].split("</pre>")[1].trim().replace("\n"," |");
+		var ita = _fixName((y[i+1])[2][0].split("</td")[1].trim());
+		var seitz = _fixName((y[i+2])[2][0].split("</td")[1].trim().replace("<sub>","_<sub>"));
+		allOps.push({"sg":i,"xyz":xyz,"ita":ita,"seitz":seitz,"m":m});
+	}
+}
 
 // all other functions are "private" to this script
 
@@ -124,6 +143,7 @@ function _createJSONArray(i, forceNew, allSettings) {
 		} else {
 	  		sg.its.push(its);
 		}
+
 		var data = _getGPText(i, j, its.tm, forceNew);
 		its.gp = _getGPJson(its, data);
 		data = _getITADataHTM(i, j, "gen", its.tm, forceNew);
@@ -146,7 +166,7 @@ function _getITADataHTM(i, j, what, trmat, forceNew) {
 	var prog = if(trmat ; "trgen" ; "getgen");
 	var url = if(forceNew ; "https://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-" + prog 
 		+ "?gnum=" + i 
-		+ if(what ; "&what=" + what ; "&settings=ITA+Settings")
+		+ if(what ; "&what=" + what.split("_")[1] ; "&settings=ITA+Settings")
 		+ if(trmat ; "&trmat=" + trmat ; "")
 		;  localFile);
 	print "getting " + url;
@@ -292,11 +312,11 @@ function _getWyckoffElement(p) {
 	case 1:
 	case 2:
 	case 4:
-		return "plane";
+		return "line";
 	case 3:
 	case 5:
 	case 6:
-		return "line";
+		return "plane";
 	}
 	return "general";
 }
@@ -310,7 +330,8 @@ function _fixName(s) {
 	return (s.trim()
 		.replace("<i>","").replace("</i>","")
 		.replace("<b>","").replace("</b>","")
-		.replace("<sub>","").replace("</sub>",""));
+		.replace("<sub>","").replace("</sub>","")
+		.replace("&#124;","|"));
 }
 
 function _toXYZ(abc){

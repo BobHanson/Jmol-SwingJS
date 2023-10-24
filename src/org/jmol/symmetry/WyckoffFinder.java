@@ -29,23 +29,6 @@ public class WyckoffFinder {
     private int type;
     private static V3d vtemp1 = new V3d();
 
-    public WyckoffPos(WyckoffPos wp, P3d offset) {
-      type = wp.type;
-      switch (type) {
-      case TYPE_POINT:
-      case TYPE_LINE:
-        point = P3d.newP(wp.point);
-        point.add(offset);
-        unitize(point);
-        line = wp.line;
-        break;
-      case TYPE_PLANE:
-        plane = P4d.newPt(wp.plane);
-        plane.w -= offset.dot(plane);
-        break;
-      }
-    }
-    
     private static P3d unitize(P3d p) {
       SimpleUnitCell.unitizeDim(3, p);
       return p;
@@ -75,9 +58,9 @@ public class WyckoffFinder {
         type = TYPE_POINT;
         point = toPoint(p);
         break;
-      case 3:
-      case 5:
-      case 6:
+      case 1:
+      case 2:
+      case 4:
         type = TYPE_LINE;
         v1 = ptFor(p, 0,0,0);
         v2 = ptFor(p, 1d,1.27d,1.64d);
@@ -86,9 +69,9 @@ public class WyckoffFinder {
         point = unitize(P3d.newP(v1));
         line = V3d.newV(v2);
         break;
-      case 1:
-      case 2:
-      case 4:
+      case 3:
+      case 5:
+      case 6:
         type = TYPE_PLANE;
         v1 = ptFor(p, 0,0,0);
         v2 = ptFor(p, 1.23d,1.47d,1.86d);
@@ -202,20 +185,20 @@ public class WyckoffFinder {
     //    }
 
     boolean contains(P3d p, P3d[] centerings) {
-      if (contains(p))
+      if (containsPt(p))
         return true;
       P3d pc = new P3d();
       if (centerings != null)
         for (int i = centerings.length; --i >= 0;) {
           pc.add2(p, centerings[i]);
           unitize(pc);
-          if (contains(pc))
+          if (containsPt(pc))
             return true;
         }
       return false;
     }
     
-    boolean contains(P3d p) {      
+    private boolean containsPt(P3d p) {      
       double d = 1;
       switch (type) {
       case TYPE_POINT:
@@ -304,10 +287,12 @@ public class WyckoffFinder {
   String getWyckoffPosition(P3d p) {
     if (positions == null)
       return "?";
-    for (int i = positions.size(); --i >= 1;) {
+    for (int i = positions.size(); --i >= 0;) {
       Map<String, Object> map = (Map<String, Object>) positions.get(i);
-      if (i == 0)
+      if (i == 0) {
+        // general
         return (String) map.get("label");
+      }
       Lst<Object> coords = (Lst<Object>) map.get("coord");
       for (int c = 0, n = coords.size(); c < n; c++) {
         Object coord = coords.get(c);
