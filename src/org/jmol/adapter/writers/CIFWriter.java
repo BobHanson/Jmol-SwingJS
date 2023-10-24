@@ -48,8 +48,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       haveUnitCell = (uc != null);
       if (!haveUnitCell)
-        uc = vwr.getSymTemp().setUnitCell(new double[] { 1, 1, 1, 90, 90, 90 },
-            false);
+        uc = vwr.getSymTemp().setUnitCell(null, false);
 
       P3d offset = uc.getFractionalOffset();
       boolean fractionalOffset = offset != null && (offset.x != (int) offset.x

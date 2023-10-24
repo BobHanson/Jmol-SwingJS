@@ -1628,6 +1628,10 @@ abstract class ScriptExpr extends ScriptParam {
     case T.function:
     case T.distance:
       break;
+    case T.wyckoff:
+      isInt = (tokenValue == "color");
+      isString = !isInt;
+      break;
     default:
       isInt = T.tokAttr(tok, T.intproperty) && !T.tokAttr(tok, T.floatproperty);
       // occupancy and radius considered floats here
@@ -1635,7 +1639,7 @@ abstract class ScriptExpr extends ScriptParam {
       // structure considered int; for the name, use .label("%[structure]")
     }
 
-    // preliminarty checks we only want to do once:
+    // preliminary checks we only want to do once:
 
     P3d pt = (isPt || !isAtoms ? new P3d() : null);
     if (isExplicitlyAll || isString && !haveIndex && minmaxtype != T.allfloat
@@ -1835,8 +1839,24 @@ abstract class ScriptExpr extends ScriptParam {
           case T.cell:
             errorStr(ERROR_unrecognizedAtomProperty, T.nameOf(tok));
             break;
+          case T.wyckoff:
+            // a-z(1-26), ?(0), and A(27, space group 47 only
+            iv = atom.getWyckoffPosition().charAt(0);
+            switch (iv) {
+            case 63: // ?
+               iv = 0;
+               break;
+            case 65: // A
+              iv = 27;
+              break;
+            default:
+              iv = iv & 0x1F;
+              break;
+            }
+            break;
           default:
             iv = atom.atomPropertyInt(tok);
+            break;
           }
           switch (minmaxtype) {
           case T.min:

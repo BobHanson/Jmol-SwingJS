@@ -92,7 +92,7 @@ public final class ModelLoader {
     ms = new ModelSet(vwr, modelSetName);
     JmolAdapter adapter = vwr.getModelAdapter();
     this.modelSet0 = modelSet0;
-    merging = (modelSet0 != null && modelSet0.ac > 0);
+    merging = (modelSet0 != null && (modelSet0.ac > 0 || modelSet0.vwr.getOperativeSymmetry() != null));
     if (merging) {
       ms.canSkipLoad = false;
     } else {
@@ -831,8 +831,9 @@ public final class ModelLoader {
       }
       String group3 = iterAtom.getGroup3();
       int chainID = iterAtom.getChainID();
-      checkNewGroup(adapter, chainID, group3, iterAtom.getSequenceNumber(),
-          iterAtom.getInsertionCode(), addH, isLegacyHAddition);
+      if (jbr != null)
+        checkNewGroup(adapter, chainID, group3, iterAtom.getSequenceNumber(),
+            iterAtom.getInsertionCode(), addH, isLegacyHAddition);
       int isotope = iterAtom.getElementNumber();
       if (addH && Elements.getElementNumber(isotope) == 1)
         jbr.setHaveHsAlready(true);
@@ -987,7 +988,6 @@ public final class ModelLoader {
   private void checkNewGroup(JmolAdapter adapter, int chainID,
                              String group3, int groupSequenceNumber,
                              char groupInsertionCode, boolean addH, boolean isLegacyHAddition) {
-    String group3i = (group3 == null ? null : group3.intern());
     if (chainID != currentChainID) {
       currentChainID = chainID;
       currentChain = getOrAllocateChain(model, chainID);
@@ -996,6 +996,7 @@ public final class ModelLoader {
       currentGroup3 = "xxxx";
       isNewChain = true;
     }
+    String group3i = (group3 == null ? null : group3.intern());
     if (groupSequenceNumber != currentGroupSequenceNumber
         || groupInsertionCode != currentGroupInsertionCode
         || group3i != currentGroup3) {
@@ -1027,7 +1028,7 @@ public final class ModelLoader {
     if (chain != null)
       return chain;
     if (model.chainCount == model.chains.length)
-      model.chains = (Chain[])AU.doubleLength(model.chains);
+      model.chains = (model.chainCount == 0 ? new Chain[2] : (Chain[])AU.doubleLength(model.chains));
     return model.chains[model.chainCount++] = new Chain(model, chainID, (chainID == 0 || chainID == 32 ? 0 : ++iChain));
   }
 
@@ -1129,11 +1130,11 @@ public final class ModelLoader {
 
     if (someModelsAreModulated && ms.bsModulated == null)
       ms.bsModulated = new BS();
-    if (someModelsHaveUnitcells) {
+    boolean haveMergeCells = (modelSet0 != null
+        && modelSet0.unitCells != null);
+    if (someModelsHaveUnitcells || haveMergeCells) {
       ms.unitCells = new SymmetryInterface[ms.mc];
       ms.haveUnitCells = true;
-      boolean haveMergeCells = (modelSet0 != null
-          && modelSet0.unitCells != null);
       for (int i = 0, pt = 0; i < ms.mc; i++) {
         if (haveMergeCells && i < baseModelCount) {
           ms.unitCells[i] = modelSet0.unitCells[i];

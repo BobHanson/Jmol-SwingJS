@@ -5819,7 +5819,7 @@ public class Viewer extends JmolViewer
   }
 
   public int getHoverDelay() {
-    return (isModelKitOpen() || isModelkitPickingActive() ? 20 : g.hoverDelayMs);
+    return (isModelKitOpen() || isModelkitPickingActive() || getDrawHover() ? 20 : g.hoverDelayMs);
   }
 
   @Override
@@ -7500,7 +7500,9 @@ public class Viewer extends JmolViewer
       if (isChange)
         sm.setStatusModelKit(1);
       g.modelKitMode = true;
-      if (ms.ac == 0) {
+      if (getOperativeSymmetry() != null) {
+        // we have an empty model with a unit cell
+      } else if (ms.ac == 0) {
         zap(false, true, true);
       } else if (am.cmi >= 0 && getModelUndeletedAtomsBitSet(am.cmi).isEmpty()) {
         Map<String, Object> htParams = new Hashtable<String, Object>();

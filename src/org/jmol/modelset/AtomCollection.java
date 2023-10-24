@@ -894,7 +894,7 @@ abstract public class AtomCollection {
     taintAtom(atomIndex, TAINT_RESNO);
   }
   
-  private void setAtomSeqID(int atomIndex, int seqID) {
+  void setAtomSeqID(int atomIndex, int seqID) {
     if (seqID == at[atomIndex].getSeqID())
       return;
     if (atomSeqIDs == null)
@@ -2942,6 +2942,12 @@ abstract public class AtomCollection {
 
   public static boolean isDeleted(Atom atom) {
     return (atom == null || atom.isDeleted());
+  }
+
+
+  public String getWyckoffPosition(int iatom) {
+    return (iatom < 0 || iatom >= ac || isDeleted(at[iatom])
+        ? "?" : at[iatom].getWyckoffPosition());
   }
 
 

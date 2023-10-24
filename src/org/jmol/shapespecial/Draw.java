@@ -404,6 +404,11 @@ public void initShape() {
       return;
     }
     
+    if ("hoverlabel" == propertyName) {
+      propertyName = "title";
+      value = "<hover>" + value;
+    }
+    
     if ("title" == propertyName) {
       if (thisMesh != null) {
         thisMesh.title = setTitle(value);
@@ -480,6 +485,25 @@ public void initShape() {
     }
     resetObjects();
   }
+
+  @Override
+  protected String[] setTitle(Object value) {
+    if (value instanceof String) {
+      String lines = (String) value;
+      if (lines.startsWith("<hover>")) {
+        String s = lines.substring(7);
+        int i = s.indexOf("</hover>");
+        if (i >= 0) {
+          thisMesh.hoverLabel = s.substring(0, i);
+          value = s.substring(i + 8);
+        } else {
+          thisMesh.hoverLabel = s;
+          value = "";
+        }
+      }
+    }
+    return super.setTitle(value);
+  }  
 
  private void deleteMeshElement(int i) {
    if (meshes[i] == currentMesh)
@@ -1276,7 +1300,8 @@ private void initDraw() {
       return false;
     if (!findPickedObject(x, y, false, bsVisible))
       return false;
-    String s = (pickedMesh.title == null ? pickedMesh.thisID
+    String s = (((DrawMesh) pickedMesh).hoverLabel != null ? ((DrawMesh) pickedMesh).hoverLabel 
+        : pickedMesh.title == null ? pickedMesh.thisID
         : pickedMesh.title[0]);
     if (s.length() > 1 && s.charAt(0) == '>')
       s = s.substring(1);
@@ -1356,7 +1381,12 @@ private void initDraw() {
       mesh.recalcAltVertices = true;
     mesh.setCenters();
   }
+
   
+  private Mesh pm2;
+  private int dmin22, pmod2, pickedVertex2;
+  private T3d pickedPoint2;
+
   /**
    * 
    * @param x
@@ -1373,43 +1403,84 @@ private void initDraw() {
       y <<= 1;
       dmin2 <<= 1;
     }
-    pickedModel = 0;
-    pickedVertex = 0;
+    pickedModel = pickedVertex = 0;
     pickedMesh = null;
+    pickedPt = null;
+    pm2 = null;
+    pickedPoint2 = null;
+    dmin22 = pmod2 = pickedVertex2 = -1;
     for (int i = 0; i < meshCount; i++) {
       DrawMesh m = dmeshes[i];
-      if (m.visibilityFlags != 0) {
-        int mCount = (m.isDrawPolygon ? m.pc
-            : m.modelFlags == null ? 1 : ms.mc);
-        for (int iModel = mCount; --iModel >= 0;) {
-          if (m.modelFlags != null
-              && !m.modelFlags.get(iModel)
-              || m.pis == null
-              || !m.isDrawPolygon
-              && (iModel >= m.pis.length || m.pis[iModel] == null))
-            continue;
-          for (int iVertex = (m.isDrawPolygon ? 3
-              : m.pis[iModel].length); --iVertex >= 0;) {
-            try {
-              int iv = m.pis[iModel][iVertex];
-              T3d pt = (m.altVertices == null ? m.vs[iv]
-                  : (P3d) m.altVertices[iv]);
-              int d2 = coordinateInRange(x, y, pt, dmin2, ptXY);
-              if (d2 >= 0) {
-                pickedMesh = m;
-                dmin2 = d2;
-                pickedModel = iModel;
-                pickedVertex = iVertex;
-                pickedPt = pt;
-              }
-            } catch (Exception e) {
-              System.out.println(e);
-            }
-          }
-        }
+      if (m.visibilityFlags == 0)
+        continue;
+      dmin2 = pickClosestPoint(dmin2, x, y, m, -1, -1, ptXY, null);
+    }
+    if (dmin2 != 0 && dmin22 == dmin2 && pickedMesh != null && pm2 != null) {
+      V3d vTemp = new V3d();
+      int d1 = pickClosestPoint(Integer.MAX_VALUE, x, y, (DrawMesh) pickedMesh, pickedModel, pickedVertex, ptXY, vTemp);
+      int d2 = pickClosestPoint(d1, x, y, (DrawMesh) pm2, pmod2, pickedVertex2, ptXY, vTemp);
+      
+      if (d2 < d1) {
+        pickedMesh = pm2;
+        pickedModel = pmod2;
+        pickedVertex = pickedVertex2;
+        pickedPt = pickedPoint2;
       }
     }
     return (pickedMesh != null);
+  }
+
+  private int pickClosestPoint(int dmin2, int x, int y, DrawMesh m, int model,
+                               int vnot, P3i ptXY, V3d vTemp) {
+    int mCount = (m.isDrawPolygon ? m.pc : m.modelFlags == null ? 1 : ms.mc);
+    for (int iModel = mCount; --iModel >= 0;) {
+      if (model >= 0 ? iModel != model
+          : m.modelFlags != null && !m.modelFlags.get(iModel) || m.pis == null
+              || !m.isDrawPolygon
+                  && (iModel >= m.pis.length || m.pis[iModel] == null))
+        continue;
+      for (int iVertex = (m.isDrawPolygon ? 3
+          : m.pis[iModel].length); --iVertex >= 0;) {
+        if (iVertex == vnot)
+          continue;
+        try {
+          int iv = m.pis[iModel][iVertex];
+          T3d pt = (m.altVertices == null ? m.vs[iv] : (P3d) m.altVertices[iv]);
+          // just looking for the direction here. 
+          if (vnot >= 0) {
+            vTemp.sub2(pt, pickedPt);
+            if (vTemp.length() == 0)
+              continue;
+            vTemp.normalize();
+            vTemp.add(pickedPt);
+            //System.out.println("Draw " + vTemp + " " + pt + " " + pickedPt);
+          }
+          int d2 = coordinateInRange(x, y, (vnot >= 0 ? vTemp : pt), dmin2,
+              ptXY);
+          if (d2 >= 0) {
+            if (vnot < 0) {
+              if (pm2 == null) {
+                dmin22 = d2;
+                pmod2 = pickedModel;
+                pm2 = pickedMesh;
+                pickedVertex2 = pickedVertex;
+                pickedPoint2 = pickedPt;
+              }
+              pickedVertex = iVertex;
+              pickedPt = pt;
+              pickedMesh = m;
+//              System.out.println("pickedMesh, " + pickedMesh.hoverLabel
+//                  + " pm2 is " + (pm2 == null ? null : pm2.hoverLabel));
+              pickedModel = iModel;
+            }
+            dmin2 = d2;
+          }
+        } catch (Exception e) {
+          System.out.println(e);
+        }
+      }
+    }
+    return dmin2;
   }
 
   private String getCommand(Mesh mesh) {
@@ -1556,11 +1627,16 @@ private void initDraw() {
       str.append(" title color ")
           .append(Escape.escapeColor(dmesh.titleColor.intValue()));
     }
+    String title = "";
     if (dmesh.title != null) {
-      String s = "";
       for (int i = 0; i < dmesh.title.length; i++)
-        s += "|" + dmesh.title[i];
-      str.append(" ").append(PT.esc(s.substring(1)));
+        title += "|" + dmesh.title[i];
+    }
+    if (dmesh.hoverLabel != null) {
+      title = "|<hover>" + dmesh.hoverLabel + "</hover>" + (title == "" ? "" : title.substring(1));
+    }
+    if (title.length() > 1) {
+      str.append(" ").append(PT.esc(title.substring(1)));
     }
     if (dmesh.fontID >= 0) {
       str.append(" font " + Font.getFont3D(dmesh.fontID).getInfo());

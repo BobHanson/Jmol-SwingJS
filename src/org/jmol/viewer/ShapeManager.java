@@ -240,8 +240,8 @@ public class ShapeManager {
     Shape shape;
     Map<String, Object> map = null;
     if (vwr.getPickingMode() == ActionManager.PICKING_LABEL) {
-      return shapes[JC.SHAPE_LABELS].checkObjectClicked(x, y, modifiers,
-          bsVisible, false);
+      return (shapes[JC.SHAPE_LABELS] == null ? null : shapes[JC.SHAPE_LABELS].checkObjectClicked(x, y, modifiers,
+          bsVisible, false));
     }
     if (modifiers != 0
         && vwr.getBondsPickable()

@@ -54,6 +54,8 @@ public interface SymmetryInterface {
 
   String getIntTableNumber();
 
+  String getIntTableNumberFull();
+
   int getLatticeOp();
 
   char getLatticeType();
@@ -266,5 +268,13 @@ public interface SymmetryInterface {
   boolean isWithinUnitCell(P3d pt, double x, double y, double z);
 
   boolean checkPeriodic(P3d pt);
+
+  Object convertOperation(String string, M4d matrix);
+
+  int getAdditionalOperationsCount();
+
+  M4d[] getAdditionalOperations();
+
+  String getWyckoffPosition(Viewer vwr, P3d p3d);
 
 }

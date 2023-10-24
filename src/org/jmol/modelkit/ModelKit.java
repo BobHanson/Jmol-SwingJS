@@ -1336,6 +1336,7 @@ public class ModelKit {
       boolean noAtoms = bsAtoms.isEmpty();
       if (mi < 0)
         mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
+      vwr.ms.getModelAuxiliaryInfo(mi).remove("spaceGroupInfo");
       SymmetryInterface sym = vwr.getOperativeSymmetry();
       if (sym == null)
         sym = vwr.getSymTemp()
@@ -1350,8 +1351,9 @@ public class ModelKit {
       BS basis;
       Object sg = null;
       @SuppressWarnings("unchecked")
-      Map<String, Object> sgInfo = (noAtoms || isP1 ? null
+      Map<String, Object> sgInfo = (noAtoms && !isDefined || isP1 ? null
           : (Map<String, Object>) vwr.findSpaceGroup(isDefined ? null : bsAtoms, isDefined ? name : null, sym.getUnitCellParams(), false, true));
+      
       if (sgInfo == null) {
         name = "P1";
         supercell = P3d.new3(1, 1, 1);
@@ -1374,6 +1376,10 @@ public class ModelKit {
       vwr.ms.setSpaceGroup(mi, sym, basis);
       P4d pt = SimpleUnitCell.ptToIJK(supercell, 1);
       ModelSet.setUnitCellOffset(sym, pt, 0);
+      if (noAtoms) {
+        appRunScript("unitcell on; center unitcell;axes unitcell; axes on;"
+            + "set perspectivedepth false;moveto 0 axis c1;draw delete;show spacegroup");
+      }
       return name + " basis=" + basis;
     } catch (Exception e) {
       if (!Viewer.isJS)

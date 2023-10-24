@@ -5791,7 +5791,7 @@ public class ScriptEval extends ScriptExpr {
         SymmetryInterface uc;
         uc = vwr.getCurrentUnitCell();
         if (uc == null) {
-          uc = vwr.getSymTemp().setUnitCell(new double[] { 1, 1, 1, 90, 90, 90 }, false);
+          uc = vwr.getSymTemp().setUnitCell(null, false);
         }
         q = uc.getQuaternionRotation(abc);
         if (q == null)
@@ -8781,9 +8781,9 @@ public class ScriptEval extends ScriptExpr {
             // problem here with   color $isosurface1 "rwb"
             if (isPropertyExplicit
                 && T.tokAttr((tok = getToken(++index).tok), T.atomproperty)
-                && !T.tokAttr(tok, T.strproperty)) {
+                && (tok == T.wyckoff || !T.tokAttr(tok, T.strproperty))) {
               tok = getToken(index).tok;
-              String type = (tok == T.dssr ? getToken(++index).value.toString() : null);
+              String type = (tok == T.dssr ? getToken(++index).value.toString() : tok == T.wyckoff ? "color" : null);
               if (!chk) {
                 data = getCmdExt().getBitsetPropertyFloat(bsSelected, tok
                     | T.allfloat, type, Double.NaN, Double.NaN);

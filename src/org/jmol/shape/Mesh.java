@@ -26,36 +26,30 @@ package org.jmol.shape;
 
 
 import java.util.Hashtable;
-
 import java.util.Map;
 
-import javajs.util.BS;
+import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
-
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.SB;
-
 import org.jmol.util.MeshSurface;
 import org.jmol.util.Normix;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
 import javajs.util.M3d;
-import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
 import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
-
+import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
-
-import org.jmol.api.SymmetryInterface;
 
 //import javax.vecmath.Matrix3f;
 
@@ -64,6 +58,7 @@ public class Mesh extends MeshSurface {
   public final static String PREVIOUS_MESH_ID = "+PREVIOUS_MESH+";
 
   public String[] title;
+  public String hoverLabel;
   
   public short meshColix;
   public short[] normixes;

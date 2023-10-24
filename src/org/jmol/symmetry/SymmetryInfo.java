@@ -37,10 +37,12 @@ class SymmetryInfo {
   boolean isMultiCell;
   String sgName;
   SymmetryOperation[] symmetryOperations;
+  SymmetryOperation[] additionalOperations;
   String infoStr;
   int[] cellRange;
   char latticeType = 'P';
   public String intlTableNo;
+  public String intlTableNoFull;
 
   SymmetryInfo() {    
   }
@@ -65,6 +67,7 @@ class SymmetryInfo {
       if (sgName == null || sgName == "")
         sgName = "spacegroup unspecified";
       intlTableNo = (String) info.get("intlTableNo");
+      intlTableNoFull = (String) info.get("intlTableNoFull");
       String s = (String) info.get("latticeType");
         latticeType = (s == null ? 'P' : s.charAt(0));
       symmetryCount = info.containsKey("symmetryCount")
@@ -80,6 +83,7 @@ class SymmetryInfo {
       // from ModelKit
       cellRange = null;
       sgName = sg.getName();
+      intlTableNoFull = sg.intlTableNumberFull;
       intlTableNo = sg.intlTableNumber;
       latticeType = sg.latticeType;
       symmetryCount = sg.getOperationCount();
@@ -115,6 +119,18 @@ class SymmetryInfo {
       infoStr = "";
     }
     return unitCellParams;
+  }
+
+
+  public SymmetryOperation[] getAdditionalOperations() {
+    if (additionalOperations == null && symmetryOperations != null) {
+      additionalOperations = SymmetryOperation.getAdditionalOperations(symmetryOperations);
+    }
+    return additionalOperations;
+  }
+
+  public SpaceGroup getSpaceGroupFromOperators() {
+    return SpaceGroup.determineSpaceGroupN(sgName);
   }
 }
 

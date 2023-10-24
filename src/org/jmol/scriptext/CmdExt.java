@@ -6451,8 +6451,9 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
     case T.spacegroup:
+      String s = vwr.assignSpaceGroup(bs, type, -1);
       if (e.doReport())
-        e.showString(vwr.assignSpaceGroup(bs, type, -1));
+        e.showString(s);
       if (isPacked) {
         int n = vwr.getModelkit(false).cmdAssignAddAtoms(null, null, bsModelAtoms, "packed", e.fullCommand, false);
         if (e.doReport())
@@ -6614,7 +6615,7 @@ public class CmdExt extends ScriptExt {
                                         double min, double max)
       throws ScriptException {
 
-    Object odata = (property == null || tok == (T.dssr | T.allfloat) ?
+    Object odata = (property == null || tok == (T.wyckoff | T.allfloat) || tok == (T.dssr | T.allfloat) ?
       e.getBitsetProperty(bs, null, tok, null, null, property,
           null, false, Integer.MAX_VALUE, false) 
           : vwr.getDataObj(property, bs, JmolDataManager.DATA_TYPE_AD));

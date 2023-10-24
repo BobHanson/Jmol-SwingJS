@@ -559,7 +559,8 @@ public class T {
   public final static int symbol        = strproperty |14 | settable;
   public final static int symmetry      = strproperty |15 | predefinedset;
   public final static int chirality     = strproperty |16;
-  public final static int ciprule = strproperty |17;
+  public final static int ciprule       = strproperty |17;
+  public final static int wyckoff       = strproperty |18;
 
   public final static int atomno        = intproperty | 1 | settable;
   public final static int atomid        = intproperty | 2;
@@ -2223,6 +2224,7 @@ public class T {
         "vxyz",
         "xyz",
         "w",
+        "wyckoff",
         "x",
         "y",
         "z",
@@ -3298,6 +3300,7 @@ public class T {
         vibxyz,                             // "vxyz"
         xyz,                                // "xyz"
         w,                                  // "w"
+        wyckoff,                            // "wyckoff
         x,                                  // "x"
         y,                                  // "y"
         z,                                  // "z"

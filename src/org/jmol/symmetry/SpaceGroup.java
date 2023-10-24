@@ -99,6 +99,7 @@ class SpaceGroup {
   //char latticeCode = '\0';
   SymmetryOperation[] operations;
   SymmetryOperation[] finalOperations;
+  SymmetryOperation[] allOperations;
   int operationCount;
   int latticeOp = -1;
   Map<String, Integer> xyzList;
@@ -269,6 +270,31 @@ class SpaceGroup {
     return finalOperations[i];
   }
 
+  /**
+   *  This call retrieves the count of all operations, including operations that 
+   *  arise from adding lattice translations.
+   *  
+   * @return allOperations.length
+   */
+  int getAdditionalOperationsCount() {
+    if (finalOperations == null)
+      setFinalOperations();
+    if (allOperations == null) {
+      allOperations = SymmetryOperation.getAdditionalOperations(finalOperations);
+    }
+    return allOperations.length - getOperationCount();
+  }
+  
+  public M4d[] getAdditionalOperations() {
+    getAdditionalOperationsCount();
+    return allOperations;
+  }
+ 
+
+  M4d getAllOperation(int i) {
+    return allOperations[i];
+  }
+
   String getXyz(int i, boolean doNormalize) {
   return (finalOperations == null ? operations[i].getXyz(doNormalize)
       : finalOperations[i].getXyz(doNormalize));
@@ -276,6 +302,11 @@ class SpaceGroup {
 
   static Object getInfo(SpaceGroup sg, String spaceGroup,
                         double[] params, boolean asMap, boolean andNonstandard) {
+    
+    
+    if (!asMap)
+      return "SG testing only";
+    
     try {
     if (sg != null && sg.index >= SG.length) {
       SpaceGroup sgDerived = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
@@ -569,6 +600,9 @@ class SpaceGroup {
       Logger.error("couldn't interpret symmetry operation: " + xyz0);
       return -1;
     }
+    if (xyz0.charAt(0) == '!') {
+      xyz0 = xyz0.substring(xyz0.lastIndexOf('!') + 1);
+    }
     return addOp(op, xyz0, isSpecial);
   }
 
@@ -672,9 +706,9 @@ class SpaceGroup {
           operation.mul2(m, operations[k]);
           operation.m03 = ((int)operation.m03 + 12) % 12;
           operation.m13 = ((int)operation.m13 + 12) % 12;
-          operation.m23 = ((int)operation.m23 + 12) % 12; 
-          String xyz = SymmetryOperation.getXYZFromMatrix(operation, true, true, true);
-          addSymmetrySM(xyz, operation);
+          operation.m23 = ((int)operation.m23 + 12) % 12;
+          String xyz = SymmetryOperation.getXYZFromMatrix(operation, true, true, false);
+          addSymmetrySM("!nohalf!" + xyz, operation);
         }
       }
     }
@@ -1809,7 +1843,7 @@ class SpaceGroup {
     if (nHallOperators != null && nHallOperators.intValue() != operationCount)
       generateAllOperators(hallInfo);
   }
- 
+
 //  private int[] latticeOps;
 //  public int[] getAllLatticeOps() {
 //    // presumes all lattice operations are listed at end of operations list

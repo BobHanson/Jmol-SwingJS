@@ -1086,8 +1086,8 @@ public class ModelSet extends BondCollection {
         double occj = (haveOccupancies ? occupancies[j] : 0);
         out: for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
           Atom ba = at[i];
-          int type = ba.atomicAndIsotopeNumber;
-          if (ba.atomicAndIsotopeNumber != type || haveOccupancies && occj != occupancies[i])
+          int type = ba.atomNumberFlags;
+          if (ba.atomNumberFlags != type || haveOccupancies && occj != occupancies[i])
             continue;
           a.setT(ba);
           sg.toFractional(a, true);

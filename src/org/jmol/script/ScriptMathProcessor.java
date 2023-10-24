@@ -939,11 +939,11 @@ public class ScriptMathProcessor {
         return addXPt4(pt4);
       case T.matrix3f:
         m = M3d.newM3((M3d) x2.value);
-        m.invert();
+        m.transpose();
         return addXM3d(m);
       case T.matrix4f:
         m4 = M4d.newM4((M4d) x2.value);
-        m4.invert();
+        m4.transpose();
         return addXM4(m4);
       case T.bitset:
         return addXBs(BSUtil.copyInvert((BS) x2.value,
@@ -1355,9 +1355,12 @@ public class ScriptMathProcessor {
           Lst<SV> l = x2.getList();
           Lst<P3d> lnew = new Lst<P3d>();
           for (int i = l.size(); --i >= 0;) {
-            P3d pt1 = P3d.newP(SV.ptValue(l.get(i)));
+            P3d pt1 = SV.ptValue(l.get(i));
+            if (pt1 == null)
+              return false;
+            pt1 = P3d.newP(pt1);
             m3.rotate(pt1);
-            lnew.add(pt1);
+            lnew.addLast(pt1);
           }
           return addXList(lnew);
         }
@@ -1475,6 +1478,11 @@ public class ScriptMathProcessor {
       // Point3f % n.0 offsets n,n,n ???
       // Point4f % n returns q0, q1, q2, q3, or theta
       // Point4f % Point4f
+      // Matrix4f %1  3x3
+      // Matrix4f %2  transposed
+      // Matrix3f %1  trace
+      // Matrix3f %2  determinant
+      
       s = null;
       int n = x2.asInt();
       switch (x1.tok) {
@@ -1578,6 +1586,16 @@ public class ScriptMathProcessor {
           return addXM3d(q.getMatrix());
         default:
           return addXDouble(Double.NaN);
+        }
+      case T.matrix3f:
+        M3d mm = (M3d) x1.value;
+        switch (n) {
+        case 1:
+          return addXDouble(mm.m00 + mm.m11 + mm.m22);
+        case 2:
+          return addXDouble(mm.determinant3());
+        default:
+          return false;
         }
       case T.matrix4f:
         M4d m4 = (M4d) x1.value;

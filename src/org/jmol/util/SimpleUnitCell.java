@@ -553,13 +553,6 @@ public class SimpleUnitCell {
     return x;
   }
   
-
-
-  public static double normalizeX12ths(double x) {
-    return Math.round(x*12) / 12;
-  }
-
-  
   /**
    * allowance for rounding in [0,1)
    */

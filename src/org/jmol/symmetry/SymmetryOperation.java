@@ -24,9 +24,11 @@
 
 package org.jmol.symmetry;
 
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.util.BoxInfo;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 
@@ -34,7 +36,9 @@ import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.Matrix;
+import javajs.util.MeasureD;
 import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3d;
@@ -67,7 +71,140 @@ public class SymmetryOperation extends M4d {
   boolean isFinalized;
   private int opId;
   private V3d centering;
+  private Hashtable<String, Object> info;
 
+  static P3d atomTest;
+  
+
+
+  final static int TYPE_UNKNOWN = -1;
+  final static int TYPE_IDENTITY = 0;
+  final static int TYPE_TRANSLATION = 1;
+  final static int TYPE_ROTATION = 2;
+  final static int TYPE_INVERSION = 4;
+  final static int TYPE_REFLECTION = 8;  
+  final static int TYPE_SCREW_ROTATION = TYPE_ROTATION | TYPE_TRANSLATION;
+  final static int TYPE_ROTOINVERSION = TYPE_ROTATION | TYPE_INVERSION;
+  final static int TYPE_GLIDE_REFLECTION = TYPE_REFLECTION | TYPE_TRANSLATION; 
+  
+  private int opType = TYPE_UNKNOWN;
+  
+  private int opOrder;
+  private V3d opTrans;
+  private P3d opPoint, opPoint2;
+  private V3d opAxis;
+  private P4d opPlane;
+  private Boolean opIsCCW;
+
+  boolean isIrrelevant;
+  boolean isCoincident;
+  
+  final static int PLANE_MODE_POSITION_ONLY = 0;
+  final static int PLANE_MODE_NOTRANS = 1;
+  final static int PLANE_MODE_FULL = 2;
+  
+
+  String getOpName(int planeMode) {
+    if (opType == TYPE_UNKNOWN)
+      setOpTypeAndOrder();
+    switch (opType) {
+    case TYPE_IDENTITY:
+      return "I";
+    case TYPE_TRANSLATION:
+      return "Trans" + op48(opTrans);
+    case TYPE_ROTATION:
+      return "Rot" + opOrder + op48(opPoint) + op48(opAxis);
+    case TYPE_INVERSION:
+      return "Inv" + op48(opPoint);
+    case TYPE_REFLECTION:
+      return (planeMode == PLANE_MODE_POSITION_ONLY ? "" : "Plane") + opPlane;
+    case TYPE_SCREW_ROTATION:
+      return "Screw" + opOrder + op48(opPoint) + op48(opAxis) + op48(opTrans) + opIsCCW;
+    case TYPE_ROTOINVERSION:
+      return "Nbar" + opOrder + op48(opPoint) + op48(opAxis);
+    case TYPE_GLIDE_REFLECTION:
+      return (planeMode == PLANE_MODE_POSITION_ONLY ? "" : "Glide") + opPlane + (planeMode == PLANE_MODE_FULL ? op48(opTrans) : "");
+    }
+    System.out.println("SymmetryOperation REJECTED TYPE FOR " + this);
+    return "";
+  }
+
+  String getOpTitle() {
+    if (opType == TYPE_UNKNOWN)
+      setOpTypeAndOrder();
+    switch (opType) {
+    case TYPE_IDENTITY:
+      return "identity ";
+    case TYPE_TRANSLATION:
+      return "translation " + opFrac(opTrans);
+    case TYPE_ROTATION:
+      return "rotation " + opOrder;
+    case TYPE_INVERSION:
+      return "inversion center " + opFrac(opPoint);
+    case TYPE_REFLECTION:
+      return "reflection ";
+    case TYPE_SCREW_ROTATION:
+      return "screw rotation " + opOrder + (opIsCCW == Boolean.TRUE ? "(+) " : "(-) ") + opFrac(opTrans);
+    case TYPE_ROTOINVERSION:
+      return opOrder + "-bar " + opFrac(opPoint);
+    case TYPE_GLIDE_REFLECTION:
+      return "glide reflection " + opFrac(opTrans);
+    }
+    return "";
+  }
+  
+  private static String opFrac(T3d p) {
+    return "{" + opF(p.x) + " " + opF(p.y)  + " " + opF(p.z) + "}";
+  }
+
+
+
+  private static String opF(double x) {
+    boolean neg = (x < 0);
+    if (neg) {
+      x = -x;
+    }
+    int n = 0;
+    if (x >= 1) {
+      n = (int) x;
+      x -= n;
+    }
+    int n48 = (int) Math.round(x * 48);
+    int div;
+    if (n48 % 48 == 0) {
+      div = 1;
+    } else if (n48 % 24 == 0) {
+      div = 2;
+    } else if (n48 % 16 == 0) {
+      div = 3;
+    } else if (n48 % 12 == 0) {
+      div = 4;
+    } else if (n48 % 8 == 0) {
+      div = 6;
+    } else if (n48 % 6 == 0) {
+      div = 8;
+    } else if (n48 % 4 == 0) {
+      div = 12;
+    } else if (n48 % 3 == 0) {
+      div = 16;
+    } else if (n48 % 2 == 0) {
+      div = 24;
+    } else {
+      div = 48;
+    }
+    return (neg ? "-" : "") + (n*div + n48 * div / 48) + (div == 1 ? "" : "/" + div);
+  }
+
+  private static String op48(T3d p) {
+    if (p == null) {
+      System.err.println("SymmetryOperation.op48 null");
+      return "(null)";
+    }
+
+    return "{" + Math.round(p.x*48) + " " + Math.round(p.y*48)  + " " + Math.round(p.z*48) + "}";
+  }
+
+  
   private String[] myLabels;
   int modDim;
 
@@ -102,6 +239,8 @@ public class SymmetryOperation extends M4d {
   boolean isCenteringOp;
   private int magOp = Integer.MAX_VALUE;
   int divisor = 12; // could be 120 for magnetic;
+  private P3d opX;
+  private String opAxisCode;
 
   void setSigma(String subsystemCode, Matrix sigma) {
     this.subsystemCode = subsystemCode;
@@ -247,9 +386,18 @@ public class SymmetryOperation extends M4d {
     divisor = setDivisor(xyz);
     xyz = xyz.toLowerCase();
     setModDim(modDim);
-    boolean isReverse = (xyz.startsWith("!"));
-    if (isReverse)
-      xyz = xyz.substring(1);
+    boolean isReverse = false;
+    boolean halfOrLess = true;
+    if (xyz.startsWith("!")) {
+      if (xyz.startsWith("!nohalf!")) {
+        halfOrLess = false;
+        xyz = xyz.substring(8);
+        xyzOriginal = xyz;
+      } else {
+        isReverse = false;
+        xyz = xyz.substring(1);
+      }
+    }
     if (xyz.indexOf("xyz matrix:") == 0) {
       /* note: these terms must in unit cell fractional coordinates!
        * CASTEP CML matrix is in fractional coordinates, but do not take into account
@@ -305,7 +453,7 @@ public class SymmetryOperation extends M4d {
       allowScaling = false;
     }
     String strOut = getMatrixFromString(this, xyz, linearRotTrans,
-        allowScaling);
+        allowScaling, halfOrLess);
     if (strOut == null)
       return false;
     xyzCanonical = strOut;
@@ -408,9 +556,9 @@ public class SymmetryOperation extends M4d {
     return true;
   }
 
-  public static M4d getMatrixFromXYZ(String xyz) {
+  public static M4d getMatrixFromXYZ(String xyz, boolean halfOrLess) {
     double[] linearRotTrans = new double[16];
-    xyz = getMatrixFromString(null, "!" + xyz, linearRotTrans, false);
+    xyz = getMatrixFromString(null, xyz, linearRotTrans, false, halfOrLess);
     if (xyz == null)
       return null;
     M4d m = new M4d();
@@ -420,7 +568,7 @@ public class SymmetryOperation extends M4d {
 
   static String getJmolCanonicalXYZ(String xyz) {
     try {
-      return getMatrixFromString(null, xyz, null, false);
+      return getMatrixFromString(null, xyz, null, false, true);
     } catch (Exception e) {
       return null;
     }
@@ -435,11 +583,12 @@ public class SymmetryOperation extends M4d {
    * @param xyz
    * @param linearRotTrans
    * @param allowScaling
+   * @param halfOrLess 
    * @return canonized Jones-Faithful string
    */
   static String getMatrixFromString(SymmetryOperation op, String xyz,
                                     double[] linearRotTrans,
-                                    boolean allowScaling) {
+                                    boolean allowScaling, boolean halfOrLess) {    
     boolean isDenominator = false;
     boolean isDecimal = false;
     boolean isNegative = false;
@@ -447,7 +596,7 @@ public class SymmetryOperation extends M4d {
     int modDim = (op == null ? 0 : op.modDim);
     int nRows = 4 + modDim;
     int divisor = (op == null ? setDivisor(xyz) : op.divisor);
-    boolean doNormalize = (op == null ? !xyz.startsWith("!") : op.doNormalize);
+    boolean doNormalize = halfOrLess && (op == null ? !xyz.startsWith("!") : op.doNormalize);
     int dimOffset = (modDim > 0 ? 3 : 0); // allow a b c to represent x y z
     if (linearRotTrans != null)
       linearRotTrans[linearRotTrans.length - 1] = 1;
@@ -523,7 +672,7 @@ public class SymmetryOperation extends M4d {
         } else if (linearRotTrans != null) {
             linearRotTrans[xpt] = val;
         }
-        strT += plusMinus(strT, val, myLabels[ipt]);
+        strT += plusMinus(strT, val, myLabels[ipt], false);
         break;
       case ',':
         if (transPt != 0) {
@@ -543,7 +692,7 @@ public class SymmetryOperation extends M4d {
         iValue = normalizeTwelfths(iValue, denom == 0 ? 12 : divisor == 0 ? denom : divisor, doNormalize);
         if (linearRotTrans != null)
           linearRotTrans[tpt0 + nRows - 1] = (divisor == 0 && denom > 0 ? iValue = toDivisor(numer, denom) : iValue);
-        strT += xyzFraction12(iValue, (divisor == 0 ? denom : divisor), false, true);
+        strT += xyzFraction12(iValue, (divisor == 0 ? denom : divisor), false, halfOrLess);
         // strT += xyzFraction48(iValue, false, true);
         strOut += (strOut == "" ? "" : ",") + strT;
         if (rowPt == nRows - 2)
@@ -625,6 +774,8 @@ public class SymmetryOperation extends M4d {
 
   private final static String xyzFraction12(double n12ths, int denom, boolean allPositive,
                                             boolean halfOrLess) {
+    if (n12ths == 0)
+      return "";
     double n = n12ths;
     if (denom != 12) {
       int in = (int) n;
@@ -688,7 +839,7 @@ public class SymmetryOperation extends M4d {
         return str + twelfths[n % 12];
       switch (n % 12) {
       case 0:
-        return "" + n / 12;
+        return str + n / 12;
       case 2:
       case 10:
         m = 6;
@@ -782,10 +933,11 @@ public class SymmetryOperation extends M4d {
   //    "15/16", "23/24", "47/48"
   //  };
   //
-  private static String plusMinus(String strT, double x, String sx) {
+  private static String plusMinus(String strT, double x, String sx, boolean allowFractions) {
+    double a;
     return (x == 0 ? ""
         : (x < 0 ? "-" : strT.length() == 0 ? "" : "+")
-            + (x == 1 || x == -1 ? "" : "" + (int) Math.abs(x)) + sx);
+            + (x == 1 || x == -1 ? "" : (a = Math.abs(x)) < 1 && allowFractions ? twelfthsOf(a * 12) : "" + (int) a)) + sx;
   }
 
   private static double normalizeTwelfths(double iValue, int divisor,
@@ -821,6 +973,12 @@ public class SymmetryOperation extends M4d {
   final public static String getXYZFromMatrix(M4d mat, boolean is12ths,
                                               boolean allPositive,
                                               boolean halfOrLess) {
+    return getXYZFromMatrixFrac(mat, is12ths, allPositive, halfOrLess, false);
+  }
+  
+  final public static String getXYZFromMatrixFrac(M4d mat, boolean is12ths,
+                                              boolean allPositive,
+                                              boolean halfOrLess, boolean allowFractions) {
     String str = "";
     SymmetryOperation op = (mat instanceof SymmetryOperation
         ? (SymmetryOperation) mat
@@ -838,26 +996,19 @@ public class SymmetryOperation extends M4d {
       int lpt = (i < 3 ? 0 : 3);
       mat.getRow(i, row);
       String term = "";
-      for (int j = 0; j < 3; j++)
-        if (approxD(row[j]) != 0)
-          term += plusMinus(term, row[j], labelsXYZ[j + lpt]);
-      if (approxD(row[3]) != 0)
+      for (int j = 0; j < 3; j++) {
+        double x = row[j];
+        if (approx(x) != 0) {
+          term += plusMinus(term, x, labelsXYZ[j + lpt], allowFractions);
+        }
+      }
+      if ((is12ths ? row[3] : approx(row[3])) != 0)
         term += xyzFraction12((is12ths ? row[3] : row[3] * denom), denom,
             allPositive, halfOrLess);
       str += "," + term;
     }
     return str.substring(1);
   }
-
-  
-
-  //  // action of this method depends upon setting of unitcell
-  //  private void transformCartesian(UnitCell unitcell, P3 pt) {
-  //    unitcell.toFractional(pt, false);
-  //    transform(pt);
-  //    unitcell.toCartesian(pt, false);
-  //
-  //  }
 
   V3d[] rotateAxes(V3d[] vectors, UnitCell unitcell, P3d ptTemp, M3d mTemp) {
     V3d[] vRot = new V3d[3];
@@ -905,7 +1056,7 @@ public class SymmetryOperation extends M4d {
     // Castep reader only
     double xabs = Math.abs(x);
     String m = (x < 0 ? "-" : "");
-    int x24 = (int) approxD(xabs * 24);
+    int x24 = (int) approx(xabs * 24);
     if (x24 / 24d == (int) (x24 / 24d))
       return m + (x24 / 24);
     if (x24 % 8 != 0) {
@@ -914,8 +1065,12 @@ public class SymmetryOperation extends M4d {
     return (x24 == 0 ? "0" : x24 == 24 ? m + "1" : m + (x24 / 8) + "/3");
   }
   
-  static double approxD(double f) {
+  static double approx(double f) {
     return PT.approxD(f, 100);
+  }
+
+  static double approx6(double f) {
+    return PT.approxD(f, 1000000);
   }
 
   static String getXYZFromRsVs(Matrix rs, Matrix vs, boolean is12ths) {
@@ -1020,14 +1175,11 @@ public class SymmetryOperation extends M4d {
     if (getMagneticOp() < 0)
       m2.scale(-1); // does not matter that we flip m33 - it is never checked
     xyz += "(" + PT.rep(PT
-        .rep(PT.rep(SymmetryOperation.getXYZFromMatrix(m2, false, false, false),
+        .rep(PT.rep(getXYZFromMatrix(m2, false, false, false),
             "x", "mx"), "y", "my"),
         "z", "mz") + ")";
     return xyz;
   }
-
-  private Hashtable<String, Object> info;
-  static P3d atomTest;
 
   public Map<String, Object> getInfo() {
     if (info == null) {
@@ -1067,13 +1219,13 @@ public class SymmetryOperation extends M4d {
     double x = 0;
     double y = 0;
     double z = 0;
-    if (SymmetryOperation.atomTest == null)
-      SymmetryOperation.atomTest = new P3d();
+    if (atomTest == null)
+      atomTest = new P3d();
     for (int i = atomIndex, i2 = i + count; i < i2; i++) {
-      Symmetry.newPoint(m, atoms[i], 0, 0, 0, SymmetryOperation.atomTest);
-      x += SymmetryOperation.atomTest.x;
-      y += SymmetryOperation.atomTest.y;
-      z += SymmetryOperation.atomTest.z;
+      Symmetry.newPoint(m, atoms[i], 0, 0, 0, atomTest);
+      x += atomTest.x;
+      y += atomTest.y;
+      z += atomTest.z;
     }
     x /= count;
     y /= count;
@@ -1105,4 +1257,575 @@ public class SymmetryOperation extends M4d {
     return list;
   }
 
+  public Boolean getOpIsCCW() {
+    if (opType == TYPE_UNKNOWN) {
+      setOpTypeAndOrder();
+    }
+    return opIsCCW;
+  }
+
+  public int getOpType() {
+    if (opType == TYPE_UNKNOWN) {
+      setOpTypeAndOrder();
+    }
+    return opType;
+  }
+
+  public int getOpOrder() {
+    if (opType == TYPE_UNKNOWN) {
+      setOpTypeAndOrder();
+    }
+    return opOrder;
+  }
+  
+  public P3d getOpPoint() {
+    if (opType == TYPE_UNKNOWN) {
+      setOpTypeAndOrder();
+    }
+    return opPoint;
+  }
+
+  public V3d getOpAxis() {
+    if (opType == TYPE_UNKNOWN) {
+      setOpTypeAndOrder();
+    }
+    return opAxis;
+  }
+  public P3d getOpPoint2() {
+   return opPoint2;
+  }
+
+  public V3d getOpTrans() {
+    if (opType == TYPE_UNKNOWN) {
+      setOpTypeAndOrder();
+    }
+    return opTrans;
+  }
+
+  private final static P3d x = P3d.new3(Math.PI, Math.E, Math.PI * Math.E);
+  
+  /**
+   * The problem is that the 3-fold axes for cubic groups
+   * have (seemingly arbitrary assignments for axes
+   */
+  private final static int[] C3codes = { //
+      0x031112, // 3+(-1 1-1)
+      0x121301, // 3-(-1 1-1)
+      0x130112, // 3+(-1-1 1)
+      0x021311, // 3-(-1-1 1)
+      0x130102, // -3+(-1 1-1)
+      0x020311, // -3-(-1 1-1)
+      0x031102, // -3+(-1-1 1)
+      0x120301, // -3-( 1-1-1)
+  };
+  
+  private static int opGet3code(M4d m) {
+    int c = 0;
+    double[] row = new double[4];
+    for (int r = 0; r < 3; r++) {
+      m.getRow(r,  row);
+      for (int i = 0; i < 3; i++) {
+        switch ((int) row[i]) {
+        case 1:
+          c |= (i+1) << ((2-r)<<3);
+          break;
+        case -1:
+          c |= (0x10 + i+1) << ((2-r)<<3);
+          break;
+        }
+      }
+    }
+    //System.out.println(Integer.toHexString(c) + "\n" + m);
+    return c;
+  }
+  
+  private static P3d xpos = P3d.new3(1, 0, 0);
+  private static P3d xneg = P3d.new3(-1, 0, 0);
+  private static P3d opGet3x(M4d m) {
+    if (m.m22 != 0) // z-axis
+      return x;
+    int c = opGet3code(m);
+    for (int i = 0; i < 8; i++)
+      if (c == C3codes[i])
+        return xneg;
+    return xpos;
+  }
+
+  private void setOpTypeAndOrder() {
+    // From International Tables for Crystallography, Volume A, Chapter 1.2, by H. Wondratschek and M. I. Aroyo
+    int det = (int) Math.round(determinant3());
+    int trace = (int) Math.round(m00 + m11 + m22);
+    int code1 = ((trace + 3) << 1) + ((det + 1) >> 1);
+    int order = 0;
+    // handle special cases of identity and inversion
+    int angle = 0;
+    P3d px = SymmetryOperation.x;
+    switch (trace) {
+    case 3:
+      if (hasTrans(this)) {
+        opType = TYPE_TRANSLATION;
+        opTrans = new V3d();
+        getTranslation(opTrans);
+        opOrder = 2;
+      } else {
+        opType = TYPE_IDENTITY;
+        opOrder = 1;
+      }
+      return;
+    case -3:
+      opType = TYPE_INVERSION;
+      order = 2;
+      break;
+    default:
+      // not identity or inversion
+      order = trace * det + 3; // will be 2, 3, 4, or 5
+      if (order == 5)
+        order = 6;
+      if (det > 0) {
+        opType = TYPE_ROTATION;
+        angle = (int) (Math.acos((trace - 1) / 2d) * 180 / Math.PI);
+        if (angle == 120) {
+          if (opX == null)
+            opX = opGet3x(this);
+          //System.out.println(opX);
+          px = opX;
+        }
+      } else {
+        // negative determinant
+        // not simple rotation    
+        if (order == 2) {
+          opType = TYPE_REFLECTION;
+        } else {
+          opType = TYPE_ROTOINVERSION;
+          if (order == 3)
+            order = 6;
+          angle = (int) (Math.acos((-trace - 1) / 2d) * 180 / Math.PI);
+          if (angle == 120) {
+            if (opX == null)
+              opX = opGet3x(this);
+            px = opX;
+          }
+        }
+      }
+      break;
+    }
+    opOrder = order;
+    M4d m4 = new M4d();
+    double d = 0;
+    P3d p1 = new P3d(); // PURPOSELY 0 0 0
+    P3d p2 = P3d.newP(px);
+
+    m4.setM4(this);
+    P3d p1sum = new P3d();
+    P3d p2sum = P3d.newP(p2);
+    P3d p2odd = new P3d();
+    P3d p2even = P3d.newP(p2);
+    V3d m4trans = new V3d();
+    P3d p21 = new P3d();
+    for (int i = 1; i < order; i++) {
+      m4.mul(this);
+      rotTrans(p1);
+      rotTrans(p2);
+      if (i == 1)
+        p21.setT(p2);
+      p1sum.add(p1);
+      p2sum.add(p2);
+      if (opType == TYPE_ROTOINVERSION) {
+        if (i % 2 == 0) {
+          p2even.add(p2);
+        } else {
+          p2odd.add(p2);
+        }
+      }
+    }
+    m4.getTranslation(m4trans);
+    d = approx6(m4trans.length());
+    if (d > 0) {
+      // issue here with 1/2 1/2 1/2 group 9?
+      opTrans = V3d.newV(m4trans);
+      opTrans.scale(1d / order);
+      m4trans.normalize();
+    }
+
+    opPoint = new P3d();
+    V3d v = null;
+    boolean isOK = true;
+    switch (opType) {
+    case TYPE_INVERSION:
+      // just get average of p2 and x
+      p2sum.add2(p2, px);
+      p2sum.scale(0.5d);
+      opPoint = P3d.newP(opClean(p2sum));
+      isOK = checkOpPoint(opPoint);
+      break;
+    case TYPE_ROTATION:
+      // the sum divided by the order gives us a point on the vector
+      // both {0 0 0} and x will be translated by the same amount
+      // so their difference will be the rotation vector
+      // but this could be reversed if no translation
+      rotTrans(p1);
+      p1.scale(1d / order);
+      d = approx6(p1.length()); // because we started at 0 0 0
+      v = V3d.newVsub(p2sum, p1sum);
+      v.normalize();
+      opAxis = (V3d) opClean(v);
+      // for the point, we do a final rotation on p1 to get it full circle
+      p1sum.scale(1d / order);
+      p1.setT(p1sum);
+      if (d > 0) {
+        p1sum.sub(opTrans);
+      }
+      opPoint = P3d.newP(opClean(p1sum));
+      if (d > 0) {
+        // all screws must start and terminate within the cell
+          p1sum.add2(opPoint, opTrans);
+          isOK = checkOpPoint(p1sum);
+      }
+      // average point for origin
+      if (Math.abs(angle) != 180) {
+          p2.cross(px, p2);
+          opIsCCW = Boolean.valueOf(p2.dot(v) < 0);
+      }
+      isOK &= checkOpAxis(p1, (d == 0 ? opAxis : opTrans), p1sum, new V3d(), new V3d(), null);
+      if (isOK) {
+        opPoint.setT(p1sum);
+        if (checkOpAxis(opPoint, opAxis, p1sum, new V3d(), new V3d(),
+            opPoint)) {
+          opPoint2 = P3d.newP(p1sum);
+        }
+        
+      }
+      break;
+    case TYPE_ROTOINVERSION:
+      // get the vector from the centroids off the odd and even sets
+      p2odd.scale(2d / order);
+      p2even.scale(2d / order);
+      v = V3d.newVsub(p2odd, p2even);
+      v.normalize();
+      opAxis = (V3d) opClean(v);
+//      opAxisCode = opGetAxisCode(opAxis);
+      p1sum.add2(p2odd, p2even);
+      p2sum.scale(1d / order);
+      opPoint = P3d.newP(opClean(p2sum));
+      isOK = checkOpPoint(opPoint);
+      if (Math.abs(angle) != 180) {
+        p2.cross(px, p2);
+        opIsCCW = Boolean.valueOf(p2.dot(v) < 0);
+      }
+      break;
+    case TYPE_REFLECTION:
+
+      //.........x-------.--p-----------.
+      //..........\...../.\.p........../|d
+      //..........X\.DP/...\p........./.|
+      //............\./.....\......../..p2
+      //.............o------pv-----*/../
+      //................V...p.....d|../DP
+      //....................p......|./
+      //....................p......p1
+      //
+      // Reflect and possibly translate the origin and an irrational point.
+      // Then V = DP - X is the vector (o->v) for the plane
+      // and the projection of p1 onto the line V (ov) gives the mirror
+      // point *. The plane point is then half way between o and *.
+      // d is the length of the translation, (p1 - *) is the translation
+      // 
+
+      v = V3d.newVsub(p2, p1);
+      v.sub(px);
+      v.normalize(); // normal to the plane
+      opAxis = (V3d) opClean(v);
+      if (d > 0 && approx6(v.dot(m4trans)) != 0) {
+        isOK = false;
+        break;
+      }
+      p1sum.set(0, 0, 0);
+      V3d vt = new V3d();
+      approx6(MeasureD.projectOntoAxis(p1, p1sum, v, vt));
+      // opTrans is the point * first, then we subtract that from p1 to get the true translation 
+      opPoint = P3d.newP(vt);
+      opPoint.scale(0.5d);
+      // now define the plane
+      // now define the plane as a P4
+      opPlane = new P4d();
+      isOK = checkOpPlane(opPoint, v, opPlane);
+      v = null;
+      break;
+    }
+    if (isOK && v != null && (d >= 1 || v.dot(p1) < 0)) {
+      isOK = false;
+    }
+
+    if (isOK && opTrans != null && d > 0) {
+      //      if (opTrans.length() > 0.8)
+      //        System.out.println(opTrans);
+      opType |= TYPE_TRANSLATION;
+      opClean(opTrans);
+    } else {
+      opTrans = null;
+    }
+    if (!isOK || opTrans != null && !checkOpTrans(opTrans)) {
+      isIrrelevant = true;
+    }
+//    if (isOK && opAxis != null)
+//      System.out.println(this + " " + opAxis + " " + opGetAxisCode(opAxis) + " " + getOpName(2));
+  }
+
+//  private static String opGetAxisCode(V3d v) {
+//    double d = Double.MAX_VALUE;
+//    if (v.x != 0 && Math.abs(v.x)< d)
+//       d = Math.abs(v.x);
+//    if (v.y != 0 && Math.abs(v.y)< d)
+//      d = Math.abs(v.y);
+//    if (v.z != 0 && Math.abs(v.z)< d)
+//      d = Math.abs(v.z);
+//    V3d v1 = V3d.newV(v);
+//    v1.scale(1/d);
+//    return "" + ((int)approx(v1.x)) + ((int)approx(v1.y)) + ((int)approx(v1.z));
+//  }
+
+  private static boolean hasTrans(M4d m4) {
+    return (approx6(m4.m03) != 0 || approx6(m4.m13) != 0 || approx6(m4.m23) != 0);
+  }
+  
+  private static P4d[] opPlanes;
+
+  private static boolean checkOpAxis(P3d pt, V3d axis, P3d ptRet, V3d t1,
+                                     V3d t2, P3d ptNot) {
+    if (opPlanes == null) {
+      opPlanes = BoxInfo.getBoxFacesFromOABC(null);
+    }
+    int[] map = BoxInfo.faceOrder;
+    double f = (ptNot == null ? 1 : -1);
+    for (int i = 0; i < 6; i++) {
+      P3d p = MeasureD.getIntersection(pt, axis, opPlanes[map[i]], ptRet, t1, t2);
+      if (p != null && checkOpPoint(p) && axis.dot(t1) * f < 0 && (ptNot == null || approx(ptNot.distance(p) - 0.5d) >= 0)) {
+        return true;
+      }
+    }
+ 
+    return false;
+  }
+
+  private static boolean checkOpTrans(T3d pt) {
+    return pt.lengthSquared() < 1;
+  }
+
+  static T3d opClean(T3d t) {
+    if (approx6(t.x) == 0)
+      t.x = 0;
+    if (approx6(t.y)== 0)
+      t.y = 0;
+    if (approx6(t.z) == 0)
+      t.z = 0;
+    return t;
+  }
+
+  static boolean checkOpPoint(T3d pt) {
+    return checkOK(pt.x, 0) && checkOK(pt.y, 0) && checkOK(pt.z, 0);
+  }
+
+  private static boolean checkOK(double p, double a) {
+    return (a != 0 || p >= 0 && p <= 1);
+  }
+
+  private static boolean checkOpPlane(P3d p2sum, V3d v, P4d plane) {
+    // just check all 8 cell points for directed distance to the plane
+    // any mix of + and - and 0 is OK; all + or all - is a fail
+    MeasureD.getPlaneThroughPoint(p2sum, v, plane);
+    plane.w = approx6(plane.w);
+    P3d[] pts = BoxInfo.unitCubePoints;
+    int nPos = 0;
+    int nNeg = 0;
+    for (int i = 8; --i >= 0;) {
+      double d = MeasureD.getPlaneProjection(pts[i], plane, p2sum, v);
+      switch ((int) Math.signum(approx6(d))) {
+      case 1:
+        if (nNeg > 0)
+          return true;
+        nPos++;
+        break;
+      case 0:
+        break;
+      case -1:
+        if (nPos > 0)
+          return true;
+        nNeg++;
+      }
+    }
+    // all + or all - means the plane is out of scope
+    return !(nNeg == 8 || nPos == 8);
+  }
+  
+  public static SymmetryOperation[] getAdditionalOperations(SymmetryOperation[] ops) {
+    int n = ops.length;
+    Lst<SymmetryOperation> lst = new Lst<SymmetryOperation>();
+    HashSet<String> xyzLst = new HashSet<String>();
+
+    Map<String, Lst<SymmetryOperation>> mapPlanes = new Hashtable<String, Lst<SymmetryOperation>>();
+    for (int i = 0; i < n; i++) {
+      SymmetryOperation op = ops[i];
+      lst.addLast(op);
+      String s = op.getOpName(PLANE_MODE_NOTRANS);
+      //System.out.println(s);
+      xyzLst.add(s);
+      if ((op.getOpType() & TYPE_REFLECTION) == TYPE_REFLECTION)
+        addPlaneMap(mapPlanes, op);
+    }
+    for (int i = 1; i < n; i++) { // skip x,y,z
+      ops[i].addOps(xyzLst, lst, mapPlanes, n);
+    }
+    return lst.toArray(new SymmetryOperation[lst.size()]);
+  }
+
+  /**
+   * add translated copies of this operation that contribute to the unit cell [0,1]
+   * @param xyzList 
+   * @param lst
+   * @param mapPlanes 
+   * @param n0 
+   */
+  void addOps(HashSet<String> xyzList, Lst<SymmetryOperation> lst, Map<String, Lst<SymmetryOperation>> mapPlanes, int n0) {
+    V3d t0 = new V3d();
+    getTranslation(t0);
+    boolean isPlane = ((getOpType() & TYPE_REFLECTION) == TYPE_REFLECTION);
+    //System.out.println("SO? addAdd for " + getOpName(PLANE_MODE_FULL) + " " + getOpAxis());
+    V3d t = new V3d();
+    
+    SymmetryOperation opTemp = null;
+    // from -2 to 2, starting with + so that we get the + version
+    for (int i = 3; --i > -3;) {
+      for (int j = 3; --j > -3;) {
+        for (int k = 3; --k > -3;) {
+          if (opTemp == null)
+            opTemp = new SymmetryOperation(null, 0, false);
+
+          // allow 0 0 0, as that brings in the translation?
+          t.set(i, j, k);
+          if (checkOpSimilar(t))
+            continue;
+          if (opTemp.opCheckAdd(this, t0, n0, t, xyzList, lst)) {
+            if (isPlane)
+              addPlaneMap(mapPlanes, opTemp);
+            opTemp = null;            
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Looking for coincidence. We only concern ourselves if there is 
+   * at least one non-glide reflection.
+   * 
+   * @param mapPlanes
+   * @param op
+   */
+  private static void addPlaneMap(Map<String, Lst<SymmetryOperation>> mapPlanes,
+                             SymmetryOperation op) {
+    String s = op.getOpName(PLANE_MODE_POSITION_ONLY);
+    Lst<SymmetryOperation> l = mapPlanes.get(s);
+    //System.out.println("SO ====" + s + "====" + op.getOpName(PLANE_MODE_FULL));
+    op.isCoincident = false;
+    if (l == null) {
+      mapPlanes.put(s, l = new Lst<SymmetryOperation>());
+    } else {
+      for (int i = l.size(); --i >= 0;) {
+         SymmetryOperation op0 = l.get(i);
+         if (op0.isCoincident || op0.getOpType() == TYPE_REFLECTION) {
+           op.isCoincident = op0.isCoincident = true;
+           break;
+         }
+      }
+    }
+    l.addLast(op);
+  }
+
+  /**
+   * No need to check lattice translations that are only
+   * going to contribute to the inherent translation 
+   * of the element. Yes, these exist. But they are 
+   * inconsequential and are never shown.
+   * 
+   * Reflections: anything perpendicular to the normal is discarded.
+   * 
+   * Rotations: anything parallel to the normal is discarded.
+   *  
+   * @param t
+   * @return true if 
+   */
+  private boolean checkOpSimilar(V3d t) {
+    switch (getOpType() &~ TYPE_TRANSLATION) {
+    default:
+      return false;
+    case TYPE_IDENTITY:
+      return true;
+    case TYPE_ROTATION: // includes screw rotation
+      return (approx6(t.dot(opAxis) - t.length()) == 0);
+    case TYPE_REFLECTION: // includes glide reflection
+      return (approx6(t.dot(opAxis)) == 0);
+    }
+  }
+
+  /**
+   * @param opThis 
+   * @param t0 
+   * @param n0  
+   * @param t 
+   * @param xyzList 
+   * @param lst 
+   * @return true if added
+   */
+  private boolean opCheckAdd(SymmetryOperation opThis, V3d t0, int n0, V3d t,
+                          HashSet<String> xyzList, Lst<SymmetryOperation> lst) {
+    //int nnew = 0;
+    setM4(opThis);
+    t.add(t0);
+    setTranslation(t);
+    opType = TYPE_UNKNOWN;
+    isIrrelevant = false;
+    int type = getOpType();
+    if (!isIrrelevant && type != TYPE_IDENTITY && type != TYPE_TRANSLATION) {
+      String s = getOpName(PLANE_MODE_NOTRANS);
+      if (!xyzList.contains(s)) {
+        xyzList.add(s);
+        lst.addLast(this);
+        isFinalized = true;
+        xyz = getXYZFromMatrix(this, false, false, false);
+//        System.out.println(//"SO " +//+ opTemp + "\n" + 
+//        " "  + t00 +
+//        " "+ ++nnew + " " + xyz + " type is " + s
+        //+ 
+        //"\n$draw s" + nnew + " symop \""+xyz+"\" // " + t00 + " " + s
+//        );
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static T3d approxPt(T3d pt) {
+    if (pt != null) {
+      pt.x = approx6(pt.x);
+      pt.y = approx6(pt.y);
+      pt.z = approx6(pt.z);
+    }
+    return pt;
+  }
+
+  public static void normalize12ths(V3d vtrans) {
+    vtrans.x = PT.approxD(vtrans.x, 12);
+    vtrans.y = PT.approxD(vtrans.y, 12);
+    vtrans.z = PT.approxD(vtrans.z, 12);    
+  }
+
+  public String getCode() {
+    getOpType();
+    String s = "";
+    return null;
+  }
+  
+
+  // https://crystalsymmetry.wordpress.com/space-group-diagrams/
+ 
 }

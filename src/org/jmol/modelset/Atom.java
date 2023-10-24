@@ -81,7 +81,13 @@ public class Atom extends Point3fi implements Node {
   public Group group;
   private double userDefinedVanDerWaalRadius;
   byte valence;
-  short atomicAndIsotopeNumber;
+  /**
+   * atomNumberFlags encodes atomic number (a), isotope number(i) as:
+   * 
+   * iiii iiii iaaa aaaa  
+   *
+   */
+  short atomNumberFlags;  
   public BS atomSymmetry;
 
   private int formalChargeAndFlags; //  cccc CIP_ _CIP --hv
@@ -97,7 +103,7 @@ public class Atom extends Point3fi implements Node {
   private final static int CIP_CHIRALITY_RULE_OFFSET = 9;
   private final static int CIP_CHIRALITY_RULE_MASK = 0xE00;
   private final static int CIP_MASK = CIP_CHIRALITY_MASK | CIP_CHIRALITY_RULE_MASK; 
-
+  
   public short madAtom;
 
   public short colixAtom;
@@ -139,7 +145,7 @@ public class Atom extends Point3fi implements Node {
     this.atomSymmetry = atomSymmetry;
     this.atomSite = atomSite;
     this.i = atomIndex;
-    this.atomicAndIsotopeNumber = atomicAndIsotopeNumber;
+    this.atomNumberFlags = atomicAndIsotopeNumber;
     if (isHetero)
       formalChargeAndFlags = IS_HETERO_FLAG;
     if (formalCharge != 0 && formalCharge != Integer.MIN_VALUE)
@@ -324,27 +330,29 @@ public class Atom extends Point3fi implements Node {
 
   @Override
   public int getElementNumber() {
-    return Elements.getElementNumber(atomicAndIsotopeNumber);
+    return Elements.getElementNumber(atomNumberFlags);
   }
   
   @Override
   public int getIsotopeNumber() {
-    return Elements.getIsotopeNumber(atomicAndIsotopeNumber);
+    return Elements.getIsotopeNumber(atomNumberFlags);
   }
   
   @Override
   public int getAtomicAndIsotopeNumber() {
-    return atomicAndIsotopeNumber;
+    return atomNumberFlags;
   }
 
   public void setAtomicAndIsotopeNumber(int n) {
-    if (n < 0 || (n & 127) >= Elements.elementNumberMax || n > Short.MAX_VALUE)
+    if (n < 0 
+        || (n & Elements.ELEMENT_NUMBER_MASK) >= Elements.elementNumberMax 
+        || n > 0xFFFF)
       n = 0;
-    atomicAndIsotopeNumber = (short) n;
+    atomNumberFlags = (short) n;
   }
 
   public String getElementSymbolIso(boolean withIsotope) {
-    return Elements.elementSymbolFromNumber(withIsotope ? atomicAndIsotopeNumber : atomicAndIsotopeNumber & 127);    
+    return Elements.elementSymbolFromNumber(withIsotope ? atomNumberFlags : atomNumberFlags & 127);    
   }
   
   public String getElementSymbol() {
@@ -441,7 +449,7 @@ public class Atom extends Point3fi implements Node {
    * Allow for aromatic-bonded C-O when calculating to return only 1 here.
    *  
    * @param checkAromatic
-   * return the total bond order for this atom
+   * @return the total bond order for this atom
    */
   int getValenceAromatic(boolean checkAromatic) {
     if (isDeleted())
@@ -563,7 +571,7 @@ public class Atom extends Point3fi implements Node {
     // AtomCollection.getAtomPropertyState with VDW_AUTO
     // AtomCollection.getVdwRadius with passed on type
     return (Double.isNaN(userDefinedVanDerWaalRadius) 
-        ? vwr.getVanderwaalsMarType(atomicAndIsotopeNumber, getVdwType(type)) / 1000d
+        ? vwr.getVanderwaalsMarType(atomNumberFlags, getVdwType(type)) / 1000d
         : userDefinedVanDerWaalRadius);
   }
 
@@ -591,7 +599,7 @@ public class Atom extends Point3fi implements Node {
   public double getBondingRadius() {
     double[] rr = group.chain.model.ms.bondingRadii;
     double r = (rr == null  || i >= rr.length ? 0 : rr[i]);
-    return (r == 0 ? Elements.getBondingRadius(atomicAndIsotopeNumber,
+    return (r == 0 ? Elements.getBondingRadius(atomNumberFlags,
         getFormalCharge()) : r);
   }
 
@@ -672,6 +680,7 @@ public class Atom extends Point3fi implements Node {
      int[] ids = group.chain.model.ms.atomSeqIDs;
      return (ids == null ? 0 : ids[i]);
    }
+   
    public boolean isVisible(int flags) {
      return ((shapeVisibilityFlags & flags) == flags);
    }
@@ -1183,7 +1192,7 @@ public class Atom extends Point3fi implements Node {
     case T.elemno:
       return getElementNumber();
     case T.elemisono:
-      return atomicAndIsotopeNumber;
+      return getAtomicAndIsotopeNumber();
     case T.file:
       return group.chain.model.fileIndex + 1;
     case T.formalcharge:
@@ -1283,7 +1292,7 @@ public class Atom extends Point3fi implements Node {
     case T.chemicalshift:
       return vwr.getNMRCalculation().getChemicalShift(this);
     case T.covalentradius:
-      return Elements.getCovalentRadius(atomicAndIsotopeNumber);
+      return Elements.getCovalentRadius(atomNumberFlags);
     case T.eta:
     case T.theta:
     case T.straightness:
@@ -1420,6 +1429,8 @@ public class Atom extends Point3fi implements Node {
       return getCIPChirality(true);
     case T.ciprule:
       return getCIPChiralityRule();
+    case T.wyckoff:
+      return getWyckoffPosition();
     case T.sequence:
       return getGroup1('?');
     case T.seqcode:
@@ -1458,6 +1469,22 @@ public class Atom extends Point3fi implements Node {
     return ""; 
   }
 
+  public String getWyckoffPosition() {
+    ModelSet ms = group.chain.model.ms;
+    Atom a = ms.getBasisAtom(i, true);
+    int id = a.getSeqID();
+    if (id != 0) {
+      return "" + (char) id;
+    }
+    SymmetryInterface sym = getUnitCell();
+    String s;
+    if (sym == null || (s = sym.getWyckoffPosition(ms.vwr, this)) == null)
+      return "?";
+    
+    ms.setAtomSeqID(i, 0 + s.charAt(0));
+    return s;
+  }
+
   /**
    * Determine R/S chirality at this position; non-H atoms only; cached in formalChargeAndFlags
    * @param doCalculate 
@@ -1467,7 +1494,7 @@ public class Atom extends Point3fi implements Node {
   @Override
   public String getCIPChirality(boolean doCalculate) {
     int flags = (formalChargeAndFlags & CIP_CHIRALITY_MASK) >> CIP_CHIRALITY_OFFSET;
-    if (flags == 0 && atomicAndIsotopeNumber > 1 && doCalculate) {
+    if (flags == 0 && atomNumberFlags > 1 && doCalculate) {
       flags = group.chain.model.ms.getAtomCIPChiralityCode(this);
       formalChargeAndFlags |= ((flags == 0 ? JC.CIP_CHIRALITY_NONE : flags) << CIP_CHIRALITY_OFFSET);
     }

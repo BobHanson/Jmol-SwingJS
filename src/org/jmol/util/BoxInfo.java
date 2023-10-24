@@ -29,7 +29,9 @@ package org.jmol.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import javajs.util.MeasureD;
 import javajs.util.P3d;
+import javajs.util.P4d;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -124,6 +126,23 @@ public class BoxInfo {
   //               1 ---------4-------- 5                 
   //              Z                                       
   
+  public final static int[] faceOrder = new int[] { 0, 3, 5, 2, 1, 4 };
+  public final static int[][] facePoints = new int[][] {
+    {4, 0, 6}, // xy0
+    {4, 6, 5}, // yz1
+    {5, 7, 1}, // xy1
+    {1, 3, 0}, // yz0
+    {6, 2, 7}, // xz1
+    {1, 0, 5}, // xz0
+    
+    {0, 2, 6},
+    {6, 7, 5}, 
+    {7, 3, 1}, 
+    {3, 2, 0},
+    {2, 3, 7}, 
+    {0, 4, 5}, 
+  };
+  
   public final static P3d[] unitCubePoints = { 
     P3d.new3(0, 0, 0), // 0
     P3d.new3(0, 0, 1), // 1
@@ -137,7 +156,8 @@ public class BoxInfo {
   
   /**
    * 
-   * @param oabc [center a b c]
+   * @param oabc
+   *        [center a b c]
    * @return all eight vertices
    */
   public final static P3d[] getVerticesFromOABC(T3d[] oabc) {
@@ -153,41 +173,6 @@ public class BoxInfo {
     }
     return vertices;
   }
-
-  public final static P3d[] getVerticesFromOABCd(T3d[] oabc) {
-    P3d[] vertices = new P3d[8];
-    for (int i = 0; i <= XYZ; i++) {
-      oabc[0].setT(vertices[i] = new P3d());
-      if ((i & X) == X)
-        addV(vertices[i], oabc[1]);
-      if ((i & Y) == Y)
-        addV(vertices[i], oabc[2]);
-      if ((i & Z) == Z)
-        addV(vertices[i], oabc[3]);
-    }
-    return vertices;
-  }
-
-  private static void addV(P3d p, T3d t) {
-    p.x += t.x;
-    p.y += t.y;
-    p.z += t.z;
-  }
-
-  public final static int[][] facePoints = new int[][] {
-    {4, 0, 6},
-    {4, 6, 5}, 
-    {5, 7, 1}, 
-    {1, 3, 0},
-    {6, 2, 7}, 
-    {1, 0, 5}, 
-    {0, 2, 6},
-    {6, 7, 5}, 
-    {7, 3, 1}, 
-    {3, 2, 0},
-    {2, 3, 7}, 
-    {0, 4, 5}, 
-  };
 
   // canonical
   //  -- relatively standard clockwise lower, then clockwise upper
@@ -456,6 +441,23 @@ public class BoxInfo {
   @Override
   public String toString() {
     return "" + bbCorner0 + bbCorner1;
+  }
+
+  public static P4d[] getBoxFacesFromOABC(P3d[] oabc) {
+    P4d[] faces = new P4d[6];
+    V3d vNorm = new V3d();
+    V3d vAB = new V3d();
+    P3d pta = new P3d();
+    P3d ptb = new P3d();
+    P3d ptc = new P3d();
+    P3d[] vertices = (oabc == null ? unitCubePoints : getVerticesFromOABC(oabc));
+    for (int i = 0; i < 6; i++) {
+      pta.setT(vertices[facePoints[i][0]]);
+      ptb.setT(vertices[facePoints[i][1]]);
+      ptc.setT(vertices[facePoints[i][2]]);
+      faces[i] = MeasureD.getPlaneThroughPoints(pta, ptb, ptc, vNorm, vAB, new P4d());
+    }
+    return faces;
   }
 
 

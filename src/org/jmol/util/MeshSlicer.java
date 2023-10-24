@@ -137,7 +137,7 @@ public class MeshSlicer {
     case T.boundbox:
       P3d[] box = (P3d[]) slabbingObject;
       sb.append("within ").append(Escape.eAP(box));
-      P4d[] faces = getBoxFacesFromOABC(box);
+      P4d[] faces = BoxInfo.getBoxFacesFromOABC(box); 
       for (int i = 0; i < faces.length; i++) {
         getIntersection(0, faces[i], null, null, null, null, null, andCap,
             false, T.plane, isGhost);
@@ -200,23 +200,6 @@ public class MeshSlicer {
     return true;
   }
 
-  private P4d[] getBoxFacesFromOABC(P3d[] oabc) {
-      P4d[] faces = new P4d[6];
-      V3d vNorm = new V3d();
-      V3d vAB = new V3d();
-      P3d pta = new P3d();
-      P3d ptb = new P3d();
-      P3d ptc = new P3d();
-      P3d[] vertices = BoxInfo.getVerticesFromOABC(oabc);
-      for (int i = 0; i < 6; i++) {
-        pta.setT(vertices[BoxInfo.facePoints[i][0]]);
-        ptb.setT(vertices[BoxInfo.facePoints[i][1]]);
-        ptc.setT(vertices[BoxInfo.facePoints[i][2]]);
-        faces[i] = MeasureD.getPlaneThroughPoints(pta, ptb, ptc, vNorm, vAB, new P4d());
-      }
-      return faces;
-    }
-
   /**
    * @param distance
    *        a distance from a plane or point
@@ -251,7 +234,7 @@ public class MeshSlicer {
     pts = ptCenters;
     if (plane != null) {
       norm = V3d.newV(plane);
-      dPlane = (double) Math.sqrt(norm.dot(norm));
+      dPlane = Math.sqrt(norm.dot(norm));
       wPlane = plane.w;
       if (dPlane == 0) {
         norm.z = dPlane = 1;

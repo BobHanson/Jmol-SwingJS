@@ -14,7 +14,6 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-//import javajs.util.M3d;
 import javajs.util.P3d;
 import javajs.util.PT;
 
@@ -106,266 +105,287 @@ public class SpaceGroupFinder {
     P3d scaling = P3d.new3(1, 1, 1);
     //    BS withinCell = null;
     SpaceGroup sg = null;
-    try {
-      if (bsOpGroups == null)
-        loadData(vwr, this);
-      if (xyzList != null) {
-        Object ret = getGroupsWithOps(xyzList, unitCellParams, isAssign);
-        if (!isAssign)
-          return ret;
-        sg = (SpaceGroup) ret;
-        uc.setUnitCell(unitCellParams, false);
-      }
 
-      oabc = uc.getUnitCellVectors();
-      uc = uc.getUnitCellMultiplied();
-      filterGroups(bsGroups, uc.getUnitCellParams());
+    boolean setNew = (isAssign && xyzList != null && nAtoms == 0
+        && (uc == null || uc.getSpaceGroup() == null
+            || "P1".equals(((SpaceGroup) uc.getSpaceGroup()).getName())));
 
-      //      withinCell = vwr.ms.getAtoms(T.unitcell, uc);
-      //BS extraAtoms = BSUtil.copy(bsAtoms);
-      //extraAtoms.andNot(withinCell);
-      //      withinCell.and(bsAtoms);
-      //int nExtra = extraAtoms.cardinality();
-
-      // 1. Get ALL atoms.
-
-      atoms = new SGAtom[bsAtoms.cardinality()];
-      System.out.println("bsAtoms = " + bsAtoms);
-      for (int p = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
-          .nextSetBit(i + 1), p++) {
-        Atom a = cartesians[i];
-        int type = a.getAtomicAndIsotopeNumber();
-        (atoms[p] = new SGAtom(type, i, a.getAtomName(), a.getOccupancy100()))
-            .setT(toFractional(a, uc));
-
-      }
-      BS bsPoints = BSUtil.newBitSet2(0, nAtoms);
-
-      // Look out for tetrgonal aac issue -- abandoned
-
-      SymmetryInterface uc0 = uc;
-      //      M3d mtet = new M3d();
-      //      uc = checkTetragonal(vwr, uc, mtet);
-      //      if (uc == uc0) {
-      //        mtet = null;
-      //      } else {
-      //System.out.println("tetragonoal setting issue detected");
-      //      }
-
-      //      // 2. Check that packing atoms, if any, are complete and only those packed. -- abandoned
-      // decided this was unnecessary. We can just unitize and remove duplicates
-
-      //      if (nExtra > 0) {
-      //        BS packedAtoms = new BS();
-      //        checkPackingAtoms(bsPoints, extraAtoms, 1, packedAtoms);
-      //        checkPackingAtoms(bsPoints, extraAtoms, 2, packedAtoms);
-      //        checkPackingAtoms(bsPoints, extraAtoms, 3, packedAtoms);
-      //        if (packedAtoms.cardinality() == nExtra) {
-      //          bsPoints.andNot(packedAtoms);
-      //        } else {
-      //System.out.println("Packing check failed! " + nExtra + " extra atoms " + extraAtoms + ", but " + packedAtoms.cardinality() + " found for " + packedAtoms);
-      //          bsPoints.clearAll();
-      //        }
-      //      }
-
-      // 3. Unitize, remove duplicates, and check for supercells in each direction
-
-      nAtoms = bsPoints.cardinality();
-      uc0 = uc;
-      boolean isSupercell = false;
-      if (nAtoms > 0) {
-        for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
-            .nextSetBit(i + 1)) {
-          SimpleUnitCell.unitizeDim(3, atoms[i]);
-        }
-        removeDuplicates(bsPoints);
-        uc = checkSupercell(vwr, uc, bsPoints, 1, scaling);
-        uc = checkSupercell(vwr, uc, bsPoints, 2, scaling);
-        uc = checkSupercell(vwr, uc, bsPoints, 3, scaling);
-        isSupercell = (uc != uc0);
-        if (isSupercell) {
-          if (scaling.x != 1)
-            System.out.println("supercell found; a scaled by 1/" + scaling.x);
-          if (scaling.y != 1)
-            System.out.println("supercell found; b scaled by 1/" + scaling.y);
-          if (scaling.z != 1)
-            System.out.println("supercell found; c scaled by 1/" + scaling.z);
-        }
-      }
-
-      // 4. Remove unneeded atoms and recalculate fractional position if a supercell
-
-      n = bsPoints.cardinality();
-      bsAtoms = new BS();
-      SGAtom[] newAtoms = new SGAtom[n];
-      for (int p = 0, i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
-          .nextSetBit(i + 1)) {
-        SGAtom a = atoms[i];
-        newAtoms[p++] = a;
-        if (isSupercell) {
-          a.setT(toFractional(cartesians[a.index], uc));
-          SimpleUnitCell.unitizeDim(3, a);
-          //          if (mtet != null)
-          //            mtet.rotate(a);
-        }
-        bsAtoms.set(atoms[i].index);
-      }
-
-      atoms = newAtoms;
-      nAtoms = n;
-      System.out.println("bsAtoms(within cell) = " + bsAtoms);
-      bsPoints.clearAll();
-      bsPoints.setBits(0, nAtoms);
-      bsPoints0 = BS.copy(bsPoints);
-      BS temp1 = BS.newN(OP_COUNT);
-      BS targeted = BS.newN(nAtoms);
-
-      bsOps.setBits(1, sg == null ? OP_COUNT : sg.getOperationCount());
-      if (nAtoms == 0) {
-        bsGroups.clearBits(1, GROUP_COUNT);
-        bsOps.clearAll();
-      }
-
-      // 5. Adaptively iterate over all known operations.
-
-      BS uncheckedOps = BS.newN(OP_COUNT);
-      BS opsChecked = BS.newN(OP_COUNT);
-      opsChecked.set(0);
-      boolean hasC1 = false;
-      for (int iop = bsOps.nextSetBit(1); iop > 0
-          && !bsGroups.isEmpty(); iop = bsOps.nextSetBit(iop + 1)) {
-        SymmetryOperation op = (sg == null ? getOp(iop)
-            : (SymmetryOperation) sg.getOperation(iop));
-        if (sg == null) {
-          System.out.println("\nChecking operation " + iop + " " + opXYZ[iop]);
-          System.out.println("bsGroups = " + bsGroups);
-          System.out.println("bsOps = " + bsOps);
-          nChecked++;
-        }
-        boolean isOK = true;
-        bsPoints.clearAll();
-        bsPoints.or(bsPoints0);
-        targeted.clearAll();
-        for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
-            .nextSetBit(i + 1)) {
-          bsPoints.clear(i);
-          //          if (iop == 15 && i == 46)
-          //System.out.println("????");
-          int j = findEquiv(iop, op, i, bsPoints, pt, true);
-          if (j < 0 && sg == null) {
-            System.out.println(
-                "failed op " + iop + " for atom " + i + " " + atoms[i].name
-                    + " " + atoms[i] + " looking for " + pt + "\n" + op);
-            isOK = false;
-            break;
-          }
-          if (j >= 0 && i != j) {
-            targeted.set(j);
-          }
-        }
-        if (sg == null) {
-          BS myGroups = bsOpGroups[iop];
-          bsOps.clear(iop);
-          opsChecked.set(iop);
-          if (isOK) {
-            System.out.println("OK!");
-            if (iop == 1)
-              hasC1 = true;
-            // iop was found
-            targets.or(targeted);
-            //System.out.println("targeted=" + targeted);
-            //System.out.println("targets=" + targets);
-            //reduce the number of possible groups to groups having this operation
-            bsGroups.and(myGroups);
-            // reduce the number of operations to check to only those NOT common to 
-            // all remaining groups;
-            temp1.setBits(1, OP_COUNT);
-            for (int i = bsGroups.nextSetBit(0); i >= 0; i = bsGroups
-                .nextSetBit(i + 1)) {
-              temp1.and(bsGroupOps[i]);
-            }
-            uncheckedOps.or(temp1);
-            bsOps.andNot(temp1);
-          } else {
-            // iop was not found
-            // clear all groups that require this operation
-            bsGroups.andNot(myGroups);
-            // trim ops to only those needed for compatible groups
-            // and retain only operations for groups that have this operation
-            temp1.clearAll();
-            for (int i = bsGroups.nextSetBit(0); i >= 0; i = bsGroups
-                .nextSetBit(i + 1)) {
-              temp1.or(bsGroupOps[i]);
-            }
-            bsOps.and(temp1);
-          }
-        } else {
-          targets.or(targeted);
-        }
-      }
+    String name;
+    BS basis;
+    if (setNew) {
+      sg = SpaceGroup.determineSpaceGroupNA(xyzList, unitCellParams);
       if (sg == null) {
-        n = bsGroups.cardinality();
-        if (n == 0) {
-          bsGroups.set(hasC1 ? 1 : 0);
-          n = 1;
-          if (hasC1 && !asString) {
-            uncheckedOps.clearAll();
-            uncheckedOps.set(1);
-            opsChecked.clearAll();
-            targets.clearAll();
-            bsPoints.or(bsPoints0);
-          }
-        }
-        isg = bsGroups.nextSetBit(0);
-        if (n == 1) {
-          if (isg > 0) {
-            opsChecked.and(bsGroupOps[isg]);
-            uncheckedOps.and(bsGroupOps[isg]);
-            uncheckedOps.andNot(opsChecked);
-            uncheckedOps.or(bsGroupOps[isg]);
-            uncheckedOps.clear(0);
-            bsPoints.or(bsPoints0);
-            //System.out.println("test1 bspoints " + bsPoints.cardinality() + " " + bsPoints);
-            //System.out.println("test2 targets " + targets.cardinality() + " " + targets);
-            //System.out.println("test3 uchop= " + uncheckedOps.cardinality() + " " + uncheckedOps);
-            //System.out.println("test4 opsc= " + opsChecked.cardinality() + " " + opsChecked);
-            bsPoints.andNot(targets);
-            if (!checkBasis(uncheckedOps, bsPoints, targets)) {
-              isg = 0;
-            }
-            //System.out.println("test2b targets " + targets.cardinality() + " " + targets);
-            //System.out.println("test1b points " + bsPoints.cardinality() + " " + bsPoints);
-          }
-          if (isg == 0)
-            targets.clearAll();
-        }
+        sg = SpaceGroup.createSpaceGroupN(xyzList);
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-      bsGroups.clearAll();
+      if (sg == null)
+        return null;
+      uc = createCompatibleUnitCell(sg, unitCellParams);
+      basis = new BS();
+      name = sg.asString();
+      oabc = uc.getUnitCellVectors();
+    } else {
+      try {
+        if (bsOpGroups == null)
+          loadData(vwr, this);
+        if (xyzList != null) {
+          Object ret = getGroupsWithOps(xyzList, unitCellParams, isAssign);
+          if (!isAssign)
+            return ret;
+          sg = (SpaceGroup) ret;
+          uc.setUnitCell(unitCellParams, false);
+        }
+        oabc = uc.getUnitCellVectors();
+        uc = uc.getUnitCellMultiplied();
+        filterGroups(bsGroups, uc.getUnitCellParams());
+
+        //      withinCell = vwr.ms.getAtoms(T.unitcell, uc);
+        //BS extraAtoms = BSUtil.copy(bsAtoms);
+        //extraAtoms.andNot(withinCell);
+        //      withinCell.and(bsAtoms);
+        //int nExtra = extraAtoms.cardinality();
+
+        // 1. Get ALL atoms.
+
+        atoms = new SGAtom[bsAtoms.cardinality()];
+        System.out.println("bsAtoms = " + bsAtoms);
+        for (int p = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+            .nextSetBit(i + 1), p++) {
+          Atom a = cartesians[i];
+          int type = a.getAtomicAndIsotopeNumber();
+          (atoms[p] = new SGAtom(type, i, a.getAtomName(), a.getOccupancy100()))
+              .setT(toFractional(a, uc));
+
+        }
+        BS bsPoints = BSUtil.newBitSet2(0, nAtoms);
+
+        // Look out for tetrgonal aac issue -- abandoned
+
+        SymmetryInterface uc0 = uc;
+        //      M3d mtet = new M3d();
+        //      uc = checkTetragonal(vwr, uc, mtet);
+        //      if (uc == uc0) {
+        //        mtet = null;
+        //      } else {
+        //System.out.println("tetragonoal setting issue detected");
+        //      }
+
+        //      // 2. Check that packing atoms, if any, are complete and only those packed. -- abandoned
+        // decided this was unnecessary. We can just unitize and remove duplicates
+
+        //      if (nExtra > 0) {
+        //        BS packedAtoms = new BS();
+        //        checkPackingAtoms(bsPoints, extraAtoms, 1, packedAtoms);
+        //        checkPackingAtoms(bsPoints, extraAtoms, 2, packedAtoms);
+        //        checkPackingAtoms(bsPoints, extraAtoms, 3, packedAtoms);
+        //        if (packedAtoms.cardinality() == nExtra) {
+        //          bsPoints.andNot(packedAtoms);
+        //        } else {
+        //System.out.println("Packing check failed! " + nExtra + " extra atoms " + extraAtoms + ", but " + packedAtoms.cardinality() + " found for " + packedAtoms);
+        //          bsPoints.clearAll();
+        //        }
+        //      }
+
+        // 3. Unitize, remove duplicates, and check for supercells in each direction
+
+        nAtoms = bsPoints.cardinality();
+        uc0 = uc;
+        boolean isSupercell = false;
+        if (nAtoms > 0) {
+          for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
+              .nextSetBit(i + 1)) {
+            SimpleUnitCell.unitizeDim(3, atoms[i]);
+          }
+          removeDuplicates(bsPoints);
+          uc = checkSupercell(vwr, uc, bsPoints, 1, scaling);
+          uc = checkSupercell(vwr, uc, bsPoints, 2, scaling);
+          uc = checkSupercell(vwr, uc, bsPoints, 3, scaling);
+          isSupercell = (uc != uc0);
+          if (isSupercell) {
+            if (scaling.x != 1)
+              System.out.println("supercell found; a scaled by 1/" + scaling.x);
+            if (scaling.y != 1)
+              System.out.println("supercell found; b scaled by 1/" + scaling.y);
+            if (scaling.z != 1)
+              System.out.println("supercell found; c scaled by 1/" + scaling.z);
+          }
+        }
+
+        // 4. Remove unneeded atoms and recalculate fractional position if a supercell
+
+        n = bsPoints.cardinality();
+        bsAtoms = new BS();
+        SGAtom[] newAtoms = new SGAtom[n];
+        for (int p = 0, i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
+            .nextSetBit(i + 1)) {
+          SGAtom a = atoms[i];
+          newAtoms[p++] = a;
+          if (isSupercell) {
+            a.setT(toFractional(cartesians[a.index], uc));
+            SimpleUnitCell.unitizeDim(3, a);
+            //          if (mtet != null)
+            //            mtet.rotate(a);
+          }
+          bsAtoms.set(atoms[i].index);
+        }
+
+        atoms = newAtoms;
+        nAtoms = n;
+        System.out.println("bsAtoms(within cell) = " + bsAtoms);
+        bsPoints.clearAll();
+        bsPoints.setBits(0, nAtoms);
+        bsPoints0 = BS.copy(bsPoints);
+        BS temp1 = BS.newN(OP_COUNT);
+        BS targeted = BS.newN(nAtoms);
+
+        bsOps.setBits(1, sg == null ? OP_COUNT : sg.getOperationCount());
+        if (nAtoms == 0) {
+          bsGroups.clearBits(1, GROUP_COUNT);
+          bsOps.clearAll();
+        }
+
+        // 5. Adaptively iterate over all known operations.
+
+        BS uncheckedOps = BS.newN(OP_COUNT);
+        BS opsChecked = BS.newN(OP_COUNT);
+        opsChecked.set(0);
+        boolean hasC1 = false;
+        for (int iop = bsOps.nextSetBit(1); iop > 0
+            && !bsGroups.isEmpty(); iop = bsOps.nextSetBit(iop + 1)) {
+          SymmetryOperation op = (sg == null ? getOp(iop)
+              : (SymmetryOperation) sg.getOperation(iop));
+          if (sg == null) {
+            System.out
+                .println("\nChecking operation " + iop + " " + opXYZ[iop]);
+            System.out.println("bsGroups = " + bsGroups);
+            System.out.println("bsOps = " + bsOps);
+            nChecked++;
+          }
+          boolean isOK = true;
+          bsPoints.clearAll();
+          bsPoints.or(bsPoints0);
+          targeted.clearAll();
+          for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
+              .nextSetBit(i + 1)) {
+            bsPoints.clear(i);
+            //          if (iop == 15 && i == 46)
+            //System.out.println("????");
+            int j = findEquiv(iop, op, i, bsPoints, pt, true);
+            if (j < 0 && sg == null) {
+              System.out.println(
+                  "failed op " + iop + " for atom " + i + " " + atoms[i].name
+                      + " " + atoms[i] + " looking for " + pt + "\n" + op);
+              isOK = false;
+              break;
+            }
+            if (j >= 0 && i != j) {
+              targeted.set(j);
+            }
+          }
+          if (sg == null) {
+            BS myGroups = bsOpGroups[iop];
+            bsOps.clear(iop);
+            opsChecked.set(iop);
+            if (isOK) {
+              System.out.println("OK!");
+              if (iop == 1)
+                hasC1 = true;
+              // iop was found
+              targets.or(targeted);
+              //System.out.println("targeted=" + targeted);
+              //System.out.println("targets=" + targets);
+              //reduce the number of possible groups to groups having this operation
+              bsGroups.and(myGroups);
+              // reduce the number of operations to check to only those NOT common to 
+              // all remaining groups;
+              temp1.setBits(1, OP_COUNT);
+              for (int i = bsGroups.nextSetBit(0); i >= 0; i = bsGroups
+                  .nextSetBit(i + 1)) {
+                temp1.and(bsGroupOps[i]);
+              }
+              uncheckedOps.or(temp1);
+              bsOps.andNot(temp1);
+            } else {
+              // iop was not found
+              // clear all groups that require this operation
+              bsGroups.andNot(myGroups);
+              // trim ops to only those needed for compatible groups
+              // and retain only operations for groups that have this operation
+              temp1.clearAll();
+              for (int i = bsGroups.nextSetBit(0); i >= 0; i = bsGroups
+                  .nextSetBit(i + 1)) {
+                temp1.or(bsGroupOps[i]);
+              }
+              bsOps.and(temp1);
+            }
+          } else {
+            targets.or(targeted);
+          }
+        }
+        if (sg == null) {
+          n = bsGroups.cardinality();
+          if (n == 0) {
+            bsGroups.set(hasC1 ? 1 : 0);
+            n = 1;
+            if (hasC1 && !asString) {
+              uncheckedOps.clearAll();
+              uncheckedOps.set(1);
+              opsChecked.clearAll();
+              targets.clearAll();
+              bsPoints.or(bsPoints0);
+            }
+          }
+          isg = bsGroups.nextSetBit(0);
+          if (n == 1) {
+            if (isg > 0) {
+              opsChecked.and(bsGroupOps[isg]);
+              uncheckedOps.and(bsGroupOps[isg]);
+              uncheckedOps.andNot(opsChecked);
+              uncheckedOps.or(bsGroupOps[isg]);
+              uncheckedOps.clear(0);
+              bsPoints.or(bsPoints0);
+              //System.out.println("test1 bspoints " + bsPoints.cardinality() + " " + bsPoints);
+              //System.out.println("test2 targets " + targets.cardinality() + " " + targets);
+              //System.out.println("test3 uchop= " + uncheckedOps.cardinality() + " " + uncheckedOps);
+              //System.out.println("test4 opsc= " + opsChecked.cardinality() + " " + opsChecked);
+              bsPoints.andNot(targets);
+              if (!checkBasis(uncheckedOps, bsPoints, targets)) {
+                isg = 0;
+              }
+              //System.out.println("test2b targets " + targets.cardinality() + " " + targets);
+              //System.out.println("test1b points " + bsPoints.cardinality() + " " + bsPoints);
+            }
+            if (isg == 0)
+              targets.clearAll();
+          }
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+        bsGroups.clearAll();
+      }
+
+      if (sg == null) {
+        System.out.println("checked " + nChecked + " operations; now " + n + " "
+            + bsGroups + " " + bsOps);
+        for (int i = bsGroups.nextSetBit(0); i >= 0; i = bsGroups
+            .nextSetBit(i + 1)) {
+          System.out.println(SpaceGroup.nameToGroup.get(groupNames[i]));
+        }
+        if (n != 1)
+          return null;
+        sg = SpaceGroup.nameToGroup.get(groupNames[isg]);
+      }
+      name = sg.asString();
+      basis = BSUtil.copy(bsAtoms);
+      for (int i = targets.nextSetBit(0); i >= 0; i = targets.nextSetBit(i + 1))
+        basis.clear(atoms[i].index);
+      int nb = basis.cardinality();
+      String msg = name + "\nbasis is " + nb + " atom" + (nb == 1 ? "" : "s")
+          + ": " + basis;
+      System.out.println(msg);
+      if (asString)
+        return msg;
     }
 
-    if (sg == null) {
-      System.out.println("checked " + nChecked + " operations; now " + n + " "
-          + bsGroups + " " + bsOps);
-      for (int i = bsGroups.nextSetBit(0); i >= 0; i = bsGroups
-          .nextSetBit(i + 1)) {
-        System.out.println(SpaceGroup.nameToGroup.get(groupNames[i]));
-      }
-      if (n != 1)
-        return null;
-      sg = SpaceGroup.nameToGroup.get(groupNames[isg]);
-    }
-    String name = sg.asString();
-    BS basis = BSUtil.copy(bsAtoms);
-    for (int i = targets.nextSetBit(0); i >= 0; i = targets.nextSetBit(i + 1))
-      basis.clear(atoms[i].index);
-    int nb = basis.cardinality();
-    String msg = name + "\nbasis is " + nb + " atom" + (nb == 1 ? "" : "s")
-        + ": " + basis;
-    System.out.println(msg);
-    if (asString)
-      return msg;
     @SuppressWarnings("unchecked")
     Map<String, Object> map = (Map<String, Object>) sg.dumpInfoObj();
     System.out.println("unitcell is " + uc.getUnitCellInfo(true));
@@ -383,6 +403,51 @@ public class SpaceGroupFinder {
     if (isAssign)
       map.put("sg", sg);
     return map;
+  }
+
+  private static SymmetryInterface createCompatibleUnitCell(SpaceGroup sg,
+                                                     double[] params) {
+    SymmetryInterface sym;
+    int n = PT.parseInt(sg.intlTableNumber);
+    boolean isHexGroup = isHexagonal(n, null);
+    if (n <= 2 || isHexGroup && isHexagonal(-1, params)) {
+      // all set
+    } else if (isHexGroup) {
+      params = new double[] { params[0], params[0], params[2], 90, 90, 120 };
+    } else if (n >= 195){
+      params = new double[] { params[0], params[0], params[0], 90, 90, 90 };
+      // cubic
+    } else if (n >= 75){
+      // tetragonal
+      params = new double[] { params[0], params[0], params[2], 90, 90, 90 };
+    } else if (n >= 16){
+      // orthorhombic
+      params = new double[] { params[0], params[1], params[2], 90, 90, 90 };
+    } else {
+      // monoclinic
+      switch (sg.uniqueAxis) {
+      case 'a':
+        params = new double[] { params[0], params[1], params[1], 90, params[4], params[5] };
+        break;
+      case 'b':
+        params = new double[] { params[0], params[1], params[0], params[3], 90, params[5] };
+        break;
+      case 'c':
+        params = new double[] { params[0], params[0], params[0],params[3], params[4], 90 };
+        break;
+      default:
+        // nothing to do
+        break;
+      }
+    }
+    sym = new Symmetry().setUnitCell(params, false);
+    sym.setSpaceGroupTo(sg);    
+    return sym;
+  }
+
+  private static boolean isHexagonal(int n, double[] params) {
+    return (n < 1 ? params[0] == params[1] && params[3] == 90 && params[4] == 90 && params[5] == 120
+        : n >= 143 && n <= 194);
   }
 
   private void removeDuplicates(BS bs) {
@@ -494,6 +559,10 @@ public class SpaceGroupFinder {
    * Remove possibilities based on unit cells. No attempt is made to permute
    * axes. Rhombohedral groups are never included.
    * 
+   * triclinic = 1, 2
+   * 
+   * monoclinic = 3 - 15
+   * 
    * orthorhombic = 16 - 74 (a, b, c, 90, 90, 90)
    * 
    * tetragonal = 75 - 142 (a, a, c, 90, 90, 90)
@@ -509,8 +578,8 @@ public class SpaceGroupFinder {
   private void filterGroups(BS bsGroups, double[] params) {
     boolean isOrtho = false, isTet = false, isTri = false,
         isRhombo = false, isCubic = false;
-    boolean absame = approx0((params[0]-params[1]));
-    boolean bcsame = approx0((params[1] - params[2]));
+    boolean absame = approx0(params[0] - params[1]);
+    boolean bcsame = approx0(params[1] - params[2]);
     if (params[3] == 90) { // alpha
       if (params[4] == 90) { // beta
         // really?? 
@@ -633,7 +702,7 @@ public class SpaceGroupFinder {
     String[] ops = PT.split(PT.trim(xyzList.trim().replace('&', ';'), ";="), ";");
     for (int j = ops.length; --j >= 0;) {
       String xyz = ops[j];
-      if (xyz == null || xyz.indexOf("z") < xyz.lastIndexOf(","))
+      if (xyz == null)// || xyz.indexOf("z") < xyz.lastIndexOf(","))
         return "?" + ops[j] + "?";
       xyz = SymmetryOperation.getJmolCanonicalXYZ(xyz);
       for (int i = opXYZ.length; --i >= 0;) {
@@ -701,7 +770,7 @@ public class SpaceGroupFinder {
 //  }
 
   P3d toFractional(Atom a, SymmetryInterface uc) {
-    pt.set(a.x, a.y, a.z);
+    pt.setT(a);
     uc.toFractional(pt, false);
     return pt;
   }

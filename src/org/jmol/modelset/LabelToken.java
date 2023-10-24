@@ -170,7 +170,8 @@ public class LabelToken {
       T.modx, T.mody, T.modz, T.modo, T.modxyz, T.symop, 
       T.nbo, // added in 14.8.2
       T.chirality, // added in 14.11.4
-      T.ciprule // added in 14.17.0
+      T.ciprule, // added in 14.17.0
+      T.wyckoff // added in 16.1.44
   };
 
   public LabelToken() {
@@ -611,6 +612,9 @@ public class LabelToken {
         break;
       case T.w:
         strT = atom.getIdentityXYZ(ptTemp, Atom.ID_U);
+        break;
+      case T.wyckoff:
+        strT = atom.getWyckoffPosition();
         break;
         
       // characters only

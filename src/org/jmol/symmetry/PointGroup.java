@@ -1254,5 +1254,160 @@ class PointGroup {
     return (drawInfo != null && drawType.equals(type == null ? "" : type) 
         && drawIndex == index && this.scale  == scale);
   }
+
+  // using https://en.wikipedia.org/wiki/Hermann%E2%80%93Mauguin_notation
+//  private final static String SF2HM = 
+//      "Cn,1,2,3,4,5,6,7,8,9,10,11,12"+
+//      "|Cnv,1m,2m,3m,4mm,5m,6mm,7m,8mm,9m,10mm,11m,12mm,\u221em"+
+//      "|Sn,,-1,,-4,,-3,,-8,,-5,,(-12)"+
+//      "|Cnh,-2,2/m,-6,4/m,-10,6/m,-14,8/m,-18,10/m,-22,12/m"+
+//      "|Dn,,22,32,422,52,622,72,822,92,(10)22,(11)2,(12)22"+
+//      "|Dnd,,-42m,-32/m,-82m,-52/m,(-12)2m,-72/m,(-16)2m,-92/m,(-20)2m,(-11)2/m,(-24)2m"+
+//      "|Dnh,,2/m2/m2/m,-6m2,4/m2/m2/m,(-10)m2,6/m2/m2/m,(-14)m2,8/m2/m2/m,(-18)m2,10/m2/m2/m,(-22)m2,12/m2/m2/mDn/2h,\u221e/mm"+
+//      "|Ci,-1"+
+//      "|Cs,-2"+
+//      "|T,23"+
+//      "|Th,m-3"+
+//      "|Td,-43m"+
+//      "|O,432"+
+//      "|Oh,m-3m";
+//
+
+  // using https://en.wikipedia.org/wiki/Point_group with added infm and inf/mm
+  private final static String SF2HM = 
+      "Cn,1,2,3,4,5,6,7,8,9,10,11,12"+
+      "|Cnv,m,2m,3m,4mm,5m,6mm,7m,8mm,9m,10mm,11m,12mm,\u221em"+
+      "|Sn,,-1,,-4,,-3,,-8,,-5,,(-12)"+
+      "|Cnh,m,2/m,-6,4/m,-10,6/m,-14,8/m,-18,10/m,-22,12/m"+
+      "|Dn,,222,32,422,52,622,72,822,92,(10)22,(11)2,(12)22"+
+      "|Dnd,,-42m,-3m,-82m,-5m,(-12)2m,-7m,(-16)2m,-9m,(-20)2m,(-11)m,(-24)2m"+
+      "|Dnh,,mmm,-6m2,4/mmm,(-10)m2,6/mmm,(-14)m2,8/mmm,(-18)m2,10/mmm,(-22)m2,12/mmm,\u221e/mm"+
+      "|Ci,-1"+
+      "|Cs,m"+
+      "|T,23"+
+      "|Th,m-3"+
+      "|Td,-43m"+
+      "|O,432"+
+      "|Oh,m-3m";
+
+private static Map<String, String> htSFToHM;
   
+  private static String getSFtoInt(String name) {
+    if (htSFToHM == null) {
+      htSFToHM = new Hashtable<String, String>();
+      String[] syms = SF2HM.split("\\|");
+      for (int i = 0; i < syms.length; i++) {
+        String[] list = syms[i].split(",");
+        String sym = list[0];
+        if (list.length == 2) {
+          htSFToHM.put(sym, list[1]);
+          System.out.println(sym + "\t" + list[1]);
+          continue;
+        }
+        String type = sym.substring(0, 1);
+        String ext = sym.substring(2, sym.length());
+        for (int n = 1; n < 13; n++) {
+          String val = list[n];
+          if (val.length() > 0) {
+            htSFToHM.put(type + n + ext, val); 
+            System.out.println(type + n + ext + "\t" + val);
+          }
+        }
+        if (list.length == 14) {
+          htSFToHM.put(type + "\u0221e" + ext, list[13]);
+        }
+      }
+      
+    }
+    return htSFToHM.get(name);
+  }
+  
+  static {
+    getSFtoInt("C2");
+  }
+
+
+//  C1  1
+//  C2  2
+//  C3  3
+//  C4  4
+//  C5  5
+//  C6  6
+//  C7  7
+//  C8  8
+//  C9  9
+//  C10 10
+//  C11 11
+//  C12 12
+//  C1v 1m
+//  C2v 2m
+//  C3v 3m
+//  C4v 4mm
+//  C5v 5m
+//  C6v 6mm
+//  C7v 7m
+//  C8v 8mm
+//  C9v 9m
+//  C10v  10mm
+//  C11v  11m
+//  C12v  12mm
+//  S2  -1
+//  S4  -4
+//  S6  -3
+//  S8  -8
+//  S10 -5
+//  S12 (-12)
+//  C1h -2
+//  C2h 2/m
+//  C3h -6
+//  C4h 4/m
+//  C5h -10
+//  C6h 6/m
+//  C7h -14
+//  C8h 8/m
+//  C9h -18
+//  C10h  10/m
+//  C11h  -22
+//  C12h  12/m
+//  D2  22
+//  D3  32
+//  D4  422
+//  D5  52
+//  D6  622
+//  D7  72
+//  D8  822
+//  D9  92
+//  D10 (10)22
+//  D11 (11)2
+//  D12 (12)22
+//  D2d -42m
+//  D3d -32/m
+//  D4d -82m
+//  D5d -52/m
+//  D6d (-12)2m
+//  D7d -72/m
+//  D8d (-16)2m
+//  D9d -92/m
+//  D10d  (-20)2m
+//  D11d  (-11)2/m
+//  D12d  (-24)2m
+//  D2h 2/m2/m2/m
+//  D3h -6m2
+//  D4h 4/m2/m2/m
+//  D5h (-10)m2
+//  D6h 6/m2/m2/m
+//  D7h (-14)m2
+//  D8h 8/m2/m2/m
+//  D9h (-18)m2
+//  D10h  10/m2/m2/m
+//  D11h  (-22)m2
+//  D12h  12/m2/m2/mDn/2h
+//  Ci  -1
+//  Cs  -2
+//  T 23
+//  Th  m-3
+//  Td  -43m
+//  O 432
+//  Oh  m-3m
+
 }

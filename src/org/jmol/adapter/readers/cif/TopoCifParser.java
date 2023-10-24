@@ -614,7 +614,7 @@ public class TopoCifParser implements Parser {
     int nOps = symops.size();
     ops = new M4d[nOps];
     for (int i = 0; i < nOps; i++) {
-      ops[i] = SymmetryOperation.getMatrixFromXYZ("!" + symops.get(i));
+      ops[i] = SymmetryOperation.getMatrixFromXYZ("!" + symops.get(i), true);
     }
     for (int i = 0; i < atoms.size(); i++) {
       atoms.get(i).finalizeAtom();
@@ -738,7 +738,7 @@ public class TopoCifParser implements Parser {
       Atom a = atoms[i];
       if (bsAtoms0 != null && !bsAtoms0.get(i))
         continue;
-      int idx = a.sequenceNumber;
+      int idx = (a instanceof TAtom ? ((TAtom) a).idx1 : 0);
       if (idx == Integer.MIN_VALUE || idx == 0)
         continue;
       if (idx > 0) {
@@ -931,6 +931,7 @@ public class TopoCifParser implements Parser {
     @SuppressWarnings("unused")
     int idx;
     TNet net;
+    public int idx1;
 
     TAtom() {
       super();
@@ -1213,7 +1214,7 @@ public class TopoCifParser implements Parser {
           elementSymbol = "Xx";
           for (int i = tatoms.size(); --i >= 0;) {
             TAtom ta = tatoms.get(i);
-            ta.sequenceNumber = idx + 1;
+            ta.idx1 = idx + 1;
             if (ta.atomName == null || !ta.atomName.startsWith(net.label + "_"))
               ta.atomName = net.label + "_" + ta.atomName;
             ta.net = net;
@@ -1399,7 +1400,7 @@ public class TopoCifParser implements Parser {
         net.hasAtoms = true;
         for (int i = n; --i >= 0;) {
           TAtom a = tatoms.get(i);
-          a.sequenceNumber = -idx - 1;
+          a.idx1 = -idx - 1;
           a.atomName = netLabel + "_" + a.atomName;
           a.net = net;
           //          a.assocDist = new double[] { calculateDistance(linkNodes[0], a), calculateDistance(linkNodes[1], a) };

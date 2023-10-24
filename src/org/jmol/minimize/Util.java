@@ -379,7 +379,7 @@ public class Util {
     //    l = l * (-sin_dl * sin_theta) + an
     //    l = l * (1 / length_jl / sin_theta)
     
-    l.scaleAdd(-sin_dl / csc_theta, l, an);
+    l.scaleAdd2(-sin_dl / csc_theta, l, an);
     l.scale(csc_theta / length_jl);
 
     j.setT(i); // need i later
@@ -390,8 +390,8 @@ public class Util {
     //    i = i * (-sin_dl / sin_theta) + bn
     //    i = i * (1 / length_ji / sin_theta);
     
-    i.scaleAdd(-cos_theta, k, i);
-    i.scaleAdd(-sin_dl * csc_theta, i, bn);
+    i.scaleAdd2(-cos_theta, k, i);
+    i.scaleAdd2(-sin_dl * csc_theta, i, bn);
     i.scale(csc_theta / length_ji);
 
     //    k = ((cn + (((-jk + ji * cos_theta) * sin_dl) / sin_theta)) / length_jk) / sin_theta;
@@ -401,8 +401,8 @@ public class Util {
     //    k = k * (1 / length_jk) / sin_theta);
 
     //    i has been set already, its original value is in j now;
-    k.scaleAdd(-cos_theta, j, k);
-    k.scaleAdd(-sin_dl * csc_theta, k, cn);
+    k.scaleAdd2(-cos_theta, j, k);
+    k.scaleAdd2(-sin_dl * csc_theta, k, cn);
     k.scale(csc_theta / length_jk);
 
     //    j = -(i + k + l);

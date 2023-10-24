@@ -142,7 +142,7 @@ public class Escape {
       sb.append("]");
       return sb.toString();
     }
-    if (x instanceof T3d || x instanceof T3d)
+    if (x instanceof T3d || x instanceof T3d || x instanceof M34d)
       return x.toString();
     if (x instanceof JSONEncodable)
       return ((JSONEncodable) x).toJSON();

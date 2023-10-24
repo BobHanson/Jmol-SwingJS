@@ -97,7 +97,7 @@ public class DrawRenderer extends MeshRenderer {
         renderInfo();
       if (!isExport 
           && mesh.visibilityFlags != 0
-          && vwr.getPickingMode() == ActionManager.PICKING_DRAW) {
+          && (vwr.getDrawHover() || vwr.getPickingMode() == ActionManager.PICKING_DRAW)) {
         if (!g3d.setC(C.getColixTranslucent3(C.GOLD, true, 0.5d)))
           needTranslucent = true;
         else
@@ -476,6 +476,7 @@ public class DrawRenderer extends MeshRenderer {
   }
 
   private final BS bsHandles = new BS();
+  private boolean haveNotifiedHandles;
   
   private void renderHandles() {
     int diameter = (int) Math.round(10 * imageFontScaling);
@@ -493,13 +494,20 @@ public class DrawRenderer extends MeshRenderer {
         int[] vertexIndexes = dmesh.pis[i];
         if (vertexIndexes == null)
           continue;
-        for (int j = (dmesh.isDrawPolygon ? 3 : vertexIndexes.length); --j >= 0;) {
+        for (int j = (dmesh.isDrawPolygon ? 3 : vertexIndexes.length - 1); --j >= 0;) {
           int k = vertexIndexes[j];
           if (bsHandles.get(k))
             continue;
           bsHandles.set(k);
-          g3d.drawFilledCircle(C.GOLD, colixFill, diameter,
+          if (k >= screens.length) {
+            if (!haveNotifiedHandles) {
+              System.out.println("DrawRender handles k >= screens.length " + k + " ");
+              haveNotifiedHandles = true;
+            }
+          } else {
+            g3d.drawFilledCircle(C.GOLD, colixFill, diameter,
               screens[k].x, screens[k].y, screens[k].z);
+          }
         }
       }
       break;

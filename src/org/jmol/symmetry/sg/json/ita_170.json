@@ -1,0 +1,1 @@
+{ "its": [ { "gen": [ "x,y,z","-y,x-y,z+2/3","-x,-y,z+1/2" ],"gp": [ "x,y,z","-y,x-y,z+2/3","-x+y,-x,z+1/3","-x,-y,z+1/2","y,-x+y,z+1/6","x-y,x,z+5/6" ],"id": "P65","itaFull": "170","set": 1,"sg": 170,"tm": "a,b,c","u": "P 65","wpos": { "pos": [ { "desc": "1","geom": "general","label": "a","mult": 6 } ] } } ],"n": 1,"sg": 170 }

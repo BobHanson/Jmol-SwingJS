@@ -214,66 +214,79 @@ public final class BioModel extends Model {
    * @param conformationIndex0
    * @param doSet
    * @param bsAtoms
-   * @param bsRet
-   * @return true;
+   * @param bsRet to be set
    */
-  public boolean getConformation(int conformationIndex0, boolean doSet,
+  public void getConformation(int conformationIndex0, boolean doSet,
                                  BS bsAtoms, BS bsRet) {
+    boolean isConfig0 = (conformationIndex0 == 0);
     if (altLocCount == 0) {
-      if (conformationIndex0 == 0)
+      if (isConfig0)
         bsRet.or(bsAtoms);
-      return true;
+      return;
     }
     boolean isFirst = (conformationIndex0 <= 0);
     Atom[] atoms = ms.at;
     boolean isSpace = (conformationIndex0 == -32);
-    boolean isNone = (conformationIndex0 == 0);
     char thisAltLoc = (isFirst && !isSpace ? (char) -conformationIndex0 : '\0');
     if (isFirst) {
       // config=n where n <= 0   atom-based
-      int lastAtom = -1;
-      String lastName = null, name;
-      int lastChain = Integer.MIN_VALUE, chain;
-      char lastIns = '\0', ins;
-      int lastRes = Integer.MIN_VALUE, res;
-      boolean haveLoc = true;
+      int lastChain = Integer.MIN_VALUE;
+      char lastIns = '\0';
+      int lastRes = Integer.MIN_VALUE;
+      Map<String, int[]> map = new Hashtable<String, int[]>(); // map name to [first loc, foundFlag]
       for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
           .nextSetBit(i + 1)) {
         Atom atom = atoms[i];
-        chain = atom.getChainID();
-        res = atom.getResno();
-        ins = atom.getInsertionCode();
-        name = atom.getAtomName();
-        if (res != lastRes || ins != lastIns || chain != lastChain
-            || name != lastName) {
-          // new atom type
-          if (!haveLoc && lastAtom >= 0) {
-            // we have a pointer for a lastAtom, but don't have the location
-            bsAtoms.set(lastAtom);
-          }
-          haveLoc = false;
-          if (isNone) {
-            lastAtom = i;
-            thisAltLoc = atom.altloc;
-          } else if (!isSpace){
-            lastAtom = i;
-          }
+        int chain = atom.getChainID();
+        int res = atom.getResno();
+        char ins = atom.getInsertionCode();
+        if (res != lastRes || ins != lastIns || chain != lastChain) {
+          lastChain = chain;
+          lastRes = res;
+          lastIns = ins;
+          map.clear();
         }
-        if (atom.altloc == thisAltLoc) {
-          haveLoc = true;
-        } else {
+        String name = atom.getAtomName();
+        int[] locs = map.get(name);
+        if (locs == null)
+          map.put(name, locs = new int[1]);//first location or -1 (foundFlag)
+        int i0 = locs[0] - 1;
+        if (i0 < 0) {
+          if (i0 == -2) {
+            // desired loc already found - clear this atom and continue
+            bsAtoms.clear(i);
+            continue;
+          }
+          // first for this atom
+          if (isSpace) {
+            // request is config=''
+            // clear it only if it is an altloc
+            if (atom.altloc != '\0') {
+              bsAtoms.clear(i);
+            }
+          } else {
+            // request is for a specific altloc
+            // just mark this as the first location and leave it selected
+            locs[0] = i + 1;
+          }
+          continue;
+        }
+        // not first for this atom 
+        if (isConfig0) {
+          // config=0 - clear this and set found flag
           bsAtoms.clear(i);
-          if (isNone) {
-            bsAtoms.clear(lastAtom);
-          }
+          locs[0] = -1;
+          // and clear i0
+        } else if (atom.altloc == thisAltLoc) {
+          // found - set flag
+          locs[0] = -1;
+          // and clear i0
+        } else {
+          // clear this atom, not first
+          i0 = i;
         }
-        lastChain = chain;
-        lastRes = res;
-        lastName = name;
-        lastIns = ins;
+        bsAtoms.clear(i0);
       }
-      if (!haveLoc)
-        bsAtoms.set(lastAtom);
     } else {
       // config=n where n > 0   residue-based
       conformationIndex0--;
@@ -310,7 +323,6 @@ public final class BioModel extends Model {
         for (int j = bioPolymerCount; --j >= 0;)
           bioPolymers[j].setConformation(bsAtoms);
     }
-    return true;
   }
 
   public void getDefaultLargePDBRendering(SB sb, int maxAtoms) {

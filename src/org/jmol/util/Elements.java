@@ -448,13 +448,18 @@ public class Elements {
     return altElementSymbols[i];
   }
   
+  public final static int ISOTOPE_NUMBER_MASK = 0xF8;
+  public final static int ISOTOPE_MASS_OFFSET = 7;
+  public final static int ELEMENT_NUMBER_MASK = 0x7F; // 127
+
+
   /**
    * @param i index into altElementSymbols
    * @return 2H
    */
   public final static String altIsotopeSymbolFromIndex(int i) {
     int code = altElementNumbers[i]; 
-    return (code >> 7) + elementSymbolFromNumber(code & 127);
+    return (code >> ISOTOPE_MASS_OFFSET) + elementSymbolFromNumber(code & 127);
   }
   
   /**
@@ -463,19 +468,19 @@ public class Elements {
    */
   public final static String altIsotopeSymbolFromIndex2(int i) {
     int code = altElementNumbers[i]; 
-    return  elementSymbolFromNumber(code & 127) + (code >> 7);
+    return  elementSymbolFromNumber(code & ELEMENT_NUMBER_MASK) + ((code) >> ISOTOPE_MASS_OFFSET);
   }
   
   public final static int getElementNumber(int atomicAndIsotopeNumber) {
-    return atomicAndIsotopeNumber & 127;
+    return atomicAndIsotopeNumber & ELEMENT_NUMBER_MASK;
   }
 
   public final static int getIsotopeNumber(int atomicAndIsotopeNumber) {
-    return atomicAndIsotopeNumber >> 7;
+    return (atomicAndIsotopeNumber & ISOTOPE_NUMBER_MASK) >> ISOTOPE_MASS_OFFSET;
   }
 
   public final static int getAtomicAndIsotopeNumber(int n, int mass) {
-    return ((n < 0 ? 0 : n) + (mass <= 0 ? 0 : mass << 7));
+    return ((n < 0 ? 0 : n) + (mass <= 0 ? 0 : mass << ISOTOPE_MASS_OFFSET));
   }
   
   /**
@@ -507,12 +512,12 @@ public class Elements {
     13,
     16,
     55,
-    (2 << 7) + 1, // D = 2*128 + 1 <-- firstIsotope
-    (3 << 7) + 1, // T = 3*128 + 1
-    (11 << 7) + 6, // 11C
-    (13 << 7) + 6, // 13C
-    (14 << 7) + 6, // 14C
-    (15 << 7) + 7, // 15N
+    (2 << ISOTOPE_MASS_OFFSET) + 1, // D = 2*128 + 1 <-- firstIsotope
+    (3 << ISOTOPE_MASS_OFFSET) + 1, // T = 3*128 + 1
+    (11 << ISOTOPE_MASS_OFFSET) + 6, // 11C
+    (13 << ISOTOPE_MASS_OFFSET) + 6, // 13C
+    (14 << ISOTOPE_MASS_OFFSET) + 6, // 14C
+    (15 << ISOTOPE_MASS_OFFSET) + 7, // 15N
   };
   
   /**

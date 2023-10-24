@@ -546,7 +546,7 @@ public class MathExt {
       ucnew = SimpleUnitCell.getReciprocal(ucnew, null, scale);
       scale = 1;
     } else if ("vertices".equalsIgnoreCase(op)) {
-      return mp.addXObj(BoxInfo.getVerticesFromOABCd(ucnew));
+      return mp.addXObj(BoxInfo.getVerticesFromOABC(ucnew));
     }
     if (scale != 1)
       for (int i = 1; i < 4; i++)
@@ -3697,6 +3697,31 @@ public class MathExt {
     // In the following, "op" can be the operator number in a space group 
     // or a string representation of the operator, such as "x,-y,z"
 
+    // options include:
+    
+    //
+//  "axisVector", 
+//  "cartesianTranslation",
+//  "centeringVector", 
+//  "cif2", 
+//  "draw", 
+//  "fractionalTranslation", 
+//  "id", 
+//  "inversionCenter", 
+//  "label",
+//  "matrix", 
+//  "plane",
+//  "point", 
+//  "rotationAngle",
+//  "timeReversal", 
+//  "type",
+//  "unitTranslation", 
+//  "xyz", 
+//  "xyzCanonical",
+//  "xyzNormalized"
+//  "xyzOriginal", 
+
+    
     // x = y.symop(op,atomOrPoint) 
     // Returns the point that is the result of the transformation of atomOrPoint 
     // via a crystallographic symmetry operation. The atom set y selects the unit 
@@ -3707,6 +3732,7 @@ public class MathExt {
     // or a specific Jones-Faithful expression in quotes such as "x,1/2-y,z".
 
     // x = y.symop("invariant")
+    // x = y.symop("invariant", "matrix")
 
     // x = y.symop(op,"label")
     // This form of the .symop() function returns a set of draw commands that describe 
@@ -3728,8 +3754,26 @@ public class MathExt {
     // x = y.symop(n,...,"cif2")
     // return a <symop> <translation> as nn [a b c] suitable for CIF2 inclusion
 
+    // x= symop(matrix,...)
+    // convert matrix back to xyz or other aspect
+    
     // x = symop(.....)
     // use this model atoms
+    
+    
+    int narg = args.length;
+    
+    // static calls in SymmetryOperation
+    Object o = null;
+    if (args.length == 2 && args[0].tok == T.string && args[1].tok == T.string && ((String) args[1].value).equalsIgnoreCase("matrix")) {
+      o = vwr.getSymTemp().convertOperation((String) args[0].value, null);
+      return (o != null && mp.addXObj(o));        
+    }
+    if (args.length == 2 && args[0].tok == T.matrix4f && args[1].tok == T.string && ((String) args[1].value).equalsIgnoreCase("xyz")) {
+      o = vwr.getSymTemp().convertOperation("", (M4d) args[0].value);
+      return (o != null && mp.addXObj(o));        
+    }    
+    
     SV x1 = (isProperty ? mp.getX() : null);
     boolean isPoint = false;
     if (x1 != null && x1.tok != T.bitset && !(isPoint = (x1.tok == T.point3f)))
@@ -3738,13 +3782,10 @@ public class MathExt {
     P3d pt1 = (isPoint ? SV.ptValue(x1) : null);
     if (!isPoint && bsAtoms == null)
       bsAtoms = vwr.getThisModelAtoms();
-    if (bsAtoms != null && bsAtoms.isEmpty())
-      return false;
-    int narg = args.length;
     if (narg == 0) {
       String[] ops = PT.split(PT.trim((String) vwr
           .getSymTemp().getSpaceGroupInfo(vwr.ms, null,
-              vwr.ms.at[bsAtoms.nextSetBit(0)].mi, false, null)
+              (bsAtoms == null || bsAtoms.isEmpty() ? Math.max(0, vwr.am.cmi) : vwr.ms.at[bsAtoms.nextSetBit(0)].mi), false, null)
           .get("symmetryInfo"), "\n"), "\n");
       Lst<String[]> lst = new Lst<String[]>();
       for (int i = 0, n = ops.length; i < n; i++)
@@ -3760,6 +3801,7 @@ public class MathExt {
     switch (args[0].tok) {
     case T.string:
       xyz = SV.sValue(args[0]);
+      invariant = xyz.equalsIgnoreCase("invariant");
       apt++;
       break;
     case T.matrix4f:
@@ -3779,18 +3821,7 @@ public class MathExt {
       }
       break;
     }
-    invariant = (xyz != null && xyz.equalsIgnoreCase("invariant"));
-
-    if (invariant && iOp == Integer.MIN_VALUE) {
-      int[] ret = null;
-      if (pt1 != null) {
-        SymmetryInterface sym = vwr.getCurrentUnitCell();
-        ret = (sym == null ? new int[0] : sym.getInvariantSymops(pt1, null));
-      } else if (bsAtoms != null) {
-        ret = vwr.ms.getSymmetryInvariant(bsAtoms.nextSetBit(0));
-      }
-      return (ret != null && mp.addXAI(ret));
-    }
+    
 
     if (bsAtoms == null) {
       if (apt < narg && args[apt].tok == T.bitset)
@@ -3800,6 +3831,7 @@ public class MathExt {
             .or((BS) args[apt + 1].value);
     }
 
+    
     // allow for [ h k l ] lattice translation
     P3d trans = null;
     if (narg > apt && args[apt].tok == T.varray) {
@@ -3825,10 +3857,10 @@ public class MathExt {
         && args[apt].tok == T.integer ? args[apt].intValue : -1);
     if (nth >= 0) // 0 here means "give me all of them"
       apt++;
-    if (iOp == Integer.MIN_VALUE)
+    if (iOp == Integer.MIN_VALUE && !invariant)
       iOp = 0;
     Map<String, ?> map = null;
-    if (xyz != null && xyz.indexOf(",") < 0) {
+    if (!invariant && xyz != null && xyz.indexOf(",") < 0) {
       if (apt == narg) {
         map = vwr.ms.getPointGroupInfo(null);
       } else if (args[apt].tok == T.hash) {
@@ -3855,7 +3887,7 @@ public class MathExt {
         iOp = 1;
       }
       xyz = xyz.substring(0, p1);
-      Object o = map.get(xyz + "_m");
+      o = map.get(xyz + "_m");
       if (o == null) {
         o = map.get(xyz);
         return (o == null ? mp.addXStr("") : mp.addXObj(o));
@@ -3895,15 +3927,16 @@ public class MathExt {
         pt1.add(centerPt);
         return mp.addXPt(pt1);
       } catch (Exception e) {
-        return false;
       }
+      return false;
     }
+
     String desc = (narg == apt
-        ? (pt2 != null ? "all" : pt1 != null ? "point" : "matrix")
+        ? (invariant ? "id" : pt2 != null ? "all" : pt1 != null ? "point" : "matrix")
         : SV.sValue(args[apt++]).toLowerCase());
     boolean haveAtom = (bsAtoms != null && !bsAtoms.isEmpty());
     int iatom = (haveAtom ? bsAtoms.nextSetBit(0) : -1);
-    if (desc.equals("invariant") && isProperty) {
+    if (invariant || desc.equals("invariant") && isProperty) {
       if (haveAtom && pt1 == null)
         pt1 = vwr.ms.at[iatom];
       haveAtom = (pt1 != null);
@@ -3911,7 +3944,29 @@ public class MathExt {
         iatom = vwr.getThisModelAtoms().nextSetBit(0);
     }
 
-    return (haveAtom && apt == args.length
+    if (invariant && iOp == Integer.MIN_VALUE) {
+      int[] ret = null;
+      SymmetryInterface sym = vwr.getCurrentUnitCell();
+      if (pt1 != null) {
+        ret = (sym == null ? new int[0] : sym.getInvariantSymops(pt1, null));
+      } else if (bsAtoms != null && !bsAtoms.isEmpty()) {
+        int ia = bsAtoms.nextSetBit(0);
+        pt1 = vwr.ms.at[ia];
+        ret = vwr.ms.getSymmetryInvariant(ia);
+      }
+      if (ret != null && ret.length > 0) {
+        Object[] m = new Object[ret.length];
+        for (int i = 0; i < m.length; i++) {
+          iOp = ret[i];
+          m[i] = vwr.getSymmetryInfo(iatom, null, iOp, null, pt1, pt1,
+              T.array, desc, 0, -1, 0, null);
+        }
+        return mp.addXObj(m);
+      }
+      return (ret != null && mp.addXAI(ret));
+    }
+
+    return (apt == args.length
         && mp.addXObj(vwr.getSymmetryInfo(iatom, xyz, iOp, trans, pt1, pt2,
             T.array, desc, 0, nth, 0, null)));
   }

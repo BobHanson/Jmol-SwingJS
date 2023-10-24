@@ -1316,7 +1316,7 @@ public class SmilesGenerator {
       return null;
     // A + (A-b0 + A-b1 + A-b2)/3 = 2A - (b0 + b1 + b2)/3 
     b.scale(-1/3d);
-    b.scaleAdd(2, (T3d) atom, b);
+    b.scaleAdd2(2, (T3d) atom, b);
     return b;
   }
 

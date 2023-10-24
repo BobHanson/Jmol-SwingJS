@@ -1142,25 +1142,42 @@ public class SV extends T implements JSONEncodable {
         }
       }
       if (pt1 != 0 && Math.abs(pt1) <= len
-          && var.tok == varray) {
-        Lst<SV> sv = var.getList();
-        if (sv.size() == len) {
-          double[] data = new double[len];
+          && (tok == matrix3f && var.tok == point3f
+              || tok == matrix4f && var.tok == point4f || var.tok == varray)) {
+
+        double[] data;
+        switch (var.tok) {
+        default:
+        case varray:
+          Lst<SV> sv = var.getList();
+          if (sv.size() != len)
+            return;
+          data = new double[len];
           for (int i = 0; i < len; i++)
             data[i] = dValue(sv.get(i));
-          if (pt1 > 0) {
-            if (tok == matrix3f)
-              ((M3d) value).setRowA(pt1 - 1, data);
-            else
-              ((M4d) value).setRowA(pt1 - 1, data);
-          } else {
-            if (tok == matrix3f)
-              ((M3d) value).setColumnA(-1 - pt1, data);
-            else
-              ((M4d) value).setColumnA(-1 - pt1, data);
-          }
+          break;
+        case point3f:
+          P3d p = (P3d) var.value;
+          data = new double[] { p.x, p.y, p.z };
+          break;
+        case point4f:
+          P4d p4 = (P4d) var.value;
+          data = new double[] { p4.x, p4.y, p4.z, p4.w };
           break;
         }
+
+        if (pt1 > 0) {
+          if (tok == matrix3f)
+            ((M3d) value).setRowA(pt1 - 1, data);
+          else
+            ((M4d) value).setRowA(pt1 - 1, data);
+        } else {
+          if (tok == matrix3f)
+            ((M3d) value).setColumnA(-1 - pt1, data);
+          else
+            ((M4d) value).setColumnA(-1 - pt1, data);
+        }
+        break;
       }
       break;
     case string:
@@ -1172,7 +1189,7 @@ public class SV extends T implements JSONEncodable {
         pt1 = 0;
       while (pt1 >= str.length())
         str += " ";
-      if (pt2 == Integer.MAX_VALUE){
+      if (pt2 == Integer.MAX_VALUE) {
         pt2 = pt1;
       } else {
         if (--pt2 < 0)
@@ -1181,8 +1198,8 @@ public class SV extends T implements JSONEncodable {
           str += " ";
       }
       if (pt2 >= pt1)
-        value = str.substring(0, pt1) + sValue(var)
-          + str.substring(++pt2);
+        value = str.substring(0, pt1) + sValue(var) 
+        + str.substring(++pt2);
       intValue = index = Integer.MAX_VALUE;
       break;
     case varray:

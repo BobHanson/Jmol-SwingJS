@@ -148,6 +148,7 @@ public class CifReader extends AtomSetCollectionReader {
   private int titleAtomSet = 1;
   private boolean addAtomLabelNumbers;
   private boolean ignoreGeomBonds;
+  private boolean allowWyckoff = true;
 
   @Override
   public void initializeReader() throws Exception {
@@ -161,6 +162,7 @@ public class CifReader extends AtomSetCollectionReader {
     ignoreGeomBonds = checkFilterKey("IGNOREGEOMBOND");
     isPrimitive = checkFilterKey("PRIMITIVE");
     readIdeal = !checkFilterKey("NOIDEAL");
+    allowWyckoff = !checkFilterKey("NOWYCKOFF");
     filterAssembly = checkFilterKey("$");
     useAuthorChainID = !checkFilterKey("NOAUTHORCHAINS");
     if (isMolecular) {
@@ -603,7 +605,7 @@ public class CifReader extends AtomSetCollectionReader {
     SymmetryInterface sym = (haveSymmetry ? asc.getXSymmetry().getBaseSymmetry()
         : null);
     if (sym != null && sym.getSpaceGroup() == null) {
-      if (!isBinary) // ignore this for MMTF
+      if (!isBinary && !isMMCIF) // ignore this for MMTF
         appendLoadNote("Invalid or missing space group operations!");
       sym = null;
     }
@@ -1151,6 +1153,7 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte LABEL_SEQ_ID = 71;
   final private static byte LABEL_COMP_ID = 72;
   final private static byte LABEL_ATOM_ID = 73;
+  final private static byte WYCKOFF_LABEL = 74;
   final protected static String FAMILY_ATOM = "_atom_site";
   final private static String[] atomFields = { //
       "*_type_symbol",  //0
@@ -1223,10 +1226,11 @@ public class CifReader extends AtomSetCollectionReader {
       "*_moment_crystalaxis_x", // 
       "*_moment_crystalaxis_y", //
       "*_moment_crystalaxis_z", // 
-      "*_id", // 70
+      "*_id", // 70 mmCIF
       "*_label_seq_id", // 
       "*_label_comp_id", // 72 mmCIF dev 
-      "*_label_atom_id" // 73 mCIF dev 
+      "*_label_atom_id", // 73 mCIF dev
+      "*_wyckoff_label" // 74
   };
 
   //  final private static String singleAtomID = atomFields[CC_COMP_ID];
@@ -1250,7 +1254,7 @@ public class CifReader extends AtomSetCollectionReader {
    */
   boolean processAtomSiteLoopBlock(boolean isLigand) throws Exception {
     this.isLigand = isLigand;
-    int pdbModelNo = -1; // PDBX
+    int pdbModelNo = -1; // PDBXf
     boolean haveCoord = true;
     parseLoopParametersFor(FAMILY_ATOM, atomFields);
     if (key2col[CC_ATOM_X_IDEAL] != NONE) {
@@ -1318,7 +1322,8 @@ public class CifReader extends AtomSetCollectionReader {
           if (f0 != NONE && (addAtomLabelNumbers || atom != null)) {
             field = field + (asc.ac + 1);
             System.err.println(
-                "CifReader found duplicate atom_site_label! New label is " + field);
+                "CifReader found duplicate atom_site_label! New label is "
+                    + field);
             // user request to allow this to be automatic. 
             // note, however, that this will only work if atom_site_label is the FIRST 
             // reference to this atom
@@ -1344,6 +1349,7 @@ public class CifReader extends AtomSetCollectionReader {
       String authComp = null;
       String authSeq = null;
       String authAsym = null;
+      String wyckoff = null;
       boolean haveAuth = false;
       int seqID = 0;
       int n = cifParser.getColumnCount();
@@ -1353,6 +1359,7 @@ public class CifReader extends AtomSetCollectionReader {
         case NONE:
           break;
         case ATOM_ID:
+          // MMCIF only
           id = field;
           break;
         case CC_ATOM_SYM:
@@ -1399,6 +1406,12 @@ public class CifReader extends AtomSetCollectionReader {
           break;
         case LABEL_SEQ_ID:
           atom.sequenceNumber = seqID = parseIntStr(field);
+          break;
+        case WYCKOFF_LABEL:
+          if (allowWyckoff) {
+            wyckoff = field;
+            seqID = (field.length() > 0 ? field.charAt(0) : 0);
+          }
           break;
         case AUTH_SEQ_ID:
           haveAuth = true;
@@ -1602,13 +1615,14 @@ public class CifReader extends AtomSetCollectionReader {
         if (authAsym != null && useAuthorChainID)
           strChain = authAsym;
       }
-      if (strChain != null)
+      if (strChain != null) {
         setChainID(atom, strChain);
+      }
       if (maxSerial != Integer.MIN_VALUE)
         maxSerial = Math.max(maxSerial, atom.sequenceNumber);
       if (!addCifAtom(atom, id, componentId, strChain))
         continue;
-      if (id != null && seqID > 0) {
+      if ((id != null || wyckoff != null) && seqID > 0) {
         // co-op vibration vector when we have both id and seqID
         V3d pt = atom.vib;
         if (pt == null)

@@ -1,0 +1,1 @@
+{ "its": [ { "gen": [ "x,y,z","-y,x-y,z+2/3" ],"gp": [ "x,y,z","-y,x-y,z+2/3","-x+y,-x,z+1/3" ],"id": "P32","itaFull": "145","set": 1,"sg": 145,"tm": "a,b,c","u": "P 32","wpos": { "pos": [ { "desc": "1","geom": "general","label": "a","mult": 3 } ] } } ],"n": 1,"sg": 145 }

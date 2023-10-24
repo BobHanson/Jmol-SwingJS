@@ -748,6 +748,8 @@ public class IsoExt extends ScriptExt {
         i = eval.iToken;
         break;
       case T.spacegroup:
+        // draw spacegroup
+        // draw spacegroup ALL        
       case T.symop:
         String xyz = null;
         int iSym = Integer.MAX_VALUE;
@@ -758,6 +760,8 @@ public class IsoExt extends ScriptExt {
         P3d trans = null;
         int[] opList = null;
         boolean isSymop = (tok == T.symop);
+        int nth = -1;
+        Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
         if (isSymop) {
           iSym = 0;
           switch (tokAt(++i)) {
@@ -771,7 +775,8 @@ public class IsoExt extends ScriptExt {
           default:
             if (!eval.isCenterParameter(i)) {
               if (eval.isArrayParameter(i)) {
-                double[] params = eval.doubleParameterSet(i, 1, Integer.MAX_VALUE);
+                double[] params = eval.doubleParameterSet(i, 1,
+                    Integer.MAX_VALUE);
                 opList = new int[params.length];
                 for (int j = opList.length; --j >= 0;)
                   opList[j] = (int) params[j];
@@ -784,7 +789,6 @@ public class IsoExt extends ScriptExt {
                 }
               }
             }
-            Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
             if (eval.isCenterParameter(i))
               center = eval.centerParameter(i, ret);
             if (opList == null && eval.isCenterParameter(eval.iToken + 1))
@@ -792,56 +796,68 @@ public class IsoExt extends ScriptExt {
             if (chk)
               return;
             i = eval.iToken;
-          }
-        }
-        if (center == null && i + 1 < slen) {
-          center = centerParameter(++i);
-          // draw ID xxx symop [n or "x,-y,-z"] [optional {center}]
-          // so we also check here for the atom set to get the right model
-          bsAtoms = (eval.isAtomExpression(i) ? atomExpressionAt(i) : null);
-          i = eval.iToken;
-        }
-        int nth = ((!isSymop || target != null) && tokAt(i + 1) == T.integer
-            ? eval.getToken(++i).intValue
-            : -1);
-        if (tokAt(i + 1) == T.unitcell) {
-          target = new P3d();
-          options = T.offset;
-          i++;
-          eval.iToken = i;
-        } else if (tokAt(i + 1) == T.offset) {
-          i++;
-          target = getPoint3f(i + 1, false);
-          options = T.offset;
-          i = eval.iToken;
-        }
-
-        eval.checkLast(eval.iToken);
-        if (!chk) {          String s = "";
-          if (bsAtoms == null && vwr.am.cmi >= 0)
-            bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
-          if (bsAtoms != null) {
-            s = null;
-            int iatom = bsAtoms.nextSetBit(0);
-            if (options != 0) {
-              // options is T.offset, and target is an {i j k} offset from cell 555
-              Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-                  target, T.point, null, intScale / 100d, nth, options, opList);
-              if (o instanceof P3d)
-                target = (P3d) o;
-              else
-                s = "";
+            if (center == null && i + 1 < slen) {
+              center = centerParameter(++i);
+              // draw ID xxx symop [n or "x,-y,-z"] [optional {center}]
+              // so we also check here for the atom set to get the right model
+              bsAtoms = (eval.isAtomExpression(i) ? atomExpressionAt(i) : null);
+              i = eval.iToken;
             }
-            if (thisId == null)
-              thisId = "sym";
-            if (s == null)
-              s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-                  target, T.draw, thisId, intScale / 100d, nth, options, opList);
+            nth = ((!isSymop || target != null) && tokAt(i + 1) == T.integer
+                ? eval.getToken(++i).intValue
+                : -1);
+            if (nth < -1)
+              invArg();
+            if (tokAt(i + 1) == T.unitcell) {
+              target = new P3d();
+              options = T.offset;
+              eval.iToken = ++i;
+            } else if (tokAt(i + 1) == T.offset) {
+              i++;
+              target = getPoint3f(i + 1, false);
+              options = T.offset;
+              i = eval.iToken;
+            }
           }
-          eval.runBufferedSafely(
-              s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete",
-              eval.outputBuffer);
+        } else if (tokAt(i + 1) == T.all) {
+          //  draw SPACEGROUP ALL
+          nth = -2;
+          eval.iToken = ++i;
         }
+        if (xyz != null) {
+          i++;
+          if (eval.isCenterParameter(i)) {
+            center = eval.centerParameter(i, ret);
+            i = eval.iToken;
+          }
+        }
+        eval.checkLast(eval.iToken);
+        if (chk)
+          return;
+        String s = "";
+        int iatom = (bsAtoms != null ? bsAtoms.nextSetBit(0) : -1);
+        if (bsAtoms == null && vwr.am.cmi >= 0)
+          bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
+        if (bsAtoms != null) {
+          s = null;
+          if (options != 0) {
+            // options is T.offset, and target is an {i j k} offset from cell 555
+            Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
+                target, T.point, null, intScale / 100d, nth, options, opList);
+            if (o instanceof P3d)
+              target = (P3d) o;
+            else
+              s = "";
+          }
+          if (thisId == null)
+            thisId = "sym";
+          if (s == null)
+            s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
+                target, T.draw, thisId, intScale / 100d, nth, options, opList);
+        }
+        eval.runBufferedSafely(
+            s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete",
+            eval.outputBuffer);
         return;
       case T.frame:
         isFrame = true;
@@ -929,6 +945,10 @@ public class IsoExt extends ScriptExt {
       case T.string:
         propertyValue = stringParameter(i);
         propertyName = "title";
+        break;
+      case T.hoverlabel:
+        propertyValue = stringParameter(++i);
+        propertyName = "hoverlabel";
         break;
       case T.font:
         // must be LAST set of parameters
