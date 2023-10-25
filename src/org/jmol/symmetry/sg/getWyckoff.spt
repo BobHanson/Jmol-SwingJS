@@ -1,8 +1,9 @@
 // Bob Hanson hansonr@stolaf.edu
 
+
 // getWyckoff.spt
 //
-// 2023.10 Bob Hanson hansonr@stolaf.edu
+// 2023.10.24 Bob Hanson hansonr@stolaf.edu
 //
 // requires Jmol 16.1.43 or higher
 //
@@ -293,7 +294,7 @@ function _getWyckoffJson(its, data) {
 function _getWyckoffElement(p) {
 	var xyz = p.split(",");
 	var n = 0; 
-	var nxyz = 0
+	var nxyz = ({});
 	for (var i = 1; i <= 3; i++) {
 		if (xyz[i].find('x')) {
 			nxyz |= 1;
@@ -302,19 +303,15 @@ function _getWyckoffElement(p) {
 			nxyz |= 2;
 		}		
 		if (xyz[i].find('z')) {
-			nxyz |= 4;
+			nxyz |= 3;
 		}		
 	}
-	switch (nxyz) {
+	switch (nxyz.length) {
 	case 0:
 		return "point";
 	case 1:
-	case 2:
-	case 4:
 		return "line";
-	case 3:
-	case 5:
-	case 6:
+	case 2:
 		return "plane";
 	}
 	return "general";
