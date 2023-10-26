@@ -334,7 +334,7 @@ public class MOCalculation extends QuantumCalculation {
     //System.out.println("shell " + iShell + " type " + basisType);
     if (atomIndex != lastAtom && (thisAtom = qmAtoms[atomIndex]) != null)
       thisAtom.setXYZ(this, true);
-    if (!setCoeffs(shell[1], true))
+    if (!allowType(basisType) || !setCoeffs(shell[1], true))
       return;
     if (havePoints)
       setMinMax(-1);
@@ -378,7 +378,7 @@ public class MOCalculation extends QuantumCalculation {
    * @return true if implemented
    */
   private boolean addHighL(int basisType) {
-    if (basisType >= QS.GS && highLEnabled[basisType] == 0)
+    if (!allowType(basisType))
       return false;
     DataAdder adder = dataAdders[basisType];
     switch (dataAdderOK[basisType]) {
@@ -396,6 +396,10 @@ public class MOCalculation extends QuantumCalculation {
     dataAdders[basisType] = null;
     dataAdderOK[basisType] = -1;
     return false;
+  }
+
+  private boolean allowType(int basisType) {
+    return (basisType < QS.GS || highLEnabled[basisType] != 0);
   }
 
   private void addValuesSquared(double occupancy) {
