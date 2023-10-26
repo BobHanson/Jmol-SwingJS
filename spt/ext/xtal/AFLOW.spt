@@ -629,8 +629,12 @@ function showSG(n, i) {
 	draw spacegroup all;
 	set drawhover;
 	color {*} translucent;
+	if (!AFLOW.credited) {
+		print "AFLOW Encyclopedia of Crystallographic Prototypes, https://www.aflowlib.org/prototype-encyclopedia; see M. J. Mehl, D. Hicks, C. Toher, O. Levy, R. M. Hanson, G. L. W. Hart, and S. Curtarolo, The AFLOW Library of Crystallographic Prototypes: Part 1, Comp. Mat. Sci. 136, S1-S828 (2017). (doi=10.1016/j.commatsci.2017.01.017) and related publications";
+		AFLOW.credited = true;
+	}
+	print "Showing " + aname + " (sg " + n + " " + i + "/" + sgs.length + ")";
 
-	print "AFLOW Encyclopedia of Crystallographic Prototypes, https://www.aflowlib.org/prototype-encyclopedia; see M. J. Mehl, D. Hicks, C. Toher, O. Levy, R. M. Hanson, G. L. W. Hart, and S. Curtarolo, The AFLOW Library of Crystallographic Prototypes: Part 1, Comp. Mat. Sci. 136, S1-S828 (2017). (doi=10.1016/j.commatsci.2017.01.017) and related publications"
 
 }
 
