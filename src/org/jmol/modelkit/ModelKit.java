@@ -2179,6 +2179,8 @@ public class ModelKit {
   public int cmdAssignAddAtoms(String type, P3d[] pts, BS bsAtoms,
                                String packing, String cmd, boolean isClick) {
     try {
+      if(type.startsWith("_"))
+        type = type.substring(1);
       vwr.pushHoldRepaintWhy("modelkit");
       boolean isPoint = (bsAtoms == null);
       int atomIndex = (isPoint ? -1 : bsAtoms.nextSetBit(0));
