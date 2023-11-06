@@ -28,6 +28,7 @@ package org.jmol.symmetry;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 
 import org.jmol.api.SymmetryInterface;
 import org.jmol.util.Logger;
@@ -302,11 +303,6 @@ class SpaceGroup {
 
   static Object getInfo(SpaceGroup sg, String spaceGroup,
                         double[] params, boolean asMap, boolean andNonstandard) {
-    
-    
-    if (!asMap)
-      return "SG testing only";
-    
     try {
     if (sg != null && sg.index >= SG.length) {
       SpaceGroup sgDerived = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
@@ -332,7 +328,8 @@ class SpaceGroup {
     }
     if (sg == null) {
       SpaceGroup sgFound = SpaceGroup.createSpaceGroupN(spaceGroup);
-      sgFound = findSpaceGroup(sgFound.operationCount, sgFound.getCanonicalSeitzList());
+      if (sgFound != null)
+        sgFound = findSpaceGroup(sgFound.operationCount, sgFound.getCanonicalSeitzList());
       if (sgFound != null)
         sg = sgFound;
     } 
@@ -417,8 +414,29 @@ class SpaceGroup {
       lst.addLast(operations[i].xyz);
     }
     map.put("operationsXYZ", lst);
+    map.put("code", getCode());
     map.put("HallSymbol",  (hallInfo == null ? "?" : hallInfo.hallSymbol));
     return map;
+  }
+
+  private String getCode() {
+    Map<String, int[]> map = new Hashtable<String, int[]>();
+    for (int i = 0; i < operationCount; i++) {
+      String code = operations[i].getCode();
+      int[] c = map.get(code);
+      if (c == null) {
+          map.put(code,  c = new int[] {0});
+      }
+      c[0]++;
+    }
+    Set<String> keys = map.keySet();
+    String[] a = keys.toArray(new String[keys.size()]);
+    Arrays.sort(a);
+    String s = "";
+    for (int i = 0; i < a.length; i++) {
+      s += a[i] + ":" + map.get(a[i])[0] + ";";
+    }
+    return s;
   }
 
   String getName() {

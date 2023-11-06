@@ -108,7 +108,7 @@ abstract public class ScriptParam extends ScriptError {
   }
 
   public SV getContextVariableAsVariable(String var, boolean isLocal) {
-    if (var.equals("expressionBegin"))
+    if (var.length() == 0 || var.equals("expressionBegin"))
       return null;
     if (var.charAt(0) == '_') {
       boolean isCallers = var.equalsIgnoreCase("_callers");

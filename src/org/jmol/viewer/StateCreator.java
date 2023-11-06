@@ -273,6 +273,42 @@ public class StateCreator extends JmolStateCreator {
       }
 
       SB sb = new SB();
+      
+      boolean loadUC = false;
+      if (ms.unitCells != null) {
+        boolean haveModulation = false;
+        for (int i = 0; i < modelCount; i++) {
+          SymmetryInterface symmetry = ms.getUnitCell(i);
+          if (symmetry == null)
+            continue;
+          sb.setLength(0);
+          if (symmetry.getState(ms, i, sb)) {
+            loadUC = true;
+            commands.append("  frame ").append(ms.getModelNumberDotted(i))
+                .appendSB(sb).append(";\n");
+          }
+          haveModulation |= (vwr.ms.getLastVibrationVector(i, T.modulation) >= 0);
+        }
+        if (loadUC)
+          vwr.shm.loadShape(JC.SHAPE_UCCAGE); // just in case
+        getShapeStatePriv(commands, isAll, JC.SHAPE_UCCAGE);
+        if (haveModulation) {
+          Map<String, BS> temp = new Hashtable<String, BS>();
+          int ivib;
+          for (int i = modelCount; --i >= 0;) {
+            if ((ivib = vwr.ms.getLastVibrationVector(i, T.modulation)) >= 0)
+              for (int j = models[i].firstAtomIndex; j <= ivib; j++) {
+                JmolModulationSet mset = ms.getModulation(j);
+                if (mset != null)
+                  BSUtil.setMapBitSet(temp, j, j, mset.getState());
+              }
+          }
+          commands.append(getCommands(temp, null, "select"));
+        }
+      }
+
+      sb.setLength(0);
+
       for (int i = 0; i < ms.bondCount; i++)
         if (!models[bonds[i].atom1.mi].isModelKit)
           if (bonds[i].isHydrogen() || (bonds[i].order & Edge.BOND_NEW) != 0) {
@@ -323,6 +359,8 @@ public class StateCreator extends JmolStateCreator {
         commands.append("  frame orientation " + ms.getModelNumberDotted(i)
             + Escape.matrixToScript(models[i].mat4) + ";\n");
 
+    
+    
     getShapeStatePriv(commands, isAll, Integer.MAX_VALUE);
 
     if (isAll) {
@@ -360,38 +398,6 @@ public class StateCreator extends JmolStateCreator {
               .appendSB(sb);
       }
 
-      boolean loadUC = false;
-      if (ms.unitCells != null) {
-        boolean haveModulation = false;
-        for (int i = 0; i < modelCount; i++) {
-          SymmetryInterface symmetry = ms.getUnitCell(i);
-          if (symmetry == null)
-            continue;
-          sb.setLength(0);
-          if (symmetry.getState(ms, i, sb)) {
-            loadUC = true;
-            commands.append("  frame ").append(ms.getModelNumberDotted(i))
-                .appendSB(sb).append(";\n");
-          }
-          haveModulation |= (vwr.ms.getLastVibrationVector(i, T.modulation) >= 0);
-        }
-        if (loadUC)
-          vwr.shm.loadShape(JC.SHAPE_UCCAGE); // just in case
-        getShapeStatePriv(commands, isAll, JC.SHAPE_UCCAGE);
-        if (haveModulation) {
-          Map<String, BS> temp = new Hashtable<String, BS>();
-          int ivib;
-          for (int i = modelCount; --i >= 0;) {
-            if ((ivib = vwr.ms.getLastVibrationVector(i, T.modulation)) >= 0)
-              for (int j = models[i].firstAtomIndex; j <= ivib; j++) {
-                JmolModulationSet mset = ms.getModulation(j);
-                if (mset != null)
-                  BSUtil.setMapBitSet(temp, j, j, mset.getState());
-              }
-          }
-          commands.append(getCommands(temp, null, "select"));
-        }
-      }
       commands.append("  set fontScaling " + vwr.getBoolean(T.fontscaling)
           + ";\n");
       //      if (vwr.getBoolean(T.modelkitmode))

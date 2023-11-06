@@ -5627,6 +5627,10 @@ public class CmdExt extends ScriptExt {
     case T.string:
     case T.identifier:
       String s = paramAsStr(i).toLowerCase();
+      if (s.equals("rhombohedral"))
+        s = "2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c";
+      else if (s.equals("trigonal")|| s.equals("hexagonal"))
+        s = "a-b,b-c,a+b+c";
       ucname = s;
       if (s.indexOf(",") >= 0 || chk) {
         newUC = s;
@@ -6051,6 +6055,7 @@ public class CmdExt extends ScriptExt {
     //  modelkit ADD @1 "C"
     //  modelkit ADD @1 "C" point (bonding)
     //  modelkit ADD "C" point
+    //  modelkit ADD "C" WYCKOFF a
     //  modelkit MOVETO @1 point
     //  modelkit FIXED VECTOR pt1 pt2
     //  modelkit FIXED PLANE pt1 pt2
@@ -6361,6 +6366,7 @@ public class CmdExt extends ScriptExt {
     }
     String type = null;
     P3d pt = null;
+    String wyckoff = null;
     if (isAdd) {
       if (e.isAtomExpression(i)) {
         bs = expFor(++e.iToken, bsModelAtoms);
@@ -6381,9 +6387,22 @@ public class CmdExt extends ScriptExt {
       }
       if (type.length() == 0)
         type = null;
-      if (tokAt(e.iToken + 1) == T.packed) {
-        isPacked = true;
+      switch (tokAt(e.iToken + 1)) {
+      case T.packed:
+      isPacked = true;
+      ++e.iToken;
+      break;
+      case T.wyckoff:
         ++e.iToken;
+        wyckoff = paramAsStr(++e.iToken);
+        char w = (wyckoff.length() > 1 || wyckoff.length() == 0 ? '\0' : wyckoff.charAt(0));
+        if (w < 'a' && w != 'A' || w > 'z')
+          invArg();
+        if ("packed".equals(e.optParameterAsString(e.iToken + 1))) {
+          isPacked = true;
+          ++e.iToken;
+        }
+        break;
       }
     } else if (isMove) {
       if (e.isArrayParameter(i)) {
@@ -6428,12 +6447,13 @@ public class CmdExt extends ScriptExt {
       type = null;
       //$FALL-THROUGH$
     case T.add:
-      if (pt == null && bs == null && pts == null)
+    case T.wyckoff:
+      if (pt == null && bs == null && pts == null && wyckoff == null)
         invArg();
       if (pts == null && pt != null) {
         pts = new P3d[] { pt };
       }
-      int na = vwr.getModelkit(false).cmdAssignAddAtoms(type, pts, bs, (isPacked ? "packed" : ""), e.fullCommand, isClick);
+      int na = vwr.getModelkit(false).cmdAssignAddAtoms(type + (wyckoff != null ? ":" + wyckoff : ""), pts, bs, (isPacked ? "packed" : ""), e.fullCommand, isClick);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms added"), na), false);
       break;

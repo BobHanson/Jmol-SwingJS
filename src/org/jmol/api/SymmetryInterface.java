@@ -275,6 +275,8 @@ public interface SymmetryInterface {
 
   M4d[] getAdditionalOperations();
 
-  String getWyckoffPosition(Viewer vwr, P3d p3d);
+  Object getWyckoffPosition(Viewer vwr, P3d pt, String letter);
+
+  Object getSpaceGroupJSON(Viewer vwr, String name, String sgname, int index);
 
 }

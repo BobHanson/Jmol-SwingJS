@@ -1316,6 +1316,10 @@ public class ModelKit {
    * @return new name or "" or error message
    */
   public String cmdAssignSpaceGroup(BS bs, String name, int mi) {
+    boolean isITA = name.startsWith("ITA/");
+    if (isITA) {
+      name = name.substring(4);
+    }
     boolean isP1 = (name.equalsIgnoreCase("P1") || name.equals("1"));
     boolean isDefined = (!isP1 && name.length() > 0);
     clearAtomConstraints();
@@ -1335,7 +1339,7 @@ public class ModelKit {
       }
       boolean noAtoms = bsAtoms.isEmpty();
       if (mi < 0)
-        mi = (noAtoms ? 0 : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
+        mi = (noAtoms && vwr.am.cmi < 0 ? 0 : noAtoms ? vwr.am.cmi : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
       vwr.ms.getModelAuxiliaryInfo(mi).remove("spaceGroupInfo");
       SymmetryInterface sym = vwr.getOperativeSymmetry();
       if (sym == null)
@@ -1352,7 +1356,7 @@ public class ModelKit {
       Object sg = null;
       @SuppressWarnings("unchecked")
       Map<String, Object> sgInfo = (noAtoms && !isDefined || isP1 ? null
-          : (Map<String, Object>) vwr.findSpaceGroup(isDefined ? null : bsAtoms, isDefined ? name : null, sym.getUnitCellParams(), false, true));
+          : (Map<String, Object>) vwr.findSpaceGroup(isDefined ? null : bsAtoms, isDefined ? (isITA ? "ITA/" + name : name) : null, sym.getUnitCellParams(), false, true));
       
       if (sgInfo == null) {
         name = "P1";
@@ -2179,14 +2183,25 @@ public class ModelKit {
   public int cmdAssignAddAtoms(String type, P3d[] pts, BS bsAtoms,
                                String packing, String cmd, boolean isClick) {
     try {
+      SymmetryInterface sym = vwr.getOperativeSymmetry();
       if(type.startsWith("_"))
         type = type.substring(1);
+      int ipt = type.indexOf(":");
+      String wyckoff = (ipt > 0 && ipt == type.length() - 2 ? type.substring(ipt + 1) : null);
+      if (wyckoff != null) {
+        type = type.substring(0, ipt);
+        if (sym != null) {
+          Object o = sym.getWyckoffPosition(vwr, null, wyckoff);
+          if (!(o instanceof P3d))
+            return 0;
+          pts = new P3d[] {(P3d) o};
+        }
+      }
       vwr.pushHoldRepaintWhy("modelkit");
       boolean isPoint = (bsAtoms == null);
       int atomIndex = (isPoint ? -1 : bsAtoms.nextSetBit(0));
       if (!isPoint && atomIndex < 0)
         return 0;
-      SymmetryInterface sym = vwr.getOperativeSymmetry();
       if (sym == null) {
         // when no symmetry, this is just a way to add multiple points at the same time. 
         if (isPoint) {
@@ -2620,8 +2635,7 @@ public class ModelKit {
       System.out.println("MK.getConstraint atomIndex=" + iatom + " symops=" + Arrays.toString(ops));
     // if no invariant operators, this is a general position
     if (ops.length == 0)
-      return addConstraint(iatom,
-          new Constraint(a, Constraint.TYPE_GENERAL, null));
+      return addConstraint(iatom, new Constraint(a, Constraint.TYPE_GENERAL, null));
     // we need only work with the first plane or line or point
     P4d plane1 = null;
     Object[] line1 = null;

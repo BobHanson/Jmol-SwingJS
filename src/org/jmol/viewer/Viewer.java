@@ -4955,7 +4955,18 @@ public class Viewer extends JmolViewer
           try {
             int pt = id.indexOf("/");
             String database = id.substring(0, pt);
-            id = JC.resolveDataBase(database, id.substring(pt + 1), null);
+            if (database.equalsIgnoreCase("aflowpro")) {
+              id = id.substring(pt + 1);
+              int index = 1;
+              pt = id.indexOf('.');
+              if (pt >= 0) {
+                index = PT.parseInt(id.substring(pt + 1));
+                id = id.substring(0, pt);
+              }
+              if (id.indexOf("_") < 0)
+                id = (String) getSymTemp().getSpaceGroupJSON(this, "AFLOW", id, index);
+            }
+            id = JC.resolveDataBase(database, id, null);
             if (id != null && id.startsWith("'"))
               id = evaluateExpression(id).toString();
             return (id == null || id.length() == 0 ? name : id);
@@ -4969,7 +4980,6 @@ public class Viewer extends JmolViewer
         return JC.resolveDataBase("mmtf", id.toUpperCase(), null);
       }
       format = g.loadFormat;
-
       //$FALL-THROUGH$
     case '#': // ligand
       if (format == null)

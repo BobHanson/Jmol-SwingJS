@@ -24,6 +24,7 @@
 
 package org.jmol.symmetry;
 
+import java.io.BufferedReader;
 import java.util.Map;
 
 import org.jmol.api.AtomIndexIterator;
@@ -40,10 +41,12 @@ import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
+import javajs.util.JSJSONParser;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
@@ -51,6 +54,7 @@ import javajs.util.Matrix;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Qd;
+import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
@@ -1079,7 +1083,7 @@ public class Symmetry implements SymmetryInterface {
     int nops = ops.length;
     for (int i = 1; i < nops; i++) {
       p.setT(pt);
-      toFractional(p, true);
+      unitCell.toFractional(p, true);
       // unitize here should take care of all Wyckoff positions
       unitCell.unitize(p);
       p0.setT(p);
@@ -1104,7 +1108,7 @@ public class Symmetry implements SymmetryInterface {
   }
   
   @Override
-  public String getWyckoffPosition(Viewer vwr, P3d p) {
+  public Object getWyckoffPosition(Viewer vwr, P3d p, String letter) {
     if (unitCell == null)
       return "";
     SpaceGroup sg = spaceGroup;
@@ -1115,16 +1119,29 @@ public class Symmetry implements SymmetryInterface {
       if (sg == null)
         return "?";
     }
-    unitCell.toFractional(p = P3d.newP(p), true);
+    if (p == null) {
+      p = P3d.new3(2.3d/5, 2.3d/7, 2.3d/9);      
+    } else {
+      p = P3d.newP(p);
+      unitCell.toFractional(p, true);
+    }
     if (wyckoffFinder == null) {
       wyckoffFinder = (WyckoffFinder) Interface
           .getInterface("org.jmol.symmetry.WyckoffFinder", null, "symmetry");
     }
     try {
-      return wyckoffFinder.getWyckoffFinder(vwr, sg.intlTableNumberFull).getWyckoffPosition(p);
+      WyckoffFinder w = wyckoffFinder.getWyckoffFinder(vwr,
+          sg.intlTableNumberFull);
+      if (letter == null) {
+        return w.getWyckoffPosition(p);
+      }
+      if (w.findPositionFor(p, letter) == null)
+        return null;
+      unitCell.toCartesian(p, true);
+      return p;
     } catch (Exception e) {
       e.printStackTrace();
-      return "?";
+      return (letter == null ? "?" : null);
     }
   }
 
@@ -1164,6 +1181,91 @@ public class Symmetry implements SymmetryInterface {
       return M4d.newA16(a);
     }
     return SymmetryOperation.getXYZFromMatrixFrac(matrix, false, false, false, true);
+  }
+
+  private static Map<String, Object> aflowStructures;
+  private static Map<String, Object>[] itaData;
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public Object getSpaceGroupJSON(Viewer vwr, String name, String sgname,
+                                  int index) {
+    String s0 = sgname;
+    try {
+      // tm 
+      int pt = sgname.indexOf("(");
+      boolean isTM = (sgname.endsWith(")") && pt > 0);
+      String tm = null;
+      if (isTM) {
+        tm = sgname.substring(pt + 1, sgname.length() - 1);
+        sgname = sgname.substring(0, pt);
+      }
+      int itno = (sgname.equalsIgnoreCase("ALL") ? 0 : PT.parseInt(sgname));
+      boolean isInt = (itno != Integer.MIN_VALUE);
+      pt = sgname.indexOf('.');
+      if (!isTM && isInt && index == 0 && pt > 0) {
+        index = PT.parseInt(sgname.substring(pt + 1));
+        sgname = sgname.substring(0, pt);
+      }
+      if (isInt && (itno > 230 || itno < 0))
+        throw new ArrayIndexOutOfBoundsException(itno);
+      if (name.equalsIgnoreCase("ITA")) {
+        if (itno == 0) {
+          return getResource(vwr, "sg/json/ita_all.json");
+        }
+        if (itaData == null)
+          itaData = new Map[230];
+        Map<String, Object> resource = itaData[itno - 1];
+        if (resource == null)
+          itaData[itno - 1] = resource = getResource(vwr,
+              "sg/json/ita_" + itno + ".json");
+        if (resource != null) {
+          if (index == 0)
+            return resource;
+          Lst<Object> its = (Lst<Object>) resource.get("its");
+          if (its != null) {
+            for (int i = (isInt ? index : its.size()); --i >= 0;) {
+              Map<String, Object> map = (Map<String, Object>) its.get(i);
+              if (i == index - 1 || sgname.equals(map.get("itaFull"))
+                  || tm != null && tm.equals(map.get("tm"))) {
+                return map;
+              }
+            }
+            if (tm != null) {
+              // todo: allow 134:(a-b,b-c,a) that is not a standard ITA setting 
+            }
+          }
+        }
+      } else if (name.equalsIgnoreCase("AFLOW") && tm == null) {
+        if (aflowStructures == null)
+          aflowStructures = getResource(vwr, "sg/json/aflow_structures.json");
+        if (itno == 0)
+          return aflowStructures;
+        System.out.println(sgname + " ? " + index);
+        Lst<Object> data = (Lst<Object>) aflowStructures.get("" + sgname);
+        if (index <= data.size()) {
+          return (index == 0 ? data : data.get(index - 1));
+        }
+      }
+      throw new IllegalArgumentException(s0);
+    } catch (Exception e) {
+      return e.getMessage();
+    }
+  }
+  
+  @SuppressWarnings("unchecked")
+  private Map<String, Object> getResource(Viewer vwr, String resource) {
+    try {
+      BufferedReader r = FileManager.getBufferedReaderForResource(vwr, this,
+          "org/jmol/symmetry/", resource);
+      String[] data = new String[1];
+      if (Rdr.readAllAsString(r, Integer.MAX_VALUE, false, data, 0)) {
+        return (Map<String, Object>) new JSJSONParser().parse(data[0], true);
+      }
+    } catch (Throwable e) {
+      System.err.println(e.getMessage());
+    }
+    return null;
   }
 
 }

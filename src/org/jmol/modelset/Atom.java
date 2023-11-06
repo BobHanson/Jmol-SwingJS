@@ -1478,7 +1478,7 @@ public class Atom extends Point3fi implements Node {
     }
     SymmetryInterface sym = getUnitCell();
     String s;
-    if (sym == null || (s = sym.getWyckoffPosition(ms.vwr, this)) == null)
+    if (sym == null || (s = (String) sym.getWyckoffPosition(ms.vwr, this, null)) == null)
       return "?";
     
     ms.setAtomSeqID(i, 0 + s.charAt(0));

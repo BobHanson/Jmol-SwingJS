@@ -850,13 +850,16 @@ public class IsoExt extends ScriptExt {
               s = "";
           }
           if (thisId == null)
-            thisId = "sym";
+            thisId = (isSymop ? "sym" : "sg");
           if (s == null)
             s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
                 target, T.draw, thisId, intScale / 100d, nth, options, opList);
+            if (!isSymop)
+              s = "draw ID sym* delete;" + s;
+            s = "draw ID sg* delete;" + s + ";draw *;";
         }
         eval.runBufferedSafely(
-            s.length() > 0 ? s : "draw ID \"" + thisId + "_*\" delete",
+            s.length() > 0 ? s : "draw ID \"" + thisId + "*\" delete",
             eval.outputBuffer);
         return;
       case T.frame:

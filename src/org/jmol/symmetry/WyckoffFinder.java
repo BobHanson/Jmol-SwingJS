@@ -27,6 +27,7 @@ public class WyckoffFinder {
     private V3d line;
     private P4d plane;
     private int type;
+    String xyz;
     private static V3d vtemp1 = new V3d();
 
     private static P3d unitize(P3d p) {
@@ -216,6 +217,21 @@ public class WyckoffFinder {
       return approx(d) == 0;
     }
 
+    void set(P3d p) {      
+      switch (type) {
+      case TYPE_POINT:
+        p.setT(point);
+        break;
+      case TYPE_LINE:        
+        MeasureD.projectOntoAxis(p, point, line, vtemp1);
+        break;
+      case TYPE_PLANE:
+        MeasureD.getPlaneProjection(p, plane, vtemp1, vtemp1);
+        p.setT(vtemp1);
+        break;
+      }
+    }
+
     private static double approx(double d) {
       return PT.approxD(d, 1000); // close enough?
     }
@@ -295,18 +311,38 @@ public class WyckoffFinder {
       }
       Lst<Object> coords = (Lst<Object>) map.get("coord");
       for (int c = 0, n = coords.size(); c < n; c++) {
-        Object coord = coords.get(c);
-        if (coord instanceof String) {
-          coords.set(c, coord = new WyckoffPos((String) coord));
-        }
-        if (((WyckoffPos) coord).contains(p, this.centerings)) {
+        if (getWyckoffCoord(coords, c).contains(p, this.centerings)) {
           return (String) map.get("label");    
         }
-      }
-      
+      }      
     }
     // not possible
     return "?";
+  }
+
+  public P3d findPositionFor(P3d p, String letter) {
+    if (positions == null)
+      return null;
+    for (int i = positions.size(); --i >= 0;) {
+      Map<String, Object> map = (Map<String, Object>) positions.get(i);
+      if (map.get("label").equals(letter)) {
+        Lst<Object> coords = (Lst<Object>) map.get("coord");
+        if (coords != null)
+          getWyckoffCoord(coords, 0).set(p);
+        return p;
+     }
+    }
+    return null;
+  }
+
+
+  
+  private static WyckoffPos getWyckoffCoord(Lst<Object> coords, int c) {
+    Object coord = coords.get(c);
+    if (coord instanceof String) {
+      coords.set(c, coord = new WyckoffPos((String) coord));
+    }
+    return (WyckoffPos) coord;
   }
 
   @SuppressWarnings("unchecked")
