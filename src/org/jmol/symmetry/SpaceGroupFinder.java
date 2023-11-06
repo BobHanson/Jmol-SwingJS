@@ -113,7 +113,7 @@ public class SpaceGroupFinder {
     String name;
     BS basis;
     if (setNew) {
-      if (xyzList.startsWith("ITA/")) {
+      if (xyzList.toUpperCase().startsWith("ITA/")) {
         xyzList = xyzList.substring(4);
         if (xyzList.indexOf(".") < 0)
           xyzList += ".1";

@@ -1927,7 +1927,7 @@ public class ModelKit {
               double d1 = vConnections.get(i).distance(pts[i]);
               if (d == Double.MAX_VALUE)
                 d1 = d;
-              else if (Math.abs(d1 - d) > 0.001f) {
+              else if (Math.abs(d1 - d) > 0.001d) {
                 // this did not work
                 isConnected = false;
                 break;
