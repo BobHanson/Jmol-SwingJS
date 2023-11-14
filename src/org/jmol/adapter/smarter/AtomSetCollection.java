@@ -1223,6 +1223,22 @@ public class AtomSetCollection {
     return bsAtoms;
   }
 
+  /**
+   * Add a full set of atoms to BSAtoms if they are not already indicated there.
+   * @param iSet
+   */
+  public void setBSAtomsForSet(int iSet) {
+    if (bsAtoms != null) {
+      if (iSet < 0)
+        iSet = this.iSet;
+      int pt = atomSetAtomIndexes[iSet];
+      if (bsAtoms.nextSetBit(pt) < 0) {
+        int n = atomSetAtomCounts[iSet];
+        bsAtoms.setBits(pt, pt + n);
+      }
+    }
+  }
+
   public void fix2Stereo() {
     getBSAtoms(-1);
     for (int i = bondCount; --i >= 0;) {
@@ -1244,6 +1260,5 @@ public class AtomSetCollection {
     // TODO
     
   }
-
 
 }

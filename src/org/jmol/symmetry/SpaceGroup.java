@@ -774,13 +774,16 @@ class SpaceGroup {
   private final static int NAME_HM = 3;
   private final static int NAME_HALL = 5;
 
+  static boolean isXYZList(String name) {
+    return (name.indexOf(",") >= 0 && name.indexOf("(") < 0);
+  }
+  
   private final static int determineSpaceGroupIndex(String name, double a,
                                                     double b, double c,
                                                     double alpha, double beta,
                                                     double gamma, int lastIndex) {
-    if (name.indexOf("x") >= 0)
+    if (isXYZList(name))
       return -1;
-
     getSpaceGroups();
     if (lastIndex < 0)
       lastIndex = SG.length;

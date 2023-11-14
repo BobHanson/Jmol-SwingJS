@@ -729,7 +729,7 @@ public class SpaceGroupFinder {
       filterGroups(groups, unitCellParams);
     }
     SpaceGroup sg = null;
-    if (xyzList.indexOf("x") < 0) {
+    if (!SpaceGroup.isXYZList(xyzList)) {
       // space group name -- here we return a space group if unit cell symmetry is allowed
       sg = SpaceGroup.determineSpaceGroupNA(xyzList, unitCellParams);
       if (sg == null)

@@ -149,7 +149,7 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean addAtomLabelNumbers;
   private boolean ignoreGeomBonds;
   private boolean allowWyckoff = true;
-
+  
   @Override
   public void initializeReader() throws Exception {
     initSubclass();
@@ -159,7 +159,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (conf != null)
       configurationPtr = parseIntStr(conf);
     isMolecular = checkFilterKey("MOLECUL") && !checkFilterKey("BIOMOLECULE"); // molecular; molecule
-    ignoreGeomBonds = checkFilterKey("IGNOREGEOMBOND");
+    ignoreGeomBonds = checkFilterKey("IGNOREGEOMBOND") || checkFilterKey("IGNOREBOND");
     isPrimitive = checkFilterKey("PRIMITIVE");
     readIdeal = !checkFilterKey("NOIDEAL");
     allowWyckoff = !checkFilterKey("NOWYCKOFF");
@@ -235,6 +235,7 @@ public class CifReader extends AtomSetCollectionReader {
       if (desiredModelNumber != Integer.MIN_VALUE)
         appendLoadNote(null);
       newModel(-1);
+
       haveCellWaveVector = false;
       if (auditBlockCode == null)
         modulated = false;
@@ -495,6 +496,11 @@ public class CifReader extends AtomSetCollectionReader {
     } else if (asc.iSet >= 0) {
       applySymmetryAndSetTrajectory();
     }
+    isMolecular = false;
+    if (auditBlockCode == null) {
+      modDim = 0;
+    }
+
   }
 
   @Override
@@ -590,7 +596,15 @@ public class CifReader extends AtomSetCollectionReader {
       modDim = 0;
     if (doApplySymmetry && !iHaveFractionalCoordinates)
       fractionalizeCoordinates(true);
+    if (!haveCellWaveVector) {
+      modDim = 0;
+    }
     applySymTrajASCR();
+    if (!haveCellWaveVector) {
+      if (!isMolecular) {
+        asc.setBSAtomsForSet(-1);
+      }
+    }
     if (doCheckBonding && (bondTypes.size() > 0 || isMolecular))
       setBondingAndMolecules();
     asc.setCurrentModelInfo("fileHasUnitCell", Boolean.TRUE);
@@ -890,7 +904,7 @@ public class CifReader extends AtomSetCollectionReader {
         return;
       key = cifParser.fixKey(key0 = key);
     }
-    if (modDim > 0)
+    if (modDim > 0) {
       switch (getModulationReader().processLoopBlock()) {
       case 0:
         break;
@@ -900,6 +914,7 @@ public class CifReader extends AtomSetCollectionReader {
       case 1:
         return;
       }
+    }
     boolean isLigand = false;
     if (key.startsWith(FAMILY_ATOM)
         || (isLigand = key.startsWith("_chem_comp_atom_"))) {
@@ -935,8 +950,7 @@ public class CifReader extends AtomSetCollectionReader {
       processAtomTypeLoopBlock();
       return;
     }
-    if ((isMolecular || !doApplySymmetry && !ignoreGeomBonds)
-        && key.startsWith("_geom_bond")) {
+    if (key.startsWith("_geom_bond")) {
       processGeomBondLoopBlock();
       return;
     }
@@ -1889,10 +1903,14 @@ public class CifReader extends AtomSetCollectionReader {
   private void processGeomBondLoopBlock() throws Exception {
     // broken in 13.3.4_dev_2013.08.20c
     // fixed in 14.4.3_2016.02.16
-    boolean bondLoopBug = (stateScriptVersionInt >= 130304
-        && stateScriptVersionInt < 140403);
-    parseLoopParameters(geomBondFields);
-    if (bondLoopBug || !checkAllFieldsPresent(geomBondFields, 2, true)) {
+    boolean ok = !modulated && (isMolecular || !doApplySymmetry && !ignoreGeomBonds
+        && !(stateScriptVersionInt >= 130304
+            && stateScriptVersionInt < 140403));
+    if (ok) {
+      parseLoopParameters(geomBondFields);
+      ok = checkAllFieldsPresent(geomBondFields, 2, true);
+    }
+    if (!ok) {
       skipLoop(false);
       return;
     }

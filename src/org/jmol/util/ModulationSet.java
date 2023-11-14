@@ -5,8 +5,6 @@ import java.util.Map;
 
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
-import org.jmol.modelset.Atom;
-import org.jmol.symmetry.Symmetry;
 import org.jmol.viewer.JC;
 
 import javajs.util.Lst;
@@ -430,17 +428,12 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     for (int i = mods.size(); --i >= 0;)
       mods.get(i).apply(this, arI);
     // rotate by R3 rotation
-    if (Logger.debuggingHigh)
-      Logger.info("ModulationSet pre-rotation " + id + " " + this.length() + " " + this);
-
     gammaE.rotate(this);
     if (mxyz != null){
       gammaE.rotate(mxyz);
       if (spinOp < 0)
         mxyz.scale(spinOp);
     }
-    if (Logger.debuggingHigh)
-      Logger.info("ModulationSet post-rotation " + id + " " + this);
     return this;
   }
 
@@ -481,10 +474,6 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       if (!Double.isNaN(vOcc))
         getOccupancy(true);
     }
-    
-    if (((Atom) a).i == 51)
-      System.out.println("modset " + a + " " + a.x + " " + a.y + " " + a.z + " " + qtOffset);
-
     if (isOn) {
       addTo(a, 1);
       enabled = true;
@@ -497,22 +486,14 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     if (isReset)
       scale = -1;
     ptTemp.setT(a);
-    if (((Atom) a).i == 51)
-    System.out.println("MODSET a " + a + ptTemp);
     ptTemp.setT(this);
     ptTemp.scale(this.scale * scale);
     if (a != null) {
       //if (!isReset)
       //System.out.println(a + " ms " + ptTemp);
-      if (((Atom) a).i == 51)
-      System.out.println("MODSET a " + a + ptTemp);
       symmetry.toCartesian(ptTemp, true);
-      if (((Atom) a).i == 51)
-      System.out.println("MODSET a, ptTemp, scale " + a + ptTemp + scale);
       a.add(ptTemp);
       ptTemp.setT(a);
-      if (((Atom) a).i == 51)
-      System.out.println("MODSET a new " + a + ptTemp);
     }
     // magnetic moment part
     if (mxyz != null)

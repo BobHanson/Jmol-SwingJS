@@ -437,7 +437,7 @@ public class MSRdr implements MSInterface {
     if (supercellSymmetry  == symmetry)
       supercellSymmetry = null;
     iopLast = -1;
-    int i0 = cr.asc.getLastAtomSetAtomIndex();
+    int i0 = cr.asc.getAtomSetAtomIndex(cr.asc.iSet);
     for (int i = i0; i < n; i++)
       modulateAtom(atoms[i]);
     htAtomMods = null;
@@ -1023,8 +1023,10 @@ public class MSRdr implements MSInterface {
 
   @Override
   public void setMinMax0(P3d minXYZ, P3d maxXYZ) {
-    if (htSubsystems == null)
+    if (htSubsystems == null) {
+      minXYZ0 = maxXYZ0 = null;
       return;
+    }
     SymmetryInterface symmetry = getDefaultUnitCell();
     minXYZ0 = P3d.newP(minXYZ);
     maxXYZ0 = P3d.newP(maxXYZ);
@@ -1075,7 +1077,8 @@ public class MSRdr implements MSInterface {
     Atom[] atoms = asc.atoms;
     P3d pt = new P3d();
     BS bs = asc.getBSAtoms(-1);
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+    int i0 = cr.asc.getLastAtomSetAtomIndex();
+    for (int i = bs.nextSetBit(i0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       boolean isOK = (!isCommensurate || modAverage || a.foccupancy >= 0.5d);
       if (isOK) {
