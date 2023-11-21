@@ -10971,29 +10971,25 @@ public class Viewer extends JmolViewer
         / tm.scalePixelsPerAngstrom / 4;
     double af = (isAntialiased ? 2 : 1);
     // I think this perspectivedepth calc is not necessary and should have used the reference plane anyway
-    double f = 1 / af;//(false && tm.perspectiveDepth ? 1d/tm.getPerspectiveFactor((tm.getCameraDepth() - .5d) * getScreenDim()) : 1) / af;   
+    //double f = 1 / af;//(false && tm.perspectiveDepth ? 1d/tm.getPerspectiveFactor((tm.getCameraDepth() - .5d) * getScreenDim()) : 1) / af;   
     int m = 0, p = 0;
     double e = 0, mp = 0;
     // seems to work
-    min = min * imageFontScaling / 2;
+    min = min * imageFontScaling / af;
     while (p < min) {
       e = Measurement.toUnits(d, u, false);
       m = (int) Math.floor(Math.log10(e));
       mp = Math.pow(10, m);
       e = Measurement.fromUnits(mp + 0.000001f, u);
-      p = (int) (e * tm.scalePixelsPerAngstrom * f);
+      p = (int) (e * tm.scalePixelsPerAngstrom / af);
       if (p < min) {
         d *= 10;
       }
-      //System.out.println("viewer p min " + p + " " + min + " " + tm.scalePixelsPerAngstrom + " " + f);
     }
     String se = (m >= 0 ? " " + (int) mp + " "
         : " 0." + "000000000".substring(0, -1 - m) + "1 ");
     ret[0] = p;
     ret[1] = e;
-//    System.out.println("Viewer.getScaleText sppa " + tm.scalePixelsPerAngstrom + " " + getScreenDim() + 
-//        " imageFontScaling " + imageFontScaling +
-//        " = p,e,af,f,mp,m " + p + " " + e + " " + af + " " + f + " " + mp + " " + m);
     return se + u;
   }
 
