@@ -2,7 +2,6 @@ package org.jmol.adapter.writers;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Stack;
 
@@ -913,7 +912,7 @@ public class CDXMLWriter extends CMLWriter {
   private final static int kCDXBondDisplay_DashDot = 14;
 
   public static String fromString(Viewer vwr, String type, String mol) {
-    HashMap<String, Object> htParams = new HashMap<String, Object>();
+    Hashtable<String, Object> htParams = new Hashtable<String, Object>();
     htParams.put("filter", "filetype=" + type);
     Object o;
     try {

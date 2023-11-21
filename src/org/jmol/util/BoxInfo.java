@@ -26,7 +26,7 @@
 package org.jmol.util;
 
 
-import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.MeasureD;
@@ -426,7 +426,7 @@ public class BoxInfo {
       return c;
     }
     if (what == null || "info".equals(what)) {
-      Map<String, Object> m = new HashMap<String, Object>();
+      Map<String, Object> m = new Hashtable<String, Object>();
       m.put("center", c);
       V3d v = V3d.newVsub(bbCorner1, bbCorner0);
       m.put("dimensions", v);
