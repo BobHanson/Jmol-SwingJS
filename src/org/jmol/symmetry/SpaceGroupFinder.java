@@ -117,11 +117,13 @@ public class SpaceGroupFinder {
         xyzList = xyzList.substring(4);
         if (xyzList.indexOf(".") < 0)
           xyzList += ".1";
+        @SuppressWarnings("unchecked")
         Map<String, Object> sgdata = (Map<String, Object>) uc.getSpaceGroupJSON(vwr, "ITA", xyzList, 0);
         if (sgdata == null)
           return null;
         name = (String) sgdata.get("itaFull");
         boolean isKnown = (name.indexOf("?") < 0);
+        @SuppressWarnings("unchecked")
         Lst<Object> genPos = (Lst<Object>) sgdata.get("gp");
         xyzList = "";
         for (int i = 0, c = genPos.size(); i < c; i++)
@@ -445,7 +447,7 @@ public class SpaceGroupFinder {
     int n = PT.parseInt(sg.intlTableNumber);
     boolean isHexGroup = isHexagonal(n, null);
     if (n <= 2 || 
-        isHexGroup && (sg.axisChoice == 'r' ? isRhombohedralCell(params) : isHexagonal(-1, params))) {
+        isHexGroup && (sg.axisChoice == 'r' ? SimpleUnitCell.isRhombohedral(params) : isHexagonal(-1, params))) {
       // all set
     } else if (isHexGroup) {
       if (sg.axisChoice == 'r')
@@ -484,14 +486,8 @@ public class SpaceGroupFinder {
   }
 
   private static boolean isHexagonal(int n, double[] params) {
-    return (n < 1 ? params[0] == params[1] && params[3] == 90 && params[4] == 90 && params[5] == 120
+    return (n < 1 ? SimpleUnitCell.isHexagonal(params)
         : n >= 143 && n <= 194);
-  }
-
-  private static boolean isRhombohedralCell(double[] params) {
-    return (approx0(params[0] - params[1]) && approx0(params[1] - params[2])
-        && params[3] != 90 && approx0(params[3] - params[4])
-        && approx0(params[4] - params[5]));
   }
 
   private void removeDuplicates(BS bs) {
@@ -648,7 +644,7 @@ public class SpaceGroupFinder {
         }
       }
     } else if (absame && bcsame
-        && params[3] == params[4]  && params[4] == params[5]) {
+        && approx0(params[3] - params[4])  && approx0(params[4] - params[5])) {
       isRhombo = true;
     }
     bsGroups.setBits(0, 2);
@@ -1001,7 +997,7 @@ public class SpaceGroupFinder {
   private static int approxInt(double finv) {
 //    int i = (int) Math.round (finv); // was 
     int i = (int) (finv + SLOP001);
-    return (Math.abs(finv - i) < SLOP001 ? i : 0);
+    return (approx0(finv - i) ? i : 0);
   }
 
   @SuppressWarnings("unused")

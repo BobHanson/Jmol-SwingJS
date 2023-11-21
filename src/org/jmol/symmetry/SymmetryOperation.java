@@ -1577,8 +1577,13 @@ public class SymmetryOperation extends M4d {
       break;
     }
     if (d > 0) {
-      opType |= TYPE_TRANSLATION;
       opClean6(opTrans);
+      if (opType == TYPE_REFLECTION) {
+        // being careful here not to disallow this for vertical planes in #156; only for #88
+        if ((opTrans.x == 1 || opTrans.y == 1 || opTrans.z == 1) && m22 == -1)
+          isOK = false;
+      }
+      opType |= TYPE_TRANSLATION;
       if (Math.abs(approx(opTrans.x)) >= dmax
           || Math.abs(approx(opTrans.y)) >= dmax
           || Math.abs(approx(opTrans.z)) >= dmax) {
@@ -1604,33 +1609,6 @@ public class SymmetryOperation extends M4d {
   //    v1.scale(1/d);
   //    return "" + ((int)approx(v1.x)) + ((int)approx(v1.y)) + ((int)approx(v1.z));
   //  }
-
-  private void normalizeOpTrans(V3d t) {
-    // without anything, 38 has =1/2 and +1/2 indications for glide planes
-    if (true)return;
-    
-    if (t.x <= -0.5d) {
-      t.x += 1;
-      m03 += 1;
-    } else if (t.x > 0.5d) {
-      t.x -= 1;
-      m03 -= 1;
-    }
-    if (t.y <= -0.5d) {
-      t.y += 1;
-      m13 += 1;
-    } else if (t.y > 0.5d) {
-      t.y -= 1;
-      m13 -= 1;
-    }
-    if (t.z <= -0.5d) {
-      t.z += 1;
-      m23 += 1;
-    } else if (t.z > 0.5d) {
-      t.z -= 1;
-      m23 -= 1;
-    }
-  }
 
   private static void normalizePlane(P4d plane) {
     approx6Pt(plane);
@@ -1932,23 +1910,31 @@ public class SymmetryOperation extends M4d {
   }
 
   public static char getGlideFromTrans(T3d ftrans, T3d ax1) {
-    double fx = Math.abs(approx(ftrans.x));
-    double fy = Math.abs(approx(ftrans.y));
-    double fz = Math.abs(approx(ftrans.z));
+    double fx = Math.abs(approx(ftrans.x * 12));
+    double fy = Math.abs(approx(ftrans.y * 12));
+    double fz = Math.abs(approx(ftrans.z * 12));
+    if (fx == 9)
+      fx = 3;
+    if (fy == 9)
+      fy = 3;
+    if (fz == 9)
+      fz = 3;
     if (fx != 0 && fy != 0 && fz != 0) {
-      return ((fx == 1 / 4d || fx == 3 / 4d) && (fy == 1 / 4d || fy == 3 / 4d)
-          && (fz == 1 / 4d || fz == 3 / 4d) ? 'd'
-              : fx == 1 / 2d && fy == 1 / 2d && fz == 1 / 2d ? 'n' 
+      return (fx == 3 && fy == 3
+          && fz == 3 ? 'd'
+              : fx == 6 && fy == 6 && fz == 6 ? 'n' 
               : 'g');
     }
-    if (fx != 0 && fy != 0 || fy != 0 && fz != 0 || fz != 0 && fx != 0) {
+    if (fx != 0 && fy != 0 
+        || fy != 0 && fz != 0 
+        || fz != 0 && fx != 0) {
       // any two
-      if (fx == 1 / 4d && fy == 1 / 4d || fx == 1 / 4d && fz == 1 / 4d
-          || fy == 1 / 4d && fz == 1 / 4d) {
+      if (fx == 3 && fy == 3 || fx == 3 && fz == 3
+          || fy == 3 && fz == 3) {
         return 'd';
       }
-      if (fx == 1 / 2d && fy == 1 / 2d || fx == 1 / 2d && fz == 1 / 2d
-          || fy == 1 / 2d && fz == 1 / 2d) {
+      if (fx == 6 && fy == 6 || fx == 6 && fz == 6
+          || fy == 6 && fz == 6) {
         // making sure here that this is truly a diagonal in the plane, not just
         // a glide parallel to a face on a diagonal plane! Mois Aroyo 2018
         if (fx == 0 && ax1.x == 0 || fy == 0 && ax1.y == 0

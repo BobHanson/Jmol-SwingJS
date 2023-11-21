@@ -204,9 +204,9 @@ public class XtalSymmetry {
   }
 
   int addSpaceGroupOperation(String xyz, boolean andSetLattice) {
-    if (andSetLattice)
-      setLatticeCells();
     symmetry.setSpaceGroup(doNormalize);
+    if (andSetLattice && symmetry.getSpaceGroupOperationCount() == 1)
+      setLatticeCells();
     return symmetry.addSpaceGroupOperation(xyz, 0);
   }
 
@@ -278,7 +278,7 @@ public class XtalSymmetry {
     int maxY = latticeCells[1];
     int maxZ = Math.abs(latticeCells[2]);
     /* kcode:  Generally the multiplier is just {ijk ijk scale}, but when we have
-    *        1iiijjjkkk 1iiijjjkkk scale, doubles lose kkk due to Java double
+    *        1iiijjjkkk 1iiijjjkkk scale, floats lose kkk due to Java double
     *        precision issues so we use P4d {1iiijjjkkk 1iiijjjkkk scale,
     *        1kkkkkk}. Here, our offset -- initially 0 or 1 from the uccage
     *        renderer, but later -500 or -499 -- tells us which code we are
@@ -307,33 +307,62 @@ public class XtalSymmetry {
     }
     if (acr.latticeType != null) {
       asc.setCurrentModelInfo("latticeType", acr.latticeType);
-      if (acr.fillRange instanceof String) {
-
-        String type = (String) acr.fillRange; // conventional or primitive
+      Object range = acr.fillRange;
+      if (range instanceof String) {
+        String type = (String) range; // conventional or primitive
         if (type.equals(AtomSetCollectionReader.CELL_TYPE_CONVENTIONAL)) {
-          acr.fillRange = symmetry.getConventionalUnitCell(acr.latticeType,
+          range = symmetry.getConventionalUnitCell(acr.latticeType,
               acr.primitiveToCrystal);
         } else if (type.equals(AtomSetCollectionReader.CELL_TYPE_PRIMITIVE)) {
-          acr.fillRange = symmetry.getUnitCellVectors();
+          range = symmetry.getUnitCellVectors();
           symmetry.toFromPrimitive(true, acr.latticeType.charAt(0),
-              (T3d[]) acr.fillRange, acr.primitiveToCrystal);
+              (T3d[]) range, acr.primitiveToCrystal);
+        } else if ("R".equals(acr.latticeType) && type.equals("rhombohedral")) {
+          if (symmetry
+              .getUnitCellInfoType(SimpleUnitCell.INFO_IS_HEXAGONAL) == 1) {
+            type = SimpleUnitCell.HEX_TO_RHOMB;
+          } else {
+            type = null;
+          }
+        } else if ("R".equals(acr.latticeType) && type.equals("trigonal")) {
+          if (symmetry
+              .getUnitCellInfoType(SimpleUnitCell.INFO_IS_RHOMBOHEDRAL) == 1) {
+            type = SimpleUnitCell.RHOMB_TO_HEX;
+          } else {
+            type = null;
+          }
+        } else if (type.indexOf(",") < 0 || type.indexOf("a") < 0
+            || type.indexOf("b") < 0 || type.indexOf("c") < 0) {
+          type = null;
         } else {
-          acr.fillRange = null;
+          type = null;
         }
-        if (acr.fillRange != null)
-          acr.addJmolScript("unitcell " + type);
+        if (type != null && range instanceof String
+            && (range = symmetry.getV0abc(type, null)) == null) {
+          type = null;
+        }
+        if (type == null) {
+          acr.appendLoadNote(
+              acr.fillRange + " symmetry could not be implemented");
+          acr.fillRange = null;
+        } else {
+          acr.fillRange = range;
+          acr.addJmolScript("unitcell " + PT.esc(type));
+        }
       }
     }
-    if (acr.fillRange != null) {
 
+    if (acr.fillRange != null) {
+      T3d[] range = (T3d[]) acr.fillRange;
       bsAtoms = updateBSAtoms();
       acr.forcePacked = true;
       doPackUnitCell = false;
-      minXYZ = new P3i();
-      maxXYZ = P3i.new3(1, 1, 1);
+      setMinMax(dim, kcode, maxX, maxY, maxZ);
+      P3i minXYZ2 = P3i.new3(minXYZ.x, minXYZ.y, minXYZ.z);
+      P3i maxXYZ2 = P3i.new3(maxXYZ.x, maxXYZ.y, maxXYZ.z);
       P3d[] oabc = new P3d[4];
       for (int i = 0; i < 4; i++)
-        oabc[i] = P3d.newP(((T3d[]) acr.fillRange)[i]);
+        oabc[i] = P3d.newP(range[i]);
       adjustRangeMinMax(oabc);
       //Logger.info("setting min/max for original lattice to " + minXYZ + " and "
       //  + maxXYZ);
@@ -348,11 +377,13 @@ public class XtalSymmetry {
         pt0.setT(atoms[i]);
         symmetry.toCartesian(pt0, false);
         sym2.toFractional(pt0, false);
-//        if (acr.fixJavaDouble)
-//          PT.fixPtDoubles(pt0, PT.FRACTIONAL_PRECISION);
+        //        if (acr.fixJavaDouble)
+        //          PT.fixPtDoubles(pt0, PT.FRACTIONAL_PRECISION);
         if (acr.noPack
-                ? !removePacking(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError)
-                : !isWithinCell(ndims, pt0, 0, 1, 0, 1, 0, 1, packingError))
+            ? !removePacking(ndims, pt0, minXYZ2.x, maxXYZ2.x, minXYZ2.y,
+                maxXYZ2.y, minXYZ2.z, maxXYZ2.z, packingError)
+            : !isWithinCell(ndims, pt0,  minXYZ2.x, maxXYZ2.x, minXYZ2.y,
+                maxXYZ2.y, minXYZ2.z, maxXYZ2.z,  packingError))
           bsAtoms.clear(i);
 
       }

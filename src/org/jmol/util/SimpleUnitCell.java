@@ -53,20 +53,43 @@ public class SimpleUnitCell {
   public static final int PARAM_SCALE = 25;
   public static final int PARAM_COUNT = 26;
 
+  public final static int INFO_IS_RHOMBOHEDRAL = 8;
+  public final static int INFO_IS_HEXAGONAL = 7;  
+  public final static int INFO_DIMENSIONS = 6;
+  public final static int INFO_GAMMA = 5;
+  public final static int INFO_BETA = 4;
+  public final static int INFO_ALPHA = 3;
+  public final static int INFO_C = 2;
+  public final static int INFO_B = 1;
+  public final static int INFO_A = 0;
+
+  public static final String HEX_TO_RHOMB = "2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c";
+  public static final String RHOMB_TO_HEX = "a-b,b-c,a+b+c";
+  
+  protected final static double toRadians = Math.PI * 2 / 360;
+
+
+  public final static double SLOP = 0.02d;
+  private final static double SLOP1 = 1 - SLOP;
+  /**
+   * allowance for rounding in [0,1)
+   */
+  private final static double SLOP001 = 0.001f;
+  private final static double SLOP0001 = 0.0001f;
+  
+  
   protected double[] unitCellParams;
   public M4d matrixCartesianToFractional;
   public M4d matrixFractionalToCartesian;
   protected M4d matrixCtoFNoOffset;
   protected M4d matrixFtoCNoOffset;
 
-  
-
-  protected int dimension = 3;
   public double volume;
 
+  protected int dimension = 3;
+ 
   private P3d fractionalOrigin;
 
-  protected final static double toRadians = Math.PI * 2 / 360;
   private int na, nb, nc;
   
   public boolean isSupercell() {
@@ -344,14 +367,6 @@ public class SimpleUnitCell {
     return (P3d) fractionalOrigin.putP(fo);
   }
 
-  public final static int INFO_DIMENSIONS = 6;
-  public final static int INFO_GAMMA = 5;
-  public final static int INFO_BETA = 4;
-  public final static int INFO_ALPHA = 3;
-  public final static int INFO_C = 2;
-  public final static int INFO_B = 1;
-  public final static int INFO_A = 0;
-
   /**
    * convenience return only after changing fpt
    * 
@@ -430,12 +445,13 @@ public class SimpleUnitCell {
       return gamma;
     case INFO_DIMENSIONS:
       return dimension;
+    case INFO_IS_HEXAGONAL:
+      return (isHexagonal(unitCellParams) ? 1 : 0);
+    case INFO_IS_RHOMBOHEDRAL:
+      return (isRhombohedral(unitCellParams) ? 1 : 0);      
     }
     return Double.NaN;
   }
-
-  public final static double SLOP = 0.02d;
-  private final static double SLOP1 = 1 - SLOP;
 
   /**
    * calculate weighting of 1 (interior), 0.5 (face), 0.25 (edge), or 0.125 (vertex)
@@ -554,11 +570,6 @@ public class SimpleUnitCell {
   }
   
   /**
-   * allowance for rounding in [0,1)
-   */
-  private final static double SLOP2 = 0.0001f;
-  
-  /**
    * check atom position for range [0, 1) allowing for rounding
 
    * @param pt 
@@ -567,15 +578,15 @@ public class SimpleUnitCell {
   public boolean checkPeriodic(P3d pt) {
     switch (dimension) {
     case 3:
-      if (pt.z < -SLOP2 || pt.z > 1 - SLOP2)
+      if (pt.z < -SLOP0001 || pt.z > 1 - SLOP0001)
         return false;
       //$FALL-THROUGH$
     case 2:
-      if (pt.y < -SLOP2 || pt.y > 1 - SLOP2)
+      if (pt.y < -SLOP0001 || pt.y > 1 - SLOP0001)
         return false;
       //$FALL-THROUGH$
     case 1:
-    if (pt.x < -SLOP2 || pt.x > 1 - SLOP2)
+    if (pt.x < -SLOP0001 || pt.x > 1 - SLOP0001)
       return false;
     }
     return true;
@@ -706,6 +717,22 @@ public class SimpleUnitCell {
       minXYZ.z = 0;
       maxXYZ.z = 1;
     }
+  }
+
+  public static boolean isHexagonal(double[] params) {
+    // a == b && alpha = beta = 90 && gamma = 120 (gamma -1 is a "rotateHexCell" indicator for AFLOW
+    return (approx0(params[0] - params[1]) 
+        && params[3] == 90 && params[4] == 90 && (params[5] == 120 || params[5] == -1));
+  }
+
+  public static boolean isRhombohedral(double[] params) {
+    return (approx0(params[0] - params[1]) && approx0(params[1] - params[2])
+        && params[3] != 90 && approx0(params[3] - params[4])
+        && approx0(params[4] - params[5]));
+  }
+
+  public static boolean approx0(double f) {
+    return (Math.abs(f) < SLOP001);
   }
 
 

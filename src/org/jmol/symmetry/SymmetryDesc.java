@@ -799,6 +799,11 @@ public class SymmetryDesc {
           type = info1 = "translation";
           info1 += ":" + s;
         } else if (isMirrorPlane) {
+          if (isSpaceGroup) {
+            fixGlideTrans(ftrans);
+            trans.setT(ftrans);
+            uc.toCartesian(trans, true);
+          }
           s = " " + strCoord(op, ftrans, op.isBio);
           // set ITA Table 2.1.2.1
           glideType = SymmetryOperation.getGlideFromTrans(ftrans, ax1);
@@ -1443,6 +1448,24 @@ public class SymmetryDesc {
 
     return ret;
   }
+
+  private static void fixGlideTrans(V3d ftrans) {
+    // set all +3/4 to -1/4
+    ftrans.x = fixGlideX(ftrans.x);
+    ftrans.y = fixGlideX(ftrans.y);
+    ftrans.z = fixGlideX(ftrans.z);
+  }
+
+  private static double fixGlideX(double x) {
+    switch ((int) Math.round(x * 12.001)) {
+    case 9:
+      return -1/4d;
+    case -9:
+      return 1/4d;
+    default:
+      return x;
+    }
+   }
 
   private void scaleByOrder(V3d v, int order, Boolean isccw) {
     v.scale(1 + (0.3d/order) + (isccw == null ? 0 : isccw  == Boolean.TRUE ? 0.02 : -0.02));
