@@ -557,8 +557,9 @@ public class CmdExt extends ScriptExt {
       T3d[] oabc = null;
       int tok = tokAt(++i);
       switch (tok) {
-      case T.unitcell:
       case T.boundbox:
+      case T.unitcell:
+      case T.string:
         break;
       default:
         if (e.isArrayParameter(i)) {
@@ -576,14 +577,18 @@ public class CmdExt extends ScriptExt {
       if (e.chk)
         return i;
       switch (tok) {
+      case T.string:
+        i--;
+        //$FALL-THROUGH$
       case T.unitcell:
-        // load .... FILL UNITCELL [conventional | primitive]
+        // load .... FILL UNITCELL [conventional | primitive | rhombohedral | trigonal | a,b,c....]
         String type = e.optParameterAsString(i++).toLowerCase();
-        if (PT.isOneOf(type, ";conventional;primitive;")) {
+        if (PT.isOneOf(type, ";conventional;primitive;rhombohedral;trigonal;")
+            || type.indexOf(",") >= 0 && (type.indexOf("a") >= 0 && type.indexOf("b") >= 0 && type.indexOf("c") >= 0)) {
           htParams.put("fillRange", type); // "conventional" or "primitive"
           sOptions.append(" FILL UNITCELL \"" + type + "\"");
           return i;
-        } 
+        }
         SymmetryInterface unitCell = vwr.getCurrentUnitCell();
         if (unitCell != null) {
           oabc = BoxInfo.toOABC(
@@ -5627,10 +5632,15 @@ public class CmdExt extends ScriptExt {
     case T.string:
     case T.identifier:
       String s = paramAsStr(i).toLowerCase();
-      if (s.equals("rhombohedral"))
-        s = "2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c";
-      else if (s.equals("trigonal")|| s.equals("hexagonal"))
-        s = "a-b,b-c,a+b+c";
+      if (s.equals("rhombohedral")) {
+        if (sym != null && sym.getUnitCellInfoType(SimpleUnitCell.INFO_IS_HEXAGONAL) == 0)
+          return;
+        s = SimpleUnitCell.HEX_TO_RHOMB;
+      } else if (s.equals("trigonal")) {
+        if (sym != null && sym.getUnitCellInfoType(SimpleUnitCell.INFO_IS_RHOMBOHEDRAL) == 0)
+          return;
+        s = SimpleUnitCell.RHOMB_TO_HEX;
+      }
       ucname = s;
       if (s.indexOf(",") >= 0 || chk) {
         newUC = s;
