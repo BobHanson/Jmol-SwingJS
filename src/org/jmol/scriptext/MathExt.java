@@ -25,7 +25,6 @@
 package org.jmol.scriptext;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -1880,7 +1879,7 @@ public class MathExt {
                 err = ee.getMessage();
               }
             }
-            Map<String, Object> m = new HashMap<String, Object>();
+            Map<String, Object> m = new Hashtable<String, Object>();
             m.put("BS1", bs);
             m.put("BS2", bs2);
             m.put("SMILES", sFind);
