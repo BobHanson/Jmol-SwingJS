@@ -186,7 +186,8 @@ public final class JC {
       "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
       "aflow",
       "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
-      "aflowpro","https://www.aflowlib.org/prototype-encyclopedia/CIF/%FILE.cif",
+      "aflowlib","https://www.aflowlib.org/prototype-encyclopedia/CIF/%FILE.cif",
+      "aflowpro","$aflowlib",
       // _#DOCACHE_ flag indicates that the loaded file should be saved in any state in full
       // ' at start indicates a Jmol script evaluation
       "ams",
@@ -297,8 +298,14 @@ public final class JC {
   final static Map<String, String> databases = new Hashtable<String, String>();
 
   static {
-    for (int i = 0; i < databaseArray.length; i += 2)
-      databases.put(databaseArray[i].toLowerCase(), databaseArray[i + 1]);
+    for (int i = 0; i < databaseArray.length; i += 2) {
+      String target = databaseArray[i + 1];
+      if (target.charAt(0) == '$') {
+        // alias
+        target = databases.get(target.substring(1)); 
+      }
+      databases.put(databaseArray[i].toLowerCase(), target);
+    }
   }
 
   public static String resolveDataBase(String database, String id, String format) {

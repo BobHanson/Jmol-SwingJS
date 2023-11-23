@@ -446,13 +446,6 @@ public class ScriptEval extends ScriptExpr {
       if (params != null) {
         popContext(false, false);
       }
-    } catch (Error er) {
-      er.printStackTrace();
-      vwr.handleError(er, false);
-      setErrorMessage("" + er + " " + vwr.getShapeErrorState());
-      errorMessageUntranslated = "" + er;
-      report(errorMessage, true);
-      haveError = true;
     } catch (ScriptException e) {
       if (e instanceof ScriptInterruption && (!isTry || !e.isError)) {
         
@@ -482,10 +475,19 @@ public class ScriptEval extends ScriptExpr {
                   : "ScriptException"), errorMessage, errorMessageUntranslated);
       haveError = true;
     }
+    catch (Throwable er) {
+      er.printStackTrace();
+      vwr.handleError(er, false);
+      setErrorMessage("" + er + " " + vwr.getShapeErrorState());
+      errorMessageUntranslated = "" + er;
+      report(errorMessage, true);
+      haveError = true;
+    }     
     if (haveError || !isJS || !allowJSThreads || params != null) {
       vwr.setTainted(true);
-      vwr.popHoldRepaint("executeCommands" + " "
+      vwr.popHoldRepaint("CLEAR HOLD - executeCommands" + " "
           + (scriptLevel > 0 ? JC.REPAINT_IGNORE : ""));
+      resumeViewer("exception");
     }
     timeEndExecution = System.currentTimeMillis();
     if (errorMessage == null && executionStopped)
@@ -611,6 +613,8 @@ public class ScriptEval extends ScriptExpr {
     vwr.setTainted(true);
     vwr.popHoldRepaint(why + (chk ? JC.REPAINT_IGNORE : ""));
     vwr.queueOnHold = false;
+    vwr.clearScriptQueue();
+    vwr.scm.queueThreadFinished(-1);
   }
 
   @Override
@@ -4828,12 +4832,15 @@ public class ScriptEval extends ScriptExpr {
           type = filename.substring(0, pt + 2);
           filename = filename.substring(pt + 2);
         }
-        if (!isMutate)
-          filename = type
-              + checkFileExists("LOAD" + (isAppend ? "_APPEND_" : "_"), isAsync,
-                  filename, filePt, !isAppend && pc != pcResume);
-        if (filename.equals("null"))
-          error(ERROR_operationCanceled);
+        if (filename.startsWith("cache://")) { 
+          localName = null;
+        } else if (!isMutate) {
+          filename = checkFileExists("LOAD" + (isAppend ? "_APPEND_" : "_"), isAsync,
+                filename, filePt, !isAppend && pc != pcResume);
+          if (filename == null)
+            error(ERROR_operationCanceled);
+          filename = type + filename;
+        }
         if (filename.startsWith("cache://"))
           localName = null;
         // on first pass, a ScriptInterruption will be thrown; 

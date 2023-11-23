@@ -27,6 +27,16 @@ package org.jmol.symmetry;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.bspt.Bspt;
+import org.jmol.bspt.CubeIterator;
+import org.jmol.modelset.Atom;
+import org.jmol.util.BSUtil;
+import org.jmol.util.Escape;
+import org.jmol.util.Logger;
+import org.jmol.util.Node;
+import org.jmol.util.Point3fi;
+
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.P3d;
@@ -35,16 +45,6 @@ import javajs.util.Qd;
 import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
-
-import org.jmol.bspt.Bspt;
-import org.jmol.bspt.CubeIterator;
-import javajs.util.BS;
-import org.jmol.modelset.Atom;
-import org.jmol.util.BSUtil;
-import org.jmol.util.Escape;
-import org.jmol.util.Logger;
-import org.jmol.util.Node;
-import org.jmol.util.Point3fi;
 
 /*
  * Bob Hanson 7/2008
@@ -151,6 +151,11 @@ class PointGroup {
   String getName() {
     return name;
   }
+  
+  String getHermannMauguinName() {
+	  
+	    return getHMfromSFName(name);
+	  }
 
   private final V3d vTemp = new V3d();
   private int centerAtomIndex = -1;
@@ -1064,8 +1069,8 @@ class PointGroup {
     for (int i = 1; i < maxAxis; i++)
       for (int j = nAxes[i]; --j >= 0;)
         nType[axes[i][j].type][0]++;
-    SB sb = new SB()
-      .append("# ").appendI(nAtoms).append(" atoms\n");
+    SB sb = new SB().append("# ").appendI(nAtoms).append(" atoms\n");
+    String hmName = getHMfromSFName(this.name);
     if (asDraw) {
       drawID = "draw " + drawID;
       boolean haveType = (type != null && type.length() > 0);
@@ -1112,7 +1117,7 @@ class PointGroup {
                     : "orange").append(";\n");
           }
       }
-      if (!haveType || type.equalsIgnoreCase("Cs"))
+      if (!haveType || type.equalsIgnoreCase("Cs")) {
         for (int j = 0; j < nAxes[0]; j++) {
           if (index > 0 && j + 1 != index)
             continue;
@@ -1135,6 +1140,9 @@ class PointGroup {
                   principalPlane != null && op.index == principalPlane.index ? "red"
                       : "blue").append(";\n");
         }
+      }
+
+      String name = this.name + "(" + hmName + ")";
       sb.append("# name=").append(name);
       sb.append(", nCi=").appendI(haveInversionCenter ? 1 : 0);
       sb.append(", nCs=").appendI(nAxes[OPERATION_PLANE]);
@@ -1229,7 +1237,8 @@ class PointGroup {
       PT.rightJustify(sb, "    ", nTotal + "\n");
       return (textInfo = sb.toString());
     }
-    info.put("name", name);
+    info.put("name", this.name);
+    info.put("hmName", hmName);
     info.put("nAtoms", Integer.valueOf(nAtoms));
     info.put("nTotal", Integer.valueOf(nTotal));
     info.put("nElements", Integer.valueOf(nElements));
@@ -1255,27 +1264,12 @@ class PointGroup {
         && drawIndex == index && this.scale  == scale);
   }
 
+  // Schoenfliess to Hermann-Mauguin
   // using https://en.wikipedia.org/wiki/Hermann%E2%80%93Mauguin_notation
-//  private final static String SF2HM = 
-//      "Cn,1,2,3,4,5,6,7,8,9,10,11,12"+
-//      "|Cnv,1m,2m,3m,4mm,5m,6mm,7m,8mm,9m,10mm,11m,12mm,\u221em"+
-//      "|Sn,,-1,,-4,,-3,,-8,,-5,,(-12)"+
-//      "|Cnh,-2,2/m,-6,4/m,-10,6/m,-14,8/m,-18,10/m,-22,12/m"+
-//      "|Dn,,22,32,422,52,622,72,822,92,(10)22,(11)2,(12)22"+
-//      "|Dnd,,-42m,-32/m,-82m,-52/m,(-12)2m,-72/m,(-16)2m,-92/m,(-20)2m,(-11)2/m,(-24)2m"+
-//      "|Dnh,,2/m2/m2/m,-6m2,4/m2/m2/m,(-10)m2,6/m2/m2/m,(-14)m2,8/m2/m2/m,(-18)m2,10/m2/m2/m,(-22)m2,12/m2/m2/mDn/2h,\u221e/mm"+
-//      "|Ci,-1"+
-//      "|Cs,-2"+
-//      "|T,23"+
-//      "|Th,m-3"+
-//      "|Td,-43m"+
-//      "|O,432"+
-//      "|Oh,m-3m";
-//
 
   // using https://en.wikipedia.org/wiki/Point_group with added infm and inf/mm
-  private final static String SF2HM = 
-      "Cn,1,2,3,4,5,6,7,8,9,10,11,12"+
+  private final static String[] SF2HM = 
+      ("Cn,1,2,3,4,5,6,7,8,9,10,11,12"+
       "|Cnv,m,2m,3m,4mm,5m,6mm,7m,8mm,9m,10mm,11m,12mm,\u221em"+
       "|Sn,,-1,,-4,,-3,,-8,,-5,,(-12)"+
       "|Cnh,m,2/m,-6,4/m,-10,6/m,-14,8/m,-18,10/m,-22,12/m"+
@@ -1288,20 +1282,20 @@ class PointGroup {
       "|Th,m-3"+
       "|Td,-43m"+
       "|O,432"+
-      "|Oh,m-3m";
+      "|Oh,m-3m").split("\\|");
 
-private static Map<String, String> htSFToHM;
+  private static Map<String, String> htSFToHM;
   
-  private static String getSFtoInt(String name) {
+  private static String getHMfromSFName(String name) {
     if (htSFToHM == null) {
       htSFToHM = new Hashtable<String, String>();
-      String[] syms = SF2HM.split("\\|");
+      String[] syms = SF2HM;
       for (int i = 0; i < syms.length; i++) {
         String[] list = syms[i].split(",");
         String sym = list[0];
         if (list.length == 2) {
           htSFToHM.put(sym, list[1]);
-          System.out.println(sym + "\t" + list[1]);
+//          System.out.println(sym + "\t" + list[1]);
           continue;
         }
         String type = sym.substring(0, 1);
@@ -1322,11 +1316,6 @@ private static Map<String, String> htSFToHM;
     return htSFToHM.get(name);
   }
   
-  static {
-    getSFtoInt("C2");
-  }
-
-
 //  C1  1
 //  C2  2
 //  C3  3

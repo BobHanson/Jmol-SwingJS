@@ -288,6 +288,13 @@ public class ScriptManager implements JmolScriptManager {
 
   @Override
   public void queueThreadFinished(int pt) {
+    if (pt < 0) {
+      queueThreadFinished(0);
+      queueThreadFinished(1);
+      return;
+    }
+    if (queueThreads[pt] == null)
+      return;
     //System.out.println("queuethread " + pt + " done");
     queueThreads[pt].interrupt();
     scriptQueueRunning[pt] = false;

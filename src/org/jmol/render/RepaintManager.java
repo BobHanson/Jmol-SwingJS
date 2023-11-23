@@ -75,6 +75,10 @@ public class RepaintManager implements JmolRepaintManager {
   
   @Override
   public void popHoldRepaint(boolean andRepaint, String why) {
+    if (why != null && why.startsWith("CLEAR HOLD")) {
+      holdRepaint = 0;
+      andRepaint = true;
+    }
     --holdRepaint;
     if (holdRepaint <= 0) {
       holdRepaint = 0;
@@ -159,7 +163,6 @@ public class RepaintManager implements JmolRepaintManager {
     }
   }
 
-  
   /////////// renderer management ///////////
   
   

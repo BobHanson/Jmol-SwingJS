@@ -281,7 +281,7 @@ public class Viewer extends JmolViewer
 
   public ModelManager mm;
   public StateManager stm;
-  private JmolScriptManager scm;
+  public JmolScriptManager scm;
   public JmolScriptEvaluator eval;
   private TempArray tempArray;
 
@@ -4955,7 +4955,7 @@ public class Viewer extends JmolViewer
           try {
             int pt = id.indexOf("/");
             String database = id.substring(0, pt);
-            if (database.equalsIgnoreCase("aflowpro")) {
+            if (database.equalsIgnoreCase("aflowlib")) {
               id = id.substring(pt + 1);
               int index = 1;
               pt = id.indexOf('.');
@@ -4974,12 +4974,12 @@ public class Viewer extends JmolViewer
             return name;
           }
         }
+        if (id.endsWith(".mmtf")) {
+          id = id.substring(0, id.indexOf(".mmtf"));
+          return JC.resolveDataBase("mmtf", id.toUpperCase(), null);
+        }
+        format = g.loadFormat;
       }
-      if (id.endsWith(".mmtf")) {
-        id = id.substring(0, id.indexOf(".mmtf"));
-        return JC.resolveDataBase("mmtf", id.toUpperCase(), null);
-      }
-      format = g.loadFormat;
       //$FALL-THROUGH$
     case '#': // ligand
       if (format == null)
@@ -9108,7 +9108,7 @@ public class Viewer extends JmolViewer
         + currentShapeState;
   }
 
-  public void handleError(Error er, boolean doClear) {
+  public void handleError(Throwable er, boolean doClear) {
     // almost certainly out of memory; could be missing Jar file
     try {
       if (doClear)
