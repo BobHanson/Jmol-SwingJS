@@ -2932,7 +2932,7 @@ abstract public class AtomCollection {
 
 
   public Lst<P3d> generateCrystalClass(int atomIndex, P3d pt) {
-    SymmetryInterface sym = (atomIndex < 0 || atomIndex >= ac ? null
+    SymmetryInterface sym = (atomIndex < 0 || atomIndex >= ac ? vwr.getOperativeSymmetry()
         : at[atomIndex].getUnitCell());
     boolean isRandom = (pt != null && Double.isNaN(pt.x));
     return (sym == null ? new Lst<P3d>() : sym

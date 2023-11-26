@@ -1319,9 +1319,15 @@ public class ModelKit {
     boolean isITA = name.startsWith("ITA/");
     if (isITA) {
       name = name.substring(4);
+      if (name.length() == 0)
+        name = vwr.getOperativeSymmetry().getSpaceGroupName();
+      if (name.startsWith("HM:"))
+        name = name.substring(3);
+    } else if (name.indexOf('.') > 0 && !Double.isNaN(PT.parseDouble(name))) {
+      isITA = true;
     }
     boolean isP1 = (name.equalsIgnoreCase("P1") || name.equals("1"));
-    boolean isDefined = (!isP1 && name.length() > 0);
+    boolean isDefined = (name.length() > 0);
     clearAtomConstraints();
     try {
       if (bs != null && bs.isEmpty())
@@ -1355,10 +1361,13 @@ public class ModelKit {
       BS basis;
       Object sg = null;
       @SuppressWarnings("unchecked")
-      Map<String, Object> sgInfo = (noAtoms && !isDefined || isP1 ? null
+      Map<String, Object> sgInfo = (noAtoms && !isDefined ? null
           : (Map<String, Object>) vwr.findSpaceGroup(isDefined ? null : bsAtoms, isDefined ? (isITA ? "ITA/" + name : name) : null, sym.getUnitCellParams(), false, true));
       
       if (sgInfo == null) {
+        if (isITA) {
+          return "No International Tables setting found!";
+        }
         name = "P1";
         supercell = P3d.new3(1, 1, 1);
         oabc = sym.getUnitCellVectors();

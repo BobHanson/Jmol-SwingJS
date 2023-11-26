@@ -72,10 +72,27 @@ import javajs.util.SB;
  *
  */
 
-class SpaceGroup {
+class SpaceGroup implements Cloneable {
+
+  SpaceGroup cloneInfoTo(SpaceGroup sg0) {
+    try {
+      SpaceGroup sg = (SpaceGroup) clone();
+      sg.operations = sg0.operations;
+      sg.finalOperations = sg0.finalOperations;
+      sg.xyzList = sg0.xyzList;
+      return sg;
+    } catch (CloneNotSupportedException e) {
+      return null;
+    }
+  }
+
+  SymmetryOperation[] operations;
+  SymmetryOperation[] finalOperations;
+  SymmetryOperation[] allOperations;
+  Map<String, Integer> xyzList;
 
   int index;
-
+  
   boolean isSSG;
   String name = "unknown!";
   String hallSymbol;
@@ -97,22 +114,12 @@ class SpaceGroup {
   String intlTableNumberExt;
   HallInfo hallInfo;
   int latticeParameter;
-  //char latticeCode = '\0';
-  SymmetryOperation[] operations;
-  SymmetryOperation[] finalOperations;
-  SymmetryOperation[] allOperations;
   int operationCount;
   int latticeOp = -1;
-  Map<String, Integer> xyzList;
-
   private int modDim;
-
   boolean doNormalize = true;
-
   boolean isBio;
-
   boolean isBilbao;
-
   char latticeType = 'P'; // P A B C I F
 
   private Integer nHallOperators;
@@ -936,6 +943,35 @@ class SpaceGroup {
     return -1;
   }
    
+  public void setIntlTableNumberFull(String name) {
+    intlTableNumberFull = name;
+    String[] parts = PT.split(name, ":");
+    intlTableNumber = parts[0];
+    intlTableNumberExt = (parts.length == 1 ? "" : parts[1]);
+    ambiguityType = '\0';
+    if (intlTableNumberExt.length() > 0) {
+      char c = intlTableNumberExt.charAt(0); 
+      if (intlTableNumberExt.equals("h") || intlTableNumberExt.equals("r")) {
+        ambiguityType = 't';
+        axisChoice = intlTableNumberExt.charAt(0);
+      } else if (c == '1' || c == '2') {
+        ambiguityType = 'o';
+        // originChoice = intlTableNumberExt.charAt(0);
+      } else if (intlTableNumberExt.length() <= 2
+          || intlTableNumberExt.length() == 3 && c == '-' ) { // :a or :b3
+        ambiguityType = 'a';
+        uniqueAxis = intlTableNumberExt.charAt(c == '-' ? 1 : 0);
+        // Q: should we include :-a1 here?
+        // if (intlTableNumberExt.length() == 2)
+        // cellChoice = intlTableNumberExt.charAt(1);
+      } else if (intlTableNumberExt.contains("-")) {
+        ambiguityType = '-';
+        // skip when searching for a group by name
+        // added 9/28/14 Jmol 14.3.7
+      }
+    }
+  }
+
    private final static char determineUniqueAxis(double a, double b, double c, double alpha, double beta, double gamma) {
      if (a == b)
        return (b == c ? '\0' : 'c');
@@ -977,31 +1013,7 @@ class SpaceGroup {
     // "4:b;2;c2^2;p 1 21 1;p 2yb",   //full name
 
     ////  terms[0] -- International Table Number and setting ////
-
-    String[] parts = PT.split(intlTableNumberFull, ":");
-    intlTableNumber = parts[0];
-    intlTableNumberExt = (parts.length == 1 ? "" : parts[1]);
-    ambiguityType = '\0';
-    if (intlTableNumberExt.length() > 0) {
-      if (intlTableNumberExt.equals("h") || intlTableNumberExt.equals("r")) {
-        ambiguityType = 't';
-        axisChoice = intlTableNumberExt.charAt(0);
-      } else if (intlTableNumberExt.startsWith("1")
-          || intlTableNumberExt.startsWith("2")) {
-        ambiguityType = 'o';
-        // originChoice = intlTableNumberExt.charAt(0);
-      } else if (intlTableNumberExt.length() <= 2) { // :a or :b3
-        ambiguityType = 'a';
-        uniqueAxis = intlTableNumberExt.charAt(0);
-        // Q: should we include :-a1 here?
-        // if (intlTableNumberExt.length() == 2)
-        // cellChoice = intlTableNumberExt.charAt(1);
-      } else if (intlTableNumberExt.contains("-")) {
-        ambiguityType = '-';
-        // skip when searching for a group by name
-        // added 9/28/14 Jmol 14.3.7
-      }
-    }
+    setIntlTableNumberFull(intlTableNumberFull);
 
     ////  terms[1] -- number of operators ////
 

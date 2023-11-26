@@ -4955,8 +4955,8 @@ public class Viewer extends JmolViewer
           try {
             int pt = id.indexOf("/");
             String database = id.substring(0, pt);
+            id = id.substring(pt + 1);
             if (database.equalsIgnoreCase("aflowlib")) {
-              id = id.substring(pt + 1);
               int index = 1;
               pt = id.indexOf('.');
               if (pt >= 0) {

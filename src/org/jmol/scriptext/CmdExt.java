@@ -6423,6 +6423,17 @@ public class CmdExt extends ScriptExt {
       i = e.iToken;
     } else if (isSpacegroup) {
       type = e.optParameterAsString(i);
+      // "ITA" "/" 12.1
+      // "ITA"
+      if (type.equals("ITA")) {
+        // just "ITA" or ITA / 2.1
+        if (e.optParameterAsString(i + 1).equals("/")) {
+          type += "/" + e.optParameterAsString(i + 2);
+          e.iToken = i = i + 2;
+        } else {
+          type += "/";
+        }
+      }
       if (tokAt(e.iToken + 1) == T.packed) {
         isPacked = true;
         ++e.iToken;
@@ -6484,7 +6495,7 @@ public class CmdExt extends ScriptExt {
       String s = vwr.assignSpaceGroup(bs, type, -1);
       if (e.doReport())
         e.showString(s);
-      if (isPacked) {
+      if (isPacked && !s.endsWith("!")) {
         int n = vwr.getModelkit(false).cmdAssignAddAtoms(null, null, bsModelAtoms, "packed", e.fullCommand, false);
         if (e.doReport())
           e.report(GT.i(GT.$("{0} atoms added"), n), false);

@@ -900,7 +900,10 @@ public class Symmetry implements SymmetryInterface {
         }
       }
       for (int j = lst.size(); --j >= 0;)
-        unitCell.toCartesian(lst.get(j), true); // ignoreOffset
+        pt = lst.get(j);
+        if (isRandom)
+          pt.scale(0.5f);
+        unitCell.toCartesian(pt, true); // ignoreOffset
     }
     return lst;
   }
@@ -1186,6 +1189,9 @@ public class Symmetry implements SymmetryInterface {
   private static Map<String, Object> aflowStructures;
   private static Map<String, Object>[] itaData;
 
+  private static Lst<Object> allDataITA;
+  private static Lst<Object> listDataITA;
+  
   @SuppressWarnings("unchecked")
   @Override
   public Object getSpaceGroupJSON(Viewer vwr, String name, String sgname,
@@ -1211,13 +1217,21 @@ public class Symmetry implements SymmetryInterface {
         throw new ArrayIndexOutOfBoundsException(itno);
       if (name.equalsIgnoreCase("ITA")) {
         if (itno == 0) {
-          return getResource(vwr, "sg/json/ita_all.json");
+          if (allDataITA == null)
+            allDataITA = (Lst<Object>) getResource(vwr, "sg/json/ita_all.json");
+          return allDataITA;
+        }
+        if (itno == Integer.MIN_VALUE) {
+          if (listDataITA == null)
+            listDataITA = (Lst<Object>) getResource(vwr, "sg/json/ita_list.json");
+          if (itno == 0)
+            return allDataITA;
         }
         if (itaData == null)
           itaData = new Map[230];
         Map<String, Object> resource = itaData[itno - 1];
         if (resource == null)
-          itaData[itno - 1] = resource = getResource(vwr,
+          itaData[itno - 1] = resource = (Map<String, Object>) getResource(vwr,
               "sg/json/ita_" + itno + ".json");
         if (resource != null) {
           if (index == 0)
@@ -1238,7 +1252,7 @@ public class Symmetry implements SymmetryInterface {
         }
       } else if (name.equalsIgnoreCase("AFLOW") && tm == null) {
         if (aflowStructures == null)
-          aflowStructures = getResource(vwr, "sg/json/aflow_structures.json");
+          aflowStructures = (Map<String, Object>) getResource(vwr, "sg/json/aflow_structures.json");
         if (itno == 0)
           return aflowStructures;
         System.out.println(sgname + " ? " + index);
@@ -1254,13 +1268,13 @@ public class Symmetry implements SymmetryInterface {
   }
   
   @SuppressWarnings("unchecked")
-  private Map<String, Object> getResource(Viewer vwr, String resource) {
+  private Object getResource(Viewer vwr, String resource) {
     try {
       BufferedReader r = FileManager.getBufferedReaderForResource(vwr, this,
           "org/jmol/symmetry/", resource);
       String[] data = new String[1];
       if (Rdr.readAllAsString(r, Integer.MAX_VALUE, false, data, 0)) {
-        return (Map<String, Object>) new JSJSONParser().parse(data[0], true);
+        return new JSJSONParser().parse(data[0], true);
       }
     } catch (Throwable e) {
       System.err.println(e.getMessage());
