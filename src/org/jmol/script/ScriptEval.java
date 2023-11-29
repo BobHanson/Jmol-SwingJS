@@ -7755,6 +7755,8 @@ public class ScriptEval extends ScriptExpr {
           // PyMOL offsets -- [1, scrx, scry, scrz, molx, moly, molz] in angstroms
           propertyValue = doubleParameterSet(pt, 7, 7);
           pt = iToken + 1;
+        } else if (tokAt(pt) == T.none) {
+          pt++;
         }
         break;
       case T.off:

@@ -36,7 +36,21 @@ import javajs.util.PT;
 import javajs.util.SB;
 
 public class Text {
- 
+
+  
+//mode == 0 indicates xyz position is absolute and sx sy sz are Angstroms
+//mode == 1 indicates xyz position is relative to atom position and sx sy sz are Angstroms
+//mode == 2 indicates xyz is absolute, and sx sy sz positions are screen pixels
+//mode == 3 indicates xyz is relative, and sx sy sz positions are screen pixels
+//mode == -1 indicates xyz are calculated 
+  
+public static final double PYMOL_MODE_FOFF      = -1;
+public static final double PYMOL_MODE_ABS_ANG    = 0;
+public static final double PYMOL_MODE_REL_ANG    = 1;
+public static final double PYMOL_MODE_ABS_SCREEN = 2;
+public static final double PYMOL_MODE_REL_SCREEN = 3;
+
+
   private Viewer vwr;
 
   public boolean doFormatText;
@@ -322,20 +336,21 @@ public class Text {
       y0 += ascent + (lines.length - 1)/2d * lineHeight;
   }
 
-  private double getPymolXYOffset(double off, int width, double ppa) {
-    double f = (off < -1 ? -1 : off > 1 ? 0 : (off - 1) / 2);
-    // offset
-    // -3     -2
-    // -2     -1
-    // -1      0 absolute, -1 width
-    //-0.5    -3/4  width
-    //  0     -1/2 width
-    // 0.5    -1/4 width
-    //  1      0
-    //  2      1
-    //  3      2
-    off = (off < -1 || off > 1 ? off + (off < 0 ? 1 : -1) : 0);
-    return f * width + off * ppa;
+  private double getPymolXYOffset(double x, int width, double ppa) {
+    double f = (x < -1 ? -1 : x > 1 ? 0 : (x - 1) / 2);
+    //  x   f/width    offset/ppa
+    // -3     -1         -2
+    // -2     -1         -1
+    // -1      0          0
+    //-0.5    -3/4        0
+    //  0     -1/2        0
+    // 0.5    -1/4        0
+    //  1      0          0
+    //  2      1          1
+    //  3      1          2
+    
+    double offset = (x < -1 || x > 1 ? x + (x < 0 ? 1 : -1) : 0);
+    return f * width + offset * ppa;
   }
 
   private void setPos(double scale) {

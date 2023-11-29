@@ -193,12 +193,12 @@ public class Echo extends TextShape {
       }
       return;
     }
-
     if ("xyz" == propertyName) {
-      if (currentObject != null && vwr.getBoolean(T.fontscaling))
+      if (currentObject != null && vwr.getBoolean(T.fontscaling)) {
         currentObject.setScalePixelsPerMicron(
-            vwr.getScalePixelsPerAngstrom(false) * 10000d);
-      // continue on to Object2d setting
+        vwr.getScalePixelsPerAngstrom(false) * 10000);
+        currentObject.setXYZ((P3d) value, true);
+      }
     }
 
     if ("scale" == propertyName) {
@@ -293,21 +293,20 @@ public class Echo extends TextShape {
       }
       return;
     }
-
-    if ("xyz" == propertyName) {
-      if (currentObject != null) {
-        currentObject.setXYZ((P3d) value, true);
-        if (currentObject.pymolOffset == null)
-          currentObject.pymolOffset = new double[] { -1, 2, 0, 0, 0, 0, 0 };        
-      }
-      return;
-    }
-
+    
     if ("offset" == propertyName) {
       if (currentObject != null) {
         currentObject.pymolOffset = (double[]) value;
       }
       return;
+    }
+
+
+    if ("align" == propertyName) {
+      if (currentObject != null) {
+          currentObject.pymolOffset = null;
+      }
+      // pass through
     }
 
     setPropTS(propertyName, value, null);

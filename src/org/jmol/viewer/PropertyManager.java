@@ -1206,10 +1206,10 @@ public class PropertyManager implements JmolPropertyManager {
     String exp = (isProp ? "%{" + type + "}"
         : isUser ? type.substring(5)
             : type.equals("xyzrn") ? "%-2e %8.3x %8.3y %8.3z %4.2[vdw] 1 [%n]%r.%a#%i"
-                : type.equals("xyzvib") ? "%-2e %10.5x %10.5y %10.5z %10.5vx %10.5vy %10.5vz"
+                : type.equals("xyzvib") ? "%-2e %12.9x %12.9y %12.9z %12.9vx %12.9vy %12.9vz"
                     : type.equals("pdb") ? "{selected and not hetero}.label(\"ATOM  %5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines"
                         + "+{selected and hetero}.label(\"HETATM%5i %-4a%1A%3.3n %1c%4R%1E   %8.3x%8.3y%8.3z%6.2Q%6.2b          %2e  \").lines"
-                        : type.equals("xyz") ? "%-2e %10.5x %10.5y %10.5z"
+                        : type.equals("xyz") ? "%-2e %12.9x %12.9y %12.9z"
                             : type.equals("cfi") ? "print '$CFI from Jmol" + Viewer.getJmolVersion() + "\n'+{selected}.count + ' ' + {selected}.bonds.count + '\n'   + {selected}.format('%10.0[atomno] %10.0[elemno] %10.4[xyz]')  + {selected}.bonds.format('%i1 %i2') + '\n' + {selected}.bonds.format('%ORDER')"
                             : null);
     if (exp == null)
@@ -1346,7 +1346,7 @@ public class PropertyManager implements JmolPropertyManager {
             && ms.getVibration(j, false) != null ? tokensVib : tokensXYZ),
             '\0', null, ptTemp);
         ms.getPointTransf(i, atoms[j], q, ptTemp);
-        s = PT.rep(s, "_XYZ_", PT.sprintf("%12.5p %12.5p %12.5p", "p", o));
+        s = PT.rep(s, "_XYZ_", PT.sprintf("%15.9p %15.9p %15.9p", "p", o));
         mol.append(s);
       }
     }
