@@ -40,7 +40,7 @@ public class MouseTest extends JPanel implements MouseMotionListener {
      * this method should be invoked from the
      * event-dispatching thread.
      */
-    private static void createAndShowGUI() {
+    static void createAndShowGUI() {
         //Create and set up the window.
         JFrame frame = new JFrame("MouseTest for swingjs");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

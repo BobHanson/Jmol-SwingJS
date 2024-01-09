@@ -62,32 +62,23 @@ public class Integration {
   public static void main(String[] argv) {
     JFrame frame = new JFrame("Hello");
     frame.addWindowListener(new ApplicationCloser());
-    frame.setSize(410, 700);
     Container contentPane = frame.getContentPane();
+    contentPane.setLayout(new BorderLayout());
     JmolPanel jmolPanel = new JmolPanel();
     jmolPanel.setPreferredSize(new Dimension(400, 400));
-
-    // main panel -- Jmol panel on top
-
-    JPanel panel = new JPanel();
-    panel.setLayout(new BorderLayout());
-    panel.add(jmolPanel);
-    
-    // main panel -- console panel on bottom
-    
     JPanel panel2 = new JPanel();
     panel2.setLayout(new BorderLayout());
-    panel2.setPreferredSize(new Dimension(400, 300));
+    panel2.setPreferredSize(new Dimension(400, 200));
     AppConsole console = new AppConsole(jmolPanel.viewer, panel2,
         "History State Clear");
-    
-    // You can use a different JmolStatusListener or JmolCallbackListener interface
-    // if you want to, but AppConsole itself should take care of any console-related callbacks
     jmolPanel.viewer.setJmolCallbackListener(console);
-    
-    panel.add("South", panel2);
-    
-    contentPane.add(panel);
+  // You can use a different JmolStatusListener or JmolCallbackListener interface
+  // if you want to, but AppConsole itself should take care of any console-related callbacks
+
+
+    contentPane.add(jmolPanel, BorderLayout.CENTER);
+    contentPane.add(panel2, BorderLayout.SOUTH);
+    frame.pack();    
     frame.setVisible(true);
 
     // sample start-up script

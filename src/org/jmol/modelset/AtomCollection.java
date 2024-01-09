@@ -779,10 +779,15 @@ abstract public class AtomCollection {
     return (JmolModulationSet) (v != null && v.modDim > 0 ? v : null);
   }
 
-  protected void setVibrationVector(int atomIndex, T3d vib) {
+  public void setVibrationVector(int atomIndex, T3d vib) {
+    if (vib == null) {
+      if (vibrations != null && vibrations.length > atomIndex)
+        vibrations[atomIndex] = null;
+      return;
+    }
     if (Double.isNaN(vib.x) || Double.isNaN(vib.y) || Double.isNaN(vib.z))
       return;
-    if (vibrations == null || vibrations.length < atomIndex)
+    if (vibrations == null || vibrations.length <= atomIndex)
       vibrations = new Vibration[at.length];
     if (vib instanceof Vibration) {
       vibrations[atomIndex] = (Vibration) vib;

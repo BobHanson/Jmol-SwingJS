@@ -212,6 +212,7 @@ public class AppConsole extends JmolConsole
 
   @Override
   public void sendConsoleMessage(String strStatus) {
+    try {
     if (strStatus == null) {
       console.clearContent(null);
       console.outputStatus("");
@@ -222,7 +223,9 @@ public class AppConsole extends JmolConsole
       console.outputStatus(strStatus);
       isError = false;
     }
-    //system.out.println("AppConsole " + console.getText().length());
+    } catch (Throwable t) {
+      System.out.println("AppConsole error " + t);
+    }
   }
 
   @Override

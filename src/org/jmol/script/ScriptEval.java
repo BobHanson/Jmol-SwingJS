@@ -3107,6 +3107,7 @@ public class ScriptEval extends ScriptExpr {
             paramAsStr(++index), paramAsStr(++index), paramAsStr(++index) });
         break;
       case 5:
+        // axes labels "X" "Y" "Z" "o"
         sOrigin = paramAsStr(index + 4);
         //$FALL-THROUGH$
       case 4:
@@ -3114,7 +3115,7 @@ public class ScriptEval extends ScriptExpr {
         setShapeProperty(JC.SHAPE_AXES, "labels", new String[] {
             paramAsStr(++index), paramAsStr(++index), paramAsStr(++index),
             sOrigin });
-        break;
+        break;  
       default:
         bad();
       }

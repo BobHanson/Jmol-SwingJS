@@ -841,15 +841,15 @@ public class Viewer extends JmolViewer
 
   /**
    * 
-   * @param isDouble
+   * @param isStereo
    * @param isImageWrite
    * @return a java.awt.Image in the case of standard Jmol; an int[] in the case
    *         of Jmol-Android a canvas in the case of JSmol
    */
-  private Object getImage(boolean isDouble, boolean isImageWrite) {
+  private Object getImage(boolean isStereo, boolean isImageWrite) {
     Object image = null;
     try {
-      beginRendering(isDouble, isImageWrite);
+      beginRendering(isStereo, isImageWrite);
       render();
       gdata.endRendering();
       image = gdata.getScreenImage(isImageWrite);
@@ -2260,6 +2260,10 @@ public class Viewer extends JmolViewer
   @Override
   public void setVibrationPeriod(double period) {
     // Eval
+    if (Double.isNaN(period)) {
+      // just a reset from ModelKit
+      period = g.vibrationPeriod; 
+    }
     tm.setVibrationPeriod(period);
     period = Math.abs(period);
     g.vibrationPeriod = period;
@@ -6876,6 +6880,7 @@ public class Viewer extends JmolViewer
       // 14.32.42
       g.doublePrecision = value;
       setBooleanPropertyTok("legacyJavaFloat", T.legacyjavafloat, value);
+      isHighPrecision = value;
       break;
     case T.checkcir:
       // 14.31.40
@@ -9540,6 +9545,8 @@ public class Viewer extends JmolViewer
   // parallel processing
 
   public static int nProcessors = 1;
+
+  public static boolean isHighPrecision;
 
   static {
     /**

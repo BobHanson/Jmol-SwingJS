@@ -800,6 +800,13 @@ public class CifReader extends AtomSetCollectionReader {
   private void processCellParameter() throws Exception {
     for (int i = 6; --i >= 0;)
       if (key.equals(JmolAdapter.cellParamNames[i])) {
+        if (data.length() > 12) {
+          setHighPrecision();
+          //          _cell_angle_alpha          89.98553195002994
+          //          _cell_angle_beta           90.00000268115016
+          //          _cell_angle_gamma          120.00117944056412
+        }
+
         double p = parseDoubleStr(data);
         if (rotateHexCell && i == 5 && p == 120)
           p = -1;

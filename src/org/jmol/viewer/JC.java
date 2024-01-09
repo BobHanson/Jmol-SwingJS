@@ -191,7 +191,7 @@ public final class JC {
       // _#DOCACHE_ flag indicates that the loaded file should be saved in any state in full
       // ' at start indicates a Jmol script evaluation
       "ams",
-      "'http://rruff.geo.arizona.edu/AMS/viewJmol.php?'+(0+'%file'==0? 'mineral':('%file'.length==7? 'amcsd':'id'))+'=%file&action=showcif#_DOCACHE_'",
+      "'https://rruff.geo.arizona.edu/AMS/viewJmol.php?'+(0+'%file'==0? 'mineral':('%file'.length==7? 'amcsd':'id'))+'=%file&action=showcif#_DOCACHE_'",
       "dssr", "http://dssr-jmol.x3dna.org/report.php?id=%FILE&opts=--json=ebi", //for debugging: -blocks",
       "dssrModel",
       "http://dssr-jmol.x3dna.org/report.php?POST?opts=--json=ebi&model=", // called in DSSR1.java
@@ -357,6 +357,7 @@ public final class JC {
             ? resolveDataBase(name.indexOf("/ligand/") >= 0 ? "ligand" : "pdb",
                 name.substring(name.lastIndexOf("/") + 1), null)
             : name.indexOf("http://www.ebi") == 0
+                || name.indexOf("http://rruff") == 0
                 || name.indexOf("http://pubchem") == 0
                 || name.indexOf("http://cactus") == 0
                 || name.indexOf("http://www.materialsproject") == 0

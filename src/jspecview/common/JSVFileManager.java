@@ -101,7 +101,7 @@ public class JSVFileManager {
   }
 
 	public static BufferedReader getBufferedReaderFromName(String name,
-			String startCode) throws JSVException {
+			String startCode) throws Exception {
 		if (name == null)
 			throw new JSVException("Cannot find " + name);
 		Logger.info("JSVFileManager getBufferedReaderFromName " + name);
@@ -174,7 +174,7 @@ public class JSVFileManager {
 
 	@SuppressWarnings("resource")
   private static BufferedReader getUnzippedBufferedReaderFromName(String name,
-			String startCode) throws JSVException {
+			String startCode) throws Exception {
 		String[] subFileList = null;
 		if (name.indexOf("|") >= 0) {
 			subFileList = PT.split(name, "|");
@@ -201,7 +201,7 @@ public class JSVFileManager {
 						.getInterface("jspecview.common.JSVZipUtil")).newGZIPInputStream(in);
 			return new BufferedReader(new InputStreamReader(in, "UTF-8"));
 		} catch (Exception e) {
-			throw new JSVException("Cannot read file " + name + " " + e);
+			throw e;
 		}
 	}
 
@@ -407,7 +407,7 @@ public class JSVFileManager {
 			in = viewer.apiPlatform.getBufferedFileInputStream(name);
 		}
 		if (in instanceof String)
-			throw new JSVException((String) in);
+			throw new JSVException("\n" + (String) in);
 		return (InputStream) in;
 
 	}

@@ -4091,9 +4091,10 @@ public class ModelSet extends BondCollection {
       BS bs = getModelAtomBitSetIncludingDeleted(iModel, true);
       bs.and(bsAtoms);
       wts = new double[bsAtoms.cardinality()];
+      boolean isHighPrecision = vwr.getBoolean(T.doubleprecision);
       for (int p = 0; i >= 0; i = bsAtoms.nextSetBit(i + 1))
         wts[p++] = SimpleUnitCell.getCellWeight(at[i].getFractionalUnitCoordPt(
-            true, false, pt));
+            true, false, pt), isHighPrecision);
     }
     return wts;
   }

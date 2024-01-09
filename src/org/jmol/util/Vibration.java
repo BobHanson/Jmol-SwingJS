@@ -23,8 +23,7 @@ public class Vibration extends V3d {
 
   public static final int TYPE_VIBRATION = -1;
   public static final int TYPE_SPIN = -2;
- // public static final int TYPE_DISPLACEMENT = -3; // not used
-
+  public static final int TYPE_WYCKOFF = -3;
   /**
    * modDim will be > 0 for modulation
    */
@@ -43,9 +42,10 @@ public class Vibration extends V3d {
 //    case TYPE_DISPLACEMENT:
 //      break;
     case TYPE_SPIN:
+    case TYPE_WYCKOFF:
       break;
     default:
-      pt.scaleAdd2((double) (Math.cos(t456.x * twoPI) * scale), this, pt);    
+      pt.scaleAdd2((double) (Math.cos(t456.x * twoPI) * scale), this, pt); 
       break;
     }
     return pt;

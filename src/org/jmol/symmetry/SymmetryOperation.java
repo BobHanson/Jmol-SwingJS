@@ -1838,8 +1838,6 @@ public class SymmetryOperation extends M4d {
     t1.add(t0);
     setTranslation(t1);
     isFinalized = true;
-//    if (itno == 12 && t.x == 1  && t.y == -1 && t.z == 0)
-//      System.out.println("SO test" + this);
     setOpTypeAndOrder();
     if (!isIrrelevant && opType != TYPE_IDENTITY && opType != TYPE_TRANSLATION) {
       String s = getOpName(PLANE_MODE_NOTRANS) + ";";

@@ -224,7 +224,7 @@ public class JDXReader implements JmolJDXMOLReader {
           br.close();
           return readBrukerFileZip(null, file.getFullPath());
         }
-        if (header.indexOf('\0') >= 0 || header.indexOf('\uFFFD') >= 0 
+        if (header.indexOf('\0') >= 0 
             || header.indexOf("##TITLE= Parameter file") == 0
             || header.indexOf("##TITLE= Audit trail") == 0
             ) {

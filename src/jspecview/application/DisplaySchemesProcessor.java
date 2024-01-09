@@ -134,6 +134,7 @@ public class DisplaySchemesProcessor {
     	return load(br);
     }
     catch(Exception e){
+      System.out.println("DisplaySchemeProcessor ignored: " + e.getMessage());
     	return false;
     }
     

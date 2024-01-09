@@ -1583,7 +1583,7 @@ public class IsoExt extends ScriptExt {
     ScriptEval eval = e;
     eval.sm.loadShape(iShape);
     if (tokAt(1) == T.list && listIsosurface(iShape))
-      return;
+      return; 
     int iptDisplayProperty = 0;
     boolean isDisplay = false;
     boolean isBest = false;
@@ -2972,6 +2972,13 @@ public class IsoExt extends ScriptExt {
         propertyName = (firstPass && !isMapped ? "readFile" : "mapColor");
         if (tok == T.string) {
           filename = paramAsStr(i);
+          int ipt = filename.indexOf("::");
+          if (ipt > 0) {
+            String ftype = filename.substring(0, ipt);
+            ftype = ftype.substring(0, 1).toUpperCase() + ftype.substring(1).toLowerCase();
+            addShapeProperty(propertyList, "fileType", ftype);
+            filename = filename.substring(ipt + 2);
+          }
         } else if (tok == T.density) {
           filename = "=density/";
         } 

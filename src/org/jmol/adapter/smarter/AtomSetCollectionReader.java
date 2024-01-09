@@ -469,8 +469,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   /////////////////////////////////////////////////////////////////////////////////////
 
   protected void setHighPrecision() {
+    if (!fixJavaDouble)
+      return;
     fixJavaDouble = false;
     asc.setInfo("highPrecision", Boolean.TRUE);
+    appendLoadNote("Structure read is high precision" + (Viewer.isSwingJS && !Viewer.isJS? "" : "! Use JmolD.jar for full precision."));
   }
 
   protected String setLoadNote() {

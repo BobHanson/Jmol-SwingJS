@@ -3768,8 +3768,10 @@ public class CmdExt extends ScriptExt {
         //$FALL-THROUGH$
       case T.brillouin:
         int index = (e.theTok == T.wigner ? -1 : (tokAt(i + 1) == T.integer ? intParameter(++i) : 1));
+        if (index > 4)
+          invArg();
         if (!chk)
-          ((BZone) Interface.getInterface("org.jmol.util.BZone", vwr, "script")).setViewer(vwr).createBZ(index, null, false, id, scale);
+          ((BZone) Interface.getInterface("org.jmol.util.BZone", vwr, "script")).setViewer(vwr).createBZ(index, null, false, id, scale * 10);
         setShapeProperty(JC.SHAPE_POLYHEDRA, "init", Boolean.FALSE);
         return;
       case T.hash:
@@ -5655,8 +5657,9 @@ public class CmdExt extends ScriptExt {
       newUC = vwr.getModelInfo("unitcell_conventional");
       // If the file read was loaded as primitive, 
       // newUC will be a T3[] indicating the conventional.
-      if (PT.isOneOf(ucname, ";parent;standard;primitive;")) {
-        if (newUC == null && vwr.getModelInfo("isprimitive") != null) {
+      boolean modelIsPrimitive = vwr.getModelInfo("isprimitive") != null;
+      if (PT.isOneOf(ucname, ";parent;standard;primitive;")) {  
+        if (newUC == null && modelIsPrimitive) {
           showString(
               "Cannot convert unit cell when file data is primitive and have no lattice information");
           return;
@@ -5675,11 +5678,12 @@ public class CmdExt extends ScriptExt {
         eval.setModelCagePts(-1, vwr.getV0abc(-1, newUC), "" + newUC);
       // now guaranteed to be "conventional"
       if (!ucname.equals("conventional")) {
+        setShapeProperty(JC.SHAPE_AXES, "labels", null); 
         s = (String) vwr.getModelInfo("unitcell_" + ucname);
         if (s == null) {
           boolean isPrimitive = ucname.equals("primitive");
           if (isPrimitive || ucname.equals("reciprocal")) {
-            double scale = (slen == i + 1 ? 1
+            double  scale = (slen == i + 1 ? 1
                 : tokAt(i + 1) == T.integer
                     ? intParameter(++i) * Math.PI
                     : doubleParameter(++i));
@@ -5694,7 +5698,8 @@ public class CmdExt extends ScriptExt {
                   T.lattice, null, 0, -1, 0, null);
             if (sym == null)
               sym = vwr.getSymTemp();
-            sym.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),
+            if (!modelIsPrimitive)
+              sym.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),
                 oabc,
                 (M3d) vwr.getCurrentModelAuxInfo().get("primitiveToCrystal"));
             if (!isPrimitive) {
@@ -6079,6 +6084,8 @@ public class CmdExt extends ScriptExt {
     //  MODELKIT SYMOP [[4x4 matrix]]
     //  MODELKIT OFFSET [{i j k}/NONE]
     //
+    //  MODELKIT VIBRATION WYCKOFF|OFF
+    //
     //  -- configuration options include the following; CAPS is default:
     //       
     //  MODELKIT SET addHydrogens [TRUE|false]
@@ -6206,6 +6213,20 @@ public class CmdExt extends ScriptExt {
       case T.set:
         key = paramAsStr(++i);
         value = (tokAt(++i) == T.nada ? "true" : paramAsStr(i));
+        break;
+      case T.vibration:
+        key = "vibration";
+        switch (tokAt(++i)) {
+        case T.off:
+          value = "off";
+          break;
+        case T.wyckoff:
+          value = "wyckoff";
+          break;
+        default:
+          invArg();
+          break;
+        }
         break;
       case T.symop:
         switch (tokAt(++i)) {

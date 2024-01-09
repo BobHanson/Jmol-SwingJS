@@ -1710,7 +1710,7 @@ public class CIPChirality {
         priorities = oldPriorities;
         nPriorities = oldNPriorities;
       } else {
-        oldPriorities = Arrays.copyOf(priorities, 4);
+        oldPriorities = new int[] { priorities[0], priorities[1], priorities[2], priorities[3] };
         oldNPriorities = nPriorities;        
       }
       for (int i = 0; i < nAtoms; i++)

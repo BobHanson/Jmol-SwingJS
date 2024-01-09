@@ -24,6 +24,8 @@
 
 package org.jmol.util;
 
+import org.jmol.viewer.Viewer;
+
 import javajs.util.AU;
 import javajs.util.M4d;
 import javajs.util.P3d;
@@ -68,14 +70,12 @@ public class SimpleUnitCell {
   
   protected final static double toRadians = Math.PI * 2 / 360;
 
-
-  public final static double SLOP = 0.02d;
-  private final static double SLOP1 = 1 - SLOP;
   /**
    * allowance for rounding in [0,1)
    */
-  private final static double SLOP001 = 0.001f;
-  private final static double SLOP0001 = 0.0001f;
+  private final static double SLOP001 = 0.001d;
+  private final static double SLOP0001 = 0.0001d;
+  private final static double SLOPDP = 0.000000000001d;
   
   
   protected double[] unitCellParams;
@@ -362,6 +362,7 @@ public class SimpleUnitCell {
   }
 
   private P3d fo = new P3d();
+  private boolean isDoublePrecision;
   
   public P3d getFractionalOrigin() {
     return (P3d) fractionalOrigin.putP(fo);
@@ -456,16 +457,17 @@ public class SimpleUnitCell {
   /**
    * calculate weighting of 1 (interior), 0.5 (face), 0.25 (edge), or 0.125 (vertex)
    * @param pt
-//   * @param tolerance fractional allowance to consider this on an edge
+   * @param isDoublePrecision 
    * @return weighting
    */
-  public static double getCellWeight(P3d pt) {
+  public static double getCellWeight(P3d pt, boolean isDoublePrecision) {
+    double slop = (isDoublePrecision ? SLOPDP : SLOP0001);
     double f = 1;
-    if (pt.x <= SLOP || pt.x >= SLOP1)
+    if (pt.x <= slop || pt.x >= 1 - slop)
       f /= 2;
-    if (pt.y <= SLOP || pt.y >= SLOP1)
+    if (pt.y <= slop || pt.y >= 1 - slop)
       f /= 2;
-    if (pt.z <= SLOP || pt.z >= SLOP1)
+    if (pt.z <= slop || pt.z >= 1 - slop)
       f /= 2;
     return f;
   }
@@ -473,9 +475,11 @@ public class SimpleUnitCell {
   /**
    * Generate the reciprocal unit cell, scaled as desired
    * 
-   * @param abc [a,b,c] or [o,a,b,c]
+   * @param abc
+   *        [a,b,c] or [o,a,b,c]
    * @param ret
-   * @param scale 0 for 2pi, general reciprocal lattice
+   * @param scale
+   *        0 for 2pi, general reciprocal lattice
    * @return oabc
    */
   public static T3d[] getReciprocal(T3d[] abc, T3d[] ret, double scale) {
@@ -526,19 +530,53 @@ public class SimpleUnitCell {
     return ucnew;
   }
 
+  /**
+   * Used for just about everything, 
+   * including SpaceGroup.getSiteMultiplicity, Symmetry.getInvariantSymops, 
+   * Symmetry.removeDuplicates, Symmetry.unitize, Symmetry.toUnitCell, SymmetryDesc.getTransform.
+   * 
+   * Low precision here unless SET HIGHPRECISION TRUE has been issued.
+   * 
+   * @param dimension
+   * @param pt
+   */
   public static void unitizeDim(int dimension, T3d pt) {
+    if (Viewer.isHighPrecision) {
+      unitizeDimD(dimension, pt);
+    }
     switch (dimension) {
     case 3:
-      pt.z = unitizeX(pt.z);  
+      pt.z = unitizeX(pt.z, false);  
       //$FALL-THROUGH$
     case 2:
-      pt.y = unitizeX(pt.y);
+      pt.y = unitizeX(pt.y, false);
       //$FALL-THROUGH$
     case 1:
-      pt.x = unitizeX(pt.x);
+      pt.x = unitizeX(pt.x, false);
     }
   }
 
+  public static void unitizeDimD(int dimension, T3d pt) {
+    switch (dimension) {
+    case 3:
+      pt.z = unitizeX(pt.z, true);  
+      //$FALL-THROUGH$
+    case 2:
+      pt.y = unitizeX(pt.y, true);
+      //$FALL-THROUGH$
+    case 1:
+      pt.x = unitizeX(pt.x, true);
+    }
+  }
+
+  /**
+   * Only used for getting equivalent points and checking for duplicates. 
+   * Presumption here is that two points should not be close together
+   * regardless of lattice distances.
+   * 
+   * @param dimension
+   * @param pt
+   */
   public static void unitizeDimRnd(int dimension, T3d pt) {
     switch (dimension) {
     case 3:
@@ -552,58 +590,76 @@ public class SimpleUnitCell {
     }
   }
   
-  public static double unitizeX(double x) {
+  public static double unitizeX(double x, boolean isDoublePrecision) {
+    double slop = (isDoublePrecision ? SLOPDP : SLOP001);    
     // introduced in Jmol 11.7.36
     x = (x - Math.floor(x));
     // question - does this cause problems with dragatom?
-    if (x > 0.999 || x < 0.001)  // 0.9999, 0.0001 was just too tight ams/jolliffeite
+    if (x > 1 - slop || x < slop)  // 0.9999, 0.0001 was just too tight ams/jolliffeite
       x = 0;
     return x;
   }
 
+  /**
+   * Slightly higher precision -- only used for cmdAssignSpaceGroup checking for duplicates
+   * @param x
+   * @return rounded value +/-0.0001
+   */
   public static double unitizeXRnd(double x) {
     // introduced in Jmol 11.7.36
     x = (x - Math.floor(x));
-    if (x > 0.9999d || x < 0.0001f) 
+    if (x > 1 - SLOP0001 || x < SLOP0001) 
       x = 0;
     return x;
   }
   
   /**
-   * check atom position for range [0, 1) allowing for rounding
+   * Check atom position for range [0, 1) allowing for rounding.
+   * Used for SELECT UNITCELL only 
 
    * @param pt 
    * @return true if in [0, 1)
    */
   public boolean checkPeriodic(P3d pt) {
+    double slop = (isDoublePrecision ? SLOPDP : SLOP0001);
     switch (dimension) {
     case 3:
-      if (pt.z < -SLOP0001 || pt.z > 1 - SLOP0001)
+      if (pt.z < -slop || pt.z > 1 - slop)
         return false;
       //$FALL-THROUGH$
     case 2:
-      if (pt.y < -SLOP0001 || pt.y > 1 - SLOP0001)
+      if (pt.y < -slop || pt.y > 1 - slop)
         return false;
       //$FALL-THROUGH$
     case 1:
-    if (pt.x < -SLOP0001 || pt.x > 1 - SLOP0001)
+    if (pt.x < -slop || pt.x > 1 - slop)
       return false;
     }
     return true;
   }
 
+  /**
+   * Used for SELECT UNITCELL and for adding H atoms only.
+   * 
+   * @param a range on a axis
+   * @param b range on b axis
+   * @param c range on c axis
+   * @param pt
+   * @return true if within bounds
+   */
   public boolean isWithinUnitCell(double a, double b, double c, P3d pt) {
+    double slop = (isDoublePrecision ? SLOPDP : SLOP0001);
     switch (dimension) {
     case 3:
-      if (pt.z < c - 1d - SLOP || pt.z > c + SLOP)
+      if (pt.z < c - 1d - slop || pt.z > c + slop)
         return false;
       //$FALL-THROUGH$
     case 2:
-      if (pt.y < b - 1d - SLOP || pt.y > b + SLOP)
+      if (pt.y < b - 1d - slop || pt.y > b + slop)
         return false;
       //$FALL-THROUGH$
     case 1:
-    if (pt.x < a - 1d - SLOP || pt.x > a + SLOP)
+    if (pt.x < a - 1d - slop || pt.x > a + slop)
       return false;
     }
     return true;
@@ -630,7 +686,6 @@ public class SimpleUnitCell {
    *        precision issues so we use P4 {1iiijjjkkk 1iiijjjkkk scale,
    *        1kkkkkk}. Here, our offset -- initially 0 or 1 from the uccage
    *        renderer, but later -500 or -499 -- tells us which code we are
-   *        looking at, the first one or the second one.
    * 
    */
   public static void ijkToPoint3f(int nnn, P3d cell, int offset, int kcode) {
@@ -719,20 +774,36 @@ public class SimpleUnitCell {
     }
   }
 
+  /**
+   * Not worrying about precision in this case
+   * @param params
+   * @return true if approximately hexagonal
+   */
   public static boolean isHexagonal(double[] params) {
     // a == b && alpha = beta = 90 && gamma = 120 (gamma -1 is a "rotateHexCell" indicator for AFLOW
     return (approx0(params[0] - params[1]) 
-        && params[3] == 90 && params[4] == 90 && (params[5] == 120 || params[5] == -1));
+        && approx0(params[3] - 90) && approx0(params[4] - 90) && (approx0(params[5] - 120) 
+            || params[5] == -1));
   }
 
+  /**
+   * Not worrying about precision in this case
+   * @param params
+   * @return true if approximately rhombohedral
+   */
   public static boolean isRhombohedral(double[] params) {
+    // a = b = c and alpha = beta = gamma and alpha != 90
     return (approx0(params[0] - params[1]) && approx0(params[1] - params[2])
-        && params[3] != 90 && approx0(params[3] - params[4])
+        && !approx0(params[3] - 90) && approx0(params[3] - params[4])
         && approx0(params[4] - params[5]));
   }
 
-  public static boolean approx0(double f) {
+  private static boolean approx0(double f) {
     return (Math.abs(f) < SLOP001);
+  }
+
+  public static boolean approx0D(double f) {
+    return (Math.abs(f) < SLOPDP);
   }
 
 

@@ -44,6 +44,7 @@ import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.util.Vibration;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.MouseState;
@@ -75,6 +76,104 @@ import javajs.util.V3d;
  */
 
 public class ModelKit {
+  
+  private static class WyckoffModulation extends Vibration {
+    private Vibration oldVib;
+    private Atom atom = null;
+    private double t;
+    private Atom baseAtom = null;
+    
+    
+    private P3d pt0 = new P3d();
+    private P3d ptf = new P3d();
+    
+    private SymmetryInterface sym;
+    private Constraint c;
+    
+    private final static int wyckoffFactor = 10;
+    
+    private WyckoffModulation(SymmetryInterface sym, Constraint c, Atom atom, Atom baseAtom) {
+      setType(Vibration.TYPE_WYCKOFF);
+      this.sym = sym;
+      this.c = c;          
+      this.atom = atom;
+      this.baseAtom = baseAtom;
+      this.x = 1; // just a placeholder to trigger a non-zero vibration is present
+    }
+    
+    @Override
+    public T3d setCalcPoint(T3d pt, T3d t456, double scale,
+                            double modulationScale) {
+      // one reset per cycle, only for the base atoms
+      Vibration v = baseAtom.getVibrationVector();
+      if (v == null || v.modDim != TYPE_WYCKOFF)
+        return pt;
+      WyckoffModulation wv = ((WyckoffModulation) v);
+      if (sym == null)
+        return pt;
+      M4d m = null;
+      if (wv.atom != atom) {
+        m = getTransform(sym, wv.atom, atom);
+        if (m == null)
+          return pt;        
+      }
+      if (wv.t != t456.x && ((int) (t456.x * 10)) % 2 == 0) {
+        if (c.type != Constraint.TYPE_LOCKED) {
+          wv.setPos(sym, c, scale);
+        }
+        wv.t = t456.x;
+      }
+      if (m == null)
+        pt.setT(wv.ptf);
+      else
+        m.rotTrans2(wv.ptf, pt);
+      sym.toCartesian(pt, false);
+      return pt;
+    }
+
+    private void setPos(SymmetryInterface sym, Constraint c, double scale) {
+      x = (Math.random() - 0.5d) / wyckoffFactor * scale;
+      y = (Math.random() - 0.5d) / wyckoffFactor * scale;
+      z = (Math.random() - 0.5d) / wyckoffFactor * scale;
+      // apply this random walk to the base atom and constrain
+      pt0.setT(atom);
+      ptf.setT(pt0);
+      ptf.add(this);
+      c.constrain(pt0, ptf, true);
+      sym.toFractional(ptf, false);
+    }
+
+    static void setVibrationMode(ModelKit mk, Object value) {
+      Atom[] atoms = mk.vwr.ms.at;
+      BS bsAtoms = mk.vwr.getThisModelAtoms();
+      if (("off").equals(value)) {
+        // remove all WyckoffModulations
+        for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+            .nextSetBit(i + 1)) {
+          Vibration v = atoms[i].getVibrationVector();
+          if (v != null && v.modDim != Vibration.TYPE_WYCKOFF)
+            continue;
+          mk.vwr.ms.setVibrationVector(i, ((WyckoffModulation) v).oldVib);
+        }
+      } else if (("wyckoff").equals(value)) {
+        for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+            .nextSetBit(i + 1)) {
+          Vibration v = atoms[i].getVibrationVector();
+          if (v != null && v.modDim != Vibration.TYPE_WYCKOFF)
+            continue;
+          SymmetryInterface sym = mk.getSym(i);
+          WyckoffModulation wv = null;
+          if (sym != null) {
+            Constraint c = mk.setConstraint(sym, i, GET_CREATE);
+            if (c.type != Constraint.TYPE_LOCKED)
+              wv = new WyckoffModulation(sym, c, atoms[i], mk.getBasisAtom(i));
+          }
+          mk.vwr.ms.setVibrationVector(i, wv);
+        }
+      }
+      mk.vwr.setVibrationPeriod(Double.NaN);
+    }
+  }
   
   private static class Constraint {
 
@@ -199,9 +298,10 @@ public class ModelKit {
   static Constraint locked = new Constraint(null, Constraint.TYPE_LOCKED, null);
   static Constraint none = new Constraint(null, Constraint.TYPE_NONE, null);
 
-  private Viewer vwr;
+  Viewer vwr;
   
   private ModelKitPopup menu;
+
 
   // scripting options -- nonstatic due to legacy autoloading class for ModelKit.xxx
   
@@ -250,7 +350,7 @@ public class ModelKit {
   final static String ATOM_MODE = "atomMenu";
 
   private static final P3d Pt000 = new P3d();
-
+  
   int state = STATE_MOLECULAR & STATE_SYM_NONE & STATE_SYM_APPLYFULL
       & STATE_UNITCELL_EXTEND; // 0x00
   
@@ -341,7 +441,7 @@ public class ModelKit {
 
   private Atom a0, a3;
 
-  private Constraint constraint;
+  Constraint constraint;
 
   // not implemented
   private String xtalHoverLabel;
@@ -804,6 +904,11 @@ public class ModelKit {
 
       if (key == "removeallconstraints") {
         notImplemented("setProperty: removeAllConstraints");
+        return null;
+      }
+      
+      if (key == "vibration") {
+        WyckoffModulation.setVibrationMode(this, value);
         return null;
       }
 
@@ -2501,7 +2606,7 @@ public class ModelKit {
     return true;
   }
 
-  private Atom getBasisAtom(int iatom) {
+  Atom getBasisAtom(int iatom) {
     if (minBasisAtoms == null) {
       minBasisAtoms = new Atom[vwr.ms.ac + 10];
     } 
@@ -2562,18 +2667,14 @@ public class ModelKit {
         // transform the shift to the basis
         Atom b = getBasisAtom(iatom);
         if (a != b) {
-          P3d fa = P3d.newPd(a);
-          sym.toFractional(fa, true);
-          P3d fb = P3d.newPd(b);
-          sym.toFractional(fb, true);
-          M4d m = sym.getTransform(fa, fb, true);
+          M4d m = getTransform(sym, a, b);
           if (m == null) {
             System.err.println(
                 "ModelKit - null matrix for " + iatom + " " + a + " to " + b);
             iatom = -1;
           } else {
             iatom = b.i;
-            P3d p = P3d.new3(ptNew.x, ptNew.y, ptNew.z);
+            P3d p = P3d.newP(ptNew);
             sym.toFractional(p, true);
             m.rotTrans(p);
             sym.toCartesian(p, true);
@@ -2595,6 +2696,14 @@ public class ModelKit {
     return n;
   }
 
+  static M4d getTransform(SymmetryInterface sym, Atom a, Atom b) {
+    P3d fa = P3d.newPd(a);
+    sym.toFractional(fa, true);
+    P3d fb = P3d.newPd(b);
+    sym.toFractional(fb, true);
+    return sym.getTransform(fa, fb, true);
+  }
+
   private Constraint[] atomConstraints;
   private Atom[] minBasisAtoms;
   private SymmetryInterface[] modelSyms;
@@ -2609,7 +2718,7 @@ public class ModelKit {
   private BS minTempModelAtoms;
   
   private static int GET = 0;
-  private static int GET_CREATE = 1;
+  static int GET_CREATE = 1;
   private static int GET_DELETE = 2;
   
   /**
@@ -2621,7 +2730,7 @@ public class ModelKit {
    *        GET, GET_CREATE, or GET_DELETE
    * @return a Constraint, or possibly null if not createNew
    */
-  private Constraint setConstraint(SymmetryInterface sym, int ia, int mode) {
+  Constraint setConstraint(SymmetryInterface sym, int ia, int mode) {
     if (ia < 0)
       return null;
     Atom a = getBasisAtom(ia);
@@ -2885,43 +2994,18 @@ public class ModelKit {
    * @param bsBasis
    * @param steps
    * @param crit
+   * @param rangeFixed 
    * @param flags
    * @throws Exception
    */
   public void cmdMinimize(JmolScriptEvaluator eval, BS bsBasis, int steps,
                           double crit, double rangeFixed, int flags)
       throws Exception {
-
-    //    function minimizeXtal() {
-    //      if (within("unitCell") == 0) return;
-    //      var m = {thisModel};
-    //      var au = {thisModel & symop=1555};
-    //      if (!0+au)
-    //        au = {thisModel};
-    //      var x = write("cif");
-    //      var usethread = useMinimizationThread;
-    //      var apnew = appendNew;
-    //      set useMinimizationThread false;
-    //      set appendNew true;
-    //      load append var x {444 666 1};
-    //      frame last;
-    //      minimize;
-    //      set useMinimizationThread @usethread;
-    //      set appendNew @apnew;
-    //      var pts = {thisModel & symop=1555}.xyz.all;
-    //      zap {thisModel};
-    //      frame @m;
-    //      modelkit moveto @au @pts;
-    //    }
-
     boolean wasAppend = vwr.getBoolean(T.appendnew);
     vwr.setBooleanProperty("appendNew", true);
     minBasisModel = vwr.am.cmi;
     minSelectionSaved = vwr.bsA();
     try {
-      // trying this, but I think it is mistaken, 
-    	// because it is for the wrong atom set 
-    	// minBasisFixed = vwr.getMotionFixedAtoms(bsBasis.nextSetBit(0));
       String cif = vwr.getModelExtract(bsBasis, false, false, "cif");
       // TODO what about Async exception?
       Map<String, Object> htParams = new Hashtable<String, Object>();
