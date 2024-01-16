@@ -60,8 +60,79 @@ import javajs.util.V3d;
 
 class UnitCell extends SimpleUnitCell implements Cloneable {
   
+  final private static double twoP2 = 2 * Math.PI * Math.PI;
+
+  private final static V3d[] unitVectors = {
+      JC.axisX, JC.axisY, JC.axisZ};
+  
+  private static void checkDuplicate(Lst<P3d> list, int i0, int n0, int n) {
+    if (n < 0)
+      n = list.size();
+    for (int i = i0; i < n; i++) {
+      P3d p = list.get(i);
+      for (int j = Math.max(i + 1, n0); j < n; j++) {
+        if (list.get(j).distanceSquared(p) < JC.UC_TOLERANCE2) {
+          list.removeItemAt(j);
+          n--;
+          j--;
+        }
+      }
+    }
+  }
+  
+  static UnitCell cloneUnitCell(UnitCell uc) {
+    UnitCell ucnew = null;
+    try {
+      ucnew = (UnitCell) uc.clone();
+    } catch (CloneNotSupportedException e) {
+    }
+    return ucnew;
+  }
+
+/**
+ * 
+ * A special constructor for spacially defined unit cells.
+ * Not used by readers. 
+ * 
+ * @param oabc [origin, Va, Vb, Vc]
+ * @param setRelative a flag only set true for IsosurfaceMesh
+ * @return new unit cell
+ */
+static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
+  UnitCell c = new UnitCell();
+  if (oabc.length == 3) // not used
+    oabc = new T3d[] { new P3d(), oabc[0], oabc[1], oabc[2] };
+  double[] parameters = new double[] { -1, 0, 0, 0, 0, 0, oabc[1].x,
+      oabc[1].y, oabc[1].z, oabc[2].x, oabc[2].y, oabc[2].z,
+      oabc[3].x, oabc[3].y, oabc[3].z };
+  c.init(parameters);
+  c.allFractionalRelative = setRelative;
+  c.initUnitcellVertices();
+  c.setCartesianOffset(oabc[0]);
+  return c;
+}
+  /** 
+   * 
+   * @param params
+   * @param setRelative only set true for JmolData and tensors
+   * @param slop 
+   * @return a new unit cell
+   */
+  static UnitCell fromParams(double[] params, boolean setRelative, double slop) {
+    UnitCell c = new UnitCell();
+    c.init(params);
+    c.initUnitcellVertices();
+    c.allFractionalRelative = setRelative;
+    c.setPrecision(slop);
+    return  c;
+  }
+  Lst<String> moreInfo;
+  
+  String name = "";
   private P3d[] vertices; // eight corners
+  
   private P3d fractionalOffset;
+
   /**
    * this flag TRUE causes an update of matrixCtoFNoOffset each time an offset is changed
    * so that it is updated and the two stay the same; set true only for isosurfaceMesh
@@ -69,7 +140,8 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    */
   private boolean allFractionalRelative;
   
-  protected final P3d cartesianOffset = new P3d();
+  private final P3d cartesianOffset = new P3d();
+
   /**
    * a P3 or P4; the raw multiplier for the cell from 
    * 
@@ -80,17 +152,13 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    * (encoded as a P4: {1iiijjjkkk 1iiijjjkkk scale 1kkkkkk} )
    * 
    */
-  protected T3d unitCellMultiplier;
-  
+  private T3d unitCellMultiplier;
+
   /**
    * the multiplied, offset UnitCell derived from this UnitCell
    */
   private UnitCell unitCellMultiplied;
 
-  public Lst<String> moreInfo;
-  
-  public String name = "";
-  
   /**
    * Indicate that this is a new unit cell, not one from a file.
    * 
@@ -98,185 +166,214 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   private UnitCell() {
     super();  
   }
-  
-  /**
-   * 
-   * A special constructor for spacially defined unit cells.
-   * Not used by readers. 
-   * 
-   * @param oabc [origin, Va, Vb, Vc]
-   * @param setRelative a flag only set true for IsosurfaceMesh
-   * @return new unit cell
-   */  static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
-    UnitCell c = new UnitCell();
-    if (oabc.length == 3) // not used
-      oabc = new T3d[] { new P3d(), oabc[0], oabc[1], oabc[2] };
-    double[] parameters = new double[] { -1, 0, 0, 0, 0, 0, oabc[1].x,
-        oabc[1].y, oabc[1].z, oabc[2].x, oabc[2].y, oabc[2].z,
-        oabc[3].x, oabc[3].y, oabc[3].z };
-    c.init(parameters);
-    c.allFractionalRelative = setRelative;
-    c.initUnitcellVertices();
-    c.setCartesianOffset(oabc[0]);
-    return c;
-  }
 
   /**
    * 
-   * @param params
-   * @param setRelative only set true for JmolData and tensors
-   * @return a new unit cell
+   * @param f1
+   * @param f2
+   * @param distance
+   * @param dx
+   * @param iRange
+   * @param jRange
+   * @param kRange
+   * @param ptOffset TODO
+   * @return       TRUE if pt has been set.
    */
-  public static UnitCell fromParams(double[] params, boolean setRelative) {
-    UnitCell c = new UnitCell();
-    c.init(params);
-    c.initUnitcellVertices();
-    c.allFractionalRelative = setRelative;
-    return  c;
+  boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
+                              int iRange, int jRange, int kRange, P3d ptOffset) {
+    P3d p1 = P3d.newP(f1);
+    toCartesian(p1, true);
+    for (int i = -iRange; i <= iRange; i++)
+      for (int j = -jRange; j <= jRange; j++)
+        for (int k = -kRange; k <= kRange; k++) {
+          ptOffset.set(f2.x + i, f2.y + j, f2.z + k);
+          toCartesian(ptOffset, true);
+          double d = p1.distance(ptOffset);
+          if (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1d) {
+            ptOffset.set(i, j, k);
+            return true;
+          }
+        }
+    return false;
   }
 
-  void initOrientation(M3d mat) {
-    if (mat == null)
-      return;
-    M4d m = new M4d();
-    m.setToM3(mat);
-    matrixFractionalToCartesian.mul2(m, matrixFractionalToCartesian);
-    matrixCartesianToFractional.setM4(matrixFractionalToCartesian).invert();
-    initUnitcellVertices();
-  }
-
-  
   /**
-   * when offset is null, use the current cell, otherwise use the original unit cell
-   * 
-   * @param p
-   * @param offset
+   * Check atom position for range [0, 1) allowing for rounding.
+   * Used for SELECT UNITCELL only 
+
+   * @param pt 
+   * @return true if in [0, 1)
    */
-  final void toUnitCell(T3d p, T3d offset) {
-    if (matrixCartesianToFractional == null)
-      return;
-    if (offset == null) {
-      // used redefined unitcell 
-      matrixCartesianToFractional.rotTrans(p);
-      unitize(p);
-      matrixFractionalToCartesian.rotTrans(p);
-    } else {
-      // use original unit cell
-      // note that this matrix will be the same as matrixCartesianToFractional
-      // when allFractionalRelative is set true (isosurfaceMesh special cases only)
-      matrixCtoFNoOffset.rotTrans(p);
-      unitize(p);
-      p.add(offset);
-      matrixFtoCNoOffset.rotTrans(p);
+  boolean checkPeriodic(P3d pt) {
+    switch (dimension) {
+    case 3:
+      if (pt.z < -slop || pt.z > 1 - slop)
+        return false;
+      //$FALL-THROUGH$
+    case 2:
+      if (pt.y < -slop || pt.y > 1 - slop)
+        return false;
+      //$FALL-THROUGH$
+    case 1:
+    if (pt.x < -slop || pt.x > 1 - slop)
+      return false;
     }
+    return true;
+  }
+
+  String dumpInfo(boolean isDebug, boolean multiplied) {
+    UnitCell m = (multiplied ? getUnitCellMultiplied() : this);
+    if (m != this)
+      return m.dumpInfo(isDebug, false);
+    return "a=" + a + ", b=" + b + ", c=" + c + ", alpha=" + alpha + ", beta=" + beta + ", gamma=" + gamma
+       + "\noabc=" + Escape.eAP(getUnitCellVectorsF())
+       + "\nvolume=" + volume
+       + (isDebug ? "\nfractional to cartesian: " + matrixFractionalToCartesian 
+       + "\ncartesian to fractional: " + matrixCartesianToFractional : "");
+  }
+
+  private double fix(double x) {
+    return (Math.abs(x) < 0.001 ? 0 : x);
+  }
+
+  private double fixd(double x) {
+    return (Math.abs(x) < 0.001 ? 0 : x);
+  }
+
+  
+  private double fixFloor(double d) {
+    return (d == 1 ? 0 : d);
   }
 
   /**
-   * when offset is null, use the current cell, otherwise use the original unit cell
+   * 
+   * @param scale
+   * @param withOffset
+   * @return points in Triangulator order
+   */
+  P3d[] getCanonicalCopy(double scale, boolean withOffset) {
+    P3d[] pts = getScaledCell(withOffset);
+    return BoxInfo.getCanonicalCopy(pts, scale);
+  }
+
+  P3d getCartesianOffset() {
+    // for slabbing isosurfaces and rendering the ucCage
+    return cartesianOffset;
+  }
+
+  /**
+   * calculate weighting of 1 (interior), 0.5 (face), 0.25 (edge), or 0.125 (vertex)
+   * @param pt
+   * @return weighting
+   */
+  double getCellWeight(P3d pt) {
+    double f = 1;
+    if (pt.x <= slop || pt.x >= 1 - slop)
+      f /= 2;
+    if (pt.y <= slop || pt.y >= 1 - slop)
+      f /= 2;
+    if (pt.z <= slop || pt.z >= 1 - slop)
+      f /= 2;
+    return f;
+  }
+
+  /**
+   * return a conventional lattice from a primitive
+   * 
+   * @param latticeType  "A" "B" "C" "R" etc.
+   * @param primitiveToCrystal 
+   * @return [origin va vb vc]
+   */
+  T3d[] getConventionalUnitCell(String latticeType, M3d primitiveToCrystal) {
+    T3d[] oabc = getUnitCellVectorsD();
+    if (!latticeType.equals("P") || primitiveToCrystal != null)
+      toFromPrimitive(false, latticeType.charAt(0), oabc, primitiveToCrystal);
+    return oabc;
+  }
+
+  /**
    * 
    * @param pt
-   * @param offset
+   *        the point to transform
+   * @param flags
+   *        "tofractional,fromfractional,packed"
+   * @param ops
+   *        space group operations
+   * @param list
+   *        the list to append to
+   * @param i0
+   *        the starting index of the list
+   * @param n0
+   *        the first point that is to be duplicated; prior points are just
+   *        references for removing duplicates
+   * @return augmented list
    */
-  final void toUnitCellRnd(T3d pt, T3d offset) {
-    if (matrixCartesianToFractional == null)
-      return;
-    if (offset == null) {
-      // used redefined unitcell 
-      matrixCartesianToFractional.rotTrans(pt);
-      unitizeRnd(pt);
-      matrixFractionalToCartesian.rotTrans(pt);
-    } else {
-      // use original unit cell
-      // note that this matrix will be the same as matrixCartesianToFractional
-      // when allFractionalRelative is set true (isosurfaceMesh special cases only)
-      matrixCtoFNoOffset.rotTrans(pt);
-      unitizeRnd(pt);
-      pt.add(offset); 
-      matrixFtoCNoOffset.rotTrans(pt);
+  Lst<P3d> getEquivPoints(P3d pt, String flags, M4d[] ops, Lst<P3d> list,
+                                int i0, int n0) {
+    boolean fromfractional = (flags.indexOf("fromfractional") >= 0);
+    boolean tofractional = (flags.indexOf("tofractional") >= 0);
+    boolean packed = (flags.indexOf("packed") >= 0);
+    if (list == null)
+      list = new Lst<P3d>();
+    P3d pf = P3d.newP(pt);
+    if (!fromfractional)
+      toFractional(pf, true);
+    int n = list.size();
+    for (int i = 0, nops = ops.length; i < nops; i++) {
+      P3d p = P3d.newP(pf);
+      ops[i].rotTrans(p);
+      //not using unitize here, because it does some averaging
+      p.x =  fixFloor(p.x - Math.floor(p.x));
+      p.y =  fixFloor(p.y - Math.floor(p.y));
+      p.z =  fixFloor(p.z - Math.floor(p.z));
+      list.addLast(p);
+      n++;
     }
+    if (packed) {
+      // duplicate all the points. 
+      for (int i = n0; i < n; i++) {
+        pf.setT(list.get(i));
+        unitizeRnd(pf);
+        if (pf.x == 0) {
+          list.addLast(P3d.new3(0,  pf.y,  pf.z));
+          list.addLast(P3d.new3(1,  pf.y,  pf.z));
+          if (pf.y == 0) {
+            list.addLast(P3d.new3(1, 1,  pf.z));
+            list.addLast(P3d.new3(0, 0,  pf.z));
+            if (pf.z == 0) {
+              list.addLast(P3d.new3(1, 1, 1));
+              list.addLast(P3d.new3(0, 0, 0));
+            }
+          }
+        }
+        if (pf.y == 0) {
+          list.addLast(P3d.new3( pf.x, 0,  pf.z));
+          list.addLast(P3d.new3( pf.x, 1,  pf.z));
+          if (pf.z == 0) {
+            list.addLast(P3d.new3( pf.x, 0, 0));
+            list.addLast(P3d.new3( pf.x, 1, 1));
+          }
+        }
+        if (pf.z == 0) {
+          list.addLast(P3d.new3( pf.x,  pf.y, 0));
+          list.addLast(P3d.new3( pf.x,  pf.y, 1));
+          if (pf.x == 0) {
+            list.addLast(P3d.new3(0,  pf.y, 0));
+            list.addLast(P3d.new3(1,  pf.y, 1));
+          }
+        }
+      }
+    }
+    checkDuplicate(list, i0, n0, -1);
+    if (!tofractional) {
+      for (int i = list.size(); --i >= n0;)
+        toCartesian(list.get(i), true);
+    }
+    return list;
   }
   
-  /**
-   * returns [0,1)
-   * 
-   * @param pt
-   */
-  public void unitize(T3d pt) {
-    unitizeDim(dimension, pt);
-  }
-
-  /**
-   * returns [0,1) with rounding to 0.0001
-   * 
-   * @param pt
-   */
-  public void unitizeRnd(T3d pt) {
-    unitizeDimRnd(dimension, pt);
-  }
-
-  public void reset() {
-    unitCellMultiplier = null;
-    unitCellMultiplied = null;
-    setOffset(P3d.new3(0, 0, 0));
-  }
-  
-  void setOffset(T3d pt) {
-    if (pt == null)
-      return;
-    unitCellMultiplied = null;
-    T4d pt4 = (pt instanceof T4d ? (T4d) pt : null);
-    double w = (pt4 == null ? Double.MIN_VALUE : pt4.w);
-    boolean isCell555P4 = (w > 999999);
-    if (pt4 != null ? w <= 0 || isCell555P4 : pt.x >= 100 || pt.y >= 100) {
-      unitCellMultiplier = (pt.z == 0 && pt.x == pt.y && !isCell555P4 ? null : isCell555P4 ? P4d.newPt((P4d) pt4) : P3d.newP(pt));
-      unitCellMultiplied = null;
-      if (pt4 == null || pt4.w == 0 || isCell555P4)
-        return;
-      // pt4.w == -1 from reset, continuing 
-    }
-    // from "unitcell offset {i j k}"
-    if (hasOffset() || pt.lengthSquared() > 0) {
-      fractionalOffset = new P3d();
-      fractionalOffset.setT(pt);
-    }
-    matrixCartesianToFractional.m03 = -pt.x;
-    matrixCartesianToFractional.m13 = -pt.y;
-    matrixCartesianToFractional.m23 = -pt.z;
-    cartesianOffset.setT(pt);
-    matrixFractionalToCartesian.m03 = 0;
-    matrixFractionalToCartesian.m13 = 0;
-    matrixFractionalToCartesian.m23 = 0;
-    matrixFractionalToCartesian.rotTrans(cartesianOffset);
-    matrixFractionalToCartesian.m03 = cartesianOffset.x;
-    matrixFractionalToCartesian.m13 = cartesianOffset.y;
-    matrixFractionalToCartesian.m23 = cartesianOffset.z;
-    if (allFractionalRelative) {
-      matrixCtoFNoOffset.setM4(matrixCartesianToFractional);
-      matrixFtoCNoOffset.setM4(matrixFractionalToCartesian);
-    }
-  }
-
-  private void setCartesianOffset(T3d origin) {
-    cartesianOffset.setT(origin);
-    matrixFractionalToCartesian.m03 = cartesianOffset.x;
-    matrixFractionalToCartesian.m13 = cartesianOffset.y;
-    matrixFractionalToCartesian.m23 = cartesianOffset.z;
-    boolean wasOffset = hasOffset();
-    fractionalOffset = new P3d();
-    fractionalOffset.setT(cartesianOffset);
-    matrixCartesianToFractional.m03 = 0;
-    matrixCartesianToFractional.m13 = 0;
-    matrixCartesianToFractional.m23 = 0;
-    matrixCartesianToFractional.rotTrans(fractionalOffset);
-    matrixCartesianToFractional.m03 = -fractionalOffset.x;
-    matrixCartesianToFractional.m13 = -fractionalOffset.y;
-    matrixCartesianToFractional.m23 = -fractionalOffset.z;
-    if (allFractionalRelative) {
-      matrixCtoFNoOffset.setM4(matrixCartesianToFractional);
-      matrixFtoCNoOffset.setM4(matrixFractionalToCartesian);
-    }
-    if (!wasOffset && fractionalOffset.lengthSquared() == 0)
-      fractionalOffset = null;
+  P3d getFractionalOffset() {
+    return fractionalOffset;
   }
 
   Map<String, Object> getInfo() {
@@ -291,46 +388,164 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     info.put("matCtoF", matrixCartesianToFractional);
     return info;
   }
-  
-  String dumpInfo(boolean isDebug, boolean multiplied) {
-    UnitCell m = (multiplied ? getUnitCellMultiplied() : this);
-    if (m != this)
-      return m.dumpInfo(isDebug, false);
-    return "a=" + a + ", b=" + b + ", c=" + c + ", alpha=" + alpha + ", beta=" + beta + ", gamma=" + gamma
-       + "\noabc=" + Escape.eAP(getUnitCellVectorsF())
-       + "\nvolume=" + volume
-       + (isDebug ? "\nfractional to cartesian: " + matrixFractionalToCartesian 
-       + "\ncartesian to fractional: " + matrixCartesianToFractional : "");
-  }
 
-  UnitCell getUnitCellMultiplied() {
-    if (unitCellMultiplier == null || unitCellMultiplier.z > 0 && unitCellMultiplier.z == (int) unitCellMultiplier.z)
-      return this;
-    if (unitCellMultiplied == null) {
-      P3d[] pts = BoxInfo.toOABC(getScaledCell(true), null);
-      unitCellMultiplied = fromOABC (pts, false);
+  /**
+   * Returns a quaternion that will take the standard frame to a view down a
+   * particular axis, expressed as its counterparts.
+   * 
+   * @param abc
+   *        ab bc ca
+   * @return quaternion
+   */
+  Qd getQuaternionRotation(String abc) {
+    T3d a = V3d.newVsub(vertices[4], vertices[0]);
+    T3d b = V3d.newVsub(vertices[2], vertices[0]);
+    T3d c = V3d.newVsub(vertices[1], vertices[0]);
+    T3d x = new V3d();
+    T3d v = new V3d();
+
+    //  qab = !quaternion({0 0 0}, cross(cxb,c), cxb);
+    //  qbc = !quaternion({0 0 0}, cross(axc,a), axc)
+    //  qca = !quaternion({0 0 0}, cross(bxa,b), bxa);
+    //
+
+    int mul = (abc.charAt(0) == '-' ? -1 : 1);
+    if (mul < 0)
+      abc = abc.substring(1);
+    String abc0 = abc;
+    abc = PT.rep(PT.rep(PT.rep(PT.rep(PT.rep(PT.rep(abc, 
+        "ab", "A"), //3
+        "bc", "B"), //4
+        "ca", "C"), //5
+        "ba", "D"), //6
+        "cb", "E"), //7
+        "ac", "F"); //8
+    boolean isFace = !abc0.equals(abc);
+    int quadrant = (isFace ? 1 : 0);
+    if (abc.length() == 2) { // a1 a2 a3 a4 b1 b2 b3 b4...
+      quadrant = abc.charAt(1) - 48;
+      abc = abc.substring(0, 1);
     }
-    return unitCellMultiplied;
+    boolean isEven = (quadrant % 2 == 0);
+    int axis = "abcABCDEF".indexOf(abc);
+
+    T3d v1, v2, v3;
+    switch (axis) {
+    case 7: // cb
+      mul = -mul;
+      //$FALL-THROUGH$
+    case 4: // bc
+      a.cross(c, b);
+      quadrant = ((5 - quadrant) % 4) + 1;
+          //$FALL-THROUGH$
+    case 0: // a
+    default:
+      v1 = a;
+      v2 = c;
+      v3 = b;
+      break;
+    case 8: // ca
+      mul = -mul;
+      //$FALL-THROUGH$
+    case 5: // ac
+      mul = -mul;
+      b.cross(c, a);
+      quadrant = ((2 + quadrant) % 4) + 1;
+    //$FALL-THROUGH$
+    case 1: // b
+      v1 = b;
+      v2 = a;
+      v3 = c;
+      mul = -mul;
+      break;
+    case 3: // ab
+      mul = -mul;
+      //$FALL-THROUGH$
+    case 6: // ba
+      c.cross(a,b);
+      if (isEven)
+        quadrant = 6 - quadrant;
+      //$FALL-THROUGH$
+    case 2: // c
+      v1 = c;
+      v2 = a;
+      v3 = b;
+      if (!isFace && quadrant > 0) {
+        quadrant = 5 - quadrant;
+      }
+     break;
+    }
+    if (quadrant > 0) {
+      if (mul > 0 != isEven) {
+        v2 = v3;
+        v1.scale(-1);
+      }
+    }
+    switch (quadrant) {
+    case 0:
+    default:
+      // upper left for a b; bottom left for c
+    case 1:
+      // upper left
+      break;
+    case 2:
+      // upper right
+      v1.scale(-1);
+      v2.scale(-1);
+      break;
+    case 3:
+      // lower right
+      v2.scale(-1);
+      break;
+    case 4:
+      // lower left
+      v1.scale(-1);
+      break;
+    }
+    x.cross(v1, v2);
+    v.cross(x, v1);
+    return Qd.getQuaternionFrame((P3d) null, v, x).inv();
   }
 
-  P3d[] getVertices() {
-    return vertices; // does not include offsets
+  private P3d[] getScaledCell(boolean withOffset) {
+    P3d[] pts  = new P3d[8];
+    P3d cell0 = null;
+    P3d cell1 = null;
+    if (withOffset && unitCellMultiplier != null && unitCellMultiplier.z == 0) {
+      cell0 = new P3d();
+      cell1 = new P3d();
+      ijkToPoint3f((int) unitCellMultiplier.x, cell0, 0, 0);
+      ijkToPoint3f((int) unitCellMultiplier.y, cell1, 0, 0);
+      cell1.sub(cell0);
+    }
+    double scale = (unitCellMultiplier == null || unitCellMultiplier.z == 0 ? 1
+        : Math.abs(unitCellMultiplier.z));
+    for (int i = 0; i < 8; i++) {
+      P3d pt = pts[i] = P3d.newP(BoxInfo.unitCubePoints[i]);
+      if (cell0 != null) {
+        pts[i].add3(cell0.x + cell1.x * pt.x, 
+            cell0.y + cell1.y * pt.y,
+            cell0.z + cell1.z * pt.z);
+      }
+      pts[i].scale(scale);
+      matrixFractionalToCartesian.rotTrans(pt);
+      if (!withOffset)
+        pt.sub(cartesianOffset);
+    }
+    return pts;
   }
   
-  P3d getCartesianOffset() {
-    // for slabbing isosurfaces and rendering the ucCage
-    return cartesianOffset;
+  String getState() {
+    String s = "";
+    // unitcell offset {1 1 1}
+    if (fractionalOffset != null && fractionalOffset.lengthSquared() != 0)
+      s += "  unitcell offset " + Escape.eP(fractionalOffset) + ";\n";
+    // unitcell range {444 555 1}
+    if (unitCellMultiplier != null)
+      s += "  unitcell range " + escapeMultiplier(unitCellMultiplier) + ";\n";
+    return s;
   }
-  
-  P3d getFractionalOffset() {
-    return fractionalOffset;
-  }
-  
-  final private static double twoP2 = 2 * Math.PI * Math.PI;
 
-  private final static V3d[] unitVectors = {
-		  JC.axisX, JC.axisY, JC.axisZ};
-  
   Tensor getTensor(Viewer vwr, double[] parBorU) {
     /*
      * 
@@ -469,94 +684,28 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
 
     return t.setFromThermalEquation(Bcart, Escape.eAD(parBorU));
   }
-  
-  /**
-   * 
-   * @param scale
-   * @param withOffset
-   * @return points in Triangulator order
-   */
-  P3d[] getCanonicalCopy(double scale, boolean withOffset) {
-    P3d[] pts = getScaledCell(withOffset);
-    return BoxInfo.getCanonicalCopy(pts, scale);
-  }
 
-  public P3d[] getScaledCell(boolean withOffset) {
-    P3d[] pts  = new P3d[8];
-    P3d cell0 = null;
-    P3d cell1 = null;
-    if (withOffset && unitCellMultiplier != null && unitCellMultiplier.z == 0) {
-      cell0 = new P3d();
-      cell1 = new P3d();
-      ijkToPoint3f((int) unitCellMultiplier.x, cell0, 0, 0);
-      ijkToPoint3f((int) unitCellMultiplier.y, cell1, 0, 0);
-      cell1.sub(cell0);
+//  void reset() {
+//    unitCellMultiplier = null;
+//    unitCellMultiplied = null;
+//    setOffset(P3d.new3(0, 0, 0));
+//  }
+  
+  UnitCell getUnitCellMultiplied() {
+    if (unitCellMultiplier == null || unitCellMultiplier.z > 0 && unitCellMultiplier.z == (int) unitCellMultiplier.z)
+      return this;
+    if (unitCellMultiplied == null) {
+      P3d[] pts = BoxInfo.toOABC(getScaledCell(true), null);
+      unitCellMultiplied = fromOABC (pts, false);
     }
-    double scale = (unitCellMultiplier == null || unitCellMultiplier.z == 0 ? 1
-        : Math.abs(unitCellMultiplier.z));
-    for (int i = 0; i < 8; i++) {
-      P3d pt = pts[i] = P3d.newP(BoxInfo.unitCubePoints[i]);
-      if (cell0 != null) {
-        pts[i].add3(cell0.x + cell1.x * pt.x, 
-            cell0.y + cell1.y * pt.y,
-            cell0.z + cell1.z * pt.z);
-      }
-      pts[i].scale(scale);
-      matrixFractionalToCartesian.rotTrans(pt);
-      if (!withOffset)
-        pt.sub(cartesianOffset);
-    }
-    return pts;
+    return unitCellMultiplied;
   }
 
-  /// private methods
-  
-  
-  private void initUnitcellVertices() {
-    if (matrixFractionalToCartesian == null)
-      return;
-    matrixCtoFNoOffset = M4d.newM4(matrixCartesianToFractional);
-    matrixFtoCNoOffset = M4d.newM4(matrixFractionalToCartesian);
-    vertices = new P3d[8];
-    for (int i = 8; --i >= 0;)
-      vertices[i] = (P3d) matrixFractionalToCartesian.rotTrans2(BoxInfo.unitCubePoints[i], new P3d());
-  }
-
-  /**
-   * 
-   * @param f1
-   * @param f2
-   * @param distance
-   * @param dx
-   * @param iRange
-   * @param jRange
-   * @param kRange
-   * @param ptOffset TODO
-   * @return       TRUE if pt has been set.
-   */
-  public boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
-                              int iRange, int jRange, int kRange, P3d ptOffset) {
-    P3d p1 = P3d.newP(f1);
-    toCartesian(p1, true);
-    for (int i = -iRange; i <= iRange; i++)
-      for (int j = -jRange; j <= jRange; j++)
-        for (int k = -kRange; k <= kRange; k++) {
-          ptOffset.set(f2.x + i, f2.y + j, f2.z + k);
-          toCartesian(ptOffset, true);
-          double d = p1.distance(ptOffset);
-          if (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1d) {
-            ptOffset.set(i, j, k);
-            return true;
-          }
-        }
-    return false;
-  }
-
-  public T3d getUnitCellMultiplier() {
+  T3d getUnitCellMultiplier() {
     return unitCellMultiplier;
   }
 
-  public P3d[] getUnitCellVectorsD() {
+  P3d[] getUnitCellVectorsD() {
     M4d m = matrixFractionalToCartesian;
     return new P3d[] { 
         P3d.newPd(cartesianOffset),
@@ -564,157 +713,14 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
         P3d.new3(fixd(m.m01), fixd(m.m11), fixd(m.m21)), 
         P3d.new3(fixd(m.m02), fixd(m.m12), fixd(m.m22)) };
   }
-
-  public P3d[] getUnitCellVectorsF() {
+  
+  P3d[] getUnitCellVectorsF() {
     M4d m = matrixFractionalToCartesian;
     return new P3d[] { 
         P3d.newP(cartesianOffset),
         P3d.new3(fix(m.m00), fix(m.m10), fix(m.m20)), 
         P3d.new3(fix(m.m01), fix(m.m11), fix(m.m21)), 
         P3d.new3(fix(m.m02), fix(m.m12), fix(m.m22)) };
-  }
-
-  private double fixd(double x) {
-    return (Math.abs(x) < 0.001 ? 0 : x);
-  }
-
-  private double fix(double x) {
-    return (Math.abs(x) < 0.001 ? 0 : x);
-  }
-
-  public boolean isSameAs(UnitCell uc) {
-    if (uc.unitCellParams.length != unitCellParams.length)
-      return false;
-    for (int i = unitCellParams.length; --i >= 0;)
-      if (unitCellParams[i] != uc.unitCellParams[i]
-          && !(Double.isNaN(unitCellParams[i]) && Double
-              .isNaN(uc.unitCellParams[i])))
-        return false;
-    return (fractionalOffset == null ? !uc.hasOffset()
-        : uc.fractionalOffset == null ? !hasOffset() 
-        : fractionalOffset.distanceSquared(uc.fractionalOffset) == 0);
-  }
-
-  public boolean hasOffset() {
-    return (fractionalOffset != null && fractionalOffset.lengthSquared() != 0);
-  }
-
-  /**
-   * Returns a quaternion that will take the standard frame to a view down a
-   * particular axis, expressed as its counterparts.
-   * 
-   * @param abc
-   *        ab bc ca
-   * @return quaternion
-   */
-  public Qd getQuaternionRotation(String abc) {
-    T3d a = V3d.newVsub(vertices[4], vertices[0]);
-    T3d b = V3d.newVsub(vertices[2], vertices[0]);
-    T3d c = V3d.newVsub(vertices[1], vertices[0]);
-    T3d x = new V3d();
-    T3d v = new V3d();
-
-    //  qab = !quaternion({0 0 0}, cross(cxb,c), cxb);
-    //  qbc = !quaternion({0 0 0}, cross(axc,a), axc)
-    //  qca = !quaternion({0 0 0}, cross(bxa,b), bxa);
-    //
-
-    int mul = (abc.charAt(0) == '-' ? -1 : 1);
-    if (mul < 0)
-      abc = abc.substring(1);
-    String abc0 = abc;
-    abc = PT.rep(PT.rep(PT.rep(PT.rep(PT.rep(PT.rep(abc, 
-        "ab", "A"), //3
-        "bc", "B"), //4
-        "ca", "C"), //5
-        "ba", "D"), //6
-        "cb", "E"), //7
-        "ac", "F"); //8
-    boolean isFace = !abc0.equals(abc);
-    int quadrant = (isFace ? 1 : 0);
-    if (abc.length() == 2) { // a1 a2 a3 a4 b1 b2 b3 b4...
-      quadrant = abc.charAt(1) - 48;
-      abc = abc.substring(0, 1);
-    }
-    boolean isEven = (quadrant % 2 == 0);
-    int axis = "abcABCDEF".indexOf(abc);
-
-    T3d v1, v2, v3;
-    switch (axis) {
-    case 7: // cb
-      mul = -mul;
-      //$FALL-THROUGH$
-    case 4: // bc
-      a.cross(c, b);
-      quadrant = ((5 - quadrant) % 4) + 1;
-          //$FALL-THROUGH$
-    case 0: // a
-    default:
-      v1 = a;
-      v2 = c;
-      v3 = b;
-      break;
-    case 8: // ca
-      mul = -mul;
-      //$FALL-THROUGH$
-    case 5: // ac
-      mul = -mul;
-      b.cross(c, a);
-      quadrant = ((2 + quadrant) % 4) + 1;
-    //$FALL-THROUGH$
-    case 1: // b
-      v1 = b;
-      v2 = a;
-      v3 = c;
-      mul = -mul;
-      break;
-    case 3: // ab
-      mul = -mul;
-      //$FALL-THROUGH$
-    case 6: // ba
-      c.cross(a,b);
-      if (isEven)
-        quadrant = 6 - quadrant;
-      //$FALL-THROUGH$
-    case 2: // c
-      v1 = c;
-      v2 = a;
-      v3 = b;
-      if (!isFace && quadrant > 0) {
-        quadrant = 5 - quadrant;
-      }
-     break;
-    }
-    if (quadrant > 0) {
-      if (mul > 0 != isEven) {
-        v2 = v3;
-        v1.scale(-1);
-      }
-    }
-    switch (quadrant) {
-    case 0:
-    default:
-      // upper left for a b; bottom left for c
-    case 1:
-      // upper left
-      break;
-    case 2:
-      // upper right
-      v1.scale(-1);
-      v2.scale(-1);
-      break;
-    case 3:
-      // lower right
-      v2.scale(-1);
-      break;
-    case 4:
-      // lower left
-      v1.scale(-1);
-      break;
-    }
-    x.cross(v1, v2);
-    v.cross(x, v1);
-    return Qd.getQuaternionFrame((P3d) null, v, x).inv();
   }
 
   /**
@@ -728,7 +734,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    * 
    * @return [origin va vb vc]
    */
-  public T3d[] getV0abc(Object def, M4d retMatrix) {
+  T3d[] getV0abc(Object def, M4d retMatrix) {
     if (def instanceof T3d[])
       return (T3d[]) def;
     M4d m;
@@ -825,6 +831,134 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
     return pts;
   }
 
+  P3d[] getVertices() {
+    return vertices; // does not include offsets
+  }
+  
+  boolean hasOffset() {
+    return (fractionalOffset != null && fractionalOffset.lengthSquared() != 0);
+  }
+  
+  void initOrientation(M3d mat) {
+    if (mat == null)
+      return;
+    M4d m = new M4d();
+    m.setToM3(mat);
+    matrixFractionalToCartesian.mul2(m, matrixFractionalToCartesian);
+    matrixCartesianToFractional.setM4(matrixFractionalToCartesian).invert();
+    initUnitcellVertices();
+  }
+  
+  private void initUnitcellVertices() {
+    if (matrixFractionalToCartesian == null)
+      return;
+    matrixCtoFNoOffset = M4d.newM4(matrixCartesianToFractional);
+    matrixFtoCNoOffset = M4d.newM4(matrixFractionalToCartesian);
+    vertices = new P3d[8];
+    for (int i = 8; --i >= 0;)
+      vertices[i] = (P3d) matrixFractionalToCartesian.rotTrans2(BoxInfo.unitCubePoints[i], new P3d());
+  }
+  
+  boolean isSameAs(UnitCell uc) {
+    if (uc.unitCellParams.length != unitCellParams.length)
+      return false;
+    for (int i = unitCellParams.length; --i >= 0;)
+      if (unitCellParams[i] != uc.unitCellParams[i]
+          && !(Double.isNaN(unitCellParams[i]) && Double
+              .isNaN(uc.unitCellParams[i])))
+        return false;
+    return (fractionalOffset == null ? !uc.hasOffset()
+        : uc.fractionalOffset == null ? !hasOffset() 
+        : fractionalOffset.distanceSquared(uc.fractionalOffset) == 0);
+  }
+
+  /**
+   * Used for SELECT UNITCELL and for adding H atoms only.
+   * 
+   * @param a range on a axis
+   * @param b range on b axis
+   * @param c range on c axis
+   * @param pt
+   * @return true if within bounds
+   */
+  boolean isWithinUnitCell(double a, double b, double c, P3d pt) {
+    switch (dimension) {
+    case 3:
+      if (pt.z < c - 1d - slop || pt.z > c + slop)
+        return false;
+      //$FALL-THROUGH$
+    case 2:
+      if (pt.y < b - 1d - slop || pt.y > b + slop)
+        return false;
+      //$FALL-THROUGH$
+    case 1:
+    if (pt.x < a - 1d - slop || pt.x > a + slop)
+      return false;
+    }
+    return true;
+  }
+
+  private void setCartesianOffset(T3d origin) {
+    cartesianOffset.setT(origin);
+    matrixFractionalToCartesian.m03 = cartesianOffset.x;
+    matrixFractionalToCartesian.m13 = cartesianOffset.y;
+    matrixFractionalToCartesian.m23 = cartesianOffset.z;
+    boolean wasOffset = hasOffset();
+    fractionalOffset = new P3d();
+    fractionalOffset.setT(cartesianOffset);
+    matrixCartesianToFractional.m03 = 0;
+    matrixCartesianToFractional.m13 = 0;
+    matrixCartesianToFractional.m23 = 0;
+    matrixCartesianToFractional.rotTrans(fractionalOffset);
+    matrixCartesianToFractional.m03 = -fractionalOffset.x;
+    matrixCartesianToFractional.m13 = -fractionalOffset.y;
+    matrixCartesianToFractional.m23 = -fractionalOffset.z;
+    if (allFractionalRelative) {
+      matrixCtoFNoOffset.setM4(matrixCartesianToFractional);
+      matrixFtoCNoOffset.setM4(matrixFractionalToCartesian);
+    }
+    if (!wasOffset && fractionalOffset.lengthSquared() == 0)
+      fractionalOffset = null;
+  }
+
+  void setOffset(T3d pt) {
+    if (pt == null)
+      return;
+    unitCellMultiplied = null;
+    T4d pt4 = (pt instanceof T4d ? (T4d) pt : null);
+    double w = (pt4 == null ? Double.MIN_VALUE : pt4.w);
+    boolean isCell555P4 = (w > 999999);
+    if (pt4 != null ? w <= 0 || isCell555P4 : pt.x >= 100 || pt.y >= 100) {
+      unitCellMultiplier = (pt.z == 0 && pt.x == pt.y && !isCell555P4 ? null : isCell555P4 ? P4d.newPt((P4d) pt4) : P3d.newP(pt));
+      unitCellMultiplied = null;
+      if (pt4 == null || pt4.w == 0 || isCell555P4)
+        return;
+      // pt4.w == -1 from reset, continuing 
+    }
+    // from "unitcell offset {i j k}"
+    if (hasOffset() || pt.lengthSquared() > 0) {
+      fractionalOffset = new P3d();
+      fractionalOffset.setT(pt);
+    }
+    matrixCartesianToFractional.m03 = -pt.x;
+    matrixCartesianToFractional.m13 = -pt.y;
+    matrixCartesianToFractional.m23 = -pt.z;
+    cartesianOffset.setT(pt);
+    matrixFractionalToCartesian.m03 = 0;
+    matrixFractionalToCartesian.m13 = 0;
+    matrixFractionalToCartesian.m23 = 0;
+    matrixFractionalToCartesian.rotTrans(cartesianOffset);
+    matrixFractionalToCartesian.m03 = cartesianOffset.x;
+    matrixFractionalToCartesian.m13 = cartesianOffset.y;
+    matrixFractionalToCartesian.m23 = cartesianOffset.z;
+    if (allFractionalRelative) {
+      matrixCtoFNoOffset.setM4(matrixCartesianToFractional);
+      matrixFtoCNoOffset.setM4(matrixFractionalToCartesian);
+    }
+  }
+
+  /// private methods
+  
   
   /**
    * 
@@ -837,7 +971,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
    * @param primitiveToCrystal
    * @return true if successful
    */
-  public boolean toFromPrimitive(boolean toPrimitive, char type, T3d[] uc,
+  boolean toFromPrimitive(boolean toPrimitive, char type, T3d[] uc,
                                  M3d primitiveToCrystal) {
 
     // columns are definitions of new coordinates in terms of old
@@ -894,137 +1028,71 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   /**
-   * return a conventional lattice from a primitive
+   * when offset is null, use the current cell, otherwise use the original unit cell
    * 
-   * @param latticeType  "A" "B" "C" "R" etc.
-   * @param primitiveToCrystal 
-   * @return [origin va vb vc]
+   * @param p
+   * @param offset
    */
-  public T3d[] getConventionalUnitCell(String latticeType, M3d primitiveToCrystal) {
-    T3d[] oabc = getUnitCellVectorsD();
-    if (!latticeType.equals("P") || primitiveToCrystal != null)
-      toFromPrimitive(false, latticeType.charAt(0), oabc, primitiveToCrystal);
-    return oabc;
-  }
-
-  public static UnitCell cloneUnitCell(UnitCell uc) {
-    UnitCell ucnew = null;
-    try {
-      ucnew = (UnitCell) uc.clone();
-    } catch (CloneNotSupportedException e) {
+  final void toUnitCell(T3d p, T3d offset) {
+    if (matrixCartesianToFractional == null)
+      return;
+    if (offset == null) {
+      // used redefined unitcell 
+      matrixCartesianToFractional.rotTrans(p);
+      unitize(p);
+      matrixFractionalToCartesian.rotTrans(p);
+    } else {
+      // use original unit cell
+      // note that this matrix will be the same as matrixCartesianToFractional
+      // when allFractionalRelative is set true (isosurfaceMesh special cases only)
+      matrixCtoFNoOffset.rotTrans(p);
+      unitize(p);
+      p.add(offset);
+      matrixFtoCNoOffset.rotTrans(p);
     }
-    return ucnew;
   }
 
   /**
+   * when offset is null, use the current cell, otherwise use the original unit cell
    * 
    * @param pt
-   *        the point to transform
-   * @param flags
-   *        "tofractional,fromfractional,packed"
-   * @param ops
-   *        space group operations
-   * @param list
-   *        the list to append to
-   * @param i0
-   *        the starting index of the list
-   * @param n0
-   *        the first point that is to be duplicated; prior points are just
-   *        references for removing duplicates
-   * @return augmented list
+   * @param offset
    */
-  Lst<P3d> getEquivPoints(P3d pt, String flags, M4d[] ops, Lst<P3d> list,
-                                int i0, int n0) {
-    boolean fromfractional = (flags.indexOf("fromfractional") >= 0);
-    boolean tofractional = (flags.indexOf("tofractional") >= 0);
-    boolean packed = (flags.indexOf("packed") >= 0);
-    if (list == null)
-      list = new Lst<P3d>();
-    P3d pf = P3d.newP(pt);
-    if (!fromfractional)
-      toFractional(pf, true);
-    int n = list.size();
-    for (int i = 0, nops = ops.length; i < nops; i++) {
-      P3d p = P3d.newP(pf);
-      ops[i].rotTrans(p);
-      //not using unitize here, because it does some averaging
-      p.x =  fixFloor(p.x - Math.floor(p.x));
-      p.y =  fixFloor(p.y - Math.floor(p.y));
-      p.z =  fixFloor(p.z - Math.floor(p.z));
-      list.addLast(p);
-      n++;
-    }
-    if (packed) {
-      // duplicate all the points. 
-      for (int i = n0; i < n; i++) {
-        pf.setT(list.get(i));
-        unitizeRnd(pf);
-        if (pf.x == 0) {
-          list.addLast(P3d.new3(0,  pf.y,  pf.z));
-          list.addLast(P3d.new3(1,  pf.y,  pf.z));
-          if (pf.y == 0) {
-            list.addLast(P3d.new3(1, 1,  pf.z));
-            list.addLast(P3d.new3(0, 0,  pf.z));
-            if (pf.z == 0) {
-              list.addLast(P3d.new3(1, 1, 1));
-              list.addLast(P3d.new3(0, 0, 0));
-            }
-          }
-        }
-        if (pf.y == 0) {
-          list.addLast(P3d.new3( pf.x, 0,  pf.z));
-          list.addLast(P3d.new3( pf.x, 1,  pf.z));
-          if (pf.z == 0) {
-            list.addLast(P3d.new3( pf.x, 0, 0));
-            list.addLast(P3d.new3( pf.x, 1, 1));
-          }
-        }
-        if (pf.z == 0) {
-          list.addLast(P3d.new3( pf.x,  pf.y, 0));
-          list.addLast(P3d.new3( pf.x,  pf.y, 1));
-          if (pf.x == 0) {
-            list.addLast(P3d.new3(0,  pf.y, 0));
-            list.addLast(P3d.new3(1,  pf.y, 1));
-          }
-        }
-      }
-    }
-    checkDuplicate(list, i0, n0, -1);
-    if (!tofractional) {
-      for (int i = list.size(); --i >= n0;)
-        toCartesian(list.get(i), true);
-    }
-    return list;
-  }
-
-  private double fixFloor(double d) {
-    return (d == 1 ? 0 : d);
-  }
-
-  private static void checkDuplicate(Lst<P3d> list, int i0, int n0, int n) {
-    if (n < 0)
-      n = list.size();
-    for (int i = i0; i < n; i++) {
-      P3d p = list.get(i);
-      for (int j = Math.max(i + 1, n0); j < n; j++) {
-        if (list.get(j).distanceSquared(p) < JC.UC_TOLERANCE2) {
-          list.removeItemAt(j);
-          n--;
-          j--;
-        }
-      }
+  final void toUnitCellRnd(T3d pt, T3d offset) {
+    if (matrixCartesianToFractional == null)
+      return;
+    if (offset == null) {
+      // used redefined unitcell 
+      matrixCartesianToFractional.rotTrans(pt);
+      unitizeRnd(pt);
+      matrixFractionalToCartesian.rotTrans(pt);
+    } else {
+      // use original unit cell
+      // note that this matrix will be the same as matrixCartesianToFractional
+      // when allFractionalRelative is set true (isosurfaceMesh special cases only)
+      matrixCtoFNoOffset.rotTrans(pt);
+      unitizeRnd(pt);
+      pt.add(offset); 
+      matrixFtoCNoOffset.rotTrans(pt);
     }
   }
 
-  public String getState() {
-    String s = "";
-    // unitcell offset {1 1 1}
-    if (fractionalOffset != null && fractionalOffset.lengthSquared() != 0)
-      s += "  unitcell offset " + Escape.eP(fractionalOffset) + ";\n";
-    // unitcell range {444 555 1}
-    if (unitCellMultiplier != null)
-      s += "  unitcell range " + escapeMultiplier(unitCellMultiplier) + ";\n";
-    return s;
+  /**
+   * returns [0,1)
+   * 
+   * @param pt
+   */
+  void unitize(T3d pt) {
+    unitizeDim(dimension, pt);
+  }
+
+  /**
+   * returns [0,1) with rounding to 0.0001
+   * 
+   * @param pt
+   */
+  void unitizeRnd(T3d pt) {
+    unitizeDimRnd(dimension, pt, slop);
   }
 
 

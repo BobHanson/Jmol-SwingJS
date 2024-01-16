@@ -48,13 +48,14 @@ import javajs.util.V3d;
 
 public class SimpleUnitCell {
 
-  public static final int PARAM_STD = 6;
-  public static final int PARAM_VABC = 6;
-  public static final int PARAM_M4 = 6;
-  public static final int PARAM_SUPERCELL = 22;
-  public static final int PARAM_SCALE = 25;
-  public static final int PARAM_COUNT = 26;
-
+  public static final int PARAM_STD       = 6;  // a b c alpha beta gamma
+  public static final int PARAM_VABC      = 6;  // ax ay az bx by bz cx cy cz (9 entries)
+  public static final int PARAM_M4        = 6;  // m00 m01 ... m44 (16 entries)
+  public static final int PARAM_SUPERCELL = 22; // na nb nc
+  public static final int PARAM_SCALE = 25;     // scale
+  public static final int PARAM_SLOP = 26;      // slop
+   public static final int PARAM_COUNT = 27;
+ 
   public final static int INFO_IS_RHOMBOHEDRAL = 8;
   public final static int INFO_IS_HEXAGONAL = 7;  
   public final static int INFO_DIMENSIONS = 6;
@@ -70,15 +71,29 @@ public class SimpleUnitCell {
   
   protected final static double toRadians = Math.PI * 2 / 360;
 
+  protected double[] unitCellParams;
+
   /**
    * allowance for rounding in [0,1)
    */
-  private final static double SLOP001 = 0.001d;
-  private final static double SLOP0001 = 0.0001d;
-  private final static double SLOPDP = 0.000000000001d;
+  public final static double SLOPSP = 0.0001d;
+  public final static double SLOPDP = 0.000000000001d;
   
+  /**
+   * initial value is set in subclass UnitCell
+   */
+  protected double slop = (Viewer.isHighPrecision ? SLOPDP : SLOPSP);
   
-  protected double[] unitCellParams;
+  public double getPrecision() {
+    return slop;
+  }
+
+  public void setPrecision(double slop) {
+    unitCellParams[PARAM_SLOP] = this.slop = (!Double.isNaN(slop) ? slop 
+        : !Double.isNaN(unitCellParams[PARAM_SLOP]) ? unitCellParams[PARAM_SLOP] 
+            : Viewer.isHighPrecision ? SLOPDP : SLOPSP);
+  }
+
   public M4d matrixCartesianToFractional;
   public M4d matrixFractionalToCartesian;
   protected M4d matrixCtoFNoOffset;
@@ -103,6 +118,7 @@ public class SimpleUnitCell {
   protected double cA_, cB_;
   protected double a_;
   protected double b_, c_;
+
 
 //  public static boolean isValid(float[] parameters) {
 //    return (parameters != null && (parameters[0] > 0 || parameters.length > 14
@@ -140,6 +156,7 @@ public class SimpleUnitCell {
    * 
    *        and/or len = 26 [...................... na nb nc scale] // scaled supercell
    * 
+   *        and/or len = 27 [..................................... slop] // precision
    * @return a simple unit cell
    */
   public static SimpleUnitCell newA(double[] params) {
@@ -153,7 +170,9 @@ public class SimpleUnitCell {
       params = new double[] {1, 1, 1, 90, 90, 90};
     if (!isValid(params))
       return;
-    params = unitCellParams = AU.arrayCopyD(params, params.length);
+    unitCellParams = new double[PARAM_COUNT];
+    for (int i = 0, n = params.length; i < PARAM_COUNT; i++)
+      unitCellParams[i] = (i < n ? params[i] : Double.NaN);
 
     boolean rotateHex = false; // special gamma = -1 indicates hex rotation for AFLOW
     
@@ -176,6 +195,11 @@ public class SimpleUnitCell {
       gamma = 120;
     }
     
+    if (params.length > PARAM_SLOP && !Double.isNaN(params[PARAM_SLOP])) {
+      slop = params[PARAM_SLOP];        
+    } else {
+      params[PARAM_SLOP] = slop;
+    }
     // (int) double.NaN == 0 (but not in JavaScript!)
     // supercell
     double fa = na = Math.max(1, params.length > PARAM_SUPERCELL+2 && !Double.isNaN(params[PARAM_SUPERCELL]) ? (int) params[PARAM_SUPERCELL] : 1);
@@ -343,7 +367,6 @@ public class SimpleUnitCell {
   }
 
   private void setCellParams() {
-    //System.out.println("unitcell " + a + " " + b + " " + c);
     cosAlpha = Math.cos(toRadians * alpha);
     sinAlpha = Math.sin(toRadians * alpha);
     cosBeta = Math.cos(toRadians * beta);
@@ -362,7 +385,6 @@ public class SimpleUnitCell {
   }
 
   private P3d fo = new P3d();
-  private boolean isDoublePrecision;
   
   public P3d getFractionalOrigin() {
     return (P3d) fractionalOrigin.putP(fo);
@@ -447,31 +469,13 @@ public class SimpleUnitCell {
     case INFO_DIMENSIONS:
       return dimension;
     case INFO_IS_HEXAGONAL:
-      return (isHexagonal(unitCellParams) ? 1 : 0);
+      return (isHexagonal(unitCellParams, slop) ? 1 : 0);
     case INFO_IS_RHOMBOHEDRAL:
-      return (isRhombohedral(unitCellParams) ? 1 : 0);      
+      return (isRhombohedral(unitCellParams, slop) ? 1 : 0);      
     }
     return Double.NaN;
   }
 
-  /**
-   * calculate weighting of 1 (interior), 0.5 (face), 0.25 (edge), or 0.125 (vertex)
-   * @param pt
-   * @param isDoublePrecision 
-   * @return weighting
-   */
-  public static double getCellWeight(P3d pt, boolean isDoublePrecision) {
-    double slop = (isDoublePrecision ? SLOPDP : SLOP0001);
-    double f = 1;
-    if (pt.x <= slop || pt.x >= 1 - slop)
-      f /= 2;
-    if (pt.y <= slop || pt.y >= 1 - slop)
-      f /= 2;
-    if (pt.z <= slop || pt.z >= 1 - slop)
-      f /= 2;
-    return f;
-  }
-  
   /**
    * Generate the reciprocal unit cell, scaled as desired
    * 
@@ -531,7 +535,7 @@ public class SimpleUnitCell {
   }
 
   /**
-   * Used for just about everything, 
+   * Used for just about everything; via UnitCell
    * including SpaceGroup.getSiteMultiplicity, Symmetry.getInvariantSymops, 
    * Symmetry.removeDuplicates, Symmetry.unitize, Symmetry.toUnitCell, SymmetryDesc.getTransform.
    * 
@@ -540,32 +544,16 @@ public class SimpleUnitCell {
    * @param dimension
    * @param pt
    */
-  public static void unitizeDim(int dimension, T3d pt) {
-    if (Viewer.isHighPrecision) {
-      unitizeDimD(dimension, pt);
-    }
+  public void unitizeDim(int dimension, T3d pt) {
     switch (dimension) {
     case 3:
-      pt.z = unitizeX(pt.z, false);  
+      pt.z = unitizeX(pt.z, slop);  
       //$FALL-THROUGH$
     case 2:
-      pt.y = unitizeX(pt.y, false);
+      pt.y = unitizeX(pt.y, slop);
       //$FALL-THROUGH$
     case 1:
-      pt.x = unitizeX(pt.x, false);
-    }
-  }
-
-  public static void unitizeDimD(int dimension, T3d pt) {
-    switch (dimension) {
-    case 3:
-      pt.z = unitizeX(pt.z, true);  
-      //$FALL-THROUGH$
-    case 2:
-      pt.y = unitizeX(pt.y, true);
-      //$FALL-THROUGH$
-    case 1:
-      pt.x = unitizeX(pt.x, true);
+      pt.x = unitizeX(pt.x, slop);
     }
   }
 
@@ -576,22 +564,22 @@ public class SimpleUnitCell {
    * 
    * @param dimension
    * @param pt
+   * @param slop 
    */
-  public static void unitizeDimRnd(int dimension, T3d pt) {
+  public static void unitizeDimRnd(int dimension, T3d pt, double slop) {
     switch (dimension) {
     case 3:
-      pt.z = unitizeXRnd(pt.z);  
+      pt.z = unitizeXRnd(pt.z, slop);  
       //$FALL-THROUGH$
     case 2:
-      pt.y = unitizeXRnd(pt.y);
+      pt.y = unitizeXRnd(pt.y, slop);
       //$FALL-THROUGH$
     case 1:
-      pt.x = unitizeXRnd(pt.x);
+      pt.x = unitizeXRnd(pt.x, slop);
     }
   }
   
-  public static double unitizeX(double x, boolean isDoublePrecision) {
-    double slop = (isDoublePrecision ? SLOPDP : SLOP001);    
+  private static double unitizeX(double x, double slop) {
     // introduced in Jmol 11.7.36
     x = (x - Math.floor(x));
     // question - does this cause problems with dragatom?
@@ -603,68 +591,17 @@ public class SimpleUnitCell {
   /**
    * Slightly higher precision -- only used for cmdAssignSpaceGroup checking for duplicates
    * @param x
-   * @return rounded value +/-0.0001
+   * @param slop 
+   * @return rounded value +/-slop
    */
-  public static double unitizeXRnd(double x) {
+  private static double unitizeXRnd(double x, double slop) {
     // introduced in Jmol 11.7.36
     x = (x - Math.floor(x));
-    if (x > 1 - SLOP0001 || x < SLOP0001) 
+    if (x > 1 - slop || x < slop) 
       x = 0;
     return x;
   }
   
-  /**
-   * Check atom position for range [0, 1) allowing for rounding.
-   * Used for SELECT UNITCELL only 
-
-   * @param pt 
-   * @return true if in [0, 1)
-   */
-  public boolean checkPeriodic(P3d pt) {
-    double slop = (isDoublePrecision ? SLOPDP : SLOP0001);
-    switch (dimension) {
-    case 3:
-      if (pt.z < -slop || pt.z > 1 - slop)
-        return false;
-      //$FALL-THROUGH$
-    case 2:
-      if (pt.y < -slop || pt.y > 1 - slop)
-        return false;
-      //$FALL-THROUGH$
-    case 1:
-    if (pt.x < -slop || pt.x > 1 - slop)
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Used for SELECT UNITCELL and for adding H atoms only.
-   * 
-   * @param a range on a axis
-   * @param b range on b axis
-   * @param c range on c axis
-   * @param pt
-   * @return true if within bounds
-   */
-  public boolean isWithinUnitCell(double a, double b, double c, P3d pt) {
-    double slop = (isDoublePrecision ? SLOPDP : SLOP0001);
-    switch (dimension) {
-    case 3:
-      if (pt.z < c - 1d - slop || pt.z > c + slop)
-        return false;
-      //$FALL-THROUGH$
-    case 2:
-      if (pt.y < b - 1d - slop || pt.y > b + slop)
-        return false;
-      //$FALL-THROUGH$
-    case 1:
-    if (pt.x < a - 1d - slop || pt.x > a + slop)
-      return false;
-    }
-    return true;
-  }
-
   ////// lattice methods //////
   
   /**
@@ -775,35 +712,31 @@ public class SimpleUnitCell {
   }
 
   /**
-   * Not worrying about precision in this case
    * @param params
+   * @param slop 
    * @return true if approximately hexagonal
    */
-  public static boolean isHexagonal(double[] params) {
+  public static boolean isHexagonal(double[] params, double slop) {
     // a == b && alpha = beta = 90 && gamma = 120 (gamma -1 is a "rotateHexCell" indicator for AFLOW
-    return (approx0(params[0] - params[1]) 
-        && approx0(params[3] - 90) && approx0(params[4] - 90) && (approx0(params[5] - 120) 
+    return (approx0(params[0] - params[1], slop) 
+        && approx0(params[3] - 90, slop) && approx0(params[4] - 90, slop) && (approx0(params[5] - 120, slop) 
             || params[5] == -1));
   }
 
   /**
-   * Not worrying about precision in this case
    * @param params
+   * @param slop 
    * @return true if approximately rhombohedral
    */
-  public static boolean isRhombohedral(double[] params) {
+  public static boolean isRhombohedral(double[] params, double slop) {
     // a = b = c and alpha = beta = gamma and alpha != 90
-    return (approx0(params[0] - params[1]) && approx0(params[1] - params[2])
-        && !approx0(params[3] - 90) && approx0(params[3] - params[4])
-        && approx0(params[4] - params[5]));
+    return (approx0(params[0] - params[1], slop) && approx0(params[1] - params[2], slop)
+        && !approx0(params[3] - 90, slop) && approx0(params[3] - params[4], slop)
+        && approx0(params[4] - params[5], slop));
   }
 
-  private static boolean approx0(double f) {
-    return (Math.abs(f) < SLOP001);
-  }
-
-  public static boolean approx0D(double f) {
-    return (Math.abs(f) < SLOPDP);
+  private static boolean approx0(double f, double slop) {
+    return (Math.abs(f) < slop);
   }
 
 

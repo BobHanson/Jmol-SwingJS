@@ -33,16 +33,16 @@ public class SpaceGroupFinder {
   private static final int MAX_COUNT = 100;
 
 
-  /**
-   * maximum allowable distance fx, fy ,fz for atom finder
-   */
-  private static final double SLOP0014 = Math.sqrt(JC.UC_TOLERANCE2);
-
-  /**
-   * tolerance for fractional coord and 
-   */
-  private final static double //SLOP02 = 0.02f, 
-      SLOP001 = 0.001, SLOP0001= 0.0001;  // 0.001 was too tight for labradorite Si // 0.0001 was too tight here. 
+//  /**
+//   * maximum allowable distance fx, fy ,fz for atom finder
+//   */
+//  private static final double SLOP0014 = Math.sqrt(JC.UC_TOLERANCE2);
+//
+//  /**
+//   * tolerance for fractional coord and 
+//   */
+//  private final static double //SLOP02 = 0.02f, 
+//      SLOP001 = 0.001, SLOP0001= 0.0001;  // 0.001 was too tight for labradorite Si // 0.0001 was too tight here. 
 
   private static int GROUP_COUNT; // 531
   private static int OP_COUNT; // 882
@@ -57,6 +57,7 @@ public class SpaceGroupFinder {
   private SGAtom[] atoms;
   private int nAtoms;
   private P3d pt = new P3d();
+  private double slop;
 
   public SpaceGroupFinder() {
   }
@@ -113,7 +114,7 @@ public class SpaceGroupFinder {
 
     String name;
     BS basis;
-    if (xyzList.toUpperCase().startsWith("ITA/")) {
+    if (xyzList != null && xyzList.toUpperCase().startsWith("ITA/")) {
       xyzList = PT.rep(xyzList.substring(4)," ","");
       boolean isJmolCode = (xyzList.indexOf(":") > 0);
       int pt = xyzList.indexOf("."); 
@@ -200,10 +201,11 @@ public class SpaceGroupFinder {
           if (!isAssign || ret == null)
             return ret;
           sg = (SpaceGroup) ret;
-          uc.setUnitCell(unitCellParams, false);
+          uc.setUnitCell(unitCellParams, false, SimpleUnitCell.SLOPDP);
         }
         oabc = uc.getUnitCellVectors();
         uc = uc.getUnitCellMultiplied();
+        slop = uc.getPrecision();
         filterGroups(bsGroups, uc.getUnitCellParams());
 
         //      withinCell = vwr.ms.getAtoms(T.unitcell, uc);
@@ -261,7 +263,7 @@ public class SpaceGroupFinder {
         if (nAtoms > 0) {
           for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
               .nextSetBit(i + 1)) {
-            SimpleUnitCell.unitizeDim(3, atoms[i]);
+            uc.unitize(atoms[i]);
           }
           removeDuplicates(bsPoints);
           uc = checkSupercell(vwr, uc, bsPoints, 1, scaling);
@@ -289,7 +291,7 @@ public class SpaceGroupFinder {
           newAtoms[p++] = a;
           if (isSupercell) {
             a.setT(toFractional(cartesians[a.index], uc));
-            SimpleUnitCell.unitizeDim(3, a);
+            uc.unitize(a);
             //          if (mtet != null)
             //            mtet.rotate(a);
           }
@@ -337,7 +339,7 @@ public class SpaceGroupFinder {
             bsPoints.clear(i);
             //          if (iop == 15 && i == 46)
             //System.out.println("????");
-            int j = findEquiv(iop, op, i, bsPoints, pt, true);
+            int j = findEquiv(uc, iop, op, i, bsPoints, pt, true);
             if (j < 0 && sg == null) {
               System.out.println(
                   "failed op " + iop + " for atom " + i + " " + atoms[i].name
@@ -416,7 +418,7 @@ public class SpaceGroupFinder {
               //System.out.println("test3 uchop= " + uncheckedOps.cardinality() + " " + uncheckedOps);
               //System.out.println("test4 opsc= " + opsChecked.cardinality() + " " + opsChecked);
               bsPoints.andNot(targets);
-              if (!checkBasis(uncheckedOps, bsPoints, targets)) {
+              if (!checkBasis(uc, uncheckedOps, bsPoints, targets)) {
                 isg = 0;
               }
               //System.out.println("test2b targets " + targets.cardinality() + " " + targets);
@@ -472,7 +474,7 @@ public class SpaceGroupFinder {
     return map;
   }
 
-  private static SymmetryInterface createCompatibleUnitCell(SpaceGroup sg,
+  private SymmetryInterface createCompatibleUnitCell(SpaceGroup sg,
                                                             double[] params) {
     SymmetryInterface sym;
     int n = PT.parseInt(sg.intlTableNumber);
@@ -530,7 +532,7 @@ public class SpaceGroupFinder {
     }
     if (isHexagonal(n, null)) {
       b = a;
-      if (sg.axisChoice == 'r' ? SimpleUnitCell.isRhombohedral(params)
+      if (sg.axisChoice == 'r' ? SimpleUnitCell.isRhombohedral(params, slop)
           : isHexagonal(-1, params)) {
         // nothing to do
       } else  if (sg.axisChoice == 'r') {
@@ -572,13 +574,13 @@ public class SpaceGroupFinder {
         break;
       }
     }
-    sym = new Symmetry().setUnitCell(new double[] { a, b, c, alpha, beta, gamma }, false);
+    sym = new Symmetry().setUnitCell(new double[] { a, b, c, alpha, beta, gamma }, false, slop);
     sym.setSpaceGroupTo(sg);
     return sym;
   }
 
-  private static boolean isHexagonal(int n, double[] params) {
-    return (n < 1 ? SimpleUnitCell.isHexagonal(params)
+  private boolean isHexagonal(int n, double[] params) {
+    return (n < 1 ? SimpleUnitCell.isHexagonal(params, slop)
         : n >= 143 && n <= 194);
   }
 
@@ -617,7 +619,7 @@ public class SpaceGroupFinder {
 //System.out.println("----");
   }
 
-  private boolean checkBasis(BS uncheckedOps, BS bsPoints, BS targets) {
+  private boolean checkBasis(SymmetryInterface uc, BS uncheckedOps, BS bsPoints, BS targets) {
 	  
     int n = uncheckedOps.cardinality();
     if (n == 0)
@@ -633,7 +635,7 @@ public class SpaceGroupFinder {
       bs.or(bsPoints);
       SymmetryOperation op = getOp(iop);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        int j = findEquiv(-1, op, i, bs, pt, false);
+        int j = findEquiv(uc, -1, op, i, bs, pt, false);
         if (j < 0)
           return false;
         if (i != j) {
@@ -728,7 +730,7 @@ public class SpaceGroupFinder {
         //       _space_group_IT_number     62
 
 
-        isTri = (absame && approx000(params[5] - 120));
+        isTri = (absame && approx0(params[5] - 120));
         if (params[5] == 90) { // gamma
           isCubic = (absame && params[1] == params[2]);
           isTet = (!isCubic && absame);
@@ -1070,35 +1072,36 @@ public class SpaceGroupFinder {
     return uc;
   }
 
-  private static boolean approx0(double f) {
-    return (Math.abs(f) < SLOP001);
+  private boolean approx0(double f) {
+    return (Math.abs(f) < slop);
   }
 
-  private static boolean approx000(double f) {
-    return (Math.abs(f) < SLOP0001);
-  }
+  private int approxInt(double finv) {
+//  int i = (int) Math.round (finv); // was 
+  int i = (int) (finv + slop);
+  return (approx0(finv - i) ? i : 0);
+}
 
-  private static boolean approx0014(double f) {
-    return (Math.abs(f) < SLOP0014);
-  }
 
+//  private static boolean approx000(double f) {
+//    return (Math.abs(f) < SLOP0001);
+//  }
+//
+//  private static boolean approx0014(double f) {
+//    return (Math.abs(f) < SLOP0014);
+//  }
+//
 //  private boolean approx01(double f) {
 //    return (Math.abs(f) < SLOP02);
 //  }
 //
-  private static int approxInt(double finv) {
-//    int i = (int) Math.round (finv); // was 
-    int i = (int) (finv + SLOP001);
-    return (approx0(finv - i) ? i : 0);
-  }
-
   @SuppressWarnings("unused")
-  private int findEquiv(int iop, SymmetryOperation op, int i, BS bsPoints,
+  private int findEquiv(SymmetryInterface uc, int iop, SymmetryOperation op, int i, BS bsPoints,
                         P3d pt, boolean andClear) {
     SGAtom a = atoms[i];
     pt.setT(a);
     op.rotTrans(pt);
-    SimpleUnitCell.unitizeDim(3, pt);
+    uc.unitize(pt);
     if (pt.distanceSquared(a) == 0) {
       return i;
     }
@@ -1138,9 +1141,9 @@ public class SpaceGroupFinder {
    * @return true if a lattice shift
    */
   private boolean latticeShift(P3d a, P3d b) {
-    boolean is1 = (approx0014(Math.abs(a.x - b.x) - 1)
-        || approx0014(Math.abs(a.y - b.y) - 1)
-        || approx0014(Math.abs(a.z - b.z) - 1));
+    boolean is1 = (approx0(Math.abs(a.x - b.x) - 1)
+        || approx0(Math.abs(a.y - b.y) - 1)
+        || approx0(Math.abs(a.z - b.z) - 1));
     if (is1) {
       //System.out.println("was 1 for " + a + b); 
       // Heulandite, Jalpaite, Letovicite, Merrillite, 

@@ -446,7 +446,7 @@ public class Symmetry implements SymmetryInterface {
     double[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo,
         unitCellParams, null);
     if (params != null) {
-      setUnitCell(params, modelAuxiliaryInfo.containsKey("jmolData"));
+      setUnitCell(params, modelAuxiliaryInfo.containsKey("jmolData"), Double.NaN);
       unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo
           .get("moreUnitCellInfo");
       modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
@@ -471,10 +471,10 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public SymmetryInterface setUnitCell(double[] unitCellParams,
-                                       boolean setRelative) {
+                                       boolean setRelative, double slop) {
     if (unitCellParams == null)
       unitCellParams = new double[] { 1, 1, 1, 90, 90, 90 };
-    unitCell = UnitCell.fromParams(unitCellParams, setRelative);
+    unitCell = UnitCell.fromParams(unitCellParams, setRelative, slop);
     return this;
   }
 
@@ -563,7 +563,7 @@ public class Symmetry implements SymmetryInterface {
     if (parBorU == null)
       return null;
     if (unitCell == null)
-      unitCell = UnitCell.fromParams(new double[] { 1, 1, 1, 90, 90, 90 }, true);
+      unitCell = UnitCell.fromParams(new double[] { 1, 1, 1, 90, 90, 90 }, true, SimpleUnitCell.SLOPSP);
     return unitCell.getTensor(vwr, parBorU);
   }
 
@@ -782,7 +782,7 @@ public class Symmetry implements SymmetryInterface {
     }
     SymmetryInterface cellInfo = null;
     if (cellParams != null) {
-      cellInfo = new Symmetry().setUnitCell(cellParams, false);
+      cellInfo = new Symmetry().setUnitCell(cellParams, false, Double.NaN);
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0,
         null, null, null, 0, -1, isFull, isForModel, 0, cellInfo, null);
@@ -1136,7 +1136,7 @@ public class Symmetry implements SymmetryInterface {
       WyckoffFinder w = wyckoffFinder.getWyckoffFinder(vwr,
           sg.intlTableNumberFull);
       if (letter == null) {
-        return w.getWyckoffPosition(p);
+        return w.getWyckoffPosition(unitCell, p);
       }
       if (w.findPositionFor(p, letter) == null)
         return null;
@@ -1267,7 +1267,6 @@ public class Symmetry implements SymmetryInterface {
     }
   }
   
-  @SuppressWarnings("unchecked")
   private Object getResource(Viewer vwr, String resource) {
     try {
       BufferedReader r = FileManager.getBufferedReaderForResource(vwr, this,
@@ -1280,6 +1279,21 @@ public class Symmetry implements SymmetryInterface {
       System.err.println(e.getMessage());
     }
     return null;
+  }
+
+  @Override
+  public double getCellWeight(P3d pt) {
+    return unitCell.getCellWeight(pt);
+  }
+
+  @Override
+  public double getPrecision() {
+    return unitCell.getPrecision();
+  }
+
+  @Override
+  public void setPrecision(double prec) {
+    unitCell.setPrecision(prec);
   }
 
 }

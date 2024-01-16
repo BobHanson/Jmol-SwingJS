@@ -113,6 +113,10 @@ public final class ModelLoader {
     info.put("loadScript", loadScript);
     initializeInfo(adapter.getFileTypeName(asc).toLowerCase().intern(), info);
     createModelSet(adapter, asc, bsNew);
+    if (info.get("lowPrecision") != null) {
+      vwr.setBooleanPropertyTok("doublePrecision", T.doubleprecision, false);      
+    }
+    
     if (jbr != null)
       jbr.setLoader(null);
     jbr = null;
@@ -978,9 +982,9 @@ public final class ModelLoader {
       }
     }
     Atom atom = ms.addAtom(iModel, nullGroup, atomicAndIsotopeNumber, atomName,
-        atomType, atomSerial, atomSeqID, atomSite, xyz, dxyz, radius, vib,
-        formalCharge, partialCharge, occupancy, bfactor, tensors, isHetero,
-        specialAtomID, atomSymmetry, bondRadius);
+        atomType, atomSerial, atomSeqID, atomSite, xyz, radius, vib, formalCharge,
+        partialCharge, occupancy, bfactor, tensors, isHetero, specialAtomID,
+        atomSymmetry, bondRadius);
     atom.altloc = alternateLocationID;
     return atom;
   }
@@ -1679,7 +1683,7 @@ public final class ModelLoader {
         if (Logger.debugging)
           Logger.debug("atomIndex = " + i + ": " + atoms[i]
               + " --> (" + xyz.x + "," + xyz.y + "," + xyz.z);
-        modelSet.setPrecisionCoord(i, xyz, true);
+//        modelSet.setPrecisionCoord(i, xyz, true);
         continue;
       }
       xyz.setT(pt);

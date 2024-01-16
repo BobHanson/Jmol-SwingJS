@@ -88,7 +88,7 @@ public class XtalSymmetry {
   // expands to 26 for cartesianToFractional matrix as array (PDB) and supercell
 
   private double symmetryRange;
-  private double packingError;
+  private double packingRange;
   private String filterSymop;
   private Set<String> bondsFound = new HashSet<String>();
   
@@ -169,12 +169,10 @@ public class XtalSymmetry {
     doCentroidUnitCell = acr.doCentroidUnitCell;
     centroidPacked = acr.centroidPacked;
     filterSymop = acr.filterSymop;
-    //if (acr.strSupercell == null)
-      //setSupercellFromPoint(acr.ptSupercell);
   }
 
   private void setUnitCell(double[] info, M3d matUnitCellOrientation,
-                                   P3d unitCellOffset) {
+                                   P3d unitCellOffset, double precision) {
     unitCellParams = new double[info.length];
     //this.unitCellOffset = unitCellOffset;
     for (int i = 0; i < info.length; i++)
@@ -189,7 +187,7 @@ public class XtalSymmetry {
       trajectoryUnitCells.addLast(unitCellParams);
     }
     asc.setGlobalBoolean(JC.GLOBAL_UNITCELLS);
-    getSymmetry().setUnitCell(unitCellParams, false);
+    getSymmetry().setUnitCell(unitCellParams, false, precision);
     // we need to set the auxiliary info as well, because 
     // ModelLoader creates a new symmetry object.
     if (unitCellOffset != null) {
@@ -219,7 +217,7 @@ public class XtalSymmetry {
       throws Exception {
     asc.setCoordinatesAreFractional(acr.iHaveFractionalCoordinates);
     setUnitCell(acr.unitCellParams, acr.matUnitCellOrientation,
-        acr.unitCellOffset);
+        acr.unitCellOffset, readerSymmetry.getPrecision());
     setAtomSetSpaceGroupName(acr.sgName);
     setSymmetryRange(acr.symmetryRange);
     if (acr.doConvertToFractional || acr.fileCoordinatesAreFractional) {
@@ -235,7 +233,7 @@ public class XtalSymmetry {
         acr.doPreSymmetry();
         readerSymmetry = null;
       }
-      packingError = acr.packingError;
+      packingRange = (acr.packingRange == null ? 0.02 : acr.packingRange.doubleValue());
       if (doApplySymmetry) {
         if (readerSymmetry != null)
           setSpaceGroupFrom(readerSymmetry);
@@ -377,13 +375,11 @@ public class XtalSymmetry {
         pt0.setT(atoms[i]);
         symmetry.toCartesian(pt0, false);
         sym2.toFractional(pt0, false);
-        //        if (acr.fixJavaDouble)
-        //          PT.fixPtDoubles(pt0, PT.FRACTIONAL_PRECISION);
         if (acr.noPack
             ? !removePacking(ndims, pt0, minXYZ2.x, maxXYZ2.x, minXYZ2.y,
-                maxXYZ2.y, minXYZ2.z, maxXYZ2.z, packingError)
+                maxXYZ2.y, minXYZ2.z, maxXYZ2.z, packingRange)
             : !isWithinCell(ndims, pt0,  minXYZ2.x, maxXYZ2.x, minXYZ2.y,
-                maxXYZ2.y, minXYZ2.z, maxXYZ2.z,  packingError))
+                maxXYZ2.y, minXYZ2.z, maxXYZ2.z,  packingRange))
           bsAtoms.clear(i);
 
       }
@@ -447,7 +443,7 @@ public class XtalSymmetry {
       symmetry = null;
       symmetry = getSymmetry();
       setUnitCell(new double[] { 0, 0, 0, 0, 0, 0, va.x, va.y, va.z, vb.x, vb.y,
-          vb.z, vc.x, vc.y, vc.z }, null, offset);
+          vb.z, vc.x, vc.y, vc.z }, null, offset, symmetry.getPrecision());
       setAtomSetSpaceGroupName(
           oabc == null || supercell == null ? "P1" : "cell=" + supercell);
       symmetry.setSpaceGroup(doNormalize);
@@ -501,14 +497,14 @@ public class XtalSymmetry {
       for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
           .nextSetBit(i + 1)) {
         if (!removePacking(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
-            maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
+            maxXYZ.y, minXYZ.z, maxXYZ.z, packingRange))
           bs.clear(i);
       }
     } else {
       for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
           .nextSetBit(i + 1)) {
       if (!isWithinCell(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
-          maxXYZ.y, minXYZ.z, maxXYZ.z, packingError))
+          maxXYZ.y, minXYZ.z, maxXYZ.z, packingRange))
         bs.clear(i);
     }
   }
@@ -541,9 +537,9 @@ public class XtalSymmetry {
       pa.setT(oabc[1]);
       pb.setT(oabc[2]);
       pc.setT(oabc[3]);
-      pa.scale(packingError);
-      pb.scale(packingError);
-      pc.scale(packingError);
+      pa.scale(packingRange);
+      pb.scale(packingRange);
+      pc.scale(packingRange);
     }
 
     // account for lattice specification
@@ -804,7 +800,6 @@ public class XtalSymmetry {
         ? new int[n]
         : null);
     int[] unitCells = new int[nCells];
-
     for (int tx = minXYZ.x; tx < maxXYZ.x; tx++) {
       for (int ty = minXYZ.y; ty < maxXYZ.y; ty++) {
         for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
@@ -834,8 +829,6 @@ public class XtalSymmetry {
               sym.toUnitCellRnd(c, ptOffset);
               pttemp.setT(c);
               sym.toFractional(pttemp, false);
-//              if (acr.fixJavaDouble)
-//                PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
               // when bsAtoms != null, we are
               // setting it to be correct for a 
               // second unit cell -- the supercell
@@ -922,7 +915,6 @@ public class XtalSymmetry {
     // and we return all atoms within a cubical volume around the 
     // target set. The user can later use select within() to narrow that down
     // This saves immensely on time.
-
     double range2 = symmetryRange * symmetryRange;
     boolean checkRangeNoSymmetry = (symmetryRange < 0);
     boolean checkRange111 = (symmetryRange > 0);
@@ -988,7 +980,7 @@ public class XtalSymmetry {
         } else {
           sym = ms.getAtomSymmetry(a, this.symmetry);
           sym.newSpaceGroupPoint(a, iSym, null, transX, transY, transZ, pttemp);
-          // COmmensurate structures may  a symmetry operator
+          // COmmensurate structures may use a symmetry operator
           // to changes space groups.
           code = sym.getSpaceGroupOperationCode(iSym);
           if (code != null) {
@@ -998,18 +990,14 @@ public class XtalSymmetry {
               finalizeSymmetry(sym);
           }
         }
-//        if (acr.fixJavaDouble)
-//          PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
         P3d c = P3d.newP(pttemp); // cartesian position
         sym.toCartesian(c, false);
         if (doPackUnitCell) {
           sym.toUnitCellRnd(c, ptOffset);
           pttemp.setT(c);
           sym.toFractional(pttemp, false);
-//          if (acr.fixJavaDouble)
-//            PT.fixPtDoubles(pttemp, PT.FRACTIONAL_PRECISION);
           if (!isWithinCell(ndims, pttemp, minXYZ0.x, maxXYZ0.x, minXYZ0.y,
-              maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingError))
+              maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingRange))
             continue;
         }
         if (checkSymmetryMinMax)
@@ -1129,7 +1117,6 @@ public class XtalSymmetry {
 
           int ia1 = atomMap[atom1.atomSite];
           int ia2 = atomMap[atom2.atomSite];
-          //          double d = 0;
           if (ia1 > ia2) {
             int i = ia1;
             ia1 = ia2;

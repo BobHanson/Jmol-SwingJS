@@ -30,11 +30,6 @@ public class WyckoffFinder {
     String xyz;
     private static V3d vtemp1 = new V3d();
 
-    private static P3d unitize(P3d p) {
-      SimpleUnitCell.unitizeDim(3, p);
-      return p;
-    }
-    
     public WyckoffPos(String xyz) {
       create(xyz);
     }
@@ -67,7 +62,8 @@ public class WyckoffFinder {
         v2 = ptFor(p, 1d,1.27d,1.64d);
         v2.sub2(v2, v1);
         v2.normalize();
-        point = unitize(P3d.newP(v1));
+        point = P3d.newP(v1);
+        SimpleUnitCell.unitizeDimRnd(3, point, SimpleUnitCell.SLOPDP);
         line = V3d.newV(v2);
         break;
       case 3:
@@ -185,21 +181,22 @@ public class WyckoffFinder {
     //      
     //    }
 
-    boolean contains(P3d p, P3d[] centerings) {
-      if (containsPt(p))
+    boolean contains(UnitCell uc, P3d p, P3d[] centerings) {
+      double slop = uc.getPrecision();
+      if (containsPt(p, slop))
         return true;
       P3d pc = new P3d();
       if (centerings != null)
         for (int i = centerings.length; --i >= 0;) {
           pc.add2(p, centerings[i]);
-          unitize(pc);
-          if (containsPt(pc))
+          uc.unitize(pc);
+          if (containsPt(pc, slop))
             return true;
         }
       return false;
     }
     
-    private boolean containsPt(P3d p) {      
+    private boolean containsPt(P3d p, double slop) {      
       double d = 1;
       switch (type) {
       case TYPE_POINT:
@@ -214,7 +211,7 @@ public class WyckoffFinder {
         d = MeasureD.distanceToPlane(plane, p);
         break;
       }
-      return approx(d) == 0;
+      return approx0(d, slop);
     }
 
     void set(P3d p) {      
@@ -232,8 +229,8 @@ public class WyckoffFinder {
       }
     }
 
-    private static double approx(double d) {
-      return PT.approxD(d, 1000); // close enough?
+    private static boolean approx0(double d, double slop) {
+      return (Math.abs(d) < slop);
     }
 
   }
@@ -250,7 +247,7 @@ public class WyckoffFinder {
   /**
    * effectively static, as this is only accessed from the static helper instance
    * 
-   * @param vwr
+  * @param vwr
    * @param sgname
    * @return helper
    */
@@ -300,7 +297,7 @@ public class WyckoffFinder {
   }
 
   @SuppressWarnings("unchecked")
-  String getWyckoffPosition(P3d p) {
+  String getWyckoffPosition(UnitCell uc, P3d p) {
     if (positions == null)
       return "?";
     for (int i = positions.size(); --i >= 0;) {
@@ -311,7 +308,7 @@ public class WyckoffFinder {
       }
       Lst<Object> coords = (Lst<Object>) map.get("coord");
       for (int c = 0, n = coords.size(); c < n; c++) {
-        if (getWyckoffCoord(coords, c).contains(p, this.centerings)) {
+        if (getWyckoffCoord(coords, c).contains(uc, p, centerings)) {
           return (String) map.get("label");    
         }
       }      
@@ -324,8 +321,10 @@ public class WyckoffFinder {
     if (positions == null)
       return null;
     for (int i = positions.size(); --i >= 0;) {
+      @SuppressWarnings("unchecked")
       Map<String, Object> map = (Map<String, Object>) positions.get(i);
       if (map.get("label").equals(letter)) {
+        @SuppressWarnings("unchecked")
         Lst<Object> coords = (Lst<Object>) map.get("coord");
         if (coords != null)
           getWyckoffCoord(coords, 0).set(p);

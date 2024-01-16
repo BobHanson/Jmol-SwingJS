@@ -1086,6 +1086,8 @@ public class ScriptEval extends ScriptExpr {
     }
     String movieScript = "";
     if (("\n" + data[1]).indexOf("\nJmolManifest.txt\n") >= 0) {
+      // this is a PNGJ or JMOL file.
+      //
       String path;
       if (filename.endsWith(".all.pngj") || filename.endsWith(".all.png")) {
         path = "|state.spt";
@@ -5799,7 +5801,7 @@ public class ScriptEval extends ScriptExpr {
         SymmetryInterface uc;
         uc = vwr.getCurrentUnitCell();
         if (uc == null) {
-          uc = vwr.getSymTemp().setUnitCell(null, false);
+          uc = vwr.getSymTemp().setUnitCell(null, false, Double.NaN);
         }
         q = uc.getQuaternionRotation(abc);
         if (q == null)

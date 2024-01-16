@@ -32,6 +32,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.script.SV;
+import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
@@ -157,7 +158,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public Object validation, dssr;
   protected boolean isConcatenated;
   public String addedData, addedDataKey;
-  public boolean fixJavaDouble = false;//true; -- removed in Jmol 15.32.53 - all high precision
+//  /**
+//   * This field has no significance for Jmol-SwingJS
+//   */
+//  public boolean floatifyJavaDouble = false;//true; -- removed in Jmol 15.32.53 - all high precision
   public Map<String, Object> thisBiomolecule;
   public Lst<M4d> lstNCS;
 
@@ -213,10 +217,15 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected P3d ptSupercell;
   protected boolean mustFinalizeModelSet;
   protected boolean forcePacked;
-  public double packingError = 0.02;
+  public Number packingRange;
+  protected double cellSlop = SimpleUnitCell.SLOPSP; // initially just single precision
   protected boolean rotateHexCell; // aflow CIF reader only
   protected boolean isPrimitive; // VASP POSCAR reasder
   public int modDim; // modulation dimension
+
+  protected boolean lowPrecision;
+  private boolean highprecision0 = Viewer.isHighPrecision;
+
 
 
   // private state variables
@@ -461,20 +470,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         }
       }
     }
-    if (!fixJavaDouble)
-      setHighPrecision();
     setLoadNote();
   }
 
   /////////////////////////////////////////////////////////////////////////////////////
-
-  protected void setHighPrecision() {
-    if (!fixJavaDouble)
-      return;
-    fixJavaDouble = false;
-    asc.setInfo("highPrecision", Boolean.TRUE);
-    appendLoadNote("Structure read is high precision" + (Viewer.isSwingJS && !Viewer.isJS? "" : "! Use JmolD.jar for full precision."));
-  }
 
   protected String setLoadNote() {
     String s = loadNote.toString();
@@ -501,6 +500,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   private Object finish() {
+    if (Viewer.isDoublePrecision != highprecision0)
+      vwr.setBooleanPropertyTok("doubleprecision",  T.doubleprecision, highprecision0);
     String s = (String) htParams.get("loadState");
     asc.setInfo("loadState",
         s == null ? "" : s);
@@ -563,15 +564,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (htParams.containsKey("stateScriptVersionInt"))
       stateScriptVersionInt = ((Integer) htParams.get("stateScriptVersionInt"))
           .intValue();
-    Object o = htParams.get("packingError");
-    if (o != null)
-      packingError = ((Double) o).doubleValue();
-    else if (htParams.get("highPrecision") != null) {
-      // earlier versions were not fully JavaScript compatible
-      // because XtalSymmetry.isWithinUnitCell was giving different answers
-      // for doubles (Java) as for doubles (JavaScript).
-      fixJavaDouble = false;
-    }
+    packingRange = (Number) htParams.get("packingRange");
     merging = htParams.containsKey("merging");
     getHeader = htParams.containsKey("getHeader");
     isSequential = htParams.containsKey("isSequential");
@@ -589,7 +582,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     setFilter(null);
     fillRange = htParams.get("fillRange");
     paramsLattice = (T3d) htParams.get("lattice");
-    o = htParams.get("supercell");
+    Object o = htParams.get("supercell");
     // noPack does not work as advertised
     noPack = checkFilterKey("NOPACK");
     if (strSupercell != null && !noPack) {
@@ -701,6 +694,33 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     isConcatenated = htParams.containsKey("concatenate");
   }
 
+  /**
+   * Called by PWMAT ALWAYS and CIFReader as well if a double-precision value for alpha is found.
+   * @param isHigh TODO
+   */
+  protected void setPrecision(boolean isHigh) {
+	    if (lowPrecision)
+	        return;
+    vwr.setBooleanProperty("doubleprecision", true);
+    if (Viewer.isHighPrecision && isHigh) {
+      cellSlop = SimpleUnitCell.SLOPDP;
+      if (packingRange == null)
+        packingRange = Double.valueOf(cellSlop);
+      asc.setInfo("highPrecision", Boolean.TRUE);
+    } else {
+      cellSlop = SimpleUnitCell.SLOPSP;
+      lowPrecision = true;
+      // not setting the packing range, because this must be consistent with previous versions (0.02)
+    }
+    if (symmetry != null)
+      symmetry.setPrecision(cellSlop);
+    if (isHigh)
+    appendLoadNote("Structure read has high precision" + (Viewer.isHighPrecision
+        ? ""
+        : ", but this version of Jmol uses float precision.\nUse JmolD.jar or JavaScript for full precision."));
+    
+  }
+
   protected void initializeSymmetryOptions() {
     latticeCells = new int[4];
     doApplySymmetry = false;
@@ -771,6 +791,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       for (int i = SimpleUnitCell.PARAM_COUNT; --i >= 0;)
         unitCellParams[i] = Double.NaN;
       unitCellParams[SimpleUnitCell.PARAM_SCALE] = latticeScaling;
+      unitCellParams[SimpleUnitCell.PARAM_SLOP] = cellSlop;      
       symmetry = null;
     }
     if (!ignoreFileSpaceGroupName)
@@ -911,9 +932,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   private boolean checkUnitCell(int n) {
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++) {
       if (Double.isNaN(unitCellParams[i]))
         return false;
+    }
     if (n == SimpleUnitCell.PARAM_M4+16 && unitCellParams[0] == 1) {
       if (unitCellParams[1] == 1 
           && unitCellParams[2] == 1 
@@ -954,7 +976,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (!iHaveUnitCell)
       return null;
     if (symmetry == null) {
-      getNewSymmetry().setUnitCell(unitCellParams, false);
+      getNewSymmetry().setUnitCell(unitCellParams, false, cellSlop);
       checkUnitCellOffset();
     }
     if (symmetry == null) // cif file with no symmetry triggers exception on LOAD {1 1 1}
@@ -1083,7 +1105,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     doReadMolecularOrbitals = !checkFilterKey("NOMO");
     useAltNames = checkFilterKey("ALTNAME");
     reverseModels = checkFilterKey("REVERSEMODELS");
-    allow_a_len_1 =checkFilterKey("TOPOS");
+    allow_a_len_1 = checkFilterKey("TOPOS");
     slabXY = checkFilterKey("SLABXY");
     polymerX = !slabXY && checkFilterKey("POLYMERX");
     noHydrogens = checkFilterKey("NOH");
@@ -1092,6 +1114,12 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
     if (filter == null)
       return;
+
+    if (checkFilterKey("LOWPRECISION")) {
+      // adding filter "lowPrecision" overrides a JavaScript setting of set HIGHPRECISION
+      lowPrecision = true;
+      //floatifyJavaDouble = true;
+    }
     if (checkFilterKey("HETATM")) {
       filterHetero = true;
       filter = PT.rep(filter, "HETATM", "HETATM-Y");
@@ -1102,12 +1130,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       filter = PT.rep(filter, "ATOM", "HETATM-N");
       filterCased = PT.rep(filterCased, "ATOM", "HETATM-N");
     }
-    
+
     // can't use getFilter() here because form includes a semicolon:
     // cell=a+b,a-b,c;0,1/2,1/2 
     // also allows for NOPACKCELL by documentation 14.0
-    if (checkFilterKey("CELL="))  
-      strSupercell = filter.substring(filter.indexOf("CELL=") + 5).toLowerCase(); // must be last filter option
+    if (checkFilterKey("CELL="))
+      strSupercell = filter.substring(filter.indexOf("CELL=") + 5)
+          .toLowerCase(); // must be last filter option
     nameRequired = PT.getQuotedAttribute(filter, "NAME");
     if (nameRequired != null) {
       if (nameRequired.startsWith("'"))
@@ -1118,7 +1147,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       filter0 = filter = PT.rep(filter, "NAME=", "");
     }
     filterAtomName = checkFilterKey("*.") || checkFilterKey("!.");
-    if (filter.startsWith("_") || filter.startsWith("!_") || filter.indexOf(";_") >= 0)
+    if (filter.startsWith("_") || filter.startsWith("!_")
+        || filter.indexOf(";_") >= 0)
       filterElement = checkFilterKey("_");
 
     filterGroup3 = checkFilterKey("[");
@@ -1144,8 +1174,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       htParams.put("bsFilter", bsFilter);
       filter = (";" + filter + ";").replace(',', ';');
       String s = getFilter("LATTICESCALING=");
-      if (s != null && unitCellParams.length > SimpleUnitCell.PARAM_SCALE) 
-        unitCellParams[SimpleUnitCell.PARAM_SCALE] = latticeScaling = parseDoubleStr(s); 
+      if (s != null && unitCellParams.length > SimpleUnitCell.PARAM_SCALE)
+        unitCellParams[SimpleUnitCell.PARAM_SCALE] = latticeScaling = parseDoubleStr(
+            s);
       s = getFilter("SYMOP=");
       if (s != null)
         filterSymop = " " + s + " ";
@@ -1159,7 +1190,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
           filter2Cased = ";" + filter.substring(ipt).trim();
         }
         filter1 = filter1Cased.toUpperCase();
-        filter2 = (filter2Cased.length() == 0 ? null : filter2Cased.toUpperCase());
+        filter2 = (filter2Cased.length() == 0 ? null
+            : filter2Cased.toUpperCase());
       }
     }
   }
@@ -1352,7 +1384,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
     if (mustFractionalize) {
       if (!symmetry.haveUnitCell())
-        symmetry.setUnitCell(unitCellParams, false);
+        symmetry.setUnitCell(unitCellParams, false, Double.NaN);
       symmetry.toFractional(atom, false);
       iHaveFractionalCoordinates = true;
     }
@@ -1447,7 +1479,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    * skipping blank lines in the process
    * 
    * @param data
-   * @param minLineLen TODO
+   * @param minLineLen
    * @throws Exception
    */
   protected void fillDataBlock(String[][] data, int minLineLen) throws Exception {
@@ -1544,9 +1576,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    *        an array either null or indicating exactly which atoms get the
    *        frequencies (used by CrystalReader)
    * @param minLineLen
-   *        TODO
    * @param data
-   *        TODO
    * @throws Exception
    */
   protected void fillFrequencyData(int iAtom0, int ac, int modelAtomCount,

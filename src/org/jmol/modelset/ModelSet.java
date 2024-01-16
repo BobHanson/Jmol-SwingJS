@@ -56,7 +56,6 @@ import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import org.jmol.util.Point3fi;
 import org.jmol.util.Rectangle;
-import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
 import org.jmol.util.Vibration;
 import org.jmol.viewer.JC;
@@ -977,8 +976,8 @@ public class ModelSet extends BondCollection {
       // hmm. atom1.group will not be expanded, though...
       // something like within(group,...) will not select these atoms!
       Atom atom2 = addAtom(modelIndex, atom1.group, 1, "H" + n, null, n,
-          atom1.getSeqID(), n, pts[i], null, Double.NaN, null, 0, 0, 100,
-          Double.NaN, null, false, (byte) 0, null, Double.NaN);
+          atom1.getSeqID(), n, pts[i], Double.NaN, null, 0, 0, 100, Double.NaN,
+          null, false, (byte) 0, null, Double.NaN);
 
       atom2.setMadAtom(vwr, rd);
       bs.set(atom2.i);
@@ -1291,23 +1290,36 @@ public class ModelSet extends BondCollection {
     if (useBoundBox && getDefaultBoundBox() != null)
       return defaultBBox.getMaxDim() / 2 * 1.2d;
     double maxRadius = 0;
+    if (ac == 0)
+      return 10;
+    modelIndex = -2;
     for (int i = ac; --i >= 0;) {
       Atom atom = at[i];
       if (isDeleted(atom))
         continue;
       if (isJmolDataFrameForAtom(atom)) {
+    	  // skip these
         modelIndex = atom.mi;
         while (i >= 0 && at[i] != null && at[i].mi == modelIndex)
           i--;
+        i++;
         continue;
+      } else if (atom.mi != modelIndex){
+        modelIndex = atom.mi;
+        SymmetryInterface uc = (am[modelIndex].isBioModel ? null : getUnitCell(modelIndex));
+        if (uc != null) {
+          P3d[] pts = uc.getUnitCellVerticesNoOffset();
+          P3d off = uc.getCartesianOffset();
+          for (int j = 0; j < 8; j++) {
+            ptTemp.setT(pts[j]);
+            ptTemp.add(off);
+            maxRadius = Math.max(maxRadius, center.distance(ptTemp));
+          }
+        }
       }
-      atom = at[i];
-      if (isDeleted(atom))
-        continue;
-      double distAtom = center.distance(atom);
-      double outerVdw = distAtom + getRadiusVdwJmol(atom);
-      if (outerVdw > maxRadius)
-        maxRadius = outerVdw;
+      double d = center.distance(atom) + getRadiusVdwJmol(atom);
+      if (d > maxRadius)
+        maxRadius = d;
     }
     return (maxRadius == 0 ? 10 : maxRadius);
   }
@@ -2252,30 +2264,6 @@ public class ModelSet extends BondCollection {
         if (!boxInfo.isWithin(at[i]))
           bs.clear(i);
       return bs;
-    case T.cell:
-      // select cell=555 (NO NOT an absolute quantity)
-      // select cell=1505050
-      // select cell=1500500500
-      bs = new BS();
-      P3d pt = (P3d) specInfo;
-
-      SymmetryInterface uc = vwr.getSymTemp();
-      for (int mi = -1, i = ac; --i >= 0;) {
-        if (isDeleted(at[i]))
-          continue;
-        int mia = at[i].getModelIndex();
-        if (mi != mia) {
-          mi = mia;
-          uc = getUnitCell(mi);
-        }
-        if (uc == null)
-          continue;
-        ptTemp.setT(at[i]);
-        uc.toFractional(ptTemp, false);
-        if (uc.isWithinUnitCell(ptTemp, pt.x, pt.y, pt.z))
-          bs.set(i);
-      }
-      return bs;
     case T.centroid:
       // select centroid=555  -- like cell=555 but for whole molecules
       // if it  is one full molecule, then return the EMPTY bitset      
@@ -2330,6 +2318,30 @@ public class ModelSet extends BondCollection {
     case T.symmetry:
       return BSUtil
           .copy(bsSymmetry == null ? bsSymmetry = BS.newN(ac) : bsSymmetry);
+    case T.cell:
+      // select cell=555 (NO NOT an absolute quantity)
+      // select cell=1505050
+      // select cell=1500500500
+      bs = new BS();
+      P3d pt = (P3d) specInfo;
+
+      SymmetryInterface uc = vwr.getSymTemp();
+      for (int mi = -1, i = ac; --i >= 0;) {
+        if (isDeleted(at[i]))
+          continue;
+        int mia = at[i].getModelIndex();
+        if (mi != mia) {
+          mi = mia;
+          uc = getUnitCell(mi);
+        }
+        if (uc == null)
+          continue;
+        ptTemp.setT(at[i]);
+        uc.toFractional(ptTemp, false);
+        if (uc.isWithinUnitCell(ptTemp, pt.x, pt.y, pt.z))
+          bs.set(i);
+      }
+      return bs;
     case T.unitcell:
       // select UNITCELL (a relative quantity)
       // this one is [0, 1)
@@ -3282,9 +3294,6 @@ public class ModelSet extends BondCollection {
       bfactor100s = AU.arrayCopyShort(bfactor100s, newLength);
     if (partialCharges != null)
       partialCharges = AU.arrayCopyD(partialCharges, newLength);
-    if (precisionCoords != null)
-      precisionCoords = AU.arrayCopyP3d(precisionCoords, newLength);
-    
     if (atomTensorList != null)
       atomTensorList = (Object[][]) AU.arrayCopyObject(atomTensorList,
           newLength);
@@ -3302,10 +3311,10 @@ public class ModelSet extends BondCollection {
 
   public Atom addAtom(int modelIndex, Group group, int atomicAndIsotopeNumber,
                       String atomName, String atomType, int atomSerial,
-                      int atomSeqID, int atomSite, P3d xyz, P3d dxyz,
-                      double radius, V3d vib, int formalCharge,
-                      double partialCharge, double occupancy, double bfactor,
-                      Lst<Object> tensors, boolean isHetero, byte specialAtomID, BS atomSymmetry, double bondRadius) {
+                      int atomSeqID, int atomSite, P3d xyz, double radius,
+                      V3d vib, int formalCharge, double partialCharge,
+                      double occupancy, double bfactor, Lst<Object> tensors,
+                      boolean isHetero, byte specialAtomID, BS atomSymmetry, double bondRadius) {
     Atom atom = new Atom().setAtom(modelIndex, ac, xyz, radius, atomSymmetry,
         atomSite, (short) atomicAndIsotopeNumber, formalCharge, isHetero);
     am[modelIndex].act++;
@@ -3316,8 +3325,6 @@ public class ModelSet extends BondCollection {
       growAtomArrays(ac + 100); // only due to added hydrogens
 
     at[ac] = atom;
-    if (dxyz != null)
-      setPrecisionCoord(atom.i, dxyz, false);
     setBFactor(ac, bfactor, false);
     setOccupancy(ac, occupancy, false);
     setPartialCharge(ac, partialCharge, false);
@@ -4086,15 +4093,22 @@ public class ModelSet extends BondCollection {
     double[] wts = null;
     int i = bsAtoms.nextSetBit(0);
     int iModel = -1;
-    if (i >= 0 && getUnitCell(iModel = at[i].mi) != null) {
-      P3d pt = new P3d();
+    SymmetryInterface sym;
+    Atom a;
+    if (i >= 0 && (sym = getUnitCell(iModel = (a = at[i]).mi)) != null) {
+      sym = sym.getUnitCellMultiplied();
+      // single model only
       BS bs = getModelAtomBitSetIncludingDeleted(iModel, true);
       bs.and(bsAtoms);
       wts = new double[bsAtoms.cardinality()];
-      boolean isHighPrecision = vwr.getBoolean(T.doubleprecision);
-      for (int p = 0; i >= 0; i = bsAtoms.nextSetBit(i + 1))
-        wts[p++] = SimpleUnitCell.getCellWeight(at[i].getFractionalUnitCoordPt(
-            true, false, pt), isHighPrecision);
+      P3d pt = new P3d();
+      for (int p = 0; i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+        a = at[i];
+          pt.setT(a);
+          sym.toFractional(pt, false);
+          sym.unitize(pt);
+        wts[p++] = sym.getCellWeight(pt);
+      }
     }
     return wts;
   }

@@ -1748,6 +1748,8 @@ public class Viewer extends JmolViewer
     setBooleanProperty("_headless", headless);
     setStringProperty("_restrict", "\"" + access + "\"");
     setBooleanProperty("_useCommandThread", useCommandThread);
+    // default for legacy JavaScript and Java is false; for SwingJS Java/JavaScript true 
+    setBooleanPropertyTok("doubleprecision", T.doubleprecision, isDoublePrecision);
   }
 
   public String getExportDriverList() {
@@ -2193,6 +2195,7 @@ public class Viewer extends JmolViewer
    * @param type
    * @param name
    * @param bs
+   * @param points 
    * @return String or Quat or P3[]
    */
   public Object getOrientation(int type, String name, BS bs, P3d[] points) {
@@ -2564,6 +2567,8 @@ public class Viewer extends JmolViewer
       htParams.put("isSequential", Boolean.TRUE);
     if (g.legacyJavaFloat || g.doublePrecision)
       htParams.put("highPrecision", Boolean.TRUE);
+    if (!g.doublePrecision)
+      htParams.put("lowPrecision", Boolean.TRUE);
     htParams.put("stateScriptVersionInt",
         Integer.valueOf(stateScriptVersionInt));
     if (!htParams.containsKey("filter")) {
@@ -6636,7 +6641,7 @@ public class Viewer extends JmolViewer
     }
   }
 
-  private void setIntPropertyTok(String key, int tok, int value) {
+  public void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
 //    case T.pointgroupmaxatoms:
 //      g.pointGroupMaxAtoms = value;
@@ -6873,14 +6878,12 @@ public class Viewer extends JmolViewer
     }
   }
 
-  private void setBooleanPropertyTok(String key, int tok, boolean value) {
+  public void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
     case T.doubleprecision:
-      // 14.32.42
-      g.doublePrecision = value;
-      setBooleanPropertyTok("legacyJavaFloat", T.legacyjavafloat, value);
-      isHighPrecision = value;
+      value = true;
+      // not appicable to Jmol-SwingJS
       break;
     case T.checkcir:
       // 14.31.40
@@ -6925,8 +6928,8 @@ public class Viewer extends JmolViewer
       break;
     case T.legacyjavafloat:
       // 14.3.5
-      if (value || !g.doublePrecision)
-        g.legacyJavaFloat = value;
+      value = true;
+      // not applicable in Jmol-SwingJS
       break;
     case T.showmodvecs:
       // 14.3.5
@@ -9288,6 +9291,7 @@ public class Viewer extends JmolViewer
   public static final int MIN_XX = 128;
   public static final int MIN_MODELKIT = 256;
 
+
   /**
    * From the MINIMIZE command and other sources.
    * 
@@ -9298,6 +9302,7 @@ public class Viewer extends JmolViewer
    *        -1 --> use defaults
    * @param bsSelected
    * @param bsFixed
+   * @param bsInFrame 
    * @param rangeFixed
    * @param flags
    * @throws Exception
@@ -9546,7 +9551,9 @@ public class Viewer extends JmolViewer
 
   public static int nProcessors = 1;
 
-  public static boolean isHighPrecision;
+  public static boolean isHighPrecision = true;
+
+  public final static boolean isDoublePrecision = true;
 
   static {
     /**
@@ -10646,6 +10653,7 @@ public class Viewer extends JmolViewer
    * @param options
    *        if nonzero, a option, currently just T.offset, indicating that pt1
    *        is an {i j k} offset from cell 555
+   * @param opList 
    * @return string, Object[], or Lst<Object[]>
    */
   public Object getSymmetryInfo(int iatom, String xyz, int iOp, P3d translation,

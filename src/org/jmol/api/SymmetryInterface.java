@@ -184,7 +184,7 @@ public interface SymmetryInterface {
 
   void setTimeReversal(int op, int val);
 
-  SymmetryInterface setUnitCell(double[] params, boolean setRelative);
+  SymmetryInterface setUnitCell(double[] params, boolean setRelative, double slop);
 
   void setUnitCell(SymmetryInterface uc);
 
@@ -278,5 +278,11 @@ public interface SymmetryInterface {
   Object getWyckoffPosition(Viewer vwr, P3d pt, String letter);
 
   Object getSpaceGroupJSON(Viewer vwr, String name, String sgname, int index);
+
+  double getCellWeight(P3d pt);
+
+  double getPrecision();
+
+  void setPrecision(double prec);
 
 }

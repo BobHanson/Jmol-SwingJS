@@ -53,7 +53,7 @@ public class PWmatReader extends AtomSetCollectionReader {
   
   @Override
   protected void initializeReader() throws Exception {
-    setHighPrecision();
+    setPrecision(true);
     doApplySymmetry = true;
   }
 

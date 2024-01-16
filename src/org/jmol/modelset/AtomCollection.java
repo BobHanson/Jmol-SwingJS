@@ -199,7 +199,7 @@ abstract public class AtomCollection {
   double[] dssrData;
   public Vibration[] vibrations;
   public double[] occupancies;
-  public P3d[] precisionCoords;
+//  public P3d[] precisionCoords;
   short[] bfactor100s;
   double[] partialCharges;
   double[] bondingRadii;
@@ -225,7 +225,7 @@ abstract public class AtomCollection {
     atomSeqIDs = null;
     vibrations = null;
     occupancies = null;
-    precisionCoords = null;
+ //   precisionCoords = null;
     bfactor100s = null;
     resetPartialCharges();
     bondingRadii = null;
@@ -242,7 +242,7 @@ abstract public class AtomCollection {
     atomSeqIDs = mergeModelSet.atomSeqIDs;
     vibrations = mergeModelSet.vibrations;
     occupancies = mergeModelSet.occupancies;
-    precisionCoords = mergeModelSet.precisionCoords;
+ //   precisionCoords = mergeModelSet.precisionCoords;
     bfactor100s = mergeModelSet.bfactor100s;
     bondingRadii = mergeModelSet.bondingRadii;
     partialCharges = mergeModelSet.partialCharges;
@@ -927,22 +927,22 @@ abstract public class AtomCollection {
     return (occupancies == null || i >= occupancies.length? 100 : occupancies[i]);
   }
 
-  protected void setPrecisionCoord(int atomIndex, P3d coord, boolean doTaint) {
-    if (coord != null && coord.equals(at[atomIndex]))
-      return;
-    boolean valid = (coord != null && !Double.isNaN(coord.x));
-    if (valid) {
-      at[atomIndex].setT(coord);
-      if (doTaint)
-        taintAtom(atomIndex, TAINT_COORD);
-    }
-  }
-  
-  public P3d getPrecisionCoord(int i) {
-    return at[i];
-//    P3d coord = (precisionCoords == null || i >= precisionCoords.length ? null : precisionCoords[i]);
-//    return (coord == null || Double.isNaN(coord.x) ? null : coord);
-  }
+//  protected void setPrecisionCoord(int atomIndex, P3d coord, boolean doTaint) {
+//    if (coord != null && coord.equals(at[atomIndex]))
+//      return;
+//    boolean valid = (coord != null && !Double.isNaN(coord.x));
+//    if (valid) {
+//      at[atomIndex].setT(coord);
+//      if (doTaint)
+//        taintAtom(atomIndex, TAINT_COORD);
+//    }
+//  }
+//  
+//  public P3d getPrecisionCoord(int i) {
+//    return at[i];
+////    P3d coord = (precisionCoords == null || i >= precisionCoords.length ? null : precisionCoords[i]);
+////    return (coord == null || Double.isNaN(coord.x) ? null : coord);
+//  }
   
   protected void setPartialCharge(int atomIndex, double partialCharge, boolean doTaint) {
     if (Double.isNaN(partialCharge))
@@ -2743,8 +2743,8 @@ abstract public class AtomCollection {
     hasBfactorRange = false;
     occupancies = (double[]) AU.deleteElements(occupancies, firstAtomIndex,
         nAtoms);
-    precisionCoords = (P3d[]) AU.deleteElements(precisionCoords, firstAtomIndex,
-        nAtoms);
+//    precisionCoords = (P3d[]) AU.deleteElements(precisionCoords, firstAtomIndex,
+//        nAtoms);
     resetPartialCharges();
     atomTensorList = (Object[][]) AU.deleteElements(atomTensorList,
         firstAtomIndex, nAtoms);

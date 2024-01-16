@@ -1445,4 +1445,24 @@ public class PT {
         / parseDouble(s.substring(pt + 1)));
   }
 
+  
+  public static final float FRACTIONAL_PRECISION = 100000f;
+  public static final float CARTESIAN_PRECISION =  10000f;
+
+  
+  public static void fixPtFloats(T3d pt, float f) {
+    //this will equate float and double as long as -256 <= x <= 256
+    pt.x = Math.round(pt.x * f) / f;
+    pt.y = Math.round(pt.y * f) / f;
+    pt.z = Math.round(pt.z * f) / f;
+  }
+  
+  public static float fixFloat(float d, double f) {
+    return (float) (Math.round(d * f) / f);
+  }
+  
+  public static double fixDouble(double d, double f) {
+    return Math.round(d * f) / f;
+  }
+
 }

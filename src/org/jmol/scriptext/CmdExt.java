@@ -632,7 +632,7 @@ public class CmdExt extends ScriptExt {
         htParams.put("packed", Boolean.TRUE);
         sOptions.append(" PACKED");
         if (!Double.isNaN(f)) {
-          htParams.put("packingError", Double.valueOf(f));
+          htParams.put("packingRange", Double.valueOf(f));
           sOptions.append(" " + f);
         }
       }

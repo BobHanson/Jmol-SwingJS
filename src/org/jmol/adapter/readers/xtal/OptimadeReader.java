@@ -36,7 +36,7 @@ public class OptimadeReader extends AtomSetCollectionReader {
 
   @Override
   protected void initializeReader() throws Exception {
-    setHighPrecision();    
+    // ? could we distinguish experimental from computed? setPrecision(true);    
     super.initializeReader();
     noSlab = checkFilterKey("NOSLAB");
     try {

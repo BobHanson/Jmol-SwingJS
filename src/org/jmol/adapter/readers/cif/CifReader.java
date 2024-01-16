@@ -149,7 +149,7 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean addAtomLabelNumbers;
   private boolean ignoreGeomBonds;
   private boolean allowWyckoff = true;
-  
+
   @Override
   public void initializeReader() throws Exception {
     initSubclass();
@@ -798,21 +798,28 @@ public class CifReader extends AtomSetCollectionReader {
    * @throws Exception
    */
   private void processCellParameter() throws Exception {
-    for (int i = 6; --i >= 0;)
+    for (int i = 6; --i >= 0;) {
       if (key.equals(JmolAdapter.cellParamNames[i])) {
-        if (data.length() > 12) {
-          setHighPrecision();
-          //          _cell_angle_alpha          89.98553195002994
-          //          _cell_angle_beta           90.00000268115016
-          //          _cell_angle_gamma          120.00117944056412
-        }
-
         double p = parseDoubleStr(data);
         if (rotateHexCell && i == 5 && p == 120)
           p = -1;
         setUnitCellItem(i, p);
+        if (i == 0) {
+          // Set the precision of data based on number of digits. 
+          // Requires 11 or more post-decimal-point numbers to qualify as full double precision.
+          // Only Jmol-SwingJS/Java and JavaScript can set high precision;
+          //        legacy Jmol/Java is float-based only and will ignore this request.
+          //if () {
+            setPrecision(!lowPrecision && (data.length() - data.indexOf('.') > 10));
+            //                                     01234567890123456
+            //          _cell_angle_alpha          89.98553195002994
+            //          _cell_angle_beta           90.00000268115016
+            //          _cell_angle_gamma          120.00117944056412
+          //}
+        }
         return;
       }
+    }
   }
 
   final private static String[] TransformFields = { "x[1][1]", "x[1][2]",

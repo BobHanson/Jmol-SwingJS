@@ -121,14 +121,6 @@ public abstract class T3d implements JSONEncodable, Serializable {
     z += t.z;
   }
   
-  public void addF(T3d t) {
-    x += t.x;
-    y += t.y;
-    z += t.z;
-  }
-
-
-
   /**
    * Computes the square of the distance between this point and point p1.
    * 

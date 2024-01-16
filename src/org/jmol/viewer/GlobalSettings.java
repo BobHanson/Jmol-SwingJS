@@ -489,7 +489,7 @@ public class GlobalSettings {
   boolean zeroBasedXyzRasmol = false;
   boolean legacyAutoBonding = false;
   boolean legacyHAddition = false;
-  public boolean legacyJavaFloat = false; // double/double issue with crystallographic symmetry before Jmol 14.2.5
+  public boolean legacyJavaFloat = true; // for Jmol-SwingJS// double/double issue with crystallographic symmetry before Jmol 14.2.5
   /**
    * setting doublePrecision will also toggle legacyJavaFloat to doublePrecision
    * in order to avoid any rounding 

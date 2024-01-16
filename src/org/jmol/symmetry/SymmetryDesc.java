@@ -1686,7 +1686,7 @@ public class SymmetryDesc {
         symTemp.newSpaceGroupPoint(ptemp, i, null, 0, 0, 0, sympt);
         if (options == T.offset) {
           uc.unitize(sympt);
-          sympt.addF(offset);
+          sympt.add(offset);
         }
         symTemp.toCartesian(sympt, false);
         P3d ret = sympt;
@@ -1898,7 +1898,7 @@ public class SymmetryDesc {
     SymmetryInterface uc = modelSet.am[iModel].biosymmetry;
     if (uc == null && (uc = modelSet.getUnitCell(iModel)) == null) {
       // just assign a simple [1 1 1 90 90 90] unit cell
-      uc = new Symmetry().setUnitCell(null, false);
+      uc = new Symmetry().setUnitCell(null, false, Double.NaN);
       //      return ret;
     }
 

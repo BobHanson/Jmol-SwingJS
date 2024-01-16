@@ -3,6 +3,7 @@ package org.jmol.adapter.writers;
 import org.jmol.api.JmolWriter;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.modelset.Atom;
+import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
@@ -28,7 +29,6 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
   private final static T3d fset0 = P3d.new3(555, 555, 1);
 
   public CIFWriter() {
-    // for JavaScript dynamic loading
   }
 
   @Override
@@ -48,8 +48,8 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       haveUnitCell = (uc != null);
       if (!haveUnitCell)
-        uc = vwr.getSymTemp().setUnitCell(null, false);
-
+        uc = vwr.getSymTemp().setUnitCell(null, false, Double.NaN);
+      isHighPrecision = (uc.getPrecision() == SimpleUnitCell.SLOPDP);
       P3d offset = uc.getFractionalOffset();
       boolean fractionalOffset = offset != null && (offset.x != (int) offset.x
           || offset.y != (int) offset.y || offset.z != (int) offset.z);
@@ -64,7 +64,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
 
       // only write the asymmetric unit set
       BS modelAU = (!haveUnitCell ? bs
-          : isP1 ? uc.removeDuplicates(vwr.ms, bs, false)
+          : isP1 ? uc.removeDuplicates(vwr.ms, bs, isHighPrecision)
               : vwr.ms.am[mi].bsAsymmetricUnit);
       BS bsOut;
       if (modelAU == null) {
@@ -87,12 +87,12 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       }
       sb.append("\ndata_global");
       double[] params = uc.getUnitCellAsArray(false);
-      appendKey(sb, "_cell_length_a").appendD(params[0]);
-      appendKey(sb, "_cell_length_b").appendD(params[1]);
-      appendKey(sb, "_cell_length_c").appendD(params[2]);
-      appendKey(sb, "_cell_angle_alpha").appendD(params[3]);
-      appendKey(sb, "_cell_angle_beta").appendD(params[4]);
-      appendKey(sb, "_cell_angle_gamma").appendD(params[5]);
+      appendKey(sb, "_cell_length_a").append(cleanT(params[0]));
+      appendKey(sb, "_cell_length_b").append(cleanT(params[1]));
+      appendKey(sb, "_cell_length_c").append(cleanT(params[2]));
+      appendKey(sb, "_cell_angle_alpha").append(cleanT(params[3]));
+      appendKey(sb, "_cell_angle_beta").append(cleanT(params[4]));
+      appendKey(sb, "_cell_angle_gamma").append(cleanT(params[5]));
       sb.append("\n");
       int n;
       String hallName;
@@ -181,12 +181,12 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
           elements += key;
         String label = sym + ++elemNums[elemno];
         sb.append(PT.formatS(label, 5, 0, true, false)).append(" ")
-            .append(PT.formatS(sym, 3, 0, true, false)).append(cleanF(p.x))
-            .append(cleanF(p.y)).append(cleanF(p.z));
+            .append(PT.formatS(sym, 3, 0, true, false)).append(clean(p.x))
+            .append(clean(p.y)).append(clean(p.z));
         if (haveOccupancy) 
-          sb.append(" ").append(cleanF(occ[i]/100));
+          sb.append(" ").append(clean(occ[i]/100));
         else if (!haveUnitCell)
-          sb.append(cleanF(a.x)).append(cleanF(a.y)).append(cleanF(a.z));
+          sb.append(clean(a.x)).append(clean(a.y)).append(clean(a.z));
         sb.append("\n");
 
         jmol_atom.append(PT.formatS("" + a.getIndex(), 3, 0, false, false))
@@ -205,6 +205,8 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       }
 
       sb.append("\n# ").appendI(nAtoms).append(" atoms\n");
+      if (isHighPrecision)
+        sb.append("\n# doublePrecision\n");
       oc.append(sb.toString());
     } catch (Exception e) {
       if (!Viewer.isJS)

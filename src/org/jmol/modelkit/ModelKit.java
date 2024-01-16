@@ -1455,7 +1455,7 @@ public class ModelKit {
       SymmetryInterface sym = vwr.getOperativeSymmetry();
       if (sym == null)
         sym = vwr.getSymTemp()
-            .setUnitCell(new double[] { 10, 10, 10, 90, 90, 90 }, false);
+            .setUnitCell(new double[] { 10, 10, 10, 90, 90, 90 }, false, Double.NaN);
       T3d m = sym.getUnitCellMultiplier();
       if (m != null && m.z == 1) {
         m.z = 0;
