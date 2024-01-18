@@ -1470,6 +1470,7 @@ public class Atom extends Point3fi implements Node {
   }
 
   public String getWyckoffPosition() {
+
     ModelSet ms = group.chain.model.ms;
     Atom a = ms.getBasisAtom(i, true);
     int id = a.getSeqID();
@@ -1480,7 +1481,6 @@ public class Atom extends Point3fi implements Node {
     String s;
     if (sym == null || (s = (String) sym.getWyckoffPosition(ms.vwr, this, null)) == null)
       return "?";
-    
     ms.setAtomSeqID(i, 0 + s.charAt(0));
     return s;
   }

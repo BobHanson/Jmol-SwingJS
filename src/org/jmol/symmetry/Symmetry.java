@@ -1119,14 +1119,18 @@ public class Symmetry implements SymmetryInterface {
       sg = SpaceGroup.determineSpaceGroupN(symmetryInfo.sgName);
       if (sg == null)
         sg = SpaceGroup.getSpaceGroupFromITAName(symmetryInfo.intlTableNoFull);
-      if (sg == null)
-        return "?";
     }
+    if (sg == null || sg.intlTableNumber == null) {
+      // maybe an unusual setting
+      return "?";
+    }    
     if (p == null) {
       p = P3d.new3(2.3d/5, 2.3d/7, 2.3d/9);      
     } else {
       p = P3d.newP(p);
       unitCell.toFractional(p, true);
+      unitCell.unitize(p);
+
     }
     if (wyckoffFinder == null) {
       wyckoffFinder = (WyckoffFinder) Interface
@@ -1135,8 +1139,12 @@ public class Symmetry implements SymmetryInterface {
     try {
       WyckoffFinder w = wyckoffFinder.getWyckoffFinder(vwr,
           sg.intlTableNumberFull);
-      if (letter == null) {
-        return w.getWyckoffPosition(unitCell, p);
+      int mode = (letter == null ? WyckoffFinder.WYCKOFF_RET_LABEL 
+          : letter.equalsIgnoreCase("coord") ? WyckoffFinder.WYCKOFF_RET_COORD 
+          : letter.equalsIgnoreCase("coords") ? WyckoffFinder.WYCKOFF_RET_COORDS 
+          : letter.endsWith("*") ? (int) letter.charAt(0) : 0);
+      if (mode != 0) {
+        return w.getWyckoffPosition(unitCell, p, mode);
       }
       if (w.findPositionFor(p, letter) == null)
         return null;
@@ -1288,12 +1296,22 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public double getPrecision() {
-    return unitCell.getPrecision();
+    return (unitCell == null ? Double.NaN : unitCell.getPrecision());
   }
 
   @Override
   public void setPrecision(double prec) {
     unitCell.setPrecision(prec);
+  }
+
+  @Override
+  public boolean fixUnitCell(double[] params) {
+    return UnitCell.createCompatibleUnitCell(spaceGroup, params, null, true);
+  }
+
+  @Override
+  public void twelfthify(P3d pt) {
+    unitCell.twelfthify(pt);
   }
 
 }

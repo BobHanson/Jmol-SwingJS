@@ -168,7 +168,7 @@ public class SpaceGroupFinder {
         sg.intlTableNumberExt = PT.rep(u, " ", "") + ";" + sgdata.get("sg")
             + "(" + tr + ")";
         char axis = u.toLowerCase().charAt(0);
-        if (isHexagonal(PT.parseInt(sg.intlTableNumber), null) && axis != 'r')
+        if (UnitCell.isHexagonalSG(PT.parseInt(sg.intlTableNumber), null) && axis != 'r')
           axis = 'h';
         switch (axis) {
         case 'a':
@@ -195,17 +195,16 @@ public class SpaceGroupFinder {
       try {
         if (bsOpGroups == null)
           loadData(vwr, this);
+        slop = uc.getPrecision();
         if (xyzList != null) {
-
           Object ret = getGroupsWithOps(xyzList, unitCellParams, isAssign);
           if (!isAssign || ret == null)
             return ret;
           sg = (SpaceGroup) ret;
-          uc.setUnitCell(unitCellParams, false, SimpleUnitCell.SLOPDP);
+          uc.setUnitCell(unitCellParams, false, slop);
         }
         oabc = uc.getUnitCellVectors();
         uc = uc.getUnitCellMultiplied();
-        slop = uc.getPrecision();
         filterGroups(bsGroups, uc.getUnitCellParams());
 
         //      withinCell = vwr.ms.getAtoms(T.unitcell, uc);
@@ -476,112 +475,11 @@ public class SpaceGroupFinder {
 
   private SymmetryInterface createCompatibleUnitCell(SpaceGroup sg,
                                                             double[] params) {
-    SymmetryInterface sym;
-    int n = PT.parseInt(sg.intlTableNumber);
-    
-    // make a, b, and c all distinct
-    
-    double a = params[0];
-    double b = params[1];
-    if (a > b) {
-      double d = a;
-      a = b;
-      b = d;
-    }
-    double c = params[2];
-    boolean bcsame = approx0(b - c);
-    if (bcsame)
-      c = b * 1.5d;
-    boolean absame = approx0(a - b);
-    if (absame)
-      b = a * 1.2d;
-    boolean acsame = approx0(c - a);
-    if (acsame)
-      c = a * 1.1d;
-
-    // make alpha, beta, and gamma all distinct
-    
-    double alpha = params[3];
-    double beta = params[4];
-    double gamma = params[5];
-    if (approx0(alpha - 90)) {
-      alpha = 80;
-    }
-    if (approx0(beta - 90)) {
-      beta = 100;
-    }
-    if (approx0(gamma - 90)) {
-      gamma = 110;
-    }
-    if (alpha > beta) {
-      double d = alpha;
-      alpha = beta;
-      beta = d;
-    }
-    boolean albesame = approx0(alpha - beta);
-    boolean begasame = approx0(beta - gamma);
-    boolean algasame = approx0(gamma - alpha);
-    if (albesame) {
-      beta = alpha * 1.2d;
-    }
-    if (begasame) {
-      gamma = beta * 1.3d;
-    }
-    if (algasame) {
-      gamma = alpha * 1.4d;
-    }
-    if (isHexagonal(n, null)) {
-      b = a;
-      if (sg.axisChoice == 'r' ? SimpleUnitCell.isRhombohedral(params, slop)
-          : isHexagonal(-1, params)) {
-        // nothing to do
-      } else  if (sg.axisChoice == 'r') {
-        c = b = a;
-        if (alpha > 85 && alpha < 95)
-          alpha = 80;
-        gamma = beta = alpha;
-      } else {
-        alpha = beta = 90;
-        gamma = 120;
-      }
-    } else if (n >= 195) {
-      // cubic
-      c = b = a;
-      alpha = beta = gamma = 90;
-    } else if (n >= 75) {
-      // tetragonal
-      b = a;
-      if (acsame)
-        c = a * 1.5d;
-      alpha = beta = gamma = 90;
-    } else if (n >= 16) {
-      // orthorhombic
-      alpha = beta = gamma = 90;
-    } else if (n >= 3) {
-      // monoclinic
-      switch (sg.uniqueAxis) {
-      case 'a':
-        c = b;
-        beta = gamma = 90;
-        break;
-      case 'b':
-        c = a;
-        alpha = gamma = 90;
-        break;
-      case 'c':
-        b = a;
-        alpha = beta = 90;
-        break;
-      }
-    }
-    sym = new Symmetry().setUnitCell(new double[] { a, b, c, alpha, beta, gamma }, false, slop);
+    double[] newParams = new double[6];
+    UnitCell.createCompatibleUnitCell(sg, params, newParams, false);
+    SymmetryInterface sym = new Symmetry().setUnitCell(newParams, false, Double.NaN);
     sym.setSpaceGroupTo(sg);
     return sym;
-  }
-
-  private boolean isHexagonal(int n, double[] params) {
-    return (n < 1 ? SimpleUnitCell.isHexagonal(params, slop)
-        : n >= 143 && n <= 194);
   }
 
   private void removeDuplicates(BS bs) {
@@ -712,8 +610,8 @@ public class SpaceGroupFinder {
   private void filterGroups(BS bsGroups, double[] params) {
     boolean isOrtho = false, isTet = false, isTri = false,
         isRhombo = false, isCubic = false;
-    boolean absame = approx0(params[0] - params[1]);
-    boolean bcsame = approx0(params[1] - params[2]);
+    boolean absame = approx001(params[0] - params[1]);
+    boolean bcsame = approx001(params[1] - params[2]);
     if (params[3] == 90) { // alpha
       if (params[4] == 90) { // beta
         // really?? 
@@ -730,7 +628,7 @@ public class SpaceGroupFinder {
         //       _space_group_IT_number     62
 
 
-        isTri = (absame && approx0(params[5] - 120));
+        isTri = (absame && approx001(params[5] - 120));
         if (params[5] == 90) { // gamma
           isCubic = (absame && params[1] == params[2]);
           isTet = (!isCubic && absame);
@@ -738,7 +636,7 @@ public class SpaceGroupFinder {
         }
       }
     } else if (absame && bcsame
-        && approx0(params[3] - params[4])  && approx0(params[4] - params[5])) {
+        && approx001(params[3] - params[4])  && approx001(params[4] - params[5])) {
       isRhombo = true;
     }
     bsGroups.setBits(0, 2);
@@ -778,6 +676,10 @@ public class SpaceGroupFinder {
       break;
     }
     bsGroups.setBits(i0, i);
+  }
+
+  private boolean approx001(double d) {
+    return Math.abs(d) < SimpleUnitCell.SLOP_PARAMS;
   }
 
   private static int scanTo(int i, String num) {

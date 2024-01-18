@@ -647,6 +647,7 @@ class SpaceGroup implements Cloneable {
         return id;
       if (latticeOp < 0) {
         // do this check until we find a lattice operation
+        // by removing +1/2 and +1/3 and checking for something we already have.
         String xxx = PT.replaceAllCharacters(
             modDim > 0 ? SymmetryOperation.replaceXn(xyz, modDim + 3) : xyz,
             "+123/", "");
@@ -1664,6 +1665,7 @@ class SpaceGroup implements Cloneable {
     "150;6;d3^2;p 3 2 1;p 3 2\"",  
     "151;6;d3^3;p 31 1 2;p 31 2 (0 0 4)",  
     "152;6;d3^4;p 31 2 1;p 31 2\"",  
+    "152:_2;6;d3^4;p 31 2 1;p 31 2\" (0 0 -4);-b",   //  NOTE: MSA quartz.cif gives different operators for this -- 
     "153;6;d3^5;p 32 1 2;p 32 2 (0 0 2)",  
     "154;6;d3^6;p 32 2 1;p 32 2\"",    
     "154:_2;6;d3^6;p 32 2 1;p 32 2\" (0 0 4);-b",   //  NOTE: MSA quartz.cif gives different operators for this -- 

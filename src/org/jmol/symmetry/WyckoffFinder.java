@@ -15,6 +15,7 @@ import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Rdr;
+import javajs.util.SB;
 import javajs.util.V3d;
 
 public class WyckoffFinder {  
@@ -31,6 +32,7 @@ public class WyckoffFinder {
     private static V3d vtemp1 = new V3d();
 
     public WyckoffPos(String xyz) {
+      this.xyz = xyz;
       create(xyz);
     }
 
@@ -233,11 +235,16 @@ public class WyckoffFinder {
       return (Math.abs(d) < slop);
     }
 
+    @Override
+    public String toString() {
+      return xyz;
+    }
   }
 
   private final static Map<String, WyckoffFinder> helpers = new Hashtable<String, WyckoffFinder>();
   private Lst<Object> positions;
   private P3d[] centerings;
+  private String centeringStr = "";
   private static WyckoffFinder nullHelper;
  
   public WyckoffFinder() {
@@ -290,31 +297,101 @@ public class WyckoffFinder {
       if (cent != null) {
         centerings = new P3d[cent.size()];
         for (int i = cent.size(); --i >= 0;) {
-          centerings[i] = toPoint((String) cent.get(i));
+          String s = (String) cent.get(i);
+          centeringStr += "+" + s;
+          centerings[i] = toPoint(s);
         }
       }
     }
   }
 
+  /**
+   *  positive numbers will be label characters or '*'
+   */
+  public final static int WYCKOFF_RET_LABEL = -1;
+  public final static int WYCKOFF_RET_COORD = -2;
+  public final static int WYCKOFF_RET_COORDS = -3;
+  public final static int WYCKOFF_RET_COORDS_ALL = '*';
+  
+  /**
+   * Get string information about this position or space group
+   * 
+   * @param uc
+   * @param p
+   * @param returnType label, coord, label*, or *
+   * @return label or coordinate or label with centerings and coordinates or full list for space group
+   */
   @SuppressWarnings("unchecked")
-  String getWyckoffPosition(UnitCell uc, P3d p) {
-    if (positions == null)
-      return "?";
-    for (int i = positions.size(); --i >= 0;) {
-      Map<String, Object> map = (Map<String, Object>) positions.get(i);
-      if (i == 0) {
-        // general
-        return (String) map.get("label");
-      }
-      Lst<Object> coords = (Lst<Object>) map.get("coord");
-      for (int c = 0, n = coords.size(); c < n; c++) {
-        if (getWyckoffCoord(coords, c).contains(uc, p, centerings)) {
-          return (String) map.get("label");    
+  String getWyckoffPosition(UnitCell uc, P3d p, int returnType) {
+    switch (returnType) {
+    case '*':
+      SB sb = new SB();
+      sb.append(centeringStr);
+      for (int i = positions.size(); --i >= 0;) {
+        Map<String, Object> map = (Map<String, Object>) positions.get(i);
+        sb.appendC('\n').append((String) map.get("label"));
+        if (i == 0) {
+          // general
+          sb.append("\tx,y,z").toString();
+        } else {
+          getList((Lst<Object>) map.get("coord"), sb);
         }
-      }      
+      }
+      return sb.toString();
+    case WYCKOFF_RET_LABEL:
+    case WYCKOFF_RET_COORD:
+    case WYCKOFF_RET_COORDS:
+      for (int i = positions.size(); --i >= 0;) {
+        Map<String, Object> map = (Map<String, Object>) positions.get(i);
+        if (i == 0) {
+          // general
+          switch (returnType) {
+          case WYCKOFF_RET_LABEL:
+            return (String) map.get("label");
+          case WYCKOFF_RET_COORD:
+            return "x,y,z";
+          case WYCKOFF_RET_COORDS:
+            return map.get("label") + "\t" + centeringStr + "\tx,y,z";
+          }
+        }
+        Lst<Object> coords = (Lst<Object>) map.get("coord");
+        for (int c = 0, n = coords.size(); c < n; c++) {
+          WyckoffPos coord = getWyckoffCoord(coords, c);
+          if (coord.contains(uc, p, centerings)) {
+            switch (returnType) {
+            case WYCKOFF_RET_LABEL:
+              return (String) map.get("label");
+            case WYCKOFF_RET_COORD:
+              return coord.toString();
+            case WYCKOFF_RET_COORDS:
+              return map.get("label") + "\t" + centeringStr + "\t" + getList(coords, null);
+            }
+          }
+        }
+      }
+      break;
+    default:
+      String letter = "" + (char) returnType;
+      for (int i = positions.size(); --i >= 0;) {
+        Map<String, Object> map = (Map<String, Object>) positions.get(i);
+        if (map.get("label").equals(letter)) {
+          return (i == 0 ? "x,y,z" : getList((Lst<Object>) map.get("coord"), null));
+        }
+      }
+      break;
     }
-    // not possible
     return "?";
+  }
+
+  private static String getList(Lst<Object> coords, SB sb) {
+    boolean asString = (sb == null);
+    if (asString)
+      sb = new SB();
+    for (int c = 0, n = coords.size(); c < n; c++) {
+      WyckoffPos coord = getWyckoffCoord(coords, c);
+      sb.append("\t").append(coord.toString());
+    }
+    return (asString ? sb.substring(1) : null);
   }
 
   public P3d findPositionFor(P3d p, String letter) {

@@ -124,7 +124,9 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     c.initUnitcellVertices();
     c.allFractionalRelative = setRelative;
     c.setPrecision(slop);
-    return  c;
+    if (params.length > SimpleUnitCell.PARAM_SLOP)
+      params[PARAM_SLOP] = slop;
+    return c;
   }
   Lst<String> moreInfo;
   
@@ -1093,6 +1095,146 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
    */
   void unitizeRnd(T3d pt) {
     unitizeDimRnd(dimension, pt, slop);
+  }
+
+  /**
+   * Create a unit cell compatible with
+   * 
+   * @param sg
+   * @param params
+   * @param newParams
+   * @param allowSame
+   * @return true if changes have occurred
+   */
+  public static boolean createCompatibleUnitCell(SpaceGroup sg, double[] params,
+                                                 double[] newParams,
+                                                 boolean allowSame) {
+    if (newParams == null)
+      newParams = params;
+    double a = params[0];
+    double b = params[1];
+    double c = params[2];
+    double alpha = params[3];
+    double beta = params[4];
+    double gamma = params[5];
+
+    int n = (sg == null || sg.intlTableNumber == null ? 0 : PT.parseInt(sg.intlTableNumber));
+    if (n > (allowSame ? 2 : 0)) {
+
+      boolean absame = approx0(a - b);
+      boolean bcsame = approx0(b - c);
+      boolean acsame = approx0(c - a);
+      boolean albesame = approx0(alpha - beta);
+      boolean begasame = approx0(beta - gamma);
+      boolean algasame = approx0(gamma - alpha);
+
+      if (!allowSame) {
+        // make a, b, and c all distinct
+        if (a > b) {
+          double d = a;
+          a = b;
+          b = d;
+        }
+        bcsame = approx0(b - c);
+        if (bcsame)
+          c = b * 1.5d;
+        absame = approx0(a - b);
+        if (absame)
+          b = a * 1.2d;
+        acsame = approx0(c - a);
+        if (acsame)
+          c = a * 1.1d;
+
+        // make alpha, beta, and gamma all distinct
+
+        if (approx0(alpha - 90)) {
+          alpha = 80;
+        }
+        if (approx0(beta - 90)) {
+          beta = 100;
+        }
+        if (approx0(gamma - 90)) {
+          gamma = 110;
+        }
+        if (alpha > beta) {
+          double d = alpha;
+          alpha = beta;
+          beta = d;
+        }
+        albesame = approx0(alpha - beta);
+        begasame = approx0(beta - gamma);
+        algasame = approx0(gamma - alpha);
+
+        if (albesame) {
+          beta = alpha * 1.2d;
+        }
+        if (begasame) {
+          gamma = beta * 1.3d;
+        }
+        if (algasame) {
+          gamma = alpha * 1.4d;
+        }
+      }
+      if (isHexagonalSG(n, null)) {
+        b = a;
+        if (sg.axisChoice == 'r' ? isRhombohedral(params)
+            : isHexagonalSG(-1, params)) {
+          // nothing to do
+        } else if (sg.axisChoice == 'r') {
+          c = b = a;
+          if (!allowSame && alpha > 85 && alpha < 95)
+            alpha = 80;
+          gamma = beta = alpha;
+        } else {
+          alpha = beta = 90;
+          gamma = 120;
+        }
+      } else if (n >= 195) {
+        // cubic
+        c = b = a;
+        alpha = beta = gamma = 90;
+      } else if (n >= 75) {
+        // tetragonal
+        b = a;
+        if (acsame && !allowSame)
+          c = a * 1.5d;
+        alpha = beta = gamma = 90;
+      } else if (n >= 16) {
+        // orthorhombic
+        alpha = beta = gamma = 90;
+      } else if (n >= 3) {
+        // monoclinic
+        switch (sg.uniqueAxis) {
+        case 'a':
+          c = b;
+          beta = gamma = 90;
+          break;
+        case 'b':
+          c = a;
+          alpha = gamma = 90;
+          break;
+        case 'c':
+          b = a;
+          alpha = beta = 90;
+          break;
+        }
+      }
+    }
+    boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
+        && alpha == params[3] && beta == params[4] && gamma == params[5]);
+
+    newParams[0] = a;
+    newParams[1] = b;
+    newParams[2] = c;
+    newParams[3] = alpha;
+    newParams[4] = beta;
+    newParams[5] = gamma;
+    return isNew;
+  }
+
+  public static boolean isHexagonalSG(int n, double[] params) {
+    return (n < 1 ? isHexagonal(params)
+        : n >= 143 && n <= 194);
   }
 
 

@@ -1457,6 +1457,11 @@ public final class JC {
   public final static int UNITID_TRIM = 16;
 
   public static final String DEFAULT_DRAG_DROP_SCRIPT = "zap; load SYNC \"%FILE\";if (%ALLOWCARTOONS && _loadScript == '' && defaultLoadScript == '' && _filetype == 'Pdb') {if ({(protein or nucleic)&*/1.1} && {*/1.1}[1].groupindex != {*/1.1}[0].groupindex){select protein or nucleic;cartoons only;}if ({visible && cartoons > 0}){color structure}else{wireframe -0.1};if (!{visible}){spacefill 23%};select *}";
+  /**
+   * used to compare two atom *fractional* positions in order to see if they are at the same position.
+   * 
+   * Q: should change this to unit cell slop? 
+   */
   public static final double UC_TOLERANCE2 = 0.0014 * 0.0014; // always use check for LT this, not LTE
 
   /**

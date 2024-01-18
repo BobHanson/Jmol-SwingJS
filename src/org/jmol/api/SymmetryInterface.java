@@ -285,4 +285,8 @@ public interface SymmetryInterface {
 
   void setPrecision(double prec);
 
+  boolean fixUnitCell(double[] unitCellParams);
+
+  void twelfthify(P3d pt);
+
 }

@@ -188,7 +188,7 @@ public class CrystalReader extends AtomSetCollectionReader {
     getLastConventional = (!isPrimitive && desiredModelNumber == 0);
     fullSymmetry = checkFilterKey("FULLSYM");
     setFractionalCoordinates(readHeader());
-    asc.checkLatticeOnly = !inputOnly;
+    asc.crystalReaderLatticeOpsOnly = !inputOnly;
   }
 
   @Override
@@ -821,16 +821,19 @@ public class CrystalReader extends AtomSetCollectionReader {
       for (int i = 0; i < 12; i++)
         f16[i] = f14[smap[i]];
       
+      Logger.info("CrystalReader: " + line);
+
       // This will not work for nanotube symmetry specifications.
-      
+      if (isSlab || isPolymer)
+        continue;
       M4d m4 = M4d.newA16(f16);
       String xyz = SymmetryOperation.getXYZFromMatrix(m4, false,
           false, false);
       if (xyz.indexOf("0y") >= 0 || xyz.indexOf("0z") >= 0) {
-        Logger.error("Symmetry operator could not be created for " + line);
+        Logger.error("CrystalReader: Symmetry operator could not be created for " + xyz);
       } else {
         symops.addLast(xyz);
-        Logger.info("state:" + state + " Symmop " + symops.size() + ": " + xyz);
+        Logger.info("CrystalReader: state=" + state + " Symmop " + symops.size() + ": " + xyz);
       }
     }
   }

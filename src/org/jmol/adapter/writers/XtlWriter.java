@@ -11,6 +11,10 @@ public class XtlWriter {
    * 
    */
   protected boolean isHighPrecision = true;
+
+  protected double slop;
+  
+  protected int precision;
   
   private static double SLOPD = 0.000000000010;
 
@@ -40,10 +44,17 @@ public class XtlWriter {
 
   private String cleanF(float f) {
     int t;
+    if (slop != 0)
+      return cleanSlop(f);
     return (!haveUnitCell || (t = twelfthsOfF(f)) < 0
         ? PT.formatD(f, 12, 7, false, false)
         : (f < 0 ? "   -" : "    ") + twelfthsF[t]);
   }
+
+  private String cleanSlop(double f) {
+    return PT.formatD(f,  precision + 6,  precision, false, false);
+  }
+
 
   private static int twelfthsOfF(float f) {
     if (f == 0)
@@ -67,6 +78,8 @@ public class XtlWriter {
    */
   protected String cleanT(double d) {
     String s = clean(d);
+    if (isHighPrecision)
+      return s;
     int i = s.length();
     while (--i >= 2 && s.charAt(i) == '0' && s.charAt(i - 1) != '.') {
     }

@@ -44,12 +44,13 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       bs = vwr.bsA();
     try {
       short mi = vwr.ms.at[bs.nextSetBit(0)].mi;
-
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       haveUnitCell = (uc != null);
       if (!haveUnitCell)
-        uc = vwr.getSymTemp().setUnitCell(null, false, Double.NaN);
-      isHighPrecision = (uc.getPrecision() == SimpleUnitCell.SLOPDP);
+        uc = vwr.getSymTemp().setUnitCell(null, false, 0.00001d);
+      slop = uc.getPrecision();
+      precision = (int) -Math.log10(slop);
+      isHighPrecision = (slop == SimpleUnitCell.SLOPDP);
       P3d offset = uc.getFractionalOffset();
       boolean fractionalOffset = offset != null && (offset.x != (int) offset.x
           || offset.y != (int) offset.y || offset.z != (int) offset.z);
@@ -61,7 +62,6 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       isP1 = (isP1 || ucm != uc || fractionalOffset
           || uc.getSpaceGroupOperationCount() < 2);
       uc = ucm;
-
       // only write the asymmetric unit set
       BS modelAU = (!haveUnitCell ? bs
           : isP1 ? uc.removeDuplicates(vwr.ms, bs, isHighPrecision)
@@ -204,9 +204,8 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
         sb.setLength(sbLength);
       }
 
-      sb.append("\n# ").appendI(nAtoms).append(" atoms\n");
-      if (isHighPrecision)
-        sb.append("\n# doublePrecision\n");
+      sb.append("\n_jmol_atom_count   " +  nAtoms);
+      sb.append("\n_jmol_precision    " + precision + "\n");
       oc.append(sb.toString());
     } catch (Exception e) {
       if (!Viewer.isJS)

@@ -460,7 +460,7 @@ public class PdbReader extends AtomSetCollectionReader {
       sgName = fileSgName;
       fractionalizeCoordinates(true);
       asc.setModelInfoForSet("biosymmetry", null, asc.iSet);
-      asc.checkSpecial = false;
+      checkNearAtoms = false;
     }
     if (latticeCells != null && latticeCells[0] != 0)
       addJmolScript("unitcell;axes on;axes unitcell;");
@@ -1386,7 +1386,7 @@ public class PdbReader extends AtomSetCollectionReader {
     // No special-position atoms in mmCIF files, because there will
     // be no center of symmetry, no rotation-inversions, 
     // no atom-centered rotation axes, and no mirror or glide planes. 
-    asc.checkSpecial = !isPDB;
+    checkNearAtoms = !isPDB;
     setModelPDB(isPDB);
     nUNK = nRes = 0;
     currentGroup3 = null;
@@ -1773,12 +1773,12 @@ public class PdbReader extends AtomSetCollectionReader {
           P3d origin = new P3d();
           tlsGroup.put("origin", origin);
           if (tokens.length == 8) {
-            origin.set((double) parseDoubleStr(tokens[5]), (double) parseDoubleStr(tokens[6]),
-                (double) parseDoubleStr(tokens[7]));
+            origin.set(parseDoubleStr(tokens[5]), parseDoubleStr(tokens[6]),
+                parseDoubleStr(tokens[7]));
           } else {
             int n = line.length();
-            origin.set((double) parseDoubleRange(line, n - 27, n - 18),
-                (double) parseDoubleRange(line, n - 18, n - 9), (double) parseDoubleRange(line, n - 9, n));
+            origin.set(parseDoubleRange(line, n - 27, n - 18),
+                parseDoubleRange(line, n - 18, n - 9), parseDoubleRange(line, n - 9, n));
           }
           if (Double.isNaN(origin.x) || Double.isNaN(origin.y) || Double.isNaN(origin.z)) {
             origin.set(Double.NaN, Double.NaN, Double.NaN);
@@ -2021,7 +2021,7 @@ public class PdbReader extends AtomSetCollectionReader {
   }
 
   protected static double fixRadius(double r) {    
-    return (double) (r < 0.9 ? 1 : r);
+    return (r < 0.9 ? 1 : r);
     // based on parameters in http://pdb2pqr.svn.sourceforge.net/viewvc/pdb2pqr/trunk/pdb2pqr/dat/
     // AMBER forcefield, H atoms may be given 0 (on O) or 0.6 (on N) for radius
     // PARSE forcefield, lots of H atoms may be given 0 radius

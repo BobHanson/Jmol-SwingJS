@@ -169,7 +169,7 @@ public class CifReader extends AtomSetCollectionReader {
       forceSymmetry(false);
       molecularType = "filter \"MOLECULAR\"";
     }
-    asc.checkSpecial = !checkFilterKey("NOSPECIAL");
+    checkNearAtoms = !checkFilterKey("NOSPECIAL"); // as in "no special positions"
     allowRotations = !checkFilterKey("NOSYM");
     if (strSupercell != null && strSupercell.indexOf(",") >= 0)
       addCellType(CELL_TYPE_CONVENTIONAL, strSupercell, true);
@@ -579,7 +579,7 @@ public class CifReader extends AtomSetCollectionReader {
     // be no center of symmetry, no rotation-inversions, 
     // no atom-centered rotation axes, and no mirror or glide planes.
     if (isMMCIF)
-      asc.checkSpecial = false;
+      checkNearAtoms = false;
     boolean doCheckBonding = doCheckUnitCell && !isMMCIF;
     if (isMMCIF && asc.iSet >= 0) {
       int modelIndex = asc.iSet;
@@ -804,19 +804,6 @@ public class CifReader extends AtomSetCollectionReader {
         if (rotateHexCell && i == 5 && p == 120)
           p = -1;
         setUnitCellItem(i, p);
-        if (i == 0) {
-          // Set the precision of data based on number of digits. 
-          // Requires 11 or more post-decimal-point numbers to qualify as full double precision.
-          // Only Jmol-SwingJS/Java and JavaScript can set high precision;
-          //        legacy Jmol/Java is float-based only and will ignore this request.
-          //if () {
-            setPrecision(!lowPrecision && (data.length() - data.indexOf('.') > 10));
-            //                                     01234567890123456
-            //          _cell_angle_alpha          89.98553195002994
-            //          _cell_angle_beta           90.00000268115016
-            //          _cell_angle_gamma          120.00117944056412
-          //}
-        }
         return;
       }
     }
@@ -1460,19 +1447,24 @@ public class CifReader extends AtomSetCollectionReader {
           if (readIdeal && !Double.isNaN(z))
             atom.z = z;
           break;
+        case FRACT_X:
+          atom.x = parsePrecision(field);
+          break;
         case CC_ATOM_X:
         case CARTN_X:
-        case FRACT_X:
-          atom.x = parseDoubleStr(field);
+          break;
+        case FRACT_Y:
+          atom.y = parsePrecision(field);
           break;
         case CC_ATOM_Y:
         case CARTN_Y:
-        case FRACT_Y:
           atom.y = parseDoubleStr(field);
+          break;
+        case FRACT_Z:
+          atom.z = parsePrecision(field);
           break;
         case CC_ATOM_Z:
         case CARTN_Z:
-        case FRACT_Z:
           atom.z = parseDoubleStr(field);
           break;
         case CC_ATOM_CHARGE:

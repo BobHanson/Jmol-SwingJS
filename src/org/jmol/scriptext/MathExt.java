@@ -3775,6 +3775,7 @@ public class MathExt {
 
     // x = symop("wyckoff")  -- report Wyckoff letter
     // x = {atom or point}.symop("wyckoff","a") -- find first "a"-type Wyckoff position for this point
+    // x = symop("wyckoff", "coord")  -- report Wyckoff coord
 
     int narg = args.length;
 
@@ -3963,9 +3964,14 @@ public class MathExt {
     int iatom = (haveAtom ? bsAtoms.nextSetBit(0) : -1);
     if (isWyckoff) {
       P3d pt = (haveAtom ? vwr.ms.getAtom(iatom) : pt1);
-      if (pt == null || "".equals(desc))
+      if (pt == null)
         return false;
-      String letter = (desc == null ? null : desc.substring(0, 1));
+      if (desc.length() == 0 || desc.equalsIgnoreCase("label"))
+        desc = null;
+      String letter = (desc == null ? null 
+          : desc.endsWith("*") 
+          || desc.equalsIgnoreCase("coord")
+          || desc.equalsIgnoreCase("coords")? desc : desc.substring(0, 1));
       SymmetryInterface sym = vwr.getOperativeSymmetry();
       return mp.addXObj(sym == null ?  null : sym.getWyckoffPosition(vwr, pt, letter));
     }

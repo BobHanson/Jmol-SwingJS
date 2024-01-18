@@ -53,7 +53,7 @@ public class PWmatReader extends AtomSetCollectionReader {
   
   @Override
   protected void initializeReader() throws Exception {
-    setPrecision(true);
+	  precision = 12;
     doApplySymmetry = true;
   }
 
@@ -109,8 +109,7 @@ public class PWmatReader extends AtomSetCollectionReader {
     addExplicitLatticeVector(1, fillDoubleArray(getLine(), 0, unitCellData), 0);
     addExplicitLatticeVector(2, fillDoubleArray(getLine(), 0, unitCellData), 0);
   }
-
-
+  
   private void readCoordinates() throws Exception {
     // Following lattice section is the position section. 
     // As long as there is "position" case-insensitive 

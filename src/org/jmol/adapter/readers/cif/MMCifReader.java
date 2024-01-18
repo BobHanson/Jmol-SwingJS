@@ -270,7 +270,7 @@ public class MMCifReader extends CifReader {
         fractionalizeCoordinates(true);
         asc.setCurrentModelInfo("biosymmetry", null);
         asc.setCurrentModelInfo("biosymmetryCount", null);
-        asc.checkSpecial = false;
+        checkNearAtoms = false;
         if (byChain)
           return true;
       }
@@ -288,12 +288,11 @@ public class MMCifReader extends CifReader {
 
   @Override
   protected boolean checkSubclassSymmetry() {
-  asc.checkSpecial = false;
-  int modelIndex = asc.iSet;
-  asc.setCurrentModelInfo(
-      "PDB_CONECT_firstAtom_count_max",
-      new int[] { asc.getAtomSetAtomIndex(modelIndex),
-          asc.getAtomSetAtomCount(modelIndex), maxSerial });
+    checkNearAtoms = false;
+    int modelIndex = asc.iSet;
+    asc.setCurrentModelInfo("PDB_CONECT_firstAtom_count_max",
+        new int[] { asc.getAtomSetAtomIndex(modelIndex),
+            asc.getAtomSetAtomCount(modelIndex), maxSerial });
     return false;
   }
 

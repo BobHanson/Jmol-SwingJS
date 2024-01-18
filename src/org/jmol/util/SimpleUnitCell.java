@@ -48,9 +48,11 @@ import javajs.util.V3d;
 
 public class SimpleUnitCell {
 
-  public static final int PARAM_STD       = 6;  // a b c alpha beta gamma
-  public static final int PARAM_VABC      = 6;  // ax ay az bx by bz cx cy cz (9 entries)
-  public static final int PARAM_M4        = 6;  // m00 m01 ... m44 (16 entries)
+  public static final int PARAM_STD       = 6;  // a b c alpha beta gamma [0-5]
+  public static final int PARAM_VAX       = 6;  // ax ay az bx by bz cx cy cz (9 entries, [6-14])
+  public static final int PARAM_VCZ       = 14; // last vector value
+  public static final int PARAM_M4        = 6;  // m00 m01 ... m44 (16 entries, [6-21)
+  public static final int PARAM_M33       = 21; // last matrix value
   public static final int PARAM_SUPERCELL = 22; // na nb nc
   public static final int PARAM_SCALE = 25;     // scale
   public static final int PARAM_SLOP = 26;      // slop
@@ -71,14 +73,15 @@ public class SimpleUnitCell {
   
   protected final static double toRadians = Math.PI * 2 / 360;
 
-  protected double[] unitCellParams;
-
   /**
    * allowance for rounding in [0,1)
    */
   public final static double SLOPSP = 0.0001d;
   public final static double SLOPDP = 0.000000000001d;
+  public static final double SLOP_PARAMS = 0.001d; // generous
   
+  protected double[] unitCellParams;
+
   /**
    * initial value is set in subclass UnitCell
    */
@@ -120,14 +123,9 @@ public class SimpleUnitCell {
   protected double b_, c_;
 
 
-//  public static boolean isValid(float[] parameters) {
-//    return (parameters != null && (parameters[0] > 0 || parameters.length > 14
-//        && !Double.isNaN(parameters[14])));
-//  }
-//
   public static boolean isValid(double[] parameters) {
-    return (parameters != null && (parameters[0] > 0 || parameters.length > 14
-        && !Double.isNaN(parameters[14])));
+    return (parameters != null && (parameters[0] > 0 || parameters.length > PARAM_VCZ
+        && !Double.isNaN(parameters[PARAM_VCZ])));
   }
 
   protected SimpleUnitCell() {
@@ -165,9 +163,14 @@ public class SimpleUnitCell {
     return c;
   }
 
+  public static int getDimensionFromParams(double[] params) {
+    return (params[0] <= 0 ? 3 : params[1] < 0 ? 1 : params[2] < 0 ? 2 : 3);
+  }
+
+
   protected void init(double[] params) {
     if (params == null)
-      params = new double[] {1, 1, 1, 90, 90, 90};
+      params = new double[] { 1, 1, 1, 90, 90, 90 };
     if (!isValid(params))
       return;
     unitCellParams = new double[PARAM_COUNT];
@@ -175,18 +178,11 @@ public class SimpleUnitCell {
       unitCellParams[i] = (i < n ? params[i] : Double.NaN);
 
     boolean rotateHex = false; // special gamma = -1 indicates hex rotation for AFLOW
-    
+
+    dimension = getDimensionFromParams(params);
     a = params[0];
     b = params[1];
     c = params[2];
-    if (a > 0) {
-      if (b < 0) {
-        dimension = 1;
-      } else if (c < 0) {
-        dimension = 2;
-      }
-    }
-    
     alpha = params[3];
     beta = params[4];
     gamma = params[5];
@@ -194,17 +190,30 @@ public class SimpleUnitCell {
       rotateHex = true;
       gamma = 120;
     }
-    
-    if (params.length > PARAM_SLOP && !Double.isNaN(params[PARAM_SLOP])) {
-      slop = params[PARAM_SLOP];        
-    } else {
-      params[PARAM_SLOP] = slop;
+    if (params.length > PARAM_SLOP) {
+      if (Double.isNaN(params[PARAM_SLOP])) {
+        params[PARAM_SLOP] = slop;
+      } else {
+        slop = params[PARAM_SLOP];
+      }
     }
     // (int) double.NaN == 0 (but not in JavaScript!)
     // supercell
-    double fa = na = Math.max(1, params.length > PARAM_SUPERCELL+2 && !Double.isNaN(params[PARAM_SUPERCELL]) ? (int) params[PARAM_SUPERCELL] : 1);
-    double fb = nb = Math.max(1, params.length > PARAM_SUPERCELL+2 && !Double.isNaN(params[PARAM_SUPERCELL+1]) ? (int) params[PARAM_SUPERCELL+1] : 1);
-    double fc = nc = Math.max(1, params.length > PARAM_SUPERCELL+2 && !Double.isNaN(params[PARAM_SUPERCELL+2]) ? (int) params[PARAM_SUPERCELL+2] : 1);
+    double fa = na = Math.max(1,
+        params.length > PARAM_SUPERCELL + 2
+            && !Double.isNaN(params[PARAM_SUPERCELL])
+                ? (int) params[PARAM_SUPERCELL]
+                : 1);
+    double fb = nb = Math.max(1,
+        params.length > PARAM_SUPERCELL + 2
+            && !Double.isNaN(params[PARAM_SUPERCELL + 1])
+                ? (int) params[PARAM_SUPERCELL + 1]
+                : 1);
+    double fc = nc = Math.max(1,
+        params.length > PARAM_SUPERCELL + 2
+            && !Double.isNaN(params[PARAM_SUPERCELL + 2])
+                ? (int) params[PARAM_SUPERCELL + 2]
+                : 1);
     if (params.length > PARAM_SCALE && !Double.isNaN(params[PARAM_SCALE])) {
       double fScale = params[PARAM_SCALE];
       if (fScale > 0) {
@@ -218,9 +227,12 @@ public class SimpleUnitCell {
 
     if (a <= 0 && c <= 0) {
       // must calculate a, b, c alpha beta gamma from Cartesian vectors;
-      V3d va = V3d.new3(params[PARAM_VABC], params[PARAM_VABC+1], params[PARAM_VABC+2]);
-      V3d vb = V3d.new3(params[PARAM_VABC+3], params[PARAM_VABC+4], params[PARAM_VABC+5]);
-      V3d vc = V3d.new3(params[PARAM_VABC+6], params[PARAM_VABC+7], params[PARAM_VABC+8]);
+      V3d va = V3d.new3(params[PARAM_VAX], params[PARAM_VAX + 1],
+          params[PARAM_VAX + 2]);
+      V3d vb = V3d.new3(params[PARAM_VAX + 3], params[PARAM_VAX + 4],
+          params[PARAM_VAX + 5]);
+      V3d vc = V3d.new3(params[PARAM_VAX + 6], params[PARAM_VAX + 7],
+          params[PARAM_VAX + 8]);
       setABC(va, vb, vc);
       if (c < 0) {
         double[] n = AU.arrayCopyD(params, -1);
@@ -239,31 +251,29 @@ public class SimpleUnitCell {
           vc.normalize();
           n[12] = vc.x;
           n[13] = vc.y;
-          n[14] = vc.z;
+          n[PARAM_VCZ] = vc.z;
         }
         params = n;
       }
     }
-    
+
     // checking here for still a dimension issue with b or c
     // was < 0 above; here <= 0
-    a *= fa; 
+    a *= fa;
     if (b <= 0) {
       b = c = 1;
-      dimension = 1;
     } else if (c <= 0) {
       c = 1;
       b *= fb;
-      dimension = 2;
     } else {
       b *= fb;
       c *= fc;
     }
     setCellParams();
-    
-    if (params.length > 21 && !Double.isNaN(params[21])) {
+
+    if (params.length > PARAM_M33 && !Double.isNaN(params[PARAM_M33])) {
       // parameters with a 4x4 matrix
-      // [a b c alpha beta gamma m00 m01 m02 m03 m10 m11.... m20...]
+      // [a b c alpha beta gamma m00 m01 m02 m03 m10 m11.... m20...m33]
       // this is for PDB and CIF reader
       double[] scaleMatrix = new double[16];
       for (int i = 0; i < 16; i++) {
@@ -283,24 +293,26 @@ public class SimpleUnitCell {
           break;
         }
         scaleMatrix[i] = params[6 + i] * f;
-      }      
+      }
       matrixCartesianToFractional = M4d.newA16(scaleMatrix);
       matrixCartesianToFractional.getTranslation(fractionalOrigin);
-      matrixFractionalToCartesian = M4d.newM4(matrixCartesianToFractional).invert();
+      matrixFractionalToCartesian = M4d.newM4(matrixCartesianToFractional)
+          .invert();
       if (params[0] == 1)
         setParamsFromMatrix();
-    } else if (params.length > 14 && !Double.isNaN(params[14])) {
+    } else if (params.length > PARAM_VCZ && !Double.isNaN(params[PARAM_VCZ])) {
       // parameters with a 3 vectors
       // [a b c alpha beta gamma ax ay az bx by bz cx cy cz...]
       M4d m = matrixFractionalToCartesian = new M4d();
-      m.setColumn4(0, params[6] * fa, params[7] * fa, params[8] * fa, 0);
+      m.setColumn4(0, params[PARAM_VAX] * fa, params[7] * fa, params[8] * fa, 0);
       m.setColumn4(1, params[9] * fb, params[10] * fb, params[11] * fb, 0);
-      m.setColumn4(2, params[12] * fc, params[13] * fc, params[14] * fc, 0);
+      m.setColumn4(2, params[12] * fc, params[13] * fc, params[PARAM_VCZ] * fc, 0);
       m.setColumn4(3, 0, 0, 0, 1);
-      matrixCartesianToFractional = M4d.newM4(matrixFractionalToCartesian).invert();
+      matrixCartesianToFractional = M4d.newM4(matrixFractionalToCartesian)
+          .invert();
     } else {
       M4d m = matrixFractionalToCartesian = new M4d();
-      
+
       if (rotateHex) {
         // 1, 2. align a and b symmetrically about the x axis (AFLOW)
         m.setColumn4(0, (-b * cosGamma), (-b * sinGamma), 0, 0);
@@ -314,11 +326,12 @@ public class SimpleUnitCell {
       }
       // 3. now the c axis,
       // http://server.ccl.net/cca/documents/molecular-modeling/node4.html
-      m.setColumn4(2, (c * cosBeta), (c
-          * (cosAlpha - cosBeta * cosGamma) / sinGamma), (volume / (a
-          * b * sinGamma)), 0);
+      m.setColumn4(2, (c * cosBeta),
+          (c * (cosAlpha - cosBeta * cosGamma) / sinGamma),
+          (volume / (a * b * sinGamma)), 0);
       m.setColumn4(3, 0, 0, 0, 1);
-      matrixCartesianToFractional = M4d.newM4(matrixFractionalToCartesian).invert();
+      matrixCartesianToFractional = M4d.newM4(matrixFractionalToCartesian)
+          .invert();
     }
     matrixCtoFNoOffset = matrixCartesianToFractional;
     matrixFtoCNoOffset = matrixFractionalToCartesian;
@@ -328,7 +341,7 @@ public class SimpleUnitCell {
     SimpleUnitCell c = SimpleUnitCell.newA(params);
     M4d m = c.matrixFractionalToCartesian;
     for (int i = 0; i < 9; i++)
-    params[PARAM_VABC + i] = m.getElement(i%3, i/3);
+    params[PARAM_M4 + i] = m.getElement(i%3, i/3);
   }
 
 
@@ -469,9 +482,9 @@ public class SimpleUnitCell {
     case INFO_DIMENSIONS:
       return dimension;
     case INFO_IS_HEXAGONAL:
-      return (isHexagonal(unitCellParams, slop) ? 1 : 0);
+      return (isHexagonal(unitCellParams) ? 1 : 0);
     case INFO_IS_RHOMBOHEDRAL:
-      return (isRhombohedral(unitCellParams, slop) ? 1 : 0);      
+      return (isRhombohedral(unitCellParams) ? 1 : 0);      
     }
     return Double.NaN;
   }
@@ -601,7 +614,34 @@ public class SimpleUnitCell {
       x = 0;
     return x;
   }
-  
+
+  public int twelfthsOf(double f) {
+    if (f == 0)
+      return 0;
+    f = Math.abs(f * 12);
+    int i = (int) Math.round(f);
+    return (i <= 12 && Math.abs(f - i) < slop * 12 ? i : -1);
+  }
+
+  public void twelfthify(P3d pt) {
+    switch (dimension) {
+    case 3:
+      pt.z = setTwelfths(pt.z);
+      //$FALL-THROUGH$
+    case 2:
+      pt.y = setTwelfths(pt.y);
+      //$FALL-THROUGH$
+    case 1:
+      pt.x = setTwelfths(pt.x);
+      break;
+    }
+  }
+
+  private double setTwelfths(double x) {
+    int i = twelfthsOf(x);
+    return (i >= 0 ? i / 12d : x);
+  }
+
   ////// lattice methods //////
   
   /**
@@ -713,30 +753,33 @@ public class SimpleUnitCell {
 
   /**
    * @param params
-   * @param slop 
    * @return true if approximately hexagonal
    */
-  public static boolean isHexagonal(double[] params, double slop) {
+  public static boolean isHexagonal(double[] params) {
     // a == b && alpha = beta = 90 && gamma = 120 (gamma -1 is a "rotateHexCell" indicator for AFLOW
-    return (approx0(params[0] - params[1], slop) 
-        && approx0(params[3] - 90, slop) && approx0(params[4] - 90, slop) && (approx0(params[5] - 120, slop) 
+    return (approx0(params[0] - params[1]) 
+        && approx0(params[3] - 90) && approx0(params[4] - 90) && (approx0(params[5] - 120) 
             || params[5] == -1));
   }
 
   /**
    * @param params
-   * @param slop 
    * @return true if approximately rhombohedral
    */
-  public static boolean isRhombohedral(double[] params, double slop) {
+  public static boolean isRhombohedral(double[] params) {
     // a = b = c and alpha = beta = gamma and alpha != 90
-    return (approx0(params[0] - params[1], slop) && approx0(params[1] - params[2], slop)
-        && !approx0(params[3] - 90, slop) && approx0(params[3] - params[4], slop)
-        && approx0(params[4] - params[5], slop));
+    return (approx0(params[0] - params[1]) && approx0(params[1] - params[2])
+        && !approx0(params[3] - 90) && approx0(params[3] - params[4])
+        && approx0(params[4] - params[5]));
   }
 
-  private static boolean approx0(double f, double slop) {
-    return (Math.abs(f) < slop);
+  /**
+   * 
+   * @param f
+   * @return true or false
+   */
+  protected static boolean approx0(double f) {
+    return (Math.abs(f) < SLOP_PARAMS);
   }
 
 

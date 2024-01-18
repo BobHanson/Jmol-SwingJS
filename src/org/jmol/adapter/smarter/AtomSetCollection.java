@@ -704,7 +704,7 @@ public class AtomSetCollection {
   }
 
   public int baseSymmetryAtomCount;
-  public boolean checkLatticeOnly;
+  public boolean crystalReaderLatticeOpsOnly;
 
   public XtalSymmetry xtalSymmetry;
 
@@ -729,8 +729,6 @@ public class AtomSetCollection {
   }
 
   int bondIndex0;
-
-  public boolean checkSpecial = true;
 
   public Map<String, Atom> atomSymbolicMap = new Hashtable<String, Atom>();
 
