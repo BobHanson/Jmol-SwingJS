@@ -1144,7 +1144,7 @@ public class Symmetry implements SymmetryInterface {
           : letter.equalsIgnoreCase("coords") ? WyckoffFinder.WYCKOFF_RET_COORDS 
           : letter.endsWith("*") ? (int) letter.charAt(0) : 0);
       if (mode != 0) {
-        return w.getWyckoffPosition(unitCell, p, mode);
+        return w.getStringInfo(unitCell, p, mode);
       }
       if (w.findPositionFor(p, letter) == null)
         return null;
