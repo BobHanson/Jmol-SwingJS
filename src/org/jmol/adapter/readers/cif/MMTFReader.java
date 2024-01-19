@@ -45,6 +45,20 @@ import org.jmol.util.Logger;
  * 
  * see https://github.com/rcsb/mmtf/blob/master/spec.md
  * 
+ * Note added 2024.01.19
+ * 
+ * Jose Duarte 2:03 PM (email)
+ * 
+ * to MMTF-Users From July 2024 the PDB file archive will not be offered in the
+ * compressed MMTF format anymore. Users are strongly encouraged to switch to
+ * the BinaryCIF format, which has been available since 2020. Details on how to
+ * access BinaryCIF (BCIF) data files for the entire PDB archive are available
+ * here.
+ * 
+ * RCSB PDB support is ready to assist with any issues or questions at
+ * info@rcsb.org.
+ * 
+ * 
  * full specification Version: v0.2+dev (as of 2016.08.08) is
  * implemented,including:
  * 
