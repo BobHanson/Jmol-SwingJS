@@ -757,9 +757,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       isHigh = false;
       precision = 4; // legacy
     } else {
-      // packingRange must be null
-      precision = Math.min(12, Math.max(4, precision));
-      isHigh = precision >= 10;
+      if (precision > 1000) {
+        precision -= 1000;
+      } else {
+        // packingRange must be null
+        precision = Math.min(12, Math.max(4, precision));
+      }
+      isHigh = (precision >= 7);
       if (isHigh) {
         vwr.setBooleanProperty("doubleprecision", true);
         if (Viewer.isHighPrecision) {
@@ -768,6 +772,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
           asc.setInfo("highPrecision", Boolean.TRUE);
         } else {
           isHigh = false;
+          precision = 6;
           appendLoadNote(
               "Structure read has high precision but this version of Jmol uses float precision.\nUse JmolD.jar or JavaScript for full precision.");
         }
@@ -786,7 +791,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         symmetry.twelfthify(asc.atoms[i]);
       }
     }
-
     appendLoadNote("Precision set to " + precision);
 
   }
@@ -1245,6 +1249,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       bsFilter = new BS();
       htParams.put("bsFilter", bsFilter);
       filter = (";" + filter + ";").replace(',', ';');
+      String p = getFilter("PRECISION=");
+      if (p != null) {
+        int prec = PT.parseInt(p);
+        if (prec > 0 && prec <= 16) {
+          precision = 1000 + prec;
+        }
+      }
       String s = getFilter("LATTICESCALING=");
       if (s != null && unitCellParams.length > SimpleUnitCell.PARAM_SCALE)
         unitCellParams[SimpleUnitCell.PARAM_SCALE] = latticeScaling = parseDoubleStr(

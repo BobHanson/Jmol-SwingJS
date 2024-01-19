@@ -454,7 +454,7 @@ public class SymmetryOperation extends M4d {
       allowScaling = false;
     }
     String strOut = getMatrixFromString(this, xyz, linearRotTrans,
-        allowScaling, halfOrLess);
+        allowScaling, halfOrLess, true);
     if (strOut == null)
       return false;
     xyzCanonical = strOut;
@@ -557,23 +557,25 @@ public class SymmetryOperation extends M4d {
     return true;
   }
 
-  public static M4d getMatrixFromXYZ(String xyz, boolean halfOrLess) {
-    double[] linearRotTrans = new double[16];
-    xyz = getMatrixFromString(null, xyz, linearRotTrans, false, halfOrLess);
+  public static M4d getMatrixFromXYZ(String xyz, double[] v, boolean halfOrLess) {
+    if (v == null)
+      v = new double[16];
+    xyz = getMatrixFromString(null, xyz, v, false, halfOrLess, true);
     if (xyz == null)
       return null;
     M4d m = new M4d();
-    m.setA(linearRotTrans);
+    m.setA(v);
     return div12(m, setDivisor(xyz));
   }
 
   static String getJmolCanonicalXYZ(String xyz) {
     try {
-      return getMatrixFromString(null, xyz, null, false, true);
+      return getMatrixFromString(null, xyz, null, false, true, true);
     } catch (Exception e) {
       return null;
     }
   }
+  
   /**
    * Convert the Jones-Faithful notation "x, -z+1/2, y" or "x1, x3-1/2, x2,
    * x5+1/2, -x6+1/2, x7..." to a linear array
@@ -584,23 +586,30 @@ public class SymmetryOperation extends M4d {
    * @param xyz
    * @param linearRotTrans
    * @param allowScaling
-   * @param halfOrLess 
+   * @param halfOrLess
+   * @param retString
    * @return canonized Jones-Faithful string
    */
   static String getMatrixFromString(SymmetryOperation op, String xyz,
                                     double[] linearRotTrans,
-                                    boolean allowScaling, boolean halfOrLess) {    
+                                    boolean allowScaling, boolean halfOrLess,
+                                    boolean retString) {
     boolean isDenominator = false;
     boolean isDecimal = false;
     boolean isNegative = false;
-    xyz = PT.rep(xyz,  "[bio[", "");
+    xyz = PT.rep(xyz, "[bio[", "");
     int modDim = (op == null ? 0 : op.modDim);
     int nRows = 4 + modDim;
     int divisor = (op == null ? setDivisor(xyz) : op.divisor);
-    boolean doNormalize = halfOrLess && (op == null ? !xyz.startsWith("!") : op.doNormalize);
+    boolean doNormalize = halfOrLess
+        && (op == null ? !xyz.startsWith("!") : op.doNormalize);
     int dimOffset = (modDim > 0 ? 3 : 0); // allow a b c to represent x y z
-    if (linearRotTrans != null)
-      linearRotTrans[linearRotTrans.length - 1] = 1;
+    if (linearRotTrans != null) {
+      int n = linearRotTrans.length - 1;
+      for (int i = n; --i >= 0;)
+        linearRotTrans[i] = 0;
+      linearRotTrans[n] = 1;
+    }
     // may be a-b,-5a-5b,-c;0,0,0 form
     int transPt = xyz.indexOf(';') + 1;
     if (transPt != 0) {
@@ -627,7 +636,7 @@ public class SymmetryOperation extends M4d {
     int numer = 0;
     double decimalMultiplier = 1d;
     String strT = "";
-    String strOut = "";
+    String strOut = (retString ? "" : null);
     int[] ret = new int[1];
     int len = xyz.length();
     for (int i = 0; i < len; i++) {
@@ -671,9 +680,10 @@ public class SymmetryOperation extends M4d {
           val = (int) iValue;
           iValue = 0;
         } else if (linearRotTrans != null) {
-            linearRotTrans[xpt] = val;
+          linearRotTrans[xpt] = val;
         }
-        strT += plusMinus(strT, val, myLabels[ipt], false);
+        if (strOut != null)
+          strT += plusMinus(strT, val, myLabels[ipt], false);
         break;
       case ',':
         if (transPt != 0) {
@@ -690,18 +700,25 @@ public class SymmetryOperation extends M4d {
           i = rotPt;
         }
         // add translation in 12ths
-        iValue = normalizeTwelfths(iValue, denom == 0 ? 12 : divisor == 0 ? denom : divisor, doNormalize);
+        iValue = normalizeTwelfths(iValue,
+            denom == 0 ? 12 : divisor == 0 ? denom : divisor, doNormalize);
         if (linearRotTrans != null)
-          linearRotTrans[tpt0 + nRows - 1] = (divisor == 0 && denom > 0 ? iValue = toDivisor(numer, denom) : iValue);
-        strT += xyzFraction12(iValue, (divisor == 0 ? denom : divisor), false, halfOrLess);
-        // strT += xyzFraction48(iValue, false, true);
-        strOut += (strOut == "" ? "" : ",") + strT;
+          linearRotTrans[tpt0 + nRows - 1] = (divisor == 0 && denom > 0
+              ? iValue = toDivisor(numer, denom)
+              : iValue);
+        if (strOut != null) {
+          strT += xyzFraction12(iValue, (divisor == 0 ? denom : divisor), false,
+              halfOrLess);
+          // strT += xyzFraction48(iValue, false, true);
+          strOut += (strOut == "" ? "" : ",") + strT;
+        }
         if (rowPt == nRows - 2)
-          return strOut;
+          return (retString ? strOut : "ok");
         iValue = 0;
         numer = 0;
         denom = 0;
         strT = "";
+        tpt0 += 4;
         if (rowPt++ > 2 && modDim == 0) {
           Logger.warn("Symmetry Operation? " + xyz);
           return null;
@@ -1556,7 +1573,7 @@ public class SymmetryOperation extends M4d {
       p1.scaleAdd(0.5d, px, p1);
       p1.scale(0.5d);
       v = new V3d();
-      isOK = checkOpPlane(opPoint, p1, p2, opAxis, opPlane, v, new V3d());
+      isOK = checkOpPlane(opPoint, p1, p2, opPlane, v, new V3d());
       opClean6(opPlane);
       if (approx6(opPlane.w) == 0)
         opPlane.w = 0;
@@ -1679,7 +1696,9 @@ public class SymmetryOperation extends M4d {
     return (a != 0 || approx(p) >= 0 && approx(p) <= 1);
   }
  
-  private static boolean checkOpPlane(P3d p1, P3d p2, P3d p3, V3d v, P4d plane, V3d vtemp1, V3d vtemp2) {
+  private static boolean checkOpPlane(P3d p1, P3d p2, P3d p3, 
+                                      P4d plane, 
+                                      V3d vtemp1, V3d vtemp2) {
     // just check all 8 cell points for directed distance to the plane
     // any mix of + and - and 0 is OK; all + or all - is a fail
     MeasureD.getPlaneThroughPoints(p1, p2, p3, vtemp1, vtemp2, plane);
@@ -1737,6 +1756,7 @@ public class SymmetryOperation extends M4d {
    * @param lst
    * @param mapPlanes
    * @param n0
+   * @param isym 
    */
   void addOps(HashSet<String> xyzList, Lst<SymmetryOperation> lst,
               Map<String, Lst<SymmetryOperation>> mapPlanes, int n0, int isym) {
@@ -1828,6 +1848,7 @@ public class SymmetryOperation extends M4d {
    * @param t 
    * @param xyzList 
    * @param lst 
+   * @param itno 
    * @return true if added
    */
   private boolean opCheckAdd(SymmetryOperation opThis, V3d t0, int n0, V3d t,
@@ -1946,7 +1967,6 @@ public class SymmetryOperation extends M4d {
     return (fx != 0 ? 'a' : fy != 0 ? 'b' : 'c');
   }
   
-
   // https://crystalsymmetry.wordpress.com/space-group-diagrams/
- 
+
 }

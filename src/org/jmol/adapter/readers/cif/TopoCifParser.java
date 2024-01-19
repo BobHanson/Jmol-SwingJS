@@ -613,8 +613,9 @@ public class TopoCifParser implements Parser {
     Lst<String> symops = reader.symops;
     int nOps = symops.size();
     ops = new M4d[nOps];
+    double[] v = new double[16];
     for (int i = 0; i < nOps; i++) {
-      ops[i] = SymmetryOperation.getMatrixFromXYZ("!" + symops.get(i), true);
+      ops[i] = SymmetryOperation.getMatrixFromXYZ("!" + symops.get(i), v, true);
     }
     for (int i = 0; i < atoms.size(); i++) {
       atoms.get(i).finalizeAtom();

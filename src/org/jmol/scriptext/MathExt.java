@@ -3775,7 +3775,7 @@ public class MathExt {
 
     // x = symop("wyckoff")  -- report Wyckoff letter
     // x = {atom or point}.symop("wyckoff","a") -- find first "a"-type Wyckoff position for this point
-    // x = symop("wyckoff", "coord")  -- report Wyckoff coord
+    // x = {atom}.symop("wyckoff", "coord")  -- report Wyckoff coord
 
     int narg = args.length;
 
@@ -3960,12 +3960,23 @@ public class MathExt {
             : invariant ? "id"
                 : pt2 != null ? "all" : pt1 != null ? "point" : "matrix")
         : SV.sValue(args[apt++]));
-    boolean haveAtom = (bsAtoms != null && !bsAtoms.isEmpty());
+    boolean haveAtom = ((!isWyckoff || isProperty) && bsAtoms != null && !bsAtoms.isEmpty());
     int iatom = (haveAtom ? bsAtoms.nextSetBit(0) : -1);
     if (isWyckoff) {
       P3d pt = (haveAtom ? vwr.ms.getAtom(iatom) : pt1);
-      if (pt == null)
-        return false;
+      if (pt == null) {
+        switch (desc) {
+        case "":
+        case "*":
+          desc = "*";
+          break;
+        default:
+          if (desc.length() == 1)
+            desc += "*";
+          else
+            return false;          
+        }
+      }
       if (desc.length() == 0 || desc.equalsIgnoreCase("label"))
         desc = null;
       String letter = (desc == null ? null 

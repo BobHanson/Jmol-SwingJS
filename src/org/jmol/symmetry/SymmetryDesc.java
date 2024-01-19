@@ -1429,7 +1429,7 @@ public class SymmetryDesc {
         if (!op.isBio && !xyzNew.equals(op.xyzOriginal)) {
           if (op.number > 0) {
             M4d orig = SymmetryOperation.getMatrixFromXYZ(op.xyzOriginal,
-                false);
+                null, false);
             orig.sub(m2);
             cift = new P3d();
             orig.getTranslation(cift);

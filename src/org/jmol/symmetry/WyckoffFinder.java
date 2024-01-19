@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 
@@ -16,9 +15,11 @@ import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Rdr;
 import javajs.util.SB;
+import javajs.util.T3d;
 import javajs.util.V3d;
 
 public class WyckoffFinder {  
+
   static class WyckoffPos {
     final static int TYPE_POINT = 1;
     final static int TYPE_LINE  = 2;
@@ -28,54 +29,73 @@ public class WyckoffFinder {
     private V3d line;
     private P4d plane;
     private int type;
+    
+    private String label;
+    
     String xyz;
-    private static V3d vtemp1 = new V3d();
-
-    public WyckoffPos(String xyz) {
+    private final static P3d p1 = new P3d(), 
+    		p2 = new P3d(), p3 = new P3d(), pc = new P3d();
+    private final static V3d vt = new V3d();
+    String thisCentering = "";
+    
+    public WyckoffPos(String xyz, String label) {
       this.xyz = xyz;
+      this.label = label;
       create(xyz);
+      
     }
+
+    private final static int X = 1;
+    private final static int Y = 2;
+    private final static int Z = 4;
 
     private void create(String p) {
       String[] xyz = PT.split(p, ",");
+
       int nxyz = 0;
       for (int i = 0; i < 3; i++) {
         if (xyz[i].indexOf('x') >= 0) {
-          nxyz |= 1;
-        }   
+          nxyz |= X;
+        }
         if (xyz[i].indexOf('y') >= 0) {
-          nxyz |= 2;
-        }   
+          nxyz |= Y;
+        }
         if (xyz[i].indexOf('z') >= 0) {
-          nxyz |= 4;
-        }   
+          nxyz |= Z;
+        }
       }
-      P3d v1, v2, v3;
+
       switch (nxyz) {
       case 0:
         type = TYPE_POINT;
         point = toPoint(p);
         break;
-      case 1:
-      case 2:
-      case 4:
+      case X:
+      case Y:
+      case Z:
+
+        // just one 
         type = TYPE_LINE;
-        v1 = ptFor(p, 0,0,0);
-        v2 = ptFor(p, 1d,1.27d,1.64d);
-        v2.sub2(v2, v1);
-        v2.normalize();
-        point = P3d.newP(v1);
-        SimpleUnitCell.unitizeDimRnd(3, point, SimpleUnitCell.SLOPDP);
-        line = V3d.newV(v2);
+//        getMatrix(p, d);
+        ptFor(0.19d, 0.53d, 0.71d, p1);
+        ptFor(0.51d, 0.27d, 0.64d, p2);
+        p2.sub2(p2, p1);
+        p2.normalize();
+        point = P3d.newP(p1);
+//        SimpleUnitCell.unitizeDimRnd(3, point, SimpleUnitCell.SLOPDP);
+        line = V3d.newV(p2);
+//        System.out.println("draw id '" + label+" "+ p + "' width 0.1 vector @{" + point + ".xyz} @{" + line + ".xyz}");
         break;
-      case 3:
-      case 5:
-      case 6:
+      case X|Y:
+      case X|Z:
+      case Y|Z:
         type = TYPE_PLANE;
-        v1 = ptFor(p, 0,0,0);
-        v2 = ptFor(p, 1.23d,1.47d,1.86d);
-        v3 = ptFor(p, 0.1d,0.2d,0.3d);
-        plane = MeasureD.getPlaneThroughPoints(v1, v2, v3, null, null, new P4d());
+ //       getMatrix(p, d);
+        ptFor(0.19d, 0.51d, 0.73d, p1);
+        ptFor(0.23d, 0.47d, 0.86d, p2);
+        ptFor(0.1d, 0.2d, 0.3d, p3);
+        plane = MeasureD.getPlaneThroughPoints(p1, p2, p3, null, null,
+            new P4d());
         break;
       case 7:
         // general position
@@ -83,18 +103,17 @@ public class WyckoffFinder {
       }
     }
 
-    private static P3d ptFor(String p, double x, double y, double z) {
-
-      // create a reference point for x,x,1/4, for example
-
-      String[] v = PT.split(p, ",");
-      double a = decodeXYZ(v[0], x, y, z);
-      double b = decodeXYZ(v[1], x, y, z);
-      double c = decodeXYZ(v[2], x, y, z);
-      return P3d.new3(a, b, c);
+    private void ptFor(double x, double y, double z, T3d p) {
+      String[] v = PT.split(xyz, ",");
+      if (parts != null) {
+        parts[0] = getParts(v[0]);
+        parts[1] = getParts(v[1]);
+        parts[2] = getParts(v[2]);
+      }
+      p.set(decodeXYZ(parts[0], x, y, z), decodeXYZ(parts[1], x, y, z), decodeXYZ(parts[2], x, y, z));
     }
-
-    private static double decodeXYZ(String s, double x, double y, double z) {
+    
+    private String[] getParts(String s) {
       // -x+1/2 => +-x+1/2 => ["","-x","1/2"] 
       // 2x+-3  =>  ["2*x","-3"]
       // x-1/2
@@ -106,10 +125,15 @@ public class WyckoffFinder {
       s = PT.rep(s, "z", "*z");
       s = PT.rep(s, "-*", "-");
       s = PT.rep(s, "+*", "+");
+      return PT.split(s, "+");
+    }
+
+    private String[][] parts = new String[3][];
+
+    private static double decodeXYZ(String[] parts, double x, double y, double z) {
       double r = 0;
-      String[] parts = PT.split(s, "+");
       for (int p = parts.length; --p >= 0;) {
-        s = parts[p];
+        String s = parts[p];
         if (s.length() == 0)
           continue;
         if (s.indexOf('.') >= 0) {
@@ -141,6 +165,7 @@ public class WyckoffFinder {
             v = z;
             break;
           case '/':
+            f2 = 1;
             v = 1 / v;
             //$FALL-THROUGH$
           case '*':
@@ -164,56 +189,83 @@ public class WyckoffFinder {
       }
       return r;
     }
-    //
-    //    static {
-    //      System.out.println(decodeXYZ("x", 1,2,3) == 1);
-    //      System.out.println(decodeXYZ("x", 1,2,3) == 1);
-    //      System.out.println(decodeXYZ("x+y", 1,2,4) == 3);
-    //      System.out.println(decodeXYZ("x+y", 1,2,4) == 3);
-    //      System.out.println(decodeXYZ("-x-y", 1,2,3) == -3);
-    //      System.out.println(decodeXYZ("-x-y", 1,2,3) == -3);
-    //      System.out.println(decodeXYZ("z+1/2", 1,2,3) == 3.5);
-    //      System.out.println(decodeXYZ("z+1/2", 1,2,3) == 3.5);
-    //      System.out.println(decodeXYZ("x-1/2", 1,2,3) == 0.5);
-    //      System.out.println(decodeXYZ("x-1/2", 1,2,3) == 0.5);
-    //      System.out.println(decodeXYZ("1/2z", 1,2,3) == 1.5);
-    //      System.out.println(decodeXYZ("1/2z", 1,2,3) == 1.5);
-    //      System.out.println(decodeXYZ("-1/3z+0.27778", 1,2,3) == -1./3*3+0.27778);
-    //      System.out.println(decodeXYZ("-1/3z+0.27778", 1,2,3) == -1./3*3+0.27778);
-    //      
-    //    }
+    
+//        static {
+//          System.out.println(decodeXYZ("11/12", 1,2,3) == 11/12d);
+//          System.out.println(decodeXYZ("x", 1,2,3) == 1);
+//          System.out.println(decodeXYZ("x+y", 1,2,4) == 3);
+//          System.out.println(decodeXYZ("x+y", 1,2,4) == 3);
+//    //      System.out.println(decodeXYZ("-x-y", 1,2,3) == -3);
+//    //      System.out.println(decodeXYZ("-x-y", 1,2,3) == -3);
+//    //      System.out.println(decodeXYZ("z+1/2", 1,2,3) == 3.5);
+//    //      System.out.println(decodeXYZ("z+1/2", 1,2,3) == 3.5);
+//    //      System.out.println(decodeXYZ("x-1/2", 1,2,3) == 0.5);
+//    //      System.out.println(decodeXYZ("x-1/2", 1,2,3) == 0.5);
+//    //      System.out.println(decodeXYZ("1/2z", 1,2,3) == 1.5);
+//    //      System.out.println(decodeXYZ("1/2z", 1,2,3) == 1.5);
+//    //      System.out.println(decodeXYZ("-1/3z+0.27778", 1,2,3) == -1./3*3+0.27778);
+//    //      System.out.println(decodeXYZ("-1/3z+0.27778", 1,2,3) == -1./3*3+0.27778);
+//    //      
+//        }
 
-    boolean contains(UnitCell uc, P3d p, P3d[] centerings) {
+    boolean contains(UnitCell uc, P3d p, WyckoffFinder w) {
       double slop = uc.getPrecision();
-      if (containsPt(p, slop))
+      thisCentering = null;
+      if (containsPt(uc, p, slop, true))
         return true;
-      P3d pc = new P3d();
-      if (centerings != null)
-        for (int i = centerings.length; --i >= 0;) {
-          pc.add2(p, centerings[i]);
+      if (w.centerings != null)
+        for (int i = w.centerings.length; --i >= 0;) {
+          pc.add2(p, w.centerings[i]);
           uc.unitize(pc);
-          if (containsPt(pc, slop))
+          if (containsPt(uc, pc, slop, true)) {
+            thisCentering = w.centeringStr[i];
             return true;
+          }
         }
       return false;
     }
-    
-    private boolean containsPt(P3d p, double slop) {      
+
+    private boolean containsPt(UnitCell uc, P3d p, double slop,
+                               boolean doLatticeCheck) {
+      if (doLatticeCheck) {
+        for (int i = -2; i < 3; i++) {
+          for (int j = -2; j < 3; j++) {
+            for (int k = -2; k < 3; k++) {
+              p3.set(i, j, k);
+              p3.add(p);
+              if (containsPt(uc, p3, slop, false)) {
+                System.out.println(label + " " + xyz + " found for " + i + " "+ j + " "+ k);
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
       double d = 1;
       switch (type) {
       case TYPE_POINT:
-        d = p.distance(point);
+        // will be unitized
+        d = point.distance(p);
+        p1.setT(point);
         break;
-      case TYPE_LINE:        
-        P3d p1 = P3d.newP(p);
-        MeasureD.projectOntoAxis(p1, point, line, vtemp1);
-        d = p.distance(p1);
+      case TYPE_LINE:
+        p1.setT(p);
+        MeasureD.projectOntoAxis(p1, point, line, vt);
+        p2.sub2(p1, p);
+//        if (label.equals("b"))
+//          System.out.println("contains? " + label + " " + xyz + "\n" + p + " "
+//              + p1 + "\np2=" + p2);
+        d = p1.distance(p);
         break;
       case TYPE_PLANE:
-        d = MeasureD.distanceToPlane(plane, p);
+        p1.setT(p);
+        d = Math.abs(MeasureD.getPlaneProjection(p1, plane, vt, vt));
         break;
       }
-      return approx0(d, slop);
+      if (d < slop)
+        System.out.println("success! " + label + " " + xyz + " " + d + " " + p);
+      return d < slop;
     }
 
     void set(P3d p) {      
@@ -222,29 +274,41 @@ public class WyckoffFinder {
         p.setT(point);
         break;
       case TYPE_LINE:        
-        MeasureD.projectOntoAxis(p, point, line, vtemp1);
+        MeasureD.projectOntoAxis(p, point, line, vt);
         break;
       case TYPE_PLANE:
-        MeasureD.getPlaneProjection(p, plane, vtemp1, vtemp1);
-        p.setT(vtemp1);
+        MeasureD.getPlaneProjection(p, plane, vt, vt);
+        p.setT(vt);
         break;
       }
     }
 
-    private static boolean approx0(double d, double slop) {
-      return (Math.abs(d) < slop);
+//    private static boolean approx0(double d, double slop) {
+//      return (Math.abs(d) < slop);
+//    }
+//    
+    SB asString(SB sb, boolean withCentering) {
+      if (sb == null)
+        sb = new SB();
+      wrap(xyz, sb);
+      if (withCentering && thisCentering != null) {
+        sb.appendC('+');
+        wrap(thisCentering, sb);
+      }
+      return sb;
     }
 
     @Override
     public String toString() {
-      return xyz;
+      return asString(null, false).toString();
     }
   }
 
   private final static Map<String, WyckoffFinder> helpers = new Hashtable<String, WyckoffFinder>();
   private Lst<Object> positions;
-  private P3d[] centerings;
-  private String centeringStr = "";
+  int npos, ncent;
+  protected P3d[] centerings;
+  protected String[] centeringStr;
   private static WyckoffFinder nullHelper;
  
   public WyckoffFinder() {
@@ -293,12 +357,15 @@ public class WyckoffFinder {
     if (map != null) {
       Map<String, Object> wpos = (Map<String, Object>) map.get("wpos");
       positions = (Lst<Object>) wpos.get("pos");
+      npos = positions.size();
       Lst<Object> cent = (Lst<Object>) wpos.get("cent");
       if (cent != null) {
-        centerings = new P3d[cent.size()];
-        for (int i = cent.size(); --i >= 0;) {
+        ncent = cent.size();
+        centeringStr = new String[ncent];
+        centerings = new P3d[ncent];
+        for (int i = ncent; --i >= 0;) {
           String s = (String) cent.get(i);
-          centeringStr += "+" + s;
+          centeringStr[i] = s;
           centerings[i] = toPoint(s);
         }
       }
@@ -325,16 +392,18 @@ public class WyckoffFinder {
   String getWyckoffPosition(UnitCell uc, P3d p, int returnType) {
     switch (returnType) {
     case '*':
+      // all
       SB sb = new SB();
-      sb.append(centeringStr);
-      for (int i = positions.size(); --i >= 0;) {
+      getCenteringStr(-1, sb);
+      for (int i = npos; --i >= 0;) {
         Map<String, Object> map = (Map<String, Object>) positions.get(i);
-        sb.appendC('\n').append((String) map.get("label"));
+        String label = (String) map.get("label");
+        sb.appendC('\n').append(label);
         if (i == 0) {
           // general
-          sb.append("\tx,y,z").toString();
+          sb.append(" (x,y,z)");
         } else {
-          getList((Lst<Object>) map.get("coord"), sb);
+          getList((Lst<Object>) map.get("coord"), label, sb);
         }
       }
       return sb.toString();
@@ -343,28 +412,34 @@ public class WyckoffFinder {
     case WYCKOFF_RET_COORDS:
       for (int i = positions.size(); --i >= 0;) {
         Map<String, Object> map = (Map<String, Object>) positions.get(i);
+        String label = (String) map.get("label");
         if (i == 0) {
           // general
           switch (returnType) {
           case WYCKOFF_RET_LABEL:
-            return (String) map.get("label");
+            return label;
           case WYCKOFF_RET_COORD:
-            return "x,y,z";
+            return "(x,y,z)";
           case WYCKOFF_RET_COORDS:
-            return map.get("label") + "\t" + centeringStr + "\tx,y,z";
+            return map.get("label") + "  (x,y,z)";
           }
         }
         Lst<Object> coords = (Lst<Object>) map.get("coord");
         for (int c = 0, n = coords.size(); c < n; c++) {
-          WyckoffPos coord = getWyckoffCoord(coords, c);
-          if (coord.contains(uc, p, centerings)) {
+          WyckoffPos coord = getWyckoffCoord(coords, c, label);
+//          System.out.println(label+ " " + coord + " " +  c + " " + p);
+          if (coord.contains(uc, p, this)) {
             switch (returnType) {
             case WYCKOFF_RET_LABEL:
-              return (String) map.get("label");
+              return label;
             case WYCKOFF_RET_COORD:
-              return coord.toString();
+              return coord.asString(null, true).toString();
             case WYCKOFF_RET_COORDS:
-              return map.get("label") + "\t" + centeringStr + "\t" + getList(coords, null);
+              SB sbc = new SB();
+              sbc.append(label).appendC(' ');
+              getCenteringStr(-1, sbc).appendC(' ');
+              getList(coords, label, sbc);
+              return sbc.toString();
             }
           }
         }
@@ -372,10 +447,10 @@ public class WyckoffFinder {
       break;
     default:
       String letter = "" + (char) returnType;
-      for (int i = positions.size(); --i >= 0;) {
+      for (int i = npos; --i >= 0;) {
         Map<String, Object> map = (Map<String, Object>) positions.get(i);
         if (map.get("label").equals(letter)) {
-          return (i == 0 ? "x,y,z" : getList((Lst<Object>) map.get("coord"), null));
+          return (i == 0 ? "(x,y,z)" : getList((Lst<Object>) map.get("coord"), letter, null).toString());
         }
       }
       break;
@@ -383,28 +458,48 @@ public class WyckoffFinder {
     return "?";
   }
 
-  private static String getList(Lst<Object> coords, SB sb) {
-    boolean asString = (sb == null);
-    if (asString)
+  private SB getCenteringStr(int n, SB sb) {
+    if (sb == null)
+      sb = new SB();
+    if (ncent == 0)
+      return sb;
+    if (n >= 0) {
+      sb.appendC('+');
+      return wrap(centeringStr[n], sb);
+    }
+    for (int i = 0; i < ncent; i++) {
+      sb.appendC('+');
+      wrap(centeringStr[i], sb);
+    }
+    return sb;
+  }
+
+  protected static SB wrap(String xyz, SB sb) {
+    return sb.appendC('(').append(xyz).appendC(')');
+  }
+
+  private static SB getList(Lst<Object> coords, String letter, SB sb) {
+    if (sb == null)
       sb = new SB();
     for (int c = 0, n = coords.size(); c < n; c++) {
-      WyckoffPos coord = getWyckoffCoord(coords, c);
-      sb.append("\t").append(coord.toString());
+      WyckoffPos coord = getWyckoffCoord(coords, c, letter);
+      sb.append(" ");
+      coord.asString(sb, false);
     }
-    return (asString ? sb.substring(1) : null);
+    return sb;
   }
 
   public P3d findPositionFor(P3d p, String letter) {
     if (positions == null)
       return null;
-    for (int i = positions.size(); --i >= 0;) {
+    for (int i = npos; --i >= 0;) {
       @SuppressWarnings("unchecked")
       Map<String, Object> map = (Map<String, Object>) positions.get(i);
       if (map.get("label").equals(letter)) {
         @SuppressWarnings("unchecked")
         Lst<Object> coords = (Lst<Object>) map.get("coord");
         if (coords != null)
-          getWyckoffCoord(coords, 0).set(p);
+          getWyckoffCoord(coords, 0, letter).set(p);
         return p;
      }
     }
@@ -413,10 +508,11 @@ public class WyckoffFinder {
 
 
   
-  private static WyckoffPos getWyckoffCoord(Lst<Object> coords, int c) {
+  
+  private static WyckoffPos getWyckoffCoord(Lst<Object> coords, int c, String label) {
     Object coord = coords.get(c);
     if (coord instanceof String) {
-      coords.set(c, coord = new WyckoffPos((String) coord));
+      coords.set(c, coord = new WyckoffPos((String) coord, label ));
     }
     return (WyckoffPos) coord;
   }

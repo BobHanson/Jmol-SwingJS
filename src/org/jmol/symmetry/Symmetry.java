@@ -317,7 +317,7 @@ public class Symmetry implements SymmetryInterface {
 
     // MMCifReader only
     return SymmetryOperation.getMatrixFromString(null, xyz, rotTransMatrix,
-        allowScaling, true);
+        allowScaling, true, true);
   }
 
   /// symmetryInfo ////
@@ -1187,7 +1187,7 @@ public class Symmetry implements SymmetryInterface {
     if (matrix == null) {
       // does allow for "a,b,c ;1/2,1/2,0" notation
       double[] a = new double[16];
-      SymmetryOperation.getMatrixFromString(null, xyz, a, true, false);
+      SymmetryOperation.getMatrixFromString(null, xyz, a, true, false, false);
       a[3]/= 12; a[7] /= 12; a[11] /= 12;
       return M4d.newA16(a);
     }
