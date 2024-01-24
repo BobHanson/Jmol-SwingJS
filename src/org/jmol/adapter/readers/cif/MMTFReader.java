@@ -123,6 +123,8 @@ public class MMTFReader extends MMCifReader {
   @Override
   protected void processBinaryDocument() throws Exception {
 
+    long t = System.currentTimeMillis();
+    
     // load xxx.mmtf filter "..." options 
 
     // NODOUBLE -- standard PDB-like structures
@@ -159,6 +161,9 @@ public class MMTFReader extends MMCifReader {
     appendLoadNote("id=" + pdbID + " numAtoms=" + fileAtomCount + " numBonds="
         + nBonds + " numGroups=" + groupCount + " numModels=" + modelCount);
     getMMTFAtoms(doDoubleBonds);
+    
+    System.out.println("MMTF read and parsed in " + (System.currentTimeMillis() - t) + " ms");
+    
     if (!isCourseGrained) {
       int[] bo = (int[]) decode("bondOrderList");
       int[] bi = (int[]) decode("bondAtomList");
@@ -166,6 +171,9 @@ public class MMTFReader extends MMCifReader {
       if (isDSSP1 || mmtfImplementsDSSP2)
         getStructure();
     }
+    
+    
+    
     setMMTFSymmetry();
     getMMTFBioAssembly();
     setModelPDB(true);

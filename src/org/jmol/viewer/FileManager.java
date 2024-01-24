@@ -1192,8 +1192,9 @@ public class FileManager implements BytePoster {
           byte[] buf = new byte[300];
           is.read(buf, 0, 300);
           is.reset();
-          if ((buf[0] & 0xFF) == 0x83) // Finite map(3)
-            return "BCifDensity";
+          if ((buf[0] & 0xFF) == 0x83) {
+            return (buf[10] == 'D' && buf[11] == 'e' && buf[12] == 'n' ? "BCifDensity" : null);
+          }
           if (buf[0] == 'P' && buf[1] == 'M' && buf[2] == 1 && buf[3] == 0)//          "PM\1\0"
             return "Pmesh";
           if (buf[208] == 'M' && buf[209] == 'A' && buf[210] == 'P')//          "MAP" at 208
@@ -1224,8 +1225,10 @@ public class FileManager implements BytePoster {
     // and thus shifting the offset
     int pt0 = line.indexOf('\0');
     if (pt0 >= 0) {
-      if (line.charAt(0) == 0x83) // Finite map(3)
-        return "BCifDensity";
+      if (line.charAt(0) == 0x83) {
+        return (line.charAt(10) == 'D' && line.charAt(11) == 'e' 
+            && line.charAt(12) == 'n' ? "BCifDensity" : null);
+      }
       if (line.indexOf(PMESH_BINARY_MAGIC_NUMBER) == 0)
         return "Pmesh";
       if (line.indexOf("MAP ") == 208)

@@ -45,7 +45,7 @@ public class Resolver {
 
   private final static String classBase = "org.jmol.adapter.readers.";
   private final static String[] readerSets = new String[] {
-    "cif.", ";Cif;Cif2;MMCif;MMTF;MagCif",
+    "cif.", ";Cif;Cif2;MMCif;MMTF;MagCif;BCIF;",
     "molxyz.", ";Mol3D;Mol;Xyz;",
     "more.", ";AFLOW;BinaryDcd;CDX;Gromacs;Jcampdx;MdCrd;MdTop;Mol2;TlsDataOnly;",
     "quantum.", ";Adf;Csf;Dgrid;GamessUK;GamessUS;Gaussian;GaussianFchk;GaussianWfn;Jaguar;" +
@@ -346,9 +346,11 @@ public class Resolver {
 
   public static String getBinaryType(InputStream inputStream) {
     byte[] magic4 = null;
-    return (Rdr.isPickleS(inputStream) ? "PyMOL" : (Rdr.getMagic(inputStream, 1)[0] & 0xDE) == 0xDE ? "MMTF" : 
-      bytesMatch((magic4 = Rdr.getMagic(inputStream, 4)), cdxMagic) ? "CDX" : 
-        bytesMatch(magic4, cmdfMagic) ? "Cmdf" : null);
+    return (Rdr.isPickleS(inputStream) ? "PyMOL" 
+        : (Rdr.getMagic(inputStream, 1)[0] & 0xDE) == 0xDE ? "MMTF" 
+        : (Rdr.getMagic(inputStream, 10)[9] & 0xB6) == 0xB6 ? "BCIF" 
+        : bytesMatch((magic4 = Rdr.getMagic(inputStream, 4)), cdxMagic) ? "CDX" 
+        : bytesMatch(magic4, cmdfMagic) ? "Cmdf" : null);
   }
 
   private static boolean bytesMatch(byte[] a, byte[] b) {

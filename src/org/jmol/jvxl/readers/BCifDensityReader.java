@@ -93,6 +93,7 @@ class BCifDensityReader extends MapFileReader {
     for (int i = dataBlocks.length; --i >= 0;) {
       Map<String, Object> map = (Map<String, Object>) dataBlocks[i];
       header = map.get("header").toString();
+      System.out.println(header);
       if ("EM".equals(header) || type.equalsIgnoreCase(header)) {
         // flatten hierarchy
         Object[] categories = (Object[]) map.get("categories");

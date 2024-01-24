@@ -18,6 +18,7 @@ public class BC {
   }
 
   public static int bytesToShort(byte[] bytes, int j, boolean isBigEndian) {
+    
     int n = (isBigEndian ? (bytes[j + 1] & 0xff) | (bytes[j] & 0xff) << 8
         : (bytes[j++] & 0xff) | (bytes[j++] & 0xff) << 8);
       return (n > 0x7FFF ? n - 0x10000 : n);
