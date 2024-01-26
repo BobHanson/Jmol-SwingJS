@@ -70,8 +70,8 @@ public class StructureIterator extends JmolAdapterStructureIterator {
   }
 
   @Override
-  public int getSerialID() {
-    return structure.serialID;
+  public String getStrandID() {
+    return structure.strandID;
   }
 
   @Override

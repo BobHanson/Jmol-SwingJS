@@ -508,7 +508,7 @@ public class JMEJmol extends JME implements WindowListener {
 
 	protected void openMolByName(String name) {
 		try {
-			String mol = (String) vwr.setLoadFormat("$$" + name, '$', true);
+			String mol = (String) vwr.setLoadFormat(false, "$$" + name, '$', true);
 			mol = vwr.getFileAsString(mol);
 			readMolFile(mol);
 		} catch (Exception e) {

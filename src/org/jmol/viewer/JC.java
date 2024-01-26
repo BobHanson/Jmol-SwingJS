@@ -205,7 +205,8 @@ public final class JC {
       "magndata", "http://webbdcrista1.ehu.es/magndata/mcif/%FILE.mcif",
       "rna3d", "http://rna.bgsu.edu/rna3dhub/%TYPE/download/%FILE",
       // now https:
-      "mmtf", "https://mmtf.rcsb.org/v1.0/full/%FILE", // new Jmol 14.5.4 4/2016
+      "mmtf", "https://mmtf.rcsb.org/v1.0/full/%FILE", // new Jmol 14.5.4 4/2016 MMTF phase out in 2024.06
+      "bcif", "https://models.rcsb.org/%file.bcif", // new Jmol 16.1.52 2024.01.25
       "chebi",
       "https://www.ebi.ac.uk/chebi/saveStructure.do?defaultImage=true&chebiId=%file%2D%",
       "ligand", "https://files.rcsb.org/ligands/download/%FILE.cif", "mp",

@@ -473,7 +473,7 @@ public class MMTFReader extends MMCifReader {
     if (lastGroup >= 0) {
       // a single structure takes care of everything
       haveStructure = true;
-      asc.addStructure(new Structure(n, null, null, null, 0, 0, bsStructures));
+      asc.addStructure(new Structure(n, null, null, null, null, 0, bsStructures));
     }
   }
 

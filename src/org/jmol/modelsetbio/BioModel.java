@@ -101,7 +101,7 @@ public final class BioModel extends Model {
 
 
   void addSecondaryStructure(STR type, String structureID,
-                                    int serialID, int strandCount,
+                                    String serialID, int strandCount,
                                     int startChainID, int startSeqcode,
                                     int endChainID, int endSeqcode, int istart,
                                     int iend, BS bsAssigned) {

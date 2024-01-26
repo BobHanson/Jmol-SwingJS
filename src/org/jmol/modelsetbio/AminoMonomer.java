@@ -390,7 +390,7 @@ public class AminoMonomer extends AlphaMonomer {
     if (proteinStructure == null || proteinStructure.structureID == null)
       return null;
     String tag = "%3N %3ID";
-    tag = PT.formatStringI(tag, "N", proteinStructure.serialID);
+    tag = PT.formatStringS(tag, "N", proteinStructure.serialID);
     tag = PT.formatStringS(tag, "ID", proteinStructure.structureID);
     if (proteinStructure.type == STR.SHEET)
       tag += PT.formatStringI("%2SC", "SC", proteinStructure.strandCount);

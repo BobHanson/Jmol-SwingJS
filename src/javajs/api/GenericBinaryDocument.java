@@ -14,8 +14,6 @@ public interface GenericBinaryDocument extends GenericBinaryDocumentReader {
 
   void setStreamData(DataInputStream dataInputStream, boolean isBigEndian);
 
-  long getPosition();
-
   SB getAllDataFiles(String binaryFileList, String firstFile);
 
   void getAllDataMapped(String replace, String string, Map<String, String> fileData);
@@ -23,8 +21,6 @@ public interface GenericBinaryDocument extends GenericBinaryDocumentReader {
   int swapBytesI(int nx);
 
   short swapBytesS(short s);
-
-  void seek(long i);
 
   void setOutputChannel(GenericOutputChannel out);
 
@@ -36,5 +32,7 @@ public interface GenericBinaryDocument extends GenericBinaryDocumentReader {
 
 
   void close();
+
+  void setBigEndian(boolean b);
 
 }

@@ -36,7 +36,7 @@ public abstract class JmolAdapterStructureIterator {
 
 	public abstract String getStructureID();
 
-	public abstract int getSerialID();
+	public abstract String getStrandID();
 
 	public abstract int getStrandCount();
 

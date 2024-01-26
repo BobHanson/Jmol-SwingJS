@@ -3022,8 +3022,8 @@ public class IsoExt extends ScriptExt {
             }
           }
           String fn = filename;
-          filename = (String) vwr.setLoadFormat(filename,
-              (chk? '?' : isFull ? '_' : '-'), false);
+          filename = (String) vwr.setLoadFormat(false,
+              filename, (chk? '?' : isFull ? '_' : '-'), false);
           if (filename == null)
             eval.errorStr(ScriptError.ERROR_invalidArgument,
                 "error parsing filename: " + fn);

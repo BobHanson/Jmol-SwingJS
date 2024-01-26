@@ -31,7 +31,7 @@ public class Structure implements Cloneable {
   public STR structureType;
   public STR substructureType;
   public String structureID;
-  public int serialID;
+  public String strandID;
   public int strandCount;
 
   public int startSequenceNumber;
@@ -60,7 +60,7 @@ public class Structure implements Cloneable {
   }
 
   public Structure(int modelIndex, STR structureType,
-      STR substructureType, String structureID, int serialID,
+      STR substructureType, String structureID, String strandID,
       int strandCount, BS[] bsAll) {
     if (bsAll != null) {
       this.modelStartEnd = new int[] {0, modelIndex};
@@ -74,7 +74,7 @@ public class Structure implements Cloneable {
     modelStartEnd[0] = modelStartEnd[1] = modelIndex;
     this.structureID = structureID;
     this.strandCount = strandCount; // 1 for sheet initially; 0 for helix or turn
-    this.serialID = serialID;
+    this.strandID = strandID;
   }
 
   public void set(int startChainID, int startSequenceNumber,

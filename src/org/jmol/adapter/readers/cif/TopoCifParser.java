@@ -398,9 +398,9 @@ public class TopoCifParser implements Parser {
       int[] t2 = new int[3];
       int n = cifParser.getColumnCount();
       for (int i = 0; i < n; ++i) {
-        int p = reader.fieldProperty(i);
-        String field = reader.field;
-        switch (p) {
+        int tok = reader.fieldProperty(i);
+        String field = (String) reader.field;
+        switch (tok) {
         case topol_link_id:
           link.id = field;
           break;
@@ -438,7 +438,7 @@ public class TopoCifParser implements Parser {
         case topol_link_translation_1_x:
         case topol_link_translation_1_y:
         case topol_link_translation_1_z:
-          t1 = processTranslation(p, t1, field);
+          t1 = processTranslation(tok, t1, field);
           break;
         case topol_link_site_symmetry_translation_2_DEPRECATED:
         case topol_link_site_symmetry_translation_2_x_DEPRECATED:
@@ -448,7 +448,7 @@ public class TopoCifParser implements Parser {
         case topol_link_translation_2_x:
         case topol_link_translation_2_y:
         case topol_link_translation_2_z:
-          t2 = processTranslation(p, t2, field);
+          t2 = processTranslation(tok, t2, field);
           break;
         case topol_link_distance:
           link.cartesianDistance = getFloat(field);
@@ -474,9 +474,9 @@ public class TopoCifParser implements Parser {
       int[] t = new int[3];
       int n = cifParser.getColumnCount();
       for (int i = 0; i < n; ++i) {
-        int p = reader.fieldProperty(i);
-        String field = reader.field;
-        switch (p) {
+        int tok = reader.fieldProperty(i);
+        String field = (String) reader.field;
+        switch (tok) {
         case topol_node_id:
           node.id = field;
           break;
@@ -493,7 +493,7 @@ public class TopoCifParser implements Parser {
         case topol_node_translation_x:
         case topol_node_translation_y:
         case topol_node_translation_z:
-          t = processTranslation(p, t, field);
+          t = processTranslation(tok, t, field);
           break;
         case topol_node_fract_x:
           node.x = getFloat(field);
@@ -517,9 +517,9 @@ public class TopoCifParser implements Parser {
       int[] t = new int[3];
       int n = cifParser.getColumnCount();
       for (int i = 0; i < n; ++i) {
-        int p = reader.fieldProperty(i);
-        String field = reader.field;
-        switch (p) {
+        int tok = reader.fieldProperty(i);
+        String field = (String) reader.field;
+        switch (tok) {
         case topol_atom_id:
           atom.id = field;
           break;
@@ -539,7 +539,7 @@ public class TopoCifParser implements Parser {
         case topol_atom_translation_x:
         case topol_atom_translation_y:
         case topol_atom_translation_z:
-          t = processTranslation(p, t, field);
+          t = processTranslation(tok, t, field);
           break;
         case topol_atom_fract_x:
           atom.x = getFloat(field);
@@ -859,7 +859,7 @@ public class TopoCifParser implements Parser {
    * @return the value or null if does not exist or is '.' or '?'
    */
   private String getDataValue(byte key) {
-    String f = reader.getField(key);
+    String f = reader.getFieldString(key);
     return ("\0".equals(f) ? null : f);
   }
 

@@ -8,8 +8,6 @@ public interface GenericCifDataParser {
 
   static final int NONE = -1;
 
-  String fullTrim(String str);
-
   Map<String, Object> getAllCifData();
 
   boolean getData() throws Exception;

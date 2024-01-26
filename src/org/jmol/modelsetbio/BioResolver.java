@@ -824,7 +824,7 @@ public final class BioResolver implements Comparator<String[]> {
   private void setStructure(JmolAdapterStructureIterator iterStructure) {
     STR t = iterStructure.getSubstructureType();
     String id = iterStructure.getStructureID();
-    int serID = iterStructure.getSerialID();
+    String serID = iterStructure.getStrandID();
     int count = iterStructure.getStrandCount();
     int[] atomRange = iterStructure.getAtomIndices();
     int[] modelRange = iterStructure.getModelIndices();

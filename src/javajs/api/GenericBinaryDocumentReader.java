@@ -22,4 +22,11 @@ public interface GenericBinaryDocumentReader {
 
   String readString(int i) throws Exception;
 
+  long getPosition();
+
+  void seek(long i);
+
+  void skip(int n) throws Exception;
+
+
 }

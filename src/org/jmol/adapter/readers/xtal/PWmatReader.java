@@ -53,7 +53,8 @@ public class PWmatReader extends AtomSetCollectionReader {
   
   @Override
   protected void initializeReader() throws Exception {
-	  precision = 12;
+	  if (!filteredPrecision)
+	    precision = 12;
     doApplySymmetry = true;
   }
 

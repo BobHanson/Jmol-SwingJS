@@ -4655,7 +4655,7 @@ public class CmdExt extends ScriptExt {
       try {
         smiles = vwr.getOpenSmiles(null);
         if (smiles.length() > 0) {
-        String fname = (String) vwr.setLoadFormat("_" + smiles, '2', false);
+        String fname = (String) vwr.setLoadFormat(true, "_" + smiles, '2', false);
         fname += "?width=" + width + "&height=" + height + "&format=" + type.toLowerCase();
         showString(fname);
         ret = vwr.fm.getFileAsBytes(fname, null);
@@ -4938,7 +4938,7 @@ public class CmdExt extends ScriptExt {
           break;
         case T.drawing:
           if (msg.length() > 0) {
-            vwr.fm.loadImage(vwr.setLoadFormat("_" + msg, '2', false), "\1"
+            vwr.fm.loadImage(vwr.setLoadFormat(false, "_" + msg, '2', false), "\1"
                 + msg, false);
             return;
           }

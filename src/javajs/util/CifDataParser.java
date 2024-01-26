@@ -1,9 +1,7 @@
 package javajs.util;
 
 import java.io.BufferedReader;
-
 import java.util.Hashtable;
-
 import java.util.Map;
 
 import javajs.api.GenericCifDataParser;
@@ -122,8 +120,9 @@ public class CifDataParser implements GenericCifDataParser {
   
   /**
    * string to return for CIF data value . and ?
+   * for CIF2 reader, "." 
    */
-  protected String nullString = "\0";
+  public static String nullString = "\0";
 
   /**
    * A flag to create and return Java objects, not strings.
@@ -145,11 +144,11 @@ public class CifDataParser implements GenericCifDataParser {
    */
   private Object strPeeked;
   private int ichPeeked;
-  private int columnCount;
-  private String[] columnNames;
+  protected int columnCount;
+  protected String[] columnNames;
   private Object[] columnData = new Object[KEY_MAX];
   private boolean isLoop;
-  private boolean haveData;
+  protected boolean haveData;
   
   /**
    * comments at the top of a file, including #\#CIF_2.0, for example
@@ -167,7 +166,7 @@ public class CifDataParser implements GenericCifDataParser {
    * 
    */
   public void setNullValue(String nullString) {
-    this.nullString  = nullString;    
+    CifDataParser.nullString  = nullString;    
   }
 
   /**
@@ -175,7 +174,7 @@ public class CifDataParser implements GenericCifDataParser {
    * if we read a set of fields for, say, atom_site, once in a lifetime, then
    * that should be good forever. Those are static lists. Or should be....
    */
-  private static Map<String, Integer> htFields = new Hashtable<String, Integer>();
+  protected static Map<String, Integer> htFields = new Hashtable<String, Integer>();
   
   ////////////////////////////////////////////////////////////////
   // special tokenizer class
@@ -185,6 +184,9 @@ public class CifDataParser implements GenericCifDataParser {
     // for reflection
   }
     
+  /**
+   * Column i in the current row
+   */
   @Override
   public Object getColumnData(int i) {
     return columnData[i];
@@ -229,7 +231,7 @@ public class CifDataParser implements GenericCifDataParser {
    */
   @Override
   public String getFileHeader() {
-    return fileHeader.toString();
+    return (fileHeader == null ? "" : fileHeader.toString());
   }
   
   
@@ -318,44 +320,6 @@ public class CifDataParser implements GenericCifDataParser {
 
 
   
-
-  /**
-   * create our own list of keywords and for each one create a list of data
-   * associated with that keyword. For example, a list of all x coordinates,
-   * then a list of all y coordinates, etc.
-   * 
-   * @param data
-   * @throws Exception
-   */
-  @SuppressWarnings("unchecked")
-  private void getAllCifLoopData(Map<String, Object> data, String[] types)
-      throws Exception {
-    String key;
-    Lst<String> keyWords = new Lst<String>();
-    Object o;
-    boolean skipping = false;
-    while ((o = peekToken()) != null && o instanceof String
-        && ((String) o).charAt(0) == '_') {
-      key = fixKey((String) getTokenPeeked());
-
-      keyWords.addLast(key);
-      if (types == null || checkKey(types, key))
-        data.put(key, new Lst<String>());
-      else
-        skipping = true;
-    }
-    columnCount = keyWords.size();
-    if (columnCount == 0)
-      return;
-    isLoop = true;
-    if (skipping)
-      skipLoop(false);
-    else
-      while (getData())
-        for (int i = 0; i < columnCount; i++)
-          ((Lst<Object>) data.get(keyWords.get(i))).addLast(columnData[i]);
-    isLoop = false;
-  }
 
   private boolean checkKey(String[] types, String key) {
     for (int i = 0; i < types.length; i++)
@@ -534,24 +498,6 @@ public class CifDataParser implements GenericCifDataParser {
     return strPeeked;
   }
   
-  /**
-   * Used especially for data that might be multi-line data that
-   * might have unwanted white space at start or end.
-   * 
-   * @param str
-   * @return str without any leading/trailing white space, and no '\n'
-   */
-  @Override
-  public String fullTrim(String str) {
-    int pt0 = -1;
-    int pt1 = str.length();
-    while (++pt0 < pt1 && PT.isWhitespace(str.charAt(pt0))) {
-    }
-    while (--pt1 > pt0 && PT.isWhitespace(str.charAt(pt1))) {      
-    }
-    return str.substring(pt0, pt1 + 1);
-  }
-
   private final static String grABC =
       "ABX\u0394E\u03A6\u0393H"   // ABCDEFGH
       + "I_K\u039BMNO\u03A0"      // I_KLMNOP
@@ -691,14 +637,18 @@ public class CifDataParser implements GenericCifDataParser {
     }
   }
 
+  /**
+   * Switch '." to "_" in a key, and also make any
+   * quirky key name changes that need to be done
+   * 
+   */
   @Override
   public String fixKey(String key) {
-    // PRELIMINARY -- BilBao _magnetic
-    // PRELIMINARY -- Jana2006
-    return (
-        key.startsWith("_magnetic") ? key.substring(9) 
-            : key.startsWith("_jana") ? key.substring(5) 
-            : key).replace('.', '_').toLowerCase();
+    return (key.charAt(1) == 'm' && key.startsWith("_magnetic") 
+              ? key.substring(9) 
+        : key.charAt(1) == 'j' && key.startsWith("_jana") 
+              ? key.substring(5) : key)
+     .replace('.', '_').toLowerCase();
   }
 
   //////////////////// private methods ////////////////////
@@ -1001,5 +951,45 @@ public class CifDataParser implements GenericCifDataParser {
     skipToken = false;
     return "<skipped>";
   }
+
+  /**
+   * create our own list of keywords and for each one create a list of data
+   * associated with that keyword. For example, a list of all x coordinates,
+   * then a list of all y coordinates, etc.
+   * 
+   * @param data
+   * @param types 
+   * @throws Exception
+   */
+  @SuppressWarnings("unchecked")
+  private void getAllCifLoopData(Map<String, Object> data, String[] types)
+      throws Exception {
+    String key;
+    Lst<String> keyWords = new Lst<String>();
+    Object o;
+    boolean skipping = false;
+    while ((o = peekToken()) != null && o instanceof String
+        && ((String) o).charAt(0) == '_') {
+      key = fixKey((String) getTokenPeeked());
+
+      keyWords.addLast(key);
+      if (types == null || checkKey(types, key))
+        data.put(key, new Lst<String>());
+      else
+        skipping = true;
+    }
+    columnCount = keyWords.size();
+    if (columnCount == 0)
+      return;
+    isLoop = true;
+    if (skipping)
+      skipLoop(false);
+    else
+      while (getData())
+        for (int i = 0; i < columnCount; i++)
+          ((Lst<Object>) data.get(keyWords.get(i))).addLast(columnData[i]);
+    isLoop = false;
+  }
+
 
 }

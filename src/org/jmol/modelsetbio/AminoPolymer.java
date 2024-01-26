@@ -424,7 +424,7 @@ public class AminoPolymer extends AlphaPolymer {
         }
         end--;
         if (end >= start + 3) {
-          addStructureProtected(STR.HELIX, null, 0,
+          addStructureProtected(STR.HELIX, null, null,
               0, start, end);
         }
         start = end;
@@ -438,7 +438,7 @@ public class AminoPolymer extends AlphaPolymer {
         }
         end--;
         if (end >= start + 3) {
-          addStructureProtected(STR.HELIX, null, 0,
+          addStructureProtected(STR.HELIX, null, null,
               0, start, end);
         }
         start = end;
@@ -453,7 +453,7 @@ public class AminoPolymer extends AlphaPolymer {
         }
         end--;
         if (end >= start + 2) {
-          addStructureProtected(STR.SHEET, null, 0,
+          addStructureProtected(STR.SHEET, null, null,
               0, start, end);
         }
         start = end;
@@ -468,7 +468,7 @@ public class AminoPolymer extends AlphaPolymer {
         }
         end--;
         if (end >= start + 2) {
-          addStructureProtected(STR.TURN, null, 0,
+          addStructureProtected(STR.TURN, null, null,
               0, start, end);
         }
         start = end;

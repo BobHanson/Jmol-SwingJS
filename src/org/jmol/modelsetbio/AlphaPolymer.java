@@ -62,7 +62,7 @@ public class AlphaPolymer extends BioPolymer {
   }
 
   public void addStructure(STR type, String structureID,
-                           int serialID, int strandCount, int startChainID,
+                           String serialID, int strandCount, int startChainID,
                            int startSeqcode, int endChainID, int endSeqcode,
                            int istart, int iend, BS bsAssigned) {
     int i0 = -1;
@@ -88,7 +88,7 @@ public class AlphaPolymer extends BioPolymer {
   }
 
   public boolean addStructureProtected(STR type, String structureID,
-                                       int serialID, int strandCount,
+                                       String serialID, int strandCount,
                                        int indexStart, int indexEnd) {
 
     //these two can be the same if this is a carbon-only polymer
@@ -277,7 +277,7 @@ public class AlphaPolymer extends BioPolymer {
            iMax < monomerCount && tags[iMax] == tag;
            ++iMax)
         { }
-      addStructureProtected(tag, null, 0, 0, i, iMax - 1);
+      addStructureProtected(tag, null, null, 0, i, iMax - 1);
       i = iMax;
     }
   }
@@ -299,7 +299,7 @@ public class AlphaPolymer extends BioPolymer {
         && i < n; i = bs.nextSetBit(i2 + 1)) {
       if ((i2 = bs.nextClearBit(i)) < 0 || i2 > n)
         i2 = n;
-      addStructureProtected(type, dsspTypes[dsspType] + (++pt), count++, (dsspType == 3 ? 1 : 0), i - offset, i2 - 1 - offset);
+      addStructureProtected(type, dsspTypes[dsspType] + (++pt), "" + count++, (dsspType == 3 ? 1 : 0), i - offset, i2 - 1 - offset);
     }
     return count;
   }

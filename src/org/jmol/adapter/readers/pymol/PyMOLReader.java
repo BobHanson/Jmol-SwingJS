@@ -1425,7 +1425,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
           continue;
         bsStructureDefined.setBits(istart, iend + 1);
         Structure structure = new Structure(imodel, type, type,
-            type.toString(), ++structureCount, type == STR.SHEET ? 1
+            type.toString(),"" + (++structureCount), type == STR.SHEET ? 1
                 : 0, null);
         Atom a = atoms[istart];
         Atom b = atoms[iend];

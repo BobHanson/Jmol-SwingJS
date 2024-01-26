@@ -128,7 +128,7 @@ public class DSSR1 extends AnnotationParser {
         break;
       }
       try {
-        String name = (String) vwr.setLoadFormat("=dssrModel/", '=', false);
+        String name = (String) vwr.setLoadFormat(false, "=dssrModel/", '=', false);
         name = PT.rep(name, "%20", " ");
         Logger.info("fetching " + name + "[pdb data]");
         String data = vwr.getPdbAtomData(bs, null, false, false);

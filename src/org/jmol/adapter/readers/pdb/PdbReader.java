@@ -1305,7 +1305,7 @@ public class PdbReader extends AtomSetCollectionReader {
       return;
 
     String structureID = line.substring(11, 15).trim();
-    int serialID = parseIntRange(line, 7, 10);
+    String strandID = line.substring(7, 10).trim();
     int startChainID = vwr.getChainID(line.substring(startChainIDIndex, startChainIDIndex + 1), true);
     int startSequenceNumber = parseIntRange(line, startIndex, startIndex + 4);
     char startInsertionCode = line.charAt(startIndex + 4);
@@ -1322,7 +1322,7 @@ public class PdbReader extends AtomSetCollectionReader {
     if (substructureType == STR.NONE)
       substructureType = structureType;
     Structure structure = new Structure(-1, structureType, substructureType,
-        structureID, serialID, strandCount, null);
+        structureID, strandID, strandCount, null);
     structure.set(startChainID, startSequenceNumber,
         startInsertionCode, endChainID, endSequenceNumber, endInsertionCode, 0, 0);
     asc.addStructure(structure);

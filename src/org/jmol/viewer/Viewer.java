@@ -2907,7 +2907,7 @@ public class Viewer extends JmolViewer
     if (isNew) {
       String s;
       if (isLigand) {
-        fname = (String) setLoadFormat("#" + id, '#', false);
+        fname = (String) setLoadFormat(false, "#" + id, '#', false);
         if (fname.length() == 0)
           return null;
         scriptEcho("fetching " + fname);
@@ -4908,7 +4908,7 @@ public class Viewer extends JmolViewer
   String resolveDatabaseFormat(String fileName) {
     return (hasDatabasePrefix(fileName)
         || fileName.indexOf(JC.legacyResolver) >= 0
-            ? (String) setLoadFormat(fileName, fileName.charAt(0), false)
+            ? (String) setLoadFormat(false, fileName, fileName.charAt(0), false)
             : fileName);
   }
 
@@ -4929,15 +4929,16 @@ public class Viewer extends JmolViewer
    * making sure it is found using isDatabaseCode() first. Starting with Jmol
    * 13.1.13, we allow a generalized search using =xxx= where xxx is a known or
    * user-specified database designation.
-   * 
+   * @param isSurface TODO
    * @param name
    * @param type
    *        a character to distinguish the type of file, '?' means we are just
    *        doing an isosurface check
    * @param withPrefix
+   * 
    * @return String or String[]
    */
-  public Object setLoadFormat(String name, char type, boolean withPrefix) {
+  public Object setLoadFormat(boolean isSurface, String name, char type, boolean withPrefix) {
     String format = null;
     String id = name.substring(1);
     switch (type) {
@@ -4983,6 +4984,10 @@ public class Viewer extends JmolViewer
             return name;
           }
         }
+        if (!isSurface && id.endsWith(".bcif")) {
+            id = id.substring(0, id.indexOf(".bcif"));
+            return JC.resolveDataBase("bcif", id.toLowerCase(), null);
+          }
         if (id.endsWith(".mmtf")) {
           id = id.substring(0, id.indexOf(".mmtf"));
           return JC.resolveDataBase("mmtf", id.toUpperCase(), null);
@@ -8608,7 +8613,7 @@ public class Viewer extends JmolViewer
       type = 'N';
       break;
     }
-    String s = (String) setLoadFormat("_" + smiles, type, false);
+    String s = (String) setLoadFormat(false, "_" + smiles, type, false);
     if (type == '2') {
       fm.loadImage(s, "\1" + smiles, false);
       return s;
@@ -10804,7 +10809,7 @@ public class Viewer extends JmolViewer
           // assume SMILES
           // setLoadFormat will correct any special characters in the 
           // SMILES CIR call. 
-          data = (String) setLoadFormat("$" + molData, '$', false);
+          data = (String) setLoadFormat(false, "$" + molData, '$', false);
           molData = getFileAsString4(data, -1, false, false, true, "script");
         }
       }
@@ -10971,6 +10976,7 @@ public class Viewer extends JmolViewer
    * @return text
    */
   public String getScaleText(String units, boolean isAntialiased, double min, double[] ret) {
+    double relativeScale = 1d;
     String u = Measurement
         .fixUnits(units.length() > 0 ? ((units.startsWith("//") ? units.substring(2) : units).toLowerCase())
           : g.measureDistanceUnits.equals("vdw") ? "angstroms"
@@ -10990,12 +10996,12 @@ public class Viewer extends JmolViewer
     int m = 0, p = 0;
     double e = 0, mp = 0;
     // seems to work
-    min = min * imageFontScaling / af;
+    min = min * imageFontScaling / af * 2 * relativeScale;
     while (p < min) {
       e = Measurement.toUnits(d, u, false);
       m = (int) Math.floor(Math.log10(e));
       mp = Math.pow(10, m);
-      e = Measurement.fromUnits(mp + 0.000001f, u);
+      e = Measurement.fromUnits(mp + 0.000001d, u);
       p = (int) (e * tm.scalePixelsPerAngstrom / af);
       if (p < min) {
         d *= 10;

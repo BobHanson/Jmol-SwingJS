@@ -130,6 +130,12 @@ class TextRenderer {
     g3d.fillTextRect(x1, y-h/2-ia, z, text.zSlab, x2-x1, 2*ia);
     g3d.fillTextRect(x1, y-h*2/2, z, text.zSlab, 2*ia, h*2/2);
     g3d.fillTextRect(x2, y-h*2/2, z, text.zSlab, 2*ia, h*2/2);
+    for (int j = 1; j < 10; j++) {
+      int x1b = x1 + j * barPixels / 10;
+      int len = (j == 5 ? h : h/2);
+      g3d.fillTextRect(x1b, y-len, z, text.zSlab, 2*ia, len);
+      
+    }
 //
 //    g3d.drawLinePixels(sA, sB, text.z, text.zSlab);
 //    sA.y = y + h;

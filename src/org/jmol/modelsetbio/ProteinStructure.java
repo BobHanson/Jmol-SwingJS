@@ -41,7 +41,7 @@ public abstract class ProteinStructure implements Structure {
   STR subtype;
   String structureID;
   int strucNo;
-  int serialID;
+  String serialID;
   int strandCount = 1;
   int id;
 

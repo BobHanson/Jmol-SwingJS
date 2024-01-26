@@ -203,7 +203,7 @@ public class MessagePackReader {
         case STR8:
           return doc.readString(doc.readUInt8());
         case STR16:
-          return doc.readString(doc.readShort());
+          return doc.readString(doc.readUnsignedShort());
         case STR32:
           return doc.readString(doc.readInt());
         }
@@ -243,10 +243,10 @@ public class MessagePackReader {
           ((String[]) array)[pt] = doc.readString(doc.readUInt8());
           break;
         case STR16:
-          ((String[]) array)[pt] = doc.readString(doc.readShort());
+          ((String[]) array)[pt] = doc.readString(doc.readUnsignedShort());
           break;
         case STR32:
-          ((String[]) array)[pt] = doc.readString(doc.readInt());
+          ((String[]) array)[pt] = doc.readString(doc.readInt()); // technically shoild be unsigned int
           break;
         }
       }
@@ -300,8 +300,6 @@ public class MessagePackReader {
     Map<String, Object> map = new Hashtable<String, Object>();
     for (int i = 0; i < n; i++) {
       String key = getNext(null, 0).toString();
-      //Logger.info(key);
-
       Object value = getNext(null, 0);
       if (value == null) {
         //Logger.info("null value for " + key);

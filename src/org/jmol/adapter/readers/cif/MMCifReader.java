@@ -118,17 +118,17 @@ public class MMCifReader extends CifReader {
 
   @Override
   protected void processSubclassEntry() throws Exception {
-    if (key0.startsWith(FAMILY_ASSEM_CAT) 
-        || key0.startsWith(FAMILY_STRUCTCONN_CAT)
-        || key0.startsWith(FAMILY_SEQUENCEDIF_CAT)
-        || key0.startsWith(FAMILY_STRUCTCONF_CAT)
-        || key0.startsWith(FAMILY_SHEET_CAT)
+    if (key0.startsWith(CAT_ASSEM_CAT) 
+        || key0.startsWith(CAT_STRUCTCONN_CAT)
+        || key0.startsWith(CAT_SEQUENCEDIF_CAT)
+        || key0.startsWith(CAT_STRUCTCONF_CAT)
+        || key0.startsWith(CAT_SHEET_CAT)
         
-//        || key0.startsWith(FAMILY_PDBX_NONPOLY_CAT)
+//        || key0.startsWith(CAT_PDBX_NONPOLY_CAT)
         )
       processSubclassLoopBlock();
     else if (key.equals("_rna3d")) {
-      addedData = data;
+      addedData = (String) field;
       addedDataKey = key;
     } else if (key.equals("_dssr")) {
       dssr = vwr.parseJSONMap(reader.readLine());
@@ -138,27 +138,27 @@ public class MMCifReader extends CifReader {
   
   @Override
   protected boolean processSubclassLoopBlock() throws Exception {
-    if (key0.startsWith(FAMILY_NCS_CAT))
+    if (key0.startsWith(CAT_NCS_CAT))
       return processStructOperListBlock(true);
-    if (key0.startsWith(FAMILY_OPER_CAT))
+    if (key0.startsWith(CAT_OPER_CAT))
       return processStructOperListBlock(false);
-    if (key0.startsWith(FAMILY_ASSEM_CAT))
+    if (key0.startsWith(CAT_ASSEM_CAT))
       return processAssemblyGenBlock();
-    if (key0.startsWith(FAMILY_SEQUENCEDIF_CAT))
+    if (key0.startsWith(CAT_SEQUENCEDIF_CAT))
       return processSequence();
 
     if (isCourseGrained)
       return false;
 
-    if (key0.startsWith(FAMILY_STRUCSITE_CAT))
+    if (key0.startsWith(CAT_STRUCSITE_CAT))
       return processStructSiteBlock();
-    if (key0.startsWith(FAMILY_CHEMCOMP_CAT))
+    if (key0.startsWith(CAT_CHEMCOMP_CAT))
       return processChemCompLoopBlock();
-//    if (key0.startsWith(FAMILY_PDBX_NONPOLY_CAT))
+//    if (key0.startsWith(CAT_PDBX_NONPOLY_CAT))
 //      return processNonpolyLoopBlock();
-    if (key0.startsWith(FAMILY_STRUCTCONF_CAT))
+    if (key0.startsWith(CAT_STRUCTCONF_CAT))
       return processStructConfLoopBlock();
-    if (key0.startsWith(FAMILY_SHEET_CAT))
+    if (key0.startsWith(CAT_SHEET_CAT))
       return processStructSheetRangeLoopBlock();
 
     // alas -- saved states must not read ligand bonding
@@ -167,9 +167,9 @@ public class MMCifReader extends CifReader {
 
     if (isLigandBondBug)
       return false;
-    if (key0.startsWith(FAMILY_COMPBOND_CAT))
+    if (key0.startsWith(CAT_COMPBOND_CAT))
       return processCompBondLoopBlock();
-    if (key0.startsWith(FAMILY_STRUCTCONN_CAT))
+    if (key0.startsWith(CAT_STRUCTCONN_CAT))
       return processStructConnLoopBlock();
     
     return false;
@@ -371,8 +371,8 @@ public class MMCifReader extends CifReader {
   final private static byte OPER_ID = 12;
   final private static byte OPER_XYZ = 13;
   
-  final private static String FAMILY_NCS_CAT = "_struct_ncs_oper.";
-  final private static String FAMILY_NCS = "_struct_ncs_oper";
+  final protected static String CAT_NCS_CAT = "_struct_ncs_oper.";
+  final protected static String CAT_NCS = "_struct_ncs_oper";
   final private static String[] ncsoperFields = {
     "*_matrix[1][1]",
     "*_matrix[1][2]",
@@ -390,8 +390,8 @@ public class MMCifReader extends CifReader {
     "*_symmetry_operation" 
   };
 
-  final private static String FAMILY_OPER_CAT = "_pdbx_struct_oper_list.";
-  final private static String FAMILY_OPER = "_pdbx_struct_oper_list";
+  final protected static String CAT_OPER_CAT = "_pdbx_struct_oper_list.";
+  final protected static String CAT_OPER = "_pdbx_struct_oper_list";
   final private static String[] operFields = {
     "*_matrix[1][1]",
     "*_matrix[1][2]",
@@ -413,7 +413,7 @@ public class MMCifReader extends CifReader {
   final private static byte ASSEM_OPERS = 1;
   final private static byte ASSEM_LIST = 2;
   
-  final private static String FAMILY_ASSEM_CAT = "_pdbx_struct_assembly_gen.";
+  final protected static String CAT_ASSEM_CAT = "_pdbx_struct_assembly_gen.";
   
   final private static String[] assemblyFields = {
     "_pdbx_struct_assembly_gen_assembly_id",
@@ -455,7 +455,7 @@ public class MMCifReader extends CifReader {
 
    */
 
-  final private static String FAMILY_SEQUENCEDIF_CAT = "_struct_ref_seq_dif."; 
+  final protected static String CAT_SEQUENCEDIF_CAT = "_struct_ref_seq_dif."; 
   final private static byte STRUCT_REF_G3 = 0;
   final private static byte STRUCT_REF_G1 = 1;
   final private static String[] structRefFields = {
@@ -468,12 +468,12 @@ public class MMCifReader extends CifReader {
    * @return true
    * @throws Exception
    */
-  private boolean processSequence() throws Exception {
+  protected boolean processSequence() throws Exception {
     parseLoopParameters(structRefFields);
     String g1, g3;
     while (cifParser.getData()) {
-      if (isNull(g1 = getField(STRUCT_REF_G1).toLowerCase())
-          || g1.length() != 1 || isNull(g3 = getField(STRUCT_REF_G3)))
+      if (isNull(g1 = getFieldString(STRUCT_REF_G1).toLowerCase())
+          || g1.length() != 1 || isNull(g3 = getFieldString(STRUCT_REF_G3)))
         continue;
       if (htGroup1 == null)
         asc.setInfo("htGroup1", htGroup1 = new Hashtable<String, String>());
@@ -482,7 +482,7 @@ public class MMCifReader extends CifReader {
     return true;
   }
 
-  private boolean processAssemblyGenBlock() throws Exception {
+  protected boolean processAssemblyGenBlock() throws Exception {
     parseLoopParameters(assemblyFields);
     while (cifParser.getData()) {
       String[] assem = new String[3];
@@ -495,7 +495,7 @@ public class MMCifReader extends CifReader {
         case ASSEM_OPERS:
         case ASSEM_LIST:
           count++;
-          assem[p] = field;
+          assem[p] = (String) field;
           break;
         }
       }
@@ -583,8 +583,8 @@ public class MMCifReader extends CifReader {
     return sb.toString().substring(1);
   }
 
-  private boolean processStructOperListBlock(boolean isNCS) throws Exception {
-    parseLoopParametersFor((isNCS ? FAMILY_NCS : FAMILY_OPER), isNCS ? ncsoperFields : operFields);
+  protected boolean processStructOperListBlock(boolean isNCS) throws Exception {
+    parseLoopParametersFor((isNCS ? CAT_NCS : CAT_OPER), isNCS ? ncsoperFields : operFields);
     double[] m = new double[16];
     m[15] = 1;
     while (cifParser.getData()) {
@@ -598,13 +598,13 @@ public class MMCifReader extends CifReader {
         case NONE:
           break;
         case OPER_ID:
-          id = field;
+          id = (String) field;
           break;
         case OPER_XYZ:
-          xyz = field;
+          xyz = (String) field;
           break;
         default:
-          m[p] = parseDoubleStr(field);
+          m[p] = parseDoubleField();
           ++count;
         }
       }
@@ -646,7 +646,7 @@ public class MMCifReader extends CifReader {
   final private static byte CHEM_COMP_ID = 0;
   final private static byte CHEM_COMP_NAME = 1;
 
-  final private static String FAMILY_CHEMCOMP_CAT = "_chem_comp.";
+  final protected static String CAT_CHEMCOMP_CAT = "_chem_comp.";
   
   final private static String[] chemCompFields = { 
     "_chem_comp_id",
@@ -661,12 +661,12 @@ public class MMCifReader extends CifReader {
    * 
    * @throws Exception
    */
-  private boolean processChemCompLoopBlock() throws Exception {
+  protected boolean processChemCompLoopBlock() throws Exception {
     parseLoopParameters(chemCompFields);
     String groupName, hetName;
     while (cifParser.getData())
-      if (!isNull(groupName = getField(CHEM_COMP_ID))
-          && !isNull(hetName = getField(CHEM_COMP_NAME)))
+      if (!isNull(groupName = getFieldString(CHEM_COMP_ID))
+          && !isNull(hetName = getFieldString(CHEM_COMP_NAME)))
         addHetero(groupName, hetName, true, true);
     return true;
   }
@@ -674,7 +674,7 @@ public class MMCifReader extends CifReader {
 //  final private static byte NONPOLY_NAME = 0;
 //  final private static byte NONPOLY_COMP_ID = 1;
 //
-//  private static final String FAMILY_PDBX_NONPOLY_CAT = "_pdbx_entity_nonpoly.";
+//  private static final String CAT_PDBX_NONPOLY_CAT = "_pdbx_entity_nonpoly.";
 //  
 //  final private static String[] nonpolyFields = {
 //      "_pdbx_entity_nonpoly_name",
@@ -693,8 +693,8 @@ public class MMCifReader extends CifReader {
 //    parseLoopParameters(nonpolyFields);
 //    String groupName, hetName;
 //    while (parser.getData()) {
-//      if (isNull(groupName = getField(NONPOLY_COMP_ID))
-//          || isNull(hetName = getField(NONPOLY_NAME)))
+//      if (isNull(groupName = getFieldString(NONPOLY_COMP_ID))
+//          || isNull(hetName = getFieldString(NONPOLY_NAME)))
 //        return false;
 //      addHetero(groupName, hetName, true);
 //    }
@@ -728,9 +728,9 @@ public class MMCifReader extends CifReader {
   final private static byte SERIAL_NO = 8;
   final private static byte HELIX_CLASS = 9;
 
-  final private static String FAMILY_STRUCTCONF_CAT = "_struct_conf.";
+  final protected static String CAT_STRUCTCONF_CAT = "_struct_conf.";
   
-  final private static String FAMILY_STRUCTCONF = "_struct_conf";
+  final protected static String CAT_STRUCTCONF = "_struct_conf";
   final private static String[] structConfFields = {
       "*_conf_type_id", 
       "*_beg_auth_asym_id",
@@ -749,28 +749,28 @@ public class MMCifReader extends CifReader {
    * @return true if successful; false to skip
    * @throws Exception
    */
-  private boolean processStructConfLoopBlock() throws Exception {
+  protected boolean processStructConfLoopBlock() throws Exception {
     if (ignoreStructure) {
       skipLoop(false);
       return false;
     }
-    parseLoopParametersFor(FAMILY_STRUCTCONF, structConfFields);
+    parseLoopParametersFor(CAT_STRUCTCONF, structConfFields);
     if (!checkAllFieldsPresent(structConfFields, -1, true)) {
       skipLoop(true);
       return false;
     }
     while (cifParser.getData()) {
-      Structure structure = new Structure(-1, STR.HELIX, STR.HELIX, null, 0, 0, null);
+      Structure structure = new Structure(-1, STR.HELIX, STR.HELIX, null, null, 0, null);
       
-      String type = getField(CONF_TYPE_ID);
+      String type = getFieldString(CONF_TYPE_ID);
       if (type.startsWith("TURN"))
         structure.structureType = structure.substructureType = STR.TURN;
       else if (!type.startsWith("HELX"))
         structure.structureType = structure.substructureType = STR.NONE; 
       else
-        structure.substructureType = Structure.getHelixType(parseIntStr(getField(HELIX_CLASS)));
-      structure.serialID = parseIntStr(getField(SERIAL_NO));
-      structure.structureID = getField(STRUCT_ID);
+        structure.substructureType = Structure.getHelixType(parseIntFieldTok(HELIX_CLASS));
+      structure.strandID = getFieldString(SERIAL_NO);
+      structure.structureID = getFieldString(STRUCT_ID);
 
       addStructure(structure);
     }
@@ -782,21 +782,25 @@ public class MMCifReader extends CifReader {
   ////////////////////////////////////////////////////////////////
 
   private void addStructure(Structure structure) {    
-    structure.startChainID = vwr.getChainID(getField(BEG_ASYM_ID), true);
-    structure.startSequenceNumber = parseIntStr(getField(BEG_SEQ_ID));
-    structure.startInsertionCode = getField(BEG_INS_CODE).charAt(0);
-    structure.endChainID = vwr.getChainID(getField(END_ASYM_ID), true);
-    structure.endSequenceNumber = parseIntStr(getField(END_SEQ_ID));
-    structure.endInsertionCode = getField(END_INS_CODE).charAt(0);
+    structure.startChainID = vwr.getChainID(getFieldString(BEG_ASYM_ID), true);
+    structure.startSequenceNumber = parseIntFieldTok(BEG_SEQ_ID);
+    structure.startInsertionCode = (getFieldString(BEG_INS_CODE)).charAt(0);
+    structure.endChainID = vwr.getChainID(getFieldString(END_ASYM_ID), true);
+    structure.endSequenceNumber = parseIntFieldTok(END_SEQ_ID);
+    structure.endInsertionCode = (getFieldString(END_INS_CODE)).charAt(0);
     asc.addStructure(structure);
+  }
+
+  protected int parseIntFieldTok(byte  tok) {
+    return parseIntStr(getFieldString(tok));
   }
 
   final private static byte SHEET_ID = 0;
   final private static byte STRAND_ID = 7;
 
-  final private static String FAMILY_SHEET_CAT = "_struct_sheet_range.";
+  final protected static String CAT_SHEET_CAT = "_struct_sheet_range.";
   
-  final private static String FAMILY_SHEET = "_struct_sheet_range";
+  final protected static String CAT_SHEET = "_struct_sheet_range";
   final private static String[] structSheetRangeFields = {
       "*_sheet_id",
       "*_beg_auth_asym_id",
@@ -816,19 +820,19 @@ public class MMCifReader extends CifReader {
    * 
    * @throws Exception
    */
-  private boolean processStructSheetRangeLoopBlock() throws Exception {
+  protected boolean processStructSheetRangeLoopBlock() throws Exception {
     if (ignoreStructure) {
       skipLoop(false);
       return false;
     }
-    parseLoopParametersFor(FAMILY_SHEET, structSheetRangeFields);
+    parseLoopParametersFor(CAT_SHEET, structSheetRangeFields);
     if (!checkAllFieldsPresent(structSheetRangeFields, -1, true)) {
       skipLoop(true);
       return false;
     }
     while (cifParser.getData())
-      addStructure(new Structure(-1, STR.SHEET, STR.SHEET, getField(SHEET_ID), 
-          parseIntStr(getField(STRAND_ID)), 1, null));
+      addStructure(new Structure(-1, STR.SHEET, STR.SHEET, getFieldString(SHEET_ID), 
+          getFieldString(STRAND_ID), 1, null));
     return true;
   }
 
@@ -838,9 +842,9 @@ public class MMCifReader extends CifReader {
   final private static byte SITE_SEQ_ID = 3;
   final private static byte SITE_INS_CODE = 4; //???
 
-  final private static String FAMILY_STRUCSITE_CAT = "_struct_site_gen.";
+  final protected static String CAT_STRUCSITE_CAT = "_struct_site_gen.";
   
-  final private static String FAMILY_STRUCSITE = "_struct_site_gen";
+  final private static String CAT_STRUCSITE = "_struct_site_gen";
   final private static String[] structSiteFields = {
       "*_site_id", 
       "*_auth_comp_id",
@@ -878,24 +882,24 @@ public class MMCifReader extends CifReader {
    * 
    * @throws Exception
    */
-  private boolean processStructSiteBlock() throws Exception {
-    parseLoopParametersFor(FAMILY_STRUCSITE, structSiteFields);
+  protected boolean processStructSiteBlock() throws Exception {
+    parseLoopParametersFor(CAT_STRUCSITE, structSiteFields);
     Map<String, Object> htSite = null;
     htSites = new Hashtable<String, Map<String, Object>>();
     String seqNum, resID;
     while (cifParser.getData()) {
-      if (isNull(seqNum = getField(SITE_SEQ_ID))
-          || isNull(resID = getField(SITE_COMP_ID)))
+      if (isNull(seqNum = getFieldString(SITE_SEQ_ID))
+          || isNull(resID = getFieldString(SITE_COMP_ID)))
         continue;
-      String siteID = getField(SITE_ID);
+      String siteID = getFieldString(SITE_ID);
       htSite = htSites.get(siteID);
       if (htSite == null) {
         htSite = new Hashtable<String, Object>();
         htSite.put("groups", "");
         htSites.put(siteID, htSite);
       }
-      String insCode = getField(SITE_INS_CODE);
-      String chainID = getField(SITE_ASYM_ID);
+      String insCode = getFieldString(SITE_INS_CODE);
+      String chainID = getFieldString(SITE_ASYM_ID);
       String group = "[" + resID + "]" + seqNum
           + (isNull(insCode) ? "" : "^" + insCode)
           + (isNull(chainID) ? "" : ":" + chainID);
@@ -1037,9 +1041,9 @@ public class MMCifReader extends CifReader {
   final private static byte STRUCT_CONN_ORDER = 13;
 
   
-  final private static String FAMILY_STRUCTCONN_CAT = "_struct_conn.";
+  final protected static String CAT_STRUCTCONN_CAT = "_struct_conn.";
   
-  final private static String FAMILY_STRUCTCONN = "_struct_conn";
+  final protected static String CAT_STRUCTCONN = "_struct_conn";
   final private static String[] structConnFields = {
     "*_ptnr1_auth_asym_id",
     "*_ptnr1_auth_seq_id",
@@ -1048,7 +1052,7 @@ public class MMCifReader extends CifReader {
     "*_pdbx_ptnr1_label_alt_id",
     "*_ptnr1_symmetry",
     "*_ptnr2_auth_asym_id",
-    "*_ptnr2_auth_seq_id",
+    "*_ptnr2_auth_seq_id", // an integer
     "*_ptnr2_auth_comp_id",
     "*_ptnr2_label_atom_id",  
     "*_pdbx_ptnr2_label_alt_id",
@@ -1075,26 +1079,30 @@ public class MMCifReader extends CifReader {
   private String structConnList = "";
   private boolean doSetBonds;
 
-  private boolean processStructConnLoopBlock() throws Exception {
-    parseLoopParametersFor(FAMILY_STRUCTCONN, structConnFields);
+  protected boolean processStructConnLoopBlock() throws Exception {
+    parseLoopParametersFor(CAT_STRUCTCONN, structConnFields);
     while (cifParser.getData()) {
-      String sym1 = getField(STRUCT_CONN_SYMM1);
-      String sym2 = getField(STRUCT_CONN_SYMM2);
+      String sym1 = getFieldString(STRUCT_CONN_SYMM1);
+      String sym2 = getFieldString(STRUCT_CONN_SYMM2);
       if (!sym1.equals(sym2) || !isNull(sym1) && !sym1.equals("1_555"))
         continue;
-      String type = getField(STRUCT_CONN_TYPE);
+      String type = getFieldString(STRUCT_CONN_TYPE);
       if (!type.startsWith("covale") && !type.equals("disulf")
           && !type.equals("metalc"))
         continue;
       if (htBondMap == null)
         htBondMap = new Hashtable<String, Lst<Object[]>>();
-      String key1 = vwr.getChainID(getField(STRUCT_CONN_ASYM1), true) + getField(STRUCT_CONN_COMP1)
-          + parseDoubleStr(getField(STRUCT_CONN_SEQ1))
-          + getField(STRUCT_CONN_ATOM1) + getField(STRUCT_CONN_ALT1);
-      String key2 = vwr.getChainID(getField(STRUCT_CONN_ASYM2), true) + getField(STRUCT_CONN_COMP2)
-          + parseDoubleStr(getField(STRUCT_CONN_SEQ2))
-          + getField(STRUCT_CONN_ATOM2) + getField(STRUCT_CONN_ALT2);
-      int order = getBondOrder(getField(STRUCT_CONN_ORDER));
+      String key1 = "" + vwr.getChainID(getFieldString(STRUCT_CONN_ASYM1), true) 
+          + getFieldString(STRUCT_CONN_COMP1)
+          + parseIntFieldTok(STRUCT_CONN_SEQ1)
+          + getFieldString(STRUCT_CONN_ATOM1) 
+          + getFieldString(STRUCT_CONN_ALT1);
+      String key2 = "" + vwr.getChainID(getFieldString(STRUCT_CONN_ASYM2), true) 
+          + getFieldString(STRUCT_CONN_COMP2)
+          + parseIntFieldTok(STRUCT_CONN_SEQ2)
+          + getFieldString(STRUCT_CONN_ATOM2) 
+          + getFieldString(STRUCT_CONN_ALT2);
+      int order = getBondOrder(getFieldString(STRUCT_CONN_ORDER));
       if (structConnMap == null)
         structConnMap = new Lst<Object[]>();
       structConnMap
@@ -1113,9 +1121,9 @@ public class MMCifReader extends CifReader {
   final private static byte CHEM_COMP_BOND_VALUE_ORDER = 3;
   final private static byte CHEM_COMP_BOND_AROMATIC_FLAG = 4;
   
-  final private static String FAMILY_COMPBOND_CAT = "_chem_comp_bond.";
+  final protected static String CAT_COMPBOND_CAT = "_chem_comp_bond.";
   
-  final private static String FAMILY_COMPBOND = "_chem_comp_bond";
+  final protected static String CAT_COMPBOND = "_chem_comp_bond";
   final private static String[] chemCompBondFields = {
     "*_comp_id",
     "*_atom_id_1", 
@@ -1124,15 +1132,15 @@ public class MMCifReader extends CifReader {
     "*_pdbx_aromatic_flag"
   };
 
-  private boolean processCompBondLoopBlock() throws Exception {
+  protected boolean processCompBondLoopBlock() throws Exception {
     doSetBonds = true;
-    parseLoopParametersFor(FAMILY_COMPBOND, chemCompBondFields);
+    parseLoopParametersFor(CAT_COMPBOND, chemCompBondFields);
     while (cifParser.getData()) {
-      String comp = getField(CHEM_COMP_BOND_ID);
-      String atom1 = getField(CHEM_COMP_BOND_ATOM_ID_1);
-      String atom2 = getField(CHEM_COMP_BOND_ATOM_ID_2);
-      int order = getBondOrder(getField(CHEM_COMP_BOND_VALUE_ORDER));
-      if ((getField(CHEM_COMP_BOND_AROMATIC_FLAG).charAt(0) == 'Y'))
+      String comp = getFieldString(CHEM_COMP_BOND_ID);
+      String atom1 = getFieldString(CHEM_COMP_BOND_ATOM_ID_1);
+      String atom2 = getFieldString(CHEM_COMP_BOND_ATOM_ID_2);
+      int order = getBondOrder(getFieldString(CHEM_COMP_BOND_VALUE_ORDER));
+      if (getFieldString(CHEM_COMP_BOND_AROMATIC_FLAG).charAt(0) == 'Y')
         switch (order) {
         case JmolAdapter.ORDER_COVALENT_SINGLE:
           order = JmolAdapter.ORDER_AROMATIC_SINGLE;
@@ -1205,7 +1213,7 @@ public class MMCifReader extends CifReader {
     // not if we have a MODEL keyword before the file name.
     
     fieldProperty(modelField);
-    int modelNo = parseIntStr(field);
+    int modelNo = parseIntField();
     return (modelNo == currentModelNo ? modelNo : incrementModel(modelNo));
   }
 

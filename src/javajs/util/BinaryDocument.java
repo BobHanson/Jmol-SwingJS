@@ -227,7 +227,8 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
     nBytes += 2;
     int a = (ioReadByte() & 0xff);
     int b = (ioReadByte() & 0xff);
-    return (isBigEndian ? (a << 8) + b : (b << 8) + a);
+    int n = (isBigEndian ? (a << 8) + b : (b << 8) + a);
+    return n;
   }
   
   @Override
@@ -341,6 +342,17 @@ public class BinaryDocument extends BC implements GenericBinaryDocument {
   @Override
   public void getAllDataMapped(String replace, String string,
                                Map<String, String> fileData) {
+  }
+
+  @Override
+  public void skip(int n) throws Exception {
+    stream.skipBytes(n);
+  }
+
+  @Override
+  public void setBigEndian(boolean b) {
+    isBigEndian = b;
+    
   }
 
 

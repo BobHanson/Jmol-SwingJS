@@ -233,7 +233,7 @@ public class MSCifParser extends MSRdr {
     CifReader cr = (CifReader) this.cr;
     if (cr.key.equals("_cell_commen_t_section_1")) {
       isCommensurate = true;
-      commensurateSection1 = cr.parseIntStr(cr.data);
+      commensurateSection1 = cr.parseIntField();
     }
     if (cr.key.startsWith("_cell_commen_supercell_matrix")) {
       isCommensurate = true;
@@ -243,7 +243,7 @@ public class MSCifParser extends MSRdr {
       int r = cr.parseIntStr(tokens[tokens.length - 2]);
       int c = cr.parseIntStr(tokens[tokens.length - 1]);
       if (r > 0 && c > 0)
-        comSSMat.setElement(r - 1, c - 1, cr.parseDoubleStr(cr.data)); 
+        comSSMat.setElement(r - 1, c - 1, cr.parseDoubleField()); 
     }
   }
 
@@ -275,7 +275,7 @@ public class MSCifParser extends MSRdr {
     }
     if (cr.asc.iSet < 0)
       cr.asc.newAtomSet();
-    cr.parseLoopParametersFor(CifReader.FAMILY_ATOM, modulationFields);
+    cr.parseLoopParametersFor(CifReader.CAT_ATOM_SITE, modulationFields);
     int tok;
 //    if (cr.key2col[JANA_FWV_Q1_COEF] != NONE) {
 //      // disable x y z for atom_site_fourier if we have coefficients

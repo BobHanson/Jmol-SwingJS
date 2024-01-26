@@ -732,7 +732,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected double parsePrecision(String s) {
     // Max of xx.yyyyy  number of y digits.
     int pt = s.indexOf('.') + 1;
-    if (pt >= 0)
+    if (pt >= 0 && !filteredPrecision)
       precision = Math.max(precision, s.length() - pt);
     return parseDoubleStr(s);
   }
@@ -768,7 +768,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         vwr.setBooleanProperty("doubleprecision", true);
         if (Viewer.isHighPrecision) {
           cellSlop = SimpleUnitCell.SLOPDP;
-          packingRange = Double.valueOf(cellSlop);
+          if (!paramsPacked)
+            packingRange = Double.valueOf(cellSlop);
           asc.setInfo("highPrecision", Boolean.TRUE);
         } else {
           isHigh = false;
@@ -791,7 +792,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         symmetry.twelfthify(asc.atoms[i]);
       }
     }
-    appendLoadNote("Precision set to " + precision);
+    appendLoadNote("Precision set to " + precision + (packingRange == null ? "" : "; packing set to " + packingRange));
 
   }
 
@@ -1134,6 +1135,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   boolean fixUnitCell;
 
+  protected boolean filteredPrecision;
+
   // xtal structures -- SLAB
 
   // ALL:  "CENTER" "REVERSEMODELS"
@@ -1254,6 +1257,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         int prec = PT.parseInt(p);
         if (prec > 0 && prec <= 16) {
           precision = 1000 + prec;
+          filteredPrecision = true;
         }
       }
       String s = getFilter("LATTICESCALING=");
