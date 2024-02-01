@@ -487,7 +487,8 @@ public class ScriptEval extends ScriptExpr {
       vwr.setTainted(true);
       vwr.popHoldRepaint("CLEAR HOLD - executeCommands" + " "
           + (scriptLevel > 0 ? JC.REPAINT_IGNORE : ""));
-      resumeViewer("exception");
+      if (haveError)
+        resumeViewer("exception");
     }
     timeEndExecution = System.currentTimeMillis();
     if (errorMessage == null && executionStopped)

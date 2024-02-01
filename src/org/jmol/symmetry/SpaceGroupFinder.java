@@ -83,12 +83,18 @@ public class SpaceGroupFinder {
    * @param uc
    * @param asString
    * @param isAssign
+   * @param checkSupercell 
    * @return SpaceGroup or null if isAssign, spacegroup information map if
    */
   @SuppressWarnings("unchecked")
-  public Object findSpaceGroup(Viewer vwr, BS atoms0, String xyzList,
-                               double[] unitCellParams, SymmetryInterface uc,
-                               boolean asString, boolean isAssign) {
+  Object findSpaceGroup(Viewer vwr, BS atoms0, String xyzList,
+                        double[] unitCellParams, SymmetryInterface uc,
+                        boolean asString, boolean isAssign, boolean checkSupercell) {
+    double slop = uc.getPrecision();
+    this.slop = (!Double.isNaN(slop) ? slop
+        : unitCellParams != null ? unitCellParams[SimpleUnitCell.PARAM_SLOP]
+            : Viewer.isDoublePrecision ? SimpleUnitCell.SLOPDP
+                : SimpleUnitCell.SLOPSP);
     P3d[] oabc = null;
     Atom[] cartesians = vwr.ms.at;
     int isg = 0;
@@ -109,20 +115,19 @@ public class SpaceGroupFinder {
     SpaceGroup sg = null;
 
     boolean setNew = (isAssign && xyzList != null && nAtoms == 0
-        && (uc == null || uc.getSpaceGroup() == null
+        && (uc.getSpaceGroup() == null
             || "P1".equals(((SpaceGroup) uc.getSpaceGroup()).getName())));
 
     String name;
     BS basis;
     if (xyzList != null && xyzList.toUpperCase().startsWith("ITA/")) {
-      xyzList = PT.rep(xyzList.substring(4)," ","");
+      xyzList = PT.rep(xyzList.substring(4), " ", "");
       boolean isJmolCode = (xyzList.indexOf(":") > 0);
-      int pt = xyzList.indexOf("."); 
+      int pt = xyzList.indexOf(".");
       if (!isJmolCode && pt < 0 && PT.parseInt(xyzList) != Integer.MIN_VALUE)
         xyzList += ".1";
       Map<String, Object> sgdata = null;
-      Object o = uc
-          .getSpaceGroupJSON(vwr, "ITA", xyzList, 0);
+      Object o = uc.getSpaceGroupJSON(vwr, "ITA", xyzList, 0);
       if (o == null || o instanceof String) {
         return null;
       }
@@ -141,9 +146,9 @@ public class SpaceGroupFinder {
           }
         }
         if (sgdata == null)
-          return null;          
+          return null;
       } else {
-          name = (String) sgdata.get("itaFull");
+        name = (String) sgdata.get("itaFull");
       }
       boolean isKnown = (name.indexOf("?") < 0);
       Lst<Object> genPos = (Lst<Object>) sgdata.get("gp");
@@ -168,7 +173,8 @@ public class SpaceGroupFinder {
         sg.intlTableNumberExt = PT.rep(u, " ", "") + ";" + sgdata.get("sg")
             + "(" + tr + ")";
         char axis = u.toLowerCase().charAt(0);
-        if (UnitCell.isHexagonalSG(PT.parseInt(sg.intlTableNumber), null) && axis != 'r')
+        if (UnitCell.isHexagonalSG(PT.parseInt(sg.intlTableNumber), null)
+            && axis != 'r')
           axis = 'h';
         switch (axis) {
         case 'a':
@@ -181,6 +187,7 @@ public class SpaceGroupFinder {
         }
       }
     }
+    boolean isSupercell = false;
     if (setNew) {
       if (sg == null
           && (sg = SpaceGroup.determineSpaceGroupNA(xyzList,
@@ -195,7 +202,6 @@ public class SpaceGroupFinder {
       try {
         if (bsOpGroups == null)
           loadData(vwr, this);
-        slop = uc.getPrecision();
         if (xyzList != null) {
           Object ret = getGroupsWithOps(xyzList, unitCellParams, isAssign);
           if (!isAssign || ret == null)
@@ -258,24 +264,29 @@ public class SpaceGroupFinder {
 
         nAtoms = bsPoints.cardinality();
         uc0 = uc;
-        boolean isSupercell = false;
         if (nAtoms > 0) {
           for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
               .nextSetBit(i + 1)) {
             uc.unitize(atoms[i]);
           }
           removeDuplicates(bsPoints);
-          uc = checkSupercell(vwr, uc, bsPoints, 1, scaling);
-          uc = checkSupercell(vwr, uc, bsPoints, 2, scaling);
-          uc = checkSupercell(vwr, uc, bsPoints, 3, scaling);
-          isSupercell = (uc != uc0);
-          if (isSupercell) {
-            if (scaling.x != 1)
-              System.out.println("supercell found; a scaled by 1/" + scaling.x);
-            if (scaling.y != 1)
-              System.out.println("supercell found; b scaled by 1/" + scaling.y);
-            if (scaling.z != 1)
-              System.out.println("supercell found; c scaled by 1/" + scaling.z);
+          // really not what we want here
+          if (checkSupercell) {
+            uc = checkSupercell(vwr, uc, bsPoints, 1, scaling);
+            uc = checkSupercell(vwr, uc, bsPoints, 2, scaling);
+            uc = checkSupercell(vwr, uc, bsPoints, 3, scaling);
+            isSupercell = (uc != uc0);
+            if (isSupercell) {
+              if (scaling.x != 1)
+                System.out
+                    .println("supercell found; a scaled by 1/" + scaling.x);
+              if (scaling.y != 1)
+                System.out
+                    .println("supercell found; b scaled by 1/" + scaling.y);
+              if (scaling.z != 1)
+                System.out
+                    .println("supercell found; c scaled by 1/" + scaling.z);
+            }
           }
         }
 
@@ -463,10 +474,11 @@ public class SpaceGroupFinder {
       dumpBasis(bsGroupOps[isg], bs1, bsPoints0);
     map.put("name", name);
     map.put("basis", basis);
-    map.put("supercell", scaling);
-    oabc[1].scale(scaling.x);
-    oabc[2].scale(scaling.y);
-    oabc[3].scale(scaling.z);
+    if (isSupercell)
+      map.put("supercell", scaling);
+    oabc[1].scale(1/scaling.x);
+    oabc[2].scale(1/scaling.y);
+    oabc[3].scale(1/scaling.z);
     map.put("unitcell", oabc);
     if (isAssign)
       map.put("sg", sg);
@@ -821,53 +833,6 @@ public class SpaceGroupFinder {
     return op;
   }
 
-//  /**
-//   * Check for the same number of base (coord 0) atoms is the same as the number
-//   * of packed atoms. If that is not the case, we have P1 symmetry, and we just
-//   * clear all points.
-//   * 
-//   * @param bsPoints
-//   *        set to empty if there is a problem
-//   * @param extraAtoms
-//   * @param packedAtoms
-//   *        to be filled
-//   * @param abc
-//   */
-//  private void checkPackingAtoms(BS bsPoints, BS extraAtoms, int abc,
-//                                 BS packedAtoms) {
-//    int nextra = extraAtoms.cardinality();
-//    if (nextra == 0)
-//      return;
-//    int nbase = 0;
-//    int npacked = 0;
-//    double f = 0;
-//    for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
-//        .nextSetBit(i + 1)) {
-//      SGAtom a = atoms[i];
-//      switch (abc) {
-//      case 1:
-//        f = a.x;
-//        break;
-//      case 2:
-//        f = a.y;
-//        break;
-//      case 3:
-//        f = a.z;
-//        break;
-//      }
-//      if (approx01(f)) {
-//        nbase++;
-//      } else if (approx01(f - 1)) {
-//        npacked++;
-//        packedAtoms.set(i);
-//      }
-//    }
-//    if (nbase != npacked) {
-//      bsPoints.clearAll();
-//      extraAtoms.clearAll();
-//    }
-//  }
-
   /**
    * Look for a supercell and adjust lattice down if necessary.
 
@@ -886,11 +851,11 @@ public class SpaceGroupFinder {
       return uc;
     int minF = Integer.MAX_VALUE, maxF = Integer.MIN_VALUE;
     int[] counts = new int[MAX_COUNT + 1];
+    int nAtoms = bsPoints.cardinality();
     for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
         .nextSetBit(i + 1)) {
       SGAtom a = atoms[i];
       int type = a.typeAndOcc;
-      //String name = a.name;
       SGAtom b;
       double f;
       for (int j = bsPoints.nextSetBit(0); j >= 0; j = bsPoints
@@ -914,7 +879,7 @@ public class SpaceGroupFinder {
           break;
         }
         int n = approxInt(1 / f);
-        // must be positive
+        // must be positive, must be an integer divisor of the number of atoms.
         //System.out.println(n + " " + f + " " + abc + " " + pt + " " + a + " " + b + " " + nAtoms + " " + n + " " + counts[n]);
         if (n == 0 || nAtoms / n != 1d * nAtoms / n || n > MAX_COUNT)
           continue;

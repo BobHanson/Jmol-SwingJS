@@ -1417,10 +1417,9 @@ public class ModelKit {
    * Assign a given space group, currently only "P1"
    * @param bs atoms in the set defining the space group
    * @param name "P1" or "1" or ignored
-   * @param mi 
    * @return new name or "" or error message
    */
-  public String cmdAssignSpaceGroup(BS bs, String name, int mi) {
+  public String cmdAssignSpaceGroup(BS bs, String name) {
     boolean isITA = name.startsWith("ITA/");
     if (isITA) {
       name = name.substring(4);
@@ -1438,7 +1437,7 @@ public class ModelKit {
       if (bs != null && bs.isEmpty())
         return "";
       // limit the atoms to this model if bs is null
-      BS bsAtoms = (mi < 0 ? vwr.getThisModelAtoms() : vwr.getModelUndeletedAtomsBitSet(mi));
+      BS bsAtoms = vwr.getThisModelAtoms();
       BS bsCell = (isP1 ? bsAtoms : SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"), true));
       if (bs == null) {
         bs = bsAtoms;
@@ -1449,8 +1448,7 @@ public class ModelKit {
           bsAtoms.and(bsCell);
       }
       boolean noAtoms = bsAtoms.isEmpty();
-      if (mi < 0)
-        mi = (noAtoms && vwr.am.cmi < 0 ? 0 : noAtoms ? vwr.am.cmi : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
+      int mi = (noAtoms && vwr.am.cmi < 0 ? 0 : noAtoms ? vwr.am.cmi : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
       vwr.ms.getModelAuxiliaryInfo(mi).remove("spaceGroupInfo");
       SymmetryInterface sym = vwr.getOperativeSymmetry();
       if (sym == null)
@@ -1467,7 +1465,7 @@ public class ModelKit {
       Object sg = null;
       @SuppressWarnings("unchecked")
       Map<String, Object> sgInfo = (noAtoms && !isDefined ? null
-          : (Map<String, Object>) vwr.findSpaceGroup(isDefined ? null : bsAtoms, isDefined ? (isITA ? "ITA/" + name : name) : null, sym.getUnitCellParams(), false, true));
+          : (Map<String, Object>) vwr.findSpaceGroup(isDefined ? null : bsAtoms, isDefined ? (isITA ? "ITA/" + name : name) : null, sym.getUnitCellParams(), false, true, false));
       
       if (sgInfo == null) {
         if (isITA) {

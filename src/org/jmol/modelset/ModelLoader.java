@@ -389,7 +389,9 @@ public final class ModelLoader {
     vwr.setModelSet(ms);
     if (isSupercell && appendNew) {
       for (int i = baseModelIndex; i < ms.mc; i++) {
-        vwr.assignSpaceGroup(null, "P1", i);
+        SymmetryInterface sym = ms.getUnitCell(i);
+        if (sym != null)
+          sym.setSpaceGroupTo("P1");
       }
     }
     setAtomProperties();

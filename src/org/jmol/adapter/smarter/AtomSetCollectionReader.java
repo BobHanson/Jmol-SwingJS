@@ -798,8 +798,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         symmetry.twelfthify(asc.atoms[i]);
       }
     }
-    appendLoadNote("Precision set to " + precision + (packingRange == null ? "" : "; packing set to " + packingRange));
-
+    appendLoadNote("Precision set to " + precision + "; packing set to " + (packingRange == null ? OLD_PACKING_RANGE : packingRange.floatValue()));
   }
 
   protected void initializeSymmetryOptions() {

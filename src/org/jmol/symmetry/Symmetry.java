@@ -967,11 +967,11 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCell,
-                               boolean asString, boolean isAssign) {
+  public Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCellParams,
+                               boolean asString, boolean isAssign, boolean checkSupercell) {
     return ((SpaceGroupFinder) Interface
         .getInterface("org.jmol.symmetry.SpaceGroupFinder", vwr, "eval"))
-            .findSpaceGroup(vwr, atoms, xyzList, unitCell, this, asString, isAssign);
+            .findSpaceGroup(vwr, atoms, xyzList, unitCellParams, this, asString, isAssign, checkSupercell);
   }
 
   @Override

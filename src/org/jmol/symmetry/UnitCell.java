@@ -864,7 +864,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   boolean isSameAs(UnitCell uc) {
     if (uc.unitCellParams.length != unitCellParams.length)
       return false;
-    for (int i = unitCellParams.length; --i >= 0;)
+    for (int i = Math.min(unitCellParams.length, PARAM_SLOP); --i >= 0;)
       if (unitCellParams[i] != uc.unitCellParams[i]
           && !(Double.isNaN(unitCellParams[i]) && Double
               .isNaN(uc.unitCellParams[i])))

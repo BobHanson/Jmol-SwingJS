@@ -40,7 +40,7 @@ public interface SymmetryInterface {
                                            String name,
                                            Object data, int modDim);
 
-  Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCellParams, boolean asString, boolean isAssign);
+  Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCellParams, boolean asString, boolean isAssign, boolean checkSupercell);
 
   int[] getCellRange();
 

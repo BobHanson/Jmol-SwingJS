@@ -173,10 +173,7 @@ public class SimpleUnitCell {
       params = new double[] { 1, 1, 1, 90, 90, 90 };
     if (!isValid(params))
       return;
-    unitCellParams = new double[PARAM_COUNT];
-    for (int i = 0, n = params.length; i < PARAM_COUNT; i++)
-      unitCellParams[i] = (i < n ? params[i] : Double.NaN);
-
+    unitCellParams = newParams(params, Double.NaN);
     boolean rotateHex = false; // special gamma = -1 indicates hex rotation for AFLOW
 
     dimension = getDimensionFromParams(params);
@@ -335,6 +332,16 @@ public class SimpleUnitCell {
     }
     matrixCtoFNoOffset = matrixCartesianToFractional;
     matrixFtoCNoOffset = matrixFractionalToCartesian;
+  }
+
+  public static double[] newParams(double[] params, double slop) {
+    double[] p = new double[PARAM_COUNT];
+    int n = params.length;
+    for (int i = 0; i < PARAM_COUNT; i++)
+      p[i] = (i < n ? params[i] : Double.NaN);
+    if (n < PARAM_COUNT)
+      p[PARAM_SLOP] = slop;
+    return p;
   }
 
   public static void addVectors(double[] params) {

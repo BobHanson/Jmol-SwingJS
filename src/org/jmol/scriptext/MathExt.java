@@ -273,23 +273,22 @@ public class MathExt {
     // spacegroup("x,y,z;-x,-y,-z", [a b c alpha beta gamma]);
     // spacegroup("all");
 
-    double[] unitCell = null;
+    double[] unitCellParams = null;
     switch (args.length) {
     case 0:
       return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null,
           vwr.am.cmi, true, null));
     case 2:
-      unitCell = SV.dlistValue(args[1], 0);
-      if (unitCell.length != 6)
+      unitCellParams = SV.dlistValue(args[1], 0);
+      if (unitCellParams == null || unitCellParams.length != 6)
         return false;
+      unitCellParams = SimpleUnitCell.newParams(unitCellParams, Double.NaN);
       //$FALL-THROUGH$
     case 1:
-      BS atoms = null;
-      String xyzList = null;
       if (args[0].tok == T.string) {
         // spacegroup("x,y,z;-x,-y,-z;...")
         // spacegroup("132:2")
-        xyzList = args[0].asString();
+        String xyzList = args[0].asString();
         if (xyzList.toUpperCase().startsWith("ITA/")) {
           // "15:ba"  or "230" or "155.2"
           return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "ITA",
@@ -300,15 +299,21 @@ public class MathExt {
           return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOW",
               xyzList.substring(6), 0));
         }
-        if (xyzList.indexOf("x") < 0 && unitCell == null)
+        if (xyzList.indexOf("x") < 0 && unitCellParams == null)
           return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfoObj(xyzList, null,
               true, false));
-      } else if ((atoms = SV.getBitSet(args[0], true)) == null) {
+          return mp.addXObj(vwr.findSpaceGroup(null, xyzList, unitCellParams,
+              true, false, false));
+      } 
+      BS atoms = SV.getBitSet(args[0], true);
+      if (atoms == null) {
+        // args[0] might be an ITA number
         return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfoObj(
-            "" + args[0].asString(), unitCell, true, false));
+            "" + args[0].asString(), unitCellParams, true, false));
       }
-      return mp.addXObj(vwr.findSpaceGroup(atoms, xyzList, unitCell,
-          (xyzList == null), false));
+      // undocumented first parameter atoms
+      return mp.addXObj(vwr.findSpaceGroup(atoms, null, unitCellParams,
+          true, false, false));
     default:
       return false;
     }
@@ -1772,7 +1777,7 @@ public class MathExt {
         case T.bitset:
           BS bs = (BS) x1.value;
           if (sFind.equalsIgnoreCase("spacegroup")) {
-            return mp.addXObj(vwr.findSpaceGroup(bs, null, null, false, false));
+            return mp.addXObj(vwr.findSpaceGroup(bs, null, null, false, false, "supercell".equals(flags.toLowerCase())));
           }
           if (sFind.equalsIgnoreCase("crystalClass")) {
             // {*}.find("crystalClass")
