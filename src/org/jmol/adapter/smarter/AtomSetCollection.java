@@ -1254,9 +1254,6 @@ public class AtomSetCollection {
         bsAtoms.clear(b.atomIndex1);
       }
     }
-
-    // TODO
-    
   }
 
 }

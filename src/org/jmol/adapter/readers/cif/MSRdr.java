@@ -1078,6 +1078,7 @@ public class MSRdr implements MSInterface {
     P3d pt = new P3d();
     BS bs = asc.getBSAtoms(-1);
     int i0 = cr.asc.getLastAtomSetAtomIndex();
+    double packing = cr.getPackingRangeValue(0.001d);
     for (int i = bs.nextSetBit(i0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       boolean isOK = (!isCommensurate || modAverage || a.foccupancy >= 0.5d);
@@ -1091,7 +1092,7 @@ public class MSRdr implements MSInterface {
 //        if (cr.fixJavaDouble)
 //          PT.fixPtDoubles(pt, PT.FRACTIONAL_PRECISION);
         isOK = asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
-            minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 0.001); // TODO!!!  
+            minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packing); // TODO!!!  
         //          || (cr.legacyJavaFloat ? !asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
         //          minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 0.001f) 
         //          : !asc.xtalSymmetry.isWithinCellInt(3, pt, minXYZ0.x, maxXYZ0.x,

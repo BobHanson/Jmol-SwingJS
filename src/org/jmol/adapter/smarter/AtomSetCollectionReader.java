@@ -225,14 +225,20 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    * the range outside the unit cell that will still be considered packing
    * range;
    */
-  public Number packingRange;
+  private Number packingRange;
   /**
    * this value is way too large; these are fractional coordinates that should
    * be much more precise than this; setting doublePrecision TRUE replaces this
    * with at the most SLOPSP, which is 0.0001
    */
-  public static final double OLD_PACKING_RANGE = 0.02d;
-  public static final double LOW_PRECISION_PACKING_RANGE = SimpleUnitCell.SLOPSP;
+  private static final double OLD_PACKING_RANGE = 0.02d;
+  private static final double LOW_PRECISION_PACKING_RANGE = SimpleUnitCell.SLOPSP;
+
+
+  public double getPackingRangeValue(double def) {
+    // def because we have used 0.001 for the MSRdr.trimAtoms()
+    return (packingRange != null ? packingRange.doubleValue() : def != 0 ? def : OLD_PACKING_RANGE);
+  }
 
   protected double cellSlop = SimpleUnitCell.SLOPSP; // initially just single precision
   protected boolean rotateHexCell; // aflow CIF reader only
