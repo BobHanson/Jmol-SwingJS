@@ -267,13 +267,9 @@ public class MessagePackReader {
         int[] a = new int[n];
         a[0] = ((Integer) v).intValue();
         v = a;
-      } else if (v instanceof Float) {
+      } else if (v instanceof Number) {
         double[] a = new double[n];
-        a[0] = ((Float) v).doubleValue();
-        v = a;
-      } else if (v instanceof Double) {
-        double[] a = new double[n];
-        a[0] = ((Double) v).doubleValue();
+        a[0] = ((Number) v).doubleValue();
         v = a;
       } else if (v instanceof String) {
         String[] a = new String[n];
