@@ -702,7 +702,7 @@ public class CmdExt extends ScriptExt {
         bs1 = (slen == 2 ? null : atomExpressionAt(2));
         e.checkLast(e.iToken);
         if (!chk) 
-          e.showString("" + vwr.findSpaceGroup(bs1, null, null, true, false));
+          e.showString("" + vwr.findSpaceGroup(bs1, null, null, true, false, false));
         return;
       case T.chirality:
         e.iToken = 1;
@@ -5722,7 +5722,7 @@ public class CmdExt extends ScriptExt {
       eval.iToken = i;
       if (chk)
         break;
-      P3d o = P3d.newPd(vwr.getBoundBoxCenter());
+      P3d o = P3d.newP(vwr.getBoundBoxCenter());
       pt = vwr.getBoundBoxCornerVector();
       o.sub(pt);
       oabc = new P3d[] { o, P3d.new3(pt.x * 2, 0, 0), P3d.new3(0, pt.y * 2, 0),
@@ -6513,7 +6513,7 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
     case T.spacegroup:
-      String s = vwr.assignSpaceGroup(bs, type, -1);
+      String s = vwr.assignSpaceGroup(bs, type);
       if (e.doReport())
         e.showString(s);
       if (isPacked && !s.endsWith("!")) {

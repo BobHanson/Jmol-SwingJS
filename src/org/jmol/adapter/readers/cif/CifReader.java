@@ -149,8 +149,6 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean addAtomLabelNumbers;
   private boolean ignoreGeomBonds;
   private boolean allowWyckoff = true;
-  private boolean isJmolData;
-  private boolean checkedLabelNumbers;
 
   @Override
   public void initializeReader() throws Exception {
@@ -200,16 +198,11 @@ public class CifReader extends AtomSetCollectionReader {
      */
     cifParser = getCifDataParser();
     line = "";
-    isJmolData = (!isMMCIF && !isBinary && cifParser.getFileHeader()
+    cifParser.peekToken();
+    addAtomLabelNumbers = (cifParser.getFileHeader()
         .startsWith("# primitive CIF file created by Jmol"));
-
-    while (continueWith(key = (String) cifParser.peekToken())) {
-      if (!checkedLabelNumbers && !addAtomLabelNumbers && !isJmolData) {
-        addAtomLabelNumbers = true;
-        checkedLabelNumbers = true;
-      }
-      if (!readEntryOrLoopData())
-        break;
+    while (continueWith(key = (String) cifParser.peekToken()) && readEntryOrLoopData()) {
+      // continue
     }
     if (appendedData != null) {
       cifParser = ((GenericCifDataParser) getInterface(

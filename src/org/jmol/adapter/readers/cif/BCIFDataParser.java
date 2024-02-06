@@ -4,7 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.BinaryDocument;
@@ -271,7 +271,7 @@ class BCIFDataParser extends CifDataParser {
   ///////////////// debugging code only ///////////////
   ///////////////// debugging code only ///////////////
 
-  private LinkedHashMap<String, BCIFDecoder> cifMap;
+  private Hashtable<String, BCIFDecoder> cifMap;
 
   public String header;
 
@@ -287,7 +287,7 @@ class BCIFDataParser extends CifDataParser {
 
     SB sb = new SB();
     try {
-      cifMap = new LinkedHashMap<String, BCIFDecoder>();
+      cifMap = new Hashtable<String, BCIFDecoder>();
       String header = (String) msgMap.get("header");
       System.out.println("BCIFDataParser header is " + header);
 

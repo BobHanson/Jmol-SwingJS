@@ -59,10 +59,6 @@ public class P3d extends T3d {
     return p;
   }
 
-  public static P3d newPd(T3d a) {
-    return new3(a.x, a.y, a.z);
-  }
-
   public static P3d newA(double[] a) {
    return new3(a[0], a[1], a[2]);    
   }

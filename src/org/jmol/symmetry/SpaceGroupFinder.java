@@ -366,7 +366,6 @@ public class SpaceGroupFinder {
             bsOps.clear(iop);
             opsChecked.set(iop);
             if (isOK) {
-              System.out.println("OK!");
               if (iop == 1)
                 hasC1 = true;
               // iop was found

@@ -1773,7 +1773,7 @@ public class SymmetryDesc {
           Integer.valueOf(modelSet.at[iAtom].getElementNumber()),
           bsElement = new BS());
     BS bsResult = new BS();
-    modelSet.getAtomsWithin(0.02f, sympt, bsResult, iModel);
+    modelSet.getAtomsWithin(0.02d, sympt, bsResult, iModel);
     if (bsElement != null)
       bsResult.and(bsElement);
     if (bsResult.isEmpty()) {

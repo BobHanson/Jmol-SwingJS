@@ -2146,6 +2146,14 @@ public class ModelSet extends BondCollection {
         Integer.MAX_VALUE, pt, distance, null);
   }
 
+  /**
+   * 
+   * @param iterator
+   * @param modelIndex
+   * @param atomIndex
+   * @param distance if -1, then this will be set later, and here we are just running a CubeIterator, no atom-atom distances, no atom sets, no "hemisphere". 
+   * @param rd
+   */
   public void setIteratorForAtom(AtomIndexIterator iterator, int modelIndex,
                                  int atomIndex, double distance, RadiusData rd) {
     if (modelIndex < 0)
@@ -2472,7 +2480,7 @@ public class ModelSet extends BondCollection {
           if (distance < 0) {
             getAtomsWithin(distance,
                 at[i].getFractionalUnitCoordPt(fixJavaFloat, true, ptTemp),
-                bsResult, -1);
+                bsResult, iModel);
           } else {
             setIteratorForAtom(iter, iModel, i, distance, rd);
             iter.addAtoms(bsResult);
@@ -2494,6 +2502,14 @@ public class ModelSet extends BondCollection {
     return bsResult;
   }
 
+  /**
+   * 
+   * @param distance negative to check all unitCell distances
+   * @param coord
+   * @param bsResult
+   * @param modelIndex
+   * @return
+   */
   public BS getAtomsWithin(double distance, T3d coord, BS bsResult, int modelIndex) {
 
     if (bsResult == null)
@@ -2512,13 +2528,11 @@ public class ModelSet extends BondCollection {
       return bsResult;
     }
 
-    BS bsCheck = getIterativeModels(true);
     AtomIndexIterator iter = getSelectedAtomIterator(null, false, false, false,
         false);
-    for (int iModel = mc; --iModel >= 0;) {
-      if (!bsCheck.get(iModel))
-        continue;
-      int i = am[iModel].bsAtoms.nextSetBit(0);
+    BS bsCheck = (modelIndex >= 0 ? BSUtil.newAndSetBit(modelIndex) : getIterativeModels(true));
+    for (int m = bsCheck.nextSetBit(0); m >= 0; m = bsCheck.nextSetBit(m + 1)) {
+      int i = am[m].bsAtoms.nextSetBit(0);
       if (i < 0)
         continue;
       setIteratorForAtom(iter, -1, i, -1, null);
@@ -4518,34 +4532,34 @@ public class ModelSet extends BondCollection {
   }
 
   public void updateBasisFromSite(int imodel) {
-    if (getUnitCell(imodel) != null) {
-      BS bsAU = am[imodel].bsAsymmetricUnit;
-      if (bsAU == null)
-        return;
-      //BS bsSym = getAtomBitsMDb(T.symmetry, null);
-      bsAU.clearAll();//andNot(bs);
-      //bsSym.or(bs);
-      BS bsSites = new BS();
-      BS bs = am[imodel].bsAtoms;
-      int[] sites = new int[ac];
-      for (int p = 0, i = 0; i < ac; i++) {
-        if (isDeleted(at[i]))
+    if (getUnitCell(imodel) == null)
+      return;
+    BS bsAU = am[imodel].bsAsymmetricUnit;
+    if (bsAU == null)
+      return;
+    //BS bsSym = getAtomBitsMDb(T.symmetry, null);
+    bsAU.clearAll();//andNot(bs);
+    //bsSym.or(bs);
+    BS bsSites = new BS();
+    BS bs = am[imodel].bsAtoms;
+    int[] sites = new int[ac];
+    for (int p = 0, i = 0; i < ac; i++) {
+      if (isDeleted(at[i]))
+        continue;
+      int site = at[i].atomSite;
+      if (!bsSites.get(site)) {
+        bsSites.set(site);
+        if (site >= sites.length)
           continue;
-        int site = at[i].atomSite;
-        if (!bsSites.get(site)) {
-          bsSites.set(site);
-          if (site >= sites.length)
-            continue;
-          sites[site] = ++p;
-          bsAU.set(i);
-        }
-        setSite(at[i], -1, false);
-        setSite(at[i], sites[site], true);
+        sites[site] = ++p;
+        bsAU.set(i);
       }
-      bsSymmetry = getAtomBitsMaybeDeleted(T.symmetry, null);
-      bsSymmetry.or(bs);
-      bsSymmetry.andNot(bsAU);
+      setSite(at[i], -1, false);
+      setSite(at[i], sites[site], true);
     }
+    bsSymmetry = getAtomBitsMaybeDeleted(T.symmetry, null);
+    bsSymmetry.or(bs);
+    bsSymmetry.andNot(bsAU);
   }
 
   public BS getConnectingAtoms(BS bsAtoms, BS bsFixed) {
@@ -4564,6 +4578,32 @@ public class ModelSet extends BondCollection {
     bsAtoms.or(bsAttached);
     bsFixed.or(bsAttached);
     return bs;
+  }
+
+  public void setSpaceGroupP1(int i) {
+    // TODO
+    
+  }
+
+  public P3d[] saveAtomPositions() {
+      P3d[] pos = new P3d[at.length];
+      for (int i = pos.length; --i >= 0;) {
+        Atom a = at[i];
+        if (!isDeleted(a))
+          pos[i] = P3d.newP(a);
+      }
+      return pos;
+  }
+
+  public void restoreAtomPositions(P3d[] apos0) {
+    for (int i = apos0.length; --i >= 0;) {
+      Atom a = at[i];
+      if (!isDeleted(a))
+        a.setT(apos0[i]);
+    }
+
+    // TODO
+    
   }
 
 

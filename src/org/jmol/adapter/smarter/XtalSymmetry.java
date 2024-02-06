@@ -83,7 +83,6 @@ public class XtalSymmetry {
   private Lst<double[]> trajectoryUnitCells;
 
   private double[] unitCellParams = null;
-  private double[] baseUnitCell;
   private int[] latticeCells;
   private V3d[] unitCellTranslations;
 
@@ -505,6 +504,39 @@ public class XtalSymmetry {
     }
 
     // but we leave matSupercell, because we might need it for vibrations in CASTEP
+    
+    // this is now P1. We need to set all the sites 
+
+    fixSuperCellAtomSites(bsAtoms);    
+  }
+
+  private void fixSuperCellAtomSites(BS bsAtoms) {
+    int n = bsAtoms.cardinality();
+    Atom[] baseAtoms = new Atom[n];
+    int nbase = 0;
+    double slop2 = 0.000001d;
+    slop2 *= slop2;
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      Atom a = asc.atoms[i];
+      Atom p = new Atom();
+      p.setT(a);
+      p.atomSerial = a.atomSite;// ORIGINAL atomSite
+      p.atomSite = a.atomSite; 
+      symmetry.unitize(p);
+      boolean found = false;
+      for (int ib = 0; ib < nbase; ib++) {
+        Atom b = baseAtoms[ib];
+        if (p.atomSerial == b.atomSerial && p.distanceSquared(b) < slop2) {
+          found = true;
+          a.atomSite = b.atomSite;
+          break;
+        }
+      }
+      if (!found) {
+        a.atomSite = p.atomSite = nbase;
+        baseAtoms[nbase++] = p;
+      }
+    }
   }
 
   private void setMinMax(int dim, int kcode, int maxX, int maxY, int maxZ) {
@@ -862,7 +894,6 @@ public class XtalSymmetry {
     asc.setCurrentModelInfo("latticeDesignation", sym.getLatticeDesignation());
     asc.setCurrentModelInfo("unitCellRange", unitCells);
     asc.setCurrentModelInfo("unitCellTranslations", unitCellTranslations);
-    baseUnitCell = unitCellParams;
     unitCellParams = null;
     reset();
   }

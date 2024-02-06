@@ -421,7 +421,7 @@ public class BoxInfo {
     if ("volume".equals(what)) {
       return vol;
     }
-    P3d c = P3d.newPd(bbCenter);
+    P3d c = P3d.newP(bbCenter);
     if ("center".equals(what)) {
       return c;
     }

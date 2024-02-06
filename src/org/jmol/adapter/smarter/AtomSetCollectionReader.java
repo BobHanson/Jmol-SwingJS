@@ -737,9 +737,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    */
   protected double parsePrecision(String s) {
     // Max of xx.yyyyy  number of y digits.
-    int pt = s.indexOf('.') + 1;
-    if (pt >= 0 && !filteredPrecision)
-      precision = Math.max(precision, s.length() - pt);
+    if (!filteredPrecision) {
+      int pt = s.indexOf('.') + 1;
+      if (pt >= 0) {
+        int n = s.indexOf('(');
+        precision = Math.max(precision, (n < 0 ? s.length() : n) - pt);
+      }
+    }
     return parseDoubleStr(s);
   }
 

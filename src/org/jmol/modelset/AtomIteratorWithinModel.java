@@ -139,7 +139,7 @@ public class AtomIteratorWithinModel implements AtomIndexIterator {
   }
   
   protected boolean hasNext2() {
-    if (atomIndex >= 0)
+    if (atomIndex >= 0) {
       while (cubeIterator.hasMoreElements()) {
         Atom a = (Atom) cubeIterator.nextElement();
         if ((iNext = a.i) != atomIndex
@@ -148,7 +148,7 @@ public class AtomIteratorWithinModel implements AtomIndexIterator {
           return true;
         }
       }
-    else if (cubeIterator.hasMoreElements()) {
+    } else if (cubeIterator.hasMoreElements()) {
       Atom a = (Atom) cubeIterator.nextElement();
       iNext = a.i;
       return true;

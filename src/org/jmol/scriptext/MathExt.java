@@ -503,11 +503,11 @@ public class MathExt {
           // [va. vb. vc]
           ucnew[0] = new P3d();
           for (int i = 0; i < 3; i++)
-            ucnew[i + 1] = P3d.newPd(SV.ptValue(uc.get(i)));
+            ucnew[i + 1] = P3d.newP(SV.ptValue(uc.get(i)));
           break;
         case 4:
           for (int i = 0; i < 4; i++)
-            ucnew[i] = P3d.newPd(SV.ptValue(uc.get(i)));
+            ucnew[i] = P3d.newP(SV.ptValue(uc.get(i)));
           break;
         case 6:
           // unitcell([a b c alpha beta gamma])
@@ -520,19 +520,19 @@ public class MathExt {
           return false;
         }
       } else {
-        ucnew[0] = P3d.newPd(SV.ptValue(args[0]));
+        ucnew[0] = P3d.newP(SV.ptValue(args[0]));
         switch (lastParam) {
         case 3:
           // unitcell(origin, pa, pb, pc)
           for (int i = 1; i < 4; i++)
-            (ucnew[i] = P3d.newPd(SV.ptValue(args[i]))).sub(ucnew[0]);
+            (ucnew[i] = P3d.newP(SV.ptValue(args[i]))).sub(ucnew[0]);
           break;
         case 1:
           // unitcell(origin, [va, vb, vc])
           Lst<SV> l = args[1].getList();
           if (l != null && l.size() == 3) {
             for (int i = 0; i < 3; i++)
-              ucnew[i + 1] = P3d.newPd(SV.ptValue(l.get(i)));
+              ucnew[i + 1] = P3d.newP(SV.ptValue(l.get(i)));
             break;
           }
           //$FALL-THROUGH$
@@ -1777,7 +1777,7 @@ public class MathExt {
         case T.bitset:
           BS bs = (BS) x1.value;
           if (sFind.equalsIgnoreCase("spacegroup")) {
-            return mp.addXObj(vwr.findSpaceGroup(bs, null, null, false, false, "supercell".equals(flags.toLowerCase())));
+            return mp.addXObj(vwr.findSpaceGroup(bs, null, null, false, false, "parent".equals(flags.toLowerCase())));
           }
           if (sFind.equalsIgnoreCase("crystalClass")) {
             // {*}.find("crystalClass")
@@ -4360,6 +4360,7 @@ public class MathExt {
           return false; // error return
         }
       }
+      // this is for ALL models
       return mp.addXBs(vwr.getAtomsNearPt(distance, pt, null));
     }
     if (tok == T.sequence)
@@ -4436,8 +4437,10 @@ public class MathExt {
       return getAtomsNearPts(distance, (T3d[]) data[1], (BS) data[2]);
     data[1] = Integer.valueOf(0);
     data[2] = Integer.valueOf(-1);
-    if (e.getShapePropertyData(JC.SHAPE_DRAW, "getCenter", data))
+    if (e.getShapePropertyData(JC.SHAPE_DRAW, "getCenter", data)) {
+      // this is for ALL models
       return vwr.getAtomsNearPt(distance, (P3d) data[2], null);
+    }
     data[1] = Double.valueOf(distance);
     if (e.getShapePropertyData(JC.SHAPE_POLYHEDRA, "getAtomsWithin", data))
       return (BS) data[2];

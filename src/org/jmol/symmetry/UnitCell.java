@@ -710,7 +710,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   P3d[] getUnitCellVectorsD() {
     M4d m = matrixFractionalToCartesian;
     return new P3d[] { 
-        P3d.newPd(cartesianOffset),
+        P3d.newP(cartesianOffset),
         P3d.new3(fixd(m.m00), fixd(m.m10), fixd(m.m20)), 
         P3d.new3(fixd(m.m01), fixd(m.m11), fixd(m.m21)), 
         P3d.new3(fixd(m.m02), fixd(m.m12), fixd(m.m22)) };

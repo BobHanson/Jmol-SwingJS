@@ -393,18 +393,18 @@ public class Viewer extends JmolViewer
     return getSmilesMatcher().getSubstructureSet(smarts, atoms, atoms.length,
         null, JC.SMILES_TYPE_SMARTS);
   }
-  
+
   public boolean hasStructure(String pattern, String smiles, boolean isSmarts) {
     try {
-      int[] ret = getSmilesMatcher().hasStructure(pattern,  new String[] { smiles }, 
-          (isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES) | JC.SMILES_FIRST_MATCH_ONLY);
+      int[] ret = getSmilesMatcher().hasStructure(pattern,
+          new String[] { smiles },
+          (isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES)
+              | JC.SMILES_FIRST_MATCH_ONLY);
       return ret[0] == 1;
     } catch (Exception e) {
       return false;
     }
   }
-  
-
 
   /**
    * 
@@ -1424,7 +1424,8 @@ public class Viewer extends JmolViewer
     int atomIndex = (bsAtoms == null ? -1 : bsAtoms.nextSetBit(0));
     int modelIndex = (atomIndex >= 0 ? getModelIndexForAtom(atomIndex) : -1);
     if (starting && atomIndex >= 0) {
-      sm.setStatusStructureModified(atomIndex, modelIndex, MODIFY_SET_COORD, "minimize:" + minStatus, bsAtoms.cardinality(), bsAtoms);
+      sm.setStatusStructureModified(atomIndex, modelIndex, MODIFY_SET_COORD,
+          "minimize:" + minStatus, bsAtoms.cardinality(), bsAtoms);
     }
     sm.notifyMinimizationStatus(minStatus,
         step instanceof String ? Integer.valueOf(0) : (Integer) step,
@@ -1433,8 +1434,9 @@ public class Viewer extends JmolViewer
             : (Double) getP("_minimizationEnergyDiff")),
         ff);
     if (done && atomIndex >= 0) {
-      sm.setStatusStructureModified(atomIndex, modelIndex, -MODIFY_SET_COORD, "minimize:" + minStatus, bsAtoms.cardinality(), bsAtoms);
-    }  
+      sm.setStatusStructureModified(atomIndex, modelIndex, -MODIFY_SET_COORD,
+          "minimize:" + minStatus, bsAtoms.cardinality(), bsAtoms);
+    }
   }
 
   /*
@@ -1749,7 +1751,8 @@ public class Viewer extends JmolViewer
     setStringProperty("_restrict", "\"" + access + "\"");
     setBooleanProperty("_useCommandThread", useCommandThread);
     // default for legacy JavaScript and Java is false; for SwingJS Java/JavaScript true 
-    setBooleanPropertyTok("doubleprecision", T.doubleprecision, isDoublePrecision);
+    setBooleanPropertyTok("doubleprecision", T.doubleprecision,
+        isDoublePrecision);
   }
 
   public String getExportDriverList() {
@@ -1797,7 +1800,7 @@ public class Viewer extends JmolViewer
     // Eval.reset()
     // initializeModel
     ms.setBoundBox(null, null, true, 0);
-//    ms.calcBoundBoxDimensions(null, 1);
+    //    ms.calcBoundBoxDimensions(null, 1);
     axesAreTainted = true;
     tm.homePosition(includingSpin);
     if (ms.setCrystallographicDefaults())
@@ -1946,18 +1949,18 @@ public class Viewer extends JmolViewer
   }
 
   public void moveTo(JmolScriptEvaluator eval, double doubleSecondsTotal,
-                     P3d center, V3d rotAxis, double degrees, M3d rotationMatrix,
-                     double zoom, double xTrans, double yTrans,
-                     double rotationRadius, P3d navCenter, double xNav, double yNav,
-                     double navDepth, double cameraDepth, double cameraX,
-                     double cameraY) {
+                     P3d center, V3d rotAxis, double degrees,
+                     M3d rotationMatrix, double zoom, double xTrans,
+                     double yTrans, double rotationRadius, P3d navCenter,
+                     double xNav, double yNav, double navDepth,
+                     double cameraDepth, double cameraX, double cameraY) {
     // from StateManager -- -1 for time --> no repaint
     if (!haveDisplay)
       doubleSecondsTotal = 0;
     setTainted(true);
-    tm.moveTo(eval, doubleSecondsTotal, center, rotAxis, degrees, rotationMatrix,
-        zoom, xTrans, yTrans, rotationRadius, navCenter, xNav, yNav, navDepth,
-        cameraDepth, cameraX, cameraY);
+    tm.moveTo(eval, doubleSecondsTotal, center, rotAxis, degrees,
+        rotationMatrix, zoom, xTrans, yTrans, rotationRadius, navCenter, xNav,
+        yNav, navDepth, cameraDepth, cameraX, cameraY);
   }
 
   public void moveUpdate(double doubleSecondsTotal) {
@@ -2035,11 +2038,21 @@ public class Viewer extends JmolViewer
 
   void rotateSelected(double deltaX, double deltaY, BS bsSelected) {
     // bsSelected null comes from sync. 
-    if (isJmolDataFrame())
+    if (isJmolDataFrame() || bsSelected.isEmpty())
       return;
     //if (mouseEnabled) {
     // "true" in setMovableBitSet call is necessary to implement set allowMoveAtoms
-    tm.rotateXYBy(deltaX, deltaY, setMovableBitSet(bsSelected, true));
+  
+    int iatom = bsSelected.nextSetBit(0);
+    SymmetryInterface sym = getOperativeSymmetry();
+    P3d[] apos0 = null;
+    if (sym != null) {
+      apos0 = getModelkit(false).checkRotateAtoms(iatom, null);
+    }
+    tm.rotateXYBy(deltaX, deltaY, setMovableBitSet(bsSelected, true));    
+    if (sym != null && getModelkit(false).checkRotateAtoms(iatom, apos0) == null) {
+      return;
+    }
     refreshMeasures(true);
     //}
     //TODO: note that sync may not work with set allowRotateSelectedAtoms
@@ -2195,7 +2208,7 @@ public class Viewer extends JmolViewer
    * @param type
    * @param name
    * @param bs
-   * @param points 
+   * @param points
    * @return String or Quat or P3[]
    */
   public Object getOrientation(int type, String name, BS bs, P3d[] points) {
@@ -2265,7 +2278,7 @@ public class Viewer extends JmolViewer
     // Eval
     if (Double.isNaN(period)) {
       // just a reset from ModelKit
-      period = g.vibrationPeriod; 
+      period = g.vibrationPeriod;
     }
     tm.setVibrationPeriod(period);
     period = Math.abs(period);
@@ -2385,11 +2398,11 @@ public class Viewer extends JmolViewer
         null);
   }
 
-//  public P3d getColorPointForPropertyValue(double val) {
-//    // x = {atomno=3}.partialcharge.color
-//    return CU.colorPtFromIntD(gdata.getColorArgbOrGray(cm.ce.getColorIndex((double) val)),
-//        null);
-//  }
+  //  public P3d getColorPointForPropertyValue(double val) {
+  //    // x = {atomno=3}.partialcharge.color
+  //    return CU.colorPtFromIntD(gdata.getColorArgbOrGray(cm.ce.getColorIndex((double) val)),
+  //        null);
+  //  }
 
   // ///////////////////////////////////////////////////////////////
   // delegated to SelectionManager
@@ -2639,7 +2652,8 @@ public class Viewer extends JmolViewer
   }
 
   @Override
-  public void openFileAsyncSpecialType(String fileName, int flags, String type) {
+  public void openFileAsyncSpecialType(String fileName, int flags,
+                                       String type) {
     getScriptManager().openFileAsync(fileName, flags, type);
   }
 
@@ -3220,9 +3234,8 @@ public class Viewer extends JmolViewer
 
     htParams = setLoadParameters(htParams, isAppend);
     String type = getModelAdapter().getFileTypeName(htParams.get("filter"));
-    if (type == null 
-        && (type = getModelAdapter().getFileTypeName(Rdr.getBR(strModel)))
-         == null)
+    if (type == null && (type = getModelAdapter()
+        .getFileTypeName(Rdr.getBR(strModel))) == null)
       return "unknown file type";
     if (type.equals("spt")) {
       return "cannot open script inline";
@@ -3332,8 +3345,8 @@ public class Viewer extends JmolViewer
             BS stereo = getAtomBitSet("_C & connected(3) & !connected(double)");
             stereo.and(bsNew);
             if (stereo.nextSetBit(0) >= 0) {
-              bsNew.or(
-                  addHydrogens(stereo, MIN_SELECT_ONLY | MIN_SILENT | MIN_QUICK));
+              bsNew.or(addHydrogens(stereo,
+                  MIN_SELECT_ONLY | MIN_SILENT | MIN_QUICK));
             }
             minimize(eval, Integer.MAX_VALUE, 0, bsNew, null, null, 0,
                 MIN_ADDH | MIN_SELECT_ONLY | MIN_SILENT | MIN_QUICK | MIN_XX);
@@ -3763,8 +3776,8 @@ public class Viewer extends JmolViewer
 
   /**
    * 
-   * convert string abc;offset or M3d or M4d to origin and three vectors -- a, b,
-   * c. The string can be preceded by ! for "reverse of". For example,
+   * convert string abc;offset or M3d or M4d to origin and three vectors -- a,
+   * b, c. The string can be preceded by ! for "reverse of". For example,
    * "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, but it still needs a
    * semicolon: "a/2,b/2,c;"
    * 
@@ -3786,9 +3799,9 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * Return current unit cell for the specified model. 
-   * If modelIndex is negative, only return a unit cell if all visible unit cells
-   * are the equivalent.
+   * Return current unit cell for the specified model. If modelIndex is
+   * negative, only return a unit cell if all visible unit cells are the
+   * equivalent.
    * 
    * @param modelIndex
    * @return unit cell ONLY if it is the same for all models
@@ -3958,8 +3971,8 @@ public class Viewer extends JmolViewer
       unitCell = getCurrentUnitCell();
     if (unitCell != null) {
       unitCell.toCartesian(pt, ignoreOffset);
-//      if (!g.legacyJavaFloat)
-//        PT.fixPtFloats(pt, PT.CARTESIAN_PRECISION);
+      //      if (!g.legacyJavaFloat)
+      //        PT.fixPtFloats(pt, PT.CARTESIAN_PRECISION);
     }
   }
 
@@ -3980,8 +3993,8 @@ public class Viewer extends JmolViewer
       unitCell = getCurrentUnitCell();
     if (unitCell != null) {
       unitCell.toFractional(pt, ignoreOffset);
-//      if (!g.legacyJavaFloat)
-//        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
+      //      if (!g.legacyJavaFloat)
+      //        PT.fixPtFloats(pt, PT.FRACTIONAL_PRECISION);
     }
   }
 
@@ -4048,6 +4061,17 @@ public class Viewer extends JmolViewer
     g.minBondDistance = minBondDistance;
   }
 
+  /**
+   * In all models.... Use vwr.ms.getAtomsWithin(distance,coord,bs,modelIndex)
+   * instead to check just one model.
+   * 
+   * 
+   * 
+   * @param distance
+   * @param coord
+   * @param bs
+   * @return bitset
+   */
   public BS getAtomsNearPt(double distance, P3d coord, BS bs) {
     if (bs == null)
       bs = new BS();
@@ -4197,8 +4221,8 @@ public class Viewer extends JmolViewer
    *        data[2] -- selection bitset or int[] atomMap when field > 0
    * 
    *        data[3] -- arrayDepth
-   *        0(String),1(double[]),2(double[][]),3(double[][][]) or -1 to indidate
-   *        that it is set by data type
+   *        0(String),1(double[]),2(double[][]),3(double[][][]) or -1 to
+   *        indidate that it is set by data type
    * 
    *        data[4] -- Boolean.TRUE == saveInState
    * 
@@ -4262,8 +4286,8 @@ public class Viewer extends JmolViewer
    *         data[2] -- selection bitset or int[] atomMap when field > 0
    * 
    *         data[3] -- arrayDepth
-   *         0(String),1(double[]),2(double[][]),3(double[][][]) or -1 to indicate
-   *         that it is set by data type
+   *         0(String),1(double[]),2(double[][]),3(double[][][]) or -1 to
+   *         indicate that it is set by data type
    * 
    *         data[4] -- Boolean.TRUE == saveInState
    */
@@ -4929,7 +4953,9 @@ public class Viewer extends JmolViewer
    * making sure it is found using isDatabaseCode() first. Starting with Jmol
    * 13.1.13, we allow a generalized search using =xxx= where xxx is a known or
    * user-specified database designation.
-   * @param isSurface TODO
+   * 
+   * @param isSurface
+   *        TODO
    * @param name
    * @param type
    *        a character to distinguish the type of file, '?' means we are just
@@ -4938,7 +4964,8 @@ public class Viewer extends JmolViewer
    * 
    * @return String or String[]
    */
-  public Object setLoadFormat(boolean isSurface, String name, char type, boolean withPrefix) {
+  public Object setLoadFormat(boolean isSurface, String name, char type,
+                              boolean withPrefix) {
     String format = null;
     String id = name.substring(1);
     switch (type) {
@@ -4974,7 +5001,8 @@ public class Viewer extends JmolViewer
                 id = id.substring(0, pt);
               }
               if (id.indexOf("_") < 0)
-                id = (String) getSymTemp().getSpaceGroupJSON(this, "AFLOW", id, index);
+                id = (String) getSymTemp().getSpaceGroupJSON(this, "AFLOW", id,
+                    index);
             }
             id = JC.resolveDataBase(database, id, null);
             if (id != null && id.startsWith("'"))
@@ -4985,9 +5013,9 @@ public class Viewer extends JmolViewer
           }
         }
         if (!isSurface && id.endsWith(".bcif")) {
-            id = id.substring(0, id.indexOf(".bcif"));
-            return JC.resolveDataBase("bcif", id.toLowerCase(), null);
-          }
+          id = id.substring(0, id.indexOf(".bcif"));
+          return JC.resolveDataBase("bcif", id.toLowerCase(), null);
+        }
         if (id.endsWith(".mmtf")) {
           id = id.substring(0, id.indexOf(".mmtf"));
           return JC.resolveDataBase("mmtf", id.toUpperCase(), null);
@@ -5260,7 +5288,7 @@ public class Viewer extends JmolViewer
   }
 
   public P3d[] getAdditionalHydrogens(BS bsAtoms, Lst<Atom> vConnections,
-                                     int flags) {
+                                      int flags) {
     if (bsAtoms == null)
       bsAtoms = bsA();
     int[] nTotal = new int[1];
@@ -5352,7 +5380,7 @@ public class Viewer extends JmolViewer
     }
     return false;
   }
-  
+
   public boolean isModelkitPickingRotateBond() {
     return (acm.getBondPickingMode() == ActionManager.PICKING_ROTATE_BOND);
   }
@@ -5399,7 +5427,8 @@ public class Viewer extends JmolViewer
 
   void hoverOff() {
     try {
-      if ((isModelKitOpen() || modelkit != null && modelkit.wasRotating()) && !isModelkitPickingRotateBond())
+      if ((isModelKitOpen() || modelkit != null && modelkit.wasRotating())
+          && !isModelkitPickingRotateBond())
         highlight(null);
       if (!hoverEnabled)
         return;
@@ -5558,17 +5587,18 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * Allows a handler to set Jmol variable doDrop=false to cancel
-   * and also set the file type if desired.
+   * Allows a handler to set Jmol variable doDrop=false to cancel and also set
+   * the file type if desired.
    * 
    * @param mode
    * @param x
    * @param y
    * @param fileName
    * @param retType
-   * @return true if we should still handle this. 
+   * @return true if we should still handle this.
    */
-  public boolean setStatusDragDropped(int mode, int x, int y, String fileName, String[] retType) {
+  public boolean setStatusDragDropped(int mode, int x, int y, String fileName,
+                                      String[] retType) {
     if (mode == 0) {
       g.setO("_fileDropped", fileName);
       g.setUserVariable("doDrop", SV.vT);
@@ -5588,12 +5618,12 @@ public class Viewer extends JmolViewer
    * resizeCallback is called whenever the applet gets a resize notification
    * from the browser
    * 
-   * jmolSetCallback("resizeCallback", "myResizeCallback") 
+   * jmolSetCallback("resizeCallback", "myResizeCallback")
    * 
    * function myResizeCallback(width, height) {}
    * 
-   * @param width 
-   * @param height 
+   * @param width
+   * @param height
    */
 
   public void setStatusResized(int width, int height) {
@@ -5626,12 +5656,11 @@ public class Viewer extends JmolViewer
    * Eval.hbond Eval.load (logMessages message) Eval.message Eval.runEval (error
    * message) Eval.write (error reading file) Eval.zap (error message)
    * FileManager.createAtomSetCollectionFromFile "requesting..." for Chime-like
-   * compatibility actionManager.atomPicked
-   * "pick one more atom in order to spin..." for example
-   * Viewer.evalStringWaitStatus -- see above -2, 0 only if error, >=1 at
-   * termination Viewer.reportSelection "xxx atoms selected"
+   * compatibility actionManager.atomPicked "pick one more atom in order to
+   * spin..." for example Viewer.evalStringWaitStatus -- see above -2, 0 only if
+   * error, >=1 at termination Viewer.reportSelection "xxx atoms selected"
    * 
-   * @param strStatus 
+   * @param strStatus
    */
 
   public void scriptStatus(String strStatus) {
@@ -5811,8 +5840,8 @@ public class Viewer extends JmolViewer
       return g.percentVdwAtom;
     case T.pickingspinrate:
       return g.pickingSpinRate;
-//    case T.pointgroupmaxatoms:
-//      return g.pointGroupMaxAtoms;
+    //    case T.pointgroupmaxatoms:
+    //      return g.pointGroupMaxAtoms;
     case T.ribbonaspectratio:
       return g.ribbonAspectRatio;
     case T.showscript:
@@ -5843,7 +5872,8 @@ public class Viewer extends JmolViewer
   }
 
   public int getHoverDelay() {
-    return (isModelKitOpen() || isModelkitPickingActive() || getDrawHover() ? 20 : g.hoverDelayMs);
+    return (isModelKitOpen() || isModelkitPickingActive() || getDrawHover() ? 20
+        : g.hoverDelayMs);
   }
 
   @Override
@@ -6069,8 +6099,7 @@ public class Viewer extends JmolViewer
   }
 
   boolean getBondsPickable() {
-    return (g.bondPicking || isModelkitPickingActive()
-        || isModelKitOpen()
+    return (g.bondPicking || isModelkitPickingActive() || isModelKitOpen()
         && getModelkitPropertySafely("isMolecular") == Boolean.TRUE);
   }
 
@@ -6648,12 +6677,12 @@ public class Viewer extends JmolViewer
 
   public void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
-//    case T.pointgroupmaxatoms:
-//      g.pointGroupMaxAtoms = value;
-//      break;
+    //    case T.pointgroupmaxatoms:
+    //      g.pointGroupMaxAtoms = value;
+    //      break;
     case T.minimizationreportsteps:
-        // 16.1.15 and 16.1.16
-        g.minimizationReportSteps = Math.min(Math.max(value, 1), 20);
+      // 16.1.15 and 16.1.16
+      g.minimizationReportSteps = Math.min(Math.max(value, 1), 20);
       break;
     case T.undomax:
       // 14.32.25
@@ -7527,7 +7556,8 @@ public class Viewer extends JmolViewer
         // we have an empty model with a unit cell
       } else if (ms.ac == 0) {
         zap(false, true, true);
-      } else if (am.cmi >= 0 && getModelUndeletedAtomsBitSet(am.cmi).isEmpty()) {
+      } else if (am.cmi >= 0
+          && getModelUndeletedAtomsBitSet(am.cmi).isEmpty()) {
         Map<String, Object> htParams = new Hashtable<String, Object>();
         htParams.put("appendToModelIndex", Integer.valueOf(am.cmi));
         loadDefaultModelKitModel(htParams);
@@ -7741,9 +7771,9 @@ public class Viewer extends JmolViewer
     g.autoBond = TF;
   }
 
-  public int[] makeConnections(double minDistance, double maxDistance, int order,
-                               int connectOperation, BS bsA, BS bsB, BS bsBonds,
-                               boolean isBonds, boolean addGroup,
+  public int[] makeConnections(double minDistance, double maxDistance,
+                               int order, int connectOperation, BS bsA, BS bsB,
+                               BS bsBonds, boolean isBonds, boolean addGroup,
                                double energy) {
     // eval
     clearModelDependentObjects();
@@ -7961,7 +7991,8 @@ public class Viewer extends JmolViewer
 
   public void setStereoMode(int[] twoColors, STER stereoMode, double degrees) {
     setFloatProperty("stereoDegrees", degrees);
-    setBooleanPropertyTok("greyscaleRendering", T.greyscalerendering, stereoMode.isBiColor());
+    setBooleanPropertyTok("greyscaleRendering", T.greyscalerendering,
+        stereoMode.isBiColor());
     if (twoColors != null)
       tm.setStereoMode2(twoColors);
     else
@@ -8050,8 +8081,9 @@ public class Viewer extends JmolViewer
     return false;
   }
 
-  public boolean rotateAxisAngleAtCenter(JmolScriptEvaluator eval, P3d rotCenter,
-                                         V3d rotAxis, double degreesPerSecond,
+  public boolean rotateAxisAngleAtCenter(JmolScriptEvaluator eval,
+                                         P3d rotCenter, V3d rotAxis,
+                                         double degreesPerSecond,
                                          double endDegrees, boolean isSpin,
                                          BS bsSelected) {
     // Eval: rotate FIXED
@@ -8259,7 +8291,8 @@ public class Viewer extends JmolViewer
                               boolean isClick) {
     // Eval
     if (ringAtomIndex >= 0) {
-      bs = JmolMolecule.getBranchesForInversion(ms.at, ringAtomIndex, ms.getMoleculeBitSetForAtom(ringAtomIndex));
+      bs = JmolMolecule.getBranchesForInversion(ms.at, ringAtomIndex,
+          ms.getMoleculeBitSetForAtom(ringAtomIndex));
       int nb = bs.cardinality();
       switch (nb) {
       case 0:
@@ -8318,8 +8351,8 @@ public class Viewer extends JmolViewer
     setStatusAtomMoved(true, bsAtoms);
   }
 
-  public void moveAtoms(M4d m4, M3d mNew, M3d rotation, V3d translation, P3d center,
-                        boolean isInternal, BS bsAtoms,
+  public void moveAtoms(M4d m4, M3d mNew, M3d rotation, V3d translation,
+                        P3d center, boolean isInternal, BS bsAtoms,
                         boolean translationOnly) {
     // from TransformManager exclusively
     if (bsAtoms.isEmpty())
@@ -8342,7 +8375,8 @@ public class Viewer extends JmolViewer
     if (deltaZ == 0 || isJmolDataFrame())
       return;
     if (x == Integer.MIN_VALUE && modelkit != null)
-      setModelkitPropertySafely("rotateBondIndex", Integer.valueOf(Integer.MIN_VALUE));
+      setModelkitPropertySafely("rotateBondIndex",
+          Integer.valueOf(Integer.MIN_VALUE));
     if (deltaX == Integer.MIN_VALUE) {
       showSelected = true;
       movableBitSet = setMovableBitSet(null, !asAtoms);
@@ -8372,10 +8406,10 @@ public class Viewer extends JmolViewer
         bsSelected = bsA();
       int iatom = bsSelected.nextSetBit(0);
       bsSelected = setMovableBitSet(bsSelected, !asAtoms);
-      
+
       if (bsSelected.isEmpty()) {
         bsSelected.set(iatom);
-        sm.setStatusStructureModified(iatom, getModelIndexForAtom(iatom), 
+        sm.setStatusStructureModified(iatom, getModelIndexForAtom(iatom),
             -MODIFY_SET_COORD, "FAILED", 1, bsSelected);
       } else {
         if (isTranslation) {
@@ -8391,6 +8425,8 @@ public class Viewer extends JmolViewer
           tm.unTransformPoint(ptScreenNew, ptNew);
           SymmetryInterface uc = getOperativeSymmetry();
           if (uc != null) {
+            ptNew.sub(ptCenter);
+            ptNew.add(ms.at[iatom]);
             getModelkit(false).cmdAssignMoveAtoms(bsSelected, null, null, iatom,
                 ptNew, null, true);
           }
@@ -8411,7 +8447,8 @@ public class Viewer extends JmolViewer
    * from Sticks
    * 
    * @param index
-   * @param closestAtomIndex - ignored
+   * @param closestAtomIndex
+   *        - ignored
    * @param x
    * @param y
    */
@@ -8428,7 +8465,7 @@ public class Viewer extends JmolViewer
       bs.set(b.atom1.i);
     }
     highlight(bs);
-    getModelkit(false); 
+    getModelkit(false);
     setModelkitPropertySafely("screenXY", new int[] { x, y });
     setModelkitPropertySafely("bondIndex", Integer.valueOf(index));
     String text = (String) setModelkitPropertySafely("hoverLabel",
@@ -8924,7 +8961,7 @@ public class Viewer extends JmolViewer
   public final static int MODIFY_SET_COORD = 3;
   public final static int MODIFY_DELETE_ATOM = 4;
   public final static int MODIFY_DELETE_MODEL = 5;
-  public final static int MODIFY_ASSIGN_BOND = 6;  // MODELKIT ASSIGN BOND ...
+  public final static int MODIFY_ASSIGN_BOND = 6; // MODELKIT ASSIGN BOND ...
   public final static int MODIFY_DELETE_ATOMS = 7; // changed from 1 for Jmol 14.32.80 and 15.2.80
 
   public int deleteAtoms(BS bsAtoms, boolean fullModels) {
@@ -9296,7 +9333,6 @@ public class Viewer extends JmolViewer
   public static final int MIN_XX = 128;
   public static final int MIN_MODELKIT = 256;
 
-
   /**
    * From the MINIMIZE command and other sources.
    * 
@@ -9307,13 +9343,14 @@ public class Viewer extends JmolViewer
    *        -1 --> use defaults
    * @param bsSelected
    * @param bsFixed
-   * @param bsInFrame 
+   * @param bsInFrame
    * @param rangeFixed
    * @param flags
    * @throws Exception
    */
   public void minimize(JmolScriptEvaluator eval, int steps, double crit,
-                       BS bsSelected, BS bsFixed, BS bsInFrame, double rangeFixed, int flags)
+                       BS bsSelected, BS bsFixed, BS bsInFrame,
+                       double rangeFixed, int flags)
       throws Exception {
 
     boolean isSelectionExplicit = (bsSelected != null); // could be MINIMIZE {...} or MINIMIZE SELECT {...} or MINIMIZE ONLY {...}
@@ -9335,7 +9372,8 @@ public class Viewer extends JmolViewer
     if (isModelKitOpen())
       setModelkitPropertySafely("constraint", null);
 
-    if (bsInFrame == null) bsInFrame = getFrameAtoms();
+    if (bsInFrame == null)
+      bsInFrame = getFrameAtoms();
 
     // When the SELECT option is given without ONLY or FIX, 
     // we go ahead and fix whatever is not selected and then make selected ALL
@@ -9360,7 +9398,8 @@ public class Viewer extends JmolViewer
       return;
 
     BS bsBasis = (isModelkitCmd || !selectedOnly
-        ? BSUtil.copy(ms.am[ms.at[bsSelected.nextSetBit(0)].mi].bsAsymmetricUnit)
+        ? BSUtil
+            .copy(ms.am[ms.at[bsSelected.nextSetBit(0)].mi].bsAsymmetricUnit)
         : null);
     if (isModelkitCmd && bsBasis == null) {
       scriptStatusMsg(
@@ -9375,10 +9414,11 @@ public class Viewer extends JmolViewer
       if (isModelkitCmd) {
         // initial only, from command, refers to true atom set, not temp
         // the model kit will call this method back with isModelkitCmd = false
-        getModelkit(false).cmdMinimize(eval, bsBasis, steps, crit, rangeFixed, flags);
+        getModelkit(false).cmdMinimize(eval, bsBasis, steps, crit, rangeFixed,
+            flags);
         return;
       }
-      
+
       String ff = (bsBasis == null ? g.forceField : "UFF");
 
       getModelForAtomIndex(bsSelected.nextSetBit(0)).auxiliaryInfo
@@ -9405,9 +9445,7 @@ public class Viewer extends JmolViewer
       BS bsNearby = (bsBasis != null && isModelkitCmd ? getThisModelAtoms()
           : selectedOnly || !haveFixed ? new BS()
               : ms.getAtomsWithinRadius(
-                  (rangeFixed <= 0 ? 
-                      JC.MINIMIZE_FIXED_RANGE 
-                      : rangeFixed),
+                  (rangeFixed <= 0 ? JC.MINIMIZE_FIXED_RANGE : rangeFixed),
                   bsSelected, true, null, null));
       bsNearby.andNot(bsSelected);
       if (haveFixed) {
@@ -9659,8 +9697,9 @@ public class Viewer extends JmolViewer
     if (bsAtoms == null) {
       Atom atom = ms.at[atomIndex];
       bsAtoms = BSUtil.newAndSetBit(atomIndex);
-      Bond[] bonds = (this.getOperativeSymmetry() == null || isModelKitOpen()
-          && !modelkit.hasConstraint(atomIndex, true, false) ? atom.bonds
+      Bond[] bonds = (this.getOperativeSymmetry() == null
+          || isModelKitOpen() && !modelkit.hasConstraint(atomIndex, true, false)
+              ? atom.bonds
               : null);
       if (bonds != null)
         for (int i = 0; i < bonds.length; i++) {
@@ -9688,7 +9727,8 @@ public class Viewer extends JmolViewer
   @Override
   public String getSmiles(BS bs) throws Exception {
     return getSmilesOpt(bs, -1, -1,
-        JC.SMILES_NO_AROMATIC | (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0),
+        JC.SMILES_NO_AROMATIC
+            | (bs == null && Logger.debugging ? JC.SMILES_GEN_ATOM_COMMENT : 0),
         null);
   }
 
@@ -9891,8 +9931,8 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * Run a script immediately using the script function script("xxxxxx") using direct script
-   * tokens for script ( "xxxxxxx" )
+   * Run a script immediately using the script function script("xxxxxx") using
+   * direct script tokens for script ( "xxxxxxx" )
    *
    */
   @Override
@@ -10089,7 +10129,8 @@ public class Viewer extends JmolViewer
     if (pts.length > 0) {
       clearModelDependentObjects();
       try {
-        bsB = (isQuick && vConnections.get(0).mi == ms.mc - 1 ? ms.addHydrogens(vConnections, pts)
+        bsB = (isQuick && vConnections.get(0).mi == ms.mc - 1
+            ? ms.addHydrogens(vConnections, pts)
             : addHydrogensInline(bsAtoms, vConnections, pts, null));
       } catch (Exception e) {
         System.out.println(e.toString());
@@ -10192,7 +10233,8 @@ public class Viewer extends JmolViewer
     return (eval == null ? null : eval.setObjectPropSafe(id, tokCommand));
   }
 
-  public void setDihedrals(double[] dihedralList, BS[] bsBranches, double rate) {
+  public void setDihedrals(double[] dihedralList, BS[] bsBranches,
+                           double rate) {
     if (bsBranches == null)
       bsBranches = ms.getBsBranches(dihedralList);
     ms.setDihedrals(dihedralList, bsBranches, rate);
@@ -10395,18 +10437,17 @@ public class Viewer extends JmolViewer
 
   void dragMinimizeAtom(final int iAtom) {
     stopMinimization();
-    
-    
+
     int flags = 0;
     if (getOperativeSymmetry() != null) {
       flags = MIN_MODELKIT;
     }
-    
-    
-    BS bs = (flags != 0 ? null : (getMotionFixedAtoms(iAtom).isEmpty()
-        ? ms.getAtoms((ms.isAtomPDB(iAtom) ? T.group : T.molecule),
-            BSUtil.newAndSetBit(iAtom))
-        : BSUtil.setAll(ms.ac)));
+
+    BS bs = (flags != 0 ? null
+        : (getMotionFixedAtoms(iAtom).isEmpty()
+            ? ms.getAtoms((ms.isAtomPDB(iAtom) ? T.group : T.molecule),
+                BSUtil.newAndSetBit(iAtom))
+            : BSUtil.setAll(ms.ac)));
     try {
       minimize(eval, Integer.MAX_VALUE, 0, bs, null, null, 0, flags);
     } catch (Exception e) {
@@ -10457,8 +10498,8 @@ public class Viewer extends JmolViewer
   }
 
   public Map<String, Object> getModelSetAuxiliaryInfoForAtoms(Object atomExpression) {
-    return ms
-        .getModelSetAuxiliaryInfo(ms.getModelBS(getAtomBitSet(atomExpression), false));
+    return ms.getModelSetAuxiliaryInfo(
+        ms.getModelBS(getAtomBitSet(atomExpression), false));
   }
 
   private JSJSONParser jsonParser;
@@ -10658,12 +10699,13 @@ public class Viewer extends JmolViewer
    * @param options
    *        if nonzero, a option, currently just T.offset, indicating that pt1
    *        is an {i j k} offset from cell 555
-   * @param opList 
+   * @param opList
    * @return string, Object[], or Lst<Object[]>
    */
   public Object getSymmetryInfo(int iatom, String xyz, int iOp, P3d translation,
                                 P3d pt1, P3d pt2, int type, String desc,
-                                double scaleFactor, int nth, int options, int[] opList) {
+                                double scaleFactor, int nth, int options,
+                                int[] opList) {
     try {
       return getSymTemp().getSymmetryInfoAtom(ms, iatom, xyz, iOp, translation,
           pt1, pt2, desc, type, scaleFactor, nth, options, opList);
@@ -10674,7 +10716,7 @@ public class Viewer extends JmolViewer
       return null;
     }
   }
-  
+
   private Map<String, Object> macros;
 
   /**
@@ -10822,15 +10864,20 @@ public class Viewer extends JmolViewer
   /**
    * 
    * @param bsAtoms
-   * @param xyzList if present, a semicolon-separated list of operators
-   * @param unitCellParams 
+   * @param xyzList
+   *        if present, a semicolon-separated list of operators
+   * @param unitCellParams
    * @param asString
-   * @param isAssign from ModelKit
-   * @param checkSupercell 
-   * @return either an array of space group identifiers or, if asString, "", or null
+   * @param isAssign
+   *        from ModelKit
+   * @param checkSupercell
+   * @return either an array of space group identifiers or, if asString, "", or
+   *         null
    * 
    */
-  public Object findSpaceGroup(BS bsAtoms, String xyzList, double[] unitCellParams, boolean asString, boolean isAssign, boolean checkSupercell) {
+  public Object findSpaceGroup(BS bsAtoms, String xyzList,
+                               double[] unitCellParams, boolean asString,
+                               boolean isAssign, boolean checkSupercell) {
     Object ret = null;
     if (bsAtoms == null && xyzList == null || isAssign)
       bsAtoms = getThisModelAtoms();
@@ -10939,7 +10986,7 @@ public class Viewer extends JmolViewer
           chLast = ch;
           continue;
         }
-        switch(ch) {
+        switch (ch) {
         case '\'':
         case '"':
           chFirst = ch;
@@ -10970,19 +11017,24 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * Depending upon the measure text, we need to indicate
-   * |-------| 1 A or 0.1 A for example.
-   * @param units possibly //angstroms or //nm or "", not null
-   * @param isAntialiased 
-   * @param min 
-   * @param ret return bar length in pixels, or null to just return units for StateCreator
+   * Depending upon the measure text, we need to indicate |-------| 1 A or 0.1 A
+   * for example.
+   * 
+   * @param units
+   *        possibly //angstroms or //nm or "", not null
+   * @param isAntialiased
+   * @param min
+   * @param ret
+   *        return bar length in pixels, or null to just return units for
+   *        StateCreator
    * @return text
    */
-  public String getScaleText(String units, boolean isAntialiased, double min, double[] ret) {
+  public String getScaleText(String units, boolean isAntialiased, double min,
+                             double[] ret) {
     double relativeScale = 1d;
-    String u = Measurement
-        .fixUnits(units.length() > 0 ? ((units.startsWith("//") ? units.substring(2) : units).toLowerCase())
-          : g.measureDistanceUnits.equals("vdw") ? "angstroms"
+    String u = Measurement.fixUnits(units.length() > 0
+        ? ((units.startsWith("//") ? units.substring(2) : units).toLowerCase())
+        : g.measureDistanceUnits.equals("vdw") ? "angstroms"
             : g.measureDistanceUnits);
     //System.out.println(g.measureDistanceUnits);
     if (Measurement.fromUnits(1, u) == 0) {
@@ -11024,7 +11076,7 @@ public class Viewer extends JmolViewer
   public void setStatusAtomMoved(boolean andCheckMinimize, BS bs) {
     if (andCheckMinimize)
       checkMinimization();
-      sm.setStatusAtomMoved(bs);
+    sm.setStatusAtomMoved(bs);
   }
 
   public boolean isModelKitOption(char type, String value) {
@@ -11033,14 +11085,16 @@ public class Viewer extends JmolViewer
 
   /**
    * Get formula -- MF or CELLFORMULA, possibly empirical
+   * 
    * @param bs
    * @param type
    * @param isEmpirical
    * @return formula as H xx C xx X xx...
    */
   public String getFormulaForAtoms(BS bs, String type, boolean isEmpirical) {
-    return JmolMolecule.getMolecularFormulaAtoms(ms.at, bs, 
-        ("CELLFORMULA".equals(type) ? ms.getCellWeights(bs) : null), isEmpirical);
+    return JmolMolecule.getMolecularFormulaAtoms(ms.at, bs,
+        ("CELLFORMULA".equals(type) ? ms.getCellWeights(bs) : null),
+        isEmpirical);
   }
 
   public void evalCallback(String cmd, Object[] params, boolean doWait) {

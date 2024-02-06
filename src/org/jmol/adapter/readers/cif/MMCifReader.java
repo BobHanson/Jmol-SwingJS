@@ -88,6 +88,10 @@ public class MMCifReader extends CifReader {
   protected void initSubclass() {
     setIsPDB();
     mident = M4d.newM4(null);
+    if (!filteredPrecision) {
+      precision = 3;
+      filteredPrecision = true;
+    }      
     isMMCIF = true;
     if (isDSSP1)
       asc.setInfo("isDSSP1",Boolean.TRUE);      

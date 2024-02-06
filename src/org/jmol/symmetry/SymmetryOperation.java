@@ -24,7 +24,6 @@
 
 package org.jmol.symmetry;
 
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -1731,14 +1730,14 @@ public class SymmetryOperation extends M4d {
   public static SymmetryOperation[] getAdditionalOperations(SymmetryOperation[] ops) {
     int n = ops.length;
     Lst<SymmetryOperation> lst = new Lst<SymmetryOperation>();
-    HashSet<String> xyzLst = new HashSet<String>();
+    SB xyzLst = new SB();
 
     Map<String, Lst<SymmetryOperation>> mapPlanes = new Hashtable<String, Lst<SymmetryOperation>>();
     for (int i = 0; i < n; i++) {
       SymmetryOperation op = ops[i];
       lst.addLast(op);
       String s = op.getOpName(PLANE_MODE_NOTRANS);
-      xyzLst.add(s + ";");
+      xyzLst.append(s).appendC(';');
       if ((op.getOpType() & TYPE_REFLECTION) != 0)
         addPlaneMap(mapPlanes, op);
     }
@@ -1758,7 +1757,7 @@ public class SymmetryOperation extends M4d {
    * @param n0
    * @param isym 
    */
-  void addOps(HashSet<String> xyzList, Lst<SymmetryOperation> lst,
+  void addOps(SB xyzList, Lst<SymmetryOperation> lst,
               Map<String, Lst<SymmetryOperation>> mapPlanes, int n0, int isym) {
     V3d t0 = new V3d();
     getTranslation(t0);
@@ -1852,7 +1851,7 @@ public class SymmetryOperation extends M4d {
    * @return true if added
    */
   private boolean opCheckAdd(SymmetryOperation opThis, V3d t0, int n0, V3d t,
-                          HashSet<String> xyzList, Lst<SymmetryOperation> lst, int itno) {
+                          SB xyzList, Lst<SymmetryOperation> lst, int itno) {
     //int nnew = 0;
     setM4(opThis);
     V3d t1 = V3d.newV(t);
@@ -1862,8 +1861,8 @@ public class SymmetryOperation extends M4d {
     setOpTypeAndOrder();
     if (!isIrrelevant && opType != TYPE_IDENTITY && opType != TYPE_TRANSLATION) {
       String s = getOpName(PLANE_MODE_NOTRANS) + ";";
-      if (!xyzList.contains(s)) {
-        xyzList.add(s);
+      if (xyzList.indexOf(s) < 0) {
+        xyzList.append(s);
         lst.addLast(this);
         isFinalized = true;
         xyz = getXYZFromMatrix(this, false, false, false);

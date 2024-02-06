@@ -862,7 +862,7 @@ public class Symmetry implements SymmetryInterface {
       rand3 = Math.log10(2000);
       pt0 = P3d.new3(rand1 + 1, rand2 + 2, rand3 + 3);
     } else {
-      pt0 = P3d.newPd(pt00);
+      pt0 = P3d.newP(pt00);
     }
     if (ops == null || unitCell == null) {
       lst.addLast(pt0);

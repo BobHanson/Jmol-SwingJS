@@ -154,7 +154,6 @@ public final class ModelLoader {
   private int groupCount;
   private P3d modulationTUV;
   private boolean highPrecision;
-  private boolean isSupercell;
   private boolean noH;
   
   
@@ -209,7 +208,6 @@ public final class ModelLoader {
     ms.someModelsHaveSymmetry = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_SYMMETRY));
     someModelsHaveUnitcells = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_UNITCELLS));
     someModelsAreModulated = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_MODULATED));
-    isSupercell = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_SUPERCELL));
     ms.someModelsHaveFractionalCoordinates = ms
         .getMSInfoB(JC.getBoolName(JC.GLOBAL_SYMMETRY));
     if (merging) {
@@ -387,13 +385,6 @@ public final class ModelLoader {
     freeze();
     finalizeShapes();
     vwr.setModelSet(ms);
-    if (isSupercell && appendNew) {
-      for (int i = baseModelIndex; i < ms.mc; i++) {
-        SymmetryInterface sym = ms.getUnitCell(i);
-        if (sym != null)
-          sym.setSpaceGroupTo("P1");
-      }
-    }
     setAtomProperties();
     if (adapter != null)
       adapter.finish(asc);    
@@ -856,7 +847,6 @@ public final class ModelLoader {
           iterAtom.getOccupancy(), 
           iterAtom.getBfactor(), 
           xyz,
-          highPrecision ? xyz : null,
           iterAtom.getIsHetero(), 
           iterAtom.getSerial(), 
           iterAtom.getSeqID(),
@@ -962,7 +952,7 @@ public final class ModelLoader {
   private Atom addAtom(boolean isPDB, BS atomSymmetry, int atomSite, int atomicAndIsotopeNumber,
                        String atomName, int formalCharge, double partialCharge,
                        Lst<Object> tensors, double occupancy, double bfactor,
-                       P3d xyz, P3d dxyz, boolean isHetero, int atomSerial, int atomSeqID,
+                       P3d xyz, boolean isHetero, int atomSerial, int atomSeqID,
                        String group3, V3d vib, char alternateLocationID,
                        double radius, double bondRadius) {
     byte specialAtomID = 0;
