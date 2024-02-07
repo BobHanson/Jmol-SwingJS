@@ -1045,6 +1045,7 @@ public class CifReader extends AtomSetCollectionReader {
   // atom site data
   ////////////////////////////////////////////////////////////////
 
+  protected final static byte EMPTY = -2;
   protected final static byte NONE = -1;
   final private static byte TYPE_SYMBOL = 0;
   final private static byte LABEL = 1;
@@ -1427,21 +1428,21 @@ public class CifReader extends AtomSetCollectionReader {
           break;
         case CC_ATOM_X:
         case CARTN_X:
-          atom.x = parseDoubleField();
+          atom.x = parseCartesianField();
           break;
         case FRACT_Y:
           atom.y = parsePrecision(field);
           break;
         case CC_ATOM_Y:
         case CARTN_Y:
-          atom.y = parseDoubleField();
+          atom.y = parseCartesianField();
           break;
         case FRACT_Z:
           atom.z = parsePrecision(field);
           break;
         case CC_ATOM_Z:
         case CARTN_Z:
-          atom.z = parseDoubleField();
+          atom.z = parseCartesianField();
           break;
         case CC_ATOM_CHARGE:
           atom.formalCharge = parseIntField();
@@ -1634,6 +1635,10 @@ public class CifReader extends AtomSetCollectionReader {
     if (isMMCIF && skipping)
       skipping = false;
     return true;
+  }
+
+  protected double parseCartesianField() {
+    return parseDoubleField();
   }
 
   protected boolean addCifAtom(Atom atom, String id, String componentId,
@@ -2376,7 +2381,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   protected String getFieldString(byte type) {
     int i = key2col[type];
-    return (i == NONE ? "\0" : (String) cifParser.getColumnData(i));
+    return (i <= NONE ? "\0" : (String) cifParser.getColumnData(i));
   }
 
   protected void skipLoopKeyword() {

@@ -47,7 +47,7 @@ class BCIFDataParser extends CifDataParser {
   private String categoryName;
   private int rowCount;
   private Object[] columnMaps;
-  private BCIFDecoder[] columnDcoders;
+  private BCIFDecoder[] columnDecoders;
 
   //// "row"-level fields
   
@@ -137,11 +137,14 @@ class BCIFDataParser extends CifDataParser {
       throws Exception {
     haveData = false;
     rowPt = -1;
+    for (int i = CifDataParser.KEY_MAX; --i >= 0;) {
+      col2key[i] = key2col[i] = NONE;
+    }
     if (!htFields.containsKey(fieldNames[0])) {
       for (int i = fieldNames.length; --i >= 0;)
         htFields.put(fieldNames[i], Integer.valueOf(i));
     }
-    columnDcoders = new BCIFDecoder[columnCount];
+    columnDecoders = new BCIFDecoder[columnCount];
     for (int pt = 0; pt < columnCount; pt++) {
       String s = columnNames[pt];
       // some columns do not correspond to fields we are interested in. 
@@ -149,14 +152,16 @@ class BCIFDataParser extends CifDataParser {
       Integer iField = htFields.get(s);
       int keyIndex = col2key[pt] = (iField == null ? NONE : iField.intValue());
       BCIFDecoder d = (keyIndex == NONE ? null
-          : getDecoder(null, getDataColumn(pt), rowCount, categoryName));
+          : getDecoder(s, getDataColumn(pt), rowCount, categoryName));
       if (d == null) {
         // either not a field of interest, or its mask is all '?' or '.'
         System.out.println("BCIFDataParser skipping " + s);
-        //        key2col[keyIndex] = NONE; 
+        if (keyIndex >= 0)
+          key2col[keyIndex] = EMPTY; 
       } else {
-        columnDcoders[pt] = d;
+        columnDecoders[pt] = d;
         key2col[keyIndex] = pt;
+        //System.out.println(s + " col " + pt + " keyIndex " + keyIndex );
         haveData = true;
       }
     }
@@ -170,10 +175,10 @@ class BCIFDataParser extends CifDataParser {
    * @param icol
    */
   void decodeAndGetData(int icol) {
-    columnDcoders = new BCIFDecoder[] {
+    columnDecoders = new BCIFDecoder[] {
         getDecoder(null, getDataColumn(icol), rowCount, categoryName) };
     getColumnData(0);
-    columnDcoders = null;
+    columnDecoders = null;
   }
 
   /**
@@ -187,8 +192,8 @@ class BCIFDataParser extends CifDataParser {
     rowPt++;
     boolean done = rowPt >= rowCount;
     if (done) {
-      for (int i = columnDcoders.length; --i >= 0;)
-        columnDcoders[i] = null;
+      for (int i = columnDecoders.length; --i >= 0;)
+        columnDecoders[i] = null;
     }
     return !done;
   }
@@ -210,21 +215,21 @@ class BCIFDataParser extends CifDataParser {
     rdr.key = getColumnName(colPt);
     ifield = BCIFDecoder.UNKNOWN_INT;
     dfield = Double.NaN;
-    if (columnDcoders[colPt] == null) {
+    if (columnDecoders[colPt] == null) {
       fieldIsValid = false;
       return fieldStr = nullString;
     }
-    switch (columnDcoders[colPt].dataType) {
+    switch (columnDecoders[colPt].dataType) {
     case BCIFDecoder.INT:
-      ifield = columnDcoders[colPt].getIntValue(rowPt);
-      fieldStr = (ifield == BCIFDecoder.UNKNOWN_INT ? nullString : "_");
+      ifield = columnDecoders[colPt].getIntValue(rowPt);
+      fieldStr = (ifield == BCIFDecoder.UNKNOWN_INT ? nullString : "" + ifield);
       break;
     case BCIFDecoder.FIXED:
-      dfield = columnDcoders[colPt].getFixedPtValue(rowPt);
-      fieldStr = (Double.isNaN(dfield) ? nullString : "_");
+      dfield = columnDecoders[colPt].getFixedPtValue(rowPt);
+      fieldStr = (Double.isNaN(dfield) ? nullString : "_" + dfield);
       break;
     case BCIFDecoder.STRING:
-      fieldStr = columnDcoders[colPt].getStringValue(rowPt);
+      fieldStr = columnDecoders[colPt].getStringValue(rowPt);
       break;
     }
     fieldIsValid = (fieldStr != nullString);
@@ -290,7 +295,6 @@ class BCIFDataParser extends CifDataParser {
       cifMap = new Hashtable<String, BCIFDecoder>();
       String header = (String) msgMap.get("header");
       System.out.println("BCIFDataParser header is " + header);
-
       Map<String, Object> dataBlock = (Map<String, Object>) ((Object[]) msgMap
           .get("dataBlocks"))[0];
 

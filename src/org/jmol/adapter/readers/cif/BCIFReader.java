@@ -128,7 +128,7 @@ public class BCIFReader extends MMCifReader {
       return false;
     bcifParser.initializeCategory(catName,
         BCIFDecoder.geMapInt(cat.get("rowCount")), (Object[]) cat.get("columns"));
-    processCategory(catName);
+    processCategoryName(catName);
     return false;
   }
 
@@ -145,15 +145,16 @@ public class BCIFReader extends MMCifReader {
     case CAT_ATOM_TYPE:
     case CAT_ATOM_SITES:
     case CAT_CELL:
-    case CAT_NCS_CAT:
-    case CAT_OPER_CAT:
-    case CAT_ASSEM_CAT:
-    case CAT_SEQUENCEDIF_CAT:
-    case CAT_STRUCSITE_CAT:
-    case CAT_CHEMCOMP_CAT:
-    case CAT_STRUCTCONF_CAT:
-    case CAT_COMPBOND_CAT:
-    case CAT_STRUCTCONN_CAT:
+    case CAT_NCS:
+    case CAT_OPER:
+    case CAT_ASSEM:
+    case CAT_SEQUENCEDIF:
+    case CAT_STRUCSITE:
+    case CAT_CHEMCOMP:
+    case CAT_STRUCTCONF:
+    case CAT_SHEET:
+    case CAT_COMPBOND:
+    case CAT_STRUCTCONN:
       return true;
     }
     return false;
@@ -166,7 +167,7 @@ public class BCIFReader extends MMCifReader {
    * @return ignored
    * @throws Exception
    */
-  private boolean processCategory(String catName) throws Exception {
+  private boolean processCategoryName(String catName) throws Exception {
     this.catName = catName;
     switch (catName) {
     case CAT_ENTRY:
@@ -181,15 +182,17 @@ public class BCIFReader extends MMCifReader {
       return processCellBlock();
     }
     switch (catName) {
-    case CAT_NCS_CAT:
-    case CAT_OPER_CAT:
-    case CAT_ASSEM_CAT:
-    case CAT_SEQUENCEDIF_CAT:
-    case CAT_STRUCSITE_CAT:
-    case CAT_CHEMCOMP_CAT:
-    case CAT_STRUCTCONF_CAT:
-    case CAT_COMPBOND_CAT:
-    case CAT_STRUCTCONN_CAT:
+    case CAT_NCS:
+    case CAT_OPER:
+    case CAT_ASSEM:
+    case CAT_SEQUENCEDIF:
+    case CAT_STRUCSITE:
+    case CAT_CHEMCOMP:
+    case CAT_STRUCTCONF:
+    case CAT_SHEET:
+    case CAT_COMPBOND:
+    case CAT_STRUCTCONN:
+      key0 = catName + ".";
       return processSubclassLoopBlock();
     }
     return false;
@@ -251,6 +254,11 @@ public class BCIFReader extends MMCifReader {
   @Override
   protected double parseDoubleField() {
     return bcifParser.dfield;
+  }
+
+  @Override
+  protected double parseCartesianField() {
+    return Math.round(bcifParser.dfield * 1000)/1000d;
   }
 
   /**

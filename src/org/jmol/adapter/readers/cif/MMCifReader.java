@@ -375,7 +375,7 @@ public class MMCifReader extends CifReader {
   final private static byte OPER_ID = 12;
   final private static byte OPER_XYZ = 13;
   
-  final protected static String CAT_NCS_CAT = "_struct_ncs_oper.";
+  final private static String CAT_NCS_CAT = "_struct_ncs_oper.";
   final protected static String CAT_NCS = "_struct_ncs_oper";
   final private static String[] ncsoperFields = {
     "*_matrix[1][1]",
@@ -394,7 +394,7 @@ public class MMCifReader extends CifReader {
     "*_symmetry_operation" 
   };
 
-  final protected static String CAT_OPER_CAT = "_pdbx_struct_oper_list.";
+  final private static String CAT_OPER_CAT = "_pdbx_struct_oper_list.";
   final protected static String CAT_OPER = "_pdbx_struct_oper_list";
   final private static String[] operFields = {
     "*_matrix[1][1]",
@@ -417,7 +417,8 @@ public class MMCifReader extends CifReader {
   final private static byte ASSEM_OPERS = 1;
   final private static byte ASSEM_LIST = 2;
   
-  final protected static String CAT_ASSEM_CAT = "_pdbx_struct_assembly_gen.";
+  final private static String CAT_ASSEM_CAT = "_pdbx_struct_assembly_gen.";
+  final protected static String CAT_ASSEM = "_pdbx_struct_assembly_gen";
   
   final private static String[] assemblyFields = {
     "_pdbx_struct_assembly_gen_assembly_id",
@@ -459,7 +460,8 @@ public class MMCifReader extends CifReader {
 
    */
 
-  final protected static String CAT_SEQUENCEDIF_CAT = "_struct_ref_seq_dif."; 
+  final private static String CAT_SEQUENCEDIF_CAT = "_struct_ref_seq_dif."; 
+  final protected static String CAT_SEQUENCEDIF = "_struct_ref_seq_dif"; 
   final private static byte STRUCT_REF_G3 = 0;
   final private static byte STRUCT_REF_G1 = 1;
   final private static String[] structRefFields = {
@@ -650,7 +652,8 @@ public class MMCifReader extends CifReader {
   final private static byte CHEM_COMP_ID = 0;
   final private static byte CHEM_COMP_NAME = 1;
 
-  final protected static String CAT_CHEMCOMP_CAT = "_chem_comp.";
+  final private static String CAT_CHEMCOMP_CAT = "_chem_comp.";
+  final protected static String CAT_CHEMCOMP = "_chem_comp";
   
   final private static String[] chemCompFields = { 
     "_chem_comp_id",
@@ -732,8 +735,7 @@ public class MMCifReader extends CifReader {
   final private static byte SERIAL_NO = 8;
   final private static byte HELIX_CLASS = 9;
 
-  final protected static String CAT_STRUCTCONF_CAT = "_struct_conf.";
-  
+  final private static String CAT_STRUCTCONF_CAT = "_struct_conf.";
   final protected static String CAT_STRUCTCONF = "_struct_conf";
   final private static String[] structConfFields = {
       "*_conf_type_id", 
@@ -802,8 +804,7 @@ public class MMCifReader extends CifReader {
   final private static byte SHEET_ID = 0;
   final private static byte STRAND_ID = 7;
 
-  final protected static String CAT_SHEET_CAT = "_struct_sheet_range.";
-  
+  final private static String CAT_SHEET_CAT = "_struct_sheet_range.";
   final protected static String CAT_SHEET = "_struct_sheet_range";
   final private static String[] structSheetRangeFields = {
       "*_sheet_id",
@@ -846,15 +847,14 @@ public class MMCifReader extends CifReader {
   final private static byte SITE_SEQ_ID = 3;
   final private static byte SITE_INS_CODE = 4; //???
 
-  final protected static String CAT_STRUCSITE_CAT = "_struct_site_gen.";
-  
-  final private static String CAT_STRUCSITE = "_struct_site_gen";
+  final private static String CAT_STRUCSITE_CAT = "_struct_site_gen.";
+  final protected static String CAT_STRUCSITE = "_struct_site_gen";
   final private static String[] structSiteFields = {
       "*_site_id", 
       "*_auth_comp_id",
       "*_auth_asym_id", 
       "*_auth_seq_id",
-      "*_label_alt_id", //should be an insertion code, not an alt ID? 
+      "*_pdbx_auth_ins_code",//*_label_alt_id", //should be an insertion code, not an alt ID? 
   };
 
   //  loop_
@@ -1045,8 +1045,7 @@ public class MMCifReader extends CifReader {
   final private static byte STRUCT_CONN_ORDER = 13;
 
   
-  final protected static String CAT_STRUCTCONN_CAT = "_struct_conn.";
-  
+  final private static String CAT_STRUCTCONN_CAT = "_struct_conn.";
   final protected static String CAT_STRUCTCONN = "_struct_conn";
   final private static String[] structConnFields = {
     "*_ptnr1_auth_asym_id",
@@ -1125,8 +1124,7 @@ public class MMCifReader extends CifReader {
   final private static byte CHEM_COMP_BOND_VALUE_ORDER = 3;
   final private static byte CHEM_COMP_BOND_AROMATIC_FLAG = 4;
   
-  final protected static String CAT_COMPBOND_CAT = "_chem_comp_bond.";
-  
+  final private static String CAT_COMPBOND_CAT = "_chem_comp_bond.";
   final protected static String CAT_COMPBOND = "_chem_comp_bond";
   final private static String[] chemCompBondFields = {
     "*_comp_id",
