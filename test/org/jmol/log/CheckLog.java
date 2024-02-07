@@ -9,7 +9,7 @@ public class CheckLog {
 
   public static void main(String[] args) {
     String f = (args.length == 0 ? "c:/temp/logJmol.txt" : args[0]);
-    Date d = new Date("5/30/2023");
+    Date d = new Date("2/06/2024");
     long l = d.getTime();
     System.out.println(d);
     int itemCount = -1;
