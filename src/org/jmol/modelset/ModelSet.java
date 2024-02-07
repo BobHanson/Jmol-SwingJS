@@ -3056,7 +3056,7 @@ public class ModelSet extends BondCollection {
           //
           //    AH args[0], CH args[1], CD args[2], DA args[3]
           //
-          energy = HBond.getEnergy(Math.sqrt(d2), C.distance(atom),
+          energy = HBond.calcEnergy(Math.sqrt(d2), C.distance(atom),
               C.distance(D), atomNear.distance(D)) / 1000d;
         } else {
           bo = Edge.BOND_H_REGULAR;

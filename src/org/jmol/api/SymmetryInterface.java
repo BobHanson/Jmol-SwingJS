@@ -184,7 +184,7 @@ public interface SymmetryInterface {
 
   void setTimeReversal(int op, int val);
 
-  SymmetryInterface setUnitCell(double[] params, boolean setRelative, double slop);
+  SymmetryInterface setUnitCellFromParams(double[] params, boolean setRelative, double slop);
 
   void setUnitCell(SymmetryInterface uc);
 

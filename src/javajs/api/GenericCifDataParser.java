@@ -7,6 +7,8 @@ import java.util.Map;
 public interface GenericCifDataParser {
 
   static final int NONE = -1;
+  static final int EMPTY = -2;
+
 
   Map<String, Object> getAllCifData();
 

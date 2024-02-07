@@ -332,7 +332,7 @@ public class AminoPolymer extends AlphaPolymer {
     //
     //    AH args[0], CH args[1], CD args[2], DA args[3]
 
-    int energy = HBond.getEnergy(distOH, distCH, distCN, distON);
+    int energy = HBond.calcEnergy(distOH, distCH, distCN, distON);
 
     boolean isHbond = (energy < -500 
         && (!checkDistances || distCN > distCH && distOH <= 3.0d));

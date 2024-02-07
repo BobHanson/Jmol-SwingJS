@@ -96,9 +96,9 @@ public class Draw extends MeshCollection {
     thisMesh = (DrawMesh)currentMesh;  
   }
   
- @Override
-public void initShape() {
-    super.initShape();
+  @Override
+  public void initShape() {
+    setMeshColor();
     myType = "draw";
   }
   

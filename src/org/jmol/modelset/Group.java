@@ -473,10 +473,6 @@ public class Group implements Structure {
     return false;
   }
 
-  public boolean isConnectedPrevious() {
-    return false;
-  }
-
   public Atom getNitrogenAtom() {
     return null;
   }

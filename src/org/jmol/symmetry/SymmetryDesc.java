@@ -1898,7 +1898,7 @@ public class SymmetryDesc {
     SymmetryInterface uc = modelSet.am[iModel].biosymmetry;
     if (uc == null && (uc = modelSet.getUnitCell(iModel)) == null) {
       // just assign a simple [1 1 1 90 90 90] unit cell
-      uc = new Symmetry().setUnitCell(null, false, Double.NaN);
+      uc = new Symmetry().setUnitCellFromParams(null, false, Double.NaN);
       //      return ret;
     }
 

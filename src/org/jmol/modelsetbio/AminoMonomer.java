@@ -103,8 +103,6 @@ public class AminoMonomer extends AlphaMonomer {
   
   ////////////////////////////////////////////////////////////////
 
-  boolean isAminoMonomer() { return true; }
-
   @Override
   public Atom getNitrogenAtom() {
     return getAtomFromOffsetIndex(N);

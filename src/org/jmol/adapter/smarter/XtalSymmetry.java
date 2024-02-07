@@ -202,7 +202,7 @@ public class XtalSymmetry {
       trajectoryUnitCells.addLast(unitCellParams);
     }
     asc.setGlobalBoolean(JC.GLOBAL_UNITCELLS);
-    getSymmetry().setUnitCell(unitCellParams, false,
+    getSymmetry().setUnitCellFromParams(unitCellParams, false,
         unitCellParams[SimpleUnitCell.PARAM_SLOP]);
     // we need to set the auxiliary info as well, because 
     // ModelLoader creates a new symmetry object.

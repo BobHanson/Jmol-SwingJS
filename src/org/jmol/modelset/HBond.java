@@ -75,7 +75,7 @@ public class HBond extends Bond {
    * @param distAD
    * @return          cal/mol
    */
-  public final static int getEnergy(double distAH, double distCH, double distCD,
+  public final static int calcEnergy(double distAH, double distCH, double distCD,
                               double distAD) {
     
     // A crude calculation based on simple distances. In the NH -- O=C

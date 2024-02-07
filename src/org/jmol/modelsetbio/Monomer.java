@@ -113,10 +113,10 @@ public abstract class Monomer extends Group {
   @Override
   public int getAtomIndex(String name, int offset) {
     if (bioPolymer != null) {
-      Group[] groups = bioPolymer.monomers;
+      Monomer[] groups = bioPolymer.monomers;
       int ipt = monomerIndex + offset;
       if (ipt >= 0 && ipt < groups.length) {
-        Group m = groups[ipt];
+        Monomer m = groups[ipt];
         if (offset == 1 && !m.isConnectedPrevious())
           return -1;
         if ("\0".equals(name))
@@ -470,7 +470,6 @@ public abstract class Monomer extends Group {
     return haveCrossLink;
   }
   
-  @Override
   public boolean isConnectedPrevious() {
     return true; // but not nec. for carbohydrates... see 1k7c
   }

@@ -47,7 +47,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       haveUnitCell = (uc != null);
       if (!haveUnitCell)
-        uc = vwr.getSymTemp().setUnitCell(null, false, 0.00001d);
+        uc = vwr.getSymTemp().setUnitCellFromParams(null, false, 0.00001d);
       slop = uc.getPrecision();
       precision = (int) -Math.log10(slop);
       isHighPrecision = (slop == SimpleUnitCell.SLOPDP);

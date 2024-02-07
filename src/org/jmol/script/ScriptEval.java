@@ -5802,7 +5802,7 @@ public class ScriptEval extends ScriptExpr {
         SymmetryInterface uc;
         uc = vwr.getCurrentUnitCell();
         if (uc == null) {
-          uc = vwr.getSymTemp().setUnitCell(null, false, Double.NaN);
+          uc = vwr.getSymTemp().setUnitCellFromParams(null, false, Double.NaN);
         }
         q = uc.getQuaternionRotation(abc);
         if (q == null)

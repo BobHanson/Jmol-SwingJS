@@ -207,7 +207,7 @@ public class SpaceGroupFinder {
           if (!isAssign || ret == null)
             return ret;
           sg = (SpaceGroup) ret;
-          uc.setUnitCell(unitCellParams, false, slop);
+          uc.setUnitCellFromParams(unitCellParams, false, slop);
         }
         oabc = uc.getUnitCellVectors();
         uc = uc.getUnitCellMultiplied();
@@ -488,7 +488,7 @@ public class SpaceGroupFinder {
                                                             double[] params) {
     double[] newParams = new double[6];
     UnitCell.createCompatibleUnitCell(sg, params, newParams, false);
-    SymmetryInterface sym = new Symmetry().setUnitCell(newParams, false, Double.NaN);
+    SymmetryInterface sym = new Symmetry().setUnitCellFromParams(newParams, false, Double.NaN);
     sym.setSpaceGroupTo(sg);
     return sym;
   }

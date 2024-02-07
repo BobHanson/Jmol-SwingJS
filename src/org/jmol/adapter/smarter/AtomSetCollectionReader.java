@@ -1058,7 +1058,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (!iHaveUnitCell)
       return null;
     if (symmetry == null) {
-      getNewSymmetry().setUnitCell(unitCellParams, false, cellSlop);
+      getNewSymmetry().setUnitCellFromParams(unitCellParams, false, cellSlop);
       checkUnitCellOffset();
     }
     if (symmetry == null) // cif file with no symmetry triggers exception on LOAD {1 1 1}
@@ -1484,7 +1484,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
     if (mustFractionalize) {
       if (!symmetry.haveUnitCell())
-        symmetry.setUnitCell(unitCellParams, false, Double.NaN);
+        symmetry.setUnitCellFromParams(unitCellParams, false, Double.NaN);
       symmetry.toFractional(atom, false);
       iHaveFractionalCoordinates = true;
     }

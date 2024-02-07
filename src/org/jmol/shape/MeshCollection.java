@@ -141,11 +141,15 @@ public abstract class MeshCollection extends Shape {
 
   @Override
   public void initShape() {
-    colix = C.ORANGE;
-    color = 0xFFFFFFFF;
+    setMeshColor();
   }
   
- @SuppressWarnings("unchecked")
+  protected void setMeshColor() {
+   colix = C.ORANGE;
+   color = 0xFFFFFFFF;
+  }
+
+@SuppressWarnings("unchecked")
  protected void setPropMC(String propertyName, Object value, BS bs) {
 
 //   if (propertyName == "setXml") {

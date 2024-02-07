@@ -82,7 +82,7 @@ public class PWMATWriter extends XtlWriter implements JmolWriter {
       uc = vwr.getSymTemp();
       V3d bb = vwr.getBoundBoxCornerVector();
       float len = Math.round(bb.length() * 2);
-      uc.setUnitCell(new double[] { len, len, len, 90, 90, 90 }, false, SimpleUnitCell.SLOPDP);
+      uc.setUnitCellFromParams(new double[] { len, len, len, 90, 90, 90 }, false, SimpleUnitCell.SLOPDP);
     }
     P3d[] abc = uc.getUnitCellVectors();
     String f = "%18.10p%18.10p%18.10p\n";

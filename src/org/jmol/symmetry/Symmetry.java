@@ -446,7 +446,7 @@ public class Symmetry implements SymmetryInterface {
     double[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo,
         unitCellParams, null);
     if (params != null) {
-      setUnitCell(params, modelAuxiliaryInfo.containsKey("jmolData"), Double.NaN);
+      setUnitCellFromParams(params, modelAuxiliaryInfo.containsKey("jmolData"), Double.NaN);
       unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo
           .get("moreUnitCellInfo");
       modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
@@ -470,7 +470,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public SymmetryInterface setUnitCell(double[] unitCellParams,
+  public SymmetryInterface setUnitCellFromParams(double[] unitCellParams,
                                        boolean setRelative, double slop) {
     if (unitCellParams == null)
       unitCellParams = new double[] { 1, 1, 1, 90, 90, 90 };
@@ -782,7 +782,7 @@ public class Symmetry implements SymmetryInterface {
     }
     SymmetryInterface cellInfo = null;
     if (cellParams != null) {
-      cellInfo = new Symmetry().setUnitCell(cellParams, false, Double.NaN);
+      cellInfo = new Symmetry().setUnitCellFromParams(cellParams, false, Double.NaN);
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0,
         null, null, null, 0, -1, isFull, isForModel, 0, cellInfo, null);
