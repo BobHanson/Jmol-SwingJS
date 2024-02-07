@@ -144,6 +144,7 @@ class BCIFDataParser extends CifDataParser {
       for (int i = fieldNames.length; --i >= 0;)
         htFields.put(fieldNames[i], Integer.valueOf(i));
     }
+    //System.out.println(fieldNames[0] + " " + columnCount);
     columnDecoders = new BCIFDecoder[columnCount];
     for (int pt = 0; pt < columnCount; pt++) {
       String s = columnNames[pt];
@@ -213,6 +214,7 @@ class BCIFDataParser extends CifDataParser {
   @Override
   public Object getColumnData(int colPt) {
     rdr.key = getColumnName(colPt);
+    //System.out.println(rdr.key);
     ifield = BCIFDecoder.UNKNOWN_INT;
     dfield = Double.NaN;
     if (columnDecoders[colPt] == null) {

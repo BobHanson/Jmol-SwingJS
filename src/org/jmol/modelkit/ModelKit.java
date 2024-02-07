@@ -178,16 +178,13 @@ public class ModelKit {
   private static class Constraint {
 
     public final static int TYPE_NONE     = 0;
-    public final static int TYPE_DISTANCE = 1; // not implemented
-    public final static int TYPE_ANGLE    = 2; // not implemented
-    public final static int TYPE_DIHEDRAL = 3; // not implemented
+//    public final static int TYPE_DISTANCE = 1; // not implemented
+//    public final static int TYPE_ANGLE    = 2; // not implemented
+//    public final static int TYPE_DIHEDRAL = 3; // not implemented
     public final static int TYPE_VECTOR   = 4;
     public final static int TYPE_PLANE    = 5;
     public final static int TYPE_LOCKED   = 6;
     public final static int TYPE_GENERAL  = 7;
-    public final static int TYPE_LATTICE_FACE = 8;
-    public final static int TYPE_LATTICE_EDGE = 9;
-    public final static int TYPE_LATTICE_POINT = 10;
 
     int type;
 
@@ -196,9 +193,9 @@ public class ModelKit {
     private P4d plane;
     private V3d unitVector;
 
-    // not used to date
-    private P3d[] points;
-    private double value;
+//    // not used to date
+//    private P3d[] points;
+//    private double value;
       
     public Constraint(P3d pt, int type, Object[] params) throws IllegalArgumentException {
       this.pt = pt;
@@ -213,7 +210,6 @@ public class ModelKit {
         unitVector = V3d.newV((T3d) params[1]);
         unitVector.normalize();
         break;
-      case TYPE_LATTICE_FACE:
       case TYPE_PLANE:
         plane = (P4d) params[0];
         break;
@@ -222,21 +218,21 @@ public class ModelKit {
 //        points = new P3d[1];
 //        offset = (P3d) params[1];
 //        break;
-      case TYPE_DISTANCE:
-        // not implemented
-        value = ((Double) params[0]).doubleValue();
-        points = new P3d[] { (P3d) params[1], null };
-        break;
-      case TYPE_ANGLE:
-        // not implemented
-        value = ((Double) params[0]).doubleValue();
-        points = new P3d[] { (P3d) params[1], (P3d) params[2], null };
-        break;
-      case TYPE_DIHEDRAL:
-        // not implemented
-        value = ((Double) params[0]).doubleValue();
-        points = new P3d[] { (P3d) params[1], (P3d) params[2], (P3d) params[3], null };
-        break;
+//      case TYPE_DISTANCE:
+//        // not implemented
+//        value = ((Double) params[0]).doubleValue();
+//        points = new P3d[] { (P3d) params[1], null };
+//        break;
+//      case TYPE_ANGLE:
+//        // not implemented
+//        value = ((Double) params[0]).doubleValue();
+//        points = new P3d[] { (P3d) params[1], (P3d) params[2], null };
+//        break;
+//      case TYPE_DIHEDRAL:
+//        // not implemented
+//        value = ((Double) params[0]).doubleValue();
+//        points = new P3d[] { (P3d) params[1], (P3d) params[2], (P3d) params[3], null };
+//        break;
       default:
         throw new IllegalArgumentException();
       }      
@@ -262,10 +258,8 @@ public class ModelKit {
       case TYPE_GENERAL:
         return;
       case TYPE_LOCKED:
-      case TYPE_LATTICE_POINT:
         ptNew.x = Double.NaN;
         return;
-      case TYPE_LATTICE_EDGE:
       case TYPE_VECTOR:
         if (pt == null) { // generic constraint 
           d = MeasureD.projectOntoAxis(p, offset, unitVector, v);
@@ -276,7 +270,7 @@ public class ModelKit {
         }
         d = MeasureD.projectOntoAxis(ptNew, offset, unitVector, v);        
         break;
-      case TYPE_LATTICE_FACE:
+//      case TYPE_LATTICE_FACE:
       case TYPE_PLANE:
         if (pt == null) { // generic constraint 
           if (Math.abs(MeasureD.getPlaneProjection(p, plane, v, v)) > 0.01d) {
@@ -422,7 +416,7 @@ public class ModelKit {
    */
   private boolean autoBond = false;
 
-  private P3d centerPoint, spherePoint;
+  private P3d centerPoint;
 
   String pickAtomAssignType = "C";
   char pickBondAssignType = 'p'; // increment up
@@ -443,11 +437,6 @@ public class ModelKit {
 
   Constraint constraint;
 
-  // not implemented
-  private String xtalHoverLabel;
-  private int atomIndexSphere = -1;
-  
-
   public ModelKit() {
   }
 
@@ -467,8 +456,8 @@ public class ModelKit {
     allOperators = null;
     currentModelIndex = -999;
     iatom0 = 0;
-    atomIndexSphere = centerAtomIndex = secondAtomIndex = -1;
-    centerPoint = spherePoint = null;
+    centerAtomIndex = secondAtomIndex = -1;
+    centerPoint = null;
    // no! atomHoverLabel = bondHoverLabel = xtalHoverLabel = null;
     symop = null;
     setDefaultState(
@@ -718,7 +707,6 @@ public class ModelKit {
         lastCenter = centerPoint.x + " " + centerPoint.y + " " + centerPoint.z;
         centerAtomIndex = (centerPoint instanceof Atom ? ((Atom) centerPoint).i
             : -1);
-        atomIndexSphere = -1;
         secondAtomIndex = -1;
         processAtomClick(centerAtomIndex);
         return null;
@@ -878,18 +866,6 @@ public class ModelKit {
           centerDistance = d;
         }
         return Double.valueOf(centerDistance);
-      }
-
-      if (key == "point") {
-        if (value != null) {
-          notImplemented("setProperty: point");
-          setDefaultState(STATE_XTALEDIT);
-          spherePoint = (P3d) value;
-          atomIndexSphere = (spherePoint instanceof Atom
-              ? ((Atom) spherePoint).i
-              : -1);
-        }
-        return spherePoint;
       }
 
       if (key == "addconstraint") {
@@ -1257,7 +1233,7 @@ public class ModelKit {
     } else if (mode == ATOM_MODE) {
       atomHoverLabel = text;
     } else if (mode == XTAL_MODE) {
-      xtalHoverLabel = atomHoverLabel = text;
+      atomHoverLabel = text;
     }
   }
 
@@ -2455,21 +2431,19 @@ public class ModelKit {
       return 0;
     }
     // a) add in any occupationally identical atoms so as not to separate occupational components
-    for (int i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
-        .nextSetBit(i + 1)) {
-      addOccupiedAtoms(i, bsSelected);
-    }
+    addOccupiedAtoms(bsSelected);
     nAtoms = bsSelected.cardinality();
     if (nAtoms == 1) {
-      return moveConstrained(iatom, bsFixed, bsModelAtoms, p, true,
-          allowProjection);
+      BS bsMoved = moveConstrained(iatom, bsFixed, bsModelAtoms, p, true,
+          allowProjection, null);
+      return (bsMoved == null ? 0 : bsMoved.cardinality());
     }
     // a set of atoms 
     // a) check that we can move this particular atom and get the change
     
     P3d p1 = P3d.newP(p);
     p.x = Double.NaN; // set "handled"
-    if (moveConstrained(iatom, bsFixed, bsModelAtoms, p1, false, true) != 1) {
+    if (moveConstrained(iatom, bsFixed, bsModelAtoms, p1, false, true, null) == null) {
       return 0;
     }
     P3d pd = P3d.newP(p1);
@@ -2490,6 +2464,7 @@ public class ModelKit {
     int[] sites = new int[maxSite];
     pts = new P3d[maxSite];
     // c) preview all changes to make sure that they are allowed for every atom - any locking nullifies.
+    BS bsMoved = new BS();
     for (int ip = 0, i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected
         .nextSetBit(i + 1), ip++) {
       p1.setT(vwr.ms.at[i]);
@@ -2497,9 +2472,7 @@ public class ModelKit {
       apos[ip] = P3d.newP(p1);
       int s = vwr.ms.at[i].getAtomSite() - 1;
       if (sites[s] == 0) {
-        p1.setT(vwr.ms.at[i]);
-        p1.add(pd);
-        if (moveConstrained(i, bsFixed, bsModelAtoms, p1, false, true) != 1) {
+        if (moveConstrained(i, bsFixed, bsModelAtoms, p1, false, true, bsMoved) == null) {
           return 0;
         }
         p1.sub(vwr.ms.at[i]);
@@ -2512,37 +2485,54 @@ public class ModelKit {
     }
     // d) carry out the changes. This next part ensures that translationally symmetry-related
     //    atoms are also moved. (As in graphite layers top and bottom, moving top also moves bottom.)
-    n = 0;
+    bsMoved.clearAll();
     for (int i = sites.length; --i >= 0;) {
       int ia = sites[i] - 1;
         if (ia >= 0) {
           p1.setT(vwr.ms.at[ia]);
           p1.add(pd);
-          n += moveConstrained(ia, bsFixed, bsModelAtoms, p1, true, true);
+          if (moveConstrained(ia, bsFixed, bsModelAtoms, p1, true, true, bsMoved) == null) {
+            bsMoved = null;
+            break;
+          }
         }
     }
+    n = (bsMoved == null ? 0 : bsMoved.cardinality());
     // 2) check that all selected atoms have been moved appropriately
-    return (n > 0 && checkAtomPositions(apos0, apos, bsSelected) ? n : 0);
+    if (n == 0) {
+      vwr.ms.restoreAtomPositions(apos0);
+      return 0;
+    }
+    return (checkAtomPositions(apos0, apos, bsSelected) ? n : 0);
   }
 
   /**
-   * Add all partially occupied atoms near this atom to the bitset
-   * @param iatom
-   * @param bsOcc bitset to add atom index to if it is partially occupied.
+   * Add all partially occupied atoms near each atom in a bitset
+   * 
+   * @param bsSelected
+   *        bitset to add atom index to if it is partially occupied.
    */
-  private void addOccupiedAtoms(int iatom, BS bsOcc) {
-    // pick up occupancies
-     Atom a = vwr.ms.at[iatom];
-    if (vwr.ms.getOccupancyFloat(a.i) == 100) {
-      bsOcc.set(a.i);
-    } else {
-      vwr.ms.getAtomsWithin(0.0001d, a, bsOcc, a.mi);
-      for (int i = bsOcc.nextSetBit(0); i >= 0; i = bsOcc.nextSetBit(i + 1)) {
-        // passing over another atom
-        if (vwr.ms.getOccupancyFloat(i) == 100)
-          bsOcc.clear(i);
+  private void addOccupiedAtoms(BS bsSelected) {
+    BS bs = new BS();
+    for (int iatom = bsSelected.nextSetBit(0); iatom >= 0; iatom = bsSelected
+        .nextSetBit(iatom + 1)) {
+      // pick up occupancies
+      Atom a = vwr.ms.at[iatom];
+      if (vwr.ms.getOccupancyFloat(a.i) == 100) {
+        bsSelected.set(a.i);
+      } else {
+        bs.clearAll();
+        vwr.ms.getAtomsWithin(0.0001d, a, bs, a.mi);
+        for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+          // passing over another atom
+          if (vwr.ms.getOccupancyFloat(i) == 100) {
+            bs.clear(i);
+            bsSelected.clear(i);
+          }
+        }
+        bsSelected.or(bs);
       }
-    } 
+    }
   }
 
   /**
@@ -2552,9 +2542,10 @@ public class ModelKit {
    * @param pt
    * @param bsFixed
    * @param bsModelAtoms
+   * @param bsMoved 
    * @return number of atoms moved
    */
-  public int assignMoveAtom(int iatom, P3d pt, BS bsFixed, BS bsModelAtoms) {
+  public int assignMoveAtom(int iatom, P3d pt, BS bsFixed, BS bsModelAtoms, BS bsMoved) {
     // check to see if a constraint has stopped this changae
     if (Double.isNaN(pt.x) || iatom < 0)
       return 0;
@@ -2596,6 +2587,7 @@ public class ModelKit {
       if (!fillPointsForMove(sym, bseq, ia0, a, pt, points)) {
         return 0;
       }
+      bsMoved.or(bseq);
       int mi = vwr.ms.at[ia0].mi;
       vwr.sm.setStatusStructureModified(ia0, mi, Viewer.MODIFY_SET_COORD,
           "dragatom", n, bseq);
@@ -2710,7 +2702,8 @@ public class ModelKit {
   }
 
   public int moveMinConstrained(int iatom, P3d p, BS bsAtoms) {
-    return moveConstrained(iatom, null, bsAtoms, p, true, true);
+    BS bsMoved = moveConstrained(iatom, null, bsAtoms, p, true, true, null);
+    return (bsMoved == null ? 0 : bsMoved.cardinality());
   }
 
   /**
@@ -2723,16 +2716,18 @@ public class ModelKit {
    * @param doAssign
    *        allow for exit with setting ptNew but not creating atoms
    * @param allowProjection
+   * @param bsMoved initial moved, or null
    * @return number of atoms moved or checked
    */
-  private int moveConstrained(int iatom, BS bsFixed, BS bsModelAtoms, P3d ptNew,
-                             boolean doAssign, boolean allowProjection) {
-    int n = 0;
+  private BS moveConstrained(int iatom, BS bsFixed, BS bsModelAtoms, P3d ptNew,
+                             boolean doAssign, boolean allowProjection, BS bsMoved) {
     SymmetryInterface sym = getSym(iatom);
     if (sym == null) {
       // molecular crystals loaded without packed or centroid will not have operations
-      return 0;
+      return null;
     }
+    if (bsMoved == null)
+      bsMoved = BSUtil.newAndSetBit(iatom);
     Atom a = vwr.ms.at[iatom];
     Constraint c = constraint;
     M4d minv = null;
@@ -2777,12 +2772,13 @@ public class ModelKit {
           sym.toCartesian(p, true);
           ptNew.setP(p);
         }
-        return 1;
+        return bsMoved;
       }
-      n = assignMoveAtom(iatom, ptNew, bsFixed, bsModelAtoms);
+     if (assignMoveAtom(iatom, ptNew, bsFixed, bsModelAtoms, bsMoved) == 0)
+       bsMoved = null;
     }
     ptNew.x = Double.NaN; // indicate handled
-    return n;
+    return bsMoved;
   }
 
   static M4d getTransform(SymmetryInterface sym, Atom a, Atom b) {
@@ -2883,9 +2879,6 @@ public class ModelKit {
           T3d v1 = (T3d) line1[1];
           if (Math.abs(v1.dot((T3d) line2[1])) < 0.999d)
             return locked;
-          //          V3d v = V3.newVsub((T3d) line1[0], (T3d) line2[0]);
-          //          if (v.lengthSquared() != 0 && Math.abs(v.dot(v1)) > 0.999d)
-          //            return locked;
           }
         if (plane1 != null) {
           if (Math.abs(plane1.dot((T3d) line2[1])) > 0.001d)
@@ -2922,24 +2915,6 @@ public class ModelKit {
     return atomConstraints[iatom] = c;
   }
 
-//  private static int FACE_AB0 = 0;
-//  private static int FACE_BC0 = 1;
-//  private static int FACE_CA0 = 2;
-//  private static int FACE_AB1 = 3;
-//  private static int FACE_BC1 = 4;
-//  private static int FACE_CA1 = 5;
-//  
-//  private void setLatticeConstraints() {
-//    if (latticeConstraints[0] != null)
-//      return;
-//    latticeConstraints[FACE_AB0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 0, 1, 0)});
-//    latticeConstraints[FACE_AB1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 0, 1, 1)});
-//    latticeConstraints[FACE_BC0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(1, 0, 0, 0)});
-//    latticeConstraints[FACE_BC1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(1, 0, 0, 1)});
-//    latticeConstraints[FACE_CA0] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 1, 0, 0)});
-//    latticeConstraints[FACE_CA1] = new Constraint(null, Constraint.TYPE_LATTICE_FACE, new Object[] {P4d.new4(0, 1, 0, 1)});
-//  }
-//
   public void addLockedAtoms(int i0, BS bs) {
     SymmetryInterface sg = getSym(i0);
     if (sg == null)
@@ -2959,7 +2934,7 @@ public class ModelKit {
     SymmetryInterface sg = getSym(i0);
     // (1) do not allow any locked atoms; skip equivalent positions
     BS bsAU = new BS();
-    BS bsAtoms2 = new BS();
+    BS bsToMove = new BS();
     for (int i = i0; i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       int bai = getBasisAtom(i).i;
       if (bsAU.get(bai)) {
@@ -2969,7 +2944,7 @@ public class ModelKit {
         return 0;
       }
       bsAU.set(bai);
-      bsAtoms2.set(i);
+      bsToMove.set(i);
     }
     // (2) save all atom positions in case we need to reset
     int nAtoms = bsAtoms.cardinality();
@@ -2992,15 +2967,14 @@ public class ModelKit {
     nAtoms = 0;
     BS bsFixed = vwr.getMotionFixedAtoms(i0);
     BS bsModelAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.ms.at[i0].mi);
-    for (int ip = 0, i = i0; i >= 0; i = bsAtoms2.nextSetBit(i + 1), ip++) {
-      if (bsAtoms2.get(i)) {
-        nAtoms += assignMoveAtom(i, apos[ip], bsFixed, bsModelAtoms);
-      }
+    BS bsMoved = new BS();
+    for (int ip = 0, i = i0; i >= 0; i = bsToMove.nextSetBit(i + 1), ip++) {
+        nAtoms += assignMoveAtom(i, apos[ip], bsFixed, bsModelAtoms, bsMoved);
     }
     // (5) check to see that all equivalent atoms have been placed where they should be
     
     BS bs = BSUtil.copy(bsAtoms);
-    bs.andNot(bsAtoms2);
+    bs.andNot(bsToMove);
     return (checkAtomPositions(apos0, apos, bs) ? nAtoms : 0);
   }
 
@@ -3016,11 +2990,6 @@ public class ModelKit {
       return true;
     vwr.ms.restoreAtomPositions(apos0);
     return false;
-  }
-
-  public P3d[] checkRotateAtoms(int iatom, P3d[] apos0) {
-    // TODO -- how to do this right. 
-    return null;
   }
 
   static String getText(String key) {
@@ -3155,6 +3124,61 @@ public class ModelKit {
     vwr.deleteModels(vwr.ms.mc - 1, null);
     vwr.setSelectionSet(minSelectionSaved);
     vwr.setCurrentModelIndex(minBasisModel);
+  }
+
+  /**
+   * Something has changed atom positions. Check to see that this is allowed
+   * and, if it is, move all equivalent atoms appropriately. If it is not, then
+   * revert.
+   * @param bsFixed 
+   * @param bsAtoms
+   * @param apos0 original positions
+   * @return number of atoms moved, possibly 0
+   */
+  public int checkMovedAtoms(BS bsFixed, BS bsAtoms, P3d[] apos0) {
+    int i0 = bsAtoms.nextSetBit(0);
+    int n = bsAtoms.cardinality();
+    P3d[] apos = new P3d[n];
+    try {
+      Atom[] atoms = vwr.ms.at;
+      // reset atoms
+      for (int ip = 0, i = i0; i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+        apos[ip++] = P3d.newP(atoms[i]);
+        atoms[i].setT(apos0[i]);
+      }
+      // b) dissect the molecule into independent sets of nonequivalent positions
+      int maxSite = 0;
+      for (int i = i0; i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+        int s = vwr.ms.at[i].getAtomSite();
+        if (s > maxSite)
+          maxSite = s;
+      }
+      int[] sites = new int[maxSite];
+      P3d p1 = new P3d();
+      // c) attempt all changes to make sure that they are allowed for every atom - any locking nullifies.
+      //    no 
+      BS bsModelAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.ms.at[i0].mi);
+      BS bsMoved = new BS();
+      for (int ip = 0, i = i0; i >= 0; i = bsAtoms.nextSetBit(i + 1), ip++) {
+        p1.setT(apos[ip]);
+        int s = vwr.ms.at[i].getAtomSite() - 1;
+        if (sites[s] == 0) {
+          sites[s] = i + 1;
+          bsMoved = moveConstrained(i, bsFixed, bsModelAtoms, p1, true,
+             false, bsMoved);
+          if (bsMoved == null) {
+            n = 0;
+            break;
+          }
+        }
+      }
+      return (n != 0 && checkAtomPositions(apos0, apos, bsAtoms) ? n : 0);
+    } finally {
+      if (n == 0) {
+        vwr.ms.restoreAtomPositions(apos0);
+        bsAtoms.clearAll();
+      }
+    }
   }
 
 }

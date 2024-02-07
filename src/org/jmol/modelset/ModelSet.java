@@ -2508,7 +2508,7 @@ public class ModelSet extends BondCollection {
    * @param coord
    * @param bsResult
    * @param modelIndex
-   * @return
+   * @return bitset
    */
   public BS getAtomsWithin(double distance, T3d coord, BS bsResult, int modelIndex) {
 
@@ -4543,7 +4543,7 @@ public class ModelSet extends BondCollection {
     BS bsSites = new BS();
     BS bs = am[imodel].bsAtoms;
     int[] sites = new int[ac];
-    for (int p = 0, i = 0; i < ac; i++) {
+    for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       if (isDeleted(at[i]))
         continue;
       int site = at[i].atomSite;
@@ -4557,7 +4557,8 @@ public class ModelSet extends BondCollection {
       setSite(at[i], -1, false);
       setSite(at[i], sites[site], true);
     }
-    bsSymmetry = getAtomBitsMaybeDeleted(T.symmetry, null);
+    if (bsSymmetry == null)
+      bsSymmetry = BS.newN(ac);
     bsSymmetry.or(bs);
     bsSymmetry.andNot(bsAU);
   }
@@ -4580,11 +4581,6 @@ public class ModelSet extends BondCollection {
     return bs;
   }
 
-  public void setSpaceGroupP1(int i) {
-    // TODO
-    
-  }
-
   public P3d[] saveAtomPositions() {
       P3d[] pos = new P3d[at.length];
       for (int i = pos.length; --i >= 0;) {
@@ -4601,9 +4597,6 @@ public class ModelSet extends BondCollection {
       if (!isDeleted(a))
         a.setT(apos0[i]);
     }
-
-    // TODO
-    
   }
 
 

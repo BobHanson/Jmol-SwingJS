@@ -2040,21 +2040,8 @@ public class Viewer extends JmolViewer
     // bsSelected null comes from sync. 
     if (isJmolDataFrame() || bsSelected.isEmpty())
       return;
-    //if (mouseEnabled) {
-    // "true" in setMovableBitSet call is necessary to implement set allowMoveAtoms
-  
-    int iatom = bsSelected.nextSetBit(0);
-    SymmetryInterface sym = getOperativeSymmetry();
-    P3d[] apos0 = null;
-    if (sym != null) {
-      apos0 = getModelkit(false).checkRotateAtoms(iatom, null);
-    }
     tm.rotateXYBy(deltaX, deltaY, setMovableBitSet(bsSelected, true));    
-    if (sym != null && getModelkit(false).checkRotateAtoms(iatom, apos0) == null) {
-      return;
-    }
     refreshMeasures(true);
-    //}
     //TODO: note that sync may not work with set allowRotateSelectedAtoms
     refresh(REFRESH_SYNC,
         sm.syncingMouse ? "Mouse: rotateMolecule " + deltaX + " " + deltaY
@@ -8357,8 +8344,19 @@ public class Viewer extends JmolViewer
     // from TransformManager exclusively
     if (bsAtoms.isEmpty())
       return;
+    BS bsFixed = getMotionFixedAtoms(bsAtoms.nextSetBit(0));
+    if (bsAtoms.intersects(bsFixed))
+      return;
+    SymmetryInterface uc = getOperativeSymmetry();
+    P3d[] apos0 = null;
+    if (uc != null) {
+      apos0 = ms.saveAtomPositions();
+    }
     ms.moveAtoms(m4, mNew, rotation, translation, bsAtoms, center, isInternal,
         translationOnly);
+    if (uc != null) {
+      getModelkit(false).checkMovedAtoms(bsFixed, bsAtoms, apos0);
+    }
     setStatusAtomMoved(true, bsAtoms);
   }
 
