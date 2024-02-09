@@ -1114,12 +1114,12 @@ public class Symmetry implements SymmetryInterface {
       return "?";
     }    
     if (p == null) {
-      p = P3d.new3(2.3d/5, 2.3d/7, 2.3d/9);      
+      // attempt to make these not very close to any special position
+      p = P3d.new3(2.3d/5, 2.3d/6, 2.3d/8);      
     } else {
       p = P3d.newP(p);
       unitCell.toFractional(p, false);
       unitCell.unitize(p);
-
     }
     if (wyckoffFinder == null) {
       wyckoffFinder = (WyckoffFinder) Interface

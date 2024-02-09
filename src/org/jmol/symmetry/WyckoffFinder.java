@@ -75,14 +75,16 @@ public class WyckoffFinder {
    */
   P3d findPositionFor(P3d p, String letter) {
     if (positions != null) {
-      for (int i = npos; --i >= 0;) {
+      boolean isGeneral = (letter.equals("G"));
+      for (int i = isGeneral ? 1 : npos; --i >= 0;) {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = (Map<String, Object>) positions.get(i);
-        if (map.get("label").equals(letter)) {
+        String l =  (String) map.get("label");
+        if (isGeneral ||l.equals(letter)) {
           @SuppressWarnings("unchecked")
           Lst<Object> coords = (Lst<Object>) map.get("coord");
           if (coords != null)
-            getWyckoffCoord(coords, 0, letter).project(p);
+            getWyckoffCoord(coords, 0, l).project(p);
           return p;
         }
       }
@@ -133,7 +135,7 @@ public class WyckoffFinder {
    * 
    * @param uc
    * @param p
-   * @param returnType '*', -1, -2, -3, or a character label 'a'-'A'
+   * @param returnType '*', -1, -2, -3, or a character label 'a'-'A' or 'G' for general
    * @return an informational string
    */
   @SuppressWarnings("unchecked")
@@ -195,9 +197,10 @@ public class WyckoffFinder {
       break;
     default:
       String letter = "" + (char) returnType;
-      for (int i = npos; --i >= 0;) {
+      boolean isGeneral = (letter.charAt(0) == 'G');
+      for (int i = isGeneral ?  1 : npos; --i >= 0;) {
         Map<String, Object> map = (Map<String, Object>) positions.get(i);
-        if (map.get("label").equals(letter)) {
+        if (isGeneral || map.get("label").equals(letter)) {
           return (i == 0 ? "(x,y,z)"
               : getList((Lst<Object>) map.get("coord"), letter, null)
                   .toString());

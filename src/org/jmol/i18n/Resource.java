@@ -29,33 +29,18 @@ class Resource {
   }
 
   static Resource getResource(Viewer vwr, String className, String name) {
-    String poData = null;
-    if (vwr != null && (Viewer.isJS || vwr.isApplet)) {
-      // no longer using individual applet language JAR files
-      String fname = Viewer.appletIdiomaBase + "/" + name + ".po";
-      Logger.info("Loading language resource " + fname);
-      poData = vwr.getFileAsString3(fname, false, "gt");
-    } else {
-      /** @j2sNative */
-      {
-        try {
-          BufferedReader br = FileManager.getBufferedReaderForResource(vwr,
-              new PO(), "org/jmol/translation/",
-              (className.indexOf("Applet") >= 0 ? "JmolApplet/" : "Jmol/")
-                  + name + ".po");
-          String[] data = new String[1];
-          Rdr.readAllAsString(br, Integer.MAX_VALUE, false, data, 0);
-          poData = data[0];
-        } catch (IOException e) {
-          return null;
-        }
-      }
+    try {
+      BufferedReader br = FileManager.getBufferedReaderForResource(vwr,
+          new PO(), "org/jmol/translation/",
+          (className.indexOf("Applet") >= 0 ? "JmolApplet/" : "Jmol/") + name
+              + ".po");
+      String[] data = new String[1];
+      Rdr.readAllAsString(br, Integer.MAX_VALUE, false, data, 0);
+      String poData = data[0];
+      return getResourceFromPO(poData);
+    } catch (IOException e) {
+      return null;
     }
-    return getResourceFromPO(poData);
-    //    }
-    //    className += name + ".Messages_" + name;
-    //    Object o = Interface.getInterface(className, vwr, "gt");
-    //    return (o == null ? null : new Resource(o, className));
   }
 
   String getString(String string) {

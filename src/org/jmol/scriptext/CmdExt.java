@@ -6071,6 +6071,7 @@ public class CmdExt extends ScriptExt {
     //  modelkit ADD @1 "C" point (bonding)
     //  modelkit ADD "C" point
     //  modelkit ADD "C" WYCKOFF a
+    //  modelkit ADD "C" WYCKOFF general
     //  modelkit MOVETO @1 point
     //  modelkit FIXED VECTOR pt1 pt2
     //  modelkit FIXED PLANE pt1 pt2
@@ -6426,8 +6427,8 @@ public class CmdExt extends ScriptExt {
       case T.wyckoff:
         ++e.iToken;
         wyckoff = paramAsStr(++e.iToken);
-        char w = (wyckoff.length() > 1 || wyckoff.length() == 0 ? '\0' : wyckoff.charAt(0));
-        if (w < 'a' && w != 'A' || w > 'z')
+        char w = (wyckoff.equalsIgnoreCase("general") ? 'G' : (wyckoff.length() > 1 || wyckoff.length() == 0 ? '\0' : wyckoff.charAt(0)));
+        if (w < 'a' && w != 'A' && w != 'G' || w > 'z')
           invArg();
         if ("packed".equals(e.optParameterAsString(e.iToken + 1))) {
           isPacked = true;
