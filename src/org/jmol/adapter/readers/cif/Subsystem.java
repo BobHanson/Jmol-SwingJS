@@ -104,7 +104,7 @@ class Subsystem {
     for (int i = 0; i < 3; i++)
       uc_nu[i + 1] = V3d.new3(a[i][0], a[i][1], a[i][2]);    
     uc_nu = SimpleUnitCell.getReciprocal(uc_nu, null, 1);
-    symmetry = ((SymmetryInterface) msRdr.cr.getInterface("org.jmol.symmetry.Symmetry")).getUnitCelld(uc_nu, false, null);
+    symmetry = ((SymmetryInterface) msRdr.cr.getInterface("org.jmol.symmetry.Symmetry")).getUnitCell(uc_nu, false, null);
     modMatrices = new Matrix[] { sigma_nu, tFactor };
     if (!setOperators)
       return;

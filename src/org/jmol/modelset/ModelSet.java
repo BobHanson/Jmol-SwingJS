@@ -1035,105 +1035,6 @@ public class ModelSet extends BondCollection {
     return null;
   }
   
-  public void setSpaceGroup(int mi, SymmetryInterface sg, BS basis) {
-    if (unitCells == null)
-      unitCells = new SymmetryInterface[mc];
-    unitCells[mi] = sg;
-    haveUnitCells = true;
-    sg.setFinalOperations(3, null, null, -1, -1, false, null);
-    int nops = sg.getSpaceGroupOperationCount();
-    am[mi].bsAsymmetricUnit = basis;
-    // set symmetry at least for symop=1555
-    bsSymmetry = getAtomBitsMaybeDeleted(T.symmetry, null);
-    BS bs = vwr.getModelUndeletedAtomsBitSet(mi);
-    bsSymmetry.or(bs);
-    bsSymmetry.andNot(basis);
-    // next is not actually true -- we may have face atoms
-    boolean isP1 = (basis.cardinality() == bs.cardinality());
-    // remove any cage created by UNITCELL command
-    // move any origin offset into atom positions
-    if (nops > 1)
-      setModelCage(mi, null);
-    P3d offset = P3d.newP(sg.getCartesianOffset());
-    if (offset.length() == 0) {
-      offset = null;
-    } else {
-      sg.setOffsetPt(new P3d());
-      setTaintedAtoms(bs, TAINT_COORD);
-    }
-    // assign sites to basis atoms
-    for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      if (offset != null) {
-        at[i].sub(offset);
-      }
-      boolean isBasis = basis.get(i);
-      at[i].setSymop(isBasis ? 1 : 0, true);
-      if (isP1 || isBasis)
-        setSite(at[i], ++p, true);
-    }
-    bs.andNot(basis);
-    if (!isP1) {
-      boolean haveOccupancies = (occupancies != null);
-      M4d[] ops = sg.getSymmetryOperations();
-      P3d a = new P3d(), b = new P3d(), t = new P3d();
-      for (int j = basis.nextSetBit(0); j >= 0; j = basis.nextSetBit(j + 1)) {
-        Atom bb = at[j];
-        b.setT(bb);
-        sg.toFractional(b, true);
-        sg.unitize(b);
-        int site = bb.atomSite;
-        double occj = (haveOccupancies ? occupancies[j] : 0);
-        out: for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-          Atom ba = at[i];
-          int type = ba.atomNumberFlags;
-          if (ba.atomNumberFlags != type || haveOccupancies && occj != occupancies[i])
-            continue;
-          a.setT(ba);
-          sg.toFractional(a, true);
-          sg.unitize(a);
-          for (int k = 0; k < nops; k++) {
-            t.setT(b);
-            ops[k].rotTrans(t);
-            sg.unitize(t);
-            if (t.distanceSquared(a) < JC.UC_TOLERANCE2) {
-              setSite(ba, site, true);
-              bs.clear(i);
-              continue out;
-            }
-          }
-        }
-      }
-    }
-    if (!bs.isEmpty()) {
-      System.err.println("Model basis atoms not found for " + bs);
-    }
-    // TODO: actually set atomSymmetry properly
-    setInfo(mi, "unitCellParams", sg.getUnitCellParams());
-
-    
-    String sgName = (String) getInfo(mi, "spaceGroup");
-    String sgOrig = (String) getInfo(mi, "spaceGroupOriginal");
-    if (sgOrig == null) {
-      if (sgName != null)
-        setInfo(mi, "spaceGroupOriginal", sgName);
-    }    
-    setInfo(mi, "spaceGroupAssigned", Boolean.TRUE);
-    setInfo(mi, "spaceGroup", sg.getSpaceGroupName());
-    setInfo(mi, "spaceGroupInfo", null);
-    if (am[mi].simpleCage != null) {
-      sg.getUnitCelld(am[mi].simpleCage.getUnitCellVectors(), false, null);
-      setInfo(mi, "unitCellParams", sg.getUnitCellParams());
-    }
-    setModelCage(mi, null);
-  }
-
-  public void setModelCage(int modelIndex, SymmetryInterface simpleCage) {
-    if (modelIndex >= 0 && modelIndex < mc) {
-      am[modelIndex].setSimpleCage(simpleCage);
-      haveUnitCells = true;
-    }
-  }
-
   public String getModelName(int modelIndex) {
     return mc < 1 ? "" : modelIndex >= 0 ? modelNames[modelIndex]
         : modelNumbersForAtomLabel[-1 - modelIndex];
@@ -4513,6 +4414,143 @@ public class ModelSet extends BondCollection {
     }
   }
 
+  public void setSpaceGroup(int mi, SymmetryInterface sg, BS basis) {
+    if (unitCells == null)
+      unitCells = new SymmetryInterface[mc];
+    unitCells[mi] = sg;
+    haveUnitCells = true;
+    boolean isP1 = (sg.getSpaceGroupOperationCount() == 1);
+    sg.setFinalOperations(3, null, null, -1, -1, false, null);
+    int nops = sg.getSpaceGroupOperationCount();
+    am[mi].bsAsymmetricUnit = basis;
+    // set symmetry at least for symop=1555
+    if (bsSymmetry == null)
+      bsSymmetry = BS.newN(ac);
+    BS bs = vwr.getModelUndeletedAtomsBitSet(mi);
+    bsSymmetry.or(bs);
+    bsSymmetry.andNot(basis);
+    // next is not actually true -- we may have face atoms
+    // remove any cage created by UNITCELL command
+    // move any origin offset into atom positions
+    if (nops > 1)
+      setModelCage(mi, null);
+//    P3d offset = P3d.newP(sg.getCartesianOffset());
+//    if (offset.length() == 0) {
+//      offset = null;
+//    } else {
+//      sg.setOffsetPt(new P3d());
+//      setTaintedAtoms(bs, TAINT_COORD);
+//    }
+    // assign sites to basis atoms
+
+    if (isP1) {
+      fixP1AtomSites(sg, bs);
+    } else {
+      for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+//        if (offset != null) {
+//          at[i].sub(offset);
+//        }
+        boolean isBasis = basis.get(i);
+        at[i].setSymop(isBasis ? 1 : 0, true);
+        if (isBasis)
+          setSite(at[i], ++p, true);
+      }
+    }
+    bs.andNot(basis);
+    if (!isP1) {
+      boolean haveOccupancies = (occupancies != null);
+      M4d[] ops = sg.getSymmetryOperations();
+      P3d a = new P3d(), b = new P3d(), t = new P3d();
+      for (int j = basis.nextSetBit(0); j >= 0; j = basis.nextSetBit(j + 1)) {
+        Atom bb = at[j];
+        b.setT(bb);
+        sg.toFractional(b, false);
+        sg.unitize(b);
+        int site = bb.atomSite;
+        double occj = (haveOccupancies ? occupancies[j] : 0);
+        out: for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+          Atom ba = at[i];
+          int type = ba.atomNumberFlags;
+          if (ba.atomNumberFlags != type
+              || haveOccupancies && occj != occupancies[i])
+            continue;
+          a.setT(ba);
+          sg.toFractional(a, false);
+          sg.unitize(a);
+          for (int k = 0; k < nops; k++) {
+            t.setT(b);
+            ops[k].rotTrans(t);
+            sg.unitize(t);
+            if (t.distanceSquared(a) < JC.UC_TOLERANCE2) {
+              setSite(ba, site, true);
+              bs.clear(i);
+              continue out;
+            }
+          }
+        }
+      }
+    }
+    if (!bs.isEmpty()) {
+      System.err.println("Model basis atoms not found for " + bs);
+    }
+    // TODO: actually set atomSymmetry properly
+    setInfo(mi, "unitCellParams", sg.getUnitCellParams());
+
+    String sgName = (String) getInfo(mi, "spaceGroup");
+    String sgOrig = (String) getInfo(mi, "spaceGroupOriginal");
+    if (sgOrig == null) {
+      if (sgName != null)
+        setInfo(mi, "spaceGroupOriginal", sgName);
+    }
+    setInfo(mi, "spaceGroupAssigned", Boolean.TRUE);
+    setInfo(mi, "spaceGroup", sg.getSpaceGroupName());
+    setInfo(mi, "spaceGroupInfo", null);
+    if (am[mi].simpleCage != null) {
+      sg.getUnitCell(am[mi].simpleCage.getUnitCellVectors(), false, null);
+      setInfo(mi, "unitCellParams", sg.getUnitCellParams());
+    }
+    setModelCage(mi, null);
+  }
+  
+  public void setModelCage(int modelIndex, SymmetryInterface simpleCage) {
+    if (modelIndex >= 0 && modelIndex < mc) {
+      am[modelIndex].setSimpleCage(simpleCage);
+      haveUnitCells = true;
+    }
+  }
+
+  public void fixP1AtomSites(SymmetryInterface sym, BS bsAtoms) {
+    if (sym == null || sym.getSpaceGroupOperationCount() != 1)
+      return;
+    int n = bsAtoms.cardinality();
+    A4d[] baseAtoms = new A4d[n];
+    int nbase = 0;
+    double slop2 = sym.getPrecision();
+    slop2 *= slop2;
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      Atom a = at[i];
+      // just using A4d here as a convenience
+      A4d p = new A4d();
+      p.setT(a);
+      sym.toFractional(p, false);
+      sym.unitize(p);
+      boolean found = false;
+      for (int ib = 0; ib < nbase; ib++) {
+        A4d b = baseAtoms[ib];
+        if (a.atomNumberFlags == b.angle && b.distanceSquared(p) < slop2) {
+          found = true;
+          setSite(a, ib + 1, true);
+          break;
+        }
+      }
+      if (!found) {
+        p.angle = a.atomNumberFlags;
+        baseAtoms[nbase] = p;
+        setSite(a, ++nbase, true);
+      }
+    }
+  }
+
   public Atom getBasisAtom(int iatom, boolean doCheck) {
     Atom a = at[iatom];
     if (!doCheck || getUnitCellForAtom(iatom) != null) {
@@ -4537,7 +4575,6 @@ public class ModelSet extends BondCollection {
     BS bsAU = am[imodel].bsAsymmetricUnit;
     if (bsAU == null)
       return;
-    //BS bsSym = getAtomBitsMDb(T.symmetry, null);
     bsAU.clearAll();//andNot(bs);
     //bsSym.or(bs);
     BS bsSites = new BS();

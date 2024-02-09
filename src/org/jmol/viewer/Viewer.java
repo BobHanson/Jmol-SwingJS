@@ -10865,6 +10865,7 @@ public class Viewer extends JmolViewer
    * @param xyzList
    *        if present, a semicolon-separated list of operators
    * @param unitCellParams
+   * @param origin TODO
    * @param asString
    * @param isAssign
    *        from ModelKit
@@ -10874,8 +10875,8 @@ public class Viewer extends JmolViewer
    * 
    */
   public Object findSpaceGroup(BS bsAtoms, String xyzList,
-                               double[] unitCellParams, boolean asString,
-                               boolean isAssign, boolean checkSupercell) {
+                               double[] unitCellParams, T3d origin,
+                               boolean asString, boolean isAssign, boolean checkSupercell) {
     Object ret = null;
     if (bsAtoms == null && xyzList == null || isAssign)
       bsAtoms = getThisModelAtoms();
@@ -10883,12 +10884,12 @@ public class Viewer extends JmolViewer
       if (!bsAtoms.isEmpty()) {
         SymmetryInterface uc = getCurrentUnitCell();
         ret = (uc == null ? null
-            : uc.findSpaceGroup(this, bsAtoms, null, unitCellParams, asString,
-                isAssign, checkSupercell));
+            : uc.findSpaceGroup(this, bsAtoms, null, unitCellParams, null,
+                asString, isAssign, checkSupercell));
       }
     } else {
       ret = getSymTemp().findSpaceGroup(this, bsAtoms, xyzList, unitCellParams,
-          asString, isAssign, checkSupercell);
+          origin, asString, isAssign, checkSupercell);
     }
     return (ret == null && asString ? "" : ret);
   }

@@ -644,7 +644,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public P3d[] getUnitCellVectors() {
-    return unitCell.getUnitCellVectorsD();
+    return unitCell.getUnitCellVectors();
   }
 
   /**
@@ -657,17 +657,6 @@ public class Symmetry implements SymmetryInterface {
    */
   @Override
   public SymmetryInterface getUnitCell(T3d[] oabc, boolean setRelative,
-                                       String name) {
-    if (oabc == null)
-      return null;
-    unitCell = UnitCell.fromOABC(oabc, setRelative);
-    if (name != null)
-      unitCell.name = name;
-    return this;
-  }
-
-  @Override
-  public SymmetryInterface getUnitCelld(T3d[] oabc, boolean setRelative,
                                        String name) {
     if (oabc == null)
       return null;
@@ -968,10 +957,10 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCellParams,
-                               boolean asString, boolean isAssign, boolean checkSupercell) {
+                               T3d origin, boolean asString, boolean isAssign, boolean checkSupercell) {
     return ((SpaceGroupFinder) Interface
         .getInterface("org.jmol.symmetry.SpaceGroupFinder", vwr, "eval"))
-            .findSpaceGroup(vwr, atoms, xyzList, unitCellParams, this, asString, isAssign, checkSupercell);
+            .findSpaceGroup(vwr, atoms, xyzList, unitCellParams, origin, this, asString, isAssign, checkSupercell);
   }
 
   @Override
@@ -1071,7 +1060,7 @@ public class Symmetry implements SymmetryInterface {
     // and turn these to Cartesians if desired
     if (!tofractional) {
       for (int i = pts.size(); --i >= nIgnored;)
-        toCartesian(pts.get(i), true);
+        toCartesian(pts.get(i), false);
     }
   }
 
@@ -1128,7 +1117,7 @@ public class Symmetry implements SymmetryInterface {
       p = P3d.new3(2.3d/5, 2.3d/7, 2.3d/9);      
     } else {
       p = P3d.newP(p);
-      unitCell.toFractional(p, true);
+      unitCell.toFractional(p, false);
       unitCell.unitize(p);
 
     }
@@ -1148,7 +1137,7 @@ public class Symmetry implements SymmetryInterface {
       }
       if (w.findPositionFor(p, letter) == null)
         return null;
-      unitCell.toCartesian(p, true);
+      unitCell.toCartesian(p, false);
       return p;
     } catch (Exception e) {
       e.printStackTrace();

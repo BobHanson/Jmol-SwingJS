@@ -228,17 +228,13 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     if (m != this)
       return m.dumpInfo(isDebug, false);
     return "a=" + a + ", b=" + b + ", c=" + c + ", alpha=" + alpha + ", beta=" + beta + ", gamma=" + gamma
-       + "\noabc=" + Escape.eAP(getUnitCellVectorsF())
+       + "\noabc=" + Escape.eAP(getUnitCellVectors())
        + "\nvolume=" + volume
        + (isDebug ? "\nfractional to cartesian: " + matrixFractionalToCartesian 
        + "\ncartesian to fractional: " + matrixCartesianToFractional : "");
   }
 
-  private double fix(double x) {
-    return (Math.abs(x) < 0.001 ? 0 : x);
-  }
-
-  private double fixd(double x) {
+  private double fix000(double x) {
     return (Math.abs(x) < 0.001 ? 0 : x);
   }
 
@@ -287,7 +283,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
    * @return [origin va vb vc]
    */
   T3d[] getConventionalUnitCell(String latticeType, M3d primitiveToCrystal) {
-    T3d[] oabc = getUnitCellVectorsD();
+    T3d[] oabc = getUnitCellVectors();
     if (!latticeType.equals("P") || primitiveToCrystal != null)
       toFromPrimitive(false, latticeType.charAt(0), oabc, primitiveToCrystal);
     return oabc;
@@ -384,7 +380,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       return m.getInfo();       
     Map<String, Object> info = new Hashtable<String, Object>();
     info.put("params", unitCellParams);
-    info.put("oabc", getUnitCellVectorsD());
+    info.put("oabc", getUnitCellVectors());
     info.put("volume", Double.valueOf(volume));
     info.put("matFtoC", matrixFractionalToCartesian);
     info.put("matCtoF", matrixCartesianToFractional);
@@ -707,24 +703,15 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     return unitCellMultiplier;
   }
 
-  P3d[] getUnitCellVectorsD() {
+  P3d[] getUnitCellVectors() {
     M4d m = matrixFractionalToCartesian;
     return new P3d[] { 
         P3d.newP(cartesianOffset),
-        P3d.new3(fixd(m.m00), fixd(m.m10), fixd(m.m20)), 
-        P3d.new3(fixd(m.m01), fixd(m.m11), fixd(m.m21)), 
-        P3d.new3(fixd(m.m02), fixd(m.m12), fixd(m.m22)) };
+        P3d.new3(fix000(m.m00), fix000(m.m10), fix000(m.m20)), 
+        P3d.new3(fix000(m.m01), fix000(m.m11), fix000(m.m21)), 
+        P3d.new3(fix000(m.m02), fix000(m.m12), fix000(m.m22)) };
   }
   
-  P3d[] getUnitCellVectorsF() {
-    M4d m = matrixFractionalToCartesian;
-    return new P3d[] { 
-        P3d.newP(cartesianOffset),
-        P3d.new3(fix(m.m00), fix(m.m10), fix(m.m20)), 
-        P3d.new3(fix(m.m01), fix(m.m11), fix(m.m21)), 
-        P3d.new3(fix(m.m02), fix(m.m12), fix(m.m22)) };
-  }
-
   /**
    * 
    * @param def
@@ -732,7 +719,8 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
    *        preceded by ! for "reverse of". For example,
    *        "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, and can be a
    *        definition such as "a=3.40,b=4.30,c=5.02,alpha=90,beta=90,gamma=129"
-   * @param retMatrix 
+   * @param retMatrix
+   *        if a string, return the 4x4 matrix corresponding to this definition; may be null to ignore
    * 
    * @return [origin va vb vc]
    */
@@ -751,7 +739,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       String sdef = (String) def;
       String strans = "0,0,0";
       if (sdef.indexOf("a=") == 0)
-        return setOabc(sdef, null, pts);
+        return setAbc(sdef, null, pts);
       // a,b,c;0,0,0
       int ptc = sdef.indexOf(";");
       if (ptc >= 0) {

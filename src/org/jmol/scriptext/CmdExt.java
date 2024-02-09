@@ -492,7 +492,7 @@ public class CmdExt extends ScriptExt {
         } else {
           if (tokAt(i) == T.string) {
             fparams = new double[6];
-            SimpleUnitCell.setOabc(s, fparams, null);
+            SimpleUnitCell.setAbc(s, fparams, null);
           } else {
             fparams = eval.doubleParameterSet(i, 6, 9);
           }
@@ -702,7 +702,7 @@ public class CmdExt extends ScriptExt {
         bs1 = (slen == 2 ? null : atomExpressionAt(2));
         e.checkLast(e.iToken);
         if (!chk) 
-          e.showString("" + vwr.findSpaceGroup(bs1, null, null, true, false, false));
+          e.showString("" + vwr.findSpaceGroup(bs1, null, null, null, true, false, false));
         return;
       case T.chirality:
         e.iToken = 1;

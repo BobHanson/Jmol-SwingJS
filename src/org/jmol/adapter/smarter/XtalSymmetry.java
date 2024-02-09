@@ -381,7 +381,7 @@ public class XtalSymmetry {
       //  + maxXYZ);
       if (sym2 == null) {
         sym2 = new Symmetry();
-        sym2.getUnitCelld((T3d[]) acr.fillRange, false, null);
+        sym2.getUnitCell((T3d[]) acr.fillRange, false, null);
       }
       applyAllSymmetry(acr.ms, bsAtoms);
       pt0 = new P3d();
@@ -507,10 +507,10 @@ public class XtalSymmetry {
     
     // this is now P1. We need to set all the sites 
 
-    fixSuperCellAtomSites(bsAtoms);    
+    fixSuperCellP1AtomSites(bsAtoms);    
   }
 
-  private void fixSuperCellAtomSites(BS bsAtoms) {
+  private void fixSuperCellP1AtomSites(BS bsAtoms) {
     int n = bsAtoms.cardinality();
     Atom[] baseAtoms = new Atom[n];
     int nbase = 0;

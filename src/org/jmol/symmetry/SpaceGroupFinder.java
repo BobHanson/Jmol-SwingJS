@@ -16,6 +16,7 @@ import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.P3d;
 import javajs.util.PT;
+import javajs.util.T3d;
 
 /**
  * A relatively simple space group finder given a unit cell.
@@ -80,6 +81,7 @@ public class SpaceGroupFinder {
    * @param atoms0
    * @param xyzList
    * @param unitCellParams
+   * @param origin TODO
    * @param uc
    * @param asString
    * @param isAssign
@@ -88,8 +90,8 @@ public class SpaceGroupFinder {
    */
   @SuppressWarnings("unchecked")
   Object findSpaceGroup(Viewer vwr, BS atoms0, String xyzList,
-                        double[] unitCellParams, SymmetryInterface uc,
-                        boolean asString, boolean isAssign, boolean checkSupercell) {
+                        double[] unitCellParams, T3d origin,
+                        SymmetryInterface uc, boolean asString, boolean isAssign, boolean checkSupercell) {
     double slop = uc.getPrecision();
     this.slop = (!Double.isNaN(slop) ? slop
         : unitCellParams != null ? unitCellParams[SimpleUnitCell.PARAM_SLOP]
@@ -198,6 +200,8 @@ public class SpaceGroupFinder {
       basis = new BS();
       name = sg.asString();
       oabc = uc.getUnitCellVectors();
+      if (origin != null)
+        oabc[0].setT(origin);
     } else {
       try {
         if (bsOpGroups == null)
@@ -211,6 +215,10 @@ public class SpaceGroupFinder {
         }
         oabc = uc.getUnitCellVectors();
         uc = uc.getUnitCellMultiplied();
+        if (origin != null) {
+          oabc[0].setT(origin);
+          uc.setOffsetPt(origin);
+        }
         filterGroups(bsGroups, uc.getUnitCellParams());
 
         //      withinCell = vwr.ms.getAtoms(T.unitcell, uc);
@@ -913,7 +921,7 @@ public class SpaceGroupFinder {
       scaling.z = n;
       break;
     }
-    uc = vwr.getSymTemp().getUnitCelld(oabc, false, "scaled");
+    uc = vwr.getSymTemp().getUnitCell(oabc, false, "scaled");
     // remove points not within this unitcell
     int f = 0;
     for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints

@@ -282,6 +282,7 @@ public class MathExt {
       unitCellParams = SV.dlistValue(args[1], 0);
       if (unitCellParams == null || unitCellParams.length != 6)
         return false;
+      // set excess params to NaN; does not set slop
       unitCellParams = SimpleUnitCell.newParams(unitCellParams, Double.NaN);
       //$FALL-THROUGH$
     case 1:
@@ -303,7 +304,7 @@ public class MathExt {
           return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfoObj(xyzList, null,
               true, false));
           return mp.addXObj(vwr.findSpaceGroup(null, xyzList, unitCellParams,
-              true, false, false));
+              null, true, false, false));
       } 
       BS atoms = SV.getBitSet(args[0], true);
       if (atoms == null) {
@@ -313,7 +314,7 @@ public class MathExt {
       }
       // undocumented first parameter atoms
       return mp.addXObj(vwr.findSpaceGroup(atoms, null, unitCellParams,
-          true, false, false));
+          null, true, false, false));
     default:
       return false;
     }
@@ -469,7 +470,7 @@ public class MathExt {
           ucnew = new P3d[4];
           for (int i = 0; i < 4; i++)
             ucnew[i] = new P3d();
-          SimpleUnitCell.setOabc(arg0, null, ucnew);
+          SimpleUnitCell.setAbc(arg0, null, ucnew);
         } else if (arg0.indexOf(",") >= 0) {
           return mp.addXObj(vwr.getV0abc(-1, arg0));
         }
@@ -514,7 +515,7 @@ public class MathExt {
           double[] params = new double[6];
           for (int i = 0; i < 6; i++)
             params[i] = uc.get(i).asDouble();
-          SimpleUnitCell.setOabc(null, params, ucnew);
+          SimpleUnitCell.setAbc(null, params, ucnew);
           break;
         default:
           return false;
@@ -1777,7 +1778,7 @@ public class MathExt {
         case T.bitset:
           BS bs = (BS) x1.value;
           if (sFind.equalsIgnoreCase("spacegroup")) {
-            return mp.addXObj(vwr.findSpaceGroup(bs, null, null, false, false, "parent".equals(flags.toLowerCase())));
+            return mp.addXObj(vwr.findSpaceGroup(bs, null, null, null, false, false, "parent".equals(flags.toLowerCase())));
           }
           if (sFind.equalsIgnoreCase("crystalClass")) {
             // {*}.find("crystalClass")

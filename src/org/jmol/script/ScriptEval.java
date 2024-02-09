@@ -8418,7 +8418,7 @@ public class ScriptEval extends ScriptExpr {
       throw new NullPointerException();
     try {
       vwr.ms.setModelCage(iModel,
-          originABC == null ? null : sym.getUnitCelld(originABC, false, name));
+          originABC == null ? null : sym.getUnitCell(originABC, false, name));
     } catch (Exception e) {
       //
     }

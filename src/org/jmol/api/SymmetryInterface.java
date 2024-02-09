@@ -40,7 +40,7 @@ public interface SymmetryInterface {
                                            String name,
                                            Object data, int modDim);
 
-  Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCellParams, boolean asString, boolean isAssign, boolean checkSupercell);
+  Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCellParams, T3d origin, boolean asString, boolean isAssign, boolean checkSupercell);
 
   int[] getCellRange();
 
@@ -107,8 +107,6 @@ public interface SymmetryInterface {
   Tensor getTensor(Viewer vwr, double[] anisoBorU);
 
   M4d getTransform(P3d fracA, P3d fracB, boolean debug);
-
-  SymmetryInterface getUnitCelld(T3d[] points, boolean setRelative, String name);
 
   SymmetryInterface getUnitCell(T3d[] points, boolean setRelative, String name);
 

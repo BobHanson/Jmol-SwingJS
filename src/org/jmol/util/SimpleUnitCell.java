@@ -49,10 +49,13 @@ import javajs.util.V3d;
 public class SimpleUnitCell {
 
   public static final int PARAM_STD       = 6;  // a b c alpha beta gamma [0-5]
-  public static final int PARAM_VAX       = 6;  // ax ay az bx by bz cx cy cz (9 entries, [6-14])
-  public static final int PARAM_VCZ       = 14; // last vector value
+  public static final int PARAM_VAX       = 6;  // ax ay az [6-8]
+  public static final int PARAM_VBX       = 9;  // bx by bz [9-11]
+  public static final int PARAM_VCX       = 12; // cx cy cz [12-14]
+  public static final int PARAM_VCZ       = 14; // last vector value - test for vabc
+  public static final int PARAM_OXYZ      = 15; // ox oy oz [15-17]
   public static final int PARAM_M4        = 6;  // m00 m01 ... m44 (16 entries, [6-21)
-  public static final int PARAM_M33       = 21; // last matrix value
+  public static final int PARAM_M33       = 21; // last matrix value - test for 4x4 matrix
   public static final int PARAM_SUPERCELL = 22; // na nb nc
   public static final int PARAM_SCALE = 25;     // scale
   public static final int PARAM_SLOP = 26;      // slop
@@ -301,10 +304,19 @@ public class SimpleUnitCell {
       // parameters with a 3 vectors
       // [a b c alpha beta gamma ax ay az bx by bz cx cy cz...]
       M4d m = matrixFractionalToCartesian = new M4d();
-      m.setColumn4(0, params[PARAM_VAX] * fa, params[7] * fa, params[8] * fa, 0);
-      m.setColumn4(1, params[9] * fb, params[10] * fb, params[11] * fb, 0);
-      m.setColumn4(2, params[12] * fc, params[13] * fc, params[PARAM_VCZ] * fc, 0);
-      m.setColumn4(3, 0, 0, 0, 1);
+      m.setColumn4(0, params[PARAM_VAX] * fa, params[PARAM_VAX + 1] * fa,
+          params[PARAM_VAX + 2] * fa, 0);
+      m.setColumn4(1, params[PARAM_VBX] * fb, params[PARAM_VBX + 1] * fb,
+          params[PARAM_VBX + 2] * fb, 0);
+      m.setColumn4(2, params[PARAM_VCX] * fc, params[PARAM_VCX + 1] * fc,
+          params[PARAM_VCX + 2] * fc, 0);
+      if (params.length > PARAM_OXYZ + 2 && !Double.isNaN(params[PARAM_OXYZ + 2])) {
+        // cartesian offset
+        m.setColumn4(3, params[PARAM_OXYZ], params[PARAM_OXYZ + 1],
+            params[PARAM_OXYZ + 2], 1);
+      } else {
+        m.setColumn4(3, 0, 0, 0, 1);
+      }
       matrixCartesianToFractional = M4d.newM4(matrixFractionalToCartesian)
           .invert();
     } else {
@@ -404,10 +416,8 @@ public class SimpleUnitCell {
     c_ = a * b * sinGamma / volume;
   }
 
-  private P3d fo = new P3d();
-  
   public P3d getFractionalOrigin() {
-    return (P3d) fractionalOrigin.putP(fo);
+    return fractionalOrigin;
   }
 
   /**
@@ -425,7 +435,9 @@ public class SimpleUnitCell {
 
   public final void toCartesian(T3d pt, boolean ignoreOffset) {
     if (matrixFractionalToCartesian != null)
-      (ignoreOffset ? matrixFtoCNoOffset : matrixFractionalToCartesian)
+      (ignoreOffset ? 
+          matrixFtoCNoOffset : 
+            matrixFractionalToCartesian)
           .rotTrans(pt);
   }
 
@@ -439,7 +451,9 @@ public class SimpleUnitCell {
   public final void toFractional(T3d pt, boolean ignoreOffset) {
     if (matrixCartesianToFractional == null)
       return;
-    (ignoreOffset ? matrixCtoFNoOffset : matrixCartesianToFractional)
+    (ignoreOffset ? 
+        matrixCtoFNoOffset 
+        : matrixCartesianToFractional)
         .rotTrans(pt);
   }
 
@@ -528,15 +542,15 @@ public class SimpleUnitCell {
   }
 
   /**
-   * set cell vectors by string
+   * set cell vectors by string. Does not set origin.
    * 
    * 
    * @param abcabg "a=...,b=...,c=...,alpha=...,beta=..., gamma=..." or null  
    * @param params to use if not null 
    * @param ucnew  to create and return; null if only to set params
-   * @return T3d[4] origin, a, b c
+   * @return T3d[4] ucnew as [origin, a, b, c], with origin unchanged or {0 0 0}
    */
-  public static T3d[] setOabc(String abcabg, double[] params, T3d[] ucnew) {
+  public static T3d[] setAbc(String abcabg, double[] params, T3d[] ucnew) {
     if (abcabg != null) {
       if (params == null)
         params = new double[6];

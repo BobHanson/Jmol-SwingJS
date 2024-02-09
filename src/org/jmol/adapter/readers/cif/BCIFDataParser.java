@@ -156,7 +156,7 @@ class BCIFDataParser extends CifDataParser {
           : getDecoder(s, getDataColumn(pt), rowCount, categoryName));
       if (d == null) {
         // either not a field of interest, or its mask is all '?' or '.'
-        System.out.println("BCIFDataParser skipping " + s);
+        // System.out.println("BCIFDataParser skipping " + s);
         if (keyIndex >= 0)
           key2col[keyIndex] = EMPTY; 
       } else {

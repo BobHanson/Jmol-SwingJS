@@ -31,10 +31,6 @@ package javajs.util;
  */
 public class A4d extends P3d {
 
-  /*
-   * I assumed that the length of the axis vector is not significant.
-   */
-
    /**
    * The angle.
    */
