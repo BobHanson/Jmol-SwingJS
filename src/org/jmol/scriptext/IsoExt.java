@@ -44,6 +44,7 @@ import org.jmol.script.ScriptParam;
 import org.jmol.script.T;
 import org.jmol.shape.MeshCollection;
 import org.jmol.util.BSUtil;
+import org.jmol.util.BZone;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
@@ -475,12 +476,17 @@ public class IsoExt extends ScriptExt {
         // best or intersection
         plane = null;
         P3d[] linePts = null;
+        boolean isAll = false;
         switch (tok) {
         case T.plane:
           plane = eval.planeParameter(i, isBest);
           break;
         case T.hkl:
           plane = eval.hklParameter(++i, null, true);
+          if (tokAt(eval.iToken + 1) == T.all) {
+            isAll = true;
+            eval.iToken++;
+          }
           break;
         case T.line:
           if (tokIntersectBox == T.lattice)
@@ -538,6 +544,11 @@ public class IsoExt extends ScriptExt {
           propertyValue = v;
           intScale = 0;
         } else {
+          if (isAll && tokIntersectBox == T.unitcell) {
+            ((BZone) Interface.getInterface("org.jmol.util.BZone", vwr, "script"))
+            .drawHKL(vwr, thisId, plane, pts);
+
+          }
           propertyName = "polygon";
           propertyValue = vwr.getTriangulator().intersectPlane(plane, pts,
               isProjection ? -1 : 0);

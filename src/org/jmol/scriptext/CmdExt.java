@@ -116,7 +116,8 @@ public class CmdExt extends ScriptExt {
    * 
    */
   @Override
-  public String dispatch(int iTok, boolean flag, T[] st) throws ScriptException {
+  public String dispatch(int iTok, boolean flag, T[] st) 
+		  throws ScriptException {
     chk = e.chk;
     slen = e.slen;
     this.st = st;
@@ -282,20 +283,23 @@ public class CmdExt extends ScriptExt {
       return getBitsetIdentFull(bs, label, useAtomMap, index, isExplicitlyAll, null);
   }
   
-  @SuppressWarnings("static-access")
-  public Object getBitsetIdentFull(BS bs, String label, 
-                               boolean useAtomMap, int index,
-                               boolean isExplicitlyAll, String[] sout) {
+  public Object getBitsetIdentFull(BS bs, String label, boolean useAtomMap,
+                                   int index, boolean isExplicitlyAll,
+                                   String[] sout) {
     boolean isAtoms = !(bs instanceof BondSet);
     if (isAtoms) {
-      if (label == null)
+      if (label == null) {
         label = vwr.getStandardLabelFormat(0);
-      else if (label.length() == 0)
+      } else if (label.length() == 0) {
         label = "%[label]";
-    } else if (label != null && label.length() == 0) {
-      label = "[%a1 #%i1] %4.3LENGTH [%a2 #%i2] #%#";
-    } else if ("%U".equals(label)) {
-      label = "";
+      }
+    } else {
+      // bond
+      if (label != null && label.length() == 0) {
+        label = "[%a1 #%i1] %4.3LENGTH [%a2 #%i2] #%#";
+      } else if ("%U".equals(label)) {
+        label = "";
+      }
     }
     int pt = (label == null ? -1 : label.indexOf("%"));
     boolean haveIndex = (index != Integer.MAX_VALUE);
@@ -306,15 +310,14 @@ public class CmdExt extends ScriptExt {
     }
     ModelSet modelSet = vwr.ms;
     int n = 0;
-    LabelToken labeler = modelSet.getLabeler();
-    int[] indices = (isAtoms || !useAtomMap ? null 
+    int[] indices = (isAtoms || !useAtomMap ? null
         : ((BondSet) bs).getAssociatedAtoms(modelSet));
     boolean asIdentity = (label == null || label.length() == 0);
-    Map<String, Object> htValues = (isAtoms || asIdentity ? null : LabelToken
-        .getBondLabelValues());
-    LabelToken[] tokens = (asIdentity ? null : isAtoms ? labeler.compile(
-        vwr, label, '\0', null) : labeler.compile(vwr, label, '\1',
-        htValues));
+    Map<String, Object> htValues = (isAtoms || asIdentity ? null
+        : LabelToken.getBondLabelValues());
+    LabelToken[] tokens = (asIdentity ? null
+        : isAtoms ? LabelToken.compile(vwr, label, '\0', null)
+            : LabelToken.compile(vwr, label, '\1', htValues));
     int nmax = (haveIndex ? 1 : bs.cardinality());
     boolean haveSout = (sout != null);
     if (!haveSout)
@@ -324,18 +327,14 @@ public class CmdExt extends ScriptExt {
         .nextSetBit(j + 1)) {
       String str;
       if (isAtoms) {
-        if (asIdentity)
-          str = modelSet.at[j].getInfo();
-        else
-          str = labeler.formatLabelAtomArray(vwr, modelSet.at[j], tokens,
-              '\0', indices, ptTemp);
+        str = (asIdentity ? modelSet.at[j].getInfo()
+            : LabelToken.formatLabelAtomArray(vwr, modelSet.at[j], tokens, '\0',
+                indices, ptTemp));
       } else {
         Bond bond = modelSet.bo[j];
-        if (asIdentity)
-          str = bond.getIdentity();
-        else
-          str = labeler
-              .formatLabelBond(vwr, bond, tokens, htValues, indices, ptTemp);
+        str = (asIdentity ? bond.getIdentity()
+            : LabelToken.formatLabelBond(vwr, bond, tokens, htValues, indices,
+                ptTemp));
       }
       str = PT.formatStringI(str, "#", (n + 1));
       sout[haveSout ? j : n] = str;
@@ -1445,7 +1444,7 @@ public class CmdExt extends ScriptExt {
         if (isFrames) {
           T3d[] oabc = vwr.getV0abc(iModel, new Object[] { m4 });
           if (oabc != null)
-            eval.setModelCagePts(iModel, oabc, null);
+            vwr.setModelCagePts(iModel, oabc, null);
         }
 
       }
@@ -3755,10 +3754,17 @@ public class CmdExt extends ScriptExt {
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
     int noToParam = -1;
     P3d offset = null;
+    double foffset = 0;
     String id = null;
     boolean ok = false;
     int[][] faces = null;
     P3d[] points = null;
+    if (slen == 2 && tokAt(1) == T.list) {
+      if (!chk)
+        eval.showStringPrint(
+            (String) getShapeProperty(JC.SHAPE_POLYHEDRA, "list"), false);
+      return;
+    }
     for (int i = 1; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
@@ -3767,12 +3773,13 @@ public class CmdExt extends ScriptExt {
         scale = Double.NaN;
         //$FALL-THROUGH$
       case T.brillouin:
-        int index = (e.theTok == T.wigner ? -1 : (tokAt(i + 1) == T.integer ? intParameter(++i) : 1));
-        if (index > 4)
+        int index = (e.theTok == T.wigner ? -1
+            : (tokAt(i + 1) == T.integer ? intParameter(++i) : 1));
+        if (index > 8)
           invArg();
         if (!chk)
-          ((BZone) Interface.getInterface("org.jmol.util.BZone", vwr, "script")).setViewer(vwr).createBZ(index, null, false, id, scale * 10);
-        setShapeProperty(JC.SHAPE_POLYHEDRA, "init", Boolean.FALSE);
+          ((BZone) Interface.getInterface("org.jmol.util.BZone", vwr, "script"))
+              .createBZ(vwr, index, null, false, id, scale, foffset, offset);
         return;
       case T.hash:
         propertyName = "info";
@@ -3781,8 +3788,8 @@ public class CmdExt extends ScriptExt {
         break;
       case T.point:
         propertyName = "points";
-        propertyValue = Double.valueOf(tokAt(++i) == T.off ? 0 : e
-            .doubleParameter(i));
+        propertyValue = Double
+            .valueOf(tokAt(++i) == T.off ? 0 : e.doubleParameter(i));
         ok = true;
         break;
       case T.scale:
@@ -3817,8 +3824,9 @@ public class CmdExt extends ScriptExt {
         points = getAllPoints(eval.iToken + 1, 3);
         i = eval.iToken;
         if (points[0] instanceof Atom)
-          setShapeProperty(JC.SHAPE_POLYHEDRA, "model", Integer.valueOf(((Atom) points[0]).getModelIndex()));
-       propertyName = "definedFaces";
+          setShapeProperty(JC.SHAPE_POLYHEDRA, "model",
+              Integer.valueOf(((Atom) points[0]).getModelIndex()));
+        propertyName = "definedFaces";
         propertyValue = new Object[] { faces, points };
         break;
       case T.full:
@@ -3857,18 +3865,19 @@ public class CmdExt extends ScriptExt {
         if (nAtomSets > 0)
           invPO();
         propertyName = (radius <= 0 ? "radius" : "radius1");
-        propertyValue = Double.valueOf(radius = (radius == 0 ? 0
-            : doubleParameter(i)));
+        propertyValue = Double
+            .valueOf(radius = (radius == 0 ? 0 : doubleParameter(i)));
         needsGenerating = true;
         break;
       case T.offset:
-        if (!isFloatParameter(i + 1)) {
+        if (isFloatParameter(i + 1)) {
+          foffset = floatParameter(++i);
+        } else {
           offset = e.centerParameter(++i, null);
           i = eval.iToken;
-          ok = true;
-          continue;
         }
-        //$FALL-THROUGH$
+        ok = true;
+        continue;
       case T.facecenteroffset:
         setShapeProperty(JC.SHAPE_POLYHEDRA, "collapsed", null);
         //$FALL-THROUGH$
@@ -3974,8 +3983,10 @@ public class CmdExt extends ScriptExt {
         if (!eval.isColorParam(i)) {
           if (i != 1)
             invPO();
-          id = (eval.theTok == T.id ? stringParameter(++i) : eval
-              .optParameterAsString(i));
+          id = (eval.theTok == T.id ? stringParameter(++i)
+              : eval.optParameterAsString(i));
+          if (tokAt(i + 1) == T.times)
+            id += paramAsStr(++i);
           setShapeProperty(JC.SHAPE_POLYHEDRA, "thisID", id);
           setShapeProperty(JC.SHAPE_POLYHEDRA, "model",
               Integer.valueOf(vwr.am.cmi));
@@ -5177,8 +5188,13 @@ public class CmdExt extends ScriptExt {
         msg = vwr.stm.listSavedStates();
       break;
     case T.unitcell:
-      if (!chk)
-        msg = vwr.getUnitCellInfoText();
+      if (!chk) {
+        if ((len = slen) == 3) {
+          msg = vwr.stm.getSavedUnitCell(paramAsStr(2));
+        } else {
+          msg = vwr.getUnitCellInfoText();
+        }
+      }
       break;
     case T.coord:
       if ((len = slen) == 2) {
@@ -5631,89 +5647,6 @@ public class CmdExt extends ScriptExt {
         break;
       pt = SimpleUnitCell.ptToIJK(eval.checkHKL(pt), 1);
       break;
-    case T.string:
-    case T.identifier:
-      String s = paramAsStr(i).toLowerCase();
-      if (s.equals("rhombohedral")) {
-        if (sym != null && sym.getUnitCellInfoType(SimpleUnitCell.INFO_IS_HEXAGONAL) == 0)
-          return;
-        s = SimpleUnitCell.HEX_TO_RHOMB;
-      } else if (s.equals("trigonal")) {
-        if (sym != null && sym.getUnitCellInfoType(SimpleUnitCell.INFO_IS_RHOMBOHEDRAL) == 0)
-          return;
-        s = SimpleUnitCell.RHOMB_TO_HEX;
-      }
-      ucname = s;
-      if (s.indexOf(",") >= 0 || chk) {
-        newUC = s;
-        break;
-      }
-      String stype = null;
-      // parent, standard, conventional, primitive
-      eval.setModelCagePts(-1, null, null);
-      // reset -- presumes conventional, so if it is not, 
-      // _M.unitcell_conventional must be set in the reader.
-
-      newUC = vwr.getModelInfo("unitcell_conventional");
-      // If the file read was loaded as primitive, 
-      // newUC will be a T3[] indicating the conventional.
-      boolean modelIsPrimitive = vwr.getModelInfo("isprimitive") != null;
-      if (PT.isOneOf(ucname, ";parent;standard;primitive;")) {  
-        if (newUC == null && modelIsPrimitive) {
-          showString(
-              "Cannot convert unit cell when file data is primitive and have no lattice information");
-          return;
-        }
-        // unitcell primitive "C"
-        if (ucname.equals("primitive") && tokAt(i + 1) == T.string)
-          stype = paramAsStr(++i).toUpperCase();
-      }
-      if (newUC instanceof T3d[]) {
-        // from reader -- getting us to conventional
-        oabc = (T3d[]) newUC;
-      }
-      if (stype == null)
-        stype = (String) vwr.getModelInfo("latticeType");
-      if (newUC != null)
-        eval.setModelCagePts(-1, vwr.getV0abc(-1, newUC), "" + newUC);
-      // now guaranteed to be "conventional"
-      if (!ucname.equals("conventional")) {
-        setShapeProperty(JC.SHAPE_AXES, "labels", null); 
-        s = (String) vwr.getModelInfo("unitcell_" + ucname);
-        if (s == null) {
-          boolean isPrimitive = ucname.equals("primitive");
-          if (isPrimitive || ucname.equals("reciprocal")) {
-            double  scale = (slen == i + 1 ? 1
-                : tokAt(i + 1) == T.integer
-                    ? intParameter(++i) * Math.PI
-                    : doubleParameter(++i));
-            ucname = (sym == null ? "" : sym.getSpaceGroupName() + " ") + ucname;
-            oabc = (sym == null
-                ? new P3d[] { P3d.new3(0, 0, 0), P3d.new3(1, 0, 0),
-                    P3d.new3(0, 1, 0), P3d.new3(0, 0, 1) }
-                : sym.getUnitCellVectors());
-            if (stype == null)
-              stype = (String) vwr.getSymmetryInfo(
-                  vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null, null,
-                  T.lattice, null, 0, -1, 0, null);
-            if (sym == null)
-              sym = vwr.getSymTemp();
-            if (!modelIsPrimitive)
-              sym.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),
-                oabc,
-                (M3d) vwr.getCurrentModelAuxInfo().get("primitiveToCrystal"));
-            if (!isPrimitive) {
-              SimpleUnitCell.getReciprocal(oabc, oabc, scale);
-            }
-            break;
-          }
-        } else {
-          ucname = s;
-          if (s.indexOf(",") >= 0)
-            newUC = s;
-        }
-      }
-      break;
     case T.isosurface:
     case T.dollarsign:
       id = eval.objectNameParameter(++i);
@@ -5810,11 +5743,102 @@ public class CmdExt extends ScriptExt {
       }
       icell = intParameter(i);
       break;
+    case T.string:
+    case T.identifier:
+      String s = paramAsStr(i).toLowerCase();
+      if (s.equals("rhombohedral")) {
+        if (sym != null && sym.getUnitCellInfoType(SimpleUnitCell.INFO_IS_HEXAGONAL) == 0)
+          return;
+        s = SimpleUnitCell.HEX_TO_RHOMB;
+      } else if (s.equals("trigonal")) {
+        if (sym != null && sym.getUnitCellInfoType(SimpleUnitCell.INFO_IS_RHOMBOHEDRAL) == 0)
+          return;
+        s = SimpleUnitCell.RHOMB_TO_HEX;
+      }
+      ucname = s;
+      if (s.indexOf(",") >= 0 || chk) {
+        newUC = s;
+        break;
+      }
+      String stype = null;
+      // parent, standard, conventional, primitive
+      vwr.setModelCagePts(-1, null, null);
+      // reset -- presumes conventional, so if it is not, 
+      // _M.unitcell_conventional must be set in the reader.
+
+      newUC = vwr.getModelInfo("unitcell_conventional");
+      // If the file read was loaded as primitive, 
+      // newUC will be a T3[] indicating the conventional.
+      boolean modelIsPrimitive = vwr.getModelInfo("isprimitive") != null;
+      if (PT.isOneOf(ucname, ";parent;standard;primitive;")) {  
+        if (newUC == null && modelIsPrimitive) {
+          showString(
+              "Cannot convert unit cell when file data is primitive and have no lattice information");
+          return;
+        }
+        // unitcell primitive "C"
+        if (ucname.equals("primitive") && tokAt(i + 1) == T.string)
+          stype = paramAsStr(++i).toUpperCase();
+      }
+      if (newUC instanceof T3d[]) {
+        // from reader -- getting us to conventional
+        oabc = (T3d[]) newUC;
+      }
+      if (stype == null)
+        stype = (String) vwr.getModelInfo("latticeType");
+      if (newUC != null)
+        vwr.setModelCagePts(-1, vwr.getV0abc(-1, newUC), "" + newUC);
+      // now guaranteed to be "conventional"
+      if (!ucname.equals("conventional")) {
+        setShapeProperty(JC.SHAPE_AXES, "labels", null); 
+        s = (String) vwr.getModelInfo("unitcell_" + ucname);
+        if (s == null) {
+          boolean isPrimitive = ucname.equals("primitive");
+          if (isPrimitive || ucname.equals("reciprocal")) {
+            double  scale = (slen == i + 1 ? 1
+                : tokAt(i + 1) == T.integer
+                    ? intParameter(++i) * Math.PI
+                    : doubleParameter(++i));
+            ucname = (sym == null ? "" : sym.getSpaceGroupName() + " ") + ucname;
+            oabc = (sym == null
+                ? new P3d[] { P3d.new3(0, 0, 0), P3d.new3(1, 0, 0),
+                    P3d.new3(0, 1, 0), P3d.new3(0, 0, 1) }
+                : sym.getUnitCellVectors());
+            if (stype == null)
+              stype = (String) vwr.getSymmetryInfo(
+                  vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null, null,
+                  T.lattice, null, 0, -1, 0, null);
+            if (sym == null)
+              sym = vwr.getSymTemp();
+            if (!modelIsPrimitive)
+              sym.toFromPrimitive(true, stype.length() == 0 ? 'P' : stype.charAt(0),
+                oabc,
+                (M3d) vwr.getCurrentModelAuxInfo().get("primitiveToCrystal"));
+            if (!isPrimitive) {
+              SimpleUnitCell.getReciprocal(oabc, oabc, scale);
+            }
+            break;
+          }
+        } else {
+          ucname = s;
+          if (s.indexOf(",") >= 0)
+            newUC = s;
+        }
+      }
+      break;
     default:
       if (eval.isArrayParameter(i)) {
-        // Origin vA vB vC
-        // these are VECTORS, though
-        oabc = eval.getPointArray(i, 4, false);
+        eval.ignoreError = true;
+        try {
+          newUC = eval.doubleParameterSet(i, 6, 6);
+        } catch (Exception e) {
+          // ignore NullPointerException
+        }
+        eval.ignoreError = false;
+        if (newUC == null)
+          // Origin vA vB vC
+          // these are VECTORS, though
+          oabc = eval.getPointArray(i, 4, false);
         i = eval.iToken;
       } else if (slen > i + 1) {
         pt = eval.getFractionalPoint(i);
@@ -5851,7 +5875,7 @@ public class CmdExt extends ScriptExt {
             fxyz[k] = P3d.newP(a[j]);
             vwr.toFractionalUC(unitCell, fxyz[k], false);
           }
-          eval.setModelCagePts(-1, oabc, ucname);
+          vwr.setModelCagePts(-1, oabc, ucname);
           unitCell = vwr.getCurrentUnitCell();
           for (int j = bsAtoms.nextSetBit(0), k = 0; j >= 0; j = bsAtoms.nextSetBit(j + 1), k++) {  
             a[j].setT(fxyz[k]);
@@ -5863,7 +5887,7 @@ public class CmdExt extends ScriptExt {
         isReset = true;
       }
       if (isReset) {
-        eval.setModelCagePts(-1, oabc, ucname);
+        vwr.setModelCagePts(-1, oabc, ucname);
       }
     }
     eval.setObjectMad10(JC.SHAPE_UCCAGE, "unitCell", mad10);
@@ -6271,6 +6295,10 @@ public class CmdExt extends ScriptExt {
           invArg();
         break;
       case T.unitcell:
+        if (e.isArrayParameter(i + 1)) {
+          unitcell(2, true);
+          return;
+        }
         value = paramAsStr(++i).toLowerCase();
         if (!vwr.isModelKitOption('U', (String) value)) {
           unitcell(2, true);

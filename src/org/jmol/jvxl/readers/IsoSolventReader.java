@@ -731,7 +731,7 @@ class IsoSolventReader extends AtomDataReader {
       this.ib = Math.max(ia, ib);
       this.d = d;
       d2 = d * d;
-      maxr = (double) Math.sqrt(d2 / 4 + Math.max(r.rs2[ia], r.rs2[ib]));
+      maxr = Math.sqrt(d2 / 4 + Math.max(r.rs2[ia], r.rs2[ib]));
       ave(r.atomXyzTruncated[ia], r.atomXyzTruncated[ib]);
       cosASB2 = (r.rs2[ia] + r.rs2[ib] - d2) / (r.rs[ib] * r.rs[ia]);
       v = V3d.newVsub(r.atomXyzTruncated[ib], r.atomXyzTruncated[ia]);
@@ -1145,10 +1145,10 @@ class IsoSolventReader extends AtomDataReader {
     double rAS = rs[ia];
     V3d v = edge.v;
     double cosAngleBAS = (edge.d2 + rs2[ia] - rs2[ib]) / (2 * edge.d * rAS);
-    double angleBAS = (double) Math.acos(cosAngleBAS);
+    double angleBAS = Math.acos(cosAngleBAS);
     p.scaleAdd2(cosAngleBAS * rAS, v, atomXyzTruncated[ia]);
     MeasureD.getPlaneThroughPoint(p, v, plane);
-    double dPS = (double)(Math.sin(angleBAS) * rAS);
+    double dPS = Math.sin(angleBAS) * rAS;
 
     P3d ptC = atomXyzTruncated[ic];
     double rCS = rs[ic];
@@ -1170,7 +1170,7 @@ class IsoSolventReader extends AtomDataReader {
     ptTemp.scaleAdd2(dPS * cosTheta, vXS, p);
     vXS.cross(v, vXS);
     vXS.normalize();
-    vXS.scale((double) (Math.sqrt(1 - cosTheta * cosTheta) * dPS));
+    vXS.scale(Math.sqrt(1 - cosTheta * cosTheta) * dPS);
     ptS1.add2(ptTemp, vXS);
     ptS2.sub2(ptTemp, vXS);
     return true;
@@ -1289,10 +1289,10 @@ class IsoSolventReader extends AtomDataReader {
    */
   private double solventDistance(double rAS, double rAS2, double rBS2, double dAV,
                                   double dAV2, double dBV2) {
-    double angleVAB = (double) Math.acos((dAV2 + dAB2 - dBV2) / (2 * dAV * dAB));
-    double angleSAB = (double) Math.acos((rAS2 + dAB2 - rBS2) / (2 * rAS * dAB));
-    double dVS2 = (double)(rAS2 + dAV2 - 2 * rAS * dAV * Math.cos(angleSAB - angleVAB));
-    double dVS = (double)Math.sqrt(dVS2);
+    double angleVAB = Math.acos((dAV2 + dAB2 - dBV2) / (2 * dAV * dAB));
+    double angleSAB = Math.acos((rAS2 + dAB2 - rBS2) / (2 * rAS * dAB));
+    double dVS2 = (rAS2 + dAV2 - 2 * rAS * dAV * Math.cos(angleSAB - angleVAB));
+    double dVS = Math.sqrt(dVS2);
     // check for voxel in trough
     return (ecosASB2 < (rAS2 + dVS2 - dAV * dAV) / (dVS * rAS) ? (double) dVS : Double.NaN);
   }

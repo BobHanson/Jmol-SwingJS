@@ -36,6 +36,7 @@ import org.jmol.util.Tensor;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
@@ -735,6 +736,9 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     pts[2] = V3d.new3(0, 1, 0);
     pts[3] = V3d.new3(0, 0, 1);
     M3d m3 = new M3d();
+    if (AU.isAD(def)) {
+      return setAbcFromParams((double[]) def, pts);
+    }
     if (def instanceof String) {
       String sdef = (String) def;
       String strans = "0,0,0";
@@ -1008,11 +1012,13 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       if (toPrimitive)
         mf.invert();
     }
+    // transform vectors a, b, and c
+    // true to ignore offests -- this is a lattice vector, so relative
     for (int i = uc.length; --i >= offset;) {
       T3d p = uc[i];
-      toFractional(p, false);
+      toFractional(p, true);
       mf.rotate(p);
-      toCartesian(p, false);
+      toCartesian(p, true);
     }
     return true;
   }
@@ -1032,6 +1038,8 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       unitize(p);
       matrixFractionalToCartesian.rotTrans(p);
     } else {
+      // ONLY in the single instance of binary operation point % n. No idea what this is about!
+      
       // use original unit cell
       // note that this matrix will be the same as matrixCartesianToFractional
       // when allFractionalRelative is set true (isosurfaceMesh special cases only)
@@ -1107,6 +1115,13 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     double gamma = params[5];
 
     int n = (sg == null || sg.intlTableNumber == null ? 0 : PT.parseInt(sg.intlTableNumber));
+    boolean toHex = isHexagonalSG(n, null);
+    boolean isHex = (toHex && isHexagonalSG(-1, params));
+    boolean toRhom = (sg.axisChoice == 'r');
+    boolean isRhom = (toRhom && isRhombohedral(params));
+    if (toHex && isHex || toRhom && isRhom) {
+      allowSame = true;
+    }
     if (n > (allowSame ? 2 : 0)) {
 
       boolean absame = approx0(a - b);
@@ -1163,10 +1178,10 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
           gamma = alpha * 1.4d;
         }
       }
-      if (isHexagonalSG(n, null)) {
+      if (toHex) {
         b = a;
-        if (sg.axisChoice == 'r' ? isRhombohedral(params)
-            : isHexagonalSG(-1, params)) {
+        if (toRhom ? isRhom
+            : isHex) {
           // nothing to do
         } else if (sg.axisChoice == 'r') {
           c = b = a;

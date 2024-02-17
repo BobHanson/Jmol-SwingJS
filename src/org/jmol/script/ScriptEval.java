@@ -6626,10 +6626,6 @@ public class ScriptEval extends ScriptExpr {
       String saveName = optParameterAsString(2);
       int tok = tokAt(1);
       switch (tok) {
-      case T.unitcell:
-        if (!chk)
-          setModelCagePts(-1, null, null);
-        return;
       case T.orientation:
       case T.rotation:
       case T.scene:
@@ -6684,6 +6680,10 @@ public class ScriptEval extends ScriptExpr {
           invArg();
         runScript(script);
         vwr.checkCoordinatesChanged();
+        return;
+      case T.unitcell:
+        if (!chk)
+          vwr.stm.restoreUnitCell(saveName);
         return;
       case T.selection:
         if (!chk)
@@ -6752,6 +6752,10 @@ public class ScriptEval extends ScriptExpr {
       case T.structure:
         if (!chk)
           vwr.stm.saveStructure(saveName);
+        return;
+      case T.unitcell:
+        if (!chk)
+          vwr.stm.saveUnitCell(saveName);
         return;
       }
     }
@@ -8408,20 +8412,6 @@ public class ScriptEval extends ScriptExpr {
     checkLength(len);
     if (!chk)
       vwr.undoMoveAction(tok, n);
-  }
-
-  public void setModelCagePts(int iModel, T3d[] originABC, String name) {
-    if (iModel < 0)
-      iModel = vwr.am.cmi;
-    SymmetryInterface sym = Interface.getSymmetry(vwr, "eval");
-    if (sym == null && vwr.async)
-      throw new NullPointerException();
-    try {
-      vwr.ms.setModelCage(iModel,
-          originABC == null ? null : sym.getUnitCell(originABC, false, name));
-    } catch (Exception e) {
-      //
-    }
   }
 
   private void cmdUnitcell(int i) throws ScriptException {

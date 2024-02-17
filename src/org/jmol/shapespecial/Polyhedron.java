@@ -9,6 +9,8 @@ import javajs.util.M4d;
 import javajs.util.MeasureD;
 import javajs.util.P3d;
 import javajs.util.P4d;
+import javajs.util.PT;
+import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -170,6 +172,9 @@ public class Polyhedron {
         o = lst.get(i);
         vertices[i] = (isSV ? SV.ptValue((SV) o) : (P3d) o);
       }
+      o = info.get("explodeOffset");
+      if (o != null)
+        setExplodeOffset(((Number) o).doubleValue());
       o = info.get("elemNos");
       if (o != null) {
         lst = (isSV ? ((SV)o).getList() : (Lst<?>) o);
@@ -214,6 +219,8 @@ public class Polyhedron {
       }
       o = info.get("bsFlat");
       bsFlat = (o == null ? new BS() : isSV ? SV.getBitSet((SV)o, false) : (BS) o);
+      if (info.containsKey("volume"))
+        info.put("volume", getVolume());
     } catch (Exception e) {
       return null;
     }
@@ -499,6 +506,45 @@ public class Polyhedron {
     offset = v;
     for (int i = vertices.length; --i >= 0;)
       vertices[i].add(value);
+  }
+
+  P3d[] v0;
+  
+  /**
+   * Specifically for Brillouin zones. From absolute {0 0 0} outward.
+   * Only used during construction.
+   * 
+   * @param value
+   */
+  public void setExplodeOffset(double value) {
+    if (id == null || center == null || value == 0)
+      return;
+    double d = center.length();
+    if (d < 0.0001d)
+      return;
+    P3d v = P3d.newP(center);
+    v.scale(value / d);
+    setOffset(v);
+  }
+
+
+  public void list(SB sb) {
+    if (id == null) {
+      sb.append(" atomIndex:" + centralAtom.i);
+      sb.append(" atomName:" + centralAtom.getAtomName());
+      sb.append(" element:" + centralAtom.getElementSymbol());
+    } else {
+      sb.append(" id:" + id);
+      sb.append("; center:" + PT.sprintf("{%6.3p %6.3p %6.3p}", "p", new Object[] { center }))
+        .append("; visible:" + visible);
+    }
+    sb.append("; model:" + modelIndex)
+    .append("; vertices:" + nVertices)
+    .append("; faces:" + faces.length)
+    .append("; volume:" + PT.formatD(getVolume().doubleValue(), 1, 3, false, false));
+    if (scale != 1)
+        sb.append("; scale:" + scale);
+    sb.append("\n");
   }
 
 }

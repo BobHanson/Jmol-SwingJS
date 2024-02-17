@@ -197,16 +197,14 @@ public abstract class Shape {
     // balls, dots, other atomshapes
   }
 
-  @SuppressWarnings("unchecked")
+  /**
+   * @param propertyName 
+   * @param value 
+   * @param bsSelected  ignored
+   */
   protected void setPropS(String propertyName, Object value, BS bsSelected) {
     if (propertyName == "setProperties") {
-      if (bsSelected == null)
-        bsSelected = vwr.bsA();
-      Lst<Object[]> propertyList = (Lst<Object[]>) value;
-      while (propertyList.size() > 0) {
-        Object[] data = propertyList.removeItemAt(0);
-        setProperty(((String) data[0]).intern(), data[1], bsSelected);
-      }
+      setProperties(value);
       return;
     }
     if (propertyName == "translucentLevel") {
@@ -218,9 +216,26 @@ public abstract class Shape {
       return;
     }
 
-    Logger.warn("unassigned " + JC.shapeClassBases[shapeID] + " + shape setProperty:" + propertyName + ":" + value);
+    Logger.warn("unassigned " + JC.shapeClassBases[shapeID]
+        + " + shape setProperty:" + propertyName + ":" + value);
   }
 
+  public void setProperties(Object value) {
+    BS bsSelected = vwr.bsA();
+    if (value instanceof Lst) {
+      @SuppressWarnings("unchecked")
+      Lst<Object[]> propertyList = (Lst<Object[]>) value;
+      while (propertyList.size() > 0) {
+        Object[] data = propertyList.removeItemAt(0);
+        setProperty(((String) data[0]).intern(), data[1], bsSelected);
+      }
+    } else {
+      Object[][] data = ((Object[][]) value);
+      for (int i = 0, n = data.length; i < n; i++) {
+        setProperty(((String) data[i][0]).intern(), data[i][1], bsSelected);
+      }
+    }
+  }
   /**
    * 
    * @param property

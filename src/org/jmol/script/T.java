@@ -1968,7 +1968,6 @@ public class T {
         "branch",
         "brillouin",
         "bzone",
-        "wignerSeitz",
         "cache",
         "carbohydrate",
         "cell",
@@ -2378,6 +2377,7 @@ public class T {
        "vertices",
        "width",
        "wigner",
+       "wignerSeitz",
   
        // set params
   
@@ -3044,7 +3044,6 @@ public class T {
         branch,                             // "branch"
         brillouin,                          // "brillouin"
         -1,                                 // "bzone"
-        -1,                                 // "wignerSeitz"
         cache,                              // "cache"
         carbohydrate,                       // "carbohydrate"
         cell,                               // "cell"
@@ -3454,6 +3453,7 @@ public class T {
         vertices,                           //        "vertices"
         width,                              //        "width"
         wigner,                             //        "wigner"
+        -1,                                 //        "wignerSeitz"
 
                 // set params
 

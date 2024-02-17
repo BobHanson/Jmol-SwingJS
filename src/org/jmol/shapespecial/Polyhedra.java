@@ -157,7 +157,9 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
         centers = bs;
         iHaveCenterBitSet = true;
       }
+      Map<String, Object> info = this.info;
       deletePolyhedra();
+      this.info = info;
       buildPolyhedra();
       return;
     }
@@ -270,6 +272,9 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
     if ("info" == propertyName) {
       info = (Map<String, Object>) value;
+      Object o = info.get("id"); 
+      if (o != null)
+        thisID = (o instanceof SV ? ((SV) o).asString() : o.toString());
       centers = (info.containsKey("center") ? null : BSUtil.newAndSetBit(((SV) info
           .get("atomIndex")).intValue));
       iHaveCenterBitSet = (centers != null);
@@ -321,7 +326,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
           .intValue()) : C.INHERIT_ALL);
       short colix = C.getColixO(isPhase ? cvalue : value);
       Polyhedron p;
-      BS bs1 = findPolyBS(bs);
+      BS bs1 = findPolyBS(bs, false);
       for (int i = bs1.nextSetBit(0); i >= 0; i = bs1.nextSetBit(i + 1)) {
         p = polyhedrons[i];
         if (p.id == null) {
@@ -343,7 +348,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
       // but from Color we need to identify the centers.
       boolean isTranslucent = (value.equals("translucent"));
       if (thisID != null) {
-        BS bs1 = findPolyBS(bs);
+        BS bs1 = findPolyBS(bs, false);
         Polyhedron p;
         for (int i = bs1.nextSetBit(0); i >= 0; i = bs1.nextSetBit(i + 1)) {
           p = polyhedrons[i];
@@ -456,19 +461,19 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
   }
 
   private void pointsPolyhedra(BS bs, double pointScale) {
-    bs = findPolyBS(thisID == null ? bs : null);
+    bs = findPolyBS(thisID == null ? bs : null, false);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
       polyhedrons[i].pointScale = pointScale;  
   }
 
   private void scalePolyhedra(double scale) {
-    BS bs = findPolyBS(null);
+    BS bs = findPolyBS(null, false);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
       polyhedrons[i].scale = scale;
   }
 
   private void offsetPolyhedra(P3d value) {
-    BS bs = findPolyBS(null);
+    BS bs = findPolyBS(null, false);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
       polyhedrons[i].setOffset(P3d.newP(value));
   }
@@ -484,6 +489,14 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
   @Override
   public Object getProperty(String property, int i) {
+    if ("list".equals(property)) {
+      SB sb = new SB();
+      for (i = 0; i < polyhedronCount; i++) {
+        sb.appendI(i + 1);
+        polyhedrons[i].list(sb);
+      }
+      return sb.toString();
+    }
     Map<String, Object> info = polyhedrons[i].getInfo(vwr, property);
     return (property.equalsIgnoreCase("info") ? info : info.get(property));
   }
@@ -504,7 +517,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
       return checkID(id);
     }
     if (property == "getAtomsWithin"){
-      p = findPoly(id, iatom, true);
+      p = findPoly(id, iatom, true, false);
       if (p == null)
         return false;
       data[2] = getAtomsWithin(p, ((Number) data[1]).doubleValue());
@@ -512,7 +525,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
     }
     if (property == "info") {
       // note that this does not set data[1] to null -- see ScriptExpr
-      p = findPoly(id, iatom, true);
+      p = findPoly(id, iatom, true, false);
       if (p == null)
         return false;
       data[1] = p.getInfo(vwr, "info");
@@ -520,7 +533,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
     }
     if (property == "syminfo") {
       // note that this does not set data[1] to null -- see ScriptExpr
-      p = findPoly(id, iatom, true);
+      p = findPoly(id, iatom, true, false);
       if (p == null)
         return false;
       p.getSymmetry(vwr, true);
@@ -528,7 +541,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
       return true;
     }
     if (property == "points") {
-      p = findPoly(id, iatom, false);
+      p = findPoly(id, iatom, false, false);
       if (p == null)
         return false;
       data[1] = p.vertices;
@@ -553,7 +566,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
       if (mat == null)
         return false;
       BS bsMoved = (BS) data[0];
-      BS bs = findPolyBS(bsMoved);
+      BS bs = findPolyBS(bsMoved, false);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
         polyhedrons[i].move(mat, bsMoved);
       return true;
@@ -631,12 +644,13 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
       if (d > maxDistance)
         maxDistance = d;
     }
-    BS bsAtoms = BSUtil.copy(vwr.getAtomsNearPt(maxDistance + offset, center, null));
+    BS bsAtoms = new BS();
+    vwr.ms.getAtomsWithin(maxDistance + offset, center, bsAtoms, p.modelIndex);
     Atom[] atoms = ms.at;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       for (int f = faces.length; --f >= 0;) {
         //System.out.println(MeasureD.distanceToPlane(p.planes[f], atoms[i]));
-        if (MeasureD.distanceToPlane(p.planes[f], atoms[i]) > offset + 0.001f) {
+        if (MeasureD.distanceToPlane(p.planes[f], atoms[i]) > offset + 0.001d) {
           bsAtoms.clear(i);
           break;
         }
@@ -648,7 +662,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
   private boolean checkID(String thisID) {
     this.thisID = thisID;
-      return (!findPolyBS(null).isEmpty());
+      return (!findPolyBS(null, false).isEmpty());
    }
 
   /**
@@ -656,27 +670,39 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
    * @param id  may be null
    * @param iatom  may be < 0 to (along with id==null) to get matching polyhedron 
    * @param allowCollapsed
+   * @param andDelete 
    * @return Polyhedron or null
    */
-  private Polyhedron findPoly(String id, int iatom, boolean allowCollapsed) {
+  private Polyhedron findPoly(String id, int iatom, boolean allowCollapsed, boolean andDelete) {
     for (int i = polyhedronCount; --i >= 0;) {
       Polyhedron p = polyhedrons[i]; 
-      if (p.id == null ? p.centralAtom.i == iatom : p.id.equalsIgnoreCase(id))
+      if (p.id == null ? p.centralAtom.i == iatom : p.id.equalsIgnoreCase(id)) {
+        if (andDelete) {
+          polyhedronCount--;
+          for (; i < polyhedronCount; i++)
+            polyhedrons[i] = polyhedrons[i + 1];
+        }
         return (allowCollapsed || !polyhedrons[i].collapsed ? polyhedrons[i] : null);
+      }
     }
    return null;
   }
 
   private BS bsPolys = new BS();
   
-  private BS findPolyBS(BS bsCenters) {
+  private BS findPolyBS(BS bsCenters, boolean isAll) {
     BS bs = bsPolys;
     bs.clearAll();
-    Polyhedron p;
-    for (int i = polyhedronCount; --i >= 0;) {
-      p = polyhedrons[i];
-      if (p.id == null ? bsCenters != null && bsCenters.get(p.centralAtom.i) : isMatch(p.id))
-        bs.set(i);
+    if (isAll) {
+      bs.setBits(0, polyhedronCount);
+    } else {
+      Polyhedron p;
+      for (int i = polyhedronCount; --i >= 0;) {
+        p = polyhedrons[i];
+        if (p.id == null ? bsCenters != null && bsCenters.get(p.centralAtom.i)
+            : isMatch(p.id))
+          bs.set(i);
+      }
     }
     return bs;
   }
@@ -708,7 +734,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
   private void deletePolyhedra() {
     int newCount = 0;
     byte pid = PAL.pidOf(null);
-    BS bs = findPolyBS(centers);
+    BS bs = findPolyBS(centers, false);
     for (int i = 0; i < polyhedronCount; ++i) {
       Polyhedron p = polyhedrons[i];
       if (bs.get(i)) {
@@ -724,7 +750,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
   }
 
   private void setVisible(boolean visible) {
-    BS bs = findPolyBS(centers);
+    BS bs = findPolyBS(centers, false);
     Atom[] atoms = ms.at;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Polyhedron p = polyhedrons[i];
@@ -736,9 +762,14 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
   private void buildPolyhedra() {
     Polyhedron p = null;
-    if (centers == null)
+    if (info == null && centers == null && (center == null || nPoints == 0))
       return;
-    if (thisID != null) {
+    if (info != null && info.containsKey("id")) {
+      Object o = info.get("id"); 
+      thisID = (o instanceof SV ? ((SV) o).asString() : o.toString());
+      //Polyhedron pold = findPoly(thisID, -1, true, true);
+      p = new Polyhedron().setInfo(vwr, info, ms.at);
+    } else if (thisID != null) {
       if (PT.isWild(thisID))
         return;
       if (center != null) {
@@ -746,10 +777,6 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
           setPointsFromBitset();
         p = validatePolyhedron(center, nPoints);
       }
-    } else if (info != null && info.containsKey("id")) {
-      Object o = info.get("id"); 
-      thisID = (o instanceof SV ? ((SV) o).asString() : o.toString());
-      p = new Polyhedron().setInfo(vwr, info, ms.at);
     }
     if (p != null) {
       addPolyhedron(p);

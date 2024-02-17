@@ -18,7 +18,7 @@ public abstract class ScriptError implements JmolScriptEvaluator {
   public Viewer vwr;
   public boolean chk;
 
-  protected boolean ignoreError;
+  public boolean ignoreError;
   protected boolean error;
   protected String errorMessage;
   protected String errorMessageUntranslated;

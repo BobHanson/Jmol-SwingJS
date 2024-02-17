@@ -396,34 +396,36 @@ public class ModelSet extends BondCollection {
     P3d[] offsets = new P3d[mc];
     for (int i = mc; --i >= 0;)
       offsets[i] = new P3d();
-    int lastModel = 0;
+    int lastModel = -1;
     int n = 0;
-    P3d offset = offsets[0];
-    boolean asTrajectory = (trajectory != null && trajectory.steps.size() == mc);
+    P3d lastOffset = null;
+    boolean   asTrajectory = (trajectory != null && trajectory.steps.size() == mc);
     int m1 = (asTrajectory ? mc : 1);
-    offsets[0].set(0, 0, 0);
     for (int m = 0; m < m1; m++) {
       if (asTrajectory)
         setTrajectory(m);
       for (int i = 0; i <= ac; i++) {
+        if (i < ac && isDeleted(at[i]))
+          continue;
         if (i == ac || at[i].mi != lastModel) {
           if (n > 0) {
-            offset.scale(-1.0d / n);
+            lastOffset.scale(-1.0d / n);
             if (lastModel != 0)
-              offset.sub(offsets[0]);
+              lastOffset.sub(offsets[0]);
             n = 0;
           }
           if (i == ac)
             break;
           lastModel = at[i].mi;
-          offset = offsets[lastModel];
+          lastOffset = offsets[lastModel];
         }
         if (!bsAtoms.get(i))
           continue;
-        offset.add(at[i]);
+        lastOffset.add(at[i]);
         n++;
       }
     }
+    offsets[0].set(0, 0, 0);
     return offsets;
   }
 

@@ -799,6 +799,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public boolean getState(ModelSet ms, int modelIndex, SB commands) {
+    boolean isAssigned = (ms.getInfo(modelIndex, "spaceGroupAssigned") != null);
     T3d pt = getFractionalOffset();
     boolean loadUC = false;
     if (pt != null && (pt.x != 0 || pt.y != 0 || pt.z != 0)) {
@@ -811,11 +812,13 @@ public class Symmetry implements SymmetryInterface {
           .append(SimpleUnitCell.escapeMultiplier(ptm));
       loadUC = true;
     }
-    boolean isAssigned = (ms.getInfo(modelIndex, "spaceGroupAssigned") != null);
     String sg = (String) ms.getInfo(modelIndex, "spaceGroup");
     if (isAssigned && sg != null) {
+      // first one may not be read, but it is important to have it
+      // in case there is an issue with assigning the spacegroup
       commands.append("\n UNITCELL " + Escape.e(ms.getUnitCell(modelIndex).getUnitCellVectors()));
       commands.append("\n MODELKIT SPACEGROUP " + PT.esc(sg));
+      commands.append("\n UNITCELL " + Escape.e(ms.getUnitCell(modelIndex).getUnitCellVectors()));
       loadUC = true;
     }
     return loadUC;
@@ -888,11 +891,12 @@ public class Symmetry implements SymmetryInterface {
           }
         }
       }
-      for (int j = lst.size(); --j >= 0;)
+      for (int j = lst.size(); --j >= 0;) {
         pt = lst.get(j);
         if (isRandom)
           pt.scale(0.5f);
         unitCell.toCartesian(pt, true); // ignoreOffset
+      }
     }
     return lst;
   }
@@ -1075,7 +1079,7 @@ public class Symmetry implements SymmetryInterface {
     int nops = ops.length;
     for (int i = 1; i < nops; i++) {
       p.setT(pt);
-      unitCell.toFractional(p, true);
+      unitCell.toFractional(p, false);
       // unitize here should take care of all Wyckoff positions
       unitCell.unitize(p);
       p0.setT(p);

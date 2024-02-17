@@ -521,18 +521,21 @@ public class SimpleUnitCell {
    * @return oabc
    */
   public static T3d[] getReciprocal(T3d[] abc, T3d[] ret, double scale) {
+    int off = (abc.length == 4 ? 1 : 0);
+    P3d[] rabc = new P3d[4];
+    rabc[0] = (off == 1 ? P3d.newP(abc[0]) : new P3d()); // origin
     if (scale == 0)
       scale = 2 * Math.PI;
-    P3d[] rabc = new P3d[4];
-    int off = (abc.length == 4 ? 1 : 0);
-    rabc[0] = (off == 1 ? P3d.newP(abc[0]) : new P3d()); // origin
     // a' = 2pi/V * b x c  = 2pi * (b x c) / (a . (b x c))
     // b' = 2pi/V * c x a 
     // c' = 2pi/V * a x b 
     for (int i = 0; i < 3; i++) {
       P3d v = rabc[i + 1] = new P3d();
       v.cross(abc[((i + 1) % 3) + off], abc[((i + 2) % 3) + off]);
-      v.scale(scale / abc[i + off].dot(v));
+      double vol = abc[i + off].dot(v);
+      if (scale == -1)
+        scale = Math.sqrt(vol);
+      v.scale(scale / vol);
     }
     if (ret == null)
       return rabc;
@@ -561,10 +564,14 @@ public class SimpleUnitCell {
     }
     if (ucnew == null)
       return null;
+    return setAbcFromParams(params, ucnew);
+  }
+
+  public static T3d[] setAbcFromParams(double[] params, T3d[] ucnew) {
     double[] f = newA(params).getUnitCellAsArray(true);
-      ucnew[1].set(f[0], f[1], f[2]);
-      ucnew[2].set(f[3], f[4], f[5]);
-      ucnew[3].set(f[6], f[7], f[8]);
+    ucnew[1].set(f[0], f[1], f[2]);
+    ucnew[2].set(f[3], f[4], f[5]);
+    ucnew[3].set(f[6], f[7], f[8]);
     return ucnew;
   }
 

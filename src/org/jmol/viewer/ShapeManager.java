@@ -172,6 +172,12 @@ public class ShapeManager {
     shapes = new Shape[JC.SHAPE_MAX];
   }
   
+  public void setShapeProperties(int shapeID, Object[]... values) {
+    vwr.setShapeErrorState(shapeID, "set properties");
+    loadShape(shapeID).setProperties(values);
+    vwr.setShapeErrorState(-1, null);
+  }
+
   /**
    * @param shapeID
    * @param size in milliangstroms

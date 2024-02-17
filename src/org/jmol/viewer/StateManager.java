@@ -23,27 +23,26 @@
 */
 package org.jmol.viewer;
 
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.jmol.api.JmolSceneGenerator;
-import javajs.util.BS;
-import javajs.util.Lst;
-
+import org.jmol.api.SymmetryInterface;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelset.Orientation;
 import org.jmol.script.SV;
 import org.jmol.script.T;
-
 import org.jmol.util.BSUtil;
 import org.jmol.util.Elements;
+import org.jmol.util.Escape;
 
+import javajs.util.BS;
+import javajs.util.Lst;
 import javajs.util.SB;
-
-import java.util.Arrays;
-import java.util.Map.Entry;
 
 public class StateManager {
 
@@ -123,6 +122,7 @@ public class StateManager {
   private String lastState = "";
   private String lastShape = "";
   private String lastCoordinates = "";
+  private String lastUnitcell = "";
 
   StateManager(Viewer vwr) {
     this.vwr = vwr;
@@ -134,6 +134,7 @@ public class StateManager {
     vwr.setShowUnitCell(false);
     global.clear();
   }
+
 
   /**
    * Reset lighting to Jmol defaults
@@ -250,7 +251,37 @@ public class StateManager {
     vwr.selectStatus(bsSelected, false, 0, false, false);
     return true;
   }
+  
+  public void saveUnitCell(String saveName) {
+    if (saveName.equalsIgnoreCase("DELETE")) {
+      deleteSavedType("Unitcell_");
+      return;
+    }
+    saveName = lastUnitcell = "Unitcell_" + saveName;
+    SymmetryInterface uc = vwr.getCurrentUnitCell();
+    if (uc != null) {
+      String state = "UNITCELL " + Escape.e(uc.getUnitCellVectors());
+      saved.put(saveName, "unitcell reset;" + state);
+    }
+  }
 
+  public String getSavedUnitCell(String saveName) {
+    String name = (saveName.length() > 0 ? "Unitcell_" + saveName
+        : lastUnitcell);
+    String ucstate = (String) getNoCase(saved, name);
+    return ucstate;
+  }
+  
+  public boolean restoreUnitCell(String saveName) {
+    String ucstate = getSavedUnitCell(saveName);
+    if (ucstate == null) {
+      vwr.setModelCagePts(-1, null, null);
+      return false;
+    }
+    vwr.runScript(ucstate);
+    return true;
+  }
+  
   public void saveState(String saveName) {
     if (saveName.equalsIgnoreCase("DELETE")) {
       deleteSavedType("State_");
@@ -475,10 +506,15 @@ public class StateManager {
 
   public String getUndoInfo() {
     boolean auto = vwr.getBooleanProperty("undoAuto");
-    return (vwr.getBoolean(T.preservestate) ? "undoAuto=" + auto + (!auto ? "; user stack sizes: UNDO=" + getStack(T.undo).size() + ", REDO="
-        + getStack(T.redo).size() : "") : "SET preserveState = FALSE -- undo/redo is disabled");
+    return (vwr.getBoolean(T.preservestate)
+        ? "undoAuto=" + auto
+            + (!auto
+                ? "; user stack sizes: UNDO=" + getStack(T.undo).size()
+                    + ", REDO=" + getStack(T.redo).size()
+                : "")
+        : "SET preserveState = FALSE -- undo/redo is disabled");
   }
-  
+
 }
 
 class Scene {

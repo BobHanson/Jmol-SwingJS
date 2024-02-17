@@ -365,6 +365,8 @@ public class MeshSurface {
     // isosurfaceMesh only
   }
 
+  // in Legacy Jmol, these two methods are in org.jmol.util.TempArray
+  
   public static Object[] getSlabObjectType(int tok, Object data, boolean isCap, Object colorData) {
     return new Object[] { Integer.valueOf(tok), data, Boolean.valueOf(isCap), colorData };
   }

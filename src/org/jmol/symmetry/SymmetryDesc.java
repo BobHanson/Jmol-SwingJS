@@ -360,7 +360,6 @@ public class SymmetryDesc {
     return bsInfo;
   }
 
-  private static V3d vtemp = new V3d();
   private static P3d ptemp = new P3d();
   private static P3d ptemp2 = new P3d();
   private static P3d pta01 = new P3d();
@@ -442,10 +441,10 @@ public class SymmetryDesc {
     boolean isTimeReversed = (op.timeReversal == -1);
     if (scaleFactor == 0)
       scaleFactor = 1d;
-    ptemp.set(0, 0, 0);
     vtrans.set(0, 0, 0);
     P4d plane = null;
-    P3d pta00 = (ptFrom == null || Double.isNaN(ptFrom.x) ? new P3d() : ptFrom);
+    P3d pta00 = (ptFrom == null || Double.isNaN(ptFrom.x) ? 
+            uc.getCartesianOffset() : ptFrom);
     if (ptTarget != null) {
 
       // Check to see that this is the correct operator
@@ -456,8 +455,8 @@ public class SymmetryDesc {
 
       pta01.setT(pta00);
       pta02.setT(ptTarget);
-      uc.toFractional(pta01, true);
-      uc.toFractional(pta02, true);
+      uc.toFractional(pta01, false);
+      uc.toFractional(pta02, false);
       op.rotTrans(pta01);
       ptemp.setT(pta01);
       uc.unitize(pta01);
@@ -521,6 +520,7 @@ public class SymmetryDesc {
 
     // check for inversion
 
+    V3d vtemp = new V3d();
     vtemp.cross(vt1, vt2);
     boolean haveInversion = (vtemp.dot(vt3) < 0);
 
@@ -685,8 +685,8 @@ public class SymmetryDesc {
         pa1.scaleAdd2(0.5d, d, pta00);
         if (ptref.distance(pt0) > 0.1d) {
           trans = V3d.newVsub(pt0, ptref);
-          setFractional(uc, trans, ptemp, null);
-          ftrans.setT(ptemp);
+          ftrans.setT(trans);
+          uc.toFractional(ftrans, true);// ignore offset, as this is a vector
         } else {
           trans = null;
         }
@@ -776,7 +776,9 @@ public class SymmetryDesc {
         info1 = "Ci: " + strCoord(op, ptemp, op.isBio);
         type = "inversion center";
       } else if (isRotation) {
-        String screwtype = (isccw == null || haveInversion || pitch1 == 0 ? ""
+        String screwtype = (isccw == null 
+            //|| (haveInversion || pitch1 == 0)
+            ? ""
             : isccw == Boolean.TRUE ? "(+)" : "(-)");
         if (haveInversion) {
           // n-bar
@@ -790,7 +792,6 @@ public class SymmetryDesc {
 
         } else {
           info1 = "C" + (360 / ang) + screwtype + " axis";
-          //          System.out.println("SD " + info1);
         }
         type = info1;
       } else if (trans != null) {
@@ -827,12 +828,12 @@ public class SymmetryDesc {
 
     }
 
-    boolean isOK = true;
+    boolean isRightHand = true;
     boolean isScrew = (isRotation && !haveInversion && pitch1 != 0);
     if (!isScrew) {
       // not a screw axis
-      isOK = checkHandedness(uc, ax1);
-      if (!isOK) {
+      isRightHand = checkHandedness(uc, ax1);
+      if (!isRightHand) {
         ang1 = -ang1;
         if (ang1 < 0)
           ang1 = 360 + ang1;
@@ -918,7 +919,7 @@ public class SymmetryDesc {
 
             ptr.setT(pa1);
 
-            if (!isOK) {
+            if (!isRightHand) {
               if (!isSpecial && !isSpaceGroup)
                 pa1.sub2(pa1, vtemp);
             }
@@ -949,14 +950,10 @@ public class SymmetryDesc {
                     drawLine(draw1, drawid + "rotLine2", 0.1d, ptinv, ipt,
                         "red");
                   }
-                } else {
-                  if (!isSpecial) {
-                    scale = pta00.distance(ptr);
-                    drawLine(draw1, drawid + "rotLine1", 0.1d, pta00, ptr,
-                        "red");
-                    drawLine(draw1, drawid + "rotLine2", 0.1d, ptinv, ptr,
-                        "red");
-                  }
+                } else if (!isSpecial) {
+                  scale = pta00.distance(ptr);
+                  drawLine(draw1, drawid + "rotLine1", 0.1d, pta00, ptr, "red");
+                  drawLine(draw1, drawid + "rotLine2", 0.1d, ptinv, ptr, "red");
                 }
               }
             } else {
@@ -1010,7 +1007,7 @@ public class SymmetryDesc {
           if (ignore) {
             System.out.println("SD ignoring " + op.getOpTrans().length() + " "
                 + op.getOpTitle() + op.xyz);
-            //ignore = false;
+            //ignore = false; // set true for debugging only
           }
 
           P3d p2 = null;
@@ -1062,9 +1059,6 @@ public class SymmetryDesc {
           if (pitch1 > 0 && !haveInversion) {
             wp = "" + (90 - (int) (vtemp.length() * wscale / pitch1 * 90));
           }
-
-          //          System.out.println("SD " + ignore + vtemp + info1);
-
           if (!ignore) {
             String name = opType + order + "rotVector1";
             drawVector(draw1, drawid, name, "vector", THICK_LINE + wp, pa1,
@@ -1094,25 +1088,25 @@ public class SymmetryDesc {
             opType = drawid + "glide";
             switch (glideType) {
             case 'g':
-              color = "gold";          
+              color = "gold";
               break;
             case 'a':
-              color = "magenta";          
+              color = "magenta";
               break;
             case 'b':
-              color = "violet";          
+              color = "violet";
               break;
-            case 'c': 
+            case 'c':
               color = "blue";
               break;
             case 'n':
-              color = "orange";          
+              color = "orange";
               break;
             case 'd':
               color = "grey";
               break;
             default:
-              color = "grey";          
+              color = "grey";
               break;
             }
             // offset ever so slightly so that we can show both in #40
@@ -1140,7 +1134,6 @@ public class SymmetryDesc {
             boolean isCoincident = (isSpaceGroup && op.isCoincident);
             planeCenter = new P3d();
 
-            int pt = draw1.length();
             for (int i = v.size(); --i >= 0;) {
               P3d[] pts = (P3d[]) v.get(i);
               // these lines provide a rendering when side-on
@@ -1160,11 +1153,6 @@ public class SymmetryDesc {
               if (title != null)
                 draw1.append(" ").append(PT.esc(title));
             }
-
-            //            if (isCoincident) {
-            //              draw1.setLength(pt);
-            //            }
-            //            System.out.println("SD??coin" + op.isCoincident + op.opPlane + " " + op.getOpTitle() + " " + op.xyz);
           }
 
           // and JUST in case that does not work, at least draw a circle
@@ -1242,7 +1230,7 @@ public class SymmetryDesc {
               ptref.scaleAdd2(-0.5d, trans, ptref);
             }
           } else if (ptref == null) {
-            ptref = (isSpaceGroup ? new P3d() : P3d.newP(pta00));
+            ptref = (isSpaceGroup ? pta00 : P3d.newP(pta00));
           }
           if (ptref != null && !ignore) {
             drawVector(draw1, drawid, "transVector", "vector",
@@ -1514,22 +1502,6 @@ public class SymmetryDesc {
         .append(" color ").append(color);
     if (title != null)
       draw1.append(" \"" + title + "\"");
-  }
-
-  /**
-   * Set pt01 to pt00, possibly adding offset into unit cell
-   * 
-   * @param uc
-   * @param pt00
-   * @param pt01
-   * @param offset
-   */
-  private static void setFractional(SymmetryInterface uc, T3d pt00, P3d pt01,
-                                    P3d offset) {
-    pt01.setT(pt00);
-    if (offset != null)
-      uc.toUnitCell(pt01, offset);
-    uc.toFractional(pt01, false);
   }
 
   private static P3d rotTransCart(SymmetryOperation op, SymmetryInterface uc,

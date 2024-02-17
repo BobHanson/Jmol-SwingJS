@@ -11113,4 +11113,19 @@ public class Viewer extends JmolViewer
     return false;
   }
 
+  public void setModelCagePts(int iModel, T3d[] originABC, String name) {
+    if (iModel < 0)
+      iModel = am.cmi;
+    SymmetryInterface sym = Interface.getSymmetry(this, "cage");
+    if (sym == null && async)
+      throw new NullPointerException();
+    try {
+      ms.setModelCage(iModel,
+          originABC == null ? null : sym.getUnitCell(originABC, false, name));
+    } catch (Exception e) {
+      //
+    }
+  }
+
+
 }

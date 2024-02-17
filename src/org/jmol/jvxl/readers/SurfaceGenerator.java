@@ -296,7 +296,7 @@ public class SurfaceGenerator {
     }
 
     if ("propertyDistanceMax" == propertyName) {
-      params.propertyDistanceMax = ((Double) value).doubleValue();
+      params.propertyDistanceMax = ((Number) value).doubleValue();
       return true;
     }
 
@@ -322,7 +322,7 @@ public class SurfaceGenerator {
     if ("sigma" == propertyName) {
       // not all readers will take this, so we assign
       // cutoff to the value as well.
-      params.cutoff = params.sigma = ((Double) value).doubleValue();
+      params.cutoff = params.sigma = ((Number) value).doubleValue();
       params.cutoffRange = null;
       //params.isPositiveOnly = false;
       params.cutoffAutomatic = false;
@@ -330,7 +330,7 @@ public class SurfaceGenerator {
     }
 
     if ("cutoff" == propertyName) {
-      params.cutoff = ((Double) value).doubleValue();
+      params.cutoff = ((Number) value).doubleValue();
       params.cutoffRange = null;
       params.isPositiveOnly = false;
       params.cutoffAutomatic = false;
@@ -338,7 +338,7 @@ public class SurfaceGenerator {
     }
 
     if ("cutoffPositive" == propertyName) {
-      params.cutoff = ((Double) value).doubleValue();
+      params.cutoff = ((Number) value).doubleValue();
       params.cutoffRange = null;
       params.isPositiveOnly = true;
       params.isCutoffAbsolute = false;
@@ -370,12 +370,12 @@ public class SurfaceGenerator {
     }
 
     if ("scale" == propertyName) {
-      params.scale = ((Double) value).doubleValue();
+      params.scale = ((Number) value).doubleValue();
       return true;
     }
 
     if ("scale3d" == propertyName) {
-      params.scale3d = ((Double) value).doubleValue();
+      params.scale3d = ((Number) value).doubleValue();
       return true;
     }
 
@@ -385,7 +385,7 @@ public class SurfaceGenerator {
     }
 
     if ("resolution" == propertyName) {
-      double resolution = ((Double) value).doubleValue();
+      double resolution = ((Number) value).doubleValue();
       params.resolution = (resolution > 0 ? resolution : Double.MAX_VALUE);
       return true;
     }
@@ -474,12 +474,12 @@ public class SurfaceGenerator {
     }
 
     if ("red" == propertyName) {
-      params.valueMappedToRed = ((Double) value).doubleValue();
+      params.valueMappedToRed = ((Number) value).doubleValue();
       return true;
     }
 
     if ("blue" == propertyName) {
-      params.valueMappedToBlue = ((Double) value).doubleValue();
+      params.valueMappedToBlue = ((Number) value).doubleValue();
       if (params.valueMappedToRed > params.valueMappedToBlue) {
         double f = params.valueMappedToRed;
         params.valueMappedToRed = params.valueMappedToBlue;
@@ -534,7 +534,7 @@ public class SurfaceGenerator {
     }
 
     if ("withinDistance" == propertyName) {
-      params.distance = ((Double) value).doubleValue();
+      params.distance = ((Number) value).doubleValue();
       return true;
     }
 
@@ -588,12 +588,12 @@ public class SurfaceGenerator {
     }
 
     if ("envelopeRadius" == propertyName) {
-      params.envelopeRadius = ((Double) value).doubleValue();
+      params.envelopeRadius = ((Number) value).doubleValue();
       return true;
     }
 
     if ("cavityRadius" == propertyName) {
-      params.cavityRadius = ((Double) value).doubleValue();
+      params.cavityRadius = ((Number) value).doubleValue();
       return true;
     }
 
@@ -672,7 +672,7 @@ public class SurfaceGenerator {
     if ("colorDensity" == propertyName) {
       params.colorDensity = true;
       if (value != null)
-        params.pointSize = ((Double) value).doubleValue();
+        params.pointSize = ((Number) value).doubleValue();
       return false;
     }
     if ("fullPlane" == propertyName) {
@@ -695,7 +695,7 @@ public class SurfaceGenerator {
     }
 
     if ("extendGrid" == propertyName) {
-      params.extendGrid = ((Double) value).doubleValue();
+      params.extendGrid = ((Number) value).doubleValue();
       return true;
     }
 
@@ -710,7 +710,7 @@ public class SurfaceGenerator {
 
     // these next four set the reader themselves.
     if ("sphere" == propertyName) {
-      params.setSphere(((Double) value).doubleValue(), false);
+      params.setSphere(((Number) value).doubleValue(), false);
       readerData = Double.valueOf(params.distance);
       surfaceReader = newReader("IsoShapeReader");
       generateSurface();
@@ -719,7 +719,7 @@ public class SurfaceGenerator {
 
     // these next four set the reader themselves.
     if ("geodesic" == propertyName) {
-      params.setSphere(((Double) value).doubleValue(), true);
+      params.setSphere(((Number) value).doubleValue(), true);
       readerData = Double.valueOf(params.distance);
       surfaceReader = newReader("IsoShapeReader");
       generateSurface();
@@ -816,7 +816,7 @@ public class SurfaceGenerator {
 
     if ("molecular" == propertyName || "solvent" == propertyName
         || "sasurface" == propertyName || "nomap" == propertyName) {
-      params.setSolvent(propertyName, ((Double) value).doubleValue());
+      params.setSolvent(propertyName, ((Number) value).doubleValue());
       if (!params.isSilent)
         Logger.info(params.calculationType);
       processState();
