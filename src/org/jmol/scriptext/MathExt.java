@@ -271,6 +271,7 @@ public class MathExt {
     // spacegroup("ITA/all")  // all, as map
     // spacegroup("x,y,z;-x,-y,-z");
     // spacegroup("x,y,z;-x,-y,-z", [a b c alpha beta gamma]);
+    // spacegroup("x,y,z;-x,-y,-z&"); //space groups with all these operators
     // spacegroup("all");
 
     double[] unitCellParams = null;
@@ -3719,11 +3720,11 @@ public class MathExt {
 
     // options include:
 
-    //
     //  "axisVector", 
     //  "cartesianTranslation",
     //  "centeringVector", 
     //  "cif2", 
+    //  "count",
     //  "draw", 
     //  "fractionalTranslation", 
     //  "id", 
@@ -3830,6 +3831,10 @@ public class MathExt {
     case T.string:
       xyz = SV.sValue(args[0]);
       if (xyz != null) {
+        if (xyz.equalsIgnoreCase("count")) {
+          SymmetryInterface sym = vwr.getOperativeSymmetry();
+          return (narg != 1 ? false : mp.addXInt(sym == null ? 0 : sym.getSpaceGroupOperationCount()));
+        }
         invariant = xyz.equalsIgnoreCase("invariant");
         isWyckoff = xyz.equalsIgnoreCase("wyckoff");
       }
