@@ -2735,7 +2735,7 @@ public class ScriptCompiler extends ScriptTokenParser {
    * @param allowSptParen
    *        specifically for script/load command, first parameter xxx.spt(3,4,4)
    * 
-   * @return true or false
+   * @return true to handle as string, false to continue processing
    */
   private boolean lookingAtImpliedString(boolean allowSpace,
                                          boolean allowEquals,
@@ -2750,13 +2750,6 @@ public class ScriptCompiler extends ScriptTokenParser {
         .charAt(ichT + 1) == '{');
     if (isMath && (isID || !passVariableToString))
       return false;
-    //    if (isMath && passVariableToString) {
-    //      // zip past math expression untested.
-    //      ichT = Txt.ichMathTerminator(script, ichToken + 1, cchScript);
-    //      return (!isID && ichT != cchScript && (cchToken = ichT + 1 - ichToken) > 0);
-    //    }
-    //    if (isMath && !passVariableToString)
-    //      return false;
     // check implicit string for math expression here
     int ptSpace = -1;
     int ptLastChar = -1;
@@ -2806,10 +2799,14 @@ public class ScriptCompiler extends ScriptTokenParser {
       ++ichT;
     }
     // message/echo/label @x
-    // message/echo/label @{.....}
-    // message/echo/label @{....} testing  NOT ok
-    // message/echo/label @x bananas OK -- "@x bananas"
+    // message/echo/label @{...}
+    // message/echo/label @{...} testing -- ok -- "@{...} testing"
+    // message/echo/label @x bananas -- OK -- "@x bananas"
     // {... message/echo label ok }  
+    if (isVariable && (ptSpace < 0 || ptSpace > ptLastChar)) {
+      // trailing space -- consider this NOT a string and process the variable
+      return false;
+    }
     if (allowSpace)
       ichT = ptLastChar + 1;
     else if (ptSpace > 0)

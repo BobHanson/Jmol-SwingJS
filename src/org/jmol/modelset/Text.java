@@ -37,20 +37,6 @@ import javajs.util.SB;
 
 public class Text {
 
-  
-//mode == 0 indicates xyz position is absolute and sx sy sz are Angstroms
-//mode == 1 indicates xyz position is relative to atom position and sx sy sz are Angstroms
-//mode == 2 indicates xyz is absolute, and sx sy sz positions are screen pixels
-//mode == 3 indicates xyz is relative, and sx sy sz positions are screen pixels
-//mode == -1 indicates xyz are calculated 
-  
-public static final double PYMOL_MODE_FOFF      = -1;
-public static final double PYMOL_MODE_ABS_ANG    = 0;
-public static final double PYMOL_MODE_REL_ANG    = 1;
-public static final double PYMOL_MODE_ABS_SCREEN = 2;
-public static final double PYMOL_MODE_REL_SCREEN = 3;
-
-
   private Viewer vwr;
 
   public boolean doFormatText;
@@ -123,7 +109,6 @@ public static final double PYMOL_MODE_REL_SCREEN = 3;
   private void set(Font font, short colix, int align,
                    double scalePixelsPerMicron) {
     this.scalePixelsPerMicron = scalePixelsPerMicron;
-    //this.isEcho = isEcho;
     this.colix = colix;
     this.align = align;
     this.setFont(font, !isEcho);
@@ -253,7 +238,8 @@ public static final double PYMOL_MODE_REL_SCREEN = 3;
     if (!isEcho || pymolOffset != null) {
       boxXY[0] = movableX;
       boxXY[1] = movableY;
-      if (pymolOffset != null && pymolOffset[0] != 2 && pymolOffset[0] != 3) {
+      boolean isAng = !isPymolOffsetPixels();
+      if (pymolOffset != null && isAng) {
         // [1,2,3] are in Angstroms, not screen pixels
         double pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
         double pz = pymolOffset[3];
@@ -336,7 +322,7 @@ public static final double PYMOL_MODE_REL_SCREEN = 3;
       y0 += ascent + (lines.length - 1)/2d * lineHeight;
   }
 
-  private double getPymolXYOffset(double x, int width, double ppa) {
+  private static double getPymolXYOffset(double x, int width, double ppa) {
     double f = (x < -1 ? -1 : x > 1 ? 0 : (x - 1) / 2);
     //  x   f/width    offset/ppa
     // -3     -1         -2
@@ -538,6 +524,37 @@ public static final double PYMOL_MODE_REL_SCREEN = 3;
 
   // PyMOL-type offset
   // [mode, screenoffsetx,y,z (applied after tranform), positionOffsetx,y,z (applied before transform)]
+  
+//
+//new feature: set labelOffset [mode sx sy sz ax ay az] (3.1.15, never documented)
+//new feature: PyMOL-like label offset options:
+//   
+//   set labelOffset [sx, sy, sz]
+//   set labelOffset [mode, sx, sy, sz, ax, ay, az]
+//   
+// where
+//   
+//   sx,sy,sz are screen coord offsets 
+//    -- applied after view rotation
+//    -- sy > 0 LOWERS label
+//   ax,ay,az are xyz position (in Angstroms; applied before view rotation)
+//   mode == 0 indicates xyz position is absolute and sx sy sz are Angstroms
+//   mode == 1 indicates xyz position is relative to atom position and sx sy sz are Angstroms
+//   mode == 2 indicates xyz is absolute, and sx sy sz positions are screen pixels
+//   mode == 3 indicates xyz is relative, and sx sy sz positions are screen pixels
+//   defaults: mode == 1; ax = ay = az = 0
+//   
+//   
+
+public final static int PYMOL_LABEL_OFFSET_JMOL= -1;
+public final static int PYMOL_LABEL_OFFSET_REL = 1;
+public final static int PYMOL_LABEL_OFFSET_PIX = 2; // and not -1
+
+public final static int PYMOL_LABEL_OFFSET_ABS_ANG = 0;
+public final static int PYMOL_LABEL_OFFSET_REL_ANG = PYMOL_LABEL_OFFSET_REL;
+public final static int PYMOL_LABEL_OFFSET_ABS_PIX = PYMOL_LABEL_OFFSET_PIX;
+public final static int PYMOL_LABEL_OFFSET_REL_PIX = PYMOL_LABEL_OFFSET_REL | PYMOL_LABEL_OFFSET_PIX;
+  
   public double[] pymolOffset;
 
   protected int windowWidth;
@@ -699,27 +716,6 @@ public static final double PYMOL_MODE_REL_SCREEN = 3;
         + boxHeight);
   }
 
-//  
-//  new feature: set labelOffset [mode sx sy sz ax ay az] (3.1.15, never documented)
-//  new feature: PyMOL-like label offset options:
-//     
-//     set labelOffset [sx, sy, sz]
-//     set labelOffset [mode, sx, sy, sz, ax, ay, az]
-//     
-//   where
-//     
-//     sx,sy,sz are screen coord offsets 
-//      -- applied after view rotation
-//      -- sy > 0 LOWERS label
-//     ax,ay,az are xyz position (in Angstroms; applied before view rotation)
-//     mode == 0 indicates xyz position is absolute and sx sy sz are Angstroms
-//     mode == 1 indicates xyz position is relative to atom position and sx sy sz are Angstroms
-//     mode == 2 indicates xyz is absolute, and sx sy sz positions are screen pixels
-//     mode == 3 indicates xyz is relative, and sx sy sz positions are screen pixels
-//     defaults: mode == 1; ax = ay = az = 0
-//     
-//     
-
   /**
    * PyMOL will use 1 here for pymolOffset[0] for relative, 0 or absolute. Jmol
    * set labelOffset or set echo offset or measure offset will set -1, when
@@ -734,24 +730,41 @@ public static final double PYMOL_MODE_REL_SCREEN = 3;
    */
   public void getPymolScreenOffset(P3d atomPt, P3i screen, int zSlab, P3d pTemp,
                                    double sppm) {
-    double mode = pymolOffset[0];
-    if (atomPt != null && (Math.abs(mode) % 2) == 1)
+    boolean isPixel = isPymolOffsetPixels();
+    boolean isRelative = isPymolOffsetRelative();
+    if (atomPt != null && isRelative)
       pTemp.setT(atomPt);
     else
       pTemp.set(0, 0, 0);
     pTemp.add3(pymolOffset[4], pymolOffset[5], pymolOffset[6]);
     vwr.tm.transformPtScr(pTemp, screen);
-    if (mode == 2 || mode == 3) {
+    if (isPixel) {
       screen.x += pymolOffset[1];
       screen.y += pymolOffset[2];
       screen.z += pymolOffset[3];
     }
     setXYZs(screen.x, screen.y, screen.z, zSlab);
-    setScalePixelsPerMicron(sppm);
+    // commented out; this next was the problem with setFontScaling TRUE and a 3d echo with offset
+    //      setScalePixelsPerMicron(sppm);
+  }
+
+  private boolean isPymolOffsetRelative() {
+    int mode = (pymolOffset == null ? PYMOL_LABEL_OFFSET_JMOL : (int) pymolOffset[0]);
+    return ((mode & PYMOL_LABEL_OFFSET_REL) == PYMOL_LABEL_OFFSET_REL);
+  }
+
+  private boolean isPymolOffsetPixels() {
+    int mode = (pymolOffset == null ? PYMOL_LABEL_OFFSET_JMOL : (int) pymolOffset[0]);
+    return (mode != PYMOL_LABEL_OFFSET_JMOL && ((mode & PYMOL_LABEL_OFFSET_PIX) == PYMOL_LABEL_OFFSET_PIX));
+  }
+
+  public String getStateText() {
+    return (doFormatText ? PT.rep(text, "@{", "\\@{") : text);
   }
 
   @Override
   public String toString() {
     return textUnformatted;
   }
+
 }

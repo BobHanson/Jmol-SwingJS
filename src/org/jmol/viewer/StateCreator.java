@@ -1356,7 +1356,7 @@ public class StateCreator extends JmolStateCreator {
   private void getEchoState(SB sb, Text t) {
     // ECHO "%SCALE" uses unformatted text
     boolean isScale = (t != null && t.barPixels > 0);
-    String text = (t == null ? null : isScale ? t.textUnformatted : t.text);
+    String text = (t == null ? null : isScale ? t.textUnformatted : t.getStateText());
     if (text == null || !t.isEcho || t.target.equals("error"))
       return;
     //set echo top left
