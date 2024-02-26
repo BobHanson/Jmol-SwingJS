@@ -273,7 +273,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
     if ("info" == propertyName) {
       info = (Map<String, Object>) value;
       Object o = info.get("id"); 
-      if (o != null)
+      if (o != null) 
         thisID = (o instanceof SV ? ((SV) o).asString() : o.toString());
       centers = (info.containsKey("center") ? null : BSUtil.newAndSetBit(((SV) info
           .get("atomIndex")).intValue));

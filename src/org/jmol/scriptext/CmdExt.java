@@ -3753,6 +3753,7 @@ public class CmdExt extends ScriptExt {
     double radius = -1;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
     int noToParam = -1;
+    int atomPt = 0;
     P3d offset = null;
     double foffset = 0;
     String id = null;
@@ -3938,16 +3939,21 @@ public class CmdExt extends ScriptExt {
         }
         propertyValue = atomExpressionAt(i);
         i = eval.iToken;
+        atomPt = i;
         needsGenerating |= (i + 1 == slen);
         break;
       case T.color:
       case T.translucent:
       case T.opaque:
+        if (atomPt == i - 1)
+          needsGenerating = true;
         translucentLevel = getColorTrans(eval, i, true, colorArgb);
         i = eval.iToken;
         continue;
       case T.flat: // removed in Jmol 14.4 -- never documented; restored in Jmol 14.29.21
       case T.collapsed:
+        if (atomPt == i - 1)
+          needsGenerating = true;
         // COLLAPSED
         // COLLAPSED [faceCenterOffset]
         if (typeSeen)
@@ -3962,6 +3968,8 @@ public class CmdExt extends ScriptExt {
       case T.edges:
       case T.frontedges:
       case T.edgesonly:
+        if (atomPt == i - 1)
+          needsGenerating = true;
         if (edgeParameterSeen)
           error(ScriptError.ERROR_incompatibleArguments);
         edgeParameterSeen = true;
@@ -4001,6 +4009,8 @@ public class CmdExt extends ScriptExt {
         //$FALL-THROUGH$
       default:
         if (eval.isColorParam(i)) {
+          if (atomPt == i - 1)
+            needsGenerating = true;
           colorArgb[0] = eval.getArgbParam(i);
           if (eval.isCenterParameter(i))
             noToParam = eval.iToken + 1;

@@ -279,7 +279,6 @@ public class T {
 //public final static int label        see mathfunc
   public final static int message      = 5 /* must be odd */ | implicitStringCommand;
   public final static int pause        = 7 /* must be odd */ | implicitStringCommand;
-  public final static int scale        = 1 | scriptCommand | setparam;
 
   //these commands control flow
   //sorry about GOTO!
@@ -360,6 +359,9 @@ public class T {
   public final static int rotateSelected = scriptCommand | 49;
   public final static int save           = scriptCommand | 50;
 //public final static int script   see mathfunc
+
+  public final static int scale        = scriptCommand | 51 | setparam;
+
   public final static int selectionhalos = scriptCommand | 52 | deprecatedparam | defaultON;
 // public final static int show     see mathfunc
   public final static int slab         = scriptCommand | 53 | intparam | defaultON;

@@ -184,12 +184,15 @@ public class BZone {
     }
 
     /**
-     * Starting with 1, build the Brillouin zones as polyhedra, discarding the previous as we go
-     * if not "exploding".
+     * Starting with 1, build the Brillouin zones as polyhedra, discarding the
+     * previous as we go if not "exploding".
      * 
-     * @param scale scaling; Brillouin only
-     * @param explodeOffset separation of Brillouin zone sections; Brillouin and n > 1 only
-     * @param offset Cartesian offset of polyhedron; Wigner-Seitz only
+     * @param scale
+     *        scaling; Brillouin only
+     * @param explodeOffset
+     *        separation of Brillouin zone sections; Brillouin and n > 1 only
+     * @param offset
+     *        Cartesian offset of polyhedron; Wigner-Seitz only
      * 
      */
     public void createAllZones(double scale, double explodeOffset, P3d offset) {
@@ -226,10 +229,11 @@ public class BZone {
           //        //info = getProperty("shapeInfo.Polyhedra");  
           //        //bzones[1].pointGroup = info.select("(pointGroup) where id='"+`polyid+"'")[1];      
         }
-        vwr.showString("Brillouin Zone " + zone.index + " volume = "
-            + Math.round(zone.volume / volume1 * 1000) / 1000d + " subzones:"
-            + zone.subzones.size() + " new k-points:"
-            + zone.newLatticePts.size(), false);
+        if (!isWignerSeitz)
+          vwr.showString("Brillouin Zone " + zone.index + " volume = "
+              + Math.round(zone.volume / volume1 * 1000) / 1000d + " subzones:"
+              + zone.subzones.size() + " new k-points:"
+              + zone.newLatticePts.size(), false);
 
         if (i > 1 && explodeOffset == 0)
           cmd += "polyhedra id " + id + (i - 1) + "_* delete;";

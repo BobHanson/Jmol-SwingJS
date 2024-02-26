@@ -322,6 +322,7 @@ public class XtalSymmetry {
       asc.setCurrentModelInfo("latticeType", acr.latticeType);
       Object range = acr.fillRange;
       if (range instanceof String) {
+        setUnitCellSafely();
         String type = (String) range; // conventional or primitive
         if (type.equals(AtomSetCollectionReader.CELL_TYPE_CONVENTIONAL)) {
           range = symmetry.getConventionalUnitCell(acr.latticeType,
@@ -1615,7 +1616,7 @@ public class XtalSymmetry {
     P3d ptScale = P3d.new3(1 / params[0], 1 / params[1], 1 / params[2]);
     int i0 = asc.getAtomSetAtomIndex(asc.iSet);
     for (int i = asc.ac; --i >= i0;) {
-      Vibration v = (Vibration) asc.atoms[i].vib;
+      V3d v = asc.atoms[i].vib;
       if (v != null) {
         v.scaleT(ptScale);
       }

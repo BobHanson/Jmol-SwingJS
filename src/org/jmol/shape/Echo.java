@@ -65,7 +65,7 @@ public class Echo extends TextShape {
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
 
-     if ("thisID" == propertyName) {
+    if ("thisID" == propertyName) {
       if (value == null) {
         currentObject = null;
         thisID = null;
@@ -114,7 +114,8 @@ public class Echo extends TextShape {
         thisID = "%SCALE";
         setPropTS("text", value, null);
         scaleObject = currentObject;
-        if (scaleObject != null && objects.get(scaleObject.target) == scaleObject)
+        if (scaleObject != null
+            && objects.get(scaleObject.target) == scaleObject)
           setPropTS("delete", scaleObject, null);
         currentObject = scaleObject;
         return;
@@ -194,9 +195,11 @@ public class Echo extends TextShape {
       return;
     }
     if ("xyz" == propertyName) {
-      if (currentObject != null && vwr.getBoolean(T.fontscaling)) {
-        currentObject.setScalePixelsPerMicron(
-        vwr.getScalePixelsPerAngstrom(false) * 10000);
+      if (currentObject != null) {
+        if (vwr.getBoolean(T.fontscaling)) {
+          currentObject.setScalePixelsPerMicron(
+              vwr.getScalePixelsPerAngstrom(false) * 10000);
+        }
         currentObject.setXYZ((P3d) value, true);
       }
     }
@@ -293,7 +296,7 @@ public class Echo extends TextShape {
       }
       return;
     }
-    
+
     if ("offset" == propertyName) {
       if (currentObject != null) {
         currentObject.pymolOffset = (double[]) value;
@@ -301,10 +304,9 @@ public class Echo extends TextShape {
       return;
     }
 
-
     if ("align" == propertyName) {
       if (currentObject != null) {
-          currentObject.pymolOffset = null;
+        currentObject.pymolOffset = null;
       }
       // pass through
     }
