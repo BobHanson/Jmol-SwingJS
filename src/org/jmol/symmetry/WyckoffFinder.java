@@ -30,11 +30,15 @@ public class WyckoffFinder {
   public final static int WYCKOFF_RET_COORD = -2;
   public final static int WYCKOFF_RET_COORDS = -3;
   public final static int WYCKOFF_RET_COORDS_ALL = '*';
+  public final static int WYCKOFF_RET_GENERAL = 'G';
+  public final static int WYCKOFF_RET_CENTERING = 'C';
+  public final static int WYCKOFF_RET_CENTERING_STRING = 'S';
 
   private Lst<Object> positions;
   private int npos, ncent;
   protected P3d[] centerings;
   protected String[] centeringStr;
+  private Lst<Object> gpos;
 
   public WyckoffFinder() {
     // only used for dynamic instantiation from Symmetry.java
@@ -102,8 +106,8 @@ public class WyckoffFinder {
    * @return label or coordinate or label with centerings and coordinates or
    *         full list for space group
    */
-  String getStringInfo(UnitCell uc, P3d p, int returnType) {
-    String info = createInfo(uc, p, returnType);
+  Object getInfo(UnitCell uc, P3d p, int returnType) {
+    Object info = createInfo(uc, p, returnType);
     return (info == null ? "?" : info);
   }
 
@@ -135,26 +139,27 @@ public class WyckoffFinder {
    * 
    * @param uc
    * @param p
-   * @param returnType '*', -1, -2, -3, or a character label 'a'-'A' or 'G' for general
+   * @param returnType '*', -1, -2, -3, or a character label 'a'-'A' or 'G' for general or 'C' for centerings
    * @return an informational string
    */
   @SuppressWarnings("unchecked")
-  private String createInfo(UnitCell uc, P3d p, int returnType) {
+  private Object createInfo(UnitCell uc, P3d p, int returnType) {
     switch (returnType) {
-    case '*':
-      // all
+    case WYCKOFF_RET_CENTERING_STRING:
+      return getCenteringStr(-1,' ', null).toString().trim();      
+    case WYCKOFF_RET_CENTERING:
+      P3d[] ret = new P3d[centerings.length];
+      for (int i = ret.length; --i >= 0;)
+        ret[i] = centerings[i];
+      return ret;
+    case WYCKOFF_RET_COORDS_ALL:
       SB sb = new SB();
-      getCenteringStr(-1, sb);
+      getCenteringStr(-1, '+', sb);
       for (int i = npos; --i >= 0;) {
         Map<String, Object> map = (Map<String, Object>) positions.get(i);
         String label = (String) map.get("label");
         sb.appendC('\n').append(label);
-        if (i == 0) {
-          // general
-          sb.append(" (x,y,z)");
-        } else {
-          getList((Lst<Object>) map.get("coord"), label, sb);
-        }
+        getList(i == 0 ? gpos : (Lst<Object>) map.get("coord"), label, sb, (i == 0 ? ncent : 0));
       }
       return sb.toString();
     case WYCKOFF_RET_LABEL:
@@ -171,7 +176,11 @@ public class WyckoffFinder {
           case WYCKOFF_RET_COORD:
             return "(x,y,z)";
           case WYCKOFF_RET_COORDS:
-            return map.get("label") + "  (x,y,z)";
+            SB sbc = new SB();
+            sbc.append(label).appendC(' ');
+            getCenteringStr(-1, '+', sbc).appendC(' ');
+            getList(gpos, label, sbc, ncent);
+            return sbc.toString();
           }
         }
         Lst<Object> coords = (Lst<Object>) map.get("coord");
@@ -187,23 +196,32 @@ public class WyckoffFinder {
             case WYCKOFF_RET_COORDS:
               SB sbc = new SB();
               sbc.append(label).appendC(' ');
-              getCenteringStr(-1, sbc).appendC(' ');
-              getList(coords, label, sbc);
+              getCenteringStr(-1, '+', sbc).appendC(' ');
+              getList(coords, label, sbc, 0);
               return sbc.toString();
             }
           }
         }
       }
       break;
+    case WYCKOFF_RET_GENERAL:
     default:
+      // specific letter
       String letter = "" + (char) returnType;
-      boolean isGeneral = (letter.charAt(0) == 'G');
+      boolean isGeneral = (returnType == WYCKOFF_RET_GENERAL);
       for (int i = isGeneral ?  1 : npos; --i >= 0;) {
         Map<String, Object> map = (Map<String, Object>) positions.get(i);
         if (isGeneral || map.get("label").equals(letter)) {
-          return (i == 0 ? "(x,y,z)"
-              : getList((Lst<Object>) map.get("coord"), letter, null)
-                  .toString());
+          SB sbc = new SB();
+          Lst<Object> coords = (i == 0 ? gpos : (Lst<Object>) map.get("coord"));
+          getList(coords, letter, sbc, 0);
+          if (i > 0 &&  ncent > 0) {
+            M4d tempOp = new M4d();
+            for (int j = 0; j < ncent; j++) {
+              addCentering(coords, centerings[j], tempOp, sbc);
+            }              
+          }
+          return sbc.toString();
         }
       }
       break;
@@ -242,6 +260,7 @@ public class WyckoffFinder {
   @SuppressWarnings("unchecked")
   private WyckoffFinder(Map<String, Object> map) {
     if (map != null) {
+      gpos = (Lst<Object>) map.get("gp");
       Map<String, Object> wpos = (Map<String, Object>) map.get("wpos");
       positions = (Lst<Object>) wpos.get("pos");
       npos = positions.size();
@@ -259,31 +278,40 @@ public class WyckoffFinder {
     }
   }
 
-  private SB getCenteringStr(int index, SB sb) {
+  private SB getCenteringStr(int index, char sep, SB sb) {
     if (sb == null)
       sb = new SB();
     if (ncent == 0)
       return sb;
     if (index >= 0) {
-      sb.appendC('+');
+      sb.appendC(sep);
       return wrap(centeringStr[index], sb);
     }
     for (int i = 0; i < ncent; i++) {
-      sb.appendC('+');
+      sb.appendC(sep);
       wrap(centeringStr[i], sb);
     }
     return sb;
   }
 
-  private static SB getList(Lst<Object> coords, String letter, SB sb) {
+  private static SB getList(Lst<Object> coords, String letter, SB sb, int n) {
     if (sb == null)
       sb = new SB();
-    for (int c = 0, n = coords.size(); c < n; c++) {
+    n = (n == 0 ? coords.size() : coords.size() / (n + 1));
+    for (int c = 0; c < n; c++) {
       WyckoffCoord coord = getWyckoffCoord(coords, c, letter);
       sb.append(" ");
       coord.asString(sb, false);
     }
     return sb;
+  }
+
+  private void addCentering(Lst<Object> coords, P3d centering, M4d tempOp, SB sb) {
+    for (int n = coords.size(), c = 0; c < n; c++) {
+      WyckoffCoord coord = (WyckoffCoord)coords.get(c);
+      sb.append(" ");
+      coord.asStringCentered(centering, tempOp, sb);
+    }
   }
 
   private static WyckoffCoord getWyckoffCoord(Lst<Object> coords, int c,
@@ -408,6 +436,18 @@ public class WyckoffFinder {
       this.xyz = xyz;
       this.label = label;
       create(xyz);
+    }
+
+    public void asStringCentered(P3d centering, M4d tempOp, SB sb) {
+      tempOp.setM4(op);
+      tempOp.add(centering);
+      sb.appendC(' ');
+      String s = ","
+          + SymmetryOperation.getXYZFromMatrix(tempOp, false, true, true)
+          + ",";
+      s = PT.rep(s, ",,", ",0,");
+      s = PT.rep(s, ",+", ",");
+      sb.appendC('(').append(s.substring(1, s.length() - 1)).appendC(')');
     }
 
     /**
@@ -548,16 +588,13 @@ public class WyckoffFinder {
     private void create(String p) {
       int nxyz = (p.indexOf('x') >= 0 ? 1 : 0) + (p.indexOf('y') >= 0 ? 1 : 0)
           + (p.indexOf('z') >= 0 ? 1 : 0);
-
-      if (nxyz == 1 || nxyz == 2) {
-        double[] a = new double[16];
-        String[] v = PT.split(xyz, ",");
-        getRow(v[0], a, 0);
-        getRow(v[1], a, 4);
-        getRow(v[2], a, 8);
-        a[15] = 1;
-        op = M4d.newA16(a);
-      }
+      double[] a = new double[16];
+      String[] v = PT.split(xyz, ",");
+      getRow(v[0], a, 0);
+      getRow(v[1], a, 4);
+      getRow(v[2], a, 8);
+      a[15] = 1;
+      op = M4d.newA16(a);
       switch (nxyz) {
       case 0:
         type = TYPE_POINT;
