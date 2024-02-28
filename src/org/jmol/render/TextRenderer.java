@@ -27,10 +27,11 @@ package org.jmol.render;
 
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.modelset.Text;
+import org.jmol.util.C;
 import org.jmol.util.Font;
 import org.jmol.util.GData;
 import org.jmol.viewer.JC;
-import org.jmol.viewer.TransformManager;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.P3i;
 
@@ -38,7 +39,7 @@ class TextRenderer {
 
   static final int MODE_IS_ANTIALIASED = 4;
 
-  static boolean render(TransformManager tm, Text text,
+  static boolean render(Viewer vwr, Text text,
                         JmolRendererInterface g3d, double scalePixelsPerMicron,
                         double imageFontScaling, double[] boxXY, double[] temp,
                         P3i pTemp, short pointerColix, int pointerWidth,
@@ -49,15 +50,18 @@ class TextRenderer {
     boolean isAbsolute = ((mode & JC.LABEL_EXPLICIT) != 0);
     boolean doPointer = ((mode & JC.LABEL_POINTER_ON) != 0);
     boolean isAntialiased = ((mode & MODE_IS_ANTIALIASED) != 0);
-    boolean showText = g3d.setC(text.colix);
+    short colix = text.colix;
+    if (text.isEcho && C.getArgb(colix) == Text.COLOR_CONTRAST)
+      colix = vwr.cm.colixBackgroundContrast;
+    boolean showText = g3d.setC(colix);
     if (!showText && (text.image == null
         && (text.bgcolix == 0 || !g3d.setC(text.bgcolix))))
       return false;
-    if (tm != null && text.valign == JC.ECHO_XYZ)
-      calcBarPixelsXYZ(tm, text, pTemp, false);
+    if (text.isEcho && text.valign == JC.ECHO_XYZ)
+      calcBarPixelsXYZ(vwr, text, pTemp, false);
     text.setPosition(scalePixelsPerMicron, imageFontScaling, isAbsolute, boxXY);
-    int barPixels = (tm != null && text.valign == JC.ECHO_XYZ
-        ? calcBarPixelsXYZ(tm, text, pTemp, false)
+    int barPixels = (text.isEcho && text.valign == JC.ECHO_XYZ
+        ? calcBarPixelsXYZ(vwr, text, pTemp, false)
         : text.barPixels);
 
     // draw the box if necessary; colix has been set
@@ -98,15 +102,15 @@ class TextRenderer {
     return true;
   }
 
-  static int calcBarPixelsXYZ(TransformManager tm, Text t, P3i pTemp,
+  static int calcBarPixelsXYZ(Viewer vwr, Text t, P3i pTemp,
                               boolean andSet) {
     int barPixels = t.barPixels;
     if (t.xyz != null) {
-      tm.transformPtScr(t.xyz, pTemp);
+      vwr.tm.transformPtScr(t.xyz, pTemp);
       if (andSet)
         t.setXYZs(pTemp.x, pTemp.y, pTemp.z, pTemp.z);
-      if (barPixels > 0 && tm.perspectiveDepth) {
-        double d = tm.unscaleToScreen(pTemp.z, barPixels);
+      if (barPixels > 0 && vwr.tm.perspectiveDepth) {
+        double d = vwr.tm.unscaleToScreen(pTemp.z, barPixels);
         barPixels = t.barPixelsXYZ = (int) (barPixels * t.barDistance / d);
       }
     }

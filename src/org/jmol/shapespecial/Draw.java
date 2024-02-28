@@ -127,6 +127,7 @@ public class Draw extends MeshCollection {
   private boolean noHead;
   private boolean isBarb;
   private int indicatedModelIndex = -1;
+  private boolean indicatedModelOnly;
   private int[] modelInfo;
   private boolean makePoints;
   //private int nidentifiers;
@@ -147,6 +148,8 @@ public class Draw extends MeshCollection {
   @SuppressWarnings("unchecked")
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
+
+    //System.out.println("DRAW " + propertyName + " value=" + value + " bs=" + bs);
 
     if ("init" == propertyName) {
       initDraw();
@@ -222,6 +225,8 @@ public class Draw extends MeshCollection {
         return;
       vData.addLast(new Object[] { Integer.valueOf(PT_MODEL_INDEX),
           (modelInfo = new int[] { indicatedModelIndex, 0 }) });
+      if (thisMesh.thisID.startsWith(THIS_MODEL_ONLY))
+        indicatedModelOnly = true;
       return;
     }
 
@@ -520,6 +525,7 @@ private void initDraw() {
    explicitID = false;
    thisFontID = -1;
    indicatedModelIndex = -1;
+   indicatedModelOnly = false;
    intersectID = null;
    isCurve = isArc = isArrow = isPlane = isCircle = isCylinder = isLine = false;
    //isBest = 
@@ -707,6 +713,7 @@ private void initDraw() {
       thisMesh.vc = 0;
       if (indicatedModelIndex >= 0) {
         setPoints(-1, 0);
+        thisMesh.thisModelOnly = indicatedModelOnly;
         thisMesh.drawType = EnumDrawType.MULTIPLE;
         thisMesh.drawVertexCount = -1;
         thisMesh.modelFlags.set(indicatedModelIndex);
@@ -799,7 +806,7 @@ private void initDraw() {
       if (newPt == null || iModel >= 0 && !bsAllModels.get(iModel))
         return;
       ptList[nPoints] = P3d.newP(newPt);
-      if (newPt.z == Double.MAX_VALUE || newPt.z == -Double.MAX_VALUE)
+      if (is2DPoint(newPt))
         thisMesh.haveXyPoints = true;
     } else if (iModel >= 0) {
       bsAllModels.set(iModel);
@@ -841,13 +848,15 @@ private void initDraw() {
         int n0 = thisMesh.vc;
         if (nPoints > 0) {
           int[] p = thisMesh.pis[modelIndex] = new int[nVertices];
+          P3d pt = null;
           for (int j = 0; j < nPoints; j++) {
             info = vData.get(++i);
-            p[j] = thisMesh.addV((P3d) info[1], false);
+            p[j] = thisMesh.addV(pt = (P3d) info[1], false);
           }
           for (int j = nPoints; j < 3; j++) {
             p[j] = n0 + nPoints - 1;
           }
+          thisMesh.haveXyPoints = is2DPoint(pt);
           thisMesh.drawTypes[modelIndex] = EnumDrawType.getType(nPoints);
           thisMesh.drawVertexCounts[modelIndex] = nPoints;
           thisMesh.modelFlags.set(modelIndex);
@@ -1232,7 +1241,7 @@ private void initDraw() {
       }
       m.visibilityFlags = (m.isValid && m.visible ? vf : 0);
       if (m.modelIndex >= 0 && !bsModels.get(m.modelIndex) || m.modelFlags != null
-          && !BSUtil.haveCommon(bsModels, m.modelFlags)) {
+          && !bsModels.intersects(m.modelFlags)) {
         m.visibilityFlags = 0;
       } else if (m.modelFlags != null) {
         m.bsMeshesVisible.clearAll();
@@ -1661,7 +1670,7 @@ private void initDraw() {
       boolean adjustPt = (mesh.isVector && mesh.drawType != EnumDrawType.ARC);
       for (int i = 0; i < nVertices; i++) {
         T3d pt = mesh.vs[mesh.pis[iModel][i]];
-        if (pt.z == Double.MAX_VALUE || pt.z == -Double.MAX_VALUE) {
+        if (is2DPoint(pt)) {
           str += (i == 0 ? " " : " ,") + "[" + (int) pt.x + " " + (int) pt.y + (pt.z < 0 ? " %]" : "]");
         } else if (adjustPt && i == 1){
           P3d pt1 = P3d.newP(pt);
@@ -1677,6 +1686,10 @@ private void initDraw() {
     return str;
   }
   
+  public static boolean is2DPoint(T3d pt) {
+    return (pt.z == Double.MAX_VALUE || pt.z == -Double.MAX_VALUE);
+  }
+
   @Override
   public Object getShapeDetail() {
     Lst<Map<String, Object>> V = new  Lst<Map<String,Object>>();

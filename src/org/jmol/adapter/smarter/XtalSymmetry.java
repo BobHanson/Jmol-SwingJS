@@ -407,16 +407,18 @@ public class XtalSymmetry {
     baseSymmetry = symmetry;
     String supercell = acr.strSupercell;
     T3d[] oabc = null;
+    double slop = 1e-6d;
     boolean isSuper = (supercell != null && supercell.indexOf(",") >= 0);
+    M4d matSuper = null;
     if (isSuper) {
       // expand range to accommodate this alternative cell
       // oabc will be cartesian
-      M4d m = new M4d();
+      matSuper = new M4d();
       if (mident == null)
         mident = new M4d();
       setUnitCellSafely();
-      oabc = symmetry.getV0abc(supercell, m);
-      if (oabc != null && !m.equals(mident)) {
+      oabc = symmetry.getV0abc(supercell, matSuper);
+      if (oabc != null && !matSuper.equals(mident)) {
         // flag this to set symmetry to P1 in the end
         // set the bounds for atoms in the new unit cell
         // in terms of the old unit cell
@@ -444,7 +446,7 @@ public class XtalSymmetry {
       boolean doPack0 = doPackUnitCell;
       doPackUnitCell = doPack0;//(doPack0 || oabc != null && acr.forcePacked);
       bsAtoms = updateBSAtoms();
-      double slop = symmetry.getPrecision();
+      slop = symmetry.getPrecision();
       // this call will set unitCellParams to null
       applyAllSymmetry(acr.ms, null);
       doPackUnitCell = doPack0;
@@ -504,23 +506,26 @@ public class XtalSymmetry {
       trimToUnitCell(iAtomFirst);
     }
 
-    // but we leave matSupercell, because we might need it for vibrations in CASTEP
+    // but we leave matSuper, because we might need it for vibrations in CASTEP
     
     // this is now P1. We need to set all the sites 
 
-    fixSuperCellP1AtomSites(bsAtoms);    
+    fixSuperCellP1AtomSites(matSuper, bsAtoms, slop);    
   }
 
-  private void fixSuperCellP1AtomSites(BS bsAtoms) {
+  private void fixSuperCellP1AtomSites(M4d m, BS bsAtoms, double slop) {
     int n = bsAtoms.cardinality();
     Atom[] baseAtoms = new Atom[n];
     int nbase = 0;
-    double slop2 = 0.000001d;
-    slop2 *= slop2;
+    double slop2 = slop * slop;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       Atom a = asc.atoms[i];
       Atom p = new Atom();
       p.setT(a);
+      if (m != null) {
+        m.rotTrans(p);
+        SimpleUnitCell.unitizeDimRnd(3, p, slop);
+      }
       p.atomSerial = a.atomSite;// ORIGINAL atomSite
       p.atomSite = a.atomSite; 
       symmetry.unitize(p);

@@ -1274,6 +1274,7 @@ public class CifReader extends AtomSetCollectionReader {
     }
     int modelField = key2col[MODEL_NO];
     int siteMult = 0;
+    String atomLabels = (isMMCIF ? null : "");
     while (cifParser.getData()) {
       if (modelField >= 0) {
         // mmCIF only
@@ -1309,16 +1310,24 @@ public class CifReader extends AtomSetCollectionReader {
             || (f = fieldProperty(key2col[MOMENT_LABEL])) != NONE) {
           atom = asc.getAtomFromName((String) field);
           if (f0 != NONE && (addAtomLabelNumbers || atom != null)) {
-            field = ((String) field) + (asc.ac + 1);
-            System.err.println(
-                "CifReader found duplicate atom_site_label! New label is "
-                    + field);
-            // user request to allow this to be automatic. 
-            // note, however, that this will only work if atom_site_label is the FIRST 
-            // reference to this atom
-            // well, Jmol 14.30 did not produce valid CIF files in that it 
-            // did not ensure that _atom_site_label was unique :(
-            atom = null;
+            if (atomLabels != null) {
+              // just check THIS loop
+              String key = ";" + field + ";";
+              if (atomLabels.indexOf(key) < 0) {
+                atomLabels += key;
+              } else {
+                field = ((String) field) + (asc.ac + 1);
+                System.err.println(
+                    "CifReader found duplicate atom_site_label! New label is "
+                        + field);
+                // user request to allow this to be automatic. 
+                // note, however, that this will only work if atom_site_label is the FIRST 
+                // reference to this atom
+                // well, Jmol 14.30 did not produce valid CIF files in that it 
+                // did not ensure that _atom_site_label was unique :(
+                atom = null;
+              }
+            }
           }
         }
         String field = (String) this.field;
@@ -1521,8 +1530,7 @@ public class CifReader extends AtomSetCollectionReader {
         case THERMAL_TYPE:
         case ADP_TYPE:
           if (field.equalsIgnoreCase("Uiso")) {
-            
-            
+
             int j = key2col[U_ISO_OR_EQUIV];
             if (j != NONE)
               asc.setU(atom, 7, getDoubleColumnData(j));

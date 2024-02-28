@@ -69,7 +69,7 @@ public class EchoRenderer extends LabelsRenderer {
         return;
     }
     if (t.valign == JC.ECHO_XYZ)
-      TextRenderer.calcBarPixelsXYZ(tm, t, pt0i, true); 
+      TextRenderer.calcBarPixelsXYZ(vwr, t, pt0i, true); 
     if (t.pymolOffset != null)
       t.getPymolScreenOffset(t.xyz, pt0i, zSlab, pTemp, sppm);
     else if (t.movableZPercent != Integer.MAX_VALUE) {
@@ -89,7 +89,7 @@ public class EchoRenderer extends LabelsRenderer {
       if (t.zSlab == Integer.MIN_VALUE)
         t.zSlab = 1;
     }
-    if (TextRenderer.render(tm, t, g3d, sppm, imageFontScaling, null, xy, pt2i, (short) 0, 0, alias)
+    if (TextRenderer.render(vwr, t, g3d, sppm, imageFontScaling, null, xy, pt2i, (short) 0, 0, alias)
         && t.valign == JC.ECHO_BOTTOM
         && t.align == JC.TEXT_ALIGN_RIGHT)
       vwr.noFrankEcho = false;

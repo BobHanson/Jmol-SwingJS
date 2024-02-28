@@ -148,7 +148,7 @@ public class Minimizer {
     if (bsBasis != null) {
       if (bsFixed == null)
         bsFixed = new BS();
-      bsFixed.or(vwr.getMotionFixedAtoms(bsBasis.nextSetBit(0)));
+      vwr.getMotionFixedAtoms(null, bsFixed);
       bsBasis.andNot(bsFixed);
       bsFixed.or(bsSelected);
       bsFixed.andNot(bsBasis);

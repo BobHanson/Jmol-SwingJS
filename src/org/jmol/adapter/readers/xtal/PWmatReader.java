@@ -291,12 +291,17 @@ public class PWmatReader extends AtomSetCollectionReader {
               map[j] = k++;
           }
         }
+
+        // supercell issue here is that we must relate the atoms to their ORIGINAL basis and unit cell.
+        // here we are using supercell coordinates. 
+        
         for (Entry<String, Object> e : p.entrySet()) {
           String key = e.getKey();
           if (key.startsWith("pwm_")) {
             double[] af = (double[]) e.getValue();
             double[] af2 = new double[n];
             for (int j = 0; j < nAtoms; j++) {
+              int site = atoms[j].atomSite;
               af2[map == null ? j : map[j]] = af[atoms[j].atomSite];
             }
             e.setValue(af2);

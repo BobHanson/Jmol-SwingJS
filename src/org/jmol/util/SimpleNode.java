@@ -37,7 +37,7 @@ public interface SimpleNode {
 
   /**
    * 
-   * @return the atomic number for this aotm
+   * @return the atomic number for this atom
    */
   int getElementNumber();
 

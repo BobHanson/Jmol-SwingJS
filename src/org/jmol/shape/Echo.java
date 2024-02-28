@@ -154,10 +154,15 @@ public class Echo extends TextShape {
           text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE, FONTSIZE),
               target, COLOR, valign, halign, 0);
           text.adjustForWindow = true;
-          if (thisID == "%SCALE")
+          if (thisID == "%SCALE") {
             scaleObject = text;
-          else
+          } else {
             objects.put(target, text);
+            if (target.startsWith(THIS_MODEL_ONLY)) {
+              text.thisModelOnly = true;
+            }
+
+          }
           if (currentFont != null)
             text.setFont(currentFont, true);
           if (currentColor != null)

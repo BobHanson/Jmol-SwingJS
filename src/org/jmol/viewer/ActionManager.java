@@ -793,8 +793,7 @@ public class ActionManager implements EventManager {
     switch (key) {
     case Event.VK_ALT:
       if (dragSelectedMode && isAltKeyReleased)
-        vwr.moveSelected(Integer.MIN_VALUE, 0, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false, modifiers);
+        vwr.moveSelectedXY(Integer.MIN_VALUE, 0, modifiers);
       isAltKeyReleased = false;
       moved.modifiers |= Binding.ALT;
       break;
@@ -848,9 +847,7 @@ public class ActionManager implements EventManager {
     case Event.VK_ALT:
       moved.modifiers &= ~Binding.ALT;
       if (dragSelectedMode)
-        vwr.moveSelected(Integer.MAX_VALUE, 0, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false,
-            moved.modifiers);
+        vwr.moveSelectedXY(Integer.MAX_VALUE, 0, moved.modifiers);
       isAltKeyReleased = true;
       break;
     case Event.VK_SHIFT:
@@ -887,7 +884,7 @@ public class ActionManager implements EventManager {
 
   private void checkKeyBuf(int key) {
     boolean shiftDown = ((moved.modifiers & Binding.SHIFT) != 0);
-    System.out.println("AM " + key + " " + shiftDown);
+//    System.out.println("AM " + key + " " + shiftDown);
     if (key != 0) {
       if (moved.keybuf == 0) {
         // N (continue) or n (assign)
@@ -1102,8 +1099,7 @@ public class ActionManager implements EventManager {
       haveSelection = (!isDragSelectedAction || vwr
           .findNearestAtomIndexMovable(x, y, true) >= 0);
       if (haveSelection && bnd(dragAction, ACTION_dragSelected, ACTION_dragZ))
-        vwr.moveSelected(Integer.MIN_VALUE, 0, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false, buttonMods);
+        vwr.moveSelectedXY(Integer.MIN_VALUE, 0, buttonMods);
       return;
     }
     //   if (vwr.g.useArcBall)
@@ -1140,7 +1136,7 @@ public class ActionManager implements EventManager {
         if (dragAtomIndex >= 0) {
           updateModelkitBranch(bi, false);
         }
-        vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null, false,
+        vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null, null, null, false,
             false, dragAtomIndex >= 0 ? 0 : Event.VK_SHIFT);
         return;
       }
@@ -1148,7 +1144,6 @@ public class ActionManager implements EventManager {
 
     BS bs = null;
     if (dragAtomIndex >= 0 && apm != PICKING_LABEL) {
-
       switch (apm) {
       case PICKING_DRAG_SELECTED:
         dragSelected(dragWheelAction, deltaX, deltaY, true);
@@ -1182,8 +1177,7 @@ public class ActionManager implements EventManager {
           }
           vwr.moveAtomWithHydrogens(dragAtomIndex, deltaX, deltaY,
               (bnd(dragWheelAction, ACTION_dragZ) ? -deltaY
-                  : Integer.MIN_VALUE),
-              bs);
+                  : Integer.MIN_VALUE), null, bs);
           vwr.checkCoordinatesChanged();
         }
         // NAH! if (atomPickingMode == PICKING_DRAG_MINIMIZE_MOLECULE && (dragGesture.getPointCount() % 5 == 0))
@@ -1235,7 +1229,7 @@ public class ActionManager implements EventManager {
         vwr.undoMoveActionClear(iatom, AtomCollection.TAINT_COORD, true);
       else
         vwr.moveSelected(Integer.MAX_VALUE, 0, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false,
+            Integer.MIN_VALUE, Integer.MIN_VALUE, null, null, null, false, false,
             buttonmods);
       dragSelected(dragWheelAction, deltaX, deltaY, false);
       return;
@@ -1352,7 +1346,7 @@ public class ActionManager implements EventManager {
           deltaX,
           deltaY,
           (isPickingDrag && bnd(a, ACTION_dragZ) ? -deltaY : Integer.MIN_VALUE),
-          Integer.MIN_VALUE, Integer.MIN_VALUE, null, true, false, dragged.modifiers);
+          Integer.MIN_VALUE, Integer.MIN_VALUE, null, null, null, true, false, dragged.modifiers);
   }
 
 
@@ -1400,8 +1394,7 @@ public class ActionManager implements EventManager {
       return;
     }
     if (haveSelection && dragSelectedMode && bnd(dragAction, ACTION_dragSelected))
-      vwr.moveSelected(Integer.MAX_VALUE, 0, Integer.MIN_VALUE,
-          Integer.MIN_VALUE, Integer.MIN_VALUE, null, false, false, dragged.modifiers);
+      vwr.moveSelectedXY(Integer.MAX_VALUE, 0, dragged.modifiers);
 
     if (dragRelease
         && checkUserAction(pressAction, x, y, 0, 0, time, Event.RELEASED))

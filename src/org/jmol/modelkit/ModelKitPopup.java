@@ -360,7 +360,7 @@ abstract public class ModelKitPopup extends JmolGenericPopup {
   @Override
   protected String getScriptForCallback(SC source, String id, String script) {
     if (script.startsWith("mk")) {
-      modelkit.processXtalClick(id, script);
+      modelkit.clickProcessXtal(id, script);
       script = null; // cancels any further processing
     }
     return script;

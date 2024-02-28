@@ -77,6 +77,7 @@ public class Balls extends AtomShape {
             || pid != PAL.NONE.id);
         atom.paletteID = pid;
       }
+      vwr.setModelkitPropertySafely("key", bs);
       return;
     }
     if ("colorValues" == propertyName) {

@@ -3137,6 +3137,7 @@ public class ModelSet extends BondCollection {
     if (me != null)
       me.setProperty("deleteAtoms", null, bsAtoms);
     validateBspf(false);
+    vwr.setModelkitPropertySafely("modelkeys", bsModels);
   }
 
   public void clearDB(int atomIndex) {
@@ -3317,24 +3318,24 @@ public class ModelSet extends BondCollection {
 //    return i >= 0 && at[i].mi == mc - 1;
 //  }
 //
-  public boolean haveModelKit() {
-    for (int i = 0; i < mc; i++)
-      if (am[i].isModelKit)
-        return true;
-    return false;
-  }
-
-  public BS getModelKitStateBitset(BS bs, BS bsDeleted) {
-    // task here is to remove bits from bs that are deleted atoms in 
-    // models that are model kits.
-
-    BS bs1 = BSUtil.copy(bsDeleted);
-    for (int i = 0; i < mc; i++)
-      if (!am[i].isModelKit)
-        bs1.andNot(am[i].bsAtoms);
-    return BSUtil.deleteBits(bs, bs1);
-  }
-
+//  public boolean haveModelKit() {
+//    for (int i = 0; i < mc; i++)
+//      if (am[i].isModelKit)
+//        return true;
+//    return false;
+//  }
+//
+//  public BS getModelKitStateBitset(BS bs, BS bsDeleted) {
+//    // task here is to remove bits from bs that are deleted atoms in 
+//    // models that are model kits.
+//
+//    BS bs1 = BSUtil.copy(bsDeleted);
+//    for (int i = 0; i < mc; i++)
+//      if (!am[i].isModelKit)
+//        bs1.andNot(am[i].bsAtoms);
+//    return BSUtil.deleteBits(bs, bs1);
+//  }
+//
   /**
    * 
    * @param iFirst
@@ -4637,7 +4638,6 @@ public class ModelSet extends BondCollection {
         a.setT(apos0[i]);
     }
   }
-
 
 }
 

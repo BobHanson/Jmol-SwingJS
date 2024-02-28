@@ -75,9 +75,10 @@ public class DrawRenderer extends MeshRenderer {
     for (int i = draw.meshCount; --i >= 0;) {
       Mesh mesh = dmesh = (DrawMesh) draw.meshes[i];
       if (mesh == null) {
-        System.out.println("DrawRenderer mesh is null?");
         return false;
       }
+      if (dmesh.thisModelOnly && vwr.am.cmi < 0)
+        continue;
       if (mesh.connectedAtoms != null) {
         if (mesh.connectedAtoms[0] < 0)
           continue;
@@ -139,26 +140,8 @@ public class DrawRenderer extends MeshRenderer {
       if (diameter == 0)
         diameter = 1;
     }
-    if (dmesh.haveXyPoints) {
-      if (dmesh.isVector) {
-        int ptXY = 0;
-        // [x y] or [x,y] refers to an xy point on the screen
-        // just a Point3f with z = Double.MAX_VALUE
-        //  [x y %] or [x,y %] refers to an xy point on the screen
-        // as a percent 
-        // just a Point3f with z = -Double.MAX_VALUE
-        for (int i = 0; i < 2; i++)
-          if (vertices[i].z == Double.MAX_VALUE
-              || vertices[i].z == -Double.MAX_VALUE)
-            ptXY += i + 1;
-        if (--ptXY < 2) {
-          renderXyArrow(ptXY);
-          return;
-        }
-      } else if (drawType == Draw.EnumDrawType.POINT){
-        renderXyPoint();
-      }
-    }
+    if (dmesh.haveXyPoints && drawXYPoints())
+        return;
     int tension = 5;
     switch (drawType) {
     case CYLINDER:
@@ -246,6 +229,29 @@ public class DrawRenderer extends MeshRenderer {
       render2b(false);
     }
 
+  }
+
+  private boolean drawXYPoints() {
+    if (dmesh.isVector) {
+      int ptXY = 0;
+      // [x y] or [x,y] refers to an xy point on the screen
+      // just a Point3f with z = Double.MAX_VALUE
+      //  [x y %] or [x,y %] refers to an xy point on the screen
+      // as a percent 
+      // just a Point3f with z = -Double.MAX_VALUE
+      for (int i = 0; i < 2; i++)
+        if (vertices[i].z == Double.MAX_VALUE
+            || vertices[i].z == -Double.MAX_VALUE)
+          ptXY += i + 1;
+      if (--ptXY < 2) {
+        renderXyArrow(ptXY);
+        return true;
+      }
+    } else if (drawType == Draw.EnumDrawType.POINT || drawType == Draw.EnumDrawType.MULTIPLE){
+      renderXyPoint();
+      return true;
+    }
+    return false;
   }
 
   private int setArc(T3d v1, T3d v2, T3d ptRef, double nDegreesOffset,

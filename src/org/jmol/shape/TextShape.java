@@ -56,10 +56,10 @@ public abstract class TextShape extends Shape {
   boolean isHover;
   boolean isAll;
 
-//  @Override
-//  public void setProperty(String propertyName, Object value, BS bsSelected) {
-//    setPropTS(propertyName, value, bsSelected);
-//  }
+  //  @Override
+  //  public void setProperty(String propertyName, Object value, BS bsSelected) {
+  //    setPropTS(propertyName, value, bsSelected);
+  //  }
 
   protected void setPropTS(String propertyName, Object value, BS bsSelected) {
     if ("text" == propertyName) {
@@ -97,7 +97,7 @@ public abstract class TextShape extends Shape {
         currentObject = (Text) value;
       }
       if (currentObject != null) {
-          objects.remove(currentObject.target);
+        objects.remove(currentObject.target);
         currentObject = null;
       } else if (isAll || thisID != null) {
         Iterator<Text> e = objects.values().iterator();
@@ -117,14 +117,21 @@ public abstract class TextShape extends Shape {
         objects = new Hashtable<String, Text>();
         isAll = false;
         currentObject = null;
-      }
-      if (currentObject == null) {
         return;
       }
-
-      objects.remove(currentObject.target);
-      currentObject = null;
-      return;
+      if (currentObject != null) {
+        objects.remove(currentObject.target);
+        currentObject = null;
+      } else if (thisID != null) {
+        Iterator<Text> e = objects.values().iterator();
+        while (e.hasNext()) {
+          Text text = e.next();
+          if (isAll
+              || PT.isMatch(text.target.toUpperCase(), thisID, true, true)) {
+            e.remove();
+          }
+        }
+      }
     }
 
     if ("model" == propertyName) {
@@ -135,6 +142,7 @@ public abstract class TextShape extends Shape {
         for (Text t : objects.values())
           t.modelIndex = modelIndex;
       }
+      
       return;
     }
 
@@ -242,7 +250,9 @@ public abstract class TextShape extends Shape {
   public void setModelVisibilityFlags(BS bsModels) {
     if (!isHover)
       for (Text t : objects.values())
-        t.visible = (t.modelIndex < 0 || bsModels.get(t.modelIndex));
+        t.visible = (t.modelIndex < 0 || bsModels.get(t.modelIndex)
+            && (!t.thisModelOnly || bsModels.cardinality() == 1)
+            );
   }
 
   @Override

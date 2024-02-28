@@ -106,11 +106,9 @@ public class MeasurementData implements JmolMeasurementClient {
     this.tokAction = tokAction;
     if (points.size() >= 2 && points.get(0) instanceof BS
         && points.get(1) instanceof BS) {
-      justOneModel = BSUtil.haveCommon(
-          vwr.ms.getModelBS((BS) points.get(0), false),
-          vwr.ms.getModelBS((BS) points.get(1), false));
+      justOneModel = vwr.ms.getModelBS((BS) points.get(0), false)
+          .equals(vwr.ms.getModelBS((BS) points.get(1), false));
     }
-    //this.rangeMinMax = rangeMinMax;
     this.bsSelected = bsSelected;
     this.htMin = htMin;
     this.radiusData = radiusData;

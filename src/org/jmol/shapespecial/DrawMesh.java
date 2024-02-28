@@ -68,6 +68,7 @@ public class DrawMesh extends Mesh {
 
   public int fontID = -1;
   public Integer titleColor;
+  public boolean thisModelOnly;
 
   @Override
   public void clear(String meshType) {

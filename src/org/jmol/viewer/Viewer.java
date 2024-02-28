@@ -792,6 +792,7 @@ public class Viewer extends JmolViewer
         isImageWrite || isReset ? g.zoomLarge : false, antialiased, false,
         false);
     gdata.setWindowParameters(width, height, antialiased);
+    setModelkitPropertySafely("modelkeys", BSUtil.newBitSet2(0, ms.mc));
     if (width > 0 && !isImageWrite)
       setStatusResized(width, height);
   }
@@ -2040,7 +2041,7 @@ public class Viewer extends JmolViewer
     // bsSelected null comes from sync. 
     if (isJmolDataFrame() || bsSelected.isEmpty())
       return;
-    tm.rotateXYBy(deltaX, deltaY, setMovableBitSet(bsSelected, true));    
+    tm.rotateXYBy(deltaX, deltaY, setMovableBitSet(bsSelected, true));
     refreshMeasures(true);
     //TODO: note that sync may not work with set allowRotateSelectedAtoms
     refresh(REFRESH_SYNC,
@@ -2054,7 +2055,7 @@ public class Viewer extends JmolViewer
     if (bsSelected == null)
       bsSelected = bsA();
     bsSelected = BSUtil.copy(bsSelected);
-    BSUtil.andNot(bsSelected, getMotionFixedAtoms(bsSelected.nextSetBit(0)));
+    BSUtil.andNot(bsSelected, getMotionFixedAtoms(null, null));
     if (checkMolecule && !g.allowMoveAtoms)
       bsSelected = ms.getMoleculeBitSet(bsSelected);
     return movableBitSet = bsSelected;
@@ -8218,6 +8219,9 @@ public class Viewer extends JmolViewer
     clearMinimization();
     ms.setAtomProperty(bs, tok, iValue, fValue, sValue, values, list);
     switch (tok) {
+    case T.element:
+      setModelkitPropertySafely("key", bs);
+      //$FALL-THROUGH$
     case T.atomx:
     case T.atomy:
     case T.atomz:
@@ -8227,7 +8231,6 @@ public class Viewer extends JmolViewer
     case T.unitx:
     case T.unity:
     case T.unitz:
-    case T.element:
       refreshMeasures(true);
     }
   }
@@ -8344,7 +8347,7 @@ public class Viewer extends JmolViewer
     // from TransformManager exclusively
     if (bsAtoms.isEmpty())
       return;
-    BS bsFixed = getMotionFixedAtoms(bsAtoms.nextSetBit(0));
+    BS bsFixed = getMotionFixedAtoms(null, null);
     if (bsAtoms.intersects(bsFixed))
       return;
     SymmetryInterface uc = getOperativeSymmetry();
@@ -8364,38 +8367,45 @@ public class Viewer extends JmolViewer
   private boolean showSelected;
   private P3d ptScreen = new P3d(), ptScreenNew = new P3d(), ptNew = new P3d();
 
-  public synchronized void moveSelected(int deltaX, int deltaY, int deltaZ,
-                                        int x, int y, BS bsSelected,
-                                        boolean isTranslation, boolean asAtoms,
-                                        int modifiers) {
+  void moveSelectedXY(int deltaX, int deltaY, int modifiers) {
+    moveSelected(deltaX, deltaY, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE,
+        null, null, null, false, false, modifiers);
+  }
+  
+  synchronized int moveSelected(int deltaX, int deltaY, int deltaZ,
+                                       int x, int y, BS bsSelected, P3d ptOld,
+                                       P3d ptNew, boolean isTranslation,
+                                       boolean asAtoms, int modifiers) {
     // called by actionManager
     // cannot synchronize this -- it's from the mouse and the event queue
-    if (deltaZ == 0 || isJmolDataFrame())
-      return;
-    if (x == Integer.MIN_VALUE && modelkit != null)
-      setModelkitPropertySafely("rotateBondIndex",
-          Integer.valueOf(Integer.MIN_VALUE));
-    if (deltaX == Integer.MIN_VALUE) {
-      showSelected = true;
-      movableBitSet = setMovableBitSet(null, !asAtoms);
-      shm.loadShape(JC.SHAPE_HALOS);
-      refresh(REFRESH_REPAINT_NO_MOTION_ONLY, "moveSelected");
-      return;
-    }
-    if (deltaX == Integer.MAX_VALUE) {
-      if (!showSelected)
-        return;
-      showSelected = false;
-      movableBitSet = null;
-      refresh(REFRESH_REPAINT_NO_MOTION_ONLY, "moveSelected");
-      return;
+    if (deltaZ == 0 && ptNew == null || isJmolDataFrame())
+      return 0;
+    if (ptNew == null) {
+      if (x == Integer.MIN_VALUE && modelkit != null)
+        setModelkitPropertySafely("rotateBondIndex",
+            Integer.valueOf(Integer.MIN_VALUE));
+      if (deltaX == Integer.MIN_VALUE) {
+        showSelected = true;
+        movableBitSet = setMovableBitSet(null, !asAtoms);
+        shm.loadShape(JC.SHAPE_HALOS);
+        refresh(REFRESH_REPAINT_NO_MOTION_ONLY, "moveSelected");
+        return 0;
+      }
+      if (deltaX == Integer.MAX_VALUE) {
+        if (!showSelected)
+          return 0;
+        showSelected = false;
+        movableBitSet = null;
+        refresh(REFRESH_REPAINT_NO_MOTION_ONLY, "moveSelected");
+        return 0;
+      }
     }
     if (movingSelected)
-      return;
+      return 0;
     movingSelected = true;
     stopMinimization();
     // note this does not sync with applets
-    if (x != Integer.MIN_VALUE && modelkit != null
+    if (ptNew == null && x != Integer.MIN_VALUE && modelkit != null
         && modelkit.getProperty("rotateBondIndex") != null) {
       modelkit.actionRotateBond(deltaX, deltaY, x, y,
           (modifiers & Event.VK_SHIFT) != 0);
@@ -8411,22 +8421,26 @@ public class Viewer extends JmolViewer
             -MODIFY_SET_COORD, "FAILED", 1, bsSelected);
       } else {
         if (isTranslation) {
-          P3d ptCenter = ms.getAtomSetCenter(bsSelected);
-          tm.finalizeTransformParameters();
-          double f = (g.antialiasDisplay ? 2 : 1);
-          tm.transformPt3f(ptCenter, ptScreen);
-          if (deltaZ != Integer.MIN_VALUE)
-            ptScreenNew.set(ptScreen.x, ptScreen.y, ptScreen.z + deltaZ);
-          else
-            ptScreenNew.set(ptScreen.x + deltaX * f, ptScreen.y + deltaY * f,
-                ptScreen.z);
-          tm.unTransformPoint(ptScreenNew, ptNew);
-          SymmetryInterface uc = getOperativeSymmetry();
-          if (uc != null) {
-            ptNew.sub(ptCenter);
-            ptNew.add(ms.at[iatom]);
-            getModelkit(false).cmdAssignMoveAtoms(bsSelected, null, null, iatom,
-                ptNew, null, true);
+          P3d ptCenter = (ptOld == null ? ms.getAtomSetCenter(bsSelected)
+              : ptOld);
+          if (ptNew == null) {
+            tm.finalizeTransformParameters();
+            double f = (g.antialiasDisplay ? 2 : 1);
+            tm.transformPt3f(ptCenter, ptScreen);
+            if (deltaZ != Integer.MIN_VALUE)
+              ptScreenNew.set(ptScreen.x, ptScreen.y, ptScreen.z + deltaZ);
+            else
+              ptScreenNew.set(ptScreen.x + deltaX * f, ptScreen.y + deltaY * f,
+                  ptScreen.z);
+            tm.unTransformPoint(ptScreenNew, this.ptNew);
+            ptNew = this.ptNew;
+            SymmetryInterface uc = getOperativeSymmetry();
+            if (uc != null) {
+              ptNew.sub(ptCenter);
+              ptNew.add(ms.at[iatom]);
+              getModelkit(false).cmdAssignMoveAtoms(bsSelected, iatom, ptNew,
+                  null, true, !asAtoms);
+            }
           }
           if (!Double.isNaN(ptNew.x)) {
             ptNew.sub(ptCenter);
@@ -8439,6 +8453,7 @@ public class Viewer extends JmolViewer
     }
     refresh(REFRESH_SYNC, ""); // should be syncing here
     movingSelected = false;
+    return (bsSelected == null ? 0 : bsSelected.cardinality());
   }
 
   /**
@@ -9544,15 +9559,25 @@ public class Viewer extends JmolViewer
     slm.setMotionFixedAtoms(bs);
   }
 
-  public BS getMotionFixedAtoms(int iatom) {
-    BS bs = BSUtil.copy(slm.getMotionFixedAtoms());
-    if (iatom < 0)
-      iatom = getModelUndeletedAtomsBitSet(
-          getVisibleFramesBitSet().nextSetBit(0)).nextSetBit(0);
-    if (iatom >= 0 && (modelkit != null
-        || getOperativeSymmetry() != null && getModelkit(false) != null))
-      modelkit.addLockedAtoms(iatom, bs);
-    return bs;
+  /**
+   * For the current SINGLE model only. 
+   * @param sym operationalSymmetry
+   * @param bsFixed optional starting BitSet to be added to
+   * @return bsFixed
+   * 
+   */
+  public BS getMotionFixedAtoms(SymmetryInterface sym, BS bsFixed) {
+    if (am.cmi < 0)
+      return new BS();
+    if (bsFixed == null)
+      bsFixed = new BS();
+    bsFixed.or(slm.getMotionFixedAtoms());
+    bsFixed.and(getThisModelAtoms());
+    if (sym == null)
+      sym = getOperativeSymmetry(); 
+    if (sym != null && getModelkit(false) != null)
+      modelkit.addLockedAtoms(sym, bsFixed);
+    return bsFixed;
   }
 
   //  void rotateArcBall(int x, int y, double factor) {
@@ -9688,26 +9713,21 @@ public class Viewer extends JmolViewer
       getStateCreator().undoMoveActionClear(taintedAtom, type, clearRedo);
   }
 
-  protected void moveAtomWithHydrogens(int atomIndex, int deltaX, int deltaY,
-                                       int deltaZ, BS bsAtoms) {
+  public int moveAtomWithHydrogens(int atomIndex, int deltaX, int deltaY,
+                                       int deltaZ, P3d ptNew, BS bsAtoms) {
     // called by actionManager
     stopMinimization();
+    boolean modelkitNoAddH = (ptNew != null && deltaX == 0);
+    Atom atom = ms.at[atomIndex];
     if (bsAtoms == null) {
-      Atom atom = ms.at[atomIndex];
       bsAtoms = BSUtil.newAndSetBit(atomIndex);
-      Bond[] bonds = (this.getOperativeSymmetry() == null
-          || isModelKitOpen() && !modelkit.hasConstraint(atomIndex, true, false)
-              ? atom.bonds
-              : null);
-      if (bonds != null)
-        for (int i = 0; i < bonds.length; i++) {
-          Atom atom2 = bonds[i].getOtherAtom(atom);
-          if (atom2.getElementNumber() == 1)
-            bsAtoms.set(atom2.i);
-        }
+      boolean addH = (this.getOperativeSymmetry() == null
+          || isModelKitOpen() && !modelkit.hasConstraint(atomIndex, true, false));
+      if (addH && !modelkitNoAddH)
+        ms.addConnectedHAtoms(atom, bsAtoms);
     }
-    moveSelected(deltaX, deltaY, deltaZ, Integer.MIN_VALUE, Integer.MIN_VALUE,
-        bsAtoms, true, true, 0);
+    return moveSelected(deltaX, deltaY, deltaZ, Integer.MIN_VALUE, Integer.MIN_VALUE,
+        bsAtoms, atom, ptNew, true, true, 0);
   }
 
   public boolean isModelPDB(int i) {
@@ -10437,12 +10457,13 @@ public class Viewer extends JmolViewer
     stopMinimization();
 
     int flags = 0;
-    if (getOperativeSymmetry() != null) {
+    SymmetryInterface sym = getOperativeSymmetry();
+    if (sym != null) {
       flags = MIN_MODELKIT;
     }
 
     BS bs = (flags != 0 ? null
-        : (getMotionFixedAtoms(iAtom).isEmpty()
+        : (getMotionFixedAtoms(sym, null).isEmpty()
             ? ms.getAtoms((ms.isAtomPDB(iAtom) ? T.group : T.molecule),
                 BSUtil.newAndSetBit(iAtom))
             : BSUtil.setAll(ms.ac)));
@@ -10865,7 +10886,8 @@ public class Viewer extends JmolViewer
    * @param xyzList
    *        if present, a semicolon-separated list of operators
    * @param unitCellParams
-   * @param origin TODO
+   * @param origin
+   *        TODO
    * @param asString
    * @param isAssign
    *        from ModelKit
@@ -10876,7 +10898,8 @@ public class Viewer extends JmolViewer
    */
   public Object findSpaceGroup(BS bsAtoms, String xyzList,
                                double[] unitCellParams, T3d origin,
-                               boolean asString, boolean isAssign, boolean checkSupercell) {
+                               boolean asString, boolean isAssign,
+                               boolean checkSupercell) {
     Object ret = null;
     if (bsAtoms == null && xyzList == null || isAssign)
       bsAtoms = getThisModelAtoms();
@@ -11126,6 +11149,5 @@ public class Viewer extends JmolViewer
       //
     }
   }
-
 
 }

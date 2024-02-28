@@ -863,7 +863,8 @@ abstract class ScriptExpr extends ScriptParam {
         rpn.addXBs(BSUtil.copy(vwr.slm.getHiddenSet()));
         break;
       case T.fixed:
-        rpn.addXBs(vwr.getMotionFixedAtoms(-1));
+        // note - this is only for the current model
+        rpn.addXBs(vwr.getMotionFixedAtoms(null, null));
         break;
       case T.displayed:
         rpn.addXBs(BSUtil.copyInvert(vwr.slm.getHiddenSet(), ac));

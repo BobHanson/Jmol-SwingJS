@@ -546,14 +546,16 @@ public class Text {
 //   
 //   
 
-public final static int PYMOL_LABEL_OFFSET_JMOL= -1;
-public final static int PYMOL_LABEL_OFFSET_REL = 1;
-public final static int PYMOL_LABEL_OFFSET_PIX = 2; // and not -1
+  public final static int PYMOL_LABEL_OFFSET_JMOL= -1;
+  public final static int PYMOL_LABEL_OFFSET_REL = 1;
+  public final static int PYMOL_LABEL_OFFSET_PIX = 2; // and not -1
+  
+  public final static int PYMOL_LABEL_OFFSET_ABS_ANG = 0;
+  public final static int PYMOL_LABEL_OFFSET_REL_ANG = PYMOL_LABEL_OFFSET_REL;
+  public final static int PYMOL_LABEL_OFFSET_ABS_PIX = PYMOL_LABEL_OFFSET_PIX;
+  public final static int PYMOL_LABEL_OFFSET_REL_PIX = PYMOL_LABEL_OFFSET_REL | PYMOL_LABEL_OFFSET_PIX;
 
-public final static int PYMOL_LABEL_OFFSET_ABS_ANG = 0;
-public final static int PYMOL_LABEL_OFFSET_REL_ANG = PYMOL_LABEL_OFFSET_REL;
-public final static int PYMOL_LABEL_OFFSET_ABS_PIX = PYMOL_LABEL_OFFSET_PIX;
-public final static int PYMOL_LABEL_OFFSET_REL_PIX = PYMOL_LABEL_OFFSET_REL | PYMOL_LABEL_OFFSET_PIX;
+  public static final int COLOR_CONTRAST = 0xFF123456;
   
   public double[] pymolOffset;
 
@@ -566,6 +568,7 @@ public final static int PYMOL_LABEL_OFFSET_REL_PIX = PYMOL_LABEL_OFFSET_REL | PY
   public double boxY;
 
   public int modelIndex = -1;
+  public boolean thisModelOnly;
   public boolean visible = true;
   public boolean hidden = false;
 

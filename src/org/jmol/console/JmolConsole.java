@@ -129,7 +129,8 @@ public abstract class JmolConsole extends GenericConsole implements ActionListen
     FileChecker fileChecker = new FileChecker(stub);
     try {
       (new File(sname)).list(fileChecker);
-      return root + fileChecker.getFile(nTab);
+      String newname = fileChecker.getFile(nTab);
+      return (newname == null ? root : root + newname);
     } catch (Exception e) {
       //
     }

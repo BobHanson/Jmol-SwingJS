@@ -118,6 +118,27 @@ abstract public class BondCollection extends AtomCollection {
 
   public BS getBondsForSelectedAtoms(BS bsAtoms, boolean bondSelectionModeOr) {
     BS bs = new BS();
+    int n = bsAtoms.cardinality();
+    switch (n) {
+    case 0:
+      return bs;
+    case 1:
+    case 2:
+      Atom a = at[bsAtoms.nextSetBit(0)];
+      Atom b = (n == 2 ? at[bsAtoms.nextSetBit(a.i + 1)] : null);
+      if (n == 1 || bondSelectionModeOr) {
+        for (int i = a.getBondCount(); --i >= 0;)
+          bs.set(a.bonds[i].index);
+        if (b != null)
+          for (int i = b.getBondCount(); --i >= 0;)
+            bs.set(b.bonds[i].index);
+      } else {
+        Bond bond = a.getBond(b);
+        if (b != null)
+          bs.set(bond.index);
+      }
+      return bs;
+    }
     for (int iBond = 0; iBond < bondCount; ++iBond) {
       Bond bond = bo[iBond];
       boolean isSelected1 = bsAtoms.get(bond.atom1.i);
@@ -525,17 +546,6 @@ abstract public class BondCollection extends AtomCollection {
 
     bsAromaticSingle = null;
     bsAromaticDouble = null;
-
-    ///////
-    // This was in the former method in ModelSet, which was not accessible:
-    //
-    // send a message to STICKS indicating that these bonds
-    // should be part of the state of the model. They will 
-    // appear in the state as bondOrder commands.    
-    //if (isUserCalculation)
-    //shapeManager.setShapeSizeBs(JC.SHAPE_STICKS, Integer.MIN_VALUE, null, bsAromatic);
-    ///////
-
   }
   
   private boolean isLinear(Bond b, V3d v1, V3d v2) {
@@ -843,6 +853,17 @@ abstract public class BondCollection extends AtomCollection {
     }
     return bsResult;
   }
+
+  public void addConnectedHAtoms(Atom atom, BS bsAtoms) {
+    if (atom.bonds != null)
+      for (int i = atom.bonds.length; --i >= 0;) {
+        Atom atom2 = atom.bonds[i].getOtherAtom(atom);
+        if (atom2.getElementNumber() == 1)
+          bsAtoms.set(atom2.i);
+      }
+  }
+
+
 
   protected boolean haveAtropicBonds;
   

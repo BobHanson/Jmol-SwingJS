@@ -933,7 +933,7 @@ public class IsoExt extends ScriptExt {
         }
         if (isSavedState)
           invArg();
-        isSavedState = true;
+        isSavedState = true; // [0 [x y %]]
         break;
       case T.rightsquare:
         if (!isSavedState)
