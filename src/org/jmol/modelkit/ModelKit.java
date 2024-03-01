@@ -855,10 +855,11 @@ public class ModelKit {
    *        atoms in the set defining the space group
    * @param name
    *        "P1" or "1" or ignored
+   * @param params -- ignored for now
    * @return new name or "" or error message
    */
-  public String cmdAssignSpaceGroup(BS bs, String name) {
-    return assignSpaceGroup(bs, name);
+  public String cmdAssignSpaceGroup(BS bs, String name, double[] params) {
+    return assignSpaceGroup(bs, name, params);
   }
 
   /**
@@ -2558,7 +2559,7 @@ public class ModelKit {
     return (checkAtomPositions(apos0, apos, bsAll) ? n : 0);
   }
 
-  private String assignSpaceGroup(BS bs, String name) {
+  private String assignSpaceGroup(BS bs, String name, double[] params) {
     boolean isITA = name.startsWith("ITA/");
     if (isITA) {
       name = name.substring(4);
@@ -2594,9 +2595,11 @@ public class ModelKit {
               : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
       vwr.ms.getModelAuxiliaryInfo(mi).remove("spaceGroupInfo");
       SymmetryInterface sym = vwr.getOperativeSymmetry();
-      if (sym == null)
+      if (sym == null) {
+        // paams not null did not work
         sym = vwr.getSymTemp().setUnitCellFromParams(
-            new double[] { 10, 10, 10, 90, 90, 90 }, false, Double.NaN);
+            params == null ? new double[] { 10, 10, 10, 90, 90, 90 } : params, false, Double.NaN);
+      }
       T3d m = sym.getUnitCellMultiplier();
       if (m != null && m.z == 1) {
         m.z = 0;
@@ -2611,25 +2614,27 @@ public class ModelKit {
       Map<String, Object> sgInfo = (noAtoms && !isDefined ? null
           : (Map<String, Object>) vwr.findSpaceGroup(isDefined ? null : bsAtoms,
               isDefined ? (isITA ? "ITA/" + name : name) : null,
-              sym.getUnitCellParams(), origin, false, true, false));
+              params == null ? sym.getUnitCellParams() : params, origin, false, true, false));
 
       if (sgInfo == null) {
         if (isITA) {
           return "No International Tables setting found!";
         }
-        name = "P1";
-        supercell = P3d.new3(1, 1, 1);
-        oabc = sym.getUnitCellVectors();
-        ita = "1";
-        basis = null;
-      } else {
+        return "Space group " + name + " is unknown or not compatible!";
+      }
+//        name = "P1";
+//        supercell = P3d.new3(1, 1, 1);
+//        oabc = sym.getUnitCellVectors();
+//        ita = "1";
+//        basis = null;
+//      } else {
         supercell = (P3d) sgInfo.get("supercell");
         oabc = (P3d[]) sgInfo.get("unitcell");
         name = (String) sgInfo.get("name");
         ita = (String) sgInfo.get("itaFull");
         basis = (BS) sgInfo.get("basis");
         sg = sgInfo.remove("sg");
-      }
+//      }
       sym.getUnitCell(oabc, false, null);
       sym.setSpaceGroupTo(sg == null ? ita : sg);
       sym.setSpaceGroupName(name);

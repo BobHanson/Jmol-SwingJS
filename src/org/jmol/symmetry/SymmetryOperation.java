@@ -1315,7 +1315,7 @@ public class SymmetryOperation extends M4d {
     if (opType == TYPE_UNKNOWN) {
       setOpTypeAndOrder();
     }
-    return opTrans;
+    return (opTrans == null ? (opTrans = new V3d()) : opTrans);
   }
 
   private final static P3d x = P3d.new3(Math.PI, Math.E, Math.PI * Math.E);

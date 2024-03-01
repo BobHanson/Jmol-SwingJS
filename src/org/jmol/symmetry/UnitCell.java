@@ -1099,7 +1099,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
    * @param sg
    * @param params
    * @param newParams
-   * @param allowSame
+   * @param allowSame true to allow same-distance a,b,c for lower-symmetry sg
    * @return true if changes have occurred
    */
   public static boolean createCompatibleUnitCell(SpaceGroup sg, double[] params,
@@ -1117,7 +1117,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     int n = (sg == null || sg.intlTableNumber == null ? 0 : PT.parseInt(sg.intlTableNumber));
     boolean toHex = (n != 0 && isHexagonalSG(n, null));
     boolean isHex = (toHex && isHexagonalSG(-1, params));
-    boolean toRhom = (sg.axisChoice == 'r');
+    boolean toRhom = (n != 0 && sg.axisChoice == 'r');
     boolean isRhom = (toRhom && isRhombohedral(params));
     if (toHex && isHex || toRhom && isRhom) {
       allowSame = true;

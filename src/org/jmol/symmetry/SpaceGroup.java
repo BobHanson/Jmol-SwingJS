@@ -394,8 +394,8 @@ class SpaceGroup implements Cloneable {
     sb.append("\n\n").append(
         hallInfo == null ? "Hall symbol unknown" : hallInfo.dumpInfo());
 
-    sb.append("\n\ncanonical Seitz: ").append((String) info)
-        .append("\n----------------------------------------------------\n");
+    //sb.append("\n\ncanonical Seitz: ").append((String) info)
+     //sb.append("\n----------------------------------------------------\n");
     return sb.toString();
   }
 

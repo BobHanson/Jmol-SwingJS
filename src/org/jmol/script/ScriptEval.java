@@ -1762,8 +1762,7 @@ public class ScriptEval extends ScriptExpr {
             continue;
         }
       }
-      if (iTok == i && token.tok != T.expressionEnd)
-        sb.append("<<<<");
+      Object tval = token.value;
       switch (token.tok) {
       case T.expressionBegin:
         if (useBraces)
@@ -1796,32 +1795,39 @@ public class ScriptEval extends ScriptExpr {
         break;
       case T.on:
         sb.append("true");
-        continue;
+        tval = null;
+        break;
       case T.off:
         sb.append("false");
-        continue;
+        tval = null;
+        break;
       case T.select:
         break;
       case T.integer:
         sb.appendI(token.intValue);
-        continue;
+        tval = null;
+        break;
       case T.point3f:
       case T.point4f:
       case T.bitset:
         sb.append(SV.sValue(token)); // list
-        continue;
+        tval = null;
+        break;
       case T.hash:
          if (Boolean.TRUE == ((Map<String, Object>)token.value).get("$_BINARY_$")) {
            sb.append("<BINARY DATA>");
-           continue;
+           tval = null;
+           break;
          }          
         //$FALL-THROUGH$
       case T.varray:
         sb.append(((SV) token).escape()); // list
-        continue;
+        tval = null;
+        break;
       case T.inscode:
         sb.appendC('^');
-        continue;
+        tval = null;
+        break;
       case T.spec_seqcode_range:
         if (token.intValue != Integer.MAX_VALUE)
           sb.appendI(token.intValue);
@@ -1829,7 +1835,6 @@ public class ScriptEval extends ScriptExpr {
           sb.append(Group.getSeqcodeStringFor(getSeqCode(token)));
         token = statement[++i];
         sb.appendC(' ');
-        // if (token.intValue == Integer.MAX_VALUE)
         sb.append(inBrace ? "-" : "- ");
         //$FALL-THROUGH$
       case T.spec_seqcode:
@@ -1837,16 +1842,19 @@ public class ScriptEval extends ScriptExpr {
           sb.appendI(token.intValue);
         else
           sb.append(Group.getSeqcodeStringFor(getSeqCode(token)));
-        continue;
+        tval = null;
+        break;
       case T.spec_chain:
         sb.append("*:");
         sb.append(vwr.getChainIDStr(token.intValue));
-        continue;
+        tval = null;
+        break;
       case T.spec_alternate:
         sb.append("*%");
         if (token.value != null)
           sb.append(token.value.toString());
-        continue;
+        tval = null;
+        break;
       case T.spec_model:
         sb.append("*/");
         //$FALL-THROUGH$
@@ -1857,18 +1865,21 @@ public class ScriptEval extends ScriptExpr {
         } else {
           sb.append("" + token.value);
         }
-        continue;
+        tval = null;
+        break;
       case T.spec_resid:
         sb.appendC('[');
         int ptr = token.intValue * 6 + 1;
         sb.append(Group.standardGroupList.substring(ptr, ptr + 3).trim());
         sb.appendC(']');
-        continue;
+        tval = null;
+        break;
       case T.spec_name_pattern:
         sb.appendC('[');
         sb.appendO(token.value);
         sb.appendC(']');
-        continue;
+        tval = null;
+        break;
       case T.spec_atom:
         sb.append("*.");
         break;
@@ -1876,12 +1887,14 @@ public class ScriptEval extends ScriptExpr {
         if (token.value instanceof P3d) {
           P3d pt = (P3d) token.value;
           sb.append("cell=").append(Escape.eP(pt));
-          continue;
+          tval = null;
+          break;
         }
         break;
       case T.string:
         sb.append("\"").appendO(token.value).append("\"");
-        continue;
+        tval = null;
+        break;
       case T.opEQ:
       case T.opLE:
       case T.opGE:
@@ -1895,18 +1908,23 @@ public class ScriptEval extends ScriptExpr {
           sb.append(T.nameOf(token.intValue)).append(" ");
         break;
       case T.trycmd:
-        continue;
+        tval = null;
+        break;
       case T.end:
         sb.append("end");
-        continue;
+        tval = null;
+        break;
       default:
         if (T.tokAttr(token.tok, T.identifier) || !doLogMessages)
           break;
         sb.appendC('\n').append(token.toString()).appendC('\n');
-        continue;
+        tval = null;
+        break;
       }
-      if (token.value != null)
+      if (tval != null)
         sb.append(token.value.toString());
+      if (iTok == i)
+        sb.append("<<<<");
     }
 //    if (iTok >= len - 1 && iTok != 9999)
 //      sb.append(" <<");

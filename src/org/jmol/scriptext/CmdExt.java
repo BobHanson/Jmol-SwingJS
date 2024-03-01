@@ -5909,10 +5909,18 @@ public class CmdExt extends ScriptExt {
           // ignore NullPointerException
         }
         eval.ignoreError = false;
-        if (newUC == null)
+        if (newUC == null) {
           // Origin vA vB vC
           // these are VECTORS, though
           oabc = eval.getPointArray(i, 4, false);
+        } else if (!chk && isModelkit) {
+          if (sym == null) {
+            vwr.assignSpaceGroup(null, "P1", (double[]) newUC);
+          } else if (sym.fixUnitCell((double[]) newUC)) {
+            eval.invArgStr(
+                "Unit cell is incompatible with current space group");
+          }
+        }
         i = eval.iToken;
       } else if (slen > i + 1) {
         pt = eval.getFractionalPoint(i);
@@ -5950,7 +5958,8 @@ public class CmdExt extends ScriptExt {
             fxyz[k] = P3d.newP(a[j]);
             vwr.toFractionalUC(unitCell, fxyz[k], false);
           }
-          vwr.setModelCagePts(-1, oabc, ucname);
+          if (!isModelkit)
+            vwr.setModelCagePts(-1, oabc, ucname);
           unitCell = vwr.getCurrentUnitCell();
           for (int j = bsAtoms.nextSetBit(0), k = 0; j >= 0; j = bsAtoms
               .nextSetBit(j + 1), k++) {
@@ -6443,6 +6452,7 @@ public class CmdExt extends ScriptExt {
     boolean isMove = (mode == T.moveto);
     boolean isSpacegroup = (mode == T.spacegroup);
     boolean isPacked = (mode == T.packed);
+    double[] params = null;
     P3d[] pts = null;
     if (isAtom || isBond || isConnect || isSpacegroup || isDelete || isMove
         || isAdd || isPacked) {
@@ -6634,10 +6644,13 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
     case T.spacegroup:
-      String s = vwr.assignSpaceGroup(bs, type);
+      String s = vwr.assignSpaceGroup(bs, type, params);
+      boolean isError = s.endsWith("!");
+      if (isError)
+        e.invArgStr(s);
       if (e.doReport())
         e.showString(s);
-      if (isPacked && !s.endsWith("!")) {
+      if (isPacked) {
         int n = vwr.getModelkit(false).cmdAssignAddAtoms(null, null,
             bsModelAtoms, "packed", e.fullCommand, false);
         if (e.doReport())

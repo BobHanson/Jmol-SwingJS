@@ -40,6 +40,10 @@ public abstract class ScriptError implements JmolScriptEvaluator {
     error(ERROR_invalidArgument);
   }
 
+  public void invArgStr(String msg) throws ScriptException {
+    errorOrWarn(ERROR_invalidArgument, msg, null, null, false);
+  }
+
   public void bad() throws ScriptException {
     error(ERROR_badArgumentCount);
   }
@@ -260,6 +264,8 @@ public abstract class ScriptError implements JmolScriptEvaluator {
       break;
     case ERROR_invalidArgument:
       msg = GT.$("invalid argument");
+      if (more != null)
+        msg += ": " + more;
       break;
     case ERROR_invalidParameterOrder:
       msg = GT.$("invalid parameter order");

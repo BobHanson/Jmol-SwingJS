@@ -94,7 +94,7 @@ public class SpaceGroupFinder {
                         SymmetryInterface uc, boolean asString, boolean isAssign, boolean checkSupercell) {
     double slop = uc.getPrecision();
     this.slop = (!Double.isNaN(slop) ? slop
-        : unitCellParams != null ? unitCellParams[SimpleUnitCell.PARAM_SLOP]
+        : unitCellParams != null  && unitCellParams.length > SimpleUnitCell.PARAM_SLOP ? unitCellParams[SimpleUnitCell.PARAM_SLOP]
             : Viewer.isDoublePrecision ? SimpleUnitCell.SLOPDP
                 : SimpleUnitCell.SLOPSP);
     P3d[] oabc = null;
