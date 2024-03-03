@@ -828,8 +828,7 @@ public final class ModelLoader {
       }
       String group3 = iterAtom.getGroup3();
       int chainID = iterAtom.getChainID();
-      if (jbr != null)
-        checkNewGroup(adapter, chainID, group3, iterAtom.getSequenceNumber(),
+      checkNewGroup(adapter, chainID, group3, iterAtom.getSequenceNumber(),
             iterAtom.getInsertionCode(), addH, isLegacyHAddition);
       int isotope = iterAtom.getElementNumber();
       if (addH && Elements.getElementNumber(isotope) == 1)
