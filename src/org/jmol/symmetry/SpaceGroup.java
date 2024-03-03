@@ -379,20 +379,20 @@ class SpaceGroup implements Cloneable {
           .append(intlTableNumber)
           .append(
               intlTableNumberExt.length() > 0 ? ":" + intlTableNumberExt : "")
-          .append("\ncrystal class: " + crystalClass)
-          .append("\n\n")
-          .appendI(operationCount)
-          .append(" operators")
-          .append(hallInfo != null && 
-              !hallInfo.hallSymbol.equals("--") ? " from Hall symbol "
-                  + hallInfo.hallSymbol + "  #" + intlTableNumberFull : "")
-          .append(": ");
-    }
-    for (int i = 0; i < operationCount; i++) {
-      sb.append("\n").append(operations[i].xyz);
+          .append("\ncrystal class: " + crystalClass);
     }
     sb.append("\n\n").append(
         hallInfo == null ? "Hall symbol unknown" : hallInfo.dumpInfo());
+    sb.append("\n\n")
+    .appendI(operationCount)
+    .append(" operators")
+    .append(hallInfo != null && 
+        !hallInfo.hallSymbol.equals("--") ? " from Hall symbol "
+            + hallInfo.hallSymbol + "  #" + intlTableNumberFull : "")
+    .append(": ");
+    for (int i = 0; i < operationCount; i++) {
+      sb.append("\n").append(operations[i].xyz);
+    }
 
     //sb.append("\n\ncanonical Seitz: ").append((String) info)
      //sb.append("\n----------------------------------------------------\n");
