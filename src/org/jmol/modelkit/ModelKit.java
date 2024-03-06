@@ -2185,9 +2185,7 @@ public class ModelKit {
       Map<String, Object> htParams = new Hashtable<String, Object>();
       if (site > 0)
         htParams.put("fixedSite", Integer.valueOf(site));
-      //      // TODO idea not implemented
-      //      if (type != null)
-      //        htParams.put("fixedElement", type);
+      htParams.put("element", type);
       bs = vwr.addHydrogensInline(bs, vConnections, pts, htParams);
       if (bd > 0 && !isConnected && vConnections.isEmpty()) {
         connectAtoms(bd, 1, bs0, bs);
@@ -2228,14 +2226,14 @@ public class ModelKit {
         vwr.ms.updateBasisFromSite(mi);
       }
       int firstAtom = vwr.ms.am[mi].firstAtomIndex;
-      if (atomicNo >= 0) {
-        atomicNo = Elements.elementNumberFromSymbol(type, true);
-        BS bsM = vwr.getThisModelAtoms();
-        for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
-          if (vwr.ms.at[i].getAtomSite() == site)
-            vwr.ms.setElement(vwr.ms.at[i], atomicNo, true);
-        }
-      }
+//      if (atomicNo >= 0) {
+//        atomicNo = Elements.elementNumberFromSymbol(type, true);
+//        BS bsM = vwr.getThisModelAtoms();
+//        for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
+//          if (vwr.ms.at[i].getAtomSite() == site)
+//            vwr.ms.setElement(vwr.ms.at[i], atomicNo, true);
+//        }
+//      }
       vwr.ms.setAtomNamesAndNumbers(firstAtom, -ac, null, true);
       vwr.sm.setStatusStructureModified(-1, mi, -3, "OK", 1, bs);
       updateElementKey(null);

@@ -813,14 +813,18 @@ public class ScriptManager implements JmolScriptManager {
     SB sb = new SB();
     sb.appendI(pts.length).append("\n").append(JC.ADD_HYDROGEN_TITLE)
         .append("#noautobond").append("\n");
+    String sym = (String) htParams.get("element");
+    sym = (sym == null ? "H" : sym) + " ";
     for (int i = 0; i < pts.length; i++)
-      sb.append("H ").appendD(pts[i].x).append(" ").appendD(pts[i].y)
+      sb.append(sym).appendD(pts[i].x).append(" ").appendD(pts[i].y)
           .append(" ").appendD(pts[i].z).append(" - - - - ").appendI(++atomno)
           .appendC('\n');
-
+    boolean wasRefreshing = vwr.getBoolean(T.refreshing);
+    vwr.setBooleanProperty("refreshing",false);
     vwr.openStringInlineParamsAppend(sb.toString(), htParams, true);
     if (sbConnect.length() > 0)
       vwr.runScript(sbConnect.toString());
+    vwr.setBooleanProperty("refreshing", wasRefreshing);
     BS bsB = vwr.getModelUndeletedAtomsBitSet(modelIndex);
     bsB.andNot(bsA);
     vwr.g.appendNew = wasAppendNew;
