@@ -1209,12 +1209,15 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
         // monoclinic
         switch (sg.uniqueAxis) {
         case 'a':
+          //c = b;
           beta = gamma = 90;
           break;
         case 'b':
+          //c = a;
           alpha = gamma = 90;
           break;
         case 'c':
+          //b = a;
           alpha = beta = 90;
           break;
         }
