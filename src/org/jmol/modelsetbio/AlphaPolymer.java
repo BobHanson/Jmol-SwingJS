@@ -39,9 +39,8 @@ public class AlphaPolymer extends BioPolymer {
   public int pt0;
 
   AlphaPolymer(Monomer[] monomers, int pt0) {
+    super(monomers, true);
     this.pt0 = pt0;
-    set(monomers);
-    hasStructure = true;
   }
 
   

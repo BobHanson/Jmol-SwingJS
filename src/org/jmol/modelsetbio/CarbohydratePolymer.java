@@ -26,7 +26,7 @@ package org.jmol.modelsetbio;
 public class CarbohydratePolymer extends BioPolymer {
 
   CarbohydratePolymer(Monomer[] monomers) {
-    set(monomers);
+    super(monomers, false);
     type = TYPE_CARBOHYDRATE;
   }
 

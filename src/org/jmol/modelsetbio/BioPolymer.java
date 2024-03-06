@@ -53,8 +53,13 @@ import org.jmol.viewer.JC;
  */
 public abstract class BioPolymer implements Structure {
 
-  protected BioPolymer() {
-    
+  protected BioPolymer(Monomer[] monomers, boolean hasStructure) {
+    this.monomers = monomers;
+    this.hasStructure = hasStructure;
+    monomerCount = monomers.length;
+    for (int i = monomerCount; --i >= 0;)
+      monomers[i].setBioPolymer(this, i);
+    model = monomers[0].getModel();    
   }
   
   public Model model;
@@ -84,14 +89,6 @@ public abstract class BioPolymer implements Structure {
   protected final static int TYPE_CARBOHYDRATE = 3;
 
   public int cyclicFlag;
-  
-  protected void set(Monomer[] monomers) {
-    this.monomers = monomers;
-    monomerCount = monomers.length;
-    for (int i = monomerCount; --i >= 0;)
-      monomers[i].setBioPolymer(this, i);
-    model = monomers[0].getModel();
-  }
   
   @Override
   public void setAtomBits(BS bs) {

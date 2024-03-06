@@ -211,8 +211,11 @@ public class WyckoffFinder {
       boolean isGeneral = (returnType == WYCKOFF_RET_GENERAL);
       for (int i = isGeneral ?  1 : npos; --i >= 0;) {
         Map<String, Object> map = (Map<String, Object>) positions.get(i);
-        if (isGeneral || map.get("label").equals(letter)) {
-          SB sbc = new SB();
+        String label = (String) map.get("label");
+        if (isGeneral || label.equals(letter)) {
+           SB sbc = new SB();
+            if (isGeneral)
+              sbc.append(label).appendC(' ');
           Lst<Object> coords = (i == 0 ? gpos : (Lst<Object>) map.get("coord"));
           getList(coords, letter, sbc, 0);
           if (i > 0 &&  ncent > 0) {
