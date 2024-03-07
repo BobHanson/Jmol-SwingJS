@@ -149,13 +149,21 @@ class PointGroup {
 
 
   String getName() {
-    return name;
+    return getConventionalName(name);
   }
   
   String getHermannMauguinName() {
-	  
-	    return getHMfromSFName(name);
-	  }
+    return getHMfromSFName(name);
+  }
+  
+  private final static int CONVENTION_SCHOENFLIES = 0;
+  private final static int CONVENTION_HERMANN_MAUGUIN = 1;
+  
+  private int convention = CONVENTION_SCHOENFLIES;
+  
+  String getConventionalName(String name) {
+    return (convention == CONVENTION_HERMANN_MAUGUIN ? getHMfromSFName(name) : name);    
+  }
 
   private final V3d vTemp = new V3d();
   private int centerAtomIndex = -1;
@@ -174,6 +182,8 @@ class PointGroup {
   private boolean localEnvOnly;
 
   private boolean isLinear;
+
+  private double sppa;
 
 
   /**
@@ -203,24 +213,11 @@ class PointGroup {
    * @return a PointGroup
    */
   
-  /**
-   * 
-   * @param pgLast
-   * @param center
-   * @param atomset a list of Atom or other Point3fi that implements Node
-   * @param bsAtoms
-   * @param haveVibration     if true, then all items in atomset must be Atom class 
-   * @param distanceTolerance
-   * @param linearTolerance
-   * @param maxAtoms
-   * @param localEnvOnly
-   * @return a PointGroup object, possibly the last calculated for efficiency
-   */
   static PointGroup getPointGroup(PointGroup pgLast, T3d center,
                                          T3d[] atomset, BS bsAtoms,
                                          boolean haveVibration,
-                                         double distanceTolerance, double linearTolerance, int maxAtoms, boolean localEnvOnly) {
-    PointGroup pg = new PointGroup();
+                                         double distanceTolerance, double linearTolerance, int maxAtoms, boolean localEnvOnly, boolean isHM, double sppa) {
+    PointGroup pg = new PointGroup(isHM);
     if (distanceTolerance <= 0) {
       distanceTolerance = 0.01f;
     }
@@ -238,18 +235,21 @@ class PointGroup {
     pg.haveVibration = haveVibration;
     pg.center = center;
     pg.localEnvOnly = localEnvOnly;
+    pg.sppa = sppa;
     if (Logger.debugging)
       pgLast = null;
     return (pg.set(pgLast, atomset) ? pg : pgLast);
   }
 
-  private PointGroup() {
+  private PointGroup(boolean isHM) {
+    convention = (isHM ? CONVENTION_HERMANN_MAUGUIN : CONVENTION_SCHOENFLIES);
   }
   
   private boolean isEqual(PointGroup pg) {
     if (pg == null)
       return false;
-    if (linearTolerance != pg.linearTolerance 
+    if (convention != pg.convention 
+        || linearTolerance != pg.linearTolerance 
         || distanceTolerance != pg.distanceTolerance
         || nAtoms != pg.nAtoms
         || localEnvOnly != pg.localEnvOnly
@@ -409,8 +409,8 @@ class PointGroup {
   private Operation setPrincipalAxis(int n, int nPlanes) {
     Operation principalPlane = setPrincipalPlane(n, nPlanes);
     if (nPlanes == 0 && n < firstProper || nAxes[n] == 1) {
-      if (nPlanes > 0 && n < firstProper)
-        n = firstProper + n / 2;
+//      if (nPlanes > 0 && n < firstProper)
+//        n = firstProper + n / 2;
         return axes[n][0];
     }
     // D2, D2d, D2h -- which c2 axis is it?
@@ -697,7 +697,7 @@ class PointGroup {
         for (int k = j; --k >= 0;) {
           v3.add2(vs[i], vs[j]);
           v3.add(vs[k]);
-          if (v3.length() < 1.0)
+          if (v3.length() < 1)
             continue;
           checkAxisOrder(c3, v3, center);
         }
@@ -1031,15 +1031,20 @@ class PointGroup {
         Logger.debug("new operation -- plane " + normalOrAxis);
     }
 
-    String getLabel() {
+    String getLabel(boolean conventional) {
+      String s;
       switch (type) {
       case OPERATION_PLANE:
-        return "Cs";
+        s ="Cs";
+        break;
       case OPERATION_IMPROPER_AXIS:
-        return "S" + order;
+        s = "S" + order;
+        break;
       default:
-        return "C" + order;
+        s = "C" + order;
+        break;
       }
+      return (conventional ? getConventionalName(s) : s);
     }
 
     M3d mat;
@@ -1054,6 +1059,9 @@ class PointGroup {
       return mat = m;
     }
 
+    public String toString() {
+      return getLabel(false) + " " + normalOrAxis;
+    }
   }
 
   Object getInfo(int modelIndex, String drawID, boolean asInfo, String type,
@@ -1070,14 +1078,14 @@ class PointGroup {
       for (int j = nAxes[i]; --j >= 0;)
         nType[axes[i][j].type][0]++;
     SB sb = new SB().append("# ").appendI(nAtoms).append(" atoms\n");
-    String hmName = getHMfromSFName(this.name);
+    String name = getConventionalName(this.name);
     if (asDraw) {
       drawID = "draw " + drawID;
       boolean haveType = (type != null && type.length() > 0);
       drawType = type = (haveType ? type : "");
       drawIndex = index;
-      boolean anyProperAxis = (type.equalsIgnoreCase("Cn"));
-      boolean anyImproperAxis = (type.equalsIgnoreCase("Sn"));
+      boolean anyProperAxis = (type.equalsIgnoreCase(getConventionalName("Cn")));
+      boolean anyImproperAxis = (type.equalsIgnoreCase(getConventionalName("Sn")));
       sb.append("set perspectivedepth off;\n");
       String m = "_" + modelIndex + "_";
       if (!haveType)
@@ -1093,31 +1101,31 @@ class PointGroup {
           offset = 0.1d;
         if (nAxes[i] == 0)
           continue;
-        String label = (!isLinear ? axes[i][0].getLabel() : "C_infinity");
+        String sglabel = (!isLinear ? axes[i][0].getLabel(false) : "C_infinity");
+        String label = (!isLinear ? axes[i][0].getLabel(true) : "C_infinity");
         offset += 0.25d;
-        double scale = scaleFactor * radius + offset;
+        double scale = scaleFactor * 1.05d * radius + offset * 80/sppa;
         boolean isProper = (i >= firstProper);
         if (!haveType || type.equalsIgnoreCase(label) || anyProperAxis
-            && isProper || anyImproperAxis && !isProper)
+            && isProper || anyImproperAxis && !isProper) {
           for (int j = 0; j < nAxes[i]; j++) {
             if (index > 0 && j + 1 != index)
               continue;
             op = axes[i][j];
             v.add2(op.normalOrAxis, center);
-            if (op.type == OPERATION_IMPROPER_AXIS)
-              scale = -scale;
-            sb.append(drawID + "pgva").append(m).append(label).append("_").appendI(
-                j + 1).append(" width 0.05 scale ").appendD(scale).append(" ").append(
+            sb.append(drawID + "pgva").append(m).append(sglabel).append("_").appendI(
+                j + 1).append(" width 0.05 scale ").appendD(op.type == OPERATION_IMPROPER_AXIS ? -scale : scale).append(" ").append(
                 Escape.eP(v));
             v.scaleAdd2(-2, op.normalOrAxis, v);
             boolean isPA = (!isLinear && principalAxis != null && op.index == principalAxis.index);
             sb.append(Escape.eP(v)).append(
-                "\"").append(label).append(isPA ? "*" : "").append("\" color ").append(
+                "\"").append(label).append(isPA ? "" : "").append("\" color ").append(
                 isPA ? "red" : op.type == OPERATION_IMPROPER_AXIS ? "blue"
                     : "orange").append(";\n");
           }
+        }
       }
-      if (!haveType || type.equalsIgnoreCase("Cs")) {
+      if (!haveType || type.equalsIgnoreCase(this.getConventionalName("Cs"))) {
         for (int j = 0; j < nAxes[0]; j++) {
           if (index > 0 && j + 1 != index)
             continue;
@@ -1142,16 +1150,16 @@ class PointGroup {
         }
       }
 
-      String name = this.name + "(" + hmName + ")";
       sb.append("# name=").append(name);
-      sb.append(", nCi=").appendI(haveInversionCenter ? 1 : 0);
-      sb.append(", nCs=").appendI(nAxes[OPERATION_PLANE]);
-      sb.append(", nCn=").appendI(nType[OPERATION_PROPER_AXIS][0]);
-      sb.append(", nSn=").appendI(nType[OPERATION_IMPROPER_AXIS][0]);
+      sb.append(", n" + getConventionalName("Ci") + "=").appendI(haveInversionCenter ? 1 : 0);
+      sb.append(", n" + getConventionalName("Cs") + "=").appendI(nAxes[OPERATION_PLANE]);
+      sb.append(", n" + getConventionalName("Cn") + "=").appendI(nType[OPERATION_PROPER_AXIS][0]);
+      sb.append(", n" + getConventionalName("Sn") + "=").appendI(nType[OPERATION_IMPROPER_AXIS][0]);
       sb.append(": ");
       for (int i = maxAxis; --i >= 2;)
         if (nAxes[i] > 0) {
-          sb.append(" n").append(i < firstProper ? "S" : "C").appendI(i % firstProper);
+          String axisName = getConventionalName((i < firstProper ? "S" : "C") + (i % firstProper));
+          sb.append(" n").append(axisName);
           sb.append("=").appendI(nAxes[i]);
         }
       sb.append(";\n");
@@ -1165,7 +1173,7 @@ class PointGroup {
     int nTotal = 1;
     int nElements = 0; // planes Cs
     
-    String ctype = (haveInversionCenter ? "Ci" : "center");
+    String ctype = (haveInversionCenter ? getConventionalName("Ci") : "center");
     if (haveInversionCenter) {
       nTotal++;
       nElements++;
@@ -1184,9 +1192,10 @@ class PointGroup {
       if (nAxes[i] > 0) {
         // includes planes
         n = nUnique[i];
-        String label = axes[i][0].getLabel();
+        String label = axes[i][0].getLabel(true);
+        String sglabel = axes[i][0].getLabel(false);
         if (asInfo)
-          info.put("n" + label, Integer.valueOf(nAxes[i]));
+          info.put("n" + sglabel, Integer.valueOf(nAxes[i]));
         else
           sb.append("\n\n").append(name).append("\tn").append(label).append("\t").appendI(nAxes[i]).append("\t").appendI(n);
         n *= nAxes[i];
@@ -1202,13 +1211,13 @@ class PointGroup {
             vinfo.addLast(aop.normalOrAxis);
             minfo.addLast(aop.getM3());
           } else {
-            sb.append("\n").append(name).append("\t").append(label).append("_").appendI(j + 1).append("\t"
+            sb.append("\n").append(name).append("\t").append(sglabel).append("_").appendI(j + 1).append("\t"
                 ).appendO(aop.normalOrAxis);
           }
         }
         if (asInfo) {
-          info.put(label, vinfo);
-          info.put(label + "_m", minfo);
+          info.put(sglabel, vinfo);
+          info.put(sglabel + "_m", minfo);
         }
       }
     }
@@ -1216,20 +1225,20 @@ class PointGroup {
     if (!asInfo) {
       sb.append("\n");
       sb.append("\n").append(name).append("\ttype\tnElements\tnUnique");
-      sb.append("\n").append(name).append("\tE\t  1\t  1");
+      sb.append("\n").append(name).append("\t"+getConventionalName("E") +"\t  1\t  1");
 
       n = (haveInversionCenter ? 1 : 0);
-      sb.append("\n").append(name).append("\tCi\t  ").appendI(n).append("\t  ").appendI(n);
+      sb.append("\n").append(name).append("\t"+getConventionalName("Ci") +"\t  ").appendI(n).append("\t  ").appendI(n);
 
-      sb.append("\n").append(name).append("\tCs\t");
+      sb.append("\n").append(name).append("\t"+getConventionalName("Cs") +"\t");
       PT.rightJustify(sb, "    ", nAxes[0] + "\t");
       PT.rightJustify(sb, "    ", nAxes[0] + "\n");
 
-      sb.append(name).append("\tCn\t");
+      sb.append(name).append("\t"+getConventionalName("Cn")+"\t");
       PT.rightJustify(sb, "    ", nType[OPERATION_PROPER_AXIS][0] + "\t");
       PT.rightJustify(sb, "    ", nType[OPERATION_PROPER_AXIS][1] + "\n");
 
-      sb.append(name).append("\tSn\t");
+      sb.append(name).append("\t"+getConventionalName("Sn")+"\t");
       PT.rightJustify(sb, "    ", nType[OPERATION_IMPROPER_AXIS][0] + "\t");
       PT.rightJustify(sb, "    ", nType[OPERATION_IMPROPER_AXIS][1] + "\n");
 
@@ -1238,7 +1247,7 @@ class PointGroup {
       return (textInfo = sb.toString());
     }
     info.put("name", this.name);
-    info.put("hmName", hmName);
+    info.put("hmName", getHermannMauguinName());
     info.put("nAtoms", Integer.valueOf(nAtoms));
     info.put("nTotal", Integer.valueOf(nTotal));
     info.put("nElements", Integer.valueOf(nElements));
@@ -1271,7 +1280,7 @@ class PointGroup {
   private final static String[] SF2HM = 
       ("Cn,1,2,3,4,5,6,7,8,9,10,11,12"+
       "|Cnv,m,2m,3m,4mm,5m,6mm,7m,8mm,9m,10mm,11m,12mm,\u221em"+
-      "|Sn,,-1,,-4,,-3,,-8,,-5,,(-12)"+
+      "|Sn,,-1,-6,-4,(-10),-3,(-14),-8,(-18),-5,(-22),(-12)"+
       "|Cnh,m,2/m,-6,4/m,-10,6/m,-14,8/m,-18,10/m,-22,12/m"+
       "|Dn,,222,32,422,52,622,72,822,92,(10)22,(11)2,(12)22"+
       "|Dnd,,-42m,-3m,-82m,-5m,(-12)2m,-7m,(-16)2m,-9m,(-20)2m,(-11)m,(-24)2m"+
@@ -1286,15 +1295,24 @@ class PointGroup {
 
   private static Map<String, String> htSFToHM;
   
-  private static String getHMfromSFName(String name) {
+  /**
+   * Get Hermann-Mauguin name from Schoenflies name
+   * @param name
+   * @return HM name
+   */
+  public static String getHMfromSFName(String name) {
     if (htSFToHM == null) {
       htSFToHM = new Hashtable<String, String>();
       String[] syms = SF2HM;
+      addNames("E", "1");
+      addNames("Ci", "-1");
+      addNames("Cn", "n");
+      addNames("Sn", "-n");
       for (int i = 0; i < syms.length; i++) {
         String[] list = syms[i].split(",");
         String sym = list[0];
         if (list.length == 2) {
-          htSFToHM.put(sym, list[1]);
+          addNames(sym, list[1]);
 //          System.out.println(sym + "\t" + list[1]);
           continue;
         }
@@ -1303,18 +1321,26 @@ class PointGroup {
         for (int n = 1; n < 13; n++) {
           String val = list[n];
           if (val.length() > 0) {
-            htSFToHM.put(type + n + ext, val); 
+            addNames(type + n + ext, val); 
             System.out.println(type + n + ext + "\t" + val);
           }
         }
         if (list.length == 14) {
-          htSFToHM.put(type + "\u0221e" + ext, list[13]);
+          // "Dinfd
+          addNames(type + "\u221e" + ext, list[13]);
         }
       }
       
     }
-    return htSFToHM.get(name);
+    String hm = htSFToHM.get(name);
+    return (hm == null ? name : hm);
   }
+
+  private static void addNames(String sch, String hm) {
+    htSFToHM.put(sch, hm);
+    htSFToHM.put(hm, sch);
+  }
+  
   
 //  C1  1
 //  C2  2

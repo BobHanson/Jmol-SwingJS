@@ -416,13 +416,13 @@ public class MathExt {
         center = new P3d();
       }
     }
-    SymmetryInterface pointGroup = vwr.getSymTemp().setPointGroup(null, center,
-        (pts == null ? vwr.ms.at : pts), bsAtoms, false,
+    SymmetryInterface pointGroup = vwr.getSymTemp().setPointGroup(vwr, null,
+        center, (pts == null ? vwr.ms.at : pts), bsAtoms,
+        false,
         distanceTolerance < 0 ? vwr.getDouble(T.pointgroupdistancetolerance)
             : distanceTolerance,
         linearTolerance < 0 ? vwr.getDouble(T.pointgrouplineartolerance)
-            : linearTolerance,
-        (bsAtoms == null ? pts.length : bsAtoms.cardinality()), true);
+            : linearTolerance, (bsAtoms == null ? pts.length : bsAtoms.cardinality()), true);
     return mp.addXMap((Map<String, ?>) pointGroup.getPointGroupInfo(-1, null,
         true, null, 0, 1));
   }

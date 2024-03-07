@@ -103,16 +103,16 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public SymmetryInterface setPointGroup(SymmetryInterface siLast, T3d center,
-                                         T3d[] atomset, BS bsAtoms,
+  public SymmetryInterface setPointGroup(Viewer vwr, SymmetryInterface siLast,
+                                         T3d center, T3d[] atomset,
+                                         BS bsAtoms,
                                          boolean haveVibration,
                                          double distanceTolerance,
-                                         double linearTolerance,
-                                         int maxAtoms, boolean localEnvOnly) {
+                                         double linearTolerance, int maxAtoms, boolean localEnvOnly) {
     pointGroup = PointGroup.getPointGroup(
         siLast == null ? null : ((Symmetry) siLast).pointGroup, center, atomset,
         bsAtoms, haveVibration, distanceTolerance, linearTolerance, maxAtoms,
-        localEnvOnly);
+        localEnvOnly, vwr.getBoolean(T.symmetryhermannmauguin), vwr.getScalePixelsPerAngstrom(false));
     return this;
   }
 

@@ -392,6 +392,7 @@ public class GlobalSettings {
     setF("strutLengthMaximum", strutLengthMaximum);
     setI("strutSpacing", strutSpacing);
     setB("strutsMultiple", strutsMultiple);
+    setB("symmetryhermannmauguin", symmetryHermannMauguin);
     setB("testFlag1", testFlag1);
     setB("testFlag2", testFlag2);
     setB("testFlag3", testFlag3);
@@ -670,6 +671,7 @@ public class GlobalSettings {
   double strutLengthMaximum = 7.0d;
   double strutDefaultRadius = JC.DEFAULT_STRUT_RADIUS;
   boolean strutsMultiple = false; //on a single position    
+  boolean symmetryHermannMauguin = false;
   //boolean useArcBall = false;
   boolean useMinimizationThread = true;
   boolean useNumberLocalization = true;
@@ -1000,7 +1002,7 @@ public class GlobalSettings {
       + ";selecthetero;selecthydrogen"
       // removed in Jmol 14.32.68
       + ";pointgrouplineartolerance;pointgroupdistancetolerance"//;pointgroupmmaxatoms"
-      + ";minimizationreportsteps;")
+      + ";minimizationreportsteps;symmetryhermannmauguin;")
       .toLowerCase();
 
   Object getAllVariables() {

@@ -5972,6 +5972,11 @@ public class CmdExt extends ScriptExt {
         isReset = true;
       }
       if (isReset) {
+        if (isModelkit && sym != null) {
+          vwr.ms.setSpaceGroup(vwr.am.cmi, sym.getUnitCell(oabc, false, null),
+              null);
+          return;
+        }
         vwr.setModelCagePts(-1, oabc, ucname);
       }
     }
@@ -6635,7 +6640,7 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms deleted"), nd), false);
       break;
     case T.moveto:
-      // do not allow projection using this command
+      // allow projection using this command if ends with TRUE
       int nm = vwr.getModelkit(false).cmdAssignMoveAtoms(bs, index,
           P3d.newP(pt), pts, true, false);
       if (nm > 0)

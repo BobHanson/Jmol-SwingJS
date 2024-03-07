@@ -247,11 +247,11 @@ public interface SymmetryInterface {
                            int index, double scale);
 
   SymmetryInterface setPointGroup(
-                                  SymmetryInterface pointGroupPrevious,
-                                  T3d center, T3d[] atomset,
+                                  Viewer vwr,
+                                  SymmetryInterface pointGroupPrevious, T3d center,
+                                  T3d[] atomset,
                                   BS bsAtoms,
-                                  boolean haveVibration,
-                                  double distanceTolerance, double linearTolerance, int maxAtoms, boolean localEnvOnly);
+                                  boolean haveVibration, double distanceTolerance, double linearTolerance, int maxAtoms, boolean localEnvOnly);
 
   int[] getInvariantSymops(P3d p3, int[] v0);
 

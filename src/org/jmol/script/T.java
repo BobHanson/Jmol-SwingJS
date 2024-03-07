@@ -359,9 +359,7 @@ public class T {
   public final static int rotateSelected = scriptCommand | 49;
   public final static int save           = scriptCommand | 50;
 //public final static int script   see mathfunc
-
   public final static int scale        = scriptCommand | 51 | setparam;
-
   public final static int selectionhalos = scriptCommand | 52 | deprecatedparam | defaultON;
 // public final static int show     see mathfunc
   public final static int slab         = scriptCommand | 53 | intparam | defaultON;
@@ -1115,7 +1113,8 @@ public class T {
   public final static int ssbondsbackbone                = booleanparam | 176;
   public final static int statusreporting                = booleanparam | 178;
   public final static int strutsmultiple                 = booleanparam | 179;
-  public final static int syncmouse                      = booleanparam | 180;
+  public final static int symmetryhermannmauguin                     = booleanparam | 180;
+  public final static int syncmouse                      = booleanparam | 181;
   public final static int syncscript                     = booleanparam | 182;
   public final static int testflag1                      = booleanparam | 184;
   public final static int testflag2                      = booleanparam | 186;
@@ -1920,6 +1919,7 @@ public class T {
         "state",
         "symbol",
         "symmetry",
+        "symmetryHM",
         "spaceGroup",
         "transform",
         "translation",
@@ -2996,6 +2996,7 @@ public class T {
         state,                              // "state"
         symbol,                             // "symbol"
         symmetry,                           // "symmetry"
+        symmetryhermannmauguin,                         // "symmetryHM"
         spacegroup,                         // "spaceGroup"
         transform,                          // "transform"
         translation,                        // "translation"

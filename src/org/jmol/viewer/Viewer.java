@@ -6036,6 +6036,8 @@ public class Viewer extends JmolViewer
       return g.ssbondsBackbone;
     case T.strutsmultiple:
       return g.strutsMultiple;
+    case T.symmetryhermannmauguin:
+      return g.symmetryHermannMauguin;
     case T.testflag1:
       // CIPChirality -- turns off tracking (skip creation of _M.CIPInfo for speed tests)
       // no PNGJ caching
@@ -6903,6 +6905,10 @@ public class Viewer extends JmolViewer
   public void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
+    case T.symmetryhermannmauguin:
+      // 16.1.66
+      g.symmetryHermannMauguin = value;
+      break;
     case T.doubleprecision:
       value = true;
       // not appicable to Jmol-SwingJS
