@@ -317,6 +317,11 @@ public class ScriptManager implements JmolScriptManager {
 
   @Override
   public String evalFile(String strFilename) {
+    return evalFileArgs(strFilename, null);
+  }
+  
+  @Override
+  public String evalFileArgs(String strFilename, String args) {
     // app -s flag
     int ptWait = strFilename.indexOf(" -noqueue"); // for TestScripts.java
     if (ptWait >= 0) {
@@ -324,11 +329,6 @@ public class ScriptManager implements JmolScriptManager {
           "script " + PT.esc(strFilename.substring(0, ptWait)), "", false,
           false);
     }
-    return evalFileArgs(strFilename, null);
-  }
-  
-  @Override
-  public String evalFileArgs(String strFilename, String args) {
     // app -s flag and app -A flag
     return addScript("script " + PT.esc(strFilename) + (args == null ? "" : "(" + args + ")"), null, false);
     
@@ -778,7 +778,7 @@ public class ScriptManager implements JmolScriptManager {
   public BS addHydrogensInline(BS bsAtoms, Lst<Atom> vConnections, P3d[] pts,
                                Map<String, Object> htParams)
       throws Exception {
-    int iatom = bsAtoms.nextSetBit(0);
+    int iatom = (bsAtoms == null ? -1 : bsAtoms.nextSetBit(0));
     if (htParams == null)
       htParams = new Hashtable<String, Object>();
     int modelIndex = (iatom < 0 ? vwr.am.cmi : vwr.ms.at[iatom].mi);
@@ -786,16 +786,9 @@ public class ScriptManager implements JmolScriptManager {
       modelIndex = vwr.ms.mc - 1;
     htParams.put("appendToModelIndex", Integer.valueOf(modelIndex));
     boolean siteFixed = (htParams.containsKey("fixedSite"));
-    //    if (!vwr.ms.isAtomInLastModel(iatom))
-    //      return new BS();
-
-    // must be added to the LAST data set only
-
     BS bsA = vwr.getModelUndeletedAtomsBitSet(modelIndex);
     boolean wasAppendNew = vwr.g.appendNew;
     vwr.g.appendNew = false;
-    // BitSet bsB = getAtomBits(Token.hydrogen, null);
-    // bsA.andNot(bsB);
     int atomno = 0;
     for (int i = bsA.nextSetBit(0); i >= 0; i = bsA.nextSetBit(i + 1)) {
       int an = vwr.ms.at[i].getAtomNumber();

@@ -30,8 +30,8 @@ import java.util.Map.Entry;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.MSInterface;
+import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.api.Interface;
-import org.jmol.api.SymmetryInterface;
 import org.jmol.util.Logger;
 import org.jmol.util.Modulation;
 
@@ -936,7 +936,7 @@ public class JanaReader extends AtomSetCollectionReader {
   private void adjustM40Occupancies() {
     Map<String, Integer> htSiteMult = new Hashtable<String, Integer>();    
     Atom[] atoms = asc.atoms;
-    SymmetryInterface symmetry = asc.getSymmetry();
+    FileSymmetry symmetry = asc.getSymmetry();
     for (int i = asc.ac; --i >= 0;) {
       Atom a = atoms[i];
       Integer ii = htSiteMult.get(a.atomName);

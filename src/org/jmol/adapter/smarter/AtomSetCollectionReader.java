@@ -27,9 +27,9 @@ package org.jmol.adapter.smarter;
 import java.io.BufferedReader;
 import java.util.Map;
 
+import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
-import org.jmol.api.SymmetryInterface;
 import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
@@ -139,6 +139,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   protected static final String CELL_TYPE_CONVENTIONAL = "conventional";
   protected static final String CELL_TYPE_PRIMITIVE = "primitive";
+  protected static final String CELL_TYPE_SUPER = "super";
 
   public boolean isBinary;
   public boolean debugging;
@@ -208,7 +209,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean ignoreFileSpaceGroupName;
   public double[] unitCellParams; //0-5 a b c alpha beta gamma; 6-21 matrix c->f
   protected int desiredModelNumber = Integer.MIN_VALUE;
-  public SymmetryInterface symmetry;
+  public FileSymmetry symmetry;
   protected OC out;
   protected boolean iHaveFractionalCoordinates;
   public boolean doPackUnitCell;
@@ -443,6 +444,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   protected boolean noPack;
 
+  /**
+   * actual SUPERCELL keyword, not just "cell="
+   */
+  public boolean isSUPERCELL;
+
   protected void finalizeReaderASCR() throws Exception {
     isFinalized = true;
     if (asc.atomSetCount > 0) {
@@ -615,9 +621,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       if (s.length() != 1) {
         strSupercell = ((int) s.x) + "a," + ((int) s.y) + "b," + ((int) s.z)
             + "c";
+        isSUPERCELL = true;
       }
     } else if (o instanceof String) {
       strSupercell = (String) o;
+      isSUPERCELL = true;
     }
     // ptFile < 0 indicates just one file being read
     // ptFile >= 0 indicates multiple files are being loaded
@@ -979,15 +987,15 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (ignoreFileUnitCell)
       return;
     clearUnitCell();
-    unitCellParams[0] = a;
-    unitCellParams[1] = b;
-    unitCellParams[2] = c;
+    unitCellParams[SimpleUnitCell.INFO_A] = a;
+    unitCellParams[SimpleUnitCell.INFO_B] = b;
+    unitCellParams[SimpleUnitCell.INFO_C] = c;
     if (alpha != 0)
-      unitCellParams[3] = alpha;
+      unitCellParams[SimpleUnitCell.INFO_ALPHA] = alpha;
     if (beta != 0)
-      unitCellParams[4] = beta;
+      unitCellParams[SimpleUnitCell.INFO_BETA] = beta;
     if (gamma != 0)
-      unitCellParams[5] = gamma;
+      unitCellParams[SimpleUnitCell.INFO_GAMMA] = gamma;
     iHaveUnitCell = checkUnitCell(SimpleUnitCell.PARAM_STD);
   }
 
@@ -1008,9 +1016,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     iHaveUnitCell = checkUnitCell(SimpleUnitCell.PARAM_VAX + 9);
     if (iHaveUnitCell) {
       if (slabXY || polymerX)
-        unitCellParams[2] = -1;
+        unitCellParams[SimpleUnitCell.INFO_C] = -1;
       if (polymerX)
-        unitCellParams[1] = -1;
+        unitCellParams[SimpleUnitCell.INFO_B] = -1;
     }
   }
 
@@ -1037,12 +1045,12 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
     if (n == SimpleUnitCell.PARAM_STD
         && Double.isNaN(unitCellParams[SimpleUnitCell.PARAM_VAX])) {
-      if (slabXY && unitCellParams[2] > 0) {
+      if (slabXY && unitCellParams[SimpleUnitCell.INFO_C] > 0) {
         SimpleUnitCell.addVectors(unitCellParams);
-        unitCellParams[2] = -1;
-      } else if (polymerX && unitCellParams[1] > 0) {
+        unitCellParams[SimpleUnitCell.INFO_C] = -1;
+      } else if (polymerX && unitCellParams[SimpleUnitCell.INFO_B] > 0) {
         SimpleUnitCell.addVectors(unitCellParams);
-        unitCellParams[1] = unitCellParams[2] = -1;
+        unitCellParams[SimpleUnitCell.INFO_B] = unitCellParams[SimpleUnitCell.INFO_C] = -1;
       }
     }
     if (doApplySymmetry) {
@@ -1054,11 +1062,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return true;
   }
 
-  public SymmetryInterface getSymmetry() {
+  public FileSymmetry getSymmetry() {
     if (!iHaveUnitCell)
       return null;
     if (symmetry == null) {
-      getNewSymmetry().setUnitCellFromParams(unitCellParams, false, cellSlop);
+      (symmetry = asc.newFileSymmetry()).setUnitCellFromParams(unitCellParams, false, cellSlop);
       checkUnitCellOffset();
     }
     if (symmetry == null) // cif file with no symmetry triggers exception on LOAD {1 1 1}
@@ -1091,11 +1099,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       for (int i = asc.ac; --i >= 0;)
         symmetry.toCartesian(a[i], false);
     setFractionalCoordinates(toFrac);
-  }
-
-  protected SymmetryInterface getNewSymmetry() {
-    return symmetry = (SymmetryInterface) getInterface(
-        "org.jmol.symmetry.Symmetry");
   }
 
   public void setFractionalCoordinates(boolean TF) {
@@ -1523,11 +1526,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   public boolean vibsFractional = false;
 
-  public SymmetryInterface applySymTrajASCR() throws Exception {
+  public FileSymmetry applySymTrajASCR() throws Exception {
     if (forcePacked)
       initializeSymmetryOptions();
     boolean doApply = (iHaveUnitCell && doCheckUnitCell);
-    SymmetryInterface sym = null;
+    FileSymmetry sym = null;
     //    int n = asc.getLastAtomSetAtomIndex();
     //    int n1 = asc.ac;
     if (doApply) {
@@ -2091,9 +2094,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       doPackUnitCell = andPack;
     if (!doApplySymmetry) {
       doApplySymmetry = true;
-      latticeCells[0] = 1;
-      latticeCells[1] = 1;
-      latticeCells[2] = 1;
+      latticeCells[0] = latticeCells[1] = latticeCells[2] = 1;
     }
   }
 

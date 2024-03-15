@@ -618,7 +618,7 @@ public class MMCifReader extends CifReader {
         Logger.info((isNCS ? "noncrystallographic symmetry operator " : "assembly operator ") + id + " " + xyz);
         M4d m4 = new M4d();
         if (count != 12) {
-          symmetry.getMatrixFromString(xyz, m, false, 0);
+          symmetry.getMatrixFromString(xyz, m);
           m[3] *= symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_A) / 12;
           m[7] *= symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_B) / 12;
           m[11] *= symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_C) / 12;

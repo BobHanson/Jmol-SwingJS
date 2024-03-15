@@ -249,10 +249,12 @@ public abstract class TextShape extends Shape {
   @Override
   public void setModelVisibilityFlags(BS bsModels) {
     if (!isHover)
-      for (Text t : objects.values())
-        t.visible = (t.modelIndex < 0 || bsModels.get(t.modelIndex)
-            && (!t.thisModelOnly || bsModels.cardinality() == 1)
+      for (Text t : objects.values()) {
+        t.visible = (t.modelIndex < 0 
+            || bsModels.get(t.modelIndex)
+            && (!t.thisModelOnly || bsModels.cardinality() == 1 && t.modelIndex == vwr.am.cmi)
             );
+      }
   }
 
   @Override

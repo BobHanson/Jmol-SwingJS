@@ -59,7 +59,7 @@ import javajs.util.V3d;
  * 
  */
 
-class UnitCell extends SimpleUnitCell implements Cloneable {
+public class UnitCell extends SimpleUnitCell implements Cloneable {
   
   final private static double twoP2 = 2 * Math.PI * Math.PI;
 
@@ -99,7 +99,7 @@ class UnitCell extends SimpleUnitCell implements Cloneable {
  * @param setRelative a flag only set true for IsosurfaceMesh
  * @return new unit cell
  */
-static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
+public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   UnitCell c = new UnitCell();
   if (oabc.length == 3) // not used
     oabc = new T3d[] { new P3d(), oabc[0], oabc[1], oabc[2] };
@@ -119,7 +119,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
    * @param slop 
    * @return a new unit cell
    */
-  static UnitCell fromParams(double[] params, boolean setRelative, double slop) {
+  public static UnitCell fromParams(double[] params, boolean setRelative, double slop) {
     UnitCell c = new UnitCell();
     c.init(params);
     c.initUnitcellVertices();
@@ -129,9 +129,11 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       params[PARAM_SLOP] = slop;
     return c;
   }
+  
   Lst<String> moreInfo;
   
   String name = "";
+  
   private P3d[] vertices; // eight corners
   
   private P3d fractionalOffset;
@@ -163,6 +165,12 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   private UnitCell unitCellMultiplied;
 
   /**
+   * used for fast comparison of fractional-to-Cartesian matrix
+   */
+  private double[][] f2c;
+  
+
+  /**
    * Indicate that this is a new unit cell, not one from a file.
    * 
    */  
@@ -182,7 +190,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
    * @param ptOffset TODO
    * @return       TRUE if pt has been set.
    */
-  boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
+  public boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
                               int iRange, int jRange, int kRange, P3d ptOffset) {
     P3d p1 = P3d.newP(f1);
     toCartesian(p1, true);
@@ -283,7 +291,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
    * @param primitiveToCrystal 
    * @return [origin va vb vc]
    */
-  T3d[] getConventionalUnitCell(String latticeType, M3d primitiveToCrystal) {
+  public T3d[] getConventionalUnitCell(String latticeType, M3d primitiveToCrystal) {
     T3d[] oabc = getUnitCellVectors();
     if (!latticeType.equals("P") || primitiveToCrystal != null)
       toFromPrimitive(false, latticeType.charAt(0), oabc, primitiveToCrystal);
@@ -545,7 +553,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     return s;
   }
 
-  Tensor getTensor(Viewer vwr, double[] parBorU) {
+  public Tensor getTensor(Viewer vwr, double[] parBorU) {
     /*
      * 
      * returns {Vector3f[3] unitVectors, double[3] lengths} from J.W. Jeffery,
@@ -684,12 +692,6 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     return t.setFromThermalEquation(Bcart, Escape.eAD(parBorU));
   }
 
-//  void reset() {
-//    unitCellMultiplier = null;
-//    unitCellMultiplied = null;
-//    setOffset(P3d.new3(0, 0, 0));
-//  }
-  
   UnitCell getUnitCellMultiplied() {
     if (unitCellMultiplier == null || unitCellMultiplier.z > 0 && unitCellMultiplier.z == (int) unitCellMultiplier.z)
       return this;
@@ -715,6 +717,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   
   /**
    * 
+   * @param uc generally this or null
    * @param def
    *        String "abc;offset" or M3d or M4d to origin; if String, can be
    *        preceded by ! for "reverse of". For example,
@@ -725,9 +728,12 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
    * 
    * @return [origin va vb vc]
    */
-  T3d[] getV0abc(Object def, M4d retMatrix) {
-    if (def instanceof T3d[])
-      return (T3d[]) def;
+  public static T3d[] getMatrixAndUnitCell(SimpleUnitCell uc,
+                                           Object def, M4d retMatrix) {
+    if (def == null)
+      def = "a,b,c";
+    if (retMatrix == null ? uc == null : !(def instanceof String))
+      return null;
     M4d m;
     boolean isRev = false;
     V3d[] pts = new V3d[4];
@@ -751,6 +757,8 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
         sdef = sdef.substring(0, ptc);
       }
       sdef += ";0,0,0";
+      while (sdef.startsWith("!!"))
+        sdef = sdef.substring(2);
       isRev = sdef.startsWith("!");
       if (isRev)
         sdef = sdef.substring(1);
@@ -775,12 +783,15 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
               ftrans[j] = PT.parseDouble(s);
             }
           }
-        P3d ptrans = P3d.new3(ftrans[0], ftrans[1], ftrans[2]);
-        m.setTranslation(ptrans);
+        m.setTranslation(P3d.new3(ftrans[0], ftrans[1], ftrans[2]));
+        if (sdef.indexOf("a") >= 0)
+          m.transpose33();
       }
       if (retMatrix != null) {
         retMatrix.setM4(m);
       }
+      if (uc == null)
+        return pts;
     } else if (def instanceof M3d) {
       m = M4d.newMV((M3d) def, new P3d());
     } else if (def instanceof M4d) {
@@ -789,10 +800,10 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       // direct 4x4 Cartesian transform
       m = (M4d) ((Object[]) def)[0];
       m.getRotationScale(m3);
-      toCartesian(pt, false);
+      uc.toCartesian(pt, false);
       m.rotTrans(pt);
       for (int i = 1; i < 4; i++) {
-        toCartesian(pts[i], true);
+        uc.toCartesian(pts[i], true);
         m3.rotate(pts[i]);
       }
       return pts;
@@ -816,11 +827,11 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     // the others are vectors from the origin.
 
     // this is a point, so we do not ignore offset
-    toCartesian(pt, false);
+    uc.toCartesian(pt, false);
     for (int i = 1; i < 4; i++) {
       m3.rotate(pts[i]);
       // these are vectors, so we ignore offset
-      toCartesian(pts[i], true);
+      uc.toCartesian(pts[i], true);
     }
     return pts;
   }
@@ -853,17 +864,41 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       vertices[i] = (P3d) matrixFractionalToCartesian.rotTrans2(BoxInfo.unitCubePoints[i], new P3d());
   }
   
-  boolean isSameAs(UnitCell uc) {
-    if (uc.unitCellParams.length != unitCellParams.length)
-      return false;
-    for (int i = Math.min(unitCellParams.length, PARAM_SLOP); --i >= 0;)
-      if (unitCellParams[i] != uc.unitCellParams[i]
-          && !(Double.isNaN(unitCellParams[i]) && Double
-              .isNaN(uc.unitCellParams[i])))
-        return false;
-    return (fractionalOffset == null ? !uc.hasOffset()
-        : uc.fractionalOffset == null ? !hasOffset() 
-        : fractionalOffset.distanceSquared(uc.fractionalOffset) == 0);
+  boolean isSameAs(double[][] f2c2) {
+    double[][] f2c = getF2C();
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 4; j++) {
+        if (!approx0(f2c[i][j] - f2c2[i][j]))
+          return false;
+      }
+    }
+    return true;
+  }
+        
+
+//    return hashCode() == uc.hashCode();
+//    
+//    
+//    if (uc.unitCellParams.length != unitCellParams.length)
+//      return false;
+//    for (int i = Math.min(unitCellParams.length, PARAM_SLOP); --i >= 0;)
+//      if (unitCellParams[i] != uc.unitCellParams[i]
+//          && !(Double.isNaN(unitCellParams[i]) && Double
+//              .isNaN(uc.unitCellParams[i])))
+//        return false;
+//    return (fractionalOffset == null ? !uc.hasOffset()
+//        : uc.fractionalOffset == null ? !hasOffset() 
+//        : fractionalOffset.distanceSquared(uc.fractionalOffset) == 0);
+ 
+  
+  
+  public double[][] getF2C() {
+    if (f2c == null) {
+      f2c = new double[3][4];
+      for (int i = 0; i < 3; i++)
+        matrixFractionalToCartesian.getRow(i, f2c[i]);
+    }
+    return f2c;
   }
 
   /**
@@ -892,14 +927,18 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     return true;
   }
 
-  private void setCartesianOffset(T3d origin) {
+  /**
+   * SpaceGroupFinder only
+   * 
+   * @param origin
+   */
+  void setCartesianOffset(T3d origin) {
     cartesianOffset.setT(origin);
     matrixFractionalToCartesian.m03 = cartesianOffset.x;
     matrixFractionalToCartesian.m13 = cartesianOffset.y;
     matrixFractionalToCartesian.m23 = cartesianOffset.z;
     boolean wasOffset = hasOffset();
-    fractionalOffset = new P3d();
-    fractionalOffset.setT(cartesianOffset);
+    fractionalOffset = P3d.newP(cartesianOffset);
     matrixCartesianToFractional.m03 = 0;
     matrixCartesianToFractional.m13 = 0;
     matrixCartesianToFractional.m23 = 0;
@@ -913,8 +952,9 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     }
     if (!wasOffset && fractionalOffset.lengthSquared() == 0)
       fractionalOffset = null;
+    f2c = null;
   }
-
+  
   void setOffset(T3d pt) {
     if (pt == null)
       return;
@@ -931,8 +971,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     }
     // from "unitcell offset {i j k}"
     if (hasOffset() || pt.lengthSquared() > 0) {
-      fractionalOffset = new P3d();
-      fractionalOffset.setT(pt);
+      fractionalOffset = P3d.newP(pt);
     }
     matrixCartesianToFractional.m03 = -pt.x;
     matrixCartesianToFractional.m13 = -pt.y;
@@ -949,10 +988,8 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       matrixCtoFNoOffset.setM4(matrixCartesianToFractional);
       matrixFtoCNoOffset.setM4(matrixFractionalToCartesian);
     }
-  }
-
-  /// private methods
-  
+    f2c = null;
+  }  
   
   /**
    * 
@@ -1026,27 +1063,27 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   /**
    * when offset is null, use the current cell, otherwise use the original unit cell
    * 
-   * @param p
+   * @param pt
    * @param offset
    */
-  final void toUnitCell(T3d p, T3d offset) {
+  final void toUnitCell(T3d pt, T3d offset) {
     if (matrixCartesianToFractional == null)
       return;
     if (offset == null) {
       // used redefined unitcell 
-      matrixCartesianToFractional.rotTrans(p);
-      unitize(p);
-      matrixFractionalToCartesian.rotTrans(p);
+      matrixCartesianToFractional.rotTrans(pt);
+      unitize(pt);
+      matrixFractionalToCartesian.rotTrans(pt);
     } else {
       // ONLY in the single instance of binary operation point % n. No idea what this is about!
       
       // use original unit cell
       // note that this matrix will be the same as matrixCartesianToFractional
       // when allFractionalRelative is set true (isosurfaceMesh special cases only)
-      matrixCtoFNoOffset.rotTrans(p);
-      unitize(p);
-      p.add(offset);
-      matrixFtoCNoOffset.rotTrans(p);
+      matrixCtoFNoOffset.rotTrans(pt);
+      unitize(pt);
+      pt.add(offset);
+      matrixFtoCNoOffset.rotTrans(pt);
     }
   }
 
@@ -1056,7 +1093,7 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
    * @param pt
    * @param offset
    */
-  final void toUnitCellRnd(T3d pt, T3d offset) {
+  public final void toUnitCellRnd(T3d pt, T3d offset) {
     if (matrixCartesianToFractional == null)
       return;
     if (offset == null) {
@@ -1239,6 +1276,5 @@ static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     return (n < 1 ? isHexagonal(params)
         : n >= 143 && n <= 194);
   }
-
 
 }

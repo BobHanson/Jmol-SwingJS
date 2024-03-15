@@ -52,7 +52,7 @@ public class ModelKitPopupResourceBundle extends PopupResource {
   
   private static String[][] menuContents = {
     { MENU_NAME, "atomMenu bondMenu xtalMenu optionsMenu" },
-    { "optionsMenu", "new center addh minimize hmin " +
+    { "optionsMenu", "new ekey center addh minimize hmin " +
         " - undo redo - SIGNEDsaveFile SIGNEDsaveState exit!Persist" },
     { ModelKit.ATOM_MODE , "assignAtom_XxP!RD dragAtomP!RD dragMinimizeP!RD dragMoleculeP!RD dragMinimizeMoleculeP!RD " +
         "invertStereoP!RD -  assignAtom_XP!RD assignAtom_CP!RD assignAtom_HP!RD assignAtom_NP!RD assignAtom_OP!RD assignAtom_FP!RD assignAtom_ClP!RD assignAtom_BrP!RD " +
@@ -60,10 +60,21 @@ public class ModelKitPopupResourceBundle extends PopupResource {
         "moreAtomMenu assignAtom_plP!RD assignAtom_miP!RD" },
     { "moreAtomMenu", "clearQPersist , _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD _??P!RD " },
     { ModelKit.BOND_MODE, "assignBond_0P!RD assignBond_1P!RD assignBond_2P!RD assignBond_3P!RD assignBond_pP!RD assignBond_mP!RD rotateBondP!RD" },
-    { ModelKit.XTAL_MODE, "xtalModePersistMenu xtalSelPersistMenu xtalSelOpPersistMenu operator xtalPackingPersistMenu xtalEditOptPersistMenu xtalOptionsPersistMenu" },
+    { ModelKit.XTAL_MODE, ""
+        //+ "xtalModePersistMenu "
+        //+ "xtalSelPersistMenu "
+        + "xtalSelOpPersistMenu "
+        + "operator "
+        //+ "xtalPackingPersistMenu "
+        //+ "xtalEditOptPersistMenu "
+        //+ "xtalOptionsPersistMenu" 
+        },
     { "xtalModePersistMenu", "mkmode_molecular mkmode_view mkmode_edit" }, 
     { "xtalSelPersistMenu", "mksel_atom mksel_position" },    
-    { "xtalSelOpPersistMenu", "xtalOp!PersistMenu mkselop_atom2 mkselop_addOffset" },
+    { "xtalSelOpPersistMenu", "xtalOp!PersistMenu "
+        //+ "mkselop_atom2 "
+        //+ "mkselop_addOffset" 
+        },
     { "xtalEditOptPersistMenu", "mksymmetry_none mksymmetry_retainLocal mksymmetry_applyLocal mksymmetry_applyFull" },
 
     { "xtalPackingPersistMenu", "mkunitcell_packed mkunitcell_extend" },
@@ -73,6 +84,7 @@ public class ModelKitPopupResourceBundle extends PopupResource {
   
   private static String[][] structureContents = {
       { "new" , "zap" },
+      { "ekey" , "set elementkey= @{!elementkey}" },
     { "center" , "zoomto 0 {visible} 0/1.5" },
     { "addh" , "calculate hydrogens {model=_lastframe}" },
     { "minimize" , "minimize" },
@@ -119,14 +131,15 @@ public class ModelKitPopupResourceBundle extends PopupResource {
         "mksymmetry_retainLocal", GT.$("retain local"),
         "mksymmetry_applyLocal", GT.$("apply local"),
         "mksymmetry_applyFull", GT.$("apply full"),
-        "mkunitcell_extend", GT.$("extend cell"),
-        "mkunitcell_packed", GT.$("pack cell"),
+        "mkunitcell_extend", GT.$("this operator"),
+        "mkunitcell_packed", GT.$("add translation"),
         "mkasymmetricUnit", GT.$("asymmetric unit"),
         "mkallAtoms", GT.$("all atoms"),
         "new", GT.$("new"),
         "undo", GT.$("undo (CTRL-Z)"),
         "redo", GT.$("redo (CTRL-Y)"),
         "center", GT.$("center"),
+        "ekey", GT.$("element key"),
         "addh", GT.$("add hydrogens"),
         "minimize", GT.$("minimize"),
         "hmin", GT.$("fix hydrogens and minimize"),

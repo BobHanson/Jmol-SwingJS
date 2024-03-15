@@ -184,8 +184,6 @@ public final class JC {
       // still http:
       "aflowbin",
       "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
-      "aflow",
-      "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
       "aflowlib","https://www.aflowlib.org/prototype-encyclopedia/CIF/%FILE.cif",
       "aflowpro","$aflowlib",
       // _#DOCACHE_ flag indicates that the loaded file should be saved in any state in full
@@ -582,6 +580,10 @@ public final class JC {
   /* .cube files need this */
   public final static double ANGSTROMS_PER_BOHR = 0.5291772d;
 
+  
+  public static final int COLOR_CONTRAST = 0xFFfedcba;
+
+
   public final static int[] altArgbsCpk = { 0xFFFF1493, // Xx 0
       0xFFBFA6A6, // Al 13
       0xFFFFFF30, // S  16
@@ -594,6 +596,9 @@ public final class JC {
       0xFF105050, // 15N  7 - darker
   };
 
+  public final static int FORMAL_CHARGE_COLIX_RED = Elements.elementSymbols.length
+      + altArgbsCpk.length;
+  
   // hmmm ... what is shapely backbone? seems interesting
   //public final static int argbShapelyBackbone = 0xFFB8B8B8;
   //public final static int argbShapelySpecial =  0xFF5E005E;
@@ -612,6 +617,9 @@ public final class JC {
       0xFF2424FF, // 6
       0xFF0000FF, // 7
   };
+
+  public final static int PARTIAL_CHARGE_COLIX_RED = FORMAL_CHARGE_COLIX_RED
+      + argbsFormalCharge.length;
 
   public final static int[] argbsRwbScale = { 0xFFFF0000, // red
       0xFFFF1010, //
@@ -646,13 +654,9 @@ public final class JC {
       0xFF0000FF, // blue
   };
 
-  public final static int FORMAL_CHARGE_COLIX_RED = Elements.elementSymbols.length
-      + altArgbsCpk.length;
-  public final static int PARTIAL_CHARGE_COLIX_RED = FORMAL_CHARGE_COLIX_RED
-      + argbsFormalCharge.length;
   public final static int PARTIAL_CHARGE_RANGE_SIZE = argbsRwbScale.length;
 
-  //  $ print  color("red","blue", 33,true)
+//  $ print  color("red","blue", 33,true)
   //  [xff0000][xff2000][xff4000]
   //[xff6000][xff8000][xff9f00]
 
@@ -917,7 +921,8 @@ public final class JC {
 
       //periodic table
       "@nonmetal _H,_He,_B,_C,_N,_O,_F,_Ne,_Si,_P,_S,_Cl,_Ar,_As,_Se,_Br,_Kr,_Te,_I,_Xe,_At,_Rn",
-      "@metal !nonmetal && !_Xx", "@alkaliMetal _Li,_Na,_K,_Rb,_Cs,_Fr",
+      "@metal !nonmetal && !_Xx", 
+      "@alkaliMetal _Li,_Na,_K,_Rb,_Cs,_Fr",
       "@alkalineEarth _Be,_Mg,_Ca,_Sr,_Ba,_Ra",
       "@nobleGas _He,_Ne,_Ar,_Kr,_Xe,_Rn", "@metalloid _B,_Si,_Ge,_As,_Sb,_Te",
       // added La, Ac as per Frank Weinhold - these two are not f-block
@@ -931,6 +936,70 @@ public final class JC {
 
   };
 
+  /**
+   * specifically for ECHO and DRAW to have these specific for a given model
+   * and only appearing when there is only one model showing (see MODELKIT SET KEY ON)
+   */
+  public static final String THIS_MODEL_ONLY = "_!_";
+  public static final String MODELKIT_ELEMENT_KEY_ID = THIS_MODEL_ONLY + "elkey_";
+
+
+  public static final String MODELKIT_SET_ELEMENT_KEYS = "setelementkeys";
+  public static final String MODELKIT_KEY = "key";
+  public static final String MODELKIT_ELEMENT_KEY = "elementkey";
+  public static final String MODELKIT_ELEMENT_KEYS = "elementkeys";
+  public static final String MODELKIT_NEW_MODEL_ATOM_KEYS = "newmodelatomkeys";
+  public static final String MODELKIT_FRAME_RESIZED = "frameresized";
+  public static final String MODELKIT_UDPATE_KEY_STATE = "updatekeysfromstate";
+  public static final String MODELKIT_UPDATE_MODEL_KEYS = "updatemodelkeys";
+  public static final String MODELKIT_UPDATE_ATOM_KEYS = "updateatomkeys";
+  public static final String MODELKIT_ASSIGN_BOND = "assignBond";
+  public static final String MODELKIT_ROTATE_BOND_ATOM_INDEX = "rotateBond";
+  public static final String MODELKIT_BRANCH_ATOM_PICKED = "branchatomclicked";
+  public static final String MODELKIT_BRANCH_ATOM_DRAGGED = "branchatomdragged";
+  
+  public static final String MODELKIT_CENTER = "center";
+  public static final String MODELKIT_HIDEMENU = "hidemenu";
+  public static final String MODELKIT_CONSTRAINT = "constraint";
+  public static final String MODELKIT_EXISTS = "exists";
+  public static final String MODELKIT_ISMOLECULAR = "ismolecular";
+  public static final String MODELKIT_ALLOPERATORS = "alloperators";
+  public static final String MODELKIT_DATA = "data";
+  public static final String MODELKIT_MINIMIZING = "minimizing";
+  public static final String MODELKIT_RESET = "reset";
+  public static final String MODELKIT_ATOMPICKINGMODE = "atompickingmode";
+  public static final String MODELKIT_BONDPICKINGMODE = "bondpickingmode";
+  public static final String MODELKIT_HIGHLIGHT = "highlight";
+  public static final String MODELKIT_MODE = "mode";
+  public static final String MODELKIT_APPLYLOCAL = "applylocal";
+  public static final String MODELKIT_RETAINLOCAL = "retainlocal";
+  public static final String MODELKIT_APPLYFULL = "applyfull";
+  public static final String MODELKIT_UNITCELL = "unitcell";
+  public static final String MODELKIT_ADDHYDROGEN = "addhydrogen";
+  public static final String MODELKIT_ADDHYDROGENS = "addhydrogens";
+  public static final String MODELKIT_AUTOBOND = "autobond";
+  public static final String MODELKIT_CLICKTOSETELEMENT = "clicktosetelement";
+  public static final String MODELKIT_HIDDEN = "hidden";
+  public static final String MODELKIT_SHOWSYMOPINFO = "showsymopinfo";
+  public static final String MODELKIT_SYMOP = "symop";
+  public static final String MODELKIT_SYMMETRY = "symmetry";
+  public static final String MODELKIT_HOVERLABEL = "hoverlabel";
+  public static final String MODELKIT_ATOMTYPE = "atomtype";
+  public static final String MODELKIT_BONDTYPE = "bondtype";
+  public static final String MODELKIT_BONDINDEX = "bondindex";
+  public static final String MODELKIT_ROTATEBONDINDEX = "rotatebondindex";
+  public static final String MODELKIT_OFFSET = "offset";
+  public static final String MODELKIT_SCREENXY = "screenxy";
+  public static final String MODELKIT_INVARIANT = "invariant";
+  public static final String MODELKIT_DISTANCE = "distance";
+  public static final String MODELKIT_ADDCONSTRAINT = "addconstraint";
+  public static final String MODELKIT_REMOVECONSTRAINT = "removeconstraint";
+  public static final String MODELKIT_REMOVEALLCONSTRAINTS = "removeallconstraints";
+  public static final String MODELKIT_VIBRATION = "vibration";
+  public static final String MODELKIT_INITIALIZE_MODEL = "initializemodel";
+
+  public static final String MODELKIT_DRAGATOM = "dragatom";
+  public static final String MODELKIT_DELETE_BOND = "deletebond";
   public final static String MODELKIT_ZAP_STRING = "5\n\nC 0 0 0\nH .63 .63 .63\nH -.63 -.63 .63\nH -.63 .63 -.63\nH .63 -.63 -.63";
   public final static String MODELKIT_ZAP_TITLE = "Jmol Model Kit";//do not ever change this -- it is in the state
   public final static String ZAP_TITLE = "zapped";//do not ever change this -- it is in the state

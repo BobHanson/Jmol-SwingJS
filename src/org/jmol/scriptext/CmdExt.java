@@ -1454,7 +1454,7 @@ public class CmdExt extends ScriptExt {
         if (isFrames) {
           T3d[] oabc = vwr.getV0abc(iModel, new Object[] { m4 });
           if (oabc != null)
-            vwr.setModelCagePts(iModel, oabc, null);
+            vwr.ms.setModelCagePts(iModel, oabc, null);
         }
 
       }
@@ -5618,8 +5618,7 @@ public class CmdExt extends ScriptExt {
     return true;
   }
 
-  private void unitcell(int i, boolean isModelkit) throws ScriptException {
-    boolean doTransform = isModelkit;
+  private void unitcell(int i, final boolean isModelkit) throws ScriptException {
     ScriptEval eval = e;
     int icell = Integer.MAX_VALUE;
     int mad10 = Integer.MAX_VALUE;
@@ -5688,7 +5687,7 @@ public class CmdExt extends ScriptExt {
         // o ---pdist-----vt-------> p
         // o - offset--o'---------> p
         if (zoffPercent) {
-          zoffset = (zoffset / 100 * oabc[3].length());
+          zoffset = zoffset / 100 * oabc[3].length();
         }
         oabc[0].scaleAdd2(zoffset, vt, oabc[0]);
       }
@@ -5836,7 +5835,7 @@ public class CmdExt extends ScriptExt {
       }
       String stype = null;
       // parent, standard, conventional, primitive
-      vwr.setModelCagePts(-1, null, null);
+      vwr.ms.setModelCagePts(-1, null, null);
       // reset -- presumes conventional, so if it is not, 
       // _M.unitcell_conventional must be set in the reader.
 
@@ -5860,8 +5859,10 @@ public class CmdExt extends ScriptExt {
       }
       if (stype == null)
         stype = (String) vwr.getModelInfo("latticeType");
-      if (newUC != null)
-        vwr.setModelCagePts(-1, vwr.getV0abc(-1, newUC), "" + newUC);
+      if (newUC != null) {
+        vwr.ms.setModelCagePts(-1, vwr.getV0abc(-1, newUC), "" + newUC);
+        newUC = null;
+      }
       // now guaranteed to be "conventional"
       if (!ucname.equals("conventional")) {
         setShapeProperty(JC.SHAPE_AXES, "labels", null);
@@ -5904,7 +5905,9 @@ public class CmdExt extends ScriptExt {
       if (eval.isArrayParameter(i)) {
         eval.ignoreError = true;
         try {
-          newUC = eval.doubleParameterSet(i, 6, 6);
+          // from state [ pt3 pt3 pt3 ]
+          if (tokAt(i + 2) != T.leftbrace)
+            newUC = eval.doubleParameterSet(i, 6, 6);
         } catch (Exception e) {
           // ignore NullPointerException
         }
@@ -5915,7 +5918,7 @@ public class CmdExt extends ScriptExt {
           oabc = eval.getPointArray(i, 4, false);
         } else if (!chk && isModelkit) {
           if (sym == null) {
-            vwr.assignSpaceGroup(null, "P1", (double[]) newUC);
+            vwr.assignSpaceGroup(null, "P1", newUC);
           } else if (sym.fixUnitCell((double[]) newUC)) {
             eval.invArgStr(
                 "Unit cell is incompatible with current space group");
@@ -5940,49 +5943,28 @@ public class CmdExt extends ScriptExt {
     if (oabc == null && newUC != null)
       oabc = vwr.getV0abc(-1, newUC);
     if (icell != Integer.MAX_VALUE) {
-      ModelSet.setUnitCellOffset(sym, null, icell);
+      // icell e.g. 555
+      if (sym != null)
+        sym.setOffset(icell);
     } else if (id != null) {
       vwr.setCurrentCage(id);
     } else if (isReset || oabc != null) {
-      isReset = true;
-      SymmetryInterface unitCell = (doTransform ? sym : null);
-      if (unitCell != null) {
-        BS bsAtoms = vwr.getFrameAtoms();
-        int n = bsAtoms.cardinality();
-        isReset = (n == 0);
-        if (!isReset) {
-          P3d[] fxyz = new P3d[n];
-          Atom[] a = vwr.ms.at;
-          for (int j = bsAtoms.nextSetBit(0), k = 0; j >= 0; j = bsAtoms
-              .nextSetBit(j + 1), k++) {
-            fxyz[k] = P3d.newP(a[j]);
-            vwr.toFractionalUC(unitCell, fxyz[k], false);
-          }
-          if (!isModelkit)
-            vwr.setModelCagePts(-1, oabc, ucname);
-          unitCell = vwr.getCurrentUnitCell();
-          for (int j = bsAtoms.nextSetBit(0), k = 0; j >= 0; j = bsAtoms
-              .nextSetBit(j + 1), k++) {
-            a[j].setT(fxyz[k]);
-            vwr.toCartesianUC(unitCell, a[j], false);
-          }
-          vwr.ms.setTaintedAtoms(bsAtoms, AtomCollection.TAINT_COORD);
-        }
-      } else {
-        isReset = true;
-      }
+      isReset = (isModelkit ? vwr.getModelkit(false).transformAtomsToUnitCell(sym, oabc, ucname) : true);
       if (isReset) {
         if (isModelkit && sym != null) {
           vwr.ms.setSpaceGroup(vwr.am.cmi, sym.getUnitCell(oabc, false, null),
               null);
           return;
         }
-        vwr.setModelCagePts(-1, oabc, ucname);
+        vwr.ms.setModelCagePts(-1, oabc, ucname);
       }
     }
     eval.setObjectMad10(JC.SHAPE_UCCAGE, "unitCell", mad10);
-    if (pt != null)
-      ModelSet.setUnitCellOffset(vwr.getCurrentUnitCell(), pt, 0);
+    if (pt != null) {
+      sym = vwr.ms.getUnitCell(Integer.MIN_VALUE);
+      if (sym != null)
+        sym.setOffsetPt(pt);
+    }
     if (tickInfo != null)
       setShapeProperty(JC.SHAPE_UCCAGE, "tickInfo", tickInfo);
     if (ucname != null)
@@ -6170,7 +6152,7 @@ public class CmdExt extends ScriptExt {
     //
     //  -- action options include alternatives to the given commands (assign is undocumented)
     //
-    //  modelkit SET KEY ON/OFF   element key
+    //  modelkit ELEMENTKEY ON/OFF   element key
     //  modelkit MINIMIZE
     //
     //  modelkit ASSIGN ATOM [symbol|pl|mi] point
@@ -6235,8 +6217,10 @@ public class CmdExt extends ScriptExt {
         e.cmdUndoRedo(tok == T.undo ? T.undomove : T.redomove);
       return;
     case T.off:
+      if (e.isStateScript)
+        vwr.getModelkit(false).setProperty(JC.MODELKIT_UDPATE_KEY_STATE, null);
       // don't continue if the model kit does not exist and this is MODELKIT OFF by itself
-      if (slen == 2 && vwr.getModelkitPropertySafely("exists") == null)
+      if (slen == 2 && vwr.getModelkitPropertySafely(JC.MODELKIT_EXISTS) == null)
         return;
       //$FALL-THROUGH$
     case T.nada:
@@ -6457,7 +6441,7 @@ public class CmdExt extends ScriptExt {
     boolean isMove = (mode == T.moveto);
     boolean isSpacegroup = (mode == T.spacegroup);
     boolean isPacked = (mode == T.packed);
-    double[] params = null;
+    Object paramsOrUC = null;
     P3d[] pts = null;
     if (isAtom || isBond || isConnect || isSpacegroup || isDelete || isMove
         || isAdd || isPacked) {
@@ -6583,6 +6567,15 @@ public class CmdExt extends ScriptExt {
           type += "/";
         }
       }
+      // new 16.2.1/2
+      if (tokAt(e.iToken + 1) == T.unitcell) {
+        ++e.iToken;
+        Object[] ret = new Object[1];
+        getUnitCellParameter(ret);
+        paramsOrUC = ret[0];
+        if (paramsOrUC == null)
+          invArg();
+      }
       if (tokAt(e.iToken + 1) == T.packed) {
         isPacked = true;
         ++e.iToken;
@@ -6649,7 +6642,7 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
     case T.spacegroup:
-      String s = vwr.assignSpaceGroup(bs, type, params);
+      String s = vwr.assignSpaceGroup(bs, type, paramsOrUC);
       boolean isError = s.endsWith("!");
       if (isError)
         e.invArgStr(s);
@@ -6663,6 +6656,41 @@ public class CmdExt extends ScriptExt {
       }
       break;
     }
+  }
+
+  /**
+   * Accept "a,b,c:0,0,0" transformation matrix syntax or [origin a b c] or [a b c alpha beta gamma]
+   * @param ret return array to hold oabc or [params]
+   * @return true if oabc 
+   * @throws ScriptException
+   */
+  private boolean getUnitCellParameter(Object[] ret) throws ScriptException {
+    ret[0] = null;
+    if (tokAt(e.iToken + 1) == T.string) {
+      String tr = paramAsStr(++e.iToken);
+      SymmetryInterface uc = vwr.getCurrentUnitCell();
+      if (uc == null)
+        invArg();
+      ret[0] = uc.getV0abc(tr, null);
+      return true;
+    }
+    if (e.isArrayParameter(e.iToken)) {
+      e.ignoreError = true;
+      try {
+        // from state [ pt3 pt3 pt3 ]
+        if (tokAt(e.iToken + 2) != T.leftbrace)
+          ret[0] = e.doubleParameterSet(e.iToken, 6, 6);
+        e.ignoreError = false;
+        return false;
+      } catch (Exception e) {
+        // ignore NullPointerException
+      }
+      e.ignoreError = false;
+      // [ Origin vA vB vC ]
+      // these are VECTORS, though
+      ret[0] = e.getPointArray(e.iToken, 4, false);
+    }
+    return true;
   }
 
   private BS expFor(int i, BS bsAtoms) throws ScriptException {

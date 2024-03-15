@@ -5253,10 +5253,13 @@ public class ScriptEval extends ScriptExpr {
                             boolean isConcat, boolean doOrient, int nFiles,
                             int ac0, int modelCount0, boolean isData)
       throws ScriptException {
+    BS bs = BSUtil.newBitSet2(isAppend ? ac0 : 0, vwr.ms.ac);
     if (isAppend && (appendNew || nFiles > 1)) {
       vwr.setAnimationRange(-1, -1);
       vwr.setCurrentModelIndex(modelCount0);
     }
+    vwr.setModelkitPropertySafely(JC.MODELKIT_UPDATE_ATOM_KEYS, bs);
+
     String msg;
     if (scriptLevel == 0 && !isAppend && (isConcat || nFiles < 2)
         && (msg = (String) vwr.ms.getInfoM("modelLoadNote")) != null) {
@@ -5264,7 +5267,6 @@ public class ScriptEval extends ScriptExpr {
     }
     Object centroid = vwr.ms.getInfoM("centroidMinMax");
     if (AU.isAI(centroid) && vwr.ms.ac > 0) {
-      BS bs = BSUtil.newBitSet2(isAppend ? ac0 : 0, vwr.ms.ac);
       vwr.ms.setCentroid(bs, (int[]) centroid);
     }
     String script = vwr.g.defaultLoadScript;

@@ -1024,17 +1024,18 @@ public class T {
   public final static int drawpicking                    = booleanparam | 58;
   public final static int dsspcalchydrogen               = booleanparam | 59;
   public final static int dynamicmeasurements            = booleanparam | 60; //DEPRECATED; not implemented; leave here to avoid SET error
-  public final static int ellipsoidarcs                  = booleanparam | 61;  
-  public final static int ellipsoidarrows                = booleanparam | 62;  
-  public final static int ellipsoidaxes                  = booleanparam | 63;  
-  public final static int ellipsoidball                  = booleanparam | 64;  
-  public final static int ellipsoiddots                  = booleanparam | 65;  
-  public final static int ellipsoidfill                  = booleanparam | 66;  
-  public final static int filecaching                    = booleanparam | 67;
-  public final static int fontcaching                    = booleanparam | 68;
-  public final static int fontscaling                    = booleanparam | 69;
-  public final static int forceautobond                  = booleanparam | 71;
-  public final static int fractionalrelative             = booleanparam | 72;
+  public final static int elementkeys                     = booleanparam | 62;  
+  public final static int ellipsoidarcs                  = booleanparam | 63;  
+  public final static int ellipsoidarrows                = booleanparam | 64;  
+  public final static int ellipsoidaxes                  = booleanparam | 65;  
+  public final static int ellipsoidball                  = booleanparam | 66;  
+  public final static int ellipsoiddots                  = booleanparam | 67;  
+  public final static int ellipsoidfill                  = booleanparam | 68;  
+  public final static int filecaching                    = booleanparam | 69;
+  public final static int fontcaching                    = booleanparam | 70;
+  public final static int fontscaling                    = booleanparam | 71;
+  public final static int forceautobond                  = booleanparam | 72;
+  public final static int fractionalrelative             = booleanparam | 73;
 // see shapecommand public final static int frank                          = booleanparam | 72;
   public final static int greyscalerendering             = booleanparam | 74;
   public final static int hbondsbackbone                 = booleanparam | 76;
@@ -1501,7 +1502,7 @@ public class T {
   protected String toString2() {
     return "Token["
     + astrType[tok < keyword ? tok : keyword]
-    + "("+(tok%(1<<9))+"/0x" + Integer.toHexString(tok) + ")"
+    + "("+(tok%(1000))+"/0x" + Integer.toHexString(tok) + ")"
     + ((intValue == Integer.MAX_VALUE) ? "" : " intValue=" + intValue
         + "(0x" + Integer.toHexString(intValue) + ")")
     + ((value == null) ? "" : value instanceof String ? " value=\"" + value
@@ -2620,6 +2621,8 @@ public class T {
        "drawHover",
        "drawPicking",
        "dsspCalculateHydrogenAlways",
+       "elementKeys",
+       "elementKey",
        "ellipsoidArcs",
        "ellipsoidArrows",
        "ellipsoidAxes",
@@ -3697,6 +3700,8 @@ public class T {
         drawhover,                          //        "drawHover"
         drawpicking,                        //        "drawPicking"
         dsspcalchydrogen,                   //        "dsspCalculateHydrogenAlways"
+        elementkeys,
+        -1,
         ellipsoidarcs,                      //        "ellipsoidArcs"
         ellipsoidarrows,                    //        "ellipsoidArrows"
         ellipsoidaxes,                      //        "ellipsoidAxes"

@@ -264,6 +264,7 @@ public class MathExt {
 
   private boolean evaluateSpacegroup(ScriptMathProcessor mp, SV[] args) {
     // spacegroup();
+    // spcacgroup("setting")
     // spacegroup(3);
     // spacegroup("133:2") // this name
     // spacegroup("ITA/155") // all settings for this ITA
@@ -272,25 +273,41 @@ public class MathExt {
     // spacegroup("x,y,z;-x,-y,-z");
     // spacegroup("x,y,z;-x,-y,-z", [a b c alpha beta gamma]);
     // spacegroup("x,y,z;-x,-y,-z&"); //space groups with all these operators
+    // spcacgroup(18, "settings")
     // spacegroup("all");
-
+    String mode = null;
     double[] unitCellParams = null;
-    switch (args.length) {
-    case 0:
+    if (args.length == 0)
       return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null,
           vwr.am.cmi, true, null));
+    String xyzList = args[0].asString();
+    switch (args.length) {
+    default:
+      return false;
     case 2:
-      unitCellParams = SV.dlistValue(args[1], 0);
-      if (unitCellParams == null || unitCellParams.length != 6)
-        return false;
-      // set excess params to NaN; does not set slop
-      unitCellParams = SimpleUnitCell.newParams(unitCellParams, Double.NaN);
+      if (args[1].tok == T.string) {
+        mode = (String) args[1].value;
+      } else {
+        unitCellParams = SV.dlistValue(args[1], 0);
+        if (unitCellParams == null || unitCellParams.length != 6)
+          return false;
+        // set excess params to NaN; does not set slop
+        unitCellParams = SimpleUnitCell.newParams(unitCellParams, Double.NaN);
+      }
       //$FALL-THROUGH$
     case 1:
+      if ("settings".equalsIgnoreCase(mode)) {
+        if (args[0].tok != T.integer)
+          return false;
+        return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "settings", null, args[0].intValue));
+      }
       if (args[0].tok == T.string) {
+        if ("setting".equalsIgnoreCase(xyzList)) {
+          SymmetryInterface sym = vwr.getOperativeSymmetry();
+          return mp.addXObj(sym == null ? null : sym.getSpaceGroupJSON(vwr, "settings", null, Integer.MIN_VALUE));
+        }
         // spacegroup("x,y,z;-x,-y,-z;...")
         // spacegroup("132:2")
-        String xyzList = args[0].asString();
         if (xyzList.toUpperCase().startsWith("ITA/")) {
           // "15:ba"  or "230" or "155.2"
           return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "ITA",
@@ -301,24 +318,22 @@ public class MathExt {
           return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOW",
               xyzList.substring(6), 0));
         }
-        if (xyzList.indexOf("x") < 0 && unitCellParams == null)
-          return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfoObj(xyzList, null,
-              true, false));
+        if (xyzList.indexOf("x") >= 0 || unitCellParams != null) {
           return mp.addXObj(vwr.findSpaceGroup(null, xyzList, unitCellParams,
               null, true, false, false));
-      } 
-      BS atoms = SV.getBitSet(args[0], true);
-      if (atoms == null) {
-        // args[0] might be an ITA number
-        return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfoObj(
-            "" + args[0].asString(), unitCellParams, true, false));
+        }
+      } else {
+        BS atoms = SV.getBitSet(args[0], true);
+        if (atoms != null) {
+          // undocumented first parameter atoms
+          return mp.addXObj(vwr.findSpaceGroup(atoms, null, unitCellParams,
+              null, true, false, false));
+        }
       }
-      // undocumented first parameter atoms
-      return mp.addXObj(vwr.findSpaceGroup(atoms, null, unitCellParams,
-          null, true, false, false));
-    default:
-      return false;
+      break;
     }
+    return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfoObj(
+        xyzList, unitCellParams, true, false));
   }
 
   @SuppressWarnings("unchecked")
@@ -433,7 +448,9 @@ public class MathExt {
     // {xxx}.boundbox()
     // {xxx}.boundbox(volume)
     // optional last parameter: scale
+    // unitcell("-a,-b,c;0,1/2,1/2") 
     // unitcell("-a,-b,c;0,0,0.50482") (polar groups can have irrational translations along z)
+    // unitcell("a,b,c",asMatrix) default false
     // unitcell(uc)
     // unitcell(uc, "reciprocal")
     // unitcell(origin, [va, vb, vc])
@@ -473,7 +490,16 @@ public class MathExt {
             ucnew[i] = new P3d();
           SimpleUnitCell.setAbc(arg0, null, ucnew);
         } else if (arg0.indexOf(",") >= 0) {
-          return mp.addXObj(vwr.getV0abc(-1, arg0));
+          boolean asMatrix = (args.length == 2 && SV.bValue(args[1]));
+          Object ret;
+          if (asMatrix) {
+            M4d m = new M4d();
+            vwr.getSymTemp().getV0abc(arg0, m);
+            ret = m;
+          } else {
+            ret = vwr.getV0abc(-1, arg0);
+          }
+          return mp.addXObj(ret);
         }
       }
       break;

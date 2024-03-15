@@ -2,7 +2,7 @@ package org.jmol.adapter.readers.cif;
 
 import java.util.Map.Entry;
 
-import org.jmol.api.SymmetryInterface;
+import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 
@@ -10,8 +10,6 @@ import javajs.util.Lst;
 import javajs.util.M4d;
 import javajs.util.Matrix;
 import javajs.util.T3d;
-import javajs.util.T3d;
-import javajs.util.V3d;
 import javajs.util.V3d;
 
 
@@ -22,7 +20,7 @@ class Subsystem {
   private int d;
   private Matrix w;
 
-  private SymmetryInterface symmetry;
+  private FileSymmetry symmetry;
   private Matrix[] modMatrices;
   private boolean isFinalized;
 
@@ -33,7 +31,7 @@ class Subsystem {
     d = w.getArray().length - 3;
   }
 
-  public SymmetryInterface getSymmetry() {
+  public FileSymmetry getSymmetry() {
     if (!isFinalized)
       setSymmetry(true);
     return symmetry;
@@ -74,7 +72,7 @@ class Subsystem {
     
     // Part 2: Get the new unit cell and symmetry operators
 
-    SymmetryInterface s0 = msRdr.cr.asc.getSymmetry();
+    FileSymmetry s0 = msRdr.cr.asc.getSymmetry();
     T3d[] vu43 = s0.getUnitCellVectors();
     T3d[] vr43 = SimpleUnitCell.getReciprocal(vu43, null, 1);
 
@@ -104,7 +102,7 @@ class Subsystem {
     for (int i = 0; i < 3; i++)
       uc_nu[i + 1] = V3d.new3(a[i][0], a[i][1], a[i][2]);    
     uc_nu = SimpleUnitCell.getReciprocal(uc_nu, null, 1);
-    symmetry = ((SymmetryInterface) msRdr.cr.getInterface("org.jmol.symmetry.Symmetry")).getUnitCell(uc_nu, false, null);
+    (symmetry = msRdr.cr.asc.newFileSymmetry()).getUnitCell(uc_nu, false, null);
     modMatrices = new Matrix[] { sigma_nu, tFactor };
     if (!setOperators)
       return;

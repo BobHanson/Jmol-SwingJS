@@ -31,6 +31,7 @@ import javajs.util.PT;
 import javajs.util.SB;
 
 import org.jmol.c.PAL;
+import org.jmol.viewer.JC;
 
 /**
  * 
@@ -123,17 +124,19 @@ public final class C {
   public final static short INHERIT_ALL = 0; // do not change this from 0; new colix[n] must be this
   public final static short INHERIT_COLOR = 1;
   public final static short USE_PALETTE = 2;
-  public final static short RAW_RGB = 3;
+  public final static short COLIX_CONTRAST = 3;
   public final static short SPECIAL_COLIX_MAX = 4;
 
   static int colixMax = SPECIAL_COLIX_MAX;
   
   static int[] argbs = new int[128];
   
+  static {
+    argbs[COLIX_CONTRAST] = JC.COLOR_CONTRAST; // in case this is used for shading
+  }
   private static int[] argbsGreyscale;
 
   private static final Int2IntHash colixHash = new Int2IntHash(256);
-  private static final int RAW_RGB_INT = RAW_RGB;
   public final static short UNMASK_CHANGEABLE_TRANSLUCENT = 0x07FF;
   public final static short CHANGEABLE_MASK = (short) 0x8000; // negative
   public final static int LAST_AVAILABLE_COLIX = UNMASK_CHANGEABLE_TRANSLUCENT;
@@ -165,6 +168,7 @@ public final class C {
   public final static short HOTPINK = 22;
   public final static short GOLD = 23;
   
+  
   public C() {
   }
   
@@ -172,14 +176,17 @@ public final class C {
     if (argb == 0)
       return 0;
     int translucentFlag = 0;
-    // in JavaScript argb & 0xFF000000 will be a negative long value
-    if ((argb & 0xFF000000) != (0xFF000000 & 0xFF000000)) {
-      translucentFlag = getTranslucentFlag((argb >> 24) & 0xFF);
-      argb |= 0xFF000000; 
-    }
+// BH 2024.03.12 ignore this -- there is no way to incorporate translucent colors into Jmol. 
+// in JavaScript argb & 0xFF000000 will be a negative long value
+//    if ((argb & 0xFF000000) != (0xFF000000 & 0xFF000000)) {
+//      translucentFlag = getTranslucentFlag((argb >> 24) & 0xFF);
+//    }
+    argb |= 0xFF000000; 
     int c = colixHash.get(argb);
-    if ((c & RAW_RGB_INT) == RAW_RGB_INT)
-      translucentFlag = 0;
+// This next is very strange. The first two bits are part of BLUE's xFF. 
+//    if ((c & RAW_RGB_INT) == RAW_RGB_INT) {
+//      translucentFlag = 0;
+//    }
     return (short) ((c > 0 ? c : allocateColix(argb, false)) | translucentFlag);
   }
 
@@ -193,6 +200,8 @@ public final class C {
     if (forceLast) {
       n = LAST_AVAILABLE_COLIX;
     } else {
+      if (argb == JC.COLOR_CONTRAST)
+        return COLIX_CONTRAST;
       for (int i = colixMax; --i >= SPECIAL_COLIX_MAX;)
         if ((argb & 0xFFFFFF) == (argbs[i] & 0xFFFFFF))
           return i;
@@ -339,6 +348,7 @@ public final class C {
   }
 
   public static int getArgb(short colix) {
+    // 0x87FF here because 0x7800, 111 1000 0000 0000 is reserved for translucency
     return argbs[colix & OPAQUE_MASK];
   }
 

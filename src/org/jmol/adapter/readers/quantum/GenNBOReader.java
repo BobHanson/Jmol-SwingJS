@@ -940,7 +940,7 @@ public class GenNBOReader extends MOReader {
       return;
     line = null;
     int pt = 0;
-    for (int i = nOrbitals0, n = nOrbitals0 + nOrbitals; i < n; i++, pt++) {
+    for (int i = nOrbitals0, n = nOrbitals0 + nNOs; i < n; i++, pt++) {
       if (pt == nNOs) {
         if (isNBO) {
           readNBO37Occupancies(pt);

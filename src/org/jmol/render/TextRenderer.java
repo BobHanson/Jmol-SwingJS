@@ -51,7 +51,7 @@ class TextRenderer {
     boolean doPointer = ((mode & JC.LABEL_POINTER_ON) != 0);
     boolean isAntialiased = ((mode & MODE_IS_ANTIALIASED) != 0);
     short colix = text.colix;
-    if (text.isEcho && C.getArgb(colix) == Text.COLOR_CONTRAST)
+    if (text.isEcho && C.getArgb(colix) == JC.COLOR_CONTRAST)
       colix = vwr.cm.colixBackgroundContrast;
     boolean showText = g3d.setC(colix);
     if (!showText && (text.image == null

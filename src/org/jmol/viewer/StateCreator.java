@@ -92,7 +92,6 @@ import javajs.util.SB;
  * modularization in JavaScript
  * 
  * 
- * 
  */
 public class StateCreator extends JmolStateCreator {
 
@@ -1172,9 +1171,12 @@ public class StateCreator extends JmolStateCreator {
       SB sb = new SB();
       sb.append("\n  set echo off;set echo \"%SCALE\" off;\n");
       getEchoState(sb, es.scaleObject);
+      boolean haveElementKey = false;
       for (Text t : es.objects.values()) {
-        getEchoState(sb, t);
+        haveElementKey |= getEchoState(sb, t);
       }
+      if (haveElementKey)
+        sb.append("  modelkit OFF;//to check for element keys\n");
       s = sb.toString();
       break;
     case JC.SHAPE_HALOS:
@@ -1353,12 +1355,12 @@ public class StateCreator extends JmolStateCreator {
     return s;
   }
 
-  private void getEchoState(SB sb, Text t) {
+  private boolean getEchoState(SB sb, Text t) {
     // ECHO "%SCALE" uses unformatted text
     boolean isScale = (t != null && t.barPixels > 0);
     String text = (t == null ? null : isScale ? t.textUnformatted : t.getStateText());
     if (text == null || !t.isEcho || t.target.equals("error"))
-      return;
+      return false;
     //set echo top left
     //set echo ID myecho x y
     //echo .....
@@ -1448,6 +1450,7 @@ public class StateCreator extends JmolStateCreator {
         sb.append("  set echo ID ").append(PT.esc(t.target))
             .append(" hidden;\n");
     }
+    return (t.target.startsWith(JC.MODELKIT_ELEMENT_KEY_ID));
   }
 
   @Override
@@ -1568,109 +1571,6 @@ public class StateCreator extends JmolStateCreator {
           getAtomicPropertyStateBufferD(commands, type, bs, null, null);
     return commands.toString();
   }
-
-//  @Override
-//  void getAtomicPropertyStateBuffer(SB commands, int type, BS bs,
-//                                           String label, double[] fData) {
-//    if (!vwr.g.preserveState)
-//      return;
-//    // see setAtomData()
-//    SB s = new SB();
-//    String dataLabel = (label == null ? AtomCollection.userSettableValues[type]
-//        : label)
-//        + " set";
-//    int n = 0;
-//    boolean isDefault = (type == AtomCollection.TAINT_COORD);
-//    Atom[] atoms = vwr.ms.at;
-//    BS[] tainted = vwr.ms.tainted;
-//    if (bs != null)
-//      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-//        if (AtomCollection.isDeleted(atoms[i]))
-//          continue;
-//        s.appendI(i + 1).append(" ").append(atoms[i].getElementSymbol())
-//            .append(" ").append(atoms[i].getInfo().replace(' ', '_')).append(
-//                " ");
-//        switch (type) {
-//        case AtomCollection.TAINT_MAX:
-//          if (i < fData.length) // when data are appended, the array may not
-//            // extend that far
-//            s.appendF(fData[i]);
-//          break;
-//        case AtomCollection.TAINT_ATOMNO:
-//          s.appendI(atoms[i].getAtomNumber());
-//          break;
-//        case AtomCollection.TAINT_CHAIN:
-//          s.append(atoms[i].getChainIDStr());
-//          break;
-//        case AtomCollection.TAINT_RESNO:
-//          s.appendI(atoms[i].group.getResno());
-//          break;
-//        case AtomCollection.TAINT_SEQID:
-//          s.appendI(atoms[i].getSeqID());
-//          break;
-//        case AtomCollection.TAINT_ATOMNAME:
-//          s.append(atoms[i].getAtomName());
-//          break;
-//        case AtomCollection.TAINT_ATOMTYPE:
-//          s.append(atoms[i].getAtomType());
-//          break;
-//        case AtomCollection.TAINT_COORD:
-//          if (isTainted(tainted, i, AtomCollection.TAINT_COORD))
-//            isDefault = false;
-//          s.appendF(atoms[i].x).append(" ").appendF(atoms[i].y).append(" ")
-//              .appendF(atoms[i].z);
-//          break;
-//        case AtomCollection.TAINT_VIBRATION:
-//          Vibration v = atoms[i].getVibrationVector();
-//          if (v == null)
-//            s.append("0 0 0");
-//          else if (Double.isNaN(v.modScale))
-//            s.appendF(v.x).append(" ").appendF(v.y).append(" ").appendF(v.z);
-//          else
-//            s.appendF(PT.FLOAT_MIN_SAFE).append(" ").appendF(PT.FLOAT_MIN_SAFE).append(" ").appendF(v.modScale);
-//          break;
-//        case AtomCollection.TAINT_SITE:
-//          s.appendI(atoms[i].getAtomSite());
-//          break;
-//        case AtomCollection.TAINT_ELEMENT:
-//          s.appendI(atoms[i].getAtomicAndIsotopeNumber());
-//          break;
-//        case AtomCollection.TAINT_FORMALCHARGE:
-//          s.appendI(atoms[i].getFormalCharge());
-//          break;
-//        case AtomCollection.TAINT_BONDINGRADIUS:
-//          s.appendF(atoms[i].getBondingRadius());
-//          break;
-//        case AtomCollection.TAINT_OCCUPANCY:
-//          s.appendI(atoms[i].getOccupancy100());
-//          break;
-//        case AtomCollection.TAINT_PARTIALCHARGE:
-//          s.appendF(atoms[i].getPartialCharge());
-//          break;
-//        case AtomCollection.TAINT_TEMPERATURE:
-//          s.appendF(atoms[i].getBfactor100() / 100d);
-//          break;
-//        case AtomCollection.TAINT_VALENCE:
-//          s.appendI(atoms[i].getValence());
-//          break;
-//        case AtomCollection.TAINT_VANDERWAALS:
-//          s.appendF(atoms[i].getVanderwaalsRadiusFloat(vwr, VDW.AUTO));
-//          break;
-//        }
-//        s.append(" ;\n");
-//        ++n;
-//      }
-//    if (n == 0)
-//      return;
-//    if (isDefault)
-//      dataLabel += "(default)";
-//    commands.append("\n  DATA \"" + dataLabel + "\"\n").appendI(n).append(
-//        " ;\nJmol Property Data Format 1 -- Jmol ").append(
-//        Viewer.getJmolVersion()).append(";\n");
-//    commands.appendSB(s);
-//    commands.append("  end \"" + dataLabel + "\";\n");
-//  }
-//
 
   @Override
   void getAtomicPropertyStateBufferD(SB commands, int type, BS bs,
@@ -1813,12 +1713,8 @@ public class StateCreator extends JmolStateCreator {
     // called by actionManager
     if (!vwr.g.preserveState)
       return;
-    int modelIndex = (taintedAtom >= 0 ? vwr.ms.at[taintedAtom].mi
+    int modelIndex = (taintedAtom >= 0 && vwr.ms.at[taintedAtom] != null ? vwr.ms.at[taintedAtom].mi
         : vwr.ms.mc - 1);
-    //System.out.print("undoAction " + type + " " + taintedAtom + " modelkit?"
-    //    + modelSet.models[modelIndex].isModelkit());
-    //System.out.println(" " + type + " size=" + actionStates.size() + " "
-    //    + +actionStatesRedo.size());
     switch (type) {
     case T.redomove:
     case T.undomove:

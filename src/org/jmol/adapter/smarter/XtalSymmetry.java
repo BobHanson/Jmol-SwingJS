@@ -31,19 +31,23 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.jmol.api.JmolModulationSet;
-import org.jmol.api.SymmetryInterface;
+import org.jmol.symmetry.SpaceGroup;
 import org.jmol.symmetry.Symmetry;
 import org.jmol.symmetry.SymmetryOperation;
+import org.jmol.symmetry.UnitCell;
 import org.jmol.util.BSUtil;
+import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
 import org.jmol.util.Vibration;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
+import javajs.util.Matrix;
 import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.PT;
@@ -59,43 +63,167 @@ import javajs.util.V3d;
  */
 public class XtalSymmetry {
 
-  private final static int PARTICLE_NONE = 0;
-  private final static int PARTICLE_CHAIN = 1;
-  private final static int PARTICLE_SYMOP = 2;
-  private static final double MAX_INTERCHAIN_BOND_2 = 25; // allowing for hydrogen bonds
+  /**
+   * A class only used by adapter.smarter.XtalSymmetry while building the
+   * file-based model.
+   */
+  public static class FileSymmetry extends Symmetry {
 
+    public FileSymmetry() {
+      // for Class.forName()
+    }
+
+    //    public void setTimeReversal(int op, int val) {
+    //      spaceGroup.operations[op].setTimeReversal(val);
+    //    }
+    //  
+    public boolean addLatticeVectors(Lst<double[]> lattvecs) {
+      return spaceGroup.addLatticeVectors(lattvecs);
+    }
+
+    /**
+     * @param code
+     * @param rs
+     *        is a full (3+d)x(3+d) array of epsilons
+     * @param vs
+     *        is a (3+d)x(1) array of translations
+     * @param sigma
+     * @return Jones-Faithful representation
+     */
+    public String addSubSystemOp(String code, Matrix rs, Matrix vs,
+                                 Matrix sigma) {
+      spaceGroup.isSSG = true;
+      String s = SymmetryOperation.getXYZFromRsVs(rs, vs, false);
+      int i = spaceGroup.addSymmetry(s, -1, true);
+      spaceGroup.operations[i].setSigma(code, sigma);
+      return s;
+    }
+
+    public boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
+                                 int iRange, int jRange, int kRange,
+                                 P3d ptOffset) {
+      return unitCell.checkDistance(f1, f2, distance, dx, iRange, jRange,
+          kRange, ptOffset);
+    }
+
+    /**
+     * 
+     * @param desiredSpaceGroupIndex
+     * @param name
+     * @param data
+     *        a Lst<SymmetryOperation> or Lst<M4d>
+     * @param modDim
+     *        in [3+d] modulation dimension
+     * @return true if a known space group
+     */
+    public boolean createSpaceGroup(int desiredSpaceGroupIndex, String name,
+                                    Object data, int modDim) {
+      spaceGroup = SpaceGroup.createSpaceGroup(desiredSpaceGroupIndex, name,
+          data, modDim);
+      if (spaceGroup != null && Logger.debugging)
+        Logger.debug("using generated space group " + spaceGroup.dumpInfo());
+      return spaceGroup != null;
+    }
+
+    public String fcoord(T3d p) {
+      return SymmetryOperation.fcoord(p);
+    }
+
+    /**
+     * MMCifReader only
+     * 
+     * @param xyz
+     * @param rotTransMatrix
+     */
+    public void getMatrixFromString(String xyz, double[] rotTransMatrix) {
+      SymmetryOperation.getMatrixFromString(null, xyz, rotTransMatrix, false,
+          true, false);
+    }
+
+    public String getSpaceGroupOperationCode(int iOp) {
+      return spaceGroup.operations[iOp].subsystemCode;
+    }
+
+    public Tensor getTensor(Viewer vwr, double[] parBorU) {
+      if (parBorU == null)
+        return null;
+      if (unitCell == null)
+        unitCell = UnitCell.fromParams(new double[] { 1, 1, 1, 90, 90, 90 },
+            true, SimpleUnitCell.SLOPSP);
+      return unitCell.getTensor(vwr, parBorU);
+    }
+
+    public void setPrecision(double prec) {
+      unitCell.setPrecision(prec);
+    }
+
+    public void toFractionalM(M4d m) {
+      if (!isBio)
+        unitCell.toFractionalM(m);
+    }
+
+    public void toUnitCellRnd(T3d pt, T3d offset) {
+      unitCell.toUnitCellRnd(pt, offset);
+    }
+
+    public void twelfthify(P3d pt) {
+      unitCell.twelfthify(pt);
+    }
+
+    /**
+     * return a conventional lattice from a primitive
+     * 
+     * @param latticeType
+     *        "A" "B" "C" "R" etc.
+     * @param primitiveToCrystal
+     * @return [origin va vb vc]
+     */
+    T3d[] getConventionalUnitCell(String latticeType, M3d primitiveToCrystal) {
+      return (unitCell == null || latticeType == null ? null
+          : unitCell.getConventionalUnitCell(latticeType, primitiveToCrystal));
+    }
+
+    int getSpaceGroupIndex() {
+      return spaceGroup.getIndex();
+    }
+
+    /**
+     * Get the actual fractional-to-Cartesian array;
+     * 
+     * @return first three rows of this matrix
+     */
+    double[][] getUnitCellF2C() {
+      return unitCell.getF2C();
+    }
+
+  }
+
+  private static final double MAX_INTERCHAIN_BOND_2 = 25; // allowing for hydrogen bonds
   private final static double MINIMUM_FRACTIONAL_ATOM_DISTANCE = 0.0001d;
-  private static final double SQUARED_CARTESIAN_DISTANCE_CHECK_OPS = 0.01d;
+  private final static int PARTICLE_CHAIN = 1;
+  private final static int PARTICLE_NONE = 0;
+
+  private final static int PARTICLE_SYMOP = 2;
   private static final double SQUARED_CARTESIAN_DISTANCE_CHECK_NOOPS = 0.0001d;
+  private static final double SQUARED_CARTESIAN_DISTANCE_CHECK_OPS = 0.01d;
 
   private AtomSetCollectionReader acr;
+  private boolean applySymmetryToBonds;
+
   private AtomSetCollection asc;
 
-  private SymmetryInterface baseSymmetry;
-  private SymmetryInterface sym2;
+  /**
+   * the Symmetry that was in place prior to any supercell or subgroup business;
+   * used by CIF and Jana readers to reset after subgroup processing
+   * 
+   */
+  private FileSymmetry baseSymmetry;
 
-  private boolean applySymmetryToBonds;
-  private boolean centroidPacked;
-  private boolean doCentroidUnitCell;
-  private boolean doNormalize = true;
-  private boolean doPackUnitCell;
-
-  private Lst<double[]> trajectoryUnitCells;
-
-  private double[] unitCellParams = null;
-  private int[] latticeCells;
-  private V3d[] unitCellTranslations;
-
-  // expands to 26 for cartesianToFractional matrix as array (PDB) and supercell
-
-  private double symmetryRange;
-  private double packingRange;
-  private String filterSymop;
+  private int bondCount0;
   private Set<String> bondsFound = new HashSet<String>();
-
-  private int ndims = 3;
-  private int firstAtom;
-
+  private boolean centroidPacked;
+  private boolean checkAll;
+  private boolean checkNearAtoms;
   /**
    * CrystalReader only; indicates that this is not just an input file. The
    * issue here is that although the space group is full and has many
@@ -104,1129 +232,73 @@ public class XtalSymmetry {
    */
   private boolean crystalReaderLatticeOpsOnly;
 
+  private Map<Integer, Character> disorderMap;
+
+  private int disorderMapMax;
+  private boolean doCentroidUnitCell;
+  private boolean doNormalize = true;
+  private boolean doPackUnitCell;
+  
+  private String filterSymop;
+  private int firstAtom;
+  
+  private int[] latticeCells;
+
   /**
    * the first centering op (such as (x+1/2, y+1/2, z+1/2), assuming these come
    * in blocks
    */
   private int latticeOp;
+  private M4d mident;
+
+  private P3i minXYZ, maxXYZ;
+
+  private P3d minXYZ0, maxXYZ0;
+  private M3d mTemp;
+  private int ndims = 3;
+
   private int noSymmetryCount;
   private int nVib;
+  private double packingRange;
+
+  private final P3d ptOffset = new P3d();
 
   private P3d ptTemp;
-  private M3d mTemp;
+
+  //private P3d unitCellOffset;
 
   /**
    * range minima and maxima -- also usedf for cartesians comparisons
    * 
    */
   private double rminx, rminy, rminz, rmaxx, rmaxy, rmaxz;
+  /**
+   * the initial and main Symmetry object
+   */
+  private FileSymmetry symmetry;
 
-  private final P3d ptOffset = new P3d();
+  private double symmetryRange;
+  private Lst<double[]> trajectoryUnitCells;
 
-  //private P3d unitCellOffset;
-
-  private P3i minXYZ, maxXYZ;
-  private P3d minXYZ0, maxXYZ0;
-
-  private boolean checkAll;
-  private int bondCount0;
+  private double[] unitCellParams = null;
+  private V3d[] unitCellTranslations;
 
   public XtalSymmetry() {
     // for reflection
   }
 
-  public XtalSymmetry set(AtomSetCollectionReader reader) {
-    this.acr = reader;
-    this.asc = reader.asc;
-    getSymmetry();
-    return this;
+  public Tensor addRotatedTensor(Atom a, Tensor t, int iSym, boolean reset,
+                                 FileSymmetry symmetry) {
+    if (ptTemp == null) {
+      ptTemp = new P3d();
+      mTemp = new M3d();
+    }
+    return a.addTensor(
+        ((Tensor) acr.getInterface("org.jmol.util.Tensor")).setFromEigenVectors(
+            symmetry.rotateAxes(iSym, t.eigenVectors, ptTemp, mTemp),
+            t.eigenValues, t.isIsotropic ? "iso" : t.type, t.id, t),
+        null, reset);
   }
-
-  public SymmetryInterface symmetry;
-  private boolean checkNearAtoms;
-
-  public SymmetryInterface getSymmetry() {
-    return (symmetry == null
-        ? (symmetry = (SymmetryInterface) acr
-            .getInterface("org.jmol.symmetry.Symmetry"))
-        : symmetry);
-  }
-
-  SymmetryInterface setSymmetry(SymmetryInterface symmetry) {
-    return (this.symmetry = symmetry);
-  }
-
-  private void setSymmetryRange(double factor) {
-    symmetryRange = factor;
-    asc.setInfo("symmetryRange", Double.valueOf(factor));
-  }
-
-  private void setLatticeCells() {
-
-    //set when unit cell is determined
-    // x <= 555 and y >= 555 indicate a range of cells to load
-    // AROUND the central cell 555 and that
-    // we should normalize (z = 1) or pack unit cells (z = -1) or not (z = 0)
-    // in addition (Jmol 11.7.36) z = -2 does a full 3x3x3 around the designated cells
-    // but then only delivers the atoms that are within the designated cells. 
-    // Normalization is the moving of the center of mass into the unit cell.
-    // Starting with Jmol 12.0.RC23 we do not normalize a CIF file that 
-    // is being loaded without {i j k} indicated.
-
-    latticeCells = acr.latticeCells;
-    boolean isLatticeRange = (latticeCells[0] <= 555 && latticeCells[1] >= 555
-        && (latticeCells[2] == 0 || latticeCells[2] == 1
-            || latticeCells[2] == -1));
-    doNormalize = latticeCells[0] != 0
-        && (!isLatticeRange || latticeCells[2] == 1);
-    applySymmetryToBonds = acr.applySymmetryToBonds;
-    doPackUnitCell = acr.doPackUnitCell && !applySymmetryToBonds;
-    doCentroidUnitCell = acr.doCentroidUnitCell;
-    centroidPacked = acr.centroidPacked;
-    filterSymop = acr.filterSymop;
-  }
-
-  private void setUnitCell(double[] info, M3d matUnitCellOrientation,
-                           P3d unitCellOffset) {
-    unitCellParams = new double[info.length];
-    //this.unitCellOffset = unitCellOffset;
-    for (int i = 0; i < info.length; i++)
-      unitCellParams[i] = info[i];
-    asc.haveUnitCell = true;
-    asc.setCurrentModelInfo("unitCellParams", unitCellParams);
-    if (asc.isTrajectory) {
-      if (trajectoryUnitCells == null) {
-        trajectoryUnitCells = new Lst<double[]>();
-        asc.setInfo("unitCells", trajectoryUnitCells);
-      }
-      trajectoryUnitCells.addLast(unitCellParams);
-    }
-    asc.setGlobalBoolean(JC.GLOBAL_UNITCELLS);
-    getSymmetry().setUnitCellFromParams(unitCellParams, false,
-        unitCellParams[SimpleUnitCell.PARAM_SLOP]);
-    // we need to set the auxiliary info as well, because 
-    // ModelLoader creates a new symmetry object.
-    if (unitCellOffset != null) {
-      symmetry.setOffsetPt(unitCellOffset);
-      asc.setCurrentModelInfo("unitCellOffset", unitCellOffset);
-    }
-    if (matUnitCellOrientation != null) {
-      symmetry.initializeOrientation(matUnitCellOrientation);
-      asc.setCurrentModelInfo("matUnitCellOrientation", matUnitCellOrientation);
-    }
-  }
-
-  int addSpaceGroupOperation(String xyz, boolean andSetLattice) {
-    symmetry.setSpaceGroup(doNormalize);
-    if (andSetLattice && symmetry.getSpaceGroupOperationCount() == 1)
-      setLatticeCells();
-    return symmetry.addSpaceGroupOperation(xyz, 0);
-  }
-
-  public void setLatticeParameter(int latt) {
-    symmetry.setSpaceGroup(doNormalize);
-    symmetry.setLattice(latt);
-  }
-
-  SymmetryInterface applySymmetryFromReader(SymmetryInterface readerSymmetry)
-      throws Exception {
-    asc.setCoordinatesAreFractional(acr.iHaveFractionalCoordinates);
-    setAtomSetSpaceGroupName(acr.sgName);
-    setSymmetryRange(acr.symmetryRange);
-    if (acr.doConvertToFractional || acr.fileCoordinatesAreFractional) {
-      setLatticeCells();
-      boolean doApplySymmetry = true;
-      if (acr.ignoreFileSpaceGroupName || !acr.iHaveSymmetryOperators) {
-        if (!acr.merging || readerSymmetry == null)
-          readerSymmetry = acr.getNewSymmetry();
-        doApplySymmetry = readerSymmetry.createSpaceGroup(
-            acr.desiredSpaceGroupIndex,
-            (acr.sgName.indexOf("!") >= 0 ? "P1" : acr.sgName),
-            acr.unitCellParams, acr.modDim);
-      } else {
-        acr.doPreSymmetry();
-        readerSymmetry = null;
-      }
-      packingRange = acr.getPackingRangeValue(0);
-      if (doApplySymmetry) {
-        if (readerSymmetry != null)
-          setSpaceGroupFrom(readerSymmetry);
-        //parameters are counts of unit cells as [a b c]
-
-        applySymmetryLattice();
-        if (readerSymmetry != null && filterSymop == null)
-          setAtomSetSpaceGroupName(readerSymmetry.getSpaceGroupName());
-      } else {
-        setUnitCellSafely();
-      }
-    }
-    if (acr.iHaveFractionalCoordinates && acr.merging
-        && readerSymmetry != null) {
-
-      // when merging (with appendNew false), we must return cartesians
-      Atom[] atoms = asc.atoms;
-      for (int i = asc.getLastAtomSetAtomIndex(), n = asc.ac; i < n; i++)
-        readerSymmetry.toCartesian(atoms[i], true);
-      asc.setCoordinatesAreFractional(false);
-
-      // We no longer allow merging of multiple-model files
-      // when the file to be appended has fractional coordinates and vibrations
-      acr.addVibrations = false;
-    }
-    return symmetry;
-  }
-
-  public void setSpaceGroupFrom(SymmetryInterface readerSymmetry) {
-    getSymmetry().setSpaceGroupTo(readerSymmetry.getSpaceGroup());
-  }
-
-  private void setAtomSetSpaceGroupName(String spaceGroupName) {
-    symmetry.setSpaceGroupName(spaceGroupName);
-    asc.setCurrentModelInfo("spaceGroup", spaceGroupName + "");
-  }
-
-  private void applySymmetryLattice() throws Exception {
-    if (!asc.coordinatesAreFractional || symmetry.getSpaceGroup() == null)
-      return;
-    sym2 = null;
-    int maxX = latticeCells[0];
-    int maxY = latticeCells[1];
-    int maxZ = Math.abs(latticeCells[2]);
-    /* kcode:  Generally the multiplier is just {ijk ijk scale}, but when we have
-    *        1iiijjjkkk 1iiijjjkkk scale, floats lose kkk due to Java double
-    *        precision issues so we use P4d {1iiijjjkkk 1iiijjjkkk scale,
-    *        1kkkkkk}. Here, our offset -- initially 0 or 1 from the uccage
-    *        renderer, but later -500 or -499 -- tells us which code we are
-    *        looking at, the first one or the second one.
-    */
-    int kcode = latticeCells[3];
-    firstAtom = asc.getLastAtomSetAtomIndex();
-    BS bsAtoms = asc.bsAtoms;
-    if (bsAtoms != null) {
-      updateBSAtoms();
-      firstAtom = bsAtoms.nextSetBit(firstAtom);
-    }
-    rminx = rminy = rminz = Double.MAX_VALUE;
-    rmaxx = rmaxy = rmaxz = -Double.MAX_VALUE;
-    P3d pt0 = null;
-    if (acr.latticeType == null)
-      acr.latticeType = "" + symmetry.getLatticeType();
-    if (acr.isPrimitive) {
-      asc.setCurrentModelInfo("isprimitive", Boolean.TRUE);
-      if (!"P".equals(acr.latticeType) || acr.primitiveToCrystal != null) {
-        asc.setCurrentModelInfo("unitcell_conventional", symmetry
-            .getConventionalUnitCell(acr.latticeType, acr.primitiveToCrystal));
-      }
-    }
-    if (acr.latticeType != null) {
-      asc.setCurrentModelInfo("latticeType", acr.latticeType);
-      Object range = acr.fillRange;
-      if (range instanceof String) {
-        setUnitCellSafely();
-        String type = (String) range; // conventional or primitive
-        if (type.equals(AtomSetCollectionReader.CELL_TYPE_CONVENTIONAL)) {
-          range = symmetry.getConventionalUnitCell(acr.latticeType,
-              acr.primitiveToCrystal);
-        } else if (type.equals(AtomSetCollectionReader.CELL_TYPE_PRIMITIVE)) {
-          range = symmetry.getUnitCellVectors();
-          symmetry.toFromPrimitive(true, acr.latticeType.charAt(0),
-              (T3d[]) range, acr.primitiveToCrystal);
-        } else if ("R".equals(acr.latticeType) && type.equals("rhombohedral")) {
-          if (symmetry
-              .getUnitCellInfoType(SimpleUnitCell.INFO_IS_HEXAGONAL) == 1) {
-            type = SimpleUnitCell.HEX_TO_RHOMB;
-          } else {
-            type = null;
-          }
-        } else if ("R".equals(acr.latticeType) && type.equals("trigonal")) {
-          if (symmetry
-              .getUnitCellInfoType(SimpleUnitCell.INFO_IS_RHOMBOHEDRAL) == 1) {
-            type = SimpleUnitCell.RHOMB_TO_HEX;
-          } else {
-            type = null;
-          }
-        } else if (type.indexOf(",") < 0 || type.indexOf("a") < 0
-            || type.indexOf("b") < 0 || type.indexOf("c") < 0) {
-          type = null;
-        } else {
-          type = null;
-        }
-        if (type != null && range instanceof String
-            && (range = symmetry.getV0abc(type, null)) == null) {
-          type = null;
-        }
-        if (type == null) {
-          acr.appendLoadNote(
-              acr.fillRange + " symmetry could not be implemented");
-          acr.fillRange = null;
-        } else {
-          acr.fillRange = range;
-          acr.addJmolScript("unitcell " + PT.esc(type));
-        }
-      }
-    }
-    if (acr.fillRange != null) {
-      T3d[] range = (T3d[]) acr.fillRange;
-      bsAtoms = updateBSAtoms();
-      acr.forcePacked = true;
-      doPackUnitCell = false;
-      setMinMax(ndims, kcode, maxX, maxY, maxZ);
-      P3i minXYZ2 = P3i.new3(minXYZ.x, minXYZ.y, minXYZ.z);
-      P3i maxXYZ2 = P3i.new3(maxXYZ.x, maxXYZ.y, maxXYZ.z);
-      P3d[] oabc = new P3d[4];
-      for (int i = 0; i < 4; i++)
-        oabc[i] = P3d.newP(range[i]);
-      setUnitCellSafely();
-      adjustRangeMinMax(oabc);
-      //Logger.info("setting min/max for original lattice to " + minXYZ + " and "
-      //  + maxXYZ);
-      if (sym2 == null) {
-        sym2 = new Symmetry();
-        sym2.getUnitCell((T3d[]) acr.fillRange, false, null);
-      }
-      applyAllSymmetry(acr.ms, bsAtoms);
-      pt0 = new P3d();
-      Atom[] atoms = asc.atoms;
-      for (int i = asc.ac; --i >= firstAtom;) {
-        pt0.setT(atoms[i]);
-        symmetry.toCartesian(pt0, false);
-        sym2.toFractional(pt0, false);
-        if (acr.noPack
-            ? !removePacking(ndims, pt0, minXYZ2.x, maxXYZ2.x, minXYZ2.y,
-                maxXYZ2.y, minXYZ2.z, maxXYZ2.z, packingRange)
-            : !isWithinCell(ndims, pt0, minXYZ2.x, maxXYZ2.x, minXYZ2.y,
-                maxXYZ2.y, minXYZ2.z, maxXYZ2.z, packingRange))
-          bsAtoms.clear(i);
-
-      }
-      return;
-    }
-    P3d offset = null;
-    nVib = 0;
-    T3d va = null, vb = null, vc = null;
-    baseSymmetry = symmetry;
-    String supercell = acr.strSupercell;
-    T3d[] oabc = null;
-    double slop = 1e-6d;
-    boolean isSuper = (supercell != null && supercell.indexOf(",") >= 0);
-    M4d matSuper = null;
-    if (isSuper) {
-      // expand range to accommodate this alternative cell
-      // oabc will be cartesian
-      matSuper = new M4d();
-      if (mident == null)
-        mident = new M4d();
-      setUnitCellSafely();
-      oabc = symmetry.getV0abc(supercell, matSuper);
-      if (oabc != null && !matSuper.equals(mident)) {
-        // flag this to set symmetry to P1 in the end
-        // set the bounds for atoms in the new unit cell
-        // in terms of the old unit cell
-        setMinMax(ndims, kcode, maxX, maxY, maxZ);
-        // base origin for new unit cell
-        pt0 = P3d.newP(oabc[0]);
-
-        // base vectors for new unit cell
-        va = P3d.newP(oabc[1]);
-        vb = P3d.newP(oabc[2]);
-        vc = P3d.newP(oabc[3]);
-
-        adjustRangeMinMax(oabc);
-      }
-    }
-    int iAtomFirst = asc.getLastAtomSetAtomIndex();
-    if (bsAtoms != null)
-      iAtomFirst = bsAtoms.nextSetBit(iAtomFirst);
-    if (rminx == Double.MAX_VALUE) {
-      // just a standard load
-      supercell = null;
-      oabc = null;
-    } else {
-      asc.setGlobalBoolean(JC.GLOBAL_SUPERCELL);
-      boolean doPack0 = doPackUnitCell;
-      doPackUnitCell = doPack0;//(doPack0 || oabc != null && acr.forcePacked);
-      bsAtoms = updateBSAtoms();
-      slop = symmetry.getPrecision();
-      // this call will set unitCellParams to null
-      applyAllSymmetry(acr.ms, null);
-      doPackUnitCell = doPack0;
-
-      // 2) set all atom coordinates to Cartesians
-
-      Atom[] atoms = asc.atoms;
-      int atomCount = asc.ac;
-      for (int i = iAtomFirst; i < atomCount; i++) {
-        symmetry.toCartesian(atoms[i], true);
-        bsAtoms.set(i);
-      }
-
-      // 3) create the supercell unit cell
-
-      symmetry = null;
-      symmetry = getSymmetry();
-      setUnitCell(new double[] { // 27 values
-          0, 0, 0, 0, 0, 0, // abc al be ga
-          va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z, 0, 0, 0, 0, 0,
-          0, // m21 22 23 30 31 32 33
-          Double.NaN, // not a matrix
-          Double.NaN, Double.NaN, Double.NaN, // no supercell items 
-          Double.NaN, // no scaling
-          slop }, null, offset);
-      setAtomSetSpaceGroupName(
-          oabc == null || supercell == null ? "P1" : "cell=" + supercell);
-      symmetry.setSpaceGroup(doNormalize);
-      symmetry.addSpaceGroupOperation("x,y,z", 0);
-
-      // 4) reset atoms to fractional values in this new system
-
-      if (pt0 != null)
-        symmetry.toFractional(pt0, true);
-      for (int i = iAtomFirst; i < atomCount; i++) {
-        symmetry.toFractional(atoms[i], true);
-        if (pt0 != null)
-          atoms[i].sub(pt0);
-      }
-
-      // 5) apply the full lattice symmetry now
-
-      asc.haveAnisou = false;
-      asc.setCurrentModelInfo("matUnitCellOrientation", null);
-
-    }
-    setMinMax(ndims, kcode, maxX, maxY, maxZ);
-    if (oabc == null) {
-      applyAllSymmetry(acr.ms, bsAtoms);
-      if (!acr.noPack && (!applySymmetryToBonds || !acr.doPackUnitCell))
-        return;
-      // fall through if packed and there are bonds, that is, when we did not shift atoms
-      // so we reset to the original min and max and then trim.
-      setMinMax(ndims, kcode, maxX, maxY, maxZ);
-    }
-    if (acr.forcePacked || acr.doPackUnitCell || acr.noPack) {
-      trimToUnitCell(iAtomFirst);
-    }
-
-    // but we leave matSuper, because we might need it for vibrations in CASTEP
-    
-    // this is now P1. We need to set all the sites 
-
-    fixSuperCellP1AtomSites(matSuper, bsAtoms, slop);    
-  }
-
-  private void fixSuperCellP1AtomSites(M4d m, BS bsAtoms, double slop) {
-    int n = bsAtoms.cardinality();
-    Atom[] baseAtoms = new Atom[n];
-    int nbase = 0;
-    double slop2 = slop * slop;
-    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
-      Atom a = asc.atoms[i];
-      Atom p = new Atom();
-      p.setT(a);
-      if (m != null) {
-        m.rotTrans(p);
-        SimpleUnitCell.unitizeDimRnd(3, p, slop);
-      }
-      p.atomSerial = a.atomSite;// ORIGINAL atomSite
-      p.atomSite = a.atomSite; 
-      symmetry.unitize(p);
-      boolean found = false;
-      for (int ib = 0; ib < nbase; ib++) {
-        Atom b = baseAtoms[ib];
-        if (p.atomSerial == b.atomSerial && p.distanceSquared(b) < slop2) {
-          found = true;
-          a.atomSite = b.atomSite;
-          break;
-        }
-      }
-      if (!found) {
-        a.atomSite = p.atomSite = nbase;
-        baseAtoms[nbase++] = p;
-      }
-    }
-  }
-
-  private void setMinMax(int dim, int kcode, int maxX, int maxY, int maxZ) {
-    minXYZ = new P3i();
-    maxXYZ = P3i.new3(maxX, maxY, maxZ);
-    SimpleUnitCell.setMinMaxLatticeParameters(dim, minXYZ, maxXYZ, kcode);
-  }
-
-  private void trimToUnitCell(int iAtomFirst) {
-    // trim atom set based on current min/max
-    Atom[] atoms = asc.atoms;
-    BS bs = updateBSAtoms();
-    if (acr.noPack) {
-      for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
-          .nextSetBit(i + 1)) {
-        if (!removePacking(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
-            maxXYZ.y, minXYZ.z, maxXYZ.z, packingRange))
-          bs.clear(i);
-      }
-    } else {
-      for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
-          .nextSetBit(i + 1)) {
-        if (!isWithinCell(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
-            maxXYZ.y, minXYZ.z, maxXYZ.z, packingRange))
-          bs.clear(i);
-      }
-    }
-  }
-
-  /**
-   * Update asc.bsAtoms to include all atoms, or at least all atoms that are
-   * still viable from the reader.
-   * 
-   * @return updated BS
-   */
-  private BS updateBSAtoms() {
-    BS bs = asc.bsAtoms;
-    if (bs == null)
-      bs = asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
-    if (bs.nextSetBit(firstAtom) < 0)
-      bs.setBits(firstAtom, asc.ac);
-    return bs;
-  }
-
-  private void adjustRangeMinMax(T3d[] oabc) {
-
-    // be sure to add in packing error adjustments 
-    // so that we include all needed atoms
-    // load "" packed x.x supercell...
-    P3d pa = new P3d();
-    P3d pb = new P3d();
-    P3d pc = new P3d();
-    if (acr.forcePacked) {
-      pa.setT(oabc[1]);
-      pb.setT(oabc[2]);
-      pc.setT(oabc[3]);
-      pa.scale(packingRange);
-      pb.scale(packingRange);
-      pc.scale(packingRange);
-    }
-
-    // account for lattice specification
-    // load "" {x y z} supercell...
-    oabc[0].scaleAdd2(minXYZ.x, oabc[1], oabc[0]);
-    oabc[0].scaleAdd2(minXYZ.y, oabc[2], oabc[0]);
-    oabc[0].scaleAdd2(minXYZ.z, oabc[3], oabc[0]);
-    // add in packing adjustment
-    oabc[0].sub(pa);
-    oabc[0].sub(pb);
-    oabc[0].sub(pc);
-    // fractionalize and adjust min/max
-    P3d pt = P3d.newP(oabc[0]);
-    symmetry.toFractional(pt, true);
-    setSymmetryMinMax(pt);
-
-    // account for lattice specification
-    oabc[1].scale(maxXYZ.x - minXYZ.x);
-    oabc[2].scale(maxXYZ.y - minXYZ.y);
-    oabc[3].scale(maxXYZ.z - minXYZ.z);
-    // add in packing adjustment
-    oabc[1].scaleAdd2(2, pa, oabc[1]);
-    oabc[2].scaleAdd2(2, pb, oabc[2]);
-    oabc[3].scaleAdd2(2, pc, oabc[3]);
-    // run through six of the corners -- a, b, c, ab, ac, bc
-    for (int i = 0; i < 3; i++) {
-      for (int j = i + 1; j < 4; j++) {
-        pt.add2(oabc[i], oabc[j]);
-        if (i != 0)
-          pt.add(oabc[0]);
-        symmetry.toFractional(pt, false);
-        setSymmetryMinMax(pt);
-      }
-    }
-    // bc in the end, so we need abc
-    symmetry.toCartesian(pt, false);
-    pt.add(oabc[1]);
-    symmetry.toFractional(pt, false);
-    setSymmetryMinMax(pt);
-    // allow for some imprecision
-    minXYZ = P3i.new3((int) Math.min(0, Math.floor(rminx + 0.001f)),
-        (int) Math.min(0, Math.floor(rminy + 0.001f)),
-        (int) Math.min(0, Math.floor(rminz + 0.001f)));
-    maxXYZ = P3i.new3((int) Math.max(1, Math.ceil(rmaxx - 0.001f)),
-        (int) Math.max(1, Math.ceil(rmaxy - 0.001f)),
-        (int) Math.max(1, Math.ceil(rmaxz - 0.001f)));
-  }
-
-  private void setSymmetryMinMax(P3d c) {
-    if (rminx > c.x)
-      rminx = c.x;
-    if (rminy > c.y)
-      rminy = c.y;
-    if (rminz > c.z)
-      rminz = c.z;
-    if (rmaxx < c.x)
-      rmaxx = c.x;
-    if (rmaxy < c.y)
-      rmaxy = c.y;
-    if (rmaxz < c.z)
-      rmaxz = c.z;
-  }
-
-  public boolean isWithinCell(int ndims, P3d pt, double minX, double maxX,
-                              double minY, double maxY, double minZ,
-                              double maxZ, double slop) {
-    return (pt.x > minX - slop && pt.x < maxX + slop
-        && (ndims < 2 || pt.y > minY - slop && pt.y < maxY + slop)
-        && (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ + slop));
-  }
-
-  public boolean removePacking(int ndims, P3d pt, double minX, double maxX,
-                               double minY, double maxY, double minZ,
-                               double maxZ, double slop) {
-    return (pt.x > minX - slop && pt.x < maxX - slop
-        && (ndims < 2 || pt.y > minY - slop && pt.y < maxY - slop)
-        && (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ - slop));
-  }
-
-  /**
-   * @param ms
-   *        modulated structure interface
-   * @param bsAtoms
-   *        relating to supercells
-   * @throws Exception
-   */
-  private void applyAllSymmetry(MSInterface ms, BS bsAtoms) throws Exception {
-    if (asc.ac == 0 || bsAtoms != null && bsAtoms.isEmpty())
-      return;
-    int n = noSymmetryCount = asc.baseSymmetryAtomCount > 0
-        ? asc.baseSymmetryAtomCount
-        : bsAtoms == null ? asc.getLastAtomSetAtomCount()
-            : asc.ac - bsAtoms.nextSetBit(asc.getLastAtomSetAtomIndex());
-    asc.setTensors();
-    applySymmetryToBonds = acr.applySymmetryToBonds;
-    doPackUnitCell = acr.doPackUnitCell && !applySymmetryToBonds;
-    bondCount0 = asc.bondCount;
-    ndims = SimpleUnitCell.getDimensionFromParams(acr.unitCellParams);
-    finalizeSymmetry(symmetry);
-    int operationCount = symmetry.getSpaceGroupOperationCount();
-    BS excludedOps = (acr.thisBiomolecule == null ? null : new BS());
-    checkNearAtoms = acr.checkNearAtoms || excludedOps != null;
-    SimpleUnitCell.setMinMaxLatticeParameters(ndims, minXYZ, maxXYZ, 0);
-    latticeOp = symmetry.getLatticeOp();
-    crystalReaderLatticeOpsOnly = (asc.crystalReaderLatticeOpsOnly
-        && latticeOp >= 0); // CrystalReader
-    if (doCentroidUnitCell)
-      asc.setInfo("centroidMinMax", new int[] { minXYZ.x, minXYZ.y, minXYZ.z,
-          maxXYZ.x, maxXYZ.y, maxXYZ.z, (centroidPacked ? 1 : 0) });
-    if (doCentroidUnitCell || acr.doPackUnitCell
-        || symmetryRange != 0 && maxXYZ.x - minXYZ.x == 1
-            && maxXYZ.y - minXYZ.y == 1 && maxXYZ.z - minXYZ.z == 1) {
-      // weird Mac bug does not allow   Point3i.new3(minXYZ) !!
-      minXYZ0 = P3d.new3(minXYZ.x, minXYZ.y, minXYZ.z);
-      maxXYZ0 = P3d.new3(maxXYZ.x, maxXYZ.y, maxXYZ.z);
-      if (ms != null) {
-        ms.setMinMax0(minXYZ0, maxXYZ0);
-        minXYZ.set((int) minXYZ0.x, (int) minXYZ0.y, (int) minXYZ0.z);
-        maxXYZ.set((int) maxXYZ0.x, (int) maxXYZ0.y, (int) maxXYZ0.z);
-      }
-      switch (ndims) {
-      case 3:
-        // standard
-        minXYZ.z--;
-        maxXYZ.z++;
-        //$FALL-THROUGH$;
-      case 2:
-        // slab or standard
-        minXYZ.y--;
-        maxXYZ.y++;
-        //$FALL-THROUGH$;
-      case 1:
-        // slab, polymer, or standard
-        minXYZ.x--;
-        maxXYZ.x++;
-      }
-    }
-    int nCells = (maxXYZ.x - minXYZ.x) * (maxXYZ.y - minXYZ.y)
-        * (maxXYZ.z - minXYZ.z);
-    int nsym = n * (crystalReaderLatticeOpsOnly ? 4 : operationCount);
-    // we track cartesian coordinates of all atoms when there is biomolecular
-    // symmetry or we need to check near atoms (d2 < d0); 
-    // we track only cell=555 when there are multiple unit cells;
-    // otherwise we don't check (though the first atom is always checked???)
-    int cartesianCount = (checkNearAtoms || acr.thisBiomolecule != null
-        ? nsym * nCells
-        : symmetryRange > 0 ? nsym // checking against {1 1 1}
-            : 1 // not checking (Q: Why not zero here?)
-    );
-    P3d[] cartesians = new P3d[cartesianCount];
-    Atom[] atoms = asc.atoms;
-    for (int i = 0; i < n; i++)
-      atoms[firstAtom + i].bsSymmetry = BS.newN(operationCount * (nCells + 1));
-    int pt = 0;
-    unitCellTranslations = new V3d[nCells];
-    int iCell = 0;
-    int cell555Count = 0;
-    double absRange = Math.abs(symmetryRange);
-    boolean checkCartesianRange = (symmetryRange != 0);
-    boolean checkRangeNoSymmetry = (symmetryRange < 0);
-    boolean checkRange111 = (symmetryRange > 0);
-    if (checkCartesianRange) {
-      rminx = rminy = rminz = Double.MAX_VALUE;
-      rmaxx = rmaxy = rmaxz = -Double.MAX_VALUE;
-    }
-    // incommensurate symmetry can have lattice centering, resulting in 
-    // duplication of operators. There's a bug later on that requires we 
-    // only do this with the first atom set for now, at least.
-    SymmetryInterface sym = symmetry;
-    SymmetryInterface lastSymmetry = sym;
-    checkAll = (crystalReaderLatticeOpsOnly
-        || asc.atomSetCount == 1 && acr.checkNearAtoms && latticeOp >= 0);
-    Lst<M4d> lstNCS = acr.lstNCS;
-    if (lstNCS != null && lstNCS.get(0).m33 == 0) {
-      int nOp = sym.getSpaceGroupOperationCount();
-      int nn = lstNCS.size();
-      for (int i = nn; --i >= 0;) {
-        M4d m = lstNCS.get(i);
-        m.m33 = 1;
-        sym.toFractionalM(m);
-      }
-      for (int i = 1; i < nOp; i++) {
-        M4d m1 = sym.getSpaceGroupOperation(i);
-        for (int j = 0; j < nn; j++) {
-          M4d m = M4d.newM4(lstNCS.get(j));
-          m.mul2(m1, m);
-          if (doNormalize && noSymmetryCount > 0)
-            SymmetryOperation.normalizeOperationToCentroid(3, m, atoms,
-                firstAtom, noSymmetryCount);
-          lstNCS.addLast(m);
-        }
-      }
-    }
-
-    // always do the 555 cell first, just operation 0 -- but for incommensurate systems this may not be x,y,z
-
-    P3d pttemp = null;
-    M4d op = sym.getSpaceGroupOperation(0);
-    if (doPackUnitCell) {
-      pttemp = new P3d();
-      ptOffset.set(0, 0, 0);
-    }
-    int[] atomMap = (bondCount0 > asc.bondIndex0 && applySymmetryToBonds
-        ? new int[n]
-        : null);
-    int[] unitCells = new int[nCells];
-    for (int tx = minXYZ.x; tx < maxXYZ.x; tx++) {
-      for (int ty = minXYZ.y; ty < maxXYZ.y; ty++) {
-        for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
-          unitCellTranslations[iCell] = V3d.new3(tx, ty, tz);
-          unitCells[iCell++] = 555 + tx * 100 + ty * 10 + tz;
-          if (tx != 0 || ty != 0 || tz != 0 || cartesians.length == 0)
-            continue;
-
-          // base cell only
-          for (pt = 0; pt < n; pt++) {
-            Atom atom = atoms[firstAtom + pt];
-            if (ms != null) {
-              // incommensurately modulated structure
-              sym = ms.getAtomSymmetry(atom, this.symmetry);
-              if (sym != lastSymmetry) {
-                if (sym.getSpaceGroupOperationCount() == 0)
-                  finalizeSymmetry(lastSymmetry = sym);
-                op = sym.getSpaceGroupOperation(0);
-              }
-            }
-            P3d c = P3d.newP(atom);
-            op.rotTrans(c);
-            sym.toCartesian(c, false);
-            if (doPackUnitCell) {
-
-              // 555 cell 
-              sym.toUnitCellRnd(c, ptOffset);
-              pttemp.setT(c);
-              sym.toFractional(pttemp, false);
-              // when bsAtoms != null, we are
-              // setting it to be correct for a 
-              // second unit cell -- the supercell
-              if (bsAtoms == null)
-                atom.setT(pttemp);
-              else if (atom.distance(pttemp) < MINIMUM_FRACTIONAL_ATOM_DISTANCE)
-                bsAtoms.set(atom.index);
-              else {// not in THIS unit cell
-                bsAtoms.clear(atom.index);
-                continue;
-              }
-            }
-            if (bsAtoms != null)
-              atom.bsSymmetry.clearAll();
-            atom.bsSymmetry.set(iCell * operationCount);
-            atom.bsSymmetry.set(0);
-            if (checkCartesianRange)
-              setSymmetryMinMax(c);
-            if (pt < cartesianCount)
-              cartesians[pt] = c;
-          }
-          if (checkRangeNoSymmetry) {
-            rminx -= absRange;
-            rminy -= absRange;
-            rminz -= absRange;
-            rmaxx += absRange;
-            rmaxy += absRange;
-            rmaxz += absRange;
-          }
-          cell555Count = pt = symmetryAddAtoms(0, 0, 0, 0, pt,
-              iCell * operationCount, cartesians, ms, excludedOps, atomMap);
-        }
-      }
-    }
-    if (checkRange111) {
-      rminx -= absRange;
-      rminy -= absRange;
-      rminz -= absRange;
-      rmaxx += absRange;
-      rmaxy += absRange;
-      rmaxz += absRange;
-    }
-
-    // now apply all the translations
-    iCell = 0;
-    for (int tx = minXYZ.x; tx < maxXYZ.x; tx++) {
-      for (int ty = minXYZ.y; ty < maxXYZ.y; ty++) {
-        for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
-          iCell++;
-          if (tx != 0 || ty != 0 || tz != 0)
-            pt = symmetryAddAtoms(tx, ty, tz, cell555Count, pt,
-                iCell * operationCount, cartesians, ms, excludedOps, atomMap);
-        }
-      }
-    }
-    if (iCell * n == asc.ac - firstAtom)
-      duplicateAtomProperties(iCell);
-    setSymmetryOps();
-    asc.setCurrentModelInfo("presymmetryAtomIndex", Integer.valueOf(firstAtom));
-    asc.setCurrentModelInfo("presymmetryAtomCount", Integer.valueOf(n));
-    asc.setCurrentModelInfo("latticeDesignation", sym.getLatticeDesignation());
-    asc.setCurrentModelInfo("unitCellRange", unitCells);
-    asc.setCurrentModelInfo("unitCellTranslations", unitCellTranslations);
-    unitCellParams = null;
-    reset();
-  }
-
-  @SuppressWarnings("cast")
-  private int symmetryAddAtoms(int transX, int transY, int transZ,
-                               int baseCount, int pt, int iCellOpPt,
-                               P3d[] cartesians, MSInterface ms, BS excludedOps,
-                               int[] atomMap)
-      throws Exception {
-    boolean isBaseCell = (baseCount == 0);
-    boolean addBonds = (atomMap != null);
-    if (doPackUnitCell)
-      ptOffset.set(transX, transY, transZ);
-
-    //symmetryRange < 0 : just check symop=1 set
-    //symmetryRange > 0 : check against {1 1 1}
-
-    // if we are not checking special atoms, then this is a PDB file
-    // and we return all atoms within a cubical volume around the 
-    // target set. The user can later use select within() to narrow that down
-    // This saves immensely on time.
-    double range2 = symmetryRange * symmetryRange;
-    boolean checkRangeNoSymmetry = (symmetryRange < 0);
-    boolean checkRange111 = (symmetryRange > 0);
-    boolean checkSymmetryMinMax = (isBaseCell && checkRange111);
-    checkRange111 &= !isBaseCell;
-    int nOp = symmetry.getSpaceGroupOperationCount();
-    Lst<M4d> lstNCS = acr.lstNCS;
-    int nNCS = (lstNCS == null ? 0 : lstNCS.size());
-    int nOperations = nOp + nNCS;
-    nNCS = nNCS / nOp;
-    /**
-     * checkNearAtoms indicates that we are looking for atoms with (nearly) the
-     * same cartesian position. This is important when packing and there are
-     * multiple operations.
-     */
-    boolean checkNearAtoms = (this.checkNearAtoms
-        && (nOperations > 1 || doPackUnitCell));
-    boolean checkSymmetryRange = (checkRangeNoSymmetry || checkRange111);
-    boolean checkDistances = (checkNearAtoms || checkSymmetryRange);
-    boolean checkOps = (excludedOps != null);
-    boolean addCartesian = (checkNearAtoms || checkSymmetryMinMax);
-    BS bsAtoms = (acr.isMolecular ? null : asc.bsAtoms);
-    SymmetryInterface sym = symmetry;
-    if (checkRangeNoSymmetry)
-      baseCount = noSymmetryCount;
-    int atomMax = firstAtom + noSymmetryCount;
-    int bondAtomMin = (asc.firstAtomToBond < 0 ? atomMax : asc.firstAtomToBond);
-    P3d pttemp = new P3d();
-    String code = null;
-    double minCartDist2 = (checkOps ? SQUARED_CARTESIAN_DISTANCE_CHECK_OPS
-        : SQUARED_CARTESIAN_DISTANCE_CHECK_NOOPS);
-    char subSystemId = '\0';
-    int j00 = (bsAtoms == null ? firstAtom : bsAtoms.nextSetBit(firstAtom));
-
-    // loop over all symmetry operations...
-    out: for (int iSym = 0; iSym < nOperations; iSym++) {
-
-      // ignore if very first operation 
-      // or this is CrystalReader and we are just checking the lattice operations
-      //    and this is not a lattice operation
-      // or this is an operation we have excluded
-      if (isBaseCell && iSym == 0
-          || crystalReaderLatticeOpsOnly && iSym > 0 && (iSym % latticeOp) != 0
-          || excludedOps != null && excludedOps.get(iSym))
-        continue;
-
-      /* pt0 sets the range of points cross-checked. 
-       * If we are checking special positions, then we have to check
-       *   all previous atoms. 
-       * If we are doing a symmetry range check relative to {1 1 1}, then
-       *   we have to check only the base set. (checkRange111 true)
-       * If we are doing a symmetry range check on symop=1555 (checkRangeNoSymmetry true), 
-       *   then we don't check any atoms and just use the box.
-       *    
-       */
-
-      int pt0 = firstAtom
-          + (checkNearAtoms ? pt : checkRange111 ? baseCount : 0);
-      int spinOp = (iSym >= nOp ? 0
-          : asc.vibScale == 0 ? sym.getSpinOp(iSym) : asc.vibScale);
-      int i0 = Math.max(firstAtom,
-          (bsAtoms == null ? 0 : bsAtoms.nextSetBit(0)));
-      boolean checkDistance = checkDistances;
-      int spt = (iSym >= nOp ? (iSym - nOp) / nNCS : iSym);
-      int cpt = spt + iCellOpPt;
-      for (int i = i0; i < atomMax; i++) {
-        Atom a = asc.atoms[i];
-        if (bsAtoms != null && !bsAtoms.get(i))
-          continue;
-
-        if (ms == null) {
-          sym.newSpaceGroupPoint(a, iSym,
-              (iSym >= nOp ? lstNCS.get(iSym - nOp) : null), transX, transY,
-              transZ, pttemp);
-        } else {
-          sym = ms.getAtomSymmetry(a, this.symmetry);
-          sym.newSpaceGroupPoint(a, iSym, null, transX, transY, transZ, pttemp);
-          // COmmensurate structures may use a symmetry operator
-          // to changes space groups.
-          code = sym.getSpaceGroupOperationCode(iSym);
-          if (code != null) {
-            subSystemId = code.charAt(0);
-            sym = ms.getSymmetryFromCode(code);
-            if (sym.getSpaceGroupOperationCount() == 0)
-              finalizeSymmetry(sym);
-          }
-        }
-        P3d c = P3d.newP(pttemp); // cartesian position
-        sym.toCartesian(c, false);
-        if (doPackUnitCell) {
-          sym.toUnitCellRnd(c, ptOffset);
-          pttemp.setT(c);
-          sym.toFractional(pttemp, false);
-          if (!isWithinCell(ndims, pttemp, minXYZ0.x, maxXYZ0.x, minXYZ0.y,
-              maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingRange)) {
-            continue;
-          }
-        }
-        if (checkSymmetryMinMax)
-          setSymmetryMinMax(c);
-        Atom special = null;
-        if (checkDistance) {
-          // for range checking, we first make sure we are not out of range
-          // for the cartesian
-          if (checkSymmetryRange && (c.x < rminx || c.y < rminy || c.z < rminz
-              || c.x > rmaxx || c.y > rmaxy || c.z > rmaxz))
-            continue;
-          double minDist2 = Double.MAX_VALUE;
-          // checkAll means we have to check against operations that have
-          // just been done; otherwise we can check only to the base set
-          int j0 = (checkAll ? asc.ac : pt0);
-          String name = a.atomName;
-          char id = (code == null ? a.altLoc : subSystemId);
-          for (int j = j00; j < j0; j++) {
-            if (bsAtoms != null && !bsAtoms.get(j))
-              continue;
-            P3d pc = cartesians[j - firstAtom];
-            if (pc == null)
-              continue;
-            double d2 = c.distanceSquared(pc);
-            if (checkNearAtoms && d2 < minCartDist2) {
-              if (checkOps) {
-                // if a matching atom is found for a model built
-                // from a mix of crystallographic and noncrystallographic 
-                // operators, we throw out the entire operation, not just this atom
-                excludedOps.set(iSym);
-                continue out;
-              }
-              special = asc.atoms[j];
-              if ((special.atomName == null || special.atomName.equals(name))
-                  && special.altLoc == id)
-                break;
-              special = null;
-            }
-            if (checkRange111 && j < baseCount && d2 < minDist2)
-              minDist2 = d2;
-          }
-          if (checkRange111 && minDist2 > range2)
-            continue;
-        }
-        if (checkOps) {
-          // if we did not find a common atom for the first atom when checking operators,
-          // we do not have to check again for any other atom.
-          checkDistance = false;
-        }
-        int atomSite = a.atomSite;
-        if (special != null) {
-          if (addBonds)
-            atomMap[atomSite] = special.index;
-          special.bsSymmetry.set(cpt);
-          special.bsSymmetry.set(spt);
-        } else {
-          if (addBonds)
-            atomMap[atomSite] = asc.ac;
-          Atom atom1 = a.copyTo(pttemp, asc);
-          if (asc.bsAtoms != null)
-            asc.bsAtoms.set(atom1.index);
-          if (spinOp != 0 && atom1.vib != null) {
-            // spinOp is making the correction for spin being a pseudoVector, not a standard vector
-            sym.getSpaceGroupOperation(iSym).rotate(atom1.vib);
-            atom1.vib.scale(spinOp);
-          }
-          if (atom1.isNegDisorder) {
-            // special negative disorder group in CifReader
-            if (disorderMap == null)
-              disorderMap = new Hashtable<Integer, Character>();
-            Integer key = Integer.valueOf(iSym * 1000 + atom1.altLoc);
-            Character ch = disorderMap.get(key);
-            if (ch == null) {
-              if (disorderMapMax == 0 || disorderMapMax == 'Z')
-                disorderMapMax = (int) '@'; // necessary for legacy java2script JSmol
-              disorderMap.put(key,
-                  ch = new Character((char) (++disorderMapMax)));
-            }
-            atom1.altLoc = ch.charValue();
-          }
-          atom1.atomSite = atomSite;
-          if (code != null)
-            atom1.altLoc = subSystemId;
-          atom1.bsSymmetry = BSUtil.newAndSetBit(cpt);
-          atom1.bsSymmetry.set(spt);
-          if (addCartesian)
-            cartesians[pt++] = c;
-          Lst<Object> tensors = a.tensors;
-          if (tensors != null) {
-            atom1.tensors = null;
-            for (int j = tensors.size(); --j >= 0;) {
-              Tensor t = (Tensor) tensors.get(j);
-              if (t == null)
-                continue;
-              if (nOp == 1)
-                atom1.addTensor(t.copyTensor(), null, false);
-              else
-                addRotatedTensor(atom1, t, iSym, false, sym);
-            }
-          }
-        }
-      }
-      if (addBonds) {
-        // Clone bonds
-        Bond[] bonds = asc.bonds;
-        Atom[] atoms = asc.atoms;
-        String key;
-        for (int bondNum = asc.bondIndex0; bondNum < bondCount0; bondNum++) {
-          Bond bond = bonds[bondNum];
-          Atom atom1 = atoms[bond.atomIndex1];
-          Atom atom2 = atoms[bond.atomIndex2];
-          if (atom1 == null || atom2 == null
-              || atom2.atomSetIndex < atom1.atomSetIndex)
-            continue;
-
-          int ia1 = atomMap[atom1.atomSite];
-          int ia2 = atomMap[atom2.atomSite];
-          if (ia1 > ia2) {
-            int i = ia1;
-            ia1 = ia2;
-            ia2 = i;
-          }
-          if ((ia1 != ia2 && (ia1 >= bondAtomMin || ia2 >= bondAtomMin))
-              && !bondsFound.contains(key = "-" + ia1 + "," + ia2)) {
-            bondsFound.add(key);
-            asc.addNewBondWithOrder(ia1, ia2, bond.order);//.distance = d;
-          }
-        }
-      }
-    }
-    return pt;
-  }
-
-  private Map<Integer, Character> disorderMap;
-  private int disorderMapMax;
-
-  @SuppressWarnings("unchecked")
-  private void duplicateAtomProperties(int nTimes) {
-    Map<String, Object> p = (Map<String, Object>) asc
-        .getAtomSetAuxiliaryInfoValue(-1, "atomProperties");
-    if (p != null)
-      for (Map.Entry<String, Object> entry : p.entrySet()) {
-        String key = entry.getKey();
-        Object val = entry.getValue();
-        if (val instanceof String) {
-          String data = (String) val;
-          SB s = new SB();
-          for (int i = nTimes; --i >= 0;)
-            s.append(data);
-          p.put(key, s.toString());
-        } else {
-          double[] f = (double[]) val;
-          double[] fnew = new double[f.length * nTimes];
-          for (int i = nTimes; --i >= 0;)
-            System.arraycopy(f, 0, fnew, i * f.length, f.length);
-        }
-      }
-  }
-
-  private void finalizeSymmetry(SymmetryInterface symmetry) {
-    String name = (String) asc.getAtomSetAuxiliaryInfoValue(-1, "spaceGroup");
-    symmetry.setFinalOperations(ndims, name, asc.atoms, firstAtom,
-        noSymmetryCount, doNormalize, filterSymop);
-    if (filterSymop != null || name == null || name.equals("unspecified!")) {
-      setAtomSetSpaceGroupName(symmetry.getSpaceGroupName());
-    }
-    if (unitCellParams != null)
-      return;
-    if (symmetry.fixUnitCell(acr.unitCellParams)) {
-      acr.appendLoadNote(
-          "Unit cell parameters were adjusted to match space group!");
-    }
-    setUnitCellSafely();
-  }
-
-  private void setUnitCellSafely() {
-    if (unitCellParams == null)
-      setUnitCell(acr.unitCellParams, acr.matUnitCellOrientation,
-          acr.unitCellOffset);
-  }
-
-  private void setSymmetryOps() {
-    int operationCount = symmetry.getSpaceGroupOperationCount();
-    if (operationCount > 0) {
-      String[] symmetryList = new String[operationCount];
-      for (int i = 0; i < operationCount; i++)
-        symmetryList[i] = "" + symmetry.getSpaceGroupXyz(i, doNormalize);
-      asc.setCurrentModelInfo("symmetryOperations", symmetryList);
-      asc.setCurrentModelInfo("symmetryOps", symmetry.getSymmetryOperations());
-    }
-    asc.setCurrentModelInfo("symmetryCount", Integer.valueOf(operationCount));
-    asc.setCurrentModelInfo("latticeType",
-        acr.latticeType == null ? "P" : acr.latticeType);
-    asc.setCurrentModelInfo("intlTableNo", symmetry.getIntTableNumber());
-    asc.setCurrentModelInfo("intlTableNoFull",
-        symmetry.getIntTableNumberFull());
-    if (acr.sgName == null || acr.sgName.indexOf("?") >= 0
-        || acr.sgName.indexOf("!") >= 0)
-      setAtomSetSpaceGroupName(acr.sgName = symmetry.getSpaceGroupName());
-  }
-
-  public T3d getOverallSpan() {
-    return (maxXYZ0 == null
-        ? V3d.new3(maxXYZ.x - minXYZ.x, maxXYZ.y - minXYZ.y,
-            maxXYZ.z - minXYZ.z)
-        : V3d.newVsub(maxXYZ0, minXYZ0));
-  }
-
-  M4d mident;
 
   @SuppressWarnings("unchecked")
   public void applySymmetryBio(Map<String, Object> thisBiomolecule,
@@ -1259,8 +331,7 @@ public class XtalSymmetry {
         : filter.indexOf("BYSYMOP") >= 0 ? PARTICLE_SYMOP : PARTICLE_NONE);
     doNormalize = false;
     Lst<String> biomtchains = (Lst<String>) thisBiomolecule.get("chains");
-    symmetry = null;
-    getSymmetry().setSpaceGroup(doNormalize);
+    (symmetry = new FileSymmetry()).setSpaceGroup(doNormalize);
     addSpaceGroupOperation("x,y,z", false);
     String name = (String) thisBiomolecule.get("name");
     setAtomSetSpaceGroupName(acr.sgName = name);
@@ -1533,76 +604,43 @@ public class XtalSymmetry {
 
     }
     noSymmetryCount = atomMax - firstAtom;
-    asc.setCurrentModelInfo("presymmetryAtomIndex", Integer.valueOf(firstAtom));
-    asc.setCurrentModelInfo("presymmetryAtomCount",
-        Integer.valueOf(noSymmetryCount));
-    asc.setCurrentModelInfo("biosymmetryCount", Integer.valueOf(len));
-    asc.setCurrentModelInfo("biosymmetry", symmetry);
     finalizeSymmetry(symmetry);
-    setSymmetryOps();
+    setCurrentModelInfo(len, null, null);
     reset();
 
     //TODO: need to clone bonds
   }
 
-  private void reset() {
-    asc.coordinatesAreFractional = false;
-    asc.setCurrentModelInfo("hasSymmetry", Boolean.TRUE);
-    asc.setGlobalBoolean(JC.GLOBAL_SYMMETRY);
+  /**
+   * Get the symmetry that was in place prior to any supercell business.
+   * 
+   * @return base symmetry
+   */
+  public FileSymmetry getBaseSymmetry() {
+    return (baseSymmetry == null ? symmetry : baseSymmetry);
   }
 
-  public Tensor addRotatedTensor(Atom a, Tensor t, int iSym, boolean reset,
-                                 SymmetryInterface symmetry) {
-    if (ptTemp == null) {
-      ptTemp = new P3d();
-      mTemp = new M3d();
-    }
-    return a.addTensor(
-        ((Tensor) acr.getInterface("org.jmol.util.Tensor")).setFromEigenVectors(
-            symmetry.rotateAxes(iSym, t.eigenVectors, ptTemp, mTemp),
-            t.eigenValues, t.isIsotropic ? "iso" : t.type, t.id, t),
-        null, reset);
+  public T3d getOverallSpan() {
+    return (maxXYZ0 == null
+        ? V3d.new3(maxXYZ.x - minXYZ.x, maxXYZ.y - minXYZ.y,
+            maxXYZ.z - minXYZ.z)
+        : V3d.newVsub(maxXYZ0, minXYZ0));
   }
 
-  void setTensors() {
-    int n = asc.ac;
-    for (int i = asc.getLastAtomSetAtomIndex(); i < n; i++) {
-      Atom a = asc.atoms[i];
-      if (a.anisoBorU == null)
-        continue;
-      // getTensor will return correct type
-      a.addTensor(symmetry.getTensor(acr.vwr, a.anisoBorU), null, false);
-      if (Double.isNaN(a.bfactor))
-        a.bfactor = a.anisoBorU[7] * 100d;
-      // prevent multiple additions
-      a.anisoBorU = null;
-    }
+  public FileSymmetry getSymmetry() {
+    return (symmetry == null ? (symmetry = new FileSymmetry()) : symmetry);
   }
 
-  public void setTimeReversal(int op, int timeRev) {
-    symmetry.setTimeReversal(op, timeRev);
-  }
+  //  public void setTimeReversal(int op, int timeRev) {
+  //    symmetry.setTimeReversal(op, timeRev);
+  //  }
 
-  public int setSpinVectors() {
-    // return spin vectors to cartesians
-    if (nVib > 0 || asc.iSet < 0 || !acr.vibsFractional)
-      return nVib; // already done
-    int i0 = asc.getAtomSetAtomIndex(asc.iSet);
-    SymmetryInterface sym = getBaseSymmetry();
-    for (int i = asc.ac; --i >= i0;) {
-      Vibration v = (Vibration) asc.atoms[i].vib;
-      if (v != null) {
-        if (v.modDim > 0) {
-          ((JmolModulationSet) v).setMoment();
-        } else {
-          v = (Vibration) v.clone(); // this could be a modulation set
-          sym.toCartesian(v, true);
-          asc.atoms[i].vib = v;
-        }
-        nVib++;
-      }
-    }
-    return nVib;
+  public boolean isWithinCell(int ndims, P3d pt, double minX, double maxX,
+                              double minY, double maxY, double minZ,
+                              double maxZ, double slop) {
+    return (pt.x > minX - slop && pt.x < maxX + slop
+        && (ndims < 2 || pt.y > minY - slop && pt.y < maxY + slop)
+        && (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ + slop));
   }
 
   /**
@@ -1628,13 +666,1194 @@ public class XtalSymmetry {
     }
   }
 
+  public XtalSymmetry set(AtomSetCollectionReader reader) {
+    this.acr = reader;
+    this.asc = reader.asc;
+    getSymmetry();
+    return this;
+  }
+
   /**
-   * Get the symmetry that was in place prior to any supercell business
+   * Shelx and Wien2k readers
    * 
-   * @return base symmetry
+   * @param latt
    */
-  public SymmetryInterface getBaseSymmetry() {
-    return (baseSymmetry == null ? symmetry : baseSymmetry);
+  public void setLatticeParameter(int latt) {
+    symmetry.setSpaceGroup(doNormalize);
+    symmetry.setLattice(latt);
+  }
+
+  public int setSpinVectors() {
+    // return spin vectors to cartesians
+    if (nVib > 0 || asc.iSet < 0 || !acr.vibsFractional)
+      return nVib; // already done
+    int i0 = asc.getAtomSetAtomIndex(asc.iSet);
+    FileSymmetry sym = getBaseSymmetry();
+    for (int i = asc.ac; --i >= i0;) {
+      Vibration v = (Vibration) asc.atoms[i].vib;
+      if (v != null) {
+        if (v.modDim > 0) {
+          ((JmolModulationSet) v).setMoment();
+        } else {
+          v = (Vibration) v.clone(); // this could be a modulation set
+          sym.toCartesian(v, true);
+          asc.atoms[i].vib = v;
+        }
+        nVib++;
+      }
+    }
+    return nVib;
+  }
+
+  int addSpaceGroupOperation(String xyz, boolean andSetLattice) {
+    symmetry.setSpaceGroup(doNormalize);
+    if (andSetLattice && symmetry.getSpaceGroupOperationCount() == 1)
+      setLatticeCells();
+    return symmetry.addSpaceGroupOperation(xyz, 0);
+  }
+
+  /**
+   * General entry point.
+   * 
+   * @param readerSymmetry
+   * @return FileSymmetry
+   * @throws Exception
+   */
+  FileSymmetry applySymmetryFromReader(FileSymmetry readerSymmetry)
+      throws Exception {
+    asc.setCoordinatesAreFractional(acr.iHaveFractionalCoordinates);
+    setAtomSetSpaceGroupName(acr.sgName);
+    symmetryRange = acr.symmetryRange;
+    asc.setInfo("symmetryRange", Double.valueOf(symmetryRange));
+    if (acr.doConvertToFractional || acr.fileCoordinatesAreFractional) {
+      setLatticeCells();
+      boolean doApplySymmetry = true;
+      if (acr.ignoreFileSpaceGroupName || !acr.iHaveSymmetryOperators) {
+        if (!acr.merging || readerSymmetry == null)
+          readerSymmetry = new FileSymmetry();
+        doApplySymmetry = readerSymmetry.createSpaceGroup(
+            acr.desiredSpaceGroupIndex,
+            (acr.sgName.indexOf("!") >= 0 ? "P1" : acr.sgName),
+            acr.unitCellParams, acr.modDim);
+      } else {
+        acr.doPreSymmetry();
+        readerSymmetry = null;
+      }
+      packingRange = acr.getPackingRangeValue(0);
+      if (doApplySymmetry) {
+        if (readerSymmetry != null)
+          getSymmetry().setSpaceGroupTo(readerSymmetry.getSpaceGroup());
+        //parameters are counts of unit cells as [a b c]
+
+        applySymmetryLattice();
+        if (readerSymmetry != null && filterSymop == null)
+          setAtomSetSpaceGroupName(readerSymmetry.getSpaceGroupName());
+      } else {
+        setUnitCellSafely();
+      }
+    }
+    if (acr.iHaveFractionalCoordinates && acr.merging
+        && readerSymmetry != null) {
+
+      // when merging (with appendNew false), we must return cartesians
+      Atom[] atoms = asc.atoms;
+      for (int i = asc.getLastAtomSetAtomIndex(), n = asc.ac; i < n; i++)
+        readerSymmetry.toCartesian(atoms[i], true);
+      asc.setCoordinatesAreFractional(false);
+
+      // We no longer allow merging of multiple-model files
+      // when the file to be appended has fractional coordinates and vibrations
+      acr.addVibrations = false;
+    }
+    return symmetry;
+  }
+
+  FileSymmetry setSymmetry(FileSymmetry symmetry) {
+    return (this.symmetry = symmetry);
+  }
+
+  void setTensors() {
+    int n = asc.ac;
+    for (int i = asc.getLastAtomSetAtomIndex(); i < n; i++) {
+      Atom a = asc.atoms[i];
+      if (a.anisoBorU == null)
+        continue;
+      // getTensor will return correct type
+      a.addTensor(symmetry.getTensor(acr.vwr, a.anisoBorU), null, false);
+      if (Double.isNaN(a.bfactor))
+        a.bfactor = a.anisoBorU[7] * 100d;
+      // prevent multiple additions
+      a.anisoBorU = null;
+    }
+  }
+
+  private void adjustRangeMinMax(T3d[] oabc) {
+
+    // be sure to add in packing error adjustments 
+    // so that we include all needed atoms
+    // load "" packed x.x supercell...
+    P3d pa = new P3d();
+    P3d pb = new P3d();
+    P3d pc = new P3d();
+    if (acr.forcePacked) {
+      pa.setT(oabc[1]);
+      pb.setT(oabc[2]);
+      pc.setT(oabc[3]);
+      pa.scale(packingRange);
+      pb.scale(packingRange);
+      pc.scale(packingRange);
+    }
+
+    // account for lattice specification
+    // load "" {x y z} supercell...
+    oabc[0].scaleAdd2(minXYZ.x, oabc[1], oabc[0]);
+    oabc[0].scaleAdd2(minXYZ.y, oabc[2], oabc[0]);
+    oabc[0].scaleAdd2(minXYZ.z, oabc[3], oabc[0]);
+    // add in packing adjustment
+    oabc[0].sub(pa);
+    oabc[0].sub(pb);
+    oabc[0].sub(pc);
+    // fractionalize and adjust min/max
+    P3d pt = P3d.newP(oabc[0]);
+    symmetry.toFractional(pt, true);
+    setSymmetryMinMax(pt);
+
+    // account for lattice specification
+    oabc[1].scale(maxXYZ.x - minXYZ.x);
+    oabc[2].scale(maxXYZ.y - minXYZ.y);
+    oabc[3].scale(maxXYZ.z - minXYZ.z);
+    // add in packing adjustment
+    oabc[1].scaleAdd2(2, pa, oabc[1]);
+    oabc[2].scaleAdd2(2, pb, oabc[2]);
+    oabc[3].scaleAdd2(2, pc, oabc[3]);
+    // run through six of the corners -- a, b, c, ab, ac, bc
+    for (int i = 0; i < 3; i++) {
+      for (int j = i + 1; j < 4; j++) {
+        pt.add2(oabc[i], oabc[j]);
+        if (i != 0)
+          pt.add(oabc[0]);
+        symmetry.toFractional(pt, false);
+        setSymmetryMinMax(pt);
+      }
+    }
+    // bc in the end, so we need abc
+    symmetry.toCartesian(pt, false);
+    pt.add(oabc[1]);
+    symmetry.toFractional(pt, false);
+    setSymmetryMinMax(pt);
+    // allow for some imprecision
+    minXYZ = P3i.new3((int) Math.min(0, Math.floor(rminx + 0.001f)),
+        (int) Math.min(0, Math.floor(rminy + 0.001f)),
+        (int) Math.min(0, Math.floor(rminz + 0.001f)));
+    maxXYZ = P3i.new3((int) Math.max(1, Math.ceil(rmaxx - 0.001f)),
+        (int) Math.max(1, Math.ceil(rmaxy - 0.001f)),
+        (int) Math.max(1, Math.ceil(rmaxz - 0.001f)));
+  }
+
+  /**
+   * @param ms
+   *        modulated structure interface
+   * @param bsAtoms
+   *        relating to supercells
+   * @throws Exception
+   */
+  private void applyAllSymmetry(MSInterface ms, BS bsAtoms) throws Exception {
+    if (asc.ac == 0 || bsAtoms != null && bsAtoms.isEmpty())
+      return;
+    int n = noSymmetryCount = asc.baseSymmetryAtomCount > 0
+        ? asc.baseSymmetryAtomCount
+        : bsAtoms == null ? asc.getLastAtomSetAtomCount()
+            : asc.ac - bsAtoms.nextSetBit(asc.getLastAtomSetAtomIndex());
+    asc.setTensors();
+    applySymmetryToBonds = acr.applySymmetryToBonds;
+    doPackUnitCell = acr.doPackUnitCell && !applySymmetryToBonds;
+    bondCount0 = asc.bondCount;
+    ndims = SimpleUnitCell.getDimensionFromParams(acr.unitCellParams);
+    finalizeSymmetry(symmetry);
+    int operationCount = symmetry.getSpaceGroupOperationCount();
+    BS excludedOps = (acr.thisBiomolecule == null ? null : new BS());
+    checkNearAtoms = acr.checkNearAtoms || excludedOps != null;
+    SimpleUnitCell.setMinMaxLatticeParameters(ndims, minXYZ, maxXYZ, 0);
+    latticeOp = symmetry.getLatticeOp();
+    crystalReaderLatticeOpsOnly = (asc.crystalReaderLatticeOpsOnly
+        && latticeOp >= 0); // CrystalReader
+    if (doCentroidUnitCell)
+      asc.setInfo("centroidMinMax", new int[] { minXYZ.x, minXYZ.y, minXYZ.z,
+          maxXYZ.x, maxXYZ.y, maxXYZ.z, (centroidPacked ? 1 : 0) });
+    if (doCentroidUnitCell || acr.doPackUnitCell
+        || symmetryRange != 0 && maxXYZ.x - minXYZ.x == 1
+            && maxXYZ.y - minXYZ.y == 1 && maxXYZ.z - minXYZ.z == 1) {
+      // weird Mac bug does not allow   Point3i.new3(minXYZ) !!
+      minXYZ0 = P3d.new3(minXYZ.x, minXYZ.y, minXYZ.z);
+      maxXYZ0 = P3d.new3(maxXYZ.x, maxXYZ.y, maxXYZ.z);
+      if (ms != null) {
+        ms.setMinMax0(minXYZ0, maxXYZ0);
+        minXYZ.set((int) minXYZ0.x, (int) minXYZ0.y, (int) minXYZ0.z);
+        maxXYZ.set((int) maxXYZ0.x, (int) maxXYZ0.y, (int) maxXYZ0.z);
+      }
+      switch (ndims) {
+      case 3:
+        // standard
+        minXYZ.z--;
+        maxXYZ.z++;
+        //$FALL-THROUGH$;
+      case 2:
+        // slab or standard
+        minXYZ.y--;
+        maxXYZ.y++;
+        //$FALL-THROUGH$;
+      case 1:
+        // slab, polymer, or standard
+        minXYZ.x--;
+        maxXYZ.x++;
+      }
+    }
+    int nCells = (maxXYZ.x - minXYZ.x) * (maxXYZ.y - minXYZ.y)
+        * (maxXYZ.z - minXYZ.z);
+    int nsym = n * (crystalReaderLatticeOpsOnly ? 4 : operationCount);
+    // we track cartesian coordinates of all atoms when there is biomolecular
+    // symmetry or we need to check near atoms (d2 < d0); 
+    // we track only cell=555 when there are multiple unit cells;
+    // otherwise we don't check (though the first atom is always checked???)
+    int cartesianCount = (checkNearAtoms || acr.thisBiomolecule != null
+        ? nsym * nCells
+        : symmetryRange > 0 ? nsym // checking against {1 1 1}
+            : 1 // not checking (Q: Why not zero here?)
+    );
+    P3d[] cartesians = new P3d[cartesianCount];
+    Atom[] atoms = asc.atoms;
+    for (int i = 0; i < n; i++)
+      atoms[firstAtom + i].bsSymmetry = BS.newN(operationCount * (nCells + 1));
+    int pt = 0;
+    unitCellTranslations = new V3d[nCells];
+    int iCell = 0;
+    int cell555Count = 0;
+    double absRange = Math.abs(symmetryRange);
+    boolean checkCartesianRange = (symmetryRange != 0);
+    boolean checkRangeNoSymmetry = (symmetryRange < 0);
+    boolean checkRange111 = (symmetryRange > 0);
+    if (checkCartesianRange) {
+      rminx = rminy = rminz = Double.MAX_VALUE;
+      rmaxx = rmaxy = rmaxz = -Double.MAX_VALUE;
+    }
+    // incommensurate symmetry can have lattice centering, resulting in 
+    // duplication of operators. There's a bug later on that requires we 
+    // only do this with the first atom set for now, at least.
+    FileSymmetry sym = symmetry;
+    FileSymmetry lastSymmetry = sym;
+    checkAll = (crystalReaderLatticeOpsOnly
+        || asc.atomSetCount == 1 && acr.checkNearAtoms && latticeOp >= 0);
+    Lst<M4d> lstNCS = acr.lstNCS;
+    if (lstNCS != null && lstNCS.get(0).m33 == 0) {
+      int nOp = sym.getSpaceGroupOperationCount();
+      int nn = lstNCS.size();
+      for (int i = nn; --i >= 0;) {
+        M4d m = lstNCS.get(i);
+        m.m33 = 1;
+        sym.toFractionalM(m);
+      }
+      for (int i = 1; i < nOp; i++) {
+        M4d m1 = sym.getSpaceGroupOperation(i);
+        for (int j = 0; j < nn; j++) {
+          M4d m = M4d.newM4(lstNCS.get(j));
+          m.mul2(m1, m);
+          if (doNormalize && noSymmetryCount > 0)
+            SymmetryOperation.normalizeOperationToCentroid(3, m, atoms,
+                firstAtom, noSymmetryCount);
+          lstNCS.addLast(m);
+        }
+      }
+    }
+
+    // always do the 555 cell first, just operation 0 -- but for incommensurate systems this may not be x,y,z
+
+    P3d pttemp = null;
+    M4d op = sym.getSpaceGroupOperation(0);
+    if (doPackUnitCell) {
+      pttemp = new P3d();
+      ptOffset.set(0, 0, 0);
+    }
+    int[] atomMap = (bondCount0 > asc.bondIndex0 && applySymmetryToBonds
+        ? new int[n]
+        : null);
+    int[] unitCells = new int[nCells];
+    for (int tx = minXYZ.x; tx < maxXYZ.x; tx++) {
+      for (int ty = minXYZ.y; ty < maxXYZ.y; ty++) {
+        for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
+          unitCellTranslations[iCell] = V3d.new3(tx, ty, tz);
+          unitCells[iCell++] = 555 + tx * 100 + ty * 10 + tz;
+          if (tx != 0 || ty != 0 || tz != 0 || cartesians.length == 0)
+            continue;
+
+          // base cell only
+          for (pt = 0; pt < n; pt++) {
+            Atom atom = atoms[firstAtom + pt];
+            if (ms != null) {
+              // incommensurately modulated structure
+              sym = ms.getAtomSymmetry(atom, this.symmetry);
+              if (sym != lastSymmetry) {
+                if (sym.getSpaceGroupOperationCount() == 0)
+                  finalizeSymmetry(lastSymmetry = sym);
+                op = sym.getSpaceGroupOperation(0);
+              }
+            }
+            // acr.fixFloatPt(pttemp, PT.FRACTIONAL_PRECISION); // LEGACY ONLY
+            P3d c = P3d.newP(atom);
+            op.rotTrans(c);
+            sym.toCartesian(c, false);
+            if (doPackUnitCell) {
+
+              // 555 cell 
+              sym.toUnitCellRnd(c, ptOffset);
+              pttemp.setT(c);
+              sym.toFractional(pttemp, false);
+              // acr.fixFloatPt(pttemp, PT.FRACTIONAL_PRECISION); //LEGACY ONLY
+              // when bsAtoms != null, we are
+              // setting it to be correct for a 
+              // second unit cell -- the supercell
+              if (bsAtoms == null)
+                atom.setT(pttemp);
+              else if (atom.distance(pttemp) < MINIMUM_FRACTIONAL_ATOM_DISTANCE)
+                bsAtoms.set(atom.index);
+              else {// not in THIS unit cell
+                bsAtoms.clear(atom.index);
+                continue;
+              }
+            }
+            if (bsAtoms != null)
+              atom.bsSymmetry.clearAll();
+            atom.bsSymmetry.set(iCell * operationCount);
+            atom.bsSymmetry.set(0);
+            if (checkCartesianRange)
+              setSymmetryMinMax(c);
+            if (pt < cartesianCount)
+              cartesians[pt] = c;
+          }
+          if (checkRangeNoSymmetry) {
+            rminx -= absRange;
+            rminy -= absRange;
+            rminz -= absRange;
+            rmaxx += absRange;
+            rmaxy += absRange;
+            rmaxz += absRange;
+          }
+          cell555Count = pt = symmetryAddAtoms(0, 0, 0, 0, pt,
+              iCell * operationCount, cartesians, ms, excludedOps, atomMap);
+        }
+      }
+    }
+    if (checkRange111) {
+      rminx -= absRange;
+      rminy -= absRange;
+      rminz -= absRange;
+      rmaxx += absRange;
+      rmaxy += absRange;
+      rmaxz += absRange;
+    }
+
+    // now apply all the translations
+    iCell = 0;
+    for (int tx = minXYZ.x; tx < maxXYZ.x; tx++) {
+      for (int ty = minXYZ.y; ty < maxXYZ.y; ty++) {
+        for (int tz = minXYZ.z; tz < maxXYZ.z; tz++) {
+          iCell++;
+          if (tx != 0 || ty != 0 || tz != 0)
+            pt = symmetryAddAtoms(tx, ty, tz, cell555Count, pt,
+                iCell * operationCount, cartesians, ms, excludedOps, atomMap);
+        }
+      }
+    }
+    if (iCell * n == asc.ac - firstAtom)
+      duplicateAtomProperties(iCell);
+    setCurrentModelInfo(n, sym, unitCells);
+    unitCellParams = null;
+    reset();
+  }
+
+  /**
+   * LOAD FILL ...
+   * 
+   * @param bsAtoms
+   * @throws Exception
+   */
+  private void applyRangeSymmetry(BS bsAtoms) throws Exception {
+    T3d[] range = (T3d[]) acr.fillRange;
+    bsAtoms = updateBSAtoms();
+    acr.forcePacked = true;
+    doPackUnitCell = false;
+    P3i minXYZ2 = P3i.new3(minXYZ.x, minXYZ.y, minXYZ.z);
+    P3i maxXYZ2 = P3i.new3(maxXYZ.x, maxXYZ.y, maxXYZ.z);
+    P3d[] oabc = new P3d[4];
+    for (int i = 0; i < 4; i++)
+      oabc[i] = P3d.newP(range[i]);
+    setUnitCellSafely();
+    adjustRangeMinMax(oabc);
+    //Logger.info("setting min/max for original lattice to " + minXYZ + " and "
+    //  + maxXYZ);
+    FileSymmetry superSymmetry = new FileSymmetry();
+    superSymmetry.getUnitCell((T3d[]) acr.fillRange, false, null);
+    applyAllSymmetry(acr.ms, bsAtoms);
+    P3d pt0 = new P3d();
+    Atom[] atoms = asc.atoms;
+    for (int i = asc.ac; --i >= firstAtom;) {
+      pt0.setT(atoms[i]);
+      symmetry.toCartesian(pt0, false);
+      superSymmetry.toFractional(pt0, false);
+      //acr.fixFloatPt(pt0, PT.FRACTIONAL_PRECISION); // LEGACY ONLY
+      if (acr.noPack
+          ? !removePacking(ndims, pt0, minXYZ2.x, maxXYZ2.x, minXYZ2.y,
+              maxXYZ2.y, minXYZ2.z, maxXYZ2.z, packingRange)
+          : !isWithinCell(ndims, pt0, minXYZ2.x, maxXYZ2.x, minXYZ2.y,
+              maxXYZ2.y, minXYZ2.z, maxXYZ2.z, packingRange))
+        bsAtoms.clear(i);
+    }
+  }
+
+  private void applySuperSymmetry(String supercell, BS bsAtoms, int iAtomFirst,
+                                  T3d[] oabc, P3d pt0, V3d[] vabc, double slop)
+      throws Exception {
+    asc.setGlobalBoolean(JC.GLOBAL_SUPERCELL);
+    boolean doPack0 = doPackUnitCell;
+    doPackUnitCell = doPack0;//(doPack0 || oabc != null && acr.forcePacked);
+    // this call will set unitCellParams to null
+    applyAllSymmetry(acr.ms, null);
+    doPackUnitCell = doPack0;
+
+    // 2) set all atom coordinates to Cartesians
+
+    Atom[] atoms = asc.atoms;
+    int atomCount = asc.ac;
+    for (int i = iAtomFirst; i < atomCount; i++) {
+      symmetry.toCartesian(atoms[i], true);
+      bsAtoms.set(i);
+    }
+
+    // 3) create the supercell unit cell
+
+    //      oldParams = symmetry.getUnitCellParams();
+
+    asc.setCurrentModelInfo("unitcell_conventional",
+        symmetry.getV0abc("a,b,c", null));
+    V3d va = vabc[0];
+    V3d vb = vabc[1];
+    V3d vc = vabc[2];
+    symmetry = new FileSymmetry();
+    setUnitCell(new double[] { // 27 values
+        0, 0, 0, 0, 0, 0, // abc al be ga
+        va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z, 0, 0, 0, 0, 0, 0, // m21 22 23 30 31 32 33
+        Double.NaN, // not a matrix
+        Double.NaN, Double.NaN, Double.NaN, // no supercell items 
+        Double.NaN, // no scaling
+        slop }, null, null);
+    String name = oabc == null || supercell == null ? "P1"
+        : "cell=" + supercell;
+    setAtomSetSpaceGroupName(name);
+    symmetry.setSpaceGroupName(name);
+    symmetry.setSpaceGroup(doNormalize);
+    symmetry.addSpaceGroupOperation("x,y,z", 0);
+
+    // 4) reset atoms to fractional values in this new system
+
+    if (pt0 != null && pt0.length() == 0)
+      pt0 = null;
+    if (pt0 != null)
+      symmetry.toFractional(pt0, true);
+    for (int i = iAtomFirst; i < atomCount; i++) {
+      symmetry.toFractional(atoms[i], true);
+      if (pt0 != null)
+        atoms[i].sub(pt0);
+    }
+
+    // 5) apply the full lattice symmetry now
+
+    asc.haveAnisou = false;
+    asc.setCurrentModelInfo("matUnitCellOrientation", null);
+  }
+
+  /**
+   * 
+   * Apply all the lattice-based aspects of symmetry, creating supercells,
+   * filling regions such as primitive cells, etc.
+   * 
+   * Called once, only by applySymmetryFromReader
+   * 
+   * @throws Exception
+   */
+  private void applySymmetryLattice() throws Exception {
+    if (!asc.coordinatesAreFractional || symmetry.getSpaceGroup() == null)
+      return;
+    int maxX = latticeCells[0];
+    int maxY = latticeCells[1];
+    int maxZ = Math.abs(latticeCells[2]);
+    /**
+     * kcode: Generally the multiplier is just {ijk ijk scale}, but when we have
+     * 1iiijjjkkk 1iiijjjkkk scale, floats lose kkk due to Java double precision
+     * issues so we use P4d {1iiijjjkkk 1iiijjjkkk scale, 1kkkkkk}. Here, our
+     * offset -- initially 0 or 1 from the uccage renderer, but later -500 or
+     * -499 -- tells us which code we are looking at, the first one or the
+     * second one.
+     */
+    int kcode = latticeCells[3];
+    firstAtom = asc.getLastAtomSetAtomIndex();
+    BS bsAtoms = asc.bsAtoms;
+    if (bsAtoms != null) {
+      updateBSAtoms();
+      firstAtom = bsAtoms.nextSetBit(firstAtom);
+    }
+    rminx = rminy = rminz = Double.MAX_VALUE;
+    rmaxx = rmaxy = rmaxz = -Double.MAX_VALUE;
+    if (acr.latticeType == null)
+      acr.latticeType = "" + symmetry.getLatticeType();
+    if (acr.isPrimitive) {
+      asc.setCurrentModelInfo("isprimitive", Boolean.TRUE);
+      if (!"P".equals(acr.latticeType) || acr.primitiveToCrystal != null) {
+        asc.setCurrentModelInfo("unitcell_conventional", symmetry
+            .getConventionalUnitCell(acr.latticeType, acr.primitiveToCrystal));
+      }
+    }
+    setUnitCellSafely();
+    asc.setCurrentModelInfo("f2c", symmetry.getUnitCellF2C());
+    asc.setCurrentModelInfo("f2cTitle", symmetry.getSpaceGroupTitle());
+    asc.setCurrentModelInfo("f2cParams", symmetry.getUnitCellParams());
+    if (acr.latticeType != null) {
+      asc.setCurrentModelInfo("latticeType", acr.latticeType);
+      if (acr.fillRange instanceof String) {
+        T3d[] range = setLatticeRange(acr.latticeType, (String) acr.fillRange);
+        if (range == null) {
+          acr.appendLoadNote(
+              acr.fillRange + " symmetry could not be implemented");
+          acr.fillRange = null;
+        } else {
+          acr.fillRange = range;
+        }
+      }
+    }
+    baseSymmetry = symmetry;
+    if (acr.fillRange != null) {
+      setMinMax(ndims, kcode, maxX, maxY, maxZ);
+      applyRangeSymmetry(bsAtoms);
+      return;
+    }
+    T3d[] oabc = null;
+    double slop = 1e-6d;
+    nVib = 0;
+    String supercell = acr.strSupercell;
+    boolean isSuper = (supercell != null && supercell.indexOf(",") >= 0);
+    M4d matSuper = null;
+    P3d pt0 = null;
+    V3d[] vabc = new V3d[3];
+    if (isSuper) {
+      // expand range to accommodate this alternative cell
+      // oabc will be cartesian
+      matSuper = new M4d();
+      if (mident == null)
+        mident = new M4d();
+      setUnitCellSafely();
+      oabc = symmetry.getV0abc(supercell, matSuper);
+      matSuper.transpose33();
+      if (oabc != null && !matSuper.equals(mident)) {
+        // flag this to set symmetry to P1 in the end
+        // set the bounds for atoms in the new unit cell
+        // in terms of the old unit cell
+        setMinMax(ndims, kcode, maxX, maxY, maxZ);
+        // base origin for new unit cell
+        pt0 = P3d.newP(oabc[0]);
+        // base vectors for new unit cell
+        vabc[0] = V3d.newV(oabc[1]);
+        vabc[1] = V3d.newV(oabc[2]);
+        vabc[2] = V3d.newV(oabc[3]);
+        adjustRangeMinMax(oabc);
+      }
+    }
+    int iAtomFirst = asc.getLastAtomSetAtomIndex();
+    if (bsAtoms != null)
+      iAtomFirst = bsAtoms.nextSetBit(iAtomFirst);
+    if (rminx == Double.MAX_VALUE) {
+      // just a standard load
+      supercell = null;
+      oabc = null;
+    } else {
+      bsAtoms = updateBSAtoms();
+      slop = symmetry.getPrecision();
+      applySuperSymmetry(supercell, bsAtoms, iAtomFirst, oabc, pt0, vabc, slop);
+    }
+    setMinMax(ndims, kcode, maxX, maxY, maxZ);
+    if (oabc == null) {
+      // finally operate on the simple cell
+      applyAllSymmetry(acr.ms, bsAtoms);
+      if (!acr.noPack && (!applySymmetryToBonds || !acr.doPackUnitCell)) {
+        // normal return for simple structure load
+        return;
+      }
+      // fall through if packed and there are bonds, that is, when we did not shift atoms
+      // so we reset to the original min and max and then trim.
+      setMinMax(ndims, kcode, maxX, maxY, maxZ);
+    }
+    if (acr.forcePacked || acr.doPackUnitCell || acr.noPack) {
+      trimToUnitCell(iAtomFirst);
+    }
+
+    // we leave matSuper, because we might need it for vibrations in CASTEP
+    // this is now effectively P1. We need to set all the sites 
+
+    updateSupercellAtomSites(matSuper, bsAtoms, slop);
+
+    //    if (oldParams != null)
+    //      setUnitCell(oldParams, null, offset);
+  }
+
+  @SuppressWarnings("unchecked")
+  private void duplicateAtomProperties(int nTimes) {
+    Map<String, Object> p = (Map<String, Object>) asc
+        .getAtomSetAuxiliaryInfoValue(-1, "atomProperties");
+    if (p != null)
+      for (Map.Entry<String, Object> entry : p.entrySet()) {
+        String key = entry.getKey();
+        Object val = entry.getValue();
+        if (val instanceof String) {
+          String data = (String) val;
+          SB s = new SB();
+          for (int i = nTimes; --i >= 0;)
+            s.append(data);
+          p.put(key, s.toString());
+        } else {
+          double[] f = (double[]) val;
+          double[] fnew = new double[f.length * nTimes];
+          for (int i = nTimes; --i >= 0;)
+            System.arraycopy(f, 0, fnew, i * f.length, f.length);
+        }
+      }
+  }
+
+  private void finalizeSymmetry(FileSymmetry symmetry) {
+    String name = (String) asc.getAtomSetAuxiliaryInfoValue(-1, "spaceGroup");
+    symmetry.setFinalOperations(ndims, name, asc.atoms, firstAtom,
+        noSymmetryCount, doNormalize, filterSymop);
+    if (filterSymop != null || name == null || name.equals("unspecified!")) {
+      setAtomSetSpaceGroupName(symmetry.getSpaceGroupName());
+    }
+    if (unitCellParams != null)
+      return;
+    if (symmetry.fixUnitCell(acr.unitCellParams)) {
+      acr.appendLoadNote(
+          "Unit cell parameters were adjusted to match space group!");
+    }
+    setUnitCellSafely();
+  }
+
+  private boolean removePacking(int ndims, P3d pt, double minX, double maxX,
+                                double minY, double maxY, double minZ,
+                                double maxZ, double slop) {
+    return (pt.x > minX - slop && pt.x < maxX - slop
+        && (ndims < 2 || pt.y > minY - slop && pt.y < maxY - slop)
+        && (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ - slop));
+  }
+
+  private void reset() {
+    asc.coordinatesAreFractional = false;
+    asc.setCurrentModelInfo("hasSymmetry", Boolean.TRUE);
+    asc.setGlobalBoolean(JC.GLOBAL_SYMMETRY);
+  }
+
+  private void setAtomSetSpaceGroupName(String spaceGroupName) {
+    symmetry.setSpaceGroupName(spaceGroupName);
+    asc.setCurrentModelInfo("spaceGroup", spaceGroupName + "");
+  }
+
+  private void setCurrentModelInfo(int n, FileSymmetry sym, int[] unitCells) {
+    if (sym == null) {
+      // biomodel symmetry
+      asc.setCurrentModelInfo("presymmetryAtomCount",
+          Integer.valueOf(noSymmetryCount));
+      asc.setCurrentModelInfo("biosymmetryCount", Integer.valueOf(n));
+      asc.setCurrentModelInfo("biosymmetry", symmetry);
+    } else {
+      asc.setCurrentModelInfo("presymmetryAtomCount", Integer.valueOf(n));
+      asc.setCurrentModelInfo("latticeDesignation",
+          sym.getLatticeDesignation());
+      asc.setCurrentModelInfo("unitCellRange", unitCells);
+      asc.setCurrentModelInfo("unitCellTranslations", unitCellTranslations);
+      if (acr.isSUPERCELL)
+        asc.setCurrentModelInfo("supercell", acr.strSupercell);
+    }
+    asc.setCurrentModelInfo("presymmetryAtomIndex", Integer.valueOf(firstAtom));
+    int operationCount = symmetry.getSpaceGroupOperationCount();
+    if (operationCount > 0) {
+      String[] symmetryList = new String[operationCount];
+      for (int i = 0; i < operationCount; i++)
+        symmetryList[i] = "" + symmetry.getSpaceGroupXyz(i, doNormalize);
+      asc.setCurrentModelInfo("symmetryOperations", symmetryList);
+      asc.setCurrentModelInfo("symmetryOps", symmetry.getSymmetryOperations());
+    }
+    asc.setCurrentModelInfo("symmetryCount", Integer.valueOf(operationCount));
+    asc.setCurrentModelInfo("latticeType",
+        acr.latticeType == null ? "P" : acr.latticeType);
+    asc.setCurrentModelInfo("intlTableNo", symmetry.getIntTableNumber());
+    asc.setCurrentModelInfo("intlTableNoFull",
+        symmetry.getIntTableNumberFull());
+    asc.setCurrentModelInfo("spaceGroupIndex",
+        Integer.valueOf(symmetry.getSpaceGroupIndex()));
+    asc.setCurrentModelInfo("spaceGroupTitle", symmetry.getSpaceGroupTitle());
+    if (acr.sgName == null || acr.sgName.indexOf("?") >= 0
+        || acr.sgName.indexOf("!") >= 0)
+      setAtomSetSpaceGroupName(acr.sgName = symmetry.getSpaceGroupName());
+  }
+
+  private void setCurrentModelUCInfo(double[] unitCellParams,
+                                     P3d unitCellOffset,
+                                     M3d matUnitCellOrientation) {
+    if (unitCellParams != null)
+      asc.setCurrentModelInfo("unitCellParams", unitCellParams);
+    if (unitCellOffset != null)
+      asc.setCurrentModelInfo("unitCellOffset", unitCellOffset);
+    if (matUnitCellOrientation != null)
+      asc.setCurrentModelInfo("matUnitCellOrientation", matUnitCellOrientation);
+  }
+
+  private void setLatticeCells() {
+
+    //set when unit cell is determined
+    // x <= 555 and y >= 555 indicate a range of cells to load
+    // AROUND the central cell 555 and that
+    // we should normalize (z = 1) or pack unit cells (z = -1) or not (z = 0)
+    // in addition (Jmol 11.7.36) z = -2 does a full 3x3x3 around the designated cells
+    // but then only delivers the atoms that are within the designated cells. 
+    // Normalization is the moving of the center of mass into the unit cell.
+    // Starting with Jmol 12.0.RC23 we do not normalize a CIF file that 
+    // is being loaded without {i j k} indicated.
+
+    latticeCells = acr.latticeCells;
+    boolean isLatticeRange = (latticeCells[0] <= 555 && latticeCells[1] >= 555
+        && (latticeCells[2] == 0 || latticeCells[2] == 1
+            || latticeCells[2] == -1));
+    doNormalize = latticeCells[0] != 0
+        && (!isLatticeRange || latticeCells[2] == 1);
+    applySymmetryToBonds = acr.applySymmetryToBonds;
+    doPackUnitCell = acr.doPackUnitCell && !applySymmetryToBonds;
+    doCentroidUnitCell = acr.doCentroidUnitCell;
+    centroidPacked = acr.centroidPacked;
+    filterSymop = acr.filterSymop;
+  }
+
+  /**
+   * Establish a range of cells that cover the desired range.
+   * 
+   * @param latticetype
+   *        "conventional", "primitive", "R",
+   * @param rangeType
+   * @return range as T3d[] or null
+   */
+  private T3d[] setLatticeRange(String latticetype, String rangeType) {
+    T3d[] range = null;
+    boolean isRhombohedral = "R".equals(latticetype);
+    if (rangeType.equals(AtomSetCollectionReader.CELL_TYPE_CONVENTIONAL)) {
+      range = symmetry.getConventionalUnitCell(latticetype,
+          acr.primitiveToCrystal);
+    } else if (rangeType.equals(AtomSetCollectionReader.CELL_TYPE_PRIMITIVE)) {
+      range = symmetry.getUnitCellVectors();
+      symmetry.toFromPrimitive(true, latticetype.charAt(0), range,
+          acr.primitiveToCrystal);
+    } else if (isRhombohedral && rangeType.equals("rhombohedral")) {
+      if (symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_IS_HEXAGONAL) == 1) {
+        rangeType = SimpleUnitCell.HEX_TO_RHOMB;
+      } else {
+        rangeType = null;
+      }
+    } else if (isRhombohedral && rangeType.equals("trigonal")) {
+      if (symmetry
+          .getUnitCellInfoType(SimpleUnitCell.INFO_IS_RHOMBOHEDRAL) == 1) {
+        rangeType = SimpleUnitCell.RHOMB_TO_HEX;
+      } else {
+        rangeType = null;
+      }
+    } else if (rangeType.indexOf(",") < 0 || rangeType.indexOf("a") < 0
+        || rangeType.indexOf("b") < 0 || rangeType.indexOf("c") < 0) {
+      // was not "a,b,c..."
+      rangeType = null;
+    } else {
+      rangeType = null;
+    }
+    if (rangeType != null && range == null
+        && (range = symmetry.getV0abc(rangeType, null)) == null) {
+      rangeType = null;
+    }
+    if (rangeType == null)
+      return null;
+    acr.addJmolScript("unitcell " + PT.esc(rangeType));
+    return range;
+  }
+
+  private void setMinMax(int dim, int kcode, int maxX, int maxY, int maxZ) {
+    minXYZ = new P3i();
+    maxXYZ = P3i.new3(maxX, maxY, maxZ);
+    SimpleUnitCell.setMinMaxLatticeParameters(dim, minXYZ, maxXYZ, kcode);
+  }
+
+  private void setSymmetryMinMax(P3d c) {
+    if (rminx > c.x)
+      rminx = c.x;
+    if (rminy > c.y)
+      rminy = c.y;
+    if (rminz > c.z)
+      rminz = c.z;
+    if (rmaxx < c.x)
+      rmaxx = c.x;
+    if (rmaxy < c.y)
+      rmaxy = c.y;
+    if (rmaxz < c.z)
+      rmaxz = c.z;
+  }
+
+  private void setUnitCell(double[] info, M3d matUnitCellOrientation,
+                           P3d unitCellOffset) {
+    unitCellParams = new double[info.length];
+    //this.unitCellOffset = unitCellOffset;
+    for (int i = 0; i < info.length; i++)
+      unitCellParams[i] = info[i];
+    asc.haveUnitCell = true;
+    if (asc.isTrajectory) {
+      if (trajectoryUnitCells == null) {
+        trajectoryUnitCells = new Lst<double[]>();
+        asc.setInfo("unitCells", trajectoryUnitCells);
+      }
+      trajectoryUnitCells.addLast(unitCellParams);
+    }
+    asc.setGlobalBoolean(JC.GLOBAL_UNITCELLS);
+    getSymmetry().setUnitCellFromParams(unitCellParams, false,
+        unitCellParams[SimpleUnitCell.PARAM_SLOP]);
+    // we need to set the auxiliary info as well, because 
+    // ModelLoader creates a new symmetry object.
+    if (unitCellOffset != null)
+      symmetry.setOffsetPt(unitCellOffset);
+    if (matUnitCellOrientation != null)
+      symmetry.initializeOrientation(matUnitCellOrientation);
+    setCurrentModelUCInfo(unitCellParams, unitCellOffset,
+        matUnitCellOrientation);
+  }
+
+  private void setUnitCellSafely() {
+    if (unitCellParams == null)
+      setUnitCell(acr.unitCellParams, acr.matUnitCellOrientation,
+          acr.unitCellOffset);
+  }
+
+  @SuppressWarnings("cast")
+  private int symmetryAddAtoms(int transX, int transY, int transZ,
+                               int baseCount, int pt, int iCellOpPt,
+                               P3d[] cartesians, MSInterface ms, BS excludedOps,
+                               int[] atomMap)
+      throws Exception {
+    boolean isBaseCell = (baseCount == 0);
+    boolean addBonds = (atomMap != null);
+    if (doPackUnitCell)
+      ptOffset.set(transX, transY, transZ);
+
+    //symmetryRange < 0 : just check symop=1 set
+    //symmetryRange > 0 : check against {1 1 1}
+
+    // if we are not checking special atoms, then this is a PDB file
+    // and we return all atoms within a cubical volume around the 
+    // target set. The user can later use select within() to narrow that down
+    // This saves immensely on time.
+    double range2 = symmetryRange * symmetryRange;
+    boolean checkRangeNoSymmetry = (symmetryRange < 0);
+    boolean checkRange111 = (symmetryRange > 0);
+    boolean checkSymmetryMinMax = (isBaseCell && checkRange111);
+    checkRange111 &= !isBaseCell;
+    int nOp = symmetry.getSpaceGroupOperationCount();
+    Lst<M4d> lstNCS = acr.lstNCS;
+    int nNCS = (lstNCS == null ? 0 : lstNCS.size());
+    int nOperations = nOp + nNCS;
+    nNCS = nNCS / nOp;
+    /**
+     * checkNearAtoms indicates that we are looking for atoms with (nearly) the
+     * same cartesian position. This is important when packing and there are
+     * multiple operations.
+     */
+    boolean checkNearAtoms = (this.checkNearAtoms
+        && (nOperations > 1 || doPackUnitCell));
+    boolean checkSymmetryRange = (checkRangeNoSymmetry || checkRange111);
+    boolean checkDistances = (checkNearAtoms || checkSymmetryRange);
+    boolean checkOps = (excludedOps != null);
+    boolean addCartesian = (checkNearAtoms || checkSymmetryMinMax);
+    BS bsAtoms = (acr.isMolecular ? null : asc.bsAtoms);
+    FileSymmetry sym = symmetry;
+    if (checkRangeNoSymmetry)
+      baseCount = noSymmetryCount;
+    int atomMax = firstAtom + noSymmetryCount;
+    int bondAtomMin = (asc.firstAtomToBond < 0 ? atomMax : asc.firstAtomToBond);
+    P3d pttemp = new P3d();
+    String code = null;
+    double minCartDist2 = (checkOps ? SQUARED_CARTESIAN_DISTANCE_CHECK_OPS
+        : SQUARED_CARTESIAN_DISTANCE_CHECK_NOOPS);
+    char subSystemId = '\0';
+    int j00 = (bsAtoms == null ? firstAtom : bsAtoms.nextSetBit(firstAtom));
+
+    // loop over all symmetry operations...
+    out: for (int iSym = 0; iSym < nOperations; iSym++) {
+
+      // ignore if very first operation 
+      // or this is CrystalReader and we are just checking the lattice operations
+      //    and this is not a lattice operation
+      // or this is an operation we have excluded
+      if (isBaseCell && iSym == 0
+          || crystalReaderLatticeOpsOnly && iSym > 0 && (iSym % latticeOp) != 0
+          || excludedOps != null && excludedOps.get(iSym))
+        continue;
+
+      /* pt0 sets the range of points cross-checked. 
+       * If we are checking special positions, then we have to check
+       *   all previous atoms. 
+       * If we are doing a symmetry range check relative to {1 1 1}, then
+       *   we have to check only the base set. (checkRange111 true)
+       * If we are doing a symmetry range check on symop=1555 (checkRangeNoSymmetry true), 
+       *   then we don't check any atoms and just use the box.
+       *    
+       */
+
+      int pt0 = firstAtom
+          + (checkNearAtoms ? pt : checkRange111 ? baseCount : 0);
+      int spinOp = (iSym >= nOp ? 0
+          : asc.vibScale == 0 ? sym.getSpinOp(iSym) : asc.vibScale);
+      int i0 = Math.max(firstAtom,
+          (bsAtoms == null ? 0 : bsAtoms.nextSetBit(0)));
+      boolean checkDistance = checkDistances;
+      int spt = (iSym >= nOp ? (iSym - nOp) / nNCS : iSym);
+      int cpt = spt + iCellOpPt;
+      for (int i = i0; i < atomMax; i++) {
+        Atom a = asc.atoms[i];
+        if (bsAtoms != null && !bsAtoms.get(i))
+          continue;
+
+        if (ms == null) {
+          sym.newSpaceGroupPoint(a, iSym,
+              (iSym >= nOp ? lstNCS.get(iSym - nOp) : null), transX, transY,
+              transZ, pttemp);
+        } else {
+          sym = ms.getAtomSymmetry(a, this.symmetry);
+          sym.newSpaceGroupPoint(a, iSym, null, transX, transY, transZ, pttemp);
+          // COmmensurate structures may use a symmetry operator
+          // to changes space groups.
+          code = sym.getSpaceGroupOperationCode(iSym);
+          if (code != null) {
+            subSystemId = code.charAt(0);
+            sym = ms.getSymmetryFromCode(code);
+            if (sym.getSpaceGroupOperationCount() == 0)
+              finalizeSymmetry(sym);
+          }
+        }
+        P3d c = P3d.newP(pttemp); // cartesian position
+        sym.toCartesian(c, false);
+        if (doPackUnitCell) {
+          sym.toUnitCellRnd(c, ptOffset);
+          pttemp.setT(c);
+          sym.toFractional(pttemp, false);
+          if (!isWithinCell(ndims, pttemp, minXYZ0.x, maxXYZ0.x, minXYZ0.y,
+              maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingRange)) {
+            continue;
+          }
+        }
+        if (checkSymmetryMinMax)
+          setSymmetryMinMax(c);
+        Atom special = null;
+        if (checkDistance) {
+          // for range checking, we first make sure we are not out of range
+          // for the cartesian
+          if (checkSymmetryRange && (c.x < rminx || c.y < rminy || c.z < rminz
+              || c.x > rmaxx || c.y > rmaxy || c.z > rmaxz))
+            continue;
+          double minDist2 = Double.MAX_VALUE;
+          // checkAll means we have to check against operations that have
+          // just been done; otherwise we can check only to the base set
+          int j0 = (checkAll ? asc.ac : pt0);
+          String name = a.atomName;
+          char id = (code == null ? a.altLoc : subSystemId);
+          for (int j = j00; j < j0; j++) {
+            if (bsAtoms != null && !bsAtoms.get(j))
+              continue;
+            P3d pc = cartesians[j - firstAtom];
+            if (pc == null)
+              continue;
+            double d2 = c.distanceSquared(pc);
+            if (checkNearAtoms && d2 < minCartDist2) {
+              if (checkOps) {
+                // if a matching atom is found for a model built
+                // from a mix of crystallographic and noncrystallographic 
+                // operators, we throw out the entire operation, not just this atom
+                excludedOps.set(iSym);
+                continue out;
+              }
+              special = asc.atoms[j];
+              if ((special.atomName == null || special.atomName.equals(name))
+                  && special.altLoc == id)
+                break;
+              special = null;
+            }
+            if (checkRange111 && j < baseCount && d2 < minDist2)
+              minDist2 = d2;
+          }
+          if (checkRange111 && minDist2 > range2)
+            continue;
+        }
+        if (checkOps) {
+          // if we did not find a common atom for the first atom when checking operators,
+          // we do not have to check again for any other atom.
+          checkDistance = false;
+        }
+        int atomSite = a.atomSite;
+        if (special != null) {
+          if (addBonds)
+            atomMap[atomSite] = special.index;
+          special.bsSymmetry.set(cpt);
+          special.bsSymmetry.set(spt);
+        } else {
+          if (addBonds)
+            atomMap[atomSite] = asc.ac;
+          Atom atom1 = a.copyTo(pttemp, asc);
+          if (asc.bsAtoms != null)
+            asc.bsAtoms.set(atom1.index);
+          if (spinOp != 0 && atom1.vib != null) {
+            // spinOp is making the correction for spin being a pseudoVector, not a standard vector
+            sym.getSpaceGroupOperation(iSym).rotate(atom1.vib);
+            atom1.vib.scale(spinOp);
+          }
+          if (atom1.isNegDisorder) {
+            // special negative disorder group in CifReader
+            if (disorderMap == null)
+              disorderMap = new Hashtable<Integer, Character>();
+            Integer key = Integer.valueOf(iSym * 1000 + atom1.altLoc);
+            Character ch = disorderMap.get(key);
+            if (ch == null) {
+              if (disorderMapMax == 0 || disorderMapMax == 'Z')
+                disorderMapMax = (int) '@'; // necessary for legacy java2script JSmol
+              disorderMap.put(key,
+                  ch = new Character((char) (++disorderMapMax)));
+            }
+            atom1.altLoc = ch.charValue();
+          }
+          atom1.atomSite = atomSite;
+          if (code != null)
+            atom1.altLoc = subSystemId;
+          atom1.bsSymmetry = BSUtil.newAndSetBit(cpt);
+          atom1.bsSymmetry.set(spt);
+          if (addCartesian)
+            cartesians[pt++] = c;
+          Lst<Object> tensors = a.tensors;
+          if (tensors != null) {
+            atom1.tensors = null;
+            for (int j = tensors.size(); --j >= 0;) {
+              Tensor t = (Tensor) tensors.get(j);
+              if (t == null)
+                continue;
+              if (nOp == 1)
+                atom1.addTensor(t.copyTensor(), null, false);
+              else
+                addRotatedTensor(atom1, t, iSym, false, sym);
+            }
+          }
+        }
+      }
+      if (addBonds) {
+        // Clone bonds
+        Bond[] bonds = asc.bonds;
+        Atom[] atoms = asc.atoms;
+        String key;
+        for (int bondNum = asc.bondIndex0; bondNum < bondCount0; bondNum++) {
+          Bond bond = bonds[bondNum];
+          Atom atom1 = atoms[bond.atomIndex1];
+          Atom atom2 = atoms[bond.atomIndex2];
+          if (atom1 == null || atom2 == null
+              || atom2.atomSetIndex < atom1.atomSetIndex)
+            continue;
+
+          int ia1 = atomMap[atom1.atomSite];
+          int ia2 = atomMap[atom2.atomSite];
+          if (ia1 > ia2) {
+            int i = ia1;
+            ia1 = ia2;
+            ia2 = i;
+          }
+          if ((ia1 != ia2 && (ia1 >= bondAtomMin || ia2 >= bondAtomMin))
+              && !bondsFound.contains(key = "-" + ia1 + "," + ia2)) {
+            bondsFound.add(key);
+            asc.addNewBondWithOrder(ia1, ia2, bond.order);//.distance = d;
+          }
+        }
+      }
+    }
+    return pt;
+  }
+
+  private void trimToUnitCell(int iAtomFirst) {
+    // trim atom set based on current min/max
+    Atom[] atoms = asc.atoms;
+    BS bs = updateBSAtoms();
+    if (acr.noPack) {
+      for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
+          .nextSetBit(i + 1)) {
+        if (!removePacking(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
+            maxXYZ.y, minXYZ.z, maxXYZ.z, packingRange))
+          bs.clear(i);
+      }
+    } else {
+      for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
+          .nextSetBit(i + 1)) {
+        if (!isWithinCell(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
+            maxXYZ.y, minXYZ.z, maxXYZ.z, packingRange))
+          bs.clear(i);
+      }
+    }
+  }
+
+  /**
+   * Update asc.bsAtoms to include all atoms, or at least all atoms that are
+   * still viable from the reader.
+   * 
+   * @return updated BS
+   */
+  private BS updateBSAtoms() {
+    BS bs = asc.bsAtoms;
+    if (bs == null)
+      bs = asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac);
+    if (bs.nextSetBit(firstAtom) < 0)
+      bs.setBits(firstAtom, asc.ac);
+    return bs;
+  }
+
+  private void updateSupercellAtomSites(M4d matSuper, BS bsAtoms, double slop) {
+    int n = bsAtoms.cardinality();
+    Atom[] baseAtoms = new Atom[n];
+    int nbase = 0;
+    double slop2 = slop * slop;
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      Atom a = asc.atoms[i];
+      Atom p = new Atom();
+      p.setT(a);
+      if (matSuper != null) {
+        matSuper.rotTrans(p);
+        SimpleUnitCell.unitizeDimRnd(3, p, slop);
+      }
+      p.atomSerial = a.atomSite;// ORIGINAL atomSite
+      p.atomSite = a.atomSite;
+      symmetry.unitize(p);
+      boolean found = false;
+      for (int ib = 0; ib < nbase; ib++) {
+        Atom b = baseAtoms[ib];
+        if (p.atomSerial == b.atomSerial && p.distanceSquared(b) < slop2) {
+          found = true;
+          a.atomSite = b.atomSite;
+          break;
+        }
+      }
+      if (!found) {
+        a.atomSite = p.atomSite = nbase;
+        baseAtoms[nbase++] = p;
+      }
+    }
+  }
+
+  public FileSymmetry newFileSymmetry() {
+    return new FileSymmetry();
   }
 
 }

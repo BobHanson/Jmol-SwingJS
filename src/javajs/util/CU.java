@@ -34,6 +34,7 @@ public class CU {
   }
   
   private final static String[] colorNames = {
+    "contrast",             // fedcba
     "black",                // 000000
     "pewhite",              // ffffff
     "pecyan",               // 00ffff
@@ -203,6 +204,7 @@ public class CU {
   
   private final static int[] colorArgbs = {
   //#FFFFC3 hover
+    0xFFfedcba, // CONTRAST (colix = 3)
     0xFF000000, // black
     // plus the PE chain colors
     0xFFffffff, // pewhite

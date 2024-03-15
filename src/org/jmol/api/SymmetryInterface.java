@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
-import org.jmol.util.Tensor;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
@@ -22,8 +21,6 @@ public interface SymmetryInterface {
 
   int addSpaceGroupOperation(String xyz, int opId);
 
-  String addSubSystemOp(String code, Matrix rs, Matrix vs, Matrix sigma);
-
   void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms);
 
   String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles)
@@ -31,20 +28,9 @@ public interface SymmetryInterface {
 
   int addBioMoleculeOperation(M4d mat, boolean isReverse);
 
-  boolean addLatticeVectors(Lst<double[]> lattvecs);
-
-  boolean checkDistance(P3d f1, P3d f2, double distance, 
-                                        double dx, int iRange, int jRange, int kRange, P3d ptOffset);
-
-  boolean createSpaceGroup(int desiredSpaceGroupIndex,
-                                           String name,
-                                           Object data, int modDim);
-
   Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCellParams, T3d origin, boolean asString, boolean isAssign, boolean checkSupercell);
 
   int[] getCellRange();
-
-  T3d[] getConventionalUnitCell(String latticeType, M3d primitiveToCryst);
 
   boolean getCoordinatesAreFractional();
 
@@ -59,8 +45,6 @@ public interface SymmetryInterface {
   int getLatticeOp();
 
   char getLatticeType();
-
-  String getMatrixFromString(String xyz, double[] temp, boolean allowScaling, int modDim);
 
   Lst<String> getMoreInfo();
 
@@ -90,8 +74,6 @@ public interface SymmetryInterface {
 
   M4d getSpaceGroupOperation(int i);
   
-  String getSpaceGroupOperationCode(int op);
-
   int getSpaceGroupOperationCount();
   
   String getSpaceGroupXyz(int i, boolean doNormalize);
@@ -103,8 +85,6 @@ public interface SymmetryInterface {
   String getSymmetryInfoStr();
 
   M4d[] getSymmetryOperations();
-
-  Tensor getTensor(Viewer vwr, double[] anisoBorU);
 
   M4d getTransform(P3d fracA, P3d fracB, boolean debug);
 
@@ -178,10 +158,6 @@ public interface SymmetryInterface {
    */
   void setSpaceGroupTo(Object spaceGroup);
 
-  SymmetryInterface setSymmetryInfo(int modelIndex, Map<String, Object> modelAuxiliaryInfo, double[] notionalCell);
-
-  void setTimeReversal(int op, int val);
-
   SymmetryInterface setUnitCellFromParams(double[] params, boolean setRelative, double slop);
 
   void setUnitCell(SymmetryInterface uc);
@@ -190,14 +166,10 @@ public interface SymmetryInterface {
 
   void toFractional(T3d pt, boolean ignoreOffset);
   
-  void toFractionalM(M4d m);
-
-  boolean toFromPrimitive(boolean toPrimitive, char type, T3d[] oabc,
+   boolean toFromPrimitive(boolean toPrimitive, char type, T3d[] oabc,
                           M3d primitiveToCrystal);
 
   void toUnitCell(T3d pt, T3d offset);
-
-  void toUnitCellRnd(T3d pt, T3d offset);
 
   boolean unitCellEquals(SymmetryInterface uc2);
 
@@ -205,10 +177,6 @@ public interface SymmetryInterface {
 
   void initializeOrientation(M3d matUnitCellOrientation);
 
-  String fcoord(T3d p);
-
-  // floats
-  
   /**
    * 
    * @param ms
@@ -281,10 +249,9 @@ public interface SymmetryInterface {
 
   double getPrecision();
 
-  void setPrecision(double prec);
-
   boolean fixUnitCell(double[] unitCellParams);
 
-  void twelfthify(P3d pt);
+  String getSpaceGroupTitle();
 
+  boolean isSymmetryCell(SymmetryInterface sym);
 }

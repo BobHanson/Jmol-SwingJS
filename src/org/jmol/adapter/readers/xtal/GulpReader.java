@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.api.SymmetryInterface;
+import org.jmol.symmetry.Symmetry;
 
 import javajs.util.PT;
 import javajs.util.V3d;
@@ -304,7 +304,7 @@ public class GulpReader extends AtomSetCollectionReader {
   public void applySymmetryAndSetTrajectory() throws Exception {
     if (coordinatesArePrimitive && iHaveUnitCell && doCheckUnitCell && primitiveData != null && !isPrimitive) {
       setModelParameters(false);
-      SymmetryInterface symFull = symmetry;
+      Symmetry symFull = symmetry;
       setModelParameters(true);
       // Full cell -- must convert primitive to conventional
       

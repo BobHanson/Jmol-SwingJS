@@ -2,7 +2,7 @@ package org.jmol.adapter.smarter;
 
 import java.util.Map;
 
-import org.jmol.api.SymmetryInterface;
+import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 
 import javajs.util.Lst;
 import javajs.util.Matrix;
@@ -27,13 +27,13 @@ public interface MSInterface {
 
   int initialize(AtomSetCollectionReader r, int modDim) throws Exception;
 
-  void setModulation(boolean isPost, SymmetryInterface symmetry) throws Exception;
+  void setModulation(boolean isPost, XtalSymmetry.FileSymmetry symmetry) throws Exception;
 
-  SymmetryInterface getAtomSymmetry(Atom a, SymmetryInterface symmetry);
+  XtalSymmetry.FileSymmetry getAtomSymmetry(Atom a, XtalSymmetry.FileSymmetry symmetry);
 
   void setMinMax0(P3d minXYZ0, P3d maxXYZ0);
 
-  SymmetryInterface getSymmetryFromCode(String spaceGroupOperationCode);
+  XtalSymmetry.FileSymmetry getSymmetryFromCode(String spaceGroupOperationCode);
 
   boolean addLatticeVector(Lst<double[]> lattvecs, String substring) throws Exception;
 

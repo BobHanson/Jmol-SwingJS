@@ -8,7 +8,7 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.MSInterface;
-import org.jmol.api.SymmetryInterface;
+import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
@@ -224,7 +224,7 @@ public class MSRdr implements MSInterface {
 
   private boolean finalized;
 
-  private SymmetryInterface symmetry, supercellSymmetry;
+  private FileSymmetry symmetry, supercellSymmetry;
 
   private Lst<String> legendres;
 
@@ -329,7 +329,7 @@ public class MSRdr implements MSInterface {
    * 
    */
   @Override
-  public void setModulation(boolean isPost, SymmetryInterface symmetry) throws Exception {
+  public void setModulation(boolean isPost, FileSymmetry symmetry) throws Exception {
     if (modDim == 0 || htModulation == null)
       return;
     if (modDebug)
@@ -433,7 +433,7 @@ public class MSRdr implements MSInterface {
     //cr.symmetry = cr.asc.getSymmetry();
     if (symmetry != null)
       nOps = symmetry.getSpaceGroupOperationCount();
-    supercellSymmetry = cr.asc.getXSymmetry().symmetry;
+    supercellSymmetry = cr.asc.getXSymmetry().getSymmetry();
     if (supercellSymmetry  == symmetry)
       supercellSymmetry = null;
     iopLast = -1;
@@ -946,7 +946,7 @@ public class MSRdr implements MSInterface {
         for (Entry<String, Double> e : ms.htUij.entrySet())
           addUStr(a, e.getKey(), e.getValue().doubleValue());
 
-        SymmetryInterface sym = getAtomSymmetry(a, symmetry);
+        FileSymmetry sym = getAtomSymmetry(a, symmetry);
         t = cr.asc.getXSymmetry().addRotatedTensor(a,
             sym.getTensor(cr.vwr, a.anisoBorU), iop, false, sym);
         t.isModulated = true;
@@ -989,8 +989,8 @@ public class MSRdr implements MSInterface {
    * 
    */
   @Override
-  public SymmetryInterface getAtomSymmetry(Atom a,
-                                           SymmetryInterface defaultSymmetry) {
+  public FileSymmetry getAtomSymmetry(Atom a,
+                                           FileSymmetry defaultSymmetry) {
     Subsystem ss;
     return (htSubsystems == null || (ss = getSubsystem(a)) == null ? defaultSymmetry
         : ss.getSymmetry());
@@ -1010,7 +1010,7 @@ public class MSRdr implements MSInterface {
     return (ss == null ? modMatrices : ss.getModMatrices());
   }
 
-  private SymmetryInterface getSymmetry(Atom a) {
+  private FileSymmetry getSymmetry(Atom a) {
     Subsystem ss = getSubsystem(a);
     return (ss == null ? symmetry : ss.getSymmetry());
   }
@@ -1027,7 +1027,7 @@ public class MSRdr implements MSInterface {
       minXYZ0 = maxXYZ0 = null;
       return;
     }
-    SymmetryInterface symmetry = getDefaultUnitCell();
+    FileSymmetry symmetry = getDefaultUnitCell();
     minXYZ0 = P3d.newP(minXYZ);
     maxXYZ0 = P3d.newP(maxXYZ);
     P3d pt0 = P3d.newP(minXYZ);
@@ -1041,7 +1041,7 @@ public class MSRdr implements MSInterface {
       return;
     }
     for (Entry<String, Subsystem> e : htSubsystems.entrySet()) {
-      SymmetryInterface sym = e.getValue().getSymmetry();
+      FileSymmetry sym = e.getValue().getSymmetry();
       for (int i = 8; --i >= 0;) {
         pt.x = (pts[i].x == 0 ? pt0.x : pt1.x);
         pt.y = (pts[i].y == 0 ? pt0.y : pt1.y);
@@ -1051,7 +1051,7 @@ public class MSRdr implements MSInterface {
     }
   }
 
-  private void expandMinMax(P3d pt, SymmetryInterface sym, P3d minXYZ, P3d maxXYZ) {
+  private void expandMinMax(P3d pt, FileSymmetry sym, P3d minXYZ, P3d maxXYZ) {
     P3d pt2 = P3d.newP(pt);
     double slop = 0.0001;
     sym.toFractional(pt2, false);
@@ -1073,7 +1073,7 @@ public class MSRdr implements MSInterface {
     if (!cr.doApplySymmetry)
       return;
     AtomSetCollection asc = cr.asc;
-    SymmetryInterface sym = getDefaultUnitCell();
+    FileSymmetry sym = getDefaultUnitCell();
     Atom[] atoms = asc.atoms;
     P3d pt = new P3d();
     BS bs = asc.getBSAtoms(-1);
@@ -1108,13 +1108,13 @@ public class MSRdr implements MSInterface {
     }
   }
 
-  private SymmetryInterface getDefaultUnitCell() {
+  private FileSymmetry getDefaultUnitCell() {
     return (modCell != null && htSubsystems.containsKey(modCell) ? htSubsystems
         .get(modCell).getSymmetry() : cr.asc.getSymmetry());
   }
 
   @Override
-  public SymmetryInterface getSymmetryFromCode(String code) {
+  public FileSymmetry getSymmetryFromCode(String code) {
     return htSubsystems.get(code).getSymmetry();
   }
 

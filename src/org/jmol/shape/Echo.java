@@ -65,6 +65,69 @@ public class Echo extends TextShape {
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
 
+    if ("target" == propertyName) {
+      if ("%SCALE".equals(value)) {
+        currentObject = scaleObject;
+        thisID = "%SCALE";
+        if (currentObject != null)
+          return;
+      }
+      String target = ((String) value).intern().toLowerCase();
+      if (PT.isWild(target)) {
+        propertyName = "thisID";
+      } else if (target != "none" && target != "all") {
+        isAll = false;
+        Text text = (thisID == "%SCALE" ? scaleObject : objects.get(target));
+        if (text == null) {
+          int valign = JC.ECHO_XY;
+          int halign = JC.TEXT_ALIGN_LEFT;
+          if ("top" == target) {
+            valign = JC.ECHO_TOP;
+            halign = JC.TEXT_ALIGN_CENTER;
+          } else if ("middle" == target) {
+            valign = JC.ECHO_MIDDLE;
+            halign = JC.TEXT_ALIGN_CENTER;
+          } else if ("bottom" == target) {
+            valign = JC.ECHO_BOTTOM;
+          } else if ("error" == target) {
+            valign = JC.ECHO_TOP;
+          }
+          //          if (scaleObject != null && scaleObject.valign == valign
+          //              && scaleObject.align == halign) {
+          //            text = scaleObject;
+          //          } else {
+          text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE, FONTSIZE),
+              target, COLOR, valign, halign, 0);
+          text.adjustForWindow = true;
+          if (thisID == "%SCALE") {
+            scaleObject = text;
+          } else {
+            objects.put(target, text);
+            if (target.startsWith(JC.THIS_MODEL_ONLY)) {
+              text.thisModelOnly = true;
+            }
+
+          }
+          if (currentFont != null)
+            text.setFont(currentFont, true);
+          if (currentColor != null)
+            text.colix = C.getColixO(currentColor);
+          if (currentBgColor != null)
+            text.bgcolix = C.getColixO(currentBgColor);
+          if (currentTranslucentLevel != 0)
+            text.setTranslucent(currentTranslucentLevel, false);
+          if (currentBgTranslucentLevel != 0)
+            text.setTranslucent(currentBgTranslucentLevel, true);
+          //          }
+        }
+        currentObject = text;
+        if (thisID != "%SCALE")
+          thisID = null;
+        return;
+      }
+    }
+
+
     if ("thisID" == propertyName) {
       if (value == null) {
         currentObject = null;
@@ -102,7 +165,7 @@ public class Echo extends TextShape {
     }
 
     if ("off" == propertyName) {
-      if (currentObject == scaleObject) {
+      if (currentObject != null && currentObject == scaleObject) {
         currentObject = scaleObject = null;
         return;
       }
@@ -122,66 +185,6 @@ public class Echo extends TextShape {
       }
       // continue to TextShape
     }
-    if ("target" == propertyName) {
-      if ("%SCALE".equals(value)) {
-        currentObject = scaleObject;
-        thisID = "%SCALE";
-        if (currentObject != null)
-          return;
-      }
-      String target = ((String) value).intern().toLowerCase();
-      if (target != "none" && target != "all") {
-        isAll = false;
-        Text text = (thisID == "%SCALE" ? scaleObject : objects.get(target));
-        if (text == null) {
-          int valign = JC.ECHO_XY;
-          int halign = JC.TEXT_ALIGN_LEFT;
-          if ("top" == target) {
-            valign = JC.ECHO_TOP;
-            halign = JC.TEXT_ALIGN_CENTER;
-          } else if ("middle" == target) {
-            valign = JC.ECHO_MIDDLE;
-            halign = JC.TEXT_ALIGN_CENTER;
-          } else if ("bottom" == target) {
-            valign = JC.ECHO_BOTTOM;
-          } else if ("error" == target) {
-            valign = JC.ECHO_TOP;
-          }
-          //          if (scaleObject != null && scaleObject.valign == valign
-          //              && scaleObject.align == halign) {
-          //            text = scaleObject;
-          //          } else {
-          text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE, FONTSIZE),
-              target, COLOR, valign, halign, 0);
-          text.adjustForWindow = true;
-          if (thisID == "%SCALE") {
-            scaleObject = text;
-          } else {
-            objects.put(target, text);
-            if (target.startsWith(THIS_MODEL_ONLY)) {
-              text.thisModelOnly = true;
-            }
-
-          }
-          if (currentFont != null)
-            text.setFont(currentFont, true);
-          if (currentColor != null)
-            text.colix = C.getColixO(currentColor);
-          if (currentBgColor != null)
-            text.bgcolix = C.getColixO(currentBgColor);
-          if (currentTranslucentLevel != 0)
-            text.setTranslucent(currentTranslucentLevel, false);
-          if (currentBgTranslucentLevel != 0)
-            text.setTranslucent(currentBgTranslucentLevel, true);
-          //          }
-        }
-        currentObject = text;
-        if (thisID != "%SCALE")
-          thisID = null;
-        return;
-      }
-    }
-
     if ("scalereference" == propertyName) {
       if (currentObject != null) {
         double val = ((Number) value).doubleValue();

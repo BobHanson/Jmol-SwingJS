@@ -37,6 +37,12 @@ public class GData implements JmolGraphicsInterface {
   protected boolean newAntialiasing;
 
   public int bgcolor;  
+ 
+  /**
+   *  WHITE or BLACK
+   */
+  public short contrastColix;
+  
   public int xLast, yLast;
   public int slab, depth;
   public int width, height;
@@ -170,6 +176,8 @@ public class GData implements JmolGraphicsInterface {
   }
 
   public int getColorArgbOrGray(short colix) {
+    if (colix == C.COLIX_CONTRAST)
+      return C.getArgb(contrastColix);
     if (colix < 0)
       colix = changeableColixMap[colix & C.UNMASK_CHANGEABLE_TRANSLUCENT];
     return (inGreyscaleMode ? C.getArgbGreyscale(colix) : C.getArgb(colix));
