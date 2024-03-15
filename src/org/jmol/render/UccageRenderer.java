@@ -182,7 +182,7 @@ public class UccageRenderer extends CageRenderer {
 
     if (!unitcell.isSimple()) {
       String sgName = (isPolymer ? "polymer"
-          : isSlab ? "slab" : unitcell.getSpaceGroupName());
+          : isSlab ? "slab" : unitcell.getSpaceGroupTitle());
       if (sgName != null) {
         if (sgName.startsWith("cell=!"))
           sgName = "cell=inverse[" + sgName.substring(6) + "]";
@@ -192,7 +192,7 @@ public class UccageRenderer extends CageRenderer {
           if (!isSlab && !isPolymer && intTab != null)
             sgName += " #" + intTab;
         }
-        if (!sgName.equals("-- [--]")) {
+        if (sgName.indexOf("-- [--]") < 0) {
           drawInfo(sgName, 0, null);
         }
       }

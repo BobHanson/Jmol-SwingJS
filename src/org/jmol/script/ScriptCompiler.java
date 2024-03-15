@@ -273,7 +273,6 @@ public class ScriptCompiler extends ScriptTokenParser {
   private boolean haveENDIF;
   
   private boolean compile0(boolean isFull) {
-    haveENDIF = false;
     script = cleanScriptComments(script);
     ichToken = script.indexOf(JC.STATE_VERSION_STAMP);
     isStateScript = (ichToken >= 0 && ichToken < 10); // leaves a bit of room for Proteopedia's "exit;\n" hack
@@ -284,6 +283,8 @@ public class ScriptCompiler extends ScriptTokenParser {
             script
                 .substring(ichToken + JC.STATE_VERSION_STAMP.length(), ptSemi)
                 .trim());
+    } else {
+        haveENDIF = (script.indexOf("endif") >= 0);
     }
     cchScript = script.length();
 

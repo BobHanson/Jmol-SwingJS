@@ -225,7 +225,7 @@ public class Draw extends MeshCollection {
         return;
       vData.addLast(new Object[] { Integer.valueOf(PT_MODEL_INDEX),
           (modelInfo = new int[] { indicatedModelIndex, 0 }) });
-      if (thisMesh.thisID.startsWith(THIS_MODEL_ONLY))
+      if (thisMesh.thisID.startsWith(JC.THIS_MODEL_ONLY))
         indicatedModelOnly = true;
       return;
     }
@@ -1248,7 +1248,6 @@ private void initDraw() {
         m.bsMeshesVisible.or(m.modelFlags);
         m.bsMeshesVisible.and(bsModels);
       }
-
     }
   }
   
@@ -1462,7 +1461,6 @@ private void initDraw() {
               continue;
             vTemp.normalize();
             vTemp.add(pickedPt);
-            //System.out.println("Draw " + vTemp + " " + pt + " " + pickedPt);
           }
           int d2 = coordinateInRange(x, y, (vnot >= 0 ? vTemp : pt), dmin2,
               ptXY);
@@ -1478,8 +1476,6 @@ private void initDraw() {
               pickedVertex = iVertex;
               pickedPt = pt;
               pickedMesh = m;
-//              System.out.println("pickedMesh, " + pickedMesh.hoverLabel
-//                  + " pm2 is " + (pm2 == null ? null : pm2.hoverLabel));
               pickedModel = iModel;
             }
             dmin2 = d2;

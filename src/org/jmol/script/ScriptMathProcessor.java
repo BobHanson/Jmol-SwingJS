@@ -408,7 +408,8 @@ public class ScriptMathProcessor {
     return addOpAllowMath(op, true, T.nada);
   }
 
-  boolean addOpAllowMath(T op, boolean allowMathFunc, int tokNext) throws ScriptException {
+  boolean addOpAllowMath(T op, boolean allowMathFunc, int tokNext)
+      throws ScriptException {
 
     if (debugHigh) {
       dumpStacks("adding " + op + " wasx=" + wasX);
@@ -444,14 +445,14 @@ public class ScriptMathProcessor {
       haveSpaceBeforeSquare = true;
       return true;
     case T.comma:
-      if (!wasX)  
+      if (!wasX)
         return false;
       break;
     case T.minusMinus:
     case T.plusPlus:
       // check for [a ++b]
       if (wasX && op.intValue == -1 && addOp(T.tokenComma))
-          return addOp(op);
+        return addOp(op);
       break;
     case T.rightsquare:
       break;
@@ -494,8 +495,8 @@ public class ScriptMathProcessor {
         boolean isArgument = (oPt >= 1 && tok0 == T.leftparen);
         if (isDotSelector) {
           if (tokNext == T.leftparen) {
-          // check for {hash}.x(), which is not allowed
-          // if this is desired, one needs to use {hash}..x()
+            // check for {hash}.x(), which is not allowed
+            // if this is desired, one needs to use {hash}..x()
             if (xStack[xPt].tok == T.hash)
               return false;
           }
@@ -626,9 +627,9 @@ public class ScriptMathProcessor {
       if (oPt < 0)
         return true;
       if (isOpFunc(oStack[oPt])) {
-         wasX = false;
-         if(!evaluateFunction(T.nada))
-           return false;
+        wasX = false;
+        if (!evaluateFunction(T.nada))
+          return false;
       }
       skipping = (ifPt >= 0 && ifStack[ifPt] == 'X');
       return true;
@@ -663,16 +664,26 @@ public class ScriptMathProcessor {
     case T.opOr:
       if (!wasSyntaxCheck && xPt < 0)
         return false;
-      if (!wasSyntaxCheck && xStack[xPt].tok != T.bitset
-          && xStack[xPt].tok != T.varray) {
-        // check to see if we need to evaluate the second operand or not
-        // if not, then set this to syntax check in order to skip :)
-        // Jmol 12.0.4, Jmol 12.1.2
-        boolean tf = getX().asBoolean();
-        addX(SV.getBoolean(tf));
-        if (tf == (op.tok == T.opOr)) { // TRUE or.. FALSE and...
-          chk = true;
-          op = (op.tok == T.opOr ? T.tokenOrTRUE : T.tokenAndFALSE);
+      if (!wasSyntaxCheck) {
+        switch (xStack[xPt].tok) {
+        case T.bitset:
+        case T.varray:
+          break;
+        case T.matrix3f: 
+          if (op.tok == T.opOr)
+            break;
+          //$FALL-THROUGH$
+        default:
+          // check to see if we need to evaluate the second operand or not
+          // if not, then set this to syntax check in order to skip :)
+          // Jmol 12.0.4, Jmol 12.1.2
+          boolean tf = getX().asBoolean();
+          addX(SV.getBoolean(tf));
+          if (tf == (op.tok == T.opOr)) { // TRUE or.. FALSE and...
+            chk = true;
+            op = (op.tok == T.opOr ? T.tokenOrTRUE : T.tokenAndFALSE);
+          }
+          break;
         }
       }
       wasX = false;
@@ -700,7 +711,7 @@ public class ScriptMathProcessor {
     switch (op.tok) {
     case T.propselector:
       return (((op.intValue & ~T.minmaxmask) == T.function
-          && op.intValue != T.function)? evaluateFunction(T.nada) : true);
+          && op.intValue != T.function) ? evaluateFunction(T.nada) : true);
     case T.plusPlus:
     case T.minusMinus:
       return (wasX ? operate() : true);
@@ -912,13 +923,13 @@ public class ScriptMathProcessor {
         //System.out.println("ptx="+ ptx + " " + pto);
         if (ptx < pto) {
           // x++ must make a copy first
-          x1 = SV.newS("").setv(x2);
+          x1 = SV.copySafely(x2);
         }
         if (!x2.increment(op.tok == T.plusPlus ? 1 : -1))
           return false;
         if (ptx > pto) {
           // ++x must make a copy after
-          x1 = SV.newS("").setv(x2);
+          x1 = SV.copySafely(x2);
         }
       }
       wasX = false;
@@ -1129,6 +1140,11 @@ public class ScriptMathProcessor {
         return addXBs(x1.value instanceof BondSet ? BondSet.newBS(bs) : bs);
       case T.varray:
         return addX(SV.concatList(x1, x2, false));
+      case T.matrix3f:
+        if (x2.tok == T.point3f) {
+          return addXM4(M4d.newMV((M3d) x1.value, (P3d) x2.value));
+        }
+        break;
       }
       return addXBool(x1.asBoolean() || x2.asBoolean());
     case T.opXor:

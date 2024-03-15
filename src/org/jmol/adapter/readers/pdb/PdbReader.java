@@ -31,8 +31,9 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Structure;
+import org.jmol.adapter.smarter.XtalSymmetry;
+import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.api.JmolAdapter;
-import org.jmol.api.SymmetryInterface;
 import org.jmol.c.STR;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
@@ -421,7 +422,7 @@ public class PdbReader extends AtomSetCollectionReader {
     checkUnitCellParams();
     if (!isCourseGrained)
       connectAll(maxSerial, isConnectStateBug);
-    SymmetryInterface symmetry;
+    XtalSymmetry.FileSymmetry symmetry;
     if (vBiomolecules != null && vBiomolecules.size() > 0 && asc.ac > 0) {
       asc.setCurrentModelInfo("biomolecules", vBiomolecules);
       setBiomoleculeAtomCounts();
@@ -433,7 +434,7 @@ public class PdbReader extends AtomSetCollectionReader {
       }
     }
     if (vTlsModels != null) {
-      symmetry = (SymmetryInterface) getInterface("org.jmol.symmetry.Symmetry");
+      symmetry = asc.newFileSymmetry();
       int n = asc.atomSetCount;
       if (n == vTlsModels.size()) {
         for (int i = n; --i >= 0;)
@@ -489,7 +490,7 @@ public class PdbReader extends AtomSetCollectionReader {
     }
   }
 
-  private void checkForResidualBFactors(SymmetryInterface symmetry) {
+  private void checkForResidualBFactors(XtalSymmetry.FileSymmetry symmetry) {
     Atom[] atoms = asc.atoms;
     boolean isResidual = false;
      for (int i = asc.ac; --i >= 0;) {
@@ -1849,7 +1850,7 @@ public class PdbReader extends AtomSetCollectionReader {
    * @param symmetry 
    */
   @SuppressWarnings("unchecked")
-  private void setTlsGroups(int iGroup, int iModel, SymmetryInterface symmetry) {
+  private void setTlsGroups(int iGroup, int iModel, XtalSymmetry.FileSymmetry symmetry) {
 
     // TLS.groupCount   Integer
     // TLS.groups       List of Map
@@ -1946,7 +1947,7 @@ public class PdbReader extends AtomSetCollectionReader {
   private static final double _8PI2_ = (8 * Math.PI * Math.PI);
   private Map<Atom, double[]>tlsU;
   
-  private void setTlsTensor(Atom atom, Map<String, Object> group, SymmetryInterface symmetry) {
+  private void setTlsTensor(Atom atom, Map<String, Object> group, XtalSymmetry.FileSymmetry symmetry) {
     P3d origin = (P3d) group.get("origin");
     if (Double.isNaN(origin.x))
       return;

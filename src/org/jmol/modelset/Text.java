@@ -555,8 +555,6 @@ public class Text {
   public final static int PYMOL_LABEL_OFFSET_ABS_PIX = PYMOL_LABEL_OFFSET_PIX;
   public final static int PYMOL_LABEL_OFFSET_REL_PIX = PYMOL_LABEL_OFFSET_REL | PYMOL_LABEL_OFFSET_PIX;
 
-  public static final int COLOR_CONTRAST = 0xFF123456;
-  
   public double[] pymolOffset;
 
   protected int windowWidth;

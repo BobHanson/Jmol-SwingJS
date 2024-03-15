@@ -151,8 +151,7 @@ public class Model {
 
   public String pdbID;
 
-  public Model() {
-    
+  public Model() { 
   }
   
   public Model set(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex,
@@ -327,8 +326,7 @@ public class Model {
   }
 
   public void setSimpleCage(SymmetryInterface ucell) {
-    simpleCage = ucell;
-    if (ucell != null) {
+    if ((simpleCage = ucell) != null) {
       auxiliaryInfo.put("unitCellParams", ucell.getUnitCellParams());
     }
   }

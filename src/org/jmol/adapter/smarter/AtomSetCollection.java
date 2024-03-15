@@ -29,9 +29,9 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
+import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
-import org.jmol.api.SymmetryInterface;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
@@ -715,11 +715,14 @@ public class AtomSetCollection {
     return xtalSymmetry;
   }
 
-  public SymmetryInterface getSymmetry() {
+  public FileSymmetry newFileSymmetry() {
+    return getXSymmetry().newFileSymmetry();
+  }
+  public FileSymmetry getSymmetry() {
     return getXSymmetry().getSymmetry();
   }
 
-  public SymmetryInterface setSymmetry(SymmetryInterface symmetry) {
+  public FileSymmetry setSymmetry(FileSymmetry symmetry) {
     return (symmetry == null ? null : getXSymmetry().setSymmetry(symmetry));
   }
 
@@ -1255,5 +1258,6 @@ public class AtomSetCollection {
       }
     }
   }
+
 
 }

@@ -41,6 +41,7 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.JmolAsyncException;
 import org.jmol.viewer.Viewer;
 
@@ -144,7 +145,7 @@ public class Minimizer {
     isSilent = ((flags & Viewer.MIN_SILENT) == Viewer.MIN_SILENT);
     isQuick = (ff.indexOf("2D") >= 0
         || (flags & Viewer.MIN_QUICK) == Viewer.MIN_QUICK);
-    modelkitMinimizing = (bsBasis != null && vwr.getModelkitPropertySafely("minimizing") == Boolean.TRUE);
+    modelkitMinimizing = (bsBasis != null && vwr.getModelkitPropertySafely(JC.MODELKIT_MINIMIZING) == Boolean.TRUE);
     if (bsBasis != null) {
       if (bsFixed == null)
         bsFixed = new BS();

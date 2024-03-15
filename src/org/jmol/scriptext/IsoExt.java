@@ -382,6 +382,14 @@ public class IsoExt extends ScriptExt {
             uc = vwr.getSymTemp()
                 .getUnitCell(eval.getPointArray(i + 1, -1, false), false, null);
             i = eval.iToken;
+          } else if (tokAt(i + 1) == T.string) {
+            // modelkit spacegroup xx unitcell "a,b,2c"
+            String tr = stringParameter(i + 1);
+            // empty string can be used here to skip this and add a title still
+            if (tr.length() > 0 && (uc = vwr.getCurrentUnitCell()) != null) {
+              uc = vwr.getSymTemp().getUnitCell(uc.getV0abc(tr, null), false, "draw");
+            }
+            i = eval.iToken;
           }
           if (tokAt(i + 1) == T.lattice) {
             if (tokIntersectBox == T.unitcell)
@@ -545,8 +553,8 @@ public class IsoExt extends ScriptExt {
           intScale = 0;
         } else {
           if (isAll && tokIntersectBox == T.unitcell) {
-            ((BZone) Interface.getInterface("org.jmol.util.BZone", vwr, "script"))
-            .drawHKL(vwr, thisId, plane, pts);
+            ((BZone) Interface.getInterface("org.jmol.util.BZone", vwr,
+                "script")).drawHKL(vwr, thisId, plane, pts);
 
           }
           propertyName = "polygon";
@@ -865,8 +873,8 @@ public class IsoExt extends ScriptExt {
           if (s == null)
             s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
                 target, T.draw, thisId, intScale / 100d, nth, options, opList);
-            s = "draw ID " + (isSymop ? "sg" : "sym")+ "* delete;" + s;
-            s = "draw ID " + thisId +"* delete;" + s + ";draw *;";
+          s = "draw ID " + (isSymop ? "sg" : "sym") + "* delete;" + s;
+          s = "draw ID " + thisId + "* delete;" + s + ";draw *;";
         }
         eval.runBufferedSafely(
             s.length() > 0 ? s : "draw ID \"" + thisId + "*\" delete",

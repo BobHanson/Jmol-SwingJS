@@ -1247,7 +1247,7 @@ abstract class ScriptExpr extends ScriptParam {
           false, null, null, false);
       if (v.size() == 0)
         invArg();
-      ht.put(key, v.get(0));
+      ht.put(key, SV.copySafely(v.get(0)));
       i = iToken;
       if (tokAt(i) != T.comma)
         break;
@@ -2221,7 +2221,7 @@ abstract class ScriptExpr extends ScriptParam {
       invArg();
     if (chk || v.get(0).tok == T.nada)
       return null;
-    SV tv = SV.selectItemVar(SV.newS("").setv(v.get(nv - 1)));
+    SV tv = SV.selectItemVar(SV.copySafely(v.get(nv - 1)));
     if (nv > 1) {
       SV sel = (nv > 2 ? v.get(1) : null);
       t = v.get(0);

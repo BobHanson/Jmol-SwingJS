@@ -88,13 +88,6 @@ import java.util.Map;
  */
 public abstract class Shape {
 
-  /**
-   * specifically for ECHO and DRAW to have these specific for a given model
-   * and only appearing when there is only one model showing (see MODELKIT SET KEY ON)
-   */
-  public static final String THIS_MODEL_ONLY = "_!_";
-  
-
   public String myType;
 
   abstract public String getShapeState();

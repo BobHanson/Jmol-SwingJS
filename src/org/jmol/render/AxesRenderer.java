@@ -70,8 +70,8 @@ public class AxesRenderer extends CageRenderer {
         && !ms.getJmolFrameType(modelIndex).equals("plot data"))
       return false;
     boolean isUnitCell = (vwr.g.axesMode == T.axesunitcell);
-    SymmetryInterface unitcell = null;
-    if (isUnitCell && (unitcell = vwr.getCurrentUnitCell()) == null && modelIndex < 0)
+    SymmetryInterface unitcell = (isUnitCell ? vwr.getCurrentUnitCell() : null);
+    if (isUnitCell && (unitcell == null || modelIndex < 0))
       return false;
     imageFontScaling = vwr.imageFontScaling;
     if (vwr.areAxesTainted())

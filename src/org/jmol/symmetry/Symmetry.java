@@ -25,6 +25,7 @@
 package org.jmol.symmetry;
 
 import java.io.BufferedReader;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.api.AtomIndexIterator;
@@ -40,7 +41,6 @@ import org.jmol.util.Escape;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
-import org.jmol.util.Tensor;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
@@ -81,15 +81,23 @@ public class Symmetry implements SymmetryInterface {
   // NOTE: THIS CLASS IS VERY IMPORTANT.
   // IN ORDER TO MODULARIZE IT, IT IS REFERENCED USING 
   // xxxx = Interface.getSymmetry();
-
-  SpaceGroup spaceGroup;
-  private PointGroup pointGroup;
-  private SymmetryInfo symmetryInfo;
-  private UnitCell unitCell;
-  private CIPChirality cip;
+  
+  private static SymmetryDesc nullDesc;
+  private static Map<String, Object> aflowStructures;
+  private static Map<String, Object>[] itaData;
+  private static Lst<Object> allDataITA;
   private static WyckoffFinder wyckoffFinder;
-  private boolean isBio;
+  
+  public SpaceGroup spaceGroup;
+  public UnitCell unitCell;
+  public boolean isBio;
 
+  PointGroup pointGroup;
+  CIPChirality cip;
+
+  private SymmetryInfo symmetryInfo;
+  private SymmetryDesc desc;
+    
   @Override
   public boolean isBio() {
     return isBio;
@@ -163,26 +171,6 @@ public class Symmetry implements SymmetryInterface {
     return spaceGroup;
   }
 
-  /**
-   * 
-   * @param desiredSpaceGroupIndex
-   * @param name
-   * @param data
-   *        a Lst<SymmetryOperation> or Lst<M4d>
-   * @param modDim
-   *        in [3+d] modulation dimension
-   * @return true if a known space group
-   */
-  @Override
-  public boolean createSpaceGroup(int desiredSpaceGroupIndex, String name,
-                                  Object data, int modDim) {
-    spaceGroup = SpaceGroup.createSpaceGroup(desiredSpaceGroupIndex, name, data,
-        modDim);
-    if (spaceGroup != null && Logger.debugging)
-      Logger.debug("using generated space group " + spaceGroup.dumpInfo());
-    return spaceGroup != null;
-  }
-
   @Override
   public Object getSpaceGroupInfoObj(String name, double[] params,
                                      boolean isFull, boolean addNonstandard) {
@@ -222,11 +210,6 @@ public class Symmetry implements SymmetryInterface {
                 : spaceGroup.finalOperations[i]);
   }
 
-//  @Override
-//  public M4d getSpaceGroupOperationRaw(int i) {
-//    return spaceGroup.getRawOperation(i);
-//  }
-
   @Override
   public String getSpaceGroupXyz(int i, boolean doNormalize) {
     return spaceGroup.getXyz(i, doNormalize);
@@ -242,7 +225,7 @@ public class Symmetry implements SymmetryInterface {
         op.doFinalize();
       o = op;
     }
-    newPoint((o == null ? spaceGroup.finalOperations[i] : o), pt, transX,
+    SymmetryOperation.rotateAndTranslatePoint((o == null ? spaceGroup.finalOperations[i] : o), pt, transX,
         transY, transZ, retPoint);
   }
 
@@ -254,23 +237,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String getSpaceGroupOperationCode(int iOp) {
-    return spaceGroup.operations[iOp].subsystemCode;
-  }
-
-  @Override
-  public void setTimeReversal(int op, int val) {
-    spaceGroup.operations[op].setTimeReversal(val);
-  }
-
-  @Override
   public int getSpinOp(int op) {
     return spaceGroup.operations[op].getMagneticOp();
-  }
-
-  @Override
-  public boolean addLatticeVectors(Lst<double[]> lattvecs) {
-    return spaceGroup.addLatticeVectors(lattvecs);
   }
 
   @Override
@@ -295,39 +263,6 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  /**
-   * @param rot
-   *        is a full (3+d)x(3+d) array of epsilons
-   * @param trans
-   *        is a (3+d)x(1) array of translations
-   * @return Jones-Faithful representation
-   */
-  public String addSubSystemOp(String code, Matrix rs, Matrix vs,
-                               Matrix sigma) {
-    spaceGroup.isSSG = true;
-    String s = SymmetryOperation.getXYZFromRsVs(rs, vs, false);
-    int i = spaceGroup.addSymmetry(s, -1, true);
-    spaceGroup.operations[i].setSigma(code, sigma);
-    return s;
-  }
-
-  @Override
-  public String getMatrixFromString(String xyz, double[] rotTransMatrix,
-                                    boolean allowScaling, int modDim) {
-
-    // MMCifReader only
-    return SymmetryOperation.getMatrixFromString(null, xyz, rotTransMatrix,
-        allowScaling, true, true);
-  }
-
-  /// symmetryInfo ////
-
-  // symmetryInfo is (inefficiently) passed to Jmol from the adapter 
-  // in lieu of saving the actual unit cell read in the reader. Not perfect.
-  // The idea was to be able to create the unit cell from "scratch" independent
-  // of the reader. 
-
-  @Override
   public String getSpaceGroupName() {
     return (symmetryInfo != null ? symmetryInfo.sgName
         : spaceGroup != null ? spaceGroup.getName()
@@ -335,6 +270,20 @@ public class Symmetry implements SymmetryInterface {
                 ? "cell=" + unitCell.name
                 : "");
   }
+  
+  @Override
+  public String getSpaceGroupTitle() {
+    if (symmetryInfo != null)
+      return symmetryInfo.getSpaceGroupTitle();
+    String s = getSpaceGroupName();
+    if (s.startsWith("cell="))
+      return s;
+    return (spaceGroup != null ? spaceGroup.asString()
+            : unitCell != null && unitCell.name.length() > 0
+                ? "cell=" + unitCell.name
+                : "");
+  }
+    
 
   @Override
   public String getSpaceGroupNameType(String type) {
@@ -381,8 +330,7 @@ public class Symmetry implements SymmetryInterface {
       return symmetryInfo.infoStr;
     if (spaceGroup == null)
       return "";
-    symmetryInfo = new SymmetryInfo();
-    symmetryInfo.setSymmetryInfo(null, getUnitCellParams(), spaceGroup);
+    (symmetryInfo = new SymmetryInfo()).setSymmetryInfo(null, getUnitCellParams(), spaceGroup);
     return symmetryInfo.infoStr;
   }
 
@@ -432,36 +380,6 @@ public class Symmetry implements SymmetryInterface {
         && (symmetryInfo == null || symmetryInfo.symmetryOperations == null));
   }
 
-  /**
-   * Set space group and unit cell from the auxiliary info generated by the
-   * model adapter.
-   * 
-   */
-  @SuppressWarnings("unchecked")
-  @Override
-  public SymmetryInterface setSymmetryInfo(int modelIndex,
-                                           Map<String, Object> modelAuxiliaryInfo,
-                                           double[] unitCellParams) {
-    symmetryInfo = new SymmetryInfo();
-    double[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo,
-        unitCellParams, null);
-    if (params != null) {
-      setUnitCellFromParams(params, modelAuxiliaryInfo.containsKey("jmolData"), Double.NaN);
-      unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo
-          .get("moreUnitCellInfo");
-      modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
-      setOffsetPt((T3d) modelAuxiliaryInfo.get("unitCellOffset"));
-      M3d matUnitCellOrientation = (M3d) modelAuxiliaryInfo
-          .get("matUnitCellOrientation");
-      if (matUnitCellOrientation != null)
-        initializeOrientation(matUnitCellOrientation);
-      if (Logger.debugging)
-        Logger.debug("symmetryInfos[" + modelIndex + "]:\n"
-            + unitCell.dumpInfo(true, true));
-    }
-    return this;
-  }
-
   // UnitCell methods
 
   @Override
@@ -477,11 +395,26 @@ public class Symmetry implements SymmetryInterface {
     unitCell = UnitCell.fromParams(unitCellParams, setRelative, slop);
     return this;
   }
-
+  
   @Override
   public boolean unitCellEquals(SymmetryInterface uc2) {
-    return ((Symmetry) (uc2)).unitCell.isSameAs(unitCell);
+    return ((Symmetry) (uc2)).unitCell.isSameAs(unitCell.getF2C());
   }
+
+  @Override
+  public boolean isSymmetryCell(SymmetryInterface sym) {
+    double[][] f2c = (symmetryInfo == null ? unitCell.getF2C()
+        : symmetryInfo.spaceGroupF2C);
+    boolean ret = ((Symmetry) (sym)).unitCell.isSameAs(f2c);
+    if (symmetryInfo != null) {
+      if (symmetryInfo.setIsActiveCell(ret)) {
+        setUnitCellFromParams(symmetryInfo.spaceGroupF2CParams, false,
+            Double.NaN);
+      }
+    }
+    return ret;
+  }
+
 
   @Override
   public String getUnitCellState() {
@@ -493,11 +426,6 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public Lst<String> getMoreInfo() {
     return unitCell.moreInfo;
-  }
-
-  public String getUnitsymmetryInfo() {
-    // not used in Jmol?
-    return unitCell.dumpInfo(false, true);
   }
 
   @Override
@@ -516,11 +444,6 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void toUnitCellRnd(T3d pt, T3d offset) {
-    unitCell.toUnitCellRnd(pt, offset);
-  }
-
-  @Override
   public P3d toSupercell(P3d fpt) {
     return unitCell.toSupercell(fpt);
   }
@@ -529,12 +452,6 @@ public class Symmetry implements SymmetryInterface {
   public void toFractional(T3d pt, boolean ignoreOffset) {
     if (!isBio)
       unitCell.toFractional(pt, ignoreOffset);
-  }
-
-  @Override
-  public void toFractionalM(M4d m) {
-    if (!isBio)
-      unitCell.toFractionalM(m);
   }
 
   @Override
@@ -548,23 +465,9 @@ public class Symmetry implements SymmetryInterface {
     return unitCell.getUnitCellParams();
   }
 
-//  @Override
-//  public double[] getUnitCellParamsF() {
-//    return unitCell.getUnitCellParamsF();
-//  }
-//
   @Override
   public double[] getUnitCellAsArray(boolean vectorsOnly) {
     return unitCell.getUnitCellAsArray(vectorsOnly);
-  }
-
-  @Override
-  public Tensor getTensor(Viewer vwr, double[] parBorU) {
-    if (parBorU == null)
-      return null;
-    if (unitCell == null)
-      unitCell = UnitCell.fromParams(new double[] { 1, 1, 1, 90, 90, 90 }, true, SimpleUnitCell.SLOPSP);
-    return unitCell.getTensor(vwr, parBorU);
   }
 
   @Override
@@ -599,6 +502,9 @@ public class Symmetry implements SymmetryInterface {
     return unitCell.getUnitCellMultiplier();
   }
 
+  /**
+   * Note, this has no origin shift.
+   */
   @Override
   public SymmetryInterface getUnitCellMultiplied() {
     UnitCell uc = unitCell.getUnitCellMultiplied();
@@ -632,14 +538,6 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public boolean isPolymer() {
     return unitCell.isPolymer();
-  }
-
-  @Override
-  public boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
-                               int iRange, int jRange, int kRange,
-                               P3d ptOffset) {
-    return unitCell.checkDistance(f1, f2, distance, dx, iRange, jRange, kRange,
-        ptOffset);
   }
 
   @Override
@@ -733,9 +631,6 @@ public class Symmetry implements SymmetryInterface {
 
   // info
 
-  private SymmetryDesc desc;
-  private static SymmetryDesc nullDesc;
-
   private SymmetryDesc getDesc(ModelSet modelSet) {
     if (modelSet == null) {
       return (nullDesc == null
@@ -778,13 +673,9 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String fcoord(T3d p) {
-    return SymmetryOperation.fcoord(p);
-  }
-
-  @Override
   public T3d[] getV0abc(Object def, M4d retMatrix) {
-    return (unitCell == null ? null : unitCell.getV0abc(def, retMatrix));
+      return (def instanceof T3d[] ? (T3d[]) def 
+          : UnitCell.getMatrixAndUnitCell(unitCell, def, retMatrix));
   }
 
   @Override
@@ -843,6 +734,8 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Lst<P3d> generateCrystalClass(P3d pt00) {
+    if (symmetryInfo == null || !symmetryInfo.isActive)
+      return null;
     M4d[] ops = getSymmetryOperations();
     Lst<P3d> lst = new Lst<P3d>();
     boolean isRandom = (pt00 == null);
@@ -933,20 +826,6 @@ public class Symmetry implements SymmetryInterface {
         ? (cip = ((CIPChirality) Interface
             .getInterface("org.jmol.symmetry.CIPChirality", vwr, "script")))
         : cip);
-  }
-
-  /**
-   * return a conventional lattice from a primitive
-   * 
-   * @param latticeType
-   *        "A" "B" "C" "R" etc.
-   * @return [origin va vb vc]
-   */
-  @Override
-  public T3d[] getConventionalUnitCell(String latticeType,
-                                      M3d primitiveToCrystal) {
-    return (unitCell == null || latticeType == null ? null
-        : unitCell.getConventionalUnitCell(latticeType, primitiveToCrystal));
   }
 
   @Override
@@ -1160,11 +1039,6 @@ public class Symmetry implements SymmetryInterface {
         fracB, best);
   }
 
-  static void newPoint(M4d m, P3d atom1, int x, int y, int z, P3d atom2) {
-    m.rotTrans2(atom1, atom2);
-    atom2.add3(x, y, z);
-  }
-
   @Override
   public boolean isWithinUnitCell(P3d pt, double x, double y, double z) {
     return unitCell.isWithinUnitCell(x, y, z, pt);
@@ -1187,46 +1061,57 @@ public class Symmetry implements SymmetryInterface {
     return SymmetryOperation.getXYZFromMatrixFrac(matrix, false, false, false, true);
   }
 
-  private static Map<String, Object> aflowStructures;
-  private static Map<String, Object>[] itaData;
-
-  private static Lst<Object> allDataITA;
-  private static Lst<Object> listDataITA;
-  
   @SuppressWarnings("unchecked")
   @Override
   public Object getSpaceGroupJSON(Viewer vwr, String name, String sgname,
                                   int index) {
-    String s0 = sgname;
+    boolean isSettings = name.equalsIgnoreCase("settings");
+    boolean isThis = (isSettings && index == Integer.MIN_VALUE);
+    String s0 = (!isSettings ? name
+        : isThis ? getSpaceGroupName() : "" + index);
     try {
-      // tm 
-      int pt = sgname.indexOf("(");
-      boolean isTM = (sgname.endsWith(")") && pt > 0);
+      int itno;
       String tm = null;
-      if (isTM) {
-        tm = sgname.substring(pt + 1, sgname.length() - 1);
-        sgname = sgname.substring(0, pt);
-      }
-      int itno = (sgname.equalsIgnoreCase("ALL") ? 0 : PT.parseInt(sgname));
-      boolean isInt = (itno != Integer.MIN_VALUE);
-      pt = sgname.indexOf('.');
-      if (!isTM && isInt && index == 0 && pt > 0) {
-        index = PT.parseInt(sgname.substring(pt + 1));
-        sgname = sgname.substring(0, pt);
+      boolean isTM, isInt;
+      if (isSettings) {
+        isTM = false;
+        isInt = true;
+        if (isThis) {
+          itno = PT.parseInt(getIntTableNumber());
+          if (spaceGroup == null) {
+            SpaceGroup sg = symmetryInfo.getDerivedSpaceGroup();
+            if (sg == null)
+              return new Hashtable<String, Object>();
+            sgname = sg.intlTableNumberFull;
+          } else {
+            sgname = getIntTableNumberFull();
+          }
+        } else {
+          itno = index;
+        }
+      } else {
+        // tm 
+        int pt = sgname.indexOf("(");
+        isTM = (sgname.endsWith(")") && pt > 0);
+        if (isTM) {
+          tm = sgname.substring(pt + 1, sgname.length() - 1);
+          sgname = sgname.substring(0, pt);
+        }
+        itno = (sgname.equalsIgnoreCase("ALL") ? 0 : PT.parseInt(sgname));
+        isInt = (itno != Integer.MIN_VALUE);
+        pt = sgname.indexOf('.');
+        if (!isTM && isInt && index == 0 && pt > 0) {
+          index = PT.parseInt(sgname.substring(pt + 1));
+          sgname = sgname.substring(0, pt);
+        }
       }
       if (isInt && (itno > 230 || itno < 0))
         throw new ArrayIndexOutOfBoundsException(itno);
-      if (name.equalsIgnoreCase("ITA")) {
+      if (isSettings || name.equalsIgnoreCase("ITA")) {
         if (itno == 0) {
           if (allDataITA == null)
             allDataITA = (Lst<Object>) getResource(vwr, "sg/json/ita_all.json");
           return allDataITA;
-        }
-        if (itno == Integer.MIN_VALUE) {
-          if (listDataITA == null)
-            listDataITA = (Lst<Object>) getResource(vwr, "sg/json/ita_list.json");
-          if (itno == 0)
-            return allDataITA;
         }
         if (itaData == null)
           itaData = new Map[230];
@@ -1239,7 +1124,10 @@ public class Symmetry implements SymmetryInterface {
             return resource;
           Lst<Object> its = (Lst<Object>) resource.get("its");
           if (its != null) {
-            for (int i = (isInt ? index : its.size()); --i >= 0;) {
+            if (isSettings && !isThis) {
+              return its;
+            }
+            for (int i = (isInt && !isThis ? index : its.size()); --i >= 0;) {
               Map<String, Object> map = (Map<String, Object>) its.get(i);
               if (i == index - 1 || sgname.equals(map.get("itaFull"))
                   || tm != null && tm.equals(map.get("tm"))) {
@@ -1253,7 +1141,8 @@ public class Symmetry implements SymmetryInterface {
         }
       } else if (name.equalsIgnoreCase("AFLOW") && tm == null) {
         if (aflowStructures == null)
-          aflowStructures = (Map<String, Object>) getResource(vwr, "sg/json/aflow_structures.json");
+          aflowStructures = (Map<String, Object>) getResource(vwr,
+              "sg/json/aflow_structures.json");
         if (itno == 0)
           return aflowStructures;
         System.out.println(sgname + " ? " + index);
@@ -1262,6 +1151,8 @@ public class Symmetry implements SymmetryInterface {
           return (index == 0 ? data : data.get(index - 1));
         }
       }
+      if (isThis)
+        return new Hashtable<String, Object>();
       throw new IllegalArgumentException(s0);
     } catch (Exception e) {
       return e.getMessage();
@@ -1293,18 +1184,61 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void setPrecision(double prec) {
-    unitCell.setPrecision(prec);
-  }
-
-  @Override
   public boolean fixUnitCell(double[] params) {
     return UnitCell.createCompatibleUnitCell(spaceGroup, params, null, true);
   }
 
-  @Override
-  public void twelfthify(P3d pt) {
-    unitCell.twelfthify(pt);
+  // non-interface methods
+  
+  /**
+   * Called from SpaceGroupFinder only.
+   * 
+   * @param origin
+   */
+  void setCartesianOffset(T3d origin) {
+    unitCell.setCartesianOffset(origin);
   }
+
+  /**
+   * Set space group and unit cell from the auxiliary info generated by
+   * XtalSymmetry specific to a given model.
+   * 
+   * Only called by ModelLoader.
+   * 
+   * @param ms
+   * @param modelIndex
+   * @param unitCellParams
+   * 
+   */
+  @SuppressWarnings("unchecked")
+  public void setSymmetryInfoFromFile(ModelSet ms, int modelIndex,
+                                      double[] unitCellParams) {
+    Map<String, Object> modelAuxiliaryInfo = ms.getModelAuxiliaryInfo(modelIndex);
+    symmetryInfo = new SymmetryInfo();
+    double[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo,
+        unitCellParams, null);
+    if (params != null) {
+      setUnitCellFromParams(params, modelAuxiliaryInfo.containsKey("jmolData"),
+          Double.NaN);
+      unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo
+          .get("moreUnitCellInfo");
+      modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
+      setOffsetPt((T3d) modelAuxiliaryInfo.get("unitCellOffset"));
+      M3d matUnitCellOrientation = (M3d) modelAuxiliaryInfo
+          .get("matUnitCellOrientation");
+      if (matUnitCellOrientation != null)
+        initializeOrientation(matUnitCellOrientation);
+      String s = symmetryInfo.strSUPERCELL;
+      if (s != null) {
+        T3d[] oabc = unitCell.getUnitCellVectors();
+        oabc[0] = new P3d();
+        ms.setModelCagePts(modelIndex, oabc, "conventional");
+      }
+      if (Logger.debugging)
+        Logger.debug("symmetryInfos[" + modelIndex + "]:\n"
+            + unitCell.dumpInfo(true, true));
+    }
+  }
+
 
 }

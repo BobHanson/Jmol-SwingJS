@@ -30,6 +30,7 @@ import org.jmol.c.PAL;
 import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.C;
+import org.jmol.viewer.JC;
 
 public class Balls extends AtomShape {
 
@@ -77,7 +78,7 @@ public class Balls extends AtomShape {
             || pid != PAL.NONE.id);
         atom.paletteID = pid;
       }
-      vwr.setModelkitPropertySafely("key", bs);
+      vwr.setModelkitPropertySafely(JC.MODELKIT_UPDATE_ATOM_KEYS, bs);
       return;
     }
     if ("colorValues" == propertyName) {

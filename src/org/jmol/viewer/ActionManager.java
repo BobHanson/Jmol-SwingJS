@@ -447,10 +447,11 @@ public class ActionManager implements EventManager {
   public final static int PICKING_IDENTIFY_BOND = 35;
   public final static int PICKING_DRAG_LIGAND = 36;
   public final static int PICKING_DRAG_MODEL = 37;
+  public final static int PICKING_SYMOP = 38;
 
   private final static String[] pickingModeNames;
   static {
-    pickingModeNames = "off identify label center draw spin symmetry deleteatom deletebond atom group chain molecule polymer structure site model element measure distance angle torsion sequence navigate connect struts dragselected dragmolecule dragatom dragminimize dragminimizemolecule invertstereo assignatom assignbond rotatebond identifybond dragligand dragmodel".split(" ");
+    pickingModeNames = "off identify label center draw spin symmetry deleteatom deletebond atom group chain molecule polymer structure site model element measure distance angle torsion sequence navigate connect struts dragselected dragmolecule dragatom dragminimize dragminimizemolecule invertstereo assignatom assignbond rotatebond identifybond dragligand dragmodel symop".split(" ");
   }
   
   public final static String getPickingModeName(int pickingMode) {
@@ -460,8 +461,11 @@ public class ActionManager implements EventManager {
 
   public final static int getPickingMode(String str) {
     for (int i = pickingModeNames.length; --i >= 0;)
-      if (str.equalsIgnoreCase(pickingModeNames[i]))
+      if (str.equalsIgnoreCase(pickingModeNames[i])) {
+        if (i == PICKING_SYMOP)
+          i=PICKING_SYMMETRY; 
         return i;
+      }
     return -1;
   }
 
@@ -546,12 +550,12 @@ public class ActionManager implements EventManager {
     String script = ";set modelkitMode " + vwr.getBoolean(T.modelkitmode)
         + ";set picking " + getPickingModeName(apm);
     if (apm == PICKING_ASSIGN_ATOM)
-      script += "_" + vwr.getModelkitPropertySafely("atomType");
+      script += "_" + vwr.getModelkitPropertySafely(JC.MODELKIT_ATOMTYPE);
     script += ";";
     if (bondPickingMode != PICKING_OFF)
       script += "set picking " + getPickingModeName(bondPickingMode);
     if (bondPickingMode == PICKING_ASSIGN_BOND)
-      script += "_" + vwr.getModelkitPropertySafely("bondType");
+      script += "_" + vwr.getModelkitPropertySafely(JC.MODELKIT_BONDTYPE);
     script += ";";
     return script;
   }
@@ -884,7 +888,6 @@ public class ActionManager implements EventManager {
 
   private void checkKeyBuf(int key) {
     boolean shiftDown = ((moved.modifiers & Binding.SHIFT) != 0);
-//    System.out.println("AM " + key + " " + shiftDown);
     if (key != 0) {
       if (moved.keybuf == 0) {
         // N (continue) or n (assign)
@@ -1087,7 +1090,7 @@ public class ActionManager implements EventManager {
           updateModelkitBranch(bi, true);
         }
       }
-      int[] xy = (int[]) vwr.getModelkitPropertySafely("screenXY");
+      int[] xy = (int[]) vwr.getModelkitPropertySafely(JC.MODELKIT_SCREENXY);
       mkBondPressed = (xy != null && pressed.inRange(10, xy[0], xy[1]));
       return;
     }
@@ -1294,7 +1297,7 @@ public class ActionManager implements EventManager {
   }
 
   private void updateModelkitBranch(int bondIndex, boolean isClick) {
-    vwr.setModelkitPropertySafely(isClick? "branchAtomClicked" : "branchAtomDragged", Integer.valueOf(dragAtomIndex));
+    vwr.setModelkitPropertySafely(isClick? JC.MODELKIT_BRANCH_ATOM_PICKED : JC.MODELKIT_BRANCH_ATOM_DRAGGED, Integer.valueOf(dragAtomIndex));
     if (measurementQueued == null || measurementQueued.numSet == 0 || mp == null) {
       vwr.setPendingMeasurement(vwr.getModelkit(false).setBondMeasure(bondIndex,
           measurementQueued = mp = getMP()));
@@ -1371,7 +1374,7 @@ public class ActionManager implements EventManager {
         exitMeasurementMode(null);
         return;
       } else if (bondPickingMode == PICKING_ROTATE_BOND) {
-        vwr.setModelkitPropertySafely("bondAtomIndex", Integer.valueOf(dragAtomIndex));
+        vwr.setModelkitPropertySafely(JC.MODELKIT_ROTATE_BOND_ATOM_INDEX, Integer.valueOf(dragAtomIndex));
         exitMeasurementMode(null);
         return;
       }
@@ -1418,6 +1421,14 @@ public class ActionManager implements EventManager {
     // points are always picked up first, then atoms
     // so that atom picking can be superceded by draw picking
     // Binding.MOVED is used for some vwr methods.
+    
+    if (clickedCount > 1 && (apm == PICKING_SPIN || apm == PICKING_SYMMETRY)) {
+      resetMeasurement();
+      runScript("draw ID sym* delete;spin off;");
+      // no double clicks if spinning or selecting atoms for symmetry description
+      return;
+    }
+        
     if (clickedCount > 0) {
       if (checkUserAction(clickAction, x, y, 0, 0, time, Binding.CLICK))
         return;
@@ -1934,8 +1945,10 @@ public class ActionManager implements EventManager {
       return;
     case PICKING_SPIN:
     case PICKING_SYMMETRY:
-      if (bnd(clickAction, ACTION_pickAtom))
+      if (bnd(clickAction, ACTION_pickAtom)) {
         checkTwoAtomAction(ptClicked, atomIndex);
+        return;
+      }
     }
     if (ptClicked != null)
       return;
@@ -2023,7 +2036,7 @@ public class ActionManager implements EventManager {
     switch (bondPickingMode) {
     case PICKING_ASSIGN_BOND:
       vwr.undoMoveActionClear(-1, T.save, true);
-      vwr.setModelkitPropertySafely("scriptAssignBond", Integer.valueOf(index));
+      vwr.setModelkitPropertySafely(JC.MODELKIT_ASSIGN_BOND, Integer.valueOf(index));
       break;
     case PICKING_ROTATE_BOND:
       // done separately
@@ -2035,6 +2048,9 @@ public class ActionManager implements EventManager {
 
   private void checkTwoAtomAction(Point3fi ptClicked, int atomIndex) {
     boolean isSpin = (apm == PICKING_SPIN);
+    boolean isSymmetry = (apm == PICKING_SYMMETRY);
+    if (!isSpin && !isSymmetry)
+      return;
     if (vwr.tm.spinOn || vwr.tm.navOn
         || vwr.getPendingMeasurement() != null) {
       resetMeasurement();
@@ -2054,6 +2070,8 @@ public class ActionManager implements EventManager {
           return;
       }
     }
+    if (!isSpin && !isSymmetry)
+      return;
     if (atomIndex >= 0 || ptClicked != null)
       queuedAtomCount = queueAtom(atomIndex, ptClicked);
     if (queuedAtomCount < 2) {
@@ -2070,10 +2088,11 @@ public class ActionManager implements EventManager {
       return;
     }
     String s = measurementQueued.getMeasurementScript(" ", false);
+    resetMeasurement();
     if (isSpin)
       runScript("spin" + s + " " + vwr.getInt(T.pickingspinrate));
     else
-      runScript("draw symop " + s + ";show symop " + s);
+      runScript("draw symop " + s + ";print 'all:';show symop " + s);
   }
 
   private void reset() {

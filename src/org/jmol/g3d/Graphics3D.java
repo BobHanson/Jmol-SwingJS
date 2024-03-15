@@ -370,6 +370,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     haveTranslucentObjects = wasScreened = false;
     pixel = pixel0;
     pixel.bgcolor = bgcolor;
+    contrastColix = C.getBgContrast(bgcolor);
     translucentCoverOnly = !translucentMode;
     if (pbuf == null) {
       platform.allocateBuffers(windowWidth, windowHeight, antialiasThisFrame,
@@ -748,7 +749,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
     }
     shadesCurrent = getShades(colix);
     currentShadeIndex = -1;
-    setColor(getColorArgbOrGray(colix));
+    setColor(colix == C.COLIX_CONTRAST ? contrastColix : getColorArgbOrGray(colix));
     return true;
   }
 

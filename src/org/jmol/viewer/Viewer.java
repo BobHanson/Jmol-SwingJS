@@ -792,7 +792,7 @@ public class Viewer extends JmolViewer
         isImageWrite || isReset ? g.zoomLarge : false, antialiased, false,
         false);
     gdata.setWindowParameters(width, height, antialiased);
-    setModelkitPropertySafely("modelkeys", BSUtil.newBitSet2(0, ms.mc));
+    setModelkitPropertySafely(JC.MODELKIT_FRAME_RESIZED, null);
     if (width > 0 && !isImageWrite)
       setStatusResized(width, height);
   }
@@ -3713,8 +3713,7 @@ public class Viewer extends JmolViewer
     }
     reset(true);
     selectAll();
-    if (modelkit != null)
-      modelkit.initializeForModel();
+    setModelkitPropertySafely(JC.MODELKIT_INITIALIZE_MODEL, null);
     movingSelected = false;
     slm.noneSelected = Boolean.FALSE;
     setHoverEnabled(true);
@@ -5341,7 +5340,7 @@ public class Viewer extends JmolViewer
       return;
     String label = (isLabel ? GT.$("Drag to move label")
         : isModelKitOpen() || isModelkitPickingActive() // force modelkit
-            ? (String) getModelkit(false).setProperty("hoverLabel",
+            ? (String) getModelkit(false).setProperty(JC.MODELKIT_HOVERLABEL,
                 Integer.valueOf(atomIndex))
             : null);
 
@@ -5477,7 +5476,7 @@ public class Viewer extends JmolViewer
     String name = ActionManager.getPickingModeName(acm.getAtomPickingMode());
     g.setO("picking", name);
     if (modelkit != null) {
-      modelkit.setProperty("atompickingmode", name);
+      modelkit.setProperty(JC.MODELKIT_ATOMPICKINGMODE, name);
       acm.setPickingMode(pickingMode);
       switch (pickingMode) {
       case ActionManager.PICKING_IDENTIFY:
@@ -5486,7 +5485,7 @@ public class Viewer extends JmolViewer
         break;
       case ActionManager.PICKING_DELETE_BOND:
       case ActionManager.PICKING_IDENTIFY_BOND:
-        modelkit.setProperty("bondpickingmode", strMode.toLowerCase());
+        modelkit.setProperty(JC.MODELKIT_BONDPICKINGMODE, strMode.toLowerCase());
         break;
       }
     }
@@ -5496,11 +5495,11 @@ public class Viewer extends JmolViewer
         + (option.length() == 1 ? "" : option.substring(1, 2));
     switch (pickingMode) {
     case ActionManager.PICKING_ASSIGN_ATOM:
-      getModelkit(false).setProperty("atomType", option);
+      getModelkit(false).setProperty(JC.MODELKIT_ATOMTYPE, option);
       break;
     case ActionManager.PICKING_ASSIGN_BOND:
       setBooleanPropertyTok("bondPicking", T.bondpicking, true);
-      getModelkit(false).setProperty("bondType", option);
+      getModelkit(false).setProperty(JC.MODELKIT_BONDTYPE, option);
       break;
     default:
       Logger.error("Bad picking mode: " + strMode + "_" + option);
@@ -6090,7 +6089,7 @@ public class Viewer extends JmolViewer
 
   boolean getBondsPickable() {
     return (g.bondPicking || isModelkitPickingActive() || isModelKitOpen()
-        && getModelkitPropertySafely("isMolecular") == Boolean.TRUE);
+        && getModelkitPropertySafely(JC.MODELKIT_ISMOLECULAR) == Boolean.TRUE);
   }
 
   boolean isModelKitOpen() {
@@ -6905,8 +6904,13 @@ public class Viewer extends JmolViewer
   public void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
+    case T.elementkeys:
+      // 16.2.1
+      g.elementKeys = value;
+      getModelkit(false).setProperty(JC.MODELKIT_SET_ELEMENT_KEYS, Boolean.valueOf(value));
+      break;
     case T.symmetryhermannmauguin:
-      // 16.1.66
+      // 16.1.65
       g.symmetryHermannMauguin = value;
       break;
     case T.doubleprecision:
@@ -7533,7 +7537,7 @@ public class Viewer extends JmolViewer
     g.setB("modelkitmode", value); // in case there is a callback before this completes
     highlight(null);
     if (isChange) {
-      setModelkitPropertySafely("constraint", null);
+      setModelkitPropertySafely(JC.MODELKIT_CONSTRAINT, null);
     }
     if (value) {
       setNavigationMode(false);
@@ -7561,7 +7565,7 @@ public class Viewer extends JmolViewer
       if (isChange) {
         sm.setStatusModelKit(0);
       } else if (!value) {
-        getModelkit(false).setProperty("hideMenu", null);
+        getModelkit(false).setProperty(JC.MODELKIT_HIDEMENU, null);
       }
     }
   }
@@ -8226,7 +8230,7 @@ public class Viewer extends JmolViewer
     ms.setAtomProperty(bs, tok, iValue, fValue, sValue, values, list);
     switch (tok) {
     case T.element:
-      setModelkitPropertySafely("key", bs);
+      setModelkitPropertySafely(JC.MODELKIT_UPDATE_ATOM_KEYS, bs);
       //$FALL-THROUGH$
     case T.atomx:
     case T.atomy:
@@ -8388,7 +8392,7 @@ public class Viewer extends JmolViewer
       return 0;
     if (ptNew == null) {
       if (x == Integer.MIN_VALUE && modelkit != null)
-        setModelkitPropertySafely("rotateBondIndex",
+        setModelkitPropertySafely(JC.MODELKIT_ROTATEBONDINDEX,
             Integer.valueOf(Integer.MIN_VALUE));
       if (deltaX == Integer.MIN_VALUE) {
         showSelected = true;
@@ -8412,7 +8416,7 @@ public class Viewer extends JmolViewer
     stopMinimization();
     // note this does not sync with applets
     if (ptNew == null && x != Integer.MIN_VALUE && modelkit != null
-        && modelkit.getProperty("rotateBondIndex") != null) {
+        && modelkit.getProperty(JC.MODELKIT_ROTATEBONDINDEX) != null) {
       modelkit.actionRotateBond(deltaX, deltaY, x, y,
           (modifiers & Event.VK_SHIFT) != 0);
     } else {
@@ -8485,9 +8489,9 @@ public class Viewer extends JmolViewer
     }
     highlight(bs);
     getModelkit(false);
-    setModelkitPropertySafely("screenXY", new int[] { x, y });
-    setModelkitPropertySafely("bondIndex", Integer.valueOf(index));
-    String text = (String) setModelkitPropertySafely("hoverLabel",
+    setModelkitPropertySafely(JC.MODELKIT_SCREENXY, new int[] { x, y });
+    setModelkitPropertySafely(JC.MODELKIT_BONDINDEX, Integer.valueOf(index));
+    String text = (String) setModelkitPropertySafely(JC.MODELKIT_HOVERLABEL,
         Integer.valueOf(-2 - index));
     if (text != null)
       hoverOnPt(x, y, text, null, null);
@@ -8507,7 +8511,7 @@ public class Viewer extends JmolViewer
       shm.loadShape(JC.SHAPE_HALOS);
       setCursor(GenericPlatform.CURSOR_HAND);
     }
-    setModelkitPropertySafely("highlight", bs);
+    setModelkitPropertySafely(JC.MODELKIT_HIGHLIGHT, bs);
     setShapeProperty(JC.SHAPE_HALOS, "highlight", bs);
   }
 
@@ -9389,7 +9393,7 @@ public class Viewer extends JmolViewer
 
     // only allow crystal symmetry constraints 
     if (isModelKitOpen())
-      setModelkitPropertySafely("constraint", null);
+      setModelkitPropertySafely(JC.MODELKIT_CONSTRAINT, null);
 
     if (bsInFrame == null)
       bsInFrame = getFrameAtoms();
@@ -10156,6 +10160,7 @@ public class Viewer extends JmolViewer
         bsB = (isQuick && vConnections.get(0).mi == ms.mc - 1
             ? ms.addHydrogens(vConnections, pts)
             : addHydrogensInline(bsAtoms, vConnections, pts, null));
+        setModelkitPropertySafely(JC.MODELKIT_UPDATE_ATOM_KEYS, bsAtoms);
       } catch (Exception e) {
         System.out.println(e.toString());
         // ignore
@@ -10897,7 +10902,7 @@ public class Viewer extends JmolViewer
    * @param asString
    * @param isAssign
    *        from ModelKit
-   * @param checkSupercell
+   * @param checkSupercell only true for x=spacegroup("parent")
    * @return either an array of space group identifiers or, if asString, "", or
    *         null
    * 
@@ -11097,8 +11102,8 @@ public class Viewer extends JmolViewer
     return se + u;
   }
 
-  public String assignSpaceGroup(BS bs, String type, double[] params) {
-    return getModelkit(false).cmdAssignSpaceGroup(bs, type, params);
+  public String assignSpaceGroup(BS bs, String type, Object paramsOrUC) {
+    return getModelkit(false).cmdAssignSpaceGroup(bs, type, paramsOrUC);
   }
 
   public void setStatusAtomMoved(boolean andCheckMinimize, BS bs) {
@@ -11140,20 +11145,6 @@ public class Viewer extends JmolViewer
       }
     }
     return false;
-  }
-
-  public void setModelCagePts(int iModel, T3d[] originABC, String name) {
-    if (iModel < 0)
-      iModel = am.cmi;
-    SymmetryInterface sym = Interface.getSymmetry(this, "cage");
-    if (sym == null && async)
-      throw new NullPointerException();
-    try {
-      ms.setModelCage(iModel,
-          originABC == null ? null : sym.getUnitCell(originABC, false, name));
-    } catch (Exception e) {
-      //
-    }
   }
 
 }

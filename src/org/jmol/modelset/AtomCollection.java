@@ -2940,9 +2940,9 @@ abstract public class AtomCollection {
     SymmetryInterface sym = (atomIndex < 0 || atomIndex >= ac ? vwr.getOperativeSymmetry()
         : at[atomIndex].getUnitCell());
     boolean isRandom = (pt != null && Double.isNaN(pt.x));
-    return (sym == null ? new Lst<P3d>() : sym
+    Lst<P3d> ret = (sym == null ? null : sym
         .generateCrystalClass(isRandom ? null : pt != null ? pt : at[atomIndex]));
-
+    return (ret == null ? new Lst<P3d>() : ret);
   }
 
   public static boolean isDeleted(Atom atom) {

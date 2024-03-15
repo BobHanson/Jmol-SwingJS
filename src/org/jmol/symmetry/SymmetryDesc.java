@@ -1987,7 +1987,8 @@ public class SymmetryDesc {
           ((SymmetryOperation) sym.getSpaceGroupOperation(0)).timeReversal = 1;
         Object[][] infolist = new Object[ops.length][];
         String sops = "";
-        for (int i = 0, nop = 0; i < ops.length && nop != nth; i++) {
+        int i0 = (drawID == null || pt1 == null || pt2 == null && nth < 0 ? 0 : 1);
+        for (int i = i0, nop = 0; i < ops.length && nop != nth; i++) {
           SymmetryOperation op = ops[i];
           String xyzOriginal = op.xyzOriginal;
           int iop;

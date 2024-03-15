@@ -43,6 +43,7 @@ import org.jmol.c.VDW;
 import org.jmol.modelsetbio.BioModel;
 import org.jmol.modelsetbio.BioResolver;
 import org.jmol.script.T;
+import org.jmol.symmetry.Symmetry;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
@@ -820,6 +821,7 @@ public final class ModelLoader {
         mbs.set(ms.ac + nAtoms);
         mbs.clearAll();
         model.isOrderly = (appendToModelIndex == null);
+        System.out.println("ML " + appendToModelIndex + " " + model.isOrderly);
         isPdbThisModel = model.isBioModel;
         iLast = modelIndex;
         addH = isPdbThisModel && doAddPDBHydrogens;
@@ -871,7 +873,7 @@ public final class ModelLoader {
         iLast = atoms[i].mi;
         Model m = models[iLast];
         m.firstAtomIndex = i;
-        m.isOrderly = (m.act == m.bsAtoms.length()); 
+        m.isOrderly = (m.act == m.bsAtoms.length() - i); 
         VDW vdwtype = ms.getDefaultVdwType(iLast);
         if (vdwtype != vdwtypeLast) {
           Logger.info("Default Van der Waals type for model" + " set to "
@@ -1133,7 +1135,7 @@ public final class ModelLoader {
       for (int i = 0, pt = 0; i < ms.mc; i++) {
         if (haveMergeCells && i < baseModelCount) {
           ms.unitCells[i] = modelSet0.unitCells[i];
-        } else {
+        } else if (ms.getModelAuxiliaryInfo(i).get("spaceGroupIndex") != null) {
           ms.unitCells[i] = Interface.getSymmetry(vwr, "file");
           double[] notionalCell = null;
           if (isTrajectory) {
@@ -1142,7 +1144,8 @@ public final class ModelLoader {
             if (lst != null)
               notionalCell = lst.get(pt++);
           }
-          ms.unitCells[i].setSymmetryInfo(i, ms.getModelAuxiliaryInfo(i), notionalCell);
+          
+          ((Symmetry) ms.unitCells[i]).setSymmetryInfoFromFile(ms, i, notionalCell);
         }
       }
     }

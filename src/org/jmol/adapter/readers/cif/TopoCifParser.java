@@ -7,7 +7,7 @@ import org.jmol.adapter.readers.cif.CifReader.Parser;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.Bond;
 import org.jmol.api.JmolAdapter;
-import org.jmol.api.SymmetryInterface;
+import org.jmol.symmetry.Symmetry;
 import org.jmol.symmetry.SymmetryOperation;
 import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
@@ -160,7 +160,7 @@ public class TopoCifParser implements Parser {
   private String allowedTypes;
 
   String netNotes = "";
-  private SymmetryInterface sym;
+  private Symmetry sym;
   String selectedNet;
 
   // CifParser supports up to 100 fields

@@ -231,7 +231,7 @@ public class SymmetryOperation extends M4d {
   boolean isBio;
   Matrix sigma;
   int number;
-  String subsystemCode;
+  public String subsystemCode;
   int timeReversal;
 
   private boolean unCentered;
@@ -242,7 +242,7 @@ public class SymmetryOperation extends M4d {
   private String opAxisCode;
   public boolean opIsLong;
 
-  void setSigma(String subsystemCode, Matrix sigma) {
+  public void setSigma(String subsystemCode, Matrix sigma) {
     this.subsystemCode = subsystemCode;
     this.sigma = sigma;
   }
@@ -589,7 +589,7 @@ public class SymmetryOperation extends M4d {
    * @param retString
    * @return canonized Jones-Faithful string
    */
-  static String getMatrixFromString(SymmetryOperation op, String xyz,
+  public static String getMatrixFromString(SymmetryOperation op, String xyz,
                                     double[] linearRotTrans,
                                     boolean allowScaling, boolean halfOrLess,
                                     boolean retString) {
@@ -1064,7 +1064,7 @@ public class SymmetryOperation extends M4d {
    * @param p
    * @return "1/2" for example
    */
-  static String fcoord(T3d p) {
+  public static String fcoord(T3d p) {
     // Castep reader only
     return fc(p.x) + " " + fc(p.y) + " " + fc(p.z);
   }
@@ -1090,7 +1090,7 @@ public class SymmetryOperation extends M4d {
     return PT.approxD(f, 1000000);
   }
 
-  static String getXYZFromRsVs(Matrix rs, Matrix vs, boolean is12ths) {
+  public static String getXYZFromRsVs(Matrix rs, Matrix vs, boolean is12ths) {
     double[][] ra = rs.getArray();
     double[][] va = vs.getArray();
     int d = ra.length;
@@ -1148,7 +1148,7 @@ public class SymmetryOperation extends M4d {
    * 
    * @param magRev
    */
-  void setTimeReversal(int magRev) {
+  public void setTimeReversal(int magRev) {
     timeReversal = magRev;
     if (xyz.indexOf("m") >= 0)
       xyz = xyz.substring(0, xyz.indexOf("m"));
@@ -1226,27 +1226,27 @@ public class SymmetryOperation extends M4d {
    * 
    * @param dim
    * @param m
-   * @param atoms
-   * @param atomIndex first index
-   * @param count number of atoms
+   * @param fracPts
+   * @param i0 first index
+   * @param n number of atoms
    */
-  public static void normalizeOperationToCentroid(int dim, M4d m, P3d[] atoms, int atomIndex, int count) {
-    if (count <= 0)
+  public static void normalizeOperationToCentroid(int dim, M4d m, P3d[] fracPts, int i0, int n) {
+    if (n <= 0)
       return;
     double x = 0;
     double y = 0;
     double z = 0;
     if (atomTest == null)
       atomTest = new P3d();
-    for (int i = atomIndex, i2 = i + count; i < i2; i++) {
-      Symmetry.newPoint(m, atoms[i], 0, 0, 0, atomTest);
+    for (int i = i0, i2 = i + n; i < i2; i++) {
+      m.rotTrans2(fracPts[i], atomTest);
       x += atomTest.x;
       y += atomTest.y;
       z += atomTest.z;
     }
-    x /= count;
-    y /= count;
-    z /= count;
+    x /= n;
+    y /= n;
+    z /= n;
     while (x < -0.001 || x >= 1.001) {
       m.m03 += (x < 0 ? 1 : -1);
       x += (x < 0 ? 1 : -1);
@@ -1964,6 +1964,12 @@ public class SymmetryOperation extends M4d {
       return 'g';
     }
     return (fx != 0 ? 'a' : fy != 0 ? 'b' : 'c');
+  }
+
+
+  static void rotateAndTranslatePoint(M4d m, P3d src, int ta, int tb, int tc, P3d dest) {
+    m.rotTrans2(src, dest);
+    dest.add3(ta, tb, tc);
   }
   
   // https://crystalsymmetry.wordpress.com/space-group-diagrams/

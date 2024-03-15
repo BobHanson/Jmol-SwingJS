@@ -25,17 +25,18 @@
 
 package org.jmol.symmetry;
 
-import javajs.util.PT;
+import java.util.Map;
 
 import org.jmol.util.SimpleUnitCell;
 
-import java.util.Map;
+import javajs.util.PT;
+import javajs.util.T3d;
 
 class SymmetryInfo {
 
   boolean coordinatesAreFractional;
   boolean isMultiCell;
-  String sgName;
+  String sgName, sgTitle;
   SymmetryOperation[] symmetryOperations;
   SymmetryOperation[] additionalOperations;
   String infoStr;
@@ -43,43 +44,63 @@ class SymmetryInfo {
   char latticeType = 'P';
   public String intlTableNo;
   public String intlTableNoFull;
+  private int spaceGroupIndex;
 
+  double[][] spaceGroupF2C;
+  private String spaceGroupF2CTitle;
+  double[] spaceGroupF2CParams;
+  /**
+   * actual LOAD ... SUPERCELL a,b,c designation
+   * 
+   */
+  protected String strSUPERCELL;
+  
   SymmetryInfo() {    
   }
   
   
   /**
    * 
-   * @param info
+   * @param modelInfo from file reader; will be nonnull only when sg is null
    * @param unitCellParams
    *        an array of parameters could be from model, but also could be from a
    *        trajectory listing
    * @param sg space group determined by SpaceGroupFinder via modelkit
    * @return actual unit cell parameters
    */
-  double[] setSymmetryInfo(Map<String, Object> info, double[] unitCellParams,
+  double[] setSymmetryInfo(Map<String, Object> modelInfo, double[] unitCellParams,
                           SpaceGroup sg) {
     int symmetryCount;
     if (sg == null) {
       // from ModelAdapter only
-      cellRange = (int[]) info.get("unitCellRange");
-      sgName = (String) info.get("spaceGroup");
+      spaceGroupIndex = ((Integer)modelInfo.get("spaceGroupIndex")).intValue();
+      //we need to be passing the unit cell that matches the symmetry
+      //in the file -- primitive or otherwise -- 
+      //then convert it here to the right multiple.
+      cellRange = (int[]) modelInfo.get("unitCellRange");
+      sgName = (String) modelInfo.get("spaceGroup");
+      spaceGroupF2C = (double[][]) modelInfo.get("f2c");
+      spaceGroupF2CTitle = (String) modelInfo.get("f2cTitle");
+      spaceGroupF2CParams = (double[]) modelInfo.get("f2cParams");
+      sgTitle = (String) modelInfo.get("spaceGroupTitle");
+      strSUPERCELL = (String) modelInfo.get("supercell"); 
       if (sgName == null || sgName == "")
         sgName = "spacegroup unspecified";
-      intlTableNo = (String) info.get("intlTableNo");
-      intlTableNoFull = (String) info.get("intlTableNoFull");
-      String s = (String) info.get("latticeType");
+      intlTableNo = (String) modelInfo.get("intlTableNo");
+      intlTableNoFull = (String) modelInfo.get("intlTableNoFull");
+      String s = (String) modelInfo.get("latticeType");
         latticeType = (s == null ? 'P' : s.charAt(0));
-      symmetryCount = info.containsKey("symmetryCount")
-          ? ((Integer) info.get("symmetryCount")).intValue()
+      symmetryCount = modelInfo.containsKey("symmetryCount")
+          ? ((Integer) modelInfo.get("symmetryCount")).intValue()
           : 0;
-      symmetryOperations = (SymmetryOperation[]) info.remove("symmetryOps");
-      coordinatesAreFractional = info.containsKey("coordinatesAreFractional")
-          ? ((Boolean) info.get("coordinatesAreFractional")).booleanValue()
+      symmetryOperations = (SymmetryOperation[]) modelInfo.remove("symmetryOps");
+      coordinatesAreFractional = modelInfo.containsKey("coordinatesAreFractional")
+          ? ((Boolean) modelInfo.get("coordinatesAreFractional")).booleanValue()
           : false;
       isMultiCell = (coordinatesAreFractional && symmetryOperations != null);
       infoStr = "Spacegroup: " + sgName;
     } else {
+      // from Symmetry.getSymmetryInfoStr
       // from ModelKit
       cellRange = null;
       sgName = sg.getName();
@@ -110,17 +131,17 @@ class SymmetryInfo {
       infoStr += "\n";
     }
     if (unitCellParams == null)
-      unitCellParams = (double[]) info.get("unitCellParams");
+      unitCellParams = (double[]) modelInfo.get("unitCellParams");
     unitCellParams = (SimpleUnitCell.isValid(unitCellParams) ? unitCellParams : null);
     if (unitCellParams == null) {
       coordinatesAreFractional = false;
       symmetryOperations = null;
       cellRange = null;
       infoStr = "";
+      modelInfo.remove("unitCellParams");
     }
     return unitCellParams;
   }
-
 
   public SymmetryOperation[] getAdditionalOperations() {
     if (additionalOperations == null && symmetryOperations != null) {
@@ -129,8 +150,27 @@ class SymmetryInfo {
     return additionalOperations;
   }
 
-  public SpaceGroup getSpaceGroupFromOperators() {
-    return SpaceGroup.determineSpaceGroupN(sgName);
+  private SpaceGroup sgDerived;
+  
+  public SpaceGroup getDerivedSpaceGroup() {
+    if (sgDerived == null) {
+      sgDerived = SpaceGroup.getSpaceGroupFromIndex(spaceGroupIndex);
+    }
+    return sgDerived;
   }
+
+  boolean isActive = true;
+
+  public boolean setIsActiveCell(boolean TF) {
+    return (isActive != TF && (isActive = TF) == true);
+  }
+
+
+  public String getSpaceGroupTitle() {
+    return (isActive && spaceGroupF2CTitle != null ? spaceGroupF2CTitle 
+      : sgName.startsWith("cell=") ? sgName : sgTitle);
+  }
+
+
 }
 

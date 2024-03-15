@@ -502,6 +502,8 @@ public class ModelSet extends BondCollection {
 
   private BoxInfo defaultBBox;
 
+  private boolean haveJmolDataFrames;
+
   private Object calculatePointGroupForFirstModel(BS bsAtoms, boolean doAll,
                                                   boolean asInfo, String type,
                                                   int index, double scale,
@@ -738,6 +740,7 @@ public class ModelSet extends BondCollection {
     boolean allOrderly = true;
     boolean isOneOfSeveral = false;
     BS files = new BS();
+    System.out.println("ModelSet deleting ZAP???");
     int firstAtom = bsAtomsToDelete.nextSetBit(0);
     for (int i = 0; i < mc; i++) {
       Model m = am[i];
@@ -1020,23 +1023,48 @@ public class ModelSet extends BondCollection {
   }
 
   public SymmetryInterface getUnitCell(int modelIndex) {
+    boolean returnCage = (modelIndex == Integer.MIN_VALUE);
+    if (returnCage)
+      modelIndex = vwr.am.cmi;
     if (modelIndex < 0 || modelIndex >= mc)
       return null;
-    if (am[modelIndex].simpleCage != null)
-      return am[modelIndex].simpleCage;
+    SymmetryInterface ucSimple = am[modelIndex].simpleCage;
+    SymmetryInterface uc = null;
     if (unitCells != null && modelIndex < unitCells.length
         && unitCells[modelIndex] != null && unitCells[modelIndex].haveUnitCell())
-      return unitCells[modelIndex];
-    if (getInfo(modelIndex, "unitCellParams") != null) {
-      if (unitCells == null)
-        unitCells = new SymmetryInterface[mc];
-      haveUnitCells = true;
-      return unitCells[modelIndex] = vwr.getSymTemp().setSymmetryInfo(modelIndex,
-          am[modelIndex].auxiliaryInfo, null);
+      uc = unitCells[modelIndex];
+//    if (uc == null && getInfo(modelIndex, "unitCellParams") != null) {
+//      // setting the unit cell from the file??
+//      if (unitCells == null)
+//        unitCells = new SymmetryInterface[mc];
+//      haveUnitCells = true;
+//      uc = unitCells[modelIndex] = vwr.getSymTemp().setSymmetryInfo(modelIndex,
+//          am[modelIndex].auxiliaryInfo, null);
+//    }
+    if (uc != null && returnCage) {
+      return (ucSimple == null ? 
+        setModelCagePts(modelIndex, uc.getUnitCellVectors(), "cage") : ucSimple);
     }
-    return null;
+    if (uc == null || ucSimple != null && !uc.isSymmetryCell(ucSimple)) {
+        uc = ucSimple; 
+    }
+    return uc;
   }
   
+  public SymmetryInterface setModelCagePts(int iModel, T3d[] originABC, String name) {    
+    if (iModel < 0 && (iModel = vwr.am.cmi) < 0)
+      return null;
+    SymmetryInterface sym = vwr.getSymTemp();//Interface.getSymmetry(vwr, "cage");
+    try {
+      return setModelCage(iModel,
+          originABC == null ? null : sym.getUnitCell(originABC, false, name));
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+
   public String getModelName(int modelIndex) {
     return mc < 1 ? "" : modelIndex >= 0 ? modelNames[modelIndex]
         : modelNumbersForAtomLabel[-1 - modelIndex];
@@ -1633,7 +1661,7 @@ public class ModelSet extends BondCollection {
   }
 
   public boolean isJmolDataFrameForModel(int modelIndex) {
-    return (am != null && modelIndex >= 0 && modelIndex < mc && am[modelIndex].isJmolDataFrame);
+    return haveJmolDataFrames && (am != null && modelIndex >= 0 && modelIndex < mc && am[modelIndex].isJmolDataFrame);
   }
 
   private boolean isJmolDataFrameForAtom(Atom atom) {
@@ -1641,6 +1669,7 @@ public class ModelSet extends BondCollection {
   }
 
   public void setJmolDataFrame(String type, int modelIndex, int modelDataIndex) {
+    haveJmolDataFrames = true;
     Model model = am[type == null ? am[modelDataIndex].dataSourceFrame
         : modelIndex];
     if (type == null) {
@@ -3106,6 +3135,7 @@ public class ModelSet extends BondCollection {
     //averageAtomPoint = null;
     if (bs == null)
       return;
+    
     BS bsModels = getModelBS(bs, false);
     BS bsBonds = new BS();
     boolean doNull = Viewer.nullDeletedAtoms; 
@@ -3130,14 +3160,14 @@ public class ModelSet extends BondCollection {
       bs = BSUtil.andNot(m.bsAtoms, m.bsAtomsDeleted);
       m.firstAtomIndex = bs.nextSetBit(0);
       m.act = bs.cardinality();
-      m.isOrderly = (m.act == m.bsAtoms.length()); 
+      m.isOrderly = (m.act == m.bsAtoms.length() - m.firstAtomIndex); 
     }
     deleteBonds(bsBonds, false);
     Shape me = vwr.shm.getShape(JC.SHAPE_MEASURES);
     if (me != null)
       me.setProperty("deleteAtoms", null, bsAtoms);
     validateBspf(false);
-    vwr.setModelkitPropertySafely("modelkeys", bsModels);
+    vwr.setModelkitPropertySafely(JC.MODELKIT_UPDATE_MODEL_KEYS, bsModels);
   }
 
   public void clearDB(int atomIndex) {
@@ -3396,16 +3426,6 @@ public class ModelSet extends BondCollection {
       if (!am[thisModelIndex].isModelKit || atom.getElementNumber() > 0)
         atomNo++;
     }
-  }
-
-  public static void setUnitCellOffset(SymmetryInterface unitCell, T3d pt, int ijk) {
-    if (unitCell == null)
-      return;
-    if (pt == null)
-      unitCell.setOffset(ijk);
-    else
-      unitCell.setOffsetPt(pt);
-    //    }
   }
 
   public void connect(double[][] connections) {
@@ -4440,27 +4460,37 @@ public class ModelSet extends BondCollection {
       // move any origin offset into atom positions
       if (nops > 1)
         setModelCage(mi, null);
-      //    P3d offset = P3d.newP(sg.getCartesianOffset());
-      //    if (offset.length() == 0) {
-      //      offset = null;
-      //    } else {
-      //      sg.setOffsetPt(new P3d());
-      //      setTaintedAtoms(bs, TAINT_COORD);
-      //    }
-      // assign sites to basis atoms
+      P3d offset = P3d.newP(sg.getCartesianOffset());
+      if (offset.length() == 0) {
+        offset = null;
+      } else {
+        sg.setOffsetPt(new P3d());
+        setTaintedAtoms(bs, TAINT_COORD);
+      }
+      if (offset != null) {
+        // carry out the offset
+        for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+          at[i].sub(offset);
+        }
+      }
+      // reset Wyckoff positions
+      int nid = (atomSeqIDs == null ? 0 : atomSeqIDs.length);
+      if (nid > 0) {
+        for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+          atomSeqIDs[i] = 0;
+        }
+      }
 
+      // assign sites to basis atoms
       if (isP1) {
         fixP1AtomSites(sg, bs);
       } else {
         for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs
             .nextSetBit(i + 1)) {
-          //        if (offset != null) {
-          //          at[i].sub(offset);
-          //        }
           boolean isBasis = basis.get(i);
-          at[i].setSymop(isBasis ? 1 : 0, true);
+          at[i].setSymop(isBasis ? 1 : 0, false);
           if (isBasis)
-            setSite(at[i], ++p, true);
+            setSite(at[i], ++p, false);
         }
       }
       bs.andNot(basis);
@@ -4497,9 +4527,9 @@ public class ModelSet extends BondCollection {
             }
           }
         }
-      }
-      if (!bs.isEmpty()) {
-        System.err.println("Model basis atoms not found for " + bs);
+        if (!bs.isEmpty()) {
+          System.err.println("Model basis atoms not found for " + bs);
+        }
       }
     }
     // TODO: actually set atomSymmetry properly
@@ -4521,14 +4551,24 @@ public class ModelSet extends BondCollection {
     setModelCage(mi, null);
   }
   
-  public void setModelCage(int modelIndex, SymmetryInterface simpleCage) {
+  /**
+   * This is the model-specific cage created by a UNITCELL or MODELKIT UNITCELL command.
+   * It will be used provided it is different from the symmetry unit cell associated with 
+   * a particular space group setting, if it exists.
+   * 
+   * @param modelIndex
+   * @param simpleCage
+   * @return simpleCage
+   */
+  public SymmetryInterface setModelCage(int modelIndex, SymmetryInterface simpleCage) {
     if (modelIndex >= 0 && modelIndex < mc) {
       am[modelIndex].setSimpleCage(simpleCage);
       haveUnitCells = true;
     }
+    return simpleCage;
   }
-
-  public void fixP1AtomSites(SymmetryInterface sym, BS bsAtoms) {
+  
+  private void fixP1AtomSites(SymmetryInterface sym, BS bsAtoms) {
     if (sym == null || sym.getSpaceGroupOperationCount() != 1)
       return;
     int n = bsAtoms.cardinality();

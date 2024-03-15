@@ -10,6 +10,9 @@ import java.util.Map;
 import org.jmol.adapter.smarter.Atom;
 
 /**
+ * 
+ * BH note: this reader was never set up to read Z-matrix structures such as benzenev4.1.fdf
+ * 
  * SIESTA http://www.icmab.es/siesta/
  * 
  * @author Pieremanuele Canepa, Room 104, FM Group School of Physical Sciences,
@@ -40,7 +43,8 @@ public class SiestaReader extends AtomSetCollectionReader {
   
   @Override
   protected boolean checkLine() throws Exception {
-    if (line.length() == 0 || line.charAt(0) == '#' || line.indexOf(' ') < 0)
+    if (line.length() == 0 || line.charAt(0) == '#' 
+        || line.indexOf(' ') < 0 && line.indexOf('\t') < 0 )
       return true;
     switch (state) {
     case STATE_UNKNOWN:

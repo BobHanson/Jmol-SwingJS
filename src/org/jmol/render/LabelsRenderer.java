@@ -29,6 +29,7 @@ import org.jmol.modelset.Group;
 import org.jmol.modelset.Text;
 import org.jmol.script.T;
 import org.jmol.shape.Labels;
+import org.jmol.util.C;
 import org.jmol.util.Font;
 import org.jmol.util.Point3fi;
 import org.jmol.viewer.JC;
@@ -107,7 +108,8 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         continue;
       labelColix = labels.getColix2(i, atom, false);
       bgcolix = labels.getColix2(i, atom, true);
-      if (bgcolix == 0
+      // black on black or white on white or colorX on colorX will set the label to contrast
+      if (bgcolix == C.INHERIT_ALL // 0x0000
           && vwr.gdata.getColorArgbOrGray(labelColix) == backgroundColor)
         labelColix = backgroundColixContrast;
       fid = ((fids == null || i >= fids.length || fids[i] == 0) ? labels.zeroFontId

@@ -275,7 +275,7 @@ public class StateManager {
   public boolean restoreUnitCell(String saveName) {
     String ucstate = getSavedUnitCell(saveName);
     if (ucstate == null) {
-      vwr.setModelCagePts(-1, null, null);
+      vwr.ms.setModelCagePts(-1, null, null);
       return false;
     }
     vwr.runScript(ucstate);

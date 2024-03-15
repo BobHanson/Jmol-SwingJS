@@ -131,6 +131,16 @@ public class SV extends T implements JSONEncodable {
     return this;
   }
 
+  /**
+   * Make a copy if this is a variable -- if it has myName != null.
+   * 
+   * @param v
+   * @return v or a copy of it
+   */
+  public static SV copySafely(SV v) {
+    return (v.myName == null ? v : new SV().setv(v));
+  }
+
   @SuppressWarnings("unchecked")
   static int sizeOf(T x) {
     switch (x == null ? nada : x.tok) {
@@ -954,7 +964,7 @@ public class SV extends T implements JSONEncodable {
       break;
     default:
       return ((tokenIn instanceof SV) && ((SV) tokenIn).myName != null 
-      ? newI(0).setv((SV) tokenIn) 
+      ? copySafely((SV) tokenIn) 
           : tokenIn);
     }
 
@@ -1631,7 +1641,7 @@ public class SV extends T implements JSONEncodable {
               : x.removeItemAt(x.size() - 1));
         }
         // array.push(value)
-        x.addLast(newI(0).setv(value));
+        x.addLast(copySafely(value));
       } else {
         if (value == null) {
           // assocArray.pop()
@@ -1665,7 +1675,7 @@ public class SV extends T implements JSONEncodable {
       }
       if (m != null) {
         //assocArray.push(key,value)
-        m.put(mapKey.asString(), newI(0).setv(value));
+        m.put(mapKey.asString(), copySafely(value));
       }
     }
     return this;
@@ -1856,7 +1866,12 @@ public class SV extends T implements JSONEncodable {
   }
 
   public void mapPut(String key, SV v) {
-    getMap().put(key, v);
+    switch (tok) {
+    case hash:
+    case context:
+      getMap().put(key, copySafely(v));
+      break;
+    }
   }
 
   @SuppressWarnings("unchecked")
