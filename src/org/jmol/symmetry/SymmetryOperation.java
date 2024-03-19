@@ -1019,10 +1019,14 @@ public class SymmetryOperation extends M4d {
           term += plusMinus(term, x, labelsXYZ[j + lpt], allowFractions);
         }
       }
-      if ((is12ths ? row[3] : approx(row[3])) != 0)
-        term += xyzFraction12((is12ths ? row[3] : row[3] * denom), denom,
+      if ((is12ths ? row[3] : approx(row[3])) != 0) {
+        String f = xyzFraction12((is12ths ? row[3] : row[3] * denom), denom,
             allPositive, halfOrLess);
-      str += "," + term;
+        if (term == "")
+          f = (f.charAt(0) == '+' ? f.substring(1) : f);
+        term += f;
+      }
+      str += "," + (term == "" ? "0" : term);
     }
     return str.substring(1);
   }
@@ -1148,7 +1152,7 @@ public class SymmetryOperation extends M4d {
    * 
    * @param magRev
    */
-  public void setTimeReversal(int magRev) {
+  void setTimeReversal(int magRev) {
     timeReversal = magRev;
     if (xyz.indexOf("m") >= 0)
       xyz = xyz.substring(0, xyz.indexOf("m"));
@@ -1970,6 +1974,41 @@ public class SymmetryOperation extends M4d {
   static void rotateAndTranslatePoint(M4d m, P3d src, int ta, int tb, int tc, P3d dest) {
     m.rotTrans2(src, dest);
     dest.add3(ta, tb, tc);
+  }
+
+  /**
+   * Convert an operation string in one basis to the equivalent string in another basis.
+   * 
+   * Performs trm * op * trm^-1  
+   * 
+   * @param xyz
+   * @param trm
+   * @param trmInv
+   * @param t  temporary or null
+   * @param v  temporary or null
+   * @return transformed string
+   */
+  static String transformStr(String xyz, M4d trm, M4d trmInv, M4d t, double[] v) {
+    if (trmInv == null) {
+      trmInv = M4d.newM4(trm);
+      trmInv.invert();
+    }
+    if (t == null)
+      t = new M4d();
+    if (v == null)
+      v = new double[16];      
+    M4d op = getMatrixFromXYZ(xyz, v, true);
+    t.setM4(trm);
+    t.mul(op);
+    t.mul(trmInv);
+    return getXYZFromMatrix(t, false, true, false);
+  }
+
+  static M4d stringToMatrix(String xyz) {
+    int divisor = setDivisor(xyz);
+    double[] a = new double[16];
+    SymmetryOperation.getMatrixFromString(null, xyz, a, true, false, false);
+    return div12(M4d.newA16(a), divisor);
   }
   
   // https://crystalsymmetry.wordpress.com/space-group-diagrams/

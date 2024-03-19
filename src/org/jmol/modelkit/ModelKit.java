@@ -2724,7 +2724,16 @@ public class ModelKit {
    * @return message or error (message in "!")
    */
   private String assignSpaceGroup(BS bs, String name, Object paramsOrUC) {
+    int pt = name.indexOf(":");
     boolean isITA = name.startsWith("ITA/");
+    boolean hasTransform = (name.indexOf(",") > pt);
+    String transform = null;
+    if (hasTransform) {
+      // modelkit spacegroup "4:1/2a+1/2b,c,1/2a-1/2b"
+      transform = name.substring(pt + 1);
+      name = name.substring(0, pt);
+      isITA = true;
+    }
     if (isITA) {
       name = name.substring(4);
       if (name.length() == 0)
@@ -2732,8 +2741,9 @@ public class ModelKit {
       if (name.startsWith("HM:"))
         name = name.substring(3);
     } else if (name.indexOf('.') > 0 && !Double.isNaN(PT.parseDouble(name))) {
+      // "6.1"
       isITA = true;
-    }
+    } 
     boolean isP1 = (name.equalsIgnoreCase("P1") || name.equals("1"));
     boolean isDefined = (name.length() > 0);
     clearAtomConstraints();
@@ -2761,26 +2771,34 @@ public class ModelKit {
       SymmetryInterface sym = vwr.getOperativeSymmetry();
       double[] params = (paramsOrUC == null || !AU.isAD(paramsOrUC) ? null 
           : (double[]) paramsOrUC);
+      T3d[] oabc = null;
       if (sym == null) {
         sym = vwr.getSymTemp().setUnitCellFromParams(
             params == null ? new double[] { 10, 10, 10, 90, 90, 90 } : params,
             false, Double.NaN);
         paramsOrUC = null;
-      } else if (paramsOrUC != null) {
-        if (AU.isAD(paramsOrUC))
+      } 
+      if (transform != null || paramsOrUC != null) {
+        if (transform != null) {
+          paramsOrUC = sym.getV0abc(transform, null);
+        } 
+        if (AU.isAD(paramsOrUC)) {
           params = (double[]) paramsOrUC;
-        else
-          params = vwr.getSymTemp().getUnitCell((T3d[]) paramsOrUC, false, "assign").getUnitCellParams();        
+        } else {
+          oabc = (T3d[]) paramsOrUC;
+          params = vwr.getSymTemp().getUnitCell(oabc, false, "assign").getUnitCellParams();
+        }
       }
+      T3d origin = sym.getUnitCellMultiplied().getUnitCellVectors()[0];
+      if (oabc != null)
+        origin.add(oabc[0]);
       T3d m = sym.getUnitCellMultiplier();
       if (m != null && m.z == 1) {
         m.z = 0;
       }
-      P3d[] oabc;
       String ita;
       BS basis;
       Object sg = null;
-      T3d origin = sym.getUnitCellMultiplied().getUnitCellVectors()[0];
       @SuppressWarnings("unchecked")
       Map<String, Object> sgInfo = (noAtoms && !isDefined ? null
           : (Map<String, Object>) vwr.findSpaceGroup(isDefined ? null : bsAtoms,

@@ -268,6 +268,7 @@ public class MathExt {
     // spacegroup(3);
     // spacegroup("133:2") // this name
     // spacegroup("ITA/155") // all settings for this ITA
+    // spacegroup("ITA/155:c,b,a") // setting for this ITA by transform
     // spacegroup("ITA/14.3") // third ITA entry for this ITA
     // spacegroup("ITA/all")  // all, as map
     // spacegroup("x,y,z;-x,-y,-z");

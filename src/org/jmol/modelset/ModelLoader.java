@@ -530,10 +530,13 @@ public final class ModelLoader {
     Map<String, Object> info = modelSet0.getModelSetAuxiliaryInfo(null);
     String[] mergeGroup3Lists = (String[]) info.get("group3Lists");
     int[][] mergeGroup3Counts = (int[][]) info.get("group3Counts");
+    int nLists = (mergeGroup3Lists == null ? 0 : mergeGroup3Lists.length);
     if (mergeGroup3Lists != null) {
       for (int i = 0; i < baseModelCount; i++) {
-        group3Lists[i + 1] = mergeGroup3Lists[i + 1];
-        group3Counts[i + 1] = mergeGroup3Counts[i + 1];
+        if (i < nLists) {
+          group3Lists[i + 1] = mergeGroup3Lists[i + 1];
+          group3Counts[i + 1] = mergeGroup3Counts[i + 1];
+        }
         structuresDefinedInFile.set(i);
       }
       group3Lists[0] = mergeGroup3Lists[0];

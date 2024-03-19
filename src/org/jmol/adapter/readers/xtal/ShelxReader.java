@@ -154,7 +154,10 @@ public class ShelxReader extends AtomSetCollectionReader {
   }
 
   private void parseLattRecord() throws Exception {
-    asc.getXSymmetry().setLatticeParameter(parseIntStr(tokens[1]));
+    int latt = parseIntStr(tokens[1]);
+    if (latt ==1 || latt == -1)
+      return;
+    asc.getXSymmetry().setLatticeParameter(latt);
   }
 
   boolean haveXYZ;
@@ -256,9 +259,13 @@ public class ShelxReader extends AtomSetCollectionReader {
 
     Atom atom = asc.addNewAtom();
     atom.atomName = atomName;
-    if (sfacElementSymbols != null && elementIndex >= 0
-        && elementIndex < sfacElementSymbols.length)
+    boolean isQPeak = atomName.startsWith("Q");
+    if (isQPeak) {
+     atom.elementSymbol = "Xx";
+    } else  if (sfacElementSymbols != null && elementIndex >= 0
+        && elementIndex < sfacElementSymbols.length) {
       atom.elementSymbol = sfacElementSymbols[elementIndex];
+    }
     setAtomCoordXYZ(atom, x, y, z);
 
     if (tokens.length == 12) {

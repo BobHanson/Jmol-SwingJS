@@ -126,6 +126,10 @@ public class SpaceGroup implements Cloneable {
   boolean isBilbao;
   char latticeType = 'P'; // P A B C I F
 
+  public String itaTransform;
+
+  Object info;
+
   private Integer nHallOperators;
   
   static SpaceGroup getNull(boolean doInit, boolean doNormalize, boolean doFinalize) {
@@ -386,7 +390,7 @@ public class SpaceGroup implements Cloneable {
     if (intlTableNumber != null) {
       sb.append("\ninternational table number: ")
           .append(intlTableNumber)
-          .append(
+          .append(itaTransform != null ? itaTransform : 
               intlTableNumberExt.length() > 0 ? ":" + intlTableNumberExt : "")
           .append("\ncrystal class: " + crystalClass);
     }
@@ -472,6 +476,7 @@ public class SpaceGroup implements Cloneable {
   }  
  
   void setLatticeParam(int latticeParameter) {
+    // this does not work, because it clears the operations. 
     // Wien2K and Shelx readers only
     // implication here is that we do NOT have a Hall symbol.
     // so we generate one.
@@ -726,7 +731,7 @@ public class SpaceGroup implements Cloneable {
     M4d[] newOps = new M4d[7];
     for (int i = 0; i < 7; i++)
       newOps[i] = new M4d();
-    operationCount = 1;
+   //??? operationCount = 1;
     // prior to Jmol 11.7.36/11.6.23 this was setting nOps within the loop
     // and setIdentity() outside the loop. That caused a multiplication of
     // operations, not a resetting of them each time.
@@ -748,6 +753,8 @@ public class SpaceGroup implements Cloneable {
           operation.m13 = ((int)operation.m13 + 12) % 12;
           operation.m23 = ((int)operation.m23 + 12) % 12;
           String xyz = SymmetryOperation.getXYZFromMatrix(operation, true, true, false);
+          if (checkXYZlist(xyz) >= 0)
+            continue;
           addSymmetrySM("!nohalf!" + xyz, operation);
         }
       }
@@ -1093,7 +1100,8 @@ public class SpaceGroup implements Cloneable {
   }
   
   String asString() {
-    return (intlTableNumberFull == null ? name : intlTableNumberFull + " HM:" + hmSymbolFull + " Hall:" + hallSymbol);
+    return (intlTableNumberFull == null ? name : intlTableNumberFull + " HM:" + hmSymbolFull 
+        + (itaTransform == null ? " Hall:" + hallSymbol : " (" + itaTransform + ")"));
   }
 
   private static SpaceGroup[] SG;
@@ -1850,7 +1858,6 @@ public class SpaceGroup implements Cloneable {
 //    return op;
 //  }
 
-  Object info;
   String getNameType(String type, SymmetryInterface uc) {
     String ret = null;
     if (type.equals("HM")) {

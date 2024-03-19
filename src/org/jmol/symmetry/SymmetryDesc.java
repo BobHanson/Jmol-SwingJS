@@ -64,6 +64,7 @@ import javajs.util.V3d;
 public class SymmetryDesc {
 
   private ModelSet modelSet;
+  private String drawID;
 
   public SymmetryDesc() {
     // for reflection
@@ -854,13 +855,13 @@ public class SymmetryDesc {
         cmds = "";
       } else {
         String opType = null;
-        String drawid = "\ndraw ID " + id + "_";
+        drawID = "\ndraw ID \"" + id;
 
         // delete previous elements of this user-settable ID
 
-        SB draw1 = new SB();
+        SB drawSB = new SB();
 
-        draw1.append(drawid).append("* delete");
+        drawSB.append(getDrawID("*")).append(" delete");
         //    .append(
         //    ("print " + PT.esc(
         //        id + " " + (op.index + 1) + " " + op.fixMagneticXYZ(op, op.xyzOriginal, false) + "|"
@@ -870,9 +871,9 @@ public class SymmetryDesc {
         // draw the initial frame
 
         if (!isSpaceGroup) {
-          drawLine(draw1, drawid + "frame1X", 0.15d, pta00, pta01, "red");
-          drawLine(draw1, drawid + "frame1Y", 0.15d, pta00, pta02, "green");
-          drawLine(draw1, drawid + "frame1Z", 0.15d, pta00, pta03, "blue");
+          drawLine(drawSB, "frame1X", 0.15d, pta00, pta01, "red");
+          drawLine(drawSB, "frame1Y", 0.15d, pta00, pta02, "green");
+          drawLine(drawSB, "frame1Z", 0.15d, pta00, pta03, "blue");
         }
         String color;
         P3d planeCenter = null;
@@ -903,14 +904,14 @@ public class SymmetryDesc {
           P3d ptr = new P3d();
           if (pitch1 != 0 && !haveInversion) {
             // screw axis
-            opType = drawid + "screw";
+            opType ="screw";
             color = (isccw == Boolean.TRUE ? "orange"
                 : isccw == Boolean.FALSE ? "yellow"
                     : order == 4 ? "lightgray" : "grey");
             if (!isSpaceGroup) {
-              drawLine(draw1, drawid + "rotLine1", 0.1d, pta00, pa1, "red");
+              drawLine(drawSB, "rotLine1", 0.1d, pta00, pa1, "red");
               ptemp.add2(pa1, vtemp);
-              drawLine(draw1, drawid + "rotLine2", 0.1d, pt0, ptemp, "red");
+              drawLine(drawSB, "rotLine2", 0.1d, pt0, ptemp, "red");
               ptr.scaleAdd2(0.5d, vtemp, pa1);
             }
           } else {
@@ -925,7 +926,7 @@ public class SymmetryDesc {
             }
             if (haveInversion) {
               // rotation-inversion
-              opType = drawid + "rotinv";
+              opType = "rotinv";
 
               if (isSpaceGroup) {
                 vtemp.normalize();
@@ -944,29 +945,29 @@ public class SymmetryDesc {
                     color = "cyan";
                   } else {
                     ptemp.scaleAdd2(-1, vtemp, pa1);
-                    //                drawVector(draw1, drawid, "rotVector2", "", pa1, ptemp, "red");
-                    drawLine(draw1, drawid + "rotLine1", 0.1d, pta00, ipt,
+                    //                drawVector(drawSB, drawid, "rotVector2", "", pa1, ptemp, "red");
+                    drawLine(drawSB, "rotLine1", 0.1d, pta00, ipt,
                         "red");
-                    drawLine(draw1, drawid + "rotLine2", 0.1d, ptinv, ipt,
+                    drawLine(drawSB, "rotLine2", 0.1d, ptinv, ipt,
                         "red");
                   }
                 } else if (!isSpecial) {
                   scale = pta00.distance(ptr);
-                  drawLine(draw1, drawid + "rotLine1", 0.1d, pta00, ptr, "red");
-                  drawLine(draw1, drawid + "rotLine2", 0.1d, ptinv, ptr, "red");
+                  drawLine(drawSB, "rotLine1", 0.1d, pta00, ptr, "red");
+                  drawLine(drawSB, "rotLine2", 0.1d, ptinv, ptr, "red");
                 }
               }
             } else {
               // simple rotation
-              opType = drawid + "rot";
+              opType = "rot";
               vtemp.scale(3 * scaleFactor);
               if (isSpecial) {
                 // flat
               } else {
                 // lines from base
                 if (!isSpaceGroup) {
-                  drawLine(draw1, drawid + "rotLine1", 0.1d, pta00, ptr, "red");
-                  drawLine(draw1, drawid + "rotLine2", 0.1d, pt0, ptr, "red");
+                  drawLine(drawSB, "rotLine1", 0.1d, pta00, ptr, "red");
+                  drawLine(drawSB, "rotLine2", 0.1d, pt0, ptr, "red");
                 }
               }
               ptr.setT(pa1);
@@ -983,16 +984,16 @@ public class SymmetryDesc {
               ang = 180 - ang;
             }
             ptemp.add2(ptr, vtemp);
-            draw1
-                .append(drawid).append("rotRotArrow arrow width 0.1 scale "
+            drawSB
+                .append(getDrawID("rotRotArrow")).append(" arrow width 0.1 scale "
                     + PT.escD(scale) + " arc ")
                 .append(Escape.eP(ptr)).append(Escape.eP(ptemp));
             ptemp.setT(pta00);
             if (ptemp.distance(pt0) < 0.1d)
               ptemp.set(Math.random(), Math.random(), Math.random());
-            draw1.append(Escape.eP(ptemp));
+            drawSB.append(Escape.eP(ptemp));
             ptemp.set(0, ang - 5 * Math.signum(ang), 0);
-            draw1.append(Escape.eP(ptemp)).append(" color red");
+            drawSB.append(Escape.eP(ptemp)).append(" color red");
           }
 
           // draw the main vector
@@ -1061,10 +1062,10 @@ public class SymmetryDesc {
           }
           if (!ignore) {
             String name = opType + order + "rotVector1";
-            drawVector(draw1, drawid, name, "vector", THICK_LINE + wp, pa1,
+            drawVector(drawSB, name, "vector", THICK_LINE + wp, pa1,
                 vtemp, isTimeReversed ? "gray" : color, title);
             if (p2 != null) {
-              drawVector(draw1, drawid, name + "b", "vector", THICK_LINE + wp,
+              drawVector(drawSB, name + "b", "vector", THICK_LINE + wp,
                   ptr, vtemp, isTimeReversed ? "gray" : color, title);
             }
           }
@@ -1075,17 +1076,17 @@ public class SymmetryDesc {
 
           ptemp.sub2(ptref, pta00);
           if (!isSpaceGroup && pta00.distance(ptref) > 0.2)
-            drawVector(draw1, drawid, "planeVector", "vector", THIN_LINE, pta00,
+            drawVector(drawSB, "planeVector", "vector", THIN_LINE, pta00,
                 ptemp, isTimeReversed ? "gray" : "cyan", null);
 
           // faint inverted frame if mirror trans is not null
 
-          opType = drawid + "plane";
+          opType = "plane";
           P4d p = P4d.newPt(plane);
           if (trans == null) {
             color = "green";
           } else {
-            opType = drawid + "glide";
+            opType = "glide";
             switch (glideType) {
             case 'g':
               color = "gold";
@@ -1112,11 +1113,11 @@ public class SymmetryDesc {
             // offset ever so slightly so that we can show both in #40
             p.w += 0.01d;
             if (!isSpaceGroup) {
-              drawFrameLine("X", ptref, vt1, 0.15d, ptemp, draw1, opType,
+              drawFrameLine("X", ptref, vt1, 0.15d, ptemp, drawSB, opType,
                   "red");
-              drawFrameLine("Y", ptref, vt2, 0.15d, ptemp, draw1, opType,
+              drawFrameLine("Y", ptref, vt2, 0.15d, ptemp, drawSB, opType,
                   "green");
-              drawFrameLine("Z", ptref, vt3, 0.15d, ptemp, draw1, opType,
+              drawFrameLine("Z", ptref, vt3, 0.15d, ptemp, drawSB, opType,
                   "blue");
             }
           }
@@ -1137,21 +1138,20 @@ public class SymmetryDesc {
             for (int i = v.size(); --i >= 0;) {
               P3d[] pts = (P3d[]) v.get(i);
               // these lines provide a rendering when side-on
-              draw1.append(drawid).append(trans == null ? "m" : "g")
-                  .append("planep").appendI(i).append(" ")
-                  .append(Escape.eP(pts[0])).append(Escape.eP(pts[1]));
+              drawSB.append(getDrawID((trans == null ? "m" : "g") 
+                  + "planep" + i)).append(Escape.eP(pts[0])).append(Escape.eP(pts[1]));
               if (pts.length == 3) {
                 if (!isCoincident || (i % 2 == 0) != (trans == null)) {
-                  draw1.append(Escape.eP(pts[2]));
+                  drawSB.append(Escape.eP(pts[2]));
                 }
               } else {
                 planeCenter.add(pts[0]);
                 planeCenter.add(pts[1]);
                 nPC += 2;
               }
-              draw1.append(" color translucent ").append(color);
+              drawSB.append(" color translucent ").append(color);
               if (title != null)
-                draw1.append(" ").append(PT.esc(title));
+                drawSB.append(" ").append(PT.esc(title));
             }
           }
 
@@ -1163,57 +1163,57 @@ public class SymmetryDesc {
               ignore = true;
             } else {
               ptemp.add2(pa1, ax1);
-              draw1.append(drawid).append("planeCircle scale 2.0 circle ")
+              drawSB.append(getDrawID("planeCircle")).append(" scale 2.0 circle ")
                   .append(Escape.eP(pa1)).append(Escape.eP(ptemp))
                   .append(" color translucent ").append(color)
                   .append(" mesh fill");
               if (title != null)
-                draw1.append(" ").append(PT.esc(title));
+                drawSB.append(" ").append(PT.esc(title));
             }
           }
 
         }
 
         if (haveInversion) {
-          opType = drawid + "inv";
+          opType = "inv";
           if (isInversionOnly) {
-            draw1.append(drawid).append("invPoint diameter 0.4 ")
+            drawSB.append(getDrawID("invPoint")).append(" diameter 0.4 ")
                 .append(Escape.eP(ipt));
             if (title != null)
-              draw1.append(" ").append(PT.esc(title));
+              drawSB.append(" ").append(PT.esc(title));
 
             ptemp.sub2(ptinv, pta00);
             if (!isSpaceGroup) {
-              drawVector(draw1, drawid, "Arrow", "vector", THIN_LINE, pta00,
+              drawVector(drawSB, "Arrow", "vector", THIN_LINE, pta00,
                   ptemp, isTimeReversed ? "gray" : "cyan", null);
             }
           } else {
             if (order == 4) {
-              draw1.append(drawid).append("RotPoint diameter 0.3 color red")
+              drawSB.append(getDrawID("RotPoint")).append(" diameter 0.3 color red")
                   .append(Escape.eP(ipt));
               if (title != null)
-                draw1.append(" ").append(PT.esc(title));
+                drawSB.append(" ").append(PT.esc(title));
             }
             if (!isSpaceGroup) {
-              draw1.append(" color cyan");
+              drawSB.append(" color cyan");
               if (!isSpecial) {
                 ptemp.sub2(pt0, ptinv);
-                drawVector(draw1, drawid, "Arrow", "vector", THIN_LINE, ptinv,
+                drawVector(drawSB, "Arrow", "vector", THIN_LINE, ptinv,
                     ptemp, isTimeReversed ? "gray" : "cyan", null);
               }
               if (options != T.offset) {
                 // n-bar: draw a faint frame showing the inversion
                 vtemp.setT(vt1);
                 vtemp.scale(-1);
-                drawFrameLine("X", ptinv, vtemp, 0.15d, ptemp, draw1, opType,
+                drawFrameLine("X", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
                     "red");
                 vtemp.setT(vt2);
                 vtemp.scale(-1);
-                drawFrameLine("Y", ptinv, vtemp, 0.15d, ptemp, draw1, opType,
+                drawFrameLine("Y", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
                     "green");
                 vtemp.setT(vt3);
                 vtemp.scale(-1);
-                drawFrameLine("Z", ptinv, vtemp, 0.15d, ptemp, draw1, opType,
+                drawFrameLine("Z", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
                     "blue");
               }
             }
@@ -1233,7 +1233,7 @@ public class SymmetryDesc {
             ptref = (isSpaceGroup ? pta00 : P3d.newP(pta00));
           }
           if (ptref != null && !ignore) {
-            drawVector(draw1, drawid, "transVector", "vector",
+            drawVector(drawSB, "transVector", "vector",
                 (isTranslationOnly ? THICK_LINE : THIN_LINE), ptref, trans,
                 isTimeReversed && !haveInversion && !isMirrorPlane
                     && !isRotation ? "darkGray" : "gold",
@@ -1248,51 +1248,47 @@ public class SymmetryDesc {
           ptemp2.setT(pt0);
           ptemp.sub2(pt1, pt0);
           ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
-          drawLine(draw1, drawid + "frame2X", 0.2d, ptemp2, ptemp, "red");
+          drawLine(drawSB, "frame2X", 0.2d, ptemp2, ptemp, "red");
           ptemp.sub2(pt2, pt0);
           ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
-          drawLine(draw1, drawid + "frame2Y", 0.2d, ptemp2, ptemp, "green");
+          drawLine(drawSB, "frame2Y", 0.2d, ptemp2, ptemp, "green");
           ptemp.sub2(pt3, pt0);
           ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
-          drawLine(draw1, drawid + "frame2Z", 0.2d, ptemp2, ptemp, "purple");
+          drawLine(drawSB, "frame2Z", 0.2d, ptemp2, ptemp, "purple");
 
           // color the targeted atoms opaque and add another frame if necessary
 
-          draw1.append("\nsym_point = " + Escape.eP(pta00));
-          draw1.append("\nvar p0 = " + Escape.eP(ptemp2));
+          drawSB.append("\nsym_point = " + Escape.eP(pta00));
+          drawSB.append("\nvar p0 = " + Escape.eP(ptemp2));
 
           if (pta00 instanceof Atom) {
-            draw1.append(
+            drawSB.append(
                 "\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
-            draw1.append(
+            drawSB.append(
                 "\n set2 &= {_" + ((Atom) pta00).getElementSymbol() + "}");
           } else {
-            draw1.append("\nvar set2 = p0.uxyz");
+            drawSB.append("\nvar set2 = p0.uxyz");
           }
-          draw1.append("\nsym_target = set2;if (set2) {");
+          drawSB.append("\nsym_target = set2;if (set2) {");
           //      if (haveCentering)
-          //      draw1.append(drawid).append(
+          //      drawSB.append(drawid).append(
           //        "cellOffsetVector arrow @p0 @set2 color grey");
           if (!isSpecial && options != T.offset && ptTarget == null
               && !haveTranslation) {
-            draw1.append(drawid)
-                .append("offsetFrameX diameter 0.20 @{set2.xyz} @{set2.xyz + ")
+            drawSB.append(getDrawID("offsetFrameX")).append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
                 .append(Escape.eP(vt1)).append("*0.9} color red");
-            draw1.append(drawid)
-                .append("offsetFrameY diameter 0.20 @{set2.xyz} @{set2.xyz + ")
+            drawSB.append(getDrawID("offsetFrameY")).append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
                 .append(Escape.eP(vt2)).append("*0.9} color green");
-            draw1.append(drawid)
-                .append("offsetFrameZ diameter 0.20 @{set2.xyz} @{set2.xyz + ")
+            drawSB.append(getDrawID("offsetFrameZ")).append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
                 .append(Escape.eP(vt3)).append("*0.9} color purple");
           }
-          draw1.append("\n}\n");
+          drawSB.append("\n}\n");
 
         }
-        cmds = draw1.toString();
+        cmds = drawSB.toString();
         if (Logger.debugging)
           Logger.info(cmds);
-        draw1 = null;
-        drawid = null;
+        drawSB = null;
       }
     }
 
@@ -1474,21 +1470,21 @@ public class SymmetryDesc {
         : c == 0 ? a > 0 : (b == 0 ? c > 0 : a * b * c > 0));
   }
 
-  private static void drawLine(SB s, String id, double diameter, P3d pt0,
+  private void drawLine(SB s, String id, double diameter, P3d pt0,
                                P3d pt1, String color) {
-    s.append(id).append(" diameter ").appendD(diameter).append(Escape.eP(pt0))
+    s.append(getDrawID(id)).append(" diameter ").appendD(diameter).append(Escape.eP(pt0))
         .append(Escape.eP(pt1)).append(" color ").append(color);
   }
 
-  private static void drawFrameLine(String xyz, P3d pt, V3d v, double width,
-                                    P3d ptemp, SB draw1, String key,
+  private void drawFrameLine(String xyz, P3d pt, V3d v, double width,
+                                    P3d ptemp, SB drawSB, String key,
                                     String color) {
     ptemp.setT(pt);
     ptemp.add(v);
-    drawLine(draw1, key + "Pt" + xyz, width, pt, ptemp, "translucent " + color);
+    drawLine(drawSB, key + "Pt" + xyz, width, pt, ptemp, "translucent " + color);
   }
 
-  private static void drawVector(SB draw1, String drawid, String label,
+  private void drawVector(SB drawSB, String label,
                                  String type, String d, T3d pt1, T3d v,
                                  String color, String title) {
     if (type.equals("vline")) {
@@ -1497,11 +1493,11 @@ public class SymmetryDesc {
       v = ptemp2;
     }
     d += " ";
-    draw1.append(drawid).append(label).append(" diameter ").append(d)
+    drawSB.append(getDrawID(label)).append(" diameter ").append(d)
         .append(type).append(Escape.eP(pt1)).append(Escape.eP(v))
         .append(" color ").append(color);
     if (title != null)
-      draw1.append(" \"" + title + "\"");
+      drawSB.append(" \"" + title + "\"");
   }
 
   private static P3d rotTransCart(SymmetryOperation op, SymmetryInterface uc,
@@ -1832,8 +1828,12 @@ public class SymmetryDesc {
       return a;
     }
     if (sb.length() == 0)
-      return (drawID != null ? "draw " + drawID + "* delete" : ret);
+      return (drawID != null ? getDrawID("*") + " delete" : ret);
     return sb.toString();
+  }
+
+  private String getDrawID(String id) {
+    return drawID + id +"\" ";
   }
 
   /**

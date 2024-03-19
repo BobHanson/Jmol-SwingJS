@@ -5902,21 +5902,22 @@ public class CmdExt extends ScriptExt {
       }
       break;
     default:
-      if (eval.isArrayParameter(i)) {
-        eval.ignoreError = true;
-        try {
-          // from state [ pt3 pt3 pt3 ]
-          if (tokAt(i + 2) != T.leftbrace)
-            newUC = eval.doubleParameterSet(i, 6, 6);
-        } catch (Exception e) {
-          // ignore NullPointerException
+      Object[] ret = new Object[1];
+      if (getUnitCellParameter(i, ret)) {
+        oabc = (T3d[]) ret[0];
+      } else {
+        newUC = ret[0];
+      }
+      if (newUC == null && oabc == null) {
+        if (slen > i + 1) {
+          pt = eval.getFractionalPoint(i);
+          i = eval.iToken;
+        } else {
+          // backup for diameter
+          i--;
         }
-        eval.ignoreError = false;
-        if (newUC == null) {
-          // Origin vA vB vC
-          // these are VECTORS, though
-          oabc = eval.getPointArray(i, 4, false);
-        } else if (!chk && isModelkit) {
+      } else if (newUC != null) {
+        if (!chk && isModelkit) {
           if (sym == null) {
             vwr.assignSpaceGroup(null, "P1", newUC);
           } else if (sym.fixUnitCell((double[]) newUC)) {
@@ -5925,12 +5926,8 @@ public class CmdExt extends ScriptExt {
           }
         }
         i = eval.iToken;
-      } else if (slen > i + 1) {
-        pt = eval.getFractionalPoint(i);
+      } else if (oabc != null) {
         i = eval.iToken;
-      } else {
-        // backup for diameter
-        i--;
       }
       break;
     }
@@ -6569,9 +6566,8 @@ public class CmdExt extends ScriptExt {
       }
       // new 16.2.1/2
       if (tokAt(e.iToken + 1) == T.unitcell) {
-        ++e.iToken;
         Object[] ret = new Object[1];
-        getUnitCellParameter(ret);
+        getUnitCellParameter(e.iToken + 2, ret);
         paramsOrUC = ret[0];
         if (paramsOrUC == null)
           invArg();
@@ -6659,36 +6655,49 @@ public class CmdExt extends ScriptExt {
   }
 
   /**
-   * Accept "a,b,c:0,0,0" transformation matrix syntax or [origin a b c] or [a b c alpha beta gamma]
-   * @param ret return array to hold oabc or [params]
-   * @return true if oabc 
+   * Accept "a,b,c:0,0,0" transformation matrix syntax or [origin a b c] or [a b
+   * c alpha beta gamma]
+   * 
+   * @param ret
+   *        return array to hold oabc or [params]
+   * @return true if oabc
    * @throws ScriptException
    */
-  private boolean getUnitCellParameter(Object[] ret) throws ScriptException {
+  private boolean getUnitCellParameter(int i, Object[] ret)
+      throws ScriptException {
     ret[0] = null;
-    if (tokAt(e.iToken + 1) == T.string) {
-      String tr = paramAsStr(++e.iToken);
+    if (tokAt(i) == T.point3f) 
+      return false;
+    int ei = e.iToken;
+    if (tokAt(i) == T.string) {
+      String tr = paramAsStr(i);
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       if (uc == null)
         invArg();
       ret[0] = uc.getV0abc(tr, null);
       return true;
     }
-    if (e.isArrayParameter(e.iToken)) {
+    if (e.isArrayParameter(i)) {
+      // from state [ pt3 pt3 pt3 pt4 ]
       e.ignoreError = true;
+      if (tokAt(i + 2) != T.leftbrace) {
+        try {
+          ret[0] = e.doubleParameterSet(i, 6, 6);
+          e.ignoreError = false;
+          return false;
+        } catch (Exception e) {
+          // ignore NullPointerException
+        }
+      }
       try {
-        // from state [ pt3 pt3 pt3 ]
-        if (tokAt(e.iToken + 2) != T.leftbrace)
-          ret[0] = e.doubleParameterSet(e.iToken, 6, 6);
-        e.ignoreError = false;
-        return false;
-      } catch (Exception e) {
+        // [ Origin vA vB vC ]
+        // these are VECTORS, though
+        ret[0] = e.getPointArray(i, 4, false);
+      } catch (Exception ee) {
         // ignore NullPointerException
+        e.iToken = ei;
       }
       e.ignoreError = false;
-      // [ Origin vA vB vC ]
-      // these are VECTORS, though
-      ret[0] = e.getPointArray(e.iToken, 4, false);
     }
     return true;
   }

@@ -46,7 +46,6 @@ import org.jmol.shape.MeshCollection;
 import org.jmol.shape.Shape;
 import org.jmol.thread.JmolThread;
 import org.jmol.util.BSUtil;
-import org.jmol.util.BoxInfo;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
@@ -9367,17 +9366,20 @@ public class ScriptEval extends ScriptExpr {
           if (uc == null)
             invArg(); 
           P3d[] pts = uc.getUnitCellVerticesNoOffset();
-          P3d off = uc.getCartesianOffset();
-          P3d pt = new P3d();
-          BoxInfo bi = new BoxInfo();
+          P3d center = new P3d();
           for (int j = 0; j < 8; j++) {
-            pt.add2(off, pts[j]);
-            bi.addBoundBoxPoint(pt);
+            center.add(pts[j]);
           }
-          bi.setBbcage(1);
-          r = bi.bbCorner0.distance(bi.bbCorner1) / 2;
+          center.scale(1d/8);
+          r = 0;
+          for (int j = 0; j < 8; j++) {
+            double d = pts[j].distanceSquared(center);
+            if (d > r)
+              r = d;
+          }
           if (r == 0)
             invArg();
+          r = Math.sqrt(r);
           break;
         case T.dollarsign:
           P3d[] bbox = getObjectBoundingBox(objectNameParameter(ptCenter + 1));

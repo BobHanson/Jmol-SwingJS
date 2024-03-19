@@ -1332,7 +1332,7 @@ public class XtalSymmetry {
     if (filterSymop != null || name == null || name.equals("unspecified!")) {
       setAtomSetSpaceGroupName(symmetry.getSpaceGroupName());
     }
-    if (unitCellParams != null)
+    if (unitCellParams != null || Double.isNaN(acr.unitCellParams[SimpleUnitCell.INFO_A]))
       return;
     if (symmetry.fixUnitCell(acr.unitCellParams)) {
       acr.appendLoadNote(

@@ -1164,7 +1164,7 @@ public class Viewer extends JmolViewer
           + entryName;
     } else {
       String script = "" + getModelNumberDotted(currentFrame);
-      if (!entryName.equals(script))
+      if (!script.equals(entryName))
         entryName = script + ": " + entryName;
     }
     // there was a point where I thought frameNo and currentFrame

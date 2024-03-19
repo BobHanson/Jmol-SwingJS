@@ -31,7 +31,6 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Structure;
-import org.jmol.adapter.smarter.XtalSymmetry;
 import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.api.JmolAdapter;
 import org.jmol.c.STR;
@@ -156,6 +155,9 @@ public class PdbReader extends AtomSetCollectionReader {
   private int atomTypeLen;
   private boolean isCourseGrained;
   private boolean isbiomol;
+
+  private double cryst1;
+  private String fileSgName;
 
   final private static String lineOptions = 
    "ATOM    " + //0
@@ -422,7 +424,7 @@ public class PdbReader extends AtomSetCollectionReader {
     checkUnitCellParams();
     if (!isCourseGrained)
       connectAll(maxSerial, isConnectStateBug);
-    XtalSymmetry.FileSymmetry symmetry;
+    FileSymmetry symmetry;
     if (vBiomolecules != null && vBiomolecules.size() > 0 && asc.ac > 0) {
       asc.setCurrentModelInfo("biomolecules", vBiomolecules);
       setBiomoleculeAtomCounts();
@@ -483,6 +485,10 @@ public class PdbReader extends AtomSetCollectionReader {
   }
 
   private void checkUnitCellParams() {
+    if (isbiomol && (unitCellParams == null || Double.isNaN(unitCellParams[0]))) {
+        setUnitCell(1, 1, 1, 90, 90, 90);
+        addSpaceGroupName("P1");
+    }
     if (iHaveUnitCell) {
       asc.setCurrentModelInfo("unitCellParams", unitCellParams);
       if (sgName != null)
@@ -490,7 +496,7 @@ public class PdbReader extends AtomSetCollectionReader {
     }
   }
 
-  private void checkForResidualBFactors(XtalSymmetry.FileSymmetry symmetry) {
+  private void checkForResidualBFactors(FileSymmetry symmetry) {
     Atom[] atoms = asc.atoms;
     boolean isResidual = false;
      for (int i = asc.ac; --i >= 0;) {
@@ -1393,20 +1399,22 @@ public class PdbReader extends AtomSetCollectionReader {
     currentGroup3 = null;
   }
 
-  private double cryst1;
-  private String fileSgName;
   private void cryst1() throws Exception {
     double a = cryst1 = getFloat(6, 9);
     if (a == 1)
       a = Double.NaN; // 1 for a means no unit cell
     setUnitCell(a, getFloat(15, 9), getFloat(24, 9), getFloat(33,
         7), getFloat(40, 7), getFloat(47, 7));
+    addSpaceGroupName(PT.parseTrimmedRange(line, 55, 66));
+  }
+
+  private void addSpaceGroupName(String name) {
     if (isbiomol)
       doConvertToFractional = false;
     if (sgName == null || sgName.equals("unspecified!"))
-      setSpaceGroupName(PT.parseTrimmedRange(line, 55, 66));
+      setSpaceGroupName(name);
     fileSgName = sgName;
-  }
+ }
 
   private double getFloat(int ich, int cch) throws Exception {
     return parseDoubleRange(line, ich, ich+cch);
@@ -1850,7 +1858,7 @@ public class PdbReader extends AtomSetCollectionReader {
    * @param symmetry 
    */
   @SuppressWarnings("unchecked")
-  private void setTlsGroups(int iGroup, int iModel, XtalSymmetry.FileSymmetry symmetry) {
+  private void setTlsGroups(int iGroup, int iModel, FileSymmetry symmetry) {
 
     // TLS.groupCount   Integer
     // TLS.groups       List of Map
@@ -1947,7 +1955,7 @@ public class PdbReader extends AtomSetCollectionReader {
   private static final double _8PI2_ = (8 * Math.PI * Math.PI);
   private Map<Atom, double[]>tlsU;
   
-  private void setTlsTensor(Atom atom, Map<String, Object> group, XtalSymmetry.FileSymmetry symmetry) {
+  private void setTlsTensor(Atom atom, Map<String, Object> group, FileSymmetry symmetry) {
     P3d origin = (P3d) group.get("origin");
     if (Double.isNaN(origin.x))
       return;

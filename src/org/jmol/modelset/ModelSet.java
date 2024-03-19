@@ -1321,7 +1321,7 @@ public class ModelSet extends BondCollection {
   private void calcUnitCellMinMax() {
     P3d pt = new P3d();
     for (int i = 0; i < mc; i++) {
-      if (!unitCells[i].getCoordinatesAreFractional())
+      if (unitCells[i] == null || !unitCells[i].getCoordinatesAreFractional())
         continue;
       P3d[] vertices = unitCells[i].getUnitCellVerticesNoOffset();
       P3d offset = unitCells[i].getCartesianOffset();
@@ -3121,14 +3121,15 @@ public class ModelSet extends BondCollection {
       msInfo.put("group3Lists", group3Lists);
       msInfo.put("group3Counts", group3Counts);
     }
-    unitCells = (SymmetryInterface[]) AU.arrayCopyObject(unitCells,
-        newModelCount);
+    unitCells = (unitCells == null ? new SymmetryInterface[newModelCount] : (SymmetryInterface[]) AU.arrayCopyObject(unitCells,
+        newModelCount));
     for (int i = mc; i < newModelCount; i++) {
       newModels[i] = new Model().set(this, i, -1, null, null, null);
       newModels[i].loadState = " model create #" + i + ";";
     }
     am = newModels;
     mc = newModelCount;
+    vwr.setAnimationRange(-1, -1);
   }
 
   public void deleteAtoms(BS bs) {
@@ -4460,13 +4461,13 @@ public class ModelSet extends BondCollection {
       // move any origin offset into atom positions
       if (nops > 1)
         setModelCage(mi, null);
-      P3d offset = P3d.newP(sg.getCartesianOffset());
-      if (offset.length() == 0) {
-        offset = null;
-      } else {
-        sg.setOffsetPt(new P3d());
-        setTaintedAtoms(bs, TAINT_COORD);
-      }
+      P3d offset = null;//P3d.newP(sg.getCartesianOffset());
+//      if (offset.length() == 0) {
+//        offset = null;
+//      } else {
+//        sg.setOffsetPt(new P3d());
+//        setTaintedAtoms(bs, TAINT_COORD);
+//      }
       if (offset != null) {
         // carry out the offset
         for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {

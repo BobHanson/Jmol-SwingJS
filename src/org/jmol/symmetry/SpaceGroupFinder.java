@@ -14,6 +14,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
+import javajs.util.M4d;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.T3d;
@@ -120,7 +121,7 @@ public class SpaceGroupFinder {
     //    BS withinCell = null;
     SpaceGroup sg = null;
 
-    boolean setNew = (isAssign && xyzList != null && nAtoms == 0
+    boolean setFromScratch = (isAssign && xyzList != null && nAtoms == 0
         && (uc.getSpaceGroup() == null
             || "P1".equals(((SpaceGroup) uc.getSpaceGroup()).getName())));
 
@@ -128,22 +129,34 @@ public class SpaceGroupFinder {
     BS basis;
     boolean isHall = (xyzList != null && xyzList.startsWith("Hall:"));
     Map<String, Object> sgdata = null;
+    boolean hasTransform = false;
     if (isHall) {
       name = xyzList;
       sg = SpaceGroup.createSpaceGroupN(xyzList);
       // still need basis
     } else if (xyzList != null && xyzList.toUpperCase().startsWith("ITA/")) {
       xyzList = PT.rep(xyzList.substring(4), " ", "");
-      boolean isJmolCode = (xyzList.indexOf(":") > 0);
-      int pt = xyzList.indexOf(".");
-      if (!isJmolCode && pt < 0 && PT.parseInt(xyzList) != Integer.MIN_VALUE)
+      int pt = xyzList.indexOf(":");
+      hasTransform = (pt > 0 && xyzList.indexOf(",") > pt);
+      boolean isJmolCode = (pt > 0 && !hasTransform);
+      String transform = null;
+      if (hasTransform) {
+        name = transform = xyzList.substring(pt + 1);
+        xyzList = xyzList.substring(0, pt);
+      }
+      pt = xyzList.indexOf(".");
+      if (pt > 0 && (hasTransform || isJmolCode)) {
+        xyzList = xyzList.substring(0, pt);
+        pt = -1;        
+      }
+      if (!isJmolCode && !hasTransform && pt < 0 && PT.parseInt(xyzList) != Integer.MIN_VALUE)
         xyzList += ".1";
       Object o = uc.getSpaceGroupJSON(vwr, "ITA", xyzList, 0);
       if (o == null || o instanceof String) {
         return null;
       }
       sgdata = (Map<String, Object>) o;
-      if (isJmolCode) {
+      if (isJmolCode || hasTransform) {
         name = xyzList;
         Lst<Object> its = (Lst<Object>) sgdata.get("its");
         sgdata = null;
@@ -151,26 +164,48 @@ public class SpaceGroupFinder {
           return null;
         for (int i = 0, c = its.size(); i < c; i++) {
           Map<String, Object> setting = (Map<String, Object>) its.get(i);
-          if (name.equals(setting.get("itaFull"))) {
+          if (name.equals(setting.get(hasTransform ? "tm" : "itaFull"))) {
             sgdata = setting;
             break;
           }
         }
-        if (sgdata == null)
-          return null;
+        if (sgdata == null) {
+          if (isJmolCode)
+            return null;
+          // nonstandard transform
+          sgdata = (Map<String, Object>) its.get(0);
+        }
       } else {
         name = (String) sgdata.get("itaFull");
       }
-      boolean isKnown = (name.indexOf("?") < 0);
+      boolean isKnownToJmolButNotITA = isJmolCode && (name.indexOf("?") < 0);
+      M4d trm = null, trmInv = null, t = null;
+      double[] v = null;
+      if (hasTransform) {
+        trm = new M4d();
+        UnitCell.getMatrixAndUnitCell(null, transform, trm);
+        trmInv = M4d.newM4(trm);
+        trmInv.invert();
+        v = new double[16];
+        t = new M4d();
+      }
+      
       Lst<Object> genPos = (Lst<Object>) sgdata.get("gp");
       xyzList = "";
-      for (int i = 0, c = genPos.size(); i < c; i++)
-        xyzList += ";" + (String) genPos.get(i);
+      for (int i = 0, c = genPos.size(); i < c; i++) {
+        String xyz = (String) genPos.get(i);
+        if (hasTransform && i > 0) {
+          xyz = SymmetryOperation.transformStr(xyz, trm, trmInv, t, v);
+        }
+        xyzList += ";" + xyz;
+      }
+      //System.out.println("for " + transform + " " + xyzList);
       xyzList = xyzList.substring(1);
       sg = SpaceGroup.createSpaceGroupN(xyzList);
       sg.intlTableNumber = name;
+      sg.itaTransform = transform;
       SpaceGroup sgjmol = null;
-      if (isKnown) {
+      if (isKnownToJmolButNotITA) {
         sgjmol = SpaceGroup.determineSpaceGroupNA(name, null);
         if (sgjmol != null) {
           sg = sgjmol.cloneInfoTo(sg);
@@ -183,8 +218,12 @@ public class SpaceGroupFinder {
       if (sgjmol == null) {
         String u = (String) sgdata.get("u");
         String tr = (String) sgdata.get("tm");
-        sg.intlTableNumberExt = PT.rep(u, " ", "") + ";" + sgdata.get("sg")
-            + "(" + tr + ")";
+        sg.itaTransform = (hasTransform ? transform : tr);
+        sg.hmSymbol = PT.rep(u, " ", "");
+        sg.hmSymbolFull = u;
+        sg.intlTableNumber = "" + sgdata.get("sg");
+        sg.intlTableNumberExt = sg.intlTableNumberFull 
+              = sg.intlTableNumber;
         char axis = u.toLowerCase().charAt(0);
         if (UnitCell.isHexagonalSG(PT.parseInt(sg.intlTableNumber), null)
             && axis != 'r')
@@ -201,7 +240,7 @@ public class SpaceGroupFinder {
       }
     }
     boolean isSupercell = false;
-    if (setNew) {
+    if (setFromScratch) {
       if (sg == null
           && (sg = SpaceGroup.determineSpaceGroupNA(xyzList,
               unitCellParams)) == null
@@ -216,13 +255,13 @@ public class SpaceGroupFinder {
         oabc[0].setT(origin);
     } else {
       try {
-        if (isHall) {
+        if (isHall || hasTransform) {
           bsGroups.set(0);
         } else if (bsOpGroups == null) {
           loadData(vwr, this);
         }
         if (xyzList != null) {
-          if (!isHall) {
+          if (!isHall && !hasTransform) {
             Object ret = getGroupsWithOps(xyzList, unitCellParams, isAssign);
             if (!isAssign || ret == null)
               return ret;
@@ -237,7 +276,7 @@ public class SpaceGroupFinder {
           oabc[0].setT(origin);
           uc.setCartesianOffset(origin);
         }
-        if (!isHall)
+        if (!isHall && !hasTransform)
           filterGroups(bsGroups, uc.getUnitCellParams());
 
         //      withinCell = vwr.ms.getAtoms(T.unitcell, uc);
@@ -812,34 +851,6 @@ public class SpaceGroupFinder {
     }
     return ret;
   }
-
-  //  private SymmetryInterface checkTetragonal(Viewer vwr, SymmetryInterface uc, M3d mtet) {    
-  //    double[] params = uc.getUnitCellParams();
-  //    if (!approx0(params[0] - params[1])
-  //        && approx0(params[1] - params[2])
-  //        && approx0(params[3] - 90) && approx0(params[4] - 90)
-  //        && approx0(params[5] - 90)) {
-  //      // b==c, so a->c->b->a
-  //      mtet.setA(new double[] {0, 1, 0, 0, 0, 1, 1, 0, 0});
-  //      for (int i = 0; i < nAtoms; i++) {
-  //        mtet.rotate(atoms[i]);
-  //      }
-  //      P3[] oabc = uc.getUnitCellVectors();
-  //      uc = vwr.getSymTemp().getUnitCell(new P3[] {oabc[0], oabc[2], oabc[3], oabc[1]}, false, "permuted");
-  //    } else if (!approx0(params[0] - params[1])
-  //        && approx0(params[0] - params[2])
-  //        && approx0(params[3] - 90) && approx0(params[4] - 90)
-  //        && approx0(params[5] - 90)) {
-  //      // a==c, so b->c->a->b
-  //      mtet.setA(new double[] {1, 0, 0, 0, 0, 1, 0, 1, 0});
-  //      for (int i = 0; i < nAtoms; i++) {
-  //        mtet.rotate(atoms[i]);
-  //      }
-  //      P3[] oabc = uc.getUnitCellVectors();
-  //      uc = vwr.getSymTemp().getUnitCell(new P3[] {oabc[0], oabc[1], oabc[3], oabc[2]}, false, "permuted");
-  //    }
-  //    return uc;
-  //  }
 
   P3d toFractional(Atom a, SymmetryInterface uc) {
     pt.setT(a);

@@ -735,7 +735,6 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     if (retMatrix == null ? uc == null : !(def instanceof String))
       return null;
     M4d m;
-    boolean isRev = false;
     V3d[] pts = new V3d[4];
     V3d pt = pts[0] = V3d.new3(0, 0, 0);
     pts[1] = V3d.new3(1, 0, 0);
@@ -753,13 +752,13 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       // a,b,c;0,0,0
       int ptc = sdef.indexOf(";");
       if (ptc >= 0) {
-        strans = sdef.substring(ptc + 1);
+        strans = sdef.substring(ptc + 1).trim();
         sdef = sdef.substring(0, ptc);
       }
       sdef += ";0,0,0";
       while (sdef.startsWith("!!"))
         sdef = sdef.substring(2);
-      isRev = sdef.startsWith("!");
+      boolean isRev = sdef.startsWith("!");
       if (isRev)
         sdef = sdef.substring(1);
       Symmetry symTemp = new Symmetry();
@@ -770,9 +769,11 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       m = symTemp.getSpaceGroupOperation(i);
       ((SymmetryOperation) m).doFinalize();
       if (strans != null) {
+        if (strans.indexOf(',') < 0)
+          strans = strans.replace(' ', ',');
         String[] atrans = PT.split(strans, ",");
         double[] ftrans = new double[3];
-        if (atrans.length == 3)
+        if (atrans.length == 3) {
           for (int j = 0; j < 3; j++) {
             String s = atrans[j];
             int sfpt = s.indexOf("/");
@@ -783,15 +784,22 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
               ftrans[j] = PT.parseDouble(s);
             }
           }
-        m.setTranslation(P3d.new3(ftrans[0], ftrans[1], ftrans[2]));
-        if (sdef.indexOf("a") >= 0)
-          m.transpose33();
+        }
+        P3d t = P3d.new3(ftrans[0], ftrans[1], ftrans[2]);
+        m.setTranslation(t);
+      }
+      boolean isABC = (sdef.indexOf("c") >= 0);
+      if (isABC) {
+        m.transpose33();
+      }
+      if (isRev) {
+        m.invert();
       }
       if (retMatrix != null) {
         retMatrix.setM4(m);
       }
       if (uc == null)
-        return pts;
+        return pts;      
     } else if (def instanceof M3d) {
       m = M4d.newMV((M3d) def, new P3d());
     } else if (def instanceof M4d) {
@@ -802,6 +810,7 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       m.getRotationScale(m3);
       uc.toCartesian(pt, false);
       m.rotTrans(pt);
+      
       for (int i = 1; i < 4; i++) {
         uc.toCartesian(pts[i], true);
         m3.rotate(pts[i]);
@@ -811,22 +820,16 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
 
     // We have an operator that may need reversing.
     // Note that translations are limited to 1/2, 1/3, 1/4, 1/6, 1/8.
-
-    m.getRotationScale(m3);
-    m.getTranslation(pt);
-    if (isRev) {
-      m3.invert();
-      m3.transpose();
-      m3.rotate(pt);
-      pt.scale(-1);
-    } else {
-      m3.transpose();
-    }
-
+    
+    
+    // everything must happen in the CURRENT frame
+    
     // Note that only the origin is translated;
     // the others are vectors from the origin.
 
     // this is a point, so we do not ignore offset
+    m.getRotationScale(m3);
+    m.getTranslation(pt);
     uc.toCartesian(pt, false);
     for (int i = 1; i < 4; i++) {
       m3.rotate(pts[i]);
@@ -865,6 +868,8 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   }
   
   boolean isSameAs(double[][] f2c2) {
+    if (f2c2 == null)
+      return false;
     double[][] f2c = getF2C();
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 4; j++) {
@@ -1246,15 +1251,13 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
         // monoclinic
         switch (sg.uniqueAxis) {
         case 'a':
-          //c = b;
           beta = gamma = 90;
           break;
+        default:
         case 'b':
-          //c = a;
           alpha = gamma = 90;
           break;
         case 'c':
-          //b = a;
           alpha = beta = 90;
           break;
         }
