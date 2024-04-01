@@ -38,6 +38,7 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Tensor;
+import org.jmol.viewer.JC;
 
 import javajs.util.BS;
 import javajs.util.Lst;
@@ -247,7 +248,7 @@ public class Ellipsoids extends AtomShape {
       return;
     }
 
-    if (propertyName == "deleteModelAtoms") {
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       Iterator<Ellipsoid> e = simpleEllipsoids.values().iterator();
       while (e.hasNext())

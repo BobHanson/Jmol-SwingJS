@@ -2101,7 +2101,7 @@ public class CifReader extends AtomSetCollectionReader {
           Logger.debug(molecularType + " removing " + i + " "
               + atoms[i].atomName + " " + atoms[i]);
       }
-      asc.setCurrentModelInfo("unitCellParams", null);
+      asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_PARAMS, null);
       if (nMolecular++ == asc.iSet) {
         asc.clearGlobalBoolean(JC.GLOBAL_FRACTCOORD);
         asc.clearGlobalBoolean(JC.GLOBAL_SYMMETRY);

@@ -41,6 +41,7 @@ import org.jmol.quantum.QS;
 import org.jmol.script.T;
 import org.jmol.shape.MeshCollection;
 import org.jmol.util.Escape;
+import org.jmol.viewer.JC;
 
 public class MolecularOrbital extends Isosurface {
 
@@ -240,7 +241,7 @@ public class MolecularOrbital extends Isosurface {
       return;
     }
 
-    if (propertyName == "deleteModelAtoms") {
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       Map<String, Map<String, Object>> htModelsNew = new Hashtable<String, Map<String, Object>>();
       for (int i = meshCount; --i >= 0;) {

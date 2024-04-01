@@ -36,6 +36,7 @@ import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
 import org.jmol.shape.MeshCollection;
+import org.jmol.viewer.JC;
 
 public class CGO extends MeshCollection {
   
@@ -116,7 +117,7 @@ public class CGO extends MeshCollection {
       return;
     }
     
-    if (propertyName == "deleteModelAtoms") {
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       deleteModels(((int[]) ((Object[]) value)[2])[0]);
       return;
     }

@@ -139,7 +139,7 @@ public abstract class BioShapeCollection extends Shape {
       return;
     }
 
-    if (propertyName == "deleteModelAtoms") {
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       atoms = (Atom[]) ((Object[]) value)[1];
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       for (int i = bioShapes.length; --i >= 0;) {

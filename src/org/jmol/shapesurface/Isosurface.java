@@ -711,7 +711,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
      * meshes[i].hideBackground = doHide; } return; }
      */
 
-    if (propertyName == "deleteModelAtoms") {
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       int firstAtomDeleted = ((int[]) ((Object[]) value)[2])[1];
       int nAtomsDeleted = ((int[]) ((Object[]) value)[2])[2];

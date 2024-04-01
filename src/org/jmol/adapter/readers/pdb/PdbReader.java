@@ -490,9 +490,9 @@ public class PdbReader extends AtomSetCollectionReader {
         addSpaceGroupName("P1");
     }
     if (iHaveUnitCell) {
-      asc.setCurrentModelInfo("unitCellParams", unitCellParams);
+      asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_PARAMS, unitCellParams);
       if (sgName != null)
-        asc.setCurrentModelInfo("spaceGroup", sgName);
+        asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP, sgName);
     }
   }
 

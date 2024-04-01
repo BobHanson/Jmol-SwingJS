@@ -175,8 +175,7 @@ public abstract class AtomShape extends Shape {
       }
       return;
     }
-    if (propertyName == "deleteModelAtoms") {
-      Atom[] atoms = (Atom[]) ((Object[]) value)[1];
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       int[] info = (int[]) ((Object[]) value)[2];
       int firstAtomDeleted = info[1];
       int nAtomsDeleted = info[2];

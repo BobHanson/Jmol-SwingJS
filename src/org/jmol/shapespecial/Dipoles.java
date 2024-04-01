@@ -44,6 +44,7 @@ import org.jmol.util.C;
 import org.jmol.util.Edge;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 
 
@@ -308,7 +309,7 @@ public class Dipoles extends Shape {
       return;
     }
 
-    if (propertyName == "deleteModelAtoms") {
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       for (int i = dipoleCount; --i >= 0;)
         if (dipoles[i].modelIndex > modelIndex) {

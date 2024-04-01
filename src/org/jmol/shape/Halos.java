@@ -31,6 +31,7 @@ import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
+import org.jmol.viewer.JC;
 
 public class Halos extends AtomShape {
 
@@ -60,7 +61,7 @@ public class Halos extends AtomShape {
       return;
     }
 
-    if (propertyName == "deleteModelAtoms") {
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       BSUtil.deleteBits(bsHighlight, bs);
       // pass through to AtomShape
     }

@@ -341,7 +341,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     isPDB = checkBoolean(JC.getBoolName(JC.GLOBAL_ISPDB));
     isMultiFrame = (modelCount > 1);
     hasSymmetry = !isPDB && modelInfo.containsKey("hasSymmetry");
-    isUnitCell = modelInfo.containsKey("unitCellParams");
+    isUnitCell = modelInfo.containsKey(JC.INFO_UNIT_CELL_PARAMS);
     fileHasUnitCell = (isPDB && isUnitCell || checkBoolean("fileHasUnitCell"));
     isLastFrame = (modelIndex == modelCount - 1);
     altlocs = vwr.ms.getAltLocListInModel(modelIndex);
@@ -712,13 +712,13 @@ abstract public class JmolPopup extends JmolGenericPopup {
     if (!hasSymmetry || modelIndex < 0)
       return;
     Map<String, Object> info = (Map<String, Object>) vwr.getProperty(
-        "DATA_API", "spaceGroupInfo", null);
+        "DATA_API", JC.INFO_SPACE_GROUP_INFO, null);
     if (info == null)
       return;
     Object[][] infolist = (Object[][]) info.get("operations");
     if (infolist == null)
       return;
-    String name = (String) info.get("spaceGroupName");
+    String name = (String) info.get(JC.INFO_SPACE_GROUP_NAME);
     menuSetLabel(menu, name == null ? GT.$("Space Group") : name);
     SC subMenu = menu;
     int pt = (infolist.length > itemMax ? 0 : Integer.MIN_VALUE);
@@ -758,7 +758,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     String[] list = (String[]) modelInfo.get("symmetryOperations");
     if (list == null)
       return;
-    int[] cellRange = (int[]) modelInfo.get("unitCellRange");
+    int[] cellRange = (int[]) modelInfo.get(JC.INFO_UNIT_CELL_RANGE);
     boolean haveUnitCellRange = (cellRange != null);
     SC subMenu = menu;
     int nmod = itemMax;

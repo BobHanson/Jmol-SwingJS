@@ -28,6 +28,7 @@ package org.jmol.shape;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
+import org.jmol.viewer.JC;
 import org.jmol.util.Edge;
 
 import javajs.util.P3d;
@@ -167,7 +168,7 @@ public class Sticks extends Shape {
       return;
     }
 
-    if ("deleteModelAtoms" == propertyName) {
+    if (JC.PROP_DELETE_MODEL_ATOMS == propertyName) {
       return;
     }
 

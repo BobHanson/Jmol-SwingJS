@@ -56,6 +56,7 @@ import org.jmol.util.C;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshCapper;
 import org.jmol.util.Normix;
+import org.jmol.viewer.JC;
 
 public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
@@ -400,7 +401,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
       return;
     }
     
-    if (propertyName == "deleteModelAtoms") {
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       for (int i = polyhedronCount; --i >= 0;) {
         Polyhedron p = polyhedrons[i];

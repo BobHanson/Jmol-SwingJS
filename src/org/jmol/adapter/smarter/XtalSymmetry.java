@@ -1132,7 +1132,7 @@ public class XtalSymmetry {
 
     //      oldParams = symmetry.getUnitCellParams();
 
-    asc.setCurrentModelInfo("unitcell_conventional",
+    asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_CONVENTIONAL,
         symmetry.getV0abc("a,b,c", null));
     V3d va = vabc[0];
     V3d vb = vabc[1];
@@ -1207,7 +1207,7 @@ public class XtalSymmetry {
     if (acr.isPrimitive) {
       asc.setCurrentModelInfo("isprimitive", Boolean.TRUE);
       if (!"P".equals(acr.latticeType) || acr.primitiveToCrystal != null) {
-        asc.setCurrentModelInfo("unitcell_conventional", symmetry
+        asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_CONVENTIONAL, symmetry
             .getConventionalUnitCell(acr.latticeType, acr.primitiveToCrystal));
       }
     }
@@ -1326,7 +1326,7 @@ public class XtalSymmetry {
   }
 
   private void finalizeSymmetry(FileSymmetry symmetry) {
-    String name = (String) asc.getAtomSetAuxiliaryInfoValue(-1, "spaceGroup");
+    String name = (String) asc.getAtomSetAuxiliaryInfoValue(-1, JC.INFO_SPACE_GROUP);
     symmetry.setFinalOperations(ndims, name, asc.atoms, firstAtom,
         noSymmetryCount, doNormalize, filterSymop);
     if (filterSymop != null || name == null || name.equals("unspecified!")) {
@@ -1357,7 +1357,7 @@ public class XtalSymmetry {
 
   private void setAtomSetSpaceGroupName(String spaceGroupName) {
     symmetry.setSpaceGroupName(spaceGroupName);
-    asc.setCurrentModelInfo("spaceGroup", spaceGroupName + "");
+    asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP, spaceGroupName + "");
   }
 
   private void setCurrentModelInfo(int n, FileSymmetry sym, int[] unitCells) {
@@ -1371,8 +1371,8 @@ public class XtalSymmetry {
       asc.setCurrentModelInfo("presymmetryAtomCount", Integer.valueOf(n));
       asc.setCurrentModelInfo("latticeDesignation",
           sym.getLatticeDesignation());
-      asc.setCurrentModelInfo("unitCellRange", unitCells);
-      asc.setCurrentModelInfo("unitCellTranslations", unitCellTranslations);
+      asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_RANGE, unitCells);
+      asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_TRANSLATIONS, unitCellTranslations);
       if (acr.isSUPERCELL)
         asc.setCurrentModelInfo("supercell", acr.strSupercell);
     }
@@ -1391,9 +1391,9 @@ public class XtalSymmetry {
     asc.setCurrentModelInfo("intlTableNo", symmetry.getIntTableNumber());
     asc.setCurrentModelInfo("intlTableNoFull",
         symmetry.getIntTableNumberFull());
-    asc.setCurrentModelInfo("spaceGroupIndex",
+    asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_INDEX,
         Integer.valueOf(symmetry.getSpaceGroupIndex()));
-    asc.setCurrentModelInfo("spaceGroupTitle", symmetry.getSpaceGroupTitle());
+    asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_TITLE, symmetry.getSpaceGroupTitle());
     if (acr.sgName == null || acr.sgName.indexOf("?") >= 0
         || acr.sgName.indexOf("!") >= 0)
       setAtomSetSpaceGroupName(acr.sgName = symmetry.getSpaceGroupName());
@@ -1403,9 +1403,9 @@ public class XtalSymmetry {
                                      P3d unitCellOffset,
                                      M3d matUnitCellOrientation) {
     if (unitCellParams != null)
-      asc.setCurrentModelInfo("unitCellParams", unitCellParams);
+      asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_PARAMS, unitCellParams);
     if (unitCellOffset != null)
-      asc.setCurrentModelInfo("unitCellOffset", unitCellOffset);
+      asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_OFFSET, unitCellOffset);
     if (matUnitCellOrientation != null)
       asc.setCurrentModelInfo("matUnitCellOrientation", matUnitCellOrientation);
   }

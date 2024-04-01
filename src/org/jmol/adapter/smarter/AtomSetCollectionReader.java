@@ -697,9 +697,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
           || desiredSpaceGroupIndex >= 0);
       ignoreFileSymmetryOperators = (desiredSpaceGroupIndex != -1);
     }
-    if (htParams.containsKey("unitCellOffset")) {
+    if (htParams.containsKey(JC.INFO_UNIT_CELL_OFFSET)) {
       fileScaling = P3d.new3(1, 1, 1);
-      fileOffset = (P3d) htParams.get("unitCellOffset");
+      fileOffset = (P3d) htParams.get(JC.INFO_UNIT_CELL_OFFSET);
       fileOffsetFractional = P3d.newP(fileOffset);
       unitCellOffsetFractional = htParams
           .containsKey("unitCellOffsetFractional");

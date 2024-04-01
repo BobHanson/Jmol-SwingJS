@@ -162,7 +162,7 @@ public class Dots extends AtomShape {
       return;
     }
 
-    if (propertyName == "deleteModelAtoms") {
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       int firstAtomDeleted = ((int[])((Object[])value)[2])[1];
       int nAtomsDeleted = ((int[])((Object[])value)[2])[2];
       BSUtil.deleteBits(bsOn, bs);
