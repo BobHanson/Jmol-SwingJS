@@ -27,6 +27,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.adapter.smarter.Atom;
+import org.jmol.quantum.SlaterData;
 
 /**
  * 
@@ -60,11 +61,17 @@ abstract class MopacSlaterReader extends SlaterReader {
    */
   @Override
   protected double scaleSlater(int ex, int ey, int ez, int er, double zeta) {
+    int el = Math.abs(ex + ey + ez);
+    switch (el) {
+    case 0: // s
+      return getSlaterConstSSpherical(er + 1, Math.abs(zeta));
+    case 1: // p
+      return getSlaterConstPSpherical(er + 2, Math.abs(zeta));
+    }
     if (ex >= 0 && ey >= 0) {
       // no need for special attention here
       return super.scaleSlater(ex, ey, ez, er, zeta);
     }
-    int el = Math.abs(ex + ey + ez);
     if (el == 3) {
       return 0; // not set up for spherical f
     }
@@ -78,13 +85,80 @@ abstract class MopacSlaterReader extends SlaterReader {
     return getSlaterConstDSpherical(el + er + 1, Math.abs(zeta), ex, ey);
   }
 
+  /**
+   * spherical scaling factors specifically for x2-y2 and z2 orbitals
+   * 
+   * see http://openmopac.net/Manual/real_spherical_harmonics.html
+   * 
+   * dz2 sqrt((1/2p)(5/8))(2cos2(q) -sin2(q)) sqrt(5/16p)(3z2-r2)/r2 dxz
+   * sqrt((1/2p)(15/4))(cos(q)sin(q))cos(f) sqrt(15/4p)(xz)/r2 dyz
+   * sqrt((1/2p)(15/4))(cos(q)sin(q))sin(f) sqrt(15/4p)(yz)/r2 dx2-y2
+   * sqrt((1/2p)(15/16))sin2(q)cos2(f) sqrt(15/16p)(x2-y2)/r2 dxy
+   * sqrt((1/2p)(15/16))sin2(q)sin2(f) sqrt(15/4p)(xy)/r2
+   *
+   * The fact() method returns sqrt(15/4p) for both z2 and x2-y2. So now we ned
+   * to correct that with sqrt(1/12) for z2 and sqrt(1/4) for x2-y2.
+   * 
+   * http://openmopac.net/Manual/real_spherical_harmonics.html
+   *
+   * Apply the appropriate scaling factor for spherical D orbitals.
+   * 
+   * ex will be -2 for z2; ey will be -2 for x2-y2
+   * 
+   * 
+   * @param n
+   * @param zeta
+   * @param ex
+   * @param ey
+   * @return scaling factor
+   */
+  private final static double getSlaterConstDSpherical(int n, double zeta,
+                                                       int ex, int ey) {
+    // BH 2024.03.20 found missing "d" in 15d, so this was using integer division!
+
+    return fact(15d / (ex < 0 ? 12 : ey < 0 ? 4 : 1), zeta, n);
+  }
+
+  private final static double getSlaterConstSSpherical(int n, double zeta) {
+    // these values were determined empirically using Au (n=6) and Ag (n=5);
+    // other atoms with n=3 and 4 were no problem.
+    return Math.pow(2 * zeta, n + 0.5) * Math.sqrt(_1_4pi / fact_2n[n]);
+  }
+  
+//  private final static double calcSlater(double r, int n, double zeta) {
+//    double N = getSlaterConstSSpherical(n, zeta);
+//    return N * Math.pow(r, n-1) * Math.exp(-zeta * r);
+//  }
+//  static {
+// //for Excel. 
+//    double zeta = 1;
+//    double [] a = new double[7];
+//    for (int i = 0; i <= 100; i++) {
+//      double r = 10 * i/100d;
+//      a[0] = r;
+//      for (int n = 1; n <= 6; n++)
+//         a[n] = calcSlater(r, n, zeta);
+//      System.out.println(Arrays.toString(a).replace('[', ' ').replace(']', ' ').trim());
+//    }
+//    System.out.println("xxxx");
+//  }
+
+  private final static double getSlaterConstPSpherical(int n, double zeta) {
+    // these values were determined emprically using Au (n=6) and Ag (n=5);
+    // other atoms with n=3 and 4 were no problem.
+    double f = fact_2n[n] / 3;
+    return Math.pow(2 * zeta, n + 0.5) * Math.sqrt(_1_4pi / f);
+  }
+
   @Override
   public void setMOData(boolean clearOrbitals) {
     if (!allowNoOrbitals && orbitals.size() == 0)
       return;
-    if (mopacBasis == null || !forceMOPAC && gaussians != null && shells != null) {
-      if (forceMOPAC) 
-        System.out.println("MopacSlaterReader ignoring MOPAC zeta parameters -- using Gaussian contractions");
+    if (mopacBasis == null
+        || !forceMOPAC && gaussians != null && shells != null) {
+      if (forceMOPAC)
+        System.out.println(
+            "MopacSlaterReader ignoring MOPAC zeta parameters -- using Gaussian contractions");
       super.setMOData(clearOrbitals);
       return;
     }
@@ -201,7 +275,7 @@ abstract class MopacSlaterReader extends SlaterReader {
    */
   @Override
   protected void addSlaterBasis() {
-    if (mopacBasis == null ||  slaters != null && slaters.size() > 0)
+    if (mopacBasis == null || slaters != null && slaters.size() > 0)
       return;
     int ac = asc.ac;
     int i0 = asc.getLastAtomSetAtomIndex();
@@ -212,7 +286,8 @@ abstract class MopacSlaterReader extends SlaterReader {
     }
   }
 
-  public void createMopacSlaters(int iAtom, int atomicNumber, double[] values, boolean allowD) {
+  public void createMopacSlaters(int iAtom, int atomicNumber, double[] values,
+                                 boolean allowD) {
     double zeta;
     if ((zeta = values[0]) != 0) {
       createSphericalSlaterByType(iAtom, atomicNumber, "S", zeta, 1);
@@ -248,7 +323,8 @@ abstract class MopacSlaterReader extends SlaterReader {
     //....... 0 2  5  8   12    18  22  26  30
     switch (pt) {
     case 0: // s
-      addSlater(iAtom + 1, 0, 0, 0, getNPQs(atomicNumber) - 1, zeta, coef);
+      SlaterData sd = addSlater(iAtom + 1, 0, 0, 0, getNPQs(atomicNumber) - 1, zeta, coef);
+      sd.elemNo = atomicNumber;
       return;
     case 2: // Px
     case 5: // Py

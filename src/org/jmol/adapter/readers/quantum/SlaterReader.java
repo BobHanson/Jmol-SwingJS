@@ -70,10 +70,12 @@ abstract class SlaterReader extends MOReader {
    * @param zeta
    * @param coef
    */
-  protected final void addSlater(int iAtom, int a, int b, int c, int d, 
+  protected final SlaterData addSlater(int iAtom, int a, int b, int c, int d, 
                         double zeta, double coef) {
     //System.out.println ("SlaterReader " + slaters.size() + ": " + iAtom + " " + a + " " + b +  " " + c + " " + d + " " + zeta + " " + coef);
-    getSlaters().addLast(new SlaterData(iAtom, a, b, c, d, zeta, coef));
+    SlaterData sd = new SlaterData(iAtom, a, b, c, d, zeta, coef);
+    getSlaters().addLast(sd);
+    return sd;
   }
 
   protected Lst<SlaterData> getSlaters() {
@@ -212,10 +214,11 @@ abstract class SlaterReader extends MOReader {
    *   
    * slater scaling based on zeta, n, l, and x y z exponents.
    * 
-   * sqrt[(2zeta)^(2n + 1) 
-   *         * (2 el + 1)!! / (2 ex - 1)!! / (2 ey - 1)!! / (2 ez - 1)!!
-   *         / 4pi / (2n)! 
-   *     ]
+   * sqrt[(2zeta)^(2n + 1) * f  / 4pi / (2n)!]
+   * 
+   * where 
+   * 
+   * f = (2 el + 1)!! / (2 ex - 1)!! / (2 ey - 1)!! / (2 ez - 1)!!
    *     
    * The double factorials are precalculated.
    * 
@@ -224,20 +227,20 @@ abstract class SlaterReader extends MOReader {
    * @param n
    * @return scaled exponent
    */
-  private static double fact(double f, double zeta, int n) {
-    return Math.pow(2 * zeta, n + 0.5) * Math.sqrt(f * _1_4pi / fact1[n]);
+  protected static double fact(double f, double zeta, int n) {
+    return Math.pow(2 * zeta, n + 0.5) * Math.sqrt(f * _1_4pi / fact_2n[n]);
   }
 
-  private final static double _1_4pi = 0.25 / Math.PI;
+  protected final static double _1_4pi = 0.25 / Math.PI;
 
-  // (2n)! 
-  private final static double[] fact1 = new double[] {
-    1.0, 2.0, 24.0, 720.0, 40320.0, 362880.0, 87178291200.0 };
- 
-  //                                               x   0  1  2  3   4
+  // (2n)!        
+  protected final static double[] fact_2n = new double[] {
+    1, 2, 24, 720, 40320, 3628800, 479001600 };
+  //0  1  2    3     4       5          6
+  //0! 2! 4!  6!     8! *9*10^    *11*12^                                                      x   0  1  2  3   4
   // (2x - 1)!!   double factorial                        s  p  d   f
   private final static double[] dfact2 = new double[] { 1, 1, 3, 15, 105 };
-
+  
   /**
    *  scales slater using double factorials involving 
    *  quantum number n, l, and xyz exponents. fact2[x] is (2x - 1)!!
@@ -269,40 +272,11 @@ abstract class SlaterReader extends MOReader {
   protected final static double getSlaterConstCartesian(int n, double zeta,
                                                        int el, int ex, int ey,
                                                        int ez) {
-    return fact(ez < 0 ? dfact2[el + 1] 
-        : dfact2[el + 1] / dfact2[ex] / dfact2[ey] / dfact2[ez], zeta, n);
+    
+    // f = (2 el + 1)!! / (2 ex - 1)!! / (2 ey - 1)!! / (2 ez - 1)!!
+
+    double f = ez < 0 ? dfact2[el + 1] : dfact2[el + 1] / dfact2[ex] / dfact2[ey] / dfact2[ez];
+    return fact(f, zeta, n);
   }
 
-  /**
-   * spherical scaling factors specifically for x2-y2 and z2 orbitals
-   * 
-   * see http://openmopac.net/Manual/real_spherical_harmonics.html
-   * 
-   * dz2     sqrt((1/2p)(5/8))(2cos2(q) -sin2(q))     sqrt(5/16p)(3z2-r2)/r2
-   * dxz     sqrt((1/2p)(15/4))(cos(q)sin(q))cos(f)   sqrt(15/4p)(xz)/r2
-   * dyz     sqrt((1/2p)(15/4))(cos(q)sin(q))sin(f)   sqrt(15/4p)(yz)/r2
-   * dx2-y2  sqrt((1/2p)(15/16))sin2(q)cos2(f)        sqrt(15/16p)(x2-y2)/r2
-   * dxy     sqrt((1/2p)(15/16))sin2(q)sin2(f)        sqrt(15/4p)(xy)/r2
-   *
-   * The fact() method returns sqrt(15/4p) for both z2 and x2-y2. 
-   * So now we ned to correct that with sqrt(1/12) for z2 and sqrt(1/4) for x2-y2. 
-   * 
-   * http://openmopac.net/Manual/real_spherical_harmonics.html
-   *
-   * Apply the appropriate scaling factor for spherical D orbitals.
-   * 
-   * ex will be -2 for z2; ey will be -2 for x2-y2
-   * 
-   * 
-   * @param n
-   * @param zeta
-   * @param ex
-   * @param ey
-   * @return scaling factor
-   */
-  protected final static double getSlaterConstDSpherical(int n, double zeta, 
-                                                      int ex, int ey) {
-    return fact(15 / (ex < 0 ? 12 : ey < 0 ? 4 : 1), zeta, n);
-  }
-  
 }

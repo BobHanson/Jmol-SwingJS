@@ -138,16 +138,21 @@ abstract public class QuantumCalculation {
 
     if (atoms == null)
       atoms = (Atom[]) xyz;
+    double[] range = new double[] {nX, nY, nZ};
     if (points == null) {
       volume = 1;
       for (int i = 3; --i >= 0;) {
         originBohr[i] = originXYZ[i] * unitFactor;
         stepBohr[i] = stepsXYZ[i] * unitFactor;
+        range[i] = (stepsXYZ[i] * range[i]) * unitFactor/bohr_per_angstrom  ;
         volume *= stepBohr[i];
       }
-      Logger.info("QuantumCalculation:" + "\n origin = "
-          + Escape.eAD(originXYZ) + "\n steps = " + Escape.eAD(stepsXYZ)
-          + "\n origin(Bohr)= " + Escape.eAD(originBohr) + "\n steps(Bohr)= "
+      Logger.info("QuantumCalculation:" 
+          + "\n origin = " + Escape.eAD(originXYZ) 
+          + "\n range (Ang) = " +  Escape.eAD(range)
+          + "\n steps (Bohr)= " + Escape.eAD(stepBohr)
+          + "\n origin(Bohr)= " + Escape.eAD(originBohr) 
+          + "\n steps = "
           + Escape.eAD(stepBohr) + "\n counts= " + nX + " " + nY + " " + nZ);
     }
     

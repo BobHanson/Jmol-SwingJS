@@ -29,6 +29,7 @@ public class SlaterData {
 
   public boolean isCore;
   public int atomNo;
+  public int elemNo;
   public int x;
   public int y;
   public int z;
