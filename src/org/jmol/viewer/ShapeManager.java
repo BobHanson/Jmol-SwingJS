@@ -290,18 +290,34 @@ public class ShapeManager {
     if (shapes != null)
       for (int j = 0; j < JC.SHAPE_MAX; j++)
         if (shapes[j] != null)
-          setShapePropertyBs(j, "deleteModelAtoms", value, bs);
+          setShapePropertyBs(j, JC.PROP_DELETE_MODEL_ATOMS, value, bs);
   }
 
   void deleteVdwDependentShapes(BS bs) {
     if (bs == null)
       bs = vwr.bsA();
-    if (shapes[JC.SHAPE_ISOSURFACE] != null)
-      shapes[JC.SHAPE_ISOSURFACE].setProperty("deleteVdw", null, bs);
-    if (shapes[JC.SHAPE_CONTACT] != null)
-      shapes[JC.SHAPE_CONTACT].setProperty("deleteVdw", null, bs);
+    setShapeAtomsSafely(JC.SHAPE_ISOSURFACE, "deleteVdw", bs);
+    setShapeAtomsSafely(JC.SHAPE_CONTACT, "deleteVdw", bs);
   }
   
+  private void setShapeAtomsSafely(int i, String key, BS bs) {
+    if (shapes[i] != null)
+      shapes[i].setProperty(key, null, bs);
+  }
+
+  public void notifyAtoms(String prop, BS[] atomsAndModels) {
+    switch (prop) {
+    case JC.PROP_ATOMS_DELETED:
+      setShapeAtomsSafely(JC.SHAPE_MEASURES, prop, atomsAndModels[0]);
+      vwr.setModelkitPropertySafely(JC.MODELKIT_UPDATE_MODEL_KEYS, atomsAndModels);
+      break;
+    case JC.PROP_ATOMS_MOVED:
+      if (getShape(JC.SHAPE_DRAW) != null)
+        vwr.setModelkitPropertySafely(prop, atomsAndModels[0]);
+      break;
+    }
+  }
+
   public double getAtomShapeValue(int tok, Group group, int atomIndex) {
     int iShape = JC.shapeTokenIndex(tok);
     if (iShape < 0 || shapes[iShape] == null) 
