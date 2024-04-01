@@ -196,7 +196,7 @@ public class MOCalculation extends QuantumCalculation {
         Logger.info("Normalization of contractions (NWCHEM)");
       }        
     }
-    Logger.info("Normalizing AOs: " + type + " slaters:" + (slaters != null));
+    //Logger.info("Normalizing AOs: " + type + " slaters:" + (slaters != null));
   }
 
   @Override
@@ -889,8 +889,7 @@ public class MOCalculation extends QuantumCalculation {
     int b = slater.y;
     int c = slater.z;
     int d = slater.r;
-    //System.out.println("MOCALC " + slaterIndex + " atomNo=" + (atomIndex+1) + "\tx^" + a + " y^"+ b + " z^" + c + " r^" + d + "\tzeta=" + (-minuszeta) + "\tcoef=" + coef);
-          //+ " minmax " + xMin + " " + xMax + " " + yMin + " " + yMax + " " + zMin + " " + zMax
+//    System.out.println("MOCALC " + slaterIndex + " atomNo=" + (atomIndex+1) + "\tx^" + a + " y^"+ b + " z^" + c + " r^" + d + "\tzeta=" + (-minuszeta) + "\tcoef=" + coef);
     if (a == -2) /* if dz2 */
       for (int ix = xMax; --ix >= xMin;) {
         double dx2 = X2[ix];
@@ -1048,6 +1047,7 @@ public class MOCalculation extends QuantumCalculation {
 
   private void dumpInfo(int shell) {
     if (doShowShellType) {
+      if (Logger.debugging)
       Logger.debug("\n\t\t\tprocessShell: " + shell + " type="
           + QS.getQuantumShellTag(shell) + " nGaussians="
           + nGaussians + " atom=" + atomIndex);
@@ -1058,7 +1058,8 @@ public class MOCalculation extends QuantumCalculation {
       for (int ig = 0; ig < nGaussians; ig++) {
         double alpha = gaussians[gaussianPtr + ig][0];
         double c1 = gaussians[gaussianPtr + ig][1];
-        Logger.debug("\t\t\tGaussian " + (ig + 1) + " alpha=" + alpha + " c="
+        if (Logger.debugging)
+          Logger.debug("\t\t\tGaussian " + (ig + 1) + " alpha=" + alpha + " c="
             + c1);
       }
     }
@@ -1066,7 +1067,8 @@ public class MOCalculation extends QuantumCalculation {
       for (int i = 0; i < map.length; i++) {
         int n = map[i] + moCoeff - map.length + i + 1;
         double c = coeffs[i];
-          Logger.debug("MO coeff " + (so == null ? "?" : so[i]) + " "
+        if (Logger.debugging)
+            Logger.debug("MO coeff " + (so == null ? "?" : so[i]) + " "
               + n + "\t" + c + "\t" + thisAtom.atom);
       
     }
@@ -1104,7 +1106,7 @@ public class MOCalculation extends QuantumCalculation {
     double volume = stepBohr[0] * stepBohr[1] * stepBohr[2]; 
         // / bohr_per_angstrom / bohr_per_angstrom / bohr_per_angstrom;
     integration *= volume;
-    Logger.info("Integrated density = " + integration);
+    Logger.info("Integrated density = " + integration + " for volume " + (volume * nX * nY * nZ/ bohr_per_angstrom / bohr_per_angstrom / bohr_per_angstrom) + " Ang^3 steps " + nX + " " + nY + " " + nZ);
   }
 
 }
