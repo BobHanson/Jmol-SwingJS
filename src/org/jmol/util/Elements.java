@@ -202,7 +202,7 @@ public class Elements {
    };
 
    public static int getNaturalIsotope(int elementNumber) {
-     return isotopeMass[elementNumber & 0x7F];
+     return isotopeMass[elementNumber & ELEMENT_NUMBER_MASK];
    }
 
    public static double getAtomicMass(int i) {
@@ -276,7 +276,7 @@ public class Elements {
         if (elemNo == altElementNumbers[j])
           return altElementSymbols[j];
       isoNumber = getIsotopeNumber(elemNo);
-      elemNo %= 128;
+      elemNo &= ELEMENT_NUMBER_MASK;
       return "" + isoNumber + getElementSymbol(elemNo);
     }
     return getElementSymbol(elemNo);
@@ -448,7 +448,7 @@ public class Elements {
     return altElementSymbols[i];
   }
   
-  public final static int ISOTOPE_NUMBER_MASK = 0xF8;
+  public final static int ISOTOPE_NUMBER_MASK = 0x7F80;
   public final static int ISOTOPE_MASS_OFFSET = 7;
   public final static int ELEMENT_NUMBER_MASK = 0x7F; // 127
 

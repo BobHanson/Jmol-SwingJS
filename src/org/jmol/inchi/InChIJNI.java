@@ -162,7 +162,7 @@ public class InChIJNI implements JmolInChI {
     for (int pt = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
         .nextSetBit(i + 1)) {
       Atom a = vwr.ms.at[i];
-      String sym = a.getElementSymbol();
+      String sym = a.getElementSymbolIso(false);
       int iso = a.getIsotopeNumber();
       if (a.getElementNumber() == 1) {
         sym = "H"; // in case this is D
