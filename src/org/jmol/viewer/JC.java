@@ -524,6 +524,7 @@ public final class JC {
       + " EDITOR_IGNORE ##";
   public final static String REPAINT_IGNORE = SCRIPT_EXT + " REPAINT_IGNORE ##";
   public final static String SCRIPT_GUI = "; ## GUI ##";
+  public static final String SCRIPT_QUIET = "#quiet";
 
   public final static String LOAD_ATOM_DATA_TYPES = ";xyz;vxyz;vibration;temperature;occupancy;partialcharge;";
 
@@ -1577,11 +1578,32 @@ public final class JC {
     return globalBooleans[g];
   }
 
-  /**
-   * was a minimum for float as double, but now just Double.MIN_VALUE
-   */
   public final static double FLOAT_MIN_SAFE = Double.MIN_VALUE; // was 2E-45f; 
 
+  public static final String INFO_SPACE_GROUP = "spaceGroup";
+  public static final String INFO_SPACE_GROUP_ORIGINAL = "spaceGroupOriginal";
+  public static final String INFO_SPACE_GROUP_ASSIGNED = "spaceGroupAssigned";
+  public static final String INFO_SPACE_GROUP_INFO = "spaceGroupInfo";
+  public static final String INFO_SPACE_GROUP_INDEX = "spaceGroupIndex";
+  public static final String INFO_SPACE_GROUP_TITLE = "spaceGroupTitle";
+  public static final String INFO_SPACE_GROUP_NAME = "spaceGroupName";
+  public static final String INFO_SPACE_GROUP_NOTE = "spaceGroupNote";
+  public static final String INFO_UNIT_CELL_PARAMS = "unitCellParams";
+  public static final String INFO_UNIT_CELL_OFFSET = "unitCellOffset";
+  public static final String INFO_UNIT_CELL_CONVENTIONAL = "unitcell_conventional";
+  public static final String INFO_UNIT_CELL_RANGE = "unitCellRange";
+  public static final String INFO_UNIT_CELL_TRANSLATIONS = "unitCellTranslations";
+  public static final String INFO_UNIT_CELLS = "unitCells";
+  public static final String INFO_UNIT_CELL = "unitcell";
+  public static final String PROP_DELETE_MODEL_ATOMS = "deleteModelAtoms";
+  public static final String PROP_ATOMS_DELETED = "atomsDeleted";
+  public static final String PROP_ATOMS_MOVED = "atomsMoved";
+
+  /**
+   * was a minimum for float as double, but now just Double.MIN_VALUE
+   * @param type 
+   * @return 
+   */
   public static String getMenuScript(String type) {
     if (type == "openPDB") {
       return "var x__id__ = _modelTitle; if (x__id__.length != 4) { x__id__ = '1crn'};x__id__ = prompt('"
