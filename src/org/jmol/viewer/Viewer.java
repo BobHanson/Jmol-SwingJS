@@ -4021,7 +4021,7 @@ public class Viewer extends JmolViewer
     //  but this is not included as an atomMovedCallback
     ms.setAtomData(type, name, coordinateData, isDefault);
     if (type == AtomCollection.TAINT_COORD)
-      checkCoordinatesChanged();
+      checkCoordinatesChanged(null);
     refreshMeasures(true);
   }
 
@@ -7019,7 +7019,7 @@ public class Viewer extends JmolViewer
       boolean b = g.twistedSheets;
       g.twistedSheets = value;
       if (b != value)
-        checkCoordinatesChanged();
+        checkCoordinatesChanged(null);
       break;
     case T.celshading:
       // 13.1.13
@@ -8097,7 +8097,7 @@ public class Viewer extends JmolViewer
                                            double endDegrees, boolean isSpin,
                                            BS bsSelected, V3d translation,
                                            Lst<P3d> finalPoints,
-                                           double[] dihedralList, M4d m4) {
+                                           double[] dihedralList, M4d m4, boolean useModelKit) {
     // Eval: rotate INTERNAL
 
     if (eval == null)
@@ -8111,7 +8111,7 @@ public class Viewer extends JmolViewer
 
     boolean isOK = tm.rotateAboutPointsInternal(eval, point1, point2,
         degreesPerSecond, endDegrees, false, isSpin, bsSelected, false,
-        translation, finalPoints, dihedralList, m4);
+        translation, finalPoints, dihedralList, m4, useModelKit);
     if (isOK)
       setSync();
     return isOK;
@@ -8127,7 +8127,7 @@ public class Viewer extends JmolViewer
     }
     tm.rotateAboutPointsInternal(null, pt1, pt2, g.pickingSpinRate,
         Double.MAX_VALUE, isClockwise, true, null, false, null, null, null,
-        null);
+        null, false);
   }
 
   public V3d getModelDipole() {
@@ -8245,10 +8245,10 @@ public class Viewer extends JmolViewer
     }
   }
 
-  public void checkCoordinatesChanged() {
+  public void checkCoordinatesChanged(BS bsAtoms) {
     // note -- use of save/restore coordinates cannot 
     // track connected objects
-    ms.recalculatePositionDependentQuantities(null, null);
+    ms.recalculatePositionDependentQuantities(bsAtoms, null);
     refreshMeasures(true);
   }
 
@@ -8353,14 +8353,14 @@ public class Viewer extends JmolViewer
 
   public void moveAtoms(M4d m4, M3d mNew, M3d rotation, V3d translation,
                         P3d center, boolean isInternal, BS bsAtoms,
-                        boolean translationOnly) {
+                        boolean translationOnly, boolean useModelKit) {
     // from TransformManager exclusively
     if (bsAtoms.isEmpty())
       return;
     BS bsFixed = getMotionFixedAtoms(null, null);
     if (bsAtoms.intersects(bsFixed))
       return;
-    SymmetryInterface uc = getOperativeSymmetry();
+    SymmetryInterface uc = (useModelKit ? getOperativeSymmetry() : null);
     P3d[] apos0 = null;
     if (uc != null) {
       apos0 = ms.saveAtomPositions();

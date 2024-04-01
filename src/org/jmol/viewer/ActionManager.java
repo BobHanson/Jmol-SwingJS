@@ -1181,7 +1181,7 @@ public class ActionManager implements EventManager {
           vwr.moveAtomWithHydrogens(dragAtomIndex, deltaX, deltaY,
               (bnd(dragWheelAction, ACTION_dragZ) ? -deltaY
                   : Integer.MIN_VALUE), null, bs);
-          vwr.checkCoordinatesChanged();
+          vwr.checkCoordinatesChanged(null);
         }
         // NAH! if (atomPickingMode == PICKING_DRAG_MINIMIZE_MOLECULE && (dragGesture.getPointCount() % 5 == 0))
         //  minimize(false);
@@ -2087,12 +2087,15 @@ public class ActionManager implements EventManager {
                     .$("pick two atoms in order to display the symmetry relationship between them"));
       return;
     }
+    if (isSpin) {
     String s = measurementQueued.getMeasurementScript(" ", false);
-    resetMeasurement();
-    if (isSpin)
+      resetMeasurement();
       runScript("spin" + s + " " + vwr.getInt(T.pickingspinrate));
-    else
-      runScript("draw symop " + s + ";print 'all:';show symop " + s);
+    } else {
+      int a1 = measurementQueued.getAtomIndex(1), a2 = measurementQueued.getAtomIndex(2);
+      resetMeasurement();
+      vwr.getModelkit(false).drawSymop(a1, a2);
+    }
   }
 
   private void reset() {

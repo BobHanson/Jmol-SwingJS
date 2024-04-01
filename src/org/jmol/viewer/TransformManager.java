@@ -260,7 +260,7 @@ public class TransformManager {
     unTransformPoint(pt2, pt2);
     vwr.setInMotion(false);
     rotateAboutPointsInternal(null, pt2, pt1, 10 * speed, Double.NaN, false,
-        true, null, true, null, null, null, null);
+        true, null, true, null, null, null, null, false);
   }
 
   //  final V3 arcBall0 = new V3();
@@ -311,13 +311,13 @@ public class TransformManager {
   }
 
   private void applyRotation(M3d mNew, boolean isInternal, BS bsAtoms,
-                             V3d translation, boolean translationOnly, M4d m4) {
+                             V3d translation, boolean translationOnly, M4d m4, boolean useModelKit) {
     if (bsAtoms == null) {
       matrixRotate.mul2(mNew, matrixRotate);
       return;
     }
     vwr.moveAtoms(m4, mNew, matrixRotate, translation, internalRotationCenter,
-        isInternal, bsAtoms, translationOnly);
+        isInternal, bsAtoms, translationOnly, useModelKit);
     if (translation != null) {
       internalRotationCenter.add(translation);
     }
@@ -335,22 +335,22 @@ public class TransformManager {
     // the signs of both screen Y and screen Z in the end.
 
     if (matrixTemp3.setAsBallRotation(JC.radiansPerDegree, -yDeg, -xDeg))
-      applyRotation(matrixTemp3, false, bsAtoms, null, false, null);
+      applyRotation(matrixTemp3, false, bsAtoms, null, false, null, false);
   }
 
   public synchronized void rotateXRadians(double angleRadians, BS bsAtoms) {
     applyRotation(matrixTemp3.setAsXRotation(angleRadians), false, bsAtoms,
-        null, false, null);
+        null, false, null, false);
   }
 
   public synchronized void rotateYRadians(double angleRadians, BS bsAtoms) {
     applyRotation(matrixTemp3.setAsYRotation(angleRadians), false, bsAtoms,
-        null, false, null);
+        null, false, null, false);
   }
 
   public synchronized void rotateZRadians(double angleRadians) {
     applyRotation(matrixTemp3.setAsZRotation(angleRadians), false, null, null,
-        false, null);
+        false, null, false);
   }
 
   public void rotateAxisAngle(V3d rotAxis, double radians) {
@@ -359,7 +359,7 @@ public class TransformManager {
   }
 
   private synchronized void rotateAxisAngle2(A4d axisAngle, BS bsAtoms) {
-    applyRotation(matrixTemp3.setAA(axisAngle), false, bsAtoms, null, false, null);
+    applyRotation(matrixTemp3.setAA(axisAngle), false, bsAtoms, null, false, null, false);
   }
 
   /*
@@ -445,7 +445,7 @@ public class TransformManager {
                                     double endDegrees, boolean isClockwise,
                                     boolean isSpin, BS bsAtoms,
                                     boolean isGesture, V3d translation,
-                                    Lst<P3d> finalPoints, double[] dihedralList, M4d m4) {
+                                    Lst<P3d> finalPoints, double[] dihedralList, M4d m4, boolean useModelKit) {
 
     // *THE* Viewer INTERNAL frame rotation entry point
 
@@ -497,12 +497,12 @@ public class TransformManager {
     }
     double radians = endDegrees * JC.radiansPerDegree;
     internalRotationAxis.setVA(axis, radians);
-    rotateAxisAngleRadiansInternal(radians, bsAtoms, m4);
+    rotateAxisAngleRadiansInternal(radians, bsAtoms, m4, useModelKit);
     return false;
   }
 
   public synchronized void rotateAxisAngleRadiansInternal(double radians,
-                                                          BS bsAtoms, M4d m4) {
+                                                          BS bsAtoms, M4d m4, boolean useModelKit) {
 
     // final matrix rotation when spinning or just rotating
 
@@ -517,7 +517,7 @@ public class TransformManager {
     // NOW apply that rotation  
 
     applyRotation(matrixTemp3.setAA(axisangleT), true, bsAtoms,
-        internalTranslation, radians > 1e6d, m4);
+        internalTranslation, radians > 1e6d, m4, useModelKit);
     if (bsAtoms == null)
       getNewFixedRotationCenter();
   }
@@ -2432,7 +2432,7 @@ public class TransformManager {
         break;
       }
       vwr.moveAtoms(null, null, matrixRotate, v, internalRotationCenter,
-          false, bsAtoms, true);
+          false, bsAtoms, true, false);
       return;
     }
     this.bsSelectedAtoms = bsAtoms;
