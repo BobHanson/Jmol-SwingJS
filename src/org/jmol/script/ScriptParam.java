@@ -1389,7 +1389,7 @@ abstract public class ScriptParam extends ScriptError {
     }
     if (tokAt(++index) == T.none) {
       tickInfo = new TickInfo(null);
-      tickInfo.type = str;
+      tickInfo.type = str.charAt(0);
       iToken = index;
       return tickInfo;
     }
@@ -1400,7 +1400,7 @@ abstract public class ScriptParam extends ScriptError {
     }
     if (tokAt(iToken + 1) == T.unitcell)
       iToken++;
-    tickInfo.type = str;
+    tickInfo.type = str.charAt(0);
     if (tokAt(iToken + 1) == T.format)
       tickInfo.tickLabelFormats = stringParameterSet(iToken + 2);
     if (!allowScale)

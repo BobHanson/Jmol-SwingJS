@@ -32,7 +32,7 @@ public abstract class FontLineShape extends Shape {
 
   // Axes, Bbcage, Uccage
   
-  public final TickInfo[] tickInfos = new TickInfo[4];
+  public TickInfo[] tickInfos;
 
   public Font font3d;
 
@@ -45,21 +45,41 @@ public abstract class FontLineShape extends Shape {
 
     if ("tickInfo" == propertyName) {
       TickInfo t = (TickInfo) value;
+      char type = t.type;
       if (t.ticks == null) {
         // null ticks is an indication to delete the tick info
-        if (t.type.equals(" ")) {
-          tickInfos[0] = tickInfos[1] = tickInfos[2] = tickInfos[3] = null;
+        if (t.type == ' ') {
+          tickInfos = null;
           return;
         }
-        t = null;
+        if (tickInfos != null) {
+          boolean haveTicks = false;
+          for (int i = 0; i < 4; i++) {
+            if (tickInfos[i] != null && tickInfos[i].type == t.type) {
+              tickInfos[i] = null;
+            } else {
+              haveTicks = true;
+            }
+          }
+          if (!haveTicks)
+            tickInfos = null;
+        }
+        return;
       }
-      tickInfos["xyz".indexOf(t.type) + 1] = t;
+      if (tickInfos == null)
+        tickInfos = new TickInfo[4];
+      tickInfos["xyz".indexOf(type) + 1] = t;
       return;
     }
     if ("font" == propertyName) {
       font3d = (Font) value;
       return;
     }
+  }
+
+  private void checkTickinfos() {
+    // TODO
+    
   }
 
   @Override

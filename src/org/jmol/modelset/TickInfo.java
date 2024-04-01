@@ -33,7 +33,7 @@ public class TickInfo {
   }
 
   public String id = "";
-  public String type = " ";
+  public char type = ' ';
   public P3d ticks;
   public String[] tickLabelFormats;
   public P3d scale;
