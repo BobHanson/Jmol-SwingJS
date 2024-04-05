@@ -244,7 +244,7 @@ public interface SymmetryInterface {
 
   Object getWyckoffPosition(Viewer vwr, P3d pt, String letter);
 
-  Object getSpaceGroupJSON(Viewer vwr, String name, String sgname, int index);
+  Object getSpaceGroupJSON(Viewer vwr, String name, Object data, int index);
 
   double getCellWeight(P3d pt);
 
@@ -263,4 +263,12 @@ public interface SymmetryInterface {
   String cleanTransform(String tr);
 
   M4d replaceTransformMatrix(M4d trm);
+
+  Object getSubgroupJSON(Viewer vwr, int ita1, int ita2, int index1, int index2);
+
+  String getIntTableIndex();
+
+  String getIntTableTransform();
+
+  String getUnitCellDisplayInfo();
 }

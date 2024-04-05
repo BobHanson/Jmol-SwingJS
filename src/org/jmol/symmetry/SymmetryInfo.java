@@ -57,6 +57,8 @@ class SymmetryInfo {
    * 
    */
   protected String strSUPERCELL;
+  String intlTableIndex;
+  String intlTableTransform;
   
   SymmetryInfo() {    
   }
@@ -90,6 +92,8 @@ class SymmetryInfo {
       if (sgName == null || sgName == "")
         sgName = "spacegroup unspecified";
       intlTableNo = (String) modelInfo.get("intlTableNo");
+      intlTableIndex = (String) modelInfo.get("intlTableIndex");
+      intlTableTransform = (String) modelInfo.get("intlTableTransform");
       intlTableJmolID = (String) modelInfo.remove("intlTableJmolID");
       String s = (String) modelInfo.get("latticeType");
         latticeType = (s == null ? 'P' : s.charAt(0));
@@ -163,6 +167,7 @@ class SymmetryInfo {
   }
 
   boolean isActive = true;
+  String displayName;
 
   public boolean setIsActiveCell(boolean TF) {
     return (isActive != TF && (isActive = TF) == true);

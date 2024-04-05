@@ -175,21 +175,9 @@ public class UccageRenderer extends CageRenderer {
     ypos = lineheight = (int) Math.floor(15 * imageFontScaling);
 
     if (!unitcell.isSimple()) {
-      String sgName = (isPolymer ? "polymer"
-          : isSlab ? "slab" : unitcell.getSpaceGroupTitle());
-      if (sgName != null) {
-        if (sgName.startsWith("cell=!"))
-          sgName = "cell=inverse[" + sgName.substring(6) + "]";
-        sgName = PT.rep(sgName, ";0,0,0", "");
-        if (sgName.indexOf("#") < 0) {
-          String intTab = (String) unitcell.getSpaceGroupInfoObj("itaIndex", null, false, false);
-          if (!isSlab && !isPolymer && intTab != null)
-            sgName += " #" + intTab;
-        }
-        if (sgName.indexOf("-- [--]") < 0) {
+      String sgName = unitcell.getUnitCellDisplayInfo();
+      if (sgName != null)
           drawInfo(sgName, 0, null);
-        }
-      }
       Lst<String> info = unitcell.getMoreInfo();
       if (info != null)
         for (int i = 0; i < info.size(); i++)

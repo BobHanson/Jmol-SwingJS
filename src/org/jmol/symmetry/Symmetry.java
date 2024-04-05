@@ -85,6 +85,7 @@ public class Symmetry implements SymmetryInterface {
   private static SymmetryDesc nullDesc;
   private static Map<String, Object> aflowStructures;
   private static Map<String, Object>[] itaData;
+  private static Map<String, Object>[] itaSubData;
   private static Lst<Object> allDataITA;
   private static WyckoffFinder wyckoffFinder;
 
@@ -178,7 +179,7 @@ public class Symmetry implements SymmetryInterface {
                                      boolean addNonstandard) {
     switch (name) {
     case "itaIndex":
-    case "transform":
+    case "itaTransform":
     case "itaNumber":
       SpaceGroup sg = null;
       if (params != null) {
@@ -186,18 +187,17 @@ public class Symmetry implements SymmetryInterface {
       } else if (spaceGroup != null) {
         sg = spaceGroup;
       } else if (symmetryInfo != null) {
-        sg = SpaceGroup.determineSpaceGroupN(symmetryInfo.sgName);
-      } 
+        sg = symmetryInfo.getDerivedSpaceGroup();
+      }
       switch (sg == null ? "" : name) {
       case "itaIndex":
         return sg.getItaIndex();
-      case "transform":
+      case "itaTransform":
         return sg.itaTransform;
       case "itaNumber":
         return sg.itaNumber;
-      default:        
-        return null;
       }
+      return null;
     default:
       return SpaceGroup.getInfo(spaceGroup, name, (double[]) params, isFull,
           addNonstandard);
@@ -332,6 +332,18 @@ public class Symmetry implements SymmetryInterface {
   public String getIntTableNumber() {
     return (symmetryInfo != null ? symmetryInfo.intlTableNo
         : spaceGroup == null ? null : spaceGroup.itaNumber);
+  }
+
+  @Override
+  public String getIntTableIndex() {
+    return (symmetryInfo != null ? symmetryInfo.intlTableIndex
+        : spaceGroup == null ? null : spaceGroup.itaIndex);
+  }
+
+  @Override
+  public String getIntTableTransform() {
+    return (symmetryInfo != null ? symmetryInfo.intlTableTransform
+        : spaceGroup == null ? null : spaceGroup.itaTransform);
   }
 
   @Override
@@ -1090,42 +1102,199 @@ public class Symmetry implements SymmetryInterface {
     return (matrix == null ? SymmetryOperation.stringToMatrix(xyz) : SymmetryOperation.getXYZFromMatrixFrac(matrix, false, false, false, true));
   }
 
+
+  /**
+   * Retrieve subgroup information for a space group. Returns:
+   * 
+   * <pre>
+   * 
+   * values are 1-based so that "0" has special meaning, "-" means ignored; "MnV" is Integer.MIN_VALUE
+   * 
+   * itaFrom  itaTo  index1  index2
+   *    n      MnV     -       -      return map for group n, contents of sub_n.json
+   *    n       0      0       0      return int[][] of critical information 
+   *    n       0      m      MnV     return map map.subgroups[m]
+   *    n       0     MnV      -      return int[] array of list of valid super>>sub 
+   *    n       0      m       t      return string transform map.subgroups[m].trm[t]
+   *    n1      n2    MnV      -      return list map.subgroups.select("WHERE subgroup=n2")
+   *    n1      n2     m      MnV     return map map.subgroups.select("WHERE subgroup=n2")[m]
+   *    n1      n2     m       t      return string transform map.subgroups.select("WHERE subgroup=n2")[m].trm[t]
+   * 
+   * </pre>
+   * Critical information array is:
+   * 
+   *  [ isub, ntrm, subIndex, idet, trType ]
+   *  
+   *  isub: subgroupNumber
+   *  ntrm: transformation count
+   *  subIndex: index of this group-subgroup relationship
+   *  idet:  determinant if determinant >= 1; -1/determinant if determinant < 1
+   *  trType: 1 translationengeliechen, 3 klassengleichen "ct" loss of centering translation, 4 klassengleichen "eu" enlarged unit cell
+   *
+   * 
+   * @param vwr
+   * @param itaFrom
+   *        group ITA number
+   * @param itaTo
+   *        subgroup ITA number
+   * @param index1
+   *        for a specific index or Integer.MIN_VALUE for all itaFrom; itaTo
+   *        ignored
+   * @param index2
+   *        Integer.MIN_VALUE for all, or an index for a specific transform
+   * @return Map, List, or String with conjugation class removed (first two
+   *         characters "a:......")
+   */
   @SuppressWarnings("unchecked")
   @Override
-  public Object getSpaceGroupJSON(Viewer vwr, String name, String sgname,
+  public Object getSubgroupJSON(Viewer vwr, int itaFrom, int itaTo, int index1,
+                                int index2) {
+    boolean allSubsMap = (itaTo < 0);
+    boolean asIntArray = (itaTo == 0 && index1 == 0);
+    boolean asSSIntArray = (itaTo == 0 && index1 < 0);
+    boolean isIndexMap = (itaTo == 0 && index1 > 0 && index2 < 0);
+    boolean isIndexTStr = (itaTo == 0 && index1 > 0 && index2 > 0);
+    boolean isWhereList = (itaTo > 0 && index1 < 0);
+    boolean isWhereMap = (itaTo > 0 && index1 > 0 && index2 < 0);
+    boolean isWhereTStr = (itaTo > 0 && index1 > 0 && index2 > 0);
+    try {
+      Map<String, Object> o = (Map<String, Object>) getSpaceGroupJSON(vwr,
+          "subgroups", "map", itaFrom);
+      int ithis = 0;
+      if (o != null) {
+        if (allSubsMap)
+          return o;
+        if (asIntArray || asSSIntArray) {
+          Lst<Object> list = (Lst<Object>) o.get("subgroups");
+          int n = list.size();
+          int[][] groups = (asIntArray ? new int[n][] : null);
+          BS bs = (asSSIntArray ? new BS() : null);
+          for (int i = n; --i >= 0;) {
+            o = (Map<String, Object>) list.get(i);
+            int isub = ((Integer) o.get("subgroup")).intValue();
+            if (asSSIntArray) {
+              bs.set(isub);
+              continue;
+            }            
+            int subIndex = ((Integer) o.get("subgroupIndex")).intValue();
+            int trType = "k".equals(o.get("trType")) ? 2 : 1;
+            String subType = (trType == 1 ? (String) o.get("trSubtype") : "");
+            double det = ((Number) o.get("det")).doubleValue();
+            int idet = (int)(det < 1 ? -1/det : det);
+            if (subType.equals("ct"))
+              trType = 3;
+            else if (subType.equals("eu"))
+              trType = 4;
+            int ntrm = ((Lst<Object>) o.get("trm")).size();
+            groups[i] = new int[] { isub, ntrm, subIndex, idet, trType };
+          }
+          if (asSSIntArray) {
+            int[] a = new int[bs.cardinality()];
+            for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+              a[p++] = i;
+            }
+            return a;
+          }
+          return groups;
+          
+        }
+        Lst<Object> list = (Lst<Object>) o.get("subgroups");
+        int i0 = 0;
+        int n = list.size();
+        if (isIndexMap || isIndexTStr) {
+          if (index1 > n) {
+            throw new ArrayIndexOutOfBoundsException(
+                "no map.subgroups[" + index1 + "]");
+          }
+          i0 = index1 - 1;
+          if (isIndexMap)
+            return list.get(i0);
+          n = index1;
+        }
+        Lst<Map<String, Object>> whereList = (isWhereList ? new Lst<>() : null);
+        for (int i = i0; i < n; i++) {
+          o = (Map<String, Object>) list.get(i);
+          int isub = ((Integer) o.get("subgroup")).intValue();
+          if (!isIndexTStr && isub != itaTo)
+            continue;
+          if (++ithis == index1) {
+            if (isWhereMap)
+              return o;
+          } else if (isWhereTStr) {
+            continue;
+          }
+          if (isWhereList) {
+            whereList.addLast(o);
+            continue;
+          }
+          Lst<Object> trms = (Lst<Object>) o.get("trm");
+          n = trms.size();
+          if (index2 < 1 || index2 > n)
+            return null;
+          return ((String) trms.get(index2 - 1)).substring(2);
+        }
+        if (isWhereList && !whereList.isEmpty()) {
+          return whereList;
+        }
+      }
+      if (index1 == 0)
+        return null;
+      if (isWhereTStr && ithis > 0) {
+        throw new ArrayIndexOutOfBoundsException(
+            "only " + ithis +" maximal subgroup information for " + itaFrom + ">>" + itaTo);
+      }
+
+      throw new ArrayIndexOutOfBoundsException(
+          "no maximal subgroup information for " + itaFrom + ">>" + itaTo);
+    } catch (Exception e) {
+      return e.getMessage();
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public Object getSpaceGroupJSON(Viewer vwr, String name, Object data,
                                   int index) {
-    boolean isSettings = name.equalsIgnoreCase("settings");
-    boolean isThis = (isSettings && index == Integer.MIN_VALUE);
-    String s0 = (!isSettings ? name
+    boolean isSettings = name.equals("settings");
+    boolean isSubgroups = !isSettings && name.equals("subgroups");
+    boolean isThis = ((isSettings || isSubgroups)
+        && index == Integer.MIN_VALUE);
+    String s0 = (!isSettings && !isSubgroups ? name
         : isThis ? getSpaceGroupName() : "" + index);
     try {
       int itno;
       String tm = null;
       boolean isTM, isInt;
-      if (isSettings) {
+      String sgname;
+      if (isSettings || isSubgroups) {
         isTM = false;
         isInt = true;
+        sgname = (isSettings ? (String) data : null);
         if (isThis) {
           itno = PT.parseInt(getIntTableNumber());
-          if (spaceGroup == null) {
-            SpaceGroup sg = symmetryInfo.getDerivedSpaceGroup();
-            if (sg == null)
-              return new Hashtable<String, Object>();
-            sgname = sg.jmolId;
-          } else {
-            sgname = getIntTableNumberFull();
+          if (isSettings) {
+            if (spaceGroup == null) {
+              SpaceGroup sg = symmetryInfo.getDerivedSpaceGroup();
+              if (sg == null)
+                return new Hashtable<String, Object>();
+              sgname = sg.jmolId;
+            } else {
+              sgname = getIntTableNumberFull();
+            }
           }
         } else {
           itno = index;
         }
       } else {
+        sgname = (String) data;
         // tm allow for both 4(a,b,...) and 4:a,b,..., or, technically, 4(a,b,....
         int pt = sgname.indexOf("(");
         if (pt < 0)
           pt = sgname.indexOf(":");
         isTM = (pt >= 0 && sgname.indexOf(",") > pt);
-        if (isTM) {          
-          tm = sgname.substring(pt + 1, sgname.length() - (sgname.endsWith(")") ? 1 : 0));
+        if (isTM) {
+          tm = sgname.substring(pt + 1,
+              sgname.length() - (sgname.endsWith(")") ? 1 : 0));
           sgname = sgname.substring(0, pt);
           isThis = true;
         }
@@ -1137,9 +1306,19 @@ public class Symmetry implements SymmetryInterface {
           sgname = sgname.substring(0, pt);
         }
       }
-      if (isInt && (itno > 230 || itno < 0))
+      if (isInt && (itno > 230 || (isSettings ? itno < 1 : itno < 0)))
         throw new ArrayIndexOutOfBoundsException(itno);
-      if (isSettings || name.equalsIgnoreCase("ITA")) {
+      if (isSubgroups) {
+        if (itaSubData == null)
+          itaSubData = new Map[230];
+        Map<String, Object> resource = itaSubData[itno - 1];
+        if (resource == null)
+          itaSubData[itno - 1] = resource = (Map<String, Object>) getResource(
+              vwr, "sg/json/sub_" + itno + ".json");
+        if (resource != null) {
+            return resource;
+        }
+      } else if (isSettings || name.equalsIgnoreCase("ITA")) {
         if (itno == 0) {
           if (allDataITA == null)
             allDataITA = (Lst<Object>) getResource(vwr, "sg/json/ita_all.json");
@@ -1182,9 +1361,9 @@ public class Symmetry implements SymmetryInterface {
         if (itno == 0)
           return aflowStructures;
         System.out.println(sgname + " ? " + index);
-        Lst<Object> data = (Lst<Object>) aflowStructures.get("" + sgname);
-        if (index <= data.size()) {
-          return (index == 0 ? data : data.get(index - 1));
+        Lst<Object> adata = (Lst<Object>) aflowStructures.get("" + sgname);
+        if (index <= adata.size()) {
+          return (index == 0 ? adata : adata.get(index - 1));
         }
       }
       if (isThis)
@@ -1321,6 +1500,48 @@ public class Symmetry implements SymmetryInterface {
       M4d trm0 = transformMatrix;
       transformMatrix = trm;
       return trm0;
+  }
+
+  @Override
+  public String getUnitCellDisplayInfo() {
+    String name = (symmetryInfo != null ? symmetryInfo.displayName
+        : spaceGroup != null ? spaceGroup.displayName : null);
+    if (name == null) {
+      boolean isPolymer = isPolymer();
+      boolean isSlab = isSlab();
+      String sgName = (isPolymer ? "polymer"
+          : isSlab ? "slab" : getSpaceGroupTitle());
+      if (sgName == null)
+        return null;
+      if (sgName.startsWith("cell=!"))
+        sgName = "cell=inverse[" + sgName.substring(6) + "]";
+      sgName = PT.rep(sgName, ";0,0,0", "");
+      if (sgName.indexOf("#") < 0) {
+        String trm = getIntTableTransform();
+        String intTab = getIntTableIndex();
+        if (!isSlab && !isPolymer && intTab != null) {
+          if (trm != null) {
+            int pt = sgName.indexOf(trm);
+            if (pt >= 0) {
+              sgName = PT.rep(sgName, "(" + trm + ")", "");
+            }
+            if (intTab.indexOf(trm) < 0) {
+              pt = intTab.indexOf(".");
+              if (pt > 0)
+                intTab = intTab.substring(0, pt);
+              intTab += ":" + trm;
+            }
+          }
+          sgName += " #" + intTab;
+        }
+      }
+      name = (sgName.indexOf("-- [--]") < 0 ? sgName : "");
+      if (symmetryInfo != null)
+        symmetryInfo.displayName = name;
+      else
+        spaceGroup.displayName = name;
+    }
+    return (name.length() > 0 ? name : null);
   }
   
 }

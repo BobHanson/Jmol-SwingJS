@@ -264,7 +264,7 @@ public class MathExt {
 
   private boolean evaluateSpacegroup(ScriptMathProcessor mp, SV[] args) {
     // spacegroup();
-    // spcacgroup("setting")
+    // spacegroup("setting")
     // spacegroup(3);
     // spacegroup("133:2") // this name
     // spacegroup("ITA/155") // all settings for this ITA
@@ -274,15 +274,77 @@ public class MathExt {
     // spacegroup("x,y,z;-x,-y,-z");
     // spacegroup("x,y,z;-x,-y,-z", [a b c alpha beta gamma]);
     // spacegroup("x,y,z;-x,-y,-z&"); //space groups with all these operators
-    // spcacgroup(18, "settings")
+    // spacegroup(18, "settings")
+    // spacegroup(4,"subgroups") all data for 4
+	// spacegroup(4,0,"subgroups") an array of known subgroups
+    // spacegroup(4,0,0,0,"subgroups") an array of arrays of [isub, ntrm, subIndex, type(t=1, k(eu)=3, k(ct)= 4]
+    // spacegroup(4,5,"subgroups") list of all 4 >> 5
+    // spacegroup(4,5,1,"subgroups") first-listed 4 >> 5 as a map
+    // spacegroup(4,0,2,"subgroups") second listed subgroup as a map
+    // spacegroup(4,0,2,1,"subgroups") second listed subgroup, first transformation
+    // spacegroup(4,5,1,2,"subgroups") second transformation for 4>>5, first match
+    
+    
+//    * itaFrom  itaTo  index1  index2
+//    *    n      MnV     -       -      return map for group n, contents of sub_n.json
+//    *    n       0     MnV      -      return int[][] of critical information 
+//    *    n       0      m      MnV     return map map.subgroups[m]
+//    *    n       0      m       t      return string transform map.subgroups[m].trm[t]
+//    *    n       0      0       0      return int[] array of list of valid super>>sub 
+//    *    n1      n2    MnV      -      return list map.subgroups.select("WHERE subgroup=n2")
+//    *    n1      n2     m      MnV     return map map.subgroups.select("WHERE subgroup=n2")[m]
+//    *    n1      n2     m       t      return string transform map.subgroups.select("WHERE subgroup=n2")[m].trm[t]
+//    * 
+
+    
     // spacegroup("all");
-    String mode = null;
     double[] unitCellParams = null;
-    if (args.length == 0)
+    int n = args.length;
+    if (n == 0)
       return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null,
           vwr.am.cmi, true, null));
     String xyzList = args[0].asString();
-    switch (args.length) {
+    String mode = (args[args.length - 1].tok == T.string 
+        ? (String) args[args.length - 1].value : null);
+    if ("subgroups".equals(mode)) {
+      SymmetryInterface sym;
+      int itaFrom = Integer.MIN_VALUE, itaTo = Integer.MIN_VALUE, index1 = Integer.MIN_VALUE, index2 =Integer.MIN_VALUE;
+      switch (n) {
+      case 5:
+        index2 = args[3].intValue;
+        if (index2 < 0)
+          return false;
+        //$FALL-THROUGH$
+      case 4:
+        index1 = args[2].intValue;
+        if (index1 < 0)
+          return false;
+        //$FALL-THROUGH$
+      case 3:
+        itaTo = args[1].intValue;
+        if (itaTo < 0)
+          return false;
+        //$FALL-THROUGH$
+      case 2:
+        itaFrom = args[0].intValue;
+        if (itaFrom < 0)
+          return false;
+        //$FALL-THROUGH$
+      case 1:
+      default:
+        if (itaFrom == Integer.MIN_VALUE) {
+          sym = vwr.getCurrentUnitCell();
+          itaFrom = PT.parseInt(sym.getIntTableNumber());
+          if (itaFrom < 1)
+            return false;              
+        } else {
+          sym = vwr.getSymTemp();
+        }
+        break;
+      }
+      return mp.addXObj(sym.getSubgroupJSON(vwr, itaFrom, itaTo, index1, index2));
+    }
+    switch (n) {
     default:
       return false;
     case 2:
@@ -297,10 +359,11 @@ public class MathExt {
       }
       //$FALL-THROUGH$
     case 1:
+      int itaNo = (args[0].tok == T.integer ? args[0].intValue : n == 1 ? Integer.MIN_VALUE : 0);
       if ("settings".equalsIgnoreCase(mode)) {
-        if (args[0].tok != T.integer)
+        if (itaNo == 0)
           return false;
-        return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "settings", null, args[0].intValue));
+        return mp.addXObj((itaNo == Integer.MIN_VALUE ? vwr.getCurrentUnitCell() : vwr.getSymTemp()).getSpaceGroupJSON(vwr, mode.toLowerCase(), null, itaNo));
       }
       if (args[0].tok == T.string) {
         if ("setting".equalsIgnoreCase(xyzList)) {
