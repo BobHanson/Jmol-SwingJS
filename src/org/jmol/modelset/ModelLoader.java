@@ -1138,12 +1138,12 @@ public final class ModelLoader {
       for (int i = 0, pt = 0; i < ms.mc; i++) {
         if (haveMergeCells && i < baseModelCount) {
           ms.unitCells[i] = modelSet0.unitCells[i];
-        } else if (ms.getModelAuxiliaryInfo(i).get("spaceGroupIndex") != null) {
+        } else if (ms.getModelAuxiliaryInfo(i).get(JC.INFO_SPACE_GROUP_INDEX) != null) {
           ms.unitCells[i] = Interface.getSymmetry(vwr, "file");
           double[] notionalCell = null;
           if (isTrajectory) {
             @SuppressWarnings("unchecked")
-            Lst<double[]> lst = (Lst<double[]>) ms.getInfoM("unitCells");
+            Lst<double[]> lst = (Lst<double[]>) ms.getInfoM(JC.INFO_UNIT_CELLS);
             if (lst != null)
               notionalCell = lst.get(pt++);
           }

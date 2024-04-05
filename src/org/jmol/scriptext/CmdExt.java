@@ -471,7 +471,7 @@ public class CmdExt extends ScriptExt {
               if ((lattice.x < 9 && lattice.y < 9 && lattice.z == 0))
                 spacegroup += "#doNormalize=0";
           }
-          htParams.put("spaceGroupName", spacegroup);
+          htParams.put(JC.INFO_SPACE_GROUP_NAME, spacegroup);
           iGroup = -2;
         }
       }
@@ -511,7 +511,7 @@ public class CmdExt extends ScriptExt {
         i = eval.iToken + 1;
       }
       if (iGroup != Integer.MIN_VALUE)
-        htParams.put("spaceGroupIndex", Integer.valueOf(iGroup));
+        htParams.put(JC.INFO_SPACE_GROUP_INDEX, Integer.valueOf(iGroup));
       if (isEmptyLoad && fparams == null && spacegroup != null
           && (iGroup = PT.parseInt(spacegroup)) != Integer.MIN_VALUE) {
         // TODO check here for number and set unit cell appropriately.
@@ -704,7 +704,7 @@ public class CmdExt extends ScriptExt {
         e.checkLast(e.iToken);
         if (!chk)
           e.showString(""
-              + vwr.findSpaceGroup(bs1, null, null, null, true, false, false));
+              + vwr.findSpaceGroup(null, bs1, null, null, null, null, JC.SG_AS_STRING));
         return;
       case T.chirality:
         e.iToken = 1;
@@ -1497,7 +1497,7 @@ public class CmdExt extends ScriptExt {
         doAnimate = false;
       if (vwr.rotateAboutPointsInternal(eval, center, pt1,
           endDegrees / nSeconds, endDegrees, doAnimate, bsFrom, translation,
-          ptsB, null, null) && doAnimate && eval.isJS)
+          ptsB, null, null, false) && doAnimate && eval.isJS)
         throw new ScriptInterruption(eval, "compare", 1);
     }
   }
@@ -5028,7 +5028,7 @@ public class CmdExt extends ScriptExt {
       }
       if (info != null) {
         msg = (tok == T.spacegroup
-            ? "" + info.get("spaceGroupInfo") + info.get("spaceGroupNote")
+            ? "" + info.get(JC.INFO_SPACE_GROUP_INFO) + info.get(JC.INFO_SPACE_GROUP_NOTE)
             : "")
             + (info.containsKey("symmetryInfo") ? info.get("symmetryInfo")
                 : "");
@@ -5634,6 +5634,10 @@ public class CmdExt extends ScriptExt {
     SymmetryInterface sym = (chk ? null : vwr.getCurrentUnitCell());
     int tok = tokAt(++i);
     switch (tok) {
+    case T.none:
+      if (!chk)
+        vwr.ms.clearUnitCell(vwr.am.cmi);
+      return;
     case T.restore:
     case T.reset:
       isReset = true;
@@ -5817,12 +5821,12 @@ public class CmdExt extends ScriptExt {
     case T.string:
     case T.identifier:
       String s = paramAsStr(i).toLowerCase();
-      if (s.equals("rhombohedral")) {
+      if (s.equals("rhombohedral") || s.equals("r")) {
         if (sym != null
             && sym.getUnitCellInfoType(SimpleUnitCell.INFO_IS_HEXAGONAL) == 0)
           return;
         s = SimpleUnitCell.HEX_TO_RHOMB;
-      } else if (s.equals("trigonal")) {
+      } else if (s.equals("trigonal") || s.equals("hexagonal")) {
         if (sym != null && sym
             .getUnitCellInfoType(SimpleUnitCell.INFO_IS_RHOMBOHEDRAL) == 0)
           return;
@@ -5839,7 +5843,7 @@ public class CmdExt extends ScriptExt {
       // reset -- presumes conventional, so if it is not, 
       // _M.unitcell_conventional must be set in the reader.
 
-      newUC = vwr.getModelInfo("unitcell_conventional");
+      newUC = vwr.getModelInfo(JC.INFO_UNIT_CELL_CONVENTIONAL);
       // If the file read was loaded as primitive, 
       // newUC will be a T3[] indicating the conventional.
       boolean modelIsPrimitive = vwr.getModelInfo("isprimitive") != null;
@@ -6612,10 +6616,16 @@ public class CmdExt extends ScriptExt {
       //$FALL-THROUGH$
     case T.add:
     case T.wyckoff:
-      if (pt == null && bs == null && pts == null && wyckoff == null)
-        invArg();
-      if (pts == null && pt != null) {
-        pts = new P3d[] { pt };
+      if (pts == null) {
+        if (pt != null) {
+          pts = new P3d[] { pt };
+        } else if (bs == null && wyckoff == null) {
+          // defaults to wyckoff position G
+          if (type == null)
+            invArg();
+          else
+            wyckoff = "G";
+        }
       }
       int na = vwr.getModelkit(false).cmdAssignAddAtoms(
           type + (wyckoff != null ? ":" + wyckoff : ""), pts, bs,
@@ -6633,7 +6643,7 @@ public class CmdExt extends ScriptExt {
       int nm = vwr.getModelkit(false).cmdAssignMoveAtoms(bs, index,
           P3d.newP(pt), pts, true, false);
       if (nm > 0)
-        vwr.checkCoordinatesChanged();
+        vwr.checkCoordinatesChanged(bs);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
@@ -6674,7 +6684,8 @@ public class CmdExt extends ScriptExt {
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       if (uc == null)
         invArg();
-      ret[0] = uc.getV0abc(tr, null);
+      if (!chk)
+        ret[0] = uc.getV0abc(tr, null);
       return true;
     }
     if (e.isArrayParameter(i)) {

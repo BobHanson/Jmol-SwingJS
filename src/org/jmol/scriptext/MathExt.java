@@ -320,15 +320,15 @@ public class MathExt {
               xyzList.substring(6), 0));
         }
         if (xyzList.indexOf("x") >= 0 || unitCellParams != null) {
-          return mp.addXObj(vwr.findSpaceGroup(null, xyzList, unitCellParams,
-              null, true, false, false));
+          return mp.addXObj(vwr.findSpaceGroup(null, null, xyzList,
+              unitCellParams, null, null, JC.SG_AS_STRING));
         }
       } else {
         BS atoms = SV.getBitSet(args[0], true);
         if (atoms != null) {
           // undocumented first parameter atoms
-          return mp.addXObj(vwr.findSpaceGroup(atoms, null, unitCellParams,
-              null, true, false, false));
+          return mp.addXObj(vwr.findSpaceGroup(null, atoms, null,
+              unitCellParams, null, null, JC.SG_AS_STRING));         
         }
       }
       break;
@@ -449,6 +449,7 @@ public class MathExt {
     // {xxx}.boundbox()
     // {xxx}.boundbox(volume)
     // optional last parameter: scale
+    // unitcell(T1) => a,b,c:ta,tb,tc;
     // unitcell("-a,-b,c;0,1/2,1/2") 
     // unitcell("-a,-b,c;0,0,0.50482") (polar groups can have irrational translations along z)
     // unitcell("a,b,c",asMatrix) default false
@@ -462,7 +463,7 @@ public class MathExt {
     // {1.1}.unitcell(ucconv, "primitive","BCC"|"FCC")
     // {1.1}.unitcell(ucprim, "conventional","BCC"|"FCC")
 
-    BS x1 = (isSelector ? SV.getBitSet(mp.getX(), true) 
+    BS x1 = (isSelector ? SV.getBitSet(mp.getX(), true)
         : tok == T.boundbox ? vwr.getAllAtoms() : null);
     int iatom = ((x1 == null ? vwr.getAllAtoms() : x1).nextSetBit(0));
     int lastParam = args.length - 1;
@@ -474,6 +475,7 @@ public class MathExt {
       lastParam--;
       break;
     }
+    boolean normalize = false;
     int tok0 = (lastParam < 0 ? T.nada : args[0].tok);
     T3d[] ucnew = null;
     Lst<SV> uc = null;
@@ -482,6 +484,19 @@ public class MathExt {
     case T.varray:
       uc = args[0].getList();
       break;
+    case T.matrix4f:
+      switch (lastParam > 1 ? T.error : lastParam < 1 ? T.nada : args[1].tok) {
+      default:
+      case T.error:
+        return false;
+      case T.nada:
+      case T.off:
+        break;
+      case T.on:
+        normalize = true;
+        break;
+      }
+      return mp.addXStr(vwr.getSymTemp().getTransformABC(args[0].value, normalize));
     case T.string:
       arg0 = args[0].asString();
       if (tok == T.unitcell) {
@@ -490,7 +505,7 @@ public class MathExt {
           for (int i = 0; i < 4; i++)
             ucnew[i] = new P3d();
           SimpleUnitCell.setAbc(arg0, null, ucnew);
-        } else if (arg0.indexOf(",") >= 0) {
+        } else if (arg0.indexOf(",") >= 0 || arg0.equals("r")) {
           boolean asMatrix = (args.length == 2 && SV.bValue(args[1]));
           Object ret;
           if (asMatrix) {
@@ -1806,7 +1821,8 @@ public class MathExt {
         case T.bitset:
           BS bs = (BS) x1.value;
           if (sFind.equalsIgnoreCase("spacegroup")) {
-            return mp.addXObj(vwr.findSpaceGroup(bs, null, null, null, false, false, "parent".equals(flags.toLowerCase())));
+            return mp.addXObj(vwr.findSpaceGroup(null, bs, null, null, null, 
+                null, ("parent".equals(flags.toLowerCase()) ? JC.SG_CHECK_SUPERCELL : 0)));
           }
           if (sFind.equalsIgnoreCase("crystalClass")) {
             // {*}.find("crystalClass")
@@ -3755,6 +3771,7 @@ public class MathExt {
     //  "draw", 
     //  "fractionalTranslation", 
     //  "id", 
+    //  "invariant",
     //  "inversionCenter", 
     //  "label",
     //  "matrix", 
@@ -3807,9 +3824,12 @@ public class MathExt {
     // x = symop(.....)
     // use this model atoms
 
+    // x = symop("wyckoffm")  -- report Wyckoff letter with multiplicity "4a"
     // x = symop("wyckoff")  -- report Wyckoff letter
+	// x = symop("wyckoff", "c") -- just one position
     // x = {atom or point}.symop("wyckoff","a") -- find first "a"-type Wyckoff position for this point
     // x = {atom}.symop("wyckoff", "coord")  -- report Wyckoff coord
+	// x = {atom}.symop("wyckoff", "coords") -- get full coordinate list
 
     int narg = args.length;
 
@@ -3848,22 +3868,33 @@ public class MathExt {
       return mp.addXList(lst);
     }
     String xyz = null;
-    boolean invariant = false;
-    boolean isWyckoff = false;
+    int tok = 0;
     int iOp = Integer.MIN_VALUE;
     int apt = 0;
     P3d pt2 = null;
     BS bs1 = null;
+    boolean isWyckoff = false; 
     switch (args[0].tok) {
     case T.string:
       xyz = SV.sValue(args[0]);
-      if (xyz != null) {
-        if (xyz.equalsIgnoreCase("count")) {
+      switch (xyz == null ? "" : xyz.toLowerCase()) {
+      case "count": 
           SymmetryInterface sym = vwr.getOperativeSymmetry();
           return (narg != 1 ? false : mp.addXInt(sym == null ? 0 : sym.getSpaceGroupOperationCount()));
-        }
-        invariant = xyz.equalsIgnoreCase("invariant");
-        isWyckoff = xyz.equalsIgnoreCase("wyckoff");
+      case "":
+        tok = T.nada;
+        break;
+      case JC.MODELKIT_INVARIANT:
+        tok = T.var;
+        break;
+      case "wyckoff":
+        tok = T.wyckoff;
+        isWyckoff = true;
+        break;
+      case "wyckoffm":
+        tok = T.wyckoffm;
+        isWyckoff = true;
+        break;
       }
       apt++;
       break;
@@ -3919,10 +3950,10 @@ public class MathExt {
         && args[apt].tok == T.integer ? args[apt].intValue : -1);
     if (nth >= 0) // 0 here means "give me all of them"
       apt++;
-    if (iOp == Integer.MIN_VALUE && !invariant)
+    if (iOp == Integer.MIN_VALUE && tok != T.var)
       iOp = 0;
     Map<String, ?> map = null;
-    if (!isWyckoff && !invariant && xyz != null && xyz.indexOf(",") < 0) {
+    if (tok == 0 && xyz.indexOf(",") < 0) {
       if (apt == narg) {
         map = vwr.ms.getPointGroupInfo(null);
       } else if (args[apt].tok == T.hash) {
@@ -3992,10 +4023,9 @@ public class MathExt {
       }
       return false;
     }
-
     String desc = (narg == apt
         ? (isWyckoff ? ""
-            : invariant ? "id"
+            : tok == T.var ? "id"
                 : pt2 != null ? "all" : pt1 != null ? "point" : "matrix")
         : SV.sValue(args[apt++]));
     boolean haveAtom = ((!isWyckoff || isProperty) && bsAtoms != null && !bsAtoms.isEmpty());
@@ -4017,15 +4047,19 @@ public class MathExt {
       }
       if (desc.length() == 0 || desc.equalsIgnoreCase("label"))
         desc = null;
-      String letter = (desc == null ? null 
+      String letter = (desc == null ? (tok == T.wyckoffm ? "" : null) 
           : desc.endsWith("*") 
           || desc.equalsIgnoreCase("coord")
           || desc.equalsIgnoreCase("coords")? desc : desc.substring(0, 1));
-      SymmetryInterface sym = vwr.getOperativeSymmetry();
-      return mp.addXObj(sym == null ?  null : sym.getWyckoffPosition(vwr, pt, letter));
+      SymmetryInterface sym = vwr.getOperativeSymmetry();      
+      return mp.addXObj(sym == null ?  null 
+          : sym.getWyckoffPosition(vwr, pt, 
+              (letter == null ? 
+                  (tok == T.wyckoffm ? "M"  : null)
+                  : (tok == T.wyckoffm ? "M"  :"") + letter)));
     }
     desc = desc.toLowerCase();
-    if (invariant || desc.equals("invariant") && isProperty) {
+    if (tok == T.var || desc.equals(JC.MODELKIT_INVARIANT) && isProperty) {
       if (haveAtom && pt1 == null)
         pt1 = vwr.ms.at[iatom];
       haveAtom = (pt1 != null);
@@ -4033,7 +4067,7 @@ public class MathExt {
         iatom = vwr.getThisModelAtoms().nextSetBit(0);
     }
 
-    if (invariant && iOp == Integer.MIN_VALUE) {
+    if (tok == T.var && iOp == Integer.MIN_VALUE) {
       int[] ret = null;
       SymmetryInterface sym = vwr.getCurrentUnitCell();
       if (pt1 != null) {

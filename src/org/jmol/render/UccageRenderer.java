@@ -71,11 +71,10 @@ public class UccageRenderer extends CageRenderer {
     return false;
   }
 
-  private P3d fset0 = P3d.new3(555,555,1);
-  private P3d cell0 = new P3d();
-  private P3d cell1 = new P3d();
-  private P3d offset = new P3d();
-  private P3d offsetT = new P3d();
+  private final static P3d fset0 = P3d.new3(555,555,1);
+  private final P3d[] cellRange = { new P3d(), new P3d()} ;
+  private final P3d offset = new P3d();
+  private final P3d offsetT = new P3d();
 
   private SymmetryInterface unitcell;
 
@@ -102,14 +101,8 @@ public class UccageRenderer extends CageRenderer {
     boolean haveMultiple = (fset != null && !fset.equals(fset0));
     if (!haveMultiple)
       fset = fset0;
-    int t3w = (fset instanceof T4d ? (int) ((T4d) fset).w : 0);
-    SimpleUnitCell.ijkToPoint3f((int) fset.x, cell0, 0, t3w);
-    SimpleUnitCell.ijkToPoint3f((int) fset.y, cell1, 1, t3w);
+    SimpleUnitCell.getCellRange(fset, cellRange);
     int firstLine, allow0, allow1;
-    if (fset.z < 0) {
-      cell0.scale(-1 / fset.z);
-      cell1.scale(-1 / fset.z);
-    }
     double scale = Math.abs(fset.z);
     Axes axes = (Axes) vwr.shm.getShape(JC.SHAPE_AXES);
     if (axes != null && vwr.areAxesTainted())
@@ -126,27 +119,27 @@ public class UccageRenderer extends CageRenderer {
     P3d[] aPoints = axisPoints;
     int[][] faces = (hiddenLines ? BoxInfo.facePoints : null);
     if (fset.z == 0) {
-      offsetT.setT(cell0);
+      offsetT.setT(cellRange[0]);
       unitcell.toCartesian(offsetT, true);
       offsetT.add(offset);
-      aPoints = (cell0.x == 0 && cell0.y == 0 && cell0.z == 0 ? axisPoints
+      aPoints = (cellRange[0].x == 0 && cellRange[0].y == 0 && cellRange[0].z == 0 ? axisPoints
           : null);
       firstLine = 0;
       allow0 = 0xFF;
       allow1 = 0xFF;
       P3d[] pts = BoxInfo.unitCubePoints;
       for (int i = 8; --i >= 0;) {
-        P3d v = P3d.new3(pts[i].x * (cell1.x - cell0.x),
-            pts[i].y * (cell1.y - cell0.y), pts[i].z * (cell1.z - cell0.z));
+        P3d v = P3d.new3(pts[i].x * (cellRange[1].x - cellRange[0].x),
+            pts[i].y * (cellRange[1].y - cellRange[0].y), pts[i].z * (cellRange[1].z - cellRange[0].z));
         unitcell.toCartesian(v, true);
         verticesT[i].add2(v, offsetT);
       }
       renderCage(mad10, verticesT, faces, aPoints, firstLine, allow0, allow1,
           1);
-    } else
-      for (int x = (int) cell0.x; x < cell1.x; x++) {
-        for (int y = (int) cell0.y; y < cell1.y; y++) {
-          for (int z = (int) cell0.z; z < cell1.z; z++) {
+    } else {
+      for (int x = (int) cellRange[0].x; x < cellRange[1].x; x++) {
+        for (int y = (int) cellRange[0].y; y < cellRange[1].y; y++) {
+          for (int z = (int) cellRange[0].z; z < cellRange[1].z; z++) {
             if (haveMultiple) {
               offsetT.set(x, y, z);
               offsetT.scale(scale);
@@ -167,6 +160,7 @@ public class UccageRenderer extends CageRenderer {
           }
         }
       }
+    }
     renderInfo();
   }
   
@@ -188,7 +182,7 @@ public class UccageRenderer extends CageRenderer {
           sgName = "cell=inverse[" + sgName.substring(6) + "]";
         sgName = PT.rep(sgName, ";0,0,0", "");
         if (sgName.indexOf("#") < 0) {
-          String intTab = unitcell.getIntTableNumber();
+          String intTab = (String) unitcell.getSpaceGroupInfoObj("itaIndex", null, false, false);
           if (!isSlab && !isPolymer && intTab != null)
             sgName += " #" + intTab;
         }

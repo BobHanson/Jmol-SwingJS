@@ -29,6 +29,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.jmol.api.AtomIndexIterator;
@@ -181,6 +182,10 @@ public class ModelSet extends BondCollection {
   private final M3d matTemp, matInv;
   private final M4d mat4, mat4t;
   private final V3d vTemp;
+
+  private BoxInfo defaultBBox;
+
+  private boolean haveJmolDataFrames;
 
   ////////////////////////////////////////////////////////////////
 
@@ -499,10 +504,6 @@ public class ModelSet extends BondCollection {
     return (String) calculatePointGroupForFirstModel(bsAtoms, true,
         false, type, index, scale, pts, center, id);
   }
-
-  private BoxInfo defaultBBox;
-
-  private boolean haveJmolDataFrames;
 
   private Object calculatePointGroupForFirstModel(BS bsAtoms, boolean doAll,
                                                   boolean asInfo, String type,
@@ -1140,7 +1141,7 @@ public class ModelSet extends BondCollection {
 
   public boolean setCrystallographicDefaults() {
     return !haveBioModels && someModelsHaveSymmetry
-        && someModelsHaveFractionalCoordinates;
+        && someModelsHaveFractionalCoordinates || getUnitCell(vwr.am.cmi) != null;
   }
 
   public P3d getBoundBoxCenter(int modelIndex) {
@@ -1220,10 +1221,10 @@ public class ModelSet extends BondCollection {
     }
     if (useBoundBox && getDefaultBoundBox() != null)
       return defaultBBox.getMaxDim() / 2 * 1.2d;
-    double maxRadius = 0;
     if (ac == 0)
       return 10;
     modelIndex = -2;
+    double maxRadius = 0;
     for (int i = ac; --i >= 0;) {
       Atom atom = at[i];
       if (isDeleted(atom))
@@ -1665,7 +1666,7 @@ public class ModelSet extends BondCollection {
   }
 
   private boolean isJmolDataFrameForAtom(Atom atom) {
-    return am[atom.mi].isJmolDataFrame;
+    return haveJmolDataFrames && am[atom.mi].isJmolDataFrame;
   }
 
   public void setJmolDataFrame(String type, int modelIndex, int modelDataIndex) {
@@ -2467,7 +2468,7 @@ public class ModelSet extends BondCollection {
       int i = am[m].bsAtoms.nextSetBit(0);
       if (i < 0)
         continue;
-      setIteratorForAtom(iter, -1, i, -1, null);
+      setIteratorForAtom(iter, modelIndex, i, -1, null);
       iter.setCenter(coord, distance);
       iter.addAtoms(bsResult);
     }
@@ -3164,11 +3165,8 @@ public class ModelSet extends BondCollection {
       m.isOrderly = (m.act == m.bsAtoms.length() - m.firstAtomIndex); 
     }
     deleteBonds(bsBonds, false);
-    Shape me = vwr.shm.getShape(JC.SHAPE_MEASURES);
-    if (me != null)
-      me.setProperty("deleteAtoms", null, bsAtoms);
+    vwr.shm.notifyAtoms(JC.PROP_ATOMS_DELETED, new BS[] { bsAtoms, bsModels} );
     validateBspf(false);
-    vwr.setModelkitPropertySafely(JC.MODELKIT_UPDATE_MODEL_KEYS, bsModels);
   }
 
   public void clearDB(int atomIndex) {
@@ -4461,19 +4459,6 @@ public class ModelSet extends BondCollection {
       // move any origin offset into atom positions
       if (nops > 1)
         setModelCage(mi, null);
-      P3d offset = null;//P3d.newP(sg.getCartesianOffset());
-//      if (offset.length() == 0) {
-//        offset = null;
-//      } else {
-//        sg.setOffsetPt(new P3d());
-//        setTaintedAtoms(bs, TAINT_COORD);
-//      }
-      if (offset != null) {
-        // carry out the offset
-        for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-          at[i].sub(offset);
-        }
-      }
       // reset Wyckoff positions
       int nid = (atomSeqIDs == null ? 0 : atomSeqIDs.length);
       if (nid > 0) {
@@ -4534,20 +4519,15 @@ public class ModelSet extends BondCollection {
       }
     }
     // TODO: actually set atomSymmetry properly
-    setInfo(mi, "unitCellParams", sg.getUnitCellParams());
+    setInfo(mi, JC.INFO_UNIT_CELL_PARAMS, sg.getUnitCellParams());
 
-    String sgName = (String) getInfo(mi, "spaceGroup");
-    String sgOrig = (String) getInfo(mi, "spaceGroupOriginal");
-    if (sgOrig == null) {
-      if (sgName != null)
-        setInfo(mi, "spaceGroupOriginal", sgName);
-    }
-    setInfo(mi, "spaceGroupAssigned", Boolean.TRUE);
-    setInfo(mi, "spaceGroup", sg.getSpaceGroupName());
-    setInfo(mi, "spaceGroupInfo", null);
+    String sgName = (String) getInfo(mi, JC.INFO_SPACE_GROUP);
+    setInfo(mi, JC.INFO_SPACE_GROUP_ASSIGNED, Boolean.TRUE);
+    setInfo(mi, JC.INFO_SPACE_GROUP, sg.getSpaceGroupName());
+    setInfo(mi, JC.INFO_SPACE_GROUP_INFO, null);
     if (am[mi].simpleCage != null) {
       sg.getUnitCell(am[mi].simpleCage.getUnitCellVectors(), false, null);
-      setInfo(mi, "unitCellParams", sg.getUnitCellParams());
+      setInfo(mi, JC.INFO_UNIT_CELL_PARAMS, sg.getUnitCellParams());
     }
     setModelCage(mi, null);
   }
@@ -4684,6 +4664,31 @@ public class ModelSet extends BondCollection {
       if (!isDeleted(a))
         a.setT(apos0[i]);
     }
+  }
+
+  public void clearUnitCell(int modelIndex) {
+    if (unitCells == null)
+      return;
+    if (modelIndex < 0) {
+      for (int i = 0; i < mc; i++)
+        clearUnitCell(i);
+    } else {
+      am[modelIndex].simpleCage = null;
+      if (modelIndex < unitCells.length) {
+        unitCells[modelIndex] = null;
+        Map<String, Object> info = getModelAuxiliaryInfo(modelIndex);
+        Iterator<Entry<String, Object>> it = info.entrySet().iterator(); 
+        while (it.hasNext()) {
+          if (JC.isSpaceGroupInfoKey(it.next().getKey()))
+            it.remove();
+        }
+        if (mc > 1)
+          return;
+      }
+    }
+    // if all or only one model
+    unitCells = null;
+    haveUnitCells = false;     
   }
 
 }

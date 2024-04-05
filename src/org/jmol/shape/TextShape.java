@@ -39,6 +39,7 @@ import org.jmol.modelset.Text;
 import org.jmol.util.C;
 import org.jmol.util.Font;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 public abstract class TextShape extends Shape {
 
@@ -217,7 +218,7 @@ public abstract class TextShape extends Shape {
       return;
     }
 
-    if (propertyName == "deleteModelAtoms") {
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       Iterator<Text> e = objects.values().iterator();
       while (e.hasNext()) {

@@ -38,11 +38,13 @@ import org.jmol.modelset.ModelSet;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.T;
+import org.jmol.symmetry.SpaceGroup;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Font;
 import org.jmol.util.Logger;
+import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Vibration;
 import org.jmol.viewer.ActionManager;
 import org.jmol.viewer.JC;
@@ -212,7 +214,8 @@ public class ModelKit {
       if (nAtoms == 0)
         return;
       Atom[] a = vwr.ms.at;
-      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+          .nextSetBit(i + 1)) {
         String elem = a[i].getElementSymbol();
         int elemno = a[i].getElementNumber();
         int color = a[i].atomPropertyInt(T.color);
@@ -237,14 +240,15 @@ public class ModelKit {
         colors[elemno][j] = color;
       }
     }
-    
-    void draw(Viewer vwr) {      
+
+    void draw(Viewer vwr) {
       if (nAtoms == 0)
         return;
       String key = getElementKey(modelIndex);
       int h = vwr.getScreenHeight();
-      Font font = vwr.getFont3D("SansSerif", "Bold", h*20/400);
-      for (int y = 90, elemno = bsElements.nextSetBit(0); elemno >= 0; elemno = bsElements.nextSetBit(elemno + 1)) {
+      Font font = vwr.getFont3D("SansSerif", "Bold", h * 20 / 400);
+      for (int y = 90, elemno = bsElements.nextSetBit(
+          0); elemno >= 0; elemno = bsElements.nextSetBit(elemno + 1)) {
         int n = isotopeCounts[elemno];
         if (n == 0)
           continue;
@@ -278,7 +282,7 @@ public class ModelKit {
       vwr.shm.getShape(JC.SHAPE_ECHO).setModelVisibilityFlags(bs);
     }
   }
-  
+
   private static class WyckoffModulation extends Vibration {
 
     private final static int wyckoffFactor = 10;
@@ -620,13 +624,14 @@ public class ModelKit {
   private BS minTempModelAtoms;
 
   /**
-   * TRUE to automatically set element keys for all atoms; see SET ELEMENTKEYS ON/OFF
+   * TRUE to automatically set element keys for all atoms; see SET ELEMENTKEYS
+   * ON/OFF
    */
   private boolean setElementKeys;
 
   /**
-   * a bitset indicating the presence of element keys for models;
-   * clearing a bit will cause a new key to be produced.
+   * a bitset indicating the presence of element keys for models; clearing a bit
+   * will cause a new key to be produced.
    * 
    */
   final private BS bsElementKeyModels = new BS();
@@ -706,8 +711,7 @@ public class ModelKit {
     bs.andNot(vwr.slm.getMotionFixedAtoms());
 
     vwr.rotateAboutPointsInternal(null, atomFix, atomMove, 0, degrees, false,
-        bs, null, null, null, null);
-
+        bs, null, null, null, null, true);
   }
 
   /**
@@ -784,6 +788,8 @@ public class ModelKit {
       if (n == 0) {
         vwr.ms.restoreAtomPositions(apos0);
         bsAtoms.clearAll();
+      } else {
+        updateAtomSets(JC.PROP_ATOMS_MOVED, bsAtoms);
       }
     }
   }
@@ -791,7 +797,8 @@ public class ModelKit {
   /**
    * MODELKIT SET options for syntax checking.
    * 
-   * @param type  'M' menu, 'S' symmetry 'U' unit cell, 'B' boolean
+   * @param type
+   *        'M' menu, 'S' symmetry 'U' unit cell, 'B' boolean
    * @param key
    * @return true if the type exists
    */
@@ -825,7 +832,7 @@ public class ModelKit {
 
   public void clickAssignAtom(int atomIndex, String element, P3d ptNew) {
     // from Mouse -- run it through the MODELKIT ASSIGN ATOM command
-    addAtoms(element, new P3d[] { (ptNew != null ? ptNew : null)},
+    addAtoms(element, new P3d[] { (ptNew != null ? ptNew : null) },
         BSUtil.newAndSetBit(atomIndex), "", "click", true);
   }
 
@@ -955,8 +962,7 @@ public class ModelKit {
       n = assignMoveAtoms(sym, bsSelected, null, null, iatom, p, pts,
           allowProjection, isMolecule);
     } else {
-      n = vwr.moveAtomWithHydrogens(iatom, addHydrogens ? 1 : 0, 0, 0, p,
-          null);
+      n = vwr.moveAtomWithHydrogens(iatom, addHydrogens ? 1 : 0, 0, 0, p, null);
     }
     if (n == 0)
       vwr.showString("could not move atoms!", false);
@@ -974,7 +980,7 @@ public class ModelKit {
    * @return new name or "" or error message
    */
   public String cmdAssignSpaceGroup(BS bs, String name, Object paramsOrUC) {
-    return assignSpaceGroup(bs, name, paramsOrUC);
+    return assignSpaceGroup(bs, paramsOrUC, PT.split(name, ">"), 0, null);
   }
 
   /**
@@ -1058,7 +1064,7 @@ public class ModelKit {
       return Boolean.valueOf(getMKState() == STATE_MOLECULAR);
     }
 
-    if (name == JC.MODELKIT_KEY || name == JC.MODELKIT_ELEMENT_KEYS 
+    if (name == JC.MODELKIT_KEY || name == JC.MODELKIT_ELEMENT_KEYS
         || name == JC.MODELKIT_ELEMENT_KEYS) {
       return Boolean.valueOf(isElementKeyOn(vwr.am.cmi));
     }
@@ -1140,8 +1146,8 @@ public class ModelKit {
   }
 
   /**
-   * Not clear this is a good idea. It's possible
-   * for this to be set only once, when the file is loaded
+   * Not clear this is a good idea. It's possible for this to be set only once,
+   * when the file is loaded
    */
   public void initializeForModel() {
     // from Viewer also
@@ -1248,20 +1254,34 @@ public class ModelKit {
         return null;
       }
       
+      if (key == "atomset") {
+        addAtomSet((String) value);
+        return null;
+      }
+
       if (key == JC.MODELKIT_SET_ELEMENT_KEYS) {
         setElementKeys(isTrue(value));
         return null;
       }
-      
+
       if (key == JC.MODELKIT_FRAME_RESIZED) {
         clearElementKey(-1);
         updateModelElementKeys(null, true);
         return null;
       }
-      
+
+      if (key == JC.PROP_ATOMS_MOVED) {
+        if (atomSets != null) {
+          updateAtomSets(key, ((BS[])value)[0]); 
+        }
+        return null;
+      }
       if (key == JC.MODELKIT_UPDATE_MODEL_KEYS) {
         if (haveElementKeys)
-          updateModelElementKeys((BS) value, false);
+          updateModelElementKeys(((BS[]) value)[1], false);
+        if (atomSets != null) {
+          updateAtomSets(JC.PROP_ATOMS_DELETED, ((BS[])value)[0]); 
+        }
         return null;
       }
 
@@ -1269,8 +1289,7 @@ public class ModelKit {
         updateElementKeyFromStateScript();
         return null;
       }
-      if (key == JC.MODELKIT_UPDATE_ATOM_KEYS 
-          || key == JC.MODELKIT_ELEMENT_KEY 
+      if (key == JC.MODELKIT_UPDATE_ATOM_KEYS || key == JC.MODELKIT_ELEMENT_KEY
           || key == JC.MODELKIT_ELEMENT_KEYS) {
         if (value == null || value instanceof BS) {
           BS bsAtoms = (BS) value;
@@ -1372,7 +1391,6 @@ public class ModelKit {
         return (bondIndex < 0 ? null : Integer.valueOf(bondIndex));
       }
 
-
       if (key == JC.MODELKIT_HIGHLIGHT) {
         bsHighlight.clearAll();
         if (value != null)
@@ -1426,8 +1444,7 @@ public class ModelKit {
 
       // boolean get/set
 
-      if (key == JC.MODELKIT_ADDHYDROGEN 
-          || key == JC.MODELKIT_ADDHYDROGENS) {
+      if (key == JC.MODELKIT_ADDHYDROGEN || key == JC.MODELKIT_ADDHYDROGENS) {
         if (value != null)
           addHydrogens = isTrue(value);
         return Boolean.valueOf(addHydrogens);
@@ -1537,7 +1554,7 @@ public class ModelKit {
 
       // not yet implemented
 
-      if (key == "invariant") {
+      if (key == JC.MODELKIT_INVARIANT) {
         // not really a model kit issue
         int iatom = (value instanceof BS ? ((BS) value).nextSetBit(0) : -1);
         P3d atom = vwr.ms.getAtom(iatom);
@@ -1771,6 +1788,10 @@ public class ModelKit {
       return addConstraint(iatom,
           new Constraint(a, Constraint.TYPE_NONE, null));
     // the first atom is the site atom
+    // these may be special cases such as (y+1/2,x+1/2,z)
+    // where y = x + 1/2. For example {0.3,0.8,0}->{1.3,0.8,0} == {0.3 0.8 0.0}
+    // glide-planes and screw axes do not create invariant points in general,
+    // but there are special cases like this. 
     int[] ops = sym.getInvariantSymops(a, null);
     if (Logger.debugging)
       System.out.println("MK.getConstraint atomIndex=" + iatom + " symops="
@@ -1785,10 +1806,10 @@ public class ModelKit {
     for (int i = ops.length; --i >= 0;) {
       Object[] line2 = null;
       Object c = sym.getSymmetryInfoAtom(vwr.ms, iatom, null, ops[i], null, a,
-          null, "invariant", T.array, 0, -1, 0, null);
+          null, JC.MODELKIT_INVARIANT, T.array, 0, -1, 0, null);
       if (c instanceof String) {
-        // this would be a translation
-        return locked;
+        // this would be a special glide plane, for instance
+        continue;
       } else if (c instanceof P4d) {
         // check plane - first is the constraint; second is almost(?) certainly not parallel
         P4d plane = (P4d) c;
@@ -1908,7 +1929,7 @@ public class ModelKit {
       int atomicNo = -1;
       int site = 0;
       P3d pf = null;
-      if (pts != null && pts.length == 1) {
+      if (pts != null && pts.length == 1 && pts[0] != null) {
         pf = P3d.newP(pts[0]);
         sym.toFractional(pf, false);
         isPoint = true;
@@ -2025,7 +2046,8 @@ public class ModelKit {
   /**
    * Original ModelKitPopup functionality -- assign an atom.
    * 
-   * @param atomIndex the atom clicked
+   * @param atomIndex
+   *        the atom clicked
    * @param type
    * @param autoBond
    *        an older idea whereby atoms are bonded automatically, for example,
@@ -2143,7 +2165,7 @@ public class ModelKit {
     if (atomicNumber != 1 && autoBond) {
 
       // we no longer do this 
-      
+
       // 4) clear out all atoms within 1.0 angstrom
       vwr.ms.validateBspf(false);
       bs = vwr.ms.getAtomsWithinRadius(1.0d, bsA, false, null, null);
@@ -2163,7 +2185,7 @@ public class ModelKit {
     }
 
     if (addHydrogens)
-        vwr.addHydrogens(bsA, Viewer.MIN_SILENT);
+      vwr.addHydrogens(bsA, Viewer.MIN_SILENT);
     return atomicNumber;
   }
 
@@ -2178,7 +2200,7 @@ public class ModelKit {
    * pt    -1        null  ASSIGN ATOM "N" {x,y,z}
    * 
    * pt    -1          bs  ADD ATOM @1 "N" {x,y,z} (add with bonding)
-   *</pre>
+   * </pre>
    * 
    * 
    * 
@@ -2198,9 +2220,8 @@ public class ModelKit {
    * @param packing
    */
   private void assignAtoms(P3d pt, int atomIndex, BS bs, String type,
-                           boolean newPoint, String cmd,
-                           boolean isClick, 
-                        // strictly internal, for crystal work:
+                           boolean newPoint, String cmd, boolean isClick,
+                           // strictly internal, for crystal work:
                            int atomicNo, int site, SymmetryInterface sym,
                            Lst<P3d> points, String packing) {
     if (sym == null)
@@ -2225,7 +2246,10 @@ public class ModelKit {
           packing + (newPoint && atomIndex < 0 ? "newpt" : ""));
     }
     BS bsEquiv = (atom == null ? null
-        : sym != null ? vwr.ms.getSymmetryEquivAtoms(bs, sym, null) : bs == null || bs.cardinality() == 0 ? BSUtil.newAndSetBit(atomIndex) : bs);
+        : sym != null ? vwr.ms.getSymmetryEquivAtoms(bs, sym, null)
+            : bs == null || bs.cardinality() == 0
+                ? BSUtil.newAndSetBit(atomIndex)
+                : bs);
     BS bs0 = (bsEquiv == null ? null
         : sym == null ? BSUtil.newAndSetBit(atomIndex) : BSUtil.copy(bsEquiv));
     int mi = (atom == null ? vwr.am.cmi : atom.mi);
@@ -2367,8 +2391,8 @@ public class ModelKit {
       int atomIndexNew = bs.nextSetBit(0);
       if (points == null) {
         // new single atom
-        assignAtom(atomIndexNew, type, false, atomIndex >= 0 && sym == null, true,
-            null);
+        assignAtom(atomIndexNew, type, false, atomIndex >= 0 && sym == null,
+            true, null);
         if (atomIndex >= 0) {
           boolean doAutobond = (sym == null && !"H".equals(type));
           assignAtom(atomIndex, ".", false, doAutobond, isClick, null);
@@ -2416,7 +2440,8 @@ public class ModelKit {
       boolean a1H = (bond.atom1.getElementNumber() == 1);
       boolean isH = (a1H || bond.atom2.getElementNumber() == 1);
       if (isH && bondOrder > 1) {
-        vwr.deleteAtoms(BSUtil.newAndSetBit(a1H ? bond.atom1.i : bond.atom2.i), false);
+        vwr.deleteAtoms(BSUtil.newAndSetBit(a1H ? bond.atom1.i : bond.atom2.i),
+            false);
         return true;
       }
       if (bondOrder == 0) {
@@ -2493,6 +2518,7 @@ public class ModelKit {
       return 0;
     int state = getMKState();
     setMKState(STATE_MOLECULAR);
+    int n = 0;
     try {
       // check for locked atoms
       SymmetryInterface sym = getSym(iatom);
@@ -2504,7 +2530,7 @@ public class ModelKit {
       }
       if (bsFixed != null && !bsFixed.isEmpty())
         bseq.andNot(bsFixed);
-      int n = bseq.cardinality();
+      n = bseq.cardinality();
       if (n == 0) {
         return 0;
       }
@@ -2539,6 +2565,10 @@ public class ModelKit {
       return 0;
     } finally {
       setMKState(state);
+      if (n > 0) {
+        updateAtomSets(JC.PROP_ATOMS_MOVED, bsMoved);
+      }
+        
     }
   }
 
@@ -2718,38 +2748,344 @@ public class ModelKit {
   }
 
   /**
-   * @param bs 
-   * @param name 
-   * @param paramsOrUC 
-   * @return message or error (message in "!")
+   * Assign the space group and associated unit cell from the MODELKIT
+   * SPACEGROUP command.
+   * 
+   * All aspects depend upon having one of:
+   * 
+   * - a space group number: n (1-230); will be converted to n.1
+   * 
+   * - a valid n.m Jmol-recognized ITA setting: "13.3"
+   * 
+   * - an ITA space group number with a transform: "10:c,a,b"
+   * 
+   * - a valid jmolId such as "3:b", which will be converted to an ITA n.m
+   * setting
+   * 
+   * - (hopefully unambiguous) Hermann-Mauguin symbol, such as "p 4/n b m :2"
+   * 
+   * jmolId and H-M symbols will be converted to ITA n.m format.
+   * 
+   * Options include two basic forms:
+   * 
+   * 1. non-CLEG format. Just the space group identifier: "13.3", "3:b", etc.
+   * with an optional unit cell.
+   * 
+   * MODELKIT SPACEGROUP 13
+   * 
+   * MODELKIT SPACEGROUP "P 1 2/1 1" UNITCELL <unit cell description>
+   * 
+   * where <unit cell description> is one of:
+   * 
+   * - [a b c alpha beta gamma]
+   * 
+   * - [ origin va vb vc ]
+   * 
+   * - a transform such as "a,b,c;0,0,1/2"
+   * 
+   * 3. CLEG format
+   * 
+   * identifier > [transform or identifier >]n > identifier
+   * 
+   * for example:
+   * 
+   * MODELKIT SPACEGROUP "10:b,c,a > a-c,b,2c;0,0,1/2 > 13:a,-a-c,b"
+   * 
+   * Identifiers with settings are treated as follows:
+   * 
+   * - If the space group number is UNCHANGED, for example
+   * 
+   * 10 > 10:c,a,b
+   * 
+   * then the final setting is applied to the unit cell as (!P) * UC, and the
+   * space group operators R are adjusted using P * R * (!P), where P is the
+   * transform of the setting.
+   * 
+   * - If the space group number is CHANGED, for example, "10 > ... transforms
+   * ... > 13:a,-a-c,b"
+   * 
+   * then the final setting is only applied to the operators. The unit cell
+   * setting is assumed to already be accounted for by the transforms.
+   * 
+   * Note that there is an implicit transform from the CURRENT unit cell and
+   * space group when the two have the same space group number:
+   * 
+   * current == 10:b,c,a
+   * 
+   * MODELKIT SPACEGROUP 10:c,b,a ...
+   * 
+   * Here the current setting will be processed with a transform that brings it
+   * from 10:b,c,a to 10:c,b,a as:
+   * 
+   * 10:b,c,a > !b,c,a > 10:a,b,c > c,a,b > 10:c,a,b ...
+   *
+   * Note that this allows for the direct use of Hermann-Mauguin notation. In
+   * the case of H-M settings WITHIN THE SAME SPACE GROUP, this can be condensed
+   * to:
+   * 
+   * P 1 1 2/m >> P 2/m 1 1
+   * 
+   * because this method will be able to understand that to mean "switch
+   * settings" and is able to implement that as
+   * 
+   * P 1 1 2/m > !b,c,a > c,a,b > P 2/m 1 1
+   * 
+   * However, where a space group change is involved, as from P 2/m to P 2/c, No
+   * unambiguous implicit transformation is determined here, and an error
+   * message will be returned indicating that a transform is required. These can
+   * be found at the ITA, specifically for ITA default settings. Thus, we might
+   * write:
+   * 
+   * P 1 1 2/m > 10 > a-c,b,2c;0,0,1/2 > 13 > P 2/c 1 1
+   * 
+   * where we are EXPLICITY indicating the standard-to-standard ITA transform:
+   * 
+   * 10 > a-c,b,2c;0,0,1/2 > 13
+   * 
+   * as part of the CLEG sequence.
+   * 
+   * This ensures that the desired specific conversion is used.
+   * 
+   * Additional aspects of the notation include:
+   * 
+   * ! prefix - "not" or "inverse of"
+   * 
+   * :r setting - abbreviation for
+   * :2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c
+   * 
+   * :h setting - abbreviation for
+   * :!2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c
+   * 
+   * [xx xx xx] - Hall notation, such as [P 2/1] see
+   * http://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
+   * 
+   * Note that this allows also for fully transformed Hall notation as a
+   * setting. For example:
+   * 
+   * 85.4 as [-p 4a"]:a-b,a+b,c;0,1/4,-1/8
+   * 
+   * In all cases, the two actions performed include:
+   * 
+   * - replacing the current unit cell - replacing the space group
+   * 
+   * Note that in cases where there is a series of transforms, the initial
+   * action of this method is to convert that sequence to a single overall
+   * transform first.
+   * 
+   * @param bs
+   * @param paramsOrUC
+   * @param tokens
+   *        separation based on >
+   * @param index
+   * @param trm0
+   * 
+   * 
+   * @return message or error (message ending in "!")
    */
-  private String assignSpaceGroup(BS bs, String name, Object paramsOrUC) {
-    int pt = name.indexOf(":");
-    boolean isITA = name.startsWith("ITA/");
-    boolean hasTransform = (name.indexOf(",") > pt);
-    String transform = null;
-    if (hasTransform) {
-      // modelkit spacegroup "4:1/2a+1/2b,c,1/2a-1/2b"
-      transform = name.substring(pt + 1);
-      name = name.substring(0, pt);
-      isITA = true;
+  private String assignSpaceGroup(BS bs, Object paramsOrUC, String[] tokens,
+                                  int index, M4d trm0) {
+
+    // modelkit spacegroup 10
+    // modelkit spacegroup 10 unitcell [a b c alpha beta gamma]
+    // modelkit spacegroup 10:b,c,a
+    // modelkit spacegroup 10:b,c,a  unitcell [a b c alpha beta gamma]
+
+    // modelkit spacegroup 10>a,b,c>13
+    // modelkit spacegroup >a,b,c>13
+    // modelkit spacegroup 10:b,c,a > -b+c,-b-c,a:0,1/2,0 > 13:a,-a-c,b
+
+    if (index >= tokens.length)
+      return "invalid CLEG expression";
+    if (index > 0 && (trm0 == null || paramsOrUC != null)) {
+      return "invalid syntax - can't mix transormations and UNITCELL option!";
     }
+    boolean haveUCParams = (paramsOrUC != null);
+
+    String name = tokens[index].trim();
+    if (name.equals("r")) {
+      // >r>
+      name = name.substring(0, name.length() - 1) + SimpleUnitCell.HEX_TO_RHOMB;
+    }
+    SymmetryInterface sym = vwr.getOperativeSymmetry();
+    SymmetryInterface uc = null;
+    String trRef = null;
+    boolean noSymmetryYet = (sym == null);
+    if (noSymmetryYet) {
+      sym = vwr.getSymTemp();
+    }
+
+    // process UNITCELL option if present -- at this is both first and last then
+
+    double[] params = null;
+    T3d[] oabc = null;
+    T3d origin = null;
+    M4d trTemp = new M4d();
+    if (index == 0) {
+      // starting point
+      // handle UNITCELL [params] option
+      params = (paramsOrUC == null || !AU.isAD(paramsOrUC) ? null
+          : (double[]) paramsOrUC);
+      if (noSymmetryYet) {
+        sym.setUnitCellFromParams(
+            params == null ? new double[] { 10, 10, 10, 90, 90, 90 } : params,
+            false, Double.NaN);
+        paramsOrUC = null;
+      }
+
+      if (paramsOrUC != null) {
+        // have UNITCELL params, either [a b c..] or [o a b c] or 'a,b,c:...'
+        if (AU.isAD(paramsOrUC)) {
+          params = (double[]) paramsOrUC;
+        } else {
+          oabc = (T3d[]) paramsOrUC;
+        }
+      }
+      if (paramsOrUC == null && !noSymmetryYet) {
+        // start of CLEG
+        uc = vwr.ms.getUnitCell(vwr.am.cmi);
+        boolean haveReferenceCell = !uc.isSimple();
+        if (haveReferenceCell) {
+          trRef = (String) sym.getSpaceGroupInfoObj("transform", null, false,
+              false);
+        }
+      }
+      trm0 = addSGTransform(sym, (trRef == null ? null : "!" + trRef), trm0,
+          trTemp);
+    }
+
+    // retrieve the CLEG index and transform
+
+    if (trRef != null)
+      System.out.println("Modelkit.assignSpaceGroup ref=" + trRef + " for "
+          + sym.getSpaceGroupName());
+    boolean hasTransform = (name.indexOf(',') > 0);
+    int pt = name.lastIndexOf(":"); // could be "154:_2" or "R 3 2 :" 
+    boolean isTransformOnly = (hasTransform && pt < 0);
+    boolean isFinal = (index == tokens.length - 1);
+    // first check is for just > a,b,c:tx,ty,tz >
+    if (!isFinal) {
+      if (isTransformOnly) {
+        // not a setting, not a node
+
+        sym.getV0abc(name, trTemp);
+        if (trm0 != null)
+          trm0.mul(trTemp);
+        else
+          trm0 = trTemp;
+      } else {
+        // ignore -- maybe just a specified setting > P 21 1 1 > 
+        // implication that this is just for readability;
+        // not actionable, since it's not a transformation
+      }
+      System.out
+          .println("ModelKit.assignSpaceGroup index=" + index + " trm=" + trm0);
+
+      // ITERATE  ...
+      return assignSpaceGroup(bs, null, tokens, ++index, trm0);
+    }
+
+    // so we are at the end now, and we have an initial transform,
+    // but we still may need to adjust it with an explicit or implicit transform.
+
+    boolean isUnknown = false;
+    if (name.length() == 0) {
+      // Q: could we allow "x > .... >" as an unknown?
+      if (isFinal)
+        isUnknown = true;
+      else
+        name = sym.getSpaceGroupName();
+    }
+
+    // we will apply the setting if it is present
+    boolean haveSetting = (hasTransform && pt >= 0);
+    String setting = (haveSetting ? name.substring(pt + 1).trim() : "a,b,c");
+    if (haveSetting) {
+      name = name.substring(0, pt);
+    }
+    boolean isITA = name.startsWith("ITA/");
+    boolean isHM = false;
+    String hallSymbol = null;
+    String itaNo = null;
+    String itaSet = null;
     if (isITA) {
+      // ITA/140 or ITA/140.2
       name = name.substring(4);
-      if (name.length() == 0)
-        name = vwr.getOperativeSymmetry().getSpaceGroupName();
-      if (name.startsWith("HM:"))
-        name = name.substring(3);
-    } else if (name.indexOf('.') > 0 && !Double.isNaN(PT.parseDouble(name))) {
-      // "6.1"
+    } else if (name.charAt(0) == '[') {
+      // [P 2y] is a Hall symbol
+      pt = name.indexOf(']');
+      if (pt < 0)
+        return "invalid Hall symbol: " + name + "!";
+      hallSymbol = name = "Hall:" + name.substring(1, pt);
+    } else if (name.startsWith("HM:")) {
+      // ok, leave this this way
+      isHM = true;
+    } else if (name.length() <= 3) {
+      // quick check for nnn
       isITA = true;
-    } 
-    boolean isP1 = (name.equalsIgnoreCase("P1") || name.equals("1"));
-    boolean isDefined = (name.length() > 0);
+      for (int i = name.length(); --i >= 0;) {
+        if (!PT.isDigit(name.charAt(i))) {
+          isITA = false;
+          break;
+        }
+      }
+      if (isITA) {
+        name += ".1";
+      }
+    }
+    if (!isITA && hallSymbol == null && !isHM) {
+      pt = (PT.isDigit(name.charAt(0)) ? name.indexOf(" ") : -1);
+      if (pt > 0)
+        name = name.substring(0, pt);
+      if (name.indexOf('.') > 0 && !Double.isNaN(PT.parseDouble(name))) {
+        // "6.1"
+        isITA = true;
+        if (!name.endsWith(".1") && hasTransform) {
+          return "Space group ITA/" + name
+              + " syntax cannot be used with a transform!";
+        }
+      }
+    }
+    String trm1 = null;
+    if (isITA) {
+      // Even if we have "13.2" we need the tranformation matrix
+      // so that we can set the unit cell, as findSpacegroup does NOT 
+      // set the unit cell.
+      tokens = PT.split(name, ".");
+      itaNo = tokens[0];
+      itaSet = tokens[1];
+      trm1 = (String) sym.getITASettingValue(vwr, name, "trm");
+      if (trm1 == null)
+        return "Unknown ITA setting: " + name + "!";
+      name = "ITA/" + name;
+      if (haveSetting) {
+        // 10.2:c,b,a?? possible
+        name += ":" + setting;
+      }
+    } else if (!haveUCParams) {
+      trm1 = (String) sym.getSpaceGroupInfoObj("transform", name, false, false);
+    }
+
+    if (index == 0 && !haveUCParams) {
+      addSGTransform(sym, trm1, trm0, trTemp);
+      addSGTransform(sym, setting, trm0, trTemp);
+      if (!noSymmetryYet)
+        oabc = sym.getV0abc(new Object[] {trm0}, null);
+    }
+    
+    if (oabc != null) {
+      params = vwr.getSymTemp().getUnitCell(oabc, false, "assign")
+          .getUnitCellParams();
+    }
+    origin = sym.getUnitCellMultiplied().getUnitCellVectors()[0];
+    if (oabc != null)
+      origin.add(oabc[0]);
+
+    // ready to roll....
+    boolean isP1 = (name.equalsIgnoreCase("P1") || name.equals("ITA/1.1"));
     clearAtomConstraints();
     try {
       if (bs != null && bs.isEmpty())
-        return "";
+        return "no atoms specified!";
       // limit the atoms to this model if bs is null
       BS bsAtoms = vwr.getThisModelAtoms();
       BS bsCell = (isP1 ? bsAtoms
@@ -2767,45 +3103,26 @@ public class ModelKit {
       int mi = (noAtoms && vwr.am.cmi < 0 ? 0
           : noAtoms ? vwr.am.cmi
               : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
-      vwr.ms.getModelAuxiliaryInfo(mi).remove("spaceGroupInfo");
-      SymmetryInterface sym = vwr.getOperativeSymmetry();
-      double[] params = (paramsOrUC == null || !AU.isAD(paramsOrUC) ? null 
-          : (double[]) paramsOrUC);
-      T3d[] oabc = null;
-      if (sym == null) {
-        sym = vwr.getSymTemp().setUnitCellFromParams(
-            params == null ? new double[] { 10, 10, 10, 90, 90, 90 } : params,
-            false, Double.NaN);
-        paramsOrUC = null;
-      } 
-      if (transform != null || paramsOrUC != null) {
-        if (transform != null) {
-          paramsOrUC = sym.getV0abc(transform, null);
-        } 
-        if (AU.isAD(paramsOrUC)) {
-          params = (double[]) paramsOrUC;
-        } else {
-          oabc = (T3d[]) paramsOrUC;
-          params = vwr.getSymTemp().getUnitCell(oabc, false, "assign").getUnitCellParams();
-        }
-      }
-      T3d origin = sym.getUnitCellMultiplied().getUnitCellVectors()[0];
-      if (oabc != null)
-        origin.add(oabc[0]);
-      T3d m = sym.getUnitCellMultiplier();
-      if (m != null && m.z == 1) {
-        m.z = 0;
-      }
-      String ita;
-      BS basis;
-      Object sg = null;
+      vwr.ms.getModelAuxiliaryInfo(mi).remove(JC.INFO_SPACE_GROUP_INFO);
+      // why do this? It treats the supercell as the unit cell. 
+      // is that what we want?
+
+      //      T3d m = sym.getUnitCellMultiplier();
+      //      if (m != null && m.z == 1) {
+      //        m.z = 0;
+      //      }
+
+      if (noSymmetryYet)
+        sym.replaceTransformMatrix(trm0);
       @SuppressWarnings("unchecked")
-      Map<String, Object> sgInfo = (noAtoms && !isDefined ? null
-          : (Map<String, Object>) vwr.findSpaceGroup(isDefined ? null : bsAtoms,
-              isDefined ? (isITA ? "ITA/" + name : name) : null,
-              params == null ? sym.getUnitCellMultiplied().getUnitCellParams()
-                  : params,
-              origin, false, true, false));
+      Map<String, Object> sgInfo = (noAtoms && isUnknown ? null
+          : (Map<String, Object>) vwr.findSpaceGroup(sym,
+              isUnknown ? bsAtoms : null,
+              isUnknown ? null : name, params == null ? sym.getUnitCellMultiplied().getUnitCellParams()
+                      : params, origin,
+              oabc, JC.SG_IS_ASSIGN | (noSymmetryYet ? JC.SG_FROM_SCRATCH : 0)
+              ));
+
 
       if (sgInfo == null) {
         if (isITA) {
@@ -2813,38 +3130,43 @@ public class ModelKit {
         }
         return "Space group " + name + " is unknown or not compatible!";
       }
-      //        name = "P1";
-      //        supercell = P3d.new3(1, 1, 1);
-      //        oabc = sym.getUnitCellVectors();
-      //        ita = "1";
-      //        basis = null;
-      //      } else {
+
       oabc = (P3d[]) sgInfo.get("unitcell");
       name = (String) sgInfo.get("name");
-      ita = (String) sgInfo.get("itaFull");
-      basis = (BS) sgInfo.get("basis");
-      sg = sgInfo.remove("sg");
+      String jmolId = (String) sgInfo.get("jmolId");
+      String itaIndex = (String) sgInfo.get("itaIndex");
+      String trm2 = (String) sgInfo.get("itaTransform");
+      BS basis = (BS) sgInfo.get("basis");
+      SpaceGroup sg = (SpaceGroup) sgInfo.remove("sg");
       //      }
       sym.getUnitCell(oabc, false, null);
-      sym.setSpaceGroupTo(sg == null ? ita : sg);
+      sym.setSpaceGroupTo(sg == null ? jmolId : sg);
       sym.setSpaceGroupName(name);
       if (basis == null)
         basis = sym.removeDuplicates(vwr.ms, bsAtoms, true);
       vwr.ms.setSpaceGroup(mi, sym, basis);
-      
-//      if (isUserParams && !noAtoms) {
-//        transformAtomsToUnitCell(sym, vwr.getV0abc(-1, params), "modelkit");
-//      }      
-      if (noAtoms) {
-        appRunScript("unitcell on; center unitcell;axes unitcell; axes on;"
+      if (noSymmetryYet) {
+        appRunScript("unitcell on; center unitcell;axes unitcell; axes 0.1; axes on;"
             + "set perspectivedepth false;moveto 0 axis c1;draw delete;show spacegroup");
       }
       return name + " basis=" + basis;
     } catch (Exception e) {
       if (!Viewer.isJS)
         e.printStackTrace();
-      return e.getMessage();
+      return e.getMessage() + "!";
     }
+  }
+
+  private M4d addSGTransform(SymmetryInterface sym, String tr, M4d trm0, M4d temp) {
+    if (trm0 == null) {
+      trm0 = new M4d();
+      trm0.setIdentity();
+    }
+    if (tr != null) {
+      sym.getV0abc(tr, temp);
+      trm0.mul(temp);
+    }
+    return trm0;
   }
 
   /**
@@ -2872,7 +3194,7 @@ public class ModelKit {
   }
 
   private void clearElementKey(int modelIndex) {
-    if (!haveElementKeys) 
+    if (!haveElementKeys)
       return;
     String key = getElementKey(modelIndex) + "*";
     Object[][] val = new Object[][] { { "thisID", key }, { "delete", null } };
@@ -3556,8 +3878,8 @@ public class ModelKit {
   }
 
   /**
-   * Triggered by a MODELKIT OFF in a state script, set there by
-   * StateCreator when there is an ECHO for _!_elkey*.
+   * Triggered by a MODELKIT OFF in a state script, set there by StateCreator
+   * when there is an ECHO for _!_elkey*.
    */
   private void updateElementKeyFromStateScript() {
     for (int i = vwr.ms.mc; --i >= 0;) {
@@ -3567,11 +3889,12 @@ public class ModelKit {
   }
 
   /**
-   * Create an element key for the specified model or all models.
-   * In the case of a specific model, only create the key if it does
-   * not yet exist in elementKeyModelList.
+   * Create an element key for the specified model or all models. In the case of
+   * a specific model, only create the key if it does not yet exist in
+   * elementKeyModelList.
    * 
-   * @param modelIndex the specified model, or -1 to recreate or delete all keys
+   * @param modelIndex
+   *        the specified model, or -1 to recreate or delete all keys
    * 
    * @param isOn
    */
@@ -3669,16 +3992,18 @@ public class ModelKit {
   }
 
   /**
-   * Update the element keys for the given models, possibly forcing new keys
-   * if none exist yet.
-   *  
+   * Update the element keys for the given models, possibly forcing new keys if
+   * none exist yet.
+   * 
    * @param bsModels
-   * @param forceNew for example, when we have a frame resize
+   * @param forceNew
+   *        for example, when we have a frame resize
    */
   private void updateModelElementKeys(BS bsModels, boolean forceNew) {
     if (bsModels == null)
-      bsModels = BSUtil.newBitSet2(0,  vwr.ms.mc);
-    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) {
+      bsModels = BSUtil.newBitSet2(0, vwr.ms.mc);
+    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels
+        .nextSetBit(i + 1)) {
       updateModelElementKey(i, forceNew);
     }
   }
@@ -3687,7 +4012,8 @@ public class ModelKit {
    * Only set a model's elmeent key if it is already on or if SET ELEMENTKEYS ON
    * has been issued. "ON" is defined as "present as a draw object"
    * 
-   * @param modelIndex the specified model; modelIndex < 0 is ignored
+   * @param modelIndex
+   *        the specified model; modelIndex < 0 is ignored
    * @param forceNew
    */
   private void updateModelElementKey(int modelIndex, boolean forceNew) {
@@ -3706,7 +4032,7 @@ public class ModelKit {
   }
 
   /**
-   * Turn on or off automatic all-model element keys, from 
+   * Turn on or off automatic all-model element keys, from
    * 
    * SET ELEMENTKEYS ON/OFF
    * 
@@ -3725,21 +4051,22 @@ public class ModelKit {
       updateModelElementKeys(null, false);
     }
   }
-  
+
   private void clearElementKeysOFF() {
     bsElementKeyModelsOFF.clearAll();
   }
 
   /**
-   * Transform the atoms to fractional coordinate, set the unit cell to a new cell, 
-   * and then transform them back to Cartesians.
+   * Transform the atoms to fractional coordinate, set the unit cell to a new
+   * cell, and then transform them back to Cartesians.
    * 
    * @param sym
    * @param oabc
    * @param ucname
    * @return true if this is a "reset" with no atoms
    */
-  public boolean transformAtomsToUnitCell(SymmetryInterface sym, T3d[] oabc, String ucname) {
+  public boolean transformAtomsToUnitCell(SymmetryInterface sym, T3d[] oabc,
+                                          String ucname) {
     BS bsAtoms = vwr.getThisModelAtoms();
     int n = bsAtoms.cardinality();
     boolean isReset = (n == 0);
@@ -3776,6 +4103,131 @@ public class ModelKit {
       vwr.toFractionalUC(sym, fxyz[k], false);
     }
     return fxyz;
+  }
+
+  private class AtomSet {
+    BS bsAtoms;
+    String cmd;
+    String id;
+    int modelIndex;
+
+    AtomSet(BS bs, String id, String cmd, int modelIndex) {
+      bsAtoms = bs;
+      this.modelIndex = modelIndex;
+      this.cmd = cmd;
+      this.id = id;
+    }
+    
+  }
+
+  private Lst<AtomSet> atomSets;
+
+  public synchronized void updateAtomSets(String mode, BS atoms) {
+    if (atomSets == null)
+      return;
+    String cmd = "";
+    for (int i = atomSets.size(); --i >= 0;) {
+      AtomSet a = atomSets.get(i);
+      if (mode == JC.PROP_DELETE_MODEL_ATOMS
+          ? atoms.get(a.bsAtoms.nextSetBit(0))
+          : atoms.intersects(a.bsAtoms)) {
+        switch (mode) {
+        case JC.PROP_DELETE_MODEL_ATOMS:
+        case JC.PROP_ATOMS_DELETED:
+          System.out
+              .println("remove deleteatoms " + atoms + " " + a.bsAtoms + a.id);
+          atomSets.removeItemAt(i);
+          break;
+        case JC.PROP_ATOMS_MOVED:
+          try {
+            if (!checkDrawID(a.id)) {
+              //System.out.println("remove " + a.id);
+              atomSets.removeItemAt(i);
+            } else {
+              cmd += a.cmd + JC.SCRIPT_QUIET + "\n";
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+          break;
+        }
+        if (atomSets.size() == 0)
+          atomSets = null;
+      }
+      if (cmd.length() > 0)
+        vwr.evalStringGUI(cmd);
+    }
+  }
+
+  
+  private boolean checkDrawID(String id) {
+    Object[] o = new Object[] { id + "*", null };
+    //System.out.println("checking " + id);
+    boolean exists = vwr.shm.getShapePropertyData(JC.SHAPE_DRAW, "checkID", o);
+    // System.out.println(id + " " + exists + " " + o[1]);
+    return (exists && o[1] != null);
+  }
+
+  /** from set picking symop
+   * @param a1 
+   * @param a2 
+   */
+  public void drawSymop(int a1, int a2) {
+    String s = "({" + a1 + "}) ({" + a2 + "}) ";
+    String cmd = "draw ID 'sym' symop " + s;
+    vwr.evalStringGUI(cmd);
+  }
+  
+  public void addAtomSet(String data) {
+    String[] tokens = PT.split(data, "|");
+    String id = tokens[0];
+    clearAtomSets(id);
+    int a1 = PT.parseInt(tokens[1]);
+    int a2 = PT.parseInt(tokens[2]);
+    String cmd = tokens[3];
+    BS bs = BSUtil.newAndSetBit(a1);
+    bs.set(a2);
+    if (atomSets == null) {
+      atomSets = new Lst<AtomSet>();
+    }
+    atomSets.addLast(new AtomSet(bs, id, cmd, vwr.am.cmi));
+    //System.out.println("testing addatomset " + atomSets.size() + " for " + cmd);
+}
+
+  private void clearAtomSets(String id) {
+    if (atomSets == null)
+      return;
+    for (int i = atomSets.size(); --i >= 0;) {
+      AtomSet a = atomSets.get(i);
+      if (a.id.equals(id)) {
+        atomSets.remove(i);
+        return;
+      }
+    }
+  }
+
+  public void drawUnitCell(String id, T3d ucLattice, String cmd) {
+    SymmetryInterface sym = vwr.getOperativeSymmetry();
+    if (sym == null)
+      return;
+    SymmetryInterface uc = vwr.getSymTemp().getUnitCell(sym.getUnitCellVectors(), false, "draw");
+    uc.setOffsetPt(ucLattice);
+       P3d[] cellRange = { new P3d(), new P3d() };
+    String s = "";
+    if (id == null)
+      id = "uclat";
+    Object[][] val = new Object[][] { { "thisID", id + "*" }, { "delete", null } };
+    vwr.shm.setShapeProperties(JC.SHAPE_DRAW, val);
+    
+    SimpleUnitCell.getCellRange(ucLattice, cellRange);
+    for (int p = 1, x = (int) cellRange[0].x; x < cellRange[1].x; x++) {
+      for (int y = (int) cellRange[0].y; y < cellRange[1].y; y++) {
+        for (int z = (int) cellRange[0].z; z < cellRange[1].z; z++, p++) {
+          s += "\ndraw ID " + PT.esc(id + "_" + p) + " unitcell \"a,b,c;"+x+","+y+","+z+"\""; 
+        }
+      }
+    }
+    appRunScript(s);
   }
 
 }

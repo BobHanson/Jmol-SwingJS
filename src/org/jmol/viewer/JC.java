@@ -526,6 +526,12 @@ public final class JC {
   public final static String SCRIPT_GUI = "; ## GUI ##";
   public static final String SCRIPT_QUIET = "#quiet";
 
+  public static final int SG_AS_STRING = 1;
+  public static final int SG_IS_ASSIGN = 2;
+  public static final int SG_FROM_SCRATCH = 4;
+  public static final int SG_CHECK_SUPERCELL = 8;
+  
+  
   public final static String LOAD_ATOM_DATA_TYPES = ";xyz;vxyz;vibration;temperature;occupancy;partialcharge;";
 
   public final static double radiansPerDegree = Math.PI / 180;
@@ -1581,7 +1587,6 @@ public final class JC {
   public final static double FLOAT_MIN_SAFE = Double.MIN_VALUE; // was 2E-45f; 
 
   public static final String INFO_SPACE_GROUP = "spaceGroup";
-  public static final String INFO_SPACE_GROUP_ORIGINAL = "spaceGroupOriginal";
   public static final String INFO_SPACE_GROUP_ASSIGNED = "spaceGroupAssigned";
   public static final String INFO_SPACE_GROUP_INFO = "spaceGroupInfo";
   public static final String INFO_SPACE_GROUP_INDEX = "spaceGroupIndex";
@@ -1591,10 +1596,30 @@ public final class JC {
   public static final String INFO_UNIT_CELL_PARAMS = "unitCellParams";
   public static final String INFO_UNIT_CELL_OFFSET = "unitCellOffset";
   public static final String INFO_UNIT_CELL_CONVENTIONAL = "unitcell_conventional";
-  public static final String INFO_UNIT_CELL_RANGE = "unitCellRange";
-  public static final String INFO_UNIT_CELL_TRANSLATIONS = "unitCellTranslations";
+  /**
+   * used to set atom symmetry 555 556 etc. 
+   */
+  public static final String INFO_UNIT_CELL_RANGE = "ML_unitCellRange";
+//  public static final String INFO_UNIT_CELL_TRANSLATIONS = "unitCellTranslations";
   public static final String INFO_UNIT_CELLS = "unitCells";
   public static final String INFO_UNIT_CELL = "unitcell";
+
+  /**
+   * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.
+   * 
+   * @param key
+   * @return true to delete
+   */
+  public static boolean isSpaceGroupInfoKey(String key) {
+    return (key.indexOf("nitCell") >= 0
+        || key.equals("coordinatesAreFractional")
+        || key.startsWith("spaceGroup")
+        || key.indexOf("ymmet") >= 0
+        || key.startsWith("f2c")              
+        || key.startsWith("lattice")
+        || key.startsWith("intlTable"));
+  }
+  
   public static final String PROP_DELETE_MODEL_ATOMS = "deleteModelAtoms";
   public static final String PROP_ATOMS_DELETED = "atomsDeleted";
   public static final String PROP_ATOMS_MOVED = "atomsMoved";
@@ -1602,7 +1627,7 @@ public final class JC {
   /**
    * was a minimum for float as double, but now just Double.MIN_VALUE
    * @param type 
-   * @return 
+   * @return script for opening file menu for PDB and MOL
    */
   public static String getMenuScript(String type) {
     if (type == "openPDB") {

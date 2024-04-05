@@ -1842,7 +1842,7 @@ abstract class ScriptExpr extends ScriptParam {
             break;
           case T.wyckoff:
             // a-z(1-26), ?(0), and A(27, space group 47 only
-            iv = atom.getWyckoffPosition().charAt(0);
+            iv = atom.getWyckoffPosition(false).charAt(0);
             switch (iv) {
             case 63: // ?
                iv = 0;

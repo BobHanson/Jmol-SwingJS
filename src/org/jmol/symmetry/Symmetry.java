@@ -97,6 +97,7 @@ public class Symmetry implements SymmetryInterface {
 
   private SymmetryInfo symmetryInfo;
   private SymmetryDesc desc;
+  private M4d transformMatrix;
 
   @Override
   public boolean isBio() {
@@ -173,9 +174,34 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object getSpaceGroupInfoObj(String name, double[] params,
-                                     boolean isFull, boolean addNonstandard) {
-    return SpaceGroup.getInfo(spaceGroup, name, params, isFull, addNonstandard);
+  public Object getSpaceGroupInfoObj(String name, Object params, boolean isFull,
+                                     boolean addNonstandard) {
+    switch (name) {
+    case "itaIndex":
+    case "transform":
+    case "itaNumber":
+      SpaceGroup sg = null;
+      if (params != null) {
+        sg = SpaceGroup.determineSpaceGroupN((String) params);
+      } else if (spaceGroup != null) {
+        sg = spaceGroup;
+      } else if (symmetryInfo != null) {
+        sg = SpaceGroup.determineSpaceGroupN(symmetryInfo.sgName);
+      } 
+      switch (sg == null ? "" : name) {
+      case "itaIndex":
+        return sg.getItaIndex();
+      case "transform":
+        return sg.itaTransform;
+      case "itaNumber":
+        return sg.itaNumber;
+      default:        
+        return null;
+      }
+    default:
+      return SpaceGroup.getInfo(spaceGroup, name, (double[]) params, isFull,
+          addNonstandard);
+    }
   }
 
   @Override
@@ -305,16 +331,16 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public String getIntTableNumber() {
     return (symmetryInfo != null ? symmetryInfo.intlTableNo
-        : spaceGroup == null ? null : spaceGroup.intlTableNumber);
+        : spaceGroup == null ? null : spaceGroup.itaNumber);
   }
 
   @Override
   public String getIntTableNumberFull() {
-    return (symmetryInfo != null ? symmetryInfo.intlTableNoFull
+    return (symmetryInfo != null ? symmetryInfo.intlTableJmolID
         : spaceGroup == null ? null
-            : spaceGroup.intlTableNumberFull != null
-                ? spaceGroup.intlTableNumberFull
-                : spaceGroup.intlTableNumber);
+            : spaceGroup.jmolId != null
+                ? spaceGroup.jmolId
+                : spaceGroup.itaNumber);
   }
 
   @Override
@@ -406,7 +432,7 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public boolean isSymmetryCell(SymmetryInterface sym) {
     UnitCell uc = ((Symmetry) (sym)).unitCell;
-    double[][] f2c = (uc.getUnitCellMultiplier() == null ? (symmetryInfo == null ? unitCell.getF2C()
+    double[][] f2c = (uc.isStandard() ? (symmetryInfo == null ? unitCell.getF2C()
         : symmetryInfo.spaceGroupF2C) : null);
     boolean ret = uc.isSameAs(f2c);
     if (symmetryInfo != null) {
@@ -529,7 +555,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public String getUnitCellInfo(boolean scaled) {
-    return unitCell.dumpInfo(false, scaled);
+    return (unitCell == null ? null : unitCell.dumpInfo(false, scaled));
   }
 
   @Override
@@ -664,7 +690,7 @@ public class Symmetry implements SymmetryInterface {
       Map<String, Object> info = modelSet
           .getModelAuxiliaryInfo(modelSet.vwr.am.cmi);
       if (info != null)
-        sgName = (String) info.get("spaceGroup");
+        sgName = (String) info.get(JC.INFO_SPACE_GROUP);
     }
     SymmetryInterface cellInfo = null;
     if (cellParams != null) {
@@ -693,7 +719,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public boolean getState(ModelSet ms, int modelIndex, SB commands) {
-    boolean isAssigned = (ms.getInfo(modelIndex, "spaceGroupAssigned") != null);
+    boolean isAssigned = (ms.getInfo(modelIndex, JC.INFO_SPACE_GROUP_ASSIGNED) != null);
     T3d pt = getFractionalOffset();
     boolean loadUC = false;
     if (pt != null && (pt.x != 0 || pt.y != 0 || pt.z != 0)) {
@@ -706,7 +732,7 @@ public class Symmetry implements SymmetryInterface {
           .append(SimpleUnitCell.escapeMultiplier(ptm));
       loadUC = true;
     }
-    String sg = (String) ms.getInfo(modelIndex, "spaceGroup");
+    String sg = (String) ms.getInfo(modelIndex, JC.INFO_SPACE_GROUP);
     if (isAssigned && sg != null) {
       // first one may not be read, but it is important to have it
       // in case there is an issue with assigning the spacegroup
@@ -845,13 +871,10 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList,
-                               double[] unitCellParams, T3d origin,
-                               boolean asString, boolean isAssign,
-                               boolean checkSupercell) {
+                               double[] unitCellParams, T3d origin, T3d[] oabc, int flags) {
     return ((SpaceGroupFinder) Interface
         .getInterface("org.jmol.symmetry.SpaceGroupFinder", vwr, "eval"))
-            .findSpaceGroup(vwr, atoms, xyzList, unitCellParams, origin, this,
-                asString, isAssign, checkSupercell);
+            .findSpaceGroup(vwr, atoms, xyzList, unitCellParams, origin, oabc, this, flags);
   }
 
   @Override
@@ -860,7 +883,7 @@ public class Symmetry implements SymmetryInterface {
     if (sg instanceof SpaceGroup) {
       spaceGroup = (SpaceGroup) sg;
     } else {
-      spaceGroup = SpaceGroup.getSpaceGroupFromITAName(sg.toString());
+      spaceGroup = SpaceGroup.getSpaceGroupFromJmolClegOrITA(sg.toString());
     }
   }
 
@@ -917,7 +940,7 @@ public class Symmetry implements SymmetryInterface {
     // fractionalize all points if necessary
     if (flags.indexOf("fromfractional") < 0) {
       for (int i = 0; i < pts.size(); i++) {
-        toFractional(pts.get(i), true);
+        toFractional(pts.get(i), false); // was true in SwingJS
       }
     }
     // signal to make no changes in points
@@ -957,7 +980,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public int[] getInvariantSymops(P3d pt, int[] v0) {
-    M4d[] ops = getSymmetryOperations();
+    SymmetryOperation[] ops = getSymmetryOperations();
     if (ops == null)
       return new int[0];
     BS bs = new BS();
@@ -998,9 +1021,9 @@ public class Symmetry implements SymmetryInterface {
     if (sg == null && symmetryInfo != null) {
       sg = SpaceGroup.determineSpaceGroupN(symmetryInfo.sgName);
       if (sg == null)
-        sg = SpaceGroup.getSpaceGroupFromITAName(symmetryInfo.intlTableNoFull);
+        sg = SpaceGroup.getSpaceGroupFromJmolClegOrITA(symmetryInfo.intlTableJmolID);
     }
-    if (sg == null || sg.intlTableNumber == null) {
+    if (sg == null || sg.itaNumber == null) {
       // maybe an unusual setting
       return "?";
     }
@@ -1018,14 +1041,18 @@ public class Symmetry implements SymmetryInterface {
     }
     try {
       WyckoffFinder w = wyckoffFinder.getWyckoffFinder(vwr,
-          sg.intlTableNumberFull);
+          sg.jmolId);
+      boolean withMult = (letter != null && letter.charAt(0) == 'M');
+      if (withMult) {
+        letter = (letter.length() == 1 ? null : letter.substring(1));
+      }
       int mode = (letter == null ? WyckoffFinder.WYCKOFF_RET_LABEL
           : letter.equalsIgnoreCase("coord") ? WyckoffFinder.WYCKOFF_RET_COORD
               : letter.equalsIgnoreCase("coords")
                   ? WyckoffFinder.WYCKOFF_RET_COORDS
                   : letter.endsWith("*") ? (int) letter.charAt(0) : 0);
       if (mode != 0) {
-        return w.getInfo(unitCell, p, mode);
+        return (w == null ? "?" : w.getInfo(unitCell, p, mode, withMult));
       }
       if (w.findPositionFor(p, letter) == null)
         return null;
@@ -1084,7 +1111,7 @@ public class Symmetry implements SymmetryInterface {
             SpaceGroup sg = symmetryInfo.getDerivedSpaceGroup();
             if (sg == null)
               return new Hashtable<String, Object>();
-            sgname = sg.intlTableNumberFull;
+            sgname = sg.jmolId;
           } else {
             sgname = getIntTableNumberFull();
           }
@@ -1132,9 +1159,13 @@ public class Symmetry implements SymmetryInterface {
             if (isSettings && !isThis) {
               return its;
             }
-            for (int i = (isInt && !isThis ? index : its.size()); --i >= 0;) {
+            int n = its.size();
+            int i0 = (isInt && !isThis ? index : n);
+            if (i0 > n)
+              return null;
+            for (int i = i0; --i >= 0;) {
               Map<String, Object> map = (Map<String, Object>) its.get(i);
-              if (i == index - 1 || sgname.equals(map.get("itaFull"))
+              if (i == index - 1 || sgname.equals(map.get("jmolId"))
                   || tm != null && tm.equals(map.get("tm"))) {
                 return map;
               }
@@ -1193,6 +1224,13 @@ public class Symmetry implements SymmetryInterface {
     return UnitCell.createCompatibleUnitCell(spaceGroup, params, null, true);
   }
 
+
+  @Override
+  public String getTransformABC(Object transform, boolean normalize) {
+    return SymmetryOperation.getTransformABC(transform, normalize);
+  }
+  
+
   /**
    * Called from SpaceGroupFinder only.
    * 
@@ -1227,7 +1265,7 @@ public class Symmetry implements SymmetryInterface {
       unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo
           .get("moreUnitCellInfo");
       modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
-      setOffsetPt((T3d) modelAuxiliaryInfo.get("unitCellOffset"));
+      setOffsetPt((T3d) modelAuxiliaryInfo.get(JC.INFO_UNIT_CELL_OFFSET));
       M3d matUnitCellOrientation = (M3d) modelAuxiliaryInfo
           .get("matUnitCellOrientation");
       if (matUnitCellOrientation != null)
@@ -1244,4 +1282,45 @@ public class Symmetry implements SymmetryInterface {
     }
   }
 
+  public void transformUnitCell(M4d trm) {
+    if (trm == null) {
+      trm = new M4d();
+      UnitCell.getMatrixAndUnitCell(null, spaceGroup.itaTransform, trm);
+    }
+    M4d trmInv = M4d.newM4(trm);
+    trmInv.invert();
+    P3d[] oabc = getUnitCellVectors();
+    for (int i = 1; i <= 3; i++) {
+      toFractional(oabc[i], true);
+      trmInv.rotate(oabc[i]);
+      toCartesian(oabc[i], true);
+    }
+    P3d o = new P3d();
+    trm.getTranslation(o);
+    toCartesian(o, true);
+    oabc[0].add(o);
+    unitCell = UnitCell.fromOABC(oabc, false);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public Object getITASettingValue(Viewer vwr, String itaIndex, String key) {
+      Object o = getSpaceGroupJSON(vwr, "ITA", itaIndex, 0);
+      return (o instanceof Map ? ( (Map<String, Object>)o).get(key) : o);
+  }
+
+  @Override
+  public String cleanTransform(String tr) {
+    M4d m = new M4d();
+    UnitCell.getMatrixAndUnitCell(null, tr, m);
+    return SymmetryOperation.getTransformABC(m, true);
+  }
+  
+  @Override
+  public M4d replaceTransformMatrix(M4d trm) {
+      M4d trm0 = transformMatrix;
+      transformMatrix = trm;
+      return trm0;
+  }
+  
 }

@@ -10,6 +10,7 @@ import org.jmol.script.ScriptError;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.ScriptException;
 import org.jmol.script.T;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 public abstract class ScriptExt {
@@ -154,6 +155,20 @@ public abstract class ScriptExt {
     return translucentLevel;
   }
 
+  /**
+   * 
+   * @param shapeID
+   * @param colorArgb
+   * @param translucentLevel
+   * @param intScale
+   * @param doSet
+   * @param data
+   * @param iptDisplayProperty
+   *        pointer to mesh nofill....; if default is meshNoFill, then this
+   *        number is -1 - ipt
+   * @param bs
+   * @throws ScriptException
+   */
   protected void finalizeObject(int shapeID, int colorArgb,
                                 double translucentLevel, int intScale,
                                 boolean doSet, Object data,
@@ -168,6 +183,12 @@ public abstract class ScriptExt {
          e.setShapeTranslucency(shapeID, "", "translucent", translucentLevel, bs);
        if (intScale != 0) {
          setShapeProperty(shapeID, "scale", Integer.valueOf(intScale));
+       }
+       if (iptDisplayProperty < 0) {
+         // unitcell and boundbox default to mesh nofill for Jmol 16.2.3
+         iptDisplayProperty = -1 - iptDisplayProperty;
+         setShapeProperty(shapeID, "token", Integer.valueOf(T.mesh));
+         setShapeProperty(shapeID, "token", Integer.valueOf(T.nofill));
        }
        if (iptDisplayProperty > 0) {
          if (!e.setMeshDisplayProperty(shapeID, iptDisplayProperty, 0))

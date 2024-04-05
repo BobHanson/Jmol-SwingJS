@@ -1372,7 +1372,7 @@ public class XtalSymmetry {
       asc.setCurrentModelInfo("latticeDesignation",
           sym.getLatticeDesignation());
       asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_RANGE, unitCells);
-      asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_TRANSLATIONS, unitCellTranslations);
+//      asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_TRANSLATIONS, unitCellTranslations);
       if (acr.isSUPERCELL)
         asc.setCurrentModelInfo("supercell", acr.strSupercell);
     }
@@ -1389,7 +1389,7 @@ public class XtalSymmetry {
     asc.setCurrentModelInfo("latticeType",
         acr.latticeType == null ? "P" : acr.latticeType);
     asc.setCurrentModelInfo("intlTableNo", symmetry.getIntTableNumber());
-    asc.setCurrentModelInfo("intlTableNoFull",
+    asc.setCurrentModelInfo("intlTableJmolID",
         symmetry.getIntTableNumberFull());
     asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_INDEX,
         Integer.valueOf(symmetry.getSpaceGroupIndex()));

@@ -949,7 +949,7 @@ public class StateCreator extends JmolStateCreator {
   }
 
   private static void addTickInfo(SB sb, TickInfo tickInfo, boolean addFirst) {
-    sb.append(" ticks ").append(tickInfo.type).append(" ").append(
+    sb.append(" ticks ").appendC(tickInfo.type).append(" ").append(
         Escape.eP(tickInfo.ticks));
     boolean isUnitCell = (tickInfo.scale != null && Double
         .isNaN(tickInfo.scale.x));

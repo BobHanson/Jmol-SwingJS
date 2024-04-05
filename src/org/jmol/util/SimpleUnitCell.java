@@ -33,6 +33,7 @@ import javajs.util.P3i;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.T3d;
+import javajs.util.T4d;
 import javajs.util.V3d;
 
 
@@ -681,6 +682,10 @@ public class SimpleUnitCell {
    * 1000000000 - 1999999999 --> center 500, 500, 500; range 0 to 999 or -500 to
    * +499
    * 
+   * for example, a 3x3x3 block of 27 cells:
+   * 
+   * {444 666 1} or {1494949 1515151 1} or {1499499499 1501501501 1}
+   * 
    * @param nnn
    * @param cell
    * @param offset
@@ -809,6 +814,17 @@ public class SimpleUnitCell {
   protected static boolean approx0(double f) {
     return (Math.abs(f) < SLOP_PARAMS);
   }
+
+  public static int getCellRange(T3d fset, P3d[] cellRange) {
+	    int t3w = (fset instanceof T4d ? (int) ((T4d) fset).w : 0);
+	    SimpleUnitCell.ijkToPoint3f((int) fset.x, cellRange[0], 0, t3w);
+	    SimpleUnitCell.ijkToPoint3f((int) fset.y, cellRange[1], 1, t3w);
+	    if (fset.z < 0) {
+	      cellRange[0].scale(-1 / fset.z);
+	      cellRange[1].scale(-1 / fset.z);
+	    }
+	    return t3w;
+	  }
 
 
   @Override

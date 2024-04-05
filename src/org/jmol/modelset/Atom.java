@@ -1429,8 +1429,11 @@ public class Atom extends Point3fi implements Node {
       return getCIPChirality(true);
     case T.ciprule:
       return getCIPChiralityRule();
+    case T.w:
     case T.wyckoff:
-      return getWyckoffPosition();
+      return getWyckoffPosition(false);
+    case T.wyckoffm:
+      return getWyckoffPosition(true);
     case T.sequence:
       return getGroup1('?');
     case T.seqcode:
@@ -1469,20 +1472,25 @@ public class Atom extends Point3fi implements Node {
     return ""; 
   }
 
-  public String getWyckoffPosition() {
+  public String getWyckoffPosition(boolean withMultiplicity) {
 
     ModelSet ms = group.chain.model.ms;
     Atom a = ms.getBasisAtom(i, true);
     int id = a.getSeqID();
     if (id != 0) {
-      return "" + (char) id;
+      int m = id >> 16;
+      char c = (char) (id & 0xFF);
+      return (withMultiplicity ? "" + (id >> 16) : "") + (char) (id & 0xFF);
     }
     SymmetryInterface sym = getUnitCell();
     String s;
-    if (sym == null || (s = (String) sym.getWyckoffPosition(ms.vwr, this, null)) == null)
-      return "?";
-    ms.setAtomSeqID(i, 0 + s.charAt(0));
-    return s;
+    if (sym == null
+        || (s = (String) sym.getWyckoffPosition(ms.vwr, this, "M")) == null) {
+      s = "0?";
+    }
+    ms.setAtomSeqID(i, (PT.parseInt(s) << 16) + s.charAt(s.length() - 1));
+    // remove multiplicity
+    return (withMultiplicity ? s : s.substring(s.length() - 1));
   }
 
   /**

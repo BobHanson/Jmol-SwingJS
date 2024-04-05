@@ -222,7 +222,7 @@ public class SpinThread extends JmolThread {
           : transformManager.fixedRotationAxis).angle
           / myFps;
       if (transformManager.isSpinInternal) {
-        transformManager.rotateAxisAngleRadiansInternal(angle, bsAtoms, m4);
+        transformManager.rotateAxisAngleRadiansInternal(angle, bsAtoms, m4, false);
       } else {
         transformManager.rotateAxisAngleRadiansFixed(angle, bsAtoms);
       }

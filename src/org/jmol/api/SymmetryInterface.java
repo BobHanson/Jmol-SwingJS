@@ -28,7 +28,8 @@ public interface SymmetryInterface {
 
   int addBioMoleculeOperation(M4d mat, boolean isReverse);
 
-  Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCellParams, T3d origin, boolean asString, boolean isAssign, boolean checkSupercell);
+  Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCellParams, 
+                        T3d origin, T3d[] oabc, int flags);
 
   int[] getCellRange();
 
@@ -60,7 +61,7 @@ public interface SymmetryInterface {
 
   Map<String, Object> getSpaceGroupInfo(ModelSet modelSet, String spaceGroup, int modelIndex, boolean isFull, double[] cellParams);
 
-  Object getSpaceGroupInfoObj(String name, double[] params,
+  Object getSpaceGroupInfoObj(String name, Object params,
                               boolean isFull, boolean addNonstandard);
 
   String getSpaceGroupName();
@@ -254,4 +255,12 @@ public interface SymmetryInterface {
   String getSpaceGroupTitle();
 
   boolean isSymmetryCell(SymmetryInterface sym);
+
+  String getTransformABC(Object value, boolean normalize);
+
+  Object getITASettingValue(Viewer vwr, String itaIndex, String key);
+
+  String cleanTransform(String tr);
+
+  M4d replaceTransformMatrix(M4d trm);
 }

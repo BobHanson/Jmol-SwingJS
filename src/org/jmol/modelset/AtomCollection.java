@@ -2935,7 +2935,6 @@ abstract public class AtomCollection {
     return bs;
   }
 
-
   public Lst<P3d> generateCrystalClass(int atomIndex, P3d pt) {
     SymmetryInterface sym = (atomIndex < 0 || atomIndex >= ac ? vwr.getOperativeSymmetry()
         : at[atomIndex].getUnitCell());
@@ -2948,13 +2947,6 @@ abstract public class AtomCollection {
   public static boolean isDeleted(Atom atom) {
     return (atom == null || atom.isDeleted());
   }
-
-
-  public String getWyckoffPosition(int iatom) {
-    return (iatom < 0 || iatom >= ac || isDeleted(at[iatom])
-        ? "?" : at[iatom].getWyckoffPosition());
-  }
-
 
 }
 

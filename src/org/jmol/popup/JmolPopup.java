@@ -757,9 +757,8 @@ abstract public class JmolPopup extends JmolGenericPopup {
       return;
     String[] list = (String[]) modelInfo.get("symmetryOperations");
     if (list == null)
-      return;
-    int[] cellRange = (int[]) modelInfo.get(JC.INFO_UNIT_CELL_RANGE);
-    boolean haveUnitCellRange = (cellRange != null);
+      return;    
+    boolean enableSymop = (vwr.getOperativeSymmetry() != null);
     SC subMenu = menu;
     int nmod = itemMax;
     int pt = (list.length > itemMax ? 0 : Integer.MIN_VALUE);
@@ -776,7 +775,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
       String entryName = "symop=" + (i + 1) + " # " + list[i];
       menuEnable(
           menuCreateItem(subMenu, entryName, "SELECT symop=" + (i + 1), null),
-          haveUnitCellRange);
+          enableSymop);
     }
     menuEnable(menu, true);
   }

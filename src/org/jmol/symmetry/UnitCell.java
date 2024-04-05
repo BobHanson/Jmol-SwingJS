@@ -48,9 +48,10 @@ import javajs.util.T3d;
 import javajs.util.T4d;
 import javajs.util.V3d;
 
+
 /**
- * a class private to the org.jmol.symmetry package
- * to be accessed only through the SymmetryInterface API
+ * a class pseudoprivate to the org.jmol.symmetry and org.jmol.applet.smarter.FileSymmetry
+ * to be accessed generally only through the SymmetryInterface API 
  * 
  * adds vertices and offsets orientation, 
  * and a variety of additional calculations that in 
@@ -65,70 +66,6 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
 
   private final static V3d[] unitVectors = {
       JC.axisX, JC.axisY, JC.axisZ};
-  
-  private static void checkDuplicate(Lst<P3d> list, int i0, int n0, int n) {
-    if (n < 0)
-      n = list.size();
-    for (int i = i0; i < n; i++) {
-      P3d p = list.get(i);
-      for (int j = Math.max(i + 1, n0); j < n; j++) {
-        if (list.get(j).distanceSquared(p) < JC.UC_TOLERANCE2) {
-          list.removeItemAt(j);
-          n--;
-          j--;
-        }
-      }
-    }
-  }
-  
-  static UnitCell cloneUnitCell(UnitCell uc) {
-    UnitCell ucnew = null;
-    try {
-      ucnew = (UnitCell) uc.clone();
-    } catch (CloneNotSupportedException e) {
-    }
-    return ucnew;
-  }
-
-/**
- * 
- * A special constructor for spacially defined unit cells.
- * Not used by readers. 
- * 
- * @param oabc [origin, Va, Vb, Vc]
- * @param setRelative a flag only set true for IsosurfaceMesh
- * @return new unit cell
- */
-public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
-  UnitCell c = new UnitCell();
-  if (oabc.length == 3) // not used
-    oabc = new T3d[] { new P3d(), oabc[0], oabc[1], oabc[2] };
-  double[] parameters = new double[] { -1, 0, 0, 0, 0, 0, oabc[1].x,
-      oabc[1].y, oabc[1].z, oabc[2].x, oabc[2].y, oabc[2].z,
-      oabc[3].x, oabc[3].y, oabc[3].z };
-  c.init(parameters);
-  c.allFractionalRelative = setRelative;
-  c.initUnitcellVertices();
-  c.setCartesianOffset(oabc[0]);
-  return c;
-}
-  /** 
-   * 
-   * @param params
-   * @param setRelative only set true for JmolData and tensors
-   * @param slop 
-   * @return a new unit cell
-   */
-  public static UnitCell fromParams(double[] params, boolean setRelative, double slop) {
-    UnitCell c = new UnitCell();
-    c.init(params);
-    c.initUnitcellVertices();
-    c.allFractionalRelative = setRelative;
-    c.setPrecision(slop);
-    if (params.length > SimpleUnitCell.PARAM_SLOP)
-      params[PARAM_SLOP] = slop;
-    return c;
-  }
   
   Lst<String> moreInfo;
   
@@ -148,13 +85,25 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   private final P3d cartesianOffset = new P3d();
 
   /**
-   * a P3 or P4; the raw multiplier for the cell from 
+   * a P3 or P4; the raw multiplier for the cell from
    * 
    * UNITCELL {ijk ijk scale}
    * 
    * UNITCELL {1iiijjjkkk 1iiijjjkkk scale}
    * 
    * (encoded as a P4: {1iiijjjkkk 1iiijjjkkk scale 1kkkkkk} )
+   * 
+   * Expanded cell notation:
+   * 
+   * 111 - 999 --> center 5,5,5; range 0 to 9 or -5 to +4
+   * 
+   * 1000000 - 1999999 --> center 50,50,50; range 0 to 99 or -50 to +49
+   * 1000000000 - 1999999999 --> center 500, 500, 500; range 0 to 999 or -500 to
+   * +499
+   * 
+   * for example, a 3x3x3 block of 27 cells:
+   * 
+   * {444 666 1} or {1494949 1515151 1} or {1499499499 1501501501 1}
    * 
    */
   private T3d unitCellMultiplier;
@@ -171,11 +120,63 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   
 
   /**
-   * Indicate that this is a new unit cell, not one from a file.
+   * Private constructor. 
    * 
    */  
   private UnitCell() {
     super();  
+  }
+
+  /**
+   * 
+   * A special constructor for spacially defined unit cells.
+   * Not used by readers. 
+   * 
+   * @param oabc [origin, Va, Vb, Vc]
+   * @param setRelative a flag only set true for IsosurfaceMesh
+   * @return new unit cell
+   */
+  public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
+    UnitCell c = new UnitCell();
+    if (oabc.length == 3) // not used
+      oabc = new T3d[] { new P3d(), oabc[0], oabc[1], oabc[2] };
+    double[] parameters = new double[] { -1, 0, 0, 0, 0, 0, oabc[1].x,
+        oabc[1].y, oabc[1].z, oabc[2].x, oabc[2].y, oabc[2].z,
+        oabc[3].x, oabc[3].y, oabc[3].z };
+    c.init(parameters);
+    c.allFractionalRelative = setRelative;
+    c.initUnitcellVertices();
+    c.setCartesianOffset(oabc[0]);
+    return c;
+  }
+
+  /**
+   * 
+   * @param params
+   * @param setRelative
+   *        only set true for JmolData and tensors
+   * @param slop
+   * @return a new unit cell
+   */
+  public static UnitCell fromParams(double[] params, boolean setRelative,
+                                    double slop) {
+    UnitCell c = new UnitCell();
+    c.init(params);
+    c.initUnitcellVertices();
+    c.allFractionalRelative = setRelative;
+    c.setPrecision(slop);
+    if (params.length > SimpleUnitCell.PARAM_SLOP)
+      params[PARAM_SLOP] = slop;
+    return c;
+  }
+    
+  static UnitCell cloneUnitCell(UnitCell uc) {
+    UnitCell ucnew = null;
+    try {
+      ucnew = (UnitCell) uc.clone();
+    } catch (CloneNotSupportedException e) {
+    }
+    return ucnew;
   }
 
   /**
@@ -371,7 +372,7 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
         }
       }
     }
-    checkDuplicate(list, i0, n0, -1);
+    removeDuplicates(list, i0, n0, -1);
     if (!tofractional) {
       for (int i = list.size(); --i >= n0;)
         toCartesian(list.get(i), true);
@@ -705,6 +706,11 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   T3d getUnitCellMultiplier() {
     return unitCellMultiplier;
   }
+  
+  boolean isStandard() {
+    // not allowing {555 666 1} here
+    return (unitCellMultiplier == null || unitCellMultiplier.x == unitCellMultiplier.y);    
+  }
 
   P3d[] getUnitCellVectors() {
     M4d m = matrixFractionalToCartesian;
@@ -717,43 +723,60 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   
   /**
    * 
-   * @param uc generally this or null
+   * @param uc
+   *        generally this or null
    * @param def
    *        String "abc;offset" or M3d or M4d to origin; if String, can be
    *        preceded by ! for "reverse of". For example,
    *        "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, and can be a
    *        definition such as "a=3.40,b=4.30,c=5.02,alpha=90,beta=90,gamma=129"
    * @param retMatrix
-   *        if a string, return the 4x4 matrix corresponding to this definition; may be null to ignore
+   *        if a string, return the 4x4 matrix corresponding to this definition;
+   *        may be null to ignore
    * 
    * @return [origin va vb vc]
    */
-  public static T3d[] getMatrixAndUnitCell(SimpleUnitCell uc,
-                                           Object def, M4d retMatrix) {
+  public static T3d[] getMatrixAndUnitCell(SimpleUnitCell uc, Object def,
+                                           M4d retMatrix) {
     if (def == null)
       def = "a,b,c";
     if (retMatrix == null ? uc == null : !(def instanceof String))
       return null;
     M4d m;
-    V3d[] pts = new V3d[4];
-    V3d pt = pts[0] = V3d.new3(0, 0, 0);
-    pts[1] = V3d.new3(1, 0, 0);
-    pts[2] = V3d.new3(0, 1, 0);
-    pts[3] = V3d.new3(0, 0, 1);
+    P3d[] pts = new P3d[4];
+    P3d pt = pts[0] = P3d.new3(0, 0, 0);
+    pts[1] = P3d.new3(1, 0, 0);
+    pts[2] = P3d.new3(0, 1, 0);
+    pts[3] = P3d.new3(0, 0, 1);
     M3d m3 = new M3d();
     if (AU.isAD(def)) {
       return setAbcFromParams((double[]) def, pts);
     }
     if (def instanceof String) {
       String sdef = (String) def;
-      String strans = "0,0,0";
+      String strans;
+      String strans2 = null;
       if (sdef.indexOf("a=") == 0)
         return setAbc(sdef, null, pts);
       // a,b,c;0,0,0
+      // or a+1/2,b,c+1/2
+      String[] ret = new String[1];
       int ptc = sdef.indexOf(";");
       if (ptc >= 0) {
         strans = sdef.substring(ptc + 1).trim();
         sdef = sdef.substring(0, ptc);
+        // allow mixed
+        ret[0] = sdef;
+        strans2 = fixABC(ret);
+        if (sdef != ret[0]) {
+          sdef = ret[0];
+        }
+      } else if (sdef.equals("a,b,c")) {
+        strans = null;
+      } else {
+        ret[0] = sdef;
+        strans = fixABC(ret);
+        sdef = ret[0];
       }
       sdef += ";0,0,0";
       while (sdef.startsWith("!!"))
@@ -761,6 +784,8 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       boolean isRev = sdef.startsWith("!");
       if (isRev)
         sdef = sdef.substring(1);
+      if (sdef.startsWith("r;"))
+        sdef = SpaceGroup.SET_R + sdef.substring(1);
       Symmetry symTemp = new Symmetry();
       symTemp.setSpaceGroup(false);
       int i = symTemp.addSpaceGroupOperation("=" + sdef, 0);
@@ -768,26 +793,10 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
         return null;
       m = symTemp.getSpaceGroupOperation(i);
       ((SymmetryOperation) m).doFinalize();
-      if (strans != null) {
-        if (strans.indexOf(',') < 0)
-          strans = strans.replace(' ', ',');
-        String[] atrans = PT.split(strans, ",");
-        double[] ftrans = new double[3];
-        if (atrans.length == 3) {
-          for (int j = 0; j < 3; j++) {
-            String s = atrans[j];
-            int sfpt = s.indexOf("/");
-            if (sfpt >= 0) {
-              ftrans[j] = PT.parseDouble(s.substring(0, sfpt))
-                  / PT.parseDouble(s.substring(sfpt + 1));
-            } else {
-              ftrans[j] = PT.parseDouble(s);
-            }
-          }
-        }
-        P3d t = P3d.new3(ftrans[0], ftrans[1], ftrans[2]);
-        m.setTranslation(t);
-      }
+      P3d t = new P3d();
+      addTrans(strans, t);
+      addTrans(strans2, t);
+      m.setTranslation(t);
       boolean isABC = (sdef.indexOf("c") >= 0);
       if (isABC) {
         m.transpose33();
@@ -799,7 +808,7 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
         retMatrix.setM4(m);
       }
       if (uc == null)
-        return pts;      
+        return pts;
     } else if (def instanceof M3d) {
       m = M4d.newMV((M3d) def, new P3d());
     } else if (def instanceof M4d) {
@@ -808,22 +817,18 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
       // direct 4x4 Cartesian transform
       m = (M4d) ((Object[]) def)[0];
       m.getRotationScale(m3);
-      uc.toCartesian(pt, false);
       m.rotTrans(pt);
-      
+      uc.toCartesian(pt, false);
+
       for (int i = 1; i < 4; i++) {
-        uc.toCartesian(pts[i], true);
         m3.rotate(pts[i]);
+        uc.toCartesian(pts[i], true);
       }
       return pts;
     }
 
-    // We have an operator that may need reversing.
-    // Note that translations are limited to 1/2, 1/3, 1/4, 1/6, 1/8.
-    
-    
     // everything must happen in the CURRENT frame
-    
+
     // Note that only the origin is translated;
     // the others are vectors from the origin.
 
@@ -839,6 +844,67 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     return pts;
   }
 
+  private static void addTrans(String strans, P3d t) {
+    if (strans == null)
+      return;
+    String[] atrans = PT.split(strans, ",");
+    double[] ftrans = new double[3];
+    if (atrans.length == 3) {
+      for (int j = 0; j < 3; j++) {
+        String s = atrans[j];
+        int sfpt = s.indexOf("/");
+        if (sfpt >= 0) {
+          ftrans[j] = PT.parseDouble(s.substring(0, sfpt))
+              / PT.parseDouble(s.substring(sfpt + 1));
+        } else {
+          ftrans[j] = PT.parseDouble(s);
+        }
+      }
+    }
+    t.add3(ftrans[0], ftrans[1], ftrans[2]);
+  }
+
+  private static String fixABC(String[] ret) {
+    // checking here for embedded translation
+    String[] tokens = PT.split(ret[0], ",");
+    if (tokens.length != 3)
+      return null;
+    String trans = "";
+    String abc = "";
+    boolean haveT = false;
+    for (int i = 0; i < 3; i++) {
+      String a = tokens[i];
+      int p;
+      int n = 0;
+      for (p = a.length(); --p >= 0;) {
+        char c = a.charAt(p);
+        switch (c) {
+        default:
+          if (c >= 'a')
+            p = 0;
+          break;
+        case '+':
+          n = 1;
+          //$FALL-THROUGH$
+        case '-':
+          p = -p;
+          break;
+        }
+      }
+      p = -1 - p;
+      if (p == 0) {
+        trans += ",0";
+        abc += "," + a;
+      } else {
+        haveT = true;
+        trans += "," + a.substring(p + n);
+        abc += "," + a.substring(0, p);
+      }
+    }
+    ret[0] = abc.substring(1);
+    return (haveT ? trans.substring(1) : null);
+  }
+  
   P3d[] getVertices() {
     return vertices; // does not include offsets
   }
@@ -967,8 +1033,13 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     T4d pt4 = (pt instanceof T4d ? (T4d) pt : null);
     double w = (pt4 == null ? Double.MIN_VALUE : pt4.w);
     boolean isCell555P4 = (w > 999999);
-    if (pt4 != null ? w <= 0 || isCell555P4 : pt.x >= 100 || pt.y >= 100) {
-      unitCellMultiplier = (pt.z == 0 && pt.x == pt.y && !isCell555P4 ? null : isCell555P4 ? P4d.newPt((P4d) pt4) : P3d.newP(pt));
+    if (pt4 != null ? 
+    		w <= 0 || isCell555P4 
+    		: pt.x >= 100 || pt.y >= 100) {
+      unitCellMultiplier = (pt.z == 0 && pt.x == pt.y 
+    		  && !isCell555P4 ? null 
+    				  : isCell555P4 ? P4d.newPt((P4d) pt4) 
+    						  : P3d.newP(pt));
       unitCellMultiplied = null;
       if (pt4 == null || pt4.w == 0 || isCell555P4)
         return;
@@ -1156,7 +1227,7 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
     double beta = params[4];
     double gamma = params[5];
 
-    int n = (sg == null || sg.intlTableNumber == null ? 0 : PT.parseInt(sg.intlTableNumber));
+    int n = (sg == null || sg.itaNumber == null ? 0 : PT.parseInt(sg.itaNumber));
     boolean toHex = (n != 0 && isHexagonalSG(n, null));
     boolean isHex = (toHex && isHexagonalSG(-1, params));
     boolean toRhom = (n != 0 && sg.axisChoice == 'r');
@@ -1221,7 +1292,6 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
         }
       }
       if (toHex) {
-        b = a;
         if (toRhom ? isRhom
             : isHex) {
           // nothing to do
@@ -1231,6 +1301,7 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
             alpha = 80;
           gamma = beta = alpha;
         } else {
+          b = a;
           alpha = beta = 90;
           gamma = 120;
         }
@@ -1278,6 +1349,21 @@ public static UnitCell fromOABC(T3d[] oabc, boolean setRelative) {
   public static boolean isHexagonalSG(int n, double[] params) {
     return (n < 1 ? isHexagonal(params)
         : n >= 143 && n <= 194);
+  }
+  
+  private static void removeDuplicates(Lst<P3d> list, int i0, int n0, int n) {
+    if (n < 0)
+      n = list.size();
+    for (int i = i0; i < n; i++) {
+      P3d p = list.get(i);
+      for (int j = Math.max(i + 1, n0); j < n; j++) {
+        if (list.get(j).distanceSquared(p) < JC.UC_TOLERANCE2) {
+          list.removeItemAt(j);
+          n--;
+          j--;
+        }
+      }
+    }
   }
 
 }

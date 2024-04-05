@@ -40,7 +40,7 @@ import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
-/*
+/**
  * 
  * A general class to deal with Hermann-Mauguin or Hall names
  * 
@@ -66,24 +66,18 @@ import javajs.util.SB;
  * data table is from Syd Hall, private email, 9/4/2006, 
  * amended using * ** to indicate nonstandard H-M symbols or full names  
  * 
+ * amended 2024.03.24 to add several ITA settings; full set of ITA settings are now encoded. 
+ * 
  * NEVER ACCESS THESE METHODS DIRECTLY! ONLY THROUGH CLASS Symmetry
+ * 
  * 
  *
  */
 
 public class SpaceGroup implements Cloneable {
 
-  SpaceGroup cloneInfoTo(SpaceGroup sg0) {
-    try {
-      SpaceGroup sg = (SpaceGroup) clone();
-      sg.operations = sg0.operations;
-      sg.finalOperations = sg0.finalOperations;
-      sg.xyzList = sg0.xyzList;
-      return sg;
-    } catch (CloneNotSupportedException e) {
-      return null;
-    }
-  }
+  private static final String NEW_HALL_GROUP = "0;-;;0;--;--;";
+  private static final String NEW_NO_HALL_GROUP = "0;;-;0;--;--;--";
 
   public SymmetryOperation[] operations;
   SymmetryOperation[] finalOperations;
@@ -93,10 +87,6 @@ public class SpaceGroup implements Cloneable {
   private int index;
   private int derivedIndex = -1;
 
-  public int getIndex() {
-    return (derivedIndex >= 0 ? derivedIndex : index);
-  }
- 
   public boolean isSSG;
   String name = "unknown!";
   String hallSymbol;
@@ -113,9 +103,9 @@ public class SpaceGroup implements Cloneable {
   char axisChoice = '\0';
   //int cellChoice; 
   //int originChoice;
-  String intlTableNumber;
-  String intlTableNumberFull;
-  String intlTableNumberExt;
+  String itaNumber;  // "3"
+  String jmolId;     // "3:a"
+  String jmolIdExt;  // "a" in "3:a"
   HallInfo hallInfo;
   int latticeParameter;
   int operationCount;
@@ -123,7 +113,7 @@ public class SpaceGroup implements Cloneable {
   private int modDim;
   boolean doNormalize = true;
   boolean isBio;
-  boolean isBilbao;
+  //boolean isBilbao;
   char latticeType = 'P'; // P A B C I F
 
   public String itaTransform;
@@ -131,24 +121,36 @@ public class SpaceGroup implements Cloneable {
   Object info;
 
   private Integer nHallOperators;
+  //private String[] xyzListITA;
+  /**
+   * index in cleg_settings.tab; "-" if in Jmol's list but not at ITA -- 152:_2 and 154:_2
+   */
+  private String itaIndex;
+  
+  private String clegId;
+  
+  public String getItaIndex() {
+    return itaIndex == null ? itaNumber : itaIndex;
+  }
   
   static SpaceGroup getNull(boolean doInit, boolean doNormalize, boolean doFinalize) {
-      getSpaceGroups();
+    //  getSpaceGroups();
     SpaceGroup sg = new SpaceGroup(-1, null, doInit);
     sg.doNormalize = doNormalize;
     if (doFinalize)
       sg.setFinalOperations();
     return sg;
   }
+
   
-  private SpaceGroup(int index, String cifLine, boolean doInit) {
+  private SpaceGroup(int index, String strData, boolean doInit) {
     ++sgIndex; // increment even if not using
     if (index < 0)
       index = sgIndex;
     this.index = index;
-    init(doInit && cifLine == null);
-    if (doInit && cifLine != null)
-      buildSpaceGroup(cifLine);
+    init(doInit && strData == null);
+    if (doInit && strData != null)
+      buildSelf(strData);
   }
 
   private void init(boolean addXYZ) {
@@ -177,6 +179,22 @@ public class SpaceGroup implements Cloneable {
     return sg;
   }
 
+  SpaceGroup cloneInfoTo(SpaceGroup sg0) {
+    try {
+      SpaceGroup sg = (SpaceGroup) clone();
+      sg.operations = sg0.operations;
+      sg.finalOperations = sg0.finalOperations;
+      sg.xyzList = sg0.xyzList;
+      return sg;
+    } catch (CloneNotSupportedException e) {
+      return null;
+    }
+  }
+
+  public int getIndex() {
+    return (derivedIndex >= 0 ? derivedIndex : index);
+  }
+ 
   /**
    * 
    * @param name
@@ -185,7 +203,7 @@ public class SpaceGroup implements Cloneable {
    */
   private static SpaceGroup createSGFromList(String name, Lst<?> data) {
     // try unconventional Hall symbol
-    SpaceGroup sg = new SpaceGroup(-1, "0;0;--;--;--", true);
+    SpaceGroup sg = new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
     sg.doNormalize = false;
     sg.name = name;
     int n = data.size();
@@ -233,9 +251,9 @@ public class SpaceGroup implements Cloneable {
       if (sg != null) {
         name = sg.getName();
         latticeType = sg.latticeType;
-        intlTableNumber = sg.intlTableNumber;
-        intlTableNumberExt = sg.intlTableNumberExt;
-        intlTableNumberFull = sg.intlTableNumberFull;
+        itaNumber = sg.itaNumber;
+        jmolIdExt = sg.jmolIdExt;
+        jmolId = sg.jmolId;
         hallSymbol = sg.hallSymbol;
         hmSymbolFull = sg.hmSymbolFull;
         derivedIndex = sg.index;
@@ -321,13 +339,26 @@ public class SpaceGroup implements Cloneable {
       : finalOperations[i].getXyz(doNormalize));
   }
 
+  public static SpaceGroup findSpaceGroupFromXYZ(String xyzList) {
+    SpaceGroup sg = new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
+    sg.doNormalize = false;
+    String[] xyzlist = xyzList.split(";");
+    for (int i = 0, n = xyzlist.length; i < n; i++) {
+      SymmetryOperation op = new SymmetryOperation(null, i, false);
+      op.setMatrixFromXYZ(xyzlist[i],  0,  false);
+      sg.addOp(op, xyzlist[i], false);
+    }
+    return findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
+  }
+
+
   static Object getInfo(SpaceGroup sg, String spaceGroup,
                         double[] params, boolean asMap, boolean andNonstandard) {
     try {
     if (sg != null && sg.index >= SG.length) {
       SpaceGroup sgDerived = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
       if (sgDerived != null)
-        sg = sgDerived;
+        sg = sgDerived;   
     }
     if (params != null) {
       if (sg == null) {
@@ -385,30 +416,31 @@ public class SpaceGroup implements Cloneable {
     if (hmSymbol == null || hmSymbolExt == null)
       sb.append("?");
     else
-      sb.append(hmSymbol).append(
-          hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : "");
-    if (intlTableNumber != null) {
-      sb.append("\ninternational table number: ")
-          .append(intlTableNumber)
-          .append(itaTransform != null ? itaTransform : 
-              intlTableNumberExt.length() > 0 ? ":" + intlTableNumberExt : "")
+      sb.append(hmSymbol)
+          .append(hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : "");
+    if (itaNumber != null) {
+      sb.append("\ninternational table number: ").append(itaNumber)
+          .append(itaTransform != null ? ":" + itaTransform
+              : "")
           .append("\ncrystal class: " + crystalClass);
     }
-    sb.append("\n\n").append(
-        hallInfo == null ? "Hall symbol unknown" : hallInfo.dumpInfo());
+    if (jmolId != null) {
+      sb.append("\nJmol_ID: ").append(jmolId).append(" ("+itaIndex+")");
+    }
     sb.append("\n\n")
-    .appendI(operationCount)
-    .append(" operators")
-    .append(hallInfo != null && 
-        !hallInfo.hallSymbol.equals("--") ? " from Hall symbol "
-            + hallInfo.hallSymbol + "  #" + intlTableNumberFull : "")
-    .append(": ");
+        .append(hallInfo == null ? "Hall symbol unknown" : Logger.debugging ?  hallInfo.dumpInfo() : "");
+    sb.append("\n\n").appendI(operationCount).append(" operators")
+        .append(hallInfo != null && !hallInfo.hallSymbol.equals("--")
+            ? " from Hall symbol " + hallInfo.hallSymbol + "  #"
+                + jmolId
+            : "")
+        .append(": ");
     for (int i = 0; i < operationCount; i++) {
       sb.append("\n").append(operations[i].xyz);
     }
 
     //sb.append("\n\ncanonical Seitz: ").append((String) info)
-     //sb.append("\n----------------------------------------------------\n");
+    //sb.append("\n----------------------------------------------------\n");
     return sb.toString();
   }
 
@@ -423,9 +455,11 @@ public class SpaceGroup implements Cloneable {
     Map<String, Object> map = new Hashtable<String, Object>();
     String s = (hmSymbol == null || hmSymbolExt == null ? "?" : hmSymbol + (hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : ""));
     map.put("HermannMauguinSymbol", s);
-    if (intlTableNumber != null) {
-      map.put("ita", Integer.valueOf(PT.parseInt(intlTableNumber)));
-      map.put("itaFull", intlTableNumberFull);
+    if (itaNumber != null) {
+      map.put("ita", Integer.valueOf(PT.parseInt(itaNumber)));
+      map.put("itaIndex", itaIndex == null ? "n/a" : itaIndex);
+      map.put("clegId", itaIndex == null ? "n/a" : clegId);
+      map.put("jmolId", jmolId);
       map.put("crystalClass", crystalClass);
       map.put("operationCount", Integer.valueOf(operationCount));
     }
@@ -435,7 +469,8 @@ public class SpaceGroup implements Cloneable {
     }
     map.put("operationsXYZ", lst);
 //    map.put("code", getCode());
-    map.put("HallSymbol",  (hallInfo == null ? "?" : hallInfo.hallSymbol));
+    if (hallInfo != null && hallInfo.hallSymbol != null)
+      map.put("HallSymbol", hallInfo.hallSymbol);
     return map;
   }
 
@@ -495,8 +530,7 @@ public class SpaceGroup implements Cloneable {
    */
   private Object dumpCanonicalSeitzList() {
     if (nHallOperators != null) {
-      if (hallInfo == null)
-        hallInfo = new HallInfo(hallSymbol);
+      hallInfo = new HallInfo(hallSymbol);
       generateAllOperators(null);
     } 
     String s = getCanonicalSeitzList();
@@ -600,11 +634,11 @@ public class SpaceGroup implements Cloneable {
       // try unconventional Hall symbol
       hallInfo = new HallInfo(name);
       if (hallInfo.nRotations > 0) {
-        sg = new SpaceGroup(-1, "0;0;--;--;" + name, true);
+        sg = new SpaceGroup(-1, NEW_HALL_GROUP + name, true);
         sg.hallInfo = hallInfo;
         sg.hallSymbol = hallInfo.hallSymbol;
       } else if (name.indexOf(",") >= 0) {
-        sg = new SpaceGroup(-1, "0;0;--;--;--", true);
+        sg = new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
         sg.doNormalize = false;
         sg.generateOperatorsFromXyzInfo(name);
       }
@@ -708,6 +742,10 @@ public class SpaceGroup implements Cloneable {
     if (h == null) {
       if (operationCount > 0)
         return;
+      if ("?".equals(hallSymbol)) {
+        checkHallOperators();
+        return;
+      }
       h = hallInfo;
       operations = new SymmetryOperation[4];
       if (hallInfo == null || hallInfo.nRotations == 0)
@@ -774,16 +812,16 @@ public class SpaceGroup implements Cloneable {
   }
 
   final static SpaceGroup determineSpaceGroupN(String name) {
-    return determineSpaceGroup(name, 0d, 0d, 0d, 0d, 0d, 0d, -1);
+    return determineSpaceGroup(name, 0, 0, 0, 0, 0, 0, -1);
   }
 
   private final static SpaceGroup determineSpaceGroupNS(String name, SpaceGroup sg) {
-    return determineSpaceGroup(name, 0d, 0d, 0d, 0d, 0d, 0d, sg.index);
+    return determineSpaceGroup(name, 0, 0, 0, 0, 0, 0, sg.index);
   }
 
   final static SpaceGroup determineSpaceGroupNA(String name,
                                                      double[] unitCellParams) {
-    return (unitCellParams == null ? determineSpaceGroup(name, 0d, 0d, 0d, 0d, 0d, 0d, -1)
+    return (unitCellParams == null ? determineSpaceGroup(name, 0, 0, 0, 0, 0, 0, -1)
         : determineSpaceGroup(name, unitCellParams[0], unitCellParams[1],
         unitCellParams[2], unitCellParams[3], unitCellParams[4],
         unitCellParams[5], -1));
@@ -801,35 +839,41 @@ public class SpaceGroup implements Cloneable {
 
   private final static int NAME_UNK = 0;
   private final static int NAME_HM = 3;
+  private final static int NAME_ITA = 4;
   private final static int NAME_HALL = 5;
 
   static boolean isXYZList(String name) {
-    return (name.indexOf(",") >= 0 && name.indexOf("(") < 0);
+    return (name != null && name.indexOf(",") >= 0 
+        && name.indexOf("(") < 0
+        && name.indexOf(":") < 0);
   }
   
   private final static int determineSpaceGroupIndex(String name, double a,
                                                     double b, double c,
                                                     double alpha, double beta,
-                                                    double gamma, int lastIndex) {
+                                                    double gamma,
+                                                    int lastIndex) {
     if (isXYZList(name))
       return -1;
     getSpaceGroups();
     if (lastIndex < 0)
       lastIndex = SG.length;
     name = name.trim().toLowerCase();
-    boolean checkBilbao = false;
+    //boolean checkBilbao = false;
     if (name.startsWith("bilbao:")) {
-      checkBilbao = true;
+      //      checkBilbao = true;
       name = name.substring(7);
     }
     int pt = name.indexOf("hall:");
     if (pt > 0)
       name = name.substring(pt);
-    int nameType = (name.startsWith("hall:") ? NAME_HALL : name
-        .startsWith("hm:") ? NAME_HM : NAME_UNK);
+    int nameType = (name.startsWith("ita/") ? NAME_ITA
+        : name.startsWith("hall:") ? NAME_HALL
+            : name.startsWith("hm:") ? NAME_HM : NAME_UNK);
     switch (nameType) {
     case NAME_HM:
     case NAME_HALL:
+    case NAME_ITA:
       name = name.substring(nameType);
       break;
     case NAME_UNK:
@@ -837,23 +881,30 @@ public class SpaceGroup implements Cloneable {
         // feeding back "P 1 [P 1]" for example
         nameType = NAME_HALL;
         name = name.substring(0, name.indexOf("[")).trim();
+      } else if (name.indexOf(".") > 0) {
+        // 151.1 or 152.1:a,b,c;0,0,-1/6
+        nameType = NAME_ITA;
       }
     }
     String nameExt = name;
     int i;
     boolean haveExtension = false;
 
-    // '_' --> ' '
-    name = name.replace('_', ' ');
+    if (nameType == NAME_ITA) {
 
-    // get lattice term to upper case and separated
-    if (name.length() >= 2) {
-      i = (name.indexOf("-") == 0 ? 2 : 1);
-      if (i < name.length() && name.charAt(i) != ' ')
-        name = name.substring(0, i) + " " + name.substring(i);
-      name = toCap(name, 2);
+    } else {
+
+      // '_' --> ' '
+      name = name.replace('_', ' ');
+
+      // get lattice term to upper case and separated
+      if (name.length() >= 2) {
+        i = (name.indexOf("-") == 0 ? 2 : 1);
+        if (i < name.length() && name.charAt(i) != ' ')
+          name = name.substring(0, i) + " " + name.substring(i);
+        name = toCap(name, 2);
+      }
     }
-
     // get extension
     String ext = "";
     if ((i = name.indexOf(":")) > 0) {
@@ -862,8 +913,8 @@ public class SpaceGroup implements Cloneable {
       haveExtension = true;
     }
 
-    if (nameType != NAME_HALL && !haveExtension
-        && PT.isOneOf(name, ambiguousNames)) {
+    if (nameType != NAME_ITA && nameType != NAME_HALL && !haveExtension
+        && PT.isOneOf(name, ambiguousHMNames)) {
       ext = "?";
       haveExtension = true;
     }
@@ -874,22 +925,33 @@ public class SpaceGroup implements Cloneable {
     SpaceGroup s;
 
     // exact matches:
-
-    // Hall symbol
-
-    if (nameType != NAME_HM && !haveExtension)
-      for (i = lastIndex; --i >= 0;) {
-        if (SG[i].hallSymbol.equalsIgnoreCase(name))
-          return i;
-      }
-
-    if (nameType != NAME_HALL) {
-
+    
+    switch (nameType) {
+    case NAME_ITA:
+      if (haveExtension)
+        for (i = lastIndex; --i >= 0;) {
+          if (nameExt.equalsIgnoreCase(SG[i].itaIndex))
+            return i;
+        }
+      else
+        for (i = lastIndex; --i >= 0;) {
+          if (name.equalsIgnoreCase(SG[i].itaIndex))
+            return i;
+        }
+      break;
+    case NAME_HALL:
+        for (i = lastIndex; --i >= 0;) {
+          if (SG[i].hallSymbol.equalsIgnoreCase(name))
+            return i;
+        }
+      break;
+    default:
+    case NAME_HM:
       // Full intl table entry, including :xx
 
       if (nameType != NAME_HM)
         for (i = lastIndex; --i >= 0;)
-          if (SG[i].intlTableNumberFull.equalsIgnoreCase(nameExt))
+          if (SG[i].jmolId.equalsIgnoreCase(nameExt))
             return i;
 
       // Full H-M symbol, including :xx
@@ -901,92 +963,94 @@ public class SpaceGroup implements Cloneable {
         if (SG[i].hmSymbolFull.equalsIgnoreCase(nameExt))
           return i;
       }
-
       // alternative, but unique H-M symbol, specifically for F m 3 m/F m -3 m type
-      for (i = lastIndex; --i >= 0;)
-        if ((s = SG[i]).hmSymbolAlternative != null
-            && s.hmSymbolAlternative.equalsIgnoreCase(nameExt))
-          return i;
+     for (i = lastIndex; --i >= 0;)
+       if ((s = SG[i]).hmSymbolAlternative != null
+           && s.hmSymbolAlternative.equalsIgnoreCase(nameExt))
+         return i;
 
-      if (haveExtension) { // P2/m:a      
-        // Abbreviated H-M with intl table :xx
-        for (i = lastIndex; --i >= 0;)
-          if ((s = SG[i]).hmSymbolAbbr.equalsIgnoreCase(abbr)
-              && s.intlTableNumberExt.equalsIgnoreCase(ext))
-            return i;
-        // shortened -- not including " 1 " terms
-        for (i = lastIndex; --i >= 0;)
-          if ((s = SG[i]).hmSymbolAbbrShort.equalsIgnoreCase(abbr)
-              && s.intlTableNumberExt.equalsIgnoreCase(ext))
-            return i;
-      }
-      // unique axis, cell and origin options with H-M abbr
+     if (haveExtension) { // P2/m:a      
+       // Abbreviated H-M with intl table :xx
+       for (i = lastIndex; --i >= 0;)
+         if ((s = SG[i]).hmSymbolAbbr.equalsIgnoreCase(abbr)
+             && s.jmolIdExt.equalsIgnoreCase(ext))
+           return i;
+       // shortened -- not including " 1 " terms
+       for (i = lastIndex; --i >= 0;)
+         if ((s = SG[i]).hmSymbolAbbrShort.equalsIgnoreCase(abbr)
+             && s.jmolIdExt.equalsIgnoreCase(ext))
+           return i;
+     }
+     // unique axis, cell and origin options with H-M abbr
 
-      char uniqueAxis = determineUniqueAxis(a, b, c, alpha, beta, gamma);
+     char uniqueAxis = determineUniqueAxis(a, b, c, alpha, beta, gamma);
 
-      if (!haveExtension || ext.charAt(0) == '?')
-        // no extension or unknown extension, so we look for unique axis
-        for (i = 0; i < lastIndex; i++)
-          if (((s = SG[i]).hmSymbolAbbr.equalsIgnoreCase(abbr) 
-              || s.hmSymbolAbbrShort.equalsIgnoreCase(abbr)
-              || s.intlTableNumber.equals(abbr)
-              ) 
-              && (!checkBilbao || s.isBilbao))
-            switch (s.ambiguityType) {
-            case '\0':
-              return i;
-            case 'a':
-              if (s.uniqueAxis == uniqueAxis || uniqueAxis == '\0')
-                return i;
-              break;
-            case 'o':
-              if (ext.length() == 0) {
-                if (s.hmSymbolExt.equals("2"))
-                  return i; // defaults to origin:2
-              } else if (s.hmSymbolExt.equalsIgnoreCase(ext))
-                return i;
-              break;
-            case 't':
-              if (ext.length() == 0) {
-                if (s.axisChoice == 'h')
-                  return i; //defaults to hexagonal
-              } else if ((s.axisChoice + "").equalsIgnoreCase(ext))
-                return i;
-              break;
-            }
+     if (!haveExtension || ext.charAt(0) == '?')
+       // no extension or unknown extension, so we look for unique axis
+       for (i = 0; i < lastIndex; i++)
+         if (((s = SG[i]).hmSymbolAbbr.equalsIgnoreCase(abbr)
+             || s.hmSymbolAbbrShort.equalsIgnoreCase(abbr)
+             || s.itaNumber.equals(abbr))
+         //&& (!checkBilbao || s.isBilbao)
+         )
+           switch (s.ambiguityType) {
+           case '\0':
+             return i;
+           case 'a':
+             if (s.uniqueAxis == uniqueAxis || uniqueAxis == '\0')
+               return i;
+             break;
+           case 'o':
+             if (ext.length() == 0) {
+               if (s.hmSymbolExt.equals("2"))
+                 return i; // defaults to origin:2
+             } else if (s.hmSymbolExt.equalsIgnoreCase(ext))
+               return i;
+             break;
+           case 't':
+             if (ext.length() == 0) {
+               if (s.axisChoice == 'h')
+                 return i; //defaults to hexagonal
+             } else if ((s.axisChoice + "").equalsIgnoreCase(ext))
+               return i;
+             break;
+           }
+      break;
     }
+
     // inexact just the number; no extension indicated -- first in list
 
     if (ext.length() == 0)
       for (i = 0; i < lastIndex; i++)
-        if ((s = SG[i]).intlTableNumber.equals(nameExt)
-            && (!checkBilbao || s.isBilbao))
+        if ((s = SG[i]).itaNumber.equals(nameExt)
+        //&& (!checkBilbao || s.isBilbao)
+        )
           return i;
     return -1;
   }
    
-  void setIntlTableNumberFull(String name) {
-    intlTableNumberFull = name;
+  private void setJmolCode(String name) {
+    jmolId = name;
     String[] parts = PT.split(name, ":");
-    intlTableNumber = parts[0];
-    intlTableNumberExt = (parts.length == 1 ? "" : parts[1]);
+    itaNumber = parts[0];
+    jmolIdExt = (parts.length == 1 ? "" : parts[1]);
     ambiguityType = '\0';
-    if (intlTableNumberExt.length() > 0) {
-      char c = intlTableNumberExt.charAt(0); 
-      if (intlTableNumberExt.equals("h") || intlTableNumberExt.equals("r")) {
+    if (jmolIdExt.length() > 0) {
+      char c = jmolIdExt.charAt(0); 
+      if (jmolIdExt.equals("h") || jmolIdExt.equals("r")) {
         ambiguityType = 't';
-        axisChoice = intlTableNumberExt.charAt(0);
+        axisChoice = jmolIdExt.charAt(0);
       } else if (c == '1' || c == '2') {
         ambiguityType = 'o';
         // originChoice = intlTableNumberExt.charAt(0);
-      } else if (intlTableNumberExt.length() <= 2
-          || intlTableNumberExt.length() == 3 && c == '-' ) { // :a or :b3
+      } else if (jmolIdExt.length() <= 2
+          || jmolIdExt.length() == 3 && c == '-' ) { // :a or :b3
         ambiguityType = 'a';
-        uniqueAxis = intlTableNumberExt.charAt(c == '-' ? 1 : 0);
+        uniqueAxis = jmolIdExt.charAt(c == '-' ? 1 : 0);
         // Q: should we include :-a1 here?
         // if (intlTableNumberExt.length() == 2)
         // cellChoice = intlTableNumberExt.charAt(1);
-      } else if (intlTableNumberExt.contains("-")) {
+      } else if (jmolIdExt.contains("-")) {
         ambiguityType = '-';
         // skip when searching for a group by name
         // added 9/28/14 Jmol 14.3.7
@@ -1012,61 +1076,79 @@ public class SpaceGroup implements Cloneable {
 
   ///  data  ///
 
-  private static int sgIndex = -1;
+  private volatile static int sgIndex = -1;
   
-  private static String ambiguousNames = "";
-  private static String lastInfo = "";
+  private volatile static String lastInfo;
+
+  final static String SET_R = "2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c";
+  private final static String SET_AB = "a-b,a+b,c";
+  
+  /**
+   * For example P 1 2 1 and P 2, meaning P 2 is somewhat ambiguous (without knowning the standard)
+   */
+  private volatile static String ambiguousHMNames = "";
  
-  private void buildSpaceGroup(String cifLine) {
-    String[] terms = PT.split(cifLine.toLowerCase(), ";");
-    intlTableNumberFull = terms[0].trim(); // International Table Number :
+  private void buildSelf(String sgLineData) {
+    String[] terms = PT.split(sgLineData.toLowerCase(), ";");
+    jmolId = terms[0].trim(); // International Table Number :
                                            // options
-    isBilbao = (terms.length < 6 && !intlTableNumberFull.equals("0"));
-    // intlNo:options;nOps;schoenflies;hermannMauguin;Hall;BilbaoFlag
+    // intlNo:options;itaIndex;nOps;schoenflies;hermannMauguin;Hall;BilbaoFlag
     //   0             1        2            3         4        5
 
-    // the 5th term is not actually checked; we have ";-b" as 5th term right now for "not Bilbao"
-    // "48:1;8;d2h^2;p n n n:1;p 2 2 -1n;-b",
-    // and is probably origin choice 1.    
-    // 4:c*;2;c2^2;p 1 1 21;p 21
 
     // added # of operators to help in search phase
 
-    // "4:b;2;c2^2;p 1 21 1;p 2yb",   //full name
+    // "4:b;4.1;2;c2^2;p 1 21 1;p 2yb",   //full name
 
     ////  terms[0] -- International Table Number and setting ////
-    setIntlTableNumberFull(intlTableNumberFull);
+    setJmolCode(jmolId);
 
-    ////  terms[1] -- number of operators ////
+    ////  terms[1] -- ITA index or '-' ////
 
-    if (!terms[1].equals("0")) {
-      nHallOperators = Integer.valueOf(terms[1]);
+    itaIndex = terms[1];
+    
+    ////  terms[2] -- transform
+    String s = terms[2];
+    // leaving "r" as is
+    itaTransform = (s.length() == 0 ? "a,b,c" : PT.rep(s, "ab", SET_AB).replace('|', ';'));
+    clegId = itaNumber + ":" + itaTransform;
+   
+    ////  terms[3] -- number of operators ////
+
+    if (terms[3].length() > 0) {
+      nHallOperators = Integer.valueOf(terms[3]);
       Lst<SpaceGroup> lst = htByOpCount.get(nHallOperators);
       if (lst == null)
         htByOpCount.put(nHallOperators, lst = new Lst<SpaceGroup>());
       lst.addLast(this);
     }
-    ////  terms[2] -- Schoenflies ////
+    ////  terms[4] -- Schoenflies ////
 
-    crystalClass = toCap(PT.split(terms[2], "^")[0], 1);
+    crystalClass = toCap(PT.split(terms[4], "^")[0], 1);
 
-    /* schoenfliesSymbol = terms[2] */
+    ////  terms[5] -- Hermann-Mauguin ////
 
-    ////  terms[3] -- Hermann-Mauguin ////
+    setHMSymbol(terms[5]);
 
-    setHMSymbol(terms[3]);
+    ////  term 6 -- Hall ////
 
-    ////  term 4 -- Hall ////
-
-    hallSymbol = terms[4];
-
-    if (hallSymbol.length() > 1)
-      hallSymbol = toCap(hallSymbol, 2);
-    String info = intlTableNumber + hallSymbol;
-    if (intlTableNumber.charAt(0) != '0' && lastInfo.equals(info))
-      ambiguousNames += hmSymbol + ";";
+    String info;
+    if ("xyz".equals(terms[6])) {
+      info = hmSymbol;
+      hallSymbol = "" + latticeType + " "; // hallInfo will be used to apply lattice
+    } else {
+      hallSymbol = terms[6];
+      if (hallSymbol.length() > 1)
+        hallSymbol = toCap(hallSymbol, 2);
+      info = itaNumber + hallSymbol;
+      if (itaNumber.charAt(0) != '0' && info.equals(lastInfo))
+        ambiguousHMNames += hmSymbol + ";";
+    }
+    
+    // terms[6]  operator list where I ddn't figure out the Hall code 
     lastInfo = info;
-    name = hallSymbol + " [" + hmSymbolFull + "] #" + intlTableNumber;
+    name = (hallSymbol == null || hallSymbol == "?" ? "" : hallSymbol + " ") + "[" + hmSymbolFull + "] #" + itaIndex;
+
 
     //System.out.println(intlTableNumber + (intlTableNumberExt.equals("") ? "" : ":" + intlTableNumberExt) + "\t"
     //      + hmSymbol + "\t" + hmSymbolAbbr + "\t" + hmSymbolAbbrShort + "\t"
@@ -1099,34 +1181,35 @@ public class SpaceGroup implements Cloneable {
     return asString();
   }
   
+  String strName;
+  
   String asString() {
-    return (intlTableNumberFull == null ? name : intlTableNumberFull + " HM:" + hmSymbolFull 
-        + (itaTransform == null ? " Hall:" + hallSymbol : " (" + itaTransform + ")"));
+    return (strName == null ? (strName = (jmolId == null ? name : jmolId + " HM:" + hmSymbolFull 
+        + (itaTransform == null ? (hallSymbol == null || hallSymbol == "?" ? "" :  " Hall:" + hallSymbol) : " (" + itaTransform + ")"))) : strName);
   }
 
   private static SpaceGroup[] SG;
   
   private static Map<Integer, Lst<SpaceGroup>> htByOpCount = new Hashtable<Integer, Lst<SpaceGroup>>();
-  
-  private synchronized static SpaceGroup[] getSpaceGroups() {
-    return (SG == null ? (SG = createSpaceGroups())
-        : SG);
-  }
-
   static Map<String, SpaceGroup> nameToGroup;
   
-  private static SpaceGroup[] createSpaceGroups() {
-    int n = STR_SG.length;
-    nameToGroup = new Hashtable<String, SpaceGroup>();
-    SpaceGroup[] defs = new SpaceGroup[n];
-    for (int i = 0; i < n; i++) {
-      defs[i] = new SpaceGroup(i, STR_SG[i], true);
-      nameToGroup.put(defs[i].intlTableNumberFull, defs[i]);
+  private synchronized static SpaceGroup[] getSpaceGroups() {
+    if (SG == null) {
+      int n = STR_SG.length;
+      nameToGroup = new Hashtable<String, SpaceGroup>();
+      SpaceGroup[] defs = new SpaceGroup[n];
+      for (int i = 0; i < n; i++) {
+        defs[i] = new SpaceGroup(i, STR_SG[i], true);
+        nameToGroup.put(defs[i].jmolId, defs[i]);
+      }
+      System.out.println("SpaceGroup - " +STR_SG.length + " settings generated");
+      STR_SG = null;
+      SG = defs;
     }
-    STR_SG = null;
-    return defs;
+    return SG;
   }
-
+  
+  
   // primitives:
   // 1: primitive:  1. P1   2. P1¯,
   //                3. P2  10. P2/m   
@@ -1184,607 +1267,703 @@ public class SpaceGroup implements Cloneable {
 
 
   private static String[] STR_SG = {
-    "1;1;c1^1;p 1;p 1",  
-    "2;2;ci^1;p -1;-p 1",  
-    "3:b;2;c2^1;p 1 2 1;p 2y",   //full name
-    "3:b;2;c2^1;p 2;p 2y",  
-    "3:c;2;c2^1;p 1 1 2;p 2",  
-    "3:a;2;c2^1;p 2 1 1;p 2x",  
-    "4:b;2;c2^2;p 1 21 1;p 2yb",   //full name
-    "4:b;2;c2^2;p 21;p 2yb",  
-    "4:b*;2;c2^2;p 1 21 1*;p 2y1",   //nonstandard
-    "4:c;2;c2^2;p 1 1 21;p 2c",  
-    "4:c*;2;c2^2;p 1 1 21*;p 21",   //nonstandard
-    "4:a;2;c2^2;p 21 1 1;p 2xa",  
-    "4:a*;2;c2^2;p 21 1 1*;p 2x1",   //nonstandard
-    "5:b1;4;c2^3;c 1 2 1;c 2y",   //full name
-    "5:b1;4;c2^3;c 2;c 2y",  
-    "5:b2;4;c2^3;a 1 2 1;a 2y",  
-    "5:b3;4;c2^3;i 1 2 1;i 2y",  
-    "5:c1;4;c2^3;a 1 1 2;a 2",  
-    "5:c2;4;c2^3;b 1 1 2;b 2",  
-    "5:c3;4;c2^3;i 1 1 2;i 2",  
-    "5:a1;4;c2^3;b 2 1 1;b 2x",  
-    "5:a2;4;c2^3;c 2 1 1;c 2x",  
-    "5:a3;4;c2^3;i 2 1 1;i 2x",  
-    "6:b;2;cs^1;p 1 m 1;p -2y",   //full name
-    "6:b;2;cs^1;p m;p -2y",  
-    "6:c;2;cs^1;p 1 1 m;p -2",  
-    "6:a;2;cs^1;p m 1 1;p -2x",  
-    "7:b1;2;cs^2;p 1 c 1;p -2yc",   //full name
-    "7:b1;2;cs^2;p c;p -2yc",  
-    "7:b2;2;cs^2;p 1 n 1;p -2yac",   //full name
-    "7:b2;2;cs^2;p n;p -2yac",  
-    "7:b3;2;cs^2;p 1 a 1;p -2ya",   //full name
-    "7:b3;2;cs^2;p a;p -2ya",  
-    "7:c1;2;cs^2;p 1 1 a;p -2a",  
-    "7:c2;2;cs^2;p 1 1 n;p -2ab",  
-    "7:c3;2;cs^2;p 1 1 b;p -2b",  
-    "7:a1;2;cs^2;p b 1 1;p -2xb",  
-    "7:a2;2;cs^2;p n 1 1;p -2xbc",  
-    "7:a3;2;cs^2;p c 1 1;p -2xc",  
-    "8:b1;4;cs^3;c 1 m 1;c -2y",   //full name
-    "8:b1;4;cs^3;c m;c -2y",  
-    "8:b2;4;cs^3;a 1 m 1;a -2y",  
-    "8:b3;4;cs^3;i 1 m 1;i -2y",   //full name
-    "8:b3;4;cs^3;i m;i -2y",  
-    "8:c1;4;cs^3;a 1 1 m;a -2",  
-    "8:c2;4;cs^3;b 1 1 m;b -2",  
-    "8:c3;4;cs^3;i 1 1 m;i -2",  
-    "8:a1;4;cs^3;b m 1 1;b -2x",  
-    "8:a2;4;cs^3;c m 1 1;c -2x",  
-    "8:a3;4;cs^3;i m 1 1;i -2x",  
-    "9:b1;4;cs^4;c 1 c 1;c -2yc",   //full name
-    "9:b1;4;cs^4;c c;c -2yc",  
-    "9:b2;4;cs^4;a 1 n 1;a -2yab",  
-    "9:b3;4;cs^4;i 1 a 1;i -2ya",  
-    "9:-b1;4;cs^4;a 1 a 1;a -2ya",  
-    "9:-b2;4;cs^4;c 1 n 1;c -2yac",  
-    "9:-b3;4;cs^4;i 1 c 1;i -2yc",  
-    "9:c1;4;cs^4;a 1 1 a;a -2a",  
-    "9:c2;4;cs^4;b 1 1 n;b -2ab",  
-    "9:c3;4;cs^4;i 1 1 b;i -2b",  
-    "9:-c1;4;cs^4;b 1 1 b;b -2b",  
-    "9:-c2;4;cs^4;a 1 1 n;a -2ab",  
-    "9:-c3;4;cs^4;i 1 1 a;i -2a",  
-    "9:a1;4;cs^4;b b 1 1;b -2xb",  
-    "9:a2;4;cs^4;c n 1 1;c -2xac",  
-    "9:a3;4;cs^4;i c 1 1;i -2xc",  
-    "9:-a1;4;cs^4;c c 1 1;c -2xc",  
-    "9:-a2;4;cs^4;b n 1 1;b -2xab",  
-    "9:-a3;4;cs^4;i b 1 1;i -2xb",  
-    "10:b;4;c2h^1;p 1 2/m 1;-p 2y",   //full name
-    "10:b;4;c2h^1;p 2/m;-p 2y",  
-    "10:c;4;c2h^1;p 1 1 2/m;-p 2",  
-    "10:a;4;c2h^1;p 2/m 1 1;-p 2x",  
-    "11:b;4;c2h^2;p 1 21/m 1;-p 2yb",   //full name
-    "11:b;4;c2h^2;p 21/m;-p 2yb",  
-    "11:b*;4;c2h^2;p 1 21/m 1*;-p 2y1",   //nonstandard
-    "11:c;4;c2h^2;p 1 1 21/m;-p 2c",  
-    "11:c*;4;c2h^2;p 1 1 21/m*;-p 21",   //nonstandard
-    "11:a;4;c2h^2;p 21/m 1 1;-p 2xa",  
-    "11:a*;4;c2h^2;p 21/m 1 1*;-p 2x1",   //nonstandard
-    "12:b1;8;c2h^3;c 1 2/m 1;-c 2y",   //full name
-    "12:b1;8;c2h^3;c 2/m;-c 2y",  
-    "12:b2;8;c2h^3;a 1 2/m 1;-a 2y",  
-    "12:b3;8;c2h^3;i 1 2/m 1;-i 2y",   //full name
-    "12:b3;8;c2h^3;i 2/m;-i 2y",  
-    "12:c1;8;c2h^3;a 1 1 2/m;-a 2",  
-    "12:c2;8;c2h^3;b 1 1 2/m;-b 2",  
-    "12:c3;8;c2h^3;i 1 1 2/m;-i 2",  
-    "12:a1;8;c2h^3;b 2/m 1 1;-b 2x",  
-    "12:a2;8;c2h^3;c 2/m 1 1;-c 2x",  
-    "12:a3;8;c2h^3;i 2/m 1 1;-i 2x",  
-    "13:b1;4;c2h^4;p 1 2/c 1;-p 2yc",   //full name
-    "13:b1;4;c2h^4;p 2/c;-p 2yc",  
-    "13:b2;4;c2h^4;p 1 2/n 1;-p 2yac",   //full name
-    "13:b2;4;c2h^4;p 2/n;-p 2yac",  
-    "13:b3;4;c2h^4;p 1 2/a 1;-p 2ya",   //full name
-    "13:b3;4;c2h^4;p 2/a;-p 2ya",  
-    "13:c1;4;c2h^4;p 1 1 2/a;-p 2a",  
-    "13:c2;4;c2h^4;p 1 1 2/n;-p 2ab",  
-    "13:c3;4;c2h^4;p 1 1 2/b;-p 2b",  
-    "13:a1;4;c2h^4;p 2/b 1 1;-p 2xb",  
-    "13:a2;4;c2h^4;p 2/n 1 1;-p 2xbc",  
-    "13:a3;4;c2h^4;p 2/c 1 1;-p 2xc",  
-    "14:b1;4;c2h^5;p 1 21/c 1;-p 2ybc",   //full name
-    "14:b1;4;c2h^5;p 21/c;-p 2ybc",  
-    "14:b2;4;c2h^5;p 1 21/n 1;-p 2yn",   //full name
-    "14:b2;4;c2h^5;p 21/n;-p 2yn",  
-    "14:b3;4;c2h^5;p 1 21/a 1;-p 2yab",   //full name
-    "14:b3;4;c2h^5;p 21/a;-p 2yab",  
-    "14:c1;4;c2h^5;p 1 1 21/a;-p 2ac",  
-    "14:c2;4;c2h^5;p 1 1 21/n;-p 2n",  
-    "14:c3;4;c2h^5;p 1 1 21/b;-p 2bc",  
-    "14:a1;4;c2h^5;p 21/b 1 1;-p 2xab",  
-    "14:a2;4;c2h^5;p 21/n 1 1;-p 2xn",  
-    "14:a3;4;c2h^5;p 21/c 1 1;-p 2xac",  
-    "15:b1;8;c2h^6;c 1 2/c 1;-c 2yc",   //full name
-    "15:b1;8;c2h^6;c 2/c;-c 2yc",  
-    "15:b2;8;c2h^6;a 1 2/n 1;-a 2yab",  
-    "15:b3;8;c2h^6;i 1 2/a 1;-i 2ya",   //full name
-    "15:b3;8;c2h^6;i 2/a;-i 2ya",  
-    "15:-b1;8;c2h^6;a 1 2/a 1;-a 2ya",  
-    "15:-b2;8;c2h^6;c 1 2/n 1;-c 2yac",   //full name
-    "15:-b2;8;c2h^6;c 2/n;-c 2yac",  
-    "15:-b3;8;c2h^6;i 1 2/c 1;-i 2yc",   //full name
-    "15:-b3;8;c2h^6;i 2/c;-i 2yc",  
-    "15:c1;8;c2h^6;a 1 1 2/a;-a 2a",  
-    "15:c2;8;c2h^6;b 1 1 2/n;-b 2ab",  
-    "15:c3;8;c2h^6;i 1 1 2/b;-i 2b",  
-    "15:-c1;8;c2h^6;b 1 1 2/b;-b 2b",  
-    "15:-c2;8;c2h^6;a 1 1 2/n;-a 2ab",  
-    "15:-c3;8;c2h^6;i 1 1 2/a;-i 2a",  
-    "15:a1;8;c2h^6;b 2/b 1 1;-b 2xb",  
-    "15:a2;8;c2h^6;c 2/n 1 1;-c 2xac",  
-    "15:a3;8;c2h^6;i 2/c 1 1;-i 2xc",  
-    "15:-a1;8;c2h^6;c 2/c 1 1;-c 2xc",  
-    "15:-a2;8;c2h^6;b 2/n 1 1;-b 2xab",  
-    "15:-a3;8;c2h^6;i 2/b 1 1;-i 2xb",  
-    "16;4;d2^1;p 2 2 2;p 2 2",  
-    "17;4;d2^2;p 2 2 21;p 2c 2",  
-    "17*;4;d2^2;p 2 2 21*;p 21 2",   //nonstandard
-    "17:cab;4;d2^2;p 21 2 2;p 2a 2a",  
-    "17:bca;4;d2^2;p 2 21 2;p 2 2b",  
-    "18;4;d2^3;p 21 21 2;p 2 2ab",  
-    "18:cab;4;d2^3;p 2 21 21;p 2bc 2",  
-    "18:bca;4;d2^3;p 21 2 21;p 2ac 2ac",  
-    "19;4;d2^4;p 21 21 21;p 2ac 2ab",  
-    "20;8;d2^5;c 2 2 21;c 2c 2",  
-    "20*;8;d2^5;c 2 2 21*;c 21 2",   //nonstandard
-    "20:cab;8;d2^5;a 21 2 2;a 2a 2a",  
-    "20:cab*;8;d2^5;a 21 2 2*;a 2a 21",   //nonstandard
-    "20:bca;8;d2^5;b 2 21 2;b 2 2b",  
-    "21;8;d2^6;c 2 2 2;c 2 2",  
-    "21:cab;8;d2^6;a 2 2 2;a 2 2",  
-    "21:bca;8;d2^6;b 2 2 2;b 2 2",  
-    "22;16;d2^7;f 2 2 2;f 2 2",  
-    "23;8;d2^8;i 2 2 2;i 2 2",  
-    "24;8;d2^9;i 21 21 21;i 2b 2c",  
-    "25;4;c2v^1;p m m 2;p 2 -2",  
-    "25:cab;4;c2v^1;p 2 m m;p -2 2",  
-    "25:bca;4;c2v^1;p m 2 m;p -2 -2",  
-    "26;4;c2v^2;p m c 21;p 2c -2",  
-    "26*;4;c2v^2;p m c 21*;p 21 -2",   //nonstandard
-    "26:ba-c;4;c2v^2;p c m 21;p 2c -2c",  
-    "26:ba-c*;4;c2v^2;p c m 21*;p 21 -2c",   //nonstandard
-    "26:cab;4;c2v^2;p 21 m a;p -2a 2a",  
-    "26:-cba;4;c2v^2;p 21 a m;p -2 2a",  
-    "26:bca;4;c2v^2;p b 21 m;p -2 -2b",  
-    "26:a-cb;4;c2v^2;p m 21 b;p -2b -2",  
-    "27;4;c2v^3;p c c 2;p 2 -2c",  
-    "27:cab;4;c2v^3;p 2 a a;p -2a 2",  
-    "27:bca;4;c2v^3;p b 2 b;p -2b -2b",  
-    "28;4;c2v^4;p m a 2;p 2 -2a",  
-    "28*;4;c2v^4;p m a 2*;p 2 -21",   //nonstandard
-    "28:ba-c;4;c2v^4;p b m 2;p 2 -2b",  
-    "28:cab;4;c2v^4;p 2 m b;p -2b 2",  
-    "28:-cba;4;c2v^4;p 2 c m;p -2c 2",  
-    "28:-cba*;4;c2v^4;p 2 c m*;p -21 2",   //nonstandard
-    "28:bca;4;c2v^4;p c 2 m;p -2c -2c",  
-    "28:a-cb;4;c2v^4;p m 2 a;p -2a -2a",  
-    "29;4;c2v^5;p c a 21;p 2c -2ac",  
-    "29:ba-c;4;c2v^5;p b c 21;p 2c -2b",  
-    "29:cab;4;c2v^5;p 21 a b;p -2b 2a",  
-    "29:-cba;4;c2v^5;p 21 c a;p -2ac 2a",  
-    "29:bca;4;c2v^5;p c 21 b;p -2bc -2c",  
-    "29:a-cb;4;c2v^5;p b 21 a;p -2a -2ab",  
-    "30;4;c2v^6;p n c 2;p 2 -2bc",  
-    "30:ba-c;4;c2v^6;p c n 2;p 2 -2ac",  
-    "30:cab;4;c2v^6;p 2 n a;p -2ac 2",  
-    "30:-cba;4;c2v^6;p 2 a n;p -2ab 2",  
-    "30:bca;4;c2v^6;p b 2 n;p -2ab -2ab",  
-    "30:a-cb;4;c2v^6;p n 2 b;p -2bc -2bc",  
-    "31;4;c2v^7;p m n 21;p 2ac -2",  
-    "31:ba-c;4;c2v^7;p n m 21;p 2bc -2bc",  
-    "31:cab;4;c2v^7;p 21 m n;p -2ab 2ab",  
-    "31:-cba;4;c2v^7;p 21 n m;p -2 2ac",  
-    "31:bca;4;c2v^7;p n 21 m;p -2 -2bc",  
-    "31:a-cb;4;c2v^7;p m 21 n;p -2ab -2",  
-    "32;4;c2v^8;p b a 2;p 2 -2ab",  
-    "32:cab;4;c2v^8;p 2 c b;p -2bc 2",  
-    "32:bca;4;c2v^8;p c 2 a;p -2ac -2ac",  
-    "33;4;c2v^9;p n a 21;p 2c -2n",  
-    "33*;4;c2v^9;p n a 21*;p 21 -2n",   //nonstandard
-    "33:ba-c;4;c2v^9;p b n 21;p 2c -2ab",  
-    "33:ba-c*;4;c2v^9;p b n 21*;p 21 -2ab",   //nonstandard
-    "33:cab;4;c2v^9;p 21 n b;p -2bc 2a",  
-    "33:cab*;4;c2v^9;p 21 n b*;p -2bc 21",   //nonstandard
-    "33:-cba;4;c2v^9;p 21 c n;p -2n 2a",  
-    "33:-cba*;4;c2v^9;p 21 c n*;p -2n 21",   //nonstandard
-    "33:bca;4;c2v^9;p c 21 n;p -2n -2ac",  
-    "33:a-cb;4;c2v^9;p n 21 a;p -2ac -2n",  
-    "34;4;c2v^10;p n n 2;p 2 -2n",  
-    "34:cab;4;c2v^10;p 2 n n;p -2n 2",  
-    "34:bca;4;c2v^10;p n 2 n;p -2n -2n",  
-    "35;8;c2v^11;c m m 2;c 2 -2",  
-    "35:cab;8;c2v^11;a 2 m m;a -2 2",  
-    "35:bca;8;c2v^11;b m 2 m;b -2 -2",  
-    "36;8;c2v^12;c m c 21;c 2c -2",  
-    "36*;8;c2v^12;c m c 21*;c 21 -2",   //nonstandard
-    "36:ba-c;8;c2v^12;c c m 21;c 2c -2c",  
-    "36:ba-c*;8;c2v^12;c c m 21*;c 21 -2c",   //nonstandard
-    "36:cab;8;c2v^12;a 21 m a;a -2a 2a",  
-    "36:cab*;8;c2v^12;a 21 m a*;a -2a 21",   //nonstandard
-    "36:-cba;8;c2v^12;a 21 a m;a -2 2a",  
-    "36:-cba*;8;c2v^12;a 21 a m*;a -2 21",   //nonstandard
-    "36:bca;8;c2v^12;b b 21 m;b -2 -2b",  
-    "36:a-cb;8;c2v^12;b m 21 b;b -2b -2",  
-    "37;8;c2v^13;c c c 2;c 2 -2c",  
-    "37:cab;8;c2v^13;a 2 a a;a -2a 2",  
-    "37:bca;8;c2v^13;b b 2 b;b -2b -2b",  
-    "38;8;c2v^14;a m m 2;a 2 -2",  
-    "38:ba-c;8;c2v^14;b m m 2;b 2 -2",  
-    "38:cab;8;c2v^14;b 2 m m;b -2 2",  
-    "38:-cba;8;c2v^14;c 2 m m;c -2 2",  
-    "38:bca;8;c2v^14;c m 2 m;c -2 -2",  
-    "38:a-cb;8;c2v^14;a m 2 m;a -2 -2",  
-    "39;8;c2v^15;a e m 2;a 2 -2b",   // newer IT name
-    "39;8;c2v^15;a b m 2;a 2 -2b",  
-    "39:ba-c;8;c2v^15;b m a 2;b 2 -2a",  
-    "39:cab;8;c2v^15;b 2 c m;b -2a 2",  
-    "39:-cba;8;c2v^15;c 2 m b;c -2a 2",  
-    "39:bca;8;c2v^15;c m 2 a;c -2a -2a",  
-    "39:a-cb;8;c2v^15;a c 2 m;a -2b -2b",  
-    "40;8;c2v^16;a m a 2;a 2 -2a",  
-    "40:ba-c;8;c2v^16;b b m 2;b 2 -2b",  
-    "40:cab;8;c2v^16;b 2 m b;b -2b 2",  
-    "40:-cba;8;c2v^16;c 2 c m;c -2c 2",  
-    "40:bca;8;c2v^16;c c 2 m;c -2c -2c",  
-    "40:a-cb;8;c2v^16;a m 2 a;a -2a -2a",  
-    "41;8;c2v^17;a e a 2;a 2 -2ab",    // newer IT name
-    "41;8;c2v^17;a b a 2;a 2 -2ab;-b",  
-    "41:ba-c;8;c2v^17;b b a 2;b 2 -2ab",  
-    "41:cab;8;c2v^17;b 2 c b;b -2ab 2",  
-    "41:-cba;8;c2v^17;c 2 c b;c -2ac 2",  
-    "41:bca;8;c2v^17;c c 2 a;c -2ac -2ac",  
-    "41:a-cb;8;c2v^17;a c 2 a;a -2ab -2ab",  
-    "42;16;c2v^18;f m m 2;f 2 -2",  
-    "42:cab;16;c2v^18;f 2 m m;f -2 2",  
-    "42:bca;16;c2v^18;f m 2 m;f -2 -2",  
-    "43;16;c2v^19;f d d 2;f 2 -2d",  
-    "43:cab;16;c2v^19;f 2 d d;f -2d 2",  
-    "43:bca;16;c2v^19;f d 2 d;f -2d -2d",  
-    "44;8;c2v^20;i m m 2;i 2 -2",  
-    "44:cab;8;c2v^20;i 2 m m;i -2 2",  
-    "44:bca;8;c2v^20;i m 2 m;i -2 -2",  
-    "45;8;c2v^21;i b a 2;i 2 -2c",  
-    "45:cab;8;c2v^21;i 2 c b;i -2a 2",  
-    "45:bca;8;c2v^21;i c 2 a;i -2b -2b",  
-    "46;8;c2v^22;i m a 2;i 2 -2a",  
-    "46:ba-c;8;c2v^22;i b m 2;i 2 -2b",  
-    "46:cab;8;c2v^22;i 2 m b;i -2b 2",  
-    "46:-cba;8;c2v^22;i 2 c m;i -2c 2",  
-    "46:bca;8;c2v^22;i c 2 m;i -2c -2c",  
-    "46:a-cb;8;c2v^22;i m 2 a;i -2a -2a",  
-    "47;8;d2h^1;p m m m;-p 2 2",  
-    "48:1;8;d2h^2;p n n n:1;p 2 2 -1n;-b",  
-    "48:2;8;d2h^2;p n n n:2;-p 2ab 2bc",  
-    "49;8;d2h^3;p c c m;-p 2 2c",  
-    "49:cab;8;d2h^3;p m a a;-p 2a 2",  
-    "49:bca;8;d2h^3;p b m b;-p 2b 2b",  
-    "50:1;8;d2h^4;p b a n:1;p 2 2 -1ab;-b",  
-    "50:2;8;d2h^4;p b a n:2;-p 2ab 2b",  
-    "50:1cab;8;d2h^4;p n c b:1;p 2 2 -1bc",  
-    "50:2cab;8;d2h^4;p n c b:2;-p 2b 2bc",  
-    "50:1bca;8;d2h^4;p c n a:1;p 2 2 -1ac",  
-    "50:2bca;8;d2h^4;p c n a:2;-p 2a 2c",  
-    "51;8;d2h^5;p m m a;-p 2a 2a",  
-    "51:ba-c;8;d2h^5;p m m b;-p 2b 2",  
-    "51:cab;8;d2h^5;p b m m;-p 2 2b",  
-    "51:-cba;8;d2h^5;p c m m;-p 2c 2c",  
-    "51:bca;8;d2h^5;p m c m;-p 2c 2",  
-    "51:a-cb;8;d2h^5;p m a m;-p 2 2a",  
-    "52;8;d2h^6;p n n a;-p 2a 2bc",  
-    "52:ba-c;8;d2h^6;p n n b;-p 2b 2n",  
-    "52:cab;8;d2h^6;p b n n;-p 2n 2b",  
-    "52:-cba;8;d2h^6;p c n n;-p 2ab 2c",  
-    "52:bca;8;d2h^6;p n c n;-p 2ab 2n",  
-    "52:a-cb;8;d2h^6;p n a n;-p 2n 2bc",  
-    "53;8;d2h^7;p m n a;-p 2ac 2",  
-    "53:ba-c;8;d2h^7;p n m b;-p 2bc 2bc",  
-    "53:cab;8;d2h^7;p b m n;-p 2ab 2ab",  
-    "53:-cba;8;d2h^7;p c n m;-p 2 2ac",  
-    "53:bca;8;d2h^7;p n c m;-p 2 2bc",  
-    "53:a-cb;8;d2h^7;p m a n;-p 2ab 2",  
-    "54;8;d2h^8;p c c a;-p 2a 2ac",  
-    "54:ba-c;8;d2h^8;p c c b;-p 2b 2c",  
-    "54:cab;8;d2h^8;p b a a;-p 2a 2b",  
-    "54:-cba;8;d2h^8;p c a a;-p 2ac 2c",  
-    "54:bca;8;d2h^8;p b c b;-p 2bc 2b",  
-    "54:a-cb;8;d2h^8;p b a b;-p 2b 2ab",  
-    "55;8;d2h^9;p b a m;-p 2 2ab",  
-    "55:cab;8;d2h^9;p m c b;-p 2bc 2",  
-    "55:bca;8;d2h^9;p c m a;-p 2ac 2ac",  
-    "56;8;d2h^10;p c c n;-p 2ab 2ac",  
-    "56:cab;8;d2h^10;p n a a;-p 2ac 2bc",  
-    "56:bca;8;d2h^10;p b n b;-p 2bc 2ab",  
-    "57;8;d2h^11;p b c m;-p 2c 2b",  
-    "57:ba-c;8;d2h^11;p c a m;-p 2c 2ac",  
-    "57:cab;8;d2h^11;p m c a;-p 2ac 2a",  
-    "57:-cba;8;d2h^11;p m a b;-p 2b 2a",  
-    "57:bca;8;d2h^11;p b m a;-p 2a 2ab",  
-    "57:a-cb;8;d2h^11;p c m b;-p 2bc 2c",  
-    "58;8;d2h^12;p n n m;-p 2 2n",  
-    "58:cab;8;d2h^12;p m n n;-p 2n 2",  
-    "58:bca;8;d2h^12;p n m n;-p 2n 2n",  
-    "59:1;8;d2h^13;p m m n:1;p 2 2ab -1ab;-b",  
-    "59:2;8;d2h^13;p m m n:2;-p 2ab 2a",  
-    "59:1cab;8;d2h^13;p n m m:1;p 2bc 2 -1bc",  
-    "59:2cab;8;d2h^13;p n m m:2;-p 2c 2bc",  
-    "59:1bca;8;d2h^13;p m n m:1;p 2ac 2ac -1ac",  
-    "59:2bca;8;d2h^13;p m n m:2;-p 2c 2a",  
-    "60;8;d2h^14;p b c n;-p 2n 2ab",  
-    "60:ba-c;8;d2h^14;p c a n;-p 2n 2c",  
-    "60:cab;8;d2h^14;p n c a;-p 2a 2n",  
-    "60:-cba;8;d2h^14;p n a b;-p 2bc 2n",  
-    "60:bca;8;d2h^14;p b n a;-p 2ac 2b",  
-    "60:a-cb;8;d2h^14;p c n b;-p 2b 2ac",  
-    "61;8;d2h^15;p b c a;-p 2ac 2ab",  
-    "61:ba-c;8;d2h^15;p c a b;-p 2bc 2ac",  
-    "62;8;d2h^16;p n m a;-p 2ac 2n",  
-    "62:ba-c;8;d2h^16;p m n b;-p 2bc 2a",  
-    "62:cab;8;d2h^16;p b n m;-p 2c 2ab",  
-    "62:-cba;8;d2h^16;p c m n;-p 2n 2ac",  
-    "62:bca;8;d2h^16;p m c n;-p 2n 2a",  
-    "62:a-cb;8;d2h^16;p n a m;-p 2c 2n",  
-    "63;16;d2h^17;c m c m;-c 2c 2",  
-    "63:ba-c;16;d2h^17;c c m m;-c 2c 2c",  
-    "63:cab;16;d2h^17;a m m a;-a 2a 2a",  
-    "63:-cba;16;d2h^17;a m a m;-a 2 2a",  
-    "63:bca;16;d2h^17;b b m m;-b 2 2b",  
-    "63:a-cb;16;d2h^17;b m m b;-b 2b 2",  
-    "64;16;d2h^18;c m c e;-c 2ac 2",   // newer IT name
-    "64;16;d2h^18;c m c a;-c 2ac 2",  
-    "64:ba-c;16;d2h^18;c c m b;-c 2ac 2ac",  
-    "64:cab;16;d2h^18;a b m a;-a 2ab 2ab",  
-    "64:-cba;16;d2h^18;a c a m;-a 2 2ab",  
-    "64:bca;16;d2h^18;b b c m;-b 2 2ab",  
-    "64:a-cb;16;d2h^18;b m a b;-b 2ab 2",  
-    "65;16;d2h^19;c m m m;-c 2 2",  
-    "65:cab;16;d2h^19;a m m m;-a 2 2",  
-    "65:bca;16;d2h^19;b m m m;-b 2 2",  
-    "66;16;d2h^20;c c c m;-c 2 2c",  
-    "66:cab;16;d2h^20;a m a a;-a 2a 2",  
-    "66:bca;16;d2h^20;b b m b;-b 2b 2b",  
-    "67;16;d2h^21;c m m e;-c 2a 2",   // newer IT name
-    "67;16;d2h^21;c m m a;-c 2a 2",  
-    "67:ba-c;16;d2h^21;c m m b;-c 2a 2a",  
-    "67:cab;16;d2h^21;a b m m;-a 2b 2b",  
-    "67:-cba;16;d2h^21;a c m m;-a 2 2b",  
-    "67:bca;16;d2h^21;b m c m;-b 2 2a",  
-    "67:a-cb;16;d2h^21;b m a m;-b 2a 2",  
-    "68:1;16;d2h^22;c c c e:1;c 2 2 -1ac;-b",   // newer IT name
-    "68:1;16;d2h^22;c c c a:1;c 2 2 -1ac;-b",  
-    "68:2;16;d2h^22;c c c e:2;-c 2a 2ac",  
-    "68:2;16;d2h^22;c c c a:2;-c 2a 2ac",  
-    "68:1ba-c;16;d2h^22;c c c b:1;c 2 2 -1ac",  
-    "68:2ba-c;16;d2h^22;c c c b:2;-c 2a 2c",  
-    "68:1cab;16;d2h^22;a b a a:1;a 2 2 -1ab",  
-    "68:2cab;16;d2h^22;a b a a:2;-a 2a 2b",  
-    "68:1-cba;16;d2h^22;a c a a:1;a 2 2 -1ab",  
-    "68:2-cba;16;d2h^22;a c a a:2;-a 2ab 2b",  
-    "68:1bca;16;d2h^22;b b c b:1;b 2 2 -1ab",  
-    "68:2bca;16;d2h^22;b b c b:2;-b 2ab 2b",  
-    "68:1a-cb;16;d2h^22;b b a b:1;b 2 2 -1ab",  
-    "68:2a-cb;16;d2h^22;b b a b:2;-b 2b 2ab",  
-    "69;32;d2h^23;f m m m;-f 2 2",  
-    "70:1;32;d2h^24;f d d d:1;f 2 2 -1d;-b",  
-    "70:2;32;d2h^24;f d d d:2;-f 2uv 2vw",  
-    "71;16;d2h^25;i m m m;-i 2 2",  
-    "72;16;d2h^26;i b a m;-i 2 2c",  
-    "72:cab;16;d2h^26;i m c b;-i 2a 2",  
-    "72:bca;16;d2h^26;i c m a;-i 2b 2b",  
-    "73;16;d2h^27;i b c a;-i 2b 2c",  
-    "73:ba-c;16;d2h^27;i c a b;-i 2a 2b",  
-    "74;16;d2h^28;i m m a;-i 2b 2",  
-    "74:ba-c;16;d2h^28;i m m b;-i 2a 2a",  
-    "74:cab;16;d2h^28;i b m m;-i 2c 2c",  
-    "74:-cba;16;d2h^28;i c m m;-i 2 2b",  
-    "74:bca;16;d2h^28;i m c m;-i 2 2a",  
-    "74:a-cb;16;d2h^28;i m a m;-i 2c 2",  
-    "75;4;c4^1;p 4;p 4",  
-    "76;4;c4^2;p 41;p 4w",  
-    "76*;4;c4^2;p 41*;p 41",   //nonstandard
-    "77;4;c4^3;p 42;p 4c",  
-    "77*;4;c4^3;p 42*;p 42",   //nonstandard
-    "78;4;c4^4;p 43;p 4cw",  
-    "78*;4;c4^4;p 43*;p 43",   //nonstandard
-    "79;8;c4^5;i 4;i 4",  
-    "80;8;c4^6;i 41;i 4bw",  
-    "81;4;s4^1;p -4;p -4",  
-    "82;8;s4^2;i -4;i -4",  
-    "83;8;c4h^1;p 4/m;-p 4",  
-    "84;8;c4h^2;p 42/m;-p 4c",  
-    "84*;8;c4h^2;p 42/m*;-p 42",   //nonstandard
-    "85:1;8;c4h^3;p 4/n:1;p 4ab -1ab;-b",  
-    "85:2;8;c4h^3;p 4/n:2;-p 4a",  
-    "86:1;8;c4h^4;p 42/n:1;p 4n -1n;-b",  
-    "86:2;8;c4h^4;p 42/n:2;-p 4bc",  
-    "87;16;c4h^5;i 4/m;-i 4",  
-    "88:1;16;c4h^6;i 41/a:1;i 4bw -1bw;-b",  
-    "88:2;16;c4h^6;i 41/a:2;-i 4ad",  
-    "89;8;d4^1;p 4 2 2;p 4 2",  
-    "90;8;d4^2;p 4 21 2;p 4ab 2ab",  
-    "91;8;d4^3;p 41 2 2;p 4w 2c",  
-    "91*;8;d4^3;p 41 2 2*;p 41 2c",   //nonstandard
-    "92;8;d4^4;p 41 21 2;p 4abw 2nw",  
-    "93;8;d4^5;p 42 2 2;p 4c 2",  
-    "93*;8;d4^5;p 42 2 2*;p 42 2",   //nonstandard
-    "94;8;d4^6;p 42 21 2;p 4n 2n",  
-    "95;8;d4^7;p 43 2 2;p 4cw 2c",  
-    "95*;8;d4^7;p 43 2 2*;p 43 2c",   //nonstandard
-    "96;8;d4^8;p 43 21 2;p 4nw 2abw",  
-    "97;16;d4^9;i 4 2 2;i 4 2",  
-    "98;16;d4^10;i 41 2 2;i 4bw 2bw",  
-    "99;8;c4v^1;p 4 m m;p 4 -2",  
-    "100;8;c4v^2;p 4 b m;p 4 -2ab",  
-    "101;8;c4v^3;p 42 c m;p 4c -2c",  
-    "101*;8;c4v^3;p 42 c m*;p 42 -2c",   //nonstandard
-    "102;8;c4v^4;p 42 n m;p 4n -2n",  
-    "103;8;c4v^5;p 4 c c;p 4 -2c",  
-    "104;8;c4v^6;p 4 n c;p 4 -2n",  
-    "105;8;c4v^7;p 42 m c;p 4c -2",  
-    "105*;8;c4v^7;p 42 m c*;p 42 -2",   //nonstandard
-    "106;8;c4v^8;p 42 b c;p 4c -2ab",  
-    "106*;8;c4v^8;p 42 b c*;p 42 -2ab",   //nonstandard
-    "107;16;c4v^9;i 4 m m;i 4 -2",  
-    "108;16;c4v^10;i 4 c m;i 4 -2c",  
-    "109;16;c4v^11;i 41 m d;i 4bw -2",  
-    "110;16;c4v^12;i 41 c d;i 4bw -2c",  
-    "111;8;d2d^1;p -4 2 m;p -4 2",  
-    "112;8;d2d^2;p -4 2 c;p -4 2c",  
-    "113;8;d2d^3;p -4 21 m;p -4 2ab",  
-    "114;8;d2d^4;p -4 21 c;p -4 2n",  
-    "115;8;d2d^5;p -4 m 2;p -4 -2",  
-    "116;8;d2d^6;p -4 c 2;p -4 -2c",  
-    "117;8;d2d^7;p -4 b 2;p -4 -2ab",  
-    "118;8;d2d^8;p -4 n 2;p -4 -2n",  
-    "119;16;d2d^9;i -4 m 2;i -4 -2",  
-    "120;16;d2d^10;i -4 c 2;i -4 -2c",  
-    "121;16;d2d^11;i -4 2 m;i -4 2",  
-    "122;16;d2d^12;i -4 2 d;i -4 2bw",  
-    "123;16;d4h^1;p 4/m m m;-p 4 2",  
-    "124;16;d4h^2;p 4/m c c;-p 4 2c",  
-    "125:1;16;d4h^3;p 4/n b m:1;p 4 2 -1ab;-b",  
-    "125:2;16;d4h^3;p 4/n b m:2;-p 4a 2b",  
-    "126:1;16;d4h^4;p 4/n n c:1;p 4 2 -1n;-b",  
-    "126:2;16;d4h^4;p 4/n n c:2;-p 4a 2bc",  
-    "127;16;d4h^5;p 4/m b m;-p 4 2ab",  
-    "128;16;d4h^6;p 4/m n c;-p 4 2n",  
-    "129:1;16;d4h^7;p 4/n m m:1;p 4ab 2ab -1ab;-b",  
-    "129:2;16;d4h^7;p 4/n m m:2;-p 4a 2a",  
-    "130:1;16;d4h^8;p 4/n c c:1;p 4ab 2n -1ab;-b",  
-    "130:2;16;d4h^8;p 4/n c c:2;-p 4a 2ac",  
-    "131;16;d4h^9;p 42/m m c;-p 4c 2",  
-    "132;16;d4h^10;p 42/m c m;-p 4c 2c",  
-    "133:1;16;d4h^11;p 42/n b c:1;p 4n 2c -1n;-b",  
-    "133:2;16;d4h^11;p 42/n b c:2;-p 4ac 2b",  
-    "134:1;16;d4h^12;p 42/n n m:1;p 4n 2 -1n;-b",  
-    "134:2;16;d4h^12;p 42/n n m:2;-p 4ac 2bc",  
-    "135;16;d4h^13;p 42/m b c;-p 4c 2ab",  
-    "135*;16;d4h^13;p 42/m b c*;-p 42 2ab",   //nonstandard
-    "136;16;d4h^14;p 42/m n m;-p 4n 2n",  
-    "137:1;16;d4h^15;p 42/n m c:1;p 4n 2n -1n;-b",  
-    "137:2;16;d4h^15;p 42/n m c:2;-p 4ac 2a",  
-    "138:1;16;d4h^16;p 42/n c m:1;p 4n 2ab -1n;-b",  
-    "138:2;16;d4h^16;p 42/n c m:2;-p 4ac 2ac",  
-    "139;32;d4h^17;i 4/m m m;-i 4 2",  
-    "140;32;d4h^18;i 4/m c m;-i 4 2c",  
-    "141:1;32;d4h^19;i 41/a m d:1;i 4bw 2bw -1bw;-b",  
-    "141:2;32;d4h^19;i 41/a m d:2;-i 4bd 2",  
-    "142:1;32;d4h^20;i 41/a c d:1;i 4bw 2aw -1bw;-b",  
-    "142:2;32;d4h^20;i 41/a c d:2;-i 4bd 2c",  
-    "143;3;c3^1;p 3;p 3",  
-    "144;3;c3^2;p 31;p 31",  
-    "145;3;c3^3;p 32;p 32",  
-    "146:h;9;c3^4;r 3:h;r 3",  
-    "146:r;3;c3^4;r 3:r;p 3*",  
-    "147;6;c3i^1;p -3;-p 3",  
-    "148:h;18;c3i^2;r -3:h;-r 3",  
-    "148:r;6;c3i^2;r -3:r;-p 3*",  
-    "149;6;d3^1;p 3 1 2;p 3 2",  
-    "150;6;d3^2;p 3 2 1;p 3 2\"",  
-    "151;6;d3^3;p 31 1 2;p 31 2 (0 0 4)",  
-    "152;6;d3^4;p 31 2 1;p 31 2\"",  
-    "152:_2;6;d3^4;p 31 2 1;p 31 2\" (0 0 -4);-b",   //  NOTE: MSA quartz.cif gives different operators for this -- 
-    "153;6;d3^5;p 32 1 2;p 32 2 (0 0 2)",  
-    "154;6;d3^6;p 32 2 1;p 32 2\"",    
-    "154:_2;6;d3^6;p 32 2 1;p 32 2\" (0 0 4);-b",   //  NOTE: MSA quartz.cif gives different operators for this -- 
-    "155:h;18;d3^7;r 3 2:h;r 3 2\"",  
-    "155:r;6;d3^7;r 3 2:r;p 3* 2",  
-    "156;6;c3v^1;p 3 m 1;p 3 -2\"",  
-    "157;6;c3v^2;p 3 1 m;p 3 -2",  
-    "158;6;c3v^3;p 3 c 1;p 3 -2\"c",  
-    "159;6;c3v^4;p 3 1 c;p 3 -2c",  
-    "160:h;18;c3v^5;r 3 m:h;r 3 -2\"",  
-    "160:r;6;c3v^5;r 3 m:r;p 3* -2",  
-    "161:h;18;c3v^6;r 3 c:h;r 3 -2\"c",  
-    "161:r;6;c3v^6;r 3 c:r;p 3* -2n",  
-    "162;12;d3d^1;p -3 1 m;-p 3 2",  
-    "163;12;d3d^2;p -3 1 c;-p 3 2c",  
-    "164;12;d3d^3;p -3 m 1;-p 3 2\"",  
-    "165;12;d3d^4;p -3 c 1;-p 3 2\"c",  
-    "166:h;36;d3d^5;r -3 m:h;-r 3 2\"",  
-    "166:r;12;d3d^5;r -3 m:r;-p 3* 2",  
-    "167:h;36;d3d^6;r -3 c:h;-r 3 2\"c",  
-    "167:r;12;d3d^6;r -3 c:r;-p 3* 2n",  
-    "168;6;c6^1;p 6;p 6",  
-    "169;6;c6^2;p 61;p 61",  
-    "170;6;c6^3;p 65;p 65",  
-    "171;6;c6^4;p 62;p 62",  
-    "172;6;c6^5;p 64;p 64",  
-    "173;6;c6^6;p 63;p 6c",  
-    "173*;6;c6^6;p 63*;p 63 ",   //nonstandard; space added so not identical to H-M P 63
-    "174;6;c3h^1;p -6;p -6",  
-    "175;12;c6h^1;p 6/m;-p 6",  
-    "176;12;c6h^2;p 63/m;-p 6c",  
-    "176*;12;c6h^2;p 63/m*;-p 63",   //nonstandard
-    "177;12;d6^1;p 6 2 2;p 6 2",  
-    "178;12;d6^2;p 61 2 2;p 61 2 (0 0 5)",  
-    "179;12;d6^3;p 65 2 2;p 65 2 (0 0 1)",  
-    "180;12;d6^4;p 62 2 2;p 62 2 (0 0 4)",  
-    "181;12;d6^5;p 64 2 2;p 64 2 (0 0 2)",  
-    "182;12;d6^6;p 63 2 2;p 6c 2c",  
-    "182*;12;d6^6;p 63 2 2*;p 63 2c",   //nonstandard
-    "183;12;c6v^1;p 6 m m;p 6 -2",  
-    "184;12;c6v^2;p 6 c c;p 6 -2c",  
-    "185;12;c6v^3;p 63 c m;p 6c -2",  
-    "185*;12;c6v^3;p 63 c m*;p 63 -2",   //nonstandard
-    "186;12;c6v^4;p 63 m c;p 6c -2c",  
-    "186*;12;c6v^4;p 63 m c*;p 63 -2c",   //nonstandard
-    "187;12;d3h^1;p -6 m 2;p -6 2",  
-    "188;12;d3h^2;p -6 c 2;p -6c 2",  
-    "189;12;d3h^3;p -6 2 m;p -6 -2",  
-    "190;12;d3h^4;p -6 2 c;p -6c -2c",  
-    "191;24;d6h^1;p 6/m m m;-p 6 2",  
-    "192;24;d6h^2;p 6/m c c;-p 6 2c",  
-    "193;24;d6h^3;p 63/m c m;-p 6c 2",  
-    "193*;24;d6h^3;p 63/m c m*;-p 63 2",   //nonstandard
-    "194;24;d6h^4;p 63/m m c;-p 6c 2c",  
-    "194*;24;d6h^4;p 63/m m c*;-p 63 2c",   //nonstandard
-    "195;12;t^1;p 2 3;p 2 2 3",  
-    "196;48;t^2;f 2 3;f 2 2 3",  
-    "197;24;t^3;i 2 3;i 2 2 3",  
-    "198;12;t^4;p 21 3;p 2ac 2ab 3",  
-    "199;24;t^5;i 21 3;i 2b 2c 3",  
-    "200;24;th^1;p m -3;-p 2 2 3",  
-    "201:1;24;th^2;p n -3:1;p 2 2 3 -1n;-b",  
-    "201:2;24;th^2;p n -3:2;-p 2ab 2bc 3",  
-    "202;96;th^3;f m -3;-f 2 2 3",  
-    "203:1;96;th^4;f d -3:1;f 2 2 3 -1d;-b",  
-    "203:2;96;th^4;f d -3:2;-f 2uv 2vw 3",  
-    "204;48;th^5;i m -3;-i 2 2 3",  
-    "205;24;th^6;p a -3;-p 2ac 2ab 3",  
-    "206;48;th^7;i a -3;-i 2b 2c 3",  
-    "207;24;o^1;p 4 3 2;p 4 2 3",  
-    "208;24;o^2;p 42 3 2;p 4n 2 3",  
-    "209;96;o^3;f 4 3 2;f 4 2 3",  
-    "210;96;o^4;f 41 3 2;f 4d 2 3",  
-    "211;48;o^5;i 4 3 2;i 4 2 3",  
-    "212;24;o^6;p 43 3 2;p 4acd 2ab 3",  
-    "213;24;o^7;p 41 3 2;p 4bd 2ab 3",  
-    "214;48;o^8;i 41 3 2;i 4bd 2c 3",  
-    "215;24;td^1;p -4 3 m;p -4 2 3",  
-    "216;96;td^2;f -4 3 m;f -4 2 3",  
-    "217;48;td^3;i -4 3 m;i -4 2 3",  
-    "218;24;td^4;p -4 3 n;p -4n 2 3",  
-    "219;96;td^5;f -4 3 c;f -4a 2 3",  
-    "220;48;td^6;i -4 3 d;i -4bd 2c 3",  
-    "221;48;oh^1;p m -3 m;-p 4 2 3",  
-    "222:1;48;oh^2;p n -3 n:1;p 4 2 3 -1n;-b",  
-    "222:2;48;oh^2;p n -3 n:2;-p 4a 2bc 3",  
-    "223;48;oh^3;p m -3 n;-p 4n 2 3",  
-    "224:1;48;oh^4;p n -3 m:1;p 4n 2 3 -1n;-b",  
-    "224:2;48;oh^4;p n -3 m:2;-p 4bc 2bc 3",  
-    "225;192;oh^5;f m -3 m;-f 4 2 3",  
-    "226;192;oh^6;f m -3 c;-f 4a 2 3",  
-    "227:1;192;oh^7;f d -3 m:1;f 4d 2 3 -1d;-b",  
-    "227:2;192;oh^7;f d -3 m:2;-f 4vw 2vw 3",  
-    "228:1;192;oh^8;f d -3 c:1;f 4d 2 3 -1ad;-b",  
-    "228:2;192;oh^8;f d -3 c:2;-f 4ud 2vw 3",  
-    "229;96;oh^9;i m -3 m;-i 4 2 3",  
-    "230;96;oh^10;i a -3 d;-i 4bd 2c 3",    
+      "1;1.1;;1;c1^1;p 1;p 1",  
+      "2;2.1;;2;ci^1;p -1;-p 1",  
+      "3:b;3.1;;2;c2^1;p 1 2 1;p 2y",   //full name
+      "3:b;3.1;;2;c2^1;p 2;p 2y",  
+      "3:c;3.2;c,a,b;2;c2^1;p 1 1 2;p 2",  
+      "3:a;3.3;b,c,a;2;c2^1;p 2 1 1;p 2x",  
+      "4:b;4.1;;2;c2^2;p 1 21 1;p 2yb",   //full name
+      "4:b;4.1;;2;c2^2;p 21;p 2yb",  
+      "4:b*;4.1;;2;c2^2;p 1 21 1*;p 2y1",   //nonstandard
+      "4:c;4.2;c,a,b;2;c2^2;p 1 1 21;p 2c",  
+      "4:c*;4.2;c,a,b;2;c2^2;p 1 1 21*;p 21",   //nonstandard
+      "4:a;4.3;b,c,a;2;c2^2;p 21 1 1;p 2xa",  
+      "4:a*;4.3;b,c,a;2;c2^2;p 21 1 1*;p 2x1",   //nonstandard
+      "5:b1;5.1;;4;c2^3;c 1 2 1;c 2y",   //full name
+      "5:b1;5.1;;4;c2^3;c 2;c 2y",  
+      "5:b2;5.2;-a-c,b,a;4;c2^3;a 1 2 1;a 2y",  
+      "5:b3;5.3;c,b,-a-c;4;c2^3;i 1 2 1;i 2y",  
+      "5:c1;5.4;c,a,b;4;c2^3;a 1 1 2;a 2",  
+      "5:c2;5.5;a,-a-c,b;4;c2^3;b 1 1 2;b 2",  
+      "5:c3;5.6;-a-c,c,b;4;c2^3;i 1 1 2;i 2",  
+      "5:a1;5.7;b,c,a;4;c2^3;b 2 1 1;b 2x",  
+      "5:a2;5.8;b,a,-a-c;4;c2^3;c 2 1 1;c 2x",  
+      "5:a3;5.9;b,-a-c,c;4;c2^3;i 2 1 1;i 2x",  
+      "6:b;6.1;;2;cs^1;p 1 m 1;p -2y",   //full name
+      "6:b;6.1;;2;cs^1;p m;p -2y",  
+      "6:c;6.2;c,a,b;2;cs^1;p 1 1 m;p -2",  
+      "6:a;6.3;b,c,a;2;cs^1;p m 1 1;p -2x",  
+      "7:b1;7.1;;2;cs^2;p 1 c 1;p -2yc",   //full name
+      "7:b1;7.1;;2;cs^2;p c;p -2yc",  
+      "7:b2;7.2;-a-c,b,a;2;cs^2;p 1 n 1;p -2yac",   //full name
+      "7:b2;7.2;-a-c,b,a;2;cs^2;p n;p -2yac",  
+      "7:b3;7.3;c,b,-a-c;2;cs^2;p 1 a 1;p -2ya",   //full name
+      "7:b3;7.3;c,b,-a-c;2;cs^2;p a;p -2ya",  
+      "7:c1;7.4;c,a,b;2;cs^2;p 1 1 a;p -2a",  
+      "7:c2;7.5;a,-a-c,b;2;cs^2;p 1 1 n;p -2ab",  
+      "7:c3;7.6;-a-c,c,b;2;cs^2;p 1 1 b;p -2b",  
+      "7:a1;7.7;b,c,a;2;cs^2;p b 1 1;p -2xb",  
+      "7:a2;7.8;b,a,-a-c;2;cs^2;p n 1 1;p -2xbc",  
+      "7:a3;7.9;b,-a-c,c;2;cs^2;p c 1 1;p -2xc",  
+      "8:b1;8.1;;4;cs^3;c 1 m 1;c -2y",   //full name
+      "8:b1;8.1;;4;cs^3;c m;c -2y",  
+      "8:b2;8.2;-a-c,b,a;4;cs^3;a 1 m 1;a -2y",  
+      "8:b3;8.3;c,b,-a-c;4;cs^3;i 1 m 1;i -2y",   //full name
+      "8:b3;8.3;c,b,-a-c;4;cs^3;i m;i -2y",  
+      "8:c1;8.4;c,a,b;4;cs^3;a 1 1 m;a -2",  
+      "8:c2;8.5;a,-a-c,b;4;cs^3;b 1 1 m;b -2",  
+      "8:c3;8.6;-a-c,c,b;4;cs^3;i 1 1 m;i -2",  
+      "8:a1;8.7;b,c,a;4;cs^3;b m 1 1;b -2x",  
+      "8:a2;8.8;b,a,-a-c;4;cs^3;c m 1 1;c -2x",  
+      "8:a3;8.9;b,-a-c,c;4;cs^3;i m 1 1;i -2x",  
+      "9:b1;9.1;;4;cs^4;c 1 c 1;c -2yc",   //full name
+      "9:b1;9.1;;4;cs^4;c c;c -2yc",  
+      "9:b2;9.2;-a-c,b,a;4;cs^4;a 1 n 1;a -2yab",  
+      "9:b3;9.3;c,b,-a-c;4;cs^4;i 1 a 1;i -2ya",  
+      "9:-b1;9.4;c,-b,a;4;cs^4;a 1 a 1;a -2ya",  
+      "9:-b2;9.5;a,-b,-a-c;4;cs^4;c 1 n 1;c -2yac",  
+      "9:-b3;9.6;-a-c,-b,c;4;cs^4;i 1 c 1;i -2yc",  
+      "9:c1;9.7;c,a,b;4;cs^4;a 1 1 a;a -2a",  
+      "9:c2;9.8;a,-a-c,b;4;cs^4;b 1 1 n;b -2ab",  
+      "9:c3;9.9;-a-c,c,b;4;cs^4;i 1 1 b;i -2b",  
+      "9:-c1;9.10;a,c,-b;4;cs^4;b 1 1 b;b -2b",  
+      "9:-c2;9.11;-a-c,a,-b;4;cs^4;a 1 1 n;a -2ab",  
+      "9:-c3;9.12;c,-a-c,-b;4;cs^4;i 1 1 a;i -2a",  
+      "9:a1;9.13;b,c,a;4;cs^4;b b 1 1;b -2xb",  
+      "9:a2;9.14;b,a,-a-c;4;cs^4;c n 1 1;c -2xac",  
+      "9:a3;9.15;b,-a-c,c;4;cs^4;i c 1 1;i -2xc",  
+      "9:-a1;9.16;-b,a,c;4;cs^4;c c 1 1;c -2xc",  
+      "9:-a2;9.17;-b,-a-c,a;4;cs^4;b n 1 1;b -2xab",  
+      "9:-a3;9.18;-b,c,-a-c;4;cs^4;i b 1 1;i -2xb",  
+      "10:b;10.1;;4;c2h^1;p 1 2/m 1;-p 2y",   //full name
+      "10:b;10.1;;4;c2h^1;p 2/m;-p 2y",  
+      "10:c;10.2;c,a,b;4;c2h^1;p 1 1 2/m;-p 2",  
+      "10:a;10.3;b,c,a;4;c2h^1;p 2/m 1 1;-p 2x",  
+      "11:b;11.1;;4;c2h^2;p 1 21/m 1;-p 2yb",   //full name
+      "11:b;11.1;;4;c2h^2;p 21/m;-p 2yb",  
+      "11:b*;11.1;;4;c2h^2;p 1 21/m 1*;-p 2y1",   //nonstandard
+      "11:c;11.2;c,a,b;4;c2h^2;p 1 1 21/m;-p 2c",  
+      "11:c*;11.2;c,a,b;4;c2h^2;p 1 1 21/m*;-p 21",   //nonstandard
+      "11:a;11.3;b,c,a;4;c2h^2;p 21/m 1 1;-p 2xa",  
+      "11:a*;11.3;b,c,a;4;c2h^2;p 21/m 1 1*;-p 2x1",   //nonstandard
+      "12:b1;12.1;;8;c2h^3;c 1 2/m 1;-c 2y",   //full name
+      "12:b1;12.1;;8;c2h^3;c 2/m;-c 2y",  
+      "12:b2;12.2;-a-c,b,a;8;c2h^3;a 1 2/m 1;-a 2y",  
+      "12:b3;12.3;c,b,-a-c;8;c2h^3;i 1 2/m 1;-i 2y",   //full name
+      "12:b3;12.3;c,b,-a-c;8;c2h^3;i 2/m;-i 2y",  
+      "12:c1;12.4;c,a,b;8;c2h^3;a 1 1 2/m;-a 2",  
+      "12:c2;12.5;a,-a-c,b;8;c2h^3;b 1 1 2/m;-b 2",  
+      "12:c3;12.6;-a-c,c,b;8;c2h^3;i 1 1 2/m;-i 2",  
+      "12:a1;12.7;b,c,a;8;c2h^3;b 2/m 1 1;-b 2x",  
+      "12:a2;12.8;b,a,-a-c;8;c2h^3;c 2/m 1 1;-c 2x",  
+      "12:a3;12.9;b,-a-c,c;8;c2h^3;i 2/m 1 1;-i 2x",  
+      "13:b1;13.1;;4;c2h^4;p 1 2/c 1;-p 2yc",   //full name
+      "13:b1;13.1;;4;c2h^4;p 2/c;-p 2yc",  
+      "13:b2;13.2;-a-c,b,a;4;c2h^4;p 1 2/n 1;-p 2yac",   //full name
+      "13:b2;13.2;-a-c,b,a;4;c2h^4;p 2/n;-p 2yac",  
+      "13:b3;13.3;c,b,-a-c;4;c2h^4;p 1 2/a 1;-p 2ya",   //full name
+      "13:b3;13.3;c,b,-a-c;4;c2h^4;p 2/a;-p 2ya",  
+      "13:c1;13.4;c,a,b;4;c2h^4;p 1 1 2/a;-p 2a",  
+      "13:c2;13.5;a,-a-c,b;4;c2h^4;p 1 1 2/n;-p 2ab",  
+      "13:c3;13.6;-a-c,c,b;4;c2h^4;p 1 1 2/b;-p 2b",  
+      "13:a1;13.7;b,c,a;4;c2h^4;p 2/b 1 1;-p 2xb",  
+      "13:a2;13.8;b,a,-a-c;4;c2h^4;p 2/n 1 1;-p 2xbc",  
+      "13:a3;13.9;b,-a-c,c;4;c2h^4;p 2/c 1 1;-p 2xc",  
+      "14:b1;14.1;;4;c2h^5;p 1 21/c 1;-p 2ybc",   //full name
+      "14:b1;14.1;;4;c2h^5;p 21/c;-p 2ybc",  
+      "14:b2;14.2;-a-c,b,a;4;c2h^5;p 1 21/n 1;-p 2yn",   //full name
+      "14:b2;14.2;-a-c,b,a;4;c2h^5;p 21/n;-p 2yn",  
+      "14:b3;14.3;c,b,-a-c;4;c2h^5;p 1 21/a 1;-p 2yab",   //full name
+      "14:b3;14.3;c,b,-a-c;4;c2h^5;p 21/a;-p 2yab",  
+      "14:c1;14.4;c,a,b;4;c2h^5;p 1 1 21/a;-p 2ac",  
+      "14:c2;14.5;a,-a-c,b;4;c2h^5;p 1 1 21/n;-p 2n",  
+      "14:c3;14.6;-a-c,c,b;4;c2h^5;p 1 1 21/b;-p 2bc",  
+      "14:a1;14.7;b,c,a;4;c2h^5;p 21/b 1 1;-p 2xab",  
+      "14:a2;14.8;b,a,-a-c;4;c2h^5;p 21/n 1 1;-p 2xn",  
+      "14:a3;14.9;b,-a-c,c;4;c2h^5;p 21/c 1 1;-p 2xac",  
+      "15:b1;15.1;;8;c2h^6;c 1 2/c 1;-c 2yc",   //full name
+      "15:b1;15.1;;8;c2h^6;c 2/c;-c 2yc",  
+      "15:b2;15.2;-a-c,b,a;8;c2h^6;a 1 2/n 1;-a 2yab",  
+      "15:b3;15.3;c,b,-a-c;8;c2h^6;i 1 2/a 1;-i 2ya",   //full name
+      "15:b3;15.3;c,b,-a-c;8;c2h^6;i 2/a;-i 2ya",  
+      "15:-b1;15.4;c,-b,a;8;c2h^6;a 1 2/a 1;-a 2ya",  
+      "15:-b2;15.5;a,-b,-a-c;8;c2h^6;c 1 2/n 1;-c 2yac",   //full name
+      "15:-b2;15.5;a,-b,-a-c;8;c2h^6;c 2/n;-c 2yac",  
+      "15:-b3;15.6;-a-c,-b,c;8;c2h^6;i 1 2/c 1;-i 2yc",   //full name
+      "15:-b3;15.6;-a-c,-b,c;8;c2h^6;i 2/c;-i 2yc",  
+      "15:c1;15.7;c,a,b;8;c2h^6;a 1 1 2/a;-a 2a",  
+      "15:c2;15.8;a,-a-c,b;8;c2h^6;b 1 1 2/n;-b 2ab",  
+      "15:c3;15.9;-a-c,c,b;8;c2h^6;i 1 1 2/b;-i 2b",  
+      "15:-c1;15.10;a,c,-b;8;c2h^6;b 1 1 2/b;-b 2b",  
+      "15:-c2;15.11;-a-c,a,-b;8;c2h^6;a 1 1 2/n;-a 2ab",  
+      "15:-c3;15.12;c,-a-c,-b;8;c2h^6;i 1 1 2/a;-i 2a",  
+      "15:a1;15.13;b,c,a;8;c2h^6;b 2/b 1 1;-b 2xb",  
+      "15:a2;15.14;b,a,-a-c;8;c2h^6;c 2/n 1 1;-c 2xac",  
+      "15:a3;15.15;b,-a-c,c;8;c2h^6;i 2/c 1 1;-i 2xc",  
+      "15:-a1;15.16;-b,a,c;8;c2h^6;c 2/c 1 1;-c 2xc",  
+      "15:-a2;15.17;-b,-a-c,a;8;c2h^6;b 2/n 1 1;-b 2xab",  
+      "15:-a3;15.18;-b,c,-a-c;8;c2h^6;i 2/b 1 1;-i 2xb",  
+      "16;16.1;;4;d2^1;p 2 2 2;p 2 2",  
+      "17;17.1;;4;d2^2;p 2 2 21;p 2c 2",  
+      "17*;17.1;;4;d2^2;p 2 2 21*;p 21 2",   //nonstandard
+      "17:cab;17.2;c,a,b;4;d2^2;p 21 2 2;p 2a 2a",  
+      "17:bca;17.3;b,c,a;4;d2^2;p 2 21 2;p 2 2b",  
+      "18;18.1;;4;d2^3;p 21 21 2;p 2 2ab",  
+      "18:cab;18.2;c,a,b;4;d2^3;p 2 21 21;p 2bc 2",  
+      "18:bca;18.3;b,c,a;4;d2^3;p 21 2 21;p 2ac 2ac",  
+      "19;19.1;;4;d2^4;p 21 21 21;p 2ac 2ab",  
+      "20;20.1;;8;d2^5;c 2 2 21;c 2c 2",  
+      "20*;20.1;;8;d2^5;c 2 2 21*;c 21 2",   //nonstandard
+      "20:cab;20.2;c,a,b;8;d2^5;a 21 2 2;a 2a 2a",  
+      "20:cab*;20.2;c,a,b;8;d2^5;a 21 2 2*;a 2a 21",   //nonstandard
+      "20:bca;20.3;b,c,a;8;d2^5;b 2 21 2;b 2 2b",  
+      "21;21.1;;8;d2^6;c 2 2 2;c 2 2",  
+      "21:cab;21.2;c,a,b;8;d2^6;a 2 2 2;a 2 2",  
+      "21:bca;21.3;b,c,a;8;d2^6;b 2 2 2;b 2 2",  
+      "22;22.1;;16;d2^7;f 2 2 2;f 2 2",  
+      "23;23.1;;8;d2^8;i 2 2 2;i 2 2",  
+      "24;24.1;;8;d2^9;i 21 21 21;i 2b 2c",  
+      "25;25.1;;4;c2v^1;p m m 2;p 2 -2",  
+      "25:cab;25.2;c,a,b;4;c2v^1;p 2 m m;p -2 2",  
+      "25:bca;25.3;b,c,a;4;c2v^1;p m 2 m;p -2 -2",  
+      "26;26.1;;4;c2v^2;p m c 21;p 2c -2",  
+      "26*;26.1;;4;c2v^2;p m c 21*;p 21 -2",   //nonstandard
+      "26:ba-c;26.2;b,a,-c;4;c2v^2;p c m 21;p 2c -2c",  
+      "26:ba-c*;26.2;b,a,-c;4;c2v^2;p c m 21*;p 21 -2c",   //nonstandard
+      "26:cab;26.3;c,a,b;4;c2v^2;p 21 m a;p -2a 2a",  
+      "26:-cba;26.4;-c,b,a;4;c2v^2;p 21 a m;p -2 2a",  
+      "26:bca;26.5;b,c,a;4;c2v^2;p b 21 m;p -2 -2b",  
+      "26:a-cb;26.6;a,-c,b;4;c2v^2;p m 21 b;p -2b -2",  
+      "27;27.1;;4;c2v^3;p c c 2;p 2 -2c",  
+      "27:cab;27.2;c,a,b;4;c2v^3;p 2 a a;p -2a 2",  
+      "27:bca;27.3;b,c,a;4;c2v^3;p b 2 b;p -2b -2b",  
+      "28;28.1;;4;c2v^4;p m a 2;p 2 -2a",  
+      "28*;28.1;;4;c2v^4;p m a 2*;p 2 -21",   //nonstandard
+      "28:ba-c;28.2;b,a,-c;4;c2v^4;p b m 2;p 2 -2b",  
+      "28:cab;28.3;c,a,b;4;c2v^4;p 2 m b;p -2b 2",  
+      "28:-cba;28.4;-c,b,a;4;c2v^4;p 2 c m;p -2c 2",  
+      "28:-cba*;28.4;-c,b,a;4;c2v^4;p 2 c m*;p -21 2",   //nonstandard
+      "28:bca;28.5;b,c,a;4;c2v^4;p c 2 m;p -2c -2c",  
+      "28:a-cb;28.6;a,-c,b;4;c2v^4;p m 2 a;p -2a -2a",  
+      "29;29.1;;4;c2v^5;p c a 21;p 2c -2ac",  
+      "29:ba-c;29.2;b,a,-c;4;c2v^5;p b c 21;p 2c -2b",  
+      "29:cab;29.3;c,a,b;4;c2v^5;p 21 a b;p -2b 2a",  
+      "29:-cba;29.4;-c,b,a;4;c2v^5;p 21 c a;p -2ac 2a",  
+      "29:bca;29.5;b,c,a;4;c2v^5;p c 21 b;p -2bc -2c",  
+      "29:a-cb;29.6;a,-c,b;4;c2v^5;p b 21 a;p -2a -2ab",  
+      "30;30.1;;4;c2v^6;p n c 2;p 2 -2bc",  
+      "30:ba-c;30.2;b,a,-c;4;c2v^6;p c n 2;p 2 -2ac",  
+      "30:cab;30.3;c,a,b;4;c2v^6;p 2 n a;p -2ac 2",  
+      "30:-cba;30.4;-c,b,a;4;c2v^6;p 2 a n;p -2ab 2",  
+      "30:bca;30.5;b,c,a;4;c2v^6;p b 2 n;p -2ab -2ab",  
+      "30:a-cb;30.6;a,-c,b;4;c2v^6;p n 2 b;p -2bc -2bc",  
+      "31;31.1;;4;c2v^7;p m n 21;p 2ac -2",  
+      "31:ba-c;31.2;b,a,-c;4;c2v^7;p n m 21;p 2bc -2bc",  
+      "31:cab;31.3;c,a,b;4;c2v^7;p 21 m n;p -2ab 2ab",  
+      "31:-cba;31.4;-c,b,a;4;c2v^7;p 21 n m;p -2 2ac",  
+      "31:bca;31.5;b,c,a;4;c2v^7;p n 21 m;p -2 -2bc",  
+      "31:a-cb;31.6;a,-c,b;4;c2v^7;p m 21 n;p -2ab -2",  
+      "32;32.1;;4;c2v^8;p b a 2;p 2 -2ab",  
+      "32:cab;32.2;c,a,b;4;c2v^8;p 2 c b;p -2bc 2",  
+      "32:bca;32.3;b,c,a;4;c2v^8;p c 2 a;p -2ac -2ac",  
+      "33;33.1;;4;c2v^9;p n a 21;p 2c -2n",  
+      "33*;33.1;;4;c2v^9;p n a 21*;p 21 -2n",   //nonstandard
+      "33:ba-c;33.2;b,a,-c;4;c2v^9;p b n 21;p 2c -2ab",  
+      "33:ba-c*;33.2;b,a,-c;4;c2v^9;p b n 21*;p 21 -2ab",   //nonstandard
+      "33:cab;33.3;c,a,b;4;c2v^9;p 21 n b;p -2bc 2a",  
+      "33:cab*;33.3;c,a,b;4;c2v^9;p 21 n b*;p -2bc 21",   //nonstandard
+      "33:-cba;33.4;-c,b,a;4;c2v^9;p 21 c n;p -2n 2a",  
+      "33:-cba*;33.4;-c,b,a;4;c2v^9;p 21 c n*;p -2n 21",   //nonstandard
+      "33:bca;33.5;b,c,a;4;c2v^9;p c 21 n;p -2n -2ac",  
+      "33:a-cb;33.6;a,-c,b;4;c2v^9;p n 21 a;p -2ac -2n",  
+      "34;34.1;;4;c2v^10;p n n 2;p 2 -2n",  
+      "34:cab;34.2;c,a,b;4;c2v^10;p 2 n n;p -2n 2",  
+      "34:bca;34.3;b,c,a;4;c2v^10;p n 2 n;p -2n -2n",  
+      "35;35.1;;8;c2v^11;c m m 2;c 2 -2",  
+      "35:cab;35.2;c,a,b;8;c2v^11;a 2 m m;a -2 2",  
+      "35:bca;35.3;b,c,a;8;c2v^11;b m 2 m;b -2 -2",  
+      "36;36.1;;8;c2v^12;c m c 21;c 2c -2",  
+      "36*;36.1;;8;c2v^12;c m c 21*;c 21 -2",   //nonstandard
+      "36:ba-c;36.2;b,a,-c;8;c2v^12;c c m 21;c 2c -2c",  
+      "36:ba-c*;36.2;b,a,-c;8;c2v^12;c c m 21*;c 21 -2c",   //nonstandard
+      "36:cab;36.3;c,a,b;8;c2v^12;a 21 m a;a -2a 2a",  
+      "36:cab*;36.3;c,a,b;8;c2v^12;a 21 m a*;a -2a 21",   //nonstandard
+      "36:-cba;36.4;-c,b,a;8;c2v^12;a 21 a m;a -2 2a",  
+      "36:-cba*;36.4;-c,b,a;8;c2v^12;a 21 a m*;a -2 21",   //nonstandard
+      "36:bca;36.5;b,c,a;8;c2v^12;b b 21 m;b -2 -2b",  
+      "36:a-cb;36.6;a,-c,b;8;c2v^12;b m 21 b;b -2b -2",  
+      "37;37.1;;8;c2v^13;c c c 2;c 2 -2c",  
+      "37:cab;37.2;c,a,b;8;c2v^13;a 2 a a;a -2a 2",  
+      "37:bca;37.3;b,c,a;8;c2v^13;b b 2 b;b -2b -2b",  
+      "38;38.1;;8;c2v^14;a m m 2;a 2 -2",  
+      "38:ba-c;38.2;b,a,-c;8;c2v^14;b m m 2;b 2 -2",  
+      "38:cab;38.3;c,a,b;8;c2v^14;b 2 m m;b -2 2",  
+      "38:-cba;38.4;-c,b,a;8;c2v^14;c 2 m m;c -2 2",  
+      "38:bca;38.5;b,c,a;8;c2v^14;c m 2 m;c -2 -2",  
+      "38:a-cb;38.6;a,-c,b;8;c2v^14;a m 2 m;a -2 -2",  
+      "39;39.1;;8;c2v^15;a e m 2;a 2 -2b",   // newer IT name
+      "39;39.1;;8;c2v^15;a b m 2;a 2 -2b",  
+      "39:ba-c;39.2;b,a,-c;8;c2v^15;b m e 2;b 2 -2a",  
+      "39:ba-c;39.2;b,a,-c;8;c2v^15;b m a 2;b 2 -2a",  
+      "39:cab;39.3;c,a,b;8;c2v^15;b 2 e m;b -2a 2",  
+      "39:cab;39.3;c,a,b;8;c2v^15;b 2 c m;b -2a 2",  
+      "39:-cba;39.4;-c,b,a;8;c2v^15;c 2 m e;c -2a 2",  
+      "39:-cba;39.4;-c,b,a;8;c2v^15;c 2 m b;c -2a 2",  
+      "39:bca;39.5;b,c,a;8;c2v^15;c m 2 e;c -2a -2a",  
+      "39:bca;39.5;b,c,a;8;c2v^15;c m 2 a;c -2a -2a",  
+      "39:a-cb;39.6;a,-c,b;8;c2v^15;a e 2 m;a -2b -2b",  
+      "39:a-cb;39.6;a,-c,b;8;c2v^15;a c 2 m;a -2b -2b",  
+      "40;40.1;;8;c2v^16;a m a 2;a 2 -2a",  
+      "40:ba-c;40.2;b,a,-c;8;c2v^16;b b m 2;b 2 -2b",  
+      "40:cab;40.3;c,a,b;8;c2v^16;b 2 m b;b -2b 2",  
+      "40:-cba;40.4;-c,b,a;8;c2v^16;c 2 c m;c -2c 2",  
+      "40:bca;40.5;b,c,a;8;c2v^16;c c 2 m;c -2c -2c",  
+      "40:a-cb;40.6;a,-c,b;8;c2v^16;a m 2 a;a -2a -2a",  
+      "41;41.1;;8;c2v^17;a e a 2;a 2 -2ab",    // newer IT name
+      "41;41.1;;8;c2v^17;a b a 2;a 2 -2ab",
+      "41:ba-c;41.2;b,a,-c;8;c2v^17;b b e 2;b 2 -2ab",  
+      "41:ba-c;41.2;b,a,-c;8;c2v^17;b b a 2;b 2 -2ab",  
+      "41:cab;41.3;c,a,b;8;c2v^17;b 2 e b;b -2ab 2",  
+      "41:cab;41.3;c,a,b;8;c2v^17;b 2 c b;b -2ab 2",  
+      "41:-cba;41.4;-c,b,a;8;c2v^17;c 2 c e;c -2ac 2",  
+      "41:-cba;41.4;-c,b,a;8;c2v^17;c 2 c b;c -2ac 2",  
+      "41:bca;41.5;b,c,a;8;c2v^17;c c 2 e;c -2ac -2ac",  
+      "41:bca;41.5;b,c,a;8;c2v^17;c c 2 a;c -2ac -2ac",  
+      "41:a-cb;41.6;a,-c,b;8;c2v^17;a e 2 a;a -2ab -2ab",  
+      "41:a-cb;41.6;a,-c,b;8;c2v^17;a c 2 a;a -2ab -2ab",  
+      "42;42.1;;16;c2v^18;f m m 2;f 2 -2",  
+      "42:cab;42.2;c,a,b;16;c2v^18;f 2 m m;f -2 2",  
+      "42:bca;42.3;b,c,a;16;c2v^18;f m 2 m;f -2 -2",  
+      "43;43.1;;16;c2v^19;f d d 2;f 2 -2d",  
+      "43:cab;43.2;c,a,b;16;c2v^19;f 2 d d;f -2d 2",  
+      "43:bca;43.3;b,c,a;16;c2v^19;f d 2 d;f -2d -2d",  
+      "44;44.1;;8;c2v^20;i m m 2;i 2 -2",  
+      "44:cab;44.2;c,a,b;8;c2v^20;i 2 m m;i -2 2",  
+      "44:bca;44.3;b,c,a;8;c2v^20;i m 2 m;i -2 -2",  
+      "45;45.1;;8;c2v^21;i b a 2;i 2 -2c",  
+      "45:cab;45.2;c,a,b;8;c2v^21;i 2 c b;i -2a 2",  
+      "45:bca;45.3;b,c,a;8;c2v^21;i c 2 a;i -2b -2b",  
+      "46;46.1;;8;c2v^22;i m a 2;i 2 -2a",  
+      "46:ba-c;46.2;b,a,-c;8;c2v^22;i b m 2;i 2 -2b",  
+      "46:cab;46.3;c,a,b;8;c2v^22;i 2 m b;i -2b 2",  
+      "46:-cba;46.4;-c,b,a;8;c2v^22;i 2 c m;i -2c 2",  
+      "46:bca;46.5;b,c,a;8;c2v^22;i c 2 m;i -2c -2c",  
+      "46:a-cb;46.6;a,-c,b;8;c2v^22;i m 2 a;i -2a -2a",  
+      "47;47.1;;8;d2h^1;p m m m;-p 2 2",  
+      "48:2;48.1;;8;d2h^2;p n n n :2;-p 2ab 2bc",  
+      "48:1;48.2;a,b,c|1/4,1/4,1/4;8;d2h^2;p n n n :1;p 2 2 -1n",
+      "49;49.1;;8;d2h^3;p c c m;-p 2 2c",  
+      "49:cab;49.2;c,a,b;8;d2h^3;p m a a;-p 2a 2",  
+      "49:bca;49.3;b,c,a;8;d2h^3;p b m b;-p 2b 2b",  
+      "50:2;50.1;;8;d2h^4;p b a n :2;-p 2ab 2b",  
+      "50:2cab;50.2;c,a,b;8;d2h^4;p n c b :2;-p 2b 2bc",  
+      "50:2bca;50.3;b,c,a;8;d2h^4;p c n a :2;-p 2a 2c",  
+      "50:1;50.4;a,b,c|1/4,1/4,0;8;d2h^4;p b a n :1;p 2 2 -1ab",
+      "50:1cab;50.5;c,a,b|1/4,1/4,0;8;d2h^4;p n c b :1;p 2 2 -1bc",  
+      "50:1bca;50.6;b,c,a|1/4,1/4,0;8;d2h^4;p c n a :1;p 2 2 -1ac",  
+      "51;51.1;;8;d2h^5;p m m a;-p 2a 2a",  
+      "51:ba-c;51.2;b,a,-c;8;d2h^5;p m m b;-p 2b 2",  
+      "51:cab;51.3;c,a,b;8;d2h^5;p b m m;-p 2 2b",  
+      "51:-cba;51.4;-c,b,a;8;d2h^5;p c m m;-p 2c 2c",  
+      "51:bca;51.5;b,c,a;8;d2h^5;p m c m;-p 2c 2",  
+      "51:a-cb;51.6;a,-c,b;8;d2h^5;p m a m;-p 2 2a",  
+      "52;52.1;;8;d2h^6;p n n a;-p 2a 2bc",  
+      "52:ba-c;52.2;b,a,-c;8;d2h^6;p n n b;-p 2b 2n",  
+      "52:cab;52.3;c,a,b;8;d2h^6;p b n n;-p 2n 2b",  
+      "52:-cba;52.4;-c,b,a;8;d2h^6;p c n n;-p 2ab 2c",  
+      "52:bca;52.5;b,c,a;8;d2h^6;p n c n;-p 2ab 2n",  
+      "52:a-cb;52.6;a,-c,b;8;d2h^6;p n a n;-p 2n 2bc",  
+      "53;53.1;;8;d2h^7;p m n a;-p 2ac 2",  
+      "53:ba-c;53.2;b,a,-c;8;d2h^7;p n m b;-p 2bc 2bc",  
+      "53:cab;53.3;c,a,b;8;d2h^7;p b m n;-p 2ab 2ab",  
+      "53:-cba;53.4;-c,b,a;8;d2h^7;p c n m;-p 2 2ac",  
+      "53:bca;53.5;b,c,a;8;d2h^7;p n c m;-p 2 2bc",  
+      "53:a-cb;53.6;a,-c,b;8;d2h^7;p m a n;-p 2ab 2",  
+      "54;54.1;;8;d2h^8;p c c a;-p 2a 2ac",  
+      "54:ba-c;54.2;b,a,-c;8;d2h^8;p c c b;-p 2b 2c",  
+      "54:cab;54.3;c,a,b;8;d2h^8;p b a a;-p 2a 2b",  
+      "54:-cba;54.4;-c,b,a;8;d2h^8;p c a a;-p 2ac 2c",  
+      "54:bca;54.5;b,c,a;8;d2h^8;p b c b;-p 2bc 2b",  
+      "54:a-cb;54.6;a,-c,b;8;d2h^8;p b a b;-p 2b 2ab",  
+      "55;55.1;;8;d2h^9;p b a m;-p 2 2ab",  
+      "55:cab;55.2;c,a,b;8;d2h^9;p m c b;-p 2bc 2",  
+      "55:bca;55.3;b,c,a;8;d2h^9;p c m a;-p 2ac 2ac",  
+      "56;56.1;;8;d2h^10;p c c n;-p 2ab 2ac",  
+      "56:cab;56.2;c,a,b;8;d2h^10;p n a a;-p 2ac 2bc",  
+      "56:bca;56.3;b,c,a;8;d2h^10;p b n b;-p 2bc 2ab",  
+      "57;57.1;;8;d2h^11;p b c m;-p 2c 2b",  
+      "57:ba-c;57.2;b,a,-c;8;d2h^11;p c a m;-p 2c 2ac",  
+      "57:cab;57.3;c,a,b;8;d2h^11;p m c a;-p 2ac 2a",  
+      "57:-cba;57.4;-c,b,a;8;d2h^11;p m a b;-p 2b 2a",  
+      "57:bca;57.5;b,c,a;8;d2h^11;p b m a;-p 2a 2ab",  
+      "57:a-cb;57.6;a,-c,b;8;d2h^11;p c m b;-p 2bc 2c",  
+      "58;58.1;;8;d2h^12;p n n m;-p 2 2n",  
+      "58:cab;58.2;c,a,b;8;d2h^12;p m n n;-p 2n 2",  
+      "58:bca;58.3;b,c,a;8;d2h^12;p n m n;-p 2n 2n",  
+      "59:2;59.1;;8;d2h^13;p m m n :2;-p 2ab 2a",  
+      "59:2cab;59.2;c,a,b;8;d2h^13;p n m m :2;-p 2c 2bc",  
+      "59:2bca;59.3;b,c,a;8;d2h^13;p m n m :2;-p 2c 2a",  
+      "59:1;59.4;a,b,c|1/4,1/4,0;8;d2h^13;p m m n :1;p 2 2ab -1ab",
+      "59:1cab;59.5;c,a,b|1/4,1/4,0;8;d2h^13;p n m m :1;p 2bc 2 -1bc",  
+      "59:1bca;59.6;b,c,a|1/4,1/4,0;8;d2h^13;p m n m :1;p 2ac 2ac -1ac",  
+      "60;60.1;;8;d2h^14;p b c n;-p 2n 2ab",  
+      "60:ba-c;60.2;b,a,-c;8;d2h^14;p c a n;-p 2n 2c",  
+      "60:cab;60.3;c,a,b;8;d2h^14;p n c a;-p 2a 2n",  
+      "60:-cba;60.4;-c,b,a;8;d2h^14;p n a b;-p 2bc 2n",  
+      "60:bca;60.5;b,c,a;8;d2h^14;p b n a;-p 2ac 2b",  
+      "60:a-cb;60.6;a,-c,b;8;d2h^14;p c n b;-p 2b 2ac",  
+      "61;61.1;;8;d2h^15;p b c a;-p 2ac 2ab",  
+      "61:ba-c;61.2;b,a,-c;8;d2h^15;p c a b;-p 2bc 2ac",  
+      "62;62.1;;8;d2h^16;p n m a;-p 2ac 2n",  
+      "62:ba-c;62.2;b,a,-c;8;d2h^16;p m n b;-p 2bc 2a",  
+      "62:cab;62.3;c,a,b;8;d2h^16;p b n m;-p 2c 2ab",  
+      "62:-cba;62.4;-c,b,a;8;d2h^16;p c m n;-p 2n 2ac",  
+      "62:bca;62.5;b,c,a;8;d2h^16;p m c n;-p 2n 2a",  
+      "62:a-cb;62.6;a,-c,b;8;d2h^16;p n a m;-p 2c 2n",  
+      "63;63.1;;16;d2h^17;c m c m;-c 2c 2",  
+      "63:ba-c;63.2;b,a,-c;16;d2h^17;c c m m;-c 2c 2c",  
+      "63:cab;63.3;c,a,b;16;d2h^17;a m m a;-a 2a 2a",  
+      "63:-cba;63.4;-c,b,a;16;d2h^17;a m a m;-a 2 2a",  
+      "63:bca;63.5;b,c,a;16;d2h^17;b b m m;-b 2 2b",  
+      "63:a-cb;63.6;a,-c,b;16;d2h^17;b m m b;-b 2b 2",  
+      "64;64.1;;16;d2h^18;c m c e;-c 2ac 2",   // newer IT name
+      "64;64.1;;16;d2h^18;c m c a;-c 2ac 2",  
+      "64:ba-c;64.2;b,a,-c;16;d2h^18;c c m e;-c 2ac 2ac",  
+      "64:ba-c;64.2;b,a,-c;16;d2h^18;c c m b;-c 2ac 2ac",  
+      "64:cab;64.3;c,a,b;16;d2h^18;a e m a;-a 2ab 2ab",  
+      "64:cab;64.3;c,a,b;16;d2h^18;a b m a;-a 2ab 2ab",  
+      "64:-cba;64.4;-c,b,a;16;d2h^18;a e a m;-a 2 2ab",  
+      "64:-cba;64.4;-c,b,a;16;d2h^18;a c a m;-a 2 2ab",  
+      "64:bca;64.5;b,c,a;16;d2h^18;b b e m;-b 2 2ab",  
+      "64:bca;64.5;b,c,a;16;d2h^18;b b c m;-b 2 2ab",  
+      "64:a-cb;64.6;a,-c,b;16;d2h^18;b m e b;-b 2ab 2",  
+      "64:a-cb;64.6;a,-c,b;16;d2h^18;b m a b;-b 2ab 2",  
+      "65;65.1;;16;d2h^19;c m m m;-c 2 2",  
+      "65:cab;65.2;c,a,b;16;d2h^19;a m m m;-a 2 2",  
+      "65:bca;65.3;b,c,a;16;d2h^19;b m m m;-b 2 2",  
+      "66;66.1;;16;d2h^20;c c c m;-c 2 2c",  
+      "66:cab;66.2;c,a,b;16;d2h^20;a m a a;-a 2a 2",  
+      "66:bca;66.3;b,c,a;16;d2h^20;b b m b;-b 2b 2b",  
+      "67;67.1;;16;d2h^21;c m m e;-c 2a 2",   // newer IT name
+      "67;67.1;;16;d2h^21;c m m a;-c 2a 2",  
+      "67:ba-c;67.2;b,a,-c;16;d2h^21;c m m b;-c 2a 2a",  
+      "67:cab;67.3;c,a,b;16;d2h^21;a b m m;-a 2b 2b",  
+      "67:-cba;67.4;-c,b,a;16;d2h^21;a c m m;-a 2 2b",  
+      "67:bca;67.5;b,c,a;16;d2h^21;b m c m;-b 2 2a",  
+      "67:a-cb;67.6;a,-c,b;16;d2h^21;b m a m;-b 2a 2",  
+      "68:2;68.1;;16;d2h^22;c c c e :2;-c 2a 2ac",  
+      "68:2;68.1;;16;d2h^22;c c c a :2;-c 2a 2ac",  
+      "68:2ba-c;68.2;b,a,-c;16;d2h^22;c c c b :2;-c 2a 2c",  
+      "68:2cab;68.3;c,a,b;16;d2h^22;a b a a :2;-a 2a 2b",  
+      "68:2-cba;68.4;-c,b,a;16;d2h^22;a c a a :2;-a 2ab 2b",  
+      "68:2bca;68.5;b,c,a;16;d2h^22;b b c b :2;-b 2ab 2b",  
+      "68:2a-cb;68.6;a,-c,b;16;d2h^22;b b a b :2;-b 2b 2ab",  
+      "68:1;68.7;a,b,c|0,1/4,1/4;16;d2h^22;c c c e :1;c 2 2 -1ac",  
+      "68:1;68.7;a,b,c|0,1/4,1/4;16;d2h^22;c c c a :1;c 2 2 -1ac",  
+      "68:1ba-c;68.8;b,a,-c|0,1/4,1/4;16;d2h^22;c c c b :1;c 2 2 -1ac",  
+      "68:1cab;68.9;c,a,b|0,1/4,1/4;16;d2h^22;a b a a :1;a 2 2 -1ab",  
+      "68:1-cba;68.10;-c,b,a|0,1/4,1/4;16;d2h^22;a c a a :1;a 2 2 -1ab",  
+      "68:1bca;68.11;b,c,a|0,1/4,1/4;16;d2h^22;b b c b :1;b 2 2 -1ab",  
+      "68:1a-cb;68.12;a,-c,b|0,1/4,1/4;16;d2h^22;b b a b :1;b 2 2 -1ab",  
+      "69;69.1;;32;d2h^23;f m m m;-f 2 2",  
+      "70:2;70.1;;32;d2h^24;f d d d :2;-f 2uv 2vw",  
+      "70:1;70.2;a,b,c|-1/8,-1/8,-1/8;32;d2h^24;f d d d :1;f 2 2 -1d",
+      "71;71.1;;16;d2h^25;i m m m;-i 2 2",  
+      "72;72.1;;16;d2h^26;i b a m;-i 2 2c",  
+      "72:cab;72.2;c,a,b;16;d2h^26;i m c b;-i 2a 2",  
+      "72:bca;72.3;b,c,a;16;d2h^26;i c m a;-i 2b 2b",  
+      "73;73.1;;16;d2h^27;i b c a;-i 2b 2c",  
+      "73:ba-c;73.2;b,a,-c;16;d2h^27;i c a b;-i 2a 2b",  
+      "74;74.1;;16;d2h^28;i m m a;-i 2b 2",  
+      "74:ba-c;74.2;b,a,-c;16;d2h^28;i m m b;-i 2a 2a",  
+      "74:cab;74.3;c,a,b;16;d2h^28;i b m m;-i 2c 2c",  
+      "74:-cba;74.4;-c,b,a;16;d2h^28;i c m m;-i 2 2b",  
+      "74:bca;74.5;b,c,a;16;d2h^28;i m c m;-i 2 2a",  
+      "74:a-cb;74.6;a,-c,b;16;d2h^28;i m a m;-i 2c 2",  
+      "75;75.1;;4;c4^1;p 4;p 4",  
+      "75:c;75.2;ab;8;c4^1;c 4;c 4", // ITA 75.2 
+      "76;76.1;;4;c4^2;p 41;p 4w",  
+      "76*;76.1;;4;c4^2;p 41*;p 41",   //nonstandard
+      "76:c;76.2;ab;8;c4^2;c 41;c 4w", // ITA 76.2  
+      "77;77.1;;4;c4^3;p 42;p 4c",  
+      "77*;77.1;;4;c4^3;p 42*;p 42",   //nonstandard
+      "77:c;77.2;ab;8;c4^3;c 42;c 4c", // ITA 77.2  
+      "78;78.1;;4;c4^4;p 43;p 4cw",  
+      "78*;78.1;;4;c4^4;p 43*;p 43",   //nonstandard
+      "78:c;78.2;ab;8;c4^4;c 43;c 4cw", // ITA 78.2  
+      "79;79.1;;8;c4^5;i 4;i 4",  
+      "79:f;79.2;ab;16;c4^5;f 4;f 4", // ITA 79.2  
+      "80;80.1;;8;c4^6;i 41;i 4bw",  
+      "80:f;80.2;ab;16;c4^6;f 41;xyz",//;x,y,z;-x,-y+1/2,z+1/2;-y+3/4,x+1/4,z+1/4;y+1/4,-x+1/4,z+3/4;x,y+1/2,z+1/2;-x,-y,z;-y+1/4,x+1/4,z+3/4;y+3/4,-x+1/4,z+1/4;x+1/2,y+1/2,z;-x+1/2,-y,z+1/2;-y+1/4,x+3/4,z+1/4;y+3/4,-x+3/4,z+3/4;x+1/2,y,z+1/2;-x+1/2,-y+1/2,z;-y+3/4,x+3/4,z+3/4;y+1/4,-x+3/4,z+1/4", // ITA 80.2
+      "81;81.1;;4;s4^1;p -4;p -4",  
+      "81:c;81.2;ab;8;s4^1;c -4;c -4",  // ITA 81.2
+      "82;82.1;;8;s4^2;i -4;i -4",  
+      "82:f;82.2;ab;16;s4^2;f -4;f -4",  // ITA 82.2  
+      "83;83.1;;8;c4h^1;p 4/m;-p 4",  
+      "83:f;83.2;ab;16;c4h^1;c 4/m;-c 4",  // ITA 83.2  
+      "84;84.1;;8;c4h^2;p 42/m;-p 4c",  
+      "84*;84.1;;8;c4h^2;p 42/m*;-p 42",   //nonstandard
+      "84:c;84.2;ab;16;c4h^2;c 42/m;-c 4c", // ITA 84.2  
+      "85:2;85.1;;8;c4h^3;p 4/n :2;-p 4a",  
+      "85:c2;85.2;ab;16;c4h^3;c 4/e :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+1/4,x+1/4,z;y+3/4,-x+1/4,z;-x,-y,-z;x,y+1/2,-z;y+1/4,-x+1/4,-z;-y+3/4,x+1/4,-z;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+3/4,x+3/4,z;y+1/4,-x+3/4,z;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+3/4,-x+3/4,-z;-y+1/4,x+3/4,-z", // ITA 85.2
+      "85:1;85.3;a,b,c|-1/4,1/4,0;8;c4h^3;p 4/n :1;p 4ab -1ab",
+      "85:c1;85.4;ab|-1/4,1/4,0;16;c4h^3;c 4/e :1;xyz",//;x,y,z;-x+1/2,-y+1/2,z;-y+1/2,x,z;y,-x+1/2,z;-x+1/2,-y,-z;x,y+1/2,-z;y+1/2,-x+1/2,-z;-y,x,-z;x+1/2,y+1/2,z;-x,-y,z;-y,x+1/2,z;y+1/2,-x,z;-x,-y+1/2,-z;x+1/2,y,-z;y,-x,-z;-y+1/2,x+1/2,-z", // ITA 85.4
+      "86:2;86.1;;8;c4h^4;p 42/n :2;-p 4bc",  
+      "86:1;86.3;a,b,c|-1/4,-1/4,-1/4;8;c4h^4;p 42/n :1;p 4n -1n",
+      "86:c1;86.4;ab|-1/4,-1/4,-1/4;16;c4h^4;c 42/e :1;xyz",//;x,y,z;-x,-y,z;-y,x+1/2,z+1/2;y,-x+1/2,z+1/2;-x,-y+1/2,-z+1/2;x,y+1/2,-z+1/2;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y+1/2,-x,z+1/2;-x+1/2,-y,-z+1/2;x+1/2,y,-z+1/2;y,-x,-z;-y,x,-z", // ITA 86.4
+      "86:c2;86.2;ab;16;c4h^4;c 42/e :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+3/4,x+1/4,z+1/2;y+1/4,-x+1/4,z+1/2;-x,-y,-z;x,y+1/2,-z;y+3/4,-x+1/4,-z+1/2;-y+1/4,x+1/4,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+1/4,x+3/4,z+1/2;y+3/4,-x+3/4,z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+1/4,-x+3/4,-z+1/2;-y+3/4,x+3/4,-z+1/2", // ITA 86.2
+      "87;87.1;;16;c4h^5;i 4/m;-i 4",  
+      "87:f;87.2;ab;32;c4h^5;f 4/m;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;-x,-y,-z;x,y,-z;y,-x,-z;-y,x,-z;x,y+1/2,z+1/2;-x,-y+1/2,z+1/2;-y,x+1/2,z+1/2;y,-x+1/2,z+1/2;-x,-y+1/2,-z+1/2;x,y+1/2,-z+1/2;y,-x+1/2,-z+1/2;-y,x+1/2,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;x+1/2,y,z+1/2;-x+1/2,-y,z+1/2;-y+1/2,x,z+1/2;y+1/2,-x,z+1/2;-x+1/2,-y,-z+1/2;x+1/2,y,-z+1/2;y+1/2,-x,-z+1/2;-y+1/2,x,-z+1/2", // ITA 87.2
+      "88:2;88.1;;16;c4h^6;i 41/a :2;-i 4ad",  
+      "88:f2;88.2;ab;32;c4h^6;f 41/d :2;xyz",//;x,y,z;-x+1/4,-y+1/4,z+1/2;-y+1/4,x+1/2,z+1/4;y,-x+3/4,z+3/4;-x,-y,-z;x+1/4,y+1/4,-z+1/2;y+3/4,-x+1/2,-z+3/4;-y,x+1/4,-z+1/4;x,y+1/2,z+1/2;-x+3/4,-y+1/4,z;-y+3/4,x+1/2,z+3/4;y,-x+1/4,z+1/4;-x,-y+1/2,-z+1/2;x+3/4,y+1/4,-z;y+1/4,-x+1/2,-z+1/4;-y,x+3/4,-z+3/4;x+1/2,y+1/2,z;-x+3/4,-y+3/4,z+1/2;-y+3/4,x,z+1/4;y+1/2,-x+5/4,z+3/4;-x+1/2,-y+1/2,-z;x+3/4,y+3/4,-z+1/2;y+1/4,-x,-z+3/4;-y+1/2,x+3/4,-z+1/4;x+1/2,y,z+1/2;-x+1/4,-y+3/4,z;-y+1/4,x,z+3/4;y+1/2,-x+3/4,z+1/4;-x+1/2,-y,-z+1/2;x+1/4,y+3/4,-z;y+3/4,-x,-z+1/4;-y+1/2,x+5/4,-z+3/4", // ITA 88.2
+      "88:1;88.3;a,b,c|0,-1/4,-1/8;16;c4h^6;i 41/a :1;i 4bw -1bw",
+      "88:f1;88.4;ab|0,-1/4,-1/8;32;c4h^6;f 41/d :1;xyz",//;x,y,z;-x,-y+1/2,z+1/2;-y+1/4,x+3/4,z+1/4;y+3/4,-x+3/4,z+3/4;-x+3/4,-y+1/4,-z+1/4;x+1/4,y+1/4,-z+3/4;y+1/2,-x+1/2,-z;-y,x+1/2,-z+1/2;x,y+1/2,z+1/2;-x+1/2,-y+1/2,z;-y+3/4,x+3/4,z+3/4;y+3/4,-x+1/4,z+1/4;-x+3/4,-y+3/4,-z+3/4;x+3/4,y+1/4,-z+1/4;y,-x+1/2,-z+1/2;-y,x,-z;x+1/2,y+1/2,z;-x+1/2,-y,z+1/2;-y+3/4,x+5/4,z+1/4;y+1/4,-x+5/4,z+3/4;-x+1/4,-y+3/4,-z+1/4;x+3/4,y+3/4,-z+3/4;y,-x,-z;-y+1/2,x,-z+1/2;x+1/2,y,z+1/2;-x,-y,z;-y+1/4,x+5/4,z+3/4;y+1/4,-x+3/4,z+1/4;-x+1/4,-y+5/4,-z+3/4;x+1/4,y+3/4,-z+1/4;y+1/2,-x,-z+1/2;-y+1/2,x+1/2,-z", // ITA 88.4
+      "89;89.1;;8;d4^1;p 4 2 2;p 4 2",  
+      "89:c;89.2;ab;16;d4^1;c 4 2 2;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;-y,-x,-z;y,x,-z;-x,y,-z;x,-y,-z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z", // ITA 89.2
+      "90;90.1;;8;d4^2;p 4 21 2;p 4ab 2ab",  
+      "90:c;90.2;ab;16;d4^2;c 4 2 21;xyz",//;x,y,z;-x,-y,z;-y,x+1/2,z;y,-x+1/2,z;-y,-x+1/2,-z;y,x+1/2,-z;-x,y,-z;x,-y,-z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x,z;y+1/2,-x,z;-y+1/2,-x,-z;y+1/2,x,-z;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z", // ITA 90.2    
+      "91;91.1;;8;d4^3;p 41 2 2;p 4w 2c",  
+      "91*;91.1;;8;d4^3;p 41 2 2*;p 41 2c",   //nonstandard
+      "91:c;91.2;ab;16;d4^3;c 41 2 2;xyz",//;x,y,z;-x,-y,z+1/2;-y,x,z+1/4;y,-x,z+3/4;-y,-x,-z;y,x,-z+1/2;-x,y,-z+3/4;x,-y,-z+1/4;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z+1/2;-y+1/2,x+1/2,z+1/4;y+1/2,-x+1/2,z+3/4;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z+1/2;-x+1/2,y+1/2,-z+3/4;x+1/2,-y+1/2,-z+1/4", // ITA 91.2
+      "92;92.1;;8;d4^4;p 41 21 2;p 4abw 2nw",  
+      "92:c;92.2;ab;16;d4^4;c 41 2 21;xyz",//;x,y,z;-x,-y,z+1/2;-y,x+1/2,z+1/4;y,-x+1/2,z+3/4;-y,-x+1/2,-z+1/4;y,x+1/2,-z+3/4;-x,y,-z;x,-y,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z+1/2;-y+1/2,x,z+1/4;y+1/2,-x,z+3/4;-y+1/2,-x,-z+1/4;y+1/2,x,-z+3/4;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z+1/2", // ITA 92.2
+      "93;93.1;;8;d4^5;p 42 2 2;p 4c 2",  
+      "93*;93.1;;8;d4^5;p 42 2 2*;p 42 2",   //nonstandard
+      "93:c;93.2;ab;16;d4^5;c 42 2 2;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;-y,-x,-z;y,x,-z;-x,y,-z+1/2;x,-y,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z;-x+1/2,y+1/2,-z+1/2;x+1/2,-y+1/2,-z+1/2", // ITA 93.2
+      "94;94.1;;8;d4^6;p 42 21 2;p 4n 2n",  
+      "94:c;94.2;ab;16;d4^6;c 42 2 21;xyz",//;x,y,z;-x,-y,z;-y,x+1/2,z+1/2;y,-x+1/2,z+1/2;-y,-x+1/2,-z+1/2;y,x+1/2,-z+1/2;-x,y,-z;x,-y,-z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y+1/2,-x,z+1/2;-y+1/2,-x,-z+1/2;y+1/2,x,-z+1/2;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z", // ITA 94.2
+      "95;95.1;;8;d4^7;p 43 2 2;p 4cw 2c",  
+      "95*;95.1;;8;d4^7;p 43 2 2*;p 43 2c",   //nonstandard
+      "95:c;95.2;ab;16;d4^7;c 43 2 2;xyz",//;x,y,z;-x,-y,z+1/2;-y,x,z+3/4;y,-x,z+1/4;-y,-x,-z;y,x,-z+1/2;-x,y,-z+1/4;x,-y,-z+3/4;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z+1/2;-y+1/2,x+1/2,z+3/4;y+1/2,-x+1/2,z+1/4;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z+1/2;-x+1/2,y+1/2,-z+1/4;x+1/2,-y+1/2,-z+3/4", // ITA 95.2
+      "96;96.1;;8;d4^8;p 43 21 2;p 4nw 2abw",  
+      "96:c;96.2;ab;16;d4^8;c 43 2 21;xyz",//;x,y,z;-x,-y,z+1/2;-y,x+1/2,z+3/4;y,-x+1/2,z+1/4;-y,-x+1/2,-z+3/4;y,x+1/2,-z+1/4;-x,y,-z;x,-y,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z+1/2;-y+1/2,x,z+3/4;y+1/2,-x,z+1/4;-y+1/2,-x,-z+3/4;y+1/2,x,-z+1/4;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z+1/2", // ITA 96.2
+      "97;97.1;;16;d4^9;i 4 2 2;i 4 2",  
+      "97:f;97.2;ab;32;d4^9;f 4 2 2;f 4 2", // ITA 97.2  
+      "98;98.1;;16;d4^10;i 41 2 2;i 4bw 2bw",  
+      "98:f;98.2;ab;32;d4^10;f 41 2 2;xyz",//;x,y,z;-x,-y+1/2,z+1/2;-y+3/4,x+1/4,z+1/4;y+1/4,-x+1/4,z+3/4;-y+1/4,-x+1/4,-z+3/4;y+3/4,x+1/4,-z+1/4;-x,y+1/2,-z+1/2;x,-y,-z;x,y+1/2,z+1/2;-x,-y,z;-y+1/4,x+1/4,z+3/4;y+3/4,-x+1/4,z+1/4;-y+3/4,-x+1/4,-z+1/4;y+1/4,x+1/4,-z+3/4;-x,y,-z;x,-y+1/2,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y,z+1/2;-y+1/4,x+3/4,z+1/4;y+3/4,-x+3/4,z+3/4;-y+3/4,-x+3/4,-z+3/4;y+1/4,x+3/4,-z+1/4;-x+1/2,y,-z+1/2;x+1/2,-y+1/2,-z;x+1/2,y,z+1/2;-x+1/2,-y+1/2,z;-y+3/4,x+3/4,z+3/4;y+1/4,-x+3/4,z+1/4;-y+1/4,-x+3/4,-z+1/4;y+3/4,x+3/4,-z+3/4;-x+1/2,y+1/2,-z;x+1/2,-y,-z+1/2", // ITA 98.2
+      "99;99.1;;8;c4v^1;p 4 m m;p 4 -2",  
+      "99:c;99.2;ab;16;c4v^1;c 4 m m;c 4 -2",  // ITA 99.2  
+      "100;100.1;;8;c4v^2;p 4 b m;p 4 -2ab",  
+      "100:c;100.2;ab;16;c4v^2;c 4 m g1;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;y,x+1/2,z;-y,-x+1/2,z;x,-y+1/2,z;-x,y+1/2,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;y+1/2,x,z;-y+1/2,-x,z;x+1/2,-y,z;-x+1/2,y,z", // ITA 100.2
+      "101;101.1;;8;c4v^3;p 42 c m;p 4c -2c",  
+      "101*;101.1;;8;c4v^3;p 42 c m*;p 42 -2c",   //nonstandard
+      "101:c;101.2;ab;16;c4v^3;c 42 m c;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;y,x,z+1/2;-y,-x,z+1/2;x,-y,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;y+1/2,x+1/2,z+1/2;-y+1/2,-x+1/2,z+1/2;x+1/2,-y+1/2,z;-x+1/2,y+1/2,z", // ITA 101.2
+      "102;102.1;;8;c4v^4;p 42 n m;p 4n -2n",  
+      "102:c;102.2;ab;16;c4v^4;c 42 m g2;xyz",//;x,y,z;-x,-y,z;-y,x+1/2,z+1/2;y,-x+1/2,z+1/2;y,x+1/2,z+1/2;-y,-x+1/2,z+1/2;x,-y,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y+1/2,-x,z+1/2;y+1/2,x,z+1/2;-y+1/2,-x,z+1/2;x+1/2,-y+1/2,z;-x+1/2,y+1/2,z", // ITA 102.2
+      "103;103.1;;8;c4v^5;p 4 c c;p 4 -2c",  
+      "103:c;103.2;ab;16;c4v^5;c 4 c c;c 4 -2c",  
+      "104;104.1;;8;c4v^6;p 4 n c;p 4 -2n",  
+      "104:c;104.2;ab;16;c4v^6;c 4 c g2;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;y,x+1/2,z+1/2;-y,-x+1/2,z+1/2;x,-y+1/2,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;y+1/2,x,z+1/2;-y+1/2,-x,z+1/2;x+1/2,-y,z+1/2;-x+1/2,y,z+1/2", // ITA 104.2
+      "105;105.1;;8;c4v^7;p 42 m c;p 4c -2",  
+      "105*;105.1;;8;c4v^7;p 42 m c*;p 42 -2",   //nonstandard
+      "105:c;105.2;ab;16;c4v^7;c 42 c m;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;y,x,z;-y,-x,z;x,-y,z+1/2;-x,y,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;y+1/2,x+1/2,z;-y+1/2,-x+1/2,z;x+1/2,-y+1/2,z+1/2;-x+1/2,y+1/2,z+1/2", // ITA 105.2
+      "106;106.1;;8;c4v^8;p 42 b c;p 4c -2ab",  
+      "106*;106.1;;8;c4v^8;p 42 b c*;p 42 -2ab",   //nonstandard
+      "106:c;106.2;ab;16;c4v^8;c 42 c g1;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;y,x+1/2,z;-y,-x+1/2,z;x,-y+1/2,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;y+1/2,x,z;-y+1/2,-x,z;x+1/2,-y,z+1/2;-x+1/2,y,z+1/2", // ITA 106.2
+      "107;107.1;;16;c4v^9;i 4 m m;i 4 -2",  
+      "107:f;107.2;ab;32;c4v^9;f 4 m m;f 4 -2",  
+      "108;108.1;;16;c4v^10;i 4 c m;i 4 -2c",  
+      "108:f;108.2;ab;32;c4v^10;f 4 m c;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;y,x,z+1/2;-y,-x,z+1/2;x,-y,z+1/2;-x,y,z+1/2;x,y+1/2,z+1/2;-x,-y+1/2,z+1/2;-y,x+1/2,z+1/2;y,-x+1/2,z+1/2;y,x+1/2,z;-y,-x+1/2,z;x,-y+1/2,z;-x,y+1/2,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;y+1/2,x+1/2,z+1/2;-y+1/2,-x+1/2,z+1/2;x+1/2,-y+1/2,z+1/2;-x+1/2,y+1/2,z+1/2;x+1/2,y,z+1/2;-x+1/2,-y,z+1/2;-y+1/2,x,z+1/2;y+1/2,-x,z+1/2;y+1/2,x,z;-y+1/2,-x,z;x+1/2,-y,z;-x+1/2,y,z", // ITA 108.2
+      "109;109.1;;16;c4v^11;i 41 m d;i 4bw -2",  
+      "109:f;109.2;ab;32;c4v^11;f 41 d m;xyz",//;x,y,z;-x,-y+1/2,z+1/2;-y+3/4,x+1/4,z+1/4;y+1/4,-x+1/4,z+3/4;y,x,z;-y,-x+1/2,z+1/2;x+3/4,-y+1/4,z+1/4;-x+1/4,y+1/4,z+3/4;x,y+1/2,z+1/2;-x,-y,z;-y+1/4,x+1/4,z+3/4;y+3/4,-x+1/4,z+1/4;y,x+1/2,z+1/2;-y,-x,z;x+1/4,-y+1/4,z+3/4;-x+3/4,y+1/4,z+1/4;x+1/2,y+1/2,z;-x+1/2,-y,z+1/2;-y+1/4,x+3/4,z+1/4;y+3/4,-x+3/4,z+3/4;y+1/2,x+1/2,z;-y+1/2,-x,z+1/2;x+1/4,-y+3/4,z+1/4;-x+3/4,y+3/4,z+3/4;x+1/2,y,z+1/2;-x+1/2,-y+1/2,z;-y+3/4,x+3/4,z+3/4;y+1/4,-x+3/4,z+1/4;y+1/2,x,z+1/2;-y+1/2,-x+1/2,z;x+3/4,-y+3/4,z+3/4;-x+1/4,y+3/4,z+1/4", // ITA 109.2
+      "110;110.1;;16;c4v^12;i 41 c d;i 4bw -2c", 
+      "110:f;110.2;ab;32;c4v^12;f 41 d c;xyz",//;x,y,z;-x,-y+1/2,z+1/2;-y+3/4,x+1/4,z+1/4;y+1/4,-x+1/4,z+3/4;y,x,z+1/2;-y,-x+1/2,z;x+3/4,-y+1/4,z+3/4;-x+1/4,y+1/4,z+1/4;x,y+1/2,z+1/2;-x,-y,z;-y+1/4,x+1/4,z+3/4;y+3/4,-x+1/4,z+1/4;y,x+1/2,z;-y,-x,z+1/2;x+1/4,-y+1/4,z+1/4;-x+3/4,y+1/4,z+3/4;x+1/2,y+1/2,z;-x+1/2,-y,z+1/2;-y+1/4,x+3/4,z+1/4;y+3/4,-x+3/4,z+3/4;y+1/2,x+1/2,z+1/2;-y+1/2,-x,z;x+1/4,-y+3/4,z+3/4;-x+3/4,y+3/4,z+1/4;x+1/2,y,z+1/2;-x+1/2,-y+1/2,z;-y+3/4,x+3/4,z+3/4;y+1/4,-x+3/4,z+1/4;y+1/2,x,z;-y+1/2,-x+1/2,z+1/2;x+3/4,-y+3/4,z+1/4;-x+1/4,y+3/4,z+3/4", // ITA 110.2
+      "111;111.1;;8;d2d^1;p -4 2 m;p -4 2",  
+      "111:c;111.2;ab;16;d2d^1;c -4 m 2;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;-y,-x,-z;y,x,-z;x,-y,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z;x+1/2,-y+1/2,z;-x+1/2,y+1/2,z", // ITA 111.2
+      "112;112.1;;8;d2d^2;p -4 2 c;p -4 2c",  
+      "112:c;112.2;ab;16;d2d^2;c -4 c 2;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;-y,-x,-z+1/2;y,x,-z+1/2;x,-y,z+1/2;-x,y,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;-y+1/2,-x+1/2,-z+1/2;y+1/2,x+1/2,-z+1/2;x+1/2,-y+1/2,z+1/2;-x+1/2,y+1/2,z+1/2", // ITA 112.2
+      "113;113.1;;8;d2d^3;p -4 21 m;p -4 2ab",  
+      "113:c;113.2;ab;16;d2d^3;c -4 m 21;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;-y,-x+1/2,-z;y,x+1/2,-z;x,-y+1/2,z;-x,y+1/2,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;-y+1/2,-x,-z;y+1/2,x,-z;x+1/2,-y,z;-x+1/2,y,z", // ITA 113.2
+      "114;114.1;;8;d2d^4;p -4 21 c;p -4 2n",  
+      "114:c;114.2;ab;16;d2d^4;c -4 c 21;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;-y,-x+1/2,-z+1/2;y,x+1/2,-z+1/2;x,-y+1/2,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;-y+1/2,-x,-z+1/2;y+1/2,x,-z+1/2;x+1/2,-y,z+1/2;-x+1/2,y,z+1/2", // ITA 114.2
+      "115;115.1;;8;d2d^5;p -4 m 2;p -4 -2",  
+      "115:c;115.2;ab;16;d2d^5;c -4 2 m;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;y,x,z;-y,-x,z;-x,y,-z;x,-y,-z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z;-y+1/2,-x+1/2,z;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z", // ITA 115.2
+      "116;116.1;;8;d2d^6;p -4 c 2;p -4 -2c",  
+      "116:c;116.2;ab;16;d2d^6;c -4 2 c;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;y,x,z+1/2;-y,-x,z+1/2;-x,y,-z+1/2;x,-y,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z+1/2;-y+1/2,-x+1/2,z+1/2;-x+1/2,y+1/2,-z+1/2;x+1/2,-y+1/2,-z+1/2", // ITA 116.2
+      "117;117.1;;8;d2d^7;p -4 b 2;p -4 -2ab",  
+      "117:c;117.2;ab;16;d2d^7;c -4 2 g1;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;y,x+1/2,z;-y,-x+1/2,z;-x,y+1/2,-z;x,-y+1/2,-z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x,z;-y+1/2,-x,z;-x+1/2,y,-z;x+1/2,-y,-z", // ITA 117.2
+      "118;118.1;;8;d2d^8;p -4 n 2;p -4 -2n",  
+      "118:c;118.2;ab;16;d2d^8;c -4 2 g2;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;y,x+1/2,z+1/2;-y,-x+1/2,z+1/2;-x,y+1/2,-z+1/2;x,-y+1/2,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x,z+1/2;-y+1/2,-x,z+1/2;-x+1/2,y,-z+1/2;x+1/2,-y,-z+1/2", // ITA 118.2
+      "119;119.1;;16;d2d^9;i -4 m 2;i -4 -2",  
+      "119:f;119.2;ab;32;d2d^9;f -4 2 m;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;y,x,z;-y,-x,z;-x,y,-z;x,-y,-z;x,y+1/2,z+1/2;-x,-y+1/2,z+1/2;y,-x+1/2,-z+1/2;-y,x+1/2,-z+1/2;y,x+1/2,z+1/2;-y,-x+1/2,z+1/2;-x,y+1/2,-z+1/2;x,-y+1/2,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z;-y+1/2,-x+1/2,z;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z;x+1/2,y,z+1/2;-x+1/2,-y,z+1/2;y+1/2,-x,-z+1/2;-y+1/2,x,-z+1/2;y+1/2,x,z+1/2;-y+1/2,-x,z+1/2;-x+1/2,y,-z+1/2;x+1/2,-y,-z+1/2", // ITA 119.2
+      "120;120.1;;16;d2d^10;i -4 c 2;i -4 -2c",  
+      "120:f;120.2;ab;32;d2d^10;f -4 2 c;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;y,x,z+1/2;-y,-x,z+1/2;-x,y,-z+1/2;x,-y,-z+1/2;x,y+1/2,z+1/2;-x,-y+1/2,z+1/2;y,-x+1/2,-z+1/2;-y,x+1/2,-z+1/2;y,x+1/2,z;-y,-x+1/2,z;-x,y+1/2,-z;x,-y+1/2,-z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z+1/2;-y+1/2,-x+1/2,z+1/2;-x+1/2,y+1/2,-z+1/2;x+1/2,-y+1/2,-z+1/2;x+1/2,y,z+1/2;-x+1/2,-y,z+1/2;y+1/2,-x,-z+1/2;-y+1/2,x,-z+1/2;y+1/2,x,z;-y+1/2,-x,z;-x+1/2,y,-z;x+1/2,-y,-z", // ITA 120.2
+      "121;121.1;;16;d2d^11;i -4 2 m;i -4 2",  
+      "121:f;121.2;ab;32;d2d^11;f -4 m 2;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;-y,-x,-z;y,x,-z;x,-y,z;-x,y,z;x,y+1/2,z+1/2;-x,-y+1/2,z+1/2;y,-x+1/2,-z+1/2;-y,x+1/2,-z+1/2;-y,-x+1/2,-z+1/2;y,x+1/2,-z+1/2;x,-y+1/2,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z;x+1/2,-y+1/2,z;-x+1/2,y+1/2,z;x+1/2,y,z+1/2;-x+1/2,-y,z+1/2;y+1/2,-x,-z+1/2;-y+1/2,x,-z+1/2;-y+1/2,-x,-z+1/2;y+1/2,x,-z+1/2;x+1/2,-y,z+1/2;-x+1/2,y,z+1/2", // ITA 121.2
+      "122;122.1;;16;d2d^12;i -4 2 d;i -4 2bw",  
+      "122:f;122.2;ab;32;d2d^12;f -4 d 2;xyz",//;x,y,z;-x,-y,z;y,-x,-z;-y,x,-z;-y+1/4,-x+1/4,-z+3/4;y+1/4,x+1/4,-z+3/4;x+1/4,-y+1/4,z+3/4;-x+1/4,y+1/4,z+3/4;x,y+1/2,z+1/2;-x,-y+1/2,z+1/2;y,-x+1/2,-z+1/2;-y,x+1/2,-z+1/2;-y+3/4,-x+1/4,-z+1/4;y+3/4,x+1/4,-z+1/4;x+3/4,-y+1/4,z+1/4;-x+3/4,y+1/4,z+1/4;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;-y+3/4,-x+3/4,-z+3/4;y+3/4,x+3/4,-z+3/4;x+3/4,-y+3/4,z+3/4;-x+3/4,y+3/4,z+3/4;x+1/2,y,z+1/2;-x+1/2,-y,z+1/2;y+1/2,-x,-z+1/2;-y+1/2,x,-z+1/2;-y+1/4,-x+3/4,-z+1/4;y+1/4,x+3/4,-z+1/4;x+1/4,-y+3/4,z+1/4;-x+1/4,y+3/4,z+1/4", // ITA 122.2
+      "123;123.1;;16;d4h^1;p 4/m m m;-p 4 2",  
+      "123:c;123.2;ab;32;d4h^1;c 4/m m m;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;-y,-x,-z;y,x,-z;-x,y,-z;x,-y,-z;-x,-y,-z;x,y,-z;y,-x,-z;-y,x,-z;y,x,z;-y,-x,z;x,-y,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z;-y+1/2,-x+1/2,z;x+1/2,-y+1/2,z;-x+1/2,y+1/2,z", // ITA 123.2
+      "124;124.1;;16;d4h^2;p 4/m c c;-p 4 2c",  
+      "124:c;124.2;ab;32;d4h^2;c 4/m c c;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;-y,-x,-z+1/2;y,x,-z+1/2;-x,y,-z+1/2;x,-y,-z+1/2;-x,-y,-z;x,y,-z;y,-x,-z;-y,x,-z;y,x,z+1/2;-y,-x,z+1/2;x,-y,z+1/2;-x,y,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;-y+1/2,-x+1/2,-z+1/2;y+1/2,x+1/2,-z+1/2;-x+1/2,y+1/2,-z+1/2;x+1/2,-y+1/2,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z+1/2;-y+1/2,-x+1/2,z+1/2;x+1/2,-y+1/2,z+1/2;-x+1/2,y+1/2,z+1/2", // ITA 124.2
+      "125:2;125.1;;16;d4h^3;p 4/n b m :2;-p 4a 2b",  
+      "125:c2;125.2;ab;32;d4h^3;c 4/e m g1 :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+1/4,x+1/4,z;y+3/4,-x+1/4,z;-y+1/4,-x+1/4,-z;y+3/4,x+1/4,-z;-x,y,-z;x,-y+1/2,-z;-x,-y,-z;x,y+1/2,-z;y+1/4,-x+1/4,-z;-y+3/4,x+1/4,-z;y+1/4,x+1/4,z;-y+3/4,-x+1/4,z;x,-y,z;-x,y+1/2,z;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+3/4,x+3/4,z;y+1/4,-x+3/4,z;-y+3/4,-x+3/4,-z;y+1/4,x+3/4,-z;-x+1/2,y+1/2,-z;x+1/2,-y,-z;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+3/4,-x+3/4,-z;-y+1/4,x+3/4,-z;y+3/4,x+3/4,z;-y+1/4,-x+3/4,z;x+1/2,-y+1/2,z;-x+1/2,y,z", // ITA 125.2
+      "125:1;125.3;a,b,c|-1/4,-1/4,0;16;d4h^3;p 4/n b m :1;p 4 2 -1ab",
+      "125:c1;125.4;ab|-1/4,-1/4,0;32;d4h^3;c 4/e m g1 :1;xyz",//;x,y,z;-x,-y,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z;-x,y,-z;x,-y,-z;-x,-y+1/2,-z;x,y+1/2,-z;y,-x+1/2,-z;-y,x+1/2,-z;y,x+1/2,z;-y,-x+1/2,z;x,-y+1/2,z;-x,y+1/2,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y,x,z;y,-x,z;-y,-x,-z;y,x,-z;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z;-x+1/2,-y,-z;x+1/2,y,-z;y+1/2,-x,-z;-y+1/2,x,-z;y+1/2,x,z;-y+1/2,-x,z;x+1/2,-y,z;-x+1/2,y,z", // ITA 125.4
+      "126:2;126.1;;16;d4h^4;p 4/n n c :2;-p 4a 2bc",  
+      "126:c1;126.2;ab;32;d4h^4;c 4/e c g2 :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+1/4,x+1/4,z;y+3/4,-x+1/4,z;-y+1/4,-x+1/4,-z+1/2;y+3/4,x+1/4,-z+1/2;-x,y,-z+1/2;x,-y+1/2,-z+1/2;-x,-y,-z;x,y+1/2,-z;y+1/4,-x+1/4,-z;-y+3/4,x+1/4,-z;y+1/4,x+1/4,z+1/2;-y+3/4,-x+1/4,z+1/2;x,-y,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+3/4,x+3/4,z;y+1/4,-x+3/4,z;-y+3/4,-x+3/4,-z+1/2;y+1/4,x+3/4,-z+1/2;-x+1/2,y+1/2,-z+1/2;x+1/2,-y,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+3/4,-x+3/4,-z;-y+1/4,x+3/4,-z;y+3/4,x+3/4,z+1/2;-y+1/4,-x+3/4,z+1/2;x+1/2,-y+1/2,z+1/2;-x+1/2,y,z+1/2", // ITA 126.2
+      "126:1;126.3;a,b,c|-1/4,-1/4,-1/4;16;d4h^4;p 4/n n c :1;p 4 2 -1n",
+      "127:c;127.2;ab;32;d4h^5;c 4/m m g1;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;-y,-x+1/2,-z;y,x+1/2,-z;-x,y+1/2,-z;x,-y+1/2,-z;-x,-y,-z;x,y,-z;y,-x,-z;-y,x,-z;y,x+1/2,z;-y,-x+1/2,z;x,-y+1/2,z;-x,y+1/2,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;-y+1/2,-x,-z;y+1/2,x,-z;-x+1/2,y,-z;x+1/2,-y,-z;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x,z;-y+1/2,-x,z;x+1/2,-y,z;-x+1/2,y,z", // ITA 127.2
+      "128:c;128.2;a+b,-a+b,c;32;d4h^6;c 4/m c g2;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;y+1/2,x,-z+1/2;-y+1/2,-x,-z+1/2;x+1/2,-y,-z+1/2;-x+1/2,y,-z+1/2;-x,-y,-z;x,y,-z;y,-x,-z;-y,x,-z;-y+1/2,-x,z+1/2;y+1/2,x,z+1/2;-x+1/2,y,z+1/2;x+1/2,-y,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;y,x+1/2,-z+1/2;-y,-x+1/2,-z+1/2;x,-y+1/2,-z+1/2;-x,y+1/2,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;-y,-x+1/2,z+1/2;y,x+1/2,z+1/2;-x,y+1/2,z+1/2;x,-y+1/2,z+1/2", // ITA 128.2
+      "129:c2;129.2;ab;32;d4h^7;c 4/e m m :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+1/4,x+1/4,z;y+3/4,-x+1/4,z;-y+3/4,-x+1/4,-z;y+1/4,x+1/4,-z;-x,y+1/2,-z;x,-y,-z;-x,-y,-z;x,y+1/2,-z;y+1/4,-x+1/4,-z;-y+3/4,x+1/4,-z;y+3/4,x+1/4,z;-y+1/4,-x+1/4,z;x,-y+1/2,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+3/4,x+3/4,z;y+1/4,-x+3/4,z;-y+1/4,-x+3/4,-z;y+3/4,x+3/4,-z;-x+1/2,y,-z;x+1/2,-y+1/2,-z;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+3/4,-x+3/4,-z;-y+1/4,x+3/4,-z;y+1/4,x+3/4,z;-y+3/4,-x+3/4,z;x+1/2,-y,z;-x+1/2,y+1/2,z", // ITA 129.2
+      "129:c1;129.4;ab|-1/4,1/4,0;32;d4h^7;c 4/e m m :1;xyz",//;x,y,z;-x+1/2,-y+1/2,z;-y+1/2,x,z;y,-x+1/2,z;-y,-x+1/2,-z;y+1/2,x,-z;-x+1/2,y+1/2,-z;x,-y,-z;-x+1/2,-y,-z;x,y+1/2,-z;y+1/2,-x+1/2,-z;-y,x,-z;y,x,z;-y+1/2,-x+1/2,z;x,-y+1/2,z;-x+1/2,y,z;x+1/2,y+1/2,z;-x,-y,z;-y,x+1/2,z;y+1/2,-x,z;-y+1/2,-x,-z;y,x+1/2,-z;-x,y,-z;x+1/2,-y+1/2,-z;-x,-y+1/2,-z;x+1/2,y,-z;y,-x,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z;-y,-x,z;x+1/2,-y,z;-x,y+1/2,z", // ITA 129.4
+      "130:c2;130.2;ab;32;d4h^8;c 4/e c c :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+1/4,x+1/4,z;y+3/4,-x+1/4,z;-y+3/4,-x+1/4,-z+1/2;y+1/4,x+1/4,-z+1/2;-x,y+1/2,-z+1/2;x,-y,-z+1/2;-x,-y,-z;x,y+1/2,-z;y+1/4,-x+1/4,-z;-y+3/4,x+1/4,-z;y+3/4,x+1/4,z+1/2;-y+1/4,-x+1/4,z+1/2;x,-y+1/2,z+1/2;-x,y,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+3/4,x+3/4,z;y+1/4,-x+3/4,z;-y+1/4,-x+3/4,-z+1/2;y+3/4,x+3/4,-z+1/2;-x+1/2,y,-z+1/2;x+1/2,-y+1/2,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+3/4,-x+3/4,-z;-y+1/4,x+3/4,-z;y+1/4,x+3/4,z+1/2;-y+3/4,-x+3/4,z+1/2;x+1/2,-y,z+1/2;-x+1/2,y+1/2,z+1/2", // ITA 130.2
+      "130:c1;130.4;ab|-1/4,1/4,0;32;d4h^8;c 4/e c c :1;xyz",//;x,y,z;-x+1/2,-y+1/2,z;-y+1/2,x,z;y,-x+1/2,z;-y,-x+1/2,-z+1/2;y+1/2,x,-z+1/2;-x+1/2,y+1/2,-z+1/2;x,-y,-z+1/2;-x+1/2,-y,-z;x,y+1/2,-z;y+1/2,-x+1/2,-z;-y,x,-z;y,x,z+1/2;-y+1/2,-x+1/2,z+1/2;x,-y+1/2,z+1/2;-x+1/2,y,z+1/2;x+1/2,y+1/2,z;-x,-y,z;-y,x+1/2,z;y+1/2,-x,z;-y+1/2,-x,-z+1/2;y,x+1/2,-z+1/2;-x,y,-z+1/2;x+1/2,-y+1/2,-z+1/2;-x,-y+1/2,-z;x+1/2,y,-z;y,-x,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z+1/2;-y,-x,z+1/2;x+1/2,-y,z+1/2;-x,y+1/2,z+1/2", // ITA 130.4
+      "131:c;131.2;ab;32;d4h^9;c 42/m c m;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;-y,-x,-z;y,x,-z;-x,y,-z+1/2;x,-y,-z+1/2;-x,-y,-z;x,y,-z;y,-x,-z+1/2;-y,x,-z+1/2;y,x,z;-y,-x,z;x,-y,z+1/2;-x,y,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z;-x+1/2,y+1/2,-z+1/2;x+1/2,-y+1/2,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z+1/2;-y+1/2,x+1/2,-z+1/2;y+1/2,x+1/2,z;-y+1/2,-x+1/2,z;x+1/2,-y+1/2,z+1/2;-x+1/2,y+1/2,z+1/2", // ITA 131.2
+      "132:c;132.2;ab;32;d4h^10;c 42/m m c;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;-y,-x,-z+1/2;y,x,-z+1/2;-x,y,-z;x,-y,-z;-x,-y,-z;x,y,-z;y,-x,-z+1/2;-y,x,-z+1/2;y,x,z+1/2;-y,-x,z+1/2;x,-y,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;-y+1/2,-x+1/2,-z+1/2;y+1/2,x+1/2,-z+1/2;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z+1/2;-y+1/2,x+1/2,-z+1/2;y+1/2,x+1/2,z+1/2;-y+1/2,-x+1/2,z+1/2;x+1/2,-y+1/2,z;-x+1/2,y+1/2,z", // ITA 132.2
+      "133:c1;133.2;ab;32;d4h^11;c 42/e c g1 :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+1/4,x+1/4,z+1/2;y+3/4,-x+1/4,z+1/2;-y+1/4,-x+1/4,-z;y+3/4,x+1/4,-z;-x,y,-z+1/2;x,-y+1/2,-z+1/2;-x,-y,-z;x,y+1/2,-z;y+1/4,-x+1/4,-z+1/2;-y+3/4,x+1/4,-z+1/2;y+1/4,x+1/4,z;-y+3/4,-x+1/4,z;x,-y,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+3/4,x+3/4,z+1/2;y+1/4,-x+3/4,z+1/2;-y+3/4,-x+3/4,-z;y+1/4,x+3/4,-z;-x+1/2,y+1/2,-z+1/2;x+1/2,-y,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+3/4,-x+3/4,-z+1/2;-y+1/4,x+3/4,-z+1/2;y+3/4,x+3/4,z;-y+1/4,-x+3/4,z;x+1/2,-y+1/2,z+1/2;-x+1/2,y,z+1/2", // ITA 133.2
+      "134:c2;134.2;ab;32;d4h^12;c 42/e m g2 :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+1/4,x+1/4,z+1/2;y+3/4,-x+1/4,z+1/2;-y+1/4,-x+1/4,-z+1/2;y+3/4,x+1/4,-z+1/2;-x,y,-z;x,-y+1/2,-z;-x,-y,-z;x,y+1/2,-z;y+1/4,-x+1/4,-z+1/2;-y+3/4,x+1/4,-z+1/2;y+1/4,x+1/4,z+1/2;-y+3/4,-x+1/4,z+1/2;x,-y,z;-x,y+1/2,z;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+3/4,x+3/4,z+1/2;y+1/4,-x+3/4,z+1/2;-y+3/4,-x+3/4,-z+1/2;y+1/4,x+3/4,-z+1/2;-x+1/2,y+1/2,-z;x+1/2,-y,-z;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+3/4,-x+3/4,-z+1/2;-y+1/4,x+3/4,-z+1/2;y+3/4,x+3/4,z+1/2;-y+1/4,-x+3/4,z+1/2;x+1/2,-y+1/2,z;-x+1/2,y,z", // ITA 134.2
+      "134:c1;134.4;ab|-1/4,1/4,-1/4;32;d4h^12;c 42/e m g2 :1;xyz",//;x,y,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y,-x+1/2,z+1/2;-y+1/2,-x+1/2,-z;y,x,-z;-x+1/2,y,-z+1/2;x,-y+1/2,-z+1/2;-x+1/2,-y,-z+1/2;x,y+1/2,-z+1/2;y+1/2,-x+1/2,-z;-y,x,-z;y+1/2,x,z+1/2;-y,-x+1/2,z+1/2;x,-y,z;-x+1/2,y+1/2,z;x+1/2,y+1/2,z;-x,-y,z;-y,x+1/2,z+1/2;y+1/2,-x,z+1/2;-y,-x,-z;y+1/2,x+1/2,-z;-x,y+1/2,-z+1/2;x+1/2,-y,-z+1/2;-x,-y+1/2,-z+1/2;x+1/2,y,-z+1/2;y,-x,-z;-y+1/2,x+1/2,-z;y,x+1/2,z+1/2;-y+1/2,-x,z+1/2;x+1/2,-y+1/2,z;-x,y,z", // ITA 134.4
+      "135:c;135.2;ab;32;d4h^13;c 42/m c g1;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;-y,-x+1/2,-z;y,x+1/2,-z;-x,y+1/2,-z+1/2;x,-y+1/2,-z+1/2;-x,-y,-z;x,y,-z;y,-x,-z+1/2;-y,x,-z+1/2;y,x+1/2,z;-y,-x+1/2,z;x,-y+1/2,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;-y+1/2,-x,-z;y+1/2,x,-z;-x+1/2,y,-z+1/2;x+1/2,-y,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z+1/2;-y+1/2,x+1/2,-z+1/2;y+1/2,x,z;-y+1/2,-x,z;x+1/2,-y,z+1/2;-x+1/2,y,z+1/2", // ITA 135.2
+      "136:c;136.2;ab;32;d4h^14;c 42/m m g2;xyz",//;x,y,z;-x,-y,z;-y,x+1/2,z+1/2;y,-x+1/2,z+1/2;-y,-x+1/2,-z+1/2;y,x+1/2,-z+1/2;-x,y,-z;x,-y,-z;-x,-y,-z;x,y,-z;y,-x+1/2,-z+1/2;-y,x+1/2,-z+1/2;y,x+1/2,z+1/2;-y,-x+1/2,z+1/2;x,-y,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y+1/2,-x,z+1/2;-y+1/2,-x,-z+1/2;y+1/2,x,-z+1/2;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x,-z+1/2;-y+1/2,x,-z+1/2;y+1/2,x,z+1/2;-y+1/2,-x,z+1/2;x+1/2,-y+1/2,z;-x+1/2,y+1/2,z", // ITA 136.2
+      "137:c1;137.2;ab;32;d4h^15;c 42/e c m :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+1/4,x+1/4,z+1/2;y+3/4,-x+1/4,z+1/2;-y+3/4,-x+1/4,-z;y+1/4,x+1/4,-z;-x,y+1/2,-z+1/2;x,-y,-z+1/2;-x,-y,-z;x,y+1/2,-z;y+1/4,-x+1/4,-z+1/2;-y+3/4,x+1/4,-z+1/2;y+3/4,x+1/4,z;-y+1/4,-x+1/4,z;x,-y+1/2,z+1/2;-x,y,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+3/4,x+3/4,z+1/2;y+1/4,-x+3/4,z+1/2;-y+1/4,-x+3/4,-z;y+3/4,x+3/4,-z;-x+1/2,y,-z+1/2;x+1/2,-y+1/2,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+3/4,-x+3/4,-z+1/2;-y+1/4,x+3/4,-z+1/2;y+1/4,x+3/4,z;-y+3/4,-x+3/4,z;x+1/2,-y,z+1/2;-x+1/2,y+1/2,z+1/2", // ITA 137.2
+      "138:c2;138.2;ab;32;d4h^16;c 42/e m c :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+1/4,x+1/4,z+1/2;y+3/4,-x+1/4,z+1/2;-y+3/4,-x+1/4,-z+1/2;y+1/4,x+1/4,-z+1/2;-x,y+1/2,-z;x,-y,-z;-x,-y,-z;x,y+1/2,-z;y+1/4,-x+1/4,-z+1/2;-y+3/4,x+1/4,-z+1/2;y+3/4,x+1/4,z+1/2;-y+1/4,-x+1/4,z+1/2;x,-y+1/2,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+3/4,x+3/4,z+1/2;y+1/4,-x+3/4,z+1/2;-y+1/4,-x+3/4,-z+1/2;y+3/4,x+3/4,-z+1/2;-x+1/2,y,-z;x+1/2,-y+1/2,-z;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+3/4,-x+3/4,-z+1/2;-y+1/4,x+3/4,-z+1/2;y+1/4,x+3/4,z+1/2;-y+3/4,-x+3/4,z+1/2;x+1/2,-y,z;-x+1/2,y+1/2,z", // ITA 138.2
+      "138:c1;138.4;ab|-1/4,1/4,-1/4;32;d4h^16;c 42/e m c :1;xyz",//;x,y,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y,-x+1/2,z+1/2;-y,-x+1/2,-z;y+1/2,x,-z;-x+1/2,y+1/2,-z+1/2;x,-y,-z+1/2;-x+1/2,-y,-z+1/2;x,y+1/2,-z+1/2;y+1/2,-x+1/2,-z;-y,x,-z;y,x,z+1/2;-y+1/2,-x+1/2,z+1/2;x,-y+1/2,z;-x+1/2,y,z;x+1/2,y+1/2,z;-x,-y,z;-y,x+1/2,z+1/2;y+1/2,-x,z+1/2;-y+1/2,-x,-z;y,x+1/2,-z;-x,y,-z+1/2;x+1/2,-y+1/2,-z+1/2;-x,-y+1/2,-z+1/2;x+1/2,y,-z+1/2;y,-x,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z+1/2;-y,-x,z+1/2;x+1/2,-y,z;-x,y+1/2,z", // ITA 138.4
+      "139:f;139.2;ab;64;d4h^17;f 4/m m m;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;-y,-x,-z;y,x,-z;-x,y,-z;x,-y,-z;-x,-y,-z;x,y,-z;y,-x,-z;-y,x,-z;y,x,z;-y,-x,z;x,-y,z;-x,y,z;x,y+1/2,z+1/2;-x,-y+1/2,z+1/2;-y,x+1/2,z+1/2;y,-x+1/2,z+1/2;-y,-x+1/2,-z+1/2;y,x+1/2,-z+1/2;-x,y+1/2,-z+1/2;x,-y+1/2,-z+1/2;-x,-y+1/2,-z+1/2;x,y+1/2,-z+1/2;y,-x+1/2,-z+1/2;-y,x+1/2,-z+1/2;y,x+1/2,z+1/2;-y,-x+1/2,z+1/2;x,-y+1/2,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z;-y+1/2,-x+1/2,z;x+1/2,-y+1/2,z;-x+1/2,y+1/2,z;x+1/2,y,z+1/2;-x+1/2,-y,z+1/2;-y+1/2,x,z+1/2;y+1/2,-x,z+1/2;-y+1/2,-x,-z+1/2;y+1/2,x,-z+1/2;-x+1/2,y,-z+1/2;x+1/2,-y,-z+1/2;-x+1/2,-y,-z+1/2;x+1/2,y,-z+1/2;y+1/2,-x,-z+1/2;-y+1/2,x,-z+1/2;y+1/2,x,z+1/2;-y+1/2,-x,z+1/2;x+1/2,-y,z+1/2;-x+1/2,y,z+1/2", // ITA 139.2
+      "140:f;140.2;ab;64;d4h^18;f 4/m m c;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;-y,-x,-z+1/2;y,x,-z+1/2;-x,y,-z+1/2;x,-y,-z+1/2;-x,-y,-z;x,y,-z;y,-x,-z;-y,x,-z;y,x,z+1/2;-y,-x,z+1/2;x,-y,z+1/2;-x,y,z+1/2;x,y+1/2,z+1/2;-x,-y+1/2,z+1/2;-y,x+1/2,z+1/2;y,-x+1/2,z+1/2;-y,-x+1/2,-z;y,x+1/2,-z;-x,y+1/2,-z;x,-y+1/2,-z;-x,-y+1/2,-z+1/2;x,y+1/2,-z+1/2;y,-x+1/2,-z+1/2;-y,x+1/2,-z+1/2;y,x+1/2,z;-y,-x+1/2,z;x,-y+1/2,z;-x,y+1/2,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;-y+1/2,-x+1/2,-z+1/2;y+1/2,x+1/2,-z+1/2;-x+1/2,y+1/2,-z+1/2;x+1/2,-y+1/2,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z+1/2;-y+1/2,-x+1/2,z+1/2;x+1/2,-y+1/2,z+1/2;-x+1/2,y+1/2,z+1/2;x+1/2,y,z+1/2;-x+1/2,-y,z+1/2;-y+1/2,x,z+1/2;y+1/2,-x,z+1/2;-y+1/2,-x,-z;y+1/2,x,-z;-x+1/2,y,-z;x+1/2,-y,-z;-x+1/2,-y,-z+1/2;x+1/2,y,-z+1/2;y+1/2,-x,-z+1/2;-y+1/2,x,-z+1/2;y+1/2,x,z;-y+1/2,-x,z;x+1/2,-y,z;-x+1/2,y,z", // ITA 140.2
+      "141:f2;141.2;ab;64;d4h^19;f 41/d d m :2;xyz",//;x,y,z;-x+1/4,-y+1/4,z+1/2;-y+3/4,x+1/2,z+1/4;y,-x+1/4,z+3/4;-y+1/4,-x+1/4,-z+1/2;y,x,-z;-x+3/4,y+1/2,-z+1/4;x,-y+1/4,-z+3/4;-x,-y,-z;x+1/4,y+1/4,-z+1/2;y+1/4,-x+1/2,-z+3/4;-y,x+3/4,-z+1/4;y+1/4,x+1/4,z+1/2;-y,-x,z;x+1/4,-y+1/2,z+3/4;-x,y+3/4,z+1/4;x,y+1/2,z+1/2;-x+3/4,-y+1/4,z;-y+1/4,x+1/2,z+3/4;y,-x+3/4,z+1/4;-y+3/4,-x+1/4,-z;y,x+1/2,-z+1/2;-x+1/4,y+1/2,-z+3/4;x,-y+3/4,-z+1/4;-x,-y+1/2,-z+1/2;x+3/4,y+1/4,-z;y+3/4,-x+1/2,-z+1/4;-y,x+1/4,-z+3/4;y+3/4,x+1/4,z;-y,-x+1/2,z+1/2;x+3/4,-y+1/2,z+1/4;-x,y+1/4,z+3/4;x+1/2,y+1/2,z;-x+3/4,-y+3/4,z+1/2;-y+1/4,x,z+1/4;y+1/2,-x+3/4,z+3/4;-y+3/4,-x+3/4,-z+1/2;y+1/2,x+1/2,-z;-x+1/4,y,-z+1/4;x+1/2,-y+3/4,-z+3/4;-x+1/2,-y+1/2,-z;x+3/4,y+3/4,-z+1/2;y+3/4,-x,-z+3/4;-y+1/2,x+5/4,-z+1/4;y+3/4,x+3/4,z+1/2;-y+1/2,-x+1/2,z;x+3/4,-y,z+3/4;-x+1/2,y+5/4,z+1/4;x+1/2,y,z+1/2;-x+1/4,-y+3/4,z;-y+3/4,x,z+3/4;y+1/2,-x+5/4,z+1/4;-y+1/4,-x+3/4,-z;y+1/2,x,-z+1/2;-x+3/4,y,-z+3/4;x+1/2,-y+5/4,-z+1/4;-x+1/2,-y,-z+1/2;x+1/4,y+3/4,-z;y+1/4,-x,-z+1/4;-y+1/2,x+3/4,-z+3/4;y+1/4,x+3/4,z;-y+1/2,-x,z+1/2;x+1/4,-y,z+1/4;-x+1/2,y+3/4,z+3/4", // ITA 141.2
+      "141:f1;141.4;ab|0,1/4,-1/8;64;d4h^19;f 41/d d m :1;xyz",//;x,y,z;-x+1/2,-y,z+1/2;-y+3/4,x+1/4,z+1/4;y+1/4,-x+1/4,z+3/4;-y+1/4,-x+1/4,-z+3/4;y+1/4,x+3/4,-z+1/4;-x,y+1/2,-z+1/2;x,-y,-z;-x+1/4,-y+3/4,-z+1/4;x+1/4,y+1/4,-z+3/4;y+1/2,-x+1/2,-z;-y,x+1/2,-z+1/2;y+1/2,x,z+1/2;-y,-x,z;x+1/4,-y+1/4,z+3/4;-x+1/4,y+3/4,z+1/4;x,y+1/2,z+1/2;-x,-y,z;-y+1/4,x+1/4,z+3/4;y+1/4,-x+3/4,z+1/4;-y+3/4,-x+1/4,-z+1/4;y+1/4,x+1/4,-z+3/4;-x+1/2,y+1/2,-z;x,-y+1/2,-z+1/2;-x+1/4,-y+1/4,-z+3/4;x+3/4,y+1/4,-z+1/4;y,-x+1/2,-z+1/2;-y,x,-z;y,x,z;-y,-x+1/2,z+1/2;x+3/4,-y+1/4,z+1/4;-x+1/4,y+1/4,z+3/4;x+1/2,y+1/2,z;-x,-y+1/2,z+1/2;-y+1/4,x+3/4,z+1/4;y+3/4,-x+3/4,z+3/4;-y+3/4,-x+3/4,-z+3/4;y+3/4,x+1/4,-z+1/4;-x+1/2,y,-z+1/2;x+1/2,-y+1/2,-z;-x+3/4,-y+1/4,-z+1/4;x+3/4,y+3/4,-z+3/4;y,-x,-z;-y+1/2,x,-z+1/2;y,x+1/2,z+1/2;-y+1/2,-x+1/2,z;x+3/4,-y+3/4,z+3/4;-x+3/4,y+5/4,z+1/4;x+1/2,y,z+1/2;-x+1/2,-y+1/2,z;-y+3/4,x+3/4,z+3/4;y+3/4,-x+5/4,z+1/4;-y+1/4,-x+3/4,-z+1/4;y+3/4,x+3/4,-z+3/4;-x,y,-z;x+1/2,-y,-z+1/2;-x+3/4,-y+3/4,-z+3/4;x+1/4,y+3/4,-z+1/4;y+1/2,-x,-z+1/2;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z;-y+1/2,-x,z+1/2;x+1/4,-y+3/4,z+1/4;-x+3/4,y+3/4,z+3/4", // ITA 141.4
+      "142:f2;142.2;ab;64;d4h^20;f 41/d d c :2;xyz",//;x,y,z;-x+1/4,-y+1/4,z+1/2;-y+3/4,x+1/2,z+1/4;y,-x+1/4,z+3/4;-y+1/4,-x+1/4,-z;y,x,-z+1/2;-x+3/4,y+1/2,-z+3/4;x,-y+1/4,-z+1/4;-x,-y,-z;x+1/4,y+1/4,-z+1/2;y+1/4,-x+1/2,-z+3/4;-y,x+3/4,-z+1/4;y+1/4,x+1/4,z;-y,-x,z+1/2;x+1/4,-y+1/2,z+1/4;-x,y+3/4,z+3/4;x,y+1/2,z+1/2;-x+3/4,-y+1/4,z;-y+1/4,x+1/2,z+3/4;y,-x+3/4,z+1/4;-y+3/4,-x+1/4,-z+1/2;y,x+1/2,-z;-x+1/4,y+1/2,-z+1/4;x,-y+3/4,-z+3/4;-x,-y+1/2,-z+1/2;x+3/4,y+1/4,-z;y+3/4,-x+1/2,-z+1/4;-y,x+1/4,-z+3/4;y+3/4,x+1/4,z+1/2;-y,-x+1/2,z;x+3/4,-y+1/2,z+3/4;-x,y+1/4,z+1/4;x+1/2,y+1/2,z;-x+3/4,-y+3/4,z+1/2;-y+1/4,x,z+1/4;y+1/2,-x+3/4,z+3/4;-y+3/4,-x+3/4,-z;y+1/2,x+1/2,-z+1/2;-x+1/4,y,-z+3/4;x+1/2,-y+3/4,-z+1/4;-x+1/2,-y+1/2,-z;x+3/4,y+3/4,-z+1/2;y+3/4,-x,-z+3/4;-y+1/2,x+5/4,-z+1/4;y+3/4,x+3/4,z;-y+1/2,-x+1/2,z+1/2;x+3/4,-y,z+1/4;-x+1/2,y+5/4,z+3/4;x+1/2,y,z+1/2;-x+1/4,-y+3/4,z;-y+3/4,x,z+3/4;y+1/2,-x+5/4,z+1/4;-y+1/4,-x+3/4,-z+1/2;y+1/2,x,-z;-x+3/4,y,-z+1/4;x+1/2,-y+5/4,-z+3/4;-x+1/2,-y,-z+1/2;x+1/4,y+3/4,-z;y+1/4,-x,-z+1/4;-y+1/2,x+3/4,-z+3/4;y+1/4,x+3/4,z+1/2;-y+1/2,-x,z;x+1/4,-y,z+3/4;-x+1/2,y+3/4,z+1/4", // ITA 142.2
+      "142:f1;142.4;ab|0,1/4,-1/8;64;d4h^20;f 41/d d c :1;xyz",//;x,y,z;-x+1/2,-y,z+1/2;-y+3/4,x+1/4,z+1/4;y+1/4,-x+1/4,z+3/4;-y+1/4,-x+1/4,-z+1/4;y+1/4,x+3/4,-z+3/4;-x,y+1/2,-z;x,-y,-z+1/2;-x+1/4,-y+3/4,-z+1/4;x+1/4,y+1/4,-z+3/4;y+1/2,-x+1/2,-z;-y,x+1/2,-z+1/2;y+1/2,x,z;-y,-x,z+1/2;x+1/4,-y+1/4,z+1/4;-x+1/4,y+3/4,z+3/4;x,y+1/2,z+1/2;-x,-y,z;-y+1/4,x+1/4,z+3/4;y+1/4,-x+3/4,z+1/4;-y+3/4,-x+1/4,-z+3/4;y+1/4,x+1/4,-z+1/4;-x+1/2,y+1/2,-z+1/2;x,-y+1/2,-z;-x+1/4,-y+1/4,-z+3/4;x+3/4,y+1/4,-z+1/4;y,-x+1/2,-z+1/2;-y,x,-z;y,x,z+1/2;-y,-x+1/2,z;x+3/4,-y+1/4,z+3/4;-x+1/4,y+1/4,z+1/4;x+1/2,y+1/2,z;-x,-y+1/2,z+1/2;-y+1/4,x+3/4,z+1/4;y+3/4,-x+3/4,z+3/4;-y+3/4,-x+3/4,-z+1/4;y+3/4,x+1/4,-z+3/4;-x+1/2,y,-z;x+1/2,-y+1/2,-z+1/2;-x+3/4,-y+1/4,-z+1/4;x+3/4,y+3/4,-z+3/4;y,-x,-z;-y+1/2,x,-z+1/2;y,x+1/2,z;-y+1/2,-x+1/2,z+1/2;x+3/4,-y+3/4,z+1/4;-x+3/4,y+5/4,z+3/4;x+1/2,y,z+1/2;-x+1/2,-y+1/2,z;-y+3/4,x+3/4,z+3/4;y+3/4,-x+5/4,z+1/4;-y+1/4,-x+3/4,-z+3/4;y+3/4,x+3/4,-z+1/4;-x,y,-z+1/2;x+1/2,-y,-z;-x+3/4,-y+3/4,-z+3/4;x+1/4,y+3/4,-z+1/4;y+1/2,-x,-z+1/2;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z+1/2;-y+1/2,-x,z;x+1/4,-y+3/4,z+3/4;-x+3/4,y+3/4,z+1/4", // ITA 142.4
+      "148:h;148.1;;18;c3i^2;r -3 :h;-r 3",  
+      "146:h;146.1;;9;c3^4;r 3 :h;r 3",  
+      "167:h;167.1;;36;d3d^6;r -3 c :h;-r 3 2\"c",  
+      "161:h;161.1;;18;c3v^6;r 3 c :h;r 3 -2\"c",  
+      "166:h;166.1;;36;d3d^5;r -3 m :h;-r 3 2\"",  
+      "160:h;160.1;;18;c3v^5;r 3 m :h;r 3 -2\"",  
+      "155:h;155.1;;18;d3^7;r 3 2 :h;r 3 2\"",  
+      "176;176.1;;12;c6h^2;p 63/m;-p 6c",  
+      "173;173.1;;6;c6^6;p 63;p 6c",  
+      "194;194.1;;24;d6h^4;p 63/m m c;-p 6c 2c",  
+      "190;190.1;;12;d3h^4;p -6 2 c;p -6c -2c",  
+      "186;186.1;;12;c6v^4;p 63 m c;p 6c -2c",  
+      "182;182.1;;12;d6^6;p 63 2 2;p 6c 2c",  
+      "193;193.1;;24;d6h^3;p 63/m c m;-p 6c 2",  
+      "188;188.1;;12;d3h^2;p -6 c 2;p -6c 2",  
+      "185;185.1;;12;c6v^3;p 63 c m;p 6c -2",  
+      "170;170.1;;6;c6^3;p 65;p 65",  
+      "179;179.1;;12;d6^3;p 65 2 2;p 65 2 (0 0 1)",  
+      "172;172.1;;6;c6^5;p 64;p 64",  
+      "181;181.1;;12;d6^5;p 64 2 2;p 64 2 (0 0 2)",  
+      "171;171.1;;6;c6^4;p 62;p 62",  
+      "180;180.1;;12;d6^4;p 62 2 2;p 62 2 (0 0 4)",  
+      "169;169.1;;6;c6^2;p 61;p 61",  
+      "178;178.1;;12;d6^2;p 61 2 2;p 61 2 (0 0 5)",  
+      "175;175.1;;12;c6h^1;p 6/m;-p 6",  
+      "174;174.1;;6;c3h^1;p -6;p -6",  
+      "168;168.1;;6;c6^1;p 6;p 6",  
+      "192;192.1;;24;d6h^2;p 6/m c c;-p 6 2c",  
+      "184;184.1;;12;c6v^2;p 6 c c;p 6 -2c",  
+      "191;191.1;;24;d6h^1;p 6/m m m;-p 6 2",  
+      "189;189.1;;12;d3h^3;p -6 2 m;p -6 -2",  
+      "187;187.1;;12;d3h^1;p -6 m 2;p -6 2",  
+      "183;183.1;;12;c6v^1;p 6 m m;p 6 -2",  
+      "177;177.1;;12;d6^1;p 6 2 2;p 6 2",  
+      "136;136.1;;16;d4h^14;p 42/m n m;-p 4n 2n",  
+      "137:1;137.3;a,b,c|-1/4,1/4,-1/4;16;d4h^15;p 42/n m c :1;p 4n 2n -1n",
+      "133:1;133.3;a,b,c|-1/4,1/4,-1/4;16;d4h^11;p 42/n b c :1;p 4n 2c -1n",
+      "138:1;138.3;a,b,c|-1/4,1/4,-1/4;16;d4h^16;p 42/n c m :1;p 4n 2ab -1n",
+      "223;223.1;;48;oh^3;p m -3 n;-p 4n 2 3",  
+      "218;218.1;;24;td^4;p -4 3 n;p -4n 2 3",  
+      "208;208.1;;24;o^2;p 42 3 2;p 4n 2 3",  
+      "224:1;224.2;a,b,c|-1/4,-1/4,-1/4;48;oh^4;p n -3 m :1;p 4n 2 3 -1n",
+      "134:1;134.3;a,b,c|-1/4,1/4,-1/4;16;d4h^12;p 42/n n m :1;p 4n 2 -1n",
+      "132;132.1;;16;d4h^10;p 42/m c m;-p 4c 2c",  
+      "135;135.1;;16;d4h^13;p 42/m b c;-p 4c 2ab",  
+      "131;131.1;;16;d4h^9;p 42/m m c;-p 4c 2",  
+      "213;213.1;;24;o^7;p 41 3 2;p 4bd 2ab 3",  
+      "224:2;224.1;;48;oh^4;p n -3 m :2;-p 4bc 2bc 3",  
+      "212;212.1;;24;o^6;p 43 3 2;p 4acd 2ab 3",  
+      "134:2;134.1;;16;d4h^12;p 42/n n m :2;-p 4ac 2bc",  
+      "133:2;133.1;;16;d4h^11;p 42/n b c :2;-p 4ac 2b",  
+      "138:2;138.1;;16;d4h^16;p 42/n c m :2;-p 4ac 2ac",  
+      "137:2;137.1;;16;d4h^15;p 42/n m c :2;-p 4ac 2a",  
+      "130:1;130.3;a,b,c|-1/4,1/4,0;16;d4h^8;p 4/n c c :1;p 4ab 2n -1ab",
+      "129:1;129.3;a,b,c|-1/4,1/4,0;16;d4h^7;p 4/n m m :1;p 4ab 2ab -1ab",
+      "222:2;222.1;;48;oh^2;p n -3 n :2;-p 4a 2bc 3",  
+      "130:2;130.1;;16;d4h^8;p 4/n c c :2;-p 4a 2ac",  
+      "129:2;129.1;;16;d4h^7;p 4/n m m :2;-p 4a 2a",  
+      "128;128.1;;16;d4h^6;p 4/m n c;-p 4 2n",  
+      "127;127.1;;16;d4h^5;p 4/m b m;-p 4 2ab",  
+      "221;221.1;;48;oh^1;p m -3 m;-p 4 2 3",  
+      "215;215.1;;24;td^1;p -4 3 m;p -4 2 3",  
+      "207;207.1;;24;o^1;p 4 3 2;p 4 2 3",  
+      "222:1;222.2;a,b,c|-1/4,-1/4,-1/4;48;oh^2;p n -3 n :1;p 4 2 3 -1n",
+      "145;145.1;;3;c3^3;p 32;p 32",  
+      "154;154.1;;6;d3^6;p 32 2 1;p 32 2\"",    
+      "154:_2;154:a,b,c|0,0,-1/6;a,b,c|0,0,-1/6;6;d3^6;p 32 2 1;p 32 2\" (0 0 4)",  //  NOTE: MSA quartz.cif gives different operators for this -- 
+      "153;153.1;;6;d3^5;p 32 1 2;p 32 2 (0 0 2)",  
+      "144;144.1;;3;c3^2;p 31;p 31",  
+      "152;152.1;;6;d3^4;p 31 2 1;p 31 2\"",  
+      "152:_2;152:a,b,c|0,0,-1/6;a,b,c|0,0,-1/6;6;d3^4;p 31 2 1;p 31 2\" (0 0 -4)", //  NOTE: MSA quartz.cif gives different operators for this -- 
+      "151;151.1;;6;d3^3;p 31 1 2;p 31 2 (0 0 4)",  
+      "148:r;148.2;r;6;c3i^2;r -3 :r;-p 3*",  
+      "146:r;146.2;r;3;c3^4;r 3 :r;p 3*",  
+      "167:r;167.2;r;12;d3d^6;r -3 c :r;-p 3* 2n",  
+      "161:r;161.2;r;6;c3v^6;r 3 c :r;p 3* -2n",  
+      "166:r;166.2;r;12;d3d^5;r -3 m :r;-p 3* 2",  
+      "160:r;160.2;r;6;c3v^5;r 3 m :r;p 3* -2",  
+      "155:r;155.2;r;6;d3^7;r 3 2 :r;p 3* 2",  
+      "147;147.1;;6;c3i^1;p -3;-p 3",  
+      "143;143.1;;3;c3^1;p 3;p 3",  
+      "163;163.1;;12;d3d^2;p -3 1 c;-p 3 2c",  
+      "159;159.1;;6;c3v^4;p 3 1 c;p 3 -2c",  
+      "165;165.1;;12;d3d^4;p -3 c 1;-p 3 2\"c",  
+      "158;158.1;;6;c3v^3;p 3 c 1;p 3 -2\"c",  
+      "164;164.1;;12;d3d^3;p -3 m 1;-p 3 2\"",  
+      "156;156.1;;6;c3v^1;p 3 m 1;p 3 -2\"",  
+      "150;150.1;;6;d3^2;p 3 2 1;p 3 2\"",  
+      "162;162.1;;12;d3d^1;p -3 1 m;-p 3 2",  
+      "157;157.1;;6;c3v^2;p 3 1 m;p 3 -2",  
+      "149;149.1;;6;d3^1;p 3 1 2;p 3 2",  
+      "205;205.1;;24;th^6;p a -3;-p 2ac 2ab 3",  
+      "198;198.1;;12;t^4;p 21 3;p 2ac 2ab 3",  
+      "201:2;201.1;;24;th^2;p n -3 :2;-p 2ab 2bc 3",  
+      "200;200.1;;24;th^1;p m -3;-p 2 2 3",  
+      "195;195.1;;12;t^1;p 2 3;p 2 2 3",  
+      "201:1;201.2;a,b,c|-1/4,-1/4,-1/4;24;th^2;p n -3 :1;p 2 2 3 -1n",
+      "141:1;141.3;a,b,c|0,1/4,-1/8;32;d4h^19;i 41/a m d :1;i 4bw 2bw -1bw",
+      "142:1;142.3;a,b,c|0,1/4,-1/8;32;d4h^20;i 41/a c d :1;i 4bw 2aw -1bw",
+      "142:2;142.1;;32;d4h^20;i 41/a c d :2;-i 4bd 2c",  
+      "230;230.1;;96;oh^10;i a -3 d;-i 4bd 2c 3",    
+      "220;220.1;;48;td^6;i -4 3 d;i -4bd 2c 3",  
+      "214;214.1;;48;o^8;i 41 3 2;i 4bd 2c 3",  
+      "141:2;141.1;;32;d4h^19;i 41/a m d :2;-i 4bd 2",  
+      "140;140.1;;32;d4h^18;i 4/m c m;-i 4 2c",  
+      "139;139.1;;32;d4h^17;i 4/m m m;-i 4 2",  
+      "229;229.1;;96;oh^9;i m -3 m;-i 4 2 3",  
+      "217;217.1;;48;td^3;i -4 3 m;i -4 2 3",  
+      "211;211.1;;48;o^5;i 4 3 2;i 4 2 3",  
+      "206;206.1;;48;th^7;i a -3;-i 2b 2c 3",  
+      "199;199.1;;24;t^5;i 21 3;i 2b 2c 3",  
+      "204;204.1;;48;th^5;i m -3;-i 2 2 3",  
+      "197;197.1;;24;t^3;i 2 3;i 2 2 3",  
+      "227:2;227.1;;192;oh^7;f d -3 m :2;-f 4vw 2vw 3",  
+      "228:2;228.1;;192;oh^8;f d -3 c :2;-f 4ud 2vw 3",  
+      "210;210.1;;96;o^4;f 41 3 2;f 4d 2 3",  
+      "227:1;227.2;a,b,c|-1/8,-1/8,-1/8;192;oh^7;f d -3 m :1;f 4d 2 3 -1d",
+      "228:1;228.2;a,b,c|-3/8,-3/8,-3/8;192;oh^8;f d -3 c :1;f 4d 2 3 -1ad",
+      "226;226.1;;192;oh^6;f m -3 c;-f 4a 2 3",  
+      "219;219.1;;96;td^5;f -4 3 c;f -4a 2 3",  
+      "225;225.1;;192;oh^5;f m -3 m;-f 4 2 3",  
+      "216;216.1;;96;td^2;f -4 3 m;f -4 2 3",  
+      "209;209.1;;96;o^3;f 4 3 2;f 4 2 3",  
+      "203:2;203.1;;96;th^4;f d -3 :2;-f 2uv 2vw 3",  
+      "202;202.1;;96;th^3;f m -3;-f 2 2 3",  
+      "196;196.1;;48;t^2;f 2 3;f 2 2 3",  
+      "203:1;203.2;a,b,c|-1/8,-1/8,-1/8;96;th^4;f d -3 :1;f 2 2 3 -1d",
+      "133:c2;133.4;ab|-1/4,1/4,-1/4;32;d4h^11;c 42/e c g1 :1;xyz",//;x,y,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y,-x+1/2,z+1/2;-y+1/2,-x+1/2,-z+1/2;y,x,-z+1/2;-x+1/2,y,-z;x,-y+1/2,-z;-x+1/2,-y,-z+1/2;x,y+1/2,-z+1/2;y+1/2,-x+1/2,-z;-y,x,-z;y+1/2,x,z;-y,-x+1/2,z;x,-y,z+1/2;-x+1/2,y+1/2,z+1/2;x+1/2,y+1/2,z;-x,-y,z;-y,x+1/2,z+1/2;y+1/2,-x,z+1/2;-y,-x,-z+1/2;y+1/2,x+1/2,-z+1/2;-x,y+1/2,-z;x+1/2,-y,-z;-x,-y+1/2,-z+1/2;x+1/2,y,-z+1/2;y,-x,-z;-y+1/2,x+1/2,-z;y,x+1/2,z;-y+1/2,-x,z;x+1/2,-y+1/2,z+1/2;-x,y,z+1/2", // ITA 133.4
+      "137:c2;137.4;ab|-1/4,1/4,-1/4;32;d4h^15;c 42/e c m :1;xyz",//;x,y,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y,-x+1/2,z+1/2;-y,-x+1/2,-z+1/2;y+1/2,x,-z+1/2;-x+1/2,y+1/2,-z;x,-y,-z;-x+1/2,-y,-z+1/2;x,y+1/2,-z+1/2;y+1/2,-x+1/2,-z;-y,x,-z;y,x,z;-y+1/2,-x+1/2,z;x,-y+1/2,z+1/2;-x+1/2,y,z+1/2;x+1/2,y+1/2,z;-x,-y,z;-y,x+1/2,z+1/2;y+1/2,-x,z+1/2;-y+1/2,-x,-z+1/2;y,x+1/2,-z+1/2;-x,y,-z;x+1/2,-y+1/2,-z;-x,-y+1/2,-z+1/2;x+1/2,y,-z+1/2;y,-x,-z;-y+1/2,x+1/2,-z;y+1/2,x+1/2,z;-y,-x,z;x+1/2,-y,z+1/2;-x,y+1/2,z+1/2", // ITA 137.4
+      "176*;176.1;;12;c6h^2;p 63/m*;-p 63",   //nonstandard
+      "194*;194.1;;24;d6h^4;p 63/m m c*;-p 63 2c",   //nonstandard
+      "186*;186.1;;12;c6v^4;p 63 m c*;p 63 -2c",   //nonstandard
+      "182*;182.1;;12;d6^6;p 63 2 2*;p 63 2c",   //nonstandard
+      "193*;193.1;;24;d6h^3;p 63/m c m*;-p 63 2",   //nonstandard
+      "185*;185.1;;12;c6v^3;p 63 c m*;p 63 -2",   //nonstandard
+      "173*;173.1;;6;c6^6;p 63*;p 63 ",   //nonstandard",// space added so not identical to H-M P 63
+      "135*;135.1;;16;d4h^13;p 42/m b c*;-p 42 2ab",   //nonstandard
+      "126:c4;126.4;ab|-1/4,-1/4,-1/4;32;d4h^4;c 4/e c g2 :1;xyz",//;x,y,z;-x,-y,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z;-x,y,-z;x,-y,-z;-x,-y+1/2,-z+1/2;x,y+1/2,-z+1/2;y,-x+1/2,-z+1/2;-y,x+1/2,-z+1/2;y,x+1/2,z+1/2;-y,-x+1/2,z+1/2;x,-y+1/2,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y,x,z;y,-x,z;-y,-x,-z;y,x,-z;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z;-x+1/2,-y,-z+1/2;x+1/2,y,-z+1/2;y+1/2,-x,-z+1/2;-y+1/2,x,-z+1/2;y+1/2,x,z+1/2;-y+1/2,-x,z+1/2;x+1/2,-y,z+1/2;-x+1/2,y,z+1/2", // ITA 126.4
   };
   
   /**
@@ -1863,7 +2042,7 @@ public class SpaceGroup implements Cloneable {
     if (type.equals("HM")) {
       ret = hmSymbol;
     } else if (type.equals("ITA")) {
-      ret = intlTableNumber;
+      ret = itaNumber;
     } else if (type.equals("Hall")) {
       ret = hallSymbol;
     } else {
@@ -1883,28 +2062,114 @@ public class SpaceGroup implements Cloneable {
     return (v == null ? null : v.toString());
   }
 
-  static SpaceGroup getSpaceGroupFromITAName(String ita) {
+  /**
+   * Look for Jmol ID such as 10:b or 10 or 10.2 or 10:c,a,b
+   * 
+   * @param name
+   * @return found space group or null
+   */
+  static SpaceGroup getSpaceGroupFromJmolClegOrITA(String name) {
     getSpaceGroups();
     int n = SG.length;
-    for (int i = 0; i < n; i++)
-      if (ita.equals(SG[i].intlTableNumberFull))
-        return SG[i];
-    for (int i = 0; i < n; i++)
-      if (ita.equals(SG[i].intlTableNumber))
-        return SG[i];
+    if (name.indexOf(":") >= 0) {
+      if (name.indexOf(",") >= 0) {
+        // 10:c,a,b
+        for (int i = 0; i < n; i++)
+          if (name.equals(SG[i].clegId))
+            return SG[i];
+      } else {
+        // 10:b
+        for (int i = 0; i < n; i++)
+          if (name.equals(SG[i].jmolId))
+            return SG[i];
+      }
+    } else if (name.indexOf(".") >= 0) {
+      // 10.3
+      for (int i = 0; i < n; i++)
+        if (name.equals(SG[i].itaIndex))
+          return SG[i];
+    } else {
+      // just first match to ita number
+      for (int i = 0; i < n; i++)
+        if (name.equals(SG[i].itaNumber))
+          return SG[i];
+    }
     return null;
   }
 
   void checkHallOperators() {
-    if (nHallOperators != null && nHallOperators.intValue() != operationCount)
-      generateAllOperators(hallInfo);
+    if (nHallOperators != null && nHallOperators.intValue() != operationCount) {
+      if (hallInfo == null || hallInfo.nRotations > 0) {
+        generateAllOperators(hallInfo); 
+      } else {
+        init(false);
+        doNormalize = false;
+        transformSpaceGroup(this, getSpaceGroupFromJmolClegOrITA(itaNumber), null, itaTransform, null);
+        hallInfo = null;
+      }
+    }
+  }
+
+  public static SpaceGroup transformSpaceGroup(SpaceGroup sg, SpaceGroup base,
+                                               Lst<Object> genPos,
+                                               String transform, M4d trm) {
+    boolean hasTransform = (transform != null);
+    M4d trmInv = null, t = null;
+    double[] v = null;
+    if (hasTransform) {
+      if (trm == null) {
+        trm = new M4d();
+      }
+      UnitCell.getMatrixAndUnitCell(null, transform, trm);
+      trmInv = M4d.newM4(trm);
+      trmInv.invert();
+      v = new double[16];
+      t = new M4d();
+    }
+    String xyzList = "";
+    if (genPos == null) {
+      // should be able to do this much slicker
+      genPos = new Lst<Object>();
+      for (int i = 0, n = base.getOperationCount(); i < n; i++) {
+        genPos.addLast(base.getXyz(i, false));
+      }
+    }
+    for (int i = 0, c = genPos.size(); i < c; i++) {
+      String xyz = (String) genPos.get(i);
+      if (hasTransform && i > 0) {
+        xyz = SymmetryOperation.transformStr(xyz, trm, trmInv, t, v);
+      }
+      if (sg == null)
+        xyzList += ";" + xyz;
+      else
+        sg.addOp(null, xyz, false);
+    }
+    xyzList = xyzList.substring(1);
+    //System.out.println("for " + transform + " " + xyzList);
+    return SpaceGroup.createSpaceGroupN(xyzList);
   }
 
   static SpaceGroup getSpaceGroupFromIndex(int i) {
     return (SG != null && i >= 0 && i < SG.length ? SG[i] : null);
   }
 
-// 601 settings for 230 space groups
+  /**
+   * from SpaceGroupFinder after finding a match with an ITA setting
+   * @param jmolId
+   * @param sg
+   * @param set
+   * @param tr
+   */
+  void setITATableNames(String jmolId, String sg, String set, String tr) {
+    itaNumber = sg;
+    itaIndex = sg + "." + set;
+    itaTransform = tr;
+    clegId = sg + ":" + tr;
+    if (jmolId != null)
+      setJmolCode(jmolId);
+  }
+
+// 613 settings for 230 space groups (611 from ITA; 2 for added 152 and 154 c-shifts
   /*  see http://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
  
 intl#     H-M full       HM-abbr   HM-short  Hall
@@ -2501,240 +2766,6 @@ intl#     H-M full       HM-abbr   HM-short  Hall
 228:2     F d -3 c       Fd-3c     Fd-3c     -F 4ud 2vw 3
 229       I m -3 m       Im-3m     Im-3m     -I 4 2 3  
 230       I a -3 d       Ia-3d     Ia-3d     -I 4bd 2c 3
-
-first settings:
-
-1 p 1
-2  p -1
-3  p 1 2 1
-4  p 1 21 1
-5  c 1 2 1
-6  p 1 m 1
-7  p 1 c 1
-8  c 1 m 1
-9  c 1 c 1
-10   p 1 2/m 1
-11   p 1 21/m 1
-12   c 1 2/m 1
-13   p 1 2/c 1
-14   p 1 21/c 1
-15   c 1 2/c 1
-16   p 2 2 2
-17   p 2 2 21
-18   p 21 21 2
-19   p 21 21 21
-20   c 2 2 21
-21   c 2 2 2
-22   f 2 2 2
-23   i 2 2 2
-24   i 21 21 21
-25   p m m 2
-26   p m c 21
-27   p c c 2
-28   p m a 2
-29   p c a 21
-30   p n c 2
-31   p m n 21
-32   p b a 2
-33   p n a 21
-34   p n n 2
-35   c m m 2
-36   c m c 21
-37   c c c 2
-38   a m m 2
-39   a b m 2
-40   a m a 2
-41   a b a 2
-42   f m m 2
-43   f d d 2
-44   i m m 2
-45   i b a 2
-46   i m a 2
-47   p m m m
-48   p n n n
-49   p c c m
-50   p b a n
-51   p m m a
-52   p n n a
-53   p m n a
-54   p c c a
-55   p b a m
-56   p c c n
-57   p b c m
-58   p n n m
-59   p m m n
-60   p b c n
-61   p b c a
-62   p n m a
-63   c m c m
-64   c m c a
-65   c m m m
-66   c c c m
-67   c m m a
-68   c c c a
-69   f m m m
-70   f d d d
-71   i m m m
-72   i b a m
-73   i b c a
-74   i m m a
-75   p 4
-76   p 41
-77   p 42
-78   p 43
-79   i 4
-80   i 41
-81   p -4
-82   i -4
-83   p 4/m
-84   p 42/m
-85   p 4/n
-86   p 42/n
-87   i 4/m
-88   i 41/a
-89   p 4 2 2
-90   p 4 21 2
-91   p 41 2 2
-92   p 41 21 2
-93   p 42 2 2
-94   p 42 21 2
-95   p 43 2 2
-96   p 43 21 2
-97   i 4 2 2
-98   i 41 2 2
-99   p 4 m m
-100  p 4 b m
-101  p 42 c m
-102  p 42 n m
-103  p 4 c c
-104  p 4 n c
-105  p 42 m c
-106  p 42 b c
-107  i 4 m m
-108  i 4 c m
-109  i 41 m d
-110  i 41 c d
-111  p -4 2 m
-112  p -4 2 c
-113  p -4 21 m
-114  p -4 21 c
-115  p -4 m 2
-116  p -4 c 2
-117  p -4 b 2
-118  p -4 n 2
-119  i -4 m 2
-120  i -4 c 2
-121  i -4 2 m
-122  i -4 2 d
-123  p 4/m m m
-124  p 4/m c c
-125  p 4/n b m
-126  p 4/n n c
-127  p 4/m b m
-128  p 4/m n c
-129  p 4/n m m
-130  p 4/n c c
-131  p 42/m m c
-132  p 42/m c m
-133  p 42/n b c
-134  p 42/n n m
-135  p 42/m b c
-136  p 42/m n m
-137  p 42/n m c
-138  p 42/n c m
-139  i 4/m m m
-140  i 4/m c m
-141  i 41/a m d
-142  i 41/a c d
-143  p 3
-144  p 31
-145  p 32
-146  r 3
-147  p -3
-148  r -3
-149  p 3 1 2
-150  p 3 2 1
-151  p 31 1 2
-152  p 31 2 1
-153  p 32 1 2
-154  p 32 2 1
-155  r 3 2
-156  p 3 m 1
-157  p 3 1 m
-158  p 3 c 1
-159  p 3 1 c
-160  r 3 m
-161  r 3 c
-162  p -3 1 m
-163  p -3 1 c
-164  p -3 m 1
-165  p -3 c 1
-166  r -3 m
-167  r -3 c
-168  p 6
-169  p 61
-170  p 65
-171  p 62
-172  p 64
-173  p 63
-174  p -6
-175  p 6/m
-176  p 63/m
-177  p 6 2 2
-178  p 61 2 2
-179  p 65 2 2
-180  p 62 2 2
-181  p 64 2 2
-182  p 63 2 2
-183  p 6 m m
-184  p 6 c c
-185  p 63 c m
-186  p 63 m c
-187  p -6 m 2
-188  p -6 c 2
-189  p -6 2 m
-190  p -6 2 c
-191  p 6/m m m
-192  p 6/m c c
-193  p 63/m c m
-194  p 63/m m c
-195  p 2 3
-196  f 2 3
-197  i 2 3
-198  p 21 3
-199  i 21 3
-200  p m -3
-201  p n -3
-202  f m -3
-203  f d -3
-204  i m -3
-205  p a -3
-206  i a -3
-207  p 4 3 2
-208  p 42 3 2
-209  f 4 3 2
-210  f 41 3 2
-211  i 4 3 2
-212  p 43 3 2
-213  p 41 3 2
-214  i 41 3 2
-215  p -4 3 m
-216  f -4 3 m
-217  i -4 3 m
-218  p -4 3 n
-219  f -4 3 c
-220  i -4 3 d
-221  p m -3 m
-222  p n -3 n
-223  p m -3 n
-224  p n -3 m
-225  f m -3 m
-226  f m -3 c
-227  f d -3 m
-228  f d -3 c
-229  i m -3 m
-230  i a -3 d
-
 
 
    */

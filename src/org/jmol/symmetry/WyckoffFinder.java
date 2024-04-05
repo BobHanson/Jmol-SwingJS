@@ -33,6 +33,7 @@ public class WyckoffFinder {
   public final static int WYCKOFF_RET_GENERAL = 'G';
   public final static int WYCKOFF_RET_CENTERING = 'C';
   public final static int WYCKOFF_RET_CENTERING_STRING = 'S';
+  public final static int WYCKOFF_RET_WITH_MULT = 'M';
 
   private Lst<Object> positions;
   private int npos, ncent;
@@ -106,11 +107,10 @@ public class WyckoffFinder {
    * @return label or coordinate or label with centerings and coordinates or
    *         full list for space group
    */
-  Object getInfo(UnitCell uc, P3d p, int returnType) {
-    Object info = createInfo(uc, p, returnType);
+  Object getInfo(UnitCell uc, P3d p, int returnType, boolean withMult) {
+    Object info = createInfo(uc, p, returnType, withMult);
     return (info == null ? "?" : info);
   }
-
   /**
    * Convert "1/2,1/2,0" to {0.5 0.5 0}
    * 
@@ -140,10 +140,11 @@ public class WyckoffFinder {
    * @param uc
    * @param p
    * @param returnType '*', -1, -2, -3, or a character label 'a'-'A' or 'G' for general or 'C' for centerings
+   * @param withMult from "wyckoffm"
    * @return an informational string
    */
   @SuppressWarnings("unchecked")
-  private Object createInfo(UnitCell uc, P3d p, int returnType) {
+  private Object createInfo(UnitCell uc, P3d p, int returnType, boolean withMult) {
     switch (returnType) {
     case WYCKOFF_RET_CENTERING_STRING:
       return getCenteringStr(-1,' ', null).toString().trim();      
@@ -157,7 +158,7 @@ public class WyckoffFinder {
       getCenteringStr(-1, '+', sb);
       for (int i = npos; --i >= 0;) {
         Map<String, Object> map = (Map<String, Object>) positions.get(i);
-        String label = (String) map.get("label");
+        String label =  (withMult ? ""  + map.get("mult") : "") + map.get("label");
         sb.appendC('\n').append(label);
         getList(i == 0 ? gpos : (Lst<Object>) map.get("coord"), label, sb, (i == 0 ? ncent : 0));
       }
@@ -167,7 +168,7 @@ public class WyckoffFinder {
     case WYCKOFF_RET_COORDS:
       for (int i = npos; --i >= 0;) {
         Map<String, Object> map = (Map<String, Object>) positions.get(i);
-        String label = (String) map.get("label");
+        String label = (withMult ? "" + map.get("mult") : "") + map.get("label");
         if (i == 0) {
           // general
           switch (returnType) {
@@ -217,7 +218,7 @@ public class WyckoffFinder {
             if (isGeneral)
               sbc.append(label).appendC(' ');
           Lst<Object> coords = (i == 0 ? gpos : (Lst<Object>) map.get("coord"));
-          getList(coords, letter, sbc, 0);
+          getList(coords, (withMult ? map.get("mult") : "") + letter, sbc, 0);
           if (i > 0 &&  ncent > 0) {
             M4d tempOp = new M4d();
             for (int j = 0; j < ncent; j++) {
@@ -243,7 +244,7 @@ public class WyckoffFinder {
         if (its != null) {
           for (int i = its.size(); --i >= 0;) {
             Map<String, Object> map = (Map<String, Object>) its.get(i);
-            if (sgname.equals(map.get("itaFull"))) {
+            if (sgname.equals(map.get("jmolId"))) {
               WyckoffFinder helper = new WyckoffFinder(map);
               helpers.put(sgname, helper);
               return helper;
@@ -577,8 +578,6 @@ public class WyckoffFinder {
         d = Math.abs(MeasureD.getPlaneProjection(p, plane, vt, vt));
         break;
       }
-      if (d < slop)
-        System.out.println("success! " + label + " " + xyz + " " + d + " " + p);
       return d < slop;
     }
 

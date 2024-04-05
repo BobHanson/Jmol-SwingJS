@@ -28,9 +28,9 @@ package org.jmol.symmetry;
 import java.util.Map;
 
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.viewer.JC;
 
 import javajs.util.PT;
-import javajs.util.T3d;
 
 class SymmetryInfo {
 
@@ -43,7 +43,10 @@ class SymmetryInfo {
   int[] cellRange;
   char latticeType = 'P';
   public String intlTableNo;
-  public String intlTableNoFull;
+  /**
+   * actually just the Jmol id, such as 3:abc
+   */
+  public String intlTableJmolID;
   private int spaceGroupIndex;
 
   double[][] spaceGroupF2C;
@@ -73,21 +76,21 @@ class SymmetryInfo {
     int symmetryCount;
     if (sg == null) {
       // from ModelAdapter only
-      spaceGroupIndex = ((Integer)modelInfo.get("spaceGroupIndex")).intValue();
+      spaceGroupIndex = ((Integer)modelInfo.remove(JC.INFO_SPACE_GROUP_INDEX)).intValue();
       //we need to be passing the unit cell that matches the symmetry
       //in the file -- primitive or otherwise -- 
       //then convert it here to the right multiple.
-      cellRange = (int[]) modelInfo.get("unitCellRange");
-      sgName = (String) modelInfo.get("spaceGroup");
-      spaceGroupF2C = (double[][]) modelInfo.get("f2c");
-      spaceGroupF2CTitle = (String) modelInfo.get("f2cTitle");
-      spaceGroupF2CParams = (double[]) modelInfo.get("f2cParams");
-      sgTitle = (String) modelInfo.get("spaceGroupTitle");
-      strSUPERCELL = (String) modelInfo.get("supercell"); 
+      cellRange = (int[]) modelInfo.remove(JC.INFO_UNIT_CELL_RANGE);
+      sgName = (String) modelInfo.get(JC.INFO_SPACE_GROUP);
+      spaceGroupF2C = (double[][]) modelInfo.remove("f2c");
+      spaceGroupF2CTitle = (String) modelInfo.remove("f2cTitle");
+      spaceGroupF2CParams = (double[]) modelInfo.remove("f2cParams");
+      sgTitle = (String) modelInfo.remove(JC.INFO_SPACE_GROUP_TITLE);
+      strSUPERCELL = (String) modelInfo.remove("supercell"); 
       if (sgName == null || sgName == "")
         sgName = "spacegroup unspecified";
       intlTableNo = (String) modelInfo.get("intlTableNo");
-      intlTableNoFull = (String) modelInfo.get("intlTableNoFull");
+      intlTableJmolID = (String) modelInfo.remove("intlTableJmolID");
       String s = (String) modelInfo.get("latticeType");
         latticeType = (s == null ? 'P' : s.charAt(0));
       symmetryCount = modelInfo.containsKey("symmetryCount")
@@ -104,8 +107,8 @@ class SymmetryInfo {
       // from ModelKit
       cellRange = null;
       sgName = sg.getName();
-      intlTableNoFull = sg.intlTableNumberFull;
-      intlTableNo = sg.intlTableNumber;
+      intlTableJmolID = sg.jmolId;
+      intlTableNo = sg.itaNumber;
       latticeType = sg.latticeType;
       symmetryCount = sg.getOperationCount();
       symmetryOperations = sg.finalOperations;
@@ -131,14 +134,14 @@ class SymmetryInfo {
       infoStr += "\n";
     }
     if (unitCellParams == null)
-      unitCellParams = (double[]) modelInfo.get("unitCellParams");
+      unitCellParams = (double[]) modelInfo.get(JC.INFO_UNIT_CELL_PARAMS);
     unitCellParams = (SimpleUnitCell.isValid(unitCellParams) ? unitCellParams : null);
     if (unitCellParams == null) {
       coordinatesAreFractional = false;
       symmetryOperations = null;
       cellRange = null;
       infoStr = "";
-      modelInfo.remove("unitCellParams");
+      modelInfo.remove(JC.INFO_UNIT_CELL_PARAMS);
     }
     return unitCellParams;
   }

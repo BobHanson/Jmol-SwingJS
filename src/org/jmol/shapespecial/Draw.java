@@ -68,14 +68,14 @@ public class Draw extends MeshCollection {
   private final static int PT_MODEL_INDEX = 4;
   private final static int PT_MODEL_BASED_POINTS = 5;
 
+  DrawMesh[] dmeshes = new DrawMesh[4];
+  private DrawMesh thisMesh;
+  
   public Draw() {
     // from reflection
     htObjects = new Hashtable<String, Mesh>();
   }
 
-  DrawMesh[] dmeshes = new DrawMesh[4];
-  private DrawMesh thisMesh;
-  
   @Override
   public void allocMesh(String thisID, Mesh m) {
     int index = meshCount++;
@@ -459,7 +459,7 @@ public class Draw extends MeshCollection {
       return;
     }
 
-    if (propertyName == "deleteModelAtoms") {
+    if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       deleteModels(((int[]) ((Object[]) value)[2])[0]);
       return;
     }
@@ -1808,4 +1808,5 @@ private void initDraw() {
       }
     }
   }
+  
 }

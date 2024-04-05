@@ -428,9 +428,10 @@ public abstract class MeshCollection extends Shape {
     if (property == "checkID") {
       String key = (String) data[0];
       Lst<Mesh> list = getMeshList(key, true);
-      if (list.size() == 0)
+      Mesh m;
+      if (list.size() == 0 || (m = list.get(0)) == null)
         return false;
-      data[1] = list.get(0).thisID;
+      data[1] = m.thisID;
       return true;
     }
     if (property == "index") {
@@ -468,7 +469,7 @@ public abstract class MeshCollection extends Shape {
     String id;
     // important that this counts down because sometimes
     // we want just the MOST RECENT mesh.
-    for (int i = meshCount; --i >= 0;)
+    for (int i = meshCount; --i >= 0;) {
       if (key == null
           || (id = meshes[i].thisID.toUpperCase()).equals(key) 
           || isWild && PT.isMatch(id, key, true, true)) {
@@ -476,6 +477,7 @@ public abstract class MeshCollection extends Shape {
         if (justOne)
           break;
       }
+    }
     return list;
   }
 

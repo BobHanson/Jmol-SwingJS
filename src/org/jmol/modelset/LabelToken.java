@@ -97,10 +97,10 @@ public class LabelToken {
 
   // do not change array order without changing string order as well
   // new tokens can be added to the list at the end
-  // and then also added in appendTokenValue()
+  // and then also added in appendAtomTokenValue()
   // and also in Eval, to atomProperty()
 
-  final private static String labelTokenParams = "AaBbCcDEefGgIiLlMmNnOoPpQqRrSsTtUuVvWXxxYyyZzz%%%gqW";
+  final private static String labelTokenParams = "AaBbCcDEefGgIiLlMmNnOoPpQqRrSsTtUuVvWwXxxYyyZzz%%%gqW";
   final private static int[] labelTokenIds = {
       /* 'A' */T.altloc,
       /* 'a' */T.atomname,
@@ -139,6 +139,7 @@ public class LabelToken {
       /* 'V' */T.vanderwaals,
       /* 'v' */T.vibxyz,
       /* 'W' */T.w, // identifier and XYZ coord
+      /* 'w' */T.wyckoffm, // with multiplicity
       /* 'X' */T.fracx,
       /* 'x' */T.atomx,
       /* 'x' */T.x,
@@ -614,7 +615,10 @@ public class LabelToken {
         strT = atom.getIdentityXYZ(ptTemp, Atom.ID_U);
         break;
       case T.wyckoff:
-        strT = atom.getWyckoffPosition();
+        strT = atom.getWyckoffPosition(false);
+        break;
+      case T.wyckoffm:
+        strT = atom.getWyckoffPosition(true);
         break;
         
       // characters only

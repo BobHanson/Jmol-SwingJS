@@ -159,6 +159,8 @@ public class SymmetryOperation extends M4d {
 
 
   private static String opF(double x) {
+    if (x == 0)
+      return "0";
     boolean neg = (x < 0);
     if (neg) {
       x = -x;
@@ -169,6 +171,8 @@ public class SymmetryOperation extends M4d {
       x -= n;
     }
     int n48 = (int) Math.round(x * 48);
+    if (PT.approxD(n48/48d - x, 1000) != 0)
+      return "" + x;
     int div;
     if (n48 % 48 == 0) {
       div = 1;
@@ -1044,24 +1048,6 @@ public class SymmetryOperation extends M4d {
     return vRot;
   }
 
-  public String fcoord2(T3d p) {
-    if (divisor == 12)
-      return fcoord(p);
-    return fc2((int) linearRotTrans[3]) + " " + fc2((int) linearRotTrans[7]) + " " + fc2((int) linearRotTrans[11]);
-  }
-
-  /**
-   * Get string version of fraction when divisor == 0 
-   * 
-   * @param num
-   * @return "1/2" for example
-   */
-  private String fc2(int num) {
-      int denom = (num & DIVISOR_MASK);
-      num = num >> DIVISOR_OFFSET;
-    return (num == 0 ? "0" : num + "/" + denom);
-  }
-
   /**
    * Get string version of fraction 
    * 
@@ -1069,21 +1055,8 @@ public class SymmetryOperation extends M4d {
    * @return "1/2" for example
    */
   public static String fcoord(T3d p) {
-    // Castep reader only
-    return fc(p.x) + " " + fc(p.y) + " " + fc(p.z);
-  }
-
-  private static String fc(double x) {
-    // Castep reader only
-    double xabs = Math.abs(x);
-    String m = (x < 0 ? "-" : "");
-    int x24 = (int) approx(xabs * 24);
-    if (x24 / 24d == (int) (x24 / 24d))
-      return m + (x24 / 24);
-    if (x24 % 8 != 0) {
-      return m + twelfthsOf(x24 >> 1);
-    }
-    return (x24 == 0 ? "0" : x24 == 24 ? m + "1" : m + (x24 / 8) + "/3");
+    // Castep re
+    return opF(p.x) + " " + opF(p.y) + " " + opF(p.z);
   }
   
   static double approx(double f) {
@@ -1979,7 +1952,7 @@ public class SymmetryOperation extends M4d {
   /**
    * Convert an operation string in one basis to the equivalent string in another basis.
    * 
-   * Performs trm * op * trm^-1  
+   * Performs trm^1 * op * trm  
    * 
    * @param xyz
    * @param trm
@@ -1998,11 +1971,28 @@ public class SymmetryOperation extends M4d {
     if (v == null)
       v = new double[16];      
     M4d op = getMatrixFromXYZ(xyz, v, true);
-    t.setM4(trm);
+    t.setM4(trmInv);
     t.mul(op);
-    t.mul(trmInv);
+    t.mul(trm);
     return getXYZFromMatrix(t, false, true, false);
   }
+  
+  static String transformXyzT(String xyz, String transform) {
+    M4d trm = new M4d();
+    UnitCell.getMatrixAndUnitCell(null, transform, trm);
+    return (transformStr(xyz, trm, null,null, null));    
+  }
+  
+//  static {
+//
+//    System.out.println(transformXyzT("-x+1/2, y+1/2, -z+1/2", "a+b,-a+b,c"));
+//    System.out.println(transformXyzT("x+1/2, -y+1/2, -z+1/2", "a+b,-a+b,c"));
+//    System.out.println(transformXyzT("  y+1/2, x+1/2, -z+1/2", "a+b,-a+b,c"));
+//    System.out.println(transformXyzT("y, -x, z", "a+b,-a+b,c"));
+//    
+//    
+//    
+//  }
 
   static M4d stringToMatrix(String xyz) {
     int divisor = setDivisor(xyz);
@@ -2010,6 +2000,41 @@ public class SymmetryOperation extends M4d {
     SymmetryOperation.getMatrixFromString(null, xyz, a, true, false, false);
     return div12(M4d.newA16(a), divisor);
   }
+
+  public static String getTransformABC(Object transform, boolean normalize) {
+    if (transform == null)
+      return "a,b,c";
+    M4d t = (M4d) transform;
+    M4d m = M4d.newM4(t);
+    V3d tr = new V3d();
+    m.getTranslation(tr);
+    tr.scale(-1);
+    m.add(tr);
+    m.transpose();
+    String s = SymmetryOperation.getXYZFromMatrixFrac(m, false, true, false, true)
+          .replace('x', 'a').replace('y', 'b').replace('z', 'c');
+    return (tr.lengthSquared() < 1e-12d ? s : s + ";" +
+        (normalize ? norm(-tr.x) + "," + norm(-tr.y) + "," + norm(-tr.z)
+        : opF(-tr.x)+ "," + opF(-tr.y) + "," + opF(-tr.z)
+        )
+        );
+  }
+
+  /**
+   * normalize to interval (-1/2,1/2]
+   * @param d
+   * @return normalized translation
+   */
+  private static String norm(double d) {
+    while (d <= -0.5) {
+      d += 1;
+    }
+    while (d > 0.5) {
+      d -= 1;
+    }
+    return opF(d);
+  }
+
   
   // https://crystalsymmetry.wordpress.com/space-group-diagrams/
 

@@ -69,6 +69,7 @@ import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
 import javajs.util.SB;
+import javajs.util.T3d;
 import javajs.util.V3d;
 
 public class IsoExt extends ScriptExt {
@@ -291,6 +292,7 @@ public class IsoExt extends ScriptExt {
     int iArray = -1;
     int iOn = -1;
     boolean isBest = false;
+    boolean meshNoFill = false;
     int tok = 0;
     P3d lattice = null;
     for (int i = eval.iToken; i < slen; ++i) {
@@ -343,6 +345,7 @@ public class IsoExt extends ScriptExt {
 
         lattice = null;
         SymmetryInterface uc = null;
+        T3d ucLattice = null;
         BS bs = null;
         switch (tok) {
         case T.boundbox:
@@ -382,14 +385,24 @@ public class IsoExt extends ScriptExt {
             uc = vwr.getSymTemp()
                 .getUnitCell(eval.getPointArray(i + 1, -1, false), false, null);
             i = eval.iToken;
-          } else if (tokAt(i + 1) == T.string) {
-            // modelkit spacegroup xx unitcell "a,b,2c"
-            String tr = stringParameter(i + 1);
-            // empty string can be used here to skip this and add a title still
-            if (tr.length() > 0 && (uc = vwr.getCurrentUnitCell()) != null) {
-              uc = vwr.getSymTemp().getUnitCell(uc.getV0abc(tr, null), false, "draw");
+          } else {
+            switch (tokAt(i + 1)) {
+            case T.string: 
+              // modelkit spacegroup xx unitcell "a,b,2c"
+              String tr = stringParameter(i + 1);
+              // empty string can be used here to skip this and add a title still
+              if (tr.length() > 0 && (uc = vwr.getCurrentUnitCell()) != null) {
+                uc = vwr.getSymTemp().getUnitCell(uc.getV0abc(tr, null), false, "draw");
+              }
+              i = eval.iToken;
+              break;
+            case T.point3f:
+            case T.leftbrace:
+              // draw unitcell {444 666 1}
+              ucLattice = eval.getFractionalPoint(i + 1);              
+              i = eval.iToken;
+              break;
             }
-            i = eval.iToken;
           }
           if (tokAt(i + 1) == T.lattice) {
             if (tokIntersectBox == T.unitcell)
@@ -414,6 +427,10 @@ public class IsoExt extends ScriptExt {
               (P3d[]) vwr.getOrientation(T.unitcell, "array", null, pts), false,
               null);
         } else if (tok == T.unitcell && uc == null) {
+          if (ucLattice != null) {
+              vwr.getModelkit(false).drawUnitCell(thisId, ucLattice, eval.fullCommand);
+            return;
+          }
           uc = vwr.getCurrentUnitCell();
         }
         if (lattice == null) {
@@ -444,8 +461,10 @@ public class IsoExt extends ScriptExt {
           propertyValue = v;
           havePoints = true;
           intScale = 0;
+          meshNoFill = true;
           break;
         }
+        // intersection....
         if (tokAt(i + 1) == T.on) {
           //intersection boundbox... ON ...
           iOn = ++i;
@@ -743,6 +762,7 @@ public class IsoExt extends ScriptExt {
             polygons = ((MeshCapper) Interface
                 .getInterface("org.jmol.util.MeshCapper", vwr, "script"))
                     .set(null).triangulatePolygon(points, -1);
+          break;
         }
         if (polygons == null && !isPoints) {
           // read array of arrays of triangle vertex pointers
@@ -837,6 +857,7 @@ public class IsoExt extends ScriptExt {
               options = T.offset;
               i = eval.iToken;
             }
+            break;
           }
         } else if (tokAt(i + 1) == T.all) {
           //  draw SPACEGROUP ALL
@@ -873,8 +894,18 @@ public class IsoExt extends ScriptExt {
           if (s == null)
             s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
                 target, T.draw, thisId, intScale / 100d, nth, options, opList);
+          if (s == null)
+            return;
           s = "draw ID " + (isSymop ? "sg" : "sym") + "* delete;" + s;
-          s = "draw ID " + thisId + "* delete;" + s + ";draw *;";
+          s = "draw ID " + thisId + "* delete;" + s;
+          if (isSymop && target instanceof Atom && center instanceof Atom) {
+            if (eval.fullCommand.indexOf(JC.SCRIPT_QUIET)>=0)
+              s = PT.rep(s, "print", "#print");
+            s +="\nmodelkit set atomset " + PT.esc(thisId 
+                + "|" + ((Atom) center).i 
+                + "|" + ((Atom) target).i 
+                + "|" + eval.fullCommand) + ";";
+          }
         }
         eval.runBufferedSafely(
             s.length() > 0 ? s : "draw ID \"" + thisId + "*\" delete",
@@ -1137,8 +1168,12 @@ public class IsoExt extends ScriptExt {
       }
       if (havePoints && isWild)
         invArg();
-      if (propertyName != null)
+      if (propertyName != null) {
         setShapeProperty(JC.SHAPE_DRAW, propertyName, propertyValue);
+      }
+    }
+    if (meshNoFill) {
+      iptDisplayProperty = -1 - iptDisplayProperty;
     }
     finalizeObject(JC.SHAPE_DRAW, colorArgb[0], translucentLevel, intScale,
         havePoints, connections, iptDisplayProperty, null);

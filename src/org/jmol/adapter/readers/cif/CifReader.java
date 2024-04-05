@@ -1127,6 +1127,7 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte LABEL_COMP_ID = 72;
   final private static byte LABEL_ATOM_ID = 73;
   final private static byte WYCKOFF_LABEL = 74;
+  final private static byte SITE_SYMMETRY_MULTIPLICITY= 75;
   final protected static String CAT_ATOM_SITE = "_atom_site";
   final private static String[] atomFields = { //
       "*_type_symbol", //0
@@ -1203,7 +1204,8 @@ public class CifReader extends AtomSetCollectionReader {
       "*_label_seq_id", // 
       "*_label_comp_id", // 72 mmCIF dev 
       "*_label_atom_id", // 73 mCIF dev
-      "*_wyckoff_label" // 74
+      "*_wyckoff_label", // 74
+      "*_site_symmetry_multiplicity", // 75
   };
 
   //  final private static String singleAtomID = atomFields[CC_COMP_ID];
@@ -1412,8 +1414,7 @@ public class CifReader extends AtomSetCollectionReader {
           break;
         case WYCKOFF_LABEL:
           if (allowWyckoff) {
-            wyckoff = field;
-            seqID = (field.length() > 0 ? field.charAt(0) : 0);
+            wyckoff = field;              
           }
           break;
         case AUTH_SEQ_ID:
@@ -1526,9 +1527,9 @@ public class CifReader extends AtomSetCollectionReader {
             continue; //skip 
           }
           break;
+        case SITE_SYMMETRY_MULTIPLICITY:
         case SITE_MULT:
-          if (modulated)
-            siteMult = parseIntField();
+          siteMult = parseIntField();
           break;
         case THERMAL_TYPE:
         case ADP_TYPE:
@@ -1612,6 +1613,8 @@ public class CifReader extends AtomSetCollectionReader {
         continue;
       }
       // auth_xxx are optional; label_xxx are required
+      if (siteMult > 0 && wyckoff != null && wyckoff.length() > 0)
+        seqID = (siteMult << 16) + wyckoff.charAt(0);
       String strChain = componentId;
       if (haveAuth) {
         if (authAtom != null)

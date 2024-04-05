@@ -487,7 +487,7 @@ public class ScriptEval extends ScriptExpr {
       vwr.popHoldRepaint("CLEAR HOLD - executeCommands" + " "
           + (scriptLevel > 0 ? JC.REPAINT_IGNORE : ""));
       if (haveError)
-        resumeViewer("exception");
+        resumeViewer("exception", true);
     }
     timeEndExecution = System.currentTimeMillis();
     if (errorMessage == null && executionStopped)
@@ -579,7 +579,7 @@ public class ScriptEval extends ScriptExpr {
     // 
     setErrorMessage(null);
     if (executionStopped || sc == null || !sc.mustResumeEval) {
-      resumeViewer("resumeEval");
+      resumeViewer("resumeEval", executionStopped);
       return;
     }
     thisContext = sc;
@@ -609,12 +609,14 @@ public class ScriptEval extends ScriptExpr {
     pcResume = -1;
   }
 
-  private void resumeViewer(String why) {
+  private void resumeViewer(String why, boolean andStopQueue) {
     vwr.setTainted(true);
     vwr.popHoldRepaint(why + (chk ? JC.REPAINT_IGNORE : ""));
     vwr.queueOnHold = false;
-    vwr.clearScriptQueue();
-    vwr.scm.queueThreadFinished(-1);
+    if (andStopQueue) {
+      vwr.clearScriptQueue();
+      vwr.scm.queueThreadFinished(-1);
+    }
   }
 
   @Override
@@ -1711,9 +1713,10 @@ public class ScriptEval extends ScriptExpr {
       sx.message += s;
       sx.untranslated += s;
     }
-    resumeViewer(isThrown ? "throw context" : "scriptException");
-    if (isThrown || thisContext != null || chk
-        || msg.indexOf(JC.NOTE_SCRIPT_FILE) >= 0)
+    boolean done = (isThrown || thisContext != null || chk
+        || msg.indexOf(JC.NOTE_SCRIPT_FILE) >= 0);
+    resumeViewer(isThrown ? "throw context" : "scriptException", isThrown);
+    if (done)
       return;
     isFuncReturn = false;
     Logger.error("eval ERROR: " + s + "\n" + toString());
@@ -6633,7 +6636,7 @@ public class ScriptEval extends ScriptExpr {
         return;
       if (vwr.rotateAboutPointsInternal(this, points[0], points[1], rate,
           endDegrees, isSpin, bsAtoms, translation, ptsB, dihedralList,
-          is4x4 ? m4 : null)
+          is4x4 ? m4 : null, false)
           && isJS && isSpin)
         throw new ScriptInterruption(this, "rotate", 1);
     }
@@ -6698,11 +6701,7 @@ public class ScriptEval extends ScriptExpr {
         if (script == null)
           invArg();
         runScript(script);
-        vwr.checkCoordinatesChanged();
-        return;
-      case T.unitcell:
-        if (!chk)
-          vwr.stm.restoreUnitCell(saveName);
+        vwr.checkCoordinatesChanged(null);
         return;
       case T.selection:
         if (!chk)
@@ -6727,6 +6726,10 @@ public class ScriptEval extends ScriptExpr {
         if (shape == null)
           invArg();
         runScript(shape);
+        return;
+      case T.unitcell:
+        if (!chk)
+          vwr.stm.restoreUnitCell(saveName);
         return;
       }
     }

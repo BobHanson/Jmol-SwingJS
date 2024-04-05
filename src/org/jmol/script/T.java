@@ -561,6 +561,7 @@ public class T {
   public final static int chirality     = strproperty |16;
   public final static int ciprule       = strproperty |17;
   public final static int wyckoff       = strproperty |18;
+  public final static int wyckoffm       = strproperty |19; // "4a", %w
 
   public final static int atomno        = intproperty | 1 | settable;
   public final static int atomid        = intproperty | 2;
@@ -1502,7 +1503,7 @@ public class T {
   protected String toString2() {
     return "Token["
     + astrType[tok < keyword ? tok : keyword]
-    + "("+(tok%(1000))+"/0x" + Integer.toHexString(tok) + ")"
+    + "("+(tok%1000)+"/0x" + Integer.toHexString(tok) + ")"
     + ((intValue == Integer.MAX_VALUE) ? "" : " intValue=" + intValue
         + "(0x" + Integer.toHexString(intValue) + ")")
     + ((value == null) ? "" : value instanceof String ? " value=\"" + value
@@ -2227,6 +2228,7 @@ public class T {
         "xyz",
         "w",
         "wyckoff",
+        "wyckoffm",
         "x",
         "y",
         "z",
@@ -3306,6 +3308,7 @@ public class T {
         xyz,                                // "xyz"
         w,                                  // "w"
         wyckoff,                            // "wyckoff
+        wyckoffm,                           // "wyckoffm
         x,                                  // "x"
         y,                                  // "y"
         z,                                  // "z"

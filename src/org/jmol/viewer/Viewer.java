@@ -10893,12 +10893,15 @@ public class Viewer extends JmolViewer
 
   /**
    * 
+   * @param sym TODO
    * @param bsAtoms
    * @param xyzList
    *        if present, a semicolon-separated list of operators
    * @param unitCellParams
    * @param origin
    *        TODO
+   * @param oabc TODO
+   * @param spaceGroup TODO
    * @param asString
    * @param isAssign
    *        from ModelKit
@@ -10907,25 +10910,22 @@ public class Viewer extends JmolViewer
    *         null
    * 
    */
-  public Object findSpaceGroup(BS bsAtoms, String xyzList,
-                               double[] unitCellParams, T3d origin,
-                               boolean asString, boolean isAssign,
-                               boolean checkSupercell) {
+  public Object findSpaceGroup(SymmetryInterface sym, BS bsAtoms,
+                               String xyzList, double[] unitCellParams, T3d origin, T3d[] oabc, int flags) {
     Object ret = null;
-    if (bsAtoms == null && xyzList == null || isAssign)
+    if (bsAtoms == null && xyzList == null || (flags & JC.SG_IS_ASSIGN) != 0)
       bsAtoms = getThisModelAtoms();
     if (xyzList == null) {
       if (!bsAtoms.isEmpty()) {
-        SymmetryInterface uc = getCurrentUnitCell();
+        SymmetryInterface uc = (sym == null ? getOperativeSymmetry() : sym);
         ret = (uc == null ? null
-            : uc.findSpaceGroup(this, bsAtoms, null, unitCellParams, null,
-                asString, isAssign, checkSupercell));
+            : uc.findSpaceGroup(this, bsAtoms, null, unitCellParams,null, oabc, flags));
       }
     } else {
       ret = getSymTemp().findSpaceGroup(this, bsAtoms, xyzList, unitCellParams,
-          origin, asString, isAssign, checkSupercell);
+          origin, oabc, flags);
     }
-    return (ret == null && asString ? "" : ret);
+    return (ret == null && (flags & JC.SG_AS_STRING) != 0 ? "" : ret);
   }
 
   /**

@@ -260,7 +260,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       return;
     }
 
-    if ("deleteAtoms" == propertyName) {
+    if (JC.PROP_ATOMS_DELETED == propertyName) {
       for (int i = measurementCount; --i >= 0;) {
         out: for (int iatom = bsAtoms.nextSetBit(0); iatom >= 0; iatom = bsAtoms
             .nextSetBit(iatom + 1)) {
@@ -278,7 +278,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
       return;
     }
 
-    if ("deleteModelAtoms" == propertyName) {
+    if (JC.PROP_DELETE_MODEL_ATOMS == propertyName) {
       //atoms = (Atom[]) ((Object[]) value)[1];
       int modelIndex = ((int[]) ((Object[]) value)[2])[0];
       int firstAtomDeleted = ((int[]) ((Object[]) value)[2])[1];

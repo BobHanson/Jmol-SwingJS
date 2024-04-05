@@ -135,7 +135,7 @@ public class SymmetryDesc {
       return T.array;
     if (id.equalsIgnoreCase("element"))
       return T.element;
-    if (id.equalsIgnoreCase("invariant"))
+    if (id.equalsIgnoreCase(JC.MODELKIT_INVARIANT))
       return T.var;
     // center, draw, plane, axis, atom, translation, angle, array, list
     type = T.getTokFromName(id);
@@ -774,7 +774,7 @@ public class SymmetryDesc {
       if (isInversionOnly) {
         ptemp.setT(ipt);
         uc.toFractional(ptemp, false);
-        info1 = "Ci: " + strCoord(op, ptemp, op.isBio);
+        info1 = "Ci: " + strCoord(ptemp, op.isBio);
         type = "inversion center";
       } else if (isRotation) {
         String screwtype = (isccw == null 
@@ -788,7 +788,7 @@ public class SymmetryDesc {
           // screw axis
           ptemp.setT(ax1);
           uc.toFractional(ptemp, false);
-          info1 = (360 / ang) + screwtype + " (" + strCoord(op, ptemp, op.isBio)
+          info1 = (360 / ang) + screwtype + " (" + strCoord(ptemp, op.isBio)
               + ") screw axis";
 
         } else {
@@ -796,7 +796,7 @@ public class SymmetryDesc {
         }
         type = info1;
       } else if (trans != null) {
-        String s = " " + strCoord(op, ftrans, op.isBio);
+        String s = " " + strCoord(ftrans, op.isBio);
         if (isTranslation) {
           type = info1 = "translation";
           info1 += ":" + s;
@@ -806,7 +806,7 @@ public class SymmetryDesc {
             trans.setT(ftrans);
             uc.toCartesian(trans, true);
           }
-          s = " " + strCoord(op, ftrans, op.isBio);
+          s = " " + strCoord(ftrans, op.isBio);
           // set ITA Table 2.1.2.1
           glideType = SymmetryOperation.getGlideFromTrans(ftrans, ax1);
           type = info1 = glideType + "-glide plane";
@@ -819,7 +819,7 @@ public class SymmetryDesc {
       if (haveInversion && !isInversionOnly) {
         ptemp.setT(ipt);
         uc.toFractional(ptemp, false);
-        info1 += "|at " + strCoord(op, ptemp, op.isBio);
+        info1 += "|at " + strCoord(ptemp, op.isBio);
       }
 
       if (isTimeReversed) {
@@ -850,7 +850,8 @@ public class SymmetryDesc {
 
       if (op.getOpType() == SymmetryOperation.TYPE_IDENTITY
           || isSpaceGroupAll && op.isIrrelevant) {
-        System.out
+        if (Logger.debugging)
+          System.out
             .println("!!SD irrelevent " + op.getOpTitle() + op.getOpPoint());
         cmds = "";
       } else {
@@ -881,7 +882,7 @@ public class SymmetryDesc {
 
         boolean isSpecial = (pta00.distance(pt0) < 0.2d);
 
-        String title = (isSpaceGroup ? "<hover>" + id + ": " + op.xyz + "\n" + info1 + "</hover>" : null);
+        String title = (isSpaceGroup ? "<hover>" + id + ": " + op.xyz + "|" + info1 + "</hover>" : null);
 
         if (isRotation) {
 
@@ -1005,7 +1006,7 @@ public class SymmetryDesc {
               && (isSpaceGroupAll && pitch1 > 0 && !haveInversion
                   && op.getOpTrans().length() > (order == 2 ? 0.71d
                       : order == 3 ? 0.578d : order == 4 ? 0.51d : 0.3d));
-          if (ignore) {
+          if (ignore && Logger.debugging) {
             System.out.println("SD ignoring " + op.getOpTrans().length() + " "
                 + op.getOpTitle() + op.xyz);
             //ignore = false; // set true for debugging only
@@ -1075,7 +1076,7 @@ public class SymmetryDesc {
           // lavender arrow across plane from pt00 to pt0
 
           ptemp.sub2(ptref, pta00);
-          if (!isSpaceGroup && pta00.distance(ptref) > 0.2)
+          if (!isSpaceGroup && pta00.distance(ptref) > 0.2d)
             drawVector(drawSB, "planeVector", "vector", THIN_LINE, pta00,
                 ptemp, isTimeReversed ? "gray" : "cyan", null);
 
@@ -1186,7 +1187,7 @@ public class SymmetryDesc {
             if (!isSpaceGroup) {
               drawVector(drawSB, "Arrow", "vector", THIN_LINE, pta00,
                   ptemp, isTimeReversed ? "gray" : "cyan", null);
-            }
+             }
           } else {
             if (order == 4) {
               drawSB.append(getDrawID("RotPoint")).append(" diameter 0.3 color red")
@@ -1201,7 +1202,7 @@ public class SymmetryDesc {
                 drawVector(drawSB, "Arrow", "vector", THIN_LINE, ptinv,
                     ptemp, isTimeReversed ? "gray" : "cyan", null);
               }
-              if (options != T.offset) {
+                      if (options != T.offset) {
                 // n-bar: draw a faint frame showing the inversion
                 vtemp.setT(vt1);
                 vtemp.scale(-1);
@@ -1452,7 +1453,7 @@ public class SymmetryDesc {
    }
 
   private void scaleByOrder(V3d v, int order, Boolean isccw) {
-    v.scale(1 + (0.3d/order) + (isccw == null ? 0 : isccw  == Boolean.TRUE ? 0.02 : -0.02));
+    v.scale(1 + (0.3d/order) + (isccw == null ? 0 : isccw  == Boolean.TRUE ? 0.02d : -0.02d));
   }
 
   private static boolean checkHandedness(SymmetryInterface uc, P3d ax1) {
@@ -1477,14 +1478,14 @@ public class SymmetryDesc {
   }
 
   private void drawFrameLine(String xyz, P3d pt, V3d v, double width,
-                                    P3d ptemp, SB drawSB, String key,
+                                    P3d ptemp, SB sb, String key,
                                     String color) {
     ptemp.setT(pt);
     ptemp.add(v);
-    drawLine(drawSB, key + "Pt" + xyz, width, pt, ptemp, "translucent " + color);
+    drawLine(sb, key + "Pt" + xyz, width, pt, ptemp, "translucent " + color);
   }
 
-  private void drawVector(SB drawSB, String label,
+  private void drawVector(SB sb, String label,
                                  String type, String d, T3d pt1, T3d v,
                                  String color, String title) {
     if (type.equals("vline")) {
@@ -1493,11 +1494,11 @@ public class SymmetryDesc {
       v = ptemp2;
     }
     d += " ";
-    drawSB.append(getDrawID(label)).append(" diameter ").append(d)
+    sb.append(getDrawID(label)).append(" diameter ").append(d)
         .append(type).append(Escape.eP(pt1)).append(Escape.eP(v))
         .append(" color ").append(color);
     if (title != null)
-      drawSB.append(" \"" + title + "\"");
+      sb.append(" \"" + title + "\"");
   }
 
   private static P3d rotTransCart(SymmetryOperation op, SymmetryInterface uc,
@@ -1510,9 +1511,9 @@ public class SymmetryDesc {
     return p0;
   }
 
-  private static String strCoord(SymmetryOperation op, T3d p, boolean isBio) {
+  private static String strCoord(T3d p, boolean isBio) {
     approx0(p);
-    return (isBio ? p.x + " " + p.y + " " + p.z : op.fcoord2(p));
+    return (isBio ? p.x + " " + p.y + " " + p.z : SymmetryOperation.fcoord(p));
   }
 
   private static T3d approx0(T3d pt) {
@@ -1828,7 +1829,7 @@ public class SymmetryDesc {
       return a;
     }
     if (sb.length() == 0)
-      return (drawID != null ? getDrawID("*") + " delete" : ret);
+      return (drawID != null ? "draw ID \"" + drawID + "*\" delete" : ret);
     return sb.toString();
   }
 
@@ -1952,12 +1953,12 @@ public class SymmetryDesc {
           sgNote = "not applicable";
         if (sgNote != null) {
           info = new Hashtable<String, Object>();
-          info.put("spaceGroupInfo", "");
-          info.put("spaceGroupNote", sgNote);
+          info.put(JC.INFO_SPACE_GROUP_INFO, "");
+          info.put(JC.INFO_SPACE_GROUP_NOTE, sgNote);
           info.put("symmetryInfo", "");
         } else if (isStandard) {
           info = (Map<String, Object>) modelSet.getInfo(modelIndex,
-              "spaceGroupInfo");
+              JC.INFO_SPACE_GROUP_INFO);
         }
         // created once
         if (info != null)
@@ -2015,12 +2016,13 @@ public class SymmetryDesc {
               : createInfoArray(op, cellInfo, pt1, pt2, drawID, scaleFactor,
                   options, false, bsInfo, false, false));
           if (ret != null) {
-            if (nth > 0 && ++nop != nth)
+            nop++;
+            if (nth > 0 && nop != nth)
               continue;
             infolist[i] = ret;
             if (!matrixOnly)
-              sops += "\n" + (i + 1) + "\t"
-                  + ret[bsInfo.get(RET_XYZNORMALIZED) ? RET_XYZNORMALIZED
+              sops += "\n" + (i + 1) + (drawID != null && nop == 1 ? "*" : "") 
+                  + "\t" + ret[bsInfo.get(RET_XYZNORMALIZED) ? RET_XYZNORMALIZED
                       : RET_XYZ]
                   + "\t  " + ret[RET_LABEL];
             opCount++;
@@ -2044,12 +2046,12 @@ public class SymmetryDesc {
       if (slist != null)
         sgName = slist.substring(slist.indexOf(";") + 1);
       if (saveModelInfo)
-        modelSet.setInfo(modelIndex, "spaceGroupInfo", info);
+        modelSet.setInfo(modelIndex, JC.INFO_SPACE_GROUP_INFO, info);
     } else {
       info = new Hashtable<String, Object>();
     }
-    info.put("spaceGroupName", sgName);
-    info.put("spaceGroupNote", sgNote == null ? "" : sgNote);
+    info.put(JC.INFO_SPACE_GROUP_NAME, sgName);
+    info.put(JC.INFO_SPACE_GROUP_NOTE, sgNote == null ? "" : sgNote);
     Object data;
     if (isBio) {
       data = sgName;
@@ -2061,13 +2063,13 @@ public class SymmetryDesc {
           !isForModel);
       if (data == null || data.equals("?")) {
         data = "?";
-        info.put("spaceGroupNote",
+        info.put(JC.INFO_SPACE_GROUP_NOTE,
             "could not identify space group from name: " + sgName
                 + "\nformat: show spacegroup \"2\" or \"P 2c\" "
                 + "or \"C m m m\" or \"x, y, z;-x ,-y, -z\"");
       }
     }
-    info.put("spaceGroupInfo", data);
+    info.put(JC.INFO_SPACE_GROUP_INFO, data);
     return info;
   }
 

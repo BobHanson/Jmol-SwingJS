@@ -39,6 +39,7 @@ import javajs.util.SB;
 
 import org.jmol.util.BSUtil;
 import org.jmol.viewer.FileManager;
+import org.jmol.viewer.JC;
 
 public class Model {
 
@@ -327,7 +328,7 @@ public class Model {
 
   public void setSimpleCage(SymmetryInterface ucell) {
     if ((simpleCage = ucell) != null) {
-      auxiliaryInfo.put("unitCellParams", ucell.getUnitCellParams());
+      auxiliaryInfo.put(JC.INFO_UNIT_CELL_PARAMS, ucell.getUnitCellParams());
     }
   }
 
