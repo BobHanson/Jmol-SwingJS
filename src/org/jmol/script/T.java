@@ -717,6 +717,7 @@ public class T {
   public final static int intersection     = 35 | 0 << 9 | mathfunc;
   public final static int spacegroup       = 36 | 0 << 9 | mathfunc;
   public final static int _args            = 37 | 0 << 9 | mathfunc;
+  public final static int matrix           = 38 | 0 << 9 | mathfunc;
 
 
     // xxx(a)
@@ -1802,6 +1803,7 @@ public class T {
         "load",
         "log",
         "loop",
+        "matrix",
         "measure",
         "measures",
         "monitor",
@@ -2882,6 +2884,7 @@ public class T {
         load,                               // "load"
         log,                                // "log"
         loop,                               // "loop"
+        matrix,
         measure,                            // "measure"
         -1,                                 // "measures"
         -1,                                 // "monitor"

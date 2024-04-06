@@ -140,6 +140,8 @@ public class MathExt {
     case T.array:
       return evaluateArray(mp, args,
           tok == T.array && op.tok == T.propselector);
+    case T.matrix:
+      return evaluateMatrix(mp, args);
     case T._args:
       return evaluateCallbackParam(mp, args);
     case T.axisangle:
@@ -247,6 +249,42 @@ public class MathExt {
       return evaluateWithin(mp, args, op.tok == T.propselector);
     case T.write:
       return evaluateWrite(mp, args);
+    }
+    return false;
+  }
+
+  private boolean evaluateMatrix(ScriptMathProcessor mp, SV[] args) {
+        // matrix("x-y+1/2,x+y,z")
+        // matrix("a+b,b-a,c;1/2,0,0")
+        // matrix([.........])
+        // matrix([.................])
+        // matrix([,,][,,][,,])
+        // matrix([,,,][,,,][,,,][,,,])
+
+    int n = args.length;
+    switch (n) {
+    case 1:
+      switch (args[0].tok) {
+      case T.string:
+        M4d m4 = new M4d();
+        vwr.getSymTemp().getV0abc(args[0].value, m4);
+        return mp.addXM4(m4);      
+      case T.varray:
+        double[] a = SV.dlistValue(args[0], 0);
+        return mp.addXObj(a.length == 9 ? M3d.newA9(a) : M4d.newA16(a));
+      }
+      break;
+    case 3:
+    case 4:
+      if (args[0].tok == T.varray) {
+        double[] a = new double[n == 3 ? 9 : 16];
+        for (int p = 0, i = 0; i < n; i++) {
+          double[] row = SV.dlistValue(args[i], 0);
+          for (int j = 0; j < n; j++)
+            a[p++] = row[j];
+        }
+        return mp.addXObj(a.length == 9 ? M3d.newA9(a) : M4d.newA16(a));
+      }
     }
     return false;
   }

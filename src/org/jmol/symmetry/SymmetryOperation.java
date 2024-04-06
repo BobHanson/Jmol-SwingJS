@@ -73,21 +73,19 @@ public class SymmetryOperation extends M4d {
   private Hashtable<String, Object> info;
 
   static P3d atomTest;
-  
-
 
   final static int TYPE_UNKNOWN = -1;
   final static int TYPE_IDENTITY = 0;
   final static int TYPE_TRANSLATION = 1;
   final static int TYPE_ROTATION = 2;
   final static int TYPE_INVERSION = 4;
-  final static int TYPE_REFLECTION = 8;  
+  final static int TYPE_REFLECTION = 8;
   final static int TYPE_SCREW_ROTATION = TYPE_ROTATION | TYPE_TRANSLATION;
   final static int TYPE_ROTOINVERSION = TYPE_ROTATION | TYPE_INVERSION;
-  final static int TYPE_GLIDE_REFLECTION = TYPE_REFLECTION | TYPE_TRANSLATION; 
-  
+  final static int TYPE_GLIDE_REFLECTION = TYPE_REFLECTION | TYPE_TRANSLATION;
+
   private int opType = TYPE_UNKNOWN;
-  
+
   private int opOrder;
   private V3d opTrans;
   private P3d opPoint, opPoint2;
@@ -97,11 +95,10 @@ public class SymmetryOperation extends M4d {
 
   boolean isIrrelevant;
   boolean isCoincident;
-  
+
   final static int PLANE_MODE_POSITION_ONLY = 0;
   final static int PLANE_MODE_NOTRANS = 1;
   final static int PLANE_MODE_FULL = 2;
-  
 
   private String getOpName(int planeMode) {
     if (opType == TYPE_UNKNOWN)
@@ -118,11 +115,13 @@ public class SymmetryOperation extends M4d {
     case TYPE_REFLECTION:
       return (planeMode == PLANE_MODE_POSITION_ONLY ? "" : "Plane") + opPlane;
     case TYPE_SCREW_ROTATION:
-      return "Screw" + opOrder + op48(opPoint) + op48(opAxis) + op48(opTrans) + opIsCCW;
+      return "Screw" + opOrder + op48(opPoint) + op48(opAxis) + op48(opTrans)
+          + opIsCCW;
     case TYPE_ROTOINVERSION:
       return "Nbar" + opOrder + op48(opPoint) + op48(opAxis) + opIsCCW;
     case TYPE_GLIDE_REFLECTION:
-      return (planeMode == PLANE_MODE_POSITION_ONLY ? "" : "Glide") + opPlane + (planeMode == PLANE_MODE_FULL ? op48(opTrans) : "");
+      return (planeMode == PLANE_MODE_POSITION_ONLY ? "" : "Glide") + opPlane
+          + (planeMode == PLANE_MODE_FULL ? op48(opTrans) : "");
     }
     System.out.println("SymmetryOperation REJECTED TYPE FOR " + this);
     return "";
@@ -143,20 +142,22 @@ public class SymmetryOperation extends M4d {
     case TYPE_REFLECTION:
       return "reflection ";
     case TYPE_SCREW_ROTATION:
-      return "screw rotation " + opOrder + (opIsCCW == null ? "" : opIsCCW == Boolean.TRUE ? "(+) " : "(-) ") + opFrac(opTrans);
+      return "screw rotation " + opOrder
+          + (opIsCCW == null ? "" : opIsCCW == Boolean.TRUE ? "(+) " : "(-) ")
+          + opFrac(opTrans);
     case TYPE_ROTOINVERSION:
-      return opOrder + "-bar "  + (opIsCCW == null ? "" : opIsCCW == Boolean.TRUE ? "(+) " : "(-) ") + opFrac(opPoint);
+      return opOrder + "-bar "
+          + (opIsCCW == null ? "" : opIsCCW == Boolean.TRUE ? "(+) " : "(-) ")
+          + opFrac(opPoint);
     case TYPE_GLIDE_REFLECTION:
       return "glide reflection " + opFrac(opTrans);
     }
     return "";
   }
-  
+
   private static String opFrac(T3d p) {
-    return "{" + opF(p.x) + " " + opF(p.y)  + " " + opF(p.z) + "}";
+    return "{" + opF(p.x) + " " + opF(p.y) + " " + opF(p.z) + "}";
   }
-
-
 
   private static String opF(double x) {
     if (x == 0)
@@ -171,7 +172,7 @@ public class SymmetryOperation extends M4d {
       x -= n;
     }
     int n48 = (int) Math.round(x * 48);
-    if (PT.approxD(n48/48d - x, 1000) != 0)
+    if (PT.approxD(n48 / 48d - x, 1000) != 0)
       return "" + x;
     int div;
     if (n48 % 48 == 0) {
@@ -195,7 +196,8 @@ public class SymmetryOperation extends M4d {
     } else {
       div = 48;
     }
-    return (neg ? "-" : "") + (n*div + n48 * div / 48) + (div == 1 ? "" : "/" + div);
+    return (neg ? "-" : "") + (n * div + n48 * div / 48)
+        + (div == 1 ? "" : "/" + div);
   }
 
   private static String op48(T3d p) {
@@ -204,10 +206,10 @@ public class SymmetryOperation extends M4d {
       return "(null)";
     }
 
-    return "{" + Math.round(p.x*48) + " " + Math.round(p.y*48)  + " " + Math.round(p.z*48) + "}";
+    return "{" + Math.round(p.x * 48) + " " + Math.round(p.y * 48) + " "
+        + Math.round(p.z * 48) + "}";
   }
 
-  
   private String[] myLabels;
   int modDim;
 
@@ -253,9 +255,11 @@ public class SymmetryOperation extends M4d {
 
   /**
    * 
-   * @param op operation to clone or null
-   * @param id opId for this operation; ignored if cloning
-   * @param doNormalize 
+   * @param op
+   *        operation to clone or null
+   * @param id
+   *        opId for this operation; ignored if cloning
+   * @param doNormalize
    */
   SymmetryOperation(SymmetryOperation op, int id, boolean doNormalize) {
     this.doNormalize = doNormalize;
@@ -326,7 +330,7 @@ public class SymmetryOperation extends M4d {
     if (modDim > 0) {
       double[][] a = rsvs.getArray();
       for (int i = a.length - 1; --i >= 0;)
-        a[i][3 + modDim] = finalizeD(a[i][3 + modDim],  divisor);
+        a[i][3 + modDim] = finalizeD(a[i][3 + modDim], divisor);
     }
     isFinalized = true;
   }
@@ -344,7 +348,7 @@ public class SymmetryOperation extends M4d {
         return 0;
       int n = (int) m;
       return ((n >> DIVISOR_OFFSET) * 1F / (n & DIVISOR_MASK));
-    } 
+    }
     return m / divisor;
   }
 
@@ -371,10 +375,12 @@ public class SymmetryOperation extends M4d {
       sb.append("[\t");
       for (int j = 0; j < 3; j++)
         sb.appendI((int) r[j]).append("\t");
-      double trans =  r[3];
+      double trans = r[3];
       if (trans != (int) trans)
         trans = 12 * trans;
-      sb.append(twelfthsOf(isCanonical ? normalizeTwelfths(trans / 12, 12, true) : (int) trans)).append("\t]\n");
+      sb.append(twelfthsOf(
+          isCanonical ? normalizeTwelfths(trans / 12, 12, true) : (int) trans))
+          .append("\t]\n");
     }
     return sb.toString();
   }
@@ -456,8 +462,8 @@ public class SymmetryOperation extends M4d {
       xyz = xyz.substring(0, pt);
       allowScaling = false;
     }
-    String strOut = getMatrixFromString(this, xyz, linearRotTrans,
-        allowScaling, halfOrLess, true);
+    String strOut = getMatrixFromString(this, xyz, linearRotTrans, allowScaling,
+        halfOrLess, true);
     if (strOut == null)
       return false;
     xyzCanonical = strOut;
@@ -479,6 +485,7 @@ public class SymmetryOperation extends M4d {
 
   /**
    * Sets the divisor to 0 for n/9 or n/mm
+   * 
    * @param xyz
    * @return 0 or 12
    */
@@ -487,7 +494,8 @@ public class SymmetryOperation extends M4d {
     int len = xyz.length();
     while (pt > 0 && pt < len - 1) {
       char c = xyz.charAt(pt + 1);
-      if ("2346".indexOf(c) < 0 || pt < len - 2 && Character.isDigit(xyz.charAt(pt + 2))) {
+      if ("2346".indexOf(c) < 0
+          || pt < len - 2 && Character.isDigit(xyz.charAt(pt + 2))) {
         // any n/m where m is not 2,3,4,6
         // any n/nn
         return 0;
@@ -530,15 +538,15 @@ public class SymmetryOperation extends M4d {
       if (Double.isNaN(linearRotTrans[i]))
         return false;
       v = linearRotTrans[i];
-      
+
       if (Math.abs(v) < 0.00001f)
         v = 0;
       boolean isTrans = ((i + 1) % (n + 1) == 0);
       if (isTrans) {
-        int denom =  (divisor == 0 ? ((int) v) & DIVISOR_MASK : divisor);
+        int denom = (divisor == 0 ? ((int) v) & DIVISOR_MASK : divisor);
         if (denom == 0)
           denom = 12;
-        v =  finalizeD(v, divisor);
+        v = finalizeD(v, divisor);
         // offset == null only in the case of "xyz matrix:" option
         if (offset != null) {
           // magnetic centering only
@@ -560,7 +568,8 @@ public class SymmetryOperation extends M4d {
     return true;
   }
 
-  public static M4d getMatrixFromXYZ(String xyz, double[] v, boolean halfOrLess) {
+  public static M4d getMatrixFromXYZ(String xyz, double[] v,
+                                     boolean halfOrLess) {
     if (v == null)
       v = new double[16];
     xyz = getMatrixFromString(null, xyz, v, false, halfOrLess, true);
@@ -578,7 +587,7 @@ public class SymmetryOperation extends M4d {
       return null;
     }
   }
-  
+
   /**
    * Convert the Jones-Faithful notation "x, -z+1/2, y" or "x1, x3-1/2, x2,
    * x5+1/2, -x6+1/2, x7..." to a linear array
@@ -594,9 +603,10 @@ public class SymmetryOperation extends M4d {
    * @return canonized Jones-Faithful string
    */
   public static String getMatrixFromString(SymmetryOperation op, String xyz,
-                                    double[] linearRotTrans,
-                                    boolean allowScaling, boolean halfOrLess,
-                                    boolean retString) {
+                                           double[] linearRotTrans,
+                                           boolean allowScaling,
+                                           boolean halfOrLess,
+                                           boolean retString) {
     boolean isDenominator = false;
     boolean isDecimal = false;
     boolean isNegative = false;
@@ -781,19 +791,20 @@ public class SymmetryOperation extends M4d {
 
   private final static int DIVISOR_MASK = 0xFF;
   private final static int DIVISOR_OFFSET = 8;
-  
+
   private final static int toDivisor(double numer, int denom) {
     int n = (int) numer;
     if (n != numer) {
       // could happen with magnetic lattice centering 1/5 + 1/2 = 7/10
       double f = numer - n;
-      denom = (int) Math.abs(denom/f);
+      denom = (int) Math.abs(denom / f);
       n = (int) (Math.abs(numer) / f);
     }
     return ((n << DIVISOR_OFFSET) + denom);
   }
 
-  private final static String xyzFraction12(double n12ths, int denom, boolean allPositive,
+  private final static String xyzFraction12(double n12ths, int denom,
+                                            boolean allPositive,
                                             boolean halfOrLess) {
     if (n12ths == 0)
       return "";
@@ -954,15 +965,19 @@ public class SymmetryOperation extends M4d {
   //    "15/16", "23/24", "47/48"
   //  };
   //
-  private static String plusMinus(String strT, double x, String sx, boolean allowFractions) {
+  private static String plusMinus(String strT, double x, String sx,
+                                  boolean allowFractions) {
     double a;
     return (x == 0 ? ""
         : (x < 0 ? "-" : strT.length() == 0 ? "" : "+")
-            + (x == 1 || x == -1 ? "" : (a = Math.abs(x)) < 1 && allowFractions ? twelfthsOf(a * 12) : "" + (int) a)) + sx;
+            + (x == 1 || x == -1 ? ""
+                : (a = Math.abs(x)) < 1 && allowFractions ? twelfthsOf(a * 12)
+                    : "" + (int) a))
+        + sx;
   }
 
   private static double normalizeTwelfths(double iValue, int divisor,
-                                         boolean doNormalize) {
+                                          boolean doNormalize) {
     iValue *= divisor;
     int half = divisor / 2;
     if (doNormalize) {
@@ -996,10 +1011,11 @@ public class SymmetryOperation extends M4d {
                                               boolean halfOrLess) {
     return getXYZFromMatrixFrac(mat, is12ths, allPositive, halfOrLess, false);
   }
-  
+
   final public static String getXYZFromMatrixFrac(M4d mat, boolean is12ths,
-                                              boolean allPositive,
-                                              boolean halfOrLess, boolean allowFractions) {
+                                                  boolean allPositive,
+                                                  boolean halfOrLess,
+                                                  boolean allowFractions) {
     String str = "";
     SymmetryOperation op = (mat instanceof SymmetryOperation
         ? (SymmetryOperation) mat
@@ -1049,7 +1065,7 @@ public class SymmetryOperation extends M4d {
   }
 
   /**
-   * Get string version of fraction 
+   * Get string version of fraction
    * 
    * @param p
    * @return "1/2" for example
@@ -1058,7 +1074,7 @@ public class SymmetryOperation extends M4d {
     // Castep re
     return opF(p.x) + " " + opF(p.y) + " " + opF(p.z);
   }
-  
+
   static double approx(double f) {
     return PT.approxD(f, 100);
   }
@@ -1082,7 +1098,8 @@ public class SymmetryOperation extends M4d {
               + (j + 1);
         }
       }
-      s += xyzFraction12((int) (va[i][0] * (is12ths ? 1 : 12)), 12, false, true);
+      s += xyzFraction12((int) (va[i][0] * (is12ths ? 1 : 12)), 12, false,
+          true);
     }
     return PT.rep(s.substring(1), ",+", ",");
   }
@@ -1115,7 +1132,8 @@ public class SymmetryOperation extends M4d {
    * @return +1, -1, or 0
    */
   int getMagneticOp() {
-    return (magOp == Integer.MAX_VALUE ? magOp = (int) (determinant3() * timeReversal)
+    return (magOp == Integer.MAX_VALUE
+        ? magOp = (int) (determinant3() * timeReversal)
         : magOp);
   }
 
@@ -1147,7 +1165,7 @@ public class SymmetryOperation extends M4d {
           && m02 == 0 && m10 == 0 && m12 == 0 && m20 == 0 && m21 == 0
           && (m03 != 0 || m13 != 0 || m23 != 0)) {
         isCenteringOp = true;
-        centering = V3d.new3( m03, m13, m23);
+        centering = V3d.new3(m03, m13, m23);
       } else {
         unCentered = true;
         centering = null;
@@ -1168,9 +1186,9 @@ public class SymmetryOperation extends M4d {
     m2.m03 = m2.m13 = m2.m23 = 0;
     if (getMagneticOp() < 0)
       m2.scale(-1); // does not matter that we flip m33 - it is never checked
-    xyz += "(" + PT.rep(PT
-        .rep(PT.rep(getXYZFromMatrix(m2, false, false, false),
-            "x", "mx"), "y", "my"),
+    xyz += "(" + PT.rep(
+        PT.rep(PT.rep(getXYZFromMatrix(m2, false, false, false), "x", "mx"),
+            "y", "my"),
         "z", "mz") + ")";
     return xyz;
   }
@@ -1204,10 +1222,13 @@ public class SymmetryOperation extends M4d {
    * @param dim
    * @param m
    * @param fracPts
-   * @param i0 first index
-   * @param n number of atoms
+   * @param i0
+   *        first index
+   * @param n
+   *        number of atoms
    */
-  public static void normalizeOperationToCentroid(int dim, M4d m, P3d[] fracPts, int i0, int n) {
+  public static void normalizeOperationToCentroid(int dim, M4d m, P3d[] fracPts,
+                                                  int i0, int n) {
     if (n <= 0)
       return;
     double x = 0;
@@ -1229,21 +1250,21 @@ public class SymmetryOperation extends M4d {
       x += (x < 0 ? 1 : -1);
     }
     if (dim > 1)
-    while (y < -0.001 || y >= 1.001) {
-      m.m13 += (y < 0 ? 1 : -1);
-      y += (y < 0 ? 1 : -1);
-    }
+      while (y < -0.001 || y >= 1.001) {
+        m.m13 += (y < 0 ? 1 : -1);
+        y += (y < 0 ? 1 : -1);
+      }
     if (dim > 2)
-    while (z < -0.001 || z >= 1.001) {
-      m.m23 += (z < 0 ? 1 : -1);
-      z += (z < 0 ? 1 : -1);
-    }
+      while (z < -0.001 || z >= 1.001) {
+        m.m23 += (z < 0 ? 1 : -1);
+        z += (z < 0 ? 1 : -1);
+      }
   }
 
   public static Lst<P3d> getLatticeCentering(SymmetryOperation[] ops) {
     Lst<P3d> list = new Lst<P3d>();
     for (int i = 0; i < ops.length; i++) {
-      T3d c = (ops[i]  == null ? null : ops[i].getCentering());
+      T3d c = (ops[i] == null ? null : ops[i].getCentering());
       if (c != null)
         list.addLast(P3d.newP(c));
     }
@@ -1270,7 +1291,7 @@ public class SymmetryOperation extends M4d {
     }
     return opOrder;
   }
-  
+
   public P3d getOpPoint() {
     if (opType == TYPE_UNKNOWN) {
       setOpTypeAndOrder();
@@ -1284,8 +1305,9 @@ public class SymmetryOperation extends M4d {
     }
     return opAxis;
   }
+
   public P3d getOpPoint2() {
-   return opPoint2;
+    return opPoint2;
   }
 
   public V3d getOpTrans() {
@@ -1296,10 +1318,10 @@ public class SymmetryOperation extends M4d {
   }
 
   private final static P3d x = P3d.new3(Math.PI, Math.E, Math.PI * Math.E);
-  
+
   /**
-   * The problem is that the 3-fold axes for cubic groups
-   * have (seemingly arbitrary assignments for axes
+   * The problem is that the 3-fold axes for cubic groups have (seemingly
+   * arbitrary assignments for axes
    */
   private final static int[] C3codes = { //
       0x031112, // 3+(-1 1-1)
@@ -1311,28 +1333,29 @@ public class SymmetryOperation extends M4d {
       0x031102, // -3+(-1-1 1)
       0x120301, // -3-( 1-1-1)
   };
-  
+
   private static int opGet3code(M4d m) {
     int c = 0;
     double[] row = new double[4];
     for (int r = 0; r < 3; r++) {
-      m.getRow(r,  row);
+      m.getRow(r, row);
       for (int i = 0; i < 3; i++) {
         switch ((int) row[i]) {
         case 1:
-          c |= (i+1) << ((2-r)<<3);
+          c |= (i + 1) << ((2 - r) << 3);
           break;
         case -1:
-          c |= (0x10 + i+1) << ((2-r)<<3);
+          c |= (0x10 + i + 1) << ((2 - r) << 3);
           break;
         }
       }
     }
     return c;
   }
-  
+
   //private static V3d xpos;
   private static V3d xneg;
+
   private static T3d opGet3x(M4d m) {
     if (m.m22 != 0) // z-axis
       return x;
@@ -1494,10 +1517,9 @@ public class SymmetryOperation extends M4d {
       isOK &= checkOpAxis(p1, (d == 0 ? opAxis : opTrans), p1sum, new V3d(),
           new V3d(), null);
       if (isOK) {
-          opPoint.setT(p1sum);
-          // this next changes opPoint value position to front edge or where it just touches.
-          if (checkOpAxis(opPoint, opAxis, p2, new V3d(), new V3d(),
-            opPoint)) {
+        opPoint.setT(p1sum);
+        // this next changes opPoint value position to front edge or where it just touches.
+        if (checkOpAxis(opPoint, opAxis, p2, new V3d(), new V3d(), opPoint)) {
           opPoint2 = P3d.newP(p2);
           // was for vertical offset of screw components 4(+) and 4(-)
           //          if (order != 2 && opIsCCW == Boolean.FALSE && d > 0 && d <= 0.5d) {
@@ -1554,11 +1576,10 @@ public class SymmetryOperation extends M4d {
       if (approx6(opPlane.w) == 0)
         opPlane.w = 0;
       approx6Pt(opAxis);
-     normalizePlane(opPlane);
-//      
-//      opAxis.setT(opPlane);
-      if (d > 0 && 
-          (opTrans.z == 0 && opTrans.lengthSquared() == 1.25d
+      normalizePlane(opPlane);
+      //      
+      //      opAxis.setT(opPlane);
+      if (d > 0 && (opTrans.z == 0 && opTrans.lengthSquared() == 1.25d
           || opTrans.z == 0.5d && opTrans.lengthSquared() == 1.5d)) {
         // SG 186
         // +/-0.5x +/-y, +/-x +/-0.5y
@@ -1606,10 +1627,8 @@ public class SymmetryOperation extends M4d {
   private static void normalizePlane(P4d plane) {
     approx6Pt(plane);
     plane.w = approx6(plane.w);
-    if (plane.w > 0 
-        || plane.w == 0 && (plane.x < 0 
-                || plane.x == 0 && plane.y < 0 
-                || plane.y == 0 && plane.z < 0)) {
+    if (plane.w > 0 || plane.w == 0 && (plane.x < 0
+        || plane.x == 0 && plane.y < 0 || plane.y == 0 && plane.z < 0)) {
       plane.scale4(-1);
     }
     // unsure no -0 values; we need this for the maps
@@ -1618,8 +1637,10 @@ public class SymmetryOperation extends M4d {
   }
 
   private static boolean isCoaxial(T3d v) {
-    return (Math.abs(approx(v.x)) == 1 || Math.abs(approx(v.y)) == 1 || Math.abs(approx(v.z)) == 1);
+    return (Math.abs(approx(v.x)) == 1 || Math.abs(approx(v.y)) == 1
+        || Math.abs(approx(v.z)) == 1);
   }
+
   private void clearOp() {
     if (!isFinalized)
       doFinalize();
@@ -1632,9 +1653,10 @@ public class SymmetryOperation extends M4d {
   }
 
   private static boolean hasTrans(M4d m4) {
-    return (approx6(m4.m03) != 0 || approx6(m4.m13) != 0 || approx6(m4.m23) != 0);
+    return (approx6(m4.m03) != 0 || approx6(m4.m13) != 0
+        || approx6(m4.m23) != 0);
   }
-  
+
   private static P4d[] opPlanes;
 
   private static boolean checkOpAxis(P3d pt, V3d axis, P3d ptRet, V3d t1,
@@ -1645,19 +1667,21 @@ public class SymmetryOperation extends M4d {
     int[] map = BoxInfo.faceOrder;
     double f = (ptNot == null ? 1 : -1);
     for (int i = 0; i < 6; i++) {
-      P3d p = MeasureD.getIntersection(pt, axis, opPlanes[map[i]], ptRet, t1, t2);
-      if (p != null && checkOpPoint(p) && axis.dot(t1) * f < 0 && (ptNot == null || approx(ptNot.distance(p) - 0.5d) >= 0)) {
+      P3d p = MeasureD.getIntersection(pt, axis, opPlanes[map[i]], ptRet, t1,
+          t2);
+      if (p != null && checkOpPoint(p) && axis.dot(t1) * f < 0
+          && (ptNot == null || approx(ptNot.distance(p) - 0.5d) >= 0)) {
         return true;
       }
     }
- 
+
     return false;
   }
 
   static T3d opClean6(T3d t) {
     if (approx6(t.x) == 0)
       t.x = 0;
-    if (approx6(t.y)== 0)
+    if (approx6(t.y) == 0)
       t.y = 0;
     if (approx6(t.z) == 0)
       t.z = 0;
@@ -1671,15 +1695,14 @@ public class SymmetryOperation extends M4d {
   private static boolean checkOK(double p, double a) {
     return (a != 0 || approx(p) >= 0 && approx(p) <= 1);
   }
- 
-  private static boolean checkOpPlane(P3d p1, P3d p2, P3d p3, 
-                                      P4d plane, 
+
+  private static boolean checkOpPlane(P3d p1, P3d p2, P3d p3, P4d plane,
                                       V3d vtemp1, V3d vtemp2) {
     // just check all 8 cell points for directed distance to the plane
     // any mix of + and - and 0 is OK; all + or all - is a fail
     MeasureD.getPlaneThroughPoints(p1, p2, p3, vtemp1, vtemp2, plane);
     //System.out.println( "draw plane " + p1 + p2 + p3 + "//" + v + vtemp1 + vtemp2);
-    
+
     P3d[] pts = BoxInfo.unitCubePoints;
     int nPos = 0;
     int nNeg = 0;
@@ -1702,7 +1725,6 @@ public class SymmetryOperation extends M4d {
     // all + or all - means the plane is out of scope
     return !(nNeg == 8 || nPos == 8);
   }
-  
 
   public static SymmetryOperation[] getAdditionalOperations(SymmetryOperation[] ops) {
     int n = ops.length;
@@ -1732,7 +1754,7 @@ public class SymmetryOperation extends M4d {
    * @param lst
    * @param mapPlanes
    * @param n0
-   * @param isym 
+   * @param isym
    */
   void addOps(SB xyzList, Lst<SymmetryOperation> lst,
               Map<String, Lst<SymmetryOperation>> mapPlanes, int n0, int isym) {
@@ -1762,14 +1784,14 @@ public class SymmetryOperation extends M4d {
   }
 
   /**
-   * Looking for coincidence. We only concern ourselves if there is 
-   * at least one non-glide reflection.
+   * Looking for coincidence. We only concern ourselves if there is at least one
+   * non-glide reflection.
    * 
    * @param mapPlanes
    * @param op
    */
   private static void addPlaneMap(Map<String, Lst<SymmetryOperation>> mapPlanes,
-                             SymmetryOperation op) {
+                                  SymmetryOperation op) {
     String s = op.getOpName(PLANE_MODE_POSITION_ONLY);
     Lst<SymmetryOperation> l = mapPlanes.get(s);
     //System.out.println("SO ====" + s + "====" + op.getOpName(PLANE_MODE_FULL));
@@ -1780,10 +1802,10 @@ public class SymmetryOperation extends M4d {
     } else {
       SymmetryOperation op0 = l.get(0);
       if (op0.isCoincident) {
-           op.isCoincident = true;
+        op.isCoincident = true;
       } else if (havePlane || (op0.opType == TYPE_REFLECTION)) {
         op.isCoincident = true;
-        for (int i = l.size(); --i >= 0;) {        
+        for (int i = l.size(); --i >= 0;) {
           l.get(i).isCoincident = true;
         }
       }
@@ -1792,20 +1814,19 @@ public class SymmetryOperation extends M4d {
   }
 
   /**
-   * No need to check lattice translations that are only
-   * going to contribute to the inherent translation 
-   * of the element. Yes, these exist. But they are 
+   * No need to check lattice translations that are only going to contribute to
+   * the inherent translation of the element. Yes, these exist. But they are
    * inconsequential and are never shown.
    * 
    * Reflections: anything perpendicular to the normal is discarded.
    * 
    * Rotations: anything parallel to the normal is discarded.
-   *  
+   * 
    * @param t
-   * @return true if 
+   * @return true if
    */
   private boolean checkOpSimilar(V3d t) {
-    switch (getOpType() &~ TYPE_TRANSLATION) {
+    switch (getOpType() & ~TYPE_TRANSLATION) {
     default:
       return false;
     case TYPE_IDENTITY:
@@ -1818,17 +1839,17 @@ public class SymmetryOperation extends M4d {
   }
 
   /**
-   * @param opThis 
-   * @param t0 
-   * @param n0  
-   * @param t 
-   * @param xyzList 
-   * @param lst 
-   * @param itno 
+   * @param opThis
+   * @param t0
+   * @param n0
+   * @param t
+   * @param xyzList
+   * @param lst
+   * @param itno
    * @return true if added
    */
   private boolean opCheckAdd(SymmetryOperation opThis, V3d t0, int n0, V3d t,
-                          SB xyzList, Lst<SymmetryOperation> lst, int itno) {
+                             SB xyzList, Lst<SymmetryOperation> lst, int itno) {
     //int nnew = 0;
     setM4(opThis);
     V3d t1 = V3d.newV(t);
@@ -1836,7 +1857,8 @@ public class SymmetryOperation extends M4d {
     setTranslation(t1);
     isFinalized = true;
     setOpTypeAndOrder();
-    if (!isIrrelevant && opType != TYPE_IDENTITY && opType != TYPE_TRANSLATION) {
+    if (!isIrrelevant && opType != TYPE_IDENTITY
+        && opType != TYPE_TRANSLATION) {
       String s = getOpName(PLANE_MODE_NOTRANS) + ";";
       if (xyzList.indexOf(s) < 0) {
         xyzList.append(s);
@@ -1860,7 +1882,7 @@ public class SymmetryOperation extends M4d {
   public static void normalize12ths(V3d vtrans) {
     vtrans.x = PT.approxD(vtrans.x, 12);
     vtrans.y = PT.approxD(vtrans.y, 12);
-    vtrans.z = PT.approxD(vtrans.z, 12);    
+    vtrans.z = PT.approxD(vtrans.z, 12);
   }
 
   public String getCode() {
@@ -1883,7 +1905,8 @@ public class SymmetryOperation extends M4d {
       break;
     case 'S':
       double d = opTrans.length();
-      if (opIsCCW != null && (d < (d > 1 ? 6 : 0.5d)) == (opIsCCW == Boolean.TRUE))
+      if (opIsCCW != null
+          && (d < (d > 1 ? 6 : 0.5d)) == (opIsCCW == Boolean.TRUE))
         t = 'w';
       break;
     case 'R':
@@ -1896,11 +1919,10 @@ public class SymmetryOperation extends M4d {
     default:
       break;
     }
-    String s = g + m + t + "."
-        + ((char) ('0' + o)) + "." + ccw + "."
+    String s = g + m + t + "." + ((char) ('0' + o)) + "." + ccw + "."
     //+ ((char)('@' + o * 2 + ccw))
     ;
-//    System.out.println("!!" + s + " " + getOpName(PLANE_MODE_FULL));
+    //    System.out.println("!!" + s + " " + getOpName(PLANE_MODE_FULL));
     return opAxisCode = s;
   }
 
@@ -1915,21 +1937,15 @@ public class SymmetryOperation extends M4d {
     if (fz == 9)
       fz = 3;
     if (fx != 0 && fy != 0 && fz != 0) {
-      return (fx == 3 && fy == 3
-          && fz == 3 ? 'd'
-              : fx == 6 && fy == 6 && fz == 6 ? 'n' 
-              : 'g');
+      return (fx == 3 && fy == 3 && fz == 3 ? 'd'
+          : fx == 6 && fy == 6 && fz == 6 ? 'n' : 'g');
     }
-    if (fx != 0 && fy != 0 
-        || fy != 0 && fz != 0 
-        || fz != 0 && fx != 0) {
+    if (fx != 0 && fy != 0 || fy != 0 && fz != 0 || fz != 0 && fx != 0) {
       // any two
-      if (fx == 3 && fy == 3 || fx == 3 && fz == 3
-          || fy == 3 && fz == 3) {
+      if (fx == 3 && fy == 3 || fx == 3 && fz == 3 || fy == 3 && fz == 3) {
         return 'd';
       }
-      if (fx == 6 && fy == 6 || fx == 6 && fz == 6
-          || fy == 6 && fz == 6) {
+      if (fx == 6 && fy == 6 || fx == 6 && fz == 6 || fy == 6 && fz == 6) {
         // making sure here that this is truly a diagonal in the plane, not just
         // a glide parallel to a face on a diagonal plane! Mois Aroyo 2018
         if (fx == 0 && ax1.x == 0 || fy == 0 && ax1.y == 0
@@ -1943,25 +1959,132 @@ public class SymmetryOperation extends M4d {
     return (fx != 0 ? 'a' : fy != 0 ? 'b' : 'c');
   }
 
-
-  static void rotateAndTranslatePoint(M4d m, P3d src, int ta, int tb, int tc, P3d dest) {
+  static void rotateAndTranslatePoint(M4d m, P3d src, int ta, int tb, int tc,
+                                      P3d dest) {
     m.rotTrans2(src, dest);
     dest.add3(ta, tb, tc);
   }
 
   /**
-   * Convert an operation string in one basis to the equivalent string in another basis.
+   * Convert an operation string in one basis to the equivalent string in
+   * another basis.
    * 
-   * Performs trm^1 * op * trm  
+   * Performs trm^-1 * op * trm
+   * 
+   * as per
+   * https://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-show-tr-matrix?what=gp&way=&type=&trm=x%2By%2C%2Dx%2By%2Cz&from=ita@trgen
+   * 
+   * Rationale:
+   * 
+   * Consider operation R and transform P. Let Q = P^-1. Then we are claiming
+   * that
+   * 
+   * R' = Q*R*P
+   * 
+   * The way I think about this is to think about what a matrix operation does
+   * in relation to coordinates. The role of an operation is to transform a
+   * coordinate c1 in real space to another point, c2. But symmetry operations
+   * do not work directly on Cartesian coordinates. Rather, they operate on
+   * fractional coordinates, f1 and f2, expressed in a basis relative to
+   * Cartesian space -- the unit cell.
+   * 
+   * Thus, we have a 4x4 matrix F for converting Cartesian coordinates to
+   * fractional and its inverse, C:
+   * 
+   * f1 = F(c1); c1 = C(f1); C = F^-1
+   * 
+   * and, applying operation R, we have:
+   * 
+   * f2 = R(f1)
+   * 
+   * we can write:
+   * 
+   * c2 = C(f2) = C(R(f1)) = C(R(F(c1)))
+   * 
+   * or
+   * 
+   * c2 = (C*R*F)(c1)
+   * 
+   * similarly, using the other basis we have to get the same thing, we can
+   * write:
+   * 
+   * c2 = (C'*R'*F')(c1)
+   * 
+   * Thus,
+   * 
+   * C*R*F = C'*R'*F'
+   *
+   * This is just a statement that we can use any basis we want to do describe
+   * the symmetry.
+   * 
+   * So what about Q*R*P ?
+   * 
+   * In general, since P is the description of the change of bases, which means
+   * it relates a nonstandard fractional point description to its standard
+   * description:
+   * 
+   * P(f') = f;
+   * 
+   * For example, if P is (c,a,b;1/2,0,0) and f' = {1/2 1/4 1/2}, then f = {3/4
+   * 1/2 1/2}. (Trust me or do the math yourself using:
+   * 
+   * <pre>
+   
+      P = matrix("c,a,b;1/2,0,0");      
+      f_ = {0.5 0.25 0.5};
+      print P*f_;
+   
+   * </pre>
+   * 
+   * That is, the point {3/4 1/2 1/2} in the standard setting is described as
+   * {1/2 1/4 1/2} in the nonstandard setting. These are just two descriptions
+   * of the same point.
+   * 
+   * And the inverse is:
+   * 
+   * Q(f) = f'
+   * 
+   * We want a description of R' such that
+   * 
+   * c2 = (C*R*F)(c1) = (C'*R'*F')(c1)
+   * 
+   * 
+   * c2 = (C*R*F)(c1)
+   * 
+   * C(f2) = C*R(f1)
+   * 
+   * f2 = R(f1)
+   * 
+   * P(f2') = R(P(f1'))
+   * 
+   * QP(f2') = QRP(f1')
+   * 
+   * f2' = QRP(f1')
+   * 
+   * and since
+   * 
+   * R'(f1') = f2'
+   * 
+   * we have
+   * 
+   * R'(f1') = Q*R*P(f1')
+   * 
+   * and we have the desired result, that
+   * 
+   * R' = Q*R*P
+   * 
    * 
    * @param xyz
    * @param trm
    * @param trmInv
-   * @param t  temporary or null
-   * @param v  temporary or null
+   * @param t
+   *        temporary or null
+   * @param v
+   *        temporary or null
    * @return transformed string
    */
-  static String transformStr(String xyz, M4d trm, M4d trmInv, M4d t, double[] v) {
+  static String transformStr(String xyz, M4d trm, M4d trmInv, M4d t,
+                             double[] v) {
     if (trmInv == null) {
       trmInv = M4d.newM4(trm);
       trmInv.invert();
@@ -1969,29 +2092,27 @@ public class SymmetryOperation extends M4d {
     if (t == null)
       t = new M4d();
     if (v == null)
-      v = new double[16];      
+      v = new double[16];
     M4d op = getMatrixFromXYZ(xyz, v, true);
     t.setM4(trmInv);
     t.mul(op);
     t.mul(trm);
     return getXYZFromMatrix(t, false, true, false);
   }
-  
+
   static String transformXyzT(String xyz, String transform) {
     M4d trm = new M4d();
     UnitCell.getMatrixAndUnitCell(null, transform, trm);
-    return (transformStr(xyz, trm, null,null, null));    
+    return (transformStr(xyz, trm, null, null, null));
   }
-  
+
 //  static {
 //
 //    System.out.println(transformXyzT("-x+1/2, y+1/2, -z+1/2", "a+b,-a+b,c"));
 //    System.out.println(transformXyzT("x+1/2, -y+1/2, -z+1/2", "a+b,-a+b,c"));
-//    System.out.println(transformXyzT("  y+1/2, x+1/2, -z+1/2", "a+b,-a+b,c"));
+//    System.out.println(transformXyzT("y+1/2, x+1/2, -z+1/2", "a+b,-a+b,c"));
 //    System.out.println(transformXyzT("y, -x, z", "a+b,-a+b,c"));
-//    
-//    
-//    
+//
 //  }
 
   static M4d stringToMatrix(String xyz) {
@@ -2011,17 +2132,18 @@ public class SymmetryOperation extends M4d {
     tr.scale(-1);
     m.add(tr);
     m.transpose();
-    String s = SymmetryOperation.getXYZFromMatrixFrac(m, false, true, false, true)
-          .replace('x', 'a').replace('y', 'b').replace('z', 'c');
-    return (tr.lengthSquared() < 1e-12d ? s : s + ";" +
-        (normalize ? norm(-tr.x) + "," + norm(-tr.y) + "," + norm(-tr.z)
-        : opF(-tr.x)+ "," + opF(-tr.y) + "," + opF(-tr.z)
-        )
-        );
+    String s = SymmetryOperation
+        .getXYZFromMatrixFrac(m, false, true, false, true).replace('x', 'a')
+        .replace('y', 'b').replace('z', 'c');
+    return (tr.lengthSquared() < 1e-12d ? s
+        : s + ";"
+            + (normalize ? norm(-tr.x) + "," + norm(-tr.y) + "," + norm(-tr.z)
+                : opF(-tr.x) + "," + opF(-tr.y) + "," + opF(-tr.z)));
   }
 
   /**
    * normalize to interval (-1/2,1/2]
+   * 
    * @param d
    * @return normalized translation
    */
@@ -2035,7 +2157,6 @@ public class SymmetryOperation extends M4d {
     return opF(d);
   }
 
-  
   // https://crystalsymmetry.wordpress.com/space-group-diagrams/
 
 }

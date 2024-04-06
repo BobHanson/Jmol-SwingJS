@@ -229,6 +229,7 @@ public class ModelKit {
     public String toString() {
       return "[ClegNode #" + index + " " + name + "   " + myIta + ":" + setting + " " + myTrm + "]"; 
     }
+
   }
 
   private static class Constraint {
@@ -3240,7 +3241,6 @@ public class ModelKit {
         origin = new P3d();
       origin.add(oabc[0]);
     }
-
     // ready to roll....
     boolean isP1 = (name.equalsIgnoreCase("P1") || name.equals("ITA/1.1"));
     clearAtomConstraints();
