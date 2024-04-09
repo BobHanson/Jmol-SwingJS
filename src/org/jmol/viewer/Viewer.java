@@ -8715,7 +8715,7 @@ public class Viewer extends JmolViewer
     if (autoExit || !haveDisplay || !getPreserveState())
       return;
     if (command.startsWith("pause ") || command.equals("pause"))
-      command = "resume" + command.substring(5);
+      command = "resume";// + command.substring(5);
     commandHistory.addCommand(PT.replaceAllCharacters(command, "\r\n\t", " "));
   }
 
@@ -10557,12 +10557,22 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * Retrieve a Symmetry object, possibly re-using an old one.
+   * Retrieve a new Symmetry object.
    * 
    * @return org.jmol.symmetry.Symmetry object
    */
   public SymmetryInterface getSymTemp() {
     return Interface.getSymmetry(this, "ms");
+  }
+
+  private static SymmetryInterface symStatic;
+  /**
+   * Retrieve the static Symmetry object, which should be used only statically
+   * 
+   * @return org.jmol.symmetry.Symmetry object
+   */
+  public SymmetryInterface getSymStatic() {
+    return (symStatic == null ? (symStatic = Interface.getSymmetry(this, "ms")) : symStatic);
   }
 
   public void setWindowDimensions(double[] dims) {

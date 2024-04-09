@@ -444,9 +444,10 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public boolean isSymmetryCell(SymmetryInterface sym) {
     UnitCell uc = ((Symmetry) (sym)).unitCell;
-    double[][] f2c = (uc.isStandard() ? (symmetryInfo == null ? unitCell.getF2C()
-        : symmetryInfo.spaceGroupF2C) : null);
-    boolean ret = uc.isSameAs(f2c);
+    double[][] myf2c = (!uc.isStandard() ? null 
+        : (symmetryInfo != null ? symmetryInfo.spaceGroupF2C 
+            : unitCell.getF2C()));
+    boolean ret = uc.isSameAs(myf2c);
     if (symmetryInfo != null) {
       if (symmetryInfo.setIsActiveCell(ret)) {
         setUnitCellFromParams(symmetryInfo.spaceGroupF2CParams, false,
@@ -1098,7 +1099,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object convertOperation(String xyz, M4d matrix) {
+  public Object staticConvertOperation(String xyz, M4d matrix) {
     return (matrix == null ? SymmetryOperation.stringToMatrix(xyz) : SymmetryOperation.getXYZFromMatrixFrac(matrix, false, false, false, true));
   }
 
@@ -1405,7 +1406,7 @@ public class Symmetry implements SymmetryInterface {
 
 
   @Override
-  public String getTransformABC(Object transform, boolean normalize) {
+  public String staticGetTransformABC(Object transform, boolean normalize) {
     return SymmetryOperation.getTransformABC(transform, normalize);
   }
   
@@ -1489,7 +1490,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String cleanTransform(String tr) {
+  public String staticCleanTransform(String tr) {
     M4d m = new M4d();
     UnitCell.getMatrixAndUnitCell(null, tr, m);
     return SymmetryOperation.getTransformABC(m, true);
@@ -1542,6 +1543,11 @@ public class Symmetry implements SymmetryInterface {
         spaceGroup.displayName = name;
     }
     return (name.length() > 0 ? name : null);
+  }
+
+  @Override
+  public String staticToRationalXYZ(P3d fPt) {
+    return "("+ SymmetryOperation.fcoord(fPt) + ")";
   }
   
 }

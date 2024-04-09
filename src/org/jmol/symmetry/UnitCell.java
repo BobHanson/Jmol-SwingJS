@@ -83,6 +83,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
   private boolean allFractionalRelative;
   
   private final P3d cartesianOffset = new P3d();
+  
 
   /**
    * a P3 or P4; the raw multiplier for the cell from
@@ -1005,15 +1006,13 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
    */
   void setCartesianOffset(T3d origin) {
     cartesianOffset.setT(origin);
+    
     matrixFractionalToCartesian.m03 = cartesianOffset.x;
     matrixFractionalToCartesian.m13 = cartesianOffset.y;
     matrixFractionalToCartesian.m23 = cartesianOffset.z;
     boolean wasOffset = hasOffset();
     fractionalOffset = P3d.newP(cartesianOffset);
-    matrixCartesianToFractional.m03 = 0;
-    matrixCartesianToFractional.m13 = 0;
-    matrixCartesianToFractional.m23 = 0;
-    matrixCartesianToFractional.rotTrans(fractionalOffset);
+    matrixCartesianToFractional.rotate(fractionalOffset);
     matrixCartesianToFractional.m03 = -fractionalOffset.x;
     matrixCartesianToFractional.m13 = -fractionalOffset.y;
     matrixCartesianToFractional.m23 = -fractionalOffset.z;
@@ -1053,10 +1052,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     matrixCartesianToFractional.m13 = -pt.y;
     matrixCartesianToFractional.m23 = -pt.z;
     cartesianOffset.setT(pt);
-    matrixFractionalToCartesian.m03 = 0;
-    matrixFractionalToCartesian.m13 = 0;
-    matrixFractionalToCartesian.m23 = 0;
-    matrixFractionalToCartesian.rotTrans(cartesianOffset);
+    matrixFractionalToCartesian.rotate(cartesianOffset);
     matrixFractionalToCartesian.m03 = cartesianOffset.x;
     matrixFractionalToCartesian.m13 = cartesianOffset.y;
     matrixFractionalToCartesian.m23 = cartesianOffset.z;
@@ -1349,6 +1345,28 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
   public static boolean isHexagonalSG(int n, double[] params) {
     return (n < 1 ? isHexagonal(params)
         : n >= 143 && n <= 194);
+  }
+  
+  public static boolean isMonoclinicSG(int n) {
+    return (n >= 3 && n <= 15);
+  }
+  
+  public static boolean isTetragonalSG(int n) {
+    return (n >= 75 && n <= 142);
+  }
+  
+  public static boolean isPolarSG(int n) {
+    return ( n == 1 // 1
+        || n >= 3 && n <= 5 // 2
+        || n >= 6 && n <= 9 // m
+        || n >= 25 && n <= 46 // 2mm
+        || n >= 75 && n <= 80 // 4
+        || n >= 99 && n <= 110 // 4mm
+        || n >= 143 && n <= 146 // 3
+        || n >= 156 && n <= 161 // 3mm
+        || n >= 168 && n <= 173 // 6
+        || n >= 183 && n <= 186 // 6mm
+        );
   }
   
   private static void removeDuplicates(Lst<P3d> list, int i0, int n0, int n) {

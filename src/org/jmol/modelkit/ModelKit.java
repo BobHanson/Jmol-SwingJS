@@ -174,8 +174,10 @@ public class ModelKit {
         }
         String[] tokens = PT.split(name, ".");
         myIta = tokens[0];
-        name = "ITA/" + tokens[0] + (setting != null ? ":" + setting
-            : tokens[1].equals("1") ? "" : "." + tokens[1]); // for SpaceGroupFinder
+        name = "ITA/" + myIta + ":" 
+            + (myTrm == null || myTrm.equals("a,b,c") ? setting : myTrm);
+           // (setting != null ? ":" + setting
+           // : myTrm);//tokens[1].equals("1") ? "" : "." + tokens[1]); // for SpaceGroupFinder
       } else {
         myTrm = (String) sym.getSpaceGroupInfoObj("itaTransform", name, false,
             false);

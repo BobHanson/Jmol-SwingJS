@@ -343,15 +343,7 @@ public class SpaceGroup implements Cloneable {
   }
 
   public static SpaceGroup findSpaceGroupFromXYZ(String xyzList) {
-    SpaceGroup sg = new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
-    sg.doNormalize = false;
-    String[] xyzlist = xyzList.split(";");
-    for (int i = 0, n = xyzlist.length; i < n; i++) {
-      SymmetryOperation op = new SymmetryOperation(null, i, false);
-      op.setMatrixFromXYZ(xyzlist[i],  0,  false);
-      sg.addOp(op, xyzlist[i], false);
-    }
-    return findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
+    return findOrCreateSpaceGroupXYZ(xyzList, false);
   }
 
 
@@ -2151,7 +2143,22 @@ public class SpaceGroup implements Cloneable {
     }
     xyzList = xyzList.substring(1);
     //System.out.println("for " + transform + " " + xyzList);
-    return SpaceGroup.createSpaceGroupN(xyzList);
+    return findOrCreateSpaceGroupXYZ(xyzList, true);
+  }
+
+  private static SpaceGroup findOrCreateSpaceGroupXYZ(String xyzList, boolean doCreate) {
+    SpaceGroup sg = new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
+    sg.doNormalize = false;
+    String[] xyzlist = xyzList.split(";");
+    for (int i = 0, n = xyzlist.length; i < n; i++) {
+      SymmetryOperation op = new SymmetryOperation(null, i, false);
+      op.setMatrixFromXYZ(xyzlist[i],  0,  false);
+      sg.addOp(op, xyzlist[i], false);
+    }
+    SpaceGroup sg1 = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
+    if (sg1 == null || !doCreate)
+      return sg1;
+    return sg1;    
   }
 
   static SpaceGroup getSpaceGroupFromIndex(int i) {
@@ -2167,7 +2174,7 @@ public class SpaceGroup implements Cloneable {
    */
   void setITATableNames(String jmolId, String sg, String set, String tr) {
     itaNumber = sg;
-    itaIndex = sg + "." + set;
+    itaIndex = (set.indexOf(".") >= 0 ? set : sg + "." + set);
     itaTransform = tr;
     clegId = sg + ":" + tr;
     if (jmolId != null)

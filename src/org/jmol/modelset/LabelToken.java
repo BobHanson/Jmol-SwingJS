@@ -172,7 +172,8 @@ public class LabelToken {
       T.nbo, // added in 14.8.2
       T.chirality, // added in 14.11.4
       T.ciprule, // added in 14.17.0
-      T.wyckoff // added in 16.1.44
+      T.wyckoff, // added in 16.1.44
+      T.rxyz // added in 16.2.5
   };
 
   public LabelToken() {
@@ -652,6 +653,8 @@ public class LabelToken {
             strT = "";
           break;
         default:
+          if (t.tok == T.rxyz)
+            strT = atom.atomPropertyString(vwr, T.rxyz);
           // any dual case would be here -- must handle specially
         }
       }

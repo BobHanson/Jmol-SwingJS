@@ -1629,6 +1629,9 @@ abstract class ScriptExpr extends ScriptParam {
     case T.function:
     case T.distance:
       break;
+    case T.rxyz:
+      isString = true;
+      break;
     case T.wyckoff:
       isInt = (tokenValue == "color");
       isString = !isInt;

@@ -1140,8 +1140,8 @@ public class ModelSet extends BondCollection {
 //  }
 
   public boolean setCrystallographicDefaults() {
-    return !haveBioModels && someModelsHaveSymmetry
-        && someModelsHaveFractionalCoordinates || getUnitCell(vwr.am.cmi) != null;
+    return !haveBioModels && (someModelsHaveSymmetry
+        && someModelsHaveFractionalCoordinates || getUnitCell(vwr.am.cmi) != null);
   }
 
   public P3d getBoundBoxCenter(int modelIndex) {

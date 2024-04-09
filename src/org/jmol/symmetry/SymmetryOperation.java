@@ -173,7 +173,7 @@ public class SymmetryOperation extends M4d {
     }
     int n48 = (int) Math.round(x * 48);
     if (PT.approxD(n48 / 48d - x, 1000) != 0)
-      return "" + x;
+      return "" + PT.approxD(x, 1000);
     int div;
     if (n48 % 48 == 0) {
       div = 1;

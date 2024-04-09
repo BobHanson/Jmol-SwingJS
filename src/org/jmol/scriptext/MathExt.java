@@ -597,7 +597,7 @@ public class MathExt {
         normalize = true;
         break;
       }
-      return mp.addXStr(vwr.getSymTemp().getTransformABC(args[0].value, normalize));
+      return mp.addXStr(vwr.getSymStatic().staticGetTransformABC(args[0].value, normalize));
     case T.string:
       arg0 = args[0].asString();
       if (tok == T.unitcell) {
@@ -3939,12 +3939,12 @@ public class MathExt {
 
     if (args.length == 2 && args[0].tok == T.string && args[1].tok == T.string
         && ((String) args[1].value).equalsIgnoreCase("matrix")) {
-      o = vwr.getSymTemp().convertOperation((String) args[0].value, null);
+      o = vwr.getSymStatic().staticConvertOperation((String) args[0].value, null);
       return (o != null && mp.addXObj(o));
     }
     if (args.length == 2 && args[0].tok == T.matrix4f && args[1].tok == T.string
         && ((String) args[1].value).equalsIgnoreCase("xyz")) {
-      o = vwr.getSymTemp().convertOperation("", (M4d) args[0].value);
+      o = vwr.getSymStatic().staticConvertOperation("", (M4d) args[0].value);
       return (o != null && mp.addXObj(o));
     }
 

@@ -190,14 +190,16 @@ public class SpaceGroupFinder {
       if (oabc == null) {
         boolean userDefined = (unitCellParams.length == 6);
         // this unit cell is still for the UNTRANSFORMED space group
-        uc = setSpaceGroupAndUnitCell(sg, unitCellParams, null, userDefined,
-            trm);
+        uc = setSpaceGroupAndUnitCell(sg, unitCellParams, null, userDefined);
         oabc = uc.getUnitCellVectors();
         if (origin != null)
           oabc[0].setT(origin);
+//        if (trm != null)
+//          uc.transformUnitCell(trm);
+
       } else {
-        uc = setSpaceGroupAndUnitCell(sg, null, oabc, false,
-            uci.replaceTransformMatrix(null));
+        uc = setSpaceGroupAndUnitCell(sg, null, oabc, false);
+        uc.transformUnitCell(uci.replaceTransformMatrix(null));
       }
     } else {
       Object ret = findGroupByOperations();
@@ -249,7 +251,7 @@ public class SpaceGroupFinder {
     boolean isJmolCode = (pt > 0 && !hasTransform);
     String transform = null;
     if (hasTransform) {
-      name = transform = uc.cleanTransform(xyzList.substring(pt + 1));
+      name = transform = uc.staticCleanTransform(xyzList.substring(pt + 1));
       // why name?
       if (transform.equals("a,b,c")) {
         transform = null;
@@ -307,33 +309,37 @@ public class SpaceGroupFinder {
     sg = SpaceGroup.transformSpaceGroup(null, null, genPos,
         (hasTransform ? transform : null),
         (hasTransform ? trm = new M4d() : null));
-    String hm = (String) sgdata.get("hm");
-    String tr = (String) sgdata.get("trm");
-    sg.hmSymbol = PT.rep(hm, " ", "");
-    String s = (String) sgdata.get("hall");
-    if (!"xyz".equals(s))
-      sg.hallSymbol = s;
-    //ok, this is going to be incorrect
-    sg.hmSymbolFull = hm;
-
-    sg.setITATableNames((String) sgdata.get("jmolId"), "" + sgdata.get("sg"),
-        "" + sgdata.get("set"), (hasTransform ? transform : tr));
-
-    char axis = hm.toLowerCase().charAt(0);
-    if (UnitCell.isHexagonalSG(PT.parseInt(sg.itaNumber), null)) {
-      axis = (hm.indexOf(":R") > 0 ? 'r' : 'h');
-    }
-    switch (axis) {
-    case 'a':
-    case 'b':
-    case 'c':
-    case 'r':
-    case 'h':
-      sg.axisChoice = axis;
-      break;
-    }
-    
-    return name;
+    if (sg == null)
+      return null;
+    return sg.getName();
+//    boolean isITA = (PT.parseInt(sg.itaNumber) > 0);
+//    String hm = (isITA ? (String) sgdata.get("hm");
+//    String tr = (String) sgdata.get("trm");
+//    sg.hmSymbol = PT.rep(hm, " ", "");
+//    String s = (String) sgdata.get("hall");
+//    if (!"xyz".equals(s))
+//      sg.hallSymbol = s;
+//    //ok, this is going to be incorrect
+//    sg.hmSymbolFull = hm;
+//
+//    sg.setITATableNames((String) sgdata.get("jmolId"), "" + sgdata.get("sg"),
+//        "" + sgdata.get("set"), (hasTransform ? transform : tr));
+//
+//    char axis = hm.toLowerCase().charAt(0);
+//    if (UnitCell.isHexagonalSG(PT.parseInt(sg.itaNumber), null)) {
+//      axis = (hm.indexOf(":R") > 0 ? 'r' : 'h');
+//    }
+//    switch (axis) {
+//    case 'a':
+//    case 'b':
+//    case 'c':
+//    case 'r':
+//    case 'h':
+//      sg.axisChoice = axis;
+//      break;
+//    }
+//    
+//    return name;
   }
 
 
@@ -615,8 +621,7 @@ public class SpaceGroupFinder {
   }
 
   private static Symmetry setSpaceGroupAndUnitCell(SpaceGroup sg, double[] params,
-                                           T3d[] oabc, boolean allowSame,
-                                           M4d trm) {
+                                           T3d[] oabc, boolean allowSame) {
     Symmetry sym = new Symmetry();
     sym.setSpaceGroupTo(sg);
     if (oabc == null) {
@@ -628,8 +633,6 @@ public class SpaceGroupFinder {
     } else {
       sym.getUnitCell(oabc, false, "modelkit");
     }
-    if (trm != null)
-      sym.transformUnitCell(trm);
     return sym;
   }  
 

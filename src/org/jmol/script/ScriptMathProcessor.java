@@ -1794,6 +1794,8 @@ public class ScriptMathProcessor {
         return (op.intValue == T.fracxyz ? addXPt(ptf)
             : addXDouble(op.intValue == T.fracx ? ptf.x
                 : op.intValue == T.fracy ? ptf.y : ptf.z));
+      case T.rxyz:
+        return addXStr(vwr.getSymStatic().staticToRationalXYZ(P3d.newP((P3d) x2.value)));
       case T.fux:
       case T.fuy:
       case T.fuz:

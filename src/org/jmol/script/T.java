@@ -524,8 +524,9 @@ public class T {
   public final static int reverse   = 5 | mathproperty;
   public final static int size             = 6 | mathproperty;
   public final static int type      = 8 | mathproperty;
-  public final static int xyz       =10 | mathproperty | atomproperty | settable;
-  public final static int fracxyz   =11 | mathproperty | atomproperty | settable;
+  public final static int xyz       = 9 | mathproperty | atomproperty | settable;
+  public final static int fracxyz   =10 | mathproperty | atomproperty | settable;
+  public final static int rxyz      =11 | mathproperty | atomproperty;
   public final static int screenxyz =12 | mathproperty | atomproperty | settable;
   public final static int fuxyz     =13 | mathproperty | atomproperty | settable;
   public final static int unitxyz   =14 | mathproperty | atomproperty;
@@ -2160,6 +2161,7 @@ public class T {
         "rna3d",
         "rock",
         "rubberband",
+        "rxyz",
         "saSurface",
         "saved",
         "scale",
@@ -3241,6 +3243,7 @@ public class T {
         rna3d,                              // "rna3d"
         rock,                               // "rock"
         rubberband,                         // "rubberband"
+        rxyz,
         sasurface,                          // "saSurface"
         saved,                              // "saved"
         scale,                              // "scale"

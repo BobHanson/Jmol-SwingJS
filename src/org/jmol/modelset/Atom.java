@@ -1456,6 +1456,8 @@ public class Atom extends Point3fi implements Node {
       if (s == null)
         s = "";
       return s;
+    case T.rxyz:
+      return vwr.getSymStatic().staticToRationalXYZ(getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, null)); 
     case T.structure:
       return group.getProteinStructureType().getBioStructureTypeName(false);
     case T.substructure:

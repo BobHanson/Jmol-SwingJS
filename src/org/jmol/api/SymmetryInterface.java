@@ -236,7 +236,7 @@ public interface SymmetryInterface {
 
   boolean checkPeriodic(P3d pt);
 
-  Object convertOperation(String string, M4d matrix);
+  Object staticConvertOperation(String string, M4d matrix);
 
   int getAdditionalOperationsCount();
 
@@ -256,11 +256,11 @@ public interface SymmetryInterface {
 
   boolean isSymmetryCell(SymmetryInterface sym);
 
-  String getTransformABC(Object value, boolean normalize);
+  String staticGetTransformABC(Object value, boolean normalize);
 
   Object getITASettingValue(Viewer vwr, String itaIndex, String key);
 
-  String cleanTransform(String tr);
+  String staticCleanTransform(String tr);
 
   M4d replaceTransformMatrix(M4d trm);
 
@@ -271,4 +271,6 @@ public interface SymmetryInterface {
   String getIntTableTransform();
 
   String getUnitCellDisplayInfo();
+
+  String staticToRationalXYZ(P3d fPt);
 }
