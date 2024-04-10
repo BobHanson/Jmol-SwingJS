@@ -260,31 +260,66 @@ public class MathExt {
         // matrix([.................])
         // matrix([,,][,,][,,])
         // matrix([,,,][,,,][,,,][,,,])
+        // any of 4x4 with "abc" or "xyz"
 
     int n = args.length;
+    M4d m4 = null;
+    String retType = (n > 0 && args[n-1].tok == T.string ? (String) args[n-1].value : null);
+    boolean asABC = "abc".equalsIgnoreCase(retType);
+    boolean asXYZ = "xyz".equalsIgnoreCase(retType);
+    double[] a = null;
+    if (asABC || asXYZ)
+      n--;
     switch (n) {
+    case 0:
+      m4 = new M4d();
+      m4.setIdentity();
+      break;
     case 1:
       switch (args[0].tok) {
+      case T.matrix4f:
+        m4 = (M4d) args[0].value;
+        break;
       case T.string:
-        M4d m4 = new M4d();
+        m4 = new M4d();
         vwr.getSymTemp().getV0abc(args[0].value, m4);
-        return mp.addXM4(m4);      
+        break;
       case T.varray:
-        double[] a = SV.dlistValue(args[0], 0);
-        return mp.addXObj(a.length == 9 ? M3d.newA9(a) : M4d.newA16(a));
+        a = SV.dlistValue(args[0], 0);
+        break;
       }
       break;
     case 3:
     case 4:
       if (args[0].tok == T.varray) {
-        double[] a = new double[n == 3 ? 9 : 16];
+        a = new double[n == 3 ? 9 : 16];
         for (int p = 0, i = 0; i < n; i++) {
           double[] row = SV.dlistValue(args[i], 0);
           for (int j = 0; j < n; j++)
             a[p++] = row[j];
         }
-        return mp.addXObj(a.length == 9 ? M3d.newA9(a) : M4d.newA16(a));
+        break;
       }
+    }
+    if (a != null) {
+      switch (a.length) {
+      case 9:
+        return mp.addXObj(M3d.newA9(a));
+      case 16:
+        m4 = M4d.newA16(a);
+        break;
+      default:
+        return false;
+      }
+    }
+    if (m4 != null) { 
+      if (asABC) {
+        return mp.addXStr(vwr.getSymStatic().staticGetTransformABC(m4, false));
+      } 
+      if (asXYZ) {
+        return mp.addXStr((String) vwr.getSymStatic().staticConvertOperation("", m4));
+      }
+      return mp.addXM4(m4);      
     }
     return false;
   }

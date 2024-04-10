@@ -228,12 +228,9 @@ public class SimpleUnitCell {
 
     if (a <= 0 && c <= 0) {
       // must calculate a, b, c alpha beta gamma from Cartesian vectors;
-      V3d va = V3d.new3(params[PARAM_VAX], params[PARAM_VAX + 1],
-          params[PARAM_VAX + 2]);
-      V3d vb = V3d.new3(params[PARAM_VAX + 3], params[PARAM_VAX + 4],
-          params[PARAM_VAX + 5]);
-      V3d vc = V3d.new3(params[PARAM_VAX + 6], params[PARAM_VAX + 7],
-          params[PARAM_VAX + 8]);
+      V3d va = newV(params, PARAM_VAX);
+      V3d vb = newV(params, PARAM_VAX + 3);
+      V3d vc = newV(params, PARAM_VAX + 6);
       setABC(va, vb, vc);
       if (c < 0) {
         double[] n = AU.arrayCopyD(params, -1);
@@ -347,6 +344,10 @@ public class SimpleUnitCell {
     matrixFtoCNoOffset = matrixFractionalToCartesian;
   }
 
+  private static V3d newV(double[] p, int i) {
+    return V3d.new3(p[i++], p[i++],p[i]);
+  }
+
   public static double[] newParams(double[] params, double slop) {
     double[] p = new double[PARAM_COUNT];
     int n = params.length;
@@ -378,25 +379,37 @@ public class SimpleUnitCell {
   }
 
   private void setABC(V3d va, V3d vb, V3d vc) {
-    a = va.length();
-    b = vb.length();
-    c = vc.length();
+    fillParams(va, vb, vc, unitCellParams);
+    double[] p = unitCellParams;
+    a = p[0];
+    b = p[1];
+    c = p[2];
+    alpha = p[3];
+    beta = p[4];
+    gamma = p[5];
+  }
+
+  public static void fillParams(V3d va, V3d vb, V3d vc, double[] p) {
+    if (va == null) {
+      va = newV(p, PARAM_VAX);
+      vb = newV(p, PARAM_VAX + 3);
+      vc = newV(p, PARAM_VAX + 6);
+    }
+    double a = va.length();
+    double b = vb.length();
+    double c = vc.length();
     if (a == 0)
       return;
     if (b == 0)
       b = c = -1; //polymer
     else if (c == 0)
       c = -1; //slab
-    alpha = (b < 0 || c < 0 ? 90 : vb.angle(vc) / toRadians);
-    beta = (c < 0 ? 90 : va.angle(vc) / toRadians);
-    gamma = (b < 0 ? 90 : va.angle(vb) / toRadians);
-    double[] p = unitCellParams;
     p[0] = a;
     p[1] = b;
     p[2] = c;
-    p[3] = alpha;
-    p[4] = beta;
-    p[5] = gamma;
+    p[3] = (b < 0 || c < 0 ? 90 : vb.angle(vc) / toRadians);
+    p[4] = (c < 0 ? 90 : va.angle(vc) / toRadians);
+    p[5] = (b < 0 ? 90 : va.angle(vb) / toRadians);
   }
 
   private void setCellParams() {

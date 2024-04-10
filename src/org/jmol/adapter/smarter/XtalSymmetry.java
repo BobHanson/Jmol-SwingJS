@@ -731,6 +731,9 @@ public class XtalSymmetry {
       if (acr.ignoreFileSpaceGroupName || !acr.iHaveSymmetryOperators) {
         if (!acr.merging || readerSymmetry == null)
           readerSymmetry = new FileSymmetry();
+        if (acr.unitCellParams[0] == 0 && acr.unitCellParams[2] == 0) {
+          SimpleUnitCell.fillParams(null, null, null, acr.unitCellParams);
+        }
         doApplySymmetry = readerSymmetry.createSpaceGroup(
             acr.desiredSpaceGroupIndex,
             (acr.sgName.indexOf("!") >= 0 ? "P1" : acr.sgName),

@@ -1322,10 +1322,11 @@ public class ModelSet extends BondCollection {
   private void calcUnitCellMinMax() {
     P3d pt = new P3d();
     for (int i = 0; i < mc; i++) {
-      if (unitCells[i] == null || !unitCells[i].getCoordinatesAreFractional())
+      SymmetryInterface uc = unitCells[i];
+      if (uc == null || !uc.getCoordinatesAreFractional())
         continue;
-      P3d[] vertices = unitCells[i].getUnitCellVerticesNoOffset();
-      P3d offset = unitCells[i].getCartesianOffset();
+      P3d[] vertices = uc.getUnitCellVerticesNoOffset();
+      P3d offset = uc.getCartesianOffset();
       for (int j = 0; j < 8; j++) {
         pt.add2(offset, vertices[j]);
         boxInfo.addBoundBoxPoint(pt);

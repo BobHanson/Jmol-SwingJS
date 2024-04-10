@@ -3303,7 +3303,8 @@ public class ModelKit {
         return "Space group " + node.name + " is unknown or not compatible!";
       }
 
-      oabc = (P3d[]) sgInfo.get("unitcell");
+      if (oabc == null || !haveUnitCell)
+        oabc = (P3d[]) sgInfo.get("unitcell");
       name = (String) sgInfo.get("name");
       String jmolId = (String) sgInfo.get("jmolId");
       //      String itaIndex = (String) sgInfo.get("itaIndex");
@@ -3322,7 +3323,7 @@ public class ModelKit {
             "unitcell on; center unitcell;axes unitcell; axes 0.1; axes on;"
                 + "set perspectivedepth false;moveto 0 axis c1;draw delete;show spacegroup");
       }
-      return name + " basis=" + basis;
+      return sym.staticGetTransformABC(trm, false) + "\n" + name + " basis=" + basis;
     } catch (Exception e) {
       if (!Viewer.isJS)
         e.printStackTrace();

@@ -1152,19 +1152,22 @@ public class SpaceGroup implements Cloneable {
   }
 
   private void setHMSymbol(String name) {
+    int pt = name.indexOf("#");
+    if (pt >= 0)
+      name = name.substring(0, pt).trim();
     hmSymbolFull = toCap(name, 1);
     latticeType = hmSymbolFull.charAt(0);
     String[] parts = PT.split(hmSymbolFull, ":");
     hmSymbol = parts[0];
     hmSymbolExt = (parts.length == 1 ? "" : parts[1]);
-    int pt = hmSymbol.indexOf(" -3");
+    pt = hmSymbol.indexOf(" -3");
     if (pt >= 1)
       if ("admn".indexOf(hmSymbol.charAt(pt - 1)) >= 0) {
         hmSymbolAlternative = (hmSymbol.substring(0, pt) + " 3" + hmSymbol
             .substring(pt + 3)).toLowerCase();
       }
     hmSymbolAbbr = PT.rep(hmSymbol, " ", "");
-    hmSymbolAbbrShort = PT.rep(hmSymbol, " 1", "");
+    hmSymbolAbbrShort = (hmSymbol.length() > 3 ? PT.rep(hmSymbol, " 1", "") : hmSymbolAbbr);
     hmSymbolAbbrShort = PT.rep(hmSymbolAbbrShort, " ", "");
   }
 
