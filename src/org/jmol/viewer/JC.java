@@ -40,6 +40,14 @@ import javajs.util.V3d;
 
 public final class JC {
 
+  public final static int AXIS_A = 6;
+  public final static String[] axisLabels = { "+X", "+Y", "+Z", null, null, null, 
+      "a", "b", "c", 
+      "X", "Y", "Z", null, null, null,
+      "X", null, "Z", null, "(Y)", null};
+
+  public final static String[] axesTypes = {"a", "b", "c", "x", "y", "z"};
+
   public static final String NBO_TYPES = ";" + "AO;;;;" // 31
       + "PNAO;;" // 32
       + "NAO;;;" // 33
@@ -516,15 +524,15 @@ public final class JC {
   public final static String NOTE_SCRIPT_FILE = "NOTE: file recognized as a script file: ";
 
   public static final String SCRIPT_EXT = "\1##";
+  public final static String SCRIPT_GUI = "; ## GUI ##";
+  public static final String SCRIPT_QUIET = "#quiet";
   public static final String SCRIPT_STEP = SCRIPT_EXT + "SCRIPT_STEP";
   public static final String SCRIPT_START = SCRIPT_EXT + "SCRIPT_START";
   public static final String SCRIPT_NOENDCHECK = SCRIPT_EXT + "NOENDCHECK";
   public final static String SCRIPT_ISEDITOR = SCRIPT_EXT + " ISEDITOR";
-  public final static String SCRIPT_EDITOR_IGNORE = SCRIPT_EXT
-      + " EDITOR_IGNORE ##";
+  public final static String SCRIPT_EDITOR_IGNORE = SCRIPT_EXT + " EDITOR_IGNORE ##";
+  public final static String SCRIPT_CONSOLE = SCRIPT_GUI + SCRIPT_EDITOR_IGNORE + SCRIPT_GUI;
   public final static String REPAINT_IGNORE = SCRIPT_EXT + " REPAINT_IGNORE ##";
-  public final static String SCRIPT_GUI = "; ## GUI ##";
-  public static final String SCRIPT_QUIET = "#quiet";
 
   public static final int SG_AS_STRING = 1;
   public static final int SG_IS_ASSIGN = 2;
@@ -1011,6 +1019,7 @@ public final class JC {
   public final static String MODELKIT_ZAP_TITLE = "Jmol Model Kit";//do not ever change this -- it is in the state
   public final static String ZAP_TITLE = "zapped";//do not ever change this -- it is in the state
   public final static String ADD_HYDROGEN_TITLE = "Viewer.AddHydrogens"; //do not ever change this -- it is in the state
+  public static final String JMOL_MODEL_KIT = "Jmol Model Kit";
 
   ////////////////////////////////////////////////////////////////
   // font-related

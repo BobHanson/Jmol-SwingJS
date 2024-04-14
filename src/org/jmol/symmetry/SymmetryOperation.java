@@ -1070,9 +1070,8 @@ public class SymmetryOperation extends M4d {
    * @param p
    * @return "1/2" for example
    */
-  public static String fcoord(T3d p) {
-    // Castep re
-    return opF(p.x) + " " + opF(p.y) + " " + opF(p.z);
+  public static String fcoord(T3d p, String sep) {
+    return opF(p.x) + sep + opF(p.y) + sep + opF(p.z);
   }
 
   static double approx(double f) {
@@ -2081,10 +2080,11 @@ public class SymmetryOperation extends M4d {
    *        temporary or null
    * @param v
    *        temporary or null
+   * @param centering 
    * @return transformed string
    */
   static String transformStr(String xyz, M4d trm, M4d trmInv, M4d t,
-                             double[] v) {
+                             double[] v, T3d centering, boolean normalize) {
     if (trmInv == null) {
       trmInv = M4d.newM4(trm);
       trmInv.invert();
@@ -2094,26 +2094,26 @@ public class SymmetryOperation extends M4d {
     if (v == null)
       v = new double[16];
     M4d op = getMatrixFromXYZ(xyz, v, true);
+    if (centering != null)
+      op.add(centering);
     t.setM4(trmInv);
     t.mul(op);
     t.mul(trm);
+    if (normalize) {
+      t.getColumn(3, v);
+      for (int i = 0; i < 3; i++) {
+        v[i] = v[i] % 1;
+      }
+      t.setColumnA(3, v);
+    }
     return getXYZFromMatrix(t, false, true, false);
   }
 
   static String transformXyzT(String xyz, String transform) {
     M4d trm = new M4d();
     UnitCell.getMatrixAndUnitCell(null, transform, trm);
-    return (transformStr(xyz, trm, null, null, null));
+    return (transformStr(xyz, trm, null, null, null, null, true));
   }
-
-//  static {
-//
-//    System.out.println(transformXyzT("-x+1/2, y+1/2, -z+1/2", "a+b,-a+b,c"));
-//    System.out.println(transformXyzT("x+1/2, -y+1/2, -z+1/2", "a+b,-a+b,c"));
-//    System.out.println(transformXyzT("y+1/2, x+1/2, -z+1/2", "a+b,-a+b,c"));
-//    System.out.println(transformXyzT("y, -x, z", "a+b,-a+b,c"));
-//
-//  }
 
   static M4d stringToMatrix(String xyz) {
     int divisor = setDivisor(xyz);
@@ -2156,7 +2156,6 @@ public class SymmetryOperation extends M4d {
     }
     return opF(d);
   }
-
   // https://crystalsymmetry.wordpress.com/space-group-diagrams/
 
 }

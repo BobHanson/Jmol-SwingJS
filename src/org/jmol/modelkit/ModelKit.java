@@ -103,19 +103,23 @@ public class ModelKit {
       this.setting = (setting == null ? "a,b,c" : setting);
       int pt;
       isITA = name.startsWith("ITA/");
-      isHM = false;
-      hallSymbol = null;
       if (isITA) {
         // ITA/140 or ITA/140.2
         name = name.substring(4);
-      } else if (name.charAt(0) == '[') {
+      } 
+      isHM = false;
+      hallSymbol = null;
+      if (name.charAt(0) == '[') {
+        
+        
         // [P 2y] is a Hall symbol
         pt = name.indexOf(']');
         if (pt < 0) {
           errString = "invalid Hall symbol: " + name + "!";
           return;
         }
-        hallSymbol = name = "Hall:" + name.substring(1, pt);
+        hallSymbol = name.substring(1, pt);
+        name = "Hall:" + hallSymbol;
       } else if (name.startsWith("HM:")) {
         // ok, leave this this way
         isHM = true;
@@ -160,6 +164,8 @@ public class ModelKit {
     
     boolean update(Viewer vwr, ClegNode prevNode, M4d trm, M4d trTemp,
                    SymmetryInterface sym) {
+      if (errString != null)
+        return false;
       if (name == null)
         return true;
       if (isITA) {
@@ -178,6 +184,20 @@ public class ModelKit {
             + (myTrm == null || myTrm.equals("a,b,c") ? setting : myTrm);
            // (setting != null ? ":" + setting
            // : myTrm);//tokens[1].equals("1") ? "" : "." + tokens[1]); // for SpaceGroupFinder
+      } else if (hallSymbol != null){
+        if (sym.getSpaceGroupInfoObj("nameToXYZList", "Hall:" + hallSymbol, false, false) == null) {
+          errString = "Invalid Hall notation: " + hallSymbol;
+          return false;
+        }
+        int pt = hallSymbol.indexOf("(");
+        if (pt > 0) {
+          //modelkit spacegroup "[p 32 2\" (0 0 4)]"
+          String[] vabc = PT.split(hallSymbol.substring(pt + 1, hallSymbol.length() - 1), " ");
+          hallSymbol = hallSymbol.substring(0, pt).trim();
+          P3d v = P3d.new3(-PT.parseDouble(vabc[0])/12,-PT.parseDouble(vabc[1])/12,-PT.parseDouble(vabc[2])/12);
+          setting = "a,b,c;" + sym.staticToRationalXYZ(v, ",");
+        }
+        name = "[" + hallSymbol + "]" + (setting.equals("a,b,c") ? "" :":" + setting);
       } else {
         myTrm = (String) sym.getSpaceGroupInfoObj("itaTransform", name, false,
             false);
@@ -189,14 +209,14 @@ public class ModelKit {
        * haveReferenceCell is set true if and only if we can apply the setting
        * if it is present or implied; this is the case when the current unit
        * cell is the "symmetry" cell -- that is, that cell represents the proper
-       * unit cell for the current space group; this is checked for a matchin
+       * unit cell for the current space group; this is checked for a matching
        * ITA number.
        */
 
       boolean haveCalc = false;
       boolean haveReferenceCell = (prevNode != null && trLink == null
-          && myIta != null
-          && (myIta.equals(prevNode.myIta) || prevNode.calcNext != null));
+          && (hallSymbol != null
+               || myIta != null && (myIta.equals(prevNode.myIta) || prevNode.calcNext != null)));
       if (haveReferenceCell) {
         if (prevNode != null && prevNode.myTrm != null) {
           addSGTransform(sym, "!" + prevNode.setting, trm, trTemp);
@@ -218,11 +238,10 @@ public class ModelKit {
           //addSGTransform(sym, trCalc, trm, trTemp);
           System.out.println("sub := " + calc);
           setting = trCalc; // TODO should be trCalc * setting
-
         }
         addSGTransform(sym, myTrm, trm, trTemp);
         addSGTransform(sym, setting, trm, trTemp);
-        System.out.println(this + "\n" + trm);
+        System.out.println("ClegNode " + this + "\n" + trm);
       }
       return true;
     }
@@ -944,7 +963,7 @@ public class ModelKit {
         vwr.ms.restoreAtomPositions(apos0);
         bsAtoms.clearAll();
       } else {
-        updateAtomSets(JC.PROP_ATOMS_MOVED, bsAtoms);
+        updateDrawAtomSets(JC.PROP_ATOMS_MOVED, bsAtoms);
       }
     }
   }
@@ -985,38 +1004,66 @@ public class ModelKit {
     }
   }
 
+  /**
+   * From Mouse or handleAtomOrBondBicked
+   * 
+   * @param atomIndex
+   *        initiating atom clicked or dragged from
+   * @param element
+   *        chemical symbol or "X" for delete, or one of the pickAssignTypes,
+   *        such as increase/decrease charge
+   * @param ptNew
+   *        if dragged to a new location to create a bond
+   */
   public void clickAssignAtom(int atomIndex, String element, P3d ptNew) {
-    // from Mouse -- run it through the MODELKIT ASSIGN ATOM command
-    addAtoms(element, new P3d[] { (ptNew != null ? ptNew : null) },
-        BSUtil.newAndSetBit(atomIndex), "", "click", true);
+    int n = addAtomType(element, 
+        new P3d[] { (ptNew == null ? null : ptNew) },
+        BSUtil.newAndSetBit(atomIndex), 
+        "", 
+        null, 
+        "click");
+    if (n > 0) // do we really want this???
+      vwr.setPickingMode("dragAtom", 0);
   }
 
   /**
+   * 
    * MODELKIT ADD @3 ...
+   * 
+   * MODELKIT ADD _C wyckoff <[a-zAG]
+   * 
+   * MODELKIT ADD C <point> | <array of points>
    * 
    * this model only
    * 
-   * @param type
+   * @param type <element Symbol> | "_"<element Symbol> | <element symbol>":"<Wyckoff letter [a-zAG]
    * @param pts
-   *        one or more new points
+   *        one or more new points, may be null
    * @param bsAtoms
    *        the atoms to process, presumably from different sites
    * @param packing
    *        "packed" or ""
    * @param cmd
    *        the command generating this call
-   * @param isClick
    * @return the number of atoms added
    */
   public int cmdAssignAddAtoms(String type, P3d[] pts, BS bsAtoms,
-                               String packing, String cmd, boolean isClick) {
-    return addAtoms(type, pts, bsAtoms, packing, cmd, isClick);
+                               String packing, String cmd) {
+    if (type.startsWith("_"))
+      type = type.substring(1);
+    return Math.abs(addAtomType(type, 
+        pts, 
+        bsAtoms, 
+        packing,
+        null, 
+        cmd));
   }
 
   /**
    * A versatile method that allows changing element, setting charge, setting
-   * position, adding or deleting an atom by clicking or dragging or via the
-   * MODELKIT ASSIGN ATOM command.
+   * position, adding or deleting an atom via 
+   * 
+   * MODELKIT ASSIGN ATOM
    * 
    * @param bs
    *        may be -1
@@ -1028,17 +1075,20 @@ public class ModelKit {
    *        "Pl" (increment charge), "." (from connect; just adding hydrogens)
    * @param cmd
    *        reference command given; may be null
-   * @param isClick
-   *        if this is a user-generated click event
    * 
    */
-  public void cmdAssignAtom(BS bs, P3d pt, String type, String cmd,
-                            boolean isClick) {
-    // single atom - clicked or from ASSIGN or MODELKIT ASSIGN command
+  public void cmdAssignAtom(BS bs, P3d pt, String type, String cmd) {
     if (pt != null && bs != null && bs.cardinality() > 1)
       bs = BSUtil.newAndSetBit(bs.nextSetBit(0));
-    assignAtoms(pt, -1, bs, type, (pt != null), cmd, isClick, 0, 0, null, null,
-        null);
+    if (type.startsWith("_"))
+      type = type.substring(1);
+    assignAtomNoAddedSymmetry(pt, 
+        -1, 
+        bs, 
+        type, 
+        (pt != null), 
+        cmd, 
+        0);
   }
 
   public void cmdAssignBond(int bondIndex, char type, String cmd) {
@@ -1125,7 +1175,11 @@ public class ModelKit {
   }
 
   /**
+   * MODELKIT SPACEGROUP 
+   * 
    * Assign a given space group, currently only "P1"
+   * Do all the necessary changes in unit cells and atom
+   * site assignments. 
    * 
    * @param bs
    *        atoms in the set defining the space group
@@ -1136,10 +1190,44 @@ public class ModelKit {
    */
   public String cmdAssignSpaceGroup(BS bs, String name, Object paramsOrUC) {
     SB  sb = new SB();
-    
     String ret = assignSpaceGroup(vwr.getOperativeSymmetry(), null, bs, paramsOrUC, PT.split(name, ">"), 0, null, null, sb);
-    return ret;
-   
+    return ret;   
+  }
+
+  /**
+   * MODELKIT SPACEGROUP .... PACKED
+   * 
+   * (final part, the packing)
+   * 
+   * This is a rather complicated process, involving temporarily adding
+   * "centering-like" operations that propagate atoms from one former unit cell
+   * to others in a klassengleiche (crystal class-preserving) transformation in
+   * which lattice translations have been removed, leading to a sort of general
+   * position splitting.
+   * 
+   * For example: MODELKIT SPACEGROUP "100 > a,b,3c > 100".
+   * 
+   * @param bsAtoms
+   * @param transform
+   * @param cmd
+   * @return number of atoms added
+   */
+  public int cmdAssignSpaceGroupPacked(BS bsAtoms, String transform, String cmd) {
+    SymmetryInterface sym = vwr.getOperativeSymmetry();
+    if (sym == null)
+      return 0;
+    // augment the operations with ones derived from checking the scope of the tranformation.
+    M4d[] opsCtr = (M4d[]) sym.getSpaceGroupInfoObj("opsCtr", transform, false,
+        false);
+    // add all the atoms
+    int n0 = bsAtoms.cardinality();
+    addAtoms(null, null, bsAtoms, "packed", opsCtr, cmd);
+    // set all the model atom basis and symmetry issues
+    // the space group itself is unchanged here.
+    bsAtoms = vwr.getThisModelAtoms();
+    vwr.ms.setSpaceGroup(vwr.am.cmi, sym, new BS());
+    // return the number of new atoms
+    return bsAtoms.cardinality() - n0;
   }
 
   /**
@@ -1430,16 +1518,16 @@ public class ModelKit {
       }
 
       if (key == JC.PROP_ATOMS_MOVED) {
-        if (atomSets != null) {
-          updateAtomSets(key, ((BS[]) value)[0]);
+        if (drawAtomSets != null) {
+          updateDrawAtomSets(key, ((BS[]) value)[0]);
         }
         return null;
       }
       if (key == JC.MODELKIT_UPDATE_MODEL_KEYS) {
         if (haveElementKeys)
-          updateModelElementKeys(((BS[]) value)[1], false);
-        if (atomSets != null) {
-          updateAtomSets(JC.PROP_ATOMS_DELETED, ((BS[]) value)[0]);
+          updateModelElementKeys(((BS[]) value)[1], true);
+        if (drawAtomSets != null) {
+          updateDrawAtomSets(JC.PROP_ATOMS_DELETED, ((BS[]) value)[0]);
         }
         return null;
       }
@@ -2038,13 +2126,56 @@ public class ModelKit {
     state = (state & ~STATE_BITS_XTAL) | (hasUnitCell ? bits : STATE_MOLECULAR);
   }
 
+  /**
+   * Entry point from clickAssignAtom or cmdAssignAddAtoms
+   * 
+   * @param type <element Symbol> | <element symbol>":"<Wyckoff letter [a-zAG]
+   * @param pts
+   * @param bsAtoms
+   * @param packing
+   * @param opsCtr
+   * @param cmd
+   * @return number of atoms added
+   */
+  private int addAtomType(String type, P3d[] pts, BS bsAtoms, String packing,
+                       M4d[] opsCtr, String cmd) {
+      SymmetryInterface sym = vwr.getOperativeSymmetry();
+        int ipt = type.indexOf(":");
+        String wyckoff = (ipt > 0 && ipt == type.length() - 2
+            ? type.substring(ipt + 1)
+            : null);
+        if (wyckoff != null) {
+          type = type.substring(0, ipt);
+          if (sym != null) {
+            Object o = sym.getWyckoffPosition(vwr, null, wyckoff);
+            if (!(o instanceof P3d))
+              return 0;
+            pts = new P3d[] { (P3d) o };
+          }
+        }        
+        return addAtoms(type, pts, bsAtoms, packing, opsCtr, cmd);
+    }
+  
+  /**
+   * The full-blown command with all options, called by addAtomType or
+   * cmdAssignSpaceGroupPacked
+   * 
+   * @param type
+   *        <element Symbol> | <element symbol>":"<Wyckoff letter [a-zAG]
+   * @param pts
+   * @param bsAtoms
+   * @param packing
+   * @param opsCtr
+   * @param cmd
+   * @return 0 if nothing added; -n if added and no symmetry; n if added with
+   *         symmetry
+   */
   private int addAtoms(String type, P3d[] pts, BS bsAtoms, String packing,
-                       String cmd, boolean isClick) {
+                       M4d[] opsCtr, String cmd) {
     try {
+      vwr.pushHoldRepaintWhy("modelkit");
       SymmetryInterface sym = vwr.getOperativeSymmetry();
       if (type != null) {
-        if (type.startsWith("_"))
-          type = type.substring(1);
         int ipt = type.indexOf(":");
         String wyckoff = (ipt > 0 && ipt == type.length() - 2
             ? type.substring(ipt + 1)
@@ -2059,83 +2190,26 @@ public class ModelKit {
           }
         }
       }
-      vwr.pushHoldRepaintWhy("modelkit");
       boolean isPoint = (bsAtoms == null);
       int atomIndex = (isPoint ? -1 : bsAtoms.nextSetBit(0));
-      if (!isPoint && atomIndex < 0)
+      if (!isPoint && atomIndex < 0 || sym == null && type == null)
         return 0;
+      int n = 0;
       if (sym == null) {
-        if (type == null)
-          return 0;
         // when no symmetry, this is just a way to add multiple points at the same time. 
         if (isPoint) {
           for (int i = 0; i < pts.length; i++)
-            assignAtoms(pts[i], -1, null, type, true, cmd, false, 1, -1, null,
-                null, "");
-          return pts.length;
-        }
-        assignAtoms(pts[0], atomIndex, null, type, true, cmd, false, 1, -1,
-            null, null, "");
-        return 1;
-      }
-      // must have symmetry; must be this model
-      BS bsM = vwr.getThisModelAtoms();
-      int n = bsM.cardinality();
-      if (n == 0)
-        packing = "zapped;" + packing;
-      String stype = "" + type;
-      Lst<P3d> list = new Lst<P3d>();
-      int atomicNo = -1;
-      int site = 0;
-      P3d pf = null;
-      if (pts != null && pts.length == 1 && pts[0] != null) {
-        pf = P3d.newP(pts[0]);
-        sym.toFractional(pf, false);
-        isPoint = true;
-      }
-      for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
-        P3d p = P3d.newP(vwr.ms.at[i]);
-        sym.toFractional(p, false);
-        if (pf != null && pf.distanceSquared(p) < JC.UC_TOLERANCE2) {
-          site = vwr.ms.at[i].getAtomSite();
-          if (type == null || pts == null)
-            type = vwr.ms.at[i].getElementSymbolIso(true);
-        }
-        list.addLast(p);
-      }
-      int nIgnored = list.size();
-      packing = "fromfractional;tocartesian;" + packing;
-      if (type != null)
-        atomicNo = Elements.elementNumberFromSymbol(type, true);
-      if (isPoint) {
-        // new atom, but connected to an current atom (multiple versions
-        BS bsEquiv = (bsAtoms == null ? null
-            : vwr.ms.getSymmetryEquivAtoms(bsAtoms, null, null));
-        for (int i = 0; i < pts.length; i++) {
-          assignAtoms(P3d.newP(pts[i]), atomIndex, bsEquiv, stype, true, null,
-              false, atomicNo, site, sym, list, packing);
+            assignAtomNoAddedSymmetry(pts[i], -1, null, type, true, cmd, -1);
+          n = -pts.length;
+        } else {
+          assignAtomNoAddedSymmetry(pts[0], atomIndex, null, type, true, cmd, -1);
+          n = -1;
         }
       } else {
-        // not a new point
-        BS sites = new BS();
-        for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
-            .nextSetBit(i + 1)) {
-          Atom a = vwr.ms.at[i];
-          site = a.getAtomSite();
-          if (sites.get(site))
-            continue;
-          sites.set(site);
-          stype = (type == null ? a.getElementSymbolIso(true) : stype);
-          assignAtoms(P3d.newP(a), -1, null, stype, false, null, false,
-              atomicNo, site, sym, list, packing);
-          for (int j = list.size(); --j >= nIgnored;)
-            list.removeItemAt(j);
-        }
+        // handle equilivalent positions
+        n = addAtomsWithSymmetry(sym, bsAtoms, type, atomIndex, isPoint, pts,
+          packing, opsCtr);
       }
-      if (isClick) {
-        vwr.setPickingMode("dragAtom", 0);
-      }
-      n = vwr.getThisModelAtoms().cardinality() - n;
       return n;
     } catch (Exception e) {
       e.printStackTrace();
@@ -2143,6 +2217,139 @@ public class ModelKit {
     } finally {
       vwr.popHoldRepaint("modelkit");
     }
+  }
+
+  /**
+   * 
+   * Add atoms with or without packing, but 
+   * always with consideration of equivalent positions.
+   * 
+   *  
+   * must have symmetry; must be this model
+    
+   * @param sym
+   * @param bsAtoms model atoms to check for identity of atom at the specified location
+   * @param type
+   * @param atomIndex
+   * @param isPoint
+   * @param pts 
+   * @param packing "packed" or ""
+   * @param opsCtr  augmented operator set that includes lost translations for subgroups
+   * @return number of atoms added 
+   */
+  private int addAtomsWithSymmetry(SymmetryInterface sym, BS bsAtoms,
+                                   String type, int atomIndex,
+                                   boolean isPoint, P3d[] pts, String packing, M4d[] opsCtr) {
+    BS bsM = vwr.getThisModelAtoms();
+    int n = bsM.cardinality();
+    if (n == 0)
+      packing = "zapped;" + packing;
+    String stype = "" + type;
+    Lst<P3d> points = new Lst<P3d>();
+    int site = 0;
+    P3d pf = null;
+    if (pts != null && pts.length == 1 && pts[0] != null) {
+      pf = P3d.newP(pts[0]);
+      sym.toFractional(pf, false);
+      isPoint = true;
+    }
+    // set element type from the atom at this position already, if there is one
+    for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
+      P3d p = P3d.newP(vwr.ms.at[i]);
+      sym.toFractional(p, false);
+      if (pf != null && pf.distanceSquared(p) < JC.UC_TOLERANCE2) {
+        site = vwr.ms.at[i].getAtomSite();
+        if (type == null || pts == null)
+          type = vwr.ms.at[i].getElementSymbolIso(true);
+      }
+      points.addLast(p);
+    }
+    int nInitial = points.size();
+    packing = "fromfractional;tocartesian;" + packing;
+    if (isPoint) {
+      
+      // MODELKIT ASSIGN ATOM ....
+      // new atom at a single point,
+      // but there could be equivalent atoms. 
+      // note that if there are occupancies at the same spot
+      // even if "a point", we need to move all of them.
+      
+      BS bsEquiv = (bsAtoms == null ? null
+          : vwr.ms.getSymmetryEquivAtoms(bsAtoms, null, null));
+      for (int i = 0; i < pts.length; i++) {
+        assignAtoms(P3d.newP(pts[i]), 
+            atomIndex, 
+            bsEquiv, 
+            stype, 
+            true, // newPoint
+            null, // cmd
+            false, 
+            site, 
+            sym, 
+            points, 
+            packing, 
+            null);
+      }
+    } else {
+      
+      // MODELKIT SPACEGROUP 
+      
+      // Go through site-by-site. There is no need to check
+      // every atom of a given site, since any one will produce
+      // the closed set of all the others. But we do need to 
+      // add all symmetry-equivalent atoms for each site.
+      
+      BS sites = new BS();
+      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+          .nextSetBit(i + 1)) {
+        Atom a = vwr.ms.at[i];
+        site = a.getAtomSite();
+        if (sites.get(site))
+          continue;
+        sites.set(site);
+        stype = (type == null ? a.getElementSymbolIso(true) : stype);
+        
+        // now assign atoms with consideration for equivalent atoms. 
+        
+        assignAtoms(P3d.newP(a), 
+            -1, 
+            null, 
+            stype, 
+            false, 
+            null, 
+            false,
+            site, 
+            sym, 
+            points, 
+            packing, 
+            opsCtr);
+        
+        // If we don't have augmnted operations, we can just
+        // remove the new atoms from the list, because there won't be any
+        // cross-over between Wyckoff positions.
+        // 
+        // But if we have augmented operations, then we need
+        // to convert these back to fractional so that they
+        // can be checked for duplicate positions. 
+        // (They were converted to Cartesians in order to 
+        // load them into the structure.)
+        
+        if (opsCtr == null) {
+          for (int j = points.size(); --j >= nInitial;)
+            points.removeItemAt(j);
+          // no change in nInitial
+        } else {
+          for (int j = points.size(); --j >= nInitial;) {
+            // these were converted to Cartesians.
+            P3d p = points.get(j);
+            sym.toFractional(p, false);
+          }
+          // include these now for duplication checking
+          nInitial = points.size();
+        }
+      }
+    }
+    return vwr.getThisModelAtoms().cardinality() - n;
   }
 
   private Constraint addConstraint(int iatom, Constraint c) {
@@ -2203,7 +2410,300 @@ public class ModelKit {
   }
 
   /**
-   * Original ModelKitPopup functionality -- assign an atom.
+   * Just a conduit for debugging and keeping one's sanity. 
+   * 
+   * 
+   * @param pt
+   * @param atomIndex
+   * @param bs
+   * @param type
+   * @param newPoint
+   * @param cmd
+   * @param site
+   */
+  private void assignAtomNoAddedSymmetry(P3d pt, int atomIndex, BS bs, String type,
+                           boolean newPoint, String cmd,
+                           // strictly internal, for crystal work:
+                           int site) {
+    assignAtoms(pt, atomIndex,
+        bs, 
+        type, 
+        newPoint, 
+        cmd, 
+        false, 
+        site,
+        null, 
+        null, 
+        null,
+        null);
+  }
+
+  /**
+   * The penultimate target method. 
+   * 
+   * Change element, charge, and deleting an atom by clicking on it or via the
+   * MODELKIT ASSIGN ATOM command or from packing with MODELKIT SPACEGROUP ... PACKED
+   * 
+   * <pre>
+   * pt     atomIndex  bs
+   * null   i          bs  ASSIGN ATOM @1 "N"
+   * 
+   * pt    -1        null  ASSIGN ATOM "N" {x,y,z}
+   * 
+   * pt    -1          bs  ADD ATOM @1 "N" {x,y,z} (add with bonding)
+   * 
+   * pt     i          bsEquiv  SPACEGROUP ... PACKED
+   * </pre>
+   * 
+   * @param pt
+   * @param atomIndex
+   * @param bs
+   * @param type
+   * @param newPoint
+   * @param cmd passed on to notifications
+   * @param isClick
+   * @param site
+   * @param sym
+   *        a SymmetryInterface being passed on from addAtoms, or null; will be set if null
+   * @param points
+   * @param packing
+   * @param opsCtr
+   *        when packing a subgroup or setting with expanded unit cell
+   *        (deteriminent > 1), this is the expanded operation set that includes
+   *        the lost translations
+   */
+  private void assignAtoms(P3d pt, int atomIndex, BS bs, String type,
+                           boolean newPoint, String cmd, boolean isClick,
+                           // strictly internal, for crystal work:
+                           int site, SymmetryInterface sym,
+                           Lst<P3d> points, String packing, M4d[] opsCtr) {
+    if (sym == null)
+      sym = vwr.getOperativeSymmetry();
+    boolean haveAtomByIndex = (atomIndex >= 0);
+    boolean isMultipleAtoms = (bs != null && bs.cardinality() > 1);
+    int nIgnored = 0;
+    int np = 0;
+    if (!haveAtomByIndex)
+      atomIndex = (bs == null ? -1 : bs.nextSetBit(0));
+    Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
+    double bd = (pt != null && atom != null ? pt.distance(atom) : -1);
+    if (points != null) {
+      np = nIgnored = points.size();
+      sym.toFractional(pt, false);
+      points.addLast(pt);
+      if (newPoint && haveAtomByIndex)
+        nIgnored++;
+      // this will convert points to the needed equivalent points
+      sym.getEquivPointList(points, nIgnored,
+          packing + (newPoint && atomIndex < 0 ? "newpt" : ""), opsCtr);
+    }
+    BS bsEquiv = (atom == null ? null
+        : sym != null ? vwr.ms.getSymmetryEquivAtoms(bs, sym, null)
+            : bs == null || bs.cardinality() == 0
+                ? BSUtil.newAndSetBit(atomIndex)
+                : bs);
+    BS bs0 = (bsEquiv == null ? null
+        : sym == null ? BSUtil.newAndSetBit(atomIndex) : BSUtil.copy(bsEquiv));
+    int mi = (atom == null ? vwr.am.cmi : atom.mi);
+    int ac = vwr.ms.ac;
+    int state = getMKState();
+    boolean isDelete = type.equals("X");
+    try {
+      if (isDelete) {
+        if (isClick) {
+          setProperty(JC.MODELKIT_ROTATEBONDINDEX, Integer.valueOf(-1));
+        }
+        setConstraint(null, atomIndex, GET_DELETE);
+      }
+      if (pt == null && points == null) {
+        // no new position
+        // just assigning a charge, deleting an atom, or changing its element 
+        if (atom == null)
+          return;
+        vwr.sm.setStatusStructureModified(atomIndex, mi,
+            Viewer.MODIFY_ASSIGN_ATOM, cmd, 1, bsEquiv);
+        for (int i = bsEquiv.nextSetBit(0); i >= 0; i = bsEquiv
+            .nextSetBit(i + 1)) {
+          assignAtom(i, type, autoBond, sym == null, isClick);
+        }
+        if (!PT.isOneOf(type, ";Mi;Pl;X;"))
+          vwr.ms.setAtomNamesAndNumbers(atomIndex, -ac, null, true);
+        vwr.sm.setStatusStructureModified(atomIndex, mi,
+            -Viewer.MODIFY_ASSIGN_ATOM, "OK", 1, bsEquiv);
+        vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
+        updateElementKey(null);
+        return;
+      }
+
+      // have pt or points -- assumes at most a SINGLE atom here
+      // if pt != null, then it is what needs to be duplicated
+      // if bs != null, then we have atoms to connect as well 
+
+      setMKState(STATE_MOLECULAR);
+
+      // set up the pts array for equivalent points, which will be passed
+      // to vwr.addHydrogenAtoms along with information about site and element type
+
+      P3d[] pts;
+      if (points == null) {
+        pts = new P3d[] { pt };
+      } else {
+        pts = new P3d[Math.max(0, points.size() - np)];
+        for (int i = pts.length; --i >= 0;) {
+          pts[i] = points.get(np + i);
+        }
+      }
+
+      // connections list for the new atoms
+
+      Lst<Atom> vConnections = new Lst<Atom>();
+      boolean isConnected = false;
+
+      if (site == 0) {
+
+        // set the site to last-site + 1 if this is not an atom
+        // and set up the connections
+
+        if (atom != null) {
+          if (!isMultipleAtoms) {
+            vConnections.addLast(atom);
+            isConnected = true;
+          } else if (sym != null) {
+            P3d p = P3d.newP(atom);
+            sym.toFractional(p, false);
+            bs.or(bsEquiv);
+            Lst<P3d> list = sym.getEquivPoints(null, p, packing);
+            for (int j = 0, n = list.size(); j < n; j++) {
+              for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+                if (vwr.ms.at[i].distanceSquared(list.get(j)) < 0.001d) {
+                  vConnections.addLast(vwr.ms.at[i]);
+                  bs.clear(i);
+                }
+              }
+            }
+          }
+          isConnected = (vConnections.size() == pts.length);
+          if (isConnected) {
+            double d = Double.MAX_VALUE;
+            for (int i = pts.length; --i >= 0;) {
+              double d1 = vConnections.get(i).distance(pts[i]);
+              if (d == Double.MAX_VALUE)
+                d1 = d;
+              else if (Math.abs(d1 - d) > 0.001d) {
+                // this did not work
+                isConnected = false;
+                break;
+              }
+            }
+          }
+          if (!isConnected) {
+            vConnections.clear();
+          }
+          vwr.sm.setStatusStructureModified(atomIndex, mi,
+              Viewer.MODIFY_SET_COORD, cmd, 1, null);
+        }
+        if (pt != null || points != null) {
+          BS bsM = vwr.getThisModelAtoms();
+          for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
+            int as = vwr.ms.at[i].getAtomSite();
+            if (as > site)
+              site = as;
+          }
+          site++;
+        }
+      }
+
+      // save globals
+      int pickingMode = vwr.acm.getAtomPickingMode();
+      boolean wasHidden = menu.hidden;
+      boolean isMK = vwr.getBoolean(T.modelkitmode);
+      if (!isMK && sym == null) {
+        vwr.setBooleanProperty("modelkitmode", true);
+        menu.hidden = true;
+        menu.allowPopup = false;
+      }
+
+      // now add the "hydrogens" aka new atoms
+      // using vwr.addHydrogensInline, which works through a merge using ModelLoader
+      
+      Map<String, Object> htParams = new Hashtable<String, Object>();
+      if (site > 0)
+        htParams.put("fixedSite", Integer.valueOf(site));
+      htParams.put("element", type);
+      bs = vwr.addHydrogensInline(bs, vConnections, pts, htParams);
+      if (bd > 0 && !isConnected && vConnections.isEmpty()) {
+        connectAtoms(bd, 1, bs0, bs);
+      }
+
+      // bs now points to the new atoms
+      // restore globals
+      
+      if (!isMK) {
+        vwr.setBooleanProperty("modelkitmode", false);
+        menu.hidden = wasHidden;
+        menu.allowPopup = true;
+        vwr.acm.setPickingMode(pickingMode);
+        menu.hidePopup();
+      }
+
+      // we have the new atom, now assign it
+      
+      int atomIndexNew = bs.nextSetBit(0);
+      if (points == null) {
+        // new single atom
+        assignAtom(atomIndexNew, type, false,
+            atomIndex >= 0 && sym == null, true);
+        if (atomIndex >= 0) {
+          boolean doAutobond = (sym == null && !"H".equals(type));
+          assignAtom(atomIndex, ".", false, doAutobond, isClick);
+        }
+        vwr.ms.setAtomNamesAndNumbers(atomIndexNew, -ac, null, true);
+        vwr.sm.setStatusStructureModified(atomIndexNew, mi,
+            -Viewer.MODIFY_SET_COORD, "OK", 1, bs);
+        return;
+      }
+      // potentially many new atoms here, from MODELKIT ADD 
+      if (atomIndexNew >= 0) {
+        for (int i = atomIndexNew; i >= 0; i = bs.nextSetBit(i + 1)) {
+          assignAtom(i, type, false, false, true);
+          // ensure that site is tainted
+          vwr.ms.setSite(vwr.ms.at[i], -1, false);
+          vwr.ms.setSite(vwr.ms.at[i], site, true);
+        }
+        vwr.ms.updateBasisFromSite(mi);
+      }
+      int firstAtom = vwr.ms.am[mi].firstAtomIndex;
+      vwr.ms.setAtomNamesAndNumbers(firstAtom, -ac, null, true);
+      vwr.sm.setStatusStructureModified(-1, mi, -3, "OK", 1, bs);
+      updateModelElementKey(mi, true);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    } finally {
+      setMKState(state);
+    }
+  }
+
+  /**
+   * Do the actual assignment of a single atom, possibly with bonding,
+   * possibly deletion or charge increment/decerement.
+   * 
+   * This is the terminal method in the series:
+   * 
+   * <pre>    
+   *        clickAssignAtom        cmdAssignAddAtoms
+   *                 |                      |
+   *                 +----> AddAtomType <---+       cmdAssignSpaceGroupPacked
+   *                            |                          |
+   *       cmdAssignAtom        + ----> addAtoms <---------+     
+   *              |                         |                        
+   *        assignAtomNoAddedSymmetry  <----+---->   assignAtomWithSymmetry
+   *                     |                                    |
+   *                     +-----------> assignAtoms <----------+    
+   *                                        |
+   *                                        +--------> assignAtom    
+   *                                                   ==========                
+   *
+   * </pre>
    * 
    * @param atomIndex
    *        the atom clicked
@@ -2217,33 +2717,21 @@ public class ModelKit {
    *        standard operation for non-xtal systems
    * @param isClick
    *        whether this is a click or not
-   * @param bsAtoms
-   *        equivalent crystallographic atoms
    * @return atomicNumber or -1
    */
-  private int assignAtom(int atomIndex, String type, boolean autoBond,
-                         boolean addHsAndBond, boolean isClick, BS bsAtoms) {
+  private int assignAtom(int atomIndex, String type,
+                         boolean autoBond, boolean addHsAndBond, boolean isClick) {
 
     if (isClick) {
       if (vwr.isModelkitPickingRotateBond()) {
         bondAtomIndex1 = atomIndex;
         return -1;
       }
-
       if (clickProcessAtom(atomIndex) || !clickToSetElement
           && vwr.ms.getAtom(atomIndex).getElementNumber() != 1)
         return -1;
-
     }
 
-    if (bsAtoms != null) {
-      int n = -1;
-      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
-          .nextSetBit(i + 1)) {
-        n = assignAtom(i, type, autoBond, addHsAndBond, isClick, null);
-      }
-      return n;
-    }
     Atom atom = vwr.ms.at[atomIndex];
     if (atom == null)
       return -1;
@@ -2346,240 +2834,6 @@ public class ModelKit {
     if (addHydrogens)
       vwr.addHydrogens(bsA, Viewer.MIN_SILENT);
     return atomicNumber;
-  }
-
-  /**
-   * Change element, charge, and deleting an atom by clicking on it or via the
-   * MODELKIT ASSIGN ATOM command.
-   * 
-   * <pre>
-   * pt     atomIndex  bs
-   * null   n          bs  ASSIGN ATOM @1 "N"
-   * 
-   * pt    -1        null  ASSIGN ATOM "N" {x,y,z}
-   * 
-   * pt    -1          bs  ADD ATOM @1 "N" {x,y,z} (add with bonding)
-   * </pre>
-   * 
-   * 
-   * 
-   * 
-   * @param pt
-   * @param atomIndex
-   * @param bs
-   * @param type
-   * @param newPoint
-   * @param cmd
-   * @param isClick
-   * @param atomicNo
-   * @param site
-   * @param sym
-   *        a SymmetryInterface or null
-   * @param points
-   * @param packing
-   */
-  private void assignAtoms(P3d pt, int atomIndex, BS bs, String type,
-                           boolean newPoint, String cmd, boolean isClick,
-                           // strictly internal, for crystal work:
-                           int atomicNo, int site, SymmetryInterface sym,
-                           Lst<P3d> points, String packing) {
-    if (sym == null)
-      sym = vwr.getOperativeSymmetry();
-
-    boolean haveAtomByIndex = (atomIndex >= 0);
-    boolean isMultipleAtoms = (bs != null && bs.cardinality() > 1);
-    int nIgnored = 0;
-    int np = 0;
-    if (!haveAtomByIndex)
-      atomIndex = (bs == null ? -1 : bs.nextSetBit(0));
-    Atom atom = (atomIndex < 0 ? null : vwr.ms.at[atomIndex]);
-    double bd = (pt != null && atom != null ? pt.distance(atom) : -1);
-    if (points != null) {
-      np = nIgnored = points.size();
-      sym.toFractional(pt, false);
-      points.addLast(pt);
-      if (newPoint && haveAtomByIndex)
-        nIgnored++;
-      // this will convert points to the needed equivalent points
-      sym.getEquivPointList(points, nIgnored,
-          packing + (newPoint && atomIndex < 0 ? "newpt" : ""));
-    }
-    BS bsEquiv = (atom == null ? null
-        : sym != null ? vwr.ms.getSymmetryEquivAtoms(bs, sym, null)
-            : bs == null || bs.cardinality() == 0
-                ? BSUtil.newAndSetBit(atomIndex)
-                : bs);
-    BS bs0 = (bsEquiv == null ? null
-        : sym == null ? BSUtil.newAndSetBit(atomIndex) : BSUtil.copy(bsEquiv));
-    int mi = (atom == null ? vwr.am.cmi : atom.mi);
-    int ac = vwr.ms.ac;
-    int state = getMKState();
-    boolean isDelete = type.equals("X");
-    try {
-      if (isDelete) {
-        if (isClick) {
-          setProperty(JC.MODELKIT_ROTATEBONDINDEX, Integer.valueOf(-1));
-        }
-        setConstraint(null, atomIndex, GET_DELETE);
-      }
-      if (pt == null && points == null) {
-        // no new position
-        // just assigning a charge, deleting an atom, or changing its element 
-        if (atom == null)
-          return;
-        vwr.sm.setStatusStructureModified(atomIndex, mi,
-            Viewer.MODIFY_ASSIGN_ATOM, cmd, 1, bsEquiv);
-        assignAtom(atomIndex, type, autoBond, sym == null, true, bsEquiv);
-        if (!PT.isOneOf(type, ";Mi;Pl;X;"))
-          vwr.ms.setAtomNamesAndNumbers(atomIndex, -ac, null, true);
-        vwr.sm.setStatusStructureModified(atomIndex, mi,
-            -Viewer.MODIFY_ASSIGN_ATOM, "OK", 1, bsEquiv);
-        vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
-        updateElementKey(null);
-        return;
-      }
-
-      // have pt or points -- assumes at most a SINGLE atom here
-      // if pt != null, then it is what needs to be duplicated
-      // if bs != null, then we have atoms to connect as well 
-
-      setMKState(STATE_MOLECULAR);
-
-      // set up the pts array for equivalent points
-
-      P3d[] pts;
-      if (points == null) {
-        pts = new P3d[] { pt };
-      } else {
-        pts = new P3d[Math.max(0, points.size() - np)];
-        for (int i = pts.length; --i >= 0;) {
-          pts[i] = points.get(np + i);
-        }
-      }
-
-      // connections list for the new atoms
-
-      Lst<Atom> vConnections = new Lst<Atom>();
-      boolean isConnected = false;
-
-      if (site == 0) {
-
-        // set the site to last-site + 1 if this is not an atom
-        // and set up the connections
-
-        if (atom != null) {
-          if (!isMultipleAtoms) {
-            vConnections.addLast(atom);
-            isConnected = true;
-          } else if (sym != null) {
-            P3d p = P3d.newP(atom);
-            sym.toFractional(p, false);
-            bs.or(bsEquiv);
-            Lst<P3d> list = sym.getEquivPoints(null, p, packing);
-            for (int j = 0, n = list.size(); j < n; j++) {
-              for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-                if (vwr.ms.at[i].distanceSquared(list.get(j)) < 0.001d) {
-                  vConnections.addLast(vwr.ms.at[i]);
-                  bs.clear(i);
-                }
-              }
-            }
-          }
-          isConnected = (vConnections.size() == pts.length);
-          if (isConnected) {
-            double d = Double.MAX_VALUE;
-            for (int i = pts.length; --i >= 0;) {
-              double d1 = vConnections.get(i).distance(pts[i]);
-              if (d == Double.MAX_VALUE)
-                d1 = d;
-              else if (Math.abs(d1 - d) > 0.001d) {
-                // this did not work
-                isConnected = false;
-                break;
-              }
-            }
-          }
-          if (!isConnected) {
-            vConnections.clear();
-          }
-          vwr.sm.setStatusStructureModified(atomIndex, mi,
-              Viewer.MODIFY_SET_COORD, cmd, 1, null);
-        }
-        if (pt != null || points != null) {
-          BS bsM = vwr.getThisModelAtoms();
-          for (int i = bsM.nextSetBit(0); i >= 0; i = bsM.nextSetBit(i + 1)) {
-            int as = vwr.ms.at[i].getAtomSite();
-            if (as > site)
-              site = as;
-          }
-          site++;
-        }
-      }
-
-      // save globals
-      int pickingMode = vwr.acm.getAtomPickingMode();
-      boolean wasHidden = menu.hidden;
-      boolean isMK = vwr.getBoolean(T.modelkitmode);
-      if (!isMK) {
-        vwr.setBooleanProperty("modelkitmode", true);
-        menu.hidden = true;
-        menu.allowPopup = false;
-      }
-
-      // now add the hydrogens
-      Map<String, Object> htParams = new Hashtable<String, Object>();
-      if (site > 0)
-        htParams.put("fixedSite", Integer.valueOf(site));
-      htParams.put("element", type);
-      bs = vwr.addHydrogensInline(bs, vConnections, pts, htParams);
-      if (bd > 0 && !isConnected && vConnections.isEmpty()) {
-        connectAtoms(bd, 1, bs0, bs);
-      }
-
-      // bs now points to the new atoms
-
-      // restore globals
-      if (!isMK) {
-        vwr.setBooleanProperty("modelkitmode", false);
-        menu.hidden = wasHidden;
-        menu.allowPopup = true;
-        vwr.acm.setPickingMode(pickingMode);
-        menu.hidePopup();
-      }
-
-      int atomIndexNew = bs.nextSetBit(0);
-      if (points == null) {
-        // new single atom
-        assignAtom(atomIndexNew, type, false, atomIndex >= 0 && sym == null,
-            true, null);
-        if (atomIndex >= 0) {
-          boolean doAutobond = (sym == null && !"H".equals(type));
-          assignAtom(atomIndex, ".", false, doAutobond, isClick, null);
-        }
-        vwr.ms.setAtomNamesAndNumbers(atomIndexNew, -ac, null, true);
-        vwr.sm.setStatusStructureModified(atomIndexNew, mi,
-            -Viewer.MODIFY_SET_COORD, "OK", 1, bs);
-        return;
-      }
-      // potentially many new atoms here, from MODELKIT ADD 
-      if (atomIndexNew >= 0) {
-        for (int i = atomIndexNew; i >= 0; i = bs.nextSetBit(i + 1)) {
-          assignAtom(i, type, false, false, true, null);
-          // ensure that site is tainted
-          vwr.ms.setSite(vwr.ms.at[i], -1, false);
-          vwr.ms.setSite(vwr.ms.at[i], site, true);
-        }
-        vwr.ms.updateBasisFromSite(mi);
-      }
-      int firstAtom = vwr.ms.am[mi].firstAtomIndex;
-      vwr.ms.setAtomNamesAndNumbers(firstAtom, -ac, null, true);
-      vwr.sm.setStatusStructureModified(-1, mi, -3, "OK", 1, bs);
-      updateModelElementKey(mi, true);
-    } catch (Exception ex) {
-      ex.printStackTrace();
-    } finally {
-      setMKState(state);
-    }
   }
 
   /**
@@ -2725,7 +2979,7 @@ public class ModelKit {
     } finally {
       setMKState(state);
       if (n > 0) {
-        updateAtomSets(JC.PROP_ATOMS_MOVED, bsMoved);
+        updateDrawAtomSets(JC.PROP_ATOMS_MOVED, bsMoved);
       }
 
     }
@@ -3080,12 +3334,17 @@ public class ModelKit {
    * transform first. If any identifiers are in the chain other than the first
    * or last position, they are not checked and are simply ignored.
    * 
+   * @param sym00
+   * @param ita00
+   * 
    * @param bs
    * @param paramsOrUC
    * @param tokens
    *        separation based on >
    * @param index
-   * @param trm0
+   * @param trm
+   * @param prevNode
+   * @param sb
    * 
    * 
    * @return message or error (message ending in "!")
@@ -3119,15 +3378,18 @@ public class ModelKit {
 
     if (prevNode == null) {
       String ita0 = (haveUnitCell ? sym00.getIntTableNumber() : null);
-      String trm0 = (haveUnitCell
-          ? (String) sym00.getSpaceGroupInfoObj("itaTransform", null, false,
-              false)
-          : null);
+      String trm0 = null;
+      if (haveUnitCell) {
+        if (ita0.equals("0"))
+          ita0 = sym00.getClegId();
+        else
+          trm0 = (String) sym00.getSpaceGroupInfoObj("itaTransform", null,
+              false, false);
+      }
       trm = new M4d();
       trm.setIdentity();
       prevNode = new ClegNode(-1, ita0, trm0);
-      if (prevNode.errString != null
-          || !prevNode.update(vwr, null, trm, trTemp, sym))
+      if (!prevNode.update(vwr, null, trm, trTemp, sym))
         return prevNode.errString;
 
     }
@@ -3195,7 +3457,7 @@ public class ModelKit {
     // first or last. 
 
     ClegNode node = new ClegNode(index, name, transform);
-    if (node.errString != null || !node.update(vwr, prevNode, trm, trTemp, sym))
+    if (!node.update(vwr, prevNode, trm, trTemp, sym))
       return node.errString;
 
     if (!isFinal)
@@ -3286,18 +3548,11 @@ public class ModelKit {
         params = sym.getUnitCellMultiplied().getUnitCellParams();
 
       @SuppressWarnings("unchecked")
-      Map<String, Object> sgInfo = (
-          noAtoms && isUnknown 
-          ? null
-          : (Map<String, Object>) vwr.findSpaceGroup(
-              sym,
-              isUnknown ? bsAtoms : null, 
-              isUnknown ? null : node.name, 
-              params,
+      Map<String, Object> sgInfo = (noAtoms && isUnknown ? null
+          : (Map<String, Object>) vwr.findSpaceGroup(sym,
+              isUnknown ? bsAtoms : null, isUnknown ? null : node.name, params,
               origin, oabc,
-              JC.SG_IS_ASSIGN | (haveUnitCell ? 0 : JC.SG_FROM_SCRATCH)
-             )
-          );
+              JC.SG_IS_ASSIGN | (haveUnitCell ? 0 : JC.SG_FROM_SCRATCH)));
 
       if (sgInfo == null) {
         return "Space group " + node.name + " is unknown or not compatible!";
@@ -3315,15 +3570,17 @@ public class ModelKit {
       sym.getUnitCell(oabc, false, null);
       sym.setSpaceGroupTo(sg == null ? jmolId : sg);
       sym.setSpaceGroupName(name);
-      if (basis == null)
+      if (basis == null) {
         basis = sym.removeDuplicates(vwr.ms, bsAtoms, true);
+      }
       vwr.ms.setSpaceGroup(mi, sym, basis);
       if (!haveUnitCell) {
         appRunScript(
             "unitcell on; center unitcell;axes unitcell; axes 0.1; axes on;"
                 + "set perspectivedepth false;moveto 0 axis c1;draw delete;show spacegroup");
       }
-      return sym.staticGetTransformABC(trm, false) + "\n" + name + " basis=" + basis;
+      return sym.staticGetTransformABC(trm, false) + "\n" + name + " basis="
+          + basis;
     } catch (Exception e) {
       if (!Viewer.isJS)
         e.printStackTrace();
@@ -4222,7 +4479,7 @@ public class ModelKit {
     }
     clearElementKey(-1);
     if (isOn) {
-      // false here because we hvae already cleared all already
+      // false here because we have already cleared all already
       updateModelElementKeys(null, false);
     }
   }
@@ -4245,7 +4502,7 @@ public class ModelKit {
     BS bsAtoms = vwr.getThisModelAtoms();
     int n = bsAtoms.cardinality();
     boolean isReset = (n == 0);
-    if (!isReset) {
+    if (!isReset && sym != null) {
       Atom[] a = vwr.ms.at;
       P3d[] fxyz = getFractionalCoordinates(sym, bsAtoms);
       vwr.ms.setModelCagePts(-1, oabc, ucname);
@@ -4280,29 +4537,32 @@ public class ModelKit {
     return fxyz;
   }
 
-  private class AtomSet {
+  /**
+   * A class to maintain the connection between drawn symmetry business
+   * and sets of atoms. This allows them to be adjusted on the fly.
+   * 
+   */
+  private class DrawAtomSet {
     BS bsAtoms;
     String cmd;
     String id;
-    int modelIndex;
 
-    AtomSet(BS bs, String id, String cmd, int modelIndex) {
+    DrawAtomSet(BS bs, String id, String cmd) {
       bsAtoms = bs;
-      this.modelIndex = modelIndex;
       this.cmd = cmd;
       this.id = id;
     }
 
   }
 
-  private Lst<AtomSet> atomSets;
+  private Lst<DrawAtomSet> drawAtomSets;
 
-  public synchronized void updateAtomSets(String mode, BS atoms) {
-    if (atomSets == null)
+  public synchronized void updateDrawAtomSets(String mode, BS atoms) {
+    if (drawAtomSets == null)
       return;
     String cmd = "";
-    for (int i = atomSets.size(); --i >= 0;) {
-      AtomSet a = atomSets.get(i);
+    for (int i = drawAtomSets.size(); --i >= 0;) {
+      DrawAtomSet a = drawAtomSets.get(i);
       if (mode == JC.PROP_DELETE_MODEL_ATOMS
           ? atoms.get(a.bsAtoms.nextSetBit(0))
           : atoms.intersects(a.bsAtoms)) {
@@ -4311,13 +4571,12 @@ public class ModelKit {
         case JC.PROP_ATOMS_DELETED:
           System.out
               .println("remove deleteatoms " + atoms + " " + a.bsAtoms + a.id);
-          atomSets.removeItemAt(i);
+          drawAtomSets.removeItemAt(i);
           break;
         case JC.PROP_ATOMS_MOVED:
           try {
             if (!checkDrawID(a.id)) {
-              //System.out.println("remove " + a.id);
-              atomSets.removeItemAt(i);
+              drawAtomSets.removeItemAt(i);
             } else {
               cmd += a.cmd + JC.SCRIPT_QUIET + "\n";
             }
@@ -4326,8 +4585,8 @@ public class ModelKit {
           }
           break;
         }
-        if (atomSets.size() == 0)
-          atomSets = null;
+        if (drawAtomSets.size() == 0)
+          drawAtomSets = null;
       }
       if (cmd.length() > 0)
         vwr.evalStringGUI(cmd);
@@ -4336,9 +4595,7 @@ public class ModelKit {
 
   private boolean checkDrawID(String id) {
     Object[] o = new Object[] { id + "*", null };
-    //System.out.println("checking " + id);
     boolean exists = vwr.shm.getShapePropertyData(JC.SHAPE_DRAW, "checkID", o);
-    // System.out.println(id + " " + exists + " " + o[1]);
     return (exists && o[1] != null);
   }
 
@@ -4363,26 +4620,30 @@ public class ModelKit {
     String cmd = tokens[3];
     BS bs = BSUtil.newAndSetBit(a1);
     bs.set(a2);
-    if (atomSets == null) {
-      atomSets = new Lst<AtomSet>();
+    if (drawAtomSets == null) {
+      drawAtomSets = new Lst<DrawAtomSet>();
     }
-    atomSets.addLast(new AtomSet(bs, id, cmd, vwr.am.cmi));
-    //System.out.println("testing addatomset " + atomSets.size() + " for " + cmd);
+    drawAtomSets.addLast(new DrawAtomSet(bs, id, cmd));
   }
 
   private void clearAtomSets(String id) {
-    if (atomSets == null)
+    if (drawAtomSets == null)
       return;
-    for (int i = atomSets.size(); --i >= 0;) {
-      AtomSet a = atomSets.get(i);
+    for (int i = drawAtomSets.size(); --i >= 0;) {
+      DrawAtomSet a = drawAtomSets.get(i);
       if (a.id.equals(id)) {
-        atomSets.remove(i);
+        drawAtomSets.remove(i);
         return;
       }
     }
   }
 
-  public void drawUnitCell(String id, T3d ucLattice, String cmd) {
+  /**
+   * @param id 
+   * @param ucLattice 
+   * @param swidth 
+   */
+  public void drawUnitCell(String id, T3d ucLattice, String swidth) {
     SymmetryInterface sym = vwr.getOperativeSymmetry();
     if (sym == null)
       return;
@@ -4401,12 +4662,38 @@ public class ModelKit {
     for (int p = 1, x = (int) cellRange[0].x; x < cellRange[1].x; x++) {
       for (int y = (int) cellRange[0].y; y < cellRange[1].y; y++) {
         for (int z = (int) cellRange[0].z; z < cellRange[1].z; z++, p++) {
-          s += "\ndraw ID " + PT.esc(id + "_" + p) + " unitcell \"a,b,c;" + x
+          s += "\ndraw ID " + PT.esc(id + "_" + p) 
+          + " " + swidth + " unitcell \"a,b,c;" + x
               + "," + y + "," + z + "\"";
         }
       }
     }
+    s += getDrawAxes(id, swidth);
     appRunScript(s);
+  }
+
+  public void drawAxes(String id, String swidth) {
+    String s = getDrawAxes(id, swidth);
+    if (s.length() > 0)
+      appRunScript(s);
+  }
+
+  private String getDrawAxes(String id, String swidth) {
+    if (vwr.g.axesMode != T.axesunitcell || vwr.shm.getShapePropertyIndex(JC.SHAPE_AXES,"axesTypeXY", 0) == Boolean.TRUE)
+      return "";
+    if (id == null)
+      id = "uca";
+    if (swidth.indexOf(".") > 0)
+      swidth += "05";
+    P3d origin = (P3d) vwr.shm.getShapePropertyIndex(JC.SHAPE_AXES, "originPoint", 0);
+    P3d[] axisPoints = (P3d[]) vwr.shm.getShapePropertyIndex(JC.SHAPE_AXES, "axisPoints", 0);
+    String s = "";
+    String[] colors = new String[] {"red", "green", "blue"};
+    for (int i = 0, a = JC.AXIS_A; i < 3; i++, a++) {
+      s += "\ndraw ID " + PT.esc(id + "_axis_" + JC.axisLabels[a]) 
+          + " " + swidth + " line " + origin + " " + axisPoints[i] + " color " + colors[i];
+    }
+    return s;
   }
 
 }

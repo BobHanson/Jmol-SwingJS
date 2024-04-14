@@ -126,7 +126,7 @@ public class XtalSymmetry {
     }
 
     public String fcoord(T3d p) {
-      return SymmetryOperation.fcoord(p);
+      return SymmetryOperation.fcoord(p, " ");
     }
 
     /**

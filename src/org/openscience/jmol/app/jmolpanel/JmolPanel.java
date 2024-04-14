@@ -1752,6 +1752,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         fullPathName = fullPathName.substring(0, pt);
       if (recentFiles != null)
         recentFiles.notifyFileOpen(fullPathName);
+      if (title.indexOf(JC.ADD_HYDROGEN_TITLE) >= 0)
+        title = "<modelkit>";
       frame.setTitle(title);
     }
     if (atomSetChooser == null && addAtomChooser) {

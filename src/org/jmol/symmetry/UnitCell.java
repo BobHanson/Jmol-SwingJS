@@ -313,12 +313,13 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
    * @param i0
    *        the starting index of the list
    * @param n0
-   *        the first point that is to be duplicated; prior points are just
-   *        references for removing duplicates
+   *        the first point that is to be duplicated; 
+   * @param dup0 
+   *        start for checking for removing duplicates, either i0 or no?
    * @return augmented list
    */
   Lst<P3d> getEquivPoints(P3d pt, String flags, M4d[] ops, Lst<P3d> list,
-                                int i0, int n0) {
+                                int i0, int n0, int dup0) {
     boolean fromfractional = (flags.indexOf("fromfractional") >= 0);
     boolean tofractional = (flags.indexOf("tofractional") >= 0);
     boolean packed = (flags.indexOf("packed") >= 0);
@@ -373,7 +374,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         }
       }
     }
-    removeDuplicates(list, i0, n0, -1);
+    removeDuplicates(list, i0, dup0, -1);
     if (!tofractional) {
       for (int i = list.size(); --i >= n0;)
         toCartesian(list.get(i), true);
@@ -741,8 +742,6 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
                                            M4d retMatrix) {
     if (def == null)
       def = "a,b,c";
-    if (retMatrix == null ? uc == null : !(def instanceof String))
-      return null;
     M4d m;
     P3d[] pts = new P3d[4];
     P3d pt = pts[0] = P3d.new3(0, 0, 0);
@@ -753,7 +752,8 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     if (AU.isAD(def)) {
       return setAbcFromParams((double[]) def, pts);
     }
-    if (def instanceof String) {
+    boolean isString = def instanceof String;
+    if (isString) {
       String sdef = (String) def;
       String strans;
       String strans2 = null;
@@ -810,6 +810,8 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       }
       if (uc == null)
         return pts;
+    } else if (retMatrix != null || uc == null) {
+        return null;
     } else if (def instanceof M3d) {
       m = M4d.newMV((M3d) def, new P3d());
     } else if (def instanceof M4d) {
@@ -1382,6 +1384,59 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         }
       }
     }
+  }
+
+  /**
+   * We sum the M3 column vectors. The result is (a' + b' +
+   * c'), which is the diagonal vector across the unit cell in the coordinates
+   * of the original lattice. Values are obtained for negative and pasitive ranges
+   * 
+   * 
+   * This method is used for two purpose:
+   * 
+   * 1) When a subgroup transformation or setting is made that enlarges the unit
+   * cell, this method delivers the additional centering information that may be
+   * needed to generate additional operators.
+   * 
+   * 2) When a transformed space group unit cell is packed, this result gives us
+   * the information we need to pack that cell fully, drawing from atoms that
+   * are in all the covered original unit cells.
+   * 
+   * For example, P42(77) has a 45-degree rotated setting C42.
+   * 
+   * https://www.cryst.ehu.es/cgi-bin/cryst/programs//nph-trgen?gnum=077&what=gp&trmat=a-b,a+b,c&unconv=C%2042&from=ita
+   * 
+   * The transformation matrix is a-b,a+b,c;0,0,0. Summing this, we get
+   * [0,-1,0](neg) and [2,1,1](pos). The range of cells needed to cover this is [0,1,2), [-1,1), [0,1) 
+   * 
+   * @param trm
+   * @return the range as float[][], or null if the result would be [0 0 0][1 1 1]
+   */
+  static double[][] getTransformRange(M4d trm) {
+    double[][] t = new double[2][3];
+    double[] row = new double[4];
+    for (int i = 0; i < 3; i++) {
+      trm.getRow(i, row);
+      for (int j = 0; j < 3; j++) {
+        double v = row[j];
+        if (v < 0) {
+          t[0][i] += -row[j];
+        } else if (v > 0) {
+          t[1][i] += row[j];
+        }
+      }
+    }
+    boolean ignore = true;
+    for (int i = 0, dz = 0; i < 2; i++, dz++) {
+      for (int j = 0; j < 3; j++) {
+        int d = (int) Math.ceil(t[i][j]);
+        if (d > dz)
+          ignore = false;
+        t[i][j] = (i == 0 ? -d : d);
+      }
+    }
+
+    return (ignore ? null : t);
   }
 
 }

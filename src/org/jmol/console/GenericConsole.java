@@ -63,7 +63,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
   protected Map<String, Object> menuMap = new Hashtable<String, Object>();
   protected JmolAbstractButton editButton, runButton, historyButton, stateButton;
   protected JmolAbstractButton clearOutButton, clearInButton, loadButton;
-   
+
   abstract protected boolean isMenuItem(Object source);  
   abstract protected void layoutWindow(String enabledButtons);
   abstract protected void setTitle();  
@@ -229,7 +229,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     String cmd = (strCommand == null ? input.getText() : strCommand);
     if (strCommand == null)
       input.setText(null);
-    String strErrorMessage = vwr.script(cmd + JC.SCRIPT_GUI + JC.SCRIPT_EDITOR_IGNORE);
+    String strErrorMessage = vwr.script(cmd + JC.SCRIPT_CONSOLE);
     if (strErrorMessage != null && !strErrorMessage.equals("pending"))
       outputMsg(strErrorMessage);
   }
@@ -429,7 +429,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
   }
   
   protected String trimGUI(String cmd) {
-    int pt = cmd.indexOf(JC.SCRIPT_GUI);
+    int pt = cmd.indexOf(JC.SCRIPT_EXT);
     if (pt >= 0)
       cmd = cmd.substring(0, pt);
    return PT.trim(cmd, "; ");
@@ -559,6 +559,5 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     sout[3] = (nBrace > 0 ? "{" : null);
     return sout;
   }
-
 
 }

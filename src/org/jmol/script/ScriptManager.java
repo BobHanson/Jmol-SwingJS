@@ -422,7 +422,7 @@ public class ScriptManager implements JmolScriptManager {
     int pt = str.indexOf(JC.SCRIPT_GUI);
     if (pt >= 0)
       str = str.substring(0, pt);
-    else if ((pt = str.indexOf(JC.SCRIPT_EXT)) >= 0)
+    if ((pt = str.indexOf(JC.SCRIPT_EXT)) >= 0)
       str = str.substring(0, pt);
 
     if (checkResume(str))
@@ -849,6 +849,8 @@ public class ScriptManager implements JmolScriptManager {
     Object[] params = (Object[]) scriptItem.get(5);
     evalStringWaitParamsStatusQueued(returnType, script, params, statusList, isQuiet,
         true);
+    if (script.indexOf(JC.SCRIPT_CONSOLE) > 0)
+      vwr.appConsole.regainFocus();
   }
 
 }

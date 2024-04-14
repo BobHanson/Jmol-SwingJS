@@ -4437,24 +4437,32 @@ public class ModelSet extends BondCollection {
     }
   }
 
+  /**
+   * Set up all the model-related fields in association with a new
+   * space group. The basis may or may not be known. Passing an empty
+   * bitset to ths method will fill it with the basis as determined
+   * by trying all the operators.
+   * 
+   * @param mi
+   * @param sg
+   * @param basis
+   */
   public void setSpaceGroup(int mi, SymmetryInterface sg, BS basis) {
     if (unitCells == null)
       unitCells = new SymmetryInterface[mc];
     unitCells[mi] = sg;
     haveUnitCells = true;
     boolean isP1 = (sg.getSpaceGroupOperationCount() == 1);
-    sg.setFinalOperations(3, null, null, -1, -1, false, null);
-    int nops = sg.getSpaceGroupOperationCount();
+    int nops = sg.getFinalOperationCount();
 
     if (basis != null) {
-      am[mi].bsAsymmetricUnit = basis;
-      // set symmetry at least for symop=1555
-
-      if (bsSymmetry == null)
-        bsSymmetry = BS.newN(ac);
+      boolean needBasis = basis.isEmpty();
       BS bs = vwr.getModelUndeletedAtomsBitSet(mi);
-      bsSymmetry.or(bs);
-      bsSymmetry.andNot(basis);
+      if (needBasis) {
+        basis = BSUtil.copy(bs);
+      } else {
+        setAsymmetricUnit(mi, bs, basis, !isP1);
+      }
       // next is not actually true -- we may have face atoms
       // remove any cage created by UNITCELL command
       // move any origin offset into atom positions
@@ -4471,30 +4479,24 @@ public class ModelSet extends BondCollection {
       // assign sites to basis atoms
       if (isP1) {
         fixP1AtomSites(sg, bs);
-      } else {
-        for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs
-            .nextSetBit(i + 1)) {
-          boolean isBasis = basis.get(i);
-          at[i].setSymop(isBasis ? 1 : 0, false);
-          if (isBasis)
-            setSite(at[i], ++p, false);
-        }
-      }
-      bs.andNot(basis);
-      if (!isP1) {
+      } else {        
         boolean haveOccupancies = (occupancies != null);
         M4d[] ops = sg.getSymmetryOperations();
         P3d a = new P3d(), b = new P3d(), t = new P3d();
+        int site = 0;
         for (int j = basis.nextSetBit(0); j >= 0; j = basis.nextSetBit(j + 1)) {
           Atom bb = at[j];
           b.setT(bb);
           sg.toFractional(b, false);
           sg.unitize(b);
-          int site = bb.atomSite;
+          if (needBasis)
+            setSite(bb, ++site, true);
+          site = bb.atomSite;
+          bs.clear(j);
           double occj = (haveOccupancies ? occupancies[j] : 0);
-          out: for (int i = bs.nextSetBit(0); i >= 0; i = bs
+          out: for (int i = bs.nextSetBit(needBasis ? j + 1 : 0); i >= 0; i = bs
               .nextSetBit(i + 1)) {
-            Atom ba = at[i];
+           Atom ba = at[i];
             int type = ba.atomNumberFlags;
             if (ba.atomNumberFlags != type
                 || haveOccupancies && occj != occupancies[i])
@@ -4509,6 +4511,7 @@ public class ModelSet extends BondCollection {
               if (t.distanceSquared(a) < JC.UC_TOLERANCE2) {
                 setSite(ba, site, true);
                 bs.clear(i);
+                basis.clear(i);
                 continue out;
               }
             }
@@ -4517,14 +4520,20 @@ public class ModelSet extends BondCollection {
         if (!bs.isEmpty()) {
           System.err.println("Model basis atoms not found for " + bs);
         }
+        if (needBasis) {
+          // there were subset centering-like operations
+          // because of an expanded unit cell. For example, for 
+          // 100 > @subgroup(100,100,1,1) > 100
+          // now we are ready for this. 
+          setAsymmetricUnit(mi, null, basis, !isP1);
+        }
+
       }
     }
     // TODO: actually set atomSymmetry properly
     setInfo(mi, JC.INFO_UNIT_CELL_PARAMS, sg.getUnitCellParams());
-
-    String sgName = (String) getInfo(mi, JC.INFO_SPACE_GROUP);
     setInfo(mi, JC.INFO_SPACE_GROUP_ASSIGNED, Boolean.TRUE);
-    setInfo(mi, JC.INFO_SPACE_GROUP, sg.getSpaceGroupName());
+    setInfo(mi, JC.INFO_SPACE_GROUP, sg.getClegId());
     setInfo(mi, JC.INFO_SPACE_GROUP_INFO, null);
     if (am[mi].simpleCage != null) {
       sg.getUnitCell(am[mi].simpleCage.getUnitCellVectors(), false, null);
@@ -4533,6 +4542,29 @@ public class ModelSet extends BondCollection {
     setModelCage(mi, null);
   }
   
+  private void setAsymmetricUnit(int mi, BS bsModelAtoms, BS basis, boolean haveSymmetry) {
+    if (bsModelAtoms == null)
+      bsModelAtoms = vwr.getModelUndeletedAtomsBitSet(mi);
+    am[mi].bsAsymmetricUnit = basis;
+    // set symmetry at least for symop=1555
+
+    if (bsSymmetry == null)
+      bsSymmetry = BS.newN(ac);
+    bsSymmetry.or(bsModelAtoms);
+    bsSymmetry.andNot(basis);
+    if (haveSymmetry) {
+      for (int p = 0, i = bsModelAtoms.nextSetBit(0); i >= 0; i = bsModelAtoms
+          .nextSetBit(i + 1)) {
+        boolean isBasis = basis.get(i);
+        at[i].setSymop(isBasis ? 1 : 0, false);
+        if (isBasis)
+          setSite(at[i], ++p, false);
+      }
+      bsModelAtoms.andNot(basis);
+    }
+
+  }
+
   /**
    * This is the model-specific cage created by a UNITCELL or MODELKIT UNITCELL command.
    * It will be used provided it is different from the symmetry unit cell associated with 

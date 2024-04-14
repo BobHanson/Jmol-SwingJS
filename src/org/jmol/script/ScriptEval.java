@@ -2609,7 +2609,7 @@ public class ScriptEval extends ScriptExpr {
           if (chk) {
           } else {
             if (Viewer.isJS) {
-            	// using vwr.showString here, as this is just a general message
+              // using vwr.showString here, as this is just a general message
               vwr.showString("InChI module initialized", false);
               doDelay(1);
             }

@@ -229,8 +229,8 @@ public class SimpleUnitCell {
     if (a <= 0 && c <= 0) {
       // must calculate a, b, c alpha beta gamma from Cartesian vectors;
       V3d va = newV(params, PARAM_VAX);
-      V3d vb = newV(params, PARAM_VAX + 3);
-      V3d vc = newV(params, PARAM_VAX + 6);
+      V3d vb = newV(params, PARAM_VBX);
+      V3d vc = newV(params, PARAM_VCX);
       setABC(va, vb, vc);
       if (c < 0) {
         double[] n = AU.arrayCopyD(params, -1);
@@ -392,8 +392,8 @@ public class SimpleUnitCell {
   public static void fillParams(V3d va, V3d vb, V3d vc, double[] p) {
     if (va == null) {
       va = newV(p, PARAM_VAX);
-      vb = newV(p, PARAM_VAX + 3);
-      vc = newV(p, PARAM_VAX + 6);
+      vb = newV(p, PARAM_VBX);
+      vc = newV(p, PARAM_VCX);
     }
     double a = va.length();
     double b = vb.length();

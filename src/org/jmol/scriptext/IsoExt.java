@@ -332,6 +332,10 @@ public class IsoExt extends ScriptExt {
           invArg();
         }
         break;
+      case T.axes:
+        if (!chk)
+          vwr.getModelkit(false).drawAxes(thisId, swidth);
+        return;
       case T.lattice:
       case T.unitcell:
       case T.boundbox:
@@ -412,6 +416,11 @@ public class IsoExt extends ScriptExt {
                 .checkHKL(eval.getPointOrPlane(++i, ScriptParam.MODE_P3));
             i = eval.iToken;
           }
+          if (tokAt(i + 1) == T.axes) {
+            if (ucLattice == null)
+              ucLattice = P3d.new3(555, 555, 1);
+            i++;
+          }
           break;
         }
         if (chk)
@@ -428,7 +437,7 @@ public class IsoExt extends ScriptExt {
               null);
         } else if (tok == T.unitcell && uc == null) {
           if (ucLattice != null) {
-              vwr.getModelkit(false).drawUnitCell(thisId, ucLattice, eval.fullCommand);
+              vwr.getModelkit(false).drawUnitCell(thisId, ucLattice, swidth);
             return;
           }
           uc = vwr.getCurrentUnitCell();

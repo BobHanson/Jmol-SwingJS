@@ -54,11 +54,11 @@ import javajs.util.SB;
  *
  * Hall symbols:
  * 
- * http://cci.lbl.gov/sginfo/hall_symbols.html
+ * https://cci.lbl.gov/sginfo/hall_symbols.html
  * 
  * and
  * 
- * http://cci.lbl.gov/cctbx/explore_symmetry.html
+ * https://cci.lbl.gov/cctbx/explore_symmetry.html
  * 
  * (-)L   [N_A^T_1]   [N_A^T_2]   ...  [N_A^T_P]   V(Nx Ny Nz)
  * 
@@ -77,63 +77,84 @@ import javajs.util.SB;
 
 public class SpaceGroup implements Cloneable {
 
-  private static final String NEW_HALL_GROUP = "0;-;;0;--;--;";
-  private static final String NEW_NO_HALL_GROUP = "0;;-;0;--;--;--";
+  private static final String NEW_HALL_GROUP     = "0;--;--;0;--;--;";
+  private static final String NEW_NO_HALL_GROUP  = "0;--;--;0;--;--;--";
+  private static final String SG_NONE = "--";
+  static final String NO_NAME = "-- [--]"; // don't know if this is possible
+
+  private final static int SG_ITA = -2;
 
   public SymmetryOperation[] operations;
   SymmetryOperation[] finalOperations;
   SymmetryOperation[] allOperations;
   Map<String, Integer> xyzList;
-
-  private int index;
-  private int derivedIndex = -1;
-
-  public boolean isSSG;
-  String name = "unknown!";
-  String hallSymbol;
-  String crystalClass; //schoenfliesSymbol;
-  String hmSymbol; 
-  String hmSymbolFull; 
-  //String hmSymbolCompressed; 
-  String hmSymbolExt;
-  String hmSymbolAbbr;
-  String hmSymbolAlternative;
-  String hmSymbolAbbrShort;
-  char ambiguityType = '\0';
   char uniqueAxis = '\0'; 
   char axisChoice = '\0';
   //int cellChoice; 
   //int originChoice;
   String itaNumber;  // "3"
   String jmolId;     // "3:a"
-  String jmolIdExt;  // "a" in "3:a"
-  HallInfo hallInfo;
-  int latticeParameter;
+  String clegId;
   int operationCount;
   int latticeOp = -1;
-  private int modDim;
-  boolean doNormalize = true;
   boolean isBio;
-  //boolean isBilbao;
   char latticeType = 'P'; // P A B C I F
-
   String itaTransform;
-
-  Object info;
-
-  private Integer nHallOperators;
-  //private String[] xyzListITA;
   /**
    * index in cleg_settings.tab; "-" if in Jmol's list but not at ITA -- 152:_2 and 154:_2
    */
-  String itaIndex;
+
+  private String itaIndex;
   
-  private String clegId;
+ 
+  private int index;
+  private int derivedIndex = -1;
   
-  public String getItaIndex() {
-    return itaIndex == null ? itaNumber : itaIndex;
+  public boolean isSSG;
+  private String name = "unknown!";
+  private String hallSymbol;
+  private String crystalClass; //schoenfliesSymbol;
+  private String hmSymbol;   private String jmolIdExt;  // "a" in "3:a"
+  private HallInfo hallInfo;
+  private int latticeParameter;
+  private int modDim;
+  private boolean doNormalize = true;
+  private Object info;
+  private Integer nHallOperators;
+  private String hmSymbolFull; 
+  private String hmSymbolExt;
+  private String hmSymbolAbbr;
+  private String hmSymbolAlternative;
+  private String hmSymbolAbbrShort;
+  private char ambiguityType = '\0';
+
+  
+  private SpaceGroup setFrom(SpaceGroup sg, boolean isITA) {
+    if (isITA) {
+      name = (sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + clegId);
+      derivedIndex = SG_ITA; // prevents replacement in finalizeOperations
+    } else {
+      name = sg.getName();
+      derivedIndex = sg.index;
+    }
+    clegId = sg.clegId;
+    itaIndex = sg.itaIndex;
+    crystalClass = sg.crystalClass;
+    hallSymbol = sg.hallSymbol;
+    hmSymbol = sg.hmSymbol;
+    hmSymbolAbbr = sg.hmSymbolAbbr;
+    hmSymbolAbbrShort = sg.hmSymbolAbbrShort;
+    hmSymbolAlternative = sg.hmSymbolAlternative;
+    hmSymbolExt = sg.hmSymbolExt;
+    hmSymbolFull = sg.hmSymbolFull;
+    itaNumber = sg.itaNumber;
+    itaTransform = sg.itaTransform;
+    jmolId = sg.jmolId;
+    jmolIdExt = sg.jmolIdExt;
+    latticeType = sg.latticeType;
+    return this;
   }
-  
+
   static SpaceGroup getNull(boolean doInit, boolean doNormalize, boolean doFinalize) {
     //  getSpaceGroups();
     SpaceGroup sg = new SpaceGroup(-1, null, doInit);
@@ -142,7 +163,6 @@ public class SpaceGroup implements Cloneable {
       sg.setFinalOperations();
     return sg;
   }
-
   
   private SpaceGroup(int index, String strData, boolean doInit) {
     ++sgIndex; // increment even if not using
@@ -192,6 +212,14 @@ public class SpaceGroup implements Cloneable {
     }
   }
 
+  public String getItaIndex() {
+    return (itaIndex != null && !SG_NONE.equals(itaIndex) 
+        ? itaIndex 
+            : !"0".equals(itaNumber) ? itaNumber : !SG_NONE.equals(hallSymbol) 
+                ? "[" + hallSymbol + "]" 
+                    : "?");
+  }
+  
   public int getIndex() {
     return (derivedIndex >= 0 ? derivedIndex : index);
   }
@@ -224,6 +252,13 @@ public class SpaceGroup implements Cloneable {
     return sg;
   }
 
+  /**
+   * 
+   * @param xyz
+   * @param opId generally 0; -1 for subsystems
+   * @param allowScaling generally false; true for subsystems
+   * @return index
+   */
   public int addSymmetry(String xyz, int opId, boolean allowScaling) {
     xyz = xyz.toLowerCase();
     return (xyz.indexOf("[[") < 0 && xyz.indexOf("x4") < 0 && xyz.indexOf(";") < 0 &&
@@ -246,20 +281,11 @@ public class SpaceGroup implements Cloneable {
     }
     finalOperations = null;
     isBio = (name.indexOf("bio") >= 0);
-    if (index >= getSpaceGroups().length && !isBio && name.indexOf("SSG:") < 0
+    if (!isBio && index >= getSpaceGroups().length && name.indexOf("SSG:") < 0
         && name.indexOf("[subsystem") < 0) {
       SpaceGroup sg = getDerivedSpaceGroup();
-      if (sg != null) {
-        name = sg.getName();
-        latticeType = sg.latticeType;
-        itaNumber = sg.itaNumber;
-        itaIndex = sg.itaIndex;
-        itaTransform = sg.itaTransform;
-        jmolIdExt = sg.jmolIdExt;
-        jmolId = sg.jmolId;
-        hallSymbol = sg.hallSymbol;
-        hmSymbolFull = sg.hmSymbolFull;
-        derivedIndex = sg.index;
+      if (sg != null && sg != this) {
+        setFrom(sg, false);
       }
     }
     if (operationCount == 0)
@@ -425,7 +451,7 @@ public class SpaceGroup implements Cloneable {
     sb.append("\n\n")
         .append(hallInfo == null ? "Hall symbol unknown" : Logger.debugging ?  hallInfo.dumpInfo() : "");
     sb.append("\n\n").appendI(operationCount).append(" operators")
-        .append(hallInfo != null && !hallInfo.hallSymbol.equals("--")
+        .append(hallInfo != null && !hallInfo.hallSymbol.equals(SG_NONE)
             ? " from Hall symbol " + hallInfo.hallSymbol + "  #"
                 + jmolId
             : "")
@@ -448,13 +474,14 @@ public class SpaceGroup implements Cloneable {
     if (info instanceof SpaceGroup)
       return ((SpaceGroup) info).dumpInfoObj();
     Map<String, Object> map = new Hashtable<String, Object>();
-    String s = (hmSymbol == null || hmSymbolExt == null ? "?" : hmSymbol + (hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : ""));
-    map.put("HermannMauguinSymbol", s);
-    if (itaNumber != null) {
+    if (itaNumber != null && !itaNumber.equals("0")) {
+      String s = (hmSymbol == null || hmSymbolExt == null ? "?" : hmSymbol + (hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : ""));
+      map.put("HermannMauguinSymbol", s);
       map.put("ita", Integer.valueOf(PT.parseInt(itaNumber)));
       map.put("itaIndex", itaIndex == null ? "n/a" : itaIndex);
       map.put("clegId", itaIndex == null ? "n/a" : clegId);
-      map.put("jmolId", jmolId);
+      if (jmolId != null)
+        map.put("jmolId", jmolId);
       map.put("crystalClass", crystalClass);
       map.put("operationCount", Integer.valueOf(operationCount));
     }
@@ -542,7 +569,7 @@ public class SpaceGroup implements Cloneable {
    * @return a known space group or null
    */
   SpaceGroup getDerivedSpaceGroup() {
-    if (index >= 0 && index < SG.length   
+    if (derivedIndex == SG_ITA  || index >= 0 && index < SG.length   
         || modDim > 0 || operations == null
         || operations.length == 0
         || operations[0].timeReversal != 0)
@@ -632,6 +659,8 @@ public class SpaceGroup implements Cloneable {
         sg = new SpaceGroup(-1, NEW_HALL_GROUP + name, true);
         sg.hallInfo = hallInfo;
         sg.hallSymbol = hallInfo.hallSymbol;
+        sg.name = "[" + sg.hallSymbol + "]";
+        sg.jmolId = null;
       } else if (name.indexOf(",") >= 0) {
         sg = new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
         sg.doNormalize = false;
@@ -737,7 +766,7 @@ public class SpaceGroup implements Cloneable {
     if (h == null) {
       if (operationCount > 0)
         return;
-      if ("?".equals(hallSymbol)) {
+      if (hallSymbol.endsWith("?")) {
         checkHallOperators();
         return;
       }
@@ -791,6 +820,10 @@ public class SpaceGroup implements Cloneable {
           addSymmetrySM("!nohalf!" + xyz, operation);
         }
       }
+    }
+    if (hmSymbol.equals(SG_NONE)) {
+      hallSymbol = hallInfo.hallSymbol;
+      nHallOperators = Integer.valueOf(operationCount);
     }
     if (nHallOperators != null && operationCount != nHallOperators.intValue())
       Logger.error("Operator mismatch " + operationCount + " for " + this);
@@ -1087,7 +1120,8 @@ public class SpaceGroup implements Cloneable {
     String[] terms = PT.split(sgLineData.toLowerCase(), ";");
     jmolId = terms[0].trim(); // International Table Number :
                                            // options
-    // intlNo:options;itaIndex;nOps;schoenflies;hermannMauguin;Hall;BilbaoFlag
+    // "0             ;--     ;--       ;0   ;--         ;--            ;"
+    // intlNo:options;itaIndex;transform;nOps;schoenflies;hermannMauguin;Hall
     //   0             1        2            3         4        5
 
 
@@ -1098,7 +1132,7 @@ public class SpaceGroup implements Cloneable {
     ////  terms[0] -- International Table Number and setting ////
     setJmolCode(jmolId);
 
-    ////  terms[1] -- ITA index or '-' ////
+    ////  terms[1] -- ITA index or '--' ////
 
     // could be "154:a,b,c|0,0,-1/6"
     itaIndex = terms[1].replace('|',';');
@@ -1106,7 +1140,7 @@ public class SpaceGroup implements Cloneable {
     ////  terms[2] -- transform
     String s = terms[2];
     // leaving "r" as is
-    itaTransform = (s.length() == 0 ? "a,b,c" : PT.rep(s, "ab", SET_AB).replace('|', ';'));
+    itaTransform = (s.length() == 0 || s.equals(SG_NONE) ? "a,b,c" : PT.rep(s, "ab", SET_AB).replace('|', ';'));
     clegId = itaNumber + ":" + itaTransform;
    
     ////  terms[3] -- number of operators ////
@@ -1131,7 +1165,7 @@ public class SpaceGroup implements Cloneable {
     String info;
     if ("xyz".equals(terms[6])) {
       info = hmSymbol;
-      hallSymbol = "" + latticeType + " "; // hallInfo will be used to apply lattice
+      hallSymbol = "" + latticeType + "?"; // hallInfo will be used to apply lattice
     } else {
       hallSymbol = terms[6];
       if (hallSymbol.length() > 1)
@@ -1151,7 +1185,7 @@ public class SpaceGroup implements Cloneable {
     //    + hallSymbol);
   }
 
-  private void setHMSymbol(String name) {
+  void setHMSymbol(String name) {
     int pt = name.indexOf("#");
     if (pt >= 0)
       name = name.substring(0, pt).trim();
@@ -1184,8 +1218,31 @@ public class SpaceGroup implements Cloneable {
   public String displayName;
   
   String asString() {
-    return (strName == null ? (strName = (jmolId == null ? name : jmolId + " HM:" + hmSymbolFull 
-        + (itaTransform == null ? (hallSymbol == null || hallSymbol == "?" ? "" :  " Hall:" + hallSymbol) : " (" + itaTransform + ")"))) : strName);
+    return (strName == null 
+        ? (strName = 
+          (jmolId == null || jmolId.equals("0")
+            ? name 
+            : jmolId + " HM:" + hmSymbolFull + " #" + clegId
+            )
+          ) 
+        : strName
+        );
+  }
+
+  public String getDisplayName() {
+    if (displayName == null) {
+      if (jmolId == null) {
+        displayName = "";
+      } else if (!jmolId.equals("0")) {
+        displayName = jmolId + " HM: " + hmSymbolFull + " #";
+      }
+      if (displayName == null) {
+        displayName = "Hall:" + hallSymbol; // may still need setting
+      } else {
+        displayName += getItaIndex();
+      }
+    }
+    return displayName;
   }
 
   private static SpaceGroup[] SG;
@@ -1866,10 +1923,10 @@ public class SpaceGroup implements Cloneable {
       "150;150.1;;6;d3^2;p 3 2 1;p 3 2\"",  
       "151;151.1;;6;d3^3;p 31 1 2;p 31 2 (0 0 4)",  
       "152;152.1;;6;d3^4;p 31 2 1;p 31 2\"",  
-      "152:_2;152:a,b,c|0,0,-1/6;a,b,c|0,0,-1/6;6;d3^4;p 31 2 1;p 31 2\" (0 0 -4)", //  NOTE: MSA quartz.cif gives different operators for this -- 
+      "152:_2;152:a,b,c|0,0,-1/3;a,b,c|0,0,-1/3;6;d3^4;p 31 2 1;p 31 2\" (0 0 -4)", //  NOTE: MSA quartz.cif gives different operators for this -- 
       "153;153.1;;6;d3^5;p 32 1 2;p 32 2 (0 0 2)",  
       "154;154.1;;6;d3^6;p 32 2 1;p 32 2\"",    
-      "154:_2;154:a,b,c|0,0,-1/6;a,b,c|0,0,-1/6;6;d3^6;p 32 2 1;p 32 2\" (0 0 4)",  //  NOTE: MSA quartz.cif gives different operators for this -- 
+      "154:_2;154:a,b,c|0,0,-1/3;a,b,c|0,0,-1/3;6;d3^6;p 32 2 1;p 32 2\" (0 0 4)",  //  NOTE: MSA quartz.cif gives different operators for this -- 
       "155:h;155.1;;18;d3^7;r 3 2 :h;r 3 2\"",  
       "155:r;155.2;r;6;d3^7;r 3 2 :r;p 3* 2",  
       "156;156.1;;6;c3v^1;p 3 m 1;p 3 -2\"",  
@@ -2028,6 +2085,8 @@ public class SpaceGroup implements Cloneable {
     if (name != null && name.startsWith("HM:")) {
       setHMSymbol(name.substring(3));
     }
+
+   strName = displayName = null;
   }
 
 //  M4d getRawOperation(int i) {
@@ -2113,40 +2172,90 @@ public class SpaceGroup implements Cloneable {
   public static SpaceGroup transformSpaceGroup(SpaceGroup sg, SpaceGroup base,
                                                Lst<Object> genPos,
                                                String transform, M4d trm) {
-    boolean hasTransform = (transform != null);
-    M4d trmInv = null, t = null;
-    double[] v = null;
-    if (hasTransform) {
-      if (trm == null) {
-        trm = new M4d();
-      }
-      UnitCell.getMatrixAndUnitCell(null, transform, trm);
-      trmInv = M4d.newM4(trm);
-      trmInv.invert();
-      v = new double[16];
-      t = new M4d();
-    }
-    String xyzList = "";
     if (genPos == null) {
+//      base.checkHallOperators();
+      base.setFinalOperations();
       // should be able to do this much slicker
       genPos = new Lst<Object>();
       for (int i = 0, n = base.getOperationCount(); i < n; i++) {
         genPos.addLast(base.getXyz(i, false));
       }
     }
-    for (int i = 0, c = genPos.size(); i < c; i++) {
-      String xyz = (String) genPos.get(i);
-      if (hasTransform && i > 0) {
-        xyz = SymmetryOperation.transformStr(xyz, trm, trmInv, t, v);
-      }
-      if (sg == null)
-        xyzList += ";" + xyz;
-      else
-        sg.addOp(null, xyz, false);
+    boolean normalize = (sg == null || sg.doNormalize);
+    String xyzList = addTransformXYZList(sg, genPos, transform, trm, normalize);
+    if (sg != null) {
+      sg.setITATableNames(sg.jmolId, sg.itaNumber, "1", transform);
+      return sg;
     }
     xyzList = xyzList.substring(1);
     //System.out.println("for " + transform + " " + xyzList);
     return findOrCreateSpaceGroupXYZ(xyzList, true);
+  }
+
+  private static String addTransformXYZList(SpaceGroup sg, Lst<Object> genPos,
+                                            String transform, M4d trm, boolean normalize) {
+
+    M4d trmInv = null, t = null;
+    double[] v = null;
+    if (transform != null) {
+      if (trm == null) {
+        trm = new M4d();
+      }
+      if (transform.equals("r"))
+        transform = SET_R;
+      UnitCell.getMatrixAndUnitCell(null, transform, trm);
+      trmInv = M4d.newM4(trm);
+      trmInv.invert();
+      v = new double[16];
+      t = new M4d();
+    }
+    String xyzList = addTransformedOperations(sg, genPos, trm, trmInv, t, v, "", null, normalize);
+    if (sg != null) {
+      double[][] c = UnitCell.getTransformRange(trm);
+      if (c != null) {
+        P3d p = new P3d();
+        for (int i = (int)c[0][0]; i < c[1][0]; i++) {
+          for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
+            for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
+              if (i == 0 && j == 0 && k == 0)
+                continue;
+              p.set(i, j, k);
+              xyzList = addTransformedOperations(sg, genPos, trm, trmInv, t, v, xyzList, p, normalize);
+            }
+          }
+        }
+      }
+    } 
+    return xyzList;
+  }
+
+  public M4d[] getOpsCtr(String transform) {
+    SpaceGroup sg = getNull(true, true, false);
+    transformSpaceGroup(sg, this, null, "!" + transform, null);
+    sg.setFinalOperations();
+    SpaceGroup sg2 = getNull(true, false, false);
+    transformSpaceGroup(sg2, sg, null, transform, null);
+    sg2.setFinalOperations();
+    return sg2.finalOperations;
+  }
+
+
+  private static String addTransformedOperations(SpaceGroup sg, Lst<Object> genPos,
+                                               M4d trm, M4d trmInv, M4d t, double[] v, String xyzList, P3d centering, boolean normalize) {
+    if (sg != null)
+      sg.latticeOp = 0; // ignore looking for lattice operations
+    for (int i = 0, c = genPos.size(); i < c; i++) {
+      String xyz = (String) genPos.get(i);
+      if (trm != null && (i > 0 || centering != null)) {
+        xyz = SymmetryOperation.transformStr(xyz, trm, trmInv, t, v, centering, normalize);
+      }
+      if (sg == null) {
+        xyzList += ";" + xyz;
+      } else {
+        sg.addOperation(xyz, 0, false);
+      }
+    }
+    return xyzList;
   }
 
   private static SpaceGroup findOrCreateSpaceGroupXYZ(String xyzList, boolean doCreate) {
@@ -2159,10 +2268,13 @@ public class SpaceGroup implements Cloneable {
       sg.addOp(op, xyzlist[i], false);
     }
     SpaceGroup sg1 = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
-    if (sg1 == null || !doCreate)
+    if (!doCreate)
       return sg1;
-    return sg1;    
+    if (sg1 != null)
+      sg.setFrom(sg1, true);
+    return sg;
   }
+
 
   static SpaceGroup getSpaceGroupFromIndex(int i) {
     return (SG != null && i >= 0 && i < SG.length ? SG[i] : null);
@@ -2177,15 +2289,16 @@ public class SpaceGroup implements Cloneable {
    */
   void setITATableNames(String jmolId, String sg, String set, String tr) {
     itaNumber = sg;
-    itaIndex = (set.indexOf(".") >= 0 ? set : sg + "." + set);
+    itaIndex = (tr != null ? sg + ":" + tr : set.indexOf(".") >= 0 ? set : sg + "." + set);
     itaTransform = tr;
     clegId = sg + ":" + tr;
+    this.jmolId = jmolId;
     if (jmolId != null)
       setJmolCode(jmolId);
   }
 
 // 613 settings for 230 space groups (611 from ITA; 2 for added 152 and 154 c-shifts
-  /*  see http://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
+  /*  see https://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
  
 intl#     H-M full       HM-abbr   HM-short  Hall
 1         P 1            P1        P         P 1       
@@ -2788,4 +2901,5 @@ intl#     H-M full       HM-abbr   HM-short  Hall
   static {
     getSpaceGroups();
   }
+
 }

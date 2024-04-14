@@ -35,7 +35,7 @@ public interface SymmetryInterface {
 
   boolean getCoordinatesAreFractional();
 
-  void getEquivPointList(Lst<P3d> pts, int nIgnore, String flags);
+  void getEquivPointList(Lst<P3d> pts, int nIgnore, String flags, M4d[] opsCtr);
 
   P3d getFractionalOffset();
 
@@ -270,7 +270,11 @@ public interface SymmetryInterface {
 
   String getIntTableTransform();
 
-  String getUnitCellDisplayInfo();
+  String getUnitCellDisplayName();
 
-  String staticToRationalXYZ(P3d fPt);
+  String staticToRationalXYZ(P3d fPt, String sep);
+
+  String getClegId();
+
+  int getFinalOperationCount();
 }

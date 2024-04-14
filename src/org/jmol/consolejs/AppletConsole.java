@@ -133,5 +133,12 @@ public class AppletConsole extends GenericConsole {
     return null;
   }
 
+  @Override
+  public void regainFocus() {
+    
+    // TODO
+    
+  }
+
 
 }

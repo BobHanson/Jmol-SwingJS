@@ -5950,7 +5950,7 @@ public class CmdExt extends ScriptExt {
     } else if (id != null) {
       vwr.setCurrentCage(id);
     } else if (isReset || oabc != null) {
-      isReset = (isModelkit ? vwr.getModelkit(false).transformAtomsToUnitCell(sym, oabc, ucname) : true);
+      isReset = (isModelkit || sym == null ? vwr.getModelkit(false).transformAtomsToUnitCell(sym, oabc, ucname) : true);
       if (isReset) {
         if (isModelkit && sym != null) {
           vwr.ms.setSpaceGroup(vwr.am.cmi, sym.getUnitCell(oabc, false, null),
@@ -6430,7 +6430,6 @@ public class CmdExt extends ScriptExt {
     if (vwr.am.cmi < 0)
       invArg();
     BS bsModelAtoms = vwr.getThisModelAtoms();
-    boolean isClick = (tokAt(slen - 1) == T.on);
     int i = ++e.iToken;
     int mode = tokAt(i); // ATOMS, BONDS, or CONNECT; defaults to ATOMS
     int index = -1, index2 = -1;
@@ -6559,7 +6558,16 @@ public class CmdExt extends ScriptExt {
       type = e.optParameterAsString(i);
       // "ITA" "/" 12.1
       // "ITA"
-      if (type.equals("ITA")) {
+      // note: "ITA/" is now implied; adding it makes no differernce
+      //        If the Jmol id is desired, it will have a colon in it. 
+      SymmetryInterface sym = vwr.getOperativeSymmetry();
+      if (type.equalsIgnoreCase("packed")) {
+        // allow for MODELKIT SPACEGROUP packed
+        if (sym == null)
+          invArg();
+        type = sym.getClegId();
+        isPacked = true;
+      } else if (type.equals("ITA")) {
         // just "ITA" or ITA / 2.1
         if (e.optParameterAsString(i + 1).equals("/")) {
           type += "/" + e.optParameterAsString(i + 2);
@@ -6567,7 +6575,14 @@ public class CmdExt extends ScriptExt {
         } else {
           type += "/";
         }
+      } else if (type.indexOf(":") < 0 && type.indexOf(",") > 0) {
+        // allow for MODELKIT SPACEGROUP "a,b,2c"
+        if (sym == null)
+          invArg();
+        String cleg = sym.getClegId();
+        type = cleg.substring(0, cleg.indexOf(":") + 1) + type;
       }
+          
       // new 16.2.1/2
       if (tokAt(e.iToken + 1) == T.unitcell) {
         Object[] ret = new Object[1];
@@ -6583,7 +6598,7 @@ public class CmdExt extends ScriptExt {
     } else if (!isConnect) {
       type = e.optParameterAsString(i);
       if (isAtom)
-        pt = (++e.iToken < (isClick ? slen - 1 : slen)
+        pt = (++e.iToken < slen
             ? centerParameter(e.iToken)
             : null);
     } else if (isDelete) {
@@ -6600,8 +6615,7 @@ public class CmdExt extends ScriptExt {
     switch (mode) {
     case T.atoms:
       e.clearDefinedVariableAtomSets();
-      vwr.getModelkit(false).cmdAssignAtom(bs, pt, type, e.fullCommand,
-          isClick);
+      vwr.getModelkit(false).cmdAssignAtom(bs, pt, type, e.fullCommand);
       break;
     case T.bonds:
       vwr.getModelkit(false).cmdAssignBond(index, (type + "-").charAt(0),
@@ -6629,7 +6643,7 @@ public class CmdExt extends ScriptExt {
       }
       int na = vwr.getModelkit(false).cmdAssignAddAtoms(
           type + (wyckoff != null ? ":" + wyckoff : ""), pts, bs,
-          (isPacked ? "packed" : ""), e.fullCommand, isClick);
+          (isPacked ? "packed" : ""), e.fullCommand);
       if (e.doReport())
         e.report(GT.i(GT.$("{0} atoms added"), na), false);
       break;
@@ -6655,8 +6669,7 @@ public class CmdExt extends ScriptExt {
       if (e.doReport())
         e.showString(s);
       if (isPacked) {
-        int n = vwr.getModelkit(false).cmdAssignAddAtoms(null, null,
-            bsModelAtoms, "packed", e.fullCommand, false);
+        int n = vwr.getModelkit(false).cmdAssignSpaceGroupPacked(bsModelAtoms, s.substring(0, s.indexOf('\n')), e.fullCommand);
         if (e.doReport())
           e.report(GT.i(GT.$("{0} atoms added"), n), false);
       }
@@ -6667,6 +6680,7 @@ public class CmdExt extends ScriptExt {
   /**
    * Accept "a,b,c:0,0,0" transformation matrix syntax or [origin a b c] or [a b
    * c alpha beta gamma]
+   * @param i 
    * 
    * @param ret
    *        return array to hold oabc or [params]

@@ -590,7 +590,7 @@ public final class ModelLoader {
     vwr.setSmilesString((String) ms.msInfo.get("smilesString"));
     String loadState = (String) ms.msInfo.remove("loadState");
     SB loadScript = (SB)ms.msInfo.remove("loadScript");
-    if (loadScript.indexOf("Viewer.AddHydrogens") < 0 || !m.isModelKit) {
+    if (loadScript.indexOf(JC.ADD_HYDROGEN_TITLE) < 0 || !m.isModelKit) {
       String[] lines = PT.split(loadState, "\n");
       SB sb = new SB();
       for (int i = 0; i < lines.length; i++) {
@@ -663,10 +663,9 @@ public final class ModelLoader {
     codes = (String) ms.getInfo(modelIndex, "insertionCodes");
     models[modelIndex].insertionCount = (codes == null ? 0 : codes.length());
     boolean isModelKit = (ms.modelSetName != null
-        && ms.modelSetName.startsWith("Jmol Model Kit")
-        || modelName.startsWith("Jmol Model Kit") 
-        || "Jme".equals(ms.getInfo(
-        modelIndex, "fileType")) && is2D);
+        && ms.modelSetName.startsWith(JC.JMOL_MODEL_KIT)
+        || modelName.startsWith(JC.JMOL_MODEL_KIT) 
+        || "Jme".equals(ms.getInfo(modelIndex, "fileType")) && is2D);
     models[modelIndex].isModelKit = isModelKit;
   }
 

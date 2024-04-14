@@ -232,7 +232,7 @@ public class AppletConsole extends JmolConsole {
   @Override
   public void setVisible(boolean visible) {
     super.setVisible(visible);
-    ((JTextArea) input).requestFocus();
+    regainFocus();
   }
 
   @Override
@@ -244,7 +244,7 @@ public class AppletConsole extends JmolConsole {
   protected void execute(String strCommand) {
     super.execute(strCommand);
     if (strCommand == null)
-      ((JTextArea) input).requestFocus();
+      regainFocus();
   }
 
   class ControlEnterTextArea extends JTextArea implements GenericConsoleTextArea {
@@ -263,6 +263,12 @@ public class AppletConsole extends JmolConsole {
         super.processComponentKeyEvent(ke);
       }
     }
+  }
+
+
+  @Override
+  public void regainFocus() {
+    ((JTextArea) input).requestFocus();
   }
   
 

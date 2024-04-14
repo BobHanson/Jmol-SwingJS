@@ -177,13 +177,16 @@ public class Axes extends FontLineShape {
     return ptTemp; 
   }
   
-
   @Override
   public Object getProperty(String property, int index) {
-    if (property == "origin")
-      return fixedOrigin;
+    if (property == "originPoint")
+      return originPoint;
+    if (property == "axisPoints")
+      return axisPoints;
     if (property == "axesTypeXY")
       return (axisXY.z == 0 ? Boolean.FALSE : Boolean.TRUE);
+    if (property == "origin")
+      return fixedOrigin;
     return null;
   }
 

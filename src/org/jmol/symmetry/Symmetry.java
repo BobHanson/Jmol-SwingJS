@@ -109,7 +109,7 @@ public class Symmetry implements SymmetryInterface {
     // instantiated ONLY using
     // symmetry = Interface.getSymmetry();
     // DO NOT use symmetry = new Symmetry();
-    // as that will invalidate the Jar file modularization    
+    // as that will inval ate the Jar file modularization    
   }
 
   @Override
@@ -177,19 +177,34 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public Object getSpaceGroupInfoObj(String name, Object params, boolean isFull,
                                      boolean addNonstandard) {
+    boolean isNameToXYZList = false;
     switch (name) {
+    case "opsCtr":
+      return spaceGroup.getOpsCtr((String) params);
+    case "nameToXYZList": 
+      isNameToXYZList = true;
+      //$FALL-THROUGH$
     case "itaIndex":
     case "itaTransform":
     case "itaNumber":
       SpaceGroup sg = null;
       if (params != null) {
         sg = SpaceGroup.determineSpaceGroupN((String) params);
+        if (sg == null && isNameToXYZList)
+          sg = SpaceGroup.createSpaceGroupN((String) params);
       } else if (spaceGroup != null) {
         sg = spaceGroup;
       } else if (symmetryInfo != null) {
         sg = symmetryInfo.getDerivedSpaceGroup();
       }
       switch (sg == null ? "" : name) {
+      case "nameToXYZList":
+        Lst<Object> genPos = new Lst<Object>();
+        sg.setFinalOperations();
+        for (int i = 0, n = sg.getOperationCount(); i < n; i++) {
+          genPos.addLast(((SymmetryOperation) sg.getOperation(i)).xyz);
+        }
+        return genPos;
       case "itaIndex":
         return sg.getItaIndex();
       case "itaTransform":
@@ -214,7 +229,7 @@ public class Symmetry implements SymmetryInterface {
                                  int iAtomFirst, int noSymmetryCount,
                                  boolean doNormalize, String filterSymop) {
     if (name != null && (name.startsWith("bio") || name.indexOf(" *(") >= 0)) // filter SYMOP
-      spaceGroup.name = name;
+      spaceGroup.setName(name);
     if (filterSymop != null) {
       Lst<SymmetryOperation> lst = new Lst<SymmetryOperation>();
       lst.addLast(spaceGroup.operations[0]);
@@ -337,7 +352,7 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public String getIntTableIndex() {
     return (symmetryInfo != null ? symmetryInfo.intlTableIndex
-        : spaceGroup == null ? null : spaceGroup.itaIndex);
+        : spaceGroup == null ? null : spaceGroup.getItaIndex());
   }
 
   @Override
@@ -749,11 +764,11 @@ public class Symmetry implements SymmetryInterface {
     if (isAssigned && sg != null) {
       // first one may not be read, but it is important to have it
       // in case there is an issue with assigning the spacegroup
-      commands.append("\n UNITCELL "
-          + Escape.e(ms.getUnitCell(modelIndex).getUnitCellVectors()));
+      String cmd = "\n UNITCELL "
+          + Escape.e(ms.getUnitCell(modelIndex).getUnitCellVectors());
+      commands.append(cmd);
       commands.append("\n MODELKIT SPACEGROUP " + PT.esc(sg));
-      commands.append("\n UNITCELL "
-          + Escape.e(ms.getUnitCell(modelIndex).getUnitCellVectors()));
+      commands.append(cmd);
       loadUC = true;
     }
     return loadUC;
@@ -939,12 +954,12 @@ public class Symmetry implements SymmetryInterface {
     M4d[] ops = getSymmetryOperations();
     return (ops == null || unitCell == null ? null
         : unitCell.getEquivPoints(pt, flags, ops,
-            pts == null ? new Lst<P3d>() : pts, 0, 0));
+            pts == null ? new Lst<P3d>() : pts, 0, 0, 0));
   }
 
   @Override
-  public void getEquivPointList(Lst<P3d> pts, int nIgnored, String flags) {
-    M4d[] ops = getSymmetryOperations();
+  public void getEquivPointList(Lst<P3d> pts, int nInitial, String flags, M4d[] opsCtr) {
+    M4d[] ops = (opsCtr == null ? getSymmetryOperations() : opsCtr);
     boolean newPt = (flags.indexOf("newpt") >= 0);
     boolean zapped = (flags.indexOf("zapped") >= 0);
     // we will preserve the points temporarily, then remove them at the end
@@ -958,35 +973,36 @@ public class Symmetry implements SymmetryInterface {
     }
     // signal to make no changes in points
     flags += ",fromfractional,tofractional";
-    int check0 = (nIgnored > 0 ? 0 : n);
-    boolean allPoints = (nIgnored == n);
-    int n0 = (nIgnored > 0 ? nIgnored : n);
+    int check0 = (nInitial > 0 ? 0 : n);
+    boolean allPoints = (nInitial == n);
+    int n0 = (nInitial > 0 ? nInitial : n);
     if (allPoints) {
-      nIgnored--;
+      nInitial--;
       n0--;
     }
     if (zapped)
       n0 = 0;
-    P3d p0 = (nIgnored > 0 ? pts.get(nIgnored) : null);
+    P3d p0 = (nInitial > 0 ? pts.get(nInitial) : null);
+    int dup0 = (opsCtr == null ? n0 : check0);
     if (ops != null || unitCell != null) {
-      for (int i = nIgnored; i < n; i++) {
-        unitCell.getEquivPoints(pts.get(i), flags, ops, pts, check0, n0);
+      for (int i = nInitial; i < n; i++) {
+        unitCell.getEquivPoints(pts.get(i), flags, ops, pts, check0, n0, dup0);
       }
     }
     // now remove the starting points, checking to see if perhaps our
     // test point itself has been removed.
-    if (!zapped && (pts.size() == nIgnored || pts.get(nIgnored) != p0
+    if (!zapped && (pts.size() == nInitial || pts.get(nInitial) != p0
         || allPoints || newPt))
       n--;
-    for (int i = n - nIgnored; --i >= 0;)
-      pts.removeItemAt(nIgnored);
+    for (int i = n - nInitial; --i >= 0;)
+      pts.removeItemAt(nInitial);
     // final check for removing duplicates
     //    if (nIgnored > 0)
     //      UnitCell.checkDuplicate(pts, 0, nIgnored - 1, nIgnored);
 
     // and turn these to Cartesians if desired
     if (!tofractional) {
-      for (int i = pts.size(); --i >= nIgnored;)
+      for (int i = pts.size(); --i >= nInitial;)
         toCartesian(pts.get(i), false);
     }
   }
@@ -1042,7 +1058,8 @@ public class Symmetry implements SymmetryInterface {
     }
     if (p == null) {
       // attempt to make these not very close to any special position
-      p = P3d.new3(2.3d / 5, 2.3d / 6, 2.3d / 8);
+      // this point tested in every standard setting and found to be excellent
+      p = P3d.new3(0.53d, 0.20d, 0.16d);
     } else {
       p = P3d.newP(p);
       unitCell.toFractional(p, false);
@@ -1205,7 +1222,7 @@ public class Symmetry implements SymmetryInterface {
         if (isIndexMap || isIndexTStr) {
           if (index1 > n) {
             throw new ArrayIndexOutOfBoundsException(
-                "no map.subgroups[" + index1 + "]");
+                "no map.subgroups[" + index1 + "]!");
           }
           i0 = index1 - 1;
           if (isIndexMap)
@@ -1242,11 +1259,11 @@ public class Symmetry implements SymmetryInterface {
         return null;
       if (isWhereTStr && ithis > 0) {
         throw new ArrayIndexOutOfBoundsException(
-            "only " + ithis +" maximal subgroup information for " + itaFrom + ">>" + itaTo);
+            "only " + ithis +" maximal subgroup information for " + itaFrom + ">>" + itaTo + "!");
       }
 
       throw new ArrayIndexOutOfBoundsException(
-          "no maximal subgroup information for " + itaFrom + ">>" + itaTo);
+          "no maximal subgroup information for " + itaFrom + ">>" + itaTo + "!");
     } catch (Exception e) {
       return e.getMessage();
     }
@@ -1504,39 +1521,45 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String getUnitCellDisplayInfo() {
+  public String getUnitCellDisplayName() {
     String name = (symmetryInfo != null ? symmetryInfo.displayName
-        : spaceGroup != null ? spaceGroup.displayName : null);
+        : spaceGroup != null ? spaceGroup.getDisplayName() : null);
     if (name == null) {
-      boolean isPolymer = isPolymer();
-      boolean isSlab = isSlab();
-      String sgName = (isPolymer ? "polymer"
-          : isSlab ? "slab" : getSpaceGroupTitle());
-      if (sgName == null)
-        return null;
-      if (sgName.startsWith("cell=!"))
-        sgName = "cell=inverse[" + sgName.substring(6) + "]";
-      sgName = PT.rep(sgName, ";0,0,0", "");
-      if (sgName.indexOf("#") < 0) {
-        String trm = getIntTableTransform();
-        String intTab = getIntTableIndex();
-        if (!isSlab && !isPolymer && intTab != null) {
-          if (trm != null) {
-            int pt = sgName.indexOf(trm);
-            if (pt >= 0) {
-              sgName = PT.rep(sgName, "(" + trm + ")", "");
+      if (spaceGroup != null) {
+        name = spaceGroup.getDisplayName();
+      } else {
+        boolean isPolymer = isPolymer();
+        boolean isSlab = isSlab();
+        String sgName = (isPolymer ? "polymer"
+            : isSlab ? "slab" : getSpaceGroupTitle());
+        if (sgName == null)
+          return null;
+        if (sgName.startsWith("cell=!"))
+          sgName = "cell=inverse[" + sgName.substring(6) + "]";
+        sgName = PT.rep(sgName, ";0,0,0", "");
+        if (sgName.indexOf("#") < 0) {
+          String trm = getIntTableTransform();
+          String intTab = getIntTableIndex();
+          if (!isSlab && !isPolymer && intTab != null) {
+            if (trm != null) {
+              int pt = sgName.indexOf(trm);
+              if (pt >= 0) {
+                sgName = PT.rep(sgName, "(" + trm + ")", "");
+              }
+              if (intTab.indexOf(trm) < 0) {
+                pt = intTab.indexOf(".");
+                if (pt > 0)
+                  intTab = intTab.substring(0, pt);
+                intTab += ":" + trm;
+              }
             }
-            if (intTab.indexOf(trm) < 0) {
-              pt = intTab.indexOf(".");
-              if (pt > 0)
-                intTab = intTab.substring(0, pt);
-              intTab += ":" + trm;
-            }
+            sgName = (sgName.startsWith("0") ? "" : sgName + " #") + intTab;
           }
-          sgName += " #" + intTab;
         }
+        name = sgName;
       }
-      name = (sgName.indexOf("-- [--]") < 0 ? sgName : "");
+      if (name.indexOf(SpaceGroup.NO_NAME) >= 0)
+        name = "";
       if (symmetryInfo != null)
         symmetryInfo.displayName = name;
       else
@@ -1546,8 +1569,22 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String staticToRationalXYZ(P3d fPt) {
-    return "("+ SymmetryOperation.fcoord(fPt) + ")";
+  public String staticToRationalXYZ(P3d fPt, String sep) {
+    String s = SymmetryOperation.fcoord(fPt, sep);
+    return (",".equals(sep) ? s : "("+ s + ")");
+  }
+
+  @Override
+  public String getClegId() {
+    if (symmetryInfo != null)
+        return symmetryInfo.getDerivedSpaceGroup().clegId;
+    return spaceGroup.clegId;
+  }
+
+  @Override
+  public int getFinalOperationCount() {
+    setFinalOperations(3, null, null, -1, -1, false, null);
+    return spaceGroup.getOperationCount();
   }
   
 }

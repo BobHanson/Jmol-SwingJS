@@ -99,6 +99,7 @@ public class AppConsole extends JmolConsole
   private boolean noPrefs;
 
 
+  @SuppressWarnings("deprecation")
   @Override
   public void loadContent(String script) {
     getScriptEditor().setVisible(true);
@@ -551,7 +552,7 @@ public class AppConsole extends JmolConsole
     console.appendNewline();
     console.setPrompt();
     if (strCommand.length() == 0) {
-      console.grabFocus();
+      regainFocus();
       return;
     }
     if (strCommand.charAt(0) != '!'
@@ -610,7 +611,12 @@ public class AppConsole extends JmolConsole
       }
     }
     if (!hasExtension)
-      console.grabFocus();
+      regainFocus();
+  }
+
+  @Override
+  public void regainFocus() {
+    console.grabFocus();
   }
 
   @Override

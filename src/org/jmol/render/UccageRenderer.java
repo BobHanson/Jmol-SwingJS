@@ -175,7 +175,7 @@ public class UccageRenderer extends CageRenderer {
     ypos = lineheight = (int) Math.floor(15 * imageFontScaling);
 
     if (!unitcell.isSimple()) {
-      String sgName = unitcell.getUnitCellDisplayInfo();
+      String sgName = unitcell.getUnitCellDisplayName();
       if (sgName != null)
           drawInfo(sgName, 0, null);
       Lst<String> info = unitcell.getMoreInfo();

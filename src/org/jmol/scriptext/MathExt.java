@@ -340,6 +340,7 @@ public class MathExt {
     // spacegroup("setting")
     // spacegroup(3);
     // spacegroup("133:2") // this name
+    // spacegroup("Hall:p 32 2\" (0 0 4)") // XYZ list
     // spacegroup("ITA/155") // all settings for this ITA
     // spacegroup("ITA/155:c,b,a") // setting for this ITA by transform
     // spacegroup("ITA/14.3") // third ITA entry for this ITA
@@ -349,14 +350,14 @@ public class MathExt {
     // spacegroup("x,y,z;-x,-y,-z&"); //space groups with all these operators
     // spacegroup(18, "settings")
     // spacegroup(4,"subgroups") all data for 4
-	// spacegroup(4,0,"subgroups") an array of known subgroups
+	  // spacegroup(4,0,"subgroups") an array of known subgroups
     // spacegroup(4,0,0,0,"subgroups") an array of arrays of [isub, ntrm, subIndex, type(t=1, k(eu)=3, k(ct)= 4]
     // spacegroup(4,5,"subgroups") list of all 4 >> 5
     // spacegroup(4,5,1,"subgroups") first-listed 4 >> 5 as a map
     // spacegroup(4,0,2,"subgroups") second listed subgroup as a map
     // spacegroup(4,0,2,1,"subgroups") second listed subgroup, first transformation
     // spacegroup(4,5,1,2,"subgroups") second transformation for 4>>5, first match
-    
+    // if all values are integers and n > 1, then subgroups is implied
     
 //    * itaFrom  itaTo  index1  index2
 //    *    n      MnV     -       -      return map for group n, contents of sub_n.json
@@ -376,13 +377,19 @@ public class MathExt {
     if (n == 0)
       return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null,
           vwr.am.cmi, true, null));
+    boolean isSubgroups = (n > 1);
+    for (int i = n; isSubgroups && --i >= 0;) {
+      if (args[i].tok != T.integer) {
+        isSubgroups = false;
+      }
+    }
     String xyzList = args[0].asString();
     String mode = (args[args.length - 1].tok == T.string 
         ? (String) args[args.length - 1].value : null);
-    if ("subgroups".equals(mode)) {
+    if (isSubgroups || "subgroups".equals(mode)) {
       SymmetryInterface sym;
       int itaFrom = Integer.MIN_VALUE, itaTo = Integer.MIN_VALUE, index1 = Integer.MIN_VALUE, index2 =Integer.MIN_VALUE;
-      switch (n) {
+      switch (isSubgroups ? n + 1 : n) {
       case 5:
         index2 = args[3].intValue;
         if (index2 < 0)
@@ -438,7 +445,9 @@ public class MathExt {
           return false;
         return mp.addXObj((itaNo == Integer.MIN_VALUE ? vwr.getCurrentUnitCell() : vwr.getSymTemp()).getSpaceGroupJSON(vwr, mode.toLowerCase(), null, itaNo));
       }
-      if (args[0].tok == T.string) {
+      if (itaNo > 0 || args[0].tok == T.string) {
+        if (itaNo > 0 || xyzList.indexOf(",") < 0 && xyzList.indexOf(":") < 0 && !xyzList.startsWith("ITA/"))
+          xyzList = "ITA/" + xyzList;
         if ("setting".equalsIgnoreCase(xyzList)) {
           SymmetryInterface sym = vwr.getOperativeSymmetry();
           return mp.addXObj(sym == null ? null : sym.getSpaceGroupJSON(vwr, "settings", null, Integer.MIN_VALUE));
@@ -455,7 +464,7 @@ public class MathExt {
           return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOW",
               xyzList.substring(6), 0));
         }
-        if (xyzList.indexOf("x") >= 0 || unitCellParams != null) {
+        if (xyzList.startsWith("Hall:") || xyzList.indexOf("x") >= 0 || unitCellParams != null) {
           return mp.addXObj(vwr.findSpaceGroup(null, null, xyzList,
               unitCellParams, null, null, JC.SG_AS_STRING));
         }

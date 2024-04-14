@@ -24,5 +24,7 @@ public interface JmolAppConsoleInterface {
 
   public Object newJMenuItem(String key);
 
+  public void regainFocus();
+
 
 }

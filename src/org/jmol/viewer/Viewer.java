@@ -3777,6 +3777,8 @@ public class Viewer extends JmolViewer
   public T3d[] getV0abc(int iModel, Object def) {
     SymmetryInterface uc = (iModel < 0 ? getCurrentUnitCell()
         : getUnitCell(iModel));
+    if (uc == null)
+      uc = getSymTemp();
     return (uc == null ? null : uc.getV0abc(def, null));
   }
 
@@ -10980,7 +10982,7 @@ public class Viewer extends JmolViewer
     SymmetryInterface uc = getCurrentUnitCell();
     if (uc == null)
       return new Lst<P3d>();
-    uc.getEquivPointList(pts, 0, flags.toLowerCase());
+    uc.getEquivPointList(pts, 0, flags.toLowerCase(), null);
     return pts;
   }
 

@@ -27,6 +27,7 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
 import org.jmol.shape.Axes;
 import org.jmol.util.GData;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.StateManager;
 
 import javajs.util.P3d;
@@ -34,18 +35,11 @@ import javajs.util.P3d;
 
 public class AxesRenderer extends CageRenderer {
 
-  private final static String[] axisLabels = { "+X", "+Y", "+Z", null, null, null, 
-                                  "a", "b", "c", 
-                                  "X", "Y", "Z", null, null, null,
-                                  "X", null, "Z", null, "(Y)", null};
-
   private final P3d originScreen = new P3d();
   
   private short[] colixes = new short[3];
 
   private P3d pt000;
-
-  private final static String[] axesTypes = {"a", "b", "c", "x", "y", "z"};
 
   @Override
   protected void initRenderer() {
@@ -189,7 +183,7 @@ public class AxesRenderer extends CageRenderer {
     boolean showOrigin = (!isXY && nPoints == 3 && (scale == 2 || isUnitCell));
     for (int i = nPoints; --i >= 0;) {
       if (labels2 != null && i >= labels2.length()
-          || checkAxisType && !axisType.contains(axesTypes[i])
+          || checkAxisType && !axisType.contains(JC.axesTypes[i])
           || exportType != GData.EXPORT_CARTESIAN && 
           (Math.abs(xCenter - p3Screens[i].x)
               + Math.abs(yCenter - p3Screens[i].y) <= 2)
@@ -200,7 +194,7 @@ public class AxesRenderer extends CageRenderer {
       colix = colixes[i % 3];
       g3d.setC(colix);
       String label = (labels2 != null ? labels2.substring(i, i + 1) 
-          : axes.labels == null ? axisLabels[i + labelPtr]
+          : axes.labels == null ? JC.axisLabels[i + labelPtr]
           : i < axes.labels.length ? axes.labels[i] : null);
       if (label != null && label.length() > 0)
         renderLabel(label, p3Screens[i].x, p3Screens[i].y, p3Screens[i].z,

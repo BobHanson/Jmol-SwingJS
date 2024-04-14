@@ -1513,7 +1513,8 @@ public class SymmetryDesc {
 
   private static String strCoord(T3d p, boolean isBio) {
     approx0(p);
-    return (isBio ? p.x + " " + p.y + " " + p.z : SymmetryOperation.fcoord(p));
+    return (isBio ? "(" + p.x + " " + p.y + " " + p.z + ")"
+        : SymmetryOperation.fcoord(p, " "));
   }
 
   private static T3d approx0(T3d pt) {
