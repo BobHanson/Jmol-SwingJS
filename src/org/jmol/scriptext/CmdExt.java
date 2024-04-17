@@ -391,11 +391,16 @@ public class CmdExt extends ScriptExt {
 
       // {i j k} PACKED, CENTROID -- either or both; either order
 
-      i = checkPacked(i, htParams, sOptions);
+      i = checkPacked(i, 0, htParams, sOptions);
       if (tokAt(i) == T.centroid) {
         htParams.put("centroid", Boolean.TRUE);
         sOptions.append(" CENTROID");
-        i = checkPacked(++i, htParams, sOptions);
+        int ptok = 0;
+        if (isFloatParameter(i + 1)) {
+           --i;
+           ptok = T.packed;
+        }
+        i = checkPacked(++i, ptok, htParams, sOptions);
       }
 
       // {i j k} ... SUPERCELL {i' j' k'}
@@ -417,7 +422,7 @@ public class CmdExt extends ScriptExt {
         }
         sOptions.append(Escape.e(supercell));
         htParams.put("supercell", supercell);
-        i = checkPacked(++i, htParams, sOptions);
+        i = checkPacked(++i, 0, htParams, sOptions);
       }
 
       // {i j k} ... RANGE x.y  (from full unit cell set)
@@ -546,18 +551,21 @@ public class CmdExt extends ScriptExt {
    * Process FILL and PACKED and all their variants.
    * 
    * @param i
+   * @param tok 
    * @param htParams
    * @param sOptions
    * @return new token position
    * @throws ScriptException
    */
-  private int checkPacked(int i, Map<String, Object> htParams, SB sOptions)
+  private int checkPacked(int i, int tok, Map<String, Object> htParams, SB sOptions)
       throws ScriptException {
-    switch (tokAt(i)) {
+    if (tok == 0)
+      tok = tokAt(i);
+    switch (tok) {
     case T.fill:
       htParams.put("packed", Boolean.TRUE);
       T3d[] oabc = null;
-      int tok = tokAt(++i);
+      tok = tokAt(++i);
       switch (tok) {
       case T.boundbox:
       case T.unitcell:

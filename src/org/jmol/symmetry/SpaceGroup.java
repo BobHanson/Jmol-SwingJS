@@ -821,8 +821,11 @@ public class SpaceGroup implements Cloneable {
         }
       }
     }
+    if (hmSymbol == null) {
+      hmSymbol = SG_NONE;
+    }
     if (hmSymbol.equals(SG_NONE)) {
-      hallSymbol = hallInfo.hallSymbol;
+      hallSymbol = h.hallSymbol;
       nHallOperators = Integer.valueOf(operationCount);
     }
     if (nHallOperators != null && operationCount != nHallOperators.intValue())

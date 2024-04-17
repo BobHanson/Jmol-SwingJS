@@ -10,7 +10,6 @@ import org.jmol.script.ScriptError;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.ScriptException;
 import org.jmol.script.T;
-import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 public abstract class ScriptExt {
