@@ -1216,7 +1216,9 @@ public class XtalSymmetry {
     }
     setUnitCellSafely();
     asc.setCurrentModelInfo("f2c", symmetry.getUnitCellF2C());
-    asc.setCurrentModelInfo("f2cTitle", symmetry.getSpaceGroupTitle());
+    String s = symmetry.getSpaceGroupTitle();
+    if (s.indexOf("--") < 0)
+      asc.setCurrentModelInfo("f2cTitle", s);
     asc.setCurrentModelInfo("f2cParams", symmetry.getUnitCellParams());
     if (acr.latticeType != null) {
       asc.setCurrentModelInfo("latticeType", acr.latticeType);

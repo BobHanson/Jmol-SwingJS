@@ -701,7 +701,6 @@ public class FileManager implements BytePoster {
     }
   }
 
-
   /**
    * 
    * @param fileName
@@ -845,6 +844,10 @@ public class FileManager implements BytePoster {
       return false;
     }
     try {
+      if (t instanceof BufferedInputStream) {
+        if (name.toUpperCase().endsWith(".PNG") || isEmbeddable(name))
+          t = Rdr.getBufferedReader((BufferedInputStream) t, null);
+      }
       return Rdr.readAllAsString((BufferedReader) t, nBytesMax, allowBinary,
           data, 1);
     } catch (Exception e) {

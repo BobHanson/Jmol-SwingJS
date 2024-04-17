@@ -1189,8 +1189,12 @@ public class ModelKit {
    * @return new name or "" or error message
    */
   public String cmdAssignSpaceGroup(BS bs, String name, Object paramsOrUC) {
+    SymmetryInterface sym0 = vwr.getCurrentUnitCell();
+    SymmetryInterface sym = vwr.getOperativeSymmetry();
+    if (sym0 != null && sym != sym0)
+      sym.getUnitCell(sym0.getV0abc(null,null), false, "modelkit");
     SB  sb = new SB();
-    String ret = assignSpaceGroup(vwr.getOperativeSymmetry(), null, bs, paramsOrUC, PT.split(name, ">"), 0, null, null, sb);
+    String ret = assignSpaceGroup(sym, null, bs, paramsOrUC, PT.split(name, ">"), 0, null, null, sb);
     return ret;   
   }
 
@@ -4495,14 +4499,14 @@ public class ModelKit {
    * @param sym
    * @param oabc
    * @param ucname
-   * @return true if this is a "reset" with no atoms
+   * @return true if this is a "reset" with no atoms or sym == null
    */
   public boolean transformAtomsToUnitCell(SymmetryInterface sym, T3d[] oabc,
                                           String ucname) {
     BS bsAtoms = vwr.getThisModelAtoms();
     int n = bsAtoms.cardinality();
-    boolean isReset = (n == 0);
-    if (!isReset && sym != null) {
+    boolean isReset = (sym == null || n == 0);
+    if (!isReset) {
       Atom[] a = vwr.ms.at;
       P3d[] fxyz = getFractionalCoordinates(sym, bsAtoms);
       vwr.ms.setModelCagePts(-1, oabc, ucname);

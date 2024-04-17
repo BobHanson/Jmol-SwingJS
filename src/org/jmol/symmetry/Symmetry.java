@@ -1334,7 +1334,7 @@ public class Symmetry implements SymmetryInterface {
           itaSubData[itno - 1] = resource = (Map<String, Object>) getResource(
               vwr, "sg/json/sub_" + itno + ".json");
         if (resource != null) {
-            return resource;
+          return resource;
         }
       } else if (isSettings || name.equalsIgnoreCase("ITA")) {
         if (itno == 0) {
@@ -1378,7 +1378,25 @@ public class Symmetry implements SymmetryInterface {
               "sg/json/aflow_structures.json");
         if (itno == 0)
           return aflowStructures;
-        System.out.println(sgname + " ? " + index);
+        if (itno == Integer.MIN_VALUE) {
+          Lst<String> start = null;
+          if (sgname.endsWith("*")) {
+            start = new Lst<>();
+            sgname = sgname.substring(0, sgname.length() - 1);
+          }
+          for (int j = 1; j <= 230; j++) {
+            Lst<Object> list = (Lst<Object>) aflowStructures.get("" + j);
+            for (int i = 0, n = list.size(); i < n; i++) {
+              String id = (String) list.get(i);
+              if (start != null && id.startsWith(sgname)) {
+                start.addLast("=aflowlib/" + j + "." + (i + 1) + "\t" + id);
+              } else if (id.equalsIgnoreCase(sgname)) {
+                return j + "." + (i + 1);
+              }
+            }
+          }
+          return (start != null && start.size() > 0 ? start : null);
+        }
         Lst<Object> adata = (Lst<Object>) aflowStructures.get("" + sgname);
         if (index <= adata.size()) {
           return (index == 0 ? adata : adata.get(index - 1));

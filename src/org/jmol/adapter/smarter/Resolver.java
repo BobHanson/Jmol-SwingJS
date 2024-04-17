@@ -347,8 +347,8 @@ public class Resolver {
   public static String getBinaryType(InputStream inputStream) {
     byte[] magic4 = null;
     return (Rdr.isPickleS(inputStream) ? "PyMOL" 
-        : (Rdr.getMagic(inputStream, 1)[0] & 0xDE) == 0xDE ? "MMTF" 
-        : (Rdr.getMagic(inputStream, 10)[9] & 0xB6) == 0xB6 ? "BCIF" 
+        : (Rdr.getMagic(inputStream, 1)[0] & 0xFF) == 0xDE ? "MMTF" 
+        : (Rdr.getMagic(inputStream, 10)[9] & 0xFF) == 0xB6 ? "BCIF" 
         : bytesMatch((magic4 = Rdr.getMagic(inputStream, 4)), cdxMagic) ? "CDX" 
         : bytesMatch(magic4, cmdfMagic) ? "Cmdf" : null);
   }

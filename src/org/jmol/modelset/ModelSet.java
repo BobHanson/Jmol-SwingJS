@@ -47,6 +47,7 @@ import org.jmol.modelsetbio.BioModel;
 import org.jmol.script.ScriptCompiler;
 import org.jmol.script.T;
 import org.jmol.shape.Shape;
+import org.jmol.symmetry.Symmetry;
 import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Edge;
@@ -4451,6 +4452,7 @@ public class ModelSet extends BondCollection {
     if (unitCells == null)
       unitCells = new SymmetryInterface[mc];
     unitCells[mi] = sg;
+    System.out.println(PT.toJSON("setsg", ((Symmetry) sg).unitCell.getF2C()));
     haveUnitCells = true;
     boolean isP1 = (sg.getSpaceGroupOperationCount() == 1);
     int nops = sg.getFinalOperationCount();

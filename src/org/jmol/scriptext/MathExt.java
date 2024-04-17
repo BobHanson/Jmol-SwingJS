@@ -446,7 +446,16 @@ public class MathExt {
         return mp.addXObj((itaNo == Integer.MIN_VALUE ? vwr.getCurrentUnitCell() : vwr.getSymTemp()).getSpaceGroupJSON(vwr, mode.toLowerCase(), null, itaNo));
       }
       if (itaNo > 0 || args[0].tok == T.string) {
-        if (itaNo > 0 || xyzList.indexOf(",") < 0 && xyzList.indexOf(":") < 0 && !xyzList.startsWith("ITA/"))
+        if (xyzList.toUpperCase().startsWith("AFLOW/")) {
+          // "15" or "15.1"
+          return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOW",
+              xyzList.substring(6), 0));
+        }
+        if (xyzList.startsWith("Hall:") || xyzList.indexOf("x") >= 0 || unitCellParams != null) {
+          return mp.addXObj(vwr.findSpaceGroup(null, null, xyzList,
+              unitCellParams, null, null, JC.SG_AS_STRING));
+        }
+        if (itaNo > 0 || !Double.isNaN(PT.parseDouble(xyzList)))
           xyzList = "ITA/" + xyzList;
         if ("setting".equalsIgnoreCase(xyzList)) {
           SymmetryInterface sym = vwr.getOperativeSymmetry();
@@ -458,15 +467,6 @@ public class MathExt {
           // "15:ba"  or "230" or "155.2"
           return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "ITA",
               xyzList.substring(4), 0));
-        }
-        if (xyzList.toUpperCase().startsWith("AFLOW/")) {
-          // "15" or "15.1"
-          return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOW",
-              xyzList.substring(6), 0));
-        }
-        if (xyzList.startsWith("Hall:") || xyzList.indexOf("x") >= 0 || unitCellParams != null) {
-          return mp.addXObj(vwr.findSpaceGroup(null, null, xyzList,
-              unitCellParams, null, null, JC.SG_AS_STRING));
         }
       } else {
         BS atoms = SV.getBitSet(args[0], true);

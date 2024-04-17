@@ -131,10 +131,10 @@ public class SpaceGroup implements Cloneable {
   
   private SpaceGroup setFrom(SpaceGroup sg, boolean isITA) {
     if (isITA) {
-      name = (sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + clegId);
+      setName(sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + clegId);
       derivedIndex = SG_ITA; // prevents replacement in finalizeOperations
     } else {
-      name = sg.getName();
+      setName(sg.getName());
       derivedIndex = sg.index;
     }
     clegId = sg.clegId;
@@ -234,7 +234,7 @@ public class SpaceGroup implements Cloneable {
     // try unconventional Hall symbol
     SpaceGroup sg = new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
     sg.doNormalize = false;
-    sg.name = name;
+    sg.setName(name);
     int n = data.size();
     for (int i = 0; i < n; i++) {
       Object operation = data.get(i);
@@ -659,7 +659,7 @@ public class SpaceGroup implements Cloneable {
         sg = new SpaceGroup(-1, NEW_HALL_GROUP + name, true);
         sg.hallInfo = hallInfo;
         sg.hallSymbol = hallInfo.hallSymbol;
-        sg.name = "[" + sg.hallSymbol + "]";
+        sg.setName("[" + sg.hallSymbol + "]");
         sg.jmolId = null;
       } else if (name.indexOf(",") >= 0) {
         sg = new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
