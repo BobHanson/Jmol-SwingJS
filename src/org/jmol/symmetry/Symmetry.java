@@ -1071,7 +1071,7 @@ public class Symmetry implements SymmetryInterface {
     }
     try {
       WyckoffFinder w = wyckoffFinder.getWyckoffFinder(vwr,
-          sg.jmolId);
+          sg);
       boolean withMult = (letter != null && letter.charAt(0) == 'M');
       if (withMult) {
         letter = (letter.length() == 1 ? null : letter.substring(1));
@@ -1499,8 +1499,7 @@ public class Symmetry implements SymmetryInterface {
 
   public void transformUnitCell(M4d trm) {
     if (trm == null) {
-      trm = new M4d();
-      UnitCell.getMatrixAndUnitCell(null, spaceGroup.itaTransform, trm);
+      trm = UnitCell.toTrm(spaceGroup.itaTransform, null);
     }
     M4d trmInv = M4d.newM4(trm);
     trmInv.invert();
@@ -1526,9 +1525,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public String staticCleanTransform(String tr) {
-    M4d m = new M4d();
-    UnitCell.getMatrixAndUnitCell(null, tr, m);
-    return SymmetryOperation.getTransformABC(m, true);
+    return SymmetryOperation.getTransformABC(UnitCell.toTrm(tr, null), true);
   }
   
   @Override

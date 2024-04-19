@@ -2201,12 +2201,9 @@ public class SpaceGroup implements Cloneable {
     M4d trmInv = null, t = null;
     double[] v = null;
     if (transform != null) {
-      if (trm == null) {
-        trm = new M4d();
-      }
       if (transform.equals("r"))
         transform = SET_R;
-      UnitCell.getMatrixAndUnitCell(null, transform, trm);
+      trm = UnitCell.toTrm(transform, trm);
       trmInv = M4d.newM4(trm);
       trmInv.invert();
       v = new double[16];
@@ -2250,7 +2247,7 @@ public class SpaceGroup implements Cloneable {
     for (int i = 0, c = genPos.size(); i < c; i++) {
       String xyz = (String) genPos.get(i);
       if (trm != null && (i > 0 || centering != null)) {
-        xyz = SymmetryOperation.transformStr(xyz, trm, trmInv, t, v, centering, normalize);
+        xyz = SymmetryOperation.transformStr(xyz, trm, trmInv, t, v, centering, null, normalize, false);
       }
       if (sg == null) {
         xyzList += ";" + xyz;

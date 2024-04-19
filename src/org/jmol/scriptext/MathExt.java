@@ -4177,6 +4177,8 @@ public class MathExt {
     int iatom = (haveAtom ? bsAtoms.nextSetBit(0) : -1);
     if (isWyckoff) {
       P3d pt = (haveAtom ? vwr.ms.getAtom(iatom) : pt1);
+      while (desc.length() > 0 && PT.isDigit(desc.charAt(0)))
+          desc = desc.substring(1);
       if (pt == null) {
         switch (desc) {
         case "":

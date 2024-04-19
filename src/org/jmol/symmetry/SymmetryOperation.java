@@ -2081,10 +2081,13 @@ public class SymmetryOperation extends M4d {
    * @param v
    *        temporary or null
    * @param centering 
+   * @param targetCentering 
+   * @param normalize 
+   * @param allowFractions TODO
    * @return transformed string
    */
   static String transformStr(String xyz, M4d trm, M4d trmInv, M4d t,
-                             double[] v, T3d centering, boolean normalize) {
+                             double[] v, T3d centering, T3d targetCentering, boolean normalize, boolean allowFractions) {
     if (trmInv == null) {
       trmInv = M4d.newM4(trm);
       trmInv.invert();
@@ -2098,7 +2101,10 @@ public class SymmetryOperation extends M4d {
       op.add(centering);
     t.setM4(trmInv);
     t.mul(op);
-    t.mul(trm);
+    if (trm != null)
+      t.mul(trm);
+    if (targetCentering != null)
+      op.add(targetCentering);
     if (normalize) {
       t.getColumn(3, v);
       for (int i = 0; i < 3; i++) {
@@ -2106,13 +2112,11 @@ public class SymmetryOperation extends M4d {
       }
       t.setColumnA(3, v);
     }
-    return getXYZFromMatrix(t, false, true, false);
+    return getXYZFromMatrixFrac(t, false, true, false, allowFractions);
   }
 
   static String transformXyzT(String xyz, String transform) {
-    M4d trm = new M4d();
-    UnitCell.getMatrixAndUnitCell(null, transform, trm);
-    return (transformStr(xyz, trm, null, null, null, null, true));
+    return (transformStr(xyz, UnitCell.toTrm(transform, null), null, null, null, null, null, true, false));
   }
 
   static M4d stringToMatrix(String xyz) {
@@ -2135,10 +2139,15 @@ public class SymmetryOperation extends M4d {
     String s = SymmetryOperation
         .getXYZFromMatrixFrac(m, false, true, false, true).replace('x', 'a')
         .replace('y', 'b').replace('z', 'c');
-    return (tr.lengthSquared() < 1e-12d ? s
-        : s + ";"
-            + (normalize ? norm(-tr.x) + "," + norm(-tr.y) + "," + norm(-tr.z)
-                : opF(-tr.x) + "," + opF(-tr.y) + "," + opF(-tr.z)));
+    if (tr.lengthSquared() < 1e-12d)
+      return s;
+    tr.scale(-1);
+    return s + ";" + (normalize ? norm3(tr)
+        : opF(tr.x) + "," + opF(tr.y) + "," + opF(tr.z));
+  }
+
+  static String norm3(T3d tr) {
+    return norm(tr.x) + "," + norm(tr.y) + "," + norm(tr.z);
   }
 
   /**

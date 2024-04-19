@@ -723,6 +723,12 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         P3d.new3(fix000(m.m02), fix000(m.m12), fix000(m.m22)) };
   }
   
+  public static M4d toTrm(String transform, M4d trm) {
+    if (trm == null)
+      trm = new M4d();
+    getMatrixAndUnitCell(null, transform, trm);
+    return trm;
+  }
   /**
    * 
    * @param uc

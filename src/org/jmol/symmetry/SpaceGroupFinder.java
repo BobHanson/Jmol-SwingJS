@@ -302,7 +302,8 @@ public class SpaceGroupFinder {
             break;
           }
         }
-        if (sgdata == null) {
+        // "more" type, from wp-list, does note contain gp or wpos
+        if (sgdata == null || !sgdata.containsKey("gp")) {
           if (isJmolCode) {
             // trying to get an ITA from a Jmol code with ITA like ITA/12:abc
             return null;

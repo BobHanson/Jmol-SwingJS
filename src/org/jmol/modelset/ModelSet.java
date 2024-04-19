@@ -4452,7 +4452,6 @@ public class ModelSet extends BondCollection {
     if (unitCells == null)
       unitCells = new SymmetryInterface[mc];
     unitCells[mi] = sg;
-    System.out.println(PT.toJSON("setsg", ((Symmetry) sg).unitCell.getF2C()));
     haveUnitCells = true;
     boolean isP1 = (sg.getSpaceGroupOperationCount() == 1);
     int nops = sg.getFinalOperationCount();
