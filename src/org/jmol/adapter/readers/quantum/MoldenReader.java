@@ -277,9 +277,6 @@ public class MoldenReader extends MopacSlaterReader {
         slater[1] = type;
         slater[2] = gaussianPtr + 1;
         slater[3] = nPrimitives;
-        int n = getDfCoefMaps()[type].length;
-        //System.out.println("adding " + n + " coefficients type " + JmolAdapter.getQuantumShellTag(type) + " for atom " + atomIndex);
-        nCoef += n;
         for (int ip = nPrimitives; --ip >= 0;) {
           // Read ip primitives, each containing an exponent and one (s,p,d,f)
           // or two (sp) contraction coefficient(s)
@@ -307,7 +304,6 @@ public class MoldenReader extends MopacSlaterReader {
     moData.put("gaussians", garray);
     Logger.info(shells.size() + " slater shells read");
     Logger.info(garray.length + " gaussian primitives read");
-    Logger.info(nCoef + " MO coefficients expected for orbital type " + orbitalType);
     asc.setCurrentModelInfo("moData", moData);
     return false;
   }
@@ -340,6 +336,9 @@ public class MoldenReader extends MopacSlaterReader {
     }
      
     fixOrbitalType();
+
+    Logger.info(nCoef + " MO coefficients expected for orbital type " + orbitalType);
+
     // TODO we are assuming Jmol-canonical order for orbital coefficients.
     // see BasisFunctionReader
     // TODO no check here for G orbitals
