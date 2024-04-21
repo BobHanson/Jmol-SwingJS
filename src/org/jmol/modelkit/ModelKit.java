@@ -172,7 +172,8 @@ public class ModelKit {
         // We need the tranformation matrix for "10.2"
         // so that we can set the unit cell, as findSpacegroup does NOT 
         // set the unit cell in SG_IS_ASSIGN mode and there is a
-        // unit cell already.
+        // unit cell already. This call will build the space group if necessary
+        // if it is from Wyckoff 
         myTrm = (String) sym.getITASettingValue(vwr, name, "trm");
         if (myTrm == null) {
           errString = "Unknown ITA setting: " + name + "!";
@@ -3368,19 +3369,43 @@ public class ModelKit {
 
     if (index >= tokens.length)
       return "invalid CLEG expression";
-    if (tokens.length > 1 && paramsOrUC != null) {
+    boolean haveUCParams = (paramsOrUC != null);
+    if (tokens.length > 1 && haveUCParams) {
       return "invalid syntax - can't mix transformations and UNITCELL option!";
     }
 
-    boolean haveUnitCell = (sym00 != null);
-    boolean haveUCParams = (paramsOrUC != null);
+    String name = tokens[index].trim();
+    boolean isSubgroupCalc = name.equals("sub") || name.equals("super");
+    String calcNext = (isSubgroupCalc ? name : null);
+    if (isSubgroupCalc) {
+      name = tokens[++index].trim();
+    }
     boolean isFinal = (index == tokens.length - 1);
+    int pt = name.lastIndexOf(":"); // could be "154:_2" or "R 3 2 :" or 5:a,b,c
+    boolean haveUnitCell = (sym00 != null);
     boolean isUnknown = false;
-
-    SymmetryInterface sym = vwr.getSymTemp();
+    boolean haveTransform = (name.length() == 0 || name.indexOf(',') > 0);
+    boolean haveSpecialSetting = (!haveTransform && pt > 0
+        && pt < name.length() - 1);
+    boolean isTransformOnly = (haveTransform && pt < 0);
+    String transform = (haveTransform ? name.substring(pt + 1) : null);
+    
     M4d trTemp = new M4d();
-
-    if (prevNode == null) {
+    boolean restarted = false;
+    SymmetryInterface sym = vwr.getSymTemp();
+    if (prevNode == null) {      
+      if (!haveUnitCell && !haveUCParams && (haveTransform || (pt = name.indexOf('.')) > 0)) {
+        String ita = name.substring(0, pt);
+        // easiest is to restart with the default configuration
+        String err = assignSpaceGroup(null, null, null, null, new String[] { ita }, 0, null, null, sb);
+        if (err.endsWith("!"))
+          return err;
+        sym00 = vwr.getOperativeSymmetry();
+        if (sym00 == null)
+          return "modelkit spacegroup initialization error!";
+        haveUnitCell = true;
+        restarted = true;
+      }
       String ita0 = (haveUnitCell ? sym00.getIntTableNumber() : null);
       String trm0 = null;
       if (haveUnitCell) {
@@ -3397,20 +3422,10 @@ public class ModelKit {
         return prevNode.errString;
 
     }
-
-    String name = tokens[index].trim();
-    boolean isSubgroupCalc = name.equals("sub") || name.equals("super");
     if (isSubgroupCalc) {
-      prevNode.calcNext = name;
-      name = tokens[++index].trim();
-      isFinal = (index == tokens.length - 1);
+      prevNode.calcNext = calcNext;
     }
-    int pt = name.lastIndexOf(":"); // could be "154:_2" or "R 3 2 :" 
-    boolean haveTransform = (name.length() == 0 || name.indexOf(',') > 0);
-    boolean haveSpecialSetting = (!haveTransform && pt > 0
-        && pt < name.length() - 1);
-    boolean isTransformOnly = (haveTransform && pt < 0);
-    String transform = (haveTransform ? name.substring(pt + 1) : null);
+
     if (transform != null) {
       switch (transform) {
       case "r":
@@ -3470,9 +3485,6 @@ public class ModelKit {
 
     // handle parameters
 
-    /**
-     * trRef is the reference transform based on the setting
-     */
     double[] params = null;
     T3d[] oabc = null;
     T3d origin = null;
@@ -3480,12 +3492,12 @@ public class ModelKit {
     params = (!haveUCParams || !AU.isAD(paramsOrUC) ? null
         : (double[]) paramsOrUC);
     if (!haveUnitCell) {
-      sym.setUnitCellFromParams(
-          params == null ? new double[] { 10, 10, 10, 90, 90, 90 } : params,
-          false, Float.NaN);
-      paramsOrUC = null;
-      haveUCParams = false;
-    }
+        sym.setUnitCellFromParams(
+            params == null ? new double[] { 10, 10, 10, 90, 90, 90 } : params,
+            false, Float.NaN);
+        paramsOrUC = null;
+        haveUCParams = false;
+      }
     if (haveUCParams) {
       // have UNITCELL params, either [a b c..] or [o a b c] or 'a,b,c:...'
       if (AU.isAD(paramsOrUC)) {
@@ -3566,11 +3578,8 @@ public class ModelKit {
         oabc = (P3d[]) sgInfo.get("unitcell");
       name = (String) sgInfo.get("name");
       String jmolId = (String) sgInfo.get("jmolId");
-      //      String itaIndex = (String) sgInfo.get("itaIndex");
-      //      String trm2 = (String) sgInfo.get("itaTransform");
       BS basis = (BS) sgInfo.get("basis");
       SpaceGroup sg = (SpaceGroup) sgInfo.remove("sg");
-      //      }
       sym.getUnitCell(oabc, false, null);
       sym.setSpaceGroupTo(sg == null ? jmolId : sg);
       sym.setSpaceGroupName(name);
@@ -3578,7 +3587,7 @@ public class ModelKit {
         basis = sym.removeDuplicates(vwr.ms, bsAtoms, true);
       }
       vwr.ms.setSpaceGroup(mi, sym, basis);
-      if (!haveUnitCell) {
+      if (!haveUnitCell || restarted) {
         appRunScript(
             "unitcell on; center unitcell;axes unitcell; axes 0.1; axes on;"
                 + "set perspectivedepth false;moveto 0 axis c1;draw delete;show spacegroup");

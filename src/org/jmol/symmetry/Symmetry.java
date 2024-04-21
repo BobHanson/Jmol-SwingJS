@@ -1360,15 +1360,22 @@ public class Symmetry implements SymmetryInterface {
             int i0 = (isInt && !isThis ? index : n);
             if (i0 > n)
               return null;
+            Map<String, Object> map = null;
             for (int i = i0; --i >= 0;) {
-              Map<String, Object> map = (Map<String, Object>) its.get(i);
-              if (i == index - 1 || sgname.equals(map.get("jmolId"))
-                  || tm != null && tm.equals(map.get("tm"))) {
-                return map;
-              }
+              map = (Map<String, Object>) its.get(i);
+              if (i == index - 1 || 
+                  (tm == null ? sgname.equals(map.get("jmolId")) : tm.equals(map.get("trm")))) {
+                if (!map.containsKey("more")) {
+                  return map;
+                }
+                break;
+              } 
+              map = null;
             }
-            if (tm != null) {
-              // todo: allow 134:(a-b,b-c,a) that is not a standard ITA setting 
+            if (map != null) {
+              if (tm == null)
+                tm = (String) map.get("clegId");
+              return SpaceGroup.fillMoreData(map, (String) data, itno, (Map<String, Object>) its.get(0));
             }
           }
         }

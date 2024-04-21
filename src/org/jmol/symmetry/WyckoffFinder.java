@@ -1,7 +1,6 @@
 package org.jmol.symmetry;
 
 import java.io.BufferedReader;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -75,7 +74,7 @@ public class WyckoffFinder {
   WyckoffFinder getWyckoffFinder(Viewer vwr, SpaceGroup sg) {
     WyckoffFinder helper = helpers.get(sg.clegId);
     if (helper == null) {
-      helper = createHelper(this, vwr, sg);
+      helper = createHelper(this, vwr, sg.clegId);
     }
     if (helper == null) {
       if (nullHelper == null)
@@ -126,22 +125,6 @@ public class WyckoffFinder {
   Object getInfo(UnitCell uc, P3d p, int returnType, boolean withMult) {
     Object info = createInfo(uc, p, returnType, withMult);
     return (info == null ? "?" : info);
-  }
-
-  /**
-   * Convert "1/2,1/2,0" to {0.5 0.5 0}
-   * 
-   * @param xyz
-   * @param p
-   * @return p or new P3d()
-   */
-  static P3d toPoint(String xyz, P3d p) {
-    if (p == null)
-      p = new P3d();
-    String[] s = PT.split(xyz, ",");
-    p.set(PT.parseDoubleFraction(s[0]), PT.parseDoubleFraction(s[1]),
-        PT.parseDoubleFraction(s[2]));
-    return p;
   }
 
   /**
@@ -264,10 +247,10 @@ public class WyckoffFinder {
 
   @SuppressWarnings("unchecked")
   private static WyckoffFinder createHelper(Object w, Viewer vwr,
-                                            SpaceGroup sg) {
-    String sgname = sg.clegId;
+                                            String clegId) {
+    String sgname = clegId;
     int pt = sgname.indexOf(":");
-    int itno = PT.parseInt(sgname.substring(0, pt));
+    int itno = PT.parseInt(pt < 0 ? sgname : sgname.substring(0, pt));    
     if (itno >= 1 && itno <= 230) {
       Map<String, Object> resource = getResource(w, vwr,
           "ita_" + itno + ".json");
@@ -283,8 +266,8 @@ public class WyckoffFinder {
           }
         }
         // "more" type, from wp-list, does note contain gp or wpos
-        if (!haveMap || map.containsKey("wpos"))
-          map = createWyckoffData(sg, itno, (Map<String, Object>) its.get(0));
+        if (!haveMap || !map.containsKey("more"))
+          map = SpaceGroup.fillMoreData(map, clegId, itno, (Map<String, Object>) its.get(0));
         WyckoffFinder helper = new WyckoffFinder(map);
         helpers.put(sgname, helper);
         return helper;
@@ -292,138 +275,6 @@ public class WyckoffFinder {
       }
     }
     return null;
-  }
-
-  /**
-   * Create a Wyckoff information map for a setting that is not in the ITA (at
-   * leaset not in the General Position list.)
-   * 
-   * Check is that 100:a+b,a-b,c comes out right.
-   * 
-   * The task is three-fold:
-   * 
-   * 1) find the centering
-   * 
-   * 2) apply the operations
-   * 
-   * 3) update the multiplicities
-   * 
-   * @param sg
-   * @param itno
-   * @param its0
-   * @return new map containing just gp and wpos
-   */
-  @SuppressWarnings("unchecked")
-  private static Map<String, Object> createWyckoffData(SpaceGroup sg, int itno,
-                                                       Map<String, Object> its0) {
-    M4d trm = UnitCell.toTrm(sg.itaTransform, null);
-    Lst<Object> gp0 = (Lst<Object>) its0.get("gp");
-    Map<String, Object> wpos0 = (Map<String, Object>) its0.get("wpos");
-    Lst<Object> cent0 = (Lst<Object>) wpos0.get("cent");
-    Lst<Object> cent = new Lst<>();
-    if (cent0 != null)
-      cent.addAll(cent0);
-    int nctr0 = cent.size();
-    M4d trmInv = getTransformedCentering(trm, cent);
-    int nctr = cent.size();
-    Lst<Object> pos0 = (Lst<Object>) wpos0.get("pos");
-    Lst<Object> pos = new Lst<Object>();
-    M4d t = new M4d();
-    double[] v = new double[16];
-    double f = (nctr + 1d) / (nctr0 + 1);
-    for (int i = 0, n = pos0.size(); i < n; i++) {
-      Map<String, Object> p0 = (Map<String, Object>) pos0.get(i);
-      Map<String, Object> p = new Hashtable<String, Object>();
-      p.putAll(p0);
-      Lst<Object> coord = (Lst<Object>) p0.get("coord");
-      if (coord != null) {
-        coord = transformCoords(coord, trmInv, null, t, v, null);
-        p.put("coord", coord);
-      }
-      int mult = ((Integer) p0.get("mult")).intValue();
-      p.put("mult", Integer.valueOf((int) (mult * f)));
-      pos.addLast(p);
-    }
-    Lst<Object> gp = new Lst<Object>();
-    transformCoords(gp0, trmInv, null, t, v, gp);
-    if (nctr > 0) {
-      for (int i = 0; i < nctr; i++) {
-        P3d p = new P3d();
-        transformCoords(gp0, trmInv, toPoint((String) cent.get(i), p), t,
-            v, gp);
-      }
-    }
-    Map<String, Object> its = new Hashtable<String, Object>();
-    Map<String, Object> wpos = new Hashtable<>();
-    if (nctr > 0)
-      wpos.put("cent", cent);
-    wpos.put("pos", pos);
-    its.put("gp", gp);
-    its.put("wpos", wpos);
-
-    return its;
-  }
-
-  private static Lst<Object> transformCoords(Lst<Object> coord, M4d trmInv, P3d centering, M4d t,
-                                             double[] v, Lst<Object> coordt) {
-    if (coordt == null)
-      coordt = new Lst<>();
-    for (int j = 0, n = coord.size(); j < n; j++) {
-      coordt.addLast(SymmetryOperation.transformStr((String) coord.get(j), null,
-          trmInv, t, v, null, centering, true, true));
-    }
-    return coordt;
-  }
-
-  /**
-   * adjust centering based on transformation
-   * 
-   * @param trm
-   * @param cent list to be revised
-   * @return trmInv
-   */
-  private static M4d getTransformedCentering(M4d trm, Lst<Object> cent) {
-    M4d trmInv = M4d.newM4(trm);
-    trmInv.invert();
-    int n0 = cent.size();
-    P3d p = new P3d();
-    double[][] c = UnitCell.getTransformRange(trm);
-    if (c != null) {
-      for (int i = (int) c[0][0]; i < c[1][0]; i++) {
-        for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
-          for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
-            p.set(i, j, k);
-            trmInv.rotTrans(p);
-            if (p.length() % 1 != 0) {
-              p.x = p.x % 1;
-              p.y = p.y % 1;
-              p.z = p.z % 1;
-              String s = SymmetryOperation.norm3(p);
-              if (!s.equals("0,0,0") && !cent.contains(s))
-                cent.addLast(s);
-            }
-
-          }
-        }
-      }
-      int n = cent.size();
-      if (n > 0) {
-        String[] a = new String[n];
-        cent.toArray(a);
-        Arrays.sort(a);
-        cent.clear();
-        for (int i = 0; i < n; i++)
-          cent.addLast(a[i]);
-      }
-    }
-    // remove integral centerings -- when det < 1
-    for (int i = n0; --i >= 0;) {
-      toPoint((String) cent.get(i), p);
-      trmInv.rotTrans(p);
-      if (p.x % 1 == 0 && p.y % 1 == 0 && p.z % 1 == 0)
-        cent.remove(i);
-    }
-    return trmInv;
   }
 
   /**
@@ -446,7 +297,7 @@ public class WyckoffFinder {
         for (int i = ncent; --i >= 0;) {
           String s = (String) cent.get(i);
           centeringStr[i] = s;
-          centerings[i] = toPoint(s, null);
+          centerings[i] = SymmetryOperation.toPoint(s, null);
         }
       }
     }
@@ -776,7 +627,7 @@ public class WyckoffFinder {
       switch (nxyz) {
       case 0:
         type = TYPE_POINT;
-        point = toPoint(p, null);
+        point = SymmetryOperation.toPoint(p, null);
         break;
       case 1:
         // just one 

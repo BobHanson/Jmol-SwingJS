@@ -455,7 +455,7 @@ public class MathExt {
           return mp.addXObj(vwr.findSpaceGroup(null, null, xyzList,
               unitCellParams, null, null, JC.SG_AS_STRING));
         }
-        if (itaNo > 0 || !Double.isNaN(PT.parseDouble(xyzList)))
+        if (itaNo > 0 || !xyzList.endsWith(":") && !Double.isNaN(PT.parseDouble(xyzList)))
           xyzList = "ITA/" + xyzList;
         if ("setting".equalsIgnoreCase(xyzList)) {
           SymmetryInterface sym = vwr.getOperativeSymmetry();

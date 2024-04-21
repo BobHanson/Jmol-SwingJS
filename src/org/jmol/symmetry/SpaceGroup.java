@@ -113,6 +113,7 @@ public class SpaceGroup implements Cloneable {
   public boolean isSSG;
   private String name = "unknown!";
   private String hallSymbol;
+  private String hallSymbolAlt;
   private String crystalClass; //schoenfliesSymbol;
   private String hmSymbol;   private String jmolIdExt;  // "a" in "3:a"
   private HallInfo hallInfo;
@@ -186,7 +187,7 @@ public class SpaceGroup implements Cloneable {
                                                   Object data, int modDim) {
     SpaceGroup sg = null;
     if (desiredSpaceGroupIndex >= 0) {
-      sg = getSpaceGroups()[desiredSpaceGroupIndex];
+      sg = SG[desiredSpaceGroupIndex];
     } else {
       if (data instanceof Lst<?>)
         sg = createSGFromList(name, (Lst<?>) data); 
@@ -281,7 +282,7 @@ public class SpaceGroup implements Cloneable {
     }
     finalOperations = null;
     isBio = (name.indexOf("bio") >= 0);
-    if (!isBio && index >= getSpaceGroups().length && name.indexOf("SSG:") < 0
+    if (!isBio && index >= SG.length && name.indexOf("SSG:") < 0
         && name.indexOf("[subsystem") < 0) {
       SpaceGroup sg = getDerivedSpaceGroup();
       if (sg != null && sg != this) {
@@ -493,6 +494,8 @@ public class SpaceGroup implements Cloneable {
 //    map.put("code", getCode());
     if (hallInfo != null && hallInfo.hallSymbol != null)
       map.put("HallSymbol", hallInfo.hallSymbol);
+    if (hallSymbolAlt != null)
+      map.put("HallSymbolAlt", hallSymbolAlt);
     return map;
   }
 
@@ -597,7 +600,7 @@ public class SpaceGroup implements Cloneable {
   }
 
   private synchronized static SpaceGroup findSpaceGroup(int opCount, String s) {
-    getSpaceGroups();
+    //getSpaceGroups();
     Lst<SpaceGroup> lst = htByOpCount.get(Integer.valueOf(opCount));
     if (lst != null)
       for (int i = 0, n = lst.size(); i < n; i++) {
@@ -609,7 +612,7 @@ public class SpaceGroup implements Cloneable {
   }
 
   private final static Object dumpAll(boolean asMap) {
-    getSpaceGroups();
+    //getSpaceGroups();
     if (asMap) {
     Lst<Object> info = new Lst<Object>();
     for (int i = 0; i < SG.length; i++)
@@ -623,7 +626,7 @@ public class SpaceGroup implements Cloneable {
   }
   
   private final static String dumpAllSeitz() {
-    getSpaceGroups();
+    //getSpaceGroups();
     SB sb = new SB();
     for (int i = 0; i < SG.length; i++)
       sb.append("\n").appendO(getCanonicalSeitz(i));
@@ -648,7 +651,7 @@ public class SpaceGroup implements Cloneable {
   }
   
   final static SpaceGroup createSpaceGroupN(String name) {
-    getSpaceGroups();
+    //getSpaceGroups();
     name = name.trim();
     SpaceGroup sg = determineSpaceGroupN(name);
     HallInfo hallInfo;
@@ -834,7 +837,6 @@ public class SpaceGroup implements Cloneable {
 
   int addSymmetrySM(String xyz, M4d operation) {
     int iop = addOperation(xyz, 0, false);
-    //System.out.println("spacegroup addding " + iop + " " + xyz);
     if (iop >= 0) {
       SymmetryOperation symmetryOperation = operations[iop];
       symmetryOperation.setM4(operation);
@@ -886,7 +888,7 @@ public class SpaceGroup implements Cloneable {
                                                     int lastIndex) {
     if (isXYZList(name))
       return -1;
-    getSpaceGroups();
+    //getSpaceGroups();
     if (lastIndex < 0)
       lastIndex = SG.length;
     name = name.trim().toLowerCase();
@@ -1119,6 +1121,8 @@ public class SpaceGroup implements Cloneable {
    */
   private volatile static String ambiguousHMNames = "";
  
+  private volatile static String lastHallSymbol = "";
+  
   private void buildSelf(String sgLineData) {
     String[] terms = PT.split(sgLineData.toLowerCase(), ";");
     jmolId = terms[0].trim(); // International Table Number :
@@ -1135,6 +1139,10 @@ public class SpaceGroup implements Cloneable {
     ////  terms[0] -- International Table Number and setting ////
     setJmolCode(jmolId);
 
+    boolean isAlternate = jmolId.endsWith("*");
+    if (isAlternate)
+      jmolId = jmolId.substring(0, jmolId.length() - 1);
+      
     ////  terms[1] -- ITA index or '--' ////
 
     // could be "154:a,b,c|0,0,-1/6"
@@ -1161,7 +1169,10 @@ public class SpaceGroup implements Cloneable {
 
     ////  terms[5] -- Hermann-Mauguin ////
 
-    setHMSymbol(terms[5]);
+    String hm = terms[5];
+    if (hm.endsWith("*"))
+      hm = hm.substring(0, hm.length() - 1);
+    setHMSymbol(hm);
 
     ////  term 6 -- Hall ////
 
@@ -1173,19 +1184,21 @@ public class SpaceGroup implements Cloneable {
       hallSymbol = terms[6];
       if (hallSymbol.length() > 1)
         hallSymbol = toCap(hallSymbol, 2);
+      if (isAlternate) {
+        hallSymbolAlt = hallSymbol;
+        hallSymbol = lastHallSymbol;
+      }
       info = itaNumber + hallSymbol;
-      if (itaNumber.charAt(0) != '0' && info.equals(lastInfo))
+      if (itaNumber.charAt(0) != '0' && info.equals(lastInfo)) {
+        isAlternate = true;
         ambiguousHMNames += hmSymbol + ";";
+      }
     }
+    lastHallSymbol = hallSymbol;
     
     // terms[6]  operator list where I ddn't figure out the Hall code 
     lastInfo = info;
     name = "HM:" + hmSymbolFull + " " + (hallSymbol == null || hallSymbol == "?" ? "[" + hallSymbol + "]" : "") + " #" + itaIndex;
-
-
-    //System.out.println(intlTableNumber + (intlTableNumberExt.equals("") ? "" : ":" + intlTableNumberExt) + "\t"
-    //      + hmSymbol + "\t" + hmSymbolAbbr + "\t" + hmSymbolAbbrShort + "\t"
-    //    + hallSymbol);
   }
 
   void setHMSymbol(String name) {
@@ -1252,6 +1265,8 @@ public class SpaceGroup implements Cloneable {
   
   private static Map<Integer, Lst<SpaceGroup>> htByOpCount = new Hashtable<Integer, Lst<SpaceGroup>>();
   static Map<String, SpaceGroup> nameToGroup;
+
+  static int nSG = 0;
   
   private synchronized static SpaceGroup[] getSpaceGroups() {
     if (SG == null) {
@@ -1262,7 +1277,7 @@ public class SpaceGroup implements Cloneable {
         defs[i] = new SpaceGroup(i, STR_SG[i], true);
         nameToGroup.put(defs[i].jmolId, defs[i]);
       }
-      System.out.println("SpaceGroup - " +STR_SG.length + " settings generated");
+      System.out.println("SpaceGroup - " + nSG + " settings generated");
       STR_SG = null;
       SG = defs;
     }
@@ -1325,6 +1340,9 @@ public class SpaceGroup implements Cloneable {
   // added # of operators to help in search phase
   // "4:b;2;c2^2;p 1 21 1;p 2yb",   //full name
 
+//610 settings for 230 space groups (608 from ITA; 2 for added 152 and 154 c-shifts
+//including also several duplicates
+ 
 
   private static String[] STR_SG = {
       "1;1.1;;1;c1^1;p 1;p 1",  
@@ -2131,7 +2149,6 @@ public class SpaceGroup implements Cloneable {
    * @return found space group or null
    */
   static SpaceGroup getSpaceGroupFromJmolClegOrITA(String name) {
-    getSpaceGroups();
     int n = SG.length;
     if (name.indexOf(":") >= 0) {
       if (name.indexOf(",") >= 0) {
@@ -2172,64 +2189,7 @@ public class SpaceGroup implements Cloneable {
     }
   }
 
-  public static SpaceGroup transformSpaceGroup(SpaceGroup sg, SpaceGroup base,
-                                               Lst<Object> genPos,
-                                               String transform, M4d trm) {
-    if (genPos == null) {
-//      base.checkHallOperators();
-      base.setFinalOperations();
-      // should be able to do this much slicker
-      genPos = new Lst<Object>();
-      for (int i = 0, n = base.getOperationCount(); i < n; i++) {
-        genPos.addLast(base.getXyz(i, false));
-      }
-    }
-    boolean normalize = (sg == null || sg.doNormalize);
-    String xyzList = addTransformXYZList(sg, genPos, transform, trm, normalize);
-    if (sg != null) {
-      sg.setITATableNames(sg.jmolId, sg.itaNumber, "1", transform);
-      return sg;
-    }
-    xyzList = xyzList.substring(1);
-    //System.out.println("for " + transform + " " + xyzList);
-    return findOrCreateSpaceGroupXYZ(xyzList, true);
-  }
-
-  private static String addTransformXYZList(SpaceGroup sg, Lst<Object> genPos,
-                                            String transform, M4d trm, boolean normalize) {
-
-    M4d trmInv = null, t = null;
-    double[] v = null;
-    if (transform != null) {
-      if (transform.equals("r"))
-        transform = SET_R;
-      trm = UnitCell.toTrm(transform, trm);
-      trmInv = M4d.newM4(trm);
-      trmInv.invert();
-      v = new double[16];
-      t = new M4d();
-    }
-    String xyzList = addTransformedOperations(sg, genPos, trm, trmInv, t, v, "", null, normalize);
-    if (sg != null) {
-      double[][] c = UnitCell.getTransformRange(trm);
-      if (c != null) {
-        P3d p = new P3d();
-        for (int i = (int)c[0][0]; i < c[1][0]; i++) {
-          for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
-            for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
-              if (i == 0 && j == 0 && k == 0)
-                continue;
-              p.set(i, j, k);
-              xyzList = addTransformedOperations(sg, genPos, trm, trmInv, t, v, xyzList, p, normalize);
-            }
-          }
-        }
-      }
-    } 
-    return xyzList;
-  }
-
-  public M4d[] getOpsCtr(String transform) {
+  M4d[] getOpsCtr(String transform) {
     SpaceGroup sg = getNull(true, true, false);
     transformSpaceGroup(sg, this, null, "!" + transform, null);
     sg.setFinalOperations();
@@ -2237,25 +2197,6 @@ public class SpaceGroup implements Cloneable {
     transformSpaceGroup(sg2, sg, null, transform, null);
     sg2.setFinalOperations();
     return sg2.finalOperations;
-  }
-
-
-  private static String addTransformedOperations(SpaceGroup sg, Lst<Object> genPos,
-                                               M4d trm, M4d trmInv, M4d t, double[] v, String xyzList, P3d centering, boolean normalize) {
-    if (sg != null)
-      sg.latticeOp = 0; // ignore looking for lattice operations
-    for (int i = 0, c = genPos.size(); i < c; i++) {
-      String xyz = (String) genPos.get(i);
-      if (trm != null && (i > 0 || centering != null)) {
-        xyz = SymmetryOperation.transformStr(xyz, trm, trmInv, t, v, centering, null, normalize, false);
-      }
-      if (sg == null) {
-        xyzList += ";" + xyz;
-      } else {
-        sg.addOperation(xyz, 0, false);
-      }
-    }
-    return xyzList;
   }
 
   private static SpaceGroup findOrCreateSpaceGroupXYZ(String xyzList, boolean doCreate) {
@@ -2293,11 +2234,13 @@ public class SpaceGroup implements Cloneable {
     itaTransform = tr;
     clegId = sg + ":" + tr;
     this.jmolId = jmolId;
-    if (jmolId != null)
+    if (jmolId == null) {
+      info = dumpInfoObj(); 
+    } else {
       setJmolCode(jmolId);
+    }
   }
 
-// 613 settings for 230 space groups (611 from ITA; 2 for added 152 and 154 c-shifts
   /*  see https://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
  
 intl#     H-M full       HM-abbr   HM-short  Hall
@@ -2898,6 +2841,289 @@ intl#     H-M full       HM-abbr   HM-short  Hall
 
    */
   
+  static Lst<Object> transformCoords(Lst<Object> coord, M4d trmInv, P3d centering, M4d t,
+                                             double[] v, Lst<Object> coordt) {
+    if (coordt == null)
+      coordt = new Lst<>();
+    for (int j = 0, n = coord.size(); j < n; j++) {
+      String xyz = SymmetryOperation.transformStr((String) coord.get(j), null,
+          trmInv, t, v, null, centering, true, true);
+      if (!coordt.contains(xyz))
+      coordt.addLast(xyz);
+    }
+    return coordt;
+  }
+
+  /**
+   * We sum the M3 column vectors. The result is (a' + b' +
+   * c'), which is the diagonal vector across the unit cell in the coordinates
+   * of the original lattice. Values are obtained for negative and pasitive ranges
+   * 
+   * 
+   * This method is used for two purpose:
+   * 
+   * 1) When a subgroup transformation or setting is made that enlarges the unit
+   * cell, this method delivers the additional centering information that may be
+   * needed to generate additional operators.
+   * 
+   * 2) When a transformed space group unit cell is packed, this result gives us
+   * the information we need to pack that cell fully, drawing from atoms that
+   * are in all the covered original unit cells.
+   * 
+   * For example, P42(77) has a 45-degree rotated setting C42.
+   * 
+   * https://www.cryst.ehu.es/cgi-bin/cryst/programs//nph-trgen?gnum=077&what=gp&trmat=a-b,a+b,c&unconv=C%2042&from=ita
+   * 
+   * The transformation matrix is a-b,a+b,c;0,0,0. Summing this, we get
+   * [0,-1,0](neg) and [2,1,1](pos). The range of cells needed to cover this is [0,1,2), [-1,1), [0,1) 
+   * 
+   * @param trm
+   * @return the range as float[][], or null if the result would be [0 0 0][1 1 1]
+   */
+  static double[][] getTransformRange(M4d trm) {
+    double[][] t = new double[2][3];
+    double[] row = new double[4];
+    for (int i = 0; i < 3; i++) {
+      trm.getRow(i, row);
+      for (int j = 0; j < 3; j++) {
+        double v = row[j];
+        if (v < 0) {
+          t[0][i] += -row[j];
+        } else if (v > 0) {
+          t[1][i] += row[j];
+        }
+      }
+    }
+    boolean ignore = true;
+    for (int i = 0, dz = 0; i < 2; i++, dz++) {
+      for (int j = 0; j < 3; j++) {
+        int d = (int) Math.ceil(t[i][j]);
+        if (d > dz)
+          ignore = false;
+        t[i][j] = (i == 0 ? -d : d);
+      }
+    }
+  
+    return (ignore ? null : t);
+  }
+
+  /**
+   * adjust centering based on transformation
+   * 
+   * @param trm
+   * @param cent list to be revised
+   * @return trmInv
+   */
+  private static M4d getTransformedCentering(M4d trm, Lst<Object> cent) {
+    M4d trmInv = M4d.newM4(trm);
+    trmInv.invert();
+    int n0 = cent.size();
+    P3d p = new P3d();
+    double[][] c = getTransformRange(trm);
+    if (c != null) {
+      for (int i = (int) c[0][0]; i < c[1][0]; i++) {
+        for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
+          for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
+            p.set(i, j, k);
+            trmInv.rotTrans(p);
+            if (p.length() % 1 != 0) {
+              p.x = p.x % 1;
+              p.y = p.y % 1;
+              p.z = p.z % 1;
+              String s = SymmetryOperation.norm3(p);
+              if (!s.equals("0,0,0") && !cent.contains(s))
+                cent.addLast(s);
+            }
+  
+          }
+        }
+      }
+      int n = cent.size();
+      if (n > 0) {
+        String[] a = new String[n];
+        cent.toArray(a);
+        Arrays.sort(a);
+        cent.clear();
+        for (int i = 0; i < n; i++)
+          cent.addLast(a[i]);
+      }
+    }
+    // remove integral centerings -- when det < 1
+    for (int i = n0; --i >= 0;) {
+      SymmetryOperation.toPoint((String) cent.get(i), p);
+      trmInv.rotTrans(p);
+      if (p.x % 1 == 0 && p.y % 1 == 0 && p.z % 1 == 0)
+        cent.remove(i);
+    }
+    return trmInv;
+  }
+
+  /**
+   * Create a Wyckoff information map for a setting that is not in the ITA (at
+   * leaset not in the General Position list.)
+   * 
+   * Check is that 100:a+b,a-b,c comes out right.
+   * 
+   * The task is three-fold:
+   * 
+   * 1) find the centering
+   * 
+   * 2) apply the operations
+   * 
+   * 3) update the multiplicities
+   * 
+   * @param map to fill or null
+   * @param clegId
+   * @param itno
+   * @param its0
+   * @return new map containing just gp and wpos
+   */
+  @SuppressWarnings("unchecked")
+  static Map<String, Object> fillMoreData(Map<String, Object> map, String clegId, int itno,
+                                                       Map<String, Object> its0) {
+    int pt = clegId.indexOf(':');
+    String transform = (pt < 0 ? "a,b,c" : clegId.substring(pt + 1));
+    M4d trm = UnitCell.toTrm(transform, null);
+    Lst<Object> gp0 = (Lst<Object>) its0.get("gp");
+    Map<String, Object> wpos0 = (Map<String, Object>) its0.get("wpos");
+    Lst<Object> cent0 = (Lst<Object>) wpos0.get("cent");
+    Lst<Object> cent = new Lst<>();
+    if (cent0 != null)
+      cent.addAll(cent0);
+    int nctr0 = cent.size();
+    M4d trmInv = getTransformedCentering(trm, cent);
+    int nctr = cent.size();
+    Lst<Object> pos0 = (Lst<Object>) wpos0.get("pos");
+    Lst<Object> pos = new Lst<Object>();
+    M4d t = new M4d();
+    double[] v = new double[16];
+    double f = (nctr + 1d) / (nctr0 + 1);
+    for (int i = 0, n = pos0.size(); i < n; i++) {
+      Map<String, Object> p0 = (Map<String, Object>) pos0.get(i);
+      Map<String, Object> p = new Hashtable<String, Object>();
+      p.putAll(p0);
+      Lst<Object> coord = (Lst<Object>) p0.get("coord");
+      if (coord != null) {
+        coord = transformCoords(coord, trmInv, null, t, v, null);
+        p.put("coord", coord);
+      }
+      int mult = ((Integer) p0.get("mult")).intValue();
+      p.put("mult", Integer.valueOf((int) (mult * f)));
+      pos.addLast(p);
+    }
+    Lst<Object> gp = new Lst<Object>();
+    transformCoords(gp0, trmInv, null, t, v, gp);
+    if (nctr > 0) {
+      for (int i = 0; i < nctr; i++) {
+        P3d p = new P3d();
+        transformCoords(gp0, trmInv, SymmetryOperation.toPoint((String) cent.get(i), p), t,
+            v, gp);
+      }
+    }
+    if (map == null) {
+      map = new Hashtable<String, Object>();
+      map.put("sg", Integer.valueOf(itno));
+      map.put("trm", transform);
+      map.put("clegId", itno + ":" + transform);
+      map.put("det", Double.valueOf(trm.determinant3()));
+    } else {
+      map.remove("more");
+    }
+    Map<String, Object> wpos = new Hashtable<>();
+    if (nctr > 0)
+      wpos.put("cent", cent);
+    wpos.put("pos", pos);
+    map.put("wpos", wpos);     
+    wpos.put("gp", gp);
+    gp = new Lst<>();
+    SpaceGroup sg = SpaceGroup.transformSpaceGroup(null, null, gp0,
+        transform, new M4d());
+    for (int i = 0, n = sg.getOperationCount(); i < n; i++) {
+      gp.addLast(((SymmetryOperation) sg.getOperation(i)).xyz);
+    }
+    map.put("gp", gp);
+    return map;
+  }
+
+
+  static SpaceGroup transformSpaceGroup(SpaceGroup sg, SpaceGroup base,
+                                        Lst<Object> genPos, String transform,
+                                        M4d trm) {
+    if (genPos == null) {
+      //base.checkHallOperators();
+      base.setFinalOperations();
+      // should be able to do this much slicker
+      genPos = new Lst<Object>();
+      for (int i = 0, n = base.getOperationCount(); i < n; i++) {
+        genPos.addLast(base.getXyz(i, false));
+      }
+    }
+    boolean normalize = (sg == null || sg.doNormalize);
+    String xyzList = addTransformXYZList(sg, genPos, transform, trm, normalize);
+    if (sg != null) {
+      sg.setITATableNames(sg.jmolId, sg.itaNumber, "1", transform);
+      return sg;
+    }
+    xyzList = xyzList.substring(1);
+    //System.out.println("for " + transform + " " + xyzList);
+    return findOrCreateSpaceGroupXYZ(xyzList, true);
+  }
+
+  private static String addTransformXYZList(SpaceGroup sg, Lst<Object> genPos,
+                                            String transform, M4d trm,
+                                            boolean normalize) {
+
+    M4d trmInv = null, t = null;
+    double[] v = null;
+    if (transform != null) {
+      if (transform.equals("r"))
+        transform = SET_R;
+      trm = UnitCell.toTrm(transform, trm);
+      trmInv = M4d.newM4(trm);
+      trmInv.invert();
+      v = new double[16];
+      t = new M4d();
+    }
+    String xyzList = addTransformedOperations(sg, genPos, trm, trmInv, t, v, "",
+        null, normalize);
+    if (sg != null) {
+      double[][] c = getTransformRange(trm);
+      if (c != null) {
+        P3d p = new P3d();
+        for (int i = (int) c[0][0]; i < c[1][0]; i++) {
+          for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
+            for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
+              if (i == 0 && j == 0 && k == 0)
+                continue;
+              p.set(i, j, k);
+              xyzList = addTransformedOperations(sg, genPos, trm, trmInv, t, v,
+                  xyzList, p, normalize);
+            }
+          }
+        }
+      }
+    }
+    return xyzList;
+  }
+
+  private static String addTransformedOperations(SpaceGroup sg, Lst<Object> genPos,
+                                               M4d trm, M4d trmInv, M4d t, double[] v, String xyzList, P3d centering, boolean normalize) {
+    if (sg != null)
+      sg.latticeOp = 0; // ignore looking for lattice operations
+    for (int i = 0, c = genPos.size(); i < c; i++) {
+      String xyz = (String) genPos.get(i);
+      if (trm != null && (i > 0 || centering != null)) {
+        xyz = SymmetryOperation.transformStr(xyz, trm, trmInv, t, v, centering, null, normalize, false);
+      }
+      if (sg == null) {
+        xyzList += ";" + xyz;
+      } else {
+        sg.addOperation(xyz, 0, false);
+      }
+    }
+    return xyzList;
+  }
+
   static {
     getSpaceGroups();
   }
