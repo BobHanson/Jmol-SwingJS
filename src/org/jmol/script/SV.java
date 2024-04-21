@@ -83,13 +83,6 @@ public class SV extends T implements JSONEncodable {
     return sv;
   }
   
-//  public static SV newF(float f) {
-//    SV sv = new SV();
-//    sv.tok = decimal;
-//    sv.value = Double.valueOf(f);
-//    return sv;
-//  }
-  
   public static SV newD(double d) {
     if (d != d)
       return vNaN;
@@ -462,13 +455,6 @@ public class SV extends T implements JSONEncodable {
     return newV(varray, objects);
   }
 
-  static SV getVariableAFF(float[][] fx) {
-    Lst<SV> objects = new  Lst<SV>();
-    for (int i = 0; i < fx.length; i++)
-      objects.addLast(getVariableAF(fx[i]));
-    return newV(varray, objects);
-  }
-
   static SV getVariableADD(double[][] fx) {
     Lst<SV> objects = new  Lst<SV>();
     for (int i = 0; i < fx.length; i++)
@@ -487,13 +473,6 @@ public class SV extends T implements JSONEncodable {
     Lst<SV> objects = new  Lst<SV>();
     for (int i = 0; i < ix.length; i++)
       objects.addLast(getVariableAI(ix[i]));
-    return newV(varray, objects);
-  }
-
-  static SV getVariableAF(float[] f) {
-    Lst<SV> objects = new  Lst<SV>();
-    for (int i = 0; i < f.length; i++)
-      objects.addLast(newV(decimal, Double.valueOf(f[i])));
     return newV(varray, objects);
   }
 
@@ -1675,7 +1654,8 @@ public class SV extends T implements JSONEncodable {
       }
       if (m != null) {
         //assocArray.push(key,value)
-        m.put(mapKey.asString(), copySafely(value));
+        String key = mapKey.asString();
+        m.put(key, copySafely(value).setName(key));
       }
     }
     return this;
@@ -1869,7 +1849,7 @@ public class SV extends T implements JSONEncodable {
     switch (tok) {
     case hash:
     case context:
-      getMap().put(key, copySafely(v));
+      getMap().put(key, copySafely(v).setName(key));
       break;
     }
   }

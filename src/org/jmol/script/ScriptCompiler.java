@@ -42,8 +42,6 @@ import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M34d;
-import javajs.util.M34d;
-import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -273,6 +271,7 @@ public class ScriptCompiler extends ScriptTokenParser {
   private boolean haveENDIF;
   
   private boolean compile0(boolean isFull) {
+    haveENDIF = false;
     script = cleanScriptComments(script);
     ichToken = script.indexOf(JC.STATE_VERSION_STAMP);
     isStateScript = (ichToken >= 0 && ichToken < 10); // leaves a bit of room for Proteopedia's "exit;\n" hack
@@ -451,7 +450,7 @@ public class ScriptCompiler extends ScriptTokenParser {
               cchToken = 0;
               continue;
             }
-            if (lookingAtImpliedString(true, true, true))
+            if (lookingAtImpliedString(true, true, true, false))
               ichEnd = ichToken + cchToken;
           }
           return commandExpected();
@@ -1013,7 +1012,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       tokCommand = tokenCommand.tok;
       isMathExpressionCommand = (tokCommand == T.identifier || T.tokAttr(
           tokCommand, T.mathExpressionCommand));
-      isSetOrDefine = (tokCommand == T.set || tokCommand == T.define);
+      isSetOrDefine = (tokCommand == T.set || tokCommand == T.define);      
       isCommaAsOrAllowed = T.tokAttr(tokCommand, T.atomExpressionCommand);
       implicitString = T.tokAttr(tokCommand, T.implicitStringCommand);
     }
@@ -1296,12 +1295,16 @@ public class ScriptCompiler extends ScriptTokenParser {
         }
       }
       if (!iHaveQuotedString
-          && lookingAtImpliedString(tokCommand == T.show, tokCommand == T.load,
-              nTokens > 1 || tokCommand != T.script && tokCommand != T.macro)) {
+          && lookingAtImpliedString(
+              tokCommand == T.show, 
+              tokCommand == T.load,
+              nTokens > 1 || tokCommand != T.script && tokCommand != T.macro, false
+              )
+          ) {
         String str = script.substring(ichToken, ichToken + cchToken);
         if (tokCommand == T.script) {
           if (str.startsWith("javascript:")) {
-            lookingAtImpliedString(true, true, true);
+            lookingAtImpliedString(true, true, true, false);
             str = script.substring(ichToken, ichToken + cchToken);
           } else if (str.toUpperCase().indexOf(".PUSH(") >= 0) {
             cchToken = 0;
@@ -1325,6 +1328,17 @@ public class ScriptCompiler extends ScriptTokenParser {
         return CONTINUE;
       }
       break;
+    case T.modelkitmode:
+      if (nTokens == 2 && lastToken.tok == T.spacegroup) {
+        if (lookingAtImpliedString(false, false, false, true)) {
+          if (script.charAt(ichToken + cchToken - 1) == ';')
+            --cchToken;
+          String s = script.substring(ichToken, ichToken + cchToken);
+          addTokenToPrefix(T.o(T.string, s));
+          return CONTINUE;
+        }        
+      }
+      break;
     case T.write:
       // write image 300 300 filename
       // write script filename
@@ -1338,7 +1352,7 @@ public class ScriptCompiler extends ScriptTokenParser {
           iHaveQuotedString = true;
           return OK;
         }
-        if (lookingAtImpliedString(true, true, true)) {
+        if (lookingAtImpliedString(true, true, true, false)) {
           String str = script.substring(ichToken, ichToken + cchToken);
           int pt = str.indexOf(" as ");
           if (pt > 0)
@@ -1356,7 +1370,7 @@ public class ScriptCompiler extends ScriptTokenParser {
     // possibly script
     implicitString &= (nTokens == 1);
     if (implicitString && !((tokCommand == T.script || tokCommand == T.macro)
-        && iHaveQuotedString) && lookingAtImpliedString(true, true, true)) {
+        && iHaveQuotedString) && lookingAtImpliedString(true, true, true, false)) {
       String str = script.substring(ichToken, ichToken + cchToken);
       if (tokCommand == T.label
           && PT.isOneOf(str.toLowerCase(), ";on;off;hide;display;"))
@@ -1551,6 +1565,10 @@ public class ScriptCompiler extends ScriptTokenParser {
       return CONTINUE;
     case T.minusMinus:
     case T.plusPlus:
+      if (nTokens == 0) {
+          tokInitialPlusPlus = theToken.tok;
+          return CONTINUE;
+      }
       if (afterWhite == ichToken || afterMath == ichToken)
         theToken = T.tv(theToken.tok, -1, theToken.value);
       if (!isNewSet && nTokens == 1)
@@ -1727,13 +1745,16 @@ public class ScriptCompiler extends ScriptTokenParser {
   }
 
   private boolean checkNewSetCommand() {
-    String name = ltoken.get(0).value.toString();
-    if (!isContextVariable(name.toLowerCase()))
+    String name = (nTokens == 0 ? "" : ltoken.get(0).value.toString());
+    if (nTokens > 0 && !isContextVariable(name.toLowerCase()))
       return false;
     T t = setNewSetCommand(false, name);
     setCommand(T.tokenSet);
     ltoken.add(0, tokenCommand);
-    ltoken.set(1, t);
+    if (nTokens == 0)
+      ltoken.addLast(t);
+    else
+      ltoken.set(1, t);
     return true;
   }
 
@@ -2735,12 +2756,12 @@ public class ScriptCompiler extends ScriptTokenParser {
    *        command
    * @param allowSptParen
    *        specifically for script/load command, first parameter xxx.spt(3,4,4)
-   * 
+   * @param allowSemicolon special, just for MODELKIT SPACEGROUP
    * @return true to handle as string, false to continue processing
    */
   private boolean lookingAtImpliedString(boolean allowSpace,
                                          boolean allowEquals,
-                                         boolean allowSptParen) {
+                                         boolean allowSptParen, boolean allowSemicolon) {
     int ichT = ichToken;
     char ch = script.charAt(ichT);
     boolean isID = (lastToken.tok == T.id);
@@ -2757,8 +2778,15 @@ public class ScriptCompiler extends ScriptTokenParser {
     // look ahead to \n, \r, terminal ;, or }
     boolean isOK = true;
     int parenpt = 0;
-    while (isOK && !eol(ch = charAt(ichT))) {
+    while (isOK && (!eol(ch = charAt(ichT)) || allowSemicolon && ch == ';')) {
       switch (ch) {
+      case ';':
+        // only MODELKIT SPACEGROUP 100:a,b,c;1/2,0,0 where ";" is followed by a digit or -
+        if (ichT + 1 < cchScript && "01234567890-".indexOf(script.charAt(ichT + 1)) < 0) {
+          isOK = false;
+          continue;
+        }
+        break;
       case '(':
         if (!allowSptParen) {
           // script command
