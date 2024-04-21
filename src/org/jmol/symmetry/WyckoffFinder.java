@@ -266,7 +266,7 @@ public class WyckoffFinder {
           }
         }
         // "more" type, from wp-list, does note contain gp or wpos
-        if (!haveMap || !map.containsKey("more"))
+        if (!haveMap || map.containsKey("more"))
           map = SpaceGroup.fillMoreData(map, clegId, itno, (Map<String, Object>) its.get(0));
         WyckoffFinder helper = new WyckoffFinder(map);
         helpers.put(sgname, helper);

@@ -174,7 +174,7 @@ public class ModelKit {
         // set the unit cell in SG_IS_ASSIGN mode and there is a
         // unit cell already. This call will build the space group if necessary
         // if it is from Wyckoff 
-        myTrm = (String) sym.getITASettingValue(vwr, name, "trm");
+        myTrm = (name.endsWith(".1") ? "a,b,c" : (String) sym.getITASettingValue(vwr, name, "trm"));
         if (myTrm == null) {
           errString = "Unknown ITA setting: " + name + "!";
           return false;

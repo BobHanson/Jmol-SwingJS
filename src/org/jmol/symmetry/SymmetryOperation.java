@@ -1926,22 +1926,6 @@ public class SymmetryOperation extends M4d {
     return opAxisCode = s;
   }
 
-  /**
-   * Convert "1/2,1/2,0" to {0.5 0.5 0}
-   * 
-   * @param xyz
-   * @param p
-   * @return p or new P3d()
-   */
-  static P3d toPoint(String xyz, P3d p) {
-    if (p == null)
-      p = new P3d();
-    String[] s = PT.split(xyz, ",");
-    p.set(PT.parseDoubleFraction(s[0]), PT.parseDoubleFraction(s[1]),
-        PT.parseDoubleFraction(s[2]));
-    return p;
-  }
-
   public static char getGlideFromTrans(T3d ftrans, T3d ax1) {
     double fx = Math.abs(approx(ftrans.x * 12));
     double fy = Math.abs(approx(ftrans.y * 12));
@@ -2182,6 +2166,24 @@ public class SymmetryOperation extends M4d {
     }
     return opF(d);
   }
+  
+  /**
+   * Convert "1/2,1/2,0" to {0.5 0.5 0}
+   * 
+   * @param xyz
+   * @param p
+   * @return p or new P3d()
+   */
+  static P3d toPoint(String xyz, P3d p) {
+    if (p == null)
+      p = new P3d();
+    String[] s = PT.split(xyz, ",");
+    p.set(PT.parseDoubleFraction(s[0]), PT.parseDoubleFraction(s[1]),
+        PT.parseDoubleFraction(s[2]));
+    return p;
+  }
+
+
   // https://crystalsymmetry.wordpress.com/space-group-diagrams/
 
 }
