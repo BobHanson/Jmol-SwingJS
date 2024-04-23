@@ -192,8 +192,7 @@ public final class JC {
       // still http:
       "aflowbin",
       "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
-      "aflowlib",
-      "https://www.aflowlib.org/prototype-encyclopedia/%FILE/findsym.cif", // updated 2024.04.16
+      "aflowlib", "https://aflow.org/p/%FILE.cif", // updated 2024.04.22
       "aflowpro","$aflowlib",
       // _#DOCACHE_ flag indicates that the loaded file should be saved in any state in full
       // ' at start indicates a Jmol script evaluation
