@@ -94,7 +94,8 @@ public class ModelKit {
     
     private M4d trLink;
     private int index;
-    public String calcNext; // "sub" or "super"
+    protected String calcNext; // "sub" or "super"
+    protected String calculated; // transform car
 
     ClegNode(int index, String name, String setting) {
       if (name == null)
@@ -214,35 +215,59 @@ public class ModelKit {
        * ITA number.
        */
 
+      M4d trm0 = null;
       boolean haveCalc = false;
       boolean haveReferenceCell = (prevNode != null && trLink == null
           && (hallSymbol != null
                || myIta != null && (myIta.equals(prevNode.myIta) || prevNode.calcNext != null)));
       if (haveReferenceCell) {
+        trm0 = M4d.newM4(trm);
         if (prevNode != null && prevNode.myTrm != null) {
           addSGTransform(sym, "!" + prevNode.setting, trm, trTemp);
           addSGTransform(sym, "!" + prevNode.myTrm, trm, trTemp);
         }
         String trCalc = null;
         if (prevNode.calcNext != null) {
-          boolean isSub = prevNode.calcNext.equals("sub");
+          boolean isSub = true;
+          boolean isImplicit = false;
+          switch (prevNode.calcNext) {
+          case "super":
+            isSub = false;
+             break;
+          case "sub":
+            break;
+          case "":
+          case "set":
+            prevNode.calcNext = "set";
+            isImplicit = true;
+            break;
+          }
           int ita1 = PT.parseInt(prevNode.myIta);   
           int ita2 = PT.parseInt(myIta);
-          trCalc = (String) sym.getSubgroupJSON(vwr,
-              (isSub ? ita1 : ita2), (isSub ? ita2 : ita1), 0, 1);
-          haveCalc = (trCalc != null);
-          if (haveCalc && !isSub)
-            trCalc = "!" + trCalc;
-          String calc = prevNode.myIta + ">" + trCalc + ">" + myIta;
-          if (!haveCalc)
-            throw new RuntimeException(calc);
-          //addSGTransform(sym, trCalc, trm, trTemp);
-          System.out.println("sub := " + calc);
-          setting = trCalc; // TODO should be trCalc * setting
+          boolean isSetting = (isImplicit && ita1 == ita2);
+          if (!isSetting) {
+            trCalc = (String) sym.getSubgroupJSON(vwr,
+                (isSub ? ita1 : ita2), (isSub ? ita2 : ita1), 0, 1);
+            haveCalc = (trCalc != null);
+            if (haveCalc && !isSub)
+              trCalc = "!" + trCalc;
+            String calc = prevNode.myIta + ">" + trCalc + ">" + myIta;
+            if (!haveCalc)
+              throw new RuntimeException(calc);
+            System.out.println("sub := " + calc);
+            addSGTransform(sym, trCalc, trm, trTemp);
+          }
         }
         addSGTransform(sym, myTrm, trm, trTemp);
         addSGTransform(sym, setting, trm, trTemp);
         System.out.println("ClegNode " + this + "\n" + trm);
+        if (haveCalc) {
+          trm0.invert();
+          M4d trm1 = M4d.newM4(trm);
+          trm1.mul(trm0);
+          calculated = (String) sym.convertTransform(null, trm1);
+        }
+        
       }
       return true;
     }
@@ -250,6 +275,63 @@ public class ModelKit {
     @Override
     public String toString() {
       return "[ClegNode #" + index + " " + name + "   " + myIta + ":" + setting + " " + myTrm + "]"; 
+    }
+
+    /**
+     * Test nodes and transforms for valid syntax. 133:b1 is OK, perhaps, at
+     * this point, but 142:0,0,0 is not
+     * 
+     * @param tokens
+     * @param sym
+     * @return true for OK syntax
+     */
+    protected static boolean checkSyntax(String[] tokens,
+                                         SymmetryInterface sym) {
+      for (int i = 0; i < tokens.length; i++) {
+        String s = tokens[i].trim();
+        if (s.length()==0)
+          continue;
+        int pt = s.indexOf(":");
+        String transform;
+        if (pt > 0) {
+          transform = s.substring(pt + 1);
+          s = s.substring(0, pt);
+        } else if (s.indexOf(",") >= 0) {
+          transform = s;
+          s = null;
+        } else {
+          transform = "";
+        }
+        if (s != null) {
+          double itno = PT.parseDoubleStrict(s);
+          if (itno < 1 || itno >= 231)
+            return false;
+          if (Double.isNaN(itno))
+            transform = s;
+        }
+
+        switch (transform) {
+        case "":
+        case "sub":
+        case "r":
+          break;
+        default:
+          if (transform.indexOf(",") >= 0) {
+            if (((M4d) sym.convertTransform(transform, null)).determinant3() == 0)
+              return false;
+          }
+          break;
+        }
+      }
+      return true;
+    }
+
+    public void updateTokens(String[] tokens, int i) {
+      if (myIta != null && myTrm != null)
+        tokens[i] = myIta + (myTrm.equals("a,b,c") ? "" : ":" + myTrm);
+
+      if (calculated != null)
+        tokens[i - 1] = calculated;
     }
 
   }
@@ -1187,16 +1269,26 @@ public class ModelKit {
    * @param name
    *        "P1" or "1" or ignored
    * @param paramsOrUC
+   * @param isPacked 
+   * @param cmd 
    * @return new name or "" or error message
    */
-  public String cmdAssignSpaceGroup(BS bs, String name, Object paramsOrUC) {
+  public String cmdAssignSpaceGroup(BS bs, String name, Object paramsOrUC, boolean isPacked, String cmd) {
     SymmetryInterface sym0 = vwr.getCurrentUnitCell();
     SymmetryInterface sym = vwr.getOperativeSymmetry();
     if (sym0 != null && sym != sym0)
       sym.getUnitCell(sym0.getV0abc(null,null), false, "modelkit");
     SB  sb = new SB();
     String ret = assignSpaceGroup(sym, null, bs, paramsOrUC, PT.split(name, ">"), 0, null, null, sb);
-    return ret;   
+    String msg = sb.toString();
+    if (msg.endsWith("!"))
+      return msg;
+    if (isPacked) {
+      BS bsModelAtoms = vwr.getThisModelAtoms();
+      int n = cmdAssignSpaceGroupPacked(bsModelAtoms, ret, cmd);
+      msg += "\n" + GT.i(GT.$("{0} atoms added"), n);
+    }
+    return msg;
   }
 
   /**
@@ -3374,28 +3466,31 @@ public class ModelKit {
       return "invalid syntax - can't mix transformations and UNITCELL option!";
     }
 
-    String name = tokens[index].trim();
-    boolean isSubgroupCalc = name.equals("sub") || name.equals("super");
-    String calcNext = (isSubgroupCalc ? name : null);
+    String token = tokens[index].trim();
+    boolean isSubgroupCalc = token.length() == 0 || token.equals("sub") || token.equals("super");
+    String calcNext = (isSubgroupCalc ? token : null);
     if (isSubgroupCalc) {
-      name = tokens[++index].trim();
+      token = tokens[++index].trim();
     }
     boolean isFinal = (index == tokens.length - 1);
-    int pt = name.lastIndexOf(":"); // could be "154:_2" or "R 3 2 :" or 5:a,b,c
+    int pt = token.lastIndexOf(":"); // could be "154:_2" or "R 3 2 :" or 5:a,b,c
     boolean haveUnitCell = (sym00 != null);
     boolean isUnknown = false;
-    boolean haveTransform = (name.length() == 0 || name.indexOf(',') > 0);
-    boolean haveSpecialSetting = (!haveTransform && pt > 0
-        && pt < name.length() - 1);
+    boolean haveTransform = (token.length() == 0 || token.indexOf(',') > 0);
+    boolean haveJmolSetting = (!haveTransform && pt > 0
+        && pt < token.length() - 1);
     boolean isTransformOnly = (haveTransform && pt < 0);
-    String transform = (haveTransform ? name.substring(pt + 1) : null);
+    String transform = (haveTransform ? token.substring(pt + 1) : null);
     
     M4d trTemp = new M4d();
     boolean restarted = false;
     SymmetryInterface sym = vwr.getSymTemp();
+    System.out.println("MK " + token + " " + prevNode);
     if (prevNode == null) {      
-      if (!haveUnitCell && !haveUCParams && (haveTransform || (pt = name.indexOf('.')) > 0)) {
-        String ita = name.substring(0, pt);
+      if (!ClegNode.checkSyntax(tokens, sym))
+        return "invalid CLEG expression";
+      if (!haveUnitCell && !haveUCParams && (haveTransform || (pt = token.indexOf('.')) > 0)) {
+        String ita = token.substring(0, pt);
         // easiest is to restart with the default configuration
         String err = assignSpaceGroup(null, null, null, null, new String[] { ita }, 0, null, null, sb);
         if (err.endsWith("!"))
@@ -3409,7 +3504,7 @@ public class ModelKit {
       String ita0 = (haveUnitCell ? sym00.getIntTableNumber() : null);
       String trm0 = null;
       if (haveUnitCell) {
-        if (ita0.equals("0"))
+        if (ita0 == null || ita0.equals("0"))
           ita0 = sym00.getClegId();
         else
           trm0 = (String) sym00.getSpaceGroupInfoObj("itaTransform", null,
@@ -3437,14 +3532,14 @@ public class ModelKit {
         transform = "!" + SimpleUnitCell.HEX_TO_RHOMB;
         break;
       default:
-        if (haveSpecialSetting) {
+        if (haveJmolSetting) {
           pt = 0;
           haveTransform = false;
           transform = null;
         }
       }
       if (pt > 0)
-        name = name.substring(0, pt);
+        token = token.substring(0, pt);
     }
 
     if (isTransformOnly) {
@@ -3452,14 +3547,16 @@ public class ModelKit {
         isUnknown = true;// now what?
         return "CLEG pathway is incomplete";
       }
-      // not a setting, not a node; could be >?>
-      sym.getV0abc(transform, trTemp);
+      // not a setting, not a node; could be >>
+      if (transform == null || transform.length() == 0)
+        transform = "a,b,c";
+      sym.convertTransform(transform, trTemp);
       if (trm == null)
         trm = trTemp;
       else
         trm.mul(trTemp);
 
-      if (name.length() != 0) {
+      if (token.length() != 0) {
         // this will be the flag that we have x >> y
         prevNode.addTransform(trTemp);
         System.out.println(
@@ -3475,10 +3572,10 @@ public class ModelKit {
 
     // first or last. 
 
-    ClegNode node = new ClegNode(index, name, transform);
+    ClegNode node = new ClegNode(index, token, transform);
     if (!node.update(vwr, prevNode, trm, trTemp, sym))
       return node.errString;
-
+    node.updateTokens(tokens, index);
     if (!isFinal)
       return assignSpaceGroup(sym00, ita00, bs, null, tokens, ++index, trm,
           node, sb);
@@ -3497,15 +3594,15 @@ public class ModelKit {
             false, Float.NaN);
         paramsOrUC = null;
         haveUCParams = false;
-      }
+    }
     if (haveUCParams) {
       // have UNITCELL params, either [a b c..] or [o a b c] or 'a,b,c:...'
       if (AU.isAD(paramsOrUC)) {
         params = (double[]) paramsOrUC;
       } else {
         oabc = (T3d[]) paramsOrUC;
+        origin = oabc[0];
       }
-
     } else if (haveUnitCell) {
       sym = sym00;
       if (trm == null) {
@@ -3513,16 +3610,15 @@ public class ModelKit {
         trm.setIdentity();
       }
       oabc = sym.getV0abc(new Object[] { trm }, null);
-      origin = sym.getUnitCellMultiplied().getUnitCellVectors()[0];
+      origin = oabc[0];
     }
     if (oabc != null) {
       params = sym.getUnitCell(oabc, false, "assign").getUnitCellParams();
       if (origin == null)
-        origin = new P3d();
-      origin.add(oabc[0]);
+        origin = oabc[0];
     }
     // ready to roll....
-    boolean isP1 = (name.equalsIgnoreCase("P1") || name.equals("ITA/1.1"));
+    boolean isP1 = (token.equalsIgnoreCase("P1") || token.equals("ITA/1.1"));
     clearAtomConstraints();
 
     try {
@@ -3576,13 +3672,13 @@ public class ModelKit {
 
       if (oabc == null || !haveUnitCell)
         oabc = (P3d[]) sgInfo.get("unitcell");
-      name = (String) sgInfo.get("name");
+      token = (String) sgInfo.get("name");
       String jmolId = (String) sgInfo.get("jmolId");
       BS basis = (BS) sgInfo.get("basis");
       SpaceGroup sg = (SpaceGroup) sgInfo.remove("sg");
       sym.getUnitCell(oabc, false, null);
       sym.setSpaceGroupTo(sg == null ? jmolId : sg);
-      sym.setSpaceGroupName(name);
+      sym.setSpaceGroupName(token);
       if (basis == null) {
         basis = sym.removeDuplicates(vwr.ms, bsAtoms, true);
       }
@@ -3592,8 +3688,15 @@ public class ModelKit {
             "unitcell on; center unitcell;axes unitcell; axes 0.1; axes on;"
                 + "set perspectivedepth false;moveto 0 axis c1;draw delete;show spacegroup");
       }
-      return sym.staticGetTransformABC(trm, false) + "\n" + name + " basis="
-          + basis;
+      
+      // don't change the first line of this message -- it will be used in packing.
+      
+      transform = sym.staticGetTransformABC(trm, false);
+      String msg = transform + "\n" 
+      + PT.join(tokens, '>' , 0) + "\n basis=" + basis;
+      System.out.println("ModelKit trm=" + msg);
+      sb.append(msg);
+      return transform;
     } catch (Exception e) {
       if (!Viewer.isJS)
         e.printStackTrace();
@@ -3608,7 +3711,7 @@ public class ModelKit {
       trm0.setIdentity();
     }
     if (tr != null) {
-      sym.getV0abc(tr, temp);
+      sym.convertTransform(tr, temp);
       trm0.mul(temp);
     }
     return trm0;

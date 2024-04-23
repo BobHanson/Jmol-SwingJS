@@ -78,7 +78,6 @@ public class SpaceGroupFinder {
  
   private BS bsPoints0;
   private BS bsAtoms;
-  private BS atoms0;
   private BS targets;
 
   private T3d origin;
@@ -87,8 +86,6 @@ public class SpaceGroupFinder {
   private P3d scaling;
   private P3d pTemp = new P3d();
  
-  private M4d trm;
-  
   private int isg;  
   
   public SpaceGroupFinder() {
@@ -125,7 +122,6 @@ public class SpaceGroupFinder {
                         final T3d[] oabc0, final SymmetryInterface uci,
                         final int flags) {
     this.vwr = vwr;
-    this.atoms0 = atoms0;
     xyzList = xyzList0;
     this.unitCellParams = unitCellParams;
     this.origin = origin;
@@ -154,7 +150,6 @@ public class SpaceGroupFinder {
     scaling = P3d.new3(1, 1, 1);
     String name;
     BS basis;
-    trm = null;
     isUnknown = true;
     // figure out the space group
     boolean isITA = (xyzList != null
@@ -282,7 +277,6 @@ public class SpaceGroupFinder {
       xyzList += ".1";
     Lst<Object> genPos;
     Map<String, Object> setting = null;
-    int iset = 0;
     String itaIndex = xyzList; // may be Hall or jmolId as well
     if (isHall) {
       genPos = (Lst<Object>) uc.getSpaceGroupInfoObj("nameToXYZList", "Hall:" + xyzList, false, false);
@@ -305,7 +299,6 @@ public class SpaceGroupFinder {
           setting = (Map<String, Object>) its.get(i);
           if (name.equals(setting.get(hasTransform ? "trm" : "jmolId"))) {
             sgdata = setting;
-            iset = i + 1;
             break;
           }
         }
@@ -342,7 +335,7 @@ public class SpaceGroupFinder {
     }
     sg = SpaceGroup.transformSpaceGroup(null, sg, genPos,
         (hasTransform ? transform : null),
-        (hasTransform ? trm = new M4d() : null));
+        (hasTransform ? new M4d() : null));
     if (sg == null)
       return null;
     name = "";
@@ -352,7 +345,6 @@ public class SpaceGroupFinder {
         String hm = (String) sgdata.get("hm");
         sg.setHMSymbol(hm);
       }
-      iset = 1;
       name = null;
       System.out.println("SpaceGroupFinder: new setting: " + sg.asString());
     }

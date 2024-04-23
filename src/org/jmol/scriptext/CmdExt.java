@@ -5930,8 +5930,8 @@ public class CmdExt extends ScriptExt {
         }
       } else if (newUC != null) {
         if (!chk && isModelkit) {
-          if (sym == null) {
-            vwr.assignSpaceGroup(null, "P1", newUC);
+          if (sym == null) {            
+              vwr.getModelkit(false).cmdAssignSpaceGroup(null, "P1", newUC, false, "unitcell");
           } else if (sym.fixUnitCell((double[]) newUC)) {
             eval.invArgStr(
                 "Unit cell is incompatible with current space group");
@@ -5966,6 +5966,9 @@ public class CmdExt extends ScriptExt {
           return;
         }
         vwr.ms.setModelCagePts(-1, oabc, ucname);
+        if (sym == null) {
+          vwr.setNewRotationCenter(e.getUnitCellCenter());
+        }
       }
     }
     eval.setObjectMad10(JC.SHAPE_UCCAGE, "unitCell", mad10);
@@ -6575,15 +6578,7 @@ public class CmdExt extends ScriptExt {
           invArg();
         type = sym.getClegId();
         isPacked = true;
-      } else if (type.equals("ITA")) {
-        // just "ITA" or ITA / 2.1
-        if (e.optParameterAsString(i + 1).equals("/")) {
-          type += "/" + e.optParameterAsString(i + 2);
-          e.iToken = i = i + 2;
-        } else {
-          type += "/";
-        }
-      } else if (type.indexOf(":") < 0 && type.indexOf(",") > 0) {
+      } else if (type.indexOf(":") < 0 && type.indexOf(",") > 0 && type.indexOf(">") < 0) {
         // allow for MODELKIT SPACEGROUP "a,b,2c"
         if (sym == null)
           invArg();
@@ -6670,17 +6665,12 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
     case T.spacegroup:
-      String s = vwr.assignSpaceGroup(bs, type, paramsOrUC);
+      String s = vwr.getModelkit(false).cmdAssignSpaceGroup(bs, type, paramsOrUC, isPacked, e.fullCommand);
       boolean isError = s.endsWith("!");
       if (isError)
         e.invArgStr(s);
       if (e.doReport())
         e.showString(s);
-      if (isPacked) {
-        int n = vwr.getModelkit(false).cmdAssignSpaceGroupPacked(bsModelAtoms, s.substring(0, s.indexOf('\n')), e.fullCommand);
-        if (e.doReport())
-          e.report(GT.i(GT.$("{0} atoms added"), n), false);
-      }
       break;
     }
   }

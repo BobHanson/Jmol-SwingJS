@@ -2782,7 +2782,11 @@ public class ScriptCompiler extends ScriptTokenParser {
       switch (ch) {
       case ';':
         // only MODELKIT SPACEGROUP 100:a,b,c;1/2,0,0 where ";" is followed by a digit or -
-        if (ichT + 1 < cchScript && "01234567890-".indexOf(script.charAt(ichT + 1)) < 0) {
+        if (ichT + 5 > cchScript
+            || ichT + 2 < cchScript && 
+            ( ".01234567890-".indexOf(script.charAt(ichT + 1)) < 0
+            || script.charAt(ichT + 2) =='-')) {
+          //xxxxx;--x or xxxx; followed by anything other than a number
           isOK = false;
           continue;
         }

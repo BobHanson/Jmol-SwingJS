@@ -281,8 +281,7 @@ public class MathExt {
         m4 = (M4d) args[0].value;
         break;
       case T.string:
-        m4 = new M4d();
-        vwr.getSymTemp().getV0abc(args[0].value, m4);
+        m4 = (M4d) vwr.getSymTemp().convertTransform((String) args[0].value, null);
         break;
       case T.varray:
         a = SV.dlistValue(args[0], 0);
@@ -654,9 +653,7 @@ public class MathExt {
           boolean asMatrix = (args.length == 2 && SV.bValue(args[1]));
           Object ret;
           if (asMatrix) {
-            M4d m = new M4d();
-            vwr.getSymTemp().getV0abc(arg0, m);
-            ret = m;
+            ret = vwr.getSymTemp().convertTransform(arg0, null);
           } else {
             ret = vwr.getV0abc(-1, arg0);
           }

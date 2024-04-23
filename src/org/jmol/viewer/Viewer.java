@@ -11114,10 +11114,6 @@ public class Viewer extends JmolViewer
     return se + u;
   }
 
-  public String assignSpaceGroup(BS bs, String type, Object paramsOrUC) {
-    return getModelkit(false).cmdAssignSpaceGroup(bs, type, paramsOrUC);
-  }
-
   public void setStatusAtomMoved(boolean andCheckMinimize, BS bs) {
     if (andCheckMinimize)
       checkMinimization();
