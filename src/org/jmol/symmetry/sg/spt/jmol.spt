@@ -1,0 +1,647 @@
+function showSettingPp(n_pp,hm,index) {
+	save orientation o1
+	var a = n_pp.split(":");
+	var n = a[1];
+	var pp = a[2];	
+	var sg;
+	a = n.split(".");
+	if (a[2]) {	
+		n = a[1];
+		sg = n_pp;
+	} else {
+		sg = "" + n + ":" + pp;
+	}
+	set scriptreportinglevel = 3;
+	zap;
+	modelkit spacegroup @n;
+	modelkit add "N" wyckoff G;
+	draw uc1 unitcell color red;
+	//draw sg1 spacegroup all;
+	modelkit spacegroup @sg packed;
+	set scriptreportinglevel = 0;
+	color property wyckoff;
+	draw uc2 unitcell;
+	//draw sg2 spacegroup all;
+	set echo top right;
+	var s = n_pp+"|" + hm+ "|" + index;
+	echo @s
+	zoom 50
+	restore orientation o1
+	var f = ("" + index + "." + n_pp + "." + hm).replace(" ","").replace(":","_").replace(";","_").replace("+","_").replace("/","_").replace(",","_")
+	write @{"c:/temp/bilbao/examples/" + f  + ".png"}
+}
+
+//showSettingPP("142:a-b,a+b,c;0,1/4,-1/8","F 41/d d c :1",643)
+
+
+function showSetting(n,i) {
+	if (!i) { 
+		load orientation @{"=aflowlib/" + n} packed;  
+		var info = spacegroup("ITA/" + n);
+		print "nSettings=" +  info.n;
+		print info.its.select("(trm)");
+		showSetting(n,1); 
+	} else {
+		draw delete;
+		var sg = if(i.type == "string";"" + n + ":"+i;"" + n + "."+i);
+		modelkit spacegroup @sg packed;
+		draw ID @{"sg1"} spacegroup all;
+		center unitcell;
+		axes 0.1;
+		connect auto;
+		moveto axis c1;
+	}
+}
+
+function showSubgroup(i1, i2, p1,p2) {
+  var tr = "";
+  if (!i2) {
+	if (i1.type == "integer") {
+		print spacegroup(i1,0,"subgroups")
+		return;
+	}
+	tr = i1;
+	i1 = tr.split(">")[1];
+  }
+  if (!tr) {
+  	var sub = "sub";
+  	if (p2) {
+  	  sub = spacegroup(i1,i2,p1,p2);
+  	} else if (p1.type == "string" && p1.length > 0) {
+  	  sub = p1;
+  	} else {
+    	  sub = spacegroup(i1,i2,1,1);
+  	}
+	if (sub[0] == "!") {
+	  print "can't do that " + sub;
+	  return;
+  	}
+  	tr = "" + i1 + ">" + sub + ">" + i2;
+  }
+  save orientation o1
+  zap
+  set echo bottom left
+  echo @tr
+  set scriptreportinglevel = 3;
+  modelkit spacegroup @i1
+  restore orientation o1
+  draw uc1 unitcell color red
+  draw sg1 spacegroup all  
+  modelkit add P wyckoff "G"
+  modelkit spacegroup @tr packed
+  set scriptreportinglevel = 0;
+  color property site 
+  draw uc2 unitcell color yellow
+  draw sg2 spacegroup all
+  flash = false;
+  if (flash) {
+    delay 2
+    for (var i = 0; i < 3; i++) {
+	delay 1
+	draw sg1* on
+	draw sg2* off
+	delay 1
+	draw sg1* off
+	draw sg2* on
+    }
+  } else {
+    draw sg1* translucent 0.8
+  }
+}
+
+showsubgroup 20 4
+
+function showSG(n) {
+	zap;modelkit spacegroup @n
+	font axes 30
+	unitcell 0.1
+	axes 0.1
+	modelkit add N
+	connect @{{*}.distance.min({*}).min + 0.01}
+	spacefill 0.15
+	select connected;spacefill off
+	select *
+	moveto axis a3
+}
+
+print "showSubgroup n1 n2 i1 i2"
+print "showSG n"
+print "showSetting n i"
+
+/**
+
+
+save orientation o
+zap
+modelkit spacegroup "P 2/m"
+//modelkit add N {0.45 0.47 0.45/1}
+modelkit spacegroup "P 2/m 1 1" unitcell "b,c,a"
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+draw *rotvector1 color blue
+modelkit spacegroup "10" unitcell "!b,c,a"
+modelkit spacegroup "13" unitcell "a-c,b,2c;0,0,1/2"
+modelkit spacegroup "P 1 1 2/n" unitcell "a,-a-c,b;0-1,0" packed
+draw uc2 unitcell color yellow
+draw sp2 spacegroup all
+color property site
+restore orientation o
+
+pause "OK1"
+
+
+
+zap
+modelkit spacegroup "148"
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+unitcell "r";
+modelkit spacegroup "148:r" 
+draw uc2 unitcell color yellow
+draw sp2 spacegroup all
+color property site
+
+pause "OK2"
+
+zap
+modelkit spacegroup "148"
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+modelkit spacegroup "148:r" unitcell "r"
+draw uc2 unitcell color yellow
+draw sp2 spacegroup all
+color property site
+
+pause "OK3"
+
+zap
+modelkit spacegroup "148"
+print unitcell()
+print unitcell('r')
+draw points @{unitcell('r')}
+draw u1 unitcell
+unitcell rhombohedral
+show unitcell
+
+pause "OK4"
+
+zap
+modelkit spacegroup "148:h"
+modelkit add O
+draw u1 unitcell
+modelkit spacegroup "148:2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c" unitcell "r" packed
+
+pause "OK5"
+
+zap
+modelkit spacegroup "148:h"
+modelkit add O
+draw u1 unitcell
+draw sg1 spacegroup all
+unitcell 'r'
+modelkit spacegroup "148:2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c"
+draw u2 unitcell
+draw sg2 spacegroup all
+
+pause "OK6"
+
+
+zap
+modelkit spacegroup "P 2/m 1 1" 
+modelkit add N {0.45 0.47 0.45/1}
+unitcell on
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+modelkit spacegroup "P 2/m" unitcell "!b,c,a;1,0,0" packed
+draw uc2 unitcell color yellow
+draw sp2 spacegroup all
+color property site
+
+pause "OK7"
+
+
+load =aflowlib/10.3 packed
+show spacegroup
+draw uc1 unitcell
+draw spacegroup all
+modelkit spacegroup "P 2/m 1 1"
+draw sp2 spacegroup all
+
+
+pause "OK8"
+
+
+zap
+modelkit spacegroup P2/m;background white
+modelkit add N {0.45 0.47 0.45/1}
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+modelkit spacegroup P2/m11 unitcell "b,c,a"
+draw uc2 unitcell color yellow
+draw sp2 spacegroup all
+color property site
+
+
+pause "OK9"
+
+zap
+modelkit spacegroup "P 2/m"
+modelkit add N {0.45 0.47 0.45/1}
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+modelkit spacegroup "P 2/m 1 1"
+draw uc2 unitcell color yellow
+draw sp2 spacegroup all
+color property site
+
+pause "OK9b"
+
+zap
+modelkit spacegroup 4
+draw sp1 spacegroup all
+draw uc1 unitcell color red
+
+modelkit add P wyckoff "G"
+modelkit spacegroup 4:c,a,b;0,1/4,0 packed
+color property site
+draw sp2 spacegroup all
+draw uc2 unitcell color yellow
+
+pause "OK9c"
+
+
+zap
+modelkit spacegroup "4:c,a,b" packed
+modelkit add P wyckoff "G"
+color property site
+draw sp2 spacegroup all
+draw uc2 unitcell color yellow
+
+pause "OK9d"
+
+
+// nonstandard polar group offset
+zap
+modelkit spacegroup 4:c,a,b;0,1/4,0 packed
+modelkit add P wyckoff "G"
+color property site
+draw sp2 spacegroup all
+draw uc2 unitcell color yellow
+
+pause "OK9e"
+
+zap
+modelkit spacegroup 4
+draw sp1 spacegroup all
+draw *vector1 color red
+draw uc1 unitcell color red
+modelkit spacegroup 4:c,a,b packed
+modelkit add P wyckoff "G"
+color property site
+draw sp2 spacegroup all
+draw uc2 unitcell color yellow
+
+pause "OK11"
+
+
+zap
+modelkit spacegroup 18
+draw sp1 spacegroup all
+draw uc1 unitcell color red
+draw *vector1 color red
+modelkit add P wyckoff "G"
+modelkit spacegroup 18>c,a,b;0,1/4,0>4 packed
+color property site
+draw sp2 spacegroup all
+draw uc2 unitcell color yellow
+
+pause "OK12"
+
+
+zap
+modelkit spacegroup 18
+draw unitcell color red
+draw sg1 spacegroup all
+modelkit add P wyckoff "G"
+modelkit spacegroup 18>sub>4 packed
+color property site
+draw sg2 spacegroup all
+draw sg2* color translucent yellow
+
+pause "OK13"
+
+zap
+modelkit spacegroup 10
+draw unitcell color red
+draw sg1 spacegroup all
+modelkit add P wyckoff "G"
+modelkit spacegroup "10 > a-c,b,2c;0,0,1/2 > 13" packed
+color property site
+draw sg2 spacegroup all
+
+pause "OK14"
+
+
+pause "OK15"
+
+zap
+modelkit spacegroup 18
+draw unitcell color red
+draw sg1 spacegroup all
+modelkit add P wyckoff "G"
+modelkit spacegroup "18>sub>19" packed
+color property site
+draw sg2 spacegroup all
+draw sg2* color translucent yellow
+
+pause "OK16"
+
+
+
+print spacegroup(18,4,2,"subgroups")
+
+
+pause "OK17"
+
+
+zap
+modelkit spacegroup 155
+draw sp1 spacegroup all
+draw uc1 unitcell fill color translucent 0.9 red
+save state s1
+modelkit spacegroup "155>2/3a+1/3b-2/3c,b,c;1,0,0>5"
+draw uc2 unitcell
+draw sp2 spacegroup all
+background lightgray
+unitcell "!2/3a+1/3b-2/3c,b,c;1,0,0"
+
+modelkit spacegroup "155>-1/3a-2/3b-2/3c,a,c>5"
+draw uc3 unitcell
+draw sp3 spacegroup all
+unitcell "!-1/3a-2/3b-2/3c,a,c"
+
+modelkit spacegroup "155>-1/3a+1/3b-2/3c,-a-b,c;1,1,0>5"
+draw uc4 unitcell
+draw sp4 spacegroup all
+draw sp1* off
+modelkit spacegroup "5>!-1/3a+1/3b-2/3c,-a-b,c;1,1,0>155"
+
+set echo bottom left
+echo three conjugate-class subgroups of 155 >> 5
+//write c:\temp\bilbao\examples\conjClass-155-5.png as PNGJ
+
+
+pause "OK18"
+
+//background white
+//capture "C:/temp/t.gif";
+//for (var i = 1; i <= 230; i++) {showSG(i);}
+
+
+write c:/temp/t.cif
+load c:/temp/t.cif packed 0.5
+connect 4.1 .
+connect 4.1
+display connected and unitcell or connected(unitcell)
+
+
+zap
+modelkit spacegroup 154
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+
+modelkit spacegroup "[p 32 2\" (0 0 4)]"
+draw uc2 unitcell
+draw sp2 spacegroup all
+// no?
+
+zap
+modelkit spacegroup 154
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+
+modelkit spacegroup "154:a,b,c;0,0,-1/3"
+draw uc2 unitcell
+draw sp2 spacegroup all
+
+// ok
+
+zap
+modelkit spacegroup 154
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+
+modelkit spacegroup "[p 32 2\"]:a,b,c;0,0,-1/3"
+draw uc2 unitcell
+draw sp2 spacegroup all
+
+//ok
+
+zap
+load =ams/quartz 1 packed
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+
+modelkit spacegroup "154:a,b,c;0,0,-1/3"
+draw uc2 unitcell
+draw sp2 spacegroup all
+
+// ok
+
+    checkHallOperators();
+
+
+
+zap
+load =ams/quartz 1 packed
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+
+modelkit spacegroup "[p 32 2\"]:a,b,c;0,0,-1/3"
+draw uc2 unitcell
+draw sp2 spacegroup all
+
+// OK
+
+zap
+load =ams/quartz 1 packed
+draw uc1 unitcell color red
+draw sp1 spacegroup all
+
+modelkit spacegroup "[p 32 2\" (0 0 4)]"
+draw uc2 unitcell
+draw sp2 spacegroup all
+
+//ok
+
+
+
+
+
+
+
+
+reset;center {5.0 9.0 7.5}; rotate z -47.13; rotate y 9.66; rotate z -43.31; zoom 92.35; set rotationRadius 10.0;
+
+modelkit moveto @2 {0.53 0.2 0.16}
+delete *
+modelkit add F
+write "file:///C:/d_drive/bob/pubs/jmolXtal/png/figure19.sg18.png" as pngj
+script "file:///C:/d_drive/bob/pubs/jmolXtal/png/fig.x.4(b).sg18-symops.png"
+set picking dragatom
+delete *
+modelkit add F
+label %[atomNumber]
+label %[atomo]
+label %[atomno]
+font label 25
+label "%[atomno]"
+color label [x000000]
+set labelOffset 4 4
+font label 16.0 SansSerif Bold;
+draw delete
+reset;center {5.0 6.0 7.5}; rotate z -55.78; rotate y 3.88; rotate z -34.1; zoom 150.0; set rotationRadius 10.83;
+draw symop @1 @3
+draw symop @2 @3
+draw symop @1 @3d
+draw delete
+draw s13 symop @1 @3
+draw s13 symop @1 @2
+draw s13 symop @1 @3
+draw s12 symop @1 @2
+draw s13 symop @3 @1
+draw s12 symop @2 @1
+draw s24 symop @2 @4
+draw s12 symop @1 @2
+draw s23 symop @2 @3
+draw s41 symop @4 @1
+write "file:///C:/d_drive/bob/pubs/jmolXtal/png/figure19.png" as PNGJ
+script "file:///C:/d_drive/bob/pubs/jmolXtal/png/fig.x.4(c).sg18-4a-symops.png"
+delete *
+draw delete
+modelkit add F
+draw spacegroup all
+show spacegroup
+zap
+modelkit spacegroup 4
+script "file:///C:/temp/bilbao/subgroups/png/018.004.01.001.2.a.t.(P21212)-(P21).png"
+unitcell "!c,a,b;0,1/4,0"
+modelkit spacegroup 18
+show orientation
+font label 25
+label %[atomno]
+draw s14 symop @1 @4
+draw s23 symop @2 @3
+color labels black
+font label 15
+font label 15 bold
+write \temp\iucr\figure19.d.png as png
+write c:\temp\iucr\figure19.d.png as png
+show orientation
+reset
+reset;center {5.0 9.0 7.5}; rotate z -47.13; rotate y 9.66; rotate z -43.31; zoom 92.35; set rotationRadius 10.0;
+write c:\temp\iucr\figure19.d.png as png
+delete @5
+draw list
+draw list sg*
+draw list "sg*"
+draw list "uc*"
+draw list
+draw usg* off
+draw ug* off
+write c:\temp\iucr\figure19.c.png as png
+draw symop @4 @2
+draw symop @3 @1
+draw s42 symop @4 @2
+write c:\temp\iucr\figure19.c.png as png
+color atoms cpk
+modelkit assign @1 F
+write c:\temp\iucr\figure19.d.png as png
+draw * on
+modelkit spacegroup "18>c,a,b;0,1/4,0>4" packed
+color property site
+select *
+color property site
+print {*}.site.pivot
+select {_F}
+color cpk
+color property site
+show state/prop
+color property site "rgb"
+color property site range 1 2
+label %[atomno]
+font labels 15 bold
+color labels black
+draw symop @2 @5
+draw symop @1 @3
+draw s24 delete
+draw s42 delete
+draw  list
+draw s42* delete
+draw s45 symop @4 @5
+draw s15 symop @1 @5
+draw s15 line @1 @5 color red
+draw s15 delete
+write c:\temp\iucr\figure19.d2.png as png
+
+$ 
+
+reset;center {5.0 9.0 7.5}; rotate z -58.71; rotate y 19.32; rotate z -32.31; zoom 92.35; translate x 2.25; translate y 5.25; set rotationRadius 10.0;
+
+
+
+
+
+
+zap
+modelkit spacegroup 18
+draw sp1 spacegroup all
+draw uc1 unitcell color red
+draw *vector1 color red
+modelkit add P wyckoff "G"
+modelkit spacegroup "18>c,a,b;0,1/4,0>4" packed
+color property site
+draw sp2 spacegroup all
+draw uc2 unitcell color yellow
+
+
+zap
+modelkit spacegroup 18
+draw sp1 spacegroup all
+draw uc1 unitcell color red
+draw *vector1 color red
+modelkit add P wyckoff "G"
+modelkit spacegroup "18>a,b,c;1/4,0,0>4" packed
+color property site
+draw sp2 spacegroup all
+draw uc2 unitcell color yellow
+
+
+function showSettingPp(n,pp) {
+
+	zap;
+	modelkit spacegroup @n;
+	modelkit add "N" wyckoff G;
+	draw uc1 unitcell color red;
+	draw sg1 spacegroup all;
+	var sg = "" + n + ":" + pp;
+	modelkit spacegroup @sg //packed;
+	draw uc2 unitcell;
+	draw sg2 spacegroup all;
+
+}
+
+showSettingPp(146, " 2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c")
+print {*}.wyckoff.pivot
+print symop("wyckoffm")
+
+showSettingPp(100, "a+b,-a+b,c")
+print {*}.wyckoff.pivot
+print symop("wyckoffm")
+
+//showSettingPp(12,"-a-c,b,a")
+showSettingPp(100, "a-b,a+b,c")
+print {*}.wyckoff.pivot
+
+
+

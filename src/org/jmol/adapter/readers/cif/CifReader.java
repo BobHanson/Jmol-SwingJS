@@ -1250,6 +1250,7 @@ public class CifReader extends AtomSetCollectionReader {
     this.isLigand = isLigand;
     int pdbModelNo = -1; // PDBX
     boolean haveCoord = true;
+    boolean noPreviousReferences = asc.atomSymbolicMap.isEmpty();
     parseLoopParametersFor(CAT_ATOM_SITE, atomFields);
     if (key2col[CC_ATOM_X_IDEAL] != NONE) {
       setFractionalCoordinates(false);
@@ -1290,6 +1291,7 @@ public class CifReader extends AtomSetCollectionReader {
           continue;
       }
       Atom atom = null;
+      String atomName = null;
       if (isMMCIF) {
         if (haveCoord) {
           atom = new Atom();
@@ -1313,15 +1315,18 @@ public class CifReader extends AtomSetCollectionReader {
             || (f = fieldProperty(key2col[ANISO_LABEL])) != NONE
             || (f = fieldProperty(key2col[ANISO_MMCIF_ID])) != NONE
             || (f = fieldProperty(key2col[MOMENT_LABEL])) != NONE) {
-          atom = asc.getAtomFromName((String) field);
-          if (f0 != NONE && (addAtomLabelNumbers || atom != null)) {
-            if (atomLabels != null) {
-              // just check THIS loop
+          if (f0 != NONE && atomLabels != null) {
+            atom = asc.getAtomFromName((String) field);
+            if (addAtomLabelNumbers || atom != null) {
               String key = ";" + field + ";";
+              if (noPreviousReferences) {
+                atomLabels += key;
+              }
+              // just check THIS loop
               if (atomLabels.indexOf(key) < 0) {
                 atomLabels += key;
               } else {
-                field = ((String) field) + (asc.ac + 1);
+                field = atomName = ((String) field) + (asc.ac + 1);
                 System.err.println(
                     "CifReader found duplicate atom_site_label! New label is "
                         + field);
@@ -1388,7 +1393,7 @@ public class CifReader extends AtomSetCollectionReader {
         case CC_ATOM_ID:
         case LABEL:
         case LABEL_ATOM_ID:
-          atom.atomName = field;
+          atom.atomName = (atomName == null ? field : atomName);
           break;
         case AUTH_ATOM_ID:
           haveAuth = true;
@@ -1414,7 +1419,7 @@ public class CifReader extends AtomSetCollectionReader {
           break;
         case WYCKOFF_LABEL:
           if (allowWyckoff) {
-            wyckoff = field;              
+            wyckoff = field;
           }
           break;
         case AUTH_SEQ_ID:
