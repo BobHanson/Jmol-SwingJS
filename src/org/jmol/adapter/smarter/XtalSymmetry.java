@@ -153,6 +153,14 @@ public class XtalSymmetry {
       return unitCell.getTensor(vwr, parBorU);
     }
 
+    public String getSpaceGroupTitle() {
+      String s = getSpaceGroupName();
+      return (s.startsWith("cell=") ? s : spaceGroup != null ? spaceGroup.asString()
+          : unitCell != null && unitCell.name.length() > 0
+              ? "cell=" + unitCell.name
+              : "");
+    }
+
     public void setPrecision(double prec) {
       unitCell.setPrecision(prec);
     }

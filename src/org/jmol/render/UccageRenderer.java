@@ -23,15 +23,6 @@
  */
 package org.jmol.render;
 
-//import java.text.NumberFormat;
-
-import javajs.util.DF;
-import javajs.util.Lst;
-import javajs.util.P3d;
-import javajs.util.PT;
-import javajs.util.T3d;
-import javajs.util.T4d;
-
 import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
 import org.jmol.shape.Axes;
@@ -41,6 +32,13 @@ import org.jmol.util.C;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.StateManager;
+
+//import java.text.NumberFormat;
+
+import javajs.util.DF;
+import javajs.util.Lst;
+import javajs.util.P3d;
+import javajs.util.T3d;
 
 public class UccageRenderer extends CageRenderer {
 

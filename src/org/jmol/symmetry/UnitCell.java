@@ -69,7 +69,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
   
   Lst<String> moreInfo;
   
-  String name = "";
+  public String name = "";
   
   private P3d[] vertices; // eight corners
   
@@ -734,7 +734,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
    * @param uc
    *        generally this or null
    * @param def
-   *        String "abc;offset" or M3d or M4d to origin; if String, can be
+   *        String "abc;offset" or M3d or M4d or Object[M4d]; if String, can be
    *        preceded by ! for "reverse of". For example,
    *        "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, and can be a
    *        definition such as "a=3.40,b=4.30,c=5.02,alpha=90,beta=90,gamma=129"
@@ -823,10 +823,12 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     } else if (def instanceof M4d) {
       m = (M4d) def;
     } else {
+      // Object[M4d] from Modelkit only
       // direct 4x4 Cartesian transform
       m = (M4d) ((Object[]) def)[0];
       m.getRotationScale(m3);
       m.rotTrans(pt);
+      // false here to return the actual new origin
       uc.toCartesian(pt, false);
 
       for (int i = 1; i < 4; i++) {

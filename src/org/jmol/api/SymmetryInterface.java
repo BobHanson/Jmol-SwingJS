@@ -252,8 +252,6 @@ public interface SymmetryInterface {
 
   boolean fixUnitCell(double[] unitCellParams);
 
-  String getSpaceGroupTitle();
-
   boolean isSymmetryCell(SymmetryInterface sym);
 
   String staticGetTransformABC(Object value, boolean normalize);
@@ -277,4 +275,6 @@ public interface SymmetryInterface {
   String getClegId();
 
   int getFinalOperationCount();
+
+  Object convertTransform(String transform, M4d trm);
 }

@@ -170,10 +170,10 @@ public class SpaceGroupFinder {
       } else {
         xyzList = PT.replaceAllCharacters(xyzList, "[]", "");
       }
-      name = setITA(isHall);
-      if (name == null)
+      sg = setITA(isHall);
+      if (sg == null)
         return null;
-      
+      name = sg.getName();      
     } else if (oabc != null || isHall) {
       //      isUnknown = false;
       name = xyzList;
@@ -204,14 +204,13 @@ public class SpaceGroupFinder {
         oabc = uc.getUnitCellVectors();
         if (origin != null)
           oabc[0].setT(origin);
-//        if (trm != null)
-//          uc.transformUnitCell(trm);
-
       } else {
         uc = setSpaceGroupAndUnitCell(sg, null, oabc, false);
         uc.transformUnitCell(uci.replaceTransformMatrix(null));
       }
     } else {
+      // this method is used to build basisk as well, 
+      // even if we already have the space groupn
       Object ret = findGroupByOperations();
       if (!isAssign || !(ret instanceof SpaceGroup))
         return ret;
@@ -222,7 +221,7 @@ public class SpaceGroupFinder {
         basis.clear(atoms[i].index);
       int nb = basis.cardinality();
       String msg = name + (atoms0 == null ? ""
-          : "\nbasis is " + nb + " atom" + (nb == 1 ? "" : "s") + ": " + basis);
+          : "\nbasis is " +  nb + " atom" + (nb == 1 ? "" : "s") + ": " + basis);
       System.out.println(msg);
       if (asString)
         return msg;
@@ -252,7 +251,7 @@ public class SpaceGroupFinder {
 
 
   @SuppressWarnings("unchecked")
-  private String setITA(boolean isHall) {
+  private SpaceGroup setITA(boolean isHall) {
     String name = null;
     Map<String, Object> sgdata = null;
     int pt = xyzList.lastIndexOf(":");
@@ -260,14 +259,16 @@ public class SpaceGroupFinder {
     // here we have said ITA/40:b  because we want the ITA variation
     boolean isJmolCode = (pt > 0 && !hasTransform);
     String transform = null;
+    String clegId = null;
     if (hasTransform) {
       name = transform = uc.staticCleanTransform(xyzList.substring(pt + 1));
+      xyzList = xyzList.substring(0, pt);
+      clegId = xyzList + ":" + transform;
       // why name?
       if (transform.equals("a,b,c")) {
         transform = null;
         hasTransform = false;
       }
-      xyzList = xyzList.substring(0, pt);
     }
     pt = xyzList.indexOf(".");
     if (pt > 0 && (hasTransform || isJmolCode)) {
@@ -282,23 +283,24 @@ public class SpaceGroupFinder {
     Lst<Object> genPos;
     Map<String, Object> setting = null;
     int iset = 0;
-    String itaIndex = xyzList;
+    String itaIndex = xyzList; // may be Hall or jmolId as well
     if (isHall) {
       genPos = (Lst<Object>) uc.getSpaceGroupInfoObj("nameToXYZList", "Hall:" + xyzList, false, false);
       if (genPos == null)
         return null;
     } else {
+      name = (hasTransform ? transform : itaIndex);
+      sg = SpaceGroup.getSpaceGroupFromJmolClegOrITA(hasTransform ? clegId : itaIndex);
       Object o = uc.getSpaceGroupJSON(vwr, "ITA", itaIndex, 0);
       if (o == null || o instanceof String) {
         return null;
       }
       sgdata = (Map<String, Object>) o;
       if (isJmolCode || hasTransform) {
-        name = (hasTransform ? transform : itaIndex);
         Lst<Object> its = (Lst<Object>) sgdata.get("its");
-        sgdata = null;
         if (its == null)
           return null;
+        sgdata = null;
         for (int i = 0, c = its.size(); i < c; i++) {
           setting = (Map<String, Object>) its.get(i);
           if (name.equals(setting.get(hasTransform ? "trm" : "jmolId"))) {
@@ -311,34 +313,38 @@ public class SpaceGroupFinder {
         if (sgdata == null || !sgdata.containsKey("jmolId")) {
           if (isJmolCode) {
             // trying to get an ITA from a Jmol code with ITA like ITA/12:abc
-            return null;
+            return null;    
           }
           // nonstandard transform
-          sgdata = (Map<String, Object>) its.get(0);
+          setting = null;
+          if (sgdata != null)
+            transform = (String) sgdata.get("trm");
           hasTransform = true;
-          transform = (String) setting.get("trm");
+          sgdata = (Map<String, Object>) its.get(0);
         } else {
+          // we have sgdata, and we have a jmolId
+          // we can just set this from the sg and the general positions
+          // if we also found the space group
           setting = null;
           // done here
           hasTransform = false;
           transform = null;
-          // not so fast...          unitCellParams = null;
         }
       } else {
         name = (String) sgdata.get("jmolId");
-        // may be "?" unknown to Jmol
       }
       //      boolean isKnownToITAButNotToJmol = isJmolCode && (name.indexOf("?") < 0);
       genPos = (Lst<Object>) sgdata.get("gp");
-
     }
-    sg = SpaceGroup.transformSpaceGroup(null, null, genPos,
+    if (sg != null && transform == null) {
+      sg = SpaceGroup.createITASpaceGroup(genPos, sg);
+      return sg;
+    }
+    sg = SpaceGroup.transformSpaceGroup(null, sg, genPos,
         (hasTransform ? transform : null),
         (hasTransform ? trm = new M4d() : null));
     if (sg == null)
       return null;
-    if (setting != null)
-      sgdata = setting;
     name = "";
     if (sg.itaNumber.equals("0")) {
       if (transform == null) {
@@ -349,44 +355,8 @@ public class SpaceGroupFinder {
       iset = 1;
       name = null;
       System.out.println("SpaceGroupFinder: new setting: " + sg.asString());
-    } else if (transform != null && setting != null) {
-      name = null;
     }
-    if (name == null) {
-      sg.setITATableNames(null, itano, "" + iset, (String) setting.get("trm"));
-      sg.setName(itano + (hasTransform ? ":" + transform : ""));
-    }
-
-
-    return sg.getName();
-    //    boolean isITA = (PT.parseInt(sg.itaNumber) > 0);
-    //    String hm = (isITA ? (String) sgdata.get("hm");
-    //    String tr = (String) sgdata.get("trm");
-    //    sg.hmSymbol = PT.rep(hm, " ", "");
-    //    String s = (String) sgdata.get("hall");
-    //    if (!"xyz".equals(s))
-    //      sg.hallSymbol = s;
-    //    //ok, this is going to be incorrect
-    //    sg.hmSymbolFull = hm;
-    //
-    //    sg.setITATableNames((String) sgdata.get("jmolId"), "" + sgdata.get("sg"),
-    //        "" + sgdata.get("set"), (hasTransform ? transform : tr));
-    //
-    //    char axis = hm.toLowerCase().charAt(0);
-    //    if (UnitCell.isHexagonalSG(PT.parseInt(sg.itaNumber), null)) {
-    //      axis = (hm.indexOf(":R") > 0 ? 'r' : 'h');
-    //    }
-    //    switch (axis) {
-    //    case 'a':
-    //    case 'b':
-    //    case 'c':
-    //    case 'r':
-    //    case 'h':
-    //      sg.axisChoice = axis;
-    //      break;
-    //    }
-    //    
-    //    return name;
+    return sg;
   }
 
 

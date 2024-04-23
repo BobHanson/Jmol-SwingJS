@@ -314,19 +314,6 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String getSpaceGroupTitle() {
-    if (symmetryInfo != null)
-      return symmetryInfo.getSpaceGroupTitle();
-    String s = getSpaceGroupName();
-    if (s.startsWith("cell="))
-      return s;
-    return (spaceGroup != null ? spaceGroup.asString()
-        : unitCell != null && unitCell.name.length() > 0
-            ? "cell=" + unitCell.name
-            : "");
-  }
-
-  @Override
   public String getSpaceGroupNameType(String type) {
     return (spaceGroup == null ? null : spaceGroup.getNameType(type, this));
   }
@@ -464,7 +451,7 @@ public class Symmetry implements SymmetryInterface {
             : unitCell.getF2C()));
     boolean ret = uc.isSameAs(myf2c);
     if (symmetryInfo != null) {
-      if (symmetryInfo.setIsActiveCell(ret)) {
+      if (symmetryInfo.setIsCurrentCell(ret)) {
         setUnitCellFromParams(symmetryInfo.spaceGroupF2CParams, false,
             Double.NaN);
       }
@@ -793,7 +780,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Lst<P3d> generateCrystalClass(P3d pt00) {
-    if (symmetryInfo == null || !symmetryInfo.isActive)
+    if (symmetryInfo == null || !symmetryInfo.isCurrentCell)
       return null;
     M4d[] ops = getSymmetryOperations();
     Lst<P3d> lst = new Lst<P3d>();
@@ -1544,49 +1531,8 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public String getUnitCellDisplayName() {
-    String name = (symmetryInfo != null ? symmetryInfo.displayName
+    String name = (symmetryInfo != null ? symmetryInfo.getDisplayName(this)
         : spaceGroup != null ? spaceGroup.getDisplayName() : null);
-    if (name == null) {
-      if (spaceGroup != null) {
-        name = spaceGroup.getDisplayName();
-      } else {
-        boolean isPolymer = isPolymer();
-        boolean isSlab = isSlab();
-        String sgName = (isPolymer ? "polymer"
-            : isSlab ? "slab" : getSpaceGroupTitle());
-        if (sgName == null)
-          return null;
-        if (sgName.startsWith("cell=!"))
-          sgName = "cell=inverse[" + sgName.substring(6) + "]";
-        sgName = PT.rep(sgName, ";0,0,0", "");
-        if (sgName.indexOf("#") < 0) {
-          String trm = getIntTableTransform();
-          String intTab = getIntTableIndex();
-          if (!isSlab && !isPolymer && intTab != null) {
-            if (trm != null) {
-              int pt = sgName.indexOf(trm);
-              if (pt >= 0) {
-                sgName = PT.rep(sgName, "(" + trm + ")", "");
-              }
-              if (intTab.indexOf(trm) < 0) {
-                pt = intTab.indexOf(".");
-                if (pt > 0)
-                  intTab = intTab.substring(0, pt);
-                intTab += ":" + trm;
-              }
-            }
-            sgName = (sgName.startsWith("0") ? "" : sgName + " #") + intTab;
-          }
-        }
-        name = sgName;
-      }
-      if (name.indexOf(SpaceGroup.NO_NAME) >= 0)
-        name = "";
-      if (symmetryInfo != null)
-        symmetryInfo.displayName = name;
-      else
-        spaceGroup.displayName = name;
-    }
     return (name.length() > 0 ? name : null);
   }
 
@@ -1607,6 +1553,17 @@ public class Symmetry implements SymmetryInterface {
   public int getFinalOperationCount() {
     setFinalOperations(3, null, null, -1, -1, false, null);
     return spaceGroup.getOperationCount();
+  }
+
+  @Override
+  public Object convertTransform(String transform, M4d trm) {
+    if (transform == null) {
+      return staticGetTransformABC(trm, false);
+    }
+    if (trm == null)
+      trm = new M4d();
+    UnitCell.getMatrixAndUnitCell(null, transform, trm);
+    return trm;
   }
   
 }

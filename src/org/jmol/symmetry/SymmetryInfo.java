@@ -34,6 +34,9 @@ import javajs.util.PT;
 
 class SymmetryInfo {
 
+  boolean isCurrentCell = true;
+  private String displayName;
+
   boolean coordinatesAreFractional;
   boolean isMultiCell;
   String sgName, sgTitle;
@@ -42,11 +45,11 @@ class SymmetryInfo {
   String infoStr;
   int[] cellRange;
   char latticeType = 'P';
-  public String intlTableNo;
+  String intlTableNo;
   /**
    * actually just the Jmol id, such as 3:abc
    */
-  public String intlTableJmolID;
+  String intlTableJmolID;
   private int spaceGroupIndex;
 
   double[][] spaceGroupF2C;
@@ -150,7 +153,7 @@ class SymmetryInfo {
     return unitCellParams;
   }
 
-  public SymmetryOperation[] getAdditionalOperations() {
+  SymmetryOperation[] getAdditionalOperations() {
     if (additionalOperations == null && symmetryOperations != null) {
       additionalOperations = SymmetryOperation.getAdditionalOperations(symmetryOperations);
     }
@@ -159,24 +162,59 @@ class SymmetryInfo {
 
   private SpaceGroup sgDerived;
   
-  public SpaceGroup getDerivedSpaceGroup() {
+  SpaceGroup getDerivedSpaceGroup() {
     if (sgDerived == null) {
       sgDerived = SpaceGroup.getSpaceGroupFromIndex(spaceGroupIndex);
     }
     return sgDerived;
   }
 
-  boolean isActive = true;
-  String displayName;
-
-  public boolean setIsActiveCell(boolean TF) {
-    return (isActive != TF && (isActive = TF) == true);
+  boolean setIsCurrentCell(boolean TF) {
+    return (isCurrentCell != TF && (isCurrentCell = TF) == true);
   }
 
 
-  public String getSpaceGroupTitle() {
-    return (isActive && spaceGroupF2CTitle != null ? spaceGroupF2CTitle 
+  String getSpaceGroupTitle() {
+    return (isCurrentCell && spaceGroupF2CTitle != null ? spaceGroupF2CTitle 
       : sgName.startsWith("cell=") ? sgName : sgTitle);
+  }
+
+
+  String getDisplayName(Symmetry sym) {
+    if (displayName == null) {
+      boolean isPolymer = sym.isPolymer();
+      boolean isSlab = sym.isSlab();
+      String sgName = (isPolymer ? "polymer"
+          : isSlab ? "slab" : getSpaceGroupTitle());
+      if (sgName == null)
+        return null;
+      if (sgName.startsWith("cell=!"))
+        sgName = "cell=inverse[" + sgName.substring(6) + "]";
+      sgName = PT.rep(sgName, ";0,0,0", "");
+      if (sgName.indexOf("#") < 0) {
+        String trm = intlTableTransform;
+        String intTab = intlTableIndex;
+        if (!isSlab && !isPolymer && intTab != null) {
+          if (trm != null) {
+            int pt = sgName.indexOf(trm);
+            if (pt >= 0) {
+              sgName = PT.rep(sgName, "(" + trm + ")", "");
+            }
+            if (intTab.indexOf(trm) < 0) {
+              pt = intTab.indexOf(".");
+              if (pt > 0)
+                intTab = intTab.substring(0, pt);
+              intTab += ":" + trm;
+            }
+          }
+          sgName = (sgName.startsWith("0") ? "" : sgName + " #") + intTab;
+        }
+      }
+      if (sgName.indexOf(SpaceGroup.NO_NAME) >= 0)
+        sgName = "";
+      displayName = sgName;
+    }
+    return displayName;
   }
 
 
