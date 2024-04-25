@@ -5018,6 +5018,43 @@ public class CmdExt extends ScriptExt {
       }
       break;
     case T.spacegroup:
+      String sdiag = eval.optParameterAsString(2);
+      SymmetryInterface sym = vwr.getOperativeSymmetry();
+      if (sdiag.toLowerCase().startsWith("diagram")) {
+        if (chk)
+          break;
+        sdiag = PT.trim(sdiag.substring(7).trim(), "\"");
+        if (sdiag.length() == 0) {
+          if (sym == null) {
+            msg = "Include a space group name or number to view its diagram";
+            break;
+          }
+          sdiag = sym.getIntTableNumber();
+          if (sdiag == null || sdiag.equals("0")) {
+            msg = "Can't display a table; don't have an ITA number.";
+            break;
+          }
+        }
+        int ita = PT.parseInt(sdiag);
+        if (ita == Integer.MIN_VALUE) {
+          if (sym == null) {
+            sym = vwr.getSymStatic();
+          }
+          Map<String, Object> info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
+                  PT.rep(sdiag, "''", "\""), -1, true, null);
+          if (info == null) {
+            msg = "Could not find space group " + sdiag;
+            break;  
+          }
+          ita = ((Integer) ((Map<String, Object>) info.get("spaceGroupInfo")).get("ita")).intValue();
+        }
+        String href = JC.resolveDataBase("imageita", PT.formatS("" + ita, 3, 0, false, true), null);
+        msg = href;
+        vwr.showUrl(href);
+        len = slen;
+        break;
+      }
+      //$FALL-THROUGH$
     case T.symop:
       msg = "";
       Map<String, Object> info = null;
@@ -5040,7 +5077,8 @@ public class CmdExt extends ScriptExt {
       }
       if (info != null) {
         msg = (tok == T.spacegroup
-            ? "" + info.get(JC.INFO_SPACE_GROUP_INFO) + info.get(JC.INFO_SPACE_GROUP_NOTE)
+            ? "" + info.get(JC.INFO_SPACE_GROUP_INFO)
+                + info.get(JC.INFO_SPACE_GROUP_NOTE)
             : "")
             + (info.containsKey("symmetryInfo") ? info.get("symmetryInfo")
                 : "");
@@ -5303,7 +5341,8 @@ public class CmdExt extends ScriptExt {
     case T.data:
       String dtype = ((len = slen) == 3 ? paramAsStr(2) : null);
       if (!chk) {
-        Object data = vwr.getDataObj(dtype, null, JmolDataManager.DATA_TYPE_LAST);
+        Object data = vwr.getDataObj(dtype, null,
+            JmolDataManager.DATA_TYPE_LAST);
         boolean isType = (dtype != null && "types".equals(dtype.toLowerCase()));
         boolean isAll = (isType || "*".equals(dtype));
         if (data == null) {
@@ -5320,10 +5359,10 @@ public class CmdExt extends ScriptExt {
               ((Integer) odata[JmolDataManager.DATA_TYPE]).intValue());
         }
         if (msg == null) {
-          String[] sdata = (String[])data;
+          String[] sdata = (String[]) data;
           if (isType) {
-            sdata[1] = sdata[1].replace('\n',',');
-          }          
+            sdata[1] = sdata[1].replace('\n', ',');
+          }
           msg = Escape.e(sdata);
         }
       }

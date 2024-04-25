@@ -190,6 +190,8 @@ public final class JC {
 
   private final static String[] databaseArray = {
       // still http:
+      "imageita",
+      "https://onlinelibrary.wiley.com/iucr/itc/Ac/ch2o3v0001/sgtable2o3o%FILE",
       "aflowbin",
       "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
       "aflowlib", "https://aflow.org/p/%FILE.cif", // updated 2024.04.22

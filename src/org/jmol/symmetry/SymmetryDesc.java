@@ -776,6 +776,7 @@ public class SymmetryDesc {
     char glideType = 0;
     int order = op.getOpOrder();
     Boolean isccw = op.getOpIsCCW();
+    int screwDir = 0;
 
     if (bsInfo.get(RET_LABEL) || bsInfo.get(RET_TYPE)) {
 
@@ -787,10 +788,11 @@ public class SymmetryDesc {
         info1 = "Ci: " + strCoord(ptemp, op.isBio);
         type = "inversion center";
       } else if (isRotation) {
-        String screwtype = (isccw == null 
-            //|| (haveInversion || pitch1 == 0)
-            ? ""
-            : isccw == Boolean.TRUE ? "(+)" : "(-)");
+        String screwtype = "";
+        if (isccw != null) {
+          screwtype = (isccw == Boolean.TRUE ? "(+)" : "(-)");
+          screwDir = (isccw == Boolean.TRUE ? 1 : -1);
+        }
         if (haveInversion) {
           // n-bar
           info1 = (360 / ang) + "-bar" + screwtype + " axis";
@@ -802,7 +804,9 @@ public class SymmetryDesc {
               + ") screw axis";
 
         } else {
-          info1 = "C" + (360 / ang) + screwtype + " axis";
+          info1 = (360 / ang) + screwtype + " axis";
+          if (order % 2 == 0)           
+            screwDir *= order / 2; // 6_3, 4_2
         }
         type = info1;
       } else if (trans != null) {
@@ -842,6 +846,7 @@ public class SymmetryDesc {
     boolean isRightHand = true;
     boolean isScrew = (isRotation && !haveInversion && pitch1 != 0);
     if (!isScrew) {
+      screwDir = 0;
       // not a screw axis
       isRightHand = checkHandedness(uc, ax1);
       if (!isRightHand) {
@@ -917,7 +922,7 @@ public class SymmetryDesc {
             // screw axis
             opType ="screw";
             color = (isccw == Boolean.TRUE ? "orange"
-                : isccw == Boolean.FALSE ? "yellow"
+                : isccw == Boolean.FALSE ? "orange" // was yellow
                     : order == 4 ? "lightgray" : "grey");
             if (!isSpaceGroup) {
               drawLine(drawSB, "rotLine1", 0.1d, pta00, pa1, "red");
@@ -1012,10 +1017,17 @@ public class SymmetryDesc {
           double d;
           // idea here is that we only show the smaller rotation if
           // there are, say, a 3(+)1/3 and a 3(-)2/3, because one implies the other.
+          // but there is no smaller rotation for 63(+)1/2 -- the rotation is 60o. All others generate translations.
+          
+          double opTransLength = 0;
           ignore = ignore || !op.opIsLong
               && (isSpaceGroupAll && pitch1 > 0 && !haveInversion
-                  && op.getOpTrans().length() > (order == 2 ? 0.71d
-                      : order == 3 ? 0.578d : order == 4 ? 0.51d : 0.3d));
+                  && (opTransLength = op.getOpTrans().length()) > (order == 2 ? 0.71d
+                      : order == 3 ? 0.578d : order == 4 ? 0.51d 
+                          // 6:  1/2 is OK
+                      //    : 0.3d
+                        : 0.51d  
+                      ));
           if (ignore && Logger.debugging) {
             System.out.println("SD ignoring " + op.getOpTrans().length() + " "
                 + op.getOpTitle() + op.xyz);
@@ -1072,12 +1084,33 @@ public class SymmetryDesc {
             wp = "" + (90 - (int) (vtemp.length() * wscale / pitch1 * 90));
           }
           if (!ignore) {
+            
+            if (screwDir != 0) {
+              switch (order) {
+              case 2:
+                // ignoring
+                break;
+              case 3:
+                // +/-1 is fine
+                break;
+              case 4:
+                if (opTransLength > 0.49)
+                  screwDir = -2;
+                break;
+              case 6:
+                if (opTransLength > 0.49)
+                  screwDir = -3; // convention
+                else if (opTransLength > 0.33)
+                  screwDir *= 2;
+                break;
+              }
+            }
             String name = opType + "_"+ order + "rotvector1";
             drawOrderVector(drawSB, name, "vector", THICK_LINE + wp, pa1,
-                order, 1, vtemp, isTimeReversed ? "gray" : color, title);
+                order, screwDir, haveInversion, 1, vtemp, isTimeReversed ? "gray" : color, title);
             if (p2 != null) {
               drawOrderVector(drawSB, name, "vector", THICK_LINE + wp,
-                  ptr, order, 2, vtemp, isTimeReversed ? "gray" : color, title);
+                  ptr, order, screwDir, haveInversion, 2, vtemp, isTimeReversed ? "gray" : color, title);
             }
           }
 
@@ -1535,26 +1568,42 @@ public class SymmetryDesc {
       sb.append(" \"" + title + "\"");
   }
 
-  private void drawOrderVector(SB sb, String label, String type,
-                               String d, P3d pt, int order, int index,
-                               V3d vtemp, String color, String title) {
+  private void drawOrderVector(SB sb, String label, String type, String d,
+                               P3d pt, int order, int screwDir,
+                               boolean haveInversion, int index, V3d vtemp,
+                               String color, String title) {
     if (index == 2)
       label += "b";
     drawVector(sb, label, type, d, pt, vtemp, color, title);
     if (order == 2)
       return;
-    P3d[] pts = getPolygon(order, pt, vtemp);
-    sb.append(getDrawID(label + "_key")).append(" POLYGON ").appendI(order);
-    for (int i = 0; i < order; i++)
-      sb.append(Escape.eP(pts[i]));
-    sb.append(" color ").append(color);  
+    Object[] poly = getPolygon(order, 0, false, pt, vtemp);
+    Lst<Object> l = (Lst<Object>) poly[0];
+    sb.append(getDrawID(label + "_key")).append(" POLYGON ").appendI(l.size());
+    for (int i = 0, n = l.size(); i < n; i++)
+      sb.appendO(l.get(i));
+    sb.append(" color ").append(color);
+    if (screwDir != 0) {
+      poly = getPolygon(order, screwDir, haveInversion, pt, vtemp);
+      sb.append(getDrawID(label + "_key2"));
+      l = (Lst<Object>) poly[0];
+      sb.append(" POLYGON ").appendI(l.size());
+      for (int i = 0, n = l.size(); i < n; i++)
+        sb.appendO(l.get(i));
+      l = (Lst<Object>) poly[1];
+      sb.appendI(l.size());
+      for (int i = 0, n = l.size(); i < n; i++)
+        sb.appendO(PT.toJSON(null, l.get(i)));
+      sb.append(" color ").append(color);
+    }
   }
   
-  private static P3d[] getPolygon(int order, P3d pt0, V3d v) {
-    double scale = 0.3d;
-    P3d[] pts = new P3d[order];
+  private static Object[] getPolygon(int order, int screwDir, boolean haveInversion, P3d pt0, V3d v) {
+    double scale = 0.4d;
+    Lst<P3d> pts = new Lst<>();
+    Lst<int[]> faces = new Lst<>();
     V3d offset = V3d.newV(v);
-    offset.scale(0.0d);
+    offset.scale(0);
     offset.add(pt0);
 
     V3d vZ = V3d.new3(0, 0, 1);
@@ -1568,15 +1617,34 @@ public class SymmetryDesc {
       double a = vZ.angle(v);
       m.setAA(A4d.newVA(vperp, a));
     }
-    double rad = Math.PI * 2 / order;
-    for (int i = 0; i < order; i++) {
-      P3d pt = pts[i] = new P3d();
+    double rad = Math.PI * 2 / order * (screwDir < 0 ? -1 : 1);
+    V3d vt = new V3d();
+    P3d ptLast = null;
+    for (int plast = 0, p = 0, i = 0, n = (screwDir == 0 ? order : order + 1); i < n; i++) {
+      P3d pt = new P3d();
       pt.x = Math.cos(rad * i) * scale;
       pt.y = Math.sin(rad * i) * scale;
       m.rotate(pt);
       pt.add(offset);
+      if (i < order) {
+        pts.addLast(pt);
+      }
+      if (screwDir != 0 && (i % screwDir == 0) && ptLast != null) {
+        vt.sub2(pt, ptLast);
+        int p2 = (i < order ? p++ : 0);
+        P3d pt1 = P3d.newP(pt);
+        //pt1.scaleAdd(0.5d, vt, pt); 
+        pt1.scaleAdd(1, pt, pt1);
+        pt1.scaleAdd(-1, offset, pt1);
+        pts.addLast(pt1);
+        faces.addLast(new int[] {plast, p++, p2, 0});
+        plast = p2;
+      } else {
+        plast = p++;
+      }
+      ptLast = pt;
     }
-    return pts;
+    return new Object[] { pts, faces };
   }
   
   
