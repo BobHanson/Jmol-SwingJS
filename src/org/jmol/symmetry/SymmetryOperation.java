@@ -1797,7 +1797,7 @@ public class SymmetryOperation extends M4d {
     String s = op.getOpName(PLANE_MODE_POSITION_ONLY);
     Lst<SymmetryOperation> l = mapPlanes.get(s);
     op.iCoincident = 0;
-    boolean havePlane = false;//(op.opType == TYPE_REFLECTION);
+    boolean havePlane = true;//(op.opType == TYPE_REFLECTION);
     if (l == null) {
       mapPlanes.put(s, l = new Lst<SymmetryOperation>());
     } else {

@@ -148,6 +148,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void setSpaceGroup(boolean doNormalize) {
+    symmetryInfo = null;
     if (spaceGroup == null)
       spaceGroup = SpaceGroup.getNull(true, doNormalize, false);
   }
@@ -179,6 +180,8 @@ public class Symmetry implements SymmetryInterface {
                                      boolean addNonstandard) {
     boolean isNameToXYZList = false;
     switch (name) {
+    case "list":
+      return getSpaceGroupList((Viewer) params);
     case "opsCtr":
       return spaceGroup.getOpsCtr((String) params);
     case "nameToXYZList": 
@@ -217,6 +220,18 @@ public class Symmetry implements SymmetryInterface {
       return SpaceGroup.getInfo(spaceGroup, name, (double[]) params, isFull,
           addNonstandard);
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  private String getSpaceGroupList(Viewer vwr) {
+    SB sb = new SB();
+    Lst<Object> list = (Lst<Object>) getSpaceGroupJSON(vwr, "ITA", "ALL", 0);
+    for (int i = 0, n = list.size(); i < n; i++) {
+      Map<String, Object> map = (Map<String, Object>) list.get(i);
+      sb.appendO(map.get("sg")).appendC('.').appendO(map.get("set"))
+        .appendC('\t').appendO(map.get("hm")).appendC('\t').appendO(map.get("sg")).appendC(':').appendO(map.get("trm")).appendC('\n');
+    }
+    return sb.toString();
   }
 
   @Override
@@ -306,8 +321,8 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public String getSpaceGroupName() {
-    return (symmetryInfo != null ? symmetryInfo.sgName
-        : spaceGroup != null ? spaceGroup.getName()
+    return (spaceGroup != null ? spaceGroup.getName()
+        : symmetryInfo != null ? symmetryInfo.sgName
             : unitCell != null && unitCell.name.length() > 0
                 ? "cell=" + unitCell.name
                 : "");
@@ -316,12 +331,6 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public String getSpaceGroupNameType(String type) {
     return (spaceGroup == null ? null : spaceGroup.getNameType(type, this));
-  }
-
-  @Override
-  public void setSpaceGroupName(String name) {
-    if (spaceGroup != null)
-      spaceGroup.setName(name);
   }
 
   @Override
@@ -367,14 +376,17 @@ public class Symmetry implements SymmetryInterface {
     return symmetryInfo == null ? null : symmetryInfo.cellRange;
   }
 
+  /**
+   * When information is desired about the space group, we use SymmetryInfo.
+   * 
+   */
   @Override
   public String getSymmetryInfoStr() {
     if (symmetryInfo != null)
       return symmetryInfo.infoStr;
     if (spaceGroup == null)
       return "";
-    (symmetryInfo = new SymmetryInfo()).setSymmetryInfo(null,
-        getUnitCellParams(), spaceGroup);
+    (symmetryInfo = new SymmetryInfo()).setSymmetryInfoFromModelkit(spaceGroup);
     return symmetryInfo.infoStr;
   }
 
@@ -890,6 +902,13 @@ public class Symmetry implements SymmetryInterface {
     return ((SpaceGroupFinder) Interface
         .getInterface("org.jmol.symmetry.SpaceGroupFinder", vwr, "eval"))
             .findSpaceGroup(vwr, atoms, xyzList, unitCellParams, origin, oabc, this, flags);
+  }
+
+  @Override
+  public void setSpaceGroupName(String name) {
+    symmetryInfo = null;
+    if (spaceGroup != null)
+      spaceGroup.setName(name);
   }
 
   @Override
@@ -1466,8 +1485,8 @@ public class Symmetry implements SymmetryInterface {
     Map<String, Object> modelAuxiliaryInfo = ms
         .getModelAuxiliaryInfo(modelIndex);
     symmetryInfo = new SymmetryInfo();
-    double[] params = symmetryInfo.setSymmetryInfo(modelAuxiliaryInfo,
-        unitCellParams, null);
+    double[] params = symmetryInfo.setSymmetryInfoFromFile(modelAuxiliaryInfo,
+        unitCellParams);
     if (params != null) {
       setUnitCellFromParams(params, modelAuxiliaryInfo.containsKey("jmolData"),
           Double.NaN);
@@ -1531,8 +1550,8 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public String getUnitCellDisplayName() {
-    String name = (symmetryInfo != null ? symmetryInfo.getDisplayName(this)
-        : spaceGroup != null ? spaceGroup.getDisplayName() : null);
+    String name = (spaceGroup != null ? spaceGroup.getDisplayName()
+        : symmetryInfo != null ? symmetryInfo.getDisplayName(this) : null);
     return (name.length() > 0 ? name : null);
   }
 
@@ -1565,5 +1584,11 @@ public class Symmetry implements SymmetryInterface {
     UnitCell.getMatrixAndUnitCell(null, transform, trm);
     return trm;
   }
+
+  @Override
+  public P3d[] getCanonicalCopyTrimmed(P3d frac, double scale) {
+    return unitCell.getCanonicalCopyTrimmed(frac, scale);
+  }
+
   
 }

@@ -36,8 +36,10 @@ import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 
+import javajs.util.A4d;
 import javajs.util.BS;
 import javajs.util.Lst;
+import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
 import javajs.util.P3d;
@@ -109,6 +111,14 @@ public class SymmetryDesc {
       "inversionCenter", null /*point*/, "axisVector", "rotationAngle",
       "matrix", "unitTranslation", "centeringVector", "timeReversal", "plane",
       "_type", "id", "cif2", "xyzCanonical", "xyzNormalized" };
+
+  private static final String PLANE_COLOR_MIRROR = "magenta";
+  private static final String PLANE_COLOR_A_GLIDE = "[x08CCF9]"; // azure 
+  private static final String PLANE_COLOR_B_GLIDE = "blue";
+  private static final String PLANE_COLOR_C_GLIDE = "cyan";
+  private static final String PLANE_COLOR_D_GLIDE = "grey";
+  private static final String PLANE_COLOR_G_GLIDE = "lightgreen";
+  private static final String PLANE_COLOR_N_GLIDE = "orange"; // naranja
 
   //////////// private methods ///////////
 
@@ -927,7 +937,7 @@ public class SymmetryDesc {
             }
             if (haveInversion) {
               // rotation-inversion
-              opType = "rotinv";
+              opType = "bar";
 
               if (isSpaceGroup) {
                 vtemp.normalize();
@@ -1062,12 +1072,12 @@ public class SymmetryDesc {
             wp = "" + (90 - (int) (vtemp.length() * wscale / pitch1 * 90));
           }
           if (!ignore) {
-            String name = opType + order + "rotVector1";
-            drawVector(drawSB, name, "vector", THICK_LINE + wp, pa1,
-                vtemp, isTimeReversed ? "gray" : color, title);
+            String name = opType + "_"+ order + "rotvector1";
+            drawOrderVector(drawSB, name, "vector", THICK_LINE + wp, pa1,
+                order, 1, vtemp, isTimeReversed ? "gray" : color, title);
             if (p2 != null) {
-              drawVector(drawSB, name + "b", "vector", THICK_LINE + wp,
-                  ptr, vtemp, isTimeReversed ? "gray" : color, title);
+              drawOrderVector(drawSB, name, "vector", THICK_LINE + wp,
+                  ptr, order, 2, vtemp, isTimeReversed ? "gray" : color, title);
             }
           }
 
@@ -1085,30 +1095,28 @@ public class SymmetryDesc {
           opType = "plane";
           P4d p = P4d.newPt(plane);
           if (trans == null) {
-            color = "green";
+            color = PLANE_COLOR_MIRROR;
           } else {
             opType = "glide";
             switch (glideType) {
-            case 'g':
-              color = "gold";
-              break;
             case 'a':
-              color = "magenta";
+              color = PLANE_COLOR_A_GLIDE;
               break;
             case 'b':
-              color = "violet";
+              color = PLANE_COLOR_B_GLIDE;          
               break;
             case 'c':
-              color = "blue";
+              color = PLANE_COLOR_C_GLIDE;
               break;
             case 'n':
-              color = "orange";
+              color = PLANE_COLOR_N_GLIDE;
               break;
             case 'd':
-              color = "grey";
+              color = PLANE_COLOR_D_GLIDE;
               break;
+            case 'g':
             default:
-              color = "grey";
+              color = PLANE_COLOR_G_GLIDE;
               break;
             }
             // offset ever so slightly so that we can show both in #40
@@ -1130,19 +1138,21 @@ public class SymmetryDesc {
           // guaranteed to get cutoffs.
 
           // returns triangles and lines
+          boolean doTrim = isSpaceGroupAll && false; // maybe not worth it?
+          P3d[] points = getPoints(uc, margin, p, ax1, doTrim);
           Lst<Object> v = modelSet.vwr.getTriangulator().intersectPlane(p,
-              uc.getCanonicalCopy(margin, true), 3);
+              points, 3);
           if (v != null) {
-            boolean isCoincident = (isSpaceGroup && op.isCoincident);
+            int iCoincident = (isSpaceGroup ? op.iCoincident : 0);
             planeCenter = new P3d();
 
             for (int i = v.size(); --i >= 0;) {
               P3d[] pts = (P3d[]) v.get(i);
               // these lines provide a rendering when side-on
-              drawSB.append(getDrawID((trans == null ? "m" : "g") 
+              drawSB.append(getDrawID((trans == null ? "mirror_" : glideType + "_g") 
                   + "planep" + i)).append(Escape.eP(pts[0])).append(Escape.eP(pts[1]));
               if (pts.length == 3) {
-                if (!isCoincident || (i % 2 == 0) != (trans == null)) {
+                if (iCoincident == 0 || (i % 2 == 0) != (iCoincident == 1)) {
                   drawSB.append(Escape.eP(pts[2]));
                 }
               } else {
@@ -1178,7 +1188,7 @@ public class SymmetryDesc {
         if (haveInversion) {
           opType = "inv";
           if (isInversionOnly) {
-            drawSB.append(getDrawID("invPoint")).append(" diameter 0.4 ")
+            drawSB.append(getDrawID("inv_point")).append(" diameter 0.4 ")
                 .append(Escape.eP(ipt));
             if (title != null)
               drawSB.append(" ").append(PT.esc(title));
@@ -1234,7 +1244,7 @@ public class SymmetryDesc {
             ptref = (isSpaceGroup ? pta00 : P3d.newP(pta00));
           }
           if (ptref != null && !ignore) {
-            drawVector(drawSB, "transVector", "vector",
+            drawVector(drawSB,  (glideType == '\0' ? "centering_" : glideType + "_g") + "trans_vector", "vector",
                 (isTranslationOnly ? THICK_LINE : THIN_LINE), ptref, trans,
                 isTimeReversed && !haveInversion && !isMirrorPlane
                     && !isRotation ? "darkGray" : "gold",
@@ -1434,6 +1444,30 @@ public class SymmetryDesc {
     return ret;
   }
 
+  @SuppressWarnings("unused")
+  private P3d[] getPoints(SymmetryInterface uc, double margin, P4d p, P3d ax1,
+                          boolean doTrim) {
+    P3d fx = null;
+    if (doTrim) {
+      fx = P3d.newP(ax1);
+      uc.toFractional(fx, true);
+      if (approx0d(fx.x) == 0 && approx0d(fx.y) == 0) {
+        // perpendicular to c
+        fx.set(0.5d, 1, 1);
+      } else if (approx0d(fx.x) == 0 && approx0d(fx.z) == 0) {
+        // perpendicular to b
+        fx.set(1, 0.5d, 1);
+      } else if (approx0d(fx.y) == 0 && approx0d(fx.z) == 0) {
+        // perpendicular to a
+        fx.set(1, 1, 0.5d);
+      } else {
+        fx = null;
+      }
+    }
+    return (fx == null ? uc.getCanonicalCopy(margin, true)
+        : uc.getCanonicalCopyTrimmed(fx, margin));
+  }
+
   private static void fixGlideTrans(V3d ftrans) {
     // set all +3/4 to -1/4
     ftrans.x = fixGlideX(ftrans.x);
@@ -1501,6 +1535,51 @@ public class SymmetryDesc {
       sb.append(" \"" + title + "\"");
   }
 
+  private void drawOrderVector(SB sb, String label, String type,
+                               String d, P3d pt, int order, int index,
+                               V3d vtemp, String color, String title) {
+    if (index == 2)
+      label += "b";
+    drawVector(sb, label, type, d, pt, vtemp, color, title);
+    if (order == 2)
+      return;
+    P3d[] pts = getPolygon(order, pt, vtemp);
+    sb.append(getDrawID(label + "_key")).append(" POLYGON ").appendI(order);
+    for (int i = 0; i < order; i++)
+      sb.append(Escape.eP(pts[i]));
+    sb.append(" color ").append(color);  
+  }
+  
+  private static P3d[] getPolygon(int order, P3d pt0, V3d v) {
+    double scale = 0.3d;
+    P3d[] pts = new P3d[order];
+    V3d offset = V3d.newV(v);
+    offset.scale(0.0d);
+    offset.add(pt0);
+
+    V3d vZ = V3d.new3(0, 0, 1);
+    V3d vperp = new V3d();
+    M3d m = new M3d();
+    vperp.cross(vZ, v);
+    if (vperp.length() < 0.01d) {
+      m.m00 = m.m11 = m.m22 = 1;
+    } else {
+      vperp.normalize();
+      double a = vZ.angle(v);
+      m.setAA(A4d.newVA(vperp, a));
+    }
+    double rad = Math.PI * 2 / order;
+    for (int i = 0; i < order; i++) {
+      P3d pt = pts[i] = new P3d();
+      pt.x = Math.cos(rad * i) * scale;
+      pt.y = Math.sin(rad * i) * scale;
+      m.rotate(pt);
+      pt.add(offset);
+    }
+    return pts;
+  }
+  
+  
   private static P3d rotTransCart(SymmetryOperation op, SymmetryInterface uc,
                                   P3d pt00, V3d vtrans) {
     P3d p0 = P3d.newP(pt00);
@@ -1608,6 +1687,7 @@ public class SymmetryDesc {
     SymmetryOperation[] ops = null;
     if (pt2 == null) {
       if (xyz == null) {
+        // it's the additional operators that get us the coincidence business
         ops = (SymmetryOperation[]) (isSpaceGroupAll
             ? uc.getAdditionalOperations()
             : uc.getSymmetryOperations());
@@ -1636,7 +1716,7 @@ public class SymmetryDesc {
       SymmetryOperation opTemp = (SymmetryOperation) symTemp
           .getSpaceGroupOperation(i);
       if (isSpaceGroup)
-        opTemp.isCoincident = ops[iop].isCoincident;
+        opTemp.iCoincident = ops[iop].iCoincident;
       if (xyzOriginal != null)
         opTemp.xyzOriginal = xyzOriginal;
       opTemp.number = op;

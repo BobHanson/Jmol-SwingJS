@@ -52,8 +52,8 @@ class SymmetryInfo {
   String intlTableJmolID;
   private int spaceGroupIndex;
 
-  double[][] spaceGroupF2C;
   private String spaceGroupF2CTitle;
+  double[][] spaceGroupF2C;
   double[] spaceGroupF2CParams;
   /**
    * actual LOAD ... SUPERCELL a,b,c designation
@@ -66,62 +66,75 @@ class SymmetryInfo {
   SymmetryInfo() {    
   }
   
+  void setSymmetryInfoFromModelkit(SpaceGroup sg) {
+    // from Symmetry.getSymmetryInfoStr
+    cellRange = null;
+    sgName = sg.getName();
+    intlTableJmolID = sg.jmolId;
+    intlTableNo = sg.itaNumber;
+    latticeType = sg.latticeType;
+    symmetryOperations = sg.finalOperations;
+    coordinatesAreFractional = true;
+    setInfo(sg.getOperationCount());
+  }
   
   /**
    * 
-   * @param modelInfo from file reader; will be nonnull only when sg is null
+   * @param modelInfo
+   *        from file reader; will be nonnull only when sg is null
    * @param unitCellParams
    *        an array of parameters could be from model, but also could be from a
    *        trajectory listing
-   * @param sg space group determined by SpaceGroupFinder via modelkit
    * @return actual unit cell parameters
    */
-  double[] setSymmetryInfo(Map<String, Object> modelInfo, double[] unitCellParams,
-                          SpaceGroup sg) {
-    int symmetryCount;
-    if (sg == null) {
-      // from ModelAdapter only
-      spaceGroupIndex = ((Integer)modelInfo.remove(JC.INFO_SPACE_GROUP_INDEX)).intValue();
-      //we need to be passing the unit cell that matches the symmetry
-      //in the file -- primitive or otherwise -- 
-      //then convert it here to the right multiple.
-      cellRange = (int[]) modelInfo.remove(JC.INFO_UNIT_CELL_RANGE);
-      sgName = (String) modelInfo.get(JC.INFO_SPACE_GROUP);
-      spaceGroupF2C = (double[][]) modelInfo.remove("f2c");
-      spaceGroupF2CTitle = (String) modelInfo.remove("f2cTitle");
-      spaceGroupF2CParams = (double[]) modelInfo.remove("f2cParams");
-      sgTitle = (String) modelInfo.remove(JC.INFO_SPACE_GROUP_TITLE);
-      strSUPERCELL = (String) modelInfo.remove("supercell"); 
-      if (sgName == null || sgName == "")
-        sgName = "spacegroup unspecified";
-      intlTableNo = (String) modelInfo.get("intlTableNo");
-      intlTableIndex = (String) modelInfo.get("intlTableIndex");
-      intlTableTransform = (String) modelInfo.get("intlTableTransform");
-      intlTableJmolID = (String) modelInfo.remove("intlTableJmolID");
-      String s = (String) modelInfo.get("latticeType");
-        latticeType = (s == null ? 'P' : s.charAt(0));
-      symmetryCount = modelInfo.containsKey("symmetryCount")
-          ? ((Integer) modelInfo.get("symmetryCount")).intValue()
-          : 0;
-      symmetryOperations = (SymmetryOperation[]) modelInfo.remove("symmetryOps");
-      coordinatesAreFractional = modelInfo.containsKey("coordinatesAreFractional")
-          ? ((Boolean) modelInfo.get("coordinatesAreFractional")).booleanValue()
-          : false;
-      isMultiCell = (coordinatesAreFractional && symmetryOperations != null);
-      infoStr = "Spacegroup: " + sgName;
-    } else {
-      // from Symmetry.getSymmetryInfoStr
-      // from ModelKit
+  double[] setSymmetryInfoFromFile(Map<String, Object> modelInfo,
+                                   double[] unitCellParams) {
+    // from ModelAdapter only
+    spaceGroupIndex = ((Integer) modelInfo.remove(JC.INFO_SPACE_GROUP_INDEX))
+        .intValue();
+    //we need to be passing the unit cell that matches the symmetry
+    //in the file -- primitive or otherwise -- 
+    //then convert it here to the right multiple.
+    cellRange = (int[]) modelInfo.remove(JC.INFO_UNIT_CELL_RANGE);
+    sgName = (String) modelInfo.get(JC.INFO_SPACE_GROUP);
+    spaceGroupF2C = (double[][]) modelInfo.remove("f2c");
+    spaceGroupF2CTitle = (String) modelInfo.remove("f2cTitle");
+    spaceGroupF2CParams = (double[]) modelInfo.remove("f2cParams");
+    sgTitle = (String) modelInfo.remove(JC.INFO_SPACE_GROUP_TITLE);
+    strSUPERCELL = (String) modelInfo.remove("supercell");
+    if (sgName == null || sgName == "")
+      sgName = "spacegroup unspecified";
+    intlTableNo = (String) modelInfo.get("intlTableNo");
+    intlTableIndex = (String) modelInfo.get("intlTableIndex");
+    intlTableTransform = (String) modelInfo.get("intlTableTransform");
+    intlTableJmolID = (String) modelInfo.remove("intlTableJmolID");
+    String s = (String) modelInfo.get("latticeType");
+    latticeType = (s == null ? 'P' : s.charAt(0));
+    symmetryOperations = (SymmetryOperation[]) modelInfo.remove("symmetryOps");
+    coordinatesAreFractional = modelInfo.containsKey("coordinatesAreFractional")
+        ? ((Boolean) modelInfo.get("coordinatesAreFractional")).booleanValue()
+        : false;
+    isMultiCell = (coordinatesAreFractional && symmetryOperations != null);
+    if (unitCellParams == null)
+      unitCellParams = (double[]) modelInfo.get(JC.INFO_UNIT_CELL_PARAMS);
+    unitCellParams = (SimpleUnitCell.isValid(unitCellParams) ? unitCellParams
+        : null);
+    if (unitCellParams == null) {
+      coordinatesAreFractional = false;
+      symmetryOperations = null;
       cellRange = null;
-      sgName = sg.getName();
-      intlTableJmolID = sg.jmolId;
-      intlTableNo = sg.itaNumber;
-      latticeType = sg.latticeType;
-      symmetryCount = sg.getOperationCount();
-      symmetryOperations = sg.finalOperations;
-      coordinatesAreFractional = true;
-      infoStr = "Spacegroup: " + sgName;
+      infoStr = "";
+      modelInfo.remove(JC.INFO_UNIT_CELL_PARAMS);
     }
+    int symmetryCount = modelInfo.containsKey("symmetryCount")
+        ? ((Integer) modelInfo.get("symmetryCount")).intValue()
+        : 0;
+    setInfo(symmetryCount);
+    return unitCellParams;
+  }
+  
+  private void setInfo(int symmetryCount) {
+    String info = "Spacegroup: " + sgName;
     if (symmetryOperations != null) {
       String c = "";
       String s = "\nNumber of symmetry operations: "
@@ -136,22 +149,13 @@ class SymmetryInfo {
               + ")";
       }
       if (c.length() > 0)
-        infoStr += "\nCentering: " + c;
-      infoStr += s;
-      infoStr += "\n";
+        info += "\nCentering: " + c;
+      info += s;
+      info += "\n";
     }
-    if (unitCellParams == null)
-      unitCellParams = (double[]) modelInfo.get(JC.INFO_UNIT_CELL_PARAMS);
-    unitCellParams = (SimpleUnitCell.isValid(unitCellParams) ? unitCellParams : null);
-    if (unitCellParams == null) {
-      coordinatesAreFractional = false;
-      symmetryOperations = null;
-      cellRange = null;
-      infoStr = "";
-      modelInfo.remove(JC.INFO_UNIT_CELL_PARAMS);
-    }
-    return unitCellParams;
+    this.infoStr = info;
   }
+
 
   SymmetryOperation[] getAdditionalOperations() {
     if (additionalOperations == null && symmetryOperations != null) {

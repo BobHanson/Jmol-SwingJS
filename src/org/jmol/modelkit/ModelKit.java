@@ -1280,15 +1280,15 @@ public class ModelKit {
       sym.getUnitCell(sym0.getV0abc(null,null), false, "modelkit");
     SB  sb = new SB();
     String ret = assignSpaceGroup(sym, null, bs, paramsOrUC, PT.split(name, ">"), 0, null, null, sb);
-    String msg = sb.toString();
-    if (msg.endsWith("!"))
-      return msg;
+    if (ret.endsWith("!"))
+      return ret;
     if (isPacked) {
+      String transform = ret;
       BS bsModelAtoms = vwr.getThisModelAtoms();
-      int n = cmdAssignSpaceGroupPacked(bsModelAtoms, ret, cmd);
-      msg += "\n" + GT.i(GT.$("{0} atoms added"), n);
+      int n = cmdAssignSpaceGroupPacked(bsModelAtoms, transform, cmd);
+      sb.append("\n").append(GT.i(GT.$("{0} atoms added"), n));
     }
-    return msg;
+    return sb.toString();
   }
 
   /**
@@ -3460,7 +3460,7 @@ public class ModelKit {
     // modelkit spacegroup 10:b,c,a > -b+c,-b-c,a:0,1/2,0 > 13:a,-a-c,b
 
     if (index >= tokens.length)
-      return "invalid CLEG expression";
+      return "invalid CLEG expression!";
     boolean haveUCParams = (paramsOrUC != null);
     if (tokens.length > 1 && haveUCParams) {
       return "invalid syntax - can't mix transformations and UNITCELL option!";
@@ -3488,7 +3488,7 @@ public class ModelKit {
     System.out.println("MK " + token + " " + prevNode);
     if (prevNode == null) {      
       if (!ClegNode.checkSyntax(tokens, sym))
-        return "invalid CLEG expression";
+        return "invalid CLEG expression!";
       if (!haveUnitCell && !haveUCParams && (haveTransform || (pt = token.indexOf('.')) > 0)) {
         String ita = token.substring(0, pt);
         // easiest is to restart with the default configuration
@@ -3545,7 +3545,7 @@ public class ModelKit {
     if (isTransformOnly) {
       if (isFinal) {
         isUnknown = true;// now what?
-        return "CLEG pathway is incomplete";
+        return "CLEG pathway is incomplete!";
       }
       // not a setting, not a node; could be >>
       if (transform == null || transform.length() == 0)
@@ -3695,7 +3695,7 @@ public class ModelKit {
       String msg = transform + "\n" 
       + PT.join(tokens, '>' , 0) + "\n basis=" + basis;
       System.out.println("ModelKit trm=" + msg);
-      sb.append(msg);
+      sb.append(msg).append("\n");
       return transform;
     } catch (Exception e) {
       if (!Viewer.isJS)
