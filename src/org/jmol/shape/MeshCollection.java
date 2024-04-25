@@ -250,6 +250,7 @@ public abstract class MeshCollection extends Shape {
       switch (tok) {
       case T.display:
       case T.on:
+      case T.only:
       case T.frontlit:
       case T.backlit:
       case T.fullylit:
@@ -345,6 +346,13 @@ public abstract class MeshCollection extends Shape {
   } 
   
   protected void setTokenProperty(int tokProp, boolean bProp, boolean testD) {
+    if (tokProp == T.only) {
+      if (meshCount == 0)
+        return;
+      for (int i = 0; i < meshCount; i++)
+        meshes[i].visible = false;
+      tokProp = T.on;
+    }
     if (currentMesh == null) {
       String key = (explicitID && PT.isWild(previousMeshID) ? previousMeshID : null);
       Lst<Mesh> list = getMeshList(key, false);

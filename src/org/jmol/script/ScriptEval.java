@@ -9508,6 +9508,7 @@ public class ScriptEval extends ScriptExpr {
     case T.nada:
     case T.delete:
     case T.on:
+    case T.only:
     case T.off:
     case T.hide:
     case T.hidden:
@@ -9649,6 +9650,7 @@ public class ScriptEval extends ScriptExpr {
       switch (tokAt(i + 1)) {
       case T.nada:
       case T.on:
+      case T.only:
       case T.off:
       case T.displayed:
       case T.hidden:
