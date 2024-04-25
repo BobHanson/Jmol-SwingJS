@@ -5031,6 +5031,10 @@ public class CmdExt extends ScriptExt {
         len = 3;
         if (chk)
           break;
+        if (sg.startsWith("list/")) {
+          filter = sg.substring(4);
+          sg = "list";
+        }
         info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
             PT.rep(sg, "''", "\""), -1, false, null);
       }
@@ -6262,6 +6266,7 @@ public class CmdExt extends ScriptExt {
     case T.add:
     case T.moveto:
     case T.packed:
+    case T.zap:
       assign();
       return;
     case T.mutate:
@@ -6443,6 +6448,13 @@ public class CmdExt extends ScriptExt {
     BS bsModelAtoms = vwr.getThisModelAtoms();
     int i = ++e.iToken;
     int mode = tokAt(i); // ATOMS, BONDS, or CONNECT; defaults to ATOMS
+    if (mode == T.zap) {
+      if (!e.chk)
+        vwr.zap(false, false, false);
+      mode = tokAt(++i);
+      if (mode == T.nada)
+        return;
+    }
     int index = -1, index2 = -1;
     boolean isAtom = (mode == T.atoms);
     boolean isBond = (mode == T.bonds);
