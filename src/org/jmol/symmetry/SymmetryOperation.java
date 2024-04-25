@@ -94,7 +94,7 @@ public class SymmetryOperation extends M4d {
   private Boolean opIsCCW;
 
   boolean isIrrelevant;
-  boolean isCoincident;
+  int iCoincident;
 
   final static int PLANE_MODE_POSITION_ONLY = 0;
   final static int PLANE_MODE_NOTRANS = 1;
@@ -1783,29 +1783,31 @@ public class SymmetryOperation extends M4d {
   }
 
   /**
-   * Looking for coincidence. We only concern ourselves if there is at least one
-   * non-glide reflection.
+   * Looking for coincidence. 
    * 
-   * @param mapPlanes
+   * see #
+   * We only concern ourselves if there is at least one
+   * non-glide reflection.// why? e-glide will be coincident
+   * 
+   * @param mapPlanes coincident planes map
    * @param op
    */
   private static void addPlaneMap(Map<String, Lst<SymmetryOperation>> mapPlanes,
                                   SymmetryOperation op) {
     String s = op.getOpName(PLANE_MODE_POSITION_ONLY);
     Lst<SymmetryOperation> l = mapPlanes.get(s);
-    //System.out.println("SO ====" + s + "====" + op.getOpName(PLANE_MODE_FULL));
-    op.isCoincident = false;
-    boolean havePlane = (op.opType == TYPE_REFLECTION);
+    op.iCoincident = 0;
+    boolean havePlane = false;//(op.opType == TYPE_REFLECTION);
     if (l == null) {
       mapPlanes.put(s, l = new Lst<SymmetryOperation>());
     } else {
       SymmetryOperation op0 = l.get(0);
-      if (op0.isCoincident) {
-        op.isCoincident = true;
+      if (op0.iCoincident != 0) {
+        op.iCoincident = -op0.iCoincident;
       } else if (havePlane || (op0.opType == TYPE_REFLECTION)) {
-        op.isCoincident = true;
+        op.iCoincident = 1;
         for (int i = l.size(); --i >= 0;) {
-          l.get(i).isCoincident = true;
+          l.get(i).iCoincident = -1;
         }
       }
     }
@@ -1935,27 +1937,45 @@ public class SymmetryOperation extends M4d {
       fy = 3;
     if (fz == 9)
       fz = 3;
-    if (fx != 0 && fy != 0 && fz != 0) {
-      return (fx == 3 && fy == 3 && fz == 3 ? 'd'
-          : fx == 6 && fy == 6 && fz == 6 ? 'n' : 'g');
-    }
-    if (fx != 0 && fy != 0 || fy != 0 && fz != 0 || fz != 0 && fx != 0) {
-      // any two
-      if (fx == 3 && fy == 3 || fx == 3 && fz == 3 || fy == 3 && fz == 3) {
+    int nonzero = 3;
+    if (fx == 0)
+      nonzero--;
+    if (fy == 0)
+      nonzero--;
+    if (fz == 0)
+      nonzero--;
+    int sum = (int) (fx + fy + fz);
+    switch (nonzero) {
+    default:
+    case 1:
+      return (fx != 0 ? 'a' : fy != 0 ? 'b' : 'c');
+    case 2:
+      switch (sum) {
+      case 6:  // 1/4 1/4 
         return 'd';
-      }
-      if (fx == 6 && fy == 6 || fx == 6 && fz == 6 || fy == 6 && fz == 6) {
+      case 12:
+        P3d n = P3d.newP(ax1);
+        n.normalize();
+        // #230 
         // making sure here that this is truly a diagonal in the plane, not just
         // a glide parallel to a face on a diagonal plane! Mois Aroyo 2018
-        if (fx == 0 && ax1.x == 0 || fy == 0 && ax1.y == 0
-            || fz == 0 && ax1.z == 0) {
-          return 'g';
-        }
+        if (approx(n.x + n.y + n.z) == 1)
+          return 'n';
+        break;
+      }
+      // 'g'
+      break;
+    case 3:
+      switch (sum) { // 1/4 1/4 1/4 or 1/2 1/2 1/2
+      case 9:
+        return 'd';
+      case 18:
         return 'n';
       }
-      return 'g';
+      // 'g'
+      break;
     }
-    return (fx != 0 ? 'a' : fy != 0 ? 'b' : 'c');
+    return 'g';
   }
 
   static void rotateAndTranslatePoint(M4d m, P3d src, int ta, int tb, int tc,

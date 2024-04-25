@@ -264,6 +264,11 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     P3d[] pts = getScaledCell(withOffset);
     return BoxInfo.getCanonicalCopy(pts, scale);
   }
+  
+  public P3d[] getCanonicalCopyTrimmed(P3d frac, double scale) {
+    P3d[] pts = getScaledCellMult(frac, true);
+    return BoxInfo.getCanonicalCopy(pts, scale);
+  }
 
   P3d getCartesianOffset() {
     // for slabbing isosurfaces and rendering the ucCage
@@ -518,24 +523,33 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   private P3d[] getScaledCell(boolean withOffset) {
+    return getScaledCellMult(null, withOffset);
+  }
+  
+  private P3d[] getScaledCellMult(T3d mult, boolean withOffset) {
     P3d[] pts  = new P3d[8];
     P3d cell0 = null;
     P3d cell1 = null;
-    if (withOffset && unitCellMultiplier != null && unitCellMultiplier.z == 0) {
+    boolean isFrac = (mult != null);
+    if (!isFrac)
+      mult = this.unitCellMultiplier;
+    if (withOffset && mult != null && mult.z == 0) {
       cell0 = new P3d();
       cell1 = new P3d();
-      ijkToPoint3f((int) unitCellMultiplier.x, cell0, 0, 0);
-      ijkToPoint3f((int) unitCellMultiplier.y, cell1, 0, 0);
+      ijkToPoint3f((int) mult.x, cell0, 0, 0);
+      ijkToPoint3f((int) mult.y, cell1, 0, 0);
       cell1.sub(cell0);
     }
-    double scale = (unitCellMultiplier == null || unitCellMultiplier.z == 0 ? 1
-        : Math.abs(unitCellMultiplier.z));
+    double scale = (isFrac || mult == null || mult.z == 0 ? 1
+        : Math.abs(mult.z));
     for (int i = 0; i < 8; i++) {
       P3d pt = pts[i] = P3d.newP(BoxInfo.unitCubePoints[i]);
       if (cell0 != null) {
         pts[i].add3(cell0.x + cell1.x * pt.x, 
             cell0.y + cell1.y * pt.y,
             cell0.z + cell1.z * pt.z);
+      } else if (isFrac) {
+        pt.scaleT(mult);
       }
       pts[i].scale(scale);
       matrixFractionalToCartesian.rotTrans(pt);
@@ -633,7 +647,6 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       return t.setFromEigenVectors(unitVectors, eigenValues, "iso", "Uiso=" + f, null);
     }
     t.parBorU = parBorU;
-    
     double[] Bcart = new double[6];
 
     int ortepType = (int) parBorU[6];

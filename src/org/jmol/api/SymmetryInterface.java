@@ -207,6 +207,8 @@ public interface SymmetryInterface {
 
   P3d[] getCanonicalCopy(double scale, boolean withOffset);
 
+  P3d[] getCanonicalCopyTrimmed(P3d frac, double scale);
+
   Lst<P3d> getLatticeCentering();
 
   Object getLatticeDesignation();
