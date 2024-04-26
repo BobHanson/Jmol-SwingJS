@@ -119,6 +119,8 @@ public class SymmetryDesc {
   private static final String PLANE_COLOR_D_GLIDE = "grey";
   private static final String PLANE_COLOR_G_GLIDE = "lightgreen";
   private static final String PLANE_COLOR_N_GLIDE = "orange"; // naranja
+  private static final String COLOR_SCREW_1       = "orange";
+  private static final String COLOR_SCREW_2       = "blue";
 
   //////////// private methods ///////////
 
@@ -774,7 +776,9 @@ public class SymmetryDesc {
     String type = null;
 
     char glideType = 0;
+    boolean isIrrelevant = op.isIrrelevant;
     int order = op.getOpOrder();
+    op.isIrrelevant |= isIrrelevant;
     Boolean isccw = op.getOpIsCCW();
     int screwDir = 0;
 
@@ -862,7 +866,6 @@ public class SymmetryDesc {
     boolean ignore = false;
     String cmds = null;
     if (id != null && bsInfo.get(RET_DRAW)) {
-
       if (op.getOpType() == SymmetryOperation.TYPE_IDENTITY
           || isSpaceGroupAll && op.isIrrelevant) {
         if (Logger.debugging)
@@ -921,8 +924,8 @@ public class SymmetryDesc {
           if (pitch1 != 0 && !haveInversion) {
             // screw axis
             opType ="screw";
-            color = (isccw == Boolean.TRUE ? "orange"
-                : isccw == Boolean.FALSE ? "orange" // was yellow
+            color = (isccw == Boolean.TRUE ? COLOR_SCREW_1
+                : isccw == Boolean.FALSE ? COLOR_SCREW_2 // was yellow
                     : order == 4 ? "lightgray" : "grey");
             if (!isSpaceGroup) {
               drawLine(drawSB, "rotLine1", 0.1d, pta00, pa1, "red");
@@ -1020,14 +1023,41 @@ public class SymmetryDesc {
           // but there is no smaller rotation for 63(+)1/2 -- the rotation is 60o. All others generate translations.
           
           double opTransLength = 0;
-          ignore = ignore || !op.opIsLong
-              && (isSpaceGroupAll && pitch1 > 0 && !haveInversion
-                  && (opTransLength = op.getOpTrans().length()) > (order == 2 ? 0.71d
+          if (!op.opIsLong
+              && (isSpaceGroupAll && pitch1 > 0 && !haveInversion)) {
+            
+            // skewDir is what defines the pictogram direction. 
+            // Whichever one is >= 1/2 is the key, technically.
+            // So the challenge here is to indicate the right one. 
+            // Actually, this should probably just be to show the (+), 
+            // and then switch the symbol depending upon length, as discussed
+            // in ITA(1969) Table 4.1.7.
+            
+            // But, either way, when there is a large 6(+) script, so for 
+            // example, the rotation is (0,0,2/3), as in P6422 (#181), 
+            // there is also in the same location a SMALL 3(+), because the 
+            // 3(+) associated with the 6(+) is then (0,0,4/3) -- that is, 
+            // (0,0,1/3), and so the combination always produces an oppositely
+            // directed 3-skew symbol. 
+            
+            // The ITA simply ignores this and only shows the 6(+) symbol.
+
+            // The solution here had to be made earlier in the process, where
+            // multiple operations are available. Specifically, in the calculation
+            // of additonal operators. This is what SymmetryOperation.isIrrelevant is for. 
+            
+            // The following crazy calculation has to do with how symbols might
+            // change when changing settings, particularly :h>>:r.
+            // And perhaps the difference in diagonal 3-screw axes in cubic groups.
+            
+            ignore = ((opTransLength = op.getOpTrans().length()) > (order == 2 ? 0.71d
                       : order == 3 ? 0.578d : order == 4 ? 0.51d 
                           // 6:  1/2 is OK
                       //    : 0.3d
                         : 0.51d  
                       ));
+            
+          }
           if (ignore && Logger.debugging) {
             System.out.println("SD ignoring " + op.getOpTrans().length() + " "
                 + op.getOpTitle() + op.xyz);
@@ -1104,6 +1134,7 @@ public class SymmetryDesc {
                   screwDir *= 2;
                 break;
               }
+              color = (screwDir < 0 ? COLOR_SCREW_2 : COLOR_SCREW_1);
             }
             String name = opType + "_"+ order + "rotvector1";
             drawOrderVector(drawSB, name, "vector", THICK_LINE + wp, pa1,
@@ -1171,8 +1202,7 @@ public class SymmetryDesc {
           // guaranteed to get cutoffs.
 
           // returns triangles and lines
-          boolean doTrim = isSpaceGroupAll && false; // maybe not worth it?
-          P3d[] points = getPoints(uc, margin, p, ax1, doTrim);
+          P3d[] points = uc.getCanonicalCopy(margin, true);
           Lst<Object> v = modelSet.vwr.getTriangulator().intersectPlane(p,
               points, 3);
           if (v != null) {
@@ -1477,30 +1507,6 @@ public class SymmetryDesc {
     return ret;
   }
 
-  @SuppressWarnings("unused")
-  private P3d[] getPoints(SymmetryInterface uc, double margin, P4d p, P3d ax1,
-                          boolean doTrim) {
-    P3d fx = null;
-    if (doTrim) {
-      fx = P3d.newP(ax1);
-      uc.toFractional(fx, true);
-      if (approx0d(fx.x) == 0 && approx0d(fx.y) == 0) {
-        // perpendicular to c
-        fx.set(0.5d, 1, 1);
-      } else if (approx0d(fx.x) == 0 && approx0d(fx.z) == 0) {
-        // perpendicular to b
-        fx.set(1, 0.5d, 1);
-      } else if (approx0d(fx.y) == 0 && approx0d(fx.z) == 0) {
-        // perpendicular to a
-        fx.set(1, 1, 0.5d);
-      } else {
-        fx = null;
-      }
-    }
-    return (fx == null ? uc.getCanonicalCopy(margin, true)
-        : uc.getCanonicalCopyTrimmed(fx, margin));
-  }
-
   private static void fixGlideTrans(V3d ftrans) {
     // set all +3/4 to -1/4
     ftrans.x = fixGlideX(ftrans.x);
@@ -1568,6 +1574,7 @@ public class SymmetryDesc {
       sb.append(" \"" + title + "\"");
   }
 
+  @SuppressWarnings("unchecked")
   private void drawOrderVector(SB sb, String label, String type, String d,
                                P3d pt, int order, int screwDir,
                                boolean haveInversion, int index, V3d vtemp,
@@ -1633,7 +1640,6 @@ public class SymmetryDesc {
         vt.sub2(pt, ptLast);
         int p2 = (i < order ? p++ : 0);
         P3d pt1 = P3d.newP(pt);
-        //pt1.scaleAdd(0.5d, vt, pt); 
         pt1.scaleAdd(1, pt, pt1);
         pt1.scaleAdd(-1, offset, pt1);
         pts.addLast(pt1);
@@ -1783,8 +1789,12 @@ public class SymmetryDesc {
         return nullRet;
       SymmetryOperation opTemp = (SymmetryOperation) symTemp
           .getSpaceGroupOperation(i);
-      if (isSpaceGroup)
+      if (isSpaceGroup) {
         opTemp.iCoincident = ops[iop].iCoincident;
+      }
+      if (isSpaceGroupAll) {
+        opTemp.isIrrelevant = ops[iop].isIrrelevant;
+      }
       if (xyzOriginal != null)
         opTemp.xyzOriginal = xyzOriginal;
       opTemp.number = op;
@@ -2267,8 +2277,8 @@ public class SymmetryDesc {
       pta01.setT(fracA);
       op.rotTrans(pta01);
       uc.unitize(pta01);
-      System.err.println("" + imin + " " + pta01.distance(pta02) + " " + pta01
-          + " " + pta02 + " " + V3d.newVsub(pta02, pta01));
+//      System.err.println("" + imin + " " + pta01.distance(pta02) + " " + pta01
+//          + " " + pta02 + " " + V3d.newVsub(pta02, pta01));
     }
     return null;
   }

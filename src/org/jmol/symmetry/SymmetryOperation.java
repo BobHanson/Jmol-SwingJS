@@ -93,14 +93,18 @@ public class SymmetryOperation extends M4d {
   P4d opPlane;
   private Boolean opIsCCW;
 
+  /**
+   * a flag to indicate that we should not show this operation for DRAW SPACEGROUP ALL
+   * 
+   */
   boolean isIrrelevant;
   int iCoincident;
 
-  final static int PLANE_MODE_POSITION_ONLY = 0;
-  final static int PLANE_MODE_NOTRANS = 1;
-  final static int PLANE_MODE_FULL = 2;
+  final static int OP_MODE_POSITION_ONLY = 0;
+  final static int OP_MODE_NOTRANS = 1;
+  final static int OP_MODE_FULL = 2;
 
-  private String getOpName(int planeMode) {
+  private String getOpName(int opMode) {
     if (opType == TYPE_UNKNOWN)
       setOpTypeAndOrder();
     switch (opType) {
@@ -113,15 +117,15 @@ public class SymmetryOperation extends M4d {
     case TYPE_INVERSION:
       return "Inv" + op48(opPoint);
     case TYPE_REFLECTION:
-      return (planeMode == PLANE_MODE_POSITION_ONLY ? "" : "Plane") + opPlane;
+      return (opMode == OP_MODE_POSITION_ONLY ? "P" : "Plane") + opPlane;
     case TYPE_SCREW_ROTATION:
-      return "Screw" + opOrder + op48(opPoint) + op48(opAxis) + op48(opTrans)
-          + opIsCCW;
+      return (opMode == OP_MODE_POSITION_ONLY ? "S" + op48(opPoint) + op48(opAxis) : "Screw" + opOrder + op48(opPoint) + op48(opAxis) + op48(opTrans)
+          + opIsCCW);
     case TYPE_ROTOINVERSION:
       return "Nbar" + opOrder + op48(opPoint) + op48(opAxis) + opIsCCW;
     case TYPE_GLIDE_REFLECTION:
-      return (planeMode == PLANE_MODE_POSITION_ONLY ? "" : "Glide") + opPlane
-          + (planeMode == PLANE_MODE_FULL ? op48(opTrans) : "");
+      return (opMode == OP_MODE_POSITION_ONLY ? "" : "Glide") + opPlane
+          + (opMode == OP_MODE_FULL ? op48(opTrans) : "");
     }
     System.out.println("SymmetryOperation REJECTED TYPE FOR " + this);
     return "";
@@ -1643,7 +1647,7 @@ public class SymmetryOperation extends M4d {
   private void clearOp() {
     if (!isFinalized)
       doFinalize();
-    isIrrelevant = false;
+    isIrrelevant = false; // this can be a problem. 
     opTrans = null;
     opPoint = opPoint2 = null;
     opPlane = null;
@@ -1734,10 +1738,12 @@ public class SymmetryOperation extends M4d {
     for (int i = 0; i < n; i++) {
       SymmetryOperation op = ops[i];
       lst.addLast(op);
-      String s = op.getOpName(PLANE_MODE_NOTRANS);
+      String s = op.getOpName(OP_MODE_NOTRANS);
       xyzLst.append(s).appendC(';');
       if ((op.getOpType() & TYPE_REFLECTION) != 0)
-        addPlaneMap(mapPlanes, op);
+        addCoincidentMap(mapPlanes, op, TYPE_REFLECTION);
+      else if (op.getOpType() == TYPE_SCREW_ROTATION)
+        addCoincidentMap(mapPlanes, op, TYPE_SCREW_ROTATION);
     }
     for (int i = 1; i < n; i++) { // skip x,y,z
       ops[i].addOps(xyzLst, lst, mapPlanes, n, i);
@@ -1751,15 +1757,16 @@ public class SymmetryOperation extends M4d {
    * 
    * @param xyzList
    * @param lst
-   * @param mapPlanes
+   * @param mapCoincident
    * @param n0
    * @param isym
    */
   void addOps(SB xyzList, Lst<SymmetryOperation> lst,
-              Map<String, Lst<SymmetryOperation>> mapPlanes, int n0, int isym) {
+              Map<String, Lst<SymmetryOperation>> mapCoincident, int n0, int isym) {
     V3d t0 = new V3d();
     getTranslation(t0);
     boolean isPlane = ((getOpType() & TYPE_REFLECTION) == TYPE_REFLECTION);
+    boolean isScrew = (getOpType() == TYPE_SCREW_ROTATION);
     V3d t = new V3d();
 
     SymmetryOperation opTemp = null;
@@ -1774,7 +1781,9 @@ public class SymmetryOperation extends M4d {
             continue;
           if (opTemp.opCheckAdd(this, t0, n0, t, xyzList, lst, isym + 1)) {
             if (isPlane)
-              addPlaneMap(mapPlanes, opTemp);
+              addCoincidentMap(mapCoincident, opTemp, TYPE_REFLECTION);
+            else if (isScrew)
+              addCoincidentMap(mapCoincident, opTemp, TYPE_SCREW_ROTATION);
             opTemp = null;
           }
         }
@@ -1783,31 +1792,50 @@ public class SymmetryOperation extends M4d {
   }
 
   /**
-   * Looking for coincidence. 
+   * Looking for coincidence.
    * 
-   * see #
-   * We only concern ourselves if there is at least one
-   * non-glide reflection.// why? e-glide will be coincident
+   * see # We only concern ourselves if there is at least one non-glide
+   * reflection.// why? e-glide will be coincident
    * 
-   * @param mapPlanes coincident planes map
+   * @param mapCoincident
+   *        coincident planes map
    * @param op
+   * @param opType
    */
-  private static void addPlaneMap(Map<String, Lst<SymmetryOperation>> mapPlanes,
-                                  SymmetryOperation op) {
-    String s = op.getOpName(PLANE_MODE_POSITION_ONLY);
-    Lst<SymmetryOperation> l = mapPlanes.get(s);
+  private static void addCoincidentMap(Map<String, Lst<SymmetryOperation>> mapCoincident,
+                                       SymmetryOperation op, int opType) {
+    String s = op.getOpName(OP_MODE_POSITION_ONLY);
+    Lst<SymmetryOperation> l = mapCoincident.get(s);
     op.iCoincident = 0;
-    boolean havePlane = true;//(op.opType == TYPE_REFLECTION);
     if (l == null) {
-      mapPlanes.put(s, l = new Lst<SymmetryOperation>());
+      mapCoincident.put(s, l = new Lst<SymmetryOperation>());
     } else {
-      SymmetryOperation op0 = l.get(0);
-      if (op0.iCoincident != 0) {
-        op.iCoincident = -op0.iCoincident;
-      } else if (havePlane || (op0.opType == TYPE_REFLECTION)) {
+      if (opType == TYPE_SCREW_ROTATION) {
+        // we are getting rid of 3-screw in favor of 6-screw
+        if (op.opOrder == 6) {
+          for (int i = l.size(); --i >= 0;) {
+            SymmetryOperation op1 = l.get(i);
+            if (!op1.isIrrelevant)
+              switch (op1.opOrder) {
+              case 3:
+                op1.isIrrelevant = true;
+                break;
+              case 6:
+                // could check here for parity or length?
+                break;
+              }
+          }
+        }
         op.iCoincident = 1;
-        for (int i = l.size(); --i >= 0;) {
-          l.get(i).iCoincident = -1;
+      } else {
+        SymmetryOperation op0 = l.get(0);
+        if (op0.iCoincident == 0) {
+          op.iCoincident = 1;
+          for (int i = l.size(); --i >= 0;) {
+            l.get(i).iCoincident = -1;
+          }
+        } else {
+          op.iCoincident = -op0.iCoincident;
         }
       }
     }
@@ -1858,18 +1886,16 @@ public class SymmetryOperation extends M4d {
     setTranslation(t1);
     isFinalized = true;
     setOpTypeAndOrder();
-    if (!isIrrelevant && opType != TYPE_IDENTITY
-        && opType != TYPE_TRANSLATION) {
-      String s = getOpName(PLANE_MODE_NOTRANS) + ";";
-      if (xyzList.indexOf(s) < 0) {
-        xyzList.append(s);
-        lst.addLast(this);
-        isFinalized = true;
-        xyz = getXYZFromMatrix(this, false, false, false);
-        return true;
-      }
-    }
-    return false;
+    if (isIrrelevant || opType == TYPE_IDENTITY || opType == TYPE_TRANSLATION)
+      return false;
+    String s = getOpName(OP_MODE_NOTRANS) + ";";
+    if (xyzList.indexOf(s) >= 0)
+      return false;
+    xyzList.append(s);
+    lst.addLast(this);
+    isFinalized = true;
+    xyz = getXYZFromMatrix(this, false, false, false);
+    return true;
   }
 
   static void approx6Pt(T3d pt) {
@@ -1890,7 +1916,7 @@ public class SymmetryOperation extends M4d {
     if (opAxisCode != null) {
       return opAxisCode;
     }
-    char t = getOpName(PLANE_MODE_FULL).charAt(0); // four bits
+    char t = getOpName(OP_MODE_FULL).charAt(0); // four bits
     int o = opOrder; // 1,2,3,4,6   // 3 bits
     int ccw = (opIsCCW == null ? 0 : opIsCCW == Boolean.TRUE ? 1 : 2);
     String g = "", m = "";
