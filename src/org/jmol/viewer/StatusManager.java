@@ -664,10 +664,16 @@ public class StatusManager {
   
   synchronized void setSync(String mouseCommand) {
     if (syncingMouse) {
-      if (mouseCommand != null)
+      if (mouseCommand != null) {
+        String sJmol = getJmolScriptCallback(CBK.SYNC);
+        if (sJmol != null)
+          fireJmolScriptCallback(false, CBK.SYNC,
+              new Object[] { sJmol, mouseCommand, "sending mouseSync" }, true);
         syncSend(mouseCommand, "*", 0);
+      }
     } else if (!syncingScripts)
-      syncSend("!" + vwr.tm.getMoveToText(minSyncRepeatMs / 1000d, false), "*", 0);
+      syncSend("!" + vwr.tm.getMoveToText(minSyncRepeatMs / 1000d, false), "*",
+          0);
   }
 
   private boolean drivingSync;
