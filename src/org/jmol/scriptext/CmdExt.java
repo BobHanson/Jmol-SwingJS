@@ -4802,6 +4802,7 @@ public class CmdExt extends ScriptExt {
     return msg;
   }
 
+  @SuppressWarnings("unchecked")
   private void show() throws ScriptException {
     ScriptEval eval = e;
     String value = null;
@@ -5020,10 +5021,11 @@ public class CmdExt extends ScriptExt {
     case T.spacegroup:
       String sdiag = eval.optParameterAsString(2);
       SymmetryInterface sym = vwr.getOperativeSymmetry();
-      if (sdiag.toLowerCase().startsWith("diagram")) {
+      boolean isDiagram = sdiag.toLowerCase().startsWith("diagram");
+      if (isDiagram || sdiag.toLowerCase().startsWith("table")) {
         if (chk)
           break;
-        sdiag = PT.trim(sdiag.substring(7).trim(), "\"");
+        sdiag = PT.trim(sdiag.substring(isDiagram ? 7 : 5).trim(), "\"");
         if (sdiag.length() == 0) {
           if (sym == null) {
             msg = "Include a space group name or number to view its diagram";
@@ -5048,7 +5050,7 @@ public class CmdExt extends ScriptExt {
           }
           ita = ((Integer) ((Map<String, Object>) info.get("spaceGroupInfo")).get("ita")).intValue();
         }
-        String href = JC.resolveDataBase("imageita", PT.formatS("" + ita, 3, 0, false, true), null);
+        String href = JC.resolveDataBase(isDiagram ? "itadiagram" : "itatable", PT.formatS("" + ita, 3, 0, false, true), null);
         msg = href;
         vwr.showUrl(href);
         len = slen;
@@ -6629,7 +6631,8 @@ public class CmdExt extends ScriptExt {
           invArg();
         type = sym.getClegId();
         isPacked = true;
-      } else if (type.indexOf(":") < 0 && type.indexOf(",") > 0 && type.indexOf(">") < 0) {
+      } else if (type.indexOf(":") < 0 && type.indexOf(">") < 0 && 
+          (type.indexOf(",") > 0 || "rh".indexOf(type) >= 0)) {
         // allow for MODELKIT SPACEGROUP "a,b,2c"
         if (sym == null)
           invArg();

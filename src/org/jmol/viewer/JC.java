@@ -190,7 +190,9 @@ public final class JC {
 
   private final static String[] databaseArray = {
       // still http:
-      "imageita",
+      "itatable", 
+      "https://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen?gnum=%FILE&what=gp&list=Standard%2FDefault+Setting",
+      "itadiagram",
       "https://onlinelibrary.wiley.com/iucr/itc/Ac/ch2o3v0001/sgtable2o3o%FILE",
       "aflowbin",
       "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",

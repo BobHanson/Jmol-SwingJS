@@ -314,6 +314,9 @@ public class ModelKit {
         case "":
         case "sub":
         case "r":
+        case "h":
+        case "!r":
+        case "!h":
           break;
         default:
           if (transform.indexOf(",") >= 0) {
@@ -3476,7 +3479,9 @@ public class ModelKit {
     int pt = token.lastIndexOf(":"); // could be "154:_2" or "R 3 2 :" or 5:a,b,c
     boolean haveUnitCell = (sym00 != null);
     boolean isUnknown = false;
-    boolean haveTransform = (token.length() == 0 || token.indexOf(',') > 0);
+    boolean haveTransform = (token.length() == 0 
+        || token.indexOf(',') > 0 
+        || "!r!h".indexOf(token) >= 0);  // r !r h !h
     boolean haveJmolSetting = (!haveTransform && pt > 0
         && pt < token.length() - 1);
     boolean isTransformOnly = (haveTransform && pt < 0);
@@ -3485,7 +3490,6 @@ public class ModelKit {
     M4d trTemp = new M4d();
     boolean restarted = false;
     SymmetryInterface sym = vwr.getSymTemp();
-    System.out.println("MK " + token + " " + prevNode);
     if (prevNode == null) {      
       if (!ClegNode.checkSyntax(tokens, sym))
         return "invalid CLEG expression!";
