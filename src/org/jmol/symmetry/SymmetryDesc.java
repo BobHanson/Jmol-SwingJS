@@ -113,7 +113,7 @@ public class SymmetryDesc {
       "_type", "id", "cif2", "xyzCanonical", "xyzNormalized" };
 
   private static final String PLANE_COLOR_MIRROR = "magenta";
-  private static final String PLANE_COLOR_A_GLIDE = "[x08CCF9]"; // azure 
+  private static final String PLANE_COLOR_A_GLIDE = "[x4080ff]"; // azure (light blue) 
   private static final String PLANE_COLOR_B_GLIDE = "blue";
   private static final String PLANE_COLOR_C_GLIDE = "cyan";
   private static final String PLANE_COLOR_D_GLIDE = "grey";
@@ -827,6 +827,7 @@ public class SymmetryDesc {
           s = " " + strCoord(ftrans, op.isBio);
           // set ITA Table 2.1.2.1
           glideType = SymmetryOperation.getGlideFromTrans(ftrans, ax1);
+          
           type = info1 = glideType + "-glide plane";
           info1 += "|translation:" + s;
         }
@@ -999,7 +1000,7 @@ public class SymmetryDesc {
 
           if (!isSpaceGroup) {
             if (ang > 180) {
-              // Mois? OK? -- "(+)" is CCW, (-) is CW
+              // "(+)" is CCW, (-) is CW
               ang = 180 - ang;
             }
             ptemp.add2(ptr, vtemp);
@@ -1157,7 +1158,6 @@ public class SymmetryDesc {
           // faint inverted frame if mirror trans is not null
 
           opType = "plane";
-          P4d p = P4d.newPt(plane);
           if (trans == null) {
             color = PLANE_COLOR_MIRROR;
           } else {
@@ -1183,8 +1183,6 @@ public class SymmetryDesc {
               color = PLANE_COLOR_G_GLIDE;
               break;
             }
-            // offset ever so slightly so that we can show both in #40
-            p.w += 0.01d;
             if (!isSpaceGroup) {
               drawFrameLine("X", ptref, vt1, 0.15d, ptemp, drawSB, opType,
                   "red");
@@ -1203,21 +1201,25 @@ public class SymmetryDesc {
 
           // returns triangles and lines
           P3d[] points = uc.getCanonicalCopy(margin, true);
-          Lst<Object> v = modelSet.vwr.getTriangulator().intersectPlane(p,
+          Lst<Object> v = modelSet.vwr.getTriangulator().intersectPlane(plane,
               points, 3);
           if (v != null) {
             int iCoincident = (isSpaceGroup ? op.iCoincident : 0);
             planeCenter = new P3d();
 
-            for (int i = v.size(); --i >= 0;) {
+            for (int i = 0, iv = 0, n = v.size(); i < n; i++) {
               P3d[] pts = (P3d[]) v.get(i);
               // these lines provide a rendering when side-on
               drawSB.append(getDrawID((trans == null ? "mirror_" : glideType + "_g") 
                   + "planep" + i)).append(Escape.eP(pts[0])).append(Escape.eP(pts[1]));
               if (pts.length == 3) {
-                if (iCoincident == 0 || (i % 2 == 0) != (iCoincident == 1)) {
-                  drawSB.append(Escape.eP(pts[2]));
+                // 110 has <---d---> double-ended arrow OK this is due to a z+3/4 and a matching z-1/4 which is the same in this case  
+                // 122 has <---d---> same deal 
+                // 166 crossed diag  fixed sg183 2/3 -2/3 1/3  sg133 mrror
+                if (iCoincident == 0 || (iv % 2 == 0) != (iCoincident == 1)) {
+                 drawSB.append(Escape.eP(pts[2]));
                 }
+                iv++;
               } else {
                 planeCenter.add(pts[0]);
                 planeCenter.add(pts[1]);
@@ -1513,15 +1515,16 @@ public class SymmetryDesc {
     ftrans.y = fixGlideX(ftrans.y);
     ftrans.z = fixGlideX(ftrans.z);
   }
-
+  
   private static double fixGlideX(double x) {
-    switch ((int) Math.round(x * 12.001)) {
-    case 9:
+    int n48 = (int) Math.round(x * 48.001);
+    switch (n48) {
+    case 36:
       return -1/4d;
-    case -9:
+    case -36:
       return 1/4d;
     default:
-      return x;
+      return x;//n48/48d;
     }
    }
 

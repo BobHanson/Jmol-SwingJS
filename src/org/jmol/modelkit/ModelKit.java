@@ -1273,10 +1273,11 @@ public class ModelKit {
    *        "P1" or "1" or ignored
    * @param paramsOrUC
    * @param isPacked 
+   * @param doDraw 
    * @param cmd 
    * @return new name or "" or error message
    */
-  public String cmdAssignSpaceGroup(BS bs, String name, Object paramsOrUC, boolean isPacked, String cmd) {
+  public String cmdAssignSpaceGroup(BS bs, String name, Object paramsOrUC, boolean isPacked, boolean doDraw, String cmd) {
     SymmetryInterface sym0 = vwr.getCurrentUnitCell();
     SymmetryInterface sym = vwr.getOperativeSymmetry();
     if (sym0 != null && sym != sym0)
@@ -1286,12 +1287,24 @@ public class ModelKit {
     if (ret.endsWith("!"))
       return ret;
     if (isPacked) {
+      int n;
+      if (doDraw) {
+        n = cmdAssignAddAtoms("N:G", null, null, "packed", cmd);
+      } else {
       String transform = ret;
       BS bsModelAtoms = vwr.getThisModelAtoms();
-      int n = cmdAssignSpaceGroupPacked(bsModelAtoms, transform, cmd);
+        n = cmdAssignSpaceGroupPacked(bsModelAtoms, transform, cmd);
+      }
       sb.append("\n").append(GT.i(GT.$("{0} atoms added"), n));
     }
-    return sb.toString();
+    String msg = sb.toString();
+    boolean isError = msg.endsWith("!");
+    if (doDraw && !isError) {
+      String s = drawSymmetry("sym", false, -1, null, Integer.MAX_VALUE, null, 
+          null, null, 0, -2, 0, null);
+      appRunScript(s);
+    }
+    return msg;
   }
 
   /**
@@ -4812,6 +4825,32 @@ public class ModelKit {
     for (int i = 0, a = JC.AXIS_A; i < 3; i++, a++) {
       s += "\ndraw ID " + PT.esc(id + "_axis_" + JC.axisLabels[a]) 
           + " " + swidth + " line " + origin + " " + axisPoints[i] + " color " + colors[i];
+    }
+    return s;
+  }
+
+  public String drawSymmetry(String thisId, boolean isSymop, int iatom, String xyz, int iSym,
+                     P3d trans, P3d center, P3d target, int intScale, int nth,
+                     int options, int[] opList) {
+    
+    String s = null;
+    if (options != 0) {
+      // options is T.offset, and target is an {i j k} offset from cell 555
+      Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
+          target, T.point, null, intScale / 100d, nth, options, opList);
+      if (o instanceof P3d)
+        target = (P3d) o;
+      else
+        s = "";
+    }
+    if (thisId == null)
+      thisId = (isSymop ? "sym" : "sg");
+    if (s == null)
+      s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
+          target, T.draw, thisId, intScale / 100, nth, options, opList);
+    if (s != null) {
+      s = "draw ID " + (isSymop ? "sg" : "sym") + "* delete;" + s;
+      s = "draw ID " + thisId + "* delete;" + s;
     }
     return s;
   }

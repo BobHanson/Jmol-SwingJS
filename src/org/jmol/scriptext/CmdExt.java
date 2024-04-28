@@ -127,7 +127,7 @@ public class CmdExt extends ScriptExt {
       st[0].value = prepareBinaryOutput((SV) st[0]);
       return null;
     case T.assign:
-      assign();
+      assign(false);
       break;
     case T.cache:
       cache();
@@ -5976,7 +5976,7 @@ public class CmdExt extends ScriptExt {
       } else if (newUC != null) {
         if (!chk && isModelkit) {
           if (sym == null) {            
-              vwr.getModelkit(false).cmdAssignSpaceGroup(null, "P1", newUC, false, "unitcell");
+              vwr.getModelkit(false).cmdAssignSpaceGroup(null, "P1", newUC, false, false, "unitcell");
           } else if (sym.fixUnitCell((double[]) newUC)) {
             eval.invArgStr(
                 "Unit cell is incompatible with current space group");
@@ -6308,7 +6308,8 @@ public class CmdExt extends ScriptExt {
     case T.moveto:
     case T.packed:
     case T.zap:
-      assign();
+    case T.draw:
+      assign(true);
       return;
     case T.mutate:
       ++e.iToken;
@@ -6475,7 +6476,7 @@ public class CmdExt extends ScriptExt {
    * 
    * @throws ScriptException
    */
-  private void assign() throws ScriptException {
+  private void assign(boolean isModelkit) throws ScriptException {
     // [modelkit] assign...
     // modelkit connect
     /**
@@ -6488,25 +6489,41 @@ public class CmdExt extends ScriptExt {
       invArg();
     BS bsModelAtoms = vwr.getThisModelAtoms();
     int i = ++e.iToken;
-    int mode = tokAt(i); // ATOMS, BONDS, or CONNECT; defaults to ATOMS
+    boolean doDraw = false;
+    int mode = tokAt(i);
+    if (mode == T.draw) {
+      // MODELKIT DRAW SPACEGROUP [name or number]
+      // different from DRAW SPACEGROUP in that it 
+      // does a ZAP and allows for specifying the space grroup
+      // modelkit draw spacegroup -- this will ZAP
+      if (tokAt(2) != T.spacegroup)
+        invArg();
+      doDraw = true;
+      mode = T.zap;
+    }
     if (mode == T.zap) {
+      if (!isModelkit)
+        invArg();
       if (!e.chk)
         vwr.zap(false, false, false);
       mode = tokAt(++i);
       if (mode == T.nada)
         return;
-    }
-    int index = -1, index2 = -1;
+    }    
+    // mode might be reassigned; these next assignments are just for sanity.
     boolean isAtom = (mode == T.atoms);
     boolean isBond = (mode == T.bonds);
+    boolean isAdd = (mode == T.add);
     boolean isConnect = (mode == T.connect);
     boolean isDelete = (mode == T.delete);
-    boolean isAdd = (mode == T.add);
     boolean isMove = (mode == T.moveto);
     boolean isSpacegroup = (mode == T.spacegroup);
     boolean isPacked = (mode == T.packed);
-    Object paramsOrUC = null;
-    P3d[] pts = null;
+    // default is ATOM
+    if ((isPacked || isSpacegroup) && !isModelkit) {
+      // only options for ASSIGH are ATOMS, BONDS, ADD, CONNECT, DELETE, MOVE
+      invArg();
+    }
     if (isAtom || isBond || isConnect || isSpacegroup || isDelete || isMove
         || isAdd || isPacked) {
       i++;
@@ -6514,6 +6531,8 @@ public class CmdExt extends ScriptExt {
       isAtom = true;
       mode = T.atoms;
     }
+    // initialize some modes
+    int index = -1, index2 = -1;
     BS bs = null;
     if (isBond) {
       if (tokAt(i) == T.integer) {
@@ -6550,7 +6569,7 @@ public class CmdExt extends ScriptExt {
         }
       }
       i = ++e.iToken;
-    } else if (mode == T.packed) {
+    } else if (isPacked) {
       // new Jmol 14.32.73
       bs = bsModelAtoms;
     } else if (isAtom && tokAt(i) == T.string || mode == T.add) {
@@ -6569,9 +6588,12 @@ public class CmdExt extends ScriptExt {
       }
       i = ++e.iToken;
     }
+    // parse easch mode in full
     String type = null;
     P3d pt = null;
     String wyckoff = null;
+    Object paramsOrUC = null;
+    P3d[] pts = null;
     if (isAdd) {
       if (e.isAtomExpression(i)) {
         bs = expFor(++e.iToken, bsModelAtoms);
@@ -6652,22 +6674,28 @@ public class CmdExt extends ScriptExt {
         isPacked = true;
         ++e.iToken;
       }
-    } else if (!isConnect) {
+    } else if (isConnect) {
+      // could be from assign BOND
+      if (index2 < 0) {
+        // NOT assign BOND @3 @4 ...
+        // assign CONNECT @3 @4
+        bs = expFor(i, bsModelAtoms);
+        index2 = bs.nextSetBit(0);
+        type = e.optParameterAsString(++e.iToken);
+      }
+    } else {
+      // assign atom ... 
+      // assign delete ...
+      // more?
       type = e.optParameterAsString(i);
       if (isAtom)
         pt = (++e.iToken < slen
             ? centerParameter(e.iToken)
             : null);
-    } else if (isDelete) {
-      // N/A
-    } else if (index2 < 0) {
-      // assign CONNECT @3 @4
-      bs = expFor(i, bsModelAtoms);
-      index2 = bs.nextSetBit(0);
-      type = e.optParameterAsString(++e.iToken);
     }
     if (chk)
       return;
+    // finally, preserve the state and carry out the process
     vwr.pushState();
     switch (mode) {
     case T.atoms:
@@ -6719,7 +6747,7 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
     case T.spacegroup:
-      String s = vwr.getModelkit(false).cmdAssignSpaceGroup(bs, type, paramsOrUC, isPacked, e.fullCommand);
+      String s = vwr.getModelkit(false).cmdAssignSpaceGroup(bs, type, paramsOrUC, isPacked, doDraw, e.fullCommand);
       boolean isError = s.endsWith("!");
       if (isError)
         e.invArgStr(s);

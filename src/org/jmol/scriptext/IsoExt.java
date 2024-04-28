@@ -888,25 +888,9 @@ public class IsoExt extends ScriptExt {
         if (bsAtoms == null && vwr.am.cmi >= 0)
           bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
         if (bsAtoms != null) {
-          s = null;
-          if (options != 0) {
-            // options is T.offset, and target is an {i j k} offset from cell 555
-            Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-                target, T.point, null, intScale / 100d, nth, options, opList);
-            if (o instanceof P3d)
-              target = (P3d) o;
-            else
-              s = "";
-          }
-          if (thisId == null)
-            thisId = (isSymop ? "sym" : "sg");
-          if (s == null)
-            s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-                target, T.draw, thisId, intScale / 100d, nth, options, opList);
+          s = vwr.getModelkit(false).drawSymmetry(thisId, isSymop, iatom, xyz, iSym, trans, center, target, intScale, nth, options, opList);
           if (s == null)
             return;
-          s = "draw ID " + (isSymop ? "sg" : "sym") + "* delete;" + s;
-          s = "draw ID " + thisId + "* delete;" + s;
           if (isSymop && target instanceof Atom && center instanceof Atom) {
             if (eval.fullCommand.indexOf(JC.SCRIPT_QUIET)>=0)
               s = PT.rep(s, "print", "#print");
@@ -916,7 +900,8 @@ public class IsoExt extends ScriptExt {
                 + "|" + eval.fullCommand) + ";";
           }
         }
-        eval.runBufferedSafely(
+        if (s != null)
+          eval.runBufferedSafely(
             s.length() > 0 ? s : "draw ID \"" + thisId + "*\" delete",
             eval.outputBuffer);
         return;

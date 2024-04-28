@@ -117,7 +117,7 @@ public class SymmetryOperation extends M4d {
     case TYPE_INVERSION:
       return "Inv" + op48(opPoint);
     case TYPE_REFLECTION:
-      return (opMode == OP_MODE_POSITION_ONLY ? "P" : "Plane") + opPlane;
+      return (opMode == OP_MODE_POSITION_ONLY ? "" : "Plane") + opPlane;
     case TYPE_SCREW_ROTATION:
       return (opMode == OP_MODE_POSITION_ONLY ? "S" + op48(opPoint) + op48(opAxis) : "Screw" + opOrder + op48(opPoint) + op48(opAxis) + op48(opTrans)
           + opIsCCW);
@@ -1589,6 +1589,7 @@ public class SymmetryOperation extends M4d {
         dmax = 1.25d;
         opIsLong = true;
       } else {
+        // this is skipping "-y+2/3,-x+1/3,z+5/6" in SG 161
         dmax = 0.78d;
       }
       break;
@@ -1804,39 +1805,47 @@ public class SymmetryOperation extends M4d {
    */
   private static void addCoincidentMap(Map<String, Lst<SymmetryOperation>> mapCoincident,
                                        SymmetryOperation op, int opType) {
+    if (op.isIrrelevant)
+      return;
     String s = op.getOpName(OP_MODE_POSITION_ONLY);
     Lst<SymmetryOperation> l = mapCoincident.get(s);
     op.iCoincident = 0;
+    boolean isRotation = (opType == TYPE_SCREW_ROTATION);
     if (l == null) {
       mapCoincident.put(s, l = new Lst<SymmetryOperation>());
+    } else if (isRotation) {
+      // we are getting rid of 3-screw in favor of 6-screw
+      if (op.opOrder == 6) {
+        for (int i = l.size(); --i >= 0;) {
+          SymmetryOperation op1 = l.get(i);
+          if (!op1.isIrrelevant)
+            switch (op1.opOrder) {
+            case 3:
+              op1.isIrrelevant = true;
+              break;
+            case 6:
+              // could check here for parity or length?
+              break;
+            }
+        }
+      }
+      op.iCoincident = 1;
     } else {
-      if (opType == TYPE_SCREW_ROTATION) {
-        // we are getting rid of 3-screw in favor of 6-screw
-        if (op.opOrder == 6) {
-          for (int i = l.size(); --i >= 0;) {
-            SymmetryOperation op1 = l.get(i);
-            if (!op1.isIrrelevant)
-              switch (op1.opOrder) {
-              case 3:
-                op1.isIrrelevant = true;
-                break;
-              case 6:
-                // could check here for parity or length?
-                break;
-              }
-          }
+      SymmetryOperation op0 = l.get(0);
+      if (op.opTrans != null && op0.opTrans != null) {
+        V3d v = V3d.newV(op.opTrans);
+        v.add(op0.opTrans);
+        if (v.lengthSquared() < 1e-6) {
+          // space groups 218, 225, 227 will fire this
+          op.isIrrelevant = true;
+          return;
         }
+      }
+      if (op0.iCoincident == 0) {
         op.iCoincident = 1;
+        op0.iCoincident = -1;
       } else {
-        SymmetryOperation op0 = l.get(0);
-        if (op0.iCoincident == 0) {
-          op.iCoincident = 1;
-          for (int i = l.size(); --i >= 0;) {
-            l.get(i).iCoincident = -1;
-          }
-        } else {
-          op.iCoincident = -op0.iCoincident;
-        }
+        op.iCoincident = -op0.iCoincident;
       }
     }
     l.addLast(op);
@@ -1946,13 +1955,20 @@ public class SymmetryOperation extends M4d {
     default:
       break;
     }
-    String s = g + m + t + "." + ((char) ('0' + o)) + "." + ccw + "."
-    //+ ((char)('@' + o * 2 + ccw))
-    ;
-    //    System.out.println("!!" + s + " " + getOpName(PLANE_MODE_FULL));
-    return opAxisCode = s;
+    return opAxisCode = g + m + t + "." + ((char) ('0' + o)) + "." + ccw + ".";
   }
 
+  /**
+   * note = this method will return 'n' for SG 161 do an operator's odd 1/2 -1/2 1/2 glide
+   * (but only for additional operations, not the basic set
+   * 
+   * but ITA says "tetragonal and cubic only" in Table ITA1969 4.1.6 
+   * 
+   * 
+   * @param ftrans
+   * @param ax1
+   * @return one of a b c d g n 
+   */
   public static char getGlideFromTrans(T3d ftrans, T3d ax1) {
     double fx = Math.abs(approx(ftrans.x * 12));
     double fy = Math.abs(approx(ftrans.y * 12));
@@ -1982,12 +1998,12 @@ public class SymmetryOperation extends M4d {
       case 12:
         P3d n = P3d.newP(ax1);
         n.normalize();
-        // #230 
-        // making sure here that this is truly a diagonal in the plane, not just
-        // a glide parallel to a face on a diagonal plane! Mois Aroyo 2018
+//not sure what this was about -- no n-glides in #230
+//        // #230 
+//        // making sure here that this is truly a diagonal in the plane, not just
+//        // a glide parallel to a face on a diagonal plane! Mois Aroyo 2018
         if (approx(n.x + n.y + n.z) == 1)
           return 'n';
-        break;
       }
       // 'g'
       break;
