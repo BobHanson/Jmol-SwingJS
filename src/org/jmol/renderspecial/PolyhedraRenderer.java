@@ -119,7 +119,7 @@ public class PolyhedraRenderer extends ShapeRenderer {
     }
     P3d[] sc = this.screens3f;
     int[][] planes = p.triangles;
-    int[] elemNos = (p.pointScale > 0 ? p.getElemNos() : null);
+    int[] elemNos = (p.pointScale > 0 ? p.getElemNos(false) : null);
     for (int i = vertices.length; --i >= 0;) {
       Atom atom = (vertices[i] instanceof Atom ? (Atom) vertices[i] : null);
       P3d v = sc[i];
@@ -135,8 +135,8 @@ public class PolyhedraRenderer extends ShapeRenderer {
       }
       if (elemNos != null
           && i < elemNos.length
-          && g3d.setC(elemNos[i] < 0 ? colix : vwr.cm.setElementArgb(
-              elemNos[i], Integer.MAX_VALUE))) {
+          && g3d.setC(elemNos[i] < 0 ? colix 
+              : vwr.cm.getElementColix(elemNos[i]))) {
         g3d.fillSphereBits(
             (int) tm.scaleToScreen((int) v.z, (int) (p.pointScale * 1000)), v);
         g3d.setC(colix);

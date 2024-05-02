@@ -9439,42 +9439,46 @@ public class ScriptEval extends ScriptExpr {
   }
 
   private boolean setElementColor(String str, int argb) {
-    for (int i = Elements.elementNumberMax; --i >= 0;) {
-      if (str.equalsIgnoreCase(Elements.elementNameFromNumber(i))) {
-        if (!chk)
-          vwr.setElementArgb(i, argb);
-        return true;
+    int n = -1;
+    boolean isSym = (str.charAt(0) == '_');
+    out: while (true) {
+      if (isSym) {
+        str = str.substring(1);
+        for (int i = Elements.elementNumberMax; --i >= 0;) {
+          if (str.equalsIgnoreCase(Elements.elementSymbolFromNumber(i))) {
+            n = i;
+            break out;
+          }
+        }
+        for (int i = Elements.altElementMax; --i >= Elements.firstIsotope;) {
+          if (str.equalsIgnoreCase(Elements.altElementSymbolFromIndex(i))
+              || str.equalsIgnoreCase(Elements.altIsotopeSymbolFromIndex(i))
+              ) {
+            n = Elements.altElementNumberFromIndex(i);
+            break out;
+          }
+        }
+      } else {
+        for (int i = Elements.elementNumberMax; --i >= 0;) {
+          if (str.equalsIgnoreCase(Elements.elementNameFromNumber(i))) {
+            n = i;
+            break out;
+          }
+        }
+        for (int i = Elements.altElementMax; --i >= 0;) {
+          if (str.equalsIgnoreCase(Elements.altElementNameFromIndex(i))) {
+            n = Elements.altElementNumberFromIndex(i);
+            break out;
+          }
+        }
       }
+      break;
     }
-    for (int i = Elements.altElementMax; --i >= 0;) {
-      if (str.equalsIgnoreCase(Elements.altElementNameFromIndex(i))) {
-        if (!chk)
-          vwr.setElementArgb(Elements.altElementNumberFromIndex(i), argb);
-        return true;
-      }
-    }
-    if (str.charAt(0) != '_')
+    if (chk || n < 0) {
       return false;
-    for (int i = Elements.elementNumberMax; --i >= 0;) {
-      if (str.equalsIgnoreCase("_" + Elements.elementSymbolFromNumber(i))) {
-        if (!chk)
-          vwr.setElementArgb(i, argb);
-        return true;
-      }
     }
-    for (int i = Elements.altElementMax; --i >= Elements.firstIsotope;) {
-      if (str.equalsIgnoreCase("_" + Elements.altElementSymbolFromIndex(i))) {
-        if (!chk)
-          vwr.setElementArgb(Elements.altElementNumberFromIndex(i), argb);
-        return true;
-      }
-      if (str.equalsIgnoreCase("_" + Elements.altIsotopeSymbolFromIndex(i))) {
-        if (!chk)
-          vwr.setElementArgb(Elements.altElementNumberFromIndex(i), argb);
-        return true;
-      }
-    }
-    return false;
+    vwr.setElementArgb(n, argb);
+    return true;
   }
 
   /**

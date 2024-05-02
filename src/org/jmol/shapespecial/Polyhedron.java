@@ -3,7 +3,24 @@ package org.jmol.shapespecial;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.Interface;
+import org.jmol.api.SmilesMatcherInterface;
+import org.jmol.api.SymmetryInterface;
+import org.jmol.modelset.Atom;
+import org.jmol.script.SV;
+import org.jmol.script.T;
+import org.jmol.util.C;
+import org.jmol.util.Elements;
+import org.jmol.util.Escape;
+import org.jmol.util.Logger;
+import org.jmol.util.MeshCapper;
+import org.jmol.util.Normix;
+import org.jmol.util.Point3fi;
+import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.AU;
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
@@ -13,24 +30,6 @@ import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
-
-import org.jmol.api.Interface;
-import org.jmol.api.SmilesMatcherInterface;
-import org.jmol.api.SymmetryInterface;
-import javajs.util.BS;
-import org.jmol.modelset.Atom;
-import org.jmol.script.SV;
-import org.jmol.script.T;
-import org.jmol.util.C;
-import org.jmol.util.Elements;
-import org.jmol.util.Escape;
-import org.jmol.util.Logger;
-import org.jmol.util.MeshCapper;
-import org.jmol.util.Node;
-import org.jmol.util.Normix;
-import org.jmol.util.Point3fi;
-import org.jmol.viewer.JC;
-import org.jmol.viewer.Viewer;
 
 public class Polyhedron {
 
@@ -261,7 +260,7 @@ public class Polyhedron {
     for (int i = 0; i < nv; i++)
       pts[i] = P3d.newP(vertices[i]);
     info.put("vertices", pts);
-    info.put("elemNos", getElemNos());
+    info.put("elemNos", getElemNos(true));
 
     if (id == null) {
       info.put("atomIndex", Integer.valueOf(centralAtom.i));
@@ -296,11 +295,11 @@ public class Polyhedron {
       int[] indices = new int[nVertices];
       for (int i = nVertices; --i >= 0;) {
         P3d pt = vertices[i];
-        boolean isNode = pt instanceof Node;
-        names[i] = (isNode ? ((Node) pt).getAtomName()
+        boolean isAtom = pt instanceof Atom;
+        names[i] = (isAtom ? ((Atom) pt).getAtomName()
             : pt instanceof Point3fi ? Elements
                 .elementSymbolFromNumber(((Point3fi) pt).sD) : "");
-        indices[i] = (isNode ? ((Node) pt).getIndex() : -1);
+        indices[i] = (isAtom ? ((Atom) pt).getIndex() : -1);
       }
       info.put("atomNames", names);
       info.put("vertexIndices", indices);
@@ -370,12 +369,21 @@ public class Polyhedron {
 
   private int[] elemNos;
   
-  public int[] getElemNos() {
+  public int[] getElemNos(boolean forInfo) {
+    if (forInfo) {
+      int[] a = new int[nVertices];
+      for (int i = 0; i < nVertices; i++) {
+        P3d pt = vertices[i];
+        a[i] = (pt instanceof Atom ? ((Atom) pt).getElementNumber()
+            : pt instanceof Point3fi ? ((Point3fi) pt).sD : -2);
+      }
+      return a;
+    }
     if (elemNos == null) {      
       elemNos = new int[nVertices];
       for (int i = 0; i < nVertices; i++) {
         P3d pt = vertices[i];
-        elemNos[i] = (pt instanceof Node ? ((Node) pt).getElementNumber()
+        elemNos[i] = (pt instanceof Atom ? ((Atom) pt).getAtomicAndIsotopeNumber()
             : pt instanceof Point3fi ? ((Point3fi) pt).sD : -2);
       }
     }

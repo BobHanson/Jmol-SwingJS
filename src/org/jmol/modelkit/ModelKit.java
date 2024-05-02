@@ -1053,7 +1053,7 @@ public class ModelKit {
         vwr.ms.restoreAtomPositions(apos0);
         bsAtoms.clearAll();
       } else {
-        updateDrawAtomSets(JC.PROP_ATOMS_MOVED, bsAtoms);
+        updateDrawAtomSymmetry(JC.PROP_ATOMS_MOVED, bsAtoms);
       }
     }
   }
@@ -1634,16 +1634,16 @@ public class ModelKit {
       }
 
       if (key == JC.PROP_ATOMS_MOVED) {
-        if (drawAtomSets != null) {
-          updateDrawAtomSets(key, ((BS[]) value)[0]);
+        if (drawAtomSymmetry != null) {
+          updateDrawAtomSymmetry(key, ((BS[]) value)[0]);
         }
         return null;
       }
       if (key == JC.MODELKIT_UPDATE_MODEL_KEYS) {
         if (haveElementKeys)
-          updateModelElementKeys(((BS[]) value)[1], true);
-        if (drawAtomSets != null) {
-          updateDrawAtomSets(JC.PROP_ATOMS_DELETED, ((BS[]) value)[0]);
+          updateModelElementKeys(value == null ? null : ((BS[]) value)[1], true);
+        if (drawAtomSymmetry != null && value != null) {
+          updateDrawAtomSymmetry(JC.PROP_ATOMS_DELETED, ((BS[]) value)[0]);
         }
         return null;
       }
@@ -3110,7 +3110,7 @@ public class ModelKit {
     } finally {
       setMKState(state);
       if (n > 0) {
-        updateDrawAtomSets(JC.PROP_ATOMS_MOVED, bsMoved);
+        updateDrawAtomSymmetry(JC.PROP_ATOMS_MOVED, bsMoved);
       }
 
     }
@@ -4721,14 +4721,14 @@ public class ModelKit {
 
   }
 
-  private Lst<DrawAtomSet> drawAtomSets;
+  private Lst<DrawAtomSet> drawAtomSymmetry;
 
-  public synchronized void updateDrawAtomSets(String mode, BS atoms) {
-    if (drawAtomSets == null)
+  private synchronized void updateDrawAtomSymmetry(String mode, BS atoms) {
+    if (drawAtomSymmetry == null)
       return;
     String cmd = "";
-    for (int i = drawAtomSets.size(); --i >= 0;) {
-      DrawAtomSet a = drawAtomSets.get(i);
+    for (int i = drawAtomSymmetry.size(); --i >= 0;) {
+      DrawAtomSet a = drawAtomSymmetry.get(i);
       if (mode == JC.PROP_DELETE_MODEL_ATOMS
           ? atoms.get(a.bsAtoms.nextSetBit(0))
           : atoms.intersects(a.bsAtoms)) {
@@ -4737,12 +4737,12 @@ public class ModelKit {
         case JC.PROP_ATOMS_DELETED:
           System.out
               .println("remove deleteatoms " + atoms + " " + a.bsAtoms + a.id);
-          drawAtomSets.removeItemAt(i);
+          drawAtomSymmetry.removeItemAt(i);
           break;
         case JC.PROP_ATOMS_MOVED:
           try {
             if (!checkDrawID(a.id)) {
-              drawAtomSets.removeItemAt(i);
+              drawAtomSymmetry.removeItemAt(i);
             } else {
               cmd += a.cmd + JC.SCRIPT_QUIET + "\n";
             }
@@ -4751,8 +4751,8 @@ public class ModelKit {
           }
           break;
         }
-        if (drawAtomSets.size() == 0)
-          drawAtomSets = null;
+        if (drawAtomSymmetry.size() == 0)
+          drawAtomSymmetry = null;
       }
       if (cmd.length() > 0)
         vwr.evalStringGUI(cmd);
@@ -4786,19 +4786,19 @@ public class ModelKit {
     String cmd = tokens[3];
     BS bs = BSUtil.newAndSetBit(a1);
     bs.set(a2);
-    if (drawAtomSets == null) {
-      drawAtomSets = new Lst<DrawAtomSet>();
+    if (drawAtomSymmetry == null) {
+      drawAtomSymmetry = new Lst<DrawAtomSet>();
     }
-    drawAtomSets.addLast(new DrawAtomSet(bs, id, cmd));
+    drawAtomSymmetry.addLast(new DrawAtomSet(bs, id, cmd));
   }
 
   private void clearAtomSets(String id) {
-    if (drawAtomSets == null)
+    if (drawAtomSymmetry == null)
       return;
-    for (int i = drawAtomSets.size(); --i >= 0;) {
-      DrawAtomSet a = drawAtomSets.get(i);
+    for (int i = drawAtomSymmetry.size(); --i >= 0;) {
+      DrawAtomSet a = drawAtomSymmetry.get(i);
       if (a.id.equals(id)) {
-        drawAtomSets.remove(i);
+        drawAtomSymmetry.remove(i);
         return;
       }
     }

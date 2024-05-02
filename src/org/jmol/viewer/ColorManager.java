@@ -137,18 +137,21 @@ public class ColorManager {
         ce.getColorIndex(colorData[atom.i]));
     case PAL.PALETTE_NONE:
     case PAL.PALETTE_CPK:
+      int[] a = argbsCpk;
+      id = atom.getAtomicAndIsotopeNumber();
+      if (id >= Elements.elementNumberMax) {
+        int id0 = id;
+        id = Elements.altElementIndexFromNumber(id);
+        if (id > 0) {
+          id = Elements.elementNumberMax + id;
+          a = altArgbsCpk;
+        } else {
+          id = Elements.getElementNumber(id0);
+        }
+      }
       // Note that CPK colors can be changed based upon user preference
       // therefore, a changeable colix is allocated in this case
-      id = atom.getAtomicAndIsotopeNumber();
-      if (id < Elements.elementNumberMax)
-        return g3d.getChangeableColix(id, argbsCpk[id]);
-      int id0 = id;
-      id = Elements.altElementIndexFromNumber(id);
-      if (id > 0)
-        return g3d.getChangeableColix(Elements.elementNumberMax + id,
-            altArgbsCpk[id]);
-      id = Elements.getElementNumber(id0);
-      return g3d.getChangeableColix(id, argbsCpk[id]);
+      return g3d.getChangeableColix(id, a[id]);
     case PAL.PALETTE_PARTIAL_CHARGE:
       // This code assumes that the range of partial charges is [-1, 1].
       index = ColorEncoder.quantize4(atom.getPartialCharge(), -1, 1,
@@ -278,26 +281,45 @@ public class ColorManager {
     return JC.altArgbsCpk[Elements.altElementIndexFromNumber(id)];
   }
 
-  public short setElementArgb(int id, int argb) {
-    if (argb == T.jmol && argbsCpk == PAL.argbsCpk)
-      return 0;
-    argb = getJmolOrRasmolArgb(id, argb);
-    if (argbsCpk == PAL.argbsCpk) {
-      argbsCpk = AU.arrayCopyRangeI(PAL.argbsCpk, 0, -1);
-      altArgbsCpk = AU.arrayCopyRangeI(JC.altArgbsCpk, 0, -1);
+  public short getElementColix(int elemNo) {
+    // could be isotope,elemno
+    int i = elemNo;
+    int[] a = argbsCpk;
+    if (i > Elements.elementNumberMax) {
+      int ialt = Elements.altElementIndexFromNumber(i);
+      if (ialt >  0) {
+        i = ialt;
+        a = argbsCpk;
+      } else {
+        i = Elements.getElementNumber(i);
+      }
     }
-    if (id < Elements.elementNumberMax) {
-      if (argb == Integer.MAX_VALUE)
-        return C.getColix(argbsCpk[id]);
-      argbsCpk[id] = argb;
-      g3d.changeColixArgb(id, argb);
-      return 0;
-    }
-    id = Elements.altElementIndexFromNumber(id);
-    altArgbsCpk[id] = argb;
-    g3d.changeColixArgb(Elements.elementNumberMax + id, argb);
-    return 0;
+    return C.getColix(a[i]);
   }
+  
+  public void setElementArgb(int elemNo, int argb) {
+    if (argb == T.jmol && argbsCpk == PAL.argbsCpk)
+      return;
+    int id = elemNo;
+    while (true) {
+      argb = getJmolOrRasmolArgb(elemNo, argb);
+      if (argbsCpk == PAL.argbsCpk) {
+        argbsCpk = AU.arrayCopyRangeI(PAL.argbsCpk, 0, -1);
+        altArgbsCpk = AU.arrayCopyRangeI(JC.altArgbsCpk, 0, -1);
+      }
+      if (elemNo < Elements.elementNumberMax) {
+        argbsCpk[elemNo] = argb;
+        break;
+      }
+      id = Elements.altElementIndexFromNumber(elemNo);
+      altArgbsCpk[id] = argb;
+      id = Elements.elementNumberMax + elemNo;
+      break;
+    }
+    g3d.changeColixArgb(id, argb);
+    vwr.setModelkitPropertySafely(JC.MODELKIT_UPDATE_MODEL_KEYS, null);
+  }
+
 
   ///////////////////  propertyColorScheme ///////////////
 
