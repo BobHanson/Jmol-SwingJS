@@ -457,7 +457,7 @@ public class ModelKit {
   }
 
   /**
-   * A class to use temporarily to create an element key for a model.
+   * A class to use just temporarily to create an element key for a model.
    */
   private static class EKey {
     BS bsElements = new BS();
@@ -884,8 +884,8 @@ public class ModelKit {
   private BS minTempModelAtoms;
 
   /**
-   * TRUE to automatically set element keys for all atoms; see SET ELEMENTKEYS
-   * ON/OFF
+   * from SET ELEMENTKEY ON/OFF; TRUE to automatically set element keys for all
+   * models; off to turn them off
    */
   private boolean setElementKeys;
 
@@ -895,6 +895,10 @@ public class ModelKit {
    * 
    */
   final private BS bsElementKeyModels = new BS();
+  
+  /**
+   * tracks models for which the element key has been explicitly set OFF, overriding global SET elementKey ON 
+   */
   final private BS bsElementKeyModelsOFF = new BS();
 
   private boolean haveElementKeys;
@@ -1063,18 +1067,23 @@ public class ModelKit {
    * @return true if the type exists
    */
   public boolean checkOption(char type, String key) {
+    // only for use internally -- not for MODELKIT SET
     String check = null;
     switch (type) {
     case 'M':
+      // MODELKIT MODE ....
       check = ";view;edit;molecular;";
       break;
     case 'S':
+      // MODELKIT 
       check = ";none;applylocal;retainlocal;applyfull;";
       break;
     case 'U':
+      // MODELKIT UNITCELL ...
       check = ";packed;extend;";
       break;
     case 'B':
+      // MODELKIT (set) but not MODELKIT SET
       check = ";key;elementkey;autobond;hidden;showsymopinfo;clicktosetelement;addhydrogen;addhydrogens;";
       break;
     }
@@ -1424,8 +1433,7 @@ public class ModelKit {
       return Boolean.valueOf(getMKState() == STATE_MOLECULAR);
     }
 
-    if (name == JC.MODELKIT_KEY || name == JC.MODELKIT_ELEMENT_KEYS
-        || name == JC.MODELKIT_ELEMENT_KEYS) {
+    if (name == JC.MODELKIT_KEY || name == JC.MODELKIT_ELEMENT_KEY) {
       return Boolean.valueOf(isElementKeyOn(vwr.am.cmi));
     }
 
@@ -1506,11 +1514,12 @@ public class ModelKit {
   }
 
   /**
-   * Not clear this is a good idea. It's possible for this to be set only once,
+   * From menu opening and Not clear this is a good idea. It's possible for this to be set only once,
    * when the file is loaded
+   * @param isZap 
    */
-  public void initializeForModel() {
-    // from Viewer also
+  private void initializeForModel(boolean isZap) {
+    // from ZAP or from menu opening
     resetBondFields();
     allOperators = null;
     currentModelIndex = -999;
@@ -1524,8 +1533,12 @@ public class ModelKit {
         STATE_MOLECULAR);
     //setProperty("clicktosetelement",Boolean.valueOf(!hasUnitCell));
     //setProperty("addhydrogen",Boolean.valueOf(!hasUnitCell));
-    if (setElementKeys) {
-      updateModelElementKey(vwr.am.cmi, true);
+    if (isZap) {
+      if (setElementKeys) {
+        updateModelElementKey(vwr.am.cmi, true);
+      }
+      bsElementKeyModels.clearAll();
+      bsElementKeyModelsOFF.clearAll();        
     }
   }
 
@@ -1576,7 +1589,7 @@ public class ModelKit {
     this.menu = menu;
     this.vwr = menu.vwr;
     menu.modelkit = this;
-    initializeForModel();
+    initializeForModel(false);
   }
 
   /**
@@ -1610,23 +1623,13 @@ public class ModelKit {
       // set only
 
       if (key == JC.MODELKIT_INITIALIZE_MODEL) {
-        initializeForModel();
+        // from ZAP only
+        initializeForModel(true);
         return null;
       }
 
       if (key == "atomset") {
         addAtomSet((String) value);
-        return null;
-      }
-
-      if (key == JC.MODELKIT_SET_ELEMENT_KEYS) {
-        setElementKeys(isTrue(value));
-        return null;
-      }
-
-      if (key == JC.MODELKIT_FRAME_RESIZED) {
-        clearElementKey(-1);
-        updateModelElementKeys(null, true);
         return null;
       }
 
@@ -1649,17 +1652,32 @@ public class ModelKit {
         updateElementKeyFromStateScript();
         return null;
       }
-      if (key == JC.MODELKIT_UPDATE_ATOM_KEYS || key == JC.MODELKIT_ELEMENT_KEY
-          || key == JC.MODELKIT_ELEMENT_KEYS) {
-        if (value == null || value instanceof BS) {
+
+      if (key == JC.MODELKIT_UPDATE_ATOM_KEYS) { 
           BS bsAtoms = (BS) value;
           updateElementKey(bsAtoms);
           return null;
         }
-        // modelkit set elementkey, setelementkeys
+
+      if (key == JC.MODELKIT_SET_ELEMENT_KEY) {
+        // exclusively from SET elementKeys...
+        setElementKeys(isTrue(value));
+        return null;
+      }
+
+      if (key == JC.MODELKIT_FRAME_RESIZED) {
+        clearElementKey(-2);
+        updateModelElementKeys(null, true);
+        return null;
+      }
+
+      if (key == JC.MODELKIT_KEY 
+          || key == JC.MODELKIT_ELEMENT_KEY) {
+        // modelkit set elementkey(s), set key
         int mi = vwr.am.cmi;
         boolean isOn = isTrue(value);
         bsElementKeyModelsOFF.setBitTo(mi, !isOn);
+        bsElementKeyModels.setBitTo(mi, false);// force new, for whatever reason
         setElementKey(mi, isOn);
         return isOn ? "true" : "false";
       }
@@ -3758,6 +3776,13 @@ public class ModelKit {
     return false;
   }
 
+  /**
+   * Deletes the DRAW object for this or all models and adjusts haveElementKeys
+   * appropriately.
+   * 
+   * @param modelIndex
+   *        -1 for all models
+   */
   private void clearElementKey(int modelIndex) {
     if (!haveElementKeys)
       return;
@@ -3765,13 +3790,17 @@ public class ModelKit {
     Object[][] val = new Object[][] { { "thisID", key }, { "delete", null } };
     vwr.shm.setShapeProperties(JC.SHAPE_DRAW, val);
     vwr.shm.setShapeProperties(JC.SHAPE_ECHO, val);
-    if (modelIndex < 0) {
+    switch (modelIndex) {
+    case -2:
+      break;
+    case -1:
       bsElementKeyModels.clearAll();
-      haveElementKeys = false;
-    } else {
+      break;
+    default:
       bsElementKeyModels.clear(modelIndex);
-      haveElementKeys = !bsElementKeyModels.isEmpty();
+      break;
     }
+    haveElementKeys = !bsElementKeyModels.isEmpty();
   }
 
   /**
@@ -4444,12 +4473,15 @@ public class ModelKit {
 
   /**
    * Triggered by a MODELKIT OFF in a state script, set there by StateCreator
-   * when there is an ECHO for _!_elkey*.
+   * when there is an ECHO for _!_elkey*. Just checks for DRAW objects and sets
+   * haveElementKeys and bsElementKeyModels appropriately.
    */
   private void updateElementKeyFromStateScript() {
     for (int i = vwr.ms.mc; --i >= 0;) {
-      if (isElementKeyOn(i))
+      if (isElementKeyOn(i)) {
         bsElementKeyModels.set(i);
+        haveElementKeys = true;
+      }
     }
   }
 
@@ -4574,7 +4606,7 @@ public class ModelKit {
   }
 
   /**
-   * Only set a model's elmeent key if it is already on or if SET ELEMENTKEYS ON
+   * Only set a model's element key if it is already on or if SET ELEMENTKEYS ON
    * has been issued. "ON" is defined as "present as a draw object"
    * 
    * @param modelIndex
@@ -4593,7 +4625,8 @@ public class ModelKit {
     return modelIndex >= 0 //
         && !vwr.ms.isJmolDataFrameForModel(modelIndex) //
         && !bsElementKeyModelsOFF.get(modelIndex) //
-        && (setElementKeys || isElementKeyOn(modelIndex));
+        && (setElementKeys || bsElementKeyModels.get(modelIndex)
+            || isElementKeyOn(modelIndex));
   }
 
   /**

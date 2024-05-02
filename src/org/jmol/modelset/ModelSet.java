@@ -47,7 +47,6 @@ import org.jmol.modelsetbio.BioModel;
 import org.jmol.script.ScriptCompiler;
 import org.jmol.script.T;
 import org.jmol.shape.Shape;
-import org.jmol.symmetry.Symmetry;
 import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Edge;
@@ -2261,6 +2260,32 @@ public class ModelSet extends BondCollection {
     case T.symmetry:
       return BSUtil
           .copy(bsSymmetry == null ? bsSymmetry = BS.newN(ac) : bsSymmetry);
+    case T.unitcell:
+      // select UNITCELL (a relative quantity)
+      boolean isSelectUC = ("unitcell".equals(specInfo));
+      if (isSelectUC) {
+        // SELECT UNITCELL is [0, 1]
+        specInfo = P3d.new3(1, 1, 1);
+      } else {
+        // this one is [0, 1)
+        bs = new BS();
+        SymmetryInterface uc1 = (specInfo instanceof SymmetryInterface
+            ? (SymmetryInterface) specInfo
+            : vwr.getCurrentUnitCell());
+        if (uc1 == null)
+          return bs;
+        uc1 = uc1.getUnitCellMultiplied();
+        for (int i = ac; --i >= 0;) {
+          if (at[i] != null) {
+            ptTemp1.setT(at[i]);
+            uc1.toFractional(ptTemp1, false);
+            if (uc1.checkPeriodic(ptTemp1))
+              bs.set(i);
+          }
+        }
+        return bs;
+      }
+      //$FALL-THROUGH$
     case T.cell:
       // select cell=555 (NO NOT an absolute quantity)
       // select cell=1505050
@@ -2283,25 +2308,6 @@ public class ModelSet extends BondCollection {
         uc.toFractional(ptTemp, false);
         if (uc.isWithinUnitCell(ptTemp, pt.x, pt.y, pt.z))
           bs.set(i);
-      }
-      return bs;
-    case T.unitcell:
-      // select UNITCELL (a relative quantity)
-      // this one is [0, 1)
-      bs = new BS();
-      SymmetryInterface uc1 = (specInfo instanceof SymmetryInterface
-          ? (SymmetryInterface) specInfo
-          : vwr.getCurrentUnitCell());
-      if (uc1 == null)
-        return bs;
-      uc1 = uc1.getUnitCellMultiplied();
-      for (int i = ac; --i >= 0;) {
-        if (at[i] != null) {
-          ptTemp1.setT(at[i]);
-          uc1.toFractional(ptTemp1, false);
-          if (uc1.checkPeriodic(ptTemp1))
-            bs.set(i);
-        }
       }
       return bs;
     }

@@ -1027,7 +1027,7 @@ public class T {
   public final static int drawpicking                    = booleanparam | 58;
   public final static int dsspcalchydrogen               = booleanparam | 59;
   public final static int dynamicmeasurements            = booleanparam | 60; //DEPRECATED; not implemented; leave here to avoid SET error
-  public final static int elementkeys                     = booleanparam | 62;  
+  public final static int elementkey                     = booleanparam | 62;  
   public final static int ellipsoidarcs                  = booleanparam | 63;  
   public final static int ellipsoidarrows                = booleanparam | 64;  
   public final static int ellipsoidaxes                  = booleanparam | 65;  
@@ -2627,7 +2627,6 @@ public class T {
        "drawHover",
        "drawPicking",
        "dsspCalculateHydrogenAlways",
-       "elementKeys",
        "elementKey",
        "ellipsoidArcs",
        "ellipsoidArrows",
@@ -3709,8 +3708,7 @@ public class T {
         drawhover,                          //        "drawHover"
         drawpicking,                        //        "drawPicking"
         dsspcalchydrogen,                   //        "dsspCalculateHydrogenAlways"
-        elementkeys,
-        -1,
+        elementkey,                         //        "elementkey"
         ellipsoidarcs,                      //        "ellipsoidArcs"
         ellipsoidarrows,                    //        "ellipsoidArrows"
         ellipsoidaxes,                      //        "ellipsoidAxes"

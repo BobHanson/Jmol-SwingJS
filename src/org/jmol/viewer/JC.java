@@ -963,10 +963,9 @@ public final class JC {
   public static final String MODELKIT_ELEMENT_KEY_ID = THIS_MODEL_ONLY + "elkey_";
 
 
-  public static final String MODELKIT_SET_ELEMENT_KEYS = "setelementkeys";
+  public static final String MODELKIT_SET_ELEMENT_KEY = "setelementkey";
   public static final String MODELKIT_KEY = "key";
   public static final String MODELKIT_ELEMENT_KEY = "elementkey";
-  public static final String MODELKIT_ELEMENT_KEYS = "elementkeys";
   public static final String MODELKIT_NEW_MODEL_ATOM_KEYS = "newmodelatomkeys";
   public static final String MODELKIT_FRAME_RESIZED = "frameresized";
   public static final String MODELKIT_UDPATE_KEY_STATE = "updatekeysfromstate";

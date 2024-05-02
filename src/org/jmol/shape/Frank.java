@@ -40,7 +40,7 @@ public class Frank extends Shape {
   final static int defaultFontSize = 16;
   public final static int frankMargin = 4;
 
-  public String frankString = "Jmol";
+  public static String frankString = "Jmol";
   Font currentMetricsFont3d;
   public Font baseFont3d;
   public int frankWidth;
@@ -56,6 +56,12 @@ public class Frank extends Shape {
   public void initShape() {
     myType = "frank";
     baseFont3d = font3d = vwr.gdata.getFont3DFSS(defaultFontName, defaultFontStyle, defaultFontSize);
+    if (Viewer.isJS || Viewer.isSwingJS)
+      frankString = "JSmol";
+    else if (Viewer.isDoublePrecision)
+      frankString = "JmolD";
+//    else if (vwr.isSignedApplet)
+//      frankString = "Jmol_S";
     calcMetrics();
   }
 
@@ -90,10 +96,6 @@ public class Frank extends Shape {
   }
   
   void calcMetrics() {
-    if (Viewer.isJS || Viewer.isSwingJS)
-      frankString = "JSmol";
-    else if (vwr.isSignedApplet)
-      frankString = "Jmol_S";
     if (font3d == currentMetricsFont3d) 
       return;
     currentMetricsFont3d = font3d;

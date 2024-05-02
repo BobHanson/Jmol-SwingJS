@@ -210,14 +210,16 @@ public class MainPopupResourceBundle extends PopupResource {
               + "pickMolecule pickElement - dragAtom dragMolecule - pickSpin - modelKitMode - PDBpickChain PDBpickGroup SYMMETRYpickSite" },
 
       {   "computationMenu",
-          "minimize modelkit"
+          "minimize"
               /* calculateVolume*/ },
 
               
       {   "showMenu",
           "showHistory showFile showFileHeader - "
               + "showOrient showMeasure - "
-              + "showSpacegroup showState SYMMETRYshowSymmetry UNITCELLshow - showIsosurface showMo - extractMOL" },
+              + "showSpacegroup showState SYMMETRYshowSymmetry UNITCELLshow - "
+              + "showIsosurface showMo - "
+              + "modelkit extractMOL" },
 
       {    "SIGNEDJAVAcaptureMenuSPECIAL", "SIGNEDJAVAcaptureRock SIGNEDJAVAcaptureSpin - SIGNEDJAVAcaptureBegin SIGNEDJAVAcaptureEnd SIGNEDJAVAcaptureOff SIGNEDJAVAcaptureOn SIGNEDJAVAcaptureFpsSPECIAL SIGNEDJAVAcaptureLoopingSPECIAL" },
 
@@ -673,7 +675,7 @@ public class MainPopupResourceBundle extends PopupResource {
         "s50",null,
         "zoom50", "50%",
         "zoom800", "800%",
-        "JSConsole", "JavaScript Console",
+        "JSConsole", GT.$("JavaScript Console"),
         "jmolMenu", "Jmol",
         "date" , JC.date,
         "version", JC.version,

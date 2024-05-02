@@ -158,6 +158,9 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
         centers = bs;
         iHaveCenterBitSet = true;
       }
+      boolean modifyOnly = (value == Boolean.TRUE);
+      if (modifyOnly)
+        bs.and(vwr.getAtomBitSet("polyhedra"));
       Map<String, Object> info = this.info;
       deletePolyhedra();
       this.info = info;

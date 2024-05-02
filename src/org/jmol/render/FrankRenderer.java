@@ -54,7 +54,7 @@ public class FrankRenderer extends ShapeRenderer {
     frank.getFont(imageFontScaling);
     int dx = (int) (frank.frankWidth + Frank.frankMargin * imageFontScaling);
     int dy = frank.frankDescent;
-    g3d.drawStringNoSlab(frank.frankString, frank.font3d, vwr.gdata.width - dx,
+    g3d.drawStringNoSlab(Frank.frankString, frank.font3d, vwr.gdata.width - dx,
         vwr.gdata.height - dy, 0, (short) 0);
     ModelKit kit = (modelKitMode ? vwr.getModelkit(false) : null);
     if (modelKitMode && !kit.isHidden()) {

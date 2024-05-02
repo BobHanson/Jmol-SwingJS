@@ -3711,6 +3711,7 @@ public class Viewer extends JmolViewer
       am.initializePointers(1);
       return;
     }
+    // this is a ZAP
     reset(true);
     selectAll();
     setModelkitPropertySafely(JC.MODELKIT_INITIALIZE_MODEL, null);
@@ -6906,13 +6907,13 @@ public class Viewer extends JmolViewer
   public void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
-    case T.elementkeys:
-      // 16.2.1
-      g.elementKeys = value;
-      getModelkit(false).setProperty(JC.MODELKIT_SET_ELEMENT_KEYS, Boolean.valueOf(value));
+    case T.elementkey:
+      // 16.2.2
+      g.elementKey = value;
+      getModelkit(false).setProperty(JC.MODELKIT_SET_ELEMENT_KEY, Boolean.valueOf(value));
       break;
     case T.symmetryhermannmauguin:
-      // 16.1.65
+      // 16.1.66
       g.symmetryHermannMauguin = value;
       break;
     case T.doubleprecision:
@@ -10693,7 +10694,7 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * Get a ModelKit property.
+   * Get a ModelKit property, but only if the modelkit exists already.
    * 
    * @param name
    * @return value
@@ -10702,9 +10703,30 @@ public class Viewer extends JmolViewer
     return (modelkit == null ? null : modelkit.getProperty(name));
   }
 
+  /**
+   * Set a ModelKit property, but only if the modelkit exists already.
+   * 
+   * @param key
+   * @param value
+   * @return varies, quite possibly null
+   */
   public Object setModelkitPropertySafely(String key, Object value) {
     return (modelkit == null ? null : modelkit.setProperty(key, value));
   }
+  
+  /**
+   * Check for an option type 'M' 'S' 'U' 'B'.
+   * 
+   * @param type
+   * @param value
+   * @return true or false, but true only if the modelkit already exists
+   */
+  public boolean isModelKitOption(char type, String value) {
+    // only from MODELKIT command
+    return modelkit != null && modelkit.checkOption(type, value);
+  }
+
+
 
   /**
    * A general method for retrieving symmetry information with full capability
@@ -11118,10 +11140,6 @@ public class Viewer extends JmolViewer
     if (andCheckMinimize)
       checkMinimization();
     sm.setStatusAtomMoved(bs);
-  }
-
-  public boolean isModelKitOption(char type, String value) {
-    return modelkit != null && modelkit.checkOption(type, value);
   }
 
   /**

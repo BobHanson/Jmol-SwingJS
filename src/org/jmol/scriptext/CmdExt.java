@@ -3783,11 +3783,12 @@ public class CmdExt extends ScriptExt {
     double radius = -1;
     int[] colorArgb = new int[] { Integer.MIN_VALUE };
     int noToParam = -1;
-    int atomPt = 0;
+    int atomPt = -1;
     P3d offset = null;
     double foffset = 0;
     String id = null;
     boolean ok = false;
+    boolean modifyOnly = false;
     int[][] faces = null;
     P3d[] points = null;
     if (slen == 2 && tokAt(1) == T.list) {
@@ -3968,9 +3969,23 @@ public class CmdExt extends ScriptExt {
           eval.bad();
         }
         propertyValue = atomExpressionAt(i);
-        i = eval.iToken;
-        atomPt = i;
+        atomPt = i = eval.iToken;
         needsGenerating |= (i + 1 == slen);
+        break;
+      case T.flat: // removed in Jmol 14.4 -- never documented; restored in Jmol 14.29.21
+      case T.collapsed:
+        // assume regenerating - but not actually recommended Jmol 16.2.13/14 
+          needsGenerating = true; 
+          modifyOnly = (i == 1);
+        // COLLAPSED
+        // COLLAPSED [faceCenterOffset]
+        if (typeSeen)
+          error(ScriptError.ERROR_incompatibleArguments);
+        typeSeen = true;
+        propertyName = (e.theTok == T.collapsed ? "collapsed" : null);
+        if (isFloatParameter(i + 1))
+          setShapeProperty(JC.SHAPE_POLYHEDRA, "faceCenterOffset",
+              Double.valueOf(doubleParameter(++i)));
         break;
       case T.color:
       case T.translucent:
@@ -3978,22 +3993,9 @@ public class CmdExt extends ScriptExt {
         if (atomPt == i - 1)
           needsGenerating = true;
         translucentLevel = getColorTrans(eval, i, true, colorArgb);
+        ok = true;
         i = eval.iToken;
         continue;
-      case T.flat: // removed in Jmol 14.4 -- never documented; restored in Jmol 14.29.21
-      case T.collapsed:
-        if (atomPt == i - 1)
-          needsGenerating = true;
-        // COLLAPSED
-        // COLLAPSED [faceCenterOffset]
-        if (typeSeen)
-          error(ScriptError.ERROR_incompatibleArguments);
-        typeSeen = true;
-        propertyName = (e.theTok == T.collapsed ? "collapsed" : null);
-        if (needsGenerating && isFloatParameter(i + 1))
-          setShapeProperty(JC.SHAPE_POLYHEDRA, "faceCenterOffset",
-              Double.valueOf(doubleParameter(++i)));
-        break;
       case T.noedges:
       case T.edges:
       case T.frontedges:
@@ -4011,7 +4013,7 @@ public class CmdExt extends ScriptExt {
       case T.backlit:
       case T.frontlit:
       case T.fullylit:
-        // never implemented or 
+        // never implemented
         //        lighting = eval.theTok;
         continue;
       case T.id:
@@ -4057,7 +4059,7 @@ public class CmdExt extends ScriptExt {
     if (needsGenerating) {
       if (!typeSeen && haveBonds)
         setShapeProperty(JC.SHAPE_POLYHEDRA, "bonds", null);
-      setShapeProperty(JC.SHAPE_POLYHEDRA, "generate", null);
+      setShapeProperty(JC.SHAPE_POLYHEDRA, "generate", Boolean.valueOf(modifyOnly));
     } else if (!ok) {// && lighting == T.nada)
       error(ScriptError.ERROR_insufficientArguments);
     }
@@ -4471,7 +4473,7 @@ public class CmdExt extends ScriptExt {
         ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;PMB;ISOMESHBIN;ISOMESH;VAR;FILE;FUNCTION;CFI;CIF;CIFP1;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;MOL67;PDB;PGRP;PQR;PWMAT;PWSLAB;QUAT;RAMA;SDF;V2000;V3000;QCJSON;XSF;INLINE;"))
       eval.errorStr2(ScriptError.ERROR_writeWhat,
           "COORDS|FILE|FUNCTIONS|HISTORY|IMAGE|INLINE|ISOSURFACE|JMOL|MENU|MO|NBO|POINTGROUP|QUATERNION [w,x,y,z] [derivative]"
-              + "|RAMACHANDRAN|SPT|STATE|VAR x|ZIP|ZIPALL  CLIPBOARD",
+              + "|RAMACHANDRAN|SPT|STATE|VAR x|ZIP|ZIPALL|CLIPBOARD",
           "CIF|CIFP1|CML|CFI|GIF|GIFT|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|PWMAT|PWSLAB|SDF|CD|JSON|QCJSON|V2000|V3000|SPT|XJVXL|XSF|XYZ|XYZRN|XYZVIB|ZIP"
               + driverList.toUpperCase().replace(';', '|'));
     if (chk)
@@ -5350,7 +5352,6 @@ public class CmdExt extends ScriptExt {
         if (data == null) {
           msg = "no data";
         } else if (data instanceof Lst) {
-          @SuppressWarnings("unchecked")
           Lst<String> list = (Lst<String>) data;
           data = list.toArray(new String[list.size()]);
         } else if (!isAll) {
@@ -6373,6 +6374,7 @@ public class CmdExt extends ScriptExt {
         i = e.iToken;
         break;
       case T.set:
+        // only for T/F 
         key = paramAsStr(++i);
         value = (tokAt(++i) == T.nada ? "true" : paramAsStr(i));
         break;
@@ -6473,6 +6475,7 @@ public class CmdExt extends ScriptExt {
 
   /**
    * Though a command, not documented. Use the MODELKIT command instead
+   * @param isModelkit 
    * 
    * @throws ScriptException
    */
