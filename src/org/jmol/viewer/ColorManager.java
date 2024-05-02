@@ -140,13 +140,12 @@ public class ColorManager {
       int[] a = argbsCpk;
       id = atom.getAtomicAndIsotopeNumber();
       if (id >= Elements.elementNumberMax) {
-        int id0 = id;
-        id = Elements.altElementIndexFromNumber(id);
-        if (id > 0) {
-          id = Elements.elementNumberMax + id;
+        int idAlt = Elements.altElementIndexFromNumber(id);
+        if (idAlt > 0) {
+          id = idAlt;
           a = altArgbsCpk;
         } else {
-          id = Elements.getElementNumber(id0);
+          id = Elements.getElementNumber(id);
         }
       }
       // Note that CPK colors can be changed based upon user preference
