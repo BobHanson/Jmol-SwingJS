@@ -369,6 +369,11 @@ public class Polyhedron {
 
   private int[] elemNos;
   
+  void setPointScale(double scale) {
+    pointScale = scale;
+    elemNos = null;
+  }
+
   public int[] getElemNos(boolean forInfo) {
     if (forInfo) {
       int[] a = new int[nVertices];
@@ -379,13 +384,12 @@ public class Polyhedron {
       }
       return a;
     }
-    if (elemNos == null) {      
+    if (elemNos == null || elemNos.length < nVertices)
       elemNos = new int[nVertices];
-      for (int i = 0; i < nVertices; i++) {
-        P3d pt = vertices[i];
-        elemNos[i] = (pt instanceof Atom ? ((Atom) pt).getAtomicAndIsotopeNumber()
-            : pt instanceof Point3fi ? ((Point3fi) pt).sD : -2);
-      }
+    for (int i = 0; i < nVertices; i++) {
+      P3d pt = vertices[i];
+      elemNos[i] = (pt instanceof Atom ? ((Atom) pt).getAtomicAndIsotopeNumber()
+          : pt instanceof Point3fi ? ((Point3fi) pt).sD : -2);
     }
     return elemNos;
   }

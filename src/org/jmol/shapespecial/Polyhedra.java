@@ -467,7 +467,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
   private void pointsPolyhedra(BS bs, double pointScale) {
     bs = findPolyBS(thisID == null ? bs : null, false);
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-      polyhedrons[i].pointScale = pointScale;  
+      polyhedrons[i].setPointScale(pointScale);  
   }
 
   private void scalePolyhedra(double scale) {
