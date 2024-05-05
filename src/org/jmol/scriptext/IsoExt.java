@@ -817,7 +817,7 @@ public class IsoExt extends ScriptExt {
             xyz = stringParameter(i);
             break;
           case T.matrix4f:
-            xyz = SV.sValue(getToken(i));
+            xyz = (String) vwr.getSymStatic().convertTransform("xyz", (M4d) getToken(i).value);
             break;
           case T.integer:
           default:
@@ -888,7 +888,7 @@ public class IsoExt extends ScriptExt {
         if (bsAtoms == null && vwr.am.cmi >= 0)
           bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
         if (bsAtoms != null) {
-          s = vwr.getModelkit(false).drawSymmetry(thisId, isSymop, iatom, xyz, iSym, trans, center, target, intScale, nth, options, opList);
+          s = vwr.getModelkit(false).drawSymmetry(thisId, isSymop, iatom, xyz, iSym, trans, center, target, intScale, nth, options, opList, false);
           if (s == null)
             return;
           if (isSymop && target instanceof Atom && center instanceof Atom) {
@@ -900,10 +900,9 @@ public class IsoExt extends ScriptExt {
                 + "|" + eval.fullCommand) + ";";
           }
         }
-        if (s != null)
-          eval.runBufferedSafely(
-            s.length() > 0 ? s : "draw ID \"" + thisId + "*\" delete",
-            eval.outputBuffer);
+        eval.runBufferedSafely(
+          s.length() > 0 ? s : "draw ID \"" + thisId + "*\" delete",
+          eval.outputBuffer);
         return;
       case T.frame:
         isFrame = true;

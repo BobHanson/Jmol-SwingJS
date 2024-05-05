@@ -4095,7 +4095,7 @@ public class MathExt {
     if (iOp == Integer.MIN_VALUE && tok != T.var)
       iOp = 0;
     Map<String, ?> map = null;
-    if (tok == 0 && xyz.indexOf(",") < 0) {
+    if (tok == 0 && xyz != null && xyz.indexOf(",") < 0) {
       if (apt == narg) {
         map = vwr.ms.getPointGroupInfo(null);
       } else if (args[apt].tok == T.hash) {

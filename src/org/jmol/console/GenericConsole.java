@@ -432,6 +432,10 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     int pt = cmd.indexOf(JC.SCRIPT_EXT);
     if (pt >= 0)
       cmd = cmd.substring(0, pt);
+    pt = cmd.indexOf(JC.SCRIPT_GUI);
+    if (pt >= 0)
+      cmd = cmd.substring(0, pt);
+    pt = cmd.indexOf(JC.SCRIPT_GUI);
    return PT.trim(cmd, "; ");
   }
 

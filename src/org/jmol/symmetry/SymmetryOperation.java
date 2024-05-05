@@ -88,6 +88,7 @@ public class SymmetryOperation extends M4d {
 
   private int opOrder;
   private V3d opTrans;
+  private V3d opGlide;
   private P3d opPoint, opPoint2;
   private V3d opAxis;
   P4d opPlane;
@@ -1463,7 +1464,6 @@ public class SymmetryOperation extends M4d {
     m4.getTranslation(opTrans);
     opTrans.scale(1d / order);
     double d = approx6(opTrans.length());
-    double dmax = 1;
     opPoint = new P3d();
     V3d v = null;
     boolean isOK = true;
@@ -1523,13 +1523,13 @@ public class SymmetryOperation extends M4d {
         opPoint.setT(p1sum);
         // this next changes opPoint value position to front edge or where it just touches.
         if (checkOpAxis(opPoint, opAxis, p2, new V3d(), new V3d(), opPoint)) {
-          opPoint2 = P3d.newP(p2);
+            opPoint2 = P3d.newP(p2);        
           // was for vertical offset of screw components 4(+) and 4(-)
           //          if (order != 2 && opIsCCW == Boolean.FALSE && d > 0 && d <= 0.5d) {
           //            opPoint.add(opTrans);
           //          }
         }
-        if (d > 0) {
+       if (d > 0) {
           // all screws must start and terminate within the cell
           p1sum.scaleAdd2(0.5d, opTrans, opPoint);
           //          p1sum.add2(opPoint, opTrans);
@@ -1540,19 +1540,12 @@ public class SymmetryOperation extends M4d {
             if (!checkOpPoint(p1sum))
               opPoint2 = null;
           }
+          // real question here...
+          // problem here with p1 not being a vector, just the base point along the axis.
+          if (v.dot(p1) < 0) {
+            isOK = false;
+          }
         }
-      }
-      // real question here...
-      // problem here with p1 not being a vector, just the base point along the axis.
-      if (v.dot(p1) < 0) {
-        isOK = false;
-      }
-      if (d > 0 && opTrans.z == 0 && opTrans.lengthSquared() == 1.25d) {
-        // SG 177 
-        dmax = 1.25d;
-        opIsLong = true;
-      } else {
-        dmax = 1.0d;
       }
       break;
     case TYPE_REFLECTION:
@@ -1580,28 +1573,40 @@ public class SymmetryOperation extends M4d {
         opPlane.w = 0;
       approx6Pt(opAxis);
       normalizePlane(opPlane);
-      //      
-      //      opAxis.setT(opPlane);
-      if (d > 0 && (opTrans.z == 0 && opTrans.lengthSquared() == 1.25d
-          || opTrans.z == 0.5d && opTrans.lengthSquared() == 1.5d)) {
-        // SG 186
-        // +/-0.5x +/-y, +/-x +/-0.5y
-        dmax = 1.25d;
-        opIsLong = true;
-      } else {
-        // this is skipping "-y+2/3,-x+1/3,z+5/6" in SG 161
-        dmax = 0.78d;
-      }
       break;
     }
     if (d > 0) {
       opClean6(opTrans);
+      double dmax = 1;
       if (opType == TYPE_REFLECTION) {
+        // BUT opTrans is the composite translation, not just the glide??
+        if (opTrans.z == 0 && opTrans.lengthSquared() == 1.25d
+            || opTrans.z == 0.5d && opTrans.lengthSquared() == 1.5d) {
+          // SG 186
+          // -x+y+2,y+1,z
+          dmax = 1.25d;
+          opIsLong = true;
+        } else {
+          // this is skipping "-y+2/3,-x+1/3,z+5/6" in SG 161
+          dmax = 0.78d;
+        }
+        opGlide = V3d.newV(opTrans);
+        fixNegTrans(opGlide);
+        if (opGlide.length() == 0)
+          opGlide = null;
         // being careful here not to disallow this for vertical planes in #156; only for #88
         if ((opTrans.x == 1 || opTrans.y == 1 || opTrans.z == 1) && m22 == -1)
           isOK = false;
+      } else {
+        if (opTrans.z == 0 && opTrans.lengthSquared() == 1.25d) {
+          // SG 177   -x+y+2,y+1,-z+2
+          dmax = 1.25d;
+//          System.out.println("SO opLong " + opTrans + " " + getXYZFromMatrix(this, false, false, false));
+          opIsLong = true;
+        }
       }
       opType |= TYPE_TRANSLATION;
+      // opTrans is the FULL translation, not just the glide!
       if (Math.abs(approx(opTrans.x)) >= dmax
           || Math.abs(approx(opTrans.y)) >= dmax
           || Math.abs(approx(opTrans.z)) >= dmax) {
@@ -1627,6 +1632,12 @@ public class SymmetryOperation extends M4d {
   //    v1.scale(1/d);
   //    return "" + ((int)approx(v1.x)) + ((int)approx(v1.y)) + ((int)approx(v1.z));
   //  }
+
+  private void fixNegTrans(V3d t) {
+    t.x = normHalf(t.x);
+    t.y = normHalf(t.y);
+    t.z = normHalf(t.z);
+  }
 
   private static void normalizePlane(P4d plane) {
     approx6Pt(plane);
@@ -1734,20 +1745,20 @@ public class SymmetryOperation extends M4d {
     int n = ops.length;
     Lst<SymmetryOperation> lst = new Lst<SymmetryOperation>();
     SB xyzLst = new SB();
-
     Map<String, Lst<SymmetryOperation>> mapPlanes = new Hashtable<String, Lst<SymmetryOperation>>();
+    V3d vTemp = new V3d();
     for (int i = 0; i < n; i++) {
       SymmetryOperation op = ops[i];
       lst.addLast(op);
       String s = op.getOpName(OP_MODE_NOTRANS);
       xyzLst.append(s).appendC(';');
       if ((op.getOpType() & TYPE_REFLECTION) != 0)
-        addCoincidentMap(mapPlanes, op, TYPE_REFLECTION);
+        addCoincidentMap(mapPlanes, op, TYPE_REFLECTION, vTemp);
       else if (op.getOpType() == TYPE_SCREW_ROTATION)
-        addCoincidentMap(mapPlanes, op, TYPE_SCREW_ROTATION);
+        addCoincidentMap(mapPlanes, op, TYPE_SCREW_ROTATION, null);
     }
     for (int i = 1; i < n; i++) { // skip x,y,z
-      ops[i].addOps(xyzLst, lst, mapPlanes, n, i);
+      ops[i].addOps(xyzLst, lst, mapPlanes, n, i, vTemp);
     }
     return lst.toArray(new SymmetryOperation[lst.size()]);
   }
@@ -1761,15 +1772,15 @@ public class SymmetryOperation extends M4d {
    * @param mapCoincident
    * @param n0
    * @param isym
+   * @param vTemp 
    */
   void addOps(SB xyzList, Lst<SymmetryOperation> lst,
-              Map<String, Lst<SymmetryOperation>> mapCoincident, int n0, int isym) {
+              Map<String, Lst<SymmetryOperation>> mapCoincident, int n0, int isym, V3d vTemp) {
     V3d t0 = new V3d();
     getTranslation(t0);
     boolean isPlane = ((getOpType() & TYPE_REFLECTION) == TYPE_REFLECTION);
     boolean isScrew = (getOpType() == TYPE_SCREW_ROTATION);
     V3d t = new V3d();
-
     SymmetryOperation opTemp = null;
     // from -2 to 2, starting with + so that we get the + version
     for (int i = 3; --i >= -3;) {
@@ -1778,13 +1789,13 @@ public class SymmetryOperation extends M4d {
           if (opTemp == null)
             opTemp = new SymmetryOperation(null, 0, false);
           t.set(i, j, k);
-          if (checkOpSimilar(t))
+          if (checkOpSimilar(t, vTemp))
             continue;
           if (opTemp.opCheckAdd(this, t0, n0, t, xyzList, lst, isym + 1)) {
             if (isPlane)
-              addCoincidentMap(mapCoincident, opTemp, TYPE_REFLECTION);
+              addCoincidentMap(mapCoincident, opTemp, TYPE_REFLECTION, vTemp);
             else if (isScrew)
-              addCoincidentMap(mapCoincident, opTemp, TYPE_SCREW_ROTATION);
+              addCoincidentMap(mapCoincident, opTemp, TYPE_SCREW_ROTATION, null);
             opTemp = null;
           }
         }
@@ -1802,9 +1813,11 @@ public class SymmetryOperation extends M4d {
    *        coincident planes map
    * @param op
    * @param opType
+   * @param vTemp 
    */
   private static void addCoincidentMap(Map<String, Lst<SymmetryOperation>> mapCoincident,
-                                       SymmetryOperation op, int opType) {
+                                       SymmetryOperation op, int opType,
+                                       V3d vTemp) {
     if (op.isIrrelevant)
       return;
     String s = op.getOpName(OP_MODE_POSITION_ONLY);
@@ -1812,7 +1825,7 @@ public class SymmetryOperation extends M4d {
     op.iCoincident = 0;
     boolean isRotation = (opType == TYPE_SCREW_ROTATION);
     if (l == null) {
-      mapCoincident.put(s, l = new Lst<SymmetryOperation>());
+      mapCoincident.put(s, l = new Lst<SymmetryOperation>());      
     } else if (isRotation) {
       // we are getting rid of 3-screw in favor of 6-screw
       if (op.opOrder == 6) {
@@ -1831,16 +1844,50 @@ public class SymmetryOperation extends M4d {
       }
       op.iCoincident = 1;
     } else {
-      SymmetryOperation op0 = l.get(0);
-      if (op.opTrans != null && op0.opTrans != null) {
-        V3d v = V3d.newV(op.opTrans);
-        v.add(op0.opTrans);
-        if (v.lengthSquared() < 1e-6) {
-          // space groups 218, 225, 227 will fire this
-          op.isIrrelevant = true;
-          return;
+      SymmetryOperation op0 = null;
+      for (int i = l.size(); --i >= 0;) {
+        op0 = l.get(i);
+        if (op.opGlide != null && op0.opGlide != null) {
+          vTemp.sub2(op.opGlide, op0.opGlide);
+          if (vTemp.lengthSquared() < 1e-6) {
+            // space groups 218, 225, 227 will fire this
+            op.isIrrelevant = true;
+            return;
+          }
+          vTemp.add2(op.opGlide, op0.opGlide);
+          if (vTemp.lengthSquared() < 1e-6) {
+            // space groups 218, 225, 227 will fire this
+            op.isIrrelevant = true;
+            return;
+          }
+          vTemp.add2(op.opAxis, op0.opAxis);
+          if (vTemp.lengthSquared() < 1e-6) {
+            // opposite axes. Should we reverse one?
+            // maybe check trans vs opAxis? 
+            op.isIrrelevant = true;
+            return;
+          }
+        } else if (op.opGlide == null && op0.opGlide == null) {
+          
+          vTemp.add2(op.opAxis, op0.opAxis);
+          if (vTemp.lengthSquared() < 1e-6) {
+            // opposite axes. Should we reverse one?
+            // maybe check trans vs opAxis? 
+            op.isIrrelevant = true;
+            return;
+          }
+          vTemp.sub2(op.opAxis, op0.opAxis);
+          if (vTemp.lengthSquared() < 1e-6) {
+            // same axes
+            // how did this happen?
+            op.isIrrelevant = true;
+            return;
+          }
         }
+
+
       }
+      // FOR loop leaves op0 = lst.get(0);
       if (op0.iCoincident == 0) {
         op.iCoincident = 1;
         op0.iCoincident = -1;
@@ -1863,7 +1910,7 @@ public class SymmetryOperation extends M4d {
    * @param t
    * @return true if
    */
-  private boolean checkOpSimilar(V3d t) {
+  private boolean checkOpSimilar(V3d t, V3d vTemp) {
     switch (getOpType() & ~TYPE_TRANSLATION) {
     default:
       return false;
@@ -1872,7 +1919,10 @@ public class SymmetryOperation extends M4d {
     case TYPE_ROTATION: // includes screw rotation
       return (approx6(t.dot(opAxis) - t.length()) == 0);
     case TYPE_REFLECTION: // includes glide reflection
-      return (approx6(t.dot(opAxis)) == 0);
+      vTemp.cross(t, opAxis);
+      // t.cross(opAxis)==0 is a translation PERPENDICULAR to the plane
+      // t.dot(opAxis)==0 is a translation IN the plane
+      return (approx6(vTemp.length()) == 0 ? false : approx6(t.dot(opAxis)) == 0);
     }
   }
 
@@ -1898,8 +1948,9 @@ public class SymmetryOperation extends M4d {
     if (isIrrelevant || opType == TYPE_IDENTITY || opType == TYPE_TRANSLATION)
       return false;
     String s = getOpName(OP_MODE_NOTRANS) + ";";
-    if (xyzList.indexOf(s) >= 0)
-      return false;
+    if ((opType & TYPE_REFLECTION) == 0 && xyzList.indexOf(s) >= 0) {
+        return false;
+    }
     xyzList.append(s);
     lst.addLast(this);
     isFinalized = true;
@@ -2219,15 +2270,19 @@ public class SymmetryOperation extends M4d {
    * @return normalized translation
    */
   private static String norm(double d) {
+    return opF(normHalf(d));
+  }
+  
+  private static double normHalf(double d) {
     while (d <= -0.5) {
       d += 1;
     }
     while (d > 0.5) {
       d -= 1;
     }
-    return opF(d);
+    return d;
   }
-  
+
   /**
    * Convert "1/2,1/2,0" to {0.5 0.5 0}
    * 

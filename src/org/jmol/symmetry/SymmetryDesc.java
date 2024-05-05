@@ -121,6 +121,10 @@ public class SymmetryDesc {
   private static final String PLANE_COLOR_N_GLIDE = "orange"; // naranja
   private static final String COLOR_SCREW_1       = "orange";
   private static final String COLOR_SCREW_2       = "blue";
+  private static final String COLOR_2             = "red";
+  private static final String COLOR_BAR_3         = "[xA00040]";
+  private static final String COLOR_BAR_4         = "[x800080]";
+  private static final String COLOR_BAR_6         = "[x4000A0]";
 
   //////////// private methods ///////////
 
@@ -781,7 +785,7 @@ public class SymmetryDesc {
     op.isIrrelevant |= isIrrelevant;
     Boolean isccw = op.getOpIsCCW();
     int screwDir = 0;
-
+    int nrot = 0; 
     if (bsInfo.get(RET_LABEL) || bsInfo.get(RET_TYPE)) {
 
       info1 = type = "identity";
@@ -796,19 +800,22 @@ public class SymmetryDesc {
         if (isccw != null) {
           screwtype = (isccw == Boolean.TRUE ? "(+)" : "(-)");
           screwDir = (isccw == Boolean.TRUE ? 1 : -1);
+          if (haveInversion && screwDir == -1)
+            isIrrelevant = true;
         }
-        if (haveInversion) {
+        nrot = 360 / ang;
+        if (haveInversion) {          
           // n-bar
-          info1 = (360 / ang) + "-bar" + screwtype + " axis";
+          info1 = nrot + "-bar" + screwtype + " axis";
         } else if (pitch1 != 0) {
           // screw axis
           ptemp.setT(ax1);
           uc.toFractional(ptemp, false);
-          info1 = (360 / ang) + screwtype + " (" + strCoord(ptemp, op.isBio)
+          info1 = nrot + screwtype + " (" + strCoord(ptemp, op.isBio)
               + ") screw axis";
 
         } else {
-          info1 = (360 / ang) + screwtype + " axis";
+          info1 = nrot + screwtype + " axis";
           if (order % 2 == 0)           
             screwDir *= order / 2; // 6_3, 4_2
         }
@@ -905,7 +912,7 @@ public class SymmetryDesc {
 
         if (isRotation) {
 
-          color = "red";
+          color = (nrot == 2 ? COLOR_2 : nrot == 3 ? COLOR_BAR_3 : nrot == 4 ? COLOR_BAR_4 : COLOR_BAR_6);
 
           ang = ang1;
           double scale = 1d;
@@ -913,9 +920,6 @@ public class SymmetryDesc {
 
           // draw the lines associated with a rotation
 
-          if (haveInversion) {
-            color = "purple";
-          }
           String wp = "";
           if (isSpaceGroup) {
             pa1.setT(op.getOpPoint());
@@ -1066,7 +1070,6 @@ public class SymmetryDesc {
           }
 
           P3d p2 = null;
-          double wscale = 1;
           if (pitch1 == 0 && !haveInversion) {
             // simple rotation
             ptemp.scaleAdd2(0.5d, vtemp, pa1);
@@ -1086,8 +1089,7 @@ public class SymmetryDesc {
               && (d = op.getOpTrans().length()) > 0.4d) {
             // all space group screw
             if (isccw == Boolean.TRUE) {
-              //              vtemp.scale(1.02d);
-              //              wscale = 2d;
+              // n/a
             } else if (isccw == null) {
               // 2-fold
               // maybe add a second
@@ -1106,13 +1108,11 @@ public class SymmetryDesc {
           } else if (isSpaceGroup && haveInversion) {
             // all space group n-bar
             // pitch1 here is 120 or 60 or 0 ??
-            p2 = pt1;
-            vtemp.scale(-1d);
             scaleByOrder(vtemp, order, isccw);
             wp = "80";
           }
           if (pitch1 > 0 && !haveInversion) {
-            wp = "" + (90 - (int) (vtemp.length() * wscale / pitch1 * 90));
+            wp = "" + (90 - (int) (vtemp.length() / pitch1 * 90));
           }
           if (!ignore) {
             
@@ -1137,15 +1137,17 @@ public class SymmetryDesc {
               }
               color = (screwDir < 0 ? COLOR_SCREW_2 : COLOR_SCREW_1);
             }
-            String name = opType + "_"+ order + "rotvector1";
+            String name = opType + "_"+ nrot + "rotvector1";
             drawOrderVector(drawSB, name, "vector", THICK_LINE + wp, pa1,
-                order, screwDir, haveInversion, 1, vtemp, isTimeReversed ? "gray" : color, title);
+                nrot, screwDir, haveInversion && isSpaceGroupAll, isccw == Boolean.TRUE, 
+                vtemp, isTimeReversed ? "gray" : color, title);
             if (p2 != null) {
-              drawOrderVector(drawSB, name, "vector", THICK_LINE + wp,
-                  ptr, order, screwDir, haveInversion, 2, vtemp, isTimeReversed ? "gray" : color, title);
+              // second standard rotation arrow on other side of unit cell only
+              drawOrderVector(drawSB, name + "2", "vector", THICK_LINE + wp,
+                  ptr, order, screwDir, haveInversion, isccw == Boolean.TRUE, vtemp, 
+                  isTimeReversed ? "gray" : color, title);
             }
           }
-
         } else if (isMirrorPlane) {
 
           // lavender arrow across plane from pt00 to pt0
@@ -1309,11 +1311,20 @@ public class SymmetryDesc {
             ptref = (isSpaceGroup ? pta00 : P3d.newP(pta00));
           }
           if (ptref != null && !ignore) {
-            drawVector(drawSB,  (glideType == '\0' ? "centering_" : glideType + "_g") + "trans_vector", "vector",
-                (isTranslationOnly ? THICK_LINE : THIN_LINE), ptref, trans,
-                isTimeReversed && !haveInversion && !isMirrorPlane
-                    && !isRotation ? "darkGray" : "gold",
-                title);
+            boolean isCentered = (glideType == '\0');
+            color = (isTimeReversed && !haveInversion && !isMirrorPlane
+                      && !isRotation ? "darkGray" : "gold");
+            drawVector(drawSB,  (isCentered ? "centering_" : glideType + "_g") + "trans_vector", "vector",
+                (isTranslationOnly ? THICK_LINE : THIN_LINE), ptref, trans, color, title);
+            if (isSpaceGroup && !isCentered && !isTranslationOnly) {
+              // draw reverse arrow as well
+              ptemp.setT(ptref);
+              ptemp.add(trans);
+              ptemp2.setT(trans);
+              ptemp2.scale(-1);
+              drawVector(drawSB,  glideType + "_g" + "trans_vector2", "vector",
+                  THIN_LINE, ptemp, ptemp2, color, title);
+            }
           }
         }
 
@@ -1464,7 +1475,7 @@ public class SymmetryDesc {
         break;
       case RET_UNITTRANS:
         ret[i] = (vtrans.lengthSquared() > 0 ? vtrans : null);
-        break;
+//        break;
       case RET_CTRVECTOR:
         ret[i] = op.getCentering();
         break;
@@ -1580,20 +1591,19 @@ public class SymmetryDesc {
   @SuppressWarnings("unchecked")
   private void drawOrderVector(SB sb, String label, String type, String d,
                                P3d pt, int order, int screwDir,
-                               boolean haveInversion, int index, V3d vtemp,
+                               boolean haveInversion, boolean isCCW, V3d vtemp,
                                String color, String title) {
-    if (index == 2)
-      label += "b";
     drawVector(sb, label, type, d, pt, vtemp, color, title);
-    if (order == 2)
+    if (order == 2 || haveInversion && !isCCW)
       return;
-    Object[] poly = getPolygon(order, 0, false, pt, vtemp);
+    Object[] poly = getPolygon(order, !haveInversion ? 0 : isCCW ? 1 : -1, haveInversion, pt, vtemp);
     Lst<Object> l = (Lst<Object>) poly[0];
     sb.append(getDrawID(label + "_key")).append(" POLYGON ").appendI(l.size());
     for (int i = 0, n = l.size(); i < n; i++)
       sb.appendO(l.get(i));
     sb.append(" color ").append(color);
     if (screwDir != 0) {
+      // add screw axis "windmill"
       poly = getPolygon(order, screwDir, haveInversion, pt, vtemp);
       sb.append(getDrawID(label + "_key2"));
       l = (Lst<Object>) poly[0];
@@ -1609,7 +1619,7 @@ public class SymmetryDesc {
   }
   
   private static Object[] getPolygon(int order, int screwDir, boolean haveInversion, P3d pt0, V3d v) {
-    double scale = 0.4d;
+    double scale = (haveInversion ? 0.6d : 0.4d);
     Lst<P3d> pts = new Lst<>();
     Lst<int[]> faces = new Lst<>();
     V3d offset = V3d.newV(v);
@@ -1639,12 +1649,12 @@ public class SymmetryDesc {
       if (i < order) {
         pts.addLast(pt);
       }
-      if (screwDir != 0 && (i % screwDir == 0) && ptLast != null) {
+      if (!haveInversion && screwDir != 0 && (i % screwDir == 0) && ptLast != null) {
         vt.sub2(pt, ptLast);
         int p2 = (i < order ? p++ : 0);
         P3d pt1 = P3d.newP(pt);
-        pt1.scaleAdd(1, pt, pt1);
-        pt1.scaleAdd(-1, offset, pt1);
+        pt1.scaleAdd2(1, pt, pt1);
+        pt1.scaleAdd2(-1, offset, pt1);
         pts.addLast(pt1);
         faces.addLast(new int[] {plast, p++, p2, 0});
         plast = p2;

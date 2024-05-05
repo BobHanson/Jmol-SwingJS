@@ -1579,6 +1579,9 @@ public class Symmetry implements SymmetryInterface {
     if (transform == null) {
       return staticGetTransformABC(trm, false);
     }
+    if (transform.equals("xyz")) {
+      return (trm == null ? null : SymmetryOperation.getXYZFromMatrix(trm, false, false, false));
+    }
     if (trm == null)
       trm = new M4d();
     UnitCell.getMatrixAndUnitCell(null, transform, trm);

@@ -1309,8 +1309,8 @@ public class ModelKit {
     String msg = sb.toString();
     boolean isError = msg.endsWith("!");
     if (doDraw && !isError) {
-      String s = drawSymmetry("sym", false, -1, null, Integer.MAX_VALUE, null, 
-          null, null, 0, -2, 0, null);
+      String s = drawSymmetry("sg", false, -1, null, Integer.MAX_VALUE, null, 
+          null, null, 0, -2, 0, null, true);
       appRunScript(s);
     }
     return msg;
@@ -3728,7 +3728,7 @@ public class ModelKit {
       
       transform = sym.staticGetTransformABC(trm, false);
       String msg = transform + "\n" 
-      + PT.join(tokens, '>' , 0) + "\n basis=" + basis;
+      + PT.join(tokens, '>' , 0) + (basis.isEmpty() ? "" : "\n basis=" + basis);
       System.out.println("ModelKit trm=" + msg);
       sb.append(msg).append("\n");
       return transform;
@@ -4864,8 +4864,7 @@ public class ModelKit {
 
   public String drawSymmetry(String thisId, boolean isSymop, int iatom, String xyz, int iSym,
                      P3d trans, P3d center, P3d target, int intScale, int nth,
-                     int options, int[] opList) {
-    
+                     int options, int[] opList, boolean isModelkit) {
     String s = null;
     if (options != 0) {
       // options is T.offset, and target is an {i j k} offset from cell 555
@@ -4885,6 +4884,8 @@ public class ModelKit {
       s = "draw ID " + (isSymop ? "sg" : "sym") + "* delete;" + s;
       s = "draw ID " + thisId + "* delete;" + s;
     }
+    if (isModelkit)
+      s += ";draw ID sg_xes axes 0.05;";  
     return s;
   }
 
