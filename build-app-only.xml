@@ -114,6 +114,7 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
         -->
         <include name="**/Data/*" />
         <include name="**/*.txt" />
+        <include name="**/*.json" />
       </fileset>
     </copy>
     <copy file="Jmol.properties" tofile="${classes.dir}/org/jmol/viewer/Jmol.properties" />
