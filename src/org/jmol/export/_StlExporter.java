@@ -173,7 +173,7 @@ public class _StlExporter extends _VrmlExporter {
   @Override
   protected void outputGeometry(T3d[] vertices, T3d[] normals, short[] colixes,
                                 int[][] indices, short[] polygonColixes,
-                                int nVertices, int nPolygons,
+                                int ddnVertices, int nPolygons,
                                 BS bsPolygons, int faceVertexMax,
                                 Lst<Short> colorList, Map<Short, Integer> htColixes, P3d offset) {
     for (int i = 0; i < nPolygons; i++) {
