@@ -29,8 +29,8 @@ import java.util.Map.Entry;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.adapter.smarter.XtalSymmetry;
 import org.jmol.api.JmolAdapter;
+import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.util.Vibration;
@@ -225,7 +225,6 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private boolean readEntryOrLoopData() throws Exception {
-    //System.out.println("key is " + key);
     if (key.startsWith("data_")) {
       isLigand = false;
       if (asc.atomSetCount == 0)
@@ -304,7 +303,7 @@ public class CifReader extends AtomSetCollectionReader {
           if (htAudit != null && auditBlockCode.contains("_MOD_")) {
             String key = PT.rep(auditBlockCode, "_MOD_", "_REFRNCE_");
             if (asc.setSymmetry(
-                (XtalSymmetry.FileSymmetry) htAudit.get(key)) != null) {
+                (FileSymmetry) htAudit.get(key)) != null) {
               unitCellParams = asc.getSymmetry().getUnitCellParams();
               iHaveUnitCell = true;
             }
@@ -583,6 +582,7 @@ public class CifReader extends AtomSetCollectionReader {
     // No special-position atoms in mmCIF files, because there will
     // be no center of symmetry, no rotation-inversions, 
     // no atom-centered rotation axes, and no mirror or glide planes.
+    
     if (isMMCIF)
       checkNearAtoms = false;
     boolean doCheckBonding = doCheckUnitCell && !isMMCIF;
@@ -621,7 +621,7 @@ public class CifReader extends AtomSetCollectionReader {
       throws Exception {
     // called by applySymTrajASCR
     // just for modulated, audit block, and magnetic structures
-    XtalSymmetry.FileSymmetry sym = (haveSymmetry
+    FileSymmetry sym = (haveSymmetry
         ? asc.getXSymmetry().getBaseSymmetry()
         : null);
     if (sym != null && sym.getSpaceGroup() == null) {
@@ -1148,7 +1148,7 @@ public class CifReader extends AtomSetCollectionReader {
       "*_label_alt_id", // 
       "*_group_pdb", //
       "*_pdbx_pdb_model_num", // 
-      "*_calc_flag", // 
+      "*_calc_flag", //  18
       "*_disorder_group", //
       "*_aniso_label", // 
       "*_anisotrop_id", // 
@@ -1312,7 +1312,7 @@ public class CifReader extends AtomSetCollectionReader {
         if ((f0 = f = fieldProperty(key2col[LABEL])) != NONE
             || (f = fieldProperty(key2col[CC_ATOM_ID])) != NONE
             || (f = fieldProperty(key2col[LABEL_ATOM_ID])) != NONE
-            || (f = fieldProperty(key2col[ANISO_LABEL])) != NONE
+            || (f0 = f = fieldProperty(key2col[ANISO_LABEL])) != NONE
             || (f = fieldProperty(key2col[ANISO_MMCIF_ID])) != NONE
             || (f = fieldProperty(key2col[MOMENT_LABEL])) != NONE) {
           if (f0 != NONE && atomLabels != null) {
@@ -1525,8 +1525,7 @@ public class CifReader extends AtomSetCollectionReader {
             atom.isHetero = true;
           break;
         case DUMMY_ATOM:
-          //see http://www.iucr.org/iucr-top/cif/cifdic_html/
-          //            1/cif_core.dic/Iatom_site_calc_flag.html
+          //see http://www.iucr.org/iucr-top/cif/cifdic_html/1/cif_core.dic/Iatom_site_calc_flag.html
           if ("dum".equals(field)) {
             atom.x = Double.NaN;
             continue; //skip 
@@ -1778,7 +1777,8 @@ public class CifReader extends AtomSetCollectionReader {
   final private static String[] symmetryOperationsFields = { "*_operation_xyz",
       "*_magn_operation_xyz",
 
-      "*_ssg_operation_algebraic", "*_magn_ssg_operation_algebraic",
+      "*_ssg_operation_algebraic", 
+      "*_magn_ssg_operation_algebraic",
       "_symmetry_equiv_pos_as_xyz", // old
       "_symmetry_ssg_equiv_pos_as_xyz", // old
 
@@ -1786,7 +1786,8 @@ public class CifReader extends AtomSetCollectionReader {
       "*_magn_ssg_operation_timereversal", // another iteration
       "*_operation_timereversal", // preliminary only
 
-      "*_magn_centering_xyz", "*_magn_ssg_centering_algebraic",
+      "*_magn_centering_xyz", 
+      "*_magn_ssg_centering_algebraic",
       "*_magn_ssg_centering_xyz" // preliminary
   };
 
@@ -2167,7 +2168,11 @@ public class CifReader extends AtomSetCollectionReader {
       Atom a1 = getAtomFromNameCheckCase((String) o[0]);
       Atom a2 = getAtomFromNameCheckCase((String) o[1]);
       if (a1 == null || a2 == null) {
-        a2 = getAtomFromNameCheckCase((String) o[1]);
+        System.err.println("CifReader checking GEOM_BOND " + o[0] + "-" + o[1] + " found " + a1 + " " + a2);
+        continue;
+      }
+      if (Double.isNaN(a1.x) || Double.isNaN(a2.x)) {
+        System.err.println("CifReader checking GEOM_BOND " + o[0] + "-" + o[1] + " found x coord NaN");
         continue;
       }
       int iatom1 = a1.index;
@@ -2190,8 +2195,9 @@ public class CifReader extends AtomSetCollectionReader {
         for (int k = bs2.nextSetBit(0); k >= 0; k = bs2.nextSetBit(k + 1)) {
           if ((!isMolecular || !bsConnected[j + firstAtom].get(k))
               && checkBondDistance(atoms[j + firstAtom], atoms[k + firstAtom],
-                  distance, dx))
+                  distance, dx)) {
             addNewBond(j + firstAtom, k + firstAtom, order);
+          }
         }
       }
     }
@@ -2270,10 +2276,14 @@ public class CifReader extends AtomSetCollectionReader {
 
   private boolean checkBondDistance(Atom a, Atom b, double distance,
                                     double dx) {
-    if (iHaveFractionalCoordinates)
-      return symmetry.checkDistance(a, b, distance, dx, 0, 0, 0, ptOffset);
-    double d = a.distance(b);
-    return (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1d); // same as in Symmetry
+    boolean ret;
+    if (iHaveFractionalCoordinates) {
+      ret = symmetry.checkDistance(a, b, distance, dx, 0, 0, 0, ptOffset);
+    } else {
+      double d = a.distance(b);
+      ret = (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1d); // same as in Symmetry
+    }
+    return ret;
   }
 
   /**
