@@ -500,7 +500,7 @@ public class _VrmlExporter extends __CartesianExporter {
     //was output(" Shape{geometry Sphere{radius " + radius + "}");
     
     V3d[] vertices = Geodesic.getVertexVectors();
-    int nVertices = 162;
+    int nVertices = 162; // not used by _StlExporter; will be 642 vertices
     short[] faceList = Geodesic.getFaceVertexes(2);
     int nFaces = faceList.length / 3;
     int[][] indices = new int[nFaces][3];

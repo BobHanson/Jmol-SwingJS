@@ -72,6 +72,7 @@ public class _StlExporter extends _VrmlExporter {
   public _StlExporter() {
     super();
     useTable = null;
+    lineWidthMad = 20;
     noColor = true;
     isDebug = Logger.debugging;
     if (!isDebug) {
