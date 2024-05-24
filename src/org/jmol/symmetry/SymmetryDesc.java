@@ -1117,6 +1117,7 @@ public class SymmetryDesc {
           if (!ignore) {
             
             if (screwDir != 0) {
+              // get the polygon wings right (isSpaceGroupAll only)
               switch (order) {
               case 2:
                 // ignoring
@@ -1140,12 +1141,12 @@ public class SymmetryDesc {
             String name = opType + "_"+ nrot + "rotvector1";
             drawOrderVector(drawSB, name, "vector", THICK_LINE + wp, pa1,
                 nrot, screwDir, haveInversion && isSpaceGroupAll, isccw == Boolean.TRUE, 
-                vtemp, isTimeReversed ? "gray" : color, title);
+                vtemp, isTimeReversed ? "gray" : color, title, isSpaceGroupAll);
             if (p2 != null) {
               // second standard rotation arrow on other side of unit cell only
               drawOrderVector(drawSB, name + "2", "vector", THICK_LINE + wp,
                   ptr, order, screwDir, haveInversion, isccw == Boolean.TRUE, vtemp, 
-                  isTimeReversed ? "gray" : color, title);
+                  isTimeReversed ? "gray" : color, title, isSpaceGroupAll);
             }
           }
         } else if (isMirrorPlane) {
@@ -1592,7 +1593,7 @@ public class SymmetryDesc {
   private void drawOrderVector(SB sb, String label, String type, String d,
                                P3d pt, int order, int screwDir,
                                boolean haveInversion, boolean isCCW, V3d vtemp,
-                               String color, String title) {
+                               String color, String title, boolean isSpaceGroupAll) {
     drawVector(sb, label, type, d, pt, vtemp, color, title);
     if (order == 2 || haveInversion && !isCCW)
       return;
@@ -1602,7 +1603,7 @@ public class SymmetryDesc {
     for (int i = 0, n = l.size(); i < n; i++)
       sb.appendO(l.get(i));
     sb.append(" color ").append(color);
-    if (screwDir != 0) {
+    if (screwDir != 0 && isSpaceGroupAll) {
       // add screw axis "windmill"
       poly = getPolygon(order, screwDir, haveInversion, pt, vtemp);
       sb.append(getDrawID(label + "_key2"));
@@ -1650,6 +1651,7 @@ public class SymmetryDesc {
         pts.addLast(pt);
       }
       if (!haveInversion && screwDir != 0 && (i % screwDir == 0) && ptLast != null) {
+        // draw wings
         vt.sub2(pt, ptLast);
         int p2 = (i < order ? p++ : 0);
         P3d pt1 = P3d.newP(pt);
