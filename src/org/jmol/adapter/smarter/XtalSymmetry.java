@@ -204,6 +204,22 @@ public class XtalSymmetry {
       return unitCell.getF2C();
     }
 
+    public void addInversion() {
+      SymmetryOperation[] ops = spaceGroup.operations;
+      M4d inv = new M4d();
+      inv.m00 = inv.m11 = inv.m22 = -1;
+      inv.m33 = 1;
+      int n = getSpaceGroupOperationCount();
+      M4d m = new M4d();
+      for (int i = 0; i < n; i++) {
+        m.mul2(inv, ops[i]);
+        String s = SymmetryOperation.getXYZFromMatrix(m, true, true, false);
+        addSpaceGroupOperation(s, 0);
+      }
+      return;
+    }
+
+
   }
 
   private static final double MAX_INTERCHAIN_BOND_2 = 25; // allowing for hydrogen bonds

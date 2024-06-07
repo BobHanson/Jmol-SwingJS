@@ -27,6 +27,7 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Atom;
 
 import javajs.util.AU;
+import javajs.util.Lst;
 import javajs.util.PT;
 
 import org.jmol.util.Logger;
@@ -111,22 +112,25 @@ public class ShelxReader extends AtomSetCollectionReader {
     "HKLF;OMIT;SHEL;BASF;TWIN;EXTI;SWAT;HOPE;MERG;" +
     "SPEC;RESI;MOVE;ANIS;AFIX;HFIX;FRAG;FEND;EXYZ;" +
     "EXTI;EADP;EQIV;" +
-    "CONN;PART;BIND;FREE;" +
+    "CONN;BIND;FREE;" +
     "DFIX;DANG;BUMP;SAME;SADI;CHIV;FLAT;DELU;SIMU;" +
     "DEFS;ISOR;NCSY;SUMP;" +
     "L.S.;CGLS;BLOC;DAMP;STIR;WGHT;FVAR;" +
     "BOND;CONF;MPLA;RTAB;HTAB;LIST;ACTA;SIZE;TEMP;" +
     "WPDB;" +
     "FMAP;GRID;PLAN;MOLE;";
-  
+
+  /**
+   * Supported records -- remove from unsupportedRecordTypes if added here
+   */
   final private static String[] supportedRecordTypes = { "TITL", "CELL", "SPGR",
-      "SFAC", "LATT", "SYMM", "NOTE", "ATOM", "END" };
+      "SFAC", "LATT", "SYMM", "NOTE", "ATOM", "PART", "END" };
 
   private void processSupportedRecord(int recordIndex) throws Exception {
-    //Logger.debug(recordIndex+" "+line);
+    //System.out.println(recordIndex+" "+line);
     switch (recordIndex) {
     case 0: // TITL
-    case 8: // END
+    case 9: // END
       break;
     case 1: // CELL
       cell();
@@ -150,11 +154,55 @@ public class ShelxReader extends AtomSetCollectionReader {
       isCmdf = true;
       processCmdfAtoms();
       break;
+    case 8: // PART
+      processPartRecord();
+      break;
     }
   }
+  
+  char altloc = '\0';
 
+  private void processPartRecord() {
+    
+    // email exchange with Brian McMahon 22.10.11
+    //            see
+    //            https://journals.iucr.org/c/issues/2015/01/00/fa3356/ (in the below I
+    //            take PART to be the same as
+    //            _atom_site_disorder_group):
+    //
+    //            "The use of PART numbers, introduced in SHELXL93, has proved invaluable
+    //            in the refinement of disordered structures. Two atoms are considered to
+    //            be bonded if they have the same PART number or if one of them is in
+    //            PART 0. The resulting connectivity table is used for the generation of
+    //            H atoms (HFIX and AFIX), for setting up restraints such as DELU, SIMU,
+    //            RIGU, CHIV, BUMP and SAME, and for generating tables of geometric
+    //            parameters (BOND, CONF, HTAB). Usually, most of the atoms are in
+    //            PART 0, but, for example, a molecule or side chain dis­ordered over
+    //            three positions could use PART 1, PART 2 and PART 3. If the PART
+    //            number is negative, bonds are not generated to symmetry-equivalent
+    //            atoms. It should be noted that positive PART numbers 1, 2, 3 etc.
+    //            correspond to the alternative location indicators A, B, C etc. in
+    //            PDB format. However, this notation is difficult to use when there
+    //            is a disorder within a disorder."
+
+    // atom.basLoc provides the base altloc "n" of "-n"
+    // as symmetry is applied, if basLoc is found, then 
+    // the cloned atom is given an incremented altloc
+    // this only works with C2 and m; with higher-order symmetry, this
+    // will dump all the symmetry-related groups into the same configuration=2
+
+
+    
+    // PART 1 become altloc '1'
+    int part = parseIntStr(tokens[1]);
+    altloc = (char) (part == 0 ? 0 : '0' + part);
+  }
+
+  private boolean isCentroSymmetric;
+  
   private void parseLattRecord() throws Exception {
     int latt = parseIntStr(tokens[1]);
+    isCentroSymmetric = (latt > 0);
     if (latt ==1 || latt == -1)
       return;
     asc.getXSymmetry().setLatticeParameter(latt);
@@ -241,14 +289,16 @@ public class ShelxReader extends AtomSetCollectionReader {
     // this line gives an atom, because any line not starting with
     // a SHELX command is an atom
     double x = Double.NaN, y = Double.NaN, z = Double.NaN;
+    double occ = 1;
     int elementIndex = -1;
     String atomName = null;
     try {
       atomName = tokens[0];
       elementIndex = parseIntStr(tokens[1]) - 1;
-      x = parseDoubleStr(tokens[2]);
-      y = parseDoubleStr(tokens[3]);
-      z = parseDoubleStr(tokens[4]);
+      x = parseDoubleStr(tokens[2])%10;
+      y = parseDoubleStr(tokens[3])%10;
+      z = parseDoubleStr(tokens[4])%10;
+      occ = parseDoubleStr(tokens[5])%10;
     } catch (Exception e) {
       // must have a NaN
     }
@@ -259,6 +309,7 @@ public class ShelxReader extends AtomSetCollectionReader {
 
     Atom atom = asc.addNewAtom();
     atom.atomName = atomName;
+    atom.foccupancy = occ;
     boolean isQPeak = atomName.startsWith("Q");
     if (isQPeak) {
      atom.elementSymbol = "Xx";
@@ -267,6 +318,7 @@ public class ShelxReader extends AtomSetCollectionReader {
       atom.elementSymbol = sfacElementSymbols[elementIndex];
     }
     setAtomCoordXYZ(atom, x, y, z);
+    atom.altLoc = altloc;
 
     if (tokens.length == 12) {
       double[] data = new double[8];
@@ -320,5 +372,13 @@ public class ShelxReader extends AtomSetCollectionReader {
     return Atom.isValidSymNoCase(chFirst, chSecond);
   }
 
+  @Override
+  public void applySymmetryAndSetTrajectory() throws Exception {
+    if (isCentroSymmetric && !ignoreFileSymmetryOperators) {
+      asc.getXSymmetry().getSymmetry().addInversion();
+      isCentroSymmetric = false;
+    }
+    applySymTrajASCR();
+  }
 
 }

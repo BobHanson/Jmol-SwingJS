@@ -144,16 +144,28 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
           }
         }
       }
+      boolean haveAltLoc = false;
+      for (int i = bsOut.nextSetBit(0); i >= 0; i = bsOut.nextSetBit(i + 1)) {
+        if (atoms[i].altloc != '\0') {
+          haveAltLoc = true;
+          break;
+        }
+      }
+      
       int sbLength = sb.length();
 
       sb.append("\n" + "\nloop_" + "\n_atom_site_label"
           + "\n_atom_site_type_symbol" + "\n_atom_site_fract_x"
           + "\n_atom_site_fract_y" + "\n_atom_site_fract_z");
+      if (haveAltLoc) {
+        sb.append("\n_atom_site_disorder_group");
+      }
       if (haveOccupancy) {
         sb.append("\n_atom_site_occupancy");
-      } else if (!haveUnitCell)
+      } else if (!haveUnitCell) {
         sb.append("\n_atom_site_Cartn_x" + "\n_atom_site_Cartn_y"
             + "\n_atom_site_Cartn_z");
+      }
       sb.append("\n");
 
       SB jmol_atom = new SB();
@@ -183,6 +195,9 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
         sb.append(PT.formatS(label, 5, 0, true, false)).append(" ")
             .append(PT.formatS(sym, 3, 0, true, false)).append(clean(p.x))
             .append(clean(p.y)).append(clean(p.z));
+        if (haveAltLoc) {
+          sb.append(" ").appendC(a.altloc == '\0' ? '.' : a.altloc);
+        }
         if (haveOccupancy) 
           sb.append(" ").append(clean(occ[i]/100));
         else if (!haveUnitCell)

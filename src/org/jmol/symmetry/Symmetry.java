@@ -394,9 +394,9 @@ public class Symmetry implements SymmetryInterface {
   public int getSpaceGroupOperationCount() {
     return (symmetryInfo != null && symmetryInfo.symmetryOperations != null ? // null here for PDB 
         symmetryInfo.symmetryOperations.length
-        : spaceGroup != null && spaceGroup.finalOperations != null
-            ? spaceGroup.finalOperations.length
-            : 0);
+        : spaceGroup != null ? (spaceGroup.finalOperations != null
+            ? spaceGroup.finalOperations.length 
+            : spaceGroup.operationCount) : 0);
   }
 
   @Override

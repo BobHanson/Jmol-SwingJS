@@ -368,7 +368,7 @@ public class SV extends T implements JSONEncodable {
       return (itest ? vT : vF);
     case 1:
       return (inum > Integer.MAX_VALUE || inum != Math.floor(inum)
-          ? SV.newD(inum) : newI((int) inum));
+          ? newD(inum) : newI((int) inum));
     case 2:
       Lst<SV> v = new javajs.util.Lst<SV>();
       for (int i = 0, n = array.length; i < n; i++)
@@ -388,7 +388,7 @@ public class SV extends T implements JSONEncodable {
         }
         map.put(keys[i], newJSVar(o));
       }
-      return SV.getVariableMap(map);
+      return getVariableMap(map);
     }
     return newS(x.toString());    
   }
@@ -492,7 +492,6 @@ public class SV extends T implements JSONEncodable {
 
   public SV setName(String name) {
     this.myName = name;
-    //System.out.println("Variable: " + name + " " + intValue + " " + value);
     return this;
   }
 
@@ -825,7 +824,7 @@ public class SV extends T implements JSONEncodable {
       sb.append(PT.esc(key)).append("  :");
       SB sb2 = new SB();
       if (!(ht.get(key) instanceof SV))
-        ht.put(key, SV.getVariable(ht.get(key)));
+        ht.put(key, getVariable(ht.get(key)));
       SV v = ht.get(key);
       isEscaped = isRawType(v.tok);
       sValueArray(sb2, v, path, tabs, isEscaped, false, addValues, maxLevels, skipEmpty);
@@ -1652,10 +1651,11 @@ public class SV extends T implements JSONEncodable {
         }
         return (v == null ? newS("") : v);
       }
+      // case where value != null
       if (m != null) {
         //assocArray.push(key,value)
-        String key = mapKey.asString();
-        m.put(key, copySafely(value).setName(key));
+        // don't set name in map!
+        m.put(mapKey.asString(), copySafely(value));//.setName(key));
       }
     }
     return this;
@@ -1849,7 +1849,8 @@ public class SV extends T implements JSONEncodable {
     switch (tok) {
     case hash:
     case context:
-      getMap().put(key, copySafely(v).setName(key));
+      // don't set name in map, or 
+      getMap().put(key, copySafely(v));//.setName(key));
       break;
     }
   }
@@ -1957,7 +1958,7 @@ public class SV extends T implements JSONEncodable {
     case varray:
       if ("\r".equals(vm.myName)) {
         vm.myName = null;
-        vm = SV.newV(vm.tok, (vm.tok == hash ? new Hashtable<String, SV>() : new Lst<SV>()));
+        vm = newV(vm.tok, (vm.tok == hash ? new Hashtable<String, SV>() : new Lst<SV>()));
       } else {
         String name0 = vm.myName;
         vm.myName = "\r";

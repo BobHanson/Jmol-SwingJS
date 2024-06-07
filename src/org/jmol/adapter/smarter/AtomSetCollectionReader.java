@@ -740,16 +740,29 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    * We assume that with the numbers 0.25 0.33333 that the precision is really
    * 5, not 2.
    * 
+   * Note that in the end, the precision will never be set lower than 4. 
+   * 
    * @param s
    * @return parsed number
    */
   protected double parsePrecision(String s) {
-    // Max of xx.yyyyy  number of y digits.
+    // xx.yyyyy  max of current precision and number of y digits (5 here).
+    // xx.yyyyy(zz) min of current precision and number of y digits - 1 (4 here)
+    // I considered subtracting the number of z digits, 
+    // but I think that is probably too extreme. 
+    // this fixes the Wyckoff calculation for CSD XAZTAW and BROFRM05
+    
     if (!filteredPrecision) {
       int pt = s.indexOf('.') + 1;
       if (pt >= 0) {
         int n = s.indexOf('(');
-        precision = Math.max(precision, (n < 0 ? s.length() : n) - pt);
+        if (n < 0) {
+          precision = Math.max(precision, s.length() - pt);          
+        } else {
+          if (precision == 0)
+            precision = n;
+          precision = Math.min(precision, n - 1 - pt);
+        } 
       }
     }
     return parseDoubleStr(s);
@@ -776,6 +789,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       precision = 4; // legacy
     } else {
       if (precision > 1000) {
+        // from filter "PRECISION=n"
         precision -= 1000;
       } else {
         // packingRange must be null

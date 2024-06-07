@@ -211,7 +211,7 @@ class SymmetryInfo {
               intTab += ":" + trm;
             }
           }
-          sgName = (sgName.startsWith("0") ? "" : sgName + " #") + intTab;
+          sgName = (sgName.startsWith("0") ? "" : sgName.equals("unspecified!") ? "#" : sgName + " #") + intTab;
         }
       }
       if (sgName.indexOf(SpaceGroup.NO_NAME) >= 0)

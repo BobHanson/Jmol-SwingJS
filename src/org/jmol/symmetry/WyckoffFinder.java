@@ -560,6 +560,10 @@ public class WyckoffFinder {
      * @return true if found
      */
     private boolean checkLatticePt(P3d p, double slop) {
+      // problem here was with #178 
+      // where O1 #1 0.183 4.823 0.915 (0.363 0.682 0.083)
+      // needs to match 2x,x,1/12, since 
+      // 2*0.682 == 1.364
       if (checkPoint(p, slop))
         return true;
       for (int z = 125 / 2, i = -2; i < 3; i++) {
