@@ -203,8 +203,9 @@ public class ShelxReader extends AtomSetCollectionReader {
   private void parseLattRecord() throws Exception {
     int latt = parseIntStr(tokens[1]);
     isCentroSymmetric = (latt > 0);
-    if (latt ==1 || latt == -1)
+    if (latt ==1 || latt == -1) {
       return;
+    }
     asc.getXSymmetry().setLatticeParameter(latt);
   }
 
@@ -375,8 +376,12 @@ public class ShelxReader extends AtomSetCollectionReader {
   @Override
   public void applySymmetryAndSetTrajectory() throws Exception {
     if (isCentroSymmetric && !ignoreFileSymmetryOperators) {
+      if (!haveXYZ) {
+        setSymmetryOperator("x,y,z");
+      }
       asc.getXSymmetry().getSymmetry().addInversion();
       isCentroSymmetric = false;
+      haveXYZ = false;
     }
     applySymTrajASCR();
   }

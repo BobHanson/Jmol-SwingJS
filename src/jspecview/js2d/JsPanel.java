@@ -291,7 +291,7 @@ public class JsPanel implements JSVPanel {
 	public String saveImage(String type, GenericFileInterface file, OC out) {
 	
 			String fname = file.getName();
-			boolean isPNG = type.equals(ExportType.PNG);				
+			boolean isPNG = type.equals("png");				
 			String s = (isPNG ? "png" : "jpeg");
 			//pd.graphToMain(); TODO
 			/**

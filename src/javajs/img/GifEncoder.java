@@ -358,8 +358,8 @@ public class GifEncoder extends ImageEncoder {
       cells.addLast(newCell);
       double[][] ranges = new double[3][3];
       for (int ic = 0; ic < 3; ic++) {
-        double low = Float.MAX_VALUE;
-        double high = -Float.MAX_VALUE;
+        double low = Double.MAX_VALUE;
+        double high = -Double.MAX_VALUE;
         for (int i = n; --i >= 0;) {
           P3d lab = get(i);
           double v = (ic == 0 ? lab.x : ic == 1 ? lab.y : lab.z);
@@ -538,7 +538,7 @@ public class GifEncoder extends ImageEncoder {
           continue;
         }
         P3d pe = errors[p % w2];
-        if (pe == null || pe.x == Float.MAX_VALUE) {
+        if (pe == null || pe.x == Double.MAX_VALUE) {
           lab = null;
           rgb = pixels[p];
         } else {
@@ -560,7 +560,7 @@ public class GifEncoder extends ImageEncoder {
           cell = nearestCell.get(key);
           if (cell == null) {
             // find nearest cell
-            double maxerr = Float.MAX_VALUE;
+            double maxerr = Double.MAX_VALUE;
             // skip 0 0 0
             for (int ib = cells.size(); --ib >= 1;) {
               ColorCell c = cells.get(ib);
@@ -587,7 +587,7 @@ public class GifEncoder extends ImageEncoder {
                 addError(err, 1, errors, p + width + 1, w2);
             }
           }
-          err.x = Float.MAX_VALUE; // used; flag for resetting to 0
+          err.x = Double.MAX_VALUE; // used; flag for resetting to 0
         }
         newPixels[p] = cell.index;
       }
@@ -603,7 +603,7 @@ public class GifEncoder extends ImageEncoder {
     P3d errp = errors[p];
     if (errp == null)
       errp = errors[p] = new P3d();
-    else if (errp.x == Float.MAX_VALUE) // reuse
+    else if (errp.x == Double.MAX_VALUE) // reuse
       errp.set(0, 0, 0);
     errp.scaleAdd2(f / 16f, err, errp);
   }

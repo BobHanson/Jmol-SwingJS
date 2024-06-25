@@ -451,24 +451,12 @@ public class CU {
     return colorPtFromInt(getArgbFromString(colorName), null);
   }
 
-//  public final static P3d colorPtFromStringD(String colorName) {
-//    return colorPtFromIntD(getArgbFromString(colorName), null);
-//  }
-//
-//
   public final static P3d colorPtFromInt(int color, P3d pt) {
     if (pt == null)
       pt = new P3d();
     pt.set((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
     return pt;
   }
-
-//  public final static P3d colorPtFromIntD(int color, P3d pt) {
-//    if (pt == null)
-//      pt = new P3d();
-//    pt.set((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF);
-//    return pt;
-//  }
 
   public static int colorPtToFFRGB(T3d pt) {
     return colorTriadToFFRGB(pt.x, pt.y, pt.z);
@@ -506,7 +494,7 @@ public class CU {
    *        set to false when just using this for 
    *        for RGB -- HSL -- HSL' -- RGB' conversion
    * 
-   * @return the HSL as P3 range 360 100 100
+   * @return the HSL as P3d range 360 100 100
    * @author hansonr
    */
 
@@ -539,7 +527,7 @@ public class CU {
    * Convert HSL (hue/saturation/luninance) values to RGB
    *
    * @param hsl in the range 360, 100, 100
-   * @return the RGB as P3 range 0 to 255
+   * @return the RGB as P3d range 0 to 255
    * @author hansonr
    */
   public static P3d hslToRGB(P3d hsl) {

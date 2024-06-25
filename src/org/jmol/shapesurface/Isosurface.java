@@ -425,7 +425,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
     if ("offset" == propertyName) {
       P3d offset = P3d.newP((P3d) value);
-      if (offset.equals(JC.center))
+      if (offset.lengthSquared() == 0)
         offset = null;
       if (thisMesh != null) {
         thisMesh.rotateTranslate(null, offset, true);
