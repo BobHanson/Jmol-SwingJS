@@ -126,9 +126,10 @@ public class DrawRenderer extends MeshRenderer {
       return;
     }
     int nPoints = vertexCount;
-    boolean isCurved = ((drawType == EnumDrawType.CURVE
-        || drawType == EnumDrawType.ARROW || drawType == EnumDrawType.ARC) && vertexCount > 2);
-    if (width > 0 && isCurved || drawType == EnumDrawType.ARROW) {
+    boolean isArrow = drawType == EnumDrawType.ARROW;
+    boolean isCurved = ((isArrow || drawType == EnumDrawType.CURVE
+        || drawType == EnumDrawType.ARC) && vertexCount > 2);
+    if (width > 0 && isCurved || isArrow) {
       pt1f.set(0, 0, 0);
       int n = (drawType == EnumDrawType.ARC ? 2 : vertexCount);
       for (int i = 0; i < n; i++)
@@ -438,12 +439,18 @@ public class DrawRenderer extends MeshRenderer {
     double d = pt0d.distance(pt2f);
     if (d == 0)
       return;
-    vTemp.sub2(pt2f, pt0d);
-    vTemp.normalize();
-    vTemp.scale(fScale / 5);
+    double headWidth = (width > 0 ? width * 3 : 0);
+    vTemp.sub2(pt2f, pt0d); // total length
+    vTemp.normalize(); // unit length
+    
+    vTemp.scale(Math.min(headWidth == 0 ? fScale : headWidth*1.5, fScale) / 5); // 1/10
     if (!withShaft)
       pt2f.add(vTemp);
     vTemp.scale(5);
+    double len = vTemp.length();
+    if (len > headWidth * 1.5)
+      vTemp.scale(headWidth * 1.5/len);
+    ///  pt0====pt1>>>>pt2
     pt1f.sub2(pt2f, vTemp);
     if (isTransformed) {
       s1f.setT(pt1f);
