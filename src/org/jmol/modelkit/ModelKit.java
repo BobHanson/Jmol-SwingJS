@@ -519,7 +519,7 @@ public class ModelKit {
           vwr.shm.setShapeProperties(JC.SHAPE_DRAW,
               new Object[] { "init", "elementKey" },
               new Object[] { "thisID", key + "d_" + label },
-              new Object[] { "diameter", Float.valueOf(2f) },
+              new Object[] { "diameter", Double.valueOf(2) },
               new Object[] { "modelIndex", Integer.valueOf(modelIndex) },
               new Object[] { "points", Integer.valueOf(0) },
               new Object[] { "coord", P3d.new3(90, y, -Double.MAX_VALUE) },
