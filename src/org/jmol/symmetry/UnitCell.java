@@ -780,6 +780,20 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         return setAbc(sdef, null, pts);
       // a,b,c;0,0,0
       // or a+1/2,b,c+1/2
+      // or !b,c,a>a-c,b,2c;0,0,1/2>a,-a-c,b
+      if (sdef.indexOf(">") > 0) {
+        // must have return matrix and no unit cell
+        if (uc != null || retMatrix == null)
+          return null;
+        String[] sdefs = sdef.split(">");
+        retMatrix.setIdentity();
+        M4d m4 = new M4d();
+        for (int i = sdefs.length; --i >= 0;) {
+          getMatrixAndUnitCell(null,  sdefs[i], m4);
+          retMatrix.mul2(m4, retMatrix);
+        }
+        return pts; // just not null
+      }
       String[] ret = new String[1];
       int ptc = sdef.indexOf(";");
       if (ptc >= 0) {

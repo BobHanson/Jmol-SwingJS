@@ -261,6 +261,7 @@ public class MathExt {
         // matrix([,,][,,][,,])
         // matrix([,,,][,,,][,,,][,,,])
         // any of 4x4 with "abc" or "xyz"
+        // matrix("!b,c,a>a-c,b,2c;0,0,1/2>a,-a-c,b")
 
     int n = args.length;
     M4d m4 = null;

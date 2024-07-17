@@ -1329,7 +1329,7 @@ public class BioExt {
           Lst<Atom> vConnections = new Lst<Atom>();
           vConnections.add(a);
           Atom b = vwr.ms.addAtom(a.mi, a.group, 1, "H3", null, 0, a.getSeqID(), 0, p[0],
-              Double.NaN, null, 0, 0, 1, 0, null, a.isHetero(), (byte) 0, null, Double.NaN);
+              Double.NaN, null, 0, 0, 1, 0, null, a.isHetero(), false, (byte) 0, null, Double.NaN);
           vwr.ms.bondAtoms(a, b, Edge.BOND_COVALENT_SINGLE, 
               vwr.ms.getDefaultMadFromOrder(Edge.BOND_COVALENT_SINGLE), null, 0, true, false);
           b.setMadAtom(vwr,  vwr.rd);

@@ -1258,7 +1258,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       y = floatAt(coords, ++icoord);
       z = floatAt(coords, ++icoord);
     }
-    BoxInfo.addPointXYZ((double)x, (double)y, (double)z, xyzMin, xyzMax, 0);
+    BoxInfo.addPointXYZ(x, y, z, xyzMin, xyzMax, 0);
     if (isTrajectory && iState > 0)
       return null;
     boolean isNucleic = (nucleic.indexOf(group3) >= 0);
@@ -1304,17 +1304,10 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
         Lst<Object> labelOffset = listAt(labelPositions, apt);
         if (labelOffset != null) {
           for (int i = 0; i < 7; i++)
-            labelPos[i] = (double) floatAt(labelOffset, i);
+            labelPos[i] = floatAt(labelOffset, i);
         }
       }
-      boolean isAllZero = true;
-      for (int i = 0; i < 7; i++) {
-        if (labelPos[i] != 0)
-          isAllZero = false;
-      }
-      if (isAllZero)
-        labelPos[0] = 1; // probably means ignore
-
+      fixAllZeroLabelPosition(labelPos);
       pymolScene.addLabel(ac, uniqueID, atomColor, labelPos, label);
     }
     if (isHidden)
@@ -1330,6 +1323,14 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       pymolScene.bsNoSurface.set(ac);
     atomMap[apt] = ac++;
     return null;
+  }
+
+  static void fixAllZeroLabelPosition(double[] labelPos) {
+    for (int i = 0; i < 7; i++) {
+      if (labelPos[i] != 0)
+        return;
+    }
+    labelPos[0] = 1; // default position
   }
 
   private boolean atomBool(byte[] atomArray, int pt, int offset, int mask) {

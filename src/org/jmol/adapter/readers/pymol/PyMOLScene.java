@@ -231,7 +231,7 @@ class PyMOLScene implements JmolSceneGenerator {
     this.surfaceInfoName = filePath + "##JmolSurfaceInfo##";
     setVersionSettings();
     settings.trimToSize();
-    bgRgb = colorSetting(PyMOL.bg_rgb);
+    bgRgb = PyMOL.getRGB(colorSetting(PyMOL.bg_rgb));
     labelPosition0 = pointSetting(PyMOL.label_position);
   }
 
@@ -1010,9 +1010,9 @@ class PyMOLScene implements JmolSceneGenerator {
     int n = (isNew ? list.size() / 3 / nCoord : mdList.length);
     if (n == 0)
       return false;
-    boolean drawLabel = haveLabels && bsReps.get(PyMOL.REP_LABELS);
-    boolean drawDashes = bsReps.get(PyMOL.REP_DASHES);
-    double rad = floatSetting(PyMOL.dash_width) / 20;
+    boolean drawLabel = haveLabels && (bsReps == null || bsReps.get(PyMOL.REP_LABELS));
+    boolean drawDashes = (bsReps == null || bsReps.get(PyMOL.REP_DASHES));
+    double rad = floatSetting(PyMOL.dash_width) / 80; // was 20
     if (rad == 0)
       rad = 0.05;
     if (!drawDashes)
@@ -1044,13 +1044,14 @@ class PyMOLScene implements JmolSceneGenerator {
         md = mdList[index];
         offset = md.text.pymolOffset;
       }
+      PyMOLReader.fixAllZeroLabelPosition(offset);
       int nDigits = (int) floatSetting(MEAS_DIGITS[nCoord - 2]);
       String strFormat = nCoord + ": "
           + (drawLabel ? "%0." + (nDigits < 0 ? 1 : nDigits) + "VALUE" : "");
       //strFormat += " -- " + objectNameID + " " + floatSetting(PyMOL.surface_color) + " " + Integer.toHexString(c);
       Text text = newTextLabel(strFormat, offset, clabel,
           (int) floatSetting(PyMOL.label_font_id),
-          (double) floatSetting(PyMOL.label_size));
+          floatSetting(PyMOL.label_size));
       md.set(T.define, null, null, null, strFormat, "angstroms", null, false, false, null,
           false, (int) (rad * 2000), colix, text, Double.NaN, null);
       addJmolObject(JC.SHAPE_MEASURES, bs, md);

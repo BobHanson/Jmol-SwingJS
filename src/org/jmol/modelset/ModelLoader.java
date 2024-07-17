@@ -851,6 +851,7 @@ public final class ModelLoader {
           iterAtom.getBfactor(), 
           xyz,
           iterAtom.getIsHetero(), 
+          iterAtom.getIsNegDisorder(),
           iterAtom.getSerial(), 
           iterAtom.getSeqID(),
           group3,
@@ -955,7 +956,7 @@ public final class ModelLoader {
   private Atom addAtom(boolean isPDB, BS atomSymmetry, int atomSite, int atomicAndIsotopeNumber,
                        String atomName, int formalCharge, double partialCharge,
                        Lst<Object> tensors, double occupancy, double bfactor,
-                       P3d xyz, boolean isHetero, int atomSerial, int atomSeqID,
+                       P3d xyz, boolean isHetero, boolean isNegDisorder, int atomSerial, int atomSeqID,
                        String group3, V3d vib, char alternateLocationID,
                        double radius, double bondRadius) {
     byte specialAtomID = 0;
@@ -978,8 +979,8 @@ public final class ModelLoader {
     }
     Atom atom = ms.addAtom(iModel, nullGroup, atomicAndIsotopeNumber, atomName,
         atomType, atomSerial, atomSeqID, atomSite, xyz, radius, vib, formalCharge,
-        partialCharge, occupancy, bfactor, tensors, isHetero, specialAtomID,
-        atomSymmetry, bondRadius);
+        partialCharge, occupancy, bfactor, tensors, isHetero, isNegDisorder,
+        specialAtomID, atomSymmetry, bondRadius);
     atom.altloc = alternateLocationID;
     return atom;
   }

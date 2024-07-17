@@ -149,10 +149,12 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean addAtomLabelNumbers;
   private boolean ignoreGeomBonds;
   private boolean allowWyckoff = true;
+  private boolean stopOn_SHELX_HKL;
 
   @Override
   public void initializeReader() throws Exception {
     initSubclass();
+    stopOn_SHELX_HKL = checkFilterKey("STOPONSHELXHKL");    
     allowPDBFilter = true;
     appendedData = (String) htParams.get("appendedData");
     String conf = getFilter("CONF ");
@@ -215,7 +217,10 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private boolean continueWith(String key) {
-    boolean ret = (key != null && (ac == 0 || !key.equals("_shelx_hkl_file")));
+    boolean isHKL = false;
+    boolean ret = key != null && (!stopOn_SHELX_HKL || (ac == 0 || !key.equals("_shelx_hkl_file")));
+    if (ret && isHKL)
+      System.err.println("CIFReader reading _shelx_hkl_file; use FILTER 'StopOnShelxHKL' to stop reading when this is found");
     return ret;
   }
 
@@ -1508,8 +1513,8 @@ public class CifReader extends AtomSetCollectionReader {
             //            PDB format. However, this notation is difficult to use when there
             //            is a disorder within a disorder."
 
-            // atom.basLoc provides the base altloc "n" of "-n"
-            // as symmetry is applied, if basLoc is found, then 
+            // atom.isNegDisorder indicates the negative case; atom.altloc is the "n" of "-n"
+            // as symmetry is applied, if atom.isNegDisorder is true, then 
             // the cloned atom is given an incremented altloc
             // this only works with C2 and m; with higher-order symmetry, this
             // will dump all the symmetry-related groups into the same configuration=2

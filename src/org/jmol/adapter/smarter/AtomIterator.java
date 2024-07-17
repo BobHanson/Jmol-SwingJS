@@ -214,4 +214,10 @@ class AtomIterator implements JmolAdapterAtomIterator {
     return getElementNumber() >> 7;
   }
 
+  @Override
+  public boolean getIsNegDisorder() {
+    return atom.isNegDisorder;
+  }
+
+
 }

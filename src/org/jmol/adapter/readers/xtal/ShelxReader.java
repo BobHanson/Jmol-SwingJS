@@ -161,6 +161,7 @@ public class ShelxReader extends AtomSetCollectionReader {
   }
   
   char altloc = '\0';
+  private boolean negDisorder;
 
   private void processPartRecord() {
     
@@ -195,7 +196,10 @@ public class ShelxReader extends AtomSetCollectionReader {
     
     // PART 1 become altloc '1'
     int part = parseIntStr(tokens[1]);
-    altloc = (char) (part == 0 ? 0 : '0' + part);
+    
+    altloc = (char) (part == 0 ? 0 : '0' + Math.abs(part));
+    if (part < 0)
+      negDisorder = true;
   }
 
   private boolean isCentroSymmetric;
@@ -203,9 +207,8 @@ public class ShelxReader extends AtomSetCollectionReader {
   private void parseLattRecord() throws Exception {
     int latt = parseIntStr(tokens[1]);
     isCentroSymmetric = (latt > 0);
-    if (latt ==1 || latt == -1) {
+    if (latt ==1 || latt == -1)
       return;
-    }
     asc.getXSymmetry().setLatticeParameter(latt);
   }
 
@@ -296,9 +299,9 @@ public class ShelxReader extends AtomSetCollectionReader {
     try {
       atomName = tokens[0];
       elementIndex = parseIntStr(tokens[1]) - 1;
-      x = parseDoubleStr(tokens[2])%10;
-      y = parseDoubleStr(tokens[3])%10;
-      z = parseDoubleStr(tokens[4])%10;
+      x = parsePrecision(tokens[2])%10;
+      y = parsePrecision(tokens[3])%10;
+      z = parsePrecision(tokens[4])%10;
       occ = parseDoubleStr(tokens[5])%10;
     } catch (Exception e) {
       // must have a NaN
@@ -320,6 +323,7 @@ public class ShelxReader extends AtomSetCollectionReader {
     }
     setAtomCoordXYZ(atom, x, y, z);
     atom.altLoc = altloc;
+    atom.isNegDisorder = negDisorder;
 
     if (tokens.length == 12) {
       double[] data = new double[8];

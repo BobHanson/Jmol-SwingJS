@@ -287,7 +287,7 @@ public final class BioResolver implements Comparator<String[]> {
     Atom a = ms.at[iFirst];
     for (int i = 0; i < nH; i++)
       ms.addAtom(a.mi, a.group, 1, "H", null, 0, a.getSeqID(), 0, xyz,
-          Double.NaN, null, 0, 0, 1, 0, null, isHetero, (byte) 0, null, Double.NaN)
+          Double.NaN, null, 0, 0, 1, 0, null, isHetero, false, (byte) 0, null, Double.NaN)
           .delete(null);
   }
 

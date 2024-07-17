@@ -681,7 +681,7 @@ public class SimpleUnitCell {
 
   private double setTwelfths(double x) {
     int i = twelfthsOf(x);
-    return (i >= 0 ? i / 12d : x);
+    return (i >= 0 ? i / 12d * (x < 0 ? -1 : 1) : x);
   }
 
   ////// lattice methods //////

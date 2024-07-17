@@ -89,9 +89,9 @@ public class ModelKit {
     boolean isITA;
     boolean isHM;
     String hallSymbol;
-    
+
     String errString;
-    
+
     private M4d trLink;
     private int index;
     protected String calcNext; // "sub" or "super"
@@ -107,12 +107,11 @@ public class ModelKit {
       if (isITA) {
         // ITA/140 or ITA/140.2
         name = name.substring(4);
-      } 
+      }
       isHM = false;
       hallSymbol = null;
       if (name.charAt(0) == '[') {
-        
-        
+
         // [P 2y] is a Hall symbol
         pt = name.indexOf(']');
         if (pt < 0) {
@@ -154,7 +153,7 @@ public class ModelKit {
       }
       this.name = name;
     }
-    
+
     void addTransform(M4d trm) {
       if (trLink == null) {
         trLink = new M4d();
@@ -162,7 +161,7 @@ public class ModelKit {
       }
       trLink.mul(trm);
     }
-    
+
     boolean update(Viewer vwr, ClegNode prevNode, M4d trm, M4d trTemp,
                    SymmetryInterface sym) {
       if (errString != null)
@@ -175,31 +174,36 @@ public class ModelKit {
         // set the unit cell in SG_IS_ASSIGN mode and there is a
         // unit cell already. This call will build the space group if necessary
         // if it is from Wyckoff 
-        myTrm = (name.endsWith(".1") ? "a,b,c" : (String) sym.getITASettingValue(vwr, name, "trm"));
+        myTrm = (name.endsWith(".1") ? "a,b,c"
+            : (String) sym.getITASettingValue(vwr, name, "trm"));
         if (myTrm == null) {
           errString = "Unknown ITA setting: " + name + "!";
           return false;
         }
         String[] tokens = PT.split(name, ".");
         myIta = tokens[0];
-        name = "ITA/" + myIta + ":" 
+        name = "ITA/" + myIta + ":"
             + (myTrm == null || myTrm.equals("a,b,c") ? setting : myTrm);
-           // (setting != null ? ":" + setting
-           // : myTrm);//tokens[1].equals("1") ? "" : "." + tokens[1]); // for SpaceGroupFinder
-      } else if (hallSymbol != null){
-        if (sym.getSpaceGroupInfoObj("nameToXYZList", "Hall:" + hallSymbol, false, false) == null) {
+        // (setting != null ? ":" + setting
+        // : myTrm);//tokens[1].equals("1") ? "" : "." + tokens[1]); // for SpaceGroupFinder
+      } else if (hallSymbol != null) {
+        if (sym.getSpaceGroupInfoObj("nameToXYZList", "Hall:" + hallSymbol,
+            false, false) == null) {
           errString = "Invalid Hall notation: " + hallSymbol;
           return false;
         }
         int pt = hallSymbol.indexOf("(");
         if (pt > 0) {
           //modelkit spacegroup "[p 32 2\" (0 0 4)]"
-          String[] vabc = PT.split(hallSymbol.substring(pt + 1, hallSymbol.length() - 1), " ");
+          String[] vabc = PT.split(
+              hallSymbol.substring(pt + 1, hallSymbol.length() - 1), " ");
           hallSymbol = hallSymbol.substring(0, pt).trim();
-          P3d v = P3d.new3(-PT.parseDouble(vabc[0])/12,-PT.parseDouble(vabc[1])/12,-PT.parseDouble(vabc[2])/12);
+          P3d v = P3d.new3(-PT.parseDouble(vabc[0]) / 12,
+              -PT.parseDouble(vabc[1]) / 12, -PT.parseDouble(vabc[2]) / 12);
           setting = "a,b,c;" + sym.staticToRationalXYZ(v, ",");
         }
-        name = "[" + hallSymbol + "]" + (setting.equals("a,b,c") ? "" :":" + setting);
+        name = "[" + hallSymbol + "]"
+            + (setting.equals("a,b,c") ? "" : ":" + setting);
       } else {
         myTrm = (String) sym.getSpaceGroupInfoObj("itaTransform", name, false,
             false);
@@ -218,8 +222,8 @@ public class ModelKit {
       M4d trm0 = null;
       boolean haveCalc = false;
       boolean haveReferenceCell = (prevNode != null && trLink == null
-          && (hallSymbol != null
-               || myIta != null && (myIta.equals(prevNode.myIta) || prevNode.calcNext != null)));
+          && (hallSymbol != null || myIta != null
+              && (myIta.equals(prevNode.myIta) || prevNode.calcNext != null)));
       if (haveReferenceCell) {
         trm0 = M4d.newM4(trm);
         if (prevNode != null && prevNode.myTrm != null) {
@@ -233,7 +237,7 @@ public class ModelKit {
           switch (prevNode.calcNext) {
           case "super":
             isSub = false;
-             break;
+            break;
           case "sub":
             break;
           case "":
@@ -242,12 +246,12 @@ public class ModelKit {
             isImplicit = true;
             break;
           }
-          int ita1 = PT.parseInt(prevNode.myIta);   
+          int ita1 = PT.parseInt(prevNode.myIta);
           int ita2 = PT.parseInt(myIta);
           boolean isSetting = (isImplicit && ita1 == ita2);
           if (!isSetting) {
-            trCalc = (String) sym.getSubgroupJSON(vwr,
-                (isSub ? ita1 : ita2), (isSub ? ita2 : ita1), 0, 1);
+            trCalc = (String) sym.getSubgroupJSON(vwr, (isSub ? ita1 : ita2),
+                (isSub ? ita2 : ita1), 0, 1);
             haveCalc = (trCalc != null);
             if (haveCalc && !isSub)
               trCalc = "!" + trCalc;
@@ -267,14 +271,15 @@ public class ModelKit {
           trm1.mul(trm0);
           calculated = (String) sym.convertTransform(null, trm1);
         }
-        
+
       }
       return true;
     }
 
     @Override
     public String toString() {
-      return "[ClegNode #" + index + " " + name + "   " + myIta + ":" + setting + " " + myTrm + "]"; 
+      return "[ClegNode #" + index + " " + name + "   " + myIta + ":" + setting
+          + " " + myTrm + "]";
     }
 
     /**
@@ -289,7 +294,7 @@ public class ModelKit {
                                          SymmetryInterface sym) {
       for (int i = 0; i < tokens.length; i++) {
         String s = tokens[i].trim();
-        if (s.length()==0)
+        if (s.length() == 0)
           continue;
         int pt = s.indexOf(":");
         String transform;
@@ -320,7 +325,8 @@ public class ModelKit {
           break;
         default:
           if (transform.indexOf(",") >= 0) {
-            if (((M4d) sym.convertTransform(transform, null)).determinant3() == 0)
+            if (((M4d) sym.convertTransform(transform, null))
+                .determinant3() == 0)
               return false;
           }
           break;
@@ -895,9 +901,10 @@ public class ModelKit {
    * 
    */
   final private BS bsElementKeyModels = new BS();
-  
+
   /**
-   * tracks models for which the element key has been explicitly set OFF, overriding global SET elementKey ON 
+   * tracks models for which the element key has been explicitly set OFF,
+   * overriding global SET elementKey ON
    */
   final private BS bsElementKeyModelsOFF = new BS();
 
@@ -1111,12 +1118,8 @@ public class ModelKit {
    *        if dragged to a new location to create a bond
    */
   public void clickAssignAtom(int atomIndex, String element, P3d ptNew) {
-    int n = addAtomType(element, 
-        new P3d[] { (ptNew == null ? null : ptNew) },
-        BSUtil.newAndSetBit(atomIndex), 
-        "", 
-        null, 
-        "click");
+    int n = addAtomType(element, new P3d[] { (ptNew == null ? null : ptNew) },
+        BSUtil.newAndSetBit(atomIndex), "", null, "click");
     if (n > 0) // do we really want this???
       vwr.setPickingMode("dragAtom", 0);
   }
@@ -1131,7 +1134,9 @@ public class ModelKit {
    * 
    * this model only
    * 
-   * @param type <element Symbol> | "_"<element Symbol> | <element symbol>":"<Wyckoff letter [a-zAG]
+   * @param type
+   *        <element Symbol> | "_"<element Symbol> | <element symbol>":"<Wyckoff
+   *        letter [a-zAG]
    * @param pts
    *        one or more new points, may be null
    * @param bsAtoms
@@ -1146,17 +1151,12 @@ public class ModelKit {
                                String packing, String cmd) {
     if (type.startsWith("_"))
       type = type.substring(1);
-    return Math.abs(addAtomType(type, 
-        pts, 
-        bsAtoms, 
-        packing,
-        null, 
-        cmd));
+    return Math.abs(addAtomType(type, pts, bsAtoms, packing, null, cmd));
   }
 
   /**
    * A versatile method that allows changing element, setting charge, setting
-   * position, adding or deleting an atom via 
+   * position, adding or deleting an atom via
    * 
    * MODELKIT ASSIGN ATOM
    * 
@@ -1177,13 +1177,7 @@ public class ModelKit {
       bs = BSUtil.newAndSetBit(bs.nextSetBit(0));
     if (type.startsWith("_"))
       type = type.substring(1);
-    assignAtomNoAddedSymmetry(pt, 
-        -1, 
-        bs, 
-        type, 
-        (pt != null), 
-        cmd, 
-        0);
+    assignAtomNoAddedSymmetry(pt, -1, bs, type, (pt != null), cmd, 0);
   }
 
   public void cmdAssignBond(int bondIndex, char type, String cmd) {
@@ -1270,29 +1264,31 @@ public class ModelKit {
   }
 
   /**
-   * MODELKIT SPACEGROUP 
+   * MODELKIT SPACEGROUP
    * 
-   * Assign a given space group, currently only "P1"
-   * Do all the necessary changes in unit cells and atom
-   * site assignments. 
+   * Assign a given space group, currently only "P1" Do all the necessary
+   * changes in unit cells and atom site assignments.
    * 
    * @param bs
    *        atoms in the set defining the space group
    * @param name
    *        "P1" or "1" or ignored
    * @param paramsOrUC
-   * @param isPacked 
-   * @param doDraw 
-   * @param cmd 
+   * @param isPacked
+   * @param doDraw
+   * @param cmd
    * @return new name or "" or error message
    */
-  public String cmdAssignSpaceGroup(BS bs, String name, Object paramsOrUC, boolean isPacked, boolean doDraw, String cmd) {
+  public String cmdAssignSpaceGroup(BS bs, String name, Object paramsOrUC,
+                                    boolean isPacked, boolean doDraw,
+                                    String cmd) {
     SymmetryInterface sym0 = vwr.getCurrentUnitCell();
     SymmetryInterface sym = vwr.getOperativeSymmetry();
     if (sym0 != null && sym != sym0)
-      sym.getUnitCell(sym0.getV0abc(null,null), false, "modelkit");
-    SB  sb = new SB();
-    String ret = assignSpaceGroup(sym, null, bs, paramsOrUC, PT.split(name, ">"), 0, null, null, sb);
+      sym.getUnitCell(sym0.getV0abc(null, null), false, "modelkit");
+    SB sb = new SB();
+    String ret = assignSpaceGroup(sym, null, bs, paramsOrUC,
+        PT.split(name, ">"), 0, null, null, sb);
     if (ret.endsWith("!"))
       return ret;
     if (isPacked) {
@@ -1300,8 +1296,8 @@ public class ModelKit {
       if (doDraw) {
         n = cmdAssignAddAtoms("N:G", null, null, "packed", cmd);
       } else {
-      String transform = ret;
-      BS bsModelAtoms = vwr.getThisModelAtoms();
+        String transform = ret;
+        BS bsModelAtoms = vwr.getThisModelAtoms();
         n = cmdAssignSpaceGroupPacked(bsModelAtoms, transform, cmd);
       }
       sb.append("\n").append(GT.i(GT.$("{0} atoms added"), n));
@@ -1309,7 +1305,7 @@ public class ModelKit {
     String msg = sb.toString();
     boolean isError = msg.endsWith("!");
     if (doDraw && !isError) {
-      String s = drawSymmetry("sg", false, -1, null, Integer.MAX_VALUE, null, 
+      String s = drawSymmetry("sg", false, -1, null, Integer.MAX_VALUE, null,
           null, null, 0, -2, 0, null, true);
       appRunScript(s);
     }
@@ -1334,7 +1330,8 @@ public class ModelKit {
    * @param cmd
    * @return number of atoms added
    */
-  public int cmdAssignSpaceGroupPacked(BS bsAtoms, String transform, String cmd) {
+  public int cmdAssignSpaceGroupPacked(BS bsAtoms, String transform,
+                                       String cmd) {
     SymmetryInterface sym = vwr.getOperativeSymmetry();
     if (sym == null)
       return 0;
@@ -1514,9 +1511,10 @@ public class ModelKit {
   }
 
   /**
-   * From menu opening and Not clear this is a good idea. It's possible for this to be set only once,
-   * when the file is loaded
-   * @param isZap 
+   * From menu opening and Not clear this is a good idea. It's possible for this
+   * to be set only once, when the file is loaded
+   * 
+   * @param isZap
    */
   private void initializeForModel(boolean isZap) {
     // from ZAP or from menu opening
@@ -1538,7 +1536,7 @@ public class ModelKit {
         updateModelElementKey(vwr.am.cmi, true);
       }
       bsElementKeyModels.clearAll();
-      bsElementKeyModelsOFF.clearAll();        
+      bsElementKeyModelsOFF.clearAll();
     }
   }
 
@@ -1641,7 +1639,8 @@ public class ModelKit {
       }
       if (key == JC.MODELKIT_UPDATE_MODEL_KEYS) {
         if (haveElementKeys)
-          updateModelElementKeys(value == null ? null : ((BS[]) value)[1], true);
+          updateModelElementKeys(value == null ? null : ((BS[]) value)[1],
+              true);
         if (drawAtomSymmetry != null && value != null) {
           updateDrawAtomSymmetry(JC.PROP_ATOMS_DELETED, ((BS[]) value)[0]);
         }
@@ -1653,11 +1652,11 @@ public class ModelKit {
         return null;
       }
 
-      if (key == JC.MODELKIT_UPDATE_ATOM_KEYS) { 
-          BS bsAtoms = (BS) value;
-          updateElementKey(bsAtoms);
-          return null;
-        }
+      if (key == JC.MODELKIT_UPDATE_ATOM_KEYS) {
+        BS bsAtoms = (BS) value;
+        updateElementKey(bsAtoms);
+        return null;
+      }
 
       if (key == JC.MODELKIT_SET_ELEMENT_KEY) {
         // exclusively from SET elementKeys...
@@ -1671,8 +1670,7 @@ public class ModelKit {
         return null;
       }
 
-      if (key == JC.MODELKIT_KEY 
-          || key == JC.MODELKIT_ELEMENT_KEY) {
+      if (key == JC.MODELKIT_KEY || key == JC.MODELKIT_ELEMENT_KEY) {
         // modelkit set elementkey(s), set key
         int mi = vwr.am.cmi;
         boolean isOn = isTrue(value);
@@ -2260,7 +2258,8 @@ public class ModelKit {
   /**
    * Entry point from clickAssignAtom or cmdAssignAddAtoms
    * 
-   * @param type <element Symbol> | <element symbol>":"<Wyckoff letter [a-zAG]
+   * @param type
+   *        <element Symbol> | <element symbol>":"<Wyckoff letter [a-zAG]
    * @param pts
    * @param bsAtoms
    * @param packing
@@ -2269,24 +2268,24 @@ public class ModelKit {
    * @return number of atoms added
    */
   private int addAtomType(String type, P3d[] pts, BS bsAtoms, String packing,
-                       M4d[] opsCtr, String cmd) {
-      SymmetryInterface sym = vwr.getOperativeSymmetry();
-        int ipt = type.indexOf(":");
-        String wyckoff = (ipt > 0 && ipt == type.length() - 2
-            ? type.substring(ipt + 1)
-            : null);
-        if (wyckoff != null) {
-          type = type.substring(0, ipt);
-          if (sym != null) {
-            Object o = sym.getWyckoffPosition(vwr, null, wyckoff);
-            if (!(o instanceof P3d))
-              return 0;
-            pts = new P3d[] { (P3d) o };
-          }
-        }        
-        return addAtoms(type, pts, bsAtoms, packing, opsCtr, cmd);
+                          M4d[] opsCtr, String cmd) {
+    SymmetryInterface sym = vwr.getOperativeSymmetry();
+    int ipt = type.indexOf(":");
+    String wyckoff = (ipt > 0 && ipt == type.length() - 2
+        ? type.substring(ipt + 1)
+        : null);
+    if (wyckoff != null) {
+      type = type.substring(0, ipt);
+      if (sym != null) {
+        Object o = sym.getWyckoffPosition(vwr, null, wyckoff);
+        if (!(o instanceof P3d))
+          return 0;
+        pts = new P3d[] { (P3d) o };
+      }
     }
-  
+    return addAtoms(type, pts, bsAtoms, packing, opsCtr, cmd);
+  }
+
   /**
    * The full-blown command with all options, called by addAtomType or
    * cmdAssignSpaceGroupPacked
@@ -2333,13 +2332,14 @@ public class ModelKit {
             assignAtomNoAddedSymmetry(pts[i], -1, null, type, true, cmd, -1);
           n = -pts.length;
         } else {
-          assignAtomNoAddedSymmetry(pts[0], atomIndex, null, type, true, cmd, -1);
+          assignAtomNoAddedSymmetry(pts[0], atomIndex, null, type, true, cmd,
+              -1);
           n = -1;
         }
       } else {
         // handle equilivalent positions
         n = addAtomsWithSymmetry(sym, bsAtoms, type, atomIndex, isPoint, pts,
-          packing, opsCtr);
+            packing, opsCtr);
       }
       return n;
     } catch (Exception e) {
@@ -2352,25 +2352,28 @@ public class ModelKit {
 
   /**
    * 
-   * Add atoms with or without packing, but 
-   * always with consideration of equivalent positions.
+   * Add atoms with or without packing, but always with consideration of
+   * equivalent positions.
    * 
-   *  
+   * 
    * must have symmetry; must be this model
-    
+   * 
    * @param sym
-   * @param bsAtoms model atoms to check for identity of atom at the specified location
+   * @param bsAtoms
+   *        model atoms to check for identity of atom at the specified location
    * @param type
    * @param atomIndex
    * @param isPoint
-   * @param pts 
-   * @param packing "packed" or ""
-   * @param opsCtr  augmented operator set that includes lost translations for subgroups
-   * @return number of atoms added 
+   * @param pts
+   * @param packing
+   *        "packed" or ""
+   * @param opsCtr
+   *        augmented operator set that includes lost translations for subgroups
+   * @return number of atoms added
    */
   private int addAtomsWithSymmetry(SymmetryInterface sym, BS bsAtoms,
-                                   String type, int atomIndex,
-                                   boolean isPoint, P3d[] pts, String packing, M4d[] opsCtr) {
+                                   String type, int atomIndex, boolean isPoint,
+                                   P3d[] pts, String packing, M4d[] opsCtr) {
     BS bsM = vwr.getThisModelAtoms();
     int n = bsM.cardinality();
     if (n == 0)
@@ -2398,38 +2401,29 @@ public class ModelKit {
     int nInitial = points.size();
     packing = "fromfractional;tocartesian;" + packing;
     if (isPoint) {
-      
+
       // MODELKIT ASSIGN ATOM ....
       // new atom at a single point,
       // but there could be equivalent atoms. 
       // note that if there are occupancies at the same spot
       // even if "a point", we need to move all of them.
-      
+
       BS bsEquiv = (bsAtoms == null ? null
           : vwr.ms.getSymmetryEquivAtoms(bsAtoms, null, null));
       for (int i = 0; i < pts.length; i++) {
-        assignAtoms(P3d.newP(pts[i]), 
-            atomIndex, 
-            bsEquiv, 
-            stype, 
-            true, // newPoint
+        assignAtoms(P3d.newP(pts[i]), atomIndex, bsEquiv, stype, true, // newPoint
             null, // cmd
-            false, 
-            site, 
-            sym, 
-            points, 
-            packing, 
-            null);
+            false, site, sym, points, packing, null);
       }
     } else {
-      
+
       // MODELKIT SPACEGROUP 
-      
+
       // Go through site-by-site. There is no need to check
       // every atom of a given site, since any one will produce
       // the closed set of all the others. But we do need to 
       // add all symmetry-equivalent atoms for each site.
-      
+
       BS sites = new BS();
       for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
           .nextSetBit(i + 1)) {
@@ -2439,22 +2433,12 @@ public class ModelKit {
           continue;
         sites.set(site);
         stype = (type == null ? a.getElementSymbolIso(true) : stype);
-        
+
         // now assign atoms with consideration for equivalent atoms. 
-        
-        assignAtoms(P3d.newP(a), 
-            -1, 
-            null, 
-            stype, 
-            false, 
-            null, 
-            false,
-            site, 
-            sym, 
-            points, 
-            packing, 
-            opsCtr);
-        
+
+        assignAtoms(P3d.newP(a), -1, null, stype, false, null, false, site, sym,
+            points, packing, opsCtr);
+
         // If we don't have augmnted operations, we can just
         // remove the new atoms from the list, because there won't be any
         // cross-over between Wyckoff positions.
@@ -2464,7 +2448,7 @@ public class ModelKit {
         // can be checked for duplicate positions. 
         // (They were converted to Cartesians in order to 
         // load them into the structure.)
-        
+
         if (opsCtr == null) {
           for (int j = points.size(); --j >= nInitial;)
             points.removeItemAt(j);
@@ -2541,7 +2525,7 @@ public class ModelKit {
   }
 
   /**
-   * Just a conduit for debugging and keeping one's sanity. 
+   * Just a conduit for debugging and keeping one's sanity.
    * 
    * 
    * @param pt
@@ -2552,28 +2536,21 @@ public class ModelKit {
    * @param cmd
    * @param site
    */
-  private void assignAtomNoAddedSymmetry(P3d pt, int atomIndex, BS bs, String type,
-                           boolean newPoint, String cmd,
-                           // strictly internal, for crystal work:
-                           int site) {
-    assignAtoms(pt, atomIndex,
-        bs, 
-        type, 
-        newPoint, 
-        cmd, 
-        false, 
-        site,
-        null, 
-        null, 
-        null,
-        null);
+  private void assignAtomNoAddedSymmetry(P3d pt, int atomIndex, BS bs,
+                                         String type, boolean newPoint,
+                                         String cmd,
+                                         // strictly internal, for crystal work:
+                                         int site) {
+    assignAtoms(pt, atomIndex, bs, type, newPoint, cmd, false, site, null, null,
+        null, null);
   }
 
   /**
-   * The penultimate target method. 
+   * The penultimate target method.
    * 
    * Change element, charge, and deleting an atom by clicking on it or via the
-   * MODELKIT ASSIGN ATOM command or from packing with MODELKIT SPACEGROUP ... PACKED
+   * MODELKIT ASSIGN ATOM command or from packing with MODELKIT SPACEGROUP ...
+   * PACKED
    * 
    * <pre>
    * pt     atomIndex  bs
@@ -2591,11 +2568,13 @@ public class ModelKit {
    * @param bs
    * @param type
    * @param newPoint
-   * @param cmd passed on to notifications
+   * @param cmd
+   *        passed on to notifications
    * @param isClick
    * @param site
    * @param sym
-   *        a SymmetryInterface being passed on from addAtoms, or null; will be set if null
+   *        a SymmetryInterface being passed on from addAtoms, or null; will be
+   *        set if null
    * @param points
    * @param packing
    * @param opsCtr
@@ -2606,8 +2585,8 @@ public class ModelKit {
   private void assignAtoms(P3d pt, int atomIndex, BS bs, String type,
                            boolean newPoint, String cmd, boolean isClick,
                            // strictly internal, for crystal work:
-                           int site, SymmetryInterface sym,
-                           Lst<P3d> points, String packing, M4d[] opsCtr) {
+                           int site, SymmetryInterface sym, Lst<P3d> points,
+                           String packing, M4d[] opsCtr) {
     if (sym == null)
       sym = vwr.getOperativeSymmetry();
     boolean haveAtomByIndex = (atomIndex >= 0);
@@ -2756,7 +2735,7 @@ public class ModelKit {
 
       // now add the "hydrogens" aka new atoms
       // using vwr.addHydrogensInline, which works through a merge using ModelLoader
-      
+
       Map<String, Object> htParams = new Hashtable<String, Object>();
       if (site > 0)
         htParams.put("fixedSite", Integer.valueOf(site));
@@ -2768,7 +2747,7 @@ public class ModelKit {
 
       // bs now points to the new atoms
       // restore globals
-      
+
       if (!isMK) {
         vwr.setBooleanProperty("modelkitmode", false);
         menu.hidden = wasHidden;
@@ -2778,12 +2757,12 @@ public class ModelKit {
       }
 
       // we have the new atom, now assign it
-      
+
       int atomIndexNew = bs.nextSetBit(0);
       if (points == null) {
         // new single atom
-        assignAtom(atomIndexNew, type, false,
-            atomIndex >= 0 && sym == null, true);
+        assignAtom(atomIndexNew, type, false, atomIndex >= 0 && sym == null,
+            true);
         if (atomIndex >= 0) {
           boolean doAutobond = (sym == null && !"H".equals(type));
           assignAtom(atomIndex, ".", false, doAutobond, isClick);
@@ -2815,12 +2794,13 @@ public class ModelKit {
   }
 
   /**
-   * Do the actual assignment of a single atom, possibly with bonding,
-   * possibly deletion or charge increment/decerement.
+   * Do the actual assignment of a single atom, possibly with bonding, possibly
+   * deletion or charge increment/decerement.
    * 
    * This is the terminal method in the series:
    * 
-   * <pre>    
+   * <pre>
+   *     
    *        clickAssignAtom        cmdAssignAddAtoms
    *                 |                      |
    *                 +----> AddAtomType <---+       cmdAssignSpaceGroupPacked
@@ -2832,7 +2812,7 @@ public class ModelKit {
    *                     +-----------> assignAtoms <----------+    
    *                                        |
    *                                        +--------> assignAtom    
-   *                                                   ==========                
+   *                                                   ==========
    *
    * </pre>
    * 
@@ -2850,8 +2830,8 @@ public class ModelKit {
    *        whether this is a click or not
    * @return atomicNumber or -1
    */
-  private int assignAtom(int atomIndex, String type,
-                         boolean autoBond, boolean addHsAndBond, boolean isClick) {
+  private int assignAtom(int atomIndex, String type, boolean autoBond,
+                         boolean addHsAndBond, boolean isClick) {
 
     if (isClick) {
       if (vwr.isModelkitPickingRotateBond()) {
@@ -3487,7 +3467,8 @@ public class ModelKit {
     // modelkit spacegroup 10
     // modelkit spacegroup 10 unitcell [a b c alpha beta gamma]
     // modelkit spacegroup 10:b,c,a
-    // modelkit spacegroup 10:b,c,a  unitcell [a b c alpha beta gamma]
+    // modelkit zap spacegroup 10:b,c,a  unitcell [a b c alpha beta gamma]
+    //   in this case, we set the unitcell on the SECOND round.
 
     // modelkit spacegroup 10>a,b,c>13
     // modelkit spacegroup >a,b,c>13
@@ -3499,9 +3480,14 @@ public class ModelKit {
     if (tokens.length > 1 && haveUCParams) {
       return "invalid syntax - can't mix transformations and UNITCELL option!";
     }
-
     String token = tokens[index].trim();
-    boolean isSubgroupCalc = token.length() == 0 || token.equals("sub") || token.equals("super");
+    if (index == 0 && token.length() == 0) {
+      return assignSpaceGroup(sym00, ita00, bs, null, tokens, 1, trm, prevNode,
+          sb);
+
+    }
+    boolean isSubgroupCalc = token.length() == 0 || token.equals("sub")
+        || token.equals("super");
     String calcNext = (isSubgroupCalc ? token : null);
     if (isSubgroupCalc) {
       token = tokens[++index].trim();
@@ -3510,24 +3496,24 @@ public class ModelKit {
     int pt = token.lastIndexOf(":"); // could be "154:_2" or "R 3 2 :" or 5:a,b,c
     boolean haveUnitCell = (sym00 != null);
     boolean isUnknown = false;
-    boolean haveTransform = (token.length() == 0 
-        || token.indexOf(',') > 0 
-        || "!r!h".indexOf(token) >= 0);  // r !r h !h
+    boolean haveTransform = isTransform(token); // r !r h !h
     boolean haveJmolSetting = (!haveTransform && pt > 0
         && pt < token.length() - 1);
-    boolean isTransformOnly = (haveTransform && pt < 0);
+    boolean isSetting = (haveTransform && pt >= 0);
     String transform = (haveTransform ? token.substring(pt + 1) : null);
-    
+
     M4d trTemp = new M4d();
     boolean restarted = false;
+    boolean ignoreFirst = false;
     SymmetryInterface sym = vwr.getSymTemp();
-    if (prevNode == null) {      
+    if (prevNode == null) {
       if (!ClegNode.checkSyntax(tokens, sym))
         return "invalid CLEG expression!";
-      if (!haveUnitCell && !haveUCParams && (haveTransform || (pt = token.indexOf('.')) > 0)) {
+      if (!haveUnitCell && (haveTransform || (pt = token.indexOf('.')) > 0)) {
         String ita = token.substring(0, pt);
         // easiest is to restart with the default configuration
-        String err = assignSpaceGroup(null, null, null, null, new String[] { ita }, 0, null, null, sb);
+        String err = assignSpaceGroup(null, null, null, paramsOrUC,
+            new String[] { ita }, 0, null, null, sb);
         if (err.endsWith("!"))
           return err;
         sym00 = vwr.getOperativeSymmetry();
@@ -3536,14 +3522,20 @@ public class ModelKit {
         haveUnitCell = true;
         restarted = true;
       }
+      ignoreFirst = (haveUnitCell && isSetting && tokens.length > 1
+          && isTransformOnly(tokens[1]));
+      if (haveUnitCell)
+        System.out.println(sym00.getClegId());
       String ita0 = (haveUnitCell ? sym00.getIntTableNumber() : null);
       String trm0 = null;
       if (haveUnitCell) {
-        if (ita0 == null || ita0.equals("0"))
+        if (ita0 == null || ita0.equals("0")) {
           ita0 = sym00.getClegId();
-        else
+        } else if (ignoreFirst) {
+          transform = null;
           trm0 = (String) sym00.getSpaceGroupInfoObj("itaTransform", null,
               false, false);
+        }
       }
       trm = new M4d();
       trm.setIdentity();
@@ -3577,7 +3569,7 @@ public class ModelKit {
         token = token.substring(0, pt);
     }
 
-    if (isTransformOnly) {
+    if (haveTransform && !isSetting) {
       if (isFinal) {
         isUnknown = true;// now what?
         return "CLEG pathway is incomplete!";
@@ -3607,10 +3599,13 @@ public class ModelKit {
 
     // first or last. 
 
-    ClegNode node = new ClegNode(index, token, transform);
-    if (!node.update(vwr, prevNode, trm, trTemp, sym))
-      return node.errString;
-    node.updateTokens(tokens, index);
+    ClegNode node = null;
+    if (!ignoreFirst) {
+      node = new ClegNode(index, token, transform);
+      if (!node.update(vwr, prevNode, trm, trTemp, sym))
+        return node.errString;
+      node.updateTokens(tokens, index);
+    }
     if (!isFinal)
       return assignSpaceGroup(sym00, ita00, bs, null, tokens, ++index, trm,
           node, sb);
@@ -3624,11 +3619,11 @@ public class ModelKit {
     params = (!haveUCParams || !AU.isAD(paramsOrUC) ? null
         : (double[]) paramsOrUC);
     if (!haveUnitCell) {
-        sym.setUnitCellFromParams(
-            params == null ? new double[] { 10, 10, 10, 90, 90, 90 } : params,
-            false, Float.NaN);
-        paramsOrUC = null;
-        haveUCParams = false;
+      sym.setUnitCellFromParams(
+          params == null ? new double[] { 10, 10, 10, 90, 90, 90 } : params,
+          false, Float.NaN);
+      paramsOrUC = null;
+      haveUCParams = false;
     }
     if (haveUCParams) {
       // have UNITCELL params, either [a b c..] or [o a b c] or 'a,b,c:...'
@@ -3723,12 +3718,12 @@ public class ModelKit {
             "unitcell on; center unitcell;axes unitcell; axes 0.1; axes on;"
                 + "set perspectivedepth false;moveto 0 axis c1;draw delete;show spacegroup");
       }
-      
+
       // don't change the first line of this message -- it will be used in packing.
-      
+
       transform = sym.staticGetTransformABC(trm, false);
-      String msg = transform + "\n" 
-      + PT.join(tokens, '>' , 0) + (basis.isEmpty() ? "" : "\n basis=" + basis);
+      String msg = transform + "\n" + PT.join(tokens, '>', 0)
+          + (basis.isEmpty() ? "" : "\n basis=" + basis);
       System.out.println("ModelKit trm=" + msg);
       sb.append(msg).append("\n");
       return transform;
@@ -3739,8 +3734,17 @@ public class ModelKit {
     }
   }
 
-  protected static M4d addSGTransform(SymmetryInterface sym, String tr, M4d trm0,
-                             M4d temp) {
+  private static boolean isTransformOnly(String token) {
+    return (isTransform(token) && token.indexOf(":") < 0);
+  }
+
+  private static boolean isTransform(String token) {
+    return (token.length() == 0 || token.indexOf(',') > 0
+        || "!r!h".indexOf(token) >= 0);
+  }
+
+  protected static M4d addSGTransform(SymmetryInterface sym, String tr,
+                                      M4d trm0, M4d temp) {
     if (trm0 == null) {
       trm0 = new M4d();
       trm0.setIdentity();
@@ -4704,8 +4708,8 @@ public class ModelKit {
   }
 
   /**
-   * A class to maintain the connection between drawn symmetry business
-   * and sets of atoms. This allows them to be adjusted on the fly.
+   * A class to maintain the connection between drawn symmetry business and sets
+   * of atoms. This allows them to be adjusted on the fly.
    * 
    */
   private class DrawAtomSet {
@@ -4805,9 +4809,9 @@ public class ModelKit {
   }
 
   /**
-   * @param id 
-   * @param ucLattice 
-   * @param swidth 
+   * @param id
+   * @param ucLattice
+   * @param swidth
    */
   public void drawUnitCell(String id, T3d ucLattice, String swidth) {
     SymmetryInterface sym = vwr.getOperativeSymmetry();
@@ -4828,9 +4832,8 @@ public class ModelKit {
     for (int p = 1, x = (int) cellRange[0].x; x < cellRange[1].x; x++) {
       for (int y = (int) cellRange[0].y; y < cellRange[1].y; y++) {
         for (int z = (int) cellRange[0].z; z < cellRange[1].z; z++, p++) {
-          s += "\ndraw ID " + PT.esc(id + "_" + p) 
-          + " " + swidth + " unitcell \"a,b,c;" + x
-              + "," + y + "," + z + "\"";
+          s += "\ndraw ID " + PT.esc(id + "_" + p) + " " + swidth
+              + " unitcell \"a,b,c;" + x + "," + y + "," + z + "\"";
         }
       }
     }
@@ -4845,31 +4848,36 @@ public class ModelKit {
   }
 
   private String getDrawAxes(String id, String swidth) {
-    if (vwr.g.axesMode != T.axesunitcell || vwr.shm.getShapePropertyIndex(JC.SHAPE_AXES,"axesTypeXY", 0) == Boolean.TRUE)
+    if (vwr.g.axesMode != T.axesunitcell || vwr.shm
+        .getShapePropertyIndex(JC.SHAPE_AXES, "axesTypeXY", 0) == Boolean.TRUE)
       return "";
     if (id == null)
       id = "uca";
     if (swidth.indexOf(".") > 0)
       swidth += "05";
-    P3d origin = (P3d) vwr.shm.getShapePropertyIndex(JC.SHAPE_AXES, "originPoint", 0);
-    P3d[] axisPoints = (P3d[]) vwr.shm.getShapePropertyIndex(JC.SHAPE_AXES, "axisPoints", 0);
+    P3d origin = (P3d) vwr.shm.getShapePropertyIndex(JC.SHAPE_AXES,
+        "originPoint", 0);
+    P3d[] axisPoints = (P3d[]) vwr.shm.getShapePropertyIndex(JC.SHAPE_AXES,
+        "axisPoints", 0);
     String s = "";
-    String[] colors = new String[] {"red", "green", "blue"};
+    String[] colors = new String[] { "red", "green", "blue" };
     for (int i = 0, a = JC.AXIS_A; i < 3; i++, a++) {
-      s += "\ndraw ID " + PT.esc(id + "_axis_" + JC.axisLabels[a]) 
-          + " " + swidth + " line " + origin + " " + axisPoints[i] + " color " + colors[i];
+      s += "\ndraw ID " + PT.esc(id + "_axis_" + JC.axisLabels[a]) + " "
+          + swidth + " line " + origin + " " + axisPoints[i] + " color "
+          + colors[i];
     }
     return s;
   }
 
-  public String drawSymmetry(String thisId, boolean isSymop, int iatom, String xyz, int iSym,
-                     P3d trans, P3d center, P3d target, int intScale, int nth,
-                     int options, int[] opList, boolean isModelkit) {
+  public String drawSymmetry(String thisId, boolean isSymop, int iatom,
+                             String xyz, int iSym, P3d trans, P3d center,
+                             P3d target, int intScale, int nth, int options,
+                             int[] opList, boolean isModelkit) {
     String s = null;
     if (options != 0) {
       // options is T.offset, and target is an {i j k} offset from cell 555
-      Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-          target, T.point, null, intScale / 100d, nth, options, opList);
+      Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center, target,
+          T.point, null, intScale / 100d, nth, options, opList);
       if (o instanceof P3d)
         target = (P3d) o;
       else
@@ -4878,14 +4886,14 @@ public class ModelKit {
     if (thisId == null)
       thisId = (isSymop ? "sym" : "sg");
     if (s == null)
-      s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center,
-          target, T.draw, thisId, intScale / 100, nth, options, opList);
+      s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center, target,
+          T.draw, thisId, intScale / 100, nth, options, opList);
     if (s != null) {
       s = "draw ID " + (isSymop ? "sg" : "sym") + "* delete;" + s;
       s = "draw ID " + thisId + "* delete;" + s;
     }
     if (isModelkit)
-      s += ";draw ID sg_xes axes 0.05;";  
+      s += ";draw ID sg_xes axes 0.05;";
     return s;
   }
 

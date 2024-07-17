@@ -134,7 +134,7 @@ abstract public class BondCollection extends AtomCollection {
             bs.set(b.bonds[i].index);
       } else {
         Bond bond = a.getBond(b);
-        if (b != null)
+        if (bond != null)
           bs.set(bond.index);
       }
       return bs;

@@ -1,5 +1,7 @@
 package swingjs.api.js;
 
+import java.awt.Insets;
+
 public interface JQueryObject {
 
 	public interface JQEvent {
@@ -19,7 +21,7 @@ public interface JQueryObject {
 
 	public abstract int width();
 	public abstract int height();
-	public abstract Object offset();
+	public abstract Insets offset();
 
 
 	public abstract void html(String html);
@@ -36,7 +38,7 @@ public interface JQueryObject {
 	public abstract JQueryObject show();
 	public abstract JQueryObject hide();
 
-	public abstract void resize(Object fHandleResize);
+	public abstract JQueryObject resize(Object fHandleResize);
 
 
 	/**
@@ -56,24 +58,26 @@ public interface JQueryObject {
 	public abstract JQueryObject find(String selector);
 
 	public abstract JQueryObject parent();
-	public abstract void before(Object obj);
-	public abstract void after(Object div);
+	public abstract JQueryObject before(Object obj);
+	public abstract JQueryObject after(Object div);
+	public abstract JQueryObject scrollTop(int top);
 
 	
 	/**
 	 * remove from tree, but do not clear events
 	 */
-	public abstract void detach(); // like remove(), but does not change event settings
+	public abstract JQueryObject detach(); // like remove(), but does not change event settings
 	
 	/**
 	 * remove from tree and clear all events -- for disposal only
 	 */
-	public abstract void remove();
+	public abstract JQueryObject remove();
 
-	/**
+
+		/**
 	 * fully remove all children, clearing all events
 	 */
-	public abstract void empty();
+	public abstract JQueryObject empty();
 
 	public abstract DOMNode getElement();
 	

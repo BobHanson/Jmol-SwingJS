@@ -1251,11 +1251,11 @@ public class Symmetry implements SymmetryInterface {
             whereList.addLast(o);
             continue;
           }
-          Lst<Object> trms = (Lst<Object>) o.get("trm");
+          Lst<Object> trms = (Lst<Object>) o.get("trms");
           n = trms.size();
           if (index2 < 1 || index2 > n)
             return null;
-          return ((String) trms.get(index2 - 1)).substring(2);
+          return ((Map<String, Object>)trms.get(index2 - 1)).get("trm");
         }
         if (isWhereList && !whereList.isEmpty()) {
           return whereList;

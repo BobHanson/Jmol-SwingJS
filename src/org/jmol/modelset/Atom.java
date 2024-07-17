@@ -765,7 +765,7 @@ public class Atom extends Point3fi implements Node {
       for (int j = 0; j < nOps; j++)
         if (atomSymmetry.get(pt++))
           if (isAll) {
-            str += "," + (j + 1) + cellRange[i];
+            str += "," + (j + 1) + (cellRange == null ? 555 : cellRange[i]);
           } else {
             bs.set(j + 1);
           }

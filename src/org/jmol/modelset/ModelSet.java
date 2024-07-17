@@ -983,7 +983,7 @@ public class ModelSet extends BondCollection {
       // something like within(group,...) will not select these atoms!
       Atom atom2 = addAtom(modelIndex, atom1.group, 1, "H" + n, null, n,
           atom1.getSeqID(), n, pts[i], Double.NaN, null, 0, 0, 100, Double.NaN,
-          null, false, (byte) 0, null, Double.NaN);
+          null, false, false, (byte) 0, null, Double.NaN);
 
       atom2.setMadAtom(vwr, rd);
       bs.set(atom2.i);
@@ -3269,7 +3269,7 @@ public class ModelSet extends BondCollection {
                       int atomSeqID, int atomSite, P3d xyz, double radius,
                       V3d vib, int formalCharge, double partialCharge,
                       double occupancy, double bfactor, Lst<Object> tensors,
-                      boolean isHetero, byte specialAtomID, BS atomSymmetry, double bondRadius) {
+                      boolean isHetero, boolean isNegDisorder, byte specialAtomID, BS atomSymmetry, double bondRadius) {
     Atom atom = new Atom().setAtom(modelIndex, ac, xyz, radius, atomSymmetry,
         atomSite, (short) atomicAndIsotopeNumber, formalCharge, isHetero);
     am[modelIndex].act++;
@@ -3287,6 +3287,8 @@ public class ModelSet extends BondCollection {
       setAtomTensors(ac, tensors);
     atom.group = group;
     atom.colixAtom = vwr.cm.getColixAtomPalette(atom, PAL.CPK.id);
+    if (isNegDisorder)
+      atom.setTranslucent(true, 0.5d);
     if (atomName != null) {
       if (atomType != null) {
         if (atomTypes == null)

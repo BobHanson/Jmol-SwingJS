@@ -10,6 +10,7 @@ import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.swing.BoxLayout;
@@ -62,8 +63,10 @@ public interface HTML5Video extends DOMNode {
 						// already been loaded (or partially loaded), and the load() method is called to
 						// reload it.
 			"ended", // Playback has stopped because the end of the media was reached.
+			"error", // An error occurred while fetching the media data, or the type of the resource is not a supported media format.
 			"loadeddata", // The first frame of the media has finished loading.
 			"loadedmetadata", // The metadata has been loaded.
+			"loadstart", // Fired when the browser has started to load the resource.
 			"pause", // Playback has been paused.
 			"play", // Playback has begun.
 			"playing", // Playback is ready to start after having been paused or delayed due to lack of
@@ -99,6 +102,8 @@ public interface HTML5Video extends DOMNode {
 	public void mozGetMetadata() throws Throwable;
 
 	public void pause() throws Throwable;
+	
+	public int requestVideoFrameCallback(Object callback) throws Throwable;
 
 	public Promise play() throws Throwable;
 
@@ -227,7 +232,7 @@ public interface HTML5Video extends DOMNode {
 			public Void apply(Object jsevent) {
 				String name = (/** @j2sNative jsevent.type || */
 				"?");
-				System.out.println("HTML5Video " + (/** @j2sNative jsevent.target.id || */null) + " " + name);
+				//System.out.println("HTML5Video " + (/** @j2sNative jsevent.target.id || */null) + " " + name);
 				ActionEvent e = new ActionEvent(new Object[] { jsvideo, jsevent }, 12345, name,
 						System.currentTimeMillis(), 0);
 				listener.actionPerformed(e);
@@ -261,6 +266,7 @@ public interface HTML5Video extends DOMNode {
 			for (int i = 0; i < eventTypes.length; i++) {
 				jsvideo.removeEventListener(eventTypes[i]);
 			}
+			return;
 		}
 		
 		for (int i = 0; i < listeners.length; i += 2) {
@@ -314,7 +320,20 @@ public interface HTML5Video extends DOMNode {
 	 */
 	public static JDialog createDialog(Frame parent, Object source, int maxWidth,
 			Function<HTML5Video, Void> whenReady) {
-		JDialog dialog = new JDialog(parent);
+		return createDialog(parent, source, maxWidth, true, whenReady);
+	}
+	
+	public static class HTML5VideoDialog extends JDialog {
+
+		public HTML5VideoDialog(Frame parent) {
+			super(parent);
+		}
+		public JPanel controls;
+		
+	}
+	public static JDialog createDialog(Frame parent, Object source, int maxWidth, boolean addControls,
+			Function<HTML5Video, Void> whenReady) {
+		HTML5VideoDialog dialog = new HTML5VideoDialog(parent);
 		Container p = dialog.getContentPane();
 		p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
 		JLabel label = (source instanceof JLabel ? (JLabel) source : createLabel(source));
@@ -322,12 +341,22 @@ public interface HTML5Video extends DOMNode {
 		// not in Java! dialog.putClientProperty("jsvideo", label);
 		p.add(label);
 		label.setVisible(false);
-		p.add(getControls(label));
+		JPanel q = dialog.controls = getControls(label);
+			p.add(q);
+			q.setVisible(addControls);
+		label.putClientProperty("controls", q);
 		dialog.setModal(false);
 		dialog.pack();
 		dialog.setVisible(true);
 		dialog.setVisible(false);
 		HTML5Video jsvideo = (HTML5Video) label.getClientProperty("jsvideo");
+		/**
+		 * @j2sNative
+		 * 
+		 * jsvideo.dialog = dialog;
+		 * jsvideo.label = label;
+		 * 
+		 */
 		Object[] j2sListener = HTML5Video.addActionListener(jsvideo, new ActionListener() {
 
 			@Override
@@ -355,7 +384,58 @@ public interface HTML5Video extends DOMNode {
 		HTML5Video.setCurrentTime(jsvideo, 0);
 		return dialog;
 	}
+
+	public static void cancelVideoFrameCallback(HTML5Video jsvideo) {
+		
+		/**
+		 * @j2sNative
+		 *          jsvideo._cancelVFCallback = true;
+		 *          
+		 */		
+	}
 	
+	/**
+	 * capture frame metadata while playing. Specifically, grab the metadata.mediaTime values, 
+	 * reporting these to the provided results array as 
+	 * 
+	 * results[0] = frameCount
+	 * 
+	 * resutls[n] = frame-n startTime (seconds)
+	 * 
+	 * @param jsvideo
+	 * @param result array to load
+	 * @return
+	 */
+	@SuppressWarnings("unused")
+	public static int requestVideoFrameCallback(HTML5Video jsvideo, Consumer<Object> callback) {
+		Object[] f = null;
+		/**
+		 * @j2sNative
+		 * 			if (jsvideo.requestVideoFrameCallback) {
+		 *           jsvideo._cancelVFCallback = false;
+		 * 			 f = [];
+		 * 			 f[0] = function(now, metadata) {
+		 * 					if (jsvideo._cancelVFCallback) {
+		 * 						jsvideo._cancelVFCallback = false;
+		 * 					} else {
+		 * 						callback.accept$O(metadata);
+		 *          			jsvideo.requestVideoFrameCallback(f[0]);
+		 *          		}
+		 *           };
+		 * 			}	
+		 * 
+		 */
+		if (f == null)
+			return 0;
+		int id = 0;
+		try {
+			id = jsvideo.requestVideoFrameCallback(f[0]);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+		return id;
+	}
+
 	static JPanel getControls(JLabel label) {
 
 		JPanel controls = new JPanel();
@@ -430,6 +510,30 @@ public interface HTML5Video extends DOMNode {
 
 	public static int getFrameCount(HTML5Video jsvideo) {
 		return (int) (getDuration(jsvideo) / 0.033334);
+	}
+
+	public static void startVideo(HTML5Video jsvideo) {
+		@SuppressWarnings("unused")
+		HTML5VideoDialog d = /** @j2sNative jsvideo.dialog || */null;
+		try {
+			/**
+			 * @j2sNative
+			 * 
+			 * 			var promise = jsvideo.play();
+			 *            if (promise !== undefined) { promise["catch"](function(){
+			 *            d.controls.setVisible$Z(true);d.pack$();
+			 *            if (!d.t)
+			 *            d.t = setTimeout(function(){
+			 *            alert("Please press OK and then the play button.")}
+			 *            ,1000); }); }
+			 * 
+			 */
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+
+		// TODO Auto-generated method stub
+		
 	}
 
 // HTMLMediaElement properties
