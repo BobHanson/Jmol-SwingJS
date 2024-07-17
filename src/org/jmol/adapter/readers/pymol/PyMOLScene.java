@@ -10,8 +10,6 @@ import org.jmol.api.JmolSceneGenerator;
 import org.jmol.api.PymolAtomReader;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.VDW;
-
-import javajs.util.BS;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.MeasurementData;
 import org.jmol.modelset.Text;
@@ -20,20 +18,18 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Font;
-import org.jmol.util.Point3fi;
-
-import javajs.util.AU;
-import javajs.util.CU;
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import org.jmol.util.Logger;
-import javajs.util.P3d;
-import javajs.util.P3d;
-
+import org.jmol.util.Point3fi;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.CU;
+import javajs.util.Lst;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.SB;
 
 /**
  * A class to allow manipulation of scenes dissociated from file loading. A
@@ -926,7 +922,7 @@ class PyMOLScene implements JmolSceneGenerator {
       setLabelPosition(offset, labelPos);
     }
     labels.put(Integer.valueOf(atomIndex), newTextLabel(label, labelPos,
-        icolor, labelFontId, (double) labelSize));
+        icolor, labelFontId, labelSize));
   }
 
   double getUniqueFloatDef(int id, int key, double defaultValue) {
@@ -989,9 +985,9 @@ class PyMOLScene implements JmolSceneGenerator {
 
   double[] setLabelPosition(P3d offset, double[] labelPos) {
     labelPos[0] = 1;
-    labelPos[1] = (double) offset.x;
-    labelPos[2] = (double) offset.y;
-    labelPos[3] = (double) offset.z;
+    labelPos[1] = offset.x;
+    labelPos[2] = offset.y;
+    labelPos[3] = offset.z;
     return labelPos;
   }
 
@@ -1044,7 +1040,7 @@ class PyMOLScene implements JmolSceneGenerator {
         md = mdList[index];
         offset = md.text.pymolOffset;
       }
-      PyMOLReader.fixAllZeroLabelPosition(offset);
+      PyMOL.fixAllZeroLabelPosition(offset);
       int nDigits = (int) floatSetting(MEAS_DIGITS[nCoord - 2]);
       String strFormat = nCoord + ": "
           + (drawLabel ? "%0." + (nDigits < 0 ? 1 : nDigits) + "VALUE" : "");
@@ -1061,7 +1057,7 @@ class PyMOLScene implements JmolSceneGenerator {
 
   private static Point3fi newP3i(P3d p) {
     Point3fi pi = new Point3fi();
-    pi.set((double) p.x, (double) p.y, (double) p.z);
+    pi.set(p.x, p.y, p.z);
     return pi;
   }
 
@@ -1094,7 +1090,7 @@ class PyMOLScene implements JmolSceneGenerator {
         : colorIndex == PyMOL.COLOR_FRONT ? C.getBgContrast(bgRgb) : 
           C.getColixO(Integer.valueOf(PyMOL.getRGB(colorIndex))));
 
-    return C.getColixTranslucent3(colix, translucency > 0, (double) translucency);
+    return C.getColixTranslucent3(colix, translucency > 0, translucency);
   }
 
   void setAtomColor(int atomColor) {
@@ -1268,10 +1264,10 @@ class PyMOLScene implements JmolSceneGenerator {
           .getUniqueID(iAtom));
       if (reps[PyMOL.REP_SPHERES].get(iAtom)) {
         rad =  (reader == null ? radii[iAtom] : reader.getVDW(iAtom))
-            * (double)getUniqueFloatDef(uniqueID, PyMOL.sphere_scale, sphereScale);
+            * getUniqueFloatDef(uniqueID, PyMOL.sphere_scale, sphereScale);
       } else if (reps[PyMOL.REP_NBSPHERES].get(iAtom)) {
         // Penta_vs_mutants calcium
-        rad = (double) nonbondedSize;
+        rad = nonbondedSize;
       }
       if (rad != 0) {
         Double r = Double.valueOf(rad);
@@ -1718,7 +1714,7 @@ class PyMOLScene implements JmolSceneGenerator {
     if (argb != Integer.MAX_VALUE)
       colix = C.getColix(argb);
     if (!Double.isNaN(trans))
-      b.colix = C.getColixTranslucent3(colix, trans != 0, (double) trans);
+      b.colix = C.getColixTranslucent3(colix, trans != 0, trans);
     else if (b.colix != colix)
       b.colix = C.copyColixTranslucency(b.colix, colix);
     if (pymolValence == 1)

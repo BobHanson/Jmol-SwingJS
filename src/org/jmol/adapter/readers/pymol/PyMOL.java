@@ -4,7 +4,6 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.P3d;
-import javajs.util.P3d;
 
 import org.jmol.util.Logger;
 
@@ -6884,5 +6883,18 @@ class PyMOL {
         varray[va[i++]] = va[i++];
     }
     return varray;
+  }
+
+  /**
+   * If the label position array is all zeros, set the first value to 1.0, indicating "default".
+   * 
+   * @param labelPos
+   */
+  static void fixAllZeroLabelPosition(double[] labelPos) {
+    for (int i = 0; i < 7; i++) {
+      if (labelPos[i] != 0)
+        return;
+    }
+    labelPos[0] = 1; // default position
   }
 }

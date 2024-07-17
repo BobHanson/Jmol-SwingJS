@@ -47,7 +47,6 @@ import javajs.util.AU;
 import javajs.util.BC;
 import javajs.util.CU;
 import javajs.util.P3d;
-import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.V3d;
 
@@ -1177,8 +1176,8 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       }
       bfactor = atomFloat(atomArray, pt, vArray[PyMOL.BFACTOR]);
       occupancy = atomFloat(atomArray, pt, vArray[PyMOL.OCCUPANCY]);
-      radius= (double) atomFloat(atomArray, pt, vArray[PyMOL.VDW]);
-      partialCharge = (double) atomFloat(atomArray, pt, vArray[PyMOL.PARTIALCHARGE]);
+      radius= atomFloat(atomArray, pt, vArray[PyMOL.VDW]);
+      partialCharge = atomFloat(atomArray, pt, vArray[PyMOL.PARTIALCHARGE]);
       formalCharge = atomArray[pt + vArray[PyMOL.FORMALCHARGE]];
       if (formalCharge > 125)
         formalCharge -= 512;
@@ -1215,8 +1214,8 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       ssType = ssType.substring(0, 1);
       bfactor = floatAt(a, 14);
       occupancy = floatAt(a, 15);
-      radius = (double) floatAt(a, 16);
-      partialCharge = (double) floatAt(a, 17);
+      radius = floatAt(a, 16);
+      partialCharge = floatAt(a, 17);
       formalCharge = intAt(a, 18);
       isHetero = (intAt(a, 19) != 0);
       bsReps = getBsReps(listAt(a, 20));
@@ -1307,7 +1306,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
             labelPos[i] = floatAt(labelOffset, i);
         }
       }
-      fixAllZeroLabelPosition(labelPos);
+      PyMOL.fixAllZeroLabelPosition(labelPos);
       pymolScene.addLabel(ac, uniqueID, atomColor, labelPos, label);
     }
     if (isHidden)
@@ -1323,14 +1322,6 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       pymolScene.bsNoSurface.set(ac);
     atomMap[apt] = ac++;
     return null;
-  }
-
-  static void fixAllZeroLabelPosition(double[] labelPos) {
-    for (int i = 0; i < 7; i++) {
-      if (labelPos[i] != 0)
-        return;
-    }
-    labelPos[0] = 1; // default position
   }
 
   private boolean atomBool(byte[] atomArray, int pt, int offset, int mask) {
