@@ -132,7 +132,7 @@ public class SpaceGroup implements Cloneable {
   
   private SpaceGroup setFrom(SpaceGroup sg, boolean isITA) {
     if (isITA) {
-      setName(sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + clegId);
+      setName(sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + sg.clegId);
       derivedIndex = SG_ITA; // prevents replacement in finalizeOperations
     } else {
       setName(sg.getName());
@@ -2251,6 +2251,7 @@ public class SpaceGroup implements Cloneable {
     itaIndex = (tr != null ? sg + ":" + tr : set.indexOf(".") >= 0 ? set : sg + "." + set);
     itaTransform = tr;
     clegId = sg + ":" + tr;
+    strName = null;
     this.jmolId = jmolId;
     if (jmolId == null) {
       info = dumpInfoObj(); 

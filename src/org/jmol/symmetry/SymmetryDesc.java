@@ -1313,18 +1313,24 @@ public class SymmetryDesc {
           }
           if (ptref != null && !ignore) {
             boolean isCentered = (glideType == '\0');
-            color = (isTimeReversed && !haveInversion && !isMirrorPlane
+            boolean isGlide = (isSpaceGroup && !isCentered && !isTranslationOnly);
+            if (isGlide) {
+              ptemp.scaleAdd2(0.5, trans, ptref);
+              vtrans.setT(trans);
+              vtrans.scale(0.5);
+            } else {
+              ptemp.setT(ptref);
+              vtrans.setT(trans);
+            }
+            color = (isGlide ? "green" : isTimeReversed && !haveInversion && !isMirrorPlane
                       && !isRotation ? "darkGray" : "gold");
             drawVector(drawSB,  (isCentered ? "centering_" : glideType + "_g") + "trans_vector", "vector",
-                (isTranslationOnly ? THICK_LINE : THIN_LINE), ptref, trans, color, title);
-            if (isSpaceGroup && !isCentered && !isTranslationOnly) {
+                (isGlide || isTranslationOnly ? THICK_LINE : THIN_LINE), ptemp, vtrans, color, title);
+            if (isGlide) {
               // draw reverse arrow as well
-              ptemp.setT(ptref);
-              ptemp.add(trans);
-              ptemp2.setT(trans);
-              ptemp2.scale(-1);
+              vtrans.scale(-1);
               drawVector(drawSB,  glideType + "_g" + "trans_vector2", "vector",
-                  THIN_LINE, ptemp, ptemp2, color, title);
+                  THICK_LINE, ptemp, vtrans, color, title);
             }
           }
         }

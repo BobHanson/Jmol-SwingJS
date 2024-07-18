@@ -215,9 +215,9 @@ public class SpaceGroupFinder {
       for (int i = targets.nextSetBit(0); i >= 0; i = targets.nextSetBit(i + 1))
         basis.clear(atoms[i].index);
       int nb = basis.cardinality();
-      String msg = name + (atoms0 == null ? ""
+      String msg = name + (atoms0 == null || nb == 0 ? ""
           : "\nbasis is " +  nb + " atom" + (nb == 1 ? "" : "s") + ": " + basis);
-      System.out.println(msg);
+      System.out.println("SpaceGroupFinder: " + msg);
       if (asString)
         return msg;
     }
