@@ -264,7 +264,7 @@ public class ModelKit {
         }
         addSGTransform(sym, myTrm, trm, trTemp);
         addSGTransform(sym, setting, trm, trTemp);
-        System.out.println("ClegNode " + this + "\n" + trm);
+        //System.out.println("ClegNode " + this + "\n" + trm);
         if (haveCalc) {
           trm0.invert();
           M4d trm1 = M4d.newM4(trm);
@@ -343,6 +343,485 @@ public class ModelKit {
         tokens[i - 1] = calculated;
     }
 
+  }
+
+  /**
+   * Assign the space group and associated unit cell from the MODELKIT
+   * SPACEGROUP command.
+   * 
+   * All aspects depend upon having one of:
+   * 
+   * - a space group number: n (1-230); will be converted to n.1
+   * 
+   * - a valid n.m Jmol-recognized ITA setting: "13.3"
+   * 
+   * - an ITA space group number with a transform: "10:c,a,b"
+   * 
+   * - a valid jmolId such as "3:b", which will be converted to an ITA n.m
+   * setting
+   * 
+   * - (hopefully unambiguous) Hermann-Mauguin symbol, such as "p 4/n b m :2"
+   * 
+   * jmolId and H-M symbols will be converted to ITA n.m format.
+   * 
+   * Options include two basic forms:
+   * 
+   * 1. non-CLEG format. Just the space group identifier: "13.3", "3:b", etc.
+   * with a UNITCELL option
+   * 
+   * MODELKIT SPACEGROUP "P 1 2/1 1" UNITCELL <unit cell description>
+   * 
+   * where <unit cell description> is one of:
+   * 
+   * - [a b c alpha beta gamma]
+   * 
+   * - [ origin va vb vc ]
+   * 
+   * - a transform such as "a,b,c;0,0,1/2"
+   * 
+   * The unit cell is absolute or, if a transform, applied to the current unit
+   * cell.
+   * 
+   * It is assumed in this case that the given unit cell is the cell for the
+   * setting descibed. The standard-to-desired setting of the name is not
+   * applied to the unit cell.
+   * 
+   * 3. CLEG format
+   * 
+   * identifier
+   * 
+   * identifier [> transform ]n > identifier
+   * 
+   * identifier > [ [transform >]n [> identifier ]m ]p > identifier
+   * 
+   * for example:
+   * 
+   * 
+   * 
+   * MODELKIT SPACEGROUP "13"
+   * 
+   * MODELKIT SPACEGROUP "13:-a-c,b,a"
+   * 
+   * MODELKIT SPACEGROUP "P 1 2/n 1"
+   *
+   * MODELKIT SPACEGROUP "P 2/n"
+   *
+   * MODELKIT SPACEGROUP "13.2" // second in Jmol's list of ITA settings for
+   * space group 13
+   * 
+   * MODELKIT SPACEGROUP "13:b2" // Jmol code
+   * 
+   * MODELKIT SPACEGROUP "10:b,c,a > a-c,b,2c;0,0,1/2 > 13:a,-a-c,b" // fix -
+   * this was to c2
+   * 
+   * Note that there are two possibilities, regarding current model to start of
+   * chain, and start of chain to end of chain:
+   *
+   * 1) The space group number does not change (this a SETTING change)
+   * 
+   * 2) The space group number changes (this is a group >> subgroup or a group
+   * >> supergroup change.
+   * 
+   *
+   * 
+   * Identifiers with settings are treated as follows:
+   * 
+   * - If the space group number is UNCHANGED, for example
+   * 
+   * 10 >> 10:c,a,b
+   * 
+   * then the final setting is applied to the unit cell as P * UC, and the space
+   * group operations { R } are adjusted using (!P) * R * P, where P is the
+   * transform of the setting and !P is its inverse.
+   * 
+   * Note that there is an implicit transform from the CURRENT unit cell and
+   * space group when the two have the same space group number:
+   * 
+   * current == 10:b,c,a
+   * 
+   * MODELKIT SPACEGROUP 10:c,b,a ...
+   * 
+   * Here the current setting will be processed with a transform that brings it
+   * from 10:b,c,a to 10:c,b,a as:
+   * 
+   * MODELKIT SPACEGROUP "10:b,c,a > !b,c,a > 10:a,b,c > c,a,b > 10:c,a,b"
+   *
+   * Note that this allows for the direct use of Hermann-Mauguin notation. In
+   * the case of H-M settings WITHIN THE SAME SPACE GROUP, this can be condensed
+   * to:
+   * 
+   * MODELKIT P 1 1 2/m >> P 2/m 1 1
+   * 
+   * where ">>" means "you figure it out, Jmol." Basically, this method will
+   * interpret ">>" to mean "switch settings" and will implement that as
+   * 
+   * P 1 1 2/m > !b,c,a > c,a,b > P 2/m 1 1
+   * 
+   * 
+   * Subgroups and Supergroups
+   * 
+   * - If the space group number is CHANGED, for example,
+   * 
+   * "10 > ... transforms ... > 13:a,-a-c,b"
+   * 
+   * or the current space group of the model is 10, then the final setting is
+   * only applied to the operators of the final space group. Any change in unit
+   * cell setting is assumed to already be accounted for by the indicated
+   * transforms.
+   * 
+   * For example, in the case from from P 2/m to P 2/c, no unambiguous implicit
+   * transformation is possible, and an error message will be returned
+   * indicating that a transform is required if none is presented. Such
+   * group-group transforms an be found at the BCS, specifically for ITA default
+   * settings. Thus, we might write:
+   * 
+   * P 1 1 2/m >> 10 > a-c,b,2c;0,0,1/2 > 13 >> P 2/c 1 1
+   * 
+   * where we are EXPLICITY indicating that the standard-to-standard ITA
+   * transform:
+   * 
+   * 10 > a-c,b,2c;0,0,1/2 > 13
+   * 
+   * as part of the CLEG sequence. In this case, the indicated transforms
+   * between settings will be added to the sequence.
+   * 
+   * This ensures that the desired specific conversion is used.
+   * 
+   * Additional aspects of the notation include:
+   * 
+   * ! prefix - "not" or "inverse of"
+   * 
+   * :r setting - abbreviation for
+   * :2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c
+   * 
+   * :h setting - abbreviation for "!r":
+   * :!2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c
+   * 
+   * [xx xx xx] - Hall notation, such as [P 2/1], can also be used. See
+   * http://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
+   * 
+   * Note that this allows also for fully transformed Hall notation as a
+   * setting. For example:
+   * 
+   * 85.4 same as [-p 4a"]:a-b,a+b,c;0,1/4,-1/8
+   * 
+   * Were we are using the Hall symbol for the standard setting of space group
+   * 85 in this case, and applying the appropriate tranform to 85.4 (P 42/m).
+   * 
+   * In all cases, the two actions performed include:
+   * 
+   * - replacing the current unit cell
+   * 
+   * - replacing the space group
+   * 
+   * Note that in cases where there is a series of transforms, the initial
+   * action of this method is to convert that sequence to a single overall
+   * transform first. If any identifiers are in the chain other than the first
+   * or last position, they are not checked and are simply ignored.
+   * 
+   * @param sym00
+   * @param ita00
+   * 
+   * @param bs
+   * @param paramsOrUC
+   * @param tokens
+   *        separation based on >
+   * @param index
+   * @param trm
+   * @param prevNode
+   * @param sb
+   * 
+   * 
+   * @return message or error (message ending in "!")
+   */
+  private String assignSpaceGroup(SymmetryInterface sym00, String ita00, BS bs,
+                                  Object paramsOrUC, String[] tokens, int index,
+                                  M4d trm, ClegNode prevNode, SB sb) {
+
+    // modelkit spacegroup 10
+    // modelkit spacegroup 10 unitcell [a b c alpha beta gamma]
+    // modelkit spacegroup 10:b,c,a
+    // modelkit zap spacegroup 10:b,c,a  unitcell [a b c alpha beta gamma]
+    //   in this case, we set the unitcell on the SECOND round.
+
+    // modelkit spacegroup 10>a,b,c>13
+    // modelkit spacegroup >a,b,c>13
+    // modelkit spacegroup 10:b,c,a > -b+c,-b-c,a:0,1/2,0 > 13:a,-a-c,b
+
+    if (index >= tokens.length)
+      return "invalid CLEG expression!";
+    boolean haveUCParams = (paramsOrUC != null);
+    if (tokens.length > 1 && haveUCParams) {
+      return "invalid syntax - can't mix transformations and UNITCELL option!";
+    }
+    String token = tokens[index].trim();
+    if (index == 0 && token.length() == 0) {
+      return assignSpaceGroup(sym00, ita00, bs, null, tokens, 1, trm, prevNode,
+          sb);
+
+    }
+    boolean isSubgroupCalc = token.length() == 0 || token.equals("sub")
+        || token.equals("super");
+    String calcNext = (isSubgroupCalc ? token : null);
+    if (isSubgroupCalc) {
+      token = tokens[++index].trim();
+    }
+    boolean isFinal = (index == tokens.length - 1);
+    int pt = token.lastIndexOf(":"); // could be "154:_2" or "R 3 2 :" or 5:a,b,c
+    boolean haveUnitCell = (sym00 != null);
+    boolean isUnknown = false;
+    boolean haveTransform = isTransform(token); // r !r h !h
+    boolean haveJmolSetting = (!haveTransform && pt > 0
+        && pt < token.length() - 1);
+    boolean isSetting = (haveTransform && pt >= 0);
+    String transform = (haveTransform ? token.substring(pt + 1) : null);
+
+    M4d trTemp = new M4d();
+    boolean restarted = false;
+    boolean ignoreFirst = false;
+    SymmetryInterface sym = vwr.getSymTemp();
+    if (prevNode == null) {
+      if (!ClegNode.checkSyntax(tokens, sym))
+        return "invalid CLEG expression!";
+      if (!haveUnitCell && (haveTransform || (pt = token.indexOf('.')) > 0)) {
+        String ita = token.substring(0, pt);
+        // easiest is to restart with the default configuration and unit cell
+        String err = assignSpaceGroup(null, null, null, paramsOrUC,
+            new String[] { ita }, 0, null, null, sb);
+        if (err.endsWith("!"))
+          return err;
+        sym00 = vwr.getOperativeSymmetry();
+        if (sym00 == null)
+          return "modelkit spacegroup initialization error!";
+        haveUnitCell = true;
+        restarted = true;
+      }
+      // modelkit spacegroup 10:c,a,b>a,b,2c>....
+      ignoreFirst = (haveUnitCell && isSetting && tokens.length > 1
+          && isTransformOnly(tokens[1]));
+      String ita0 = (haveUnitCell ? sym00.getClegId() : null);
+      String trm0 = null;
+      if (haveUnitCell) {
+        if (ita0 == null || ita0.equals("0")) {
+        } else if (ignoreFirst) {
+          transform = null;
+          trm0 = (String) sym00.getSpaceGroupInfoObj("itaTransform", null,
+              false, false);
+        } else {
+          pt = ita0.indexOf(":");
+          if (pt > 0) {
+            trm0 = ita0.substring(pt + 1);
+            ita0 = ita0.substring(0, pt);
+          }
+        }
+      }
+      trm = new M4d();
+      trm.setIdentity();
+      prevNode = new ClegNode(-1, ita0, trm0);
+      if (!prevNode.update(vwr, null, trm, trTemp, sym))
+        return prevNode.errString;
+
+    }
+    if (isSubgroupCalc) {
+      prevNode.calcNext = calcNext;
+    }
+
+    if (transform != null) {
+      switch (transform) {
+      case "r":
+      case "!h":
+        transform = SimpleUnitCell.HEX_TO_RHOMB;
+        break;
+      case "h":
+      case "!r":
+        transform = "!" + SimpleUnitCell.HEX_TO_RHOMB;
+        break;
+      default:
+        if (haveJmolSetting) {
+          pt = 0;
+          haveTransform = false;
+          transform = null;
+        }
+      }
+      if (pt > 0)
+        token = token.substring(0, pt);
+    }
+
+    if (haveTransform && !isSetting) {
+      if (isFinal) {
+        isUnknown = true;// now what?
+        return "CLEG pathway is incomplete!";
+      }
+      // not a setting, not a node; could be >>
+      if (transform == null || transform.length() == 0)
+        transform = "a,b,c";
+      sym.convertTransform(transform, trTemp);
+      if (trm == null)
+        trm = trTemp;
+      else
+        trm.mul(trTemp);
+
+      if (token.length() != 0) {
+        // this will be the flag that we have x >> y
+        prevNode.addTransform(trTemp);
+        System.out.println(
+            "ModelKit.assignSpaceGroup index=" + index + " trm=" + trm);
+
+      }
+      // ITERATE  ...
+      return assignSpaceGroup(sym00, ita00, bs, null, tokens, ++index, trm,
+          prevNode, sb);
+    }
+
+    // thus ends consideration of chain of transforms
+
+    // first or last. 
+
+    ClegNode node = null;
+    if (!ignoreFirst) {
+      node = new ClegNode(index, token, transform);
+      if (!node.update(vwr, prevNode, trm, trTemp, sym))
+        return node.errString;
+      node.updateTokens(tokens, index);
+    }
+    if (!isFinal) {
+      return assignSpaceGroup(sym00, ita00, bs, null, tokens, ++index, trm,
+          node, sb);
+    }
+
+    // handle parameters
+
+    double[] params = null;
+    T3d[] oabc = null;
+    T3d origin = null;
+
+    params = (!haveUCParams || !AU.isAD(paramsOrUC) ? null
+        : (double[]) paramsOrUC);
+    if (!haveUnitCell) {
+      sym.setUnitCellFromParams(
+          params == null ? new double[] { 10, 10, 10, 90, 90, 90 } : params,
+          false, Float.NaN);
+      paramsOrUC = null;
+      haveUCParams = false;
+    }
+    if (haveUCParams) {
+      // have UNITCELL params, either [a b c..] or [o a b c] or 'a,b,c:...'
+      if (AU.isAD(paramsOrUC)) {
+        params = (double[]) paramsOrUC;
+      } else {
+        oabc = (T3d[]) paramsOrUC;
+        origin = oabc[0];
+      }
+    } else if (haveUnitCell) {
+      sym = sym00;
+      if (trm == null) {
+        trm = new M4d();
+        trm.setIdentity();
+      }
+      oabc = sym.getV0abc(new Object[] { trm }, null);
+      origin = oabc[0];
+    }
+    if (oabc != null) {
+      params = sym.getUnitCell(oabc, false, "assign").getUnitCellParams();
+      if (origin == null)
+        origin = oabc[0];
+    }
+    // ready to roll....
+    boolean isP1 = (token.equalsIgnoreCase("P1") || token.equals("ITA/1.1"));
+    clearAtomConstraints();
+
+    try {
+      if (bs != null && bs.isEmpty())
+        return "no atoms specified!";
+      // limit the atoms to this model if bs is null
+      BS bsAtoms = vwr.getThisModelAtoms();
+      BS bsCell = (isP1 ? bsAtoms
+          : SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"),
+              true));
+      if (bs == null) {
+        bs = bsAtoms;
+      }
+      if (bs != null) {
+        bsAtoms.and(bs);
+        if (!isP1)
+          bsAtoms.and(bsCell);
+      }
+      boolean noAtoms = bsAtoms.isEmpty();
+      int mi = (noAtoms && vwr.am.cmi < 0 ? 0
+          : noAtoms ? vwr.am.cmi
+              : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
+      vwr.ms.getModelAuxiliaryInfo(mi).remove(JC.INFO_SPACE_GROUP_INFO);
+
+      // old code...
+      // why do this? It treats the supercell as the unit cell. 
+      // is that what we want?
+
+      //      T3d m = sym.getUnitCellMultiplier();
+      //      if (m != null && m.z == 1) {
+      //        m.z = 0;
+      //      }
+
+      if (haveUnitCell) {
+        sym.replaceTransformMatrix(trm);
+        // storing trm0 for SpaceGroupFinder        
+      }
+      if (params == null)
+        params = sym.getUnitCellMultiplied().getUnitCellParams();
+
+      @SuppressWarnings("unchecked")
+      Map<String, Object> sgInfo = (noAtoms && isUnknown ? null
+          : (Map<String, Object>) vwr.findSpaceGroup(sym,
+              isUnknown ? bsAtoms : null, isUnknown ? null : node.name, params,
+              origin, oabc,
+              JC.SG_IS_ASSIGN | (haveUnitCell ? 0 : JC.SG_FROM_SCRATCH)));
+
+      if (sgInfo == null) {
+        return "Space group " + node.name + " is unknown or not compatible!";
+      }
+
+      if (oabc == null || !haveUnitCell)
+        oabc = (P3d[]) sgInfo.get("unitcell");
+      token = (String) sgInfo.get("name");
+      String jmolId = (String) sgInfo.get("jmolId");
+      BS basis = (BS) sgInfo.get("basis");
+      SpaceGroup sg = (SpaceGroup) sgInfo.remove("sg");
+      sym.getUnitCell(oabc, false, null);
+      sym.setSpaceGroupTo(sg == null ? jmolId : sg);
+      sym.setSpaceGroupName(token);
+      if (basis == null) {
+        basis = sym.removeDuplicates(vwr.ms, bsAtoms, true);
+      }
+      vwr.ms.setSpaceGroup(mi, sym, basis);
+      if (!haveUnitCell || restarted) {
+        appRunScript(
+            "unitcell on; center unitcell;axes unitcell; axes 0.1; axes on;"
+                + "set perspectivedepth false;moveto 0 axis c1;draw delete;show spacegroup");
+      }
+
+      // don't change the first line of this message -- it will be used in packing.
+
+      transform = sym.staticGetTransformABC(trm, false);
+      if (tokens.length > 1) {
+        String msg = transform + " for " + PT.join(tokens, '>', 0)
+            + (basis.isEmpty() ? "" : "\n basis=" + basis);
+        System.out.println("ModelKit trm=" + msg);
+        sb.append(msg).append("\n");
+      }
+      return transform;
+    } catch (Exception e) {
+      if (!Viewer.isJS)
+        e.printStackTrace();
+      return e.getMessage() + "!";
+    }
+  }
+
+  private static boolean isTransformOnly(String token) {
+    return (isTransform(token) && token.indexOf(":") < 0);
+  }
+
+  private static boolean isTransform(String token) {
+    return (token.length() == 0 || token.indexOf(',') > 0
+        || "!r!h".indexOf(token) >= 0);
   }
 
   private static class Constraint {
@@ -3269,478 +3748,6 @@ public class ModelKit {
       return 0;
     }
     return (checkAtomPositions(apos0, apos, bsAll) ? n : 0);
-  }
-
-  /**
-   * Assign the space group and associated unit cell from the MODELKIT
-   * SPACEGROUP command.
-   * 
-   * All aspects depend upon having one of:
-   * 
-   * - a space group number: n (1-230); will be converted to n.1
-   * 
-   * - a valid n.m Jmol-recognized ITA setting: "13.3"
-   * 
-   * - an ITA space group number with a transform: "10:c,a,b"
-   * 
-   * - a valid jmolId such as "3:b", which will be converted to an ITA n.m
-   * setting
-   * 
-   * - (hopefully unambiguous) Hermann-Mauguin symbol, such as "p 4/n b m :2"
-   * 
-   * jmolId and H-M symbols will be converted to ITA n.m format.
-   * 
-   * Options include two basic forms:
-   * 
-   * 1. non-CLEG format. Just the space group identifier: "13.3", "3:b", etc.
-   * with a UNITCELL option
-   * 
-   * MODELKIT SPACEGROUP "P 1 2/1 1" UNITCELL <unit cell description>
-   * 
-   * where <unit cell description> is one of:
-   * 
-   * - [a b c alpha beta gamma]
-   * 
-   * - [ origin va vb vc ]
-   * 
-   * - a transform such as "a,b,c;0,0,1/2"
-   * 
-   * The unit cell is absolute or, if a transform, applied to the current unit
-   * cell.
-   * 
-   * It is assumed in this case that the given unit cell is the cell for the
-   * setting descibed. The standard-to-desired setting of the name is not
-   * applied to the unit cell.
-   * 
-   * 3. CLEG format
-   * 
-   * identifier
-   * 
-   * identifier [> transform ]n > identifier
-   * 
-   * identifier > [ [transform >]n [> identifier ]m ]p > identifier
-   * 
-   * for example:
-   * 
-   * 
-   * 
-   * MODELKIT SPACEGROUP "13"
-   * 
-   * MODELKIT SPACEGROUP "13:-a-c,b,a"
-   * 
-   * MODELKIT SPACEGROUP "P 1 2/n 1"
-   *
-   * MODELKIT SPACEGROUP "P 2/n"
-   *
-   * MODELKIT SPACEGROUP "13.2" // second in Jmol's list of ITA settings for
-   * space group 13
-   * 
-   * MODELKIT SPACEGROUP "13:b2" // Jmol code
-   * 
-   * MODELKIT SPACEGROUP "10:b,c,a > a-c,b,2c;0,0,1/2 > 13:a,-a-c,b" // fix -
-   * this was to c2
-   * 
-   * Note that there are two possibilities, regarding current model to start of
-   * chain, and start of chain to end of chain:
-   *
-   * 1) The space group number does not change (this a SETTING change)
-   * 
-   * 2) The space group number changes (this is a group >> subgroup or a group
-   * >> supergroup change.
-   * 
-   *
-   * 
-   * Identifiers with settings are treated as follows:
-   * 
-   * - If the space group number is UNCHANGED, for example
-   * 
-   * 10 >> 10:c,a,b
-   * 
-   * then the final setting is applied to the unit cell as P * UC, and the space
-   * group operations { R } are adjusted using (!P) * R * P, where P is the
-   * transform of the setting and !P is its inverse.
-   * 
-   * Note that there is an implicit transform from the CURRENT unit cell and
-   * space group when the two have the same space group number:
-   * 
-   * current == 10:b,c,a
-   * 
-   * MODELKIT SPACEGROUP 10:c,b,a ...
-   * 
-   * Here the current setting will be processed with a transform that brings it
-   * from 10:b,c,a to 10:c,b,a as:
-   * 
-   * MODELKIT SPACEGROUP "10:b,c,a > !b,c,a > 10:a,b,c > c,a,b > 10:c,a,b"
-   *
-   * Note that this allows for the direct use of Hermann-Mauguin notation. In
-   * the case of H-M settings WITHIN THE SAME SPACE GROUP, this can be condensed
-   * to:
-   * 
-   * MODELKIT P 1 1 2/m >> P 2/m 1 1
-   * 
-   * where ">>" means "you figure it out, Jmol." Basically, this method will
-   * interpret ">>" to mean "switch settings" and will implement that as
-   * 
-   * P 1 1 2/m > !b,c,a > c,a,b > P 2/m 1 1
-   * 
-   * 
-   * Subgroups and Supergroups
-   * 
-   * - If the space group number is CHANGED, for example,
-   * 
-   * "10 > ... transforms ... > 13:a,-a-c,b"
-   * 
-   * or the current space group of the model is 10, then the final setting is
-   * only applied to the operators of the final space group. Any change in unit
-   * cell setting is assumed to already be accounted for by the indicated
-   * transforms.
-   * 
-   * For example, in the case from from P 2/m to P 2/c, no unambiguous implicit
-   * transformation is possible, and an error message will be returned
-   * indicating that a transform is required if none is presented. Such
-   * group-group transforms an be found at the BCS, specifically for ITA default
-   * settings. Thus, we might write:
-   * 
-   * P 1 1 2/m >> 10 > a-c,b,2c;0,0,1/2 > 13 >> P 2/c 1 1
-   * 
-   * where we are EXPLICITY indicating that the standard-to-standard ITA
-   * transform:
-   * 
-   * 10 > a-c,b,2c;0,0,1/2 > 13
-   * 
-   * as part of the CLEG sequence. In this case, the indicated transforms
-   * between settings will be added to the sequence.
-   * 
-   * This ensures that the desired specific conversion is used.
-   * 
-   * Additional aspects of the notation include:
-   * 
-   * ! prefix - "not" or "inverse of"
-   * 
-   * :r setting - abbreviation for
-   * :2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c
-   * 
-   * :h setting - abbreviation for "!r":
-   * :!2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c
-   * 
-   * [xx xx xx] - Hall notation, such as [P 2/1], can also be used. See
-   * http://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
-   * 
-   * Note that this allows also for fully transformed Hall notation as a
-   * setting. For example:
-   * 
-   * 85.4 same as [-p 4a"]:a-b,a+b,c;0,1/4,-1/8
-   * 
-   * Were we are using the Hall symbol for the standard setting of space group
-   * 85 in this case, and applying the appropriate tranform to 85.4 (P 42/m).
-   * 
-   * In all cases, the two actions performed include:
-   * 
-   * - replacing the current unit cell
-   * 
-   * - replacing the space group
-   * 
-   * Note that in cases where there is a series of transforms, the initial
-   * action of this method is to convert that sequence to a single overall
-   * transform first. If any identifiers are in the chain other than the first
-   * or last position, they are not checked and are simply ignored.
-   * 
-   * @param sym00
-   * @param ita00
-   * 
-   * @param bs
-   * @param paramsOrUC
-   * @param tokens
-   *        separation based on >
-   * @param index
-   * @param trm
-   * @param prevNode
-   * @param sb
-   * 
-   * 
-   * @return message or error (message ending in "!")
-   */
-  private String assignSpaceGroup(SymmetryInterface sym00, String ita00, BS bs,
-                                  Object paramsOrUC, String[] tokens, int index,
-                                  M4d trm, ClegNode prevNode, SB sb) {
-
-    // modelkit spacegroup 10
-    // modelkit spacegroup 10 unitcell [a b c alpha beta gamma]
-    // modelkit spacegroup 10:b,c,a
-    // modelkit zap spacegroup 10:b,c,a  unitcell [a b c alpha beta gamma]
-    //   in this case, we set the unitcell on the SECOND round.
-
-    // modelkit spacegroup 10>a,b,c>13
-    // modelkit spacegroup >a,b,c>13
-    // modelkit spacegroup 10:b,c,a > -b+c,-b-c,a:0,1/2,0 > 13:a,-a-c,b
-
-    if (index >= tokens.length)
-      return "invalid CLEG expression!";
-    boolean haveUCParams = (paramsOrUC != null);
-    if (tokens.length > 1 && haveUCParams) {
-      return "invalid syntax - can't mix transformations and UNITCELL option!";
-    }
-    String token = tokens[index].trim();
-    if (index == 0 && token.length() == 0) {
-      return assignSpaceGroup(sym00, ita00, bs, null, tokens, 1, trm, prevNode,
-          sb);
-
-    }
-    boolean isSubgroupCalc = token.length() == 0 || token.equals("sub")
-        || token.equals("super");
-    String calcNext = (isSubgroupCalc ? token : null);
-    if (isSubgroupCalc) {
-      token = tokens[++index].trim();
-    }
-    boolean isFinal = (index == tokens.length - 1);
-    int pt = token.lastIndexOf(":"); // could be "154:_2" or "R 3 2 :" or 5:a,b,c
-    boolean haveUnitCell = (sym00 != null);
-    boolean isUnknown = false;
-    boolean haveTransform = isTransform(token); // r !r h !h
-    boolean haveJmolSetting = (!haveTransform && pt > 0
-        && pt < token.length() - 1);
-    boolean isSetting = (haveTransform && pt >= 0);
-    String transform = (haveTransform ? token.substring(pt + 1) : null);
-
-    M4d trTemp = new M4d();
-    boolean restarted = false;
-    boolean ignoreFirst = false;
-    SymmetryInterface sym = vwr.getSymTemp();
-    if (prevNode == null) {
-      if (!ClegNode.checkSyntax(tokens, sym))
-        return "invalid CLEG expression!";
-      if (!haveUnitCell && (haveTransform || (pt = token.indexOf('.')) > 0)) {
-        String ita = token.substring(0, pt);
-        // easiest is to restart with the default configuration
-        String err = assignSpaceGroup(null, null, null, paramsOrUC,
-            new String[] { ita }, 0, null, null, sb);
-        if (err.endsWith("!"))
-          return err;
-        sym00 = vwr.getOperativeSymmetry();
-        if (sym00 == null)
-          return "modelkit spacegroup initialization error!";
-        haveUnitCell = true;
-        restarted = true;
-      }
-      ignoreFirst = (haveUnitCell && isSetting && tokens.length > 1
-          && isTransformOnly(tokens[1]));
-      if (haveUnitCell)
-        System.out.println(sym00.getClegId());
-      String ita0 = (haveUnitCell ? sym00.getIntTableNumber() : null);
-      String trm0 = null;
-      if (haveUnitCell) {
-        if (ita0 == null || ita0.equals("0")) {
-          ita0 = sym00.getClegId();
-        } else if (ignoreFirst) {
-          transform = null;
-          trm0 = (String) sym00.getSpaceGroupInfoObj("itaTransform", null,
-              false, false);
-        }
-      }
-      trm = new M4d();
-      trm.setIdentity();
-      prevNode = new ClegNode(-1, ita0, trm0);
-      if (!prevNode.update(vwr, null, trm, trTemp, sym))
-        return prevNode.errString;
-
-    }
-    if (isSubgroupCalc) {
-      prevNode.calcNext = calcNext;
-    }
-
-    if (transform != null) {
-      switch (transform) {
-      case "r":
-      case "!h":
-        transform = SimpleUnitCell.HEX_TO_RHOMB;
-        break;
-      case "h":
-      case "!r":
-        transform = "!" + SimpleUnitCell.HEX_TO_RHOMB;
-        break;
-      default:
-        if (haveJmolSetting) {
-          pt = 0;
-          haveTransform = false;
-          transform = null;
-        }
-      }
-      if (pt > 0)
-        token = token.substring(0, pt);
-    }
-
-    if (haveTransform && !isSetting) {
-      if (isFinal) {
-        isUnknown = true;// now what?
-        return "CLEG pathway is incomplete!";
-      }
-      // not a setting, not a node; could be >>
-      if (transform == null || transform.length() == 0)
-        transform = "a,b,c";
-      sym.convertTransform(transform, trTemp);
-      if (trm == null)
-        trm = trTemp;
-      else
-        trm.mul(trTemp);
-
-      if (token.length() != 0) {
-        // this will be the flag that we have x >> y
-        prevNode.addTransform(trTemp);
-        System.out.println(
-            "ModelKit.assignSpaceGroup index=" + index + " trm=" + trm);
-
-      }
-      // ITERATE  ...
-      return assignSpaceGroup(sym00, ita00, bs, null, tokens, ++index, trm,
-          prevNode, sb);
-    }
-
-    // thus ends consideration of chain of transforms
-
-    // first or last. 
-
-    ClegNode node = null;
-    if (!ignoreFirst) {
-      node = new ClegNode(index, token, transform);
-      if (!node.update(vwr, prevNode, trm, trTemp, sym))
-        return node.errString;
-      node.updateTokens(tokens, index);
-    }
-    if (!isFinal)
-      return assignSpaceGroup(sym00, ita00, bs, null, tokens, ++index, trm,
-          node, sb);
-
-    // handle parameters
-
-    double[] params = null;
-    T3d[] oabc = null;
-    T3d origin = null;
-
-    params = (!haveUCParams || !AU.isAD(paramsOrUC) ? null
-        : (double[]) paramsOrUC);
-    if (!haveUnitCell) {
-      sym.setUnitCellFromParams(
-          params == null ? new double[] { 10, 10, 10, 90, 90, 90 } : params,
-          false, Float.NaN);
-      paramsOrUC = null;
-      haveUCParams = false;
-    }
-    if (haveUCParams) {
-      // have UNITCELL params, either [a b c..] or [o a b c] or 'a,b,c:...'
-      if (AU.isAD(paramsOrUC)) {
-        params = (double[]) paramsOrUC;
-      } else {
-        oabc = (T3d[]) paramsOrUC;
-        origin = oabc[0];
-      }
-    } else if (haveUnitCell) {
-      sym = sym00;
-      if (trm == null) {
-        trm = new M4d();
-        trm.setIdentity();
-      }
-      oabc = sym.getV0abc(new Object[] { trm }, null);
-      origin = oabc[0];
-    }
-    if (oabc != null) {
-      params = sym.getUnitCell(oabc, false, "assign").getUnitCellParams();
-      if (origin == null)
-        origin = oabc[0];
-    }
-    // ready to roll....
-    boolean isP1 = (token.equalsIgnoreCase("P1") || token.equals("ITA/1.1"));
-    clearAtomConstraints();
-
-    try {
-      if (bs != null && bs.isEmpty())
-        return "no atoms specified!";
-      // limit the atoms to this model if bs is null
-      BS bsAtoms = vwr.getThisModelAtoms();
-      BS bsCell = (isP1 ? bsAtoms
-          : SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"),
-              true));
-      if (bs == null) {
-        bs = bsAtoms;
-      }
-      if (bs != null) {
-        bsAtoms.and(bs);
-        if (!isP1)
-          bsAtoms.and(bsCell);
-      }
-      boolean noAtoms = bsAtoms.isEmpty();
-      int mi = (noAtoms && vwr.am.cmi < 0 ? 0
-          : noAtoms ? vwr.am.cmi
-              : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
-      vwr.ms.getModelAuxiliaryInfo(mi).remove(JC.INFO_SPACE_GROUP_INFO);
-
-      // old code...
-      // why do this? It treats the supercell as the unit cell. 
-      // is that what we want?
-
-      //      T3d m = sym.getUnitCellMultiplier();
-      //      if (m != null && m.z == 1) {
-      //        m.z = 0;
-      //      }
-
-      if (haveUnitCell) {
-        sym.replaceTransformMatrix(trm);
-        // storing trm0 for SpaceGroupFinder        
-      }
-      if (params == null)
-        params = sym.getUnitCellMultiplied().getUnitCellParams();
-
-      @SuppressWarnings("unchecked")
-      Map<String, Object> sgInfo = (noAtoms && isUnknown ? null
-          : (Map<String, Object>) vwr.findSpaceGroup(sym,
-              isUnknown ? bsAtoms : null, isUnknown ? null : node.name, params,
-              origin, oabc,
-              JC.SG_IS_ASSIGN | (haveUnitCell ? 0 : JC.SG_FROM_SCRATCH)));
-
-      if (sgInfo == null) {
-        return "Space group " + node.name + " is unknown or not compatible!";
-      }
-
-      if (oabc == null || !haveUnitCell)
-        oabc = (P3d[]) sgInfo.get("unitcell");
-      token = (String) sgInfo.get("name");
-      String jmolId = (String) sgInfo.get("jmolId");
-      BS basis = (BS) sgInfo.get("basis");
-      SpaceGroup sg = (SpaceGroup) sgInfo.remove("sg");
-      sym.getUnitCell(oabc, false, null);
-      sym.setSpaceGroupTo(sg == null ? jmolId : sg);
-      sym.setSpaceGroupName(token);
-      if (basis == null) {
-        basis = sym.removeDuplicates(vwr.ms, bsAtoms, true);
-      }
-      vwr.ms.setSpaceGroup(mi, sym, basis);
-      if (!haveUnitCell || restarted) {
-        appRunScript(
-            "unitcell on; center unitcell;axes unitcell; axes 0.1; axes on;"
-                + "set perspectivedepth false;moveto 0 axis c1;draw delete;show spacegroup");
-      }
-
-      // don't change the first line of this message -- it will be used in packing.
-
-      transform = sym.staticGetTransformABC(trm, false);
-      String msg = transform + "\n" + PT.join(tokens, '>', 0)
-          + (basis.isEmpty() ? "" : "\n basis=" + basis);
-      System.out.println("ModelKit trm=" + msg);
-      sb.append(msg).append("\n");
-      return transform;
-    } catch (Exception e) {
-      if (!Viewer.isJS)
-        e.printStackTrace();
-      return e.getMessage() + "!";
-    }
-  }
-
-  private static boolean isTransformOnly(String token) {
-    return (isTransform(token) && token.indexOf(":") < 0);
-  }
-
-  private static boolean isTransform(String token) {
-    return (token.length() == 0 || token.indexOf(',') > 0
-        || "!r!h".indexOf(token) >= 0);
   }
 
   protected static M4d addSGTransform(SymmetryInterface sym, String tr,
