@@ -396,7 +396,7 @@ public class PdbReader extends AtomSetCollectionReader {
 
   Map<String, String> htGroup1;
   private int maxLength = 80;
-  private String pdbID;
+  protected String pdbID;
   
   private String readHeader(boolean getLine) throws Exception {
     if (getLine) {

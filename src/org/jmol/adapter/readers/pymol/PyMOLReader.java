@@ -212,7 +212,9 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
-    finalizeReaderPDB();
+    if (asc.atomSetCount == 1 && pymolScene.modelName != null && pymolScene.modelName.length() == 4)
+      pdbID = pymolScene.modelName;
+    super.finalizeSubclassReader();
     asc.setTensors();
   }
   /**
@@ -943,8 +945,10 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     addBonds(bonds);
     addMolStructures();
     atoms = asc.atoms;
-    if (!isStateScript)
+    if (!isStateScript) {
+      asc.setCurrentModelInfo("name", pymolScene.modelName);
       createShapeObjects();
+    }
     ssMapSeq = null;
 
     Logger.info("reading " + (ac - ac0) + " atoms and " + nBonds + " bonds");

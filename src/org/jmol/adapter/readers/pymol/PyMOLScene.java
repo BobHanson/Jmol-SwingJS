@@ -206,6 +206,7 @@ class PyMOLScene implements JmolSceneGenerator {
   private int thisState;
   int currentAtomSetIndex;
   String surfaceInfoName;
+  String modelName;
 
   void setStateCount(int stateCount) {
     this.stateCount = stateCount;
@@ -631,7 +632,8 @@ class PyMOLScene implements JmolSceneGenerator {
     // through all molecules...
     //    for (int m = moleculeNames.size(); --m >= 0;) {
     for (int m = 0; m < moleculeNames.size(); m++) {
-      setSceneObject(moleculeNames.get(m), thisState);
+      String name = moleculeNames.get(m);
+      setSceneObject(name, thisState);
       if (objectHidden)
         continue;
       BS[] molReps = new BS[PyMOL.REP_JMOL_MAX];
@@ -1130,10 +1132,11 @@ class PyMOLScene implements JmolSceneGenerator {
     BS bsAtoms = htDefinedAtoms.get(objectJmolName);
     if (bsAtoms == null) {
       bsAtoms = BS.newN(ac0 + atomMap.length);
-      Logger.info("PyMOL molecule " + objectName);
+      Logger.info("PyMOL molecule " + objectName + " " + objectHidden);
       htDefinedAtoms.put(objectJmolName, bsAtoms);
       htObjectAtoms.put(objectName, bsAtoms);
       moleculeNames.addLast(objectName);
+      modelName = objectName;
     }
     return bsAtoms;
   }
