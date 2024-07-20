@@ -344,6 +344,8 @@ public class SpaceGroupFinder {
         transform = (String) sgdata.get("trm");
         String hm = (String) sgdata.get("hm");
         sg.setHMSymbol(hm);
+      } else {
+        sg.setITATableNames(null, itano, null, transform);
       }
       name = null;
       System.out.println("SpaceGroupFinder: new setting: " + sg.asString());

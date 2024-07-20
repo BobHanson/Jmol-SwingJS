@@ -1908,6 +1908,7 @@ public class SymmetryOperation extends M4d {
    * Rotations: anything parallel to the normal is discarded.
    * 
    * @param t
+   * @param vTemp temp vector
    * @return true if
    */
   private boolean checkOpSimilar(V3d t, V3d vTemp) {

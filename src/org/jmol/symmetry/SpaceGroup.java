@@ -2254,6 +2254,7 @@ public class SpaceGroup implements Cloneable {
     strName = null;
     this.jmolId = jmolId;
     if (jmolId == null) {
+      name = clegId;
       info = dumpInfoObj(); 
     } else {
       setJmolCode(jmolId);
@@ -3138,6 +3139,9 @@ intl#     H-M full       HM-abbr   HM-short  Hall
 
 
   /**
+   * Add operators based on a setting or subgroup transformation. 
+   * In cases where the det > 1, scan a range of values that encompass
+   * the possibilities.
    * 
    * @param sg
    *        if not null, this is the space group that is being created and to be
@@ -3149,55 +3153,74 @@ intl#     H-M full       HM-abbr   HM-short  Hall
    * @return a semicolon-separated list of operations if sg is null, or null if
    *         it is not
    */
-  private static Lst<Object> addTransformXYZList(SpaceGroup sg, Lst<Object> genPos,
-                                            String transform, M4d trm,
-                                            boolean normalize) {
+  private static Lst<Object> addTransformXYZList(SpaceGroup sg,
+                                                 Lst<Object> genPos,
+                                                 String transform, M4d trm,
+                                                 boolean normalize) {
 
     M4d trmInv = null, t = null;
     double[] v = null;
+    double[][] c = null;
+    int nTotal = genPos.size();
     if (transform != null) {
       if (transform.equals("r"))
         transform = SET_R;
       trm = UnitCell.toTrm(transform, trm);
       trmInv = M4d.newM4(trm);
       trmInv.invert();
+      int det = (int) Math.round(trm.determinant3());
+      if (det > 1) {
+        c = getTransformRange(trm);
+        nTotal *= det;
+      }
       v = new double[16];
       t = new M4d();
     }
-    Lst<Object> xyzList = addTransformedOperations(sg, genPos, trm, trmInv, t, v,
-        sg == null ? new Lst<Object>() : null, null, normalize);
-    if (sg == null)
-      return xyzList;
-    double[][] c = getTransformRange(trm);
+    Lst<Object> xyzList = addTransformedOperations(sg, genPos, trm, trmInv, t,
+        v, sg == null ? new Lst<Object>() : null, null, normalize);
     if (c != null) {
       P3d p = new P3d();
-      for (int i = (int) c[0][0]; i < c[1][0]; i++) {
+      // scanning through a first, then b, then c
+      for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
         for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
-          for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
+          for (int i = (int) c[0][0]; i < c[1][0]; i++) {
             if (i == 0 && j == 0 && k == 0)
               continue;
             p.set(i, j, k);
-            addTransformedOperations(sg, genPos, trm, trmInv, t, v,
-                null, p, normalize);
+            if (addTransformedOperations(sg, genPos, trm, trmInv, t, v, xyzList, p,
+                normalize) != null) {
+              if (xyzList.size() == nTotal)
+                return xyzList; 
+            }
           }
         }
       }
     }
-    return null;
+    return (sg == null ? xyzList : null);
   }
 
-  /** 
-   * add transformed operations, either to form a list or to fill a space group. 
+  /**
+   * add canonical (positive unitized translation) transformed operations,
+   * either to form a list or to fill a space group.
    * 
-   * @param sg space group to fill with transformed operations
-   * @param genPos list of operations to be transfomed
-   * @param trm  transform matrix
-   * @param trmInv inverse; may be null
-   * @param t  temp matrix
-   * @param v  temp vector
-   * @param retGenPos list to append to -- only if sg == null 
-   * @param centering centering if needed
-   * @param normalize to set to a standard translation and fractions
+   * @param sg
+   *        space group to fill with transformed operations
+   * @param genPos
+   *        list of operations to be transfomed
+   * @param trm
+   *        transform matrix
+   * @param trmInv
+   *        inverse; may be null
+   * @param t
+   *        temp matrix
+   * @param v
+   *        temp vector
+   * @param retGenPos
+   *        list to append to -- only if sg == null
+   * @param centering
+   *        centering if needed
+   * @param normalize
+   *        to set to a standard translation and fractions
    * @return semicolon-separated list -- only if sg is null
    */
   private static Lst<Object> addTransformedOperations(SpaceGroup sg, Lst<Object> genPos,
@@ -3210,10 +3233,13 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       if (trm != null && (i > 0 || centering != null)) {
         xyz = SymmetryOperation.transformStr(xyz, trm, trmInv, t, v, centering, null, normalize, false);
       }
-      if (sg == null) {
-        retGenPos.addLast(xyz);
-      } else {
+      if (sg != null) {
+        // space group addition will disallow duplicates already.
         sg.addOperation(xyz, 0, false);
+      } else if (!retGenPos.contains(xyz)) {
+        // there could be duplicates because we don't know a priori which direction to translate.
+        // these are canonical, so duplicates will be found and discarded.
+        retGenPos.addLast(xyz);
       }
     }
     return retGenPos;
