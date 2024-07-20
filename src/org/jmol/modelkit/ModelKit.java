@@ -791,7 +791,17 @@ public class ModelKit {
       if (basis == null) {
         basis = sym.removeDuplicates(vwr.ms, bsAtoms, true);
       }
+      System.out.println(sym.getSpaceGroup());
+      
       vwr.ms.setSpaceGroup(mi, sym, basis);
+      
+      System.out.println(sym.getSpaceGroup());
+      
+      
+      sym = vwr.getCurrentUnitCell();
+      
+      System.out.println(sym.getSpaceGroup());
+      
       if (!haveUnitCell || restarted) {
         appRunScript(
             "unitcell on; center unitcell;axes unitcell; axes 0.1; axes on;"

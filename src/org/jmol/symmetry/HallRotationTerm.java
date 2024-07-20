@@ -27,10 +27,9 @@ package org.jmol.symmetry;
 
 import org.jmol.util.Logger;
 
-import javajs.util.SB;
-import javajs.util.M4d;
 import javajs.util.M4d;
 import javajs.util.P3i;
+import javajs.util.SB;
 
 class HallRotationTerm {
   
