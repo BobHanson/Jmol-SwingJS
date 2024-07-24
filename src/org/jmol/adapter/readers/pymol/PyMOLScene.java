@@ -70,6 +70,14 @@ class PyMOLScene implements JmolSceneGenerator {
 //  ring_radius
 //  ring_width
 
+  private final static int[] MEAS_DIGITS = { 
+      PyMOL.label_distance_digits,
+      PyMOL.label_angle_digits, 
+      PyMOL.label_dihedral_digits 
+  };
+
+  private static final double PYMOL_FONT_SIZE_FACTOR = 1.25d;
+
   private Viewer vwr;
   private int pymolVersion;
 
@@ -228,10 +236,16 @@ class PyMOLScene implements JmolSceneGenerator {
     this.surfaceInfoName = filePath + "##JmolSurfaceInfo##";
     setVersionSettings();
     settings.trimToSize();
-    bgRgb = PyMOL.getRGB(colorSetting(PyMOL.bg_rgb));
+     bgRgb = PyMOL.getRGB(colorSetting(PyMOL.bg_rgb));
     labelPosition0 = pointSetting(PyMOL.label_position);
   }
 
+  /**
+   * Find the color setting and return an int AARRGGBB for it;
+   * Accept either an integer value or an (r,g,b) triplet
+   * @param i 
+   * @return AARRGGBB
+   */
   @SuppressWarnings("unchecked")
   private int colorSetting(int i) {
     Lst<Object> pos = PyMOLReader.listAt(settings, i);
@@ -906,8 +920,8 @@ class PyMOLScene implements JmolSceneGenerator {
     bsAtoms = null;
   }
 
-  void addLabel(int atomIndex, int uniqueID, int atomColor,
-                double[] labelPos, String label) {
+  void addLabel(int atomIndex, int uniqueID, int atomColor, double[] labelPos,
+                String label) {
     int icolor = (int) getUniqueFloatDef(uniqueID, PyMOL.label_color,
         labelColor);
     if (icolor == PyMOL.COLOR_BACK || icolor == PyMOL.COLOR_FRONT) {
@@ -916,15 +930,50 @@ class PyMOLScene implements JmolSceneGenerator {
       icolor = atomColor;
     }
     if (labelPos == null) {
-      P3d offset = getUniquePoint(uniqueID, PyMOL.label_position, null);
-      if (offset == null)
-        offset = labelPosition;
-      else
-        offset.add(labelPosition);
-      setLabelPosition(offset, labelPos);
+      labelPos = setLabelPosition(
+          getUniquePoint(uniqueID, PyMOL.label_position, labelPosition),
+          labelPos, false);
+
+      // from pymol/data/setting_help.csv
+      //
+      //      "label_position","controls the position and alignment of labels in camera X, Y, and Z.  
+      //      Values between -1.0 and 1.0 affect alignment only, with the label attached to the atom position.  
+      //      Values beyond that range represent coordinate displacements.  
+      //      For the z dimension, values from -1 to 1 do not mean anything.  Values above 1 and below -1 are offsets 
+      //      (minus 1 of the absolute value) in world coordinates.  For example, the default 1.75 is .75 angstroms closer 
+      //      to the viewer.","vector","[0.0, 0.0, 1.75]","4"
+      //
+      //      "label_placement_offset","controls the position of labels in camera X, Y, and Z.  
+      //      This value is changed at the atom-state level when the labels are dragged with the mouse.  
+      //      This setting behaves similar to the label_position 
+      //      setting without the alignment functionality.","vector","[0.0, 0.0, 0.0]","4"
+      //
+      // THIS IS NOT HELPFUL!!!
+      // It is actually not this at all. 
+      // These are two completely different (and additive) parameters.
+      //
+      // label_placement sets the base location of the center of the label. 
+      // It is not in camera coordinates; it is in CARTESIAN space, a relative 
+      // offset from the atom coordinate.
+      // It is static, unless the atom is moved.
+      //
+      // label_position is completely different. "-1 to 1" relates to an alignment relative to centered:
+      //   -- horizontally, -1 is right-justified; +1 is left-justified
+      //      anything beyond 1 or -1 is ADDED to this justification in Angstroms
+      //   -- vertically -1 is top-aligned; +1 is bottom aligned, then similarly, 
+      //      any additional value is added in Angstroms (converted to screen coordinates).
+      //   -- forward/back is just the same, but there is no alignment, and the 
+      //      shift is Math.max(0, abs(value) - 1)*sign(value)
+      // This value is adjusted at rendering time, keeping the offset the same no matter how the
+      // molecule is rotated.
+
     }
-    labels.put(Integer.valueOf(atomIndex), newTextLabel(label, labelPos,
-        icolor, labelFontId, labelSize));
+    P3d offset = getUniquePoint(uniqueID, PyMOL.label_placement_offset, null);
+    if (offset != null) {
+      labelPos = setLabelPosition(offset, labelPos, true);
+    }
+    labels.put(Integer.valueOf(atomIndex),
+        newTextLabel(label, labelPos, icolor, labelFontId, labelSize));
   }
 
   double getUniqueFloatDef(int id, int key, double defaultValue) {
@@ -985,11 +1034,19 @@ class PyMOLScene implements JmolSceneGenerator {
     return setting;
   }
 
-  double[] setLabelPosition(P3d offset, double[] labelPos) {
-    labelPos[0] = 1;
-    labelPos[1] = offset.x;
-    labelPos[2] = offset.y;
-    labelPos[3] = offset.z;
+  double[] setLabelPosition(P3d offset, double[] labelPos, boolean isPlacement) {
+    if (labelPos == null)
+      labelPos = new double[7];
+    labelPos[0] = Text.PYMOL_LABEL_OFFSET_REL_ANG;
+    if (isPlacement) {
+      labelPos[4] = offset.x;
+      labelPos[5] = offset.y;
+      labelPos[6] = offset.z;
+    } else {
+      labelPos[1] = offset.x;
+      labelPos[2] = offset.y;
+      labelPos[3] = offset.z;
+    }
     return labelPos;
   }
 
@@ -1010,7 +1067,8 @@ class PyMOLScene implements JmolSceneGenerator {
       return false;
     boolean drawLabel = haveLabels && (bsReps == null || bsReps.get(PyMOL.REP_LABELS));
     boolean drawDashes = (bsReps == null || bsReps.get(PyMOL.REP_DASHES));
-    double rad = floatSetting(PyMOL.dash_width) / 80; // was 20
+    double rad = floatSetting(PyMOL.dash_width);   
+    rad /= 400; // I don't know what these units are!
     if (rad == 0)
       rad = 0.05;
     if (!drawDashes)
@@ -1034,7 +1092,7 @@ class PyMOLScene implements JmolSceneGenerator {
           points.addLast(newP3i(PyMOLReader.pointAt(list, p, new P3d())));
         offset = (PyMOLReader.floatsAt(PyMOLReader.listAt(offsets, index), 0, new double[7], 7));
         if (offset == null)
-          offset = setLabelPosition(labelPosition, new double[7]);
+          offset = setLabelPosition(labelPosition, new double[7], false);
         md = mdList[index] = vwr.newMeasurementData(objectNameID + "_"
             + (index + 1), points);
         md.note = objectName;
@@ -1042,16 +1100,18 @@ class PyMOLScene implements JmolSceneGenerator {
         md = mdList[index];
         offset = md.text.pymolOffset;
       }
-      PyMOL.fixAllZeroLabelPosition(offset);
+      offset = PyMOL.fixAllZeroLabelPosition(offset);
+      if (offset == null)
+        offset = new double[] {Text.PYMOL_LABEL_OFFSET_REL_ANG, 0, 0, 0, 0, 0, 0};
       int nDigits = (int) floatSetting(MEAS_DIGITS[nCoord - 2]);
       String strFormat = nCoord + ": "
           + (drawLabel ? "%0." + (nDigits < 0 ? 1 : nDigits) + "VALUE" : "");
       //strFormat += " -- " + objectNameID + " " + floatSetting(PyMOL.surface_color) + " " + Integer.toHexString(c);
+      double fontSize = floatSetting(PyMOL.label_size);
       Text text = newTextLabel(strFormat, offset, clabel,
-          (int) floatSetting(PyMOL.label_font_id),
-          floatSetting(PyMOL.label_size));
+          (int) floatSetting(PyMOL.label_font_id), fontSize);
       md.set(T.define, null, null, null, strFormat, "angstroms", null, false, false, null,
-          false, (int) (rad * 2000), colix, text, Double.NaN, null);
+          false,(int) (rad * 2000), colix, text, Double.NaN, null);
       addJmolObject(JC.SHAPE_MEASURES, bs, md);
     }
     return true;
@@ -1141,9 +1201,6 @@ class PyMOLScene implements JmolSceneGenerator {
     return bsAtoms;
   }
 
-  private final static int[] MEAS_DIGITS = { PyMOL.label_distance_digits,
-      PyMOL.label_angle_digits, PyMOL.label_dihedral_digits };
-
   private Text newTextLabel(String label, double[] labelOffset, int colorIndex,
                             int fontID, double fontSize) {
     // 0 GLUT 8x13 
@@ -1167,7 +1224,6 @@ class PyMOLScene implements JmolSceneGenerator {
     // 18 DejaVuSerif_BoldOblique
 
     String face;
-    double factor = 1;
     switch (fontID) {
     default:
     case 11:
@@ -1212,8 +1268,17 @@ class PyMOLScene implements JmolSceneGenerator {
       style = "BoldItalic";
       break;
     }
-    Font font = vwr.getFont3D(face, style, fontSize == 0 ? 12 : (double) (fontSize
-        * factor));
+  
+// pymol/data/setting_help.csv   
+//    label_size  controls the approximate size of label text.  Negative values specify label size in world coordinates (e.g., -1. will show a label 1 angstrom in height)
+
+    if (fontSize > 0)
+      fontSize *= PYMOL_FONT_SIZE_FACTOR;
+    // PyMOL is using the front of the viewing box; Jmol uses the center, 
+    // so we boost this a bit to approximately match.
+    // note that this font could have negative size. 
+    // this means use angstroms
+    Font font = vwr.getFont3D(face, style, fontSize == 0 ? 12 : fontSize);
     Text t = Text.newLabel(vwr, font, label, getColix(
         colorIndex, 0), (short) 0, 0, 0);
     if (t != null)

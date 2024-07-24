@@ -45,6 +45,14 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
   protected final static int[] dashes =   { 12, 0, 0, 2, 5, 7, 10 };
   protected final static int[] hDashes =  { 10, 7, 6, 1, 3, 4, 6, 7, 9 };
 
+  protected final static int[] pymoldashes = { 30, 0, 0, // length, start colix pt, end colix pt
+      2, 4,  // dash
+      7, 9,  // dash
+      12, 14, // dash...
+      17, 19, 
+      22, 24, 
+      27, 30 };
+  
   protected final static int[] ndots =  { 0, 3, 1000 };
   protected final static int[] sixdots =  { 12, 3, 6, 1, 3, 5, 7, 9, 11 };
   protected final static int[] fourdots = { 13, 3, 5, 2, 5, 8, 11 };
@@ -306,6 +314,7 @@ public abstract class FontLineShapeRenderer extends ShapeRenderer {
                           int renderD, boolean asLineOnly, P3i s1) {
     if (array == null || width < 0)
       return;
+        
     // for sticks and measures
     double f = array[0];
     double dx = xB - xA;

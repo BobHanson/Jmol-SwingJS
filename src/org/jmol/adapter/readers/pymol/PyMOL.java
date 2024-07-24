@@ -76,6 +76,7 @@ class PyMOL {
   final static int REP_MESH = 8; // objMesh
   final static int REP_DOTS = 9; // dots; also used for objMap
   final static int REP_DASHES = 10;  // for measurements
+
   final static int REP_NONBONDED = 11;
   
   final static int REP_CELL = 12; // for objMesh, objSurface
@@ -381,6 +382,8 @@ class PyMOL {
   final static int label_font_id                         = 328;
   final static int label_outline_color                   = 467;
   final static int label_position                        = 471;
+  final static int label_placement_offset                = 718;
+  
   final static int label_shadow_mode                     = 462;
   final static int label_size                            = 453;
   final static int legacy_mouse_zoom                     = 442;
@@ -6229,15 +6232,15 @@ class PyMOL {
   };
 
   static int getRGB(int color) {
+    if ((color & 0xFF000000) != 0)
+      return color;
     if (moreColors != null) {
       Integer key = Integer.valueOf(color);
       Integer c = moreColors.get(key);
       if (c != null)
         return c.intValue();
     }
-    if (color < colors.length)
-      return (colors[color]);
-    return 0;
+    return (color < colors.length ? colors[color] : color);
   }
   
   private final static Map<Integer, Integer> moreColors = new Hashtable<Integer, Integer>();
@@ -6364,7 +6367,7 @@ class PyMOL {
   static P3d getDefaultSettingPt(int i, int pymolVersion, P3d pt) {
     switch (i) {
     case label_position:
-      pt.set(0,  0,  0.75d);
+      pt.set(0,  0,  1.75d); // was 0.75, but that does not work in PyMOL or Jmol -- just dead center.
       break;
     default:
       Logger.error("PyMOL " + pymolVersion + " default point setting not found: " + i);
@@ -6889,12 +6892,13 @@ class PyMOL {
    * If the label position array is all zeros, set the first value to 1.0, indicating "default".
    * 
    * @param labelPos
+   * @return labelPos or null if all zeros (use unique_settings)
    */
-  static void fixAllZeroLabelPosition(double[] labelPos) {
+  static double[] fixAllZeroLabelPosition(double[] labelPos) {
     for (int i = 0; i < 7; i++) {
       if (labelPos[i] != 0)
-        return;
+        return labelPos;
     }
-    labelPos[0] = 1; // default position
+    return null;
   }
 }

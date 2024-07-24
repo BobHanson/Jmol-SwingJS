@@ -1,6 +1,9 @@
 package org.jmol.adapter.readers.pymol;
 
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 //import java.math.BigInteger;
 import java.util.Hashtable;
 import java.util.Map;
@@ -50,7 +53,8 @@ class PickleReader {
   private String thisName;
   private int lastMark;
   private int retrieveCount;
-
+  private OutputStreamWriter writer;
+  
   private final static byte APPEND = 97; /* a */
   private final static byte APPENDS = 101; /* e */
   private final static byte BINFLOAT = 71; /* G */
@@ -99,8 +103,15 @@ private final static byte LONG = 76; /* L */
     binaryDoc = doc;
     this.vwr = vwr;
     stack.ensureCapacity(1000);
+    try {
+    if (dumpFile != null)
+      writer = new OutputStreamWriter(new FileOutputStream(dumpFile));
+    } catch (Exception e) {
+      //
+    }
   }
 
+  private String dumpFile = null;//"C:/temp/pse/pickle.log";
   private void log(String s) {
     vwr.log(s + "\0");
   }
@@ -139,7 +150,12 @@ private final static byte LONG = 76; /* L */
 //        if (o instanceof byte[])
 //System.out.println("APPEND " + o);
 //
-        ((Lst<Object>) peek()).addLast(o);
+        if (writer != null)
+          dump("append", o);
+        Lst<Object> lst = (Lst<Object>) peek();
+        lst.addLast(o);
+        if (lst.size() < 10)
+          dump("appended to " + lst);
         break;
       case APPENDS:
         l = getObjects(getMark());
@@ -258,6 +274,8 @@ private final static byte LONG = 76; /* L */
           for (i = l.size(); --i >= 0;) {
             o = l.get(i);
             String key = bytesToString(l.get(--i));
+            if (writer != null)
+              dump("key=" + key);
             //System.out.println("map " + key + " " + o);
             map.put(key, o);
           }
@@ -384,6 +402,8 @@ private final static byte LONG = 76; /* L */
         map.put(bytesToString(a), o);
       }
     memo = null;
+    if (writer != null)
+      writer.close();
     return map;
   }
   
@@ -479,7 +499,10 @@ private final static byte LONG = 76; /* L */
         a = aTemp = AU.arrayCopyByte(a, a.length * 2);
       a[n++] = b;
     }
-    return AU.arrayCopyByte(a, n);
+    byte[] ret = AU.arrayCopyByte(a, n);
+    if (writer != null)
+      dump("String=" + new String(ret));
+    return ret;
   }
 
   private void putMark(int i) {
@@ -508,10 +531,59 @@ private final static byte LONG = 76; /* L */
   }
 
   private void push(Object o) {
+    if (writer != null) {
+      dump("push", o);
+    }
     if (logging
         && (o instanceof String || o instanceof Double || o instanceof Integer))
       log((o instanceof String ? "'" + o + "'" : o) + ", ");
     stack.addLast(o);
+  }
+
+  private void dump(String key, Object o) {
+    String s = null;
+    if (o == null) {
+      s = "null";
+    } else if (o instanceof String || o instanceof Number
+        || o instanceof Boolean) {
+      s = (o == "" ? "\"\"" : o.toString());
+   } else if (o instanceof byte[]) {
+      byte[] b = (byte[]) o;
+      if (b.length > 0 && b.length % 56 == 0) {
+        dump("b56:" + Arrays.toString(b));
+      }
+      if (b.length > 0 && b[0] >= ' ' && b[0] <= '~') {
+        s = "bytes=" + b + " " + new String(b);
+        if (s.indexOf("_labeledit") >= 0)
+          System.out.println(s);
+      } else if (b.length > 100){
+        s = "byte["+b.length+"]";
+      } else {
+        s = "bytes=" + Arrays.toString(b);
+      }
+    }
+    if (s == null)
+      s = o.getClass().getName();
+    dump(key + " " + s);
+  }
+
+  private void print(String string) {
+    try {
+      writer.write(string); 
+    } catch (Exception e) {
+      
+    }
+    
+  }
+
+  private void dump(String string) {
+    try {
+      writer.write(binaryDoc.getPosition() + "\t");
+      writer.write(string + "\n"); 
+    } catch (Exception e) {
+      
+    }
+    
   }
 
   private Object peek() {
@@ -519,6 +591,8 @@ private final static byte LONG = 76; /* L */
   }
 
   private Object pop() {
+    if (writer != null)
+      dump("pop");
     return stack.removeItemAt(stack.size() - 1);
   }
 

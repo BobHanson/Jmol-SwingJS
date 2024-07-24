@@ -25,7 +25,6 @@ package org.jmol.render;
 
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Text;
-import org.jmol.script.T;
 import org.jmol.shape.Echo;
 import org.jmol.util.C;
 import org.jmol.viewer.JC;
@@ -39,9 +38,7 @@ public class EchoRenderer extends LabelsRenderer {
     if (vwr.isPreviewOnly)
       return false;
     Echo echo = (Echo) shape;
-    sppm = (vwr.getBoolean(T.fontscaling) ? vwr
-        .getScalePixelsPerAngstrom(true) * 10000 : 0);
-    imageFontScaling = vwr.imageFontScaling;
+    setRenderVars();
     haveTranslucent = false;
     int alias = (g3d.isAntialiased() ? TextRenderer.MODE_IS_ANTIALIASED : 0);
     for (Text t : echo.objects.values()) {
@@ -71,7 +68,7 @@ public class EchoRenderer extends LabelsRenderer {
     if (t.valign == JC.ECHO_XYZ)
       TextRenderer.calcBarPixelsXYZ(vwr, t, pt0i, true); 
     if (t.pymolOffset != null)
-      t.getPymolScreenOffset(t.xyz, pt0i, zSlab, pTemp, sppm);
+      t.getPymolScreenOffset(t.xyz, pt0i, zSlab, pTemp, sppa);
     else if (t.movableZPercent != Integer.MAX_VALUE) {
       int z = vwr.tm.zValueFromPercent(t.movableZPercent % 1000);
       if (t.valign == JC.ECHO_XYZ && Math.abs(t.movableZPercent) >= 1000)
@@ -89,7 +86,8 @@ public class EchoRenderer extends LabelsRenderer {
       if (t.zSlab == Integer.MIN_VALUE)
         t.zSlab = 1;
     }
-    if (TextRenderer.render(vwr, t, g3d, sppm, imageFontScaling, null, xy, pt2i, (short) 0, 0, alias)
+    
+    if (renderText(t, pt2i, (short) 0, alias)
         && t.valign == JC.ECHO_BOTTOM
         && t.align == JC.TEXT_ALIGN_RIGHT)
       vwr.noFrankEcho = false;

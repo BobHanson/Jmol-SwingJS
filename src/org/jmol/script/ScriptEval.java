@@ -4113,7 +4113,7 @@ public class ScriptEval extends ScriptExpr {
       shapeType = (isScale ? JC.SHAPE_ECHO : getShapeType(getToken(1).tok));
 
     if (shapeType == JC.SHAPE_LABELS) {
-      if (fontsize < 0 || fontsize >= 1 && (fontsize < JC.LABEL_MINIMUM_FONTSIZE
+      if (fontsize == 0 || fontsize >= 1 && (fontsize < JC.LABEL_MINIMUM_FONTSIZE
           || fontsize > JC.LABEL_MAXIMUM_FONTSIZE)) {
         integerOutOfRange(JC.LABEL_MINIMUM_FONTSIZE - sizeAdjust,
             JC.LABEL_MAXIMUM_FONTSIZE - sizeAdjust);

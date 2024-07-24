@@ -409,12 +409,12 @@ public class GData implements JmolGraphicsInterface {
 
   public Font getFont3D(double fontSize) {
     return Font.createFont3D(Font.FONT_FACE_SANS, Font.FONT_STYLE_PLAIN,
-        fontSize, fontSize, apiPlatform, graphicsForMetrics);
+        fontSize, fontSize, 0, apiPlatform, graphicsForMetrics);
   }
 
   public Font getFont3DFS(String fontFace, double fontSize) {
     return Font.createFont3D(Font.getFontFaceID(fontFace),
-        Font.FONT_STYLE_PLAIN, fontSize, fontSize, apiPlatform, graphicsForMetrics);
+        Font.FONT_STYLE_PLAIN, fontSize, fontSize, 0, apiPlatform, graphicsForMetrics);
   }
 
   public int getFontFidFS(String fontFace, double fontSize) {
@@ -426,14 +426,14 @@ public class GData implements JmolGraphicsInterface {
     if (iStyle < 0)
       iStyle = 0;
     return Font.createFont3D(Font.getFontFaceID(fontFace), iStyle, fontSize,
-        fontSize, apiPlatform, graphicsForMetrics);
+        fontSize, 0, apiPlatform, graphicsForMetrics);
   }
 
   public Font getFont3DScaled(Font font, double scale) {
     // TODO: problem here is that we are assigning a bold font, then not DEassigning it
     double newScale = font.fontSizeNominal * scale;
     return (newScale == font.fontSize ? font : Font.createFont3D(
-        font.idFontFace, font.idFontStyle, newScale, font.fontSizeNominal, apiPlatform, graphicsForMetrics));
+        font.idFontFace, font.idFontStyle, newScale, font.fontSizeNominal, font.fontSizeAngstroms, apiPlatform, graphicsForMetrics));
   }
 
   public int getFontFidI(double fontSize) {

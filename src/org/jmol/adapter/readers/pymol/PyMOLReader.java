@@ -454,16 +454,16 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     int n = settings.size();
     for (int i = 0; i < n; i++) {
       @SuppressWarnings("unchecked")
-      int i2 = intAt((Lst<Object>) settings.get(i), 0);
+      Lst<Object> setting = (Lst<Object>) settings.get(i);
+      int i2 = intAt(setting, 0);
       if (i2 == -1) {
-        Logger.info("PyMOL reader adding null setting #" + i);
         settings.set(i, new Lst<Object>()); // PyMOL 1.7 needs this
       } else {
         while (i < i2) {
-          Logger.info("PyMOL reader adding null setting #" + i);
           settings.add(i++, new Lst<Object>());
           n++;
         }
+        System.out.println("Setting " + setting);
       }
     }
     return settings;
@@ -508,7 +508,9 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
         Lst<Object> mySettings = (Lst<Object>) atomSettings.get(1);
         for (int j = mySettings.size(); --j >= 0;) {
           Lst<Object> setting = (Lst<Object>) mySettings.get(j);
-          int uid = (id << 10) + intAt(setting, 0);
+          int type = intAt(setting, 0);
+          int uid = (id << 10) + type;
+          //System.out.println("uniqu " + id + " " + type + " " + uid);          
           uniqueSettings.put(Integer.valueOf(uid), setting);
           //System.out.println("PyMOL unique setting " + id + " " + setting);
         }
@@ -833,8 +835,6 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     pymolObject.addLast(objectName);
   }
 
-
-
   /**
    * Create a MEASURE JmolObject.
    * 
@@ -854,7 +854,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     if (nCoord == 0)
       return;
     Lst<Object> setting = listAt(pymolObject, 0);
-    BS bsReps = getBsReps(listAt(setting, 3));
+    BS bsReps = getBsReps(setting, 3);
     Lst<Object> list = listAt(measure, pt);
     Lst<Object> offsets = listAt(measure, 8);
     boolean haveLabels = (measure.size() > 8);
@@ -876,6 +876,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     Lst<Object> idxToAtm;
     Lst<Object> coords;
     Lst<Object> labelPositions;
+    Lst<Object> uniqueIds = listAt(state, 11);
     int[] idxArray = null;
     double[] coordsArray = null;
     double[] labelArray = null;
@@ -914,6 +915,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       processMolCryst(listAt(pymolObject, 10));
     Lst<Bond> bonds = getBondList(listAt(pymolObject, 6));
     Lst<Object> pymolAtoms = listAt(pymolObject, 7);
+    
     atomMap = new int[nAtoms];
     BS bsAtoms = pymolScene.setAtomMap(atomMap, ac0);
     for (int i = 0; i < PyMOL.REP_JMOL_MAX; i++)
@@ -934,10 +936,11 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
         vArray = (haveBinaryArrays ? PyMOL.getVArray(ver) : null);
       }
       for (int idx = 0; idx < n; idx++) {
-        P3d a = addAtom(pymolAtoms, (idxToAtm != null ? intAt(idxToAtm, idx)
-            : idxArray != null ? idxArray[idx] : idx),
+        int index = (idxToAtm != null ? intAt(idxToAtm, idx)
+            : idxArray != null ? idxArray[idx] : idx);
+        P3d a = addAtom(pymolAtoms, index,
             atomArray, vArray, lexStr, idx, coords,
-            coordsArray, labelPositions, labelArray, bsAtoms, iState);
+            coordsArray, labelPositions, uniqueIds, labelArray, bsAtoms, iState);
         if (a != null)
           trajectoryStep[trajectoryPtr++] = a;
       }
@@ -1137,6 +1140,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
    *        coordinates array
    * @param coordArray 
    * @param labelPositions
+   * @param uniqueIds 
    * @param labelArray 
    * @param bsState
    *        this state -- Jmol atomIndex
@@ -1148,7 +1152,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
                      byte[] atomArray, int[] vArray, String[] lexStr,
                      int icoord,
                      Lst<Object> coords, double[] coordArray, 
-                     Lst<Object> labelPositions, double[] labelArray,
+                     Lst<Object> labelPositions, Lst<Object> uniqueIds, double[] labelArray,
                      BS bsState, int iState) {
     atomMap[apt] = -1;
     String chainID, altLoc, group3, name, sym, label, ssType, resi, insCode = null;
@@ -1192,8 +1196,6 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       cartoonType = atomInt(atomArray, pt, vArray[PyMOL.CARTOON]);
       flags = atomInt(atomArray, pt, vArray[PyMOL.FLAGS]);
       uniqueID = atomInt(atomArray, pt, vArray[PyMOL.UNIQUEID]);
-      if (uniqueID == 0)
-        uniqueID = -1;
       anisou = new double[8];
       if ((vpt = vArray[PyMOL.ANISOU]) > 0)
         for (int i = 0; i < 6; i++)
@@ -1222,16 +1224,24 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
       partialCharge = floatAt(a, 17);
       formalCharge = intAt(a, 18);
       isHetero = (intAt(a, 19) != 0);
-      bsReps = getBsReps(listAt(a, 20));
+      bsReps = getBsReps(a, 20);
       intReps = (bsReps == null ? intAt(a, 20) : 0); // Pymol 1.8      
       atomColor = intAt(a, 21);
       serNo = intAt(a, 22);
       cartoonType = intAt(a, 23);
       flags = intAt(a, 24);
       bonded = (intAt(a, 25) != 0);
-      uniqueID = (a.size() > 40 && intAt(a, 40) == 1 ? intAt(a, 32) : -1);
+      uniqueID = (a.size() > 40 && intAt(a, 40) == 1 ? intAt(a, 32) : 0);
       if (a.size() > 46)
         anisou = floatsAt(a, 41, new double[8], 6);
+    }
+    if (uniqueID == 0) {
+      uniqueID = -1;
+      if (uniqueIds != null) {
+        Integer id = (Integer) uniqueIds.get(apt);
+        if (id != null)
+          uniqueID = id.intValue();
+      }
     }
     if (insCode == null) {
       int len = resi.length();
@@ -1297,7 +1307,7 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
 
     if (!bonded)
       pymolScene.bsNonbonded.set(ac);
-    if (!label.equals(" ")) {
+    if (label.trim().length() > 0) {
       pymolScene.bsLabeled.set(ac);
       double[] labelPos = new double[7];
       if (labelArray != null) {
@@ -1308,9 +1318,10 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
         if (labelOffset != null) {
           for (int i = 0; i < 7; i++)
             labelPos[i] = floatAt(labelOffset, i);
+          //System.out.println("PMR ~" + Arrays.toString(labelPos));
         }
       }
-      PyMOL.fixAllZeroLabelPosition(labelPos);
+      labelPos = PyMOL.fixAllZeroLabelPosition(labelPos);
       pymolScene.addLabel(ac, uniqueID, atomColor, labelPos, label);
     }
     if (isHidden)
@@ -1648,14 +1659,27 @@ public class PyMOLReader extends PdbReader implements PymolAtomReader {
     return (Lst<Object>) map.get(key);
   }
 
-  private static BS getBsReps(Lst<Object> list) {
-    if (list == null)
+  private static BS getBsReps(Lst<Object> setting, int pt) {
+    if (setting.size() <= pt)
       return null;
     BS bsReps = new BS();
-    int n = Math.min(list.size(), PyMOL.REP_MAX);
-    for (int i = 0; i < n; i++) {
-      if (intAt(list, i) == 1)
-        bsReps.set(i);
+    Object o = setting.get(pt);
+    if (o instanceof Integer) {
+      int bits = ((Integer) o).intValue();
+      for (int i = 0, b = 1; i < 32; i++) {
+        if ((bits & b) != 0) {
+          bsReps.set(i);
+        }
+        b <<= 1;
+      }
+    } else {
+      @SuppressWarnings("unchecked")
+      Lst<Object> list = (Lst<Object>) o;
+      int n = Math.min(list.size(), PyMOL.REP_MAX);
+      for (int i = 0; i < n; i++) {
+        if (intAt(list, i) == 1)
+          bsReps.set(i);
+      }
     }
     return bsReps;
   }

@@ -37,6 +37,17 @@ import javajs.util.SB;
 
 public class Text {
 
+  public final static int PYMOL_LABEL_OFFSET_JMOL= -1;
+  public final static int PYMOL_LABEL_OFFSET_ABS = 0;
+  public final static int PYMOL_LABEL_OFFSET_ANG = 0;
+  public final static int PYMOL_LABEL_OFFSET_REL = 1;
+  public final static int PYMOL_LABEL_OFFSET_PIX = 2; // and not -1
+  
+  public final static int PYMOL_LABEL_OFFSET_ABS_ANG = 0;
+  public final static int PYMOL_LABEL_OFFSET_REL_ANG = PYMOL_LABEL_OFFSET_REL;
+  public final static int PYMOL_LABEL_OFFSET_ABS_PIX = PYMOL_LABEL_OFFSET_PIX;
+  public final static int PYMOL_LABEL_OFFSET_REL_PIX = PYMOL_LABEL_OFFSET_REL | PYMOL_LABEL_OFFSET_PIX;
+
   private Viewer vwr;
 
   public boolean doFormatText;
@@ -66,12 +77,73 @@ public class Text {
 
   public double barDistance;
 
+  public boolean isMeasure;
+  public boolean isEcho;
+  public P3d xyz;
+  public String target;
+  public String script;
+  public short colix;
+  public short bgcolix;
+  public int pointer;
+  public double fontScale;
+
+  public int align;
+  public int valign;
+  public int atomX, atomY, atomZ = Integer.MAX_VALUE;
+  public int movableX, movableY, movableZ; // Echo only
+  public int movableXPercent = Integer.MAX_VALUE; // Echo only
+  public int movableYPercent = Integer.MAX_VALUE; // Echo only
+  public int movableZPercent = Integer.MAX_VALUE; // Echo only
+
+  public int z = 1; // front plane
+  public int zSlab = Integer.MIN_VALUE; // z for slabbing purposes -- may be near an atom
+
+  private double xAdj, yAdj;
+
+  private double y0;
+
+  public P3d pointerPt; // for echo
+
+  public double[] pymolOffset;
+
+  protected int windowWidth;
+  protected int windowHeight;
+  public boolean adjustForWindow;
+  public double boxWidth;
+  public double boxHeight;
+  public double boxX;
+  public double boxY;
+
+  public int modelIndex = -1;
+  public boolean thisModelOnly;
+  public boolean visible = true;
+  public boolean hidden = false;
+
+  public double[] boxXY;
+
+  public double scalePixelsPerMicron;
+
+  public int barPixelsXYZ;
+
+  private double sppa;
+
   public Text() {
     // public for reflection
     // requires .newLabel or .newEcho
     boxXY =  new double[5];
   }
 
+  /**
+   * 
+   * @param vwr
+   * @param font
+   * @param text
+   * @param colix
+   * @param bgcolix
+   * @param align
+   * @param scalePixelsPerMicron
+   * @return the new label
+   */
   static public Text newLabel(Viewer vwr, Font font, String text,
                               short colix, short bgcolix, int align, double scalePixelsPerMicron) {
     // for labels and hover
@@ -215,10 +287,15 @@ public class Text {
     else
       this.boxXY = boxXY;
     setWindow(vwr.gdata.width, vwr.gdata.height, scalePixelsPerMicron);
-    if (scalePixelsPerMicron != 0 && this.scalePixelsPerMicron != 0)
-      setFontScale(scalePixelsPerMicron / this.scalePixelsPerMicron);
-    else if (fontScale != imageFontScaling)
+    if (font.fontSizeAngstroms != 0 || scalePixelsPerMicron != 0 && this.scalePixelsPerMicron != 0) {
+      if (font.fontSizeAngstroms == 0) {
+        setFontScale(scalePixelsPerMicron / this.scalePixelsPerMicron);
+      } else {
+        setFontScale(sppa * font.fontSizeAngstroms / font.fontSizeNominal);
+      }
+    } else if (fontScale != imageFontScaling) {
       setFontScale(imageFontScaling);
+    }
     if (doFormatText) {
       text = (isEcho ? vwr.formatText(textUnformatted) : textUnformatted);
       recalc();
@@ -243,7 +320,7 @@ public class Text {
         // [1,2,3] are in Angstroms, not screen pixels
         double pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
         double pz = pymolOffset[3];
-        double dz = (pz < 0 ? -1 : 1) * Math.max(pz == 0 ? 0.5d : 0, Math.abs(pz) - 1)
+        double dz = (pz < 0 ? -1 : 1) * Math.max(pz == 0 ? 0 : 0, Math.abs(pz) - 1)
             * pixelsPerAngstrom;
         z -= (int) dz;
         pixelsPerAngstrom = vwr.tm.scaleToScreen(z, 1000);
@@ -279,12 +356,17 @@ public class Text {
           // from PyMOL - back to original plan
           dy -= descent;
         }
+        
+        
 
         // xAdj and yAdj are the adjustments for the box itself relative to the text 
         xAdj = (fontScale >= 2 ? 8 : 4);
         yAdj = -descent;
+        // a bit of a hack here.
+//        boxXY[0] = movableX - xAdj - ascent/8;
         boxXY[0] = movableX - xAdj;
-        boxXY[1] = movableY - yAdj;
+        boxXY[1] = movableY - yAdj + (descent -ascent)/2 + 8; //  empirical only
+//        boxXY[1] = movableY - yAdj;
         isAbsolute = true;
         boxYoff2 = -2; // empirical fudge factor
       } else {
@@ -463,12 +545,6 @@ public class Text {
     return w;
   }
 
-  private double xAdj, yAdj;
-
-  private double y0;
-
-  public P3d pointerPt; // for echo
-
   public void setXYA(double[] xy, int i) {
     if (i == 0) {
       xy[2] = boxX;
@@ -501,26 +577,6 @@ public class Text {
       s.append(" " + (10000d / scalePixelsPerMicron)); // Angstroms per pixel
   }
 
-  public boolean isMeasure;
-  public boolean isEcho;
-  public P3d xyz;
-  public String target;
-  public String script;
-  public short colix;
-  public short bgcolix;
-  public int pointer;
-  public double fontScale;
-
-  public int align;
-  public int valign;
-  public int atomX, atomY, atomZ = Integer.MAX_VALUE;
-  public int movableX, movableY, movableZ; // Echo only
-  public int movableXPercent = Integer.MAX_VALUE; // Echo only
-  public int movableYPercent = Integer.MAX_VALUE; // Echo only
-  public int movableZPercent = Integer.MAX_VALUE; // Echo only
-
-  public int z = 1; // front plane
-  public int zSlab = Integer.MIN_VALUE; // z for slabbing purposes -- may be near an atom
 
   // PyMOL-type offset
   // [mode, screenoffsetx,y,z (applied after tranform), positionOffsetx,y,z (applied before transform)]
@@ -546,38 +602,8 @@ public class Text {
 //   
 //   
 
-  public final static int PYMOL_LABEL_OFFSET_JMOL= -1;
-  public final static int PYMOL_LABEL_OFFSET_REL = 1;
-  public final static int PYMOL_LABEL_OFFSET_PIX = 2; // and not -1
-  
-  public final static int PYMOL_LABEL_OFFSET_ABS_ANG = 0;
-  public final static int PYMOL_LABEL_OFFSET_REL_ANG = PYMOL_LABEL_OFFSET_REL;
-  public final static int PYMOL_LABEL_OFFSET_ABS_PIX = PYMOL_LABEL_OFFSET_PIX;
-  public final static int PYMOL_LABEL_OFFSET_REL_PIX = PYMOL_LABEL_OFFSET_REL | PYMOL_LABEL_OFFSET_PIX;
-
-  public double[] pymolOffset;
-
-  protected int windowWidth;
-  protected int windowHeight;
-  public boolean adjustForWindow;
-  public double boxWidth;
-  public double boxHeight;
-  public double boxX;
-  public double boxY;
-
-  public int modelIndex = -1;
-  public boolean thisModelOnly;
-  public boolean visible = true;
-  public boolean hidden = false;
-
-  public double[] boxXY;
-
-  public double scalePixelsPerMicron;
-
-  public int barPixelsXYZ;
-
   public void setScalePixelsPerMicron(double scalePixelsPerMicron) {
-    fontScale = 0;//fontScale * this.scalePixelsPerMicron / scalePixelsPerMicron;
+    fontScale = 0;
     this.scalePixelsPerMicron = scalePixelsPerMicron;
   }
 
@@ -727,10 +753,11 @@ public class Text {
    * @param screen
    * @param zSlab
    * @param pTemp
-   * @param sppm
+   * @param sppa screen pixels per angstrom regardless of font scaling
    */
   public void getPymolScreenOffset(P3d atomPt, P3i screen, int zSlab, P3d pTemp,
-                                   double sppm) {
+                                   double sppa) {
+    this.sppa = sppa;
     boolean isPixel = isPymolOffsetPixels();
     boolean isRelative = isPymolOffsetRelative();
     if (atomPt != null && isRelative)
@@ -738,6 +765,7 @@ public class Text {
     else
       pTemp.set(0, 0, 0);
     pTemp.add3(pymolOffset[4], pymolOffset[5], pymolOffset[6]);
+    //System.out.println("draw id \"Txt" + atomPt + "\" width 0.1 " + pTemp + "\""+text+"\"" + "//" + isPixel + Arrays.toString(pymolOffset));
     vwr.tm.transformPtScr(pTemp, screen);
     if (isPixel) {
       screen.x += pymolOffset[1];
@@ -745,8 +773,6 @@ public class Text {
       screen.z += pymolOffset[3];
     }
     setXYZs(screen.x, screen.y, screen.z, zSlab);
-    // commented out; this next was the problem with setFontScaling TRUE and a 3d echo with offset
-    //      setScalePixelsPerMicron(sppm);
   }
 
   private boolean isPymolOffsetRelative() {

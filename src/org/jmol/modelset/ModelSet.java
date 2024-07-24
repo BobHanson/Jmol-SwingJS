@@ -3172,7 +3172,7 @@ public class ModelSet extends BondCollection {
       m.act = bs.cardinality();
       m.isOrderly = (m.act == m.bsAtoms.length() - m.firstAtomIndex); 
     }
-    deleteBonds(bsBonds, false);
+    dBb(bsBonds, false);
     vwr.shm.notifyAtoms(JC.PROP_ATOMS_DELETED, new BS[] { bsAtoms, bsModels} );
     validateBspf(false);
   }

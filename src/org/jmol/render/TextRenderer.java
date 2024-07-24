@@ -39,11 +39,27 @@ class TextRenderer {
 
   static final int MODE_IS_ANTIALIASED = 4;
 
+  /**
+   * 
+   * @param vwr
+   * @param text
+   * @param g3d
+   * @param scalePixelsPerMicron
+   * @param imageFontScaling
+   * @param boxXY
+   * @param temp
+   * @param pTemp
+   * @param pointerColix
+   * @param pointerWidth
+   * @param mode
+   * @return true if rendered
+   */
   static boolean render(Viewer vwr, Text text,
                         JmolRendererInterface g3d, double scalePixelsPerMicron,
                         double imageFontScaling, double[] boxXY, double[] temp,
                         P3i pTemp, short pointerColix, int pointerWidth,
                         int mode) {
+    // note that scalePixelsPerMicron 
     if (text == null
         || text.image == null && !text.doFormatText && text.lines == null)
       return false;

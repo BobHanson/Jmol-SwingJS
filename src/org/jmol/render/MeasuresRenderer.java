@@ -86,7 +86,8 @@ public class MeasuresRenderer extends LabelsRenderer {
     doJustify = vwr.getBoolean(T.justifymeasurements);
     modulating = ms.bsModulated != null; 
     // note that this COULD be screen pixels if <= 20. 
-    imageFontScaling = vwr.imageFontScaling;
+    
+    setRenderVars();
     mad0 = measures.mad;
     font3d =vwr.gdata.getFont3DScaled(measures.font3d, imageFontScaling);
     m = measures.mPending;
@@ -174,7 +175,9 @@ public class MeasuresRenderer extends LabelsRenderer {
     } else {
       mad = (short) m.mad;
       dotsOrDashes = true;
-      dashDots = (mad < 0 ? null : ndots);
+      dashDots = (m.text.pymolOffset != null ?
+          pymoldashes
+          : mad < 0 ? null : ndots);
     }
     switch (count) {
     case 1:
@@ -377,7 +380,7 @@ public class MeasuresRenderer extends LabelsRenderer {
     // small numbers refer to pixels already? 
     int diameter = (int) (mad >= 20 && exportType != GData.EXPORT_CARTESIAN ?
       vwr.tm.scaleToScreen((z1 + z2) / 2, mad) : mad);
-    if (dotsOrDashes && (dashDots == null || dashDots == ndots))
+    if (dotsOrDashes && (dashDots == null || dashDots == ndots || dashDots == pymoldashes))
       width = diameter;
     return drawLine2(g3d, x1, y1, z1, x2, y2, z2, diameter);
   }

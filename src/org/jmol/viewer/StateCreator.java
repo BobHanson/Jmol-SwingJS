@@ -1055,6 +1055,7 @@ public class StateCreator extends JmolStateCreator {
   private Map<String, BS> temp = new Hashtable<String, BS>();
   private Map<String, BS> temp2 = new Hashtable<String, BS>();
   private Map<String, BS> temp3 = new Hashtable<String, BS>();
+  private Map<String, BS> temp4 = new Hashtable<String, BS>();
 
   private void getShapeStatePriv(SB commands, boolean isAll, int iShape) {
     Shape[] shapes = vwr.shm.shapes;
@@ -1215,8 +1216,12 @@ public class StateCreator extends JmolStateCreator {
       if (!l.isActive || l.bsSizeSet == null)
         return "";
       clearTemp();
+      BS bs = vwr.getAllAtoms();
+      boolean isNeg = false; // protect script from failing in old versions of Jmol
       for (int i = l.bsSizeSet.nextSetBit(0); i >= 0; i = l.bsSizeSet
           .nextSetBit(i + 1)) {
+        if (!bs.get(i))
+          continue;
         Text t = l.getLabel(i);
         String cmd = "label ";
         if (t == null) {
@@ -1227,6 +1232,9 @@ public class StateCreator extends JmolStateCreator {
             cmd += ";set labelOffset " + Escape.eAD(t.pymolOffset);
         }
         BSUtil.setMapBitSet(temp, i, i, cmd);
+        
+        
+        
         if (l.bsColixSet != null && l.bsColixSet.get(i))
           BSUtil.setMapBitSet(temp2, i, i, Shape.getColorCommand("label",
               l.paletteIDs[i], l.colixes[i], l.translucentAllowed));
@@ -1259,15 +1267,25 @@ public class StateCreator extends JmolStateCreator {
           if (align.length() > 0)
             BSUtil.setMapBitSet(temp3, i, i, "set labelAlignment " + align);
         }
-
         if (l.mads != null && l.mads[i] < 0)
           BSUtil.setMapBitSet(temp2, i, i, "set toggleLabel");
-        if (l.bsFontSet != null && l.bsFontSet.get(i))
-          BSUtil.setMapBitSet(temp2, i, i,
-              Shape.getFontCommand("label", Font.getFont3D(l.fids[i])));
+        if (l.bsFontSet != null && l.bsFontSet.get(i)) {
+          Font f = Font.getFont3D(l.fids[i]);
+          if (f.fontSizeAngstroms > 0)
+            isNeg = true;
+          BSUtil.setMapBitSet(temp4, i, i,
+              Shape.getFontCommand("label", f));
+        }
+      }
+      String sf = getCommands(null, temp4, "select");
+      if (isNeg) {
+        // protect from older versions without neg font size
+          sf = "  try{\n" + sf + "  }catch{}\n";
       }
       s = getCommands(temp, temp2, "select")
-          + getCommands(null, temp3, "select");
+        + sf
+        + getCommands(null, temp3, "select");
+      temp4.clear();
       temp3.clear();
       clearTemp();
       break;

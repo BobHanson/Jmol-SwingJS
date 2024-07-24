@@ -45,7 +45,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
 
   protected int ascent;
   protected int descent;
-  protected double sppm;
+  protected double sppa;
   protected double[] xy = new double[3];
   private P3i screen = new P3i();
 
@@ -75,9 +75,15 @@ public class LabelsRenderer extends FontLineShapeRenderer {
 
   private double[] boxXY;
 
-  private double scalePixelsPerMicron;
+  protected double scalePixelsPerMicron;
 
   protected int mode;
+
+  protected void setRenderVars() {
+    sppa = vwr.getScalePixelsPerAngstrom(true);
+    scalePixelsPerMicron = (vwr.getBoolean(T.fontscaling) ? sppa * 10000d : 0);
+    imageFontScaling = vwr.imageFontScaling;
+  }
 
   @Override
   protected boolean render() {
@@ -92,9 +98,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     Atom[] atoms = ms.at;
     short backgroundColixContrast = vwr.cm.colixBackgroundContrast;
     int backgroundColor = vwr.getBackgroundArgb();
-    sppm = vwr.getScalePixelsPerAngstrom(true);
-    scalePixelsPerMicron = (vwr.getBoolean(T.fontscaling) ? sppm * 10000d : 0);
-    imageFontScaling = vwr.imageFontScaling;
+    setRenderVars();
     int iGroup = -1;
     minZ[0] = Integer.MAX_VALUE;
     boolean isAntialiased = g3d.isAntialiased();
@@ -161,20 +165,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
     boolean newText = false;
     short pointerColix = ((pointer & JC.LABEL_POINTER_BACKGROUND) != 0
         && bgcolix != 0 ? bgcolix : labelColix);
-    if (text != null) {
-      if (text.font == null)
-        text.setFontFromFid(fid);
-      text.atomX = atomPt.sX; // just for pointer
-      text.atomY = atomPt.sY;
-      text.atomZ = zSlab;
-      if (text.pymolOffset == null) {
-        text.setXYZs(atomPt.sX, atomPt.sY, zBox, zSlab);
-        text.colix = labelColix;
-        text.bgcolix = bgcolix;
-      } else {
-        text.getPymolScreenOffset(atomPt, screen, zSlab, pTemp, sppm);
-      }
-    } else {
+    if (text== null) {
       // Labels only, not measurements
       boolean isLeft = (textAlign == JC.TEXT_ALIGN_LEFT || textAlign == JC.TEXT_ALIGN_NONE);
       if (fid != fidPrevious || ascent == 0) {
@@ -205,6 +196,19 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       text.atomZ = zSlab;
       text.setXYZs(atomPt.sX, atomPt.sY, zBox, zSlab);
       newText = true;
+    } else {
+      if (text.font == null)
+        text.setFontFromFid(fid);
+      text.atomX = atomPt.sX; // just for pointer
+      text.atomY = atomPt.sY;
+      text.atomZ = zSlab;
+      if (text.pymolOffset == null) {
+        text.setXYZs(atomPt.sX, atomPt.sY, zBox, zSlab);
+        text.colix = labelColix;
+        text.bgcolix = bgcolix;
+      } else {
+        text.getPymolScreenOffset(atomPt, screen, zSlab, pTemp, sppa);
+      }
     }
     if (text.pymolOffset == null) {
       if (text.font == null)
@@ -214,8 +218,13 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         text.setAlignment(textAlign);
     }
     text.pointer = pointer;
-    TextRenderer.render(null, text, g3d, scalePixelsPerMicron, imageFontScaling,
-       boxXY, xy, null, pointerColix, (doPointer == 0 ? 0 : vwr.getInt(T.labelpointerwidth)), mode);
+    renderText(text, null, pointerColix, mode);
     return (newText ? text : null);
   }
+
+  protected boolean renderText(Text text, P3i pTemp, short pointerColix, int mode) {
+    return TextRenderer.render(vwr, text, g3d, scalePixelsPerMicron, imageFontScaling,
+        boxXY, xy, pTemp, pointerColix, (doPointer == 0 ? 0 : vwr.getInt(T.labelpointerwidth)), mode);
+  }
+
 }

@@ -885,7 +885,7 @@ public class PanelData implements EventManager {
 		}
 		int face = jsvp.getFontFaceID(isPrinting ? printingFontName
 				: displayFontName);
-		return currentFont = Font.createFont3D(face, style, size, size, jsvp.getApiPlatform(), g);
+		return currentFont = Font.createFont3D(face, style, size, size, 0, jsvp.getApiPlatform(), g);
 	}
 
 	// listeners to handle various events, from GraphSet or AwtPanel

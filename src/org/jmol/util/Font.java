@@ -56,9 +56,20 @@ final public class Font {
   private int descent;
   private boolean isBold;
   private boolean isItalic;
+  public double fontSizeAngstroms;
   
+  /**
+   * @param manager 
+   * @param fid 
+   * @param idFontFace 
+   * @param idFontStyle 
+   * @param fontSize 
+   * @param fontSizeNominal 
+   * @param fontSizeAngstroms  
+   * @param graphics 
+   */
   private Font(FontManager manager, int fid, int idFontFace,
-      int idFontStyle, double fontSize, double fontSizeNominal, Object graphics) {
+      int idFontStyle, double fontSize, double fontSizeNominal, double fontSizeAngstroms, Object graphics) {
     this.manager = manager;
     this.fid = fid;
     this.fontFace = fontFaces[idFontFace];
@@ -66,6 +77,7 @@ final public class Font {
     this.idFontFace = idFontFace;
     this.idFontStyle = idFontStyle;
     this.fontSize = fontSize;
+    this.fontSizeAngstroms = fontSizeAngstroms;
     this.isBold = (idFontStyle & FONT_STYLE_BOLD) == FONT_STYLE_BOLD;
     this.isItalic = (idFontStyle & FONT_STYLE_ITALIC) == FONT_STYLE_ITALIC;
     this.fontSizeNominal = fontSizeNominal;
@@ -92,12 +104,18 @@ final public class Font {
   public static synchronized Font createFont3D(int fontface, int fontstyle,
                                                double fontsize,
                                                double fontsizeNominal,
+                                               double fontSizeAngstroms,
                                                FontManager manager,
                                                Object graphicsForMetrics) {
     //if (graphicsForMetrics == null)
     // return null;
     if (fontsize > 0xFF)
       fontsize = 0xFF;
+    if (fontsize < 0) {
+      fontSizeAngstroms = -fontsize;
+      fontsizeNominal = fontsize = 10;
+    }
+    
     int fontsizeX16 = ((int) fontsize) << 4;
     int fontkey = ((fontface & 3) | ((fontstyle & 3) << 2)
         | (fontsizeX16 << 4));
@@ -113,7 +131,7 @@ final public class Font {
           fontIndexNext + FONT_ALLOCATION_UNIT);
     }
     Font font3d = new Font(manager, fontIndexNext, fontface, fontstyle,
-        fontsize, fontsizeNominal, graphicsForMetrics);
+        fontsize, fontsizeNominal, fontSizeAngstroms, graphicsForMetrics);
     // you must set the font3d before setting the fontkey in order
     // to prevent a race condition with getFont3D
     font3ds[fontIndexNext] = font3d;
@@ -170,7 +188,7 @@ final public class Font {
   }
 
   public String getInfo() {
-    return  fontSizeNominal + " " + fontFace + " " + fontStyle;
+    return  (fontSizeAngstroms > 0 ? -fontSizeAngstroms : fontSizeNominal) + " " + fontFace + " " + fontStyle;
   }
   
   @Override
