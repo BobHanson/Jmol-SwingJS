@@ -394,4 +394,8 @@ class JmolObject {
     this.size = (int) (size * 1000);
   }
 
+  @Override
+  public String toString() {
+    return "[JmolObject " + id + " " + (bsAtoms == null ? "" : bsAtoms.cardinality() + " atoms")+"]";
+  }
 }

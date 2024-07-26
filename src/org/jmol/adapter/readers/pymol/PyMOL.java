@@ -6300,7 +6300,6 @@ class PyMOL {
     case surface_mode:
     case surface_solvent:
     case all_states:
-    case valence:
     case cgo_transparency:
     case cartoon_fancy_helices:
     case cartoon_putty_transform:
@@ -6309,12 +6308,16 @@ class PyMOL {
     case ribbon_radius:
     case ribbon_smooth:
     case sphere_solvent:
+    case stick_ball:
     case surface_carve_cutoff:
+    case valence:
       return 0;
     case cartoon_loop_radius:
       return 0.2;
     case cartoon_rect_length:
       return 1.4;
+    case stick_ball_ratio:
+      return 1.0;
     case nonbonded_size:
       return 0.25;
     case fog_start:

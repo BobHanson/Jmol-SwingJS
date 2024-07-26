@@ -111,7 +111,7 @@ private final static byte LONG = 76; /* L */
     }
   }
 
-  private String dumpFile = null;//"C:/temp/pse/pickle.log";
+  private String dumpFile = "C:/temp/pse/pickle.log";
   private void log(String s) {
     vwr.log(s + "\0");
   }

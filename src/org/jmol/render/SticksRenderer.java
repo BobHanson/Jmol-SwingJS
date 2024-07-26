@@ -121,7 +121,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
     useBananas = (vwr.getBoolean(T.multiplebondbananas) && !isPymol);
     // negative spacing is relative, depending upon atom-atom distance;
     // positive spacing is absolute, for fixed in-plane (radiusFactor > 0) or perp-plane (radiusFactor < 0)
-    multipleBondSpacing = (isPymol ? 0.15d : vwr
+    multipleBondSpacing = (isPymol ? 0.26d : vwr
         .getDouble(T.multiplebondspacing));
     // negative radius factor indicates perpendicular fixed double bond
     multipleBondRadiusFactor = (isPymol ? 0.4d : vwr
@@ -353,6 +353,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
       }
         break;
       default:
+        
         drawBond(mask);
       }
       break;
