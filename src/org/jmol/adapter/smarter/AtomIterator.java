@@ -215,8 +215,8 @@ class AtomIterator implements JmolAdapterAtomIterator {
   }
 
   @Override
-  public boolean getIsNegDisorder() {
-    return atom.isNegDisorder;
+  public int getPart() {
+    return atom.part;
   }
 
 

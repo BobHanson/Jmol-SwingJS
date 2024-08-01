@@ -30,6 +30,8 @@ import java.util.Map;
 import javajs.util.PT;
 
 import org.jmol.util.Elements;
+import org.jmol.adapter.smarter.Atom;
+import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.util.Edge;
 import org.jmol.viewer.Viewer;
 

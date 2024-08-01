@@ -805,7 +805,6 @@ public final class ModelLoader {
     if (ms.mc > 0)
       nullGroup = new Group().setGroup(new Chain(ms.am[baseModelIndex], 32, 0),
           "", 0, -1, -1);
-    P3d xyz = new P3d();
     while (iterAtom.hasNext()) {
       nRead++;
       int modelIndex = iterAtom.getAtomSetIndex() + baseModelIndex;
@@ -839,27 +838,7 @@ public final class ModelLoader {
         jbr.setHaveHsAlready(true);
       String name = iterAtom.getAtomName();
       int charge = (addH ? getPdbCharge(group3, name) : iterAtom.getFormalCharge());
-      xyz = iterAtom.getXYZ();
-      Atom atom = addAtom(isPdbThisModel, iterAtom.getSymmetry(),
-          iterAtom.getAtomSite() + siteBase,
-          isotope,
-          name,
-          charge, 
-          iterAtom.getPartialCharge(),
-          iterAtom.getTensors(), 
-          iterAtom.getOccupancy(), 
-          iterAtom.getBfactor(), 
-          xyz,
-          iterAtom.getIsHetero(), 
-          iterAtom.getIsNegDisorder(),
-          iterAtom.getSerial(), 
-          iterAtom.getSeqID(),
-          group3,
-          iterAtom.getVib(), 
-          iterAtom.getAltLoc(),
-          iterAtom.getRadius(), 
-          iterAtom.getBondRadius()
-          );
+      Atom atom = addAtom(isPdbThisModel, iterAtom, name, isotope, siteBase, charge, group3); 
       if (haveBonds)
         htAtomMap.put(iterAtom.getUniqueID(), atom);
     }
@@ -953,12 +932,23 @@ public final class ModelLoader {
             : 0);
   }
 
-  private Atom addAtom(boolean isPDB, BS atomSymmetry, int atomSite, int atomicAndIsotopeNumber,
-                       String atomName, int formalCharge, double partialCharge,
-                       Lst<Object> tensors, double occupancy, double bfactor,
-                       P3d xyz, boolean isHetero, boolean isNegDisorder, int atomSerial, int atomSeqID,
-                       String group3, V3d vib, char alternateLocationID,
-                       double radius, double bondRadius) {
+  private Atom addAtom(boolean isPDB, JmolAdapterAtomIterator iterAtom, String atomName, int atomicAndIsotopeNumber, int siteBase, int formalCharge, String group3) {
+    
+    BS atomSymmetry = iterAtom.getSymmetry();
+    int atomSite = iterAtom.getAtomSite() + siteBase;
+    double partialCharge = iterAtom.getPartialCharge();
+    Lst<Object> tensors = iterAtom.getTensors();
+    double occupancy = iterAtom.getOccupancy();
+    double bfactor = iterAtom.getBfactor();
+    P3d xyz = iterAtom.getXYZ();
+    boolean isHetero = iterAtom.getIsHetero();
+    boolean isNegDisorder = (iterAtom.getPart() < 0);
+    int atomSerial = iterAtom.getSerial();
+    int atomSeqID = iterAtom.getSeqID();
+    V3d vib = iterAtom.getVib();
+    char alternateLocationID = iterAtom.getAltLoc();
+    double radius = iterAtom.getRadius();
+    double bondRadius = iterAtom.getBondRadius();
     byte specialAtomID = 0;
     String atomType = null;
     if (atomName != null) {

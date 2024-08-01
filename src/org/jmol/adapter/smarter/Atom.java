@@ -60,10 +60,11 @@ public class Atom extends P3d implements Cloneable {
   public char insertionCode = '\0';
   public double[] anisoBorU; //[6] = 1 for U, 0 for B; [7] = bFactor
   public Lst<Object> tensors;
-  public boolean isNegDisorder; // CIF _atom_site_disorder_group -n
   public String typeSymbol; // CIF only
 
   public double dx, dy, dz;
+  public int part; // CIF _atom_site_disorder_group  or SHELX PART
+
   
   public Tensor addTensor(Tensor tensor, String type, boolean reset) {
     if (tensor == null)

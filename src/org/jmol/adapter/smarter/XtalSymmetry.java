@@ -969,7 +969,8 @@ public class XtalSymmetry {
     FileSymmetry sym = symmetry;
     FileSymmetry lastSymmetry = sym;
     checkAll = (crystalReaderLatticeOpsOnly
-        || asc.atomSetCount == 1 && acr.checkNearAtoms && latticeOp >= 0);
+    		// was acr.checkNearAtoms
+        || asc.atomSetCount == 1 && checkNearAtoms && latticeOp >= 0);
     Lst<M4d> lstNCS = acr.lstNCS;
     if (lstNCS != null && lstNCS.get(0).m33 == 0) {
       int nOp = sym.getSpaceGroupOperationCount();
@@ -1024,7 +1025,6 @@ public class XtalSymmetry {
                 op = sym.getSpaceGroupOperation(0);
               }
             }
-            // acr.fixFloatPt(pttemp, PT.FRACTIONAL_PRECISION); // LEGACY ONLY
             P3d c = P3d.newP(atom);
             op.rotTrans(c);
             sym.toCartesian(c, false);
@@ -1568,7 +1568,6 @@ public class XtalSymmetry {
           acr.unitCellOffset);
   }
 
-  @SuppressWarnings("cast")
   private int symmetryAddAtoms(int transX, int transY, int transZ,
                                int baseCount, int pt, int iCellOpPt,
                                P3d[] cartesians, MSInterface ms, BS excludedOps,
@@ -1748,15 +1747,15 @@ public class XtalSymmetry {
             sym.getSpaceGroupOperation(iSym).rotate(atom1.vib);
             atom1.vib.scale(spinOp);
           }
-          if (atom1.isNegDisorder) {
+          if (atom1.part < 0) {
             // special negative disorder group in CifReader
+            Integer key = Integer.valueOf(iSym * 1000 + 500 + atom1.part);
             if (disorderMap == null)
               disorderMap = new Hashtable<Integer, Character>();
-            Integer key = Integer.valueOf(iSym * 1000 + atom1.altLoc);
             Character ch = disorderMap.get(key);
             if (ch == null) {
               if (disorderMapMax == 0 || disorderMapMax == 'Z')
-                disorderMapMax = (int) '@'; // necessary for legacy java2script JSmol
+                disorderMapMax = '@'; 
               disorderMap.put(key,
                   ch = new Character((char) (++disorderMapMax)));
             }

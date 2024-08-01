@@ -530,6 +530,9 @@ public class CifReader extends AtomSetCollectionReader {
     addHeader();
     if (haveAromatic)
       addJmolScript("calculate aromatic");
+    if (!isMMCIF) {
+      asc.setPartProperty();
+    }
   }
 
   private void setOxidationStates() {
@@ -1489,7 +1492,11 @@ public class CifReader extends AtomSetCollectionReader {
           disorderAssembly = field;
           break;
         case DISORDER_GROUP:
-          if (firstChar == '-' && field.length() > 1) {
+          if (!isMMCIF) {
+            atom.part = PT.parseInt(field);
+          }
+          atom.altLoc = (atom.part < 0 ? field.charAt(1) : firstChar);
+
             // disorder group -1
 
             // email exchange with Brian McMahon 22.10.11
@@ -1513,17 +1520,12 @@ public class CifReader extends AtomSetCollectionReader {
             //            PDB format. However, this notation is difficult to use when there
             //            is a disorder within a disorder."
 
-            // atom.isNegDisorder indicates the negative case; atom.altloc is the "n" of "-n"
+            // atom.part < 0 indicates the negative case; atom.altloc is the "n" of "-n"
             // as symmetry is applied, if atom.isNegDisorder is true, then 
             // the cloned atom is given an incremented altloc
             // this only works with C2 and m; with higher-order symmetry, this
             // will dump all the symmetry-related groups into the same configuration=2
 
-            atom.altLoc = field.charAt(1);
-            atom.isNegDisorder = true;
-          } else {
-            atom.altLoc = firstChar;
-          }
           break;
         case GROUP_PDB:
           if ("HETATM".equals(field))

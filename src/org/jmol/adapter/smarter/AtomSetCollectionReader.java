@@ -432,7 +432,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   /**
-   * optional reader-specific method run first.
+   * Optional reader-specific method run first. May or may not call
+   * finalizeReaderASCR(), when symmetry for the last model is finalized if
+   * necessary.
    * 
    * @throws Exception
    */

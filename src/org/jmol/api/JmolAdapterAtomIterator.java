@@ -86,5 +86,6 @@ public interface JmolAdapterAtomIterator {
 
   public int getIsotope();
 
-  boolean getIsNegDisorder();
+  int getPart();
+
 }

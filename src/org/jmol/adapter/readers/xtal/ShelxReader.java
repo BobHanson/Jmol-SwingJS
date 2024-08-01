@@ -57,8 +57,11 @@ public class ShelxReader extends AtomSetCollectionReader {
 
   private String[] sfacElementSymbols;
   private boolean isCmdf;
-  String[] tokens;
+  private String[] tokens;
   
+  private char altloc = '\0';
+  private int part;
+
   @Override
   public void initializeReader() {
       setFractionalCoordinates(true);
@@ -68,14 +71,13 @@ public class ShelxReader extends AtomSetCollectionReader {
   protected boolean checkLine() throws Exception {
 
     int lineLength ;
+    if (line.length() == 0 || line.startsWith(" "))
+      return true;
     // '=' as last char of line means continue on next line
-    while ((lineLength = (line = line.trim()).length()) > 0 
+    while ((lineLength = line.length()) > 0 
         && line.charAt(lineLength - 1) == '=') 
       line = line.substring(0, lineLength - 1) + rd();
-    
     tokens = getTokens();
-    if (tokens.length == 0)
-      return true;
     String command = tokens[0].toUpperCase();
     if (command.equals("TITL")) {
       if (!doGetModel(++modelNumber, null))
@@ -160,9 +162,6 @@ public class ShelxReader extends AtomSetCollectionReader {
     }
   }
   
-  char altloc = '\0';
-  private boolean negDisorder;
-
   private void processPartRecord() {
     
     // email exchange with Brian McMahon 22.10.11
@@ -195,11 +194,8 @@ public class ShelxReader extends AtomSetCollectionReader {
 
     
     // PART 1 become altloc '1'
-    int part = parseIntStr(tokens[1]);
-    
+    part = parseIntStr(tokens[1]);    
     altloc = (char) (part == 0 ? 0 : '0' + Math.abs(part));
-    if (part < 0)
-      negDisorder = true;
   }
 
   private boolean isCentroSymmetric;
@@ -323,7 +319,7 @@ public class ShelxReader extends AtomSetCollectionReader {
     }
     setAtomCoordXYZ(atom, x, y, z);
     atom.altLoc = altloc;
-    atom.isNegDisorder = negDisorder;
+    atom.part = part;
 
     if (tokens.length == 12) {
       double[] data = new double[8];
@@ -390,4 +386,9 @@ public class ShelxReader extends AtomSetCollectionReader {
     applySymTrajASCR();
   }
 
+  @Override
+  public void finalizeSubclassReader() throws Exception {
+    super.finalizeReaderASCR();
+    asc.setPartProperty();
+  }
 }

@@ -1259,5 +1259,19 @@ public class AtomSetCollection {
     }
   }
 
+  
+  /** SHELX and CIF loaders use atomSerial to temporarily store part numbers.
+   * 
+   */
+    public void setPartProperty() {
+      for (int iset = atomSetCount; --iset >= 0;) {
+        double[] parts = new double[getAtomSetAtomCount(iset)];
+        for (int i = 0, ia = getAtomSetAtomIndex(iset), n = parts.length; i < n; i++) {
+          Atom a = atoms[ia++];
+          parts[i] = a.part;
+        }
+        setAtomProperties("part", parts, iset, false);
+      }
+    }
 
 }
