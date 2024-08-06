@@ -1,8 +1,10 @@
 package org.jmol.adapter.writers;
 
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolWriter;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.modelset.Atom;
+import org.jmol.util.BSUtil;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.Viewer;
 
@@ -42,9 +44,18 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
   public String write(BS bs) {
     if (bs == null)
       bs = vwr.bsA();
+    else
+      bs = BSUtil.copy(bs);      
     try {
-      short mi = vwr.ms.at[bs.nextSetBit(0)].mi;
-      SymmetryInterface uc = vwr.getCurrentUnitCell();
+      // note that this is confined to the FIRST model in the set. 
+      // TODO allow multiple unit cells? 
+      int mi = vwr.ms.at[bs.nextSetBit(0)].mi;
+      int n0 = bs.cardinality();
+      bs.and(vwr.getModelUndeletedAtomsBitSet(mi));
+      if (n0 < bs.cardinality()) {
+        System.err.println("CIFWriter Warning: Atoms not in model " + (mi + 1) + " ignored");
+      }
+      SymmetryInterface uc = vwr.ms.getUnitCell(mi);
       haveUnitCell = (uc != null);
       if (!haveUnitCell)
         uc = vwr.getSymTemp().setUnitCellFromParams(null, false, 0.00001d);
@@ -151,7 +162,8 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
           break;
         }
       }
-      
+      double[] parts = (haveAltLoc ? (double[]) vwr.getDataObj("property_part", bsOut, JmolDataManager.DATA_TYPE_AD) : null);
+
       int sbLength = sb.length();
 
       sb.append("\n" + "\nloop_" + "\n_atom_site_label"
@@ -175,7 +187,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       int nAtoms = 0;
       P3d p = new P3d();
       int[] elemNums = new int[130];
-      for (int i = bsOut.nextSetBit(0); i >= 0; i = bsOut.nextSetBit(i + 1)) {
+      for (int pi = 0, i = bsOut.nextSetBit(0); i >= 0; i = bsOut.nextSetBit(i + 1)) {
         Atom a = atoms[i];
         p.setT(a);
         if (haveUnitCell) {
@@ -196,7 +208,15 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
             .append(PT.formatS(sym, 3, 0, true, false)).append(clean(p.x))
             .append(clean(p.y)).append(clean(p.z));
         if (haveAltLoc) {
-          sb.append(" ").appendC(a.altloc == '\0' ? '.' : a.altloc);
+          sb.append(" ");
+          String sdis;
+          if (parts != null) {
+            int part = (int) parts[pi++];
+            sdis = (part == 0 ? "." : "" + part);
+          } else {
+            sdis = "" + (a.altloc == '\0' ? '.' : a.altloc);
+          }
+          sb.append(sdis);
         }
         if (haveOccupancy) 
           sb.append(" ").append(clean(occ[i]/100));

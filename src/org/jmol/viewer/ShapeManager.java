@@ -421,7 +421,8 @@ public class ShapeManager {
           continue;
         if (bs.get(atom.mi)) {
           int f = Atom.ATOM_INFRAME;
-          if (!ms.isAtomHidden(i)
+          
+          if (!ms.isAtomHidden(i) 
               && (showHydrogens || atom.getElementNumber() != 1)) {
             f |= Atom.ATOM_NOTHIDDEN;
             if (atom.madAtom != 0)

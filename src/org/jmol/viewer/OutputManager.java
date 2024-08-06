@@ -314,6 +314,7 @@ abstract class OutputManager {
               try {
                 getImagePixels(image, params);
               } catch (Exception e) {
+                e.printStackTrace();
               }
               finishImage(errRet, "Png", out, null, params);
               out.closeChannel();

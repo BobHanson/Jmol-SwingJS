@@ -970,7 +970,8 @@ public class FileManager implements BytePoster {
       // -- no local file reading for headless
       if (OC.urlTypeIndex(name) >= 0 || vwr.haveAccess(ACCESS.NONE)
           || vwr.haveAccess(ACCESS.READSPT) && !name.endsWith(".spt")
-          && !name.endsWith("/")) {
+          && !name.endsWith("/")
+          || !vwr.haveAccessInternal(name)) {
         try {
           url = new URL((URL) null, name, null);
         } catch (MalformedURLException e) {

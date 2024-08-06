@@ -1349,6 +1349,10 @@ public class Atom extends Point3fi implements Node {
       return getSurfaceDistance100() / 100d;
     case T.temperature: // 0 - 9999
       return getBfactor100() / 100d;
+    case T.translucent:
+      return C.getColixTranslucencyFractional(colixAtom);
+    case T.volume:
+      return getVolume(vwr, VDW.AUTO);
     case T.unitx:
       return getFractionalUnitCoord(!vwr.g.legacyJavaFloat, 'X', ptTemp);
     case T.unity:
@@ -1380,8 +1384,6 @@ public class Atom extends Point3fi implements Node {
       return getVib('2');
     case T.modt3:
       return getVib('3');
-    case T.volume:
-      return getVolume(vwr, VDW.AUTO);
     case T.fracxyz:
     case T.fuxyz:
     case T.unitxyz:

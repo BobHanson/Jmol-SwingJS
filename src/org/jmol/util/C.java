@@ -141,6 +141,7 @@ public final class C {
   public final static short CHANGEABLE_MASK = (short) 0x8000; // negative
   public final static int LAST_AVAILABLE_COLIX = UNMASK_CHANGEABLE_TRANSLUCENT;
   public final static int TRANSLUCENT_SHIFT = 11;
+  public static final int TRANSPARENT_LEVEL = 0xFF;
   public final static int ALPHA_SHIFT = 24 - TRANSLUCENT_SHIFT;
   public final static int TRANSLUCENT_MASK = 0xF << TRANSLUCENT_SHIFT; //0x7800
   public final static int TRANSLUCENT_SCREENED = TRANSLUCENT_MASK;
@@ -167,7 +168,6 @@ public final class C {
   public final static short YELLOW = 21;
   public final static short HOTPINK = 22;
   public final static short GOLD = 23;
-  
   
   public C() {
   }
@@ -432,6 +432,10 @@ public final class C {
     default:
       return 255;
     }
+  }
+  
+  public static boolean isTransparent(short colix) {
+    return (colix & TRANSLUCENT_MASK) == TRANSPARENT;
   }
 
   public static short getColixS(String colorName) {

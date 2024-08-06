@@ -779,6 +779,8 @@ public class BioExt {
     for (int i = 0; i < n; i++) {
       a1 = vCA.get(i);
       int polymerIndex = a1.group.getBioPolymerIndexInModel();
+      if (polymerIndex < 0)
+        continue;
       int monomerIndex = a1.group.getMonomerIndex();
       int bpt = monomerIndex;
       if (bpt < nEndMin)

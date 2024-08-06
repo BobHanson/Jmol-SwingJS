@@ -215,9 +215,9 @@ public class Viewer extends JmolViewer
   public static String jsDocumentBase = "";
 
   public enum ACCESS {
-    NONE, READSPT, ALL
+    NONE, READSPT, ALL, INTERNAL
   }
-
+  
   public Object compiler;
   public Map<String, Object> definedAtomSets;
   public ModelSet ms;
@@ -276,7 +276,8 @@ public class Viewer extends JmolViewer
   public Map<String, Object> vwrOptions;
   public Object display;
   private JmolAdapter modelAdapter;
-  private ACCESS access;
+  private ACCESS access0, access;
+  private String internalAccessPath;
   private CommandHistory commandHistory;
 
   public ModelManager mm;
@@ -486,7 +487,7 @@ public class Viewer extends JmolViewer
     htmlName = (i < 0 ? fullName : fullName.substring(0, i));
     appletName = PT.split(htmlName + "_", "_")[0];
     syncId = (i < 0 ? "" : fullName.substring(i + 2, fullName.length() - 2));
-    access = (checkOption2("access:READSPT", "-r") ? ACCESS.READSPT
+    access = access0 = (checkOption2("access:READSPT", "-r") ? ACCESS.READSPT
         : checkOption2("access:NONE", "-R") ? ACCESS.NONE : ACCESS.ALL);
     isPreviewOnly = info.containsKey("previewOnly");
     if (isPreviewOnly)
@@ -7152,7 +7153,7 @@ public class Viewer extends JmolViewer
     // case Token.autoloadorientation:
     // // 11.7.30; removed in 12.0.RC10 -- use FILTER "NoOrient"
     // global.autoLoadOrientation = value;
-    // break;
+    // break;T.
     case T.allowkeystrokes:
       // 11.7.24
       //      if (g.disablePopupMenu)
@@ -11173,4 +11174,42 @@ public class Viewer extends JmolViewer
     return false;
   }
 
+  /**
+   * Check for allowed access only to the designated path starting with this path.
+   * Restricts access to internal PNGJ files and disallows WRITE and JAVASCRIPT commands from within PNGJ files.
+   *
+   * Java only.
+   * 
+   * @param path
+   * @return true if access is allowed
+   */
+  public final boolean haveAccessInternal(String path) {
+    if (isJS)
+      return true;
+    path = path.replace('\\', '/');
+    boolean ret = access != ACCESS.NONE && (internalAccessPath == null || access != ACCESS.INTERNAL || path.startsWith(internalAccessPath));
+    if (!ret)
+      System.err.println("Viewe internal file access in " + internalAccessPath + " denied for " + path);
+    return ret;
+  }
+
+  /**
+   * Set access to the specified path only; used for restricting file read/write
+   * access to only those files within the zip block of a PNGJ file
+   *
+   * Java only.
+   * 
+   * @param path
+   */
+  public void setAccessInternal(String path) {
+    if (isJS)
+      return;
+    if (access != ACCESS.INTERNAL) {
+      access = ACCESS.INTERNAL;
+    } else if (path == null) {
+        access = access0;
+    }
+    internalAccessPath = path;      
+  }
+  
 }

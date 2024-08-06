@@ -2087,7 +2087,7 @@ public class ScriptCompiler extends ScriptTokenParser {
           setBraceCount = 0;
           break;
         }
-        if (theTok != T.identifier && theTok != T.andequals
+        if (theTok != T.translucent && theTok != T.identifier && theTok != T.andequals
             && theTok != T.define && (!T.tokAttr(theTok, T.setparam))) {
           if (isNewSet)
             commandExpected();

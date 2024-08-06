@@ -55,8 +55,8 @@ public class HalosRenderer extends ShapeRenderer {
       Atom atom = atoms[i];
       if (atom == null || (atom.shapeVisibilityFlags & Atom.ATOM_INFRAME) == 0)
         continue;
-      boolean isHidden = ms.isAtomHidden(i);
-      mad = (halos.mads == null ? 0 : halos.mads[i]);
+      boolean isHidden = ms.isAtomHidden(i) || C.isTransparent(atom.colixAtom);
+      mad = (isHidden || halos.mads == null ? 0 : halos.mads[i]);
       colix = (halos.colixes == null || i >= halos.colixes.length ? C.INHERIT_ALL
           : halos.colixes[i]);
       if (selectDisplayTrue && bsSelected.get(i)) {

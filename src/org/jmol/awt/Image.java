@@ -158,6 +158,8 @@ class Image {
   static int[] grabPixels(Object imageobj, int width, int height,
                           int[] pixels) {
     // keep this simple!
+    if (imageobj instanceof sun.awt.image.ToolkitImage)
+      imageobj = ((sun.awt.image.ToolkitImage) imageobj).getBufferedImage();
     BufferedImage image = (BufferedImage) imageobj;
     int iw = image.getWidth();
     int[] data = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();

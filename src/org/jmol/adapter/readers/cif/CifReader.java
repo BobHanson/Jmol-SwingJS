@@ -516,6 +516,8 @@ public class CifReader extends AtomSetCollectionReader {
   protected void finalizeSubclassReader() throws Exception {
     if (htOxStates != null)
       setOxidationStates();
+    if (htJmolNames != null)
+      setJmolNames();
     // added check for final data_global
     if (asc.iSet > 0 && asc.getAtomSetAtomCount(asc.iSet) == 0)
       asc.atomSetCount--;
@@ -530,8 +532,8 @@ public class CifReader extends AtomSetCollectionReader {
     addHeader();
     if (haveAromatic)
       addJmolScript("calculate aromatic");
-    if (!isMMCIF) {
-      asc.setPartProperty();
+    if (!isMMCIF && asc.xtalSymmetry != null) {
+      asc.xtalSymmetry.setPartProperty();
     }
   }
 
@@ -947,6 +949,10 @@ public class CifReader extends AtomSetCollectionReader {
       processGeomBondLoopBlock();
       return;
     }
+    if (key.startsWith("_jmol")) {
+      processJmolBlock();
+      return;
+    }
     if (processSubclassLoopBlock())
       return;
     if (key.equals("_propagation_vector_seq_id")) {// Bilbao mCIF
@@ -1024,8 +1030,10 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte ATOM_TYPE_RADIUS_BOND = 2;
 
   final protected static String CAT_ATOM_TYPE = "_atom_type";
-  final private static String[] atomTypeFields = { "_atom_type_symbol",
-      "_atom_type_oxidation_number", "_atom_type_radius_bond" };
+  final private static String[] atomTypeFields = { 
+      "_atom_type_symbol",
+      "_atom_type_oxidation_number", 
+      "_atom_type_radius_bond" };
 
   /**
    * 
@@ -1051,6 +1059,49 @@ public class CifReader extends AtomSetCollectionReader {
       htOxStates.put(sym, new double[] { oxno, radius });
     }
     return true;
+  }
+  
+  //final private static byte JMOL_ATOM_INDEX = 0;
+  final private static byte JMOL_ATOM_NAME = 1;
+  final private static byte JMOL_ATOM_SITE_LABEL = 2;
+
+  final private static String[] jmolAtomFields = { 
+      "_jmol_atom_index",
+      "_jmol_atom_name", 
+      "_jmol_atom_site_label" 
+      };
+
+//  loop_
+//  _jmol_atom_index
+//  _jmol_atom_name
+//  _jmol_atom_site_label
+//    0 FE1    Fe1
+//    1 CL1    Cl1
+//    2 P1     P1
+//    3 N1     N1
+//  143 Q11   Xx11
+
+  private Map<String, String> htJmolNames;
+  
+  private void processJmolBlock() throws Exception {
+    htJmolNames = new Hashtable<>();
+    parseLoopParameters(jmolAtomFields);
+    while (cifParser.getData()) {
+      String jmolName = getFieldString(JMOL_ATOM_NAME);
+      String cifName = getFieldString(JMOL_ATOM_SITE_LABEL);
+      if (jmolName == null || cifName == null)
+        continue;
+      htJmolNames.put(cifName,  jmolName);
+    }
+  }
+
+  private void setJmolNames() {
+    for (int i = 0, n = asc.ac; i < n; i++) {
+      Atom a = asc.atoms[i];
+      String name = htJmolNames.get(a.atomName);
+      if (name != null)
+        a.atomName = name;
+    }
   }
 
   ////////////////////////////////////////////////////////////////

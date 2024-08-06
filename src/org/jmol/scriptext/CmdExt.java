@@ -4085,6 +4085,8 @@ public class CmdExt extends ScriptExt {
    * @throws ScriptException
    */
   private String write(T[] args) throws ScriptException {
+    if (args == null && !vwr.haveAccessInternal("|"))
+      invArg();
     ScriptEval eval = e;
     int pt = 1, pt0 = 1;
     String[] scripts = null;

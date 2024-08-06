@@ -389,6 +389,6 @@ public class ShelxReader extends AtomSetCollectionReader {
   @Override
   public void finalizeSubclassReader() throws Exception {
     super.finalizeReaderASCR();
-    asc.setPartProperty();
+    asc.xtalSymmetry.setPartProperty();
   }
 }

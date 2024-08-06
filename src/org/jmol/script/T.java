@@ -599,7 +599,7 @@ public class T {
   public final static int adpmax          = floatproperty | 1;
   public final static int adpmin          = floatproperty | 2;
   public final static int chemicalshift   = floatproperty | 3; // Jmol 13.1.19
-  public final static int covalentradius        = floatproperty | 4;
+  public final static int covalentradius  = floatproperty | 4;
   public final static int eta             = floatproperty | 5; // Jmol 12.0.RC23
   public final static int magneticshielding = floatproperty | 6;  // Jmol 13.1.19
   public final static int mass            = floatproperty | 7;
@@ -623,6 +623,7 @@ public class T {
   public final static int modz            = floatproperty | 25;
   public final static int modo            = floatproperty | 26;
   public final static int dssr            = floatproperty | 27;
+  public final static int translucent     = floatproperty | 28;
   public final static int vectorscale     = floatproperty | 1 | floatparam;
   public final static int atomx           = floatproperty | 1 | settable;
   public final static int atomy           = floatproperty | 2 | settable;
@@ -918,7 +919,7 @@ public class T {
   public final static int spinx                          = floatparam | 54;
   public final static int spiny                          = floatparam | 56;
   public final static int spinz                          = floatparam | 58;
-  public final static int starwidth                     = floatparam | 59; // Jmol 13.1.15
+  public final static int starwidth                      = floatparam | 59; // Jmol 13.1.15
   public final static int stereodegrees                  = floatparam | 60;
   public final static int strutdefaultradius             = floatparam | 62;
   public final static int strutlengthmaximum             = floatparam | 64;
@@ -1125,7 +1126,6 @@ public class T {
   public final static int testflag3                      = booleanparam | 188;
   public final static int testflag4                      = booleanparam | 189;
   public final static int tracealpha                     = booleanparam | 190;
-  public final static int translucent                    = booleanparam | 191;
   public final static int twistedsheets                  = booleanparam | 192;
   public final static int undo                           = booleanparam | scriptCommand | 193;
   public final static int undoauto                       = booleanparam | 193;

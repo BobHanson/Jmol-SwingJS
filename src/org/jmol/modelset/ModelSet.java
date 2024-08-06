@@ -34,6 +34,7 @@ import java.util.Properties;
 
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.Interface;
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.AtomData;
@@ -4128,8 +4129,22 @@ public class ModelSet extends BondCollection {
         if (conformationIndex < -1000) {
           char c = (char) (-1000 - conformationIndex);
           c0 = altLocs.indexOf(c);
+        } else if (conformationIndex < 0) {
+          c0 = -conformationIndex;
+          double[] parts = (double[]) vwr.getDataObj("property_part", bsAtoms, JmolDataManager.DATA_TYPE_AD);
+           if (parts == null) {
+             c0 -= 1;
+           } else {
+             for (int p = 0, ia = bsAtoms.nextSetBit(0); ia >= 0; ia = bsAtoms.nextSetBit(ia + 1)) {
+               double part = parts[p++];
+               if (part != 0 && part != c0 && part != -c0)
+                 bsAtoms.clear(ia);
+             }
+             bs.or(bsAtoms);
+             c0 = -1;
+           }
         } else {
-          c0 = Math.abs(conformationIndex) - 1;
+          c0 = conformationIndex - 1;
         }
         if (c0 < 0 || c0 >= nAltLocs) {
           continue;
@@ -4148,7 +4163,7 @@ public class ModelSet extends BondCollection {
 
   public BS getSequenceBits(String specInfo, BS bsAtoms, BS bsResult) {
     return (haveBioModels ? bioModelset.getAllSequenceBits(specInfo, bsAtoms, bsResult)
-        : bsResult);
+        : bsResult);  
   }
 
   public int getBioPolymerCountInModel(int modelIndex) {

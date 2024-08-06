@@ -1754,10 +1754,20 @@ public class XtalSymmetry {
               disorderMap = new Hashtable<Integer, Character>();
             Character ch = disorderMap.get(key);
             if (ch == null) {
-              if (disorderMapMax == 0 || disorderMapMax == 'Z')
+              Integer ia = Integer.valueOf(atom1.part);
+              boolean isNew = (disorderMap.get(ia) == null);
+              if (disorderMapMax == 0 || disorderMapMax == 'z') {
+                // back to "A"
                 disorderMapMax = '@'; 
-              disorderMap.put(key,
-                  ch = new Character((char) (++disorderMapMax)));
+              } else if (disorderMapMax == 'Z') {
+                // allow a-z as well; use select ALTLOC like 'a' to distinguish 'a' from 'A'
+                disorderMapMax = '`';
+              }
+              // first time will be altloc, then start incrementing altLoc
+              ch = new Character(isNew ? atom1.altLoc : (char) ++disorderMapMax);
+              disorderMap.put(key, ch);
+              if (isNew)
+                disorderMap.put(ia, ch);
             }
             atom1.altLoc = ch.charValue();
           }
@@ -1813,6 +1823,23 @@ public class XtalSymmetry {
     }
     return pt;
   }
+
+  /** 
+   * 
+   * create property_part for SHELX and CIF loaders
+   * 
+   */
+    public void setPartProperty() {
+      for (int iset = asc.atomSetCount; --iset >= 0;) {
+        double[] parts = new double[asc.getAtomSetAtomCount(iset)];
+        for (int i = 0, ia = asc.getAtomSetAtomIndex(iset), n = parts.length; i < n; i++) {
+          Atom a = asc.atoms[ia++];
+          parts[i] = a.part;
+        }
+        asc.setAtomProperties("part", parts, iset, false);
+      }
+    }
+
 
   private void trimToUnitCell(int iAtomFirst) {
     // trim atom set based on current min/max

@@ -1125,10 +1125,14 @@ public class ScriptEval extends ScriptExpr {
     scriptFileName = filename;
     data[1] = FileManager.getEmbeddedScript(data[1]);
     String script = fixScriptPath(data[1], data[0]);
+    int pt = -1;
+    String path = scriptPath;
     if (scriptPath == null) {
-      scriptPath = vwr.fm.getFilePath(filename, false, false);
-      scriptPath = scriptPath.substring(0,
-          Math.max(scriptPath.lastIndexOf("|"), scriptPath.lastIndexOf("/")));
+      path = vwr.fm.getFilePath(filename, false, false);
+      scriptPath = path.substring(0,
+          Math.max((pt = path.lastIndexOf("|")), path.lastIndexOf("/")));
+      if (pt > 0)
+        vwr.setAccessInternal(path.substring(0, pt));
     }
     return FileManager.setScriptFileReferences(script, localPath, remotePath,
         scriptPath) + movieScript;
@@ -1720,6 +1724,7 @@ public class ScriptEval extends ScriptExpr {
       return;
     isFuncReturn = false;
     Logger.error("eval ERROR: " + s + "\n" + toString());
+    vwr.setAccessInternal(null);
     if (vwr.autoExit)
       vwr.exitJmol();
   }
@@ -6787,6 +6792,8 @@ public class ScriptEval extends ScriptExpr {
   public void cmdScript(int tok, String filename, String theScript, Lst<SV> params)
       throws ScriptException {
     if (tok == T.javascript) {
+      if (!vwr.haveAccessInternal("|"))
+        error(ERROR_commandExpected);
       checkLength(2);
       if (!chk)
         vwr.jsEval(paramAsStr(1));
@@ -6907,6 +6914,7 @@ public class ScriptEval extends ScriptExpr {
     if (isCmdLine_c_or_C_Option)
       isCheck = true;
     if (theScript == null) {
+      
       theScript = getScriptFileInternal(filename, localPath, remotePath, scriptPath);
       if (theScript == null)
         invArg();
@@ -7204,6 +7212,11 @@ public class ScriptEval extends ScriptExpr {
         invArg();
       vwr.setStructureList(data, type);
       checkLast(iToken);
+      return;
+    case T.translucent:
+      if (slen > 3)
+        checkLast(2);
+      setBooleanProperty("translucent", slen == 2 || SV.bValue(getToken(2)));
       return;
     case T.axescolor:
       ival = getArgbParam(2);
