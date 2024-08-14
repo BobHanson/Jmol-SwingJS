@@ -103,12 +103,13 @@ public class SticksRenderer extends FontLineShapeRenderer {
         for (int i = bsForPass2.nextSetBit(0); i >= 0; i = bsForPass2
             .nextSetBit(i + 1)) {
           bond = bonds[i];
-          renderBond();
+          if (bond != null)
+            renderBond();
         }
     } else {
       for (int i = ms.bondCount; --i >= 0;) {
         bond = bonds[i];
-        if ((bond.shapeVisibilityFlags & myVisibilityFlag) != 0 && renderBond()) {
+        if (bond != null && (bond.shapeVisibilityFlags & myVisibilityFlag) != 0 && renderBond()) {
           needTranslucent = true;
           bsForPass2.set(i);
         }

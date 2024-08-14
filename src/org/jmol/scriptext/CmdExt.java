@@ -336,6 +336,8 @@ public class CmdExt extends ScriptExt {
                 indices, ptTemp));
       } else {
         Bond bond = modelSet.bo[j];
+        if (bond == null)
+          continue;
         str = (asIdentity ? bond.getIdentity()
             : LabelToken.formatLabelBond(vwr, bond, tokens, htValues, indices,
                 ptTemp));
@@ -4085,7 +4087,7 @@ public class CmdExt extends ScriptExt {
    * @throws ScriptException
    */
   private String write(T[] args) throws ScriptException {
-    if (args == null && !vwr.haveAccessInternal("|"))
+    if (args == null && vwr.haveAccessInternal(null))
       invArg();
     ScriptEval eval = e;
     int pt = 1, pt0 = 1;

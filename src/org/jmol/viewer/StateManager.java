@@ -551,8 +551,9 @@ class Connections {
     Bond[] bonds = modelSet.bo;
     for (int i = bondCount; --i >= 0;) {
       Bond b = bonds[i];
-      connections[i] = new Connection(b.atom1.i, b.atom2.i, b.mad, b.colix,
-          b.order, b.getEnergy(), b.shapeVisibilityFlags);
+      if (b != null)
+        connections[i] = new Connection(b.atom1.i, b.atom2.i, b.mad, b.colix,
+            b.order, b.getEnergy(), b.shapeVisibilityFlags);
     }
   }
 
@@ -572,8 +573,10 @@ class Connections {
       b.colix = c.colix;
       b.shapeVisibilityFlags = c.shapeVisibilityFlags;
     }
+    Bond[] bonds = modelSet.bo;
     for (int i = modelSet.bondCount; --i >= 0;)
-      modelSet.bo[i].index = i;
+      if (bonds[i] != null)
+        bonds[i].index = i;
     vwr.setShapeProperty(JC.SHAPE_STICKS, "reportAll", null);
     return true;
   }

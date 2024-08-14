@@ -24,6 +24,7 @@
 
 package org.jmol.scriptext;
 
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.adapter.readers.quantum.GenNBOReader;
@@ -1226,7 +1227,15 @@ public class IsoExt extends ScriptExt {
       Object propertyValue = null;
       boolean ignoreSquared = false;
       String nboName = null;
+      BS bsSelected = null;
       switch (getToken(i).tok) {
+      case T.select:
+        propertyName = "select";
+        bsSelected = atomExpressionAt(++i);
+        BSUtil.andNot(bsSelected, vwr.slm.bsDeleted);
+        propertyValue = bsSelected;
+        i = eval.iToken;
+        break;
       case T.type:
         if (iShape == T.mo) {
           mo(isInitOnly, JC.SHAPE_NBO);
@@ -1391,6 +1400,10 @@ public class IsoExt extends ScriptExt {
         if (haveMO) {
           addShapeProperty(propertyList, "finalize", null);
         }
+      }
+      if (bsSelected == null && vwr.slm.bsDeleted != null) {
+        bsSelected = vwr.bsA();
+        addShapeProperty(propertyList, "select", bsSelected);
       }
       if (!ignoreSquared) {
         setShapeProperty(iShape, "squareLinear", linearSquared);
@@ -1656,7 +1669,6 @@ public class IsoExt extends ScriptExt {
     boolean isFrontOnly = false;
     String nbotype = null;
     double[] data = null;
-    String cmd = null;
     BS thisSet = null;
     int nFiles = 0;
     int nX, nY, nZ, ptX, ptY;
@@ -1743,7 +1755,7 @@ public class IsoExt extends ScriptExt {
           modelIndex = Math.min(vwr.am.cmi, 0);
         boolean needIgnore = (bsIgnore == null);
         if (bsSelect == null)
-          bsSelect = BSUtil.copy(vwr.bsA());
+          bsSelect = BSUtil.andNot(BSUtil.copy(vwr.bsA()), vwr.slm.bsDeleted);
         // and in symop=1
         bsSelect.and(vwr.ms.getAtoms(T.symop, Integer.valueOf(1)));
         if (!needIgnore)
@@ -1815,12 +1827,12 @@ public class IsoExt extends ScriptExt {
       case T.intersection:
         // isosurface intersection {A} {B} VDW....
         // isosurface intersection {A} {B} function "a-b" VDW....
-        bsSelect = atomExpressionAt(++i);
+        bsSelect = BSUtil.andNot(atomExpressionAt(++i), vwr.slm.bsDeleted);
         if (chk) {
           bs = new BS();
         } else if (tokAt(eval.iToken + 1) == T.expressionBegin
             || tokAt(eval.iToken + 1) == T.bitset) {
-          bs = atomExpressionAt(++eval.iToken);
+          bs = BSUtil.andNot(atomExpressionAt(++eval.iToken), vwr.slm.bsDeleted);
           bs.and(vwr.ms.getAtomsWithinRadius(5.0d, bsSelect, false, null, null));
         } else {
           // default is "within(5.0, selected) and not within(molecule,selected)"
@@ -2031,6 +2043,7 @@ public class IsoExt extends ScriptExt {
         // has been seen yet, and APPEND it if it has.
         propertyName = "select";
         BS bs1 = atomExpressionAt(++i);
+        BSUtil.andNot(bs1, vwr.slm.bsDeleted);
         propertyValue = bs1;
         i = eval.iToken;
         boolean isOnly = (tokAt(i + 1) == T.only);
@@ -2045,7 +2058,7 @@ public class IsoExt extends ScriptExt {
         if (surfaceObjectSeen || isMapped) {
           sbCommand.append(" select " + Escape.eBS(bs1));
         } else {
-          bsSelect = (BS) propertyValue;
+          bsSelect = BSUtil.andNot((BS) propertyValue, vwr.slm.bsDeleted);          
           if (modelIndex < 0 && bsSelect.nextSetBit(0) >= 0)
             modelIndex = vwr.ms.at[bsSelect.nextSetBit(0)].mi;
         }
@@ -2774,8 +2787,11 @@ public class IsoExt extends ScriptExt {
         sbCommand.append(" gridPoints");
         break;
       case T.ignore:
+        bsIgnore = atomExpressionAt(++i);
+        if (vwr.slm.bsDeleted != null)
+          bsIgnore.or(vwr.slm.bsDeleted);
         propertyName = "ignore";
-        propertyValue = bsIgnore = atomExpressionAt(++i);
+        propertyValue = bsIgnore;
         sbCommand.append(" ignore ").append(Escape.eBS(bsIgnore));
         i = eval.iToken;
         break;
@@ -3298,10 +3314,14 @@ public class IsoExt extends ScriptExt {
         propertyList.add(0, new Object[] { "newObject", null });
         boolean needSelect = (bsSelect == null);
         if (needSelect)
-          bsSelect = BSUtil.copy(vwr.bsA());
+          bsSelect = BSUtil.andNot(BSUtil.copy(vwr.bsA()), vwr.slm.bsDeleted);
         if (modelIndex < 0)
           modelIndex = vwr.am.cmi;
         bsSelect.and(vwr.getModelUndeletedAtomsBitSet(modelIndex));
+        if (vwr.slm.bsDeleted != null && bsIgnore == null) {
+          propertyList.add(1, new Object[] { "ignore", BS.copy(vwr.slm.bsDeleted) });
+          sbCommand.insert(0, " ignore " + vwr.slm.bsDeleted);
+        }
         if (onlyOneModel != null) {
           BS bsModels = vwr.ms.getModelBS(bsSelect, false);
           if (bsModels.cardinality() > 1)
@@ -3378,10 +3398,11 @@ public class IsoExt extends ScriptExt {
       if (isMapped && !surfaceObjectSeen) {
         setShapeProperty(iShape, "finalize", sbCommand.toString());
       } else if (surfaceObjectSeen) {
-        cmd = sbCommand.toString();
-        setShapeProperty(iShape, "finalize",
-            (cmd.indexOf("; isosurface map") == 0 ? ""
-                : " select " + Escape.eBS(bsSelect) + " ") + cmd);
+        String cmd = sbCommand.toString();
+        boolean isMapping = (cmd.indexOf("; isosurface map") == 0);
+        cmd = (isMapping ? ""
+                : " select " + Escape.eBS(bsSelect) + " ") + cmd;
+        setShapeProperty(iShape, "finalize", cmd);
         s = (String) getShapeProperty(iShape, "ID");
         if (s != null && !eval.tQuiet && !isSilent) {
           cutoff = ((Number) getShapeProperty(iShape, "cutoff")).doubleValue();

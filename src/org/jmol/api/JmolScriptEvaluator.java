@@ -47,8 +47,8 @@ public interface JmolScriptEvaluator {
 
   void haltExecution();
 
-  boolean compileScriptFile(String strScript, boolean isQuiet);
-
+//  boolean compileScriptFile(String strScript, boolean isQuiet);
+//
   boolean compileScriptString(String strScript, boolean isQuiet);
 
   String getErrorMessage();

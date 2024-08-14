@@ -189,7 +189,8 @@ public class Sticks extends Shape {
     Bond[] bonds = ms.bo;
     for (int i = ms.bondCount; --i >= 0;) {
       Bond bond = bonds[i];
-      if ((bond.shapeVisibilityFlags & vf) == 0
+      if (bond == null 
+          || (bond.shapeVisibilityFlags & vf) == 0
           || ms.isAtomHidden(bond.atom1.i)
           || ms.isAtomHidden(bond.atom2.i))
         continue;
@@ -262,7 +263,7 @@ public class Sticks extends Shape {
     Bond[] bonds = ms.bo;
     for (int i = ms.bondCount; --i >= 0;) {
       Bond bond = bonds[i];
-      if (bond.shapeVisibilityFlags == 0)
+      if (bond == null || bond.shapeVisibilityFlags == 0)
         continue;
       Atom atom1 = bond.atom1;
       Atom atom2 = bond.atom2;

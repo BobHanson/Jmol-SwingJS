@@ -46,6 +46,8 @@ public class MessagePackReader {
 
   private boolean isHomo;// homogeneous arrays -- use int[] not Integer
 
+  //private Object mapName;
+
   // these maps must be checked for the specific number of bits, in the following order:
   private final static int POSITIVEFIXINT_x80 = 0x80; //0xxxxxxx
   private final static int FIXMAP_xF0         = 0x80; //1000xxxx
@@ -300,12 +302,20 @@ public class MessagePackReader {
       if (value == null) {
         //Logger.info("null value for " + key);
       } else {
+//        debugKeyValues(key, value);
         map.put(key, value);
       }
     }
     return map;
   }
 
+//  private void debugKeyValues(String key, Object value) {
+//    if (key.equals("name"))
+//      this.mapName = value;
+//    else if (key.equals("origin") && value.getClass().getName().equals("java.lang.String"))
+//      System.out.println("MPR " + mapName + "." + key + "=" + value + " as " + value.getClass());
+//  }
+//
   /////////////// MMTF MessagePack decoding ///////////////
 
   /**

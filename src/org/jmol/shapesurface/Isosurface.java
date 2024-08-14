@@ -1097,6 +1097,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     IsosurfaceMesh imesh = (IsosurfaceMesh) meshes[i];
     if (imesh == null || imesh.scriptCommand == null)
       return;
+//    if (imesh.scriptVariables != null) {
+//      sb.append("{\n").append(imesh.scriptVariables);
+//    }
     String cmd = imesh.scriptCommand;
     int modelCount = ms.mc;
     if (modelCount > 1)
@@ -1147,14 +1150,19 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
             + encodeColor(imesh.jvxlData.minColorIndex) + " "
             + encodeColor(imesh.jvxlData.maxColorIndex));
       }
-      if (imesh.vertexColorMap != null)
+      if (imesh.vertexColorMap != null) {
         for (Map.Entry<String, BS> entry : imesh.vertexColorMap.entrySet()) {
           BS bs = entry.getValue();
           if (!bs.isEmpty())
             appendCmd(sb, "color " + myType + " " + Escape.eBS(bs)
                 + " " + entry.getKey());
         }
+      }
     }
+//    if (imesh.scriptVariables != null) {
+//      sb.append("\n}\n");
+//    }
+
   }
 
   

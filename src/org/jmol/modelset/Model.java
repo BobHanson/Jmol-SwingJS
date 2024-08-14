@@ -237,7 +237,7 @@ public class Model {
     Bond[] bonds = ms.bo;
     bondCount = 0;
     for (int i = ms.bondCount; --i >= 0;)
-      if (bonds[i].atom1.mi == modelIndex)
+      if (bonds[i] != null && bonds[i].atom1.mi == modelIndex)
         bondCount++;
     return bondCount;
   }

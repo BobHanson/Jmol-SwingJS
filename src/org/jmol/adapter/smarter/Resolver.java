@@ -344,20 +344,59 @@ public class Resolver {
   
   private static byte[] cmdfMagic = new byte[] { 'C', 'M', 'D', 'F' };
 
+  private static byte[] mmtfMagic = new byte[] { 'm', 'm', 't', 'f' };
+
+  // various flavors of BCIF file format
+
+  private static byte[] bcifMolstarMagic = new byte[] { 'm', 'o', 'l', '*' };
+
+  private static byte[] bcifDensityMagic = new byte[] { 'D', 'e', 'n', 's' };
+
+  private static byte[] bcifVolumeMagic = new byte[] { 'V', 'o', 'l', 'u' };
+
+  private static byte[] bcifModelMagic = new byte[] { 'M', 'o', 'd', 'e' };
+
+  private static byte[] bcifCoordMagic = new byte[] { 'C', 'o', 'o', 'r', 'd'};
+
+  private static byte[] bcifServerMagic = new byte[] { 'S', 'E', 'R', 'V', 'E', 'R'};
+
   public static String getBinaryType(InputStream inputStream) {
-    byte[] magic4 = null;
-    return (Rdr.isPickleS(inputStream) ? "PyMOL" 
-        : (Rdr.getMagic(inputStream, 1)[0] & 0xFF) == 0xDE ? "MMTF" 
-        : (Rdr.getMagic(inputStream, 10)[9] & 0xFF) == 0xB6 ? "BCIF" 
-        : bytesMatch((magic4 = Rdr.getMagic(inputStream, 4)), cdxMagic) ? "CDX" 
-        : bytesMatch(magic4, cmdfMagic) ? "Cmdf" : null);
+    byte[] magic = Rdr.getMagic(inputStream, 100);
+    int m0 = magic[0] & 0xff;
+    return (Rdr.isPickleB(magic) ? "PyMOL" 
+        : m0 == 0xDE ? (bytesMatch(magic, 4, mmtfMagic) ? "MMTF" : null)
+        : m0 == 0x83 ? (checkBCIF(magic, true) ? "BCIF" : null) 
+        : bytesMatch(magic, 0, cdxMagic) ? "CDX" 
+        : bytesMatch(magic, 0, cmdfMagic) ? "Cmdf" 
+        : null);
   }
 
-  private static boolean bytesMatch(byte[] a, byte[] b) {
-    if (b.length > a.length)
+  public static boolean checkBCIF(byte[] magic, boolean forCoord) {
+    if (bytesMatch(magic, 10, bcifMolstarMagic) || bytesMatch(magic, 10, bcifModelMagic)
+        || bytesMatch(magic, 10, bcifModelMagic)
+        || bytesMatch(magic, 10, bcifCoordMagic))
+      return forCoord;
+    if (bytesMatch(magic, 10, bcifDensityMagic) || bytesMatch(magic, 10, bcifVolumeMagic))
+      return !forCoord;
+    return ((findBytes(magic, bcifServerMagic) < 0) == forCoord);
+  }
+
+  private static int findBytes(byte[] bytes, byte[] find) {
+    out: for (int j = bytes.length - find.length; --j >= 0;) {
+      for (int i = find.length; --i >= 0;) {
+        if (bytes[j + i] != find[i])
+          continue out;
+      }
+      return j;
+    }
+    return -1;
+  }
+
+  private static boolean bytesMatch(byte[] a, int pt, byte[] b) {
+    if (b.length > a.length - pt)
       return false;
     for (int i = b.length; --i >= 0;) {
-      if (a[i] != b[i])
+      if (a[pt + i] != b[i])
         return false;
     }
     return true;

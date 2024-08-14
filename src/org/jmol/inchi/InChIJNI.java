@@ -176,6 +176,8 @@ public class InChIJNI implements JmolInChI {
     Bond[] bonds = vwr.ms.bo;
     for (int i = bsBonds.nextSetBit(0); i >= 0; i = bsBonds.nextSetBit(i + 1)) {
       Bond bond = bonds[i];
+      if (bond == null)
+        continue;
       // partial bonds (as in ferrocene) become at least 1
       // but oddly still do not get generated, probably because the carbons are then too strange?
       INCHI_BOND_TYPE order = getOrder(Math.max(bond.isPartial() ? 1 : 0, bond.getCovalentOrder()));

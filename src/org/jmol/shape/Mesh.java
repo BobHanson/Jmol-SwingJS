@@ -282,6 +282,8 @@ public class Mesh extends MeshSurface {
 
   public short[] symopColixes;
 
+  public String scriptVariables;
+
   protected void sumVertexNormals(T3d[] vertices, V3d[] normals) {
     // subclassed in IsosurfaceMesh
     sumVertexNormals2(this, vertices, normals);

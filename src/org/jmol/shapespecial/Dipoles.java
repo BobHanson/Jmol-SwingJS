@@ -465,7 +465,7 @@ public class Dipoles extends Shape {
     Bond[] bonds = ms.bo;
     for (int i = ms.bondCount; --i >= 0;) {
       Bond bond = bonds[i];
-      if (!bond.isCovalent())
+      if (bond == null || !bond.isCovalent())
         continue;
       double c1 = partialCharges[bond.atom1.i];
       double c2 = partialCharges[bond.atom2.i];

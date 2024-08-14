@@ -495,7 +495,7 @@ public final class BioModel extends Model {
       Bond bond = bo[i];
       // trajectory atom .mi will be pointing to the trajectory;
       // here we check to see if their base model is this model
-      if ((bond.order & Edge.BOND_H_CALC_MASK) != 0
+      if (bond != null && (bond.order & Edge.BOND_H_CALC_MASK) != 0
           && am[bond.atom1.mi].trajectoryBaseIndex == modelIndex)
         bsDelete.set(i);
     }

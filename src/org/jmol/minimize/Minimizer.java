@@ -422,7 +422,7 @@ public class Minimizer {
     int i1, i2;
     for (int i = 0; i < rawBondCount; i++) {
       Bond bond = bonds[i];
-      if (!bsAtoms.get(i1 = bond.atom1.i)
+      if (bond == null || !bsAtoms.get(i1 = bond.atom1.i)
           || !bsAtoms.get(i2 = bond.atom2.i))
         continue;
       if (i2 < i1) {

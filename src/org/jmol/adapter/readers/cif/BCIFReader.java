@@ -80,6 +80,9 @@ public class BCIFReader extends MMCifReader {
         .readMap();//Selectively(cb);
     binaryDoc.close();
 
+    String encoder = (String) msgMap.get("encoder");
+    System.out.println("BCIFReader: BCIF encoder " + encoder);
+    
     version = (String) msgMap.get("version");
 
     System.out.println("BCIFReader: BCIF version " + version);
@@ -127,7 +130,7 @@ public class BCIFReader extends MMCifReader {
     if (!isCategoryOfInterest(catName))
       return false;
     bcifParser.initializeCategory(catName,
-        BCIFDecoder.geMapInt(cat.get("rowCount")), (Object[]) cat.get("columns"));
+        BCIFDecoder.geMapInt(cat.get("rowCount"), null), (Object[]) cat.get("columns"));
     processCategoryName(catName);
     return false;
   }
@@ -248,7 +251,11 @@ public class BCIFReader extends MMCifReader {
 
   @Override
   protected int parseIntField() {
-    return bcifParser.ifield;
+    // was a problem with CoordinateServer 1.4.10, 1aqj_full.bcif
+    // CoordinateServer 1.4.9  1cbs_full
+    return (bcifParser.ifield == BCIFDecoder.UNKNOWN_INT 
+        ? super.parseIntField() 
+            : bcifParser.ifield);
   }
 
   @Override

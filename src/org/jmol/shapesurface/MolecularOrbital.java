@@ -60,6 +60,7 @@ public class MolecularOrbital extends Isosurface {
   private Double moCutoff;
   private Double moResolution;
   private Double moScale;
+  private BS moSelection;
   private Integer moColorPos;
   private Integer moColorNeg;
   private Integer moMonteCarloCount;
@@ -140,6 +141,11 @@ public class MolecularOrbital extends Isosurface {
 
     if ("scale" == propertyName) {
       thisModel.put("moScale", value);
+      return;
+    }
+
+    if ("select" == propertyName) {
+      thisModel.put("moSelection", value);
       return;
     }
 
@@ -476,6 +482,7 @@ public class MolecularOrbital extends Isosurface {
     thisModel.put("moCutoff", Double.valueOf(moCutoff.doubleValue()));
     moResolution = (Double) thisModel.get("moResolution");
     moScale = (Double) thisModel.get("moScale");
+    moSelection = (BS) thisModel.get("moSelection");
     moColorPos = (Integer) thisModel.get("moColorPos");
     moColorNeg = (Integer) thisModel.get("moColorNeg");
     moSquareData = (Boolean) thisModel.get("moSquareData");
@@ -501,6 +508,8 @@ public class MolecularOrbital extends Isosurface {
     getSettings(strID);
     if (moScale != null)
       setPropI("scale", moScale, null);
+    if (moSelection != null)
+      setPropI("select", moSelection, null);
     if (moResolution != null)
       setPropI("resolution", moResolution, null);
     if (moPlane != null) {
@@ -573,6 +582,11 @@ public class MolecularOrbital extends Isosurface {
             + moCutoff);
       if (moScale != null)
         appendCmd(s, myType + " scale " + moScale);
+      if (moSelection != null) {
+        s.append("try{/*16.2*/\n"); // catch for prev. versions
+        appendCmd(s, myType + " select " +  moSelection);
+        s.append("}catch{};\n");
+      }
       if (moMonteCarloCount != null)
         appendCmd(s, myType + " points " + moMonteCarloCount + " " + moRandomSeed);
       if (moResolution != null)
@@ -615,6 +629,7 @@ public class MolecularOrbital extends Isosurface {
   moPlane = mo.moPlane;
   moResolution = mo.moResolution;
   moScale = mo.moScale;
+  moSelection = mo.moSelection;
   moSlab = mo.moSlab;
   moSlabValue = mo.moSlabValue;
   moTitleFormat = mo.moTitleFormat;

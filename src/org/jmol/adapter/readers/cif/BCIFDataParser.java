@@ -76,9 +76,10 @@ class BCIFDataParser extends CifDataParser {
    */
   private BCIFDecoder getDecoder(String key, Map<String, Object> col,
                                  int rowCount, String catName) {
-    SB sb = null;//debugging: new SB();
-    BCIFDecoder d = new BCIFDecoder(key, col, sb).setRowCount(rowCount, catName)
-        .finalizeDecoding(null);
+    SB sb = null;//new SB();
+    BCIFDecoder d = new BCIFDecoder(sb, key, col).setRowCount(rowCount, catName)
+        .finalizeDecoding(sb);
+    //System.out.println("BCIFDP " + sb);
     return (d == null || d.dataType == BCIFDecoder.IGNORE ? null : d);
   }
 
@@ -148,6 +149,7 @@ class BCIFDataParser extends CifDataParser {
     columnDecoders = new BCIFDecoder[columnCount];
     for (int pt = 0; pt < columnCount; pt++) {
       String s = columnNames[pt];
+      System.out.println(s);
       // some columns do not correspond to fields we are interested in. 
       // so they end up null here.
       Integer iField = htFields.get(s);
@@ -306,7 +308,7 @@ class BCIFDataParser extends CifDataParser {
         Map<String, Object> cat = (Map<String, Object>) categories[j];
         if (cat.isEmpty())
           continue;
-        int rowCount = BCIFDecoder.geMapInt(cat.get("rowCount"));
+        int rowCount = BCIFDecoder.geMapInt(cat.get("rowCount"), null);
         String catName = ((String) cat.get("name")).toLowerCase();
         Object[] columns = (Object[]) cat.get("columns");
         Lst<String> lst = new Lst<String>();
@@ -315,7 +317,7 @@ class BCIFDataParser extends CifDataParser {
           Map<String, Object> col = (Map<String, Object>) columns[k];
           String key = catName + "_" + ((String) col.get("name")).toLowerCase();
           lst.addLast(key);
-          BCIFDecoder d = new BCIFDecoder(key, col, sb).setRowCount(rowCount,
+          BCIFDecoder d = new BCIFDecoder(sb, key, col).setRowCount(rowCount,
               catName);
           //Object o = 
           d.debugDecode(sb);

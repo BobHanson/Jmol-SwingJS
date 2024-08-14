@@ -2492,13 +2492,16 @@ public class ModelSet extends BondCollection {
       BS bsA = new BS();
       BS bsB = new BS();
       for (int i = bsBonds.nextSetBit(0); i >= 0; i = bsBonds.nextSetBit(i + 1)) {
-        Atom atom1 = bo[i].atom1;
+        Bond bond = bo[i];
+        if (bond == null)
+          continue;
+        Atom atom1 = bond.atom1;
         if (am[atom1.mi].isModelKit)
           continue;
         bsA.clearAll();
         bsB.clearAll();
         bsA.set(atom1.i);
-        bsB.set(bo[i].getAtomIndex2());
+        bsB.set(bond.getAtomIndex2());
         addStateScript("connect ", null, bsA, bsB, "delete", false, true);
       }
     }
@@ -2532,6 +2535,8 @@ public class ModelSet extends BondCollection {
           bsA = new BS();
           bsB = new BS();
           for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+            if (bo[i] == null)
+              continue;
             bsA.set(bo[i].atom1.i);
             bsB.set(bo[i].atom2.i);
           }
@@ -2579,6 +2584,8 @@ public class ModelSet extends BondCollection {
       for (int i = bsA.nextSetBit(0); i >= 0; i = bsA.nextSetBit(i + 1)) {
         if (isBonds) {
           bondAB = bo[i];
+          if (bondAB == null)
+            continue;
           atomA = bondAB.atom1;
           atomB = bondAB.atom2;
         } else {
@@ -4747,6 +4754,21 @@ public class ModelSet extends BondCollection {
     unitCells = null;
     haveUnitCells = false;     
   }
+
+  public BS fixDeletedBonds(BS bs) {
+      BS bsFixed = new BS();
+      if (bo == null)
+        return bs;
+      for (int i = 0, i0 = 0; i < bondCount; i++) {
+        if (bo[i] != null) {
+          if (i0 >= 0)
+            bsFixed.setBitTo(i, bs.get(i0));
+          i0++;
+        }
+      }
+      return bsFixed;
+    }
+
 
 }
 

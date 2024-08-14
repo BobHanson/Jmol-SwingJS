@@ -1941,8 +1941,10 @@ abstract class ScriptExpr extends ScriptParam {
       int i1 = vwr.ms.bondCount;
       for (int i = i0; i >= 0
           && i < i1; i = (isAll ? i + 1 : bs.nextSetBit(i + 1))) {
-        n++;
         Bond bond = modelSet.bo[i];
+        if (bond == null)
+          continue;
+        n++;
         switch (tok) {
         case T.length:
           double fv = bond.atom1.distance(bond.atom2);

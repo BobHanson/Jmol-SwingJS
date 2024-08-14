@@ -628,6 +628,8 @@ public final class BioResolver implements Comparator<String[]> {
     int bondCount = ms.bondCount;
     Bond[] bonds = ms.bo;
     for (int i = baseBondIndex; i < bondCount; i++) {
+      if (bonds[i] == null)
+        continue;
       Atom a1 = bonds[i].atom1;
       Atom a2 = bonds[i].atom2;
       Group g = a1.group;

@@ -9059,10 +9059,15 @@ public class Viewer extends JmolViewer
   }
 
   public void deleteBonds(BS bsDeleted) {
-    int modelIndex = ms.bo[bsDeleted.nextSetBit(0)].atom1.mi;
-    int n = bsDeleted.cardinality();
-    if (n == 0)
+    int n = ms.bondCount;
+    for (int i = bsDeleted.nextSetBit(0); i >= 0; i = bsDeleted.nextSetBit(i + 1)) {
+      if (i >= n || ms.bo[i] == null)
+        bsDeleted.clear(i);
+    }
+    int bi = bsDeleted.nextSetBit(0);
+    if (bi < 0)
       return;
+    int modelIndex = ms.bo[bi].atom1.mi;
     sm.setStatusStructureModified(-1, modelIndex, MODIFY_DELETE_BONDS,
         "delete bonds " + Escape.eBond(bsDeleted), bsDeleted.cardinality(),
         bsDeleted);
@@ -11180,16 +11185,19 @@ public class Viewer extends JmolViewer
    *
    * Java only.
    * 
-   * @param path
-   * @return true if access is allowed
+   * @param path  set null to return false unless ACCESS.INTERNAL
+   * @return true if access is allowed to this path
    */
   public final boolean haveAccessInternal(String path) {
     if (isJS)
       return true;
+    if (path == null) {
+      return access == ACCESS.INTERNAL;
+    }
     path = path.replace('\\', '/');
     boolean ret = access != ACCESS.NONE && (internalAccessPath == null || access != ACCESS.INTERNAL || path.startsWith(internalAccessPath));
     if (!ret)
-      System.err.println("Viewe internal file access in " + internalAccessPath + " denied for " + path);
+      System.err.println("Viewer: Internal file access in " + internalAccessPath + " denied for " + path);
     return ret;
   }
 
@@ -11199,15 +11207,15 @@ public class Viewer extends JmolViewer
    *
    * Java only.
    * 
-   * @param path
+   * @param path set null to clear internal access only
    */
   public void setAccessInternal(String path) {
     if (isJS)
       return;
-    if (access != ACCESS.INTERNAL) {
+    if (path == null) {
+      access = access0;
+    } else if (access != ACCESS.INTERNAL) {
       access = ACCESS.INTERNAL;
-    } else if (path == null) {
-        access = access0;
     }
     internalAccessPath = path;      
   }

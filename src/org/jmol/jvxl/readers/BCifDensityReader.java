@@ -40,10 +40,10 @@ import org.jmol.util.Logger;
 
 
 /**
- * Binary CIF density reader. See https://www.ebi.ac.uk/pdbe/densities/x-ray/1eve/box, 
+ * Binary CIF density reader. See https://www.ebi.ac.uk/pdbe/volume-server/x-ray/1eve/box, 
  * for example:
  * 
- *  https://www.ebi.ac.uk/pdbe/densities/x-ray/1eve/box/-4.413,55.607,64.124/-0.4130001,59.607,68.124?space=cartesian&encoding=bcif
+ *  https://www.ebi.ac.uk/pdbe/volume-server/x-ray/1eve/box/-4.413,55.607,64.124/-0.4130001,59.607,68.124?space=cartesian&encoding=bcif
  *  
  * Reads a MessagePack file and extracts either 2Fo-Fc or Fo-Fc.
  *

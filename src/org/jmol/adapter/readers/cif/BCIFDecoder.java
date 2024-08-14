@@ -3,6 +3,7 @@ package org.jmol.adapter.readers.cif;
 import java.util.Map;
 
 import javajs.util.BC;
+import javajs.util.PT;
 import javajs.util.SB;
 
 /**
@@ -143,17 +144,24 @@ class BCIFDecoder {
   private String dtype;
 
   /**
-   * stan
+   * @param sb
    * @param key
    * @param col
-   * @param sb
    */
-  public BCIFDecoder(String key, Map<String, Object> col, SB sb) {
+  BCIFDecoder(SB sb, String key, Map<String, Object> col) {
     this(sb, key, col, null, null);
   }
 
-  public BCIFDecoder(Map<String, Object> encoding, String ekey, Object byteData, SB sb) {
-    this(sb, ekey, encoding, ekey, byteData);
+  /**
+   * @j2sIgnore
+   * 
+   * @param sb
+   * @param ekey
+   * @param encoding
+   * @param byteData
+   */
+  private BCIFDecoder(SB sb, String ekey, Map<String, Object> encoding, Object byteData) {
+    this(sb, ekey, encoding, byteData, ekey);
   }
 
   /**
@@ -164,14 +172,14 @@ class BCIFDecoder {
    *        debugging only -- map key
    * @param map
    *        originating map value for this decoder
-   * @param ekey
-   *        key for data, mask, or offset decoder within this map
    * @param byteData
    *        byte data being passed on from above constructor
+   * @param ekey
+   *        key for data, mask, or offset decoder within this map
    */
   @SuppressWarnings("unchecked")
-  private BCIFDecoder(SB sb, String key, Map<String, Object> map, String ekey,
-      Object byteData) {
+  BCIFDecoder(SB sb, String key, Map<String, Object> map, Object byteData,
+      String ekey) {
     this.key = key;
     Object data = (byteData == null ? map.get("data") : byteData);
     if (data instanceof Map) {
@@ -193,7 +201,7 @@ class BCIFDecoder {
         Map<String, Object> mask = (Map<String, Object>) map.get("mask");
         if (mask != null) {
           // R4B3 or B4  (so byte)
-          maskDecoder = new BCIFDecoder(mask, null, null, sb);
+          maskDecoder = new BCIFDecoder(sb, null, mask, null);
           maskDecoder.dtype = "m";
         }
       }
@@ -207,6 +215,8 @@ class BCIFDecoder {
       if (maskDecoder != null)
         type += ".mask." + maskDecoder.toString();
       sb.append(this + "\n");
+    } else {
+      //System.out.println("BCIFD  " + key + " type=" + debugGetDecoderType(encodings));
     }
   }
 
@@ -242,7 +252,11 @@ class BCIFDecoder {
     return (s != null && s.length() > 0 ? s.charAt(0) : 0);
   }
 
-  protected static int geMapInt(Object o) {
+  protected static int geMapInt(Object o, String key) {
+    if (o instanceof String) {
+      System.err.println("!BCIFDecoder found String type for " + key + "=" + o);
+      return PT.parseInt((String) o);
+    }
     return (o == null ? 0 : ((Number) o).intValue());
   }
 
@@ -263,29 +277,37 @@ class BCIFDecoder {
       }
       if (this.kind == 0)
         this.kind = kind;
+//      System.out.println(this.key + " " + i + "/" + n 
+//          + " " + encoding);
       switch (kind) {
       case 'F':
-        factor = geMapInt(encoding.get("factor"));
+        factor = geMapInt(encoding.get("factor"), null);
         dataType = FIXED;
         mode |= MODE_FIXED;
         break;
       case 'D':
-        origin = geMapInt(encoding.get("origin"));
+        origin = geMapInt(encoding.get("origin"), key + " origin");
         mode |= MODE_DELTA;
         break;
       case 'R':
         mode |= MODE_RUNLEN;
-        srcSize = geMapInt(encoding.get("srcSize"));
+        srcSize = geMapInt(encoding.get("srcSize"), null);
         break;
       case 'I':
         mode |= MODE_PACKED;
-        packingSize = geMapInt(encoding.get("srcSize"));
+        packingSize = geMapInt(encoding.get("srcSize"), null);
         if (srcSize == 0)
           srcSize = packingSize;
         unsigned = getMapBool(encoding.get("isUnsigned"));
         continue;
       case 'B':
-        btype = geMapInt(encoding.get("type"));
+        if (btype != 0) {
+          // problem with encoder ModelServer 0.9.9
+          System.err.println("!BCIFDecoder skipping " + key + " duplicate bytearray encoding " + btype + " not " + encoding);
+          continue;
+        }
+        //System.out.println("OK " + key + " encoding " + i + " " + encoding);
+        btype = geMapInt(encoding.get("type"), null);
         byteCount = (btype == 33 ? 8 : btype == 32 ? 4 : 1 << (((btype - 1) % 3)));
         if (btype >= 32) {
           dataType = FIXED;          
@@ -295,14 +317,14 @@ class BCIFDecoder {
         dataType = STRING;
         stringData = (String) encoding.get("stringData");
         stringLen = stringData.length();
-        dataDecoder = new BCIFDecoder(encoding, "dataEncoding", byteData, sb);
-        offsetDecoder = new BCIFDecoder(encoding, "offsetEncoding",
-            encoding.get("offsets"), sb);
+        dataDecoder = new BCIFDecoder(sb, "dataEncoding", encoding, byteData);
+        offsetDecoder = new BCIFDecoder(sb, "offsetEncoding", encoding,
+            encoding.get("offsets"));
         continue;
       }
       if (srcType == 0) {
         // DELTA, RUNLEN, and FIXED
-        srcType = geMapInt(encoding.get("srcType"));
+        srcType = geMapInt(encoding.get("srcType"), null);
       }
     }
   }
@@ -341,7 +363,7 @@ class BCIFDecoder {
       int[] run = null;
       int len = srcSize;
       if ((mode & MODE_RUNLEN) == MODE_RUNLEN) {
-        run = getTemp(srcSize);
+        run = getTemp(srcSize << 1); // why so large needed? 
         len = this.srcSize;
       }
       if ((mode & MODE_PACKED) == MODE_PACKED) {
@@ -532,8 +554,6 @@ class BCIFDecoder {
         } else {
           a[i++] = val + offset;
           offset = 0;
-          //          if ( (i % 100) == 0)
-          //          System.out.println(i + " " + ((ret[i-1])+ 666621)/1000.);
         }
       }
       break;
@@ -724,7 +744,7 @@ class BCIFDecoder {
         sb.appendC('.');
         continue;
       case 'I':
-        sb.appendI(geMapInt(encoding.get("byteCount")));
+        sb.appendI(geMapInt(encoding.get("byteCount"), null));
         if (unsigned)
           sb.appendC('u');
         continue;

@@ -310,6 +310,8 @@ public class MOLWriter {
                                 boolean asV3000, boolean asJSON,
                                 boolean noAromatic, boolean is2d) {
     //  1  2  1  0
+    if (b == null)
+      return;
     int a1 = atomMap[b.atom1.i];
     int a2 = atomMap[b.atom2.i];
     int order = b.getValence();

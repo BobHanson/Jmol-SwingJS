@@ -822,7 +822,6 @@ public final class ModelLoader {
         mbs.set(ms.ac + nAtoms);
         mbs.clearAll();
         model.isOrderly = (appendToModelIndex == null);
-        System.out.println("ML " + appendToModelIndex + " " + model.isOrderly);
         isPdbThisModel = model.isBioModel;
         iLast = modelIndex;
         addH = isPdbThisModel && doAddPDBHydrogens;

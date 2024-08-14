@@ -228,7 +228,7 @@ class TestSmarterJmolAdapterImpl extends TestCase {
     String type = null;
     boolean ok = true;
     Object reader;
-    String fileType = adapter.getFileTypeName(bis);
+    String fileType = Resolver.getBinaryType(bis);
     System.out.println(fileType);
     if (fileType == null) {
       reader = Rdr.getBufferedReader(bis,  null);

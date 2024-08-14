@@ -91,6 +91,8 @@ public class CMLWriter implements JmolWriter {
       Bond[] bonds = vwr.ms.bo;
       for (int i = 0; i < bondCount; i++) {
         Bond bond = bonds[i];
+        if (bond == null)
+          continue;
         Atom a1 = bond.atom1;
         Atom a2 = bond.atom2;
         if (!bsAtoms.get(a1.i) || !bsAtoms.get(a2.i))

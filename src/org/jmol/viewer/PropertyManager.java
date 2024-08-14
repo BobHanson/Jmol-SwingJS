@@ -1375,6 +1375,8 @@ public class PropertyManager implements JmolPropertyManager {
     BS bsBonds = new BS();
     for (int i = 0; i < bondCount; i++) {
       Bond bond = bonds[i];
+      if (bond == null)
+        continue;
       if (bsAtoms.get(bond.atom1.i) && bsAtoms.get(bond.atom2.i)
           && bond.isCovalent())
         bsBonds.set(i);
@@ -1596,6 +1598,8 @@ public class PropertyManager implements JmolPropertyManager {
       bs1 = ((BS[]) bsOrArray)[0];
       BS bs2 = ((BS[]) bsOrArray)[1];
       for (int i = 0; i < bondCount; i++) {
+        if (bonds[i] == null)
+          continue;
         int ia = bonds[i].atom1.i;
         int ib = bonds[i].atom2.i;
         if (bs1.get(ia) && bs2.get(ib) || bs2.get(ia) && bs1.get(ib))
@@ -1604,12 +1608,17 @@ public class PropertyManager implements JmolPropertyManager {
     } else if (bsOrArray instanceof BondSet) {
       bs1 = (BS) bsOrArray;
       for (int i = bs1.nextSetBit(0); i >= 0 && i < bondCount; i = bs1
-          .nextSetBit(i + 1))
+          .nextSetBit(i + 1)) {
+        if (bonds[i] == null)
+          continue;
         v.addLast(getBondInfo(i, ptTemp));
+      }
     } else if (bsOrArray instanceof BS) {
       bs1 = (BS) bsOrArray;
       int thisAtom = (bs1.cardinality() == 1 ? bs1.nextSetBit(0) : -1);
       for (int i = 0; i < bondCount; i++) {
+        if (bonds[i] == null)
+          continue;
         if (thisAtom >= 0 ? (bonds[i].atom1.i == thisAtom || bonds[i].atom2.i == thisAtom)
             : bs1.get(bonds[i].atom1.i) && bs1.get(bonds[i].atom2.i))
           v.addLast(getBondInfo(i, ptTemp));

@@ -387,13 +387,13 @@ public class ScriptEval extends ScriptExpr {
     return compileScript(null, script, debugScript);
   }
 
-  @Override
-  public boolean compileScriptFile(String filename, boolean tQuiet) {
-    clearState(tQuiet);
-    contextPath = filename;
-    String script = getScriptFileInternal(filename, null, null, null);
-    return  (script != null && compileScript(filename, script, debugScript));
-  }
+//  @Override
+//  public boolean compileScriptFile(String filename, boolean tQuiet) {
+//    clearState(tQuiet);
+//    contextPath = filename;
+//    String script = getScriptFileInternal(filename, null, null, null, true);
+//    return  (script != null && compileScript(filename, script, debugScript));
+//  }
 
   @Override
   public void evaluateCompiledScript(Object[] params, boolean isCmdLine_c_or_C_Option,
@@ -1071,7 +1071,7 @@ public class ScriptEval extends ScriptExpr {
    * @param filename
    * @param localPath
    * @param remotePath
-   * @param scriptPath
+   * @param scriptPath   
    * @return  Jmol script or null
    */
   private String getScriptFileInternal(String filename, String localPath,
@@ -1131,14 +1131,35 @@ public class ScriptEval extends ScriptExpr {
       path = vwr.fm.getFilePath(filename, false, false);
       scriptPath = path.substring(0,
           Math.max((pt = path.lastIndexOf("|")), path.lastIndexOf("/")));
-      if (pt > 0)
-        vwr.setAccessInternal(path.substring(0, pt));
+      if (pt > 0) {
+          script = checkFixBondDelete(script);
+          vwr.setAccessInternal(path.substring(0, pt));
+      }
     }
     return FileManager.setScriptFileReferences(script, localPath, remotePath,
         scriptPath) + movieScript;
   }
 
   // ///////////// Jmol function support  // ///////////////
+
+  /**
+   * Fix select BONDS ... DELETE ... to read ... DELETE ... select BONDS ...
+   * @param script
+   * @return fixed string
+   */
+  private String checkFixBondDelete(String script) {
+    int pt = script.indexOf("select BONDS ({"); // pre 16.2.23
+    if (pt < 0)
+      return script;
+    int pt2 = script.indexOf("delete ({", pt + 20);// will be WAY more than 20
+    if (pt2 < 0)
+      return script;
+    String line1 = script.substring(pt, script.indexOf("\n\n", pt) + 2);
+    pt2 = script.indexOf("\n", pt2);
+    script = script.substring(0, pt2 + 1) + line1.replace("select BONDS", "select /*FIXED*/ BONDS") + script.substring(pt2 + 2);
+    script = script.substring(0, pt) + script.substring(pt + line1.length());
+    return script;
+  }
 
   private JmolParallelProcessor parallelProcessor;
 
@@ -6792,7 +6813,7 @@ public class ScriptEval extends ScriptExpr {
   public void cmdScript(int tok, String filename, String theScript, Lst<SV> params)
       throws ScriptException {
     if (tok == T.javascript) {
-      if (!vwr.haveAccessInternal("|"))
+      if (vwr.haveAccessInternal(null))
         error(ERROR_commandExpected);
       checkLength(2);
       if (!chk)
@@ -6913,11 +6934,12 @@ public class ScriptEval extends ScriptExpr {
       return;
     if (isCmdLine_c_or_C_Option)
       isCheck = true;
-    if (theScript == null) {
-      
+    boolean isPNGJ = false;
+    if (theScript == null) {      
       theScript = getScriptFileInternal(filename, localPath, remotePath, scriptPath);
       if (theScript == null)
         invArg();
+      isPNGJ = vwr.haveAccessInternal(null);      
     }
     if (isMenu(theScript)) {
       vwr.setMenu(theScript, false);
@@ -6949,6 +6971,8 @@ public class ScriptEval extends ScriptExpr {
       dispatchCommands(false, false, false);
       if (isStateScript)
         ScriptManager.setStateScriptVersion(vwr, null);
+      if (isPNGJ)
+        vwr.setAccessInternal(null);
       if (timeMsg)
         showString(Logger.getTimerMsg("script", 0));
       isCmdLine_C_Option = saveLoadCheck;
@@ -7003,6 +7027,8 @@ public class ScriptEval extends ScriptExpr {
     case T.bonds:
       if (slen == 5 && tokAt(3) == T.bitset) {
         bs = (BS) getToken(3).value;
+        if (thisCommand != null && thisCommand.indexOf("/*FIXED*/") > 0)
+          bs = vwr.ms.fixDeletedBonds(bs);
         iToken++;
       } else if (isArrayParameter(4)) {
         bs = new BS();
@@ -7551,8 +7577,9 @@ public class ScriptEval extends ScriptExpr {
 
     if (newTok != 0) {
       key = T.nameOf(tok = newTok);
-    } else if (!justShow && !isContextVariable) {
+    } else if (isContextVariable) {
       // special cases must be checked
+    } else if (!justShow) {
       if (key.length() == 0 || key.charAt(0) == '_' && tokAt(2) != T.leftsquare) // these cannot be set by user
         error(ERROR_cannotSet);
 

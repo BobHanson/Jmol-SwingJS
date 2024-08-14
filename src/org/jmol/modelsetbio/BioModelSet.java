@@ -84,7 +84,7 @@ public class BioModelSet {
       Bond[] bonds = ms.bo;
       for (int i = ms.bondCount; --i >= 0;) {
         Bond bond = bonds[i];
-        if ((bond.order & Edge.BOND_H_CALC_MASK) == 0)
+        if (bond == null || (bond.order & Edge.BOND_H_CALC_MASK) == 0)
           continue;
         // trajectory atom .mi will be pointing to their trajectory;
         // here we check to see if their base model is this model
@@ -515,6 +515,8 @@ public class BioModelSet {
     int pt0 = pt;
     while (pt < len && PT.isDigit(identifier.charAt(pt)))
       ++pt;
+    if (pt == pt0)
+      return null;
     int seqNumber = 0;
     try {
       seqNumber = Integer.parseInt(identifier.substring(pt0, pt));

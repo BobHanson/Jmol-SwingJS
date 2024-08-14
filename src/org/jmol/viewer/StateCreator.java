@@ -308,8 +308,8 @@ public class StateCreator extends JmolStateCreator {
 
       sb.setLength(0);
 
-      for (int i = 0; i < ms.bondCount; i++)
-        if (!models[bonds[i].atom1.mi].isModelKit)
+      for (int i = 0; i < ms.bondCount; i++) {
+        if (bonds[i] != null && !models[bonds[i].atom1.mi].isModelKit) {
           if (bonds[i].isHydrogen() || (bonds[i].order & Edge.BOND_NEW) != 0) {
             Bond bond = bonds[i];
             int index = bond.atom1.i;
@@ -322,6 +322,8 @@ public class StateCreator extends JmolStateCreator {
                 .append(Edge.getBondOrderNameFromOrder(bond.order))
                 .append(";\n");
           }
+        }
+      }
       if (sb.length() > 0)
         commands.append("data \"connect_atoms\"\n").appendSB(sb)
             .append("end \"connect_atoms\";\n");
@@ -333,7 +335,7 @@ public class StateCreator extends JmolStateCreator {
     if (ms.haveHiddenBonds) {
       BondSet bs = new BondSet();
       for (int i = ms.bondCount; --i >= 0;)
-        if (bonds[i].mad != 0
+        if (bonds[i] != null && bonds[i].mad != 0
             && (bonds[i].shapeVisibilityFlags & Bond.myVisibilityFlag) == 0)
           bs.set(i);
       if (bs.isEmpty())
@@ -1087,7 +1089,6 @@ public class StateCreator extends JmolStateCreator {
     boolean reportAll = shape.reportAll;
     clearTemp();
     ModelSet modelSet = vwr.ms;
-    boolean haveTainted = false;
     Bond[] bonds = modelSet.bo;
     int bondCount = modelSet.bondCount;
     short r;
@@ -1096,7 +1097,8 @@ public class StateCreator extends JmolStateCreator {
       int i0 = (reportAll ? bondCount - 1 : shape.bsSizeSet.nextSetBit(0));
       for (int i = i0; i >= 0; i = (reportAll ? i - 1 : shape.bsSizeSet
           .nextSetBit(i + 1)))
-        BSUtil.setMapBitSet(temp, i, i, "wireframe "
+        if (bonds[i] != null)
+          BSUtil.setMapBitSet(temp, i, i, "wireframe "
             + ((r = bonds[i].mad) == 1 ? "on" : "" + PT.escD(r / 2000d)));
     }
     if (reportAll || bsOrderSet != null) {
@@ -1104,7 +1106,7 @@ public class StateCreator extends JmolStateCreator {
       for (int i = i0; i >= 0; i = (reportAll ? i - 1 : bsOrderSet
           .nextSetBit(i + 1))) {
         Bond bond = bonds[i];
-        if (reportAll || (bond.order & Edge.BOND_NEW) == 0)
+        if (bond != null && (reportAll || (bond.order & Edge.BOND_NEW) == 0))
           BSUtil.setMapBitSet(temp, i, i, "bondOrder "
               + Edge.getBondOrderNameFromOrder(bond.order));
       }
@@ -1112,6 +1114,8 @@ public class StateCreator extends JmolStateCreator {
     if (shape.bsColixSet != null)
       for (int i = shape.bsColixSet.nextSetBit(0); i >= 0; i = shape.bsColixSet
           .nextSetBit(i + 1)) {
+        if (bonds[i] == null)
+          continue;
         short colix = bonds[i].colix;
         if ((colix & C.OPAQUE_MASK) == C.USE_PALETTE)
           BSUtil.setMapBitSet(temp, i, i, Shape.getColorCommand("bonds",
@@ -1121,8 +1125,8 @@ public class StateCreator extends JmolStateCreator {
               colix, shape.translucentAllowed));
       }
 
-    String s = getCommands(temp, null, "select BONDS") + "\n"
-        + (haveTainted ? getCommands(temp2, null, "select BONDS") + "\n" : "");
+    // /*16.2*/ prevents earlier bond issue fix
+    String s = getCommands(temp, null, "select /*16.2*/ BONDS") + "\n";
     clearTemp();
     return s;
   }

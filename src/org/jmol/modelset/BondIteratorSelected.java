@@ -56,7 +56,7 @@ class BondIteratorSelected implements BondIterator {
     }
     for (; iBond < bondCount; ++iBond) {
       Bond bond = bonds[iBond];
-      if (bondType != Edge.BOND_ORDER_ANY
+      if (bond == null || bondType != Edge.BOND_ORDER_ANY
           && (bond.order & bondType) == 0) {
         continue;
       } else if (bondType == Edge.BOND_ORDER_ANY

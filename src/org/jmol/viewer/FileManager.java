@@ -49,6 +49,7 @@ import javajs.util.SB;
 import javajs.util.ZipTools;
 
 import org.jmol.adapter.readers.spartan.SpartanUtil;
+import org.jmol.adapter.smarter.Resolver;
 import org.jmol.api.GenericFileInterface;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolFilesReaderInterface;
@@ -1197,7 +1198,7 @@ public class FileManager implements BytePoster {
           is.read(buf, 0, 300);
           is.reset();
           if ((buf[0] & 0xFF) == 0x83) {
-            return (buf[10] == 'D' && buf[11] == 'e' && buf[12] == 'n' ? "BCifDensity" : null);
+            return (Resolver.checkBCIF(buf, false) ? "BCifDensity" : null); 
           }
           if (buf[0] == 'P' && buf[1] == 'M' && buf[2] == 1 && buf[3] == 0)//          "PM\1\0"
             return "Pmesh";
