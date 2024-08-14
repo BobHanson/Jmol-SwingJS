@@ -235,9 +235,9 @@ public final class JC {
       "pdbemapdiff",
       "https://www.ebi.ac.uk/pdbe/coordinates/files/%file_diff.ccp4",
       "pdbemapserver",
-      "pdbemapserver", // isosurface eds
       "https://www.ebi.ac.uk/pdbe/volume-server/x-ray/%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif",
-      "pdbemapdiffserver", // isosurface edsdiff
+      "pdbemapdiffserver",
+      "https://www.ebi.ac.uk/pdbe/volume-server/x-ray/%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif&diff=1", // last bit is just mine
       //"emdbmap", "https://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%file/map/emd_%file.map.gz", // https did not work in Java due to certificate issues
       // was considerably slower
       "emdbmap",
