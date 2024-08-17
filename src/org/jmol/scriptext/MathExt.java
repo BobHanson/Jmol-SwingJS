@@ -2847,7 +2847,7 @@ public class MathExt {
     // load("myfile.json","JSON")
     // load("myfile.json","JSON", true)
     if (!checkAccess())
-      return true;
+      return false;
     if (args.length < 1 || args.length > 3)
       return false;
     String file = FileManager.fixDOSName(SV.sValue(args[0]));
@@ -3677,14 +3677,16 @@ public class MathExt {
 
   private boolean evaluateScript(ScriptMathProcessor mp, SV[] args, int tok)
       throws ScriptException {
-    if (!checkAccess())
-      return true;
     // eval(cmd)
     // eval("JSON",json)
     // javascript(cmd)
     // script(cmd)
     // script(cmd, syncTarget)
     // show(showCmd)
+    if (tok != T.show && !checkAccess())
+      return false; // just ignore for PNGJ
+    if (args.length == 0 || args.length != 1 && (tok == T.show || tok == T.javascript))
+      return false;
     if ((tok == T.show || tok == T.javascript) && args.length != 1
         || args.length == 0)
       return false;
@@ -4615,7 +4617,7 @@ public class MathExt {
   private boolean evaluateWrite(ScriptMathProcessor mp, SV[] args)
       throws ScriptException {
     if (!checkAccess())
-      return true;
+      return false;
     int n = args.length;
     boolean asBytes = false;
     if (n == 2 && args[1].tok == T.on) {

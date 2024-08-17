@@ -57,7 +57,6 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
    * @param vwr
    * @param htParams
    */
-  @SuppressWarnings({ "null", "unused" })
   public void playAudio(Viewer vwr, Map<String, Object> htParams) {
     try {
       id = (String) htParams.get("id");
@@ -98,6 +97,9 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
   private void getClip() throws Exception {
     Object data = vwr.fm.getFileAsBytes(fileName, null);
     if (data == null || data instanceof String) {
+      params.put("status",  "error");
+      params.put("error", "" + data);
+      vwr.sm.notifyAudioStatus(params);
       Logger.info("File " + fileName + " " + data);
       return;
     }
@@ -111,23 +113,45 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
     processUpdate(le.getType().toString());
   }
 
+  /**
+   * In JavaScript, this is called directly from the page in response to events;
+   * in Java it is called from the audio player via update(LineEvent).
+   * 
+   * @param type
+   */
+  @Override
   public void processUpdate(String type) {
     Logger.info("audio id " + id + " " + fileName + " " + type);
-    if (type == "open" || type == "Open") {
-      params.put("status", "open");
-    } else if (type == "play" || type == "Start") {
-      params.put("status", "play");
-    } else if (type == "pause" || type == "Stop") {
-      params.put("status", "pause");
-      if (autoClose) {
+    String status = null;
+    switch (type) {
+    case "open":
+    case "Open":
+      status = "open";
+      break;
+    case "play":
+    case "Start":
+      status = "play";
+      break;
+    case "pause":
+    case "Stop":
+      status = "pause";
+      break;
+    case "ended":
+    case "Close":
+      status = "ended";
+      break;
+    default:
+      status = type;
+      break;
+    }
+    if (!status.equals(params.get("status"))) {
+      params.put("statusType", type);
+      params.put("status", status);
+      vwr.sm.notifyAudioStatus(params);
+      if (status == "ended" && autoClose) {
         myClip.close();
       }
-    } else if (type == "ended" || type == "Close") {
-      params.put("status", "ended");
-    } else {
-      params.put("status", type);
     }
-    vwr.sm.notifyAudioStatus(params);
   }
 
   /**
@@ -161,33 +185,39 @@ public class JmolAudio implements LineListener, JmolAudioPlayer {
       return;
     }
     try {
-      if ("start".equals(action)) {
+      switch (action) {
+      case "start":
         myClip.setMicrosecondPosition(0);
         myClip.loop(0);
         myClip.start();
-        
-      } else if ("loop".equals(action)) {
+        break;
+      case "loop":
         myClip.setMicrosecondPosition(0);
         myClip.loop(MAX_LOOP);
         myClip.start();
-        
-      } else if ("pause".equals(action)) {
-        if (myClip != null)
+        break;
+      case "pause":
           myClip.stop();
-        
-      } else if ("play".equals(action)) {
+        break;
+      case "stop":
+        myClip.stop();
+        myClip.setMicrosecondPosition(0);
+        break;
+      case "play":
         myClip.stop();
         myClip.start();
-        
-      } else if ("close".equals(action)) {
+        break;
+      case "kill":
+      case "close":
+        myClip.stop();
         myClip.close();
-        
+        break;        
+      }
 // did not work in Java.
 //      } else if (action.startsWith("position-")) {
 //        int n = Integer.parseInt(action.substring(9));
 //        if (n >= 0)
 //          clip.setMicrosecondPosition(n * 1000);
-      }
     } catch (Throwable t) {
       // ignore
     }

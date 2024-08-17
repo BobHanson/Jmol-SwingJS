@@ -66,9 +66,9 @@ public class Echo extends TextShape {
   public void setProperty(String propertyName, Object value, BS bs) {
 
     if ("target" == propertyName) {
-      if ("%SCALE".equals(value)) {
+      if (JC.scaleName.equals(value)) {
         currentObject = scaleObject;
-        thisID = "%SCALE";
+        thisID = JC.scaleName;
         if (currentObject != null)
           return;
       }
@@ -77,8 +77,10 @@ public class Echo extends TextShape {
         propertyName = "thisID";
       } else if (target != "none" && target != "all") {
         isAll = false;
-        Text text = (thisID == "%SCALE" ? scaleObject : objects.get(target));
-        if (text == null) {
+        boolean haveScale = (scaleObject != null);
+        boolean isScale = (thisID == JC.scaleName);
+        Text text = (isScale ? scaleObject : objects.get(target));
+        if (text == null || text == scaleObject) {
           int valign = JC.ECHO_XY;
           int halign = JC.TEXT_ALIGN_LEFT;
           if ("top" == target) {
@@ -96,37 +98,44 @@ public class Echo extends TextShape {
           //              && scaleObject.align == halign) {
           //            text = scaleObject;
           //          } else {
-          text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE, FONTSIZE),
-              target, COLOR, valign, halign, 0);
-          text.adjustForWindow = true;
-          if (thisID == "%SCALE") {
-            scaleObject = text;
-          } else {
-            objects.put(target, text);
-            if (target.startsWith(JC.THIS_MODEL_ONLY)) {
-              text.thisModelOnly = true;
-            }
 
+          if (text != null && text == scaleObject) {
+            text.valign = valign;
+            text.align = halign;
+          } else {
+            // scale
+            text = Text.newEcho(vwr, vwr.gdata.getFont3DFS(FONTFACE, FONTSIZE),
+                target, COLOR, valign, halign, 0);
+            text.adjustForWindow = true;
+            if (thisID == JC.scaleName) {
+              scaleObject = text;
+            } else {
+              objects.put(target, text);
+              if (target.startsWith(JC.THIS_MODEL_ONLY)) {
+                text.thisModelOnly = true;
+              }
+
+            }
           }
-          if (currentFont != null)
-            text.setFont(currentFont, true);
-          if (currentColor != null)
-            text.colix = C.getColixO(currentColor);
-          if (currentBgColor != null)
-            text.bgcolix = C.getColixO(currentBgColor);
-          if (currentTranslucentLevel != 0)
-            text.setTranslucent(currentTranslucentLevel, false);
-          if (currentBgTranslucentLevel != 0)
-            text.setTranslucent(currentBgTranslucentLevel, true);
-          //          }
+          if (!isScale || !haveScale) {
+            if (currentFont != null)
+              text.setFont(currentFont, true);
+            if (currentColor != null)
+              text.colix = C.getColixO(currentColor);
+            if (currentBgColor != null)
+              text.bgcolix = C.getColixO(currentBgColor);
+            if (currentTranslucentLevel != 0)
+              text.setTranslucent(currentTranslucentLevel, false);
+            if (currentBgTranslucentLevel != 0)
+              text.setTranslucent(currentBgTranslucentLevel, true);
+          }
         }
         currentObject = text;
-        if (thisID != "%SCALE")
+        if (thisID != JC.scaleName)
           thisID = null;
         return;
       }
     }
-
 
     if ("thisID" == propertyName) {
       if (value == null) {
@@ -135,7 +144,7 @@ public class Echo extends TextShape {
         return;
       }
       String target = (String) value;
-      if (target == "%SCALE") {
+      if (target == JC.scaleName) {
         currentObject = scaleObject;
         thisID = target;
       } else {
@@ -146,9 +155,9 @@ public class Echo extends TextShape {
       return;
     }
 
-    if ("%SCALE" == propertyName) {
+    if (JC.scaleName == propertyName) {
       currentObject = scaleObject = (Text) value;
-      thisID = "%SCALE";
+      thisID = JC.scaleName;
       return;
     }
 
@@ -173,8 +182,8 @@ public class Echo extends TextShape {
     }
 
     if ("text" == propertyName) {
-      if (((String) value).startsWith("%SCALE")) {
-        thisID = "%SCALE";
+      if (((String) value).startsWith(JC.scaleName)) {
+        thisID = JC.scaleName;
         setPropTS("text", value, null);
         scaleObject = currentObject;
         if (scaleObject != null
@@ -210,6 +219,7 @@ public class Echo extends TextShape {
         }
         currentObject.setXYZ((P3d) value, true);
       }
+      return;
     }
 
     if ("scale" == propertyName) {
@@ -284,7 +294,7 @@ public class Echo extends TextShape {
 
     if ("%zpos" == propertyName) {
       if (currentObject != null) {
-        currentObject.setXYZ(null, true);
+        //currentObject.setXYZ(null, true);
         currentObject.setMovableZPercent(((Integer) value).intValue());
       }
       return;
@@ -327,7 +337,7 @@ public class Echo extends TextShape {
     if ("currentTarget" == property) {
       return (currentObject != null && (data[0] = currentObject.target) != null);
     }
-    if (property == "%SCALE") {
+    if (property == JC.scaleName) {
       data[0] = scaleObject;
       return (data[0] != null);
     }

@@ -42,6 +42,7 @@ import org.jmol.modelset.BondSet;
 import org.jmol.modelset.Group;
 import org.jmol.modelset.Measurement;
 import org.jmol.modelset.TickInfo;
+import org.jmol.shape.Echo;
 import org.jmol.shape.MeshCollection;
 import org.jmol.shape.Shape;
 import org.jmol.thread.JmolThread;
@@ -2788,6 +2789,7 @@ public class ScriptEval extends ScriptExpr {
   private void checkExtension(int tok) throws ScriptException {
     switch (tok) {
     case T.assign:
+    case T.audio:
     case T.cache:
     case T.calculate:
     case T.capture:
@@ -3686,7 +3688,7 @@ public class ScriptEval extends ScriptExpr {
       if (text != null)
         setShapeProperty(JC.SHAPE_ECHO, "text", text);
     }
-    if (doRefresh && vwr.getRefreshing() && text != null && !text.startsWith("%SCALE"))
+    if (doRefresh && vwr.getRefreshing() && text != null && !text.startsWith(JC.scaleName))
       showString(vwr.formatText(text));
   }
 
@@ -4162,7 +4164,7 @@ public class ScriptEval extends ScriptExpr {
     }
     sm.loadShape(shapeType);
     if (isScale)
-      setShapeProperty(JC.SHAPE_ECHO, "target", "%SCALE");
+      setShapeProperty(JC.SHAPE_ECHO, "target", JC.scaleName);
     setShapeProperty(shapeType, name, value);
     if (scaleAngstromsPerPixel >= 0)
       setShapeProperty(shapeType, "scalereference",
@@ -4425,7 +4427,6 @@ public class ScriptEval extends ScriptExpr {
     boolean isConcat = false;
     boolean doOrient = false;
     boolean appendNew = vwr.getBoolean(T.appendnew);
-    boolean isAudio = false;
     String filename = null;
     BS bsModels;
     int i = (tokAt(0) == T.data ? 0 : 1);
@@ -4490,6 +4491,7 @@ public class ScriptEval extends ScriptExpr {
       // load PARTIALCHARGE
       // load HISTORY
       // load NBO
+      // load AUDIO
       switch (tok) {
       case T.append:
         // we are looking out for state scripts after model 1.1 deletion.
@@ -4508,6 +4510,9 @@ public class ScriptEval extends ScriptExpr {
         }
         tok = T.getTokFromName(modelName);
         break;
+      case T.audio:
+        checkExtension(T.audio);
+        return;
       case T.nbo:
       case T.history:
       case T.menu:
@@ -4539,10 +4544,6 @@ public class ScriptEval extends ScriptExpr {
         modelName = optParameterAsString(++i);
         tok = T.getTokFromName(modelName);
         htParams.put("appendToModelIndex", Integer.valueOf(vwr.am.cmi));
-        break;
-      case T.audio:
-        isAudio = true;
-        i++;
         break;
       case T.identifier:
         i++;
@@ -4884,7 +4885,7 @@ public class ScriptEval extends ScriptExpr {
         }
         if (filename.startsWith("cache://")) { 
           localName = null;
-        } else if (!isMutate) {
+        } else if (!isMutate || filename.length() > 0) {
           filename = checkFileExists("LOAD" + (isAppend ? "_APPEND_" : "_"), isAsync,
                 filename, filePt, !isAppend && pc != pcResume);
           if (filename == null)
@@ -4983,18 +4984,6 @@ public class ScriptEval extends ScriptExpr {
       }
     }
 
-    if (isAudio) {
-      if (filename != null)
-        htParams.put("audioFile", filename);
-      addFilterAttribute(htParams, filter, "id");
-      addFilterAttribute(htParams, filter, "pause");
-      addFilterAttribute(htParams, filter, "play");
-      addFilterAttribute(htParams, filter, "ended");
-      addFilterAttribute(htParams, filter, "action");
-      vwr.sm.playAudio(htParams);
-      return;
-    }
-
     // load model
 
     setCursorWait(true);
@@ -5086,13 +5075,6 @@ public class ScriptEval extends ScriptExpr {
       errorStr(ScriptError.ERROR_fileNotFoundException, filename
           + ":" + fullPathNameOrError[1]);
     return filename;
-  }
-
-  private void addFilterAttribute(Map<String, Object> htParams, String filter,
-                                  String key) {
-    String val = PT.getQuotedOrUnquotedAttribute(filter, key);
-    if (val != null && val.length() > 0)
-      htParams.put(key, val);
   }
 
   private int addLoadData(SB loadScript, String key, Map<String, Object> htParams, int i) throws ScriptException {
@@ -7648,10 +7630,10 @@ public class ScriptEval extends ScriptExpr {
     // also set SCALE (for script compatibility with older versions)
     if (chk)
       return;
-    String text = "%SCALE";
+    String text = JC.scaleName;
     switch (tokAt(pt)) {
     case T.off:
-      setShapeProperty(JC.SHAPE_ECHO, "%SCALE", null);
+      setShapeProperty(JC.SHAPE_ECHO, JC.scaleName, null);
       checkLast(pt);
       return;
     case T.on:
@@ -7667,13 +7649,14 @@ public class ScriptEval extends ScriptExpr {
       }
       break;
     }
-    setShapeProperty(JC.SHAPE_ECHO, "thisID", "%SCALE");    
+    setShapeProperty(JC.SHAPE_ECHO, "thisID", JC.scaleName);    
     if (tokAt(pt) == T.nada) {
       vwr.ms.setEchoStateActive(true);
-      vwr.shm.loadShape(JC.SHAPE_ECHO);
-      setShapeProperty(JC.SHAPE_ECHO, "target", "bottom");    
+      Echo echo = (Echo) vwr.shm.loadShape(JC.SHAPE_ECHO);
+      if (echo.scaleObject == null)
+        setShapeProperty(JC.SHAPE_ECHO, "target", "bottom");    
     } else {
-      setShapeProperty(JC.SHAPE_ECHO, "target", "%SCALE");    
+      setShapeProperty(JC.SHAPE_ECHO, "target", JC.scaleName);    
       cmdSetEcho(pt);
     }
     if (text != null)
@@ -8946,7 +8929,7 @@ public class ScriptEval extends ScriptExpr {
     if (chk || shapeType < 0)
       return;
     if (isScale)
-      setShapeProperty(JC.SHAPE_ECHO, "target", "%SCALE");
+      setShapeProperty(JC.SHAPE_ECHO, "target", JC.scaleName);
     int typeMask;
     switch (shapeType) {
     case JC.SHAPE_STRUTS:

@@ -134,7 +134,7 @@ class TextRenderer {
   }
 
   /**
-   * Render a short |---| bar with label from ECHO "%SCALE"
+   * Render a short |---| bar with label from ECHO JC.scaleName
    * 
    * @param g3d
    * @param text

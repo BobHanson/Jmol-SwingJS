@@ -1010,6 +1010,8 @@ public class SmilesGenerator {
     double osclass = (openSMILES
         ? ((Node) atom).getDoubleProperty("property_atomclass")
         : Double.NaN);
+    if (osclass == 0)
+      osclass = Double.NaN;
     String atomName = atom.getAtomName();
     String groupType = ((Node) atom).getBioStructureTypeName();
     // for bioSMARTS we provide the connecting atom if 

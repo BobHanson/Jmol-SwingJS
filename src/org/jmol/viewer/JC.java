@@ -1336,6 +1336,8 @@ public final class JC {
   public final static int ECHO_XY = 3;
   public final static int ECHO_XYZ = 4;
 
+  public final static String scaleName = "%SCALE";
+  
   private final static String[] echoNames = { "top", "bottom", "middle", "xy",
       "xyz" };
 

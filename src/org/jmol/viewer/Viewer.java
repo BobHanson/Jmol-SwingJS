@@ -11186,14 +11186,14 @@ public class Viewer extends JmolViewer
    * Java only.
    * 
    * @param path  set null to return false unless ACCESS.INTERNAL
-   * @return true if access is allowed to this path
+   * @return if path is not null, return true if access is allowed to this path; when path is null, return true if this access is internal only 
    */
   public final boolean haveAccessInternal(String path) {
-    if (isJS)
-      return true;
     if (path == null) {
       return access == ACCESS.INTERNAL;
     }
+    if (isJS)
+      return true;
     path = path.replace('\\', '/');
     boolean ret = access != ACCESS.NONE && (internalAccessPath == null || access != ACCESS.INTERNAL || path.startsWith(internalAccessPath));
     if (!ret)

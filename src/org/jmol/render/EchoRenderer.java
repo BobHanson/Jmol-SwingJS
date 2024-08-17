@@ -67,9 +67,9 @@ public class EchoRenderer extends LabelsRenderer {
     }
     if (t.valign == JC.ECHO_XYZ)
       TextRenderer.calcBarPixelsXYZ(vwr, t, pt0i, true); 
-    if (t.pymolOffset != null)
+    if (t.pymolOffset != null) {
       t.getPymolScreenOffset(t.xyz, pt0i, zSlab, pTemp, sppa);
-    else if (t.movableZPercent != Integer.MAX_VALUE) {
+    } else if (t.movableZPercent != Integer.MAX_VALUE) {
       int z = vwr.tm.zValueFromPercent(t.movableZPercent % 1000);
       if (t.valign == JC.ECHO_XYZ && Math.abs(t.movableZPercent) >= 1000)
         z = pt0i.z - vwr.tm.zValueFromPercent(0) + z;

@@ -871,7 +871,7 @@ public class SmilesAtom extends P3d implements Node {
 
   @Override
   public double getDoubleProperty(String property) {
-    if (property == "property_atomclass") // == is OK here.  
+    if (property == "property_atomclass" && atomClass != 0) // == is OK here.  
       return atomClass;
     return Double.NaN;
   }

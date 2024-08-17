@@ -312,7 +312,8 @@ public class T {
 //public final static int configuration see intproperty
   public final static int connect      = scriptCommand | 10;
   public final static int console      = scriptCommand | 11 | defaultON;
-//public final static int data  see mathfunc
+  public final static int audio        = scriptCommand | 12;
+  ////public final static int data  see mathfunc
   public final static int delay        = scriptCommand | 13 | defaultON;
   public final static int depth        = scriptCommand | 14 | intparam | defaultON;
   public final static int exit         = scriptCommand | 15 | noArgs;
@@ -1160,7 +1161,6 @@ public class T {
   public final static int as            = misc  | 24; // for LOAD and ISOSURFACE only
   public final static int async         = misc  | 25;
   public final static int atomicorbital = misc  | 26;
-  public final static int audio         = misc  | 27;
   
   public final static int auto          = misc  | 28;
   public final static int axis          = misc  | 30;

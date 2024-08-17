@@ -902,9 +902,13 @@ public class StatusManager {
       audios.put(id, (JmolAudioPlayer) htParams.get("audioPlayer"));
   }
 
-  private void stopAudio(String id) {
+  public void stopAudio(String id) {
     if (audios == null)
       return;
+    if (id == null) {
+      closeAllAudio();
+      return;
+    }
     JmolAudioPlayer player = audios.get(id);
     if (player != null)
       player.action("kill");    
@@ -928,14 +932,11 @@ public class StatusManager {
           if (audios == null || audios.isEmpty())
             return;
           if (action.equals("close")) {
-            for (String key : audios.keySet()) {
-              JmolAudioPlayer player = audios.remove(key);
-              player.action("close");
-            }
+            closeAllAudio();
           }
           return;
         }
-        JmolAudioPlayer player = audios.get(id);
+        JmolAudioPlayer player = (audios == null ? null : audios.get(id));
         if (player != null) {
           player.action(action);
           return;
@@ -952,6 +953,14 @@ public class StatusManager {
     }
   }
 
+  public void closeAllAudio() {
+    for (String key : audios.keySet()) {
+      System.out.println("AUDIO " + key);
+      audios.get(key).action("close");
+    }
+    audios.clear();
+  }
+
   /**
    * called from JmolAudio
    * 
@@ -962,13 +971,14 @@ public class StatusManager {
     String script = (String) htParams.get(status);
     if (script != null)
       vwr.script(script);
-    if (status == "ended")
-      registerAudio((String) htParams.get("id"), null);
+    // only autoclose if there was no initial action
     String sJmol = getJmolScriptCallback(CBK.AUDIO);
     boolean isEnabled = notifyEnabled(CBK.AUDIO);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.AUDIO,
           new Object[] { sJmol, htParams, status }, true);
+    if (status == "ended" && htParams.get("autoclose") != Boolean.FALSE)
+      registerAudio((String) htParams.get("id"), null);
   }
   
   

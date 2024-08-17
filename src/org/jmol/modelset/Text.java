@@ -300,7 +300,7 @@ public class Text {
       text = (isEcho ? vwr.formatText(textUnformatted) : textUnformatted);
       recalc();
     } else {
-      if (textUnformatted != null && textUnformatted.startsWith("%SCALE")) {
+      if (textUnformatted != null && textUnformatted.startsWith(JC.scaleName)) {
         double[] ret = new double[2];
         text = vwr.getScaleText(textUnformatted.substring(6).trim(), vwr.antialiased, (xyz == null ? 15 : 8), ret);
         barPixels = (int) (ret[0] * (vwr.antialiased ? 2 : 1));
@@ -610,7 +610,7 @@ public class Text {
   public void setXYZ(P3d xyz, boolean doAdjust) {
     this.xyz = xyz;
     if (xyz == null) {
-      this.zSlab = Integer.MIN_VALUE;
+      zSlab = Integer.MIN_VALUE;
       pymolOffset = null;
     }
     if (doAdjust) {

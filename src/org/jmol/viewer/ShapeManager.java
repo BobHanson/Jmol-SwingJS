@@ -158,7 +158,7 @@ public class ShapeManager {
   public void setScale() {
     if (scaleText != null) {
       loadShape(JC.SHAPE_ECHO);
-      setShapePropertyBs(JC.SHAPE_ECHO, "%SCALE", scaleText, null);
+      setShapePropertyBs(JC.SHAPE_ECHO, JC.scaleName, scaleText, null);
       scaleText = null;
     }
   }
@@ -166,7 +166,7 @@ public class ShapeManager {
   public void resetShapes(boolean cacheScale) {
     if (cacheScale) {
       Object[] data = new Object[1];
-      getShapePropertyData(JC.SHAPE_ECHO, "%SCALE", data);
+      getShapePropertyData(JC.SHAPE_ECHO, JC.scaleName, data);
       scaleText = data[0];
     }
     shapes = new Shape[JC.SHAPE_MAX];

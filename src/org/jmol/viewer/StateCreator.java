@@ -1378,7 +1378,7 @@ public class StateCreator extends JmolStateCreator {
   }
 
   private boolean getEchoState(SB sb, Text t) {
-    // ECHO "%SCALE" uses unformatted text
+    // ECHO JC.scaleName uses unformatted text
     boolean isScale = (t != null && t.barPixels > 0);
     String text = (t == null ? null : isScale ? t.textUnformatted : t.getStateText());
     if (text == null || !t.isEcho || t.target.equals("error"))
@@ -1389,7 +1389,7 @@ public class StateCreator extends JmolStateCreator {
     boolean isImage = (t.image != null);
     //    if (isDefine) {
     String strOff = null;
-    String echoCmd = "set echo ID " + PT.esc(t.target);
+    String echoCmd = "set echo ID " + PT.esc(isScale ? JC.scaleName : t.target);
     switch (t.valign) {
     case JC.ECHO_XY:
       if (t.movableXPercent == Integer.MAX_VALUE

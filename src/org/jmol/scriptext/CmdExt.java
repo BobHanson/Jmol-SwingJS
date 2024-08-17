@@ -123,6 +123,9 @@ public class CmdExt extends ScriptExt {
     slen = e.slen;
     this.st = st;
     switch (iTok) {
+    case T.audio:
+      audio();
+      break;
     case T.binary:
       st[0].value = prepareBinaryOutput((SV) st[0]);
       return null;
@@ -217,6 +220,66 @@ public class CmdExt extends ScriptExt {
     }
     return null;
   }
+
+  private void audio() throws ScriptException {
+    Map<String, Object> htParams = new Hashtable<>();
+    String id = null;
+    String filter = null;
+    String filename = null;
+    int i = e.iToken + 1;
+    if (tokAt(i) == T.off) {
+      checkLength(i + 1);
+      if (!chk)
+        vwr.sm.stopAudio(null);
+      return;
+    }
+    for (; i < slen; i++) {
+      switch (tokAt(i)) {
+      case T.id:
+        if (id != null)
+          invArg();
+        id = paramAsStr(++i);
+        break;
+      case T.string:
+        filename = stringParameter(i);
+        htParams.put("audioFile", filename);
+        break;
+      case T.filter:
+        filter = stringParameter(++i);
+        id = addFilterAttribute(htParams, filter, "id");
+        addFilterAttribute(htParams, filter, "loop");
+        addFilterAttribute(htParams, filter, "start");
+        addFilterAttribute(htParams, filter, "pause");
+        addFilterAttribute(htParams, filter, "play");
+        addFilterAttribute(htParams, filter, "ended");
+        addFilterAttribute(htParams, filter, "action");
+        break;
+      default:
+        checkLength(i + 1);
+        if (htParams.containsKey("action"))
+          invArg();
+        String action = paramAsStr(i);
+        htParams.put("autoclose", Boolean.FALSE);
+        htParams.put("action", action);
+        break;
+      }
+    }
+    if (!chk && !htParams.isEmpty()) {
+      if (id == null)
+        id = "audio1";
+      htParams.put("id", id);
+      vwr.sm.playAudio(htParams);
+    }
+  }
+
+  private String addFilterAttribute(Map<String, Object> htParams, String filter,
+                                String key) {
+    String val = PT.getQuotedOrUnquotedAttribute(filter, key);
+    if (val != null && val.length() > 0)
+      htParams.put(key, val);
+    return val;
+   }
+
 
   private void macro() throws ScriptException {
     if (chk)
