@@ -409,7 +409,7 @@
 408	101:a-b,a+b,c	C 42 m c	
 409	102	P 42 n m	P 4n -2n
 410	102:a-b,a+b,c	C 42 m g2	
-411	103	P 4 c c	P 42 -2c
+411	103	P 4 c c	P 4 -2c
 412	103:a-b,a+b,c	C 4 c c	
 413	104	P 4 n c	P 4 -2n
 414	104:a-b,a+b,c	C 4 c g2	
