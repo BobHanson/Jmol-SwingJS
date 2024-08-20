@@ -126,6 +126,8 @@ public class GifEncoder extends ImageEncoder {
   private int bitsPerPixel = 1;
 
   private int byteCount;
+  private int loopCount; // indefinite loop
+  private boolean isDelay;
 
   /**
    * we allow for animated GIF by being able to re-enter the code with different
@@ -172,9 +174,18 @@ public class GifEncoder extends ImageEncoder {
     case 1: // add 
       addHeader = false;
       addTrailer = false;
-      int fps = Math.abs(((Integer) params.get("captureFps")).intValue());
-      delayTime100ths = (fps == 0 ? 0 : 100 / fps);
+      Integer msDelay = (Integer) params.get("captureDelayMS");
+      if (msDelay == null) {
+        int fps = Math.abs(((Integer) params.get("captureFps")).intValue());
+        delayTime100ths = (fps == 0 ? 0 : 100 / fps);
+      } else {
+        isDelay = true;
+        // one-time frame delay
+        delayTime100ths = msDelay.intValue() / 10;
+        params.remove("captureDelayMS");
+      }
       looping = (Boolean.FALSE != params.get("captureLooping"));
+      loopCount = (looping ? 0 : 1);
       break;
     case 2: // end
       addHeader = false;
@@ -196,7 +207,7 @@ public class GifEncoder extends ImageEncoder {
     if (addImage) {
       createPalette();
       writeGraphicControlExtension();
-      if (delayTime100ths >= 0 && looping)
+      if (delayTime100ths >= 0 && (looping || isDelay))
         writeNetscapeLoopExtension();
       writeImage();
     }
@@ -220,9 +231,6 @@ public class GifEncoder extends ImageEncoder {
    * is the background color
    */
   private class ColorItem extends P3d {
-    /**
-	 * 
-	 */
 	protected boolean isBackground;
 
     ColorItem(int rgb, boolean isBackground) {
@@ -237,10 +245,6 @@ public class GifEncoder extends ImageEncoder {
    */
   private class ColorCell extends Lst<P3d> {
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 	protected int index;
     protected P3d center;
 
@@ -805,7 +809,7 @@ public class GifEncoder extends ImageEncoder {
     putString("NETSCAPE2.0");
     putByte(3);
     putByte(1);
-    putWord(0); // loop indefinitely
+    putWord(loopCount);
     putByte(0); // end-of-block
 
   }
