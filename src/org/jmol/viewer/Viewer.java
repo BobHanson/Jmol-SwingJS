@@ -5241,6 +5241,8 @@ public class Viewer extends JmolViewer
   /**
    * Check to see if the resolver is working
    * 
+   * this is disabled in JC.java by removing the resolverResolver reference there
+   * 
    * @param forceCheck
    */
   private void checkCIR(boolean forceCheck) {
@@ -7509,6 +7511,7 @@ public class Viewer extends JmolViewer
       g.forceAutoBond = value;
       break;
     default:
+      // includes undoAuto
       if (!g.htBooleanParameterFlags.containsKey(key.toLowerCase())) {
         g.setUserVariable(key, SV.getBoolean(value));
         return;
