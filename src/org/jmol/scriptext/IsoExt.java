@@ -1372,7 +1372,7 @@ public class IsoExt extends ScriptExt {
             ignoreSquared = false;
             linearSquared = Boolean.TRUE;
             eval.iToken++;
-          }
+          }   
           break;
         }
         int ipt = eval.iToken;
