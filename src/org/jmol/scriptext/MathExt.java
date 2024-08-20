@@ -766,11 +766,17 @@ public class MathExt {
       throws ScriptException {
     if (isSelector) {
       SV x1 = mp.getX();
-      switch (args.length == 1 ? x1.tok : T.nada) {
+      if (args.length == 0 || args.length > 2)
+        return false;
+      boolean doCopy = (args.length == 1 || args[1].tok == T.off);
+      String id = args[0].asString();
+      Map<String, SV> m1;
+      switch (x1.tok) {
       case T.hash:
+        if (args.length != 1)
+          return false;
         // map of maps to lst of maps
         Lst<SV> lst = new Lst<SV>();
-        String id = args[0].asString();
         Map<String, SV> map = x1.getMap();
         String[] keys = x1.getKeys(false);
         // values must all be maps
@@ -778,31 +784,65 @@ public class MathExt {
           if (map.get(keys[i]).getMap() == null)
             return false;
         for (int i = 0, n = keys.length; i < n; i++) {
-          SV m = map.get(keys[i]);
-          Map<String, SV> m1 = m.getMap();
-          Map<String, SV> m2 = (Map<String, SV>) SV.deepCopy(m1, true, false);
-          m2.put(id, SV.newS(keys[i]));
-          lst.addLast(SV.newV(T.hash, m2));
+          m1 = map.get(keys[i]).getMap();
+          if (doCopy)
+            m1 = (Map<String, SV>) SV.deepCopy(m1, true, false);
+          m1.put(id, SV.newS(keys[i]));
+          lst.addLast(SV.newV(T.hash, m1));
         }
         return mp.addXList(lst);
       case T.varray:
+        boolean toArray = true;
+        BS bsIndex = new BS();
         Map<String, SV> map1 = new Hashtable<String, SV>();
         Lst<SV> lst1 = x1.getList();
-        String id1 = args[0].asString();
-        // values must all be maps
-        for (int i = 0, n = lst1.size(); i < n; i++) {
-          Map<String, SV> m0 = lst1.get(i).getMap();
-          if (m0 == null || m0.get(id1) == null)
+         //values must all be maps
+        for (int i = lst1.size(); --i >- 0;) {
+          m1 = lst1.get(i).getMap();
+          if (m1 == null || m1.get(id) == null)
             return false;
         }
         for (int i = 0, n = lst1.size(); i < n; i++) {
-          SV m = lst1.get(i);
-          Map<String, SV> m1 = (Map<String, SV>) SV.deepCopy(m.getMap(), true,
-              false);
-          SV mid = m1.remove(id1);
-          map1.put(mid.asString(), SV.newV(T.hash, m1));
+          m1 = lst1.get(i).getMap();
+          if (m1 ==  null)
+            return false;
+          if (doCopy)
+            m1 = (Map<String, SV>) SV.deepCopy(m1, true, false);
+          SV mid = m1.remove(id);
+          // only [0,10000]
+          if (toArray) {
+            if (mid.tok == T.integer && mid.intValue >= 0 && mid.intValue <= 10000) {
+              bsIndex.set(mid.intValue);
+            } else {
+              toArray = false;
+            }
+          }
+          String key = mid.asString();
+          if (map1.containsKey(key))
+            return false;
+          map1.put(key, SV.newV(T.hash, m1));
         }
-        return mp.addXObj(map1);
+        if (toArray) {
+          // first index needs to be 0 or 1
+          int pt = bsIndex.nextSetBit(0);
+          if (pt < 0 && bsIndex.get(1))
+            pt = 1;
+          if (pt == 0 | pt == 1) {
+            int len = bsIndex.cardinality();
+            if (bsIndex.nextClearBit(pt) == len + pt) {
+              // no empty slots
+              SV[] a = new SV[len];
+              for (Entry<String, SV> e: map1.entrySet()) {
+                a[Integer.parseInt(e.getKey()) - pt] = e.getValue();
+              }
+              Lst<SV> list = new Lst<>();
+              for (int i = 0; i < len; i++)
+                list.addLast(a[i]);
+              return mp.addXList(list);
+            }
+          }
+        }
+        return mp.addXObj(map1);          
       }
       return false;
     }
