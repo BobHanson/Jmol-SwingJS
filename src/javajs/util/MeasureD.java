@@ -49,8 +49,10 @@ final public class MeasureD {
   }
 
   public static double computeTorsion(T3d p1, T3d p2, T3d p3, T3d p4, boolean asDegrees) {
-  
-    double ijx = p1.x - p2.x;
+    // otherwise JavaScript may not produce Infinity and NaN here
+    if (p1.distanceSquared(p2) < 1e-10)
+      return 0;
+    double ijx = p1.x - p2.x; 
     double ijy = p1.y - p2.y;
     double ijz = p1.z - p2.z;
   
@@ -71,7 +73,7 @@ final public class MeasureD {
   
     double ai2 = 1d / (ax * ax + ay * ay + az * az);
     double ci2 = 1d / (cx * cx + cy * cy + cz * cz);
-  
+
     double ai = Math.sqrt(ai2);
     double ci = Math.sqrt(ci2);
     double denom = ai * ci;
