@@ -681,7 +681,7 @@ public class ScriptEval extends ScriptExpr {
                             boolean isTop) {
     if (sb == null)
       sb = new SB();
-    int pc = Math.min(sc.pc, sc.lineNumbers[sc.lineNumbers.length - 1]);
+    int pc = (sc.lineNumbers == null ? sc.pc : Math.min(sc.pc, sc.lineNumbers[sc.lineNumbers.length - 1]));
     sb.append(getErrorLineMessage(sc.functionName, sc.scriptFileName,
         sc.lineNumbers[pc], pc, ScriptEval.statementAsString(vwr,
             sc.statement, (isTop ? sc.iToken : 9999), false)));
