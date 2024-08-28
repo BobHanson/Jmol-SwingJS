@@ -1,0 +1,59 @@
+# Silvia Casassa/Bob Hanson 2019.10.07
+
+print "CRYSTAL Jmol Macros"
+
+function topondShowBonds(color, scale) {
+  if (!_M.criticalPoints) {
+    prompt "There are no critical points in this model. Was it created using CRYSTAL/TOPAND?"
+    return
+  }
+  var n = _M.criticalPoints.bonds.length
+  for (var i = 1; i <= n; i++) topondShowBondIndex(i, color, scale)
+}
+
+function topondShowBond(cpno, color, scale) { 
+  var i = _M.criticalPoints.bonds.select("(index) where cpno=" + cpno)[1]
+  if (i)
+   topondShowBondIndex(i, color, scale);
+}
+
+function topondShowBondIndex(i, color, scale) {
+  if (!_M.criticalPoints) {
+    prompt "There are no critical points in this model. Was it created using CRYSTAL/TOPAND?"
+    return
+  }
+ var color = (color ? color : "blue")
+ var cp = _M.criticalPoints.bonds[i]
+ var id = "cp_bonds_"+cp.cpno
+ print "ellipsoid ID " + id
+ var scale = (scale ? scale : 0.3)
+ var label = "CP N. " + cp.cpno 
+	+ "\n\u03C1=" + cp.rho 
+	+ "\nlap=" + cp.lap 
+	+ "\nV/G=" + cp.ratioVG 
+	+ "\nH/\u03C1=" + cp.ratioHRho
+ ellipsoid ID @id scale @scale center @{cp.point} axes @{cp.eigenvectors[1]} @{cp.eigenvectors[2]} @{cp.eigenvectors[3]} scale @{cp.eigenvalues} color @color 
+ try {
+  ellipsoid ID @id label @label
+ } catch(e){}
+}
+
+function topondDeleteAll() {
+  ellipsoid ID cp_bonds* delete
+  print "ellipsoid ID cp_bonds* delete"
+}
+
+function topondGetBonds(what) {
+  if (!what)return _M.criticalPoints.bonds
+  if (what.type == "string")
+    return _M.criticalPoints.bonds.select(what)
+  return _M.criticalPoints.bonds.select("* where cpno=" + what);
+}
+
+print "TOPOND methods for bond critical points:"
+print "topondGetBonds(what) where 'what' is a CP N. or a JmolSQL phrase such as 'where rho > 0.2'"
+print "topondDeleteAll()"
+print "topondShowBonds(color[default 'blue'], scale[default 0.3])"
+print "topondShowBond(cpno, color[default 'blue'], scale[default 0.3]) by CP N."
+print "topondShowBondIndex(i, color[default 'blue'], scale[default 0.3]) by bonds[i]"
+print "use the ELLIPSOID command to view specific ellipsoids"

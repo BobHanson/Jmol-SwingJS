@@ -1,0 +1,8 @@
+{
+        "aflow"    :{ "path":"https://chemapps.stolaf.edu/jmol/macros/AFLOW.spt",    "title": "AFLOW macros"},
+        "bz"       :{ "path":"https://chemapps.stolaf.edu/jmol/macros/bz.spt",       "title": "Brillouin Zone/Wigner-Seitz macros"},
+        "cleg"  :{ "path":"https://chemapps.stolaf.edu/jmol/macros/cleg.spt",  "title": "CLEG macros"},
+        "crystal"  :{ "path":"https://chemapps.stolaf.edu/jmol/macros/crystal.spt",  "title": "CRYSTAL macros"},
+        "topology" :{ "path":"https://chemapps.stolaf.edu/jmol/macros/topology.spt", "title": "Topology CIF macros"},
+        "topond"   :{ "path":"https://chemapps.stolaf.edu/jmol/macros/topond.spt",   "title": "CRYSTAL/TOPOND macros"}
+}

@@ -72,14 +72,15 @@ public class WyckoffFinder {
    * @return helper
    */
   WyckoffFinder getWyckoffFinder(Viewer vwr, SpaceGroup sg) {
-    WyckoffFinder helper = helpers.get(sg.clegId);
+    String cleg = sg.getClegId();
+    WyckoffFinder helper = helpers.get(cleg);
     if (helper == null) {
-      helper = createHelper(this, vwr, sg.clegId);
+      helper = createHelper(this, vwr, cleg);
     }
     if (helper == null) {
       if (nullHelper == null)
         nullHelper = new WyckoffFinder(null);
-      helpers.put(sg.clegId, nullHelper);
+      helpers.put(cleg, nullHelper);
     }
     return helper;
   }
@@ -265,7 +266,7 @@ public class WyckoffFinder {
             break;
           }
         }
-        // "more" type, from wp-list, does note contain gp or wpos
+        // "more" type, from wp-list, does not contain gp or wpos
         if (!haveMap || map.containsKey("more"))
           map = SpaceGroup.fillMoreData(map, clegId, itno, (Map<String, Object>) its.get(0));
         WyckoffFinder helper = new WyckoffFinder(map);

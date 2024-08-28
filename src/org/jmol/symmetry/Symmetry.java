@@ -178,23 +178,30 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public Object getSpaceGroupInfoObj(String name, Object params, boolean isFull,
                                      boolean addNonstandard) {
-    boolean isNameToXYZList = false;
+    boolean isNorT = false;
     switch (name) {
     case "list":
       return getSpaceGroupList((Viewer) params);
     case "opsCtr":
       return spaceGroup.getOpsCtr((String) params);
-    case "nameToXYZList": 
-      isNameToXYZList = true;
-      //$FALL-THROUGH$
-    case "itaIndex":
     case "itaTransform":
     case "itaNumber":
+      isNorT = true;
+      //$FALL-THROUGH$
+    case "nameToXYZList": 
+    case "itaIndex":
       SpaceGroup sg = null;
       if (params != null) {
+        if (isNorT) {
+          String cleg = SpaceGroup.convertWyckoffHMCleg((String) params, null);
+          if (cleg != null) {
+            int pt = cleg.indexOf(":");
+            return ("itaNumber".equals(name) ? cleg.substring(0, pt) : cleg.substring(pt + 1));
+          }
+        }
         sg = SpaceGroup.determineSpaceGroupN((String) params);
-        if (sg == null && isNameToXYZList)
-          sg = SpaceGroup.createSpaceGroupN((String) params);
+        if (sg == null && "nameToXYZList".equals(name))
+          sg = SpaceGroup.createSpaceGroupN((String) params, true);
       } else if (spaceGroup != null) {
         sg = spaceGroup;
       } else if (symmetryInfo != null) {
@@ -236,7 +243,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Object getLatticeDesignation() {
-    return spaceGroup.getLatticeDesignation();
+    return spaceGroup.getShelxLATTDesignation();
   }
 
   @Override
@@ -247,10 +254,10 @@ public class Symmetry implements SymmetryInterface {
       spaceGroup.setName(name);
     if (filterSymop != null) {
       Lst<SymmetryOperation> lst = new Lst<SymmetryOperation>();
-      lst.addLast(spaceGroup.operations[0]);
+      lst.addLast(spaceGroup.matrixOperations[0]);
       for (int i = 1; i < spaceGroup.operationCount; i++)
         if (filterSymop.contains(" " + (i + 1) + " "))
-          lst.addLast(spaceGroup.operations[i]);
+          lst.addLast(spaceGroup.matrixOperations[i]);
       spaceGroup = SpaceGroup.createSpaceGroup(-1,
           name + " *(" + filterSymop.trim() + ")", lst, -1);
     }
@@ -260,9 +267,9 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public M4d getSpaceGroupOperation(int i) {
-    return (spaceGroup == null || spaceGroup.operations == null // bio 
-        || i >= spaceGroup.operations.length ? null
-            : spaceGroup.finalOperations == null ? spaceGroup.operations[i]
+    return (spaceGroup == null || spaceGroup.matrixOperations == null // bio 
+        || i >= spaceGroup.matrixOperations.length ? null
+            : spaceGroup.finalOperations == null ? spaceGroup.matrixOperations[i]
                 : spaceGroup.finalOperations[i]);
   }
 
@@ -275,7 +282,7 @@ public class Symmetry implements SymmetryInterface {
   public void newSpaceGroupPoint(P3d pt, int i, M4d o, int transX, int transY,
                                  int transZ, P3d retPoint) {
     if (o == null && spaceGroup.finalOperations == null) {
-      SymmetryOperation op = spaceGroup.operations[i];
+      SymmetryOperation op = spaceGroup.matrixOperations[i];
       // temporary spacegroups don't have to have finalOperations
       if (!op.isFinalized)
         op.doFinalize();
@@ -295,7 +302,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public int getSpinOp(int op) {
-    return spaceGroup.operations[op].getMagneticOp();
+    return spaceGroup.matrixOperations[op].getMagneticOp();
   }
 
   @Override
@@ -310,7 +317,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Matrix getOperationRsVs(int iop) {
-    return (spaceGroup.finalOperations == null ? spaceGroup.operations
+    return (spaceGroup.finalOperations == null ? spaceGroup.matrixOperations
         : spaceGroup.finalOperations)[iop].rsvs;
   }
 
@@ -635,7 +642,8 @@ public class Symmetry implements SymmetryInterface {
       boolean isOneMolecule = (molecules[moleculeCount
           - 1].firstAtomIndex == modelSet.am[atoms[iAtom0].mi].firstAtomIndex);
       P3d center = new P3d();
-      boolean centroidPacked = (minmax[6] == 1);
+      double packing = minmax[6] / 100d;
+      boolean centroidPacked = (packing != 0);
       nextMol: for (int i = moleculeCount; --i >= 0
           && bsAtoms.get(molecules[i].firstAtomIndex);) {
         BS bs = molecules[i].atomList;
@@ -644,7 +652,7 @@ public class Symmetry implements SymmetryInterface {
         for (int j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1)) {
           if (isOneMolecule || centroidPacked) {
             center.setT(atoms[j]);
-            if (isNotCentroid(center, 1, minmax, centroidPacked)) {
+            if (isNotCentroid(center, 1, minmax, packing)) {
               if (isOneMolecule)
                 bsDelete.set(j);
             } else if (!isOneMolecule) {
@@ -655,7 +663,7 @@ public class Symmetry implements SymmetryInterface {
             n++;
           }
         }
-        if (centroidPacked || n > 0 && isNotCentroid(center, n, minmax, false))
+        if (centroidPacked || n > 0 && isNotCentroid(center, n, minmax, 0))
           bsDelete.or(bs);
       }
       return bsDelete;
@@ -665,22 +673,26 @@ public class Symmetry implements SymmetryInterface {
   }
 
   private boolean isNotCentroid(P3d center, int n, int[] minmax,
-                                boolean centroidPacked) {
+                                double packing) {
     center.scale(1d / n);
     toFractional(center, false);
     // we have to disallow just a tiny slice of atoms due to rounding errors
     // so  -0.000001 is OK, but 0.999991 is not.
-    if (centroidPacked)
-      return (center.x + 0.000005d <= minmax[0]
-          || center.x - 0.000005d > minmax[3]
-          || center.y + 0.000005d <= minmax[1]
-          || center.y - 0.000005d > minmax[4]
-          || center.z + 0.000005d <= minmax[2]
-          || center.z - 0.000005d > minmax[5]);
-
-    return (center.x + 0.000005d <= minmax[0] || center.x + 0.00005d > minmax[3]
-        || center.y + 0.000005d <= minmax[1] || center.y + 0.00005d > minmax[4]
+    if (packing != 0) {
+      double d = (packing > 0 ? packing : 0.000005d);
+      return (center.x + d <= minmax[0]
+          || center.y + d <= minmax[1]
+          || center.z + d <= minmax[2]
+          || center.x - d > minmax[3]
+          || center.y - d > minmax[4]
+          || center.z - d > minmax[5]);
+    }
+    // I think this was a bug, but we are going to leave it. Why the two values?
+    return (center.x + 0.000005d <= minmax[0] 
+        || center.y + 0.000005d <= minmax[1] 
         || center.z + 0.000005d <= minmax[2]
+        || center.x + 0.00005d > minmax[3]
+        || center.y + 0.00005d > minmax[4]
         || center.z + 0.00005d > minmax[5]);
   }
 
@@ -1564,8 +1576,8 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public String getClegId() {
     if (symmetryInfo != null)
-        return symmetryInfo.getDerivedSpaceGroup().clegId;
-    return spaceGroup.clegId;
+        return symmetryInfo.getDerivedSpaceGroup().getClegId();
+    return spaceGroup.getClegId();
   }
 
   @Override

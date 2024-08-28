@@ -68,7 +68,7 @@ public class SV extends T implements JSONEncodable {
   public int index = Integer.MAX_VALUE;    
 
   public String myName;
-
+  
   public static SV newV(int tok, Object value) {
     SV sv = new SV();
     sv.tok = tok;
@@ -247,8 +247,6 @@ public class SV extends T implements JSONEncodable {
       return getBoolean(((Boolean) x).booleanValue());
     if (x instanceof Integer)
       return newI(((Integer) x).intValue());
-//    if (x instanceof Float)
-//      return newV(decimal, x);
     if (x instanceof Double)
       return newV(decimal, x);
     if (x instanceof String) {
@@ -495,16 +493,6 @@ public class SV extends T implements JSONEncodable {
     return this;
   }
 
-  boolean canIncrement() {
-    switch (tok) {
-    case integer:
-    case decimal:
-      return true;
-    default:
-      return false;
-    }
-  }
-
   boolean increment(int n) {
     switch (tok) {
     case integer:
@@ -615,7 +603,7 @@ public class SV extends T implements JSONEncodable {
     case point4f:
     case matrix3f:
     case matrix4f:
-      return Math.abs(dValue(x)) > 0.0001f;
+      return Math.abs(dValue(x)) > 0.0001d;
     case hash:
       return !((SV) x).getMap().isEmpty();
     default:
@@ -1317,6 +1305,13 @@ public class SV extends T implements JSONEncodable {
     return PT.sprintf(strFormat, "IFDspqP", of );
   }
 
+  public final static int FORMAT_JSON = 0;
+  public final static int FORMAT_BASE64 = 5;
+  public final static int FORMAT_BYTEARRAY = 12;
+  public final static int FORMAT_ARRAY = 22;
+  public final static int FORMAT_XYZ = 28;
+  public final static int FORMAT_ABC = 32;
+  
   /**
    * 
    * @param format
@@ -1324,8 +1319,8 @@ public class SV extends T implements JSONEncodable {
    */
   public static int getFormatType(String format) {
     return (format.indexOf(";") >= 0 ? -1 :
-        ";json;base64;bytearray;array;"
-    //   0    5      12        22
+        ";json;base64;bytearray;array;xyz;abc;"
+    //   0    5      12        22    28  32
         .indexOf(";" + format.toLowerCase() + ";"));
   }
 
@@ -1347,46 +1342,8 @@ public class SV extends T implements JSONEncodable {
     case 2:
       if (pt == Integer.MAX_VALUE)
         pt = getFormatType(args[0].asString());
-      switch (pt) {
-      case 0:
-        String name = args[1].myName;
-        args[1].myName = null;
-        Object o = args[1].toJSON();
-        args[1].myName = name;
-        return o;
-      case 5:
-      case 12:
-      case 22:
-        byte[] bytes;
-        switch (args[1].tok) {
-        case barray:
-          bytes = AU.arrayCopyByte(((BArray) args[1].value).data, -1);
-          break;
-        case varray:
-          Lst<SV> l = args[1].getList();
-          if (pt == 22) {
-            Lst<SV> l1 = new Lst<SV>();
-            for (int i = l.size(); --i >= 0;)
-              l1.addLast(l.get(i));
-            return l1;
-          }
-          bytes = new byte[l.size()];
-          for (int i = bytes.length; --i >= 0;)
-            bytes[i] = (byte) l.get(i).asInt();
-          break;
-        default:
-          String s = args[1].asString();
-          if (s.startsWith(";base64,")) {
-            if (pt == 5)
-              return s;
-            bytes = Base64.decodeBase64(s);
-          } else {
-            bytes = s.getBytes();
-          }
-        }
-        return (pt == 22 ? getVariable(bytes) : pt == 12 ? new BArray(bytes)
-            : ";base64," + javajs.util.Base64.getBase64(bytes).toString());
-      }
+      if (pt >= 0)
+        return getFormat(args[1], pt);
     }
     // use values to replace codes in format string
     String[] format = PT.split(PT.rep(sValue(args[0]), "%%", "\1"), "%");
@@ -1409,6 +1366,56 @@ public class SV extends T implements JSONEncodable {
     return sb.toString();
   }
   
+  public static Object getFormat(SV sv, int pt) {
+    switch (pt) {
+    case FORMAT_JSON:
+      String name = sv.myName;
+      sv.myName = null;
+      String o = sv.toJSON();
+      sv.myName = name;
+      return o;
+    case FORMAT_BASE64:
+    case FORMAT_BYTEARRAY:
+    case FORMAT_ARRAY:
+      byte[] bytes;
+      switch (sv.tok) {
+      case barray:
+        bytes = AU.arrayCopyByte(((BArray) sv.value).data, -1);
+        break;
+      case varray:
+        Lst<SV> l = sv.getList();
+        if (pt == FORMAT_ARRAY) {
+          Lst<SV> l1 = new Lst<SV>();
+          for (int i = l.size(); --i >= 0;)
+            l1.addLast(l.get(i));
+          return l1;
+        }
+        bytes = new byte[l.size()];
+        for (int i = bytes.length; --i >= 0;)
+          bytes[i] = (byte) l.get(i).asInt();
+        break;
+      default:
+        String s = sv.asString();
+        if (s.startsWith(";base64,")) {
+          if (pt == 5)
+            return s;
+          bytes = Base64.decodeBase64(s);
+        } else {
+          bytes = s.getBytes();
+        }
+      }
+      switch (pt) {
+      case FORMAT_BYTEARRAY:
+        return new BArray(bytes);
+      case FORMAT_BASE64:
+        return ";base64," + javajs.util.Base64.getBase64(bytes).toString(); 
+      case FORMAT_ARRAY:
+        return getVariable(bytes);
+      }
+    }
+    return null;
+  }
+
   public static BS getBitSet(SV x, boolean allowNull) {
     switch (x.tok) {
     case bitset:
@@ -1517,7 +1524,6 @@ public class SV extends T implements JSONEncodable {
     
     @Override
     public int compare(SV x, SV y) {
-      // TODO could compare as double
       if (x.tok != y.tok) {
         if (x.tok == decimal || x.tok == integer || y.tok == decimal
             || y.tok == integer) {
@@ -1655,10 +1661,14 @@ public class SV extends T implements JSONEncodable {
       if (m != null) {
         //assocArray.push(key,value)
         // don't set name in map!
-        m.put(mapKey.asString(), copySafely(value));//.setName(key));
+        addToMap(m, mapKey, value);
       }
     }
     return this;
+  }
+
+  private void addToMap(Map<String, SV> m, SV mapKey, SV value) {
+    m.put(mapKey.asString(), copySafely(value));
   }
 
   /**
@@ -1702,6 +1712,7 @@ public class SV extends T implements JSONEncodable {
     }
     return n;
   }
+  
   public static double[][] ddlistValue(T x, int nMin) {
     if (x.tok != varray) {
       return new double[][] { new double[] {dValue(x)} };
@@ -1849,7 +1860,7 @@ public class SV extends T implements JSONEncodable {
     switch (tok) {
     case hash:
     case context:
-      // don't set name in map, or 
+      // don't set name in map
       getMap().put(key, copySafely(v));//.setName(key));
       break;
     }

@@ -140,6 +140,7 @@ public class Resolver {
     }
     if (errMsg != null) {
       SmarterJmolAdapter.close(readerOrDocument);
+      Logger.error(errMsg);
       return errMsg;
     }
     htParams.put("ptFile", Integer.valueOf(ptFile));

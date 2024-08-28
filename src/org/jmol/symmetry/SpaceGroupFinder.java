@@ -156,7 +156,9 @@ public class SpaceGroupFinder {
         && xyzList.toUpperCase().startsWith("ITA/"));
     boolean isHall = (xyzList != null && !isITA && 
         (xyzList.startsWith("[") || xyzList.startsWith("Hall:")));
-    if (isITA || isAssign && isHall) {
+    
+    if (isAssign && isHall 
+        || !isHall && (isITA || (isITA = checkWyckoffHM()))) {
       isUnknown = false;  
       if (isITA) {
         xyzList = PT.rep(xyzList.substring(4), " ", "");
@@ -165,6 +167,7 @@ public class SpaceGroupFinder {
       } else {
         xyzList = PT.replaceAllCharacters(xyzList, "[]", "");
       }
+      
       sg = setITA(isHall);
       if (sg == null)
         return null;
@@ -172,7 +175,7 @@ public class SpaceGroupFinder {
     } else if (oabc != null || isHall) {
       //      isUnknown = false;
       name = xyzList;
-      sg = SpaceGroup.createSpaceGroupN(name);
+      sg = SpaceGroup.createSpaceGroupN(name, isHall);
       isUnknown = (sg == null);
       if (isHall && !isUnknown)
         return sg.dumpInfoObj();
@@ -188,7 +191,7 @@ public class SpaceGroupFinder {
       if (sg == null
           && (sg = SpaceGroup.determineSpaceGroupNA(xyzList,
               unitCellParams)) == null
-          && (sg = SpaceGroup.createSpaceGroupN(xyzList)) == null)
+          && (sg = SpaceGroup.createSpaceGroupN(xyzList, false)) == null)
         return null;
       basis = new BS();
       name = sg.asString();
@@ -245,16 +248,31 @@ public class SpaceGroupFinder {
   }
 
 
+  private boolean checkWyckoffHM() {
+    if (xyzList.indexOf(",") < 0) {
+      //could be H-M -- check for odd case
+      String clegId = SpaceGroup.convertWyckoffHMCleg(xyzList, null);
+      if (clegId != null) {
+        xyzList = "ITA/" + clegId;
+        return true;
+      }
+    }
+    return false;
+  }
+
+
   @SuppressWarnings("unchecked")
   private SpaceGroup setITA(boolean isHall) {
     String name = null;
     Map<String, Object> sgdata = null;
     int pt = xyzList.lastIndexOf(":");
-    boolean hasTransform = (pt > 0 && xyzList.indexOf(",") > pt);
+    int pt2 = xyzList.indexOf(",");
+    boolean hasTransform = (pt > 0 && pt2 > pt);
+    String clegId = null;
     // here we have said ITA/40:b  because we want the ITA variation
+    // but that is not going to be documented! 
     boolean isJmolCode = (pt > 0 && !hasTransform);
     String transform = null;
-    String clegId = null;
     if (hasTransform) {
       name = transform = uc.staticCleanTransform(xyzList.substring(pt + 1));
       xyzList = xyzList.substring(0, pt);
@@ -926,14 +944,14 @@ public class SpaceGroupFinder {
     if (groups.isEmpty()) {
       // if assigning, we must assume that this is a non-standard unknown setting 
       // and the unit cell is OK. We just define the space group as is.
-      return (isAssign ? SpaceGroup.createSpaceGroupN(xyzList) : null);
+      return (isAssign ? SpaceGroup.createSpaceGroupN(xyzList, true) : null);
     }
     if (isEqual) {
       for (int n = ops.length, i = groups.nextSetBit(0); i >= 0; i = groups
           .nextSetBit(i + 1)) {
         if (bsGroupOps[i].cardinality() == n) {
           if (isAssign) {
-            return SpaceGroup.createSpaceGroupN(groupNames[i]);
+            return SpaceGroup.createSpaceGroupN(groupNames[i], true);
           }
           return SpaceGroup.getInfo(null, groupNames[i], unitCellParams, true,
               false);

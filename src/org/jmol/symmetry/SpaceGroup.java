@@ -31,7 +31,9 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.api.SymmetryInterface;
+import org.jmol.symmetry.HallInfo.HallReceiver;
 import org.jmol.util.Logger;
+import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.JC;
 
 import javajs.util.AU;
@@ -75,7 +77,7 @@ import javajs.util.SB;
  *
  */
 
-public class SpaceGroup implements Cloneable {
+public class SpaceGroup implements Cloneable, HallReceiver {
 
   private static final String NEW_HALL_GROUP     = "0;--;--;0;--;--;";
   private static final String NEW_NO_HALL_GROUP  = "0;--;--;0;--;--;--";
@@ -84,7 +86,7 @@ public class SpaceGroup implements Cloneable {
 
   private final static int SG_ITA = -2;
 
-  public SymmetryOperation[] operations;
+  public SymmetryOperation[] matrixOperations;
   SymmetryOperation[] finalOperations;
   SymmetryOperation[] allOperations;
   Map<String, Integer> xyzList;
@@ -94,7 +96,6 @@ public class SpaceGroup implements Cloneable {
   //int originChoice;
   String itaNumber;  // "3"
   String jmolId;     // "3:a"
-  String clegId;
   int operationCount;
   int latticeOp = -1;
   boolean isBio;
@@ -105,11 +106,10 @@ public class SpaceGroup implements Cloneable {
    */
 
   private String itaIndex;
+  private String clegId, canonicalCLEG;
   
- 
   private int index;
-  private int derivedIndex = -1;
-  
+  private int referenceIndex = -1;
   public boolean isSSG;
   private String name = "unknown!";
   private String hallSymbol;
@@ -133,12 +133,12 @@ public class SpaceGroup implements Cloneable {
   private SpaceGroup setFrom(SpaceGroup sg, boolean isITA) {
     if (isITA) {
       setName(sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + sg.clegId);
-      derivedIndex = SG_ITA; // prevents replacement in finalizeOperations
+      referenceIndex = SG_ITA; // prevents replacement in finalizeOperations
     } else {
       setName(sg.getName());
-      derivedIndex = sg.index;
+      referenceIndex = sg.index;
     }
-    clegId = sg.clegId;
+    setClegId(sg.getClegId());
     itaIndex = sg.itaIndex;
     crystalClass = sg.crystalClass;
     hallSymbol = sg.hallSymbol;
@@ -195,7 +195,7 @@ public class SpaceGroup implements Cloneable {
       else
         sg = determineSpaceGroupNA(name, (double[]) data);
       if (sg == null)
-        sg = createSpaceGroupN(modDim <= 0 ? name: "x1,x2,x3,x4,x5,x6,x7,x8,x9".substring(0, modDim * 3 + 8));
+        sg = createSpaceGroupN(modDim <= 0 ? name: "x1,x2,x3,x4,x5,x6,x7,x8,x9".substring(0, modDim * 3 + 8), true);
     }
     if (sg != null)
       sg.generateAllOperators(null);
@@ -205,7 +205,7 @@ public class SpaceGroup implements Cloneable {
   SpaceGroup cloneInfoTo(SpaceGroup sg0) {
     try {
       SpaceGroup sg = (SpaceGroup) clone();
-      sg.operations = sg0.operations;
+      sg.matrixOperations = sg0.matrixOperations;
       sg.finalOperations = sg0.finalOperations;
       sg.xyzList = sg0.xyzList;
       return sg;
@@ -223,7 +223,16 @@ public class SpaceGroup implements Cloneable {
   }
   
   public int getIndex() {
-    return (derivedIndex >= 0 ? derivedIndex : index);
+    return (referenceIndex >= 0 ? referenceIndex : index);
+  }
+  
+  public void setClegId(String cleg) {
+    clegId = cleg;
+    canonicalCLEG = canonicalizeCleg(cleg);
+  }
+  
+  public String getClegId() {
+    return clegId;
   }
  
   /**
@@ -243,12 +252,12 @@ public class SpaceGroup implements Cloneable {
       if (operation instanceof SymmetryOperation) {
         SymmetryOperation op = (SymmetryOperation) operation;
         int iop = sg.addOp(op, op.xyz, false);
-        sg.operations[iop].setTimeReversal(op.timeReversal);
+        sg.matrixOperations[iop].setTimeReversal(op.timeReversal);
       } else {
         sg.addSymmetrySM("xyz matrix:" + operation, (M4d) operation);
       }
     }
-    SpaceGroup sgn = sg.getDerivedSpaceGroup();
+    SpaceGroup sgn = sg.getReferenceSpaceGroup();
     if (sgn != null)
       sg = sgn;
     return sg;
@@ -276,8 +285,8 @@ public class SpaceGroup implements Cloneable {
                                   boolean doNormalize) {
     //from AtomSetCollection.applySymmetry only
     if (hallInfo == null && latticeParameter != 0) {
-      HallInfo h = new HallInfo(
-          HallTranslation.getHallLatticeEquivalent(latticeParameter));
+      HallInfo h = newHallInfo(
+          HallInfo.getHallLatticeEquivalent(latticeParameter));
       generateAllOperators(h);
       //doNormalize = false;  // why this here?
     }
@@ -285,7 +294,7 @@ public class SpaceGroup implements Cloneable {
     isBio = (name.indexOf("bio") >= 0);
     if (!isBio && index >= SG.length && name.indexOf("SSG:") < 0
         && name.indexOf("[subsystem") < 0) {
-      SpaceGroup sg = getDerivedSpaceGroup();
+      SpaceGroup sg = getReferenceSpaceGroup();
       if (sg != null && sg != this) {
         setFrom(sg, false);
       }
@@ -299,7 +308,7 @@ public class SpaceGroup implements Cloneable {
       // we must apply this first to "x,y,z" JUST IN CASE the 
       // model center itself is out of bounds, because we want
       // NO operation for "x,y,z". This requires REDEFINING ATOM LOCATIONS
-      op = finalOperations[0] = new SymmetryOperation(operations[0], 0, true);
+      op = finalOperations[0] = new SymmetryOperation(matrixOperations[0], 0, true);
       if (op.sigma == null)
         SymmetryOperation.normalizeOperationToCentroid(dim, op, atoms, atomIndex, count);
       P3d atom = atoms[atomIndex];
@@ -320,7 +329,7 @@ public class SpaceGroup implements Cloneable {
     for (int i = 0; i < operationCount; i++) {
       // not necessary to duplicate first operation if we have it already
       if (i > 0 || op == null) {
-        op = finalOperations[i] = new SymmetryOperation(operations[i], 0,
+        op = finalOperations[i] = new SymmetryOperation(matrixOperations[i], 0,
             doNormalize);
       }
       if (doOffset && op.sigma == null) {
@@ -328,6 +337,12 @@ public class SpaceGroup implements Cloneable {
       }
       op.getCentering();
     }
+  }
+
+  private static HallInfo newHallInfo(String hallSymbol) {
+    if (hallSymbol.startsWith("Hall:"))
+      hallSymbol = hallSymbol.substring(5).trim();
+    return new HallInfo(hallSymbol);
   }
 
   int getOperationCount() {
@@ -366,7 +381,7 @@ public class SpaceGroup implements Cloneable {
   }
 
   String getXyz(int i, boolean doNormalize) {
-  return (finalOperations == null ? operations[i].getXyz(doNormalize)
+  return (finalOperations == null ? matrixOperations[i].getXyz(doNormalize)
       : finalOperations[i].getXyz(doNormalize));
   }
 
@@ -379,7 +394,7 @@ public class SpaceGroup implements Cloneable {
       op.setMatrixFromXYZ(xyzlist[i], 0, false);
       sg.addOp(op, xyzlist[i], false);
     }
-    return findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
+    return findReferenceSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList(), null);
   }
 
 
@@ -387,9 +402,9 @@ public class SpaceGroup implements Cloneable {
                         double[] params, boolean asMap, boolean andNonstandard) {
     try {
     if (sg != null && sg.index >= SG.length) {
-      SpaceGroup sgDerived = findSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList());
-      if (sgDerived != null)
-        sg = sgDerived;   
+      SpaceGroup sgReference = findReferenceSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList(), sg.clegId);
+      if (sgReference != null)
+        sg = sgReference;   
     }
     if (params != null) {
       if (sg == null) {
@@ -409,9 +424,9 @@ public class SpaceGroup implements Cloneable {
       sg = determineSpaceGroupN(spaceGroup);
     }
     if (sg == null) {
-      SpaceGroup sgFound = createSpaceGroupN(spaceGroup);
+      SpaceGroup sgFound = createSpaceGroupN(spaceGroup, true);
       if (sgFound != null)
-        sgFound = findSpaceGroup(sgFound.operationCount, sgFound.getCanonicalSeitzList());
+        sgFound = findReferenceSpaceGroup(sgFound.operationCount, sgFound.getCanonicalSeitzList(), sgFound.clegId);
       if (sgFound != null)
         sg = sgFound;
     } 
@@ -458,16 +473,18 @@ public class SpaceGroup implements Cloneable {
     if (jmolId != null) {
       sb.append("\nJmol_ID: ").append(jmolId).append(" ("+itaIndex+")");
     }
+    if (clegId != null)
+      sb.append("\nCLEG: " + clegId);
     sb.append("\n\n")
         .append(hallInfo == null ? "Hall symbol unknown" : Logger.debugging ?  hallInfo.dumpInfo() : "");
     sb.append("\n\n").appendI(operationCount).append(" operators")
-        .append(hallInfo != null && !hallInfo.hallSymbol.equals(SG_NONE)
-            ? " from Hall symbol " + hallInfo.hallSymbol + "  #"
+        .append(hallInfo != null && !hallInfo.getHallSymbol().equals(SG_NONE)
+            ? " from Hall symbol " + hallInfo.getHallSymbol() + "  #"
                 + jmolId
             : "")
         .append(": ");
     for (int i = 0; i < operationCount; i++) {
-      sb.append("\n").append(operations[i].xyz);
+      sb.append("\n").append(matrixOperations[i].xyz);
     }
 
     //sb.append("\n\ncanonical Seitz: ").append((String) info)
@@ -497,12 +514,12 @@ public class SpaceGroup implements Cloneable {
     }
     Lst<Object> lst = new Lst<Object>();
     for (int i = 0; i < operationCount; i++) {
-      lst.addLast(operations[i].xyz);
+      lst.addLast(matrixOperations[i].xyz);
     }
     map.put("operationsXYZ", lst);
 //    map.put("code", getCode());
-    if (hallInfo != null && hallInfo.hallSymbol != null)
-      map.put("HallSymbol", hallInfo.hallSymbol);
+    if (hallInfo != null && hallInfo.getHallSymbol() != null)
+      map.put("HallSymbol", hallInfo.getHallSymbol());
     if (hallSymbolAlt != null)
       map.put("HallSymbolAlt", hallSymbolAlt);
     return map;
@@ -540,8 +557,8 @@ public class SpaceGroup implements Cloneable {
     return latticeCode;
   }
 */ 
-  String getLatticeDesignation() {    
-    return HallTranslation.getLatticeDesignation(latticeParameter);
+  String getShelxLATTDesignation() {    
+    return HallInfo.getLatticeDesignation(latticeParameter);
   }  
  
   void setLatticeParam(int latticeParameter) {
@@ -553,7 +570,7 @@ public class SpaceGroup implements Cloneable {
     // as a simple set of rotation/translation operations
     this.latticeParameter = latticeParameter;
     if (latticeParameter > 10) // use negative
-      this.latticeParameter = -HallTranslation.getLatticeIndex(HallTranslation.getLatticeCode(latticeParameter));
+      this.latticeParameter = -HallInfo.getLatticeIndexFromCode(latticeParameter);
   }
 
   ///// private methods /////
@@ -564,36 +581,38 @@ public class SpaceGroup implements Cloneable {
    */
   private Object dumpCanonicalSeitzList() {
     if (nHallOperators != null) {
-      hallInfo = new HallInfo(hallSymbol);
+      hallInfo = newHallInfo(hallSymbol);
       generateAllOperators(null);
     } 
     String s = getCanonicalSeitzList();
     if (index >= SG.length) {
-      SpaceGroup sgDerived = findSpaceGroup(operationCount, s);
-      if (sgDerived != null)
-        return sgDerived.getCanonicalSeitzList();
+      SpaceGroup sgReference = findReferenceSpaceGroup(operationCount, s, clegId);
+      if (sgReference != null)
+        return sgReference.getCanonicalSeitzList();
     }
     return (index >= 0 && index < SG.length ? hallSymbol + " = " : "") + s;
   }
   
   /**
+   * Technically, some of these are non-reference settings, but in terms of 
+   * Jmol, they are references - the ones loaded statically.
    * 
    * @return a known space group or null
    */
-  SpaceGroup getDerivedSpaceGroup() {
-    if (derivedIndex == SG_ITA  || index >= 0 && index < SG.length   
-        || modDim > 0 || operations == null
-        || operations.length == 0
-        || operations[0].timeReversal != 0)
+  SpaceGroup getReferenceSpaceGroup() {
+    if (referenceIndex == SG_ITA  || index >= 0 && index < SG.length   
+        || modDim > 0 || matrixOperations == null
+        || matrixOperations.length == 0
+        || matrixOperations[0].timeReversal != 0)
       return this;
     if (finalOperations != null)
       setFinalOperations();
     String s = getCanonicalSeitzList();
-    return (s == null ? null : findSpaceGroup(operationCount, s));
+    return (s == null ? null : findReferenceSpaceGroup(operationCount, s, clegId));
   }
 
   private String getCanonicalSeitzList() {
-    return getCanonicalSeitzForOperations(operations, operationCount);
+    return getCanonicalSeitzForOperations(matrixOperations, operationCount);
   }
 
   static String getCanonicalSeitzForOperations(SymmetryOperation[] operations, int n) {
@@ -608,14 +627,24 @@ public class SpaceGroup implements Cloneable {
     return sb.toString();
   }
 
-  private synchronized static SpaceGroup findSpaceGroup(int opCount, String s) {
+  /**
+   * 
+   * @param opCount
+   * @param s
+   * @param clegId
+   *        may be null if this is setting-independent
+   * @return the matching space group if found, or null
+   */
+  private synchronized static SpaceGroup findReferenceSpaceGroup(int opCount, String s,
+                                                        String clegId) {
     //getSpaceGroups();
     Lst<SpaceGroup> lst = htByOpCount.get(Integer.valueOf(opCount));
     if (lst != null)
       for (int i = 0, n = lst.size(); i < n; i++) {
         SpaceGroup sg = lst.get(i);
-        if (getCanonicalSeitz(sg.index).indexOf(s) >= 0)
-          return SG[sg.index];
+        if (sg.clegId == null || clegId == null || sg.clegId.equals(clegId))
+          if (getCanonicalSeitz(sg.index).indexOf(s) >= 0)
+            return SG[sg.index];
       }
     return null;
   }
@@ -654,23 +683,23 @@ public class SpaceGroup implements Cloneable {
 
   private void setLattice(char latticeCode, boolean isCentrosymmetric) {
     //this.latticeCode = latticeCode;
-    latticeParameter = HallTranslation.getLatticeIndex(latticeCode);
+    latticeParameter = HallInfo.getLatticeIndex(latticeCode);
     if (!isCentrosymmetric)
       latticeParameter = -latticeParameter;
   }
   
-  final static SpaceGroup createSpaceGroupN(String name) {
+  final static SpaceGroup createSpaceGroupN(String name, boolean allowHall) {
     //getSpaceGroups();
     name = name.trim();
     SpaceGroup sg = determineSpaceGroupN(name);
     HallInfo hallInfo;
     if (sg == null) {
       // try unconventional Hall symbol
-      hallInfo = new HallInfo(name);
-      if (hallInfo.nRotations > 0) {
+      hallInfo = newHallInfo(name);
+      if (hallInfo.isGenerated()) {
         sg = new SpaceGroup(-1, NEW_HALL_GROUP + name, true);
         sg.hallInfo = hallInfo;
-        sg.hallSymbol = hallInfo.hallSymbol;
+        sg.hallSymbol = hallInfo.getHallSymbol();
         sg.setName("[" + sg.hallSymbol + "]");
         sg.jmolId = null;
       } else if (name.indexOf(",") >= 0) {
@@ -679,9 +708,15 @@ public class SpaceGroup implements Cloneable {
         sg.generateOperatorsFromXyzInfo(name);
       }
     }
-    if (sg != null)
-      sg.generateAllOperators(null);
-    return sg;
+    if (sg != null) {
+      try {
+        sg.generateAllOperators(null);
+        return sg;
+
+      } catch (Exception e) {
+      }
+    }
+    return null;
   }
   
   private int addOperation(String xyz0, int opId, boolean allowScaling) {
@@ -750,16 +785,16 @@ public class SpaceGroup implements Cloneable {
     }
     if (!xyz.equals(xyz0))
       xyzList.put(xyz0, Integer.valueOf(operationCount));
-    if (operations == null)
-      operations = new SymmetryOperation[4];
-    if (operationCount == operations.length)
-      operations = (SymmetryOperation[]) AU.arrayCopyObject(operations,
+    if (matrixOperations == null)
+      matrixOperations = new SymmetryOperation[4];
+    if (operationCount == matrixOperations.length)
+      matrixOperations = (SymmetryOperation[]) AU.arrayCopyObject(matrixOperations,
           operationCount * 2);
-    operations[operationCount++] = op;
+    matrixOperations[operationCount++] = op;
     op.number = operationCount;
     // check for initialization of group without time reversal
     if (op.timeReversal != 0)
-      operations[0].timeReversal = 1;
+      matrixOperations[0].timeReversal = 1;
     if (Logger.debugging)
       Logger.debug("\naddOperation " + operationCount + op.dumpInfo());
     return operationCount - 1;
@@ -782,14 +817,26 @@ public class SpaceGroup implements Cloneable {
         checkHallOperators();
         return;
       }
-      h = hallInfo;
-      operations = new SymmetryOperation[4];
-      if (hallInfo == null || hallInfo.nRotations == 0)
-        h = hallInfo = new HallInfo(hallSymbol);
-      setLattice(hallInfo.latticeCode, hallInfo.isCentrosymmetric);
+      matrixOperations = new SymmetryOperation[4];
+      if (hallInfo == null || !hallInfo.isGenerated())
+        hallInfo = newHallInfo(hallSymbol);
+      setLattice(hallInfo.getLatticeCode(), hallInfo.isCentrosymmetric());
       init(true);
+      h = hallInfo;
     }
-    switch (h.latticeCode) {
+    h.generateAllOperators(this);
+    
+    if (hmSymbol == null) {
+      hmSymbol = SG_NONE;
+    }
+    if (hmSymbol.equals(SG_NONE)) {
+      hallSymbol = h.getHallSymbol();
+      nHallOperators = Integer.valueOf(operationCount);
+    }
+    if (nHallOperators != null && operationCount != nHallOperators.intValue())
+      Logger.error("Operator mismatch " + operationCount + " for " + this);
+    char code = h.getLatticeCode();
+    switch (code) {
     case '\0':
     case 'S':
     case 'T':
@@ -797,57 +844,15 @@ public class SpaceGroup implements Cloneable {
       latticeType = 'P';
       break;
     default:
-      latticeType = h.latticeCode;
+      latticeType = code;
       break;
     }
-    M4d mat1 = new M4d();
-    M4d operation = new M4d();
-    M4d[] newOps = new M4d[7];
-    for (int i = 0; i < 7; i++)
-      newOps[i] = new M4d();
-   //??? operationCount = 1;
-    // prior to Jmol 11.7.36/11.6.23 this was setting nOps within the loop
-    // and setIdentity() outside the loop. That caused a multiplication of
-    // operations, not a resetting of them each time.
-    for (int i = 0; i < h.nRotations; i++) {
-      HallRotationTerm rt = h.rotationTerms[i];
-      mat1.setM4(rt.seitzMatrix12ths);
-      int nRot = rt.order;
-      // this would iterate int nOps = operationCount;
-      newOps[0].setIdentity();
-      int nOps = operationCount;
-      
-      for (int j = 1; j <= nRot; j++) {
-        M4d m = newOps[j];
-        m.mul2(mat1, newOps[0]);
-        newOps[0].setM4(m);
-        for (int k = 0; k < nOps; k++) {
-          operation.mul2(m, operations[k]);
-          operation.m03 = ((int)operation.m03 + 12) % 12;
-          operation.m13 = ((int)operation.m13 + 12) % 12;
-          operation.m23 = ((int)operation.m23 + 12) % 12;
-          String xyz = SymmetryOperation.getXYZFromMatrix(operation, true, true, false);
-          if (checkXYZlist(xyz) >= 0)
-            continue;
-          addSymmetrySM("!nohalf!" + xyz, operation);
-        }
-      }
-    }
-    if (hmSymbol == null) {
-      hmSymbol = SG_NONE;
-    }
-    if (hmSymbol.equals(SG_NONE)) {
-      hallSymbol = h.hallSymbol;
-      nHallOperators = Integer.valueOf(operationCount);
-    }
-    if (nHallOperators != null && operationCount != nHallOperators.intValue())
-      Logger.error("Operator mismatch " + operationCount + " for " + this);
   }
 
   int addSymmetrySM(String xyz, M4d operation) {
     int iop = addOperation(xyz, 0, false);
     if (iop >= 0) {
-      SymmetryOperation symmetryOperation = operations[iop];
+      SymmetryOperation symmetryOperation = matrixOperations[iop];
       symmetryOperation.setM4(operation);
     }
     return iop;
@@ -883,6 +888,7 @@ public class SpaceGroup implements Cloneable {
   private final static int NAME_HM = 3;
   private final static int NAME_ITA = 4;
   private final static int NAME_HALL = 5;
+  private final static int NAME_CLEG = 6;
 
   static boolean isXYZList(String name) {
     return (name != null && name.indexOf(",") >= 0 
@@ -906,13 +912,18 @@ public class SpaceGroup implements Cloneable {
       //      checkBilbao = true;
       name = name.substring(7);
     }
+    int i;
     int pt = name.indexOf("hall:");
     if (pt > 0)
       name = name.substring(pt);
-    int nameType = (name.startsWith("ita/") ? NAME_ITA
+    int nameType = (name.indexOf(",") >= 0 ? NAME_CLEG
+        : name.startsWith("ita/") ? NAME_ITA
         : name.startsWith("hall:") ? NAME_HALL
-            : name.startsWith("hm:") ? NAME_HM : NAME_UNK);
+            : name.startsWith("hm:") ? NAME_HM : NAME_UNK);   
     switch (nameType) {
+    case NAME_CLEG:
+      name = canonicalizeCleg(name);
+      break;
     case NAME_HM:
     case NAME_HALL:
     case NAME_ITA:
@@ -928,8 +939,23 @@ public class SpaceGroup implements Cloneable {
         nameType = NAME_ITA;
       }
     }
+    
+    switch (nameType) {
+    case NAME_CLEG:
+      for (i = 0; i < lastIndex; i++) {
+        if (name.equals(SG[i].canonicalCLEG))
+          return i;
+      }
+      return -1;
+    case NAME_HALL:
+      for (i = 0; i < lastIndex; i++) {
+          if (SG[i].hallSymbol.equalsIgnoreCase(name))
+            return i;
+        }
+      return -1;
+    }
+    
     String nameExt = name;
-    int i;
     boolean haveExtension = false;
 
     if (nameType == NAME_ITA) {
@@ -947,7 +973,7 @@ public class SpaceGroup implements Cloneable {
         name = toCap(name, 2);
       }
     }
-    // get extension
+    // get :x extension
     String ext = "";
     if ((i = name.indexOf(":")) > 0) {
       ext = name.substring(i + 1);
@@ -981,11 +1007,9 @@ public class SpaceGroup implements Cloneable {
             return i;
         }
       break;
+    case NAME_CLEG:
     case NAME_HALL:
-      for (i = 0; i < lastIndex; i++) {
-          if (SG[i].hallSymbol.equalsIgnoreCase(name))
-            return i;
-        }
+      // done already
       break;
     default:
     case NAME_HM:
@@ -1037,6 +1061,7 @@ public class SpaceGroup implements Cloneable {
          )
            switch (s.ambiguityType) {
            case '\0':
+           case '-':
              return i;
            case 'a':
              if (s.uniqueAxis == uniqueAxis || uniqueAxis == '\0')
@@ -1122,7 +1147,6 @@ public class SpaceGroup implements Cloneable {
   
   private volatile static String lastInfo;
 
-  final static String SET_R = "2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c";
   private final static String SET_AB = "a-b,a+b,c";
   
   /**
@@ -1160,8 +1184,11 @@ public class SpaceGroup implements Cloneable {
     ////  terms[2] -- transform
     String s = terms[2];
     // leaving "r" as is
-    itaTransform = (s.length() == 0 || s.equals(SG_NONE) ? "a,b,c" : PT.rep(s, "ab", SET_AB).replace('|', ';'));
-    clegId = itaNumber + ":" + itaTransform;
+    itaTransform = (s.length() == 0 
+        || s.equals(SG_NONE) ? "a,b,c" 
+        : s.equals("r") ? SimpleUnitCell.HEX_TO_RHOMB
+        : PT.rep(s, "ab", SET_AB).replace('|', ';'));
+    setClegId(itaNumber + ":" + itaTransform);
    
     ////  terms[3] -- number of operators ////
 
@@ -1270,8 +1297,8 @@ public class SpaceGroup implements Cloneable {
       } else {
         name += clegId;
       }
-      if (name.endsWith(SET_R))
-        name = PT.rep(name, SET_R, "r");
+      if (name.endsWith(SimpleUnitCell.HEX_TO_RHOMB))
+        name = PT.rep(name, SimpleUnitCell.HEX_TO_RHOMB, "r");
       if (name.indexOf(SpaceGroup.NO_NAME) >= 0)
         name = "";
       if (name.endsWith(":a,b,c"))
@@ -1297,13 +1324,1231 @@ public class SpaceGroup implements Cloneable {
         defs[i] = new SpaceGroup(i, STR_SG[i], true);
         nameToGroup.put(defs[i].jmolId, defs[i]);
       }
-      System.out.println("SpaceGroup - " + nSG + " settings generated");
+      System.out.println("SpaceGroup - " + n + " settings generated");
       STR_SG = null;
       SG = defs;
     }
     return SG;
   }
   
+  /**
+   * 
+   * @param lattvecs
+   *        could be magnetic centering, in which case there is an additional
+   *        lattice parameter that is time reversal
+   * @return true if successful
+   */
+  public boolean addLatticeVectors(Lst<double[]> lattvecs) {
+    if (latticeOp >= 0 || lattvecs.size() == 0)
+      return false;
+    int nOps = latticeOp = operationCount;
+    boolean isMagnetic = (lattvecs.get(0).length == modDim + 4);
+    int magRev = -2;
+    for (int j = 0; j < lattvecs.size(); j++) {
+      double[] data = lattvecs.get(j);
+      if (isMagnetic) {
+        magRev = (int) data[modDim + 3];
+        data = AU.arrayCopyD(data, modDim + 3);
+      }
+      if (data.length > modDim + 3)
+        return false;
+      for (int i = 0; i < nOps; i++) {
+        SymmetryOperation newOp = new SymmetryOperation(null, 0, true); // must normalize these
+        newOp.modDim = modDim;
+        SymmetryOperation op = matrixOperations[i];
+        newOp.divisor = op.divisor;
+        newOp.linearRotTrans = AU.arrayCopyD(op.linearRotTrans, -1);
+        newOp.setFromMatrix(data, false);
+        if (magRev != -2)
+          newOp.setTimeReversal(op.timeReversal * magRev);
+        newOp.xyzOriginal = newOp.xyz;
+        addOp(newOp, newOp.xyz, true);
+      }
+    }
+    return true;
+  }
+
+  int getSiteMultiplicity(P3d pt, UnitCell unitCell) {
+    int n = finalOperations.length;
+    Lst<P3d> pts = new Lst<P3d>();
+    for (int i = n; --i >= 0;) {
+      P3d pt1 = P3d.newP(pt);
+      finalOperations[i].rotTrans(pt1);
+      unitCell.unitize(pt1);
+      for (int j = pts.size(); --j >= 0;) {
+        P3d pt0 = pts.get(j);
+        if (pt1.distanceSquared(pt0) < JC.UC_TOLERANCE2) {// was 0.000001f) {
+          pt1 = null;
+          break;
+        }      
+      }
+      if (pt1 != null)
+        pts.addLast(pt1);
+    }
+    return n / pts.size();
+  }
+
+  void setName(String name) {
+    this.name = name;
+    if (name != null && name.startsWith("HM:")) {
+      setHMSymbol(name.substring(3));
+    }
+
+   strName = displayName = null;
+  }
+
+//  M4d getRawOperation(int i) {
+//    SymmetryOperation op = new SymmetryOperation(null, 0, false);
+//    op.setMatrixFromXYZ(operations[i].xyzOriginal, 0, false);
+//    op.doFinalize();
+//    return op;
+//  }
+
+  String getNameType(String type, SymmetryInterface uc) {
+    String ret = null;
+    if (type.equals("HM")) {
+      ret = hmSymbol;
+    } else if (type.equals("ITA")) {
+      ret = itaNumber;
+    } else if (type.equals("Hall")) {
+      ret = hallSymbol;
+    } else {
+      ret = "?";
+    }
+    if (ret != null)
+      return ret;
+    // find the space group using canonical Seitz
+    if (info == null)
+      info = getInfo(this, hmSymbol, uc.getUnitCellParams(), true, false);
+    if (info instanceof String)
+      return null;
+    @SuppressWarnings("unchecked")
+    Map<String, Object> map = (Map<String, Object>) info;
+    Object v = map.get(type.equals("Hall") ? "HallSymbol" :
+      type.equals("ITA") ? "ita" : "HermannMauguinSymbol");
+    return (v == null ? null : v.toString());
+  }
+
+  /**
+   * Look for Jmol ID such as 10:b or 10 or 10.2 or 10:c,a,b
+   * 
+   * @param name
+   * @return found space group or null
+   */
+  static SpaceGroup getSpaceGroupFromJmolClegOrITA(String name) {
+    int n = SG.length;
+    if (name.indexOf(":") >= 0) {
+      if (name.indexOf(",") >= 0) {
+        // 10:c,a,b
+        for (int i = 0; i < n; i++)
+          if (name.equals(SG[i].clegId))
+            return SG[i];
+      } else {
+        // 10:b
+        for (int i = 0; i < n; i++)
+          if (name.equals(SG[i].jmolId))
+            return SG[i];
+      }
+    } else if (name.indexOf(".") >= 0) {
+      // 10.3
+      for (int i = 0; i < n; i++)
+        if (name.equals(SG[i].itaIndex))
+          return SG[i];
+    } else {
+      // just first match to ita number
+      for (int i = 0; i < n; i++)
+        if (name.equals(SG[i].itaNumber))
+          return SG[i];
+    }
+    return null;
+  }
+
+  void checkHallOperators() {
+    if (nHallOperators != null && nHallOperators.intValue() != operationCount) {
+      if (hallInfo == null || hallInfo.isGenerated()) {
+        generateAllOperators(hallInfo); 
+      } else {
+        // using ITA data, not Hall operators
+        init(false);
+        doNormalize = false;
+        // get base ITA nnn.1 + transform, setting my operators
+        // I have all my information already.
+        transformSpaceGroup(this, getSpaceGroupFromJmolClegOrITA(itaNumber), null, itaTransform, null);
+        hallInfo = null;
+      }
+    }
+  }
+
+  /**
+   * This method is used to generate the additional operators needed to cover
+   * subgroups and some settings with dimension other than 1.
+   * 
+   * It back-transforms the subgroup to the group and then returns it to the
+   * subgroup, adding all the necessary operations.
+   * 
+   * It is used specifically by ModelKit.cmdAssignSpaceGroupPacked for packing
+   * the unit cell of a space group.
+   * 
+   * @param transform
+   * @return full set of operators for this transformation.
+   */
+  M4d[] getOpsCtr(String transform) {
+    SpaceGroup sg = getNull(true, true, false);
+    transformSpaceGroup(sg, this, null, "!" + transform, null);
+    sg.setFinalOperations();
+    SpaceGroup sg2 = getNull(true, false, false);
+    transformSpaceGroup(sg2, sg, null, transform, null);
+    sg2.setFinalOperations();
+    return sg2.finalOperations;
+  }
+
+  static SpaceGroup getSpaceGroupFromIndex(int i) {
+    return (SG != null && i >= 0 && i < SG.length ? SG[i] : null);
+  }
+
+  /**
+   * from SpaceGroupFinder after finding a match with an ITA setting
+   * @param jmolId
+   * @param sg
+   * @param set
+   * @param tr
+   */
+  void setITATableNames(String jmolId, String sg, String set, String tr) {
+    itaNumber = sg;
+    itaIndex = (tr != null ? sg + ":" + tr : set.indexOf(".") >= 0 ? set : sg + "." + set);
+    itaTransform = tr;
+    setClegId(sg + ":" + tr);
+    strName = null;
+    this.jmolId = jmolId;
+    if (jmolId == null) {
+      name = clegId;
+      info = dumpInfoObj(); 
+    } else {
+      setJmolCode(jmolId);
+    }
+  }
+
+  
+  static Lst<Object> transformCoords(Lst<Object> coord, M4d trmInv, P3d centering, M4d t,
+                                             double[] v, Lst<Object> coordt) {
+    if (coordt == null)
+      coordt = new Lst<>();
+    for (int j = 0, n = coord.size(); j < n; j++) {
+      String xyz = SymmetryOperation.transformStr((String) coord.get(j), null,
+          trmInv, t, v, null, centering, true, true);
+      if (!coordt.contains(xyz))
+      coordt.addLast(xyz);
+    }
+    return coordt;
+  }
+
+  /**
+   * We sum the M3 column vectors. The result is (a' + b' +
+   * c'), which is the diagonal vector across the unit cell in the coordinates
+   * of the original lattice. Values are obtained for negative and pasitive ranges
+   * 
+   * 
+   * This method is used for two purpose:
+   * 
+   * 1) When a subgroup transformation or setting is made that enlarges the unit
+   * cell, this method delivers the additional centering information that may be
+   * needed to generate additional operators.
+   * 
+   * 2) When a transformed space group unit cell is packed, this result gives us
+   * the information we need to pack that cell fully, drawing from atoms that
+   * are in all the covered original unit cells.
+   * 
+   * For example, P42(77) has a 45-degree rotated setting C42.
+   * 
+   * https://www.cryst.ehu.es/cgi-bin/cryst/programs//nph-trgen?gnum=077&what=gp&trmat=a-b,a+b,c&unconv=C%2042&from=ita
+   * 
+   * The transformation matrix is a-b,a+b,c;0,0,0. Summing this, we get
+   * [0,-1,0](neg) and [2,1,1](pos). The range of cells needed to cover this is [0,1,2), [-1,1), [0,1) 
+   * 
+   * @param trm
+   * @return the range as float[][], or null if the result would be [0 0 0][1 1 1]
+   */
+  static double[][] getTransformRange(M4d trm) {
+    double[][] t = new double[2][3];
+    double[] row = new double[4];
+    for (int i = 0; i < 3; i++) {
+      trm.getRow(i, row);
+      for (int j = 0; j < 3; j++) {
+        double v = row[j];
+        if (v < 0) {
+          t[0][i] += -row[j];
+        } else if (v > 0) {
+          t[1][i] += row[j];
+        }
+      }
+    }
+    boolean ignore = true;
+    for (int i = 0, dz = 0; i < 2; i++, dz++) {
+      for (int j = 0; j < 3; j++) {
+        int d = (int) Math.ceil(t[i][j]);
+        if (d > dz)
+          ignore = false;
+        t[i][j] = (i == 0 ? -d : d);
+      }
+    }
+  
+    return (ignore ? null : t);
+  }
+
+  /**
+   * adjust centering based on transformation
+   * 
+   * @param trm
+   * @param cent list to be revised
+   * @return trmInv
+   */
+  private static M4d getTransformedCentering(M4d trm, Lst<Object> cent) {
+    M4d trmInv = M4d.newM4(trm);
+    trmInv.invert();
+    int n0 = cent.size();
+    P3d p = new P3d();
+    double[][] c = getTransformRange(trm);
+    if (c != null) {
+      for (int i = (int) c[0][0]; i < c[1][0]; i++) {
+        for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
+          for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
+            p.set(i, j, k);
+            trmInv.rotTrans(p);
+            if (p.length() % 1 != 0) {
+              p.x = p.x % 1;
+              p.y = p.y % 1;
+              p.z = p.z % 1;
+              String s = SymmetryOperation.norm3(p);
+              if (!s.equals("0,0,0") && !cent.contains(s))
+                cent.addLast(s);
+            }
+  
+          }
+        }
+      }
+      int n = cent.size();
+      if (n > 0) {
+        String[] a = new String[n];
+        cent.toArray(a);
+        Arrays.sort(a);
+        cent.clear();
+        for (int i = 0; i < n; i++)
+          cent.addLast(a[i]);
+      }
+    }
+    // remove integral centerings -- when det < 1
+    for (int i = n0; --i >= 0;) {
+      SymmetryOperation.toPoint((String) cent.get(i), p);
+      trmInv.rotTrans(p);
+      cent.remove(i);
+      if (p.x % 1 == 0 && p.y % 1 == 0 && p.z % 1 == 0) {
+      } else {
+        String s = SymmetryOperation.norm3(p);
+        cent.add(i, s);        
+      }
+    }
+    return trmInv;
+  }
+
+  /**
+   * Create a Wyckoff information map for a setting that is not in the ITA (at
+   * least not in the General Position list.)
+   * 
+   * Check is that 100:a+b,a-b,c comes out right.
+   * 
+   * The task is three-fold:
+   * 
+   * 1) find the centering
+   * 
+   * 2) apply the operations
+   * 
+   * 3) update the multiplicities
+   * 
+   * @param map to fill or null
+   * @param clegId
+   * @param itno
+   * @param its0
+   * @return new map containing just gp and wpos
+   */
+  @SuppressWarnings("unchecked")
+  static Map<String, Object> fillMoreData(Map<String, Object> map, String clegId, int itno,
+                                                       Map<String, Object> its0) {
+    int pt = clegId.indexOf(':');
+    String transform = (pt < 0 ? "a,b,c" : clegId.substring(pt + 1));
+    M4d trm = UnitCell.toTrm(transform, null);
+    Lst<Object> gp0 = (Lst<Object>) its0.get("gp");
+    Map<String, Object> wpos0 = (Map<String, Object>) its0.get("wpos");
+    Lst<Object> cent0 = (Lst<Object>) wpos0.get("cent");
+    Lst<Object> cent = new Lst<>();
+    if (cent0 != null)
+      cent.addAll(cent0);
+    int nctr0 = cent.size();
+    M4d trmInv = getTransformedCentering(trm, cent);
+    int nctr = cent.size();
+    Lst<Object> pos0 = (Lst<Object>) wpos0.get("pos");
+    Lst<Object> pos = new Lst<Object>();
+    M4d t = new M4d();
+    double[] v = new double[16];
+    double f = (nctr + 1d) / (nctr0 + 1);
+    for (int i = 0, n = pos0.size(); i < n; i++) {
+      Map<String, Object> p0 = (Map<String, Object>) pos0.get(i);
+      Map<String, Object> p = new Hashtable<String, Object>();
+      p.putAll(p0);
+      Lst<Object> coord = (Lst<Object>) p0.get("coord");
+      if (coord != null) {
+        coord = transformCoords(coord, trmInv, null, t, v, null);
+        p.put("coord", coord);
+      }
+      int mult = ((Integer) p0.get("mult")).intValue();
+      p.put("mult", Integer.valueOf((int) (mult * f)));
+      pos.addLast(p);
+    }
+    Lst<Object> gp = new Lst<Object>();
+    transformCoords(gp0, trmInv, null, t, v, gp);
+    if (nctr > 0) {
+      for (int i = 0; i < nctr; i++) {
+        P3d p = new P3d();
+        transformCoords(gp0, trmInv, SymmetryOperation.toPoint((String) cent.get(i), p), t,
+            v, gp);
+      }
+    }
+    if (map == null) {
+      map = new Hashtable<String, Object>();
+      map.put("sg", Integer.valueOf(itno));
+      map.put("trm", transform);
+      map.put("clegId", itno + ":" + transform);
+      map.put("det", Double.valueOf(trm.determinant3()));
+    } else {
+      map.remove("more");
+    }
+    Map<String, Object> wpos = new Hashtable<>();
+    if (nctr > 0)
+      wpos.put("cent", cent);
+    wpos.put("pos", pos);
+    map.put("wpos", wpos);     
+    wpos.put("gp", gp);
+    gp = new Lst<>();
+    SpaceGroup base = getSpaceGroupFromJmolClegOrITA(clegId); 
+    SpaceGroup sg = transformSpaceGroup(null, base, gp0,
+        transform, new M4d());
+    for (int i = 0, n = sg.getOperationCount(); i < n; i++) {
+      gp.addLast(((SymmetryOperation) sg.getOperation(i)).xyz);
+    }
+    map.put("gp", gp);
+    return map;
+  }
+
+
+  /**
+   * Transform a space group based on a list of general postions (operations).
+   * 
+   * If the general positions are not known, they can be taken from a base space
+   * group instead of a list of general positions in string xyz format.
+   * 
+   * The assumption is that they need transformation. So if the base is already
+   * 
+   * 
+   * 
+   * @param sg
+   * @param base
+   * @param genPos
+   * @param transform
+   * @param trm
+   * @return new space group
+   */
+  static SpaceGroup transformSpaceGroup(SpaceGroup sg, SpaceGroup base,
+                                        Lst<Object> genPos, String transform,
+                                        M4d trm) {
+    if (genPos == null) {
+      // here we use the operations of the known space group
+      // when (1) this is a space group derived from a subgroup by reverse transformation
+      // or (2) when we are using Jmol's built-in Hall operators
+      base.setFinalOperations();
+      // should be able to do this much slicker
+      genPos = new Lst<Object>();
+      for (int i = 0, n = base.getOperationCount(); i < n; i++) {
+        genPos.addLast(base.getXyz(i, false));
+      }
+    }
+    boolean normalize = (sg == null || sg.doNormalize);
+    // if sg != null, then xyzlist is not calculated and instead sg is filled. 
+    Lst<Object> xyzList = addTransformXYZList(sg, genPos, transform, trm, normalize);
+    if (sg == null) {
+      return createITASpaceGroup(xyzList, base);
+    }
+    // a null transform indicates we have the operators already, and no transformation is needed
+    // the base space group has all the relevant information
+    if (transform == null) {
+      sg.setFrom(base, true);
+    } else {
+      // sg is presumed to be the standard setting when there is a transform
+      sg.setITATableNames(sg.jmolId, sg.itaNumber, "1", transform);
+    }
+    return sg;
+  }
+
+  /**
+   * no transformation is done
+   * 
+   * @param genpos
+   * @param base
+   * @return cloned space group
+   */
+  static SpaceGroup createITASpaceGroup(Lst<Object> genpos, SpaceGroup base) {
+    SpaceGroup sg = new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
+    sg.doNormalize = false;
+    for (int i = 0, n = genpos.size(); i < n; i++) {
+      SymmetryOperation op = new SymmetryOperation(null, i, false);
+      String xyz = (String) genpos.get(i);
+      op.setMatrixFromXYZ(xyz, 0, false);
+      sg.addOp(op, xyz, false);
+    }
+    if (base != null)
+      sg.setFrom(base, true);
+    return sg;
+  }
+
+
+
+  /**
+   * Add operators based on a setting or subgroup transformation. 
+   * In cases where the det > 1, scan a range of values that encompass
+   * the possibilities.
+   * 
+   * @param sg
+   *        if not null, this is the space group that is being created and to be
+   *        loaded with operations
+   * @param genPos
+   * @param transform
+   * @param trm
+   * @param normalize
+   * @return a semicolon-separated list of operations if sg is null, or null if
+   *         it is not
+   */
+  private static Lst<Object> addTransformXYZList(SpaceGroup sg,
+                                                 Lst<Object> genPos,
+                                                 String transform, M4d trm,
+                                                 boolean normalize) {
+
+    M4d trmInv = null, t = null;
+    double[] v = null;
+    double[][] c = null;
+    int nTotal = genPos.size();
+    if (transform != null) {
+      if (transform.equals("r"))
+        transform = SimpleUnitCell.HEX_TO_RHOMB;
+      trm = UnitCell.toTrm(transform, trm);
+      trmInv = M4d.newM4(trm);
+      trmInv.invert();
+      int det = (int) Math.round(trm.determinant3());
+      if (det > 1) {
+        c = getTransformRange(trm);
+        nTotal *= det;
+      }
+      v = new double[16];
+      t = new M4d();
+    }
+    Lst<Object> xyzList = addTransformedOperations(sg, genPos, trm, trmInv, t,
+        v, sg == null ? new Lst<Object>() : null, null, normalize);
+    if (c != null) {
+      P3d p = new P3d();
+      // scanning through a first, then b, then c
+      for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
+        for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
+          for (int i = (int) c[0][0]; i < c[1][0]; i++) {
+            if (i == 0 && j == 0 && k == 0)
+              continue;
+            p.set(i, j, k);
+            if (addTransformedOperations(sg, genPos, trm, trmInv, t, v, xyzList, p,
+                normalize) != null) {
+              if (xyzList.size() == nTotal)
+                return xyzList; 
+            }
+          }
+        }
+      }
+    }
+    return (sg == null ? xyzList : null);
+  }
+
+  /**
+   * add canonical (positive unitized translation) transformed operations,
+   * either to form a list or to fill a space group.
+   * 
+   * @param sg
+   *        space group to fill with transformed operations
+   * @param genPos
+   *        list of operations to be transfomed
+   * @param trm
+   *        transform matrix
+   * @param trmInv
+   *        inverse; may be null
+   * @param t
+   *        temp matrix
+   * @param v
+   *        temp vector
+   * @param retGenPos
+   *        list to append to -- only if sg == null
+   * @param centering
+   *        centering if needed
+   * @param normalize
+   *        to set to a standard translation and fractions
+   * @return semicolon-separated list -- only if sg is null
+   */
+  private static Lst<Object> addTransformedOperations(SpaceGroup sg, Lst<Object> genPos,
+                                               M4d trm, M4d trmInv, M4d t, double[] v, 
+                                               Lst<Object> retGenPos, P3d centering, boolean normalize) {
+    if (sg != null)
+      sg.latticeOp = 0; // ignore looking for lattice operations
+    for (int i = 0, c = genPos.size(); i < c; i++) {
+      String xyz = (String) genPos.get(i);
+      if (trm != null && (i > 0 || centering != null)) {
+        xyz = SymmetryOperation.transformStr(xyz, trm, trmInv, t, v, centering, null, normalize, false);
+      }
+      if (sg != null) {
+        // space group addition will disallow duplicates already.
+        sg.addOperation(xyz, 0, false);
+      } else if (!retGenPos.contains(xyz)) {
+        // there could be duplicates because we don't know a priori which direction to translate.
+        // these are canonical, so duplicates will be found and discarded.
+        retGenPos.addLast(xyz);
+      }
+    }
+    return retGenPos;
+  }
+
+  @Override
+  public M4d getMatrixOperation(int i) {
+    return matrixOperations[i];
+  }
+
+  @Override
+  public int getMatrixOperationCount() {
+    return operationCount;
+  }
+
+  @Override
+  public boolean addHallOperationCheckDuplicates(M4d operation) {
+    String xyz = SymmetryOperation.getXYZFromMatrix(operation, true, true,
+        false);
+    if (checkXYZlist(xyz) >= 0)
+      return false;
+    addSymmetrySM("!nohalf!" + xyz, operation);
+    return true;
+  }
+  /**
+   * adds :a,b,c;0,0,0 or ;0,0,0; does NOT change :h or :r
+   * @param t
+   * @return full CLEG
+   */
+  public static String canonicalizeCleg(String t) {
+    if (t.indexOf(":") < 0) {
+      t += ":a,b,c;0,0,0";
+    } else if (t.indexOf(",") > 0 && t.indexOf(";") < 0) {
+      t += ";0,0,0";
+    }
+    return t;
+  }
+
+  /*  see https://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
+  
+intl#     H-M full       HM-abbr   HM-short  Hall
+1         P 1            P1        P         P 1       
+2         P -1           P-1       P-1       -P 1      
+3:b       P 1 2 1        P121      P2        P 2y      
+3:b       P 2            P2        P2        P 2y      
+3:c       P 1 1 2        P112      P2        P 2       
+3:a       P 2 1 1        P211      P2        P 2x      
+4:b       P 1 21 1       P1211     P21       P 2yb     
+4:b       P 21           P21       P21       P 2yb     
+4:b*      P 1 21 1*      P1211*    P21*      P 2y1     
+4:c       P 1 1 21       P1121     P21       P 2c      
+4:c*      P 1 1 21*      P1121*    P21*      P 21      
+4:a       P 21 1 1       P2111     P21       P 2xa     
+4:a*      P 21 1 1*      P2111*    P21*      P 2x1     
+5:b1      C 1 2 1        C121      C2        C 2y      
+5:b1      C 2            C2        C2        C 2y      
+5:b2      A 1 2 1        A121      A2        A 2y      
+5:b3      I 1 2 1        I121      I2        I 2y      
+5:c1      A 1 1 2        A112      A2        A 2       
+5:c2      B 1 1 2        B112      B2        B 2       
+5:c3      I 1 1 2        I112      I2        I 2       
+5:a1      B 2 1 1        B211      B2        B 2x      
+5:a2      C 2 1 1        C211      C2        C 2x      
+5:a3      I 2 1 1        I211      I2        I 2x      
+6:b       P 1 m 1        P1m1      Pm        P -2y     
+6:b       P m            Pm        Pm        P -2y     
+6:c       P 1 1 m        P11m      Pm        P -2      
+6:a       P m 1 1        Pm11      Pm        P -2x     
+7:b1      P 1 c 1        P1c1      Pc        P -2yc    
+7:b1      P c            Pc        Pc        P -2yc    
+7:b2      P 1 n 1        P1n1      Pn        P -2yac   
+7:b2      P n            Pn        Pn        P -2yac   
+7:b3      P 1 a 1        P1a1      Pa        P -2ya    
+7:b3      P a            Pa        Pa        P -2ya    
+7:c1      P 1 1 a        P11a      Pa        P -2a     
+7:c2      P 1 1 n        P11n      Pn        P -2ab    
+7:c3      P 1 1 b        P11b      Pb        P -2b     
+7:a1      P b 1 1        Pb11      Pb        P -2xb    
+7:a2      P n 1 1        Pn11      Pn        P -2xbc   
+7:a3      P c 1 1        Pc11      Pc        P -2xc    
+8:b1      C 1 m 1        C1m1      Cm        C -2y     
+8:b1      C m            Cm        Cm        C -2y     
+8:b2      A 1 m 1        A1m1      Am        A -2y     
+8:b3      I 1 m 1        I1m1      Im        I -2y     
+8:b3      I m            Im        Im        I -2y     
+8:c1      A 1 1 m        A11m      Am        A -2      
+8:c2      B 1 1 m        B11m      Bm        B -2      
+8:c3      I 1 1 m        I11m      Im        I -2      
+8:a1      B m 1 1        Bm11      Bm        B -2x     
+8:a2      C m 1 1        Cm11      Cm        C -2x     
+8:a3      I m 1 1        Im11      Im        I -2x     
+9:b1      C 1 c 1        C1c1      Cc        C -2yc    
+9:b1      C c            Cc        Cc        C -2yc    
+9:b2      A 1 n 1        A1n1      An        A -2yab   
+9:b3      I 1 a 1        I1a1      Ia        I -2ya    
+9:-b1     A 1 a 1        A1a1      Aa        A -2ya    
+9:-b2     C 1 n 1        C1n1      Cn        C -2yac   
+9:-b3     I 1 c 1        I1c1      Ic        I -2yc    
+9:c1      A 1 1 a        A11a      Aa        A -2a     
+9:c2      B 1 1 n        B11n      Bn        B -2ab    
+9:c3      I 1 1 b        I11b      Ib        I -2b     
+9:-c1     B 1 1 b        B11b      Bb        B -2b     
+9:-c2     A 1 1 n        A11n      An        A -2ab    
+9:-c3     I 1 1 a        I11a      Ia        I -2a     
+9:a1      B b 1 1        Bb11      Bb        B -2xb    
+9:a2      C n 1 1        Cn11      Cn        C -2xac   
+9:a3      I c 1 1        Ic11      Ic        I -2xc    
+9:-a1     C c 1 1        Cc11      Cc        C -2xc    
+9:-a2     B n 1 1        Bn11      Bn        B -2xab   
+9:-a3     I b 1 1        Ib11      Ib        I -2xb    
+10:b      P 1 2/m 1      P12/m1    P2/m      -P 2y     
+10:b      P 2/m          P2/m      P2/m      -P 2y     
+10:c      P 1 1 2/m      P112/m    P2/m      -P 2      
+10:a      P 2/m 1 1      P2/m11    P2/m      -P 2x     
+11:b      P 1 21/m 1     P121/m1   P21/m     -P 2yb    
+11:b      P 21/m         P21/m     P21/m     -P 2yb    
+11:b*     P 1 21/m 1*    P121/m1*  P21/m*    -P 2y1    
+11:c      P 1 1 21/m     P1121/m   P21/m     -P 2c     
+11:c*     P 1 1 21/m*    P1121/m*  P21/m*    -P 21     
+11:a      P 21/m 1 1     P21/m11   P21/m     -P 2xa    
+11:a*     P 21/m 1 1*    P21/m11*  P21/m*    -P 2x1    
+12:b1     C 1 2/m 1      C12/m1    C2/m      -C 2y     
+12:b1     C 2/m          C2/m      C2/m      -C 2y     
+12:b2     A 1 2/m 1      A12/m1    A2/m      -A 2y     
+12:b3     I 1 2/m 1      I12/m1    I2/m      -I 2y     
+12:b3     I 2/m          I2/m      I2/m      -I 2y     
+12:c1     A 1 1 2/m      A112/m    A2/m      -A 2      
+12:c2     B 1 1 2/m      B112/m    B2/m      -B 2      
+12:c3     I 1 1 2/m      I112/m    I2/m      -I 2      
+12:a1     B 2/m 1 1      B2/m11    B2/m      -B 2x     
+12:a2     C 2/m 1 1      C2/m11    C2/m      -C 2x     
+12:a3     I 2/m 1 1      I2/m11    I2/m      -I 2x     
+13:b1     P 1 2/c 1      P12/c1    P2/c      -P 2yc    
+13:b1     P 2/c          P2/c      P2/c      -P 2yc    
+13:b2     P 1 2/n 1      P12/n1    P2/n      -P 2yac   
+13:b2     P 2/n          P2/n      P2/n      -P 2yac   
+13:b3     P 1 2/a 1      P12/a1    P2/a      -P 2ya    
+13:b3     P 2/a          P2/a      P2/a      -P 2ya    
+13:c1     P 1 1 2/a      P112/a    P2/a      -P 2a     
+13:c2     P 1 1 2/n      P112/n    P2/n      -P 2ab    
+13:c3     P 1 1 2/b      P112/b    P2/b      -P 2b     
+13:a1     P 2/b 1 1      P2/b11    P2/b      -P 2xb    
+13:a2     P 2/n 1 1      P2/n11    P2/n      -P 2xbc   
+13:a3     P 2/c 1 1      P2/c11    P2/c      -P 2xc    
+14:b1     P 1 21/c 1     P121/c1   P21/c     -P 2ybc   
+14:b1     P 21/c         P21/c     P21/c     -P 2ybc   
+14:b2     P 1 21/n 1     P121/n1   P21/n     -P 2yn    
+14:b2     P 21/n         P21/n     P21/n     -P 2yn    
+14:b3     P 1 21/a 1     P121/a1   P21/a     -P 2yab   
+14:b3     P 21/a         P21/a     P21/a     -P 2yab   
+14:c1     P 1 1 21/a     P1121/a   P21/a     -P 2ac    
+14:c2     P 1 1 21/n     P1121/n   P21/n     -P 2n     
+14:c3     P 1 1 21/b     P1121/b   P21/b     -P 2bc    
+14:a1     P 21/b 1 1     P21/b11   P21/b     -P 2xab   
+14:a2     P 21/n 1 1     P21/n11   P21/n     -P 2xn    
+14:a3     P 21/c 1 1     P21/c11   P21/c     -P 2xac   
+15:b1     C 1 2/c 1      C12/c1    C2/c      -C 2yc    
+15:b1     C 2/c          C2/c      C2/c      -C 2yc    
+15:b2     A 1 2/n 1      A12/n1    A2/n      -A 2yab   
+15:b3     I 1 2/a 1      I12/a1    I2/a      -I 2ya    
+15:b3     I 2/a          I2/a      I2/a      -I 2ya    
+15:-b1    A 1 2/a 1      A12/a1    A2/a      -A 2ya    
+15:-b2    C 1 2/n 1      C12/n1    C2/n      -C 2yac   
+15:-b2    C 2/n          C2/n      C2/n      -C 2yac   
+15:-b3    I 1 2/c 1      I12/c1    I2/c      -I 2yc    
+15:-b3    I 2/c          I2/c      I2/c      -I 2yc    
+15:c1     A 1 1 2/a      A112/a    A2/a      -A 2a     
+15:c2     B 1 1 2/n      B112/n    B2/n      -B 2ab    
+15:c3     I 1 1 2/b      I112/b    I2/b      -I 2b     
+15:-c1    B 1 1 2/b      B112/b    B2/b      -B 2b     
+15:-c2    A 1 1 2/n      A112/n    A2/n      -A 2ab    
+15:-c3    I 1 1 2/a      I112/a    I2/a      -I 2a     
+15:a1     B 2/b 1 1      B2/b11    B2/b      -B 2xb    
+15:a2     C 2/n 1 1      C2/n11    C2/n      -C 2xac   
+15:a3     I 2/c 1 1      I2/c11    I2/c      -I 2xc    
+15:-a1    C 2/c 1 1      C2/c11    C2/c      -C 2xc    
+15:-a2    B 2/n 1 1      B2/n11    B2/n      -B 2xab   
+15:-a3    I 2/b 1 1      I2/b11    I2/b      -I 2xb    
+16        P 2 2 2        P222      P222      P 2 2     
+17        P 2 2 21       P2221     P2221     P 2c 2    
+17*       P 2 2 21*      P2221*    P2221*    P 21 2    
+17:cab    P 21 2 2       P2122     P2122     P 2a 2a   
+17:bca    P 2 21 2       P2212     P2212     P 2 2b    
+18        P 21 21 2      P21212    P21212    P 2 2ab   
+18:cab    P 2 21 21      P22121    P22121    P 2bc 2   
+18:bca    P 21 2 21      P21221    P21221    P 2ac 2ac 
+19        P 21 21 21     P212121   P212121   P 2ac 2ab 
+20        C 2 2 21       C2221     C2221     C 2c 2    
+20*       C 2 2 21*      C2221*    C2221*    C 21 2    
+20:cab    A 21 2 2       A2122     A2122     A 2a 2a   
+20:cab*   A 21 2 2*      A2122*    A2122*    A 2a 21   
+20:bca    B 2 21 2       B2212     B2212     B 2 2b    
+21        C 2 2 2        C222      C222      C 2 2     
+21:cab    A 2 2 2        A222      A222      A 2 2     
+21:bca    B 2 2 2        B222      B222      B 2 2     
+22        F 2 2 2        F222      F222      F 2 2     
+23        I 2 2 2        I222      I222      I 2 2     
+24        I 21 21 21     I212121   I212121   I 2b 2c   
+25        P m m 2        Pmm2      Pmm2      P 2 -2    
+25:cab    P 2 m m        P2mm      P2mm      P -2 2    
+25:bca    P m 2 m        Pm2m      Pm2m      P -2 -2   
+26        P m c 21       Pmc21     Pmc21     P 2c -2   
+26*       P m c 21*      Pmc21*    Pmc21*    P 21 -2   
+26:ba-c   P c m 21       Pcm21     Pcm21     P 2c -2c  
+26:ba-c*  P c m 21*      Pcm21*    Pcm21*    P 21 -2c  
+26:cab    P 21 m a       P21ma     P21ma     P -2a 2a  
+26:-cba   P 21 a m       P21am     P21am     P -2 2a   
+26:bca    P b 21 m       Pb21m     Pb21m     P -2 -2b  
+26:a-cb   P m 21 b       Pm21b     Pm21b     P -2b -2  
+27        P c c 2        Pcc2      Pcc2      P 2 -2c   
+27:cab    P 2 a a        P2aa      P2aa      P -2a 2   
+27:bca    P b 2 b        Pb2b      Pb2b      P -2b -2b 
+28        P m a 2        Pma2      Pma2      P 2 -2a   
+28*       P m a 2*       Pma2*     Pma2*     P 2 -21   
+28:ba-c   P b m 2        Pbm2      Pbm2      P 2 -2b   
+28:cab    P 2 m b        P2mb      P2mb      P -2b 2   
+28:-cba   P 2 c m        P2cm      P2cm      P -2c 2   
+28:-cba*  P 2 c m*       P2cm*     P2cm*     P -21 2   
+28:bca    P c 2 m        Pc2m      Pc2m      P -2c -2c 
+28:a-cb   P m 2 a        Pm2a      Pm2a      P -2a -2a 
+29        P c a 21       Pca21     Pca21     P 2c -2ac 
+29:ba-c   P b c 21       Pbc21     Pbc21     P 2c -2b  
+29:cab    P 21 a b       P21ab     P21ab     P -2b 2a  
+29:-cba   P 21 c a       P21ca     P21ca     P -2ac 2a 
+29:bca    P c 21 b       Pc21b     Pc21b     P -2bc -2c
+29:a-cb   P b 21 a       Pb21a     Pb21a     P -2a -2ab
+30        P n c 2        Pnc2      Pnc2      P 2 -2bc  
+30:ba-c   P c n 2        Pcn2      Pcn2      P 2 -2ac  
+30:cab    P 2 n a        P2na      P2na      P -2ac 2  
+30:-cba   P 2 a n        P2an      P2an      P -2ab 2  
+30:bca    P b 2 n        Pb2n      Pb2n      P -2ab -2a
+30:a-cb   P n 2 b        Pn2b      Pn2b      P -2bc -2b
+31        P m n 21       Pmn21     Pmn21     P 2ac -2  
+31:ba-c   P n m 21       Pnm21     Pnm21     P 2bc -2bc
+31:cab    P 21 m n       P21mn     P21mn     P -2ab 2ab
+31:-cba   P 21 n m       P21nm     P21nm     P -2 2ac  
+31:bca    P n 21 m       Pn21m     Pn21m     P -2 -2bc 
+31:a-cb   P m 21 n       Pm21n     Pm21n     P -2ab -2 
+32        P b a 2        Pba2      Pba2      P 2 -2ab  
+32:cab    P 2 c b        P2cb      P2cb      P -2bc 2  
+32:bca    P c 2 a        Pc2a      Pc2a      P -2ac -2a
+33        P n a 21       Pna21     Pna21     P 2c -2n  
+33*       P n a 21*      Pna21*    Pna21*    P 21 -2n  
+33:ba-c   P b n 21       Pbn21     Pbn21     P 2c -2ab 
+33:ba-c*  P b n 21*      Pbn21*    Pbn21*    P 21 -2ab 
+33:cab    P 21 n b       P21nb     P21nb     P -2bc 2a 
+33:cab*   P 21 n b*      P21nb*    P21nb*    P -2bc 21 
+33:-cba   P 21 c n       P21cn     P21cn     P -2n 2a  
+33:-cba*  P 21 c n*      P21cn*    P21cn*    P -2n 21  
+33:bca    P c 21 n       Pc21n     Pc21n     P -2n -2ac
+33:a-cb   P n 21 a       Pn21a     Pn21a     P -2ac -2n
+34        P n n 2        Pnn2      Pnn2      P 2 -2n   
+34:cab    P 2 n n        P2nn      P2nn      P -2n 2   
+34:bca    P n 2 n        Pn2n      Pn2n      P -2n -2n 
+35        C m m 2        Cmm2      Cmm2      C 2 -2    
+35:cab    A 2 m m        A2mm      A2mm      A -2 2    
+35:bca    B m 2 m        Bm2m      Bm2m      B -2 -2   
+36        C m c 21       Cmc21     Cmc21     C 2c -2   
+36*       C m c 21*      Cmc21*    Cmc21*    C 21 -2   
+36:ba-c   C c m 21       Ccm21     Ccm21     C 2c -2c  
+36:ba-c*  C c m 21*      Ccm21*    Ccm21*    C 21 -2c  
+36:cab    A 21 m a       A21ma     A21ma     A -2a 2a  
+36:cab*   A 21 m a*      A21ma*    A21ma*    A -2a 21  
+36:-cba   A 21 a m       A21am     A21am     A -2 2a   
+36:-cba*  A 21 a m*      A21am*    A21am*    A -2 21   
+36:bca    B b 21 m       Bb21m     Bb21m     B -2 -2b  
+36:a-cb   B m 21 b       Bm21b     Bm21b     B -2b -2  
+37        C c c 2        Ccc2      Ccc2      C 2 -2c   
+37:cab    A 2 a a        A2aa      A2aa      A -2a 2   
+37:bca    B b 2 b        Bb2b      Bb2b      B -2b -2b 
+38        A m m 2        Amm2      Amm2      A 2 -2    
+38:ba-c   B m m 2        Bmm2      Bmm2      B 2 -2    
+38:cab    B 2 m m        B2mm      B2mm      B -2 2    
+38:-cba   C 2 m m        C2mm      C2mm      C -2 2    
+38:bca    C m 2 m        Cm2m      Cm2m      C -2 -2   
+38:a-cb   A m 2 m        Am2m      Am2m      A -2 -2   
+39        A b m 2        Abm2      Abm2      A 2 -2b   
+39:ba-c   B m a 2        Bma2      Bma2      B 2 -2a   
+39:cab    B 2 c m        B2cm      B2cm      B -2a 2   
+39:-cba   C 2 m b        C2mb      C2mb      C -2a 2   
+39:bca    C m 2 a        Cm2a      Cm2a      C -2a -2a 
+39:a-cb   A c 2 m        Ac2m      Ac2m      A -2b -2b 
+40        A m a 2        Ama2      Ama2      A 2 -2a   
+40:ba-c   B b m 2        Bbm2      Bbm2      B 2 -2b   
+40:cab    B 2 m b        B2mb      B2mb      B -2b 2   
+40:-cba   C 2 c m        C2cm      C2cm      C -2c 2   
+40:bca    C c 2 m        Cc2m      Cc2m      C -2c -2c 
+40:a-cb   A m 2 a        Am2a      Am2a      A -2a -2a 
+41        A b a 2        Aba2      Aba2      A 2 -2ab  
+41:ba-c   B b a 2        Bba2      Bba2      B 2 -2ab  
+41:cab    B 2 c b        B2cb      B2cb      B -2ab 2  
+41:-cba   C 2 c b        C2cb      C2cb      C -2ac 2  
+41:bca    C c 2 a        Cc2a      Cc2a      C -2ac -2a
+41:a-cb   A c 2 a        Ac2a      Ac2a      A -2ab -2a
+42        F m m 2        Fmm2      Fmm2      F 2 -2    
+42:cab    F 2 m m        F2mm      F2mm      F -2 2    
+42:bca    F m 2 m        Fm2m      Fm2m      F -2 -2   
+43        F d d 2        Fdd2      Fdd2      F 2 -2d   
+43:cab    F 2 d d        F2dd      F2dd      F -2d 2   
+43:bca    F d 2 d        Fd2d      Fd2d      F -2d -2d 
+44        I m m 2        Imm2      Imm2      I 2 -2    
+44:cab    I 2 m m        I2mm      I2mm      I -2 2    
+44:bca    I m 2 m        Im2m      Im2m      I -2 -2   
+45        I b a 2        Iba2      Iba2      I 2 -2c   
+45:cab    I 2 c b        I2cb      I2cb      I -2a 2   
+45:bca    I c 2 a        Ic2a      Ic2a      I -2b -2b 
+46        I m a 2        Ima2      Ima2      I 2 -2a   
+46:ba-c   I b m 2        Ibm2      Ibm2      I 2 -2b   
+46:cab    I 2 m b        I2mb      I2mb      I -2b 2   
+46:-cba   I 2 c m        I2cm      I2cm      I -2c 2   
+46:bca    I c 2 m        Ic2m      Ic2m      I -2c -2c 
+46:a-cb   I m 2 a        Im2a      Im2a      I -2a -2a 
+47        P m m m        Pmmm      Pmmm      -P 2 2    
+48:1      P n n n        Pnnn      Pnnn      P 2 2 -1n 
+48:2      P n n n        Pnnn      Pnnn      -P 2ab 2bc
+49        P c c m        Pccm      Pccm      -P 2 2c   
+49:cab    P m a a        Pmaa      Pmaa      -P 2a 2   
+49:bca    P b m b        Pbmb      Pbmb      -P 2b 2b  
+50:1      P b a n        Pban      Pban      P 2 2 -1ab
+50:2      P b a n        Pban      Pban      -P 2ab 2b 
+50:1cab   P n c b        Pncb      Pncb      P 2 2 -1bc
+50:2cab   P n c b        Pncb      Pncb      -P 2b 2bc 
+50:1bca   P c n a        Pcna      Pcna      P 2 2 -1ac
+50:2bca   P c n a        Pcna      Pcna      -P 2a 2c  
+51        P m m a        Pmma      Pmma      -P 2a 2a  
+51:ba-c   P m m b        Pmmb      Pmmb      -P 2b 2   
+51:cab    P b m m        Pbmm      Pbmm      -P 2 2b   
+51:-cba   P c m m        Pcmm      Pcmm      -P 2c 2c  
+51:bca    P m c m        Pmcm      Pmcm      -P 2c 2   
+51:a-cb   P m a m        Pmam      Pmam      -P 2 2a   
+52        P n n a        Pnna      Pnna      -P 2a 2bc 
+52:ba-c   P n n b        Pnnb      Pnnb      -P 2b 2n  
+52:cab    P b n n        Pbnn      Pbnn      -P 2n 2b  
+52:-cba   P c n n        Pcnn      Pcnn      -P 2ab 2c 
+52:bca    P n c n        Pncn      Pncn      -P 2ab 2n 
+52:a-cb   P n a n        Pnan      Pnan      -P 2n 2bc 
+53        P m n a        Pmna      Pmna      -P 2ac 2  
+53:ba-c   P n m b        Pnmb      Pnmb      -P 2bc 2bc
+53:cab    P b m n        Pbmn      Pbmn      -P 2ab 2ab
+53:-cba   P c n m        Pcnm      Pcnm      -P 2 2ac  
+53:bca    P n c m        Pncm      Pncm      -P 2 2bc  
+53:a-cb   P m a n        Pman      Pman      -P 2ab 2  
+54        P c c a        Pcca      Pcca      -P 2a 2ac 
+54:ba-c   P c c b        Pccb      Pccb      -P 2b 2c  
+54:cab    P b a a        Pbaa      Pbaa      -P 2a 2b  
+54:-cba   P c a a        Pcaa      Pcaa      -P 2ac 2c 
+54:bca    P b c b        Pbcb      Pbcb      -P 2bc 2b 
+54:a-cb   P b a b        Pbab      Pbab      -P 2b 2ab 
+55        P b a m        Pbam      Pbam      -P 2 2ab  
+55:cab    P m c b        Pmcb      Pmcb      -P 2bc 2  
+55:bca    P c m a        Pcma      Pcma      -P 2ac 2ac
+56        P c c n        Pccn      Pccn      -P 2ab 2ac
+56:cab    P n a a        Pnaa      Pnaa      -P 2ac 2bc
+56:bca    P b n b        Pbnb      Pbnb      -P 2bc 2ab
+57        P b c m        Pbcm      Pbcm      -P 2c 2b  
+57:ba-c   P c a m        Pcam      Pcam      -P 2c 2ac 
+57:cab    P m c a        Pmca      Pmca      -P 2ac 2a 
+57:-cba   P m a b        Pmab      Pmab      -P 2b 2a  
+57:bca    P b m a        Pbma      Pbma      -P 2a 2ab 
+57:a-cb   P c m b        Pcmb      Pcmb      -P 2bc 2c 
+58        P n n m        Pnnm      Pnnm      -P 2 2n   
+58:cab    P m n n        Pmnn      Pmnn      -P 2n 2   
+58:bca    P n m n        Pnmn      Pnmn      -P 2n 2n  
+59:1      P m m n        Pmmn      Pmmn      P 2 2ab -1
+59:2      P m m n        Pmmn      Pmmn      -P 2ab 2a 
+59:1cab   P n m m        Pnmm      Pnmm      P 2bc 2 -1
+59:2cab   P n m m        Pnmm      Pnmm      -P 2c 2bc 
+59:1bca   P m n m        Pmnm      Pmnm      P 2ac 2ac 
+59:2bca   P m n m        Pmnm      Pmnm      -P 2c 2a  
+60        P b c n        Pbcn      Pbcn      -P 2n 2ab 
+60:ba-c   P c a n        Pcan      Pcan      -P 2n 2c  
+60:cab    P n c a        Pnca      Pnca      -P 2a 2n  
+60:-cba   P n a b        Pnab      Pnab      -P 2bc 2n 
+60:bca    P b n a        Pbna      Pbna      -P 2ac 2b 
+60:a-cb   P c n b        Pcnb      Pcnb      -P 2b 2ac 
+61        P b c a        Pbca      Pbca      -P 2ac 2ab
+61:ba-c   P c a b        Pcab      Pcab      -P 2bc 2ac
+62        P n m a        Pnma      Pnma      -P 2ac 2n 
+62:ba-c   P m n b        Pmnb      Pmnb      -P 2bc 2a 
+62:cab    P b n m        Pbnm      Pbnm      -P 2c 2ab 
+62:-cba   P c m n        Pcmn      Pcmn      -P 2n 2ac 
+62:bca    P m c n        Pmcn      Pmcn      -P 2n 2a  
+62:a-cb   P n a m        Pnam      Pnam      -P 2c 2n  
+63        C m c m        Cmcm      Cmcm      -C 2c 2   
+63:ba-c   C c m m        Ccmm      Ccmm      -C 2c 2c  
+63:cab    A m m a        Amma      Amma      -A 2a 2a  
+63:-cba   A m a m        Amam      Amam      -A 2 2a   
+63:bca    B b m m        Bbmm      Bbmm      -B 2 2b   
+63:a-cb   B m m b        Bmmb      Bmmb      -B 2b 2   
+64        C m c a        Cmca      Cmca      -C 2ac 2  
+64:ba-c   C c m b        Ccmb      Ccmb      -C 2ac 2ac
+64:cab    A b m a        Abma      Abma      -A 2ab 2ab
+64:-cba   A c a m        Acam      Acam      -A 2 2ab  
+64:bca    B b c m        Bbcm      Bbcm      -B 2 2ab  
+64:a-cb   B m a b        Bmab      Bmab      -B 2ab 2  
+65        C m m m        Cmmm      Cmmm      -C 2 2    
+65:cab    A m m m        Ammm      Ammm      -A 2 2    
+65:bca    B m m m        Bmmm      Bmmm      -B 2 2    
+66        C c c m        Cccm      Cccm      -C 2 2c   
+66:cab    A m a a        Amaa      Amaa      -A 2a 2   
+66:bca    B b m b        Bbmb      Bbmb      -B 2b 2b  
+67        C m m a        Cmma      Cmma      -C 2a 2   
+67:ba-c   C m m b        Cmmb      Cmmb      -C 2a 2a  
+67:cab    A b m m        Abmm      Abmm      -A 2b 2b  
+67:-cba   A c m m        Acmm      Acmm      -A 2 2b   
+67:bca    B m c m        Bmcm      Bmcm      -B 2 2a   
+67:a-cb   B m a m        Bmam      Bmam      -B 2a 2   
+68:1      C c c a        Ccca      Ccca      C 2 2 -1ac
+68:2      C c c a        Ccca      Ccca      -C 2a 2ac 
+68:1ba-c  C c c b        Cccb      Cccb      C 2 2 -1ac
+68:2ba-c  C c c b        Cccb      Cccb      -C 2a 2c  
+68:1cab   A b a a        Abaa      Abaa      A 2 2 -1ab
+68:2cab   A b a a        Abaa      Abaa      -A 2a 2b  
+68:1-cba  A c a a        Acaa      Acaa      A 2 2 -1ab
+68:2-cba  A c a a        Acaa      Acaa      -A 2ab 2b 
+68:1bca   B b c b        Bbcb      Bbcb      B 2 2 -1ab
+68:2bca   B b c b        Bbcb      Bbcb      -B 2ab 2b 
+68:1a-cb  B b a b        Bbab      Bbab      B 2 2 -1ab
+68:2a-cb  B b a b        Bbab      Bbab      -B 2b 2ab 
+69        F m m m        Fmmm      Fmmm      -F 2 2    
+70:1      F d d d        Fddd      Fddd      F 2 2 -1d 
+70:2      F d d d        Fddd      Fddd      -F 2uv 2vw
+71        I m m m        Immm      Immm      -I 2 2    
+72        I b a m        Ibam      Ibam      -I 2 2c   
+72:cab    I m c b        Imcb      Imcb      -I 2a 2   
+72:bca    I c m a        Icma      Icma      -I 2b 2b  
+73        I b c a        Ibca      Ibca      -I 2b 2c  
+73:ba-c   I c a b        Icab      Icab      -I 2a 2b  
+74        I m m a        Imma      Imma      -I 2b 2   
+74:ba-c   I m m b        Immb      Immb      -I 2a 2a  
+74:cab    I b m m        Ibmm      Ibmm      -I 2c 2c  
+74:-cba   I c m m        Icmm      Icmm      -I 2 2b   
+74:bca    I m c m        Imcm      Imcm      -I 2 2a   
+74:a-cb   I m a m        Imam      Imam      -I 2c 2   
+75        P 4            P4        P4        P 4       
+76        P 41           P41       P41       P 4w      
+76*       P 41*          P41*      P41*      P 41      
+77        P 42           P42       P42       P 4c      
+77*       P 42*          P42*      P42*      P 42      
+78        P 43           P43       P43       P 4cw     
+78*       P 43*          P43*      P43*      P 43      
+79        I 4            I4        I4        I 4       
+80        I 41           I41       I41       I 4bw     
+81        P -4           P-4       P-4       P -4      
+82        I -4           I-4       I-4       I -4      
+83        P 4/m          P4/m      P4/m      -P 4      
+84        P 42/m         P42/m     P42/m     -P 4c     
+84*       P 42/m*        P42/m*    P42/m*    -P 42     
+85:1      P 4/n          P4/n      P4/n      P 4ab -1ab
+85:2      P 4/n          P4/n      P4/n      -P 4a     
+86:1      P 42/n         P42/n     P42/n     P 4n -1n  
+86:2      P 42/n         P42/n     P42/n     -P 4bc    
+87        I 4/m          I4/m      I4/m      -I 4      
+88:1      I 41/a         I41/a     I41/a     I 4bw -1bw
+88:2      I 41/a         I41/a     I41/a     -I 4ad    
+89        P 4 2 2        P422      P422      P 4 2     
+90        P 4 21 2       P4212     P4212     P 4ab 2ab 
+91        P 41 2 2       P4122     P4122     P 4w 2c   
+91*       P 41 2 2*      P4122*    P4122*    P 41 2c   
+92        P 41 21 2      P41212    P41212    P 4abw 2nw
+93        P 42 2 2       P4222     P4222     P 4c 2    
+93*       P 42 2 2*      P4222*    P4222*    P 42 2    
+94        P 42 21 2      P42212    P42212    P 4n 2n   
+95        P 43 2 2       P4322     P4322     P 4cw 2c  
+95*       P 43 2 2*      P4322*    P4322*    P 43 2c   
+96        P 43 21 2      P43212    P43212    P 4nw 2abw
+97        I 4 2 2        I422      I422      I 4 2     
+98        I 41 2 2       I4122     I4122     I 4bw 2bw 
+99        P 4 m m        P4mm      P4mm      P 4 -2    
+100       P 4 b m        P4bm      P4bm      P 4 -2ab  
+101       P 42 c m       P42cm     P42cm     P 4c -2c  
+101*      P 42 c m*      P42cm*    P42cm*    P 42 -2c  
+102       P 42 n m       P42nm     P42nm     P 4n -2n  
+103       P 4 c c        P4cc      P4cc      P 4 -2c   
+104       P 4 n c        P4nc      P4nc      P 4 -2n   
+105       P 42 m c       P42mc     P42mc     P 4c -2   
+105*      P 42 m c*      P42mc*    P42mc*    P 42 -2   
+106       P 42 b c       P42bc     P42bc     P 4c -2ab 
+106*      P 42 b c*      P42bc*    P42bc*    P 42 -2ab 
+107       I 4 m m        I4mm      I4mm      I 4 -2    
+108       I 4 c m        I4cm      I4cm      I 4 -2c   
+109       I 41 m d       I41md     I41md     I 4bw -2  
+110       I 41 c d       I41cd     I41cd     I 4bw -2c 
+111       P -4 2 m       P-42m     P-42m     P -4 2    
+112       P -4 2 c       P-42c     P-42c     P -4 2c   
+113       P -4 21 m      P-421m    P-421m    P -4 2ab  
+114       P -4 21 c      P-421c    P-421c    P -4 2n   
+115       P -4 m 2       P-4m2     P-4m2     P -4 -2   
+116       P -4 c 2       P-4c2     P-4c2     P -4 -2c  
+117       P -4 b 2       P-4b2     P-4b2     P -4 -2ab 
+118       P -4 n 2       P-4n2     P-4n2     P -4 -2n  
+119       I -4 m 2       I-4m2     I-4m2     I -4 -2   
+120       I -4 c 2       I-4c2     I-4c2     I -4 -2c  
+121       I -4 2 m       I-42m     I-42m     I -4 2    
+122       I -4 2 d       I-42d     I-42d     I -4 2bw  
+123       P 4/m m m      P4/mmm    P4/mmm    -P 4 2    
+124       P 4/m c c      P4/mcc    P4/mcc    -P 4 2c   
+125:1     P 4/n b m      P4/nbm    P4/nbm    P 4 2 -1ab
+125:2     P 4/n b m      P4/nbm    P4/nbm    -P 4a 2b  
+126:1     P 4/n n c      P4/nnc    P4/nnc    P 4 2 -1n 
+126:2     P 4/n n c      P4/nnc    P4/nnc    -P 4a 2bc 
+127       P 4/m b m      P4/mbm    P4/mbm    -P 4 2ab  
+128       P 4/m n c      P4/mnc    P4/mnc    -P 4 2n   
+129:1     P 4/n m m      P4/nmm    P4/nmm    P 4ab 2ab 
+129:2     P 4/n m m      P4/nmm    P4/nmm    -P 4a 2a  
+130:1     P 4/n c c      P4/ncc    P4/ncc    P 4ab 2n -
+130:2     P 4/n c c      P4/ncc    P4/ncc    -P 4a 2ac 
+131       P 42/m m c     P42/mmc   P42/mmc   -P 4c 2   
+132       P 42/m c m     P42/mcm   P42/mcm   -P 4c 2c  
+133:1     P 42/n b c     P42/nbc   P42/nbc   P 4n 2c -1
+133:2     P 42/n b c     P42/nbc   P42/nbc   -P 4ac 2b 
+134:1     P 42/n n m     P42/nnm   P42/nnm   P 4n 2 -1n
+134:2     P 42/n n m     P42/nnm   P42/nnm   -P 4ac 2bc
+135       P 42/m b c     P42/mbc   P42/mbc   -P 4c 2ab 
+135*      P 42/m b c*    P42/mbc*  P42/mbc*  -P 42 2ab 
+136       P 42/m n m     P42/mnm   P42/mnm   -P 4n 2n  
+137:1     P 42/n m c     P42/nmc   P42/nmc   P 4n 2n -1
+137:2     P 42/n m c     P42/nmc   P42/nmc   -P 4ac 2a 
+138:1     P 42/n c m     P42/ncm   P42/ncm   P 4n 2ab -
+138:2     P 42/n c m     P42/ncm   P42/ncm   -P 4ac 2ac
+139       I 4/m m m      I4/mmm    I4/mmm    -I 4 2    
+140       I 4/m c m      I4/mcm    I4/mcm    -I 4 2c   
+141:1     I 41/a m d     I41/amd   I41/amd   I 4bw 2bw 
+141:2     I 41/a m d     I41/amd   I41/amd   -I 4bd 2  
+142:1     I 41/a c d     I41/acd   I41/acd   I 4bw 2aw 
+142:2     I 41/a c d     I41/acd   I41/acd   -I 4bd 2c 
+143       P 3            P3        P3        P 3       
+144       P 31           P31       P31       P 31      
+145       P 32           P32       P32       P 32      
+146:h     R 3            R3        R3        R 3       
+146:r     R 3            R3        R3        P 3*      
+147       P -3           P-3       P-3       -P 3      
+148:h     R -3           R-3       R-3       -R 3      
+148:r     R -3           R-3       R-3       -P 3*     
+149       P 3 1 2        P312      P32       P 3 2     
+150       P 3 2 1        P321      P32       P 3 2     
+151       P 31 1 2       P3112     P312      P 31 2 (0 
+152       P 31 2 1       P3121     P312      P 31 2    
+153       P 32 1 2       P3212     P322      P 32 2 (0 
+154       P 32 2 1       P3221     P322      P 32 2    
+155:h     R 3 2          R32       R32       R 3 2     
+155:r     R 3 2          R32       R32       P 3* 2    
+156       P 3 m 1        P3m1      P3m       P 3 -2"   
+157       P 3 1 m        P31m      P3m       P 3 -2    
+158       P 3 c 1        P3c1      P3c       P 3 -2"c
+159       P 3 1 c        P31c      P3c       P 3 -2c   
+160:h     R 3 m          R3m       R3m       R 3 -2    
+160:r     R 3 m          R3m       R3m       P 3* -2   
+161:h     R 3 c          R3c       R3c       R 3 -2"c
+161:r     R 3 c          R3c       R3c       P 3* -2n  
+162       P -3 1 m       P-31m     P-3m      -P 3 2    
+163       P -3 1 c       P-31c     P-3c      -P 3 2c   
+164       P -3 m 1       P-3m1     P-3m      -P 3 2"   
+165       P -3 c 1       P-3c1     P-3c      -P 3 2"c
+166:h     R -3 m         R-3m      R-3m      -R 3 2"    
+166:r     R -3 m         R-3m      R-3m      -P 3* 2   
+167:h     R -3 c         R-3c      R-3c      -R 3 2"c
+167:r     R -3 c         R-3c      R-3c      -P 3* 2n  
+168       P 6            P6        P6        P 6       
+169       P 61           P61       P61       P 61      
+170       P 65           P65       P65       P 65      
+171       P 62           P62       P62       P 62      
+172       P 64           P64       P64       P 64      
+173       P 63           P63       P63       P 6c      
+173*      P 63*          P63*      P63*      P 63      
+174       P -6           P-6       P-6       P -6      
+175       P 6/m          P6/m      P6/m      -P 6      
+176       P 63/m         P63/m     P63/m     -P 6c     
+176*      P 63/m*        P63/m*    P63/m*    -P 63     
+177       P 6 2 2        P622      P622      P 6 2     
+178       P 61 2 2       P6122     P6122     P 61 2 (0 0 5)
+179       P 65 2 2       P6522     P6522     P 65 2 (0 0 1)
+180       P 62 2 2       P6222     P6222     P 62 2 (0 0 4)
+181       P 64 2 2       P6422     P6422     P 64 2 (0 0 2)
+182       P 63 2 2       P6322     P6322     P 6c 2c   
+182*      P 63 2 2*      P6322*    P6322*    P 63 2c   
+183       P 6 m m        P6mm      P6mm      P 6 -2    
+184       P 6 c c        P6cc      P6cc      P 6 -2c   
+185       P 63 c m       P63cm     P63cm     P 6c -2   
+185*      P 63 c m*      P63cm*    P63cm*    P 63 -2   
+186       P 63 m c       P63mc     P63mc     P 6c -2c  
+186*      P 63 m c*      P63mc*    P63mc*    P 63 -2c  
+187       P -6 m 2       P-6m2     P-6m2     P -6 2    
+188       P -6 c 2       P-6c2     P-6c2     P -6c 2   
+189       P -6 2 m       P-62m     P-62m     P -6 -2   
+190       P -6 2 c       P-62c     P-62c     P -6c -2c 
+191       P 6/m m m      P6/mmm    P6/mmm    -P 6 2    
+192       P 6/m c c      P6/mcc    P6/mcc    -P 6 2c   
+193       P 63/m c m     P63/mcm   P63/mcm   -P 6c 2   
+193*      P 63/m c m*    P63/mcm*  P63/mcm*  -P 63 2   
+194       P 63/m m c     P63/mmc   P63/mmc   -P 6c 2c  
+194*      P 63/m m c*    P63/mmc*  P63/mmc*  -P 63 2c  
+195       P 2 3          P23       P23       P 2 2 3   
+196       F 2 3          F23       F23       F 2 2 3   
+197       I 2 3          I23       I23       I 2 2 3   
+198       P 21 3         P213      P213      P 2ac 2ab 3
+199       I 21 3         I213      I213      I 2b 2c 3 
+200       P m -3         Pm-3      Pm-3      -P 2 2 3  
+201:1     P n -3         Pn-3      Pn-3      P 2 2 3 -1n
+201:2     P n -3         Pn-3      Pn-3      -P 2ab 2bc 3
+202       F m -3         Fm-3      Fm-3      -F 2 2 3  
+203:1     F d -3         Fd-3      Fd-3      F 2 2 3 -1d
+203:2     F d -3         Fd-3      Fd-3      -F 2uv 2vw 3
+204       I m -3         Im-3      Im-3      -I 2 2 3  
+205       P a -3         Pa-3      Pa-3      -P 2ac 2ab 3
+206       I a -3         Ia-3      Ia-3      -I 2b 2c 3
+207       P 4 3 2        P432      P432      P 4 2 3   
+208       P 42 3 2       P4232     P4232     P 4n 2 3  
+209       F 4 3 2        F432      F432      F 4 2 3   
+210       F 41 3 2       F4132     F4132     F 4d 2 3  
+211       I 4 3 2        I432      I432      I 4 2 3   
+212       P 43 3 2       P4332     P4332     P 4acd 2ab 3
+213       P 41 3 2       P4132     P4132     P 4bd 2ab 3
+214       I 41 3 2       I4132     I4132     I 4bd 2c 3
+215       P -4 3 m       P-43m     P-43m     P -4 2 3  
+216       F -4 3 m       F-43m     F-43m     F -4 2 3  
+217       I -4 3 m       I-43m     I-43m     I -4 2 3  
+218       P -4 3 n       P-43n     P-43n     P -4n 2 3 
+219       F -4 3 c       F-43c     F-43c     F -4a 2 3 
+220       I -4 3 d       I-43d     I-43d     I -4bd 2c 3
+221       P m -3 m       Pm-3m     Pm-3m     -P 4 2 3  
+222:1     P n -3 n       Pn-3n     Pn-3n     P 4 2 3 -1n
+222:2     P n -3 n       Pn-3n     Pn-3n     -P 4a 2bc 3
+223       P m -3 n       Pm-3n     Pm-3n     -P 4n 2 3 
+224:1     P n -3 m       Pn-3m     Pn-3m     P 4n 2 3 -1n
+224:2     P n -3 m       Pn-3m     Pn-3m     -P 4bc 2bc 3
+225       F m -3 m       Fm-3m     Fm-3m     -F 4 2 3  
+226       F m -3 c       Fm-3c     Fm-3c     -F 4a 2 3 
+227:1     F d -3 m       Fd-3m     Fd-3m     F 4d 2 3 -1d
+227:2     F d -3 m       Fd-3m     Fd-3m     -F 4vw 2vw 3
+228:1     F d -3 c       Fd-3c     Fd-3c     F 4d 2 3 -1ad
+228:2     F d -3 c       Fd-3c     Fd-3c     -F 4ud 2vw 3
+229       I m -3 m       Im-3m     Im-3m     -I 4 2 3  
+230       I a -3 d       Ia-3d     Ia-3d     -I 4bd 2c 3
+
+
+   */
   
   // primitives:
   // 1: primitive:  1. P1   2. P1¯,
@@ -2064,1189 +3309,199 @@ public class SpaceGroup implements Cloneable {
       "230;230.1;;96;oh^10;i a -3 d;-i 4bd 2c 3",        
   };
   
-  /**
-   * 
-   * @param lattvecs
-   *        could be magnetic centering, in which case there is an additional
-   *        lattice parameter that is time reversal
-   * @return true if successful
-   */
-  public boolean addLatticeVectors(Lst<double[]> lattvecs) {
-    if (latticeOp >= 0 || lattvecs.size() == 0)
-      return false;
-    int nOps = latticeOp = operationCount;
-    boolean isMagnetic = (lattvecs.get(0).length == modDim + 4);
-    int magRev = -2;
-    for (int j = 0; j < lattvecs.size(); j++) {
-      double[] data = lattvecs.get(j);
-      if (isMagnetic) {
-        magRev = (int) data[modDim + 3];
-        data = AU.arrayCopyD(data, modDim + 3);
-      }
-      if (data.length > modDim + 3)
-        return false;
-      for (int i = 0; i < nOps; i++) {
-        SymmetryOperation newOp = new SymmetryOperation(null, 0, true); // must normalize these
-        newOp.modDim = modDim;
-        SymmetryOperation op = operations[i];
-        newOp.divisor = op.divisor;
-        newOp.linearRotTrans = AU.arrayCopyD(op.linearRotTrans, -1);
-        newOp.setFromMatrix(data, false);
-        if (magRev != -2)
-          newOp.setTimeReversal(op.timeReversal * magRev);
-        newOp.xyzOriginal = newOp.xyz;
-        addOp(newOp, newOp.xyz, true);
-      }
-    }
-    return true;
-  }
-
-  int getSiteMultiplicity(P3d pt, UnitCell unitCell) {
-    int n = finalOperations.length;
-    Lst<P3d> pts = new Lst<P3d>();
-    for (int i = n; --i >= 0;) {
-      P3d pt1 = P3d.newP(pt);
-      finalOperations[i].rotTrans(pt1);
-      unitCell.unitize(pt1);
-      for (int j = pts.size(); --j >= 0;) {
-        P3d pt0 = pts.get(j);
-        if (pt1.distanceSquared(pt0) < JC.UC_TOLERANCE2) {// was 0.000001f) {
-          pt1 = null;
-          break;
-        }      
-      }
-      if (pt1 != null)
-        pts.addLast(pt1);
-    }
-    return n / pts.size();
-  }
-
-  void setName(String name) {
-    this.name = name;
-    if (name != null && name.startsWith("HM:")) {
-      setHMSymbol(name.substring(3));
-    }
-
-   strName = displayName = null;
-  }
-
-//  M4d getRawOperation(int i) {
-//    SymmetryOperation op = new SymmetryOperation(null, 0, false);
-//    op.setMatrixFromXYZ(operations[i].xyzOriginal, 0, false);
-//    op.doFinalize();
-//    return op;
-//  }
-
-  String getNameType(String type, SymmetryInterface uc) {
-    String ret = null;
-    if (type.equals("HM")) {
-      ret = hmSymbol;
-    } else if (type.equals("ITA")) {
-      ret = itaNumber;
-    } else if (type.equals("Hall")) {
-      ret = hallSymbol;
-    } else {
-      ret = "?";
-    }
-    if (ret != null)
-      return ret;
-    // find the space group using canonical Seitz
-    if (info == null)
-      info = getInfo(this, hmSymbol, uc.getUnitCellParams(), true, false);
-    if (info instanceof String)
-      return null;
-    @SuppressWarnings("unchecked")
-    Map<String, Object> map = (Map<String, Object>) info;
-    Object v = map.get(type.equals("Hall") ? "HallSymbol" :
-      type.equals("ITA") ? "ita" : "HermannMauguinSymbol");
-    return (v == null ? null : v.toString());
-  }
-
-  /**
-   * Look for Jmol ID such as 10:b or 10 or 10.2 or 10:c,a,b
-   * 
-   * @param name
-   * @return found space group or null
-   */
-  static SpaceGroup getSpaceGroupFromJmolClegOrITA(String name) {
-    int n = SG.length;
-    if (name.indexOf(":") >= 0) {
-      if (name.indexOf(",") >= 0) {
-        // 10:c,a,b
-        for (int i = 0; i < n; i++)
-          if (name.equals(SG[i].clegId))
-            return SG[i];
-      } else {
-        // 10:b
-        for (int i = 0; i < n; i++)
-          if (name.equals(SG[i].jmolId))
-            return SG[i];
-      }
-    } else if (name.indexOf(".") >= 0) {
-      // 10.3
-      for (int i = 0; i < n; i++)
-        if (name.equals(SG[i].itaIndex))
-          return SG[i];
-    } else {
-      // just first match to ita number
-      for (int i = 0; i < n; i++)
-        if (name.equals(SG[i].itaNumber))
-          return SG[i];
-    }
-    return null;
-  }
-
-  void checkHallOperators() {
-    if (nHallOperators != null && nHallOperators.intValue() != operationCount) {
-      if (hallInfo == null || hallInfo.nRotations > 0) {
-        generateAllOperators(hallInfo); 
-      } else {
-        // using ITA data, not Hall operators
-        init(false);
-        doNormalize = false;
-        // get base ITA nnn.1 + transform, setting my operators
-        // I have all my information already.
-        transformSpaceGroup(this, getSpaceGroupFromJmolClegOrITA(itaNumber), null, itaTransform, null);
-        hallInfo = null;
-      }
-    }
-  }
-
-  /**
-   * This method is used to generate the additional operators needed to cover
-   * subgroups and some settings with dimension other than 1.
-   * 
-   * It back-transforms the subgroup to the group and then returns it to the
-   * subgroup, adding all the necessary operations.
-   * 
-   * It is used specifically by ModelKit.cmdAssignSpaceGroupPacked for packing
-   * the unit cell of a space group.
-   * 
-   * @param transform
-   * @return full set of operators for this transformation.
-   */
-  M4d[] getOpsCtr(String transform) {
-    SpaceGroup sg = getNull(true, true, false);
-    transformSpaceGroup(sg, this, null, "!" + transform, null);
-    sg.setFinalOperations();
-    SpaceGroup sg2 = getNull(true, false, false);
-    transformSpaceGroup(sg2, sg, null, transform, null);
-    sg2.setFinalOperations();
-    return sg2.finalOperations;
-  }
-
-  static SpaceGroup getSpaceGroupFromIndex(int i) {
-    return (SG != null && i >= 0 && i < SG.length ? SG[i] : null);
-  }
-
-  /**
-   * from SpaceGroupFinder after finding a match with an ITA setting
-   * @param jmolId
-   * @param sg
-   * @param set
-   * @param tr
-   */
-  void setITATableNames(String jmolId, String sg, String set, String tr) {
-    itaNumber = sg;
-    itaIndex = (tr != null ? sg + ":" + tr : set.indexOf(".") >= 0 ? set : sg + "." + set);
-    itaTransform = tr;
-    clegId = sg + ":" + tr;
-    strName = null;
-    this.jmolId = jmolId;
-    if (jmolId == null) {
-      name = clegId;
-      info = dumpInfoObj(); 
-    } else {
-      setJmolCode(jmolId);
-    }
-  }
-
-  /*  see https://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
- 
-intl#     H-M full       HM-abbr   HM-short  Hall
-1         P 1            P1        P         P 1       
-2         P -1           P-1       P-1       -P 1      
-3:b       P 1 2 1        P121      P2        P 2y      
-3:b       P 2            P2        P2        P 2y      
-3:c       P 1 1 2        P112      P2        P 2       
-3:a       P 2 1 1        P211      P2        P 2x      
-4:b       P 1 21 1       P1211     P21       P 2yb     
-4:b       P 21           P21       P21       P 2yb     
-4:b*      P 1 21 1*      P1211*    P21*      P 2y1     
-4:c       P 1 1 21       P1121     P21       P 2c      
-4:c*      P 1 1 21*      P1121*    P21*      P 21      
-4:a       P 21 1 1       P2111     P21       P 2xa     
-4:a*      P 21 1 1*      P2111*    P21*      P 2x1     
-5:b1      C 1 2 1        C121      C2        C 2y      
-5:b1      C 2            C2        C2        C 2y      
-5:b2      A 1 2 1        A121      A2        A 2y      
-5:b3      I 1 2 1        I121      I2        I 2y      
-5:c1      A 1 1 2        A112      A2        A 2       
-5:c2      B 1 1 2        B112      B2        B 2       
-5:c3      I 1 1 2        I112      I2        I 2       
-5:a1      B 2 1 1        B211      B2        B 2x      
-5:a2      C 2 1 1        C211      C2        C 2x      
-5:a3      I 2 1 1        I211      I2        I 2x      
-6:b       P 1 m 1        P1m1      Pm        P -2y     
-6:b       P m            Pm        Pm        P -2y     
-6:c       P 1 1 m        P11m      Pm        P -2      
-6:a       P m 1 1        Pm11      Pm        P -2x     
-7:b1      P 1 c 1        P1c1      Pc        P -2yc    
-7:b1      P c            Pc        Pc        P -2yc    
-7:b2      P 1 n 1        P1n1      Pn        P -2yac   
-7:b2      P n            Pn        Pn        P -2yac   
-7:b3      P 1 a 1        P1a1      Pa        P -2ya    
-7:b3      P a            Pa        Pa        P -2ya    
-7:c1      P 1 1 a        P11a      Pa        P -2a     
-7:c2      P 1 1 n        P11n      Pn        P -2ab    
-7:c3      P 1 1 b        P11b      Pb        P -2b     
-7:a1      P b 1 1        Pb11      Pb        P -2xb    
-7:a2      P n 1 1        Pn11      Pn        P -2xbc   
-7:a3      P c 1 1        Pc11      Pc        P -2xc    
-8:b1      C 1 m 1        C1m1      Cm        C -2y     
-8:b1      C m            Cm        Cm        C -2y     
-8:b2      A 1 m 1        A1m1      Am        A -2y     
-8:b3      I 1 m 1        I1m1      Im        I -2y     
-8:b3      I m            Im        Im        I -2y     
-8:c1      A 1 1 m        A11m      Am        A -2      
-8:c2      B 1 1 m        B11m      Bm        B -2      
-8:c3      I 1 1 m        I11m      Im        I -2      
-8:a1      B m 1 1        Bm11      Bm        B -2x     
-8:a2      C m 1 1        Cm11      Cm        C -2x     
-8:a3      I m 1 1        Im11      Im        I -2x     
-9:b1      C 1 c 1        C1c1      Cc        C -2yc    
-9:b1      C c            Cc        Cc        C -2yc    
-9:b2      A 1 n 1        A1n1      An        A -2yab   
-9:b3      I 1 a 1        I1a1      Ia        I -2ya    
-9:-b1     A 1 a 1        A1a1      Aa        A -2ya    
-9:-b2     C 1 n 1        C1n1      Cn        C -2yac   
-9:-b3     I 1 c 1        I1c1      Ic        I -2yc    
-9:c1      A 1 1 a        A11a      Aa        A -2a     
-9:c2      B 1 1 n        B11n      Bn        B -2ab    
-9:c3      I 1 1 b        I11b      Ib        I -2b     
-9:-c1     B 1 1 b        B11b      Bb        B -2b     
-9:-c2     A 1 1 n        A11n      An        A -2ab    
-9:-c3     I 1 1 a        I11a      Ia        I -2a     
-9:a1      B b 1 1        Bb11      Bb        B -2xb    
-9:a2      C n 1 1        Cn11      Cn        C -2xac   
-9:a3      I c 1 1        Ic11      Ic        I -2xc    
-9:-a1     C c 1 1        Cc11      Cc        C -2xc    
-9:-a2     B n 1 1        Bn11      Bn        B -2xab   
-9:-a3     I b 1 1        Ib11      Ib        I -2xb    
-10:b      P 1 2/m 1      P12/m1    P2/m      -P 2y     
-10:b      P 2/m          P2/m      P2/m      -P 2y     
-10:c      P 1 1 2/m      P112/m    P2/m      -P 2      
-10:a      P 2/m 1 1      P2/m11    P2/m      -P 2x     
-11:b      P 1 21/m 1     P121/m1   P21/m     -P 2yb    
-11:b      P 21/m         P21/m     P21/m     -P 2yb    
-11:b*     P 1 21/m 1*    P121/m1*  P21/m*    -P 2y1    
-11:c      P 1 1 21/m     P1121/m   P21/m     -P 2c     
-11:c*     P 1 1 21/m*    P1121/m*  P21/m*    -P 21     
-11:a      P 21/m 1 1     P21/m11   P21/m     -P 2xa    
-11:a*     P 21/m 1 1*    P21/m11*  P21/m*    -P 2x1    
-12:b1     C 1 2/m 1      C12/m1    C2/m      -C 2y     
-12:b1     C 2/m          C2/m      C2/m      -C 2y     
-12:b2     A 1 2/m 1      A12/m1    A2/m      -A 2y     
-12:b3     I 1 2/m 1      I12/m1    I2/m      -I 2y     
-12:b3     I 2/m          I2/m      I2/m      -I 2y     
-12:c1     A 1 1 2/m      A112/m    A2/m      -A 2      
-12:c2     B 1 1 2/m      B112/m    B2/m      -B 2      
-12:c3     I 1 1 2/m      I112/m    I2/m      -I 2      
-12:a1     B 2/m 1 1      B2/m11    B2/m      -B 2x     
-12:a2     C 2/m 1 1      C2/m11    C2/m      -C 2x     
-12:a3     I 2/m 1 1      I2/m11    I2/m      -I 2x     
-13:b1     P 1 2/c 1      P12/c1    P2/c      -P 2yc    
-13:b1     P 2/c          P2/c      P2/c      -P 2yc    
-13:b2     P 1 2/n 1      P12/n1    P2/n      -P 2yac   
-13:b2     P 2/n          P2/n      P2/n      -P 2yac   
-13:b3     P 1 2/a 1      P12/a1    P2/a      -P 2ya    
-13:b3     P 2/a          P2/a      P2/a      -P 2ya    
-13:c1     P 1 1 2/a      P112/a    P2/a      -P 2a     
-13:c2     P 1 1 2/n      P112/n    P2/n      -P 2ab    
-13:c3     P 1 1 2/b      P112/b    P2/b      -P 2b     
-13:a1     P 2/b 1 1      P2/b11    P2/b      -P 2xb    
-13:a2     P 2/n 1 1      P2/n11    P2/n      -P 2xbc   
-13:a3     P 2/c 1 1      P2/c11    P2/c      -P 2xc    
-14:b1     P 1 21/c 1     P121/c1   P21/c     -P 2ybc   
-14:b1     P 21/c         P21/c     P21/c     -P 2ybc   
-14:b2     P 1 21/n 1     P121/n1   P21/n     -P 2yn    
-14:b2     P 21/n         P21/n     P21/n     -P 2yn    
-14:b3     P 1 21/a 1     P121/a1   P21/a     -P 2yab   
-14:b3     P 21/a         P21/a     P21/a     -P 2yab   
-14:c1     P 1 1 21/a     P1121/a   P21/a     -P 2ac    
-14:c2     P 1 1 21/n     P1121/n   P21/n     -P 2n     
-14:c3     P 1 1 21/b     P1121/b   P21/b     -P 2bc    
-14:a1     P 21/b 1 1     P21/b11   P21/b     -P 2xab   
-14:a2     P 21/n 1 1     P21/n11   P21/n     -P 2xn    
-14:a3     P 21/c 1 1     P21/c11   P21/c     -P 2xac   
-15:b1     C 1 2/c 1      C12/c1    C2/c      -C 2yc    
-15:b1     C 2/c          C2/c      C2/c      -C 2yc    
-15:b2     A 1 2/n 1      A12/n1    A2/n      -A 2yab   
-15:b3     I 1 2/a 1      I12/a1    I2/a      -I 2ya    
-15:b3     I 2/a          I2/a      I2/a      -I 2ya    
-15:-b1    A 1 2/a 1      A12/a1    A2/a      -A 2ya    
-15:-b2    C 1 2/n 1      C12/n1    C2/n      -C 2yac   
-15:-b2    C 2/n          C2/n      C2/n      -C 2yac   
-15:-b3    I 1 2/c 1      I12/c1    I2/c      -I 2yc    
-15:-b3    I 2/c          I2/c      I2/c      -I 2yc    
-15:c1     A 1 1 2/a      A112/a    A2/a      -A 2a     
-15:c2     B 1 1 2/n      B112/n    B2/n      -B 2ab    
-15:c3     I 1 1 2/b      I112/b    I2/b      -I 2b     
-15:-c1    B 1 1 2/b      B112/b    B2/b      -B 2b     
-15:-c2    A 1 1 2/n      A112/n    A2/n      -A 2ab    
-15:-c3    I 1 1 2/a      I112/a    I2/a      -I 2a     
-15:a1     B 2/b 1 1      B2/b11    B2/b      -B 2xb    
-15:a2     C 2/n 1 1      C2/n11    C2/n      -C 2xac   
-15:a3     I 2/c 1 1      I2/c11    I2/c      -I 2xc    
-15:-a1    C 2/c 1 1      C2/c11    C2/c      -C 2xc    
-15:-a2    B 2/n 1 1      B2/n11    B2/n      -B 2xab   
-15:-a3    I 2/b 1 1      I2/b11    I2/b      -I 2xb    
-16        P 2 2 2        P222      P222      P 2 2     
-17        P 2 2 21       P2221     P2221     P 2c 2    
-17*       P 2 2 21*      P2221*    P2221*    P 21 2    
-17:cab    P 21 2 2       P2122     P2122     P 2a 2a   
-17:bca    P 2 21 2       P2212     P2212     P 2 2b    
-18        P 21 21 2      P21212    P21212    P 2 2ab   
-18:cab    P 2 21 21      P22121    P22121    P 2bc 2   
-18:bca    P 21 2 21      P21221    P21221    P 2ac 2ac 
-19        P 21 21 21     P212121   P212121   P 2ac 2ab 
-20        C 2 2 21       C2221     C2221     C 2c 2    
-20*       C 2 2 21*      C2221*    C2221*    C 21 2    
-20:cab    A 21 2 2       A2122     A2122     A 2a 2a   
-20:cab*   A 21 2 2*      A2122*    A2122*    A 2a 21   
-20:bca    B 2 21 2       B2212     B2212     B 2 2b    
-21        C 2 2 2        C222      C222      C 2 2     
-21:cab    A 2 2 2        A222      A222      A 2 2     
-21:bca    B 2 2 2        B222      B222      B 2 2     
-22        F 2 2 2        F222      F222      F 2 2     
-23        I 2 2 2        I222      I222      I 2 2     
-24        I 21 21 21     I212121   I212121   I 2b 2c   
-25        P m m 2        Pmm2      Pmm2      P 2 -2    
-25:cab    P 2 m m        P2mm      P2mm      P -2 2    
-25:bca    P m 2 m        Pm2m      Pm2m      P -2 -2   
-26        P m c 21       Pmc21     Pmc21     P 2c -2   
-26*       P m c 21*      Pmc21*    Pmc21*    P 21 -2   
-26:ba-c   P c m 21       Pcm21     Pcm21     P 2c -2c  
-26:ba-c*  P c m 21*      Pcm21*    Pcm21*    P 21 -2c  
-26:cab    P 21 m a       P21ma     P21ma     P -2a 2a  
-26:-cba   P 21 a m       P21am     P21am     P -2 2a   
-26:bca    P b 21 m       Pb21m     Pb21m     P -2 -2b  
-26:a-cb   P m 21 b       Pm21b     Pm21b     P -2b -2  
-27        P c c 2        Pcc2      Pcc2      P 2 -2c   
-27:cab    P 2 a a        P2aa      P2aa      P -2a 2   
-27:bca    P b 2 b        Pb2b      Pb2b      P -2b -2b 
-28        P m a 2        Pma2      Pma2      P 2 -2a   
-28*       P m a 2*       Pma2*     Pma2*     P 2 -21   
-28:ba-c   P b m 2        Pbm2      Pbm2      P 2 -2b   
-28:cab    P 2 m b        P2mb      P2mb      P -2b 2   
-28:-cba   P 2 c m        P2cm      P2cm      P -2c 2   
-28:-cba*  P 2 c m*       P2cm*     P2cm*     P -21 2   
-28:bca    P c 2 m        Pc2m      Pc2m      P -2c -2c 
-28:a-cb   P m 2 a        Pm2a      Pm2a      P -2a -2a 
-29        P c a 21       Pca21     Pca21     P 2c -2ac 
-29:ba-c   P b c 21       Pbc21     Pbc21     P 2c -2b  
-29:cab    P 21 a b       P21ab     P21ab     P -2b 2a  
-29:-cba   P 21 c a       P21ca     P21ca     P -2ac 2a 
-29:bca    P c 21 b       Pc21b     Pc21b     P -2bc -2c
-29:a-cb   P b 21 a       Pb21a     Pb21a     P -2a -2ab
-30        P n c 2        Pnc2      Pnc2      P 2 -2bc  
-30:ba-c   P c n 2        Pcn2      Pcn2      P 2 -2ac  
-30:cab    P 2 n a        P2na      P2na      P -2ac 2  
-30:-cba   P 2 a n        P2an      P2an      P -2ab 2  
-30:bca    P b 2 n        Pb2n      Pb2n      P -2ab -2a
-30:a-cb   P n 2 b        Pn2b      Pn2b      P -2bc -2b
-31        P m n 21       Pmn21     Pmn21     P 2ac -2  
-31:ba-c   P n m 21       Pnm21     Pnm21     P 2bc -2bc
-31:cab    P 21 m n       P21mn     P21mn     P -2ab 2ab
-31:-cba   P 21 n m       P21nm     P21nm     P -2 2ac  
-31:bca    P n 21 m       Pn21m     Pn21m     P -2 -2bc 
-31:a-cb   P m 21 n       Pm21n     Pm21n     P -2ab -2 
-32        P b a 2        Pba2      Pba2      P 2 -2ab  
-32:cab    P 2 c b        P2cb      P2cb      P -2bc 2  
-32:bca    P c 2 a        Pc2a      Pc2a      P -2ac -2a
-33        P n a 21       Pna21     Pna21     P 2c -2n  
-33*       P n a 21*      Pna21*    Pna21*    P 21 -2n  
-33:ba-c   P b n 21       Pbn21     Pbn21     P 2c -2ab 
-33:ba-c*  P b n 21*      Pbn21*    Pbn21*    P 21 -2ab 
-33:cab    P 21 n b       P21nb     P21nb     P -2bc 2a 
-33:cab*   P 21 n b*      P21nb*    P21nb*    P -2bc 21 
-33:-cba   P 21 c n       P21cn     P21cn     P -2n 2a  
-33:-cba*  P 21 c n*      P21cn*    P21cn*    P -2n 21  
-33:bca    P c 21 n       Pc21n     Pc21n     P -2n -2ac
-33:a-cb   P n 21 a       Pn21a     Pn21a     P -2ac -2n
-34        P n n 2        Pnn2      Pnn2      P 2 -2n   
-34:cab    P 2 n n        P2nn      P2nn      P -2n 2   
-34:bca    P n 2 n        Pn2n      Pn2n      P -2n -2n 
-35        C m m 2        Cmm2      Cmm2      C 2 -2    
-35:cab    A 2 m m        A2mm      A2mm      A -2 2    
-35:bca    B m 2 m        Bm2m      Bm2m      B -2 -2   
-36        C m c 21       Cmc21     Cmc21     C 2c -2   
-36*       C m c 21*      Cmc21*    Cmc21*    C 21 -2   
-36:ba-c   C c m 21       Ccm21     Ccm21     C 2c -2c  
-36:ba-c*  C c m 21*      Ccm21*    Ccm21*    C 21 -2c  
-36:cab    A 21 m a       A21ma     A21ma     A -2a 2a  
-36:cab*   A 21 m a*      A21ma*    A21ma*    A -2a 21  
-36:-cba   A 21 a m       A21am     A21am     A -2 2a   
-36:-cba*  A 21 a m*      A21am*    A21am*    A -2 21   
-36:bca    B b 21 m       Bb21m     Bb21m     B -2 -2b  
-36:a-cb   B m 21 b       Bm21b     Bm21b     B -2b -2  
-37        C c c 2        Ccc2      Ccc2      C 2 -2c   
-37:cab    A 2 a a        A2aa      A2aa      A -2a 2   
-37:bca    B b 2 b        Bb2b      Bb2b      B -2b -2b 
-38        A m m 2        Amm2      Amm2      A 2 -2    
-38:ba-c   B m m 2        Bmm2      Bmm2      B 2 -2    
-38:cab    B 2 m m        B2mm      B2mm      B -2 2    
-38:-cba   C 2 m m        C2mm      C2mm      C -2 2    
-38:bca    C m 2 m        Cm2m      Cm2m      C -2 -2   
-38:a-cb   A m 2 m        Am2m      Am2m      A -2 -2   
-39        A b m 2        Abm2      Abm2      A 2 -2b   
-39:ba-c   B m a 2        Bma2      Bma2      B 2 -2a   
-39:cab    B 2 c m        B2cm      B2cm      B -2a 2   
-39:-cba   C 2 m b        C2mb      C2mb      C -2a 2   
-39:bca    C m 2 a        Cm2a      Cm2a      C -2a -2a 
-39:a-cb   A c 2 m        Ac2m      Ac2m      A -2b -2b 
-40        A m a 2        Ama2      Ama2      A 2 -2a   
-40:ba-c   B b m 2        Bbm2      Bbm2      B 2 -2b   
-40:cab    B 2 m b        B2mb      B2mb      B -2b 2   
-40:-cba   C 2 c m        C2cm      C2cm      C -2c 2   
-40:bca    C c 2 m        Cc2m      Cc2m      C -2c -2c 
-40:a-cb   A m 2 a        Am2a      Am2a      A -2a -2a 
-41        A b a 2        Aba2      Aba2      A 2 -2ab  
-41:ba-c   B b a 2        Bba2      Bba2      B 2 -2ab  
-41:cab    B 2 c b        B2cb      B2cb      B -2ab 2  
-41:-cba   C 2 c b        C2cb      C2cb      C -2ac 2  
-41:bca    C c 2 a        Cc2a      Cc2a      C -2ac -2a
-41:a-cb   A c 2 a        Ac2a      Ac2a      A -2ab -2a
-42        F m m 2        Fmm2      Fmm2      F 2 -2    
-42:cab    F 2 m m        F2mm      F2mm      F -2 2    
-42:bca    F m 2 m        Fm2m      Fm2m      F -2 -2   
-43        F d d 2        Fdd2      Fdd2      F 2 -2d   
-43:cab    F 2 d d        F2dd      F2dd      F -2d 2   
-43:bca    F d 2 d        Fd2d      Fd2d      F -2d -2d 
-44        I m m 2        Imm2      Imm2      I 2 -2    
-44:cab    I 2 m m        I2mm      I2mm      I -2 2    
-44:bca    I m 2 m        Im2m      Im2m      I -2 -2   
-45        I b a 2        Iba2      Iba2      I 2 -2c   
-45:cab    I 2 c b        I2cb      I2cb      I -2a 2   
-45:bca    I c 2 a        Ic2a      Ic2a      I -2b -2b 
-46        I m a 2        Ima2      Ima2      I 2 -2a   
-46:ba-c   I b m 2        Ibm2      Ibm2      I 2 -2b   
-46:cab    I 2 m b        I2mb      I2mb      I -2b 2   
-46:-cba   I 2 c m        I2cm      I2cm      I -2c 2   
-46:bca    I c 2 m        Ic2m      Ic2m      I -2c -2c 
-46:a-cb   I m 2 a        Im2a      Im2a      I -2a -2a 
-47        P m m m        Pmmm      Pmmm      -P 2 2    
-48:1      P n n n        Pnnn      Pnnn      P 2 2 -1n 
-48:2      P n n n        Pnnn      Pnnn      -P 2ab 2bc
-49        P c c m        Pccm      Pccm      -P 2 2c   
-49:cab    P m a a        Pmaa      Pmaa      -P 2a 2   
-49:bca    P b m b        Pbmb      Pbmb      -P 2b 2b  
-50:1      P b a n        Pban      Pban      P 2 2 -1ab
-50:2      P b a n        Pban      Pban      -P 2ab 2b 
-50:1cab   P n c b        Pncb      Pncb      P 2 2 -1bc
-50:2cab   P n c b        Pncb      Pncb      -P 2b 2bc 
-50:1bca   P c n a        Pcna      Pcna      P 2 2 -1ac
-50:2bca   P c n a        Pcna      Pcna      -P 2a 2c  
-51        P m m a        Pmma      Pmma      -P 2a 2a  
-51:ba-c   P m m b        Pmmb      Pmmb      -P 2b 2   
-51:cab    P b m m        Pbmm      Pbmm      -P 2 2b   
-51:-cba   P c m m        Pcmm      Pcmm      -P 2c 2c  
-51:bca    P m c m        Pmcm      Pmcm      -P 2c 2   
-51:a-cb   P m a m        Pmam      Pmam      -P 2 2a   
-52        P n n a        Pnna      Pnna      -P 2a 2bc 
-52:ba-c   P n n b        Pnnb      Pnnb      -P 2b 2n  
-52:cab    P b n n        Pbnn      Pbnn      -P 2n 2b  
-52:-cba   P c n n        Pcnn      Pcnn      -P 2ab 2c 
-52:bca    P n c n        Pncn      Pncn      -P 2ab 2n 
-52:a-cb   P n a n        Pnan      Pnan      -P 2n 2bc 
-53        P m n a        Pmna      Pmna      -P 2ac 2  
-53:ba-c   P n m b        Pnmb      Pnmb      -P 2bc 2bc
-53:cab    P b m n        Pbmn      Pbmn      -P 2ab 2ab
-53:-cba   P c n m        Pcnm      Pcnm      -P 2 2ac  
-53:bca    P n c m        Pncm      Pncm      -P 2 2bc  
-53:a-cb   P m a n        Pman      Pman      -P 2ab 2  
-54        P c c a        Pcca      Pcca      -P 2a 2ac 
-54:ba-c   P c c b        Pccb      Pccb      -P 2b 2c  
-54:cab    P b a a        Pbaa      Pbaa      -P 2a 2b  
-54:-cba   P c a a        Pcaa      Pcaa      -P 2ac 2c 
-54:bca    P b c b        Pbcb      Pbcb      -P 2bc 2b 
-54:a-cb   P b a b        Pbab      Pbab      -P 2b 2ab 
-55        P b a m        Pbam      Pbam      -P 2 2ab  
-55:cab    P m c b        Pmcb      Pmcb      -P 2bc 2  
-55:bca    P c m a        Pcma      Pcma      -P 2ac 2ac
-56        P c c n        Pccn      Pccn      -P 2ab 2ac
-56:cab    P n a a        Pnaa      Pnaa      -P 2ac 2bc
-56:bca    P b n b        Pbnb      Pbnb      -P 2bc 2ab
-57        P b c m        Pbcm      Pbcm      -P 2c 2b  
-57:ba-c   P c a m        Pcam      Pcam      -P 2c 2ac 
-57:cab    P m c a        Pmca      Pmca      -P 2ac 2a 
-57:-cba   P m a b        Pmab      Pmab      -P 2b 2a  
-57:bca    P b m a        Pbma      Pbma      -P 2a 2ab 
-57:a-cb   P c m b        Pcmb      Pcmb      -P 2bc 2c 
-58        P n n m        Pnnm      Pnnm      -P 2 2n   
-58:cab    P m n n        Pmnn      Pmnn      -P 2n 2   
-58:bca    P n m n        Pnmn      Pnmn      -P 2n 2n  
-59:1      P m m n        Pmmn      Pmmn      P 2 2ab -1
-59:2      P m m n        Pmmn      Pmmn      -P 2ab 2a 
-59:1cab   P n m m        Pnmm      Pnmm      P 2bc 2 -1
-59:2cab   P n m m        Pnmm      Pnmm      -P 2c 2bc 
-59:1bca   P m n m        Pmnm      Pmnm      P 2ac 2ac 
-59:2bca   P m n m        Pmnm      Pmnm      -P 2c 2a  
-60        P b c n        Pbcn      Pbcn      -P 2n 2ab 
-60:ba-c   P c a n        Pcan      Pcan      -P 2n 2c  
-60:cab    P n c a        Pnca      Pnca      -P 2a 2n  
-60:-cba   P n a b        Pnab      Pnab      -P 2bc 2n 
-60:bca    P b n a        Pbna      Pbna      -P 2ac 2b 
-60:a-cb   P c n b        Pcnb      Pcnb      -P 2b 2ac 
-61        P b c a        Pbca      Pbca      -P 2ac 2ab
-61:ba-c   P c a b        Pcab      Pcab      -P 2bc 2ac
-62        P n m a        Pnma      Pnma      -P 2ac 2n 
-62:ba-c   P m n b        Pmnb      Pmnb      -P 2bc 2a 
-62:cab    P b n m        Pbnm      Pbnm      -P 2c 2ab 
-62:-cba   P c m n        Pcmn      Pcmn      -P 2n 2ac 
-62:bca    P m c n        Pmcn      Pmcn      -P 2n 2a  
-62:a-cb   P n a m        Pnam      Pnam      -P 2c 2n  
-63        C m c m        Cmcm      Cmcm      -C 2c 2   
-63:ba-c   C c m m        Ccmm      Ccmm      -C 2c 2c  
-63:cab    A m m a        Amma      Amma      -A 2a 2a  
-63:-cba   A m a m        Amam      Amam      -A 2 2a   
-63:bca    B b m m        Bbmm      Bbmm      -B 2 2b   
-63:a-cb   B m m b        Bmmb      Bmmb      -B 2b 2   
-64        C m c a        Cmca      Cmca      -C 2ac 2  
-64:ba-c   C c m b        Ccmb      Ccmb      -C 2ac 2ac
-64:cab    A b m a        Abma      Abma      -A 2ab 2ab
-64:-cba   A c a m        Acam      Acam      -A 2 2ab  
-64:bca    B b c m        Bbcm      Bbcm      -B 2 2ab  
-64:a-cb   B m a b        Bmab      Bmab      -B 2ab 2  
-65        C m m m        Cmmm      Cmmm      -C 2 2    
-65:cab    A m m m        Ammm      Ammm      -A 2 2    
-65:bca    B m m m        Bmmm      Bmmm      -B 2 2    
-66        C c c m        Cccm      Cccm      -C 2 2c   
-66:cab    A m a a        Amaa      Amaa      -A 2a 2   
-66:bca    B b m b        Bbmb      Bbmb      -B 2b 2b  
-67        C m m a        Cmma      Cmma      -C 2a 2   
-67:ba-c   C m m b        Cmmb      Cmmb      -C 2a 2a  
-67:cab    A b m m        Abmm      Abmm      -A 2b 2b  
-67:-cba   A c m m        Acmm      Acmm      -A 2 2b   
-67:bca    B m c m        Bmcm      Bmcm      -B 2 2a   
-67:a-cb   B m a m        Bmam      Bmam      -B 2a 2   
-68:1      C c c a        Ccca      Ccca      C 2 2 -1ac
-68:2      C c c a        Ccca      Ccca      -C 2a 2ac 
-68:1ba-c  C c c b        Cccb      Cccb      C 2 2 -1ac
-68:2ba-c  C c c b        Cccb      Cccb      -C 2a 2c  
-68:1cab   A b a a        Abaa      Abaa      A 2 2 -1ab
-68:2cab   A b a a        Abaa      Abaa      -A 2a 2b  
-68:1-cba  A c a a        Acaa      Acaa      A 2 2 -1ab
-68:2-cba  A c a a        Acaa      Acaa      -A 2ab 2b 
-68:1bca   B b c b        Bbcb      Bbcb      B 2 2 -1ab
-68:2bca   B b c b        Bbcb      Bbcb      -B 2ab 2b 
-68:1a-cb  B b a b        Bbab      Bbab      B 2 2 -1ab
-68:2a-cb  B b a b        Bbab      Bbab      -B 2b 2ab 
-69        F m m m        Fmmm      Fmmm      -F 2 2    
-70:1      F d d d        Fddd      Fddd      F 2 2 -1d 
-70:2      F d d d        Fddd      Fddd      -F 2uv 2vw
-71        I m m m        Immm      Immm      -I 2 2    
-72        I b a m        Ibam      Ibam      -I 2 2c   
-72:cab    I m c b        Imcb      Imcb      -I 2a 2   
-72:bca    I c m a        Icma      Icma      -I 2b 2b  
-73        I b c a        Ibca      Ibca      -I 2b 2c  
-73:ba-c   I c a b        Icab      Icab      -I 2a 2b  
-74        I m m a        Imma      Imma      -I 2b 2   
-74:ba-c   I m m b        Immb      Immb      -I 2a 2a  
-74:cab    I b m m        Ibmm      Ibmm      -I 2c 2c  
-74:-cba   I c m m        Icmm      Icmm      -I 2 2b   
-74:bca    I m c m        Imcm      Imcm      -I 2 2a   
-74:a-cb   I m a m        Imam      Imam      -I 2c 2   
-75        P 4            P4        P4        P 4       
-76        P 41           P41       P41       P 4w      
-76*       P 41*          P41*      P41*      P 41      
-77        P 42           P42       P42       P 4c      
-77*       P 42*          P42*      P42*      P 42      
-78        P 43           P43       P43       P 4cw     
-78*       P 43*          P43*      P43*      P 43      
-79        I 4            I4        I4        I 4       
-80        I 41           I41       I41       I 4bw     
-81        P -4           P-4       P-4       P -4      
-82        I -4           I-4       I-4       I -4      
-83        P 4/m          P4/m      P4/m      -P 4      
-84        P 42/m         P42/m     P42/m     -P 4c     
-84*       P 42/m*        P42/m*    P42/m*    -P 42     
-85:1      P 4/n          P4/n      P4/n      P 4ab -1ab
-85:2      P 4/n          P4/n      P4/n      -P 4a     
-86:1      P 42/n         P42/n     P42/n     P 4n -1n  
-86:2      P 42/n         P42/n     P42/n     -P 4bc    
-87        I 4/m          I4/m      I4/m      -I 4      
-88:1      I 41/a         I41/a     I41/a     I 4bw -1bw
-88:2      I 41/a         I41/a     I41/a     -I 4ad    
-89        P 4 2 2        P422      P422      P 4 2     
-90        P 4 21 2       P4212     P4212     P 4ab 2ab 
-91        P 41 2 2       P4122     P4122     P 4w 2c   
-91*       P 41 2 2*      P4122*    P4122*    P 41 2c   
-92        P 41 21 2      P41212    P41212    P 4abw 2nw
-93        P 42 2 2       P4222     P4222     P 4c 2    
-93*       P 42 2 2*      P4222*    P4222*    P 42 2    
-94        P 42 21 2      P42212    P42212    P 4n 2n   
-95        P 43 2 2       P4322     P4322     P 4cw 2c  
-95*       P 43 2 2*      P4322*    P4322*    P 43 2c   
-96        P 43 21 2      P43212    P43212    P 4nw 2abw
-97        I 4 2 2        I422      I422      I 4 2     
-98        I 41 2 2       I4122     I4122     I 4bw 2bw 
-99        P 4 m m        P4mm      P4mm      P 4 -2    
-100       P 4 b m        P4bm      P4bm      P 4 -2ab  
-101       P 42 c m       P42cm     P42cm     P 4c -2c  
-101*      P 42 c m*      P42cm*    P42cm*    P 42 -2c  
-102       P 42 n m       P42nm     P42nm     P 4n -2n  
-103       P 4 c c        P4cc      P4cc      P 4 -2c   
-104       P 4 n c        P4nc      P4nc      P 4 -2n   
-105       P 42 m c       P42mc     P42mc     P 4c -2   
-105*      P 42 m c*      P42mc*    P42mc*    P 42 -2   
-106       P 42 b c       P42bc     P42bc     P 4c -2ab 
-106*      P 42 b c*      P42bc*    P42bc*    P 42 -2ab 
-107       I 4 m m        I4mm      I4mm      I 4 -2    
-108       I 4 c m        I4cm      I4cm      I 4 -2c   
-109       I 41 m d       I41md     I41md     I 4bw -2  
-110       I 41 c d       I41cd     I41cd     I 4bw -2c 
-111       P -4 2 m       P-42m     P-42m     P -4 2    
-112       P -4 2 c       P-42c     P-42c     P -4 2c   
-113       P -4 21 m      P-421m    P-421m    P -4 2ab  
-114       P -4 21 c      P-421c    P-421c    P -4 2n   
-115       P -4 m 2       P-4m2     P-4m2     P -4 -2   
-116       P -4 c 2       P-4c2     P-4c2     P -4 -2c  
-117       P -4 b 2       P-4b2     P-4b2     P -4 -2ab 
-118       P -4 n 2       P-4n2     P-4n2     P -4 -2n  
-119       I -4 m 2       I-4m2     I-4m2     I -4 -2   
-120       I -4 c 2       I-4c2     I-4c2     I -4 -2c  
-121       I -4 2 m       I-42m     I-42m     I -4 2    
-122       I -4 2 d       I-42d     I-42d     I -4 2bw  
-123       P 4/m m m      P4/mmm    P4/mmm    -P 4 2    
-124       P 4/m c c      P4/mcc    P4/mcc    -P 4 2c   
-125:1     P 4/n b m      P4/nbm    P4/nbm    P 4 2 -1ab
-125:2     P 4/n b m      P4/nbm    P4/nbm    -P 4a 2b  
-126:1     P 4/n n c      P4/nnc    P4/nnc    P 4 2 -1n 
-126:2     P 4/n n c      P4/nnc    P4/nnc    -P 4a 2bc 
-127       P 4/m b m      P4/mbm    P4/mbm    -P 4 2ab  
-128       P 4/m n c      P4/mnc    P4/mnc    -P 4 2n   
-129:1     P 4/n m m      P4/nmm    P4/nmm    P 4ab 2ab 
-129:2     P 4/n m m      P4/nmm    P4/nmm    -P 4a 2a  
-130:1     P 4/n c c      P4/ncc    P4/ncc    P 4ab 2n -
-130:2     P 4/n c c      P4/ncc    P4/ncc    -P 4a 2ac 
-131       P 42/m m c     P42/mmc   P42/mmc   -P 4c 2   
-132       P 42/m c m     P42/mcm   P42/mcm   -P 4c 2c  
-133:1     P 42/n b c     P42/nbc   P42/nbc   P 4n 2c -1
-133:2     P 42/n b c     P42/nbc   P42/nbc   -P 4ac 2b 
-134:1     P 42/n n m     P42/nnm   P42/nnm   P 4n 2 -1n
-134:2     P 42/n n m     P42/nnm   P42/nnm   -P 4ac 2bc
-135       P 42/m b c     P42/mbc   P42/mbc   -P 4c 2ab 
-135*      P 42/m b c*    P42/mbc*  P42/mbc*  -P 42 2ab 
-136       P 42/m n m     P42/mnm   P42/mnm   -P 4n 2n  
-137:1     P 42/n m c     P42/nmc   P42/nmc   P 4n 2n -1
-137:2     P 42/n m c     P42/nmc   P42/nmc   -P 4ac 2a 
-138:1     P 42/n c m     P42/ncm   P42/ncm   P 4n 2ab -
-138:2     P 42/n c m     P42/ncm   P42/ncm   -P 4ac 2ac
-139       I 4/m m m      I4/mmm    I4/mmm    -I 4 2    
-140       I 4/m c m      I4/mcm    I4/mcm    -I 4 2c   
-141:1     I 41/a m d     I41/amd   I41/amd   I 4bw 2bw 
-141:2     I 41/a m d     I41/amd   I41/amd   -I 4bd 2  
-142:1     I 41/a c d     I41/acd   I41/acd   I 4bw 2aw 
-142:2     I 41/a c d     I41/acd   I41/acd   -I 4bd 2c 
-143       P 3            P3        P3        P 3       
-144       P 31           P31       P31       P 31      
-145       P 32           P32       P32       P 32      
-146:h     R 3            R3        R3        R 3       
-146:r     R 3            R3        R3        P 3*      
-147       P -3           P-3       P-3       -P 3      
-148:h     R -3           R-3       R-3       -R 3      
-148:r     R -3           R-3       R-3       -P 3*     
-149       P 3 1 2        P312      P32       P 3 2     
-150       P 3 2 1        P321      P32       P 3 2     
-151       P 31 1 2       P3112     P312      P 31 2 (0 
-152       P 31 2 1       P3121     P312      P 31 2    
-153       P 32 1 2       P3212     P322      P 32 2 (0 
-154       P 32 2 1       P3221     P322      P 32 2    
-155:h     R 3 2          R32       R32       R 3 2     
-155:r     R 3 2          R32       R32       P 3* 2    
-156       P 3 m 1        P3m1      P3m       P 3 -2"   
-157       P 3 1 m        P31m      P3m       P 3 -2    
-158       P 3 c 1        P3c1      P3c       P 3 -2"c
-159       P 3 1 c        P31c      P3c       P 3 -2c   
-160:h     R 3 m          R3m       R3m       R 3 -2    
-160:r     R 3 m          R3m       R3m       P 3* -2   
-161:h     R 3 c          R3c       R3c       R 3 -2"c
-161:r     R 3 c          R3c       R3c       P 3* -2n  
-162       P -3 1 m       P-31m     P-3m      -P 3 2    
-163       P -3 1 c       P-31c     P-3c      -P 3 2c   
-164       P -3 m 1       P-3m1     P-3m      -P 3 2"   
-165       P -3 c 1       P-3c1     P-3c      -P 3 2"c
-166:h     R -3 m         R-3m      R-3m      -R 3 2"    
-166:r     R -3 m         R-3m      R-3m      -P 3* 2   
-167:h     R -3 c         R-3c      R-3c      -R 3 2"c
-167:r     R -3 c         R-3c      R-3c      -P 3* 2n  
-168       P 6            P6        P6        P 6       
-169       P 61           P61       P61       P 61      
-170       P 65           P65       P65       P 65      
-171       P 62           P62       P62       P 62      
-172       P 64           P64       P64       P 64      
-173       P 63           P63       P63       P 6c      
-173*      P 63*          P63*      P63*      P 63      
-174       P -6           P-6       P-6       P -6      
-175       P 6/m          P6/m      P6/m      -P 6      
-176       P 63/m         P63/m     P63/m     -P 6c     
-176*      P 63/m*        P63/m*    P63/m*    -P 63     
-177       P 6 2 2        P622      P622      P 6 2     
-178       P 61 2 2       P6122     P6122     P 61 2 (0 0 5)
-179       P 65 2 2       P6522     P6522     P 65 2 (0 0 1)
-180       P 62 2 2       P6222     P6222     P 62 2 (0 0 4)
-181       P 64 2 2       P6422     P6422     P 64 2 (0 0 2)
-182       P 63 2 2       P6322     P6322     P 6c 2c   
-182*      P 63 2 2*      P6322*    P6322*    P 63 2c   
-183       P 6 m m        P6mm      P6mm      P 6 -2    
-184       P 6 c c        P6cc      P6cc      P 6 -2c   
-185       P 63 c m       P63cm     P63cm     P 6c -2   
-185*      P 63 c m*      P63cm*    P63cm*    P 63 -2   
-186       P 63 m c       P63mc     P63mc     P 6c -2c  
-186*      P 63 m c*      P63mc*    P63mc*    P 63 -2c  
-187       P -6 m 2       P-6m2     P-6m2     P -6 2    
-188       P -6 c 2       P-6c2     P-6c2     P -6c 2   
-189       P -6 2 m       P-62m     P-62m     P -6 -2   
-190       P -6 2 c       P-62c     P-62c     P -6c -2c 
-191       P 6/m m m      P6/mmm    P6/mmm    -P 6 2    
-192       P 6/m c c      P6/mcc    P6/mcc    -P 6 2c   
-193       P 63/m c m     P63/mcm   P63/mcm   -P 6c 2   
-193*      P 63/m c m*    P63/mcm*  P63/mcm*  -P 63 2   
-194       P 63/m m c     P63/mmc   P63/mmc   -P 6c 2c  
-194*      P 63/m m c*    P63/mmc*  P63/mmc*  -P 63 2c  
-195       P 2 3          P23       P23       P 2 2 3   
-196       F 2 3          F23       F23       F 2 2 3   
-197       I 2 3          I23       I23       I 2 2 3   
-198       P 21 3         P213      P213      P 2ac 2ab 3
-199       I 21 3         I213      I213      I 2b 2c 3 
-200       P m -3         Pm-3      Pm-3      -P 2 2 3  
-201:1     P n -3         Pn-3      Pn-3      P 2 2 3 -1n
-201:2     P n -3         Pn-3      Pn-3      -P 2ab 2bc 3
-202       F m -3         Fm-3      Fm-3      -F 2 2 3  
-203:1     F d -3         Fd-3      Fd-3      F 2 2 3 -1d
-203:2     F d -3         Fd-3      Fd-3      -F 2uv 2vw 3
-204       I m -3         Im-3      Im-3      -I 2 2 3  
-205       P a -3         Pa-3      Pa-3      -P 2ac 2ab 3
-206       I a -3         Ia-3      Ia-3      -I 2b 2c 3
-207       P 4 3 2        P432      P432      P 4 2 3   
-208       P 42 3 2       P4232     P4232     P 4n 2 3  
-209       F 4 3 2        F432      F432      F 4 2 3   
-210       F 41 3 2       F4132     F4132     F 4d 2 3  
-211       I 4 3 2        I432      I432      I 4 2 3   
-212       P 43 3 2       P4332     P4332     P 4acd 2ab 3
-213       P 41 3 2       P4132     P4132     P 4bd 2ab 3
-214       I 41 3 2       I4132     I4132     I 4bd 2c 3
-215       P -4 3 m       P-43m     P-43m     P -4 2 3  
-216       F -4 3 m       F-43m     F-43m     F -4 2 3  
-217       I -4 3 m       I-43m     I-43m     I -4 2 3  
-218       P -4 3 n       P-43n     P-43n     P -4n 2 3 
-219       F -4 3 c       F-43c     F-43c     F -4a 2 3 
-220       I -4 3 d       I-43d     I-43d     I -4bd 2c 3
-221       P m -3 m       Pm-3m     Pm-3m     -P 4 2 3  
-222:1     P n -3 n       Pn-3n     Pn-3n     P 4 2 3 -1n
-222:2     P n -3 n       Pn-3n     Pn-3n     -P 4a 2bc 3
-223       P m -3 n       Pm-3n     Pm-3n     -P 4n 2 3 
-224:1     P n -3 m       Pn-3m     Pn-3m     P 4n 2 3 -1n
-224:2     P n -3 m       Pn-3m     Pn-3m     -P 4bc 2bc 3
-225       F m -3 m       Fm-3m     Fm-3m     -F 4 2 3  
-226       F m -3 c       Fm-3c     Fm-3c     -F 4a 2 3 
-227:1     F d -3 m       Fd-3m     Fd-3m     F 4d 2 3 -1d
-227:2     F d -3 m       Fd-3m     Fd-3m     -F 4vw 2vw 3
-228:1     F d -3 c       Fd-3c     Fd-3c     F 4d 2 3 -1ad
-228:2     F d -3 c       Fd-3c     Fd-3c     -F 4ud 2vw 3
-229       I m -3 m       Im-3m     Im-3m     -I 4 2 3  
-230       I a -3 d       Ia-3d     Ia-3d     -I 4bd 2c 3
-
-
-   */
+  // first HM entry (short) is saved in ClegToHM
+  private final static String[] moreSettings = {
+  "A 1 1 2 :2","5:-a-c,a,-b",
+  "A 1 1 2/m :2","12:-a-c,a,-b",
+  "A 1 1 m :2","8:-a-c,a,-b",
+  "A 2 :1*","5:c,-b,a",
+  "A 1 2 1 :1*","5:c,-b,a",
+  "A 2/m :1*","12:c,-b,a",
+  "A 1 2/m 1 :1*","12:c,-b,a",
+  "A m :1*","8:c,-b,a",
+  "A 1 m 1 :1*","8:c,-b,a",
+  "B 1 1 2 :1*","5:a,c,-b",
+  "B 1 1 2/m :1*","12:a,c,-b",
+  "B 1 1 m :1*","8:a,c,-b",
+  "B 2 1 1 :2","5:-b,-a-c,a",
+  "B 2/m 1 1 :2","12:-b,-a-c,a",
+  "B m 1 1 :2","8:-b,-a-c,a",
+  "C -4","81:a+b,-a+b,c",
+  "C -4 2 c","116:a+b,-a+b,c",
+  "C -4 2 g1","117:a+b,-a+b,c",
+  "C -4 2 g2","118:a+b,-a+b,c",
+  "C -4 2 m","115:a+b,-a+b,c",
+  "C -4 c 2","112:a+b,-a+b,c",
+  "C -4 c 21","114:a+b,-a+b,c",
+  "C -4 m 2","111:a+b,-a+b,c",
+  "C -4 m 21","113:a+b,-a+b,c",
+  "C 2 :2","5:a,-b,-a-c",     // OHOH
+  "C 1 2 1 :2","5:a,-b,-a-c", // OHOH
+  "C 2/m :2","12:a,-b,-a-c",  // OHOH
+  "C 1 2/m 1 :2","12:a,-b,-a-c", // OHOH
+  "C m :2","8:a,-b,-a-c",      // OHOH
+  "C 1 m 1 :2","8:a,-b,-a-c",  // OHOH
+  "C 2 1 1 :1*","5:-b,a,c",
+  "C 2/m 1 1 :1*","12:-b,a,c",
+  "C 4","75:a+b,-a+b,c",
+  "C 4 2 2","89:a+b,-a+b,c",
+  "C 4 2 21","90:a+b,-a+b,c",
+  "C 4 c c","103:a+b,-a+b,c",
+  "C 4 c g2","104:a+b,-a+b,c",
+  "C 4 m g1","100:a+b,-a+b,c",
+  "C 4 m m","99:a+b,-a+b,c",
+  "C 4/e :1","85:a+b,-a+b,c;-1/4,1/4,0",
+  "C 4/e :2","85:a+b,-a+b,c",
+  "C 4/e c c :1","130:a+b,-a+b,c;-1/4,1/4,0",
+  "C 4/e c c :2","130:a+b,-a+b,c",
+  "C 4/e c g2 :1","126:a+b,-a+b,c;-1/4,-1/4,-1/4",
+  "C 4/e c g2 :2","126:a+b,-a+b,c",
+  "C 4/e m g1 :1","125:a+b,-a+b,c;-1/4,-1/4,0",
+  "C 4/e m g1 :2","125:a+b,-a+b,c",
+  "C 4/e m m :1","129:a+b,-a+b,c;-1/4,1/4,0",
+  "C 4/e m m :2","129:a+b,-a+b,c",
+  "C 4/m","83:a+b,-a+b,c",
+  "C 4/m c c","124:a+b,-a+b,c",
+  "C 4/m c g2","128:a-b,a+b,c",
+  "C 4/m m g1","127:a+b,-a+b,c",
+  "C 4/m m m","123:a+b,-a+b,c",
+  "C 41","76:a+b,-a+b,c",
+  "C 41 2 2","91:a+b,-a+b,c",
+  "C 41 2 21","92:a+b,-a+b,c",
+  "C 42","77:a+b,-a+b,c",
+  "C 42 2 2","93:a+b,-a+b,c",
+  "C 42 2 21","94:a+b,-a+b,c",
+  "C 42 c g1","106:a+b,-a+b,c",
+  "C 42 c m","105:a+b,-a+b,c",
+  "C 42 m c","101:a+b,-a+b,c",
+  "C 42 m g2","102:a+b,-a+b,c",
+  "C 42/e :1","86:a+b,-a+b,c;-1/4,-1/4,-1/4",
+  "C 42/e :2","86:a+b,-a+b,c",
+  "C 42/e c g1 :1","133:a+b,-a+b,c;-1/4,1/4,-1/4",
+  "C 42/e c g1 :2","133:a+b,-a+b,c",
+  "C 42/e c m :1","137:a+b,-a+b,c;-1/4,1/4,-1/4",
+  "C 42/e c m :2","137:a+b,-a+b,c",
+  "C 42/e m c :1","138:a+b,-a+b,c;-1/4,1/4,-1/4",
+  "C 42/e m c :2","138:a+b,-a+b,c",
+  "C 42/e m g2 :1","134:a+b,-a+b,c;-1/4,1/4,-1/4",
+  "C 42/e m g2 :2","134:a+b,-a+b,c",
+  "C 42/m","84:a+b,-a+b,c",
+  "C 42/m c g1","135:a+b,-a+b,c",
+  "C 42/m c m","131:a+b,-a+b,c",
+  "C 42/m m c","132:a+b,-a+b,c",
+  "C 42/m m g2","136:a+b,-a+b,c",
+  "C 43","78:a+b,-a+b,c",
+  "C 43 2 2","95:a+b,-a+b,c",
+  "C 43 2 21","96:a+b,-a+b,c",
+  "C m 1 1 :1*","8:-b,a,c",
+  "F -4","82:a+b,-a+b,c",
+  "F -4 2 c","120:a+b,-a+b,c",
+  "F -4 2 m","119:a+b,-a+b,c",
+  "F -4 d 2","122:a+b,-a+b,c",
+  "F -4 m 2","121:a+b,-a+b,c",
+  "F 4","79:a+b,-a+b,c",
+  "F 4 2 2","97:a+b,-a+b,c",
+  "F 4 m c","108:a+b,-a+b,c",
+  "F 4 m m","107:a+b,-a+b,c",
+  "F 4/m","87:a+b,-a+b,c",
+  "F 4/m m c","140:a+b,-a+b,c",
+  "F 4/m m m","139:a+b,-a+b,c",
+  "F 41","80:a+b,-a+b,c",
+  "F 41 2 2","98:a+b,-a+b,c",
+  "F 41 d c","110:a+b,-a+b,c",
+  "F 41 d m","109:a+b,-a+b,c",
+  "F 41/d :1","88:a+b,-a+b,c;0,-1/4,-1/8",
+  "F 41/d :2","88:a+b,-a+b,c",
+  "F 41/d d c :1","142:a+b,-a+b,c;0,1/4,-1/8",
+  "F 41/d d c :2","142:a+b,-a+b,c",
+  "F 41/d d m :1","141:a+b,-a+b,c;0,1/4,-1/8",
+  "F 41/d d m :2","141:a+b,-a+b,c",
+  "I 1 1 2 :3","5:c,-a-c,-b",
+  "I 1 1 2/m :3","12:c,-a-c,-b",
+  "I 1 1 m :3","8:c,-a-c,-b",
+  "I 2 :3","5:-a-c,-b,c",
+  "I 1 2 1 :3","5:-a-c,-b,c",
+  "I 2/m :3","12:-a-c,-b,c",
+  "I 1 2/m 1 :3","12:-a-c,-b,c",
+  "I m :3","8:-a-c,-b,c",
+  "I 1 m 1 :3","8:-a-c,-b,c",
+  "I 2 1 1 :3","5:-b,c,-a-c",
+  "I 2/m 1 1 :3","12:-b,c,-a-c",
+  "I m 1 1 :3","8:-b,c,-a-c",
+  "P 1 1 2/a :3","13:c,-a-c,-b",
+  "P 1 1 2/b :1*","13:a,c,-b",
+  "P 1 1 2/n :2","13:-a-c,a,-b",
+  "P 1 1 21/a :3","14:c,-a-c,-b",
+  "P 1 1 21/b :1*","14:a,c,-b",
+  "P 1 1 21/n :2","14:-a-c,a,-b",
+  "P 1 1 a :3","7:c,-a-c,-b",
+  "P 1 1 b :1*","7:a,c,-b",
+  "P 1 1 n :2","7:-a-c,a,-b",
+  "P 2/a :1*","13:c,-b,a",
+  "P 1 2/a 1 :1*","13:c,-b,a",
+  "P 2/c :3","13:-a-c,-b,c",
+  "P 1 2/c 1 :3","13:-a-c,-b,c",
+  "P 2/n :2","13:a,-b,-a-c", // OHOH
+  "P 1 2/n 1 :2","13:a,-b,-a-c", // OHOH
+  "P 21/a :1*","14:c,-b,a",
+  "P 1 21/a 1 :1*","14:c,-b,a",
+  "P 21/c :3","14:-a-c,-b,c",
+  "P 1 21/c 1 :3","14:-a-c,-b,c",
+  "P 21/n :2","14:a,-b,-a-c",  // OHOH
+  "P 1 21/n 1 :2","14:a,-b,-a-c", // OHOH
+  "P a :1*","7:c,-b,a",
+  "P 1 a 1 :1*","7:c,-b,a",
+  "P c :3","7:-a-c,-b,c",
+  "P 1 c 1 :3","7:-a-c,-b,c",
+  "P n :2","7:a,-b,-a-c",       // OHOH
+  "P 1 n 1 :2","7:a,-b,-a-c",   // OHOH
+  "P 2/b 1 1 :3","13:-b,c,-a-c",
+  "P 2/c 1 1 :1*","13:-b,a,c",
+  "P 2/n 1 1 :2","13:-b,-a-c,a",
+  "P 21/b 1 1 :3","14:-b,c,-a-c",
+  "P 21/c 1 1 :1*","14:-b,a,c",
+  "P 21/n 1 1 :2","14:-b,-a-c,a",
+  "P b 1 1 :3","7:-b,c,-a-c",
+  "P c 1 1 :1*","7:-b,a,c",
+  "P n 1 1 :2","7:-b,-a-c,a",
+  };
   
-  static Lst<Object> transformCoords(Lst<Object> coord, M4d trmInv, P3d centering, M4d t,
-                                             double[] v, Lst<Object> coordt) {
-    if (coordt == null)
-      coordt = new Lst<>();
-    for (int j = 0, n = coord.size(); j < n; j++) {
-      String xyz = SymmetryOperation.transformStr((String) coord.get(j), null,
-          trmInv, t, v, null, centering, true, true);
-      if (!coordt.contains(xyz))
-      coordt.addLast(xyz);
-    }
-    return coordt;
-  }
-
-  /**
-   * We sum the M3 column vectors. The result is (a' + b' +
-   * c'), which is the diagonal vector across the unit cell in the coordinates
-   * of the original lattice. Values are obtained for negative and pasitive ranges
-   * 
-   * 
-   * This method is used for two purpose:
-   * 
-   * 1) When a subgroup transformation or setting is made that enlarges the unit
-   * cell, this method delivers the additional centering information that may be
-   * needed to generate additional operators.
-   * 
-   * 2) When a transformed space group unit cell is packed, this result gives us
-   * the information we need to pack that cell fully, drawing from atoms that
-   * are in all the covered original unit cells.
-   * 
-   * For example, P42(77) has a 45-degree rotated setting C42.
-   * 
-   * https://www.cryst.ehu.es/cgi-bin/cryst/programs//nph-trgen?gnum=077&what=gp&trmat=a-b,a+b,c&unconv=C%2042&from=ita
-   * 
-   * The transformation matrix is a-b,a+b,c;0,0,0. Summing this, we get
-   * [0,-1,0](neg) and [2,1,1](pos). The range of cells needed to cover this is [0,1,2), [-1,1), [0,1) 
-   * 
-   * @param trm
-   * @return the range as float[][], or null if the result would be [0 0 0][1 1 1]
-   */
-  static double[][] getTransformRange(M4d trm) {
-    double[][] t = new double[2][3];
-    double[] row = new double[4];
-    for (int i = 0; i < 3; i++) {
-      trm.getRow(i, row);
-      for (int j = 0; j < 3; j++) {
-        double v = row[j];
-        if (v < 0) {
-          t[0][i] += -row[j];
-        } else if (v > 0) {
-          t[1][i] += row[j];
-        }
-      }
-    }
-    boolean ignore = true;
-    for (int i = 0, dz = 0; i < 2; i++, dz++) {
-      for (int j = 0; j < 3; j++) {
-        int d = (int) Math.ceil(t[i][j]);
-        if (d > dz)
-          ignore = false;
-        t[i][j] = (i == 0 ? -d : d);
-      }
-    }
+  private static Hashtable<String, String> HMtoCleg;
+  private static Hashtable<String, String> ClegtoHM;
   
-    return (ignore ? null : t);
-  }
-
-  /**
-   * adjust centering based on transformation
+  /** 
+   * Convert short or full HM names to CLEG; CLEG to short HM name.
+   * Possibly little use for CLEG to HM.
    * 
-   * @param trm
-   * @param cent list to be revised
-   * @return trmInv
+   * @param hmName
+   * @param cleg
+   * @return equivalent name or null
    */
-  private static M4d getTransformedCentering(M4d trm, Lst<Object> cent) {
-    M4d trmInv = M4d.newM4(trm);
-    trmInv.invert();
-    int n0 = cent.size();
-    P3d p = new P3d();
-    double[][] c = getTransformRange(trm);
-    if (c != null) {
-      for (int i = (int) c[0][0]; i < c[1][0]; i++) {
-        for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
-          for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
-            p.set(i, j, k);
-            trmInv.rotTrans(p);
-            if (p.length() % 1 != 0) {
-              p.x = p.x % 1;
-              p.y = p.y % 1;
-              p.z = p.z % 1;
-              String s = SymmetryOperation.norm3(p);
-              if (!s.equals("0,0,0") && !cent.contains(s))
-                cent.addLast(s);
-            }
-  
-          }
+  static String convertWyckoffHMCleg(String hmName, String cleg) {
+    if (HMtoCleg == null) {
+      HMtoCleg = new Hashtable<>();
+      ClegtoHM = new Hashtable<>();
+      for (int i = moreSettings.length; --i >= 0;) {
+        String c = moreSettings[i];
+        String h = moreSettings[--i];
+        h = PT.rep(h, " ","");
+        int pt = h.length() - 1;
+        if (h.charAt(pt) == '*') {
+          // "default cell choice, even for nonstandard setting"??? a bit odd, perhaps
+          h = h.substring(0, pt);
+          // remove ":1"
+          HMtoCleg.put(h.substring(0, pt - 2), c);
         }
-      }
-      int n = cent.size();
-      if (n > 0) {
-        String[] a = new String[n];
-        cent.toArray(a);
-        Arrays.sort(a);
-        cent.clear();
-        for (int i = 0; i < n; i++)
-          cent.addLast(a[i]);
+        ClegtoHM.put(c, h);
+        HMtoCleg.put(h, c);
       }
     }
-    // remove integral centerings -- when det < 1
-    for (int i = n0; --i >= 0;) {
-      SymmetryOperation.toPoint((String) cent.get(i), p);
-      trmInv.rotTrans(p);
-      if (p.x % 1 == 0 && p.y % 1 == 0 && p.z % 1 == 0)
-        cent.remove(i);
-    }
-    return trmInv;
-  }
-
-  /**
-   * Create a Wyckoff information map for a setting that is not in the ITA (at
-   * leaset not in the General Position list.)
-   * 
-   * Check is that 100:a+b,a-b,c comes out right.
-   * 
-   * The task is three-fold:
-   * 
-   * 1) find the centering
-   * 
-   * 2) apply the operations
-   * 
-   * 3) update the multiplicities
-   * 
-   * @param map to fill or null
-   * @param clegId
-   * @param itno
-   * @param its0
-   * @return new map containing just gp and wpos
-   */
-  @SuppressWarnings("unchecked")
-  static Map<String, Object> fillMoreData(Map<String, Object> map, String clegId, int itno,
-                                                       Map<String, Object> its0) {
-    int pt = clegId.indexOf(':');
-    String transform = (pt < 0 ? "a,b,c" : clegId.substring(pt + 1));
-    M4d trm = UnitCell.toTrm(transform, null);
-    Lst<Object> gp0 = (Lst<Object>) its0.get("gp");
-    Map<String, Object> wpos0 = (Map<String, Object>) its0.get("wpos");
-    Lst<Object> cent0 = (Lst<Object>) wpos0.get("cent");
-    Lst<Object> cent = new Lst<>();
-    if (cent0 != null)
-      cent.addAll(cent0);
-    int nctr0 = cent.size();
-    M4d trmInv = getTransformedCentering(trm, cent);
-    int nctr = cent.size();
-    Lst<Object> pos0 = (Lst<Object>) wpos0.get("pos");
-    Lst<Object> pos = new Lst<Object>();
-    M4d t = new M4d();
-    double[] v = new double[16];
-    double f = (nctr + 1d) / (nctr0 + 1);
-    for (int i = 0, n = pos0.size(); i < n; i++) {
-      Map<String, Object> p0 = (Map<String, Object>) pos0.get(i);
-      Map<String, Object> p = new Hashtable<String, Object>();
-      p.putAll(p0);
-      Lst<Object> coord = (Lst<Object>) p0.get("coord");
-      if (coord != null) {
-        coord = transformCoords(coord, trmInv, null, t, v, null);
-        p.put("coord", coord);
-      }
-      int mult = ((Integer) p0.get("mult")).intValue();
-      p.put("mult", Integer.valueOf((int) (mult * f)));
-      pos.addLast(p);
-    }
-    Lst<Object> gp = new Lst<Object>();
-    transformCoords(gp0, trmInv, null, t, v, gp);
-    if (nctr > 0) {
-      for (int i = 0; i < nctr; i++) {
-        P3d p = new P3d();
-        transformCoords(gp0, trmInv, SymmetryOperation.toPoint((String) cent.get(i), p), t,
-            v, gp);
-      }
-    }
-    if (map == null) {
-      map = new Hashtable<String, Object>();
-      map.put("sg", Integer.valueOf(itno));
-      map.put("trm", transform);
-      map.put("clegId", itno + ":" + transform);
-      map.put("det", Double.valueOf(trm.determinant3()));
-    } else {
-      map.remove("more");
-    }
-    Map<String, Object> wpos = new Hashtable<>();
-    if (nctr > 0)
-      wpos.put("cent", cent);
-    wpos.put("pos", pos);
-    map.put("wpos", wpos);     
-    wpos.put("gp", gp);
-    gp = new Lst<>();
-    SpaceGroup base = getSpaceGroupFromJmolClegOrITA(clegId); 
-    SpaceGroup sg = transformSpaceGroup(null, base, gp0,
-        transform, new M4d());
-    for (int i = 0, n = sg.getOperationCount(); i < n; i++) {
-      gp.addLast(((SymmetryOperation) sg.getOperation(i)).xyz);
-    }
-    map.put("gp", gp);
-    return map;
-  }
-
-
-  /**
-   * Transform a space group based on a list of general postions (operations).
-   * 
-   * If the general positions are not known, they can be taken from a base space
-   * group instead of a list of general positions in string xyz format.
-   * 
-   * The assumption is that they need transformation. So if the base is already
-   * 
-   * 
-   * 
-   * @param sg
-   * @param base
-   * @param genPos
-   * @param transform
-   * @param trm
-   * @return new space group
-   */
-  static SpaceGroup transformSpaceGroup(SpaceGroup sg, SpaceGroup base,
-                                        Lst<Object> genPos, String transform,
-                                        M4d trm) {
-    if (genPos == null) {
-      // here we use the operations of the known space group
-      // when (1) this is a space group derived from a subgroup by reverse transformation
-      // or (2) when we are using Jmol's built-in Hall operators
-      base.setFinalOperations();
-      // should be able to do this much slicker
-      genPos = new Lst<Object>();
-      for (int i = 0, n = base.getOperationCount(); i < n; i++) {
-        genPos.addLast(base.getXyz(i, false));
-      }
-    }
-    boolean normalize = (sg == null || sg.doNormalize);
-    // if sg != null, then xyzlist is not calculated and instead sg is filled. 
-    Lst<Object> xyzList = addTransformXYZList(sg, genPos, transform, trm, normalize);
-    if (sg == null) {
-      return createITASpaceGroup(xyzList, base);
-    }
-    // a null transform indicates we have the operators already, and no transformation is needed
-    // the base space group has all the relevant information
-    if (transform == null) {
-      sg.setFrom(base, true);
-    } else {
-      // sg is presumed to be the standard setting when there is a transform
-      sg.setITATableNames(sg.jmolId, sg.itaNumber, "1", transform);
-    }
-    return sg;
-  }
-
-  /**
-   * no transformation is done
-   * 
-   * @param genpos
-   * @param base
-   * @return cloned space group
-   */
-  static SpaceGroup createITASpaceGroup(Lst<Object> genpos, SpaceGroup base) {
-    SpaceGroup sg = new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
-    sg.doNormalize = false;
-    for (int i = 0, n = genpos.size(); i < n; i++) {
-      SymmetryOperation op = new SymmetryOperation(null, i, false);
-      String xyz = (String) genpos.get(i);
-      op.setMatrixFromXYZ(xyz, 0, false);
-      sg.addOp(op, xyz, false);
-    }
-    if (base != null)
-      sg.setFrom(base, true);
-    return sg;
-  }
-
-
-
-  /**
-   * Add operators based on a setting or subgroup transformation. 
-   * In cases where the det > 1, scan a range of values that encompass
-   * the possibilities.
-   * 
-   * @param sg
-   *        if not null, this is the space group that is being created and to be
-   *        loaded with operations
-   * @param genPos
-   * @param transform
-   * @param trm
-   * @param normalize
-   * @return a semicolon-separated list of operations if sg is null, or null if
-   *         it is not
-   */
-  private static Lst<Object> addTransformXYZList(SpaceGroup sg,
-                                                 Lst<Object> genPos,
-                                                 String transform, M4d trm,
-                                                 boolean normalize) {
-
-    M4d trmInv = null, t = null;
-    double[] v = null;
-    double[][] c = null;
-    int nTotal = genPos.size();
-    if (transform != null) {
-      if (transform.equals("r"))
-        transform = SET_R;
-      trm = UnitCell.toTrm(transform, trm);
-      trmInv = M4d.newM4(trm);
-      trmInv.invert();
-      int det = (int) Math.round(trm.determinant3());
-      if (det > 1) {
-        c = getTransformRange(trm);
-        nTotal *= det;
-      }
-      v = new double[16];
-      t = new M4d();
-    }
-    Lst<Object> xyzList = addTransformedOperations(sg, genPos, trm, trmInv, t,
-        v, sg == null ? new Lst<Object>() : null, null, normalize);
-    if (c != null) {
-      P3d p = new P3d();
-      // scanning through a first, then b, then c
-      for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
-        for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
-          for (int i = (int) c[0][0]; i < c[1][0]; i++) {
-            if (i == 0 && j == 0 && k == 0)
-              continue;
-            p.set(i, j, k);
-            if (addTransformedOperations(sg, genPos, trm, trmInv, t, v, xyzList, p,
-                normalize) != null) {
-              if (xyzList.size() == nTotal)
-                return xyzList; 
-            }
-          }
-        }
-      }
-    }
-    return (sg == null ? xyzList : null);
-  }
-
-  /**
-   * add canonical (positive unitized translation) transformed operations,
-   * either to form a list or to fill a space group.
-   * 
-   * @param sg
-   *        space group to fill with transformed operations
-   * @param genPos
-   *        list of operations to be transfomed
-   * @param trm
-   *        transform matrix
-   * @param trmInv
-   *        inverse; may be null
-   * @param t
-   *        temp matrix
-   * @param v
-   *        temp vector
-   * @param retGenPos
-   *        list to append to -- only if sg == null
-   * @param centering
-   *        centering if needed
-   * @param normalize
-   *        to set to a standard translation and fractions
-   * @return semicolon-separated list -- only if sg is null
-   */
-  private static Lst<Object> addTransformedOperations(SpaceGroup sg, Lst<Object> genPos,
-                                               M4d trm, M4d trmInv, M4d t, double[] v, 
-                                               Lst<Object> retGenPos, P3d centering, boolean normalize) {
-    if (sg != null)
-      sg.latticeOp = 0; // ignore looking for lattice operations
-    for (int i = 0, c = genPos.size(); i < c; i++) {
-      String xyz = (String) genPos.get(i);
-      if (trm != null && (i > 0 || centering != null)) {
-        xyz = SymmetryOperation.transformStr(xyz, trm, trmInv, t, v, centering, null, normalize, false);
-      }
-      if (sg != null) {
-        // space group addition will disallow duplicates already.
-        sg.addOperation(xyz, 0, false);
-      } else if (!retGenPos.contains(xyz)) {
-        // there could be duplicates because we don't know a priori which direction to translate.
-        // these are canonical, so duplicates will be found and discarded.
-        retGenPos.addLast(xyz);
-      }
-    }
-    return retGenPos;
+    return (hmName != null ? HMtoCleg.get(PT.rep(hmName, " ","")) : ClegtoHM.get(cleg));
   }
 
   static {
     getSpaceGroups();
   }
+
 
 }

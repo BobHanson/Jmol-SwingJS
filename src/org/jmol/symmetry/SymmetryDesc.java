@@ -225,6 +225,8 @@ public class SymmetryDesc {
           lst.put(key, io[j]);
       }
       return lst;
+    case T.list:
+      return io[RET_ID] + "\t" + io[RET_XYZ] + "  \t" + io[RET_LABEL];
     case T.full:
       return io[RET_XYZ] + "  \t" + io[RET_LABEL];
     case T.xyz:
@@ -1771,7 +1773,7 @@ public class SymmetryDesc {
     BS bsInfo = getInfoBS(returnType);
 
     boolean isSpaceGroupAll = (nth == -2);
-    int iop = op;
+    int iop = op, iop0 = op;
     P3d offset = (options == T.offset && (type == T.atoms || type == T.point)
         ? pt2
         : null);
@@ -1818,7 +1820,7 @@ public class SymmetryDesc {
       }
       if (xyzOriginal != null)
         opTemp.xyzOriginal = xyzOriginal;
-      opTemp.number = op;
+      opTemp.number = (op == 0 ? iop0 : op);
       if (!isBio)
         opTemp.getCentering();
       if (pt == null && iatom >= 0)

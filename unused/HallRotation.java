@@ -25,37 +25,38 @@
 
 package org.jmol.symmetry;
 
-/*
- * Bob Hanson 9/2006
- * 
- * references: International Tables for Crystallography Vol. A. (2002) 
- *
- * http://www.iucr.org/iucr-top/cif/cifdic_html/1/cif_core.dic/Ispace_group_symop_operation_xyz.html
- * http://www.iucr.org/iucr-top/cif/cifdic_html/1/cif_core.dic/Isymmetry_equiv_pos_as_xyz.html
- *
- * LATT : http://macxray.chem.upenn.edu/LATT.pdf thank you, Patrick Carroll
- * 
- * Hall symbols:
- * 
- * http://cci.lbl.gov/sginfo/hall_symbols.html
- * 
- * and
- * 
- * http://cci.lbl.gov/cctbx/explore_symmetry.html
- * 
- * (-)L   [N_A^T_1]   [N_A^T_2]   ...  [N_A^T_P]   V(Nx Ny Nz)
- * 
- * lattice types S and T are not supported here
- * 
- * NEVER ACCESS THESE METHODS OUTSIDE OF THIS PACKAGE
- * 
- *
- */
-
-import javajs.util.M4d;
 import javajs.util.M4d;
 
 class HallRotation {
+  
+  /*
+   * Bob Hanson 9/2006
+   * 
+   * references: International Tables for Crystallography Vol. A. (2002) 
+   *
+   * http://www.iucr.org/iucr-top/cif/cifdic_html/1/cif_core.dic/Ispace_group_symop_operation_xyz.html
+   * http://www.iucr.org/iucr-top/cif/cifdic_html/1/cif_core.dic/Isymmetry_equiv_pos_as_xyz.html
+   *
+   * LATT : http://macxray.chem.upenn.edu/LATT.pdf thank you, Patrick Carroll
+   * 
+   * Hall symbols:
+   * 
+   * http://cci.lbl.gov/sginfo/hall_symbols.html
+   * 
+   * and
+   * 
+   * http://cci.lbl.gov/cctbx/explore_symmetry.html
+   * 
+   * (-)L   [N_A^T_1]   [N_A^T_2]   ...  [N_A^T_P]   V(Nx Ny Nz)
+   * 
+   * lattice types S and T are not supported here
+   * 
+   * NEVER ACCESS THESE METHODS OUTSIDE OF THIS PACKAGE
+   * 
+   *
+   */
+
+
   String rotCode;
   //int order;
   M4d seitzMatrix = new M4d();

@@ -95,7 +95,7 @@ public class XtalSymmetry {
       spaceGroup.isSSG = true;
       String s = SymmetryOperation.getXYZFromRsVs(rs, vs, false);
       int i = spaceGroup.addSymmetry(s, -1, true);
-      spaceGroup.operations[i].setSigma(code, sigma);
+      spaceGroup.matrixOperations[i].setSigma(code, sigma);
       return s;
     }
 
@@ -141,7 +141,7 @@ public class XtalSymmetry {
     }
 
     public String getSpaceGroupOperationCode(int iOp) {
-      return spaceGroup.operations[iOp].subsystemCode;
+      return spaceGroup.matrixOperations[iOp].subsystemCode;
     }
 
     public Tensor getTensor(Viewer vwr, double[] parBorU) {
@@ -205,7 +205,7 @@ public class XtalSymmetry {
     }
 
     public void addInversion() {
-      SymmetryOperation[] ops = spaceGroup.operations;
+      SymmetryOperation[] ops = spaceGroup.matrixOperations;
       M4d inv = new M4d();
       inv.m00 = inv.m11 = inv.m22 = -1;
       inv.m33 = 1;
@@ -906,7 +906,7 @@ public class XtalSymmetry {
         && latticeOp >= 0); // CrystalReader
     if (doCentroidUnitCell)
       asc.setInfo("centroidMinMax", new int[] { minXYZ.x, minXYZ.y, minXYZ.z,
-          maxXYZ.x, maxXYZ.y, maxXYZ.z, (centroidPacked ? 1 : 0) });
+          maxXYZ.x, maxXYZ.y, maxXYZ.z, (centroidPacked ? (int) (100 * packingRange) : 0) });
     if (doCentroidUnitCell || acr.doPackUnitCell
         || symmetryRange != 0 && maxXYZ.x - minXYZ.x == 1
             && maxXYZ.y - minXYZ.y == 1 && maxXYZ.z - minXYZ.z == 1) {

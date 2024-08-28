@@ -535,7 +535,8 @@ public class ScriptMathProcessor {
         && (!isLeftOp || tok0 == T.propselector
             && (op.tok == T.propselector || op.tok == T.leftsquare))
         // ...and previous operator has equal or higher precedence
-        && T.getPrecedence(tok0) >= T.getPrecedence(op.tok)
+        // ...except for !<matrix>, which ALWAYS operators first
+        && checkPrecedence(tok0, op.tok)
         // ...and this is not x - - y, because unary minus operates from
         //   right to left.
         && (tok0 != T.unaryMinus || op.tok != T.unaryMinus)) {
@@ -720,6 +721,23 @@ public class ScriptMathProcessor {
     return true;
   }
 
+  /**
+   * !matrix ALWAYS operates first
+   * @param tok0
+   * @param tok
+   * @return true to operate on tok0 first
+   */
+  private boolean checkPrecedence(int tok0, int tok) {
+    if (tok0 == T.opNot && xPt >= 0) {
+      switch (xStack[xPt].tok) {
+      case T.matrix3f:
+      case T.matrix4f:
+        return true;
+      }
+    }
+    return T.getPrecedence(tok0) >= T.getPrecedence(tok);
+  }
+
   private boolean checkSkip(T op, int tok0) {
     switch (op.tok) {
     case T.leftparen:
@@ -891,21 +909,29 @@ public class ScriptMathProcessor {
 
     // check for a[3][2]
     if (op.tok == T.opEQ
-        && (isArrayItem && squareCount == 0 && equalCount == 1 && oPt < 0 || oPt >= 0
-            && oStack[oPt] == null))
+        && (isArrayItem && squareCount == 0 && equalCount == 1 && oPt < 0
+            || oPt >= 0 && oStack[oPt] == null))
       return true;
 
     SV x2;
-    switch (op.tok) {
+    out: switch (op.tok) {
     case T.minusMinus:
     case T.plusPlus:
-      if (xPt >= 0 && xStack[xPt].canIncrement()) {
+      // only allow for int and dec; matrix is ignored, others fail
+      switch (xPt >= 0 ? xStack[xPt].tok : T.nada) {
+      case T.integer:
+      case T.decimal:
         x2 = xStack[xPt--];
         wasX = false;
-        break;
+        break out;
+      case T.matrix4f:
+      case T.matrix3f:
+        // ignore
+        return true;
       }
       //$FALL-THROUGH$
     default:
+      //
       x2 = getX();
       break;
     }
@@ -923,13 +949,13 @@ public class ScriptMathProcessor {
         //System.out.println("ptx="+ ptx + " " + pto);
         if (ptx < pto) {
           // x++ must make a copy first
-          x1 = SV.copySafely(x2);
+          x1 = new SV().setv(x2);
         }
         if (!x2.increment(op.tok == T.plusPlus ? 1 : -1))
           return false;
         if (ptx > pto) {
-          // ++x must make a copy after
-          x1 = SV.copySafely(x2);
+          // ++x  MUST make a copy after
+          x1 = new SV().setv(x2);
         }
       }
       wasX = false;
@@ -962,7 +988,7 @@ public class ScriptMathProcessor {
       }
       return addXDouble(-x2.asDouble());
     case T.opNot:
-       if (chk)
+      if (chk)
         return addXBool(true);
       switch (x2.tok) {
       case T.point4f: // quaterniopNon
@@ -982,7 +1008,7 @@ public class ScriptMathProcessor {
         return addXBool(!x2.asBoolean());
       }
     case T.propselector:
-      int iv = (op.intValue == T.opIf ? T.opIf  : op.intValue & ~T.minmaxmask);
+      int iv = (op.intValue == T.opIf ? T.opIf : op.intValue & ~T.minmaxmask);
       if (chk)
         return addXObj(SV.newS(""));
       if (vwr.allowArrayDotNotation)
@@ -1009,12 +1035,13 @@ public class ScriptMathProcessor {
       case T.opIf: // '?'
       case T.identifier:
         // special flag to get all properties.
-        return (x2.tok == T.bitset && (chk ? addXStr("") : getAllProperties(x2,
-            (String) op.value)));
+        return (x2.tok == T.bitset
+            && (chk ? addXStr("") : getAllProperties(x2, (String) op.value)));
       case T.type:
         return addXStr(typeOf(x2));
       case T.keys:
-        String[] keys = x2.getKeys((op.intValue & T.minmaxmask) == T.minmaxmask);
+        String[] keys = x2
+            .getKeys((op.intValue & T.minmaxmask) == T.minmaxmask);
         return (keys == null ? addXStr("") : addXAS(keys));
       case T.length:
         if (x2.tok == T.point3f) {
@@ -1024,7 +1051,7 @@ public class ScriptMathProcessor {
       case T.count:
       case T.size:
         if (iv == T.length && x2.value instanceof BondSet)
-          break; 
+          break;
         return addXInt(SV.sizeOf(x2));
       case T.lines:
         switch (x2.tok) {

@@ -2,7 +2,7 @@
  * $Author: hansonr $
  * $Date: 2006-03-05 12:22:08 -0600 (Sun, 05 Mar 2006) $
  * $Revision: 4545 $
- *
+ * 
  * Copyright (C) 2002-2005  The Jmol Development Team
  *
  * Contact: jmol-developers@lists.sf.net
@@ -262,6 +262,10 @@ public class MathExt {
         // matrix([,,,][,,,][,,,][,,,])
         // any of 4x4 with "abc" or "xyz"
         // matrix("!b,c,a>a-c,b,2c;0,0,1/2>a,-a-c,b")
+        // matrix("13>>15>>14>>2")
+        // matrix("h")
+        // matrix("r")
+    
 
     int n = args.length;
     M4d m4 = null;
@@ -282,7 +286,12 @@ public class MathExt {
         m4 = (M4d) args[0].value;
         break;
       case T.string:
-        m4 = (M4d) vwr.getSymTemp().convertTransform((String) args[0].value, null);
+        String s = (String) args[0].value;
+        if (s.indexOf(">>") > 0) {
+           m4 = vwr.getModelkit(false).getMatrixTransform(s); 
+        } else {
+          m4 = (M4d) vwr.getSymTemp().convertTransform(s, null);
+        }
         break;
       case T.varray:
         a = SV.dlistValue(args[0], 0);
@@ -312,16 +321,13 @@ public class MathExt {
         return false;
       }
     }
-    if (m4 != null) { 
-      if (asABC) {
-        return mp.addXStr(vwr.getSymStatic().staticGetTransformABC(m4, false));
-      } 
-      if (asXYZ) {
-        return mp.addXStr((String) vwr.getSymStatic().staticConvertOperation("", m4));
-      }
-      return mp.addXM4(m4);      
-    }
-    return false;
+    return (m4 != null && (asABC || asXYZ) ? mp.addXStr(matToString(m4, asABC)) : mp.addXM4(m4));      
+  }
+
+  private String matToString(M4d m4, boolean asABC) {
+    return (asABC ?
+        vwr.getSymStatic().staticGetTransformABC(m4, false)
+        : (String) vwr.getSymStatic().staticConvertOperation("", m4));
   }
 
   /**
@@ -388,7 +394,8 @@ public class MathExt {
         ? (String) args[args.length - 1].value : null);
     if (isSubgroups || "subgroups".equals(mode)) {
       SymmetryInterface sym;
-      int itaFrom = Integer.MIN_VALUE, itaTo = Integer.MIN_VALUE, index1 = Integer.MIN_VALUE, index2 =Integer.MIN_VALUE;
+      int itaFrom = Integer.MIN_VALUE, itaTo = Integer.MIN_VALUE, 
+    		  index1 = Integer.MIN_VALUE, index2 = Integer.MIN_VALUE;
       switch (isSubgroups ? n + 1 : n) {
       case 5:
         index2 = args[3].intValue;
@@ -825,8 +832,6 @@ public class MathExt {
         if (toArray) {
           // first index needs to be 0 or 1
           int pt = bsIndex.nextSetBit(0);
-          if (pt < 0 && bsIndex.get(1))
-            pt = 1;
           if (pt == 0 | pt == 1) {
             int len = bsIndex.cardinality();
             if (bsIndex.nextClearBit(pt) == len + pt) {
@@ -2516,27 +2521,119 @@ public class MathExt {
   private boolean evaluateFormat(ScriptMathProcessor mp, int intValue,
                                  SV[] args, boolean isLabel)
       throws ScriptException {
-    // NOT {xxx}.label
+    // {xxx}.label()
+
     // {xxx}.label("....")
     // {xxx}.yyy.format("...")
     // (value).format("...")
-    // format("....",a,b,c...)
-    // format("....",[a1, a2, a3, a3....])
+    // array.format([headings])
+    // map.format([headings])
+
+    // why did I do this???
     // format("base64", x)
     // format("JSON", x)
     // format("byteArray", x)
     // format("array", x)
+    // better:
+    // format(x, "base64")
+    // format(x, "JSON")
+    // format(x, "byteArray")
+    // format(x, "array") 
+    // format(matrix, "xyz")
+    // format(matrix, "abc")
+    // so now accept both!
+
+    // format("....",a,b,c...)f -- could be format(format,"xx")
+    // format("....",[a1, a2, a3, a3....])
+
+    // matrix4f.format("xyz" | "abc")
+    if (isLabel && args.length > 1)
+      return false;
     SV x1 = (args.length < 2 || intValue == T.format ? mp.getX() : null);
-    String format = (args.length == 0 ? "%U"
-        : args[0].tok == T.varray ? null : SV.sValue(args[0]));
-    if (!isLabel && args.length > 0 && x1 != null && x1.tok != T.bitset
-        && format != null) {
-      // x1.format(["energy", "pointGroup"]);
+    String format;
+    int pt = -1;
+    SV x = null;
+    switch (args.length) {
+    case 0:
+      format = "%U";
+      break;
+    case 1:
+      if (x1 == null)
+        return false;
+      switch (args[0].tok) {
+      case T.varray:
+        // array.format([headings])
+        // map.format([headings])
+        format = null;
+        break;
+      case T.string:
+        // {xxx}.label("....")
+        // {xxx}.yyy.format("...")
+        // (value).format("...")
+        // matrix4f.format("xyz" | "abc")
+        format = (String) args[0].value;
+        pt = SV.getFormatType(format);
+        if (pt >= 0)
+          x = x1;
+        break;
+      default:
+        return false;
+      }
+      break;
+    case 2:
+      if (args[0].tok == T.string) {
+        format = SV.sValue(args[0]);
+        x = args[1];
+        // format("xxx%s","testing");
+        // format("base64", x)
+        // format("JSON", x)
+        // format("byteArray", x)
+        // format("array", x)
+      } else {
+        // format(x, "base64")
+        // format(x, "JSON")
+        // format(x, "byteArray")
+        // format(x, "array") 
+        // format(matrix, "xyz")
+        // format(matrix, "abc")
+        x = args[0];
+        format = SV.sValue(args[1]);
+      }
+      pt = SV.getFormatType(format);
+      break;
+    default:
+      // all others -- more than 2 arguments must be format(format,a,b,c,...)
+      format = (String) args[0].value;
+      pt = SV.getFormatType(format);
+      if (pt >= 0)
+        return false;
+      break;
+    }
+    
+    switch (pt) {
+    case -1:
+      // {*}.label();
+      // {*}.label("xxx")
+      // format("xxx%s","testing");
+      break;
+    case SV.FORMAT_XYZ:
+    case SV.FORMAT_ABC:
+      return (x.tok == T.matrix4f && mp.addXStr(matToString((M4d) x.value, pt == SV.FORMAT_ABC)));
+    default:
+//    case SV.FORMAT_JSON:
+//    case SV.FORMAT_BYTEARRAY:
+//    case SV.FORMAT_BASE64:
+//    case SV.FORMAT_ARRAY:
+      return mp.addXObj(SV.getFormat(x, pt));
+    }
+    BS bs = (x1 != null && x1.tok == T.bitset ? (BS) x1.value : null);
+    if (!isLabel && args.length > 0 && bs == null && format != null) {
+      // x.format("xxxx")
       // x1.format("%5.3f %5s", ["energy", "pointGroup"])
       // but not x1.format() or {*}.format(....)
       if (args.length == 2) {
         Lst<SV> listIn = x1.getList();
-        Lst<SV> formatList = args[1].getList();
+        Lst<SV> formatList = x.getList();
         if (listIn == null || formatList == null)
           return false;
         x1 = SV.getVariableList(getSublist(listIn, formatList));
@@ -2545,15 +2642,13 @@ public class MathExt {
       x1 = null;
     }
     if (x1 == null) {
-      if (format == null)
-        return false;
-      int pt = (isLabel ? -1 : SV.getFormatType(format));
-      if (pt >= 0 && args.length != 2)
+      if (format == null || pt >= 0 && args.length != 2)
         return false;
       if (pt >= 0 || args.length < 2 || args[1].tok != T.varray) {
+        //format("%i %i", 2,3);
+        //format("%i %i", [2,3]);
         Object o = SV.format(args, pt);
-        return (format.equalsIgnoreCase("json") ? mp.addXStr((String) o)
-            : mp.addXObj(o));
+        return (o instanceof String ? mp.addXStr((String) o) : mp.addXObj(o));
       }
       // fill an array with applied formats
       Lst<SV> a = args[1].getList();
@@ -2565,20 +2660,28 @@ public class MathExt {
       }
       return mp.addXAS(sa);
     }
+    // arrayOfArrays.format(["energy", "pointGroup"]);
+    // arrayOfMaps.format(["energy", "pointGroup"]);
     if (x1.tok == T.varray && format == null) {
       Lst<SV> listIn = x1.getList();
       Lst<SV> formatList = args[0].getList();
       Lst<SV> listOut = getSublist(listIn, formatList);
       return mp.addXList(listOut);
     }
-
-    BS bs = (x1.tok == T.bitset ? (BS) x1.value : null);
-    boolean asArray = T.tokAttr(intValue, T.minmaxmask); // "all"
-    return mp.addXObj(format == null ? ""
-        : bs == null ? SV.sprintf(PT.formatCheck(format), x1)
-            : e.getCmdExt().getBitsetIdent(bs, format, x1.value, true, x1.index,
-                asArray));
-
+    Object ret = null;
+    if (format == null) {
+      ret = "";
+    } else if (bs == null) {
+      ret = SV.sprintf(PT.formatCheck(format), x1);
+    } else {
+      // format.all??? label.all??? not documented
+      // just use xxx.all.format....
+      // but, yes, a single return here does give string, not an array.
+      // 
+      // boolean asArray = T.tokAttr(intValue, T.minmaxmask); // "all"
+      ret = e.getCmdExt().getBitsetIdent(bs, format, x1.value, true, x1.index,false);     
+    }
+    return mp.addXObj(ret); 
   }
 
   /**
@@ -2644,7 +2747,6 @@ public class MathExt {
     
     int len = args.length;
     SV x1 = mp.getX();
-    boolean isArray1 = (x1.tok == T.varray);
     SV x2;
     switch (tok) {
     case T.push:
@@ -2664,106 +2766,10 @@ public class MathExt {
       if (len != 1)
         return false;
     }
-    String[] sList1 = null, sList2 = null, sList3 = null;
-
+    boolean isArray1 = (x1.tok == T.varray);
     if (len == 2) {
-      // special add, join, split
-      String tab = SV.sValue(args[0]);
-      x2 = args[1];
-      if (tok == T.add) {
-        // [...].add("\t", [...])
-        sList1 = (isArray1 ? SV.strListValue(x1)
-            : PT.split(SV.sValue(x1), "\n"));
-        sList2 = (x2.tok == T.varray ? SV.strListValue(x2)
-            : PT.split(SV.sValue(x2), "\n"));
-        sList3 = new String[len = Math.max(sList1.length, sList2.length)];
-        for (int i = 0; i < len; i++)
-          sList3[i] = (i >= sList1.length ? "" : sList1[i]) + tab
-              + (i >= sList2.length ? "" : sList2[i]);
-        return mp.addXAS(sList3);
-      }
-      if (x2.tok != T.on)
-        return false; // second parameter must be "true" for now.
-      Lst<SV> l = x1.getList();
-      boolean isCSV = (tab.length() == 0);
-      if (isCSV)
-        tab = ",";
-      if (tok == T.join) {
-        // [...][...].join(sep, true) [2D-array line join]
-        // [...][...].join("", true)  [CSV join]
-        SV[] s2 = new SV[l.size()];
-        for (int i = l.size(); --i >= 0;) {
-          Lst<SV> a = l.get(i).getList();
-          if (a == null)
-            s2[i] = l.get(i);
-          else {
-            SB sb = new SB();
-            for (int j = 0, n = a.size(); j < n; j++) {
-              if (j > 0)
-                sb.append(tab);
-              SV sv = a.get(j);
-              sb.append(isCSV && sv.tok == T.string
-                  ? "\"" + PT.rep((String) sv.value, "\"", "\"\"") + "\""
-                  : "" + sv.asString());
-            }
-            s2[i] = SV.newS(sb.toString());
-          }
-        }
-        return mp.addXAV(s2);
-      }
-      // [...].split(sep, true) [split individual elements as strings]
-      // [...].split("", true) [CSV split]
-      Lst<SV> sa = new Lst<SV>();
-      if (isCSV)
-        tab = "\0";
-      int[] next = new int[2];
-      for (int i = 0, nl = l.size(); i < nl; i++) {
-        String line = l.get(i).asString();
-        if (isCSV) {
-          next[1] = 0;
-          next[0] = 0;
-          int last = 0;
-          while (true) {
-            String s = PT.getCSVString(line, next);
-            if (s == null) {
-              if (next[1] == -1) {
-                // unmatched -- continue with next line if present
-                // or just close quotes gracefully
-                line += (++i < nl ? "\n" + l.get(i).asString() : "\"");
-                next[1] = last;
-                continue;
-              }
-              line = line.substring(0, last)
-                  + line.substring(last).replace(',', '\0');
-              break;
-            }
-            line = line.substring(0, last)
-                + line.substring(last, next[0]).replace(',', '\0') + s
-                + line.substring(next[1]);
-            next[1] = last = next[0] + s.length();
-          }
-        }
-        String[] linaa = line.split(tab);
-        Lst<SV> la = new Lst<SV>();
-        for (int j = 0, n = linaa.length; j < n; j++) {
-          String s = linaa[j];
-          if (s.indexOf(".") < 0)
-            try {
-              la.addLast(SV.newI(Integer.parseInt(s)));
-              continue;
-            } catch (Exception e) {
-            }
-          else
-            try {
-              la.addLast(SV.getVariable(Double.valueOf(Double.parseDouble(s))));
-              continue;
-            } catch (Exception ee) {
-            }
-          la.addLast(SV.newS(s));
-        }
-        sa.addLast(SV.getVariableList(la));
-      }
-      return mp.addXObj(SV.getVariableList(sa));
+      Object ret = listSpecial(tok, x1, SV.sValue(args[0]), args[1], isArray1);
+      return (ret != null && mp.addXObj(ret));
     }
     x2 = (len == 0 ? SV.newV(T.all, "all") : args[0]);
     boolean isAll = (x2.tok == T.all);
@@ -2777,6 +2783,7 @@ public class MathExt {
     Lst<SV> alist1 = x1.getList();
     Lst<SV> alist2 = x2.getList();
 
+    String[] sList1 = null, sList2 = null;
     if (isArray1) {
       len = alist1.size();
     } else if (isScalar1) {
@@ -2862,6 +2869,116 @@ public class MathExt {
       olist[i] = mp.getX();
     }
     return (justVal ? mp.addXObj(olist[0]) : mp.addXAV(olist));
+  }
+
+  private Object listSpecial(int tok, SV x1, String tab, SV x2, boolean isArray1) {
+    // special add, join, split
+    String[] sList1 = null, sList2 = null, sList3 = null;
+    if (tok == T.add) {
+      // [...].add("\t", [...])
+      // [...].add("", [...])
+      sList1 = (isArray1 ? SV.strListValue(x1)
+          : PT.split(SV.sValue(x1), "\n"));
+      sList2 = (x2.tok == T.varray ? SV.strListValue(x2)
+          : PT.split(SV.sValue(x2), "\n"));
+      int len = Math.max(sList1.length, sList2.length);
+      sList3 = new String[len];
+      for (int i = 0; i < len; i++)
+        sList3[i] = (i >= sList1.length ? "" : sList1[i]) + tab
+            + (i >= sList2.length ? "" : sList2[i]);
+      return sList3;
+    }
+    if (x2.tok != T.on)
+      return null; // second parameter must be "true" for now.
+    Lst<SV> l = x1.getList();
+    boolean isCSV = (tab.length() == 0);
+    if (isCSV)
+      tab = ",";
+    //boolean isTSV = (tab.equals("\t"));
+    if (tok == T.join) {
+      // [...][...].join(sep, true) [2D-array line join]
+      // [...][...].join("", true)  [CSV join] ["\t" for TSV join
+      SV[] s2 = new SV[l.size()];
+      for (int i = l.size(); --i >= 0;) {
+        Lst<SV> a = l.get(i).getList();
+        if (a == null)
+          s2[i] = l.get(i);
+        else {
+          SB sb = new SB();
+          for (int j = 0, n = a.size(); j < n; j++) {
+            if (j > 0)
+              sb.append(tab);
+            SV sv = a.get(j);
+            String s = null;
+            if (sv.tok == T.string) {
+              String st = (String) sv.value;
+              if (isCSV) {
+                s = "\"" + PT.rep(st, "\"", "\"\"") + "\"";
+// escape tabs?
+//              } else if (isTSV && st.indexOf('\t') >= 0) {
+//                s = "\"" + PT.rep(st, "\"", "\"\"") + "\"";
+              }
+            }
+            sb.append(s == null ? "" + sv.asString() : s);
+          }
+          s2[i] = SV.newS(sb.toString());
+        }
+      }
+      return s2;
+    }
+    // [...].split(sep, true) [split individual elements as strings]
+    // [...].split("", true) [CSV split]
+    Lst<SV> sa = new Lst<SV>();
+    if (isCSV)
+      tab = "\0";
+    int[] next = new int[2];
+    for (int i = 0, nl = l.size(); i < nl; i++) {
+      String line = l.get(i).asString();
+      if (isCSV) {
+        next[1] = 0;
+        next[0] = 0;
+        int last = 0;
+        while (true) {
+          String s = PT.getCSVString(line, next);
+          if (s == null) {
+            if (next[1] == -1) {
+              // unmatched -- continue with next line if present
+              // or just close quotes gracefully
+              line += (++i < nl ? "\n" + l.get(i).asString() : "\"");
+              next[1] = last;
+              continue;
+            }
+            line = line.substring(0, last)
+                + line.substring(last).replace(',', '\0');
+            break;
+          }
+          line = line.substring(0, last)
+              + line.substring(last, next[0]).replace(',', '\0') + s
+              + line.substring(next[1]);
+          next[1] = last = next[0] + s.length();
+        }
+      }
+      String[] linaa = line.split(tab);
+      Lst<SV> la = new Lst<SV>();
+      for (int j = 0, n = linaa.length; j < n; j++) {
+        String s = linaa[j];
+        if (s.indexOf(".") < 0)
+          try {
+            la.addLast(SV.newI(Integer.parseInt(s)));
+            continue;
+          } catch (Exception e) {
+          }
+        else
+          try {
+            la.addLast(SV.getVariable(Double.valueOf(Double.parseDouble(s))));
+            continue;
+          } catch (Exception ee) {
+          }
+        la.addLast(SV.newS(s));
+      }
+      sa.addLast(SV.getVariableList(la));
+    }
+    return SV.getVariableList(sa);
   }
 
   private Lst<SV> addAllLists(Lst<SV> list, Lst<SV> l) {
@@ -3724,7 +3841,7 @@ public class MathExt {
     // script(cmd, syncTarget)
     // show(showCmd)
     if (tok != T.show && !checkAccess())
-      return false; // just ignore for PNGJ
+      return false; // fail for PNGJ
     if (args.length == 0 || args.length != 1 && (tok == T.show || tok == T.javascript))
       return false;
     if ((tok == T.show || tok == T.javascript) && args.length != 1
@@ -4023,26 +4140,42 @@ public class MathExt {
     // x = {atom}.symop("wyckoff", "coord")  -- report Wyckoff coord
 	// x = {atom}.symop("wyckoff", "coords") -- get full coordinate list
 
-    int narg = args.length;
+    // print symop([ops],type)
+    Object o;
+    if (!isProperty && args.length == 2 && args[0].tok == T.varray && args[1].tok == T.string) {
+      Lst<Object> ret = new Lst<>();
+      Lst<SV> list = (Lst<SV>) args[0].value;
+      for (int i = 0, n = list.size(); i < n; i++) {
+        o = getSymopInfo(mp, null, new SV[] {list.get(i), args[1]}, i + 1, false);
+        if (o == null)
+          return false;
+        ret.addLast(o);
+      }
+      return mp.addXList(ret);
+    }
+    SV x1 = (isProperty ? mp.getX() : null);
+    o = getSymopInfo(mp, x1, args, 0, isProperty);
+    return (o != null && mp.addXObj(o));
+  }
+
+  @SuppressWarnings("unchecked")
+  private Object getSymopInfo(ScriptMathProcessor mp, SV x1, SV[] args, int index, boolean isProperty) throws ScriptException {
 
     // static calls in SymmetryOperation
     Object o = null;
 
-    if (args.length == 2 && args[0].tok == T.string && args[1].tok == T.string
+    int narg = args.length;
+    if (narg == 2 && args[0].tok == T.string && args[1].tok == T.string
         && ((String) args[1].value).equalsIgnoreCase("matrix")) {
-      o = vwr.getSymStatic().staticConvertOperation((String) args[0].value, null);
-      return (o != null && mp.addXObj(o));
+      return vwr.getSymStatic().staticConvertOperation((String) args[0].value, null);
     }
-    if (args.length == 2 && args[0].tok == T.matrix4f && args[1].tok == T.string
+    if (narg == 2 && args[0].tok == T.matrix4f && args[1].tok == T.string
         && ((String) args[1].value).equalsIgnoreCase("xyz")) {
-      o = vwr.getSymStatic().staticConvertOperation("", (M4d) args[0].value);
-      return (o != null && mp.addXObj(o));
+      return vwr.getSymStatic().staticConvertOperation("", (M4d) args[0].value);
     }
-
-    SV x1 = (isProperty ? mp.getX() : null);
     boolean isPoint = false;
     if (x1 != null && x1.tok != T.bitset && !(isPoint = (x1.tok == T.point3f)))
-      return false;
+      return null;
     BS bsAtoms = (x1 == null || isPoint ? null : (BS) x1.value);
     P3d pt1 = (isPoint ? SV.ptValue(x1) : null);
     if (!isPoint && bsAtoms == null)
@@ -4057,7 +4190,7 @@ public class MathExt {
       Lst<String[]> lst = new Lst<String[]>();
       for (int i = 0, n = ops.length; i < n; i++)
         lst.addLast(PT.split(ops[i], "\t"));
-      return mp.addXList(lst);
+      return lst;
     }
     String xyz = null;
     int tok = 0;
@@ -4072,7 +4205,7 @@ public class MathExt {
       switch (xyz == null ? "" : xyz.toLowerCase()) {
       case "count": 
           SymmetryInterface sym = vwr.getOperativeSymmetry();
-          return (narg != 1 ? false : mp.addXInt(sym == null ? 0 : sym.getSpaceGroupOperationCount()));
+          return (narg != 1 ? null : Integer.valueOf(sym == null ? 0 : sym.getSpaceGroupOperationCount()));
       case "":
         tok = T.nada;
         break;
@@ -4122,7 +4255,7 @@ public class MathExt {
     if (narg > apt && args[apt].tok == T.varray) {
       List<SV> a = args[apt++].getList();
       if (a.size() != 3)
-        return false;
+        return null;
       trans = P3d.new3(SV.dValue(a.get(0)), SV.dValue(a.get(1)),
           SV.dValue(a.get(2)));
     } else if (narg > apt && args[apt].tok == T.integer) {
@@ -4175,7 +4308,7 @@ public class MathExt {
       o = map.get(xyz + "_m");
       if (o == null) {
         o = map.get(xyz);
-        return (o == null ? mp.addXStr("") : mp.addXObj(o));
+        return (o == null ? "" : o);
       }
       P3d centerPt;
       try {
@@ -4187,7 +4320,7 @@ public class MathExt {
           } else if (obj.tok == T.varray) {
             m = (M3d) obj.getList().get(iOp - 1).value;
           } else {
-            return false;
+            return null;
           }
         } else {
           centerPt = (P3d) map.get("center");
@@ -4205,15 +4338,15 @@ public class MathExt {
           }
         }
         if (pt1 == null)
-          return mp.addXObj(m);
+          return m;
         pt1 = P3d.newP(pt1);
         pt1.sub(centerPt);
         m.rotate(pt1);
         pt1.add(centerPt);
-        return mp.addXPt(pt1);
+        return pt1;
       } catch (Exception e) {
       }
-      return false;
+      return null;
     }
     String desc = (narg == apt
         ? (isWyckoff ? ""
@@ -4236,7 +4369,7 @@ public class MathExt {
           if (desc.length() == 1)
             desc += "*";
           else
-            return false;          
+            return null;          
         }
       }
       if (desc.length() == 0 || desc.equalsIgnoreCase("label"))
@@ -4246,7 +4379,7 @@ public class MathExt {
           || desc.equalsIgnoreCase("coord")
           || desc.equalsIgnoreCase("coords")? desc : desc.substring(0, 1));
       SymmetryInterface sym = vwr.getOperativeSymmetry();      
-      return mp.addXObj(sym == null ?  null 
+      return (sym == null ?  null 
           : sym.getWyckoffPosition(vwr, pt, 
               (letter == null ? 
                   (tok == T.wyckoffm ? "M"  : null)
@@ -4278,13 +4411,12 @@ public class MathExt {
           m[i] = vwr.getSymmetryInfo(iatom, null, iOp, null, pt1, pt1, T.array,
               desc, 0, -1, 0, null);
         }
-        return mp.addXObj(m);
+        return m;
       }
-      return (ret != null && mp.addXAI(ret));
+      return ret;
     }
-
-    return (apt == args.length && mp.addXObj(vwr.getSymmetryInfo(iatom, xyz,
-        iOp, trans, pt1, pt2, T.array, desc, 0, nth, 0, null)));
+    return (apt == args.length ? vwr.getSymmetryInfo(iatom, xyz,
+        index > 0 ? index : iOp, trans, pt1, pt2, T.array, desc, 0, nth, 0, null) : null);
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)

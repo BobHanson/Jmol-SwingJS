@@ -2054,7 +2054,7 @@ public class SymmetryOperation extends M4d {
 //        // #230 
 //        // making sure here that this is truly a diagonal in the plane, not just
 //        // a glide parallel to a face on a diagonal plane! Mois Aroyo 2018
-        if (approx(n.x + n.y + n.z) == 1)
+        if (Math.abs(approx(n.x + n.y + n.z)) == 1)
           return 'n';
       }
       // 'g'

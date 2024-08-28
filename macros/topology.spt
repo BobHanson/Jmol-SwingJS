@@ -1,0 +1,124 @@
+// topology.spt
+// test Jmol script for topology cif lines
+// Bob Hanson hansonr@stolaf.edu
+// October 4-7, 2019
+
+function topologyDraw() {
+
+ draw ID "topo_*" delete
+
+ // retrieve all CIF data as arrays
+ var info = getProperty("fileInfo").models[1]
+
+try {
+ // get the number of symmetry operators
+ var nsym = info._symmetry_equiv_pos_as_xyz.length
+ 
+ // look out for older format
+ var isCif2 = !!info._topol_link_site_symmetry_translation_1
+ var isSeparate = !!info._topol_link_site_symmetry_symop_1
+
+ // get the number of topology lines
+ var n = (isSeparate ? info._topol_link_node_label_1 : info._topos_bond_atom_site_label_1).length
+
+ // catalog finds so as to remove duplicates
+ var cat = ""
+ 
+ // for each _topol_link line...
+ var a1, a2, s1, s3, d, type, mult
+ for (var i = 1; i <= n; i++) {
+  // ...get the data
+  if (isSeparate) {
+      a1 = info._topol_link_node_label_1[i]
+      a2 = info._topol_link_node_label_2[i]
+      // just simpler to join it all up and split it out later
+      if (isCif2) {
+        s1 = "" + info._topol_link_site_symmetry_symop_1[i] + "_" 
+           + info._topol_link_site_symmetry_translation_1.join("_")
+        s2 = "" + info._topol_link_site_symmetry_symop_2[i] + "_" 
+           + info._topol_link_site_symmetry_translation_2.join("_")
+      } else {
+        s1 = info._topol_link_site_symmetry_symop_1[i] + "_" 
+           + info._topol_link_site_symmetry_translation_1_x[i] + "_"
+           + info._topol_link_site_symmetry_translation_1_y[i] + "_"
+           + info._topol_link_site_symmetry_translation_1_z[i]
+        s2 = info._topol_link_site_symmetry_symop_2[i] + "_" 
+           + info._topol_link_site_symmetry_translation_2_x[i] + "_"
+           + info._topol_link_site_symmetry_translation_2_y[i] + "_"
+           + info._topol_link_site_symmetry_translation_2_z[i]
+      }
+      d = info._topol_link_distance[i]
+      type = info._topol_link_type[i]
+      mult = info._topol_link_multiplicity[i]
+  } else {
+      // original schema
+      a1 = info._topos_bond_atom_site_label_1[i]
+      a2 = info._topos_bond_atom_site_label_2[i]
+      s1 = info._topos_bond_site_symmetry_1[i]
+      s2 = info._topos_bond_site_symmetry_2[i]
+      d = info._topos_bond_distance[i]
+      type = info._topos_bond_type[i]
+      mult = info._topos_bond_multiplicity[i]
+  }
+  // ...get list of all atoms of type a1 in the model
+  var alist = {atomName=a1}
+
+  // ...identify two base atoms, and their positions based on the s1 and s2
+   var atom1 = alist[1]
+   var atom2 = {atomName=a2}[1]
+   var p1 = topologyGetPosition(atom1, s1)
+   var p2 = topologyGetPosition(atom2, s2)
+
+  // ...now loop through the atoms of type a1...
+  for (var j = 1; j <= alist.length; j++) {
+
+      var a = alist[j]
+
+      // ...determine all symmetry operations relating atom1 to a
+      // (note that there could be several of these)
+      var ops = symop(atom1, a, "matrix");
+      
+      // ... now loop over all these symmetry operations...
+      for (var k = ops.length; k > 0; --k) {
+        // ... determine the related atoms based on the relationship between p1 and p2
+        var p1k = topologyOperate(ops[k], p1)
+        var p2k = topologyOperate(ops[k], p2)
+
+        // ... only draw lines between those that are not already in the catalog
+        var key = "\n" + p1k.format("%6.2p") + p2k.format("%6.2p")
+        if (cat.find(key) == 0) {
+          draw ID @{"topo_" + i + "_" + j + "_" + k} @p1k @p2k
+          cat += key
+        }
+     }     
+  }
+ }
+ print "Edge count = " +(cat.split("\n").length - 1)
+} catch (e) {}
+}
+
+function topologyGetPosition(atom, sym) {
+  sym = sym.split("_")
+  var op = 0 + sym[1]
+  // this next converts fractional to Cartesian coordinates
+  var translation = point(sym[2], sym[3], sym[4]).xyz
+  return symop(op, atom) + translation
+}
+
+function topologyOperate(op, p) {
+  // operation is an array where element 11 is the matrix. (should document that)
+  // we multiply by the fractional coordinate equivalent of p, then back-transform to Cartesian
+  return (op * p.fxyz).xyz
+}
+
+//load "https://net.topcryst.com/cif.php?download=1273ea5e-8a99-52af-e013-afdf059b0777" fill 15
+//out = "topo1.png"
+//topologyDraw()
+//write @out as PNGJ
+
+print "topology.spt 2019.10.04 Bob Hanson hansonr@stolaf.edu"
+print "topologyDraw() created  -- depict Topology CIF network using the DRAW command."
+
+// There are many more interesting things that could be added to this macro. 
+
+

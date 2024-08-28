@@ -2323,6 +2323,7 @@ public class T {
        "lp",
        "lumo",
        "macro",
+       "macros",
        "manifest",
        "mapProperty",
        "maxSet",
@@ -3404,6 +3405,7 @@ public class T {
         lp,                                 //        "lp"
         lumo,                               //        "lumo"
         macro,                              //        "macro"  // added in Jmol 14.3.15
+        -1,
         manifest,                           //        "manifest"
         mapproperty,                        //        "mapProperty"
         maxset,                             //        "maxSet"

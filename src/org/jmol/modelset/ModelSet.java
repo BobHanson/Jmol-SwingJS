@@ -1979,8 +1979,11 @@ public class ModelSet extends BondCollection {
   }
 
   /**
+   * 
    * deletes molecules based on: CENTROID -- molecular centroid is not in unit
    * cell CENTROID PACKED -- all molecule atoms are not in unit cell
+   * 
+   * called from ScriptEval.finalizeLoad()
    * 
    * @param bs
    * @param minmax
@@ -4485,7 +4488,6 @@ public class ModelSet extends BondCollection {
     haveUnitCells = true;
     boolean isP1 = (sg.getSpaceGroupOperationCount() == 1);
     int nops = sg.getFinalOperationCount();
-
     if (basis != null) {
       boolean needBasis = basis.isEmpty();
       BS bs = vwr.getModelUndeletedAtomsBitSet(mi);

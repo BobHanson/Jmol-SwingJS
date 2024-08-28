@@ -1,0 +1,104 @@
+// cleg.spt
+//
+// MACRO CLEG
+// 
+// A set of functions that can be used or adapted to 
+// create 3D models of space groups and space group relationships
+//
+// See also https://github.com/BobHanson/CLEG
+
+// BH 2024.08.23
+
+// under development
+
+/*
+ * show subgroup chain using BCS format
+ * 
+ * for example:
+ *
+ *  showsubs("C2/c > P21/c > P21")
+ *
+ *  showsubs([13 15 14 2])
+ */
+function showsubs(chain) {
+  save orientation o;
+  draw * delete;
+  // chain = "C2/c > P21/c > P21"
+  var colors = ["red", "orange", "yellow", "green", "blue", "violet" ];
+  if (chain.type == "array")
+	chain = chain.join(">");
+  var groups = chain.replace(" ","").replace(">>",">").split(">");
+  
+  var drawIDs = [];
+  for (var i = 1; i<= groups.length; i++) {
+    var sg = groups[i];
+    if (i == 1) {
+      print sg;
+      modelkit zap spacegroup @sg;
+    } else {
+      print ">>" + sg;
+      modelkit spacegroup @{">>" + sg};
+    }
+    restore orientation o
+    var dsg = "sg"+sg + "_";
+    drawIDs.push(dsg);
+    draw ID @{"uc"+sg + "_"} unitcell color @{colors[((i-1)%6)+1]} @sg;
+    draw ID @dsg spacegroup all;
+    draw ID @{dsg + "*"} off;
+    delay 2
+  }
+  set echo bottom left;
+  for (var i = drawIDS.length; i > 0; --i) {
+    draw sg* off;
+    draw ID @{drawIDs[i] + "*"} on;
+    echo @{groups[i]}
+    delay 2;
+  }
+  draw ID * on;
+  echo @chain;
+  restore orientation o;
+ }
+
+
+ print "showsubs: creates a 3D model of a group-subgroup relationship" 
+ print "showsubs([13 15 14 2])"
+ print "showsubs('C2/c > P21/c > P21')"
+
+
+/*
+ * Generate all operations from a set of general positions
+ * starting with an array of generators for a space group setting. 
+ *
+ * For example, from
+ * 
+ * gen = spacegroup(23).its[1].gen;
+ *
+ */	function getGeneralPositions(gen) {
+	 var a = [];
+	 var b = [matrix("x,y,z")];
+	 var s= ""
+	 for (var i = 1; i <= gen.length; i++) {
+		for (var j = 1; j <= b.length; j++) {
+			var m = matrix(gen[i])*matrix(b[j]);
+			// normalize to positive ("unitary") translations only
+			// by pulling the translation out, turning it into cartesians, and then unifying it,
+			// then adding it back into the 3x3 to regenerate a 4x4 operation
+			m = m%1 + (m%2).xyz.uxyz
+			var xyz = matrix(m,"xyz");
+			var key = ";"+xyz+";";
+			if (s.find(key) == 0) {
+				// only add already-unfound operations
+				s += key;
+				b.push(m);
+				a.push(xyz);
+			}
+		}
+	 }
+	 return a;
+	}
+ 
+print "getGeneralPositions: Demonstration of creating the full set of operations "
+print "for a space group given its list of operators."
+
+
+

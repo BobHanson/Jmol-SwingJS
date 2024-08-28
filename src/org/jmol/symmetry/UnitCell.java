@@ -742,6 +742,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     getMatrixAndUnitCell(null, transform, trm);
     return trm;
   }
+
   /**
    * 
    * @param uc
@@ -789,7 +790,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         retMatrix.setIdentity();
         M4d m4 = new M4d();
         for (int i = sdefs.length; --i >= 0;) {
-          getMatrixAndUnitCell(null,  sdefs[i], m4);
+          getMatrixAndUnitCell(null, sdefs[i], m4);
           retMatrix.mul2(m4, retMatrix);
         }
         return pts; // just not null
@@ -818,8 +819,10 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       boolean isRev = sdef.startsWith("!");
       if (isRev)
         sdef = sdef.substring(1);
-      if (sdef.startsWith("r;"))
-        sdef = SpaceGroup.SET_R + sdef.substring(1);
+      if (sdef.equals("r;0,0,0"))
+        sdef = HEX_TO_RHOMB + sdef.substring(1);
+      else if (sdef.equals("h;0,0,0"))
+        sdef = RHOMB_TO_HEX + sdef.substring(1);
       Symmetry symTemp = new Symmetry();
       symTemp.setSpaceGroup(false);
       int i = symTemp.addSpaceGroupOperation("=" + sdef, 0);
@@ -844,7 +847,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       if (uc == null)
         return pts;
     } else if (retMatrix != null || uc == null) {
-        return null;
+      return null;
     } else if (def instanceof M3d) {
       m = M4d.newMV((M3d) def, new P3d());
     } else if (def instanceof M4d) {

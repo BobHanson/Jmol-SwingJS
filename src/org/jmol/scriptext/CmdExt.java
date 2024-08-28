@@ -5088,109 +5088,119 @@ public class CmdExt extends ScriptExt {
       }
       break;
     case T.spacegroup:
-      String sdiag = eval.optParameterAsString(2);
-      SymmetryInterface sym = vwr.getOperativeSymmetry();
-      boolean isDiagram = sdiag.toLowerCase().startsWith("diagram");
-      if (isDiagram || sdiag.toLowerCase().startsWith("table")) {
-        if (chk)
-          break;
-        sdiag = PT.trim(sdiag.substring(isDiagram ? 7 : 5).trim(), "\"");
-        if (sdiag.length() == 0) {
-          if (sym == null) {
-            msg = "Include a space group name or number to view its diagram";
-            break;
-          }
-          sdiag = sym.getIntTableNumber();
-          if (sdiag == null || sdiag.equals("0")) {
-            msg = "Can't display a table; don't have an ITA number.";
-            break;
-          }
-        }
-        int ita = PT.parseInt(sdiag);
-        if (ita == Integer.MIN_VALUE) {
-          if (sym == null) {
-            sym = vwr.getSymStatic();
-          }
-          Map<String, Object> info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
-                  PT.rep(sdiag, "''", "\""), -1, true, null);
-          if (info == null) {
-            msg = "Could not find space group " + sdiag;
-            break;  
-          }
-          ita = ((Integer) ((Map<String, Object>) info.get("spaceGroupInfo")).get("ita")).intValue();
-        }
-        String href = JC.resolveDataBase(isDiagram ? "itadiagram" : "itatable", PT.formatS("" + ita, 3, 0, false, true), null);
-        msg = href;
-        vwr.showUrl(href);
-        len = slen;
-        break;
-      }
-      //$FALL-THROUGH$
     case T.symop:
-      msg = "";
-      Map<String, Object> info = null;
-      if ((len = slen) == 2) {
-        if (chk)
+      SymmetryInterface sym = vwr.getOperativeSymmetry();
+      switch (tok) {
+      case T.spacegroup:
+        String sdiag = eval.optParameterAsString(2);
+        boolean isDiagram = sdiag.toLowerCase().startsWith("diagram");
+        if (isDiagram || sdiag.toLowerCase().startsWith("table")) {
+          if (chk)
+            break;
+          sdiag = PT.trim(sdiag.substring(isDiagram ? 7 : 5).trim(), "\"");
+          if (sdiag.length() == 0) {
+            if (sym == null) {
+              msg = "Include a space group name or number to view its diagram";
+              break;
+            }
+            sdiag = sym.getIntTableNumber();
+            if (sdiag == null || sdiag.equals("0")) {
+              msg = "Can't display a table; don't have an ITA number.";
+              break;
+            }
+          }
+          int ita = PT.parseInt(sdiag);
+          if (ita == Integer.MIN_VALUE) {
+            if (sym == null) {
+              sym = vwr.getSymStatic();
+            }
+            Map<String, Object> info = sym.getSpaceGroupInfo(
+                vwr.ms, PT.rep(sdiag, "''", "\""), -1, true, null);
+            if (info == null) {
+              msg = "Could not find space group " + sdiag;
+              break;
+            }
+            ita = ((Integer) ((Map<String, Object>) info.get("spaceGroupInfo"))
+                .get("ita")).intValue();
+          }
+          String href = JC.resolveDataBase(
+              isDiagram ? "itadiagram" : "itatable",
+              PT.formatS("" + ita, 3, 0, false, true), null);
+          msg = href;
+          vwr.showUrl(href);
+          len = slen;
           break;
-        info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null, -1, false,
-            null);
-      } else if (tok == T.spacegroup) {
-        String sg = paramAsStr(2);
-        len = 3;
-        if (chk)
-          break;
-        if (sg.startsWith("list/")) {
-          filter = sg.substring(4);
-          sg = "list";
         }
-        info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
-            PT.rep(sg, "''", "\""), -1, false, null);
-      }
-      if (info != null) {
-        msg = (tok == T.spacegroup
-            ? "" + info.get(JC.INFO_SPACE_GROUP_INFO)
-                + info.get(JC.INFO_SPACE_GROUP_NOTE)
-            : "")
-            + (info.containsKey("symmetryInfo") ? info.get("symmetryInfo")
-                : "");
+        //$FALL-THROUGH$
+      case T.symop:
+        msg = "";
+        Map<String, Object> info = null;
+        if ((len = slen) == 2) {
+          if (chk)
+            break;
+          if (sym == null)
+            sym = vwr.getSymTemp();
+          info = sym.getSpaceGroupInfo(vwr.ms, null, -1, false,
+              null);
+        } else if (tok == T.spacegroup) {
+          String sg = paramAsStr(2);
+          len = 3;
+          if (chk)
+            break;
+          if (sg.startsWith("list/")) {
+            filter = sg.substring(4);
+            sg = "list";
+          }
+          info = vwr.getSymTemp().getSpaceGroupInfo(vwr.ms,
+              PT.rep(sg, "''", "\""), -1, false, null);
+        }
+        if (info != null) {
+          msg = (tok == T.spacegroup
+              ? "" + info.get(JC.INFO_SPACE_GROUP_INFO)
+                  + info.get(JC.INFO_SPACE_GROUP_NOTE)
+              : "")
+              + (info.containsKey("symmetryInfo") ? info.get("symmetryInfo")
+                  : "");
+          break;
+        }
+        // symop only here
+        int iop = (tokAt(2) == T.integer ? intParameter(2) : 0);
+        String xyz = (tokAt(2) == T.string || tokAt(2) == T.matrix4f
+            ? paramAsStr(2)
+            : null);
+        P3d pt1 = null, pt2 = null;
+        int nth = -1;
+        if (slen > 3 && tokAt(3) != T.string) {
+          // show symop @1 @2 ....
+          // show symop n @1 @2
+          // not show symop n "type"
+          // not show symop "xxxxx" "type"
+          Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
+          pt1 = eval.centerParameter(2 + (iop == 0 ? 0 : 1), ret);
+          if (ret[0] != null && ((BS) ret[0]).isEmpty()) {
+            len = slen;
+            break;
+          }
+          ret[0] = null;
+          pt2 = eval.centerParameter(++eval.iToken, ret);
+          if (ret[0] != null && ((BS) ret[0]).isEmpty()) {
+            len = slen;
+            break;
+          }
+          if (iop == 0 && tokAt(eval.iToken + 1) == T.integer)
+            nth = eval.getToken(++eval.iToken).intValue;
+        }
+        String type = (eval.iToken > 1 && tokAt(eval.iToken + 1) == T.string
+            ? stringParameter(++eval.iToken)
+            : null);
+        checkLength((len = ++eval.iToken) + filterLen);
+        if (!chk) {
+          Object o = vwr.getSymmetryInfo(vwr.getAllAtoms().nextSetBit(0), xyz,
+              iop, null, pt1, pt2, 0, type, 0, nth, 0, null);
+          msg = (o == null ? ""
+              : o instanceof Map ? SV.getVariable(o).asString() : o.toString());
+        }
         break;
-      }
-      // symop only here
-      int iop = (tokAt(2) == T.integer ? intParameter(2) : 0);
-      String xyz = (tokAt(2) == T.string || tokAt(2) == T.matrix4f
-          ? paramAsStr(2)
-          : null);
-      P3d pt1 = null, pt2 = null;
-      int nth = -1;
-      if (slen > 3 && tokAt(3) != T.string) {
-        // show symop @1 @2 ....
-        // show symop n @1 @2
-        // not show symop n "type"
-        // not show symop "xxxxx" "type"
-        Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
-        pt1 = eval.centerParameter(2 + (iop == 0 ? 0 : 1), ret);
-        if (ret[0] != null && ((BS) ret[0]).isEmpty()) {
-          len = slen;
-          break;
-        }
-        ret[0] = null;
-        pt2 = eval.centerParameter(++eval.iToken, ret);
-        if (ret[0] != null && ((BS) ret[0]).isEmpty()) {
-          len = slen;
-          break;
-        }
-        if (iop == 0 && tokAt(eval.iToken + 1) == T.integer)
-          nth = eval.getToken(++eval.iToken).intValue;
-      }
-      String type = (eval.iToken > 1 && tokAt(eval.iToken + 1) == T.string
-          ? stringParameter(++eval.iToken)
-          : null);
-      checkLength((len = ++eval.iToken) + filterLen);
-      if (!chk) {
-        Object o = vwr.getSymmetryInfo(vwr.getAllAtoms().nextSetBit(0), xyz,
-            iop, null, pt1, pt2, 0, type, 0, nth, 0, null);
-        msg = (o == null ? ""
-            : o instanceof Map ? SV.getVariable(o).asString() : o.toString());
       }
       break;
     case T.vanderwaals:
