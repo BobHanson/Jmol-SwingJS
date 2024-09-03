@@ -98,7 +98,7 @@ class SymmetryInfo {
     cellRange = (int[]) modelInfo.remove(JC.INFO_UNIT_CELL_RANGE);
     sgName = (String) modelInfo.get(JC.INFO_SPACE_GROUP);
     spaceGroupF2C = (double[][]) modelInfo.remove("f2c");
-    spaceGroupF2CTitle = (String) modelInfo.remove("f2cTitle");
+    spaceGroupF2CTitle = (String) modelInfo.remove(JC.INFO_SPACE_GROUP_F2C_TITLE);
     spaceGroupF2CParams = (double[]) modelInfo.remove("f2cParams");
     sgTitle = (String) modelInfo.remove(JC.INFO_SPACE_GROUP_TITLE);
     strSUPERCELL = (String) modelInfo.remove("supercell");
@@ -110,7 +110,7 @@ class SymmetryInfo {
     intlTableJmolID = (String) modelInfo.remove("intlTableJmolID");
     String s = (String) modelInfo.get("latticeType");
     latticeType = (s == null ? 'P' : s.charAt(0));
-    symmetryOperations = (SymmetryOperation[]) modelInfo.remove("symmetryOps");
+    symmetryOperations = (SymmetryOperation[]) modelInfo.remove(JC.INFO_SYMOPS_TEMP);
     coordinatesAreFractional = modelInfo.containsKey("coordinatesAreFractional")
         ? ((Boolean) modelInfo.get("coordinatesAreFractional")).booleanValue()
         : false;
@@ -219,6 +219,10 @@ class SymmetryInfo {
       displayName = sgName;
     }
     return displayName;
+  }
+
+  public String getClegId() {
+    return intlTableIndex + ":" + intlTableTransform;
   }
 
 

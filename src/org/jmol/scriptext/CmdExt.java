@@ -6722,26 +6722,10 @@ public class CmdExt extends ScriptExt {
       i = e.iToken;
     } else if (isSpacegroup) {
       type = e.optParameterAsString(i);
-      // "ITA" "/" 12.1
-      // "ITA"
-      // note: "ITA/" is now implied; adding it makes no differernce
-      //        If the Jmol id is desired, it will have a colon in it. 
-      SymmetryInterface sym = vwr.getOperativeSymmetry();
       if (type.equalsIgnoreCase("packed")) {
         // allow for MODELKIT SPACEGROUP packed
-        if (sym == null)
-          invArg();
-        type = sym.getClegId();
         isPacked = true;
-      } else if (type.indexOf(":") < 0 && type.indexOf(">") < 0 && 
-          (type.indexOf(",") > 0 || "rh".indexOf(type) >= 0)) {
-        // allow for MODELKIT SPACEGROUP "a,b,2c"
-        if (sym == null)
-          invArg();
-        String cleg = sym.getClegId();
-        type = cleg.substring(0, cleg.indexOf(":") + 1) + type;
       }
-          
       // new 16.2.1/2
       if (tokAt(e.iToken + 1) == T.unitcell) {
         Object[] ret = new Object[1];
@@ -6750,7 +6734,7 @@ public class CmdExt extends ScriptExt {
         if (paramsOrUC == null)
           invArg();
       }
-      if (tokAt(e.iToken + 1) == T.packed) {
+      if (!isPacked && tokAt(e.iToken + 1) == T.packed) {
         isPacked = true;
         ++e.iToken;
       }
@@ -6827,6 +6811,25 @@ public class CmdExt extends ScriptExt {
         e.report(GT.i(GT.$("{0} atoms moved"), nm), false);
       break;
     case T.spacegroup:
+      // "ITA" "/" 12.1
+      // "ITA"
+      // note: "ITA/" is now implied; adding it makes no differernce
+      //        If the Jmol id is desired, it will have a colon in it. 
+      SymmetryInterface sym = vwr.getOperativeSymmetry();
+      if (isPacked && type.equalsIgnoreCase("packed")) {
+        // allow for MODELKIT SPACEGROUP packed
+        if (sym == null)
+          invArg();
+        type = sym.getClegId();
+      } else if (type.length() > 0 && type.indexOf(":") < 0 && type.indexOf(">") < 0 && 
+          (type.indexOf(",") > 0 || "rh".indexOf(type) >= 0)) {
+        // allow for MODELKIT SPACEGROUP "a,b,2c"
+        if (sym == null)
+          invArg();
+        String cleg = sym.getClegId();
+        type = cleg.substring(0, cleg.indexOf(":") + 1) + type;
+      }
+          
       String s = vwr.getModelkit(false).cmdAssignSpaceGroup(bs, type, paramsOrUC, isPacked, doDraw, e.fullCommand);
       boolean isError = s.endsWith("!");
       if (isError)

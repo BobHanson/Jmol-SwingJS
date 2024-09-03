@@ -44,13 +44,15 @@ package org.jmol.adapter.readers.xtal;
 
 import javajs.util.DF;
 import javajs.util.Lst;
+import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.P3d;
 import javajs.util.V3d;
 import javajs.util.PT;
-import javajs.util.V3d;
 
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.api.SymmetryInterface;
+import org.jmol.symmetry.SymmetryOperation;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.util.Logger;
 import org.jmol.util.Tensor;
@@ -188,7 +190,7 @@ public class CastepReader extends AtomSetCollectionReader {
   }
 
   private boolean readFileData() throws Exception {
-    while (tokenizeCastepCell() > 0)
+    while (tokenizeCastepCell() > 0) {
       if (tokens.length >= 2 && tokens[0].equalsIgnoreCase("%BLOCK")) {
         Logger.info(line);
         /*
@@ -237,7 +239,14 @@ public class CastepReader extends AtomSetCollectionReader {
           readPositionsAbs();
           continue;
         }
+        if (tokens[1].equalsIgnoreCase("SYMMETRY_OPS")) {
+          readSymmetryOps();
+          continue;
+        }
+      } else if (tokens[0].equalsIgnoreCase("SYMMETRY_GENERATE")) {
+        addJmolScript("print 'CastepReader SYMMETRY_GENERATE';modelkit spacegroup");
       }
+    }
     if (isPhonon || isOutput || isTS) {
       if (isPhonon) {
         isTrajectory = (desiredVibrationNumber <= 0);
@@ -247,6 +256,76 @@ public class CastepReader extends AtomSetCollectionReader {
     }
     return false;
   }
+
+  /**
+   * Add the operators. The list is 3x3 rotation operator op3, followed by a
+   * translation t
+   * 
+   * For each op3 and t, given transpose(latt) and inv(transpose(latt)), we calculate:
+   * 
+   *  M4(lattTrInv * transpose(op3) * lattTr, t)
+   * 
+   * 
+   * @throws Exception
+   */
+  private void readSymmetryOps() throws Exception {
+//    %BLOCK symmetry_ops
+//    # Symm. op. 1       E
+//              1.000000000000000      -0.000000000000000       0.000000000000000
+//              0.000000000000000       1.000000000000000       0.000000000000000
+//              0.000000000000000       0.000000000000000       1.000000000000000
+//              0.000000000000000       0.000000000000000       0.000000000000000
+//    # Symm. op. 2     6_3
+//              0.500000000000000       0.866025403784439       0.000000000000000
+//             -0.866025403784438       0.500000000000000       0.000000000000000
+//              0.000000000000000       0.000000000000000       1.000000000000000
+//              0.000000000000000       0.000000000000000       0.500000000000000
+    // generate the transpose of the lattice and its inverse
+    if (lattTr == null) {
+      setLatticeVectors();
+      SymmetryInterface uc = getSymmetry().setUnitCellFromParams(unitCellParams, false, 0.0001);
+      P3d[] vecs = uc.getUnitCellVectors();
+      lattTr = new M3d();
+      lattTr.setColumnV(0, vecs[1]);
+      lattTr.setColumnV(1, vecs[2]);
+      lattTr.setColumnV(2, vecs[3]);
+    }
+    M3d lattTrInv = M3d.newM3(lattTr);
+    lattTrInv.invert();
+    M4d op = new M4d();
+    int nop = 0;
+    tokenizeCastepCell();
+    while (tokens.length > 0
+        && !tokens[0].equalsIgnoreCase("%ENDBLOCK")) {
+      M3d op3 = new M3d();
+      P3d t = new P3d();
+      for (int i = 0; i < 4; i++) {
+        if (tokens.length >= 3) {
+          double x = parseCalcStr(tokens[0]);
+          double y = parseCalcStr(tokens[1]);
+          double z = parseCalcStr(tokens[2]);
+          if (i < 3) {
+            op3.setColumn3(i, x, y, z);
+          } else {
+            t.set(x, y, z);
+          }
+        } else {
+          Logger.warn("cannot read line with CASTEP symmetr_ops: " + line);
+        }
+        tokenizeCastepCell();
+      }
+      //System.out.println(op3);
+      op3.mul2(op3, lattTr);
+      op3.mul2(lattTrInv, op3);
+      op.setMV(op3, t);
+      //System.out.println(op);
+      String xyz = SymmetryOperation.getXYZFromMatrix(op, false, true, false);
+      nop++;
+      System.out.println("CASTEP reader op[" + nop+ "] = " + xyz);
+      setSymmetryOperator(xyz);
+    }
+  }
+  
 
   @Override
   protected boolean checkLine() throws Exception {
@@ -446,17 +525,21 @@ public class CastepReader extends AtomSetCollectionReader {
     }
   }
 
+  private M3d lattTr;
+  
   private void readLatticeCart() throws Exception {
     if (tokenizeCastepCell() == 0)
       return;
     double factor = readLengthUnit(tokens[0]);
     double x, y, z;
+    lattTr = new M3d();
     for (int i = 0; i < 3; i++) {
       if (tokens.length >= 3) {
-        x = parseDoubleStr(tokens[0]) * factor;
-        y = parseDoubleStr(tokens[1]) * factor;
-        z = parseDoubleStr(tokens[2]) * factor;
+        x = parseCalcStr(tokens[0]) * factor;
+        y = parseCalcStr(tokens[1]) * factor;
+        z = parseCalcStr(tokens[2]) * factor;
         abc[i] = V3d.new3(x, y, z);
+        lattTr.setColumnV(i, abc[i]);
       } else {
         Logger.warn("error reading coordinates of lattice vector "
             + Integer.toString(i + 1)
@@ -472,6 +555,58 @@ public class CastepReader extends AtomSetCollectionReader {
     alpha = (abc[1].angle(abc[2]) * RAD_TO_DEG);
     beta = (abc[2].angle(abc[0]) * RAD_TO_DEG);
     gamma = (abc[0].angle(abc[1]) * RAD_TO_DEG);
+  }
+
+  private static String[] functions = { "sqrt","sin","cos","tan", "+", "-", "*", "/"}; 
+
+  private double parseCalcStr(String s) {
+    String[] parts;
+    double d = PT.parseDoubleStrict(s);
+    if (!Double.isNaN(d))
+      return d;
+    s = s.toLowerCase();
+    if (s.indexOf('(') >= 0) {
+      parts = PT.split(s, "(");
+      for (int i = parts.length - 1; --i >= 0;) {
+        String p = parts[i];
+        String f = null;
+        for (int j = functions.length; --j >= 0;) {
+          if (p.endsWith(functions[j])) {
+            f = functions[j];
+            break;
+          }
+        }
+        if (f == null) {
+          System.err.println("Unrecognized function " + s);
+          parts[i] += "?";
+        }
+      }
+      s = PT.join(parts, '(', 0);
+    }
+    // make sure all / are decimal 1/2 -> 1./2
+    if (s.indexOf('/') >= 0) {
+      parts = PT.split(s, "/");
+      for (int i = parts.length - 1; --i >= 0;) {
+        String p = parts[i];
+        boolean haveDecimal = false;
+        boolean haveDigit = false;
+        for (int j = p.length(); --j >= 0;) {
+          char c = p.charAt(j);
+          if (c == '.') {
+            haveDecimal = true;
+            break;
+          }
+          if (!PT.isDigit(c)) {
+            break;
+          }
+          haveDigit = true;
+        }
+        if (haveDigit && !haveDecimal)
+          parts[i] += ".";
+      }
+      s = PT.join(parts, '/', 0);
+    }
+    return vwr.evaluateExpressionAsVariable(s).asDouble();
   }
 
   private void readPositionsFrac() throws Exception {
@@ -519,8 +654,8 @@ public class CastepReader extends AtomSetCollectionReader {
           atom.elementSymbol = tokens[0];
         }
         
-        atom.set(parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]),
-            parseDoubleStr(tokens[3]));
+        atom.set(parseCalcStr(tokens[1]), parseCalcStr(tokens[2]),
+            parseCalcStr(tokens[3]));
         atom.scale(factor);
       } else {
         Logger.warn("cannot read line with CASTEP atom data: " + line);

@@ -279,4 +279,6 @@ public interface SymmetryInterface {
   int getFinalOperationCount();
 
   Object convertTransform(String transform, M4d trm);
+
+  String[] getSymopList(boolean normalize);
 }

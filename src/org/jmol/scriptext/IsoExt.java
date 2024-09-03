@@ -24,7 +24,6 @@
 
 package org.jmol.scriptext;
 
-import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.adapter.readers.quantum.GenNBOReader;
@@ -392,19 +391,20 @@ public class IsoExt extends ScriptExt {
             i = eval.iToken;
           } else {
             switch (tokAt(i + 1)) {
-            case T.string: 
+            case T.string:
               // modelkit spacegroup xx unitcell "a,b,2c"
               String tr = stringParameter(i + 1);
               // empty string can be used here to skip this and add a title still
               if (tr.length() > 0 && (uc = vwr.getCurrentUnitCell()) != null) {
-                uc = vwr.getSymTemp().getUnitCell(uc.getV0abc(tr, null), false, "draw");
+                uc = vwr.getSymTemp().getUnitCell(uc.getV0abc(tr, null), false,
+                    "draw");
               }
               i = eval.iToken;
               break;
             case T.point3f:
             case T.leftbrace:
               // draw unitcell {444 666 1}
-              ucLattice = eval.getFractionalPoint(i + 1);              
+              ucLattice = eval.getFractionalPoint(i + 1);
               i = eval.iToken;
               break;
             }
@@ -438,7 +438,7 @@ public class IsoExt extends ScriptExt {
               null);
         } else if (tok == T.unitcell && uc == null) {
           if (ucLattice != null) {
-              vwr.getModelkit(false).drawUnitCell(thisId, ucLattice, swidth);
+            vwr.getModelkit(false).drawUnitCell(thisId, ucLattice, swidth);
             return;
           }
           uc = vwr.getCurrentUnitCell();
@@ -799,6 +799,8 @@ public class IsoExt extends ScriptExt {
       case T.spacegroup:
         // draw spacegroup
         // draw spacegroup ALL        
+        // draw spacegroup @n
+        // draw spacegroup @n index
       case T.symop:
         String xyz = null;
         int iSym = Integer.MAX_VALUE;
@@ -811,6 +813,7 @@ public class IsoExt extends ScriptExt {
         boolean isSymop = (tok == T.symop);
         int nth = -1;
         Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
+        boolean checkNth = false;
         if (isSymop) {
           iSym = 0;
           switch (tokAt(++i)) {
@@ -818,7 +821,8 @@ public class IsoExt extends ScriptExt {
             xyz = stringParameter(i);
             break;
           case T.matrix4f:
-            xyz = (String) vwr.getSymStatic().convertTransform("xyz", (M4d) getToken(i).value);
+            xyz = (String) vwr.getSymStatic().convertTransform("xyz",
+                (M4d) getToken(i).value);
             break;
           case T.integer:
           default:
@@ -845,19 +849,35 @@ public class IsoExt extends ScriptExt {
             if (chk)
               return;
             i = eval.iToken;
-            if (center == null && i + 1 < slen) {
-              center = centerParameter(++i);
-              // draw ID xxx symop [n or "x,-y,-z"] [optional {center}]
-              // so we also check here for the atom set to get the right model
-              bsAtoms = (eval.isAtomExpression(i) ? atomExpressionAt(i) : null);
-              i = eval.iToken;
-            }
-            nth = ((!isSymop || target != null) && tokAt(i + 1) == T.integer
-                ? eval.getToken(++i).intValue
-                : -1);
-            if (nth < -1)
-              invArg();
+            checkNth = true;
+            break;
+          }
+        } else {
+          if (tokAt(i + 1) == T.all) {
+            //  draw SPACEGROUP ALL
+            nth = -2;
+            eval.iToken = ++i;
+          } else {
+            checkNth = true;
+          }
+        }
+        // symop or spacegroup
+        if (checkNth) {
+          if (center == null && i + 1 < slen) {
+            center = centerParameter(++i);
+            // draw spacegroup @n i
+            // draw ID xxx symop [n or "x,-y,-z"] [optional {center}]
+            // so we also check here for the atom set to get the right model
+            bsAtoms = (eval.isAtomExpression(i) ? atomExpressionAt(i) : null);
+            i = eval.iToken;
+          }
+          nth = ((!isSymop && center != null || target != null)
+              && tokAt(i + 1) == T.integer ? eval.getToken(++i).intValue : -1);
+          if (nth < -1)
+            invArg();
+          if (isSymop) {
             if (tokAt(i + 1) == T.unitcell) {
+              //??
               target = new P3d();
               options = T.offset;
               eval.iToken = ++i;
@@ -867,18 +887,13 @@ public class IsoExt extends ScriptExt {
               options = T.offset;
               i = eval.iToken;
             }
-            break;
-          }
-        } else if (tokAt(i + 1) == T.all) {
-          //  draw SPACEGROUP ALL
-          nth = -2;
-          eval.iToken = ++i;
-        }
-        if (xyz != null) {
-          i++;
-          if (eval.isCenterParameter(i)) {
-            center = eval.centerParameter(i, ret);
-            i = eval.iToken;
+            if (xyz != null) {
+              i++;
+              if (eval.isCenterParameter(i)) {
+                center = eval.centerParameter(i, ret);
+                i = eval.iToken;
+              }
+            }
           }
         }
         eval.checkLast(eval.iToken);
@@ -889,21 +904,23 @@ public class IsoExt extends ScriptExt {
         if (bsAtoms == null && vwr.am.cmi >= 0)
           bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
         if (bsAtoms != null) {
-          s = vwr.getModelkit(false).drawSymmetry(thisId, isSymop, iatom, xyz, iSym, trans, center, target, intScale, nth, options, opList, false);
+          s = vwr.getModelkit(false).drawSymmetry(thisId, isSymop, iatom, xyz,
+              iSym, trans, center, target, intScale, nth, options, opList,
+              false);
           if (s == null)
             return;
           if (isSymop && target instanceof Atom && center instanceof Atom) {
-            if (eval.fullCommand.indexOf(JC.SCRIPT_QUIET)>=0)
+            if (eval.fullCommand.indexOf(JC.SCRIPT_QUIET) >= 0)
               s = PT.rep(s, "print", "#print");
-            s +="\nmodelkit set atomset " + PT.esc(thisId 
-                + "|" + ((Atom) center).i 
-                + "|" + ((Atom) target).i 
-                + "|" + eval.fullCommand) + ";";
+            s += "\nmodelkit set atomset "
+                + PT.esc(thisId + "|" + ((Atom) center).i + "|"
+                    + ((Atom) target).i + "|" + eval.fullCommand)
+                + ";";
           }
         }
         eval.runBufferedSafely(
-          s.length() > 0 ? s : "draw ID \"" + thisId + "*\" delete",
-          eval.outputBuffer);
+            s.length() > 0 ? s : "draw ID \"" + thisId + "*\" delete",
+            eval.outputBuffer);
         return;
       case T.frame:
         isFrame = true;

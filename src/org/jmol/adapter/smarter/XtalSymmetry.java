@@ -1242,7 +1242,7 @@ public class XtalSymmetry {
     asc.setCurrentModelInfo("f2c", symmetry.getUnitCellF2C());
     String s = symmetry.getSpaceGroupTitle();
     if (s.indexOf("--") < 0)
-      asc.setCurrentModelInfo("f2cTitle", s);
+      asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_F2C_TITLE, s);
     asc.setCurrentModelInfo("f2cParams", symmetry.getUnitCellParams());
     if (acr.latticeType != null) {
       asc.setCurrentModelInfo("latticeType", acr.latticeType);
@@ -1359,7 +1359,7 @@ public class XtalSymmetry {
     symmetry.setFinalOperations(ndims, name, asc.atoms, firstAtom,
         noSymmetryCount, doNormalize, filterSymop);
     if (filterSymop != null || name == null || name.equals("unspecified!")) {
-      setAtomSetSpaceGroupName(symmetry.getSpaceGroupName());
+      setAtomSetSpaceGroupName(symmetry.getUnitCellDisplayName());
     }
     if (unitCellParams != null || Double.isNaN(acr.unitCellParams[SimpleUnitCell.INFO_A]))
       return;
@@ -1386,7 +1386,9 @@ public class XtalSymmetry {
 
   private void setAtomSetSpaceGroupName(String spaceGroupName) {
     symmetry.setSpaceGroupName(spaceGroupName);
-    asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP, spaceGroupName + "");
+    String s = spaceGroupName + "";
+    asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_F2C_TITLE, s);
+    asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP, s);
   }
 
   private void setCurrentModelInfo(int n, FileSymmetry sym, int[] unitCells) {
@@ -1408,11 +1410,8 @@ public class XtalSymmetry {
     asc.setCurrentModelInfo("presymmetryAtomIndex", Integer.valueOf(firstAtom));
     int operationCount = symmetry.getSpaceGroupOperationCount();
     if (operationCount > 0) {
-      String[] symmetryList = new String[operationCount];
-      for (int i = 0; i < operationCount; i++)
-        symmetryList[i] = "" + symmetry.getSpaceGroupXyz(i, doNormalize);
-      asc.setCurrentModelInfo("symmetryOperations", symmetryList);
-      asc.setCurrentModelInfo("symmetryOps", symmetry.getSymmetryOperations());
+      asc.setCurrentModelInfo(JC.INFO_SYMMETRY_OPERATIONS, symmetry.getSymopList(doNormalize));
+      asc.setCurrentModelInfo(JC.INFO_SYMOPS_TEMP, symmetry.getSymmetryOperations());
     }
     asc.setCurrentModelInfo("symmetryCount", Integer.valueOf(operationCount));
     asc.setCurrentModelInfo("latticeType",
@@ -1545,7 +1544,7 @@ public class XtalSymmetry {
     if (asc.isTrajectory) {
       if (trajectoryUnitCells == null) {
         trajectoryUnitCells = new Lst<double[]>();
-        asc.setInfo("unitCells", trajectoryUnitCells);
+        asc.setInfo(JC.INFO_UNIT_CELLS, trajectoryUnitCells);
       }
       trajectoryUnitCells.addLast(unitCellParams);
     }

@@ -755,7 +755,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
     menuEnable(menu, false);
     if (!hasSymmetry || modelIndex < 0)
       return;
-    String[] list = (String[]) modelInfo.get("symmetryOperations");
+    String[] list = (String[]) modelInfo.get(JC.INFO_SYMMETRY_OPERATIONS);
     if (list == null)
       return;    
     boolean enableSymop = (vwr.getOperativeSymmetry() != null);

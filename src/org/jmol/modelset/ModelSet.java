@@ -4566,8 +4566,10 @@ public class ModelSet extends BondCollection {
     // TODO: actually set atomSymmetry properly
     setInfo(mi, JC.INFO_UNIT_CELL_PARAMS, sg.getUnitCellParams());
     setInfo(mi, JC.INFO_SPACE_GROUP_ASSIGNED, Boolean.TRUE);
-    setInfo(mi, JC.INFO_SPACE_GROUP, sg.getClegId());
+    setInfo(mi, JC.INFO_SPACE_GROUP, sg.getUnitCellDisplayName());
     setInfo(mi, JC.INFO_SPACE_GROUP_INFO, null);
+    setInfo(mi, JC.INFO_SYMMETRY_OPERATIONS, sg.getSymopList(false));
+    setInfo(mi, JC.INFO_SPACE_GROUP, sg.getSpaceGroupName());
     if (am[mi].simpleCage != null) {
       sg.getUnitCell(am[mi].simpleCage.getUnitCellVectors(), false, null);
       setInfo(mi, JC.INFO_UNIT_CELL_PARAMS, sg.getUnitCellParams());

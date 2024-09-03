@@ -99,6 +99,15 @@ public class Symmetry implements SymmetryInterface {
   private SymmetryInfo symmetryInfo;
   private SymmetryDesc desc;
   private M4d transformMatrix;
+ 
+  @Override
+  public String[] getSymopList(boolean doNormalize) {
+    int n = spaceGroup.operationCount;
+    String[] list = new String[n];
+    for (int i = 0; i < n; i++)
+      list[i] = "" + getSpaceGroupXyz(i, doNormalize);
+    return list;
+  }
 
   @Override
   public boolean isBio() {
@@ -192,16 +201,19 @@ public class Symmetry implements SymmetryInterface {
     case "itaIndex":
       SpaceGroup sg = null;
       if (params != null) {
-        if (isNorT) {
-          String cleg = SpaceGroup.convertWyckoffHMCleg((String) params, null);
-          if (cleg != null) {
-            int pt = cleg.indexOf(":");
-            return ("itaNumber".equals(name) ? cleg.substring(0, pt) : cleg.substring(pt + 1));
+        String s = (String) params;
+        if (s.endsWith("'")) {
+          // Jmol-specific Wyckoff type names
+          s = SpaceGroup.convertWyckoffHMCleg(s, null);
+          if (isNorT && s != null) {
+            int pt = s.indexOf(":");
+            return ("itaNumber".equals(name) ? s.substring(0, pt) : s.substring(pt + 1));
           }
+          return null;
         }
-        sg = SpaceGroup.determineSpaceGroupN((String) params);
+        sg = SpaceGroup.determineSpaceGroupN(s);
         if (sg == null && "nameToXYZList".equals(name))
-          sg = SpaceGroup.createSpaceGroupN((String) params, true);
+          sg = SpaceGroup.createSpaceGroupN(s, true);
       } else if (spaceGroup != null) {
         sg = spaceGroup;
       } else if (symmetryInfo != null) {
@@ -252,11 +264,14 @@ public class Symmetry implements SymmetryInterface {
                                  boolean doNormalize, String filterSymop) {
     if (name != null && (name.startsWith("bio") || name.indexOf(" *(") >= 0)) // filter SYMOP
       spaceGroup.setName(name);
+    boolean doCalculate = "unspecified!".equals(name);
+    if (doCalculate)
+      filterSymop = "calculated";
     if (filterSymop != null) {
       Lst<SymmetryOperation> lst = new Lst<SymmetryOperation>();
       lst.addLast(spaceGroup.matrixOperations[0]);
       for (int i = 1; i < spaceGroup.operationCount; i++)
-        if (filterSymop.contains(" " + (i + 1) + " "))
+        if (doCalculate || filterSymop.contains(" " + (i + 1) + " "))
           lst.addLast(spaceGroup.matrixOperations[i]);
       spaceGroup = SpaceGroup.createSpaceGroup(-1,
           name + " *(" + filterSymop.trim() + ")", lst, -1);
@@ -1575,9 +1590,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public String getClegId() {
-    if (symmetryInfo != null)
-        return symmetryInfo.getDerivedSpaceGroup().getClegId();
-    return spaceGroup.getClegId();
+    return (symmetryInfo != null ? symmetryInfo.getClegId() : spaceGroup.getClegId());
   }
 
   @Override

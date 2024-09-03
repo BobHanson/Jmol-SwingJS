@@ -944,7 +944,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       return -1;
     int isym = asc.getXSymmetry().addSpaceGroupOperation(xyz, true);
     if (isym < 0)
-      Logger.warn("Skippings symmetry operation " + xyz);
+      Logger.warn("Skipping symmetry operation " + xyz);
     iHaveSymmetryOperators = true;
     return isym;
   }

@@ -89,15 +89,16 @@ public class ModelKit {
     protected final boolean calcOnly;   
 
     protected int index;
-    protected M4d trm;
+    protected M4d trMat;
     protected ClegNode prevNode;
 
     protected String[] tokens;
-    protected SymmetryInterface sym00, sym, symTemp; 
+    protected SymmetryInterface sym00, sym; 
     protected Object paramsOrUC;
     protected BS bs;
     protected boolean ignoreAllSettings;
     protected boolean wasNode;
+    protected boolean isCalcSpaceGroup;
 
     protected M4d trTemp = new M4d();
 
@@ -112,6 +113,7 @@ public class ModelKit {
     ClegData(Viewer vwr, SymmetryInterface sym00, BS bs, Object paramsOrUC,
         String[] tokens, int index, boolean ignoreAllSettings, SB sb) {
       calcOnly = false;
+      this.isCalcSpaceGroup = (tokens.length == 1 && tokens[0].equals("."));
       this.vwr = vwr;
       this.tokens = tokens;
       this.index = index;
@@ -124,17 +126,17 @@ public class ModelKit {
     }
 
     M4d addSGTransform(String tr, String what) {
-      if (trm == null) {
+      if (trMat == null) {
         System.out.println("ClegData reset");
-        trm = new M4d();
-        trm.setIdentity();
+        trMat = new M4d();
+        trMat.setIdentity();
       }
       if (tr != null) {
         sym.convertTransform(tr, trTemp);
-        trm.mul(trTemp);
+        trMat.mul(trTemp);
       }
-      System.out.println("Modelkit adding " + what + " " + tr + " now " + abcFor(trm));
-      return trm;
+      System.out.println("Modelkit adding " + what + " " + tr + " now " + abcFor(trMat));
+      return trMat;
     }
 
     String abcFor(M4d trm) {
@@ -150,12 +152,12 @@ public class ModelKit {
 
     public String calculate(M4d trm0) {
       trm0.invert();
-      M4d trm1 = M4d.newM4(trm);
+      M4d trm1 = M4d.newM4(trMat);
       trm1.mul(trm0);
       return (String) sym.convertTransform(null, trm1);
     }
 
-    public static void canonicalizeTokens(String[] tokens, boolean isEnd) {
+    public static void standardizeTokens(String[] tokens, boolean isEnd) {
       for (int i = tokens.length; --i >= 0;) {
         String t = tokens[i];
         if (t.length() == 0) {
@@ -221,6 +223,7 @@ public class ModelKit {
     protected String calculated; // transform car
     boolean disabled;
     private boolean applySetting;
+    boolean isRef;
 
     ClegNode(int index, String name, String setting, boolean applySetting) {
       if (name == null)
@@ -233,6 +236,9 @@ public class ModelKit {
       this.index = index;
       this.mySetting = (setting == null ? "a,b,c" : setting);
       int pt;
+      if (name.equals("ref")) {
+        isRef = true;
+      }
       isITAnDotm = name.startsWith("ITA/");
       if (isITAnDotm) {
         // ITA/140 or ITA/140.2
@@ -346,7 +352,8 @@ public class ModelKit {
         if (!"0".equals(myIta))
             name = "ITA/" + myIta + ":" + myTrm;
       }
-
+      if (data.prevNode.isRef)
+        data.prevNode.myIta = myIta;
       /**
        * haveReferenceCell is set true if and only if we can apply the setting
        * if it is present or implied; this is the case when the current unit
@@ -365,7 +372,7 @@ public class ModelKit {
       System.out.println("ClegNode update i=" + index + " n=" + name + " s=" + mySetting + " trm=" + myTrm + " " + haveReferenceCell);
       
       if (haveReferenceCell) {
-        trm0 = M4d.newM4(data.trm);
+        trm0 = M4d.newM4(data.trMat);
         data.removePrevNodeTrm();
         String trCalc = null;
         if (prevNode.calcNext != null) {
@@ -475,7 +482,11 @@ public class ModelKit {
   }
 
   public M4d getMatrixTransform(String cleg) {
+    if (cleg.indexOf(">") < 0)
+      cleg = ">>" + cleg;
     String[] tokens = PT.split(cleg, ">");
+    if (tokens[0].length() == 0)
+      tokens[0] = "ref";
     ClegData data = new ClegData(vwr, tokens);
     String err = assignSpaceGroup(data);
     if (err.indexOf("!") > 0) {
@@ -483,9 +494,9 @@ public class ModelKit {
       return null;
     }
     System.out.println("Modelkit transform: " + PT.join(tokens, '>', 0));
-    cleg = data.abcFor(data.trm);
+    cleg = data.abcFor(data.trMat);
     System.out.println("Modelkit transform: " +  tokens[0] + ">" + cleg + ">" + tokens[tokens.length - 1]);
-    return data.trm;
+    return data.trMat;
   }
   
   /**
@@ -693,28 +704,37 @@ public class ModelKit {
         && isTransformOnly(tokens[index + 1])
         && tokens[index + 1].length() > 0);
     String token = tokens[index].trim();
+    boolean isDot = token.equals(".");
     if (index == 0) {
       if (token.length() == 0) {
-        // >>
+        // >> or "."
         // but not >h>...
         if (data.sym00 == null) {
-            return "no starting space group for CLEG!";
+          return "no starting space group for CLEG!";
         }
-        tokens[0] = data.sym00.getClegId();
-        data.index = 1;
-        data.wasNode = true;
-        data.ignoreAllSettings = nextTransformExplicit;
-        return assignSpaceGroup(data);
+        if (!data.isCalcSpaceGroup) {
+          tokens[0] = data.sym00.getClegId();
+          data.index = 1;
+          data.wasNode = true;
+          data.ignoreAllSettings = nextTransformExplicit;
+          return assignSpaceGroup(data);
+        }
       }
-      ClegData.canonicalizeTokens(tokens, false);
+      if (data.isCalcSpaceGroup) {
+        if (data.sym00 == null)
+          return "no starting space group for calculation!";
+      } else {
+        ClegData.standardizeTokens(tokens, false);
+      }
     }
+
     boolean isSubgroupCalc = token.length() == 0 || token.equals("sub")
         || token.equals("super");
-    
-    System.out.println("token " + token + " wasNode " + data.wasNode);
+
+    //System.out.println("token " + token + " wasNode " + data.wasNode);
 
     if ((isSubgroupCalc || isTransformOnly(token)) != data.wasNode) {
-      return "invalid CLEG expression, not node>transform>node>transform>....!";      
+      return "invalid CLEG expression, not node>transform>node>transform>....!";
     }
     data.wasNode = !data.wasNode;
     String calcNext = (isSubgroupCalc ? token : null);
@@ -722,7 +742,7 @@ public class ModelKit {
       token = tokens[++index].trim();
     }
     boolean isFinal = (index == tokens.length - 1);
-    if (isFinal && token.equals(".") && data.prevNode != null) {
+    if (isFinal && isDot && data.prevNode != null) {
       token = data.prevNode.name;
     }
     int pt = token.lastIndexOf(":"); // could be "154:_2" or "R 3 2 :" or 5:a,b,c
@@ -751,12 +771,16 @@ public class ModelKit {
         String ita = token.substring(0, pt);
         // easiest is to restart with the default configuration and unit cell
         // modelkit zap spacegroup ita ....
-        String err = assignSpaceGroup(new ClegData(vwr, data.calcOnly ? data.sym00 : null, null, 
-        		data.paramsOrUC, new String[] { ita }, -1, true, data.sb));
+        String[] cleg = new String[] { ita };
+        ClegData cdInit = (data.calcOnly ? new ClegData(vwr, cleg)
+            : new ClegData(vwr, null, null, data.paramsOrUC, cleg, -1, true,
+                data.sb));
+        String err = assignSpaceGroup(cdInit);
         if (err.endsWith("!"))
           return err;
         if (data.calcOnly) {
-          data.sym00 = data.symTemp;
+          sym = data.sym00 = cdInit.sym;
+          data.trMat = cdInit.trMat;
         } else {
           data.sym00 = vwr.getOperativeSymmetry();
         }
@@ -771,8 +795,8 @@ public class ModelKit {
       // modelkit spacegroup 10>a,b,2c>....
       // moswlkir spacegroup  >h>...
 
-      ignoreFirstSetting = (index == 0 && haveUnitCell && nextTransformExplicit
-          && !data.calcOnly);
+      ignoreFirstSetting = (index == 0 && (haveUnitCell && nextTransformExplicit
+          && !data.calcOnly || data.isCalcSpaceGroup));
       String ita0 = (haveUnitCell ? data.sym00.getClegId() : null);
       String trm0 = null;
       if (haveUnitCell) {
@@ -790,15 +814,16 @@ public class ModelKit {
           }
         }
       }
-      if (data.trm == null) {
-        data.trm = new M4d();
-        data.trm.setIdentity();
+      if (data.trMat == null) {
+        data.trMat = new M4d();
+        data.trMat.setIdentity();
       }
-      data.prevNode = new ClegNode(-1, ita0, trm0, true);
-      data.sym = sym;
-      if (!data.prevNode.update(data, data.ignoreAllSettings))
-        return data.prevNode.errString;
-
+      if (!data.isCalcSpaceGroup) {
+        data.prevNode = new ClegNode(-1, ita0, trm0, true);
+        data.sym = sym;
+        if (!data.prevNode.update(data, data.ignoreAllSettings))
+          return data.prevNode.errString;
+      }
     } else if (!isTransformOnly) {
       if (tokens[index - 1].length() > 0
           && isTransformOnly(tokens[index - 1])) {
@@ -842,16 +867,16 @@ public class ModelKit {
       if (transform == null || transform.length() == 0)
         transform = "a,b,c";
       sym.convertTransform(transform, data.trTemp);
-      if (data.trm == null)
-        data.trm = data.trTemp;
+      if (data.trMat == null)
+        data.trMat = data.trTemp;
       else
-        data.trm.mul(data.trTemp);
+        data.trMat.mul(data.trTemp);
 
       if (token.length() != 0) {
         // this will be the flag that we have x >> y
         data.prevNode.addTransform(data.trTemp);
         System.out.println(
-            "ModelKit.assignSpaceGroup index=" + index + " trm=" + data.trm);
+            "ModelKit.assignSpaceGroup index=" + index + " trm=" + data.trMat);
 
       }
       // ITERATE  ...
@@ -903,11 +928,11 @@ public class ModelKit {
       }
     } else if (haveUnitCell) {
       sym = data.sym = data.sym00;
-      if (data.trm == null) {
-        data.trm = new M4d();
-        data.trm.setIdentity();
+      if (data.trMat == null) {
+        data.trMat = new M4d();
+        data.trMat.setIdentity();
       }
-      oabc = sym.getV0abc(new Object[] { data.trm }, null);
+      oabc = sym.getV0abc(new Object[] { data.trMat }, null);
       origin = oabc[0];
     }
     if (oabc != null) {
@@ -920,26 +945,36 @@ public class ModelKit {
     clearAtomConstraints();
 
     try {
-      if (data.bs != null && data.bs.isEmpty())
-        return "no atoms specified!";
-      // limit the atoms to this model if bs is null
-      BS bsAtoms = vwr.getThisModelAtoms();
-      BS bsCell = (isP1 ? bsAtoms
-          : SV.getBitSet(vwr.evaluateExpressionAsVariable("{within(unitcell)}"),
-              true));
-      if (data.bs == null) {
-        data.bs = bsAtoms;
+      BS bsAtoms;
+      boolean noAtoms;
+      int modelIndex = -1;
+      if (data.calcOnly) {
+        data.bs = bsAtoms = new BS();
+        noAtoms = true;
+      } else {
+        if (data.bs != null && data.bs.isEmpty())
+          return "no atoms specified!";
+        // limit the atoms to this model if bs is null
+        bsAtoms = vwr.getThisModelAtoms();
+        BS bsCell = (isP1 ? bsAtoms
+            : SV.getBitSet(
+                vwr.evaluateExpressionAsVariable("{within(unitcell)}"), true));
+        if (data.bs == null) {
+          data.bs = bsAtoms;
+        }
+        if (data.bs != null) {
+          bsAtoms.and(data.bs);
+          if (!isP1)
+            bsAtoms.and(bsCell);
+        }
+        noAtoms = bsAtoms.isEmpty();
+        modelIndex = (noAtoms && vwr.am.cmi < 0 ? 0
+            : noAtoms ? vwr.am.cmi
+                : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
+        if (!data.isCalcSpaceGroup)
+        vwr.ms.getModelAuxiliaryInfo(modelIndex)
+            .remove(JC.INFO_SPACE_GROUP_INFO);
       }
-      if (data.bs != null) {
-        bsAtoms.and(data.bs);
-        if (!isP1)
-          bsAtoms.and(bsCell);
-      }
-      boolean noAtoms = bsAtoms.isEmpty();
-      int mi = (noAtoms && vwr.am.cmi < 0 ? 0
-          : noAtoms ? vwr.am.cmi
-              : vwr.ms.at[bsAtoms.nextSetBit(0)].getModelIndex());
-      vwr.ms.getModelAuxiliaryInfo(mi).remove(JC.INFO_SPACE_GROUP_INFO);
 
       // old code...
       // why do this? It treats the supercell as the unit cell. 
@@ -950,19 +985,20 @@ public class ModelKit {
       //        m.z = 0;
       //      }
 
-      if (haveUnitCell) {
-        sym.replaceTransformMatrix(data.trm);
+      if (haveUnitCell && !data.isCalcSpaceGroup) {
+        sym.replaceTransformMatrix(data.trMat);
         // storing trm0 for SpaceGroupFinder        
       }
       if (params == null)
         params = sym.getUnitCellMultiplied().getUnitCellParams();
 
+      isUnknown |= data.isCalcSpaceGroup;
       @SuppressWarnings("unchecked")
       Map<String, Object> sgInfo = (noAtoms && isUnknown ? null
           : (Map<String, Object>) vwr.findSpaceGroup(sym,
               isUnknown ? bsAtoms : null, isUnknown ? null : node.name, params,
-              origin, oabc,
-              JC.SG_IS_ASSIGN | (haveUnitCell ? 0 : JC.SG_FROM_SCRATCH)));
+              origin, oabc, JC.SG_IS_ASSIGN
+              | (data.calcOnly ? JC.SG_CALC_ONLY : 0) | (haveUnitCell || data.isCalcSpaceGroup ? 0 : JC.SG_FROM_SCRATCH)));
 
       if (sgInfo == null) {
         return "Space group " + node.name + " is unknown or not compatible!";
@@ -977,16 +1013,18 @@ public class ModelKit {
       sym.getUnitCell(oabc, false, null);
       sym.setSpaceGroupTo(sg == null ? jmolId : sg);
       sym.setSpaceGroupName(token);
+      if (data.calcOnly) {
+        data.sym = sym;
+        return "OK";
+      }
+      // not a calculation
       if (basis == null) {
         basis = sym.removeDuplicates(vwr.ms, bsAtoms, true);
       }
-      if (data.calcOnly) {
-        data.symTemp = (index == 0 ? sym : null);
-        return "OK";
+      vwr.ms.setSpaceGroup(modelIndex, sym, basis);
+      if (data.isCalcSpaceGroup) {
+        return token;
       }
-      vwr.ms.setSpaceGroup(mi, sym, basis);
-      if (sym.getClegId() == null)
-        System.out.println("?????");
       if (!haveUnitCell || restarted) {
         appRunScript(
             "unitcell on; center unitcell;axes unitcell; axes 0.1; axes on;"
@@ -995,9 +1033,9 @@ public class ModelKit {
 
       // don't change the first line of this message -- it will be used in packing.
 
-      transform = data.abcFor(data.trm);
+      transform = data.abcFor(data.trMat);
       if (!initializing) {
-        ClegData.canonicalizeTokens(tokens, true);
+        ClegData.standardizeTokens(tokens, true);
         String msg = PT.join(tokens, '>', 0)
             + (basis.isEmpty() ? "" : "\n basis=" + basis);
         System.out.println("ModelKit trm=" + msg);
@@ -1970,12 +2008,15 @@ public class ModelKit {
       name = PT.rep(name, "<<", ">super>").replace('<','>');
     }
     // allow unterminated to mean no change in space group
-    if (name.endsWith(">"))
+    if (name.length() == 0 || name.endsWith(">"))
       name += ".";
-    String ret = assignSpaceGroup(new ClegData(vwr, sym, bs, paramsOrUC,
-        PT.split(name, ">"), 0, false, sb));//false false
+    ClegData data = new ClegData(vwr, sym, bs, paramsOrUC,
+        PT.split(name, ">"), 0, false, sb);
+    String ret = assignSpaceGroup(data);//false false
     if (ret.endsWith("!"))
       return ret;
+    if (data.isCalcSpaceGroup)
+      sb.append(ret);
     if (isPacked) {
       int n;
       if (doDraw) {

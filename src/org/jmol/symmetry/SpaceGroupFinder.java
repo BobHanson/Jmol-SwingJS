@@ -70,12 +70,13 @@ public class SpaceGroupFinder {
   private double[] unitCellParams;
   private double slop;
 
+  private boolean isCalcOnly;
   private boolean isAssign;
   private boolean isUnknown;
   private boolean checkSupercell;
   private boolean isSupercell;
   private boolean asString;
- 
+  
   private BS bsPoints0;
   private BS bsAtoms;
   private BS targets;
@@ -127,6 +128,7 @@ public class SpaceGroupFinder {
     this.origin = origin;
     oabc = oabc0;
     uc = (Symmetry) uci;
+    isCalcOnly = ((flags & JC.SG_CALC_ONLY) != 0);
     isAssign = ((flags & JC.SG_IS_ASSIGN) != 0);
     checkSupercell = ((flags & JC.SG_CHECK_SUPERCELL) != 0);
     asString = ((flags & JC.SG_AS_STRING) != 0);
@@ -154,12 +156,12 @@ public class SpaceGroupFinder {
     // figure out the space group
     boolean isITA = (xyzList != null
         && xyzList.toUpperCase().startsWith("ITA/"));
-    boolean isHall = (xyzList != null && !isITA && 
-        (xyzList.startsWith("[") || xyzList.startsWith("Hall:")));
-    
-    if (isAssign && isHall 
+    boolean isHall = (xyzList != null && !isITA
+        && (xyzList.startsWith("[") || xyzList.startsWith("Hall:")));
+
+    if (isAssign && isHall
         || !isHall && (isITA || (isITA = checkWyckoffHM()))) {
-      isUnknown = false;  
+      isUnknown = false;
       if (isITA) {
         xyzList = PT.rep(xyzList.substring(4), " ", "");
       } else if (xyzList.startsWith("Hall:")) {
@@ -167,15 +169,16 @@ public class SpaceGroupFinder {
       } else {
         xyzList = PT.replaceAllCharacters(xyzList, "[]", "");
       }
-      
+
       sg = setITA(isHall);
       if (sg == null)
         return null;
-      name = sg.getName();      
+      name = sg.getName();
     } else if (oabc != null || isHall) {
       //      isUnknown = false;
       name = xyzList;
-      sg = SpaceGroup.createSpaceGroupN(name, isHall);
+      if (name != null)
+        sg = SpaceGroup.createSpaceGroupN(name, isHall);
       isUnknown = (sg == null);
       if (isHall && !isUnknown)
         return sg.dumpInfoObj();
@@ -207,7 +210,7 @@ public class SpaceGroupFinder {
         uc.transformUnitCell(uci.replaceTransformMatrix(null));
       }
     } else {
-      // this method is used to build basisk as well, 
+      // this method is used to build basis as well, 
       // even if we already have the space groupn
       Object ret = findGroupByOperations();
       if (!isAssign || !(ret instanceof SpaceGroup))
@@ -218,16 +221,19 @@ public class SpaceGroupFinder {
       for (int i = targets.nextSetBit(0); i >= 0; i = targets.nextSetBit(i + 1))
         basis.clear(atoms[i].index);
       int nb = basis.cardinality();
-      String msg = name + (atoms0 == null || nb == 0 ? ""
-          : "\nbasis is " +  nb + " atom" + (nb == 1 ? "" : "s") + ": " + basis);
-      System.out.println("SpaceGroupFinder: " + msg);
-      if (asString)
-        return msg;
+      if (!isCalcOnly) {
+        String msg = name + (atoms0 == null || nb == 0 ? ""
+            : "\nbasis is " + nb + " atom" + (nb == 1 ? "" : "s") + ": "
+                + basis);
+        System.out.println("SpaceGroupFinder: " + msg);
+        if (asString)
+          return msg;
+      }
     }
 
     // supplement SpaceGroup info map with additional information
     Map<String, Object> map = (Map<String, Object>) sg.dumpInfoObj();
-    if (uc != null)
+    if (uc != null && !isCalcOnly)
       System.out.println("unitcell is " + uc.getUnitCellInfo(true));
     if (!isAssign) {
       BS bs1 = BS.copy(bsPoints0);

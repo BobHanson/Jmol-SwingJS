@@ -287,7 +287,7 @@ public class MathExt {
         break;
       case T.string:
         String s = (String) args[0].value;
-        if (s.indexOf(">>") > 0) {
+        if (s.indexOf(">") >= 0 || s.indexOf(",") < 0 || s.indexOf(":") > 0) {
            m4 = vwr.getModelkit(false).getMatrixTransform(s); 
         } else {
           m4 = (M4d) vwr.getSymTemp().convertTransform(s, null);
@@ -3417,27 +3417,37 @@ public class MathExt {
     // point(pt, false) // from screen coord
     // point(x, y, z)
     // point(x, y, z, w)
-    // point(["{1,2,3", "{2,3,4}"])
+    // point(["{1,2,3}", "{2,3,4}"])
+    // point("(1/2,1/2,1/2)")
 
+    String s = null;
     switch (args.length) {
     default:
       return false;
     case 1:
-      if (args[0].tok == T.decimal || args[0].tok == T.integer)
+      switch (args[0].tok) {
+      case T.decimal:
+      case T.integer:
         return mp.addXInt(args[0].asInt());
-      String s = null;
-      if (args[0].tok == T.varray) {
+      case T.string:
+        s = (String) args[0].value;
+        if (s.startsWith("(") && s.charAt(s.length() - 1) == ')') {
+          // from .rxyz -- this is fractional but 1/2, for example
+          return mp.addXPt(getRealPointFromFraction(s));
+        }
+        break;
+      case T.varray:
         Lst<SV> list = args[0].getList();
         int len = list.size();
         if (len == 0) {
           return false;
         }
+        s = (String) list.get(0).value;
         switch (list.get(0).tok) {
         case T.integer:
         case T.decimal:
           break;
         case T.string:
-          s = (String) list.get(0).value;
           if (!s.startsWith("{") || Escape.uP(s) instanceof String) {
             s = null;
             break;
@@ -3447,8 +3457,11 @@ public class MathExt {
             a.addLast(SV.getVariable(Escape.uP(SV.sValue(list.get(i)))));
           }
           return mp.addXList(a);
+        default:
+          s = null;
+          break;
         }
-        s = "{" + SV.sValue(args[0]) + "}";
+        s = "{" + s + "}";
       }
       if (s == null)
         s = SV.sValue(args[0]);
@@ -3506,6 +3519,24 @@ public class MathExt {
       return mp.addXPt4(P4d.new4(args[0].asDouble(), args[1].asDouble(),
           args[2].asDouble(), args[3].asDouble()));
     }
+  }
+
+  /**
+   * Assumes (.....)
+   * @param s
+   * @return real point
+   */
+  private P3d getRealPointFromFraction(String s) {
+    s = PT.rep(s.substring(1, s.length()-1).replace(',', ' '),"  "," ");
+    String[] xyz = PT.split(s.trim(), " ");
+    if (xyz.length != 3)
+      return null;
+    P3d pt = P3d.new3(
+        SimpleUnitCell.parseCalc(vwr, null, xyz[0]),
+        SimpleUnitCell.parseCalc(vwr, null, xyz[1]),
+        SimpleUnitCell.parseCalc(vwr, null, xyz[2])
+        );
+    return pt;
   }
 
   private boolean evaluatePrompt(ScriptMathProcessor mp, SV[] args) {

@@ -971,11 +971,11 @@ public class SymmetryOperation extends M4d {
   //
   private static String plusMinus(String strT, double x, String sx,
                                   boolean allowFractions) {
-    double a;
-    return (x == 0 ? ""
+    double a = Math.abs(x);
+    return (a < 0.0001 ? ""
         : (x < 0 ? "-" : strT.length() == 0 ? "" : "+")
-            + (x == 1 || x == -1 ? ""
-                : (a = Math.abs(x)) < 1 && allowFractions ? twelfthsOf(a * 12)
+            + (a > 0.9999 ? ""
+                : a < 1 && allowFractions ? twelfthsOf(a * 12)
                     : "" + (int) a))
         + sx;
   }

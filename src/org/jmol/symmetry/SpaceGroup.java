@@ -67,7 +67,7 @@ import javajs.util.SB;
  * lattice types S and T are not supported here
  * 
  * data table is from Syd Hall, private email, 9/4/2006, 
- * amended using * ** to indicate nonstandard H-M symbols or full names  
+ * amended using * to indicate nonstandard H-M symbols or full names  
  * 
  * amended 2024.03.24 to add several ITA settings; full set of ITA settings are now encoded. 
  * 
@@ -504,6 +504,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     if (itaNumber != null && !itaNumber.equals("0")) {
       String s = (hmSymbol == null || hmSymbolExt == null ? "?" : hmSymbol + (hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : ""));
       map.put("HermannMauguinSymbol", s);
+      map.put("hm", s);
       map.put("ita", Integer.valueOf(PT.parseInt(itaNumber)));
       map.put("itaIndex", itaIndex == null ? "n/a" : itaIndex);
       map.put("clegId", itaIndex == null ? "n/a" : clegId);
@@ -642,7 +643,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     if (lst != null)
       for (int i = 0, n = lst.size(); i < n; i++) {
         SpaceGroup sg = lst.get(i);
-        if (sg.clegId == null || clegId == null || sg.clegId.equals(clegId))
+        if (sg.clegId == null || clegId == null || clegId.equals("0:a,b,c") || sg.clegId.equals(clegId))
           if (getCanonicalSeitz(sg.index).indexOf(s) >= 0)
             return SG[sg.index];
       }
@@ -1039,12 +1040,14 @@ public class SpaceGroup implements Cloneable, HallReceiver {
        // Abbreviated H-M with intl table :xx
        for (i = 0; i < lastIndex; i++)
          if ((s = SG[i]).hmSymbolAbbr.equalsIgnoreCase(abbr)
-             && s.jmolIdExt.equalsIgnoreCase(ext))
+             && (s.hmSymbolExt.equalsIgnoreCase(ext)
+                 || s.jmolIdExt.equalsIgnoreCase(ext)))
            return i;
        // shortened -- not including " 1 " terms
        for (i = 0; i < lastIndex; i++)
          if ((s = SG[i]).hmSymbolAbbrShort.equalsIgnoreCase(abbr)
-             && s.jmolIdExt.equalsIgnoreCase(ext))
+             && (s.hmSymbolExt.equalsIgnoreCase(ext)
+                 || s.jmolIdExt.equalsIgnoreCase(ext)))
            return i;
      }
      // unique axis, cell and origin options with H-M abbr
@@ -1274,7 +1277,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         ? (strName = 
           (jmolId == null || jmolId.equals("0")
             ? name 
-            : jmolId + " HM:" + hmSymbolFull + " #" + clegId
+            : jmolId + " HM:" + hmSymbolFull 
+            + (getClegId() == null ? "" : " #" + getClegId())
             )
           ) 
         : strName
@@ -1287,15 +1291,15 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       if (jmolId == null || SG_NONE.equals(hallSymbol)) {
         name = "";
         if (hmSymbolFull != null && !SG_NONE.equals(hmSymbol))
-          name = hmSymbolFull + " #";
+          name = hmSymbolFull;
       } else if (!jmolId.equals("0")) {
         name = //jmolId + " HM: " + 
-                      hmSymbolFull + " #";
+                      hmSymbolFull;
       }
       if (name == null) {
         name = "[" + hallSymbol + "]"; // may still need setting
-      } else {
-        name += clegId;
+      } else if (getClegId() != null){
+        name += " #" + getClegId();
       }
       if (name.endsWith(SimpleUnitCell.HEX_TO_RHOMB))
         name = PT.rep(name, SimpleUnitCell.HEX_TO_RHOMB, "r");
@@ -1518,7 +1522,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     itaIndex = (tr != null ? sg + ":" + tr : set.indexOf(".") >= 0 ? set : sg + "." + set);
     itaTransform = tr;
     setClegId(sg + ":" + tr);
-    strName = null;
+    strName = displayName = null;
     this.jmolId = jmolId;
     if (jmolId == null) {
       name = clegId;
@@ -1599,55 +1603,50 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * adjust centering based on transformation
    * 
    * @param trm
-   * @param cent list to be revised
+   * @param cent
+   *        list to be revised
    * @return trmInv
    */
   private static M4d getTransformedCentering(M4d trm, Lst<Object> cent) {
     M4d trmInv = M4d.newM4(trm);
     trmInv.invert();
     int n0 = cent.size();
+    P3d pc = new P3d();
     P3d p = new P3d();
     double[][] c = getTransformRange(trm);
     if (c != null) {
-      for (int i = (int) c[0][0]; i < c[1][0]; i++) {
-        for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
-          for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
-            p.set(i, j, k);
-            trmInv.rotTrans(p);
-            if (p.length() % 1 != 0) {
-              p.x = p.x % 1;
-              p.y = p.y % 1;
-              p.z = p.z % 1;
-              String s = SymmetryOperation.norm3(p);
-              if (!s.equals("0,0,0") && !cent.contains(s))
-                cent.addLast(s);
-            }
-  
-          }
-        }
-      }
-      int n = cent.size();
-      if (n > 0) {
-        String[] a = new String[n];
-        cent.toArray(a);
-        Arrays.sort(a);
-        cent.clear();
-        for (int i = 0; i < n; i++)
-          cent.addLast(a[i]);
-      }
-    }
-    // remove integral centerings -- when det < 1
-    for (int i = n0; --i >= 0;) {
-      SymmetryOperation.toPoint((String) cent.get(i), p);
-      trmInv.rotTrans(p);
-      cent.remove(i);
-      if (p.x % 1 == 0 && p.y % 1 == 0 && p.z % 1 == 0) {
-      } else {
-        String s = SymmetryOperation.norm3(p);
-        cent.add(i, s);        
+      int n = addCentering(trmInv, c, pc, p, cent, 0);
+      for (int i = n0; --i >= 0 && n < 3;) {
+        SymmetryOperation.toPoint((String) cent.remove(i), pc);
+        n = addCentering(trmInv, c, pc, p, cent, n);
       }
     }
     return trmInv;
+  }
+
+  private static int addCentering(M4d trmInv, double[][] c, P3d pc, P3d p,
+                                   Lst<Object> cent, int n) {
+    for (int i = (int) c[0][0]; i <= c[1][0]; i++) {
+      for (int j = (int) c[0][1]; j <= c[1][1]; j++) {
+        for (int k = (int) c[0][2]; k <= c[1][2]; k++) {
+          p.set(i, j, k);
+          p.add(pc);
+          trmInv.rotTrans(p);
+          if (p.length() % 1 != 0) {
+            p.x = p.x % 1;
+            p.y = p.y % 1;
+            p.z = p.z % 1;
+            String s = SymmetryOperation.norm3(p);
+            if (!s.equals("0,0,0") && !cent.contains(s)) {
+              cent.addLast(s);
+              if (++n == 3)
+                return 3;
+            }
+          }
+        }
+      }
+    }
+    return n;
   }
 
   /**
@@ -1951,7 +1950,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   }
 
   /*  see https://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
-  
+  https://cci.lbl.gov/sginfo/itvb_2001_table_a1427_hall_symbols.html
 intl#     H-M full       HM-abbr   HM-short  Hall
 1         P 1            P1        P         P 1       
 2         P -1           P-1       P-1       -P 1      
@@ -2600,14 +2599,16 @@ intl#     H-M full       HM-abbr   HM-short  Hall
   // the 5th term is not actually checked; we have ";-b" as 5th term right now for "not Bilbao"
   // "48:1;8;d2h^2;p n n n:1;p 2 2 -1n;-b",
   // and is probably origin choice 1.   
-  // * indicates a nonstandard Hall name  "p 21" same as "p 2yb"
+  // * indicates a nonstandard Hall name  "p 21" same as "p 2yb" (removed in 16.2.28)
+  //   (this was some idea that Sid Hall gave me by email, but it no
+  //    longer seems to matter, and it caused trouble with modelkit assign spacegroup
   // 4:c*;2;c2^2;p 1 1 21*;p 21         
   // added # of operators to help in search phase
   // "4:b;2;c2^2;p 1 21 1;p 2yb",   //full name
 
 //610 settings for 230 space groups (608 from ITA; 2 for added 152 and 154 c-shifts
 //including also several duplicates
- 
+  //
 
   private static String[] STR_SG = {
       "1;1.1;;1;c1^1;p 1;p 1",  
@@ -2618,11 +2619,11 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "3:a;3.3;b,c,a;2;c2^1;p 2 1 1;p 2x",  
       "4:b;4.1;;2;c2^2;p 1 21 1;p 2yb",   //full name
       "4:b;4.1;;2;c2^2;p 21;p 2yb",  
-      "4:b*;4.1;;2;c2^2;p 1 21 1*;p 2y1",   //nonstandard
+      //"4:b*;4.1;;2;c2^2;p 1 21 1*;p 2y1",   //nonstandard
       "4:c;4.2;c,a,b;2;c2^2;p 1 1 21;p 2c",  
-      "4:c*;4.2;c,a,b;2;c2^2;p 1 1 21*;p 21",   //nonstandard
+      //"4:c*;4.2;c,a,b;2;c2^2;p 1 1 21*;p 21",   //nonstandard
       "4:a;4.3;b,c,a;2;c2^2;p 21 1 1;p 2xa",  
-      "4:a*;4.3;b,c,a;2;c2^2;p 21 1 1*;p 2x1",   //nonstandard
+      //"4:a*;4.3;b,c,a;2;c2^2;p 21 1 1*;p 2x1",   //nonstandard
       "5:b1;5.1;;4;c2^3;c 1 2 1;c 2y",   //full name
       "5:b1;5.1;;4;c2^3;c 2;c 2y",  
       "5:b2;5.2;-a-c,b,a;4;c2^3;a 1 2 1;a 2y",  
@@ -2685,11 +2686,11 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "10:a;10.3;b,c,a;4;c2h^1;p 2/m 1 1;-p 2x",  
       "11:b;11.1;;4;c2h^2;p 1 21/m 1;-p 2yb",   //full name
       "11:b;11.1;;4;c2h^2;p 21/m;-p 2yb",  
-      "11:b*;11.1;;4;c2h^2;p 1 21/m 1*;-p 2y1",   //nonstandard
+      //"11:b*;11.1;;4;c2h^2;p 1 21/m 1*;-p 2y1",   //nonstandard
       "11:c;11.2;c,a,b;4;c2h^2;p 1 1 21/m;-p 2c",  
-      "11:c*;11.2;c,a,b;4;c2h^2;p 1 1 21/m*;-p 21",   //nonstandard
+      //"11:c*;11.2;c,a,b;4;c2h^2;p 1 1 21/m*;-p 21",   //nonstandard
       "11:a;11.3;b,c,a;4;c2h^2;p 21/m 1 1;-p 2xa",  
-      "11:a*;11.3;b,c,a;4;c2h^2;p 21/m 1 1*;-p 2x1",   //nonstandard
+      //"11:a*;11.3;b,c,a;4;c2h^2;p 21/m 1 1*;-p 2x1",   //nonstandard
       "12:b1;12.1;;8;c2h^3;c 1 2/m 1;-c 2y",   //full name
       "12:b1;12.1;;8;c2h^3;c 2/m;-c 2y",  
       "12:b2;12.2;-a-c,b,a;8;c2h^3;a 1 2/m 1;-a 2y",  
@@ -2749,7 +2750,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "15:-a3;15.18;-b,c,-a-c;8;c2h^6;i 2/b 1 1;-i 2xb",  
       "16;16.1;;4;d2^1;p 2 2 2;p 2 2",  
       "17;17.1;;4;d2^2;p 2 2 21;p 2c 2",  
-      "17*;17.1;;4;d2^2;p 2 2 21*;p 21 2",   //nonstandard
+      //"17*;17.1;;4;d2^2;p 2 2 21*;p 21 2",   //nonstandard
       "17:cab;17.2;c,a,b;4;d2^2;p 21 2 2;p 2a 2a",  
       "17:bca;17.3;b,c,a;4;d2^2;p 2 21 2;p 2 2b",  
       "18;18.1;;4;d2^3;p 21 21 2;p 2 2ab",  
@@ -2757,7 +2758,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "18:bca;18.3;b,c,a;4;d2^3;p 21 2 21;p 2ac 2ac",  
       "19;19.1;;4;d2^4;p 21 21 21;p 2ac 2ab",  
       "20;20.1;;8;d2^5;c 2 2 21;c 2c 2",  
-      "20*;20.1;;8;d2^5;c 2 2 21*;c 21 2",   //nonstandard
+      //"20*;20.1;;8;d2^5;c 2 2 21*;c 21 2",   //nonstandard
       "20:cab;20.2;c,a,b;8;d2^5;a 21 2 2;a 2a 2a",  
       "20:cab*;20.2;c,a,b;8;d2^5;a 21 2 2*;a 2a 21",   //nonstandard
       "20:bca;20.3;b,c,a;8;d2^5;b 2 21 2;b 2 2b",  
@@ -2771,7 +2772,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "25:cab;25.2;c,a,b;4;c2v^1;p 2 m m;p -2 2",  
       "25:bca;25.3;b,c,a;4;c2v^1;p m 2 m;p -2 -2",  
       "26;26.1;;4;c2v^2;p m c 21;p 2c -2",  
-      "26*;26.1;;4;c2v^2;p m c 21*;p 21 -2",   //nonstandard
+      //"26*;26.1;;4;c2v^2;p m c 21*;p 21 -2",   //nonstandard
       "26:ba-c;26.2;b,a,-c;4;c2v^2;p c m 21;p 2c -2c",  
       "26:ba-c*;26.2;b,a,-c;4;c2v^2;p c m 21*;p 21 -2c",   //nonstandard
       "26:cab;26.3;c,a,b;4;c2v^2;p 21 m a;p -2a 2a",  
@@ -2782,7 +2783,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "27:cab;27.2;c,a,b;4;c2v^3;p 2 a a;p -2a 2",  
       "27:bca;27.3;b,c,a;4;c2v^3;p b 2 b;p -2b -2b",  
       "28;28.1;;4;c2v^4;p m a 2;p 2 -2a",  
-      "28*;28.1;;4;c2v^4;p m a 2*;p 2 -21",   //nonstandard
+      //"28*;28.1;;4;c2v^4;p m a 2*;p 2 -21",   //nonstandard
       "28:ba-c;28.2;b,a,-c;4;c2v^4;p b m 2;p 2 -2b",  
       "28:cab;28.3;c,a,b;4;c2v^4;p 2 m b;p -2b 2",  
       "28:-cba;28.4;-c,b,a;4;c2v^4;p 2 c m;p -2c 2",  
@@ -2811,13 +2812,13 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "32:cab;32.2;c,a,b;4;c2v^8;p 2 c b;p -2bc 2",  
       "32:bca;32.3;b,c,a;4;c2v^8;p c 2 a;p -2ac -2ac",  
       "33;33.1;;4;c2v^9;p n a 21;p 2c -2n",  
-      "33*;33.1;;4;c2v^9;p n a 21*;p 21 -2n",   //nonstandard
+      //"33*;33.1;;4;c2v^9;p n a 21*;p 21 -2n",   //nonstandard
       "33:ba-c;33.2;b,a,-c;4;c2v^9;p b n 21;p 2c -2ab",  
-      "33:ba-c*;33.2;b,a,-c;4;c2v^9;p b n 21*;p 21 -2ab",   //nonstandard
+      //"33:ba-c*;33.2;b,a,-c;4;c2v^9;p b n 21*;p 21 -2ab",   //nonstandard
       "33:cab;33.3;c,a,b;4;c2v^9;p 21 n b;p -2bc 2a",  
-      "33:cab*;33.3;c,a,b;4;c2v^9;p 21 n b*;p -2bc 21",   //nonstandard
+      //"33:cab*;33.3;c,a,b;4;c2v^9;p 21 n b*;p -2bc 21",   //nonstandard
       "33:-cba;33.4;-c,b,a;4;c2v^9;p 21 c n;p -2n 2a",  
-      "33:-cba*;33.4;-c,b,a;4;c2v^9;p 21 c n*;p -2n 21",   //nonstandard
+      //"33:-cba*;33.4;-c,b,a;4;c2v^9;p 21 c n*;p -2n 21",   //nonstandard
       "33:bca;33.5;b,c,a;4;c2v^9;p c 21 n;p -2n -2ac",  
       "33:a-cb;33.6;a,-c,b;4;c2v^9;p n 21 a;p -2ac -2n",  
       "34;34.1;;4;c2v^10;p n n 2;p 2 -2n",  
@@ -2827,13 +2828,13 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "35:cab;35.2;c,a,b;8;c2v^11;a 2 m m;a -2 2",  
       "35:bca;35.3;b,c,a;8;c2v^11;b m 2 m;b -2 -2",  
       "36;36.1;;8;c2v^12;c m c 21;c 2c -2",  
-      "36*;36.1;;8;c2v^12;c m c 21*;c 21 -2",   //nonstandard
+      //"36*;36.1;;8;c2v^12;c m c 21*;c 21 -2",   //nonstandard
       "36:ba-c;36.2;b,a,-c;8;c2v^12;c c m 21;c 2c -2c",  
-      "36:ba-c*;36.2;b,a,-c;8;c2v^12;c c m 21*;c 21 -2c",   //nonstandard
+      //"36:ba-c*;36.2;b,a,-c;8;c2v^12;c c m 21*;c 21 -2c",   //nonstandard
       "36:cab;36.3;c,a,b;8;c2v^12;a 21 m a;a -2a 2a",  
-      "36:cab*;36.3;c,a,b;8;c2v^12;a 21 m a*;a -2a 21",   //nonstandard
+      //"36:cab*;36.3;c,a,b;8;c2v^12;a 21 m a*;a -2a 21",   //nonstandard
       "36:-cba;36.4;-c,b,a;8;c2v^12;a 21 a m;a -2 2a",  
-      "36:-cba*;36.4;-c,b,a;8;c2v^12;a 21 a m*;a -2 21",   //nonstandard
+      //"36:-cba*;36.4;-c,b,a;8;c2v^12;a 21 a m*;a -2 21",   //nonstandard
       "36:bca;36.5;b,c,a;8;c2v^12;b b 21 m;b -2 -2b",  
       "36:a-cb;36.6;a,-c,b;8;c2v^12;b m 21 b;b -2b -2",  
       "37;37.1;;8;c2v^13;c c c 2;c 2 -2c",  
@@ -3027,13 +3028,13 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "75;75.1;;4;c4^1;p 4;p 4",  
       "75:c;75.2;ab;8;c4^1;c 4;c 4", // ITA 75.2 
       "76;76.1;;4;c4^2;p 41;p 4w",  
-      "76*;76.1;;4;c4^2;p 41*;p 41",   //nonstandard
+      //"76*;76.1;;4;c4^2;p 41*;p 41",   //nonstandard
       "76:c;76.2;ab;8;c4^2;c 41;c 4w", // ITA 76.2  
       "77;77.1;;4;c4^3;p 42;p 4c",  
-      "77*;77.1;;4;c4^3;p 42*;p 42",   //nonstandard
+      //"77*;77.1;;4;c4^3;p 42*;p 42",   //nonstandard
       "77:c;77.2;ab;8;c4^3;c 42;c 4c", // ITA 77.2  
       "78;78.1;;4;c4^4;p 43;p 4cw",  
-      "78*;78.1;;4;c4^4;p 43*;p 43",   //nonstandard
+      //"78*;78.1;;4;c4^4;p 43*;p 43",   //nonstandard
       "78:c;78.2;ab;8;c4^4;c 43;c 4cw", // ITA 78.2  
       "79;79.1;;8;c4^5;i 4;i 4",  
       "79:f;79.2;ab;16;c4^5;f 4;f 4", // ITA 79.2  
@@ -3046,7 +3047,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "83;83.1;;8;c4h^1;p 4/m;-p 4",  
       "83:f;83.2;ab;16;c4h^1;c 4/m;-c 4",  // ITA 83.2  
       "84;84.1;;8;c4h^2;p 42/m;-p 4c",  
-      "84*;84.1;;8;c4h^2;p 42/m*;-p 42",   //nonstandard
+      //"84*;84.1;;8;c4h^2;p 42/m*;-p 42",   //nonstandard
       "84:c;84.2;ab;16;c4h^2;c 42/m;-c 4c", // ITA 84.2  
       "85:2;85.1;;8;c4h^3;p 4/n :2;-p 4a",  
       "85:c2;85.2;ab;16;c4h^3;c 4/e :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+1/4,x+1/4,z;y+3/4,-x+1/4,z;-x,-y,-z;x,y+1/2,-z;y+1/4,-x+1/4,-z;-y+3/4,x+1/4,-z;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+3/4,x+3/4,z;y+1/4,-x+3/4,z;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+3/4,-x+3/4,-z;-y+1/4,x+3/4,-z", // ITA 85.2
@@ -3067,17 +3068,17 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "90;90.1;;8;d4^2;p 4 21 2;p 4ab 2ab",  
       "90:c;90.2;ab;16;d4^2;c 4 2 21;xyz",//;x,y,z;-x,-y,z;-y,x+1/2,z;y,-x+1/2,z;-y,-x+1/2,-z;y,x+1/2,-z;-x,y,-z;x,-y,-z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x,z;y+1/2,-x,z;-y+1/2,-x,-z;y+1/2,x,-z;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z", // ITA 90.2    
       "91;91.1;;8;d4^3;p 41 2 2;p 4w 2c",  
-      "91*;91.1;;8;d4^3;p 41 2 2*;p 41 2c",   //nonstandard
+      //"91*;91.1;;8;d4^3;p 41 2 2*;p 41 2c",   //nonstandard
       "91:c;91.2;ab;16;d4^3;c 41 2 2;xyz",//;x,y,z;-x,-y,z+1/2;-y,x,z+1/4;y,-x,z+3/4;-y,-x,-z;y,x,-z+1/2;-x,y,-z+3/4;x,-y,-z+1/4;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z+1/2;-y+1/2,x+1/2,z+1/4;y+1/2,-x+1/2,z+3/4;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z+1/2;-x+1/2,y+1/2,-z+3/4;x+1/2,-y+1/2,-z+1/4", // ITA 91.2
       "92;92.1;;8;d4^4;p 41 21 2;p 4abw 2nw",  
       "92:c;92.2;ab;16;d4^4;c 41 2 21;xyz",//;x,y,z;-x,-y,z+1/2;-y,x+1/2,z+1/4;y,-x+1/2,z+3/4;-y,-x+1/2,-z+1/4;y,x+1/2,-z+3/4;-x,y,-z;x,-y,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z+1/2;-y+1/2,x,z+1/4;y+1/2,-x,z+3/4;-y+1/2,-x,-z+1/4;y+1/2,x,-z+3/4;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z+1/2", // ITA 92.2
       "93;93.1;;8;d4^5;p 42 2 2;p 4c 2",  
-      "93*;93.1;;8;d4^5;p 42 2 2*;p 42 2",   //nonstandard
+      //"93*;93.1;;8;d4^5;p 42 2 2*;p 42 2",   //nonstandard
       "93:c;93.2;ab;16;d4^5;c 42 2 2;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;-y,-x,-z;y,x,-z;-x,y,-z+1/2;x,-y,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z;-x+1/2,y+1/2,-z+1/2;x+1/2,-y+1/2,-z+1/2", // ITA 93.2
       "94;94.1;;8;d4^6;p 42 21 2;p 4n 2n",  
       "94:c;94.2;ab;16;d4^6;c 42 2 21;xyz",//;x,y,z;-x,-y,z;-y,x+1/2,z+1/2;y,-x+1/2,z+1/2;-y,-x+1/2,-z+1/2;y,x+1/2,-z+1/2;-x,y,-z;x,-y,-z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y+1/2,-x,z+1/2;-y+1/2,-x,-z+1/2;y+1/2,x,-z+1/2;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z", // ITA 94.2
       "95;95.1;;8;d4^7;p 43 2 2;p 4cw 2c",  
-      "95*;95.1;;8;d4^7;p 43 2 2*;p 43 2c",   //nonstandard
+      //"95*;95.1;;8;d4^7;p 43 2 2*;p 43 2c",   //nonstandard
       "95:c;95.2;ab;16;d4^7;c 43 2 2;xyz",//;x,y,z;-x,-y,z+1/2;-y,x,z+3/4;y,-x,z+1/4;-y,-x,-z;y,x,-z+1/2;-x,y,-z+1/4;x,-y,-z+3/4;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z+1/2;-y+1/2,x+1/2,z+3/4;y+1/2,-x+1/2,z+1/4;-y+1/2,-x+1/2,-z;y+1/2,x+1/2,-z+1/2;-x+1/2,y+1/2,-z+1/4;x+1/2,-y+1/2,-z+3/4", // ITA 95.2
       "96;96.1;;8;d4^8;p 43 21 2;p 4nw 2abw",  
       "96:c;96.2;ab;16;d4^8;c 43 2 21;xyz",//;x,y,z;-x,-y,z+1/2;-y,x+1/2,z+3/4;y,-x+1/2,z+1/4;-y,-x+1/2,-z+3/4;y,x+1/2,-z+1/4;-x,y,-z;x,-y,-z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z+1/2;-y+1/2,x,z+3/4;y+1/2,-x,z+1/4;-y+1/2,-x,-z+3/4;y+1/2,x,-z+1/4;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z+1/2", // ITA 96.2
@@ -3090,7 +3091,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "100;100.1;;8;c4v^2;p 4 b m;p 4 -2ab",  
       "100:c;100.2;ab;16;c4v^2;c 4 m g1;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;y,x+1/2,z;-y,-x+1/2,z;x,-y+1/2,z;-x,y+1/2,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;y+1/2,x,z;-y+1/2,-x,z;x+1/2,-y,z;-x+1/2,y,z", // ITA 100.2
       "101;101.1;;8;c4v^3;p 42 c m;p 4c -2c",  
-      "101*;101.1;;8;c4v^3;p 42 c m*;p 42 -2c",   //nonstandard
+      //"101*;101.1;;8;c4v^3;p 42 c m*;p 42 -2c",   //nonstandard
       "101:c;101.2;ab;16;c4v^3;c 42 m c;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;y,x,z+1/2;-y,-x,z+1/2;x,-y,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;y+1/2,x+1/2,z+1/2;-y+1/2,-x+1/2,z+1/2;x+1/2,-y+1/2,z;-x+1/2,y+1/2,z", // ITA 101.2
       "102;102.1;;8;c4v^4;p 42 n m;p 4n -2n",  
       "102:c;102.2;ab;16;c4v^4;c 42 m g2;xyz",//;x,y,z;-x,-y,z;-y,x+1/2,z+1/2;y,-x+1/2,z+1/2;y,x+1/2,z+1/2;-y,-x+1/2,z+1/2;x,-y,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y+1/2,-x,z+1/2;y+1/2,x,z+1/2;-y+1/2,-x,z+1/2;x+1/2,-y+1/2,z;-x+1/2,y+1/2,z", // ITA 102.2
@@ -3099,10 +3100,10 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "104;104.1;;8;c4v^6;p 4 n c;p 4 -2n",  
       "104:c;104.2;ab;16;c4v^6;c 4 c g2;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;y,x+1/2,z+1/2;-y,-x+1/2,z+1/2;x,-y+1/2,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;y+1/2,x,z+1/2;-y+1/2,-x,z+1/2;x+1/2,-y,z+1/2;-x+1/2,y,z+1/2", // ITA 104.2
       "105;105.1;;8;c4v^7;p 42 m c;p 4c -2",  
-      "105*;105.1;;8;c4v^7;p 42 m c*;p 42 -2",   //nonstandard
+      //"105*;105.1;;8;c4v^7;p 42 m c*;p 42 -2",   //nonstandard
       "105:c;105.2;ab;16;c4v^7;c 42 c m;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;y,x,z;-y,-x,z;x,-y,z+1/2;-x,y,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;y+1/2,x+1/2,z;-y+1/2,-x+1/2,z;x+1/2,-y+1/2,z+1/2;-x+1/2,y+1/2,z+1/2", // ITA 105.2
       "106;106.1;;8;c4v^8;p 42 b c;p 4c -2ab",  
-      "106*;106.1;;8;c4v^8;p 42 b c*;p 42 -2ab",   //nonstandard
+      //"106*;106.1;;8;c4v^8;p 42 b c*;p 42 -2ab",   //nonstandard
       "106:c;106.2;ab;16;c4v^8;c 42 c g1;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;y,x+1/2,z;-y,-x+1/2,z;x,-y+1/2,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;y+1/2,x,z;-y+1/2,-x,z;x+1/2,-y,z+1/2;-x+1/2,y,z+1/2", // ITA 106.2
       "107;107.1;;16;c4v^9;i 4 m m;i 4 -2",  
       "107:f;107.2;ab;32;c4v^9;f 4 m m;f 4 -2",  
@@ -3173,7 +3174,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "134:1;134.3;a,b,c|-1/4,1/4,-1/4;16;d4h^12;p 42/n n m :1;p 4n 2 -1n",
       "134:c1;134.4;ab|-1/4,1/4,-1/4;32;d4h^12;c 42/e m g2 :1;xyz",//;x,y,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y,-x+1/2,z+1/2;-y+1/2,-x+1/2,-z;y,x,-z;-x+1/2,y,-z+1/2;x,-y+1/2,-z+1/2;-x+1/2,-y,-z+1/2;x,y+1/2,-z+1/2;y+1/2,-x+1/2,-z;-y,x,-z;y+1/2,x,z+1/2;-y,-x+1/2,z+1/2;x,-y,z;-x+1/2,y+1/2,z;x+1/2,y+1/2,z;-x,-y,z;-y,x+1/2,z+1/2;y+1/2,-x,z+1/2;-y,-x,-z;y+1/2,x+1/2,-z;-x,y+1/2,-z+1/2;x+1/2,-y,-z+1/2;-x,-y+1/2,-z+1/2;x+1/2,y,-z+1/2;y,-x,-z;-y+1/2,x+1/2,-z;y,x+1/2,z+1/2;-y+1/2,-x,z+1/2;x+1/2,-y+1/2,z;-x,y,z", // ITA 134.4
       "135;135.1;;16;d4h^13;p 42/m b c;-p 4c 2ab",  
-      "135*;135.1;;16;d4h^13;p 42/m b c*;-p 42 2ab",   //nonstandard
+      //"135*;135.1;;16;d4h^13;p 42/m b c*;-p 42 2ab",   //nonstandard
       "135:c;135.2;ab;32;d4h^13;c 42/m c g1;xyz",//;x,y,z;-x,-y,z;-y,x,z+1/2;y,-x,z+1/2;-y,-x+1/2,-z;y,x+1/2,-z;-x,y+1/2,-z+1/2;x,-y+1/2,-z+1/2;-x,-y,-z;x,y,-z;y,-x,-z+1/2;-y,x,-z+1/2;y,x+1/2,z;-y,-x+1/2,z;x,-y+1/2,z+1/2;-x,y+1/2,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z+1/2;y+1/2,-x+1/2,z+1/2;-y+1/2,-x,-z;y+1/2,x,-z;-x+1/2,y,-z+1/2;x+1/2,-y,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z+1/2;-y+1/2,x+1/2,-z+1/2;y+1/2,x,z;-y+1/2,-x,z;x+1/2,-y,z+1/2;-x+1/2,y,z+1/2", // ITA 135.2
       "136;136.1;;16;d4h^14;p 42/m n m;-p 4n 2n",  
       "136:c;136.2;ab;32;d4h^14;c 42/m m g2;xyz",//;x,y,z;-x,-y,z;-y,x+1/2,z+1/2;y,-x+1/2,z+1/2;-y,-x+1/2,-z+1/2;y,x+1/2,-z+1/2;-x,y,-z;x,-y,-z;-x,-y,-z;x,y,-z;y,-x+1/2,-z+1/2;-y,x+1/2,-z+1/2;y,x+1/2,z+1/2;-y,-x+1/2,z+1/2;x,-y,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x,z+1/2;y+1/2,-x,z+1/2;-y+1/2,-x,-z+1/2;y+1/2,x,-z+1/2;-x+1/2,y+1/2,-z;x+1/2,-y+1/2,-z;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x,-z+1/2;-y+1/2,x,-z+1/2;y+1/2,x,z+1/2;-y+1/2,-x,z+1/2;x+1/2,-y+1/2,z;-x+1/2,y+1/2,z", // ITA 136.2
@@ -3237,24 +3238,24 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "171;171.1;;6;c6^4;p 62;p 62",  
       "172;172.1;;6;c6^5;p 64;p 64",  
       "173;173.1;;6;c6^6;p 63;p 6c",  
-      "173*;173.1;;6;c6^6;p 63*;p 63 ",   //nonstandard",// space added so not identical to H-M P 63
+      //"173*;173.1;;6;c6^6;p 63*;p 63 ",   //nonstandard",// space added so not identical to H-M P 63
       "174;174.1;;6;c3h^1;p -6;p -6",  
       "175;175.1;;12;c6h^1;p 6/m;-p 6",  
       "176;176.1;;12;c6h^2;p 63/m;-p 6c",  
-      "176*;176.1;;12;c6h^2;p 63/m*;-p 63",   //nonstandard
+      //"176*;176.1;;12;c6h^2;p 63/m*;-p 63",   //nonstandard
       "177;177.1;;12;d6^1;p 6 2 2;p 6 2",  
       "178;178.1;;12;d6^2;p 61 2 2;p 61 2 (0 0 5)",  
       "179;179.1;;12;d6^3;p 65 2 2;p 65 2 (0 0 1)",  
       "180;180.1;;12;d6^4;p 62 2 2;p 62 2 (0 0 4)",  
       "181;181.1;;12;d6^5;p 64 2 2;p 64 2 (0 0 2)",  
       "182;182.1;;12;d6^6;p 63 2 2;p 6c 2c",  
-      "182*;182.1;;12;d6^6;p 63 2 2*;p 63 2c",   //nonstandard
+      //"182*;182.1;;12;d6^6;p 63 2 2*;p 63 2c",   //nonstandard
       "183;183.1;;12;c6v^1;p 6 m m;p 6 -2",  
       "184;184.1;;12;c6v^2;p 6 c c;p 6 -2c",  
       "185;185.1;;12;c6v^3;p 63 c m;p 6c -2",  
-      "185*;185.1;;12;c6v^3;p 63 c m*;p 63 -2",   //nonstandard
+      //"185*;185.1;;12;c6v^3;p 63 c m*;p 63 -2",   //nonstandard
       "186;186.1;;12;c6v^4;p 63 m c;p 6c -2c",  
-      "186*;186.1;;12;c6v^4;p 63 m c*;p 63 -2c",   //nonstandard
+      //"186*;186.1;;12;c6v^4;p 63 m c*;p 63 -2c",   //nonstandard
       "187;187.1;;12;d3h^1;p -6 m 2;p -6 2",  
       "188;188.1;;12;d3h^2;p -6 c 2;p -6c 2",  
       "189;189.1;;12;d3h^3;p -6 2 m;p -6 -2",  
@@ -3262,9 +3263,9 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "191;191.1;;24;d6h^1;p 6/m m m;-p 6 2",  
       "192;192.1;;24;d6h^2;p 6/m c c;-p 6 2c",  
       "193;193.1;;24;d6h^3;p 63/m c m;-p 6c 2",  
-      "193*;193.1;;24;d6h^3;p 63/m c m*;-p 63 2",   //nonstandard
+      //"193*;193.1;;24;d6h^3;p 63/m c m*;-p 63 2",   //nonstandard
       "194;194.1;;24;d6h^4;p 63/m m c;-p 6c 2c",  
-      "194*;194.1;;24;d6h^4;p 63/m m c*;-p 63 2c",   //nonstandard
+      //"194*;194.1;;24;d6h^4;p 63/m m c*;-p 63 2c",   //nonstandard
       "195;195.1;;12;t^1;p 2 3;p 2 2 3",  
       "196;196.1;;48;t^2;f 2 3;f 2 2 3",  
       "197;197.1;;24;t^3;i 2 3;i 2 2 3",  
@@ -3311,159 +3312,142 @@ intl#     H-M full       HM-abbr   HM-short  Hall
   
   // first HM entry (short) is saved in ClegToHM
   private final static String[] moreSettings = {
-  "A 1 1 2 :2","5:-a-c,a,-b",
-  "A 1 1 2/m :2","12:-a-c,a,-b",
-  "A 1 1 m :2","8:-a-c,a,-b",
-  "A 2 :1*","5:c,-b,a",
-  "A 1 2 1 :1*","5:c,-b,a",
-  "A 2/m :1*","12:c,-b,a",
-  "A 1 2/m 1 :1*","12:c,-b,a",
-  "A m :1*","8:c,-b,a",
-  "A 1 m 1 :1*","8:c,-b,a",
-  "B 1 1 2 :1*","5:a,c,-b",
-  "B 1 1 2/m :1*","12:a,c,-b",
-  "B 1 1 m :1*","8:a,c,-b",
-  "B 2 1 1 :2","5:-b,-a-c,a",
-  "B 2/m 1 1 :2","12:-b,-a-c,a",
-  "B m 1 1 :2","8:-b,-a-c,a",
-  "C -4","81:a+b,-a+b,c",
-  "C -4 2 c","116:a+b,-a+b,c",
-  "C -4 2 g1","117:a+b,-a+b,c",
-  "C -4 2 g2","118:a+b,-a+b,c",
-  "C -4 2 m","115:a+b,-a+b,c",
-  "C -4 c 2","112:a+b,-a+b,c",
-  "C -4 c 21","114:a+b,-a+b,c",
-  "C -4 m 2","111:a+b,-a+b,c",
-  "C -4 m 21","113:a+b,-a+b,c",
-  "C 2 :2","5:a,-b,-a-c",     // OHOH
-  "C 1 2 1 :2","5:a,-b,-a-c", // OHOH
-  "C 2/m :2","12:a,-b,-a-c",  // OHOH
-  "C 1 2/m 1 :2","12:a,-b,-a-c", // OHOH
-  "C m :2","8:a,-b,-a-c",      // OHOH
-  "C 1 m 1 :2","8:a,-b,-a-c",  // OHOH
-  "C 2 1 1 :1*","5:-b,a,c",
-  "C 2/m 1 1 :1*","12:-b,a,c",
-  "C 4","75:a+b,-a+b,c",
-  "C 4 2 2","89:a+b,-a+b,c",
-  "C 4 2 21","90:a+b,-a+b,c",
-  "C 4 c c","103:a+b,-a+b,c",
-  "C 4 c g2","104:a+b,-a+b,c",
-  "C 4 m g1","100:a+b,-a+b,c",
-  "C 4 m m","99:a+b,-a+b,c",
-  "C 4/e :1","85:a+b,-a+b,c;-1/4,1/4,0",
-  "C 4/e :2","85:a+b,-a+b,c",
-  "C 4/e c c :1","130:a+b,-a+b,c;-1/4,1/4,0",
-  "C 4/e c c :2","130:a+b,-a+b,c",
-  "C 4/e c g2 :1","126:a+b,-a+b,c;-1/4,-1/4,-1/4",
-  "C 4/e c g2 :2","126:a+b,-a+b,c",
-  "C 4/e m g1 :1","125:a+b,-a+b,c;-1/4,-1/4,0",
-  "C 4/e m g1 :2","125:a+b,-a+b,c",
-  "C 4/e m m :1","129:a+b,-a+b,c;-1/4,1/4,0",
-  "C 4/e m m :2","129:a+b,-a+b,c",
-  "C 4/m","83:a+b,-a+b,c",
-  "C 4/m c c","124:a+b,-a+b,c",
-  "C 4/m c g2","128:a-b,a+b,c",
-  "C 4/m m g1","127:a+b,-a+b,c",
-  "C 4/m m m","123:a+b,-a+b,c",
-  "C 41","76:a+b,-a+b,c",
-  "C 41 2 2","91:a+b,-a+b,c",
-  "C 41 2 21","92:a+b,-a+b,c",
-  "C 42","77:a+b,-a+b,c",
-  "C 42 2 2","93:a+b,-a+b,c",
-  "C 42 2 21","94:a+b,-a+b,c",
-  "C 42 c g1","106:a+b,-a+b,c",
-  "C 42 c m","105:a+b,-a+b,c",
-  "C 42 m c","101:a+b,-a+b,c",
-  "C 42 m g2","102:a+b,-a+b,c",
-  "C 42/e :1","86:a+b,-a+b,c;-1/4,-1/4,-1/4",
-  "C 42/e :2","86:a+b,-a+b,c",
-  "C 42/e c g1 :1","133:a+b,-a+b,c;-1/4,1/4,-1/4",
-  "C 42/e c g1 :2","133:a+b,-a+b,c",
-  "C 42/e c m :1","137:a+b,-a+b,c;-1/4,1/4,-1/4",
-  "C 42/e c m :2","137:a+b,-a+b,c",
-  "C 42/e m c :1","138:a+b,-a+b,c;-1/4,1/4,-1/4",
-  "C 42/e m c :2","138:a+b,-a+b,c",
-  "C 42/e m g2 :1","134:a+b,-a+b,c;-1/4,1/4,-1/4",
-  "C 42/e m g2 :2","134:a+b,-a+b,c",
-  "C 42/m","84:a+b,-a+b,c",
-  "C 42/m c g1","135:a+b,-a+b,c",
-  "C 42/m c m","131:a+b,-a+b,c",
-  "C 42/m m c","132:a+b,-a+b,c",
-  "C 42/m m g2","136:a+b,-a+b,c",
-  "C 43","78:a+b,-a+b,c",
-  "C 43 2 2","95:a+b,-a+b,c",
-  "C 43 2 21","96:a+b,-a+b,c",
-  "C m 1 1 :1*","8:-b,a,c",
-  "F -4","82:a+b,-a+b,c",
-  "F -4 2 c","120:a+b,-a+b,c",
-  "F -4 2 m","119:a+b,-a+b,c",
-  "F -4 d 2","122:a+b,-a+b,c",
-  "F -4 m 2","121:a+b,-a+b,c",
-  "F 4","79:a+b,-a+b,c",
-  "F 4 2 2","97:a+b,-a+b,c",
-  "F 4 m c","108:a+b,-a+b,c",
-  "F 4 m m","107:a+b,-a+b,c",
-  "F 4/m","87:a+b,-a+b,c",
-  "F 4/m m c","140:a+b,-a+b,c",
-  "F 4/m m m","139:a+b,-a+b,c",
-  "F 41","80:a+b,-a+b,c",
-  "F 41 2 2","98:a+b,-a+b,c",
-  "F 41 d c","110:a+b,-a+b,c",
-  "F 41 d m","109:a+b,-a+b,c",
-  "F 41/d :1","88:a+b,-a+b,c;0,-1/4,-1/8",
-  "F 41/d :2","88:a+b,-a+b,c",
-  "F 41/d d c :1","142:a+b,-a+b,c;0,1/4,-1/8",
-  "F 41/d d c :2","142:a+b,-a+b,c",
-  "F 41/d d m :1","141:a+b,-a+b,c;0,1/4,-1/8",
-  "F 41/d d m :2","141:a+b,-a+b,c",
-  "I 1 1 2 :3","5:c,-a-c,-b",
-  "I 1 1 2/m :3","12:c,-a-c,-b",
-  "I 1 1 m :3","8:c,-a-c,-b",
-  "I 2 :3","5:-a-c,-b,c",
-  "I 1 2 1 :3","5:-a-c,-b,c",
-  "I 2/m :3","12:-a-c,-b,c",
-  "I 1 2/m 1 :3","12:-a-c,-b,c",
-  "I m :3","8:-a-c,-b,c",
-  "I 1 m 1 :3","8:-a-c,-b,c",
-  "I 2 1 1 :3","5:-b,c,-a-c",
-  "I 2/m 1 1 :3","12:-b,c,-a-c",
-  "I m 1 1 :3","8:-b,c,-a-c",
-  "P 1 1 2/a :3","13:c,-a-c,-b",
-  "P 1 1 2/b :1*","13:a,c,-b",
-  "P 1 1 2/n :2","13:-a-c,a,-b",
-  "P 1 1 21/a :3","14:c,-a-c,-b",
-  "P 1 1 21/b :1*","14:a,c,-b",
-  "P 1 1 21/n :2","14:-a-c,a,-b",
-  "P 1 1 a :3","7:c,-a-c,-b",
-  "P 1 1 b :1*","7:a,c,-b",
-  "P 1 1 n :2","7:-a-c,a,-b",
-  "P 2/a :1*","13:c,-b,a",
-  "P 1 2/a 1 :1*","13:c,-b,a",
-  "P 2/c :3","13:-a-c,-b,c",
-  "P 1 2/c 1 :3","13:-a-c,-b,c",
-  "P 2/n :2","13:a,-b,-a-c", // OHOH
-  "P 1 2/n 1 :2","13:a,-b,-a-c", // OHOH
-  "P 21/a :1*","14:c,-b,a",
-  "P 1 21/a 1 :1*","14:c,-b,a",
-  "P 21/c :3","14:-a-c,-b,c",
-  "P 1 21/c 1 :3","14:-a-c,-b,c",
-  "P 21/n :2","14:a,-b,-a-c",  // OHOH
-  "P 1 21/n 1 :2","14:a,-b,-a-c", // OHOH
-  "P a :1*","7:c,-b,a",
-  "P 1 a 1 :1*","7:c,-b,a",
-  "P c :3","7:-a-c,-b,c",
-  "P 1 c 1 :3","7:-a-c,-b,c",
-  "P n :2","7:a,-b,-a-c",       // OHOH
-  "P 1 n 1 :2","7:a,-b,-a-c",   // OHOH
-  "P 2/b 1 1 :3","13:-b,c,-a-c",
-  "P 2/c 1 1 :1*","13:-b,a,c",
-  "P 2/n 1 1 :2","13:-b,-a-c,a",
-  "P 21/b 1 1 :3","14:-b,c,-a-c",
-  "P 21/c 1 1 :1*","14:-b,a,c",
-  "P 21/n 1 1 :2","14:-b,-a-c,a",
-  "P b 1 1 :3","7:-b,c,-a-c",
-  "P c 1 1 :1*","7:-b,a,c",
-  "P n 1 1 :2","7:-b,-a-c,a",
+      // these are allowed only in their full-name form, with a "'" following
+      "A 1 1 2 :2'","5:-a-c,a,-b",
+      "A 1 2 1 :1'","5:c,-b,a",
+      "B 1 1 2 :1'","5:a,c,-b",
+      "B 2 1 1 :2'","5:-b,-a-c,a",
+      "C 1 2 1 :2'","5:a,-b,-a-c",
+      "C 2 1 1 :1'","5:-b,a,c",
+      "I 1 1 2 :3'","5:c,-a-c,-b",
+      "I 1 2 1 :3'","5:-a-c,-b,c",
+      "I 2 1 1 :3'","5:-b,c,-a-c",
+      "P 1 1 a :3'","7:c,-a-c,-b",
+      "P 1 1 b :1'","7:a,c,-b",
+      "P 1 1 n :2'","7:-a-c,a,-b",
+      "P 1 a 1 :1'","7:c,-b,a",
+      "P 1 c 1 :3'","7:-a-c,-b,c",
+      "P 1 n 1 :2'","7:a,-b,-a-c",
+      "P b 1 1 :3'","7:-b,c,-a-c",
+      "P c 1 1 :1'","7:-b,a,c",
+      "P n 1 1 :2'","7:-b,-a-c,a",
+      "A 1 1 m :2'","8:-a-c,a,-b",
+      "A 1 m 1 :1'","8:c,-b,a",
+      "B 1 1 m :1'","8:a,c,-b",
+      "B m 1 1 :2'","8:-b,-a-c,a",
+      "C 1 m 1 :2'","8:a,-b,-a-c",
+      "C m 1 1 :1'","8:-b,a,c",
+      "I 1 1 m :3'","8:c,-a-c,-b",
+      "I 1 m 1 :3'","8:-a-c,-b,c",
+      "I m 1 1 :3'","8:-b,c,-a-c",
+      "A 1 1 2/m :2'","12:-a-c,a,-b",
+      "A 1 2/m 1 :1'","12:c,-b,a",
+      "B 1 1 2/m :1'","12:a,c,-b",
+      "B 2/m 1 1 :2'","12:-b,-a-c,a",
+      "C 1 2/m 1 :2'","12:a,-b,-a-c",
+      "C 2/m 1 1 :1'","12:-b,a,c",
+      "I 1 1 2/m :3'","12:c,-a-c,-b",
+      "I 1 2/m 1 :3'","12:-a-c,-b,c",
+      "I 2/m 1 1 :3'","12:-b,c,-a-c",
+      "P 1 1 2/a :3'","13:c,-a-c,-b",
+      "P 1 1 2/b :1'","13:a,c,-b",
+      "P 1 1 2/n :2'","13:-a-c,a,-b",
+      "P 1 2/a 1 :1'","13:c,-b,a",
+      "P 1 2/c 1 :3'","13:-a-c,-b,c",
+      "P 1 2/n 1 :2'","13:a,-b,-a-c",
+      "P 2/b 1 1 :3'","13:-b,c,-a-c",
+      "P 2/c 1 1 :1'","13:-b,a,c",
+      "P 2/n 1 1 :2'","13:-b,-a-c,a",
+      "P 1 1 21/a :3'","14:c,-a-c,-b",
+      "P 1 1 21/b :1'","14:a,c,-b",
+      "P 1 1 21/n :2'","14:-a-c,a,-b",
+      "P 1 21/a 1 :1'","14:c,-b,a",
+      "P 1 21/c 1 :3'","14:-a-c,-b,c",
+      "P 1 21/n 1 :2'","14:a,-b,-a-c",
+      "P 21/b 1 1 :3'","14:-b,c,-a-c",
+      "P 21/c 1 1 :1'","14:-b,a,c",
+      "P 21/n 1 1 :2'","14:-b,-a-c,a",
+      "C 4'","75:a+b,-a+b,c",  
+      "C 41'","76:a+b,-a+b,c",
+      "C 42'","77:a+b,-a+b,c",
+      "C 43'","78:a+b,-a+b,c",
+      "F 4'","79:a+b,-a+b,c",
+      "F 41'","80:a+b,-a+b,c",
+      "C -4'","81:a+b,-a+b,c",
+      "F -4'","82:a+b,-a+b,c",
+      "C 4/m'","83:a+b,-a+b,c",
+      "C 42/m'","84:a+b,-a+b,c",
+      "C 4/e :1'","85:a+b,-a+b,c;-1/4,1/4,0",
+      "C 4/e :2'","85:a+b,-a+b,c",
+      "C 42/e :1'","86:a+b,-a+b,c;-1/4,-1/4,-1/4",
+      "C 42/e :2'","86:a+b,-a+b,c",
+      "F 4/m'","87:a+b,-a+b,c",
+      "F 41/d :1'","88:a+b,-a+b,c;0,-1/4,-1/8",
+      "F 41/d :2'","88:a+b,-a+b,c",
+      "C 4 2 2'","89:a+b,-a+b,c",
+      "C 4 2 21'","90:a+b,-a+b,c",
+      "C 41 2 2'","91:a+b,-a+b,c",
+      "C 41 2 21'","92:a+b,-a+b,c",
+      "C 42 2 2'","93:a+b,-a+b,c",
+      "C 42 2 21'","94:a+b,-a+b,c",
+      "C 43 2 2'","95:a+b,-a+b,c",
+      "C 43 2 21'","96:a+b,-a+b,c",
+      "F 4 2 2'","97:a+b,-a+b,c",
+      "F 41 2 2'","98:a+b,-a+b,c",
+      "C 4 m m'","99:a+b,-a+b,c",
+      "C 4 m g1'","100:a+b,-a+b,c",
+      "C 42 m c'","101:a+b,-a+b,c",
+      "C 42 m g2'","102:a+b,-a+b,c",
+      "C 4 c c'","103:a+b,-a+b,c",
+      "C 4 c g2'","104:a+b,-a+b,c",
+      "C 42 c m'","105:a+b,-a+b,c",
+      "C 42 c g1'","106:a+b,-a+b,c",
+      "F 4 m m'","107:a+b,-a+b,c",
+      "F 4 m c'","108:a+b,-a+b,c",
+      "F 41 d m'","109:a+b,-a+b,c",
+      "F 41 d c'","110:a+b,-a+b,c",
+      "C -4 m 2'","111:a+b,-a+b,c",
+      "C -4 c 2'","112:a+b,-a+b,c",
+      "C -4 m 21'","113:a+b,-a+b,c",
+      "C -4 c 21'","114:a+b,-a+b,c",
+      "C -4 2 m'","115:a+b,-a+b,c",
+      "C -4 2 c'","116:a+b,-a+b,c",
+      "C -4 2 g1'","117:a+b,-a+b,c",
+      "C -4 2 g2'","118:a+b,-a+b,c",
+      "F -4 2 m'","119:a+b,-a+b,c",
+      "F -4 2 c'","120:a+b,-a+b,c",
+      "F -4 m 2'","121:a+b,-a+b,c",
+      "F -4 d 2'","122:a+b,-a+b,c",
+      "C 4/m m m'","123:a+b,-a+b,c",
+      "C 4/m c c'","124:a+b,-a+b,c",
+      "C 4/e m g1 :1'","125:a+b,-a+b,c;-1/4,-1/4,0",
+      "C 4/e m g1 :2'","125:a+b,-a+b,c",
+      "C 4/e c g2 :1'","126:a+b,-a+b,c;-1/4,-1/4,-1/4",
+      "C 4/e c g2 :2'","126:a+b,-a+b,c",
+      "C 4/m m g1'","127:a+b,-a+b,c",
+      "C 4/m c g2'","128:a-b,a+b,c",
+      "C 4/e m m :1'","129:a+b,-a+b,c;-1/4,1/4,0",
+      "C 4/e m m :2'","129:a+b,-a+b,c",
+      "C 4/e c c :1'","130:a+b,-a+b,c;-1/4,1/4,0",
+      "C 4/e c c :2'","130:a+b,-a+b,c",
+      "C 42/m c m'","131:a+b,-a+b,c",
+      "C 42/m m c'","132:a+b,-a+b,c",
+      "C 42/e c g1 :1'","133:a+b,-a+b,c;-1/4,1/4,-1/4",
+      "C 42/e c g1 :2'","133:a+b,-a+b,c",
+      "C 42/e m g2 :1'","134:a+b,-a+b,c;-1/4,1/4,-1/4",
+      "C 42/e m g2 :2'","134:a+b,-a+b,c",
+      "C 42/m c g1'","135:a+b,-a+b,c",
+      "C 42/m m g2'","136:a+b,-a+b,c",
+      "C 42/e c m :1'","137:a+b,-a+b,c;-1/4,1/4,-1/4",
+      "C 42/e c m :2'","137:a+b,-a+b,c",
+      "C 42/e m c :1'","138:a+b,-a+b,c;-1/4,1/4,-1/4",
+      "C 42/e m c :2'","138:a+b,-a+b,c",
+      "F 4/m m m'","139:a+b,-a+b,c",
+      "F 4/m m c'","140:a+b,-a+b,c",
+      "F 41/d d m :1'","141:a+b,-a+b,c;0,1/4,-1/8",
+      "F 41/d d m :2'","141:a+b,-a+b,c",
+      "F 41/d d c :1'","142:a+b,-a+b,c;0,1/4,-1/8",
+      "F 41/d d c :2'","142:a+b,-a+b,c",
   };
   
   private static Hashtable<String, String> HMtoCleg;
@@ -3485,13 +3469,6 @@ intl#     H-M full       HM-abbr   HM-short  Hall
         String c = moreSettings[i];
         String h = moreSettings[--i];
         h = PT.rep(h, " ","");
-        int pt = h.length() - 1;
-        if (h.charAt(pt) == '*') {
-          // "default cell choice, even for nonstandard setting"??? a bit odd, perhaps
-          h = h.substring(0, pt);
-          // remove ":1"
-          HMtoCleg.put(h.substring(0, pt - 2), c);
-        }
         ClegtoHM.put(c, h);
         HMtoCleg.put(h, c);
       }
