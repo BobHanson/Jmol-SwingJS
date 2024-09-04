@@ -11222,5 +11222,10 @@ public class Viewer extends JmolViewer
     }
     internalAccessPath = path;      
   }
+
+  public int getItaNumberFor(String name) {
+    String s = (String) getSymStatic().getSpaceGroupInfoObj("itaNumber", name, false, false);
+    return (s == null ? -1 : PT.parseInt(s));
+  }
   
 }

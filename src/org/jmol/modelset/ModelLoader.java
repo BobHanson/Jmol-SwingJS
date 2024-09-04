@@ -174,7 +174,7 @@ public final class ModelLoader {
       jbr = vwr.getJBR().setLoader(this);
     jmolData = (adapterModelCount == 0 ? (String) ms.getInfoM("jmolData") : null);
     fileHeader = (String) ms.getInfoM("fileHeader");
-    Lst<P3d[]> steps = (Lst<P3d[]>) ms.getInfoM("trajectorySteps");
+    Lst<P3d[]> steps = (Lst<P3d[]>) ms.getInfoM(JC.INFO_TRAJECTORY_STEPS);
     isTrajectory = (steps != null);
     highPrecision = false;
     if (isTrajectory)
@@ -186,9 +186,9 @@ public final class ModelLoader {
     if (info != null) {
       info.remove("pdbNoHydrogens");
       info.remove("pdbAddHydrogens");
-      info.remove("trajectorySteps");
+      info.remove(JC.INFO_TRAJECTORY_STEPS);
       if (isTrajectory)
-        ms.vibrationSteps = (Lst<V3d[]>) info.remove("vibrationSteps");
+        ms.vibrationSteps = (Lst<V3d[]>) info.remove(JC.INFO_VIBRATION_STEPS);
       highPrecision = info.containsKey("highPrecision");
       if (highPrecision) {
         // we must RESET this, because 'ZAP' has unset it in the script

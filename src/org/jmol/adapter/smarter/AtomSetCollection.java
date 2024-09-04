@@ -826,9 +826,9 @@ public class AtomSetCollection {
         atoms[i].setT(trajectory[ii]);
       ii++;
     }
-    setInfo("trajectorySteps", trajectorySteps);
+    setInfo(JC.INFO_TRAJECTORY_STEPS, trajectorySteps);
     if (vibrationSteps != null)
-      setInfo("vibrationSteps", vibrationSteps);
+      setInfo(JC.INFO_VIBRATION_STEPS, vibrationSteps);
     if (ac == 0)
       ac = trajectory.length;
   }
@@ -1131,7 +1131,7 @@ public class AtomSetCollection {
       return;
     for (int i = 0; i < a.trajectoryStepCount; i++)
       trajectorySteps.add(trajectoryStepCount++, a.trajectorySteps.get(i));
-    setInfo("trajectorySteps", trajectorySteps);
+    setInfo(JC.INFO_TRAJECTORY_STEPS, trajectorySteps);
     setInfo("ignoreUnitCell", a.atomSetInfo.get("ignoreUnitCell"));
   }
 

@@ -426,9 +426,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected void initializeTrajectoryFile() {
     // add a dummy atom, just so not "no atoms found"
     asc.addAtom(new Atom());
-    trajectorySteps = (Lst<P3d[]>) htParams.get("trajectorySteps");
+    trajectorySteps = (Lst<P3d[]>) htParams.get(JC.INFO_TRAJECTORY_STEPS);
     if (trajectorySteps == null)
-      htParams.put("trajectorySteps", trajectorySteps = new Lst<P3d[]>());
+      htParams.put(JC.INFO_TRAJECTORY_STEPS, trajectorySteps = new Lst<P3d[]>());
   }
 
   /**

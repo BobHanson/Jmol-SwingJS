@@ -363,16 +363,17 @@ public class MathExt {
     // spacegroup(4,0,2,"subgroups") second listed subgroup as a map
     // spacegroup(4,0,2,1,"subgroups") second listed subgroup, first transformation
     // spacegroup(4,5,1,2,"subgroups") second transformation for 4>>5, first match
-    // if all values are integers and n > 1, then subgroups is implied
+    // the first and second number can be replaced by a Hermann-Mauguin name.
+    // "subgroups" is optional if there are more than two parameter.
     
 //    * itaFrom  itaTo  index1  index2
-//    *    n      MnV     -       -      return map for group n, contents of sub_n.json
-//    *    n       0     MnV      -      return int[][] of critical information 
-//    *    n       0      m      MnV     return map map.subgroups[m]
+//    *    n      MinV    -       -      return map for group n, contents of sub_n.json
+//    *    n       0     MinV     -      return int[][] of critical information 
+//    *    n       0      m      MinV    return map map.subgroups[m]
 //    *    n       0      m       t      return string transform map.subgroups[m].trm[t]
 //    *    n       0      0       0      return int[] array of list of valid super>>sub 
-//    *    n1      n2    MnV      -      return list map.subgroups.select("WHERE subgroup=n2")
-//    *    n1      n2     m      MnV     return map map.subgroups.select("WHERE subgroup=n2")[m]
+//    *    n1      n2    MinV     -      return list map.subgroups.select("WHERE subgroup=n2")
+//    *    n1      n2     m      MinV    return map map.subgroups.select("WHERE subgroup=n2")[m]
 //    *    n1      n2     m       t      return string transform map.subgroups.select("WHERE subgroup=n2")[m].trm[t]
 //    * 
 
@@ -383,20 +384,16 @@ public class MathExt {
     if (n == 0)
       return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null,
           vwr.am.cmi, true, null));
-    boolean isSubgroups = (n > 1);
-    for (int i = n; isSubgroups && --i >= 0;) {
-      if (args[i].tok != T.integer) {
-        isSubgroups = false;
-      }
-    }
-    String xyzList = args[0].asString();
     String mode = (args[args.length - 1].tok == T.string 
         ? (String) args[args.length - 1].value : null);
+    boolean isSettings = "settings".equalsIgnoreCase(mode);
+    boolean isSubgroups = (n > 1 && (n != 2 || !"settings".equalsIgnoreCase(mode)));
+    String xyzList = args[0].asString(); 
     if (isSubgroups || "subgroups".equals(mode)) {
       SymmetryInterface sym;
       int itaFrom = Integer.MIN_VALUE, itaTo = Integer.MIN_VALUE, 
     		  index1 = Integer.MIN_VALUE, index2 = Integer.MIN_VALUE;
-      switch (isSubgroups ? n + 1 : n) {
+      switch ("subgroups".equals(mode) ? n : n + 1) {
       case 5:
         index2 = args[3].intValue;
         if (index2 < 0)
@@ -404,16 +401,22 @@ public class MathExt {
         //$FALL-THROUGH$
       case 4:
         index1 = args[2].intValue;
-        if (index1 < 0)
+        if (index1 < 0 || index1 == Integer.MAX_VALUE)
           return false;
         //$FALL-THROUGH$
       case 3:
         itaTo = args[1].intValue;
+        if (itaTo == Integer.MAX_VALUE) {
+          itaTo = vwr.getItaNumberFor(args[1].asString());
+        }
         if (itaTo < 0)
           return false;
         //$FALL-THROUGH$
       case 2:
         itaFrom = args[0].intValue;
+        if (itaFrom == Integer.MAX_VALUE) {
+          itaFrom = vwr.getItaNumberFor(args[0].asString());
+        }
         if (itaFrom < 0)
           return false;
         //$FALL-THROUGH$
@@ -435,9 +438,7 @@ public class MathExt {
     default:
       return false;
     case 2:
-      if (args[1].tok == T.string) {
-        mode = (String) args[1].value;
-      } else {
+      if (args[1].tok != T.string) {
         unitCellParams = SV.dlistValue(args[1], 0);
         if (unitCellParams == null || unitCellParams.length != 6)
           return false;
@@ -447,12 +448,12 @@ public class MathExt {
       //$FALL-THROUGH$
     case 1:
       int itaNo = (args[0].tok == T.integer ? args[0].intValue : n == 1 ? Integer.MIN_VALUE : 0);
-      if ("settings".equalsIgnoreCase(mode)) {
+      if (isSettings) {
         if (itaNo == 0)
           return false;
         return mp.addXObj((itaNo == Integer.MIN_VALUE ? vwr.getCurrentUnitCell() : vwr.getSymTemp()).getSpaceGroupJSON(vwr, mode.toLowerCase(), null, itaNo));
       }
-      if (itaNo > 0 || args[0].tok == T.string) {
+      if (itaNo > 0 || args[0].tok == T.decimal || args[0].tok == T.string) {
         if (xyzList.toUpperCase().startsWith("AFLOW/")) {
           // "15" or "15.1"
           return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOW",

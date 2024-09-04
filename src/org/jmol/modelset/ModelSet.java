@@ -1030,19 +1030,13 @@ public class ModelSet extends BondCollection {
       modelIndex = vwr.am.cmi;
     if (modelIndex < 0 || modelIndex >= mc)
       return null;
+    if (isTrajectory(modelIndex))
+      modelIndex = am[modelIndex].trajectoryBaseIndex;
     SymmetryInterface ucSimple = am[modelIndex].simpleCage;
     SymmetryInterface uc = null;
     if (unitCells != null && modelIndex < unitCells.length
         && unitCells[modelIndex] != null && unitCells[modelIndex].haveUnitCell())
       uc = unitCells[modelIndex];
-//    if (uc == null && getInfo(modelIndex, "unitCellParams") != null) {
-//      // setting the unit cell from the file??
-//      if (unitCells == null)
-//        unitCells = new SymmetryInterface[mc];
-//      haveUnitCells = true;
-//      uc = unitCells[modelIndex] = vwr.getSymTemp().setSymmetryInfo(modelIndex,
-//          am[modelIndex].auxiliaryInfo, null);
-//    }
     if (uc != null && returnCage) {
       return (ucSimple == null ? 
         setModelCagePts(modelIndex, uc.getUnitCellVectors(), "cage") : ucSimple);

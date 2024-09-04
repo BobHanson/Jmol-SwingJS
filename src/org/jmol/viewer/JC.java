@@ -1614,7 +1614,15 @@ public final class JC {
   public static final String INFO_UNIT_CELL_CONVENTIONAL = "unitcell_conventional";
   public static final String INFO_SYMMETRY_OPERATIONS = "symmetryOperations";
   public static final String INFO_SYMOPS_TEMP = "symOpsTemp";
- /** 
+  
+  public static final String PROP_DELETE_MODEL_ATOMS = "deleteModelAtoms";
+  public static final String PROP_ATOMS_DELETED = "atomsDeleted";
+  public static final String PROP_ATOMS_MOVED = "atomsMoved";
+  
+  public static final String INFO_TRAJECTORY_STEPS = "trajectorySteps";
+  public static final String INFO_VIBRATION_STEPS = "vibrationSteps";
+
+  /** 
    * used to set atom symmetry 555 556 etc. 
    */
   public static final String INFO_UNIT_CELL_RANGE = "ML_unitCellRange";
@@ -1637,10 +1645,7 @@ public final class JC {
         || key.startsWith("lattice")
         || key.startsWith("intlTable"));
   }
-  
-  public static final String PROP_DELETE_MODEL_ATOMS = "deleteModelAtoms";
-  public static final String PROP_ATOMS_DELETED = "atomsDeleted";
-  public static final String PROP_ATOMS_MOVED = "atomsMoved";
+
   /**
    * was a minimum for float as double, but now just Double.MIN_VALUE
    * @param type 

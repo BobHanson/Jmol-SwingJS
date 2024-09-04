@@ -39,6 +39,7 @@ import org.jmol.api.JmolFilesReaderInterface;
 import org.jmol.script.SV;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericBinaryDocument;
@@ -346,7 +347,7 @@ public class SmarterJmolAdapter extends JmolAdapter {
       }
     }
     AtomSetCollection result;
-    if (htParams.containsKey("trajectorySteps")) {
+    if (htParams.containsKey(JC.INFO_TRAJECTORY_STEPS)) {
       // this is one model with a set of coordinates from a 
       // molecular dynamics calculation
       // all the htParams[] entries point to the same Hashtable
@@ -355,8 +356,8 @@ public class SmarterJmolAdapter extends JmolAdapter {
         if (asc.length > 1)
           asc[0].setInfo("ignoreUnitCell", asc[1].atomSetInfo.get("ignoreUnitCell"));
         result.finalizeTrajectoryAs(
-            (Lst<P3d[]>) htParams.get("trajectorySteps"),
-            (Lst<V3d[]>) htParams.get("vibrationSteps"));
+            (Lst<P3d[]>) htParams.get(JC.INFO_TRAJECTORY_STEPS),
+            (Lst<V3d[]>) htParams.get(JC.INFO_VIBRATION_STEPS));
       } catch (Exception e) {
         if (result.errorMessage == null)
           result.errorMessage = "" + e;
