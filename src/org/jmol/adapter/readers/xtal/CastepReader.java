@@ -504,9 +504,9 @@ public class CastepReader extends AtomSetCollectionReader {
       return;
     double factor = readLengthUnit(tokens[0]);
     if (tokens.length >= 3) {
-      a = parseDoubleStr(tokens[0]) * factor;
-      b = parseDoubleStr(tokens[1]) * factor;
-      c = parseDoubleStr(tokens[2]) * factor;
+      a = parseCalcStr(tokens[0]) * factor;
+      b = parseCalcStr(tokens[1]) * factor;
+      c = parseCalcStr(tokens[2]) * factor;
     } else {
       Logger
           .warn("error reading a,b,c in %BLOCK LATTICE_ABC in CASTEP .cell file");
@@ -516,9 +516,9 @@ public class CastepReader extends AtomSetCollectionReader {
     if (tokenizeCastepCell() == 0)
       return;
     if (tokens.length >= 3) {
-      alpha = parseDoubleStr(tokens[0]);
-      beta = parseDoubleStr(tokens[1]);
-      gamma = parseDoubleStr(tokens[2]);
+      alpha = parseCalcStr(tokens[0]);
+      beta = parseCalcStr(tokens[1]);
+      gamma = parseCalcStr(tokens[2]);
     } else {
       Logger
           .warn("error reading alpha,beta,gamma in %BLOCK LATTICE_ABC in CASTEP .cell file");
