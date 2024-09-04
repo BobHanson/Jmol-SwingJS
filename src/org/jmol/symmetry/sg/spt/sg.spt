@@ -10,6 +10,7 @@ lat = types[name]
 
 nsg = 0;
 a = ""
+jmolIds = "";
 for (var sg in x) {
 print sg.jmolId + " " + sg.ita;
   key = ";" + sg.jmolId + ";"
@@ -22,7 +23,10 @@ issues += [sg.jmolId + " " + sg.ita + " " + sg.itaIndex]
   found += key;
   var s = sg.jmolId.split(":")
   var post = (s.length == 1 ? "" : ":" + s[2]) 
-  var pre = "\n\"" + s[1].format("%03s")+post + "\"\t\""
+  var id = s[1].format("%03s")+post;
+  jmolIds += id + "\t";
+
+  var pre = "\n\"" + id + "\"\t\""
   var list = sg.operationsXYZ
   var n = sg.operationCount
   for (var i = 1; i <= n; i++){
@@ -30,6 +34,7 @@ issues += [sg.jmolId + " " + sg.ita + " " + sg.itaIndex]
   }
 }
 
+write var jmolIds @{"c:/temp/sg_headers"}
 write var a @{"c:/temp/sg_"+name}
 print issues
 print "" + nsg + " " + issues.length
@@ -37,3 +42,6 @@ print "" + nsg + " " + issues.length
 
 
 
+/**
+
+BH 2024.09.03 reran also creating sg_headers for Excel createMap.xlsx
