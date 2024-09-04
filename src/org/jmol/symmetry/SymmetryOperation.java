@@ -584,6 +584,11 @@ public class SymmetryOperation extends M4d {
     return div12(m, setDivisor(xyz));
   }
 
+  /**
+   * JmolCanonical is translations (-1/2,1/2]
+   * @param xyz
+   * @return xyz with translations (-1/2,1/2]
+   */
   static String getJmolCanonicalXYZ(String xyz) {
     try {
       return getMatrixFromString(null, xyz, null, false, true, true);
@@ -2202,6 +2207,8 @@ public class SymmetryOperation extends M4d {
    */
   static String transformStr(String xyz, M4d trm, M4d trmInv, M4d t,
                              double[] v, T3d centering, T3d targetCentering, boolean normalize, boolean allowFractions) {
+    if (xyz.equals("y+1/2,-x,z+3/4"))
+      System.out.println("SO "+ xyz);
     if (trmInv == null) {
       trmInv = M4d.newM4(trm);
       trmInv.invert();
@@ -2221,16 +2228,13 @@ public class SymmetryOperation extends M4d {
       op.add(targetCentering);
     if (normalize) {
       t.getColumn(3, v);
+      // note that this returns only positive values, aa does the iTA
       for (int i = 0; i < 3; i++) {
-        v[i] = v[i] % 1;
+        v[i] = (10+v[i]) % 1;
       }
       t.setColumnA(3, v);
     }
     return getXYZFromMatrixFrac(t, false, true, false, allowFractions);
-  }
-
-  static String transformXyzT(String xyz, String transform) {
-    return (transformStr(xyz, UnitCell.toTrm(transform, null), null, null, null, null, null, true, false));
   }
 
   static M4d stringToMatrix(String xyz) {

@@ -369,7 +369,7 @@ public class ModelKit {
           && (hallSymbol != null || myIta != null
               && (myIta.equals(prevNode.myIta) || prevNode.calcNext != null)));
       
-      System.out.println("ClegNode update i=" + index + " n=" + name + " s=" + mySetting + " trm=" + myTrm + " " + haveReferenceCell);
+//      System.out.println("ClegNode update i=" + index + " n=" + name + " s=" + mySetting + " trm=" + myTrm + " " + haveReferenceCell);
       
       if (haveReferenceCell) {
         trm0 = M4d.newM4(data.trMat);
@@ -2012,7 +2012,7 @@ public class ModelKit {
       name += ".";
     ClegData data = new ClegData(vwr, sym, bs, paramsOrUC,
         PT.split(name, ">"), 0, false, sb);
-    String ret = assignSpaceGroup(data);//false false
+    String ret = assignSpaceGroup(data);
     if (ret.endsWith("!"))
       return ret;
     if (data.isCalcSpaceGroup)

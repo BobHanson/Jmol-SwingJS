@@ -255,7 +255,7 @@ public class SpaceGroupFinder {
 
 
   private boolean checkWyckoffHM() {
-    if (xyzList.indexOf(",") < 0) {
+    if (xyzList != null && xyzList.indexOf(",") < 0) {
       //could be H-M -- check for odd case
       String clegId = SpaceGroup.convertWyckoffHMCleg(xyzList, null);
       if (clegId != null) {
@@ -414,7 +414,7 @@ public class SpaceGroupFinder {
       if (isUnknown)
         filterGroups(bsGroups, uc.getUnitCellParams());
       else if (nAtoms == 0) {
-          return sg;
+        return sg;
       }
 
       //      withinCell = vwr.ms.getAtoms(T.unitcell, uc);
@@ -432,8 +432,8 @@ public class SpaceGroupFinder {
             .nextSetBit(i + 1), p++) {
           Atom a = cartesians[i];
           int type = a.getAtomicAndIsotopeNumber();
-          (atoms[p] = new SGAtom(type, i, a.getAtomName(),
-              a.getOccupancy100())).setT(toFractional(a, uc));
+          (atoms[p] = new SGAtom(type, i, a.getAtomName(), a.getOccupancy100()))
+              .setT(toFractional(a, uc));
         }
       }
       BS bsPoints = BSUtil.newBitSet2(0, nAtoms);
@@ -482,14 +482,11 @@ public class SpaceGroupFinder {
           isSupercell = (uc != uc0);
           if (isSupercell) {
             if (scaling.x != 1)
-              System.out
-                  .println("supercell found; a scaled by 1/" + scaling.x);
+              System.out.println("supercell found; a scaled by 1/" + scaling.x);
             if (scaling.y != 1)
-              System.out
-                  .println("supercell found; b scaled by 1/" + scaling.y);
+              System.out.println("supercell found; b scaled by 1/" + scaling.y);
             if (scaling.z != 1)
-              System.out
-                  .println("supercell found; c scaled by 1/" + scaling.z);
+              System.out.println("supercell found; c scaled by 1/" + scaling.z);
           }
         }
       }
@@ -535,8 +532,7 @@ public class SpaceGroupFinder {
         SymmetryOperation op = (sg == null ? getOp(iop)
             : (SymmetryOperation) sg.getOperation(iop));
         if (sg == null) {
-          System.out
-              .println("\nChecking operation " + iop + " " + opXYZ[iop]);
+          System.out.println("\nChecking operation " + iop + " " + opXYZ[iop]);
           System.out.println("bsGroups = " + bsGroups);
           System.out.println("bsOps = " + bsOps);
           nChecked++;
@@ -545,6 +541,7 @@ public class SpaceGroupFinder {
         bsPoints.clearAll();
         bsPoints.or(bsPoints0);
         targeted.clearAll();
+        boolean allInvariant = true;
         for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
             .nextSetBit(i + 1)) {
           bsPoints.clear(i);
@@ -557,6 +554,7 @@ public class SpaceGroupFinder {
             break;
           }
           if (j >= 0 && i != j) {
+            allInvariant = false;
             targeted.set(j);
           }
         }
@@ -572,16 +570,18 @@ public class SpaceGroupFinder {
             //System.out.println("targeted=" + targeted);
             //System.out.println("targets=" + targets);
             //reduce the number of possible groups to groups having this operation
-            bsGroups.and(myGroups);
-            // reduce the number of operations to check to only those NOT common to 
-            // all remaining groups;
-            temp1.setBits(1, OP_COUNT);
-            for (int i = bsGroups.nextSetBit(0); i >= 0; i = bsGroups
-                .nextSetBit(i + 1)) {
-              temp1.and(bsGroupOps[i]);
+            if (!allInvariant) {
+              bsGroups.and(myGroups);
+              // reduce the number of operations to check to only those NOT common to 
+              // all remaining groups;
+              temp1.setBits(1, OP_COUNT);
+              for (int i = bsGroups.nextSetBit(0); i >= 0; i = bsGroups
+                  .nextSetBit(i + 1)) {
+                temp1.and(bsGroupOps[i]);
+              }
+              uncheckedOps.or(temp1);
+              bsOps.andNot(temp1);
             }
-            uncheckedOps.or(temp1);
-            bsOps.andNot(temp1);
           } else {
             // iop was not found
             // clear all groups that require this operation
@@ -599,7 +599,7 @@ public class SpaceGroupFinder {
           targets.or(targeted);
         }
       }
-      
+
       if (sg == null) {
         n = bsGroups.cardinality();
         if (n == 0) {
@@ -646,11 +646,17 @@ public class SpaceGroupFinder {
           + bsGroups + " " + bsOps);
       for (int i = bsGroups.nextSetBit(0); i >= 0; i = bsGroups
           .nextSetBit(i + 1)) {
-        System.out.println(SpaceGroup.nameToGroup.get(groupNames[i]));
+        System.out.println("SpaceGroupFinder found " + SpaceGroup.nameToGroup.get(groupNames[i]));
       }
-      if (n != 1)
-        return null;
-      sg = SpaceGroup.nameToGroup.get(groupNames[isg]);
+      if (n != 1) {
+    	  // multiple space groups are poosible when
+    	  // the only atoms are on special positions.
+    	  // for example, a single atom at the origin.
+        isg = bsGroups.length() - 1;
+        if (isg < 0)
+          return null;
+      }
+      sg = SpaceGroup.nameToGroup.get(PT.trim(groupNames[isg], "0"));
     }
     return sg;
   }
@@ -849,6 +855,7 @@ public class SpaceGroupFinder {
         if (g.indexOf(":r") >= 0) {
           if (!isRhombo)
             continue;
+          System.out.println("SGF " + g);
           bsGroups.set(i);
         }
         if (g.startsWith("195")) {
@@ -1165,12 +1172,16 @@ public class SpaceGroupFinder {
   }
 
   public static void main(String[] args) {
+    // map is created using sg.spt and createmap.xls
+    // I then used superfix.exe to remove all tabs. 
+    
     if (loadData(null, new SpaceGroupFinder()))
       System.out.println("OK");
   }
 
   private static boolean loadData(Viewer vwr, Object me) {
     try {
+      // recreated using createmap.xlsx 2024.09.03
       groupNames = getList(vwr, me, null, "sggroups_ordered.txt");
       GROUP_COUNT = groupNames.length;
       opXYZ = getList(vwr, me, null, "sgops_ordered.txt");

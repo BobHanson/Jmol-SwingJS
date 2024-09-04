@@ -1474,7 +1474,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       } else {
         // using ITA data, not Hall operators
         init(false);
-        doNormalize = false;
+        doNormalize = true;
         // get base ITA nnn.1 + transform, setting my operators
         // I have all my information already.
         transformSpaceGroup(this, getSpaceGroupFromJmolClegOrITA(itaNumber), null, itaTransform, null);
