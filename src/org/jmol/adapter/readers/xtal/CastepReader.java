@@ -117,9 +117,12 @@ public class CastepReader extends AtomSetCollectionReader {
 
   private String tsType;
 
+  private boolean allowSymmetryGeneration = true;
+
   @Override
   public void initializeReader() throws Exception {
     if (filter != null) {
+      allowSymmetryGeneration = !checkFilterKey("NOSYM");
       chargeType = getFilter("CHARGE=");
       if (chargeType != null && chargeType.length() > 4)
         chargeType = chargeType.substring(0, 4);
@@ -130,6 +133,7 @@ public class CastepReader extends AtomSetCollectionReader {
       if (!isAllQ && filter.indexOf("{") >= 0)
         setDesiredQpt(filter.substring(filter.indexOf("{")));
       filter = PT.rep(filter, "-PT", "");
+      
     }
     continuing = readFileData();
   }
@@ -243,7 +247,7 @@ public class CastepReader extends AtomSetCollectionReader {
           readSymmetryOps();
           continue;
         }
-      } else if (tokens[0].equalsIgnoreCase("SYMMETRY_GENERATE")) {
+      } else if (allowSymmetryGeneration && tokens[0].equalsIgnoreCase("SYMMETRY_GENERATE")) {
         addJmolScript("print 'CastepReader SYMMETRY_GENERATE';modelkit spacegroup");
       }
     }
