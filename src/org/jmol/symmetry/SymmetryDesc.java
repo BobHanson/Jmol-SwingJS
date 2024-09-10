@@ -2016,6 +2016,8 @@ public class SymmetryDesc {
   }
 
   private String getDrawID(String id) {
+    if (drawID.indexOf("sg482") >= 0)
+      System.out.println(drawID);
     return drawID + id +"\" ";
   }
 
@@ -2073,7 +2075,7 @@ public class SymmetryDesc {
     String s = "";
     M4d[] ops = (isSpaceGroup && nth == -2 ? uc.getAdditionalOperations()
         : uc.getSymmetryOperations());
-    if (ops != null) {
+   if (ops != null) {
       if (id == null)
         id = "sg";
       int n = ops.length;
@@ -2089,9 +2091,13 @@ public class SymmetryDesc {
               pt, pt2, id + op, T.draw, scaleFactor, nth, options, pt == null);
         }
       } else {
-        for (op = 1; op <= n; op++)
-          s += (String) getSymmetryInfo(iModel, iAtom, uc, xyz, op, translation,
+        for (op = 1; op <= n; op++) {
+          String s1 = (String) getSymmetryInfo(iModel, iAtom, uc, xyz, op, translation,
               pt, pt2, id + op, T.draw, scaleFactor, nth, options, true);
+          if (op == 482)
+            System.out.println("????482" + s1);
+          s += s1;
+        }
       }
     }
     return s;

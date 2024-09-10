@@ -281,4 +281,17 @@ public interface SymmetryInterface {
   Object convertTransform(String transform, M4d trm);
 
   String[] getSymopList(boolean normalize);
+  
+  /**
+   * for Viewer.getSymStatic only
+   * @param vwr
+   * @return this
+   */
+  SymmetryInterface setViewer(Viewer vwr);
+
+  M4d staticGetMatrixTransform(String cleg);
+
+  String staticTransformSpaceGroup(BS bs, String cleg, Object paramsOrUC,
+                                   SB sb);
+
 }

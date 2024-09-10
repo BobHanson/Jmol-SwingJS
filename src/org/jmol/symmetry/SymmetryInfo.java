@@ -60,7 +60,7 @@ class SymmetryInfo {
    * 
    */
   protected String strSUPERCELL;
-  String intlTableIndex;
+  String intlTableIndexNdotM;
   String intlTableTransform;
   
   SymmetryInfo() {    
@@ -105,7 +105,7 @@ class SymmetryInfo {
     if (sgName == null || sgName == "")
       sgName = "spacegroup unspecified";
     intlTableNo = (String) modelInfo.get("intlTableNo");
-    intlTableIndex = (String) modelInfo.get("intlTableIndex");
+    intlTableIndexNdotM = (String) modelInfo.get("intlTableIndex");
     intlTableTransform = (String) modelInfo.get("intlTableTransform");
     intlTableJmolID = (String) modelInfo.remove("intlTableJmolID");
     String s = (String) modelInfo.get("latticeType");
@@ -197,7 +197,7 @@ class SymmetryInfo {
       sgName = PT.rep(sgName, ";0,0,0", "");
       if (sgName.indexOf("#") < 0) {
         String trm = intlTableTransform;
-        String intTab = intlTableIndex;
+        String intTab = intlTableIndexNdotM;
         if (!isSlab && !isPolymer && intTab != null) {
           if (trm != null) {
             int pt = sgName.indexOf(trm);
@@ -221,8 +221,14 @@ class SymmetryInfo {
     return displayName;
   }
 
+  private String itaNo; 
   public String getClegId() {
-    return intlTableIndex + ":" + intlTableTransform;
+    if (itaNo == null) {
+      itaNo = intlTableIndexNdotM;
+      int pt = itaNo.indexOf(".");
+      itaNo = (pt > 0 ? itaNo.substring(0, pt) : itaNo) + ":" + intlTableTransform;
+    }
+    return itaNo;
   }
 
 

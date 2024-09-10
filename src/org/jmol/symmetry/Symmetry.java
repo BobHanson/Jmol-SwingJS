@@ -88,7 +88,8 @@ public class Symmetry implements SymmetryInterface {
   private static Map<String, Object>[] itaSubData;
   private static Lst<Object> allDataITA;
   private static WyckoffFinder wyckoffFinder;
-
+  private static CLEG clegInstance;
+  
   public SpaceGroup spaceGroup;
   public UnitCell unitCell;
   public boolean isBio;
@@ -369,7 +370,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public String getIntTableIndex() {
-    return (symmetryInfo != null ? symmetryInfo.intlTableIndex
+    return (symmetryInfo != null ? symmetryInfo.intlTableIndexNdotM
         : spaceGroup == null ? null : spaceGroup.getItaIndex());
   }
 
@@ -788,6 +789,9 @@ public class Symmetry implements SymmetryInterface {
     }
     String sg = (String) ms.getInfo(modelIndex, JC.INFO_SPACE_GROUP);
     if (isAssigned && sg != null) {
+      int ipt = sg.indexOf("#");
+      if (ipt >= 0)
+        sg = sg.substring(ipt + 1);
       // first one may not be read, but it is important to have it
       // in case there is an issue with assigning the spacegroup
       String cmd = "\n UNITCELL "
@@ -1200,6 +1204,8 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public Object getSubgroupJSON(Viewer vwr, int itaFrom, int itaTo, int index1,
                                 int index2) {
+    if (vwr == null)
+      vwr = this.vwr;
     boolean allSubsMap = (itaTo < 0);
     boolean asIntArray = (itaTo == 0 && index1 == 0);
     boolean asSSIntArray = (itaTo == 0 && index1 < 0);
@@ -1617,6 +1623,42 @@ public class Symmetry implements SymmetryInterface {
   public P3d[] getCanonicalCopyTrimmed(P3d frac, double scale) {
     return unitCell.getCanonicalCopyTrimmed(frac, scale);
   }
+
+
+  @Override
+  public M4d staticGetMatrixTransform(String cleg) {
+    return getCLEGInstance().getMatrixTransform(vwr, cleg);
+  }
+
+
+  @Override
+  public String staticTransformSpaceGroup(BS bs, String cleg, Object paramsOrUC,
+                                          SB sb) {
+    return getCLEGInstance().transformSpaceGroup(vwr, bs, cleg, paramsOrUC, sb);
+  }
+
+
+  private CLEG getCLEGInstance() {
+    if (clegInstance == null) {
+      clegInstance = (CLEG) Interface
+          .getInterface("org.jmol.symmetry.CLEG", null, "symmetry");
+    }
+    return clegInstance;
+  }
+  
+  private Viewer vwr = null;
+  
+  /**
+   * for the vwr.getSymTemp() only
+   * 
+   * @param vwr
+   */
+  @Override
+  public SymmetryInterface setViewer(Viewer vwr) {
+    this.vwr = vwr;
+    return this;
+  }
+
 
   
 }

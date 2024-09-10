@@ -6054,7 +6054,7 @@ public class CmdExt extends ScriptExt {
       } else if (newUC != null) {
         if (!chk && isModelkit) {
           if (sym == null) {            
-              vwr.getModelkit(false).cmdAssignSpaceGroup(null, "P1", newUC, false, false, "unitcell");
+              assignSpaceGroup(null, "P1", newUC, false, false, "unitcell");
           } else if (sym.fixUnitCell((double[]) newUC)) {
             eval.invArgStr(
                 "Unit cell is incompatible with current space group");
@@ -6552,7 +6552,8 @@ public class CmdExt extends ScriptExt {
 
   /**
    * Though a command, not documented. Use the MODELKIT command instead
-   * @param isModelkit 
+   * 
+   * @param isModelkit
    * 
    * @throws ScriptException
    */
@@ -6589,7 +6590,7 @@ public class CmdExt extends ScriptExt {
       mode = tokAt(++i);
       if (mode == T.nada)
         return;
-    }    
+    }
     // mode might be reassigned; these next assignments are just for sanity.
     boolean isAtom = (mode == T.atoms);
     boolean isBond = (mode == T.bonds);
@@ -6753,9 +6754,7 @@ public class CmdExt extends ScriptExt {
       // more?
       type = e.optParameterAsString(i);
       if (isAtom)
-        pt = (++e.iToken < slen
-            ? centerParameter(e.iToken)
-            : null);
+        pt = (++e.iToken < slen ? centerParameter(e.iToken) : null);
     }
     if (chk)
       return;
@@ -6821,16 +6820,20 @@ public class CmdExt extends ScriptExt {
         if (sym == null)
           invArg();
         type = sym.getClegId();
-      } else if (type.length() > 0 && type.indexOf(":") < 0 && type.indexOf(">") < 0 && 
-          (type.indexOf(",") > 0 || "rh".indexOf(type) >= 0)) {
-        // allow for MODELKIT SPACEGROUP "a,b,2c"
-        if (sym == null)
-          invArg();
-        String cleg = sym.getClegId();
-        type = cleg.substring(0, cleg.indexOf(":") + 1) + type;
+      } else {
+        type = concatString(i, "packed");
+        if (type.length() > 0 && type.indexOf(":") < 0 && type.indexOf(">") < 0
+            && (type.indexOf(",") > 0 || "rh".indexOf(type) >= 0)) {
+          // allow for MODELKIT SPACEGROUP "a,b,2c"
+          if (sym == null)
+            invArg();
+          String cleg = sym.getClegId();
+          type = cleg.substring(0, cleg.indexOf(":") + 1) + type;
+        }
       }
-          
-      String s = vwr.getModelkit(false).cmdAssignSpaceGroup(bs, type, paramsOrUC, isPacked, doDraw, e.fullCommand);
+
+      String s = assignSpaceGroup(bs, type, paramsOrUC, isPacked, doDraw,
+          e.fullCommand);
       boolean isError = s.endsWith("!");
       if (isError)
         e.invArgStr(s);
@@ -6838,6 +6841,31 @@ public class CmdExt extends ScriptExt {
         e.showString(s);
       break;
     }
+  }
+
+  private String assignSpaceGroup(BS bs, String cleg, Object paramsOrUC,
+                                  boolean isPacked, boolean doDraw, String cmd) {
+     SB sb = new SB();
+     String ret = vwr.getSymStatic().staticTransformSpaceGroup(bs, cleg, paramsOrUC, sb);
+     boolean isError = ret.endsWith("!");
+     if (isError)
+       return ret;
+     if (isPacked || doDraw)
+       vwr.getModelkit(false).cmdAssignSpaceGroup(ret, sb, cmd, isPacked, doDraw);
+     return sb.toString();
+   }
+
+  private String concatString(int i, String butNot) throws ScriptException {
+    String s = "";
+    for (; i < slen; i++) {
+      String t = SV.sValue(e.getToken(i));
+      if (t.equals(butNot)) {
+        e.iToken--;
+        break;
+      }
+      s += t;
+    }
+    return s;
   }
 
   /**

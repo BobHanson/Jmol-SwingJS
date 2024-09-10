@@ -10574,7 +10574,7 @@ public class Viewer extends JmolViewer
    * @return org.jmol.symmetry.Symmetry object
    */
   public SymmetryInterface getSymTemp() {
-    return Interface.getSymmetry(this, "ms");
+    return Interface.getSymmetry(this, "ms").setViewer(this);
   }
 
   private static SymmetryInterface symStatic;
@@ -10584,7 +10584,7 @@ public class Viewer extends JmolViewer
    * @return org.jmol.symmetry.Symmetry object
    */
   public SymmetryInterface getSymStatic() {
-    return (symStatic == null ? (symStatic = Interface.getSymmetry(this, "ms")) : symStatic);
+    return (symStatic == null ? (symStatic = Interface.getSymmetry(this, "ms")).setViewer(this) : symStatic);
   }
 
   public void setWindowDimensions(double[] dims) {
@@ -10936,19 +10936,16 @@ public class Viewer extends JmolViewer
 
   /**
    * 
-   * @param sym TODO
+   * @param sym
    * @param bsAtoms
    * @param xyzList
    *        if present, a semicolon-separated list of operators
    * @param unitCellParams
    * @param origin
-   *        TODO
-   * @param oabc TODO
-   * @param spaceGroup TODO
-   * @param asString
-   * @param isAssign
-   *        from ModelKit
-   * @param checkSupercell only true for x=spacegroup("parent")
+   * @param oabc
+   * @param flags
+   *        including spaceGroup, asString, isAssignFromModelKit, checkSupercell
+   *        (only for x=spacegrooup("parent"); maybe disable??
    * @return either an array of space group identifiers or, if asString, "", or
    *         null
    * 
