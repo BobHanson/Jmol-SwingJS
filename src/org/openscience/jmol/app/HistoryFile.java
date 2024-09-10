@@ -138,7 +138,7 @@ public class HistoryFile {
         if ((x != null) && (y != null)) {
           int posX = Integer.parseInt(x);
           int posY = Integer.parseInt(y);
-          return new Point(posX, posY);
+          return new Point(Math.max(0,posX), Math.max(0, posY));
         }
       } catch (Exception e) {
         //Just return a null result
