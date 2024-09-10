@@ -118,20 +118,28 @@ public class SymmetryOperation extends M4d {
     case TYPE_INVERSION:
       return "Inv" + op48(opPoint);
     case TYPE_REFLECTION:
-      return (opMode == OP_MODE_POSITION_ONLY ? "" : "Plane") + opPlane;
+      return (opMode == OP_MODE_POSITION_ONLY ? "" : "Plane") + opRound(opPlane);
     case TYPE_SCREW_ROTATION:
       return (opMode == OP_MODE_POSITION_ONLY ? "S" + op48(opPoint) + op48(opAxis) : "Screw" + opOrder + op48(opPoint) + op48(opAxis) + op48(opTrans)
           + opIsCCW);
     case TYPE_ROTOINVERSION:
       return "Nbar" + opOrder + op48(opPoint) + op48(opAxis) + opIsCCW;
     case TYPE_GLIDE_REFLECTION:
-      return (opMode == OP_MODE_POSITION_ONLY ? "" : "Glide") + opPlane
+      return (opMode == OP_MODE_POSITION_ONLY ? "" : "Glide") + opRound(opPlane)
           + (opMode == OP_MODE_FULL ? op48(opTrans) : "");
     }
     System.out.println("SymmetryOperation REJECTED TYPE FOR " + this);
     return "";
   }
 
+  private String opRound(P4d p) {
+    return Math.round(p.x * 1000) 
+        + "," + Math.round(p.y * 1000) 
+        + "," + Math.round(p.z * 1000)
+        + "," + Math.round(p.w * 1000)
+        ;
+  }
+  
   String getOpTitle() {
     if (opType == TYPE_UNKNOWN)
       setOpTypeAndOrder();
@@ -1787,10 +1795,12 @@ public class SymmetryOperation extends M4d {
     boolean isScrew = (getOpType() == TYPE_SCREW_ROTATION);
     V3d t = new V3d();
     SymmetryOperation opTemp = null;
-    // from -2 to 2, starting with + so that we get the + version
-    for (int i = 3; --i >= -3;) {
-      for (int j = 3; --j >= -3;) {
-        for (int k = 3; --k >= -3;) {
+    // originally from -2 to 2, starting with + so that we get the + version
+    // but for "225:1/2b+1/2c,1/2a+1/2c,1/2a+1/2b" we need higher.
+    // and needed =2 to 4 to catch all the elemens
+    for (int i = 5; --i >= -2;) {
+      for (int j = 5; --j >= -2;) {
+        for (int k = 5; --k >= -2;) {
           if (opTemp == null)
             opTemp = new SymmetryOperation(null, 0, false);
           t.set(i, j, k);
@@ -1854,6 +1864,7 @@ public class SymmetryOperation extends M4d {
         op0 = l.get(i);
         if (op.opGlide != null && op0.opGlide != null) {
           vTemp.sub2(op.opGlide, op0.opGlide);
+          
           if (vTemp.lengthSquared() < 1e-6) {
             // space groups 218, 225, 227 will fire this
             op.isIrrelevant = true;
@@ -2207,8 +2218,6 @@ public class SymmetryOperation extends M4d {
    */
   static String transformStr(String xyz, M4d trm, M4d trmInv, M4d t,
                              double[] v, T3d centering, T3d targetCentering, boolean normalize, boolean allowFractions) {
-    if (xyz.equals("y+1/2,-x,z+3/4"))
-      System.out.println("SO "+ xyz);
     if (trmInv == null) {
       trmInv = M4d.newM4(trm);
       trmInv.invert();
