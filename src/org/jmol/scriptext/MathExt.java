@@ -260,7 +260,10 @@ public class MathExt {
         // matrix([.................])
         // matrix([,,][,,][,,])
         // matrix([,,,][,,,][,,,][,,,])
-        // any of 4x4 with "abc" or "xyz"
+        // matrix([[,,][,,][,,]])
+        // matrix([[,,,][,,,][,,,][,,,]])
+        // matrix([[,,][,,][,,]])
+           // any of 4x4 with "abc" or "xyz"
         // matrix("!b,c,a>a-c,b,2c;0,0,1/2>a,-a-c,b")
         // matrix("13>>15>>14>>2")
         // matrix("h")
@@ -287,14 +290,34 @@ public class MathExt {
         break;
       case T.string:
         String s = (String) args[0].value;
-        if (s.indexOf(">") >= 0 || s.indexOf(",") < 0 || s.indexOf(":") > 0) {
-           m4 = vwr.getModelkit(false).getMatrixTransform(s); 
+        if (!s.equals("h") && !s.equals("r") && (s.indexOf(">") >= 0 || s.indexOf(",") < 0 || s.indexOf(":") > 0 )) {
+           m4 = vwr.getSymStatic().staticGetMatrixTransform(s); 
         } else {
           m4 = (M4d) vwr.getSymTemp().convertTransform(s, null);
         }
         break;
       case T.varray:
-        a = SV.dlistValue(args[0], 0);
+        Lst<SV> lst = args[0].getList();
+        int len = lst.size();
+        switch (len) {
+        case 3:
+        case 4:
+          a = new double[len*len];
+          for (int i = 0, pt = 0; i < len; i++) {
+            Lst<SV> a2 = lst.get(i).getList();
+            if (a2 == null || a2.size() != len)
+              return false;
+            for (int j = 0; j < len; j++)
+              a[pt++] = SV.dValue(a2.get(j));
+          }
+          break;
+        case 9:
+        case 16:
+          a = SV.dlistValue(args[0], 0);
+          break;
+        default:
+          return false;    
+        }
         break;
       }
       break;
