@@ -29,6 +29,7 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
@@ -844,6 +845,9 @@ public class AppConsole extends JmolConsole
       int kid = ke.getID();
       if (kid == KeyEvent.KEY_PRESSED) {
         switch (kcode) {
+        case KeyEvent.VK_ENTER:
+          hBar.setValue(0);
+          break;
         case KeyEvent.VK_C:
           if (ke.isControlDown() && ke.isAltDown()) {
             ke.consume();
