@@ -1130,28 +1130,14 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         return true;
       case 'P':
         toPrimitive = true;
-        mf = M3d.newA9(new double[] { 1, 0, 0, 0, 1, 0, 0, 0, 1 });
-        break;
+        //$FALL-THROUGH$
       case 'A':
-        mf = M3d.newA9(new double[] { 1, 0, 0, 0, 0.5d, 0.5d, 0, -0.5d, 0.5d });
-        break;
       case 'B':
-        mf = M3d.newA9(new double[] { 0.5d, 0, 0.5d, 0, 1, 0, -0.5d, 0, 0.5d });
-        break;
       case 'C':
-        mf = M3d.newA9(new double[] { 0.5d, 0.5d, 0, -0.5d, 0.5d, 0, 0, 0, 1 });
-        break;
       case 'R':
-        mf = M3d.newA9(new double[] { 2 / 3d, -1 / 3d, -1 / 3d, 1 / 3d, 1 / 3d,
-            -2 / 3d, 1 / 3d, 1 / 3d, 1 / 3d });
-        break;
       case 'I':
-        mf = M3d.newA9(
-            new double[] { -.5d, .5d, .5d, .5d, -.5d, .5d, .5d, .5d, -.5d });
-        break;
       case 'F':
-        mf = M3d
-            .newA9(new double[] { 0, 0.5d, 0.5d, 0.5d, 0, 0.5d, 0.5d, 0.5d, 0 });
+        mf = getPrimitiveTransform(type);
         break;
       }
       if (!toPrimitive)
@@ -1170,6 +1156,29 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       toCartesian(p, true);
     }
     return true;
+  }
+
+  static M3d getPrimitiveTransform(char type) {
+    switch (type) {
+    case 'P':
+      return M3d.newA9(new double[] { 1, 0, 0, 0, 1, 0, 0, 0, 1 });
+    case 'A':
+      return M3d.newA9(new double[] { 1, 0, 0, 0, 0.5d, 0.5d, 0, -0.5d, 0.5d });
+    case 'B':
+      return M3d.newA9(new double[] { 0.5d, 0, 0.5d, 0, 1, 0, -0.5d, 0, 0.5d });
+    case 'C':
+      return M3d.newA9(new double[] { 0.5d, 0.5d, 0, -0.5d, 0.5d, 0, 0, 0, 1 });
+    case 'R':
+      return M3d.newA9(new double[] { 2 / 3d, -1 / 3d, -1 / 3d, 1 / 3d, 1 / 3d,
+          -2 / 3d, 1 / 3d, 1 / 3d, 1 / 3d });
+    case 'I':
+      return M3d.newA9(
+          new double[] { -.5d, .5d, .5d, .5d, -.5d, .5d, .5d, .5d, -.5d });
+    case 'F':
+      return M3d
+          .newA9(new double[] { 0, 0.5d, 0.5d, 0.5d, 0, 0.5d, 0.5d, 0.5d, 0 });
+    }
+    return null;
   }
 
   /**

@@ -366,6 +366,8 @@ public class MathExt {
 
   private boolean evaluateSpacegroup(ScriptMathProcessor mp, SV[] args) {
     // spacegroup();
+    // spacegroup("list")
+    // spacegroup(10, "list")
     // spacegroup("setting")
     // spacegroup(3);
     // spacegroup("133:2") // this name
@@ -402,7 +404,8 @@ public class MathExt {
 
     
     // spacegroup("all");
-    double[] unitCellParams = null;
+    double[] ucParams = null;
+    Object params = null;
     int n = args.length;
     if (n == 0)
       return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null,
@@ -410,7 +413,9 @@ public class MathExt {
     String mode = (args[args.length - 1].tok == T.string 
         ? (String) args[args.length - 1].value : null);
     boolean isSettings = "settings".equalsIgnoreCase(mode);
-    boolean isSubgroups = (n > 1 && (n != 2 || !"settings".equalsIgnoreCase(mode)));
+    boolean isSubgroups = (n > 1 && (n != 2 
+        || !"settings".equalsIgnoreCase(mode) && !"list".equalsIgnoreCase(mode))
+        );
     String xyzList = args[0].asString(); 
     if (isSubgroups || "subgroups".equals(mode)) {
       SymmetryInterface sym;
@@ -461,12 +466,18 @@ public class MathExt {
     default:
       return false;
     case 2:
+      if ("list".equals(mode)) {
+        params = Integer.valueOf((String) vwr.getSymTemp().getSpaceGroupInfoObj(
+            "itaNumber", xyzList, false, false));
+        xyzList = "list";
+        break;
+      }
       if (args[1].tok != T.string) {
-        unitCellParams = SV.dlistValue(args[1], 0);
-        if (unitCellParams == null || unitCellParams.length != 6)
+        ucParams = SV.dlistValue(args[1], 0);
+        if (ucParams == null || ucParams.length != 6)
           return false;
         // set excess params to NaN; does not set slop
-        unitCellParams = SimpleUnitCell.newParams(unitCellParams, Double.NaN);
+        params = ucParams = SimpleUnitCell.newParams(ucParams, Double.NaN);
       }
       //$FALL-THROUGH$
     case 1:
@@ -482,9 +493,9 @@ public class MathExt {
           return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOW",
               xyzList.substring(6), 0));
         }
-        if (xyzList.startsWith("Hall:") || xyzList.indexOf("x") >= 0 || unitCellParams != null) {
+        if (xyzList.startsWith("Hall:") || xyzList.indexOf("x") >= 0 || ucParams != null) {
           return mp.addXObj(vwr.findSpaceGroup(null, null, xyzList,
-              unitCellParams, null, null, JC.SG_AS_STRING));
+              ucParams, null, null, JC.SG_AS_STRING));
         }
         if (itaNo > 0 || !xyzList.endsWith(":") && !Double.isNaN(PT.parseDouble(xyzList)))
           xyzList = "ITA/" + xyzList;
@@ -504,13 +515,13 @@ public class MathExt {
         if (atoms != null) {
           // undocumented first parameter atoms
           return mp.addXObj(vwr.findSpaceGroup(null, atoms, null,
-              unitCellParams, null, null, JC.SG_AS_STRING));         
+              ucParams, null, null, JC.SG_AS_STRING));         
         }
       }
       break;
     }
-    return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfoObj(
-        xyzList, unitCellParams, true, false));
+    return mp.addXObj(vwr.getSymStatic().getSpaceGroupInfoObj(
+        xyzList, params, true, false));
   }
 
   @SuppressWarnings("unchecked")

@@ -1,0 +1,277 @@
+ntest = 0
+function test(a,b) {
+	if (a != b) { 
+		print a;
+		print b;
+		print "FAILED"
+		exit 
+	} else {
+		print "OK " + (++ntest) + " " + b
+	}
+}
+
+
+print "test 16.2.28" 
+// BH 2024.09.05 passes all 49 tests 
+
+modelkit zap spacegroup "225:p"
+test (spacegroup().operations.count, 48)
+
+modelkit zap spacegroup "[-C 2c 2]:p"
+test (spacegroup().operations.count, 8)
+
+modelkit zap spacegroup "[-C 2c 2]"
+test (spacegroup().spaceGroupInfo.hm  "C m c m");
+
+modelkit zap spacegroup "[-C 2c 2]:a,-c,b"
+test (spacegroup().spaceGroupInfo.hm  "B m m b");
+
+
+load =aflowlib/128
+test(matrix(">>128.2", "abc"), "a-b,a+b,c")
+
+test(matrix("227.2>>227.1", "abc"), "a,b,c;1/8,1/8,1/8")
+
+
+var CASTEPcell = "%block lattice_abc\n" + 
+    "  3.92*sqrt(3)/2   3.92*sqrt(3)/2   3.92*sqrt(3)/2\n" + 
+    "  109.47   109.47  109.47\n" + 
+    "%endblock lattice_abc\n" + 
+    "\n" + 
+    "%block positions_frac\n" + 
+    "   Pb             0.0       0.0       0.0\n" + 
+    "%endblock positions_frac\n" + 
+    "\n" + 
+    "%block species_pot\n" + 
+    "Pb Pb_OTF-saved.uspso\n" + 
+    "%endblock species_pot\n" + 
+    "\n" + 
+    "kpoint_mp_grid  4  4  4\n" + 
+    "\n" + 
+    "symmetry_generate"
+
+load inline @CASTEPcell packed
+test spacegroup().spaceGroupName "166:r HM:R -3 m :r #166:2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c"
+
+
+load DATA "CASTEP2"
+%block lattice_cart
+2.6954645 2.6954645 0.0 
+2.6954645 0.0 2.6954645
+0.0 2.6954645 2.6954645
+%endblock lattice_cart
+
+%block positions_frac
+Si   0.00 0.00 0.00
+Si   0.25 0.25 0.25
+%endblock positions_frac
+
+%block species_pot
+Si    C9
+%endblock species_pot
+
+%BLOCK KPOINTS_LIST
+-0.250000  -0.250000  -0.250000   0.2500000
+-0.250000   0.250000   0.250000   0.7500000
+%ENDBLOCK KPOINTS_LIST 
+
+symmetry_generate
+END "CASTEP2" filter "NOSYM"
+unitcell "!1/2b+1/2c,1/2a+1/2c,1/2a+1/2b"
+modelkit spacegroup 227.2 packed
+connect
+print symop().count
+
+load =aflowlib/146.1
+MODELKIT SPACEGROUP >r> PACKED
+test({*}.length, 13)
+
+modelkit zap spacegroup 10.2
+u2= unitcell()[3]
+modelkit spacegroup 10.1
+u1 = unitcell()[2]
+test u1 u2
+
+modelkit zap spacegroup 10.1
+u1 = unitcell()[2]
+modelkit spacegroup 10.2
+u2= unitcell()[3]
+test u1 u2
+
+
+test(spacegroup("P2/m", "subgroups").subgroups.select("(subgroupHM)"), 		[ "P-1","P2","Pm","P2/m","P2/m","P21/m","C2/m","P2/c" ])
+test(spacegroup("P2/m", "P2/c")[1].trms.select("(trm)"), 
+[ "a-c,b,2c;0,0,1/2","a-c,b,2c","-2a-c,b,2a;1/2,0,0","-2a-c,b,2a","a,b,2c;0,0,1/2","a,b,2c" ])
+
+test(point("(1/2,1/4,1/8)"), {0.5 0.25 0.125})
+test(point("(cos(60)/cos(60),sin(60)/sin(60),sqrt(2)/sqrt(2))"), {1,1,1})
+
+modelkit zap spacegroup 30
+test([symop(1,"xyz"), symop(2,"xyz"), symop(3,"xyz")], symop([symop(1), symop(2), symop(3)], "xyz"))
+
+test(matrix("A2/m"), matrix([
+  [-1.0	0.0	1.0	0.0]
+  [0.0	1.0	0.0	0.0]
+  [-1.0	0.0	0.0	0.0]
+  [0.0	0.0	0.0	1.0] ]))
+
+
+test(spacegroup(10.2).hm, "P 1 1 2/m")
+test(spacegroup(15).n, 18)
+
+test matrix("P2/m>>P112/m"), matrix([
+ [0.0	1.0	0.0	0.0]
+  [0.0	0.0	1.0	0.0]
+  [1.0	0.0	0.0	0.0]
+  [0.0	0.0	0.0	1.0] ])
+
+
+
+test(matrix("13>>15>>14>>2").format("abc"), "a,b,c;1,1,0")
+
+test matrix("r").format("abc") "2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c"
+test matrix("h").format("abc") "a-b,b-c,a+b+c"
+modelkit spacegroup 10
+test symop(4).format("xyz") "x,-y,z"
+
+modelkit zap spacegroup "146:r"
+test symop().count 3
+modelkit spacegroup "146:r>>146:h"
+test symop(9,"label") "3(-) (0 0 2/3) screw axis"
+
+modelkit zap spacegroup "146:h"
+modelkit spacegroup "146:h>>146:r"
+test symop().count 3
+test symop(3,"label") "3(-) axis"
+
+modelkit zap spacegroup "146:h"
+modelkit spacegroup "146:h>r>146:r"
+test symop().count 3
+test symop(2,"label") "3(+) axis"
+
+modelkit zap spacegroup "146:r"
+test symop().count 3
+modelkit spacegroup "146:r>>146:h"
+test symop(9,"label") "3(-) (0 0 2/3) screw axis"
+
+modelkit zap spacegroup "146:r"
+test symop().count 3
+modelkit spacegroup "146:r>h>146:h"
+test symop(8,"label") "3(+) (0 0 2/3) screw axis"
+
+modelkit zap spacegroup "146:r"
+test symop().count 3
+modelkit spacegroup "146:r>>146:h"
+test symop(7,"label") "translation: 1/3 2/3 2/3"
+
+modelkit zap spacegroup "146:r"
+test symop().count 3
+modelkit spacegroup ">h>146:h"
+test symop(6,"label") "3(-) (0 0 1/3) screw axis"
+
+modelkit zap spacegroup "146:r"
+test symop().count 3
+modelkit spacegroup ">>146:h"
+test symop(5,"label") "3(+) (0 0 1/3) screw axis"
+
+
+modelkit zap SPACEGROUP 146:r
+test unitcell()[2].length/unitcell()[3].length,1
+
+modelkit zap spacegroup "Cmmb"
+test spacegroup().spaceGroupInfo.clegId "67:b,a,-c"
+test spacegroup().spaceGroupInfo.hm "C m m b"
+
+
+
+load $2-butanol
+@2.property_atomclass=2
+@3.property_atomclass=3
+@5.property_atomclass=5
+test({*}.find("smiles/open"), "C[C@H:2]([OH:5])[CH2:3]C")
+test({*}.find("smiles", "C[C@H:2]([OH:5])[CH2:3]C"),({0:14}))
+test({*}.find("smiles", "C[C@H:2]([OH:5])[CH2:6]C"),({}))
+
+
+
+load =aflowlib/146.1
+MODELKIT SPACEGROUP 146>>146:r PACKED
+test({*}.length, 13)
+
+
+
+load =aflowlib/146.1
+MODELKIT SPACEGROUP >r> PACKED
+test({*}.length, 13)
+
+
+/*
+ * show subgroup chain using BCS format
+ * 
+ * for example:
+ *
+ *  showsubs("C2/c > P21/c > P21")
+ *
+ *  showsubs([13 15 14 2])
+ */
+function showsubs(chain) {
+  save orientation o;
+  draw * delete;
+  // chain = "C2/c > P21/c > P21"
+  var colors = ["red", "orange", "yellow", "green", "blue", "violet" ];
+  if (chain.type == "array")
+	chain = chain.join(">");
+  var groups = chain.replace(" ","").replace(">>",">").split(">");
+  
+  var drawIDs = [];
+  for (var i = 1; i<= groups.length; i++) {
+    var sg = groups[i];
+    if (i == 1) {
+      print sg;
+      modelkit zap spacegroup @sg;
+    } else {
+      print ">>" + sg;
+      modelkit spacegroup @{">>" + sg};
+    }
+    restore orientation o
+    var dsg = "sg"+sg + "_";
+    drawIDs.push(dsg);
+    draw ID @{"uc"+sg + "_"} unitcell color @{colors[((i-1)%6)+1]} @sg;
+    draw ID @dsg spacegroup all;
+    draw ID @{dsg + "*"} off;
+    delay 2
+  }
+  set echo bottom left;
+  for (var i = drawIDS.length; i > 0; --i) {
+    draw sg* off;
+    draw ID @{drawIDs[i] + "*"} on;
+    echo @{groups[i]}
+    delay 2;
+  }
+  draw ID * on;
+  echo @chain;
+  restore orientation o;
+ }
+
+ //showsubs([13 15 14 2])
+ showsubs("C2/c > P21/c > P21")
+
+modelkit zap spacegroup "P21/c"
+draw uc unitcell
+draw sp1 spacegroup all
+test symop().count 4
+modelkit spacegroup "P21/c >super> C2/c"
+draw sp2 spacegroup all
+test symop().count 8
+
+
+modelkit zap spacegroup "P21/c"
+draw uc unitcell
+draw sp1 spacegroup all
+test symop().count 4
+modelkit spacegroup "P21/c << C2/c"
+draw sp2 spacegroup all
+test symop().count 8
+
+print "test 16.2.28 complete" 
+

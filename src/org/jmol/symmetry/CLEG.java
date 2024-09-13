@@ -153,6 +153,20 @@ final public class CLEG {
       public ClegNode setPrevNode(ClegNode node) {
         return prevNode = node;
       }
+
+      public String addPrimitiveTransform(String myIta, String myTrm) {
+        String hmName = (String) sym.getSpaceGroupInfoObj("hmName", myIta + ":" + myTrm,
+            false, false);
+        if (hmName == null)
+          return myTrm;
+        char c = hmName.charAt(0);
+        if ("ABCFI".indexOf(c) < 0)
+          return myTrm;
+        M4d t = M4d.newMV(UnitCell.getPrimitiveTransform(c), P3d.new3(0,0,0));
+        sym.convertTransform(myTrm, trTemp);
+        t.mul(trTemp);
+        return abcFor(t);
+      }
     }
 
   public static class ClegNode {
@@ -221,6 +235,9 @@ final public class CLEG {
       if (name.equals(TYPE_REFERENCE)) {
         isThisModelCalc = true;
       }
+      boolean isPrimitive = name.endsWith(":p");
+      if (isPrimitive)
+        name = name.substring(0, name.length() - 2);
       boolean isITAnDotm = name.startsWith("ITA/");
       if (isITAnDotm) {
         // ITA/140 or ITA/140.2
@@ -283,6 +300,7 @@ final public class CLEG {
         if (myTrm == null)
           myTrm = (String) data.sym.getSpaceGroupInfoObj("itaTransform", name,
               false, false);
+        
         if (hallSymbol != null && hallTrm != null) {
           if (myTrm.equals("a,b,c")) {
             myTrm = hallTrm;
@@ -296,6 +314,9 @@ final public class CLEG {
       if ("0".equals(myIta)) {
         data.errString = "Could not get ITA space group for " + name + "!";
         return;
+      }
+      if (isPrimitive) {
+        myTrm = data.addPrimitiveTransform(myIta, myTrm);
       }
       setITAName();
     }
@@ -1111,7 +1132,7 @@ final public class CLEG {
       }
 
       if (oabc == null || zapped)
-        oabc = (P3d[]) sgInfo.get("unitcell");
+         oabc = (P3d[]) sgInfo.get("unitcell");
       token = (String) sgInfo.get("name");
       String jmolId = (String) sgInfo.get("jmolId");
       BS basis = (BS) sgInfo.get("basis");

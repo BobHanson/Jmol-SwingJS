@@ -191,7 +191,8 @@ public class Symmetry implements SymmetryInterface {
     boolean isNorT = false;
     switch (name) {
     case "list":
-      return getSpaceGroupList((Viewer) params);
+      // from spacegroup(n, "list")
+      return getSpaceGroupList((Integer) params);
     case "opsCtr":
       return spaceGroup.getOpsCtr((String) params);
     case "itaTransform":
@@ -200,6 +201,7 @@ public class Symmetry implements SymmetryInterface {
       //$FALL-THROUGH$
     case "nameToXYZList": 
     case "itaIndex":
+    case "hmName":
       SpaceGroup sg = null;
       if (params != null) {
         String s = (String) params;
@@ -221,6 +223,8 @@ public class Symmetry implements SymmetryInterface {
         sg = symmetryInfo.getDerivedSpaceGroup();
       }
       switch (sg == null ? "" : name) {
+      case "hmName":
+        return sg.getHMName();
       case "nameToXYZList":
         Lst<Object> genPos = new Lst<Object>();
         sg.setFinalOperations();
@@ -243,13 +247,15 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @SuppressWarnings("unchecked")
-  private String getSpaceGroupList(Viewer vwr) {
+  private String getSpaceGroupList(Integer sg0) {
     SB sb = new SB();
     Lst<Object> list = (Lst<Object>) getSpaceGroupJSON(vwr, "ITA", "ALL", 0);
     for (int i = 0, n = list.size(); i < n; i++) {
       Map<String, Object> map = (Map<String, Object>) list.get(i);
-      sb.appendO(map.get("sg")).appendC('.').appendO(map.get("set"))
-        .appendC('\t').appendO(map.get("hm")).appendC('\t').appendO(map.get("sg")).appendC(':').appendO(map.get("trm")).appendC('\n');
+      Integer sg = (Integer) map.get("sg");
+      if (sg0 == null || sg.equals(sg0))
+        sb.appendO(sg).appendC('.').appendO(map.get("set"))
+          .appendC('\t').appendO(map.get("hm")).appendC('\t').appendO(map.get("sg")).appendC(':').appendO(map.get("trm")).appendC('\n');
     }
     return sb.toString();
   }

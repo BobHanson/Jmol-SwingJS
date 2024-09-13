@@ -115,7 +115,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   private String hallSymbol;
   private String hallSymbolAlt;
   private String crystalClass; //schoenfliesSymbol;
-  private String hmSymbol;   private String jmolIdExt;  // "a" in "3:a"
+  private String hmSymbol;   
+  private String jmolIdExt;  // "a" in "3:a"
   private HallInfo hallInfo;
   private int latticeParameter;
   private int modDim;
@@ -3476,9 +3477,13 @@ intl#     H-M full       HM-abbr   HM-short  Hall
     return (hmName != null ? HMtoCleg.get(PT.rep(hmName, " ","")) : ClegtoHM.get(cleg));
   }
 
+  public String getHMName() {
+    return hmSymbol;
+  }
+
+
   static {
     getSpaceGroups();
   }
-
 
 }
