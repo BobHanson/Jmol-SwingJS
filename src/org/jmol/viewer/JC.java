@@ -972,8 +972,8 @@ public final class JC {
   public static final String MODELKIT_UDPATE_KEY_STATE = "updatekeysfromstate";
   public static final String MODELKIT_UPDATE_MODEL_KEYS = "updatemodelkeys";
   public static final String MODELKIT_UPDATE_ATOM_KEYS = "updateatomkeys";
-  public static final String MODELKIT_ASSIGN_BOND = "assignBond";
-  public static final String MODELKIT_ROTATE_BOND_ATOM_INDEX = "rotateBond";
+  public static final String MODELKIT_ASSIGN_BOND = "assignbond";
+  public static final String MODELKIT_ROTATE_BOND_ATOM_INDEX = "rotatebloadond";
   public static final String MODELKIT_BRANCH_ATOM_PICKED = "branchatomclicked";
   public static final String MODELKIT_BRANCH_ATOM_DRAGGED = "branchatomdragged";
   

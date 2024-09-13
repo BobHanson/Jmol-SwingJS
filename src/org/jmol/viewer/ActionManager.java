@@ -2036,7 +2036,7 @@ public class ActionManager implements EventManager {
     switch (bondPickingMode) {
     case PICKING_ASSIGN_BOND:
       vwr.undoMoveActionClear(-1, T.save, true);
-      vwr.setModelkitPropertySafely(JC.MODELKIT_ASSIGN_BOND, Integer.valueOf(index));
+      vwr.getModelkit(false).setProperty(JC.MODELKIT_ASSIGN_BOND, Integer.valueOf(index));
       break;
     case PICKING_ROTATE_BOND:
       // done separately
