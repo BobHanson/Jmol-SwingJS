@@ -1,20 +1,17 @@
 package org.jmol.adapter.readers.quantum;
 
-import org.jmol.adapter.smarter.Atom;
-
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.PT;
-
 import java.util.Arrays;
 import java.util.Hashtable;
-
 import java.util.Map;
 
-import javajs.util.BS;
-
+import org.jmol.adapter.smarter.Atom;
 import org.jmol.quantum.QS;
 import org.jmol.util.Logger;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.PT;
 
 /**
  * A molecular structure and orbital reader for MolDen files.
@@ -276,7 +273,12 @@ public class MoldenReader extends MopacSlaterReader {
         slater[0] = atomIndex + 1;
         slater[1] = type;
         slater[2] = gaussianPtr + 1;
-        slater[3] = nPrimitives;
+        slater[3] = nPrimitives;   
+        int n = getDfCoefMaps()[type].length;
+        if (!haveCoefs) {
+          System.out.println(this.nCoef + " adding " + n + " coefficients type " + BasisFunctionReader.getQuantumShellTag(type) + " for atom " + atomIndex);
+          nCoef += n;
+        }
         for (int ip = nPrimitives; --ip >= 0;) {
           // Read ip primitives, each containing an exponent and one (s,p,d,f)
           // or two (sp) contraction coefficient(s)
@@ -423,6 +425,7 @@ public class MoldenReader extends MopacSlaterReader {
   }
   
   private int ptLineBuf, bufLen;
+
   @Override
   public String rd() throws Exception {
     if (++ptLineBuf < bufLen) {

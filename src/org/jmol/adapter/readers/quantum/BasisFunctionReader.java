@@ -37,7 +37,6 @@ import java.util.Hashtable;
 
 import java.util.Map;
 
-
 /**
  * 
  * @author hansonr <hansonr@stolaf.edu>
@@ -49,17 +48,17 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
   protected SlaterData[] slaterArray;
 
   public Map<String, Object> moData = new Hashtable<String, Object>();
-  public Lst<Map<String, Object>> orbitals = new  Lst<Map<String, Object>>();
+  public Lst<Map<String, Object>> orbitals = new Lst<Map<String, Object>>();
   protected int nOrbitals = 0;
   protected boolean ignoreMOs = false;
   protected String alphaBeta = "";
 
   protected int[][] dfCoefMaps;
-  
+
   private String[] filterTokens;
   private boolean filterIsNot;
 
-  private String spin; 
+  private String spin;
 
   /**
    * check line for filter options
@@ -77,8 +76,8 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
       int nOK = 0;
       if (filterTokens == null) {
         filterIsNot = (filter.indexOf("!") >= 0);
-        filterTokens = PT.getTokens(filter.replace('!', ' ').replace(',', ' ')
-            .replace(';', ' '));
+        filterTokens = PT.getTokens(
+            filter.replace('!', ' ').replace(',', ' ').replace(';', ' '));
       }
       for (int i = 0; i < filterTokens.length; i++)
         if (ucline.indexOf(filterTokens[i]) >= 0) {
@@ -107,22 +106,23 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
       mo.put("spin", spin);
     moData.put("highLEnabled", highLEnabled);
   }
-  
-  public class MOEnergySorter implements Comparator<Object>{
+
+  public class MOEnergySorter implements Comparator<Object> {
     @Override
     @SuppressWarnings("unchecked")
     public int compare(Object a, Object b) {
-      double ea = ((Number) ((Map<String, Object>)a).get("energy")).doubleValue();
-      double eb = ((Number) ((Map<String, Object>)b).get("energy")).doubleValue();
+      double ea = ((Number) ((Map<String, Object>) a).get("energy"))
+          .doubleValue();
+      double eb = ((Number) ((Map<String, Object>) b).get("energy"))
+          .doubleValue();
       return (ea < eb ? -1 : ea > eb ? 1 : 0);
     }
   }
 
-  
   Map<String, String> orbitalMaps = new Hashtable<String, String>();
 
   private int[] highLEnabled = new int[QS.idSpherical.length];
- 
+
   /**
    * 
    * finds the position in the Jmol-required list of function types. This list
@@ -156,8 +156,9 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
   }
 
   /**
-   * This flag must be explicitly set when a reader has been 
-   * verified to properly sort G, H, I,... orbitals.
+   * This flag must be explicitly set when a reader has been verified to
+   * properly sort G, H, I,... orbitals.
+   * 
    * @param shellType
    */
   protected void enableShell(int shellType) {
@@ -165,9 +166,11 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
   }
 
   protected int nCoef;
+  protected boolean haveCoefs;
 
   public int[][] getDfCoefMaps() {
-    return (dfCoefMaps == null ? (dfCoefMaps = QS.getNewDfCoefMap()) : dfCoefMaps);
+    return (dfCoefMaps == null ? (dfCoefMaps = QS.getNewDfCoefMap())
+        : dfCoefMaps);
   }
 
   final protected static String canonicalizeQuantumSubshellTag(String tag) {
@@ -176,10 +179,19 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
       char[] sorted = tag.toCharArray();
       Arrays.sort(sorted);
       return new String(sorted);
-    } 
+    }
     return tag;
   }
-  
+
+  /**
+   * Only for 5D, 10F, 15G designations.
+   * Each time this method is run through, additional changes are made
+   * in the orbital count. So only the final reading is significant. 
+   * 
+   * @param typeOld
+   * @param typeNew
+   * @return the number of coefficients overall, for all orbital types
+   */
   protected int fixSlaterTypes(int typeOld, int typeNew) {
     // Molden reader, QchemReader
     // in certain cases we assume Cartesian and then later have to 
@@ -187,13 +199,14 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
     if (shells == null)
       return 0;
     nCoef = 0;
-    for (int i = shells.size(); --i >=0 ;) {
+    for (int i = shells.size(); --i >= 0;) {
       int[] slater = shells.get(i);
       if (slater[1] == typeOld)
         slater[1] = typeNew;
       int m = getDfCoefMaps()[slater[1]].length;
       nCoef += m;
     }
+    haveCoefs = true;
     return nCoef;
   }
 
@@ -217,12 +230,11 @@ public abstract class BasisFunctionReader extends AtomSetCollectionReader {
   }
 
   protected void clearOrbitals() {
-    orbitals = new  Lst<Map<String, Object>>();
+    orbitals = new Lst<Map<String, Object>>();
     moData = new Hashtable<String, Object>();
     alphaBeta = "";
     slaterArray = null;
     slaters = null;
   }
-
 
 }
