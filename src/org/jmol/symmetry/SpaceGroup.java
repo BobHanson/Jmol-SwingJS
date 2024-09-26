@@ -694,10 +694,9 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     //getSpaceGroups();
     name = name.trim();
     SpaceGroup sg = determineSpaceGroupN(name);
-    HallInfo hallInfo;
-    if (sg == null) {
+    if (sg == null && allowHall) {
       // try unconventional Hall symbol
-      hallInfo = newHallInfo(name);
+      HallInfo hallInfo = newHallInfo(name);
       if (hallInfo.isGenerated()) {
         sg = new SpaceGroup(-1, NEW_HALL_GROUP + name, true);
         sg.hallInfo = hallInfo;

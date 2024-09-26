@@ -855,7 +855,7 @@ final public class CLEG {
           return "no starting space group for CLEG!";
         }
         if (!asgParams.mkIsAssign) {
-          tokens[0] = asgParams.mkSym00.getClegId();
+          tokens[0] = asgParams.mkSym00.getSpaceGroupClegId();
           asgParams.mkIndex = 1;
           asgParams.mkWsNode = true;
           asgParams.mkIgnoreAllSettings = nextTransformExplicit;
@@ -957,7 +957,7 @@ final public class CLEG {
               // ...or ...
               || asgParams.mkIsAssign // we are specifically checking the current space group
           ));
-      String ita0 = (zapped ? null : asgParams.mkSym00.getClegId());
+      String ita0 = (zapped ? null : asgParams.mkSym00.getSpaceGroupClegId());
       String trm0 = null;
       if (!zapped) {
         if (ita0 == null || ita0.equals("0")) {

@@ -413,8 +413,11 @@ public class MathExt {
     String mode = (args[args.length - 1].tok == T.string 
         ? (String) args[args.length - 1].value : null);
     boolean isSettings = "settings".equalsIgnoreCase(mode);
+    boolean isSetting = "setting".equalsIgnoreCase(mode);
     boolean isSubgroups = (n > 1 && (n != 2 
-        || !"settings".equalsIgnoreCase(mode) && !"list".equalsIgnoreCase(mode))
+        || !isSettings && !isSetting
+          && !"list".equalsIgnoreCase(mode)
+          )
         );
     String xyzList = args[0].asString(); 
     if (isSubgroups || "subgroups".equals(mode)) {
@@ -482,10 +485,11 @@ public class MathExt {
       //$FALL-THROUGH$
     case 1:
       int itaNo = (args[0].tok == T.integer ? args[0].intValue : n == 1 ? Integer.MIN_VALUE : 0);
-      if (isSettings) {
-        if (itaNo == 0)
+      if (isSettings || isSetting) {
+        if (isSettings && itaNo == 0)
           return false;
-        return mp.addXObj((itaNo == Integer.MIN_VALUE ? vwr.getCurrentUnitCell() : vwr.getSymTemp()).getSpaceGroupJSON(vwr, mode.toLowerCase(), null, itaNo));
+        String data = (isSetting && n > 1 ? xyzList : null);        
+        return mp.addXObj((itaNo == Integer.MIN_VALUE ? vwr.getCurrentUnitCell() : vwr.getSymTemp()).getSpaceGroupJSON(vwr, mode.toLowerCase(), data, itaNo));
       }
       if (itaNo > 0 || args[0].tok == T.decimal || args[0].tok == T.string) {
         if (xyzList.toUpperCase().startsWith("AFLOW/")) {
@@ -499,9 +503,9 @@ public class MathExt {
         }
         if (itaNo > 0 || !xyzList.endsWith(":") && !Double.isNaN(PT.parseDouble(xyzList)))
           xyzList = "ITA/" + xyzList;
-        if ("setting".equalsIgnoreCase(xyzList)) {
+        if ("setting".equalsIgnoreCase(xyzList) || "settings".equalsIgnoreCase(xyzList)) {
           SymmetryInterface sym = vwr.getOperativeSymmetry();
-          return mp.addXObj(sym == null ? null : sym.getSpaceGroupJSON(vwr, "settings", null, Integer.MIN_VALUE));
+          return mp.addXObj(sym == null ? null : sym.getSpaceGroupJSON(vwr, xyzList.toLowerCase(), null, Integer.MIN_VALUE));
         }
         // spacegroup("x,y,z;-x,-y,-z;...")
         // spacegroup("132:2")

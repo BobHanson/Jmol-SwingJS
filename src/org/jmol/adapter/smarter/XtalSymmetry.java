@@ -1419,8 +1419,8 @@ public class XtalSymmetry {
     asc.setCurrentModelInfo("intlTableNo", symmetry.getIntTableNumber());
     asc.setCurrentModelInfo("intlTableIndex", symmetry.getSpaceGroupInfoObj("itaIndex", null, false, false));
     asc.setCurrentModelInfo("intlTableTransform", symmetry.getSpaceGroupInfoObj("itaTransform", null, false, false));
-    asc.setCurrentModelInfo("intlTableJmolID",
-        symmetry.getIntTableNumberFull());
+    asc.setCurrentModelInfo("intlTableJmolId",
+        symmetry.getSpaceGroupJmolId());
     asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_INDEX,
         Integer.valueOf(symmetry.getSpaceGroupIndex()));
     asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_TITLE, symmetry.getSpaceGroupTitle());

@@ -6819,15 +6819,15 @@ public class CmdExt extends ScriptExt {
         // allow for MODELKIT SPACEGROUP packed
         if (sym == null)
           invArg();
-        type = sym.getClegId();
+        type = sym.getSpaceGroupClegId();
       } else {
-        type = concatString(i, "packed");
+        type = concatString(i, (isPacked ? "packed" : "unitcell"));
         if (type.length() > 0 && type.indexOf(":") < 0 && type.indexOf(">") < 0
             && (type.indexOf(",") > 0 || "rh".indexOf(type) >= 0)) {
           // allow for MODELKIT SPACEGROUP "a,b,2c"
           if (sym == null)
             invArg();
-          String cleg = sym.getClegId();
+          String cleg = sym.getSpaceGroupClegId();
           type = cleg.substring(0, cleg.indexOf(":") + 1) + type;
         }
       }

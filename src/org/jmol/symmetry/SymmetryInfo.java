@@ -49,7 +49,7 @@ class SymmetryInfo {
   /**
    * actually just the Jmol id, such as 3:abc
    */
-  String intlTableJmolID;
+  String intlTableJmolId;
   private int spaceGroupIndex;
 
   private String spaceGroupF2CTitle;
@@ -70,7 +70,7 @@ class SymmetryInfo {
     // from Symmetry.getSymmetryInfoStr
     cellRange = null;
     sgName = sg.getName();
-    intlTableJmolID = sg.jmolId;
+    intlTableJmolId = sg.jmolId;
     intlTableNo = sg.itaNumber;
     latticeType = sg.latticeType;
     symmetryOperations = sg.finalOperations;
@@ -107,7 +107,7 @@ class SymmetryInfo {
     intlTableNo = (String) modelInfo.get("intlTableNo");
     intlTableIndexNdotM = (String) modelInfo.get("intlTableIndex");
     intlTableTransform = (String) modelInfo.get("intlTableTransform");
-    intlTableJmolID = (String) modelInfo.remove("intlTableJmolID");
+    intlTableJmolId = (String) modelInfo.remove("intlTableJmolId");
     String s = (String) modelInfo.get("latticeType");
     latticeType = (s == null ? 'P' : s.charAt(0));
     symmetryOperations = (SymmetryOperation[]) modelInfo.remove(JC.INFO_SYMOPS_TEMP);

@@ -41,7 +41,7 @@ public interface SymmetryInterface {
 
   String getIntTableNumber();
 
-  String getIntTableNumberFull();
+  String getSpaceGroupJmolId();
 
   int getLatticeOp();
 
@@ -274,7 +274,7 @@ public interface SymmetryInterface {
 
   String staticToRationalXYZ(P3d fPt, String sep);
 
-  String getClegId();
+  String getSpaceGroupClegId();
 
   int getFinalOperationCount();
 

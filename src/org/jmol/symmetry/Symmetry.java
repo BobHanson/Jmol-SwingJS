@@ -119,7 +119,7 @@ public class Symmetry implements SymmetryInterface {
     // instantiated ONLY using
     // symmetry = Interface.getSymmetry();
     // DO NOT use symmetry = new Symmetry();
-    // as that will inval ate the Jar file modularization    
+    // as that will invalidate the Jar file modularization    
   }
 
   @Override
@@ -387,12 +387,14 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String getIntTableNumberFull() {
-    return (symmetryInfo != null ? symmetryInfo.intlTableJmolID
-        : spaceGroup == null ? null
-            : spaceGroup.jmolId != null
-                ? spaceGroup.jmolId
-                : spaceGroup.itaNumber);
+  public String getSpaceGroupClegId() {
+    return (symmetryInfo != null ? symmetryInfo.getClegId() : spaceGroup.getClegId());
+  }
+
+  @Override
+  public String getSpaceGroupJmolId() {
+    return (symmetryInfo != null ? symmetryInfo.intlTableJmolId
+        : spaceGroup == null ? null : spaceGroup.jmolId);
   }
 
   @Override
@@ -603,6 +605,12 @@ public class Symmetry implements SymmetryInterface {
   public P3d[] getCanonicalCopy(double scale, boolean withOffset) {
     return unitCell.getCanonicalCopy(scale, withOffset);
   }
+
+  @Override
+  public P3d[] getCanonicalCopyTrimmed(P3d frac, double scale) {
+    return unitCell.getCanonicalCopyTrimmed(frac, scale);
+  }
+
 
   @Override
   public double getUnitCellInfoType(int infoType) {
@@ -1092,8 +1100,12 @@ public class Symmetry implements SymmetryInterface {
     SpaceGroup sg = spaceGroup;
     if (sg == null && symmetryInfo != null) {
       sg = SpaceGroup.determineSpaceGroupN(symmetryInfo.sgName);
-      if (sg == null)
-        sg = SpaceGroup.getSpaceGroupFromJmolClegOrITA(symmetryInfo.intlTableJmolID);
+      if (sg == null) {
+        String id = getSpaceGroupJmolId(); 
+        if (id == null)
+          id = getSpaceGroupClegId();
+        sg = SpaceGroup.getSpaceGroupFromJmolClegOrITA(id);
+      }
     }
     if (sg == null || sg.itaNumber == null) {
       // maybe an unusual setting
@@ -1318,37 +1330,46 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public Object getSpaceGroupJSON(Viewer vwr, String name, Object data,
                                   int index) {
+    boolean isSetting = name.equals("setting");
     boolean isSettings = name.equals("settings");
+    boolean isAFLOW = name.equalsIgnoreCase("AFLOW");
     boolean isSubgroups = !isSettings && name.equals("subgroups");
-    boolean isThis = ((isSettings || isSubgroups)
+    boolean isThis = ((isSetting || isSettings || isSubgroups)
         && index == Integer.MIN_VALUE);
-    String s0 = (!isSettings && !isSubgroups ? name
+    String s0 = (!isSettings && !isSetting && !isSubgroups? name
         : isThis ? getSpaceGroupName() : "" + index);
     try {
       int itno;
       String tm = null;
       boolean isTM, isInt;
       String sgname;
-      if (isSettings || isSubgroups) {
+      if (isSetting && data == null || isSettings || isSubgroups) {
         isTM = false;
         isInt = true;
-        sgname = (isSettings ? (String) data : null);
+        sgname = (isSetting ? (String) data : null);
         if (isThis) {
           itno = PT.parseInt(getIntTableNumber());
-          if (isSettings) {
+          if (isSetting || isSettings) {
             if (spaceGroup == null) {
               SpaceGroup sg = symmetryInfo.getDerivedSpaceGroup();
               if (sg == null)
                 return new Hashtable<String, Object>();
               sgname = sg.jmolId;
             } else {
-              sgname = getIntTableNumberFull();
+              sgname = getSpaceGroupClegId();
+              if (isSetting) {
+                tm = sgname.substring(sgname.indexOf(":") + 1);
+              }  else if (isSettings) {
+                index = 0;
+              }
             }
           }
         } else {
           itno = index;
         }
       } else {
+        if (!isAFLOW)
+          index = 0;
         sgname = (String) data;
         // tm allow for both 4(a,b,...) and 4:a,b,..., or, technically, 4(a,b,....
         int pt = sgname.indexOf("(");
@@ -1369,7 +1390,7 @@ public class Symmetry implements SymmetryInterface {
           sgname = sgname.substring(0, pt);
         }
       }
-      if (isInt && (itno > 230 || (isSettings ? itno < 1 : itno < 0)))
+      if (isInt && (itno > 230 || (isSettings || isSetting ? itno < 1 : itno < 0)))
         throw new ArrayIndexOutOfBoundsException(itno);
       if (isSubgroups) {
         if (itaSubData == null)
@@ -1381,7 +1402,7 @@ public class Symmetry implements SymmetryInterface {
         if (resource != null) {
           return resource;
         }
-      } else if (isSettings || name.equalsIgnoreCase("ITA")) {
+      } else if (isSetting || isSettings || name.equalsIgnoreCase("ITA")) {
         if (itno == 0) {
           if (allDataITA == null)
             allDataITA = (Lst<Object>) getResource(vwr, "sg/json/ita_all.json");
@@ -1395,16 +1416,18 @@ public class Symmetry implements SymmetryInterface {
               "sg/json/ita_" + itno + ".json");
         if (resource != null) {
           if (index == 0 && tm == null)
-            return resource;
+            return (isSettings ? resource.get("its") : resource);
           Lst<Object> its = (Lst<Object>) resource.get("its");
           if (its != null) {
             if (isSettings && !isThis) {
               return its;
             }
             int n = its.size();
-            int i0 = (isInt && !isThis ? index : n);
+            int i0 = (isSetting ? Math.max(index, 1) : isInt && !isThis ? index : n);
             if (i0 > n)
               return null;
+            if (isSetting)
+              return its.get(i0 - 1);
             Map<String, Object> map = null;
             for (int i = i0; --i >= 0;) {
               map = (Map<String, Object>) its.get(i);
@@ -1424,7 +1447,7 @@ public class Symmetry implements SymmetryInterface {
             }
           }
         }
-      } else if (name.equalsIgnoreCase("AFLOW") && tm == null) {
+      } else if (isAFLOW && tm == null) {
         if (aflowStructures == null)
           aflowStructures = (Map<String, Object>) getResource(vwr,
               "sg/json/aflow_structures.json");
@@ -1601,11 +1624,6 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String getClegId() {
-    return (symmetryInfo != null ? symmetryInfo.getClegId() : spaceGroup.getClegId());
-  }
-
-  @Override
   public int getFinalOperationCount() {
     setFinalOperations(3, null, null, -1, -1, false, null);
     return spaceGroup.getOperationCount();
@@ -1624,12 +1642,6 @@ public class Symmetry implements SymmetryInterface {
     UnitCell.getMatrixAndUnitCell(null, transform, trm);
     return trm;
   }
-
-  @Override
-  public P3d[] getCanonicalCopyTrimmed(P3d frac, double scale) {
-    return unitCell.getCanonicalCopyTrimmed(frac, scale);
-  }
-
 
   @Override
   public M4d staticGetMatrixTransform(String cleg) {

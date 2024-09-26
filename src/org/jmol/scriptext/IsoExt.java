@@ -887,15 +887,16 @@ public class IsoExt extends ScriptExt {
               options = T.offset;
               i = eval.iToken;
             }
-            if (xyz != null) {
-              i++;
-              if (eval.isCenterParameter(i)) {
-                center = eval.centerParameter(i, ret);
-                i = eval.iToken;
-              }
-            }
           }
         }
+        if (isSymop && xyz != null) {
+          i++;
+          if (eval.isCenterParameter(i)) {
+            center = eval.centerParameter(i, ret);
+            i = eval.iToken;
+          }
+        }
+
         eval.checkLast(eval.iToken);
         if (chk)
           return;

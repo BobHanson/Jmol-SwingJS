@@ -628,6 +628,7 @@ public class SpaceGroupFinder {
             //System.out.println("test4 opsc= " + opsChecked.cardinality() + " " + opsChecked);
             bsPoints.andNot(targets);
             if (!checkBasis(uc, uncheckedOps, bsPoints, targets)) {
+              System.out.println("failed checkBasis");
               isg = 0;
             }
             //System.out.println("test2b targets " + targets.cardinality() + " " + targets);
@@ -646,19 +647,25 @@ public class SpaceGroupFinder {
           + bsGroups + " " + bsOps);
       for (int i = bsGroups.nextSetBit(0); i >= 0; i = bsGroups
           .nextSetBit(i + 1)) {
-        System.out.println("SpaceGroupFinder found " + SpaceGroup.nameToGroup.get(groupNames[i]));
+        System.out.println("SpaceGroupFinder found "
+            + nameToGroup(groupNames[i]));
       }
       if (n != 1) {
-    	  // multiple space groups are poosible when
-    	  // the only atoms are on special positions.
-    	  // for example, a single atom at the origin.
+        // multiple space groups are poosible when
+        // the only atoms are on special positions.
+        // for example, a single atom at the origin.
         isg = bsGroups.length() - 1;
         if (isg < 0)
           return null;
       }
-      sg = SpaceGroup.nameToGroup.get(PT.trim(groupNames[isg], "0"));
+      sg = nameToGroup(groupNames[isg]);
     }
     return sg;
+  }
+
+  private static SpaceGroup nameToGroup(String name) {
+    int pt = (name.charAt(0) != '0' ?  0 : name.charAt(1) != '0' ? 1 : 2);
+    return  SpaceGroup.nameToGroup.get(name.substring(pt));
   }
 
   private static Symmetry setSpaceGroupAndUnitCell(SpaceGroup sg, double[] params,
@@ -727,8 +734,8 @@ public class SpaceGroupFinder {
       //      if (bs.isEmpty())
       //        return;
       // added
-      bs.or(bsPoints);
       SymmetryOperation op = getOp(iop);
+      bs.or(bsPoints);
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
         int j = findEquiv(uc, -1, op, i, bs, pTemp, false);
         if (j < 0)
@@ -1225,7 +1232,9 @@ public class SpaceGroupFinder {
     if (list == null) {
       Lst<String> l = new Lst<String>();
       String line;
+      int i = 0;
       while ((line = rdr.readLine()) != null) {
+        System.out.println(i++ + " "  + line);
         if (line.length() > 0) {
           l.addLast(line);
         }
