@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Jmol, see http://www.jmol.org">
+  <meta name="generator" content="Jmol, see https://jmol.sourceforge.net">
   <meta name="author" content="@AUTHOR@">
   <meta name="keywords" content="generated_by_Jmol_Webexport">
   <title>@TITLE@</title>
@@ -82,7 +82,7 @@ jmolInfo = { //default values
 		//they will need modification for the page to work.
 	jarPath: "@REMOTEAPPLETPATH@/java", //path to applet .jar files on server.
 	j2sPath: "@REMOTEAPPLETPATH@/j2s",//path to javascript version.
-	serverURL: "@REMOTEAPPLETPATH@/php/jsmol.php", //if your own server does not allow php, you can change to http://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php
+	serverURL: "@REMOTEAPPLETPATH@/php/jsmol.php", //if your own server does not allow php, you can change to https://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php
 	makeLiveImg:"@REMOTEAPPLETPATH@/j2s/img/play_make_live.jpg",//path to activate 3-D image.
 	jarFile: "JmolAppletSigned0.jar",
 	isSigned: true,
@@ -112,7 +112,7 @@ jmolInfo = { //default values
    if (protocol == "file:") { 
     jmolInfo.jarPath = "@LOCALAPPLETPATH@/java";
     jmolInfo.j2sPath = "@LOCALAPPLETPATH@/j2s";
-    jmolInfo.serverURL = "http://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php"; //you can change to your own path
+    jmolInfo.serverURL = "https://chemapps.stolaf.edu/jmol/jsmol/php/jsmol.php"; //you can change to your own path
     jmolInfo.makeLiveImg = "@LOCALAPPLETPATH@/j2s/img/play_make_live.jpg";
     jmolInfo.jarFile = "JmolAppletSigned.jar";
     jmolInfo.isSigned= "true";

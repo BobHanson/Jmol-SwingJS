@@ -61,10 +61,10 @@ import naga.packetwriter.RawPacketWriter;
  * This class uses the Naga asynchronous socket network I/O package (NIO), the
  * JSON.org JSON package and Jmol.
  * 
- * http://code.google.com/p/naga/
+ * https://code.google.com/p/naga/
  * 
  * Initial versions of this code, including the JSON-base protocol were created
- * by Adam Williams, U-Mass Amherst see http://MolecularPlayground.org and
+ * by Adam Williams, U-Mass Amherst see https://MolecularPlayground.org and
  * org.openscience.jmol.molecularplayground.MPJmolApp.java
  * 
  * <code>

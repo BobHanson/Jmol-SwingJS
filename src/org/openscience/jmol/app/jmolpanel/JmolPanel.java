@@ -1395,7 +1395,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
           if (url.length() == 4 && url.indexOf(".") < 0)
             url = "=" + url;
           if (!url.startsWith("="))
-            url = "http://" + url;
+            url = "https://" + url;
         }
         vwr.openFileAsync(url);
       }

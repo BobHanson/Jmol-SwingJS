@@ -152,7 +152,7 @@ public class AppConsole extends JmolConsole
     //        .contains("mac"));
     //system.out.println("appConsole " + System.getProperty("os.name"));
     if (!Viewer.isJS) {// || isMacOs) {
-      // See http://stackoverflow.com/questions/7252749/how-to-use-command-c-command-v-shortcut-in-mac-to-copy-paste-text#answer-7253059
+      // See https://stackoverflow.com/questions/7252749/how-to-use-command-c-command-v-shortcut-in-mac-to-copy-paste-text#answer-7253059
       InputMap im = (InputMap) UIManager.get("TextPane.focusInputMap");
       im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.META_DOWN_MASK),
           DefaultEditorKit.selectAllAction);

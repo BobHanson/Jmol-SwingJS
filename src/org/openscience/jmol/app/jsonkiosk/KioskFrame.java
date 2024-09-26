@@ -32,7 +32,7 @@ import javax.swing.JPanel;
 /**
  * A borderless rectangle, like the applet, that contains the application
  * for use in kiosk-style displays, as for example projected on the wall
- * as in http://molecularPlayground.org
+ * as in https://molecularPlayground.org
  * 
  */
 public class KioskFrame extends JFrame {

@@ -552,7 +552,7 @@ class Molecules extends JPanel {//implements ActionListener {
 //      out.println(Stamp);
 //      out.println("Original");
 //      out
-//          .println("page composed by <a href=\"http://www.uwosh.edu/faculty_staff/gutow/\">J.");
+//          .println("page composed by <a href=\"https://www.uwosh.edu/faculty_staff/gutow/\">J.");
 //      out.println("Gutow 7/2006</a>. </small> </td>");
 //      out.println("    </tr>");
 //      out.println("    <tr>");
@@ -587,7 +587,7 @@ class Molecules extends JPanel {//implements ActionListener {
 //          .println("right corner (right click also works on a multibutton mouse).&nbsp; </li>");
 //      out
 //          .println("        <li>For more info about Jmol go to <a target=\"_blank\"");
-//      out.println(" href=\"http://www.jmol.org\">www.jmol.org.</a></li>");
+//      out.println(" href=\"https://jmol.sourceforge.net\">www.jmol.org.</a></li>");
 //      out.println("      </ol>");
 //      out.println("      </td>");
 //      out.println("    </tr>");

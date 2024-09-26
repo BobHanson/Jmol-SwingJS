@@ -3,12 +3,12 @@
 	-- this file is the successor of JmolPopIn.js 
 	-- when its code changed so much (JSmol)
 
-	Available from  http://biomodel.uah.es/Jmol/  and  http://wiki.jmol.org/ 
-	Author: Angel Herráez.  Version 2007.04.23
+	Available from  https://biomodel.uah.es/Jmol/  and  https://wiki.jmol.org/ 
+	Author: Angel Herrï¿½ez.  Version 2007.04.23
 	
 	This template is offered freely for anyone to use or adapt it, 
 	according to Creative Commons Attribution-ShareAlike 3.0 License,
-	http://creativecommons.org/licenses/by-sa/3.0/
+	https://creativecommons.org/licenses/by-sa/3.0/
 
 	Modified 2007.07.17  by Jonathan Gutow
 	

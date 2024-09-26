@@ -166,7 +166,7 @@ public class NmrPlugin implements JmolPlugin {
 
   @Override
   public String getWebSite() {
-    return "http://janocchio.sourceforge.net/index.html";
+    return "https://janocchio.sourceforge.net/index.html";
   }
 
 }
