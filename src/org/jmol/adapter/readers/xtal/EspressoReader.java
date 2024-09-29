@@ -55,11 +55,11 @@ public class EspressoReader extends AtomSetCollectionReader {
     return true;
   }
 
-  private double aPar;
+  private double alat;
 
   private void readAparam() throws Exception {
     // lattice parameter (alat)  =       5.3033  a.u.
-    aPar = parseDoubleStr(getTokens()[4]) * ANGSTROMS_PER_BOHR;
+    alat = parseDoubleStr(getTokens()[4]) * ANGSTROMS_PER_BOHR;
   }
 
   /*
@@ -83,8 +83,8 @@ public class EspressoReader extends AtomSetCollectionReader {
 
    */
 
-  private void readCellParam(boolean andAPar) throws Exception {
-    int i0 = (andAPar ? 0 : 3);
+  private void readCellParam(boolean andAlat) throws Exception {
+    int i0 = (andAlat ? 0 : 3);
     
     /*   in the old version of Espresso optimized cell parameters
     are expressed in Bohr unit
@@ -94,7 +94,9 @@ public class EspressoReader extends AtomSetCollectionReader {
      4.979256769   4.979256769  -9.998215946
     */
     if (line.contains("bohr"))
-      aPar = ANGSTROMS_PER_BOHR;
+      alat = ANGSTROMS_PER_BOHR;
+    else if (line.contains("angstrom"))
+      alat = 1;
 
     /*    in the old version of Espresso optimized cell parameters
     are expressed in function of the original aPar stored at the beginning
@@ -106,8 +108,8 @@ public class EspressoReader extends AtomSetCollectionReader {
      *
      */
 
-    if (andAPar && line.contains("="))
-      aPar = parseDoubleStr(line.substring(line.indexOf("=") + 1))
+    if (andAlat && line.contains("="))
+      alat = parseDoubleStr(line.substring(line.indexOf("=") + 1))
       * ANGSTROMS_PER_BOHR;
 
     //Can you look at the example HAP_fullopt_40_r1.fullopt from the 2nd model on the representation is correct 
@@ -119,9 +121,9 @@ public class EspressoReader extends AtomSetCollectionReader {
     cellParams = new double[9];
     for (int n = 0, i = 0; n < 3; n++) {
       String[] tokens = PT.getTokens(rd());
-      cellParams[i++] = parseDoubleStr(tokens[i0]) * aPar;
-      cellParams[i++] = parseDoubleStr(tokens[i0 + 1]) * aPar;
-      cellParams[i++] = parseDoubleStr(tokens[i0 + 2]) * aPar;
+      cellParams[i++] = parseDoubleStr(tokens[i0]) * alat;
+      cellParams[i++] = parseDoubleStr(tokens[i0 + 1]) * alat;
+      cellParams[i++] = parseDoubleStr(tokens[i0 + 2]) * alat;
     }
   }
 
@@ -193,7 +195,7 @@ public class EspressoReader extends AtomSetCollectionReader {
       if (isBohr) {
         atom.scale(ANGSTROMS_PER_BOHR);
       } else if (isAlat) {
-        atom.scale(aPar);
+        atom.scale(alat);
       }
       setAtomCoord(atom);
     }
