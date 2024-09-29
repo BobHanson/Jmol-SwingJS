@@ -1026,8 +1026,11 @@ public class ModelSet extends BondCollection {
 
   public SymmetryInterface getUnitCell(int modelIndex) {
     boolean returnCage = (modelIndex == Integer.MIN_VALUE);
+    boolean returnSym = !returnCage && (modelIndex < 0);
     if (returnCage)
       modelIndex = vwr.am.cmi;
+    else if (returnSym)
+      modelIndex = -1 - modelIndex;
     if (modelIndex < 0 || modelIndex >= mc)
       return null;
     if (isTrajectory(modelIndex))
@@ -1035,14 +1038,21 @@ public class ModelSet extends BondCollection {
     SymmetryInterface ucSimple = am[modelIndex].simpleCage;
     SymmetryInterface uc = null;
     if (unitCells != null && modelIndex < unitCells.length
-        && unitCells[modelIndex] != null && unitCells[modelIndex].haveUnitCell())
+        && unitCells[modelIndex] != null
+        && unitCells[modelIndex].haveUnitCell())
       uc = unitCells[modelIndex];
-    if (uc != null && returnCage) {
-      return (ucSimple == null ? 
-        setModelCagePts(modelIndex, uc.getUnitCellVectors(), "cage") : ucSimple);
+    if (uc != null) {
+      if (returnCage) {
+        return (ucSimple == null
+            ? setModelCagePts(modelIndex, uc.getUnitCellVectors(), "cage")
+            : ucSimple);
+      }
+      if (returnSym) {
+        return uc;
+      }
     }
     if (uc == null || ucSimple != null && !uc.isSymmetryCell(ucSimple)) {
-        uc = ucSimple; 
+      uc = ucSimple;
     }
     return uc;
   }
@@ -2164,7 +2174,7 @@ public class ModelSet extends BondCollection {
   /**
    * Note that this method returns all atoms, included deleted ones. If you
    * don't want deleted atoms, then use
-   * vwr.getModelAtomBitSetUndeleted(modelIndex, TRUE)
+   * vwr.getModelUndeletedAtomBitSet(modelIndex, TRUE)
    * 
    * @param modelIndex
    * @param asCopy
@@ -4767,6 +4777,11 @@ public class ModelSet extends BondCollection {
       return bsFixed;
     }
 
-
+  public BS getEquivalentAtoms(int iatom) {
+    BS bs = vwr.getModelUndeletedAtomsBitSet(at[iatom].mi);  
+    bs.and(getAtomBitsMaybeDeleted(T.site, BSUtil.newAndSetBit(iatom)));
+    return bs;
+  }
+  
 }
 

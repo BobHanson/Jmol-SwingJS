@@ -8455,8 +8455,8 @@ public class Viewer extends JmolViewer
             if (uc != null) {
               ptNew.sub(ptCenter);
               ptNew.add(ms.at[iatom]);
-              getModelkit(false).cmdAssignMoveAtoms(bsSelected, iatom, ptNew,
-                  null, true, !asAtoms);
+              getModelkit(false).assignMoveAtoms(bsSelected, iatom, ptNew,
+                  null, true, !asAtoms, false);
             }
           }
           if (!Double.isNaN(ptNew.x)) {
@@ -8471,6 +8471,14 @@ public class Viewer extends JmolViewer
     refresh(REFRESH_SYNC, ""); // should be syncing here
     movingSelected = false;
     return (bsSelected == null ? 0 : bsSelected.cardinality());
+  }
+
+  public void warnAtom(int iatom) {
+    if (iatom < 0 && atomHighlighted < 0)
+      return;
+    atomHighlighted = iatom;
+    shm.loadShape(JC.SHAPE_HALOS);
+    setShapeProperty(JC.SHAPE_HALOS, "warnAtom", (iatom >= 0 ? Integer.valueOf(iatom): null));
   }
 
   /**
@@ -11224,5 +11232,5 @@ public class Viewer extends JmolViewer
     String s = (String) getSymStatic().getSpaceGroupInfoObj("itaNumber", name, false, false);
     return (s == null ? -1 : PT.parseInt(s));
   }
-  
+
 }

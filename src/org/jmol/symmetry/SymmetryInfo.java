@@ -225,6 +225,8 @@ class SymmetryInfo {
   public String getClegId() {
     if (itaNo == null) {
       itaNo = intlTableIndexNdotM;
+      if (itaNo.indexOf(":") > 0)
+        return itaNo;
       int pt = itaNo.indexOf(".");
       itaNo = (pt > 0 ? itaNo.substring(0, pt) : itaNo) + ":" + intlTableTransform;
     }

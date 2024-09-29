@@ -62,9 +62,8 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
       slop = uc.getPrecision();
       precision = (int) -Math.log10(slop);
       isHighPrecision = (slop == SimpleUnitCell.SLOPDP);
-      P3d offset = uc.getFractionalOffset();
-      boolean fractionalOffset = offset != null && (offset.x != (int) offset.x
-          || offset.y != (int) offset.y || offset.z != (int) offset.z);
+      P3d offset = uc.getFractionalOffset(true);
+      boolean fractionalOffset = (offset != null);
       T3d fset;
       boolean haveCustom = (fractionalOffset
           || (fset = uc.getUnitCellMultiplier()) != null

@@ -37,7 +37,7 @@ public interface SymmetryInterface {
 
   void getEquivPointList(Lst<P3d> pts, int nIgnore, String flags, M4d[] opsCtr);
 
-  P3d getFractionalOffset();
+  P3d getFractionalOffset(boolean onlyIfFractional);
 
   String getIntTableNumber();
 

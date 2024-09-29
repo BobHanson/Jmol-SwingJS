@@ -37,27 +37,33 @@ import org.jmol.viewer.JC;
 public class HalosRenderer extends ShapeRenderer {
 
   boolean isAntialiased;
+
   @Override
   protected boolean render() {
     Halos halos = (Halos) shape;
     boolean showOnce = vwr.getShowSelectedOnce();
     boolean selectDisplayTrue = (vwr.getSelectionHalosEnabled() || showOnce);
-    boolean showHiddenSelections = (selectDisplayTrue && vwr.getBoolean(T.showhiddenselectionhalos));
-    if (halos.mads == null && halos.bsHighlight == null && !selectDisplayTrue)
+    boolean showHiddenSelections = (selectDisplayTrue
+        && vwr.getBoolean(T.showhiddenselectionhalos));
+    if (halos.atomWarning == null && halos.mads == null
+        && halos.bsHighlight == null && !selectDisplayTrue)
       return false;
     isAntialiased = g3d.isAntialiased();
     Atom[] atoms = ms.at;
-    BS bsSelected = (showOnce && vwr.movableBitSet != null ? vwr.movableBitSet 
+    BS bsSelected = (showOnce && vwr.movableBitSet != null ? vwr.movableBitSet
         : selectDisplayTrue ? vwr.bsA() : null);
     boolean needTranslucent = false;
     g3d.addRenderer(T.circle);
+    BS bsWarning = (halos.atomWarning == null ? null
+        : vwr.ms.getEquivalentAtoms(halos.atomWarning.intValue()));
     for (int i = ms.ac; --i >= 0;) {
       Atom atom = atoms[i];
       if (atom == null || (atom.shapeVisibilityFlags & Atom.ATOM_INFRAME) == 0)
         continue;
       boolean isHidden = ms.isAtomHidden(i) || C.isTransparent(atom.colixAtom);
       mad = (isHidden || halos.mads == null ? 0 : halos.mads[i]);
-      colix = (halos.colixes == null || i >= halos.colixes.length ? C.INHERIT_ALL
+      colix = (halos.colixes == null || i >= halos.colixes.length
+          ? C.INHERIT_ALL
           : halos.colixes[i]);
       if (selectDisplayTrue && bsSelected.get(i)) {
         if (isHidden && !showHiddenSelections)
@@ -83,12 +89,19 @@ public class HalosRenderer extends ShapeRenderer {
         if (render1(atom))
           needTranslucent = true;
       }
-      if (!isHidden && halos.bsHighlight != null && halos.bsHighlight.get(i)) {
-        mad = -2;
-        colix = halos.colixHighlight;
-        if (render1(atom))
-          needTranslucent = true;
-      }       
+      if (!isHidden) {
+        if (halos.bsHighlight != null && halos.bsHighlight.get(i)) {
+          mad = -2;
+          colix = halos.colixHighlight;
+          if (render1(atom))
+            needTranslucent = true;
+        } else if (bsWarning != null && bsWarning.get(i)) {
+          mad = -2;
+          colix = C.RED;
+          if (render1(atom))
+            needTranslucent = true;
+        }
+      }
     }
     return needTranslucent;
   }

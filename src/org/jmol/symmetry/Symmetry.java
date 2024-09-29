@@ -567,8 +567,13 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public P3d getFractionalOffset() {
-    return unitCell.getFractionalOffset();
+  public P3d getFractionalOffset(boolean onlyIfFractional) {
+    P3d offset = unitCell.getFractionalOffset();
+    return (onlyIfFractional 
+        && offset != null
+        && offset.x == (int) offset.x
+        && offset.y == (int) offset.y 
+        && offset.z == (int) offset.z ? null : offset);
   }
 
   @Override
@@ -789,7 +794,7 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public boolean getState(ModelSet ms, int modelIndex, SB commands) {
     boolean isAssigned = (ms.getInfo(modelIndex, JC.INFO_SPACE_GROUP_ASSIGNED) != null);
-    T3d pt = getFractionalOffset();
+    T3d pt = getFractionalOffset(false);
     boolean loadUC = false;
     if (pt != null && (pt.x != 0 || pt.y != 0 || pt.z != 0)) {
       commands.append("; set unitcell ").append(Escape.eP(pt));

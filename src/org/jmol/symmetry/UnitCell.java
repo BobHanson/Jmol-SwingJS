@@ -950,7 +950,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     return vertices; // does not include offsets
   }
   
-  boolean hasOffset() {
+  private boolean hasOffset() {
     return (fractionalOffset != null && fractionalOffset.lengthSquared() != 0);
   }
   

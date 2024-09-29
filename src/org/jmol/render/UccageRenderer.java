@@ -171,7 +171,6 @@ public class UccageRenderer extends CageRenderer {
     vwr.gdata.setFontBold("Monospaced", 14 * imageFontScaling);
     xpos = (int) Math.floor(10 * imageFontScaling);
     ypos = lineheight = (int) Math.floor(15 * imageFontScaling);
-
     if (!unitcell.isSimple()) {
       String sgName = unitcell.getUnitCellDisplayName();
       if (sgName != null)

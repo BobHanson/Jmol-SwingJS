@@ -38,6 +38,8 @@ public class Halos extends AtomShape {
   public short colixSelection = C.USE_PALETTE;
 
   public BS bsHighlight;
+  public Integer atomWarning;
+  
   public short colixHighlight = C.RED;
 
   void initState() {
@@ -58,6 +60,12 @@ public class Halos extends AtomShape {
     }
     if ("highlight" == propertyName) {
       bsHighlight = (BS) value;
+      if (value == null)
+        atomWarning = null;
+      return;
+    }
+    if ("warnAtom" == propertyName) {
+      atomWarning = (Integer) value;
       return;
     }
 

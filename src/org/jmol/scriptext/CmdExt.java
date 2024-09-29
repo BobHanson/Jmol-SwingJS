@@ -3455,7 +3455,7 @@ public class CmdExt extends ScriptExt {
         invArg();
       }
     }
-    if (!chk && !vwr.isJmolDataFrame())
+    if (!chk && !vwr.isJmolDataFrame() && !vwr.getBoolean(T.mode2d))
       vwr.tm.navigateList(eval, list);
   }
 
@@ -5087,6 +5087,11 @@ public class CmdExt extends ScriptExt {
         }
       }
       break;
+    case T.wyckoff:
+      if (chk)
+        break;
+      msg = ("" + vwr.evaluateExpression("symop('wyckoff')")).trim();
+      break;
     case T.spacegroup:
     case T.symop:
       SymmetryInterface sym = vwr.getOperativeSymmetry();
@@ -5749,7 +5754,8 @@ public class CmdExt extends ScriptExt {
     return true;
   }
 
-  private void unitcell(int i, final boolean isModelkit) throws ScriptException {
+  private void unitcell(int i, final boolean isModelkit)
+      throws ScriptException {
     ScriptEval eval = e;
     int icell = Integer.MAX_VALUE;
     int mad10 = Integer.MAX_VALUE;
@@ -5762,6 +5768,7 @@ public class CmdExt extends ScriptExt {
     String ucname = null;
     boolean isOffset = false;
     boolean isReset = false;
+    boolean isPacked = false;
     SymmetryInterface sym = (chk ? null : vwr.getCurrentUnitCell());
     int tok = tokAt(++i);
     switch (tok) {
@@ -6053,8 +6060,8 @@ public class CmdExt extends ScriptExt {
         }
       } else if (newUC != null) {
         if (!chk && isModelkit) {
-          if (sym == null) {            
-              assignSpaceGroup(null, "P1", newUC, false, false, "unitcell");
+          if (sym == null) {
+            assignSpaceGroup(null, "P1", newUC, false, false, "unitcell");
           } else if (sym.fixUnitCell((double[]) newUC)) {
             eval.invArgStr(
                 "Unit cell is incompatible with current space group");
@@ -6065,6 +6072,10 @@ public class CmdExt extends ScriptExt {
         i = eval.iToken;
       }
       break;
+    }
+    if (isModelkit && tokAt(i + 1) == T.packed) {
+      isPacked = true;
+      i = ++eval.iToken;
     }
     mad10 = eval.getSetAxesTypeMad10(++i);
     eval.checkLast(eval.iToken);
@@ -6081,7 +6092,9 @@ public class CmdExt extends ScriptExt {
     } else if (id != null) {
       vwr.setCurrentCage(id);
     } else if (isReset || oabc != null) {
-      isReset = (isModelkit || sym == null ? vwr.getModelkit(false).transformAtomsToUnitCell(sym, oabc, ucname) : true);
+      isReset = (isModelkit || sym == null
+          ? vwr.getModelkit(false).transformAtomsToUnitCell(sym, oabc, ucname)
+          : true);
       if (isReset) {
         if (isModelkit && sym != null) {
           vwr.ms.setSpaceGroup(vwr.am.cmi, sym.getUnitCell(oabc, false, null),
@@ -6099,6 +6112,11 @@ public class CmdExt extends ScriptExt {
       sym = vwr.ms.getUnitCell(Integer.MIN_VALUE);
       if (sym != null)
         sym.setOffsetPt(pt);
+    }
+    if (isModelkit && sym.getFractionalOffset(true) == null) {
+      sym = vwr.ms.getUnitCell(-1 - vwr.am.cmi);
+      assignSpaceGroup(vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi),
+          sym.getSpaceGroupClegId(), null, isPacked, false, e.fullCommand);
     }
     if (tickInfo != null)
       setShapeProperty(JC.SHAPE_UCCAGE, "tickInfo", tickInfo);
@@ -6515,8 +6533,8 @@ public class CmdExt extends ScriptExt {
           unitcell(2, true);
           return;
         }
-        value = paramAsStr(++i).toLowerCase();
-        if (!vwr.isModelKitOption('U', (String) value)) {
+        value = (tokAt(i + 1) == T.string ? paramAsStr(++i).toLowerCase() : null);
+        if (value == null || !vwr.isModelKitOption('U', (String) value)) {
           unitcell(2, true);
           return;
         }
