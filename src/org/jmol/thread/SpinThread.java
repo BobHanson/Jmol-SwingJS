@@ -43,7 +43,9 @@ public class SpinThread extends JmolThread {
    */
   private TransformManager transformManager;
   private double endDegrees;
+  private int nFrames;
   private Lst<P3d> endPositions;
+  private P3d[][] centerAndPoints;
   private double[] dihedralList;
   private double nDegrees;
   private BS bsAtoms;
@@ -57,6 +59,7 @@ public class SpinThread extends JmolThread {
   private BS[] bsBranches;
   private boolean isDone = false;
   private M4d m4;
+  private P3d ptemp;
   
   public SpinThread() {}
   
@@ -86,6 +89,11 @@ public class SpinThread extends JmolThread {
         bsBranches = vwr.ms.getBsBranches(dihedralList);
       bsAtoms = (BS) options[3];
       isGesture = (options[4] != null);
+      centerAndPoints = (P3d[][]) options[5];
+      if (centerAndPoints != null) {
+        ptemp = new P3d();
+        nFrames = ((Integer) options[6]).intValue();
+      }
     }
     return 0;
   }
@@ -178,9 +186,10 @@ public class SpinThread extends JmolThread {
             vwr.requestRepaintAndWait("spin thread");
         else
           vwr.refresh(Viewer.REFRESH_REPAINT, "SpinThread");
-        if (endDegrees >= 1e10d ? nDegrees/endDegrees > 0.99 
+        if (nFrames >= 0 && index >= nFrames 
+            || (endDegrees >= 1e10d ? nDegrees/endDegrees > 0.99 
             : !isNav && endDegrees >= 0 ? nDegrees >= endDegrees - 0.001
-            : -nDegrees <= endDegrees + 0.001) {
+            : -nDegrees <= endDegrees + 0.001)) {
           isDone = true;
           transformManager.setSpinOff();
         }
@@ -209,8 +218,12 @@ public class SpinThread extends JmolThread {
       }
   }
 
+  
   private void doTransform() {
-    if (dihedralList != null) {
+    if (centerAndPoints != null) {
+      double f = index * 1d / nFrames;
+      vwr.ms.morphAtoms(bsAtoms, centerAndPoints, 0, f, ptemp);
+    } else if (dihedralList != null) {
       double f = 1d / myFps / endDegrees;
       vwr.setDihedrals(dihedralList, bsBranches, f);
       nDegrees += 1d / myFps;
@@ -243,4 +256,5 @@ public class SpinThread extends JmolThread {
       }
     }
   }
+
 }

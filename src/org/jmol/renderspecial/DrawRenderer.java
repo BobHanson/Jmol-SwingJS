@@ -192,7 +192,7 @@ public class DrawRenderer extends MeshRenderer {
       nPoints = setArc(vertices[0], vertices[1], ptRef, nDegreesOffset, theta,
           fractionalOffset, dmesh.scale);
       if (dmesh.isVector && !dmesh.noHead) {
-        renderArrowHead(pt0, pt1, 0.3d, false, false, dmesh.isBarb);
+        renderArrowWithHead(pt0, pt1, 0.3d, false, false, dmesh.isBarb);
         tm.transformPtScr(pt1f, screens[nPoints - 1]);
         tm.transformPtScrT3(pt1f, p3Screens[nPoints - 1]);
       }
@@ -200,7 +200,7 @@ public class DrawRenderer extends MeshRenderer {
       break;
     case ARROW:
       if (!isCurved) {
-        renderArrowHead(vertices[0], vertices[1], 0, false, true, dmesh.isBarb);
+        renderArrowWithHead(vertices[0], vertices[1], 0, false, true, dmesh.isBarb);
         return;
       }
       int nHermites = 5;
@@ -211,7 +211,7 @@ public class DrawRenderer extends MeshRenderer {
           vertices[vertexCount - 2], vertices[vertexCount - 1],
           vertices[vertexCount - 1], vertices[vertexCount - 1],
           controlHermites, 0, nHermites, true);
-      renderArrowHead(controlHermites[nHermites - 2],
+      renderArrowWithHead(controlHermites[nHermites - 2],
           controlHermites[nHermites - 1], 0, false, false, dmesh.isBarb);
       break;
     }
@@ -409,7 +409,7 @@ public class DrawRenderer extends MeshRenderer {
       g3d.drawDashedLineBits(8, 4, pt0, pt1);
     else
       g3d.fillCylinderBits(GData.ENDCAPS_FLAT, diameter, pt0, pt1);
-    renderArrowHead(pt0, pt1, 0, true, false, false);
+    renderArrowWithHead(pt0, pt1, 0, true, false, false);
   }
 
   private final P3d pt0d = new P3d();
@@ -418,10 +418,10 @@ public class DrawRenderer extends MeshRenderer {
   private P3d s1f;
   private P3d s2f;
 
-  private void renderArrowHead(T3d pt1, T3d pt2, double factor2,
+  private void renderArrowWithHead(T3d pt1, T3d pt2, double factor2,
                                boolean isTransformed, boolean withShaft,
                                boolean isBarb) {
-    if (dmesh.noHead)
+    if (dmesh.noHead && !withShaft)
       return;
     if (s0d == null) {
       s0d = new P3d();
@@ -439,7 +439,7 @@ public class DrawRenderer extends MeshRenderer {
     double d = pt0d.distance(pt2f);
     if (d == 0)
       return;
-    double headWidth = (width > 0 ? width * 3 : 0);
+    double headWidth = (width > 0 && !dmesh.noHead ? width * 3 : 0);
     vTemp.sub2(pt2f, pt0d); // total length
     vTemp.normalize(); // unit length
     
@@ -472,7 +472,7 @@ public class DrawRenderer extends MeshRenderer {
     }
     if (diameter < 1)
       diameter = 1;
-    if (headDiameter > 2)
+    if (headDiameter > 2 && !dmesh.noHead)
       g3d.fillConeScreen3f(GData.ENDCAPS_FLAT, headDiameter, s1f, s2f,
           isBarb);
     if (withShaft)

@@ -246,7 +246,7 @@ public interface SymmetryInterface {
 
   Object getWyckoffPosition(Viewer vwr, P3d pt, String letter);
 
-  Object getSpaceGroupJSON(Viewer vwr, String name, Object data, int index);
+  Object getSpaceGroupJSON(Viewer vwr, String name, String data, int index);
 
   double getCellWeight(P3d pt);
 
@@ -293,5 +293,11 @@ public interface SymmetryInterface {
 
   String staticTransformSpaceGroup(BS bs, String cleg, Object paramsOrUC,
                                    SB sb);
+
+  int getPeriodicity();
+
+  int getDimensionality();
+
+  P3d getUnitCellCenter();
 
 }

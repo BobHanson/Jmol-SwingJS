@@ -205,7 +205,7 @@ public class MathExt {
     case T.hkl:
     case T.plane:
     case T.intersection:
-      return evaluatePlane(mp, args, tok);
+      return evaluatePlane(mp, args, tok, op.tok == T.propselector);
     case T.eval:
     case T.javascript:
     case T.script:
@@ -377,11 +377,12 @@ public class MathExt {
     // spacegroup("ITA/14.3") // third ITA entry for this ITA
     // spacegroup("ITA/all")  // all, as map
     // spacegroup("x,y,z;-x,-y,-z");
-    // spacegroup("x,y,z;-x,-y,-z", [a b c alpha beta gamma]);
+    // spacegroup("x,y,z;-x,y,z", [a, b, c, alpha, beta, gamma])
+    // spacegroup(6, [a, b, c, alpha, beta, gamma])
     // spacegroup("x,y,z;-x,-y,-z&"); //space groups with all these operators
     // spacegroup(18, "settings")
     // spacegroup(4,"subgroups") all data for 4
-	  // spacegroup(4,0,"subgroups") an array of known subgroups
+    // spacegroup(4,0,"subgroups") an array of known subgroups
     // spacegroup(4,0,0,0,"subgroups") an array of arrays of [isub, ntrm, subIndex, type(t=1, k(eu)=3, k(ct)= 4]
     // spacegroup(4,5,"subgroups") list of all 4 >> 5
     // spacegroup(4,5,1,"subgroups") first-listed 4 >> 5 as a map
@@ -390,92 +391,55 @@ public class MathExt {
     // spacegroup(4,5,1,2,"subgroups") second transformation for 4>>5, first match
     // the first and second number can be replaced by a Hermann-Mauguin name.
     // "subgroups" is optional if there are more than two parameter.
-    
-//    * itaFrom  itaTo  index1  index2
-//    *    n      MinV    -       -      return map for group n, contents of sub_n.json
-//    *    n       0     MinV     -      return int[][] of critical information 
-//    *    n       0      m      MinV    return map map.subgroups[m]
-//    *    n       0      m       t      return string transform map.subgroups[m].trm[t]
-//    *    n       0      0       0      return int[] array of list of valid super>>sub 
-//    *    n1      n2    MinV     -      return list map.subgroups.select("WHERE subgroup=n2")
-//    *    n1      n2     m      MinV    return map map.subgroups.select("WHERE subgroup=n2")[m]
-//    *    n1      n2     m       t      return string transform map.subgroups.select("WHERE subgroup=n2")[m].trm[t]
-//    * 
 
-    
+    //    * itaFrom  itaTo  index1  index2
+    //    *    n      MinV    -       -      return map for group n, contents of sub_n.json
+    //    *    n       0     MinV     -      return int[][] of critical information 
+    //    *    n       0      m      MinV    return map map.subgroups[m]
+    //    *    n       0      m       t      return string transform map.subgroups[m].trm[t]
+    //    *    n       0      0       0      return int[] array of list of valid super>>sub 
+    //    *    n1      n2    MinV     -      return list map.subgroups.select("WHERE subgroup=n2")
+    //    *    n1      n2     m      MinV    return map map.subgroups.select("WHERE subgroup=n2")[m]
+    //    *    n1      n2     m       t      return string transform map.subgroups.select("WHERE subgroup=n2")[m].trm[t]
+    //    * 
+
     // spacegroup("all");
     double[] ucParams = null;
-    Object params = null;
-    int n = args.length;
-    if (n == 0)
+    int nargs = args.length;
+    if (nargs == 0)
       return mp.addXObj(vwr.getSymTemp().getSpaceGroupInfo(vwr.ms, null,
           vwr.am.cmi, true, null));
-    String mode = (args[args.length - 1].tok == T.string 
-        ? (String) args[args.length - 1].value : null);
+    String mode = (args[args.length - 1].tok == T.string
+        ? (String) args[args.length - 1].value
+        : null);
     boolean isSettings = "settings".equalsIgnoreCase(mode);
     boolean isSetting = "setting".equalsIgnoreCase(mode);
-    boolean isSubgroups = (n > 1 && (n != 2 
-        || !isSettings && !isSetting
-          && !"list".equalsIgnoreCase(mode)
-          )
-        );
-    String xyzList = args[0].asString(); 
+    boolean isSubgroups = (nargs > 1 && (nargs != 2
+        || !isSettings && !isSetting 
+        && !"list".equalsIgnoreCase(mode)
+        && !"jmol".equalsIgnoreCase(mode)
+        ));
+    String xyzList = args[0].asString();
     if (isSubgroups || "subgroups".equals(mode)) {
-      SymmetryInterface sym;
-      int itaFrom = Integer.MIN_VALUE, itaTo = Integer.MIN_VALUE, 
-    		  index1 = Integer.MIN_VALUE, index2 = Integer.MIN_VALUE;
-      switch ("subgroups".equals(mode) ? n : n + 1) {
-      case 5:
-        index2 = args[3].intValue;
-        if (index2 < 0)
-          return false;
-        //$FALL-THROUGH$
-      case 4:
-        index1 = args[2].intValue;
-        if (index1 < 0 || index1 == Integer.MAX_VALUE)
-          return false;
-        //$FALL-THROUGH$
-      case 3:
-        itaTo = args[1].intValue;
-        if (itaTo == Integer.MAX_VALUE) {
-          itaTo = vwr.getItaNumberFor(args[1].asString());
-        }
-        if (itaTo < 0)
-          return false;
-        //$FALL-THROUGH$
-      case 2:
-        itaFrom = args[0].intValue;
-        if (itaFrom == Integer.MAX_VALUE) {
-          itaFrom = vwr.getItaNumberFor(args[0].asString());
-        }
-        if (itaFrom < 0)
-          return false;
-        //$FALL-THROUGH$
-      case 1:
-      default:
-        if (itaFrom == Integer.MIN_VALUE) {
-          sym = vwr.getCurrentUnitCell();
-          itaFrom = PT.parseInt(sym.getIntTableNumber());
-          if (itaFrom < 1)
-            return false;              
-        } else {
-          sym = vwr.getSymTemp();
-        }
-        break;
-      }
-      return mp.addXObj(sym.getSubgroupJSON(vwr, itaFrom, itaTo, index1, index2));
+      Object ret = getSubgroupInfo(args,
+          "subgroups".equals(mode) ? nargs : nargs + 1);
+      return (ret == null ? false : mp.addXObj(ret));
     }
-    switch (n) {
+    Object params = null;
+    Object ret = null;
+    switch (nargs) {
     default:
       return false;
     case 2:
       if ("list".equals(mode)) {
-        params = Integer.valueOf((String) vwr.getSymTemp().getSpaceGroupInfoObj(
-            "itaNumber", xyzList, false, false));
+        params = Integer.valueOf((String) vwr.getSymTemp()
+            .getSpaceGroupInfoObj("itaNumber", xyzList, false, false));
         xyzList = "list";
         break;
       }
       if (args[1].tok != T.string) {
+        // spacegroup("x,y,z;-x,y,z", [a, b, c, alpha, beta, gamma])
+        // spacegroup(6, [a, b, c, alpha, beta, gamma])
         ucParams = SV.dlistValue(args[1], 0);
         if (ucParams == null || ucParams.length != 6)
           return false;
@@ -484,48 +448,120 @@ public class MathExt {
       }
       //$FALL-THROUGH$
     case 1:
-      int itaNo = (args[0].tok == T.integer ? args[0].intValue : n == 1 ? Integer.MIN_VALUE : 0);
+      if (args[0].tok == T.bitset) {
+        BS atoms = SV.getBitSet(args[0], true);
+        // undocumented first parameter atoms, so getting a space group for a subset of atoms
+        return mp.addXObj(vwr.findSpaceGroup(null, atoms, null, ucParams, null,
+            null, JC.SG_AS_STRING));
+      }
+      int itaNo = (args[0].tok == T.integer ? args[0].intValue
+          : nargs == 1 ? Integer.MIN_VALUE : 0);
       if (isSettings || isSetting) {
         if (isSettings && itaNo == 0)
           return false;
-        String data = (isSetting && n > 1 ? xyzList : null);        
-        return mp.addXObj((itaNo == Integer.MIN_VALUE ? vwr.getCurrentUnitCell() : vwr.getSymTemp()).getSpaceGroupJSON(vwr, mode.toLowerCase(), data, itaNo));
+        String data = (isSetting && nargs > 1 ? xyzList : null);
+        return mp.addXObj((itaNo == Integer.MIN_VALUE ? vwr.getCurrentUnitCell()
+            : vwr.getSymTemp()).getSpaceGroupJSON(vwr, mode.toLowerCase(), data,
+                itaNo));
+      }
+      if ("setting".equalsIgnoreCase(xyzList)
+          || "settings".equalsIgnoreCase(xyzList)) {
+        SymmetryInterface sym = vwr.getOperativeSymmetry();
+        return mp.addXObj(sym == null ? null
+            : sym.getSpaceGroupJSON(vwr, xyzList.toLowerCase(), null,
+                Integer.MIN_VALUE));
+      }
+      if (xyzList.toUpperCase().startsWith("AFLOW/")) {
+        // "15" or "15.1"
+        return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOW",
+            xyzList.substring(6), 0));
+      }
+      if (xyzList.startsWith("Hall:") || xyzList.indexOf("x") >= 0
+          || ucParams != null) {
+        // spacegroup("x,y,z;-x,y,z", ...)
+        // this returns a Jmol group, not an ITA group. 
+        // it is used for the script getITA.spt to retrive Jmol-specific info.
+        // possibly with parameters
+        ret = vwr.findSpaceGroup(null, null, xyzList, ucParams,
+            null, null, JC.SG_AS_STRING);
+        break;
       }
       if (itaNo > 0 || args[0].tok == T.decimal || args[0].tok == T.string) {
-        if (xyzList.toUpperCase().startsWith("AFLOW/")) {
-          // "15" or "15.1"
-          return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOW",
-              xyzList.substring(6), 0));
-        }
-        if (xyzList.startsWith("Hall:") || xyzList.indexOf("x") >= 0 || ucParams != null) {
-          return mp.addXObj(vwr.findSpaceGroup(null, null, xyzList,
-              ucParams, null, null, JC.SG_AS_STRING));
-        }
-        if (itaNo > 0 || !xyzList.endsWith(":") && !Double.isNaN(PT.parseDouble(xyzList)))
+
+        // spacegroup("132:2")     
+        // spacegroup("p/3")
+        // spacegroup("p/p3m1")
+
+        if (itaNo > 0 || xyzList.length() > 1 && xyzList.charAt(1) == '/'
+            || !xyzList.endsWith(":") && !Double.isNaN(PT.parseDouble(xyzList)))
           xyzList = "ITA/" + xyzList;
-        if ("setting".equalsIgnoreCase(xyzList) || "settings".equalsIgnoreCase(xyzList)) {
-          SymmetryInterface sym = vwr.getOperativeSymmetry();
-          return mp.addXObj(sym == null ? null : sym.getSpaceGroupJSON(vwr, xyzList.toLowerCase(), null, Integer.MIN_VALUE));
-        }
-        // spacegroup("x,y,z;-x,-y,-z;...")
-        // spacegroup("132:2")
         if (xyzList.toUpperCase().startsWith("ITA/")) {
-          // "15:ba"  or "230" or "155.2"
+          // "230" or "155.2"; includes JmolID "15:ab"
           return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "ITA",
               xyzList.substring(4), 0));
         }
-      } else {
-        BS atoms = SV.getBitSet(args[0], true);
-        if (atoms != null) {
-          // undocumented first parameter atoms
-          return mp.addXObj(vwr.findSpaceGroup(null, atoms, null,
-              ucParams, null, null, JC.SG_AS_STRING));         
-        }
+        // spacegroup("P 2") handled by finding Jmol space group 
+        // and using the itaIndex for that
       }
       break;
     }
-    return mp.addXObj(vwr.getSymStatic().getSpaceGroupInfoObj(
-        xyzList, params, true, false));
+    if (ret == null)
+      ret = vwr.getSymStatic().getSpaceGroupInfoObj(xyzList, params, true,
+        false);
+    if (!"jmol".equals(mode) && !"list".equals(mode)) {
+      System.out.println("MathExt " + ret);
+      // "jmol" used will return the Jmol group if that was to be returned
+      @SuppressWarnings("unchecked")
+      String s = "" + ((Map<String, Object>) ret).get("itaIndex");
+      ret = vwr.getSymTemp().getSpaceGroupJSON(vwr, "ITA", s, 0);
+    }
+    return mp.addXObj(ret);
+  }
+
+  private Object getSubgroupInfo(SV[] args, int nargs) {
+    SymmetryInterface sym;
+    int itaFrom = Integer.MIN_VALUE, itaTo = Integer.MIN_VALUE, 
+        index1 = Integer.MIN_VALUE, index2 = Integer.MIN_VALUE;
+    switch (nargs) {
+    case 5:
+      index2 = args[3].intValue;
+      if (index2 < 0)
+        return null;
+      //$FALL-THROUGH$
+    case 4:
+      index1 = args[2].intValue;
+      if (index1 < 0 || index1 == Integer.MAX_VALUE)
+        return null;
+      //$FALL-THROUGH$
+    case 3:
+      itaTo = args[1].intValue;
+      if (itaTo == Integer.MAX_VALUE) {
+        itaTo = vwr.getItaNumberFor(args[1].asString());
+      }
+      if (itaTo < 0)
+        return null;
+      //$FALL-THROUGH$
+    case 2:
+      itaFrom = args[0].intValue;
+      if (itaFrom == Integer.MAX_VALUE) {
+        itaFrom = vwr.getItaNumberFor(args[0].asString());
+      }
+      if (itaFrom < 0)
+        return null;
+      //$FALL-THROUGH$
+    case 1:
+    default:
+      if (itaFrom == Integer.MIN_VALUE) {
+        sym = vwr.getCurrentUnitCell();
+        itaFrom = PT.parseInt(sym.getIntTableNumber());
+        if (itaFrom < 1)
+          return null;              
+      } else {
+        sym = vwr.getSymTemp();
+      }
+      break;
+    }
+    return sym.getSubgroupJSON(vwr, itaFrom, itaTo, index1, index2);
   }
 
   @SuppressWarnings("unchecked")
@@ -3262,15 +3298,16 @@ public class MathExt {
   }
 
   /**
-   * plane() or intersection()
+   * plane() or intersection() or hkl()
    * 
    * @param mp
    * @param args
    * @param tok
+   * @param isSelector
    * @return true
    * @throws ScriptException
    */
-  private boolean evaluatePlane(ScriptMathProcessor mp, SV[] args, int tok)
+  private boolean evaluatePlane(ScriptMathProcessor mp, SV[] args, int tok, boolean isSelector)
       throws ScriptException {
     if (tok == T.hkl && args.length != 3 && args.length != 4
         || tok == T.intersection && args.length != 2 && args.length != 3
@@ -3282,12 +3319,20 @@ public class MathExt {
     V3d norm, vTemp;
     switch (args.length) {
     case 1:
-      if (args[0].tok == T.bitset) {
-        BS bs = (BS) args[0].value;
-        if (bs.cardinality() == 3) {
-          Lst<P3d> pts = vwr.ms.getAtomPointVector(bs);
-          return mp.addXPt4(MeasureD.getPlaneThroughPoints(pts.get(0),
-              pts.get(1), pts.get(2), new V3d(), new V3d(), new P4d()));
+      if (tok == T.plane) {
+        if (args[0].tok != T.varray)
+          return false;
+        double[] uvw = SV.dlistValue(args[0], 3);
+        if (uvw.length != 3)
+          return false;
+        SymmetryInterface sym = vwr.getOperativeSymmetry();
+        if (sym == null)
+          return false;
+        P3d ptuvw = P3d.new3(uvw[0], uvw[1], uvw[2]);
+        sym.toCartesian(ptuvw, false);
+        plane = P4d.new4(ptuvw.x, ptuvw.y, ptuvw.z, 0);
+        if (isSelector) {
+          break;
         }
       }
       return (plane != null && mp.addXPt4(plane));
@@ -3323,6 +3368,9 @@ public class MathExt {
         double offset = (args.length == 4 ? SV.dValue(args[3]) : Double.NaN);
         plane = e.getHklPlane(P3d.new3(SV.dValue(args[0]), SV.dValue(args[1]),
             SV.dValue(args[2])), offset, null);
+        if (isSelector) {
+          break;
+        }
         return plane != null && mp.addXPt4(plane);
       case T.intersection:
         pt1 = mp.ptValue(args[0], null);
@@ -3440,6 +3488,26 @@ public class MathExt {
             ptref, norm, vAB);
         return mp.addXPt4(P4d.new4(norm.x, norm.y, norm.z, nd));
       }
+    }
+    if (isSelector) {
+        // {*}.hkl(
+        SV x1 = mp.getX();
+        switch (x1.tok) {
+        case T.bitset:
+          Lst<SV> list = new Lst<>();
+          BS bsAtoms = SV.getBitSet(x1, false);
+          for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+            P3d p = new P3d(); // will be filled
+            MeasureD.getPlaneProjection(vwr.ms.at[i], plane, p, new V3d());
+            list.addLast(SV.getVariable(p));
+          }
+          return mp.addXList(list);
+        case T.point3f:
+          P3d pt = SV.ptValue(x1);
+          P3d p = new P3d(); // will be filled
+          MeasureD.getPlaneProjection(pt, plane, p, new V3d());            
+          return mp.addXPt(p);
+        }
     }
     if (args.length != 4)
       return false;

@@ -322,7 +322,7 @@ public class NMRCalculation implements JmolNMRInterface {
     BufferedReader br = null;
     try {
       boolean debugging = Logger.debugging;
-      br = FileManager.getBufferedReaderForResource(vwr, this,
+      br = FileManager.getBufferedReaderForResource(vwr, NMRCalculation.class,
           "org/jmol/quantum/", resource);
       // #extracted by Simone Sturniolo from ROBIN K. HARRIS, EDWIN D. BECKER, SONIA M. CABRAL DE MENEZES, ROBIN GOODFELLOW, AND PIERRE GRANGER, Pure Appl. Chem., Vol. 73, No. 11, pp. 1795–1818, 2001. NMR NOMENCLATURE. NUCLEAR SPIN PROPERTIES AND CONVENTIONS FOR CHEMICAL SHIFTS (IUPAC Recommendations 2001)
       // #element atomNo  isotopeDef  isotope1  G1  Q1  isotope2  G2  Q2  isotope3  G3  Q3

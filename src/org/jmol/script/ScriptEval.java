@@ -5688,6 +5688,7 @@ public class ScriptEval extends ScriptExpr {
     // yNav navDepth
     // where [zoom factor] is [0|n|+n|-n|*n|/n|IN|OUT]
     // moveto [time] front|back|left|right|top|bottom
+    // moveto plane [1 1 1]
     if (slen == 2 && tokAt(1) == T.stop) {
       if (!chk)
         vwr.tm.stopMotion();
@@ -5702,8 +5703,8 @@ public class ScriptEval extends ScriptExpr {
         floatSecondsTotal = 0;
       if (floatSecondsTotal > 0)
         refresh(false);
-      vwr.moveTo(this, floatSecondsTotal, null, JC.axisZ, 0, null, 100, 0, 0,
-          0, null, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN,
+      vwr.moveTo(this, floatSecondsTotal, null, JC.axisZ, 0, null, 100, 0, 0, 0,
+          null, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN,
           Double.NaN);
       if (isJS && floatSecondsTotal > 0 && vwr.g.waitForMoveTo)
         throw new ScriptInterruption(this, "moveTo", 1);
@@ -5762,8 +5763,9 @@ public class ScriptEval extends ScriptExpr {
         if (!(ret[0] instanceof BS))
           invArg();
         bsCenter = (BS) ret[0];
-        q = (chk ? new Qd() : vwr.ms.getQuaternion(bsCenter.nextSetBit(0),
-            vwr.getQuaternionFrame()));
+        q = (chk ? new Qd()
+            : vwr.ms.getQuaternion(bsCenter.nextSetBit(0),
+                vwr.getQuaternionFrame()));
       } else {
         q = getQuaternionParameter(i, null, false);
       }
@@ -5812,6 +5814,14 @@ public class ScriptEval extends ScriptExpr {
       axis.set(-1, 0, 0);
       checkLength(++i);
       break;
+    case T.plane:
+      P4d v = planeParameter(i, false);
+      V3d x = V3d.new3(3.24,2.56, 6.12);
+      x.cross(x,v);
+      v.cross(x,v);
+      q =  Qd.getQuaternionFrame((P3d) null, v, x).inv();
+      i = iToken + 1;
+      break;
     case T.axis:
       String abc = paramAsStr(++i);
       if (abc.equals("-"))
@@ -5819,16 +5829,16 @@ public class ScriptEval extends ScriptExpr {
       checkLength(++i);
       switch ("xyz".indexOf(abc)) {
       case 0:
-        q = Qd.new4(0.5d,0.5d,0.5d,-0.5d);
+        q = Qd.new4(0.5d, 0.5d, 0.5d, -0.5d);
         break;
       case 1:
-        q = Qd.new4(0.5d,0.5d,0.5d,0.5d);
+        q = Qd.new4(0.5d, 0.5d, 0.5d, 0.5d);
         break;
       case 2:
         q = Qd.new4(0, 0, 0, 1);
         break;
       default:
-         // a b c
+        // a b c
         SymmetryInterface uc;
         uc = vwr.getCurrentUnitCell();
         if (uc == null) {
@@ -5900,13 +5910,13 @@ public class ScriptEval extends ScriptExpr {
         if ((rotationRadius == 0 || Double.isNaN(rotationRadius))
             && (zoom == 0 || Double.isNaN(zoom))) {
           // alternative (atom expression) 0 zoomFactor
-          double newZoom = Math.abs(getZoom(0, i, bsCenter, (zoom == 0 ? 0
-              : zoom0)));
+          double newZoom = Math
+              .abs(getZoom(0, i, bsCenter, (zoom == 0 ? 0 : zoom0)));
           i = iToken + 1;
           zoom = newZoom;
         } else {
-          if (!isChange
-              && Math.abs(rotationRadius - vwr.getDouble(T.rotationradius)) >= 0.1)
+          if (!isChange && Math
+              .abs(rotationRadius - vwr.getDouble(T.rotationradius)) >= 0.1)
             isChange = true;
         }
       }
@@ -6107,6 +6117,9 @@ public class ScriptEval extends ScriptExpr {
 
   public void cmdRotate(boolean isSpin, boolean isSelected)
       throws ScriptException {
+    boolean is2d = vwr.is2D();
+    if (isSpin && is2d)
+      return;
 
     // rotate is a full replacement for spin
     // spin is DEPRECATED
@@ -6291,10 +6304,14 @@ public class ScriptEval extends ScriptExpr {
         direction = -1;
         continue;
       case T.x:
+        if (is2d)
+          return;
         haveRotation = true;
         rotAxis.set(direction, 0, 0);
         continue;
       case T.y:
+        if (is2d)
+          return;
         haveRotation = true;
         rotAxis.set(0, direction, 0);
         continue;
@@ -6644,7 +6661,7 @@ public class ScriptEval extends ScriptExpr {
         return;
       if (vwr.rotateAboutPointsInternal(this, points[0], points[1], rate,
           endDegrees, isSpin, bsAtoms, translation, ptsB, dihedralList,
-          is4x4 ? m4 : null, false)
+          is4x4 ? m4 : null, false, null)
           && isJS && isSpin)
         throw new ScriptInterruption(this, "rotate", 1);
     }

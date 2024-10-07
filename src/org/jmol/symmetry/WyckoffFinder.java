@@ -1,20 +1,16 @@
 package org.jmol.symmetry;
 
-import java.io.BufferedReader;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.JSJSONParser;
 import javajs.util.Lst;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
 import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.PT;
-import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.V3d;
 
@@ -43,6 +39,7 @@ public class WyckoffFinder {
   public final static int WYCKOFF_RET_LABEL = -1;
   public final static int WYCKOFF_RET_COORD = -2;
   public final static int WYCKOFF_RET_COORDS = -3;
+  public final static int WYCKOFF_RET_ALL_ARRAY = -4;
   public final static int WYCKOFF_RET_COORDS_ALL = '*';
   public final static int WYCKOFF_RET_GENERAL = 'G';
   public final static int WYCKOFF_RET_CENTERING = 'C';
@@ -73,14 +70,17 @@ public class WyckoffFinder {
    */
   WyckoffFinder getWyckoffFinder(Viewer vwr, SpaceGroup sg) {
     String cleg = sg.getClegId();
-    WyckoffFinder helper = helpers.get(cleg);
-    if (helper == null) {
-      helper = createHelper(this, vwr, cleg);
-    }
+    String key = sg.specialPrefix + cleg;
+    WyckoffFinder helper = helpers.get(key);
+    if (helper != null) 
+      return helper;
+    helper = createHelper(vwr, cleg, sg.groupType);
     if (helper == null) {
       if (nullHelper == null)
         nullHelper = new WyckoffFinder(null);
-      helpers.put(cleg, nullHelper);
+      helpers.put(key, nullHelper);
+    } else {
+      helpers.put(key, helper);
     }
     return helper;
   }
@@ -120,11 +120,12 @@ public class WyckoffFinder {
    * @param returnType
    *        label, coord, label*, or
    * @param withMult
+   * @param is2d 
    * @return label or coordinate or label with centerings and coordinates or
    *         full list for space group
    */
-  Object getInfo(UnitCell uc, P3d p, int returnType, boolean withMult) {
-    Object info = createInfo(uc, p, returnType, withMult);
+  Object getInfo(UnitCell uc, P3d p, int returnType, boolean withMult, boolean is2d) {
+    Object info = createInfo(uc, p, returnType, withMult, is2d);
     return (info == null ? "?" : info);
   }
 
@@ -139,6 +140,10 @@ public class WyckoffFinder {
     return sb.appendC('(').append(xyz).appendC(')');
   }
 
+  private final String elementList = "AlB C D Fe F "
+      + "GaHeI GeK LiMgN Os"
+      + "P CaRhS T U V W XeYbZnAm";
+
   /**
    * Generate information for the symop("wyckoff") script function
    * 
@@ -149,11 +154,12 @@ public class WyckoffFinder {
    *        'C' for centerings
    * @param withMult
    *        from "wyckoffm"
+   * @param is2d 
    * @return an informational string
    */
   @SuppressWarnings("unchecked")
   private Object createInfo(UnitCell uc, P3d p, int returnType,
-                            boolean withMult) {
+                            boolean withMult, boolean is2d) {
     switch (returnType) {
     case WYCKOFF_RET_CENTERING_STRING:
       return getCenteringStr(-1, ' ', null).toString().trim();
@@ -174,6 +180,14 @@ public class WyckoffFinder {
             (i == 0 ? ncent : 0));
       }
       return sb.toString();
+    case WYCKOFF_RET_ALL_ARRAY:
+      P3d[] pts = new P3d[npos];
+      for (int i = 0; i < npos; i++) {
+          Map<String, Object> map = (Map<String, Object>) positions.get(i);
+          pts[i] = findPositionFor(P3d.newP(p), (String) map.get("label"));
+          uc.toCartesian(pts[i], false);
+      }
+      return new Object[] { pts, elementList };
     case WYCKOFF_RET_LABEL:
     case WYCKOFF_RET_COORD:
     case WYCKOFF_RET_COORDS:
@@ -247,35 +261,34 @@ public class WyckoffFinder {
   }
 
   @SuppressWarnings("unchecked")
-  private static WyckoffFinder createHelper(Object w, Viewer vwr,
-                                            String clegId) {
+  private static WyckoffFinder createHelper(Viewer vwr, String clegId,
+                                            int groupType) {
     String sgname = clegId;
     int pt = sgname.indexOf(":");
-    int itno = PT.parseInt(pt < 0 ? sgname : sgname.substring(0, pt));    
-    if (itno >= 1 && itno <= 230) {
-      Map<String, Object> resource = getResource(w, vwr,
-          "ita_" + itno + ".json");
-      if (resource != null) {
-        Lst<Object> its = (Lst<Object>) resource.get("its");
-        Map<String, Object> map = null;
-        boolean haveMap = false;
-        for (int i = 0, c = its.size(); i < c; i++) {
-          map = (Map<String, Object>) its.get(i);
-          if (sgname.equals(map.get("clegId"))) {
-            haveMap = true;
-            break;
-          }
-        }
-        // "more" type, from wp-list, does not contain gp or wpos
-        if (!haveMap || map.containsKey("more"))
-          map = SpaceGroup.fillMoreData(map, clegId, itno, (Map<String, Object>) its.get(0));
-        WyckoffFinder helper = new WyckoffFinder(map);
-        helpers.put(sgname, helper);
-        return helper;
-
+    int itno = PT.parseInt(pt < 0 ? sgname : sgname.substring(0, pt));
+    if (!SpaceGroup.isInRange(itno, groupType, false, false))
+      return null;
+    Map<String, Object> resource = Symmetry.getITResource(vwr, groupType, itno, null);
+    if (resource == null)
+      return null;
+    Lst<Object> its = (Lst<Object>) resource.get("its");
+    Map<String, Object> map = null;
+    boolean haveMap = false;
+    for (int i = 0, c = its.size(); i < c; i++) {
+      map = (Map<String, Object>) its.get(i);
+      String dataCleg = (String) map.get("clegId");
+      if (sgname.equals(dataCleg.substring(2))) {
+        haveMap = true;
+        break;
       }
     }
-    return null;
+    
+    // "more" type, from wp-list, does not contain gp or wpos
+    if (!haveMap || map.containsKey("more"))
+      map = SpaceGroup.fillMoreData(vwr, map, clegId, itno,
+          (Map<String, Object>) its.get(0));
+    WyckoffFinder helper = new WyckoffFinder(map);
+    return helper;
   }
 
   /**
@@ -348,22 +361,6 @@ public class WyckoffFinder {
       coords.set(c, coord = new WyckoffCoord((String) coord, label));
     }
     return (WyckoffCoord) coord;
-  }
-
-  @SuppressWarnings("unchecked")
-  private static Map<String, Object> getResource(Object w, Viewer vwr,
-                                                 String resource) {
-    try {
-      BufferedReader r = FileManager.getBufferedReaderForResource(vwr, w,
-          "org/jmol/symmetry/", "sg/json/" + resource);
-      String[] data = new String[1];
-      if (Rdr.readAllAsString(r, Integer.MAX_VALUE, false, data, 0)) {
-        return (Map<String, Object>) new JSJSONParser().parse(data[0], true);
-      }
-    } catch (Throwable e) {
-      System.err.println(e.getMessage());
-    }
-    return null;
   }
 
   /**

@@ -379,11 +379,11 @@ public class SymmetryDesc {
     return bsInfo;
   }
 
-  private static P3d ptemp = new P3d();
-  private static P3d ptemp2 = new P3d();
-  private static P3d pta01 = new P3d();
-  private static P3d pta02 = new P3d();
-  private static V3d vtrans = new V3d();
+  private static final P3d ptemp = new P3d();
+  private static final P3d ptemp2 = new P3d();
+  private static final P3d pta01 = new P3d();
+  private static final P3d pta02 = new P3d();
+  private static final V3d vtrans = new V3d();
 
   /**
    * 
@@ -462,8 +462,10 @@ public class SymmetryDesc {
       scaleFactor = 1d;
     vtrans.set(0, 0, 0);
     P4d plane = null;
-    P3d pta00 = (ptFrom == null || Double.isNaN(ptFrom.x) ? 
-            uc.getCartesianOffset() : ptFrom);
+
+    P3d pta00 = (ptFrom == null || Double.isNaN(ptFrom.x)
+        ? uc.getCartesianOffset()
+        : ptFrom);
     if (ptTarget != null) {
 
       // Check to see that this is the correct operator
@@ -565,7 +567,7 @@ public class SymmetryDesc {
     Qd q = Qd.getQuaternionFrame(pt0, pt1, pt2)
         .div(Qd.getQuaternionFrame(pta00, pta01, pta02));
     Qd qF = Qd.new4(q.q1, q.q2, q.q3, q.q0);
-    T3d[] info = MeasureD.computeHelicalAxis(pta00, pt0, qF);
+    final T3d[] info = MeasureD.computeHelicalAxis(pta00, pt0, qF);
     // new T3[] { pt_a_prime, n, r, P3.new3(theta, pitch, residuesPerTurn), pt_b_prime };
     P3d pa1 = P3d.newP(info[0]);
     P3d ax1 = P3d.newP(info[1]);
@@ -593,7 +595,7 @@ public class SymmetryDesc {
     P3d ptinv = null; // inverted point for translucent frame
     P3d ipt = null; // inversion center
     P3d ptref = null; // reflection center
-
+    V3d vShift = null; // layer group shift along C
     double w = 0;
     double margin = 0; // for plane
 
@@ -610,6 +612,34 @@ public class SymmetryDesc {
 
     // handle inversion
 
+    /**
+     * Indicates that our vertical planes need to be shifted down 1/2 c
+     */
+    int periodicity = uc.getPeriodicity();
+    boolean notC = (periodicity == 0x4);
+    boolean shiftA = (isSpaceGroup && (periodicity & 0x1) == 0); // rod (ab)c
+    boolean shiftB = (isSpaceGroup && (periodicity & 0x2) == 0); // frieze a(b), rod (ab)c
+    boolean shiftC = (isSpaceGroup && (periodicity & 0x4) == 0); // plane ab, layer ab(c), frieze a(b)
+
+    /**
+     * will depend upon the dot product; used to show the second vector for a rotation
+     */
+    boolean isPeriodic = !(shiftA || shiftB || shiftC);
+    
+      // check for axis colinear with c. We will not show the second of these
+      // if they exist
+      vShift = V3d.newVsub(pta00, pta03);
+      double dot = Math
+          .abs(ax1.dot(vShift) / vShift.length() / ax1.length());
+      if (Math.abs(dot - 1) < 0.001d) {
+        // c dot axis = 1
+        notC = false;
+        vShift = null;
+      } else {
+        isPeriodic = true;
+      }
+
+    
     if (haveInversion && isTranslation) {
 
       // simple inversion operation
@@ -720,6 +750,44 @@ public class SymmetryDesc {
         isRotation = false;
         haveInversion = false;
         isMirrorPlane = true;
+        if (shiftC) {
+          vShift = V3d.newVsub(pta00, pta03);
+          dot = Math
+              .abs(ax1.dot(vShift) / vShift.length() / ax1.length());
+          shiftC = (dot < 0.001d);
+          if (shiftC) {
+            vShift.scale(0.5);
+            uc.toCartesian(vShift, true);
+          }
+        } 
+        if (shiftB) {
+          V3d vs = V3d.newVsub(pta00, pta02);
+          dot = notC ? 0 : Math.abs(ax1.dot(vs) / vs.length() / ax1.length());
+          shiftB = (dot < 0.001d);
+          if (shiftB) {
+            vs.scale(0.5);
+            uc.toCartesian(vs, true);
+            if (shiftC) {
+              vShift.add(vs);
+            } else {
+              vShift = vs;
+            }
+          }
+        }
+        if (shiftA) {
+          V3d vs = V3d.newVsub(pta00, pta01);
+          dot = notC ? 0 : Math.abs(ax1.dot(vs) / vs.length() / ax1.length());
+          shiftA = (dot < 0.001d);
+          if (shiftA) {
+            vs.scale(0.5);
+            uc.toCartesian(vs, true);
+            if (shiftB || shiftC) {
+              vShift.add(vs);
+            } else {
+              vShift = vs;
+            }
+          }
+        }
         break;
       default:
         haveInversion = false;
@@ -787,7 +855,7 @@ public class SymmetryDesc {
     op.isIrrelevant |= isIrrelevant;
     Boolean isccw = op.getOpIsCCW();
     int screwDir = 0;
-    int nrot = 0; 
+    int nrot = 0;
     if (bsInfo.get(RET_LABEL) || bsInfo.get(RET_TYPE)) {
 
       info1 = type = "identity";
@@ -806,7 +874,7 @@ public class SymmetryDesc {
             isIrrelevant = true;
         }
         nrot = 360 / ang;
-        if (haveInversion) {          
+        if (haveInversion) {
           // n-bar
           info1 = nrot + "-bar" + screwtype + " axis";
         } else if (pitch1 != 0) {
@@ -818,7 +886,7 @@ public class SymmetryDesc {
 
         } else {
           info1 = nrot + screwtype + " axis";
-          if (order % 2 == 0)           
+          if (order % 2 == 0)
             screwDir *= order / 2; // 6_3, 4_2
         }
         type = info1;
@@ -836,7 +904,7 @@ public class SymmetryDesc {
           s = " " + strCoord(ftrans, op.isBio);
           // set ITA Table 2.1.2.1
           glideType = SymmetryOperation.getGlideFromTrans(ftrans, ax1);
-          
+
           type = info1 = glideType + "-glide plane";
           info1 += "|translation:" + s;
         }
@@ -875,517 +943,542 @@ public class SymmetryDesc {
 
     boolean ignore = false;
     String cmds = null;
-    if (id != null && bsInfo.get(RET_DRAW)) {
+    while (true) {
+      if (id == null || !bsInfo.get(RET_DRAW))
+        break;
+
       if (op.getOpType() == SymmetryOperation.TYPE_IDENTITY
           || isSpaceGroupAll && op.isIrrelevant) {
         if (Logger.debugging)
           System.out
-            .println("!!SD irrelevent " + op.getOpTitle() + op.getOpPoint());
+              .println("!!SD irrelevent " + op.getOpTitle() + op.getOpPoint());
         cmds = "";
-      } else {
-        String opType = null;
-        drawID = "\ndraw ID \"" + id;
+        break;
+      }
+      String opType = null;
+      drawID = "\ndraw ID \"" + id;
 
-        // delete previous elements of this user-settable ID
+      // delete previous elements of this user-settable ID
+      SB drawSB = new SB();
 
-        SB drawSB = new SB();
+      drawSB.append(getDrawID("*")).append(" delete");
+      //    .append(
+      //    ("print " + PT.esc(
+      //        id + " " + (op.index + 1) + " " + op.fixMagneticXYZ(op, op.xyzOriginal, false) + "|"
+      //            + op.fixMagneticXYZ(op, xyzNew, true) + "|" + info1).replace(
+      //        '\n', ' '))).append("\n")
 
-        drawSB.append(getDrawID("*")).append(" delete");
-        //    .append(
-        //    ("print " + PT.esc(
-        //        id + " " + (op.index + 1) + " " + op.fixMagneticXYZ(op, op.xyzOriginal, false) + "|"
-        //            + op.fixMagneticXYZ(op, xyzNew, true) + "|" + info1).replace(
-        //        '\n', ' '))).append("\n")
+      // draw the initial frame
 
-        // draw the initial frame
+      if (!isSpaceGroup) {
+        drawLine(drawSB, "frame1X", 0.15d, pta00, pta01, "red");
+        drawLine(drawSB, "frame1Y", 0.15d, pta00, pta02, "green");
+        drawLine(drawSB, "frame1Z", 0.15d, pta00, pta03, "blue");
+      }
+      String color;
+      P3d planeCenter = null;
+      int nPC = 0;
 
-        if (!isSpaceGroup) {
-          drawLine(drawSB, "frame1X", 0.15d, pta00, pta01, "red");
-          drawLine(drawSB, "frame1Y", 0.15d, pta00, pta02, "green");
-          drawLine(drawSB, "frame1Z", 0.15d, pta00, pta03, "blue");
+      boolean isSpecial = (pta00.distance(pt0) < 0.2d);
+
+      String title = (isSpaceGroup
+          ? "<hover>" + id + ": " + op.xyz + "|" + info1 + "</hover>"
+          : null);
+
+      // now check for:
+      //
+      // 1) rotation or mirror plane
+      // 2) inversion
+      // 3) translation
+
+      if (isRotation) {
+
+        if (notC) {
+          
         }
-        String color;
-        P3d planeCenter = null;
-        int nPC = 0;
+        color = (nrot == 2 ? COLOR_2
+            : nrot == 3 ? COLOR_BAR_3 : nrot == 4 ? COLOR_BAR_4 : COLOR_BAR_6);
 
-        boolean isSpecial = (pta00.distance(pt0) < 0.2d);
+        ang = ang1;
+        double scale = 1d;
+        vtemp.setT(ax1);
 
-        String title = (isSpaceGroup ? "<hover>" + id + ": " + op.xyz + "|" + info1 + "</hover>" : null);
+        // draw the lines associated with a rotation
 
-        if (isRotation) {
-
-          color = (nrot == 2 ? COLOR_2 : nrot == 3 ? COLOR_BAR_3 : nrot == 4 ? COLOR_BAR_4 : COLOR_BAR_6);
-
-          ang = ang1;
-          double scale = 1d;
-          vtemp.setT(ax1);
-
-          // draw the lines associated with a rotation
-
-          String wp = "";
-          if (isSpaceGroup) {
-            pa1.setT(op.getOpPoint());
-            uc.toCartesian(pa1, false);
+        String wp = "";
+        if (isSpaceGroup) {
+          pa1.setT(op.getOpPoint());
+          uc.toCartesian(pa1, false);
+        }
+        P3d ptr = new P3d();
+        if (pitch1 != 0 && !haveInversion) {
+          // screw axis
+          opType = "screw";
+          color = (isccw == Boolean.TRUE ? COLOR_SCREW_1
+              : isccw == Boolean.FALSE ? COLOR_SCREW_2 // was yellow
+                  : order == 4 ? "lightgray" : "grey");
+          if (!isSpaceGroup) {
+            drawLine(drawSB, "rotLine1", 0.1d, pta00, pa1, "red");
+            ptemp.add2(pa1, vtemp);
+            drawLine(drawSB, "rotLine2", 0.1d, pt0, ptemp, "red");
+            ptr.scaleAdd2(0.5d, vtemp, pa1);
           }
-          P3d ptr = new P3d();
-          if (pitch1 != 0 && !haveInversion) {
-            // screw axis
-            opType ="screw";
-            color = (isccw == Boolean.TRUE ? COLOR_SCREW_1
-                : isccw == Boolean.FALSE ? COLOR_SCREW_2 // was yellow
-                    : order == 4 ? "lightgray" : "grey");
-            if (!isSpaceGroup) {
-              drawLine(drawSB, "rotLine1", 0.1d, pta00, pa1, "red");
-              ptemp.add2(pa1, vtemp);
-              drawLine(drawSB, "rotLine2", 0.1d, pt0, ptemp, "red");
-              ptr.scaleAdd2(0.5d, vtemp, pa1);
-            }
-          } else {
+        } else {
 
-            // check here for correct direction
+          // check here for correct direction
 
-            ptr.setT(pa1);
+          ptr.setT(pa1);
 
-            if (!isRightHand) {
-              if (!isSpecial && !isSpaceGroup)
-                pa1.sub2(pa1, vtemp);
-            }
-            if (haveInversion) {
-              // rotation-inversion
-              opType = "bar";
+          if (!isRightHand) {
+            if (!isSpecial && !isSpaceGroup)
+              pa1.sub2(pa1, vtemp);
+          }
+          if (haveInversion) {
+            // rotation-inversion
+            opType = "bar";
 
-              if (isSpaceGroup) {
-                vtemp.normalize();
-                if (isccw == Boolean.TRUE) {
-                  vtemp.scale(-1);
-                }
-              } else {
-                if (pitch1 == 0) {
-                  // atom to atom or no change in atom position
-                  ptr.setT(ipt);
-                  vtemp.scale(3 * scaleFactor);
-                  if (isSpecial) {
-                    ptemp.scaleAdd2(0.25d, vtemp, pa1);
-                    pa1.scaleAdd2(-0.24d, vtemp, pa1);
-                    ptr.scaleAdd2(0.31d, vtemp, ptr);
-                    color = "cyan";
-                  } else {
-                    ptemp.scaleAdd2(-1, vtemp, pa1);
-                    //                drawVector(drawSB, drawid, "rotVector2", "", pa1, ptemp, "red");
-                    drawLine(drawSB, "rotLine1", 0.1d, pta00, ipt,
-                        "red");
-                    drawLine(drawSB, "rotLine2", 0.1d, ptinv, ipt,
-                        "red");
-                  }
-                } else if (!isSpecial) {
-                  scale = pta00.distance(ptr);
-                  drawLine(drawSB, "rotLine1", 0.1d, pta00, ptr, "red");
-                  drawLine(drawSB, "rotLine2", 0.1d, ptinv, ptr, "red");
-                }
+            if (isSpaceGroup) {
+              vtemp.normalize();
+              if (isccw == Boolean.TRUE) {
+                vtemp.scale(-1);
               }
             } else {
-              // simple rotation
-              opType = "rot";
-              vtemp.scale(3 * scaleFactor);
-              if (isSpecial) {
-                // flat
-              } else {
-                // lines from base
-                if (!isSpaceGroup) {
-                  drawLine(drawSB, "rotLine1", 0.1d, pta00, ptr, "red");
-                  drawLine(drawSB, "rotLine2", 0.1d, pt0, ptr, "red");
+              if (pitch1 == 0) {
+                // atom to atom or no change in atom position
+                ptr.setT(ipt);
+                vtemp.scale(3 * scaleFactor);
+                if (isSpecial) {
+                  ptemp.scaleAdd2(0.25d, vtemp, pa1);
+                  pa1.scaleAdd2(-0.24d, vtemp, pa1);
+                  ptr.scaleAdd2(0.31d, vtemp, ptr);
+                  color = "cyan";
+                } else {
+                  ptemp.scaleAdd2(-1, vtemp, pa1);
+                  //                drawVector(drawSB, drawid, "rotVector2", "", pa1, ptemp, "red");
+                  drawLine(drawSB, "rotLine1", 0.1d, pta00, ipt, "red");
+                  drawLine(drawSB, "rotLine2", 0.1d, ptinv, ipt, "red");
                 }
+              } else if (!isSpecial) {
+                scale = pta00.distance(ptr);
+                drawLine(drawSB, "rotLine1", 0.1d, pta00, ptr, "red");
+                drawLine(drawSB, "rotLine2", 0.1d, ptinv, ptr, "red");
               }
-              ptr.setT(pa1);
-              if (pitch1 == 0 && isSpecial)
-                ptr.scaleAdd2(0.25d, vtemp, ptr);
             }
-          }
-
-          // draw arc arrow
-
-          if (!isSpaceGroup) {
-            if (ang > 180) {
-              // "(+)" is CCW, (-) is CW
-              ang = 180 - ang;
-            }
-            ptemp.add2(ptr, vtemp);
-            drawSB
-                .append(getDrawID("rotRotArrow")).append(" arrow width 0.1 scale "
-                    + PT.escD(scale) + " arc ")
-                .append(Escape.eP(ptr)).append(Escape.eP(ptemp));
-            ptemp.setT(pta00);
-            if (ptemp.distance(pt0) < 0.1d)
-              ptemp.set(Math.random(), Math.random(), Math.random());
-            drawSB.append(Escape.eP(ptemp));
-            ptemp.set(0, ang - 5 * Math.signum(ang), 0);
-            drawSB.append(Escape.eP(ptemp)).append(" color red");
-          }
-
-          // draw the main vector
-
-          double d;
-          // idea here is that we only show the smaller rotation if
-          // there are, say, a 3(+)1/3 and a 3(-)2/3, because one implies the other.
-          // but there is no smaller rotation for 63(+)1/2 -- the rotation is 60o. All others generate translations.
-          
-          double opTransLength = 0;
-          if (!op.opIsLong
-              && (isSpaceGroupAll && pitch1 > 0 && !haveInversion)) {
-            
-            // skewDir is what defines the pictogram direction. 
-            // Whichever one is >= 1/2 is the key, technically.
-            // So the challenge here is to indicate the right one. 
-            // Actually, this should probably just be to show the (+), 
-            // and then switch the symbol depending upon length, as discussed
-            // in ITA(1969) Table 4.1.7.
-            
-            // But, either way, when there is a large 6(+) script, so for 
-            // example, the rotation is (0,0,2/3), as in P6422 (#181), 
-            // there is also in the same location a SMALL 3(+), because the 
-            // 3(+) associated with the 6(+) is then (0,0,4/3) -- that is, 
-            // (0,0,1/3), and so the combination always produces an oppositely
-            // directed 3-skew symbol. 
-            
-            // The ITA simply ignores this and only shows the 6(+) symbol.
-
-            // The solution here had to be made earlier in the process, where
-            // multiple operations are available. Specifically, in the calculation
-            // of additonal operators. This is what SymmetryOperation.isIrrelevant is for. 
-            
-            // The following crazy calculation has to do with how symbols might
-            // change when changing settings, particularly :h>>:r.
-            // And perhaps the difference in diagonal 3-screw axes in cubic groups.
-            
-            ignore = ((opTransLength = op.getOpTrans().length()) > (order == 2 ? 0.71d
-                      : order == 3 ? 0.578d : order == 4 ? 0.51d 
-                          // 6:  1/2 is OK
-                      //    : 0.3d
-                        : 0.51d  
-                      ));
-            
-          }
-          if (ignore && Logger.debugging) {
-            System.out.println("SD ignoring " + op.getOpTrans().length() + " "
-                + op.getOpTitle() + op.xyz);
-            //ignore = false; // set true for debugging only
-          }
-
-          P3d p2 = null;
-          if (pitch1 == 0 && !haveInversion) {
-            // simple rotation
-            ptemp.scaleAdd2(0.5d, vtemp, pa1);
-            pa1.scaleAdd2(isSpaceGroup ? -0.5d : -0.45d, vtemp, pa1);
-            if (isSpaceGroupAll && (p2 = op.getOpPoint2()) != null) {
-              // second vector on other side of the cell
-              ptr.setT(p2);
-              uc.toCartesian(ptr, false);
-              ptr.scaleAdd2(-0.5d, vtemp, ptr);
-            }
-            if (isSpaceGroup) {
-              // when showing the space group, adjust the length 
-              // based on the order and +/- sense
-              scaleByOrder(vtemp, order, isccw);
-            }
-          } else if (isSpaceGroupAll && pitch1 != 0 && !haveInversion
-              && (d = op.getOpTrans().length()) > 0.4d) {
-            // all space group screw
-            if (isccw == Boolean.TRUE) {
-              // n/a
-            } else if (isccw == null) {
-              // 2-fold
-              // maybe add a second
-              //              p2 = P3d.newP(pa1);
-              //              p2.add(vtemp);
-              //              ptr.scaleAdd2(2d, vtemp, pa1);
-              //              uc.toFractional(ptr, false);
-              //              if (SymmetryOperation
-              //                  .checkOpPoint(SymmetryOperation.opClean(ptr)))
-              //                ptr.setT(p2);
-              //              else
-              //                p2 = null;
-            } else if (d == 0.5d) {
-              ignore = true;
-            }
-          } else if (isSpaceGroup && haveInversion) {
-            // all space group n-bar
-            // pitch1 here is 120 or 60 or 0 ??
-            scaleByOrder(vtemp, order, isccw);
-            wp = "80";
-          }
-          if (pitch1 > 0 && !haveInversion) {
-            wp = "" + (90 - (int) (vtemp.length() / pitch1 * 90));
-          }
-          if (!ignore) {
-            
-            if (screwDir != 0) {
-              // get the polygon wings right (isSpaceGroupAll only)
-              switch (order) {
-              case 2:
-                // ignoring
-                break;
-              case 3:
-                // +/-1 is fine
-                break;
-              case 4:
-                if (opTransLength > 0.49)
-                  screwDir = -2;
-                break;
-              case 6:
-                if (opTransLength > 0.49)
-                  screwDir = -3; // convention
-                else if (opTransLength > 0.33)
-                  screwDir *= 2;
-                break;
-              }
-              color = (screwDir < 0 ? COLOR_SCREW_2 : COLOR_SCREW_1);
-            }
-            String name = opType + "_"+ nrot + "rotvector1";
-            drawOrderVector(drawSB, name, "vector", THICK_LINE + wp, pa1,
-                nrot, screwDir, haveInversion && isSpaceGroupAll, isccw == Boolean.TRUE, 
-                vtemp, isTimeReversed ? "gray" : color, title, isSpaceGroupAll);
-            if (p2 != null) {
-              // second standard rotation arrow on other side of unit cell only
-              drawOrderVector(drawSB, name + "2", "vector", THICK_LINE + wp,
-                  ptr, order, screwDir, haveInversion, isccw == Boolean.TRUE, vtemp, 
-                  isTimeReversed ? "gray" : color, title, isSpaceGroupAll);
-            }
-          }
-        } else if (isMirrorPlane) {
-
-          // lavender arrow across plane from pt00 to pt0
-
-          ptemp.sub2(ptref, pta00);
-          if (!isSpaceGroup && pta00.distance(ptref) > 0.2d)
-            drawVector(drawSB, "planeVector", "vector", THIN_LINE, pta00,
-                ptemp, isTimeReversed ? "gray" : "cyan", null);
-
-          // faint inverted frame if mirror trans is not null
-
-          opType = "plane";
-          if (trans == null) {
-            color = PLANE_COLOR_MIRROR;
           } else {
-            opType = "glide";
-            switch (glideType) {
-            case 'a':
-              color = PLANE_COLOR_A_GLIDE;
+            // simple rotation
+            opType = "rot";
+            vtemp.scale(3 * scaleFactor);
+            if (isSpecial) {
+              // flat
+            } else {
+              // lines from base
+              if (!isSpaceGroup) {
+                drawLine(drawSB, "rotLine1", 0.1d, pta00, ptr, "red");
+                drawLine(drawSB, "rotLine2", 0.1d, pt0, ptr, "red");
+              }
+            }
+            ptr.setT(pa1);
+            if (pitch1 == 0 && isSpecial)
+              ptr.scaleAdd2(0.25d, vtemp, ptr);
+          }
+        }
+
+        // draw arc arrow
+
+        if (!isSpaceGroup) {
+          if (ang > 180) {
+            // "(+)" is CCW, (-) is CW
+            ang = 180 - ang;
+          }
+          ptemp.add2(ptr, vtemp);
+          drawSB.append(getDrawID("rotRotArrow"))
+              .append(" arrow width 0.1 scale " + PT.escD(scale) + " arc ")
+              .append(Escape.eP(ptr)).append(Escape.eP(ptemp));
+          ptemp.setT(pta00);
+          if (ptemp.distance(pt0) < 0.1d)
+            ptemp.set(Math.random(), Math.random(), Math.random());
+          drawSB.append(Escape.eP(ptemp));
+          ptemp.set(0, ang - 5 * Math.signum(ang), 0);
+          drawSB.append(Escape.eP(ptemp)).append(" color red");
+        }
+
+        // draw the main vector
+
+        double d;
+        // idea here is that we only show the smaller rotation if
+        // there are, say, a 3(+)1/3 and a 3(-)2/3, because one implies the other.
+        // but there is no smaller rotation for 63(+)1/2 -- the rotation is 60o. All others generate translations.
+
+        double opTransLength = 0;
+        if (!op.opIsLong && (isSpaceGroupAll && pitch1 > 0 && !haveInversion)) {
+
+          // skewDir is what defines the pictogram direction. 
+          // Whichever one is >= 1/2 is the key, technically.
+          // So the challenge here is to indicate the right one. 
+          // Actually, this should probably just be to show the (+), 
+          // and then switch the symbol depending upon length, as discussed
+          // in ITA(1969) Table 4.1.7.
+
+          // But, either way, when there is a large 6(+) script, so for 
+          // example, the rotation is (0,0,2/3), as in P6422 (#181), 
+          // there is also in the same location a SMALL 3(+), because the 
+          // 3(+) associated with the 6(+) is then (0,0,4/3) -- that is, 
+          // (0,0,1/3), and so the combination always produces an oppositely
+          // directed 3-skew symbol. 
+
+          // The ITA simply ignores this and only shows the 6(+) symbol.
+
+          // The solution here had to be made earlier in the process, where
+          // multiple operations are available. Specifically, in the calculation
+          // of additonal operators. This is what SymmetryOperation.isIrrelevant is for. 
+
+          // The following crazy calculation has to do with how symbols might
+          // change when changing settings, particularly :h>>:r.
+          // And perhaps the difference in diagonal 3-screw axes in cubic groups.
+
+          ignore = ((opTransLength = op.getOpTrans().length()) > (order == 2
+              ? 0.71d
+              : order == 3 ? 0.578d
+                  : order == 4 ? 0.51d
+                      // 6:  1/2 is OK
+                      //    : 0.3d
+                      : 0.51d));
+
+        }
+        if (ignore && Logger.debugging) {
+          System.out.println("SD ignoring " + op.getOpTrans().length() + " "
+              + op.getOpTitle() + op.xyz);
+          //ignore = false; // set true for debugging only
+        }
+
+        P3d p2 = null;
+        if (pitch1 == 0 && !haveInversion) {
+          // simple rotation
+          ptemp.scaleAdd2(0.5d, vtemp, pa1);
+          pa1.scaleAdd2(isSpaceGroup ? -0.5d : -0.45d, vtemp, pa1);
+          if (isSpaceGroupAll && isPeriodic
+              && (p2 = op.getOpPoint2()) != null) {
+            // second vector on other side of the cell
+            ptr.setT(p2);
+            uc.toCartesian(ptr, false);
+            ptr.scaleAdd2(-0.5d, vtemp, ptr);
+          }
+          if (isSpaceGroup) {
+            // when showing the space group, adjust the length 
+            // based on the order and +/- sense
+            scaleByOrder(vtemp, order, isccw);
+          }
+        } else if (isSpaceGroupAll && pitch1 != 0 && !haveInversion
+            && (d = op.getOpTrans().length()) > 0.4d) {
+          // all space group screw
+          if (isccw == Boolean.TRUE) {
+            // n/a
+          } else if (isccw == null) {
+            // 2-fold
+            // maybe add a second
+            //              p2 = P3d.newP(pa1);
+            //              p2.add(vtemp);
+            //              ptr.scaleAdd2(2d, vtemp, pa1);
+            //              uc.toFractional(ptr, false);
+            //              if (SymmetryOperation
+            //                  .checkOpPoint(SymmetryOperation.opClean(ptr)))
+            //                ptr.setT(p2);
+            //              else
+            //                p2 = null;
+          } else if (d == 0.5d) {
+            ignore = true;
+          }
+        } else if (isSpaceGroup && haveInversion) {
+          // all space group n-bar
+          // pitch1 here is 120 or 60 or 0 ??
+          scaleByOrder(vtemp, order, isccw);
+          wp = "80";
+        }
+        if (pitch1 > 0 && !haveInversion) {
+          wp = "" + (90 - (int) (vtemp.length() / pitch1 * 90));
+        }
+        if (!ignore) {
+
+          if (screwDir != 0) {
+            // get the polygon wings right (isSpaceGroupAll only)
+            switch (order) {
+            case 2:
+              // ignoring
               break;
-            case 'b':
-              color = PLANE_COLOR_B_GLIDE;          
+            case 3:
+              // +/-1 is fine
               break;
-            case 'c':
-              color = PLANE_COLOR_C_GLIDE;
+            case 4:
+              if (opTransLength > 0.49)
+                screwDir = -2;
               break;
-            case 'n':
-              color = PLANE_COLOR_N_GLIDE;
-              break;
-            case 'd':
-              color = PLANE_COLOR_D_GLIDE;
-              break;
-            case 'g':
-            default:
-              color = PLANE_COLOR_G_GLIDE;
+            case 6:
+              if (opTransLength > 0.49)
+                screwDir = -3; // convention
+              else if (opTransLength > 0.33)
+                screwDir *= 2;
               break;
             }
-            if (!isSpaceGroup) {
-              drawFrameLine("X", ptref, vt1, 0.15d, ptemp, drawSB, opType,
+            color = (screwDir < 0 ? COLOR_SCREW_2 : COLOR_SCREW_1);
+          }
+          String name = opType + "_" + nrot + "rotvector1";
+          drawOrderVector(drawSB, name, "vector", THICK_LINE + wp, pa1, nrot,
+              screwDir, haveInversion && isSpaceGroupAll, isccw == Boolean.TRUE,
+              vtemp, isTimeReversed ? "gray" : color, title, isSpaceGroupAll);
+          if (p2 != null) {
+            // second standard rotation arrow on other side of unit cell only
+            drawOrderVector(drawSB, name + "2", "vector", THICK_LINE + wp, ptr,
+                order, screwDir, haveInversion, isccw == Boolean.TRUE, vtemp,
+                isTimeReversed ? "gray" : color, title, isSpaceGroupAll);
+          }
+        }
+      } else if (isMirrorPlane) {
+
+        // lavender arrow across plane from pt00 to pt0
+
+        ptemp.sub2(ptref, pta00);
+        if (!isSpaceGroup && pta00.distance(ptref) > 0.2d)
+          drawVector(drawSB, "planeVector", "vector", THIN_LINE, pta00, ptemp,
+              isTimeReversed ? "gray" : "cyan", null);
+
+        // faint inverted frame if mirror trans is not null
+
+        opType = "plane";
+        if (trans == null) {
+          color = PLANE_COLOR_MIRROR;
+        } else {
+          opType = "glide";
+          switch (glideType) {
+          case 'a':
+            color = PLANE_COLOR_A_GLIDE;
+            break;
+          case 'b':
+            color = PLANE_COLOR_B_GLIDE;
+            break;
+          case 'c':
+            color = PLANE_COLOR_C_GLIDE;
+            break;
+          case 'n':
+            color = PLANE_COLOR_N_GLIDE;
+            break;
+          case 'd':
+            color = PLANE_COLOR_D_GLIDE;
+            break;
+          case 'g':
+          default:
+            color = PLANE_COLOR_G_GLIDE;
+            break;
+          }
+          if (!isSpaceGroup) {
+            drawFrameLine("X", ptref, vt1, 0.15d, ptemp, drawSB, opType, "red");
+            drawFrameLine("Y", ptref, vt2, 0.15d, ptemp, drawSB, opType,
+                "green");
+            drawFrameLine("Z", ptref, vt3, 0.15d, ptemp, drawSB, opType,
+                "blue");
+          }
+        }
+
+        // ok, now HERE's a good trick. We use the Marching Cubes
+        // algorithm to find the intersection points of a plane and the unit
+        // cell.
+        // We expand the unit cell by 5% in all directions just so we are
+        // guaranteed to get cutoffs.
+
+        // returns triangles and lines
+        P3d[] points = uc.getCanonicalCopy(margin, true);
+        if (isSpaceGroup && (shiftA || shiftB || shiftC)) {
+          for (int i = 8; --i >= 0;) {
+            points[i].add(vShift);
+          }
+        }
+        Lst<Object> v = modelSet.vwr.getTriangulator().intersectPlane(plane,
+            points, 3);
+        if (v != null) {
+          int iCoincident = (isSpaceGroup ? op.iCoincident : 0);
+          planeCenter = new P3d();
+
+          for (int i = 0, iv = 0, n = v.size(); i < n; i++) {
+            P3d[] pts = (P3d[]) v.get(i);
+            // these lines provide a rendering when side-on
+            drawSB
+                .append(getDrawID((trans == null ? "mirror_" : glideType + "_g")
+                    + "planep" + i))
+                .append(Escape.eP(pts[0])).append(Escape.eP(pts[1]));
+            if (pts.length == 3) {
+              // 110 has <---d---> double-ended arrow OK this is due to a z+3/4 and a matching z-1/4 which is the same in this case  
+              // 122 has <---d---> same deal 
+              // 166 crossed diag  fixed sg183 2/3 -2/3 1/3  sg133 mrror
+              if (iCoincident == 0 || (iv % 2 == 0) != (iCoincident == 1)) {
+                drawSB.append(Escape.eP(pts[2]));
+              }
+              iv++;
+            } else {
+              planeCenter.add(pts[0]);
+              planeCenter.add(pts[1]);
+              nPC += 2;
+            }
+            drawSB.append(" color translucent ").append(color);
+            if (title != null)
+              drawSB.append(" ").append(PT.esc(title));
+          }
+        }
+
+        // and JUST in case that does not work, at least draw a circle
+
+        if (v == null || v.size() == 0) {
+          if (isSpaceGroupAll) {
+            // space group 185 can give odd results
+            ignore = true;
+          } else {
+            ptemp.add2(pa1, ax1);
+            drawSB.append(getDrawID("planeCircle")).append(" scale 2.0 circle ")
+                .append(Escape.eP(pa1)).append(Escape.eP(ptemp))
+                .append(" color translucent ").append(color)
+                .append(" mesh fill");
+            if (title != null)
+              drawSB.append(" ").append(PT.esc(title));
+          }
+        }
+
+      } // isMirrorPlane or isRotation
+
+      if (haveInversion) {
+        opType = "inv";
+        if (isInversionOnly) {
+          drawSB.append(getDrawID("inv_point")).append(" diameter 0.4 ")
+              .append(Escape.eP(ipt));
+          if (title != null)
+            drawSB.append(" ").append(PT.esc(title));
+
+          ptemp.sub2(ptinv, pta00);
+          if (!isSpaceGroup) {
+            drawVector(drawSB, "Arrow", "vector", THIN_LINE, pta00, ptemp,
+                isTimeReversed ? "gray" : "cyan", null);
+          }
+        } else {
+          if (order == 4) {
+            drawSB.append(getDrawID("RotPoint"))
+                .append(" diameter 0.3 color red").append(Escape.eP(ipt));
+            if (title != null)
+              drawSB.append(" ").append(PT.esc(title));
+          }
+          if (!isSpaceGroup) {
+            drawSB.append(" color cyan");
+            if (!isSpecial) {
+              ptemp.sub2(pt0, ptinv);
+              drawVector(drawSB, "Arrow", "vector", THIN_LINE, ptinv, ptemp,
+                  isTimeReversed ? "gray" : "cyan", null);
+            }
+            if (options != T.offset) {
+              // n-bar: draw a faint frame showing the inversion
+              vtemp.setT(vt1);
+              vtemp.scale(-1);
+              drawFrameLine("X", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
                   "red");
-              drawFrameLine("Y", ptref, vt2, 0.15d, ptemp, drawSB, opType,
+              vtemp.setT(vt2);
+              vtemp.scale(-1);
+              drawFrameLine("Y", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
                   "green");
-              drawFrameLine("Z", ptref, vt3, 0.15d, ptemp, drawSB, opType,
+              vtemp.setT(vt3);
+              vtemp.scale(-1);
+              drawFrameLine("Z", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
                   "blue");
             }
           }
-
-          // ok, now HERE's a good trick. We use the Marching Cubes
-          // algorithm to find the intersection points of a plane and the unit
-          // cell.
-          // We expand the unit cell by 5% in all directions just so we are
-          // guaranteed to get cutoffs.
-
-          // returns triangles and lines
-          P3d[] points = uc.getCanonicalCopy(margin, true);
-          Lst<Object> v = modelSet.vwr.getTriangulator().intersectPlane(plane,
-              points, 3);
-          if (v != null) {
-            int iCoincident = (isSpaceGroup ? op.iCoincident : 0);
-            planeCenter = new P3d();
-
-            for (int i = 0, iv = 0, n = v.size(); i < n; i++) {
-              P3d[] pts = (P3d[]) v.get(i);
-              // these lines provide a rendering when side-on
-              drawSB.append(getDrawID((trans == null ? "mirror_" : glideType + "_g") 
-                  + "planep" + i)).append(Escape.eP(pts[0])).append(Escape.eP(pts[1]));
-              if (pts.length == 3) {
-                // 110 has <---d---> double-ended arrow OK this is due to a z+3/4 and a matching z-1/4 which is the same in this case  
-                // 122 has <---d---> same deal 
-                // 166 crossed diag  fixed sg183 2/3 -2/3 1/3  sg133 mrror
-                if (iCoincident == 0 || (iv % 2 == 0) != (iCoincident == 1)) {
-                 drawSB.append(Escape.eP(pts[2]));
-                }
-                iv++;
-              } else {
-                planeCenter.add(pts[0]);
-                planeCenter.add(pts[1]);
-                nPC += 2;
-              }
-              drawSB.append(" color translucent ").append(color);
-              if (title != null)
-                drawSB.append(" ").append(PT.esc(title));
-            }
-          }
-
-          // and JUST in case that does not work, at least draw a circle
-
-          if (v == null || v.size() == 0) {
-            if (isSpaceGroupAll) {
-              // space group 185 can give odd results
-              ignore = true;
-            } else {
-              ptemp.add2(pa1, ax1);
-              drawSB.append(getDrawID("planeCircle")).append(" scale 2.0 circle ")
-                  .append(Escape.eP(pa1)).append(Escape.eP(ptemp))
-                  .append(" color translucent ").append(color)
-                  .append(" mesh fill");
-              if (title != null)
-                drawSB.append(" ").append(PT.esc(title));
-            }
-          }
-
         }
+      } // haveInversion
 
-        if (haveInversion) {
-          opType = "inv";
-          if (isInversionOnly) {
-            drawSB.append(getDrawID("inv_point")).append(" diameter 0.4 ")
-                .append(Escape.eP(ipt));
-            if (title != null)
-              drawSB.append(" ").append(PT.esc(title));
+      // and display translation if still not {0 0 0}
 
-            ptemp.sub2(ptinv, pta00);
-            if (!isSpaceGroup) {
-              drawVector(drawSB, "Arrow", "vector", THIN_LINE, pta00,
-                  ptemp, isTimeReversed ? "gray" : "cyan", null);
-             }
+      if (trans != null) {
+        // centering and glides
+        if (isMirrorPlane && isSpaceGroup) {
+          if (planeCenter != null) {
+            ptref = planeCenter;
+            ptref.scale(1d / nPC);
+            ptref.scaleAdd2(-0.5d, trans, ptref);
+          }
+        } else if (ptref == null) {
+          ptref = (isSpaceGroup ? pta00 : P3d.newP(pta00));
+        }
+        if (ptref != null && !ignore) {
+          boolean isCentered = (glideType == '\0');
+          boolean isGlide = (isSpaceGroup && !isCentered && !isTranslationOnly);
+          if (isGlide) {
+            ptemp.scaleAdd2(0.5, trans, ptref);
+            vtrans.setT(trans);
+            vtrans.scale(0.5);
           } else {
-            if (order == 4) {
-              drawSB.append(getDrawID("RotPoint")).append(" diameter 0.3 color red")
-                  .append(Escape.eP(ipt));
-              if (title != null)
-                drawSB.append(" ").append(PT.esc(title));
-            }
-            if (!isSpaceGroup) {
-              drawSB.append(" color cyan");
-              if (!isSpecial) {
-                ptemp.sub2(pt0, ptinv);
-                drawVector(drawSB, "Arrow", "vector", THIN_LINE, ptinv,
-                    ptemp, isTimeReversed ? "gray" : "cyan", null);
-              }
-                      if (options != T.offset) {
-                // n-bar: draw a faint frame showing the inversion
-                vtemp.setT(vt1);
-                vtemp.scale(-1);
-                drawFrameLine("X", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
-                    "red");
-                vtemp.setT(vt2);
-                vtemp.scale(-1);
-                drawFrameLine("Y", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
-                    "green");
-                vtemp.setT(vt3);
-                vtemp.scale(-1);
-                drawFrameLine("Z", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
-                    "blue");
-              }
-            }
+            ptemp.setT(ptref);
+            vtrans.setT(trans);
+          }
+          color = (isGlide ? "green"
+              : isTimeReversed && !haveInversion && !isMirrorPlane
+                  && !isRotation ? "darkGray" : "gold");
+          drawVector(drawSB,
+              (isCentered ? "centering_" : glideType + "_g") + "trans_vector",
+              "vector", (isGlide || isTranslationOnly ? THICK_LINE : THIN_LINE),
+              ptemp, vtrans, color, title);
+          if (isGlide) {
+            // draw reverse arrow as well
+            vtrans.scale(-1);
+            drawVector(drawSB, glideType + "_g" + "trans_vector2", "vector",
+                THICK_LINE, ptemp, vtrans, color, title);
           }
         }
+      } // trans != null
 
-        // and display translation if still not {0 0 0}
+      if (!isSpaceGroup) {
+        // draw the final frame just a bit fatter and shorter, in case they
+        // overlap
 
-        if (trans != null) {
-          if (isMirrorPlane && isSpaceGroup) {
-            if (planeCenter != null) {
-              ptref = planeCenter;
-              ptref.scale(1d / nPC);
-              ptref.scaleAdd2(-0.5d, trans, ptref);
-            }
-          } else if (ptref == null) {
-            ptref = (isSpaceGroup ? pta00 : P3d.newP(pta00));
-          }
-          if (ptref != null && !ignore) {
-            boolean isCentered = (glideType == '\0');
-            boolean isGlide = (isSpaceGroup && !isCentered && !isTranslationOnly);
-            if (isGlide) {
-              ptemp.scaleAdd2(0.5, trans, ptref);
-              vtrans.setT(trans);
-              vtrans.scale(0.5);
-            } else {
-              ptemp.setT(ptref);
-              vtrans.setT(trans);
-            }
-            color = (isGlide ? "green" : isTimeReversed && !haveInversion && !isMirrorPlane
-                      && !isRotation ? "darkGray" : "gold");
-            drawVector(drawSB,  (isCentered ? "centering_" : glideType + "_g") + "trans_vector", "vector",
-                (isGlide || isTranslationOnly ? THICK_LINE : THIN_LINE), ptemp, vtrans, color, title);
-            if (isGlide) {
-              // draw reverse arrow as well
-              vtrans.scale(-1);
-              drawVector(drawSB,  glideType + "_g" + "trans_vector2", "vector",
-                  THICK_LINE, ptemp, vtrans, color, title);
-            }
-          }
+        ptemp2.setT(pt0);
+        ptemp.sub2(pt1, pt0);
+        ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
+        drawLine(drawSB, "frame2X", 0.2d, ptemp2, ptemp, "red");
+        ptemp.sub2(pt2, pt0);
+        ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
+        drawLine(drawSB, "frame2Y", 0.2d, ptemp2, ptemp, "green");
+        ptemp.sub2(pt3, pt0);
+        ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
+        drawLine(drawSB, "frame2Z", 0.2d, ptemp2, ptemp, "purple");
+
+        // color the targeted atoms opaque and add another frame if necessary
+
+        drawSB.append("\nsym_point = " + Escape.eP(pta00));
+        drawSB.append("\nvar p0 = " + Escape.eP(ptemp2));
+
+        if (pta00 instanceof Atom) {
+          drawSB.append(
+              "\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
+          drawSB.append(
+              "\n set2 &= {_" + ((Atom) pta00).getElementSymbol() + "}");
+        } else {
+          drawSB.append("\nvar set2 = p0.uxyz");
         }
-
-        if (!isSpaceGroup) {
-          // draw the final frame just a bit fatter and shorter, in case they
-          // overlap
-
-          ptemp2.setT(pt0);
-          ptemp.sub2(pt1, pt0);
-          ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
-          drawLine(drawSB, "frame2X", 0.2d, ptemp2, ptemp, "red");
-          ptemp.sub2(pt2, pt0);
-          ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
-          drawLine(drawSB, "frame2Y", 0.2d, ptemp2, ptemp, "green");
-          ptemp.sub2(pt3, pt0);
-          ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
-          drawLine(drawSB, "frame2Z", 0.2d, ptemp2, ptemp, "purple");
-
-          // color the targeted atoms opaque and add another frame if necessary
-
-          drawSB.append("\nsym_point = " + Escape.eP(pta00));
-          drawSB.append("\nvar p0 = " + Escape.eP(ptemp2));
-
-          if (pta00 instanceof Atom) {
-            drawSB.append(
-                "\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
-            drawSB.append(
-                "\n set2 &= {_" + ((Atom) pta00).getElementSymbol() + "}");
-          } else {
-            drawSB.append("\nvar set2 = p0.uxyz");
-          }
-          drawSB.append("\nsym_target = set2;if (set2) {");
-          //      if (haveCentering)
-          //      drawSB.append(drawid).append(
-          //        "cellOffsetVector arrow @p0 @set2 color grey");
-          if (!isSpecial && options != T.offset && ptTarget == null
-              && !haveTranslation) {
-            drawSB.append(getDrawID("offsetFrameX")).append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
-                .append(Escape.eP(vt1)).append("*0.9} color red");
-            drawSB.append(getDrawID("offsetFrameY")).append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
-                .append(Escape.eP(vt2)).append("*0.9} color green");
-            drawSB.append(getDrawID("offsetFrameZ")).append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
-                .append(Escape.eP(vt3)).append("*0.9} color purple");
-          }
-          drawSB.append("\n}\n");
-
+        drawSB.append("\nsym_target = set2;if (set2) {");
+        //      if (haveCentering)
+        //      drawSB.append(drawid).append(
+        //        "cellOffsetVector arrow @p0 @set2 color grey");
+        if (!isSpecial && options != T.offset && ptTarget == null
+            && !haveTranslation) {
+          drawSB.append(getDrawID("offsetFrameX"))
+              .append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
+              .append(Escape.eP(vt1)).append("*0.9} color red");
+          drawSB.append(getDrawID("offsetFrameY"))
+              .append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
+              .append(Escape.eP(vt2)).append("*0.9} color green");
+          drawSB.append(getDrawID("offsetFrameZ"))
+              .append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
+              .append(Escape.eP(vt3)).append("*0.9} color purple");
         }
-        cmds = drawSB.toString();
-        if (Logger.debugging)
-          Logger.info(cmds);
-        drawSB = null;
-      }
+        drawSB.append("\n}\n");
+      } // end !isSpaceGroup
+      cmds = drawSB.toString();
+      if (Logger.debugging)
+        Logger.info(cmds);
+      drawSB = null;
+      break;
     }
 
     // finalize returns
@@ -1476,7 +1569,6 @@ public class SymmetryDesc {
         ret[i] = (plane == null ? approx0(ax1) : null);
         break;
       case RET_ROTANGLE:
-
         ret[i] = (ang1 != 0 ? Integer.valueOf(ang1) : null);
         break;
       case RET_MATRIX:
@@ -1484,7 +1576,7 @@ public class SymmetryDesc {
         break;
       case RET_UNITTRANS:
         ret[i] = (vtrans.lengthSquared() > 0 ? vtrans : null);
-//        break;
+        break;
       case RET_CTRVECTOR:
         ret[i] = op.getCentering();
         break;
@@ -1508,8 +1600,8 @@ public class SymmetryDesc {
         T3d cift = null;
         if (!op.isBio && !xyzNew.equals(op.xyzOriginal)) {
           if (op.number > 0) {
-            M4d orig = SymmetryOperation.getMatrixFromXYZ(op.xyzOriginal,
-                null, false);
+            M4d orig = SymmetryOperation.getMatrixFromXYZ(op.xyzOriginal, null,
+                false);
             orig.sub(m2);
             cift = new P3d();
             orig.getTranslation(cift);
@@ -2263,12 +2355,6 @@ public class SymmetryDesc {
 
   public M4d getTransform(UnitCell uc, SymmetryOperation[] ops, P3d fracA,
                           P3d fracB, boolean best) {
-    if (pta01 == null) {
-      pta01 = new P3d();
-      pta02 = new P3d();
-      ptemp = new P3d();
-      vtrans = new V3d();
-    }
     pta02.setT(fracB);
     vtrans.setT(pta02);
     uc.unitize(pta02);

@@ -159,7 +159,7 @@ class SymmetryInfo {
 
   SymmetryOperation[] getAdditionalOperations() {
     if (additionalOperations == null && symmetryOperations != null) {
-      additionalOperations = SymmetryOperation.getAdditionalOperations(symmetryOperations);
+      additionalOperations = SymmetryOperation.getAdditionalOperations(symmetryOperations, 7);
     }
     return additionalOperations;
   }
@@ -185,6 +185,7 @@ class SymmetryInfo {
 
 
   String getDisplayName(Symmetry sym) {
+    displayName = null;
     if (displayName == null) {
       boolean isPolymer = sym.isPolymer();
       boolean isSlab = sym.isSlab();

@@ -2726,5 +2726,4 @@ abstract class ScriptExpr extends ScriptParam {
     return (f == null ? (ScriptFunction) vwr.getFunction(sf) : f);
   }
 
-
 }

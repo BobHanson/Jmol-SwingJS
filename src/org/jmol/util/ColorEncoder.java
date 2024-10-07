@@ -320,7 +320,7 @@ import javajs.util.P3d;
               try {
                 Logger.info("ColorEncoder opening colorschemes/" + s);
                 Rdr.readAllAsString(
-                    FileManager.getBufferedReaderForResource(vwr, new C(),
+                    FileManager.getBufferedReaderForResource(vwr, C.class,
                         "org/jmol/util/", "colorschemes/" + s),
                     -1, false, data, 0);
               } catch (IOException e) {

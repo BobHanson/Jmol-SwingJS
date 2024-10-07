@@ -272,7 +272,7 @@ abstract public class ScriptParam extends ScriptError {
     if (checkToken(i)) {
       switch (getToken(i).tok) {
       case T.unitcell:
-        return getUnitCellCenter();
+        return vwr.getUnitCellCenter();
       case T.dollarsign:
         String id = objectNameParameter(++i);
         int index = Integer.MIN_VALUE;
@@ -304,21 +304,6 @@ abstract public class ScriptParam extends ScriptError {
     }
     if (center == null)
       error(ERROR_coordinateOrNameOrExpressionRequired);
-    return center;
-  }
-
-  public P3d getUnitCellCenter() {
-    P3d center = new P3d();
-    SymmetryInterface uc = vwr.getCurrentUnitCell();
-    if (uc != null) {
-      P3d[] pts = uc.getUnitCellVerticesNoOffset();
-      P3d off = uc.getCartesianOffset();
-      for (int j = 0; j < 8; j++) {
-        center.add(pts[j]);
-        center.add(off);
-      }
-    }
-    center.scale(1d/8);
     return center;
   }
 
@@ -409,14 +394,23 @@ abstract public class ScriptParam extends ScriptError {
               // best plane [array]
               bestPoints = getPointArray(i, -1, false);
             } else {
-              Lst<P3d> list = getPointOrCenterVector(getToken(i));
-              int n = list.size();
-              if (n != 3)
-                invArg();
-              pt1 = list.get(0);
-              pt2 = list.get(1);
-              pt3 = list.get(2);
-              have3 = true;
+              try {
+                Lst<P3d> list = getPointOrCenterVector(getToken(i));
+                int n = list.size();
+                if (n != 3)
+                  invArg();
+                pt1 = list.get(0);
+                pt2 = list.get(1);
+                pt3 = list.get(2);
+                have3 = true;
+              } catch (Exception e) {
+                SymmetryInterface sym = vwr.getCurrentUnitCell();
+                if (sym == null)
+                  invArg();
+                plane = new P4d();
+                plane.setT(P3d.newA(doubleParameterSet(i + 1, 3, 3)));
+                vwr.toCartesian(plane, true);
+              }
             }
           }
         }

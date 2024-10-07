@@ -88,7 +88,8 @@ public class SpaceGroupFinder {
   private P3d pTemp = new P3d();
  
   private int isg;  
-  
+
+  private int groupType = SpaceGroup.TYPE_SPACE; // TODO 
   public SpaceGroupFinder() {
   }
 
@@ -290,11 +291,16 @@ public class SpaceGroupFinder {
       }
     }
     pt = xyzList.indexOf(".");
+    
     if (pt > 0 && (hasTransform || isJmolCode)) {
       xyzList = xyzList.substring(0, pt);
       pt = -1;
     }
     String itano = xyzList;
+    if (SpaceGroup.getExplicitSpecialGroupType(itano) > SpaceGroup.TYPE_SPACE) {
+      itano = itano.substring(2);
+      pt -= 2;
+    }
     boolean isITADotSetting = (pt > 0);
     if (!isJmolCode && !isHall && !hasTransform && !isITADotSetting
         && PT.parseInt(itano) != Integer.MIN_VALUE)
@@ -307,8 +313,8 @@ public class SpaceGroupFinder {
       if (genPos == null)
         return null;
     } else {
-      name = (hasTransform ? transform : itaIndex);
-      sg = SpaceGroup.getSpaceGroupFromJmolClegOrITA(hasTransform ? clegId : itaIndex);
+      name = (hasTransform ? transform : itaIndex);// p/2 here for itaIndex?
+      sg = SpaceGroup.getSpaceGroupFromJmolClegOrITA(vwr, hasTransform ? clegId : itaIndex);
       Object o = uc.getSpaceGroupJSON(vwr, "ITA", itaIndex, 0);
       if (o == null || o instanceof String) {
         return null;
@@ -327,6 +333,7 @@ public class SpaceGroupFinder {
           }
         }
         // "more" type, from wp-list, does note contain gp or wpos
+        // also no jmolId for special groups
         if (sgdata == null || !sgdata.containsKey("jmolId")) {
           if (isJmolCode) {
             // trying to get an ITA from a Jmol code with ITA like ITA/12:abc
@@ -354,10 +361,10 @@ public class SpaceGroupFinder {
       genPos = (Lst<Object>) sgdata.get("gp");
     }
     if (sg != null && transform == null) {
-      sg = SpaceGroup.createITASpaceGroup(genPos, sg);
+      sg = SpaceGroup.createITASpaceGroup(groupType, genPos, sg);
       return sg;
     }
-    sg = SpaceGroup.transformSpaceGroup(null, sg, genPos,
+    sg = SpaceGroup.transformSpaceGroup(groupType, null, sg, genPos,
         (hasTransform ? transform : null),
         (hasTransform ? new M4d() : null));
     if (sg == null)
@@ -674,7 +681,7 @@ public class SpaceGroupFinder {
     sym.setSpaceGroupTo(sg);
     if (oabc == null) {
     double[] newParams = new double[6];
-    if (!UnitCell.createCompatibleUnitCell(sg, params, newParams, allowSame)) {
+    if (!sg.createCompatibleUnitCell(params, newParams, allowSame)) {
       newParams = params;
     }
     sym.setUnitCellFromParams(newParams, false, Double.NaN);
@@ -862,7 +869,6 @@ public class SpaceGroupFinder {
         if (g.indexOf(":r") >= 0) {
           if (!isRhombo)
             continue;
-          System.out.println("SGF " + g);
           bsGroups.set(i);
         }
         if (g.startsWith("195")) {
@@ -1189,11 +1195,11 @@ public class SpaceGroupFinder {
   private static boolean loadData(Viewer vwr, Object me) {
     try {
       // recreated using createmap.xlsx 2024.09.03
-      groupNames = getList(vwr, me, null, "sggroups_ordered.txt");
+      groupNames = getList(vwr, null, "sggroups_ordered.txt");
       GROUP_COUNT = groupNames.length;
-      opXYZ = getList(vwr, me, null, "sgops_ordered.txt");
+      opXYZ = getList(vwr, null, "sgops_ordered.txt");
       OP_COUNT = opXYZ.length;
-      String[] map = getList(vwr, me, new String[OP_COUNT], "sgmap.txt");
+      String[] map = getList(vwr, new String[OP_COUNT], "sgmap.txt");
       bsGroupOps = new BS[GROUP_COUNT];
       bsOpGroups = new BS[OP_COUNT];
       for (int j = 0; j < GROUP_COUNT; j++)
@@ -1224,10 +1230,10 @@ public class SpaceGroupFinder {
     }
   }
 
-  private static String[] getList(Viewer vwr, Object me, String[] list,
+  private static String[] getList(Viewer vwr, String[] list,
                                   String fileName)
       throws IOException {
-    rdr = FileManager.getBufferedReaderForResource(vwr, me,
+    rdr = FileManager.getBufferedReaderForResource(vwr, SpaceGroupFinder.class,
         "org/jmol/symmetry/", "sg/" + fileName);
     if (list == null) {
       Lst<String> l = new Lst<String>();

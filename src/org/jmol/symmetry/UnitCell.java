@@ -321,10 +321,11 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
    *        the first point that is to be duplicated; 
    * @param dup0 
    *        start for checking for removing duplicates, either i0 or no?
+   * @param periodicity 
    * @return augmented list
    */
   Lst<P3d> getEquivPoints(P3d pt, String flags, M4d[] ops, Lst<P3d> list,
-                                int i0, int n0, int dup0) {
+                                int i0, int n0, int dup0, int periodicity) {
     boolean fromfractional = (flags.indexOf("fromfractional") >= 0);
     boolean tofractional = (flags.indexOf("tofractional") >= 0);
     boolean packed = (flags.indexOf("packed") >= 0);
@@ -334,18 +335,44 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     if (!fromfractional)
       toFractional(pf, true);
     int n = list.size();
+    boolean adjustA = ((periodicity & 0x1) != 0);
+    boolean adjustB = ((periodicity & 0x2) != 0);
+    boolean adjustC = ((periodicity & 0x4) != 0);
     for (int i = 0, nops = ops.length; i < nops; i++) {
       P3d p = P3d.newP(pf);
       ops[i].rotTrans(p);
       //not using unitize here, because it does some averaging
-      p.x =  fixFloor(p.x - Math.floor(p.x));
-      p.y =  fixFloor(p.y - Math.floor(p.y));
-      p.z =  fixFloor(p.z - Math.floor(p.z));
+      if (adjustA)
+        p.x =  fixFloor(p.x - Math.floor(p.x));
+      if (adjustB)
+        p.y =  fixFloor(p.y - Math.floor(p.y));
+      if (adjustC)
+        p.z =  fixFloor(p.z - Math.floor(p.z));
       list.addLast(p);
       n++;
     }
     if (packed) {
+      // but when we lack periodicity, as in a layer group,
+      // we need to duplicate based on 0.5!!! 
       // duplicate all the points. 
+      if (!adjustC) {
+        P3d offset = P3d.new3(0, 0, 0.5);
+        for (int i = n0; i < n; i++) {
+          list.get(i).add(offset);
+        }          
+      }
+      if (!adjustB) {
+        P3d offset = P3d.new3(0, 0.5, 0);
+        for (int i = n0; i < n; i++) {
+          list.get(i).add(offset);
+        }          
+      }
+      if (!adjustA) {
+        P3d offset = P3d.new3(0.5, 0, 0);
+        for (int i = n0; i < n; i++) {
+          list.get(i).add(offset);
+        }          
+      }
       for (int i = n0; i < n; i++) {
         pf.setT(list.get(i));
         unitizeRnd(pf);
@@ -377,6 +404,27 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
             list.addLast(P3d.new3(1,  pf.y, 1));
           }
         }
+      }
+      n = list.size();
+      if (!adjustA) {
+        P3d offset = P3d.new3(-0.5, 0, 0);
+        for (int i = n0; i < n; i++) {
+          list.get(i).add(offset);
+        }          
+      }
+      if (!adjustB) {
+        n = list.size();
+        P3d offset = P3d.new3(0, -0.5, 0);
+        for (int i = n0; i < n; i++) {
+          list.get(i).add(offset);
+        }          
+      }
+      if (!adjustC) {
+        n = list.size();
+        P3d offset = P3d.new3(0, 0, -0.5);
+        for (int i = n0; i < n; i++) {
+          list.get(i).add(offset);
+        }          
       }
     }
     removeDuplicates(list, i0, dup0, -1);
@@ -1251,172 +1299,6 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     unitizeDimRnd(dimension, pt, slop);
   }
 
-  /**
-   * Create a unit cell compatible with
-   * 
-   * @param sg
-   * @param params
-   * @param newParams
-   * @param allowSame true to allow same-distance a,b,c for lower-symmetry sg
-   * @return true if changes have occurred
-   */
-  public static boolean createCompatibleUnitCell(SpaceGroup sg, double[] params,
-                                                 double[] newParams,
-                                                 boolean allowSame) {
-    if (newParams == null)
-      newParams = params;
-    double a = params[0];
-    double b = params[1];
-    double c = params[2];
-    double alpha = params[3];
-    double beta = params[4];
-    double gamma = params[5];
-
-    int n = (sg == null || sg.itaNumber == null ? 0 : PT.parseInt(sg.itaNumber));
-    boolean toHex = (n != 0 && isHexagonalSG(n, null));
-    boolean isHex = (toHex && isHexagonalSG(-1, params));
-    boolean toRhom = (n != 0 && sg.axisChoice == 'r');
-    boolean isRhom = (toRhom && isRhombohedral(params));
-    if (toHex && isHex || toRhom && isRhom) {
-      allowSame = true;
-    }
-    if (n > (allowSame ? 2 : 0)) {
-
-      boolean absame = approx0(a - b);
-      boolean bcsame = approx0(b - c);
-      boolean acsame = approx0(c - a);
-      boolean albesame = approx0(alpha - beta);
-      boolean begasame = approx0(beta - gamma);
-      boolean algasame = approx0(gamma - alpha);
-
-      if (!allowSame) {
-        // make a, b, and c all distinct
-        if (a > b) {
-          double d = a;
-          a = b;
-          b = d;
-        }
-        bcsame = approx0(b - c);
-        if (bcsame)
-          c = b * 1.5d;
-        absame = approx0(a - b);
-        if (absame)
-          b = a * 1.2d;
-        acsame = approx0(c - a);
-        if (acsame)
-          c = a * 1.1d;
-
-        // make alpha, beta, and gamma all distinct
-
-        if (approx0(alpha - 90)) {
-          alpha = 80;
-        }
-        if (approx0(beta - 90)) {
-          beta = 100;
-        }
-        if (approx0(gamma - 90)) {
-          gamma = 110;
-        }
-        if (alpha > beta) {
-          double d = alpha;
-          alpha = beta;
-          beta = d;
-        }
-        albesame = approx0(alpha - beta);
-        begasame = approx0(beta - gamma);
-        algasame = approx0(gamma - alpha);
-
-        if (albesame) {
-          beta = alpha * 1.2d;
-        }
-        if (begasame) {
-          gamma = beta * 1.3d;
-        }
-        if (algasame) {
-          gamma = alpha * 1.4d;
-        }
-      }
-      if (toHex) {
-        if (toRhom ? isRhom
-            : isHex) {
-          // nothing to do
-        } else if (sg.axisChoice == 'r') {
-          c = b = a;
-          if (!allowSame && alpha > 85 && alpha < 95)
-            alpha = 80;
-          gamma = beta = alpha;
-        } else {
-          b = a;
-          alpha = beta = 90;
-          gamma = 120;
-        }
-      } else if (n >= 195) {
-        // cubic
-        c = b = a;
-        alpha = beta = gamma = 90;
-      } else if (n >= 75) {
-        // tetragonal
-        b = a;
-        if (acsame && !allowSame)
-          c = a * 1.5d;
-        alpha = beta = gamma = 90;
-      } else if (n >= 16) {
-        // orthorhombic
-        alpha = beta = gamma = 90;
-      } else if (n >= 3) {
-        // monoclinic
-        switch (sg.uniqueAxis) {
-        case 'a':
-          beta = gamma = 90;
-          break;
-        default:
-        case 'b':
-          alpha = gamma = 90;
-          break;
-        case 'c':
-          alpha = beta = 90;
-          break;
-        }
-      }
-    }
-    boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
-        && alpha == params[3] && beta == params[4] && gamma == params[5]);
-
-    newParams[0] = a;
-    newParams[1] = b;
-    newParams[2] = c;
-    newParams[3] = alpha;
-    newParams[4] = beta;
-    newParams[5] = gamma;
-    return isNew;
-  }
-
-  public static boolean isHexagonalSG(int n, double[] params) {
-    return (n < 1 ? isHexagonal(params)
-        : n >= 143 && n <= 194);
-  }
-  
-  public static boolean isMonoclinicSG(int n) {
-    return (n >= 3 && n <= 15);
-  }
-  
-  public static boolean isTetragonalSG(int n) {
-    return (n >= 75 && n <= 142);
-  }
-  
-  public static boolean isPolarSG(int n) {
-    return ( n == 1 // 1
-        || n >= 3 && n <= 5 // 2
-        || n >= 6 && n <= 9 // m
-        || n >= 25 && n <= 46 // 2mm
-        || n >= 75 && n <= 80 // 4
-        || n >= 99 && n <= 110 // 4mm
-        || n >= 143 && n <= 146 // 3
-        || n >= 156 && n <= 161 // 3mm
-        || n >= 168 && n <= 173 // 6
-        || n >= 183 && n <= 186 // 6mm
-        );
-  }
   
   private static void removeDuplicates(Lst<P3d> list, int i0, int n0, int n) {
     if (n < 0)
@@ -1431,6 +1313,68 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         }
       }
     }
+  }
+
+  /**
+   * Takes into account subperiodic groups using BoxInfo.unitCubePoints
+   * 
+   * P3d.new3(0, 0, 0), // 0
+   * 
+   * P3d.new3(0, 0, 1), // 1 c
+   *
+   * P3d.new3(0, 1, 0), // 2 b
+   * 
+   * P3d.new3(0, 1, 1), // 3 bc
+   * 
+   * P3d.new3(1, 0, 0), // 4 a
+   * 
+   * P3d.new3(1, 0, 1), // 5 ac
+   * 
+   * P3d.new3(1, 1, 0), // 6 ab
+   * 
+   * P3d.new3(1, 1, 1), // 7 }; abc
+   * 
+   * 
+   * @param periodicity 
+   * @return center
+   */
+  public P3d getCenter(int periodicity) {
+    P3d center = new P3d();
+    P3d off = getCartesianOffset();
+    P3d[] pts = getVertices();
+    // 0x1 a 0x2 b 0x4 c
+    // possibilities include abc (space), 
+    // ab (0,2,3,6 layer, plane), 
+    // c (0,2 rod), and 
+    // a (0,4 frieze) 
+    int j2, jd;
+    switch (periodicity) {
+    default:
+    case 0x7:
+      j2 = 8;
+      jd = 1;
+      break;
+    case 0x3: // ab
+      j2 = 8;
+      jd = 2;
+      break;
+    case 0x4: // c
+      j2 = 2;
+      jd = 1;
+      break;
+    case 0x1: // a
+      j2 = 4;
+      jd = 4;
+      break;
+    }
+    int n = 0;
+    for (int j = 0; j < j2; j += jd) {
+      center.add(pts[j]);
+      center.add(off);
+      n++;
+    }
+    center.scale(1d / n);
+    return center;
   }
 
 }

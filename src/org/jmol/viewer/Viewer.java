@@ -1805,11 +1805,15 @@ public class Viewer extends JmolViewer
     //    ms.calcBoundBoxDimensions(null, 1);
     axesAreTainted = true;
     tm.homePosition(includingSpin);
-    if (ms.setCrystallographicDefaults())
+    if (ms.setCrystallographicDefaults()) {
       stm.setCrystallographicDefaults();
-    else
+      setNewRotationCenter(getUnitCellCenter());
+
+    } else {
       setAxesMode(T.axeswindow);
+    }
     prevFrame = Integer.MIN_VALUE;
+    setBooleanPropertyTok("mode2d", T.mode2d, false);
     if (!tm.spinOn)
       setSync();
   }
@@ -5989,6 +5993,9 @@ public class Viewer extends JmolViewer
       return g.measurementLabels;
     case T.messagestylechime:
       return g.messageStyleChime;
+    case T.mode2d:
+      // 16.2.33
+      return g.mode2d;
     case T.modelkitmode:
       return g.modelKitMode;
     case T.multiplebondbananas:
@@ -6910,6 +6917,10 @@ public class Viewer extends JmolViewer
   public void setBooleanPropertyTok(String key, int tok, boolean value) {
     boolean doRepaint = true;
     switch (tok) {
+    case T.mode2d:
+      // 16.2.33
+      g.mode2d = value;
+      break;
     case T.elementkey:
       // 16.2.2
       g.elementKey = value;
@@ -8104,7 +8115,7 @@ public class Viewer extends JmolViewer
                                            double endDegrees, boolean isSpin,
                                            BS bsSelected, V3d translation,
                                            Lst<P3d> finalPoints,
-                                           double[] dihedralList, M4d m4, boolean useModelKit) {
+                                           double[] dihedralList, M4d m4, boolean useModelKit, P3d[][] centerAndPoints) {
     // Eval: rotate INTERNAL
 
     if (eval == null)
@@ -8118,7 +8129,7 @@ public class Viewer extends JmolViewer
 
     boolean isOK = tm.rotateAboutPointsInternal(eval, point1, point2,
         degreesPerSecond, endDegrees, false, isSpin, bsSelected, false,
-        translation, finalPoints, dihedralList, m4, useModelKit);
+        translation, finalPoints, dihedralList, m4, useModelKit, centerAndPoints);
     if (isOK)
       setSync();
     return isOK;
@@ -8134,7 +8145,7 @@ public class Viewer extends JmolViewer
     }
     tm.rotateAboutPointsInternal(null, pt1, pt2, g.pickingSpinRate,
         Double.MAX_VALUE, isClockwise, true, null, false, null, null, null,
-        null, false);
+        null, false, null);
   }
 
   public V3d getModelDipole() {
@@ -10585,7 +10596,12 @@ public class Viewer extends JmolViewer
     return Interface.getSymmetry(this, "ms").setViewer(this);
   }
 
-  private static SymmetryInterface symStatic;
+  /**
+   * Static only in the sense of "just one instance per viewer"
+   * unlike symTemp, which is new every time.
+   */
+  private SymmetryInterface symStatic;
+  
   /**
    * Retrieve the static Symmetry object, which should be used only statically
    * 
@@ -11231,6 +11247,15 @@ public class Viewer extends JmolViewer
   public int getItaNumberFor(String name) {
     String s = (String) getSymStatic().getSpaceGroupInfoObj("itaNumber", name, false, false);
     return (s == null ? -1 : PT.parseInt(s));
+  }
+
+  public boolean is2D() {
+    return getBoolean(T.mode2d);
+  }
+
+  public P3d getUnitCellCenter() {
+    SymmetryInterface uc = getCurrentUnitCell();
+    return (uc == null ? new P3d() : uc.getUnitCellCenter());      
   }
 
 }

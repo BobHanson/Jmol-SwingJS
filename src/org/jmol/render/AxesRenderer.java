@@ -57,7 +57,7 @@ public class AxesRenderer extends CageRenderer {
       return false;
     if (isXY ? exportType == GData.EXPORT_CARTESIAN
         : tm.isNavigating() && vwr.getBoolean(T.navigationperiodic))
-      return false;
+      return false; 
     // includes check here for background model present
     int modelIndex = vwr.am.cmi;
     if (ms.isJmolDataFrameForModel(modelIndex)
@@ -76,7 +76,9 @@ public class AxesRenderer extends CageRenderer {
     boolean isabcxyz = (isXY && isUnitCell && axes.axes2 != null);
     isPolymer = isUnitCell && unitcell.isPolymer();
     isSlab = isUnitCell && unitcell.isSlab();
-
+    nDims = (isUnitCell ? unitcell.getDimensionality() : 3);
+    periodicity = (isUnitCell ? unitcell.getPeriodicity() : 0x7);
+    setShifts();
     double scale = axes.scale;
     if (isabcxyz) {
       // both abc and xyz
@@ -94,10 +96,12 @@ public class AxesRenderer extends CageRenderer {
   }
   
   private final P3d ptTemp = new P3d();
-  private void render1(Axes axes,int mad10, boolean isXY,
-                       String axisType, boolean isUnitCell, double scale, String labels2) {
+
+  private void render1(Axes axes, int mad10, boolean isXY, String axisType,
+                       boolean isUnitCell, double scale, String labels2) {
     boolean isDataFrame = vwr.isJmolDataFrame();
     pt000 = (isDataFrame ? pt0 : axes.originPoint);
+
     int nPoints = 6;
     int labelPtr = 0;
     if (isUnitCell) {
@@ -119,7 +123,8 @@ public class AxesRenderer extends CageRenderer {
     int diameter = mad10;
     boolean drawTicks = false;
     ptTemp.setT(originScreen);
-    boolean checkAxisType = (labels2 == null && axisType != null && (isXY || vwr.getDouble(T.axesoffset) != 0 || axes.fixedOrigin != null));
+    boolean checkAxisType = (labels2 == null && axisType != null && (isXY
+        || vwr.getDouble(T.axesoffset) != 0 || axes.fixedOrigin != null));
     if (isXY) {
       if (mad10 >= 20) {
         // width given in angstroms as mAng.
@@ -140,7 +145,7 @@ public class AxesRenderer extends CageRenderer {
         // offset is from {0 0 0}
         pointT.setT(pt000);
         for (int i = 0; i < 3; i++)
-          pointT.add(axes.getAxisPoint(i, false, ptTemp)); 
+          pointT.add(axes.getAxisPoint(i, false, ptTemp));
         pt0i.setT(tm.transformPt(pt000));
         pt2i.scaleAdd(-1, pt0i, tm.transformPt(pointT));
         if (pt2i.x < 0)
@@ -172,33 +177,55 @@ public class AxesRenderer extends CageRenderer {
       }
       tm.transformPtNoClip(pt000, ptTemp);
       diameter = getDiameter((int) ptTemp.z, mad10);
-      for (int i = nPoints; --i >= 0;)
-        tm.transformPtNoClip(axes.getAxisPoint(i, !isDataFrame, pointT), p3Screens[i]);
+      for (int i = nPoints; --i >= 0;) {
+        P3d p = axes.getAxisPoint(i, !isDataFrame, pointT);
+        tm.transformPtNoClip(p, p3Screens[i]);
+      }
+      if (shifting) {
+        if (vvert == null) {
+          vvert = new P3d[] { new P3d(), new P3d(), new P3d(), new P3d(),
+              new P3d(), new P3d() };
+        }
+        if (shiftA) {
+          setVVert(axes, 0);
+        }
+        if (shiftB) {
+          setVVert(axes, 1);
+        }
+        if (shiftC) {
+          setVVert(axes, 2);
+        }
+      }
     }
     double xCenter = ptTemp.x;
     double yCenter = ptTemp.y;
     colixes[0] = vwr.getObjectColix(StateManager.OBJ_AXIS1);
     colixes[1] = vwr.getObjectColix(StateManager.OBJ_AXIS2);
     colixes[2] = vwr.getObjectColix(StateManager.OBJ_AXIS3);
-    boolean showOrigin = (!isXY && nPoints == 3 && (scale == 2 || isUnitCell));
+    boolean showOrigin = (nDims == 3 && !isXY && nPoints == 3
+        && (scale == 2 || isUnitCell));
+    if (nDims == 2)
+      nPoints = 2; // plane group
     for (int i = nPoints; --i >= 0;) {
       if (labels2 != null && i >= labels2.length()
           || checkAxisType && !axisType.contains(JC.axesTypes[i])
-          || exportType != GData.EXPORT_CARTESIAN && 
-          (Math.abs(xCenter - p3Screens[i].x)
-              + Math.abs(yCenter - p3Screens[i].y) <= 2)
-          && (!(showOrigin = false)) // setting showOrigin here
+          || exportType != GData.EXPORT_CARTESIAN
+              && (Math.abs(xCenter - p3Screens[i].x)
+                  + Math.abs(yCenter - p3Screens[i].y) <= 2)
+              && (!(showOrigin = false)) // setting showOrigin here
       ) {
         continue;
       }
       colix = colixes[i % 3];
       g3d.setC(colix);
-      String label = (labels2 != null ? labels2.substring(i, i + 1) 
+      String label = (labels2 != null ? labels2.substring(i, i + 1)
           : axes.labels == null ? JC.axisLabels[i + labelPtr]
-          : i < axes.labels.length ? axes.labels[i] : null);
-      if (label != null && label.length() > 0)
-        renderLabel(label, p3Screens[i].x, p3Screens[i].y, p3Screens[i].z,
-            xCenter, yCenter);
+              : i < axes.labels.length ? axes.labels[i] : null);
+      if (label != null && label.length() > 0) {
+        P3d p = (i == 0 && shiftA ? vvert[1] : i == 1 && shiftB ? vvert[3]
+            : i == 2 && shiftC ? vvert[5] : p3Screens[i]);
+        renderLabel(label, p.x, p.y, p.z, xCenter, yCenter);
+      }
       if (drawTicks) {
         tickInfo = axes.tickInfos[(i % 3) + 1];
         if (tickInfo == null)
@@ -208,9 +235,23 @@ public class AxesRenderer extends CageRenderer {
           tickInfo.first = 0;
           tickInfo.signFactor = (i % 6 >= 3 ? -1 : 1);
         }
-      }      
-      int d = (isSlab && i == 2 || isPolymer && i > 0 ? -4 : diameter);
-      renderLine(ptTemp, p3Screens[i], d , drawTicks && tickInfo != null);
+      }
+      // assume slab is a,b and polymer is a only
+      int d = (isSlab && i == 2 || isPolymer && i > 0 ? -4 // dashed line
+          : diameter);
+      P3d p1 = ptTemp;
+      P3d p2 = p3Screens[i];
+      if (i == 2 && shiftC) {
+        p1 = vvert[4];
+        p2 = vvert[5];
+      } else if (i == 1 && shiftB) {
+        p1 = vvert[2];
+        p2 = vvert[3];
+      } else if (i == 0 && shiftA) {
+        p1 = vvert[0];
+        p2 = vvert[1];
+      }
+      renderLine(p1, p2, d, drawTicks && tickInfo != null);
     }
     if (showOrigin) { // a b c [orig]
       String label0 = (axes.labels == null || axes.labels.length == 3
@@ -223,6 +264,16 @@ public class AxesRenderer extends CageRenderer {
     }
     if (isXY)
       g3d.setSlab(slab);
+  }
+
+  private void setVVert(Axes axes, int i) {
+    int vpt = i * 2;
+    vvert[vpt].setT(axes.originPoint);
+    axes.getAxisPoint(i, true, pt).scale(0.5);
+    vvert[vpt].sub(pt);
+    pt.add(axes.originPoint);
+    tm.transformPtNoClip(vvert[vpt], vvert[vpt]);
+    tm.transformPtNoClip(pt, vvert[vpt + 1]);
   }
 
   private void renderLabel(String str, double x, double y, double z, double xCenter, double yCenter) {

@@ -62,8 +62,9 @@ public class SimpleUnitCell {
   public static final int PARAM_SLOP = 26;      // slop
    public static final int PARAM_COUNT = 27;
  
-  public final static int INFO_IS_RHOMBOHEDRAL = 8;
-  public final static int INFO_IS_HEXAGONAL = 7;  
+  public final static int INFO_IS_RHOMBOHEDRAL = 9;
+  public final static int INFO_IS_HEXAGONAL = 8;  
+  public final static int INFO_DIMENSION_TYPE = 7;
   public final static int INFO_DIMENSIONS = 6;
   public final static int INFO_GAMMA = 5;
   public final static int INFO_BETA = 4;
@@ -71,6 +72,8 @@ public class SimpleUnitCell {
   public final static int INFO_C = 2;
   public final static int INFO_B = 1;
   public final static int INFO_A = 0;
+
+  public static final int DIMENSION_TYPE_ALL = 0x7;
 
   public static final String HEX_TO_RHOMB = "2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c";
   public static final String RHOMB_TO_HEX = "a-b,b-c,a+b+c";
@@ -109,6 +112,10 @@ public class SimpleUnitCell {
   public double volume;
 
   protected int dimension = 3;
+  /**
+   * 0x07 : z,y,x periodic
+   */
+  public int dimensionType = DIMENSION_TYPE_ALL;
  
   private P3d fractionalOrigin;
 
@@ -167,8 +174,17 @@ public class SimpleUnitCell {
     return c;
   }
 
+  /**
+   * Allows for abc, ab, or a
+   * 
+   * @param params
+   * @return 1, 2, or 3
+   */
   public static int getDimensionFromParams(double[] params) {
-    return (params[0] <= 0 ? 3 : params[1] < 0 ? 1 : params[2] < 0 ? 2 : 3);
+    return (params[0] <= 0 ? 3 // given elsewhere
+           : params[1] < 0 ? 1 // no b or c
+           : params[2] < 0 ? 2 // no c
+           : 3);
   }
 
 
@@ -181,6 +197,17 @@ public class SimpleUnitCell {
     boolean rotateHex = false; // special gamma = -1 indicates hex rotation for AFLOW
 
     dimension = getDimensionFromParams(params);
+    switch (dimension) {
+    case 1:
+      dimensionType = 1; // a only
+      break;
+    case 2:
+      dimensionType = 3; // a and b
+      break;
+    case 3:
+      dimensionType = 7; // a, b, and c
+      break;
+    }
     a = params[0];
     b = params[1];
     c = params[2];
@@ -430,6 +457,13 @@ public class SimpleUnitCell {
     c_ = a * b * sinGamma / volume;
   }
 
+  /**
+   * Get the fractional origin for the UccageRenderer.
+   * 
+   * NOTE: This is NOT a copy
+   * 
+   * @return fractionalOrigin
+   */
   public P3d getFractionalOrigin() {
     return fractionalOrigin;
   }
@@ -495,7 +529,7 @@ public class SimpleUnitCell {
         m.m00, m.m10, m.m20, // Va
         m.m01, m.m11, m.m21, // Vb
         m.m02, m.m12, m.m22, // Vc
-        dimension, volume,
+        dimension, volume, dimensionType
       } 
     );
   }
@@ -516,6 +550,8 @@ public class SimpleUnitCell {
       return gamma;
     case INFO_DIMENSIONS:
       return dimension;
+    case INFO_DIMENSION_TYPE:
+      return dimensionType;
     case INFO_IS_HEXAGONAL:
       return (isHexagonal(unitCellParams) ? 1 : 0);
     case INFO_IS_RHOMBOHEDRAL:
@@ -772,7 +808,7 @@ public class SimpleUnitCell {
   public static void setMinMaxLatticeParameters(int dimension, P3i minXYZ, P3i maxXYZ, int kcode) {
     
     if (maxXYZ.x <= maxXYZ.y && maxXYZ.y >= 555) {
-      //alternative format for indicating a range of cells:
+      //alternative format for indicatin.g a range of cells:
       //{111 666}
       //555 --> {0 0 0}
       P3d pt = new P3d();
@@ -824,7 +860,7 @@ public class SimpleUnitCell {
    * @param f
    * @return true or false
    */
-  protected static boolean approx0(double f) {
+  public static boolean approx0(double f) {
     return (Math.abs(f) < SLOP_PARAMS);
   }
 

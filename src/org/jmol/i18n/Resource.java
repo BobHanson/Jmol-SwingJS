@@ -31,7 +31,7 @@ class Resource {
   static Resource getResource(Viewer vwr, String className, String name) {
     try {
       BufferedReader br = FileManager.getBufferedReaderForResource(vwr,
-          new PO(), "org/jmol/translation/",
+          PO.class, "org/jmol/translation/",
           (className.indexOf("Applet") >= 0 ? "JmolApplet/" : "Jmol/") + name
               + ".po");
       String[] data = new String[1];

@@ -313,7 +313,7 @@ public class T {
   public final static int connect      = scriptCommand | 10;
   public final static int console      = scriptCommand | 11 | defaultON;
   public final static int audio        = scriptCommand | 12;
-  ////public final static int data  see mathfunc
+  //public final static int data  see mathfunc
   public final static int delay        = scriptCommand | 13 | defaultON;
   public final static int depth        = scriptCommand | 14 | intparam | defaultON;
   public final static int exit         = scriptCommand | 15 | noArgs;
@@ -1070,6 +1070,7 @@ public class T {
   public final static int messagestylechime              = booleanparam | 103;
   public final static int minimizationrefresh            = booleanparam | 104;
   public final static int minimizationsilent             = booleanparam | 105;
+  public final static int mode2d                         = booleanparam | 106;  // 16.2.33
   public final static int modulateoccupancy              = booleanparam | 108;  // 14.3.13
   public final static int monitorenergy                  = booleanparam | 109;
   public final static int multiplebondbananas            = booleanparam | 110;
@@ -1815,6 +1816,7 @@ public class T {
         "minimize",
         "minimization",
         "mo",
+        "mode2d",
         "model",
         "models",
         "modulation",
@@ -2897,6 +2899,7 @@ public class T {
         minimize,                           // "minimize"
         -1,                                 // "minimization"
         mo,                                 // "mo"
+        mode2d,                             // "mode2d"
         model,                              // "model"
         -1,                                 // "models"
         modulation,                         // "modulation"

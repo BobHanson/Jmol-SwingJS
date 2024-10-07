@@ -517,12 +517,12 @@ public class FileManager implements BytePoster {
 
   @SuppressWarnings("null")
   public static BufferedReader getBufferedReaderForResource(Viewer vwr,
-                                                            Object resourceClass,
+                                                            Class<?> resourceClass,
                                                             String classPath,
                                                             String resourceName)
       throws IOException {
 
-    URL url = resourceClass.getClass().getResource(resourceName);
+    URL url = resourceClass.getResource(resourceName);
     if (url == null) {
       System.err.println("Couldn't find file: " + classPath + resourceName);
       throw new IOException();

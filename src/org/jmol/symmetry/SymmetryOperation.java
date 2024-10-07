@@ -1754,7 +1754,7 @@ public class SymmetryOperation extends M4d {
     return !(nNeg == 8 || nPos == 8);
   }
 
-  public static SymmetryOperation[] getAdditionalOperations(SymmetryOperation[] ops) {
+  public static SymmetryOperation[] getAdditionalOperations(SymmetryOperation[] ops, int periodicity) {
     int n = ops.length;
     Lst<SymmetryOperation> lst = new Lst<SymmetryOperation>();
     SB xyzLst = new SB();
@@ -1771,7 +1771,7 @@ public class SymmetryOperation extends M4d {
         addCoincidentMap(mapPlanes, op, TYPE_SCREW_ROTATION, null);
     }
     for (int i = 1; i < n; i++) { // skip x,y,z
-      ops[i].addOps(xyzLst, lst, mapPlanes, n, i, vTemp);
+      ops[i].addOps(xyzLst, lst, mapPlanes, n, i, vTemp, periodicity);
     }
     return lst.toArray(new SymmetryOperation[lst.size()]);
   }
@@ -1786,9 +1786,10 @@ public class SymmetryOperation extends M4d {
    * @param n0
    * @param isym
    * @param vTemp 
+   * @param periodicity 
    */
   void addOps(SB xyzList, Lst<SymmetryOperation> lst,
-              Map<String, Lst<SymmetryOperation>> mapCoincident, int n0, int isym, V3d vTemp) {
+              Map<String, Lst<SymmetryOperation>> mapCoincident, int n0, int isym, V3d vTemp, int periodicity) {
     V3d t0 = new V3d();
     getTranslation(t0);
     boolean isPlane = ((getOpType() & TYPE_REFLECTION) == TYPE_REFLECTION);
@@ -1797,10 +1798,33 @@ public class SymmetryOperation extends M4d {
     SymmetryOperation opTemp = null;
     // originally from -2 to 2, starting with + so that we get the + version
     // but for "225:1/2b+1/2c,1/2a+1/2c,1/2a+1/2b" we need higher.
-    // and needed =2 to 4 to catch all the elemens
-    for (int i = 5; --i >= -2;) {
-      for (int j = 5; --j >= -2;) {
-        for (int k = 5; --k >= -2;) {
+    // and needed =2 to 4 to catch all the elements
+    
+    // periodicity here affects how the arrays run.
+    int i0 = 5, i1 = -2, j0 = 5, j1 = -2, k0 = 5, k1 = -2;
+    switch (periodicity) {
+    case 0x7: // abc space
+      break;
+    case 0x3: // ab plane, layer
+      k0 = 1;
+      k1 = 0;
+      break;
+    case 0x4: // c rod
+      i0 = 1;
+      i1 = 0;
+      j0 = 1;
+      j1 = 0;
+      break;
+    case 0x1: // a frieze
+      j0 = 1;
+      j1 = 0;
+      k0 = 1;
+      k1 = 0;
+      break;
+    }
+    for (int i = i0; --i >= i1;) {
+      for (int j = j0; --j >= j1;) {
+        for (int k = k0; --k >= k1;) {
           if (opTemp == null)
             opTemp = new SymmetryOperation(null, 0, false);
           t.set(i, j, k);

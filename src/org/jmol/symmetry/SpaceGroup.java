@@ -35,6 +35,7 @@ import org.jmol.symmetry.HallInfo.HallReceiver;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
 import javajs.util.Lst;
@@ -79,6 +80,491 @@ import javajs.util.SB;
 
 public class SpaceGroup implements Cloneable, HallReceiver {
 
+  protected String specialPrefix = "";
+
+  private static abstract class SpecialGroup extends SpaceGroup {
+
+    /**
+     * the space group and unit cell that this group relates to; may be null
+     */
+    protected Symmetry embeddingSymmetry;
+
+    /**
+     * @param sym the space group and unit cell that this group relates to; may be null
+     * @param info ITA/ITE info for building this group 
+     * @param type TYPE_PLANE, TYPE_LAYER, TYPE_ROD, TYPE_FRIEZE  
+     */
+    protected SpecialGroup(Symmetry sym, Map<String, Object> info, int type) {
+      super(-1, null, true);
+      embeddingSymmetry = sym;
+      groupType = type;
+      if (info == null)
+        return;
+      initSpecial(info);
+    }
+
+    protected void initSpecial(Map<String, Object> info) {
+      @SuppressWarnings("unchecked")
+      Lst<Object> ops = (Lst<Object>) info.get("gp");
+      for (int i = 0; i < ops.size(); i++) {
+        addOperation((String) ops.get(i), 0, false);
+      }
+      itaTransform = (String) info.get("trm");
+      itaNumber = "" + info.get("sg");
+      itaIndex = "" + info.get("set");
+      setHMSymbol((String) info.get("hm"));
+      specialPrefix  = getGroupTypePrefix(groupType);
+      //setClegId(normalizeSpecialCleg((String) info.get("clegId")));
+      setITATableNames(null, itaNumber, itaIndex, itaTransform);
+    }
+
+    private String normalizeSpecialCleg(String cleg) {
+      int pt = cleg.indexOf(":");
+      int itNo = getITNo(cleg, pt);
+      itNo = itNo%100;
+      return itNo + cleg.substring(pt);
+    }
+
+    @Override
+    protected SpaceGroup newSpaceGroup() {
+      return createSpecialGroup(embeddingSymmetry, null, groupType);
+    }
+
+
+  }
+  
+  public static SpaceGroup createSpecialGroup(Symmetry sym, Map<String, Object> info, int type) {
+    switch (type) {
+    case TYPE_SPACE:
+      return new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
+    case TYPE_PLANE:
+      return new PlaneGroup(sym, info);
+    case TYPE_LAYER:
+      return new LayerGroup(sym, info);
+    case TYPE_ROD:
+      return new RodGroup(sym, info);
+    case TYPE_FRIEZE:
+      return new FriezeGroup(sym, info);
+    }
+    return null;
+  }
+  
+  /**
+   * A 2D spacegroup with two periodic directions, x and y (axes a and b).
+   * 
+   * https://en.wikipedia.org/wiki/List_of_planar_symmetry_groups
+   * 
+   */
+  private static class PlaneGroup extends SpecialGroup {
+    protected PlaneGroup(Symmetry sym, Map<String, Object> info) {
+      super(sym, info, TYPE_PLANE);
+      nDim = 2;
+      periodicity = 0x1 | 0x2;
+    }
+
+   
+    /**
+     * PlaneGroup rules
+     */
+    @Override
+    public boolean createCompatibleUnitCell(double[] params, double[] newParams,
+                                            boolean allowSame) {
+      if (newParams == null)
+        newParams = params;
+      double a = params[0];
+      double b = params[1];
+      double c = -1;
+      double alpha = 90;
+      double beta = 90;
+      double gamma = params[5];
+      int n = (itaNumber == null ? 0 : PT.parseInt(itaNumber));
+
+      
+      boolean toHex = false, isHex = false;
+      toHex = (n != 0 && isHexagonalSG(n, null));
+      isHex = (toHex && isHexagonalSG(-1, params));
+      if (toHex && isHex) {
+        allowSame = true;
+      }
+
+      if (n > (allowSame ? 2 : 0)) {
+
+        boolean absame = SimpleUnitCell.approx0(a - b);
+
+        if (!allowSame) {
+          // make a, b distinct
+          if (a > b) {
+            double d = a;
+            a = b;
+            b = d;
+          }
+          absame = SimpleUnitCell.approx0(a - b);
+          if (absame)
+            b = a * 1.2d;
+
+          if (SimpleUnitCell.approx0(gamma - 90)) {
+            gamma = 110;
+          }
+        }
+        
+        if (toHex) {
+            b = a;
+            alpha = beta = 90;
+            gamma = 120;
+        } else if (n >= 10) {
+          // tetragonal
+          b = a;
+          gamma = 90;
+        } else if (n >= 3) {
+          // orthorhombic
+          gamma = 90;
+        }
+      }
+
+      boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
+          && alpha == params[3] && beta == params[4] && gamma == params[5]);
+
+      newParams[0] = a;
+      newParams[1] = b;
+      newParams[2] = c;
+      newParams[3] = alpha;
+      newParams[4] = beta;
+      newParams[5] = gamma;
+      return isNew;
+    }
+    
+    @Override
+    public boolean isHexagonalSG(int n, double[] params) {
+      return (n < 1 ? SimpleUnitCell.isHexagonal(params)
+          : n >= 13);
+    }
+    
+
+  }
+
+
+  /**
+   * A 3D subperiodic group with two periodic directions, x and y (axes a and b).
+   * 
+   * The c axis will be perpendicular to the layer in most cases.
+   * 
+   * see https://iopscience.iop.org/article/10.1088/2053-1583/ad3e0c DOI
+   * 10.1088/2053-1583/ad3e0c
+   * 
+   * Symmetry classification of 2D materials: layer groups versus space groups
+   * 
+   * Jingheng Fu1, Mikael Kuisma, Ask Hjorth Larsen, Kohei Shinohara, Atsushi
+   * Togo and Kristian S Thygesen
+   * 
+   */
+  private static class LayerGroup extends SpecialGroup {
+
+    protected LayerGroup(Symmetry sym, Map<String, Object> info) {
+      super(sym, info, TYPE_LAYER);
+      nDim = 3;
+      periodicity = 0x1 | 0x2;
+    }
+
+    /**
+     * LayerGroup rules
+     */
+    @Override
+    public boolean createCompatibleUnitCell(double[] params, double[] newParams,
+                                            boolean allowSame) {
+      if (newParams == null)
+        newParams = params;
+      double a = params[0];
+      double b = params[1];
+      double c = params[2];
+      double alpha = params[3];
+      double beta = params[4];
+      double gamma = params[5];
+      int n = (itaNumber == null ? 0 : PT.parseInt(itaNumber));
+
+      
+      boolean toHex = false, isHex = false;
+      toHex = (n != 0 && isHexagonalSG(n, null));
+      isHex = (toHex && isHexagonalSG(-1, params));
+      if (toHex && isHex) {
+        allowSame = true;
+      }
+
+      if (n > (allowSame ? 2 : 0)) {
+
+        boolean absame = b > 0 && SimpleUnitCell.approx0(a - b);
+        boolean bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
+        boolean acsame = c > 0 && SimpleUnitCell.approx0(c - a);
+        boolean albesame = SimpleUnitCell.approx0(alpha - beta);
+        boolean begasame = SimpleUnitCell.approx0(beta - gamma);
+        boolean algasame = SimpleUnitCell.approx0(gamma - alpha);
+
+        if (!allowSame) {
+          // make a, b, and c all distinct
+          if (b > 0 && a > b) {
+            double d = a;
+            a = b;
+            b = d;
+          }
+          bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
+          if (bcsame)
+            c = b * 1.5d;
+          absame = SimpleUnitCell.approx0(a - b);
+          if (absame)
+            b = a * 1.2d;
+          acsame = SimpleUnitCell.approx0(c - a);
+          if (acsame)
+            c = a * 1.1d;
+
+          // make alpha, beta, and gamma all distinct
+
+          if (SimpleUnitCell.approx0(alpha - 90)) {
+            alpha = 80;
+          }
+          if (SimpleUnitCell.approx0(beta - 90)) {
+            beta = 100;
+          }
+          if (SimpleUnitCell.approx0(gamma - 90)) {
+            gamma = 110;
+          }
+          if (alpha > beta) {
+            double d = alpha;
+            alpha = beta;
+            beta = d;
+          }
+          albesame = SimpleUnitCell.approx0(alpha - beta);
+          begasame = SimpleUnitCell.approx0(beta - gamma);
+          algasame = SimpleUnitCell.approx0(gamma - alpha);
+
+          if (albesame) {
+            beta = alpha * 1.2d;
+          }
+          if (begasame) {
+            gamma = beta * 1.3d;
+          }
+          if (algasame) {
+            gamma = alpha * 1.4d;
+          }
+        }
+        if (toHex) {
+          b = a;
+          alpha = beta = 90;
+          gamma = 120;
+        } else if (n >= 49) {
+          // tetragonal
+          b = a;
+          if (acsame && !allowSame)
+            c = a * 1.5d;
+          alpha = beta = gamma = 90;
+        } else if (n >= 19) {
+          // orthorhombic
+          alpha = beta = gamma = 90;
+        } else if (n >= 8) {
+          // monoclinic rectangular
+          beta = gamma = 90;
+        } else if (n >= 3) {
+          // monoclinic oblique
+          alpha = beta = 90;
+        }
+      }
+
+      boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
+          && alpha == params[3] && beta == params[4] && gamma == params[5]);
+
+      newParams[0] = a;
+      newParams[1] = b;
+      newParams[2] = c;
+      newParams[3] = alpha;
+      newParams[4] = beta;
+      newParams[5] = gamma;
+      return isNew;
+    }
+
+    @Override
+    public boolean isHexagonalSG(int n, double[] params) {
+      return (n < 1 ? SimpleUnitCell.isHexagonal(params)
+          : n >= 65);
+    }
+    
+
+  }
+
+  /**
+   * A 1D periodic group with the periodic direction z (c axis).
+   * 
+   * x,y axes will be perpendicular to the linear direction.
+   */
+  private static class RodGroup extends SpecialGroup {
+
+    protected RodGroup(Symmetry sym, Map<String, Object> info) {
+      super(sym, info, TYPE_ROD);
+      nDim = 3;
+      periodicity = 0x4; // c only
+    }
+
+    /**
+     * RodGroup rules
+     */
+    @Override
+    public boolean createCompatibleUnitCell(double[] params, double[] newParams,
+                                            boolean allowSame) {
+      if (newParams == null)
+        newParams = params;
+      double a = params[0];
+      double b = params[1];
+      double c = params[2];
+      double alpha = params[3];
+      double beta = params[4];
+      double gamma = params[5];
+      int n = (itaNumber == null ? 0 : PT.parseInt(itaNumber));
+
+      
+      boolean toHex = false, isHex = false;
+      toHex = (n != 0 && isHexagonalSG(n, null));
+      isHex = (toHex && isHexagonalSG(-1, params));
+      if (toHex && isHex) {
+        allowSame = true;
+      }
+
+      if (n > (allowSame ? 2 : 0)) {
+
+        boolean absame = b > 0 && SimpleUnitCell.approx0(a - b);
+        boolean bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
+        boolean acsame = c > 0 && SimpleUnitCell.approx0(c - a);
+        boolean albesame = SimpleUnitCell.approx0(alpha - beta);
+        boolean begasame = SimpleUnitCell.approx0(beta - gamma);
+        boolean algasame = SimpleUnitCell.approx0(gamma - alpha);
+
+        if (!allowSame) {
+          // make a, b, and c all distinct
+          if (b > 0 && a > b) {
+            double d = a;
+            a = b;
+            b = d;
+          }
+          bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
+          if (bcsame)
+            c = b * 1.5d;
+          absame = SimpleUnitCell.approx0(a - b);
+          if (absame)
+            b = a * 1.2d;
+          acsame = SimpleUnitCell.approx0(c - a);
+          if (acsame)
+            c = a * 1.1d;
+
+          // make alpha, beta, and gamma all distinct
+
+          if (SimpleUnitCell.approx0(alpha - 90)) {
+            alpha = 80;
+          }
+          if (SimpleUnitCell.approx0(beta - 90)) {
+            beta = 100;
+          }
+          if (SimpleUnitCell.approx0(gamma - 90)) {
+            gamma = 110;
+          }
+          if (alpha > beta) {
+            double d = alpha;
+            alpha = beta;
+            beta = d;
+          }
+          albesame = SimpleUnitCell.approx0(alpha - beta);
+          begasame = SimpleUnitCell.approx0(beta - gamma);
+          algasame = SimpleUnitCell.approx0(gamma - alpha);
+
+          if (albesame) {
+            beta = alpha * 1.2d;
+          }
+          if (begasame) {
+            gamma = beta * 1.3d;
+          }
+          if (algasame) {
+            gamma = alpha * 1.4d;
+          }
+        }
+        if (toHex) {
+          b = a;
+          alpha = beta = 90;
+          gamma = 120;
+        } else if (n >= 23) {
+          // tetragonal
+          b = a;
+          if (acsame && !allowSame)
+            c = a * 1.5d;
+          alpha = beta = gamma = 90;
+        } else if (n >= 13) {
+          // orthorhombic
+          alpha = beta = gamma = 90;
+        } else if (n >= 8) {
+          // monoclinic rectangular
+          alpha = beta = 90;
+        } else if (n >= 3) {
+          // monoclinic oblique
+          beta = gamma = 90;
+        }
+      }
+
+      boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
+          && alpha == params[3] && beta == params[4] && gamma == params[5]);
+
+      newParams[0] = a;
+      newParams[1] = b;
+      newParams[2] = c;
+      newParams[3] = alpha;
+      newParams[4] = beta;
+      newParams[5] = gamma;
+      return isNew;
+    }
+
+    @Override
+    public boolean isHexagonalSG(int n, double[] params) {
+      return (n < 1 ? SimpleUnitCell.isHexagonal(params)
+          : n >= 42);
+    }
+    
+  }
+
+  /**
+   * A 2D spacegroup with one periodic direction, along a.
+   */
+  private static class FriezeGroup extends SpecialGroup {
+
+    protected FriezeGroup(Symmetry sym, Map<String, Object> info) {
+      super(sym, info, TYPE_FRIEZE);
+      nDim = 2;
+      periodicity = 0x1;
+    }
+
+    /**
+     * FriezeGroup rules
+     */
+    @Override
+    public boolean createCompatibleUnitCell(double[] params, double[] newParams,
+                                            boolean allowSame) {
+      if (newParams == null)
+        newParams = params;
+      double a = params[0];
+      double b = params[0];
+      double c = -1;
+      double alpha = 90;
+      double beta = 90;
+      double gamma = 90;//params[5];
+
+      
+      boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
+          && alpha == params[3] && beta == params[4] && gamma == params[5]);
+
+      newParams[0] = a;
+      newParams[1] = b;
+      newParams[2] = c;
+      newParams[3] = alpha;
+      newParams[4] = beta;
+      newParams[5] = gamma;
+      return isNew;
+    }
+
+  
+  }
+
   private static final String NEW_HALL_GROUP     = "0;--;--;0;--;--;";
   private static final String NEW_NO_HALL_GROUP  = "0;--;--;0;--;--;--";
   private static final String SG_NONE = "--";
@@ -86,6 +572,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
 
   private final static int SG_ITA = -2;
 
+  public int groupType = TYPE_SPACE;
+  
   public SymmetryOperation[] matrixOperations;
   SymmetryOperation[] finalOperations;
   SymmetryOperation[] allOperations;
@@ -105,8 +593,16 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * index in cleg_settings.tab; "-" if in Jmol's list but not at ITA -- 152:_2 and 154:_2
    */
 
-  private String itaIndex;
+  protected String itaIndex;
+  /**
+   * number of dimesions -- 2 (plane, frieze) or 3 (layer, rod, space)
+   */
+  protected int nDim = 3;
+ 
+  protected int periodicity = 0x7; // abc
+
   private String clegId, canonicalCLEG;
+
   
   private int index;
   private int referenceIndex = -1;
@@ -133,7 +629,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   
   private SpaceGroup setFrom(SpaceGroup sg, boolean isITA) {
     if (isITA) {
-      setName(sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + sg.clegId);
+      setName(sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + sg.specialPrefix + sg.clegId);
       referenceIndex = SG_ITA; // prevents replacement in finalizeOperations
     } else {
       setName(sg.getName());
@@ -154,6 +650,9 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     jmolId = null;
     jmolIdExt = null;
     latticeType = sg.latticeType;
+    specialPrefix = sg.specialPrefix;
+    periodicity = sg.periodicity;
+    groupType = sg.groupType;
     strName = displayName = null;
     return this;
   }
@@ -167,7 +666,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     return sg;
   }
   
-  private SpaceGroup(int index, String strData, boolean doInit) {
+  protected SpaceGroup(int index, String strData, boolean doInit) {
     ++sgIndex; // increment even if not using
     if (index < 0)
       index = sgIndex;
@@ -366,7 +865,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     if (finalOperations == null)
       setFinalOperations();
     if (allOperations == null) {
-      allOperations = SymmetryOperation.getAdditionalOperations(finalOperations);
+      allOperations = SymmetryOperation.getAdditionalOperations(finalOperations, periodicity);
     }
     return allOperations.length - getOperationCount();
   }
@@ -511,7 +1010,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       map.put("clegId", itaIndex == null ? "n/a" : clegId);
       if (jmolId != null)
         map.put("jmolId", jmolId);
-      map.put("crystalClass", crystalClass);
+      if (crystalClass != null)
+        map.put("crystalClass", crystalClass);
       map.put("operationCount", Integer.valueOf(operationCount));
     }
     Lst<Object> lst = new Lst<Object>();
@@ -582,7 +1082,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * @return either a String or a SpaceGroup, depending on index.
    */
   private Object dumpCanonicalSeitzList() {
-    if (nHallOperators != null) {
+    if (nHallOperators != null && hallSymbol != null) {
       hallInfo = newHallInfo(hallSymbol);
       generateAllOperators(null);
     } 
@@ -720,7 +1220,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     return null;
   }
   
-  private int addOperation(String xyz0, int opId, boolean allowScaling) {
+  protected int addOperation(String xyz0, int opId, boolean allowScaling) {
     if (xyz0 == null || xyz0.length() < 3) {
       init(false);
       return -1;
@@ -907,6 +1407,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     //getSpaceGroups();
     if (lastIndex < 0)
       lastIndex = SG.length;
+    if (getExplicitSpecialGroupType(name) > TYPE_SPACE)
+      return -1;
     name = name.trim().toLowerCase();
     //boolean checkBilbao = false;
     if (name.startsWith("bilbao:")) {
@@ -1244,8 +1746,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     int pt = name.indexOf("#");
     if (pt >= 0)
       name = name.substring(0, pt).trim();
-    hmSymbolFull = toCap(name, 1);
-    latticeType = hmSymbolFull.charAt(0);
+    hmSymbolFull = (groupType == TYPE_SPACE ? toCap(name, 1) : name.toLowerCase());
+    latticeType = Character.toUpperCase(hmSymbolFull.charAt(0));
     String[] parts = PT.split(hmSymbolFull, ":");
     hmSymbol = parts[0];
     hmSymbolExt = (parts.length == 1 ? "" : parts[1]);
@@ -1271,6 +1773,18 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   
   String strName;
   public String displayName;
+  
+  public static final String PREFIX_FRIEZE = "f/";
+  public static final String PREFIX_ROD    = "r/";
+  public static final String PREFIX_LAYER  = "l/";
+  public static final String PREFIX_PLANE  = "p/";
+  public static final String PREFIX_SPACE  = "";
+  public static final int TYPE_FRIEZE   = 600;
+  public static final int TYPE_ROD      = 500;
+  public static final int TYPE_LAYER    = 400;
+  public static final int TYPE_PLANE    = 300;
+  public static final int TYPE_SPACE    = 0;
+  public static final int TYPE_INVALID  = -1;
   
   public String asString() {
     return (strName == null 
@@ -1299,11 +1813,11 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       if (name == null) {
         name = "[" + hallSymbol + "]"; // may still need setting
       } else if (getClegId() != null){
-        name += " #" + getClegId();
+        name += " #" + specialPrefix + getClegId();
       }
       if (name.endsWith(SimpleUnitCell.HEX_TO_RHOMB))
         name = PT.rep(name, SimpleUnitCell.HEX_TO_RHOMB, "r");
-      if (name.indexOf(SpaceGroup.NO_NAME) >= 0)
+      if (name.indexOf(NO_NAME) >= 0)
         name = "";
       if (name.endsWith(":a,b,c"))
         name = name.substring(0, name.length() - 6);
@@ -1435,25 +1949,38 @@ public class SpaceGroup implements Cloneable, HallReceiver {
 
   /**
    * Look for Jmol ID such as 10:b or 10 or 10.2 or 10:c,a,b
-   * 
+   * @param vwr
    * @param name
+   * 
    * @return found space group or null
    */
-  static SpaceGroup getSpaceGroupFromJmolClegOrITA(String name) {
+  static SpaceGroup getSpaceGroupFromJmolClegOrITA(Viewer vwr, String name) {
+    int specialType = getExplicitSpecialGroupType(name);
+    String s = (specialType > TYPE_SPACE ? name.substring(2) : name);
+    int ptCleg = s.indexOf(":");
+    int ptTrm = s.indexOf(",");
+    int ptIndex = s.indexOf(".");
+    int pt = (ptCleg > 0 && ptTrm > ptCleg ? ptCleg : ptIndex);
+    int itno = getITNo(s, pt);
+    int itindex = (pt > 0 && pt == ptCleg || itno == Integer.MIN_VALUE ? 0
+        : pt > 0 ? getITNo(s.substring(pt + 1), 0) : 1);
+    if (specialType > TYPE_SPACE) {
+      return getSpecialGroup(null, vwr, name, itno, itindex, pt > 0 && pt == ptCleg, specialType);
+    }
     int n = SG.length;
-    if (name.indexOf(":") >= 0) {
-      if (name.indexOf(",") >= 0) {
-        // 10:c,a,b
-        for (int i = 0; i < n; i++)
-          if (name.equals(SG[i].clegId))
-            return SG[i];
-      } else {
-        // 10:b
-        for (int i = 0; i < n; i++)
-          if (name.equals(SG[i].jmolId))
-            return SG[i];
+    if (pt > 0 && pt == ptCleg) {
+      // 10:c,a,b
+      for (int i = 0; i < n; i++) {
+        if (name.equals(SG[i].clegId))
+          return SG[i];
       }
-    } else if (name.indexOf(".") >= 0) {
+    } else if (ptCleg > 0) {
+      // 10:b
+      for (int i = 0; i < n; i++) {
+        if (name.equals(SG[i].jmolId))
+          return SG[i];
+      }
+    } else if (ptIndex > 0) {
       // 10.3
       for (int i = 0; i < n; i++)
         if (name.equals(SG[i].itaIndex))
@@ -1467,6 +1994,36 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     return null;
   }
 
+  /**
+   * @param sym 
+   * @param vwr 
+   * @param name 
+   * @param itno 
+   * @param itindex  
+   * @param isCleg 
+   * @param type 
+   * @return SpaceGroup 
+   */
+  @SuppressWarnings("unchecked")
+  private static SpaceGroup getSpecialGroup(Symmetry sym, Viewer vwr, String name, int itno, int itindex, boolean isCleg, int type) {
+    Map<String, Object>[] data = (Map<String, Object>[]) Symmetry.getAllITAData(vwr, type, false);
+    Map<String, Object> info = null;
+    if (itindex > 0) {
+      info = (Map<String, Object>) ((Lst<Object>) data[itno - 1].get("its")).get(itindex - 1);    
+    } else {
+      name = name.substring(2);
+      for (int i = data.length; --i >= 0;) {
+        info = data[i];
+        if (hmEquals((String) info.get("hm"), name, type)) {
+          break;
+        }
+        if (i == 0)
+          return null;
+      }     
+    }
+    return createSpecialGroup(sym, info, type);
+  }
+
   void checkHallOperators() {
     if (nHallOperators != null && nHallOperators.intValue() != operationCount) {
       if (hallInfo == null || hallInfo.isGenerated()) {
@@ -1477,7 +2034,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         doNormalize = true;
         // get base ITA nnn.1 + transform, setting my operators
         // I have all my information already.
-        transformSpaceGroup(this, getSpaceGroupFromJmolClegOrITA(itaNumber), null, itaTransform, null);
+        transformSpaceGroup(TYPE_SPACE, this, getSpaceGroupFromJmolClegOrITA(null, itaNumber), null, itaTransform, null);
         hallInfo = null;
       }
     }
@@ -1498,10 +2055,10 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    */
   M4d[] getOpsCtr(String transform) {
     SpaceGroup sg = getNull(true, true, false);
-    transformSpaceGroup(sg, this, null, "!" + transform, null);
+    transformSpaceGroup(-1, sg, this, null, "!" + transform, null);
     sg.setFinalOperations();
     SpaceGroup sg2 = getNull(true, false, false);
-    transformSpaceGroup(sg2, sg, null, transform, null);
+    transformSpaceGroup(-1, sg2, sg, null, transform, null);
     sg2.setFinalOperations();
     return sg2.finalOperations;
   }
@@ -1662,16 +2219,17 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * 2) apply the operations
    * 
    * 3) update the multiplicities
-   * 
+   * @param vwr
    * @param map to fill or null
    * @param clegId
    * @param itno
    * @param its0
+   * 
    * @return new map containing just gp and wpos
    */
   @SuppressWarnings("unchecked")
-  static Map<String, Object> fillMoreData(Map<String, Object> map, String clegId, int itno,
-                                                       Map<String, Object> its0) {
+  static Map<String, Object> fillMoreData(Viewer vwr, Map<String, Object> map, String clegId,
+                                                       int itno, Map<String, Object> its0) {
     int pt = clegId.indexOf(':');
     String transform = (pt < 0 ? "a,b,c" : clegId.substring(pt + 1));
     M4d trm = UnitCell.toTrm(transform, null);
@@ -1727,8 +2285,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     map.put("wpos", wpos);     
     wpos.put("gp", gp);
     gp = new Lst<>();
-    SpaceGroup base = getSpaceGroupFromJmolClegOrITA(clegId); 
-    SpaceGroup sg = transformSpaceGroup(null, base, gp0,
+    SpaceGroup base = getSpaceGroupFromJmolClegOrITA(vwr, clegId); 
+    SpaceGroup sg = transformSpaceGroup(TYPE_SPACE, null, base, gp0,
         transform, new M4d());
     for (int i = 0, n = sg.getOperationCount(); i < n; i++) {
       gp.addLast(((SymmetryOperation) sg.getOperation(i)).xyz);
@@ -1746,8 +2304,10 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * 
    * The assumption is that they need transformation. So if the base is already
    * 
+   * modelkit zap spacegroup "225:p"
    * 
-   * 
+   * @param groupType 
+   * @param groupType ignored if sg and base are not both null
    * @param sg
    * @param base
    * @param genPos
@@ -1755,7 +2315,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * @param trm
    * @return new space group
    */
-  static SpaceGroup transformSpaceGroup(SpaceGroup sg, SpaceGroup base,
+  static SpaceGroup transformSpaceGroup(int groupType, SpaceGroup sg, SpaceGroup base,
                                         Lst<Object> genPos, String transform,
                                         M4d trm) {
     if (genPos == null) {
@@ -1773,7 +2333,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     // if sg != null, then xyzlist is not calculated and instead sg is filled. 
     Lst<Object> xyzList = addTransformXYZList(sg, genPos, transform, trm, normalize);
     if (sg == null) {
-      return createITASpaceGroup(xyzList, base);
+      return createITASpaceGroup(groupType, xyzList, base);
     }
     // a null transform indicates we have the operators already, and no transformation is needed
     // the base space group has all the relevant information
@@ -1789,12 +2349,13 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   /**
    * no transformation is done
    * 
+   * @param groupType 
    * @param genpos
    * @param base
    * @return cloned space group
    */
-  static SpaceGroup createITASpaceGroup(Lst<Object> genpos, SpaceGroup base) {
-    SpaceGroup sg = new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
+  static SpaceGroup createITASpaceGroup(int groupType, Lst<Object> genpos, SpaceGroup base) {
+    SpaceGroup sg = (base == null ? createSpecialGroup(null, null, groupType) : base.newSpaceGroup());
     sg.doNormalize = false;
     for (int i = 0, n = genpos.size(); i < n; i++) {
       SymmetryOperation op = new SymmetryOperation(null, i, false);
@@ -1808,6 +2369,10 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   }
 
 
+
+  protected SpaceGroup newSpaceGroup() {
+    return new SpaceGroup(-1, NEW_NO_HALL_GROUP, true);
+  }
 
   /**
    * Add operators based on a setting or subgroup transformation. 
@@ -3152,7 +3717,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "127;127.1;;16;d4h^5;p 4/m b m;-p 4 2ab",  
       "127:c;127.2;ab;32;d4h^5;c 4/m m g1;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;-y,-x+1/2,-z;y,x+1/2,-z;-x,y+1/2,-z;x,-y+1/2,-z;-x,-y,-z;x,y,-z;y,-x,-z;-y,x,-z;y,x+1/2,z;-y,-x+1/2,z;x,-y+1/2,z;-x,y+1/2,z;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;-y+1/2,-x,-z;y+1/2,x,-z;-x+1/2,y,-z;x+1/2,-y,-z;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;y+1/2,x,z;-y+1/2,-x,z;x+1/2,-y,z;-x+1/2,y,z", // ITA 127.2
       "128;128.1;;16;d4h^6;p 4/m n c;-p 4 2n",  
-      "128:c;128.2;a-b,a+b,c;32;d4h^6;c 4/m c g2;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;y+1/2,x,-z+1/2;-y+1/2,-x,-z+1/2;x+1/2,-y,-z+1/2;-x+1/2,y,-z+1/2;-x,-y,-z;x,y,-z;y,-x,-z;-y,x,-z;-y+1/2,-x,z+1/2;y+1/2,x,z+1/2;-x+1/2,y,z+1/2;x+1/2,-y,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;y,x+1/2,-z+1/2;-y,-x+1/2,-z+1/2;x,-y+1/2,-z+1/2;-x,y+1/2,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;-y,-x+1/2,z+1/2;y,x+1/2,z+1/2;-x,y+1/2,z+1/2;x,-y+1/2,z+1/2", // ITA 128.2
+      "128:c;128.2;ab;32;d4h^6;c 4/m c g2;xyz",//;x,y,z;-x,-y,z;-y,x,z;y,-x,z;y+1/2,x,-z+1/2;-y+1/2,-x,-z+1/2;x+1/2,-y,-z+1/2;-x+1/2,y,-z+1/2;-x,-y,-z;x,y,-z;y,-x,-z;-y,x,-z;-y+1/2,-x,z+1/2;y+1/2,x,z+1/2;-x+1/2,y,z+1/2;x+1/2,-y,z+1/2;x+1/2,y+1/2,z;-x+1/2,-y+1/2,z;-y+1/2,x+1/2,z;y+1/2,-x+1/2,z;y,x+1/2,-z+1/2;-y,-x+1/2,-z+1/2;x,-y+1/2,-z+1/2;-x,y+1/2,-z+1/2;-x+1/2,-y+1/2,-z;x+1/2,y+1/2,-z;y+1/2,-x+1/2,-z;-y+1/2,x+1/2,-z;-y,-x+1/2,z+1/2;y,x+1/2,z+1/2;-x,y+1/2,z+1/2;x,-y+1/2,z+1/2", // ITA 128.2
       "129:2;129.1;;16;d4h^7;p 4/n m m :2;-p 4a 2a",  
       "129:c2;129.2;ab;32;d4h^7;c 4/e m m :2;xyz",//;x,y,z;-x,-y+1/2,z;-y+1/4,x+1/4,z;y+3/4,-x+1/4,z;-y+3/4,-x+1/4,-z;y+1/4,x+1/4,-z;-x,y+1/2,-z;x,-y,-z;-x,-y,-z;x,y+1/2,-z;y+1/4,-x+1/4,-z;-y+3/4,x+1/4,-z;y+3/4,x+1/4,z;-y+1/4,-x+1/4,z;x,-y+1/2,z;-x,y,z;x+1/2,y+1/2,z;-x+1/2,-y,z;-y+3/4,x+3/4,z;y+1/4,-x+3/4,z;-y+1/4,-x+3/4,-z;y+3/4,x+3/4,-z;-x+1/2,y,-z;x+1/2,-y+1/2,-z;-x+1/2,-y+1/2,-z;x+1/2,y,-z;y+3/4,-x+3/4,-z;-y+1/4,x+3/4,-z;y+1/4,x+3/4,z;-y+3/4,-x+3/4,z;x+1/2,-y,z;-x+1/2,y+1/2,z", // ITA 129.2
       "129:1;129.3;a,b,c|-1/4,1/4,0;16;d4h^7;p 4/n m m :1;p 4ab 2ab -1ab",
@@ -3480,7 +4045,336 @@ intl#     H-M full       HM-abbr   HM-short  Hall
     return hmSymbol;
   }
 
+  public static int getITNo(String name, int n) {
+    if (n <= 0)
+      n = name.length();
+    for (int i = n; --i >= 0;)
+      if (!PT.isDigit(name.charAt(i)))
+        return -1;
+    return Integer.parseInt(name.substring(0, n));
+  }
 
+  public static boolean isInRange(double itno, int groupType, boolean allowSetIndex, boolean allow300) {
+    int max = getMax(groupType);
+    switch (groupType) {
+    case TYPE_SPACE:
+      if (allow300) {
+        int i = (int) itno;
+        int type = getImplicitSpecialGroupType(i);
+        if (type == TYPE_PLANE)
+          allowSetIndex = false;
+        return (type != TYPE_INVALID && (allowSetIndex || i == itno));
+      }
+      break;
+    case TYPE_PLANE:
+      allowSetIndex = false;
+      break;
+    case TYPE_LAYER:
+    case TYPE_ROD:
+    case TYPE_FRIEZE:
+      break;     
+    }
+    // possibly for 230.1 230.2, etc
+    return itno >= 1 && (allowSetIndex ? itno < max + 1 : itno <= max);
+  }
+
+  public static int getMax(int groupType) {
+    switch (groupType) {
+    case TYPE_SPACE:
+      return 230;
+    case TYPE_PLANE:
+      return 17;
+    case TYPE_LAYER:
+      return 80;
+    case TYPE_ROD:
+      return 75;
+    case TYPE_FRIEZE:
+      return 7;
+    default:
+      return 0;
+    }
+  }
+
+  public static String getGroupTypePrefix(int itno) {
+    itno -= itno % 100;
+    switch (itno) {
+    case TYPE_SPACE:
+      return PREFIX_SPACE;
+    case TYPE_PLANE:
+      return PREFIX_PLANE;
+    case TYPE_LAYER:
+      return PREFIX_LAYER;
+    case TYPE_ROD:
+      return PREFIX_ROD;
+    case TYPE_FRIEZE:
+      return PREFIX_FRIEZE;
+    }
+    return "";
+  }
+
+  public static int getExplicitSpecialGroupType(String name) {
+    if (name.length() < 2 || name.charAt(1) != '/')
+      return TYPE_SPACE;
+    switch (name.substring(0,2)) {
+    case PREFIX_PLANE:
+      return TYPE_PLANE;
+    case PREFIX_LAYER:
+      return TYPE_LAYER;
+    case PREFIX_ROD:
+      return TYPE_ROD;
+    case PREFIX_FRIEZE:
+      return TYPE_FRIEZE;
+    default:
+      return TYPE_INVALID;
+    }
+  }
+
+  public static String getSpecialGroupName(int type) {
+    switch (type) {
+    case TYPE_SPACE:
+      return "";
+    case TYPE_PLANE:
+      return "plane";
+    case TYPE_LAYER:
+      return "layer";
+    case TYPE_ROD:
+      return "rod";
+    case TYPE_FRIEZE:
+      return "frieze";
+    default:
+      return null;
+    }
+  }
+
+  public static int getImplicitSpecialGroupType(int itno) {
+    if (itno < 1)
+      return TYPE_INVALID;
+    if (itno <= 230)
+      return TYPE_SPACE;
+    if (itno > TYPE_PLANE && itno <= TYPE_PLANE + 17) 
+      return TYPE_PLANE;
+    if (itno > TYPE_LAYER && itno <= TYPE_LAYER + 80) 
+      return TYPE_LAYER;
+    if (itno > TYPE_ROD && itno <= TYPE_ROD + 75) 
+      return TYPE_ROD;
+    if (itno > TYPE_FRIEZE && itno <= TYPE_FRIEZE + 7) 
+      return TYPE_FRIEZE;
+    return TYPE_INVALID;
+  }
+
+  /**
+   * Matches Hermann-Mauguin names for special types by 
+   * ignoring spaces and some special treatment for plane groups.
+   *  
+   * @param hm
+   * @param name
+   * @param type
+   * @return true if equivalent
+   */
+  public static boolean hmEquals(String hm, String name, int type) {
+    if (hm.charAt(1) == '/')
+      hm = hm.substring(2);
+    if (hm.charAt(0) != name.charAt(0))
+      return false;
+    if (name.indexOf(' ') < 0) {
+      hm = PT.rep(hm, " ", "");
+    }
+    if (hm.equals(name))
+        return true;
+    if (type == TYPE_PLANE) {
+      int n = hm.length();
+      if (n <= name.length())
+        return false;
+      char c = name.charAt(1);
+      switch (name.length()) {
+      case 2:
+        //        p1m1 p1g1 c1m1
+        // accepts pm   pg   cm   
+        return (n == 4 && hm.charAt(1) == '1' && c == hm.charAt(2));
+      case 3:
+        //        p2mm p2mg p2gg c2mm 
+        // accepts pmm  pmg  pgg  cmm
+        //        p4mm p4gm p6mm
+        // accepts p4m  p4g  p6m
+        char c2 = hm.charAt(1);
+        return (c2 == '2' ?
+        hm.charAt(2) == c && hm.charAt(3) == name.charAt(2)
+        : hm.charAt(n - 1) == 'm' && hm.startsWith(name));
+      }
+    }
+    return false;
+  }
+
+  
+  /**
+   * Create a unit cell compatible with
+   * 
+   * @param params
+   * @param newParams
+   * @param allowSame
+   *        true to allow same-distance a,b,c for lower-symmetry sg
+   * @return true if changes have occurred
+   */
+  public boolean createCompatibleUnitCell(double[] params, double[] newParams,
+                                          boolean allowSame) {
+    if (newParams == null)
+      newParams = params;
+    double a = params[0];
+    double b = params[1];
+    double c = params[2];
+    double alpha = params[3];
+    double beta = params[4];
+    double gamma = params[5];
+    int n = (itaNumber == null ? 0 : PT.parseInt(itaNumber));
+
+    
+    boolean toHex = false, isHex = false, toRhom = false, isRhom = false;
+    toHex = (n != 0 && isHexagonalSG(n, null));
+    isHex = (toHex && isHexagonalSG(-1, params));
+    toRhom = (n != 0 && axisChoice == 'r');
+    isRhom = (toRhom && SimpleUnitCell.isRhombohedral(params));
+    if (toHex && isHex || toRhom && isRhom) {
+      allowSame = true;
+    }
+
+    if (n > (allowSame ? 2 : 0)) {
+
+      boolean absame = b > 0 && SimpleUnitCell.approx0(a - b);
+      boolean bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
+      boolean acsame = c > 0 && SimpleUnitCell.approx0(c - a);
+      boolean albesame = SimpleUnitCell.approx0(alpha - beta);
+      boolean begasame = SimpleUnitCell.approx0(beta - gamma);
+      boolean algasame = SimpleUnitCell.approx0(gamma - alpha);
+
+      if (!allowSame) {
+        // make a, b, and c all distinct
+        if (b > 0 && a > b) {
+          double d = a;
+          a = b;
+          b = d;
+        }
+        bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
+        if (bcsame)
+          c = b * 1.5d;
+        absame = SimpleUnitCell.approx0(a - b);
+        if (absame)
+          b = a * 1.2d;
+        acsame = SimpleUnitCell.approx0(c - a);
+        if (acsame)
+          c = a * 1.1d;
+
+        // make alpha, beta, and gamma all distinct
+
+        if (SimpleUnitCell.approx0(alpha - 90)) {
+          alpha = 80;
+        }
+        if (SimpleUnitCell.approx0(beta - 90)) {
+          beta = 100;
+        }
+        if (SimpleUnitCell.approx0(gamma - 90)) {
+          gamma = 110;
+        }
+        if (alpha > beta) {
+          double d = alpha;
+          alpha = beta;
+          beta = d;
+        }
+        albesame = SimpleUnitCell.approx0(alpha - beta);
+        begasame = SimpleUnitCell.approx0(beta - gamma);
+        algasame = SimpleUnitCell.approx0(gamma - alpha);
+
+        if (albesame) {
+          beta = alpha * 1.2d;
+        }
+        if (begasame) {
+          gamma = beta * 1.3d;
+        }
+        if (algasame) {
+          gamma = alpha * 1.4d;
+        }
+      }
+      if (toHex) {
+        if (toRhom ? isRhom : isHex) {
+          // nothing to do
+        } else if (axisChoice == 'r') {
+          c = b = a;
+          if (!allowSame && alpha > 85 && alpha < 95)
+            alpha = 80;
+          gamma = beta = alpha;
+        } else {
+          b = a;
+          alpha = beta = 90;
+          gamma = 120;
+        }
+      } else if (n >= 195) {
+        // cubic
+        c = b = a;
+        alpha = beta = gamma = 90;
+      } else if (n >= 75) {
+        // tetragonal
+        b = a;
+        if (acsame && !allowSame)
+          c = a * 1.5d;
+        alpha = beta = gamma = 90;
+      } else if (n >= 16) {
+        // orthorhombic
+        alpha = beta = gamma = 90;
+      } else if (n >= 3) {
+        // monoclinic
+        switch (uniqueAxis) {
+        case 'a':
+          beta = gamma = 90;
+          break;
+        default:
+        case 'b':
+          alpha = gamma = 90;
+          break;
+        case 'c':
+          alpha = beta = 90;
+          break;
+        }
+      }
+    }
+
+    boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
+        && alpha == params[3] && beta == params[4] && gamma == params[5]);
+
+    newParams[0] = a;
+    newParams[1] = b;
+    newParams[2] = c;
+    newParams[3] = alpha;
+    newParams[4] = beta;
+    newParams[5] = gamma;
+    return isNew;
+  }
+
+  public boolean isHexagonalSG(int n, double[] params) {
+    return (n < 1 ? SimpleUnitCell.isHexagonal(params)
+        : n >= 143 && n <= 194);
+  }
+  
+//  public boolean isMonoclinicSG(int n) {
+//    return (n >= 3 && n <= 15);
+//  }
+//  
+//  public boolean isTetragonalSG(int n) {
+//    return (n >= 75 && n <= 142);
+//  }
+//  
+//  public static boolean isPolarSG(int n) {
+//    return ( n == 1 // 1
+//        || n >= 3 && n <= 5 // 2
+//        || n >= 6 && n <= 9 // m
+//        || n >= 25 && n <= 46 // 2mm
+//        || n >= 75 && n <= 80 // 4
+//        || n >= 99 && n <= 110 // 4mm
+//        || n >= 143 && n <= 146 // 3
+//        || n >= 156 && n <= 161 // 3mm
+//        || n >= 168 && n <= 173 // 6
+//        || n >= 183 && n <= 186 // 6mm
+//        );
+//  }
+//
   static {
     getSpaceGroups();
   }

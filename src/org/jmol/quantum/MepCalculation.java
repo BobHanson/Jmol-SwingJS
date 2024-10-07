@@ -221,7 +221,7 @@ public class MepCalculation extends QuantumCalculation {
     htAtomicPotentials = new Hashtable<String, Object>();
     try {
       br = (data == null ? FileManager.getBufferedReaderForResource(vwr,
-          this, "org/jmol/quantum/", resourceName) : Rdr
+          MepCalculation.class, "org/jmol/quantum/", resourceName) : Rdr
           .getBR(data));
       String line;
       while ((line = br.readLine()) != null) {

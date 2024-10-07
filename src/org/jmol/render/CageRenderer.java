@@ -24,13 +24,13 @@
 package org.jmol.render;
 
 
-import javajs.util.MeasureD;
-import javajs.util.P3d;
-
-import javajs.util.BS;
 import org.jmol.shape.Bbcage;
 import org.jmol.shape.FontLineShape;
 import org.jmol.util.BoxInfo;
+
+import javajs.util.BS;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
 
 abstract class CageRenderer extends FontLineShapeRenderer {
 
@@ -46,8 +46,20 @@ abstract class CageRenderer extends FontLineShapeRenderer {
   
   protected boolean isSlab;
   protected boolean isPolymer;
-  
-  private P3d pt = new P3d();
+  protected int periodicity = 0x7;
+  protected int nDims = 3;
+  protected BS bsPeriod; 
+  protected P3d pt = new P3d();
+
+  protected P3d[] vvert, vvertA;
+
+  /**
+   * Uccage only
+   * 
+   * @param vertices  
+   * @param scale 
+   */
+  protected void setPeriodicity(P3d[] vertices, double scale){}
   
   protected void renderCage(int mad, P3d[] vertices, int[][] faces,
                         P3d[] axisPoints, int firstLine, int allowedEdges0,
@@ -70,6 +82,7 @@ abstract class CageRenderer extends FontLineShapeRenderer {
       tm.transformPtNoClip(pt, p3Screens[i]);
       zSum += p3Screens[i].z;
     }
+    setPeriodicity(vertices, scale);
     BS bsSolid = null;
     if (hiddenLines) {
       // bsSolid marks all points on faces that are front-facing
@@ -90,7 +103,10 @@ abstract class CageRenderer extends FontLineShapeRenderer {
     char edge = 0;
     allowedEdges0 &= (isPolymer ? 0x1 : isSlab ? 0x55 : 0xFF);
     allowedEdges1 &= (isPolymer ? 0x10 : isSlab ? 0x55 : 0xFF);
+    setBSPeriod();
     for (int i = firstLine * 2; i < 24; i += 2) {
+      if (bsPeriod != null && !bsPeriod.get(i))
+        continue;
       int d = diameter;
       int edge0 = BoxInfo.edges[i];
       int edge1 = BoxInfo.edges[i + 1];
@@ -127,9 +143,32 @@ abstract class CageRenderer extends FontLineShapeRenderer {
         else
           tickInfo.first = start;
       }
-      renderLine(p3Screens[edge0], p3Screens[edge1], d,
-          drawTicks);
+      renderCageLine(i, edge0, edge1, d, drawTicks);
     }
+  }
+
+  /**
+   * @param i  
+   * @param edge0 
+   * @param edge1 
+   * @param d 
+   * @param drawTicks 
+   */
+  protected void renderCageLine(int i, int edge0, int edge1, int d, boolean drawTicks) {
+    P3d p1 = p3Screens[edge0];
+    P3d p2 = p3Screens[edge1];
+    renderLine(p1, p2, d, drawTicks);
+  }
+
+  protected void setBSPeriod() {}
+
+  protected boolean shiftA, shiftB, shiftC, shifting;
+  
+  protected void setShifts() {
+    shiftA = (nDims == 3 && periodicity == 0x4); // rod
+    shiftB = shiftA || (nDims == 2 && periodicity == 0x1); // rod or frieze
+    shiftC = (nDims == 3 && periodicity == 0x3); // layer
+    shifting = (shiftA || shiftB || shiftC);
   }
 }
 

@@ -27,11 +27,14 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
 import org.jmol.shape.Axes;
 import org.jmol.shape.Uccage;
+import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.C;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.StateManager;
+
+import javajs.util.BS;
 
 //import java.text.NumberFormat;
 
@@ -42,7 +45,7 @@ import javajs.util.T3d;
 
 public class UccageRenderer extends CageRenderer {
 
-  private final P3d[] verticesT = new P3d[8]; 
+  private final P3d[] verticesT = new P3d[8];
 
   @Override
   protected void initRenderer() {
@@ -50,6 +53,58 @@ public class UccageRenderer extends CageRenderer {
       verticesT[i] = new P3d();
     tickEdges = BoxInfo.uccageTickEdges;    
     draw000 = false;
+  }
+  
+  @Override
+  protected void setPeriodicity(P3d[] vertices, double scale) {
+    setShifts();
+    if (shifting) {
+      // layer group shifts axes and unit cell down 50%
+      if (vvert == null) { //v[1] is c, v[2,3] is b, v[4,5] is a 
+        vvert = new P3d[8];
+        for (int i = 8; --i >= 0;) {
+          vvert[i] = new P3d();
+        }
+      }
+      P3d p0;
+      P3d p1;
+      if (shiftA) {
+        if (vvertA == null) { //v[1] is c, v[2,3] is b, v[4,5] is a 
+          vvertA = new P3d[8];
+          for (int i = 8; --i >= 0;) {
+            vvertA[i] = new P3d();
+          }
+        }
+        p0 = P3d.newP(vertices[4]);
+        p0.sub(vertices[0]);
+        p0.scale(0.5);
+        for (int i = 8; --i >= 0;) {
+          pt.setT(vertices[i]);
+          pt.sub(vertices[0]);
+          pt.scaleAdd2(scale, pt, vertices[0]);
+          pt.sub(p0);
+          tm.transformPtNoClip(pt, vvertA[i]);
+        }
+      } else {
+        vvertA = null;
+      }
+      p0 = P3d.newP(vertices[shiftB ? 2 : 1]);
+      p0.sub(vertices[0]);
+      p0.scale(0.5);
+      if (shiftB && !shiftA) {
+        p1 = P3d.newP(vertices[2]);
+        p1.sub(vertices[0]);
+        p1.scale(0.5);
+        p0.add(p1);
+      }
+      for (int i = 8; --i >= 0;) {
+        pt.setT(vertices[i]);
+        pt.sub(vertices[0]);
+        pt.scaleAdd2(scale, pt, vertices[0]);
+        pt.sub(p0);
+        tm.transformPtNoClip(pt, vvert[i]);
+      }
+    }
   }
   
   @Override
@@ -89,6 +144,8 @@ public class UccageRenderer extends CageRenderer {
       return;
     isPolymer = unitcell.isPolymer();
     isSlab = unitcell.isSlab();
+    periodicity = unitcell.getPeriodicity();
+    nDims = unitcell.getDimensionality();
     P3d[] vertices = unitcell.getUnitCellVerticesNoOffset();
     offset.setT(unitcell.getCartesianOffset());
     offsetT.setT(unitcell.getFractionalOrigin());
@@ -162,6 +219,87 @@ public class UccageRenderer extends CageRenderer {
     renderInfo();
   }
   
+  @Override
+  protected void renderCageLine(int i, int edge0, int edge1, int d, boolean drawTicks) {
+    P3d p1;
+    P3d p2;
+    if (bsVerticals != null && bsVerticals.get(i)) {
+      if (vvertA != null && (i == 4 || i == 8)) {
+        p1 = vvertA[edge0];
+        p2 = vvertA[edge1];
+      } else {
+        p1 = vvert[edge0];
+        p2 = vvert[edge1];
+      }
+      
+    } else {
+      p1 = p3Screens[edge0];
+      p2 = p3Screens[edge1];
+    }
+    renderLine(p1, p2, d, drawTicks);
+  }
+  
+  private BS bsVerticals;
+
+  @Override
+  protected void setBSPeriod() {
+    BS bs;
+    if (bsVerticals != null)
+      bsVerticals.clearAll();
+    if (bsPeriod != null)
+      bsPeriod.clearAll();
+    switch (periodicity) {
+    case 0x7:
+      return;
+    case 0x3:
+      bs = (bsPeriod == null ? (bsPeriod = new BS()) : bsPeriod);
+      if (nDims == 3) {
+        // verticals
+       bs.set(0);
+       bs.set(10);
+       bs.set(16);
+       bs.set(22);
+       if (bsVerticals == null) {
+         bsVerticals = new BS();
+       }
+       BSUtil.copy2(bs, bsVerticals);
+      }
+      // horizontals
+      bs.set(2);
+      bs.set(4);
+      bs.set(12);
+      bs.set(18);
+      break;
+    case 0x4:
+      // rod
+      bs = (bsPeriod == null ? (bsPeriod = new BS()) : bsPeriod);
+      bs.set(2);
+      bs.set(4);
+      bs.set(6);
+      bs.set(8);
+      if (bsVerticals == null) {
+        bsVerticals = new BS();
+      }
+      BSUtil.copy2(bs, bsVerticals);
+      // c axis
+      bs.set(0);
+      break;
+    case 0x1:
+      bs = (bsPeriod == null ? (bsPeriod = new BS()) : bsPeriod);
+      if (nDims == 2) {
+        // frieze
+        bs.set(2);
+        if (bsVerticals == null) {
+          bsVerticals = new BS();
+        }
+        BSUtil.copy2(bs, bsVerticals);
+        bs.set(4);
+      }
+      break;
+    }
+  }
+
+
   private void renderInfo() {
     boolean showDetails = vwr.getBoolean(T.showunitcelldetails);
     if (isExport || !vwr.getBoolean(T.displaycellparameters)

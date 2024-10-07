@@ -1395,13 +1395,16 @@ public class ModelSet extends BondCollection {
         }
       } else {
         P3d[] coords = (P3d[]) bss[1];
-        for (int i = bsAtoms1.nextSetBit(0), j = 0; i >= 0 && j < coords.length; i = bsAtoms1
-            .nextSetBit(i + 1), j++) {
-          points[0][--n] = at[i];
-          points[1][n] = coords[j];
+        for (int pt = 0, i = bsAtoms1.nextSetBit(0), j = 0; i >= 0 && j < coords.length; i = bsAtoms1
+            .nextSetBit(i + 1), j++, pt++) {
           if (addCenters) {
             points[0][0].add(at[i]);
             points[1][0].add(coords[j]);
+            points[0][--n] = at[i];
+            points[1][n] = coords[j];
+          } else {
+            points[0][pt] = at[i];
+            points[1][pt] = coords[j];
           }
         }
       }
@@ -4570,7 +4573,6 @@ public class ModelSet extends BondCollection {
     // TODO: actually set atomSymmetry properly
     setInfo(mi, JC.INFO_UNIT_CELL_PARAMS, sg.getUnitCellParams());
     setInfo(mi, JC.INFO_SPACE_GROUP_ASSIGNED, Boolean.TRUE);
-    setInfo(mi, JC.INFO_SPACE_GROUP, sg.getUnitCellDisplayName());
     setInfo(mi, JC.INFO_SPACE_GROUP_INFO, null);
     setInfo(mi, JC.INFO_SYMMETRY_OPERATIONS, sg.getSymopList(false));
     setInfo(mi, JC.INFO_SPACE_GROUP, sg.getSpaceGroupName());
@@ -4781,6 +4783,16 @@ public class ModelSet extends BondCollection {
     BS bs = vwr.getModelUndeletedAtomsBitSet(at[iatom].mi);  
     bs.and(getAtomBitsMaybeDeleted(T.site, BSUtil.newAndSetBit(iatom)));
     return bs;
+  }
+
+  public void morphAtoms(BS bsAtoms, P3d[][] points, int ipt, double f, P3d ptemp) {
+      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1), ipt++) {
+        Atom a = vwr.ms.at[i];        
+        ptemp.sub2(points[1][ipt], points[0][ipt]);
+        ptemp.scaleAdd2(f, ptemp, points[0][ipt]);
+        a.setT(ptemp);
+        taintAtom(i, TAINT_COORD);
+      }
   }
   
 }

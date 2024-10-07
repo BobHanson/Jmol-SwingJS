@@ -502,7 +502,7 @@ abstract public class ForceField {
   }
 
   protected BufferedReader getBufferedReader(String resourceName) throws IOException {
-    return FileManager.getBufferedReaderForResource(minimizer.vwr, this,
+    return FileManager.getBufferedReaderForResource(minimizer.vwr, ForceField.class,
         "org/jmol/minimize/forcefield/", "data/" + resourceName);
   }
   public void recalculateEnergy() {

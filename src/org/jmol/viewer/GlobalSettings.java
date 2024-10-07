@@ -323,6 +323,7 @@ public class GlobalSettings {
     setB("minimizationRefresh", minimizationRefresh);
     setB("minimizationSilent", minimizationSilent);
     setF("minimizationCriterion", minimizationCriterion);
+    setB("mode2d", mode2d);
     setB("modelKitMode", modelKitMode);
     setF("modulationScale", modulationScale);
     setB("monitorEnergy", monitorEnergy);
@@ -540,6 +541,7 @@ public class GlobalSettings {
   int dotDensity = 3;
   int dotScale = 1;
   int meshScale = 1;
+  boolean mode2d = false;
   boolean greyscaleRendering = false;
   boolean isosurfaceKey = false;
   boolean isosurfacePropertySmoothing = true;
@@ -1004,7 +1006,7 @@ public class GlobalSettings {
       + ";selecthetero;selecthydrogen"
       // removed in Jmol 14.32.68
       + ";pointgrouplineartolerance;pointgroupdistancetolerance"//;pointgroupmmaxatoms"
-      + ";minimizationreportsteps;elementkey;symmetryhermannmauguin;")
+      + ";minimizationreportsteps;elementkey;symmetryhermannmauguin;mode2d;")
       .toLowerCase();
 
   Object getAllVariables() {

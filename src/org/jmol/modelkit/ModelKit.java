@@ -381,8 +381,8 @@ public class ModelKit {
     }
   }
 
-  static Constraint locked = new Constraint(null, Constraint.TYPE_LOCKED, null);
-  static Constraint none = new Constraint(null, Constraint.TYPE_NONE, null);
+  private static Constraint locked = new Constraint(null, Constraint.TYPE_LOCKED, null);
+  //private static Constraint none = new Constraint(null, Constraint.TYPE_NONE, null);
 
   final static int STATE_MOLECULAR /* 0b00000000000*/ = 0x00;
 
@@ -411,6 +411,9 @@ public class ModelKit {
   final static String BOND_MODE = "bondMenu";
   final static String ATOM_MODE = "atomMenu";
   private static final P3d Pt000 = new P3d();
+
+  private static final P4d plane001 = P4d.new4(0, 0, 1, 0);
+  
   private static int GET = 0;
 
   static int GET_CREATE = 1;
@@ -713,8 +716,8 @@ public class ModelKit {
     bs.andNot(vwr.slm.getMotionFixedAtoms());
 
     vwr.rotateAboutPointsInternal(null, atomFix, atomMove, 0, degrees, false,
-        bs, null, null, null, null, true);
-  }
+        bs, null, null, null, null, true, null);
+   }
 
   /**
    * 
@@ -979,6 +982,12 @@ public class ModelKit {
 
   public int cmdAssignMoveAtoms(BS bsSelected, int iatom, P3d p, P3d[] pts,
                                 boolean allowProjection, boolean isMolecule) {
+    return assignMoveAtoms(bsSelected, iatom, p, pts, allowProjection, isMolecule, true);
+  }
+
+  public int assignMoveAtoms(BS bsSelected, int iatom, P3d p, P3d[] pts,
+                              boolean allowProjection, boolean isMolecule,
+                              boolean isCommand) {
     SymmetryInterface sym = getSym(iatom);
     int n;
     if (sym != null) {
@@ -986,11 +995,16 @@ public class ModelKit {
         vwr.ms.addConnectedHAtoms(vwr.ms.at[iatom], bsSelected);
       n = assignMoveAtoms(sym, bsSelected, null, null, iatom, p, pts,
           allowProjection, isMolecule);
+      if (n == 0 || bsSelected.isEmpty()) {
+        vwr.showString("could not move atom!", false);
+        if (!isCommand)
+          vwr.warnAtom(iatom);
+      } else if (!isCommand){
+        vwr.warnAtom(-1);
+      }
     } else {
       n = vwr.moveAtomWithHydrogens(iatom, addHydrogens ? 1 : 0, 0, 0, p, null);
     }
-    if (n == 0)
-      vwr.showString("could not move atoms!", false);
     return n;
   }
 
@@ -1808,6 +1822,9 @@ public class ModelKit {
     if (sym == null)
       return addConstraint(iatom,
           new Constraint(a, Constraint.TYPE_NONE, null));
+    // plane and frieze adds an (x,y,0) plane constraint
+    boolean isPlanar = (sym.getDimensionality() == 2);
+    
     // the first atom is the site atom
     // these may be special cases such as (y+1/2,x+1/2,z)
     // where y = x + 1/2. For example {0.3,0.8,0}->{1.3,0.8,0} == {0.3 0.8 0.0}
@@ -1818,16 +1835,16 @@ public class ModelKit {
       System.out.println("MK.getConstraint atomIndex=" + iatom + " symops="
           + Arrays.toString(ops));
     // if no invariant operators, this is a general position
-    if (ops.length == 0)
+    if (ops.length == 0 && !isPlanar)
       return addConstraint(iatom,
           new Constraint(a, Constraint.TYPE_GENERAL, null));
     // we need only work with the first plane or line or point
     P4d plane1 = null;
     Object[] line1 = null;
-    for (int i = ops.length; --i >= 0;) {
+    for (int i = ops.length + (isPlanar ? 1 : 0); --i >= 0;) {
       Object[] line2 = null;
-      Object c = sym.getSymmetryInfoAtom(vwr.ms, iatom, null, ops[i], null, a,
-          null, JC.MODELKIT_INVARIANT, T.array, 0, -1, 0, null);
+      Object c = (i == ops.length ? plane001 : sym.getSymmetryInfoAtom(vwr.ms, iatom, null, ops[i], null, a,
+          null, JC.MODELKIT_INVARIANT, T.array, 0, -1, 0, null));
       if (c instanceof String) {
         // this would be a special glide plane, for instance
         continue;
@@ -1922,7 +1939,22 @@ public class ModelKit {
     if (wyckoff != null) {
       type = type.substring(0, ipt);
       if (sym != null) {
-        Object o = sym.getWyckoffPosition(vwr, null, wyckoff);
+        Object o = sym.getWyckoffPosition(vwr, pts == null ? null : pts[0], wyckoff);
+        if ("L".equals(wyckoff)) {
+          Object[] oa  = (Object[]) o;
+          P3d[] allPts = (P3d[]) oa[0];
+          String elements = (String) oa[1];
+          pts = new P3d[1];
+          int n = 0;
+          int opt = allPts.length - 1;
+          for (int i = 0, ept = opt * 2; i < allPts.length; i++, ept -= 2) {
+            pts[0] = allPts[i];
+            
+            n += addAtoms(i == 0 ? type : elements.substring(ept, ept + 2).trim(), 
+                pts, bsAtoms, packing, opsCtr, cmd);
+          }
+          return n;
+        }
         if (!(o instanceof P3d))
           return 0;
         pts = new P3d[] { (P3d) o };
@@ -2030,6 +2062,8 @@ public class ModelKit {
     if (pts != null && pts.length == 1 && pts[0] != null) {
       pf = P3d.newP(pts[0]);
       sym.toFractional(pf, false);
+      if (sym.getDimensionality() == 2)
+        pf.z = 0;
       isPoint = true;
     }
     // set element type from the atom at this position already, if there is one
@@ -2245,6 +2279,8 @@ public class ModelKit {
     if (points != null) {
       np = nIgnored = points.size();
       sym.toFractional(pt, false);
+      if (pt.z != 0 && sym.getDimensionality() == 2)
+        pt.z = 0;
       points.addLast(pt);
       if (newPoint && haveAtomByIndex)
         nIgnored++;
@@ -4008,6 +4044,9 @@ public class ModelKit {
   }
 
   private String getDrawAxes(String id, String swidth) {
+    SymmetryInterface sym = vwr.getOperativeSymmetry();
+    if (sym == null)
+      return "";
     if (vwr.g.axesMode != T.axesunitcell || vwr.shm
         .getShapePropertyIndex(JC.SHAPE_AXES, "axesTypeXY", 0) == Boolean.TRUE)
       return "";
@@ -4021,10 +4060,39 @@ public class ModelKit {
         "axisPoints", 0);
     String s = "";
     String[] colors = new String[] { "red", "green", "blue" };
+    int nDim = sym.getDimensionality();
+    int per = sym.getPeriodicity();
+    boolean shiftA = (per == 0x4 && nDim == 3); // rod group
+    boolean shiftB = (shiftA || per == 0x1 && nDim == 2); // rod or frieze
+    boolean shiftC = (per == 0x1 && nDim == 2 || per == 0x3 && nDim == 3); // frieze or layer
+    P3d[] pts = axisPoints;
+    P3d[] opts = null;
+    if (shiftA || shiftB || shiftC) {
+      pts = new P3d[] { new P3d(), new P3d(), new P3d() };
+      opts = new P3d[] { new P3d(), new P3d(), new P3d() };
+      if (shiftA) {
+        opts[0].sub2(origin, axisPoints[0]);
+        opts[0].scale(0.5d);
+        pts[0].sub2(origin, opts[0]);
+      }
+      if (shiftB) {
+        opts[1].sub2(origin, axisPoints[1]);
+        opts[1].scale(0.5d);
+        pts[1].sub2(origin, opts[1]);
+      }
+      if (shiftC) {
+        opts[2].sub2(origin, axisPoints[2]);
+        opts[2].scale(0.5d);
+        pts[2].sub2(origin, opts[2]);
+      }
+    }
     for (int i = 0, a = JC.AXIS_A; i < 3; i++, a++) {
       s += "\ndraw ID " + PT.esc(id + "_axis_" + JC.axisLabels[a]) + " "
-          + swidth + " line " + origin + " " + axisPoints[i] + " color "
-          + colors[i];
+          + swidth + " line "
+          + (opts == null 
+          || i == 0 && !shiftA
+          || i == 1 && !shiftB ? origin : opts[i])
+          + " " + pts[i] + " color " + colors[i];
     }
     return s;
   }

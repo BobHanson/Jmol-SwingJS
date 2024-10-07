@@ -260,7 +260,7 @@ public class TransformManager {
     unTransformPoint(pt2, pt2);
     vwr.setInMotion(false);
     rotateAboutPointsInternal(null, pt2, pt1, 10 * speed, Double.NaN, false,
-        true, null, true, null, null, null, null, false);
+        true, null, true, null, null, null, null, false, null);
   }
 
   //  final V3 arcBall0 = new V3();
@@ -295,13 +295,10 @@ public class TransformManager {
   //  }
 
   protected void rotateXYBy(double degX, double degY, BS bsAtoms) {
+    if (vwr.is2D())
+      return;
     // from mouse action
-    //if (vwr.getTestFlag(2)) {
-    //  rotateXRadians(degY * JC.radiansPerDegree, bsAtoms);
-    //  rotateYRadians(degX * JC.radiansPerDegree, bsAtoms);
-    //} else {
     rotate3DBall(degX, degY, bsAtoms);
-    //}
   }
 
   void rotateZBy(int zDelta, int x, int y) {
@@ -400,7 +397,7 @@ public class TransformManager {
       isSpinInternal = false;
       isSpinFixed = true;
       isSpinSelected = (bsAtoms != null);
-      setSpin(eval, true, endDegrees, null, null, bsAtoms, false);
+      setSpin(eval, true, endDegrees, null, null, bsAtoms, false, null, -1);
       // fixed spin -- we will wait
       return (endDegrees != Double.MAX_VALUE);
     }
@@ -438,6 +435,8 @@ public class TransformManager {
    * @param finalPoints
    * @param dihedralList
    * @param m4 
+   * @param useModelKit 
+   * @param centerAndPoints 
    * @return true if synchronous so that JavaScript can restart properly
    */
   boolean rotateAboutPointsInternal(JmolScriptEvaluator eval, T3d point1,
@@ -445,7 +444,8 @@ public class TransformManager {
                                     double endDegrees, boolean isClockwise,
                                     boolean isSpin, BS bsAtoms,
                                     boolean isGesture, V3d translation,
-                                    Lst<P3d> finalPoints, double[] dihedralList, M4d m4, boolean useModelKit) {
+                                    Lst<P3d> finalPoints, double[] dihedralList, M4d m4, boolean useModelKit,
+                                    P3d[][] centerAndPoints) {
 
     // *THE* Viewer INTERNAL frame rotation entry point
 
@@ -454,7 +454,7 @@ public class TransformManager {
     setNavOn(false);
 
     if (dihedralList == null
-        && (translation == null || translation.length() < 0.001)
+        && centerAndPoints == null && (translation == null || translation.length() < 0.001)
         && (isSpin ? Double.isNaN(degreesPerSecond) || degreesPerSecond == 0
             : endDegrees == 0))
       return false;
@@ -469,6 +469,7 @@ public class TransformManager {
       internalTranslation = (translation == null ? null : V3d.newV(translation));
     }
     boolean isSelected = (bsAtoms != null);
+    int nFrames = -1;
     if (isSpin) {
       // we need to adjust the degreesPerSecond to match a multiple of the frame rate
       if (dihedralList == null) {
@@ -477,7 +478,7 @@ public class TransformManager {
         if (Double.isNaN(endDegrees)) {
           rotationRate = degreesPerSecond;
         } else {
-          int nFrames = (int) (Math.abs(endDegrees)
+          nFrames = (int) (Math.abs(endDegrees)
               / Math.abs(degreesPerSecond) * spinFps + 0.5);
           rotationRate = degreesPerSecond = endDegrees / nFrames * spinFps;
           if (translation != null)
@@ -492,7 +493,7 @@ public class TransformManager {
         endDegrees = degreesPerSecond;
       }
       setSpin(eval, true, endDegrees, finalPoints, dihedralList, bsAtoms,
-          isGesture);
+          isGesture, centerAndPoints, centerAndPoints == null ? -1 : nFrames);
       return !Double.isNaN(endDegrees);
     }
     double radians = endDegrees * JC.radiansPerDegree;
@@ -2128,16 +2129,16 @@ public class TransformManager {
   private boolean spinIsGesture;
 
   public void setSpinOn() {
-    setSpin(null, true, Double.MAX_VALUE, null, null, null, false);
+    setSpin(null, true, Double.MAX_VALUE, null, null, null, false, null, -1);
   }
 
   public void setSpinOff() {
-    setSpin(null, false, Double.MAX_VALUE, null, null, null, false);
+    setSpin(null, false, Double.MAX_VALUE, null, null, null, false, null, -1);
   }
 
   private void setSpin(JmolScriptEvaluator eval, boolean spinOn,
                        double endDegrees, Lst<P3d> endPositions,
-                       double[] dihedralList, BS bsAtoms, boolean isGesture) {
+                       double[] dihedralList, BS bsAtoms, boolean isGesture, P3d[][] centerAndPoints, int nFrames) {
     
     if (navOn && spinOn)
       setNavOn(false);
@@ -2151,7 +2152,9 @@ public class TransformManager {
             "tm");
         spinThread.setManager(this, vwr,
             new Object[] { Double.valueOf(endDegrees), endPositions,
-                dihedralList, bsAtoms, isGesture ? Boolean.TRUE : null });
+                dihedralList, bsAtoms, 
+                isGesture ? Boolean.TRUE : null, 
+                		centerAndPoints, Integer.valueOf(nFrames) });
         spinIsGesture = isGesture;
         if ((Double.isNaN(endDegrees) || endDegrees == Double.MAX_VALUE || !vwr.g.waitForMoveTo)) {
           spinThread.start();
@@ -2171,7 +2174,7 @@ public class TransformManager {
       return;
     boolean wasOn = this.navOn;
     if (navOn && spinOn)
-      setSpin(null, false, 0, null, null, null, false);
+      setSpin(null, false, 0, null, null, null, false, null, -1);
     this.navOn = navOn;
     vwr.g.setB("_navigating", navOn);
     if (!navOn)

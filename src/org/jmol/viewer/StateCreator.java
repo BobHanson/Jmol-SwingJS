@@ -403,6 +403,9 @@ public class StateCreator extends JmolStateCreator {
           + ";\n");
       //      if (vwr.getBoolean(T.modelkitmode))
       //      commands.append("  set modelKitMode true;\n");
+      if (vwr.getBoolean(T.mode2d)) {
+        commands.append("  set mode2d TRUE;\n");
+      }
     }
     if (sfunc != null)
       commands.append("\n}\n\n");

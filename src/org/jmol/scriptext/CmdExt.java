@@ -1166,13 +1166,14 @@ public class CmdExt extends ScriptExt {
     // compare {model1} {model2} SUBSET {polyhedra} POLYHEDRA    
     // compare {model1} {model2} ATOMS @atom1 @atom2 POLYHEDRA
     // compare FRAMES POLYHEDRA
-
+    // compare {*} @{{*}.plane([1 0 0])} MORPH TRANSLATE
     ScriptEval eval = e;
     boolean isQuaternion = false;
     boolean doRotate = false;
     boolean doTranslate = false;
     boolean doAnimate = false;
     boolean isFlexFit = false;
+    boolean doMorph = false;
     Qd[] data1 = null, data2 = null;
     BS bsAtoms1 = null, bsAtoms2 = null;
     Lst<Object[]> vAtomSets = null;
@@ -1321,6 +1322,9 @@ public class CmdExt extends ScriptExt {
       case T.point:
         isQuaternion = false;
         break;
+      case T.morph:
+        doMorph = true;
+        break;
       case T.rotate:
         doRotate = true;
         break;
@@ -1339,7 +1343,7 @@ public class CmdExt extends ScriptExt {
       nSeconds = 0;
     if (Double.isNaN(nSeconds) || nSeconds < 0)
       nSeconds = 1;
-    else if (!doRotate && !doTranslate)
+    else if (!doMorph && !doRotate && !doTranslate)
       doRotate = doTranslate = true;
     doAnimate = (nSeconds != 0);
 
@@ -1419,26 +1423,30 @@ public class CmdExt extends ScriptExt {
           vAtomSets2.addLast(new Object[] { bsAtoms1, coordTo });
         }
         try {
-          centerAndPoints = vwr.getCenterAndPoints(vAtomSets2, true);
+          centerAndPoints = vwr.getCenterAndPoints(vAtomSets2, !doMorph);
         } catch (Exception ex) {
           invArg();
         }
-        int n = centerAndPoints[0].length - 1;
-        for (int i = 1; i <= n; i++) {
-          P3d aij = centerAndPoints[0][i];
-          P3d bij = centerAndPoints[1][i];
-          if (!(aij instanceof Atom) || !(bij instanceof Atom))
-            break;
-          if (!isFrames)
-            Logger.info(" atom 1 " + ((Atom) aij).getInfo() + "\tatom 2 "
-                + ((Atom) bij).getInfo());
+        if (doMorph) {
+          // nothing to do
+        } else {
+          int n = centerAndPoints[0].length - 1;
+          for (int i = 1; i <= n; i++) {
+            P3d aij = centerAndPoints[0][i];
+            P3d bij = centerAndPoints[1][i];
+            if (!(aij instanceof Atom) || !(bij instanceof Atom))
+              break;
+            if (!isFrames)
+              Logger.info(" atom 1 " + ((Atom) aij).getInfo() + "\tatom 2 "
+                  + ((Atom) bij).getInfo());
+          }
+          q = MeasureD.calculateQuaternionRotation(centerAndPoints, retStddev);
+          double r0 = (Double.isNaN(retStddev[1]) ? Double.NaN
+              : Math.round(retStddev[0] * 100) / 100d);
+          double r1 = (Double.isNaN(retStddev[1]) ? Double.NaN
+              : Math.round(retStddev[1] * 100) / 100d);
+          showString("RMSD " + r0 + " --> " + r1 + " Angstroms");
         }
-        q = MeasureD.calculateQuaternionRotation(centerAndPoints, retStddev);
-        double r0 = (Double.isNaN(retStddev[1]) ? Double.NaN
-            : Math.round(retStddev[0] * 100) / 100d);
-        double r1 = (Double.isNaN(retStddev[1]) ? Double.NaN
-            : Math.round(retStddev[1] * 100) / 100d);
-        showString("RMSD " + r0 + " --> " + r1 + " Angstroms");
       } else if (isQuaternion) {
         if (vQuatSets == null) {
           for (int i = 0; i < vAtomSets2.size(); i++) {
@@ -1539,29 +1547,38 @@ public class CmdExt extends ScriptExt {
       }
       P3d pt1 = new P3d();
       double endDegrees = Double.NaN;
-      if (doTranslate) {
-        if (translation == null)
-          translation = V3d.newVsub(centerAndPoints[1][0], center);
+      if (doMorph) {
         endDegrees = 1e10d;
-      }
-      if (doRotate) {
-        if (q == null)
-          eval.evalError("option not implemented", null);
-        pt1.add2(center, q.getNormal());
-        endDegrees = q.getTheta();
-        if (endDegrees == 0 && doTranslate) {
-          if (translation.length() > 0.01d)
-            endDegrees = 1e10d;
-          else if (isFrames)
-            continue;
-          else
-            doRotate = doTranslate = doAnimate = false;
+      } else {
+        if (doTranslate) {
+          if (translation == null)
+            translation = V3d.newVsub(centerAndPoints[1][0], center);
+          endDegrees = 1e10d;
+        }
+        if (doRotate) {
+          if (q == null)
+            eval.evalError("option not implemented", null);
+          pt1.add2(center, q.getNormal());
+          endDegrees = q.getTheta();
+          if (endDegrees == 0 && doTranslate) {
+            if (translation.length() > 0.01d)
+              endDegrees = 1e10d;
+            else if (isFrames)
+              continue;
+            else
+              doRotate = doTranslate = doAnimate = false;
+          }
         }
       }
       if (Double.isNaN(endDegrees) || Double.isNaN(pt1.x))
         continue;
       Lst<P3d> ptsB = null;
-      if (doRotate && doTranslate && nSeconds != 0) {
+      if (doMorph) {
+        ptsB = new Lst<>();
+        for (int n = centerAndPoints[0].length, i = 0; i < n; i++) {
+          ptsB.addLast(centerAndPoints[1][i]);
+        }
+      } else if (doRotate && doTranslate && nSeconds != 0) {
         Lst<P3d> ptsA = vwr.ms.getAtomPointVector(bsFrom);
         M4d m4 = ScriptMathProcessor.getMatrix4f(q.getMatrix(), translation);
         ptsB = ScriptParam.transformPoints(ptsA, m4, center);
@@ -1570,7 +1587,7 @@ public class CmdExt extends ScriptExt {
         doAnimate = false;
       if (vwr.rotateAboutPointsInternal(eval, center, pt1,
           endDegrees / nSeconds, endDegrees, doAnimate, bsFrom, translation,
-          ptsB, null, null, false) && doAnimate && eval.isJS)
+          ptsB, null, null, false, doMorph ? centerAndPoints : null) && doAnimate && eval.isJS)
         throw new ScriptInterruption(eval, "compare", 1);
     }
   }
@@ -5087,10 +5104,11 @@ public class CmdExt extends ScriptExt {
         }
       }
       break;
+    case T.wyckoffm:
     case T.wyckoff:
       if (chk)
         break;
-      msg = ("" + vwr.evaluateExpression("symop('wyckoff')")).trim();
+      msg = ("" + vwr.evaluateExpression("symop('wyckoff" + (tok == T.wyckoffm ? "m" : "") + "')")).trim();
       break;
     case T.spacegroup:
     case T.symop:
@@ -6103,7 +6121,7 @@ public class CmdExt extends ScriptExt {
         }
         vwr.ms.setModelCagePts(-1, oabc, ucname);
         if (sym == null) {
-          vwr.setNewRotationCenter(e.getUnitCellCenter());
+          vwr.setNewRotationCenter(vwr.getUnitCellCenter());
         }
       }
     }
@@ -6703,6 +6721,9 @@ public class CmdExt extends ScriptExt {
           isPacked = true;
           type = "";
         }
+      } else if (e.tokAt(i) == T.wyckoff) {
+        e.iToken = i - 1;
+        type = "O"; // general position is red
       } else {
         type = e.optParameterAsString(i);
       }
@@ -6721,11 +6742,12 @@ public class CmdExt extends ScriptExt {
       case T.wyckoff:
         ++e.iToken;
         wyckoff = paramAsStr(++e.iToken);
-        char w = (wyckoff.equalsIgnoreCase("general") ? 'G'
+        char w = (wyckoff.equalsIgnoreCase("all") ? 'L' : wyckoff.equalsIgnoreCase("general") ? 'G'
             : (wyckoff.length() > 1 || wyckoff.length() == 0 ? '\0'
                 : wyckoff.charAt(0)));
-        if (w < 'a' && w != 'A' && w != 'G' || w > 'z')
+        if (w < 'a' && w != 'A' && w != 'G' && w != 'L' || w > 'z')
           invArg();
+        wyckoff = "" + w;
         if ("packed".equals(e.optParameterAsString(e.iToken + 1))) {
           isPacked = true;
           ++e.iToken;
@@ -6839,6 +6861,14 @@ public class CmdExt extends ScriptExt {
           invArg();
         type = sym.getSpaceGroupClegId();
       } else {
+        if (!isPacked) {
+          for (int j = i + 1; j < slen; j++) {
+            if (tokAt(j) == T.packed) {
+              isPacked = true;
+              break;
+            }
+          }
+        }
         type = concatString(i, (isPacked ? "packed" : "unitcell"));
         if (type.length() > 0 && type.indexOf(":") < 0 && type.indexOf(">") < 0
             && (type.indexOf(",") > 0 || "rh".indexOf(type) >= 0)) {
