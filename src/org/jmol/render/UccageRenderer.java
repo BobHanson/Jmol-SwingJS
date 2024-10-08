@@ -91,12 +91,6 @@ public class UccageRenderer extends CageRenderer {
       p0 = P3d.newP(vertices[shiftB ? 2 : 1]);
       p0.sub(vertices[0]);
       p0.scale(0.5);
-      if (shiftB && !shiftA) {
-        p1 = P3d.newP(vertices[2]);
-        p1.sub(vertices[0]);
-        p1.scale(0.5);
-        p0.add(p1);
-      }
       for (int i = 8; --i >= 0;) {
         pt.setT(vertices[i]);
         pt.sub(vertices[0]);
@@ -289,6 +283,7 @@ public class UccageRenderer extends CageRenderer {
       if (nDims == 2) {
         // frieze
         bs.set(2);
+        bs.set(18);
         if (bsVerticals == null) {
           bsVerticals = new BS();
         }

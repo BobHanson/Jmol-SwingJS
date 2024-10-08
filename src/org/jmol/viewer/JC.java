@@ -1601,6 +1601,12 @@ public final class JC {
 
   public final static double FLOAT_MIN_SAFE = Double.MIN_VALUE; // was 2E-45f; 
 
+  // these literals are used various places. Track them down with their INFO_ name.
+  
+  public static final String INFO_HM = "HermannMauguinSymbol";
+  public static final String INFO_HALL = "HallSymbol";
+  public static final String INFO_ITA = "ita";
+
   public static final String INFO_SPACE_GROUP = "spaceGroup";
   public static final String INFO_SPACE_GROUP_F2C_TITLE = "f2cTitle";
   public static final String INFO_SPACE_GROUP_ASSIGNED = "spaceGroupAssigned";

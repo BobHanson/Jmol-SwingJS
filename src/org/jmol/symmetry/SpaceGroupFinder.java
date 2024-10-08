@@ -361,7 +361,7 @@ public class SpaceGroupFinder {
       genPos = (Lst<Object>) sgdata.get("gp");
     }
     if (sg != null && transform == null) {
-      sg = SpaceGroup.createITASpaceGroup(groupType, genPos, sg);
+      sg = SpaceGroup.createITASpaceGroup(sg.groupType, genPos, sg);
       return sg;
     }
     sg = SpaceGroup.transformSpaceGroup(groupType, null, sg, genPos,
@@ -393,7 +393,7 @@ public class SpaceGroupFinder {
     try {
       if (isUnknown) {
         if (bsOpGroups == null)
-          loadData(vwr, this);
+          loadData(vwr);
       } else {
         bsGroups.set(0);
       }
@@ -1188,11 +1188,11 @@ public class SpaceGroupFinder {
     // map is created using sg.spt and createmap.xls
     // I then used superfix.exe to remove all tabs. 
     
-    if (loadData(null, new SpaceGroupFinder()))
+    if (loadData(null))
       System.out.println("OK");
   }
 
-  private static boolean loadData(Viewer vwr, Object me) {
+  private static boolean loadData(Viewer vwr) {
     try {
       // recreated using createmap.xlsx 2024.09.03
       groupNames = getList(vwr, null, "sggroups_ordered.txt");

@@ -385,8 +385,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String getSpaceGroupNameType(String type) {
-    return (spaceGroup == null ? null : spaceGroup.getNameType(type, this));
+  public String geCIFWriterValue(String type) {
+    return (spaceGroup == null ? null : spaceGroup.getCIFWriterValue(type, this));
   }
 
   @Override
@@ -788,8 +788,9 @@ public class Symmetry implements SymmetryInterface {
                                                double[] cellParams) {
     boolean isForModel = (sgName == null);
     if (sgName == null) {
-      Map<String, Object> info = modelSet
-          .getModelAuxiliaryInfo(modelSet.vwr.am.cmi);
+      if (modelIndex < 0)
+        modelIndex = vwr.am.cmi;
+      Map<String, Object> info = modelSet.getModelAuxiliaryInfo(modelIndex);
       if (info != null)
         sgName = (String) info.get(JC.INFO_SPACE_GROUP);
     }
@@ -1162,12 +1163,9 @@ public class Symmetry implements SymmetryInterface {
       unitCell.toFractional(p, false);
       unitCell.unitize(p);
     }
-    if (wyckoffFinder == null) {
-      wyckoffFinder = (WyckoffFinder) Interface
-          .getInterface("org.jmol.symmetry.WyckoffFinder", null, "symmetry");
-    }
+    
     try {
-      WyckoffFinder w = wyckoffFinder.getWyckoffFinder(vwr,
+      WyckoffFinder w = getWyckoffFinder().getWyckoffFinder(vwr,
           sg);
       boolean withMult = (letter != null && letter.charAt(0) == 'M');
       if (withMult) {
@@ -1190,6 +1188,14 @@ public class Symmetry implements SymmetryInterface {
       e.printStackTrace();
       return (letter == null ? "?" : null);
     }
+  }
+
+  private WyckoffFinder getWyckoffFinder() {
+    if (wyckoffFinder == null) {
+      wyckoffFinder = (WyckoffFinder) Interface
+          .getInterface("org.jmol.symmetry.WyckoffFinder", null, "symmetry");
+    }
+    return wyckoffFinder;
   }
 
   /**
@@ -1815,6 +1821,19 @@ public class Symmetry implements SymmetryInterface {
     return unitCell.getCenter(getPeriodicity());
   }
 
-
+  private static SpecialGroupFactory groupFactory;
+  
+  /**
+   * Called from SpaceGroup to get a special group
+   * 
+   * @return singleton SpecialGroupFactory instance
+   */
+  static SpecialGroupFactory getSGFactory() {
+    if (groupFactory == null) {
+      groupFactory = (SpecialGroupFactory) Interface
+          .getInterface("org.jmol.symmetry.SpecialGroupFactory", null, "symmetry");
+    }
+    return groupFactory;
+  }
   
 }

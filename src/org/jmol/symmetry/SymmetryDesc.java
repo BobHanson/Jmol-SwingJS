@@ -616,7 +616,7 @@ public class SymmetryDesc {
      * Indicates that our vertical planes need to be shifted down 1/2 c
      */
     int periodicity = uc.getPeriodicity();
-    boolean notC = (periodicity == 0x4);
+    boolean notC = (periodicity == 0x4); // rod
     boolean shiftA = (isSpaceGroup && (periodicity & 0x1) == 0); // rod (ab)c
     boolean shiftB = (isSpaceGroup && (periodicity & 0x2) == 0); // frieze a(b), rod (ab)c
     boolean shiftC = (isSpaceGroup && (periodicity & 0x4) == 0); // plane ab, layer ab(c), frieze a(b)
@@ -636,7 +636,7 @@ public class SymmetryDesc {
         notC = false;
         vShift = null;
       } else {
-        isPeriodic = true;
+        isPeriodic = !notC;
       }
 
     

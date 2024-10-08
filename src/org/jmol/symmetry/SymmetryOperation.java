@@ -389,10 +389,13 @@ public class SymmetryOperation extends M4d {
       for (int j = 0; j < 3; j++)
         sb.appendI((int) r[j]).append("\t");
       double trans = r[3];
-      trans *= (trans == (int) trans ? 4 : 48);
-      sb.append(twelfthsOf(
-          isCanonical ? normalizeTwelfths(trans / 48, 48, true) : (int) trans))
-          .append("\t]\n");
+      if (trans == 0) {
+        sb.append("0");
+      } else {
+        trans *= (trans == (int) trans ? 4 : 48);
+        sb.append(twelfthsOf(isCanonical ? normalizeTwelfths(trans / 48, 48, true) : (int) trans));
+      }
+      sb.append("\t]\n");
     }
     return sb.toString();
   }

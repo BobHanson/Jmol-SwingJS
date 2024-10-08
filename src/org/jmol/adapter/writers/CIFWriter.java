@@ -6,6 +6,7 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
@@ -116,9 +117,9 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
         n = 0;
       } else {
         uc.getSpaceGroupInfo(vwr.ms, null, mi, true, null);
-        ita = uc.getSpaceGroupNameType("ITA");
-        hallName = uc.getSpaceGroupNameType("Hall");
-        hmName = uc.getSpaceGroupNameType("HM");
+        ita = uc.geCIFWriterValue(JC.INFO_ITA);
+        hallName = uc.geCIFWriterValue(JC.INFO_HALL);
+        hmName = uc.geCIFWriterValue(JC.INFO_HM);
         n = uc.getSpaceGroupOperationCount();
       }
       appendKey(sb, "_space_group_IT_number")

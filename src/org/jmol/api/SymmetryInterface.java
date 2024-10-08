@@ -66,12 +66,7 @@ public interface SymmetryInterface {
 
   String getSpaceGroupName();
 
-  /**
-   * 
-   * @param type "Hall" or "HM" or "ITA"
-   * @return type or null
-   */
-  String getSpaceGroupNameType(String type);
+  String geCIFWriterValue(String type);
 
   M4d getSpaceGroupOperation(int i);
   

@@ -264,6 +264,7 @@ public class WyckoffFinder {
   private static WyckoffFinder createHelper(Viewer vwr, String clegId,
                                             int groupType) {
     String sgname = clegId;
+    String key = SpaceGroup.getGroupTypePrefix(groupType) + clegId;
     int pt = sgname.indexOf(":");
     int itno = PT.parseInt(pt < 0 ? sgname : sgname.substring(0, pt));
     if (!SpaceGroup.isInRange(itno, groupType, false, false))
@@ -276,8 +277,7 @@ public class WyckoffFinder {
     boolean haveMap = false;
     for (int i = 0, c = its.size(); i < c; i++) {
       map = (Map<String, Object>) its.get(i);
-      String dataCleg = (String) map.get("clegId");
-      if (sgname.equals(dataCleg.substring(2))) {
+      if (key.equals(map.get("clegId"))) {
         haveMap = true;
         break;
       }
@@ -285,7 +285,7 @@ public class WyckoffFinder {
     
     // "more" type, from wp-list, does not contain gp or wpos
     if (!haveMap || map.containsKey("more"))
-      map = SpaceGroup.fillMoreData(vwr, map, clegId, itno,
+      map = SpaceGroup.fillMoreData(vwr, haveMap ? map : null, clegId, itno,
           (Map<String, Object>) its.get(0));
     WyckoffFinder helper = new WyckoffFinder(map);
     return helper;

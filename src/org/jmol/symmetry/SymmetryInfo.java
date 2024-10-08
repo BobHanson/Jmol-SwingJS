@@ -185,7 +185,6 @@ class SymmetryInfo {
 
 
   String getDisplayName(Symmetry sym) {
-    displayName = null;
     if (displayName == null) {
       boolean isPolymer = sym.isPolymer();
       boolean isSlab = sym.isSlab();
@@ -223,6 +222,7 @@ class SymmetryInfo {
   }
 
   private String itaNo; 
+  
   public String getClegId() {
     if (itaNo == null) {
       itaNo = intlTableIndexNdotM;
