@@ -6921,9 +6921,18 @@ public class Viewer extends JmolViewer
       // 16.2.33
       g.mode2d = value;
       break;
+    case T.labelkey:
+      // 16.2.34
+      g.labelKey = value;
+      if (value)
+        g.elementKey = false;
+      getModelkit(false).setProperty(JC.MODELKIT_SET_LABEL_KEY, Boolean.valueOf(value));
+      break;
     case T.elementkey:
       // 16.2.2
       g.elementKey = value;
+      if (value)
+        g.labelKey = false;
       getModelkit(false).setProperty(JC.MODELKIT_SET_ELEMENT_KEY, Boolean.valueOf(value));
       break;
     case T.symmetryhermannmauguin:
@@ -10729,11 +10738,13 @@ public class Viewer extends JmolViewer
   /**
    * Get a ModelKit property, but only if the modelkit exists already.
    * 
-   * @param name
+   * @param name if null returns Boolean.TRUE if modelkit is instantiated
    * @return value
    */
   public Object getModelkitPropertySafely(String name) {
-    return (modelkit == null ? null : modelkit.getProperty(name));
+    return (modelkit == null ? null 
+        : name == null ? Boolean.TRUE 
+        : modelkit.getProperty(name));
   }
 
   /**

@@ -1379,6 +1379,8 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public Object getSpaceGroupJSON(Viewer vwr, String name, String data,
                                   int index) {
+    if (vwr == null)
+      vwr = this.vwr;
     boolean isSetting = name.equals("setting");
     boolean isSettings = name.equals("settings");
     boolean isAFLOW = name.equalsIgnoreCase("AFLOW");

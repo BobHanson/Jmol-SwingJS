@@ -140,7 +140,7 @@ public class WyckoffFinder {
     return sb.appendC('(').append(xyz).appendC(')');
   }
 
-  private final String elementList = "AlB C D Fe F "
+  private final String elementList = "AlB C D FeF "
       + "GaHeI GeK LiMgN Os"
       + "P CaRhS T U V W XeYbZnAm";
 
@@ -299,7 +299,10 @@ public class WyckoffFinder {
   @SuppressWarnings("unchecked")
   private WyckoffFinder(Map<String, Object> map) {
     if (map != null) {
-      gpos = (Lst<Object>) map.get("gp");
+      // These will be turned into WyckoffCoord as needed
+      Lst<Object> gp = (Lst<Object>) map.get("gp");
+      gpos = new Lst<Object>();
+      gpos.addAll(gp);
       Map<String, Object> wpos = (Map<String, Object>) map.get("wpos");
       positions = (Lst<Object>) wpos.get("pos");
       npos = positions.size();

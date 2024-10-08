@@ -25,7 +25,10 @@ package org.jmol.modelkit;
 
 import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.jmol.api.JmolScriptEvaluator;
 import org.jmol.api.SymmetryInterface;
@@ -193,24 +196,247 @@ public class ModelKit {
 
   }
 
+  private abstract static class Key {
+    
+    ModelKit mk;
+    int nAtoms;
+    protected int modelIndex;
+    protected BS bsAtoms;
+
+    protected Key(ModelKit mk, int modelIndex) {
+      this.mk = mk;
+      bsAtoms = mk.vwr.getModelUndeletedAtomsBitSet(modelIndex);
+      nAtoms = (bsAtoms == null ? 0 : bsAtoms.cardinality());
+      this.modelIndex = modelIndex;
+    }
+
+    protected void setVisibilityFlags() {
+      BS bs = mk.vwr.getVisibleFramesBitSet();
+      mk.vwr.shm.getShape(JC.SHAPE_DRAW).setModelVisibilityFlags(bs);
+      mk.vwr.shm.getShape(JC.SHAPE_ECHO).setModelVisibilityFlags(bs);
+    }
+
+    protected void createDrawEcho(int x, int y, String key, String label, int color,
+                                Font font) {
+      if (label.startsWith("~_"))
+        label = label.substring(2);
+      String text = label;
+      label = PT.replaceAllCharacters(label, "\"'\n\r\t", "_");
+      mk.vwr.shm.setShapeProperties(JC.SHAPE_DRAW,
+          new Object[] { "init", "elementKey" },
+          new Object[] { "thisID", key + "d_" + label },
+          new Object[] { "diameter", Double.valueOf(2) },
+          new Object[] { "modelIndex", Integer.valueOf(modelIndex) },
+          new Object[] { "points", Integer.valueOf(0) },
+          new Object[] { "coord", P3d.new3(x, y, -Double.MAX_VALUE) },
+          new Object[] { "set", null }, 
+          new Object[] { "color", Integer.valueOf(color) },
+          new Object[] { "thisID", null });
+      mk.vwr.shm.setShapeProperties(JC.SHAPE_ECHO,
+          new Object[] { "thisID", null },
+          new Object[] { "target", key + "e_" + label },
+          new Object[] { "model", Integer.valueOf(modelIndex) },
+          new Object[] { "xypos", P3d.new3(x+1, y-1, -Double.MAX_VALUE) },
+          new Object[] { "text", text }, 
+          new Object[] { "font", font },
+          new Object[] { "color", Integer.valueOf(JC.COLOR_CONTRAST) },
+          new Object[] { "thisID", null });
+    }
+
+    protected static char isKeyOn(ModelKit mk, int modelIndex, char type) {
+      Object[] data = new Object[] { getKey(modelIndex, type) + "*", null };
+      mk.vwr.shm.getShapePropertyData(JC.SHAPE_ECHO, "checkID", data);
+      if (data[1] == null)
+        return '\0';
+      String key = (String) data[0];
+      return (key.indexOf("_E_") >= 0 ? 'E' : key.indexOf("_L_") >= 0 ? 'L' : '\0');
+    }
+
+    /**
+     * Triggered by a MODELKIT OFF in a state script, set there by StateCreator
+     * when there is an ECHO for _!_elkey*. Just checks for DRAW objects and sets
+     * haveElementKeys and bsElementKeyModels appropriately.
+     * @param mk 
+     */
+    protected static void updateKeyFromStateScript(ModelKit mk) {
+      for (int i = mk.vwr.ms.mc; --i >= 0;) {
+        if (isKeyOn(mk, i, '\0') != '\0') {
+          mk.bsKeyModels.set(i);
+          mk.haveKeys = true;
+        }
+      }
+    }
+
+    /**
+     * Create an element or label key for the specified model or all models. In the case of
+     * a specific model, only create the key if it does not yet exist in
+     * elementKeyModelList.
+     * @param mk 
+     * 
+     * @param modelIndex
+     *        the specified model, or -1 to recreate or delete all keys
+     * 
+     * @param isOn
+     */
+    protected static void setKey(ModelKit mk, int modelIndex, boolean isOn) {
+      if (isOn && (modelIndex >= 0 && mk.bsKeyModels.get(modelIndex)))
+        return;
+      clearKey(mk, modelIndex);
+      if (!isOn || modelIndex < 0)
+        return;
+      switch (mk.keyType) {
+      case 'E':
+        new EKey(mk, modelIndex).draw();
+        break;
+      case 'L':
+        new LKey(mk, modelIndex).draw();
+        break;
+      default:
+        mk.haveKeys = false;
+        return;
+      }
+      mk.bsKeyModels.set(modelIndex);
+      mk.haveKeys = true;
+    }
+    
+    /**
+     * Deletes the DRAW object for this or all models and adjusts haveKeys
+     * appropriately.
+     * 
+     * @param mk 
+     * 
+     * @param modelIndex
+     *        -1 for all models
+     */
+    protected static void clearKey(ModelKit mk, int modelIndex) {
+      if (!mk.haveKeys)
+        return;
+      String key = getKey(modelIndex, '\0') + "*";
+      Object[][] val = new Object[][] { { "thisID", key }, { "delete", null } };
+      mk.vwr.shm.setShapeProperties(JC.SHAPE_DRAW, val);
+      mk.vwr.shm.setShapeProperties(JC.SHAPE_ECHO, val);
+      switch (modelIndex) {
+      case -2:
+        break;
+      case -1:
+        mk.bsKeyModels.clearAll();
+        break;
+      default:
+        mk.bsKeyModels.clear(modelIndex);
+        break;
+      }
+      mk.haveKeys = !mk.bsKeyModels.isEmpty();
+    }
+
+    /**
+     * Element count, symbol, or color has changed for one or more models.
+     * Recreate the element key provided it already exists.
+     * @param mk 
+     * 
+     * @param bsAtoms
+     */
+    protected static void updateKey(ModelKit mk, BS bsAtoms) {
+      if (bsAtoms == null) {
+        updateModelKey(mk, mk.vwr.am.cmi, true);
+        return;
+      }
+      if (bsAtoms.cardinality() == 1) {
+        updateModelKey(mk, mk.vwr.ms.at[bsAtoms.nextSetBit(0)].mi, true);
+        return;
+      }
+      for (int i = mk.vwr.ms.mc; --i >= 0;) {
+        if (mk.vwr.ms.am[i].bsAtoms.intersects(bsAtoms)) {
+          updateModelKey(mk, i, true);
+        }
+      }
+    }
+
+    /**
+     * Update the element keys for the given models, possibly forcing new keys if
+     * none exist yet.
+     * @param mk 
+     * 
+     * @param bsModels
+     * @param forceNew
+     *        for example, when we have a frame resize
+     */
+    protected static void updateModelKeys(ModelKit mk, BS bsModels, boolean forceNew) {
+      if (bsModels == null)
+        bsModels = BSUtil.newBitSet2(0, mk.vwr.ms.mc);
+      for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels
+          .nextSetBit(i + 1)) {
+        updateModelKey(mk, i, forceNew);
+      }
+    }
+
+    /**
+     * Only set a model's element key if it is already on or if SET ELEMENTKEYS ON
+     * has been issued. "ON" is defined as "present as a draw object"
+     * @param mk 
+     * 
+     * @param modelIndex
+     *        the specified model; modelIndex < 0 is ignored
+     * @param forceNew
+     */
+    protected static void updateModelKey(ModelKit mk, int modelIndex, boolean forceNew) {
+      if (doUpdateKey(mk, modelIndex)) {
+        if (forceNew)
+          clearKey(mk, modelIndex);
+        setKey(mk, modelIndex, true);
+      }
+    }
+
+    protected static boolean doUpdateKey(ModelKit mk, int modelIndex) {
+      return modelIndex >= 0 //
+          && !mk.vwr.ms.isJmolDataFrameForModel(modelIndex) //
+          && !mk.bsKeyModelsOFF.get(modelIndex) //
+          && (mk.keyType != '\0' 
+              || mk.bsKeyModels.get(modelIndex)
+              || (mk.keyType = isKeyOn(mk, modelIndex, '\0')) != '\0');
+    }
+
+    /**
+     * Turn on or off automatic all-model element keys, from
+     * 
+     * SET ELEMENTKEYS ON/OFF
+     * 
+     * ON here will also clear all bsElementKeyModelsOFF overrides.
+     * @param mk 
+     *
+     * @param isOn
+     */
+    protected static void setKeys(ModelKit mk, boolean isOn) {
+      if (isOn) {
+        clearKeysOFF(mk);
+      }
+      clearKey(mk, -1);
+      if (isOn) {
+        // false here because we have already cleared all already
+        updateModelKeys(mk, null, false);
+      }
+    }
+
+    private static void clearKeysOFF(ModelKit mk) {
+      mk.bsKeyModelsOFF.clearAll();
+    }
+
+
+
+  }
   /**
    * A class to use just temporarily to create an element key for a model.
    */
-  private static class EKey {
+  private static class EKey extends Key {
     BS bsElements = new BS();
-    int nAtoms;
     String[][] elementStrings = new String[120][10];
     int[][] colors = new int[120][10];
     int[] isotopeCounts = new int[120];
-    private int modelIndex;
-
-    EKey(Viewer vwr, int modelIndex) {
-      BS bsAtoms = vwr.getModelUndeletedAtomsBitSet(modelIndex);
-      nAtoms = (bsAtoms == null ? 0 : bsAtoms.cardinality());
-      this.modelIndex = modelIndex;
+    
+    EKey(ModelKit mk, int modelIndex) {
+      super(mk, modelIndex);
       if (nAtoms == 0)
         return;
-      Atom[] a = vwr.ms.at;
+      Atom[] a = mk.vwr.ms.at;
       for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
           .nextSetBit(i + 1)) {
         String elem = a[i].getElementSymbol();
@@ -238,48 +464,122 @@ public class ModelKit {
       }
     }
 
-    void draw(Viewer vwr) {
+    void draw() {
       if (nAtoms == 0)
         return;
-      String key = getElementKey(modelIndex);
-      int h = vwr.getScreenHeight();
-      Font font = vwr.getFont3D("SansSerif", "Bold", h * 20 / 400);
+      String key = getKey(modelIndex, 'E');
+      int h = mk.vwr.getScreenHeight();
+      int f = h / 20;
+      int n = bsElements.cardinality();
+      int dy = 5;
+      if (n * f > 0.9d * h) {
+        f = (int) (0.9d * h / n);
+        dy = (int) (90d / n);
+      }
+      Font font = mk.vwr.getFont3D("SansSerif", "Bold", f);
+      int x = 98 - 75 * f * 3 / h;
       for (int y = 90, elemno = bsElements.nextSetBit(
           0); elemno >= 0; elemno = bsElements.nextSetBit(elemno + 1)) {
-        int n = isotopeCounts[elemno];
+        n = isotopeCounts[elemno];
         if (n == 0)
           continue;
         String[] elem = elementStrings[elemno];
         for (int j = 0; j < n; j++) {
           String label = elem[j];
           int color = colors[elemno][j];
-          vwr.shm.setShapeProperties(JC.SHAPE_DRAW,
-              new Object[] { "init", "elementKey" },
-              new Object[] { "thisID", key + "d_" + label },
-              new Object[] { "diameter", Double.valueOf(2) },
-              new Object[] { "modelIndex", Integer.valueOf(modelIndex) },
-              new Object[] { "points", Integer.valueOf(0) },
-              new Object[] { "coord", P3d.new3(90, y, -Double.MAX_VALUE) },
-              new Object[] { "set", null },
-              new Object[] { "color", Integer.valueOf(color) },
-              new Object[] { "thisID", null });
-          vwr.shm.setShapeProperties(JC.SHAPE_ECHO,
-              new Object[] { "thisID", null },
-              new Object[] { "target", key + "e_" + label },
-              new Object[] { "model", Integer.valueOf(modelIndex) },
-              new Object[] { "xypos", P3d.new3(91, y - 2, -Double.MAX_VALUE) },
-              new Object[] { "text", label }, new Object[] { "font", font },
-              new Object[] { "color", Integer.valueOf(JC.COLOR_CONTRAST) },
-              new Object[] { "thisID", null });
-          y -= 5;
+          createDrawEcho(x, y, key, label, color, font);
+          y -= dy;
         }
       }
-      BS bs = vwr.getVisibleFramesBitSet();
-      vwr.shm.getShape(JC.SHAPE_DRAW).setModelVisibilityFlags(bs);
-      vwr.shm.getShape(JC.SHAPE_ECHO).setModelVisibilityFlags(bs);
+      setVisibilityFlags();
     }
+
   }
 
+  /**
+   * A class to use just temporarily to create a label key for a model.
+   */
+  private static class LKey extends Key {
+    TreeMap<String, Integer> labels;
+    
+    LKey(ModelKit mk, int modelIndex) {
+       super(mk, modelIndex);
+      if (nAtoms == 0)
+        return;
+      Atom[] a = mk.vwr.ms.at;
+      labels = new TreeMap<>();
+      Lst<Integer> colorList = new Lst<>();
+      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+          .nextSetBit(i + 1)) {
+        String label = (String) mk.vwr.shm.getShapePropertyIndex(JC.SHAPE_LABELS, "label", i);
+        if (label == null) {
+          // any missing label results in no label assignments
+          nAtoms = 0;
+          break;
+        }
+        if (label.length() == 0)
+          continue;
+        if (label.charAt(0) < 'a')
+          label = "~_" + label;
+
+        int color = a[i].atomPropertyInt(T.color);  
+        Integer iColor = labels.get(label);
+        if (iColor == null) {
+          iColor = Integer.valueOf(color);
+          if (colorList.contains(iColor)) {
+            nAtoms = 0;
+            break;
+          }
+          colorList.addLast(iColor);
+        } else if (iColor.intValue() != color) {
+          nAtoms = 0;
+          break;
+        }          
+        labels.put(label, iColor);
+      }
+      if (nAtoms == 0) {
+        labels = null;
+      }
+    }
+
+    void draw() {
+      if (nAtoms == 0)
+        return;
+      String key = getKey(modelIndex, 'L');
+      int h = mk.vwr.getScreenHeight();
+      int f = h * 20 / 400;
+      int n = labels.size();
+      int dy = 5;
+      if (n * f > 0.9d * h) {
+        f = (int) (0.9d * h / n);
+        dy = (int) (90d / n);
+      }
+      Iterator<String> ik = labels.keySet().iterator();
+      int wmax = 0;
+      while (ik.hasNext()) {
+        String label = ik.next();
+        int w = label.length();
+        if (label.startsWith("~_"))
+          w -= 2;
+        if (w > wmax)
+          wmax = w;
+      }
+      int x = 98 - 75 * f * wmax / h;
+
+      Font font = mk.vwr.getFont3D("SansSerif", "Bold", f);
+      Iterator<Entry<String, Integer>> it = labels.entrySet().iterator();
+      for (int y = 90; it.hasNext();) {
+        Entry<String, Integer> e = it.next();
+        String label = e.getKey();
+        int color = e.getValue().intValue();
+        createDrawEcho(x, y, key, label, color, font);
+        y -= dy;
+      }
+      setVisibilityFlags();
+    }
+    
+  }
+  
   private static class WyckoffModulation extends Vibration {
 
     private final static int wyckoffFactor = 10;
@@ -469,9 +769,10 @@ public class ModelKit {
     return sym.getTransform(fa, fb, true);
   }
 
-  protected static String getElementKey(int modelIndex) {
+  protected static String getKey(int modelIndex, char ext) {
     return JC.MODELKIT_ELEMENT_KEY_ID
-        + (modelIndex < 0 ? "" : modelIndex + "_");
+        + (modelIndex < 0 ? "" : modelIndex + "_")
+        + (ext == '\0' ? "" : ext + "_");
   }
 
   private static boolean isTrue(Object value) {
@@ -624,25 +925,26 @@ public class ModelKit {
   private BS minTempModelAtoms;
 
   /**
-   * from SET ELEMENTKEY ON/OFF; TRUE to automatically set element keys for all
-   * models; off to turn them off
+   * from SET ELEMENTKEY ON/OFF or SET LABELKEY ON/OFF; 
+   * TRUE to automatically set element keys for all
+   * model s; off to turn them off
    */
-  private boolean setElementKeys;
+  protected char keyType;
 
   /**
    * a bitset indicating the presence of element keys for models; clearing a bit
    * will cause a new key to be produced.
    * 
    */
-  final private BS bsElementKeyModels = new BS();
+  final protected BS bsKeyModels = new BS();
 
   /**
    * tracks models for which the element key has been explicitly set OFF,
    * overriding global SET elementKey ON
    */
-  final private BS bsElementKeyModelsOFF = new BS();
+  final protected BS bsKeyModelsOFF = new BS();
 
-  private boolean haveElementKeys;
+  protected boolean haveKeys;
 
   public ModelKit() {
     // for dynamic class loading in Java and JavaScript
@@ -825,7 +1127,7 @@ public class ModelKit {
       break;
     case 'B':
       // MODELKIT (set) but not MODELKIT SET
-      check = ";key;elementkey;autobond;hidden;showsymopinfo;clicktosetelement;addhydrogen;addhydrogens;";
+      check = ";key;elementkey;labelkey;autobond;hidden;showsymopinfo;clicktosetelement;addhydrogen;addhydrogens;";
       break;
     }
     return (check != null && PT.isOneOf(key.toLowerCase(), check));
@@ -1089,8 +1391,20 @@ public class ModelKit {
       return Boolean.valueOf(getMKState() == STATE_MOLECULAR);
     }
 
-    if (name == JC.MODELKIT_KEY || name == JC.MODELKIT_ELEMENT_KEY) {
-      return Boolean.valueOf(isElementKeyOn(vwr.am.cmi));
+    if (name.startsWith(JC.MODELKIT_MODEL_KEY)) {
+      int model = Integer.parseInt(name.substring(JC.MODELKIT_MODEL_KEY.length()));
+      return Boolean.valueOf(Key.isKeyOn(this, model, '\0') != '\0');
+    }
+    if (name == JC.MODELKIT_KEY) {
+      return Boolean.valueOf(Key.isKeyOn(this, vwr.am.cmi, '\0') != '\0');
+    }
+
+    if (name == JC.MODELKIT_ELEMENT_KEY) {
+      return Boolean.valueOf(Key.isKeyOn(this, vwr.am.cmi, 'E') == 'E');
+    }
+
+    if (name == JC.MODELKIT_LABEL_KEY) {
+      return Boolean.valueOf(Key.isKeyOn(this, vwr.am.cmi, 'L') == 'L');
     }
 
     if (name == JC.MODELKIT_MINIMIZING)
@@ -1191,11 +1505,11 @@ public class ModelKit {
     //setProperty("clicktosetelement",Boolean.valueOf(!hasUnitCell));
     //setProperty("addhydrogen",Boolean.valueOf(!hasUnitCell));
     if (isZap) {
-      if (setElementKeys) {
-        updateModelElementKey(vwr.am.cmi, true);
+      if (keyType != '\0') {
+        Key.updateModelKey(this, vwr.am.cmi, true);
       }
-      bsElementKeyModels.clearAll();
-      bsElementKeyModelsOFF.clearAll();
+      bsKeyModels.clearAll();
+      bsKeyModelsOFF.clearAll();
     }
   }
 
@@ -1297,35 +1611,49 @@ public class ModelKit {
         return null;
       }
       if (key == JC.MODELKIT_UPDATE_MODEL_KEYS) {
-        if (haveElementKeys)
-          updateModelElementKeys(value == null ? null : ((BS[]) value)[1],
-              true);
-        if (drawAtomSymmetry != null && value != null) {
+        BS bsModels = (value == null ? null : ((BS[]) value)[1]);
+        if (haveKeys) {
+          if (value != null && bsModels == null) {
+            if (keyType != 'L')
+              return null;
+            // labels only
+            bsModels = vwr.ms.getModelBS(((BS[]) value)[0], false);
+          }
+          Key.updateModelKeys(this, bsModels, true);
+        }
+        if (drawAtomSymmetry != null && bsModels != null) {
           updateDrawAtomSymmetry(JC.PROP_ATOMS_DELETED, ((BS[]) value)[0]);
         }
         return null;
       }
 
       if (key == JC.MODELKIT_UDPATE_KEY_STATE) {
-        updateElementKeyFromStateScript();
+        Key.updateKeyFromStateScript(this);
         return null;
       }
 
       if (key == JC.MODELKIT_UPDATE_ATOM_KEYS) {
-        BS bsAtoms = (BS) value;
-        updateElementKey(bsAtoms);
+        Key.updateKey(this, (BS) value);
         return null;
       }
 
       if (key == JC.MODELKIT_SET_ELEMENT_KEY) {
         // exclusively from SET elementKeys...
-        setElementKeys(isTrue(value));
+        keyType = 'E';
+        Key.setKeys(this, isTrue(value));
+        
+        return null;
+      }
+      if (key == JC.MODELKIT_SET_LABEL_KEY) {
+        keyType = 'L';
+        // exclusively from SET elementKeys...
+        Key.setKeys(this, isTrue(value));
         return null;
       }
 
       if (key == JC.MODELKIT_FRAME_RESIZED) {
-        clearElementKey(-2);
-        updateModelElementKeys(null, true);
+        Key.clearKey(this, -2);
+        Key.updateModelKeys(this, null, true);
         return null;
       }
 
@@ -1333,9 +1661,9 @@ public class ModelKit {
         // modelkit set elementkey(s), set key
         int mi = vwr.am.cmi;
         boolean isOn = isTrue(value);
-        bsElementKeyModelsOFF.setBitTo(mi, !isOn);
-        bsElementKeyModels.setBitTo(mi, false);// force new, for whatever reason
-        setElementKey(mi, isOn);
+        bsKeyModelsOFF.setBitTo(mi, !isOn);
+        bsKeyModels.setBitTo(mi, false);// force new, for whatever reason
+        Key.setKey(this, mi, isOn);
         return isOn ? "true" : "false";
       }
 
@@ -1949,8 +2277,8 @@ public class ModelKit {
           int opt = allPts.length - 1;
           for (int i = 0, ept = opt * 2; i < allPts.length; i++, ept -= 2) {
             pts[0] = allPts[i];
-            
-            n += addAtoms(i == 0 ? type : elements.substring(ept, ept + 2).trim(), 
+            String el = (i == 0 ? type : elements.substring(ept, ept + 2).trim());
+            n += addAtoms(el, 
                 pts, bsAtoms, packing, opsCtr, cmd);
           }
           return n;
@@ -2322,7 +2650,7 @@ public class ModelKit {
         vwr.sm.setStatusStructureModified(atomIndex, mi,
             -Viewer.MODIFY_ASSIGN_ATOM, "OK", 1, bsEquiv);
         vwr.refresh(Viewer.REFRESH_SYNC_MASK, "assignAtom");
-        updateElementKey(null);
+        Key.updateKey(this, null);
         return;
       }
 
@@ -2466,7 +2794,7 @@ public class ModelKit {
       int firstAtom = vwr.ms.am[mi].firstAtomIndex;
       vwr.ms.setAtomNamesAndNumbers(firstAtom, -ac, null, true);
       vwr.sm.setStatusStructureModified(-1, mi, -3, "OK", 1, bs);
-      updateModelElementKey(mi, true);
+      Key.updateModelKey(this, mi, true);
     } catch (Exception ex) {
       ex.printStackTrace();
     } finally {
@@ -2974,33 +3302,6 @@ public class ModelKit {
       return true;
     vwr.ms.restoreAtomPositions(apos0);
     return false;
-  }
-
-  /**
-   * Deletes the DRAW object for this or all models and adjusts haveElementKeys
-   * appropriately.
-   * 
-   * @param modelIndex
-   *        -1 for all models
-   */
-  private void clearElementKey(int modelIndex) {
-    if (!haveElementKeys)
-      return;
-    String key = getElementKey(modelIndex) + "*";
-    Object[][] val = new Object[][] { { "thisID", key }, { "delete", null } };
-    vwr.shm.setShapeProperties(JC.SHAPE_DRAW, val);
-    vwr.shm.setShapeProperties(JC.SHAPE_ECHO, val);
-    switch (modelIndex) {
-    case -2:
-      break;
-    case -1:
-      bsElementKeyModels.clearAll();
-      break;
-    default:
-      bsElementKeyModels.clear(modelIndex);
-      break;
-    }
-    haveElementKeys = !bsElementKeyModels.isEmpty();
   }
 
   /**
@@ -3665,48 +3966,6 @@ public class ModelKit {
     }
   }
 
-  private boolean isElementKeyOn(int modelIndex) {
-    Object[] data = new Object[] { getElementKey(modelIndex) + "*", null };
-    vwr.shm.getShapePropertyData(JC.SHAPE_ECHO, "checkID", data);
-    return (data[1] != null);
-  }
-
-  /**
-   * Triggered by a MODELKIT OFF in a state script, set there by StateCreator
-   * when there is an ECHO for _!_elkey*. Just checks for DRAW objects and sets
-   * haveElementKeys and bsElementKeyModels appropriately.
-   */
-  private void updateElementKeyFromStateScript() {
-    for (int i = vwr.ms.mc; --i >= 0;) {
-      if (isElementKeyOn(i)) {
-        bsElementKeyModels.set(i);
-        haveElementKeys = true;
-      }
-    }
-  }
-
-  /**
-   * Create an element key for the specified model or all models. In the case of
-   * a specific model, only create the key if it does not yet exist in
-   * elementKeyModelList.
-   * 
-   * @param modelIndex
-   *        the specified model, or -1 to recreate or delete all keys
-   * 
-   * @param isOn
-   */
-  private void setElementKey(int modelIndex, boolean isOn) {
-    if (isOn && (modelIndex >= 0 && bsElementKeyModels.get(modelIndex)))
-      return;
-    clearElementKey(modelIndex);
-    if (!isOn || modelIndex < 0)
-      return;
-    // could make this changeable
-    new EKey(vwr, modelIndex).draw(vwr);
-    bsElementKeyModels.set(modelIndex);
-    haveElementKeys = true;
-  }
-
   private void setSymEdit(int bits) {
     state = (state & ~STATE_BITS_SYM_EDIT) | bits;
   }
@@ -3764,94 +4023,6 @@ public class ModelKit {
           ";refresh;set echo top right;echo " + drawData.replace('\t', ' '));
       break;
     }
-  }
-
-  /**
-   * Element count, symbol, or color has changed for one or more models.
-   * Recreate the element key provided it already exists.
-   * 
-   * @param bsAtoms
-   */
-  private void updateElementKey(BS bsAtoms) {
-    if (bsAtoms == null) {
-      updateModelElementKey(vwr.am.cmi, true);
-      return;
-    }
-    if (bsAtoms.cardinality() == 1) {
-      updateModelElementKey(vwr.ms.at[bsAtoms.nextSetBit(0)].mi, true);
-      return;
-    }
-    for (int i = vwr.ms.mc; --i >= 0;) {
-      if (vwr.ms.am[i].bsAtoms.intersects(bsAtoms)) {
-        updateModelElementKey(i, true);
-      }
-    }
-  }
-
-  /**
-   * Update the element keys for the given models, possibly forcing new keys if
-   * none exist yet.
-   * 
-   * @param bsModels
-   * @param forceNew
-   *        for example, when we have a frame resize
-   */
-  private void updateModelElementKeys(BS bsModels, boolean forceNew) {
-    if (bsModels == null)
-      bsModels = BSUtil.newBitSet2(0, vwr.ms.mc);
-    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels
-        .nextSetBit(i + 1)) {
-      updateModelElementKey(i, forceNew);
-    }
-  }
-
-  /**
-   * Only set a model's element key if it is already on or if SET ELEMENTKEYS ON
-   * has been issued. "ON" is defined as "present as a draw object"
-   * 
-   * @param modelIndex
-   *        the specified model; modelIndex < 0 is ignored
-   * @param forceNew
-   */
-  private void updateModelElementKey(int modelIndex, boolean forceNew) {
-    if (doUpdateElementKey(modelIndex)) {
-      if (forceNew)
-        clearElementKey(modelIndex);
-      setElementKey(modelIndex, true);
-    }
-  }
-
-  private boolean doUpdateElementKey(int modelIndex) {
-    return modelIndex >= 0 //
-        && !vwr.ms.isJmolDataFrameForModel(modelIndex) //
-        && !bsElementKeyModelsOFF.get(modelIndex) //
-        && (setElementKeys || bsElementKeyModels.get(modelIndex)
-            || isElementKeyOn(modelIndex));
-  }
-
-  /**
-   * Turn on or off automatic all-model element keys, from
-   * 
-   * SET ELEMENTKEYS ON/OFF
-   * 
-   * ON here will also clear all bsElementKeyModelsOFF overrides.
-   *
-   * @param isOn
-   */
-  private void setElementKeys(boolean isOn) {
-    setElementKeys = isOn;
-    if (isOn) {
-      clearElementKeysOFF();
-    }
-    clearElementKey(-1);
-    if (isOn) {
-      // false here because we have already cleared all already
-      updateModelElementKeys(null, false);
-    }
-  }
-
-  private void clearElementKeysOFF() {
-    bsElementKeyModelsOFF.clearAll();
   }
 
   /**
@@ -3935,8 +4106,6 @@ public class ModelKit {
         switch (mode) {
         case JC.PROP_DELETE_MODEL_ATOMS:
         case JC.PROP_ATOMS_DELETED:
-          System.out
-              .println("remove deleteatoms " + atoms + " " + a.bsAtoms + a.id);
           drawAtomSymmetry.removeItemAt(i);
           break;
         case JC.PROP_ATOMS_MOVED:

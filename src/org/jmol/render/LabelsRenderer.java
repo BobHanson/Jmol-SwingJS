@@ -89,7 +89,6 @@ public class LabelsRenderer extends FontLineShapeRenderer {
   protected boolean render() {
     fidPrevious = 0;
     Labels labels = (Labels) shape;
-
     String[] labelStrings = labels.strings;
     int[] fids = labels.fids;
     int[] offsets = labels.offsets;

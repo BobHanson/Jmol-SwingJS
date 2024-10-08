@@ -775,9 +775,6 @@ public class Atom extends Point3fi implements Node {
     return (str.length() == 0 ? "" : str.substring(1));
   }
    
-  /**
-   * SMILES only
-   */
   @Override
   public int getModelIndex() {
     return mi;

@@ -5816,10 +5816,14 @@ public class ScriptEval extends ScriptExpr {
       break;
     case T.plane:
       P4d v = planeParameter(i, false);
-      V3d x = V3d.new3(3.24,2.56, 6.12);
-      x.cross(x,v);
-      v.cross(x,v);
-      q =  Qd.getQuaternionFrame((P3d) null, v, x).inv();
+      V3d x = V3d.new3(0, 0, 1);
+      x.cross(x, v);
+      if (x.length() < 0.001d) {
+        x.set(0, 1, 0);
+        x.cross(x, v);
+      }      
+      v.cross(x, v);
+      q =  Qd.getQuaternionFrame(null, v, x).inv();
       i = iToken + 1;
       break;
     case T.axis:

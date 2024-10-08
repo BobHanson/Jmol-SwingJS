@@ -1698,6 +1698,11 @@ private void initDraw() {
       info.put("fixed", mesh.ptCenters == null ? Boolean.TRUE : Boolean.FALSE);
       info.put("ID", (mesh.thisID == null ? "<noid>" : mesh.thisID));
       info.put("drawType", mesh.drawType.name);
+      if (mesh.hoverLabel != null)
+        info.put("hoverLabel", mesh.hoverLabel);
+      if (mesh.title != null) {
+        info.put("title", mesh.title);
+      }
       if (mesh.diameter > 0)
         info.put("diameter", Integer.valueOf(mesh.diameter));
       if (mesh.width != 0)

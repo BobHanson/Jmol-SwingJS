@@ -170,6 +170,9 @@ public class Labels extends AtomShape {
             && i < ac; i = bs.nextSetBit(i + 1))
           setLabel(tokens, strLabel, i, !isPicked);
       }
+      if (vwr.getModelkitPropertySafely(null) == Boolean.TRUE) {
+        vwr.shm.notifyAtoms(JC.PROP_ATOMS_LABELED, new BS[] { bs, null });
+      }
       return;
     }
 

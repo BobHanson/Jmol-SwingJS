@@ -1782,7 +1782,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       wpos.put("cent", cent);
     wpos.put("pos", pos);
     map.put("wpos", wpos);     
-    wpos.put("gp", gp);
+    //wpos.put("gp", gp);
     gp = new Lst<>();
     SpaceGroup base = getSpaceGroupFromJmolClegOrITA(vwr, clegId); 
     SpaceGroup sg = transformSpaceGroup(TYPE_SPACE, null, base, gp0,

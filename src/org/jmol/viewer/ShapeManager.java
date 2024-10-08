@@ -307,6 +307,9 @@ public class ShapeManager {
 
   public void notifyAtoms(String prop, BS[] atomsAndModels) {
     switch (prop) {
+    case JC.PROP_ATOMS_LABELED:
+      vwr.setModelkitPropertySafely(JC.MODELKIT_UPDATE_MODEL_KEYS, atomsAndModels);
+      break;
     case JC.PROP_ATOMS_DELETED:
       setShapeAtomsSafely(JC.SHAPE_MEASURES, prop, atomsAndModels[0]);
       vwr.setModelkitPropertySafely(JC.MODELKIT_UPDATE_MODEL_KEYS, atomsAndModels);
@@ -373,8 +376,11 @@ public class ShapeManager {
   }
 
   public void setAtomLabel(String strLabel, int i) {
-    if (shapes != null)
+    if (shapes != null) {
       shapes[JC.SHAPE_LABELS].setProperty("label:"+strLabel, Integer.valueOf(i), null);
+      if (vwr.getModelkitPropertySafely(null) == Boolean.TRUE)
+        notifyAtoms(JC.PROP_ATOMS_LABELED, new BS[] { null, BSUtil.newAndSetBit(vwr.ms.at[i].mi)});
+    }
   }
   
   /**

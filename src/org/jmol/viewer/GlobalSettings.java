@@ -257,6 +257,7 @@ public class GlobalSettings {
     setB("drawPicking", drawPicking);
     setB("dsspCalculateHydrogenAlways", dsspCalcHydrogen);
     setB("elementkey", elementKey);
+    setB("labelkey", labelKey);
 //    setO("edsUrlFormat", edsUrlFormat);
 //    setO("edsUrlFormatDiff", edsUrlFormatDiff);
 //    //setParameterValue("edsUrlOptions", edsUrlOptions);
@@ -634,6 +635,7 @@ public class GlobalSettings {
   boolean drawPicking = false;
   boolean dsspCalcHydrogen = true;
   boolean elementKey = false;
+  boolean labelKey = false;
   public String energyUnits = "kJ";
   double exportScale = 0d;
   String helpPath = JC.DEFAULT_HELP_PATH;
@@ -1006,7 +1008,7 @@ public class GlobalSettings {
       + ";selecthetero;selecthydrogen"
       // removed in Jmol 14.32.68
       + ";pointgrouplineartolerance;pointgroupdistancetolerance"//;pointgroupmmaxatoms"
-      + ";minimizationreportsteps;elementkey;symmetryhermannmauguin;mode2d;")
+      + ";minimizationreportsteps;labelkey;elementkey;symmetryhermannmauguin;mode2d;")
       .toLowerCase();
 
   Object getAllVariables() {

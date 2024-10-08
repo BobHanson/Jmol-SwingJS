@@ -1051,14 +1051,15 @@ public class T {
   public final static int hidenameinpopup                = booleanparam | 82;
   public final static int hidenavigationpoint            = booleanparam | 84;
   public final static int hidenotselected                = booleanparam | 86;
-  public final static int highresolution                 = booleanparam | 88;
+  public final static int highresolution                 = booleanparam | 87;
 // see predefinedset  public final static int hydrogen                       = booleanparam | 90;
-  public final static int imagestate                     = booleanparam | 89;
-  public static final int iskiosk                        = booleanparam | 90; // 11.9.29
-  public final static int isosurfacekey                  = booleanparam | 91;
-  public final static int isosurfacepropertysmoothing    = booleanparam | 92;
-  public final static int jmolinjspecview                = booleanparam | 93; // 14.13.1
-  public final static int justifymeasurements            = booleanparam | 94;
+  public final static int imagestate                     = booleanparam | 88;
+  public static final int iskiosk                        = booleanparam | 89; // 11.9.29
+  public final static int isosurfacekey                  = booleanparam | 90;
+  public final static int isosurfacepropertysmoothing    = booleanparam | 91;
+  public final static int jmolinjspecview                = booleanparam | 92; // 14.13.1
+  public final static int justifymeasurements            = booleanparam | 93;
+  public final static int labelkey                       = booleanparam | 94;  
   public final static int languagetranslation            = booleanparam | 95;
   public final static int legacyautobonding              = booleanparam | 96;
   public final static int legacyhaddition                = booleanparam | 97;
@@ -2661,6 +2662,7 @@ public class T {
        "isosurfacePropertySmoothingPower",
        "jmolInJSpecView",
        "justifyMeasurements",
+       "labelKey",
        "languageTranslation",
        "leadAtom",
        "leadAtoms",
@@ -3744,6 +3746,7 @@ public class T {
         isosurfacepropertysmoothingpower,   //        "isosurfacePropertySmoothingPower"
         jmolinjspecview,
         justifymeasurements,                //        "justifyMeasurements"
+        labelkey,                           //        "labelkey"
         languagetranslation,                //        "languageTranslation"
         leadatom,                           //        "leadAtom"
         -1,                                 //        "leadAtoms"
