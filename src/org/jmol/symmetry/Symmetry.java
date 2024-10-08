@@ -1838,4 +1838,5 @@ public class Symmetry implements SymmetryInterface {
     return groupFactory;
   }
   
+  
 }
