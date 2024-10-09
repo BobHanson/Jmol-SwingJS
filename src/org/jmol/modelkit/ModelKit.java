@@ -218,10 +218,10 @@ public class ModelKit {
 
     protected void createDrawEcho(int x, int y, String key, String label, int color,
                                 Font font) {
-      if (label.startsWith("~_"))
-        label = label.substring(2);
-      String text = label;
       label = PT.replaceAllCharacters(label, "\"'\n\r\t", "_");
+      String text = label;
+      if (text.startsWith("~_"))
+        text = text.substring(2);
       mk.vwr.shm.setShapeProperties(JC.SHAPE_DRAW,
           new Object[] { "init", "elementKey" },
           new Object[] { "thisID", key + "d_" + label },
