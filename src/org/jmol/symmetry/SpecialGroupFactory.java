@@ -60,15 +60,7 @@ import javajs.util.Lst;
       if (itindex > 0) {
         info = (Map<String, Object>) ((Lst<Object>) data[itno - 1].get("its")).get(itindex - 1);    
       } else {
-        name = name.substring(2);
-        for (int i = data.length; --i >= 0;) {
-          info = data[i];
-          if (SpaceGroup.hmEquals((String) info.get("hm"), name, type)) {
-            break;
-          }
-          if (i == 0)
-            return null;
-        }     
+        info = Symmetry.getSpecialSettingJSON(data, name);
       }
       return createSpecialGroup(null, sym, info, type);
     }

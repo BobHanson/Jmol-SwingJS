@@ -43,7 +43,7 @@ public class SpinThread extends JmolThread {
    */
   private TransformManager transformManager;
   private double endDegrees;
-  private int nFrames;
+  private int nFrames = -1;
   private Lst<P3d> endPositions;
   private P3d[][] centerAndPoints;
   private double[] dihedralList;

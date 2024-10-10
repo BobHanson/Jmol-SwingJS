@@ -269,8 +269,9 @@ public class AxesRenderer extends CageRenderer {
   private void setVVert(Axes axes, int i) {
     int vpt = i * 2;
     vvert[vpt].setT(axes.originPoint);
-    axes.getAxisPoint(i, true, pt).scale(0.5);
+    axes.getAxisPoint(i, false, pt);// relative
     vvert[vpt].sub(pt);
+//    vvert[vpt].add(axes.originPoint);
     pt.add(axes.originPoint);
     tm.transformPtNoClip(vvert[vpt], vvert[vpt]);
     tm.transformPtNoClip(pt, vvert[vpt + 1]);

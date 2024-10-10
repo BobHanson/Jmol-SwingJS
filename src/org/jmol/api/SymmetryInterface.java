@@ -259,7 +259,7 @@ public interface SymmetryInterface {
 
   M4d replaceTransformMatrix(M4d trm);
 
-  Object getSubgroupJSON(Viewer vwr, int ita1, int ita2, int index1, int index2);
+  Object getSubgroupJSON(String nameFrom, String nameTo, int index1, int index2);
 
   String getIntTableIndex();
 

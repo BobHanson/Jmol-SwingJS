@@ -160,15 +160,17 @@ public class Axes extends FontLineShape {
   }
 
   /**
-   * get actual point or 1/2 vector from origin to this point
+   * axisPoints are offset cartesian values.
+   * 
+   * Get actual point or relative 1/2 vector from origin to this point
    * 
    * @param i
-   * @param unscaled
+   * @param actual
    * @param ptTemp 
    * @return actual point if not a data frame and not an XY request; otherwise return 1/2 vector along unit cell
    */
-  public P3d getAxisPoint(int i, boolean unscaled, P3d ptTemp) {
-    if (unscaled) {
+  public P3d getAxisPoint(int i, boolean actual, P3d ptTemp) {
+    if (actual) {
       ptTemp.setT(axisPoints[i]);
     } else {
       ptTemp.sub2(axisPoints[i], originPoint);

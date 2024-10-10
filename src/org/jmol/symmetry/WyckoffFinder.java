@@ -269,7 +269,7 @@ public class WyckoffFinder {
     int itno = PT.parseInt(pt < 0 ? sgname : sgname.substring(0, pt));
     if (!SpaceGroup.isInRange(itno, groupType, false, false))
       return null;
-    Map<String, Object> resource = Symmetry.getITResource(vwr, groupType, itno, null);
+    Map<String, Object> resource = Symmetry.getITJSONResource(vwr, groupType, itno, null);
     if (resource == null)
       return null;
     Lst<Object> its = (Lst<Object>) resource.get("its");

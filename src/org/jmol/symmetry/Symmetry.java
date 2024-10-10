@@ -221,7 +221,7 @@ public class Symmetry implements SymmetryInterface {
         if (s.length() > 1 && s.charAt(1) == '/') {
           // get first item if nnn and not nnn.m
           if (s.indexOf('.') < 0  && s.indexOf(":") < 0 && PT.isDigit(s.charAt(2))) {
-            s += ".";
+            s += ".1";
           }
           Map<String, Object> info = (Map<String, Object>) getSpaceGroupJSON(vwr, "ITA", s, 0);
           switch (info == null ? "" : name) {
@@ -1228,21 +1228,8 @@ public class Symmetry implements SymmetryInterface {
   /**
    * Retrieve subgroup information for a space group. Returns:
    * 
-   * <pre>
-   * 
    * values are 1-based so that "0" has special meaning, "-" means ignored; "MnV" is Integer.MIN_VALUE
    * 
-   * itaFrom  itaTo  index1  index2
-   *    n      MnV     -       -      return map for group n, contents of sub_n.json
-   *    n       0      0       0      return int[][] of critical information 
-   *    n       0      m      MnV     return map map.subgroups[m]
-   *    n       0     MnV      -      return int[] array of list of valid super>>sub 
-   *    n       0      m       t      return string transform map.subgroups[m].trm[t]
-   *    n1      n2    MnV      -      return list map.subgroups.select("WHERE subgroup=n2")
-   *    n1      n2     m      MnV     return map map.subgroups.select("WHERE subgroup=n2")[m]
-   *    n1      n2     m       t      return string transform map.subgroups.select("WHERE subgroup=n2")[m].trm[t]
-   * 
-   * </pre>
    * Critical information array is:
    * 
    *  [ isub, ntrm, subIndex, idet, trType ]
@@ -1269,10 +1256,31 @@ public class Symmetry implements SymmetryInterface {
    */
   @SuppressWarnings("unchecked")
   @Override
-  public Object getSubgroupJSON(Viewer vwr, int itaFrom, int itaTo, int index1,
+  public Object getSubgroupJSON(String nameFrom, String nameTo, int index1,
                                 int index2) {
-    if (vwr == null)
-      vwr = this.vwr;
+    
+    //    nameFrom  nameTo  index1  index2
+    //      n      null    -       -      return map for group n, contents of sub_n.json
+    //      n1      n2    MinV     -      return list map.subgroups.select("WHERE subgroup=n2")
+    //      n       ""    MinV     -      return int[][] of critical information 
+    //      n       ""     m      MinV    return map map.subgroups[m]
+    //      n1      n2     m      MinV    return map map.subgroups.select("WHERE subgroup=n2")[m]
+    //      n       ""     m       t      return string transform map.subgroups[m].trm[t]
+    //      n       ""     0       0      return int[] array of list of valid super>>sub 
+    //      n1      n2     m       t      return string transform map.subgroups.select("WHERE subgroup=n2")[m].trm[t]
+    //     
+
+
+    int groupType1 = SpaceGroup.getExplicitSpecialGroupType(nameFrom);
+    if (groupType1 == SpaceGroup.TYPE_INVALID)
+      return null;
+    int groupType2 = (nameTo == null || nameTo.length() == 0 ? groupType1 : SpaceGroup.getExplicitSpecialGroupType(nameFrom));
+    if (groupType2 != groupType1)
+      return null;
+    int itaFrom = PT.parseInt((String) getSpaceGroupInfoObj("itaNumber", nameFrom, false, false));
+    int itaTo = (nameTo == null ? -1 : nameTo.length() == 0 ? 0 : PT.parseInt((String) getSpaceGroupInfoObj("itaNumber", nameFrom, false, false)));
+    
+    
     boolean allSubsMap = (itaTo < 0);
     boolean asIntArray = (itaTo == 0 && index1 == 0);
     boolean asSSIntArray = (itaTo == 0 && index1 < 0);
@@ -1283,7 +1291,7 @@ public class Symmetry implements SymmetryInterface {
     boolean isWhereTStr = (itaTo > 0 && index1 > 0 && index2 > 0);
     try {
       Map<String, Object> o = (Map<String, Object>) getSpaceGroupJSON(vwr,
-          "subgroups", "map", itaFrom);
+          "subgroups", nameFrom, itaFrom);
       int ithis = 0;
       if (o != null) {
         if (allSubsMap)
@@ -1450,13 +1458,7 @@ public class Symmetry implements SymmetryInterface {
       if (isInt && (itno > SpaceGroup.getMax(specialType) || (isSettings || isSetting ? itno < 1 : itno < 0)))
         throw new ArrayIndexOutOfBoundsException(itno);
       if (isSubgroups) {
-        // special TODO
-        if (itaSubData == null)
-          itaSubData = new Map[230];
-        Map<String, Object> resource = itaSubData[itno - 1];
-        if (resource == null)
-          itaSubData[itno - 1] = resource = (Map<String, Object>) getResource(
-              vwr, "sg/json/sub_" + itno + ".json");
+        Map<String, Object> resource = getITSubJSONResource(specialType, itno);
         if (resource != null) {
           return resource;
         }
@@ -1465,7 +1467,7 @@ public class Symmetry implements SymmetryInterface {
         if (itno == 0) {
           return getAllITAData(vwr, specialType, true);
         }
-        Map<String, Object> resource = getITResource(vwr, specialType, itno, data);
+        Map<String, Object> resource = getITJSONResource(vwr, specialType, itno, data);
         if (resource != null) {
           if (index == 0 && tm == null)
             return (isSettings ? resource.get("its") : resource);
@@ -1538,8 +1540,51 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @SuppressWarnings("unchecked")
-  static Map<String, Object> getITResource(Viewer vwr, int type, int itno,
-                                           String hmName) {
+  private Map<String, Object> getITSubJSONResource(int type, int itno) {
+    if (type == SpaceGroup.TYPE_SPACE) {
+      if (itaSubData == null)
+        itaSubData = new Map[230];
+      Map<String, Object> resource = itaSubData[itno - 1];
+      if (resource == null)
+        itaSubData[itno - 1] = resource = (Map<String, Object>) getResource(vwr,
+            "sg/json/sub_" + itno + ".json");
+      return resource;
+    }
+    String typeName = SpaceGroup.getSpecialGroupName(type);
+    int nGroups = SpaceGroup.getMax(type);
+    Map<String, Object>[] data = null;
+    switch (type) {
+    case SpaceGroup.TYPE_PLANE:
+      if (friezeSubData == null)
+        friezeSubData = new Map[nGroups];
+      data = friezeSubData;
+      break;
+    case SpaceGroup.TYPE_LAYER:
+      if (layerSubData == null)
+        layerSubData = new Map[nGroups];
+      data = layerSubData;
+      break;
+    case SpaceGroup.TYPE_ROD:
+      if (rodSubData == null)
+        rodSubData = new Map[nGroups];
+      data = rodSubData;
+      break;
+    case SpaceGroup.TYPE_FRIEZE:
+      if (friezeSubData == null)
+        friezeSubData = new Map[nGroups];
+      data = friezeSubData;
+      break;
+    }
+    Map<String, Object> resource = data[itno - 1];
+    if (resource == null)
+      data[itno - 1] = resource = (Map<String, Object>) getResource(vwr,
+          "sg/json/sub_" + typeName + "_"  + itno + ".json");
+    return resource;
+  }
+
+  @SuppressWarnings("unchecked")
+  static Map<String, Object> getITJSONResource(Viewer vwr, int type, int itno,
+                                           String name) {
     if (type == SpaceGroup.TYPE_SPACE) {
       if (itaData == null)
         itaData = new Map[230];
@@ -1553,16 +1598,35 @@ public class Symmetry implements SymmetryInterface {
         type, false);
     if (itno > 0)
       return data[itno - 1];
-    // match HM name
-    for (int i = 0, n = data.length; i < n; i++) {
-      Lst<Object> list = (Lst<Object>) data[i].get("its");
-      for (int j = list.size(); --j >= 0;) {
-        Map<String, Object> map = (Map<String, Object>) list.get(j);
-        String hm = (String) map.get("hm");
-        if (SpaceGroup.hmEquals(hm, hmName, type))
-          return map;
-      }
+    // match HM name or cleg
+    return getSpecialSettingJSON(data, name);
+  }
+
+  /**
+   * 
+   * @param data
+   * @param name
+   * @return JSON info or null
+   */
+  @SuppressWarnings("unchecked")
+  static Map<String, Object> getSpecialSettingJSON(Map<String, Object>[] data,
+                                                    String name) {
+    Map<String, Object> info = null;
+    boolean isCleg = Character.isDigit(name.charAt(2));
+    if (isCleg && name.endsWith(";0,0,0")) {
+      name = name.substring(0, name.length() - 6);
     }
+    String key = (isCleg ? "clegId" : "hm");
+       for (int i = data.length; --i >= 0;) {
+      //(Map<String, Object>)
+      Lst<Object>lst = (Lst<Object>)data[i].get("its");
+      for (int j = lst.size(); --j >= 0;) {
+        info = (Map<String, Object>) lst.get(j);            
+        if (name.equals(info.get(key))) {
+          return info;
+        }           
+      }
+    }     
     return null;
   }
 

@@ -206,10 +206,10 @@ final public class CLEG {
       /**
        * "sub" or "super" for Jmol >sub>  >super>
        */
-      public String calcNext;
+      private String calcNext;
       
       String calculated; // transform car
-      public boolean disabled;
+      boolean disabled;
       //private boolean applySetting = true;
       /**
        * Cleg ends with >, implying we want a calculation of the final transform
@@ -221,7 +221,8 @@ final public class CLEG {
       private String hallSymbol;
   
       private int specialType = SpaceGroup.TYPE_SPACE;
-      private String specialPrefix = "";
+      
+      String specialPrefix = "";
       
       public ClegNode(ClegData data, int index, String name) {
         if (name == null)
@@ -329,9 +330,9 @@ final public class CLEG {
         // unit cell already. This call will build the space group if necessary
         // if it is from Wyckoff 
         myTrm = (name.endsWith(".1") ? "a,b,c"
-            : (String) data.sym.getITASettingValue(null, name, "trm"));
+            : (String) data.sym.getITASettingValue(null, specialPrefix + name, "trm"));
         if (myTrm == null) {
-          data.errString = "Unknown ITA setting: " + name + "!";
+          data.errString = "Unknown ITA setting: " + specialPrefix + name + "!";
           return;
         }
         String[] parts = PT.split(name, ".");
@@ -424,8 +425,8 @@ final public class CLEG {
         int ita2 = PT.parseInt(myIta);
         boolean unspecifiedSettingChangeOnly = (isImplicit && ita1 == ita2);
         if (!unspecifiedSettingChangeOnly) {
-          Object o = data.sym.getSubgroupJSON(null, (isSub ? ita1 : ita2),
-              (isSub ? ita2 : ita1), 0, 1);
+          Object o = data.sym.getSubgroupJSON((isSub ? prev.name : name),
+              (isSub ? name : prev.name), 0, 1);
           trCalc = (String) o;
           boolean haveCalc = (trCalc != null);
           if (haveCalc && !isSub)
@@ -450,7 +451,10 @@ final public class CLEG {
       }
 
       public String getCleanITAName() {
-        return (name.startsWith("ITA/") ? name.substring(4) : name);
+        String s = (name.startsWith("ITA/") ? name.substring(4) : name);
+        if (specialType != SpaceGroup.TYPE_SPACE && !s.startsWith(specialPrefix))
+          s = specialPrefix + s;
+        return s;
       }
   
       public boolean isDefaultSetting() {
@@ -979,7 +983,7 @@ final public class CLEG {
         String ita = node.myIta;
         // easiest is to restart with the default configuration and unit cell
         // modelkit zap spacegroup ita ....
-        String[] cleg = new String[] { ita };
+        String[] cleg = new String[] { node.specialPrefix + ita };
         AssignedSGParams paramsInit = (asgParams.mkCalcOnly
             ? new AssignedSGParams(vwr)
             : new AssignedSGParams(vwr, null, null, asgParams.mkParamsOrUC, -1,
@@ -1039,7 +1043,7 @@ final public class CLEG {
       }
       if (!asgParams.mkIsAssign) {
         data.sym = sym;
-        data.setPrevNode(new ClegNode(data, -1, ita0 + ":" + trm0));
+        data.setPrevNode(new ClegNode(data, -1, ita0 == null ? null : ita0 + ":" + trm0));
         if (asgParams.mkIgnoreAllSettings)
           data.getPrevNode().disable();
         if (!data.getPrevNode().update(data))

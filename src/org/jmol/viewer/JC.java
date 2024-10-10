@@ -219,8 +219,9 @@ public final class JC {
       "bcif", "https://models.rcsb.org/%file.bcif", // new Jmol 16.1.52 2024.01.25
       "chebi",
       "https://www.ebi.ac.uk/chebi/saveStructure.do?defaultImage=true&chebiId=%file%2D%",
-      "ligand", "https://files.rcsb.org/ligands/download/%FILE.cif", "mp",
-      "https://www.materialsproject.org/materials/mp-%FILE/cif#_DOCACHE_", // e.g. https://materialsproject.org/rest/v1/materials/mp-24972/cif 
+      "ligand", "https://files.rcsb.org/ligands/download/%FILE.cif", 
+//      "mp",
+//      "https://www.materialsproject.org/materials/mp-%FILE/cif#_DOCACHE_", // e.g. https://materialsproject.org/rest/v1/materials/mp-24972/cif 
       "nci", "https://cactus.nci.nih.gov/chemical/structure/", 
       "pdb",
       "https://files.rcsb.org/download/%FILE.pdb", // new Jmol 14.4.4 3/2016

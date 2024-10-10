@@ -392,18 +392,7 @@ public class MathExt {
     // the first and second number can be replaced by a Hermann-Mauguin name.
     // "subgroups" is optional if there are more than two parameter.
 
-    //    * itaFrom  itaTo  index1  index2
-    //    *    n      MinV    -       -      return map for group n, contents of sub_n.json
-    //    *    n       0     MinV     -      return int[][] of critical information 
-    //    *    n       0      m      MinV    return map map.subgroups[m]
-    //    *    n       0      m       t      return string transform map.subgroups[m].trm[t]
-    //    *    n       0      0       0      return int[] array of list of valid super>>sub 
-    //    *    n1      n2    MinV     -      return list map.subgroups.select("WHERE subgroup=n2")
-    //    *    n1      n2     m      MinV    return map map.subgroups.select("WHERE subgroup=n2")[m]
-    //    *    n1      n2     m       t      return string transform map.subgroups.select("WHERE subgroup=n2")[m].trm[t]
-    //    * 
-
-    // spacegroup("all");
+     // spacegroup("all");
     double[] ucParams = null;
     int nargs = args.length;
     if (nargs == 0)
@@ -519,9 +508,24 @@ public class MathExt {
   }
 
   private Object getSubgroupInfo(SV[] args, int nargs) {
-    SymmetryInterface sym;
-    int itaFrom = Integer.MIN_VALUE, itaTo = Integer.MIN_VALUE, 
-        index1 = Integer.MIN_VALUE, index2 = Integer.MIN_VALUE;
+ 
+    //  nargs  0        1       2       3 
+    //    * nameFrom  nameTo  index1  index2
+    //    1  current  null    -       -      return map for current group, contents of sub_n.json
+    //    2    n      null    -       -      return map for group n, contents of sub_n.json
+    //    3    n1      n2    MinV     -      return list map.subgroups.select("WHERE subgroup=n2")
+    //    3    n     0/""    MinV     -      return int[][] of critical information 
+    //    4    n     0/""     m      MinV    return map map.subgroups[m]
+    //    4    n1      n2     m      MinV    return map map.subgroups.select("WHERE subgroup=n2")[m]
+    //    5    n     0/""     m       t      return string transform map.subgroups[m].trm[t]
+    //    5    n     0/""     0       0      return int[] array of list of valid super>>sub 
+    //    5    n1      n2     m       t      return string transform map.subgroups.select("WHERE subgroup=n2")[m].trm[t]
+    //    * 
+
+SymmetryInterface sym;
+    
+    int index1 = Integer.MIN_VALUE, index2 = Integer.MIN_VALUE;
+    String nameFrom = null, nameTo = null;
     switch (nargs) {
     case 5:
       index2 = args[3].intValue;
@@ -534,34 +538,25 @@ public class MathExt {
         return null;
       //$FALL-THROUGH$
     case 3:
-      itaTo = args[1].intValue;
-      if (itaTo == Integer.MAX_VALUE) {
-        itaTo = vwr.getItaNumberFor(args[1].asString());
-      }
-      if (itaTo < 0)
-        return null;
+      nameTo = (args[1].intValue == 0 ? "" : args[1].asString());
       //$FALL-THROUGH$
     case 2:
-      itaFrom = args[0].intValue;
-      if (itaFrom == Integer.MAX_VALUE) {
-        itaFrom = vwr.getItaNumberFor(args[0].asString());
-      }
-      if (itaFrom < 0)
-        return null;
+      nameFrom = args[0].asString();
+      // nameTo will be null
       //$FALL-THROUGH$
     case 1:
     default:
-      if (itaFrom == Integer.MIN_VALUE) {
-        sym = vwr.getCurrentUnitCell();
-        itaFrom = PT.parseInt(sym.getIntTableNumber());
-        if (itaFrom < 1)
-          return null;              
+      if (nameFrom == null) {
+        sym = vwr.getOperativeSymmetry();
+        if (sym == null)
+          return null;
+        nameFrom = sym.getSpaceGroupClegId();
       } else {
-        sym = vwr.getSymTemp();
+        sym = vwr.getSymStatic();
       }
       break;
     }
-    return sym.getSubgroupJSON(vwr, itaFrom, itaTo, index1, index2);
+    return sym.getSubgroupJSON(nameFrom, nameTo, index1, index2);
   }
 
   @SuppressWarnings("unchecked")
