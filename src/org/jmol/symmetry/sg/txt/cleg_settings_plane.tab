@@ -1,0 +1,18 @@
+i	subtype	clegId	det	hm	more
+1	plane	p/1:a,b,c	1.0	p/p 1
+2	plane	p/2:a,b,c	1.0	p/p 2
+3	plane	p/3:a,b,c	1.0	p/p 1 m 1
+4	plane	p/4:a,b,c	1.0	p/p 1 g 1
+5	plane	p/5:a,b,c	1.0	p/c 1 m 1
+6	plane	p/6:a,b,c	1.0	p/p 2 m m
+7	plane	p/7:a,b,c	1.0	p/p 2 m g
+8	plane	p/8:a,b,c	1.0	p/p 2 g g
+9	plane	p/9:a,b,c	1.0	p/c 2 m m
+10	plane	p/10:a,b,c	1.0	p/p 4
+11	plane	p/11:a,b,c	1.0	p/p 4 m m
+12	plane	p/12:a,b,c	1.0	p/p 4 g m
+13	plane	p/13:a,b,c	1.0	p/p 3
+14	plane	p/14:a,b,c	1.0	p/p 3 m 1
+15	plane	p/15:a,b,c	1.0	p/p 3 1 m
+16	plane	p/16:a,b,c	1.0	p/p 6
+17	plane	p/17:a,b,c	1.0	p/p 6 m m

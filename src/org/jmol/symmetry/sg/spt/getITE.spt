@@ -1,0 +1,598 @@
+// Bob Hanson hansonr@stolaf.edu
+
+
+// getITE.spt
+//
+// 2024.09.28 Bob Hanson hansonr@stolaf.edu
+//
+//
+// Creates JSON of International Tables Vol. E layer, rod, and frieze group data, 
+//
+//
+// for example:
+// 
+// https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_gen?gnum=15&what=gp&ite=ITE+Setting&subtype=rod // list of settings
+// https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_gen?gnum=7&what=wpos&settings=ITE+Settings&subtype=rod // list of settings for wyckoff positions
+
+
+// https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_gen?gnum=5&what=gp&subtype=layer&ite=show // listing of default general positions
+// https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_gen?gnum=5&what=gen&subtype=layer&ite=show // listing of default generators
+
+// https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_wp?gnum=20&what=wpos&subtype=layer&ite=show // listing of Wyckoff positions
+
+// https://www.cryst.ehu.es/cgi-bin/cryst/programs//nph-getgen?what=text&gnum=7&mat=-y,x,z&type=rod text list of generators
+
+// https://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-trgen?gnum=5&subtype=layer&from=ite&what=gen&trmat=a,b,c
+
+//
+// settings included are those from getgen, not wp-list:
+// 
+// General position coordinates for Wyckoff positions are skipped, as they are redundant.
+//
+// Output files are available in the src/org/jmol/symmetry/sg/json folder
+//
+
+// a bit of hardwiring:
+
+targetDir = "c:/temp/bilbao/ite/";
+
+useprefix = false;
+
+// variables for the createJSONFiles call (below), after the functions
+
+issues = [];
+
+itedelay = 0.05;
+iteForceNew = false;
+iteFirst = 0;
+iteLast = 80;
+is2d = false;
+
+// only one function to run here:
+
+function createJSONFiles(gtype, n, nmax, forceNew) {
+	subtype = gtype;
+	iteFirst = n;
+	iteLast = nmax;
+	is2d = (gtype == "frieze");	
+	ncleg = 0;
+
+	// creates ite_<subtype>_<i>.json, by group
+
+	// n option to start at a given number (-30), or only a certain number (30), or all (0)
+	// forceNew option true to overwrite local files; false to use them if they are there.
+
+	var allSettings = []; 	
+	var allMore = [];
+	var allTransforms = [["i", "subtype", "clegId","det","hm", "more"]]; // , "xyz"]];
+	var allOps = [];
+	for (var i = 1; i <= iteLast; i++) {
+		if (n < 0 && i < -n || n > 0 && i != n) {
+			continue;
+		}
+		_getAllOps(i, allOps);
+		var adata = _createJSONArray(i, forceNew, allSettings, allMore, allTransforms);
+		var thedata = adata.format("JSON");
+		var fname = targetDir + "json/ite_" + subtype + "_" + i + ".json";
+		write var thedata @fname;
+	}
+	if (n == 0 || n == -1) {
+		allSettings += allMore;
+		var thedata = allSettings.format("JSON");
+		var fname = targetDir + "json/ite_all_" + subtype + ".json";
+		write var thedata @fname;
+		thedata = allOps.format("JSON");
+		fname = targetDir + "json/ops_all_" + subtype + ".json";
+		write var thedata @fname;
+		for (var g in allSettings) {
+			if (g.gen) {
+  				g.ngen = g.pop("gen").length;
+  				g.ngp = g.pop("gp").length;
+  				g.nwpos = g.pop("wpos").pos.length;
+			}
+		}
+		fname = targetDir + "json/ite_list_" + subtype + ".json";
+		thedata = allSettings.format("JSON");
+		write var thedata @fname;
+		var thedata = allTransforms.join("\t",TRUE);
+		var fname = targetDir + "txt/cleg_settings_" + subtype + ".tab";
+		write var thedata @fname;
+		print "done -- " + allSettings.length + " settings and " + allOps.length + " operations";
+	}
+	print issues;
+}
+
+function _getAllOps(sg, allOps) {
+	var y = _getITEDataHTM(sg, 1, "gp_full", "", "", forceNew).split('<td align="center"');
+	for (var i = 8; i < y.length; i += 4) {
+		var xyz = y[i].split("&nbsp;")[3].trim();
+		if (!xyz) {
+			i -= 3;
+			continue;
+		}
+		var m = y[i].split("<pre>")[2].split("</pre>")[1].trim().replace("\n"," |");
+		var ite = _fixName((y[i+1])[2][0].split("</td")[1].trim());
+		var seitz = _fixName((y[i+2])[2][0].split("</td")[1].trim().replace("<sub>","_<sub>"));
+		allOps.push({"sg":i,"xyz":xyz,"ite":ite,"seitz":seitz,"m":m});
+	}
+}
+
+// all other functions are "private" to this script
+
+function _createJSONArray(i, forceNew, allSettings, allMore, allTransforms) {
+
+	// Create ITE records for a specific space group.
+
+	// start by getting the ITE settings using getgen 
+	// some reordering is done for groups 48, 50, 59, 68, and 78,
+	// which for some reason are not presented with the default (a,b,c) transformation
+	// as the first setting on the list. 
+
+	var x = _getITEDataHTM(i, 0, "", "", "", forceNew);
+
+	var myTransforms = "";
+	var prefix = if(subtype == "layer" ; "l/" ;if (subtype == "rod" ; "r/"; if(subtype == "frieze" ; "f/" ; 0)));
+	var x = x.split("<a href=")[5][-3];
+	var sg = {};
+	var k0 = 0;
+	sg.sg = i;
+	sg.its = [];
+	sg.subtype = subtype;
+	sg.n = x.length;
+	var outOfOrder = false;
+	var hmlist = "";
+	for (var j = 1; j <= sg.n; j++) {
+  		var its = {};  
+		var a = x[j].split('"');
+		var unconv = "";
+		var href = "https://www.cryst.ehu.es" + a[2].replace("//","/");
+		if (href.find("unconv=")) {
+			unconv = _getField(href, "unconv", 100);
+			its.hm =  _fixName(unconv);
+		} else if (!href.find("Standard")) {
+			href += "&standard=Standard%2FDefault+Setting";
+		}
+		if (!its.hm) {
+			its.hm = _fixName((a[3])[2][0].split("</a>")[1]);
+		}
+		var hm = _fixHM(its.hm);
+		its.hm = prefix + hm;
+		if (its.hm.find(" (")) {
+			a = its.hm.replace(")", " (").split(" (");
+			var hm = a[2] + if(a[3];a[3];"");
+			var hmAlt = a[1] + if(a[3];a[3];"");
+			var key = ";" + hm + ";"
+			if (hmlist.find(key)) {
+				// C c c e, for example
+				its.hmOrig = hm;
+				its.hmAlt = hm;
+				its.hm = hmAlt;
+				issues.push("SG " + i + "." + j + " found duplicate HM, using alt: " + hm + "->" + hmAlt)
+			} else {
+				hmlist += key;
+				its.hm = hm;
+				its.hmAlt = hmAlt;
+			}
+		}
+		its.id = subtype + "_" + hm.replace(" ","_").replace(":","");
+		var tm = _getField(href, "trmat", 100);	
+		if (!tm)tm = "a,b,c";
+		its.subtype = subtype;	
+		its.trm = _toTransform(tm, true);
+		its.det = unitcell(its.trm,true)%1%2;
+		its.clegId = prefix + i + ":" + its.trm;
+		its.set = j;
+		its.sg = i;
+		if (tm == "a,b,c" && j > 1 || outOfOrder) {
+			// out of order! -- we want origin 2 to be first here because it is the default
+			// space groups 48, 50, 59, 68, and 70
+			if (!outOfOrder) {
+				for (var k = sg.its.length; k > 0; --k) {
+					var kk = k + x.length/2;
+					var itk = sg.its[k];
+					sg.its[kk] = itk;
+				}
+			}
+			k0++;
+			sg.its[k0] = its;
+			outOfOrder = true;
+		} else {
+	  		sg.its.push(its);
+		}
+		var gdata = _getGPText(i, j, tm, its.hm, forceNew);
+		its.gp = _getGPJson(its, gdata);
+		gdata = _getITEDataHTM(i, j, "gen", tm, "", forceNew);
+		its.gen = _getGeneratorJson(gdata);
+		gdata = _getITEDataHTM(i, j, "wpos", tm, unconv, forceNew);
+		its.wpos = _getWyckoffJson(its, gdata);
+	}
+	for (var j = 1; j <= sg.n; j++) {
+		ns++;
+		var s = sg.its[j];
+		s.set = j;
+		allSettings.push(s);
+		//var xyz = s.gp.join(";");
+		myTransforms += ";" + s.clegId + ";"
+		var nc = ++ncleg;
+		var atr = [ nc, s.subtype, s.clegId, s.det, s.hm ];
+		allTransforms.push(atr);
+	}
+	var more = _getWPListJSON(i, sg, myTransforms, allMore.length, allTransforms, forceNew);
+	if (more) {
+		for (var j = 1; j<= more.length; j++) {
+			more[j].set = ++sg.n;
+			sg.its.push(more[j]);
+		}
+		allMore += more;
+		//issues.push(more);
+	}
+	return sg;
+}
+
+function _getWPListJSON(i, sg, myTransforms, nm, allTransforms, forceNew) {
+	var more = [];
+	print "getwplistJson " + nm;
+	var a = _getITEDataHTM(i, 0, "wp-list", "", "", forceNew).split("trgen");
+	for (var j = 2; j <= a.length; j++) {
+		var href = a[j].split('">')[1];
+		var tm = _getField(href, "trmat", 100);
+		var trm = _toTransform(tm, true);
+		var clegId = "" + i + ":" + trm;
+		if (!myTransforms.find(";" + clegId + ";")) {
+			// add a prime mark here - many of these are duplicates  I2/m for example
+			var unconv = _fixHM(_fixName(_getField(href, "unconv", 100))) + "'";
+			nm++;
+			var sm = {
+				"clegId":clegId,
+				"det": unitcell(trm,true)%1%2,
+				"more": true,
+				"hm":unconv,
+				"id": unconv.replace(" ","_").replace(":",""),
+//				"i": nm,
+//				"tm": tm,
+				"sg": i,
+				"trm": trm};
+			more.push(sm);
+			var id = ++ncleg;
+			var atr = [id, sm.clegId, sm.det, sm.hm, "", "", nm ];
+			allTransforms.push(atr);
+
+		}		
+	}
+	return if(more.length ; more ; null);
+
+
+}
+
+function _fixHM(hm) {
+	var ret = hm.replace("[origin ",":").replace("[ cell choice ",":").replace("]","").replace(": origin choice "," :").replace(" 1<sup>st</sup> setting","1").replace(": ",":").trim();
+	return ret
+}
+
+function _getITEDataHTM(i, j, what, trmat, unconv, forceNew) {
+ // what is one of ["gen","wpos","", "gp","wp-list"]
+
+// https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_gen?gnum=15&what=gp&ite=ITE+Setting&subtype=rod // list of settings
+// https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_gen?gnum=7&what=wpos&settings=ITE+Settings&subtype=rod // list of settings for wyckoff positions
+
+
+// https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_gen?gnum=5&what=gp&subtype=layer&lite=show // listing of default general positions
+// https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_gen?gnum=5&what=gen&subtype=layer&lite=show // listing of default generators
+
+// https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_wp?gnum=20&what=wpos&subtype=layer&ite=show // listing of Wyckoff positions
+
+// https://www.cryst.ehu.es/cgi-bin/cryst/programs//nph-trgen?gnum=5&what=gp&subtype=layer&ite=show&from=ite&trmat=b,-a-b,c
+// https://www.cryst.ehu.es/cgi-bin/cryst/programs//nph-trgen?gnum=5&what=gen&subtype=layer&ite=show&from=ite&trmat=b,-a-b,c
+
+// https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_wp?gnum=5&what=wpos&subtype=layer&ite=show&from=ite&trmat=b,-a-b,c&unconv=%3Ci%3Ep%3C/i%3E%201%201%20n
+
+	// the main function for retieving data from sub_gen, nph-trgen, or sub_wp
+
+	var localFile = targetDir + "data/" + subtype + "_" + if(what ; what ; "its") + "_" + i + if(j;"_"+j+".html";".htm");
+	var url = "x";
+	if (forceNew) {
+		var base = "https://www.cryst.ehu.es/cgi-bin/"
+		var numtype = "gnum=" + i + "&subtype=" + subtype
+		var prog = "sub_gen";
+		var root = "subperiodic"; 
+
+		switch (what) {
+		case "":
+			url = "&settings=ITE+Settings";
+			break;
+		case "wp-list":
+			url = "&settings=ITE+Settings&what=wpos";
+			break;
+		case "gen":
+		  	url = "&from=ite&ite=show&what=gen";
+		  	break;
+		case "gp_full":
+		  	url = "&from=ite&ite=show&what=gp";
+		  	break;
+		case "wpos":
+			prog = "sub_wp";
+			url = "&what=wpos&ite=show&from=ite";
+			if (unconv) {
+				url += "&unconv=" + _fixURI(unconv);
+			}
+			break;
+		}
+		if (trmat && prog != "sub_wp") {
+			root = "cryst";
+			prog = "trgen";
+		}
+		url = base + root + "/programs/nph-" + prog + "?" + numtype + url;
+		if (trmat) {
+			url += "&trmat=" + trmat
+		}
+	} else {
+		url = localFile;
+	}
+	print "getting " + url;
+	delay @itedelay;
+	var gdata = load(url);
+	if (forceNew) {
+		write var gdata @localFile;
+	} else if (gdata.find("FileNotFound")) {
+		gdata = _getITEDataHTM(i, j, what, trmat, unconv, true);
+	}
+	return gdata;
+}
+
+function _getGPText(i, j, trmat, hm, forceNew) {
+
+// https://www.cryst.ehu.es/cgi-bin/cryst/programs//nph-getgen?what=text&gnum=7&mat=-y,x,z&type=rod   // text list of generators
+
+	var bcsCall = "https://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen" 
+		+ "?gnum=" + i + "&what=text&mat=" + _toXYZ(trmat) + "&type=" + subtype;
+
+	//issues.push("# " + i + " " + j + " " + hm + " " + trmat + " " + bcsCall);	
+
+	// specifically for retieving data from getgen for general position text
+	var localFile = targetDir + "data/" + subtype + "_gp_" + i + if(j;"_"+j+".html";".htm");
+	var url = if(forceNew ; bcsCall	;  localFile);
+	//print "getting " + url;
+	delay @itedelay;
+	var gdata = load(url);
+	if (forceNew) {
+		write var gdata @localFile;
+	} else if (gdata.find("FileNotFound")) {
+		gdata = _getGPText(i, j, trmat, hm, true);
+	}
+	return gdata;
+}
+
+function _getGPJson(its, gdata) {
+
+	// just split the text on the <big> tag
+	// normalize -n/m to +(1-n/m); "+1," to ","
+
+	var gp = [];
+	var d = gdata.split("<big>");
+	var xyzlist = "";
+	for (var j = 2; j <= d.length; j++) {
+		var xyz0 = d[j].split(" ")[2].split("<")[1];
+		var xyz = _fixUnitXYZ(xyz0);
+		var key = ";" + xyz + ";"; 
+		if (xyzlist.find(key)) {
+			//issues += "removed " + xyz0 + " in " + its.sg + "." + its.set;
+			continue;
+		} else if (xyz != xyz0) {
+			//issues += "replaced " + xyz0 + " with " + xyz + " in "  + its.sg + "." + its.set;
+		}
+		xyzlist += key;
+		gp.push(xyz);
+  	}
+	return gp;
+}
+
+function _fixURI(s) {
+  return s.replace(" ","%20");
+}
+
+function _fixUnitXYZ(xyz) {
+  if (is2d) {
+	if (xyz[0] == ",")
+		xyz += "z";
+  	else
+		xyz += ",z";
+  }
+	// this only for translation
+	// ITE gives non-normalized transformed operations for several settings, particularly when	
+	// rotating to F from I or C from P in tetragonals, h to r in trigonals, and I to F in cubics.
+	// normalizes the code and removes the duplicated operators in case those are created
+	return (xyz + ",").replace("-1/2","+1/2").replace("-3/2","+1/2").replace("+3/2","+1/2").replace("-1/4","+3/4").replace("-3/4","+1/4").replace("-1/3","+2/3").replace("-2/3","+1/3").replace("-1/6","+5/6").replace("-5/6","+1/6").replace("-1/8","+7/8").replace("-3/8","+5/8").replace("-7/8","+1/8").replace("-1/12","+11/12").replace("-5/12","+7/12").replace("-7/12","+5/12").replace("-11/12","+1/12").replace("+1,",",")[1][-1];
+}
+
+function _getGeneratorJson(gdata) {
+
+	// parse the generator list using <nobr> tags. All cases return two columns here, 
+	// so we always just skip the first column.
+
+  var gen = [];
+  if (is2d) {
+	var y = gdata.split('align="center">');
+	var b = false;
+	for (var j = 1; j <= y.length; j++) {
+		var c = y[j].split("</td>")[1];
+		if (c.find(" ")==0 && c.find("x")>0 && c.find("y")>0) {
+		  if (b)
+			gen.push(_fixUnitXYZ(c.replace("<nobr>","").replace("</nobr>","")));
+		  b = !b;
+		}
+	}
+  } else {
+	var y = gdata.split('<nobr>');
+	for (var j = 5; j <= y.length; j += 3) {
+		var coor = y[j++].split("</nobr>")[1] + "," + y[j++].split("</nobr>")[1] + "," + y[j++].split("</nobr>")[1];
+		gen.push(_fixUnitXYZ(coor));
+  	}
+  }
+  return gen;
+}
+
+function _getWyckoffJson(its, gdata) {
+
+	// Wyckoff positions are a bit trickier.
+	// currently adding some Jmol-derived geometric elements here, just for the first member of the list.
+	var wyck = {};  
+	var isUnconv = (gdata.find("Standard/Default setting") > 0);
+	var w = gdata.split("Wyck");
+
+
+	var y = w[0].split('align="center">');
+	var pos = [];
+	wyck.pos = pos;
+	var n = 0;
+	var nctr = 0;
+	for (var j = 1; j <= y.length; j++) {
+		if (j == 1) {
+		  if (y[j].find("(")) {
+			var cent = [];
+			var c = y[j].split("th>")[-1].split("+");
+			for (var k = 1; k < c.length; k++) {
+				var cp = c[k].split("(")[2].split(")")[1];
+				if (cp && is2d) {
+					cp += ",0";
+				}
+				if (cp && cp != "0,0,0") {
+					cent.push(cp);
+					nctr++;
+				}
+			}
+			if (nctr > 0)
+			   wyck.cent = cent;
+		  }
+  		  continue;
+		}
+		
+		var d = {};
+		d.mult = 0+y[j++].split("</td")[1];
+		d.label = y[j++].split("</td")[1];
+		var td = y[j].split("</td")[1];
+		d.desc = td.trim();
+		if (isUnconv) j++;
+		td = y[++j].split("</td")[1];
+		td = "<nobr>" + td.replace(")(",")<nobr>(");
+		td = td.split("<nobr>");
+
+		var coor = [];
+		for (var k = 2; k <= td.length; k++) {
+			var t = td[k];
+			if (t.find(')')) {
+				var p = t.split("(")[2].split(")")[1];
+				if (is2d) p += ",0";
+				coor.push(p);
+			}
+		}
+		d.mult = coor.length * (nctr + 1);
+		if (++n == 1) {
+			// skip first, which is general positions in a transformed format
+			d.geom = "general";
+		} else {
+			d.coord = coor;
+			d.geom = _getWyckoffElement(coor[1]);
+		}
+		pos.push(d);
+  	}
+	return wyck;
+}
+
+
+function _getWyckoffElement(p) {
+	var xyz = p.split(",");
+	var n = 0; 
+	var nxyz = ({});
+	for (var i = 1; i <= 3; i++) {
+		if (xyz[i].find('x')) {
+			nxyz |= 1;
+		}		
+		if (xyz[i].find('y')) {
+			nxyz |= 2;
+		}		
+		if (xyz[i].find('z')) {
+			nxyz |= 3;
+		}		
+	}
+	switch (nxyz.length) {
+	case 0:
+		return "point";
+	case 1:
+		return "line";
+	case 2:
+		return "plane";
+	}
+	return "general";
+}
+
+// utility methods
+
+function _fixName(s) {
+
+	// remove HTML markings, fix "unconv" :R
+
+	return (s.trim()
+		.replace("<i>","").replace("</i>","")
+		.replace("<b>","").replace("</b>","")
+		.replace("<sub>","").replace("</sub>","")
+		.replace("&#124;","|")).replace("  "," ").replace(":R",":r");
+}
+
+m40 = [[0 0 0 0][0 0 0 0][0 0 0 0][0 0 0 1]];
+
+function _toTransform(xyz){ 
+	// 1 0 -1 | 0
+	// 0 1  0 | 0
+	// 0 0  2 | 1/2
+	// 
+	// x-z,y,2z+1/2 to "a,b,-a+2c;0,0,1/2 (transposed)
+	// a,b,-a+2c+1/2 also to "a,b,-a+2c;0,0,1/2 (not transposed)
+
+	// the function unitcell() runs org.jmol.symmetry.UnitCell.getMatrixAndUnitCell()
+	// unitcell() removes any embedded translations and puts the rotation in xyz-row,abc column format
+	// we get any embedded translation using symop()
+
+	var m = -unitcell(xyz, true);
+	var abc = symop(m, "xyz").replace('x','a').replace('y','b').replace('z','c');
+
+	var t = symop(xyz, "matrix")%2;
+	if (t == 0) {
+		return abc;
+	}
+	return abc + ";" + symop(m40 + t, "xyz");
+}
+
+function _toXYZ(abc){
+
+	// getGen needs the transposed matrix, in xyz format. 
+	// this does the trick, as -m4 is the transpose of m4, and symop(matrix, "xyz") 
+ 	// will accept a,b,c and return x,y,z
+	// check for translation and don't transpose that
+
+	var a = symop(abc, "matrix");
+	var t = a%2; // get translation vector
+	if (1.0 * t == 0) {
+		// transpose if no translation
+		a = -a;
+	} else {
+		// remove translation from 4x4, transpose it, then return translation
+		a = -(a + -t) + t;
+  }
+  return symop(a, "xyz");
+}
+
+function _getField(gdata, field, max) {
+	
+	// get a &... field form a URL
+
+	var i = gdata.find(field + "=");
+	return (i == 0 ? "" : (gdata[i+field.length + 1][i+max] + "&").split("&")[1]);
+}
+
+createJSONFiles("layer", 0, 80, iteForceNew);
+createJSONFiles("rod", 0, 75, iteForceNew);
+createJSONFiles("frieze", 0, 7, iteForceNew);
+
+
+/**
+2024.09.28 new

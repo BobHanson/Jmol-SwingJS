@@ -67,7 +67,6 @@ function createJSONFiles(n, forceNew) {
 		_getAllOps(i, allOps);
 		var adata = _createJSONArray(i, forceNew, allSettings, allMore, allTransforms);
 		var thedata = adata.format("JSON");
-		var thedata = adata.format("JSON");
 		var fname = targetDir + "json/ita_" + i + ".json";
 		write var thedata @fname;
 	}
@@ -87,6 +86,7 @@ function createJSONFiles(n, forceNew) {
 			}
 		}
 		fname = targetDir + "json/ita_list.json";
+		thedata = allSettings.format("JSON");
 		write var thedata @fname;
 		var thedata = allTransforms.join("\t",TRUE);
 		var fname = targetDir + "txt/cleg_settings.tab";
@@ -303,7 +303,7 @@ function _getGPText(i, j, trmat, hm, forceNew) {
 	if (forceNew) {
 		write var gdata @localFile;
 	} else if (gdata.find("FileNotFound")) {
-		gdata = _getGPText(i, j, trmat, true);
+		gdata = _getGPText(i, j, trmat, hm, true);
 	}
 	return gdata;
 }

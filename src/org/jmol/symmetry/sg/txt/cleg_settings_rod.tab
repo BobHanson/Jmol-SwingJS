@@ -1,0 +1,191 @@
+i	subtype	clegId	det	hm	more
+1	rod	r/1:a,b,c	1.0	r/p 1
+2	rod	r/2:a,b,c	1.0	r/p -1
+3	rod	r/3:a,b,c	1.0	r/pc 2 1 1
+4	rod	r/3:b,-a,c	1.0	r/pc 1 2 1
+5	rod	r/3:-c,b,a	1.0	r/pa 1 1 2
+6	rod	r/3:b,c,a	1.0	r/pb 1 1 2
+7	rod	r/3:a,-c,b	1.0	r/pb 2 1 1
+8	rod	r/3:-c,-a,b	1.0	r/pa 1 2 1
+9	rod	r/4:a,b,c	1.0	r/pc m 1 1
+10	rod	r/4:b,-a,c	1.0	r/pc 1 m 1
+11	rod	r/4:-c,b,a	1.0	r/pa 1 1 m
+12	rod	r/4:b,c,a	1.0	r/pb 1 1 m
+13	rod	r/4:a,-c,b	1.0	r/pb m 1 1
+14	rod	r/4:-c,-a,b	1.0	r/pa 1 m 1
+15	rod	r/5:a,b,c	1.0	r/pc c 1 1
+16	rod	r/5:b,-a,c	1.0	r/pc 1 c 1
+17	rod	r/5:-c,b,a	1.0	r/pa 1 1 a
+18	rod	r/5:b,c,a	1.0	r/pb 1 1 b
+19	rod	r/5:a,-c,b	1.0	r/pb b 1 1
+20	rod	r/5:-c,-a,b	1.0	r/pa 1 a 1
+21	rod	r/6:a,b,c	1.0	r/pc 2/m 1 1
+22	rod	r/6:b,-a,c	1.0	r/pc 1 2/m 1
+23	rod	r/6:-c,b,a	1.0	r/pa 1 1 2/m
+24	rod	r/6:b,c,a	1.0	r/pb 1 1 2/m
+25	rod	r/6:a,-c,b	1.0	r/pb 2/m 1 1
+26	rod	r/6:-c,-a,b	1.0	r/pa 1 2/m 1
+27	rod	r/7:a,b,c	1.0	r/pc 2/c 1 1
+28	rod	r/7:b,-a,c	1.0	r/pc 1 2/c 1
+29	rod	r/7:-c,b,a	1.0	r/pa 1 1 2/a
+30	rod	r/7:b,c,a	1.0	r/pb 1 1 2/b
+31	rod	r/7:a,-c,b	1.0	r/pb 2/b 1 1
+32	rod	r/7:-c,-a,b	1.0	r/pa 1 2/a 1
+33	rod	r/8:a,b,c	1.0	r/pc 1 1 2
+34	rod	r/8:b,-a,c	1.0	r/pc 1 1 2
+35	rod	r/8:-c,b,a	1.0	r/pa 2 1 1
+36	rod	r/8:b,c,a	1.0	r/pb 1 2 1
+37	rod	r/8:a,-c,b	1.0	r/pb 1 2 1
+38	rod	r/8:-c,-a,b	1.0	r/pa 2 1 1
+39	rod	r/9:a,b,c	1.0	r/pc 1 1 21
+40	rod	r/9:b,-a,c	1.0	r/pc 1 1 21
+41	rod	r/9:-c,b,a	1.0	r/pa 21 1 1
+42	rod	r/9:b,c,a	1.0	r/pb 1 21 1
+43	rod	r/9:a,-c,b	1.0	r/pb 1 21 1
+44	rod	r/9:-c,-a,b	1.0	r/pa 21 1 1
+45	rod	r/10:a,b,c	1.0	r/pc 1 1 m
+46	rod	r/10:b,-a,c	1.0	r/pc 1 1 m
+47	rod	r/10:-c,b,a	1.0	r/pa m 1 1
+48	rod	r/10:b,c,a	1.0	r/pb 1 m 1
+49	rod	r/10:a,-c,b	1.0	r/pb 1 m 1
+50	rod	r/10:-c,-a,b	1.0	r/pa m 1 1
+51	rod	r/11:a,b,c	1.0	r/pc 1 1 2/m
+52	rod	r/11:b,-a,c	1.0	r/pc 1 1 2/m
+53	rod	r/11:-c,b,a	1.0	r/pa 2/m 1 1
+54	rod	r/11:b,c,a	1.0	r/pb 1 2/m 1
+55	rod	r/11:a,-c,b	1.0	r/pb 1 2/m 1
+56	rod	r/11:-c,-a,b	1.0	r/pa 2/m 1 1
+57	rod	r/12:a,b,c	1.0	r/pc 1 1 21/m
+58	rod	r/12:b,-a,c	1.0	r/pc 1 1 21/m
+59	rod	r/12:-c,b,a	1.0	r/pa 21/m 1 1
+60	rod	r/12:b,c,a	1.0	r/pb 1 21/m 1
+61	rod	r/12:a,-c,b	1.0	r/pb 1 21/m 1
+62	rod	r/12:-c,-a,b	1.0	r/pa 21/m 1 1
+63	rod	r/13:a,b,c	1.0	r/pc 2 2 2
+64	rod	r/13:b,-a,c	1.0	r/pc 2 2 2
+65	rod	r/13:-c,b,a	1.0	r/pa 2 2 2
+66	rod	r/13:b,c,a	1.0	r/pb 2 2 2
+67	rod	r/13:a,-c,b	1.0	r/pb 2 2 2
+68	rod	r/13:-c,-a,b	1.0	r/pa 2 2 2
+69	rod	r/14:a,b,c	1.0	r/pc 2 2 21
+70	rod	r/14:b,-a,c	1.0	r/pc 2 2 21
+71	rod	r/14:-c,b,a	1.0	r/pa 21 2 2
+72	rod	r/14:b,c,a	1.0	r/pb 2 21 2
+73	rod	r/14:a,-c,b	1.0	r/pb 2 21 2
+74	rod	r/14:-c,-a,b	1.0	r/pa 21 2 2
+75	rod	r/15:a,b,c	1.0	r/pc m m 2
+76	rod	r/15:b,-a,c	1.0	r/pc m m 2
+77	rod	r/15:-c,b,a	1.0	r/pa 2 m m
+78	rod	r/15:b,c,a	1.0	r/pb m 2 m
+79	rod	r/15:a,-c,b	1.0	r/pb m 2 m
+80	rod	r/15:-c,-a,b	1.0	r/pa 2 m m
+81	rod	r/16:a,b,c	1.0	r/pc c c 2
+82	rod	r/16:b,-a,c	1.0	r/pc c c 2
+83	rod	r/16:-c,b,a	1.0	r/pa 2 a a
+84	rod	r/16:b,c,a	1.0	r/pb b 2 b
+85	rod	r/16:a,-c,b	1.0	r/pb b 2 b
+86	rod	r/16:-c,-a,b	1.0	r/pa 2 a a
+87	rod	r/17:a,b,c	1.0	r/pc m c 21
+88	rod	r/17:b,-a,c	1.0	r/pc c m 21
+89	rod	r/17:-c,b,a	1.0	r/pa 21 a m
+90	rod	r/17:b,c,a	1.0	r/pb b 21 m
+91	rod	r/17:a,-c,b	1.0	r/pb m 21 b
+92	rod	r/17:-c,-a,b	1.0	r/pa 21 m a
+93	rod	r/18:a,b,c	1.0	r/pc 2 m m
+94	rod	r/18:b,-a,c	1.0	r/pc m 2 m
+95	rod	r/18:-c,b,a	1.0	r/pa m m 2
+96	rod	r/18:b,c,a	1.0	r/pb m m 2
+97	rod	r/18:a,-c,b	1.0	r/pb 2 m m
+98	rod	r/18:-c,-a,b	1.0	r/pa m 2 m
+99	rod	r/19:a,b,c	1.0	r/pc 2 c m
+100	rod	r/19:b,-a,c	1.0	r/pc c 2 m
+101	rod	r/19:-c,b,a	1.0	r/pa m a 2
+102	rod	r/19:b,c,a	1.0	r/pb b m 2
+103	rod	r/19:a,-c,b	1.0	r/pb 2 m b
+104	rod	r/19:-c,-a,b	1.0	r/pa m 2 a
+105	rod	r/20:a,b,c	1.0	r/pc m m m
+106	rod	r/20:b,-a,c	1.0	r/pc m m m
+107	rod	r/20:-c,b,a	1.0	r/pa m m m
+108	rod	r/20:b,c,a	1.0	r/pb m m m
+109	rod	r/20:a,-c,b	1.0	r/pb m m m
+110	rod	r/20:-c,-a,b	1.0	r/pa m m m
+111	rod	r/21:a,b,c	1.0	r/pc c c m
+112	rod	r/21:b,-a,c	1.0	r/pc c c m
+113	rod	r/21:-c,b,a	1.0	r/pa m a a
+114	rod	r/21:b,c,a	1.0	r/pb b m b
+115	rod	r/21:a,-c,b	1.0	r/pb b m b
+116	rod	r/21:-c,-a,b	1.0	r/pa m a a
+117	rod	r/22:a,b,c	1.0	r/pc m c m
+118	rod	r/22:b,-a,c	1.0	r/pc c m m
+119	rod	r/22:-c,b,a	1.0	r/pa m a m
+120	rod	r/22:b,c,a	1.0	r/pb b m m
+121	rod	r/22:a,-c,b	1.0	r/pb m m b
+122	rod	r/22:-c,-a,b	1.0	r/pa m m a
+123	rod	r/23:a,b,c	1.0	r/p 4
+124	rod	r/24:a,b,c	1.0	r/p 41
+125	rod	r/25:a,b,c	1.0	r/p 42
+126	rod	r/26:a,b,c	1.0	r/p 43
+127	rod	r/27:a,b,c	1.0	r/p -4
+128	rod	r/28:a,b,c	1.0	r/p 4/m
+129	rod	r/29:a,b,c	1.0	r/p 42/m
+130	rod	r/30:a,b,c	1.0	r/p 4 2 2
+131	rod	r/31:a,b,c	1.0	r/p 41 2 2
+132	rod	r/32:a,b,c	1.0	r/p 42 2 2
+133	rod	r/33:a,b,c	1.0	r/p 43 2 2
+134	rod	r/34:a,b,c	1.0	r/p 4 m m
+135	rod	r/35:a,b,c	1.0	r/p 42 c m :1
+136	rod	r/35:a+b,-a+b,c	2.0	r/p 42 m c :2
+137	rod	r/36:a,b,c	1.0	r/p 4 c c
+138	rod	r/37:a,b,c	1.0	r/p -4 2 m :1
+139	rod	r/37:a+b,-a+b,c	2.0	r/p -4 m 2 :2
+140	rod	r/38:a,b,c	1.0	r/p -4 2 c :1
+141	rod	r/38:a+b,-a+b,c	2.0	r/p -4 c 2 :2
+142	rod	r/39:a,b,c	1.0	r/p 4/m m m
+143	rod	r/40:a,b,c	1.0	r/p 4/m c c
+144	rod	r/41:a,b,c	1.0	r/p 42/m m c :1
+145	rod	r/41:a+b,-a+b,c	2.0	r/p 42/m c m :2
+146	rod	r/42:a,b,c	1.0	r/p 3
+147	rod	r/43:a,b,c	1.0	r/p 31
+148	rod	r/44:a,b,c	1.0	r/p 32
+149	rod	r/45:a,b,c	1.0	r/p -3
+150	rod	r/46:a,b,c	1.0	r/p 3 1 2 :1
+151	rod	r/46:a+b,-a+b,c	2.0	r/p 3 2 1 :2
+152	rod	r/47:a,b,c	1.0	r/p 31 1 2 :1
+153	rod	r/47:a+b,-a+b,c	2.0	r/p 31 2 1 :2
+154	rod	r/48:a,b,c	1.0	r/p 32 1 2 :1
+155	rod	r/48:a+b,-a+b,c	2.0	r/p 32 2 1 :2
+156	rod	r/49:a,b,c	1.0	r/p 3 m 1 :1
+157	rod	r/49:a+b,-a+b,c	2.0	r/p 3 1 m :2
+158	rod	r/50:a,b,c	1.0	r/p 3 c 1 :1
+159	rod	r/50:a+b,-a+b,c	2.0	r/p 3 1 c :2
+160	rod	r/51:a,b,c	1.0	r/p -3 1 m :1
+161	rod	r/51:a+b,-a+b,c	2.0	r/p -3 m 1 :2
+162	rod	r/52:a,b,c	1.0	r/p -3 1 c :1
+163	rod	r/52:a+b,-a+b,c	2.0	r/p -3 c 1 :2
+164	rod	r/53:a,b,c	1.0	r/p 6
+165	rod	r/54:a,b,c	1.0	r/p 61
+166	rod	r/55:a,b,c	1.0	r/p 62
+167	rod	r/56:a,b,c	1.0	r/p 63
+168	rod	r/57:a,b,c	1.0	r/p 64
+169	rod	r/58:a,b,c	1.0	r/p 65
+170	rod	r/59:a,b,c	1.0	r/p -6
+171	rod	r/60:a,b,c	1.0	r/p 6/m
+172	rod	r/61:a,b,c	1.0	r/p 63/m
+173	rod	r/62:a,b,c	1.0	r/p 6 2 2
+174	rod	r/63:a,b,c	1.0	r/p 61 2 2
+175	rod	r/64:a,b,c	1.0	r/p 62 2 2
+176	rod	r/65:a,b,c	1.0	r/p 63 2 2
+177	rod	r/66:a,b,c	1.0	r/p 64 2 2
+178	rod	r/67:a,b,c	1.0	r/p 65 2 2
+179	rod	r/68:a,b,c	1.0	r/p 6 m m
+180	rod	r/69:a,b,c	1.0	r/p 6 c c
+181	rod	r/70:a,b,c	1.0	r/p 63 m c :1
+182	rod	r/70:a+b,-a+b,c	2.0	r/p 63 c m :2
+183	rod	r/71:a,b,c	1.0	r/p -6 m 1 :1
+184	rod	r/71:a+b,-a+b,c	2.0	r/p -6 2 m :2
+185	rod	r/72:a,b,c	1.0	r/p -6 c 2 :1
+186	rod	r/72:a+b,-a+b,c	2.0	r/p -6 2 c :2
+187	rod	r/73:a,b,c	1.0	r/p 6/m m m
+188	rod	r/74:a,b,c	1.0	r/p 6/m c c
+189	rod	r/75:a,b,c	1.0	r/p 63/m m c :1
+190	rod	r/75:a+b,-a+b,c	2.0	r/p 63/m c m :2

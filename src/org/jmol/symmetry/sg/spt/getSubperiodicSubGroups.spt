@@ -1,0 +1,254 @@
+// Bob Hanson hansonr@stolaf.edu
+
+// create plane and subperiodic (layer, rod, frieze) group data, json, and txt files
+
+targetDir = "c:/temp/bilbao/ite/subgroups/";
+
+// variables for the createJSONFiles call (below), after the functions
+
+itadelay = 0.1;
+itaFirst = 0;
+itaForceNew = false;
+htmlOnly = true;
+maxindex = 4;
+nsubs = 0;
+ntrm = 0;
+subtype = "p/";
+subtypeName = "plane";
+base = "https://www.cryst.ehu.es/"
+
+
+// only one function to run here:
+function createSubJSONFiles(type, typeName, n, nMax, forceNew) {
+	itaFirst = n0;
+	subtype = type;
+	subtypeName = typeName;
+	nsubs = 0;
+	ntrm = 0;
+
+	// creates sub_<subtypeName>_<i>.json, by space group
+
+	// n option to start at a given number (-30), or only a certain number (30), or all (0)
+	// forceNew option true to overwrite local files; false to use them if they are there.
+
+	var allTransforms = [["i", "cleg", "tr_type", "tr_subtype" "det", "index", "conj_class"]]
+	var indexList = []
+	for (var i = 1; i <= nMax; i++) {
+		if (n < 0 && i < -n || n > 0 && i != n) {
+			continue;
+		}
+		var adata = {"sg":i, "subtype":subtypeName, "created":now("").trim()};
+		_getAllSubs(i, adata, allTransforms, indexList);
+		var thedata = adata.format("JSON");
+		var fname = targetDir + "json/sub_" + subtypeName + "_" + i + ".json";
+		write var thedata @fname;
+
+
+	}
+
+	if (n == 0 || n == -1) {
+
+		var thedata = allTransforms.join("\t",TRUE);
+		var fname = targetDir + "txt/cleg_subgroups_" + subtypeName + ".txt";
+		write var thedata @fname;
+		var thedata = indexList.format("json");
+		var fname = targetDir + "json/sub_" + subtypeName + "_index.json";
+		write var thedata @fname;
+
+		print "DONE " + nsubs + " subGroups; " + ntrm + " cleg";
+
+	}
+
+}
+
+function _getAllSubs(group, adata, allTransforms, indexList) {
+	var prog = if(subtype=="p/";"nph-plane_getgen";"nph-sub_maxsub");
+	var subs = [];
+	adata.subgroups = subs;
+	// split by buttons
+	var y = _getSubDataHTM(group, 0, "sub", "", forceNew).replace("em>","i>");
+	y = y.split(prog);
+	adata.hm = subtype + _fixName(y[1].split("<center>")[1].split("roup ")[2].split("(No.")[1]);
+	var isub = 0;
+	var nt = 0;
+	var ipt = 2;
+	var list = [];
+	indexList.push(list);
+	var sglast = -1;
+	for (var j = 1; j < y.length; j++) {
+		var gdata = y[j + 1];
+		var href = base + _getField(gdata, "href", 1000);
+		var sindex = 0+_getField(href, "index");
+		if (sindex > maxIndex) continue;
+		isub++;
+		var subgroup = 0+_getField(href, "sub");
+		if (subgroup != sglast)
+			list.push(subgroup);
+		sglast = subgroup;
+		var stype = _getField(href, "subgrouptype");
+		if (!stype) {
+			// plane
+			stype = gdata.split("<td")[4].split(">")[2].split("</td")[1]
+		}
+		var trsubtype = stype[2][0];
+		var trtype = stype[1];
+		var hm = _fixName(gdata.split("<i>")[ipt].split("</td>")[1]);
+		var a = {"i":isub,
+			"sg":subgroup, 
+			"hm":subtype + hm, 
+			"trType":trtype, 
+			"trSubtype": trsubtype,
+			"subgroupIndex":sindex};//, "url": "" + href};
+		// name="trm" value="%31%2F%32x%2B%31%2F%32y%2C%2D%31%2F%32x%2B%31%2F%32y%2Cz"
+		var sdata = _getSubDataHTM(group, isub, "sub", href, forcenew).replace("> Conj", ">Conj").split('"trm"');
+		var transforms = [];
+		var classes = [];
+		//<small> Conjugacy class a</small>
+		var s = sdata[1];
+		var sdet;
+		var conjClass = "?";
+		var n = 0;
+		for (var t = 2; t <= sdata.length; t++) {
+			nt++;
+			n++;
+			var ac = s.split(">Conjugacy class ");
+			if (ac[2])
+				conjClass = ac[2].split("<")[1].trim();
+			s = sdata[t];
+			var xyz = _fixURI(_getField(s,"value"));
+			var tabc = _toTransform(xyz);
+			sdet = unitcell(tabc,true)%1%2;
+			//var abc = conjClass + "=" + tabc;// + "=" + xyz;
+			transforms.push({"conjClass":conjClass, "trm": tabc});
+			allTransforms.push([ntrm + nt, "" + subtype + group + ">" + tabc + ">" + subtype + subgroup, stype, subtypeName, sdet, sindex, conjClass]); 
+		}
+		a["det"] = sdet;
+		a["trms"] = transforms;
+		a["n"] = n;
+		subs.push(a);
+	}
+	adata.nSubgroups = subs.length;
+	adata.nSettings = nt;
+	nsubs += subs.length;
+	ntrm = += nt;
+}
+
+// all other functions are "private" to this script
+
+function _getSubDataHTM(i, j, what, url0, forceNew) {
+
+//https://www.cryst.ehu.es/cgi-bin/subperiodic/programs/nph-sub_maxsub?gnum=14&subtype=layer
+//https://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-tranmax?way=up&super=14&sub=2&index=2&client=submax&what=gp&path=&subtype=layer&subgrouptype=t&conj=all
+//"chbas" https://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-trgen?client=submax&super=14&sub=2&from=submax&type=layer&what=gp&way=up&trm=x%252Cy%252Cz
+
+//
+	var localFile = targetDir + "data/" + what + "_" + subtypeName + "_" + i + if(j;"_"+j+".html";".htm");
+	if (url0) {
+	  var url = url0;
+	} else {
+	  var url = if(subtype=="/p";base + "cgi-bin/plane/programs/nph-plane_maxsub?type=plane";
+			base + "cgi-bin/subperiodic/programs/nph-sub_maxsub?subtype=" + subtypeName);
+	}
+	url = if(url0;url0;url + "&gnum=" + i);
+	url = if(forceNew ; url;  localFile);
+
+	print url;
+	delay @itadelay;
+	var gdata = load(url);
+	if (forceNew) {
+		write var gdata @localFile;
+	} else if (gdata.find("FileNotFound")) {
+		gdata = _getSubDataHTM(i, j, what, url0, true);
+	}
+	return gdata;
+}
+
+
+function _getField(gdata, field, max) {
+	
+	if (!max) max = 0;
+
+	// get a &... field form a URL
+
+	var ret;
+	var i = gdata.find(field + "=");
+	if (i == 0) return "";
+	gdata = gdata[i + field.length + 1][0];
+	if (gdata[1] == '"') {
+		return gdata.split('"')[2];	
+	} 
+	return (gdata[1][max] + "&").split("&")[1];
+}
+
+// utility methods
+
+function _fixName(s) {
+
+	// remove HTML markings
+
+	return (s.trim()
+		.replace("<i>","").replace("</i>","")
+		.replace("<b>","").replace("</b>","")
+		.replace("<sub>","").replace("</sub>","")
+		.replace("&#124;","|")).replace("  "," ");
+}
+
+
+function _fixURI(s) {
+	s = s.replace('%3A',':').replace('%3B',';').replace('%3','').replace('%2F','/').replace('%2B','+').replace('%2C',',')
+	return s.replace('%2D','-').replace('%2E','.').replace('%28','(').replace('%29',')').replace('%20',' ')
+}
+
+m40 = [[0 0 0 0][0 0 0 0][0 0 0 0][0 0 0 1]];
+
+function _toTransform(xyz){ 
+	// 1 0 -1 | 0
+	// 0 1  0 | 0
+	// 0 0  2 | 1/2
+	// 
+	// x-z,y,2z+1/2 to "a,b,-a+2c;0,0,1/2 (transposed)
+	// a,b,-a+2c+1/2 also to "a,b,-a+2c;0,0,1/2 (not transposed)
+
+	// the function unitcell() runs org.jmol.symmetry.UnitCell.getMatrixAndUnitCell()
+	// unitcell() removes any embedded translations and puts the rotation in xyz-row,abc column format
+	// we get any embedded translation using symop()
+
+	var m = -unitcell(xyz, true);
+	var abc = symop(m, "xyz").replace('x','a').replace('y','b').replace('z','c');
+
+	var t = symop(xyz, "matrix")%2;
+	if (t == 0) {
+		return abc;
+	}
+	return abc + ";" + symop(m40 + t, "xyz");
+}
+
+function _toXYZ(abc, asTrm){
+
+	// getGen needs the transposed matrix, in xyz format. 
+	// this does the trick, as -m4 is the transpose of m4, and symop(matrix, "xyz") 
+ 	// will accept a,b,c and return x,y,z
+	// check for translation and don't transpose that
+
+	var a = symop(abc, "matrix");
+	var t = a%2; // get translation vector
+	if (1.0 * t == 0) {
+		// transpose if no translation
+		a = -a;
+	} else {
+		// remove translation from 4x4, transpose it, then return translation
+		a = -(a + -t) + t;
+	}
+	return symop(a, "xyz");
+}
+
+
+
+
+createSubJSONFiles("l/","layer", 0, 80, iteForceNew);
+createSubJSONFiles("f/","frieze", 0, 7, iteForceNew);
+createSubJSONFiles("p/","plane", 0, 17, iteForceNew);
+createSubJSONFiles("r/","rod", 0, 75, iteForceNew);
+
+#
+last update 2024.10.10 "HM" and "subgroupHM" to "hm"; adds cleg subtype prefix to hm

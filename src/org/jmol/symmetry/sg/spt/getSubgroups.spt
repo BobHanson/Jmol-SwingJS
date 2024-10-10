@@ -1,10 +1,8 @@
 // Bob Hanson hansonr@stolaf.edu
 
-// 1604 subGroups; 3767 settings
+// create ITA subgroup data, json, and txt files
 
-// a bit of hardwiring:
-
-targetDir = "c:/temp/bilbao/subgroups/";
+targetDir = "c:/temp/bilbao/ita/subgroups/";
 
 // variables for the createJSONFiles call (below), after the functions
 
@@ -15,9 +13,11 @@ htmlOnly = true;
 maxindex = 4;
 nsubs = 0;
 ntrm = 0;
+issues = [];
+
 // only one function to run here:
 function createSubJSONFiles(n, forceNew) {
-
+	issues = [];
 	nsubs = 0;
 	ntrm = 0;
 
@@ -27,17 +27,16 @@ function createSubJSONFiles(n, forceNew) {
 	// forceNew option true to overwrite local files; false to use them if they are there.
 
 	var allTransforms = [["i", "cleg", "tr_type", "tr_subtype" "det", "index", "conj_class"]]
+	var indexList = [];
 	for (var i = 1; i <= 230; i++) {
 		if (n < 0 && i < -n || n > 0 && i != n) {
 			continue;
 		}
 		var adata = {"sg":i, "created":now("").trim()};
-		_getAllSubs(i, adata, allTransforms);
+		_getAllSubs(i, adata, allTransforms, indexList);
 		var thedata = adata.format("JSON");
 		var fname = targetDir + "json/sub_" + i + ".json";
 		write var thedata @fname;
-
-
 	}
 
 	if (n == 0 || n == -1) {
@@ -45,64 +44,76 @@ function createSubJSONFiles(n, forceNew) {
 		var thedata = allTransforms.join("\t",TRUE);
 		var fname = targetDir + "txt/cleg_subgroups.txt";
 		write var thedata @fname;
+		var thedata = indexList.format("JSON");
+		var fname = targetDir + "json/sub_index.json";
+		write var thedata @fname;
 
 		print "DONE " + nsubs + " subGroups; " + ntrm + " cleg";
 
 	}
-
+	print issues;
 }
 
-function _getAllSubs(group, adata, allTransforms) {
+function _getAllSubs(group, adata, allTransforms, indexList) {
 	var subs = [];
+	var list = [];
+	indexList.push(list);
 	adata.subgroups = subs;
 	// split by buttons
 	var y = _getSubDataHTM(group, 0, "sub", "", forceNew).split('<a href="nph-lxi');
-	var groupHM = _fixName(y[1].split("Maximal subgroups of group ")[2].split("(No.")[1]);
-	adata.HM = groupHM;
+	adata.hm = _fixName(y[1].split("Maximal subgroups of group ")[2].split("(No.")[1]);
 	var isub = 0;
 	var nt = 0;
+	var sglast = -1;
 	for (var j = 1; j < y.length; j++) {
 		var gdata = y[j + 1];
 		var href = _getField(gdata, "href", 1000);
-		var sindex = _getField(href, "index");
-		if (0 + sindex > maxIndex) continue;
+		var sindex = 0+_getField(href, "index");
+		if (sindex > maxIndex) continue;
 		isub++;
-		var subgroup = _getField(href, "sub");
+		var subgroup = 0+_getField(href, "sub");
+		if (subgroup != sglast)
+			list.push(subgroup);
+		sglast = subgroup;
 		var stype = _getField(href, "type");
 		var subtype = stype[2][0];
 		stype = stype[1];
-		var hm = _fixName(gdata.split("<i>")[2].split("</td>")[1]);
+		var s = gdata[gdata.find("<i>")][0].split("</td>")[1];
+		var hm = _fixName(s);
 		var a = {"i":0+isub,
-			"subgroup":0+subgroup, 
-			"subgroupHM":hm, 
+			"sg":subgroup, 
+			"hm":hm, 
 			"trType":stype, 
 			"trSubtype": subtype,
 			"subgroupIndex":0+sindex};//, "url": "" + href};
 		// name="trm" value="%31%2F%32x%2B%31%2F%32y%2C%2D%31%2F%32x%2B%31%2F%32y%2Cz"
-		var sdata = _getSubDataHTM(group, isub, "sub", href, forcenew).split('"trm"');
+		var sdata = _getSubDataHTM(group, isub, "sub", href, forcenew).replace("> Conj", ">Conj").split('"trm"');
 		var transforms = [];
-	
+		var classes = [];
 		//<small> Conjugacy class a</small>
 		var s = sdata[1];
 		var sdet;
+		var conjClass = "?";
+		var n = 0;
 		for (var t = 2; t <= sdata.length; t++) {
 			nt++;
-			var ac = s.split("> Conjugacy class ");
+			n++;
+			var ac = s.split(">Conjugacy class ");
 			if (ac[2])
 				conjClass = ac[2].split("<")[1].trim();
 			s = sdata[t];
 			var xyz = _fixURI(_getField(s,"value"));
 			var tabc = _toTransform(xyz);
 			sdet = unitcell(tabc,true)%1%2;
-			var abc = conjClass + ":" + tabc;// + "=" + xyz;
-			transforms.push(abc);
+			//var abc = conjClass + "=" + tabc;// + "=" + xyz;
+			transforms.push({"conjClass":conjClass, "trm": tabc});
 			allTransforms.push([ntrm + nt, "" + group + ">" + tabc + ">" + subgroup, stype, subtype, sdet, sindex, conjClass]); 
 		}
 		a["det"] = sdet;
-		a["trm"] = transforms;
+		a["trms"] = transforms;
+		a["n"] = n;
 		subs.push(a);
 	}
-	adata.HM = groupHM;
 	adata.nSubgroups = subs.length;
 	adata.nSettings = nt;
 	nsubs += subs.length;
@@ -211,15 +222,5 @@ function _toXYZ(abc, asTrm){
 
 createSubJSONFiles(itaFirst, itaForceNew);
 
-
-
-/**
-
-function test() {
-}
-
-test(subs)
-
-Lots missing, but no first setting at least.
-First one missing is #75 (tetragonols) and last is #167 (trigonals, :r option never implemented in Jmol). 
-
+#
+last update 2024.10.10 "HM" and "subgroupHM" to "hm"
