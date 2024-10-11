@@ -184,7 +184,6 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
       <fileset dir="src/org/jmol/translation/JmolApplet" includes="Messages*.class"/>
     </jar>
   	<echo>build/JmolD.jar created (unsigned)</echo>
-  	<copy file="build/JmolD.jar" tofile="dist/Jmol.jar" />
   	<copy file="build/JmolD.jar" tofile="dist/JmolD.jar" />
   	
     <zip basedir="${site.dir}" 
@@ -231,7 +230,6 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
 	</fileset>
 	<fileset dir="${appjars.dir}" includes="**/*"/>
 	</jar>
-  	<copy file="build/JmolDataD.jar" tofile="dist/JmolData.jar" />
   	<copy file="build/JmolDataD.jar" tofile="dist/JmolDataD.jar" />
 
   	
