@@ -620,7 +620,7 @@ final public class CLEG {
     SymmetryInterface mkSym00;
     BS mkBitset;
     Object mkParamsOrUC;
-    boolean mkWsNode;
+    boolean mkWasNode;
     int mkIndex;
 
     AssignedSGParams(Viewer vwr) {
@@ -919,7 +919,7 @@ final public class CLEG {
         if (!asgParams.mkIsAssign) {
           tokens[0] = asgParams.mkSym00.getSpaceGroupClegId();
           asgParams.mkIndex = 1;
-          asgParams.mkWsNode = true;
+          asgParams.mkWasNode = true;
           asgParams.mkIgnoreAllSettings = nextTransformExplicit;
           return assignSpaceGroup(data, asgParams);
         }
@@ -934,10 +934,10 @@ final public class CLEG {
 
     //System.out.println("token " + token + " wasNode " + data.wasNode);
 
-    if ((isSubgroupCalc || isTransformOnly(token)) != asgParams.mkWsNode) {
+    if ((isSubgroupCalc || isTransformOnly(token)) != asgParams.mkWasNode) {
       return "invalid CLEG expression, not node>transform>node>transform>....!";
     }
-    asgParams.mkWsNode = !asgParams.mkWsNode;
+    asgParams.mkWasNode = !asgParams.mkWasNode;
     String calcNext = (isSubgroupCalc ? token : null);
     if (isSubgroupCalc) {
       token = tokens[++index].trim();

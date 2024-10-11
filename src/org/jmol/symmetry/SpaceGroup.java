@@ -146,12 +146,16 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   
   private SpaceGroup setFrom(SpaceGroup sg, boolean isITA) {
     if (isITA) {
-      setName(sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + sg.specialPrefix + sg.clegId);
+      setName(sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + sg.clegId);
       referenceIndex = SG_ITA; // prevents replacement in finalizeOperations
     } else {
       setName(sg.getName());
       referenceIndex = sg.index;
     }
+    latticeType = sg.latticeType;
+    specialPrefix = sg.specialPrefix;
+    periodicity = sg.periodicity;
+    groupType = sg.groupType;
     setClegId(sg.getClegId());
     itaIndex = sg.itaIndex;
     crystalClass = sg.crystalClass;
@@ -166,10 +170,6 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     itaTransform = sg.itaTransform;
     jmolId = null;
     jmolIdExt = null;
-    latticeType = sg.latticeType;
-    specialPrefix = sg.specialPrefix;
-    periodicity = sg.periodicity;
-    groupType = sg.groupType;
     strName = displayName = null;
     return this;
   }
@@ -483,10 +483,10 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       sb.append(hmSymbol)
           .append(hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : "");
     if (itaNumber != null) {
-      sb.append("\ninternational table number: ").append(itaNumber)
-          .append(itaTransform != null ? ":" + itaTransform
-              : "")
-          .append("\ncrystal class: " + crystalClass);
+      sb.append("\ninternational table number: ").append(itaNumber);
+    }
+    if (crystalClass != null) {
+          sb.append("\ncrystal class: " + crystalClass);
     }
     if (jmolId != null) {
       sb.append("\nJmol_ID: ").append(jmolId).append(" ("+itaIndex+")");
@@ -1374,7 +1374,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       if (name == null) {
         name = "[" + hallSymbol + "]"; // may still need setting
       } else if (getClegId() != null){
-        name += " #" + specialPrefix + getClegId();
+        name += " #" + getClegId();
       }
       if (name.endsWith(SimpleUnitCell.HEX_TO_RHOMB))
         name = PT.rep(name, SimpleUnitCell.HEX_TO_RHOMB, "r");
@@ -1567,6 +1567,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   }
 
   /**
+   * NOTE: SpecialPrefix must be set before this method is executed.
+   * 
    * from SpaceGroupFinder after finding a match with an ITA setting
    * @param jmolId
    * @param sg
@@ -1577,7 +1579,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     itaNumber = sg;
     itaIndex = (tr != null ? sg + ":" + tr : set.indexOf(".") >= 0 ? set : sg + "." + set);
     itaTransform = tr;
-    setClegId(sg + ":" + tr);
+    setClegId(specialPrefix + sg + ":" + tr);
     strName = displayName = null;
     this.jmolId = jmolId;
     if (jmolId == null) {

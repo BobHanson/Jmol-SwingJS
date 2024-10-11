@@ -241,6 +241,8 @@ public class Symmetry implements SymmetryInterface {
           return null;
           
         }
+        if (s.startsWith("ITA/"))
+          s = s.substring(4);
         sg = SpaceGroup.determineSpaceGroupN(s);
         if (sg == null && "nameToXYZList".equals(name))
           sg = SpaceGroup.createSpaceGroupN(s, true);
@@ -1278,7 +1280,7 @@ public class Symmetry implements SymmetryInterface {
     if (groupType2 != groupType1)
       return null;
     int itaFrom = PT.parseInt((String) getSpaceGroupInfoObj("itaNumber", nameFrom, false, false));
-    int itaTo = (nameTo == null ? -1 : nameTo.length() == 0 ? 0 : PT.parseInt((String) getSpaceGroupInfoObj("itaNumber", nameFrom, false, false)));
+    int itaTo = (nameTo == null ? -1 : nameTo.length() == 0 ? 0 : PT.parseInt((String) getSpaceGroupInfoObj("itaNumber", nameTo, false, false)));
     
     
     boolean allSubsMap = (itaTo < 0);
@@ -1346,7 +1348,7 @@ public class Symmetry implements SymmetryInterface {
         Lst<Map<String, Object>> whereList = (isWhereList ? new Lst<>() : null);
         for (int i = i0; i < n; i++) {
           o = (Map<String, Object>) list.get(i);
-          int isub = ((Integer) o.get("subgroup")).intValue();
+          int isub = ((Integer) o.get("sg")).intValue();
           if (!isIndexTStr && isub != itaTo)
             continue;
           if (++ithis == index1) {

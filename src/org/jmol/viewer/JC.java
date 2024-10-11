@@ -193,7 +193,8 @@ public final class JC {
       "itatable", 
       "https://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen?gnum=%FILE&what=gp&list=Standard%2FDefault+Setting",
       "itadiagram",
-      "https://onlinelibrary.wiley.com/iucr/itc/Ac/ch2o3v0001/sgtable2o3o%FILE",
+//      "https://onlinelibrary.wiley.com/iucr/itc/Ac/ch2o3v0001/sgtable2o3o%FILE",
+      "http://img.chem.ucl.ac.uk/sgp/large/%FILEaz1.htm",
       "aflowbin",
       "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
       "aflowlib", "https://aflow.org/p/%FILE.cif", // updated 2024.04.22

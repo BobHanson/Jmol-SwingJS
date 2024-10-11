@@ -990,7 +990,7 @@ public class SymmetryOperation extends M4d {
     double a = Math.abs(x);
     return (a < 0.0001 ? ""
         : (x < 0 ? "-" : strT.length() == 0 ? "" : "+")
-            + (a > 0.9999 ? ""
+            + (a <= 1.0001 && a > 0.9999 ? ""
                 : a < 1 && allowFractions ? twelfthsOf(a * 12)
                     : "" + (int) a))
         + sx;

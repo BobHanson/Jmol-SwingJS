@@ -464,7 +464,23 @@ public class IsoExt extends ScriptExt {
           v.addLast(pts);
           if (lattice == null) {
             vwr.getTriangulator();// initialize for legacy java2script
-            v.addLast(Triangulator.fullCubePolygon);
+            int[][] faces;
+            switch (uc.getPeriodicity()) {
+            case 0x1:
+              faces = Triangulator.friezeEdge;
+              break;
+            case 0x4:
+              faces = Triangulator.rodEdge;
+              break;
+            case 0x3:
+              faces = Triangulator.abFace;
+              break;
+            default:
+            case 0x7:
+              faces = Triangulator.fullCubePolygon;
+              break;
+            }
+            v.addLast(faces);
           } else {
             v.addLast(null);
           }

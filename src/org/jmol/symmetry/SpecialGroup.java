@@ -37,8 +37,8 @@ public abstract class SpecialGroup extends SpaceGroup {
     itaTransform = (String) info.get("trm");
     itaNumber = "" + info.get("sg");
     itaIndex = "" + info.get("set");
-    setHMSymbol((String) info.get("hm"));
     specialPrefix  = getGroupTypePrefix(groupType);
+    setHMSymbol((String) info.get("hm"));
     //setClegId(normalizeSpecialCleg((String) info.get("clegId")));
     setITATableNames(null, itaNumber, itaIndex, itaTransform);
   }

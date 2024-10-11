@@ -393,26 +393,26 @@ abstract public class ScriptParam extends ScriptError {
             if (isBest) {
               // best plane [array]
               bestPoints = getPointArray(i, -1, false);
+            } else if (tokAt(i) == T.varray) {
+              // NOT spacebeforesquare
+              Lst<P3d> list = getPointOrCenterVector(getToken(i));
+              int n = list.size();
+              if (n != 3)
+                invArg();
+              pt1 = list.get(0);
+              pt2 = list.get(1);
+              pt3 = list.get(2);
+              have3 = true;
             } else {
-              try {
-                Lst<P3d> list = getPointOrCenterVector(getToken(i));
-                int n = list.size();
-                if (n != 3)
-                  invArg();
-                pt1 = list.get(0);
-                pt2 = list.get(1);
-                pt3 = list.get(2);
-                have3 = true;
-              } catch (Exception e) {
-                SymmetryInterface sym = vwr.getCurrentUnitCell();
-                if (sym == null)
-                  invArg();
-                plane = new P4d();
-                plane.setT(P3d.newA(doubleParameterSet(i + 1, 3, 3)));
-                vwr.toCartesian(plane, true);
-              }
+              SymmetryInterface sym = vwr.getCurrentUnitCell();
+              if (sym == null)
+                invArg();
+              plane = new P4d();
+              plane.setT(P3d.newA(doubleParameterSet(i + 1, 3, 3)));
+              vwr.toCartesian(plane, true);
             }
           }
+          break;
         }
         if (isBest) {
           plane = new P4d();

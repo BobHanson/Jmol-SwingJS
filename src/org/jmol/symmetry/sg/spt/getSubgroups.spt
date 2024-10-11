@@ -21,7 +21,7 @@ function createSubJSONFiles(n, forceNew) {
 	nsubs = 0;
 	ntrm = 0;
 
-	// creates ita_<i>.json, by space group
+	// creates ita_<i>.json, by space groupuse
 
 	// n option to start at a given number (-30), or only a certain number (30), or all (0)
 	// forceNew option true to overwrite local files; false to use them if they are there.
@@ -102,7 +102,8 @@ function _getAllSubs(group, adata, allTransforms, indexList) {
 			if (ac[2])
 				conjClass = ac[2].split("<")[1].trim();
 			s = sdata[t];
-			var xyz = _fixURI(_getField(s,"value"));
+			var v = _getField(s,"value");
+			var xyz = _fixURI(v);
 			var tabc = _toTransform(xyz);
 			sdet = unitcell(tabc,true)%1%2;
 			//var abc = conjClass + "=" + tabc;// + "=" + xyz;
@@ -222,5 +223,5 @@ function _toXYZ(abc, asTrm){
 
 createSubJSONFiles(itaFirst, itaForceNew);
 
-#
+/**
 last update 2024.10.10 "HM" and "subgroupHM" to "hm"

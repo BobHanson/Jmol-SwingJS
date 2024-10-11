@@ -5108,7 +5108,8 @@ public class CmdExt extends ScriptExt {
     case T.wyckoff:
       if (chk)
         break;
-      msg = ("" + vwr.evaluateExpression("symop('wyckoff" + (tok == T.wyckoffm ? "m" : "") + "')")).trim();
+      msg = ("" + vwr.evaluateExpression(
+          "symop('wyckoff" + (tok == T.wyckoffm ? "m" : "") + "')")).trim();
       break;
     case T.spacegroup:
     case T.symop:
@@ -5116,14 +5117,23 @@ public class CmdExt extends ScriptExt {
       switch (tok) {
       case T.spacegroup:
         String sdiag = eval.optParameterAsString(2);
+        boolean isSubgroup = sdiag.toLowerCase().startsWith("subgroups");
         boolean isDiagram = sdiag.toLowerCase().startsWith("diagram");
-        if (isDiagram || sdiag.toLowerCase().startsWith("table")) {
+        boolean isTable = sdiag.toLowerCase().startsWith("table");
+        len = slen;
+        if (isSubgroup || isDiagram || isTable) {
           if (chk)
             break;
-          sdiag = PT.trim(sdiag.substring(isDiagram ? 7 : 5).trim(), "\"");
+          sdiag = PT.trim(
+              sdiag.substring(isSubgroup ? 9 : isDiagram ? 7 : 5).trim(), "\"");
           if (sdiag.length() == 0) {
             if (sym == null) {
-              msg = "Include a space group name or number to view its diagram";
+              msg = "Include a space group name or number to view its diagram, table, or subgroups";
+              break;
+            }
+            if (sym.getSpaceGroupClegId().charAt(1) == '/') {
+              // special not available ? 
+              msg = "special group information is not implemented yet";
               break;
             }
             sdiag = sym.getIntTableNumber();
@@ -5132,13 +5142,15 @@ public class CmdExt extends ScriptExt {
               break;
             }
           }
+          if (msg != null)
+            break;
           int ita = PT.parseInt(sdiag);
           if (ita == Integer.MIN_VALUE) {
             if (sym == null) {
               sym = vwr.getSymStatic();
             }
-            Map<String, Object> info = sym.getSpaceGroupInfo(
-                vwr.ms, PT.rep(sdiag, "''", "\""), -1, true, null);
+            Map<String, Object> info = sym.getSpaceGroupInfo(vwr.ms,
+                PT.rep(sdiag, "''", "\""), -1, true, null);
             if (info == null) {
               msg = "Could not find space group " + sdiag;
               break;
@@ -5151,7 +5163,6 @@ public class CmdExt extends ScriptExt {
               PT.formatS("" + ita, 3, 0, false, true), null);
           msg = href;
           vwr.showUrl(href);
-          len = slen;
           break;
         }
         //$FALL-THROUGH$
@@ -5163,8 +5174,7 @@ public class CmdExt extends ScriptExt {
             break;
           if (sym == null)
             sym = vwr.getSymTemp();
-          info = sym.getSpaceGroupInfo(vwr.ms, null, -1, false,
-              null);
+          info = sym.getSpaceGroupInfo(vwr.ms, null, -1, false, null);
         } else if (tok == T.spacegroup) {
           String sg = paramAsStr(2);
           len = 3;
