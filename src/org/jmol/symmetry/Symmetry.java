@@ -637,14 +637,8 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public P3d[] getCanonicalCopy(double scale, boolean withOffset) {
-    return unitCell.getCanonicalCopy(scale, withOffset);
+    return unitCell.getCanonicalCopy(scale, true);
   }
-
-  @Override
-  public P3d[] getCanonicalCopyTrimmed(P3d frac, double scale) {
-    return unitCell.getCanonicalCopyTrimmed(frac, scale);
-  }
-
 
   @Override
   public double getUnitCellInfoType(int infoType) {
@@ -1242,12 +1236,8 @@ public class Symmetry implements SymmetryInterface {
    *  idet:  determinant if determinant >= 1; -1/determinant if determinant < 1
    *  trType: 1 translationengeliechen, 3 klassengleichen "ct" loss of centering translation, 4 klassengleichen "eu" enlarged unit cell
    *
-   * 
-   * @param vwr
-   * @param itaFrom
-   *        group ITA number
-   * @param itaTo
-   *        subgroup ITA number
+   * @param nameFrom
+   * @param nameTo
    * @param index1
    *        for a specific index or Integer.MIN_VALUE for all itaFrom; itaTo
    *        ignored
@@ -1557,9 +1547,9 @@ public class Symmetry implements SymmetryInterface {
     Map<String, Object>[] data = null;
     switch (type) {
     case SpaceGroup.TYPE_PLANE:
-      if (friezeSubData == null)
-        friezeSubData = new Map[nGroups];
-      data = friezeSubData;
+      if (planeSubData == null)
+        planeSubData = new Map[nGroups];
+      data = planeSubData;
       break;
     case SpaceGroup.TYPE_LAYER:
       if (layerSubData == null)

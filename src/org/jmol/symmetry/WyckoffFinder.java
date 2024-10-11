@@ -69,18 +69,17 @@ public class WyckoffFinder {
    * @return helper
    */
   WyckoffFinder getWyckoffFinder(Viewer vwr, SpaceGroup sg) {
-    String cleg = sg.getClegId();
-    String key = sg.specialPrefix + cleg;
-    WyckoffFinder helper = helpers.get(key);
+    String cleg = sg.getClegId(); // includes type
+    WyckoffFinder helper = helpers.get(cleg);
     if (helper != null) 
       return helper;
     helper = createHelper(vwr, cleg, sg.groupType);
     if (helper == null) {
       if (nullHelper == null)
         nullHelper = new WyckoffFinder(null);
-      helpers.put(key, nullHelper);
+      helpers.put(cleg, nullHelper);
     } else {
-      helpers.put(key, helper);
+      helpers.put(cleg, helper);
     }
     return helper;
   }
@@ -263,8 +262,7 @@ public class WyckoffFinder {
   @SuppressWarnings("unchecked")
   private static WyckoffFinder createHelper(Viewer vwr, String clegId,
                                             int groupType) {
-    String sgname = clegId;
-    String key = SpaceGroup.getGroupTypePrefix(groupType) + clegId;
+    String sgname = (groupType > SpaceGroup.TYPE_SPACE ? clegId.substring(2) : clegId);
     int pt = sgname.indexOf(":");
     int itno = PT.parseInt(pt < 0 ? sgname : sgname.substring(0, pt));
     if (!SpaceGroup.isInRange(itno, groupType, false, false))
@@ -277,7 +275,7 @@ public class WyckoffFinder {
     boolean haveMap = false;
     for (int i = 0, c = its.size(); i < c; i++) {
       map = (Map<String, Object>) its.get(i);
-      if (key.equals(map.get("clegId"))) {
+      if (clegId.equals(map.get("clegId"))) {
         haveMap = true;
         break;
       }

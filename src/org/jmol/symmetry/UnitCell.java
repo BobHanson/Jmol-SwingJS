@@ -265,11 +265,6 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     return BoxInfo.getCanonicalCopy(pts, scale);
   }
   
-  public P3d[] getCanonicalCopyTrimmed(P3d frac, double scale) {
-    P3d[] pts = getScaledCellMult(frac, true);
-    return BoxInfo.getCanonicalCopy(pts, scale);
-  }
-
   P3d getCartesianOffset() {
     // for slabbing isosurfaces and rendering the ucCage
     return cartesianOffset;
