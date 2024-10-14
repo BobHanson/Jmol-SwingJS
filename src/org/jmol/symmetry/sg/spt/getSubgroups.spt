@@ -7,10 +7,10 @@ targetDir = "c:/temp/bilbao/ita/subgroups/";
 // variables for the createJSONFiles call (below), after the functions
 
 itadelay = 0.1;
-itaFirst = 10;
+itaFirst = 0;
 itaForceNew = false;
 htmlOnly = true;
-maxindex = 4;
+maxindex = 100;
 nsubs = 0;
 ntrm = 0;
 issues = [];
@@ -72,8 +72,10 @@ function _getAllSubs(group, adata, allTransforms, indexList) {
 		if (sindex > maxIndex) continue;
 		isub++;
 		var subgroup = 0+_getField(href, "sub");
-		if (subgroup != sglast)
+		if (subgroup != sglast) {
 			list.push(subgroup);
+			list.push(sindex);
+		}
 		sglast = subgroup;
 		var stype = _getField(href, "type");
 		var subtype = stype[2][0];
@@ -222,6 +224,9 @@ function _toXYZ(abc, asTrm){
 
 
 createSubJSONFiles(itaFirst, itaForceNew);
+
+/**
+last update 2024.10.10 "HM" and "subgroupHM" to "hm"
 
 /**
 last update 2024.10.10 "HM" and "subgroupHM" to "hm"
