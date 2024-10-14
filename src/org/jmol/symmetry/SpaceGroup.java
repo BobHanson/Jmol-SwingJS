@@ -699,7 +699,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     if (lst != null)
       for (int i = 0, n = lst.size(); i < n; i++) {
         SpaceGroup sg = lst.get(i);
-        if (clegId != null && clegId.equals(sg))
+        if (clegId != null && clegId.equals(sg.clegId))
           return SG[sg.index];
         if (sg.clegId == null || clegId == null || clegId.equals("0:a,b,c")) {
           String sgi = getCanonicalSeitz(sg.index);
@@ -1318,7 +1318,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
             .substring(pt + 3)).toLowerCase();
       }
     hmSymbolAbbr = PT.rep(hmSymbol, " ", "");
-    hmSymbolAbbrShort = (hmSymbol.length() > 3 ? PT.rep(hmSymbol, " 1", "") : hmSymbolAbbr);
+    hmSymbolAbbrShort = (hmSymbol.length() > 3 && hmSymbol.charAt(2) != '3' && hmSymbol.charAt(3) != '3' ? PT.rep(hmSymbol, " 1", "") : hmSymbolAbbr);
     hmSymbolAbbrShort = PT.rep(hmSymbolAbbrShort, " ", "");
     strName = null;
   }
@@ -3540,6 +3540,11 @@ intl#     H-M full       HM-abbr   HM-short  Hall
 
   public String getHMName() {
     return hmSymbol;
+  }
+
+  public Object getHMNameShort() {
+    System.out.println(clegId + "\t" + hmSymbolFull + "\t" + hmSymbolAbbr + "\t" + hmSymbolAbbrShort);
+    return hmSymbolAbbrShort == null ? hmSymbol : hmSymbolAbbrShort;
   }
 
   public static int getITNo(String name, int n) {

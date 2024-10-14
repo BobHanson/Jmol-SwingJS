@@ -254,29 +254,37 @@ public class MathExt {
   }
 
   private boolean evaluateMatrix(ScriptMathProcessor mp, SV[] args) {
-        // matrix("x-y+1/2,x+y,z")
-        // matrix("a+b,b-a,c;1/2,0,0")
-        // matrix([.........])
-        // matrix([.................])
-        // matrix([,,][,,][,,])
-        // matrix([,,,][,,,][,,,][,,,])
-        // matrix([[,,][,,][,,]])
-        // matrix([[,,,][,,,][,,,][,,,]])
-        // matrix([[,,][,,][,,]])
-           // any of 4x4 with "abc" or "xyz"
-        // matrix("!b,c,a>a-c,b,2c;0,0,1/2>a,-a-c,b")
-        // matrix("13>>15>>14>>2")
-        // matrix("h")
-        // matrix("r")
-    
+    // matrix("x-y+1/2,x+y,z")
+    // matrix("a+b,b-a,c;1/2,0,0")
+    // matrix([.........])
+    // matrix([.................])
+    // matrix([,,][,,][,,])
+    // matrix([,,,][,,,][,,,][,,,])
+    // matrix([[,,][,,][,,]])
+    // matrix([[,,,][,,,][,,,][,,,]])
+    // matrix([[,,][,,][,,]])
+    // any of 4x4 with "abc" or "xyz"
+    // matrix("!b,c,a>a-c,b,2c;0,0,1/2>a,-a-c,b")
+    // matrix("13>>15>>14>>2")
+    // matrix("13>sub(...params..)>2", {})
+    // matrix("13>...>2", [])
+
+    // matrix("h")
+    // matrix("r")
 
     int n = args.length;
     M4d m4 = null;
-    String retType = (n > 0 && args[n-1].tok == T.string ? (String) args[n-1].value : null);
+    String sarg0 = (n > 0 && args[0].tok == T.string ? (String) args[0].value
+        : null);
+    Map<String, SV> map = (n < 2 || sarg0 == null ? null : args[1].getMap());
+    Lst<SV> lst = (n < 2 || sarg0 == null ? null : args[1].getList());
+    String retType = (n > 1 && args[n - 1].tok == T.string
+        ? (String) args[n - 1].value
+        : null);
     boolean asABC = "abc".equalsIgnoreCase(retType);
     boolean asXYZ = "xyz".equalsIgnoreCase(retType);
     double[] a = null;
-    if (asABC || asXYZ)
+    if (retType != null || lst != null || map != null)
       n--;
     switch (n) {
     case 0:
@@ -290,19 +298,63 @@ public class MathExt {
         break;
       case T.string:
         String s = (String) args[0].value;
-        if (!s.equals("h") && !s.equals("r") && (s.indexOf(">") >= 0 || s.indexOf(",") < 0 || s.indexOf(":") > 0 )) {
-           m4 = vwr.getSymStatic().staticGetMatrixTransform(s); 
-        } else {
+
+        // first check for "t1>>t2>>t3"
+        if (s.equals("h") || s.equals("r")
+            || s.indexOf(",") >= 0 && s.indexOf(":") < 0)
           m4 = (M4d) vwr.getSymTemp().convertTransform(s, null);
+        if (m4 != null) 
+          break;
+        String select = null;
+        if (retType != null && !asABC && !asXYZ) {
+          if ("map".equals(retType)) {
+            map = new Hashtable<String, SV>();
+            retType = null;
+          } else if ("list".equals(retType)) {
+            lst = new Lst<SV>();
+            retType = null;
+          } else {
+            select = "[SELECT (" + retType + ")]";
+            lst = new Lst<SV>();
+            retType = null;
+          }
+        }
+        boolean returnM4 = (lst == null && map == null);
+        Hashtable<String, Object> retMap = (map == null ? null
+            : new Hashtable<>());
+        Lst<Object> retLst = (lst == null ? null : new Lst<Object>());
+        if (returnM4) {
+          retMap = new Hashtable<>();
+          retMap.put("ASM4", Boolean.TRUE);
+        }
+        m4 = vwr.getSymStatic().staticGetMatrixTransform(s,
+            retMap == null ? retLst : retMap);
+        if (returnM4)
+          break;
+        if (map != null) {
+          map.clear();
+          for (Entry<String, Object> e : retMap.entrySet()) {
+            map.put(e.getKey(), SV.getVariable(e.getValue()));
+          }
+          return mp.addXMap(map);
+        }
+        if (lst != null) {
+          if (select != null)
+            return mp.addXObj(vwr.extractProperty(retLst, select, -1));
+          lst.clear();
+          for (int i = 0, nl = retLst.size(); i < nl; i++) {
+            lst.addLast(SV.getVariable(retLst.get(i)));
+          }
+          return mp.addXList(lst);
         }
         break;
       case T.varray:
-        Lst<SV> lst = args[0].getList();
+        lst = args[0].getList();
         int len = lst.size();
         switch (len) {
         case 3:
         case 4:
-          a = new double[len*len];
+          a = new double[len * len];
           for (int i = 0, pt = 0; i < len; i++) {
             Lst<SV> a2 = lst.get(i).getList();
             if (a2 == null || a2.size() != len)
@@ -316,7 +368,7 @@ public class MathExt {
           a = SV.dlistValue(args[0], 0);
           break;
         default:
-          return false;    
+          return false;
         }
         break;
       }
@@ -344,7 +396,8 @@ public class MathExt {
         return false;
       }
     }
-    return (m4 != null && (asABC || asXYZ) ? mp.addXStr(matToString(m4, asABC)) : mp.addXM4(m4));      
+    return (m4 == null ? mp.addXStr("")
+        : asABC || asXYZ ? mp.addXStr(matToString(m4, asABC)) : mp.addXM4(m4));
   }
 
   private String matToString(M4d m4, boolean asABC) {
@@ -556,7 +609,7 @@ SymmetryInterface sym;
       }
       break;
     }
-    return sym.getSubgroupJSON(nameFrom, nameTo, index1, index2);
+    return sym.getSubgroupJSON(nameFrom, nameTo, index1, index2, 0, null, null);
   }
 
   @SuppressWarnings("unchecked")

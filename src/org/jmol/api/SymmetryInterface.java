@@ -257,7 +257,7 @@ public interface SymmetryInterface {
 
   M4d replaceTransformMatrix(M4d trm);
 
-  Object getSubgroupJSON(String nameFrom, String nameTo, int index1, int index2);
+  Object getSubgroupJSON(String nameFrom, String nameTo, int index1, int index2, int flags, Map<String, Object> retMap, Lst<Object> retLst);
 
   String getIntTableIndex();
 
@@ -282,7 +282,7 @@ public interface SymmetryInterface {
    */
   SymmetryInterface setViewer(Viewer vwr);
 
-  M4d staticGetMatrixTransform(String cleg);
+  M4d staticGetMatrixTransform(String cleg, Object retLstOrMap);
 
   String staticTransformSpaceGroup(BS bs, String cleg, Object paramsOrUC,
                                    SB sb);
