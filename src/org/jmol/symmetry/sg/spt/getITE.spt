@@ -73,7 +73,7 @@ function createJSONFiles(gtype, n, nmax, forceNew) {
 		_getAllOps(i, allOps);
 		var adata = _createJSONArray(i, forceNew, allSettings, allMore, allTransforms);
 		var thedata = adata.format("JSON");
-		var fname = targetDir + "json/ite_" + subtype + "_" + i + ".json";
+		var fname = targetDir + "jsonx/ite_" + subtype + "_" + i + ".json";
 		write var thedata @fname;
 	}
 	if (n == 0 || n == -1) {
@@ -82,7 +82,7 @@ function createJSONFiles(gtype, n, nmax, forceNew) {
 		var fname = targetDir + "json/ite_all_" + subtype + ".json";
 		write var thedata @fname;
 		thedata = allOps.format("JSON");
-		fname = targetDir + "json/ops_all_" + subtype + ".json";
+		fname = targetDir + "jsonx/ops_all_" + subtype + ".json";
 		write var thedata @fname;
 		for (var g in allSettings) {
 			if (g.gen) {
@@ -91,7 +91,7 @@ function createJSONFiles(gtype, n, nmax, forceNew) {
   				g.nwpos = g.pop("wpos").pos.length;
 			}
 		}
-		fname = targetDir + "json/ite_list_" + subtype + ".json";
+		fname = targetDir + "jsonx/ite_list_" + subtype + ".json";
 		thedata = allSettings.format("JSON");
 		write var thedata @fname;
 		var thedata = allTransforms.join("\t",TRUE);

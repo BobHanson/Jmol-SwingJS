@@ -7,7 +7,7 @@ targetDir = "c:/temp/bilbao/ita/subgroups/";
 // variables for the createJSONFiles call (below), after the functions
 
 itadelay = 0.1;
-itaFirst = 0;
+itaFirst = 10;
 itaForceNew = false;
 htmlOnly = true;
 maxindex = 4;
@@ -21,7 +21,7 @@ function createSubJSONFiles(n, forceNew) {
 	nsubs = 0;
 	ntrm = 0;
 
-	// creates ita_<i>.json, by space groupuse
+	// creates ita_<i>.json, by space group
 
 	// n option to start at a given number (-30), or only a certain number (30), or all (0)
 	// forceNew option true to overwrite local files; false to use them if they are there.
@@ -42,7 +42,7 @@ function createSubJSONFiles(n, forceNew) {
 	if (n == 0 || n == -1) {
 
 		var thedata = allTransforms.join("\t",TRUE);
-		var fname = targetDir + "txt/cleg_subgroups.txt";
+		var fname = targetDir + "txt/cleg_subgroups.tab";
 		write var thedata @fname;
 		var thedata = indexList.format("JSON");
 		var fname = targetDir + "json/sub_index.json";
@@ -85,7 +85,7 @@ function _getAllSubs(group, adata, allTransforms, indexList) {
 			"hm":hm, 
 			"trType":stype, 
 			"trSubtype": subtype,
-			"subgroupIndex":0+sindex};//, "url": "" + href};
+			"index":0+sindex};//, "url": "" + href};
 		// name="trm" value="%31%2F%32x%2B%31%2F%32y%2C%2D%31%2F%32x%2B%31%2F%32y%2Cz"
 		var sdata = _getSubDataHTM(group, isub, "sub", href, forcenew).replace("> Conj", ">Conj").split('"trm"');
 		var transforms = [];

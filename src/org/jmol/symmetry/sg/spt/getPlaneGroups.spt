@@ -53,7 +53,7 @@ function createJSONFiles(n, forceNew) {
 		//_getAllOps(i, allOps);
 		var adata = _createJSONArray(i, forceNew, allSettings, allMore, allTransforms);
 		var thedata = adata.format("JSON");
-		var fname = targetDir + "json/plane_" +i + ".json";
+		var fname = targetDir + "jsonp/plane_" +i + ".json";
 		write var thedata @fname;
 	}
 	if (n == 0 || n == -1) {
@@ -68,9 +68,9 @@ function createJSONFiles(n, forceNew) {
   				g.nwpos = g.pop("wpos").pos.length;
 			}
 		}
-		fname = targetDir + "json/plane_list.json";
-		thedata = allSettings.format("JSON");
-		write var thedata @fname;
+//		fname = targetDir + "json/plane_list.json";
+//		thedata = allSettings.format("JSON");
+//		write var thedata @fname;
 		var thedata = allTransforms.join("\t",TRUE);
 		var fname = targetDir + "txt/cleg_settings_plane.tab";
 		write var thedata @fname;

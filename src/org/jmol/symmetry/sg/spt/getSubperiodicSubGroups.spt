@@ -98,7 +98,7 @@ function _getAllSubs(group, adata, allTransforms, indexList) {
 			"hm":subtype + hm, 
 			"trType":trtype, 
 			"trSubtype": trsubtype,
-			"subgroupIndex":sindex};//, "url": "" + href};
+			"index":sindex};//, "url": "" + href};
 		// name="trm" value="%31%2F%32x%2B%31%2F%32y%2C%2D%31%2F%32x%2B%31%2F%32y%2Cz"
 		var sdata = _getSubDataHTM(group, isub, "sub", href, forcenew).replace("> Conj", ">Conj").split('"trm"');
 		var transforms = [];
