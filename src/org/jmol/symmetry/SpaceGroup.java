@@ -274,6 +274,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         sg.addSymmetrySM("xyz matrix:" + operation, (M4d) operation);
       }
     }
+    sg.setFinalOperationsSafely();
     SpaceGroup sgn = sg.getReferenceSpaceGroup();
     if (sgn != null)
       sg = sgn;
@@ -665,7 +666,6 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         || matrixOperations.length == 0
         || matrixOperations[0].timeReversal != 0)
       return this;
-    setFinalOperationsSafely();
     String s = getCanonicalSeitzList();
     return (s == null ? null : findReferenceSpaceGroup(operationCount, s, clegId));
   }

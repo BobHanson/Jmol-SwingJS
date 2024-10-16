@@ -2120,8 +2120,6 @@ public class SymmetryDesc {
   }
 
   private String getDrawID(String id) {
-    if (drawID.indexOf("sg482") >= 0)
-      System.out.println(drawID);
     return drawID + id +"\" ";
   }
 
@@ -2196,11 +2194,8 @@ public class SymmetryDesc {
         }
       } else {
         for (op = 1; op <= n; op++) {
-          String s1 = (String) getSymmetryInfo(iModel, iAtom, uc, xyz, op, translation,
+          s += (String) getSymmetryInfo(iModel, iAtom, uc, xyz, op, translation,
               pt, pt2, id + op, T.draw, scaleFactor, nth, options, true);
-          if (op == 482)
-            System.out.println("????482" + s1);
-          s += s1;
         }
       }
     }
