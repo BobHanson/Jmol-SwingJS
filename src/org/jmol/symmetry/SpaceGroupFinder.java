@@ -87,9 +87,10 @@ public class SpaceGroupFinder {
   private P3d scaling;
   private P3d pTemp = new P3d();
  
-  private int isg;  
-
+  private int isg; 
   private int groupType = SpaceGroup.TYPE_SPACE; // TODO 
+  private boolean isSpecialGroup;
+  
   public SpaceGroupFinder() {
   }
 
@@ -299,6 +300,7 @@ public class SpaceGroupFinder {
     String itano = xyzList;
     if (SpaceGroup.getExplicitSpecialGroupType(itano) > SpaceGroup.TYPE_SPACE) {
       itano = itano.substring(2);
+      isSpecialGroup = true;
       pt -= 2;
     }
     boolean isITADotSetting = (pt > 0);
@@ -313,13 +315,15 @@ public class SpaceGroupFinder {
       if (genPos == null)
         return null;
     } else {
+      // get space group
       name = (hasTransform ? transform : itaIndex);// p/2 here for itaIndex?
       sg = SpaceGroup.getSpaceGroupFromJmolClegOrITA(vwr, hasTransform ? clegId : itaIndex);
-      Object o = uc.getSpaceGroupJSON(vwr, "ITA", itaIndex, 0);
-      if (o == null || o instanceof String) {
+      // get reference group data
+      Object allSettings = uc.getSpaceGroupJSON(vwr, "ITA", itaIndex, 0);
+      if (allSettings == null || allSettings instanceof String) {
         return null;
       }
-      sgdata = (Map<String, Object>) o;
+      sgdata = (Map<String, Object>) allSettings;
       if (isJmolCode || hasTransform) {
         Lst<Object> its = (Lst<Object>) sgdata.get("its");
         if (its == null)
@@ -334,7 +338,7 @@ public class SpaceGroupFinder {
         }
         // "more" type, from wp-list, does note contain gp or wpos
         // also no jmolId for special groups
-        if (sgdata == null || !sgdata.containsKey("jmolId")) {
+        if (sgdata == null || !isSpecialGroup && !sgdata.containsKey("jmolId")) {
           if (isJmolCode) {
             // trying to get an ITA from a Jmol code with ITA like ITA/12:abc
             return null;    
@@ -1240,7 +1244,7 @@ public class SpaceGroupFinder {
       String line;
       int i = 0;
       while ((line = rdr.readLine()) != null) {
-        System.out.println(i++ + " "  + line);
+//        System.out.println(i++ + " "  + line);
         if (line.length() > 0) {
           l.addLast(line);
         }

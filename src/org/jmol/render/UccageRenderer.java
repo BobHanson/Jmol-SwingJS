@@ -47,6 +47,8 @@ public class UccageRenderer extends CageRenderer {
 
   private final P3d[] verticesT = new P3d[8];
 
+  private P3d[] vvertA;
+
   @Override
   protected void initRenderer() {
     for (int i = 8; --i >= 0; ) 
@@ -58,6 +60,7 @@ public class UccageRenderer extends CageRenderer {
   @Override
   protected void setPeriodicity(P3d[] vertices, double scale) {
     setShifts();
+    P3d p0;
     if (shifting) {
       // layer group shifts axes and unit cell down 50%
       if (vvert == null) { //v[1] is c, v[2,3] is b, v[4,5] is a 
@@ -66,9 +69,25 @@ public class UccageRenderer extends CageRenderer {
           vvert[i] = new P3d();
         }
       }
-      P3d p0;
-      P3d p1;
-      if (shiftA) {
+      
+      if (shiftC && periodicity == 0x1) {
+        if (vvertA == null) { //v[1] is c, v[2,3] is b, v[4,5] is a 
+          vvertA = new P3d[8];
+          for (int i = 8; --i >= 0;) {
+            vvertA[i] = new P3d();
+          }
+        }
+        p0 = P3d.newP(vertices[1]);
+        p0.sub(vertices[0]);
+        p0.scale(0.5);
+        for (int i = 8; --i >= 0;) {
+          pt.setT(vertices[i]);
+          pt.sub(vertices[0]);
+          pt.scaleAdd2(scale, pt, vertices[0]);
+          pt.sub(p0);
+          tm.transformPtNoClip(pt, vvertA[i]);
+        }
+      } else if (shiftA) {
         if (vvertA == null) { //v[1] is c, v[2,3] is b, v[4,5] is a 
           vvertA = new P3d[8];
           for (int i = 8; --i >= 0;) {
@@ -156,6 +175,7 @@ public class UccageRenderer extends CageRenderer {
     Axes axes = (Axes) vwr.shm.getShape(JC.SHAPE_AXES);
     if (axes != null && vwr.areAxesTainted())
       axes.reinitShape();
+    
     P3d[] axisPoints = (axes == null
         || vwr.getObjectMad10(StateManager.OBJ_AXIS1) == 0 
         || axes.axisXY.z != 0 && (axes.axes2 == null || axes.axes2.length() == 3)
@@ -213,12 +233,14 @@ public class UccageRenderer extends CageRenderer {
     renderInfo();
   }
   
+  
   @Override
   protected void renderCageLine(int i, int edge0, int edge1, int d, boolean drawTicks) {
     P3d p1;
     P3d p2;
     if (bsVerticals != null && bsVerticals.get(i)) {
-      if (vvertA != null && (i == 4 || i == 8)) {
+      if (vvertA != null && (i == 4 || i == 8 || i == 12 || i == 16 
+          || i == 0 && periodicity != 0x2)) {
         p1 = vvertA[edge0];
         p2 = vvertA[edge1];
       } else {
@@ -246,9 +268,10 @@ public class UccageRenderer extends CageRenderer {
     case 0x7:
       return;
     case 0x3:
+      // plane, layer ab(c)
       bs = (bsPeriod == null ? (bsPeriod = new BS()) : bsPeriod);
       if (nDims == 3) {
-        // verticals
+        // verticals for four layer c-posts, all set the same direction
        bs.set(0);
        bs.set(10);
        bs.set(16);
@@ -267,9 +290,9 @@ public class UccageRenderer extends CageRenderer {
     case 0x4:
       // rod
       bs = (bsPeriod == null ? (bsPeriod = new BS()) : bsPeriod);
-      bs.set(2);
-      bs.set(4);
+      bs.set(2); // these offset in b
       bs.set(6);
+      bs.set(4); // these two offset in a
       bs.set(8);
       if (bsVerticals == null) {
         bsVerticals = new BS();
@@ -279,17 +302,34 @@ public class UccageRenderer extends CageRenderer {
       bs.set(0);
       break;
     case 0x1:
+      // rod-a, frieze
       bs = (bsPeriod == null ? (bsPeriod = new BS()) : bsPeriod);
-      if (nDims == 2) {
-        // frieze
-        bs.set(2);
-        bs.set(18);
-        if (bsVerticals == null) {
-          bsVerticals = new BS();
-        }
-        BSUtil.copy2(bs, bsVerticals);
-        bs.set(4);
+      bs.set(2);
+      bs.set(18);
+      if (nDims == 3) {
+        //rod-a
+        bs.set(0);
+        bs.set(16);
       }
+      if (bsVerticals == null) {
+        bsVerticals = new BS();
+      }
+      BSUtil.copy2(bs, bsVerticals);
+      bs.set(4);
+      break;
+    case 0x2:
+      // rod-b
+      bs = (bsPeriod == null ? (bsPeriod = new BS()) : bsPeriod);
+      bs.set(0); 
+      bs.set(4);
+      bs.set(12); //"A" shift 
+      bs.set(10);
+      //bs.set(16);
+      if (bsVerticals == null) {
+        bsVerticals = new BS();
+      }
+      BSUtil.copy2(bs, bsVerticals);
+      bs.set(2);      
       break;
     }
   }

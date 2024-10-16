@@ -193,7 +193,6 @@ public class Symmetry implements SymmetryInterface {
     return spaceGroup;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Object getSpaceGroupInfoObj(String name, Object params, boolean isFull,
                                      boolean addNonstandard) {
@@ -226,30 +225,28 @@ public class Symmetry implements SymmetryInterface {
           return null;
         }
         if (s.length() > 1 && s.charAt(1) == '/') {
+          // special group setting
           // get first item if nnn and not nnn.m
-          if (s.indexOf('.') < 0 && s.indexOf(":") < 0
-              && PT.isDigit(s.charAt(2))) {
-            s += ".1";
-          }
-          Map<String, Object> info = (Map<String, Object>) getSpaceGroupJSON(
-              vwr, "ITA", s, 0);
-          switch (info == null ? "" : name) {
-          case "itaData":
-            return info;
-          case "hmName":
-          case "hmNameShort":
-            return info.get("hm");
-          case "nameToXYZList":
-            return info.get("gp");
-          case "itaIndex":
-            return "" + info.get("sg") + "." + info.get("set");
-          case "itaTransform":
-            return info.get("trm");
-          case "itaNumber": // as String here
-            return "" + info.get("sg");
+          int specialType = SpaceGroup.getExplicitSpecialGroupType(s);
+          Map<String, Object> info = getSpecialSettingInfo(vwr, s, specialType);
+          if (info != null) {
+            switch (name) {
+            case "itaData":
+              return info;
+            case "hmName":
+            case "hmNameShort":
+              return info.get("hm");
+            case "nameToXYZList":
+              return info.get("gp");
+            case "itaIndex":
+              return "" + info.get("sg") + "." + info.get("set");
+            case "itaTransform":
+              return info.get("trm");
+            case "itaNumber": // as String here
+              return "" + info.get("sg");
+            }
           }
           return null;
-
         }
         if (s.startsWith("ITA/"))
           s = s.substring(4);
@@ -268,7 +265,7 @@ public class Symmetry implements SymmetryInterface {
         return sg.getHMNameShort();
       case "nameToXYZList":
         Lst<Object> genPos = new Lst<Object>();
-        sg.setFinalOperations();
+        sg.setFinalOperationsSafely();
         for (int i = 0, n = sg.getOperationCount(); i < n; i++) {
           genPos.addLast(((SymmetryOperation) sg.getOperation(i)).xyz);
         }
@@ -484,7 +481,7 @@ public class Symmetry implements SymmetryInterface {
       return symmetryInfo.symmetryOperations;
     if (spaceGroup == null)
       spaceGroup = SpaceGroup.getNull(true, false, true);
-    spaceGroup.setFinalOperations();
+    spaceGroup.setFinalOperationsSafely();
     return spaceGroup.finalOperations;
   }
 
@@ -1053,6 +1050,21 @@ public class Symmetry implements SymmetryInterface {
             pts == null ? new Lst<P3d>() : pts, 0, 0, 0, getPeriodicity()));
   }
 
+  /**
+   * 0x1 a only  frieze, rod-a
+   * 
+   * 0x2 b only  rod-b
+   * 
+   * 0x4 c only  rod-c
+   * 
+   * 0x3 ab only plane, layer
+   * 
+   * 0x5 ac only n/a
+   * 
+   * 0x6 bc only n/a
+   * 
+   * 0x7 abc all space
+   */
   @Override
   public int getPeriodicity() {
     return (spaceGroup == null ? 0x7 : spaceGroup.periodicity);
@@ -1296,16 +1308,19 @@ public class Symmetry implements SymmetryInterface {
         : SpaceGroup.getExplicitSpecialGroupType(nameFrom));
     if (groupType2 != groupType1)
       return null;
-    int itaFrom = PT.parseInt((String) getSpaceGroupInfoObj("itaNumber",
-        groupType1 == SpaceGroup.TYPE_SPACE ? nameFrom : nameFrom.substring(2),
-        false, false));
+    String sgNameFrom = (groupType1 == SpaceGroup.TYPE_SPACE ? nameFrom
+        : nameFrom.substring(2));
+    if (sgNameFrom.equalsIgnoreCase("all")) {
+      return getAllITSubData(groupType1);
+    }
+    int itaFrom = PT.parseInt(
+        (String) getSpaceGroupInfoObj("itaNumber", sgNameFrom, false, false));
     int itaTo = (nameTo == null ? -1
         : nameTo.length() == 0 ? 0
             : PT.parseInt((String) getSpaceGroupInfoObj("itaNumber",
                 groupType1 == SpaceGroup.TYPE_SPACE ? nameTo
                     : nameTo.substring(2),
                 false, false)));
-
     if (flags != 0) {
       //System.out.println(Integer.toHexString(flags));
       String prefix = SpaceGroup.getGroupTypePrefix(groupType1);
@@ -1643,6 +1658,7 @@ public class Symmetry implements SymmetryInterface {
         if (itno == 0) {
           return getAllITAData(vwr, specialType, true);
         }
+        boolean isSpecial = (specialType > SpaceGroup.TYPE_SPACE);
         Map<String, Object> resource = getITJSONResource(vwr, specialType, itno,
             data);
         if (resource != null) {
@@ -1663,9 +1679,10 @@ public class Symmetry implements SymmetryInterface {
             Map<String, Object> map = null;
             for (int i = i0; --i >= 0;) {
               map = (Map<String, Object>) its.get(i);
-              if (i == index - 1
-                  || (tm == null ? sgname.equals(map.get("jmolId"))
-                      : tm.equals(map.get("trm")))) {
+              if (i == index - 1 || (tm == null ? (isSpecial
+                  ? SpaceGroup.hmMatches((String) map.get("hm"), sgname, specialType)
+                  : sgname.equals(map.get("jmolId")))
+                  : tm.equals(map.get("trm")))) {
                 if (!map.containsKey("more")) {
                   return map;
                 }
@@ -1719,9 +1736,17 @@ public class Symmetry implements SymmetryInterface {
     }
   }
 
+  /**
+   * Retrieves the overall map for a group.
+   * @param vwr
+   * @param type
+   * @param itno
+   * @param specialName
+   * @return the resource or null if not available
+   */
   @SuppressWarnings("unchecked")
   static Map<String, Object> getITJSONResource(Viewer vwr, int type, int itno,
-                                               String name) {
+                                               String specialName) {
     if (type == SpaceGroup.TYPE_SPACE) {
       if (itaData == null)
         itaData = new Map[230];
@@ -1736,19 +1761,22 @@ public class Symmetry implements SymmetryInterface {
     if (itno > 0)
       return data[itno - 1];
     // match HM name or cleg
-    return getSpecialSettingJSON(data, name);
+    return getSpecialSettingJSON(data, specialName, type, false);
   }
 
   /**
-   * 
+   * Returns the specific setting for this special group
    * @param data
-   * @param name
+   * @param name with special type prefix l/, r/, p/, f/ 
+   * @param specialType 
+   * @param thisSettingOnly 
    * @return JSON info or null
    */
   @SuppressWarnings("unchecked")
   static Map<String, Object> getSpecialSettingJSON(Map<String, Object>[] data,
-                                                   String name) {
+                                                   String name, int specialType, boolean thisSettingOnly) {
     Map<String, Object> info = null;
+    
     boolean isCleg = Character.isDigit(name.charAt(2));
     if (isCleg && name.endsWith(";0,0,0")) {
       name = name.substring(0, name.length() - 6);
@@ -1759,8 +1787,9 @@ public class Symmetry implements SymmetryInterface {
       Lst<Object> lst = (Lst<Object>) data[i].get("its");
       for (int j = lst.size(); --j >= 0;) {
         info = (Map<String, Object>) lst.get(j);
-        if (name.equals(info.get(key))) {
-          return info;
+        String val = (String) info.get(key);
+        if (isCleg ? name.equals(val) : SpaceGroup.hmMatches(val, name, specialType)) {
+          return (thisSettingOnly ? info : data[i]);
         }
       }
     }
@@ -1829,38 +1858,46 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @SuppressWarnings("unchecked")
-  private Map<String, Object> getITSubJSONResource(int type, int itno) {
+  private Lst<Object> getAllITSubData(int type) {
     switch (type) {
     default:
     case SpaceGroup.TYPE_SPACE:
-      if (itaSubData == null)
+      // not applicable - these are individual files
+      return null;
+    case SpaceGroup.TYPE_PLANE:
+      if (planeSubData == null)
+        planeSubData = (Lst<Object>) getResource(vwr,
+            "sg/json/sub_all_plane.json");
+      return planeSubData;
+    case SpaceGroup.TYPE_LAYER:
+      if (layerSubData == null)
+      layerSubData = (Lst<Object>) getResource(vwr,
+          "sg/json/sub_all_layer.json");
+    return layerSubData;
+    case SpaceGroup.TYPE_ROD:
+      if (rodSubData == null)
+        rodSubData = (Lst<Object>) getResource(vwr,
+            "sg/json/sub_all_rod.json");
+      return rodSubData;
+    case SpaceGroup.TYPE_FRIEZE:
+      if (friezeSubData == null)
+        friezeSubData = (Lst<Object>) getResource(vwr,
+            "sg/json/sub_all_frieze.json");
+      return friezeSubData;
+    }    
+  }    
+  @SuppressWarnings("unchecked")
+  private Map<String, Object> getITSubJSONResource(int type, int itno) {
+    if (type == SpaceGroup.TYPE_SPACE) {
+      if (itaSubData == null)      
         itaSubData = new Map[230];
       Map<String, Object> resource = itaSubData[itno - 1];
       if (resource == null)
         itaSubData[itno - 1] = resource = (Map<String, Object>) getResource(vwr,
             "sg/json/sub_" + itno + ".json");
       return resource;
-    case SpaceGroup.TYPE_PLANE:
-      if (planeSubData == null)
-        planeSubData = (Lst<Object>) getResource(vwr,
-            "sg/json/sub_all_plane.json");
-      return (Map<String, Object>) planeSubData.get(itno - 1);
-    case SpaceGroup.TYPE_LAYER:
-      if (layerSubData == null)
-      layerSubData = (Lst<Object>) getResource(vwr,
-          "sg/json/sub_all_layer.json");
-    return (Map<String, Object>) layerSubData.get(itno - 1);
-    case SpaceGroup.TYPE_ROD:
-      if (rodSubData == null)
-        rodSubData = (Lst<Object>) getResource(vwr,
-            "sg/json/sub_all_rod.json");
-      return (Map<String, Object>) rodSubData.get(itno - 1);
-    case SpaceGroup.TYPE_FRIEZE:
-      if (friezeSubData == null)
-        friezeSubData = (Lst<Object>) getResource(vwr,
-            "sg/json/sub_all_frieze.json");
-      return (Map<String, Object>) friezeSubData.get(itno - 1);
     }
+    return (Map<String, Object>) getAllITSubData(type).get(itno - 1);
   }
 
   private int[][][] getSubgroupIndexData(int groupType) {
@@ -2079,7 +2116,7 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public String staticTransformSpaceGroup(BS bs, String cleg, Object paramsOrUC,
                                           SB sb) {
-    return getCLEGInstance().transformSpaceGroup(vwr, bs, cleg, paramsOrUC, sb);
+     return getCLEGInstance().transformSpaceGroup(vwr, bs, cleg, paramsOrUC, sb);
   }
 
   private CLEG getCLEGInstance() {
@@ -2112,7 +2149,7 @@ public class Symmetry implements SymmetryInterface {
 
   /**
    * Called from SpaceGroup to get a special group
-   * 
+   *
    * @return singleton SpecialGroupFactory instance
    */
   static SpecialGroupFactory getSGFactory() {
@@ -2121,6 +2158,24 @@ public class Symmetry implements SymmetryInterface {
           "org.jmol.symmetry.SpecialGroupFactory", null, "symmetry");
     }
     return groupFactory;
+  }
+
+  @SuppressWarnings("unchecked")
+  static Map<String, Object> getSpecialSettingInfo(Viewer vwr, String name, int type) {
+    String s = name.substring(2);
+    int ptCleg = s.indexOf(":");
+    int ptTrm = s.indexOf(",");
+    int ptIndex = s.indexOf(".");
+    int pt = (ptCleg > 0 && ptTrm > ptCleg ? ptCleg : ptIndex);
+    int itno = SpaceGroup.getITNo(s, pt);
+    int itindex = (pt > 0 && pt == ptCleg || itno < 0 ? 0
+        : pt > 0 ? SpaceGroup.getITNo(s.substring(pt + 1), 0) : 1);
+    Map<String, Object>[] data = (Map<String, Object>[]) Symmetry
+        .getAllITAData(vwr, type, false);
+    if (itindex > 0)
+      return (Map<String, Object>) ((Lst<Object>) data[itno - 1].get("its"))
+          .get(itindex - 1);
+    return getSpecialSettingJSON(data, name, type, true);
   }
 
 }

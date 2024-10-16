@@ -183,8 +183,10 @@ public class Axes extends FontLineShape {
   public Object getProperty(String property, int index) {
     if (property == "originPoint")
       return originPoint;
-    if (property == "axisPoints")
+    if (property == "axisPoints") {
+      setPoints(vwr.g.axesMode);
       return axisPoints;
+    }
     if (property == "axesTypeXY")
       return (axisXY.z == 0 ? Boolean.FALSE : Boolean.TRUE);
     if (property == "origin")

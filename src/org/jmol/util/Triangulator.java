@@ -31,14 +31,17 @@ public class Triangulator extends TriangleData {
 //                 3 ---------2-------- 2     
 //                Z                           
 
-  public final static int[][] rodEdge = new int[][] {
+  public final static int[][] edgeC = new int[][] {
     { 0, 3, 0, 1 } };
 
-  public final static int[][] friezeEdge = new int[][] {
+  public final static int[][] edgeB = new int[][] {
+    { 0, 4, 0, 1 } };
+
+  public final static int[][] edgeA = new int[][] {
     { 0, 1, 0, 1 } };
 
   public final static int[][] abFace = new int[][] {
-       { 0, 4, 5, 3 }, { 5, 1, 0, 3 }  };
+    { 0, 4, 5, 3 }, { 5, 1, 0, 3 }  };
 
   public final static int[][] fullCubePolygon = new int[][] {
     /* 0 1   */ { 0, 4, 5, 3 }, { 5, 1, 0, 3 }, // back

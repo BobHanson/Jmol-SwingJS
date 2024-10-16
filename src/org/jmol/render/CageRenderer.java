@@ -51,7 +51,7 @@ abstract class CageRenderer extends FontLineShapeRenderer {
   protected BS bsPeriod; 
   protected P3d pt = new P3d();
 
-  protected P3d[] vvert, vvertA;
+  protected P3d[] vvert;
 
   /**
    * Uccage only
@@ -165,9 +165,9 @@ abstract class CageRenderer extends FontLineShapeRenderer {
   protected boolean shiftA, shiftB, shiftC, shifting;
   
   protected void setShifts() {
-    shiftA = (nDims == 3 && periodicity == 0x4); // rod
-    shiftB = shiftA || (nDims == 2 && periodicity == 0x1); // rod or frieze
-    shiftC = (nDims == 3 && periodicity == 0x3); // layer
+    shiftA = ((periodicity & 0x1) == 0); // rod (ab)c, rod (a)b(c)
+    shiftB = ((periodicity & 0x2) == 0); // frieze a(b), rod (ab)c, rod a(bc)
+    shiftC = ((periodicity & 0x4) == 0); // plane ab, layer ab(c), frieze a(b), rod (a)b(c)
     shifting = (shiftA || shiftB || shiftC);
   }
 }

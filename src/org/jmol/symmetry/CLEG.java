@@ -46,7 +46,7 @@ import javajs.util.T3d;
  * org.jmol.modelkit.Modelkit to process CLEG strings.
  * 
  * This code access multiple methods in Jmol, so it is not independently
- * implemented outside that context. But it encapsulates the essentals of 
+ * implemented outside that context. But it enca  psulates the essentals of 
  * 
  */
 final public class CLEG {
@@ -259,11 +259,6 @@ final public class CLEG {
         if (name == null)
           return;
         this.index = index;
-        int pt = isProbableClegSetting(name);
-        if (pt > 0) {
-          myIta = name.substring(0, pt);
-          myTrm = name.substring(pt + 1);
-        }
         // sets this.name
         init(data, name);
       }
@@ -304,7 +299,11 @@ final public class CLEG {
     }
 
     private void init(ClegData data, String name) {
-      int pt;
+      int pt = isProbableClegSetting(name);
+      if (pt > 0) {
+        myIta = name.substring(0, pt);
+        myTrm = name.substring(pt + 1);
+      }
       if (name.equals(TYPE_REFERENCE)) {
         isThisModelCalc = true;
       }
@@ -374,7 +373,7 @@ final public class CLEG {
           myIta = (String) data.sym.getSpaceGroupInfoObj("itaNumber", specialPrefix + name,
               false, false);
         if (myTrm == null)
-          myTrm = (String) data.sym.getSpaceGroupInfoObj("itaTransform", name,
+          myTrm = (String) data.sym.getSpaceGroupInfoObj("itaTransform", specialPrefix + name,
               false, false);
 
         if (hallSymbol != null && hallTrm != null) {
@@ -1292,7 +1291,7 @@ final public class CLEG {
     }
     // ready to roll....
     boolean isP1 = (token.equalsIgnoreCase("P1") || token.equals("ITA/1.1"));
-
+    // TODO: P1 is only for space groups need isP1(token) or node.isP1
     try {
       BS bsAtoms;
       boolean noAtoms;

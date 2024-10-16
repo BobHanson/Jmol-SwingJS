@@ -294,7 +294,12 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         ? -1 : addOperation(xyz, opId, allowScaling));
   }
 
-  void setFinalOperations() {
+  public void setFinalOperationsSafely() {
+    if (finalOperations == null)
+      setFinalOperations();
+  }
+
+  protected void setFinalOperations() {
     setFinalOperationsForAtoms(3, null, 0, 0, false);
   }
 
@@ -363,8 +368,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   }
 
   int getOperationCount() {
-    if (finalOperations == null)
-      setFinalOperations();
+    setFinalOperationsSafely();
     return finalOperations.length;
   }
 
@@ -379,10 +383,9 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * @return allOperations.length
    */
   int getAdditionalOperationsCount() {
-    if (finalOperations == null)
-      setFinalOperations();
+    setFinalOperationsSafely();
     if (allOperations == null) {
-      allOperations = SymmetryOperation.getAdditionalOperations(finalOperations, periodicity);
+      allOperations = SymmetryOperation.getAdditionalOperations(finalOperations, (periodicity << 4) | nDim);
     }
     return allOperations.length - getOperationCount();
   }
@@ -662,8 +665,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         || matrixOperations.length == 0
         || matrixOperations[0].timeReversal != 0)
       return this;
-    if (finalOperations != null)
-      setFinalOperations();
+    setFinalOperationsSafely();
     String s = getCanonicalSeitzList();
     return (s == null ? null : findReferenceSpaceGroup(operationCount, s, clegId));
   }
@@ -823,7 +825,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         ? xyzList.get(xyz).intValue() : -1);
   }
 
-  private int addOp(SymmetryOperation op, String xyz0, boolean isSpecial) {
+  protected int addOp(SymmetryOperation op, String xyz0, boolean isSpecial) {
     String xyz = op.xyz;
     if (!isSpecial) {
       // ! in character 0 indicates we are using the symop() function and want to be explicit
@@ -1485,17 +1487,13 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    */
   static SpaceGroup getSpaceGroupFromJmolClegOrITA(Viewer vwr, String name) {
     int specialType = getExplicitSpecialGroupType(name);
-    String s = (specialType > TYPE_SPACE ? name.substring(2) : name);
-    int ptCleg = s.indexOf(":");
-    int ptTrm = s.indexOf(",");
-    int ptIndex = s.indexOf(".");
-    int pt = (ptCleg > 0 && ptTrm > ptCleg ? ptCleg : ptIndex);
-    int itno = getITNo(s, pt);
-    int itindex = (pt > 0 && pt == ptCleg || itno == Integer.MIN_VALUE ? 0
-        : pt > 0 ? getITNo(s.substring(pt + 1), 0) : 1);
     if (specialType > TYPE_SPACE) {
-      return Symmetry.getSGFactory().getSpecialGroup(null, vwr, name, itno, itindex, pt > 0 && pt == ptCleg, specialType);
+      return Symmetry.getSGFactory().getSpecialGroup(null, vwr, name, specialType);
     }
+    int ptCleg = name.indexOf(":");
+    int ptTrm = name.indexOf(",");
+    int ptIndex = name.indexOf(".");
+    int pt = (ptCleg > 0 && ptTrm > ptCleg ? ptCleg : ptIndex);
     int n = SG.length;
     if (pt > 0 && pt == ptCleg) {
       // 10:c,a,b
@@ -1822,7 +1820,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       // here we use the operations of the known space group
       // when (1) this is a space group derived from a subgroup by reverse transformation
       // or (2) when we are using Jmol's built-in Hall operators
-      base.setFinalOperations();
+      base.setFinalOperationsSafely();
       // should be able to do this much slicker
       genPos = new Lst<Object>();
       for (int i = 0, n = base.getOperationCount(); i < n; i++) {
@@ -1868,6 +1866,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     }
     if (base != null)
       sg.setFrom(base, true);
+    sg.setFinalOperationsSafely();
     return sg;
   }
 
@@ -3543,7 +3542,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
   }
 
   public Object getHMNameShort() {
-    System.out.println(clegId + "\t" + hmSymbolFull + "\t" + hmSymbolAbbr + "\t" + hmSymbolAbbrShort);
+    //System.out.println(clegId + "\t" + hmSymbolFull + "\t" + hmSymbolAbbr + "\t" + hmSymbolAbbrShort);
     return hmSymbolAbbrShort == null ? hmSymbol : hmSymbolAbbrShort;
   }
 
@@ -3552,7 +3551,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       n = name.length();
     for (int i = n; --i >= 0;)
       if (!PT.isDigit(name.charAt(i)))
-        return -1;
+        return Integer.MIN_VALUE;
     return Integer.parseInt(name.substring(0, n));
   }
 
@@ -3667,13 +3666,13 @@ intl#     H-M full       HM-abbr   HM-short  Hall
   /**
    * Matches Hermann-Mauguin names for special types by 
    * ignoring spaces and some special treatment for plane groups.
-   *  
-   * @param hm
-   * @param name
-   * @param type
-   * @return true if equivalent
+   * 
+   * @param hm the standard name, generally with x/ if special
+   * @param name the name to check, maybe abbreviated, no spaces, no x/
+   * @param specialType
+   * @return true if matching
    */
-  public static boolean hmEquals(String hm, String name, int type) {
+  public static boolean hmMatches(String hm, String name, int specialType) {
     if (hm.charAt(1) == '/')
       hm = hm.substring(2);
     if (hm.charAt(0) != name.charAt(0))
@@ -3683,7 +3682,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
     }
     if (hm.equals(name))
         return true;
-    if (type == TYPE_PLANE) {
+    if (specialType == TYPE_PLANE) {
       int n = hm.length();
       if (n <= name.length())
         return false;
@@ -3707,6 +3706,89 @@ intl#     H-M full       HM-abbr   HM-short  Hall
     return false;
   }
 
+  protected static class ParamCheck {
+    
+    double a,b,c,alpha, beta, gamma;
+
+    boolean acsame;
+    
+    protected ParamCheck(double[] params, boolean allowSame, boolean checkC) {
+      a = params[0];
+      b = params[1];
+      c = params[2];
+      alpha = params[3];
+      beta = params[4];
+      gamma = params[5];
+      if (!allowSame)
+        checkParams(checkC);
+    }
+
+    private void checkParams(boolean checkC) {
+
+      // make a, b, and c all distinct
+      if (b > 0 && a > b) {
+        double d = a;
+        a = b;
+        b = d;
+      }
+      boolean bcsame = checkC && c > 0 && SimpleUnitCell.approx0(b - c);
+      if (bcsame)
+        c = b * 1.5d;
+      boolean absame = SimpleUnitCell.approx0(a - b);
+      if (absame)
+        b = a * 1.2d;
+
+      if (SimpleUnitCell.approx0(gamma - 90)) {
+        gamma = 130;
+      }
+
+      if (!checkC)
+        return;
+
+      acsame = c > 0 && SimpleUnitCell.approx0(c - a);
+      if (acsame)
+        c = a * 1.1d;
+
+      // make alpha, beta, and gamma all distinct
+
+      if (SimpleUnitCell.approx0(alpha - 90)) {
+        alpha = 70;
+      }
+      if (SimpleUnitCell.approx0(beta - 90)) {
+        beta = 100;
+      }
+      if (alpha > beta) {
+        double d = alpha;
+        alpha = beta;
+        beta = d;
+      }
+      boolean albesame = SimpleUnitCell.approx0(alpha - beta);
+      boolean begasame = SimpleUnitCell.approx0(beta - gamma);
+      boolean algasame = SimpleUnitCell.approx0(gamma - alpha);
+      if (albesame) {
+        beta = alpha * 1.2d;
+      }
+      if (begasame) {
+        gamma = beta * 1.3d;
+      }
+      if (algasame) {
+        gamma = alpha * 1.4d;
+      }
+    }
+
+    protected boolean checkNew(double[] params, double[] newParams) {
+      boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
+          && alpha == params[3] && beta == params[4] && gamma == params[5]);
+
+      newParams[0] = a;
+      newParams[1] = b;
+      newParams[2] = c;
+      newParams[3] = alpha;
+      newParams[4] = beta;
+      newParams[5] = gamma;
+      return isNew;
+    }
+  }
   
   /**
    * Create a unit cell compatible with
@@ -3719,17 +3801,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
    */
   public boolean createCompatibleUnitCell(double[] params, double[] newParams,
                                           boolean allowSame) {
-    if (newParams == null)
-      newParams = params;
-    double a = params[0];
-    double b = params[1];
-    double c = params[2];
-    double alpha = params[3];
-    double beta = params[4];
-    double gamma = params[5];
     int n = (itaNumber == null ? 0 : PT.parseInt(itaNumber));
-
-    
     boolean toHex = false, isHex = false, toRhom = false, isRhom = false;
     toHex = (n != 0 && isHexagonalSG(n, null));
     isHex = (toHex && isHexagonalSG(-1, params));
@@ -3738,116 +3810,52 @@ intl#     H-M full       HM-abbr   HM-short  Hall
     if (toHex && isHex || toRhom && isRhom) {
       allowSame = true;
     }
+    ParamCheck pc = new ParamCheck(params, allowSame, true);
 
     if (n > (allowSame ? 2 : 0)) {
-
-      boolean absame = b > 0 && SimpleUnitCell.approx0(a - b);
-      boolean bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
-      boolean acsame = c > 0 && SimpleUnitCell.approx0(c - a);
-      boolean albesame = SimpleUnitCell.approx0(alpha - beta);
-      boolean begasame = SimpleUnitCell.approx0(beta - gamma);
-      boolean algasame = SimpleUnitCell.approx0(gamma - alpha);
-
-      if (!allowSame) {
-        // make a, b, and c all distinct
-        if (b > 0 && a > b) {
-          double d = a;
-          a = b;
-          b = d;
-        }
-        bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
-        if (bcsame)
-          c = b * 1.5d;
-        absame = SimpleUnitCell.approx0(a - b);
-        if (absame)
-          b = a * 1.2d;
-        acsame = SimpleUnitCell.approx0(c - a);
-        if (acsame)
-          c = a * 1.1d;
-
-        // make alpha, beta, and gamma all distinct
-
-        if (SimpleUnitCell.approx0(alpha - 90)) {
-          alpha = 80;
-        }
-        if (SimpleUnitCell.approx0(beta - 90)) {
-          beta = 100;
-        }
-        if (SimpleUnitCell.approx0(gamma - 90)) {
-          gamma = 110;
-        }
-        if (alpha > beta) {
-          double d = alpha;
-          alpha = beta;
-          beta = d;
-        }
-        albesame = SimpleUnitCell.approx0(alpha - beta);
-        begasame = SimpleUnitCell.approx0(beta - gamma);
-        algasame = SimpleUnitCell.approx0(gamma - alpha);
-
-        if (albesame) {
-          beta = alpha * 1.2d;
-        }
-        if (begasame) {
-          gamma = beta * 1.3d;
-        }
-        if (algasame) {
-          gamma = alpha * 1.4d;
-        }
-      }
       if (toHex) {
         if (toRhom ? isRhom : isHex) {
           // nothing to do
         } else if (axisChoice == 'r') {
-          c = b = a;
-          if (!allowSame && alpha > 85 && alpha < 95)
-            alpha = 80;
-          gamma = beta = alpha;
+          pc.c = pc.b = pc.a;
+          if (!allowSame && pc.alpha > 85 && pc.alpha < 95)
+            pc.alpha = 80;
+          pc.gamma = pc.beta = pc.alpha;
         } else {
-          b = a;
-          alpha = beta = 90;
-          gamma = 120;
+          pc.b = pc.a;
+          pc.alpha = pc.beta = 90;
+          pc.gamma = 120;
         }
       } else if (n >= 195) {
         // cubic
-        c = b = a;
-        alpha = beta = gamma = 90;
+        pc.c = pc.b = pc.a;
+        pc.alpha = pc.beta = pc.gamma = 90;
       } else if (n >= 75) {
         // tetragonal
-        b = a;
-        if (acsame && !allowSame)
-          c = a * 1.5d;
-        alpha = beta = gamma = 90;
+        pc.b = pc.a;
+        if (pc.acsame && !allowSame)
+          pc.c = pc.a * 1.5d;
+        pc.alpha = pc.beta = pc.gamma = 90;
       } else if (n >= 16) {
         // orthorhombic
-        alpha = beta = gamma = 90;
+        pc.alpha = pc.beta = pc.gamma = 90;
       } else if (n >= 3) {
         // monoclinic
         switch (uniqueAxis) {
         case 'a':
-          beta = gamma = 90;
+          pc.beta = pc.gamma = 90;
           break;
         default:
         case 'b':
-          alpha = gamma = 90;
+          pc.alpha = pc.gamma = 90;
           break;
         case 'c':
-          alpha = beta = 90;
+          pc.alpha = pc.beta = 90;
           break;
         }
       }
     }
-
-    boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
-        && alpha == params[3] && beta == params[4] && gamma == params[5]);
-
-    newParams[0] = a;
-    newParams[1] = b;
-    newParams[2] = c;
-    newParams[3] = alpha;
-    newParams[4] = beta;
-    newParams[5] = gamma;
-    return isNew;
+    return pc.checkNew(params, newParams == null ? params : newParams);
   }
 
   public boolean isHexagonalSG(int n, double[] params) {

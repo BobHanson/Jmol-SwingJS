@@ -34,13 +34,17 @@ public abstract class SpecialGroup extends SpaceGroup {
     for (int i = 0; i < ops.size(); i++) {
       addOperation((String) ops.get(i), 0, false);
     }
-    itaTransform = (String) info.get("trm");
+    setTransform((String) info.get("trm"));
     itaNumber = "" + info.get("sg");
     itaIndex = "" + info.get("set");
     specialPrefix  = getGroupTypePrefix(groupType);
     setHMSymbol((String) info.get("hm"));
     //setClegId(normalizeSpecialCleg((String) info.get("clegId")));
     setITATableNames(null, itaNumber, itaIndex, itaTransform);
+  }
+
+  void setTransform(String transform) {
+    itaTransform = transform;
   }
 
 // an initial idea that turned out to be more trouble than it was worth
@@ -67,73 +71,34 @@ public abstract class SpecialGroup extends SpaceGroup {
   
   
     /**
-     * PlaneGroup rules
+     * PlaneGroup rules -- only executed for the reference setting
      */
     @Override
     public boolean createCompatibleUnitCell(double[] params, double[] newParams,
                                             boolean allowSame) {
-      if (newParams == null)
-        newParams = params;
-      double a = params[0];
-      double b = params[1];
-      double c = -1;
-      double alpha = 90;
-      double beta = 90;
-      double gamma = params[5];
       int n = (itaNumber == null ? 0 : PT.parseInt(itaNumber));
-  
-      
       boolean toHex = false, isHex = false;
       toHex = (n != 0 && isHexagonalSG(n, null));
       isHex = (toHex && isHexagonalSG(-1, params));
       if (toHex && isHex) {
         allowSame = true;
       }
-  
-      if (n > (allowSame ? 2 : 0)) {
-  
-        boolean absame = SimpleUnitCell.approx0(a - b);
-  
-        if (!allowSame) {
-          // make a, b distinct
-          if (a > b) {
-            double d = a;
-            a = b;
-            b = d;
-          }
-          absame = SimpleUnitCell.approx0(a - b);
-          if (absame)
-            b = a * 1.2d;
-  
-          if (SimpleUnitCell.approx0(gamma - 90)) {
-            gamma = 110;
-          }
-        }
-        
+      ParamCheck pc = new ParamCheck(params, allowSame, false);
+      if (n > (allowSame ? 2 : 0)) {  
         if (toHex) {
-            b = a;
-            alpha = beta = 90;
-            gamma = 120;
+            pc.b = pc.a;
+            pc.alpha = pc.beta = 90;
+            pc.gamma = 120;
         } else if (n >= 10) {
           // tetragonal
-          b = a;
-          gamma = 90;
+          pc.b = pc.a;
+          pc.gamma = 90;
         } else if (n >= 3) {
           // orthorhombic
-          gamma = 90;
+          pc.gamma = 90;
         }
-      }
-  
-      boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
-          && alpha == params[3] && beta == params[4] && gamma == params[5]);
-  
-      newParams[0] = a;
-      newParams[1] = b;
-      newParams[2] = c;
-      newParams[3] = alpha;
-      newParams[4] = beta;
-      newParams[5] = gamma;
-      return isNew;
+      }  
+      return pc.checkNew(params, newParams == null ? params : newParams);
     }
     
     @Override
@@ -164,7 +129,7 @@ public abstract class SpecialGroup extends SpaceGroup {
     protected LayerGroup(Symmetry sym, Map<String, Object> info) {
       super(sym, info, SpaceGroup.TYPE_LAYER);
       nDim = 3;
-      periodicity = 0x1 | 0x2;
+      periodicity = 0x3;
     }
   
     /**
@@ -173,112 +138,7 @@ public abstract class SpecialGroup extends SpaceGroup {
     @Override
     public boolean createCompatibleUnitCell(double[] params, double[] newParams,
                                             boolean allowSame) {
-      if (newParams == null)
-        newParams = params;
-      double a = params[0];
-      double b = params[1];
-      double c = params[2];
-      double alpha = params[3];
-      double beta = params[4];
-      double gamma = params[5];
-      int n = (itaNumber == null ? 0 : PT.parseInt(itaNumber));
-  
-      
-      boolean toHex = false, isHex = false;
-      toHex = (n != 0 && isHexagonalSG(n, null));
-      isHex = (toHex && isHexagonalSG(-1, params));
-      if (toHex && isHex) {
-        allowSame = true;
-      }
-  
-      if (n > (allowSame ? 2 : 0)) {
-  
-        boolean absame = b > 0 && SimpleUnitCell.approx0(a - b);
-        boolean bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
-        boolean acsame = c > 0 && SimpleUnitCell.approx0(c - a);
-        boolean albesame = SimpleUnitCell.approx0(alpha - beta);
-        boolean begasame = SimpleUnitCell.approx0(beta - gamma);
-        boolean algasame = SimpleUnitCell.approx0(gamma - alpha);
-  
-        if (!allowSame) {
-          // make a, b, and c all distinct
-          if (b > 0 && a > b) {
-            double d = a;
-            a = b;
-            b = d;
-          }
-          bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
-          if (bcsame)
-            c = b * 1.5d;
-          absame = SimpleUnitCell.approx0(a - b);
-          if (absame)
-            b = a * 1.2d;
-          acsame = SimpleUnitCell.approx0(c - a);
-          if (acsame)
-            c = a * 1.1d;
-  
-          // make alpha, beta, and gamma all distinct
-  
-          if (SimpleUnitCell.approx0(alpha - 90)) {
-            alpha = 80;
-          }
-          if (SimpleUnitCell.approx0(beta - 90)) {
-            beta = 100;
-          }
-          if (SimpleUnitCell.approx0(gamma - 90)) {
-            gamma = 110;
-          }
-          if (alpha > beta) {
-            double d = alpha;
-            alpha = beta;
-            beta = d;
-          }
-          albesame = SimpleUnitCell.approx0(alpha - beta);
-          begasame = SimpleUnitCell.approx0(beta - gamma);
-          algasame = SimpleUnitCell.approx0(gamma - alpha);
-  
-          if (albesame) {
-            beta = alpha * 1.2d;
-          }
-          if (begasame) {
-            gamma = beta * 1.3d;
-          }
-          if (algasame) {
-            gamma = alpha * 1.4d;
-          }
-        }
-        if (toHex) {
-          b = a;
-          alpha = beta = 90;
-          gamma = 120;
-        } else if (n >= 49) {
-          // tetragonal
-          b = a;
-          if (acsame && !allowSame)
-            c = a * 1.5d;
-          alpha = beta = gamma = 90;
-        } else if (n >= 19) {
-          // orthorhombic
-          alpha = beta = gamma = 90;
-        } else if (n >= 8) {
-          // monoclinic rectangular
-          beta = gamma = 90;
-        } else if (n >= 3) {
-          // monoclinic oblique
-          alpha = beta = 90;
-        }
-      }
-  
-      boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
-          && alpha == params[3] && beta == params[4] && gamma == params[5]);
-  
-      newParams[0] = a;
-      newParams[1] = b;
-      newParams[2] = c;
-      newParams[3] = alpha;
-      newParams[4] = beta;
-      newParams[5] = gamma;
-      return isNew;
+      return checkCompatible(params, newParams, allowSame, 3, 8, 19, 49);
     }
   
     @Override
@@ -300,127 +160,57 @@ public abstract class SpecialGroup extends SpaceGroup {
     protected RodGroup(Symmetry sym, Map<String, Object> info) {
       super(sym, info, SpaceGroup.TYPE_ROD);
       nDim = 3;
-      periodicity = 0x4; // c only
+      if (info != null)
+        periodicity = setRodPeriodicityFromTrm(info);
     }
-  
+    
+    /**
+     * Set the rod group periodicity from the transformation string. This is
+     * only done for data, so it is based on the simple look at the string.
+     * 
+     * Only for monoclinic groups (3-22).
+     * 
+     *  For example, for r/4 we have:
+     * 
+     * <pre>
+     * 
+     * a,b,c  b,-a,c    pc m 1 1 and pc 1 m 1
+     * b,c,a  a,-c,b    pb 1 1 m and pb m 1 1 
+     * -c,b,a -c,-a,b   pa 1 1 m and pa 1 m 1
+     * 
+     * </pre>
+     * 
+     * The location of "c" in the string, meaning "the reference c axis goes to
+     * this position" tells us that for b,c,a, the reference "c" axis becomes the
+     * "b" axis and the periodicity becomes 0x2.
+     * 
+     * @param info
+     * @return 0x1, 0x2, 0x4 (a, b, or c periodicity)
+     */
+    private int setRodPeriodicityFromTrm(Map<String, Object> info) {
+      int sg = ((Number) info.get("sg")).intValue();
+      if (sg < 3 || sg > 22) {
+        return 0x4;
+      } 
+      String trm = (String) info.get("trm");
+      if (trm.endsWith("c")) {
+        return 0x4;
+      }
+      return (trm.indexOf('c') < trm.indexOf(',') ? 0x1 : 0x2);       
+    }
+
     /**
      * RodGroup rules
      */
     @Override
     public boolean createCompatibleUnitCell(double[] params, double[] newParams,
                                             boolean allowSame) {
-      if (newParams == null)
-        newParams = params;
-      double a = params[0];
-      double b = params[1];
-      double c = params[2];
-      double alpha = params[3];
-      double beta = params[4];
-      double gamma = params[5];
-      int n = (itaNumber == null ? 0 : PT.parseInt(itaNumber));
-  
-      
-      boolean toHex = false, isHex = false;
-      toHex = (n != 0 && isHexagonalSG(n, null));
-      isHex = (toHex && isHexagonalSG(-1, params));
-      if (toHex && isHex) {
-        allowSame = true;
-      }
-  
-      if (n > (allowSame ? 2 : 0)) {
-  
-        boolean absame = b > 0 && SimpleUnitCell.approx0(a - b);
-        boolean bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
-        boolean acsame = c > 0 && SimpleUnitCell.approx0(c - a);
-        boolean albesame = SimpleUnitCell.approx0(alpha - beta);
-        boolean begasame = SimpleUnitCell.approx0(beta - gamma);
-        boolean algasame = SimpleUnitCell.approx0(gamma - alpha);
-  
-        if (!allowSame) {
-          // make a, b, and c all distinct
-          if (b > 0 && a > b) {
-            double d = a;
-            a = b;
-            b = d;
-          }
-          bcsame = c > 0 && SimpleUnitCell.approx0(b - c);
-          if (bcsame)
-            c = b * 1.5d;
-          absame = SimpleUnitCell.approx0(a - b);
-          if (absame)
-            b = a * 1.2d;
-          acsame = SimpleUnitCell.approx0(c - a);
-          if (acsame)
-            c = a * 1.1d;
-  
-          // make alpha, beta, and gamma all distinct
-  
-          if (SimpleUnitCell.approx0(alpha - 90)) {
-            alpha = 80;
-          }
-          if (SimpleUnitCell.approx0(beta - 90)) {
-            beta = 100;
-          }
-          if (SimpleUnitCell.approx0(gamma - 90)) {
-            gamma = 110;
-          }
-          if (alpha > beta) {
-            double d = alpha;
-            alpha = beta;
-            beta = d;
-          }
-          albesame = SimpleUnitCell.approx0(alpha - beta);
-          begasame = SimpleUnitCell.approx0(beta - gamma);
-          algasame = SimpleUnitCell.approx0(gamma - alpha);
-  
-          if (albesame) {
-            beta = alpha * 1.2d;
-          }
-          if (begasame) {
-            gamma = beta * 1.3d;
-          }
-          if (algasame) {
-            gamma = alpha * 1.4d;
-          }
-        }
-        if (toHex) {
-          b = a;
-          alpha = beta = 90;
-          gamma = 120;
-        } else if (n >= 23) {
-          // tetragonal
-          b = a;
-          if (acsame && !allowSame)
-            c = a * 1.5d;
-          alpha = beta = gamma = 90;
-        } else if (n >= 13) {
-          // orthorhombic
-          alpha = beta = gamma = 90;
-        } else if (n >= 8) {
-          // monoclinic rectangular
-          alpha = beta = 90;
-        } else if (n >= 3) {
-          // monoclinic oblique
-          beta = gamma = 90;
-        }
-      }
-  
-      boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
-          && alpha == params[3] && beta == params[4] && gamma == params[5]);
-  
-      newParams[0] = a;
-      newParams[1] = b;
-      newParams[2] = c;
-      newParams[3] = alpha;
-      newParams[4] = beta;
-      newParams[5] = gamma;
-      return isNew;
+      return checkCompatible(params, newParams, allowSame, 3, 8, 13, 23);
     }
   
     @Override
     public boolean isHexagonalSG(int n, double[] params) {
-      return (n < 1 ? SimpleUnitCell.isHexagonal(params)
-          : n >= 42);
+      return (n < 1 ? SimpleUnitCell.isHexagonal(params) : n >= 42);
     }
     
   }
@@ -442,19 +232,18 @@ public abstract class SpecialGroup extends SpaceGroup {
     @Override
     public boolean createCompatibleUnitCell(double[] params, double[] newParams,
                                             boolean allowSame) {
-      if (newParams == null)
-        newParams = params;
       double a = params[0];
       double b = params[0];
       double c = -1;
       double alpha = 90;
       double beta = 90;
-      double gamma = 90;//params[5];
+      double gamma = 90;
   
-      
       boolean isNew = !(a == params[0] && b == params[1] && c == params[2]
           && alpha == params[3] && beta == params[4] && gamma == params[5]);
   
+      if (newParams == null)
+        newParams = params;
       newParams[0] = a;
       newParams[1] = b;
       newParams[2] = c;
@@ -462,10 +251,49 @@ public abstract class SpecialGroup extends SpaceGroup {
       newParams[4] = beta;
       newParams[5] = gamma;
       return isNew;
-    }
-  
-  
+    }  
   }
 
+  public boolean checkCompatible(double[] params, double[] newParams,
+                                 boolean allowSame, int monoclinic_oblique,
+                                 int monoclinic_orthogonal, int orthorhombic,
+                                 int tetragonal) {
+    int n = (itaNumber == null ? 0 : PT.parseInt(itaNumber));
+    boolean toHex = (n != 0 && isHexagonalSG(n, null));
+    boolean isHex = (toHex && isHexagonalSG(-1, params));
+    if (toHex && isHex) {
+      allowSame = true;
+    }
+    ParamCheck pc = new ParamCheck(params, allowSame, true);
+    if (n > (allowSame ? 2 : 0)) {
+      if (toHex) {
+        pc.b = pc.a;
+        pc.alpha = pc.beta = 90;
+        pc.gamma = 120;
+      } else if (n >= tetragonal) {
+        pc.b = pc.a;
+        if (pc.acsame && !allowSame)
+          pc.c = pc.a * 1.5d;
+        pc.alpha = pc.beta = pc.gamma = 90;
+      } else if (n >= orthorhombic) {
+        pc.alpha = pc.beta = pc.gamma = 90;
+      } else if (n >= monoclinic_orthogonal) {
+        pc.beta = 90; // ac angle is always 90
+        if (groupType == TYPE_LAYER) {
+          pc.gamma = 90;  // ab angle
+        } else {
+          pc.alpha = 90; //bc angle
+        }
+      } else if (n >= monoclinic_oblique) {
+        pc.beta = 90; // ac angle is always 90
+        if (groupType == TYPE_LAYER) {
+          pc.alpha = 90; //bc angle
+        } else {
+          pc.gamma = 90; //ab angle
+        }
+      }
+    }
+    return pc.checkNew(params, newParams == null ? params : newParams);
+  }
 
 }

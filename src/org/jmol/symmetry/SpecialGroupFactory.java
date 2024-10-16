@@ -5,8 +5,6 @@ import java.util.Map;
 import org.jmol.symmetry.SpecialGroup.PlaneGroup;
 import org.jmol.viewer.Viewer;
 
-import javajs.util.Lst;
-
 /**
    * A static singleton class to create plane, layer, rod, and frieze groups
    */
@@ -38,32 +36,24 @@ import javajs.util.Lst;
         // won't happen
         return null;
       }
-      if (base != null)
+      if (base != null) {
         spg.embeddingSymmetry = base.embeddingSymmetry;
+        spg.periodicity = base.periodicity;
+      }
       return spg;
     }
 
-    /**
-     * @param sym 
-     * @param vwr 
-     * @param name 
-     * @param itno 
-     * @param itindex  
-     * @param isCleg 
-     * @param type 
-     * @return SpaceGroup 
-     */
-    @SuppressWarnings("unchecked")
-    SpaceGroup getSpecialGroup(Symmetry sym, Viewer vwr, String name, int itno, int itindex, boolean isCleg, int type) {
-      Map<String, Object>[] data = (Map<String, Object>[]) Symmetry.getAllITAData(vwr, type, false);
-      Map<String, Object> info = null;
-      if (itindex > 0) {
-        info = (Map<String, Object>) ((Lst<Object>) data[itno - 1].get("its")).get(itindex - 1);    
-      } else {
-        info = Symmetry.getSpecialSettingJSON(data, name);
-      }
-      return createSpecialGroup(null, sym, info, type);
-    }
+  /**
+   * @param sym
+   * @param vwr
+   * @param name
+   * @param type
+   * @return SpaceGroup
+   */
+  SpaceGroup getSpecialGroup(Symmetry sym, Viewer vwr, String name, int type) {
+    return createSpecialGroup(null, sym,
+        Symmetry.getSpecialSettingInfo(vwr, name, type), type);
+  }
 
     
   }

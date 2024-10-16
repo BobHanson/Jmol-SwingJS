@@ -467,10 +467,13 @@ public class IsoExt extends ScriptExt {
             int[][] faces;
             switch (uc.getPeriodicity()) {
             case 0x1:
-              faces = Triangulator.friezeEdge;
+              faces = Triangulator.edgeA;
+              break;
+            case 0x2: 
+              faces = Triangulator.edgeB;
               break;
             case 0x4:
-              faces = Triangulator.rodEdge;
+              faces = Triangulator.edgeC;
               break;
             case 0x3:
               faces = Triangulator.abFace;

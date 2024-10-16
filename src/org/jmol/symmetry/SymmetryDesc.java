@@ -612,34 +612,50 @@ public class SymmetryDesc {
 
     // handle inversion
 
+    boolean notC = false;
+    int nDim = uc.getDimensionality();
     /**
      * Indicates that our vertical planes need to be shifted down 1/2 c
      */
     int periodicity = uc.getPeriodicity();
-    boolean notC = (periodicity == 0x4); // rod
     boolean shiftA = (isSpaceGroup && (periodicity & 0x1) == 0); // rod (ab)c
     boolean shiftB = (isSpaceGroup && (periodicity & 0x2) == 0); // frieze a(b), rod (ab)c
     boolean shiftC = (isSpaceGroup && (periodicity & 0x4) == 0); // plane ab, layer ab(c), frieze a(b)
 
+    vShift = V3d.new3(0,  0,  1);
+    if (nDim == 3) {
+      // special issue with rods
+      switch (periodicity) {
+      case 0x1:
+        vShift = V3d.new3(1,  0,  0);
+        notC = true;
+        break;
+      case 0x2:
+        notC = true;
+        vShift = V3d.new3(0,  1,  0);
+        break;
+      case 0x4:
+        notC = true;
+        break;
+      }
+    }
     /**
-     * will depend upon the dot product; used to show the second vector for a rotation
+     * will depend upon the dot product; used to show the second vector for a
+     * rotation
      */
     boolean isPeriodic = !(shiftA || shiftB || shiftC);
-    
-      // check for axis colinear with c. We will not show the second of these
-      // if they exist
-      vShift = V3d.newVsub(pta00, pta03);
-      double dot = Math
-          .abs(ax1.dot(vShift) / vShift.length() / ax1.length());
-      if (Math.abs(dot - 1) < 0.001d) {
-        // c dot axis = 1
-        notC = false;
-        vShift = null;
-      } else {
-        isPeriodic = !notC;
-      }
 
-    
+    // check for axis colinear with c. We will not show the second of these
+    // if they exist
+    double dot = Math.abs(ax1.dot(vShift) / vShift.length() / ax1.length());
+    if (Math.abs(dot - 1) < 0.001d) {
+      // c dot axis = 1
+      notC = false;
+      vShift = null;
+    } else {
+      isPeriodic = !notC;
+    }
+
     if (haveInversion && isTranslation) {
 
       // simple inversion operation
@@ -752,14 +768,13 @@ public class SymmetryDesc {
         isMirrorPlane = true;
         if (shiftC) {
           vShift = V3d.newVsub(pta00, pta03);
-          dot = Math
-              .abs(ax1.dot(vShift) / vShift.length() / ax1.length());
+          dot = Math.abs(ax1.dot(vShift) / vShift.length() / ax1.length());
           shiftC = (dot < 0.001d);
           if (shiftC) {
             vShift.scale(0.5);
             uc.toCartesian(vShift, true);
           }
-        } 
+        }
         if (shiftB) {
           V3d vs = V3d.newVsub(pta00, pta02);
           dot = notC ? 0 : Math.abs(ax1.dot(vs) / vs.length() / ax1.length());
@@ -993,9 +1008,6 @@ public class SymmetryDesc {
 
       if (isRotation) {
 
-        if (notC) {
-          
-        }
         color = (nrot == 2 ? COLOR_2
             : nrot == 3 ? COLOR_BAR_3 : nrot == 4 ? COLOR_BAR_4 : COLOR_BAR_6);
 

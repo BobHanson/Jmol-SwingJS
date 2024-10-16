@@ -1357,6 +1357,10 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       j2 = 2;
       jd = 1;
       break;
+    case 0x2: // b
+      j2 = 3;
+      jd = 2;
+      break;
     case 0x1: // a
       j2 = 8;
       jd = 4;

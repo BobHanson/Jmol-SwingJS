@@ -159,7 +159,7 @@ class SymmetryInfo {
 
   SymmetryOperation[] getAdditionalOperations() {
     if (additionalOperations == null && symmetryOperations != null) {
-      additionalOperations = SymmetryOperation.getAdditionalOperations(symmetryOperations, 7);
+      additionalOperations = SymmetryOperation.getAdditionalOperations(symmetryOperations, 0x73);
     }
     return additionalOperations;
   }

@@ -94,6 +94,9 @@ public class SymmetryOperation extends M4d {
   P4d opPlane;
   private Boolean opIsCCW;
 
+  private int opPerDim;
+
+
   /**
    * a flag to indicate that we should not show this operation for DRAW SPACEGROUP ALL
    * 
@@ -1757,7 +1760,7 @@ public class SymmetryOperation extends M4d {
     return !(nNeg == 8 || nPos == 8);
   }
 
-  public static SymmetryOperation[] getAdditionalOperations(SymmetryOperation[] ops, int periodicity) {
+  public static SymmetryOperation[] getAdditionalOperations(SymmetryOperation[] ops, int per_dim) {
     int n = ops.length;
     Lst<SymmetryOperation> lst = new Lst<SymmetryOperation>();
     SB xyzLst = new SB();
@@ -1765,6 +1768,7 @@ public class SymmetryOperation extends M4d {
     V3d vTemp = new V3d();
     for (int i = 0; i < n; i++) {
       SymmetryOperation op = ops[i];
+      op.opPerDim = per_dim;
       lst.addLast(op);
       String s = op.getOpName(OP_MODE_NOTRANS);
       xyzLst.append(s).appendC(';');
@@ -1774,7 +1778,7 @@ public class SymmetryOperation extends M4d {
         addCoincidentMap(mapPlanes, op, TYPE_SCREW_ROTATION, null);
     }
     for (int i = 1; i < n; i++) { // skip x,y,z
-      ops[i].addOps(xyzLst, lst, mapPlanes, n, i, vTemp, periodicity);
+      ops[i].addOps(xyzLst, lst, mapPlanes, n, i, vTemp);
     }
     return lst.toArray(new SymmetryOperation[lst.size()]);
   }
@@ -1789,10 +1793,9 @@ public class SymmetryOperation extends M4d {
    * @param n0
    * @param isym
    * @param vTemp 
-   * @param periodicity 
    */
-  void addOps(SB xyzList, Lst<SymmetryOperation> lst,
-              Map<String, Lst<SymmetryOperation>> mapCoincident, int n0, int isym, V3d vTemp, int periodicity) {
+  private void addOps(SB xyzList, Lst<SymmetryOperation> lst,
+              Map<String, Lst<SymmetryOperation>> mapCoincident, int n0, int isym, V3d vTemp) {
     V3d t0 = new V3d();
     getTranslation(t0);
     boolean isPlane = ((getOpType() & TYPE_REFLECTION) == TYPE_REFLECTION);
@@ -1805,22 +1808,30 @@ public class SymmetryOperation extends M4d {
     
     // periodicity here affects how the arrays run.
     int i0 = 5, i1 = -2, j0 = 5, j1 = -2, k0 = 5, k1 = -2;
-    switch (periodicity) {
-    case 0x7: // abc space
+    switch (opPerDim) {
+    case 0x73: // abc 3-space
       break;
-    case 0x3: // ab plane, layer
+    case 0x33: // ab plane, layer
+    case 0x22: // ab plane, layer
       k0 = 1;
       k1 = 0;
       break;
-    case 0x4: // c rod
+    case 0x12: // a frieze 2-space
+    case 0x13: // a rod
+      j0 = 1;
+      j1 = 0;
+      k0 = 1;
+      k1 = 0;
+      break;
+    case 0x43: // c rod
       i0 = 1;
       i1 = 0;
       j0 = 1;
       j1 = 0;
       break;
-    case 0x1: // a frieze
-      j0 = 1;
-      j1 = 0;
+    case 0x23: // b rod
+      i0 = 1;
+      i1 = 0;
       k0 = 1;
       k1 = 0;
       break;

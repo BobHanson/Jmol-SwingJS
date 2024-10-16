@@ -4227,32 +4227,40 @@ public class ModelKit {
         "originPoint", 0);
     P3d[] axisPoints = (P3d[]) vwr.shm.getShapePropertyIndex(JC.SHAPE_AXES,
         "axisPoints", 0);
+    
     String s = "";
     String[] colors = new String[] { "red", "green", "blue" };
     int nDim = sym.getDimensionality();
-    int per = sym.getPeriodicity();
-    boolean shiftA = (per == 0x4 && nDim == 3); // rod group
-    boolean shiftB = (shiftA || per == 0x1 && nDim == 2); // rod or frieze
-    boolean shiftC = (per == 0x1 && nDim == 2 || per == 0x3 && nDim == 3); // frieze or layer
+    int periodicity = sym.getPeriodicity();
+    boolean shiftA = ((periodicity & 0x1) == 0); // rod (ab)c, rod b(ca)
+    boolean shiftB = ((periodicity & 0x2) == 0); // frieze a(b), rod (ab)c, rod a(bc)
+    boolean shiftC = ((periodicity & 0x4) == 0); // plane ab, layer ab(c), frieze a(b), rod a(bc), rod b(ca)
     P3d[] pts = axisPoints;
     P3d[] opts = null;
     if (shiftA || shiftB || shiftC) {
       pts = new P3d[] { new P3d(), new P3d(), new P3d() };
       opts = new P3d[] { new P3d(), new P3d(), new P3d() };
+      
       if (shiftA) {
         opts[0].sub2(origin, axisPoints[0]);
         opts[0].scale(0.5d);
         pts[0].sub2(origin, opts[0]);
+      } else if (nDim == 3) {
+        pts[0] = axisPoints[0];
       }
       if (shiftB) {
         opts[1].sub2(origin, axisPoints[1]);
         opts[1].scale(0.5d);
         pts[1].sub2(origin, opts[1]);
+      } else if (nDim == 3) {
+        pts[1] = axisPoints[1];
       }
       if (shiftC) {
         opts[2].sub2(origin, axisPoints[2]);
         opts[2].scale(0.5d);
         pts[2].sub2(origin, opts[2]);
+      } else if (nDim == 3) {
+        pts[2] = axisPoints[2];
       }
     }
     for (int i = 0, a = JC.AXIS_A; i < 3; i++, a++) {
@@ -4260,7 +4268,8 @@ public class ModelKit {
           + swidth + " line "
           + (opts == null 
           || i == 0 && !shiftA
-          || i == 1 && !shiftB ? origin : opts[i])
+          || i == 1 && !shiftB 
+          || i == 2 && !shiftC ? origin : opts[i])
           + " " + pts[i] + " color " + colors[i];
     }
     return s;
