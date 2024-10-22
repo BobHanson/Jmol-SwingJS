@@ -1080,7 +1080,6 @@ public class MSRdr implements MSInterface {
     BS bs = asc.getBSAtoms(-1);
     int i0 = cr.asc.getLastAtomSetAtomIndex();
     double packing = cr.getPackingRangeValue(0.001d);
-    System.out.println("MSRDR " + i0 + " " + packing + " " + bs);
     for (int i = bs.nextSetBit(i0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       boolean isOK = (!isCommensurate || modAverage || a.foccupancy >= 0.5d);
@@ -1101,8 +1100,6 @@ public class MSRdr implements MSInterface {
         //              minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 100))) {
         //              }
       }
-//      if (i/10 == i/10d)
-//      System.out.println("ms2 " + isOK + " " + i + " " + pt);
       if (isOK) {
 //        if (cr.fixJavaDouble)
 //          PT.fixPtDoubles(a, PT.FRACTIONAL_PRECISION);

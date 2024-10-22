@@ -83,7 +83,9 @@ public class Sticks extends Shape {
     short mad = (short) size;
     while (iter.hasNext()) {
       bsSizeSet.set(iter.nextIndex());
-      iter.next().setMad(mad);
+      Bond b = iter.next();
+      if (b != null)
+        b.setMad(mad);
     }
   }
 

@@ -1243,7 +1243,6 @@ public class SpaceGroupFinder {
     if (list == null) {
       Lst<String> l = new Lst<String>();
       String line;
-      int i = 0;
       while ((line = rdr.readLine()) != null) {
 //        System.out.println(i++ + " "  + line);
         if (line.length() > 0) {
