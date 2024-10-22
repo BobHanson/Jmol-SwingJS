@@ -3,6 +3,7 @@ package org.jmol.adapter.readers.cif;
 import java.util.Map.Entry;
 
 import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
+import org.jmol.symmetry.SymmetryOperation;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 
@@ -14,13 +15,34 @@ import javajs.util.V3d;
 
 
 class Subsystem {
+  
+  class SubsystemSymmetry extends FileSymmetry {
+
+    /**
+     * @param code
+     * @param rs
+     *        is a full (3+d)x(3+d) array of epsilons
+     * @param vs
+     *        is a (3+d)x(1) array of translations
+     * @param sigma
+     * @return Jones-Faithful representation
+     */
+    String addSubSystemOp(String code, Matrix rs, Matrix vs, Matrix sigma) {
+      spaceGroup.isSSG = true;
+      String s = SymmetryOperation.getXYZFromRsVs(rs, vs, false);
+      int i = spaceGroup.addSymmetry(s, -1, true);
+      spaceGroup.matrixOperations[i].setSigma(code, sigma);
+      return s;
+    }
+
+  }
 
   private MSRdr msRdr;
   private String code;
   private int d;
   private Matrix w;
 
-  private FileSymmetry symmetry;
+  private SubsystemSymmetry subsym;
   private Matrix[] modMatrices;
   private boolean isFinalized;
 
@@ -34,7 +56,7 @@ class Subsystem {
   public FileSymmetry getSymmetry() {
     if (!isFinalized)
       setSymmetry(true);
-    return symmetry;
+    return subsym;
   }
 
   public Matrix[] getModMatrices() {
@@ -102,7 +124,8 @@ class Subsystem {
     for (int i = 0; i < 3; i++)
       uc_nu[i + 1] = V3d.new3(a[i][0], a[i][1], a[i][2]);    
     uc_nu = SimpleUnitCell.getReciprocal(uc_nu, null, 1);
-    (symmetry = msRdr.cr.asc.newFileSymmetry()).getUnitCell(uc_nu, false, null);
+    subsym = new SubsystemSymmetry();
+    subsym.getUnitCell(uc_nu, false, null);
     modMatrices = new Matrix[] { sigma_nu, tFactor };
     if (!setOperators)
       return;
@@ -111,8 +134,8 @@ class Subsystem {
     // Part 3: Transform the operators 
     // 
 
-    Logger.info("unit cell parameters: " + symmetry.getUnitCellInfo(true));
-    symmetry.createSpaceGroup(-1, "[subsystem " + code + "]", new Lst<M4d>(), d);
+    Logger.info("unit cell parameters: " + subsym.getUnitCellInfo(true));
+    subsym.createSpaceGroup(-1, "[subsystem " + code + "]", new Lst<M4d>(), d);
     int nOps = s0.getSpaceGroupOperationCount();
     for (int iop = 0; iop < nOps; iop++) {
       Matrix rv = s0.getOperationRsVs(iop);
@@ -147,8 +170,8 @@ class Subsystem {
           }
         }
       }
-      String jf = symmetry.addSubSystemOp(code, r, v, sigma_nu);      
-      Logger.info(this.code + "." + (iop + 1) + (this.code.equals(code) ? "   " : ">" + code + " ") + jf);
+      String jf = subsym.addSubSystemOp(code, r, v, sigma_nu);      
+      Logger.info("SubSystem " + this.code + "." + (iop + 1) + (this.code.equals(code) ? "   " : ">" + code + " ") + jf);
     }
   }
 

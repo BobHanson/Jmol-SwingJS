@@ -1003,6 +1003,7 @@ public class MSRdr implements MSInterface {
       htSubsystems = new Hashtable<String, Subsystem>();
     htSubsystems.put(code, system);
     setSubsystemOptions();
+    
   }
 
   private Matrix[] getMatrices(Atom a) {
@@ -1056,17 +1057,17 @@ public class MSRdr implements MSInterface {
     double slop = 0.0001;
     sym.toFractional(pt2, false);
     if (minXYZ.x > pt2.x + slop)
-      minXYZ.x = (int) Math.floor(pt2.x) - 1;
+      minXYZ.x = (int) Math.floor(pt2.x + slop) - 1;
     if (minXYZ.y > pt2.y + slop)
-      minXYZ.y = (int) Math.floor(pt2.y) - 1;
+      minXYZ.y = (int) Math.floor(pt2.y + slop) - 1;
     if (minXYZ.z > pt2.z + slop)
-      minXYZ.z = (int) Math.floor(pt2.z) - 1;
+      minXYZ.z = (int) Math.floor(pt2.z + slop) - 1;
     if (maxXYZ.x < pt2.x - slop)
-      maxXYZ.x = (int) Math.ceil(pt2.x) + 1;
+      maxXYZ.x = (int) Math.ceil(pt2.x - slop) + 1;
     if (maxXYZ.y < pt2.y - slop)
-      maxXYZ.y = (int) Math.ceil(pt2.y) + 1;
+      maxXYZ.y = (int) Math.ceil(pt2.y - slop) + 1;
     if (maxXYZ.z < pt2.z - slop)
-      maxXYZ.z = (int) Math.ceil(pt2.z) + 1;
+      maxXYZ.z = (int) Math.ceil(pt2.z - slop) + 1;
   }
 
   private void trimAtomSet() {
@@ -1079,6 +1080,7 @@ public class MSRdr implements MSInterface {
     BS bs = asc.getBSAtoms(-1);
     int i0 = cr.asc.getLastAtomSetAtomIndex();
     double packing = cr.getPackingRangeValue(0.001d);
+    System.out.println("MSRDR " + i0 + " " + packing + " " + bs);
     for (int i = bs.nextSetBit(i0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Atom a = atoms[i];
       boolean isOK = (!isCommensurate || modAverage || a.foccupancy >= 0.5d);
@@ -1099,6 +1101,8 @@ public class MSRdr implements MSInterface {
         //              minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 100))) {
         //              }
       }
+//      if (i/10 == i/10d)
+//      System.out.println("ms2 " + isOK + " " + i + " " + pt);
       if (isOK) {
 //        if (cr.fixJavaDouble)
 //          PT.fixPtDoubles(a, PT.FRACTIONAL_PRECISION);

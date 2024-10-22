@@ -5119,13 +5119,14 @@ public class CmdExt extends ScriptExt {
         String sdiag = eval.optParameterAsString(2);
         boolean isSubgroup = sdiag.toLowerCase().startsWith("subgroups");
         boolean isDiagram = sdiag.toLowerCase().startsWith("diagram");
+        boolean isDiagramITA = sdiag.startsWith("diagramITA"); // undocumented - testing only
         boolean isTable = sdiag.toLowerCase().startsWith("table");
         len = slen;
-        if (isSubgroup || isDiagram || isTable) {
+        if (isSubgroup || isDiagram || isTable || isDiagramITA) {
           if (chk)
             break;
           sdiag = PT.trim(
-              sdiag.substring(isSubgroup ? 9 : isDiagram ? 7 : 5).trim(), "\"");
+              sdiag.substring(isDiagramITA ? 10 : isSubgroup ? 9 : isDiagram ? 7 : 5).trim(), "\"");
           if (sdiag.length() == 0) {
             if (sym == null) {
               msg = "Include a space group name or number to view its diagram, table, or subgroups";
@@ -5159,7 +5160,7 @@ public class CmdExt extends ScriptExt {
                 .get("ita")).intValue();
           }
           String href = JC.resolveDataBase(
-              isDiagram ? "itadiagram" : "itatable",
+              isDiagramITA ? "itadiagramita" : isDiagram ? "itadiagram" : "itatable",
               PT.formatS("" + ita, 3, 0, false, true), null);
           msg = href;
           vwr.showUrl(href);
@@ -5943,7 +5944,7 @@ public class CmdExt extends ScriptExt {
       int iAtom = atomExpressionAt(i).nextSetBit(0);
       i = eval.iToken;
       if (!chk)
-        vwr.am.setUnitCellAtomIndex(iAtom);
+        vwr.setUnitCellAtomIndex(iAtom);
       if (iAtom < 0)
         return;
       break;
@@ -6617,6 +6618,7 @@ public class CmdExt extends ScriptExt {
     BS bsModelAtoms = vwr.getThisModelAtoms();
     int i = ++e.iToken;
     boolean doDraw = false;
+    boolean isZap = false;
     int mode = tokAt(i);
     if (mode == T.draw) {
       // MODELKIT DRAW SPACEGROUP [name or number]
@@ -6631,8 +6633,7 @@ public class CmdExt extends ScriptExt {
     if (mode == T.zap) {
       if (!isModelkit)
         invArg();
-      if (!e.chk)
-        vwr.zap(false, false, false);
+      isZap = true;
       mode = tokAt(++i);
       if (mode == T.nada)
         return;
@@ -6716,6 +6717,7 @@ public class CmdExt extends ScriptExt {
       i = ++e.iToken;
     }
     // parse easch mode in full
+    SymmetryInterface sym = vwr.getOperativeSymmetry();
     String type = null;
     P3d pt = null;
     String wyckoff = null;
@@ -6773,9 +6775,19 @@ public class CmdExt extends ScriptExt {
       i = e.iToken;
     } else if (isSpacegroup) {
       type = e.optParameterAsString(i);
+      if (type.length() == 0)
+        type = ".";
+      sym = vwr.getOperativeSymmetry();
+      if (type.equals(".")) {
+        if (sym == null)
+          type = "P1";
+        else
+          type = sym.getSpaceGroupClegId();
+      }
       if (type.equalsIgnoreCase("packed")) {
         // allow for MODELKIT SPACEGROUP packed
         isPacked = true;
+        type = sym.getSpaceGroupClegId();
       }
       // new 16.2.1/2
       if (tokAt(e.iToken + 1) == T.unitcell) {
@@ -6864,12 +6876,15 @@ public class CmdExt extends ScriptExt {
       // "ITA"
       // note: "ITA/" is now implied; adding it makes no differernce
       //        If the Jmol id is desired, it will have a colon in it. 
-      SymmetryInterface sym = vwr.getOperativeSymmetry();
+      if (isZap) {
+        vwr.zap(false, false, false);
+        sym = null;
+      }
       if (isPacked && type.equalsIgnoreCase("packed")) {
+        type = null;
         // allow for MODELKIT SPACEGROUP packed
         if (sym == null)
           invArg();
-        type = sym.getSpaceGroupClegId();
       } else {
         if (!isPacked) {
           for (int j = i + 1; j < slen; j++) {
@@ -6879,7 +6894,8 @@ public class CmdExt extends ScriptExt {
             }
           }
         }
-        type = concatString(i, (isPacked ? "packed" : "unitcell"));
+        if (type == null)
+          type = concatString(i, (isPacked ? "packed" : "unitcell"));
         if (type.length() > 0 && type.indexOf(":") < 0 && type.indexOf(">") < 0
             && (type.indexOf(",") > 0 || "rh".indexOf(type) >= 0)) {
           // allow for MODELKIT SPACEGROUP "a,b,2c"

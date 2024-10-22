@@ -743,8 +743,8 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
     } else if (occSiteMultiplicity > 0) {
       // cif with m40 Fourier
       // occ_site * (occ_0 + SUM)
-      double o_site = fileOcc * occSiteMultiplicity / nOps / occParams[1];
-      occ = o_site * (occParams[1] + vOcc);
+      double o_site = 1 / occSiteMultiplicity ;
+      occ = o_site * occSiteMultiplicity * (fileOcc + vOcc);
     } else {
       // m40 Fourier
       // occ_site * (occ_0 + SUM)

@@ -126,8 +126,6 @@ public interface SymmetryInterface {
 
   BS removeDuplicates(ModelSet ms, BS bs, boolean highPrec);
 
-  V3d[] rotateAxes(int iop, V3d[] axes, P3d ptTemp, M3d mTemp);
-
   void setFinalOperations(int dim, String name, P3d[] atoms,
                                           int iAtomFirst,
                                           int noSymmetryCount, boolean doNormalize, String filterSymop);
@@ -251,11 +249,9 @@ public interface SymmetryInterface {
 
   String staticGetTransformABC(Object value, boolean normalize);
 
-  Object getITASettingValue(Viewer vwr, String itaIndex, String key);
+  String staticCleanTransform(String trm);
 
-  String staticCleanTransform(String tr);
-
-  M4d replaceTransformMatrix(M4d trm);
+  M4d saveOrRetrieveTransformMatrix(M4d trmat);
 
   Object getSubgroupJSON(String nameFrom, String nameTo, int index1, int index2, int flags, Map<String, Object> retMap, Lst<Object> retLst);
 

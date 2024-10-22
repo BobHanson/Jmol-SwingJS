@@ -81,24 +81,6 @@ public class XtalSymmetry {
       return spaceGroup.addLatticeVectors(lattvecs);
     }
 
-    /**
-     * @param code
-     * @param rs
-     *        is a full (3+d)x(3+d) array of epsilons
-     * @param vs
-     *        is a (3+d)x(1) array of translations
-     * @param sigma
-     * @return Jones-Faithful representation
-     */
-    public String addSubSystemOp(String code, Matrix rs, Matrix vs,
-                                 Matrix sigma) {
-      spaceGroup.isSSG = true;
-      String s = SymmetryOperation.getXYZFromRsVs(rs, vs, false);
-      int i = spaceGroup.addSymmetry(s, -1, true);
-      spaceGroup.matrixOperations[i].setSigma(code, sigma);
-      return s;
-    }
-
     public boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
                                  int iRange, int jRange, int kRange,
                                  P3d ptOffset) {
@@ -219,6 +201,11 @@ public class XtalSymmetry {
       return;
     }
 
+    public V3d[] rotateAxes(int iop, V3d[] axes, P3d ptTemp, M3d mTemp) {
+      return (iop == 0 ? axes
+          : spaceGroup.matrixOperations[iop].rotateAxes(axes, unitCell, ptTemp,
+              mTemp));
+    }
 
   }
 
@@ -1021,7 +1008,8 @@ public class XtalSymmetry {
               sym = ms.getAtomSymmetry(atom, this.symmetry);
               if (sym != lastSymmetry) {
                 if (sym.getSpaceGroupOperationCount() == 0)
-                  finalizeSymmetry(lastSymmetry = sym);
+                  finalizeSymmetry(sym);
+                lastSymmetry = sym;
                 op = sym.getSpaceGroupOperation(0);
               }
             }
@@ -1659,7 +1647,7 @@ public class XtalSymmetry {
               (iSym >= nOp ? lstNCS.get(iSym - nOp) : null), transX, transY,
               transZ, pttemp);
         } else {
-          sym = ms.getAtomSymmetry(a, this.symmetry);
+          sym = ms.getAtomSymmetry(a, symmetry);
           sym.newSpaceGroupPoint(a, iSym, null, transX, transY, transZ, pttemp);
           // COmmensurate structures may use a symmetry operator
           // to changes space groups.
@@ -1841,6 +1829,7 @@ public class XtalSymmetry {
 
 
   private void trimToUnitCell(int iAtomFirst) {
+    
     // trim atom set based on current min/max
     Atom[] atoms = asc.atoms;
     BS bs = updateBSAtoms();

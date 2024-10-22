@@ -1172,7 +1172,7 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte DISORDER_ASSEMBLY = 58;
   final private static byte LABEL_ASYM_ID = 59;
   final private static byte SUBSYS_ID = 60;
-  final private static byte SITE_MULT = 61;
+  final private static byte SYMMETRY_MULT = 61;
   final private static byte THERMAL_TYPE = 62;
   final private static byte MOMENT_LABEL = 63;
   final private static byte MOMENT_PRELIM_X = 64;
@@ -1590,7 +1590,7 @@ public class CifReader extends AtomSetCollectionReader {
           }
           break;
         case SITE_SYMMETRY_MULTIPLICITY:
-        case SITE_MULT:
+        case SYMMETRY_MULT:
           siteMult = parseIntField();
           break;
         case THERMAL_TYPE:
@@ -1906,8 +1906,8 @@ public class CifReader extends AtomSetCollectionReader {
               field = field.replace(';', ' ');
               symops.addLast(field);
               setSymmetryOperator(field);
-              if (modulated && modDim == 0)
-                modDim = getModulationReader().modDim;
+              if (modulated && modDim == 0 && modr != null)
+                modDim = modr.modDim;
             }
           break;
         case SYM_MAGN_CENTERING:

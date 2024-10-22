@@ -62,146 +62,150 @@ final public class CLEG {
   public static final String RHOMB_TO_HEX = "a-b,b-c,a+b+c";
   
   /**
-     * running data items for assignSpaceGroup iteration
-     */
-    public static class ClegData {
-      
-      final public String[] tokens;
-      
-      public SymmetryInterface sym;       
- 
-      public M4d trMat;
+   * running data items for assignSpaceGroup iteration
+   */
+  public static class ClegData {
 
-      public String errString;
-  
-      M4d trLink;
+    final public String[] tokens;
 
-      private M4d trTemp = new M4d();
-      ClegNode prevNode;
+    public Symmetry sym;
 
-      Map<String, Object> retMap;
-      Lst<Object> retLst;
-      boolean asM4;
+    public M4d trMat;
 
-      public ClegData(SymmetryInterface sym, String[] tokens) {
-        this.tokens = tokens;
-        this.sym = sym;
-      }
-  
-      public M4d addSGTransform(String tr, String what) {
-        if (trMat == null) {
-          System.out.println("ClegData reset");
-          trMat = new M4d();
-          trMat.setIdentity();
-        }
-        if (tr != null) {
-          trMat.mul(matFor(tr));
-        }
-        if (what != null)
-          System.out.println("ClegData adding " + what + " " + tr + " now " + abcFor(trMat));
-        return trMat;
-      }
-  
-      public String abcFor(M4d trm) {
-        return sym.staticGetTransformABC(trm, false);
-      }
+    public String errString;
 
-      public M4d matFor(String trm) {
-        return (M4d) sym.convertTransform(trm, (trm.indexOf(">") > 0 ? null : trTemp));
-      }
-  
-  
-      public void removePrevNodeTrm() {
-        if (prevNode != null && prevNode.myTrm != null && !prevNode.disabled) {
-          //addSGTransform("!" + prevNode.mySetting, "!prevNode.setting");
-          addSGTransform("!" + prevNode.myTrm, "!prevNode.myTrm");
-        }
-      }
-  
-      public String calculate(M4d trm0) {
-        trm0.invert();
-        M4d trm1 = M4d.newM4(trMat);
-        trm1.mul(trm0);
-        return (String) sym.convertTransform(null, trm1);
-      }
-  
-      /**
-       * fill in the blanks to create a CLEG string when joined.
-       * @param node
-       */
-      public void updateTokens(ClegNode node) {
-          int index = node.index;
-          String s = node.name;
-          if (s.startsWith("ITA/"))
-            s = s.substring(4);
-          else // 133.1
-            s = node.myIta + ":" + node.myTrm;
-          setToken(index, s);
-          if (node.calculated != null && index > 0)
-            setToken(index - 1, node.calculated);
-      }
-  
-      private void setToken(int index, String s) {
-        tokens[index] = s;
-      }
-  
-      public void addTransformLink() {
-        if (trLink == null) {
-          trLink = new M4d();
-          trLink.setIdentity();
-        }
-        trLink.mul(trTemp);
-      }
-  
-      public void setNodeTransform(ClegNode node) {
-        node.myTrm = abcFor(trMat);
-        node.setITAName();
-      }
+    M4d trLink;
 
-      public void addTransform(int index, String transform) {
-          addSGTransform(transform, ">t>");
-          // if the link is null, this will be the flag that we have x >> y
-          addTransformLink();
-          System.out.println(
-              "CLEG.addTransform index=" + index + " trm=" + trMat);
-      }
+    private M4d trTemp = new M4d();
+    ClegNode prevNode;
 
-      public ClegNode getPrevNode() {
-        return prevNode;
-      }
-      
-      public ClegNode setPrevNode(ClegNode node) {
-        return prevNode = node;
-      }
+    Map<String, Object> retMap;
+    Lst<Object> retLst;
+    boolean asM4;
 
-      public String addPrimitiveTransform(String myIta, String myTrm) {
-        String hmName = (String) sym.getSpaceGroupInfoObj("hmName", myIta + ":" + myTrm,
-            false, false);
-        if (hmName == null)
-          return myTrm;
-        char c = hmName.charAt(0);
-        if ("ABCFI".indexOf(c) < 0)
-          return myTrm;
-        M4d t = M4d.newMV(UnitCell.getPrimitiveTransform(c), P3d.new3(0,0,0));
-        t.mul(matFor(myTrm));
-        return abcFor(t);
-      }
-
-      public void setReturnMap(Map<String, Object> ret) {
-        if (ret != null) {
-          asM4 = (ret.get("ASM4") == Boolean.TRUE);
-          ret.clear();
-        }
-        retMap = ret;
-      }
-
-      public void setReturnLst(Lst<Object> ret) {
-        if (ret != null)
-          ret.clear();
-        retLst = ret;        
-      }
-
+    public ClegData(SymmetryInterface sym, String[] tokens) {
+      this.tokens = tokens;
+      this.sym = (Symmetry) sym;
     }
+
+    public void setSymmetry(SymmetryInterface sym) {
+      this.sym = (Symmetry) sym;
+    }
+
+    public M4d addSGTransform(String tr, String what) {
+      if (trMat == null) {
+        System.out.println("ClegData reset");
+        trMat = new M4d();
+        trMat.setIdentity();
+      }
+      if (tr != null) {
+        trMat.mul(matFor(tr));
+      }
+      if (what != null)
+        System.out.println(
+            "ClegData adding " + what + " " + tr + " now " + abcFor(trMat));
+      return trMat;
+    }
+
+    public String abcFor(M4d trm) {
+      return sym.staticGetTransformABC(trm, false);
+    }
+
+    public M4d matFor(String trm) {
+      return (M4d) sym.convertTransform(trm,
+          (trm.indexOf(">") > 0 ? null : trTemp));
+    }
+
+    public void removePrevNodeTrm() {
+      if (prevNode != null && prevNode.myTrm != null && !prevNode.disabled) {
+        addSGTransform("!" + prevNode.myTrm, "!prevNode.myTrm");
+      }
+    }
+
+    public String calculate(M4d trm0) {
+      trm0.invert();
+      M4d trm1 = M4d.newM4(trMat);
+      trm1.mul(trm0);
+      return (String) sym.convertTransform(null, trm1);
+    }
+
+    /**
+     * fill in the blanks to create a CLEG string when joined.
+     * 
+     * @param node
+     */
+    public void updateTokens(ClegNode node) {
+      int index = node.index;
+      String s = node.name;
+      if (s.startsWith("ITA/"))
+        s = s.substring(4);
+      else // 133.1
+        s = node.myIta + ":" + node.myTrm;
+      setToken(index, s);
+      if (node.calculated != null && index > 0)
+        setToken(index - 1, node.calculated);
+    }
+
+    private void setToken(int index, String s) {
+      tokens[index] = s;
+    }
+
+    public void addTransformLink() {
+      if (trLink == null) {
+        trLink = new M4d();
+        trLink.setIdentity();
+      }
+      trLink.mul(trTemp);
+    }
+
+    public void setNodeTransform(ClegNode node) {
+      node.myTrm = abcFor(trMat);
+      node.setITAName();
+    }
+
+    public void addTransform(int index, String transform) {
+      addSGTransform(transform, ">t>");
+      // if the link is null, this will be the flag that we have x >> y
+      addTransformLink();
+      System.out.println("CLEG.addTransform index=" + index + " trm=" + trMat);
+    }
+
+    public ClegNode getPrevNode() {
+      return prevNode;
+    }
+
+    public ClegNode setPrevNode(ClegNode node) {
+      return prevNode = node;
+    }
+
+    public String addPrimitiveTransform(String myIta, String myTrm) {
+      String hmName = (String) sym.getSpaceGroupInfoObj("hmName",
+          myIta + ":" + myTrm, false, false);
+      if (hmName == null)
+        return myTrm;
+      char c = hmName.charAt(0);
+      if ("ABCFI".indexOf(c) < 0)
+        return myTrm;
+      M4d t = M4d.newMV(UnitCell.getPrimitiveTransform(c), P3d.new3(0, 0, 0));
+      t.mul(matFor(myTrm));
+      return abcFor(t);
+    }
+
+    public void setReturnMap(Map<String, Object> ret) {
+      if (ret != null) {
+        asM4 = (ret.get("ASM4") == Boolean.TRUE);
+        ret.clear();
+      }
+      retMap = ret;
+    }
+
+    public void setReturnLst(Lst<Object> ret) {
+      if (ret != null)
+        ret.clear();
+      retLst = ret;
+    }
+
+  }
 
     public static class ClegNode {
   
@@ -360,7 +364,7 @@ final public class CLEG {
         // unit cell already. This call will build the space group if necessary
         // if it is from Wyckoff 
         myTrm = (name.endsWith(".1") ? "a,b,c"
-            : (String) data.sym.getITASettingValue(null, specialPrefix + name, "trm"));
+            : (String) data.sym.getSpaceGroupInfoObj("itaTransform", specialPrefix + name, false, false));
         if (myTrm == null) {
           data.errString = "Unknown ITA setting: " + specialPrefix + name + "!";
           return;
@@ -735,7 +739,10 @@ final public class CLEG {
    */
   @SuppressWarnings("unchecked")
   M4d getMatrixTransform(Viewer vwr, String cleg, Object retLstOrMap) {
-    if (cleg.indexOf(">") < 0)
+    if (cleg.length() == 0)
+      cleg = ".";
+    
+    if (cleg.indexOf(">") < 0 && !cleg.equals("."))
       cleg = ">>" + cleg;
     String[] tokens = PT.split(cleg, ">");
     if (tokens[0].length() == 0)
@@ -749,7 +756,7 @@ final public class CLEG {
         : null);
     data.setReturnMap(retMap);
     data.setReturnLst(retLst);
-    String err = assignSpaceGroup(data, new AssignedSGParams(vwr));
+    String err = assignSpaceGroup(data, new AssignedSGParams(vwr, cleg.equals(".")));
     if (err.indexOf("!") > 0) { 
       System.err.println(err);
       if (retMap != null)
@@ -783,11 +790,13 @@ final public class CLEG {
     boolean mkWasNode;
     int mkIndex;
 
-    AssignedSGParams(Viewer vwr) {
+    AssignedSGParams(Viewer vwr, boolean isCurrentSG) {
       this.vwr = vwr;
       mkCalcOnly = true;
       mkIsAssign = false;
       mkSb = null;
+      if (isCurrentSG)
+        mkSym00 = vwr.getOperativeSymmetry();
     }
 
     AssignedSGParams(Viewer vwr, SymmetryInterface sym00, BS bs,
@@ -812,10 +821,10 @@ final public class CLEG {
 
 
   /**
-   * Entry point for 
+   * 
    * @param vwr
    * @param bs
-   * @param cleg
+   * @param cleg a CLEG expression or "."
    * @param paramsOrUC
    * @param sb
    * @return log message, which indicates an error if ending with "!"
@@ -1064,13 +1073,14 @@ final public class CLEG {
     if (index == 0 && !initializing)
       standardizeTokens(tokens, false);
 
-    boolean nextTransformExplicit = (tokens.length > index + 1
-        && isTransformOnly(tokens[index + 1])
-        && tokens[index + 1].length() > 0);
+    boolean isFinal = (index == tokens.length - 1);
     String token = tokens[index].trim();
     boolean isDot = token.equals(".");
+    boolean nextTransformExplicit = (isFinal ? isDot 
+        : isTransformOnly(tokens[index + 1])
+        && tokens[index + 1].length() > 0);
     if (index == 0) {
-      if (token.length() == 0) {
+      if (token.length() == 0 || isDot) {
         // >> or "."
         // but not >h>...
         if (asgParams.mkSym00 == null) {
@@ -1078,8 +1088,8 @@ final public class CLEG {
         }
         if (!asgParams.mkIsAssign) {
           tokens[0] = asgParams.mkSym00.getSpaceGroupClegId();
-          asgParams.mkIndex = 1;
-          asgParams.mkWasNode = true;
+          asgParams.mkIndex = (isDot && isFinal ? 0 : 1);
+          asgParams.mkWasNode = (asgParams.mkIndex == 1);
           asgParams.mkIgnoreAllSettings = nextTransformExplicit;
           return assignSpaceGroup(data, asgParams);
         }
@@ -1101,11 +1111,11 @@ final public class CLEG {
     String calcNext = (isCalc ? token : null);
     if (isCalc) {
       token = tokens[++index].trim();
+      isFinal = (index == tokens.length - 1);
     }
 
     // check for "...>..>.", which picks up the previous node name. (Not sure how that works)
 
-    boolean isFinal = (index == tokens.length - 1);
     if (isFinal && isDot && data.getPrevNode() != null) {
       token = data.getPrevNode().getCleanITAName();
     }
@@ -1123,7 +1133,7 @@ final public class CLEG {
     // initiaize a node if this is not just a transformation
     ClegNode node = null;
     if (!isTransformOnly) {
-      data.sym = sym;
+      data.setSymmetry(sym);
       node = new ClegNode(data, index, token);
       if (data.errString != null)
         return data.errString;
@@ -1145,7 +1155,7 @@ final public class CLEG {
         // modelkit zap spacegroup ita ....
         String[] cleg = new String[] { node.specialPrefix + ita };
         AssignedSGParams paramsInit = (asgParams.mkCalcOnly
-            ? new AssignedSGParams(vwr)
+            ? new AssignedSGParams(vwr, false)
             : new AssignedSGParams(vwr, null, null, asgParams.mkParamsOrUC, -1,
                 true, asgParams.mkSb, false));
         ClegData cdInit = new ClegData(vwr.getSymTemp(), cleg);
@@ -1202,7 +1212,7 @@ final public class CLEG {
         data.trMat.setIdentity();
       }
       if (!asgParams.mkIsAssign) {
-        data.sym = sym;
+        data.setSymmetry(sym);
         data.setPrevNode(new ClegNode(data, -1, ita0 == null ? null : ita0 + ":" + trm0));
         if (asgParams.mkIgnoreAllSettings)
           data.getPrevNode().disable();
@@ -1234,7 +1244,7 @@ final public class CLEG {
 
     //boolean applySetting = (!asgParams.mkCalcOnly || index > 0);
     if (!ignoreFirstSetting) {
-      data.sym = sym;
+      data.setSymmetry(sym);
       if (ignoreNodeTransform)
         node.disable();
       //      if (!applySetting)
@@ -1276,7 +1286,7 @@ final public class CLEG {
         origin = oabc[0];
       }
     } else if (!zapped) {
-      sym = data.sym = asgParams.mkSym00;
+      data.setSymmetry(sym = asgParams.mkSym00);
       if (data.trMat == null) {
         data.trMat = new M4d();
         data.trMat.setIdentity();
@@ -1324,18 +1334,9 @@ final public class CLEG {
               .remove(JC.INFO_SPACE_GROUP_INFO);
       }
 
-      // old code...
-      // why do this? It treats the supercell as the unit cell. 
-      // is that what we want?
-
-      //      T3d m = sym.getUnitCellMultiplier();
-      //      if (m != null && m.z == 1) {
-      //        m.z = 0;
-      //      }
-
       if (!zapped && !asgParams.mkIsAssign) {
-        sym.replaceTransformMatrix(data.trMat);
-        // storing trm0 for SpaceGroupFinder        
+        // store trm0 for SpaceGroupFinder        
+        sym.saveOrRetrieveTransformMatrix(data.trMat);
       }
       if (params == null)
         params = sym.getUnitCellMultiplied().getUnitCellParams();
@@ -1365,7 +1366,7 @@ final public class CLEG {
       sym.setSpaceGroupTo(sg == null ? jmolId : sg);
       sym.setSpaceGroupName(token);
       if (asgParams.mkCalcOnly) {
-        data.sym = sym;
+        data.setSymmetry(sym);
         return "OK";
       }
       // not a calculation

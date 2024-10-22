@@ -3789,8 +3789,12 @@ public class Viewer extends JmolViewer
   }
 
   public SymmetryInterface getCurrentUnitCell() {
+    SymmetryInterface sym = getUnitCell(am.cmi);
+    if (sym == null)
+      return null;
+    P3d offset = sym.getCartesianOffset();
     int iAtom = am.getUnitCellAtomIndex();
-    return (iAtom >= 0 ? ms.getUnitCellForAtom(iAtom) : getUnitCell(am.cmi));
+    return (iAtom >= 0 && (offset == null || offset.length() == 0) ? ms.getUnitCellForAtom(iAtom) : sym);
   }
 
   /**
@@ -11269,4 +11273,14 @@ public class Viewer extends JmolViewer
     return (uc == null ? new P3d() : uc.getUnitCellCenter());      
   }
 
+  public void setUnitCellAtomIndex(int iAtom) {
+    SymmetryInterface sym = getCurrentUnitCell();
+    if (sym != null)
+      sym.setOffsetPt(new P3d());
+    am.setUnitCellAtomIndex(iAtom);
+  }
+
+  public int getUnitCellAtomIndex() {
+    return am.getUnitCellAtomIndex();
+  }
 }

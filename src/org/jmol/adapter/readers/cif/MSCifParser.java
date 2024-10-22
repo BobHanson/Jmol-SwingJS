@@ -268,9 +268,12 @@ public class MSCifParser extends MSRdr {
     
     if (!key.startsWith("_cell_wave") && !key.contains("fourier")
         && !key.contains("legendre") && !key.contains("_special_func")) {
-      if (key.contains("crenel_ortho"))
+      if (key.contains("crenel_ortho")) {
+        String s = cr.cifParser.skipLoop(true);
         cr.appendLoadNote("WARNING: Orthogonalized non-Legendre functions not supported.\nThe following block has been ignored. Use Legendre functions instead.\n\n" 
-            + cr.cifParser.skipLoop(true) + "=================================\n");
+            + s + "=================================\n");
+        
+      }
       return 0;
     }
     if (cr.asc.iSet < 0)

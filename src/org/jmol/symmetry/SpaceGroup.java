@@ -264,6 +264,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     sg.doNormalize = false;
     sg.setName(name);
     int n = data.size();
+    if (n == 0)
+      return sg;
     for (int i = 0; i < n; i++) {
       Object operation = data.get(i);
       if (operation instanceof SymmetryOperation) {

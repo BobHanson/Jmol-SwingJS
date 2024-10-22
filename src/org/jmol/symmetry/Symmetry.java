@@ -47,6 +47,7 @@ import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.JSJSONParser;
 import javajs.util.Lst;
@@ -354,13 +355,6 @@ public class Symmetry implements SymmetryInterface {
     SymmetryOperation.rotateAndTranslatePoint(
         (o == null ? spaceGroup.finalOperations[i] : o), pt, transX, transY,
         transZ, retPoint);
-  }
-
-  @Override
-  public V3d[] rotateAxes(int iop, V3d[] axes, P3d ptTemp, M3d mTemp) {
-    return (iop == 0 ? axes
-        : spaceGroup.finalOperations[iop].rotateAxes(axes, unitCell, ptTemp,
-            mTemp));
   }
 
   @Override
@@ -794,7 +788,7 @@ public class Symmetry implements SymmetryInterface {
     boolean isForModel = (sgName == null);
     if (sgName == null) {
       if (modelIndex < 0)
-        modelIndex = vwr.am.cmi;
+        modelIndex = modelSet.vwr.am.cmi;
       Map<String, Object> info = modelSet.getModelAuxiliaryInfo(modelIndex);
       if (info != null)
         sgName = (String) info.get(JC.INFO_SPACE_GROUP);
@@ -1404,7 +1398,7 @@ public class Symmetry implements SymmetryInterface {
         if (asIntArray || asSSIntArray) {
           Lst<Object> list = (Lst<Object>) o.get("subgroups");
           int n = list.size();
-          int[][] groups = (asIntArray ? new int[n][] : null);
+          int[][] groups = (asIntArray ? AU.newInt2(n) : null);
           BS bs = (asSSIntArray ? new BS() : null);
           for (int i = n; --i >= 0;) {
             o = (Map<String, Object>) list.get(i);
@@ -1909,27 +1903,27 @@ public class Symmetry implements SymmetryInterface {
     default:
     case SpaceGroup.TYPE_SPACE:
       if (itaSubList == null)
-        itaSubList = new int[nGroups + 1][][];
+        itaSubList = AU.newInt3(nGroups + 1, 0);
       data = itaSubList;
       break;
     case SpaceGroup.TYPE_PLANE:
       if (planeSubList == null)
-        planeSubList = new int[nGroups + 1][][];
+        planeSubList = AU.newInt3(nGroups + 1, 0);
       data = planeSubList;
       break;
     case SpaceGroup.TYPE_LAYER:
       if (layerSubList == null)
-        layerSubList = new int[nGroups + 1][][];
+        layerSubList = AU.newInt3(nGroups + 1, 0);
       data = layerSubList;
       break;
     case SpaceGroup.TYPE_ROD:
       if (rodSubList == null)
-        rodSubList = new int[nGroups + 1][][];
+        rodSubList = AU.newInt3(nGroups + 1, 0);
       data = rodSubList;
       break;
     case SpaceGroup.TYPE_FRIEZE:
       if (friezeSubList == null)
-        friezeSubList = new int[nGroups + 1][][];
+        friezeSubList = AU.newInt3(nGroups + 1, 0);
       data = friezeSubList;
       break;
     }
@@ -1938,11 +1932,11 @@ public class Symmetry implements SymmetryInterface {
         "sg/json/sub_"
             + (groupType == SpaceGroup.TYPE_SPACE ? "" : typeName + "_")
             + "index.json");
-    // one-based numbers here sequenially pairs [sg1,index1, sg2,index2, sg3,index3,...]
+    // one-based numbers here sequential pairs [sg1,index1, sg2,index2, sg3,index3,...]
     for (int i = o.size(); --i >= 0;) {
       Lst<?> l = o.get(i);
       int n = l.size() / 2;
-      int[][] a = data[i + 1] = new int[n][];
+      int[][] a = data[i + 1] = AU.newInt2(n);
       for (int j = 0, pt = 0; j < n; j++) {
         a[j] = new int[] { ((Integer) l.get(pt++)).intValue(),
             ((Integer) l.get(pt++)).intValue() };
@@ -2036,6 +2030,14 @@ public class Symmetry implements SymmetryInterface {
     }
   }
 
+  /**
+   * Transform the unit cell based on the calculated transformation 
+   * matrix. 
+   * 
+   * From SpaceGroupFinder only. 
+   * 
+   * @param trm
+   */
   public void transformUnitCell(M4d trm) {
     if (trm == null) {
       trm = UnitCell.toTrm(spaceGroup.itaTransform, null);
@@ -2055,20 +2057,28 @@ public class Symmetry implements SymmetryInterface {
     unitCell = UnitCell.fromOABC(oabc, false);
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public Object getITASettingValue(Viewer vwr, String itaIndex, String key) {
-    Object o = getSpaceGroupJSON(vwr, "ITA", itaIndex, 0);
-    return (o instanceof Map ? ((Map<String, Object>) o).get(key) : o);
-  }
-
+  /**
+   * Normalize the transform, changing for instance a+1/2,b,c to "a,b,c;1/2,0,0"
+   * 
+   * From SpaceGroupFinder only.
+   * 
+   */
   @Override
   public String staticCleanTransform(String tr) {
     return SymmetryOperation.getTransformABC(UnitCell.toTrm(tr, null), true);
   }
 
+  /**
+   * Saved by CLEG.assignSpaceGroup; retrieved by SpaceGroupFinder.
+   * 
+   * One-time save/retrieve a transformation matrix.
+   *
+   * Just a way for CLEG to pass a transform matrix off to SpaceGroupFinder.
+   * 
+   * 
+   */
   @Override
-  public M4d replaceTransformMatrix(M4d trm) {
+  public M4d saveOrRetrieveTransformMatrix(M4d trm) {
     M4d trm0 = transformMatrix;
     transformMatrix = trm;
     return trm0;
@@ -2127,7 +2137,7 @@ public class Symmetry implements SymmetryInterface {
     return clegInstance;
   }
 
-  private Viewer vwr = null;
+  private Viewer vwr;
 
   /**
    * for the vwr.getSymTemp() only

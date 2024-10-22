@@ -209,7 +209,8 @@ public class SpaceGroupFinder {
           oabc[0].setT(origin);
       } else {
         uc = setSpaceGroupAndUnitCell(sg, null, oabc, false);
-        uc.transformUnitCell(uci.replaceTransformMatrix(null));
+        // CLEG has savee this for us; now retrieve it
+        uc.transformUnitCell(uci.saveOrRetrieveTransformMatrix(null));
       }
     } else {
       // this method is used to build basis as well, 

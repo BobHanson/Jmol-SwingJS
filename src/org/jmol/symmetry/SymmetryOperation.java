@@ -264,6 +264,12 @@ public class SymmetryOperation extends M4d {
   private String opAxisCode;
   public boolean opIsLong;
 
+  /**
+   * Sets sigma and the subsystem code for modulated CIF
+   * 
+   * @param subsystemCode
+   * @param sigma
+   */
   public void setSigma(String subsystemCode, Matrix sigma) {
     this.subsystemCode = subsystemCode;
     this.sigma = sigma;
@@ -1074,7 +1080,7 @@ public class SymmetryOperation extends M4d {
     return str.substring(1);
   }
 
-  V3d[] rotateAxes(V3d[] vectors, UnitCell unitcell, P3d ptTemp, M3d mTemp) {
+  public V3d[] rotateAxes(V3d[] vectors, UnitCell unitcell, P3d ptTemp, M3d mTemp) {
     V3d[] vRot = new V3d[3];
     getRotationScale(mTemp);
     for (int i = vectors.length; --i >= 0;) {

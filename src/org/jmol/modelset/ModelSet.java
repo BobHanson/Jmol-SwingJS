@@ -1043,6 +1043,9 @@ public class ModelSet extends BondCollection {
       uc = unitCells[modelIndex];
     if (uc != null) {
       if (returnCage) {
+        int cai = vwr.getUnitCellAtomIndex();
+        if (cai > 0)
+          uc = getUnitCellForAtom(cai);
         return (ucSimple == null
             ? setModelCagePts(modelIndex, uc.getUnitCellVectors(), "cage")
             : ucSimple);
