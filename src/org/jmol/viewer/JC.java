@@ -188,6 +188,8 @@ public final class JC {
 
   public static final String defaultMacroDirectory = "https://chemapps.stolaf.edu/jmol/macros";
 
+  public static final String SPACE_GROUP_LIST_BCS = "https://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen";
+
   private final static String[] databaseArray = {
       // still http:
       "itatable", 

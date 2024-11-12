@@ -5117,16 +5117,22 @@ public class CmdExt extends ScriptExt {
       switch (tok) {
       case T.spacegroup:
         String sdiag = eval.optParameterAsString(2);
+        boolean isNames = sdiag.toLowerCase().equals("names");
         boolean isSubgroup = sdiag.toLowerCase().startsWith("subgroups");
         boolean isDiagram = sdiag.toLowerCase().startsWith("diagram");
         boolean isDiagramITA = sdiag.startsWith("diagramITA"); // undocumented - testing only
         boolean isTable = sdiag.toLowerCase().startsWith("table");
         len = slen;
-        if (isSubgroup || isDiagram || isTable || isDiagramITA) {
+        int ita = -1;
+        if (isNames) {
           if (chk)
             break;
-          sdiag = PT.trim(
-              sdiag.substring(isDiagramITA ? 10 : isSubgroup ? 9 : isDiagram ? 7 : 5).trim(), "\"");
+        } else if (isSubgroup || isDiagram || isTable || isDiagramITA) {
+          if (chk)
+            break;
+          sdiag = PT.trim(sdiag
+              .substring(isDiagramITA ? 10 : isSubgroup ? 9 : isDiagram ? 7 : 5)
+              .trim(), "\"");
           if (sdiag.length() == 0) {
             if (sym == null) {
               msg = "Include a space group name or number to view its diagram, table, or subgroups";
@@ -5145,7 +5151,7 @@ public class CmdExt extends ScriptExt {
           }
           if (msg != null)
             break;
-          int ita = PT.parseInt(sdiag);
+          ita = PT.parseInt(sdiag);
           if (ita == Integer.MIN_VALUE) {
             if (sym == null) {
               sym = vwr.getSymStatic();
@@ -5159,9 +5165,13 @@ public class CmdExt extends ScriptExt {
             ita = ((Integer) ((Map<String, Object>) info.get("spaceGroupInfo"))
                 .get("ita")).intValue();
           }
-          String href = JC.resolveDataBase(
-              isDiagramITA ? "itadiagramita" : isDiagram ? "itadiagram" : "itatable",
-              PT.formatS("" + ita, 3, 0, false, true), null);
+        }
+        if (isNames || ita > 0) {
+          String href = (isNames ? JC.SPACE_GROUP_LIST_BCS
+              : JC.resolveDataBase(
+                  isDiagramITA ? "itadiagramita"
+                      : isDiagram ? "itadiagram" : "itatable",
+                  PT.formatS("" + ita, 3, 0, false, true), null));
           msg = href;
           vwr.showUrl(href);
           break;
