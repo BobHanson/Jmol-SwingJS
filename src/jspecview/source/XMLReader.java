@@ -25,8 +25,6 @@ import java.io.IOException;
 import javajs.util.Lst;
 import javajs.util.SB;
 
-
-
 import org.jmol.util.Logger;
 
 import jspecview.api.SourceReader;
@@ -35,6 +33,7 @@ import jspecview.common.Spectrum;
 
 /**
  * Representation of a XML Source.
+ * 
  * @author Craig Walters
  * @author Prof. Robert J. Lancashire
  */
@@ -42,17 +41,18 @@ import jspecview.common.Spectrum;
 abstract class XMLReader implements SourceReader {
 
   abstract protected JDXSource getXML(BufferedReader br);
-  
+
   abstract protected boolean processTag(int tagId) throws Exception;
+
   abstract protected void processEndTag(int tagId) throws Exception;
 
   protected JDXSource source;
   protected String filePath = "";
-  
+
   protected XMLParser parser;
 
-  protected String tagName = "START", attrList = "",
-      title = "", owner = "UNKNOWN", origin = "UNKNOWN";
+  protected String tagName = "START", attrList = "", title = "",
+      owner = "UNKNOWN", origin = "UNKNOWN";
   protected String tmpEnd = "END", molForm = "", techname = "";
   protected int npoints = -1, samplenum = -1;
   protected double[] yaxisData;
@@ -63,7 +63,7 @@ abstract class XMLReader implements SourceReader {
   protected String pathlength = "na", identifier = "", plLabel = "";
   protected String resolution = "na", resLabel = "", LocName = "";
   protected String LocContact = "", casName = "";
-  protected String sampleowner = "", obNucleus = "", StrObFreq = "";
+  protected String sampleowner = "", obNucleus = "", strObFreq = "";
   protected boolean increasing = false, continuous = false;
   protected int ivspoints, evspoints, sampleRefNum = 0;
   protected double deltaX = JDXDataObject.ERROR;
@@ -79,14 +79,14 @@ abstract class XMLReader implements SourceReader {
   protected SB errorLog = new SB();
 
   public XMLReader() {
-  	// for reflection
+    // for reflection
   }
-  
-	@Override
-	public JDXSource getSource(String filePath, BufferedReader br) {
-		this.filePath = filePath;
-		return getXML(br);
-	}
+
+  @Override
+  public JDXSource getSource(String filePath, BufferedReader br) {
+    this.filePath = filePath;
+    return getXML(br);
+  }
 
   protected void getSimpleXmlReader(BufferedReader br) {
     parser = new XMLParser(br);
@@ -118,6 +118,8 @@ abstract class XMLReader implements SourceReader {
     spectrum.setLongDate(LongDate);
     spectrum.setOrigin(origin);
     spectrum.setOwner(owner);
+    spectrum.setNucleusAndFreq(obNucleus, true);
+
     //spectrum.setPathlength(pathlength);
 
     //  now fill in what we can of a HashMap with parameters from the CML file
@@ -126,8 +128,8 @@ abstract class XMLReader implements SourceReader {
     //      Key kk = new Key;
     JDXReader.addHeader(LDRTable, "##PATHLENGTH", pathlength);
     JDXReader.addHeader(LDRTable, "##RESOLUTION", resolution);
-    if (!StrObFreq.equals(""))
-      JDXReader.addHeader(LDRTable, "##.OBSERVEFREQUENCY", StrObFreq);
+    if (!strObFreq.equals(""))
+      JDXReader.addHeader(LDRTable, "##.OBSERVEFREQUENCY", strObFreq);
     if (!obNucleus.equals(""))
       JDXReader.addHeader(LDRTable, "##.OBSERVENUCLEUS", obNucleus);
     JDXReader.addHeader(LDRTable, "##$MANUFACTURER", vendor);
@@ -159,7 +161,7 @@ abstract class XMLReader implements SourceReader {
 
     if (!increasing)
       xyCoords = Coordinate.reverse(xyCoords);
-      
+
     spectrum.setXUnits(xUnits);
     spectrum.setYUnits(yUnits);
 
@@ -179,7 +181,6 @@ abstract class XMLReader implements SourceReader {
     return true;
   }
 
-
   protected void processErrors(String type) {
     // for ease of processing later, return a source rather than a spectrum
     //    return XMLSource.getXMLInstance(spectrum);
@@ -193,22 +194,26 @@ abstract class XMLReader implements SourceReader {
   }
 
   final static String[] tagNames = {
-    // aml:
-    "audittrail",
-    "experimentstepset",
-    "sampleset",
-    "xx result",
-    // cml:
-    "spectrum",
-    "metadatalist",
-    "conditionlist",
-    "parameterlist",
-    "sample",
-    "spectrumdata",
-    "peaklist",
-    // not processed in XMLSource, only subclasses thereof
-    "author",
-    "peaklist"
+      // aml:
+      "audittrail", //0
+      "experimentstepset", "sampleset", "xx result", //3
+      // cml:
+      "spectrum", //4
+      "metadatalist", "conditionlist", "parameterlist", "sample",
+      "spectrumdata", "peaklist", //10
+      // not processed in XMLSource, only subclasses thereof
+      "author", "peaklist", //12
+      // NMRML:
+      "acquisitionnucleus", //13
+      "effectiveexcitationfield", "spectrum1d", "spectrumAnnotationList",
+      "chemicalcompound", "identifier", "npmrd_id", "structure", "atomlist",
+      "atom", "bondlist", "bond",
+      // more
+      "atomassignmentlist", "multiplet", "atoms", "multiplicity", "peakList",
+      "peak", // 30
+      "acquisition", "spectrumdataarray","spectrumlist" // 33
+
+
   };
 
   final static int AML_0 = 0;
@@ -231,6 +236,31 @@ abstract class XMLReader implements SourceReader {
   final static int AML_AUTHOR = 11;
   final static int CML_PEAKLIST2 = 12;
 
+  final static int NMRML_0 = 13;
+  final static int NMRML_acquisitionnucleus = 13;
+  final static int NMRML_effectiveexcitationfield = 14;
+  final static int NMRML_spectrum1d = 15;
+  final static int NMRML_spectrumAnnotationList = 16;
+  final static int NMRML_chemicalcompound = 17;
+  final static int NMRML_identifier = 18;
+  final static int NMRML_npmrd_id = 19;
+  final static int NMRML_structure = 20;
+  final static int NMRML_atomlist = 21;
+  final static int NMRML_atom = 22;
+  final static int NMRML_bondlist = 23;
+  final static int NMRML_bond = 24;
+  // more
+  final static int NMRML_atomAssignmentList = 25;
+  final static int NMRML_multiplet = 26;
+  final static int NMRML_atoms = 27;
+  final static int NMRML_multiplicity = 28;
+  final static int NMRML_peakList = 29;
+  final static int NMRML_peak = 30;
+  final static int NMRML_acquisition = 31;
+  final static int NMRML_spectrumdataarray = 32;
+  final static int NMRML_spectrumlist = 33;
+  final static int NMRML_1 = 33;
+
   protected void processXML(int i0, int i1) throws Exception {
     while (parser.hasNext()) {
       if (parser.nextEvent() != XMLParser.START_ELEMENT)
@@ -249,6 +279,7 @@ abstract class XMLReader implements SourceReader {
 
   /**
    * Process the audit XML events
+   * 
    * @param tagId
    * @param requiresEndTag
    */
@@ -280,7 +311,8 @@ abstract class XMLReader implements SourceReader {
           return;
       }
     } catch (Exception e) {
-      String msg = "error reading " + tagName + " section: " + e + "\n" + e.getStackTrace();
+      String msg = "error reading " + tagName + " section: " + e + "\n"
+          + e.getStackTrace();
       Logger.error(msg);
       errorLog.append(msg + "\n");
     }

@@ -160,8 +160,8 @@ class CMLReader extends XMLReader {
     if (tagName.equals("parameter")) {
       String title = parser.getAttrValueLC("title");
       if (title.equals("nmr.observe frequency")) {
-        StrObFreq = parser.qualifiedValue();
-        obFreq = Double.parseDouble(StrObFreq);
+        strObFreq = parser.qualifiedValue();
+        obFreq = Double.parseDouble(strObFreq);
       } else if (title.equals("nmr.observe nucleus")) {
         obNucleus = parser.getAttrValue("value");
       } else if (title.equals("spectrometer/data system")) {
@@ -180,10 +180,10 @@ class CMLReader extends XMLReader {
     if (tagName.equals("scalar")) {
       String dictRef = parser.getAttrValueLC("dictRef");
       if (dictRef.contains(":field")) {
-        StrObFreq = parser.thisValue();
-        if (StrObFreq.charAt(0) > 47
-            && StrObFreq.charAt(0) < 58)
-          obFreq = Double.parseDouble(StrObFreq);
+        strObFreq = parser.thisValue();
+        if (strObFreq.charAt(0) > 47
+            && strObFreq.charAt(0) < 58)
+          obFreq = Double.parseDouble(strObFreq);
       }
     }
   }

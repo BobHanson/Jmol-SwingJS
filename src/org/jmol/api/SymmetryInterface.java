@@ -15,7 +15,6 @@ import javajs.util.P3d;
 import javajs.util.Qd;
 import javajs.util.SB;
 import javajs.util.T3d;
-import javajs.util.V3d;
 
 public interface SymmetryInterface {
 
@@ -288,5 +287,7 @@ public interface SymmetryInterface {
   int getDimensionality();
 
   P3d getUnitCellCenter();
+
+  Atom getConstrainableEquivAtom(Atom a);
 
 }

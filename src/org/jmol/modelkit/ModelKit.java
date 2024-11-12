@@ -92,18 +92,28 @@ public class ModelKit {
 
     int type;
 
-    private P3d pt;
     private P3d offset;
     private P4d plane;
     private V3d unitVector;
+
+    /**
+     * This atom is usually the atom being moved, but
+     * in some cases we need to switch to a different 
+     * atom in order to avoid the special case where a 
+     * screw axis (SG 224 Wyckoff i) or glide 
+     * (plane group 12 Wyckoff c) creates a stationary 
+     * point. In such a case, we can't do a projection
+     * the way we can with an axis or plane. 
+     */
+    Atom keyAtom;
 
     //    // not used to date
     //    private P3d[] points;
     //    private double value;
 
-    Constraint(P3d pt, int type, Object[] params)
+    Constraint(Atom keyAtom, int type, Object[] params)
         throws IllegalArgumentException {
-      this.pt = pt;
+      this.keyAtom = keyAtom;
       this.type = type;
       switch (type) {
       case TYPE_NONE:
@@ -168,7 +178,7 @@ public class ModelKit {
         ptNew.x = Double.NaN;
         return;
       case TYPE_VECTOR:
-        if (pt == null) { // generic constraint 
+        if (keyAtom == null) { // generic constraint 
           d = MeasureD.projectOntoAxis(p, offset, unitVector, v);
           if (d * d >= JC.UC_TOLERANCE2) {
             ptNew.x = Double.NaN;
@@ -179,7 +189,7 @@ public class ModelKit {
         break;
       //      case TYPE_LATTICE_FACE:
       case TYPE_PLANE:
-        if (pt == null) { // generic constraint 
+        if (keyAtom == null) { // generic constraint 
           if (Math.abs(MeasureD.getPlaneProjection(p, plane, v, v)) > 0.01d) {
             ptNew.x = Double.NaN;
             break;
@@ -682,7 +692,6 @@ public class ModelKit {
   }
 
   private static Constraint locked = new Constraint(null, Constraint.TYPE_LOCKED, null);
-  //private static Constraint none = new Constraint(null, Constraint.TYPE_NONE, null);
 
   final static int STATE_MOLECULAR /* 0b00000000000*/ = 0x00;
 
@@ -1298,7 +1307,6 @@ public class ModelKit {
       n = assignMoveAtoms(sym, bsSelected, null, null, iatom, p, pts,
           allowProjection, isMolecule);
       if (n == 0 || bsSelected.isEmpty()) {
-        vwr.showString("could not move atom!", false);
         if (!isCommand)
           vwr.warnAtom(iatom);
       } else if (!isCommand){
@@ -1693,11 +1701,9 @@ public class ModelKit {
           P3d v2 = (P3d) o[1];
           P4d plane = (P4d) o[2];
           if (v1 != null && v2 != null) {
-            constraint = new Constraint(null, Constraint.TYPE_VECTOR,
-                new Object[] { v1, v2 });
+            constraint = new Constraint(null, Constraint.TYPE_VECTOR, new Object[] { v1, v2 });
           } else if (plane != null) {
-            constraint = new Constraint(null, Constraint.TYPE_PLANE,
-                new Object[] { plane });
+            constraint = new Constraint(null, Constraint.TYPE_PLANE, new Object[] { plane });
           } else if (v1 != null)
             constraint = new Constraint(null, Constraint.TYPE_LOCKED, null);
         }
@@ -2150,6 +2156,9 @@ public class ModelKit {
     if (sym == null)
       return addConstraint(iatom,
           new Constraint(a, Constraint.TYPE_NONE, null));
+
+    a = sym.getConstrainableEquivAtom(a);
+    
     // plane and frieze adds an (x,y,0) plane constraint
     boolean isPlanar = (sym.getDimensionality() == 2);
     
@@ -2166,13 +2175,16 @@ public class ModelKit {
     if (ops.length == 0 && !isPlanar)
       return addConstraint(iatom,
           new Constraint(a, Constraint.TYPE_GENERAL, null));
+    
+    
+    
     // we need only work with the first plane or line or point
-    P4d plane1 = null;
+    P4d plane1 = (isPlanar ? plane001 : null);
     Object[] line1 = null;
-    for (int i = ops.length + (isPlanar ? 1 : 0); --i >= 0;) {
+    for (int i = ops.length; --i >= 0;) {
       Object[] line2 = null;
-      Object c = (i == ops.length ? plane001 : sym.getSymmetryInfoAtom(vwr.ms, iatom, null, ops[i], null, a,
-          null, JC.MODELKIT_INVARIANT, T.array, 0, -1, 0, null));
+      Object c = sym.getSymmetryInfoAtom(vwr.ms, iatom, null, ops[i], null, a,
+          null, JC.MODELKIT_INVARIANT, T.array, 0, -1, 0, null);
       if (c instanceof String) {
         // this would be a special glide plane, for instance
         continue;
@@ -2217,11 +2229,12 @@ public class ModelKit {
       // translate line to be through this atom
       line1[0] = P3d.newP(a);
     }
+    
+    
     return addConstraint(iatom, //true ? locked : 
         line1 != null ? new Constraint(a, Constraint.TYPE_VECTOR, line1)
             : plane1 != null
-                ? new Constraint(a, Constraint.TYPE_PLANE,
-                    new Object[] { plane1 })
+                ? new Constraint(a, Constraint.TYPE_PLANE, new Object[] { plane1 })
                 : new Constraint(a, Constraint.TYPE_GENERAL, null));
   }
 
@@ -2271,6 +2284,12 @@ public class ModelKit {
         if ("L".equals(wyckoff)) {
           Object[] oa  = (Object[]) o;
           P3d[] allPts = (P3d[]) oa[0];
+          // not successful.
+          for (int i = allPts.length; --i >= 0;) {
+            sym.toFractional(allPts[i], true);
+            sym.unitize(allPts[i]);
+            sym.toCartesian(allPts[i], true);
+          }
           String elements = (String) oa[1];
           pts = new P3d[1];
           int n = 0;
@@ -2329,10 +2348,19 @@ public class ModelKit {
       int atomIndex = (isPoint ? -1 : bsAtoms.nextSetBit(0));
       if (!isPoint && atomIndex < 0 || sym == null && type == null)
         return 0;
+      if (pts != null) {
+        for (int i = 0; i < pts.length; i++)
+          if (Double.isNaN(pts[i].x + pts[i].y + pts[i].z))
+              return 0;         
+      }
       int n = 0;
       if (sym == null) {
         // when no symmetry, this is just a way to add multiple points at the same time. 
         if (isPoint) {
+          if (pts == null) {
+            // zap; modelkit add wyckoff G
+            return 0;
+          }
           for (int i = 0; i < pts.length; i++)
             assignAtomNoAddedSymmetry(pts[i], -1, null, type, true, cmd, -1);
           n = -pts.length;
@@ -2607,6 +2635,7 @@ public class ModelKit {
     if (points != null) {
       np = nIgnored = points.size();
       sym.toFractional(pt, false);
+      // don't unitize here (for Wyckoff ALL)
       if (pt.z != 0 && sym.getDimensionality() == 2)
         pt.z = 0;
       points.addLast(pt);
@@ -3057,8 +3086,9 @@ public class ModelKit {
       SymmetryInterface sym = getSym(iatom);
       BS bseq = new BS();
       vwr.ms.getSymmetryEquivAtomsForAtom(iatom, null, bsModelAtoms, bseq);
-      if (setConstraint(sym, bseq.nextSetBit(0),
-          GET_CREATE).type == Constraint.TYPE_LOCKED) {
+      Constraint c = setConstraint(sym, bseq.nextSetBit(0),
+          GET_CREATE);
+      if (c.type == Constraint.TYPE_LOCKED) {
         return 0;
       }
       if (bsFixed != null && !bsFixed.isEmpty())
@@ -3069,32 +3099,34 @@ public class ModelKit {
       }
       // checking here that the new point has not moved to a special position
       Atom a = vwr.ms.at[iatom];
-      int[] v0 = sym.getInvariantSymops(a, null);
+      int[] v0 = sym.getInvariantSymops(c.keyAtom, null);
       int[] v1 = sym.getInvariantSymops(pt, v0);
-      if ((v1 == null) != (v0 == null) || !Arrays.equals(v0, v1))
+      if (v1 != null && (v0 == null || !Arrays.equals(v0, v1))) {
         return 0;
+      }
       P3d[] points = new P3d[n];
       // If this next call fails, then we have a serious problem. 
       // An operator was not found for one of the atoms that transforms it
       // into its presumed symmetry-equivalent atom
-      int ia0 = bseq.nextSetBit(0);
-      if (!fillPointsForMove(sym, bseq, ia0, a, pt, points)) {
+      if (!fillPointsForMove(sym, bseq, a, pt, points)) {
         return 0;
       }
+      int ikey = c.keyAtom.i;
       bsMoved.or(bseq);
-      int mi = vwr.ms.at[ia0].mi;
-      vwr.sm.setStatusStructureModified(ia0, mi, Viewer.MODIFY_SET_COORD,
+      int mi = vwr.ms.at[ikey].mi;
+      vwr.sm.setStatusStructureModified(ikey, mi, Viewer.MODIFY_SET_COORD,
           "dragatom", n, bseq);
       for (int k = 0, ia = bseq.nextSetBit(0); ia >= 0; ia = bseq
           .nextSetBit(ia + 1)) {
         P3d p = points[k++];
         vwr.ms.setAtomCoord(ia, p.x, p.y, p.z);
       }
-      vwr.sm.setStatusStructureModified(ia0, mi, -Viewer.MODIFY_SET_COORD,
+      vwr.sm.setStatusStructureModified(ikey, mi, -Viewer.MODIFY_SET_COORD,
           "dragatom", n, bseq);
       return n;
     } catch (Exception e) {
-      System.err.println("Modelkit err" + e);
+      System.err.println("Modelkit err: " + e);
+      e.printStackTrace();
       return 0;
     } finally {
       setMKState(state);
@@ -3407,21 +3439,19 @@ public class ModelKit {
    * 
    * @param sg
    * @param bseq
-   * @param i0
-   *        // basis atom index
    * @param a
    * @param pt
    * @param points
    * @return false if there is a failure to find a transform
    */
-  private boolean fillPointsForMove(SymmetryInterface sg, BS bseq, int i0,
+  private boolean fillPointsForMove(SymmetryInterface sg, BS bseq,
                                     P3d a, P3d pt, P3d[] points) {
     double d = a.distance(pt);
     P3d fa = P3d.newP(a);
     P3d fb = P3d.newP(pt);
     sg.toFractional(fa, false);
     sg.toFractional(fb, false);
-    for (int k = 0, i = i0; i >= 0; i = bseq.nextSetBit(i + 1)) {
+    for (int k = 0, i = bseq.nextSetBit(0); i >= 0; i = bseq.nextSetBit(i + 1)) {
       P3d p = P3d.newP(vwr.ms.at[i]);
       P3d p0 = P3d.newP(p);
       sg.toFractional(p, false);
@@ -3786,7 +3816,7 @@ public class ModelKit {
         iatom = -1;
       } else {
         // transform the shift to the basis
-        Atom b = getBasisAtom(iatom);
+        Atom b = c.keyAtom;
         if (a != b) {
           M4d m = getTransform(sym, a, b);
           if (m == null) {

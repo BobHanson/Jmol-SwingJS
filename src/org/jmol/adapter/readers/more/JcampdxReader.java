@@ -151,7 +151,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
       break;
     case 36:// $MOLFILE
       acdMolFile = mpr.readACDMolFile();
-      processModelData(acdMolFile, title + " (assigned)", "MOL", "mol", "", 0.01f, Double.NaN, true);
+      processModelData(acdMolFile, title + " (assigned)", "MOL", "mol", "", 0.01d, Double.NaN, true);
       if (asc.errorMessage != null) {
         continuing = false;
         return false;
@@ -193,6 +193,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
                                double vibScale, boolean isFirst) throws Exception {
     int model0 = asc.iSet;
     AtomSetCollection model = null;
+    boolean haveScaling = !Double.isNaN(modelScale);
     while (true) {
       Object ret = SmarterJmolAdapter.staticGetAtomSetCollectionReader(
           filePath, type, Rdr.getBR(data), htParams);
@@ -232,7 +233,16 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
             atoms[i].vib.scale(vibScale);
         }
       }
-      if (!Double.isNaN(modelScale)) {
+      if (haveScaling) {
+        if (model.bondCount > 0) {
+          Bond b = model.bonds[0];
+          double d = model.atoms[b.atomIndex1].distance(model.atoms[b.atomIndex2]);
+          if (d > 0.5d) {
+            haveScaling = false;
+          }
+        }
+      }
+      if (haveScaling) {
         Logger.info("JcampdxReader applying model scaling of " + modelScale + " to "
             + model.ac + " atoms");
         Atom[] atoms = model.atoms;

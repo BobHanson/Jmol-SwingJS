@@ -84,10 +84,11 @@ public abstract class SpecialGroup extends SpaceGroup {
         allowSame = true;
       }
       ParamCheck pc = new ParamCheck(params, allowSame, false);
+      pc.c = 0.5d;
+      pc.alpha = pc.beta = 90;
       if (n > (allowSame ? 2 : 0)) {  
         if (toHex) {
             pc.b = pc.a;
-            pc.alpha = pc.beta = 90;
             pc.gamma = 120;
         } else if (n >= 10) {
           // tetragonal

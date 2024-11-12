@@ -4683,21 +4683,26 @@ public class ModelSet extends BondCollection {
     if (bsAU == null)
       return;
     bsAU.clearAll();//andNot(bs);
-    //bsSym.or(bs);
     BS bsSites = new BS();
     BS bs = am[imodel].bsAtoms;
-    int[] sites = new int[ac];
-    for (int p = 0, i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       if (isDeleted(at[i]))
         continue;
       int site = at[i].atomSite;
       if (!bsSites.get(site)) {
         bsSites.set(site);
-        if (site >= sites.length)
-          continue;
-        sites[site] = ++p;
         bsAU.set(i);
       }
+    }
+    int[] sites = new int[bsSites.length()];
+    for (int p = 0, i = bsSites.nextSetBit(0); i >= 0; i = bsSites.nextSetBit(i + 1)) {
+      sites[i] = ++p;
+    }
+    
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      if (isDeleted(at[i]))
+        continue;
+      int site = at[i].atomSite;
       setSite(at[i], -1, false);
       setSite(at[i], sites[site], true);
     }

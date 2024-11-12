@@ -150,6 +150,8 @@ public class UccageRenderer extends CageRenderer {
 
   private int ypos;
   
+  private boolean isPlanarGroup;
+  
   private void render1(int mad10) {
     g3d.setC(colix);
     unitcell = vwr.getCurrentUnitCell();
@@ -159,6 +161,7 @@ public class UccageRenderer extends CageRenderer {
     isSlab = unitcell.isSlab();
     periodicity = unitcell.getPeriodicity();
     nDims = unitcell.getDimensionality();
+    isPlanarGroup = (periodicity == 0x03 && nDims == 2);
     P3d[] vertices = unitcell.getUnitCellVerticesNoOffset();
     offset.setT(unitcell.getCartesianOffset());
     offsetT.setT(unitcell.getFractionalOrigin());
@@ -358,10 +361,10 @@ public class UccageRenderer extends CageRenderer {
     drawInfo("a=", SimpleUnitCell.INFO_A, "\u00C5");
     if (!isPolymer)
       drawInfo("b=", SimpleUnitCell.INFO_B, "\u00C5");
-    if (!isPolymer && !isSlab)
+    if (!isPolymer && !isSlab && !isPlanarGroup)
       drawInfo("c=", SimpleUnitCell.INFO_C, "\u00C5");
     if (!isPolymer) {
-      if (!isSlab) {
+      if (!isSlab && !isPlanarGroup) {
         drawInfo("\u03B1=", SimpleUnitCell.INFO_ALPHA, "\u00B0");
         drawInfo("\u03B2=", SimpleUnitCell.INFO_BETA, "\u00B0");
       }

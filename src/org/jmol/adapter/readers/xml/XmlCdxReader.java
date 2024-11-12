@@ -370,7 +370,7 @@ public class XmlCdxReader extends XmlReader {
   private String thisFragmentID;
   private CDNode thisNode;
   private Stack<CDNode> nodes = new Stack<CDNode>();
-  private List<CDNode> nostereo = new ArrayList<CDNode>();
+  private Lst<CDNode> nostereo = new Lst<CDNode>();
   Map<String, Object> objectsByID = new HashMap<String, Object>();
 
   /**
@@ -403,14 +403,61 @@ public class XmlCdxReader extends XmlReader {
 
     if ("t".equals(localName)) {
       textBuffer = "";
+      return;
     }
 
     if ("s".equals(localName)) {
       setKeepChars(true);
+      return;
+    }
+
+    if ("crossingbond".equals(localName)) {
+      BracketedGroup bg = (bracketedGroups == null || bracketedGroups.isEmpty()
+          ? null
+          : bracketedGroups.get(bracketedGroups.size() - 1));
+      if (bg != null && bg.repeatCount > 0) {
+        bg.innerAtomID = parseIntStr(atts.get("inneratomid"));
+        bg.bondID = parseIntStr(atts.get("bondid"));
+      }
+      return;
+    }
+    if ("bracketedgroup".equals(localName)) {
+      String usage = atts.get("bracketusage");
+      if (bracketedGroups == null)
+        bracketedGroups = new Stack<>();
+      int[] ids = null;
+      int repeatCount = 0;
+      if ("MultipleGroup".equals(usage)) {
+        String[] sids = PT.getTokens(atts.get("bracketedobjectids"));
+        ids = new int[sids.length];
+        for (int i = ids.length; --i >= 0;)
+          ids[i] = parseIntStr(sids[i]);
+        repeatCount = parseIntStr(atts.get("repeatcount"));
+      }
+      bracketedGroups.add(new BracketedGroup(ids, repeatCount));
     }
 
   }
+  
+  private Stack<BracketedGroup> bracketedGroups;
 
+  static class BracketedGroup {
+    int[] ids;
+    int bondID;
+    int innerAtomID;
+    int repeatCount;  
+    BracketedGroup(int[] ids, int repeatCount) {
+      this.ids = ids;
+      this.repeatCount = repeatCount;      
+    }
+    public void process() {
+      // TODO
+      // here we would process all of this;
+      System.out.println("bracketed groups not implmented");
+      
+    }
+  }
+  
   private CDNode setFragment(String id) {
     fragments.push(thisFragmentID = id);
     CDNode fragmentNode = (thisNode == null || !thisNode.isFragment ? null
@@ -435,6 +482,9 @@ public class XmlCdxReader extends XmlReader {
     if ("n".equals(localName)) {
       thisNode = (nodes.size() == 0 ? null : nodes.pop());
       return;
+    }
+    if ("BracketedGroup".equals(localName)) {
+      bracketedGroups.pop().process();
     }
     if ("s".equals(localName)) {
       textBuffer += chars.toString();
@@ -619,9 +669,9 @@ public class XmlCdxReader extends XmlReader {
 
     if (order == JmolAdapter.ORDER_STEREO_EITHER) {
       if (!nostereo.contains(node1))
-        nostereo.add(node1);
+        nostereo.addLast(node1);
       if (!nostereo.contains(node2))
-        nostereo.add(node2);
+        nostereo.addLast(node2);
     }
 
     if (node1.hasMultipleAttachments) {

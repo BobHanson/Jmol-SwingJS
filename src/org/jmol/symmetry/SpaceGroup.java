@@ -116,7 +116,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    */
   protected int nDim = 3;
  
-  protected int periodicity = 0x7; // abc
+  protected int periodicity = 0x7; // c(0x4)|b(0x2)|a(0x1)
 
   private String clegId, canonicalCLEG;
 

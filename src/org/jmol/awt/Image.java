@@ -157,9 +157,15 @@ class Image {
 
   static int[] grabPixels(Object imageobj, int width, int height,
                           int[] pixels) {
-    // keep this simple!
-    if (imageobj instanceof sun.awt.image.ToolkitImage)
-      imageobj = ((sun.awt.image.ToolkitImage) imageobj).getBufferedImage();
+    if (!(imageobj instanceof BufferedImage)) {
+      java.awt.Image img = (java.awt.Image) imageobj;
+      BufferedImage bimage = new BufferedImage(img.getWidth(null),
+          img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+      Graphics2D bGr = bimage.createGraphics();
+      bGr.drawImage(img, 0, 0, null);
+      bGr.dispose();
+      imageobj = bimage;
+    }
     BufferedImage image = (BufferedImage) imageobj;
     int iw = image.getWidth();
     int[] data = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();

@@ -494,6 +494,23 @@ public class Elements {
     return 0;
   }
   
+  private static String commonNmrIsotopes = ", 1H, 2H, 6Li, 7Li,10B,13C,15N,17O,19F,";
+
+  public final static String getCommonNMRIsotope(String sym) {
+    if (PT.isDigit(sym.charAt(0)))
+        return sym;
+    if (sym.equals("D"))
+      return "2H";
+    int pt = commonNmrIsotopes.indexOf(sym + ",");
+    return (pt < 0 ? sym : commonNmrIsotopes.substring(pt - 2, pt + sym.length()).trim());
+  }
+  
+  public static String getNmrNucleusFromName(String name){
+    return getCommonNMRIsotope(
+            elementSymbolFromNumber(
+             elementNumberFromName(name)));
+  }
+
 
   // add as we go
   private final static String naturalIsotopes = "1H,12C,14N";

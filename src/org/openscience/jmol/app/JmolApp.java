@@ -484,7 +484,7 @@ public class JmolApp implements JmolAppAPI {
       }
     }
     if (GraphicsEnvironment.isHeadless())
-      info.put("headlistMaxTimeMs",
+      info.put("headlessMaxTimeMs",
           Integer.valueOf(1000
               * (line.hasOption("T") ? PT.parseInt(line.getOptionValue("T"))
                   : 60)));

@@ -663,7 +663,7 @@ public class Viewer extends JmolViewer
       cd(".");
       if (headless) {
         headlessImageParams = (Map<String, Object>) info.get("headlessImage");
-        o = info.get("headlistMaxTimeMs");
+        o = info.get("headlessMaxTimeMs");
         if (o == null)
           o = Integer.valueOf(60000);
         setTimeout("" + Math.random(), ((Integer) o).intValue(), "exitJmol");
@@ -11282,5 +11282,16 @@ public class Viewer extends JmolViewer
 
   public int getUnitCellAtomIndex() {
     return am.getUnitCellAtomIndex();
+  }
+
+  public String writeBinaryFile(String fname, byte[] bytes) {
+    
+    Map<String, Object> params = new Hashtable<>();
+    Lst<Object> lst = new Lst<>();
+    lst.addLast(bytes);
+    params.put("imageData", lst);
+    params.put("fileName", fname);
+    params.put("type", "BINARY");
+    return getOutputManager().outputToFile(params);
   }
 }

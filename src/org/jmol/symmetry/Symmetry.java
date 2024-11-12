@@ -60,7 +60,6 @@ import javajs.util.Qd;
 import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.T3d;
-import javajs.util.V3d;
 
 /* Symmetry is a wrapper class that allows access to the package-local
  * classes PointGroup, SpaceGroup, SymmetryInfo, and UnitCell.
@@ -1098,9 +1097,9 @@ public class Symmetry implements SymmetryInterface {
     P3d p0 = (nInitial > 0 ? pts.get(nInitial) : null);
     int dup0 = (opsCtr == null ? n0 : check0);
     if (ops != null || unitCell != null) {
+      int per = getPeriodicity();
       for (int i = nInitial; i < n; i++) {
-        unitCell.getEquivPoints(pts.get(i), flags, ops, pts, check0, n0, dup0,
-            getPeriodicity());
+        unitCell.getEquivPoints(pts.get(i), flags, ops, pts, check0, n0, dup0, per);
       }
     }
     // now remove the starting points, checking to see if perhaps our
@@ -1121,6 +1120,11 @@ public class Symmetry implements SymmetryInterface {
     }
   }
 
+  /**
+   * 
+   * @return array of 1-based symmetry operation numbers for which the pt is
+   *         invariant.
+   */
   @Override
   public int[] getInvariantSymops(P3d pt, int[] v0) {
     SymmetryOperation[] ops = getSymmetryOperations();
@@ -1776,6 +1780,8 @@ public class Symmetry implements SymmetryInterface {
       name = name.substring(0, name.length() - 6);
     }
     String key = (isCleg ? "clegId" : "hm");
+    if (!isCleg)
+      name = name.substring(2);
     for (int i = data.length; --i >= 0;) {
       //(Map<String, Object>)
       Lst<Object> lst = (Lst<Object>) data[i].get("its");
@@ -2186,6 +2192,45 @@ public class Symmetry implements SymmetryInterface {
       return (Map<String, Object>) ((Lst<Object>) data[itno - 1].get("its"))
           .get(itindex - 1);
     return getSpecialSettingJSON(data, name, type, true);
+  }
+
+  /**
+   * This atom is usually the atom being moved, but
+   * in some cases we need to switch to a different 
+   * atom in order to avoid the special case where a 
+   * screw axis (SG 224 Wyckoff i) or glide 
+   * (plane group 12 Wyckoff c) creates a stationary 
+   * point. In such a case, we can't do a projection
+   * the way we can with an axis or plane. 
+   */
+  @Override
+  public Atom getConstrainableEquivAtom(Atom a) {
+    BS bsEquiv = vwr.ms.getSymmetryEquivAtoms(BSUtil.newAndSetBit(a.i), this, null);
+    SymmetryOperation[] sgOps = getSymmetryOperations();
+    // start with the specified atom
+    Atom ai = a;
+    for (int i = 9999;  i >= 0; i = bsEquiv.nextSetBit(i + 1)) {
+      if (ai == null) {
+        ai = vwr.ms.at[i];
+        if (ai == a)
+          continue;
+      } else if (i == 9999){
+        i = -1;
+      }
+      int[] inv = getInvariantSymops(ai, null);
+      if (inv.length > 0) {
+        SymmetryOperation op = sgOps[inv[0] - 1];
+        //System.out.println(op.getOpDesc());
+        switch (op.getOpType()) {
+        case SymmetryOperation.TYPE_ROTATION:
+        case SymmetryOperation.TYPE_REFLECTION:
+          return ai;
+        }
+      }
+      ai = null;
+    }
+    // probably a general position
+    return a;
   }
 
 }

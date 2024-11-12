@@ -9,7 +9,10 @@ import javajs.util.Rdr;
 /**
  * 
  * A reader for ChemDraw binary CDX files. See
- * https://www.cambridgesoft.com/services/documentation/sdk/chemdraw/cdx/
+ * 
+ * https://iupac.github.io/IUPAC-FAIRSpec/cdx_sdk
+ * 
+ * formerly https://www.cambridgesoft.com/services/documentation/sdk/chemdraw/cdx/
  * 
  * CambridgeSoft did a fabulous job on the specification.
  * 

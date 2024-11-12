@@ -197,7 +197,10 @@ public class Coordinate {
     double xval = 0;
     double yval = 0;
     Lst<Coordinate> xyCoords = new Lst<Coordinate>();
-  
+    if (dataPoints.indexOf('(') >= 0) {
+      // np-mrd jdx contain actual "(nnnn,mmmm)" even with (XY..XY) descriptor
+      dataPoints = dataPoints.replace('(', ' ').replace(')', ' ').replace(',', ' ');
+    }
     String delim = " \t\n\r\f,;";
     StringTokenizer st = new StringTokenizer(dataPoints, delim);
     String tmp1, tmp2;

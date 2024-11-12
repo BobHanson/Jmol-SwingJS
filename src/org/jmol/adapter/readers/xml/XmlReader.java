@@ -24,6 +24,8 @@
 package org.jmol.adapter.readers.xml;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -193,6 +195,7 @@ abstract public class XmlReader extends AtomSetCollectionReader {
       reader = parent.reader;
       atts = parent.atts;
     }
+    BufferedReader rdr = previewXML(reader);
     if (saxReader == null) {
       //domAttributes = getDOMAttributes();
       attribs = new Object[1];
@@ -204,16 +207,16 @@ abstract public class XmlReader extends AtomSetCollectionReader {
        * 
        * @j2sNative
        * 
-       *            o = this.reader.lock.lock; 
+       *            o = rdr.lock.lock; 
        *            if (o && o.$in) {
        *              data = o.$in.buf;
-       *            } else if ((o=this.reader.$in.str) != null) {
-       *            } else if (this.reader.$in.$in.$in.fd) {
+       *            } else if ((o=rdr.$in.str) != null) {
+       *            } else if (rdr.$in.$in.$in.fd) {
        *              // may need to adjust this;
-       *              o = this.reader.$in.$in;
+       *              o = rdr.$in.$in;
        *              data = o.$in.fd._file.秘bytes; 
        *            } else {
-       *              data = (o=this.reader.$in.$in).$in.buf;
+       *              data = (o=rdr.$in.$in).$in.buf;
        *            }
        */
       {
@@ -239,10 +242,20 @@ abstract public class XmlReader extends AtomSetCollectionReader {
       }
     } else {
       ((XmlHandler) Interface.getOption("adapter.readers.xml.XmlHandler", vwr,
-          "file")).parseXML(this, saxReader, reader);
+          "file")).parseXML(this, saxReader, rdr);
     }
   }
   
+  /**
+   * An opportunity to fix XML (nmrML issues)
+   * @param reader
+   * @return reader or a repaired reader
+   * @throws IOException 
+   */
+  protected BufferedReader previewXML(BufferedReader reader) throws IOException {
+    return reader;
+  }
+
   /**
    * totally untested, probably useless
    * 

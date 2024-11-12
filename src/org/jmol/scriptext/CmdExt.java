@@ -1583,7 +1583,7 @@ public class CmdExt extends ScriptExt {
         M4d m4 = ScriptMathProcessor.getMatrix4f(q.getMatrix(), translation);
         ptsB = ScriptParam.transformPoints(ptsA, m4, center);
       }
-      if (!eval.useThreads())
+      if (!eval.useThreads(true))
         doAnimate = false;
       if (vwr.rotateAboutPointsInternal(eval, center, pt1,
           endDegrees / nSeconds, endDegrees, doAnimate, bsFrom, translation,
@@ -6782,9 +6782,9 @@ public class CmdExt extends ScriptExt {
         if (sym == null)
           type = "P1";
         else
-          type = sym.getSpaceGroupClegId();
+          type = (i == slen ? null : sym.getSpaceGroupClegId());
       }
-      if (type.equalsIgnoreCase("packed")) {
+      if ("packed".equalsIgnoreCase(type)) {
         // allow for MODELKIT SPACEGROUP packed
         isPacked = true;
         type = sym.getSpaceGroupClegId();
@@ -6887,12 +6887,16 @@ public class CmdExt extends ScriptExt {
           invArg();
       } else {
         if (!isPacked) {
-          for (int j = i + 1; j < slen; j++) {
+          int ptend = i + 1;
+          for (int j = ptend; j < slen; j++) {
             if (tokAt(j) == T.packed) {
               isPacked = true;
+              ptend = j;
               break;
             }
           }
+          if (ptend < slen)
+            type = null;
         }
         if (type == null)
           type = concatString(i, (isPacked ? "packed" : "unitcell"));

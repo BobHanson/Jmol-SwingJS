@@ -428,9 +428,14 @@ public class ScriptEval extends ScriptExpr {
     vwr.hasSelected = false;
   }
 
-  public boolean useThreads() {
-    return (!chk && !vwr.headless && !vwr.autoExit
-        && vwr.haveDisplay && outputBuffer == null && allowJSThreads);
+  public boolean useThreads(boolean allowWaitFor) {
+    return (!chk && 
+        (allowWaitFor && vwr.g.waitForMoveTo ||
+          !vwr.headless && !vwr.autoExit
+          && vwr.haveDisplay 
+          && outputBuffer == null 
+          && allowJSThreads
+        ));
   }
 
   private int executeCommands(Object[] params, boolean isTry, boolean reportCompletion) {
@@ -2122,7 +2127,7 @@ public class ScriptEval extends ScriptExpr {
    * @throws ScriptException
    */
   private void doDelay(int millis) throws ScriptException {
-    if (!useThreads())
+    if (!useThreads(false))
       return;
     if (isJS)
       throw new ScriptInterruption(this, CONTEXT_DELAY, millis);
@@ -2347,7 +2352,7 @@ public class ScriptEval extends ScriptExpr {
     boolean allowJSInterrupt = (
         isJS 
         && !fromFunc 
-        && useThreads() 
+        && useThreads(false) 
         && vwr.getInt(T.showscript) >= 0);
     commandLoop(allowJSInterrupt);
     if (chk)
@@ -3217,7 +3222,7 @@ public class ScriptEval extends ScriptExpr {
         }
         o = (file.startsWith(";base64,") ?  new BArray(Base64.decodeBase64(file)) : file);
       }
-      if (vwr.fm.loadImage(o, null, !useThreads()))
+      if (vwr.fm.loadImage(o, null, !useThreads(false)))
           throw new ScriptInterruption(this,"backgroundImage", 1);
       return;
     }
@@ -5671,7 +5676,7 @@ public class ScriptEval extends ScriptExpr {
     if (chk)
       return;
     refresh(false);
-    if (!useThreads())
+    if (!useThreads(true))
       floatSecondsTotal = 0;
     vwr.move(this, dRot, dZoom, dTrans, dSlab, floatSecondsTotal, fps);
     if (floatSecondsTotal > 0 && isJS)
@@ -5699,7 +5704,7 @@ public class ScriptEval extends ScriptExpr {
       floatSecondsTotal = floatParameter(1);
       if (chk)
         return;
-      if (!useThreads())
+      if (!useThreads(true))
         floatSecondsTotal = 0;
       if (floatSecondsTotal > 0)
         refresh(false);
@@ -5815,6 +5820,7 @@ public class ScriptEval extends ScriptExpr {
       checkLength(++i);
       break;
     case T.plane:
+    case T.direction:
       P4d v = planeParameter(i, false);
       V3d x = V3d.new3(0, 0, 1);
       x.cross(x, v);
@@ -5965,7 +5971,7 @@ public class ScriptEval extends ScriptExpr {
       floatSecondsTotal = 0;
     if (floatSecondsTotal > 0)
       refresh(false);
-    if (!useThreads())
+    if (!useThreads(true))
       floatSecondsTotal = 0;
     if (cameraDepth == 0) {
       cameraDepth = cameraX = cameraY = Double.NaN;
@@ -6589,7 +6595,7 @@ public class ScriptEval extends ScriptExpr {
         // rotate axisangle {0 1 0} 10
         // rotate x 10 (atoms) # point-centered
         // rotate x 10 $object # point-centered
-        if (requiresThread && bsAtoms == null && !useThreads()) {
+        if (requiresThread && bsAtoms == null && !useThreads(true)) {
           isSpin = false;
           if (endDegrees == Double.MAX_VALUE)
             return;
@@ -6661,7 +6667,7 @@ public class ScriptEval extends ScriptExpr {
     if (bsAtoms != null && !isSpin && ptsB != null) {
       vwr.setAtomCoords(bsAtoms, T.xyz, ptsB);
     } else {
-      if (requiresThread && !useThreads())
+      if (requiresThread && !useThreads(false))
         return;
       if (vwr.rotateAboutPointsInternal(this, points[0], points[1], rate,
           endDegrees, isSpin, bsAtoms, translation, ptsB, dihedralList,
@@ -7226,7 +7232,7 @@ public class ScriptEval extends ScriptExpr {
       if (chk)
         return;
       if (o instanceof String) {
-        if (vwr.fm.loadImage(o, "\0windowImage", !useThreads()))
+        if (vwr.fm.loadImage(o, "\0windowImage", !useThreads(false)))
           throw new ScriptInterruption(this, "windowImage", 1);
       } else {
         vwr.setWindowDimensions((double[]) o);
@@ -7857,7 +7863,7 @@ public class ScriptEval extends ScriptExpr {
             id = data[0];
           }
           if (!chk && vwr.ms.getEchoStateActive()
-              && vwr.fm.loadImage(getToken(pt).value, id, !useThreads()))
+              && vwr.fm.loadImage(getToken(pt).value, id, !useThreads(false)))
             throw new ScriptInterruption(this, "setEchoImage", 1);
           return;
         }
@@ -8713,7 +8719,7 @@ public class ScriptEval extends ScriptExpr {
       xTrans = 0;
     if (Double.isNaN(yTrans))
       yTrans = 0;
-    if (!useThreads())
+    if (!useThreads(true))
       floatSecondsTotal = 0;
     vwr.moveTo(this, floatSecondsTotal, center, JC.center, Double.NaN, null,
         newZoom, xTrans, yTrans, Double.NaN, null, Double.NaN, Double.NaN,

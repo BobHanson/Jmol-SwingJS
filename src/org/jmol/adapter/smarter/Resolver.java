@@ -56,8 +56,8 @@ public class Resolver {
     "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;FAH;",
     "spartan.", ";Spartan;SpartanSmol;Odyssey;",
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
-             "VaspPoscar;Wien2k;Xcrysden;PWmat;Optimade;Cmdf;",
-    "xml.",  ";XmlCdx;XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
+             "VaspPoscar;Wien2k;Xcrysden;PWmat;Optimade;Cmdf;Cmdx;",
+    "xml.",  ";XmlCdx;XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlNmrml;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
   };
   
 
@@ -345,6 +345,8 @@ public class Resolver {
   
   private static byte[] cmdfMagic = new byte[] { 'C', 'M', 'D', 'F' };
 
+  private static byte[] cmdxMagic = new byte[] { 'C', 'M', 'D', 'X' };
+
   private static byte[] mmtfMagic = new byte[] { 'm', 'm', 't', 'f' };
 
   // various flavors of BCIF file format
@@ -369,6 +371,7 @@ public class Resolver {
         : m0 == 0x83 ? (checkBCIF(magic, true) ? "BCIF" : null) 
         : bytesMatch(magic, 0, cdxMagic) ? "CDX" 
         : bytesMatch(magic, 0, cmdfMagic) ? "Cmdf" 
+        : bytesMatch(magic, 0, cmdxMagic) ? "Cmdx" 
         : null);
   }
 
@@ -847,6 +850,9 @@ public class Resolver {
         || header.indexOf("cml:") >= 0
         || header.indexOf("<cml>") >= 0) {
       return "XmlCml";
+    }
+    if (header.indexOf("<nmrML") >= 0) {
+      return "XmlNmrml";
     }
     if (header.indexOf("XSD") >= 0) {
       return "XmlXsd";

@@ -313,8 +313,7 @@ public class Exporter implements ExportInterface {
 
   private static String fileCopy(String name, OC out) {
     try {
-      BufferedReader br = JSVFileManager.getBufferedReaderFromName(name,
-          null);
+      BufferedReader br = JSVFileManager.getBufferedReaderFromName(name);
       String line = null;
       while ((line = br.readLine()) != null) {
         out.append(line);

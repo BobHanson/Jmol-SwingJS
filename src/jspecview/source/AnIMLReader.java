@@ -173,8 +173,8 @@ public class AnIMLReader extends XMLReader {
       } else if (attrList.equals("nucleus")) {
         obNucleus = parser.qualifiedValue();
       } else if (attrList.equals("observefrequency")) {
-        StrObFreq = parser.qualifiedValue();
-        obFreq = Double.parseDouble(StrObFreq);
+        strObFreq = parser.qualifiedValue();
+        obFreq = Double.parseDouble(strObFreq);
       } else if (attrList.equals("referencepoint")) {
         refPoint = Double.parseDouble(parser.qualifiedValue());
       } else if (attrList.equals("sample path length")) {

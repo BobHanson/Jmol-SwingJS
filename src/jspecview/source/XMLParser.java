@@ -151,7 +151,32 @@ public class XMLParser {
     return sb.toString();
   }
 
+  public String getOuterXML() throws Exception {
+    int pt = buffer.pt0;
+    String myName = thisEvent.getTagName();
+    thisEvent = buffer.peek();
+    while (thisEvent.getEventType() != END_ELEMENT || !thisEvent.getTagName().equals(myName)) {
+      thisEvent = buffer.newXmlEvent();
+    }
+    return buffer.data.substring2(pt, buffer.ptEnd);
+  }
+  public String getInnerXML() throws Exception {
+    int pt = buffer.data.length();
+    int pt1 = pt;
+    int pt2 = pt;
+    String myName = thisEvent.getTagName();
+    thisEvent = buffer.peek();
+    while (thisEvent.getEventType() != END_ELEMENT || !thisEvent.getTagName().equals(myName)) {
+      pt2 = pt1;
+      pt1 = buffer.data.length();
+      thisEvent = buffer.newXmlEvent();
+    }
+    return buffer.data.substring2(pt, pt2);
+  }
+
   private class DataBuffer extends DataString {
+
+    int pt0;
 
     DataBuffer(BufferedReader br) {
       reader = br;
@@ -201,6 +226,11 @@ public class XMLParser {
     XmlEvent nextEvent() throws Exception {
       flush();
       // cursor is always left after the last element
+      return newXmlEvent();
+    }
+
+    protected XmlEvent newXmlEvent() throws Exception {
+      pt0 = ptr;
       return new XmlEvent(this);
     }
 
@@ -248,6 +278,7 @@ public class XMLParser {
     }
 
     int skipTo(char toWhat, boolean inQuotes) throws Exception {
+      boolean ignoreQuotes = (toWhat == '<');
       if (data == null)
         return -1;
       char ch;
@@ -263,7 +294,7 @@ public class XMLParser {
           // must escape \\" by skipping the second \
           if ((ch = data.charAt(ptr + 1)) == '"' || ch == '\\')
             ptr++;
-        } else if (ch == '"') {
+        } else if (!ignoreQuotes && ch == '"') {
           ptr++;
           if (skipTo('"', true) < 0)
             return -1;

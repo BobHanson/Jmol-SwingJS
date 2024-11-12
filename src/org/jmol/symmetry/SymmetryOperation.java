@@ -108,6 +108,30 @@ public class SymmetryOperation extends M4d {
   final static int OP_MODE_NOTRANS = 1;
   final static int OP_MODE_FULL = 2;
 
+  public String getOpDesc() {
+    if (opType == TYPE_UNKNOWN)
+      setOpTypeAndOrder();
+    switch (opType) {
+    case TYPE_IDENTITY:
+      return "I";
+    case TYPE_TRANSLATION:
+      return "Trans";
+    case TYPE_ROTATION:
+      return "Rot" + opOrder;
+    case TYPE_INVERSION:
+      return "Inv";
+    case TYPE_REFLECTION:
+      return "Plane";
+    case TYPE_SCREW_ROTATION:
+      return "Screw" + opOrder;
+    case TYPE_ROTOINVERSION:
+      return "Nbar" + opOrder;
+    case TYPE_GLIDE_REFLECTION:
+      return "Glide";
+    }
+    return null;
+  }
+  
   private String getOpName(int opMode) {
     if (opType == TYPE_UNKNOWN)
       setOpTypeAndOrder();

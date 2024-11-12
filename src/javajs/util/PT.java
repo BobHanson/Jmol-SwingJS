@@ -359,11 +359,11 @@ public class PT {
   }
   
   public static boolean isOneOf(String key, String semiList) {
-    if (semiList.length() == 0)
+    if (semiList.length() == 0 || key.indexOf(";") >= 0)
       return false;
     if (semiList.charAt(0) != ';')
       semiList = ";" + semiList + ";";
-    return key.indexOf(";") < 0  && semiList.indexOf(';' + key + ';') >= 0;
+    return  semiList.indexOf(';' + key + ';') >= 0;
   }
 
   public static String getQuotedAttribute(String info, String name) {

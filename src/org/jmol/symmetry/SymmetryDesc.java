@@ -207,7 +207,7 @@ public class SymmetryDesc {
    * 
    */
 
-  private static Object getInfo(Object[] io, int type) {
+  private static Object getInfo(Object[] io, int type, int nDim) {
     if (io.length == 0)
       return "";
     if (type < 0 && -type <= keys.length && -type <= io.length)
@@ -280,12 +280,18 @@ public class SymmetryDesc {
       // so a screw axis is allowed. Apparently the diagonal screw 
       // sets the new point in the original location plus a lattice translation
       // see SG 224 Wyckoff i
+      // ah, but "trans" is not just the translation vector. 
+      // a diagonal plane will be (0.7071067811865476, -0.7071067811865475, 0, 0) with "translation" 1/2 1/2
+      // However, there is a problem in p/12 with symop 8 diagonal mirror -y+1/2,-x+1/2,z
+      // if the nDim check is not here, then an atom on the line intersecting the 
+      // plane of the group fails to move properly. The translation is 
+      // not indicated.
       return (io[RET_INVCTR] != null ? io[RET_INVCTR] // inversion center 
-              : io[RET_AXISVECTOR] != null
-                  ? new Object[] { io[RET_POINT], io[RET_AXISVECTOR], io[RET_CTRANS] } // axis
+              : io[RET_AXISVECTOR] != null ? new Object[] { io[RET_POINT], io[RET_AXISVECTOR], io[RET_CTRANS] } // axis
                   : io[RET_CTRANS] != null ? "none" // translation 
                       : io[RET_PLANE] != null ? io[RET_PLANE] // plane
-                          : "identity"); // identity
+//                          : io[RET_CTRANS] != null ? "none" // translation 
+                              : "identity"); // identity
     }
   }
 
@@ -451,7 +457,7 @@ public class SymmetryDesc {
                                    double scaleFactor, int options,
                                    boolean haveTranslation, BS bsInfo,
                                    boolean isSpaceGroup,
-                                   boolean isSpaceGroupAll) {
+                                   boolean isSpaceGroupAll, int nDim) {
 
     if (!op.isFinalized)
       op.doFinalize();
@@ -613,7 +619,6 @@ public class SymmetryDesc {
     // handle inversion
 
     boolean notC = false;
-    int nDim = uc.getDimensionality();
     /**
      * Indicates that our vertical planes need to be shifted down 1/2 c
      */
@@ -1598,7 +1603,7 @@ public class SymmetryDesc {
       case RET_PLANE:
         if (plane != null && bsInfo.get(RET_INVARIANT)) {
           double d = MeasureD.distanceToPlane(plane, pta00);
-          plane.w -= d;
+          plane.w -= d;          
         }
         ret[i] = plane;
         break;
@@ -1886,6 +1891,8 @@ public class SymmetryDesc {
     Object[] info = null;
     String xyzOriginal = null;
     SymmetryOperation[] ops = null;
+    int nDim = (uc == null ? 3 : uc.getDimensionality());
+
     if (pt2 == null) {
       if (xyz == null) {
         // it's the additional operators that get us the coincidence business
@@ -1948,7 +1955,7 @@ public class SymmetryDesc {
         return (type == T.atoms ? getAtom(uc, iModel, iatom, ret) : ret);
       }
       info = createInfoArray(opTemp, uc, pt, null, (id == null ? "sym" : id),
-          scaleFactor, options, (translation != null), bsInfo, isSpaceGroup, isSpaceGroupAll);
+          scaleFactor, options, (translation != null), bsInfo, isSpaceGroup, isSpaceGroupAll, nDim);
       if (type == T.array && id != null) {
         returnType = getKeyType(id);
       }
@@ -2009,7 +2016,7 @@ public class SymmetryDesc {
       Lst<Object> lst = new Lst<Object>();
       for (int i = 0; i < info.length; i++)
         lst.addLast(
-            getInfo((Object[]) info[i], returnType < 0 ? returnType : type));
+            getInfo((Object[]) info[i], returnType < 0 ? returnType : type, nDim));
       return lst;
     } else if (returnType < 0 && (nth >= 0 || op > 0 || xyz != null)) {
       type = returnType;
@@ -2018,7 +2025,7 @@ public class SymmetryDesc {
       info = (Object[]) info[0];
     if (type == T.draw && isSpaceGroup && nth == -2)
       type = T.spacegroup;
-    return getInfo(info, type);
+    return getInfo(info, type, nDim);
   }
 
   private BS getAtom(SymmetryInterface uc, int iModel, int iAtom, T3d sympt) {
@@ -2216,6 +2223,8 @@ public class SymmetryDesc {
       bsInfo.setBits(0, keys.length);
       bsInfo.clear(RET_XYZNORMALIZED);
     }
+    int nDim = sym.getDimensionality();
+
     boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX));
     Map<String, Object> info = null;
     boolean isStandard = (!matrixOnly && pt1 == null && drawID == null
@@ -2301,7 +2310,7 @@ public class SymmetryDesc {
             slist += ";" + op.xyz;
           Object[] ret = (symOp > 0 && symOp - 1 != iop ? null
               : createInfoArray(op, cellInfo, pt1, pt2, drawID, scaleFactor,
-                  options, false, bsInfo, false, false));
+                  options, false, bsInfo, false, false, nDim));
           if (ret != null) {
             nop++;
             if (nth > 0 && nop != nth)

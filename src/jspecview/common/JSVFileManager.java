@@ -74,7 +74,7 @@ public class JSVFileManager {
 		BufferedReader br;
 		SB sb = new SB();
 		try {
-			br = getBufferedReaderFromName(name, null);
+			br = getBufferedReaderFromName(name);
 			String line;
 			while ((line = br.readLine()) != null) {
 				sb.append(line);
@@ -100,15 +100,14 @@ public class JSVFileManager {
         stringOrBytes instanceof String ? (String) stringOrBytes : new String((byte[]) stringOrBytes))));
   }
 
-	public static BufferedReader getBufferedReaderFromName(String name,
-			String startCode) throws Exception {
+	public static BufferedReader getBufferedReaderFromName(String name) throws Exception {
 		if (name == null)
 			throw new JSVException("Cannot find " + name);
 		Logger.info("JSVFileManager getBufferedReaderFromName " + name);
 		String path = getFullPathName(name);
 		if (!path.equals(name))
 			Logger.info("JSVFileManager getBufferedReaderFromName " + path);
-		return getUnzippedBufferedReaderFromName(path, startCode);
+		return getUnzippedBufferedReaderFromName(path);
 	}
 
 	/**
@@ -173,8 +172,7 @@ public class JSVFileManager {
 	}
 
 	@SuppressWarnings("resource")
-  private static BufferedReader getUnzippedBufferedReaderFromName(String name,
-			String startCode) throws Exception {
+  private static BufferedReader getUnzippedBufferedReaderFromName(String name) throws Exception {
 		String[] subFileList = null;
 		if (name.indexOf("|") >= 0) {
 			subFileList = PT.split(name, "|");
@@ -184,6 +182,7 @@ public class JSVFileManager {
 		if (name.startsWith(SIMULATION_PROTOCOL))
 			return getSimulationReader(name);
 		try {
+		  // posting will be form-based
 			Object ret = getInputStream(name, true, null);
 			if (ret instanceof SB || ret instanceof String)
 				return new BufferedReader(new StringReader(ret.toString()));			
@@ -458,6 +457,9 @@ public class JSVFileManager {
 		boolean is13C = type.equals("C13");
 		String url = (is13C ? nmrdbServerC13 : nmrdbServerH1);
 		String json = getFileAsString(url + molFile);
+		if (json.indexOf("Error:") >= 0) {
+		  return json;
+		}
 		Map<String, Object> map = (new javajs.util.JSJSONParser()).parseMap(json,
 				true);
 		cachePut("json", json);
@@ -717,9 +719,9 @@ public class JSVFileManager {
 		return newFile(fileName).getName();
 	}
 
-private static GenericFileInterface newFile(String fileName) {
-    return viewer.apiPlatform.newFile(fileName);
-  }
+	private static GenericFileInterface newFile(String fileName) {
+      return viewer.apiPlatform.newFile(fileName);
+    } 
 
 //	public static String getQuotedJSONAttribute(String json, String key1,
 //			String key2) {

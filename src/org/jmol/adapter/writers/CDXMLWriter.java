@@ -225,6 +225,15 @@ public class CDXMLWriter extends CMLWriter {
       id = Integer.MIN_VALUE;
       //     hasAttributes = false;
       break;
+    case kCDXObj_BracketedGroup: // 0x8017
+      name = "bracketedgroup";
+      break;
+    case kCDXObj_BracketAttachment: // 0x8018
+      name = "bracketattachment";
+      break;
+    case kCDXObj_CrossingBond: // 0x8019
+      name = "crossingbond";
+      break;
     }
     sbpt = sb.length();
     objects.push(name);
@@ -259,6 +268,12 @@ public class CDXMLWriter extends CMLWriter {
       case kCDXObj_Bond:
         writeBondProperties(prop, len);
         break;
+      case kCDXObj_BracketedGroup:
+        writeBracketedGroupProperties(prop, len);
+        break;
+      case kCDXObj_CrossingBond:
+        writeCrossingBondProperties(prop, len);
+        break;
       default:
         skip(len);
         break;
@@ -270,6 +285,47 @@ public class CDXMLWriter extends CMLWriter {
       } else {
         closeTag(sb, name);
       }
+    }
+  }
+
+  private void writeBracketedGroupProperties(int prop, int len)
+      throws Exception {
+    switch (prop) {
+    case kCDXProp_BracketedObjects:
+      addAttribute(sb, "BracketedObjectIDs", readArray(len));
+      break;
+    case kCDXProp_Bracket_RepeatCount:
+      addAttribute(sb, "RepeatCount", "" + (int)readFloat64());
+      break;
+    case kCDXProp_Bracket_Usage:
+      int usage = readInt(len);
+      String sval = null;
+      switch (usage) {
+      case 16:
+        sval = "MultipleGroup";
+        break;
+      default:
+        removeObject();
+        return;
+      }
+      addAttribute(sb, "BracketUsage", sval);
+      break;
+    default:
+      skip(len);
+    }
+
+  }
+
+  private void writeCrossingBondProperties(int prop, int len) throws Exception {
+    switch (prop) {
+    case kCDXProp_Bracket_BondID:
+      addAttribute(sb, "BondID", "" + readInt(len));
+      break;
+    case kCDXProp_Bracket_InnerAtomID:
+      addAttribute(sb, "InnerAtomID", "" + readInt(len));
+      break;
+    default:
+      skip(len);
     }
   }
 
@@ -298,13 +354,13 @@ public class CDXMLWriter extends CMLWriter {
       addAttribute(sb, "Warning", readString(len));
       break;
     case kCDXProp_Atom_BondOrdering: // 0x0431 An ordering of the bonds to this node used for stereocenters fragments and named alternative groups with more than one attachment. (CDXObjectIDArray)
-      addAttribute(sb, "BondOrdering", readArray());
+      addAttribute(sb, "BondOrdering", readArray(len));
       break;
     case kCDXProp_Frag_ConnectionOrder: // 0x0505 An ordered list of attachment points within a fragment. (CDXObjectIDArray)
-      addAttribute(sb, "ConnectionOrder", readArray());
+      addAttribute(sb, "ConnectionOrder", readArray(len));
       break;
     case kCDXProp_Node_Attachments: // 0x0432 For multicenter attachment nodes or variable attachment nodes a list of IDs of the nodes which are multiply or variably attached to this node. (CDXObjectIDArrayWithCounts)
-      addAttribute(sb, "Attachments", readArray());
+      addAttribute(sb, "Attachments", readArray(-1));
       break;
     case kCDXProp_Atom_GenericNickname: // 0x0433 The name of the generic nickname. (CDXString)
       addAttribute(sb, "GenericNickname", readString(len));
@@ -506,6 +562,10 @@ public class CDXMLWriter extends CMLWriter {
     doc.seek(doc.getPosition() + len);
   }
 
+  private double readFloat64() throws Exception {
+    return doc.readDouble();
+  }
+  
   private int readInt(int len) throws Exception {
     switch (len) {
     case 1:
@@ -535,9 +595,10 @@ public class CDXMLWriter extends CMLWriter {
     return doc.readString(len);
   }
 
-  private String readArray() throws Exception {
+  private String readArray(int len) throws Exception {
+    int n = (len < 0 ? doc.readShort() : len / 4);
     String s = "";
-    for (int i = doc.readShort(); --i >= 0;) {
+    for (int i = n; --i >= 0;) {
       s += " " + doc.readInt();
     }
     return s.trim();
@@ -557,14 +618,14 @@ public class CDXMLWriter extends CMLWriter {
   }
 
   public static void main(String[] args) {
-    try {
-      FileInputStream fis = new FileInputStream("c:/temp/t2.cdx");
-      BinaryDocument doc = new BinaryDocument();
-      doc.setStream(new BufferedInputStream(fis), false);
-      System.out.println(fromCDX(doc));
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+//    try {
+//      FileInputStream fis = new FileInputStream("c:/temp/t2.cdx");
+//      BinaryDocument doc = new BinaryDocument();
+//      doc.setStream(new BufferedInputStream(fis), false);
+//      System.out.println(fromCDX(doc));
+//    } catch (Exception e) {
+//      e.printStackTrace();
+//    }
   }
 
   // from https://www.cambridgesoft.com/services/documentation/sdk/chemdraw/cdx/CDXConstants.h via Excel
@@ -647,7 +708,7 @@ public class CDXMLWriter extends CMLWriter {
   // private final static int kCDXProp_Atom_ShowQuery = 0x043A; // 0x043A Show the query indicator if non-zero. (CDXBoolean)
   // private final static int kCDXProp_Atom_ShowStereo = 0x043B; // 0x043B Show the stereochemistry indicator if non-zero. (CDXBoolean)
   // private final static int kCDXProp_Atom_ShowAtomNumber = 0x043C; // 0x043C Show the atom number if non-zero. (CDXBoolean)
-  // private final static int kCDXProp_Atom_LinkCountLow = 0x043D; // 0x043D Low end of repeat count for link nodes. (INT16)
+  // private final static int kCDXProp_Atom_LinkCountLow = 0x043D; // 0x043D Low end of repeat count for link nodes. (FLOAT64)
   // private final static int kCDXProp_Atom_LinkCountHigh = 0x043E; // 0x043E High end of repeat count for link nodes. (INT16)
   // private final static int kCDXProp_Atom_IsotopicAbundance = 0x043F; // 0x043F Isotopic abundance of this atom's isotope. (INT8)
   // private final static int kCDXProp_Atom_ExternalConnectionType = 0x0440; // 0x0440 Type of external connection for atoms of type kCDXNodeType_ExternalConnectionPoint. (INT8)
@@ -744,16 +805,16 @@ public class CDXMLWriter extends CMLWriter {
   // private final static int kCDXProp_Arc_AngularSize = 0x0A21; // 0x0A21 The size of an arc (in degrees * 10 so 90 degrees = 900). (INT16)
   // private final static int kCDXProp_Bracket_LipSize = 0x0A22; // 0x0A22 The size of a bracket. (INT16)
   // private final static int kCDXProp_Curve_Points = 0x0A23; // 0x0A23 The B&eacute;zier curve's control point locations. (CDXCurvePoints)
-  // private final static int kCDXProp_Bracket_Usage = 0x0A24; // 0x0A24 The syntactical chemical meaning of the bracket (SRU mer mon xlink etc). (INT8)
+  private final static int kCDXProp_Bracket_Usage = 0x0A24; // 0x0A24 The syntactical chemical meaning of the bracket (SRU mer mon xlink etc). (INT8)
   // private final static int kCDXProp_Polymer_RepeatPattern = 0x0A25; // 0x0A25 The head-to-tail connectivity of objects contained within the bracket. (INT8)
   // private final static int kCDXProp_Polymer_FlipType = 0x0A26; // 0x0A26 The flip state of objects contained within the bracket. (INT8)
-  // private final static int kCDXProp_BracketedObjects = 0x0A27; // 0x0A27 The set of objects contained in a BracketedGroup. (CDXObjectIDArray)
-  // private final static int kCDXProp_Bracket_RepeatCount = 0x0A28; // 0x0A28 The number of times a multiple-group BracketedGroup is repeated. (INT16)
+  private final static int kCDXProp_BracketedObjects = 0x0A27; // 0x0A27 The set of objects contained in a BracketedGroup. (CDXObjectIDArray)
+  private final static int kCDXProp_Bracket_RepeatCount = 0x0A28; // 0x0A28 The number of times a multiple-group BracketedGroup is repeated. (INT16)
   // private final static int kCDXProp_Bracket_ComponentOrder = 0x0A29; // 0x0A29 The component order associated with a BracketedGroup. (INT16)
   // private final static int kCDXProp_Bracket_SRULabel = 0x0A2A; // 0x0A2A The label associated with a BracketedGroup that represents an SRU. (CDXString)
   // private final static int kCDXProp_Bracket_GraphicID = 0x0A2B; // 0x0A2B The ID of a graphical object (bracket brace or parenthesis) associated with a Bracket Attachment. (CDXObjectID)
-  // private final static int kCDXProp_Bracket_BondID = 0x0A2C; // 0x0A2C The ID of a bond that crosses a Bracket Attachment. (CDXObjectID)
-  // private final static int kCDXProp_Bracket_InnerAtomID = 0x0A2D; // 0x0A2D The ID of the node located within the Bracketed Group and attached to a bond that crosses a Bracket Attachment. (CDXObjectID)
+  private final static int kCDXProp_Bracket_BondID = 0x0A2C; // 0x0A2C The ID of a bond that crosses a Bracket Attachment. (CDXObjectID)
+  private final static int kCDXProp_Bracket_InnerAtomID = 0x0A2D; // 0x0A2D The ID of the node located within the Bracketed Group and attached to a bond that crosses a Bracket Attachment. (CDXObjectID)
   // private final static int kCDXProp_Curve_Points3D = 0x0A2E; // 0x0A2E The B&eacute;zier curve's control point locations. (CDXCurvePoints3D)
 
   //Objects.  = ;  
@@ -780,9 +841,9 @@ public class CDXMLWriter extends CMLWriter {
   // private final static int kCDXObj_CrossReference = 0x8014; // 0x8014
   // private final static int kCDXObj_Splitter = 0x8015; // 0x8015
   // private final static int kCDXObj_Table = 0x8016; // 0x8016
-  // private final static int kCDXObj_BracketedGroup = 0x8017; // 0x8017
-  // private final static int kCDXObj_BracketAttachment = 0x8018; // 0x8018
-  // private final static int kCDXObj_CrossingBond = 0x8019; // 0x8019
+  private final static int kCDXObj_BracketedGroup = 0x8017; // 0x8017
+  private final static int kCDXObj_BracketAttachment = 0x8018; // 0x8018
+  private final static int kCDXObj_CrossingBond = 0x8019; // 0x8019
   // private final static int kCDXObj_Border = 0x8020; // 0x8020
   // private final static int kCDXObj_Geometry = 0x8021; // 0x8021
   // private final static int kCDXObj_Constraint = 0x8022; // 0x8022

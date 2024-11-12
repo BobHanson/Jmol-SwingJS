@@ -41,21 +41,16 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 
 /**
- * A CML2 Reader - 
- * If passed a bufferedReader (from a file or inline string), we
- * generate a SAX parser and use callbacks to construct an
+ * A CML2 Reader - If passed a bufferedReader (from a file or inline string), we
+ * generate a SAX parser and use callbacks to construct an AtomSetCollection. If
+ * passed a JSObject (from LiveConnect) we treat it as a JS DOM tree, and walk
+ * the tree, (using the same processing as the SAX parser) to construct the
  * AtomSetCollection.
- * If passed a JSObject (from LiveConnect) we treat it as a JS DOM
- * tree, and walk the tree, (using the same processing as the SAX
- * parser) to construct the AtomSetCollection.
  * 
  * symmetry added by Bob Hanson:
  * 
- *  setSpaceGroupName()
- *  setUnitCellItem()
- *  setFractionalCoordinates()
- *  setAtomCoord()
- *  applySymmetryAndSetTrajectory()
+ * setSpaceGroupName() setUnitCellItem() setFractionalCoordinates()
+ * setAtomCoord() applySymmetryAndSetTrajectory()
  *
  *
  * "isotope" added 4/6/2009 Bob Hanson
@@ -93,7 +88,6 @@ public class XmlCmlReader extends XmlReader {
   private boolean embeddedCrystal = false;
   private Properties atomIdNames;
 
-
   ////////////////////////////////////////////////////////////////
   // Main body of class; variables & functions shared by DOM & SAX alike.
 
@@ -123,33 +117,21 @@ public class XmlCmlReader extends XmlReader {
   private Map<Atom, String> mapRtoA;
   private BS deleteAtoms;
   protected String moleculeID;
-  
+
   protected Map<String, Object> htModelAtomMap;
   private boolean optimize2d;
 
   /**
    * state constants
    */
-  final static protected int START = 0, 
-    CML = 1, 
-    CRYSTAL = 2, 
-    CRYSTAL_SCALAR = 3,
-    CRYSTAL_SYMMETRY = 4, 
-    CRYSTAL_SYMMETRY_TRANSFORM3 = 5, 
-    MOLECULE = 6,
-    MOLECULE_ATOM_ARRAY = 7, 
-    MOLECULE_ATOM = 8, 
-    MOLECULE_ATOM_SCALAR = 9,
-    MOLECULE_BOND_ARRAY = 10, 
-    MOLECULE_BOND = 11, 
-    MOLECULE_BOND_STEREO = 12, 
-    MOLECULE_FORMULA = 13,
-    MOLECULE_ATOM_BUILTIN = 14, 
-    MOLECULE_BOND_BUILTIN = 15,
-    MODULE = 16,
-    SYMMETRY = 17,
-    LATTICE_VECTOR = 18,
-    ASSOCIATION = 19;
+  final static protected int START = 0, CML = 1, CRYSTAL = 2,
+      CRYSTAL_SCALAR = 3, CRYSTAL_SYMMETRY = 4, CRYSTAL_SYMMETRY_TRANSFORM3 = 5,
+      MOLECULE = 6, MOLECULE_ATOM_ARRAY = 7, MOLECULE_ATOM = 8,
+      MOLECULE_ATOM_SCALAR = 9, MOLECULE_BOND_ARRAY = 10, MOLECULE_BOND = 11,
+      MOLECULE_BOND_STEREO = 12, MOLECULE_FORMULA = 13,
+      MOLECULE_ATOM_BUILTIN = 14, MOLECULE_BOND_BUILTIN = 15, MODULE = 16,
+      SYMMETRY = 17, LATTICE_VECTOR = 18, ASSOCIATION = 19;
+
   /**
    * the current state
    */
@@ -162,13 +144,13 @@ public class XmlCmlReader extends XmlReader {
       <cellParameter latticeType="real" parameterType="angle"
         units="castepunits:degree">9.000000000000e1 9.000000000000e1 9.000000000000e1</cellParameter>
     </crystal>
-
+  
    * 
    */
 
   @Override
-  protected void processXml(XmlReader parent,
-                            Object saxReader) throws Exception {
+  protected void processXml(XmlReader parent, Object saxReader)
+      throws Exception {
     optimize2d = parent.checkFilterKey("2D");
     processXml2(parent, saxReader);
     if (optimize2d)
@@ -187,16 +169,19 @@ public class XmlCmlReader extends XmlReader {
     String val;
     switch (state) {
     case START:
-      if (name.equals("molecule")) {
+      switch (name) {
+      case "molecule":
         moleculeID = atts.get("id");
         state = MOLECULE;
         haveMolecule = true;
         if (moleculeNesting == 0)
           createNewAtomSet();
         moleculeNesting++;
-      } else if (name.equals("crystal")) {
+        break;
+      case "crystal":
         state = CRYSTAL;
-      } else if (name.equals("symmetry")) {
+        break;
+      case "symmetry":
         state = SYMMETRY;
         if ((val = atts.get("spacegroup")) != null) {
           localSpaceGroupName = val;
@@ -204,25 +189,29 @@ public class XmlCmlReader extends XmlReader {
           localSpaceGroupName = "P1";
           parent.clearUnitCell();
         }
-      } else if (name.equals("module")) {
+        break;
+      case "module":
         moduleNestingLevel++;
         //nModules++;
-      } else if (name.equals("latticevector")) {
+        break;
+      case "latticevector":
         state = LATTICE_VECTOR;
         setKeepChars(true);
+        break;
       }
-
       break;
     case CRYSTAL:
       // we force this to be NOT serialized by number, because we might have a1 and a1_....
       checkedSerial = true;
       isSerial = false;
-      if (name.equals("scalar")) {
+      switch (name) {
+      case "scalar":
         state = CRYSTAL_SCALAR;
         setKeepChars(true);
         scalarTitle = atts.get("title");
         getDictRefValue();
-      } else if (name.equals("symmetry")) {
+        break;
+      case "symmetry":
         state = CRYSTAL_SYMMETRY;
         if ((val = atts.get("spacegroup")) != null) {
           localSpaceGroupName = val;
@@ -231,11 +220,13 @@ public class XmlCmlReader extends XmlReader {
               localSpaceGroupName = localSpaceGroupName.substring(0, i)
                   + localSpaceGroupName.substring((i--) + 1);
         }
-      } else if (name.equals("cellparameter")) {
+        break;
+      case "cellparameter":
         if ((val = atts.get("parametertype")) != null) {
           cellParameterType = val;
           setKeepChars(true);
         }
+        break;
       }
       break;
     case LATTICE_VECTOR:
@@ -245,7 +236,7 @@ public class XmlCmlReader extends XmlReader {
        * 3.430000066757e0 0.000000000000e0</latticeVector> <latticeVector
        * units="castepunits:A" dictRef="cml:latticeVector">-1.980499982834e0
        * 3.430000066757e0 0.000000000000e0</latticeVector> <latticeVector
-       * units="castepunits:A" dictRef="cml:latticeVector">0.000000000000e0
+       * units="castepunits:A" dictRef="a">0.000000000000e0
        * 0.000000000000e0 4.165999889374e0</latticeVector> </lattice>
        */
       setKeepChars(true);
@@ -253,25 +244,31 @@ public class XmlCmlReader extends XmlReader {
     case SYMMETRY:
     case CRYSTAL_SCALAR:
     case CRYSTAL_SYMMETRY:
-      if (name.equals("transform3")) {
+      switch (name) {
+      case "transform3":
         state = CRYSTAL_SYMMETRY_TRANSFORM3;
         setKeepChars(true);
+        break;
       }
       break;
     case CRYSTAL_SYMMETRY_TRANSFORM3:
     case MOLECULE:
-      if (name.equals("fragmentlist")) {
+      switch (name) {
+      case "fragmentlist":
         joinList = new Lst<String[]>();
         mapRtoA = new Hashtable<Atom, String>();
         if (deleteAtoms == null)
           deleteAtoms = new BS();
-      } else if (name.equals("crystal")) {
+        break;
+      case "crystal":
         state = CRYSTAL;
         embeddedCrystal = true;
-      } else if (name.equals("molecule")) {
+        break;
+      case "molecule":
         state = MOLECULE;
         moleculeNesting++;
-      } else if (name.equals("join")) {
+        break;
+      case "join":
         int order = -1;
         tokenCount = 0;
         if ((val = atts.get("atomrefs2")) != null) {
@@ -281,7 +278,8 @@ public class XmlCmlReader extends XmlReader {
           if (tokenCount == 2 && order > 0)
             joinList.addLast(new String[] { tokens[0], tokens[1], "" + order });
         }
-      } else if (name.equals("bondarray")) {
+        break;
+      case "bondarray":
         state = MOLECULE_BOND_ARRAY;
         bondCount = 0;
         if ((val = atts.get("order")) != null) {
@@ -299,7 +297,8 @@ public class XmlCmlReader extends XmlReader {
           for (int i = tokenCount; --i >= 0;)
             bondArray[i].atomIndex2 = getAtomIndex(tokens[i]);
         }
-      } else if (name.equals("atomarray")) {
+        break;
+      case "atomarray":
         state = MOLECULE_ATOM_ARRAY;
         aaLen = 0;
         boolean coords3D = false;
@@ -348,14 +347,17 @@ public class XmlCmlReader extends XmlReader {
             atom.z = 0;
           addAtom(atom);
         }
-      } else if (name.equals("formula")) {
+        break;
+      case "formula":
         state = MOLECULE_FORMULA;
-      } else if (name.equals("association")) {
+        break;
+      case "association":
         state = ASSOCIATION;
       }
       break;
     case MOLECULE_BOND_ARRAY:
-      if (name.equals("bond")) {
+      switch (name) {
+      case "bond":
         state = MOLECULE_BOND;
         int order = -1;
         tokenCount = 0;
@@ -366,10 +368,12 @@ public class XmlCmlReader extends XmlReader {
         if (tokenCount == 2 && order > 0) {
           addNewBond(tokens[0], tokens[1], order);
         }
+        break;
       }
       break;
     case MOLECULE_ATOM_ARRAY:
-      if (name.equals("atom")) {
+      switch (name) {
+      case "atom":
         state = MOLECULE_ATOM;
         atom = new Atom();
         parent.setFractionalCoordinates(false);
@@ -386,8 +390,8 @@ public class XmlCmlReader extends XmlReader {
           // this is important because the atomName may not be unique
           // (as in PDB files)
           // but it causes problems in cif-derived files that involve a1 and a1_1, for instance
-          isSerial = (id != null && id.length() > 1 && id.startsWith("a") && PT
-              .parseInt(id.substring(1)) != Integer.MIN_VALUE);
+          isSerial = (id != null && id.length() > 1 && id.startsWith("a")
+              && PT.parseInt(id.substring(1)) != Integer.MIN_VALUE);
           checkedSerial = true;
         }
         if (isSerial)
@@ -406,12 +410,13 @@ public class XmlCmlReader extends XmlReader {
         if ((val = atts.get("elementtype")) != null) {
           String sym = val;
           if ((val = atts.get("isotope")) != null)
-            atom.elementNumber = (short) ((parseIntStr(val) << 7) + JmolAdapter
-                .getElementNumber(sym));
+            atom.elementNumber = (short) ((parseIntStr(val) << 7)
+                + JmolAdapter.getElementNumber(sym));
           atom.elementSymbol = sym;
         }
         if ((val = atts.get("formalcharge")) != null)
           atom.formalCharge = parseIntStr(val);
+        break;
       }
 
       break;
@@ -456,7 +461,7 @@ public class XmlCmlReader extends XmlReader {
   }
 
   final private static String[] unitCellParamTags = { "a", "b", "c", "alpha",
-    "beta", "gamma" };
+      "beta", "gamma" };
 
   @Override
   void processEndElement(String name) {
@@ -467,8 +472,8 @@ public class XmlCmlReader extends XmlReader {
       return;
     processEnd2(name);
   }
-  
-  public void processEnd2(String name) {
+
+  protected void processEnd2(String name) {
     name = name.toLowerCase();
     switch (state) {
     case START:
@@ -517,8 +522,9 @@ public class XmlCmlReader extends XmlReader {
         if (scalarTitle != null)
           checkUnitCellItem(unitCellParamTags, scalarTitle);
         else if (scalarDictRef != null)
-          checkUnitCellItem(JmolAdapter.cellParamNames, (scalarDictValue
-              .startsWith("_") ? scalarDictValue : "_" + scalarDictValue));
+          checkUnitCellItem(JmolAdapter.cellParamNames,
+              (scalarDictValue.startsWith("_") ? scalarDictValue
+                  : "_" + scalarDictValue));
       }
       setKeepChars(false);
       scalarTitle = null;
@@ -586,8 +592,8 @@ public class XmlCmlReader extends XmlReader {
     case MOLECULE_ATOM_ARRAY:
       if (name.equals("atomarray")) {
         state = MOLECULE;
-//        for (int i = 0; i < aaLen; ++i)
-  //        addAtom(atomArray[i]);
+        //        for (int i = 0; i < aaLen; ++i)
+        //        addAtom(atomArray[i]);
       }
       break;
     case MOLECULE_BOND:
@@ -633,7 +639,8 @@ public class XmlCmlReader extends XmlReader {
     case MOLECULE_BOND_STEREO:
       String stereo = chars.toString();
       if (bond.order == 1)
-        bond.order = (stereo.equals("H") ? JmolAdapter.ORDER_STEREO_FAR : JmolAdapter.ORDER_STEREO_NEAR);
+        bond.order = (stereo.equals("H") ? JmolAdapter.ORDER_STEREO_FAR
+            : JmolAdapter.ORDER_STEREO_NEAR);
       setKeepChars(false);
       state = MOLECULE_BOND;
       break;
@@ -665,8 +672,9 @@ public class XmlCmlReader extends XmlReader {
   }
 
   /**
-   * Checks to see if we have a bond to R and, if so, adds this R atom
-   * as a key to its attached atom
+   * Checks to see if we have a bond to R and, if so, adds this R atom as a key
+   * to its attached atom
+   * 
    * @param a1name
    * @param a2name
    * @return true if handled so no need to add a bond
@@ -687,17 +695,17 @@ public class XmlCmlReader extends XmlReader {
   }
 
   private void setAtomNames() {
-      // for CML reader "a3" --> "N3"
-      if (atomIdNames == null)
-        return;
-      String s;
-      Atom[] atoms = asc.atoms;
-      for (int i = atomIndex0; i < asc.ac; i++)
-        if ((s = atomIdNames.getProperty(atoms[i].atomName)) != null)
-          atoms[i].atomName = s;
-      atomIdNames = null;
-      atomIndex0 = asc.ac;
-    }
+    // for CML reader "a3" --> "N3"
+    if (atomIdNames == null)
+      return;
+    String s;
+    Atom[] atoms = asc.atoms;
+    for (int i = atomIndex0; i < asc.ac; i++)
+      if ((s = atomIdNames.getProperty(atoms[i].atomName)) != null)
+        atoms[i].atomName = s;
+    atomIdNames = null;
+    atomIndex0 = asc.ac;
+  }
 
   private void addNewBond(String a1, String a2, int order) {
     if (a1 == null || a2 == null)
@@ -748,11 +756,17 @@ public class XmlCmlReader extends XmlReader {
     double floatOrder = parseDoubleStr(str);
     if (Double.isNaN(floatOrder) && str.length() >= 1) {
       str = str.toUpperCase();
+      // http://www.xml-cml.org/convention/molecular#bond-order
+      // note that CML spec only says "recommended to not be a number"
+      // with no further indication as to how to specify the bond order
       switch (str.charAt(0)) {
+      case '1': // nmrML
       case 'S':
         return JmolAdapter.ORDER_COVALENT_SINGLE;
+      case '2': // nmrML
       case 'D':
         return JmolAdapter.ORDER_COVALENT_DOUBLE;
+      case '3': // nmrML 
       case 'T':
         return JmolAdapter.ORDER_COVALENT_TRIPLE;
       case 'A':
@@ -827,13 +841,13 @@ public class XmlCmlReader extends XmlReader {
     String val;
     if (htModelAtomMap != null)
       htModelAtomMap.put("" + asc.iSet, "" + moleculeID);
-    String collectionName = ((val = atts.get("title")) != null 
+    String collectionName = ((val = atts.get("title")) != null
         || (val = atts.get("id")) != null ? val : null);
     if (collectionName != null) {
       asc.setAtomSetName(collectionName);
     }
   }
-  
+
   @Override
   public void applySymmetryAndSetTrajectory() {
     if (moduleNestingLevel > 0 || !haveMolecule || localSpaceGroupName == null)
@@ -850,11 +864,10 @@ public class XmlCmlReader extends XmlReader {
   public void endDocument() {
     // CML reader uses this
     if (deleteAtoms != null) {
-      BS bs = (asc.bsAtoms == null ? asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac) : asc.bsAtoms);
+      BS bs = (asc.bsAtoms == null ? asc.bsAtoms = BSUtil.newBitSet2(0, asc.ac)
+          : asc.bsAtoms);
       bs.andNot(deleteAtoms);
     }
   }
-
-
 
 }

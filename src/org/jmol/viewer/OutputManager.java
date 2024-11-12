@@ -692,6 +692,10 @@ abstract class OutputManager {
     int saveWidth = 0, saveHeight = 0;
     int quality = getInt(params, "quality", Integer.MIN_VALUE);
     String captureMode = (String) params.get("captureMode");
+    
+    
+System.out.println("OutputManager " + captureMode);    
+    
     boolean is2D = params.get("is2D") == Boolean.TRUE;
     String localName = null;
     if (captureMode != null && !vwr.allowCapture())

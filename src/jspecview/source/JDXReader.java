@@ -211,8 +211,8 @@ public class JDXReader implements JmolJDXMOLReader {
     try {
       if (br == null) {
         if (file != null && file.isDirectory())
-          return readBrukerFileDir(file.getFullPath());
-        br = JSVFileManager.getBufferedReaderFromName(filePath, "##TITLE");
+          return readBrukerFileDir(file.getFullPath());        
+        br = JSVFileManager.getBufferedReaderFromName(filePath);
       }
       if (!isHeaderOnly) {
         br.mark(400);
@@ -237,7 +237,9 @@ public class JDXReader implements JmolJDXMOLReader {
           String xmlType = header.toLowerCase();
           xmlType = (xmlType.contains("<animl")
               || xmlType.contains("<!doctype technique") ? "AnIML"
-                  : xmlType.contains("xml-cml") ? "CML" : null);
+                   : xmlType.contains("xml-cml") ? "CML" 
+                   : xmlType.contains("<nmrml") ? "NMRML"
+                   : null);
           if (xmlType == null)
             return readBrukerFileDir(file.getFullPath());
           source = ((SourceReader) JSViewer
@@ -831,7 +833,8 @@ public class JDXReader implements JmolJDXMOLReader {
         try {
           srt.nextToken();
           srt.nextToken();
-          int pt = Integer.parseInt(srt.nextToken().trim());
+          // np-nmr JDX has a float here
+          int pt = (int) Double.parseDouble(srt.nextToken().trim());
           double shift = parseAFFN(label, srt.nextToken().trim());
           spectrum.setShiftReference(shift, pt,
               JDXDataObject.REF_TYPE_STANDARD);
@@ -861,7 +864,7 @@ public class JDXReader implements JmolJDXMOLReader {
     case 10:
       jdxHeader.jcampdx = value;
       double version = PT.parseDouble(value);
-      if (version >= 6.0 || Double.isNaN(version)) {
+      if (version >= 6 || Double.isNaN(version)) {
         if (errorLog != null)
           errorLog
               .append("Warning: JCAMP-DX version may not be fully supported: "

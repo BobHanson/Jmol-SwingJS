@@ -407,6 +407,8 @@ public class ShapeManager {
 
     // Bbcage, Halos, Dipoles, Draw, Ellipsoids, Polyhedra
     // bioshapes, Echo, Hover, 
+    if (shapes[JC.SHAPE_HALOS] != null)
+      shapes[JC.SHAPE_HALOS].setProperty("highlight", null, null);
     for (int i = JC.SHAPE_MIN_HAS_SETVIS; i < JC.SHAPE_MAX_HAS_SETVIS; i++)
       if (shapes[i] != null)
         shapes[i].setModelVisibilityFlags(bs);
