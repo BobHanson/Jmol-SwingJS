@@ -550,7 +550,7 @@ public class MathExt {
     if (ret == null)
       ret = vwr.getSymStatic().getSpaceGroupInfoObj(xyzList, params, true,
         false);
-    if (!"jmol".equals(mode) && !"list".equals(mode)) {
+    if (ret != null && !"jmol".equals(mode) && !"list".equals(mode)) {
       System.out.println("MathExt " + ret);
       // "jmol" used will return the Jmol group if that was to be returned
       @SuppressWarnings("unchecked")
@@ -4207,7 +4207,21 @@ SymmetryInterface sym;
     // y = pattern('CCCC')
     // atoms = {*}.search(y)
     // print search(x, y)
-
+    
+    SV x = (isSelector ? mp.getX() : null);
+    String sx = null;
+    BS bsSelected = null;
+    switch (x.tok) {
+    case T.bitset:
+      bsSelected = (BS) x.value;
+      break;
+    case T.string:
+      sx = (String) x.value;
+      if (sx.startsWith("InChI")) {
+        mp.addX(x);
+        return evaluateInChI(mp, new SV[] { SV.newS("SMILES") });
+      }
+    }
     if (args.length == 0 || isSelector && (tok == T.pattern || args.length > 1))
       return false;
     Object objTarget = (tok == T.search && !isSelector && args[0].tok == T.search ? args[0].value : null);
@@ -4235,8 +4249,8 @@ SymmetryInterface sym;
           return mp.addX(SV.newV(T.pattern,
               vwr.getSmilesMatcher().compileSmartsPattern(pattern)));
         }
-        BS bsSelected = (isSelector ? (BS) mp.getX().value
-            : args.length == 2 && args[1].tok == T.bitset ? (BS) args[1].value
+        if (bsSelected == null)
+          bsSelected = (args.length == 2 && args[1].tok == T.bitset ? (BS) args[1].value
                 : vwr.getModelUndeletedAtomsBitSet(-1));
         bs = vwr.getSmilesMatcher().getSubstructureSet(
             (objPattern == null ? pattern : objPattern), vwr.ms.at, vwr.ms.ac,

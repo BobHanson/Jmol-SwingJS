@@ -421,8 +421,8 @@ public class OC extends OutputStream implements GenericOutputChannel {
   /**
    * We have constructed some sort of byte[] that needs to be posted to a remote
    * site. We don't do that posting here -- we let the bytePoster do it.
+   * @return  a message or null
    * 
-   * @return
    */
   private String postByteArray() {
     return bytePoster == null ? null

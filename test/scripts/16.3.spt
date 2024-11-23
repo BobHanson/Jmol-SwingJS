@@ -1,4 +1,4 @@
-// this causes a moveto to fail silently set nodelay
+// this causes a moveto to fail silently: set nodelay
 ntest = 0
 function test(a,b) {
 	refresh
@@ -13,6 +13,9 @@ function test(a,b) {
 }
 	
 
+print "test 16.3.6"
+
+test(show("spacegroup 224").length, 822)
 
 print "test 16.3.4"
 
@@ -573,6 +576,7 @@ print "test 16.2.34 complete"
 print "test 16.2.36 complete"
 print "test 16.3.2 complete"
 print "test 16.3.4 complete"
+
 
 print "DONE " + ntest
 

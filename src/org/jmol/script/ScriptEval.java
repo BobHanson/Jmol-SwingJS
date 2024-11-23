@@ -963,7 +963,8 @@ public class ScriptEval extends ScriptExpr {
       pushContext(null, "checkSelect");
       ok = parameterExpressionSelect(h, where);
     } catch (Exception ex) {
-      Logger.error("checkSelect " + ex);
+      //this needs to be silent; it can be very much repeated
+      //Logger.error("checkSelect " + ex);
     }
     popContext(false, false);
     return ok;
@@ -1750,7 +1751,8 @@ public class ScriptEval extends ScriptExpr {
     if (done)
       return;
     isFuncReturn = false;
-    Logger.error("eval ERROR: " + s + "\n" + toString());
+    if (s.indexOf("w_h_e_r_e =") < 0)
+      Logger.error("eval ERROR: " + s + "\n" + toString());
     vwr.setAccessInternal(null);
     if (vwr.autoExit)
       vwr.exitJmol();

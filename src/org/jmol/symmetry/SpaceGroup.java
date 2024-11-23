@@ -215,7 +215,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         sg = createSpaceGroupN(modDim <= 0 ? name: "x1,x2,x3,x4,x5,x6,x7,x8,x9".substring(0, modDim * 3 + 8), true);
     }
     if (sg != null)
-      sg.generateAllOperators(null);
+      sg.generateMatrixOperators(null);
     return sg;
   }
 
@@ -312,8 +312,10 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     if (hallInfo == null && latticeParameter != 0) {
       HallInfo h = newHallInfo(
           HallInfo.getHallLatticeEquivalent(latticeParameter));
-      generateAllOperators(h);
+      generateMatrixOperators(h);
       //doNormalize = false;  // why this here?
+    } else {
+      checkCreateFromHall();
     }
     finalOperations = null;
     isBio = (name.indexOf("bio") >= 0);
@@ -460,11 +462,12 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       SB sb = new SB();
       while (sg != null) {
         // I don't know why there would be multiples here
-        sb.append(sg.dumpInfo());
-        if (sg.index >= SG.length || !andNonstandard)
+        if (sg.index < SG.length || andNonstandard)
           break;
-        sg = determineSpaceGroupNS(spaceGroup, sg);
+        sg = SG[sg.index];
       }
+      sg.getOperationCount();
+      sb.append(sg.dumpInfo());
       return sb.toString();
     }
     return asMap ? null : "?";
@@ -503,8 +506,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         .append(hallInfo == null ? "Hall symbol unknown" : Logger.debugging ?  hallInfo.dumpInfo() : "");
     sb.append("\n\n").appendI(operationCount).append(" operators")
         .append(hallInfo != null && !hallInfo.getHallSymbol().equals(SG_NONE)
-            ? " from Hall symbol " + hallInfo.getHallSymbol() + "  #"
-                + jmolId
+            ? " from Hall symbol " + hallInfo.getHallSymbol()
             : "")
         .append(": ");
     for (int i = 0; i < operationCount; i++) {
@@ -643,10 +645,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * @return either a String or a SpaceGroup, depending on index.
    */
   private String dumpCanonicalSeitzList() {
-    if (nHallOperators != null && hallSymbol != null) {
-      hallInfo = newHallInfo(hallSymbol);
-      generateAllOperators(null);
-    } 
+    checkCreateFromHall();
     String s = getCanonicalSeitzList();
     if (index >= SG.length) {
       SpaceGroup sgReference = findReferenceSpaceGroup(operationCount, s, clegId);
@@ -656,6 +655,13 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     return (index >= 0 && index < SG.length ? hallSymbol + " = " : "") + s;
   }
   
+  private void checkCreateFromHall() {
+    if (nHallOperators != null && hallSymbol != null) {
+      hallInfo = newHallInfo(hallSymbol);
+      generateMatrixOperators(null);
+    } 
+  }
+
   /**
    * Technically, some of these are non-reference settings, but in terms of 
    * Jmol, they are references - the ones loaded statically.
@@ -775,7 +781,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     }
     if (sg != null) {
       try {
-        sg.generateAllOperators(null);
+        sg.generateMatrixOperators(null);
         return sg;
 
       } catch (Exception e) {
@@ -874,7 +880,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   
   /// operation based on Hall name and unit cell parameters only
 
-  private void generateAllOperators(HallInfo h) {
+  private void generateMatrixOperators(HallInfo h) {
     if (h == null) {
       if (operationCount > 0)
         return;
@@ -1157,11 +1163,12 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     // inexact just the number; no extension indicated -- first in list
 
     if (ext.length() == 0)
-      for (i = 0; i < lastIndex; i++)
+      for (i = 0; i < lastIndex; i++) {
         if ((s = SG[i]).itaNumber.equals(nameExt)
         //&& (!checkBilbao || s.isBilbao)
         )
           return i;
+      }
     return -1;
   }
    
@@ -1526,7 +1533,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   void checkHallOperators() {
     if (nHallOperators != null && nHallOperators.intValue() != operationCount) {
       if (hallInfo == null || hallInfo.isGenerated()) {
-        generateAllOperators(hallInfo); 
+        generateMatrixOperators(hallInfo); 
       } else {
         // using ITA data, not Hall operators
         init(false);

@@ -964,7 +964,9 @@ public class FileManager implements BytePoster {
     name = vwr.resolveDatabaseFormat(name);
     if (name == null)
       return new String[] { null };
-    if (name.indexOf(":") < 0 && name.indexOf("/") != 0)
+    if (name.startsWith("file:///") && name.indexOf('|') == 9)
+      name = name.substring(0, 9) + ':' + name.substring(10);      
+    if (name.indexOf(":") < 0 && name.indexOf('/') != 0  && name.indexOf('\\') != 0)
       name = addDirectory(vwr.getDefaultDirectory(), name);
     if (appletDocumentBaseURL == null) {
       // This code is for the app or signed local applet 
@@ -1008,13 +1010,13 @@ public class FileManager implements BytePoster {
       names[0] = pathForAllFiles + names[1];
       Logger.info("FileManager substituting " + name0 + " --> " + names[0]);
     }
-    if (isFullLoad && OC.isLocal(names[0])) {
-      String path = names[0];
+    String path = names[0];
+    if (isFullLoad && OC.isLocal(path) && !path.startsWith("file:/")) {
       if (file == null)
-        path = PT.trim(names[0].substring(names[0].indexOf(":") + 1), "/");
+        path = PT.trim(path.substring(path.indexOf(":") + 1), "/");
       int pt = path.length() - names[1].length() - 1;
       if (pt > 0) {
-        path = path.substring(0, pt);
+        path = path.substring(0, pt).replace('|', ':'); // for file:///C|/
         setLocalPath(vwr, path, true);
       }
     }
@@ -1131,9 +1133,14 @@ public class FileManager implements BytePoster {
     if (file.startsWith("http://") || file.startsWith("https://"))
       return file;
     file = PT.rep(file, "?", "");
-    if (file.indexOf("file:/") == 0)
-      return file.substring(6);
-    if (file.indexOf("/") == 0 || file.indexOf(":") >= 0)
+    if (file.indexOf("file:/") == 0) {
+      int pt = file.indexOf('|');
+      if (pt > 5 && pt < 10) // file:///C| 
+        file = file.substring(0, pt) + ':' + file.substring(pt + 1);
+      pt = file.indexOf(':', 5); // dos file://C:/...
+      return file.substring(pt > 0 ? pt -1 : 5);
+    }
+    if (file.indexOf('/') == 0 || file.indexOf('\\') == 0 || file.indexOf(":") >= 0)
       return file;
     GenericFileInterface dir = null;
     try {
@@ -1579,7 +1586,7 @@ public class FileManager implements BytePoster {
   }
 
   //// BytePoster interface 
-  
+
   @Override
   public String postByteArray(String fileName, byte[] bytes) {
     // BytePoster interface - for javajs.util.OC (output channel)
