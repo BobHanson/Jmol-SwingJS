@@ -2988,14 +2988,14 @@ public class Viewer extends JmolViewer
     Logger.startTimer(msg);
     htParams = setLoadParameters(htParams, isAppend);
     boolean isLoadVariable = fileName.startsWith("@");
-    boolean haveFileData = (htParams.containsKey("fileData"));
+    boolean haveFileData = (htParams.containsKey(JC.FILE_DATA));
     if (fileName.indexOf('$') == 0)
       htParams.put("smilesString", fileName.substring(1));
     boolean isString = (fileName.equals("string")
         || fileName.equals(JC.MODELKIT_ZAP_TITLE));
     String strModel = null;
     if (haveFileData) {
-      strModel = (String) htParams.get("fileData");
+      strModel = (String) htParams.get(JC.FILE_DATA);
       if (htParams.containsKey("isData")) {
         Object o = loadInlineScript(strModel, '\0', isAppend, htParams);
         lastData = (g.preserveState ? getDataManager().createFileData(strModel)
@@ -3155,30 +3155,33 @@ public class Viewer extends JmolViewer
                                   Map<String, Object> htParams) {
     if (strModel == null || strModel.length() == 0)
       return null;
-    strModel = fixInlineString(strModel, newLine);
-    if (newLine != 0)
-      Logger.info("loading model inline, " + strModel.length()
-          + " bytes, with newLine character " + (int) newLine + " isAppend="
-          + isAppend);
-    if (Logger.debugging)
-      Logger.debug(strModel);
-    String datasep = getDataSeparator();
-    int i;
-    if (datasep != null && datasep != "" && (i = strModel.indexOf(datasep)) >= 0
-        && strModel.indexOf("# Jmol state") < 0) {
-      int n = 2;
-      while ((i = strModel.indexOf(datasep, i + 1)) >= 0)
-        n++;
-      String[] strModels = new String[n];
-      int pt = 0, pt0 = 0;
-      for (i = 0; i < n; i++) {
-        pt = strModel.indexOf(datasep, pt0);
-        if (pt < 0)
-          pt = strModel.length();
-        strModels[i] = strModel.substring(pt0, pt);
-        pt0 = pt + datasep.length();
+    if (!strModel.startsWith(JC.BASE64_TAG)) {
+      strModel = fixInlineString(strModel, newLine);
+      if (newLine != 0)
+        Logger.info("loading model inline, " + strModel.length()
+            + " bytes, with newLine character " + (int) newLine + " isAppend="
+            + isAppend);
+      if (Logger.debugging)
+        Logger.debug(strModel);
+      String datasep = getDataSeparator();
+      int i;
+      if (datasep != null && datasep != ""
+          && (i = strModel.indexOf(datasep)) >= 0
+          && strModel.indexOf("# Jmol state") < 0) {
+        int n = 2;
+        while ((i = strModel.indexOf(datasep, i + 1)) >= 0)
+          n++;
+        String[] strModels = new String[n];
+        int pt = 0, pt0 = 0;
+        for (i = 0; i < n; i++) {
+          pt = strModel.indexOf(datasep, pt0);
+          if (pt < 0)
+            pt = strModel.length();
+          strModels[i] = strModel.substring(pt0, pt);
+          pt0 = pt + datasep.length();
+        }
+        return openStringsInlineParamsAppend(strModels, htParams, isAppend);
       }
-      return openStringsInlineParamsAppend(strModels, htParams, isAppend);
     }
     return openStringInlineParamsAppend(strModel, htParams, isAppend);
   }
@@ -3226,23 +3229,25 @@ public class Viewer extends JmolViewer
     // loadInline, openStringInline
 
     htParams = setLoadParameters(htParams, isAppend);
-    String type = getModelAdapter().getFileTypeName(htParams.get("filter"));
-    if (type == null && (type = getModelAdapter()
-        .getFileTypeName(Rdr.getBR(strModel))) == null)
-      return "unknown file type";
-    if (type.equals("spt")) {
-      return "cannot open script inline";
-    }
-
     SB loadScript = (SB) htParams.get("loadScript");
     boolean isLoadCommand = htParams.containsKey("isData");
+    if (!strModel.startsWith(JC.BASE64_TAG)) {
+      String type = getModelAdapter().getFileTypeName(htParams.get("filter"));
+      if (type == null && (type = getModelAdapter()
+          .getFileTypeName(Rdr.getBR(strModel))) == null)
+        return "unknown file type";
+      if (type.equals("spt")) {
+        return "cannot open script inline";
+      }
+    }
     if (loadScript == null)
       loadScript = new SB();
     if (!isAppend)
       zap(true, false/*true*/, false);
-    if (!isLoadCommand)
+    if (!isLoadCommand) {
       getStateCreator().getInlineData(loadScript, strModel, isAppend,
           (Integer) htParams.get("appendToModelIndex"), g.defaultLoadFilter);
+    }
     Object atomSetCollection = fm.createAtomSetCollectionFromString(strModel,
         htParams, isAppend);
     return createModelSetAndReturnError(atomSetCollection, isAppend, loadScript,
@@ -8755,7 +8760,12 @@ public class Viewer extends JmolViewer
       return;
     if (command.startsWith("pause ") || command.equals("pause"))
       command = "resume";// + command.substring(5);
-    commandHistory.addCommand(PT.replaceAllCharacters(command, "\r\n\t", " "));
+    command = command.trim();
+    if (command.length() < 20
+        || command.substring(0, 20).toUpperCase().indexOf("DATA \"") < 0) {
+      PT.replaceAllCharacters(command, "\r\n\t", " ");
+    }
+    commandHistory.addCommand(command);
   }
 
   public void pushState() {

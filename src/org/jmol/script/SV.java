@@ -35,6 +35,7 @@ import java.util.Set;
 import org.jmol.modelset.BondSet;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
+import org.jmol.viewer.JC;
 
 import javajs.api.JSONEncodable;
 import javajs.util.AU;
@@ -1396,7 +1397,7 @@ public class SV extends T implements JSONEncodable {
         break;
       default:
         String s = sv.asString();
-        if (s.startsWith(";base64,")) {
+        if (s.startsWith(JC.BASE64_TAG)) {
           if (pt == 5)
             return s;
           bytes = Base64.decodeBase64(s);
@@ -1408,7 +1409,7 @@ public class SV extends T implements JSONEncodable {
       case FORMAT_BYTEARRAY:
         return new BArray(bytes);
       case FORMAT_BASE64:
-        return ";base64," + javajs.util.Base64.getBase64(bytes).toString(); 
+        return JC.BASE64_TAG + javajs.util.Base64.getBase64(bytes).toString(); 
       case FORMAT_ARRAY:
         return getVariable(bytes);
       }

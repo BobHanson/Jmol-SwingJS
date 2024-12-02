@@ -3222,7 +3222,7 @@ public class ScriptEval extends ScriptExpr {
           vwr.setBackgroundImage(null, null);
           return;
         }
-        o = (file.startsWith(";base64,") ?  new BArray(Base64.decodeBase64(file)) : file);
+        o = (file.startsWith(JC.BASE64_TAG) ?  new BArray(Base64.decodeBase64(file)) : file);
       }
       if (vwr.fm.loadImage(o, null, !useThreads(false)))
           throw new ScriptInterruption(this,"backgroundImage", 1);
@@ -4866,7 +4866,7 @@ public class ScriptEval extends ScriptExpr {
         isInline = true;
       }
       if (isInline) {
-        htParams.put("fileData", filename);
+        htParams.put(JC.FILE_DATA, filename);
       } else if (filename.startsWith("@") && filename.length() > 1) {
         Object o = getVarParameter(filename.substring(1), false);
         if (o instanceof Map<?, ?>) {
@@ -4879,7 +4879,7 @@ public class ScriptEval extends ScriptExpr {
         loadScript = new SB().append("{\n    var ")
             .append(filename.substring(1)).append(" = ")
             .append(PT.esc((String) o)).append(";\n    ").appendSB(loadScript);
-        htParams.put("fileData", o);
+        htParams.put(JC.FILE_DATA, o);
       } else if (!isData
           && !((filename.startsWith("=") || filename.startsWith("*"))
               && filename.indexOf("/") > 0)) {
@@ -5093,8 +5093,9 @@ public class ScriptEval extends ScriptExpr {
     String strModel = (ptVar >= 0 ? ""
         + getParameter(key.substring(ptVar + 1), T.string, true)
         : paramAsStr(++i));
-    strModel = Viewer.fixInlineString(strModel, vwr.getInlineChar());
-    htParams.put("fileData", strModel);
+    if (!strModel.startsWith(JC.BASE64_TAG))
+      strModel = Viewer.fixInlineString(strModel, vwr.getInlineChar());
+    htParams.put(JC.FILE_DATA, strModel);
     htParams.put("isData", Boolean.TRUE);
     //note: ScriptCompiler will remove an initial \n if present
     loadScript.appendC('\n').append(strModel).append(" end ")

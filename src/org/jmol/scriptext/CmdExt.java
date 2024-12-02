@@ -4849,7 +4849,7 @@ public class CmdExt extends ScriptExt {
       byte[] bytes = (o.tok == T.barray ? ((BArray) o.value).data : null);
       if (bytes == null) {
         String s = o.asString();
-        bytes = (s.startsWith(";base64,") ? Base64.decodeBase64(s)
+        bytes = (s.startsWith(JC.BASE64_TAG) ? Base64.decodeBase64(s)
             : s.getBytes());
       }
       if (key.equals("_DATA_")) {

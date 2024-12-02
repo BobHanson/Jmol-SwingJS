@@ -949,13 +949,13 @@ public class ModelSet extends BondCollection {
     if (modelIndex < 0)
       return "";
     Map<String, Object> fileData = (Map<String, Object>) getInfo(modelIndex,
-        "fileData");
+        JC.FILE_DATA);
     if (fileData != null)
       return fileData;
     if (!getInfoB(modelIndex, "isCIF"))
       return getPDBHeader(modelIndex);
     fileData = vwr.getCifData(modelIndex);
-    setInfo(modelIndex, "fileData", fileData);
+    setInfo(modelIndex, JC.FILE_DATA, fileData);
     return fileData;
   }
 

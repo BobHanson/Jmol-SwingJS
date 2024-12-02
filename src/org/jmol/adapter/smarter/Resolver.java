@@ -322,7 +322,7 @@ public class Resolver {
       String json = rdr.readLine();
       if ((readerName = checkJSONContains(json)) != null) {
         if (htParams != null)
-          htParams.put("fileData", json);
+          htParams.put(JC.FILE_DATA, json);
         return readerName;
       }
       msg = (htParams == null ? null

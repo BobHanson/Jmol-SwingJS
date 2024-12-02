@@ -144,6 +144,7 @@ final public class CommandHistory {
 
   /**
    * Adds any number of lines to the command history
+   * 
    * @param strCommand
    */
   public void addCommand(String strCommand) {
@@ -152,16 +153,22 @@ final public class CommandHistory {
     if (strCommand.endsWith(NOHISTORYATALL_FLAG))
       return;
     int i;
-    
+
     // I don't think Jmol can deliver a multiline parameter here
-    while ((i = strCommand.indexOf("\n")) >= 0) {
-      String str = strCommand.substring(0, i);
-      if (str.length() > 0)
-        addCommandLine(str);
-      strCommand = strCommand.substring(i + 1);
+    // load /*data*/ data "
+    // 012345678901234567890
+    if (strCommand.length() == 0)
+      return;
+    if (strCommand.length() < 20
+        || strCommand.substring(0, 20).toUpperCase().indexOf("DATA \"") < 0) {
+      while ((i = strCommand.indexOf("\n")) >= 0) {
+        String str = strCommand.substring(0, i);
+        if (str.length() > 0)
+          addCommandLine(str);
+        strCommand = strCommand.substring(i + 1);
+      }
     }
-    if (strCommand.length() > 0)
-      addCommandLine(strCommand);
+    addCommandLine(strCommand);
   }
 
   boolean isOn = true;

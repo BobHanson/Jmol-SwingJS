@@ -147,7 +147,8 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
   abstract protected String nextFileName(String stub, int nTab);
   public int nTab = 0;
   private String incompleteCmd;
-  
+  public String pageUpBuffer;
+
   public String completeCommand(String thisCmd) {
     if (thisCmd.length() == 0)
       return null;
@@ -418,14 +419,21 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
   
   /**
    * @param up 
-   * @param pageUp  
+   * @param findLastLikeThis  
    */
-  protected void recallCommand(boolean up, boolean pageUp) {
-    String cmd = vwr.getSetHistory(up ? -1 : 1);
+  protected void recallCommand(boolean up, boolean findLastLikeThis) {
+    String cmd = (findLastLikeThis ? vwr.historyFind(
+        pageUpBuffer == null ? (pageUpBuffer = getCommandString())
+            : pageUpBuffer,
+            up ? -1 : 1) : vwr.getSetHistory(up ? -1 : 1));
     if (cmd != null) {
       cmd = trimGUI(cmd);
       input.setText(PT.escUnicode(cmd));
     }
+  }
+  
+  protected String getCommandString() {
+    return input.getText();
   }
   
   protected String trimGUI(String cmd) {
@@ -435,7 +443,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     pt = cmd.indexOf(JC.SCRIPT_GUI);
     if (pt >= 0)
       cmd = cmd.substring(0, pt);
-    pt = cmd.indexOf(JC.SCRIPT_GUI);
+    //pt = cmd.indexOf(JC.SCRIPT_GUI);
    return PT.trim(cmd, "; ");
   }
 
@@ -475,7 +483,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
         return mode;
       }
       if (kcode == KeyEvent.VK_UP || kcode == KeyEvent.VK_DOWN) {
-        recallCommand(kcode == KeyEvent.VK_UP, false);
+        recallCommand(kcode == KeyEvent.VK_UP, isControlDown);
         return mode;
       }
       break;

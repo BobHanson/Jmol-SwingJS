@@ -39,6 +39,7 @@ import org.jmol.api.JmolAdapter;
 
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 /**
  * Reader for Gaussian fchk files
@@ -64,7 +65,7 @@ public class GaussianFchkReader extends GaussianReader {
     fileData.put("title",  rd().trim());
     calculationType = PT.rep(rd(), "  ", " ");
     asc.newAtomSet();
-    asc.setCurrentModelInfo("fileData", fileData);
+    asc.setCurrentModelInfo(JC.FILE_DATA, fileData);
     readAllData();
     readAtoms();
     readBonds();

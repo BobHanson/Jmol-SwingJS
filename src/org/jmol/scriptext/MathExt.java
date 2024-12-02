@@ -4211,27 +4211,28 @@ SymmetryInterface sym;
     SV x = (isSelector ? mp.getX() : null);
     String sx = null;
     BS bsSelected = null;
-    switch (x.tok) {
-    case T.bitset:
-      bsSelected = (BS) x.value;
-      break;
-    case T.string:
-      sx = (String) x.value;
-      if (sx.startsWith("InChI")) {
-        mp.addX(x);
-        return evaluateInChI(mp, new SV[] { SV.newS("SMILES") });
+    if (x != null)
+      switch (x.tok) {
+      case T.bitset:
+        bsSelected = (BS) x.value;
+        break;
+      case T.string:
+        sx = (String) x.value;
+        if (sx.startsWith("InChI")) {
+          mp.addX(x);
+          return evaluateInChI(mp, new SV[] { SV.newS("SMILES") });
+        }
       }
-    }
     if (args.length == 0 || isSelector && (tok == T.pattern || args.length > 1))
       return false;
-    Object objTarget = (tok == T.search && !isSelector && args[0].tok == T.search ? args[0].value : null);
+    Object objTarget = (tok == T.search && !isSelector
+        && args[0].tok == T.search ? args[0].value : null);
     if (objTarget != null && args.length < 2)
       return false;
-    boolean compileSearch = (tok == T.search && !isSelector && args[0].tok == T.bitset);
+    boolean compileSearch = (tok == T.search && !isSelector
+        && args[0].tok == T.bitset);
     Object objPattern = (args[0].tok == T.pattern ? args[0].value
-        : objTarget != null && args[1].tok == T.pattern
-            ? args[1].value
-            : null);
+        : objTarget != null && args[1].tok == T.pattern ? args[1].value : null);
     if (objTarget != null && objPattern == null)
       return false;
     String pattern = (compileSearch ? null : SV.sValue(args[0]));
@@ -4239,19 +4240,21 @@ SymmetryInterface sym;
     if (compileSearch || pattern.length() > 0)
       try {
         if (compileSearch) {
-          return mp.addX(SV.newV(T.search,
-              vwr.getSmilesMatcher().compileSearchTarget(vwr.ms.at, vwr.ms.ac, SV.getBitSet(args[0], false))));
+          return mp.addX(
+              SV.newV(T.search, vwr.getSmilesMatcher().compileSearchTarget(
+                  vwr.ms.at, vwr.ms.ac, SV.getBitSet(args[0], false))));
         }
         if (objTarget != null)
-          return mp.addXBs(vwr.getSmilesMatcher().getSubstructureSet(
-              objPattern, objTarget, 0, null, JC.SMILES_TYPE_SMARTS));
+          return mp.addXBs(vwr.getSmilesMatcher().getSubstructureSet(objPattern,
+              objTarget, 0, null, JC.SMILES_TYPE_SMARTS));
         if (tok == T.pattern) {
           return mp.addX(SV.newV(T.pattern,
               vwr.getSmilesMatcher().compileSmartsPattern(pattern)));
         }
         if (bsSelected == null)
-          bsSelected = (args.length == 2 && args[1].tok == T.bitset ? (BS) args[1].value
-                : vwr.getModelUndeletedAtomsBitSet(-1));
+          bsSelected = (args.length == 2 && args[1].tok == T.bitset
+              ? (BS) args[1].value
+              : vwr.getModelUndeletedAtomsBitSet(-1));
         bs = vwr.getSmilesMatcher().getSubstructureSet(
             (objPattern == null ? pattern : objPattern), vwr.ms.at, vwr.ms.ac,
             bsSelected,

@@ -435,7 +435,7 @@ public class StateCreator extends JmolStateCreator {
             + Escape.escapeColor(global.objColors[i]) + '"');
     if (global.backgroundImageFileName != null) {
       app(str, "background IMAGE "
-          + (global.backgroundImageFileName.startsWith(";base64,") ? "" : "/*file*/")
+          + (global.backgroundImageFileName.startsWith(JC.BASE64_TAG) ? "" : "/*file*/")
           + PT.esc(global.backgroundImageFileName));
     }
     str.append(getLightingState(false));

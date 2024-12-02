@@ -2676,7 +2676,7 @@ public class ScriptCompiler extends ScriptTokenParser {
       String s = script.substring(ichToken + 1, ichToken + cchToken - 1);
       if (s.indexOf("\\u") >= 0)
         s = Escape.unescapeUnicode(s);
-      if (s.indexOf(";base64,") != 0)
+      if (s.indexOf(JC.BASE64_TAG) != 0)
         return s;
     }
     return unescapeString(script, ichToken + 1, cchToken - 2);

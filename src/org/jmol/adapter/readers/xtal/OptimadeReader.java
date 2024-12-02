@@ -7,6 +7,7 @@ import java.util.Map;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 import javajs.util.SB;
 
@@ -40,7 +41,7 @@ public class OptimadeReader extends AtomSetCollectionReader {
     super.initializeReader();
     noSlab = checkFilterKey("NOSLAB");
     try {
-      String strJSON = (String) htParams.get("fileData");
+      String strJSON = (String) htParams.get(JC.FILE_DATA);
       if (strJSON == null) {
         SB sb = new SB();
         while (rd() != null)

@@ -716,8 +716,8 @@ public class AppConsole extends JmolConsole
   @Override
   protected void recallCommand(boolean up, boolean pageup) {
     String cmd = (pageup ? vwr.historyFind(
-        console.pageUpBuffer == null ? (console.pageUpBuffer = consoleDoc.getCommandString())
-            : console.pageUpBuffer,
+        pageUpBuffer == null ? (pageUpBuffer = getCommandString())
+            : pageUpBuffer,
         up ? -1 : 1) : vwr.getSetHistory(up ? -1 : 1));
     if (cmd == null) {
       EventQueue.invokeLater(new Runnable() {
@@ -745,6 +745,10 @@ public class AppConsole extends JmolConsole
     }
   }
 
+  @Override
+  protected String getCommandString() {
+    return consoleDoc.getCommandString();
+  }
 
 
   class ConsoleTextPane extends JTextPane implements KeyListener {
@@ -752,7 +756,6 @@ public class AppConsole extends JmolConsole
     private EnterListener enterListener;
 
     boolean checking = false;
-    String pageUpBuffer;
     boolean checkingCommand;
     private Timer checkTimer;
 
@@ -882,7 +885,7 @@ public class AppConsole extends JmolConsole
         nTab = 0;
       }
       if ((kcode == KeyEvent.VK_UP || kcode == KeyEvent.VK_DOWN)
-          && ke.isControlDown() && consoleDoc.isAtEnd()) {
+          && (ke.isShiftDown() || ke.isControlDown()) && consoleDoc.isAtEnd()) {
         if (kid == KeyEvent.KEY_PRESSED) {
           //System.out.println(pageUpBuffer);
           recallCommand(kcode == KeyEvent.VK_UP, true);
@@ -1127,7 +1130,8 @@ public class AppConsole extends JmolConsole
         super.insertString(offs, str, a == attError ? a : attUserInput);
         setCaretPosition(offs + str.length());
       }
-      if (ichNewline >= 0) {
+      if (str.endsWith("\n")) {
+//      if (ichNewline >= 0) {
         consoleTextPane.enterPressed();
       }
     }

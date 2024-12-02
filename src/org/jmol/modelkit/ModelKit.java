@@ -3736,7 +3736,7 @@ public class ModelKit {
     Map<String, Object> htParams = new Hashtable<String, Object>();
     htParams.put("eval", eval);
     htParams.put("lattice", P3d.new3(444, 666, 1));
-    htParams.put("fileData", cif);
+    htParams.put(JC.FILE_DATA, cif);
     htParams.put("loadScript", new SB());
     if (vwr.loadModelFromFile(null, "<temp>", null, null, true, htParams, null,
         null, 0, " ") != null)

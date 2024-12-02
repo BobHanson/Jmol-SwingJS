@@ -1549,6 +1549,7 @@ public final class JC {
   }
 
   public static String READER_NOT_FOUND = "File reader was not found:";
+  public static String BASE64_TAG = ";base64,";
 
   public final static int UNITID_MODEL = 1;
   public final static int UNITID_RESIDUE = 2;
@@ -1645,6 +1646,8 @@ public final class JC {
   public static final String INFO_UNIT_CELLS = "unitCells";
   public static final String INFO_UNIT_CELL = "unitcell";
 
+  public static final String FILE_DATA = "fileData";
+  
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.
    * 

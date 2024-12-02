@@ -286,7 +286,8 @@ public class FileManager implements BytePoster {
     boolean isAddH = (strModel.indexOf(JC.ADD_HYDROGEN_TITLE) >= 0);
     String[] fnames = (isAddH ? getFileInfo() : null);
     FileReader fileReader = new FileReader(vwr, "string", null, null, null,
-        Rdr.getBR(strModel), htParams, isAppend);
+        (strModel.startsWith(JC.BASE64_TAG) ? Base64.decodeBase64(strModel) : Rdr.getBR(strModel)), 
+        htParams, isAppend);
     fileReader.run();
     if (fnames != null)
       setFileInfo(fnames);
@@ -674,7 +675,8 @@ public class FileManager implements BytePoster {
         return (forceInputStream ? Rdr.getBIS(s.getBytes()) : Rdr.getBR(s));
       }
       // check for PyMOL or MMTF
-      if (Rdr.isMessagePackS(bis) || Rdr.isPickleS(bis))
+      if (Rdr.isMessagePackS(bis) || Rdr.isPickleS(bis)
+          || Resolver.getBinaryType(bis) != null)
         return bis;
       if (Rdr.isPngZipStream(bis))
         bis = ZipTools.getPngZipStream(bis, true);
@@ -898,7 +900,7 @@ public class FileManager implements BytePoster {
       nameOrBytes = ((SV) nameOrBytes).value;
     String name = (nameOrBytes instanceof String ? (String) nameOrBytes : null);
     boolean isAsynchronous = false;
-    if (name != null && name.startsWith(";base64,")) {
+    if (name != null && name.startsWith(JC.BASE64_TAG)) {
       bytes = Base64.decodeBase64(name);
     } else if (nameOrBytes instanceof BArray) {
       bytes = ((BArray) nameOrBytes).data;
@@ -921,7 +923,7 @@ public class FileManager implements BytePoster {
       image = null;
     }
     if (!Viewer.isJS && image != null && bytes != null)
-      nameOrError = ";base64," + Base64.getBase64(bytes).toString();
+      nameOrError = JC.BASE64_TAG + Base64.getBase64(bytes).toString();
     if (!Viewer.isJS || isPopupImage && nameOrError == null
         || !isPopupImage && image != null)
       return vwr.loadImageData(image, nameOrError, echoName, null);
