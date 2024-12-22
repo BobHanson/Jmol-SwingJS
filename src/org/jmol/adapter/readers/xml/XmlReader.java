@@ -94,8 +94,7 @@ import javajs.util.SB;
 
 abstract public class XmlReader extends AtomSetCollectionReader {
 
-  protected Atom atom;
-  protected Bond bond;
+  protected Atom thisAtom;
   //protected String[] domAttributes;
   public XmlReader parent = this; // was much more complicated. Now much simpler. 
   // No longer: XmlReader itself; to be assigned by the subReader
@@ -222,7 +221,7 @@ abstract public class XmlReader extends AtomSetCollectionReader {
       {
       }
       if (o instanceof BufferedInputStream)
-        o = Rdr.streamToUTF8String(Rdr.getBIS(data));
+        o = new String(data, "utf-8");
       boolean isjs = false;
       /**
        * 
@@ -235,9 +234,9 @@ abstract public class XmlReader extends AtomSetCollectionReader {
         walkDOMTree();
       }
       if (isjs) {
-        this.domObj[0] = this.createDomNodeJS("xmlReader", o);
-        this.walkDOMTree();
-        this.createDomNodeJS("xmlReader", null);
+        domObj[0] = createDomNodeJS("xmlReader", o);
+        walkDOMTree();
+        createDomNodeJS("xmlReader", null);
 
       }
     } else {
@@ -268,8 +267,6 @@ abstract public class XmlReader extends AtomSetCollectionReader {
     // Firefox, at least, does not recognize "/>" in HTML blocks
     // that are added this way.
     
-    @SuppressWarnings("unused")
-    Object applet = (parent == null ? this : parent).vwr.html5Applet;
     Object d = null;
     /**
      * note that there is no need to actually load it into the document

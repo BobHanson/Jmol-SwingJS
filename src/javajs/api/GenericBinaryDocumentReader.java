@@ -28,5 +28,7 @@ public interface GenericBinaryDocumentReader {
 
   void skip(int n) throws Exception;
 
+  void setBigEndian(boolean isBigEndian);
+
 
 }

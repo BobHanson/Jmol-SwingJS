@@ -1,7 +1,5 @@
 package org.jmol.adapter.writers;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.util.Hashtable;
 import java.util.Stack;
 
@@ -13,9 +11,8 @@ import org.jmol.api.JmolAdapterBondIterator;
 import org.jmol.util.Edge;
 import org.jmol.viewer.Viewer;
 
-import javajs.api.GenericBinaryDocument;
+import javajs.api.GenericBinaryDocumentReader;
 import javajs.util.BS;
-import javajs.util.BinaryDocument;
 import javajs.util.OC;
 import javajs.util.P3d;
 import javajs.util.PT;
@@ -32,7 +29,7 @@ import javajs.util.SB;
  */
 public class CDXMLWriter extends CMLWriter {
 
-  private GenericBinaryDocument doc;
+  private GenericBinaryDocumentReader doc;
   private Stack<String> objects = new Stack<String>();
   private SB sb = new SB();
   private int sbpt;
@@ -64,7 +61,7 @@ public class CDXMLWriter extends CMLWriter {
         "CDXMLWriter is not implemented for writing");
   }
 
-  public static String fromCDX(GenericBinaryDocument binaryDoc)
+  public static String fromCDX(GenericBinaryDocumentReader binaryDoc)
       throws Exception {
     return new CDXMLWriter().cdxToCdxml(binaryDoc);
   }
@@ -160,12 +157,12 @@ public class CDXMLWriter extends CMLWriter {
     addAttribute(sb, "id", "" + ++id);
   }
 
-  private String cdxToCdxml(GenericBinaryDocument doc) throws Exception {
+  private String cdxToCdxml(GenericBinaryDocumentReader doc) throws Exception {
     this.doc = doc;
     try {
       openDocument(sb);
       appendHeader(sb);
-      doc.setStreamData(null, false);// little-endian
+      doc.setBigEndian(false);// little-endian
       doc.seek(22); // header
       processObject(doc.readShort());
       sb.append("</CDXML>\n");

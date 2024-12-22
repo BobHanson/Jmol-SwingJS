@@ -67,18 +67,18 @@ public class XmlOdysseyReader extends XmlReader {
 
     if ("atom".equals(localName)) {
       String id = atts.get("id");
-      (atom = new Atom()).atomName = atts
+      (thisAtom = new Atom()).atomName = atts
           .get(atts.containsKey("label") ? "label" : "id");
       if (id != null && stateScriptVersionInt >= 140400)
-        asc.atomSymbolicMap.put(id, atom);
+        asc.atomSymbolicMap.put(id, thisAtom);
       if (atts.containsKey("xyz")) {
         String xyz = atts.get("xyz");
         String[] tokens = PT.getTokens(xyz);
-        atom.set(parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]),
+        thisAtom.set(parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]),
             parseDoubleStr(tokens[2]));
       }
       if (atts.containsKey("element")) {
-        atom.elementSymbol = atts.get("element");
+        thisAtom.elementSymbol = atts.get("element");
       }
       return;
     }
@@ -160,10 +160,10 @@ public class XmlOdysseyReader extends XmlReader {
   @Override
   void processEndElement(String localName) {
     if ("atom".equals(localName)) {
-      if (atom.elementSymbol != null && !Double.isNaN(atom.z)) {
-        asc.addAtomWithMappedName(atom);
+      if (thisAtom.elementSymbol != null && !Double.isNaN(thisAtom.z)) {
+        asc.addAtomWithMappedName(thisAtom);
       }
-      atom = null;
+      thisAtom = null;
       return;
     }
     if ("group".equals(localName)) {

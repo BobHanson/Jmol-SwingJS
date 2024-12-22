@@ -1102,7 +1102,7 @@ public final class ModelLoader {
   }
   
   public BS structuresDefinedInFile = new BS();
-  private int stereodir = 1;
+  //private int stereodir = 1;
 
   ////// symmetry ///////
 
@@ -1426,6 +1426,7 @@ public final class ModelLoader {
     
     V3d v = new V3d();
     
+    int stereodir = 1;
     if (vStereo != null) {
       out: for (int i = vStereo.size(); --i >= 0;) {
         Bond b = vStereo.get(i);
@@ -1442,7 +1443,7 @@ public final class ModelLoader {
           // South and wedge or North and hash sets to invert stereo??
           if (Math.abs(v.x) < 0.1) {
             if ((b.order == Edge.BOND_STEREO_NEAR) == (v.y < 0))
-              stereodir = -1;
+              stereodir = -1; 
             break out;
           }
           
@@ -1451,12 +1452,12 @@ public final class ModelLoader {
     
     // 2) implicit stereochemistry 
     
-    set2dZ(v);
+    set2dZ(v, stereodir);
 
     // 3) explicit stereochemistry
     
     if (vStereo != null) {
-      BS bsToTest = BSUtil.newBitSet2(baseAtomIndex, vwr.ms.ac);
+      BS bsToTest = BSUtil.newBitSet2(baseAtomIndex, ms.ac);
       for (int i = vStereo.size(); --i >= 0;) {
         Bond b = vStereo.get(i);
         double dz2 = (b.order == Edge.BOND_STEREO_NEAR ? 3 : -3);
@@ -1483,7 +1484,7 @@ public final class ModelLoader {
     int n = 0;
     int lastModel = -1;
     int i0 = baseAtomIndex;
-    int i1 = vwr.ms.ac;
+    int i1 = ms.ac;
     for (int i = i0; i < i1; i++) {
       Atom a = ms.at[i];
       int m = a.getModelIndex();
@@ -1512,20 +1513,21 @@ public final class ModelLoader {
     }
   }
 
-  private void set2dZ(V3d v) {
+  private void set2dZ(V3d v, int stereodir) {
     int iatom1 = baseAtomIndex;
-    int iatom2 = vwr.ms.ac;
+    int iatom2 = ms.ac;
     BS atomlist = BS.newN(iatom2);
     BS bsBranch = new BS();
     V3d v0 = V3d.new3(0, 1, 0);
     V3d v1 = new V3d();
     BS bs0 = new BS();
     bs0.setBits(iatom1, iatom2);
-    for (int i = iatom1; i < iatom2; i++)
+    for (int i = iatom1; i < iatom2; i++) {
       if (!atomlist.get(i) && !bsBranch.get(i)) {
         bsBranch = getBranch2dZ(i, -1, bs0, bsBranch, v, v0, v1, stereodir );
         atomlist.or(bsBranch);
       }
+    }
   }
   
   
@@ -1607,7 +1609,7 @@ public final class ModelLoader {
     double theta = Math.acos(v.dot(v0));
     double f = (0.4d * -dir * Math.sin(4*theta)); // was 0.8
     atom2.z = atomRef.z + f;
-//System.out.println(atomRef + " " + atomRef.z + " " + atom2 + " " + atom2.z + " " + f + " " + v + " " + (theta * 180/Math.PI));
+    //System.out.println(atomRef + " " + atomRef.z + " " + atom2 + " " + atom2.z + " " + f + " " + v + " " + (theta * 180/Math.PI));
   }
 
   ///////////////  shapes  ///////////////

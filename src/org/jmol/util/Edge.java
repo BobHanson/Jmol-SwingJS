@@ -49,12 +49,15 @@ public abstract class Edge implements SimpleEdge {
   //.. ...| |... PyMOL render multiple      3 << 15  0x18000 + covalent order 
   //.. .... |... strut                      1 << 15  0x08000
   //.. ...| .nnm m... .... ...| atropisomer          0x10001 + (nnmm << 11)
-  //.. .... .||| |... Hydrogen bond         F << 11  0x03800
+  //.. .... .||| |... .... .... Hydrogen bond         F << 11  0x03800
   //.. .... .... .||| |||| |||| Covalent             0x003FF
-  //.. .... .... .|.. Stereo                1 << 10  0x00400   
+  //.. .... .... .|.. .... .... Stereo      1 << 10  0x00400   
+  //.. .... .... .|.. .... ...| Stereo near 1 << 10  0x00401   
+  //.. .... .... .|.. ...| ...| Stereo far  1 << 10  0x00411 incomp with partial   
+  //.. .... .... .|.. ..|. ...| Stereo eith 1 << 10  0x00421 incomp with partial
   //.. .... .... ..|. Aromatic              1 << 9   0x00200
   //.. .... .... ...| Sulfur-Sulfur         1 << 8   0x00100
-  //.. .... .... .... |||. Partial n        7 << 5   0x00E00
+  //.. .... .... .... |||. .... Partial n   7 << 5   0x00E00
   //.. .... .... .... ...| |||| Partial m            0x0001F
   //.. .... .... .... .... .||| Covalent order       0x00007
   //.0 0000 0000 0000 0001 0001 UNSPECIFIED
@@ -76,7 +79,7 @@ public abstract class Edge implements SimpleEdge {
 //  public final static int BOND_CIP_STEREO_SHIFT = 18;
 
 
-  public final static int BOND_STEREO_MASK   = 0x400; // 1 << 10
+  private final static int BOND_STEREO_MASK  = 0x400; // 1 << 10
   public final static int BOND_STEREO_NEAR   = 0x401; // for JME reader and SMILES and XMLChemDraw reader
   public final static int BOND_STEREO_FAR    = 0x411; // for JME reader and SMILES and XMLChemDraw reader
   public final static int BOND_STEREO_EITHER = 0x421; // for JME reader and SMILES and XMLChemDraw reader
@@ -85,7 +88,7 @@ public abstract class Edge implements SimpleEdge {
   public final static int BOND_AROMATIC_DOUBLE = 0x202; // same as double
   public final static int BOND_AROMATIC        = 0x203; // same as partial 2.1
   public final static int BOND_SULFUR_MASK   = 0x100; // 1 << 8; will be incremented
-  public final static int BOND_PARTIAL_MASK  = 0xE0;  // 7 << 5;
+  private final static int BOND_PARTIAL_MASK = 0xE0;  // 7 << 5;   //1110 0000 conflics with stereo_either 0100 0010 0001
   public final static int BOND_PARTIAL01     = 0x21;
   public final static int BOND_PARTIAL12     = 0x42;
   public final static int BOND_PARTIAL23     = 0x61;
@@ -143,9 +146,16 @@ public abstract class Edge implements SimpleEdge {
   @Override
   abstract public boolean isCovalent();
 
-  abstract public boolean isPartial();
-
   abstract public boolean isHydrogen();
+
+  // overridden in SmilesBond
+  public boolean isPartial() {
+    return ((order & BOND_PARTIAL_MASK) != 0 && !isStereo());
+  }
+
+  public boolean isStereo() {
+    return ((order & BOND_STEREO_MASK) != 0);
+  }
 
   public static int getArgbHbondType(int order) {
     int argbIndex = ((order & BOND_HYDROGEN_MASK) >> BOND_HBOND_SHIFT);
@@ -259,7 +269,7 @@ public abstract class Edge implements SimpleEdge {
   }
 
   public final static int getPartialBondOrder(int order) {
-    return ((order & BOND_RENDER_MASK) >> 5);
+    return ((order & BOND_STEREO_MASK) != 0 ? 1 : (order & BOND_RENDER_MASK) >> 5);
   }
 
   protected final static int getCovalentBondOrder(int order) {

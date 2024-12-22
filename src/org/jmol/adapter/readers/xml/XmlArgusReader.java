@@ -84,7 +84,7 @@ public class XmlArgusReader extends XmlReader {
     }
     if ("atom".equals(localName)) {
       elementContext = ATOM;
-      atom = new Atom();
+      thisAtom = new Atom();
       return;
     }
     if ("bond".equals(localName)) {
@@ -138,11 +138,11 @@ public class XmlArgusReader extends XmlReader {
       return;
     }
     if ("atom".equals(localName)) {
-      if (atom.elementSymbol != null && !Double.isNaN(atom.z)) {
-        parent.setAtomCoord(atom);
-        asc.addAtomWithMappedName(atom);
+      if (thisAtom.elementSymbol != null && !Double.isNaN(thisAtom.z)) {
+        parent.setAtomCoord(thisAtom);
+        asc.addAtomWithMappedName(thisAtom);
       }
-      atom = null;
+      thisAtom = null;
       elementContext = UNSET;
       return;
     }
@@ -171,22 +171,22 @@ public class XmlArgusReader extends XmlReader {
       }
       return;
     }
-    if (atom != null && elementContext == ATOM) {
+    if (thisAtom != null && elementContext == ATOM) {
       if ("x".equals(localName)) {
-        atom.x = parseDoubleStr(chars.toString());
+        thisAtom.x = parseDoubleStr(chars.toString());
       } else if ("y".equals(localName)) {
-        atom.y = parseDoubleStr(chars.toString());
+        thisAtom.y = parseDoubleStr(chars.toString());
         return;
       } else if ("z".equals(localName)) {
-        atom.z = parseDoubleStr(chars.toString());
+        thisAtom.z = parseDoubleStr(chars.toString());
         return;
       } else if ("atsym".equals(localName)) {
-        atom.elementSymbol = chars.toString();
+        thisAtom.elementSymbol = chars.toString();
         return;
       } else if ("formalchg".equals(localName)) {
-        atom.formalCharge = parseIntStr(chars.toString());
+        thisAtom.formalCharge = parseIntStr(chars.toString());
       } else if ("atomkey".equals(localName)) {
-        atom.atomName = chars.toString();
+        thisAtom.atomName = chars.toString();
       }
       setKeepChars(false);
       return;

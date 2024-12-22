@@ -85,20 +85,20 @@ public class XmlXsdReader extends XmlReader {
     }
 
     if ("atom3d".equals(localName)) {
-      atom = new Atom();
-      atom.elementSymbol = atts.get("components");
-      atom.atomName = atts.get("id");
-      atom.atomSerial = ++iAtom;
+      thisAtom = new Atom();
+      thisAtom.elementSymbol = atts.get("components");
+      thisAtom.atomName = atts.get("id");
+      thisAtom.atomSerial = ++iAtom;
       if (iChain >= 0)
-        parent.setChainID(atom, "" + (char) ((iChain - 1)%26 + 'A'));
-      atom.group3 = "UNK";
+        parent.setChainID(thisAtom, "" + (char) ((iChain - 1)%26 + 'A'));
+      thisAtom.group3 = "UNK";
       if (iGroup == 0)
         iGroup = 1;
-      atom.sequenceNumber = iGroup;
+      thisAtom.sequenceNumber = iGroup;
       String xyz = atts.get("xyz");
       if (xyz != null) {
         tokens = PT.getTokens(xyz.replace(',',' '));
-        atom.set(parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]));
+        thisAtom.set(parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]), parseDoubleStr(tokens[2]));
       }
       boolean isBackbone = "1".equals(atts.get("isbackboneatom"));
       if (isBackbone)
@@ -123,11 +123,11 @@ public class XmlXsdReader extends XmlReader {
   @Override
   void processEndElement(String localName) {
     if ("atom3d".equalsIgnoreCase(localName)) {
-      if (atom.elementSymbol != null && !Double.isNaN(atom.z)) {
-        parent.setAtomCoord(atom);
-        asc.addAtomWithMappedName(atom);
+      if (thisAtom.elementSymbol != null && !Double.isNaN(thisAtom.z)) {
+        parent.setAtomCoord(thisAtom);
+        asc.addAtomWithMappedName(thisAtom);
       }
-      atom = null;
+      thisAtom = null;
       return;
     }
     setKeepChars(false);

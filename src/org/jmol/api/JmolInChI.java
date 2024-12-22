@@ -12,7 +12,7 @@ public interface JmolInChI {
    * @param atoms
    * @param molData can be String or InputStream
    * @param options
-   * @return
+   * @return InChI or SMILES or InChIKey or internal InChI structure details
    */
   String getInchi(Viewer vwr, BS atoms, Object molData, String options);
 

@@ -10954,7 +10954,7 @@ public class Viewer extends JmolViewer
    * @param atoms
    * @param molData
    *        null, or MOL data, or a database $ or : call, or SMILES, or
-   *        "InChI=...." to retrieve the key
+   *        "InChI=...." to retrieve the key or internal InChI structure as a string
    * @param options
    * @return InChI or InChIKey
    */

@@ -211,8 +211,9 @@ public class SticksRenderer extends FontLineShapeRenderer {
 
     // set the rendered bond order
 
+    boolean isPartial = bond.isPartial();
     bondOrder = order & Edge.BOND_RENDER_MASK;
-    if ((bondOrder & Edge.BOND_PARTIAL_MASK) == 0) {
+    if (!isPartial) {
       if ((bondOrder & Edge.BOND_SULFUR_MASK) != 0)
         bondOrder &= ~Edge.BOND_SULFUR_MASK;
       if ((bondOrder & Edge.BOND_COVALENT_MASK) != 0) {
@@ -251,7 +252,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
       mask = (order == Edge.BOND_AROMATIC ? getAromaticDottedBondMask() : 0);
       break;
     default:
-      if ((bondOrder & Edge.BOND_PARTIAL_MASK) != 0) {
+      if (isPartial) {
         bondOrder = Edge.getPartialBondOrder(order);
         mask = Edge.getPartialBondDotted(order);
       } else if (Edge.isOrderH(bondOrder)) {

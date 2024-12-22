@@ -33,6 +33,4 @@ public interface GenericBinaryDocument extends GenericBinaryDocumentReader {
 
   void close();
 
-  void setBigEndian(boolean b);
-
 }

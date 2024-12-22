@@ -4498,15 +4498,20 @@ public class CmdExt extends ScriptExt {
       //   fileName = fileName.substring(0, fileName.length() - 1);
     }
 
-    if (type.equals("ISOSURFACE") || type.equals("CONTACT")) {
+    if (type.equals("ISOSURFACE") || type.equals("CONTACT") || type.equals("PLB")) {
       isContact = type.equals("CONTACT");
-      type = (fileName != null && fileName.indexOf(".") >= 0
+      if (!type.equals("PLB"))
+        type = (fileName != null && fileName.indexOf(".") >= 0
           ? fileName.substring(fileName.lastIndexOf(".") + 1).toUpperCase()
           : "JVXL");
       if (type.equals("PMESH"))
         type = "ISOMESH";
       else if (type.equals("PMB"))
         type = "ISOMESHBIN";
+      if (type.equals("PLY"))
+        type = "ISOPLY";
+      else if (type.equals("PLB"))
+        type = "ISOPLYBIN";
     }
     boolean isImage = PT.isOneOf(type.toLowerCase(), JC.IMAGE_OR_SCENE);
     if (!isImage) {
@@ -4554,7 +4559,7 @@ public class CmdExt extends ScriptExt {
         type = "PNGJ";
     }
     if (!isImage && !isExport && !PT.isOneOf(type,
-        ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;PMB;ISOMESHBIN;ISOMESH;VAR;FILE;FUNCTION;CFI;CIF;CIFP1;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;MOL67;PDB;PGRP;PQR;PWMAT;PWSLAB;QUAT;RAMA;SDF;V2000;V3000;QCJSON;XSF;INLINE;"))
+        ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;PMB;PLY;PLB;ISOMESHBIN;ISOMESH;ISOPLY;ISOPLYBIN;VAR;FILE;FUNCTION;CFI;CIF;CIFP1;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;MOL67;PDB;PGRP;PQR;PWMAT;PWSLAB;QUAT;RAMA;SDF;V2000;V3000;QCJSON;XSF;INLINE;"))
       eval.errorStr2(ScriptError.ERROR_writeWhat,
           "COORDS|FILE|FUNCTIONS|HISTORY|IMAGE|INLINE|ISOSURFACE|JMOL|MENU|MO|NBO|POINTGROUP|QUATERNION [w,x,y,z] [derivative]"
               + "|RAMACHANDRAN|SPT|STATE|VAR x|ZIP|ZIPALL|CLIPBOARD",
@@ -4626,7 +4631,7 @@ public class CmdExt extends ScriptExt {
       if (data == "MENU") {
         data = vwr.getMenu("");
       } else if (data == "PGRP") {
-        data = vwr.ms.getPointGroupAsString(vwr.bsA(), null, 0, 1.0d, null,
+        data = vwr.ms.getPointGroupAsString(vwr.bsA(), null, 0, 1, null,
             null, type2.equals("draw") ? "" : null);
       } else if (data == "PDB" || data == "PQR") {
         if (showOnly) {
@@ -4731,6 +4736,16 @@ public class CmdExt extends ScriptExt {
             "ISOMESHBIN")) == null)
           error(ScriptError.ERROR_noData);
         type = "PMB";
+      } else if (data == "ISOPLY") {
+        if ((data = (String) getIsosurfaceJvxl(JC.SHAPE_ISOSURFACE,
+            data)) == null)
+          error(ScriptError.ERROR_noData);
+        type = "PLY";
+      } else if (data == "ISOPLYBIN") {
+        if ((bytes = getIsosurfaceJvxl(JC.SHAPE_ISOSURFACE,
+            "ISOPLYBIN")) == null)
+          error(ScriptError.ERROR_noData);
+        type = "PLB";
       } else if (data == "ISOSURFACE" || data == "MESH") {
         if ((data = (String) getIsosurfaceJvxl(
             isContact ? JC.SHAPE_CONTACT : JC.SHAPE_ISOSURFACE, data)) == null)
@@ -7044,10 +7059,29 @@ public class CmdExt extends ScriptExt {
   }
 
   private Object getIsosurfaceJvxl(int iShape, String type) {
-    type = (type == "PMESH" || type == "MESH" ? "jvxlMeshX"
-        : type == "ISOMESH" ? "pmesh"
-            : type == "ISOMESHBIN" || type == "PMB" ? "pmeshbin"
-                : "jvxlDataXml");
+    switch (type) {
+    case "PMESH":
+    case "MESH":
+      type = "jvxlMeshX";
+      break;
+    case "ISOMESH":
+      type = "pmesh";
+      break;
+    case "ISOMESHBIN":
+    case "PMB":
+      type = "pmeshbin";
+      break;
+    case "ISOPLY":
+      type = "ply";
+      break;
+    case "ISOPLYBIN":
+    case "PLB":
+      type = "plybin";
+      break;
+    default:
+      type = "jvxlDataXml";
+      break;
+    }
     return (chk ? "" : getShapeProperty(iShape, type));
   }
 

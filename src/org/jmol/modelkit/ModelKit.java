@@ -2350,7 +2350,7 @@ public class ModelKit {
         return 0;
       if (pts != null) {
         for (int i = 0; i < pts.length; i++)
-          if (Double.isNaN(pts[i].x + pts[i].y + pts[i].z))
+          if (pts[i] != null && Double.isNaN(pts[i].x + pts[i].y + pts[i].z))
               return 0;         
       }
       int n = 0;

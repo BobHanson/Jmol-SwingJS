@@ -988,6 +988,7 @@ public class _ObjExporter extends __CartesianExporter {
       debugPrint("End createTextureFile: " + fname);
       return (OC) params.get("outputChannel");
     } catch (Exception ex) {
+      ex.printStackTrace();
       debugPrint("End createTextureFile (" + ex.getMessage() + "):");
       return null;
     }

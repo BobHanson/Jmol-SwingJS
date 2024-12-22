@@ -156,6 +156,8 @@ abstract class OutputManager {
             false)) == null)
           return errMsg = "ERROR: canceled";
         fileName = out.getFileName();
+        if (rgbbuf != null)
+          params.put("outputChannel", out);
       }
       String comment = null;
       Object stateData = null;
@@ -850,8 +852,11 @@ abstract class OutputManager {
           if (createImage) {
             if (localName != null)
               params.put("fileName", localName);
-            if (sret == null)
+            if (sret == null) {
               sret = writeToOutputChannel(params);
+              if (params.containsKey("rgbbuf"))
+                return sret;
+            }
             if (!is2D) {
               vwr.sm.createImage(sret, type, null, null, quality);
               if (captureMode != null) {

@@ -296,6 +296,11 @@ public class IsosurfaceMesh extends Mesh {
     return mw.write(this, isBinary);
   }
 
+  public Object getPLYData(boolean isBinary) {
+    PLYWriter w = (PLYWriter) Interface.getInterface("org.jmol.shapesurface.PLYWriter", vwr, "script");
+    return w.write(this, isBinary);
+  }
+
   private static void get3dContour(IsosurfaceMesh m, Lst<Object> v, double value, short colix) {
     BS bsContour = BS.newN(m.pc);
     SB fData = new SB();

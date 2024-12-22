@@ -265,10 +265,15 @@ public class MOLWriter {
         vTemp = new V3d();
         vNorm = new V3d();
       }
+      boolean isWavy = false;
       Bond[] bonds = a.bonds;
       int nH = 0;
       for (int pt = 0, i = bonds.length; --i >= 0;) {
         if (bonds[i].isCovalent()) {
+          if (bonds[i].order == Edge.BOND_STEREO_EITHER) {
+            isWavy = true;
+            break;
+          }
           Atom b = bonds[i].getOtherAtom(a);
           if (b.getAtomicAndIsotopeNumber() == 1)
             nH++;
@@ -276,6 +281,8 @@ public class MOLWriter {
         }
       }
       if (nH < 3) {
+        if (isWavy)
+          return "3"; // either
         Arrays.sort(connections);
         Atom[] atoms = vwr.ms.at;
         MeasureD.getNormalThroughPoints(atoms[connections[0]],
@@ -318,6 +325,9 @@ public class MOLWriter {
     String cfg = "";
     if (order > 3)
       order = 1;
+    if (!asJSON && b.order == Edge.BOND_STEREO_EITHER) {
+        cfg = (asV3000 ? "  CFG=3" : "  4");
+    }
     if (is2d) {
       if (asJSON) {
         //TODO?? ChemDoodle? Examples
@@ -330,7 +340,7 @@ public class MOLWriter {
           cfg = (asV3000 ? "  CFG=1" : "  1");
           break;
         case Edge.BOND_STEREO_FAR:
-          cfg = (asV3000 ? "  CFG=2" : "  3");
+          cfg = (asV3000 ? "  CFG=2" : "  6");
           break;
         default:
           cfg = "  0";

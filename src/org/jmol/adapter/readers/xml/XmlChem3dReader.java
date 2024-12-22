@@ -74,13 +74,13 @@ public class XmlChem3dReader extends XmlReader {
     }
 
     if ("atom".equals(localName)) {
-      atom = new Atom();
-      atom.atomName = atts.get("id");
-      atom.elementSymbol = atts.get("symbol");
+      thisAtom = new Atom();
+      thisAtom.atomName = atts.get("id");
+      thisAtom.elementSymbol = atts.get("symbol");
       if (atts.containsKey("cartcoords")) {
         String xyz = atts.get("cartcoords");
         tokens = PT.getTokens(xyz);
-        atom.set(parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]),
+        thisAtom.set(parseDoubleStr(tokens[0]), parseDoubleStr(tokens[1]),
             parseDoubleStr(tokens[2]));
       }
       return;
@@ -164,11 +164,11 @@ public class XmlChem3dReader extends XmlReader {
   void processEndElement(String localName) {
     //System.out.println("xmlchem3d: end " + localName);
     if ("atom".equals(localName)) {
-      if (atom.elementSymbol != null && !Double.isNaN(atom.z)) {
-        parent.setAtomCoord(atom);
-        asc.addAtomWithMappedName(atom);
+      if (thisAtom.elementSymbol != null && !Double.isNaN(thisAtom.z)) {
+        parent.setAtomCoord(thisAtom);
+        asc.addAtomWithMappedName(thisAtom);
       }
-      atom = null;
+      thisAtom = null;
       return;
     }
     setKeepChars(false);

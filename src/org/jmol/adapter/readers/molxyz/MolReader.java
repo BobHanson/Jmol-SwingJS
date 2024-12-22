@@ -34,6 +34,7 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Bond;
 import org.jmol.api.JmolAdapter;
+import org.jmol.util.BoxInfo;
 import org.jmol.util.Logger;
 
 /**
@@ -86,7 +87,7 @@ public class MolReader extends AtomSetCollectionReader {
   private int atomCount;
   private String[] atomData;
   public BS bsDeleted;
-  public boolean haveNonzeroZ;
+  private boolean haveNonzeroZ;
   /**
    * fix charges for RN(=O)(O), =N(O)*, =N
    */
@@ -174,7 +175,6 @@ public class MolReader extends AtomSetCollectionReader {
 
   private void processMolSdHeader() throws Exception {
     // We aren't being this strict. Line definitions are from ctfile.pdf (October 2003)
-    String header = "";
     // Line 1: Molecule name. This line is unformatted, but like all 
     // other lines in a molfile may not extend beyond column 80. 
     // If no name is available, a blank line must be present.
@@ -186,7 +186,7 @@ public class MolReader extends AtomSetCollectionReader {
     String thisDataSetName = line.trim();
     asc.setCollectionName(thisDataSetName);
 
-    header += line + "\n";
+    String header = line + "\n";
 
     // Line 2: This line has the format:
     // IIPPPPPPPPMMDDYYHHmmddSSssssssssssEEEEEEEEEEEERRRRRR
@@ -306,7 +306,7 @@ public class MolReader extends AtomSetCollectionReader {
       iAtom1 = line.substring(0, 3).trim();
       iAtom2 = line.substring(3, 6).trim();
       int order = parseIntRange(line, 6, 9);
-      if ((is2D || !is3D) && order == 1 && line.length() >= 12)
+      if (order == 1 && line.length() >= 12)
         stereo = parseIntRange(line, 9, 12);
       if (stereo != 0 && !is3D)
         is2D = true;

@@ -91,15 +91,6 @@ public class Bond extends Edge {
     return isOrderH(order);
   }
 
-  public boolean isStereo() {
-    return (order & BOND_STEREO_MASK) != 0;
-  }
-
-  @Override
-  public boolean isPartial() {
-    return (order & BOND_PARTIAL_MASK) != 0;
-  }
-
   public boolean isAromatic() {
     return (order & BOND_AROMATIC_MASK) != 0;
   }

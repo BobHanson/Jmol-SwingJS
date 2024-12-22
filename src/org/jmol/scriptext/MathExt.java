@@ -1894,6 +1894,7 @@ SymmetryInterface sym;
       throws ScriptException {
     // {*}.inchi(options)
     // InChI.inchi("key")
+    // InChI.inchi("structure")
     // smiles.inchi(options) // including "key"
     // molFIleData.inchi(options) // including "key" and "smiles"
     SV x1 = mp.getX();
@@ -2292,6 +2293,9 @@ SymmetryInterface sym;
                 : JC.SMILES_TYPE_SMARTS)
                 | (isON && sFind.length() == 0 ? JC.SMILES_GEN_BIO_COV_CROSSLINK
                     | JC.SMILES_GEN_BIO_COMMENT : 0);
+            if (isSmiles && flags.indexOf("/ALL/") >= 0) {
+              smilesFlags |= JC.SMILES_GEN_ALL_COMPONENTS;
+            }
             if (flags.indexOf("/MOLECULE/") >= 0) {
               // all molecules 
               JmolMolecule[] mols = vwr.ms.getMolecules();

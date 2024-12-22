@@ -114,8 +114,11 @@ public class SmilesGenerator {
   private int iHypervalent;
   private boolean is2D;
   private boolean haveSmilesAtoms;
-  private boolean noBranches;
+  private boolean noBranches; // testing only -- leave false
   private boolean allComponents;
+  private boolean allowBioResidues;
+  private boolean allowConnectionsToOutsideWorld;
+  private boolean forceBrackets;
 
   // generation of SMILES strings
 
@@ -198,7 +201,7 @@ public class SmilesGenerator {
     isPolyhedral = ((flags
         & JC.SMILES_GEN_POLYHEDRAL) == JC.SMILES_GEN_POLYHEDRAL);
     is2D = ((flags & JC.SMILES_2D) == JC.SMILES_2D);
-    noBranches = ((flags & JC.SMILES_GEN_NO_BRANCHES) == JC.SMILES_GEN_NO_BRANCHES);
+    noBranches = false;//((flags & JC.SMILES_GEN_NO_BRANCHES) == JC.SMILES_GEN_NO_BRANCHES);
     allComponents = ((flags & JC.SMILES_GEN_ALL_COMPONENTS) == JC.SMILES_GEN_ALL_COMPONENTS);
     return getSmilesComponent(atoms[ipt], bsSelected, MODE_COMP_ALLOW_BIO);
   }
@@ -363,10 +366,10 @@ public class SmilesGenerator {
 
     String ret = "";
 
-    boolean allowBioResidues = ((mode & MODE_COMP_ALLOW_BIO) != 0);
-    boolean allowConnectionsToOutsideWorld = ((mode
+    allowBioResidues = ((mode & MODE_COMP_ALLOW_BIO) != 0);
+    allowConnectionsToOutsideWorld = ((mode
         & MODE_COMP_ALLOW_OUTSIDE) != 0);
-    boolean forceBrackets = ((mode & MODE_COMP_FORCE_BRACKETS) != 0);
+    forceBrackets = ((mode & MODE_COMP_FORCE_BRACKETS) != 0);
 
     while (true) {
       if (atom == null)
@@ -403,19 +406,18 @@ public class SmilesGenerator {
       }
       bsToDo = BSUtil.copy(bsSelected);
       SB sb = new SB();
-      // The idea hear is to allow a hypervalent atom to be listed first
+      // The idea here is to allow a hypervalent atom to be listed first
       for (int i = bsToDo.nextSetBit(0); i >= 0; i = bsToDo.nextSetBit(i + 1)) {
         if (atoms[i].getCovalentBondCount() > 4 || isPolyhedral || noBranches) {
           if (atom == null)
             sb.append(".");
-          getSmilesAt(sb, atoms[i], allowConnectionsToOutsideWorld, false,
-              forceBrackets, false);
+          getSmilesAt(sb, atoms[i], false, false);
           atom = null;
         }
       }
       if (atom != null)
-        while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld,
-            true, forceBrackets, false)) != null) {
+        while ((atom = getSmilesAt(sb, atom, true,
+            false)) != null) {
         }
       while (!bsToDo.isEmpty() || !htRings.isEmpty()) {
         Iterator<Object[]> e = htRings.values().iterator();
@@ -429,8 +431,8 @@ public class SmilesGenerator {
         sb.append(".");
         prevSp2Atoms = alleneStereo = null;
         prevAtom = null;
-        while ((atom = getSmilesAt(sb, atom, allowConnectionsToOutsideWorld,
-            true, forceBrackets, false)) != null) {
+        while ((atom = getSmilesAt(sb, atom, true,
+            false)) != null) {
         }
       }
       if (!htRings.isEmpty()) {
@@ -701,8 +703,7 @@ public class SmilesGenerator {
   private BS bsEnds = new BS();
 
   private Node getSmilesAt(SB sb, SimpleNode atom,
-                           boolean allowConnectionsToOutsideWorld,
-                           boolean allowBranches, boolean forceBrackets,
+                           boolean allowBranches,
                            boolean isBranch) {
     int atomIndex = atom.getIndex();
     if (!bsToDo.get(atomIndex))
@@ -743,6 +744,9 @@ public class SmilesGenerator {
         Edge bond = bonds[i];
         if (!bond.isCovalent())
           continue;
+        if (bond.order == Edge.BOND_STEREO_EITHER) {
+          stereoFlag = 10;
+        }
         SimpleNode atom1 = bonds[i].getOtherNode(atom);
         int index1 = atom1.getIndex();
         if (index1 == prevIndex) {
@@ -891,8 +895,7 @@ public class SmilesGenerator {
       int ptSp2Atom0t = ptSp2Atom0;
       int ptAtomt = ptAtom;
       // next call re-enters this method.
-      getSmilesAt(s2, a, allowConnectionsToOutsideWorld, allowBranches,
-          forceBrackets, true);
+      getSmilesAt(s2, a, allowBranches, true);
       bondNext = bond0t;
       ptAtom = ptAtomt;
       ptSp2Atom0 = ptSp2Atom0t;
@@ -1025,14 +1028,16 @@ public class SmilesGenerator {
         && atomName.length() != 0) {
       addBracketedBioName(sb, (Node) atom, "." + atomName, false);
     } else {
-      sb.append(SmilesAtom.getAtomLabel(atomicNumber, isotope,
-          (forceBrackets ? -1 : valence), charge, osclass, nH, isAromatic,
-          atat != null ? atat
-              : noStereo ? null
-                  : checkStereoPairs(atom,
-                      alleneStereo == null ? atomIndex : -1, stereo, stereoFlag,
-                      prevIndex == -1),
-          is2D));
+      sb.append(SmilesAtom.getAtomLabel(
+          atomicNumber,
+          isotope,
+          (forceBrackets ? -1 : valence),
+          charge,
+          osclass,
+          nH,
+          isAromatic,
+          atat != null ? atat : noStereo ? null : checkStereoPairs(atom,
+              alleneStereo == null ? atomIndex : -1, stereo, stereoFlag, prevIndex == -1), is2D));
     }
 
     // add the rings...
@@ -1299,6 +1304,18 @@ public class SmilesGenerator {
     return SmilesStereo.getStereoFlag(atom, stereo, stereoFlag, vTemp, is2D);
   }
 
+  /**
+   * Create a dummy atom at the position of an atom at the end of a wedge or hash.
+   * 
+   * In the case where we need a fourth atom, add this atom in a way that 
+   * roughly puts the center atom at the center of geometry of the four atoms.
+   * 
+   * @param atom
+   * @param stereo
+   * @param a
+   * @param z
+   * @return the new atom
+   */
   private static SimpleNode setStereoTemp(SimpleNode atom, SimpleNode[] stereo,
                                           SimpleNode a, double z) {
     SmilesAtom b = new SmilesAtom();

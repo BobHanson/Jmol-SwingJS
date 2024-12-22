@@ -72,6 +72,8 @@ public class XmlCmlReader extends XmlReader {
   public XmlCmlReader() {
   }
 
+  private Bond thisbond;
+
   private String scalarDictRef;
   //String scalarDictKey;
   private String scalarDictValue;
@@ -375,17 +377,17 @@ public class XmlCmlReader extends XmlReader {
       switch (name) {
       case "atom":
         state = MOLECULE_ATOM;
-        atom = new Atom();
+        thisAtom = new Atom();
         parent.setFractionalCoordinates(false);
         String id = atts.get("id");
         if ((val = atts.get("name")) != null)
-          atom.atomName = val;
+          thisAtom.atomName = val;
         else if ((val = atts.get("title")) != null)
-          atom.atomName = val;
+          thisAtom.atomName = val;
         else if ((val = atts.get("label")) != null)
-          atom.atomName = val;
+          thisAtom.atomName = val;
         else
-          atom.atomName = id;
+          thisAtom.atomName = id;
         if (!checkedSerial) {
           // this is important because the atomName may not be unique
           // (as in PDB files)
@@ -395,27 +397,27 @@ public class XmlCmlReader extends XmlReader {
           checkedSerial = true;
         }
         if (isSerial)
-          atom.atomSerial = PT.parseInt(id.substring(1));
+          thisAtom.atomSerial = PT.parseInt(id.substring(1));
         if ((val = atts.get("xfract")) != null
             && (parent.iHaveUnitCell || !atts.containsKey("x3"))) {
           parent.setFractionalCoordinates(true);
-          atom.set(parseDoubleStr(val), parseDoubleStr(atts.get("yfract")),
+          thisAtom.set(parseDoubleStr(val), parseDoubleStr(atts.get("yfract")),
               parseDoubleStr(atts.get("zfract")));
         } else if ((val = atts.get("x3")) != null) {
-          atom.set(parseDoubleStr(val), parseDoubleStr(atts.get("y3")),
+          thisAtom.set(parseDoubleStr(val), parseDoubleStr(atts.get("y3")),
               parseDoubleStr(atts.get("z3")));
         } else if ((val = atts.get("x2")) != null) {
-          atom.set(parseDoubleStr(val), parseDoubleStr(atts.get("y2")), 0);
+          thisAtom.set(parseDoubleStr(val), parseDoubleStr(atts.get("y2")), 0);
         }
         if ((val = atts.get("elementtype")) != null) {
           String sym = val;
           if ((val = atts.get("isotope")) != null)
-            atom.elementNumber = (short) ((parseIntStr(val) << 7)
+            thisAtom.elementNumber = (short) ((parseIntStr(val) << 7)
                 + JmolAdapter.getElementNumber(sym));
-          atom.elementSymbol = sym;
+          thisAtom.elementSymbol = sym;
         }
         if ((val = atts.get("formalcharge")) != null)
-          atom.formalCharge = parseIntStr(val);
+          thisAtom.formalCharge = parseIntStr(val);
         break;
       }
 
@@ -604,20 +606,20 @@ public class XmlCmlReader extends XmlReader {
     case MOLECULE_ATOM:
       if (name.equals("atom")) {
         state = MOLECULE_ATOM_ARRAY;
-        addAtom(atom);
-        atom = null;
+        addAtom(thisAtom);
+        thisAtom = null;
       }
       break;
     case MOLECULE_ATOM_SCALAR:
       if (name.equals("scalar")) {
         state = MOLECULE_ATOM;
         if ("jmol:charge".equals(scalarDictRef)) {
-          atom.partialCharge = parseDoubleStr(chars.toString());
+          thisAtom.partialCharge = parseDoubleStr(chars.toString());
         } else if (scalarDictRef != null
             && "_atom_site_label".equals(scalarDictValue)) {
           if (atomIdNames == null)
             atomIdNames = new Properties();
-          atomIdNames.put(atom.atomName, chars.toString());
+          atomIdNames.put(thisAtom.atomName, chars.toString());
         }
       }
       setKeepChars(false);
@@ -627,19 +629,19 @@ public class XmlCmlReader extends XmlReader {
     case MOLECULE_ATOM_BUILTIN:
       state = MOLECULE_ATOM;
       if (scalarDictValue.equals("x3"))
-        atom.x = parseDoubleStr(chars.toString());
+        thisAtom.x = parseDoubleStr(chars.toString());
       else if (scalarDictValue.equals("y3"))
-        atom.y = parseDoubleStr(chars.toString());
+        thisAtom.y = parseDoubleStr(chars.toString());
       else if (scalarDictValue.equals("z3"))
-        atom.z = parseDoubleStr(chars.toString());
+        thisAtom.z = parseDoubleStr(chars.toString());
       else if (scalarDictValue.equals("elementType"))
-        atom.elementSymbol = chars.toString();
+        thisAtom.elementSymbol = chars.toString();
       setKeepChars(false);
       break;
     case MOLECULE_BOND_STEREO:
       String stereo = chars.toString();
-      if (bond.order == 1)
-        bond.order = (stereo.equals("H") ? JmolAdapter.ORDER_STEREO_FAR
+      if (thisbond.order == 1)
+        thisbond.order = (stereo.equals("H") ? JmolAdapter.ORDER_STEREO_FAR
             : JmolAdapter.ORDER_STEREO_NEAR);
       setKeepChars(false);
       state = MOLECULE_BOND;
@@ -715,7 +717,7 @@ public class XmlCmlReader extends XmlReader {
     a2 = fixSerialName(a2);
     if (joinList == null || !checkBondToR(a1, a2)) {
       asc.addNewBondFromNames(a1, a2, order);
-      bond = asc.bonds[asc.bondCount - 1];
+      thisbond = asc.bonds[asc.bondCount - 1];
     }
   }
 
