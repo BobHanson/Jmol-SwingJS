@@ -8729,10 +8729,20 @@ public class Viewer extends JmolViewer
         s += PT.rep(info, " ", "%20");
     }
     s = getFileAsString4(s, -1, false, false, false, "file");
-    if (type == 'M' && s.indexOf("\n") > 0)
-      s = s.substring(0, s.indexOf("\n"));
-    else if (info.equals("jme"))
-      s = getPropertyManager().fixJMEFormalCharges(bsAtoms, s);
+    switch (type) {
+    case 'K':
+      if (s.startsWith("InChIKey="))
+        s = s.substring(9);
+      break;
+    case 'M':
+      if (s.indexOf("\n") > 0)
+        s = s.substring(0, s.indexOf("\n"));
+      break;
+    default:
+      if (info.equals("jme"))
+        s = getPropertyManager().fixJMEFormalCharges(bsAtoms, s);
+      break;
+    }
     return s;
   }
 
