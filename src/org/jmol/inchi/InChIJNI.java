@@ -165,6 +165,8 @@ public class InChIJNI implements JmolInChI {
         sym = "H"; // in case this is D
       }
       mol.addAtom(atoms[pt] = new JniInchiAtom(a.x, a.y, a.z, sym));
+      //System.out.println(i + " " + sym + " " + a);
+
       atoms[pt].setCharge(a.getFormalCharge());
       if (iso > 0)
         atoms[pt].setIsotopicMass(iso);
@@ -179,8 +181,16 @@ public class InChIJNI implements JmolInChI {
       // but oddly still do not get generated, probably because the carbons are then too strange?
       INCHI_BOND_TYPE order = getOrder(Math.max(bond.isPartial() ? 1 : 0, bond.getCovalentOrder()));
       if (order != null) {
-        mol.addBond(new JniInchiBond(atoms[map[bond.getAtomIndex1()]],
-            atoms[map[bond.getAtomIndex2()]], order, getStereo(bond.getBondType())));
+        int atom1 = bond.getAtomIndex1();
+        int atom2 = bond.getAtomIndex2();
+        INCHI_BOND_STEREO stereo = getInChIStereo(bond.getBondType());
+        mol.addBond(new JniInchiBond(atoms[map[atom1]],
+            atoms[map[atom2]], order, stereo));
+        
+        
+        //System.out.println(i + " " + atom1 + " " + atom2 + " " + order + " " + stereo);
+
+        
       }
     }
     return mol;
@@ -230,6 +240,7 @@ public class InChIJNI implements JmolInChI {
         }
         String sym = Elements.elementSymbolFromNumber(atno);
         JniInchiAtom a = new JniInchiAtom(p.x, p.y, p.z, sym);
+        
         a.setCharge(ai.getFormalCharge());
         mol.addAtom(a);
         atomMap.put(ai.getUniqueID(), Integer.valueOf(n));
@@ -256,7 +267,7 @@ public class InChIJNI implements JmolInChI {
                     + " for ids " + id1 + " " + id2 + " and " + n + " atoms");
             return null;
           }
-          mol.addBond(new JniInchiBond(a, b, order, getStereo(jmolOrder)));
+          mol.addBond(new JniInchiBond(a, b, order, getInChIStereo(jmolOrder)));
           nb++;
         }
       }
@@ -276,7 +287,7 @@ public class InChIJNI implements JmolInChI {
     return mol;
   }
 
-  private static INCHI_BOND_STEREO getStereo(int jmolOrder) {
+  private static INCHI_BOND_STEREO getInChIStereo(int jmolOrder) {
     switch (jmolOrder) {
     case Edge.BOND_STEREO_FAR:
       return INCHI_BOND_STEREO.SINGLE_1DOWN;
