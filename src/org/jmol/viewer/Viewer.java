@@ -5147,10 +5147,11 @@ public class Viewer extends JmolViewer
       case 'I':
       case 'T':
         format = g.nihResolverFormat + "/%FILE/file?format=stdinchi";
+        //format = g.nihResolverFormat + "/%FILE/stdinchi";
         break;
       case 'K':
-        format = g.nihResolverFormat + "/%FILE/inchikey";
-        break;
+//        format = g.nihResolverFormat + "/%FILE/inchikey";
+//        break;
       case 'S':
         format = g.nihResolverFormat + "/%FILE/stdinchikey";
         break;
