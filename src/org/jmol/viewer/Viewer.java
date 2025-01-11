@@ -5146,7 +5146,7 @@ public class Viewer extends JmolViewer
         break;
       case 'I':
       case 'T':
-        format = g.nihResolverFormat + "/%FILE/stdinchi";
+        format = g.nihResolverFormat + "/%FILE/file?format=stdinchi";
         break;
       case 'K':
         format = g.nihResolverFormat + "/%FILE/inchikey";
@@ -8694,10 +8694,10 @@ public class Viewer extends JmolViewer
     //       0     6        15       24          36   41    47      55
     //       0         1         2         3         4         5
     //       0123456789012345678901234567890123456789012345678901234567890
-    case 0: // inchi
+    case 0: // inchi, also stdinchi
       type = 'I';
       break;
-    case 6: // inchikey
+    case 6: // inchikey, also stdinchikey
       type = 'K';
       break;
     case 15: // stdinchi
@@ -8733,6 +8733,10 @@ public class Viewer extends JmolViewer
     case 'K':
       if (s.startsWith("InChIKey="))
         s = s.substring(9);
+      break;
+    case 'I':
+      if (s.indexOf("\t") > 0)
+        s = s.substring(0, s.indexOf("\t"));
       break;
     case 'M':
       if (s.indexOf("\n") > 0)

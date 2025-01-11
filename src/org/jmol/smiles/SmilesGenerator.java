@@ -370,13 +370,10 @@ public class SmilesGenerator {
     allowConnectionsToOutsideWorld = ((mode
         & MODE_COMP_ALLOW_OUTSIDE) != 0);
     forceBrackets = ((mode & MODE_COMP_FORCE_BRACKETS) != 0);
-
     while (true) {
       if (atom == null)
         atom = atoms[bs.nextSetBit(0)];
-
       atom = checkFirstAtom(atom);
-
       bsSelected = JmolMolecule.getBranchBitSet(atoms, atom.getIndex(),
           BSUtil.copy(bs), null, -1, true, allowBioResidues);
       bs.andNot(bsSelected);
@@ -415,10 +412,11 @@ public class SmilesGenerator {
           atom = null;
         }
       }
-      if (atom != null)
+      if (atom != null) {
         while ((atom = getSmilesAt(sb, atom, true,
             false)) != null) {
         }
+      }
       while (!bsToDo.isEmpty() || !htRings.isEmpty()) {
         Iterator<Object[]> e = htRings.values().iterator();
         if (e.hasNext()) {
@@ -708,6 +706,7 @@ public class SmilesGenerator {
     int atomIndex = atom.getIndex();
     if (!bsToDo.get(atomIndex))
       return null;
+    int pt = sb.length() - 1;
     ptAtom++;
     bsToDo.clear(atomIndex);
     boolean includeHs = (atomIndex == iHypervalent
@@ -856,14 +855,7 @@ public class SmilesGenerator {
     if (stereoFlag < 7 && nH == 1)
       stereo[stereoFlag++] = aH;
 
-    boolean
-    // I guess I thought that we should not put a / before a ring number
-    // for a future ring, but that is not true. fixed 2022.03.12 Jmol 14.32.34
-    //
-    //    deferStereo = (orderNext == 1 && sp2Atoms == null);
-    //    if (deferStereo) {
-    deferStereo = false;
-    //    }
+    boolean deferStereo = false;
 
     char chBond = getBondStereochemistry(bondPrev, prevAtom);
     if (strPrev != null || chBond != '\0') {
@@ -964,7 +956,16 @@ public class SmilesGenerator {
         stereoFlag = 8; // no @/@@ for even cumulenes
       } else {
         if (nb == 3 || nb == 2 && lastIsN) {
-          // this is for allenes only, not general odd cumulenes
+          // Q is whether we have already indicated FC or C(F).
+          // if we have FC, and the stereo[] array starts with H,
+          // then we need to switch the allene stereochemistry
+          // note that we cannot process FC=C=C=C=CF, and neither can NCI/CADD
+          if (!includeHs && sb.charAt(pt) != ')'
+              && ((Node) stereo[pt]).getAtomicAndIsotopeNumber() == 1) {
+                SimpleNode s0 = stereo[0];
+                stereo[0] = stereo[1];
+                stereo[1] = s0;
+          }
           bonds = atomNext.getEdges();
           for (int k = 0; k < bonds.length; k++) {
             int index = atomNext.getBondedAtomIndex(k);
@@ -975,12 +976,6 @@ public class SmilesGenerator {
             stereo[stereoFlag++] = atomNext;
           if (stereoFlag == 4) {
             alleneStereo = stereo;
-            if (((Node) stereo[3]).getAtomicAndIsotopeNumber() == 1) {
-              // if last atom is 1H, we swap.
-              SimpleNode n = stereo[3];
-              stereo[3] = stereo[2];
-              stereo[2] = n;
-            }
           }
         }
       }
@@ -1383,7 +1378,6 @@ public class SmilesGenerator {
         int nunique = (nh == 2 ? 0 : 3);
         for (int j = atom.getBondCount(); --j >= 0;) {
           SimpleNode a2 = edges[j].getOtherNode(atom);
-          //System.out.println(level + " " + atom + " " + a2);
           int i2 = a2.getIndex();
           if (bsDone.get(i2) || !edges[j].isCovalent())
             continue;
