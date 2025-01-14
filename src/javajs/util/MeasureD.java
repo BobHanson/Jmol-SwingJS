@@ -125,6 +125,7 @@ final public class MeasureD {
      * 
      * a negative angle implies a left-handed axis (sheets)
      */
+    
     double theta = dq.getTheta();
     V3d n = dq.getNormal();
     double v_dot_n = vab.dot(n);
@@ -144,6 +145,8 @@ final public class MeasureD {
     va_prime_d.scale(theta == 0 ? 0 : (vda.length() / Math.tan(theta
         / 2 / 180 * Math.PI)));
     V3d r = V3d.newV(va_prime_d);
+    System.out.println(a + " " + b + " theta=" + theta 
+        + "v.n=" +v_dot_n +" n=" +  n + " " + vda);
     if (theta != 0)
       r.add(vda);
     P3d pt_a_prime = P3d.newP(a);
@@ -155,12 +158,15 @@ final public class MeasureD {
     P3d pt_b_prime = P3d.newP(pt_a_prime);
     pt_b_prime.add(n);
     theta = computeTorsion(a, pt_a_prime, pt_b_prime, b, true);
+    System.out.println(a + " " + pt_a_prime + " " + pt_b_prime + " " + b + " theta=" + theta 
+        );
     if (Double.isNaN(theta) || r.length() < 0.0001)
       theta = dq.getThetaDirectedV(n); // allow for r = 0
     // anything else is an array
     double residuesPerTurn = Math.abs(theta == 0 ? 0 : 360d / theta);
     double pitch = Math.abs(v_dot_n == 2E-45 ? 0 : n.length()
         * (theta == 0 ? 1 : 360.0 / theta));
+    System.out.println("rpt " + residuesPerTurn + " " + theta + " " + pitch);
     return new T3d[] { pt_a_prime, n, r, P3d.new3(theta, pitch, residuesPerTurn), pt_b_prime };
   }
 

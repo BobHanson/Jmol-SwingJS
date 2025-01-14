@@ -105,6 +105,7 @@ public class SymmetryDesc {
   // additional flags
   final static int RET_LIST = 21;
   final static int RET_INVARIANT = 22;
+  final static int RET_RXYZ = 23;
 
   private final static String[] keys = { "xyz", "xyzOriginal", "label",
       null /*draw*/, "fractionalTranslation", "cartesianTranslation",
@@ -139,20 +140,22 @@ public class SymmetryDesc {
     int type;
     if (id == null)
       return T.list;
-    if (id.equalsIgnoreCase("matrix"))
+    switch (id.toLowerCase()) {
+    case "matrix":
       return T.matrix4f;
-    if (id.equalsIgnoreCase("description"))
+    case "description":
       return T.label;
-    if (id.equalsIgnoreCase("axispoint"))
+    case "axispoint":
       return T.point;
-    if (id.equalsIgnoreCase("time"))
+    case "time":
       return T.times;
-    if (id.equalsIgnoreCase("info"))
+    case "info":
       return T.array;
-    if (id.equalsIgnoreCase("element"))
+    case "element":
       return T.element;
-    if (id.equalsIgnoreCase(JC.MODELKIT_INVARIANT))
+    case JC.MODELKIT_INVARIANT:
       return T.var;
+    }
     // center, draw, plane, axis, atom, translation, angle, array, list
     type = T.getTokFromName(id);
     if (type != 0)
@@ -181,6 +184,7 @@ public class SymmetryDesc {
     case T.fuxyz:
     case T.matrix3f:
     case T.origin:
+    case T.rxyz:
       return "";
     case T.atoms:
       return new BS();
@@ -257,6 +261,7 @@ public class SymmetryDesc {
       return io[RET_AXISVECTOR];
     case T.angle:
       return io[RET_ROTANGLE];
+    case T.rxyz:
     case T.matrix4f:
       return io[RET_MATRIX];
     case T.unitcell:
@@ -290,8 +295,7 @@ public class SymmetryDesc {
               : io[RET_AXISVECTOR] != null ? new Object[] { io[RET_POINT], io[RET_AXISVECTOR], io[RET_CTRANS] } // axis
                   : io[RET_CTRANS] != null ? "none" // translation 
                       : io[RET_PLANE] != null ? io[RET_PLANE] // plane
-//                          : io[RET_CTRANS] != null ? "none" // translation 
-                              : "identity"); // identity
+                          : "identity"); // identity
     }
   }
 
@@ -462,10 +466,10 @@ public class SymmetryDesc {
     if (!op.isFinalized)
       op.doFinalize();
 
-    boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX));
+    boolean matrixOnly = (bsInfo.get(RET_MATRIX) & (bsInfo.cardinality() == (bsInfo.get(RET_RXYZ) ? 2 : 1)));
     boolean isTimeReversed = (op.timeReversal == -1);
     if (scaleFactor == 0)
-      scaleFactor = 1d;
+      scaleFactor = 1;
     vtrans.set(0, 0, 0);
     P4d plane = null;
 
@@ -517,7 +521,7 @@ public class SymmetryDesc {
       // quick-return -- note that this is not for magnetic!
       int im = getKeyType("matrix");
       Object[] o = new Object[-im];
-      o[-1 - im] = m2;
+      o[-1 - im] = (bsInfo.get(RET_RXYZ) ? SymmetryOperation.matrixToRationalString(m2) : m2);
       return o;
     }
 
@@ -570,6 +574,7 @@ public class SymmetryDesc {
     // axis, and the
     // symop(sym,{0 0 0}) function will return the overall translation.
 
+    System.out.println("pt012 " + pta00 + " " + pta01 + " " + pta02);
     Qd q = Qd.getQuaternionFrame(pt0, pt1, pt2)
         .div(Qd.getQuaternionFrame(pta00, pta01, pta02));
     Qd qF = Qd.new4(q.q1, q.q2, q.q3, q.q0);
@@ -900,7 +905,7 @@ public class SymmetryDesc {
         } else if (pitch1 != 0) {
           // screw axis
           ptemp.setT(ax1);
-          uc.toFractional(ptemp, false);
+          uc.toFractional(ptemp, true);
           info1 = nrot + screwtype + " (" + strCoord(ptemp, op.isBio)
               + ") screw axis";
 
@@ -1853,18 +1858,27 @@ public class SymmetryDesc {
                                  boolean isSpaceGroup) {
     int returnType = 0;
     Object nullRet = nullReturn(type);
+    int bsMore = 0;
     switch (type) {
     case T.lattice:
       return "" + uc.getLatticeType();
     case T.list:
-      returnType = T.label;
+      returnType = T.list;
       break;
     case T.draw:
       returnType = T.draw;
       break;
+    case T.rxyz:
+      returnType = getKeyType("matrix");
+      bsMore = RET_RXYZ;
+      break;
     case T.array:
       returnType = getType(id);
       switch (returnType) {
+      case T.rxyz:
+        returnType = getKeyType("matrix");
+        bsMore = RET_RXYZ;
+        break;
       case T.atoms:
       case T.full:
       case T.list:
@@ -1880,7 +1894,8 @@ public class SymmetryDesc {
       break;
     }
     BS bsInfo = getInfoBS(returnType);
-
+    if (bsMore > RET_COUNT)
+      bsInfo.set(bsMore);
     boolean isSpaceGroupAll = (nth == -2);
     int iop = op, iop0 = op;
     P3d offset = (options == T.offset && (type == T.atoms || type == T.point)
@@ -1956,7 +1971,7 @@ public class SymmetryDesc {
       }
       info = createInfoArray(opTemp, uc, pt, null, (id == null ? "sym" : id),
           scaleFactor, options, (translation != null), bsInfo, isSpaceGroup, isSpaceGroupAll, nDim);
-      if (type == T.array && id != null) {
+      if (type == T.array && id != null && returnType != -1 - RET_MATRIX) {
         returnType = getKeyType(id);
       }
     } else {
@@ -1965,7 +1980,8 @@ public class SymmetryDesc {
       boolean asString = false;
       switch (type) {
       case T.array: // new Jmol 14.29.45
-        returnType = getKeyType(id);
+        if (returnType != -1 - RET_MATRIX)
+          returnType = getKeyType(id);
         id = stype = null;
         if (nth == 0)
           nth = -1;
@@ -2362,7 +2378,7 @@ public class SymmetryDesc {
         info.put(JC.INFO_SPACE_GROUP_NOTE,
             "could not identify space group from name: " + sgName
                 + "\nformat: show spacegroup \"2\" or \"P 2c\" "
-                + "or \"C m m m\" or \"x, y, z;-x ,-y, -z\"");
+                + "or \"C m m m\" or \"x, y, z;-x ,-y, -z\"\n");
       }
     }
     info.put(JC.INFO_SPACE_GROUP_INFO, data);

@@ -1859,6 +1859,12 @@ public class ScriptMathProcessor {
         return addXDouble(((P4d) x2.value).w);
       }
       break;
+    case T.matrix4f:
+      switch (op.intValue) {
+        case T.rxyz:
+          return addXStr((String) vwr.getSymStatic().staticConvertOperation(null, (M4d) x2.value, true));
+      }
+      break;
     case T.bitset:
       boolean isAtoms = (op.intValue != T.bonds); 
       if (!isAtoms && x2.value instanceof BondSet)

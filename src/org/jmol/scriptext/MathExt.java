@@ -282,7 +282,8 @@ public class MathExt {
         ? (String) args[n - 1].value
         : null);
     boolean asABC = "abc".equalsIgnoreCase(retType);
-    boolean asXYZ = "xyz".equalsIgnoreCase(retType);
+    boolean asXYZ = !asABC && "xyz".equalsIgnoreCase(retType);
+    boolean asRXYZ = !asABC & !asXYZ && "rxyz".equalsIgnoreCase(retType);
     double[] a = null;
     if (retType != null || lst != null || map != null)
       n--;
@@ -299,7 +300,7 @@ public class MathExt {
       case T.string:
         String s = (String) args[0].value;
 
-        // first check for "t1>>t2>>t3"
+        // first check for "t1>t2>t3"
         if (s.equals("h") || s.equals("r")
             || s.indexOf(",") >= 0 && s.indexOf(":") < 0)
           m4 = (M4d) vwr.getSymTemp().convertTransform(s, null);
@@ -397,13 +398,20 @@ public class MathExt {
       }
     }
     return (m4 == null ? mp.addXStr("")
-        : asABC || asXYZ ? mp.addXStr(matToString(m4, asABC)) : mp.addXM4(m4));
+        : asRXYZ || asABC || asXYZ ? mp.addXStr(matToString(m4, asRXYZ ? 0x1 : asABC ? 0xABC : 0)) : mp.addXM4(m4));
   }
 
-  private String matToString(M4d m4, boolean asABC) {
-    return (asABC ?
-        vwr.getSymStatic().staticGetTransformABC(m4, false)
-        : (String) vwr.getSymStatic().staticConvertOperation("", m4));
+  private String matToString(M4d m4, int mode) {
+    SymmetryInterface sym = vwr.getSymStatic();
+    switch (mode) {
+    case 0x1:
+      return (String) sym.staticConvertOperation(null, m4, true);
+    case 0xABC:
+      return sym.staticGetTransformABC(m4, false);
+    default:
+    case 0: // xyz
+      return (String) vwr.getSymStatic().staticConvertOperation("", m4, false);
+    }
   }
 
   /**
@@ -513,10 +521,10 @@ public class MathExt {
             : sym.getSpaceGroupJSON(vwr, xyzList.toLowerCase(), null,
                 Integer.MIN_VALUE));
       }
-      if (xyzList.toUpperCase().startsWith("AFLOW/")) {
+      if (xyzList.toUpperCase().startsWith("AFLOWLIB/")) {
         // "15" or "15.1"
-        return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOW",
-            xyzList.substring(6), 0));
+        return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOWLIB",
+            xyzList.substring(9), 0));
       }
       if (xyzList.startsWith("Hall:") || xyzList.indexOf("x") >= 0
           || ucParams != null) {
@@ -554,8 +562,10 @@ public class MathExt {
       System.out.println("MathExt " + ret);
       // "jmol" used will return the Jmol group if that was to be returned
       @SuppressWarnings("unchecked")
-      String s = "" + ((Map<String, Object>) ret).get("itaIndex");
-      ret = vwr.getSymTemp().getSpaceGroupJSON(vwr, "ITA", s, 0);
+      Object o = ((Map<String, Object>) ret).get("itaIndex"); 
+      if (o != null) {
+        ret = vwr.getSymTemp().getSpaceGroupJSON(vwr, "ITA", o.toString(), 0);
+      }
     }
     return mp.addXObj(ret);
   }
@@ -2745,7 +2755,7 @@ SymmetryInterface sym;
       break;
     case SV.FORMAT_XYZ:
     case SV.FORMAT_ABC:
-      return (x.tok == T.matrix4f && mp.addXStr(matToString((M4d) x.value, pt == SV.FORMAT_ABC)));
+      return (x.tok == T.matrix4f && mp.addXStr(matToString((M4d) x.value, pt == SV.FORMAT_ABC ? 0xABC : 0)));
     default:
 //    case SV.FORMAT_JSON:
 //    case SV.FORMAT_BYTEARRAY:
@@ -4293,6 +4303,7 @@ SymmetryInterface sym;
     //  "matrix", 
     //  "plane",
     //  "point", 
+    //  "rxyz",
     //  "rotationAngle",
     //  "timeReversal", 
     //  "type",
@@ -4366,20 +4377,42 @@ SymmetryInterface sym;
   }
 
   @SuppressWarnings("unchecked")
-  private Object getSymopInfo(ScriptMathProcessor mp, SV x1, SV[] args, int index, boolean isProperty) throws ScriptException {
+  private Object getSymopInfo(ScriptMathProcessor mp, SV x1, SV[] args,
+                              int index, boolean isProperty)
+      throws ScriptException {
 
     // static calls in SymmetryOperation
     Object o = null;
 
     int narg = args.length;
-    if (narg == 2 && args[0].tok == T.string && args[1].tok == T.string
-        && ((String) args[1].value).equalsIgnoreCase("matrix")) {
-      return vwr.getSymStatic().staticConvertOperation((String) args[0].value, null);
+    String str1 = (narg == 2 && args[1].tok == T.string
+        ? ((String) args[1].value).toLowerCase()
+        : null);
+    boolean isrxyz = "rxyz".equals(str1);
+    if (str1 != null) {
+      M4d m = null;
+      String xyz = null;
+      switch (args[0].tok) {
+      case T.string:
+        switch (str1) {
+        case "rxyz":
+        case "matrix":
+          xyz = (String) args[0].value;
+        }
+        break;
+      case T.matrix4f:
+        switch (str1) {
+        case "rxyz":
+        case "xyz":
+          m = (M4d) args[0].value;
+          break;
+        }
+        break;
+      }
+      if (m != null || xyz != null)
+        return vwr.getSymStatic().staticConvertOperation(xyz, m, isrxyz);
     }
-    if (narg == 2 && args[0].tok == T.matrix4f && args[1].tok == T.string
-        && ((String) args[1].value).equalsIgnoreCase("xyz")) {
-      return vwr.getSymStatic().staticConvertOperation("", (M4d) args[0].value);
-    }
+
     boolean isPoint = false;
     if (x1 != null && x1.tok != T.bitset && !(isPoint = (x1.tok == T.point3f)))
       return null;
@@ -4405,14 +4438,16 @@ SymmetryInterface sym;
     int apt = 0;
     P3d pt2 = null;
     BS bs1 = null;
-    boolean isWyckoff = false; 
+    boolean isWyckoff = false;
     switch (args[0].tok) {
     case T.string:
       xyz = SV.sValue(args[0]);
       switch (xyz == null ? "" : xyz.toLowerCase()) {
-      case "count": 
-          SymmetryInterface sym = vwr.getOperativeSymmetry();
-          return (narg != 1 ? null : Integer.valueOf(sym == null ? 0 : sym.getSpaceGroupOperationCount()));
+      case "count":
+        SymmetryInterface sym = vwr.getOperativeSymmetry();
+        return (narg != 1 ? null
+            : Integer
+                .valueOf(sym == null ? 0 : sym.getSpaceGroupOperationCount()));
       case "":
         tok = T.nada;
         break;
@@ -4558,14 +4593,18 @@ SymmetryInterface sym;
     String desc = (narg == apt
         ? (isWyckoff ? ""
             : tok == T.var ? "id"
-                : pt2 != null ? "all" : pt1 != null ? "point" : "matrix")
+                : pt2 != null || pt1 == null ? "matrix" : "point")
         : SV.sValue(args[apt++]));
-    boolean haveAtom = ((!isWyckoff || isProperty) && bsAtoms != null && !bsAtoms.isEmpty());
+    if (narg > 2)
+      isrxyz = "rxyz".equals(desc);
+
+    boolean haveAtom = ((!isWyckoff || isProperty) && bsAtoms != null
+        && !bsAtoms.isEmpty());
     int iatom = (haveAtom ? bsAtoms.nextSetBit(0) : -1);
     if (isWyckoff) {
       P3d pt = (haveAtom ? vwr.ms.getAtom(iatom) : pt1);
       while (desc.length() > 0 && PT.isDigit(desc.charAt(0)))
-          desc = desc.substring(1);
+        desc = desc.substring(1);
       if (pt == null) {
         switch (desc) {
         case "":
@@ -4576,21 +4615,19 @@ SymmetryInterface sym;
           if (desc.length() == 1)
             desc += "*";
           else
-            return null;          
+            return null;
         }
       }
       if (desc.length() == 0 || desc.equalsIgnoreCase("label"))
         desc = null;
-      String letter = (desc == null ? (tok == T.wyckoffm ? "" : null) 
-          : desc.endsWith("*") 
-          || desc.equalsIgnoreCase("coord")
-          || desc.equalsIgnoreCase("coords")? desc : desc.substring(0, 1));
-      SymmetryInterface sym = vwr.getOperativeSymmetry();      
-      return (sym == null ?  null 
-          : sym.getWyckoffPosition(vwr, pt, 
-              (letter == null ? 
-                  (tok == T.wyckoffm ? "M"  : null)
-                  : (tok == T.wyckoffm ? "M"  :"") + letter)));
+      String letter = (desc == null ? (tok == T.wyckoffm ? "" : null)
+          : desc.endsWith("*") || desc.equalsIgnoreCase("coord")
+              || desc.equalsIgnoreCase("coords") ? desc : desc.substring(0, 1));
+      SymmetryInterface sym = vwr.getOperativeSymmetry();
+      return (sym == null ? null
+          : sym.getWyckoffPosition(vwr, pt,
+              (letter == null ? (tok == T.wyckoffm ? "M" : null)
+                  : (tok == T.wyckoffm ? "M" : "") + letter)));
     }
     desc = desc.toLowerCase();
     if (tok == T.var || desc.equals(JC.MODELKIT_INVARIANT) && isProperty) {
@@ -4622,8 +4659,10 @@ SymmetryInterface sym;
       }
       return ret;
     }
-    return (apt == args.length ? vwr.getSymmetryInfo(iatom, xyz,
-        index > 0 ? index : iOp, trans, pt1, pt2, T.array, desc, 0, nth, 0, null) : null);
+    return(apt == args.length
+        ? vwr.getSymmetryInfo(iatom, xyz, index > 0 ? index : iOp, trans, pt1,
+            pt2, T.array, desc, 0, nth, 0, null)
+        : null);
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)

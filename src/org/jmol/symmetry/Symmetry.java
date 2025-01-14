@@ -1245,14 +1245,25 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object staticConvertOperation(String xyz, M4d matrix) {
-    return (matrix == null ? SymmetryOperation.stringToMatrix(xyz)
+  public Object staticConvertOperation(String xyz, M4d matrix, boolean asRationalMatrix) {
+    boolean toMat = (matrix == null);
+    if (toMat)
+        matrix = SymmetryOperation.stringToMatrix(xyz);
+    if (asRationalMatrix) {
+      return SymmetryOperation.matrixToRationalString(matrix);
+    }
+    return (toMat ? matrix
         : SymmetryOperation.getXYZFromMatrixFrac(matrix, false, false, false,
             true));
   }
 
   /**
-   * Retrieve subgroup information for a space group. Returns:
+   * Retrieve subgroup information for a space group. 
+   * 
+   * This method allows for recursive searching of the ITA
+   * maximal subgroup tree to find a path to a target subgroup.
+   * 
+   * Returns:
    * 
    * values are 1-based so that "0" has special meaning, "-" means ignored;
    * "MnV" is Integer.MIN_VALUE
@@ -1275,8 +1286,11 @@ public class Symmetry implements SymmetryInterface {
    * @param i2
    *        Integer.MIN_VALUE for all, or an index for a specific transform
    * @param flags
-   *        what to do if we don't find a maximal subgroup = (indexMax << 8) |
-   *        depthMax
+   *        what to do if we don't find a maximal subgroup; if non-zero, we will
+   *        search the maximal subgroup tree for a path
+   * 
+   *        flags = (indexMax << 24) | indexMin << 16 | depthMax << 8 | depthMin
+   * 
    * @return Map, Lst, or String with conjugation class removed (first two
    *         characters "a:......")
    */
@@ -1489,7 +1503,11 @@ public class Symmetry implements SymmetryInterface {
   }
 
   /**
-   * do not allow looping
+   * Recursively find a group-subgroup path that is preferably, but not necessarily, 
+   * a maximal subgroup path (a single step) and that does not loop through 
+   * the same subgroup (no 20 > 20). Criteria can be set that limit the search
+   * to a range of indexes (the multiples of symmetry operation counts between 
+   * group and subgroup) and depth (the number of subgroup steps allowed). 
    * 
    * @param itaFrom
    * @param itaTo
@@ -1551,6 +1569,7 @@ public class Symmetry implements SymmetryInterface {
           }
           break;
         case 2:
+          //System.out.println("Step 2 checking group=" + group +  " itaTo=" + itaTo + " " + bs);
           if (group != itaTo && !bs.get(group)) {
             BS bsNew = BSUtil.copy(bs);
             bsNew.set(group);
@@ -1560,7 +1579,7 @@ public class Symmetry implements SymmetryInterface {
                 depthMax, depthMin, data, depth + 1, index, indexNew, bsNew,
                 stack, retAll);
             stack.pop();
-            if (retAll == null)
+            if (s != null && retAll == null)
               return s;
             // continue finding more fits
           }
@@ -1579,7 +1598,7 @@ public class Symmetry implements SymmetryInterface {
       vwr = this.vwr;
     boolean isSetting = name.equals("setting");
     boolean isSettings = name.equals("settings");
-    boolean isAFLOW = name.equalsIgnoreCase("AFLOW");
+    boolean isAFLOW = name.equalsIgnoreCase("AFLOWLIB");
     boolean isSubgroups = !isSettings && name.equals("subgroups");
     boolean isThis = ((isSetting || isSettings || isSubgroups)
         && index == Integer.MIN_VALUE);

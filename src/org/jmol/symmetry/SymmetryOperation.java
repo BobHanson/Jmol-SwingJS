@@ -1157,12 +1157,6 @@ public class SymmetryOperation extends M4d {
     return PT.rep(s.substring(1), ",+", ",");
   }
 
-  @Override
-  public String toString() {
-    return (rsvs == null ? super.toString()
-        : super.toString() + " " + rsvs.toString());
-  }
-
   /**
    * Magnetic spin is a pseudo (or "axial") vector. This means that it acts as a
    * rotation, not a vector. When a rotation about x is passed through the
@@ -2381,6 +2375,53 @@ public class SymmetryOperation extends M4d {
     return p;
   }
 
+  /**
+   * rxyz option creates tab-separated string representation of a 3x4 (r,t) matrix with rational fractions
+   * 
+   * adds "|" prior to translation; does NOT add last row of 0 0 0 1
+   * 
+   * <code>
+     (
+        1  -1   0 |   1/2
+        0   0   1 |  -1/2
+        0   1   0 |    0
+     )
+   * </code>
+   * 
+   * @param matrix
+   * @return string representation
+   */
+  public static Object matrixToRationalString(M4d matrix) {
+    String ret = "(";
+    for (int i = 0; i < 3; i++) {
+      ret += "\n";
+      for (int j = 0; j < 4; j++) {
+        if (j > 0)
+          ret += "\t";
+        if (j == 3)
+          ret += "|  ";
+        double d = matrix.getElement(i, j);
+        if (d == (int) d) {
+          ret += (d < 0 ? " " + (int) d : "  " + (int) d);
+        } else {
+          int n48 = (int) Math.round(d * 48);
+          if (approx6(d * 48 - n48) != 0) {
+            ret += d;
+          } else {
+            String s = opF(d);
+            ret += (d > 0 ? " " + s : s);
+          }
+        }
+      }
+    }
+    return ret + "\n)";
+  }
+
+  @Override
+  public String toString() {
+    return (rsvs == null ? super.toString()
+        : super.toString() + " " + rsvs.toString());
+  }
 
   // https://crystalsymmetry.wordpress.com/space-group-diagrams/
 

@@ -5241,7 +5241,8 @@ public class CmdExt extends ScriptExt {
             break;
           }
           ret[0] = null;
-          pt2 = eval.centerParameter(++eval.iToken, ret);
+          if (tokAt(eval.iToken + 1) != 0 && tokAt(eval.iToken + 1) != T.string)
+            pt2 = eval.centerParameter(++eval.iToken, ret);
           if (ret[0] != null && ((BS) ret[0]).isEmpty()) {
             len = slen;
             break;
@@ -5251,7 +5252,7 @@ public class CmdExt extends ScriptExt {
         }
         String type = (eval.iToken > 1 && tokAt(eval.iToken + 1) == T.string
             ? stringParameter(++eval.iToken)
-            : null);
+            : pt1 == null && pt2 == null ? "label" : null);
         checkLength((len = ++eval.iToken) + filterLen);
         if (!chk) {
           Object o = vwr.getSymmetryInfo(vwr.getAllAtoms().nextSetBit(0), xyz,

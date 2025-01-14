@@ -228,7 +228,7 @@ public interface SymmetryInterface {
 
   boolean checkPeriodic(P3d pt);
 
-  Object staticConvertOperation(String string, M4d matrix);
+  Object staticConvertOperation(String string, M4d matrix, boolean asRationalMatrix);
 
   int getAdditionalOperationsCount();
 

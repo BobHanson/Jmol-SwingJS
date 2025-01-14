@@ -333,9 +333,13 @@ final public class CLEG {
           return;
         }
         hallSymbol = name.substring(1, pt);
-        pt = name.indexOf(":", pt);
-        if (pt > 0)
-          hallTrm = name.substring(pt + 1);
+        pt = hallSymbol.indexOf("(");
+        if (pt > 0) {
+          hallTrm = hallSymbol.substring(pt + 1, hallSymbol.length() - 1) + " ";
+          hallSymbol = hallSymbol.substring(0, pt).trim();
+          hallTrm = PT.rep(hallTrm, " ", "/12,");
+          hallTrm = "a,b,c;" + hallTrm.substring(0, hallTrm.length() - 1);
+        }
         name = "Hall:" + hallSymbol;
       } else if (name.startsWith("HM:")) {
         // not sure this is still useful; ok, leave this this way
@@ -384,9 +388,10 @@ final public class CLEG {
           if (myTrm.equals("a,b,c")) {
             myTrm = hallTrm;
           } else {
-            data.errString = "Non-reference Hall symbol cannot also contain a setting: "
-                + name + "!";
-            return;
+            myTrm += ">" + hallTrm;
+//            data.errString = "Non-reference Hall symbol cannot also contain a setting: "
+//                + name + "!";
+//            return;
           }
         }
       }
@@ -492,7 +497,7 @@ final public class CLEG {
       if (!disabled)
         data.addSGTransform(myTrm, "myTrm");
       calculated = data.calculate(trm0);
-      System.out.println("calculated is " + calculated);
+      System.out.println("calculated is " + calculated + (data.retMap == null ? "" : " for the path " + data.retMap.get("indexPath")));
       return true;
     }
   
@@ -645,7 +650,7 @@ final public class CLEG {
       }
 
   public static String cleanCleg000(String t) {
-    return (t.endsWith(";0,0,0") ? t.substring(t.length() - 6) : t);
+    return (t.endsWith(";0,0,0") ? t.substring(0, t.length() - 6) : t);
   }
 
   /**

@@ -1040,7 +1040,7 @@ public class T {
   public final static int fontcaching                    = booleanparam | 70;
   public final static int fontscaling                    = booleanparam | 71;
   public final static int forceautobond                  = booleanparam | 72;
-  public final static int fractionalrelative             = booleanparam | 73;
+  public final static int fractionalrelative             = booleanparam | 73; // abandoned
 // see shapecommand public final static int frank                          = booleanparam | 72;
   public final static int greyscalerendering             = booleanparam | 74;
   public final static int hbondsbackbone                 = booleanparam | 76;
@@ -2642,7 +2642,7 @@ public class T {
        "fontCaching",
        "fontScaling",
        "forceAutoBond",
-       "fractionalRelative",
+       "fractionalRelative", // abandoned
    // see commands     "frank",
        "greyscaleRendering",
        "hbondsBackbone",
@@ -3726,7 +3726,7 @@ public class T {
         fontcaching,                        //        "fontCaching"
         fontscaling,                        //        "fontScaling"
         forceautobond,                      //        "forceAutoBond"
-        fractionalrelative,                 //        "fractionalRelative"
+        fractionalrelative,  // abandoned                //        "fractionalRelative"
           // see commands     "frank"
         greyscalerendering,                 //        "greyscaleRendering"
         hbondsbackbone,                     //        "hbondsBackbone"

@@ -106,6 +106,21 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   boolean isBio;
   char latticeType = 'P'; // P A B C I F
   String itaTransform;
+  
+  /**
+   * X in X.n or X:a... for SpaceGroupFinder sorting
+   */
+  public int itaNo;
+  /**
+   * n in X.n or 9 for X:a... (152_2 and 154_2 only)
+   */
+  public int setNo;
+  /**
+   * just while SpaceGroupFinder is sorting
+   */
+  public transient int sfIndex;
+  
+
   /**
    * index in cleg_settings.tab; "-" if in Jmol's list but not at ITA -- 152:_2 and 154:_2
    */
@@ -544,6 +559,12 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       if (crystalClass != null)
         map.put("crystalClass", crystalClass);
       map.put("operationCount", Integer.valueOf(operationCount));
+    } else if (hallInfo != null) {
+      if (hallInfo.getHallSymbol() != null)
+        map.put(JC.INFO_HALL, hallInfo.getHallSymbol());
+      if (hallSymbolAlt != null)
+        map.put("HallSymbolAlt", hallSymbolAlt);
+      map.put("operationCount", Integer.valueOf(operationCount));      
     }
     Lst<Object> lst = new Lst<Object>();
     for (int i = 0; i < operationCount; i++) {
@@ -1256,7 +1277,14 @@ public class SpaceGroup implements Cloneable, HallReceiver {
 
     // could be "154:a,b,c|0,0,-1/6"
     itaIndex = terms[1].replace('|',';');
-    
+    int pt = itaIndex.indexOf(".");
+    if (pt < 0) {
+      setNo = Integer.MAX_VALUE;
+      pt = itaIndex.indexOf(":");
+    } else {
+      setNo = Integer.parseInt(itaIndex.substring(pt + 1));
+    }
+    itaNo = (pt < 0 ? 0 : Integer.parseInt(itaIndex.substring(0, pt)));
     ////  terms[2] -- transform
     String s = terms[2];
     // leaving "r" as is
@@ -3280,7 +3308,7 @@ intl#     H-M full       HM-abbr   HM-short  Hall
       "150;150.1;;6;d3^2;p 3 2 1;p 3 2\"",  
       "151;151.1;;6;d3^3;p 31 1 2;p 31 2 (0 0 4)",  
       "152;152.1;;6;d3^4;p 31 2 1;p 31 2\"",  
-      "152:_2;152:a,b,c|0,0,-1/3;a,b,c|0,0,-1/3;6;d3^4;p 31 2 1;p 31 2\" (0 0 -4)", //  NOTE: MSA quartz.cif gives different operators for this -- 
+      "152:_2;152:a,b,c|0,0,-1/3;a,b,c|0,0,-1/3;6;d3^4;p 31 2 1;p 31 2\" (0 0 4)", // BH 2025.01.11 was 0 0 -4, but this is now the mirror image of 154:_2
       "153;153.1;;6;d3^5;p 32 1 2;p 32 2 (0 0 2)",  
       "154;154.1;;6;d3^6;p 32 2 1;p 32 2\"",    
       "154:_2;154:a,b,c|0,0,-1/3;a,b,c|0,0,-1/3;6;d3^6;p 32 2 1;p 32 2\" (0 0 4)",  //  NOTE: MSA quartz.cif gives different operators for this -- 
