@@ -141,6 +141,8 @@ public class SymmetryDesc {
     if (id == null)
       return T.list;
     switch (id.toLowerCase()) {
+    case "xyzoriginal":
+      return T.origin;
     case "matrix":
       return T.matrix4f;
     case "description":
@@ -574,7 +576,7 @@ public class SymmetryDesc {
     // axis, and the
     // symop(sym,{0 0 0}) function will return the overall translation.
 
-    System.out.println("pt012 " + pta00 + " " + pta01 + " " + pta02);
+    //System.out.println("pt012 " + pta00 + " " + pta01 + " " + pta02);
     Qd q = Qd.getQuaternionFrame(pt0, pt1, pt2)
         .div(Qd.getQuaternionFrame(pta00, pta01, pta02));
     Qd qF = Qd.new4(q.q1, q.q2, q.q3, q.q0);
@@ -1885,6 +1887,7 @@ public class SymmetryDesc {
       case T.point:
       case T.element:
       case T.var:
+      case T.origin:
         type = returnType;
         break;
       default:

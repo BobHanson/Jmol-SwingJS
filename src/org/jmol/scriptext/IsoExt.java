@@ -74,6 +74,8 @@ import javajs.util.V3d;
 
 public class IsoExt extends ScriptExt {
 
+  private static final double DEFAULT_DRAW_LINE_WIDTH = 0.05;
+
   public IsoExt() {
     // used by Reflection
   }
@@ -379,6 +381,7 @@ public class IsoExt extends ScriptExt {
           case T.expressionBegin:
             bs = eval.getAtomsStartingAt(i + 1);
             i = eval.iToken;
+            break;
           }
           break;
         case T.unitcell:
@@ -465,11 +468,11 @@ public class IsoExt extends ScriptExt {
           if (lattice == null) {
             vwr.getTriangulator();// initialize for legacy java2script
             int[][] faces;
-            switch (uc.getPeriodicity()) {
+            switch (uc == null ? 0x7 : uc.getPeriodicity()) {
             case 0x1:
               faces = Triangulator.edgeA;
               break;
-            case 0x2: 
+            case 0x2:
               faces = Triangulator.edgeB;
               break;
             case 0x4:
@@ -882,7 +885,7 @@ public class IsoExt extends ScriptExt {
         }
         // symop or spacegroup
         if (checkNth) {
-          if (center == null && i + 1 < slen) {
+          if (center == null && eval.isCenterParameter(i + 1)) {
             center = centerParameter(++i);
             // draw spacegroup @n i
             // draw ID xxx symop [n or "x,-y,-z"] [optional {center}]
@@ -915,7 +918,6 @@ public class IsoExt extends ScriptExt {
             i = eval.iToken;
           }
         }
-
         eval.checkLast(eval.iToken);
         if (chk)
           return;
@@ -1200,6 +1202,19 @@ public class IsoExt extends ScriptExt {
       if (havePoints && isWild)
         invArg();
       if (propertyName != null) {
+        if (swidth == "") {
+          switch (propertyName) {
+          case "vector":
+          case "line":
+            if (swidth == "") {
+              // new 16.3.9/10
+              swidth = "width " + DEFAULT_DRAW_LINE_WIDTH;
+              setShapeProperty(JC.SHAPE_DRAW, "width",
+                  Double.valueOf(DEFAULT_DRAW_LINE_WIDTH));
+            }
+            break;
+          }
+        }
         setShapeProperty(JC.SHAPE_DRAW, propertyName, propertyValue);
       }
     }

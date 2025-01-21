@@ -465,7 +465,7 @@ public class MathExt {
     boolean isSettings = "settings".equalsIgnoreCase(mode);
     boolean isSetting = "setting".equalsIgnoreCase(mode);
     boolean isSubgroups = (nargs > 1 && (nargs != 2
-        || !isSettings && !isSetting 
+        || !isSettings && !isSetting && mode != null 
         && !"list".equalsIgnoreCase(mode)
         && !"jmol".equalsIgnoreCase(mode)
         ));
@@ -511,20 +511,18 @@ public class MathExt {
           return false;
         String data = (isSetting && nargs > 1 ? xyzList : null);
         return mp.addXObj((itaNo == Integer.MIN_VALUE ? vwr.getCurrentUnitCell()
-            : vwr.getSymTemp()).getSpaceGroupJSON(vwr, mode.toLowerCase(), data,
-                itaNo));
+            : vwr.getSymTemp()).getSpaceGroupJSON(mode.toLowerCase(), data, itaNo));
       }
       if ("setting".equalsIgnoreCase(xyzList)
           || "settings".equalsIgnoreCase(xyzList)) {
         SymmetryInterface sym = vwr.getOperativeSymmetry();
         return mp.addXObj(sym == null ? null
-            : sym.getSpaceGroupJSON(vwr, xyzList.toLowerCase(), null,
-                Integer.MIN_VALUE));
+            : sym.getSpaceGroupJSON(xyzList.toLowerCase(), null, Integer.MIN_VALUE));
       }
       if (xyzList.toUpperCase().startsWith("AFLOWLIB/")) {
         // "15" or "15.1"
-        return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "AFLOWLIB",
-            xyzList.substring(9), 0));
+        return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON("AFLOWLIB", xyzList.substring(9),
+            0));
       }
       if (xyzList.startsWith("Hall:") || xyzList.indexOf("x") >= 0
           || ucParams != null) {
@@ -547,8 +545,8 @@ public class MathExt {
           xyzList = "ITA/" + xyzList;
         if (xyzList.toUpperCase().startsWith("ITA/")) {
           // "230" or "155.2"; includes JmolID "15:ab"
-          return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON(vwr, "ITA",
-              xyzList.substring(4), 0));
+          return mp.addXObj(vwr.getSymTemp().getSpaceGroupJSON("ITA", xyzList.substring(4),
+              0));
         }
         // spacegroup("P 2") handled by finding Jmol space group 
         // and using the itaIndex for that
@@ -558,13 +556,13 @@ public class MathExt {
     if (ret == null)
       ret = vwr.getSymStatic().getSpaceGroupInfoObj(xyzList, params, true,
         false);
-    if (ret != null && !"jmol".equals(mode) && !"list".equals(mode)) {
-      System.out.println("MathExt " + ret);
+    if (ret instanceof Map<?,?> && !"jmol".equals(mode) && !"list".equals(mode)) {
+      //System.out.println("MathExt " + ret);
       // "jmol" used will return the Jmol group if that was to be returned
       @SuppressWarnings("unchecked")
       Object o = ((Map<String, Object>) ret).get("itaIndex"); 
       if (o != null) {
-        ret = vwr.getSymTemp().getSpaceGroupJSON(vwr, "ITA", o.toString(), 0);
+        ret = vwr.getSymTemp().getSpaceGroupJSON("ITA", o.toString(), 0);
       }
     }
     return mp.addXObj(ret);
@@ -717,13 +715,13 @@ SymmetryInterface sym;
         center = new P3d();
       }
     }
-    SymmetryInterface pointGroup = vwr.getSymTemp().setPointGroup(vwr, null,
-        center, (pts == null ? vwr.ms.at : pts), bsAtoms,
-        false,
+    SymmetryInterface pointGroup = vwr.getSymTemp().setPointGroup(null, center,
+        (pts == null ? vwr.ms.at : pts), bsAtoms, false,
         distanceTolerance < 0 ? vwr.getDouble(T.pointgroupdistancetolerance)
             : distanceTolerance,
         linearTolerance < 0 ? vwr.getDouble(T.pointgrouplineartolerance)
-            : linearTolerance, (bsAtoms == null ? pts.length : bsAtoms.cardinality()), true);
+            : linearTolerance,
+        (bsAtoms == null ? pts.length : bsAtoms.cardinality()), true);
     return mp.addXMap((Map<String, ?>) pointGroup.getPointGroupInfo(-1, null,
         true, null, 0, 1));
   }
@@ -1996,8 +1994,7 @@ SymmetryInterface sym;
         // InChI.find("SMILES")
         if (((String) x1.value).startsWith("InChI=")) {
           if (sFind.equalsIgnoreCase("SMILES")) {
-            return mp.addXStr(
-                vwr.getInchi(null, x1.value, "SMILES" + flags));
+            return mp.addXStr(vwr.getInchi(null, x1.value, "SMILES" + flags));
           }
         }
         isStr = true;
@@ -2034,14 +2031,16 @@ SymmetryInterface sym;
         && sFind.equalsIgnoreCase("INCHIKEY");
     boolean isStructureMap = (!isSmiles && !isSMARTS && tok0 == T.bitset
         && flags.toLowerCase().indexOf("map") >= 0);
-    boolean isEquivalent = !isSmiles && !isSMARTS && ((x1.tok == T.bitset || x1.tok == T.point3f
-        || x1.tok == T.varray) && sFind.toLowerCase().startsWith("equivalent"));
+    boolean isEquivalent = !isSmiles && !isSMARTS
+        && ((x1.tok == T.bitset || x1.tok == T.point3f || x1.tok == T.varray)
+            && sFind.toLowerCase().startsWith("equivalent"));
 
     try {
       if (isEquivalent) {
         switch (x1.tok) {
         case T.bitset:
-          return mp.addXBs(vwr.ms.getSymmetryEquivAtoms((BS) x1.value, null, null));
+          return mp
+              .addXBs(vwr.ms.getSymmetryEquivAtoms((BS) x1.value, null, null));
         case T.point3f:
           return mp.addXList(
               vwr.getSymmetryEquivPoints((P3d) x1.value, sFind + flags));
@@ -2083,7 +2082,7 @@ SymmetryInterface sym;
         case T.varray:
         case T.string:
           if (smiles == null && !isList) {
-              smiles = SV.sValue(x1);
+            smiles = SV.sValue(x1);
           }
           if ((isSmiles || isSMARTS) && args.length == 1) {
             return false;
@@ -2091,7 +2090,8 @@ SymmetryInterface sym;
           if (bs2 != null)
             return false;
           if (flags.equalsIgnoreCase("mf")) {
-            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, isSMARTS, isON);
+            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, isSMARTS,
+                isON);
           } else {
             String pattern = flags;
             // "SMARTS",flags,asMap, allMappings
@@ -2109,8 +2109,8 @@ SymmetryInterface sym;
             boolean justOne = (!asMap
                 && (!allMappings || !isSMARTS && !isChirality));
             try {
-              ret = e.getSmilesExt().getSmilesMatches(pattern, (isList ? SV.strListValue(x1) : smiles), null,
-                  null,
+              ret = e.getSmilesExt().getSmilesMatches(pattern,
+                  (isList ? SV.strListValue(x1) : smiles), null, null,
                   isSMARTS ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
                   !asMap, !allMappings);
               if (isList)
@@ -2143,8 +2143,14 @@ SymmetryInterface sym;
         case T.bitset:
           BS bs = (BS) x1.value;
           if (sFind.equalsIgnoreCase("spacegroup")) {
-            return mp.addXObj(vwr.findSpaceGroup(null, bs, null, null, null, 
-                null, ("parent".equals(flags.toLowerCase()) ? JC.SG_CHECK_SUPERCELL : 0)));
+            Object o = vwr.findSpaceGroup(null, bs, null, null, null, null,
+                ("parent".equals(flags.toLowerCase()) ? JC.SG_CHECK_SUPERCELL
+                    : 0));
+            if (o != null) {
+              String s = o.toString();
+              o = PT.rep(s.substring(s.indexOf(" ") + 1), " #", "\t");
+            }
+            return mp.addXStr(o.toString());
           }
           if (sFind.equalsIgnoreCase("crystalClass")) {
             // {*}.find("crystalClass")
@@ -2166,7 +2172,8 @@ SymmetryInterface sym;
           }
           if (isMF || isCF) {
             boolean isEmpirical = isON;
-            return mp.addXStr(vwr.getFormulaForAtoms(bs, (isMF ? "MF" : "CELLFORMULA"), isEmpirical));
+            return mp.addXStr(vwr.getFormulaForAtoms(bs,
+                (isMF ? "MF" : "CELLFORMULA"), isEmpirical));
           }
           if (isSequence || isSeq) {
             boolean isHH = (argLast.asString().equalsIgnoreCase("H"));
@@ -2279,7 +2286,8 @@ SymmetryInterface sym;
           if (flags.equals("MF")) {
             smiles = (String) e.getSmilesExt().getSmilesMatches("", null, bs,
                 bsMatch3D, JC.SMILES_TYPE_SMILES, true, false);
-            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, false, isON);
+            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, false,
+                isON);
           } else if (asBonds) {
             // this will return a single match
             int[][] map = vwr.getSmilesMatcher().getCorrelationMaps(sFind,
@@ -4373,7 +4381,7 @@ SymmetryInterface sym;
     }
     SV x1 = (isProperty ? mp.getX() : null);
     o = getSymopInfo(mp, x1, args, 0, isProperty);
-    return (o != null && mp.addXObj(o));
+    return mp.addXObj(o);
   }
 
   @SuppressWarnings("unchecked")
@@ -4625,9 +4633,8 @@ SymmetryInterface sym;
               || desc.equalsIgnoreCase("coords") ? desc : desc.substring(0, 1));
       SymmetryInterface sym = vwr.getOperativeSymmetry();
       return (sym == null ? null
-          : sym.getWyckoffPosition(vwr, pt,
-              (letter == null ? (tok == T.wyckoffm ? "M" : null)
-                  : (tok == T.wyckoffm ? "M" : "") + letter)));
+          : sym.getWyckoffPosition(pt, (letter == null ? (tok == T.wyckoffm ? "M" : null)
+              : (tok == T.wyckoffm ? "M" : "") + letter)));
     }
     desc = desc.toLowerCase();
     if (tok == T.var || desc.equals(JC.MODELKIT_INVARIANT) && isProperty) {
@@ -4738,6 +4745,7 @@ SymmetryInterface sym;
     // {atoms}.within(distance,{otheratoms})
     // within("SMILES", "...", {atoms}) or {atoms}.within("SMILES", "...")
     // within("SMARTS", "...", {atoms}) or {atoms}.within("SMARTS", "...") // returns all sets
+    // within("sequence", 
     // ...several more 
     int len = args.length;
     if (len < 1 || len > 5)
@@ -4745,6 +4753,7 @@ SymmetryInterface sym;
     if (len == 1 && args[0].tok == T.bitset)
       return mp.addX(args[0]);
     BS bs = (isAtomProperty ? SV.getBitSet(mp.getX(), false) : null);
+    boolean haveBS = (bs != null);
     double distance = 0;
     Object withinSpec = args[0].value;
     String withinStr = "" + withinSpec;
@@ -4753,282 +4762,308 @@ SymmetryInterface sym;
     boolean isWithinModelSet = false;
     boolean isWithinGroup = false;
     boolean isDistance = false;
+    BS bsSelected = null;
     RadiusData rd = null;
     int tok = args[0].tok;
-    switch (tok == T.string ? tok = T.getTokFromName(withinStr) : tok) {
-    case T.vanderwaals:
-      isVdw = true;
-      withinSpec = null;
-      //$FALL-THROUGH$
-    case T.decimal:
-    case T.integer:
-      isDistance = true;
-      if (len < 2
-          || len == 3 && args[1].tok == T.varray && args[2].tok != T.varray)
-        return false;
-      distance = (isVdw ? 100 : SV.dValue(args[0]));
-      switch (tok = args[1].tok) {
-      case T.on:
-      case T.off:
-        isWithinModelSet = args[1].asBoolean();
-        if (len > 2 && SV.sValue(args[2]).equalsIgnoreCase("unitcell"))
-          tok = T.unitcell;
-        else if (len > 2 && args[2].tok != T.bitset)
+    out: while (true) {
+      switch (tok == T.string ? tok = T.getTokFromName(withinStr) : tok) {
+      case T.vanderwaals:
+        isVdw = true;
+        withinSpec = null;
+        //$FALL-THROUGH$
+      case T.decimal:
+      case T.integer:
+        isDistance = true;
+        if (len < 2
+            || len == 3 && args[1].tok == T.varray && args[2].tok != T.varray)
           return false;
-        len = 0;
-        break;
-      case T.string:
-        String s = SV.sValue(args[1]);
-        if (s.startsWith("$"))
-          return mp.addXBs(getAtomsNearSurface(distance, s.substring(1)));
-        if (s.equalsIgnoreCase("group")) {
-          isWithinGroup = true;
-          tok = T.group;
-        } else if (s.equalsIgnoreCase("vanderwaals")
-            || s.equalsIgnoreCase("vdw")) {
-          withinSpec = null;
-          isVdw = true;
-          tok = T.vanderwaals;
-        } else {
-          tok = T.getTokFromName(s);
-          if (tok == T.nada)
+        distance = (isVdw ? 100 : SV.dValue(args[0]));
+        switch (tok = args[1].tok) {
+        case T.on:
+        case T.off:
+          isWithinModelSet = args[1].asBoolean();
+          if (len > 2 && SV.sValue(args[2]).equalsIgnoreCase("unitcell"))
+            tok = T.unitcell;
+          else if (len > 2 && args[2].tok != T.bitset)
             return false;
+          len = 0;
+          break;
+        case T.string:
+          String s = SV.sValue(args[1]);
+          if (s.startsWith("$")) {
+            bsSelected = getAtomsNearSurface(distance, s.substring(1));
+            break out;
+          }
+          if (s.equalsIgnoreCase("group")) {
+            isWithinGroup = true;
+            tok = T.group;
+          } else if (s.equalsIgnoreCase("vanderwaals")
+              || s.equalsIgnoreCase("vdw")) {
+            withinSpec = null;
+            isVdw = true;
+            tok = T.vanderwaals;
+          } else {
+            tok = T.getTokFromName(s);
+            if (tok == T.nada)
+              return false;
+          }
+          break;
         }
         break;
+      case T.varray:
+        if (len == 1) {
+          withinSpec = args[0].asString(); // units ids8
+          tok = T.nada;
+        }
+        break;
+      case T.branch:
+        // within(branch,bs1, bs2)
+        bsSelected = (len == 3 && args[1].value instanceof BS
+            && args[2].value instanceof BS
+                ? vwr.getBranchBitSet(((BS) args[2].value).nextSetBit(0),
+                    ((BS) args[1].value).nextSetBit(0), true)
+                : null);
+        break out;
+      case T.smiles:
+      case T.substructure: // same as "SMILES"
+      case T.search:
+        // within("smiles", "...", {atoms})
+        // within("smarts", "...", {atoms})
+        // {atoms}.within("smiles", "...")
+        // {atoms}.within("smarts", "...")
+        boolean isOK = true;
+        switch (len) {
+        case 2:
+          bsSelected = bs;
+          break;
+        case 3:
+          isOK = (args[2].tok == T.bitset);
+          if (isOK)
+            bsSelected = (BS) args[2].value;
+          break;
+        default:
+          isOK = false;
+        }
+        return isOK
+            && mp.addXObj(e.getSmilesExt().getSmilesMatches(SV.sValue(args[1]),
+                null, bsSelected, null,
+                tok == T.search ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
+                mp.asBitSet, false));
       }
-      break;
-    case T.varray:
-      if (len == 1) {
-        withinSpec = args[0].asString(); // units ids8
-        tok = T.nada;
+      if (withinSpec instanceof String) {
+        if (tok == T.nada) {
+          tok = T.spec_seqcode;
+          if (len > 2)
+            return false;
+          len = 2;
+        }
+      } else if (!isDistance) {
+        return false;
       }
-      break;
-    case T.branch:
-      return (len == 3 && args[1].value instanceof BS
-          && args[2].value instanceof BS
-          && mp.addXBs(vwr.getBranchBitSet(((BS) args[2].value).nextSetBit(0),
-              ((BS) args[1].value).nextSetBit(0), true)));
-    case T.smiles:
-    case T.substructure: // same as "SMILES"
-    case T.search:
-      // within("smiles", "...", {atoms})
-      // within("smarts", "...", {atoms})
-      // {atoms}.within("smiles", "...")
-      // {atoms}.within("smarts", "...")
-      BS bsSelected = null;
-      boolean isOK = true;
       switch (len) {
+      case 1:
+        // within (sheet)
+        // within (helix)
+        // within (boundbox)
+        // within (unitcell)
+        // within (basepair)
+        // within ("...a sequence...")
+        switch (tok) {
+        case T.sheet:
+        case T.helix:
+        case T.boundbox:
+        case T.unitcell:
+          bsSelected = ms.getAtoms(tok, null);
+          break out;
+        case T.basepair:
+          bsSelected = ms.getAtoms(tok, "");
+          break out;
+        case T.spec_seqcode:
+          bsSelected = ms.getAtoms(T.sequence, withinStr);
+          break out;
+        }
+        return false;
       case 2:
-        bsSelected = bs;
+        // within (atomName, "XX,YY,ZZZ")
+        // within (unitcell, u);
+        switch (tok) {
+        case T.varray:
+          break;
+        case T.spec_seqcode:
+          tok = T.sequence;
+          break;
+        case T.identifier:
+        case T.atomname:
+        case T.atomtype:
+        case T.basepair:
+        case T.sequence:
+        case T.dssr:
+        case T.rna3d:
+        case T.domains:
+        case T.validation:
+          bsSelected = vwr.ms.getAtoms(tok, SV.sValue(args[1]));
+          break out;
+        case T.cell:
+        case T.centroid:
+          bsSelected = vwr.ms.getAtoms(tok, SV.ptValue(args[1]));
+          break out;
+        case T.unitcell:
+          Lst<SV> l = args[1].getList();
+          if (l == null)
+            return false;
+          P3d[] oabc = null;
+          SymmetryInterface uc = null;
+          if (l.size() != 4)
+            return false;
+          oabc = new P3d[4];
+          for (int i = 0; i < 4; i++) {
+            if ((oabc[i] = SV.ptValue(l.get(i))) == null)
+              return false;
+          }
+          uc = vwr.getSymTemp().getUnitCell(oabc, false, null);
+          bsSelected = vwr.ms.getAtoms(tok, uc);
+          break out;
+        }
         break;
       case 3:
-        isOK = (args[2].tok == T.bitset);
-        if (isOK)
-          bsSelected = (BS) args[2].value;
-        break;
-      default:
-        isOK = false;
-      }
-      return isOK
-          && mp.addXObj(e.getSmilesExt().getSmilesMatches(SV.sValue(args[1]),
-              null, bsSelected, null,
-              tok == T.search ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
-              mp.asBitSet, false));
-    }
-
-    if (withinSpec instanceof String) {
-      if (tok == T.nada) {
-        tok = T.spec_seqcode;
-        if (len > 2)
-          return false;
-        len = 2;
-      }
-    } else if (!isDistance) {
-      return false;
-    }
-    switch (len) {
-    case 1:
-      // within (sheet)
-      // within (helix)
-      // within (boundbox)
-      // within (unitcell)
-      // within (basepair)
-      // within ("...a sequence...")
-      switch (tok) {
-      case T.helix:
-      case T.sheet:
-      case T.boundbox:
-      case T.unitcell:
-        return mp.addXBs(ms.getAtoms(tok, null));
-      case T.basepair:
-        return mp.addXBs(ms.getAtoms(tok, ""));
-      case T.spec_seqcode:
-        return mp.addXBs(ms.getAtoms(T.sequence, withinStr));
-      }
-      return false;
-    case 2:
-      // within (atomName, "XX,YY,ZZZ")
-      // within (unitcell, u);
-      switch (tok) {
-      case T.spec_seqcode:
-        tok = T.sequence;
-        break;
-      case T.identifier:
-      case T.atomname:
-      case T.atomtype:
-      case T.basepair:
-      case T.sequence:
-      case T.dssr:
-      case T.rna3d:
-      case T.domains:
-      case T.validation:
-        return mp.addXBs(vwr.ms.getAtoms(tok, SV.sValue(args[1])));
-      case T.cell:
-      case T.centroid:
-        return mp.addXBs(vwr.ms.getAtoms(tok, SV.ptValue(args[1])));
-      case T.unitcell:
-        Lst<SV> l = args[1].getList();
-        if (l == null)
-          return false;
-        P3d[] oabc = null;
-        SymmetryInterface uc = null;
-        if (l.size() != 4)
-          return false;
-        oabc = new P3d[4];
-        for (int i = 0; i < 4; i++) {
-          if ((oabc[i] = SV.ptValue(l.get(i))) == null)
-            return false;
-        }
-        uc = vwr.getSymTemp().getUnitCell(oabc, false, null);
-        return mp.addXBs(vwr.ms.getAtoms(tok, uc));
-      case T.varray:
-        break;
-      }
-      break;
-    case 3:
-      switch (tok) {
-      case T.on:
-      case T.off:
-      case T.group:
-      case T.vanderwaals:
-      case T.unitcell:
-      case T.plane:
-      case T.hkl:
-      case T.coord:
-      case T.point3f:
-      case T.varray:
-        break;
-      case T.sequence:
-        // within ("sequence", "CII", *.ca)
-        withinStr = SV.sValue(args[2]);
-        break;
-      default:
-        return false;
-      }
-      // within (distance, group, {atom collection})
-      // within (distance, true|false, {atom collection})
-      // within (distance, plane|hkl, [plane definition] )
-      // within (distance, coord, [point or atom center] )
-      break;
-    }
-    P4d plane = null;
-    P3d pt = null;
-    Lst<SV> pts1 = null;
-    int last = args.length - 1;
-    switch (args[last].tok) {
-    case T.point4f:
-      plane = (P4d) args[last].value;
-      break;
-    case T.point3f:
-      pt = (P3d) args[last].value;
-      if (SV.sValue(args[1]).equalsIgnoreCase("hkl"))
-        plane = e.getHklPlane(pt, Double.NaN, null);
-      break;
-    case T.varray:
-      pts1 = (last == 2 && args[1].tok == T.varray ? args[1].getList() : null);
-      pt = (last == 2 ? SV.ptValue(args[1])
-          : last == 1 ? P3d.new3(Double.NaN, 0, 0) : null);
-      break;
-    }
-    if (plane != null)
-      return mp.addXBs(ms.getAtomsNearPlane(distance, plane));
-    BS bsLast = (args[last].tok == T.bitset ? (BS) args[last].value : null);
-    if (bs == null)
-      bs = bsLast;
-    if (last > 0 && pt == null && pts1 == null && bs == null)
-      return false;
-    // if we have anything, it must have a point or an array or a plane or a bitset from here on out    
-    if (tok == T.unitcell) {
-      boolean asMap = isWithinModelSet;
-      return ((bs != null || pt != null) && mp
-          .addXObj(vwr.ms.getUnitCellPointsWithin(distance, bs, pt, asMap)));
-    }
-    if (pt != null || pts1 != null) {
-      if (args[last].tok == T.varray) {
-        // within(dist, pt, [pt1, pt2, pt3...])
-        // within(dist, [pt1, pt2, pt3...])
-        // {*}.within(0.1, [points])
-        Lst<SV> sv = args[last].getList();
-        P3d[] ap3 = new P3d[sv.size()];
-        for (int i = ap3.length; --i >= 0;)
-          ap3[i] = SV.ptValue(sv.get(i));
-        P3d[] ap31 = null;
-        if (pts1 != null) {
-          ap31 = new P3d[pts1.size()];
-          for (int i = ap31.length; --i >= 0;)
-            ap31[i] = SV.ptValue(pts1.get(i));
-        }
-        Object[] ret = new Object[1];
-        if (bs != null) {
-          bs.and(vwr.getAllAtoms());
-          ap31 = vwr.ms.at;
-        }
-        switch (PointIterator.withinDistPoints(distance, pt, ap3, ap31, bs,
-            ret)) {
-        case T.bitset:
-          return mp.addXBs((BS) ret[0]);
-        case T.point:
-          return mp.addXPt((P3d) ret[0]);
-        case T.list:
-          return mp.addXList((Lst<?>) ret[0]);
-        case T.array: // 
-          return mp.addXAI((int[]) ret[0]);
-        case T.string: // ""  return
-          return mp.addXStr((String) ret[0]);
+        switch (tok) {
+        case T.on:
+        case T.off:
+        case T.group:
+        case T.vanderwaals:
+        case T.unitcell:
+        case T.plane:
+        case T.hkl:
+        case T.coord:
+        case T.point3f:
+        case T.varray:
+          break;
+        case T.sequence:
+          // within ("sequence", "CII", *.ca)
+          withinStr = SV.sValue(args[1]);
+          break;
         default:
-          return false; // error return
+          return false;
+        }
+        // within (distance, group, {atom collection})
+        // within (distance, true|false, {atom collection})
+        // within (distance, plane|hkl, [plane definition] )
+        // within (distance, coord, [point or atom center] )
+        break;
+      }
+      P4d plane = null;
+      P3d pt = null;
+      Lst<SV> pts1 = null;
+      int last = args.length - 1;
+      switch (args[last].tok) {
+      case T.point4f:
+        plane = (P4d) args[last].value;
+        break;
+      case T.point3f:
+        pt = (P3d) args[last].value;
+        if (SV.sValue(args[1]).equalsIgnoreCase("hkl"))
+          plane = e.getHklPlane(pt, Double.NaN, null);
+        break;
+      case T.varray:
+        pts1 = (last == 2 && args[1].tok == T.varray ? args[1].getList()
+            : null);
+        pt = (last == 2 ? SV.ptValue(args[1])
+            : last == 1 ? P3d.new3(Double.NaN, 0, 0) : null);
+        break;
+      }
+      if (plane != null) {
+        bsSelected = ms.getAtomsNearPlane(distance, plane);
+        break out;
+      } 
+      
+      // from here we allow bs.within(...) or within(...,bs);
+      
+      BS bsLast = (args[last].tok == T.bitset ? (BS) args[last].value : null);
+      if (bs == null)
+        bs = bsLast;
+      if (last > 0 && pt == null && pts1 == null && bs == null)
+        return false;
+      // if we have anything, it must have a point or an array or a plane or a bitset from here on out    
+      if (tok == T.unitcell) {
+        boolean asMap = isWithinModelSet;
+        return ((bs != null || pt != null) && mp
+            .addXObj(vwr.ms.getUnitCellPointsWithin(distance, bs, pt, asMap)));
+      }
+      if (pt != null || pts1 != null) {
+        if (args[last].tok == T.varray) {
+          // within(dist, pt, [pt1, pt2, pt3...])
+          // within(dist, [pt1, pt2, pt3...])
+          // {*}.within(0.1, [points])
+          Lst<SV> sv = args[last].getList();
+          P3d[] ap3 = new P3d[sv.size()];
+          for (int i = ap3.length; --i >= 0;)
+            ap3[i] = SV.ptValue(sv.get(i));
+          P3d[] ap31 = null;
+          if (pts1 != null) {
+            ap31 = new P3d[pts1.size()];
+            for (int i = ap31.length; --i >= 0;)
+              ap31[i] = SV.ptValue(pts1.get(i));
+          }
+          Object[] ret = new Object[1];
+          if (bs != null) {
+            bs.and(vwr.getAllAtoms());
+            ap31 = vwr.ms.at;
+          }
+          switch (PointIterator.withinDistPoints(distance, pt, ap3, ap31, bs,
+              ret)) {
+          case T.bitset:
+            return mp.addXBs((BS) ret[0]);
+          case T.point:
+            return mp.addXPt((P3d) ret[0]);
+          case T.list:
+            return mp.addXList((Lst<?>) ret[0]);
+          case T.array: // 
+            return mp.addXAI((int[]) ret[0]);
+          case T.string: // ""  return
+            return mp.addXStr((String) ret[0]);
+          default:
+            return false; // error return
+          }
+        }
+        // this is for ALL models
+        return mp.addXBs(vwr.getAtomsNearPt(distance, pt, null));
+      }
+      if (tok == T.sequence) {
+        return mp.addXBs(vwr.ms.getSequenceBits(withinStr, bs, new BS()));
+      }
+      if (bs == null)
+        bs = new BS();
+      if (!isDistance) {
+        try {
+          return mp.addXBs(vwr.ms.getAtoms(tok, bs));
+        } catch (Exception e) {
+          return false;
         }
       }
-      // this is for ALL models
-      return mp.addXBs(vwr.getAtomsNearPt(distance, pt, null));
-    }
-    if (tok == T.sequence)
-      return mp.addXBs(vwr.ms.getSequenceBits(withinStr, bs, new BS()));
-    if (bs == null)
-      bs = new BS();
-    if (!isDistance) {
-      try {
-        return mp.addXBs(vwr.ms.getAtoms(tok, bs));
-      } catch (Exception e) {
-        return false;
+      if (isWithinGroup)
+        return mp.addXBs(vwr.getGroupsWithin((int) distance, bs));
+      if (isVdw) {
+        rd = new RadiusData(null, (distance > 10 ? distance / 100 : distance),
+            (distance > 10 ? EnumType.FACTOR : EnumType.OFFSET), VDW.AUTO);
+        if (distance < 0)
+          distance = 0; // not used, but this prevents a diversion
       }
+      BS bsret = vwr.ms.getAtomsWithinRadius(distance,
+          (isAtomProperty ? bsLast : bs), isWithinModelSet, rd,
+          isAtomProperty ? bs : null);
+      if (isAtomProperty) {
+        // {*}.within(0.001, x) excludes atoms x 
+        bsret.andNot(bsLast);
+      }
+      return mp.addXBs(bsret);
     }
-    if (isWithinGroup)
-      return mp.addXBs(vwr.getGroupsWithin((int) distance, bs));
-    if (isVdw) {
-      rd = new RadiusData(null, (distance > 10 ? distance / 100 : distance),
-          (distance > 10 ? EnumType.FACTOR : EnumType.OFFSET), VDW.AUTO);
-      if (distance < 0)
-        distance = 0; // not used, but this prevents a diversion
+    // fall out after selection
+    if (bsSelected != null) {
+      if (bs != null)
+        bsSelected.and(bs);
+      return mp.addXBs(bsSelected);
     }
-    BS bsret = vwr.ms.getAtomsWithinRadius(distance,
-        (isAtomProperty ? bsLast : bs), isWithinModelSet, rd,
-        isAtomProperty ? bs : null);
-    if (isAtomProperty) {
-      // {*}.within(0.001, x) excludes atoms x 
-      bsret.andNot(bsLast);
-    }
-    return mp.addXBs(bsret);
+    return false;
   }
 
   @SuppressWarnings("unchecked")

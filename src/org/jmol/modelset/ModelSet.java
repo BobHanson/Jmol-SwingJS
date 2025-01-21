@@ -489,11 +489,6 @@ public class ModelSet extends BondCollection {
 
   ///////// atom and shape selecting /////////
 
-  public String calculatePointGroup(BS bsAtoms) {
-    return (String) calculatePointGroupForFirstModel(bsAtoms, false,
-        false, null, 0, 0, null, null, null);
-  }
-
   @SuppressWarnings("unchecked")
   public Map<String, Object> getPointGroupInfo(BS bsAtoms) {
     return (Map<String, Object>) calculatePointGroupForFirstModel(bsAtoms,
@@ -569,9 +564,9 @@ public class ModelSet extends BondCollection {
         index = 0;
       type = type.substring(0, tp);
     }
-    pointGroup = symmetry.setPointGroup(vwr, pointGroup, center, pts,
-        bs, haveVibration,
-        (isPoints ? 0 : vwr.getDouble(T.pointgroupdistancetolerance)), vwr.getDouble(T.pointgrouplineartolerance), (bs == null ? pts.length : bs.cardinality()), localEnvOnly);
+    pointGroup = symmetry.setPointGroup(pointGroup, center, pts, bs,
+        haveVibration, (isPoints ? 0 : vwr.getDouble(T.pointgroupdistancetolerance)),
+        vwr.getDouble(T.pointgrouplineartolerance), (bs == null ? pts.length : bs.cardinality()), localEnvOnly);
     if (!isPolyhedron && !isPoints)
       this.pointGroup = pointGroup;
     if (!doAll && !asInfo)
@@ -1043,6 +1038,7 @@ public class ModelSet extends BondCollection {
       uc = unitCells[modelIndex];
     if (uc != null) {
       if (returnCage) {
+//        uc.setViewer(vwr);
         int cai = vwr.getUnitCellAtomIndex();
         if (cai > 0)
           uc = getUnitCellForAtom(cai);
@@ -2280,20 +2276,36 @@ public class ModelSet extends BondCollection {
       if (isSelectUC) {
         // SELECT UNITCELL is [0, 1]
         specInfo = P3d.new3(1, 1, 1);
+        // fall through to cell=555
       } else {
         // this one is [0, 1)
         bs = new BS();
+        boolean isStatic = (specInfo != null);
         SymmetryInterface uc1 = (specInfo instanceof SymmetryInterface
             ? (SymmetryInterface) specInfo
-            : vwr.getCurrentUnitCell());
-        if (uc1 == null)
+            : null);
+        if (isStatic && uc1 == null)
           return bs;
-        uc1 = uc1.getUnitCellMultiplied();
+        if (isStatic)
+          uc1 = uc1.getUnitCellMultiplied();
+        SymmetryInterface uc = uc1;
+        modelIndex = -1;
         for (int i = ac; --i >= 0;) {
           if (at[i] != null) {
+            if (!isStatic) {
+              int mi = at[i].getModelIndex();
+              if (mi != modelIndex) {
+                modelIndex = mi;
+                uc = getUnitCell(mi);
+                if (uc != null)
+                  uc = uc.getUnitCellMultiplied();
+              }
+              if (uc == null)
+                continue;
+            }
             ptTemp1.setT(at[i]);
-            uc1.toFractional(ptTemp1, false);
-            if (uc1.checkPeriodic(ptTemp1))
+            uc.toFractional(ptTemp1, false);
+            if (uc.checkPeriodic(ptTemp1))
               bs.set(i);
           }
         }
@@ -2635,10 +2647,17 @@ public class ModelSet extends BondCollection {
             nNew++;
           } else {
             if (notAnyAndNoId) {
-              bondAB.setOrder(order);
               if (isAtrop) {
-                haveAtropicBonds = true;
-                bondAB.setAtropisomerOptions();
+                int order0 = bondAB.order;
+                bondAB.setOrder(order);
+                if (bondAB.setAtropisomerOptions()) {
+                  haveAtropicBonds = true;
+                  nModified++;
+                } else {
+                  bondAB.setOrder(order0);
+                }
+              } else {
+                bondAB.setOrder(order);
               }
               bsAromatic.clear(bondAB.index);
             }
@@ -4347,8 +4366,7 @@ public class ModelSet extends BondCollection {
     if (iAtom >= 0) {
       SymmetryInterface unitCell = getUnitCellForAtom(iAtom);
       if (unitCell != null) {
-        AtomIndexIterator iter = unitCell.getIterator(vwr, at[iAtom], bs,
-            distance);
+        AtomIndexIterator iter = unitCell.getIterator(at[iAtom], bs, distance);
         if (pt != null)
           iter.setCenter(pt, distance);
         while (iter.hasNext()) {
@@ -4400,7 +4418,7 @@ public class ModelSet extends BondCollection {
     haveChirality = true;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) 
       at[i].setCIPChirality(0);
-    Interface.getSymmetry(vwr, "ms").calculateCIPChiralityForAtoms(vwr, bsAtoms);
+    Interface.getSymmetry(vwr, "ms").calculateCIPChiralityForAtoms(bsAtoms);
     if (!withReturn)
       return null;
     String s = "";
@@ -4803,5 +4821,15 @@ public class ModelSet extends BondCollection {
       }
   }
   
+  public String calculatePointGroup(BS bsAtoms) {
+    return (String) calculatePointGroupForFirstModel(bsAtoms, false,
+        false, null, 0, 0, null, null, null);
+  }
+
+  public String calculatePointGroup(BS bsAtoms, P3d center) {
+    return (String) calculatePointGroupForFirstModel(bsAtoms, false,
+        false, null, 0, 0, null, center, null);
+  }
+
 }
 

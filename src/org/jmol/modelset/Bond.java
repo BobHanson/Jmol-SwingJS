@@ -156,7 +156,9 @@ public class Bond extends Edge {
     return (atom1 == thisAtom ? atom2 : atom2 == thisAtom || thisAtom == null ? atom1 : null);
   }
   
-  public void setAtropisomerOptions() {
+  public boolean setAtropisomerOptions() {
+    if (getCovalentOrder() > 1)
+      return false;
     int i1, i2 = Integer.MAX_VALUE;
     Bond[] bonds = atom1.bonds;
     for (i1 = 0; i1 < bonds.length; i1++) {
@@ -172,8 +174,11 @@ public class Bond extends Edge {
           break;
       }
     }
-    order = (i1 > 2 || i2 >= bonds.length || i2 > 2 ? BOND_COVALENT_SINGLE
-        : getAtropismOrder(i1 + 1, i2 + 1));
+    if (i1 > 2 || i2 >= bonds.length || i2 > 2) {
+      return false;
+    }
+    order = getAtropismOrder(i1 + 1, i2 + 1);
+    return true;    
   }
 
   /**

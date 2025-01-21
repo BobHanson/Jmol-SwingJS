@@ -50,7 +50,7 @@ import org.jmol.viewer.Viewer;
    * @param type
    * @return SpaceGroup
    */
-  SpaceGroup getSpecialGroup(Symmetry sym, Viewer vwr, String name, int type) {
+  SpaceGroup getSpecialGroup(Viewer vwr, Symmetry sym, String name, int type) {
     return createSpecialGroup(null, sym,
         Symmetry.getSpecialSettingInfo(vwr, name, type), type);
   }

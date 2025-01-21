@@ -473,6 +473,10 @@ abstract class ScriptExpr extends ScriptParam {
           }
         }
         SV var = getBitsetPropertySelector(i + 1, rpn.getXTok());
+// ???       if (tokAt(iToken + 1) == T.leftparen) {
+//          // .pivot(), .sum() all ok
+//          iToken += 2;
+//        }
         // check for added min/max modifier
         boolean isUserFunction = (var.intValue == T.function);
         boolean allowMathFunc = true;
@@ -491,10 +495,15 @@ abstract class ScriptExpr extends ScriptParam {
           case T.sum:
           case T.sum2:
           case T.average:
+            // .pivot  but not .pivot()
             allowMathFunc = (isUserFunction || var.intValue == T.distance
                 || tok2 == T.minmaxmask || tok2 == T.selectedfloat || tok2 == T.pivot);
             var.intValue |= tok2 & T.minmaxmask;
             getToken(iToken + 2);
+            if (tokAt(iToken + 1) == T.leftparen) {
+              // .pivot()
+              iToken += 2;
+            }
           }
         }
         int tokNext = tokAt(iToken + 1);
@@ -2001,6 +2010,7 @@ abstract class ScriptExpr extends ScriptParam {
     if (minmaxtype == T.all) {
       if (asVectorIfAll) {
         if (isPivot) {
+          // .pivot, not .pivot()
           return getMathExt().getMinMax(vout, T.pivot, false);
         }
         return vout;
