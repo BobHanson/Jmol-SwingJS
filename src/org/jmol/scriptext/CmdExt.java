@@ -861,7 +861,11 @@ public class CmdExt extends ScriptExt {
                     : "");
           } else {
             bs1 = (slen == 2 ? vwr.bsA() : atomExpressionAt(2));
-            showString(vwr.ms.calculatePointGroup(bs1));
+            P3d center = null;
+            if (tokAt(e.iToken) == T.center) {
+              center = e.centerParameter(e.iToken + 1, null);
+            }
+            showString(vwr.ms.calculatePointGroup(bs1, center));
           }
         }
         return;

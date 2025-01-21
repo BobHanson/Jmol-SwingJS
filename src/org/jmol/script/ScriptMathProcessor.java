@@ -186,8 +186,6 @@ public class ScriptMathProcessor {
     }
     if (++xPt == xStack.length)
       xStack = (SV[]) AU.doubleLength(xStack);
-    if (xPt < 0)
-      System.out.println("testing scriptemaafe");
     xStack[xPt] = x;
     ptx = ++ptid;
     if (debugHigh) {
@@ -1041,7 +1039,7 @@ public class ScriptMathProcessor {
         return addXStr(typeOf(x2));
       case T.keys:
         String[] keys = x2
-            .getKeys((op.intValue & T.minmaxmask) == T.minmaxmask);
+            .getKeys((op.intValue & T.minmaxmask) == T.minmaxmask); // keys.all
         return (keys == null ? addXStr("") : addXAS(keys));
       case T.length:
         if (x2.tok == T.point3f) {

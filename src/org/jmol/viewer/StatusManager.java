@@ -1119,7 +1119,7 @@ public class StatusManager {
             .parseInt(tokens[3]));
         return;
       case 75: // rotatemolecule
-        vwr.rotateSelected(PT.parseDouble(tokens[2]), PT
+        vwr.rotateSelected(tokens.length < 4 ? -1 : PT.parseInt(tokens[4]), PT.parseDouble(tokens[2]), PT
             .parseDouble(tokens[3]), null);
         return;
       case 90:// spinxyby

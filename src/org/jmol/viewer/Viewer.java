@@ -2042,10 +2042,17 @@ public class Viewer extends JmolViewer
             : "");
   }
 
-  void rotateSelected(double deltaX, double deltaY, BS bsSelected) {
+  void rotateSelected(int iatom, double deltaX, double deltaY, BS bsSelected) {
     // bsSelected null comes from sync. 
     if (isJmolDataFrame() || bsSelected.isEmpty())
       return;
+    SymmetryInterface uc = getOperativeSymmetry();
+    if (uc != null) {
+      
+      // TODO -- enable this!
+      return;
+    }
+    
     tm.rotateXYBy(deltaX, deltaY, setMovableBitSet(bsSelected, true));
     refreshMeasures(true);
     //TODO: note that sync may not work with set allowRotateSelectedAtoms
@@ -4293,7 +4300,9 @@ public class Viewer extends JmolViewer
    *         0(String),1(double[]),2(double[][]),3(double[][][]) or -1 to
    *         indicate that it is set by data type
    * 
-   *         data[4] -- Boolean.TRUE == saveInState
+   *         data[4] -- Boolean.TRUE == saveInState (not from a file)
+   *         
+   *         data[5] -- ModelLoader atomProperty Map.Entry for revising array data
    */
   public Object getDataObj(String key, BS bsSelected, int dataType) {
     return (key == null && dataType == JmolDataManager.DATA_TYPE_LAST ? lastData
@@ -5005,8 +5014,7 @@ public class Viewer extends JmolViewer
                 id = id.substring(0, pt);
               }
               if (id.indexOf("_") < 0)
-                id = (String) getSymTemp().getSpaceGroupJSON(this, "AFLOWLIB", id,
-                    index);
+                id = (String) getSymTemp().getSpaceGroupJSON("AFLOWLIB", id, index);
             }
             id = JC.resolveDataBase(database, id, null);
             if (id != null && id.startsWith("'"))
@@ -8459,7 +8467,7 @@ public class Viewer extends JmolViewer
     } else {
       if (bsSelected == null)
         bsSelected = bsA();
-      int iatom = bsSelected.nextSetBit(0);
+      int iatom = (ptOld == null ? bsSelected.nextSetBit(0) : ((Atom) ptOld).i);
       bsSelected = setMovableBitSet(bsSelected, !asAtoms);
 
       if (bsSelected.isEmpty()) {
@@ -10731,7 +10739,7 @@ public class Viewer extends JmolViewer
   public String[] calculateChiralityForSmiles(String smiles) {
     try {
       return Interface.getSymmetry(this, "ms")
-          .calculateCIPChiralityForSmiles(this, smiles);
+          .calculateCIPChiralityForSmiles(smiles);
     } catch (Exception e) {
       return null;
     }
@@ -11023,11 +11031,11 @@ public class Viewer extends JmolViewer
       if (!bsAtoms.isEmpty()) {
         SymmetryInterface uc = (sym == null ? getOperativeSymmetry() : sym);
         ret = (uc == null ? null
-            : uc.findSpaceGroup(this, bsAtoms, null, unitCellParams,null, oabc, flags));
+            : uc.findSpaceGroup(bsAtoms, null, unitCellParams, null,oabc, flags));
       }
     } else {
-      ret = getSymTemp().findSpaceGroup(this, bsAtoms, xyzList, unitCellParams,
-          origin, oabc, flags);
+      ret = getSymTemp().findSpaceGroup(bsAtoms, xyzList, unitCellParams, origin,
+          oabc, flags);
     }
     return (ret == null && (flags & JC.SG_AS_STRING) != 0 ? "" : ret);
   }

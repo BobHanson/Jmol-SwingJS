@@ -419,13 +419,13 @@ public class Polyhedron {
       // first time through includes all atoms as atoms
       for (int i = pts.length; --i >= 0;)
         pts[i] = vertices[i];
-      pointGroup = vwr.getSymTemp().setPointGroup(vwr, null, null, pts,
+      pointGroup = vwr.getSymTemp().setPointGroup(null, null, pts,
           null, false,
           vwr.getDouble(T.pointgroupdistancetolerance), vwr.getDouble(T.pointgrouplineartolerance), pts.length, true);
       // second time through includes all atoms as points only
       for (int i = pts.length; --i >= 0;)
         pts[i] = P3d.newP(vertices[i]);
-      pointGroupFamily = vwr.getSymTemp().setPointGroup(vwr, null, null,
+      pointGroupFamily = vwr.getSymTemp().setPointGroup(null, null,
           pts, null, false,
           vwr.getDouble(T.pointgroupdistancetolerance), vwr.getDouble(T.pointgrouplineartolerance), pts.length, true);
     }

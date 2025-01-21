@@ -118,7 +118,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   /**
    * just while SpaceGroupFinder is sorting
    */
-  public transient int sfIndex;
+  public transient int sfIndex = -1;
   
 
   /**
@@ -954,11 +954,11 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     return determineSpaceGroup(name, 0, 0, 0, 0, 0, 0, -1);
   }
 
-  private final static SpaceGroup determineSpaceGroupNS(String name, SpaceGroup sg) {
+  public static SpaceGroup determineSpaceGroupNS(String name, SpaceGroup sg) {
     return determineSpaceGroup(name, 0, 0, 0, 0, 0, 0, sg.index);
   }
 
-  final static SpaceGroup determineSpaceGroupNA(String name,
+  public static SpaceGroup determineSpaceGroupNA(String name,
                                                      double[] unitCellParams) {
     return (unitCellParams == null ? determineSpaceGroup(name, 0, 0, 0, 0, 0, 0, -1)
         : determineSpaceGroup(name, unitCellParams[0], unitCellParams[1],
@@ -1525,7 +1525,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   static SpaceGroup getSpaceGroupFromJmolClegOrITA(Viewer vwr, String name) {
     int specialType = getExplicitSpecialGroupType(name);
     if (specialType > TYPE_SPACE) {
-      return Symmetry.getSGFactory().getSpecialGroup(null, vwr, name, specialType);
+      return Symmetry.getSGFactory().getSpecialGroup(vwr, null, name, specialType);
     }
     int ptCleg = name.indexOf(":");
     int ptTrm = name.indexOf(",");

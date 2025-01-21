@@ -2280,7 +2280,7 @@ public class ModelKit {
     if (wyckoff != null) {
       type = type.substring(0, ipt);
       if (sym != null) {
-        Object o = sym.getWyckoffPosition(vwr, pts == null ? null : pts[0], wyckoff);
+        Object o = sym.getWyckoffPosition(pts == null ? null : pts[0], wyckoff);
         if ("L".equals(wyckoff)) {
           Object[] oa  = (Object[]) o;
           P3d[] allPts = (P3d[]) oa[0];
@@ -2337,7 +2337,7 @@ public class ModelKit {
         if (wyckoff != null) {
           type = type.substring(0, ipt);
           if (sym != null) {
-            Object o = sym.getWyckoffPosition(vwr, null, wyckoff);
+            Object o = sym.getWyckoffPosition(null, wyckoff);
             if (!(o instanceof P3d))
               return 0;
             pts = new P3d[] { (P3d) o };
@@ -2532,7 +2532,7 @@ public class ModelKit {
    * @param bsSelected
    *        bitset to add atom index to if it is partially occupied.
    */
-  private void addOccupiedAtomsToBitset(BS bsSelected) {
+  private int addOccupiedAtomsToBitset(BS bsSelected) {
     BS bs = new BS();
     for (int iatom = bsSelected.nextSetBit(0); iatom >= 0; iatom = bsSelected
         .nextSetBit(iatom + 1)) {
@@ -2553,6 +2553,7 @@ public class ModelKit {
         bsSelected.or(bs);
       }
     }
+    return bsSelected.cardinality();
   }
 
   private void appRunScript(String script) {
@@ -3200,8 +3201,7 @@ public class ModelKit {
 
     // a) add in any occupationally identical atoms so as not to separate occupational components
 
-    addOccupiedAtomsToBitset(bsSelected);
-    nAtoms = bsSelected.cardinality();
+    nAtoms = addOccupiedAtomsToBitset(bsSelected);
 
     // b) check for just one atom
 

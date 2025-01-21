@@ -20,15 +20,15 @@ public interface SymmetryInterface {
 
   int addSpaceGroupOperation(String xyz, int opId);
 
-  void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms);
+  void calculateCIPChiralityForAtoms(BS bsAtoms);
 
-  String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles)
+  String[] calculateCIPChiralityForSmiles(String smiles)
       throws Exception;
 
   int addBioMoleculeOperation(M4d mat, boolean isReverse);
 
-  Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList, double[] unitCellParams, 
-                        T3d origin, T3d[] oabc, int flags);
+  Object findSpaceGroup(BS atoms, String xyzList, double[] unitCellParams, T3d origin, 
+                        T3d[] oabc, int flags);
 
   int[] getCellRange();
 
@@ -208,11 +208,11 @@ public interface SymmetryInterface {
                            int index, double scale);
 
   SymmetryInterface setPointGroup(
-                                  Viewer vwr,
-                                  SymmetryInterface pointGroupPrevious, T3d center,
-                                  T3d[] atomset,
+                                  SymmetryInterface pointGroupPrevious,
+                                  T3d center, T3d[] atomset,
                                   BS bsAtoms,
-                                  boolean haveVibration, double distanceTolerance, double linearTolerance, int maxAtoms, boolean localEnvOnly);
+                                  boolean haveVibration,
+                                  double distanceTolerance, double linearTolerance, int maxAtoms, boolean localEnvOnly);
 
   int[] getInvariantSymops(P3d p3, int[] v0);
 
@@ -222,7 +222,7 @@ public interface SymmetryInterface {
 
   P3d getFractionalOrigin();
 
-  AtomIndexIterator getIterator(Viewer vwr, Atom atom, BS bstoms, double radius);
+  AtomIndexIterator getIterator(Atom atom, BS bstoms, double radius);
 
   boolean isWithinUnitCell(P3d pt, double x, double y, double z);
 
@@ -234,9 +234,9 @@ public interface SymmetryInterface {
 
   M4d[] getAdditionalOperations();
 
-  Object getWyckoffPosition(Viewer vwr, P3d pt, String letter);
+  Object getWyckoffPosition(P3d pt, String letter);
 
-  Object getSpaceGroupJSON(Viewer vwr, String name, String data, int index);
+  Object getSpaceGroupJSON(String name, String data, int index);
 
   double getCellWeight(P3d pt);
 
