@@ -5016,8 +5016,7 @@ public class Viewer extends JmolViewer
                 id = id.substring(0, pt);
               }
               if (id.indexOf("_") < 0)
-                id = (String) getSymTemp().getSpaceGroupJSON(this, "AFLOWLIB",
-                    id, index);
+                id = (String) getSymTemp().getSpaceGroupJSON("AFLOWLIB", id, index);
             }
             id = JC.resolveDataBase(database, id, null);
             if (id != null && id.startsWith("'"))
