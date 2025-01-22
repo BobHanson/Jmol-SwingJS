@@ -14,7 +14,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-import net.sf.jniinchi.JniInchiAtom;
+//import net.sf.jniinchi.JniInchiAtom;
 
 class InchiToSmilesConverter {
   
@@ -73,8 +73,6 @@ class InchiToSmilesConverter {
     }
     for (int i = 0; i < nBonds; i++) {
       provider.setBond(i);
-      //JniInchiAtom a1 = b.getOriginAtom();
-      //JniInchiAtom a2 = b.getTargetAtom();
       int bt = provider.getJmolBondType();
       SmilesAtom sa1 = listSmiles.get(provider.getOriginAtom()); //getOriginAtom produces the index of the origin atom of the bond
       SmilesAtom sa2 = listSmiles.get(provider.getTargetAtom()); //getTargetAtom produces the index of the target atom of the bond
@@ -92,7 +90,7 @@ class InchiToSmilesConverter {
     int iA = -1, iB = -1;
     for (int i = provider.getNumStereo0D(); --i >= 0;) {
       provider.setStereo0D(i);
-      provider.setAn();
+      provider.setAn(); //an is an array of JniInchiAtoms that gets the neighbors of the current stereo0D
       if (provider.get_an_length() != 4)
         continue;
       
@@ -102,7 +100,7 @@ class InchiToSmilesConverter {
       int i2 = provider.get_an_map_index(2);
       int i3 = provider.get_an_map_index(3);
 //System.out.println(aatoms[i0] + "\n" +  aatoms[i1] + "\n" +  aatoms[i2] + "\n" +  aatoms[i3]);
-      boolean isEven = (provider.getParity() == "INCHI_PARITY.EVEN");
+      boolean isEven = (provider.getParity() == "INCHI_PARITY.EVEN"); //converted to String from INCHI_STEREOTYPE
       String type = provider.getStereoType();
       switch (type) {
       case "ALLENE":

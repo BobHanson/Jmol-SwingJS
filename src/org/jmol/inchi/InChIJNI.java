@@ -521,7 +521,7 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
 
   @Override
   public int get_an_map_index(int i) {
-    return map.get(an[i]);
+    return map.get(an[i]); //as opposed to map.get(an[i]).getIndex() (was not working and unsure what getIndex() does in this case.
   }
 
   @Override

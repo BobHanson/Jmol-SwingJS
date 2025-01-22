@@ -6,11 +6,11 @@ import net.sf.jniinchi.JniInchiAtom;
 
 interface InChIStructureProvider {
   //JniInchiAtom Methods
+  String getElementType();
   int getNumAtoms();
   int getNumBonds();
   int getImplicitH();
   int getCharge();
-  String getElementType();
   double getX();
   double getY();
   double getZ();
@@ -27,13 +27,13 @@ interface InChIStructureProvider {
   
   //JniInchiStereo Methods
   String getParity();
-  int getNumStereo0D();
   String getStereoType();
+  int getNumStereo0D();
   
   //Others
   void setAn();
-  int get_an_length();
   void setCa();
+  int get_an_length();
   int get_an_map_index(int i);
   boolean caIsNull();
   
