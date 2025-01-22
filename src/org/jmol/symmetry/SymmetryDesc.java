@@ -1925,7 +1925,7 @@ public class SymmetryDesc {
       } else {
         iop = op = 0;
       }
-      SymmetryInterface symTemp = new Symmetry();
+      SymmetryInterface symTemp = new Symmetry(); // no vwr object here
       symTemp.setSpaceGroup(false);
       boolean isBio = (uc != null && uc.isBio());
       int i = (isBio
@@ -2180,6 +2180,7 @@ public class SymmetryDesc {
     SymmetryInterface uc = modelSet.am[iModel].biosymmetry;
     if (uc == null && (uc = modelSet.getUnitCell(iModel)) == null) {
       // just assign a simple [1 1 1 90 90 90] unit cell
+      // no vwr object here
       uc = new Symmetry().setUnitCellFromParams(null, false, Double.NaN);
       //      return ret;
     }

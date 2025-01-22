@@ -69,6 +69,8 @@ public class XtalSymmetry {
   public static class FileSymmetry extends Symmetry {
 
     public FileSymmetry() {
+      super();
+      
       // for Class.forName()
     }
 

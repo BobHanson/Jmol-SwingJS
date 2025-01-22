@@ -767,9 +767,9 @@ public class SpaceGroupFinder {
     return  SpaceGroup.nameToGroup.get(name.substring(pt));
   }
 
-  private static Symmetry setSpaceGroupAndUnitCell(SpaceGroup sg, double[] params,
+  private Symmetry setSpaceGroupAndUnitCell(SpaceGroup sg, double[] params,
                                            T3d[] oabc, boolean allowSame) {
-    Symmetry sym = new Symmetry();
+    Symmetry sym = new Symmetry().setViewer(vwr);
     sym.setSpaceGroupTo(sg);
     if (oabc == null) {
     double[] newParams = new double[6];
@@ -1183,7 +1183,7 @@ public class SpaceGroupFinder {
       scaling.z = n;
       break;
     }
-    (uc = new Symmetry()).getUnitCell(oabc, false, "scaled");
+    (uc = new Symmetry()).setViewer(vwr).getUnitCell(oabc, false, "scaled");
     // remove points not within this unitcell
     int f = 0;
     for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints
