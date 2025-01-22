@@ -392,8 +392,6 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
   }
 
   private Map<JniInchiAtom, Integer> map = new Hashtable<JniInchiAtom, Integer>();
-  private JniInchiAtom[] an;
-  private JniInchiAtom ca;
   
   private JniInchiAtom thisAtom;
   private JniInchiBond thisBond;
@@ -458,13 +456,13 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
   }
 
   @Override
-  public Integer getOriginAtom() {
-    return map.get(thisBond.getOriginAtom());
+  public int getIndexOriginAtom() {
+    return map.get(thisBond.getOriginAtom()).intValue();
   }
 
   @Override
-  public Integer getTargetAtom() {
-    return map.get(thisBond.getTargetAtom());
+  public int getIndexTargetAtom() {
+    return map.get(thisBond.getTargetAtom()).intValue();
   }
   @Override
   public InChIStructureProvider setStereo0D(int i) {
@@ -478,40 +476,29 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
   }
 
   @Override
-  public int getJmolBondType() {
-    return getJmolBondType(thisBond);
+  public String getInchiBondType() {
+    INCHI_BOND_TYPE type = thisBond.getBondType();
+    return type.name();
   }
 
   @Override
-  public void setAn() {
-    an = thisStereo.getNeighbors();
-  }
-
-  public static int getJmolBondType(JniInchiBond b) {
-    INCHI_BOND_TYPE type = b.getBondType();
-    switch (type) {
-    case NONE:
-      return 0;
-    case ALTERN:
-      return Edge.BOND_AROMATIC;
-    case DOUBLE:
-      return Edge.BOND_COVALENT_DOUBLE;
-    case TRIPLE:
-      return Edge.BOND_COVALENT_TRIPLE;
-    case SINGLE:
-    default:
-      return Edge.BOND_COVALENT_SINGLE;
+  public int[] getNeighbors() {
+    JniInchiAtom[] an = thisStereo.getNeighbors();
+    
+    int n = an.length;
+    int[] a = new int[n];
+    
+    //add for loop
+    for(int i = 0; i < n; i++) {
+      a[i] = map.get(an[i]).intValue();
     }
+    return a;
   }
 
   @Override
-  public int get_an_length() {
-    return an.length;
-  }
-
-  @Override
-  public void setCa() {
-    ca = thisStereo.getCentralAtom();
+  public int getCenterAtom() {
+    JniInchiAtom ca = thisStereo.getCentralAtom();
+    return (ca == null? -1: map.get(ca).intValue());
   }
 
   @Override
@@ -520,23 +507,9 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
   }
 
   @Override
-  public int get_an_map_index(int i) {
-    return map.get(an[i]); //as opposed to map.get(an[i]).getIndex() (was not working and unsure what getIndex() does in this case.
-  }
-
-  @Override
   public String getParity() {
     return thisStereo.getParity().toString();
   }
-
-  @Override
-  public boolean caIsNull() {
-    if (ca == null) {
-      return true;
-    }
-    return false;
-  }
-  
   
 
 

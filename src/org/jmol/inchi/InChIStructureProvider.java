@@ -21,9 +21,9 @@ interface InChIStructureProvider {
   InChIStructureProvider setStereo0D(int i);
   
   //JniInchiBond Methods
-  Integer getOriginAtom();
-  Integer getTargetAtom();
-  int getJmolBondType();
+  int getIndexOriginAtom();
+  int getIndexTargetAtom();
+  String getInchiBondType();
   
   //JniInchiStereo Methods
   String getParity();
@@ -31,11 +31,8 @@ interface InChIStructureProvider {
   int getNumStereo0D();
   
   //Others
-  void setAn();
-  void setCa();
-  int get_an_length();
-  int get_an_map_index(int i);
-  boolean caIsNull();
+  int getCenterAtom();
+  int[] getNeighbors();
   
 
 }

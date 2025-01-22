@@ -15,6 +15,8 @@ import org.jmol.viewer.Viewer;
 import javajs.util.BS;
 import javajs.util.Lst;
 //import net.sf.jniinchi.JniInchiAtom;
+import net.sf.jniinchi.INCHI_BOND_TYPE;
+import net.sf.jniinchi.JniInchiBond;
 
 class InchiToSmilesConverter {
   
@@ -73,9 +75,9 @@ class InchiToSmilesConverter {
     }
     for (int i = 0; i < nBonds; i++) {
       provider.setBond(i);
-      int bt = provider.getJmolBondType();
-      SmilesAtom sa1 = listSmiles.get(provider.getOriginAtom()); //getOriginAtom produces the index of the origin atom of the bond
-      SmilesAtom sa2 = listSmiles.get(provider.getTargetAtom()); //getTargetAtom produces the index of the target atom of the bond
+      int bt = getJmolBondType(provider.getInchiBondType());
+      SmilesAtom sa1 = listSmiles.get(provider.getIndexOriginAtom()); //getIndexOriginAtom produces the index of the origin atom of the bond
+      SmilesAtom sa2 = listSmiles.get(provider.getIndexTargetAtom()); //getIndexTargetAtom produces the index of the target atom of the bond
       SmilesBond sb = new SmilesBond(sa1, sa2, bt, false);
       sb.index = nb++;
     }
@@ -90,17 +92,17 @@ class InchiToSmilesConverter {
     int iA = -1, iB = -1;
     for (int i = provider.getNumStereo0D(); --i >= 0;) {
       provider.setStereo0D(i);
-      provider.setAn(); //an is an array of JniInchiAtoms that gets the neighbors of the current stereo0D
-      if (provider.get_an_length() != 4)
+      int[] neighbors = provider.getNeighbors(); //an is an array of JniInchiAtoms that gets the neighbors of the current stereo0D
+      if (neighbors.length != 4)
         continue;
       
-      provider.setCa(); //create central atom
-      int i0 = provider.get_an_map_index(0);
-      int i1 = provider.get_an_map_index(1);
-      int i2 = provider.get_an_map_index(2);
-      int i3 = provider.get_an_map_index(3);
-//System.out.println(aatoms[i0] + "\n" +  aatoms[i1] + "\n" +  aatoms[i2] + "\n" +  aatoms[i3]);
-      boolean isEven = (provider.getParity() == "INCHI_PARITY.EVEN"); //converted to String from INCHI_STEREOTYPE
+      int centerAtom = provider.getCenterAtom(); //create central atom
+      int i0 = listSmiles.get(Integer.valueOf(neighbors[0])).getIndex();
+      int i1 = listSmiles.get(Integer.valueOf(neighbors[1])).getIndex();
+      int i2 = listSmiles.get(Integer.valueOf(neighbors[2])).getIndex();
+      int i3 = listSmiles.get(Integer.valueOf(neighbors[3])).getIndex();
+      
+      boolean isEven = (provider.getParity().equals("EVEN")); //converted to String from INCHI_STEREOTYPE
       String type = provider.getStereoType();
       switch (type) {
       case "ALLENE":
@@ -116,7 +118,7 @@ class InchiToSmilesConverter {
       case "TETRAHEDRAL":
         break;
       }
-      if (provider.caIsNull()) {
+      if (centerAtom == -1) {
 //        addStereoMap(aatoms, i0, i1, i2, i3, isEven);
         // i1 and i2 are now substituents on the original A=B, possibly -1, but we don't care
         setPlanarKey(i0, i3, iA, iB, Boolean.valueOf(isEven));
@@ -283,5 +285,19 @@ class InchiToSmilesConverter {
     return -1;
   }
 
-
+  public static int getJmolBondType(String type) {
+    switch (type) {
+    case "NONE":
+      return 0;
+    case "ALTERN":
+      return Edge.BOND_AROMATIC;
+    case "DOUBLE":
+      return Edge.BOND_COVALENT_DOUBLE;
+    case "TRIPLE":
+      return Edge.BOND_COVALENT_TRIPLE;
+    case "SINGLE":
+    default:
+      return Edge.BOND_COVALENT_SINGLE;
+    }
+  }
 }
