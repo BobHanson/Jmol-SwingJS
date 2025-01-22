@@ -62,9 +62,9 @@ class InchiToSmilesConverter {
       atoms.addLast(n);
       n.set(provider.getX(), provider.getY(), provider.getZ());
       n.setIndex(na++);
-      n.setCharge(a.getCharge());
-      n.setSymbol(a.getElementType());
-      nh = a.getImplicitH();
+      n.setCharge(provider.getCharge());
+      n.setSymbol(provider.getElementType());
+      nh = provider.getImplicitH();
       for (int j = 0; j < nh; j++) {
         addH(atoms, n, nb++);
         na++;
@@ -72,12 +72,12 @@ class InchiToSmilesConverter {
       listSmiles.add(n);
     }
     for (int i = 0; i < nBonds; i++) {
-      JniInchiBond b = struc.getBond(i);
-      JniInchiAtom a1 = b.getOriginAtom();
-      JniInchiAtom a2 = b.getTargetAtom();
-      int bt = getJmolBondType(b);
-      SmilesAtom sa1 = map.get(a1);
-      SmilesAtom sa2 = map.get(a2);
+      provider.setBond(i);
+      //JniInchiAtom a1 = b.getOriginAtom();
+      //JniInchiAtom a2 = b.getTargetAtom();
+      int bt = provider.getJmolBondType();
+      SmilesAtom sa1 = listSmiles.get(provider.getOriginAtom()); //getOriginAtom produces the index of the origin atom of the bond
+      SmilesAtom sa2 = listSmiles.get(provider.getTargetAtom()); //getTargetAtom produces the index of the target atom of the bond
       SmilesBond sb = new SmilesBond(sa1, sa2, bt, false);
       sb.index = nb++;
     }
@@ -90,34 +90,35 @@ class InchiToSmilesConverter {
     }
 
     int iA = -1, iB = -1;
-    for (int i = struc.getNumStereo0D(); --i >= 0;) {
-      JniInchiStereo0D sd = struc.getStereo0D(i);
-      JniInchiAtom[] an = sd.getNeighbors();
-      if (an.length != 4)
+    for (int i = provider.getNumStereo0D(); --i >= 0;) {
+      provider.setStereo0D(i);
+      provider.setAn();
+      if (provider.get_an_length() != 4)
         continue;
-      JniInchiAtom ca = sd.getCentralAtom();
-      int i0 = map.get(an[0]).getIndex();
-      int i1 = map.get(an[1]).getIndex();
-      int i2 = map.get(an[2]).getIndex();
-      int i3 = map.get(an[3]).getIndex();
+      
+      provider.setCa(); //create central atom
+      int i0 = provider.get_an_map_index(0);
+      int i1 = provider.get_an_map_index(1);
+      int i2 = provider.get_an_map_index(2);
+      int i3 = provider.get_an_map_index(3);
 //System.out.println(aatoms[i0] + "\n" +  aatoms[i1] + "\n" +  aatoms[i2] + "\n" +  aatoms[i3]);
-      boolean isEven = (sd.getParity() == INCHI_PARITY.EVEN);
-      INCHI_STEREOTYPE type = sd.getStereoType();
+      boolean isEven = (provider.getParity() == "INCHI_PARITY.EVEN");
+      String type = provider.getStereoType();
       switch (type) {
-      case ALLENE:
-      case DOUBLEBOND:
+      case "ALLENE":
+      case "DOUBLEBOND":
         // alkene or 2N-cummulene
         iA = i1;
         iB = i2;
         i1 = getOtherEneAtom(aatoms, i1, i0);
         i2 = getOtherEneAtom(aatoms, i2, i3);
         break;
-      case NONE:
+      case "NONE":
         continue;
-      case TETRAHEDRAL:
+      case "TETRAHEDRAL":
         break;
       }
-      if (ca == null) {
+      if (provider.caIsNull()) {
 //        addStereoMap(aatoms, i0, i1, i2, i3, isEven);
         // i1 and i2 are now substituents on the original A=B, possibly -1, but we don't care
         setPlanarKey(i0, i3, iA, iB, Boolean.valueOf(isEven));
@@ -282,23 +283,6 @@ class InchiToSmilesConverter {
     }
     // could be imine
     return -1;
-  }
-
-  private static int getJmolBondType(JniInchiBond b) {
-    INCHI_BOND_TYPE type = b.getBondType();
-    switch (type) {
-    case NONE:
-      return 0;
-    case ALTERN:
-      return Edge.BOND_AROMATIC;
-    case DOUBLE:
-      return Edge.BOND_COVALENT_DOUBLE;
-    case TRIPLE:
-      return Edge.BOND_COVALENT_TRIPLE;
-    case SINGLE:
-    default:
-      return Edge.BOND_COVALENT_SINGLE;
-    }
   }
 
 

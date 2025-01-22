@@ -64,7 +64,6 @@ import net.sf.jniinchi.JniInchiWrapper;
 public class InChIJNI implements JmolInChI, InChIStructureProvider {
 
   private JniInchiOutputStructure struc;
-
   public InChIJNI() {
     // for dynamic loading
   }
@@ -393,7 +392,12 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
   }
 
   private Map<JniInchiAtom, Integer> map = new Hashtable<JniInchiAtom, Integer>();
+  private JniInchiAtom[] an;
+  private JniInchiAtom ca;
+  
   private JniInchiAtom thisAtom;
+  private JniInchiBond thisBond;
+  private JniInchiStereo0D thisStereo;
 
   private void getAtomList() {
     for (int i = getNumAtoms(); --i >= 0;) 
@@ -426,6 +430,114 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
   public double getX() {
     return thisAtom.getX();
   }
+
+  @Override
+  public InChIStructureProvider setBond(int i) {
+    thisBond = struc.getBond(i);
+    return this;
+  }
+
+  @Override
+  public double getY() {
+    return thisAtom.getY();
+  }
+
+  @Override
+  public double getZ() {
+    return thisAtom.getZ();
+  }
+
+  @Override
+  public int getCharge() {
+    return thisAtom.getCharge();
+  }
+
+  @Override
+  public String getElementType() {
+    return thisAtom.getElementType();
+  }
+
+  @Override
+  public Integer getOriginAtom() {
+    return map.get(thisBond.getOriginAtom());
+  }
+
+  @Override
+  public Integer getTargetAtom() {
+    return map.get(thisBond.getTargetAtom());
+  }
+  @Override
+  public InChIStructureProvider setStereo0D(int i) {
+    thisStereo = struc.getStereo0D(i);
+    return this;
+  }
+
+  @Override
+  public int getNumStereo0D() {
+    return struc.getNumStereo0D();
+  }
+
+  @Override
+  public int getJmolBondType() {
+    return getJmolBondType(thisBond);
+  }
+
+  @Override
+  public void setAn() {
+    an = thisStereo.getNeighbors();
+  }
+
+  public static int getJmolBondType(JniInchiBond b) {
+    INCHI_BOND_TYPE type = b.getBondType();
+    switch (type) {
+    case NONE:
+      return 0;
+    case ALTERN:
+      return Edge.BOND_AROMATIC;
+    case DOUBLE:
+      return Edge.BOND_COVALENT_DOUBLE;
+    case TRIPLE:
+      return Edge.BOND_COVALENT_TRIPLE;
+    case SINGLE:
+    default:
+      return Edge.BOND_COVALENT_SINGLE;
+    }
+  }
+
+  @Override
+  public int get_an_length() {
+    return an.length;
+  }
+
+  @Override
+  public void setCa() {
+    ca = thisStereo.getCentralAtom();
+  }
+
+  @Override
+  public String getStereoType() {
+    return thisStereo.getStereoType().toString();
+  }
+
+  @Override
+  public int get_an_map_index(int i) {
+    return map.get(an[i]).getIndex();
+  }
+
+  @Override
+  public String getParity() {
+    return thisStereo.getParity().toString();
+  }
+
+  @Override
+  public boolean caIsNull() {
+    if (ca == null) {
+      return true;
+    }
+    return false;
+  }
+  
+  
 
 
 }
