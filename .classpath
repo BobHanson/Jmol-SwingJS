@@ -4,8 +4,8 @@
 	<classpathentry excluding="CDKIntegration.java|CDKIntegrationPDB.java" kind="src" path="examples/basic"/>
 	<classpathentry kind="src" path="examples/externalAppletControls"/>
 	<classpathentry kind="src" path="test"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="jars/netscape.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="jars/jni-inchi-0.7-jar-with-dependencies.jar"/>
 	<classpathentry kind="lib" path="jars/junit.jar"/>
 	<classpathentry kind="lib" path="jars/JME-SwingJS.jar" sourcepath="/JME-SwingJS/src"/>

@@ -486,7 +486,7 @@ public class MolReader extends AtomSetCollectionReader {
       break;
     default:
       elementSymbol = isotope + elementSymbol;
-    }
+    } 
     Atom atom = new Atom();
     atom.elementSymbol = elementSymbol;
     atom.formalCharge = charge;

@@ -131,12 +131,11 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public SymmetryInterface setPointGroup(Viewer vwr, SymmetryInterface siLast,
-                                         T3d center, T3d[] atomset, BS bsAtoms,
-                                         boolean haveVibration,
+  public SymmetryInterface setPointGroup(SymmetryInterface siLast, T3d center,
+                                         T3d[] atomset, BS bsAtoms, boolean haveVibration,
                                          double distanceTolerance,
-                                         double linearTolerance, int maxAtoms,
-                                         boolean localEnvOnly) {
+                                         double linearTolerance,
+                                         int maxAtoms, boolean localEnvOnly) {
     pointGroup = PointGroup.getPointGroup(
         siLast == null ? null : ((Symmetry) siLast).pointGroup, center, atomset,
         bsAtoms, haveVibration, distanceTolerance, linearTolerance, maxAtoms,
@@ -287,7 +286,7 @@ public class Symmetry implements SymmetryInterface {
   @SuppressWarnings("unchecked")
   private String getSpaceGroupList(Integer sg0) {
     SB sb = new SB();
-    Lst<Object> list = (Lst<Object>) getSpaceGroupJSON(vwr, "ITA", "ALL", 0);
+    Lst<Object> list = (Lst<Object>) getSpaceGroupJSON("ITA", "ALL", 0);
     for (int i = 0, n = list.size(); i < n; i++) {
       Map<String, Object> map = (Map<String, Object>) list.get(i);
       Integer sg = (Integer) map.get("sg");
@@ -849,8 +848,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public AtomIndexIterator getIterator(Viewer vwr, Atom atom, BS bsAtoms,
-                                       double radius) {
+  public AtomIndexIterator getIterator(Atom atom, BS bsAtoms, double radius) {
     return ((UnitCellIterator) Interface
         .getInterface("org.jmol.symmetry.UnitCellIterator", vwr, "script"))
             .set(this, atom, vwr.ms.at, bsAtoms, radius);
@@ -928,7 +926,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public void calculateCIPChiralityForAtoms(Viewer vwr, BS bsAtoms) {
+  public void calculateCIPChiralityForAtoms(BS bsAtoms) {
     vwr.setCursor(GenericPlatform.CURSOR_WAIT);
     CIPChirality cip = getCIPChirality(vwr);
     String dataClass = (vwr.getBoolean(T.testflag1) ? "CIPData"
@@ -942,7 +940,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String[] calculateCIPChiralityForSmiles(Viewer vwr, String smiles)
+  public String[] calculateCIPChiralityForSmiles(String smiles)
       throws Exception {
     vwr.setCursor(GenericPlatform.CURSOR_WAIT);
     CIPChirality cip = getCIPChirality(vwr);
@@ -972,9 +970,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object findSpaceGroup(Viewer vwr, BS atoms, String xyzList,
-                               double[] unitCellParams, T3d origin, T3d[] oabc,
-                               int flags) {
+  public Object findSpaceGroup(BS atoms, String xyzList, double[] unitCellParams,
+                               T3d origin, T3d[] oabc, int flags) {
     return ((SpaceGroupFinder) Interface
         .getInterface("org.jmol.symmetry.SpaceGroupFinder", vwr, "eval"))
             .findSpaceGroup(vwr, atoms, xyzList, unitCellParams, origin, oabc,
@@ -1159,7 +1156,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object getWyckoffPosition(Viewer vwr, P3d p, String letter) {
+  public Object getWyckoffPosition(P3d p, String letter) {
     if (unitCell == null)
       return "";
     SpaceGroup sg = spaceGroup;
@@ -1403,8 +1400,8 @@ public class Symmetry implements SymmetryInterface {
     boolean isWhereMap = (itaTo > 0 && i1 > 0 && i2 < 0);
     boolean isWhereTStr = (itaTo > 0 && i1 > 0 && i2 > 0);
     try {
-      Map<String, Object> o = (Map<String, Object>) getSpaceGroupJSON(vwr,
-          "subgroups", nameFrom, itaFrom);
+      Map<String, Object> o = (Map<String, Object>) getSpaceGroupJSON("subgroups",
+          nameFrom, itaFrom);
       int ithis = 0;
       while (true) {
         if (o == null)
@@ -1590,10 +1587,7 @@ public class Symmetry implements SymmetryInterface {
 
   @SuppressWarnings("unchecked")
   @Override
-  public Object getSpaceGroupJSON(Viewer vwr, String name, String data,
-                                  int index) {
-    if (vwr == null)
-      vwr = this.vwr;
+  public Object getSpaceGroupJSON(String name, String data, int index) {
     boolean isSetting = name.equals("setting");
     boolean isSettings = name.equals("settings");
     boolean isAFLOW = name.equalsIgnoreCase("AFLOWLIB");
@@ -2160,10 +2154,12 @@ public class Symmetry implements SymmetryInterface {
     return clegInstance;
   }
 
-  private Viewer vwr;
+  /**
+   * Viewer is needed to load json files. 
+   */
+  Viewer vwr;
 
   /**
-   * for the vwr.getSymTemp() only
    * 
    * @param vwr
    */
@@ -2194,7 +2190,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @SuppressWarnings("unchecked")
-  static Map<String, Object> getSpecialSettingInfo(Viewer vwr, String name, int type) {
+  static Map<String, Object> getSpecialSettingInfo(Viewer vwr, String name,
+                                                   int type) {
     String s = name.substring(2);
     int ptCleg = s.indexOf(":");
     int ptTrm = s.indexOf(",");
@@ -2203,12 +2200,14 @@ public class Symmetry implements SymmetryInterface {
     int itno = SpaceGroup.getITNo(s, pt);
     int itindex = (pt > 0 && pt == ptCleg || itno < 0 ? 0
         : pt > 0 ? SpaceGroup.getITNo(s.substring(pt + 1), 0) : 1);
-    Map<String, Object>[] data = (Map<String, Object>[]) Symmetry
-        .getAllITAData(vwr, type, false);
-    if (itindex > 0)
-      return (Map<String, Object>) ((Lst<Object>) data[itno - 1].get("its"))
-          .get(itindex - 1);
-    return getSpecialSettingJSON(data, name, type, true);
+    Map<String, Object>[] data = (Map<String, Object>[]) getAllITAData(vwr,
+        type, false);
+    if (itindex <= 0) {
+      return getSpecialSettingJSON(data, name, type, true);
+    }
+    Lst<Object> list = (Lst<Object>) data[itno - 1].get("its");
+    return (Map<String, Object>) (itindex <= list.size() ? list.get(itindex - 1)
+        : null);
   }
 
   /**

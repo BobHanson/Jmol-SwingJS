@@ -1918,16 +1918,22 @@ public class SV extends T implements JSONEncodable {
       }
       return;
     }
-    for(Entry<String, SV> e: map.entrySet()) {
+    for (Entry<String, SV> e : map.entrySet()) {
       String k = e.getKey();
-      if (isAll && (k.length() == 0 || !PT.isLetter(k.charAt(0)))) {
-        if (prefix.endsWith("."))
-          prefix = prefix.substring(0, prefix.length() - 1);
-        k = "[" + PT.esc(k) + "]";
-      }
-      keys.addLast(prefix + k);
-      if (isAll)
+      if (isAll) {
+        boolean hasDot = prefix.endsWith(".");
+        if (k.length() == 0 || !PT.isLetter(k.charAt(0))) {
+          if (hasDot)
+            prefix = prefix.substring(0, prefix.length() - 1);
+          k = "[" + PT.esc(k) + "]";
+        } else if (!hasDot && prefix.length() > 0) {
+          prefix += ".";
+        }
+        keys.addLast(prefix + k);
         e.getValue().getKeyList(true, keys, prefix + k + ".");
+      } else {
+        keys.addLast(prefix + k);
+      }
     }
   }
 

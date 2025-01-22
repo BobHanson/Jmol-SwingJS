@@ -882,8 +882,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
     if (bsAtoms.isEmpty())
       return null;
     Atom[] atoms = ms.at;
-    AtomIndexIterator iter = unitcell.getIterator(vwr, atom, bsAtoms,
-        useBondAlgorithm ? 5d : radius);
+    AtomIndexIterator iter = unitcell.getIterator(atom, bsAtoms, useBondAlgorithm ? 5d : radius);
     if (!useBondAlgorithm)
       return constructRadiusPolyhedron(atom, iter);
     double myBondingRadius = atom.getBondingRadius();

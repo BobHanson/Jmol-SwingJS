@@ -102,6 +102,8 @@ public class SpaceGroupFinder {
   private P3d zero;
 
   private int firstOrtho;
+
+  private boolean isQuery;
   
   public SpaceGroupFinder() {
   }
@@ -154,13 +156,15 @@ public class SpaceGroupFinder {
                 ? unitCellParams[SimpleUnitCell.PARAM_SLOP]
                 : Viewer.isDoublePrecision ? SimpleUnitCell.SLOPDP
                     : SimpleUnitCell.SLOPSP);
-
+    if (Double.isNaN(slop))
+      slop = 1E-6;
     cartesians = vwr.ms.at;
     bsPoints0 = new BS();
     if (xyzList == null || isAssign) {
       bsAtoms = BSUtil.copy(atoms0);
       nAtoms = bsAtoms.cardinality();
     }
+    isQuery = (xyzList != null && xyzList.indexOf("&") >= 0);
     targets = BS.newN(nAtoms);
     // this will be set in checkSupercell
     scaling = P3d.new3(1, 1, 1);
@@ -196,7 +200,7 @@ public class SpaceGroupFinder {
       if (isHall && !isUnknown)
         return sg.dumpInfoObj();
       // still need basis
-    } else if (SpaceGroup.isXYZList(xyzList)) {
+    } else if (!isQuery && SpaceGroup.isXYZList(xyzList)) {
       // never for isAssign true
       sg = SpaceGroup.findSpaceGroupFromXYZ(xyzList);
       if (sg != null)
@@ -331,7 +335,7 @@ public class SpaceGroupFinder {
       name = (hasTransform ? transform : itaIndex);// p/2 here for itaIndex?
       sg = SpaceGroup.getSpaceGroupFromJmolClegOrITA(vwr, hasTransform ? clegId : itaIndex);
       // get reference group data
-      Object allSettings = uc.getSpaceGroupJSON(vwr, "ITA", itaIndex, 0);
+      Object allSettings = uc.getSpaceGroupJSON("ITA", itaIndex, 0);
       if (allSettings == null || allSettings instanceof String) {
         return null;
       }
@@ -415,7 +419,7 @@ public class SpaceGroupFinder {
       }
       if (xyzList != null) {
         if (isUnknown) {
-          Object ret = getGroupsWithOps(xyzList, unitCellParams, isAssign);
+          Object ret = getGroupsWithOps();
           if (!isAssign || ret == null)
             return ret;
           sg = (SpaceGroup) ret;
@@ -717,7 +721,7 @@ public class SpaceGroupFinder {
    *              we have already tested for a=b
    */
   private boolean checkUnitCell(SpaceGroup sg) {
-    if (sg.sfIndex < 3 || sg.sfIndex >= firstOrtho)
+    if (sg.itaNo < 3 || sg.itaNo >= 16)
       return true;
     if (zero == null) {
       vectorBA = new V3d();
@@ -1016,8 +1020,7 @@ public class SpaceGroupFinder {
    *         if "=" and a string starting and ending with "?" if an xyz operator
    *         is of an invalid form.
    */
-  private Object getGroupsWithOps(String xyzList, double[] unitCellParams,
-                                  boolean isAssign) {
+  private Object getGroupsWithOps() {
     BS groups = new BS();
     if (unitCellParams == null) {
       groups.setBits(0, GROUP_COUNT);
@@ -1036,12 +1039,20 @@ public class SpaceGroupFinder {
       tableNo = tableNo.substring((pt < 0 ? tableNo.length() : pt) - 3 );
       // check for appropriate unit cell
       for (int i = 0; i < GROUP_COUNT; i++)
-        if (groupNames[i].equals(tableNo))
-          return (groups.get(i) ? sgo : null);
+        if (groupNames[i].equals(tableNo)) {
+          if (!groups.get(i))
+            return null;
+          if (unitCellParams != null) {
+            uc.setUnitCellFromParams(unitCellParams, false, slop);
+            if (!checkUnitCell(sgo))
+              return null;
+          }
+          return (sgo);
+        }
       return null;
     }
     // xyz list only, possibly starting with "&" for partial match
-    boolean isEqual = xyzList.indexOf("&") < 0 || isAssign;
+    boolean isEqual = !isQuery || isAssign;
     String[] ops = PT.split(PT.trim(xyzList.trim().replace('&', ';'), ";="),
         ";");
     for (int j = ops.length; --j >= 0;) {
@@ -1068,7 +1079,10 @@ public class SpaceGroupFinder {
       for (int n = ops.length, i = groups.nextSetBit(0); i >= 0; i = groups
           .nextSetBit(i + 1)) {
         if (bsGroupOps[i].cardinality() == n) {
-          if (isAssign) {
+         sg = nameToGroup(groupNames[i]);
+         uc.setUnitCellFromParams(unitCellParams, false, slop);
+         if (!checkUnitCell(sg))
+         if (isAssign) {
             return SpaceGroup.createSpaceGroupN(groupNames[i], true);
           }
           return SpaceGroup.getInfo(null, groupNames[i], unitCellParams, true,
@@ -1078,10 +1092,13 @@ public class SpaceGroupFinder {
       return null;
     }
     // at this point, the group has cardinality of at least 1 
-    String[] ret = new String[groups.cardinality()];
+    Lst<String> ret = new Lst<>();
+    uc.setUnitCellFromParams(unitCellParams, false, slop);
     for (int p = 0, i = groups.nextSetBit(0); i >= 0; i = groups
         .nextSetBit(i + 1)) {
-      ret[p++] = groupNames[i];
+      SpaceGroup sg = nameToGroup(groupNames[i]);
+      if (checkUnitCell(sg))
+        ret.add(sg.getClegId());
     }
     return ret;
   }

@@ -1167,7 +1167,7 @@ public class ActionManager implements EventManager {
               true);
         setMotion(GenericPlatform.CURSOR_MOVE, true);
         if (bnd(dragWheelAction, ACTION_rotateSelected)) {
-          vwr.rotateSelected(getDegrees(deltaX, true),
+          vwr.rotateSelected(dragAtomIndex, getDegrees(deltaX, true),
               getDegrees(deltaY, false), bs);
         } else {
           switch (apm) {
@@ -1342,7 +1342,7 @@ public class ActionManager implements EventManager {
 
     setMotion(GenericPlatform.CURSOR_MOVE, true);
     if (bnd(a, ACTION_rotateSelected) && vwr.getBoolean(T.allowrotateselected))
-      vwr.rotateSelected(getDegrees(deltaX, true), getDegrees(deltaY, false),
+      vwr.rotateSelected(a, getDegrees(deltaX, true), getDegrees(deltaY, false),
           null);
     else
       vwr.moveSelected(

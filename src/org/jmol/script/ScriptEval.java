@@ -7795,7 +7795,7 @@ public class ScriptEval extends ScriptExpr {
         propertyValue = Boolean.TRUE;
         break;
       case T.model:
-        int modelIndex = (chk ? 0 : modelNumberParameter(pt++));
+        int modelIndex = modelNumberParameter(pt++);
         if (modelIndex >= vwr.ms.mc)
           invArg();
         propertyName = "model";
