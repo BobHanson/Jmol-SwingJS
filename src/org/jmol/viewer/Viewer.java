@@ -217,7 +217,7 @@ public class Viewer extends JmolViewer
   public enum ACCESS {
     NONE, READSPT, ALL, INTERNAL
   }
-  
+
   public Object compiler;
   public Map<String, Object> definedAtomSets;
   public ModelSet ms;
@@ -3806,7 +3806,9 @@ public class Viewer extends JmolViewer
       return null;
     P3d offset = sym.getCartesianOffset();
     int iAtom = am.getUnitCellAtomIndex();
-    return (iAtom >= 0 && (offset == null || offset.length() == 0) ? ms.getUnitCellForAtom(iAtom) : sym);
+    return (iAtom >= 0 && (offset == null || offset.length() == 0)
+        ? ms.getUnitCellForAtom(iAtom)
+        : sym);
   }
 
   /**
@@ -5014,7 +5016,8 @@ public class Viewer extends JmolViewer
                 id = id.substring(0, pt);
               }
               if (id.indexOf("_") < 0)
-                id = (String) getSymTemp().getSpaceGroupJSON("AFLOWLIB", id, index);
+                id = (String) getSymTemp().getSpaceGroupJSON(this, "AFLOWLIB",
+                    id, index);
             }
             id = JC.resolveDataBase(database, id, null);
             if (id != null && id.startsWith("'"))
@@ -5158,8 +5161,8 @@ public class Viewer extends JmolViewer
         //format = g.nihResolverFormat + "/%FILE/stdinchi";
         break;
       case 'K':
-//        format = g.nihResolverFormat + "/%FILE/inchikey";
-//        break;
+        //        format = g.nihResolverFormat + "/%FILE/inchikey";
+        //        break;
       case 'S':
         format = g.nihResolverFormat + "/%FILE/stdinchikey";
         break;
@@ -5263,7 +5266,8 @@ public class Viewer extends JmolViewer
   /**
    * Check to see if the resolver is working
    * 
-   * this is disabled in JC.java by removing the resolverResolver reference there
+   * this is disabled in JC.java by removing the resolverResolver reference
+   * there
    * 
    * @param forceCheck
    */
@@ -5513,7 +5517,8 @@ public class Viewer extends JmolViewer
         break;
       case ActionManager.PICKING_DELETE_BOND:
       case ActionManager.PICKING_IDENTIFY_BOND:
-        modelkit.setProperty(JC.MODELKIT_BONDPICKINGMODE, strMode.toLowerCase());
+        modelkit.setProperty(JC.MODELKIT_BONDPICKINGMODE,
+            strMode.toLowerCase());
         break;
       }
     }
@@ -6944,14 +6949,16 @@ public class Viewer extends JmolViewer
       g.labelKey = value;
       if (value)
         g.elementKey = false;
-      getModelkit(false).setProperty(JC.MODELKIT_SET_LABEL_KEY, Boolean.valueOf(value));
+      getModelkit(false).setProperty(JC.MODELKIT_SET_LABEL_KEY,
+          Boolean.valueOf(value));
       break;
     case T.elementkey:
       // 16.2.2
       g.elementKey = value;
       if (value)
         g.labelKey = false;
-      getModelkit(false).setProperty(JC.MODELKIT_SET_ELEMENT_KEY, Boolean.valueOf(value));
+      getModelkit(false).setProperty(JC.MODELKIT_SET_ELEMENT_KEY,
+          Boolean.valueOf(value));
       break;
     case T.symmetryhermannmauguin:
       // 16.1.66
@@ -8142,7 +8149,9 @@ public class Viewer extends JmolViewer
                                            double endDegrees, boolean isSpin,
                                            BS bsSelected, V3d translation,
                                            Lst<P3d> finalPoints,
-                                           double[] dihedralList, M4d m4, boolean useModelKit, P3d[][] centerAndPoints) {
+                                           double[] dihedralList, M4d m4,
+                                           boolean useModelKit,
+                                           P3d[][] centerAndPoints) {
     // Eval: rotate INTERNAL
 
     if (eval == null)
@@ -8156,7 +8165,8 @@ public class Viewer extends JmolViewer
 
     boolean isOK = tm.rotateAboutPointsInternal(eval, point1, point2,
         degreesPerSecond, endDegrees, false, isSpin, bsSelected, false,
-        translation, finalPoints, dihedralList, m4, useModelKit, centerAndPoints);
+        translation, finalPoints, dihedralList, m4, useModelKit,
+        centerAndPoints);
     if (isOK)
       setSync();
     return isOK;
@@ -8423,14 +8433,14 @@ public class Viewer extends JmolViewer
   private P3d ptScreen = new P3d(), ptScreenNew = new P3d(), ptNew = new P3d();
 
   void moveSelectedXY(int deltaX, int deltaY, int modifiers) {
-    moveSelected(deltaX, deltaY, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE,
-        null, null, null, false, false, modifiers);
+    moveSelected(deltaX, deltaY, Integer.MIN_VALUE, Integer.MIN_VALUE,
+        Integer.MIN_VALUE, null, null, null, false, false, modifiers);
   }
-  
-  synchronized int moveSelected(int deltaX, int deltaY, int deltaZ,
-                                       int x, int y, BS bsSelected, P3d ptOld,
-                                       P3d ptNew, boolean isTranslation,
-                                       boolean asAtoms, int modifiers) {
+
+  synchronized int moveSelected(int deltaX, int deltaY, int deltaZ, int x,
+                                int y, BS bsSelected, P3d ptOld, P3d ptNew,
+                                boolean isTranslation, boolean asAtoms,
+                                int modifiers) {
     // called by actionManager
     // cannot synchronize this -- it's from the mouse and the event queue
     if (deltaZ == 0 && ptNew == null || isJmolDataFrame())
@@ -8482,19 +8492,22 @@ public class Viewer extends JmolViewer
             tm.finalizeTransformParameters();
             double f = (g.antialiasDisplay ? 2 : 1);
             tm.transformPt3f(ptCenter, ptScreen);
-            if (deltaZ != Integer.MIN_VALUE)
+            SymmetryInterface uc = getOperativeSymmetry();
+            if (deltaZ != Integer.MIN_VALUE) {
+              if (uc != null)
+                return 0; // don't all shift-Z with unit cell
               ptScreenNew.set(ptScreen.x, ptScreen.y, ptScreen.z + deltaZ);
-            else
+            } else {
               ptScreenNew.set(ptScreen.x + deltaX * f, ptScreen.y + deltaY * f,
                   ptScreen.z);
+            } 
             tm.unTransformPoint(ptScreenNew, this.ptNew);
             ptNew = this.ptNew;
-            SymmetryInterface uc = getOperativeSymmetry();
-            if (uc != null) {
+            if (uc != null) {              
               ptNew.sub(ptCenter);
               ptNew.add(ms.at[iatom]);
-              getModelkit(false).assignMoveAtoms(bsSelected, iatom, ptNew,
-                  null, true, !asAtoms, false);
+              getModelkit(false).assignMoveAtoms(bsSelected, iatom, ptNew, null,
+                  true, !asAtoms, false);
             }
           }
           if (!Double.isNaN(ptNew.x)) {
@@ -8516,7 +8529,8 @@ public class Viewer extends JmolViewer
       return;
     atomHighlighted = iatom;
     shm.loadShape(JC.SHAPE_HALOS);
-    setShapeProperty(JC.SHAPE_HALOS, "warnAtom", (iatom >= 0 ? Integer.valueOf(iatom): null));
+    setShapeProperty(JC.SHAPE_HALOS, "warnAtom",
+        (iatom >= 0 ? Integer.valueOf(iatom) : null));
   }
 
   /**
@@ -9128,7 +9142,8 @@ public class Viewer extends JmolViewer
 
   public void deleteBonds(BS bsDeleted) {
     int n = ms.bondCount;
-    for (int i = bsDeleted.nextSetBit(0); i >= 0; i = bsDeleted.nextSetBit(i + 1)) {
+    for (int i = bsDeleted.nextSetBit(0); i >= 0; i = bsDeleted
+        .nextSetBit(i + 1)) {
       if (i >= n || ms.bo[i] == null)
         bsDeleted.clear(i);
     }
@@ -9647,9 +9662,12 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * For the current SINGLE model only. 
-   * @param sym operationalSymmetry
-   * @param bsFixed optional starting BitSet to be added to
+   * For the current SINGLE model only.
+   * 
+   * @param sym
+   *        operationalSymmetry
+   * @param bsFixed
+   *        optional starting BitSet to be added to
    * @return bsFixed
    * 
    */
@@ -9661,7 +9679,7 @@ public class Viewer extends JmolViewer
     bsFixed.or(slm.getMotionFixedAtoms());
     bsFixed.and(getThisModelAtoms());
     if (sym == null)
-      sym = getOperativeSymmetry(); 
+      sym = getOperativeSymmetry();
     if (sym != null && getModelkit(false) != null)
       modelkit.addLockedAtoms(sym, bsFixed);
     return bsFixed;
@@ -9801,20 +9819,20 @@ public class Viewer extends JmolViewer
   }
 
   public int moveAtomWithHydrogens(int atomIndex, int deltaX, int deltaY,
-                                       int deltaZ, P3d ptNew, BS bsAtoms) {
+                                   int deltaZ, P3d ptNew, BS bsAtoms) {
     // called by actionManager
     stopMinimization();
     boolean modelkitNoAddH = (ptNew != null && deltaX == 0);
     Atom atom = ms.at[atomIndex];
     if (bsAtoms == null) {
       bsAtoms = BSUtil.newAndSetBit(atomIndex);
-      boolean addH = (this.getOperativeSymmetry() == null
-          || isModelKitOpen() && !modelkit.hasConstraint(atomIndex, true, false));
+      boolean addH = (this.getOperativeSymmetry() == null || isModelKitOpen()
+          && !modelkit.hasConstraint(atomIndex, true, false));
       if (addH && !modelkitNoAddH)
         ms.addConnectedHAtoms(atom, bsAtoms);
     }
-    return moveSelected(deltaX, deltaY, deltaZ, Integer.MIN_VALUE, Integer.MIN_VALUE,
-        bsAtoms, atom, ptNew, true, true, 0);
+    return moveSelected(deltaX, deltaY, deltaZ, Integer.MIN_VALUE,
+        Integer.MIN_VALUE, bsAtoms, atom, ptNew, true, true, 0);
   }
 
   public boolean isModelPDB(int i) {
@@ -10643,18 +10661,20 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * Static only in the sense of "just one instance per viewer"
-   * unlike symTemp, which is new every time.
+   * Static only in the sense of "just one instance per viewer" unlike symTemp,
+   * which is new every time.
    */
   private SymmetryInterface symStatic;
-  
+
   /**
    * Retrieve the static Symmetry object, which should be used only statically
    * 
    * @return org.jmol.symmetry.Symmetry object
    */
   public SymmetryInterface getSymStatic() {
-    return (symStatic == null ? (symStatic = Interface.getSymmetry(this, "ms")).setViewer(this) : symStatic);
+    return (symStatic == null
+        ? (symStatic = Interface.getSymmetry(this, "ms")).setViewer(this)
+        : symStatic);
   }
 
   public void setWindowDimensions(double[] dims) {
@@ -10775,13 +10795,13 @@ public class Viewer extends JmolViewer
   /**
    * Get a ModelKit property, but only if the modelkit exists already.
    * 
-   * @param name if null returns Boolean.TRUE if modelkit is instantiated
+   * @param name
+   *        if null returns Boolean.TRUE if modelkit is instantiated
    * @return value
    */
   public Object getModelkitPropertySafely(String name) {
-    return (modelkit == null ? null 
-        : name == null ? Boolean.TRUE 
-        : modelkit.getProperty(name));
+    return (modelkit == null ? null
+        : name == null ? Boolean.TRUE : modelkit.getProperty(name));
   }
 
   /**
@@ -10794,7 +10814,7 @@ public class Viewer extends JmolViewer
   public Object setModelkitPropertySafely(String key, Object value) {
     return (modelkit == null ? null : modelkit.setProperty(key, value));
   }
-  
+
   /**
    * Check for an option type 'M' 'S' 'U' 'B'.
    * 
@@ -10806,8 +10826,6 @@ public class Viewer extends JmolViewer
     // only from MODELKIT command
     return modelkit != null && modelkit.checkOption(type, value);
   }
-
-
 
   /**
    * A general method for retrieving symmetry information with full capability
@@ -10977,7 +10995,8 @@ public class Viewer extends JmolViewer
    * @param atoms
    * @param molData
    *        null, or MOL data, or a database $ or : call, or SMILES, or
-   *        "InChI=...." to retrieve the key or internal InChI structure as a string
+   *        "InChI=...." to retrieve the key or internal InChI structure as a
+   *        string
    * @param options
    * @return InChI or InChIKey
    */
@@ -11023,7 +11042,8 @@ public class Viewer extends JmolViewer
    * 
    */
   public Object findSpaceGroup(SymmetryInterface sym, BS bsAtoms,
-                               String xyzList, double[] unitCellParams, T3d origin, T3d[] oabc, int flags) {
+                               String xyzList, double[] unitCellParams,
+                               T3d origin, T3d[] oabc, int flags) {
     Object ret = null;
     if (bsAtoms == null && xyzList == null || (flags & JC.SG_IS_ASSIGN) != 0)
       bsAtoms = getThisModelAtoms();
@@ -11252,13 +11272,16 @@ public class Viewer extends JmolViewer
   }
 
   /**
-   * Check for allowed access only to the designated path starting with this path.
-   * Restricts access to internal PNGJ files and disallows WRITE and JAVASCRIPT commands from within PNGJ files.
+   * Check for allowed access only to the designated path starting with this
+   * path. Restricts access to internal PNGJ files and disallows WRITE and
+   * JAVASCRIPT commands from within PNGJ files.
    *
    * Java only.
    * 
-   * @param path  set null to return false unless ACCESS.INTERNAL
-   * @return if path is not null, return true if access is allowed to this path; when path is null, return true if this access is internal only 
+   * @param path
+   *        set null to return false unless ACCESS.INTERNAL
+   * @return if path is not null, return true if access is allowed to this path;
+   *         when path is null, return true if this access is internal only
    */
   public final boolean haveAccessInternal(String path) {
     if (path == null) {
@@ -11267,9 +11290,11 @@ public class Viewer extends JmolViewer
     if (isJS)
       return true;
     path = path.replace('\\', '/');
-    boolean ret = access != ACCESS.NONE && (internalAccessPath == null || access != ACCESS.INTERNAL || path.startsWith(internalAccessPath));
+    boolean ret = access != ACCESS.NONE && (internalAccessPath == null
+        || access != ACCESS.INTERNAL || path.startsWith(internalAccessPath));
     if (!ret)
-      System.err.println("Viewer: Internal file access in " + internalAccessPath + " denied for " + path);
+      System.err.println("Viewer: Internal file access in " + internalAccessPath
+          + " denied for " + path);
     return ret;
   }
 
@@ -11279,7 +11304,8 @@ public class Viewer extends JmolViewer
    *
    * Java only.
    * 
-   * @param path set null to clear internal access only
+   * @param path
+   *        set null to clear internal access only
    */
   public void setAccessInternal(String path) {
     if (isJS)
@@ -11289,11 +11315,12 @@ public class Viewer extends JmolViewer
     } else if (access != ACCESS.INTERNAL) {
       access = ACCESS.INTERNAL;
     }
-    internalAccessPath = path;      
+    internalAccessPath = path;
   }
 
   public int getItaNumberFor(String name) {
-    String s = (String) getSymStatic().getSpaceGroupInfoObj("itaNumber", name, false, false);
+    String s = (String) getSymStatic().getSpaceGroupInfoObj("itaNumber", name,
+        false, false);
     return (s == null ? -1 : PT.parseInt(s));
   }
 
@@ -11303,7 +11330,7 @@ public class Viewer extends JmolViewer
 
   public P3d getUnitCellCenter() {
     SymmetryInterface uc = getCurrentUnitCell();
-    return (uc == null ? new P3d() : uc.getUnitCellCenter());      
+    return (uc == null ? new P3d() : uc.getUnitCellCenter());
   }
 
   public void setUnitCellAtomIndex(int iAtom) {
@@ -11318,7 +11345,7 @@ public class Viewer extends JmolViewer
   }
 
   public String writeBinaryFile(String fname, byte[] bytes) {
-    
+
     Map<String, Object> params = new Hashtable<>();
     Lst<Object> lst = new Lst<>();
     lst.addLast(bytes);
