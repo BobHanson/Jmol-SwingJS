@@ -170,7 +170,7 @@ if ($call == "getInfoFromDatabase") {
 ob_start();
 
  if ($myerror != "") {
-   $output = $myerror;
+   $output = htmlspecialchars($myerror);
  } else { 
    if ($imagedata != "") {
   	$output = $imagedata;
