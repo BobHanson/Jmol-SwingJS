@@ -1,5 +1,6 @@
 package org.jmol.inchi;
 
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -78,6 +79,7 @@ class InchiToSmilesConverter {
       int bt = getJmolBondType(provider.getInchiBondType());
       SmilesAtom sa1 = listSmiles.get(provider.getIndexOriginAtom()); //getIndexOriginAtom produces the index of the origin atom of the bond
       SmilesAtom sa2 = listSmiles.get(provider.getIndexTargetAtom()); //getIndexTargetAtom produces the index of the target atom of the bond
+      System.out.println(provider.getIndexOriginAtom() + "target" + provider.getIndexTargetAtom());
       SmilesBond sb = new SmilesBond(sa1, sa2, bt, false);
       sb.index = nb++;
     }
@@ -93,6 +95,7 @@ class InchiToSmilesConverter {
     for (int i = provider.getNumStereo0D(); --i >= 0;) {
       provider.setStereo0D(i);
       int[] neighbors = provider.getNeighbors(); //an is an array of JniInchiAtoms that gets the neighbors of the current stereo0D
+      System.out.println(Arrays.toString(neighbors));
       if (neighbors.length != 4)
         continue;
       
