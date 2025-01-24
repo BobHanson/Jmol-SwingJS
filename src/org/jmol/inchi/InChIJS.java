@@ -101,7 +101,7 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
           Object json = null;
           /**
            * @j2sNative
-           *  json = (Jmol.modelFromInchi ? JSON.parse(Jmol.modelFromInchi(molData)).model : "");
+           *  json = (Jmol.modelFromInchi ? JSON.parse(Jmol.modelFromInchi(molData).model) : "");
            */{}
            // "getStructure" is just a debugging method 
            // to see the exposed InChI structure in string form
@@ -296,7 +296,7 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
   public int[] getNeighbors() {
     /**
      * @j2sNative
-     * return this.stereo0d.neighbors;
+     * return this.thisStereo.neighbors;
      */{return null;}
   }
 
