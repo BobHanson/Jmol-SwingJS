@@ -18,19 +18,13 @@
  */
 package org.jmol.inchi;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import org.jmol.api.JmolInChI;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.PT;
-import net.sf.jniinchi.JniInchiAtom;
-import net.sf.jniinchi.JniInchiInputInchi;
-import net.sf.jniinchi.JniInchiWrapper;
 
 /**
  * This class adapts Richard Apodaca's 2020 molfile-to-inchi LLVM-derived Web Assembly 
@@ -53,18 +47,15 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
 
   static {
     @SuppressWarnings("unused")
-    String wasmPath = "/_WASM";
-    @SuppressWarnings("unused")
     String es6Path = "/_ES6";
     try {
       /**
-       * We pass into molfile-to-inchi.js app.inchiPath for the fetch of molfile-to-inchi.wasm
-       * but for some reason, the import() path is one directory off from the fetch() pathin J2S
+       * We pass into inchi-web-SwingJS.js
        * 
        * @j2sNative 
        *            var j2sPath = Jmol._applets.master._j2sFullPath;
        *            //
-       *            Jmol.inchiPath = j2sPath + wasmPath;
+       *            Jmol.inchiPath = j2sPath + es6Path;
        *            //
        *            var importPath = j2sPath + es6Path;
        *            //
