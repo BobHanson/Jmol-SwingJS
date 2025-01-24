@@ -18,7 +18,9 @@
  */
 package org.jmol.inchi;
 
-import org.jmol.api.JmolInChI;
+import java.util.List;
+import java.util.Map;
+
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
@@ -41,22 +43,19 @@ import javajs.util.PT;
  * 
  * 
  */
-public class InChIJS implements JmolInChI {
+public class InChIJS extends InchiJmol implements InChIStructureProvider {
 
   static {
-    @SuppressWarnings("unused")
-    String wasmPath = "/_WASM";
     @SuppressWarnings("unused")
     String es6Path = "/_ES6";
     try {
       /**
-       * We pass into molfile-to-inchi.js app.inchiPath for the fetch of molfile-to-inchi.wasm
-       * but for some reason, the import() path is one directory off from the fetch() pathin J2S
+       * We pass into inchi-web-SwingJS.js
        * 
        * @j2sNative 
        *            var j2sPath = Jmol._applets.master._j2sFullPath;
        *            //
-       *            Jmol.inchiPath = j2sPath + wasmPath;
+       *            Jmol.inchiPath = j2sPath + es6Path;
        *            //
        *            var importPath = j2sPath + es6Path;
        *            //
@@ -81,17 +80,29 @@ public class InChIJS implements JmolInChI {
     try {
       if (options == null)
         options = "";
+      options = setParameters(options, molData, atoms, vwr);
       options = PT.rep(PT.rep(options.replace('-',' '), "  ", " ").trim(), " ", " -").toLowerCase();
       if (options.length() > 0)
         options = "-" + options;
       if (molData == null)
         molData = vwr.getModelExtract(atoms,  false,  false, "MOL");
+      
       if (molData instanceof String && ((String) molData).startsWith("InChI=")) {
+        if(getSmiles || getInchiModel){
+          Object json = null;
+          /**
+           * @j2sNative
+           *  json = (Jmol.modelFromInchi ? JSON.parse(Jmol.modelFromInchi(molData).model) : "");
+           */{}
+           // "getStructure" is just a debugging method 
+           // to see the exposed InChI structure in string form
+           return (getSmiles ? getSmiles(vwr, json, smilesOptions)
+               : "");
+        }
         /**
          * @j2sNative
-         *  ret = (Jmol.inchiToInchiKey ? Jmol.inchiToInchiKey(molData) : "");
+         *  ret = (Jmol.inchikeyFromInchi ? Jmol.inchikeyFromInchi(molData).inchikey : "");
          */{}
-
       } else {
         boolean haveKey = (options.indexOf("key") >= 0);
         if (haveKey) {
@@ -99,7 +110,7 @@ public class InChIJS implements JmolInChI {
         }
         /**
          * @j2sNative
-         *  ret = (Jmol.molfileToInChI ? Jmol.molfileToInChI(molData, options) : "");
+         *  ret = (Jmol.inchiFromMolfile ? Jmol.inchiFromMolfile(molData, options).inchi : "");
          */{}
       }
     } catch (Throwable e) {
@@ -114,6 +125,170 @@ public class InChIJS implements JmolInChI {
     }
     return ret;
   }
+  
+  private Object json;
+  
+  //all javascript maps and arrays, only accessible through j2sNative.
+  List<Map<String,Object>> atoms,bonds,stereo0d;
+  private Map<String,Object> thisAtom;
+  private Map<String,Object> thisBond;
+  private Map<String,Object> thisStereo;
 
+  private String getSmiles(Viewer vwr, Object json, String smilesOptions) {
+    this.json = json;
+    getAtomList();
+    return new InchiToSmilesConverter(this).getSmiles(vwr, smilesOptions);
+  }
+  private void getAtomList() {
+    /**
+     * @j2sNative
+     * this.atoms = this.json.atoms;
+     * this.bonds = this.json.bonds;
+     * this.stereo0d = this.json.stereo0d;
+     */{}
+  }
+  private int getInt(Map<String, Object> map, String name, int defaultValue) {
+    /**
+     * @j2sNative
+     * var val = map[name];
+     * if (val || val == 0) return val;
+     */{}
+    return defaultValue;
+  }
+  private double getDouble(Map<String, Object> map, String name, double defaultValue) {
+    /**
+     * @j2sNative
+     * var val = map[name];
+     * if (val || val == 0) return val;
+     */{}
+    return defaultValue;
+  }
+  private String getString(Map<String, Object> map, String name, String defaultValue) {
+    /**
+     * @j2sNative
+     * var val = map[name];
+     * if (val || val == "") return val;
+     */{}
+    return defaultValue;
+  }
+  
+  @Override
+  public String getElementType() {
+    return getString(thisAtom, "elname", "");
+  }
+
+  @Override
+  public int getNumAtoms() {
+    /**
+     * @j2sNative
+     * return this.atoms.length;
+     */{return 0;}
+  }
+
+  @Override
+  public int getNumBonds() {
+    /**
+     * @j2sNative
+     * return this.bonds.length;
+     */{return 0;}
+  }
+
+  @Override
+  public int getImplicitH() {
+    return getInt(thisAtom, "implicitH", 0);
+  }
+
+  @Override
+  public int getCharge() {
+    return getInt(thisAtom, "charge", 0);
+  }
+
+  @Override
+  public double getX() {
+    return getDouble(thisAtom, "x", 0);
+  }
+
+  @Override
+  public double getY() {
+    return getDouble(thisAtom, "y", 0);
+  }
+
+  @Override
+  public double getZ() {
+    return getDouble(thisAtom, "z", 0);
+  }
+
+  @Override
+  public InChIStructureProvider setAtom(int i) {
+    /**
+     * @j2sNative
+     * this.thisAtom = this.atoms[i];
+     */{}
+    return this;
+  }
+
+  @Override
+  public InChIStructureProvider setBond(int i) {
+    /**
+     * @j2sNative
+     * this.thisBond = this.bonds[i];
+     */{}
+    return this;
+  }
+
+  @Override
+  public InChIStructureProvider setStereo0D(int i) {
+    /**
+     * @j2sNative
+     * this.thisStereo = this.stereo0d[i];
+     */{}
+    return this;
+  }
+
+  @Override
+  public int getIndexOriginAtom() {
+    return getInt(thisBond, "originAtom", 0);
+  }
+
+  @Override
+  public int getIndexTargetAtom() {
+    return getInt(thisBond, "targetAtom", 0);
+  }
+
+  @Override
+  public String getInchiBondType() {
+    return getString(thisBond, "type", "");
+  }
+
+  @Override
+  public String getParity() {
+    return getString(thisStereo, "parity", "");
+  }
+
+  @Override
+  public String getStereoType() {
+    return getString(thisStereo, "stereoType", "");
+  }
+
+  @Override
+  public int getNumStereo0D() {
+    /**
+     * @j2sNative
+     * return this.stereo0d.length;
+     */{return 0;}
+  }
+
+  @Override
+  public int getCenterAtom() {
+    return getInt(thisStereo, "centralAtom", -1);
+  }
+
+  @Override
+  public int[] getNeighbors() {
+    /**
+     * @j2sNative
+     * return this.thisStereo.neighbors;
+     */{return null;}
+  }
 
 }

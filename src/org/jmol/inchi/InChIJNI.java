@@ -61,9 +61,9 @@ import net.sf.jniinchi.JniInchiStereo0D;
 import net.sf.jniinchi.JniInchiStructure;
 import net.sf.jniinchi.JniInchiWrapper;
 
-public class InChIJNI implements JmolInChI, InChIStructureProvider {
+public class InChIJNI extends InchiJmol implements InChIStructureProvider {
 
-  private JniInchiOutputStructure struc;
+  private JniInchiOutputStructure inchiModel;
   public InChIJNI() {
     // for dynamic loading
   }
@@ -75,44 +75,17 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
         return "";
       if (options == null)
         options = "";
-      String inchi = null;
-      String lc = options.toLowerCase();
-      boolean getSmiles = (lc.indexOf("smiles") == 0);
-      boolean getStructure = (lc.indexOf("structure") >= 0);
-      boolean getKey = (lc.indexOf("key") >= 0);
-      String smilesOptions = (getSmiles ? options : null);
-      if (lc.startsWith("structure/")) {
-        inchi = options.substring(10);
-        options = lc = "";
-      }
-      boolean inputInChI = (molData instanceof String && ((String) molData).startsWith("InChI="));
-           if (inputInChI) {
-        inchi = (String) molData;
-        if (getSmiles) {
-          options = lc.replace("structure", "");
-        }
-      } else {
-        options = lc;
-        if (getKey) {
-          options = options.replace("inchikey", "");
-          options = options.replace("key", "");
-        }
-
-        if (options.indexOf("fixedh?") >= 0) {
-          String fxd = getInchi(vwr, atoms, molData, options.replace('?', ' '));
-          options = PT.rep(options, "fixedh?", "");
-          String std = getInchi(vwr, atoms, molData, options);
-          inchi = (fxd != null && fxd.length() <= std.length() ? std : fxd);
-        } else {
+      options = setParameters(options, molData, atoms, vwr);
+      if(!fixedH && !inputInChI) {
           JniInchiInput in = new JniInchiInput(getSmiles ? "fixedh" : options);
-          JniInchiStructure struc;
+          JniInchiStructure inchiInputModel;
           if (atoms == null) {
-            in.setStructure(struc = newJniInchiStructure(vwr, molData));
+            in.setStructure(inchiInputModel = newJniInchiStructure(vwr, molData));
           } else {
-            in.setStructure(struc = newJniInchiStructureBS(vwr, atoms));
+            in.setStructure(inchiInputModel = newJniInchiStructureBS(vwr, atoms));
           }
-          if (getStructure) {
-            return toJSON(struc);
+          if (getInchiModel) {
+            return toJSON(inchiInputModel);
           }
           JniInchiOutput out = JniInchiWrapper.getInchi(in);
           String msg = out.getMessage();
@@ -120,14 +93,13 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
             System.err.println(msg);
           inchi = out.getInchi();
         }
-      }
-      if (getSmiles || getStructure) {
+      if (getSmiles || getInchiModel) {
         // "getStructure" is just a debugging method 
         // to see the exposed InChI structure in string form
-        struc = JniInchiWrapper
+        inchiModel = JniInchiWrapper
             .getStructureFromInchi(new JniInchiInputInchi(inchi));
         return (getSmiles ? getSmiles(vwr, smilesOptions)
-            : toJSON(struc));
+            : toJSON(inchiModel));
       }
       return (getKey ? JniInchiWrapper.getInchiKey(inchi).getKey() : inchi);
     } catch (Throwable e) {
@@ -399,24 +371,24 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
 
   private void getAtomList() {
     for (int i = getNumAtoms(); --i >= 0;) 
-      map.put(struc.getAtom(i), Integer.valueOf(i));
+      map.put(inchiModel.getAtom(i), Integer.valueOf(i));
   }
   
   @Override
   public int getNumAtoms() {
-    return struc.getNumAtoms();
+    return inchiModel.getNumAtoms();
   }
 
   
   @Override
   public InChIStructureProvider setAtom(int i) {
-    thisAtom = struc.getAtom(i);
+    thisAtom = inchiModel.getAtom(i);
     return this;
   }
 
   @Override
   public int getNumBonds() {
-    return struc.getNumBonds();
+    return inchiModel.getNumBonds();
   }
 
   @Override
@@ -431,7 +403,7 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
 
   @Override
   public InChIStructureProvider setBond(int i) {
-    thisBond = struc.getBond(i);
+    thisBond = inchiModel.getBond(i);
     return this;
   }
 
@@ -466,13 +438,13 @@ public class InChIJNI implements JmolInChI, InChIStructureProvider {
   }
   @Override
   public InChIStructureProvider setStereo0D(int i) {
-    thisStereo = struc.getStereo0D(i);
+    thisStereo = inchiModel.getStereo0D(i);
     return this;
   }
 
   @Override
   public int getNumStereo0D() {
-    return struc.getNumStereo0D();
+    return inchiModel.getNumStereo0D();
   }
 
   @Override
