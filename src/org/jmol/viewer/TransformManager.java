@@ -332,7 +332,7 @@ public class TransformManager {
     // the signs of both screen Y and screen Z in the end.
 
     if (matrixTemp3.setAsBallRotation(JC.radiansPerDegree, -yDeg, -xDeg))
-      applyRotation(matrixTemp3, false, bsAtoms, null, false, null, false);
+      applyRotation(matrixTemp3, false, bsAtoms, null, false, null, true);
   }
 
   public synchronized void rotateXRadians(double angleRadians, BS bsAtoms) {

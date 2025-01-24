@@ -866,7 +866,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         sdef = HEX_TO_RHOMB + sdef.substring(1);
       else if (sdef.equals("h;0,0,0"))
         sdef = RHOMB_TO_HEX + sdef.substring(1);
-      Symmetry symTemp = new Symmetry();
+      Symmetry symTemp = new Symmetry(); // no vwr here
       symTemp.setSpaceGroup(false);
       int i = symTemp.addSpaceGroupOperation("=" + sdef, 0);
       if (i < 0)

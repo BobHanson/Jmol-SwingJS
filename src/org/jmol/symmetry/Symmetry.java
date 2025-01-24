@@ -636,9 +636,7 @@ public class Symmetry implements SymmetryInterface {
     UnitCell uc = unitCell.getUnitCellMultiplied();
     if (uc == unitCell)
       return this;
-    Symmetry s = new Symmetry();
-    s.unitCell = uc;
-    return s;
+   return new Symmetry().setViewer(vwr);
   }
 
   @Override
@@ -793,7 +791,7 @@ public class Symmetry implements SymmetryInterface {
     }
     SymmetryInterface cellInfo = null;
     if (cellParams != null) {
-      cellInfo = new Symmetry().setUnitCellFromParams(cellParams, false,
+      cellInfo = new Symmetry().setViewer(vwr).setUnitCellFromParams(cellParams, false,
           Double.NaN);
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0,
@@ -2166,7 +2164,7 @@ public class Symmetry implements SymmetryInterface {
    * @param vwr
    */
   @Override
-  public SymmetryInterface setViewer(Viewer vwr) {
+  public Symmetry setViewer(Viewer vwr) {
     this.vwr = vwr;
     return this;
   }
@@ -2223,6 +2221,8 @@ public class Symmetry implements SymmetryInterface {
    */
   @Override
   public Atom getConstrainableEquivAtom(Atom a) {
+    if (vwr == null)
+      System.out.println("???");
     BS bsEquiv = vwr.ms.getSymmetryEquivAtoms(BSUtil.newAndSetBit(a.i), this, null);
     SymmetryOperation[] sgOps = getSymmetryOperations();
     // start with the specified atom

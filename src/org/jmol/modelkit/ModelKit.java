@@ -1442,8 +1442,8 @@ public class ModelKit {
       modelSyms = new SymmetryInterface[vwr.ms.mc];
       for (int imodel = modelSyms.length; --imodel >= 0;) {
         SymmetryInterface sym = vwr.ms.getUnitCell(imodel);
-        if (sym == null || sym.getSymmetryOperations() != null)
-          modelSyms[imodel] = sym;
+        if (sym != null && sym.getSymmetryOperations() != null)
+          modelSyms[imodel] = sym.setViewer(vwr);
       }
     }
     return (iatom < 0 ? null : modelSyms[modelIndex]);
