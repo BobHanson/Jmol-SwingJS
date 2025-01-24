@@ -101,7 +101,7 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
           Object json = null;
           /**
            * @j2sNative
-           *  json = (Jmol.modelFromInchi ? Jmol.modelFromInchi(molData).model : "");
+           *  json = (Jmol.modelFromInchi ? JSON.parse(Jmol.modelFromInchi(molData)).model : "");
            */{}
            // "getStructure" is just a debugging method 
            // to see the exposed InChI structure in string form
@@ -119,7 +119,7 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
         }
         /**
          * @j2sNative
-         *  ret = (Jmol.InchiFromMolfile ? Jmol.InchiFromMolfile(molData, options).inchi : "");
+         *  ret = (Jmol.inchiFromMolfile ? Jmol.inchiFromMolfile(molData, options).inchi : "");
          */{}
       }
     } catch (Throwable e) {
@@ -231,7 +231,7 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
   public InChIStructureProvider setAtom(int i) {
     /**
      * @j2sNative
-     * return this.atoms[i];
+     * this.thisAtom = this.atoms[i];
      */{}
     return this;
   }
@@ -240,7 +240,7 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
   public InChIStructureProvider setBond(int i) {
     /**
      * @j2sNative
-     * return this.bonds[i];
+     * this.thisBond = this.bonds[i];
      */{}
     return this;
   }
@@ -249,7 +249,7 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
   public InChIStructureProvider setStereo0D(int i) {
     /**
      * @j2sNative
-     * return this.stereo0d[i];
+     * this.thisStereo = this.stereo0d[i];
      */{}
     return this;
   }
