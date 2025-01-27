@@ -1,6 +1,5 @@
 package org.jmol.inchi;
 
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -9,15 +8,13 @@ import org.jmol.smiles.SmilesAtom;
 import org.jmol.smiles.SmilesBond;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
+import org.jmol.util.Logger;
 import org.jmol.util.SimpleNode;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
-//import net.sf.jniinchi.JniInchiAtom;
-import net.sf.jniinchi.INCHI_BOND_TYPE;
-import net.sf.jniinchi.JniInchiBond;
 
 class InchiToSmilesConverter {
   
@@ -28,6 +25,7 @@ class InchiToSmilesConverter {
 
   public InchiToSmilesConverter(InChIStructureProvider provider) {
     this.provider = provider;
+    provider.initializeModelForSmiles();
   }
 
   String getSmiles(Viewer vwr, String smilesOptions) {
@@ -67,19 +65,21 @@ class InchiToSmilesConverter {
       n.setIndex(na++);
       n.setCharge(provider.getCharge());
       n.setSymbol(provider.getElementType());
+      int m = provider.getIsotopicMass();
+      if (m > 0)
+        n.setAtomicMass(m);
       nh = provider.getImplicitH();
       for (int j = 0; j < nh; j++) {
         addH(atoms, n, nb++);
         na++;
       }
-      listSmiles.add(n);
+      listSmiles.addLast(n);
     }
     for (int i = 0; i < nBonds; i++) {
       provider.setBond(i);
       int bt = getJmolBondType(provider.getInchiBondType());
       SmilesAtom sa1 = listSmiles.get(provider.getIndexOriginAtom()); //getIndexOriginAtom produces the index of the origin atom of the bond
       SmilesAtom sa2 = listSmiles.get(provider.getIndexTargetAtom()); //getIndexTargetAtom produces the index of the target atom of the bond
-      System.out.println(provider.getIndexOriginAtom() + "target" + provider.getIndexTargetAtom());
       SmilesBond sb = new SmilesBond(sa1, sa2, bt, false);
       sb.index = nb++;
     }
@@ -95,15 +95,14 @@ class InchiToSmilesConverter {
     for (int i = provider.getNumStereo0D(); --i >= 0;) {
       provider.setStereo0D(i);
       int[] neighbors = provider.getNeighbors(); //an is an array of JniInchiAtoms that gets the neighbors of the current stereo0D
-      System.out.println(Arrays.toString(neighbors));
       if (neighbors.length != 4)
         continue;
       
       int centerAtom = provider.getCenterAtom(); //create central atom
-      int i0 = listSmiles.get(Integer.valueOf(neighbors[0])).getIndex();
-      int i1 = listSmiles.get(Integer.valueOf(neighbors[1])).getIndex();
-      int i2 = listSmiles.get(Integer.valueOf(neighbors[2])).getIndex();
-      int i3 = listSmiles.get(Integer.valueOf(neighbors[3])).getIndex();
+      int i0 = listSmiles.get(neighbors[0]).getIndex();
+      int i1 = listSmiles.get(neighbors[1]).getIndex();
+      int i2 = listSmiles.get(neighbors[2]).getIndex();
+      int i3 = listSmiles.get(neighbors[3]).getIndex();
       
       boolean isEven = (provider.getParity().equals("EVEN")); //converted to String from INCHI_STEREOTYPE
       String type = provider.getStereoType();
@@ -137,8 +136,10 @@ class InchiToSmilesConverter {
     }
     try {
       SmilesMatcherInterface m = vwr.getSmilesMatcher();
-      return m.getSmiles(aatoms, na, BSUtil.newBitSet2(0, na), smilesOptions,
+      String smiles = m.getSmiles(aatoms, na, BSUtil.newBitSet2(0, na), smilesOptions,
           JC.SMILES_TYPE_SMILES);
+      Logger.info("InchiToSmiles: " + smiles);
+      return smiles;
     } catch (Exception e) {
       e.printStackTrace();
       return "";

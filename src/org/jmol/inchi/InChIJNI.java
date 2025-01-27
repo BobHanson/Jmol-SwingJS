@@ -18,10 +18,6 @@
  */
 package org.jmol.inchi;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -30,27 +26,16 @@ import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterAtomIterator;
 import org.jmol.api.JmolAdapterBondIterator;
-import org.jmol.api.JmolInChI;
-import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
-import org.jmol.smiles.SmilesAtom;
-import org.jmol.smiles.SmilesBond;
-import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
-import org.jmol.util.SimpleNode;
-import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
-import javajs.util.Lst;
 import javajs.util.P3d;
-import javajs.util.PT;
 import net.sf.jniinchi.INCHI_BOND_STEREO;
 import net.sf.jniinchi.INCHI_BOND_TYPE;
-import net.sf.jniinchi.INCHI_PARITY;
-import net.sf.jniinchi.INCHI_STEREOTYPE;
 import net.sf.jniinchi.JniInchiAtom;
 import net.sf.jniinchi.JniInchiBond;
 import net.sf.jniinchi.JniInchiInput;
@@ -61,6 +46,18 @@ import net.sf.jniinchi.JniInchiStereo0D;
 import net.sf.jniinchi.JniInchiStructure;
 import net.sf.jniinchi.JniInchiWrapper;
 
+/**
+ * Interface with inchi.c via JNI-InChI. 
+ * 
+ * For MOL file data to InChi, we first create a Jmol model from 
+ * the mol file data using Jmol's adapter, and then use that
+ * to create a JNI-InChI model.
+ * 
+ * For InChI to SMILES, we use JNI-InChI to read InChI's input structure, 
+ * via JNI-InChI.
+ * 
+ * 
+ */
 public class InChIJNI extends InchiJmol implements InChIStructureProvider {
 
   private JniInchiOutputStructure inchiModel;
@@ -71,13 +68,11 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
   @Override
   public String getInchi(Viewer vwr, BS atoms, Object molData, String options) {
     try {
-      if (atoms == null ? molData == null : atoms.isEmpty())
-        return "";
-      if (options == null)
-        options = "";
       options = setParameters(options, molData, atoms, vwr);
+      if (options == null)
+        return "";
       if(!fixedH && !inputInChI) {
-          JniInchiInput in = new JniInchiInput(getSmiles ? "fixedh" : options);
+          JniInchiInput in = new JniInchiInput(doGetSmiles ? "fixedh" : options);
           JniInchiStructure inchiInputModel;
           if (atoms == null) {
             in.setStructure(inchiInputModel = newJniInchiStructure(vwr, molData));
@@ -93,19 +88,17 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
             System.err.println(msg);
           inchi = out.getInchi();
         }
-      if (getSmiles || getInchiModel) {
+      if (doGetSmiles || getInchiModel) {
         // "getStructure" is just a debugging method 
         // to see the exposed InChI structure in string form
         inchiModel = JniInchiWrapper
             .getStructureFromInchi(new JniInchiInputInchi(inchi));
-        return (getSmiles ? getSmiles(vwr, smilesOptions)
+        return (doGetSmiles ? getSmiles(vwr, smilesOptions)
             : toJSON(inchiModel));
       }
       return (getKey ? JniInchiWrapper.getInchiKey(inchi).getKey() : inchi);
     } catch (Throwable e) {
-
       System.out.println(e);
-
       if (e.getMessage().indexOf("ption") >= 0)
         System.out.println(e.getMessage() + ": " + options.toLowerCase()
             + "\n See https://www.inchi-trust.org/download/104/inchi-faq.pdf for valid options");
@@ -116,7 +109,6 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
   }
 
   private String getSmiles(Viewer vwr, String smilesOptions) {
-    getAtomList();
     return new InchiToSmilesConverter(this).getSmiles(vwr, smilesOptions);
   }
 
@@ -143,8 +135,6 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
         sym = "H"; // in case this is D
       }
       mol.addAtom(atoms[pt] = new JniInchiAtom(a.x, a.y, a.z, sym));
-      //System.out.println(i + " " + sym + " " + a);
-
       atoms[pt].setCharge(a.getFormalCharge());
       if (iso > 0)
         atoms[pt].setIsotopicMass(iso);
@@ -164,11 +154,6 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
         INCHI_BOND_STEREO stereo = getInChIStereo(bond.getBondType());
         mol.addBond(new JniInchiBond(atoms[map[atom1]],
             atoms[map[atom2]], order, stereo));
-        
-        
-        //System.out.println(i + " " + atom1 + " " + atom2 + " " + order + " " + stereo);
-
-        
       }
     }
     return mol;
@@ -185,24 +170,15 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
    */
   private static JniInchiStructure newJniInchiStructure(Viewer vwr,
                                                         Object molData) {
-    JniInchiStructure mol = new JniInchiStructure();
-    Object r = null;
     try {
-      if (molData instanceof String) {
-        r = new BufferedReader(new StringReader((String) molData));
-      } else if (molData instanceof InputStream) {
-        r = molData;
-      }
-      Map<String, Object> htParams = new Hashtable<String, Object>();
+      JniInchiStructure mol = new JniInchiStructure();
       JmolAdapter adapter = vwr.getModelAdapter();
-      Object atomSetReader = adapter.getAtomSetCollectionReader("String", null,
-          r, htParams);
-      if (atomSetReader instanceof String) {
-        System.err.println("InChIJNI could not read molData");
+      Object o = adapter.getAtomSetCollectionInline(molData, null);
+      if (o == null || o instanceof String) {
+        System.err.println("InChIJNI could not read molData " + o);
         return null;
       }
-      AtomSetCollection asc = (AtomSetCollection) adapter
-          .getAtomSetCollection(atomSetReader);
+      AtomSetCollection asc = (AtomSetCollection) o;
       JmolAdapterAtomIterator ai = adapter.getAtomIterator(asc);
       JmolAdapterBondIterator bi = adapter.getBondIterator(asc);
       JniInchiAtom[] atoms = new JniInchiAtom[asc.getAtomSetAtomCount(0)];
@@ -216,9 +192,11 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
               + " is not a valid element");
           return null;
         }
+        int isotopeMass = Elements.getIsotopeNumber(atno);
+        atno = Elements.getElementNumber(atno);
         String sym = Elements.elementSymbolFromNumber(atno);
         JniInchiAtom a = new JniInchiAtom(p.x, p.y, p.z, sym);
-        
+        a.setIsotopicMass(isotopeMass);
         a.setCharge(ai.getFormalCharge());
         mol.addAtom(a);
         atomMap.put(ai.getUniqueID(), Integer.valueOf(n));
@@ -249,20 +227,12 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
           nb++;
         }
       }
+      return mol;
     } catch (Throwable t) {
       t.printStackTrace();
       System.err.println(t.toString());
-    } finally {
-      try {
-        if (r instanceof BufferedReader) {
-          ((BufferedReader) r).close();
-        } else {
-          ((InputStream) r).close();
-        }
-      } catch (IOException e) {
-      }
     }
-    return mol;
+    return null;
   }
 
   private static INCHI_BOND_STEREO getInChIStereo(int jmolOrder) {
@@ -301,66 +271,117 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
     int nb = mol.getNumBonds();
     int ns = mol.getNumStereo0D();
     Map<JniInchiAtom, Integer> mapAtoms = new HashMap<>();
-    String s = "{\"atoms\":[\n";
-    String sep = "";
+    boolean haveXYZ = false;
     for (int i = 0; i < na; i++) {
       JniInchiAtom a = mol.getAtom(i);
-      mapAtoms.put(a,  Integer.valueOf(i));
+      if (a.getX() != 0 || a.getY() != 0 || a.getZ() != 0) {
+        haveXYZ = true;
+        break;
+      }
+    }
+    String s = "{\"atoms\":[\n";
+    for (int i = 0; i < na; i++) {
+      JniInchiAtom a = mol.getAtom(i);
+      mapAtoms.put(a, Integer.valueOf(i));
       if (i > 0)
         s += ",\n";
-      s += "{\n";
-      s += toJSON("index", Integer.valueOf(i), ",");
-      s += toJSON("elementType", a.getElementType(), ",");
-      s += toJSON("charge", a.getCharge(), ",");
-      s += toJSON("isotopeMass", a.getIsotopicMass(), ",");
-      s += toJSON("implicitH", a.getImplicitH(), ",");
-      s += toJSON("radical", a.getRadical(), ",");
-      s += toJSON("x", a.getX(), ",");
-      s += toJSON("y", a.getY(), ",");
-      s += toJSON("z", a.getZ(), ",");
-      s += toJSON("implicitDeuterium", a.getImplicitDeuterium(), ",");
-      s += toJSON("implicitProtium", a.getImplicitProtium(), ",");
-      s += toJSON("implicitTritium", a.getImplicitTritium(), "");
+      s += "{";
+      s += toJSONInt("index", Integer.valueOf(i), "");
+      if (haveXYZ) {
+        s += toJSONDouble("x", a.getX(), ",");
+        s += toJSONDouble("y", a.getY(), ",");
+        s += toJSONDouble("z", a.getZ(), ",");
+      }
+      s += toJSONNotNone("radical", a.getRadical(), ",");
+      String sym = a.getElementType();
+      s += toJSONNotNone("elname", sym, ",");
+      s += toJSONNonZero("charge", a.getCharge(), ",");
+      s += toJSONNonZero("isotopeMass", a.getIsotopicMass(), ",");
+      if (a.getImplicitH() > 0)
+        s += toJSONNonZero("implicitH", a.getImplicitH(), ",");
+      s += toJSONNonZero("implicitDeuterium", a.getImplicitDeuterium(), ",");
+      s += toJSONNonZero("implicitProtium", a.getImplicitProtium(), ",");
+      s += toJSONNonZero("implicitTritium", a.getImplicitTritium(), ",");
       s += "}";
     }
     s += "\n],\n\"bonds\":[\n";
-    
+
     for (int i = 0; i < nb; i++) {
       if (i > 0)
         s += ",\n";
-      s += "{\n";
+      s += "{";
       JniInchiBond b = mol.getBond(i);
-      s += toJSON("originAtom", mapAtoms.get(b.getOriginAtom()), ",");
-      s += toJSON("targetAtom", mapAtoms.get(b.getTargetAtom()), ",");
-      s += toJSON("bondType", b.getBondType() , ",");
-      s += toJSON("bondStereo", b.getBondStereo(), "");
+      s += toJSONInt("originAtom", mapAtoms.get(b.getOriginAtom()).intValue(),
+          "");
+      s += toJSONInt("targetAtom", mapAtoms.get(b.getTargetAtom()).intValue(),
+          ",");
+      String bt = b.getBondType().toString();
+      if (!bt.equals("SINGLE"))
+        s += toJSONString("type", bt, ",");
+      s += toJSONNotNone("stereo", b.getBondStereo(), ",");
       s += "}";
     }
-    s += "\n],\n\"stereo\":[\n";
-    for (int i = 0; i < ns; i++) {
-      if (i > 0)
-        s += ",\n";
-      s += "{\n";
-      JniInchiStereo0D d = mol.getStereo0D(i);
-      s += toJSON("centralAtomID",mapAtoms.get(d.getCentralAtom()), ",");
-      s += toJSON("debugString",d.getDebugString(), ",");
-      s += toJSON("disconnectedParity",d.getDisconnectedParity(), ",");
-      s += toJSON("parity",d.getParity(), ",");
-      s += toJSON("stereoType",d.getStereoType(), ",");
-      JniInchiAtom[] an = d.getNeighbors();
-      int[] nbs = new int[an.length];
-      for (int j = 0; j < an.length; j++) {
-        nbs[j] = mapAtoms.get(d.getNeighbor(j)).intValue();
+    s += "\n]";
+    if (ns > 0) {
+      s += ",\n\"stereo\":[\n";
+      for (int i = 0; i < ns; i++) {
+        if (i > 0)
+          s += ",\n";
+        s += "{";
+        JniInchiStereo0D d = mol.getStereo0D(i);
+        JniInchiAtom a = d.getCentralAtom();
+        s += toJSONNotNone("parity", d.getParity(), "");
+        s += toJSONNotNone("type", d.getStereoType(), ",");
+        if (a != null)
+          s += toJSONInt("centralAtom", mapAtoms.get(a).intValue(), ",");
+        //s += toJSON("debugString",d.getDebugString(), ",");
+        // never implemented? s += toJSON("disconnectedParity",d.getDisconnectedParity(), ",");
+        JniInchiAtom[] an = d.getNeighbors();
+        int[] nbs = new int[an.length];
+        for (int j = 0; j < an.length; j++) {
+          nbs[j] = mapAtoms.get(d.getNeighbor(j)).intValue();
+        }
+        s += toJSONArray("neighbors", nbs, ",");
+        s += "}";
       }
-      s += toJSON("neighbors",nbs, "");
-      s += "}";
+      s += "\n]";
     }
-    s += "\n]}\n";
+    s += "}";
+    System.out.println(s);
     return s;
   }
 
-  private static String toJSON(String key, Object val, String term) {
-    return PT.toJSON(key, val) +  term + "\n";
+  private static String toJSONArray(String key, int[] val, String term) {
+    String s = term  + "\"" + key + "\":[" + val[0];
+    for (int i = 1; i < val.length; i++) {
+      s += "," + val[i];
+    }
+    return s + "]";
+  }
+
+  private static String toJSONNonZero(String key, int val, String term) {
+    return (val == 0 ? "" : toJSONInt(key, val, term));
+  }
+
+  private static String toJSONInt(String key, int val, String term) {
+    return term + "\"" + key + "\":" + val;
+  }
+
+  private static String toJSONDouble(String key, double val, String term) {
+    String s = "" + (val + 0.00000001);
+    s = s.substring(0, s.indexOf(".") + 5);
+    int n = s.length();
+    while (s.charAt(--n) == '0') {}
+    s = s.substring(0, n + 1);
+    return term + "\"" + key + "\":" + s;
+  }
+
+  private static String toJSONString(String key, String val, String term) {
+    return term + "\"" + key + "\":\"" + val + "\"";
+  }
+  private static String toJSONNotNone(String key, Object val, String term) {
+    String s = val.toString();
+    return ("NONE".equals(s) ? "" : term + "\"" + key + "\":\"" + s + "\"");
   }
 
   private Map<JniInchiAtom, Integer> map = new Hashtable<JniInchiAtom, Integer>();
@@ -369,10 +390,13 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
   private JniInchiBond thisBond;
   private JniInchiStereo0D thisStereo;
 
-  private void getAtomList() {
+  @Override
+  public void initializeModelForSmiles() {
     for (int i = getNumAtoms(); --i >= 0;) 
       map.put(inchiModel.getAtom(i), Integer.valueOf(i));
   }
+
+  /// atoms ///
   
   @Override
   public int getNumAtoms() {
@@ -387,24 +411,13 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
   }
 
   @Override
-  public int getNumBonds() {
-    return inchiModel.getNumBonds();
-  }
-
-  @Override
-  public int getImplicitH() {
-    return thisAtom.getImplicitH();
+  public String getElementType() {
+    return thisAtom.getElementType();
   }
 
   @Override
   public double getX() {
     return thisAtom.getX();
-  }
-
-  @Override
-  public InChIStructureProvider setBond(int i) {
-    thisBond = inchiModel.getBond(i);
-    return this;
   }
 
   @Override
@@ -423,9 +436,29 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
   }
 
   @Override
-  public String getElementType() {
-    return thisAtom.getElementType();
+  public int getIsotopicMass() {
+    return getActualMass(getElementType(), thisAtom.getIsotopicMass());
   }
+
+  @Override
+  public int getImplicitH() {
+    return thisAtom.getImplicitH();
+  }
+
+  
+  /// bonds ///
+  
+  @Override
+  public int getNumBonds() {
+    return inchiModel.getNumBonds();
+  }
+
+  @Override
+  public InChIStructureProvider setBond(int i) {
+    thisBond = inchiModel.getBond(i);
+    return this;
+  }
+
 
   @Override
   public int getIndexOriginAtom() {
@@ -436,16 +469,6 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
   public int getIndexTargetAtom() {
     return map.get(thisBond.getTargetAtom()).intValue();
   }
-  @Override
-  public InChIStructureProvider setStereo0D(int i) {
-    thisStereo = inchiModel.getStereo0D(i);
-    return this;
-  }
-
-  @Override
-  public int getNumStereo0D() {
-    return inchiModel.getNumStereo0D();
-  }
 
   @Override
   public String getInchiBondType() {
@@ -453,6 +476,19 @@ public class InChIJNI extends InchiJmol implements InChIStructureProvider {
     return type.name();
   }
 
+  /// Stereo ///
+  
+  @Override
+  public int getNumStereo0D() {
+    return inchiModel.getNumStereo0D();
+  }
+
+  @Override
+  public InChIStructureProvider setStereo0D(int i) {
+    thisStereo = inchiModel.getStereo0D(i);
+    return this;
+  }
+    
   @Override
   public int[] getNeighbors() {
     JniInchiAtom[] an = thisStereo.getNeighbors();

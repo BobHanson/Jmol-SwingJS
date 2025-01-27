@@ -28,6 +28,8 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.api.Interface;
@@ -113,6 +115,8 @@ public class SmarterJmolAdapter extends JmolAdapter {
    */
   public static Object staticGetAtomSetCollectionReader(String name, String type,
                                    Object bufferedReader, Map<String, Object> htParams) {
+    if (htParams == null)
+      htParams = new Hashtable<String, Object>();
     try {
       Object ret = Resolver.getAtomCollectionReader(name, type,
           bufferedReader, htParams, -1);
@@ -498,5 +502,44 @@ public class SmarterJmolAdapter extends JmolAdapter {
       else
         ((GenericBinaryDocument) bufferedReader).close();
   }
+
+  @Override
+  /**
+   * 
+   * @param adapter
+   *        the adapter to be used; may be null
+   * @param molData
+   *        a String or an InputStream
+   * @return an AtomSetCollection or an error string
+   */
+  public Object getAtomSetCollectionInline(Object molData, Map<String, Object> htParams) {
+    Object r = null;
+    try {
+      if (molData instanceof String) {
+        r = new BufferedReader(new StringReader((String) molData));
+      } else if (molData instanceof InputStream) {
+        r = molData;
+      } else {
+        return null;
+      }
+      // create a Jmol model from a MOL file data using Jmol's MOL file reader
+      Object atomSetReader = getAtomSetCollectionReader("String", null,
+          r, null);
+      if (atomSetReader instanceof String) {
+        return atomSetReader;
+      }
+      return getAtomSetCollection(atomSetReader);
+    } finally {
+      try {
+        if (r instanceof BufferedReader) {
+          ((BufferedReader) r).close();
+        } else {
+          ((InputStream) r).close();
+        }
+      } catch (IOException e) {
+      }
+    }
+  }
+
 
 }

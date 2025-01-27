@@ -53,7 +53,6 @@ import org.jmol.util.BoxInfo;
 import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.util.Escape;
-// future ref import org.jmol.util.Geodesic;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import org.jmol.util.Point3fi;
@@ -474,20 +473,12 @@ public class ModelSet extends BondCollection {
     return closestIndex;
   }
 
-  /*
-  private Map userProperties;
-
-  void putUserProperty(String name, Object property) {
-    if (userProperties == null)
-      userProperties = new Hashtable();
-    if (property == null)
-      userProperties.remove(name);
-    else
-      userProperties.put(name, property);
-  }
-  */
-
   ///////// atom and shape selecting /////////
+
+  public String calculatePointGroup(BS bsAtoms, P3d center) {
+    return (String) calculatePointGroupForFirstModel(bsAtoms, false,
+        false, null, 0, 0, null, center, null);
+  }
 
   @SuppressWarnings("unchecked")
   public Map<String, Object> getPointGroupInfo(BS bsAtoms) {
@@ -737,7 +728,6 @@ public class ModelSet extends BondCollection {
     boolean allOrderly = true;
     boolean isOneOfSeveral = false;
     BS files = new BS();
-    System.out.println("ModelSet deleting ZAP???");
     int firstAtom = bsAtomsToDelete.nextSetBit(0);
     for (int i = 0; i < mc; i++) {
       Model m = am[i];
@@ -1038,7 +1028,6 @@ public class ModelSet extends BondCollection {
       uc = unitCells[modelIndex];
     if (uc != null) {
       if (returnCage) {
-//        uc.setViewer(vwr);
         int cai = vwr.getUnitCellAtomIndex();
         if (cai > 0)
           uc = getUnitCellForAtom(cai);
@@ -2176,7 +2165,7 @@ public class ModelSet extends BondCollection {
   /**
    * Note that this method returns all atoms, included deleted ones. If you
    * don't want deleted atoms, then use
-   * vwr.getModelUndeletedAtomBitSet(modelIndex, TRUE)
+   * vwr.getModelAtomBitSetUndeleted(modelIndex, TRUE)
    * 
    * @param modelIndex
    * @param asCopy
@@ -2318,7 +2307,6 @@ public class ModelSet extends BondCollection {
       // select cell=1500500500
       bs = new BS();
       P3d pt = (P3d) specInfo;
-
       SymmetryInterface uc = vwr.getSymTemp();
       for (int mi = -1, i = ac; --i >= 0;) {
         if (isDeleted(at[i]))
@@ -4821,15 +4809,6 @@ public class ModelSet extends BondCollection {
       }
   }
   
-  public String calculatePointGroup(BS bsAtoms) {
-    return (String) calculatePointGroupForFirstModel(bsAtoms, false,
-        false, null, 0, 0, null, null, null);
-  }
-
-  public String calculatePointGroup(BS bsAtoms, P3d center) {
-    return (String) calculatePointGroupForFirstModel(bsAtoms, false,
-        false, null, 0, 0, null, center, null);
-  }
 
 }
 

@@ -27,12 +27,21 @@ import javajs.util.BS;
 import javajs.util.PT;
 
 /**
- * This class adapts Richard Apodaca's 2020 molfile-to-inchi LLVM-derived Web Assembly 
- * implementation of IUPAC InChI v. 1.05. 
+ * This class implements inchi-web.wasm from InChI-SwingJS, which is adapted
+ * from https://github.com/IUPAC-InChI/InChI-Web-Demo by Bob Hanson and Josh
+ * Charlton 2025.01.23-2025.01.24.
  * 
- * see https://depth-first.com/articles/2020/03/02/compiling-inchi-to-webassembly-part-2-from-molfile-to-inchi/
+ * In the case of a Jmol model for mdel to InChI, we first generate MOL file
+ * data.
  * 
- * Note that this initialiation is asynchronous. One has to either use 
+ * For InChI to SMILES, we use the inchi-web.c method model_from_inchi() that we
+ * developed with the assistance of Frank Lange.
+ * 
+ * The class originally adapted Richard Apodaca's 2020 molfile-to-inchi
+ * LLVM-derived Web Assembly implementation of IUPAC InChI v. 1.05. see
+ * https://depth-first.com/articles/2020/03/02/compiling-inchi-to-webassembly-part-2-from-molfile-to-inchi/
+ * 
+ * Note that this initialiation is asynchronous. One has to either use
  * 
  * sync inchi
  * 
@@ -40,26 +49,17 @@ import javajs.util.PT;
  * 
  * x = {none}.find("inchi")
  * 
- * 
- * 
  */
 public class InChIJS extends InchiJmol implements InChIStructureProvider {
 
   static {
-    @SuppressWarnings("unused")
-    String es6Path = "/_ES6";
     try {
       /**
-       * We pass into inchi-web-SwingJS.js
+       * Import inchi-web-SwingJS.js
        * 
-       * @j2sNative 
-       *            var j2sPath = Jmol._applets.master._j2sFullPath;
-       *            //
-       *            Jmol.inchiPath = j2sPath + es6Path;
-       *            //
-       *            var importPath = j2sPath + es6Path;
-       *            //
-       *            import(importPath + "/molfile-to-inchi.js");
+       * @j2sNative var j2sPath = Jmol._applets.master._j2sFullPath;
+       *            Jmol.inchiPath = Jmol._applets.master._j2sFullPath +
+       *            "/_ES6"; import(importPath + "/inchi-web-SwingJS.js");
        */
       {
       }
@@ -68,139 +68,121 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
     }
 
   }
+
   public InChIJS() {
     // for dynamic loading
   }
 
   @Override
   public String getInchi(Viewer vwr, BS atoms, Object molData, String options) {
-    if (atoms == null ? molData == null : atoms.isEmpty())
-      return "";
     String ret = "";
     try {
-      if (options == null)
-        options = "";
       options = setParameters(options, molData, atoms, vwr);
-      options = PT.rep(PT.rep(options.replace('-',' '), "  ", " ").trim(), " ", " -").toLowerCase();
+      if (options == null)
+        return "";
+      options = PT
+          .rep(PT.rep(options.replace('-', ' '), "  ", " ").trim(), " ", " -")
+          .toLowerCase();
       if (options.length() > 0)
         options = "-" + options;
       if (molData == null)
-        molData = vwr.getModelExtract(atoms,  false,  false, "MOL");
-      
-      if (molData instanceof String && ((String) molData).startsWith("InChI=")) {
-        if(getSmiles || getInchiModel){
-          Object json = null;
+        molData = vwr.getModelExtract(atoms, false, false, "MOL");
+      if (inputInChI) {
+        if (doGetSmiles || getInchiModel) {
+          String json = null;
           /**
-           * @j2sNative
-           *  json = (Jmol.modelFromInchi ? JSON.parse(Jmol.modelFromInchi(molData).model) : "");
-           */{}
-           // "getStructure" is just a debugging method 
-           // to see the exposed InChI structure in string form
-           return (getSmiles ? getSmiles(vwr, json, smilesOptions)
-               : "");
+           * @j2sNative json = (Jmol.modelFromInchi ?
+           *            Jmol.modelFromInchi(molData).model : ""); if (json &&
+           *            !this.getInchiModel) { json = JSON.parse(json); }
+           */
+          {
+          }
+          // "getInchiModel" is just a debugging method 
+          // to see the exposed InChI structure in string form
+          return (doGetSmiles ? getSmiles(vwr, json, smilesOptions) : json);
         }
+        // could be inchikey from inchi
         /**
-         * @j2sNative
-         *  ret = (Jmol.inchikeyFromInchi ? Jmol.inchikeyFromInchi(molData).inchikey : "");
-         */{}
+         * @j2sNative ret = (Jmol.inchikeyFromInchi ?
+         *            Jmol.inchikeyFromInchi(molData).inchikey : "");
+         */
+        {
+        }
       } else {
         boolean haveKey = (options.indexOf("key") >= 0);
         if (haveKey) {
           options = options.replace("inchikey", "key");
         }
         /**
-         * @j2sNative
-         *  ret = (Jmol.inchiFromMolfile ? Jmol.inchiFromMolfile(molData, options).inchi : "");
-         */{}
+         * @j2sNative ret = (Jmol.inchiFromMolfile ?
+         *            Jmol.inchiFromMolfile(molData, options).inchi : "");
+         */
+        {
+        }
       }
     } catch (Throwable e) {
       // oddly, e will be a string, not an error
       /**
        * @j2sNative
        * 
-       *   e = (e.getMessage$ ? e.getMessage$() : e);
+       *            e = (e.getMessage$ ? e.getMessage$() : e);
        */
-      {}
-        System.err.println("InChIJS exception: " + e);
+      {
+      }
+      System.err.println("InChIJS exception: " + e);
     }
     return ret;
   }
-  
+
+  @SuppressWarnings("unused")
   private Object json;
-  
+
   //all javascript maps and arrays, only accessible through j2sNative.
-  List<Map<String,Object>> atoms,bonds,stereo0d;
-  private Map<String,Object> thisAtom;
-  private Map<String,Object> thisBond;
-  private Map<String,Object> thisStereo;
+  List<Map<String, Object>> atoms, bonds, stereo0d;
+  private Map<String, Object> thisAtom;
+  private Map<String, Object> thisBond;
+  private Map<String, Object> thisStereo;
 
   private String getSmiles(Viewer vwr, Object json, String smilesOptions) {
     this.json = json;
-    getAtomList();
     return new InchiToSmilesConverter(this).getSmiles(vwr, smilesOptions);
   }
-  private void getAtomList() {
-    /**
-     * @j2sNative
-     * this.atoms = this.json.atoms;
-     * this.bonds = this.json.bonds;
-     * this.stereo0d = this.json.stereo0d;
-     */{}
-  }
-  private int getInt(Map<String, Object> map, String name, int defaultValue) {
-    /**
-     * @j2sNative
-     * var val = map[name];
-     * if (val || val == 0) return val;
-     */{}
-    return defaultValue;
-  }
-  private double getDouble(Map<String, Object> map, String name, double defaultValue) {
-    /**
-     * @j2sNative
-     * var val = map[name];
-     * if (val || val == 0) return val;
-     */{}
-    return defaultValue;
-  }
-  private String getString(Map<String, Object> map, String name, String defaultValue) {
-    /**
-     * @j2sNative
-     * var val = map[name];
-     * if (val || val == "") return val;
-     */{}
-    return defaultValue;
-  }
-  
+
   @Override
-  public String getElementType() {
-    return getString(thisAtom, "elname", "");
+  public void initializeModelForSmiles() {
+    /**
+     * @j2sNative this.atoms = this.json.atoms; this.bonds = this.json.bonds;
+     *            this.stereo0d = this.json.stereo0d;
+     */
+    {
+    }
   }
 
+  /// Atoms ///
+  
   @Override
   public int getNumAtoms() {
     /**
-     * @j2sNative
-     * return this.atoms.length;
-     */{return 0;}
+     * @j2sNative return this.atoms.length;
+     */
+    {
+      return 0;
+    }
   }
 
   @Override
-  public int getNumBonds() {
+  public InChIStructureProvider setAtom(int i) {
     /**
-     * @j2sNative
-     * return this.bonds.length;
-     */{return 0;}
+     * @j2sNative this.thisAtom = this.atoms[i];
+     */
+    {
+    }
+    return this;
   }
 
   @Override
-  public int getImplicitH() {
-    return getInt(thisAtom, "implicitH", 0);
-  }
-
-  @Override
-  public int getCharge() {
-    return getInt(thisAtom, "charge", 0);
+  public String getElementType() {
+    return getString(thisAtom, "elname", "");
   }
 
   @Override
@@ -219,29 +201,46 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
   }
 
   @Override
-  public InChIStructureProvider setAtom(int i) {
+  public int getCharge() {
+    return getInt(thisAtom, "charge", 0);
+  }
+
+  @Override
+  public int getImplicitH() {
+    return getInt(thisAtom, "implicitH", 0);
+  }
+
+  @Override
+  public int getIsotopicMass() {
+    String sym = getElementType();
+    int mass = 0;
     /**
-     * @j2sNative
-     * this.thisAtom = this.atoms[i];
-     */{}
-    return this;
+     * @j2sNative mass = this.thisAtom["isotopicMass"] || 0;
+     */
+    {
+    }
+    return getActualMass(sym, mass);
+  }
+
+  /// Bonds ///
+  
+  @Override
+  public int getNumBonds() {
+    /**
+     * @j2sNative return this.bonds.length;
+     */
+    {
+      return 0;
+    }
   }
 
   @Override
   public InChIStructureProvider setBond(int i) {
     /**
-     * @j2sNative
-     * this.thisBond = this.bonds[i];
-     */{}
-    return this;
-  }
-
-  @Override
-  public InChIStructureProvider setStereo0D(int i) {
-    /**
-     * @j2sNative
-     * this.thisStereo = this.stereo0d[i];
-     */{}
+     * @j2sNative this.thisBond = this.bonds[i];
+     */
+    {
+    }
     return this;
   }
 
@@ -260,6 +259,29 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
     return getString(thisBond, "type", "");
   }
 
+  
+  /// Stereo ///
+  
+  @Override
+  public int getNumStereo0D() {
+    /**
+     * @j2sNative return this.stereo0d.length;
+     */
+    {
+      return 0;
+    }
+  }
+
+  @Override
+  public InChIStructureProvider setStereo0D(int i) {
+    /**
+     * @j2sNative this.thisStereo = this.stereo0d[i];
+     */
+    {
+    }
+    return this;
+  }
+  
   @Override
   public String getParity() {
     return getString(thisStereo, "parity", "");
@@ -271,14 +293,6 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
   }
 
   @Override
-  public int getNumStereo0D() {
-    /**
-     * @j2sNative
-     * return this.stereo0d.length;
-     */{return 0;}
-  }
-
-  @Override
   public int getCenterAtom() {
     return getInt(thisStereo, "centralAtom", -1);
   }
@@ -286,9 +300,43 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
   @Override
   public int[] getNeighbors() {
     /**
-     * @j2sNative
-     * return this.thisStereo.neighbors;
-     */{return null;}
+     * @j2sNative return this.thisStereo.neighbors;
+     */
+    {
+      return null;
+    }
   }
+
+  @SuppressWarnings("unused")
+  private int getInt(Map<String, Object> map, String name, int defaultValue) {
+    /**
+     * @j2sNative var val = map[name]; if (val || val == 0) return val;
+     */
+    {
+    }
+    return defaultValue;
+  }
+
+  @SuppressWarnings("unused")
+  private double getDouble(Map<String, Object> map, String name,
+                           double defaultValue) {
+    /**
+     * @j2sNative var val = map[name]; if (val || val == 0) return val;
+     */
+    {
+    }
+    return defaultValue;
+  }
+
+  @SuppressWarnings("unused")
+  private String getString(Map<String, Object> map, String name,
+                           String defaultValue) {
+    /**
+     * @j2sNative var val = map[name]; if (val || val == "") return val;
+     */
+    {
+    }
+    return defaultValue;
+  }  
 
 }

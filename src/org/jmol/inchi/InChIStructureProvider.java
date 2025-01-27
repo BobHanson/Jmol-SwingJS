@@ -1,38 +1,55 @@
 package org.jmol.inchi;
 
-import org.jmol.smiles.SmilesAtom;
-
-import net.sf.jniinchi.JniInchiAtom;
-
 interface InChIStructureProvider {
-  //JniInchiAtom Methods
-  String getElementType();
-  int getNumAtoms();
-  int getNumBonds();
-  int getImplicitH();
-  int getCharge();
-  double getX();
-  double getY();
-  double getZ();
+  
+  void initializeModelForSmiles();
   
   //InChIStructureProvider Setters
   InChIStructureProvider setAtom(int i);
   InChIStructureProvider setBond(int i);
   InChIStructureProvider setStereo0D(int i);
   
-  //JniInchiBond Methods
+  int getNumAtoms();
+  int getNumBonds();
+  int getNumStereo0D();
+  
+  //Atom Methods
+  String getElementType();
+  double getX();
+  double getY();
+  double getZ();
+  int getCharge();
+  int getImplicitH();
+  
+  /**
+   * from inchi_api.h
+   * 
+   * #define ISOTOPIC_SHIFT_FLAG 10000
+   * 
+   * add to isotopic mass if isotopic_mass = (isotopic mass - average atomic
+   * mass)
+   * 
+   * AT_NUM isotopic_mass;
+   * 
+   * 0 => non-isotopic; isotopic mass or ISOTOPIC_SHIFT_FLAG + mass - (average
+   * atomic mass)
+   * 
+   * 
+   * However, I double "average" here means "average"
+   * 
+   * @return inchi's value of
+   */
+  int getIsotopicMass();
+ 
+  //Bond Methods
   int getIndexOriginAtom();
   int getIndexTargetAtom();
   String getInchiBondType();
   
-  //JniInchiStereo Methods
+  //Stereo Methods
   String getParity();
   String getStereoType();
-  int getNumStereo0D();
-  
-  //Others
   int getCenterAtom();
   int[] getNeighbors();
-  
 
 }

@@ -1,0 +1,100 @@
+$ //Jmol script 
+
+// tests for isotopes
+
+// structure.inchi()
+
+$ load $4-hexene
+$ show inchi
+InChI=1S/C6H12/c1-3-5-6-4-2/h3,5H,4,6H2,1-2H3/b5-3+
+
+// adding D and T isotopes at center of chirality
+// check that SMILES from InChI is equivalent to SMILES from the 
+// Chemical Identifier Resolver using Jmol's smiles.find(smiles2) script function
+
+// structure.inchi()
+// model_from_inchi
+// getSmiles(model)
+// smiles.inchi()
+//
+$ load $2-Deutero-2-tritio-4-hexene
+$ x = all.inchi()
+$ print x
+InChI=1S/C6H12/c1-3-5-6-4-2/h3,5H,4,6H2,1-2H3/b5-3+/i4TD/t4-/m1/s1
+$ print x.inchi("model").atoms.select("where isotopeMass > 0").format("JSON")
+[ { "elname": "H","index": 0,"isotopeMass": 2,"x": 1.6851,"y": -1.3734,"z": -0.6052 },
+  { "elname": "H","index": 7,"isotopeMass": 3,"x": 1.3791,"y": -0.9431,"z": 1.0946 } 
+]
+$ print x.smiles()
+C/C=C/C[C@](C)([2H])[3H]
+$ cirSmiles = show("chemical smiles")
+$ print cirSmiles
+C[C@@](C\C=C\C)([2H])[3H]
+$ print x.smiles().find("SMILES", cirSmiles) > 0
+true
+
+// add Br-79 and Br-81
+// note that "average mass" is directly taken from util.c
+
+$ @11.element="79Br"
+$ show smiles
+[2H][C@@]1([3H])C[79Br].C1/C=C/C
+$ x = all.inchi()
+$ print x;
+InChI=1S/C6H11Br/c1-2-3-4-5-6-7/h2-3H,4-6H2,1H3/b3-2+/i5TD,7-1/t5-/m0/s1
+$ print x.smiles()
+C/C=C/C[C@]([2H])([3H])C[79Br]
+$ @11.element="81Br"
+$ x = all.inchi()
+$ print x
+InChI=1S/C6H11Br/c1-2-3-4-5-6-7/h2-3H,4-6H2,1H3/b3-2+/i5TD,7+1/t5-/m0/s1
+$ print x.smiles()
+C/C=C/C[C@]([2H])([3H])C[81Br]
+$ print x.smiles().inchi()
+InChI=1S/C6H11Br/c1-2-3-4-5-6-7/h2-3H,4-6H2,1H3/b3-2+/i5TD,7+1/t5-/m0/s1
+$ print x.smiles().inchi().smiles()
+C/C=C/C[C@]([2H])([3H])C[81Br]
+$ show chemical smiles
+C/C=C/C[C@](C[81Br])([2H])[3H]
+$ print x.smiles().find("SMILES", show("chemical smiles")) > 0
+true
+
+// add Cl-35 and Cl-37
+
+$ @11.element="35Cl"
+$ show smiles
+[2H][C@@]1([3H])C[35Cl].C1/C=C/C
+$ x = all.inchi()
+$ print x;
+InChI=1S/C6H11Cl/c1-2-3-4-5-6-7/h2-3H,4-6H2,1H3/b3-2+/i5TD,7+0/t5-/m0/s1
+$ print x.smiles()
+C/C=C/C[C@]([2H])([3H])C[35Cl]
+$ @11.element="37Cl"
+$ x = all.inchi()
+$ print x
+InChI=1S/C6H11Cl/c1-2-3-4-5-6-7/h2-3H,4-6H2,1H3/b3-2+/i5TD,7+2/t5-/m0/s1
+$ print x.smiles()
+C/C=C/C[C@]([2H])([3H])C[37Cl]
+$ print x.smiles().inchi()
+InChI=1S/C6H11Cl/c1-2-3-4-5-6-7/h2-3H,4-6H2,1H3/b3-2+/i5TD,7+2/t5-/m0/s1
+$ print x.smiles().inchi().smiles()
+C/C=C/C[C@]([2H])([3H])C[37Cl]
+$ show chemical smiles
+C/C=C/C[C@](C[37Cl])([2H])[3H]
+$ print x.smiles().find("SMILES", show("chemical smiles")) > 0
+true
+
+// write(molfile)
+// molfileData.inchi()
+// InChI_from_molfile
+// structure.inchi()
+
+// ensure that MOL file data with isotopes written by Jmol 
+// can work as a starting point for InChI
+// and that the molFileData itself creates the same InChI. 
+
+$ molfileData = write("mol")
+$ print molfileData.inchi()
+InChI=1S/C6H11Cl/c1-2-3-4-5-6-7/h2-3H,4-6H2,1H3/b3-2+/i5TD,7+2/t5-/m0/s1
+$ print molfileData.inchi() == all.inchi()
+true

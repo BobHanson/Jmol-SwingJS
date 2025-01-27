@@ -27,13 +27,11 @@ package org.jmol.api;
 import java.io.BufferedReader;
 import java.util.Map;
 
-import javajs.util.PT;
-
-import org.jmol.util.Elements;
-import org.jmol.adapter.smarter.Atom;
-import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.util.Edge;
+import org.jmol.util.Elements;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.PT;
 
 /****************************************************************
  * The JmolAdapter interface defines the API used by the JmolViewer to
@@ -164,7 +162,10 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
 
   abstract public Object getAtomSetCollectionFromReader(String fname,
                                                         Object reader, Map<String, Object> htParams) throws Exception;
-              
+
+  abstract public Object getAtomSetCollectionInline(Object molData, Map<String, Object> htParams);
+ 
+
 
   /**
    * all in one -- for TestSmarterJmolAdapter
@@ -347,6 +348,7 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
 
   abstract public JmolAdapterStructureIterator getStructureIterator(Object atomSetCollection);
 
+
   
   //////////////////////////////////////////////////////////////////
   // range-checking routines
@@ -368,5 +370,6 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
     // pdb altLoc
     return canonizeAlphaDigit(altLoc);
   }
+
 
 }

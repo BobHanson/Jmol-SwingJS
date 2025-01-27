@@ -108,7 +108,7 @@ public class Resolver {
     String readerName;
     fullName = fixDOSName(fullName);
     String errMsg = null;
-    if (type == null && htParams != null) {
+    if (type == null) {
       type = Resolver.getFileTypefromFilter((String) htParams.get("filter"));
     }      
     if (type != null) {

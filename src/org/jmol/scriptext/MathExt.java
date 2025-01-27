@@ -1911,7 +1911,8 @@ SymmetryInterface sym;
       flags = "";
     BS atoms = SV.getBitSet(x1, true);
     String molData = (atoms == null ? SV.sValue(x1) : null);
-    return mp.addXStr(vwr.getInchi(atoms, molData, flags));
+    String ret = vwr.getInchi(atoms, molData, flags);
+    return (flags.startsWith("model") ? mp.addXMap(vwr.parseJSONMap(ret)) : mp.addXStr(ret));
   }
 
   private boolean evaluateFind(ScriptMathProcessor mp, SV[] args)
@@ -4245,6 +4246,11 @@ SymmetryInterface sym;
           return evaluateInChI(mp, new SV[] { SV.newS("SMILES") });
         }
       }
+    boolean isSelectedSmiles = isSelector && tok == T.smiles;
+    if (isSelectedSmiles) {
+      // just smple {*}.smiles()
+      return mp.addXObj(e.getSmilesExt().getSmilesMatches("", null, bsSelected, null, JC.SMILES_TYPE_SMILES, true, false));
+    }
     if (args.length == 0 || isSelector && (tok == T.pattern || args.length > 1))
       return false;
     Object objTarget = (tok == T.search && !isSelector

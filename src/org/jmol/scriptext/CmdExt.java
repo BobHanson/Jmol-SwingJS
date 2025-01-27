@@ -446,6 +446,7 @@ public class CmdExt extends ScriptExt {
         lattice = P3d.new3(555, 555, -1);
       // re-read this token
       eval.iToken = i - 1;
+      break;
     }
 
     P3d offset = null;
@@ -606,7 +607,7 @@ public class CmdExt extends ScriptExt {
       } else {
         sOptions.append(" offset " + Escape.eP(offset));
       }
-      htParams.put("unitCellOffset", offset);
+      htParams.put(JC.INFO_UNIT_CELL_OFFSET, offset);
       i = eval.iToken + 1;
     }
     return i;
@@ -667,8 +668,9 @@ public class CmdExt extends ScriptExt {
         }
         SymmetryInterface unitCell = vwr.getCurrentUnitCell();
         if (unitCell != null) {
-          oabc = BoxInfo.toOABC(unitCell.getUnitCellVerticesNoOffset(),
-              unitCell.getCartesianOffset());
+          oabc = BoxInfo.toOABC(
+        		  unitCell.getUnitCellVerticesNoOffset(),
+                  unitCell.getCartesianOffset());
           break;
         }
         //$FALL-THROUGH$
@@ -1982,8 +1984,7 @@ public class CmdExt extends ScriptExt {
       Text text = null;
       if (font != null || alignment != null || colix != 0
           || strFormat != null && (isRefreshID || strFormat.indexOf('\n') >= 0))
-        text = ((Text) Interface.getInterface("org.jmol.modelset.Text", vwr,
-            "script")).newMeasure(vwr, font, colix);
+        text = Text.newMeasure(vwr, font, colix);
       if (text != null) {
         text.pymolOffset = offset;
         text.setAlignmentLCR(alignment);
