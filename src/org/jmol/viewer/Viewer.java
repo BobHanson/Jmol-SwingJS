@@ -94,6 +94,7 @@ import org.jmol.modelset.ModelSet;
 import org.jmol.modelset.Orientation;
 import org.jmol.modelset.StateScript;
 import org.jmol.modelsetbio.BioResolver;
+import org.jmol.ocl.OpenChemLib;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptContext;
 import org.jmol.script.ScriptEval;
@@ -186,6 +187,10 @@ public class Viewer extends JmolViewer
   static public boolean isSwingJS = /** @j2sNative true|| */
       false;
 
+  public final static boolean isDoublePrecision = true;
+  
+  public final static boolean hasOCL = isDoublePrecision;
+
   public boolean testAsync;// = true; // testing only
 
   @Override
@@ -213,6 +218,9 @@ public class Viewer extends JmolViewer
   public static String appletIdiomaBase;
 
   public static String jsDocumentBase = "";
+
+  public static boolean isHighPrecision = true;
+
 
   public enum ACCESS {
     NONE, READSPT, ALL, INTERNAL
@@ -2042,17 +2050,10 @@ public class Viewer extends JmolViewer
             : "");
   }
 
-  void rotateSelected(int iatom, double deltaX, double deltaY, BS bsSelected) {
+  void rotateSelected(double deltaX, double deltaY, BS bsSelected) {
     // bsSelected null comes from sync. 
     if (isJmolDataFrame() || bsSelected.isEmpty())
       return;
-    SymmetryInterface uc = getOperativeSymmetry();
-    if (uc != null) {
-      
-      // TODO -- enable this!
-      return;
-    }
-    
     tm.rotateXYBy(deltaX, deltaY, setMovableBitSet(bsSelected, true));
     refreshMeasures(true);
     //TODO: note that sync may not work with set allowRotateSelectedAtoms
@@ -9722,10 +9723,6 @@ public class Viewer extends JmolViewer
 
   public static int nProcessors = 1;
 
-  public static boolean isHighPrecision = true;
-
-  public final static boolean isDoublePrecision = true;
-
   static {
     /**
      * @j2sIgnore
@@ -10992,6 +10989,9 @@ public class Viewer extends JmolViewer
   /**
    * Get an InChI or InChIKey for a set of atoms or MOL data.
    * 
+   * If molData is a SMILES string, then SwingJS will use OpenChemLib
+   * but Jmol legacy has to use NIH/CADD CIR.
+   * 
    * @param atoms
    * @param molData
    *        null, or MOL data, or a database $ or : call, or SMILES, or
@@ -11015,8 +11015,15 @@ public class Viewer extends JmolViewer
           // assume SMILES
           // setLoadFormat will correct any special characters in the 
           // SMILES CIR call. 
-          data = (String) setLoadFormat(false, "$" + molData, '$', false);
-          molData = getFileAsString4(data, -1, false, false, true, "script");
+          if (options != null && options.toLowerCase().indexOf("ocl") >= 0 && hasOCL) {
+            // use internal OpenChemLib methods
+            options = PT.rep(options.toLowerCase(), "ocl", "");
+            molData = smilesToMolfile(data);
+          } else {
+            // use NCI/CADD Chemical Identifier Resolver
+            data = (String) setLoadFormat(false, "$" + molData, '$', false);
+            molData = getFileAsString4(data, -1, false, false, true, "script");
+          }
         }
       }
       return inch.getInchi(this, atoms, molData, options);
@@ -11024,6 +11031,17 @@ public class Viewer extends JmolViewer
       return "";
     }
   }
+
+  /**
+   * Use OCL to get 2D MOL file coordinates rather than NIC/CADD call
+   * @param smiles
+   * @return 2D MOL file data
+   */
+  public String smilesToMolfile(String smiles) {
+    return getOCL().smilesToMolfile(smiles);
+  }
+
+
 
   /**
    * 
@@ -11354,4 +11372,15 @@ public class Viewer extends JmolViewer
     params.put("type", "BINARY");
     return getOutputManager().outputToFile(params);
   }
+  
+  ////////////////// Jmol-SwingJS only //////////////
+
+  private OpenChemLib ocl;
+  
+  public OpenChemLib getOCL() {
+    if (ocl == null && hasOCL)
+      ocl = (OpenChemLib) Interface.getInterface("org.jmol.ocl.OpenChemLib", this, "script");
+    return ocl;
+  }
+  
 }
