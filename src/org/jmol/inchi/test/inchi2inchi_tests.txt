@@ -1,0 +1,41 @@
+$ //Jmol script 
+
+// tests for inchi to inchi
+
+$ x1 = "Oc1nc(O)nc(O)n1".inchi("ocl")
+$ print x1
+InChI=1/C3H3N3O3/c7-1-4-2(8)6-3(9)5-1/h(H3,4,5,6,7,8,9)/f/h7-9H
+$ print x1.inchi("standard");
+
+$ print x1.smiles()
+c1(O)[n]c(O)[n]c(O)[n]1
+$ print (x1.smiles().find("SMILES/noaromatic","Oc1nc(O)nc(O)n1") > 0)
+true
+$ print x1.smiles().inchi()
+InChI=1/C3H3N3O3/c7-1-4-2(8)6-3(9)5-1/h(H3,4,5,6,7,8,9)/f/h7-9H
+
+// isocyanuric acid fixedh round trips as well:
+$ x2 = "C1(=O)NC(=O)NC(=O)N1".inchi()
+$ print x2
+InChI=1/C3H3N3O3/c7-1-4-2(8)6-3(9)5-1/h(H3,4,5,6,7,8,9)/f/h4-6H
+$ print x2.smiles()
+C1(=O)NC(=O)NC(=O)N1
+$ print x2.smiles().inchi()
+InChI=1/C3H3N3O3/c7-1-4-2(8)6-3(9)5-1/h(H3,4,5,6,7,8,9)/f/h4-6H
+
+
+// and cyanuric acid standard SMILES round-trips as well
+$ x1s = "Oc1nc(O)nc(O)n1".inchi("standard")
+$ print x1s
+InChI=1S/C3H3N3O3/c7-1-4-2(8)6-3(9)5-1/h(H3,4,5,6,7,8,9)
+$ print x1s.smiles()
+c1(O)[n]c(O)[n]c(O)[n]1
+// same as above
+
+// so isocyanuric acid standard must also round-trip to cyanuric acid
+$ x2s = "C1(=O)NC(=O)NC(=O)N1".inchi("standard")
+$ print x2s
+InChI=1S/C3H3N3O3/c7-1-4-2(8)6-3(9)5-1/h(H3,4,5,6,7,8,9)
+$ print x2s.smiles()
+c1(O)[n]c(O)[n]c(O)[n]1
+

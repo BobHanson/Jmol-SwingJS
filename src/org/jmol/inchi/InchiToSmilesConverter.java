@@ -3,6 +3,7 @@ package org.jmol.inchi;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.iupac.InChIStructureProvider;
 import org.jmol.api.SmilesMatcherInterface;
 import org.jmol.smiles.SmilesAtom;
 import org.jmol.smiles.SmilesBond;

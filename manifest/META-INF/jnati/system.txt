@@ -1,0 +1,74 @@
+#
+# Host type (os/architecture) specification file
+#
+# Lines starting '#' are comments, and are ignored.
+#
+# Definitions are separated by blank lines
+# The first line of a definition contains the platform
+# name. Subsequent lines contain property name/value
+# pairs defining the plaform.
+#
+# Definitions will be tested in the order they are listed
+# in this file, and the first match accepted. More specific
+# definitions should appear before less specific ones.
+#
+# Windows definition names MUST start WINDOWS-
+# Linux definition names MUST start LINUX-
+# MacOS definition names MUST start MAC-
+#
+
+WINDOWS-AMD64
+os.name = windows.*
+os.arch = amd64
+
+WINDOWS-X86_64
+os.name = windows.*
+os.arch = x86_64
+
+WINDOWS-X86
+os.name = windows.*
+os.arch = .*86
+
+
+MAC-X86_64
+os.name = mac.*
+os.arch = x86_64
+
+MAC-X86_64
+os.name = mac.*
+os.arch = aarch64
+
+MAC-X86
+os.name = mac.*
+os.arch = .*86
+
+MAC-PPC
+os.name = mac.*
+os.arch = ppc
+
+
+LINUX-X86
+os.name = linux.*
+os.arch = .*86
+
+LINUX-AMD64
+os.name = linux.*
+os.arch = amd64
+
+LINUX-X86_64
+os.name = linux.*
+os.arch = x86_64
+
+
+SUNOS-X86
+os.name = sunos.*
+os.arch = .*86
+
+SUNOS-AMD64
+os.name = sunos.*
+os.arch = amd64
+
+
+FREEBSD-AMD64
+os.name = freebsd.*
+os.arch = amd64

@@ -56,12 +56,11 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
 
   <property name="tests.source.dir" value="source-tests" />
   <property name="lib.dir" value="jars" />
+  <property name="manifest.dir" value="manifest" />
   <property name="plugin.dir" value="plugin-jars" />
   <property name="appjars.dir" value="build/appjars" />
   <property name="classes.dir" value="build/classes" />
   <property name="test-classes.dir" value="build/test-classes" />
-  <property name="applet.classes.dir" value="build/applet-classes" />
-  <property name="apisio.classes.dir" value="build/apisio-classes" />
   <property name="tests.dir" value="build/unit.tests" />
   <property name="javadoc.dir" value="build/javadoc" />
   <property name="jmol.applet.web.dir" value="appletweb" />
@@ -69,7 +68,7 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
   <property name="docbook-xml" value="docbook-xml-4.4" />
   <property name="naga.jar" value="naga-3_0.jar" />
   <property name="commons-cli.jar" value="commons-cli-1.2.jar" />
-  <property name="inchi.jar" value="jni-inchi-0.7-jar-with-dependencies.jar" />
+  <property name="inchi.jar" value="jna-inchi-1.3-SNAPSHOT.jar" />
 	
 	  <path id="project.class.path">
 	    <fileset dir="${lib.dir}">
@@ -144,24 +143,20 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
   	<delete dir="${appjars.dir}/org/jmol" />
   	<delete dir="${appjars.dir}/org/apache/tools" />
   	<delete dir="${appjars.dir}/META-INF" />
+  	<echo>Unjar for ${lib.dir}/${inchi.jar}"</echo>
     <unjar dest="${appjars.dir}" src="${lib.dir}/${inchi.jar}"/>
-  	<move file="${appjars.dir}/META-INF/LICENSE" tofile="${appjars.dir}/META-INF/LICENSE-JNI-INCHI"/>
-  	<delete file="${appjars.dir}/META-INF/MANIFEST.MF" />
-  	<!-- the following mitigation is in accord with https://logging.apache.org/log4j/2.x/security.html
-  	     despite the fact that the org/apache/logging package is not included in Jmol.
-  	     It is added here in case JNI-InChI is ever upgraded to Log4J2 (which requires Java 7+) -->  
-  	<delete file="${appjars.dir}/org/apache/logging/log4j/core/lookup/JndiLookup.class" />
     <touch file="build/libjars.timestamp"/>
   </target>
 
   <target name="jar" id="jar"
           depends="init,classes,libjars">
      <jar destfile="build/JmolD.jar"
-         manifest="manifest/application.txt">
+         manifest="${manifest.dir}/application.txt">
       <fileset dir="${classes.dir}" >
         <exclude name="**/.*" />
         <exclude name="**/*.dx" />
         <exclude name="ant/**" />
+        <include name="io/github/**" />
         <include name="com/**" />
         <include name="jspecview/**" />
         <include name="javajs/api/**" />
@@ -173,7 +168,8 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
         <include name="**/org/gennbo/**" />
         <include name="**/org/apache/**" />
         <include name="**/org/qcschema/**" />
-        <include name="**/jmol/**" />
+        <include name="**/org/iupac/**" />
+         <include name="**/jmol/**" />
         <exclude name="**/Test*.class" />
         <exclude name="**/jmol/jcamp/**" />
         <exclude name="**/jmol/applet/*" />
@@ -185,9 +181,12 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
     </jar>
   	<echo>build/JmolD.jar created (unsigned)</echo>
   	<copy file="build/JmolD.jar" tofile="dist/JmolD.jar" />  	
+
+
+
     <echo message="Creating JmolDataD.jar -- if this fails, check to see that build/JmolD.jar is not open." />
 	<jar destfile="build/JmolDataD.jar"
-	 manifest="manifest/applicationData.txt">
+	 manifest="${manifest.dir}/applicationData.txt">
 	<fileset dir="${classes.dir}" >
 	<exclude name="**/Test*.class" />
 	<exclude name="**/jmol/jcamp/**" />
@@ -197,7 +196,7 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
 	<exclude name="**/Test*.class" />
 	<exclude name="ant/**" />
 	<exclude name="com/**" />
-	<include name="net/sf/**" />
+	<include name="io/github/**" />
 	<include name="javajs/api/**" />
 	<include name="javajs/awt/**" />
 	<include name="javajs/export/**" />
@@ -209,6 +208,7 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
 	<include name="**/org/gennbo/**" />
 	<include name="**/org/apache/**" />
 	<include name="**/org/qcschema/**" />
+    <include name="**/org/iupac/**" />
 	<include name="**/jmol/**" />
 	<exclude name="**/jmol/_documents/**" />
 	<exclude name="**/jmol/applet/**" />
@@ -223,6 +223,8 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
 	<exclude name="**/openscience/jmol/app/webexport/**" />
 	</fileset>
 	<fileset dir="${appjars.dir}" includes="**/*"/>
+    <fileset dir="${classes.dir}" includes="net/sf/jniinchi/JniInchiWrapper.class" />
+    <fileset dir="${classes.dir}" includes="net/sf/jnati/SystemTyper.class" />
 	</jar>
   	<copy file="build/JmolDataD.jar" tofile="dist/JmolDataD.jar" />
 
@@ -236,8 +238,6 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
 
   <target name="clean" id="clean">
     <delete dir="${classes.dir}"/>
-    <delete dir="${applet.classes.dir}"/>
-    <delete dir="${apisio.classes.dir}"/>
     <delete dir="${test-classes.dir}"/>
     <delete dir="${appjars.dir}"/>
     <delete dir="build/dist"/>

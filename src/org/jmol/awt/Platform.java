@@ -27,7 +27,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolInChI;
 import org.jmol.api.PlatformViewer;
 import org.jmol.i18n.GT;
-import org.jmol.inchi.InChIJNI;
+import org.jmol.inchi.InChIJNA;
 import org.jmol.inchi.InChIJS;
 import org.jmol.util.Font;
 import org.jmol.viewer.Viewer;
@@ -351,7 +351,7 @@ public class Platform implements GenericPlatform {
   @SuppressWarnings("unused")
   @Override
   public JmolInChI getInChI() {
-    return (inchi == null ? (inchi = (/** @j2sNative true ||*/false ? new InChIJS() : new InChIJNI())) : inchi);
+    return (inchi == null ? (inchi = (/** @j2sNative true ||*/false ? new InChIJS() : new InChIJNA())) : inchi);
   }
 
   @Override

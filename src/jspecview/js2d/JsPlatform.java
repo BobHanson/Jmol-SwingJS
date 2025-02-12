@@ -12,7 +12,6 @@ import org.jmol.api.GenericMenuInterface;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
-import org.jmol.inchi.InChIJNI;
 import org.jmol.util.Font;
 
 import javajs.util.P3d;
@@ -393,7 +392,7 @@ public class JsPlatform implements GenericPlatform {
   }
 
   @Override
-  public InChIJNI getInChI() {
+  public Object getInChI() {
     // TODO
     return null;
   }

@@ -21,6 +21,8 @@ package org.jmol.inchi;
 import java.util.List;
 import java.util.Map;
 
+import org.iupac.InChIStructureProvider;
+import org.iupac.InchiUtils;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
@@ -50,20 +52,29 @@ import javajs.util.PT;
  * x = {none}.find("inchi")
  * 
  */
-public class InChIJS extends InchiJmol implements InChIStructureProvider {
+public class InChIJS extends InchiJmol {
 
   static {
     try {
       /**
        * Import inchi-web-SwingJS.js
+       * We just load a small JavaScript piece 
+       * first, _ES6/jsutil.js, in order to run the import() command.
+       * This is because the (older) Google closure compiler 
+       * that we are using cannot accept the import command. 
+       *  
        * 
-       * @j2sNative var j2sPath = Jmol._applets.master._j2sFullPath;
-       *            Jmol.inchiPath = Jmol._applets.master._j2sFullPath +
-       *            "/_ES6"; import(importPath + "/inchi-web-SwingJS.js");
+       * @j2sNative 
+       * 
+       * var j2sPath = J2S._applets.master._j2sPath; 
+       * J2S.inchiPath = j2sPath + "/_ES6"; 
+       * $.getScript(J2S.inchiPath +   "/inchi-web-SwingJS.js");
+       * 
+       * 
        */
       {
       }
-    } catch (Throwable t) {
+    } catch (Throwable t) { 
       // 
     }
 
@@ -88,18 +99,20 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
       if (molData == null)
         molData = vwr.getModelExtract(atoms, false, false, "MOL");
       if (inputInChI) {
+        // set this.json here
         if (doGetSmiles || getInchiModel) {
-          String json = null;
           /**
-           * @j2sNative json = (Jmol.modelFromInchi ?
-           *            Jmol.modelFromInchi(molData).model : ""); if (json &&
-           *            !this.getInchiModel) { json = JSON.parse(json); }
+           * @j2sNative this.json = (Jmol.modelFromInchi ?
+           *            Jmol.modelFromInchi(molData).model : ""); 
+           *            if (this.json && !this.getInchiModel) { 
+           *              this.json = JSON.parse(this.json); 
+           *            }
            */
           {
           }
           // "getInchiModel" is just a debugging method 
           // to see the exposed InChI structure in string form
-          return (doGetSmiles ? getSmiles(vwr, json, smilesOptions) : json);
+          return (doGetSmiles ? getSmiles(vwr, smilesOptions) : json);
         }
         // could be inchikey from inchi
         /**
@@ -134,8 +147,7 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
     return ret;
   }
 
-  @SuppressWarnings("unused")
-  private Object json;
+  private String json;
 
   //all javascript maps and arrays, only accessible through j2sNative.
   List<Map<String, Object>> atoms, bonds, stereo0d;
@@ -143,16 +155,13 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
   private Map<String, Object> thisBond;
   private Map<String, Object> thisStereo;
 
-  private String getSmiles(Viewer vwr, Object json, String smilesOptions) {
-    this.json = json;
-    return new InchiToSmilesConverter(this).getSmiles(vwr, smilesOptions);
-  }
-
   @Override
   public void initializeModelForSmiles() {
     /**
-     * @j2sNative this.atoms = this.json.atoms; this.bonds = this.json.bonds;
-     *            this.stereo0d = this.json.stereo0d;
+     * @j2sNative 
+     * this.atoms = this.json.atoms; 
+     * this.bonds = this.json.bonds;
+     * this.stereo0d = this.json.stereo0d || [];
      */
     {
     }
@@ -219,7 +228,7 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
      */
     {
     }
-    return getActualMass(sym, mass);
+    return InchiUtils.getActualMass(sym, mass);
   }
 
   /// Bonds ///
@@ -289,7 +298,7 @@ public class InChIJS extends InchiJmol implements InChIStructureProvider {
 
   @Override
   public String getStereoType() {
-    return getString(thisStereo, "stereoType", "");
+    return getString(thisStereo, "type", "");
   }
 
   @Override
