@@ -1312,16 +1312,17 @@ public class SV extends T implements JSONEncodable {
   public final static int FORMAT_ARRAY = 22;
   public final static int FORMAT_XYZ = 28;
   public final static int FORMAT_ABC = 32;
+  public final static int FORMAT_UVW = 36;
   
   /**
    * 
    * @param format
-   * @return 0: JSON, 5: base64, 12: bytearray, 22: array
+   * @return 0: JSON, 5: base64, 12: bytearray, 22: array, 28:xyz, 32:abc, 36:uvw
    */
   public static int getFormatType(String format) {
     return (format.indexOf(";") >= 0 ? -1 :
-        ";json;base64;bytearray;array;xyz;abc;"
-    //   0    5      12        22    28  32
+        ";json;base64;bytearray;array;xyz;abc;uvw;"
+    //   0    5      12        22    28  32  36
         .indexOf(";" + format.toLowerCase() + ";"));
   }
 
