@@ -27,4 +27,5 @@ package org.jmol.rendersurface;
 
 
 public class LcaoCartoonRenderer extends IsosurfaceRenderer {
+  // nothing to do here, because there is also isosurface LCAO ...
 }

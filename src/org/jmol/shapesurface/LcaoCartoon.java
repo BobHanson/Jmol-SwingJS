@@ -240,7 +240,7 @@ public class LcaoCartoon extends Isosurface {
   }
 
   private void setLcaoOn(int iAtom, boolean TF) {
-    String id = getID(lcaoID, iAtom);
+    String id = getID(lcaoID, iAtom, false);
     for (int i = meshCount; --i >= 0;)
       if (meshes[i].thisID.indexOf(id) == 0)
         meshes[i].visible = TF;
@@ -260,7 +260,7 @@ public class LcaoCartoon extends Isosurface {
   }
 
   private void deleteLcaoCartoon(int iAtom) {
-    String id = getID(lcaoID, iAtom);
+    String id = getID(lcaoID, iAtom, false);
     for (int i = meshCount; --i >= 0;)
       if (meshes[i].thisID.indexOf(id) == 0)
         deleteMeshI(i);
@@ -277,7 +277,7 @@ public class LcaoCartoon extends Isosurface {
   }
 
   private void createLcaoCartoon(int iAtom) {
-    String id = getID(lcaoID, iAtom);
+    String id = getID(lcaoID, iAtom, true);
     boolean isCpk = (thisType.equals("cpk"));
     for (int i = meshCount; --i >= 0;)
       if (meshes[i].thisID.indexOf(id) == 0)
@@ -341,11 +341,11 @@ public class LcaoCartoon extends Isosurface {
           meshes[i].setTranslucent(true, translucentLevel);
   }
 
-  private String getID(String id, int i) {
+  private String getID(String id, int i, boolean withPrefix) {
     // remove "-" from "-px" "-py" "-pz" because we never want to have
     // both "pz" and "-pz" on the same atom
     // but we can have "-sp3a" and "sp3a"
-    return (id != null ? id : (isLonePair || isRadical ? "lp_" : "lcao_") + (i + 1) + "_")
+    return (id != null ? id : (!withPrefix ? "_" : isLonePair || isRadical ? "lp_" : "lcao_") + (i + 1) + "_")
         + (thisType == null ? "" : PT.rep(thisType, "-",
             (thisType.indexOf("-p") == 0 ? "" : "_")));
   }
