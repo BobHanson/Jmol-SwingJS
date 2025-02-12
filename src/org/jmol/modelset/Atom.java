@@ -53,9 +53,6 @@ import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
-
-
-
 public class Atom extends Point3fi implements Node {
 
   // ATOM_IN_FRAME simply associates an atom with the current model
@@ -1479,8 +1476,6 @@ public class Atom extends Point3fi implements Node {
     Atom a = ms.getBasisAtom(i, true);
     int id = a.getSeqID();
     if (id != 0) {
-      int m = id >> 16;
-      char c = (char) (id & 0xFF);
       return (withMultiplicity ? "" + (id >> 16) : "") + (char) (id & 0xFF);
     }
     SymmetryInterface sym = getUnitCell();
