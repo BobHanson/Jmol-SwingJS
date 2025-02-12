@@ -125,7 +125,7 @@ public class Shader {
     celOn = celShading;
     celPower = celShadingPower;
     useLight = (!celOn || celShadingPower > 0);
-    celZ = 1 - (double) Math.pow(2, -Math.abs(celShadingPower)/10d);
+    celZ = 1 - Math.pow(2, -Math.abs(celShadingPower)/10d);
     celRGB = argb;
     flushCaches();
   }
@@ -291,9 +291,8 @@ public class Shader {
     // from Cylinder3D.calcArgbEndcap and renderCone
     // from GData.getShadeIndex and getShadeIndex
     double magnitude = Math.sqrt(x * x + y * y + z * z);
-    return (int) Math.round(getShadeF((double) (x / magnitude),
-        (double) (y / magnitude), (double) (z / magnitude))
-        * SHADE_INDEX_LAST);
+    return Math.round((getShadeF((x / magnitude),
+        (y / magnitude), (z / magnitude))        * SHADE_INDEX_LAST));
   }
 
   public byte getShadeB(double x, double y, double z) {
@@ -306,13 +305,11 @@ public class Shader {
     //from calcDitheredNoisyShadeIndex (not utilized)
     //and Cylinder.calcRotatedPoint
     double magnitude = Math.sqrt(x*x + y*y + z*z);
-    return (int) Math.floor(getShadeF((double)(x/magnitude),
-                                              (double)(y/magnitude),
-                                              (double)(z/magnitude))
+    return Math.floor(getShadeF(x/magnitude, y/magnitude, z/magnitude)
                  * SHADE_INDEX_LAST * (1 << 8));
   }
 
-  private double getShadeF(double x, double y, double z) {
+  private float getShadeF(double x, double y, double z) {
     double NdotL = (useLight ? x * xLight + y * yLight + z * zLight : z);
     if (NdotL <= 0)
       return 0;
@@ -345,7 +342,7 @@ public class Shader {
       double k_specular = 2 * NdotL * z - zLight;
       if (k_specular > 0) {
         if (usePhongExponent) {
-          k_specular = (double) Math.pow(k_specular, phongExponent);
+          k_specular = Math.pow(k_specular, phongExponent);
         } else {
           for (int n = specularExponent; --n >= 0
               && k_specular > .0001f;)
@@ -354,7 +351,7 @@ public class Shader {
         intensity += k_specular * specularFactor;
       }
     }
-    return (celOn && z < celZ ? 0d : intensity > 1 ? 1d : intensity);
+    return (float) (celOn && z < celZ ? 0d : intensity > 1 ? 1d : intensity);
   }
 
   /*
@@ -429,7 +426,7 @@ public class Shader {
         byte shadeIndex = 0;
         double z2 = r2 - xF2 - yF * yF;
         if (z2 > 0) {
-          double z = (double) Math.sqrt(z2);
+          double z = Math.sqrt(z2);
           shadeIndex = getShadeN(xF, yF, z, 130);
         }
         sphereShadeIndexes[(j << 8) + i] = shadeIndex;
@@ -493,7 +490,7 @@ public class Shader {
     double ty = mDeriv.m10 * x + mDeriv.m11 * y + mDeriv.m12 * z + mDeriv.m13;
     double tz = mDeriv.m20 * x + mDeriv.m21 * y + mDeriv.m22 * z + mDeriv.m23;
     double f = Math.min(radius/2d, 45) / 
-        (double) Math.sqrt(tx * tx + ty * ty + tz * tz);
+        Math.sqrt(tx * tx + ty * ty + tz * tz);
     // optimized for about 30-100% inclusion
     int i = (int) (-tx * f);
     int j = (int) (-ty * f);
