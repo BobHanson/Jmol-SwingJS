@@ -211,7 +211,6 @@ abstract class ScriptExpr extends ScriptParam {
         if (isSpecialAssignment && nSquare == 1 && tokAt(i + 1) == T.opEQ)
           isSpecialAssignment = rpn.endAssignment();
       }
-
       switch (tok) {
       case T.define:
         if ((tok = tokAt(++i)) == T.expressionBegin) {
@@ -414,6 +413,10 @@ abstract class ScriptExpr extends ScriptParam {
         }
         i = iToken;
         break;
+      case T.this_:
+        v = vwr.getFrameAtoms();
+        i = iToken;
+        break;
       case T.expressionBegin:
         if (tokAt(i + 1) == T.expressionEnd) {
           v = new Hashtable<String, Object>();
@@ -473,10 +476,6 @@ abstract class ScriptExpr extends ScriptParam {
           }
         }
         SV var = getBitsetPropertySelector(i + 1, rpn.getXTok());
-// ???       if (tokAt(iToken + 1) == T.leftparen) {
-//          // .pivot(), .sum() all ok
-//          iToken += 2;
-//        }
         // check for added min/max modifier
         boolean isUserFunction = (var.intValue == T.function);
         boolean allowMathFunc = true;
@@ -975,6 +974,7 @@ abstract class ScriptExpr extends ScriptParam {
       case T.cell:
         rpn.addXBs(getAtomBits(instruction.tok, value));
         break;
+      case T.this_:
       case T.thismodel:
         rpn.addXBs(vwr.am.cmi < 0 ? vwr.getFrameAtoms() : vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi));
         break;

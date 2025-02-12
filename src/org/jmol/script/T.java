@@ -1402,6 +1402,7 @@ public class T {
   public final static int perper              = misc | 513;
   public final static int rightbrace          = misc | 514;
   public final static int semicolon           = misc | 515;
+  public final static int this_               = misc | 516; // 16.3.9/10
   public final static int spec_alternate      = misc | 531;
   public final static int spec_atom           = misc | 532;
   public final static int spec_chain          = misc | 533;
@@ -1411,13 +1412,6 @@ public class T {
   public final static int spec_resid          = misc | 537;
   public final static int spec_seqcode        = misc | 538;
   public final static int spec_seqcode_range  = misc | 539;
-
-  
-  // NOTE: It is important that width is the last token. 
-  //       build_13_tojs.xml needs to see that to clear out
-  //       the unnecessary static defs.
-
-  
   
   // predefined Tokens: 
   
@@ -1888,6 +1882,7 @@ public class T {
         "subsystem",
         "synchronize",
         "sync",
+        "this",
         "trace",
         "translate",
         "translateSelected",
@@ -2972,6 +2967,7 @@ public class T {
         subsystem,                          // "subsystem"
         sync,                               // "synchronize"
         -1,                                 // "sync"
+        this_,                               // "this"
         trace,                              // "trace"
         translate,                          // "translate"
         translateSelected,                  // "translateSelected"

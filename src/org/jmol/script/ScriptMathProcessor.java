@@ -1536,7 +1536,7 @@ public class ScriptMathProcessor {
         f = x1.asDouble();
         // neg is scientific notation
         if (n == 0)
-          return addXInt((int) Math.round(f));
+          return addXInt(Math.round((float)f));
         s = DF.formatDecimal(f, n);
         return addXStr(s);
       case T.string:
@@ -1860,7 +1860,7 @@ public class ScriptMathProcessor {
     case T.matrix4f:
       switch (op.intValue) {
         case T.rxyz:
-          return addXStr((String) vwr.getSymStatic().staticConvertOperation(null, (M4d) x2.value, true));
+          return addXStr((String) vwr.getSymStatic().staticConvertOperation(null, (M4d) x2.value, "rxyz"));
       }
       break;
     case T.bitset:
