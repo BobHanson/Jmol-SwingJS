@@ -231,6 +231,13 @@ public class IsosurfaceRenderer extends MeshRenderer {
       V3d v2 = new V3d();
       pt1f.setT(vertices[0]);
       tm.transformPt3f(pt1f, pt1f);
+      // exit if the lobe is pointing sufficiently away from the user
+      if (pt2f.z > pt1f.z 
+    		  && pt1f.z - pt2f.z + 
+    		  Math.sqrt((pt1f.x - pt2f.x) * (pt1f.x - pt2f.x) 
+    				  + (pt1f.y - pt2f.y) * (pt1f.y - pt2f.y)) < 0) {
+        return;
+      }
       v1.sub2(pt2f, pt1f);
       v2.set(v1.x, v1.y, v1.z + 1);
       v2.cross(v2,v1);

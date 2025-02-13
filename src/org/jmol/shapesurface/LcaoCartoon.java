@@ -242,7 +242,7 @@ public class LcaoCartoon extends Isosurface {
   private void setLcaoOn(int iAtom, boolean TF) {
     String id = getID(lcaoID, iAtom, false);
     for (int i = meshCount; --i >= 0;)
-      if (meshes[i].thisID.indexOf(id) == 0)
+      if (meshes[i].thisID.indexOf(id) >= 0)
         meshes[i].visible = TF;
   }
 
@@ -261,11 +261,13 @@ public class LcaoCartoon extends Isosurface {
 
   private void deleteLcaoCartoon(int iAtom) {
     String id = getID(lcaoID, iAtom, false);
-    for (int i = meshCount; --i >= 0;)
-      if (meshes[i].thisID.indexOf(id) == 0)
+    for (int i = meshCount; --i >= 0;) {
+      if (meshes[i].thisID.indexOf(id) >= 0) {
         deleteMeshI(i);
+      }
+    }
   }
-
+  
   private void createLcaoCartoon() {
     isMolecular = (isMolecular && (thisType.indexOf("px") >= 0
         || thisType.indexOf("py") >= 0 || thisType.indexOf("pz") >= 0));
@@ -277,6 +279,7 @@ public class LcaoCartoon extends Isosurface {
   }
 
   private void createLcaoCartoon(int iAtom) {
+    // true here, since this is specific to the type
     String id = getID(lcaoID, iAtom, true);
     boolean isCpk = (thisType.equals("cpk"));
     for (int i = meshCount; --i >= 0;)
@@ -335,12 +338,15 @@ public class LcaoCartoon extends Isosurface {
         setPropI("translucentLevel", Double.valueOf(C.getColixTranslucencyLevel(colix)), null);
         setPropI("translucency", "translucent", null);
       }
-    } else if (lcaoTranslucent)
-      for (int i = meshCount; --i >= 0;)
-        if (meshes[i].thisID.indexOf(id) == 0)
+    } else if (lcaoTranslucent) {
+      for (int i = meshCount; --i >= 0;) {
+        if (meshes[i].thisID.indexOf(id) == 0) {
           meshes[i].setTranslucent(true, translucentLevel);
+        }
+      }
+    }
   }
-
+ 
   private String getID(String id, int i, boolean withPrefix) {
     // remove "-" from "-px" "-py" "-pz" because we never want to have
     // both "pz" and "-pz" on the same atom
