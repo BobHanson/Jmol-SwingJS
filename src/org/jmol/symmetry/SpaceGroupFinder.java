@@ -101,8 +101,6 @@ public class SpaceGroupFinder {
 
   private P3d zero;
 
-  private int firstOrtho;
-
   private boolean isQuery;
   
   public SpaceGroupFinder() {
@@ -125,6 +123,12 @@ public class SpaceGroupFinder {
    * @param vwr
    * @param atoms0
    * @param xyzList0
+   *        a semicolon-separated list of possible space groups, such as
+   *        "-x,-y,-z;x,-y,-z" or a space group ID such as "133:2"; if a list,
+   *        prefixing or postfixing the list with "&" or joining with "&"
+   *        indicates that a partial match is desired, returning a list of names
+   *        of space groups that have at least the specified operations
+   * 
    * @param unitCellParams
    * @param origin
    * @param oabc0
@@ -730,7 +734,7 @@ public class SpaceGroupFinder {
     }
     String trm = sg.getClegId();
     trm = trm.substring(trm.indexOf(":") + 1);
-    M4d tr = (M4d) uc.staticConvertOperation("!"+trm, null, false);
+    M4d tr = (M4d) uc.staticConvertOperation("!"+trm, null, null);
     P3d a = P3d.new3(1, 0, 0);
     P3d b = P3d.new3(0, 1, 0);
     P3d c = P3d.new3(0, 0, 1);
@@ -947,7 +951,7 @@ public class SpaceGroupFinder {
     bsGroups.setBits(0, 2);
     int i0 = 2, i = 2;
     while (true) {
-      firstOrtho = i = scanTo(i, "16");
+      i = scanTo(i, "16");
       if (!isOrtho && !isTet && !isTri && !isRhombo && !isCubic)
         break;
 
@@ -1006,21 +1010,13 @@ public class SpaceGroupFinder {
    * Could be the result of spacegroup(nameOrXYZList, unitcellParametersArray)
    * or MODELKIT ASSIGN SPACEGROUP "nameOrXYZList" other than P1
    * 
-   * @param xyzList
-   *        a semicolon-separated list of possible space groups, such as
-   *        "-x,-y,-z;x,-y,-z" or a space group ID such as "133:2"; if a list,
-   *        prefixing or postfixing the list with "&" or joining with "&"
-   *        indicates that a partial match is desired, returning a list of names
-   *        of space groups that have at least the specified operations
-   * @param unitCellParams
-   * @param isAssign
-   *        from ModelKit
    * @return an array of space group IDs if not isAssign and not "="; a
    *         SpaceGroup or null if isAssign; a single space group ID as a string
    *         if "=" and a string starting and ending with "?" if an xyz operator
    *         is of an invalid form.
    */
   private Object getGroupsWithOps() {
+
     BS groups = new BS();
     if (unitCellParams == null) {
       groups.setBits(0, GROUP_COUNT);
@@ -1082,10 +1078,10 @@ public class SpaceGroupFinder {
          sg = nameToGroup(groupNames[i]);
          uc.setUnitCellFromParams(unitCellParams, false, slop);
          if (!checkUnitCell(sg))
-         if (isAssign) {
-            return SpaceGroup.createSpaceGroupN(groupNames[i], true);
-          }
-          return SpaceGroup.getInfo(null, groupNames[i], unitCellParams, true,
+           if (isAssign) {
+             return SpaceGroup.createSpaceGroupN(groupNames[i], true);
+           }
+           return SpaceGroup.getInfo(null, groupNames[i], unitCellParams, true,
               false);
         }
       }
@@ -1094,11 +1090,11 @@ public class SpaceGroupFinder {
     // at this point, the group has cardinality of at least 1 
     Lst<String> ret = new Lst<>();
     uc.setUnitCellFromParams(unitCellParams, false, slop);
-    for (int p = 0, i = groups.nextSetBit(0); i >= 0; i = groups
+    for (int i = groups.nextSetBit(0); i >= 0; i = groups
         .nextSetBit(i + 1)) {
       SpaceGroup sg = nameToGroup(groupNames[i]);
       if (checkUnitCell(sg))
-        ret.add(sg.getClegId());
+        ret.addLast(sg.getClegId());
     }
     return ret;
   }

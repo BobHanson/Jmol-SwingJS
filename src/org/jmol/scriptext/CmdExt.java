@@ -636,6 +636,7 @@ public class CmdExt extends ScriptExt {
       case T.boundbox:
       case T.unitcell:
       case T.string:
+      case T.spin:
         break;
       default:
         if (e.isArrayParameter(i)) {
@@ -653,16 +654,17 @@ public class CmdExt extends ScriptExt {
       if (e.chk)
         return i;
       switch (tok) {
+      case T.spin:
       case T.string:
         i--;
         //$FALL-THROUGH$
       case T.unitcell:
         // load .... FILL UNITCELL [conventional | primitive | rhombohedral | trigonal | a,b,c....]
         String type = e.optParameterAsString(i++).toLowerCase();
-        if (PT.isOneOf(type, ";conventional;primitive;rhombohedral;trigonal;")
+        if (PT.isOneOf(type, ";spin;conventional;primitive;rhombohedral;trigonal;")
             || type.indexOf(",") >= 0 && (type.indexOf("a") >= 0
                 && type.indexOf("b") >= 0 && type.indexOf("c") >= 0)) {
-          htParams.put("fillRange", type); // "conventional" or "primitive"
+          htParams.put(JC.LOAD_OPTION_FILL_RANGE, type); // "conventional" or "primitive"
           sOptions.append(" FILL UNITCELL \"" + type + "\"");
           return i;
         }
@@ -1640,7 +1642,6 @@ public class CmdExt extends ScriptExt {
     vwr.selectStatus(bsAtoms, false, 0, !e.doReport(), false);
   }
 
-  @SuppressWarnings("static-access")
   private void measure() throws ScriptException {
     ScriptEval eval = e;
     String id = null;
@@ -6016,6 +6017,7 @@ public class CmdExt extends ScriptExt {
       }
       icell = intParameter(i);
       break;
+    case T.spin:
     case T.string:
     case T.identifier:
       String s = paramAsStr(i).toLowerCase();
@@ -6937,7 +6939,7 @@ public class CmdExt extends ScriptExt {
           if (sym == null)
             invArg();
           String cleg = sym.getSpaceGroupClegId();
-          type = cleg.substring(0, cleg.indexOf(":") + 1) + type;
+          type = (cleg == null ? "[" + sym.getSpaceGroupName() + "]:" : cleg.substring(0, cleg.indexOf(":") + 1) ) + type;
         }
       }
 

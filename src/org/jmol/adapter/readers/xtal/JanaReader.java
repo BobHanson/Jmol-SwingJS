@@ -184,7 +184,7 @@ public class JanaReader extends AtomSetCollectionReader {
     if (!haveM40Data)
       readM40Data(false);
     if (lattvecs != null && lattvecs.size() > 0)
-      asc.getSymmetry().addLatticeVectors(lattvecs);
+      asc.getSymmetry().addMagLatticeVectors(lattvecs);
     applySymmetryAndSetTrajectory();
     finalizeReaderASCR();
   }

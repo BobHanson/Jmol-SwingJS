@@ -228,8 +228,6 @@ public interface SymmetryInterface {
 
   boolean checkPeriodic(P3d pt);
 
-  Object staticConvertOperation(String string, M4d matrix, boolean asRationalMatrix);
-
   int getAdditionalOperationsCount();
 
   M4d[] getAdditionalOperations();
@@ -289,5 +287,7 @@ public interface SymmetryInterface {
   P3d getUnitCellCenter();
 
   Atom getConstrainableEquivAtom(Atom a);
+
+  Object staticConvertOperation(String xyz, M4d matrix, String labels);
 
 }

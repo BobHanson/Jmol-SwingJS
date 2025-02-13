@@ -305,7 +305,7 @@ public class Shader {
     //from calcDitheredNoisyShadeIndex (not utilized)
     //and Cylinder.calcRotatedPoint
     double magnitude = Math.sqrt(x*x + y*y + z*z);
-    return Math.floor(getShadeF(x/magnitude, y/magnitude, z/magnitude)
+    return (int) Math.floor(getShadeF(x/magnitude, y/magnitude, z/magnitude)
                  * SHADE_INDEX_LAST * (1 << 8));
   }
 

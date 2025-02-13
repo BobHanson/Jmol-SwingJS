@@ -852,6 +852,9 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       } else if (sdef.equals("a,b,c")) {
         strans = null;
       } else {
+        if (sdef.indexOf("w") > 0) {
+          sdef = sdef.replace('u', 'x').replace('v', 'y').replace('w', 'z');
+        }
         ret[0] = sdef;
         strans = fixABC(ret);
         sdef = ret[0];

@@ -466,7 +466,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
     }
     int dxB = dx * dx;
     int dyB = dy * dy;
-    mag2d = (int) Math.round(Math.sqrt(dxB + dyB));
+    mag2d = Math.round((float) Math.sqrt(dxB + dyB));
     resetAxisCoordinates();
     if (isCartesian && bondOrder == 3) {
       fillCylinder(g3d, colixA, colixB, endcaps, xAxis1, yAxis1, zA, xAxis2, yAxis2,

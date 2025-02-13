@@ -176,7 +176,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
           if (pt2f.z > z1)
             z1 = pt2f.z;
         }
-        thisSlabValue = (int) Math.round(z0 + (z1 - z0) * (100d - meshSlabValue)/100);
+        thisSlabValue = Math.round((float) (z0 + (z1 - z0) * (100 - meshSlabValue)/100));
         frontOnly &= (meshSlabValue >= 100);
         isShell &= (meshSlabValue >= 100);
       }
@@ -239,10 +239,10 @@ public class IsosurfaceRenderer extends MeshRenderer {
       v2.scale(f);
       pt1f.add2(pt2f, v2);
       pt2f.sub(v2);
-      screens[0].set((int) Math.round(pt1f.x),(int) Math.round(pt1f.y),(int) Math.round(pt1f.z));
+      screens[0].set(Math.round((float) pt1f.x),Math.round((float) pt1f.y), Math.round((float) pt1f.z) - 110);
       g3d.fillSphereI(r, screens[0]);
     }
-    screens[1].set((int) Math.round(pt2f.x),(int) Math.round(pt2f.y),(int) Math.round(pt2f.z));
+    screens[1].set(Math.round((float) pt2f.x), Math.round((float) pt2f.y), Math.round((float) pt2f.z) - 110);
     g3d.fillSphereI(r, screens[1]);
   }
   

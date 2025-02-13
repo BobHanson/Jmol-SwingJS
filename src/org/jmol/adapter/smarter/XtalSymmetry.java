@@ -69,8 +69,6 @@ public class XtalSymmetry {
   public static class FileSymmetry extends Symmetry {
 
     public FileSymmetry() {
-      super();
-      
       // for Class.forName()
     }
 
@@ -78,8 +76,12 @@ public class XtalSymmetry {
     //      spaceGroup.operations[op].setTimeReversal(val);
     //    }
     //  
-    public boolean addLatticeVectors(Lst<double[]> lattvecs) {
-      return spaceGroup.addLatticeVectors(lattvecs);
+    public boolean addMagLatticeVectors(Lst<double[]> lattvecs) {
+      return spaceGroup.addMagLatticeVectors(lattvecs);
+    }
+
+    public boolean addSpinLattice(Lst<String> lstSpinFrames) {
+      return spaceGroup.addSpinLattice(lstSpinFrames);
     }
 
     public boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
@@ -118,13 +120,13 @@ public class XtalSymmetry {
      * @param xyz
      * @param rotTransMatrix
      */
-    public void getMatrixFromString(String xyz, double[] rotTransMatrix) {
-      SymmetryOperation.getMatrixFromString(null, xyz, rotTransMatrix, false,
-          true, false);
+    public void getRotTransArrayAndXYZ(String xyz, double[] rotTransMatrix) {
+      SymmetryOperation.getRotTransArrayAndXYZ(null, xyz, rotTransMatrix, false,
+          true, false, null);
     }
 
     public String getSpaceGroupOperationCode(int iOp) {
-      return spaceGroup.matrixOperations[iOp].subsystemCode;
+      return spaceGroup.symmetryOperations[iOp].subsystemCode;
     }
 
     public Tensor getTensor(Viewer vwr, double[] parBorU) {
@@ -138,10 +140,11 @@ public class XtalSymmetry {
 
     public String getSpaceGroupTitle() {
       String s = getSpaceGroupName();
-      return (s.startsWith("cell=") ? s : spaceGroup != null ? spaceGroup.asString()
-          : unitCell != null && unitCell.name.length() > 0
-              ? "cell=" + unitCell.name
-              : "");
+      return (s.startsWith("cell=") ? s
+          : spaceGroup != null ? spaceGroup.asString()
+              : unitCell != null && unitCell.name.length() > 0
+                  ? "cell=" + unitCell.name
+                  : "");
     }
 
     public void setPrecision(double prec) {
@@ -188,7 +191,7 @@ public class XtalSymmetry {
     }
 
     public void addInversion() {
-      SymmetryOperation[] ops = spaceGroup.matrixOperations;
+      SymmetryOperation[] ops = spaceGroup.symmetryOperations;
       M4d inv = new M4d();
       inv.m00 = inv.m11 = inv.m22 = -1;
       inv.m33 = 1;
@@ -199,13 +202,104 @@ public class XtalSymmetry {
         String s = SymmetryOperation.getXYZFromMatrix(m, true, true, false);
         addSpaceGroupOperation(s, 0);
       }
-      return;
     }
 
     public V3d[] rotateAxes(int iop, V3d[] axes, P3d ptTemp, M3d mTemp) {
       return (iop == 0 ? axes
-          : spaceGroup.matrixOperations[iop].rotateAxes(axes, unitCell, ptTemp,
-              mTemp));
+          : spaceGroup.symmetryOperations[iop].rotateAxes(axes, unitCell,
+              ptTemp, mTemp));
+    }
+
+    M4d spinFramePp;
+    String spinFrame;
+    private Set<String> uvwMap;
+    
+    public String transformUVW(String uvw, String spinFrame) {
+      if (spinFrame == null)
+        return uvw;
+      this.spinFrame = spinFrame;
+      if (spinFramePp == null) {
+        System.out.println("XtalSymmetry.transformUVW using frame " + spinFrame);
+        spinFramePp = (M4d) convertTransform(spinFrame, null);
+        uvwMap = new HashSet<String>();
+      }
+      if (!uvwMap.contains(uvw)) {
+        uvwMap.add(uvw);
+      }
+      return uvw;
+    }
+
+    private P3d magneticScaling;
+    /**
+     * Scale the magnetic moments of magCIF and spinCIF files.
+     * 
+     * magCIF files have moments expressed as Bohr magnetons along the
+     * crystallographic axes. These have to be "fractionalized" in order to be
+     * properly handled by symmetry operations, then, in the end, turned into
+     * Cartesians (in setSpinVectors)
+     * 
+     * It is not clear to me at all how this would be handled if there are
+     * subsystems. This method must be run PRIOR to applying symmetry and thus
+     * prior to creation of modulation sets.
+     * 
+     * @param asc 
+     * @param unitCellParams 
+     * 
+     */
+    protected void magneticMomentsToFractional(AtomSetCollection asc, double[] unitCellParams) {
+      double a = unitCellParams[0];
+      double b = unitCellParams[1];
+      double c = unitCellParams[2];
+      if (spinFramePp != null) {
+        // the vectors are based on the spin frame, not the real frame
+        // we create a unit cell for this FileSymmetry just 
+        // for this purpose
+        setUnitCellFromParams(unitCellParams, false, Double.NaN);
+        T3d[] spinABC = getV0abc(spinFrame, null);
+        a = spinABC[1].length();
+        b = spinABC[2].length();
+        c = spinABC[3].length();
+      }
+      magneticScaling = P3d.new3(1 / a, 1 / b, 1 / c);
+      int i0 = asc.getAtomSetAtomIndex(asc.iSet);
+      for (int i = asc.ac; --i >= i0;) {
+        V3d v = asc.atoms[i].vib;
+        if (v != null) {
+          v.scaleT(magneticScaling);
+        }
+      }
+    }
+
+    protected int nVib;
+
+    /**
+     * At the end, we need to rescale the vectors.
+     * @param asc 
+     * 
+     * @return number of vectors
+     */
+    protected int setSpinVectors(AtomSetCollection asc) {
+      // return spin vectors to cartesians
+      if (nVib > 0)
+        return nVib; // already done
+      int i0 = asc.getAtomSetAtomIndex(asc.iSet);
+      for (int i = asc.ac; --i >= i0;) {
+        Vibration v = (Vibration) asc.atoms[i].vib;
+        if (v != null) {
+          if (v.modDim > 0) {
+            ((JmolModulationSet) v).setMoment();
+          } else {
+            v = (Vibration) v.clone(); // this could be a modulation set
+            if (spinFramePp != null) {
+              spinFramePp.rotate(v);
+            }
+            toCartesian(v, true);
+            asc.atoms[i].vib = v;
+          }
+          nVib++;
+        }
+      }
+      return nVib;
     }
 
   }
@@ -250,10 +344,10 @@ public class XtalSymmetry {
   private boolean doCentroidUnitCell;
   private boolean doNormalize = true;
   private boolean doPackUnitCell;
-  
+
   private String filterSymop;
   private int firstAtom;
-  
+
   private int[] latticeCells;
 
   /**
@@ -270,14 +364,11 @@ public class XtalSymmetry {
   private int ndims = 3;
 
   private int noSymmetryCount;
-  private int nVib;
   private double packingRange;
 
   private final P3d ptOffset = new P3d();
 
   private P3d ptTemp;
-
-  //private P3d unitCellOffset;
 
   /**
    * range minima and maxima -- also usedf for cartesians comparisons
@@ -603,7 +694,7 @@ public class XtalSymmetry {
                     || bsAtoms.get(a.index) && bsAtoms.get(b.index))
                 && a.distanceSquared(b) > MAX_INTERCHAIN_BOND_2) {
               vConnect.removeItemAt(i);
-              System.out.println("long interchain bond removed for @"
+              System.out.println("XtalSymmetry: long interchain bond removed for @"
                   + a.atomSerial + "-@" + b.atomSerial);
             }
           }
@@ -643,39 +734,12 @@ public class XtalSymmetry {
     return (symmetry == null ? (symmetry = new FileSymmetry()) : symmetry);
   }
 
-  //  public void setTimeReversal(int op, int timeRev) {
-  //    symmetry.setTimeReversal(op, timeRev);
-  //  }
-
   public boolean isWithinCell(int ndims, P3d pt, double minX, double maxX,
                               double minY, double maxY, double minZ,
                               double maxZ, double slop) {
     return (pt.x > minX - slop && pt.x < maxX + slop
         && (ndims < 2 || pt.y > minY - slop && pt.y < maxY + slop)
         && (ndims < 3 || pt.z > minZ - slop && pt.z < maxZ + slop));
-  }
-
-  /**
-   * magCIF files have moments expressed as Bohr magnetons along the
-   * cryrstallographic axes. These have to be "fractionalized" in order to be
-   * properly handled by symmetry operations, then, in the end, turned into
-   * Cartesians.
-   * 
-   * It is not clear to me at all how this would be handled if there are
-   * subsystems. This method must be run PRIOR to applying symmetry and thus
-   * prior to creation of modulation sets.
-   * 
-   */
-  public void scaleFractionalVibs() {
-    double[] params = acr.unitCellParams;
-    P3d ptScale = P3d.new3(1 / params[0], 1 / params[1], 1 / params[2]);
-    int i0 = asc.getAtomSetAtomIndex(asc.iSet);
-    for (int i = asc.ac; --i >= i0;) {
-      V3d v = asc.atoms[i].vib;
-      if (v != null) {
-        v.scaleT(ptScale);
-      }
-    }
   }
 
   public XtalSymmetry set(AtomSetCollectionReader reader) {
@@ -693,28 +757,6 @@ public class XtalSymmetry {
   public void setLatticeParameter(int latt) {
     symmetry.setSpaceGroup(doNormalize);
     symmetry.setLattice(latt);
-  }
-
-  public int setSpinVectors() {
-    // return spin vectors to cartesians
-    if (nVib > 0 || asc.iSet < 0 || !acr.vibsFractional)
-      return nVib; // already done
-    int i0 = asc.getAtomSetAtomIndex(asc.iSet);
-    FileSymmetry sym = getBaseSymmetry();
-    for (int i = asc.ac; --i >= i0;) {
-      Vibration v = (Vibration) asc.atoms[i].vib;
-      if (v != null) {
-        if (v.modDim > 0) {
-          ((JmolModulationSet) v).setMoment();
-        } else {
-          v = (Vibration) v.clone(); // this could be a modulation set
-          sym.toCartesian(v, true);
-          asc.atoms[i].vib = v;
-        }
-        nVib++;
-      }
-    }
-    return nVib;
   }
 
   int addSpaceGroupOperation(String xyz, boolean andSetLattice) {
@@ -893,8 +935,9 @@ public class XtalSymmetry {
     crystalReaderLatticeOpsOnly = (asc.crystalReaderLatticeOpsOnly
         && latticeOp >= 0); // CrystalReader
     if (doCentroidUnitCell)
-      asc.setInfo("centroidMinMax", new int[] { minXYZ.x, minXYZ.y, minXYZ.z,
-          maxXYZ.x, maxXYZ.y, maxXYZ.z, (centroidPacked ? (int) (100 * packingRange) : 0) });
+      asc.setInfo("centroidMinMax",
+          new int[] { minXYZ.x, minXYZ.y, minXYZ.z, maxXYZ.x, maxXYZ.y,
+              maxXYZ.z, (centroidPacked ? (int) (100 * packingRange) : 0) });
     if (doCentroidUnitCell || acr.doPackUnitCell
         || symmetryRange != 0 && maxXYZ.x - minXYZ.x == 1
             && maxXYZ.y - minXYZ.y == 1 && maxXYZ.z - minXYZ.z == 1) {
@@ -957,7 +1000,7 @@ public class XtalSymmetry {
     FileSymmetry sym = symmetry;
     FileSymmetry lastSymmetry = sym;
     checkAll = (crystalReaderLatticeOpsOnly
-    		// was acr.checkNearAtoms
+        // was acr.checkNearAtoms
         || asc.atomSetCount == 1 && checkNearAtoms && latticeOp >= 0);
     Lst<M4d> lstNCS = acr.lstNCS;
     if (lstNCS != null && lstNCS.get(0).m33 == 0) {
@@ -1254,7 +1297,7 @@ public class XtalSymmetry {
     }
     T3d[] oabc = null;
     double slop = 1e-6d;
-    nVib = 0;
+    baseSymmetry.nVib = 0;
     String supercell = acr.strSupercell;
     boolean isSuper = (supercell != null && supercell.indexOf(",") >= 0);
     M4d matSuper = null;
@@ -1344,13 +1387,15 @@ public class XtalSymmetry {
   }
 
   private void finalizeSymmetry(FileSymmetry symmetry) {
-    String name = (String) asc.getAtomSetAuxiliaryInfoValue(-1, JC.INFO_SPACE_GROUP);
+    String name = (String) asc.getAtomSetAuxiliaryInfoValue(-1,
+        JC.INFO_SPACE_GROUP);
     symmetry.setFinalOperations(ndims, name, asc.atoms, firstAtom,
         noSymmetryCount, doNormalize, filterSymop);
     if (filterSymop != null || name == null || name.equals("unspecified!")) {
       setAtomSetSpaceGroupName(symmetry.getUnitCellDisplayName());
     }
-    if (unitCellParams != null || Double.isNaN(acr.unitCellParams[SimpleUnitCell.INFO_A]))
+    if (unitCellParams != null
+        || Double.isNaN(acr.unitCellParams[SimpleUnitCell.INFO_A]))
       return;
     if (symmetry.fixUnitCell(acr.unitCellParams)) {
       acr.appendLoadNote(
@@ -1392,27 +1437,31 @@ public class XtalSymmetry {
       asc.setCurrentModelInfo("latticeDesignation",
           sym.getLatticeDesignation());
       asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_RANGE, unitCells);
-//      asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_TRANSLATIONS, unitCellTranslations);
+      //      asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_TRANSLATIONS, unitCellTranslations);
       if (acr.isSUPERCELL)
         asc.setCurrentModelInfo("supercell", acr.strSupercell);
     }
     asc.setCurrentModelInfo("presymmetryAtomIndex", Integer.valueOf(firstAtom));
     int operationCount = symmetry.getSpaceGroupOperationCount();
     if (operationCount > 0) {
-      asc.setCurrentModelInfo(JC.INFO_SYMMETRY_OPERATIONS, symmetry.getSymopList(doNormalize));
-      asc.setCurrentModelInfo(JC.INFO_SYMOPS_TEMP, symmetry.getSymmetryOperations());
+      asc.setCurrentModelInfo(JC.INFO_SYMMETRY_OPERATIONS,
+          symmetry.getSymopList(doNormalize));
+      asc.setCurrentModelInfo(JC.INFO_SYMOPS_TEMP,
+          symmetry.getSymmetryOperations());
     }
     asc.setCurrentModelInfo("symmetryCount", Integer.valueOf(operationCount));
     asc.setCurrentModelInfo("latticeType",
         acr.latticeType == null ? "P" : acr.latticeType);
     asc.setCurrentModelInfo("intlTableNo", symmetry.getIntTableNumber());
-    asc.setCurrentModelInfo("intlTableIndex", symmetry.getSpaceGroupInfoObj("itaIndex", null, false, false));
-    asc.setCurrentModelInfo("intlTableTransform", symmetry.getSpaceGroupInfoObj("itaTransform", null, false, false));
-    asc.setCurrentModelInfo("intlTableJmolId",
-        symmetry.getSpaceGroupJmolId());
+    asc.setCurrentModelInfo("intlTableIndex",
+        symmetry.getSpaceGroupInfoObj("itaIndex", null, false, false));
+    asc.setCurrentModelInfo("intlTableTransform",
+        symmetry.getSpaceGroupInfoObj("itaTransform", null, false, false));
+    asc.setCurrentModelInfo("intlTableJmolId", symmetry.getSpaceGroupJmolId());
     asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_INDEX,
         Integer.valueOf(symmetry.getSpaceGroupIndex()));
-    asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_TITLE, symmetry.getSpaceGroupTitle());
+    asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_TITLE,
+        symmetry.getSpaceGroupTitle());
     if (acr.sgName == null || acr.sgName.indexOf("?") >= 0
         || acr.sgName.indexOf("!") >= 0)
       setAtomSetSpaceGroupName(acr.sgName = symmetry.getSpaceGroupName());
@@ -1485,12 +1534,14 @@ public class XtalSymmetry {
       } else {
         rangeType = null;
       }
+    } else if (rangeType.equals("spin")) {
+      rangeType = getBaseSymmetry().spinFrame;
     } else if (rangeType.indexOf(",") < 0 || rangeType.indexOf("a") < 0
         || rangeType.indexOf("b") < 0 || rangeType.indexOf("c") < 0) {
       // was not "a,b,c..."
       rangeType = null;
     } else {
-      rangeType = null;
+//      rangeType = null;
     }
     if (rangeType != null && range == null
         && (range = symmetry.getV0abc(rangeType, null)) == null) {
@@ -1732,7 +1783,8 @@ public class XtalSymmetry {
             asc.bsAtoms.set(atom1.index);
           if (spinOp != 0 && atom1.vib != null) {
             // spinOp is making the correction for spin being a pseudoVector, not a standard vector
-            sym.getSpaceGroupOperation(iSym).rotate(atom1.vib);
+            ((SymmetryOperation) sym.getSpaceGroupOperation(iSym))
+                .rotateSpin(atom1.vib);
             atom1.vib.scale(spinOp);
           }
           if (atom1.part < 0) {
@@ -1746,13 +1798,14 @@ public class XtalSymmetry {
               boolean isNew = (disorderMap.get(ia) == null);
               if (disorderMapMax == 0 || disorderMapMax == 'z') {
                 // back to "A"
-                disorderMapMax = '@'; 
+                disorderMapMax = '@';
               } else if (disorderMapMax == 'Z') {
                 // allow a-z as well; use select ALTLOC like 'a' to distinguish 'a' from 'A'
                 disorderMapMax = '`';
               }
               // first time will be altloc, then start incrementing altLoc
-              ch = new Character(isNew ? atom1.altLoc : (char) ++disorderMapMax);
+              ch = new Character(
+                  isNew ? atom1.altLoc : (char) ++disorderMapMax);
               disorderMap.put(key, ch);
               if (isNew)
                 disorderMap.put(ia, ch);
@@ -1812,25 +1865,25 @@ public class XtalSymmetry {
     return pt;
   }
 
-  /** 
+  /**
    * 
    * create property_part for SHELX and CIF loaders
    * 
    */
-    public void setPartProperty() {
-      for (int iset = asc.atomSetCount; --iset >= 0;) {
-        double[] parts = new double[asc.getAtomSetAtomCount(iset)];
-        for (int i = 0, ia = asc.getAtomSetAtomIndex(iset), n = parts.length; i < n; i++) {
-          Atom a = asc.atoms[ia++];
-          parts[i] = a.part;
-        }
-        asc.setAtomProperties("part", parts, iset, false);
+  public void setPartProperty() {
+    for (int iset = asc.atomSetCount; --iset >= 0;) {
+      double[] parts = new double[asc.getAtomSetAtomCount(iset)];
+      for (int i = 0, ia = asc
+          .getAtomSetAtomIndex(iset), n = parts.length; i < n; i++) {
+        Atom a = asc.atoms[ia++];
+        parts[i] = a.part;
       }
+      asc.setAtomProperties("part", parts, iset, false);
     }
-
+  }
 
   private void trimToUnitCell(int iAtomFirst) {
-    
+
     // trim atom set based on current min/max
     Atom[] atoms = asc.atoms;
     BS bs = updateBSAtoms();
@@ -1900,6 +1953,15 @@ public class XtalSymmetry {
 
   public FileSymmetry newFileSymmetry() {
     return new FileSymmetry();
+  }
+
+  public void scaleFractionalVibs() {
+    getBaseSymmetry().magneticMomentsToFractional(asc, acr.unitCellParams);
+  }
+
+  public int setSpinVectors() {
+    return (asc.iSet < 0 || !acr.vibsFractional ? 0 
+        : getBaseSymmetry().setSpinVectors(asc));
   }
 
 }

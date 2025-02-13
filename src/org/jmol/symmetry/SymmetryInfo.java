@@ -141,7 +141,7 @@ class SymmetryInfo {
           + (symmetryCount == 0 ? 1 : symmetryCount) + "\nSymmetry Operations:";
       for (int i = 0; i < symmetryCount; i++) {
         SymmetryOperation op = symmetryOperations[i];
-        s += "\n" + op.fixMagneticXYZ(op, op.xyz, true);
+        s += "\n" + op.fixMagneticXYZ(op, op.xyz);
         // TODO magnetic centering
         if (op.isCenteringOp)
           c += " ("
@@ -226,7 +226,7 @@ class SymmetryInfo {
   public String getClegId() {
     if (itaNo == null) {
       itaNo = intlTableIndexNdotM;
-      if (itaNo.indexOf(":") > 0)
+      if (itaNo == null || itaNo.indexOf(":") > 0)
         return itaNo;
       int pt = itaNo.indexOf(".");
       itaNo = (pt > 0 ? itaNo.substring(0, pt) : itaNo) + ":" + intlTableTransform;

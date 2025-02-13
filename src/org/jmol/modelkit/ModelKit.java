@@ -4209,6 +4209,8 @@ public class ModelKit {
    * @param swidth
    */
   public void drawUnitCell(String id, T3d ucLattice, String swidth) {
+    if (swidth.length() == 0)
+      swidth = "diameter 3";
     SymmetryInterface sym = vwr.getOperativeSymmetry();
     if (sym == null)
       return;

@@ -264,7 +264,7 @@ public class Viewer extends JmolViewer
 
   public static String strJavaVendor = "Java: "
       + System.getProperty("java.vendor", "j2s");
-  public static String strOSName = System.getProperty("os.name", "");
+  final public static String strOSName = System.getProperty("os.name", "");
   public static String strJavaVersion = "Java "
       + System.getProperty("java.version", "");
 
@@ -641,6 +641,7 @@ public class Viewer extends JmolViewer
       if (appletProxy != null)
         setStringProperty("appletProxy", appletProxy);
       if (isSignedApplet) {
+        showSystemInfo();
         logFilePath = PT.rep(appletCodeBase, "file://", "");
         logFilePath = PT.rep(logFilePath, "file:/", "");
         if (logFilePath.indexOf("//") >= 0)
@@ -685,16 +686,6 @@ public class Viewer extends JmolViewer
      * Logger.info("jvm11orGreater=" + jvm11orGreater + "\njvm12orGreater=" +
      * jvm12orGreater + "\njvm14orGreater=" + jvm14orGreater);
      */
-    if (!isSilent) {
-      Logger.info(JC.copyright + "\nJmol Version: " + getJmolVersion()
-          + "\njava.vendor: " + strJavaVendor + "\njava.version: "
-          + strJavaVersion + "\nos.name: " + strOSName + "\nAccess: " + access
-          + "\nmemory: " + getP("_memory") + "\nprocessors available: "
-          + nProcessors + "\nuseCommandThread: " + useCommandThread
-          + (!isApplet ? ""
-              : "\nappletId:" + htmlName
-                  + (isSignedApplet ? " (signed)" : "")));
-    }
     zap(false, true, false); // here to allow echos
     g.setO("language", GT.getLanguage());
     g.setO("_hoverLabel", hoverLabel);
@@ -1634,6 +1625,22 @@ public class Viewer extends JmolViewer
     }
     Logger.error("ERROR in getProperty DATA_API: " + infoType);
     return null;
+  }
+
+  private boolean systemInfoShown = false;
+  public void showSystemInfo() {
+    if (!isSilent && !systemInfoShown) {
+      Logger.info(JC.copyright + "\nJmol Version: " + getJmolVersion()
+          + "\njava.vendor: " + strJavaVendor 
+          + "\njava.version: " + strJavaVersion 
+          + "\nos: " + strOSName + " " + System.getProperty("os.arch", "") 
+          + "\nAccess: " + access
+          + "\nmemory: " + getP("_memory") + "\nprocessors available: "
+          + nProcessors + "\nuseCommandThread: " + useCommandThread
+          + (!isApplet ? ""
+              : "\nappletId:" + htmlName
+                  + (isSignedApplet ? " (signed)" : "")));
+    }
   }
 
   public int notifyMouseClicked(int x, int y, int action, int mode) {
@@ -5754,9 +5761,12 @@ public class Viewer extends JmolViewer
       return;
     // Eval
     try {
-      if (appConsole == null && showConsole)
+      boolean firstTime = (appConsole == null);
+      if (firstTime && showConsole) {
         getConsole();
+      }
       appConsole.setVisible(true);
+
     } catch (Throwable e) {
       // no console for this client... maybe no Swing
     }
@@ -11028,6 +11038,7 @@ public class Viewer extends JmolViewer
       }
       return inch.getInchi(this, atoms, molData, options);
     } catch (Throwable t) {
+      t.printStackTrace();
       return "";
     }
   }

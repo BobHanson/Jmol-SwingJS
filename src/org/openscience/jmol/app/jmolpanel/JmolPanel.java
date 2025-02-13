@@ -540,6 +540,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     consoleframe.setIconImage(frame.getIconImage());
     try {
       final ConsoleTextArea consoleTextArea = new ConsoleTextArea(true);
+      vwr.showSystemInfo();
       consoleTextArea.setFont(Font.decode("monospaced"));
       consoleframe.getContentPane().add(new JScrollPane(consoleTextArea),
           java.awt.BorderLayout.CENTER);

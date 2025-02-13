@@ -474,7 +474,7 @@ public class WyckoffFinder {
       tempOp.setTranslation(tempP);
       sb.appendC(' ');
       String s = "," + SymmetryOperation.getXYZFromMatrixFrac(tempOp, false,
-          true, false, true) + ",";
+          true, false, true, null) + ",";
       s = PT.rep(s, ",,", ",0,");
       s = PT.rep(s, ",+", ",");
       sb.appendC('(').append(s.substring(1, s.length() - 1)).appendC(')');

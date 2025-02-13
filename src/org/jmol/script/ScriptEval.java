@@ -1962,8 +1962,6 @@ public class ScriptEval extends ScriptExpr {
       if (iTok == i)
         sb.append("<<<<");
     }
-//    if (iTok >= len - 1 && iTok != 9999)
-//      sb.append(" <<");
     return sb.toString();
   }
 
@@ -9263,7 +9261,7 @@ public class ScriptEval extends ScriptExpr {
     return filename;
   }
 
-  private P3d[] getObjectBoundingBox(String id) {
+  public P3d[] getObjectBoundingBox(String id) {
     Object[] data = new Object[] { id, null, null };
     return (getShapePropertyData(JC.SHAPE_ISOSURFACE, "getBoundingBox", data)
         || getShapePropertyData(JC.SHAPE_PMESH, "getBoundingBox", data)

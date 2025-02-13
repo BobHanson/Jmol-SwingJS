@@ -60,7 +60,6 @@ import javajs.util.Qd;
 import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.T3d;
-
 /* Symmetry is a wrapper class that allows access to the package-local
  * classes PointGroup, SpaceGroup, SymmetryInfo, and UnitCell.
  * 
@@ -314,10 +313,10 @@ public class Symmetry implements SymmetryInterface {
       filterSymop = "calculated";
     if (filterSymop != null) {
       Lst<SymmetryOperation> lst = new Lst<SymmetryOperation>();
-      lst.addLast(spaceGroup.matrixOperations[0]);
+      lst.addLast(spaceGroup.symmetryOperations[0]);
       for (int i = 1; i < spaceGroup.operationCount; i++)
         if (doCalculate || filterSymop.contains(" " + (i + 1) + " "))
-          lst.addLast(spaceGroup.matrixOperations[i]);
+          lst.addLast(spaceGroup.symmetryOperations[i]);
       spaceGroup = SpaceGroup.createSpaceGroup(-1,
           name + " *(" + filterSymop.trim() + ")", lst, -1);
     }
@@ -327,11 +326,11 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public M4d getSpaceGroupOperation(int i) {
-    return (spaceGroup == null || spaceGroup.matrixOperations == null // bio 
-        || i >= spaceGroup.matrixOperations.length
+    return (spaceGroup == null || spaceGroup.symmetryOperations == null // bio 
+        || i >= spaceGroup.symmetryOperations.length
             ? null
             : spaceGroup.finalOperations == null
-                ? spaceGroup.matrixOperations[i]
+                ? spaceGroup.symmetryOperations[i]
                 : spaceGroup.finalOperations[i]);
   }
 
@@ -344,7 +343,7 @@ public class Symmetry implements SymmetryInterface {
   public void newSpaceGroupPoint(P3d pt, int i, M4d o, int transX, int transY,
                                  int transZ, P3d retPoint) {
     if (o == null && spaceGroup.finalOperations == null) {
-      SymmetryOperation op = spaceGroup.matrixOperations[i];
+      SymmetryOperation op = spaceGroup.symmetryOperations[i];
       // temporary spacegroups don't have to have finalOperations
       if (!op.isFinalized)
         op.doFinalize();
@@ -357,7 +356,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public int getSpinOp(int op) {
-    return spaceGroup.matrixOperations[op].getMagneticOp();
+    return spaceGroup.symmetryOperations[op].getMagneticOp();
   }
 
   @Override
@@ -372,7 +371,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Matrix getOperationRsVs(int iop) {
-    return (spaceGroup.finalOperations == null ? spaceGroup.matrixOperations
+    return (spaceGroup.finalOperations == null ? spaceGroup.symmetryOperations
         : spaceGroup.finalOperations)[iop].rsvs;
   }
 
@@ -1240,16 +1239,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public Object staticConvertOperation(String xyz, M4d matrix, boolean asRationalMatrix) {
-    boolean toMat = (matrix == null);
-    if (toMat)
-        matrix = SymmetryOperation.stringToMatrix(xyz);
-    if (asRationalMatrix) {
-      return SymmetryOperation.matrixToRationalString(matrix);
-    }
-    return (toMat ? matrix
-        : SymmetryOperation.getXYZFromMatrixFrac(matrix, false, false, false,
-            true));
+  public Object staticConvertOperation(String xyz, M4d matrix, String labels) {
+    return SymmetryOperation.staticConvertOperation(xyz, matrix, labels);
   }
 
   /**
@@ -1400,8 +1391,8 @@ public class Symmetry implements SymmetryInterface {
     boolean isWhereMap = (itaTo > 0 && i1 > 0 && i2 < 0);
     boolean isWhereTStr = (itaTo > 0 && i1 > 0 && i2 > 0);
     try {
-      Map<String, Object> o = (Map<String, Object>) getSpaceGroupJSON("subgroups",
-          nameFrom, itaFrom);
+      Map<String, Object> o = (Map<String, Object>) getSpaceGroupJSON(
+    		  "subgroups", nameFrom, itaFrom);
       int ithis = 0;
       while (true) {
         if (o == null)

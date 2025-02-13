@@ -410,7 +410,7 @@ public final class JC {
   //    return null;
   //  }
 
-  public final static String copyright = "(C) 2015 Jmol Development";
+  public final static String copyright = "(C) 2005-2025 Jmol Development";
 
   public final static String version;
   public static String majorVersion;
@@ -1647,6 +1647,7 @@ public final class JC {
   public static final String INFO_UNIT_CELL = "unitcell";
 
   public static final String FILE_DATA = "fileData";
+  public static final String LOAD_OPTION_FILL_RANGE = "fillRange";
   
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.

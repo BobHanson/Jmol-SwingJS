@@ -609,7 +609,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     applySymmetryToBonds = htParams.containsKey("applySymmetryToBonds");
     bsFilter = (requiresBSFilter ? (BS) htParams.get("bsFilter") : null);
     setFilter(null);
-    fillRange = htParams.get("fillRange");
+    fillRange = htParams.get(JC.LOAD_OPTION_FILL_RANGE);
     paramsLattice = (T3d) htParams.get("lattice");
     Object o = htParams.get("supercell");
     // noPack does not work as advertised
@@ -2091,7 +2091,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return line;
   }
 
-  public void appendUunitCellInfo(String info) {
+  public void appendUnitCellInfo(String info) {
     if (moreUnitCellInfo == null)
       moreUnitCellInfo = new Lst<String>();
     moreUnitCellInfo.addLast(info);

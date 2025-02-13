@@ -682,7 +682,7 @@ final public class CLEG {
                                        SymmetryInterface sym, boolean allow300) {
     for (int i = 0; i < tokens.length; i++) {
       String s = tokens[i].trim();
-      if (s.length() == 0 || s.startsWith("sub") || s.startsWith("super"))
+      if (s == null || s.length() == 0 || s.startsWith("sub") || s.startsWith("super"))
         continue;
       int groupType = SpaceGroup.getExplicitSpecialGroupType(s);
       if (groupType > SpaceGroup.TYPE_SPACE)

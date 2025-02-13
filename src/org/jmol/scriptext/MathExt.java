@@ -281,9 +281,10 @@ public class MathExt {
     String retType = (n > 1 && args[n - 1].tok == T.string
         ? (String) args[n - 1].value
         : null);
+    boolean asUVW = "uvw".equalsIgnoreCase(retType);
     boolean asABC = "abc".equalsIgnoreCase(retType);
-    boolean asXYZ = !asABC && "xyz".equalsIgnoreCase(retType);
-    boolean asRXYZ = !asABC & !asXYZ && "rxyz".equalsIgnoreCase(retType);
+    boolean asXYZ = asUVW || !asABC && "xyz".equalsIgnoreCase(retType);
+    boolean asRXYZ = !asUVW && !asABC && !asXYZ && "rxyz".equalsIgnoreCase(retType);
     double[] a = null;
     if (retType != null || lst != null || map != null)
       n--;
@@ -299,7 +300,6 @@ public class MathExt {
         break;
       case T.string:
         String s = (String) args[0].value;
-
         // first check for "t1>t2>t3"
         if (s.equals("h") || s.equals("r")
             || s.indexOf(",") >= 0 && s.indexOf(":") < 0)
@@ -307,7 +307,7 @@ public class MathExt {
         if (m4 != null) 
           break;
         String select = null;
-        if (retType != null && !asABC && !asXYZ) {
+        if (retType != null && !asABC && !asXYZ && !asUVW) {
           if ("map".equals(retType)) {
             map = new Hashtable<String, SV>();
             retType = null;
@@ -405,12 +405,14 @@ public class MathExt {
     SymmetryInterface sym = vwr.getSymStatic();
     switch (mode) {
     case 0x1:
-      return (String) sym.staticConvertOperation(null, m4, true);
+      return (String) sym.staticConvertOperation(null, m4, "rxyz");
+    case SV.FORMAT_ABC:
     case 0xABC:
       return sym.staticGetTransformABC(m4, false);
     default:
-    case 0: // xyz
-      return (String) vwr.getSymStatic().staticConvertOperation("", m4, false);
+    case SV.FORMAT_UVW:
+    case SV.FORMAT_XYZ:
+      return (String) vwr.getSymStatic().staticConvertOperation("", m4, (mode == SV.FORMAT_UVW ? "uvw" : "xyz"));
     }
   }
 
@@ -1912,7 +1914,7 @@ SymmetryInterface sym;
     BS atoms = SV.getBitSet(x1, true);
     String molData = (atoms == null ? SV.sValue(x1) : null);
     String ret = vwr.getInchi(atoms, molData, flags);
-    return (flags.startsWith("model") ? mp.addXMap(vwr.parseJSONMap(ret)) : mp.addXStr(ret));
+    return (flags.indexOf("model") >= 0 ? mp.addXMap(vwr.parseJSONMap(ret)) : mp.addXStr(ret));
   }
 
   private boolean evaluateFind(ScriptMathProcessor mp, SV[] args)
@@ -1998,7 +2000,7 @@ SymmetryInterface sym;
             return mp.addXStr(vwr.getInchi(null, x1.value, "SMILES" + flags));
           }
         }
-        isStr = true;
+        isStr = !sFind.equals("SMILES");
         break;
       case 2:
         // "xx".find("yyy",FALSE|TRUE|""|"m"|"i"|"v") or some combination of m,i,v
@@ -2085,7 +2087,7 @@ SymmetryInterface sym;
           if (smiles == null && !isList) {
             smiles = SV.sValue(x1);
           }
-          if ((isSmiles || isSMARTS) && args.length == 1) {
+          if ((isSmiles || isSMARTS) && args.length == 1 && flags == null) {
             return false;
           }
           if (bs2 != null)
@@ -2687,12 +2689,13 @@ SymmetryInterface sym;
     // format(x, "array") 
     // format(matrix, "xyz")
     // format(matrix, "abc")
+    // format(matrix, "uvw") // same as xyz
     // so now accept both!
 
     // format("....",a,b,c...)f -- could be format(format,"xx")
     // format("....",[a1, a2, a3, a3....])
 
-    // matrix4f.format("xyz" | "abc")
+    // matrix4f.format("xyz" | "abc" | "uvw")
     if (isLabel && args.length > 1)
       return false;
     SV x1 = (args.length < 2 || intValue == T.format ? mp.getX() : null);
@@ -2716,7 +2719,7 @@ SymmetryInterface sym;
         // {xxx}.label("....")
         // {xxx}.yyy.format("...")
         // (value).format("...")
-        // matrix4f.format("xyz" | "abc")
+        // matrix4f.format("xyz" | "abc" | "uvw")
         format = (String) args[0].value;
         pt = SV.getFormatType(format);
         if (pt >= 0)
@@ -2742,6 +2745,7 @@ SymmetryInterface sym;
         // format(x, "array") 
         // format(matrix, "xyz")
         // format(matrix, "abc")
+        // format(matrix, "uvw")
         x = args[0];
         format = SV.sValue(args[1]);
       }
@@ -2764,7 +2768,8 @@ SymmetryInterface sym;
       break;
     case SV.FORMAT_XYZ:
     case SV.FORMAT_ABC:
-      return (x.tok == T.matrix4f && mp.addXStr(matToString((M4d) x.value, pt == SV.FORMAT_ABC ? 0xABC : 0)));
+    case SV.FORMAT_UVW:
+      return (x.tok == T.matrix4f && mp.addXStr(matToString((M4d) x.value, pt)));
     default:
 //    case SV.FORMAT_JSON:
 //    case SV.FORMAT_BYTEARRAY:
@@ -4424,7 +4429,7 @@ SymmetryInterface sym;
         break;
       }
       if (m != null || xyz != null)
-        return vwr.getSymStatic().staticConvertOperation(xyz, m, isrxyz);
+        return vwr.getSymStatic().staticConvertOperation(xyz, m, isrxyz ? "rxyz" : null);
     }
 
     boolean isPoint = false;

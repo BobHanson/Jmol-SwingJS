@@ -91,7 +91,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
 
   public int groupType = TYPE_SPACE;
   
-  public SymmetryOperation[] matrixOperations;
+  public SymmetryOperation[] symmetryOperations;
   SymmetryOperation[] finalOperations;
   SymmetryOperation[] allOperations;
   Map<String, Integer> xyzList;
@@ -286,7 +286,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       if (operation instanceof SymmetryOperation) {
         SymmetryOperation op = (SymmetryOperation) operation;
         int iop = sg.addOp(op, op.xyz, false);
-        sg.matrixOperations[iop].setTimeReversal(op.timeReversal);
+        sg.symmetryOperations[iop].setTimeReversal(op.timeReversal);
       } else {
         sg.addSymmetrySM("xyz matrix:" + operation, (M4d) operation);
       }
@@ -334,8 +334,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     }
     finalOperations = null;
     isBio = (name.indexOf("bio") >= 0);
-    if (!isBio && index >= SG.length && name.indexOf("SSG:") < 0
-        && name.indexOf("[subsystem") < 0) {
+    if (!isBio && index >= SG.length && 
+        allowCheckForReference()) {
       SpaceGroup sg = getReferenceSpaceGroup();
       if (sg != null && sg != this) {
         setFrom(sg, false);
@@ -344,13 +344,13 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     if (operationCount == 0)
       addOperation("x,y,z", 1, false);
     finalOperations = new SymmetryOperation[operationCount];
-    SymmetryOperation op = null;
     boolean doOffset = (doNormalize && count > 0 && atoms != null);
+    SymmetryOperation op = null;
     if (doOffset) {
       // we must apply this first to "x,y,z" JUST IN CASE the 
       // model center itself is out of bounds, because we want
       // NO operation for "x,y,z". This requires REDEFINING ATOM LOCATIONS
-      op = finalOperations[0] = new SymmetryOperation(matrixOperations[0], 0, true);
+      op = finalOperations[0] = new SymmetryOperation(symmetryOperations[0], 0, true);
       if (op.sigma == null)
         SymmetryOperation.normalizeOperationToCentroid(dim, op, atoms, atomIndex, count);
       P3d atom = atoms[atomIndex];
@@ -371,14 +371,26 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     for (int i = 0; i < operationCount; i++) {
       // not necessary to duplicate first operation if we have it already
       if (i > 0 || op == null) {
-        op = finalOperations[i] = new SymmetryOperation(matrixOperations[i], 0,
+        op = finalOperations[i] = new SymmetryOperation(symmetryOperations[i], 0,
             doNormalize);
       }
       if (doOffset && op.sigma == null) {
+        if (!op.isFinalized)
+          op.doFinalize();
         SymmetryOperation.normalizeOperationToCentroid(dim, op, atoms, atomIndex, count);
       }
       op.getCentering();
     }
+  }
+
+  /**
+   * @return true if not incommensurate, not a subsystem, and not magnetic
+   */
+  private boolean allowCheckForReference() {
+    return (modDim == 0 && symmetryOperations != null
+        && symmetryOperations.length > 0
+        && symmetryOperations[0].timeReversal == 0
+        && name.indexOf("[subsystem") < 0);
   }
 
   private static HallInfo newHallInfo(String hallSymbol) {
@@ -421,7 +433,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   }
 
   String getXyz(int i, boolean doNormalize) {
-  return (finalOperations == null ? matrixOperations[i].getXyz(doNormalize)
+  return (finalOperations == null ? symmetryOperations[i].getXyz(doNormalize)
       : finalOperations[i].getXyz(doNormalize));
   }
 
@@ -441,7 +453,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   static Object getInfo(SpaceGroup sg, String spaceGroup,
                         double[] params, boolean asMap, boolean andNonstandard) {
     try {
-    if (sg != null && sg.index >= SG.length) {
+    if (sg != null && sg.index >= SG.length && sg.allowCheckForReference()) {
       SpaceGroup sgReference = findReferenceSpaceGroup(sg.operationCount, sg.getCanonicalSeitzList(), sg.clegId);
       if (sgReference != null)
         sg = sgReference;   
@@ -525,7 +537,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
             : "")
         .append(": ");
     for (int i = 0; i < operationCount; i++) {
-      sb.append("\n").append(matrixOperations[i].xyz);
+      sb.append("\n").append(symmetryOperations[i].xyz);
     }
 
     //sb.append("\n\ncanonical Seitz: ").append((String) info)
@@ -568,7 +580,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     }
     Lst<Object> lst = new Lst<Object>();
     for (int i = 0; i < operationCount; i++) {
-      lst.addLast(matrixOperations[i].xyz);
+      lst.addLast(symmetryOperations[i].xyz);
     }
     map.put("operationsXYZ", lst);
     return map;
@@ -690,17 +702,16 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * @return a known space group or null
    */
   SpaceGroup getReferenceSpaceGroup() {
-    if (referenceIndex == SG_ITA  || index >= 0 && index < SG.length   
-        || modDim > 0 || matrixOperations == null
-        || matrixOperations.length == 0
-        || matrixOperations[0].timeReversal != 0)
+    if (referenceIndex == SG_ITA  
+       || index >= 0 && index < SG.length 
+       || !allowCheckForReference())
       return this;
     String s = getCanonicalSeitzList();
     return (s == null ? null : findReferenceSpaceGroup(operationCount, s, clegId));
   }
 
   private String getCanonicalSeitzList() {
-    return getCanonicalSeitzForOperations(matrixOperations, operationCount);
+    return getCanonicalSeitzForOperations(symmetryOperations, operationCount);
   }
 
   static String getCanonicalSeitzForOperations(SymmetryOperation[] operations, int n) {
@@ -827,10 +838,13 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       xyzList.clear();
       operationCount = 0;
       modDim = PT.parseInt(xyz0.substring(xyz0.lastIndexOf("x") + 1)) - 3;
-    } else if (xyz0.indexOf("m") >= 0) {
+    } else if (xyz0.indexOf("m") >= 0 || xyz0.indexOf("u") >= 0) {
       // accept ",+m" or ",m" or ",-m"
       xyz0 = PT.rep(xyz0, "+m", "m");
-      if (xyz0.equals("x,y,z,m") || xyz0.equals("x,y,z(mx,my,mz)")) {
+      if (xyz0.equals("x,y,z,m") 
+          || xyz0.equals("x,y,z(mx,my,mz)")
+          || xyz0.equals("x,y,z(u,v,w)")
+          ) {
         xyzList.clear();
         operationCount = 0;
       }
@@ -877,16 +891,16 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     }
     if (!xyz.equals(xyz0))
       xyzList.put(xyz0, Integer.valueOf(operationCount));
-    if (matrixOperations == null)
-      matrixOperations = new SymmetryOperation[4];
-    if (operationCount == matrixOperations.length)
-      matrixOperations = (SymmetryOperation[]) AU.arrayCopyObject(matrixOperations,
+    if (symmetryOperations == null)
+      symmetryOperations = new SymmetryOperation[4];
+    if (operationCount == symmetryOperations.length)
+      symmetryOperations = (SymmetryOperation[]) AU.arrayCopyObject(symmetryOperations,
           operationCount * 2);
-    matrixOperations[operationCount++] = op;
+    symmetryOperations[operationCount++] = op;
     op.number = operationCount;
     // check for initialization of group without time reversal
     if (op.timeReversal != 0)
-      matrixOperations[0].timeReversal = 1;
+      symmetryOperations[0].timeReversal = 1;
     if (Logger.debugging)
       Logger.debug("\naddOperation " + operationCount + op.dumpInfo());
     return operationCount - 1;
@@ -909,7 +923,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         checkHallOperators();
         return;
       }
-      matrixOperations = new SymmetryOperation[4];
+      symmetryOperations = new SymmetryOperation[4];
       if (hallInfo == null || !hallInfo.isGenerated())
         hallInfo = newHallInfo(hallSymbol);
       setLattice(hallInfo.getLatticeCode(), hallInfo.isCentrosymmetric());
@@ -944,7 +958,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   int addSymmetrySM(String xyz, M4d operation) {
     int iop = addOperation(xyz, 0, false);
     if (iop >= 0) {
-      SymmetryOperation symmetryOperation = matrixOperations[iop];
+      SymmetryOperation symmetryOperation = symmetryOperations[iop];
       symmetryOperation.setM4(operation);
     }
     return iop;
@@ -1456,7 +1470,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    *        lattice parameter that is time reversal
    * @return true if successful
    */
-  public boolean addLatticeVectors(Lst<double[]> lattvecs) {
+  public boolean addMagLatticeVectors(Lst<double[]> lattvecs) {
     if (latticeOp >= 0 || lattvecs.size() == 0)
       return false;
     int nOps = latticeOp = operationCount;
@@ -1473,7 +1487,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       for (int i = 0; i < nOps; i++) {
         SymmetryOperation newOp = new SymmetryOperation(null, 0, true); // must normalize these
         newOp.modDim = modDim;
-        SymmetryOperation op = matrixOperations[i];
+        SymmetryOperation op = symmetryOperations[i];
         newOp.divisor = op.divisor;
         newOp.linearRotTrans = AU.arrayCopyD(op.linearRotTrans, -1);
         newOp.setFromMatrix(data, false);
@@ -1481,6 +1495,52 @@ public class SpaceGroup implements Cloneable, HallReceiver {
           newOp.setTimeReversal(op.timeReversal * magRev);
         newOp.xyzOriginal = newOp.xyz;
         addOp(newOp, newOp.xyz, true);
+      }
+    }
+    return true;
+  }
+
+  /**
+   * spin space groups only
+   * 
+   * @param lstSpinFrames
+   * @return true if magnetic
+   */
+  public boolean addSpinLattice(Lst<String> lstSpinFrames) {
+    if (latticeOp >= 0 || lstSpinFrames.size() == 0)
+      return false;
+    latticeOp = operationCount;
+    for (int j = 0; j < lstSpinFrames.size(); j++) {
+      String frameXyzUvw = lstSpinFrames.get(j);
+      if (frameXyzUvw.equals("x,y,z(u,v,w)"))
+          continue;
+      int nOps = operationCount;
+      SymmetryOperation latticeOp = new SymmetryOperation(null, 0, true); // must normalize these
+      latticeOp.setMatrixFromXYZ(frameXyzUvw, 0, false);
+      latticeOp.doFinalize();
+      for (int i = 0; i < nOps; i++) {
+        SymmetryOperation op = symmetryOperations[i];
+        op.doFinalize();
+        SymmetryOperation newOp = new SymmetryOperation(op, 0, true); // must normalize these
+        newOp.doFinalize();
+        newOp.mul(latticeOp);
+        M4d spinU;
+        if (op.spinU == null) {
+          spinU = new M4d();
+          spinU.setIdentity();
+        } else {
+          spinU = M4d.newM4(op.spinU);
+        }
+        // 12ths here?
+        if (latticeOp.spinU != null)
+          spinU.mul(latticeOp.spinU);
+        newOp.modDim = modDim; // todo
+        newOp.divisor = op.divisor;
+        //newOp.linearRotTrans = AU.arrayCopyD(op.linearRotTrans, -1);
+        String xyz = SymmetryOperation.getXYZFromMatrix(newOp, false, true, false)
+             + SymmetryOperation.getSpecialString(spinU, "u", "v", "w");
+        addOperation(xyz, nOps + i, false);
+        symmetryOperations[nOps + i].doFinalize();
       }
     }
     return true;
@@ -2016,7 +2076,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
 
   @Override
   public M4d getMatrixOperation(int i) {
-    return matrixOperations[i];
+    return symmetryOperations[i];
   }
 
   @Override

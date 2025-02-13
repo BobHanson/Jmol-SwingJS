@@ -474,7 +474,7 @@ public class MSRdr implements MSInterface {
       }
       fixDoubleA(pt);
       cr.appendLoadNote("W_" + (i + 1) + " = " + Escape.e(pt));
-      cr.appendUunitCellInfo("q" + (i + 1) + "=" + pt[0] + " " + pt[1] + " "
+      cr.appendUnitCellInfo("q" + (i + 1) + "=" + pt[0] + " " + pt[1] + " "
           + pt[2]);
       sigma.getArray()[i] = new double[] { pt[0], pt[1], pt[2] };
     }

@@ -697,7 +697,7 @@ public class SimpleUnitCell {
     if (f == 0)
       return 0;
     f = Math.abs(f * 12);
-    int i = (int) Math.round(f);
+    int i = Math.round((float) f);
     return (i <= 12 && Math.abs(f - i) < slop * 12 ? i : -1);
   }
 

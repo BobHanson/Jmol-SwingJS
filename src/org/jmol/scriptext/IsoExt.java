@@ -447,8 +447,18 @@ public class IsoExt extends ScriptExt {
           uc = vwr.getCurrentUnitCell();
         }
         if (lattice == null) {
-          pts = getBoxPoints(uc != null ? T.unitcell : tok, uc, bs,
+          String name = null;
+          if (uc == null && tokAt(i + 1) == T.dollarsign) {
+            ++i;
+            name = e.objectNameParameter(++i);
+            i = e.iToken;
+            if (name == null || chk)
+              return;
+          }
+          pts = getBoxPoints(uc != null ? T.unitcell : tok, uc, bs, name,
               intScale / 100d);
+          if (pts == null)
+            return;
         } else {
           Lst<P3d> cpts = MeasureD.getLatticePoints(uc.getLatticeCentering(),
               (int) lattice.x, (int) lattice.y, (int) lattice.z);
@@ -460,8 +470,6 @@ public class IsoExt extends ScriptExt {
         }
         isBest = false;
         if (!isIntersect) {
-          if (pts == null)
-            invArg();
           propertyName = "polygon";
           Lst<Object> v = new Lst<Object>();
           v.addLast(pts);
@@ -528,7 +536,8 @@ public class IsoExt extends ScriptExt {
           if (!chk && tok != T.line && pts == null) {
             uc = vwr.getCurrentUnitCell();
             tokIntersectBox = (uc == null ? T.boundbox : T.unitcell);
-            pts = getBoxPoints(tokIntersectBox, uc, null, intScale / 100d);
+            pts = getBoxPoints(tokIntersectBox, uc, null, null,
+                intScale / 100d);
             isIntersect = true;
           }
         }
@@ -4443,15 +4452,24 @@ public class IsoExt extends ScriptExt {
     return true;
   }
 
-  private P3d[] getBoxPoints(int type, SymmetryInterface uc, BS bsAtoms,
-                                     double scale) {
+  private P3d[] getBoxPoints(int type, SymmetryInterface uc, BS bsAtoms, 
+		  String objectName, double scale) {
     switch (type) {
     case T.unitcell:
       return (uc == null ? null : uc.getCanonicalCopy(scale, true));
     case T.boundbox:
       BoxInfo box;
       if (bsAtoms == null) {
-        box = vwr.ms.getBoxInfo();
+        if (objectName == null) {
+          box = vwr.ms.getBoxInfo();
+        } else {
+          P3d[] pts = e.getObjectBoundingBox(objectName);
+          if (pts == null)
+            return null;
+          box = new BoxInfo();
+          box.addBoundBoxPoint(pts[0]);
+          box.addBoundBoxPoint(pts[1]);
+        }
       } else {
             box = new BoxInfo();
             vwr.calcAtomsMinMax(bsAtoms, box);

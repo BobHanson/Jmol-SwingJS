@@ -31,7 +31,7 @@ class Subsystem {
       spaceGroup.isSSG = true;
       String s = SymmetryOperation.getXYZFromRsVs(rs, vs, false);
       int i = spaceGroup.addSymmetry(s, -1, true);
-      spaceGroup.matrixOperations[i].setSigma(code, sigma);
+      spaceGroup.symmetryOperations[i].setSigma(code, sigma);
       return s;
     }
 
