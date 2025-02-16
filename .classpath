@@ -10,6 +10,6 @@
 	<classpathentry kind="lib" path="jars/JME-SwingJS.jar" sourcepath="/JME-SwingJS/src"/>
 	<classpathentry kind="lib" path="jars/naga-3_0.jar"/>
 	<classpathentry kind="lib" path="jars/commons-cli-1.2.jar"/>
-	<classpathentry kind="lib" path="jars/jna-inchi-1.3-SNAPSHOT.jar"/>
+	<!-- provided by JME-SwingJS.jar  classpathentry kind="lib" path="jars/jna-inchi-1.4-SNAPSHOT.jar"/  -->
 	<classpathentry kind="output" path="bin"/>
 </classpath>

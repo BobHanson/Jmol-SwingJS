@@ -1,23 +1,7 @@
-/*
- * Copyright 2006-2011 Sam Adams <sea36 at users.sourceforge.net>
- *
- * This file is part of -InChI.
- *
- * -InChI is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * -InChI is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with -InChI.  If not, see <http://www.gnu.org/licenses/>.
- */
 package org.jmol.inchi;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
@@ -31,6 +15,8 @@ import org.jmol.modelset.Bond;
 import org.jmol.util.Edge;
 import org.jmol.viewer.Viewer;
 
+import com.sun.jna.Native;
+
 import io.github.dan2097.jnainchi.InchiAtom;
 import io.github.dan2097.jnainchi.InchiBond;
 import io.github.dan2097.jnainchi.InchiBondStereo;
@@ -39,13 +25,14 @@ import io.github.dan2097.jnainchi.InchiFlag;
 import io.github.dan2097.jnainchi.InchiInput;
 import io.github.dan2097.jnainchi.InchiOptions;
 import io.github.dan2097.jnainchi.InchiOptions.InchiOptionsBuilder;
+import io.github.dan2097.jnainchi.inchi.InchiLibrary;
 import io.github.dan2097.jnainchi.InchiOutput;
 import io.github.dan2097.jnainchi.InchiStereo;
 import io.github.dan2097.jnainchi.JnaInchi;
 import javajs.util.BS;
 
 /**
- * Interface with inchi.c via -InChI. 
+ * Interface with inchi.c via JNA (see JNA-InChI github project). 
  * 
  * For InChI to SMILES, we use JNA-InChI to read InChI's input structure, 
  * via -InChI.
@@ -58,6 +45,8 @@ public class InChIJNA extends InchiJmol {
 
   @Override
   public String getInchi(Viewer vwr, BS atoms, Object molData, String options) {
+    if ("version".equals(options))
+  	  return getInternalInchiVersion(); 
     try {
       options = setParameters(options, molData, atoms, vwr);
       if (options == null)
@@ -463,6 +452,58 @@ public class InChIJNA extends InchiJmol {
     return o.toString().toUpperCase();
   }
 
+
+  private static String inchiVersionInternal;
+
+  /**
+   * Get the InChI version directly from the inchi code without an API.
+   * To be replaced in the future with a simple inchi IXA call?
+   * 
+   * Future format may change.
+   * 
+   * @param f
+   * @return something like "InChI version 1, Software 1.07.2 (API Library)"
+   */
+  public static String getInternalInchiVersion() {
+    if (inchiVersionInternal == null) {
+      File f = InchiLibrary.JNA_NATIVE_LIB.getFile();
+      inchiVersionInternal = extractInchiVersionInternal(f);
+      if (inchiVersionInternal == null) {
+        // linux will be here after Native libary deletes the file
+        try {
+          // that's OK; we can get it ourselves
+          f = Native.extractFromResourcePath(InchiLibrary.JNA_NATIVE_LIB.getName());
+          inchiVersionInternal = extractInchiVersionInternal(f);
+        } catch (Exception e) {
+        }
+      }
+      if (inchiVersionInternal == null)
+        inchiVersionInternal = "unknown";
+    }
+    return inchiVersionInternal;
+  }
+
+  private static String extractInchiVersionInternal(File f) {
+    String s = null;
+    try (FileInputStream fis = new FileInputStream(f)) {
+      byte[] b = new byte[(int) f.length()];
+      fis.read(b);
+      s = new String(b);
+      int pt = s.indexOf("InChI version");
+      if (pt < 0) {
+        s = null;
+      } else {
+        s = s.substring(pt, s.indexOf('\0', pt));
+      }
+      fis.close();
+      f.delete();
+   } catch (Exception e) {
+      //System.out.println(f);
+      //e.printStackTrace();
+      // it's gone already in Linux
+    }
+    return s;
+  }
 
 
 }

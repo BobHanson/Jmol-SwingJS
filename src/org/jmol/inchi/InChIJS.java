@@ -88,6 +88,14 @@ public class InChIJS extends InchiJmol {
   public String getInchi(Viewer vwr, BS atoms, Object molData, String options) {
     String ret = "";
     try {
+      if (options.equals("version")) {
+        /**
+         * @j2sNative return (Jmol.modelFromInchi ?
+         *            Jmol.modelFromInchi('').ver : ""); 
+         */
+        {
+        }
+      }
       options = setParameters(options, molData, atoms, vwr);
       if (options == null)
         return "";

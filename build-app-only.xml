@@ -68,7 +68,7 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
   <property name="docbook-xml" value="docbook-xml-4.4" />
   <property name="naga.jar" value="naga-3_0.jar" />
   <property name="commons-cli.jar" value="commons-cli-1.2.jar" />
-  <property name="inchi.jar" value="jna-inchi-1.3-SNAPSHOT.jar" />
+  <property name="jme.jar" value="JME-SwingJS.jar" />
 	
 	  <path id="project.class.path">
 	    <fileset dir="${lib.dir}">
@@ -125,7 +125,7 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
         <uptodate targetfile="${appjars.dir}">
           <srcfiles dir="${lib.dir}" includes="${naga.jar}"/>
           <srcfiles dir="${lib.dir}" includes="${commons-cli.jar}"/>
-            <srcfiles dir="${lib.dir}" includes="${inchi.jar}"/>
+          <srcfiles dir="${lib.dir}" includes="${jme.jar}"/>
         </uptodate>
         <uptodate targetfile="build/libjars.timestamp"
                   srcfile="${appjars.dir}"/>
@@ -143,8 +143,8 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
   	<delete dir="${appjars.dir}/org/jmol" />
   	<delete dir="${appjars.dir}/org/apache/tools" />
   	<delete dir="${appjars.dir}/META-INF" />
-  	<echo>Unjar for ${lib.dir}/${inchi.jar}"</echo>
-    <unjar dest="${appjars.dir}" src="${lib.dir}/${inchi.jar}"/>
+  	<echo>Unjar for ${lib.dir}/${jme.jar} provides InChI as well"</echo>
+    <unjar dest="${appjars.dir}" src="${lib.dir}/${jme.jar}"/>
     <touch file="build/libjars.timestamp"/>
   </target>
 
@@ -152,10 +152,12 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
           depends="init,classes,libjars">
      <jar destfile="build/JmolD.jar"
          manifest="${manifest.dir}/application.txt">
+      <fileset dir="${appjars.dir}" includes="**/*"/>
       <fileset dir="${classes.dir}" >
         <exclude name="**/.*" />
         <exclude name="**/*.dx" />
         <exclude name="ant/**" />
+        <include name="inchi/**" />
         <include name="io/github/**" />
         <include name="com/**" />
         <include name="jspecview/**" />
@@ -175,7 +177,6 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
         <exclude name="**/jmol/applet/*" />
         <exclude name="**/app/JmolData.class" />
       </fileset>
-      <fileset dir="${appjars.dir}" includes="**/*"/>
       <fileset dir="src/org/jmol/translation/Jmol" includes="Messages*.class"/>
       <fileset dir="src/org/jmol/translation/JmolApplet" includes="Messages*.class"/>
     </jar>
@@ -187,6 +188,7 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
     <echo message="Creating JmolDataD.jar -- if this fails, check to see that build/JmolD.jar is not open." />
 	<jar destfile="build/JmolDataD.jar"
 	 manifest="${manifest.dir}/applicationData.txt">
+	<fileset dir="${appjars.dir}" includes="**/*"/>
 	<fileset dir="${classes.dir}" >
 	<exclude name="**/Test*.class" />
 	<exclude name="**/jmol/jcamp/**" />
@@ -196,6 +198,7 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
 	<exclude name="**/Test*.class" />
 	<exclude name="ant/**" />
 	<exclude name="com/**" />
+    <include name="inchi/**" />
 	<include name="io/github/**" />
 	<include name="javajs/api/**" />
 	<include name="javajs/awt/**" />
@@ -222,9 +225,6 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
 	<exclude name="**/openscience/jmol/app/jmolpanel/**" />
 	<exclude name="**/openscience/jmol/app/webexport/**" />
 	</fileset>
-	<fileset dir="${appjars.dir}" includes="**/*"/>
-    <fileset dir="${classes.dir}" includes="net/sf/jniinchi/JniInchiWrapper.class" />
-    <fileset dir="${classes.dir}" includes="net/sf/jnati/SystemTyper.class" />
 	</jar>
   	<copy file="build/JmolDataD.jar" tofile="dist/JmolDataD.jar" />
 
