@@ -595,7 +595,7 @@ abstract class ScriptExpr extends ScriptParam {
           // first check to see if the variable has been defined already
           String name = paramAsStr(i).toLowerCase();
           boolean haveParens = (tokAt(i + 1) == T.leftparen);
-          if (!haveParens)
+          if (!haveParens) {
             if (chk) {
               v = name;
             } else if (localVars == null
@@ -605,11 +605,22 @@ abstract class ScriptExpr extends ScriptParam {
                 v = (name.equals("_") ? vwr.getModelSetAuxiliaryInfo() : name
                     .equals("_m") ? vwr.getCurrentModelAuxInfo() : null);
               }
-              if (v == null)
+              if (v == null) {
                 v = getContextVariableAsVariable(name, false);
-              else if (ptEq == 0)
+                if (v == null) {                  
+                  switch (name) {
+                  case "all":
+                    v = vwr.bsA();
+                    break;
+                  case "this":
+                    v = vwr.getFrameAtoms();                    
+                  }
+                }
+              } else if (ptEq == 0) {
                 invArg();
+              }
             }
+          }
           if (v == null) {
 
             if (T.tokAttr(theTok, T.identifier) && isFunction(name)) {

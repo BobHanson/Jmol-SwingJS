@@ -2802,8 +2802,7 @@ public class ModelSet extends BondCollection {
     if (atomA.altloc != atomB.altloc && atomA.altloc != '\0'
         && atomB.altloc != '\0' && getModulation(atomA.i) == null)
       return false;
-    getOrAddBond(atomA, atomB, order, mad, bsBonds, 0, false);
-    return true;
+    return (getOrAddBond(atomA, atomB, order, mad, bsBonds, 0, false) != null);
   }
 
   private int autoBond_Pre_11_9_24(BS bsA, BS bsB, BS bsExclude, BS bsBonds,

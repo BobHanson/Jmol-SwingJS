@@ -339,7 +339,11 @@ final public class CLEG {
           hallSymbol = hallSymbol.substring(0, pt).trim();
           hallTrm = PT.rep(hallTrm, " ", "/12,");
           hallTrm = "a,b,c;" + hallTrm.substring(0, hallTrm.length() - 1);
-        }
+        } 
+        pt = name.indexOf(":");
+        if (pt > 0) {
+          myTrm = name.substring(pt + 1);
+        }   
         name = "Hall:" + hallSymbol;
       } else if (name.startsWith("HM:")) {
         // not sure this is still useful; ok, leave this this way
@@ -385,14 +389,7 @@ final public class CLEG {
               false, false);
 
         if (hallSymbol != null && hallTrm != null) {
-          if (myTrm.equals("a,b,c")) {
-            myTrm = hallTrm;
-          } else {
-            myTrm += ">" + hallTrm;
-//            data.errString = "Non-reference Hall symbol cannot also contain a setting: "
-//                + name + "!";
-//            return;
-          }
+          myTrm = hallTrm + (myTrm.equals("a,b,c") ? "" : ">" + myTrm);
         }
       }
       if ("0".equals(myIta)) {

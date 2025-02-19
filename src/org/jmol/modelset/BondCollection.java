@@ -175,6 +175,8 @@ abstract public class BondCollection extends AtomCollection {
         bo[i].setMad(mad);
         if (bo[i] instanceof HBond)
           ((HBond) bo[i]).energy = energy;
+      } else {
+        return null;
       }
     } else {
       if (bondCount == bo.length)
