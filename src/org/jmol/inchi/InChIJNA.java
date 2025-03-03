@@ -1,3 +1,21 @@
+/*
+ * Copyright 2006-2011 Sam Adams <sea36 at users.sourceforge.net>
+ *
+ * This file is part of -InChI.
+ *
+ * -InChI is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * -InChI is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with -InChI.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.jmol.inchi;
 
 import java.io.File;
@@ -51,7 +69,7 @@ public class InChIJNA extends InchiJmol {
       options = setParameters(options, molData, atoms, vwr);
       if (options == null)
         return "";
-      InchiOptions ops = getOptions(options);
+      InchiOptions ops = getOptions(options.toLowerCase());
       InchiOutput out = null;
       InchiInput in;
       if (inputInChI) {
@@ -74,14 +92,14 @@ public class InChIJNA extends InchiJmol {
         // "getStructure" is just a debugging method 
         // to see the exposed InChI structure in string form
         // note this is the INPUT model
-        in = JnaInchi.getInchiInputFromInchi(inchi).getInchiInput();
+        inchiModel = JnaInchi.getInchiInputFromInchi(inchi).getInchiInput();
         return (doGetSmiles ? getSmiles(vwr, smilesOptions)
-            : toJSON(in));
+            : toJSON(inchiModel));
       }
       return (getKey ? JnaInchi.inchiToInchiKey(inchi).getInchiKey() : inchi);
     } catch (Throwable e) {
       System.out.println(e);
-      if (e.getMessage().indexOf("ption") >= 0)
+      if (e.getMessage() != null && e.getMessage().indexOf("ption") >= 0)
         System.out.println(e.getMessage() + ": " + options.toLowerCase()
             + "\n See https://www.inchi-trust.org/download/104/inchi-faq.pdf for valid options");
       else
@@ -95,6 +113,12 @@ public class InChIJNA extends InchiJmol {
     StringTokenizer t = new StringTokenizer(options);
     while (t.hasMoreElements()) {
       String o = t.nextToken();
+      switch (o) {
+      case "smiles":
+      case "amide":
+      case "imine":
+        continue;
+      }
       InchiFlag f = InchiFlag.getFlagFromName(o);
       if (f == null) {
         System.err.println("InChIJNA InChI option " + o + " not recognized -- ignored");
@@ -231,7 +255,7 @@ public class InChIJNA extends InchiJmol {
         s += ",\n";
       s += "{";
       InchiBond b = mol.getBond(i);
-      s += toJSONInt("originAtom", mapAtoms.get(b.getEnd()).intValue(),
+      s += toJSONInt("originAtom", mapAtoms.get(b.getStart()).intValue(),
           "");
       s += toJSONInt("targetAtom", mapAtoms.get(b.getEnd()).intValue(),
           ",");
@@ -461,7 +485,6 @@ public class InChIJNA extends InchiJmol {
    * 
    * Future format may change.
    * 
-   * @param f
    * @return something like "InChI version 1, Software 1.07.2 (API Library)"
    */
   public static String getInternalInchiVersion() {

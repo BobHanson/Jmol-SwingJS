@@ -420,7 +420,7 @@ public class JMEJmol extends JME implements WindowListener {
   /**
    * Resolve a SMILES using the NCI/CADD Chemical Identifier Resolver
    * 
-   * @param smiles
+   * @param sm  iles
    * @param is3D
    * @return SMILES
    */

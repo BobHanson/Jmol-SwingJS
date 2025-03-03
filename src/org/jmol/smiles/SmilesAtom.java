@@ -846,30 +846,6 @@ public class SmilesAtom extends P3d implements Node {
   }
 
   @Override
-  public String toString() {
-    String s = (residueChar != null || residueName != null ? (residueChar == null ? residueName
-        : residueChar)
-        + "." + bioAtomName
-        : (bioAtomName != null && atomNumber != Integer.MIN_VALUE ? null : elementNumber == -1 ? "A" : elementNumber == -2 ? "*" : Elements
-            .elementSymbolFromNumber(elementNumber)));
-    if (s == null)
-      return bioAtomName + " #" + atomNumber;
-    if (isAromatic)
-      s = s.toLowerCase();
-    String s2 = "";
-    for (int i = 0; i < bondCount; i++)
-      s2 += bonds[i].getOtherAtom(this).index + ";bo=" + bonds[i].getCovalentOrder() + ", ";
-    
-    return "[" + s + '.' + index
-        + (matchingIndex >= 0 ? "(" + matchingNode + ")" : "")
-        //    + " ch:" + charge 
-        //    + " ar:" + isAromatic 
-        //    + " H:" + explicitHydrogenCount
-        //    + " h:" + implicitHydrogenCount
-        + "]->" + s2 + "(" + x + "," + y + "," + z + ")";
-  }
-
-  @Override
   public double getDoubleProperty(String property) {
     if (property == "property_atomclass" && atomClass != 0) // == is OK here.  
       return atomClass;
@@ -938,6 +914,33 @@ public class SmilesAtom extends P3d implements Node {
   public Boolean isStereoOpposite(int i2, int iA, int iB) {
     // InChIJNI.java subclass only
     return null;
+  }
+
+  @Override
+  public String toString() {
+    String s2 = "";
+    for (int i = 0; i < bondCount; i++)
+      s2 += bonds[i].getOtherAtom(this).getAtomForToString() + ";bo=" + bonds[i].getCovalentOrder() + ", ";    
+    return getAtomForToString() + "->" + s2 + "(" + x + "," + y + "," + z + ")";
+  }
+
+  private String getAtomForToString() {
+    String s = (residueChar != null || residueName != null ? (residueChar == null 
+        ? residueName : residueChar)
+        + "." + bioAtomName
+        : (bioAtomName != null && atomNumber != Integer.MIN_VALUE ? null : elementNumber == -1 ? "A" : elementNumber == -2 ? "*" : Elements
+            .elementSymbolFromNumber(elementNumber)));
+    if (s == null)
+      return bioAtomName + " #" + atomNumber;
+    if (isAromatic)
+      s = s.toLowerCase();
+    return "[" + s + '.' + index
+    + (matchingIndex >= 0 ? "(" + matchingNode + ")" : "")
+    //    + " ch:" + charge 
+    //    + " ar:" + isAromatic 
+    //    + " H:" + explicitHydrogenCount
+    //    + " h:" + implicitHydrogenCount
+    + "]";
   }
 
 }

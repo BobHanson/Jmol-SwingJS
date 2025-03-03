@@ -118,7 +118,7 @@ public class MathExt {
               - (args.length == 0 ? 0 : args[0].asInt())));
     case T.abs:
       return (args.length == 1 && args[0].tok == T.integer
-          ? mp.addXInt(args[0].intValue)
+          ? mp.addXInt(Math.abs(args[0].intValue))
           : mp.addXDouble(Math.abs(args[0].asDouble())));
     case T.acos:
     case T.cos:
@@ -4248,7 +4248,7 @@ SymmetryInterface sym;
         sx = (String) x.value;
         if (sx.startsWith("InChI")) {
           mp.addX(x);
-          return evaluateInChI(mp, new SV[] { SV.newS("SMILES") });
+          return evaluateInChI(mp, new SV[] { SV.newS("SMILES " + (args.length > 0 ? args[0].asString() : sx.indexOf("/f") >= 0 ? "fixedh" : "amide")) });
         }
       }
     boolean isSelectedSmiles = isSelector && tok == T.smiles;

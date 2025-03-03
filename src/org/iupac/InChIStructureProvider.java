@@ -34,10 +34,7 @@ public interface InChIStructureProvider {
    * 0 => non-isotopic; isotopic mass or ISOTOPIC_SHIFT_FLAG + mass - (average
    * atomic mass)
    * 
-   * 
-   * However, I double "average" here means "average"
-   * 
-   * @return inchi's value of
+   * @return inchi's value of average mass
    */
   int getIsotopicMass();
  

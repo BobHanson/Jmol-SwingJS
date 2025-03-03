@@ -1912,8 +1912,8 @@ public class CifReader extends AtomSetCollectionReader {
       "*_magn_operation_xyz",
       "*_ssg_operation_algebraic", 
       "*_magn_ssg_operation_algebraic",
-      "*_symmetry_equiv_pos_as_xyz", // old
-      "*_symmetry_ssg_equiv_pos_as_xyz", // old
+      "_symmetry_equiv_pos_as_xyz", // old
+      "_symmetry_ssg_equiv_pos_as_xyz", // old
 
       "*_magn_operation_timereversal", // second iteration
       "*_magn_ssg_operation_timereversal", // another iteration

@@ -5112,8 +5112,13 @@ public class Viewer extends JmolViewer
         if (fl.startsWith("smiles:")) {
           format += "?POST?smiles=" + id.substring(7);
           id = "smiles";
-        } else if (id.startsWith("cid:") || id.startsWith("inchikey:")
-            || id.startsWith("cas:")) {
+        } else if (id.startsWith("inchi:")) {
+          format += "?POST?inchi=" + id.substring(6);
+          id = "inchi";
+        } else if (id.startsWith("cid:") 
+            || id.startsWith("inchikey:")
+            || id.startsWith("cas:")
+            ) {
           id = id.replace(':', '/');
         } else {
           if (fl.startsWith("name:"))

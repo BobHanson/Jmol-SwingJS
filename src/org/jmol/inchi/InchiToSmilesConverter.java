@@ -31,6 +31,7 @@ class InchiToSmilesConverter {
 
   String getSmiles(Viewer vwr, String smilesOptions) {
     boolean hackImine = (smilesOptions.indexOf("imine") >= 0);
+    BS bsImplicitH = (smilesOptions.indexOf("amide") >= 0 ? new BS() : null);      
     int nAtoms = provider.getNumAtoms();
     int nBonds = provider.getNumBonds();
     int nh = 0;
@@ -70,6 +71,8 @@ class InchiToSmilesConverter {
       if (m > 0)
         n.setAtomicMass(m);
       nh = provider.getImplicitH();
+      if (nh > 0 && bsImplicitH != null)
+        bsImplicitH.set(na - 1);
       for (int j = 0; j < nh; j++) {
         addH(atoms, n, nb++);
         na++;
@@ -84,7 +87,7 @@ class InchiToSmilesConverter {
       SmilesBond sb = new SmilesBond(sa1, sa2, bt, false);
       sb.index = nb++;
     }
-    nb = checkFormalCharges(atoms, nb, hackImine);
+    nb = checkSpecial(atoms, nb, hackImine, bsImplicitH);
     na = atoms.size();
     SmilesAtom[] aatoms = new SmilesAtom[na];
     atoms.toArray(aatoms);
@@ -162,7 +165,8 @@ class InchiToSmilesConverter {
     return h;
   }
 
-  private int checkFormalCharges(Lst<SmilesAtom> atoms, int nb, boolean hackImine) {
+  private int checkSpecial(Lst<SmilesAtom> atoms, int nb, boolean hackImine,
+                           BS bsImplicitH) {
     for (int i = atoms.size(); --i >= 0;) {
       SmilesAtom a = atoms.get(i);
       int val = a.getValence();
@@ -170,18 +174,36 @@ class InchiToSmilesConverter {
       int nbtot = a.getBondCount();
       int ano = a.getElementNumber();
       int formalCharge = a.getCharge();
-      //System.out.println("InChIJNI " + ano + " " + val + " " + nbonds);
       SmilesBond b1 = null, b2 = null;
       switch (val * 10 + nbonds) {
       case 32:
         // X-N=Y
-        if (ano == 7 && hackImine) {
-          // change N to C17 and add H5
-          // the MOL reader will fix these
-          a.setSymbol("C");
-          a.setAtomicMass(17);
-          SmilesAtom h = addH(atoms, a, nb++);
-          h.setAtomicMass(5);
+        if (ano == 7) {
+          if (hackImine) {
+            // change N to C-17 and add H-5
+            // the MOL reader will fix these
+            a.setSymbol("C");
+            a.setAtomicMass(17);
+            SmilesAtom h = addH(atoms, a, nb++);
+            h.setAtomicMass(5);
+          } else if (bsImplicitH != null) {
+            // change -N=C-OH to NH-C=O
+            SmilesAtom c = getOther(atoms, a, Edge.BOND_COVALENT_DOUBLE, 6);
+            if (c != null && c.getElementNumber() == 6) {
+              SmilesAtom o = getOther(atoms, c, Edge.BOND_COVALENT_SINGLE, 8);
+              if (o != null && bsImplicitH.get(o.getIndex())) {
+                SmilesAtom h = getOther(atoms, o, Edge.BOND_COVALENT_SINGLE, 1);
+                SmilesBond nc = getBond(a, c);
+                SmilesBond co = getBond(o, c);
+                SmilesBond oh = h.getBond(0);
+                co.set2(Edge.BOND_COVALENT_DOUBLE, false);
+                nc.set2(Edge.BOND_COVALENT_SINGLE, false);
+                oh.set2(Edge.BOND_H_CALC, false);
+                SmilesBond b = new SmilesBond(h, a, Edge.BOND_COVALENT_SINGLE, false);
+                b.index = oh.index;
+              }
+            }
+          }
         }
         break;
       case 53:
@@ -201,20 +223,20 @@ class InchiToSmilesConverter {
         }
         break;
       case 54:
-//        if (ano == 15) {
-//          // X=P(R)=X -->  (-)X-N(+)(R)=X
-//          for (int j = 0; j < nbtot; j++) {
-//            SmilesBond b = a.getBond(j);
-//            if (b.getCovalentOrder() == 2) {
-//              if (b1 == null) {
-//                b1 = b;
-//              } else {
-//                b2 = b;
-//                break;
-//              }
-//            }
-//          }
-//        }
+        //        if (ano == 15) {
+        //          // X=P(R)=X -->  (-)X-N(+)(R)=X
+        //          for (int j = 0; j < nbtot; j++) {
+        //            SmilesBond b = a.getBond(j);
+        //            if (b.getCovalentOrder() == 2) {
+        //              if (b1 == null) {
+        //                b1 = b;
+        //              } else {
+        //                b2 = b;
+        //                break;
+        //              }
+        //            }
+        //          }
+        //        }
         break;
 
       }
@@ -226,6 +248,28 @@ class InchiToSmilesConverter {
       }
     }
     return nb;
+  }
+
+  private SmilesBond getBond(SmilesAtom a, SmilesAtom c) {
+    for (int i = a.getBondCount(); --i >= 0;) {
+      SmilesBond b = a.getBond(i);
+      if (b.getOtherAtom(a) == c)
+        return b;
+    }
+    return null;
+  }
+
+  private SmilesAtom getOther(Lst<SmilesAtom> atoms, SmilesAtom a, int bondType,
+                              int elemNo) {
+    for (int i = a.getBondCount(); --i >= 0;) {
+      SmilesAtom a2;
+      if (a.getBond(i).getCovalentOrder() == bondType
+          && (a2 = atoms.get(a.getBondedAtomIndex(i)))
+              .getElementNumber() == elemNo) {
+        return a2;
+      }
+    }
+    return null;
   }
 
   protected Boolean isInchiOpposite(int i1, int i2, int iA, int iB) {

@@ -34,7 +34,6 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.Bond;
 import org.jmol.api.JmolAdapter;
-import org.jmol.util.BoxInfo;
 import org.jmol.util.Logger;
 
 /**
@@ -332,6 +331,10 @@ public class MolReader extends AtomSetCollectionReader {
         readIsotopes();
         continue;
       }
+      if (line.startsWith("M  CHG")) {
+        readCharges();
+        continue;
+      }
       rd();
     }
     if (atomData != null) {
@@ -371,8 +374,8 @@ public class MolReader extends AtomSetCollectionReader {
    * @throws Exception
    */
   private void readIsotopes() throws Exception {
-    int n = parseIntAt(line, 6);
     try {
+      int n = parseIntAt(line, 6);
       int i0 = asc.getLastAtomSetAtomIndex();
       for (int i = 0, pt = 9; i < n; i++) {
         int ipt = parseIntAt(line, pt);
@@ -388,6 +391,32 @@ public class MolReader extends AtomSetCollectionReader {
         } else {
           atom.elementSymbol = "" + iso + sym;
         }
+      }
+    } catch (Throwable e) {
+      // ignore error here
+    }
+    rd();
+  }
+
+  /**
+   * Read all M  CHG  lines. These are absolute charges.
+   * 
+   * @throws Exception
+   */
+  private void readCharges() throws Exception {
+//    M CHGnn8 aaa vvv ...
+//
+//    vvv: -15 to +15. Default of 0 = uncharged atom. When present, this property supersedes
+//    all charge and radical values in the atom block, forcing a 0 charge on all atoms not
+//    listed in an M CHG or M RAD line    int n = parseIntAt(line, 6);
+    try {
+      int n = parseIntAt(line, 6);
+      int i0 = asc.getLastAtomSetAtomIndex();
+      for (int i = asc.ac; --i >= i0;) {
+        asc.atoms[i].formalCharge = 0;
+      }
+      for (int i = 0, pt = 9; i < n; i++, pt += 8) {
+        asc.atoms[parseIntAt(line, pt) + i0 - 1].formalCharge = parseIntAt(line, pt + 4);
       }
     } catch (Throwable e) {
       // ignore error here

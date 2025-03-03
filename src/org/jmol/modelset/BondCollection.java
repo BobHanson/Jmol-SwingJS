@@ -511,7 +511,7 @@ abstract public class BondCollection extends AtomCollection {
     BS bsTest = new BS();
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsBonds.nextSetBit(i + 1))) {
       bond = bo[i];
-      if (!bond.is(Edge.BOND_AROMATIC) || bsAromaticDouble.get(i)
+      if (bond == null || !bond.is(Edge.BOND_AROMATIC) || bsAromaticDouble.get(i)
           || bsAromaticSingle.get(i))
         continue;
       bsTest.set(i);
@@ -531,6 +531,8 @@ abstract public class BondCollection extends AtomCollection {
     BS bsModels = new BS();
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsBonds.nextSetBit(i + 1))) {
       bond = bo[i];
+      if (bond == null)
+        continue;
       if (bsAromaticDouble.get(i)) {
         if (!bond.is(Edge.BOND_AROMATIC_DOUBLE)) {
           bsAromatic.set(i);
