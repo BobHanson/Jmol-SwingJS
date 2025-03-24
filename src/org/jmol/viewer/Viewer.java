@@ -662,6 +662,8 @@ public class Viewer extends JmolViewer
       isSilent = checkOption2("silent", "-i");
       if (isSilent)
         Logger.setLogLevel(Logger.LEVEL_WARN); // no info, but warnings and
+      else
+        Logger.info("Jmol version " + getJmolVersion());
       if (headless && !isSilent)
         Logger.info("Operating headless display=" + display
             + " nographicsallowed=" + noGraphicsAllowed);
@@ -1013,9 +1015,13 @@ public class Viewer extends JmolViewer
 
   public ModelKit getModelkit(boolean andShow) {
     if (modelkit == null) {
-      (modelkit = (ModelKit) Interface
-          .getInterface("org.jmol.modelkit.ModelKit", this, "script"))
-              .setMenu((ModelKitPopup) apiPlatform.getMenuPopup(null, 'm'));
+      modelkit = (ModelKit) Interface
+          .getInterface("org.jmol.modelkit.ModelKit", this, "script");
+      if (headless || !haveDisplay) {
+        modelkit.setProperty("headless", this);
+      } else {
+        modelkit.setMenu((ModelKitPopup) apiPlatform.getMenuPopup(null, 'm'));
+      }
     } else if (andShow) {
       modelkit.updateMenu();
     }
@@ -5414,7 +5420,7 @@ public class Viewer extends JmolViewer
   }
 
   public boolean isModelkitPickingRotateBond() {
-    return (acm.getBondPickingMode() == ActionManager.PICKING_ROTATE_BOND);
+    return (acm != null && acm.getBondPickingMode() == ActionManager.PICKING_ROTATE_BOND);
   }
 
   /**

@@ -955,6 +955,8 @@ public class ModelKit {
 
   protected boolean haveKeys;
 
+  private boolean headless;
+
   public ModelKit() {
     // for dynamic class loading in Java and JavaScript
   }
@@ -1350,12 +1352,12 @@ public class ModelKit {
   }
 
   public void dispose() {
-
-    // from Viewer
-
-    menu.jpiDispose();
-    menu.modelkit = null;
-    menu = null;
+    if (menu != null) {
+      // from Viewer
+      menu.jpiDispose();
+      menu.modelkit = null;
+      menu = null;
+    }
     vwr = null;
   }
 
@@ -1368,7 +1370,7 @@ public class ModelKit {
 
     // from FrankRender
 
-    return menu.activeMenu;
+    return (menu == null ? "" : menu.activeMenu);
   }
 
   public String getDefaultModel() {
@@ -1525,7 +1527,7 @@ public class ModelKit {
 
     // from FrankReneder
 
-    return menu.hidden;
+    return (menu == null || menu.hidden);
   }
 
   public boolean isPickAtomAssignCharge() {
@@ -1566,8 +1568,10 @@ public class ModelKit {
   public void setMenu(ModelKitPopup menu) {
     // from Viewer
     this.menu = menu;
-    this.vwr = menu.vwr;
-    menu.modelkit = this;
+    if (menu != null) {
+      this.vwr = menu.vwr;
+      menu.modelkit = this;
+    }
     initializeForModel(false);
   }
 
@@ -1586,6 +1590,12 @@ public class ModelKit {
     // from ModelKit, Viewer, and CmdExt
 
     try {
+      if (key == "headless") {
+        headless = true;
+        vwr = (Viewer) value;
+        setMenu(null);
+        return vwr;
+      }
 
       if (vwr == null) // clearing
         return null;
@@ -1676,7 +1686,7 @@ public class ModelKit {
       }
 
       if (key == JC.MODELKIT_BRANCH_ATOM_PICKED) {
-        if (isRotateBond && !vwr.acm.isHoverable())
+        if (!headless && isRotateBond && !vwr.acm.isHoverable())
           setBranchAtom(((Integer) value).intValue(), true);
         return null;
       }
@@ -1688,7 +1698,8 @@ public class ModelKit {
       }
 
       if (key == JC.MODELKIT_HIDEMENU) {
-        menu.hidePopup();
+        if (menu != null)
+          menu.hidePopup();
         return null;
       }
 
@@ -1717,6 +1728,8 @@ public class ModelKit {
       }
 
       if (key == JC.MODELKIT_ATOMPICKINGMODE) {
+        if (headless)
+          return null;
         if (PT.isOneOf((String) value, ";identify;off;")) {
           exitBondRotation(null);
           vwr.setBooleanProperty("bondPicking", false);
@@ -1832,6 +1845,8 @@ public class ModelKit {
       }
 
       if (key == JC.MODELKIT_HIDDEN) {
+        if (menu == null)
+          return Boolean.TRUE;
         if (value != null) {
           menu.hidden = isTrue(value);
           if (menu.hidden)
@@ -1974,13 +1989,16 @@ public class ModelKit {
   }
 
   public void showMenu(int x, int y) {
-
+    if (menu == null)
+      return;
     // from viewer
 
     menu.jpiShow(x, y);
   }
 
   public void updateMenu() {
+    if (menu == null)
+      return;
 
     // from Viewer
 
@@ -2005,7 +2023,7 @@ public class ModelKit {
   }
 
   protected void clickProcessXtal(String id, String action) {
-    if (processSymop(id, false))
+    if (processSymop(id, false) || headless)
       return;
     action = action.intern();
     if (action.startsWith("mkmode_")) {
@@ -2763,13 +2781,16 @@ public class ModelKit {
       }
 
       // save globals
-      int pickingMode = vwr.acm.getAtomPickingMode();
-      boolean wasHidden = menu.hidden;
+      int pickingMode = (headless ? 0 : vwr.acm.getAtomPickingMode());
       boolean isMK = vwr.getBoolean(T.modelkitmode);
-      if (!isMK && sym == null) {
-        vwr.setBooleanProperty("modelkitmode", true);
-        menu.hidden = true;
-        menu.allowPopup = false;
+      boolean wasHidden = true;
+      if (menu != null) {
+        wasHidden = menu.hidden;
+        if (!isMK && sym == null) {
+          vwr.setBooleanProperty("modelkitmode", true);
+          menu.hidden = true;
+          menu.allowPopup = false;
+        }
       }
 
       // now add the "hydrogens" aka new atoms
@@ -2787,7 +2808,7 @@ public class ModelKit {
       // bs now points to the new atoms
       // restore globals
 
-      if (!isMK) {
+      if (!isMK && menu != null) {
         vwr.setBooleanProperty("modelkitmode", false);
         menu.hidden = wasHidden;
         menu.allowPopup = true;
@@ -2801,7 +2822,7 @@ public class ModelKit {
       if (points == null) {
         // new single atom
         assignAtom(atomIndexNew, type, false, atomIndex >= 0 && sym == null,
-            true);
+            isClick);
         if (atomIndex >= 0) {
           boolean doAutobond = (sym == null && !"H".equals(type));
           assignAtom(atomIndex, ".", false, doAutobond, isClick);
@@ -3524,6 +3545,8 @@ public class ModelKit {
    * @return special label or null
    */
   private String getHoverLabel(int atomIndex) {
+    if (headless)
+      return "";
     int state = getMKState();
     String msg = null;
     switch (state) {
@@ -3596,7 +3619,7 @@ public class ModelKit {
     addInfo(info, "addHydrogens", Boolean.valueOf(addHydrogens));
     addInfo(info, "autobond", Boolean.valueOf(autoBond));
     addInfo(info, "clickToSetElement", Boolean.valueOf(clickToSetElement));
-    addInfo(info, "hidden", Boolean.valueOf(menu.hidden));
+    addInfo(info, "hidden", Boolean.valueOf(menu == null || menu.hidden));
     addInfo(info, "showSymopInfo", Boolean.valueOf(showSymopInfo));
     addInfo(info, "centerPoint", centerPoint);
     addInfo(info, "centerAtomIndex", Integer.valueOf(centerAtomIndex));
@@ -3959,7 +3982,8 @@ public class ModelKit {
     isRotateBond = isRotate;
     bondAtomIndex1 = vwr.ms.bo[index].getAtomIndex1();
     bondAtomIndex2 = vwr.ms.bo[index].getAtomIndex2();
-    menu.setActiveMenu(BOND_MODE);
+    if (menu != null)
+      menu.setActiveMenu(BOND_MODE);
   }
 
   /**
@@ -4209,11 +4233,11 @@ public class ModelKit {
    * @param swidth
    */
   public void drawUnitCell(String id, T3d ucLattice, String swidth) {
-    if (swidth.length() == 0)
-      swidth = "diameter 3";
     SymmetryInterface sym = vwr.getOperativeSymmetry();
     if (sym == null)
       return;
+    if (swidth.length() == 0)
+      swidth = "diameter 3";
     SymmetryInterface uc = vwr.getSymTemp()
         .getUnitCell(sym.getUnitCellVectors(), false, "draw");
     uc.setOffsetPt(ucLattice);
