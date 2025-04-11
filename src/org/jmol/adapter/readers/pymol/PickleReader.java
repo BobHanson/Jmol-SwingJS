@@ -104,14 +104,21 @@ private final static byte LONG = 76; /* L */
     this.vwr = vwr;
     stack.ensureCapacity(1000);
     try {
-    if (dumpFile != null)
-      writer = new OutputStreamWriter(new FileOutputStream(dumpFile));
+// enable this for SwingJS ONLY. The presence of new FileOutputStream
+// causes legacy JSmol to try to load the class when the PickleReader file
+// is opened.
+//    if (dumpFile != null)
+//      writer = new OutputStreamWriter(new FileOutputStream(dumpFile));
     } catch (Exception e) {
       //
     }
   }
 
-  private String dumpFile = "C:/temp/pse/pickle.log";
+  /**
+   * WARNING! Do not activate this for legacy Jmol.
+   */
+  private String dumpFile = null;//"C:/temp/pse/pickle.log";
+
   private void log(String s) {
     vwr.log(s + "\0");
   }
