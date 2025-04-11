@@ -10358,9 +10358,9 @@ public class Viewer extends JmolViewer
     return sb.append("\n").toString();
   }
 
-  public void setCGO(Lst<Object> info) {
+  public void setCGO(Map<String, Object> map) {
     shm.loadShape(JC.SHAPE_CGO);
-    shm.setShapePropertyBs(JC.SHAPE_CGO, "setCGO", info, null);
+    shm.setShapePropertyBs(JC.SHAPE_CGO, "setCGO", map, null);
   }
 
   public void setModelSet(ModelSet modelSet) {

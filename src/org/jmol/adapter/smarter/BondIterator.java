@@ -74,8 +74,8 @@ class BondIterator extends JmolAdapterBondIterator {
 	}
 	
 	@Override
-  public double getRadius() {
-    return bond.radius;
+  public double getPymolRadius() {
+    return bond.pymolRadius;
   }
 
   @Override

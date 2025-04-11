@@ -30,8 +30,9 @@ import org.jmol.shape.Mesh;
 import org.jmol.shapecgo.CGO;
 import org.jmol.shapecgo.CGOMesh;
 import org.jmol.util.C;
-import javajs.util.Lst;
 import org.jmol.util.Logger;
+
+import javajs.util.Lst;
 import javajs.util.P3d;
 import javajs.util.P3i;
 
@@ -61,6 +62,9 @@ public class CGORenderer extends DrawRenderer {
   
   private boolean is2D, is2DPercent, isMapped, isPS;
   private int screenZ;
+  private double alpha;
+  private int nPts;
+  private int glMode;
 
   
   @Override
@@ -78,22 +82,20 @@ public class CGORenderer extends DrawRenderer {
     diameter = cgoMesh.diameter;
     width = cgoMesh.width;
     cmds = cgoMesh.cmds;
-    if (cmds == null || !cgoMesh.visible || cgoMesh.visibilityFlags == 0)
-      return;
+//    if (cmds == null || !cgoMesh.visible || cgoMesh.visibilityFlags == 0)
+//      return;
     if (!g3d.setC(cgoMesh.colix)) {
       needTranslucent = true;
       return;
     }
     int n = cmds.size();
-    int glMode = -1;
-    int nPts = 0;
+    glMode = -1;
+    nPts = 0;
     ptNormal = 0;
     ptColor = 0;
-    width = 0;
+    width = cgoMesh.meshWidth / 1000 * 50;
     screenZ = Integer.MAX_VALUE;
     doColor = !mesh.useColix;
-    P3d pt;
-    P3i spt;
     g3d.addRenderer(T.triangles);
     is2D = isMapped = false;
     scaleX = scaleY = 1;
@@ -110,6 +112,11 @@ public class CGORenderer extends DrawRenderer {
       switch (type) {
       default:
         System.out.println("CGO ? " + type);
+        break;
+      case CGOMesh.SPECIAL:
+        break;
+      case CGOMesh.DRAW_ARRAYS:
+        len = drawArray(j + 1);
         break;
       case CGOMesh.PS_SHOWPAGE:
         // no fill, either
@@ -155,6 +162,9 @@ public class CGORenderer extends DrawRenderer {
         scaleX = cgoMesh.getFloat(isPS ? j + 1 : j + 14);
         scaleY = cgoMesh.getFloat(isPS ? j + 2 : j + 15);
         break;
+      case CGOMesh.ALPHA:
+        alpha = cgoMesh.getFloat(j + 1);
+        break;
       case CGOMesh.RESET_NORMAL: // use?
         break;
       case CGOMesh.SIMPLE_LINE:
@@ -196,105 +206,7 @@ public class CGORenderer extends DrawRenderer {
         glMode = CGOMesh.GL_LINE_LOOP;
         //$FALL-THROUGH$
       case CGOMesh.VERTEX:
-        if (nPts++ == 0)
-          getPoint(j, pt0, pt0i);
-        switch (glMode) {
-        case -1:
-          break;
-        case CGOMesh.GL_POINTS:
-          drawEdge(1, 1, false, pt0, pt0, pt0i, pt0i);
-          break;
-        case CGOMesh.GL_LINES:
-          if (nPts == 2) {
-            getPoint(j, pt1, pt1i);
-            drawEdge(1, 2, false, pt0, pt1, pt0i, pt1i);
-            nPts = 0;
-          }
-          break;
-        case CGOMesh.GL_LINE_LOOP:
-        case CGOMesh.GL_LINE_STRIP:
-          if (nPts == 1) {
-            if (glMode == CGOMesh.GL_LINE_LOOP) {
-              pt3.setT(pt0);
-              pt3i.setT(pt0i);
-            }
-            break;
-          }
-          getPoint(j, pt1, pt1i);
-          pt = pt0;
-          pt0 = pt1;
-          pt1 = pt;
-          spt = pt0i;
-          pt0i = pt1i;
-          pt1i = spt;
-          drawEdge(1, 2, true, pt0, pt1, pt0i, pt1i);
-          break;
-        case CGOMesh.GL_TRIANGLES:
-          switch (nPts) {
-          case 1:
-            normix1 = normix2 = normix0 = normix;
-            colix1 = colix2 = colix0 = colix;
-            break;
-          case 2:
-            getPoint(j, pt1, pt1i);
-            break;
-          case 3:
-            getPoint(j, pt2, pt2i);
-            fillTriangle();
-            nPts = 0;
-            break;
-          }
-          break;
-        case CGOMesh.GL_TRIANGLE_STRIP:
-          // v0 v1 v2   v2 v1 v3   v2 v3 v4   v4 v3 v5 ...
-          switch (nPts) {
-          case 1:
-            normix1 = normix2 = normix0 = normix;
-            colix1 = colix2 = colix0 = colix;
-            break;
-          case 2:
-            getPoint(j, pt2, pt2i);
-            break;
-          default:
-            if (nPts % 2 == 0) {
-              pt = pt0;
-              pt0 = pt2;
-              spt = pt0i;
-              pt0i = pt2i;
-            } else {
-              pt = pt1;
-              pt1 = pt2;
-              spt = pt1i;
-              pt1i = pt2i;
-            }
-            pt2 = pt;
-            pt2i = spt;
-            getPoint(j, pt2, pt2i);
-            fillTriangle();
-            break;
-          }
-          break;
-        case CGOMesh.GL_TRIANGLE_FAN:
-          // v2 v0 v1   v3 v0 v2   v4 v0 v3  ...
-          switch (nPts) {
-          case 1:
-            normix1 = normix2 = normix0 = normix;
-            colix1 = colix2 = colix0 = colix;
-            pt1.setT(pt0);
-            pt1i.setT(pt0i);
-            break;
-          case 2:
-            getPoint(j, pt0, pt0i);
-            break;
-          default:
-            pt2.setT(pt0);
-            pt2i.setT(pt0i);
-            getPoint(j, pt0, pt0i);
-            fillTriangle();
-            break;
-          }
-          break;
-        }
+        processVertex(j);
         break;
       case CGOMesh.SAUSAGE:
         getPoint(j, pt0, pt0i);
@@ -322,8 +234,150 @@ public class CGORenderer extends DrawRenderer {
     }
   }
 
+  private P3d pt;
+  private P3i spt;
+  
+  private void processVertex(int j) {
+    if (nPts++ == 0)
+      getPoint(j, pt0, pt0i);
+    switch (glMode) {
+    case -1:
+      break;
+    case CGOMesh.SPECIAL:          
+      // ??
+    case CGOMesh.GL_POINTS:
+      drawEdge(1, 1, false, pt0, pt0, pt0i, pt0i);
+      break;
+    case CGOMesh.GL_LINES:
+      if (nPts == 2) {
+        getPoint(j, pt1, pt1i);
+        drawEdge(1, 2, false, pt0, pt1, pt0i, pt1i);
+        nPts = 0;
+        return;
+      }
+      break;
+    case CGOMesh.GL_LINE_LOOP:
+    case CGOMesh.GL_LINE_STRIP:
+      if (nPts == 1) {
+        if (glMode == CGOMesh.GL_LINE_LOOP) {
+          pt3.setT(pt0);
+          pt3i.setT(pt0i);
+        }
+        break;
+      }
+      getPoint(j, pt1, pt1i);
+      pt = pt0;
+      pt0 = pt1;
+      pt1 = pt;
+      spt = pt0i;
+      pt0i = pt1i;
+      pt1i = spt;
+      drawEdge(1, 2, true, pt0, pt1, pt0i, pt1i);
+      break;
+    case CGOMesh.GL_TRIANGLES:
+      switch (nPts) {
+      case 1:
+        normix1 = normix2 = normix0 = normix;
+        colix1 = colix2 = colix0 = colix;
+        break;
+      case 2:
+        getPoint(j, pt1, pt1i);
+        break;
+      case 3:
+        getPoint(j, pt2, pt2i);
+        fillTriangle();
+        nPts = 0;
+        return;
+      }
+      break;
+    case CGOMesh.GL_TRIANGLE_STRIP:
+      // v0 v1 v2   v2 v1 v3   v2 v3 v4   v4 v3 v5 ...
+      switch (nPts) {
+      case 1:
+        normix1 = normix2 = normix0 = normix;
+        colix1 = colix2 = colix0 = colix;
+        break;
+      case 2:
+        getPoint(j, pt2, pt2i);
+        break;
+      default:
+        if (nPts % 2 == 0) {
+          pt = pt0;
+          pt0 = pt2;
+          spt = pt0i;
+          pt0i = pt2i;
+        } else {
+          pt = pt1;
+          pt1 = pt2;
+          spt = pt1i;
+          pt1i = pt2i;
+        }
+        pt2 = pt;
+        pt2i = spt;
+        getPoint(j, pt2, pt2i);
+        fillTriangle();
+        break;
+      }
+      break;
+    case CGOMesh.GL_TRIANGLE_FAN:
+      // v2 v0 v1   v3 v0 v2   v4 v0 v3  ...
+      switch (nPts) {
+      case 1:
+        normix1 = normix2 = normix0 = normix;
+        colix1 = colix2 = colix0 = colix;
+        pt1.setT(pt0);
+        pt1i.setT(pt0i);
+        break;
+      case 2:
+        getPoint(j, pt0, pt0i);
+        break;
+      default:
+        pt2.setT(pt0);
+        pt2i.setT(pt0i);
+        getPoint(j, pt0, pt0i);
+        fillTriangle();
+        break;
+      }
+      break;
+    }
+  }
+
+  private int drawArray(int j0) {
+    // see CGO.cpp
+    int[] info = new int[16];
+//    info[0] = glMode;
+//    info[1] = arrayTypes;
+//    info[2] = nArrays;
+//    info[3] = nVertices;
+//    info[4] = ptVertices;
+//    info[5] = ptNormals;
+//    info[6] = ptColors;
+//    info[7] = ptPicks;
+//    info[8] = ptAccess;
+//    info[9] = ptTextures;
+    int len = cgoMesh.getDrawArrayParams(j0 - 1, info);
+    glMode = info[0];
+    int nVertices = info[3];
+    int ptVertices = info[4];
+    int jColors = info[6];
+    cgoMesh.clearNormixList();
+    cgoMesh.clearColixList();
+    ptNormal = 0;
+    ptColor = 0;
+    nPts = 0;
+    for (int v = 0, j = ptVertices - 1; v < nVertices; v++, j += 3) {
+      if (jColors > 0) {
+        // not handling alpha here
+        cgoMesh.addColix(jColors - 1 + v * 4);
+        getColix(true);
+      }
+      processVertex(j);
+    }
+    return len;
+  }
+
   private short getNormix() {
-    return cgoMesh.nList.get(ptNormal++).shortValue();
+    return (ptNormal >= cgoMesh.nList.size() ? 0 : cgoMesh.nList.get(ptNormal++).shortValue());
   }
 
   private short getColix(boolean doSet) {

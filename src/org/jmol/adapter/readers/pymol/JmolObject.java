@@ -27,6 +27,7 @@ package org.jmol.adapter.readers.pymol;
 
 
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.atomdata.RadiusData;
@@ -54,7 +55,7 @@ import javajs.util.SB;
  */
 class JmolObject {
 
-  int id;
+  int shape;
   private BS bsAtoms;
   private Object info;
   private int size = -1;  
@@ -70,13 +71,13 @@ class JmolObject {
 
   /**
    * 
-   * @param id   A Token or JmolConstants.SHAPE_XXXX
+   * @param shape   A Token or JmolConstants.SHAPE_XXXX
    * @param branchNameID
    * @param bsAtoms
    * @param info     optional additional information for the shape
    */
-  JmolObject(int id, String branchNameID, BS bsAtoms, Object info) {
-    this.id = id;
+  JmolObject(int shape, String branchNameID, BS bsAtoms, Object info) {
+    this.shape = shape;
     this.bsAtoms = bsAtoms;
     this.info = info;
     this.jmolName = branchNameID;
@@ -94,7 +95,7 @@ class JmolObject {
     if (modelOffset > 0) {
       if (modelIndex != Integer.MIN_VALUE)
         modelIndex += modelOffset;
-      switch (id) {
+      switch (shape) {
       case T.display:
       case T.hide:
         return;
@@ -114,7 +115,7 @@ class JmolObject {
     }
     if (atomOffset <= 0)
       return;
-    if (id == T.define) {
+    if (shape == T.define) {
       Collection<Object> map = ((Map<String, Object>) info).values();
       for (Object o : map)
         BSUtil.offset((BS) o, 0, atomOffset);
@@ -139,7 +140,7 @@ class JmolObject {
     SB sb = null;
     if (bsAtoms != null)
       modelIndex = getModelIndex(m);
-    switch (id) {
+    switch (shape) {
     case T.hidden:
       // bsHidden
       sm.vwr.displayAtoms(bsAtoms, false, false, T.add, true);
@@ -158,9 +159,9 @@ class JmolObject {
         if (info == null) {
           sm.vwr.displayAtoms(null, true, false, 0, true);
         }
-        sm.vwr.setObjectProp((String) info, id);
+        sm.vwr.setObjectProp((String) info, shape);
       } else {
-        sm.vwr.displayAtoms(bsAtoms, id == T.display, false, T.add, true);
+        sm.vwr.displayAtoms(bsAtoms, shape == T.display, false, T.add, true);
       }
       return;
     case T.define:
@@ -185,8 +186,8 @@ class JmolObject {
           (double[]) ((Map<String, Object>) info).get("pymolView"));
       return;
     case JC.SHAPE_LABELS:
-      sm.loadShape(id);
-      sm.setShapePropertyBs(id, "pymolLabels", info, bsAtoms);
+      sm.loadShape(shape);
+      sm.setShapePropertyBs(shape, "pymolLabels", info, bsAtoms);
       return;
     case T.bonds:
       break;
@@ -194,28 +195,36 @@ class JmolObject {
     case JC.SHAPE_STICKS:
       if (size != -1) {
         sm.setShapeSizeBs(JC.SHAPE_STICKS, size, null, bsAtoms);
-        BS bsBonds = ((BS[]) sm.getShapePropertyIndex(JC.SHAPE_STICKS, "sets",
-            0))[1];
-        pymolScene.setUniqueBonds(bsBonds, id == JC.SHAPE_STICKS);
+        BS bsBonds = sm.vwr.getBondsForSelectedAtoms(bsAtoms);
+        if (info != null) {
+            Object[] o = (Object[]) info;
+            BS bsH = (BS) o[0];
+            float stick_h_scale = ((Number) o[1]).floatValue();
+            int hsize = (int) (size * stick_h_scale);
+            sm.vwr.setBooleanProperty("bondmodeor", true);
+            sm.setShapeSizeBs(JC.SHAPE_STICKS, hsize, null, bsH);
+            sm.vwr.setBooleanProperty("bondmodeor", false);
+          }
+        pymolScene.setUniqueBonds(bsBonds, shape == JC.SHAPE_STICKS);
         size = -1;
       }
-      id = JC.SHAPE_STICKS;
+      shape = JC.SHAPE_STICKS;
       break;
     case T.atoms:
-      id = JC.SHAPE_BALLS;
+      shape = JC.SHAPE_BALLS;
       break;
     case JC.SHAPE_BALLS:
       break;
     case JC.SHAPE_TRACE:
     case JC.SHAPE_BACKBONE:
-      sm.loadShape(id);
+      sm.loadShape(shape);
       BS bsCarb = m.getAtoms(T.carbohydrate, null);
       BSUtil.andNot(bsAtoms, bsCarb);
       break;
     case JC.SHAPE_DOTS:
-      sm.loadShape(id);
-      sm.setShapePropertyBs(id, "ignore", BSUtil.copyInvert(bsAtoms, sm.vwr
-          .ms.ac), null);
+      sm.loadShape(shape);
+      sm.setShapePropertyBs(shape, "ignore",
+          BSUtil.copyInvert(bsAtoms, sm.vwr.ms.ac), null);
       break;
     default:
       if (!visible)
@@ -223,9 +232,12 @@ class JmolObject {
       break;
     }
 
-    switch (id) {
+    switch (shape) {
     case JC.SHAPE_CGO:
-      sm.vwr.setCGO((Lst<Object>) info);
+      Map<String, Object> map = new Hashtable<>();
+      map.put("mesh_width", Double.valueOf(pymolScene.getDefaultFloat(PyMOL.mesh_width)));
+      map.put("info", info);
+      sm.vwr.setCGO(map);
       break;
     case JC.SHAPE_DOTS:
     case JC.SHAPE_BALLS:
@@ -236,20 +248,20 @@ class JmolObject {
     case JC.SHAPE_TRACE:
     case JC.SHAPE_ISOSURFACE:
       if (info instanceof Object[]) {
-        sm.loadShape(id);
-        sm.setShapePropertyBs(id, "params", info, bsAtoms);
+        sm.loadShape(shape);
+        sm.setShapePropertyBs(shape, "params", info, bsAtoms);
       }
       break;
     case JC.SHAPE_MEASURES:
       if (modelIndex < 0)
         return;
-      sm.loadShape(id);
+      sm.loadShape(shape);
       MeasurementData md = (MeasurementData) info;
       md.setModelSet(m);
       Lst<Object> points = md.points;
       for (int i = points.size(); --i >= 0;)
         ((Point3fi) points.get(i)).mi = (short) modelIndex;
-      sm.setShapePropertyBs(id, "measure", md, bsAtoms);
+      sm.setShapePropertyBs(shape, "measure", md, bsAtoms);
       return;
     case T.isosurface:
       sID = (bsAtoms == null ? (String) info : jmolName);
@@ -264,10 +276,9 @@ class JmolObject {
         modelIndex = sm.vwr.am.cmi;
       if (bsAtoms == null) {
         // point display of map 
-        sb.append(" model ")        
-            .append(m.getModelNumberDotted(modelIndex)).append(
-                " color density sigma 1.0 ").append(PT.esc(cacheID)).append(" ").append(
-                PT.esc(sID));
+        sb.append(" model ").append(m.getModelNumberDotted(modelIndex))
+            .append(" color density sigma 1.0 ").append(PT.esc(cacheID))
+            .append(" ").append(PT.esc(sID));
         if (doCache)
           sb.append(";isosurface cache");
       } else {
@@ -291,9 +302,9 @@ class JmolObject {
         //        String ignore = " ignore " + Escape.eBS(bsIgnore);
         String ignore = "";
         String type = (size < 0 ? " sasurface " : " solvent ");
-        sb.append(" model ").append(model).append(resolution)
-            .append(" select ").append(Escape.eBS(bsAtoms)).append(only)
-            .append(ignore).append(type).appendD(Math.abs(size / 1000d));
+        sb.append(" model ").append(model).append(resolution).append(" select ")
+            .append(Escape.eBS(bsAtoms)).append(only).append(ignore)
+            .append(type).appendD(Math.abs(size / 1000d));
         if (!haveMep) {
           if (argb == 0)
             sb.append(" map property color");
@@ -317,10 +328,10 @@ class JmolObject {
       double min = PyMOLReader.floatAt(PyMOLReader.listAt(mep, 3), 0);
       double max = PyMOLReader.floatAt(PyMOLReader.listAt(mep, 3), 2);
       sb = new SB();
-      sb.append(";isosurface ID ").append(PT.esc(sID)).append(" map ").append(PT.esc(cacheID)).append(" ")
-          .append(PT.esc(mapID)).append(
-              ";color isosurface range " + min + " " + max
-                  + ";isosurface colorscheme rwb;set isosurfacekey true");
+      sb.append(";isosurface ID ").append(PT.esc(sID)).append(" map ")
+          .append(PT.esc(cacheID)).append(" ").append(PT.esc(mapID))
+          .append(";color isosurface range " + min + " " + max
+              + ";isosurface colorscheme rwb;set isosurfacekey true");
       if (translucency > 0)
         sb.append(";color isosurface translucent " + translucency);
       if (doCache)
@@ -332,11 +343,11 @@ class JmolObject {
       sID = mesh.get(mesh.size() - 2).toString();
       sb = new SB();
       sb.append("isosurface ID ").append(PT.esc(sID)).append(" model ")
-          .append(m.getModelNumberDotted(modelIndex))
-          .append(" color ").append(Escape.escapeColor(argb)).append("  ").append(PT.esc(cacheID)).append(" ")
-          .append(PT.esc(sID)).append(" mesh nofill frontonly");
+          .append(m.getModelNumberDotted(modelIndex)).append(" color ")
+          .append(Escape.escapeColor(argb)).append("  ").append(PT.esc(cacheID))
+          .append(" ").append(PT.esc(sID)).append(" mesh nofill frontonly");
       Lst<Object> list = PyMOLReader.sublistAt(mesh, 2, 0);
-      double within = PyMOLReader.floatAt(list, 11);  
+      double within = PyMOLReader.floatAt(list, 11);
       list = PyMOLReader.listAt(list, 12);
       if (within > 0) {
         P3d pt = new P3d();
@@ -355,26 +366,25 @@ class JmolObject {
       sb = (SB) info;
       break;
     case T.trace:
-      sm.loadShape(id = JC.SHAPE_TRACE);
-      sm.setShapePropertyBs(id, "putty", info, bsAtoms);
+      sm.loadShape(shape = JC.SHAPE_TRACE);
+      sm.setShapePropertyBs(shape, "putty", info, bsAtoms);
       break;
     }
     if (sb != null) {
-      //System.out.println("jmolobject " + sb);
       sm.vwr.runScriptCautiously(sb.toString());
       return;
     }
     // cartoon, trace, etc.
     if (size != -1 || rd != null)
-      sm.setShapeSizeBs(id, size, rd, bsAtoms);
+      sm.setShapeSizeBs(shape, size, rd, bsAtoms);
     if (argb != 0)
-      sm.setShapePropertyBs(id, color, Integer.valueOf(argb), bsAtoms);
+      sm.setShapePropertyBs(shape, color, Integer.valueOf(argb), bsAtoms);
     if (translucency > 0) {
-      sm.setShapePropertyBs(id, "translucentLevel",
+      sm.setShapePropertyBs(shape, "translucentLevel",
           Double.valueOf(translucency), bsAtoms);
-      sm.setShapePropertyBs(id, "translucency", "translucent", bsAtoms);
+      sm.setShapePropertyBs(shape, "translucency", "translucent", bsAtoms);
     } else if (colors != null)
-      sm.setShapePropertyBs(id, "colors", colors, bsAtoms);
+      sm.setShapePropertyBs(shape, "colors", colors, bsAtoms);
   }
 
   private int getModelIndex(ModelSet m) {
@@ -382,7 +392,7 @@ class JmolObject {
       return -1;
     int iAtom = bsAtoms.nextSetBit(0);
     if (iAtom >= m.at.length)
-      System.out.println("PyMOL LOADING ERROR IN MERGE");
+      System.err.println("JmolObject PyMOL LOADING ERROR IN MERGE. atom index too large");
     return (iAtom < 0 ? -1 : m.at[iAtom].mi);
   }
 
@@ -396,6 +406,7 @@ class JmolObject {
 
   @Override
   public String toString() {
-    return "[JmolObject " + id + " " + (bsAtoms == null ? "" : bsAtoms.cardinality() + " atoms")+"]";
+    return "[JmolObject " + shape + " " + (bsAtoms == null ? "" : bsAtoms.cardinality() + " atoms")+"]";
   }
+
 }

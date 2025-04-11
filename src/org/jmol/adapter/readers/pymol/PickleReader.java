@@ -554,8 +554,6 @@ private final static byte LONG = 76; /* L */
       }
       if (b.length > 0 && b[0] >= ' ' && b[0] <= '~') {
         s = "bytes=" + b + " " + new String(b);
-        if (s.indexOf("_labeledit") >= 0)
-          System.out.println(s);
       } else if (b.length > 100){
         s = "byte["+b.length+"]";
       } else {

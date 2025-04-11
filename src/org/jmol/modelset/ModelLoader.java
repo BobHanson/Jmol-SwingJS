@@ -1033,13 +1033,13 @@ public final class ModelLoader {
         if (order > 1 && order != Edge.BOND_STEREO_NEAR
             && order != Edge.BOND_STEREO_FAR)
           haveMultipleBonds = true;
-        double radius = iterBond.getRadius();
+        double radius = iterBond.getPymolRadius();
         if (radius > 0)
           b.setMad((short) (radius * 2000));
         short colix = iterBond.getColix();
         if (colix >= 0)
           b.colix = colix;
-        b.order |= (iOrder & Edge.BOND_PYMOL_MULT);
+//          b.order |= (iOrder & Edge.BOND_PYMOL_MULT);
       }
     }
     if (haveMultipleBonds && ms.someModelsHaveSymmetry

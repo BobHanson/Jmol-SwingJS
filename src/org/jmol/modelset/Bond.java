@@ -41,7 +41,7 @@ public class Bond extends Edge {
   public short colix;
 
   public int shapeVisibilityFlags;
-  
+
   /**
    * @param atom1
    * @param atom2

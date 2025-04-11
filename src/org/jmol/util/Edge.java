@@ -45,8 +45,8 @@ public abstract class Edge implements SimpleEdge {
   //.. .|.. CIP stereochemistry E           1 << 18  0x40000
   //.. ..|. new connection                  1 << 17  0x20000
   //.. ...| render as single                1 << 16  0x10000
-  //.. ...| .... PyMOL render single        2 << 15  0x18000 + covalent order 
-  //.. ...| |... PyMOL render multiple      3 << 15  0x18000 + covalent order 
+  //.. ...| |... PyMOL render multiple      3 << 15  0x18000 + covalent order 2 or 3
+  //.. .... .... .... |||| ||.. PyMOL scale * 50     0x000FC  
   //.. .... |... strut                      1 << 15  0x08000
   //.. ...| .nnm m... .... ...| atropisomer          0x10001 + (nnmm << 11)
   //.. .... .||| |... .... .... Hydrogen bond         F << 11  0x03800
@@ -88,7 +88,7 @@ public abstract class Edge implements SimpleEdge {
   public final static int BOND_AROMATIC_DOUBLE = 0x202; // same as double
   public final static int BOND_AROMATIC        = 0x203; // same as partial 2.1
   public final static int BOND_SULFUR_MASK   = 0x100; // 1 << 8; will be incremented
-  private final static int BOND_PARTIAL_MASK = 0xE0;  // 7 << 5;   //1110 0000 conflics with stereo_either 0100 0010 0001
+  private final static int BOND_PARTIAL_MASK = 0xE0;  // 7 << 5;   //1110 0000 conflicts with stereo_either 0100 0010 0001
   public final static int BOND_PARTIAL01     = 0x21;
   public final static int BOND_PARTIAL12     = 0x42;
   public final static int BOND_PARTIAL23     = 0x61;
@@ -104,8 +104,8 @@ public abstract class Edge implements SimpleEdge {
   public final static int BOND_ORDER_ANY     = 0x0FFFF;
   public final static int BOND_ORDER_NULL    = 0x1FFFF;
   public static final int BOND_STRUT         = 0x08000;
-  public final static int BOND_PYMOL_NOMULT  = 0x10000;
   public static final int BOND_PYMOL_MULT    = 0x18000;
+  public static final int BOND_PYMOL_SCALE   = 0x000FC;
   public final static int BOND_NEW           = 0x20000;
   public final static int BOND_HBOND_SHIFT   = 11;
   public final static int BOND_HYDROGEN_MASK = 0xF << 11;
@@ -150,7 +150,11 @@ public abstract class Edge implements SimpleEdge {
 
   // overridden in SmilesBond
   public boolean isPartial() {
-    return ((order & BOND_PARTIAL_MASK) != 0 && !isStereo());
+    return !isPymolMultiple() && ((order & BOND_PARTIAL_MASK) != 0 && !isStereo() && !isPymolMultiple());
+  }
+
+  private boolean isPymolMultiple() {
+    return ((order & BOND_PYMOL_MULT) == BOND_PYMOL_MULT);
   }
 
   public boolean isStereo() {
@@ -177,14 +181,19 @@ public abstract class Edge implements SimpleEdge {
     case BOND_STEREO_NEAR:
     case BOND_STEREO_FAR:
       return "1";
+    case BOND_STRUT:
+      break;
     default:
-      if (isOrderH(order) || isAtropism(order)
-          || (order & BOND_SULFUR_MASK) != 0)
-        return "1";
-      if ((order & BOND_PARTIAL_MASK) != 0)
-        return (order >> 5) + "." + (order & 0x1F);
-      return EnumBondOrder.getNumberFromCode(order);
+      if ((order & BOND_PYMOL_MULT) != 0)
+        order = order & 3;
+      break;
     }
+    if (isOrderH(order) || isAtropism(order)
+        || (order & BOND_SULFUR_MASK) != 0)
+      return "1";
+    if ((order & BOND_PARTIAL_MASK) != 0)
+      return (order >> 5) + "." + (order & 0x1F);
+    return EnumBondOrder.getNumberFromCode(order);
   }
 
   public final static String getCmlBondOrder(int order) {
@@ -224,6 +233,10 @@ public abstract class Edge implements SimpleEdge {
       return EnumBondOrder.SINGLE.name;
     case BOND_COVALENT_DOUBLE:
       return EnumBondOrder.DOUBLE.name;
+    default:
+      if ((order & BOND_PYMOL_MULT) != 0)
+        order &= 3;
+      break;
     }
     if ((order & BOND_PARTIAL_MASK) != 0)
       return "partial " + getBondOrderNumberFromOrder(order);
@@ -308,6 +321,10 @@ public abstract class Edge implements SimpleEdge {
       return BOND_COVALENT_TRIPLE;
     case 40:
       return BOND_COVALENT_QUADRUPLE;
+    case 50:
+      return BOND_COVALENT_QUINTUPLE;
+    case 60:
+      return BOND_COVALENT_sextuple;
     }
     return BOND_ORDER_NULL;
   }
@@ -390,9 +407,11 @@ public abstract class Edge implements SimpleEdge {
         i = -1;
       }
     }
-    if (pt < strDecimal.length() - 1)
+    int n = strDecimal.length();
+    if (pt < n - 1)
       try {
-        j = Integer.parseInt(strDecimal.substring(pt + 1));
+        int pt1 = pt + Math.min(6, n - pt);
+        j = Integer.parseInt(strDecimal.substring(pt + 1, pt1));
       } catch (NumberFormatException e) {
         // not a problem
       }

@@ -38,6 +38,9 @@ import org.jmol.shape.Mesh;
 import org.jmol.shape.MeshCollection;
 import org.jmol.viewer.JC;
 
+/**
+ * PyMOL Compiled Graphic Object (CGO) meshes 
+ */
 public class CGO extends MeshCollection {
   
   CGOMesh[] cmeshes = new CGOMesh[4];
@@ -84,12 +87,14 @@ public class CGO extends MeshCollection {
     }
     
     if ("setCGO" == propertyName) {
-      Lst<Object> list = (Lst<Object>) value;
+      Map<String, Object> map = (Map<String, Object>) value;
+      Lst<Object> list = (Lst<Object>) map.get("info");
       setProperty("init", null, null);
       int n = list.size() - 1;
       setProperty("thisID", list.get(n), null);
       propertyName = "set";
-      setProperty("set", value, null);
+      setProperty("set", list, null);
+      cgoMesh.meshWidth = ((Double) map.get("mesh_width")).floatValue();
       return;
     }
     
@@ -262,7 +267,7 @@ public class CGO extends MeshCollection {
     for (int i = 0; i < meshCount; i++) {
       CGOMesh m = cmeshes[i];
       if (m != null)
-        m.visibilityFlags = (m.isValid && m.visible && (m.modelIndex < 0 || bsModels.get(m.modelIndex)) ? vf : 0);
+        m.setVisibilityFlags(m.isValid && m.visible && (m.modelIndex < 0 || bsModels.get(m.modelIndex)) ? vf : 0);
     }
   }
  

@@ -72,7 +72,7 @@ public abstract class JmolAdapter {
   public final static int ORDER_PARTIAL23       = Edge.BOND_PARTIAL23;
   public final static int ORDER_PARTIAL32       = Edge.BOND_PARTIAL32;
   public final static int ORDER_UNSPECIFIED     = Edge.BOND_ORDER_UNSPECIFIED;
-  public final static int ORDER_PYMOL_SINGLE    = Edge.BOND_PYMOL_NOMULT;
+  public final static int ORDER_PYMOL_SINGLE    = Edge.BOND_RENDER_SINGLE;
   public final static int ORDER_PYMOL_MULT      = Edge.BOND_PYMOL_MULT;
   
   public static String getElementSymbol(int elementNumber) {

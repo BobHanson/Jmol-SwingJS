@@ -69,7 +69,7 @@ class PyMOL {
   final static int REP_SPHERES = 1;
   final static int REP_SURFACE = 2; // objSurface
   final static int REP_LABELS = 3;
-  final static int REP_NBSPHERES = 4;
+  final static int REP_NBSPHERES = 4;// select???
   final static int REP_CARTOON = 5;
   final static int REP_RIBBON = 6;
   final static int REP_LINES = 7; 
@@ -6277,6 +6277,8 @@ class PyMOL {
     case ray_pixel_scale:
     case ellipsoid_scale:
     case sphere_scale:
+    case stick_ball_ratio:
+    case stick_valence_scale:
     case mesh_width:
     case cartoon_ladder_mode:
     case clamp_colors:
@@ -6287,6 +6289,7 @@ class PyMOL {
     case cartoon_round_helices:
     case label_digits:
     case ribbon_sampling:
+    case valence: // BH switched this -- seems to be the default now in 3.0
       return 1;
     case sphere_transparency:
     case ellipsoid_transparency:
@@ -6295,7 +6298,7 @@ class PyMOL {
     case cartoon_transparency:
     case stick_transparency:
     case transparency:
-    case bg_rgb:
+    case bg_rgb: // "white" for Jmol, but actually "none"
     case cartoon_cylindrical_helices:
     case surface_mode:
     case surface_solvent:
@@ -6310,14 +6313,13 @@ class PyMOL {
     case sphere_solvent:
     case stick_ball:
     case surface_carve_cutoff:
-    case valence:
       return 0;
     case cartoon_loop_radius:
       return 0.2;
     case cartoon_rect_length:
       return 1.4;
-    case stick_ball_ratio:
-      return 1.0;
+    case stick_h_scale:
+      return 0.4;
     case nonbonded_size:
       return 0.25;
     case fog_start:

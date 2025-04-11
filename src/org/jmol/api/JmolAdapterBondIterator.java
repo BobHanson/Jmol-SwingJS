@@ -33,7 +33,7 @@ public abstract class JmolAdapterBondIterator {
 
 	public abstract int getEncodedOrder();
 
-  public abstract double getRadius();
+  public abstract double getPymolRadius();
   
   public abstract short getColix();
 }

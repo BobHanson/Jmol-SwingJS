@@ -1,7 +1,7 @@
 /* $RCSfile$
  * $Author: hansonr $
- * $Date: 2017-05-29 21:30:21 -0500 (Mon, 29 May 2017) $
- * $Revision: 21625 $
+ * $Date: 2025-01-01 10:38:21 -0600 (Wed, 01 Jan 2025) $
+ * $Revision: 22650 $
 
  *
  * Copyright (C) 2002-2005  The Jmol Development Team
@@ -76,6 +76,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
   private final P3d p2 = new P3d();
   private final BS bsForPass2 = BS.newN(64);
   private boolean isPass2;
+  private boolean isPymol;
 
   @Override
   protected boolean render() {
@@ -90,7 +91,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
     endcaps = GData.ENDCAPS_SPHERICAL;
     dashDots = (vwr.getBoolean(T.partialdots) ? sixdots : dashes);
     isCartesian = (exportType == GData.EXPORT_CARTESIAN);
-    getMultipleBondSettings(false);
+    getMultipleBondSettings(0);
     wireframeOnly = !vwr.checkMotionRendering(T.bonds);
     ssbondsBackbone = vwr.getBoolean(T.ssbondsbackbone);
     hbondsBackbone = vwr.getBoolean(T.hbondsbackbone);
@@ -118,29 +119,6 @@ public class SticksRenderer extends FontLineShapeRenderer {
     return needTranslucent;
   }
 
-  private void getMultipleBondSettings(boolean isPymol) {
-    useBananas = (vwr.getBoolean(T.multiplebondbananas) && !isPymol);
-    // negative spacing is relative, depending upon atom-atom distance;
-    // positive spacing is absolute, for fixed in-plane (radiusFactor > 0) or perp-plane (radiusFactor < 0)
-    multipleBondSpacing = (isPymol ? 0.26d : vwr
-        .getDouble(T.multiplebondspacing));
-    // negative radius factor indicates perpendicular fixed double bond
-    multipleBondRadiusFactor = (isPymol ? 0.4d : vwr
-        .getDouble(T.multiplebondradiusfactor));
-    bondsPerp = (useBananas || multipleBondSpacing > 0
-        && multipleBondRadiusFactor < 0);
-    if (useBananas)
-      multipleBondSpacing = (multipleBondSpacing < 0 ? -multipleBondSpacing * 0.4d
-          : multipleBondSpacing);
-    multipleBondRadiusFactor = Math.abs(multipleBondRadiusFactor);
-    if (multipleBondSpacing == 0 && isCartesian)
-      multipleBondSpacing = 0.2d;
-    modeMultipleBond = vwr.g.modeMultipleBond;
-    showMultipleBonds = (multipleBondSpacing != 0
-        && modeMultipleBond != JC.MULTIBOND_NEVER && vwr
-        .getBoolean(T.showmultiplebonds));
-  }
-
   private boolean renderBond() {
     Atom atomA0, atomB0;
 
@@ -165,17 +143,16 @@ public class SticksRenderer extends FontLineShapeRenderer {
         b = b.group.getLeadAtomOr(b);
       }
     }
-    if (!isPass2
-        && (!a.isVisible(Atom.ATOM_INFRAME_NOTHIDDEN)
-            || !b.isVisible(Atom.ATOM_INFRAME_NOTHIDDEN)
-            || !g3d.isInDisplayRange(a.sX, a.sY) || !g3d.isInDisplayRange(b.sX,
-            b.sY)))
+    if (!isPass2 && (!a.isVisible(Atom.ATOM_INFRAME_NOTHIDDEN)
+        || !b.isVisible(Atom.ATOM_INFRAME_NOTHIDDEN)
+        || !g3d.isInDisplayRange(a.sX, a.sY)
+        || !g3d.isInDisplayRange(b.sX, b.sY)))
       return false;
 
     if (slabbing) {
       boolean ba = vwr.gdata.isClippedZ(a.sZ);
-      if (ba && vwr.gdata.isClippedZ(b.sZ) || slabByAtom
-          && (ba || vwr.gdata.isClippedZ(b.sZ)))
+      if (ba && vwr.gdata.isClippedZ(b.sZ)
+          || slabByAtom && (ba || vwr.gdata.isClippedZ(b.sZ)))
         return false;
     }
     zA = a.sZ;
@@ -211,14 +188,15 @@ public class SticksRenderer extends FontLineShapeRenderer {
 
     // set the rendered bond order
 
-    boolean isPartial = bond.isPartial();
     bondOrder = order & Edge.BOND_RENDER_MASK;
+    boolean isPartial = bond.isPartial();
     if (!isPartial) {
       if ((bondOrder & Edge.BOND_SULFUR_MASK) != 0)
         bondOrder &= ~Edge.BOND_SULFUR_MASK;
       if ((bondOrder & Edge.BOND_COVALENT_MASK) != 0) {
         if (!showMultipleBonds
-            || (modeMultipleBond == JC.MULTIBOND_NOTSMALL && mad > JC.madMultipleBondSmallMaximum)
+            || (modeMultipleBond == JC.MULTIBOND_NOTSMALL
+                && mad > JC.madMultipleBondSmallMaximum)
             || (bondOrder & Edge.BOND_PYMOL_MULT) == Edge.BOND_RENDER_SINGLE) {
           bondOrder = 1;
         }
@@ -252,7 +230,11 @@ public class SticksRenderer extends FontLineShapeRenderer {
       mask = (order == Edge.BOND_AROMATIC ? getAromaticDottedBondMask() : 0);
       break;
     default:
-      if (isPartial) {
+      if ((bondOrder & Edge.BOND_PYMOL_MULT) == Edge.BOND_PYMOL_MULT) {
+        getMultipleBondSettings(bondOrder);
+        bondOrder &= 3;
+        mask = -2;
+      } else if (isPartial) {
         bondOrder = Edge.getPartialBondOrder(order);
         mask = Edge.getPartialBondDotted(order);
       } else if (Edge.isOrderH(bondOrder)) {
@@ -261,10 +243,6 @@ public class SticksRenderer extends FontLineShapeRenderer {
           mask = -1;
       } else if (bondOrder == Edge.BOND_STRUT) {
         bondOrder = 1;
-      } else if ((bondOrder & Edge.BOND_PYMOL_MULT) == Edge.BOND_PYMOL_MULT) {
-        getMultipleBondSettings(true);
-        bondOrder &= 3;
-        mask = -2;
       }
     }
 
@@ -296,11 +274,11 @@ public class SticksRenderer extends FontLineShapeRenderer {
     switch (mask) {
     case -2:
       drawBond(0);
-      getMultipleBondSettings(false);
+      getMultipleBondSettings(0);
       break;
     case -1:
-      drawDashedCylinder(g3d, xA, yA, zA, xB, yB, zB, hDashes, 
-          width, colixA, colixB, renderD, asLineOnly, s1);
+      drawDashedCylinder(g3d, xA, yA, zA, xB, yB, zB, hDashes, width, colixA,
+          colixB, renderD, asLineOnly, s1);
       break;
     default:
       switch (bondOrder) {
@@ -318,6 +296,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
         drawBond(mask >> 2);
         bondsPerp = !bondsPerp;
         multipleBondSpacing = m;
+        isPymol = false;
       }
         break;
       case 5: {
@@ -335,6 +314,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
         drawBond(mask >> 3);
         bondsPerp = !bondsPerp;
         multipleBondSpacing = m;
+        isPymol = false;
       }
         break;
       case 6: {
@@ -352,15 +332,46 @@ public class SticksRenderer extends FontLineShapeRenderer {
         drawBond(mask >> 4);
         bondsPerp = !bondsPerp;
         multipleBondSpacing = m;
+        isPymol = false;
       }
         break;
       default:
-        
         drawBond(mask);
       }
       break;
     }
     return needTranslucent;
+  }
+
+  private void getMultipleBondSettings(int pymolBondOrder) {
+    isPymol = (pymolBondOrder != 0);
+    if (isPymol) {
+      bondsPerp = false;
+      double scale = ((pymolBondOrder >> 2) & 0x3F) / 50d;
+      showMultipleBonds = (scale != 0);
+      multipleBondRadiusFactor = ((bondOrder & 3) == 3 ? 0.25d : 0.4d) * scale;
+      multipleBondSpacing = bond.mad * multipleBondRadiusFactor * 0.0015d;
+    } else {
+      useBananas = (vwr.getBoolean(T.multiplebondbananas) && !isPymol);
+      // negative spacing is relative, depending upon atom-atom distance;
+      // positive spacing is absolute, for fixed in-plane (radiusFactor > 0) or perp-plane (radiusFactor < 0)
+      multipleBondSpacing = vwr.getDouble(T.multiplebondspacing);
+      // negative radius factor indicates perpendicular fixed double bond
+      multipleBondRadiusFactor = vwr.getDouble(T.multiplebondradiusfactor);
+      bondsPerp = (useBananas
+          || multipleBondSpacing > 0 && multipleBondRadiusFactor < 0);
+      if (useBananas)
+        multipleBondSpacing = (multipleBondSpacing < 0
+            ? -multipleBondSpacing * 0.4d
+            : multipleBondSpacing);
+      multipleBondRadiusFactor = Math.abs(multipleBondRadiusFactor);
+      if (multipleBondSpacing == 0 && isCartesian)
+        multipleBondSpacing = 0.2d;
+    }
+    modeMultipleBond = vwr.g.modeMultipleBond;
+    showMultipleBonds = (multipleBondSpacing != 0
+        && modeMultipleBond != JC.MULTIBOND_NEVER
+        && vwr.getBoolean(T.showmultiplebonds));
   }
 
   private void drawBond(int dottedMask) {
@@ -377,7 +388,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
     if (isEndOn && asLineOnly && !isCartesian)
       return;
     int renderD = (!isExport || mad == 1 ? width : mad);
-    boolean doFixedSpacing = (bondOrder > 1 && multipleBondSpacing > 0);
+    boolean doFixedSpacing = (bondOrder > 1 && (isPymol || multipleBondSpacing > 0));
     boolean isPiBonded = doFixedSpacing
         && (vwr.getHybridizationAndAxes(a.i, z, x, "pz") != null || vwr
             .getHybridizationAndAxes(b.i, z, x, "pz") != null)

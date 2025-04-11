@@ -54,6 +54,7 @@ public class CGOMesh extends DrawMesh {
 
   CGOMesh(Viewer vwr, String thisID, short colix, int index) {
     super(vwr, thisID, colix, index);
+    setVisibilityFlags(1);
   }
 
   public final static int GL_POINTS = 0;
@@ -96,20 +97,42 @@ public class CGOMesh extends DrawMesh {
   public final static int CHAR = 23;
   public final static int INDENT = 24;
 
-  public final static int ALPHA = 25;
+  public final static int ALPHA = 25;        // 0x1A
   public final static int QUADRIC = 26;
   public final static int CONE = 27;
-  public final static int RESET_NORMAL = 28;
-  public final static int PICK_COLOR = 29;
+  public final static int DRAW_ARRAYS = 28;  // 0X1C
+  public final static int RESET_NORMAL = 30; // 0x1E
+  public final static int PICK_COLOR = 31;   // 0x1F
+  public final static int DRAW_BUFFERS = 32;   // 0x20 // REMOVED
+  public final static int DRAW_BUFFERS_INDEXED = 33;   // 0x21 // REMOVED
+  public final static int BOUNDING_BOX = 34;   // 0x22
+  public final static int DRAW_BUFFERS_NOT_INDEXED = 35;  //* 0x23 draw buffers not indexed */
+  public final static int SPECIAL = 36;  // 0x24                /* 0x24 special */
+  private final static int[] sizes = new int[] { //
+        0, 8, 1, 0,  3,  3,  3,  4, 27, 13,  //0-9 
+        1, 1, 1, 1, 13, 15,  1, 35, 13,  3,  //10-19
+        2, 3, 9, 1,  2,  1, 14, 16,  0,  0,  //20-29 
+        1, 2};   // 30-31
 
-  private final static int[] sizes = new int[] { 0, 8, 1, 0, 3, 3, 3, 4, 27,
-      13, 1, 1, 1, 1, 13, 15, 1, 35, 13, 3, 2, 3, 9, 1, 2, 1, 14, 16, 1, 2 };
+  private final static int[] sizes2D = new int[] { //
+        0, 6, 1, 0,  2,  3,  3,  4, 24, 13, //
+        1, 1, 1, 1, 11, 15,  1, 35, 13,  3, //
+        2, 3, 9, 1,  2,  1, 14, 16,  0,  0, //
+        1, 2, //
+        };
 
-  private final static int[] sizes2D = new int[] { 0, 6, 1, 0, 2, 3, 3, 4, 24,
-      13, 1, 1, 1, 1, 11, 15, 1, 35, 13, 3, 2, 3, 9, 1, 2, 1, 14, 16, 1, 2 };
+  public final static int CGO_VERTEX_ARRAY        = 0x01;
+  public final static int CGO_NORMAL_ARRAY        = 0x02;
+  public final static int CGO_COLOR_ARRAY         = 0x04;
+  public final static int CGO_PICK_COLOR_ARRAY    = 0x08;
+  public final static int CGO_ACCESSIBILITY_ARRAY = 0x10;
+  public final static int CGO_TEX_COORD_ARRAY     = 0x20;
+
 
   public static int getSize(int i, boolean is2D) {
     switch (i) {
+    case DRAW_ARRAYS:
+      return Integer.MAX_VALUE;
     case JMOL_PS:
       return 13;
     case JMOL_UVMAP:
@@ -121,6 +144,7 @@ public class CGOMesh extends DrawMesh {
     case JMOL_SCREEN:
     case JMOL_DIAMETER:
     case PS_SETLINEWIDTH:
+    case SPECIAL:
       return 1;
     case PS_CLOSEPATH:
     case PS_STROKE:
@@ -291,7 +315,8 @@ public class CGOMesh extends DrawMesh {
       if (list.get(0) instanceof Number) {
         cmds = list;
       } else {
-        cmds = (Lst<Object>) list.get(1);
+        // could be String name
+        cmds = (list.get(1) instanceof Lst ? (Lst<Object>) list.get(1) : null);
         if (cmds == null)
           cmds = (Lst<Object>) list.get(0);
         cmds = (Lst<Object>) cmds.get(1);
@@ -307,6 +332,9 @@ public class CGOMesh extends DrawMesh {
           return false;
         }
         switch (type) {
+        case DRAW_ARRAYS:
+          len = getDrawArrayParams(i, null);
+          break;
         case JMOL_SCREEN:
         case JMOL_UVMAP:
           is2D = true;
@@ -348,18 +376,83 @@ public class CGOMesh extends DrawMesh {
     }
   }
 
-  private void addColix(int i) {
+  /**
+   * 
+   * @param pt0
+   * @param info
+   * @return [
+   */
+  public int getDrawArrayParams(int pt0, int[] info) {
+    int pt = pt0 + 1;
+    int glMode = getInt(pt++);
+    int arrayTypes = getInt(pt++);
+    int nArrays = getInt(pt++);
+    boolean haveVertices = ((arrayTypes & CGOMesh.CGO_VERTEX_ARRAY) != 0);
+    boolean haveNormals = ((arrayTypes & CGOMesh.CGO_NORMAL_ARRAY) != 0);
+    boolean haveColors = ((arrayTypes & CGOMesh.CGO_COLOR_ARRAY) != 0);
+    boolean havePicks = ((arrayTypes & CGOMesh.CGO_PICK_COLOR_ARRAY) != 0);
+    boolean haveAccess = ((arrayTypes & CGOMesh.CGO_ACCESSIBILITY_ARRAY) != 0);
+    boolean haveTextures = ((arrayTypes & CGOMesh.CGO_TEX_COORD_ARRAY) != 0);
+    int nVertices = (haveVertices ? getInt(pt++) : -1);
+    int ptVertices = (nVertices > 0 ? pt :  - 1);
+
+    pt = pt + nVertices * 3;
+    int nNormals = (haveNormals ? nVertices : -1);
+    int ptNormals = (nNormals < 0 ? -1 : pt);
+    pt = (nNormals >= 0 ? ptNormals + nNormals * 3 : pt);
+
+    int nColors = (haveColors ? nVertices : -1);
+    int ptColors = (nColors < 0 ? -1 : pt);
+    pt = (nColors >= 0 ? ptColors + nColors * 4 : pt);
+
+    int nPicks = (havePicks ? nVertices : -1);
+    int ptPicks = (nPicks < 0 ? -1 : pt);
+    pt = (nPicks >= 0 ? ptPicks + nPicks * 2 : pt);
+
+    int nAccess = (haveAccess ? nVertices : -1);
+    int ptAccess = (nAccess < 0 ? -1 : pt);
+    pt = (nAccess >= 0 ? ptAccess + nAccess : pt);
+
+    int nTextures = (haveTextures ? nVertices : -1);
+    int ptTextures = (nTextures < 0 ? -1 : pt);
+    pt = (ptTextures >= 0 ? ptTextures + nTextures * 2 : pt);
+
+    if (info != null) {
+      info[0] = glMode;
+      info[1] = arrayTypes;
+      info[2] = nArrays;
+      info[3] = nVertices;
+      info[4] = ptVertices;
+      info[5] = ptNormals;
+      info[6] = ptColors;
+      info[7] = ptPicks;
+      info[8] = ptAccess;
+      info[9] = ptTextures;
+    }
+    return pt - pt0 - 1;
+  }
+
+  public void addColix(int i) {
     getPoint(i, vTemp);
     cList.addLast(Short.valueOf(C.getColix(CU.colorPtToFFRGB(vTemp))));
   }
 
-  private void addNormix(int i) {
+  public void addNormix(int i) {
     getPoint(i, vTemp);
     nList.addLast(Short.valueOf(Normix.get2SidedNormix(vTemp, bsTemp)));
   }
 
+  public void clearNormixList() {
+    nList.clear();
+  }
+  
+  public void clearColixList() {
+    cList.clear();
+  }
+  
   public Lst<Short> nList = new Lst<Short>();
   public Lst<Short> cList = new Lst<Short>();
+  public float meshWidth;
 
   /**
    * 

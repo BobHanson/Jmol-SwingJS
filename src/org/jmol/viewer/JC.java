@@ -600,7 +600,7 @@ public final class JC {
   // this is only here for truly pathological cases
   public final static int MAXIMUM_AUTO_BOND_COUNT = 20;
 
-  public final static short madMultipleBondSmallMaximum = 500;
+  public final static short madMultipleBondSmallMaximum = 1000;
 
   /* .cube files need this */
   public final static double ANGSTROMS_PER_BOHR = 0.5291772d;

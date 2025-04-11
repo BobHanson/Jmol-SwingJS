@@ -665,7 +665,7 @@ public abstract class MeshCollection extends Shape {
     BS bsDeleted = vwr.slm.bsDeleted;
     for (int i = meshCount; --i >= 0;) {
       Mesh mesh = meshes[i];
-      mesh.visibilityFlags = (mesh.visible
+      mesh.setVisibilityFlags(mesh.visible
           && mesh.isValid
           && (mesh.modelIndex < 0 || bsModels.get(mesh.modelIndex)
               && (mesh.atomIndex < 0 || !ms.isAtomHidden(mesh.atomIndex)
