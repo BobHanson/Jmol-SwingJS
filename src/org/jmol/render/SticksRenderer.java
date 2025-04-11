@@ -347,10 +347,35 @@ public class SticksRenderer extends FontLineShapeRenderer {
     isPymol = (pymolBondOrder != 0);
     if (isPymol) {
       bondsPerp = false;
+      // scale is encoded in 6 bits starting at the third bit
       double scale = ((pymolBondOrder >> 2) & 0x3F) / 50d;
       showMultipleBonds = (scale != 0);
-      multipleBondRadiusFactor = ((bondOrder & 3) == 3 ? 0.25d : 0.4d) * scale;
-      multipleBondSpacing = bond.mad * multipleBondRadiusFactor * 0.0015d;
+      int n = (pymolBondOrder & 3);
+      // The "teeth" span the width of the bond (mad/1000) * scale
+      //
+      // |//////  n teeth, each with fractional width fw
+      // |//////
+      // |        n-1 gaps, each fractional width fw/2
+      // |//////
+      // |//////
+      // 
+      // n*fw+(n-1)(fw/2) must fill the scaled span, 
+      // so fw = 1/(n + (n-1)/2)*scale = 2/(3n-1)*scale 
+      // and w = fw*(mad/1000)
+      // thus:      
+      multipleBondRadiusFactor = scale * 2 / (3 * n - 1); 
+      // The center-to-center spacing is (3/2)w  (y, below)
+      multipleBondSpacing = multipleBondRadiusFactor * 3 / 2 * (bond.mad / 1000);
+      // And x, the starting offset from center, is (1-fw)/2, scaled appropriately
+      // (one minus half the fractional width top and bottom, divided by two).
+      // But we can also say for convenience that it is just half the spacing for 
+      // a double bond and equal to the spacing for a triple bond. 
+      // So the calculation we use below is just (n-1)/2 * (multipleBondSpacing). 
+      // But that is not the general case. The general value for the "factional" 
+      // offset is (1-fw)/2, which is (1-2/(3n-1))/2 = (3n-3)/(3n-1)/2 = (3/2)(n-1)/(3n-1).
+      // For a double bond, this is (3/2)/5 = 3/10, and for a triple bond, it is 
+      // (3/2)(2)/8 = 3/8. For a quadruple bond, it would be (3/2)(3)/11 = 9/22. 
+      // (which is half of 18/22, which is 1-4/22 = 1-2/11), etc.
     } else {
       useBananas = (vwr.getBoolean(T.multiplebondbananas) && !isPymol);
       // negative spacing is relative, depending upon atom-atom distance;
