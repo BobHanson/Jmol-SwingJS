@@ -424,11 +424,23 @@ public class XtalSymmetry {
         lc[i] = latticeCells[i];
     latticeCells = null;
 
+    String sep = "";
     String bmChains = acr.getFilterWithCase("BMCHAINS");
-    int fixBMChains = (bmChains == null ? -1
-        : bmChains.length() < 2 ? 0 : PT.parseInt(bmChains.substring(1)));
-    if (fixBMChains == Integer.MIN_VALUE) {
-      fixBMChains = -(int) bmChains.charAt(1);
+    int fixBMChains = -1;
+    if (bmChains != null && (bmChains = bmChains.trim()).length() > 0) {
+      if (bmChains.charAt(0) == '=')
+        bmChains = bmChains.substring(1).trim();
+      if (bmChains.equals("_")) {
+        sep = "_";
+        fixBMChains = 0;
+      } else {
+        // bmchains=3 or bmchains=q
+        fixBMChains = (bmChains.length() == 0 ? 0
+            : PT.parseInt(bmChains));
+        if (fixBMChains == Integer.MIN_VALUE) {
+          fixBMChains = -(int) bmChains.charAt(0);
+        }
+      }
     }
     int particleMode = (filter.indexOf("BYCHAIN") >= 0 ? PARTICLE_CHAIN
         : filter.indexOf("BYSYMOP") >= 0 ? PARTICLE_SYMOP : PARTICLE_NONE);
@@ -619,7 +631,7 @@ public class XtalSymmetry {
             int ic = atoms[i].chainID;
             int isym = atoms[i].bsSymmetry.nextSetBit(0);
             String ch0 = acr.vwr.getChainIDStr(ic);
-            String ch = (isym == 0 ? ch0 : ch0 + isym);
+            String ch = (isym == 0 ? ch0 : ch0 + sep + isym);
             Integer known = chainMap.get(ch);
             if (known == null) {
               if (assignABC && isym != 0) {
@@ -694,8 +706,9 @@ public class XtalSymmetry {
                     || bsAtoms.get(a.index) && bsAtoms.get(b.index))
                 && a.distanceSquared(b) > MAX_INTERCHAIN_BOND_2) {
               vConnect.removeItemAt(i);
-              System.out.println("XtalSymmetry: long interchain bond removed for @"
-                  + a.atomSerial + "-@" + b.atomSerial);
+              System.out
+                  .println("XtalSymmetry: long interchain bond removed for @"
+                      + a.atomSerial + "-@" + b.atomSerial);
             }
           }
         }
