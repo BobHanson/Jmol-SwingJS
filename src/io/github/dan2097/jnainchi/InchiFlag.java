@@ -17,6 +17,9 @@
  */
 package io.github.dan2097.jnainchi;
 
+import java.util.HashMap;
+import java.util.Locale;
+
 public enum InchiFlag {
 
   /** Both ends of wedge point to stereocenters [compatible with standard InChI]*/
@@ -116,11 +119,27 @@ public enum InchiFlag {
     return super.toString();
   }
   
+  private static HashMap<String, InchiFlag> map;
+
+  /**
+   * Get a flag from a string, case insensitive.
+   * Cache the names for better performance.
+   * 
+   * @param name
+   * @return the matching InchiFlag or null
+   * @author Bob Hanson
+   */
   public static InchiFlag getFlagFromName(String name) {
-    for (InchiFlag item : values())
-      if (item.toString().equalsIgnoreCase(name))
-        return item;
-    return null;
+    if (name == null) {
+      return null;
+    }
+    if (map == null) {
+      map = new HashMap<>();
+      for (InchiFlag item : values()) {
+        map.put(item.toString().toLowerCase(Locale.ROOT), item);
+      }
+    }
+    return map.get(name.toLowerCase(Locale.ROOT));
   }
 
 }

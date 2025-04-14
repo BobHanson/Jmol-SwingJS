@@ -158,9 +158,8 @@ public class SmilesExt {
   }
 
   /**
-   * @param pattern
-   *        e
-   * @param smiles
+   * @param patternObj String or SmilesSearch
+   * @param smilesObj  String or SmilesSearch
    * @param bsSelected
    * @param bsMatch3D
    * @param flags
@@ -169,25 +168,25 @@ public class SmilesExt {
    * @return Object
    * @throws ScriptException
    */
-  public Object getSmilesMatches(String pattern, Object smiles, BS bsSelected,
+  public Object getSmilesMatches(Object patternObj, Object smilesObj, BS bsSelected,
                                  BS bsMatch3D, int flags, boolean asOneBitset,
                                  boolean firstMatchOnly)
       throws ScriptException {
 
+    String info = (patternObj instanceof String ? (String) patternObj : "-");
     // just retrieving the SMILES or bioSMILES string
-    if (pattern.length() == 0 || pattern.endsWith("///") || pattern.equals("H")
-        || pattern.equals("H2") || pattern.equals("top")
-        || pattern.equalsIgnoreCase("NOAROMATIC")) {
+    if ((info.length() == 0 || info.endsWith("///") || info.equals("H")
+        || info.equals("H2") || info.equals("top")
+        || info.equalsIgnoreCase("NOAROMATIC"))) {
       try {
-
         return e.vwr.getSmilesOpt(bsSelected, 0, 0,
-            flags | (pattern.equals("H2") ? JC.SMILES_GEN_EXPLICIT_H2_ONLY : 0)
-                | (pattern.equals("H") ? JC.SMILES_GEN_EXPLICIT_H_ALL : 0)
-                | (pattern.equals("top") ? JC.SMILES_GEN_TOPOLOGY : 0)
-                | (pattern.equalsIgnoreCase("NOAROMATIC")
+            flags | (info.equals("H2") ? JC.SMILES_GEN_EXPLICIT_H2_ONLY : 0)
+                | (info.equals("H") ? JC.SMILES_GEN_EXPLICIT_H_ALL : 0)
+                | (info.equals("top") ? JC.SMILES_GEN_TOPOLOGY : 0)
+                | (info.equalsIgnoreCase("NOAROMATIC")
                     ? JC.SMILES_NO_AROMATIC
                     : 0),
-            (pattern.endsWith("///") ? pattern : null));
+            (info.endsWith("///") ? info : null));
       } catch (Exception ex) {
         e.evalError(ex.getMessage(), null);
       }
@@ -197,10 +196,10 @@ public class SmilesExt {
       // getting a BitSet or BitSet[] from a set of atoms or a pattern.
       // not for string.find(string....)
       try {
-        if (smiles == null) {
-          b = e.vwr.getSubstructureSetArray(pattern, bsSelected, flags);
-        } else if (pattern.equals("chirality")) {
-          return e.vwr.calculateChiralityForSmiles((String) smiles);
+        if (smilesObj == null) {
+          b = e.vwr.getSubstructureSetArray(patternObj, bsSelected, flags);
+        } else if ("chirality".equals(info)) {
+          return e.vwr.calculateChiralityForSmiles(smilesObj.toString());
         } else {
           boolean isSmarts = ((flags
               & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
@@ -209,10 +208,10 @@ public class SmilesExt {
           flags = (isSmarts ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES)
               | (firstMatchOnly ? JC.SMILES_FIRST_MATCH_ONLY : 0)
               | (ignoreElements ? JC.SMILES_GEN_TOPOLOGY : 0);
-          if (!(smiles instanceof String)) {
-            return e.vwr.getSmilesMatcher().hasStructure(pattern, (String[]) smiles, flags);
+          if (smilesObj instanceof Object[]) {
+            return e.vwr.getSmilesMatcher().hasStructure(info, (Object[]) smilesObj, flags);
           }
-          int[][] map = e.vwr.getSmilesMatcher().find(pattern, (String) smiles,
+          int[][] map = e.vwr.getSmilesMatcher().find(patternObj, smilesObj,
               flags);
           if (!asOneBitset)
             return (!firstMatchOnly ? map
@@ -241,7 +240,7 @@ public class SmilesExt {
       // getting a correlation
 
       Lst<BS> vReturn = new Lst<BS>();
-      double stddev = getSmilesCorrelation(bsMatch3D, bsSelected, pattern, null,
+      double stddev = getSmilesCorrelation(bsMatch3D, bsSelected, info, null,
           null, null, vReturn, false, null, null, false, flags);
       if (Double.isNaN(stddev))
         return (asOneBitset ? new BS() : new String[] {});

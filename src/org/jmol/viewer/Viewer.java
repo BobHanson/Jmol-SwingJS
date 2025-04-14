@@ -10757,20 +10757,20 @@ public class Viewer extends JmolViewer
     return ms.calculateChiralityForAtoms(bsAtoms, true);
   }
 
-  public BS[] getSubstructureSetArray(String pattern, BS bsSelected, int flags)
+  public BS[] getSubstructureSetArray(Object pattern, BS bsSelected, int flags)
       throws Exception {
     return getSmilesMatcher().getSubstructureSetArray(pattern, ms.at, ms.ac,
         bsSelected, null, flags);
   }
 
-  public BS[] getSubstructureSetArrayForNodes(String pattern, Node[] nodes,
+  public BS[] getSubstructureSetArrayForNodes(Object pattern, Node[] nodes,
                                               int flags)
       throws Exception {
     return getSmilesMatcher().getSubstructureSetArray(pattern, nodes,
         nodes.length, null, null, flags);
   }
 
-  public Node[] getSmilesAtoms(String smiles) throws Exception {
+  public Node[] getSmilesAtoms(Object smiles) throws Exception {
     return getSmilesMatcher().getAtoms(smiles);
   }
 

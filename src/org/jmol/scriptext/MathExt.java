@@ -1988,9 +1988,10 @@ SymmetryInterface sym;
       sFind = "SMARTS";
     }
 
-    String smiles = null;
+    Object smiles = null;
     boolean isStr = false;
-    if (x1.tok == T.string) {
+    boolean isPatternObj = (args.length > 0 && args[0].tok == T.pattern);
+    if (!isPatternObj && x1.tok == T.string) {
       // check in case pattern is "SMILES" or "SMARTS" or one of the other options tested for next
       switch (args.length) {
       case 1:
@@ -2023,7 +2024,8 @@ SymmetryInterface sym;
     }
 
     boolean isSmiles = !isStr && sFind.equalsIgnoreCase("SMILES");
-    boolean isSMARTS = !isStr && sFind.equalsIgnoreCase("SMARTS");
+    boolean isSMARTS = isPatternObj
+        || !isStr && sFind.equalsIgnoreCase("SMARTS");
     boolean isChemical = !isList && !isStr
         && sFind.equalsIgnoreCase("CHEMICAL");
     boolean isMF = !isList && !isStr && sFind.equalsIgnoreCase("MF");
@@ -2078,14 +2080,18 @@ SymmetryInterface sym;
         BS bs2 = (iPt < args.length && args[iPt].tok == T.bitset
             ? (BS) args[iPt++].value
             : null);
-        boolean asBonds = ("bonds".equalsIgnoreCase(SV.sValue(argLast)));
+        boolean asBonds = (argLast.tok == T.string && "bonds".equalsIgnoreCase(SV.sValue(argLast)));
         boolean isAll = (asBonds || isON);
+        boolean isSmilesObj = false;
         Object ret = null;
         switch (x1.tok) {
+        case T.pattern:
+          isSmilesObj = true;
+          //$FALL-THROUGH$
         case T.varray:
         case T.string:
           if (smiles == null && !isList) {
-            smiles = SV.sValue(x1);
+            smiles = x1.value;
           }
           if ((isSmiles || isSMARTS) && args.length == 1 && flags == null) {
             return false;
@@ -2093,27 +2099,47 @@ SymmetryInterface sym;
           if (bs2 != null)
             return false;
           if (flags.equalsIgnoreCase("mf")) {
-            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, isSMARTS,
+            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles.toString(), isSMARTS,
                 isON);
           } else {
-            String pattern = flags;
+            Object pattern = (isPatternObj ? args[0].value : flags);
             // "SMARTS",flags,asMap, allMappings
             boolean allMappings = true;
             boolean asMap = false;
-            switch (args.length) {
-            case 4:
-              allMappings = SV.bValue(args[3]);
-              //$FALL-THROUGH$
-            case 3:
-              asMap = SV.bValue(args[2]);
-              break;
+            if (isPatternObj) {
+              switch (args.length) {
+              case 3:
+                allMappings = SV.bValue(args[2]);
+                //$FALL-THROUGH$
+              case 2:
+                asMap = SV.bValue(args[1]);
+                break;
+              }
+            } else {
+              switch (args.length) {
+              case 4:
+                allMappings = SV.bValue(args[3]);
+                //$FALL-THROUGH$
+              case 3:
+                asMap = SV.bValue(args[2]);
+                break;
+              }
             }
-            boolean isChirality = pattern.equals("chirality");
+            boolean isChirality = (!isPatternObj
+                && pattern.equals("chirality"));
             boolean justOne = (!asMap
                 && (!allMappings || !isSMARTS && !isChirality));
             try {
+              if (isList) {
+                Lst<SV> list = x1.getList();
+                Object[] o = new Object[list.size()];
+                for (int i = o.length; --i >= 0;) {
+                  o[i] = list.get(i).value;
+                }
+                smiles = o;
+              }
               ret = e.getSmilesExt().getSmilesMatches(pattern,
-                  (isList ? SV.strListValue(x1) : smiles), null, null,
+                  smiles, null, null,
                   isSMARTS ? JC.SMILES_TYPE_SMARTS : JC.SMILES_TYPE_SMILES,
                   !asMap, !allMappings);
               if (isList)
@@ -2126,8 +2152,9 @@ SymmetryInterface sym;
                 : AU.isAI(ret) ? ((int[]) ret).length : ((int[][]) ret).length);
             if (len == 0
                 && vwr.getSmilesMatcher().getLastException() != "MF_FAILED"
-                && smiles.toLowerCase().indexOf("noaromatic") < 0
-                && smiles.toLowerCase().indexOf("strict") < 0) {
+                && (isSmilesObj || 
+                ((String) smiles).toLowerCase().indexOf("noaromatic") < 0
+                && ((String) smiles).toLowerCase().indexOf("strict") < 0)) {
               // problem arising from Jmol interpreting one string as aromatic
               // and the other not, perhaps because of one using [N] as in NCI caffeine
               // and one not, as from PubChem. 
@@ -2287,9 +2314,9 @@ SymmetryInterface sym;
             return mp.addXStr(vwr.getInchi(bs, null, "SMILES/" + flags));
           }
           if (flags.equals("MF")) {
-            smiles = (String) e.getSmilesExt().getSmilesMatches("", null, bs,
+            smiles = e.getSmilesExt().getSmilesMatches("", null, bs,
                 bsMatch3D, JC.SMILES_TYPE_SMILES, true, false);
-            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles, false,
+            ret = vwr.getSmilesMatcher().getMolecularFormula(smiles.toString(), false,
                 isON);
           } else if (asBonds) {
             // this will return a single match
@@ -4268,9 +4295,9 @@ SymmetryInterface sym;
         : objTarget != null && args[1].tok == T.pattern ? args[1].value : null);
     if (objTarget != null && objPattern == null)
       return false;
-    String pattern = (compileSearch ? null : SV.sValue(args[0]));
+    String pattern = (compileSearch ? null : objPattern == null ? SV.sValue(args[0]) : null);
     BS bs = new BS();
-    if (compileSearch || pattern.length() > 0)
+    if (pattern == null || pattern.length() > 0)
       try {
         if (compileSearch) {
           return mp.addX(
@@ -4764,7 +4791,7 @@ SymmetryInterface sym;
     if (len == 1 && args[0].tok == T.bitset)
       return mp.addX(args[0]);
     BS bs = (isAtomProperty ? SV.getBitSet(mp.getX(), false) : null);
-    boolean haveBS = (bs != null);
+    //boolean haveBS = (bs != null);
     double distance = 0;
     Object withinSpec = args[0].value;
     String withinStr = "" + withinSpec;

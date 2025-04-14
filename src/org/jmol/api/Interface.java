@@ -29,7 +29,6 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
 public class Interface {
-
   /**
    * @param name
    * @param vwr not used - may be null

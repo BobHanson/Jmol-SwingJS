@@ -368,6 +368,13 @@ public class SmilesSearch extends JmolMolecule {
     return flags;
   }
 
+  public void reset() {
+    vReturn = null;
+    noAromatic = false;
+    exitFirstMatch = false;
+    flags = 0;
+  }
+
   void setFlags(int flags) {
     this.flags = flags;
 
@@ -2058,7 +2065,13 @@ public class SmilesSearch extends JmolMolecule {
     sb.append("\nmolecular formula: " + getMolecularFormula(true, null, false)); 
     return sb.toString();    
   }
-
+  
+  @Override
+  public boolean equals(Object ss) {
+    return (ss instanceof SmilesSearch) 
+        && (pattern0 == null ? ((SmilesSearch)ss).pattern0 == null 
+        : pattern0.equals(((SmilesSearch)ss).pattern0));
+  }
 
 }
 

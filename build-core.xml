@@ -13,7 +13,20 @@
    	
    	<!-- make core files -->
 
-   	<echo>creating and compressing core files - warnings are OK; "does not exist" is trouble</echo>
+    <echo>creating and compressing core smiles files - warnings are OK; "does not exist" is trouble</echo>
+   <echo>reading core class list from file coreclasses</echo>      
+   <loadresource property="coreclasses_smilesonly">
+      <file file="j2sclassfiles_smilesonly"/>
+   </loadresource>
+
+   <antcall target="call-core">
+       <param name="call-core.name" value="_jmolsmiles" />
+       <param name="call-core.list" value="
+           ${coreclasses_smilesonly}
+           " />
+   </antcall>
+
+	<echo>creating and compressing core files - warnings are OK; "does not exist" is trouble</echo>
    	<echo>reading core class list from file coreclasses</echo>   	
    	<loadresource property="coreclasses">
        <file file="j2sclassfiles"/>
@@ -26,7 +39,9 @@
          	${coreclasses}
         	" />
     </antcall>
-  </target>
+
+   
+</target>
 
 
 	  <target name="call-core" id="call-core">

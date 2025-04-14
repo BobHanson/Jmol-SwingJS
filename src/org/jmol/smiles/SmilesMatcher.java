@@ -41,6 +41,9 @@ import javajs.util.P3d;
 import javajs.util.PT;
 
 /**
+ * 
+ * @j2sExport
+ * 
  * Originating author: Nicholas Vervelle
  * 
  * A class to handle a variety of SMILES/SMARTS-related functions, including: --
@@ -102,6 +105,8 @@ import javajs.util.PT;
  */
 public class SmilesMatcher implements SmilesMatcherInterface {
 
+  public static boolean j2sHeadless = true;
+  
   // internal flags
   
   private final static int MODE_BITSET       = 0x01;
@@ -118,7 +123,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   }
 
   @Override
-  public String getMolecularFormula(String pattern, boolean isSmarts, boolean isEmpirical)
+  public String getMolecularFormula(Object pattern, boolean isSmarts, boolean isEmpirical)
       throws Exception {
     clearExceptions();
     // note: Jmol may undercount the number of hydrogen atoms
@@ -136,7 +141,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     // but
     //   $ print "c1ncnc1C".find("SMILES","MF")
     //   H 5 C 4 N 2   (incorrect)
-    SmilesSearch search = SmilesParser.newSearch("/nostereo/"+pattern, isSmarts, true);
+    SmilesSearch search = SmilesParser.newSearch("/nostereo/"+pattern.toString(), isSmarts, true);
     search.createTopoMap(null);
     search.nodes = search.target.nodes;
     return search.getMolecularFormula(!isSmarts, null, isEmpirical);
@@ -158,16 +163,22 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   }
 
   @Override
-  public int areEqual(String smiles1, String smiles2) throws Exception {
+  public int areEqual(Object smiles1, Object smiles2) throws Exception {
     clearExceptions();
-    boolean isWild = (smiles1.indexOf("*") >= 0);
+    if ((smiles1 == null) != (smiles2 == null))
+    		return 0;
+    if (smiles1 == null)
+    	return 1;
+    boolean isWild = false;
+    if (smiles1 instanceof String && smiles2 instanceof String) {
+      isWild = (((String) smiles1).indexOf("*") >= 0);
     if (!isWild && smiles1.equals(smiles2))
       return 1;
+    }
     int flags = (isWild ? JC.SMILES_TYPE_SMARTS
-        : JC.SMILES_TYPE_SMILES) | JC.SMILES_FIRST_MATCH_ONLY;
-    
-    BS[] result = (BS[]) matchPriv(smiles1, null, 0, null, null, false, flags, MODE_ARRAY, SmilesParser.newSearch(smiles2,
-        false, true));
+        : JC.SMILES_TYPE_SMILES) | JC.SMILES_FIRST_MATCH_ONLY;    
+    BS[] result = (BS[]) matchPriv(smiles1, null, 0, null, null, false, flags, MODE_ARRAY, 
+    		newSearch(smiles2));
     return (result == null ? -1 : result.length);
   }
 
@@ -194,20 +205,23 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * 
    * 
    * @param pattern
-   *        SMILES or SMARTS pattern.
+   *        SMILES or SMARTS pattern or SmilesSearch from compiling of a pattern string.
    * @param target
    * @param flags
    * @return array of correlations of occurances of pattern within smiles
    * @throws Exception
    */
   @Override
-  public int[][] find(String pattern, String target, int flags)
+  public int[][] find(Object pattern, Object target, int flags)
       throws Exception {
     clearExceptions();
-    target = SmilesParser.cleanPattern(target);
-    pattern = SmilesParser.cleanPattern(pattern);
+    if (target instanceof String)
+      target = SmilesParser.cleanPattern((String) target);
+    if (pattern instanceof String)
+    	pattern = SmilesParser.cleanPattern((String) pattern);
     // search flags will be set in findPriv
-    SmilesSearch search = SmilesParser.newSearch(target, false, true); /// smiles chirality is fixed here
+    SmilesSearch search = newSearch(target); 
+    /// smiles chirality is fixed here
     int[][] array = (int[][]) matchPriv(pattern, null, 0, null, null, false, flags, MODE_MAP, search);
     for (int i = array.length; --i >= 0;) {
       int[] a = array[i];
@@ -219,15 +233,21 @@ public class SmilesMatcher implements SmilesMatcherInterface {
 
 
   @Override
-  public Node[] getAtoms(String target)
+  public Node[] getAtoms(Object target)
       throws Exception {
     clearExceptions();
-    target = SmilesParser.cleanPattern(target);
-    SmilesSearch search = SmilesParser.newSearch(target, false, true);
+    SmilesSearch search = newSearch(target);
     search.createTopoMap(new BS());
     return search.target.nodes;
   }
 
+
+  private SmilesSearch newSearch(Object s) throws Exception {
+    return (s == null ? null
+        : s instanceof SmilesSearch ? (SmilesSearch) s
+            : SmilesParser.newSearch(SmilesParser.cleanPattern(s.toString()),
+                false, true));
+  }
 
   @Override
   public String getRelationship(String smiles1, String smiles2)
@@ -298,7 +318,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
   public BS getSubstructureSet(Object pattern, Object target, int ac, BS bsSelected, int flags) throws Exception {
     Node[] atoms = (target instanceof SmilesSearch ? null : (Node[]) target);
     return (BS) matchPriv(pattern, atoms, ac, bsSelected, null, true,
-        flags | SmilesParser.getFlags(pattern.toString()), MODE_BITSET, (atoms == null ? (SmilesSearch) target : null));
+        flags | (pattern instanceof String ? SmilesParser.getFlags(pattern.toString()) : 0), MODE_BITSET, (atoms == null ? (SmilesSearch) target : null));
   }
 
   /**
@@ -353,7 +373,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * @throws Exception
    */
   @Override
-  public BS[] getSubstructureSetArray(String pattern, Node[] atoms, int ac,
+  public BS[] getSubstructureSetArray(Object pattern, Node[] atoms, int ac,
                                       BS bsSelected, BS bsAromatic, int flags)
       throws Exception {
     return (BS[]) matchPriv(pattern, atoms, ac, bsSelected, bsAromatic, true, 
@@ -460,7 +480,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * 
    */
   @Override
-  public int[][] getCorrelationMaps(String pattern, Node[] atoms, int atomCount,
+  public int[][] getCorrelationMaps(Object pattern, Node[] atoms, int atomCount,
                                     BS bsSelected, int flags) throws Exception {
     return (int[][]) matchPriv(pattern, atoms, atomCount, bsSelected, null, true,
         flags, MODE_MAP, null);
@@ -473,15 +493,17 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     clearExceptions();
     try {
       boolean isCompiled = (pattern instanceof SmilesSearch);
-      if (isCompiled)
+      if (isCompiled) {
         flags |= JC.SMILES_TYPE_SMARTS;
+        ((SmilesSearch) pattern).reset();
+      }
       boolean isSmarts = ((flags
           & JC.SMILES_TYPE_SMARTS) == JC.SMILES_TYPE_SMARTS);
       // Note that additional flags are set when the pattern is parsed.
-      SmilesSearch search = (isCompiled ? (SmilesSearch) pattern : SmilesParser.newSearch(pattern == null ? null : pattern.toString(), isSmarts, false));
+      SmilesSearch searchPattern = (isCompiled ? (SmilesSearch) pattern : SmilesParser.newSearch(pattern == null ? null : pattern.toString(), isSmarts, false));
       if (searchTarget != null)
-        searchTarget.setFlags(searchTarget.flags | SmilesParser.getFlags(pattern.toString()));
-      return matchPattern(search, atoms, ac, bsSelected, bsAromatic, doTestAromatic, flags, mode, searchTarget);
+        searchTarget.setFlags(flags | searchTarget.flags | (isCompiled ? 0 : SmilesParser.getFlags(pattern.toString())));
+      return matchPattern(searchPattern, atoms, ac, bsSelected, bsAromatic, doTestAromatic, flags, mode, searchTarget);
     } catch (Exception e) {
       if (Logger.debugging)
         e.printStackTrace();
@@ -715,7 +737,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
    * 
    */
   @Override
-  public int[] hasStructure(String pattern, String[] smilesSet, int flags)
+  public int[] hasStructure(Object pattern, Object[] smilesSet, int flags)
       throws Exception {
     int[] ret = new int[smilesSet.length];
     if ((flags & JC.SMILES_TYPE_SMILES) != JC.SMILES_TYPE_SMILES) {
@@ -723,15 +745,21 @@ public class SmilesMatcher implements SmilesMatcherInterface {
       flags = flags | JC.SMILES_TYPE_SMARTS;
     }
     clearExceptions();
-    pattern = SmilesParser.cleanPattern(pattern);
+    if (pattern instanceof String)
+    pattern = SmilesParser.cleanPattern((String) pattern);
     try {
       // Note that additional flags are set when the pattern is parsed.
-      SmilesSearch search = SmilesParser.newSearch(pattern, true, false);
-      for (int i = 0; i < smilesSet.length; i++) {
-        String smiles = SmilesParser.cleanPattern(smilesSet[i]);
-        SmilesSearch searchTarget = SmilesParser.newSearch(smiles, false, true); /// smiles chirality is fixed here
-        searchTarget
-            .setFlags(searchTarget.flags | SmilesParser.getFlags(pattern));
+      SmilesSearch search = (pattern instanceof String ? SmilesParser.newSearch((String) pattern, true, false) : (SmilesSearch) pattern);
+      for (int i = 0; i < smilesSet.length; i++) {  
+        Object smiles = smilesSet[i];
+        SmilesSearch searchTarget;
+        if (smiles instanceof String) {
+          searchTarget = newSearch(smiles); /// smiles chirality is fixed here
+          searchTarget
+          .setFlags(searchTarget.flags | (pattern instanceof String ? SmilesParser.getFlags((String)pattern) : 0));
+        } else {
+          searchTarget = (SmilesSearch) smiles;
+        }
         try {
           clearExceptions();
           ret[i] = (matchPattern(search, null, 0, null, null, false,
@@ -752,5 +780,8 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     return ret;
   }
 
+  public static void main(String[] args) {
+	  
+  }
 
 }
