@@ -29,6 +29,7 @@ public class Vibration extends V3d {
    */
   public int modDim = TYPE_VIBRATION;
   public double modScale = Double.NaN; // modulation only
+  public double magMoment;
 
   /**
    * @param pt 

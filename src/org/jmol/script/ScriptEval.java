@@ -7041,13 +7041,20 @@ public class ScriptEval extends ScriptExpr {
           bs = vwr.ms.fixDeletedBonds(bs);
         iToken++;
       } else if (isArrayParameter(4)) {
+        i = -4;
+      } else if (isArrayParameter(3)) {
+        i = -3;
+      }
+      if (i < 0) {
         bs = new BS();
         // 0-based here, to conform with getProperty measurementInfo.index
-        int[] a = (int[]) expandDoubleArray(doubleParameterSet(4, 0,
+        int[] a = (int[]) expandDoubleArray(doubleParameterSet(-i, 0,
             Integer.MAX_VALUE), 0, false);
         for (int ii = a.length; --ii >= 0;)
           if (a[ii] >= 0)
             bs.set(a[ii]);
+        if (i == -3)
+          iToken++;
       }
       checkLast(iToken);
       if (chk)

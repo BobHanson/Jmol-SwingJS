@@ -157,6 +157,10 @@ public class CifReader extends AtomSetCollectionReader {
   private String spinFrame;
   private boolean spinFrameSetByFILTER;
   private boolean showSpinSymmetry;
+  private double spinRotationAngle;
+  private String spinRotationAxis;
+  private String spinCollinearDirection;
+  private String spinCoplanarPerpendicular;
 
   @Override
   public void initializeReader() throws Exception {
@@ -352,7 +356,7 @@ public class CifReader extends AtomSetCollectionReader {
       } else if (key.startsWith("_space_group_transform")
           || key.startsWith("_parent_space_group")
           || key.startsWith("_space_group_magn_transform")
-          || key.contains("_spin_transform_")) {
+          || key.contains("_space_group_spin")) {
                   processUnitCellTransform();
       } else if (key.contains("_database_code")) {
         addModelTitle("ID");
@@ -417,16 +421,8 @@ public class CifReader extends AtomSetCollectionReader {
     // _space_group_magn.transform_OG_Pp_abc     '-a-c,-b,1/2c;0,0,0'   -- no interest to us
     // _parent_space_group.transform_Pp_abc   'a,b,c;0,0,0'             -- no interest to us
 
-    if (key.contains("_spin_transform_spinframe_pp_abc")) {
-      addCellType(CELL_TYPE_SPIN_FRAME, (String) field, false);
-      if (spinFrameSetByFILTER) {
-        System.out.println("CifReader spinFrame set by user to " + spinFrame + " file setting ignored: " + field);
-      } else {
-        System.out.println("CifReader spinFrame set to " + field + "; use load ... FILTER \"spinframe xxxxx\" to modify");
-        spinFrame = (String) field;
-      }
-      appendUnitCellInfo("spinFrame=" + spinFrame);
-
+    if (key.startsWith("_space_group_spin_")) {
+          processSpinSpaceGroup();
     } else if (key.contains("_from_parent") || key.contains("child_transform")) {
       addCellType(CELL_TYPE_MAGNETIC_PARENT, (String) field, true);
     } else if (key.contains("_to_standard")
@@ -434,6 +430,51 @@ public class CifReader extends AtomSetCollectionReader {
       addCellType(CELL_TYPE_MAGNETIC_STANDARD, (String) field, false);
     }
     appendLoadNote(key + ": " + field);
+  }
+
+  private void processSpinSpaceGroup() {
+
+    //    _space_group_spin.transform_spinframe_P_abc  'a,b,c'
+    //    _space_group_spin.collinear_direction . 
+    //    _space_group_spin.coplanar_perp_uvw "0,0,1"
+    //    _space_group_spin.rotation_axis "0,0,1"
+    //    _space_group_spin.rotation_angle 45
+    String tag = key.substring(18);
+    switch (tag) {
+    case "transform_spinframe_p_abc":
+    case "transform_spinframe_pp_abc":
+      addCellType(CELL_TYPE_SPIN_FRAME, (String) field, false);
+      if (spinFrameSetByFILTER) {
+        System.out.println("CifReader spinFrame set by user to " + spinFrame
+            + " file setting ignored: " + field);
+        field = spinFrame;
+      } else {
+        System.out.println("CifReader spinFrame set to " + field
+            + "; use load ... FILTER \"spinframe xxxxx\" to modify");
+        spinFrame = (String) field;
+      }
+      tag = "spinFrame";
+      break;
+    case "rotation_axis":
+      spinRotationAxis = (String) field;
+      break;
+    case "rotation_angle":
+      spinRotationAngle = parseDoubleField();
+      break;
+    case "collinear_direction":
+      spinCollinearDirection = (String) field;
+      break;
+    case "coplanar_perp_uvw":
+      spinCoplanarPerpendicular = (String) field;
+      break;
+    default:
+      System.err.println("CIFReader unrecognized spin key " + key);
+      break;
+    }
+    if (spinRotationAxis != null && spinRotationAngle != 0 && spinFrame != null && spinFrame.indexOf(";") < 0) {
+      spinFrame += ";axis=" + spinRotationAxis + ";angle=" + spinRotationAngle;
+    }
+    appendUnitCellInfo(tag + "=" + field);
   }
 
   private Map<String, String> htCellTypes;
@@ -603,7 +644,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   @Override
   public void doPreSymmetry() throws Exception {
-    if (magCenterings != null || lstSpinFrames != null)
+    if (magCenterings != null || lstSpinLattices != null)
       addLatticeVectors();
     if (modDim > 0)
       getModulationReader().setModulation(false, null);
@@ -718,9 +759,11 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   protected String pdbID;
-  private Lst<String> lstSpinFrames;
+  private Lst<String> lstSpinLattices;
+  private byte newAtomSetLabel = NONE;
 
   protected void nextAtomSet() {
+    newAtomSetLabel = NONE;
     asc.setCurrentModelInfo("isCIF", Boolean.TRUE);
     if (asc.iSet >= 0) {
       // note that there can be problems with multi-data mmCIF sets each with
@@ -801,10 +844,10 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private void addLatticeVectors() {
-    if (lstSpinFrames != null) {
-      if (asc.getSymmetry().addSpinLattice(lstSpinFrames))
-        appendLoadNote("Note! spin lattice added: " + lstSpinFrames);
-      lstSpinFrames = null;
+    if (lstSpinLattices != null) {
+      if (asc.getSymmetry().addSpinLattice(lstSpinLattices))
+        appendLoadNote("Note! spin lattice added: " + lstSpinLattices);
+      lstSpinLattices = null;
       return;
     }
     lattvecs = null;    
@@ -1230,9 +1273,17 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte LABEL_ATOM_ID = 73;
   final private static byte WYCKOFF_LABEL = 74;
   final private static byte SITE_SYMMETRY_MULTIPLICITY= 75;
-  final private static byte SPIN_U = 76;
-  final private static byte SPIN_V = 77;
-  final private static byte SPIN_W = 78;
+  final private static byte SPIN_U_PRELIM = 76;
+  final private static byte SPIN_V_PRELIM = 77;
+  final private static byte SPIN_W_PRELIM = 78;
+  final private static byte spin_moment_label = 79;
+  final private static byte spin_moment_axis_u = 80;
+  final private static byte spin_moment_axis_v = 81;
+  final private static byte spin_moment_axis_w = 82;
+  final private static byte spin_moment_symmform_uvw = 83;
+  final private static byte spin_moment_magnitude = 84; // required if missing 
+  final private static byte spin_moment_spherical_azimuthal = 85;
+  final private static byte spin_moment_spherical_polar = 86;
   
   
   final protected static String CAT_ATOM_SITE = "_atom_site";
@@ -1313,15 +1364,19 @@ public class CifReader extends AtomSetCollectionReader {
       "*_label_atom_id", // 73 mCIF dev
       "*_wyckoff_label", // 74
       "*_site_symmetry_multiplicity", // 75
-      "*_moment_spinaxis_u", // 
-      "*_moment_spinaxis_v", //
-      "*_moment_spinaxis_w", //
-//    "*_moment_symmform_mxmymz", // useful? 
-//    "*_moment_symmform_uvw", //
-//    "*_moment_magnitude", //
-//    "*_moment_spherical_azimuthal", //
-//    "*_moment_spherical_polar", //
+      "*_moment_spinaxis_u", //v3 
+      "*_moment_spinaxis_v", //v3
+      "*_moment_spinaxis_w", //v3
+      "*_spin_moment_label", // 79
+      "*_spin_moment_axis_u",
+      "*_spin_moment_axis_v",
+      "*_spin_moment_axis_w",
+      "*_spin_moment_symmform_uvw",
+      "*_spin_moment_magnitude",
+      "*_spin_moment_spherical_azimuthal",
+      "*_spin_moment_spherical_polar", //86
 
+      
   };
 
   //  final private static String singleAtomID = atomFields[CC_COMP_ID];
@@ -1386,7 +1441,8 @@ public class CifReader extends AtomSetCollectionReader {
       disableField(CARTN_Y);
       disableField(CARTN_Z);
     } else if (key2col[ANISO_LABEL] != NONE || key2col[ANISO_MMCIF_ID] != NONE
-        || key2col[MOMENT_LABEL] != NONE) {
+        || key2col[MOMENT_LABEL] != NONE
+        || key2col[spin_moment_label] != NONE) {
       haveCoord = false;
       // no coordinates, but valuable information
     } else {
@@ -1394,7 +1450,7 @@ public class CifReader extends AtomSetCollectionReader {
       skipLoop(false);
       return false;
     }
-    if (key2col[SPIN_U] != NONE) {
+    if (key2col[SPIN_U_PRELIM] != NONE || key2col[spin_moment_axis_u] != NONE) {
       disableField(MOMENT_X);
       disableField(MOMENT_Y);
       disableField(MOMENT_Z);      
@@ -1428,14 +1484,17 @@ public class CifReader extends AtomSetCollectionReader {
         }
       } else {
         // check for atom reference before atom definition
-        int f = NONE;
+        int fNewAtomSet = NONE;
         int f0 = NONE;
-        if ((f0 = f = fieldProperty(key2col[LABEL])) != NONE
-            || (f = fieldProperty(key2col[CC_ATOM_ID])) != NONE
-            || (f = fieldProperty(key2col[LABEL_ATOM_ID])) != NONE
-            || (f0 = f = fieldProperty(key2col[ANISO_LABEL])) != NONE
-            || (f = fieldProperty(key2col[ANISO_MMCIF_ID])) != NONE
-            || (f0 = fieldProperty(key2col[MOMENT_LABEL])) != NONE) {
+        byte label = NONE; // will be set to the fNewAtomSet type
+        if ((f0 = fNewAtomSet = fieldProperty(key2col[LABEL])) != NONE && (label = LABEL) != NONE
+            || (fNewAtomSet = fieldProperty(key2col[CC_ATOM_ID])) != NONE && (label = CC_ATOM_ID) != NONE
+            || (fNewAtomSet = fieldProperty(key2col[LABEL_ATOM_ID])) != NONE && (label = LABEL_ATOM_ID) != NONE
+            || (f0 = fNewAtomSet = fieldProperty(key2col[ANISO_LABEL])) != NONE && (label = ANISO_LABEL) != NONE
+            || (fNewAtomSet = fieldProperty(key2col[ANISO_MMCIF_ID])) != NONE && (label = ANISO_MMCIF_ID) != NONE
+            || (f0 = fNewAtomSet = fieldProperty(key2col[MOMENT_LABEL])) != NONE && (label = MOMENT_LABEL) != NONE
+            || (f0 = fNewAtomSet = fieldProperty(key2col[spin_moment_label])) != NONE && (label = spin_moment_label) != NONE
+            ) {
           if (f0 != NONE && atomLabels != null) {
             atom = asc.getAtomFromName((String) field);
             if (addAtomLabelNumbers || atom != null) {
@@ -1464,10 +1523,11 @@ public class CifReader extends AtomSetCollectionReader {
         String field = (String) this.field;
         if (atom == null) {
           atom = new Atom();
-          if (f != NONE) {
-            if (asc.iSet < 0) {
+          if (fNewAtomSet != NONE) {
+            if (asc.iSet < 0 && newAtomSetLabel == NONE) {
               nextAtomSet();
               asc.newAtomSet();
+              newAtomSetLabel = label;
             }
             asc.atomSymbolicMap.put(field, atom);
           }
@@ -1480,6 +1540,8 @@ public class CifReader extends AtomSetCollectionReader {
       int authSeq = Integer.MIN_VALUE;
       String authAsym = null;
       String wyckoff = null;
+      double spinMag = Double.NaN;
+      String symmform = null;
       boolean haveAuth = false;
       int seqID = 0;
       int n = cifParser.getColumnCount();
@@ -1705,29 +1767,44 @@ public class CifReader extends AtomSetCollectionReader {
         case MOMENT_X:
         case MOMENT_Y:
         case MOMENT_Z:
-        case SPIN_U:
-        case SPIN_V:
-        case SPIN_W:
+        case SPIN_U_PRELIM:
+        case SPIN_V_PRELIM:
+        case SPIN_W_PRELIM:
+        case spin_moment_axis_u:
+        case spin_moment_axis_v:
+        case spin_moment_axis_w:
+        
+        case spin_moment_magnitude:
+        case spin_moment_symmform_uvw:
           haveMagneticMoments = true;
           V3d pt = atom.vib;
           if (pt == null)
             atom.vib = pt = new Vibration().setType(Vibration.TYPE_SPIN);
           double v = parseDoubleField();
           switch (tok) {
+          case spin_moment_magnitude:
+            spinMag = v;
+            continue;
+          case spin_moment_symmform_uvw:
+            symmform = field;
+            continue;
           case MOMENT_PRELIM_X:
           case MOMENT_X:
-          case SPIN_U:
+          case SPIN_U_PRELIM:
+          case spin_moment_axis_u:
             pt.x = v;
             appendLoadNote("magnetic moment: " + line);
             break;
           case MOMENT_PRELIM_Y:
           case MOMENT_Y:
-          case SPIN_V:
+          case SPIN_V_PRELIM:
+          case spin_moment_axis_v:
             pt.y = v;
             break;
           case MOMENT_PRELIM_Z:
           case MOMENT_Z:
-          case SPIN_W:
+          case SPIN_W_PRELIM:
+          case spin_moment_axis_w:
             pt.z = v;
             if (pt.length() == 0)
               atom.vib = null;
@@ -1960,7 +2037,8 @@ public class CifReader extends AtomSetCollectionReader {
           && fieldProperty(key2col[SYM_MAGN_SSG_REV]) == NONE
           && fieldProperty(key2col[SYM_MAGN_REV_PRELIM]) == NONE ? 0
               : ((String) field).equals("-1") ? -1 : 1);
-
+      if (timeRev != 0)
+        isMagCIF = true; // for old-style _magnetic_... because "_magnetic" has been removed in CifDataParser
       for (int i = 0; i < nn; ++i) {
         int tok = fieldProperty(i);
         String field = (String) this.field;
@@ -2037,10 +2115,10 @@ public class CifReader extends AtomSetCollectionReader {
       if (sxyz != null) {
         if (suvw != null) {
           isMag = isSpinCIF = true;
-          if (lstSpinFrames == null) {
-            lstSpinFrames = new Lst<String>();
+          if (lstSpinLattices == null) {
+            lstSpinLattices = new Lst<String>();
           }
-          lstSpinFrames.addLast(sxyz + "(" + suvw + ")");
+          lstSpinLattices.addLast(sxyz + "(" + suvw + ")");
           suvw = null;
         }
         sxyz = null;
