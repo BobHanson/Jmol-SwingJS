@@ -27,6 +27,7 @@ import javajs.util.BS;
 import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.M34d;
+import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
 import javajs.util.P3d;
@@ -2418,7 +2419,7 @@ abstract class ScriptExpr extends ScriptParam {
         break;
       case T.varray:
         theToken = tokenValue;
-        vwr.setAtomCoords(bs, tok, getPointArray(-1, nValues, true));
+        vwr.setAtomCoords(bs, tok, getPointArray(-1, nValues, true, true));
         break;
       }
       return;

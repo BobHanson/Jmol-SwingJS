@@ -176,7 +176,7 @@ public class StateCreator extends JmolStateCreator {
       app(sfunc, "set antialiasDisplay " + global.antialiasDisplay);
       app(sfunc, "set antialiasTranslucent " + global.antialiasTranslucent);
       app(sfunc, "set antialiasImages " + global.antialiasImages);
-      if (vwr.tm.spinOn)
+      if (vwr.tm.spinOn && !vwr.tm.vectorSpinOnly)
         app(sfunc, "spin on");
       sfunc.append("}\n\n_setState;\n");
     }
@@ -865,7 +865,7 @@ public class StateCreator extends JmolStateCreator {
           + ";";
     if (tm.navOn)
       s += " navigation on;";
-    if (!tm.spinOn)
+    if (!tm.spinOn || tm.vectorSpinOnly)
       return s;
     String prefix = (tm.isSpinSelected ? "\n  select "
         + Escape.eBS(vwr.bsA()) + ";\n  rotateSelected"

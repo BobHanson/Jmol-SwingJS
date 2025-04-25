@@ -47,6 +47,7 @@ import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.A4d;
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.JSJSONParser;
@@ -547,7 +548,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public Lst<String> getMoreInfo() {
-    return unitCell.moreInfo;
+    return unitCell.getMoreInfo();
   }
 
   @Override
@@ -841,6 +842,11 @@ public class Symmetry implements SymmetryInterface {
       commands.append(cmd);
       commands.append("\n MODELKIT SPACEGROUP " + PT.esc(sg));
       commands.append(cmd);
+      loadUC = true;
+    }
+    M3d spinRot = (M3d) ms.getInfo(modelIndex, JC.SPIN_ROTATION_MATRIX_APPLIED);
+    if (spinRot != null) {
+      commands.append("\n rotate VECTORS " + Qd.newM(spinRot));
       loadUC = true;
     }
     return loadUC;
@@ -2018,8 +2024,8 @@ public class Symmetry implements SymmetryInterface {
     if (params != null) {
       setUnitCellFromParams(params, modelAuxiliaryInfo.containsKey("jmolData"),
           Double.NaN);
-      unitCell.moreInfo = (Lst<String>) modelAuxiliaryInfo
-          .get("moreUnitCellInfo");
+      unitCell.setMoreInfo((Lst<String>) modelAuxiliaryInfo
+          .get(JC.UC_MOREINFO));
       modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
       setOffsetPt((T3d) modelAuxiliaryInfo.get(JC.INFO_UNIT_CELL_OFFSET));
       M3d matUnitCellOrientation = (M3d) modelAuxiliaryInfo
@@ -2240,6 +2246,12 @@ public class Symmetry implements SymmetryInterface {
     }
     // probably a general position
     return a;
+  }
+
+  @Override
+  public void setSpinAxisAngle(A4d aa) {
+    if (unitCell != null)
+      unitCell.setSpinAxisAngle(aa);
   }
 
 }

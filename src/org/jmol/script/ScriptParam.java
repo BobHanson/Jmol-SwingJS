@@ -13,6 +13,7 @@ import org.jmol.util.Logger;
 import javajs.util.BS;
 import javajs.util.CU;
 import javajs.util.Lst;
+import javajs.util.M34d;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
@@ -392,7 +393,7 @@ abstract public class ScriptParam extends ScriptError {
           if (isArrayParameter(i)) {
             if (isBest) {
               // best plane [array]
-              bestPoints = getPointArray(i, -1, false);
+              bestPoints = getPointArray(i, -1, false, true);
             } else if (tokAt(i) == T.varray) {
               // NOT spacebeforesquare
               Lst<P3d> list = getPointOrCenterVector(getToken(i));
@@ -570,6 +571,7 @@ abstract public class ScriptParam extends ScriptError {
     boolean implicitFractional = ((mode & MODE_P_IMPLICIT_FRACTIONAL) != 0);
     boolean integerOnly = ((mode & MODE_P_INT_ONLY) != 0);
     boolean isOK = true;
+    int t0 = iToken;
     try {
       coordinatesAreFractional = implicitFractional;
       if (tokAt(index) == T.point3f) {
@@ -688,8 +690,11 @@ abstract public class ScriptParam extends ScriptError {
       isOK = false;
       return null;
     } finally {
-      if (!isOK && (mode & MODE_P_NULL_ON_ERROR) == 0)
-        invArg();
+      if (!isOK) {
+        iToken = t0;
+        if ((mode & MODE_P_NULL_ON_ERROR) == 0)
+          invArg();
+      }
     }
   }
 
@@ -747,6 +752,10 @@ abstract public class ScriptParam extends ScriptError {
   
   public P4d getPoint4f(int i) throws ScriptException {
     return (P4d) getPointOrPlane(i, MODE_P4);
+  }
+
+  public P4d getPoint4fNoError(int i) throws ScriptException {
+    return (P4d) getPointOrPlane(i, MODE_P4 | MODE_P_NULL_ON_ERROR);
   }
 
   public P3d xypParameter(int index) throws ScriptException {
@@ -874,10 +883,11 @@ abstract public class ScriptParam extends ScriptError {
    * @param i
    * @param nPoints -1 for unspecified number of points
    * @param allowNull if allowing null values (as in setting atom properties such as vxyz or xyz)
+   * @param throwException 
    * @return array of P3, with possible null values
    * @throws ScriptException
    */
-  public P3d[] getPointArray(int i, int nPoints, boolean allowNull) throws ScriptException {
+  public P3d[] getPointArray(int i, int nPoints, boolean allowNull, boolean throwException) throws ScriptException {
     if (nPoints == Integer.MAX_VALUE)
       nPoints = -1;
     P3d[] points = (nPoints < 0 ? null : new P3d[nPoints]);
@@ -898,6 +908,12 @@ abstract public class ScriptParam extends ScriptError {
     case T.spacebeforesquare:
       tok = tokAt(i++);
       break;
+    case T.leftsquare:
+      break;
+    default:
+      iToken--;
+      if (!throwException)
+        return null;
     }
     if (tok != T.leftsquare)
       invArg();
@@ -1632,6 +1648,41 @@ abstract public class ScriptParam extends ScriptError {
             SV.newV(T.varray,  new Lst<SV>()) : list.get(n));
   }
   
-
+  protected M34d getMatrixParam(int i, int dim, boolean throwError) throws ScriptException {
+    switch (tokAt(i)) {
+    case T.matrix3f:
+      if (dim != 3)
+        break;
+      return (M3d) getToken(i).value;
+    case T.matrix4f:
+      M4d m4 = (M4d) getToken(i).value;
+      if (dim == 3) {
+        M3d m3 = new M3d();
+        m4.getRotationScale(m3);
+        return m3;
+      }
+      return m4;
+    default:
+      P3d[] pts = getPointArray(i, dim, false, false);
+      if (pts == null)
+        break;
+      M3d m = new M3d();
+      m.setRowV(0, pts[0]);
+      m.setRowV(1, pts[1]);
+      m.setRowV(2, pts[2]);
+      switch(dim) {
+      case 3:
+        return m;
+      case 4:
+        M4d mm = new M4d();
+        mm.setRotationScale(m);
+        mm.setTranslation(pts[3]);
+        return mm;
+      }
+    }
+    if (throwError)
+      invArg();
+    return null;
+  }
 
 }

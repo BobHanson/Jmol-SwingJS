@@ -1566,7 +1566,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (isTrajectory)
       asc.setTrajectory();
     if (moreUnitCellInfo != null) {
-      asc.setCurrentModelInfo("moreUnitCellInfo", moreUnitCellInfo);
+      asc.setCurrentModelInfo(JC.UC_MOREINFO, moreUnitCellInfo);
       moreUnitCellInfo = null;
     }
     finalizeSubclassSymmetry(sym != null);

@@ -36,6 +36,7 @@ import org.jmol.util.Tensor;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.A4d;
 import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M3d;
@@ -67,7 +68,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
   private final static V3d[] unitVectors = {
       JC.axisX, JC.axisY, JC.axisZ};
   
-  Lst<String> moreInfo;
+  private Lst<String> moreInfo;
   
   public String name = "";
   
@@ -118,7 +119,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
    * used for fast comparison of fractional-to-Cartesian matrix
    */
   private double[][] f2c;
-  
+
 
   /**
    * Private constructor. 
@@ -880,7 +881,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       addTrans(strans, t);
       addTrans(strans2, t);
       m.setTranslation(t);
-      boolean isABC = (sdef.indexOf("c") >= 0);
+      boolean isABC = sdef.indexOf("x") < 0 && (sdef.indexOf("a") >= 0 || sdef.indexOf("b") >= 0 || sdef.indexOf("c") >= 0);
       if (isABC) {
         m.transpose33();
       }
@@ -1379,4 +1380,45 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     return center;
   }
 
+  public void setSpinAxisAngle(A4d aa) {
+    if (moreInfo == null) {
+      moreInfo = new Lst<>();
+    }
+    int ptAxis = -1, ptAngle = -1;
+    for (int i = moreInfo.size(); --i >= 0 && (ptAxis < 0 || ptAngle < 0);) {
+      String s = moreInfo.get(i);
+      if (s.startsWith("rotation_axis=")) {
+        ptAxis = i;
+      } else if (s.startsWith("rotation_angle=")) {
+        ptAngle = i;
+      }
+    }
+    String s = "rotation_axis="
+        + (aa.x == Math.round(aa.x) ? "" + Math.round(aa.x) : "" + aa.x) + ","
+        + (aa.y == Math.round(aa.y) ? "" + Math.round(aa.y) : "" + aa.y) + ","
+        + (aa.z == Math.round(aa.z) ? "" + Math.round(aa.z) : "" + aa.z);
+    if (ptAxis < 0) {
+      moreInfo.addLast(s);
+      if (ptAngle > ptAxis)
+        ptAngle++;
+    } else {
+      moreInfo.set(ptAxis, s);
+    }
+    double a = aa.angle * 180 / Math.PI;
+    a = Math.round(a * 1000) / 1000;
+    s = "rotation_angle=" + (a == Math.round(a) ? "" + Math.round(a) : "" + a);
+    if (ptAngle < 0) {
+      moreInfo.addLast(s);
+    } else {
+      moreInfo.set(ptAngle, s);
+    }
+  }
+
+  void setMoreInfo(Lst<String> info) {
+    moreInfo = info;
+  }
+
+  Lst<String> getMoreInfo() {
+    return moreInfo;
+  }
 }

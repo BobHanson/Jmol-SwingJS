@@ -4807,7 +4807,57 @@ public class ModelSet extends BondCollection {
         taintAtom(i, TAINT_COORD);
       }
   }
-  
 
+  public void rotateModelSpinVectors(int modelIndex, M3d rot) {
+    if (modelIndex < 0 || modelIndex >= mc || vibrations == null)
+      return;
+    Map<String, Object> info = getModelAuxiliaryInfo(modelIndex);
+    if (rot == null) {
+      // reset
+      rot = (M3d) info.get(JC.SPIN_FRAME_ROTATION_MATRIX); 
+      if (rot == null)
+        return;     
+    }
+    boolean noref = Double.isNaN(rot.getElement(0, 0));
+    double deg = (noref ? rot.getElement(1, 1) : 0);
+    if (noref && deg != 0) {
+      rot.setElement(1, 1, 0);
+      rotateModelSpinVectors(modelIndex, rot);
+      rot.setElement(1, 1, deg);
+    }
+    
+    M3d m0 = (M3d) info.get(JC.SPIN_FRAME_ROTATION_MATRIX);
+    M3d mat = (M3d) info.get(JC.SPIN_ROTATION_MATRIX_APPLIED);
+    if (mat == null && m0 == null) {
+      m0 = M3d.newM3(null);
+      info.put(JC.SPIN_FRAME_ROTATION_MATRIX, m0);
+    }
+    if (mat == null) {
+    	mat = m0;
+    }
+    M3d matInv = M3d.newM3(mat);
+    matInv.invert();
+    if (noref) {
+      Qd q = Qd.newM(mat);
+      V3d qn = q.getNormal();
+      rot = Qd.newVA(qn, deg).getMatrix();
+    }
+    BS bs = am[modelIndex].bsAtoms;
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      if (i >= vibrations.length)
+        return;
+      Vibration v = vibrations[i];
+      if (v == null || v.magMoment == 0)
+        continue;     
+      matInv.rotate(v);
+      rot.rotate(v);     
+    }
+    Qd quat = Qd.newM(rot);
+    A4d aa = quat.toA4d();
+    mat = M3d.newM3(rot);
+    info.put(JC.SPIN_ROTATION_MATRIX_APPLIED, mat);
+    info.put(JC.SPIN_ROTATION_AXIS_ANGLE_APPLIED, aa);
+    unitCells[modelIndex].setSpinAxisAngle(aa);
+  }
 }
 

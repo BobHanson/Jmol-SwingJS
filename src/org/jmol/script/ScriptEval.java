@@ -69,6 +69,7 @@ import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.Base64;
 import javajs.util.Lst;
+import javajs.util.M34d;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
@@ -6059,7 +6060,7 @@ public class ScriptEval extends ScriptExpr {
     // possibly "all"
     switch (tokAt(1)) {
     case T.print:
-      if (!chk && outputBuffer != null)
+      if (outputBuffer != null)
         outputBuffer.setLength(0);
       return;
     case T.cache:
@@ -6093,6 +6094,9 @@ public class ScriptEval extends ScriptExpr {
       return;
     case T.spin:
       vwr.reset(true);
+      return;
+    case T.vector:
+      vwr.rotateModelSpinVectors(-1, null);
       return;
     }
     String var = paramAsStr(1);
@@ -6200,14 +6204,23 @@ public class ScriptEval extends ScriptExpr {
         if (!chk)
           vwr.tm.setSpinOff();
         return;
+      case T.vector:
+        if (isSpin)
+          break;
+        if (!chk) {
+          vwr.rotateModelSpinVectors(-1, null);
+        }
+        return;
       }
 
     BS bsAtoms = null, bsBest = null;
     double degreesPerSecond = JC.FLOAT_MIN_SAFE;
     int nPoints = 0;
+    int model = -1;
     double endDegrees = Double.MAX_VALUE;
     boolean isMolecular = false;
     boolean haveRotation = false;
+    boolean isVector = false;
     double[] dihedralList = null;
     Lst<P3d> ptsA = null;
     P3d[] points = new P3d[2];
@@ -6253,16 +6266,42 @@ public class ScriptEval extends ScriptExpr {
           nPoints = 0;
         // {X, Y, Z}
         // $drawObject[n]
+        if (isVector) {
+          if (nPoints == 1)
+            invArg();
+          rotAxis = V3d.newV(getPoint3f(i, true, true));
+          break;
+        }
         P3d pt1 = centerParameterForModel(i, vwr.am.cmi, null);
         if (!chk && tok == T.dollarsign && tokAt(i + 2) != T.leftsquare) {
           // rotation about an axis such as $line1
           isMolecular = true;
           Object[] data = new Object[] { objectNameParameter(++i),
               Integer.valueOf(vwr.am.cmi), null };
-          rotAxis = (getShapePropertyData(JC.SHAPE_DRAW, "getSpinAxis", data) ? (V3d) data[2]
+          rotAxis = (getShapePropertyData(JC.SHAPE_DRAW, "getSpinAxis", data)
+              ? (V3d) data[2]
               : null);
         }
         points[nPoints++] = pt1;
+        break;
+      case T.vector:
+        isVector = true;
+        isMolecular = true;
+        // rotate vectors 45;
+        // rotate vectors {0 0 1} 45;
+        // rotate vectors {q1 q2 q3 q4} 45;
+        // rotate vectors <matrix> 45;
+        m3 = (M3d) getMatrixParam(i + 1, 3, false);
+        if (m3 == null) {
+          P4d p4 = getPoint4fNoError(i + 1);
+          if (p4 != null) {
+            q = Qd.newP4(p4);
+          }
+        }
+        i = iToken;
+        if (isFloatParameter(i + 1)) {
+          rotAxis.x = Double.NaN;
+        }
         break;
       case T.spin:
         isSpin = true;
@@ -6302,7 +6341,8 @@ public class ScriptEval extends ScriptExpr {
             invArg();
           }
         }
-        if (i == slen - 2 && (tokAt(i + 1) == T.misc || tokAt(i + 1) == T.string)) {
+        if (i == slen - 2
+            && (tokAt(i + 1) == T.misc || tokAt(i + 1) == T.string)) {
           String s = paramAsStr(++i).toLowerCase();
           if (s.equals("dps")) {
             isDegreesPerSecond = true;
@@ -6328,11 +6368,11 @@ public class ScriptEval extends ScriptExpr {
         continue;
       case T.z:
         haveRotation = true;
-        rotAxis.set(0, 0, (axesOrientationRasmol && !isMolecular ? -direction
-            : direction));
+        rotAxis.set(0, 0,
+            (axesOrientationRasmol && !isMolecular ? -direction : direction));
         continue;
 
-        // 11.6 options
+      // 11.6 options
 
       case T.point4f:
       case T.quaternion:
@@ -6361,10 +6401,10 @@ public class ScriptEval extends ScriptExpr {
             return;
           pts = new P3d[3];
           for (int j = 0; j < 3; j++)
-            pts[j] = vwr.ms.getAtomSetCenter(SV.getBitSet(lst.get(n - 3 + j),
-                false));
+            pts[j] = vwr.ms
+                .getAtomSetCenter(SV.getBitSet(lst.get(n - 3 + j), false));
         } else if (isArrayParameter(i + 1)) {
-          pts = getPointArray(++i, -1, false);
+          pts = getPointArray(++i, -1, false, true);
           i = iToken;
         } else {
           pts = new P3d[3];
@@ -6445,7 +6485,8 @@ public class ScriptEval extends ScriptExpr {
         if (endDegrees == 0 && points[0] != null) {
           // glide plane
           rotAxis.normalize();
-          MeasureD.getPlaneThroughPoint(points[0], rotAxis, invPlane = new P4d());
+          MeasureD.getPlaneThroughPoint(points[0], rotAxis,
+              invPlane = new P4d());
         }
         q = Qd.newVA(rotAxis, endDegrees);
         nPoints = (points[0] == null ? 0 : 1);
@@ -6470,8 +6511,8 @@ public class ScriptEval extends ScriptExpr {
         points[0] = new P3d();
         nPoints = 1;
         Interface.getInterface("javajs.util.Eigen", vwr, "script");
-        double stddev = (chk ? 0 : ScriptParam.getTransformMatrix4(ptsA, ptsB, m4,
-            points[0]));
+        double stddev = (chk ? 0
+            : ScriptParam.getTransformMatrix4(ptsA, ptsB, m4, points[0]));
         // if the standard deviation is very small, we leave ptsB
         // because it will be used to set the absolute final positions
         if (stddev > 0.001)
@@ -6535,12 +6576,13 @@ public class ScriptEval extends ScriptExpr {
     double rate = (degreesPerSecond == JC.FLOAT_MIN_SAFE ? 10
         : endDegrees == Double.MAX_VALUE ? degreesPerSecond
             : isDegreesPerSecond ? degreesPerSecond
-                : isSeconds ? (endDegrees < 0 ? -1 : 1) * Math.abs(endDegrees / degreesPerSecond)
+                : isSeconds
+                    ? (endDegrees < 0 ? -1 : 1)
+                        * Math.abs(endDegrees / degreesPerSecond)
                     : (degreesPerSecond < 0) == (q == null ? endDegrees > 0
                         : true) ?
                     // -n means number of seconds, not degreesPerSecond
-                    -endDegrees / degreesPerSecond
-                        : degreesPerSecond);
+                            -endDegrees / degreesPerSecond : degreesPerSecond);
     if (q == null && endDegrees < 0 && rate > 0)
       rate = -rate;
     if (dihedralList != null) {
@@ -6585,7 +6627,8 @@ public class ScriptEval extends ScriptExpr {
     // a thread will be required if we are spinning 
     // UNLESS we are headless, 
     // in which case we just turn off the spin
-    boolean requiresThread = (isSpin && (!vwr.headless || endDegrees == Double.MAX_VALUE));
+    boolean requiresThread = (isSpin
+        && (!vwr.headless || endDegrees == Double.MAX_VALUE));
     // just turn this into a rotation if we cannot spin
     if (isSpin && !requiresThread)
       isSpin = false;
@@ -6639,10 +6682,11 @@ public class ScriptEval extends ScriptExpr {
     if (checkModelKit) {
       if (endDegrees == 0)
         return;
-      if ( bsAtoms == null || nPoints != 2 || isSpin || translation != null || dihedralList != null || ptsB != null 
-          || is4x4)
+      if (bsAtoms == null || nPoints != 2 || isSpin || translation != null
+          || dihedralList != null || ptsB != null || is4x4)
         invArg();
-      int na = vwr.getModelkit(false).cmdRotateAtoms(bsAtoms, points, endDegrees);
+      int na = vwr.getModelkit(false).cmdRotateAtoms(bsAtoms, points,
+          endDegrees);
       if (doReport())
         report(GT.i(GT.$("{0} atoms rotated"), na), false);
       return;
@@ -6656,7 +6700,7 @@ public class ScriptEval extends ScriptExpr {
       rate = (degreesPerSecond == JC.FLOAT_MIN_SAFE ? 0.01d
           : degreesPerSecond < 0 ?
           // -n means number of seconds, not degreesPerSecond
-          -endDegrees / degreesPerSecond
+              -endDegrees / degreesPerSecond
               : degreesPerSecond * 0.01f / translation.length());
       degreesPerSecond = 0.01f;
     }
@@ -6670,11 +6714,30 @@ public class ScriptEval extends ScriptExpr {
     } else {
       if (requiresThread && !useThreads(false))
         return;
+      if (isVector) {
+        if (model < 0 && vwr.am.cmi < 0)
+          errorStr(ScriptError.ERROR_multipleModelsDisplayedNotOK,
+              "rotate VECTOR");
+        if (q == null && endDegrees == Double.MAX_VALUE)
+          invArg();
+        double deg = (isSpin ? degreesPerSecond : endDegrees);
+        if (q == null) {
+          q = (m3 == null ? Qd.newVA(rotAxis, deg) : Qd.newM(m3));
+        }
+        m3 = q.getMatrix();
+        if (Double.isNaN(m3.getElement(0, 0)))
+          m3.setElement(1, 1, deg);
+        if (!isSpin || degreesPerSecond <= 0) {
+          vwr.tm.setSpinOff();
+          vwr.rotateModelSpinVectors(model, m3);
+          return;
+        }
+      }
       if (vwr.rotateAboutPointsInternal(this, points[0], points[1], rate,
           endDegrees, isSpin, bsAtoms, translation, ptsB, dihedralList,
-          is4x4 ? m4 : null, false, null)
-          && isJS && isSpin)
+          (isVector ? m3 : null), is4x4 ? m4 : null, false, null) && isJS && isSpin) {
         throw new ScriptInterruption(this, "rotate", 1);
+      }
     }
   }
 

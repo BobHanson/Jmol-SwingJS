@@ -640,7 +640,7 @@ public class CmdExt extends ScriptExt {
         break;
       default:
         if (e.isArrayParameter(i)) {
-          oabc = e.getPointArray(i, -1, false);
+          oabc = e.getPointArray(i, -1, false, true);
           i = e.iToken;
         } else if (isFloatParameter(i)) {
           double d = doubleParameter(i);
@@ -1202,7 +1202,7 @@ public class CmdExt extends ScriptExt {
     } else {
       bsFrom = atomExpressionAt(1);
       if (eval.isArrayParameter(++eval.iToken)) {
-        coordTo = eval.getPointArray(eval.iToken, -1, false);
+        coordTo = eval.getPointArray(eval.iToken, -1, false, true);
       } else if ((tok = tokAt(eval.iToken)) != T.atoms && tok != T.frame) {
         bsTo = atomExpressionAt(eval.iToken);
       }
@@ -1286,7 +1286,7 @@ public class CmdExt extends ScriptExt {
 
         if (bsAtoms2 == null) {
           int ipt = eval.iToken;
-          coordTo = eval.getPointArray(eval.iToken + 1, -1, false);
+          coordTo = eval.getPointArray(eval.iToken + 1, -1, false, true);
           if (coordTo == null)
             eval.iToken = ipt;
           else
@@ -1595,7 +1595,7 @@ public class CmdExt extends ScriptExt {
         doAnimate = false;
       if (vwr.rotateAboutPointsInternal(eval, center, pt1,
           endDegrees / nSeconds, endDegrees, doAnimate, bsFrom, translation,
-          ptsB, null, null, false, doMorph ? centerAndPoints : null) && doAnimate && eval.isJS)
+          ptsB, null, null, null, false, doMorph ? centerAndPoints : null) && doAnimate && eval.isJS)
         throw new ScriptInterruption(eval, "compare", 1);
     }
   }
@@ -4031,7 +4031,7 @@ public class CmdExt extends ScriptExt {
           // select... polyhedron .... to [...]
           // polyhedron {...} to [...]
           propertyName = "toVertices";
-          propertyValue = eval.getPointArray(i, -1, false);
+          propertyValue = eval.getPointArray(i, -1, false, true);
         } else {
           error(ScriptError.ERROR_insufficientArguments);
         }
@@ -6775,7 +6775,7 @@ public class CmdExt extends ScriptExt {
       if (e.isPoint3f(e.iToken + 1)) {
         pt = getPoint3f(++e.iToken, true);
       } else if (e.isArrayParameter(e.iToken + 1)) {
-        pts = e.getPointArray(e.iToken + 1, -1, false);
+        pts = e.getPointArray(e.iToken + 1, -1, false, true);
       }
       if (type.length() == 0)
         type = null;
@@ -6801,7 +6801,7 @@ public class CmdExt extends ScriptExt {
       }
     } else if (isMove) {
       if (e.isArrayParameter(i)) {
-        pts = e.getPointArray(i, -1, false);
+        pts = e.getPointArray(i, -1, false, true);
       } else {
         pt = getPoint3f(i, true);
       }
@@ -7019,7 +7019,7 @@ public class CmdExt extends ScriptExt {
       try {
         // [ Origin vA vB vC ]
         // these are VECTORS, though
-        ret[0] = e.getPointArray(i, 4, false);
+        ret[0] = e.getPointArray(i, 4, false, true);
       } catch (Exception ee) {
         // ignore NullPointerException
         e.iToken = ei;

@@ -390,7 +390,7 @@ public class IsoExt extends ScriptExt {
           if (eval.isArrayParameter(i + 1)) {
             // unitcell [o a b c]
             uc = vwr.getSymTemp()
-                .getUnitCell(eval.getPointArray(i + 1, -1, false), false, null);
+                .getUnitCell(eval.getPointArray(i + 1, -1, false, true), false, null);
             i = eval.iToken;
           } else {
             switch (tokAt(i + 1)) {
@@ -565,7 +565,7 @@ public class IsoExt extends ScriptExt {
             linePts = new P3d[] { centerParameter(++i),
                 centerParameter(eval.iToken + 1) };
           } else {
-            linePts = eval.getPointArray(++i, 2, false);
+            linePts = eval.getPointArray(++i, 2, false, true);
           }
           if (linePts.length < 2)
             invArg();
@@ -628,7 +628,7 @@ public class IsoExt extends ScriptExt {
         // draw pointgroup {atoms} CENTER xx
         // draw pointgroup SPACEGROUP
         // draw pointgroup [C2|C3|Cs|Ci|etc.] [n] [scale x]
-        pts = (eval.isArrayParameter(++i) ? eval.getPointArray(i, -1, false)
+        pts = (eval.isArrayParameter(++i) ? eval.getPointArray(i, -1, false, true)
             : null);
         if (pts == null && eval.isAtomExpression(i)) {
           bs = eval.atomExpressionAt(i);
@@ -742,7 +742,7 @@ public class IsoExt extends ScriptExt {
         int[][] polygons = null;
         if (eval.isArrayParameter(++i)) {
           // draw POLYGON [points]
-          points = eval.getPointArray(i, -1, true);
+          points = eval.getPointArray(i, -1, true, true);
           if (points.length > 0 && points[0] == null) {
             int[][] faces;
             if (tok == T.polyhedra) {
@@ -4145,7 +4145,7 @@ public class IsoExt extends ScriptExt {
               pts[k] = atoms[j];
           }
         } else {
-          pts = eval.getPointArray(i, -1, false);
+          pts = eval.getPointArray(i, -1, false, true);
         }
         if (pts.length == 0) {
           eval.iToken = i;
@@ -4153,7 +4153,7 @@ public class IsoExt extends ScriptExt {
         }
         data = new Object[] { Double.valueOf(d), pts, bs };
       } else {
-        data = eval.getPointArray(i, 4, false);
+        data = eval.getPointArray(i, 4, false, true);
         tok = T.boundbox;
       }
       break;

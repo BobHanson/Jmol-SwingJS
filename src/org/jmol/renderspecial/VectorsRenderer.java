@@ -84,17 +84,30 @@ public class VectorsRenderer extends ShapeRenderer {
     boolean needTranslucent = false;
     vectorScale = vwr.getDouble(T.vectorscale);
     vectorTrail = vwr.getInt(T.vectortrail);
-    if (vectorScale < 0)
-      vectorScale = 1;
+    Atom[] atoms = ms.at;    
+    if (vectorScale < 0) {
+        double maxScale = 0;
+        for (int i = ms.ac; --i >= 0;) {
+          Vibration vib = ms.getVibration(i, false);
+          if (vib != null && vib.magMoment > 0) {
+            double d = vib.length();
+            if (d > maxScale) {
+              maxScale = d;
+            }
+          }
+        }
+        if (maxScale > 0) {
+          vectorScale /= -maxScale;
+        } else {
+          vectorScale = 1;
+        }
+    }
     vectorSymmetry = vwr.getBoolean(T.vectorsymmetry);
     vectorsCentered = vwr.getBoolean(T.vectorscentered);
     showModVecs = vwr.getBoolean(T.showmodvecs);
     vibrationOn = vwr.tm.vibrationOn;
     headScale = arrowHeadOffset;
-    if (vectorScale < 0)
-      headScale = -headScale;
     boolean haveModulations = false;
-    Atom[] atoms = ms.at;
     for (int i = ms.ac; --i >= 0;) {
       Atom atom = atoms[i];
       if (!isVisibleForMe(atom))
@@ -121,12 +134,12 @@ public class VectorsRenderer extends ShapeRenderer {
       }
       renderVector(atom, vib);
       if (vectorSymmetry) {
-        if (vibTemp == null)
-          vibTemp = new Vibration();
-        vibTemp.setT(vib);
-        vibTemp.scale(-1);
-        transform(mads[i], atom, vibTemp, null);
+        vectorScale = -vectorScale;
+        headScale = -headScale;
+        transform(mads[i], atom, vib, null);
         renderVector(atom, vib);
+        vectorScale = -vectorScale;
+        headScale = -headScale;
       }
     }
     if (haveModulations)
@@ -203,7 +216,11 @@ public class VectorsRenderer extends ShapeRenderer {
       //        vwr.tm.getVibrationPoint(vib, v, Double.NaN);
       //      }
       pointVectorEnd.scaleAdd2(0.5d * vectorScale, vib, ptTemp);
-      pointVectorStart.scaleAdd2(-0.5d * vectorScale, vib, ptTemp);
+      if (vectorSymmetry) {
+        pointVectorStart.setP(ptTemp);
+      } else {
+        pointVectorStart.scaleAdd2(-0.5d * vectorScale, vib, ptTemp);
+      }
     } else {
       pointVectorEnd.scaleAdd2(vectorScale, vib, ptTemp);
       pointArrowHead.add2(pointVectorEnd, headOffsetVector);

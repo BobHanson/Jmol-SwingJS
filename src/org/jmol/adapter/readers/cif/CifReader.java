@@ -155,12 +155,8 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean allowWyckoff = true;
   private boolean stopOn_SHELX_HKL;
   private String spinFrame;
+  private String spinFrameExt;
   private boolean spinFrameSetByFILTER;
-  private boolean showSpinSymmetry;
-  private double spinRotationAngle;
-  private String spinRotationAxis;
-  private String spinCollinearDirection;
-  private String spinCoplanarPerpendicular;
 
   @Override
   public void initializeReader() throws Exception {
@@ -171,7 +167,6 @@ public class CifReader extends AtomSetCollectionReader {
     String conf = getFilter("CONF ");
     if (conf != null)
       configurationPtr = parseIntStr(conf);
-    showSpinSymmetry = "spin".equals(fillRange);
     if (filterCased != null && filterCased.toLowerCase().startsWith("spinframe=")) {
       spinFrame = filterCased.substring(10).trim();
       int pt = spinFrame.indexOf(";");
@@ -250,24 +245,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   private boolean readEntryOrLoopData() throws Exception {
     if (key.startsWith("data_")) {
-      isLigand = false;
-      if (asc.atomSetCount == 0)
-        iHaveDesiredModel = false;
-      if (iHaveDesiredModel)
-        return false;
-      if (desiredModelNumber != Integer.MIN_VALUE)
-        appendLoadNote(null);
-      newModel(-1);
-
-      haveCellWaveVector = false;
-      if (auditBlockCode == null)
-        modulated = false;
-      if (!skipping) {
-        nAtoms0 = asc.ac;
-        processDataParameter();
-        nAtoms = asc.ac;
-      }
-      return true;
+      return newData();
     }
     if (skipping && key.equals("_audit_block_code")) {
       iHaveDesiredModel = false;
@@ -379,6 +357,28 @@ public class CifReader extends AtomSetCollectionReader {
     return true;
   }
 
+  private boolean newData() throws Exception {
+    spinFrame = spinFrameExt = null;
+    isLigand = false;
+    if (asc.atomSetCount == 0)
+      iHaveDesiredModel = false;
+    if (iHaveDesiredModel)
+      return false;
+    if (desiredModelNumber != Integer.MIN_VALUE)
+      appendLoadNote(null);
+    newModel(-1);
+
+    haveCellWaveVector = false;
+    if (auditBlockCode == null)
+      modulated = false;
+    if (!skipping) {
+      nAtoms0 = asc.ac;
+      processDataParameter();
+      nAtoms = asc.ac;
+    }
+    return true;
+  }
+
   final static String CAT_ENTRY = "_entry";
 
   private boolean skipKey(String key) {
@@ -437,10 +437,13 @@ public class CifReader extends AtomSetCollectionReader {
     //    _space_group_spin.transform_spinframe_P_abc  'a,b,c'
     //    _space_group_spin.collinear_direction . 
     //    _space_group_spin.coplanar_perp_uvw "0,0,1"
-    //    _space_group_spin.rotation_axis "0,0,1"
+    //    _space_group_spin.rotation_axis_xyz "0,0,1"
     //    _space_group_spin.rotation_angle 45
     String tag = key.substring(18);
     switch (tag) {
+    case "number_spsg_chen":
+    case "name_spsg_chen":
+      break;
     case "transform_spinframe_p_abc":
     case "transform_spinframe_pp_abc":
       addCellType(CELL_TYPE_SPIN_FRAME, (String) field, false);
@@ -455,26 +458,34 @@ public class CifReader extends AtomSetCollectionReader {
       }
       tag = "spinFrame";
       break;
-    case "rotation_axis":
-      spinRotationAxis = (String) field;
+    case "rotation_axis_xyz":
+      field = addSpinFrameExt("axisxyz");
       break;
     case "rotation_angle":
-      spinRotationAngle = parseDoubleField();
+      field = addSpinFrameExt("angle");
       break;
     case "collinear_direction":
-      spinCollinearDirection = (String) field;
+      field = addSpinFrameExt("coldir");
       break;
     case "coplanar_perp_uvw":
-      spinCoplanarPerpendicular = (String) field;
+      field = addSpinFrameExt("perpuvw");
+      break;
+    case "coplanar_perp_xyz":
+      field = addSpinFrameExt("perpxyz");
       break;
     default:
       System.err.println("CIFReader unrecognized spin key " + key);
       break;
     }
-    if (spinRotationAxis != null && spinRotationAngle != 0 && spinFrame != null && spinFrame.indexOf(";") < 0) {
-      spinFrame += ";axis=" + spinRotationAxis + ";angle=" + spinRotationAngle;
-    }
     appendUnitCellInfo(tag + "=" + field);
+  }
+
+  private String addSpinFrameExt(String name) {
+    String val = PT.replaceAllCharacters(field.toString(), "[]\"", "");
+    if (spinFrameExt == null)
+      spinFrameExt = "";
+    spinFrameExt += ";" + name + "=" + val + ";";
+    return val;
   }
 
   private Map<String, String> htCellTypes;
@@ -2069,6 +2080,7 @@ public class CifReader extends AtomSetCollectionReader {
                   field = (String) this.field;
                 break;
               case SYM_SPIN_OP_XYZ:
+                isSpinCIF = true;
                 timeRev = getTimeReversal(field);
                 if (timeRev != 0)
                   field = (String) this.field;
@@ -2082,7 +2094,7 @@ public class CifReader extends AtomSetCollectionReader {
                   ouvw = field;
                   continue;
                 }
-                ouvw = asc.getXSymmetry().getBaseSymmetry().transformUVW(field, spinFrame);
+                ouvw = asc.getXSymmetry().getBaseSymmetry().transformUVW(field, spinFrame, spinFrameExt);
                 field = oxyz + "(" + ouvw + ")";
                 timeRev = 0;// ignore here
               }               

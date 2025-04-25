@@ -1029,7 +1029,7 @@ public class ModelKit {
     bs.andNot(vwr.slm.getMotionFixedAtoms());
 
     vwr.rotateAboutPointsInternal(null, atomFix, atomMove, 0, degrees, false,
-        bs, null, null, null, null, true, null);
+        bs, null, null, null, null, null, true, null);
    }
 
   /**

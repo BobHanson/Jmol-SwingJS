@@ -144,7 +144,7 @@ public class Qd {
    * q = (cos(theta/2), sin(theta/2) * n)
    * 
    * @param pt
-   * @param theta
+   * @param theta degrees
    */
   public void setTA(T3d pt, double theta) {
     if (pt.x == 0 && pt.y == 0 && pt.z == 0) {
@@ -631,6 +631,12 @@ public class Qd {
     return A4d.newVA(v, theta);
   }
 
+  public A4d toA4dSigned() {
+    double theta = 2 * Math.acos(Math.abs(q0));
+    V3d v = getNormal();
+    return A4d.newVA(v, theta);
+  }
+  
   public T3d transform2(T3d pt, T3d ptNew) {
     if (mat == null)
       setMatrix();

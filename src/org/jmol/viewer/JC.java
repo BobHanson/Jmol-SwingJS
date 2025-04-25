@@ -1648,6 +1648,10 @@ public final class JC {
 
   public static final String FILE_DATA = "fileData";
   public static final String LOAD_OPTION_FILL_RANGE = "fillRange";
+  public static final String SPIN_ROTATION_MATRIX_APPLIED = "spinRotationMatrixApplied";
+  public static final String SPIN_ROTATION_AXIS_ANGLE_APPLIED = "spinRotationAxisAngleApplied";
+  public static final String SPIN_FRAME_ROTATION_MATRIX = "spinFrameRotationMatrix";
+  public static final String UC_MOREINFO = "moreUnitCellInfo";
   
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.

@@ -215,7 +215,7 @@ public abstract class ScriptExt {
     try {
       switch (e.tokAt(index)) {
       case T.varray:
-        points = e.getPointArray(index, -1, false);
+        points = e.getPointArray(index, -1, false, true);
         break;
       case T.define:
       case T.bitset:

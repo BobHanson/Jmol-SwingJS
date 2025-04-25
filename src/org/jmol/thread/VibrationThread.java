@@ -28,6 +28,11 @@ package org.jmol.thread;
 import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.A4d;
+import javajs.util.M3d;
+import javajs.util.Qd;
+import javajs.util.V3d;
+
 public class VibrationThread extends JmolThread {
 
   private TransformManager transformManager;

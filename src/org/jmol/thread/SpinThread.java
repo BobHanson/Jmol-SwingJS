@@ -29,6 +29,7 @@ package org.jmol.thread;
 import javajs.util.BS;
 import org.jmol.script.T;
 import javajs.util.Lst;
+import javajs.util.M3d;
 import javajs.util.M4d;
 
 import org.jmol.util.Logger;
@@ -60,6 +61,8 @@ public class SpinThread extends JmolThread {
   private boolean isDone = false;
   private M4d m4;
   private P3d ptemp;
+  private M3d vectorMatrix;
+  private M3d vm0;
   
   public SpinThread() {}
   
@@ -69,30 +72,27 @@ public class SpinThread extends JmolThread {
     transformManager = (TransformManager) manager;
     setViewer(vwr, "SpinThread");
     Object[] options = (Object[]) params;
-
-    //f//loat endDegrees, List<P3> endPositions, double[] dihedralList, BS bsAtoms, boolean isNav,
-    //boolean isGesture) {
-
-    //Double.valueOf(endDegrees), endPositions, dihedralList,
-    //bsAtoms, Boolean.valueOf(isGesture)} );
-
-    //        spinThread = new SpinThread(this, vwr, NULL 
-    //            === 0, null, null, null, true, false);
-
     if (options == null) {
       isNav = true;
     } else {
       endDegrees = ((Number) options[0]).doubleValue();
       endPositions = (Lst<P3d>) options[1];
       dihedralList = (double[]) options[2];
+      vectorMatrix = (M3d) options[3];
+      bsAtoms = (BS) options[4];
+      isGesture = (options[5] != null);
+      centerAndPoints = (P3d[][]) options[6];
       if (dihedralList != null)
         bsBranches = vwr.ms.getBsBranches(dihedralList);
-      bsAtoms = (BS) options[3];
-      isGesture = (options[4] != null);
-      centerAndPoints = (P3d[][]) options[5];
       if (centerAndPoints != null) {
         ptemp = new P3d();
-        nFrames = ((Integer) options[6]).intValue();
+        nFrames = ((Integer) options[7]).intValue();
+      }
+      if (vectorMatrix != null) {
+        vm0 = M3d.newM3(vectorMatrix);
+        angle = endDegrees;
+        endDegrees = Double.MAX_VALUE;
+        bsAtoms = null;
       }
     }
     return 0;
@@ -198,7 +198,8 @@ public class SpinThread extends JmolThread {
         mode = MAIN;
         break;
       case FINISH:
-        if (dihedralList != null) {
+        if (vectorMatrix != null) {
+        } else if (dihedralList != null) {
           vwr.setDihedrals(dihedralList, bsBranches, 0F);
         } else if (bsAtoms != null && endPositions != null) {
           // when the standard deviations of the end points was
@@ -220,7 +221,15 @@ public class SpinThread extends JmolThread {
 
   
   private void doTransform() {
-    if (centerAndPoints != null) {
+    if (vectorMatrix != null) {
+      if (Double.isNaN(vectorMatrix.getElement(0,0))) {
+        vectorMatrix.setElement(1, 1, nDegrees);
+      } else {
+        vectorMatrix.mul(vm0);
+      }
+      vwr.rotateModelSpinVectors(-1, vectorMatrix);
+      nDegrees = (nDegrees + angle) % 360;// / myFps;      
+    } else if (centerAndPoints != null) {
       double f = index * 1d / nFrames;
       vwr.ms.morphAtoms(bsAtoms, centerAndPoints, 0, f, ptemp);
     } else if (dihedralList != null) {

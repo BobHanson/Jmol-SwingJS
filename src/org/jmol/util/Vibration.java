@@ -66,6 +66,7 @@ public class Vibration extends V3d {
     Vibration v = new Vibration();
     v.setT(this);
     v.modDim = modDim;
+    v.magMoment = magMoment;
     return v;
   }
 

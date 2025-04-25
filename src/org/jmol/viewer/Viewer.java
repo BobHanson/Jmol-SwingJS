@@ -8171,7 +8171,8 @@ public class Viewer extends JmolViewer
                                            double endDegrees, boolean isSpin,
                                            BS bsSelected, V3d translation,
                                            Lst<P3d> finalPoints,
-                                           double[] dihedralList, M4d m4,
+                                           double[] dihedralList, M3d vectorMatrix,
+                                           M4d m4,
                                            boolean useModelKit,
                                            P3d[][] centerAndPoints) {
     // Eval: rotate INTERNAL
@@ -8187,8 +8188,8 @@ public class Viewer extends JmolViewer
 
     boolean isOK = tm.rotateAboutPointsInternal(eval, point1, point2,
         degreesPerSecond, endDegrees, false, isSpin, bsSelected, false,
-        translation, finalPoints, dihedralList, m4, useModelKit,
-        centerAndPoints);
+        translation, finalPoints, dihedralList, vectorMatrix, m4,
+        useModelKit, centerAndPoints);
     if (isOK)
       setSync();
     return isOK;
@@ -8203,7 +8204,7 @@ public class Viewer extends JmolViewer
       return;
     }
     tm.rotateAboutPointsInternal(null, pt1, pt2, g.pickingSpinRate,
-        Double.MAX_VALUE, isClockwise, true, null, false, null, null, null,
+        Double.MAX_VALUE, isClockwise, true, null, false, null, null, null, null,
         null, false, null);
   }
 
@@ -11395,6 +11396,16 @@ public class Viewer extends JmolViewer
     return getOutputManager().outputToFile(params);
   }
   
+  public void rotateModelSpinVectors(int modelIndex, M3d rot) {
+    if (modelIndex < 0)
+      modelIndex = am.cmi;
+    if (modelIndex < 0 || modelIndex >= ms.mc) 
+      return;
+    if (rot == null)
+      tm.setSpinOff();
+    ms.rotateModelSpinVectors(modelIndex, rot);      
+  }
+	  
   ////////////////// Jmol-SwingJS only //////////////
 
   private OpenChemLib ocl;
@@ -11404,5 +11415,5 @@ public class Viewer extends JmolViewer
       ocl = (OpenChemLib) Interface.getInterface("org.jmol.ocl.OpenChemLib", this, "script");
     return ocl;
   }
-  
+
 }

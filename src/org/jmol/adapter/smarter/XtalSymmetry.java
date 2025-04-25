@@ -51,6 +51,7 @@ import javajs.util.M4d;
 import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.PT;
+import javajs.util.Qd;
 import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
@@ -213,46 +214,42 @@ public class XtalSymmetry {
 
     String spinFrame;
     M4d spinFramePp;
-    private M4d spinFrameAxisAngleMatrix;
+    V3d perpUVW;
+    private M3d spinFrameRotationMatrix;
     private Set<String> uvwSet;
+    private String spinFrameAxisType;
     
-    public String transformUVW(String uvw, String spinFrame) {
+    public String transformUVW(String uvw, String spinFrame,
+                               String spinFrameExt) {
       if (spinFrame == null)
         return uvw;
       this.spinFrame = spinFrame;
       if (spinFramePp == null) {
-        System.out.println("XtalSymmetry.transformUVW using frame " + spinFrame);
-        String rotation = null;
-        int pt = spinFrame.indexOf(";axis");
-        if (pt >= 0) {
-          rotation = spinFrame.substring(pt + 1) + ";";
-          spinFrame = spinFrame.substring(0, pt);
-        }
+        System.out
+            .println("XtalSymmetry.transformUVW using frame " + spinFrame);
         spinFramePp = (M4d) convertTransform(spinFrame, null);
-        if (rotation != null) {
-          pt = rotation.indexOf("axis=");
-          if (pt >= 0) {
-            String strAxis = rotation.substring(pt + 5, rotation.indexOf(";"));
-            pt = rotation.indexOf("angle=");
-            if (pt >= 0) {
-              double angle = PT.parseDouble(rotation.substring(pt + 6, rotation.indexOf(";", pt)));
-              if (!Double.isNaN(angle) && angle != 0) { 
-                double[] abc = null; 
-                String[] v = strAxis.replace('[', ' ').replace(']', ' ').split(",");
-                if (v.length == 3) {
-                  abc = new double[3];
-                  for (int i = 3; --i >= 0;) {
-                    abc[i] = PT.parseDouble(v[i].trim());
-                    if (Double.isNaN(abc[i])) {
-                      abc = null;
-                      break;
-                    }
-                  }
-                }
-                if (abc != null) {
-                  spinFrameAxisAngleMatrix = new M4d();
-                  spinFrameAxisAngleMatrix.setToAA(A4d.newVA(V3d.new3(abc[0], abc[1], abc[2]), angle * (Math.PI / 180)));
-                }
+        spinFrameAxisType = "axisxyz";
+        String strAxis = getSpinExt(spinFrameExt, "axisxyz");
+        if (strAxis == null)
+          strAxis = getSpinExt(spinFrameExt, "axisxyz");
+        if (strAxis == null)
+          strAxis = getSpinExt(spinFrameExt, spinFrameAxisType = "perpuvw");
+        if (strAxis != null) {
+          double angle = PT.parseDouble(getSpinExt(spinFrameExt, "angle"));
+          if (!Double.isNaN(angle)) {
+            double[] abc;
+            if (strAxis.indexOf("n") >= 0) {
+              abc = getVariableAxis(strAxis);
+            } else {
+              abc = getCif2Array(strAxis, new double[3]);
+            }
+            if (abc != null) {
+              V3d axis = V3d.new3(abc[0], abc[1], abc[2]);
+              if(spinFrameAxisType.equals("perpuvw")) {
+                perpUVW = axis;
+              } else {
+                spinFrameRotationMatrix = new M3d().setAA(A4d.newVA(
+                  axis, angle * (Math.PI / 180)));
               }
             }
           }
@@ -263,6 +260,35 @@ public class XtalSymmetry {
         uvwSet.add(uvw);
       }
       return uvw;
+    }
+
+    private double[] getVariableAxis(String strAxis) {
+      P3d pt = P3d.new3(1, 1, 1);
+      strAxis.replace('n', ' ').replace('u','x').replace('v','y').replace('w','z');
+      M4d m = (M4d) convertTransform(strAxis, null);
+      m.rotate(pt);
+      return new double[]{pt.x, pt.y, pt.z};
+    }
+
+    private double[] getCif2Array(String strAxis, double[] abc) {
+      String[] v = strAxis.split(",");
+      if (v.length == abc.length) {
+        for (int i = abc.length; --i >= 0;) {
+          abc[i] = PT.parseDouble(v[i].trim());
+          if (Double.isNaN(abc[i])) {
+            return null;
+          }
+        }
+      }
+      return abc;
+    }
+
+    private String getSpinExt(String spinFrameExt, String name) {
+      if (spinFrameExt == null)
+        return null;
+      name = ";" + name + "=";
+      int pt = spinFrameExt.indexOf(name);
+      return (pt < 0 ? null : spinFrameExt.substring(pt + name.length(), spinFrameExt.indexOf(';', pt + 1)));
     }
 
     /**
@@ -277,11 +303,12 @@ public class XtalSymmetry {
      * subsystems. This method must be run PRIOR to applying symmetry and thus
      * prior to creation of modulation sets.
      * 
-     * @param asc 
-     * @param unitCellParams 
+     * @param asc
+     * @param unitCellParams
      * 
      */
-    protected void magneticMomentsToFractional(AtomSetCollection asc, double[] unitCellParams) {
+    protected void magneticMomentsToFractional(AtomSetCollection asc,
+                                               double[] unitCellParams) {
       double a = unitCellParams[0];
       double b = unitCellParams[1];
       double c = unitCellParams[2];
@@ -294,20 +321,34 @@ public class XtalSymmetry {
         a = spinABC[1].length();
         b = spinABC[2].length();
         c = spinABC[3].length();
-        if (spinFrameAxisAngleMatrix != null) {
-          rotateSpinFrameVectors(spinABC);          
+        if (perpUVW != null) {
+          spinFrameRotationMatrix = rotateUVWtoXYZ();
+        }
+        if (spinFrameRotationMatrix != null) {
+          rotateSpinFrameVectors(spinABC);
+          asc.setCurrentModelInfo(JC.SPIN_FRAME_ROTATION_MATRIX,
+              spinFrameRotationMatrix);
         }
       }
       P3d magneticScaling = P3d.new3(1 / a, 1 / b, 1 / c);
       int i0 = asc.getAtomSetAtomIndex(asc.iSet);
       for (int i = asc.ac; --i >= i0;) {
         // note, these are already in Cartesian coordinates
-        V3d v = asc.atoms[i].vib;
+        Vibration v = (Vibration) asc.atoms[i].vib;
         if (v != null) {
-          // apply (v.x*scaling.x, v.y*scaling.y, v.z*scaling.z)
           v.scaleT(magneticScaling);
+          v.magMoment = v.length();
         }
       }
+    }
+
+    private M3d rotateUVWtoXYZ() {
+      M4d inv = M4d.newM4(spinFramePp).invert();
+      M3d rot = new M3d();
+      inv.getRotationScale(rot);
+      rot.rotate(perpUVW);
+      toCartesian(perpUVW, true);
+      return Qd.newVA(perpUVW, 0).getMatrix();
     }
 
     private void rotateSpinFrameVectors(T3d[] spinABC) {
@@ -315,7 +356,7 @@ public class XtalSymmetry {
       for (int i = 4; --i > 0;) {
         // the ABC vectors are already in Cartesian coord
         v.setT(spinABC[i]);
-        spinFrameAxisAngleMatrix.rotate(v);
+        spinFrameRotationMatrix.rotate(v);
         unitCell.toFractional(v, true);
         spinFramePp.setColumn4(i - 1, v.x, v.y, v.z, 0);
       }

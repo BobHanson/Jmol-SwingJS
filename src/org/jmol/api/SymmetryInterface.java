@@ -6,6 +6,7 @@ import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.A4d;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3d;
@@ -289,5 +290,7 @@ public interface SymmetryInterface {
   Atom getConstrainableEquivAtom(Atom a);
 
   Object staticConvertOperation(String xyz, M4d matrix, String labels);
+
+  void setSpinAxisAngle(A4d aa);
 
 }
