@@ -1001,7 +1001,12 @@ public class ScriptMathProcessor {
         boolean isBond = x2.value instanceof BondSet;
         BS bs = BSUtil.copyInvert((BS) x2.value,
             (isBond ? vwr.ms.bondCount : vwr.ms.ac));
-        return addXBs(isBond ? BondSet.newBS(bs) : bs);
+        if (isBond) {
+          bs = BondSet.newBS(bs);
+        } else {
+          BSUtil.andNot(bs, vwr.slm.bsDeleted);
+        }
+        return addXBs(bs);
       default:
         return addXBool(!x2.asBoolean());
       }
