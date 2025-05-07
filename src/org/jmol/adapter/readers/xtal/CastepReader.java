@@ -561,58 +561,6 @@ public class CastepReader extends AtomSetCollectionReader {
     gamma = (abc[0].angle(abc[1]) * RAD_TO_DEG);
   }
 
-  private static String[] functions = { "sqrt","sin","cos","tan", "+", "-", "*", "/"}; 
-
-  private double parseCalcStr(String s) {
-    String[] parts;
-    double d = PT.parseDoubleStrict(s);
-    if (!Double.isNaN(d))
-      return d;
-    s = s.toLowerCase();
-    if (s.indexOf('(') >= 0) {
-      parts = PT.split(s, "(");
-      for (int i = parts.length - 1; --i >= 0;) {
-        String p = parts[i];
-        String f = null;
-        for (int j = functions.length; --j >= 0;) {
-          if (p.endsWith(functions[j])) {
-            f = functions[j];
-            break;
-          }
-        }
-        if (f == null) {
-          System.err.println("Unrecognized function " + s);
-          parts[i] += "?";
-        }
-      }
-      s = PT.join(parts, '(', 0);
-    }
-    // make sure all / are decimal 1/2 -> 1./2
-    if (s.indexOf('/') >= 0) {
-      parts = PT.split(s, "/");
-      for (int i = parts.length - 1; --i >= 0;) {
-        String p = parts[i];
-        boolean haveDecimal = false;
-        boolean haveDigit = false;
-        for (int j = p.length(); --j >= 0;) {
-          char c = p.charAt(j);
-          if (c == '.') {
-            haveDecimal = true;
-            break;
-          }
-          if (!PT.isDigit(c)) {
-            break;
-          }
-          haveDigit = true;
-        }
-        if (haveDigit && !haveDecimal)
-          parts[i] += ".";
-      }
-      s = PT.join(parts, '/', 0);
-    }
-    return vwr.evaluateExpressionAsVariable(s).asDouble();
-  }
-
   private void readPositionsFrac() throws Exception {
     if (tokenizeCastepCell() == 0)
       return;

@@ -877,6 +877,8 @@ public class SimpleUnitCell {
 
   public static double parseCalc(Viewer vwr, String[] functions, String s) {
     String[] parts;
+    if (s.startsWith("+"))
+      s = s.substring(1);
     double d = PT.parseDoubleStrict(s);
     if (!Double.isNaN(d))
       return d;
@@ -918,13 +920,17 @@ public class SimpleUnitCell {
             parts[i] += "*1.0";
             break;
           }
+          if (c == '.') {
+            haveDecimal = true;
+            break;
+          }
           if (!PT.isDigit(c)) {
             break;
           }
           haveDigit = true;
         }
         if (haveDigit && !haveDecimal)
-          parts[i] += ".";
+          parts[i] += ".0";
       }
       s = PT.join(parts, '/', 0);
     }

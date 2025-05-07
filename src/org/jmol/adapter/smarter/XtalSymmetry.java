@@ -83,7 +83,7 @@ public class XtalSymmetry {
     }
 
     public boolean addSpinLattice(Lst<String> lstSpinFrames) {
-      return spaceGroup.addSpinLattice(lstSpinFrames);
+      return spaceGroup.addSpinLattice(lstSpinFrames);// testing, xyz2uvw);
     }
 
     public boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
@@ -124,7 +124,7 @@ public class XtalSymmetry {
      */
     public void getRotTransArrayAndXYZ(String xyz, double[] rotTransMatrix) {
       SymmetryOperation.getRotTransArrayAndXYZ(null, xyz, rotTransMatrix, false,
-          true, false, null);
+          true, false, false, null);
     }
 
     public String getSpaceGroupOperationCode(int iOp) {

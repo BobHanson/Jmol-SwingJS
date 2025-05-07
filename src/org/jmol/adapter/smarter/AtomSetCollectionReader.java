@@ -2114,4 +2114,15 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
   }
 
+  private static String[] functions = { "sqrt","sin","cos","tan", "+", "-", "*", "/"}; 
+
+  public double parseCalcStr(String s) {
+    double f = SimpleUnitCell.parseCalc(vwr, functions, s);
+    if (Double.isNaN(f)) {
+      Logger.error("CASTEP math error in " + s);
+    }
+    return f;
+  }
+
+
 }

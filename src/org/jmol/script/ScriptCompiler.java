@@ -2564,7 +2564,9 @@ public class ScriptCompiler extends ScriptTokenParser {
   }
 
   private static boolean isSpaceOrTab(char ch) {
-    return ch == ' ' || ch == '\t';
+    return ch == ' ' || ch == '\t' //
+        || ch == 0x2002 // 8194 https://www.codetable.net/decimal/8194 en space
+        || ch == 0xA0; // 160 https://www.codetable.net/decimal/160 no-break space
   }
 
   /**

@@ -2090,11 +2090,13 @@ public class CifReader extends AtomSetCollectionReader {
                 }
                 //$FALL-THROUGH$
               case SYM_SPIN_OP_UVW:
-                if (oxyz == null) {
+                if (ouvw == null)
                   ouvw = field;
+                if (oxyz == null) {
                   continue;
                 }
-                ouvw = asc.getXSymmetry().getBaseSymmetry().transformUVW(field, spinFrame, spinFrameExt);
+                ouvw = parseUvwMath(ouvw);
+                ouvw = asc.getXSymmetry().getBaseSymmetry().transformUVW(ouvw, spinFrame, spinFrameExt);
                 field = oxyz + "(" + ouvw + ")";
                 timeRev = 0;// ignore here
               }               
@@ -2130,6 +2132,7 @@ public class CifReader extends AtomSetCollectionReader {
           if (lstSpinLattices == null) {
             lstSpinLattices = new Lst<String>();
           }
+          suvw = parseUvwMath(suvw);
           lstSpinLattices.addLast(sxyz + "(" + suvw + ")");
           suvw = null;
         }
@@ -2139,6 +2142,41 @@ public class CifReader extends AtomSetCollectionReader {
     if (ms != null && !isMag) {
       addLatticeVectors();
     }
+  }
+
+  private String parseUvwMath(String suvw) {
+    if (suvw.indexOf('(') < 0)
+      return suvw;
+    // 1/sqrt(3)u-2/sqrt(3)v,2/sqrt(3)u-1/sqrt(3)v,w
+    String[] parts = suvw.split(",");
+    if (parts.length != 3) {
+      System.err.println("CifReader.parseUvwMath? " + suvw);
+      return suvw;
+    }
+    for (int p = 0; p < parts.length; p++) {
+      String part = parts[p];
+      if (part.indexOf('(') < 0)
+        continue;
+      // 1/sqrt(3)u-2/sqrt(3)v
+      part = ',' + part;
+      for (int n = part.length(), i = n, pt = 0; --i >=0;) {
+        switch (part.charAt(i)) {
+        case ',':
+        case 'u':
+        case 'v':
+        case 'w':
+          if (pt > 0) {
+            double val = parseCalcStr(part.substring(i + 1, pt));
+            String sign = (i > 1 && val >= 0 ? "+" : "");
+            part = part.substring(0, i + 1) + sign + val + part.substring(pt);
+          }
+          pt = i;
+          break;
+        }
+      }
+      parts[p] = part.substring(1);
+    }   
+    return PT.join(parts, ',', 0);
   }
 
   private int getTimeReversal(String field) {

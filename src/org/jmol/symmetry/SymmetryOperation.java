@@ -516,12 +516,14 @@ public class SymmetryOperation extends M4d {
       int pt = xyz.indexOf("(");
       suvw = xyz.substring(pt + 1, xyz.length() - 1);
       xyz = xyz.substring(0, pt);
-      spinU = getMatrixFromXYZ(suvw, null, false);
+      double[] v = new double[16];
+      getRotTransArrayAndXYZ(null, suvw, v, true, false, false, true, "uvw");
+      spinU = M4d.newA16(v);
       timeReversal = (int) spinU.determinant3();
       allowScaling = false;      
     }
     String strOut = getRotTransArrayAndXYZ(this, xyz, linearRotTrans, allowScaling,
-        halfOrLess, true, null);
+        halfOrLess, true, false, null);
     if (strOut == null)
       return false;
     xyzCanonical = strOut;
@@ -632,9 +634,14 @@ public class SymmetryOperation extends M4d {
 
   public static M4d getMatrixFromXYZ(String xyz, double[] v,
                                      boolean halfOrLess) {
+    return getMatrixFromXYZScaled(xyz, v, halfOrLess);
+  }
+
+  public static M4d getMatrixFromXYZScaled(String xyz, double[] v,
+                                            boolean halfOrLess) {
     if (v == null)
       v = new double[16];
-    xyz = getRotTransArrayAndXYZ(null, xyz, v, false, halfOrLess, true, null);
+    xyz = getRotTransArrayAndXYZ(null, xyz, v, false, halfOrLess, true, false, null);
     if (xyz == null)
       return null;
     M4d m = new M4d();
@@ -649,7 +656,7 @@ public class SymmetryOperation extends M4d {
    */
   static String getJmolCanonicalXYZ(String xyz) {
     try {
-      return getRotTransArrayAndXYZ(null, xyz, null, false, true, true, null);
+      return getRotTransArrayAndXYZ(null, xyz, null, false, true, true, false, null);
     } catch (Exception e) {
       return null;
     }
@@ -674,7 +681,9 @@ public class SymmetryOperation extends M4d {
                                            double[] linearRotTrans,
                                            boolean allowScaling,
                                            boolean halfOrLess,
-                                           boolean retString, String labels) {
+                                           boolean retString, 
+                                           boolean rationalFractions,
+                                           String labels) {
     boolean isDenominator = false;
     boolean isDecimal = false;
     boolean isNegative = false;
@@ -763,13 +772,19 @@ public class SymmetryOperation extends M4d {
         if (allowScaling && iValue != 0) {
           if (linearRotTrans != null)
             linearRotTrans[xpt] = iValue;
+          if (iValue != (int) iValue) {
+            if (strOut != null)
+              strT += plusMinus(strT, iValue, myLabels[ipt], false, false);
+            iValue = 0;
+            break;
+          }
           val = (int) iValue;
           iValue = 0;
         } else if (linearRotTrans != null) {
           linearRotTrans[xpt] = val;
         }
         if (strOut != null)
-          strT += plusMinus(strT, val, myLabels[ipt], false);
+          strT += plusMinus(strT, val, myLabels[ipt], false, false);
         break;
       case ',':
         if (transPt != 0) {
@@ -828,7 +843,9 @@ public class SymmetryOperation extends M4d {
               isNegative = true;
             iValue += decimalMultiplier * ich * (isNegative ? -1 : 1);
             continue;
-          }
+          } else if (isNegative && ch == '0') {
+            continue;
+          }              
           if (isDenominator) {
             ret[0] = i;
             denom = PT.parseIntNext(xyz, ret);
@@ -1047,14 +1064,16 @@ public class SymmetryOperation extends M4d {
   //  };
   //
   private static String plusMinus(String strT, double x, String sx,
-                                  boolean allowFractions) {
+                                  boolean allowFractions, boolean anyFraction) {
     double a = Math.abs(x);
     double afrac = a%1; // -1.3333 and 1.3333 become 0.3333
-    return (a < 0.0001 ? ""
+    return (a < 0.0001d ? ""
         : (x < 0 ? "-" : strT.length() == 0 ? "" : "+")
-            + (a > 0.9999 && a <= 1.0001 ? ""
-                : afrac > 0.001 && allowFractions ? twelfthsOf(a * 12)
-                    : "" + (int) a))
+            + (a > 0.9999d && a <= 1.0001d ? ""
+                : afrac <= 0.001d && !allowFractions ? "" + (int) a 
+                : anyFraction ? "" + a 
+                : twelfthsOf(a * 12)
+                ))
         + sx;
   }
 
@@ -1092,13 +1111,15 @@ public class SymmetryOperation extends M4d {
   final public static String getXYZFromMatrix(M4d mat, boolean is12ths,
                                               boolean allPositive,
                                               boolean halfOrLess) {
-    return getXYZFromMatrixFrac(mat, is12ths, allPositive, halfOrLess, false, null);
+    return getXYZFromMatrixFrac(mat, is12ths, allPositive, halfOrLess, false, false, null);
   }
 
-  final public static String getXYZFromMatrixFrac(M4d mat, boolean is12ths,
+  public static String getXYZFromMatrixFrac(M4d mat, boolean is12ths,
                                                   boolean allPositive,
                                                   boolean halfOrLess,
-                                                  boolean allowFractions, String labels) {
+                                                  boolean allowFractions, 
+                                                  boolean anyFraction,
+                                                  String labels) {
     String str = "";
     SymmetryOperation op = (mat instanceof SymmetryOperation
         ? (SymmetryOperation) mat
@@ -1120,7 +1141,7 @@ public class SymmetryOperation extends M4d {
       for (int j = 0; j < 3; j++) {
         double x = row[j];
         if (approx(x) != 0) {
-          term += plusMinus(term, x, labels_[j + lpt], allowFractions);
+          term += plusMinus(term, x, labels_[j + lpt], allowFractions, anyFraction);
         }
       }
       if ((is12ths ? row[3] : approx(row[3])) != 0) {
@@ -1264,7 +1285,7 @@ public class SymmetryOperation extends M4d {
 
   String fixMagneticXYZ(M4d m, String xyz) {
     if (spinU != null)
-      return xyz + getSpecialString(spinU, "u", "v", "w");
+      return xyz + getSpecialString(spinU, "u", "v", "w", true, true);
     if (timeReversal == 0)
       return xyz;
     int pt = xyz.indexOf("m");
@@ -1276,13 +1297,14 @@ public class SymmetryOperation extends M4d {
     m2.m03 = m2.m13 = m2.m23 = 0;
     if (getMagneticOp() < 0)
       m2.scale(-1); // does not matter that we flip m33 - it is never checked
-    return xyz + getSpecialString(m2, "mx", "my", "mz");
+    return xyz + getSpecialString(m2, "mx", "my", "mz", false, false);
   }
 
   static String getSpecialString(M4d m, String x, String y,
-                                  String z) {
+                                  String z, boolean allowFractions, boolean anyFraction) {
     return "(" + PT.rep(
-        PT.rep(PT.rep(getXYZFromMatrix(m, false, false, false), "x", x),
+        PT.rep(PT.rep(
+            getXYZFromMatrixFrac(m, false, false, false, allowFractions, anyFraction, null), "x", x),
             "y", y),
         "z", z) + ")";
   }
@@ -2355,13 +2377,13 @@ public class SymmetryOperation extends M4d {
       }
       t.setColumnA(3, v);
     }
-    return getXYZFromMatrixFrac(t, false, true, false, allowFractions, null);
+    return getXYZFromMatrixFrac(t, false, true, false, allowFractions, false, null);
   }
 
   static M4d stringToMatrix(String xyz, String labels) {
     int divisor = setDivisor(xyz);
     double[] a = new double[16];
-    getRotTransArrayAndXYZ(null, xyz, a, true, false, false, labels);
+    getRotTransArrayAndXYZ(null, xyz, a, true, false, false, false, labels);
     return div12(M4d.newA16(a), divisor);
   }
 
@@ -2376,7 +2398,7 @@ public class SymmetryOperation extends M4d {
     m.add(tr);
     m.transpose();
     String s = SymmetryOperation
-        .getXYZFromMatrixFrac(m, false, true, false, true, null).replace('x', 'a')
+        .getXYZFromMatrixFrac(m, false, true, false, true, false, null).replace('x', 'a')
         .replace('y', 'b').replace('z', 'c');
     if (tr.lengthSquared() < 1e-12d)
       return s;
@@ -2492,7 +2514,7 @@ public class SymmetryOperation extends M4d {
     }
     return (toMat ? matrix
         : getXYZFromMatrixFrac(matrix, false, false, false,
-            true, labels));
+            true, false, labels));
   }
 
   // https://crystalsymmetry.wordpress.com/space-group-diagrams/

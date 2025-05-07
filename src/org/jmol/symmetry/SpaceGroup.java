@@ -1506,43 +1506,77 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * @param lstSpinFrames
    * @return true if magnetic
    */
-  public boolean addSpinLattice(Lst<String> lstSpinFrames) {
+  public boolean addSpinLattice(Lst<String> lstSpinFrames) {//, M4d xyz2uvw) {
     if (latticeOp >= 0 || lstSpinFrames.size() == 0)
       return false;
-    latticeOp = operationCount;
-    for (int j = 0; j < lstSpinFrames.size(); j++) {
+    int nOps = operationCount;
+    //    M4d u0 = new M4d();
+    //    M4d uvw2xyz = M4d.newM4(xyz2uvw);
+    //    uvw2xyz.invert();
+    for (int j = 0, nf = lstSpinFrames.size(); j < lstSpinFrames.size(); j++) {
       String frameXyzUvw = lstSpinFrames.get(j);
       if (frameXyzUvw.equals("x,y,z(u,v,w)"))
-          continue;
-      int nOps = operationCount;
-      SymmetryOperation latticeOp = new SymmetryOperation(null, 0, true); // must normalize these
-      latticeOp.setMatrixFromXYZ(frameXyzUvw, 0, false);
-      latticeOp.doFinalize();
+        continue;
+      SymmetryOperation symop = new SymmetryOperation(null, 0, true); // must normalize these
+      symop.setMatrixFromXYZ(frameXyzUvw, 0, false);
+      //      M4d m0 = (j < nf ? M4d.newM4(symop) : null);
+      symop.doFinalize();
+      M4d u = null;
+      if (symop.spinU != null) {
+        u = M4d.newM4(symop.spinU);
+//        u.transpose33();
+      }
+      
+      //       if (m0 != null) {
+      //        M4d m1 = M4d.newM4(m0);
+      //        u0.mul2(symop.spinU, xyz2uvw);
+      //        u0.mul2(uvw2xyz, u0);
+      //        P3d p = P3d.new3(0.57, 1.15, 0);
+      //        symop.spinU.rotate(p);
+      //        M4d u1 = M4d.newM4(u0);
+      //        M4d u2 = new M4d();
+      //        while (true) {
+      //          m1.mul(m0);
+      //          if (m1.m03 % 12 == 0 && m1.m13 % 12 == 0 && m1.m23 % 12 == 0)
+      //            break;
+      //          u1.mul(u0);
+      //          u2.mul2(u1, uvw2xyz);
+      //          u2.mul2(xyz2uvw, u1);
+      //          String xyz = SymmetryOperation.getXYZFromMatrix(m1, true, true, false);
+      //          String uvw = SymmetryOperation.getXYZFromMatrixFrac(u2, false, true, false, true, true, "uvw");
+      //          lstSpinFrames.addLast(xyz + "(" + uvw + ")");
+      //        }
+      //      }
+      int pt = operationCount;
       for (int i = 0; i < nOps; i++) {
         SymmetryOperation op = symmetryOperations[i];
         op.doFinalize();
         SymmetryOperation newOp = new SymmetryOperation(op, 0, true); // must normalize these
         newOp.doFinalize();
-        newOp.mul(latticeOp);
+        newOp.mul(symop);
         M4d spinU;
-        if (op.spinU == null) {
+        if (u != null) {
           spinU = new M4d();
           spinU.setIdentity();
         } else {
-          spinU = M4d.newM4(op.spinU);
+          spinU = M4d.newM4(u);
         }
-        // 12ths here?
-        if (latticeOp.spinU != null)
-          spinU.mul(latticeOp.spinU);
+        if (u != null)
+          spinU.mul(u);
         newOp.modDim = modDim; // todo
         newOp.divisor = op.divisor;
-        //newOp.linearRotTrans = AU.arrayCopyD(op.linearRotTrans, -1);
-        String xyz = SymmetryOperation.getXYZFromMatrix(newOp, false, true, false)
-             + SymmetryOperation.getSpecialString(spinU, "u", "v", "w");
-        addOperation(xyz, nOps + i, false);
-        symmetryOperations[nOps + i].doFinalize();
+        String xyz = SymmetryOperation.getXYZFromMatrix(newOp, false, true,
+            false)
+            + SymmetryOperation.getSpecialString(spinU, "u", "v", "w", true,
+                true);
+        int iop = addOperation(xyz, pt, true);
+//        System.out.println("SG operation " + frameXyzUvw
+//            + " " + iop + " \n" + xyz + "\n" + spinU);
+        symmetryOperations[iop].doFinalize();
+        pt++;
       }
     }
+    latticeOp = nOps;
     return true;
   }
 
