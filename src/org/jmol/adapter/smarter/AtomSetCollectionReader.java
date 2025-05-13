@@ -1570,8 +1570,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       moreUnitCellInfo = null;
     }
     finalizeSubclassSymmetry(sym != null);
-    //if (sym != null && ptSupercell != null)
-    //asc.getXSymmetry().finalizeUnitCell(ptSupercell);
 
     if (merging && sym != null && iHaveFractionalCoordinates && iHaveUnitCell
         && iHaveSymmetryOperators) {

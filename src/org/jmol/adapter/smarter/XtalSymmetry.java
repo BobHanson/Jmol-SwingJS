@@ -212,54 +212,133 @@ public class XtalSymmetry {
               ptTemp, mTemp));
     }
 
+    //////////////////////  Magnetic and Spin Space Groups ///////////////
+    
+    /**
+     * 
+     */
     String spinFrame;
-    M4d spinFramePp;
+    private String spinFrameExt;
+    M4d spinFramePp, spinFrameXyz;
     V3d perpUVW;
-    private M3d spinFrameRotationMatrix;
-    private Set<String> uvwSet;
     private String spinFrameAxisType;
+    private M3d spinFrameRotationMatrix;
+    protected int nSpins;
     
     public String transformUVW(String uvw, String spinFrame,
                                String spinFrameExt) {
-      if (spinFrame == null)
-        return uvw;
-      this.spinFrame = spinFrame;
-      if (spinFramePp == null) {
-        System.out
-            .println("XtalSymmetry.transformUVW using frame " + spinFrame);
-        spinFramePp = (M4d) convertTransform(spinFrame, null);
-        spinFrameAxisType = "axisxyz";
-        String strAxis = getSpinExt(spinFrameExt, "axisxyz");
-        if (strAxis == null)
-          strAxis = getSpinExt(spinFrameExt, "axisxyz");
-        if (strAxis == null)
-          strAxis = getSpinExt(spinFrameExt, spinFrameAxisType = "perpuvw");
-        if (strAxis != null) {
-          double angle = PT.parseDouble(getSpinExt(spinFrameExt, "angle"));
-          if (!Double.isNaN(angle)) {
-            double[] abc;
-            if (strAxis.indexOf("n") >= 0) {
-              abc = getVariableAxis(strAxis);
+      if (!spinFrame.equals(this.spinFrame)) {
+        this.spinFrame = spinFrame;
+        this.spinFrameExt = spinFrameExt;
+        spinFramePp = spinFrameXyz = null;
+      }
+      return uvw;
+    }
+ 
+    /**
+     * Scale the magnetic moments of magCIF and spinCIF files.
+     * 
+     * magCIF files have moments expressed as Bohr magnetons along the
+     * crystallographic axes. These have to be "fractionalized" in order to be
+     * properly handled by symmetry operations, then, in the end, turned into
+     * Cartesians (in setSpinVectors)
+     * 
+     * It is not clear to me at all how this would be handled if there are
+     * subsystems. This method must be run PRIOR to applying symmetry and thus
+     * prior to creation of modulation sets.
+     * 
+     * @param asc
+     * @param unitCellParams
+     * 
+     */
+    protected void magneticMomentsToFractional(AtomSetCollection asc,
+                                               double[] unitCellParams) {
+      double a = unitCellParams[0];
+      double b = unitCellParams[1];
+      double c = unitCellParams[2];
+      if (spinFrame != null) {
+        T3d[] spinABC = setSpinFrameMatrices(unitCellParams);
+        a = spinABC[1].length();
+        b = spinABC[2].length();
+        c = spinABC[3].length();
+        if (perpUVW != null) {
+          M4d inv = M4d.newM4(spinFramePp).invert();
+          M3d rot = new M3d();
+          inv.getRotationScale(rot);
+          rot.rotate(perpUVW);
+          toCartesian(perpUVW, true);
+          spinFrameRotationMatrix = Qd.newVA(perpUVW, 0).getMatrix();
+        }
+        // now set spinFrameXyz
+        spinFrameXyz = new M4d();
+        P3d v = new P3d();
+        for (int i = 4; --i > 0;) {
+          // the ABC vectors are already in Cartesian coord
+          v.setT(spinABC[i]);
+          if (spinFrameRotationMatrix != null)
+            spinFrameRotationMatrix.rotate(v);
+          spinFrameXyz.setColumn4(i - 1, v.x, v.y, v.z, 0);
+        }
+        System.out.println("XtalSymmetry spinFramePp=" + spinFramePp + "\nspinFrameXyz=" + spinFrameXyz);
+        if (spinFrameRotationMatrix != null)
+          asc.setCurrentModelInfo(JC.SPIN_FRAME_ROTATION_MATRIX,
+              spinFrameRotationMatrix);
+      }
+      P3d magneticScaling = P3d.new3(1 / a, 1 / b, 1 / c);
+      int i0 = asc.getAtomSetAtomIndex(asc.iSet);
+      for (int i = asc.ac; --i >= i0;) {
+        // note, these are already in Cartesian coordinates
+        Vibration v = (Vibration) asc.atoms[i].vib;
+        if (v != null) {
+          v.scaleT(magneticScaling);
+          v.magMoment = v.length();
+        }
+      }
+    }
+
+    /**
+     * Process the spin frame settings for SSGs.
+     * @param unitCellParams 
+     * @return spin frame [origin, a, b, c] 
+     */
+    private T3d[] setSpinFrameMatrices(double[] unitCellParams) {
+      System.out.println("XtalSymmetry.transformUVW using frame " + spinFrame);
+      // the vectors are based on the spin frame, not the real frame
+      // we create a unit cell for this FileSymmetry just 
+      // for this purpose
+      setUnitCellFromParams(unitCellParams, false, Double.NaN);
+      spinFramePp = (M4d) convertTransform(spinFrame, null);
+      spinFramePp = new M4d();
+      T3d[] spinABC = UnitCell.getMatrixAndUnitCell(unitCell, spinFrame, spinFramePp);
+//      UnitCell.getMatrixAndUnitCell((transform.indexOf("*") >= 0 ? unitCell : null), transform, spinFramePp);
+
+      spinFrameAxisType = "axisxyz";
+      String strAxis = getSpinExt(spinFrameExt, "axisxyz");
+      if (strAxis == null)
+        strAxis = getSpinExt(spinFrameExt, "axisxyz");
+      if (strAxis == null)
+        strAxis = getSpinExt(spinFrameExt, spinFrameAxisType = "perpuvw");
+      if (strAxis != null) {
+        double angle = PT.parseDouble(getSpinExt(spinFrameExt, "angle"));
+        if (!Double.isNaN(angle)) {
+          double[] abc;
+          if (strAxis.indexOf("n") >= 0) {
+            abc = getVariableAxis(strAxis);
+          } else {
+            abc = getCif2Array(strAxis, new double[3]);
+          }
+          if (abc != null) {
+            V3d axis = V3d.new3(abc[0], abc[1], abc[2]);
+            if (spinFrameAxisType.equals("perpuvw")) {
+              perpUVW = axis;
             } else {
-              abc = getCif2Array(strAxis, new double[3]);
-            }
-            if (abc != null) {
-              V3d axis = V3d.new3(abc[0], abc[1], abc[2]);
-              if(spinFrameAxisType.equals("perpuvw")) {
-                perpUVW = axis;
-              } else {
-                spinFrameRotationMatrix = new M3d().setAA(A4d.newVA(
-                  axis, angle * (Math.PI / 180)));
-              }
+              spinFrameRotationMatrix = new M3d()
+                  .setAA(A4d.newVA(axis, angle * (Math.PI / 180)));
             }
           }
         }
-        uvwSet = new HashSet<String>();
       }
-      if (!uvwSet.contains(uvw)) {
-        uvwSet.add(uvw);
-      }
-      return uvw;
+      return spinABC;
     }
 
     private double[] getVariableAxis(String strAxis) {
@@ -292,106 +371,37 @@ public class XtalSymmetry {
     }
 
     /**
-     * Scale the magnetic moments of magCIF and spinCIF files.
+     * At the end, we need to rescale the vectors using SpinFramePp.
      * 
-     * magCIF files have moments expressed as Bohr magnetons along the
-     * crystallographic axes. These have to be "fractionalized" in order to be
-     * properly handled by symmetry operations, then, in the end, turned into
-     * Cartesians (in setSpinVectors)
-     * 
-     * It is not clear to me at all how this would be handled if there are
-     * subsystems. This method must be run PRIOR to applying symmetry and thus
-     * prior to creation of modulation sets.
-     * 
-     * @param asc
-     * @param unitCellParams
-     * 
-     */
-    protected void magneticMomentsToFractional(AtomSetCollection asc,
-                                               double[] unitCellParams) {
-      double a = unitCellParams[0];
-      double b = unitCellParams[1];
-      double c = unitCellParams[2];
-      if (spinFramePp != null) {
-        // the vectors are based on the spin frame, not the real frame
-        // we create a unit cell for this FileSymmetry just 
-        // for this purpose
-        setUnitCellFromParams(unitCellParams, false, Double.NaN);
-        T3d[] spinABC = getV0abc(spinFrame, null);
-        a = spinABC[1].length();
-        b = spinABC[2].length();
-        c = spinABC[3].length();
-        if (perpUVW != null) {
-          spinFrameRotationMatrix = rotateUVWtoXYZ();
-        }
-        if (spinFrameRotationMatrix != null) {
-          rotateSpinFrameVectors(spinABC);
-          asc.setCurrentModelInfo(JC.SPIN_FRAME_ROTATION_MATRIX,
-              spinFrameRotationMatrix);
-        }
-      }
-      P3d magneticScaling = P3d.new3(1 / a, 1 / b, 1 / c);
-      int i0 = asc.getAtomSetAtomIndex(asc.iSet);
-      for (int i = asc.ac; --i >= i0;) {
-        // note, these are already in Cartesian coordinates
-        Vibration v = (Vibration) asc.atoms[i].vib;
-        if (v != null) {
-          v.scaleT(magneticScaling);
-          v.magMoment = v.length();
-        }
-      }
-    }
-
-    private M3d rotateUVWtoXYZ() {
-      M4d inv = M4d.newM4(spinFramePp).invert();
-      M3d rot = new M3d();
-      inv.getRotationScale(rot);
-      rot.rotate(perpUVW);
-      toCartesian(perpUVW, true);
-      return Qd.newVA(perpUVW, 0).getMatrix();
-    }
-
-    private void rotateSpinFrameVectors(T3d[] spinABC) {
-      P3d v = new P3d();
-      for (int i = 4; --i > 0;) {
-        // the ABC vectors are already in Cartesian coord
-        v.setT(spinABC[i]);
-        spinFrameRotationMatrix.rotate(v);
-        unitCell.toFractional(v, true);
-        spinFramePp.setColumn4(i - 1, v.x, v.y, v.z, 0);
-      }
-    }
-
-    protected int nVib;
-
-    /**
-     * At the end, we need to rescale the vectors.
      * @param asc 
-     * 
-     * @return number of vectors
+     * @return number of nonzero or incommensurate spins
      */
-    protected int setSpinVectors(AtomSetCollection asc) {
+    protected int setMagneticMoments(AtomSetCollection asc) {
       // return spin vectors to cartesians
-      if (nVib > 0)
-        return nVib; // already done
+      if (nSpins > 0)
+        return nSpins; // already done
       int i0 = asc.getAtomSetAtomIndex(asc.iSet);
       for (int i = asc.ac; --i >= i0;) {
         Vibration v = (Vibration) asc.atoms[i].vib;
         if (v != null) {
           if (v.modDim > 0) {
             ((JmolModulationSet) v).setMoment();
+            nSpins++;
           } else {
             v = (Vibration) v.clone(); // this could be a modulation set
-            if (spinFramePp != null) {
-              spinFramePp.rotate(v);
+            if (spinFrameXyz != null) {
+              spinFrameXyz.rotate(v);
             }
-            toCartesian(v, true);
+            if (v.lengthSquared() > 0) {
+              nSpins++;
+            } else {
+              v = null;
+            }
             asc.atoms[i].vib = v;
           }
-          nVib++;
         }
       }
-      return nVib;
+      return nSpins;
     }
 
   }
@@ -821,6 +831,8 @@ public class XtalSymmetry {
 
   /**
    * Get the symmetry that was in place prior to any supercell business.
+   * Only different from symmetry field if
+   * applySymmetryLattice() has set some sort of special range.
    * 
    * @return base symmetry
    */
@@ -828,15 +840,20 @@ public class XtalSymmetry {
     return (baseSymmetry == null ? symmetry : baseSymmetry);
   }
 
+  /**
+   * Get the symmetry.
+   *  
+   * @return symmetry field
+   */
+  public FileSymmetry getSymmetry() {
+    return (symmetry == null ? (symmetry = new FileSymmetry()) : symmetry);
+  }
+
   public T3d getOverallSpan() {
     return (maxXYZ0 == null
         ? V3d.new3(maxXYZ.x - minXYZ.x, maxXYZ.y - minXYZ.y,
             maxXYZ.z - minXYZ.z)
         : V3d.newVsub(maxXYZ0, minXYZ0));
-  }
-
-  public FileSymmetry getSymmetry() {
-    return (symmetry == null ? (symmetry = new FileSymmetry()) : symmetry);
   }
 
   public boolean isWithinCell(int ndims, P3d pt, double minX, double maxX,
@@ -869,6 +886,16 @@ public class XtalSymmetry {
     if (andSetLattice && symmetry.getSpaceGroupOperationCount() == 1)
       setLatticeCells();
     return symmetry.addSpaceGroupOperation(xyz, 0);
+  }
+
+  /**
+   * From AtomSetCollectionReader.setSymmtryFromAuditBlock only
+   * 
+   * @param symmetry
+   * @return FileSymmetry
+   */
+  FileSymmetry setSymmetryFromAuditBlock(FileSymmetry symmetry) {
+    return (this.symmetry = symmetry);
   }
 
   /**
@@ -930,8 +957,26 @@ public class XtalSymmetry {
     return symmetry;
   }
 
-  FileSymmetry setSymmetry(FileSymmetry symmetry) {
-    return (this.symmetry = symmetry);
+  /**
+   * from XtalSymmetry.applySymmetryFromReader via CifReader and JanaReader doPreSymmetry
+   */
+  public void scaleFractionalVibs() {
+    getSymmetry().magneticMomentsToFractional(asc, acr.unitCellParams);
+  }
+
+  /**
+   * One of the last things to do for a spin space group: 
+   * Set the spin vectors, possibly based on spinFrameXyz.
+   * 
+   * From CifReader.finalizeSubclassSymmetry after supercell business.
+   * 
+   * @return number of atoms with nonzero spin (atom.vib)
+   */
+  public int setMagneticMoments() {
+    // We use the base symmetry here, because we do not want to 
+    // be working with a supercell or specific range.
+    return (asc.iSet < 0 || !acr.vibsFractional ? 0 
+        : getBaseSymmetry().setMagneticMoments(asc));
   }
 
   void setTensors() {
@@ -1402,7 +1447,7 @@ public class XtalSymmetry {
     }
     T3d[] oabc = null;
     double slop = 1e-6d;
-    baseSymmetry.nVib = 0;
+    baseSymmetry.nSpins = 0;
     String supercell = acr.strSupercell;
     boolean isSuper = (supercell != null && supercell.indexOf(",") >= 0);
     M4d matSuper = null;
@@ -1611,8 +1656,10 @@ public class XtalSymmetry {
   /**
    * Establish a range of cells that cover the desired range.
    * 
+   * Called by applySymmetryLattice.
+   * 
    * @param latticetype
-   *        "conventional", "primitive", "R",
+   *        "conventional", "primitive", "R", "spin", others
    * @param rangeType
    * @return range as T3d[] or null
    */
@@ -2058,15 +2105,6 @@ public class XtalSymmetry {
 
   public FileSymmetry newFileSymmetry() {
     return new FileSymmetry();
-  }
-
-  public void scaleFractionalVibs() {
-    getBaseSymmetry().magneticMomentsToFractional(asc, acr.unitCellParams);
-  }
-
-  public int setSpinVectors() {
-    return (asc.iSet < 0 || !acr.vibsFractional ? 0 
-        : getBaseSymmetry().setSpinVectors(asc));
   }
 
 }

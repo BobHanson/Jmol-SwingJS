@@ -313,8 +313,12 @@ abstract public class __CartesianExporter extends ___Exporter {
     }    
     // vectors, polyhedra
     // was (int) in older version
-    int mad = (screenDiameter < 0 ? -screenDiameter * 10 : (int) Math.round(vwr.tm.unscaleToScreen((screenA.z + screenB.z) / 2,
-        screenDiameter)) * 1000);
+    int mad = (
+        screenDiameter < 0 ? -screenDiameter * 10 
+            : (int) Math.round(
+                vwr.tm.unscaleToScreen((screenA.z + screenB.z) / 2, screenDiameter)
+                * 1000)
+            );
     fillCylinderScreenMad(colix, endcaps, mad, screenA, screenB);
   }
 

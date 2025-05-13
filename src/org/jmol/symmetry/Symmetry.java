@@ -2128,7 +2128,7 @@ public class Symmetry implements SymmetryInterface {
     }
     if (trm == null)
       trm = new M4d();
-    UnitCell.getMatrixAndUnitCell(null, transform, trm);
+    UnitCell.getMatrixAndUnitCell((transform.indexOf("*") >= 0 ? unitCell : null), transform, trm);
     return trm;
   }
 

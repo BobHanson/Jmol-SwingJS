@@ -709,8 +709,6 @@ public class SymmetryOperation extends M4d {
     }
     int rotPt = -1;
     String[] myLabels = getLabels(labels,(op == null || modDim == 0 ? null : op.myLabels));
-    if (myLabels == null)
-      myLabels = labelsXYZ;
     xyz = xyz.toLowerCase() + ",";
     xyz = xyz.replace('(', ',');
     //        load =magndata/1.23
@@ -1103,6 +1101,7 @@ public class SymmetryOperation extends M4d {
   //
   final static String[] labelsXYZ = new String[] { "x", "y", "z" };
   final static String[] labelsUVW = new String[] { "u", "v", "w" };
+  final static String[] labelsMXYZ = new String[] { "mx", "my", "mz" };
   final static String[] labelsXn = new String[] { "x1", "x2", "x3", "x4", "x5",
       "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13" };
   final static String[] labelsXnSub = new String[] { "x", "y", "z", "a", "b",
@@ -1157,9 +1156,14 @@ public class SymmetryOperation extends M4d {
   }
 
   private static String[] getLabels(String labels, String[] defLabels) {
-    return (labels == null ? defLabels 
-        : "uvw".equals(labels) ? labelsUVW 
-        : labelsXYZ); 
+    if (labels != null)
+      switch (labels) {
+      case "uvw":
+        return labelsUVW;
+      case "mxyz":
+        return labelsMXYZ;
+      }
+    return (defLabels == null ? labelsXYZ : defLabels);
   }
 
   public V3d[] rotateAxes(V3d[] vectors, UnitCell unitcell, P3d ptTemp, M3d mTemp) {
@@ -1285,7 +1289,7 @@ public class SymmetryOperation extends M4d {
 
   String fixMagneticXYZ(M4d m, String xyz) {
     if (spinU != null)
-      return xyz + getSpecialString(spinU, "u", "v", "w", true, true);
+      return xyz + getSpinString(spinU, true);
     if (timeReversal == 0)
       return xyz;
     int pt = xyz.indexOf("m");
@@ -1297,16 +1301,11 @@ public class SymmetryOperation extends M4d {
     m2.m03 = m2.m13 = m2.m23 = 0;
     if (getMagneticOp() < 0)
       m2.scale(-1); // does not matter that we flip m33 - it is never checked
-    return xyz + getSpecialString(m2, "mx", "my", "mz", false, false);
+    return xyz + getSpinString(m2, false);
   }
 
-  static String getSpecialString(M4d m, String x, String y,
-                                  String z, boolean allowFractions, boolean anyFraction) {
-    return "(" + PT.rep(
-        PT.rep(PT.rep(
-            getXYZFromMatrixFrac(m, false, false, false, allowFractions, anyFraction, null), "x", x),
-            "y", y),
-        "z", z) + ")";
+  static String getSpinString(M4d m, boolean isUVW) {
+     return "(" + getXYZFromMatrixFrac(m, false, false, false, isUVW, isUVW, (isUVW ? "uvw" : "mxyz")) + ")";
   }
 
   public Map<String, Object> getInfo() {

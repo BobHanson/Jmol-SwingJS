@@ -796,10 +796,10 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
    *        preceded by ! for "reverse of". For example,
    *        "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, and can be a
    *        definition such as "a=3.40,b=4.30,c=5.02,alpha=90,beta=90,gamma=129"
+   *        also allows for reciprocal lattice a*, b*, c
    * @param retMatrix
    *        if a string, return the 4x4 matrix corresponding to this definition;
    *        may be null to ignore
-   * 
    * @return [origin va vb vc]
    */
   public static T3d[] getMatrixAndUnitCell(SimpleUnitCell uc, Object def,
@@ -870,18 +870,39 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         sdef = HEX_TO_RHOMB + sdef.substring(1);
       else if (sdef.equals("h;0,0,0"))
         sdef = RHOMB_TO_HEX + sdef.substring(1);
-      Symmetry symTemp = new Symmetry(); // no vwr here
-      symTemp.setSpaceGroup(false);
-      int i = symTemp.addSpaceGroupOperation("=" + sdef, 0);
-      if (i < 0)
-        return null;
-      m = symTemp.getSpaceGroupOperation(i);
-      ((SymmetryOperation) m).doFinalize();
-      P3d t = new P3d();
-      addTrans(strans, t);
-      addTrans(strans2, t);
-      m.setTranslation(t);
-      boolean isABC = sdef.indexOf("x") < 0 && (sdef.indexOf("a") >= 0 || sdef.indexOf("b") >= 0 || sdef.indexOf("c") >= 0);
+
+      boolean isABC = sdef.indexOf("x") < 0 && (sdef.indexOf("a") >= 0
+          || sdef.indexOf("b") >= 0 || sdef.indexOf("c") >= 0);
+      if (isABC && sdef.indexOf("*") >= 0 && uc != null) {
+        // These will have been ignored;
+        // get the reciprocal lattice.
+        // 
+        M4d mSpinPp = M4d.newM4(null);
+        T3d[] oabc = getMatrixAndUnitCell(uc, "a,b,c", mSpinPp);
+        getMatrixAndUnitCell(null, sdef.replace('*', ' '),
+            mSpinPp);
+        // this is in xyz, but we need it in abc
+        boolean[] flags = new boolean[] { 
+            (sdef.indexOf("a*") >= 0),
+            (sdef.indexOf("b*") >= 0), 
+            (sdef.indexOf("c*") >= 0) };
+        m = M4d.newM4(null);
+        adjustForReciprocal(uc, oabc, mSpinPp, flags, m, pts);
+        uc = null; // pts are already set
+      } else {
+        Symmetry symTemp = new Symmetry(); // no vwr here
+        symTemp.setSpaceGroup(false);
+
+        int i = symTemp.addSpaceGroupOperation("=" + sdef, 0);
+        if (i < 0)
+          return null;
+        m = symTemp.getSpaceGroupOperation(i);
+        ((SymmetryOperation) m).doFinalize();
+        P3d t = new P3d();
+        addTrans(strans, t);
+        addTrans(strans2, t);
+        m.setTranslation(t);
+      }
       if (isABC) {
         m.transpose33();
       }
@@ -930,6 +951,51 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       uc.toCartesian(pts[i], true);
     }
     return pts;
+  }
+
+  /**
+   * Just replace a with a*, b with b*, c with c*. 
+   * Note if one a* is in the formula, then ALL a are a*. 
+   * Does not support a,b,a* for example.
+   * 
+   * @param uc 
+   * @param oabc
+   *        the Cartesian cell lattice vectors o, a, b, c
+   * @param mSpinPp
+   *        the coefficients for the spin setting ignoring asterisks
+   * @param flags
+   *        true for a*, b*, or c
+   * @param mRet
+   *        the array to fill 
+   * @param pts
+   *        the Cartesian result o a' b' c'
+   *
+   */
+  private static void adjustForReciprocal(SimpleUnitCell uc, T3d[] oabc,
+                                          M4d mSpinPp, boolean[] flags, M4d mRet,
+                                          P3d[] pts) {
+    T3d[] recipOABC = new T3d[4];
+    getReciprocal(oabc, recipOABC, 1);
+    P3d t = new P3d();
+    double[] abc = new double[4];
+    for (int i = 1; i <= 3; i++) {
+      P3d vnew = new P3d();
+      mSpinPp.getColumn(i - 1, abc);
+      for (int j = 0; j < 3; j++) {
+        if (abc[j] == 0)
+          continue;
+        vnew.scaleAdd(abc[j], (flags[j] ? recipOABC[1 + j] : oabc[1 + j]), vnew);
+      }
+      pts[i] = vnew;
+      t.setP(vnew);
+      uc.toFractional(t, true);
+      mRet.setColumn4(i - 1, fixZero(t.x, 1e-10), fixZero(t.y, 1e-10), fixZero(t.z, 1e-10), 0);
+    }        
+  }
+
+  
+  private static double fixZero(double x, double err) {
+    return (Math.abs(x) < err ? 0 : x);
   }
 
   private static void addTrans(String strans, P3d t) {

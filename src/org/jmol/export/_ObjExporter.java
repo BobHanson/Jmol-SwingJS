@@ -684,7 +684,7 @@ public class _ObjExporter extends __CartesianExporter {
     sb.append(" Ns 163\n");
     // Opacity (Sometimes d is used, sometimes Tr)
     //    sb.append(" d " + opacityFractionalFromColix(colix) + "\n");
-    sb.append(" Tr " + opacityFractionalFromColix(colix) + "\n");
+    sb.append(" Tr " + translucencyFractionalFromColix(colix) + "\n");
     // Index of refraction (.0001-10) 1.0 passes through
     sb.append(" Ni 0.001\n");
     // Illumination model (2 = highlight on)

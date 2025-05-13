@@ -302,8 +302,17 @@ public class MathExt {
         String s = (String) args[0].value;
         // first check for "t1>t2>t3"
         if (s.equals("h") || s.equals("r")
-            || s.indexOf(",") >= 0 && s.indexOf(":") < 0)
-          m4 = (M4d) vwr.getSymTemp().convertTransform(s, null);
+            || s.indexOf(",") >= 0 && s.indexOf(":") < 0) {
+          SymmetryInterface sym;
+          if (s.indexOf('*') >= 0) {
+            sym = vwr.getCurrentUnitCell();
+            if (sym == null)
+              return false;
+          } else {
+            sym = vwr.getSymTemp();           
+          }
+          m4 = (M4d) sym.convertTransform(s, null);
+        }
         if (m4 != null) 
           break;
         String select = null;
@@ -906,12 +915,20 @@ SymmetryInterface sym;
       throws ScriptException {
     if (isSelector) {
       SV x1 = mp.getX();
+      switch (x1.tok) {
+      case T.matrix3f:
+      case T.matrix4f:
+        return mp.addX(x1.toArray());
+      }
       if (args.length == 0 || args.length > 2)
         return false;
       boolean doCopy = (args.length == 1 || args[1].tok == T.off);
-      String id = args[0].asString();
+      String id;
       Map<String, SV> m1;
       switch (x1.tok) {
+      case T.matrix3f:
+      case T.matrix4f:
+        return mp.addX(x1.toArray());
       case T.hash:
         if (args.length != 1)
           return false;
@@ -923,6 +940,7 @@ SymmetryInterface sym;
         for (int i = 0, n = keys.length; i < n; i++)
           if (map.get(keys[i]).getMap() == null)
             return false;
+        id = args[0].asString();
         for (int i = 0, n = keys.length; i < n; i++) {
           m1 = map.get(keys[i]).getMap();
           if (doCopy)
@@ -937,6 +955,7 @@ SymmetryInterface sym;
         Map<String, SV> map1 = new Hashtable<String, SV>();
         Lst<SV> lst1 = x1.getList();
          //values must all be maps
+        id = args[0].asString();
         for (int i = lst1.size(); --i >- 0;) {
           m1 = lst1.get(i).getMap();
           if (m1 == null || m1.get(id) == null)
@@ -3628,6 +3647,7 @@ SymmetryInterface sym;
     // point(x, y, z)
     // point(x, y, z, w)
     // point(["{1,2,3}", "{2,3,4}"])
+    // point([[1,2,3], [2,3,4]])
     // point("(1/2,1/2,1/2)")
 
     String s = null;
@@ -3652,12 +3672,18 @@ SymmetryInterface sym;
         if (len == 0) {
           return false;
         }
-        s = (String) list.get(0).value;
         switch (list.get(0).tok) {
         case T.integer:
         case T.decimal:
           break;
+        case T.varray:
+          Lst<SV> ar = new Lst<SV>();
+          for (int i = 0; i < len; i++) {
+            ar.addLast(SV.getVariable(Escape.uP("{" + list.get(i).asString() + "}")));
+          }
+          return mp.addXList(ar);          
         case T.string:
+          s = (String) list.get(0).value;
           if (!s.startsWith("{") || Escape.uP(s) instanceof String) {
             s = null;
             break;
@@ -3668,8 +3694,7 @@ SymmetryInterface sym;
           }
           return mp.addXList(a);
         default:
-          s = null;
-          break;
+          return false;
         }
         s = "{" + s + "}";
       }

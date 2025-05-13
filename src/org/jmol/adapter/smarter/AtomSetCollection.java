@@ -722,8 +722,8 @@ public class AtomSetCollection {
     return getXSymmetry().getSymmetry();
   }
 
-  public FileSymmetry setSymmetry(FileSymmetry symmetry) {
-    return (symmetry == null ? null : getXSymmetry().setSymmetry(symmetry));
+  public FileSymmetry setSymmetryFromAuditBlock(FileSymmetry symmetry) {
+    return (symmetry == null ? null : getXSymmetry().setSymmetryFromAuditBlock(symmetry));
   }
 
   public void setTensors() {

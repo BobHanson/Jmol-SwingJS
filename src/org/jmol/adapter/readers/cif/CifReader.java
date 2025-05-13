@@ -157,6 +157,7 @@ public class CifReader extends AtomSetCollectionReader {
   private String spinFrame;
   private String spinFrameExt;
   private boolean spinFrameSetByFILTER;
+  private boolean spinOnly;
 
   @Override
   public void initializeReader() throws Exception {
@@ -164,6 +165,7 @@ public class CifReader extends AtomSetCollectionReader {
     stopOn_SHELX_HKL = checkFilterKey("STOPONSHELXHKL");    
     allowPDBFilter = true;
     appendedData = (String) htParams.get("appendedData");
+    spinOnly = checkFilterKey("SPINONLY");
     String conf = getFilter("CONF ");
     if (conf != null)
       configurationPtr = parseIntStr(conf);
@@ -304,7 +306,7 @@ public class CifReader extends AtomSetCollectionReader {
           appendLoadNote(auditBlockCode);
           if (htAudit != null && auditBlockCode.contains("_MOD_")) {
             String key = PT.rep(auditBlockCode, "_MOD_", "_REFRNCE_");
-            if (asc.setSymmetry(
+            if (asc.setSymmetryFromAuditBlock(
                 (FileSymmetry) htAudit.get(key)) != null) {
               unitCellParams = asc.getSymmetry().getUnitCellParams();
               iHaveUnitCell = true;
@@ -358,7 +360,9 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private boolean newData() throws Exception {
-    spinFrame = spinFrameExt = null;
+    if (!spinFrameSetByFILTER)
+      spinFrame = null;        
+    spinFrameExt = null;
     isLigand = false;
     if (asc.atomSetCount == 0)
       iHaveDesiredModel = false;
@@ -458,6 +462,7 @@ public class CifReader extends AtomSetCollectionReader {
       }
       tag = "spinFrame";
       break;
+    case "rotation_axis":
     case "rotation_axis_xyz":
       field = addSpinFrameExt("axisxyz");
       break;
@@ -470,7 +475,7 @@ public class CifReader extends AtomSetCollectionReader {
     case "coplanar_perp_uvw":
       field = addSpinFrameExt("perpuvw");
       break;
-    case "coplanar_perp_xyz":
+    case "coplanar_perp_xyz": // TODO exists?
       field = addSpinFrameExt("perpxyz");
       break;
     default:
@@ -697,6 +702,12 @@ public class CifReader extends AtomSetCollectionReader {
     if (!haveCellWaveVector) {
       modDim = 0;
     }
+    if (spinOnly) {
+      BS bs = asc.getBSAtoms(-1);
+      for (int i = asc.getAtomSetAtomIndex(asc.iSet); i < asc.ac; i++) {
+        bs.setBitTo(i, asc.atoms[i].vib != null && asc.atoms[i].vib.lengthSquared() > 0);
+      }
+    }
     applySymTrajASCR();
     if (!haveCellWaveVector) {
       if (!isMolecular) {
@@ -732,7 +743,7 @@ public class CifReader extends AtomSetCollectionReader {
       asc.setNoAutoBond();
       if (sym != null) {
         addJmolScript("vectors on;vectors 0.15;");
-        int n = asc.getXSymmetry().setSpinVectors();
+        int n = asc.getXSymmetry().setMagneticMoments();
         appendLoadNote(n
             + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
       }
