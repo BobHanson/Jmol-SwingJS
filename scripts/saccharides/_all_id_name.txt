@@ -1,0 +1,387 @@
+07Y	(2S,3R,4R,5R)-2-(hydroxymethyl)-5-(4-nitrophenoxy)oxolane-3,4-diol
+09X	2-bromanyl-N-[(2R,3R,4R,5S}-5-(hydroxymethyl)-3,4-bis(oxidanyl)oxolan-2-yl]ethanamide
+0H0	Carbohydrate component from a pentavalent N-acetylneuraminic acid conjugate
+0HX	pentan-3-yl 2-acetamido-2,4-dideoxy-alpha-L-threo-hex-4-enopyranosiduronic acid
+0LP	5-acetamido-2,6-anhydro-3,5-dideoxy-3-[(2E)-3-phenylprop-2-en-1-yl]-D-glycero-L-altro-non-2-enonic acid
+0MK	beta-L-ribopyranose
+0NZ	2-deoxy-6-O-phosphono-beta-D-glucopyranose
+0WK	1,5-anhydro-6-O-phosphono-D-glucitol
+0XY	5-fluoro-N-acetyl-alpha-D-glucosamine
+0YT	2-acetamido-2-deoxy-5-thio-beta-D-glucopyranose
+147	4-nitrophenyl beta-D-galactopyranoside
+16G	2-acetamido-2-deoxy-6-O-phosphono-alpha-D-glucopyranose
+18D	3,5-dideoxy-5-(propanoylamino)-D-glycero-alpha-D-galacto-non-2-ulopyranosonic acid
+1CF	2-hydroxyethyl 6-deoxy-beta-L-galactopyranoside
+1GN	2-amino-2-deoxy-beta-D-galactopyranose
+1JB	[[(2R,3S,5R)-5-[5-methyl-2,4-bis(oxidanylidene)pyrimidin-1-yl]-3-oxidanyl-oxolan-2-yl]methoxy-oxidanyl-phosphoryl] [(2R,3R,4S,5R,6R)-6-methyl-3,4,5-tris(oxidanyl)oxan-2-yl] hydrogen phosphate
+1S3	(2R,3aR,5R,6S,7S,7aR)-5-(hydroxymethyl)tetrahydro-3aH-[1,3,2]dioxaphospholo[4,5-b]pyran-2,6,7-triol 2-oxide
+1X4	2,3-dideoxy-5-O-phosphono-alpha-D-ribofuranose
+26M	N-[(biphenyl-4-yloxy)acetyl]-beta-D-glucopyranosylamine
+26Q	N-[(2E)-3-(biphenyl-4-yl)prop-2-enoyl]-beta-D-glucopyranosylamine
+26R	N-{(2R)-2-methyl-3-[4-(propan-2-yl)phenyl]propanoyl}-beta-D-glucopyranosylamine
+26V	N-[4-(5,6,7,8-tetrahydronaphthalen-2-yl)butanoyl]-beta-D-glucopyranosylamine
+26W	N-[(3R)-3-(4-ethylphenyl)butanoyl]-beta-D-glucopyranosylamine
+26Y	N-{(2E)-3-[4-(propan-2-yl)phenyl]prop-2-enoyl}-beta-D-glucopyranosylamine
+27C	5-O-[(S)-butoxy(hydroxy)phosphoryl]-2-deoxy-2-fluoro-alpha-D-arabinofuranose
+289	D-glycero-alpha-D-manno-heptopyranose
+293	2-deoxy-beta-L-galacto-heptopyranose
+2DG	2-deoxy-alpha-D-galactopyranose
+2DR	2-deoxy-beta-D-erythro-pentofuranose
+2FG	2-deoxy-2-fluoro-beta-D-galactopyranose
+2FP	1,6-FRUCTOSE DIPHOSPHATE (LINEAR FORM)
+2GS	2-O-methyl-alpha-D-galactopyranose
+2H5	3-deoxy-3-fluoro-beta-D-galactopyranose
+2HA	Dihydroxyacetone
+2M8	(2R)-3-hydroxy-2-(alpha-D-mannopyranosyloxy)propanoic acid
+2WP	S-ribosylhomocysteine
+34V	beta-L-ribulofuranose
+3BU	L-allose
+3DO	3-deoxy-beta-D-glucopyranose
+3DY	3,6-anhydro-beta-L-galactopyranose
+3J4	(6S)-2,6-anhydro-6-{[(3R)-3-(sulfamoyloxy)pyrrolidin-1-yl]sulfonyl}-D-glucitol
+3LJ	2-amino-2-deoxy-6-O-sulfo-alpha-D-glucopyranose
+3LR	3,6-dideoxy-L-arabino-hexonic acid
+3MF	3-O-METHYLFRUCTOSE IN LINEAR FORM
+3MG	3-O-methyl-beta-D-glucopyranose
+42D	3,5-dideoxy-5-[(methoxycarbonyl)amino]-D-glycero-alpha-D-galacto-non-2-ulopyranosonic acid
+44S	2-deoxy-6-O-phosphono-beta-D-lyxo-hexofuranose
+46D	(4AR,6R,7S,8R,8AR)-8-((5R,6R)-3-CARBOXY-TETRAHYDRO-4,5,6-TRIHYDROXY-2H-PYRAN-2-YLOXY)-HEXAHYDRO-6,7-DIHYDROXY-2-METHYLPYRANO[3,2-D][1,3]DIOXINE-2-CARBOXYLIC ACID)
+46Z	(2R,3R,4S,5S)-4-fluoro-3,5-dihydroxytetrahydrofuran-2-yl 2-phenylethyl hydrogen (S)-phosphate
+48Z	2-deoxy-2-fluoro-5-O-thiophosphono-alpha-D-arabinofuranose
+49A	4,9-AMINO-2,4-DEOXY-2,3-DEHYDRO-N-ACETYL-NEURAMINIC ACID
+4AM	4-AMINO-2-DEOXY-2,3-DEHYDRO-N-ACETYL-NEURAMINIC ACID
+4GL	alpha-D-gulopyranose
+4QY	2-acetamido-2-deoxy-6-O-phosphono-beta-D-glucopyranose
+4R1	2-amino-2-deoxy-6-O-phosphono-beta-D-glucopyranose
+4UZ	2-{[(benzyloxy)carbonyl]amino}-2-deoxy-beta-D-glucopyranose
+4V5	2-deoxy-2-{[3-(4-hydroxyphenyl)propanoyl]amino}-alpha-D-glucopyranose
+50A	2-deoxy-2-fluoro-5-O-phosphono-alpha-D-ribofuranose
+510	methyl (2S,4R)-1-[(2S,3R,4R,5S,6S)-6-(hydroxymethyl)-3,4,5-tris(oxidanyl)oxan-2-yl]sulfonyl-4-sulfamoyloxy-pyrrolidine-2-carbox ylate
+5DI	alpha-D-threo-hexo-2,5-diulo-2,6-pyranosyl fluoride
+5GF	5-fluoro-beta-D-glucopyranose
+5II	methyl 2-deoxy-2-methyl-alpha-D-mannopyranoside
+5KQ	(6R)-5-acetamido-6-[(1S,2S)-3-acetamido-1,2-dihydroxypropyl]-3,5-dideoxy-beta-L-threo-hex-2-ulopyranosonic acid
+5KV	2-deoxy-6-O-sulfo-2-(sulfoamino)-beta-D-glucopyranose
+5N6	9-O-acetyl-5-acetamido-3,5-dideoxy-D-glycero-alpha-D-galacto-non-2-ulopyranosonic acid
+5QP	(1R,2R,3S,5R,6S)-2,3,5-trihydroxy-6-(hydroxymethyl)cyclohexyl alpha-D-glucopyranoside
+5RP	RIBULOSE-5-PHOSPHATE
+5SP	5-O-phosphono-D-xylulose
+604	2-[(3-bromobenzene-1-carbonyl)amino]-6-{[(4-carboxy-5-methylfuran-2-yl)sulfonyl]amino}-2,6-dideoxy-alpha-D-glucopyranos e
+64K	alpha-D-arabinopyranose
+6BG	6-bromo-6-deoxy-beta-D-glucopyranose
+6GR	2-(alpha-L-altropyranosyloxy)benzoic acid
+6KL	methyl 4,5-bisacetamido-3,4,5-trideoxy-D-glycero-alpha-D-galacto-non-2-ulopyranosidonic acid
+6LW	(Z)-L-Arabinonhydroximo-1,4-lactone
+6MN	2-amino-2-deoxy-6-O-phosphono-alpha-D-mannopyranose
+6PY	5-acetamido-2,6-anhydro-4-carbamimidamido-3,4,5-trideoxy-7-O-[(2-methoxyethyl)carbamoyl]-D-glycero-D-galacto-non-2-enon ic acid
+6SA	ACARBOSE DERIVED HEXASACCHARIDE
+6Y6	2,6-anhydro-3,4,5-trideoxy-4-[4-(methoxymethyl)-1H-1,2,3-triazol-1-yl]-5-[(2-methylpropanoyl)amino]-D-glycero-D-galacto -non-2-enonic acid
+6YR	methyl 1-seleno-2-O-methyl-beta-L-fucopyranoside
+79J	4-O-acetyl-5-acetamido-3,5-dideoxy-L-glycero-alpha-D-galacto-non-2-ulopyranosonic acid
+7CV	6-deoxy-2,3-di-O-methyl-alpha-L-mannopyranose
+7JZ	2-deoxy-2,2-difluoro-beta-D-lyxo-hexopyranose
+7SA	ACARBOSE DERIVED HEPTASACCHARIDE
+8GA	5-Se-methyl-5-seleno-alpha-D-ribofuranose
+8I4	(2R,3S,5R,6R)-2,3,4,5,6-pentakis(oxidanyl)cyclohexane-1-carboxylic acid
+8LM	2,6-anhydro-3,5-dideoxy-5-[(2-methylpropanoyl)amino]-3-(4-phenyl-1H-1,2,3-triazol-1-yl)-D-glycero-D-galacto-non-2-enoni c acid
+8S0	L-glucono-1,5-lactone
+95Z	2-amino-2-deoxy-alpha-D-mannopyranose
+9AM	9-AMINO-2-DEOXY-2,3-DEHYDRO-N-ACETYL-NEURAMINIC ACID
+9C1	2-{[(2E)-4-chlorobut-2-enoyl]amino}-2-deoxy-beta-D-glucopyranose
+9MR	(3R,4R,5R)-3-hydroxy-5-(hydroxymethyl)piperidin-4-yl beta-D-glucopyranoside
+9OK	2-(3,4-dihydroxyphenyl)ethyl beta-D-fructofuranoside
+9S7	5-acetamido-2,6-anhydro-3,5,8-trideoxy-3-fluoro-D-threo-L-galacto-nononic acid
+9SG	(2R,3R,5R,6R)-5-acetamido-2,3-bis(fluoranyl)-6-[(1R,2R)-1,2,3-tris(oxidanyl)propyl]oxane-2-carboxylic acid
+9SJ	5-acetamido-2,6-anhydro-3,5,7-trideoxy-3-fluoro-D-threo-L-galacto-nononic acid
+9T1	5-acetamido-2,6-anhydro-3,5,9-trideoxy-3-fluoro-D-erythro-L-gluco-non-4-ulosonic acid
+A1H03	L-glycero-alpha-D-galacto-heptopyranose
+A1L1P	(2R,3S,4S,5S,6R)-6-[(1S)-1,2-bis(oxidanyl)ethyl]oxane-2,3,4,5-tetrol
+A2G	2-acetamido-2-deoxy-alpha-D-galactopyranose
+A6P	6-O-phosphono-alpha-D-allopyranose
+AAL	3,6-anhydro-alpha-L-galactopyranose
+AAO	ACARBOSE DERIVED HEXASACCHARIDE
+ABC	MODIFIED ACARBOSE HEXASACCHARIDE
+ABE	alpha-D-Abequopyranose
+ABF	5-O-phosphono-beta-D-arabinofuranose
+ABL	(2R,3R,4R,5R)-4,5-dihydroxy-2-(hydroxymethyl)-6-oxopiperidin-3-yl beta-D-glucopyranoside
+AC1	4,6-dideoxy-4-{[(1S,4R,5S,6S)-4,5,6-trihydroxy-3-(hydroxymethyl)cyclohex-2-en-1-yl]amino}-alpha-D-glucopyranose
+ACG	MODIFIED ACARBOSE PENTASACCHARIDE
+ADA	alpha-D-galactopyranuronic acid
+AF1	4,6-dideoxy-4-{[(1S,4S,5S,6S)-4,5,6-trihydroxy-3-(hydroxymethyl)cyclohex-2-en-1-yl]amino}-beta-D-glucopyranose
+AFD	alpha-D-allopyranose
+AFP	1,6-di-O-phosphono-alpha-D-fructofuranose
+AGH	N-{(1S,2R,3S)-1-[(ALPHA-D-GALACTOPYRANOSYLOXY)METHYL]-2,3-DIHYDROXYHEPTADECYL}HEXACOSANAMIDE
+AGL	4-amino-4,6-dideoxy-alpha-D-glucopyranose
+AH2	1-deoxy-alpha-D-mannopyranose
+AH8	(2R,3R,4R,5S)-2-azido-5-(hydroxymethyl)oxolane-3,4-diol
+AHR	alpha-L-arabinofuranose
+ALL	beta-D-allopyranose
+ALX	2-O-phosphono-alpha-D-glucopyranose
+AMG	methyl alpha-D-galactopyranoside
+AMN	methyl 5-acetamido-9-amino-3,5,9-trideoxy-D-glycero-alpha-D-galacto-non-2-ulopyranosidonic acid
+AMU	N-acetyl-beta-muramic acid
+ANA	methyl 4-O-acetyl-5-acetamido-3,5-dideoxy-D-glycero-alpha-D-galacto-non-2-ulopyranosidonic acid
+ARA	alpha-L-arabinopyranose
+ARB	beta-L-arabinopyranose
+ARE	ACARBOSE DERIVED PENTASACCHARIDE
+ASC	ASCORBIC ACID
+ASG	2-acetamido-2-deoxy-4-O-sulfo-beta-D-galactopyranose
+ASO	1,5-anhydro-D-glucitol
+AXP	(1S)-4-acetamido-1,5-anhydro-2,4-dideoxy-1-phosphono-D-glycero-D-galacto-octitol
+B0D	(2R,3S,4R,5R,6R)-2,6-difluoro-2-(hydroxymethyl)tetrahydro-2H-pyran-3,4,5-triol
+B6D	2,4-bisacetamido-2,4,6-trideoxy-beta-D-glucopyranose
+B9D	5-fluoro-alpha-L-idopyranose
+BBK	2-acetamido-2-deoxy-5-thio-alpha-D-galactopyranose
+BDF	beta-D-fructopyranose
+BDG	2,6-diamino-2,6-dideoxy-alpha-D-glucopyranose
+BDP	beta-D-glucopyranuronic acid
+BDR	beta-D-ribofuranose
+BEM	beta-D-mannopyranuronic acid
+BFN	5-acetamido-9-(benzoylamino)-3,5,9-trideoxy-3-fluoro-D-erythro-alpha-L-manno-non-2-ulopyranosonic acid
+BG6	6-O-phosphono-beta-D-glucopyranose
+BG8	2-(benzoylamino)-2-deoxy-beta-D-glucopyranose
+BGC	beta-D-glucopyranose
+BGL	2-O-octyl-beta-D-glucopyranose
+BGN	2-(butanoylamino)-2-deoxy-beta-D-glucopyranose
+BGP	6-O-phosphono-beta-D-galactopyranose
+BHG	hexyl beta-D-galactopyranoside
+BM3	2-acetamido-2-deoxy-alpha-D-mannopyranose
+BM7	2-acetamido-2-deoxy-beta-D-mannopyranose
+BMA	beta-D-mannopyranose
+BMX	2-acetamido-2-deoxy-6-O-phosphono-alpha-D-mannopyranose
+BNG	nonyl beta-D-glucopyranoside
+BOG	octyl beta-D-glucopyranoside
+BW3	(2~{S},3~{R},4~{S},5~{S},6~{R})-2-ethoxy-6-(hydroxymethyl)oxane-3,4,5-triol
+BXX	beta-D-arabinofuranose
+CAP	2-CARBOXYARABINITOL-1,5-DIPHOSPHATE
+CBF	(2R,3R,4S,5S,6R)-2,3,4,5-tetrahydroxy-6-(hydroxymethyl)oxane-2-carboxamide
+CEG	4,6-O-[(1S)-1-carboxyethylidene]-beta-D-glucopyranose
+D6G	2-deoxy-6-O-phosphono-alpha-D-glucopyranose
+DAG	4-amino-4,6-dideoxy-beta-D-glucopyranose
+DAN	2-DEOXY-2,3-DEHYDRO-N-ACETYL-NEURAMINIC ACID
+DDA	beta-D-Olivopyranose
+DFR	3-deoxy-3-methyl-beta-D-fructofuranose
+DGD	DIGALACTOSYL DIACYL GLYCEROL (DGDG)
+DGS	3,6-anhydro-2-O-sulfo-alpha-D-galactopyranose
+DIG	2,5-DIDEOXY-2,5-IMINO-D-GLUCITOL
+DMU	DECYL-BETA-D-MALTOPYRANOSIDE
+DO8	3-deoxy-8-O-phosphono-alpha-D-manno-oct-2-ulopyranosonic acid
+DPC	5-ACETYLAMINO-4-AMINO-6-(PHENETHYL-PROPYL-CARBAMOYL)-5,6-DIHYDRO-4H-PYRAN-2-CARBOXYLIC ACID
+DR4	METHYL 9-(BETA-D-TALOPYRANOSYLOXY)NONANOATE
+DVC	(2R,4S,6S)-4-azanyl-4,6-dimethyl-oxane-2,5,5-triol
+DYM	(2R)-2,3-dihydroxypropyl 2-acetamido-2,4-dideoxy-alpha-L-threo-hex-4-enopyranosiduronic acid
+E4P	ERYTHOSE-4-PHOSPHATE
+ED6	6-deoxy-1-O-phosphono-beta-L-galactopyranose
+EEN	2-deoxy-2-[(difluoroacetyl)amino]-alpha-D-galactopyranose
+EEQ	2-deoxy-2-[(fluoroacetyl)amino]-alpha-D-galactopyranose
+EJT	1,3-DI(N-PROPYLOXY-A-MANNOPYRANOSYL)-CARBOMYL 5-METHYAZIDO-BENZENE
+EMZ	6-O-methyl-beta-D-galactopyranose
+EQP	(1R)-4-acetamido-1,5-anhydro-2,4-dideoxy-1-phosphono-D-glycero-D-galacto-octitol
+EUS	N-[(1R,2S,3S,4R,5S)-5-amino-4-{[(2S,3R)-3-amino-6-(aminomethyl)-3,4-dihydro-2H-pyran-2-yl]oxy}-2-{[3-deoxy-4-C-methyl-3-(methylamino)-beta-L-arabinopyranosyl]oxy}-3-hydroxycyclohexyl]methanesulfonamide
+F1X	1-O-phosphono-beta-D-fructofuranose
+F6P	6-O-phosphono-beta-D-fructofuranose
+F8X	2-amino-2-deoxy-beta-D-altropyranuronic acid
+FBP	1,6-di-O-phosphono-beta-D-fructofuranose
+FCA	alpha-D-fucopyranose
+FCB	beta-D-fucopyranose
+FDP	2,6-di-O-phosphono-beta-D-fructofuranose
+FKD	3-deoxy-3-fluoro-D-erythro-alpha-L-manno-non-2-ulopyranosonic acid
+FMF	2-deoxy-2-fluoro-beta-D-mannopyranosyl fluoride
+FRU	beta-D-fructofuranose
+FSA	1-S-(carboxymethyl)-1-thio-beta-D-fructopyranose
+FSI	5-acetamido-3,5-dideoxy-3-fluoro-D-erythro-alpha-L-manno-non-2-ulopyranosonic acid
+FSR	(2S,3S,4R,5R,6R)-5-acetamido-2,3-bis(fluoranyl)-4-oxidanyl-6-[(1S,2S)-1,2,3-tris(oxidanyl)propyl]oxane-2-carboxylic acid
+FSW	methyl 6-deoxy-2-Se-methyl-2-seleno-alpha-L-galactopyranoside
+FUB	beta-L-arabinofuranose
+FUC	alpha-L-fucopyranose
+FUL	beta-L-fucopyranose
+FX1	beta-D-threo-hexo-2,4-diulo-2,5-furanose
+G1P	1-O-phosphono-alpha-D-glucopyranose
+G2F	2-deoxy-2-fluoro-alpha-D-glucopyranose
+G3F	3-deoxy-3-fluoro-beta-D-glucopyranose
+G3I	(3R,4R,5R)-3-hydroxy-5-(hydroxymethyl)piperidin-4-yl beta-D-glucopyranosyl-(1->4)-beta-D-glucopyranosyl-(1->4)-beta-D-glucopyranoside
+G4D	4-deoxy-alpha-D-glucopyranose
+G4S	4-O-sulfo-beta-D-galactopyranose
+G6D	alpha-D-quinovopyranose
+G6P	6-O-phosphono-alpha-D-glucopyranose
+G6S	6-O-sulfo-beta-D-galactopyranose
+G7P	6,7-dideoxy-7-phosphono-beta-D-gluco-heptopyranose
+GAF	2-deoxy-2-fluoro-alpha-D-galactopyranose
+GAL	beta-D-galactopyranose
+GC9	2,6-anhydro-3,5-dideoxy-5-[(hydroxyacetyl)amino]-D-glycero-L-altro-non-2-enonic acid
+GCS	2-amino-2-deoxy-beta-D-glucopyranose
+GCU	alpha-D-glucopyranuronic acid
+GCV	4-O-methyl-alpha-D-glucopyranuronic acid
+GCW	4-O-methyl-beta-D-glucopyranuronic acid
+GDL	2-(acetylamido)-2-deoxy-D-glucono-1,5-lactone
+GE1	2,6-diamino-2,3,4,6-tetradeoxy-alpha-D-erythro-hexopyranose
+GIV	beta-L-galactopyranose
+GL0	beta-D-gulopyranose
+GLA	alpha-D-galactopyranose
+GLC	alpha-D-glucopyranose
+GLP	2-amino-2-deoxy-6-O-phosphono-alpha-D-glucopyranose
+GLT	5-thio-alpha-D-glucopyranose
+GMH	L-glycero-alpha-D-manno-heptopyranose
+GMZ	1,7-di-O-phosphono-D-glycero-beta-D-manno-heptopyranose
+GP1	2-amino-2-deoxy-1-O-phosphono-alpha-D-glucopyranose
+GP4	2-amino-2-deoxy-4-O-phosphono-alpha-D-glucopyranose
+GRF	5-O-phosphono-beta-D-ribofuranosylamine
+GS1	1-thio-beta-D-glucopyranose
+GTK	beta-D-galactofuranuronic acid
+GTR	beta-D-galactopyranuronic acid
+GU1	2,3-di-O-methyl-beta-D-glucopyranuronic acid
+GU4	2,3,4,6-tetra-O-sulfonato-alpha-D-glucopyranose
+GUF	2-deoxy-2-fluoro-beta-D-glucopyranuronic acid
+GUL	(2R,3S,4R,5S)-2,6-difluoro-2-(hydroxymethyl)oxane-3,4,5-triol
+GXL	alpha-L-galactopyranose
+GXV	L-glyceraldehyde
+GYE	beta-D-fucofuranose
+GZL	beta-D-galactofuranose
+H6Q	2-O-[(R)-{[(2S)-1,1-dihydroxypropan-2-yl]oxy}(hydroxy)phosphoryl]-beta-D-glucopyranose
+HSG	octyl alpha-L-altropyranoside
+HSJ	octyl beta-L-talopyranoside
+HSQ	2-acetylamino-2-deoxy-alpha-L-idopyranose
+HSX	5-O-phosphono-alpha-D-ribofuranose
+HSY	alpha-L-xylopyranose
+HTM	3-hydroxypropyl 2-acetamido-2,4-dideoxy-alpha-L-threo-hex-4-enopyranosiduronic acid
+HVC	alpha-D-Sorbopyranose
+I57	2,6-anhydro-3,4,5-trideoxy-5-[(2-methylpropanoyl)amino]-4-(4-phenyl-1H-1,2,3-triazol-1-yl)-D-glycero-D-galacto-non-2-en onic acid
+IDC	(5R,6R,7R,8S)-7,8-dihydroxy-5-(hydroxymethyl)-5,6,7,8-tetrahydroimidazo[1,2-a]pyridin-6-yl beta-D-glucopyranoside
+IDR	alpha-L-idopyranuronic acid
+IDS	2-O-sulfo-alpha-L-idopyranuronic acid
+IDU	2-O-sulfo-beta-L-altropyranuronic acid
+IEM	2-methylpropyl 2-acetamido-2,4-dideoxy-alpha-L-threo-hex-4-enopyranosiduronic acid
+IN1	4-(beta-D-glucopyranosyloxy)-2,2-dihydroxybutyl propanoate
+IVG	D-Xylose, 4-O-beta-D-xylopyranosyl-
+JFZ	4-nitrophenyl 6-deoxy-alpha-L-galactopyranoside
+JS2	5-O-[(R)-{[(S)-[4-(8-amino-6-oxo-1,6-dihydro-9H-purin-9-yl)butoxy](hydroxy)phosphoryl]oxy}(hydroxy)phosphoryl]-alpha-D- ribofuranose
+KBA	2-(1H-1,2,3-triazol-1-yl)ethyl 6-deoxy-alpha-L-galactopyranoside
+KBG	beta-D-arabino-hexopyranos-2-ulose
+KDA	prop-2-en-1-yl 3-deoxy-alpha-D-manno-oct-2-ulopyranosidonic acid
+KDF	3-deoxy-alpha-D-erythro-hex-2-ulofuranosonic acid
+KDM	deamino-alpha-neuraminic acid
+KDN	deamino-beta-neuraminic acid
+KDO	3-deoxy-alpha-D-manno-oct-2-ulopyranosonic acid
+KG1	propadienyl 6-deoxy-alpha-L-galactopyranoside
+KHP	4-nitrophenyl alpha-L-arabinofuranoside
+KO2	prop-2-en-1-yl D-glycero-alpha-D-talo-oct-2-ulopyranosidonic acid
+KQC	(2R,3R,4R,5S,6R)-5-fluoranyl-6-(hydroxymethyl)oxane-2,3,4-triol
+L6T	alpha-D-glucopyranosyl 6-O-dodecyl-alpha-D-glucopyranoside
+LAG	MALTOSYL-ALPHA (1,4)-(Z,3S,4S,5R,6R)-3,4,5-TRIHYDROXY-6-HYDROXYMETHYL-PIPERIDIN-2-ONE OXIME
+LAH	2-O-[(R)-hydroxy(propan-2-yloxy)phosphoryl]-alpha-L-arabinopyranose
+LAI	L-arabinose
+LAO	2-O-phosphono-alpha-L-arabinopyranose
+LER	L-Erythrulose
+LFC	6-deoxy-L-galactonic acid
+LGU	alpha-L-gulopyranuronic acid
+LKA	5-thio-alpha-D-mannopyranosylamine
+LKS	N-[(1Z)-2-phenylethanimidoyl]-5-thio-alpha-D-mannopyranosylamine
+LM2	4'-O-METHYL-MALTOSYL-ALPHA (1,4)-(Z, 3S,4S,5R,6R)-3,4,5-TRIHYDROXY-6-HYDROXYMETHYL-PIPERIDIN-2-ONE
+LMO	dodecyl 6-O-alpha-D-galactopyranosyl-beta-D-glucopyranoside
+LMT	DODECYL-BETA-D-MALTOSIDE
+LNV	5-acetamido-2,6-anhydro-4-carbamimidamido-3,4,5-trideoxy-7-O-methyl-D-glycero-D-galacto-non-2-enonic acid
+LPK	L-psicose
+LTG	L-tagatose
+LTM	N-ACETYL GLUCONOLACTAM
+LXC	beta-L-xylopyranose
+M6D	6-O-phosphono-beta-D-mannopyranose
+M6P	6-O-phosphono-alpha-D-mannopyranose
+M7B	7-O-phosphono-D-glycero-beta-D-manno-heptopyranose
+M7P	7-O-phosphono-D-glycero-alpha-D-manno-heptopyranose
+MAF	2-deoxy-2-fluoro-alpha-D-mannopyranose
+MAN	alpha-D-mannopyranose
+MAV	alpha-D-mannopyranuronic acid
+MCU	methyl 4-O-methyl-beta-D-glucopyranuronate
+MDP	N-carboxyl-N-methyl-beta-muramic acid
+MFB	methyl beta-L-fucopyranoside
+MFU	methyl alpha-L-fucopyranoside
+MG5	2,3,4-tri-O-propanoyl-6-O-sulfamoyl-beta-D-glucopyranose
+MMN	5-DEOXY-5-{[(1S)-1-HYDROXYETHYL]AMINO}-D-GLUCITOL
+MQG	2-deoxy-2-{[(S)-hydroxy(methyl)phosphoryl]amino}-beta-D-glucopyranose
+MUB	N-acetyl-alpha-muramic acid
+MUR	beta-muramic acid
+N3U	L-xylulose-5-phosphate
+NAA	2-acetamido-2-deoxy-beta-D-allopyranose
+NAG	2-acetamido-2-deoxy-beta-D-glucopyranose
+NDG	2-acetamido-2-deoxy-alpha-D-glucopyranose
+NG6	2-acetamido-2-deoxy-6-O-sulfo-beta-D-galactopyranose
+NGA	2-acetamido-2-deoxy-beta-D-galactopyranose
+NGC	N-glycolyl-alpha-neuraminic acid
+NGE	N-glycolyl-beta-neuraminic acid
+NGS	2-acetamido-2-deoxy-6-O-sulfo-beta-D-glucopyranose
+NGY	2-acetamido-2-deoxy-6-O-sulfo-alpha-D-glucopyranose
+NNG	2-deoxy-2-{[(S)-hydroxy(methyl)phosphoryl]amino}-6-O-phosphono-alpha-D-glucopyranose
+O1G	3-deoxy-3-[(E)-({3-hydroxy-2-methyl-5-[(phosphonooxy)methyl]pyridin-4-yl}methylidene)amino]-6-O-phosphono-alpha-D-gluco pyranose
+OI7	1,7-di-O-phosphono-beta-D-altro-hept-2-ulofuranose
+OTG	2-deoxy-2-{[(2-methylphenyl)carbonyl]amino}-alpha-D-glucopyranose
+P6P	6-O-phosphono-alpha-D-fructofuranose
+P8E	5,7-diamino-3,5,7,9-tetradeoxy-L-glycero-alpha-L-manno-non-2-ulopyranosonic acid
+PA1	2-amino-2-deoxy-alpha-D-glucopyranose
+PA5	5-PHOSPHOARABINONIC ACID
+PAV	(2R,4S)-2-methyl-2,3,3,4-tetrahydroxytetrahydrofuran
+PSJ	D-psicose
+PSV	alpha-D-psicofuranose
+PUF	6-deoxy-alpha-L-psicofuranose
+QDK	L-ribulose
+QIF	1-deoxy-7-O-phosphono-alpha-D-gluco-hept-2-ulopyranose
+R1P	1-O-phosphono-alpha-D-ribofuranose
+R2G	2,5-anhydro-4-deoxy-D-erythro-pent-4-enitol
+R5P	RIBOSE-5-PHOSPHATE
+RAM	alpha-L-rhamnopyranose
+RF5	2-deoxy-2-fluoro-5-O-phosphono-alpha-D-arabinofuranose
+RHC	(2S)-2-amino-4-[[(2S,3S,4R,5R)-3,4,5-trihydroxyoxolan-2-yl]methylsulfanyl]butanoic acid
+RI2	1,5-di-O-phosphono-alpha-D-ribofuranose
+RIB	alpha-D-ribofuranose
+RIP	beta-D-ribopyranose
+RNS	L-RHAMNOSE
+RNT	L-RHAMNITOL
+ROR	L-ribose
+RP5	5-O-phosphono-beta-D-ribofuranose
+RUB	RIBULOSE-1,5-DIPHOSPHATE
+RUU	alpha-L-ribulofuranose
+S7P	1-C-(hydroxymethyl)-6-O-phosphono-beta-D-altrofuranose
+SDY	beta-D-talopyranose
+SFU	methyl 1-seleno-alpha-L-fucopyranoside
+SG4	3,4-di-O-acetyl-6-O-sulfamoyl-alpha-D-glucopyranose
+SG6	4-O-acetyl-6-O-sulfamoyl-alpha-D-galactopyranose
+SG7	3,4-di-O-acetyl-6-O-sulfamoyl-alpha-D-mannopyranose
+SGA	3-O-sulfo-beta-D-galactopyranose
+SGN	2-deoxy-6-O-sulfo-2-(sulfoamino)-alpha-D-glucopyranose
+SHG	2-deoxy-2-fluoro-beta-D-glucopyranose
+SIA	N-acetyl-alpha-neuraminic acid
+SIO	methyl 4,9-di-O-acetyl-5-acetamido-3,5-dideoxy-D-glycero-alpha-D-galacto-non-2-ulopyranosidonic acid
+SIZ	2-deoxy-2-[(difluoroacetyl)amino]-beta-D-galactopyranose
+SLB	N-acetyl-beta-neuraminic acid
+SLM	(2S,4S,5R,6R)-5-acetamido-2,4-dihydroxy-6-[(1R,2R)-1,2,3-trihydroxypropyl]oxane-2-carboxamide
+SN5	2-deoxy-2-(ethanethioylamino)-beta-D-glucopyranose
+SOE	alpha-L-sorbopyranose
+SR1	5-S-methyl-5-thio-alpha-D-ribofuranose
+STZ	Streptozotocin
+T6T	alpha-D-tagatopyranose
+TA6	6-O-phosphono-beta-D-tagatofuranose
+TFU	methyl 1-seleno-beta-L-fucopyranoside
+TGR	1-deoxy-alpha-D-xylo-hex-3-ulofuranose
+TGY	1-deoxy-alpha-D-tagatopyranose
+TOA	3-ammonio-3-deoxy-alpha-D-glucopyranose
+TS8	2,3,4,6-tetra-O-acetyl-1-thio-beta-D-glucopyranose
+TY6	(2~{S},3~{R},4~{S},5~{S},6~{S})-6-[(2-azanylhydrazinyl)methyl]oxane-2,3,4,5-tetrol
+UDC	2-acetamido-3-O-[(2S,3S)-2-carboxy-3,4-dihydroxybutan-2-yl]-2-deoxy-alpha-D-glucopyranose
+V3M	2-deoxy-2-fluoro-alpha-D-arabinofuranose
+VKN	(1R,2S,4S,5R)-6-(hydroxymethyl)cyclohexane-1,2,3,4,5-pentol
+VTB	7-O-phosphono-alpha-L-galacto-hept-2-ulopyranose
+X1X	alpha-D-talopyranuronic acid
+X6X	2-amino-2-deoxy-alpha-D-galactopyranose
+XBP	XYLULOSE-1,5-BISPHOSPHATE
+XLF	beta-D-xylulofuranose
+XLS	D-xylose
+XXM	3-C-(hydroxylmethyl)-alpha-D-erythrofuranose
+XXR	alpha-D-rhamnopyranose
+XYF	5(R)-fluoro-beta-D-xylopyranose
+XYP	beta-D-xylopyranose
+XYS	alpha-D-xylopyranose
+XYZ	beta-D-xylofuranose
+YIO	1-thio-beta-D-galactopyranose
+YYJ	1,3,4,6-tetra-O-sulfo-beta-D-fructofuranose
+YZT	6-deoxy-6-sulfo-beta-D-glucopyranose
+Z61	2-deoxy-alpha-D-arabino-hexopyranose
+Z6J	alpha-L-ribofuranose
