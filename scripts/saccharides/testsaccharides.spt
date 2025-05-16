@@ -1,0 +1,73 @@
+//testsaccharides.spt
+// download and check for saccharide entities.
+// BH 2025.05.15
+// based on the query 1:
+// https://www.rcsb.org/search?request=%7B%22query%22%3A%7B%22type%22%3A%22group%22%2C%22logical_operator%22%3A%22and%22%2C%22nodes%22%3A%5B%7B%22type%22%3A%22group%22%2C%22logical_operator%22%3A%22and%22%2C%22nodes%22%3A%5B%7B%22type%22%3A%22group%22%2C%22nodes%22%3A%5B%7B%22type%22%3A%22terminal%22%2C%22service%22%3A%22text_chem%22%2C%22parameters%22%3A%7B%22attribute%22%3A%22chem_comp.type%22%2C%22operator%22%3A%22exact_match%22%2C%22negation%22%3Afalse%2C%22value%22%3A%22saccharide%22%7D%7D%2C%7B%22type%22%3A%22terminal%22%2C%22service%22%3A%22text_chem%22%2C%22parameters%22%3A%7B%22attribute%22%3A%22chem_comp.type%22%2C%22operator%22%3A%22exact_match%22%2C%22negation%22%3Afalse%2C%22value%22%3A%22D-saccharide%2C%20alpha%20linking%22%7D%7D%2C%7B%22type%22%3A%22terminal%22%2C%22service%22%3A%22text_chem%22%2C%22parameters%22%3A%7B%22attribute%22%3A%22chem_comp.type%22%2C%22operator%22%3A%22exact_match%22%2C%22negation%22%3Afalse%2C%22value%22%3A%22D-saccharide%2C%20beta%20linking%22%7D%7D%2C%7B%22type%22%3A%22terminal%22%2C%22service%22%3A%22text_chem%22%2C%22parameters%22%3A%7B%22attribute%22%3A%22chem_comp.type%22%2C%22operator%22%3A%22exact_match%22%2C%22negation%22%3Afalse%2C%22value%22%3A%22D-saccharide%2C%20beta%20linking%22%7D%7D%2C%7B%22type%22%3A%22terminal%22%2C%22service%22%3A%22text_chem%22%2C%22parameters%22%3A%7B%22attribute%22%3A%22chem_comp.type%22%2C%22operator%22%3A%22exact_match%22%2C%22negation%22%3Afalse%2C%22value%22%3A%22L-saccharide%22%7D%7D%2C%7B%22type%22%3A%22terminal%22%2C%22service%22%3A%22text_chem%22%2C%22parameters%22%3A%7B%22attribute%22%3A%22chem_comp.type%22%2C%22operator%22%3A%22exact_match%22%2C%22negation%22%3Afalse%2C%22value%22%3A%22L-saccharide%2C%20alpha%20linking%22%7D%7D%2C%7B%22type%22%3A%22terminal%22%2C%22service%22%3A%22text_chem%22%2C%22parameters%22%3A%7B%22attribute%22%3A%22chem_comp.type%22%2C%22operator%22%3A%22exact_match%22%2C%22negation%22%3Afalse%2C%22value%22%3A%22L-saccharide%2C%20beta%20linking%22%7D%7D%5D%2C%22logical_operator%22%3A%22or%22%7D%5D%2C%22label%22%3A%22text_chem%22%7D%5D%7D%2C%22return_type%22%3A%22non_polymer_entity%22%2C%22request_options%22%3A%7B%22paginate%22%3A%7B%22start%22%3A0%2C%22rows%22%3A25%7D%2C%22results_content_type%22%3A%5B%22experimental%22%5D%2C%22sort%22%3A%5B%7B%22sort_by%22%3A%22score%22%2C%22direction%22%3A%22desc%22%7D%5D%2C%22scoring_strategy%22%3A%22combined%22%7D%2C%22request_info%22%3A%7B%22query_id%22%3A%2240bc5a72183949391950924407f5d293%22%7D%7D
+
+// QUERY: Chemical Component Type = "saccharide" OR Chemical Component Type = "D-saccharide, alpha linking" OR Chemical Component Type = "D-saccharide, beta linking" OR Chemical Component Type = "D-saccharide, beta linking" OR Chemical Component Type = "L-saccharide" OR Chemical Component Type = "L-saccharide, alpha linking" OR Chemical Component Type = "L-saccharide, beta linking"
+
+// and query 2:
+
+// https://www.rcsb.org/search?request=%7B%22query%22%3A%7B%22type%22%3A%22group%22%2C%22nodes%22%3A%5B%7B%22type%22%3A%22group%22%2C%22logical_operator%22%3A%22and%22%2C%22nodes%22%3A%5B%7B%22type%22%3A%22group%22%2C%22nodes%22%3A%5B%7B%22type%22%3A%22terminal%22%2C%22service%22%3A%22text_chem%22%2C%22parameters%22%3A%7B%22attribute%22%3A%22pdbx_reference_molecule.type%22%2C%22operator%22%3A%22exact_match%22%2C%22negation%22%3Afalse%2C%22value%22%3A%22Oligosaccharide%22%7D%7D%5D%2C%22logical_operator%22%3A%22and%22%7D%5D%2C%22label%22%3A%22text_chem%22%7D%5D%2C%22logical_operator%22%3A%22and%22%7D%2C%22return_type%22%3A%22entry%22%2C%22request_options%22%3A%7B%22paginate%22%3A%7B%22start%22%3A0%2C%22rows%22%3A25%7D%2C%22results_content_type%22%3A%5B%22experimental%22%5D%2C%22sort%22%3A%5B%7B%22sort_by%22%3A%22score%22%2C%22direction%22%3A%22desc%22%7D%5D%2C%22scoring_strategy%22%3A%22combined%22%7D%2C%22request_info%22%3A%7B%22query_id%22%3A%22bde3faf933e984b8154d32260989ee2d%22%7D%7D
+
+// QUERY: BIRD Type = "Oligosaccharide"
+
+// I'm sure there is a MUCH simpler way of discovering all "saccharide" entities. But this is what I thought of first.
+
+
+function testSacc(dir, fileHaveAlready){
+	var entities = load(dir + "/allsacc.txt").trim().split(",");
+	var haveAlready = "";
+        if (fileHaveAlready) {
+		haveAlready = load(dir + "/" + fileHaveAlready);
+	}
+	var n = entities.length;
+	print "entities = "+ n;
+	var ret = {};
+	var names = {};
+	var id_name = [];
+	var nnew = 0;
+        var pdbids =  "";
+	for (var i = 1; i <= n; i++) {	
+		var e = entities[i].split("_");
+		var pdbid = e[1]%-9999;
+		if (pdbids.find(pdbid))
+			continue;
+		pdbids += pdbid;
+		var fname = dir + "/" + pdbid + ".cif";
+		var flocal = load(fname);
+		if (flocal.find("FoundException")) {
+			flocal = load("*" +  pdbid);
+			write var flocal @fname;
+		} 
+		var cifinfo = getProperty("cifInfo", fname+ ";keys=_chem_comp.id,_chem_comp.type,_chem_comp.name" ).models[1];
+		var ccids = cifinfo._chem_comp_id;
+		var cctypes = cifinfo._chem_comp_type;
+		var ccnames = cifinfo._chem_comp_name;
+		var list = cctypes.find("saccharide", "index").array;
+                for (var j in list) {
+			n++;
+			var resid = ccids[j + 1];
+			var name = ccnames[j + 1];
+			if (haveAlready && haveAlready.find(resid)) {
+				continue;
+			}
+			var isNew = !ret[resid];			
+			ret[resid] = name;     
+			if (isNew) {	
+				nNew++;
+				print "" + i + "\t" + nNew + "\t" + resid + "\t" + name;
+				id_name.push(pdbid + "\t" + resid + "\t" + name);
+			}
+		}
+ 	}
+        id_name.sort();
+	var ids = ret.keys.join(",");
+	write var ids @{dir + "/_all_id.txt"};
+	write var id_name @{dir + "/_all_id_name.txt"};
+	return ret;
+}
+
+allsacc = testSacc("c:/temp/tmp/sacc");
+print allsacc.keys;
+print allsacc.keys.length;
