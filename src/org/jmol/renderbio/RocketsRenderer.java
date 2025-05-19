@@ -25,9 +25,11 @@
 package org.jmol.renderbio;
 
 import org.jmol.c.STR;
+import org.jmol.modelset.Atom;
 import org.jmol.modelsetbio.ProteinStructure;
 import org.jmol.script.T;
 import org.jmol.shapebio.BioShape;
+import org.jmol.util.Point3fi;
 
 import javajs.api.Interface;
 import javajs.util.P3d;
@@ -93,13 +95,11 @@ public class RocketsRenderer extends StrandsRenderer {
           proteinstructurePrev = proteinstructure;
           pt1.setT(proteinstructure.getAxisStartPoint());
           pt2.sub2(proteinstructure.getAxisEndPoint(), pt1);
-          //System.out.println("barrel " + i + "  " + pt1 + " " + proteinstructure.getAxisEndPoint());
           pt2.scale(1d / (proteinstructure.nRes - 1));
           if (ptLastRocket == i - 3) {
             // too tight! Thank you, Frieda!
             // TODO: in 1crn 30-32, this is still not satisfactory
             cordMidPoints[i - 1].ave(cordMidPoints[i - 2], pt1);
-            //System.out.println(monomers[i-1] + " " + cordMidPoints[i-1]);
           }
         }       
         point.setT(pt1);
@@ -113,6 +113,18 @@ public class RocketsRenderer extends StrandsRenderer {
    }
     controlPoints = cordMidPoints;
     calcScreenControlPoints();
+  }
+
+  public void adjustStrut(P3d[] segments, int start, int end, int offset) {
+
+    for (int i = start; i <= end; i++) {
+      Atom a = monomers[i + offset].getLeadAtom();
+      Point3fi pt = getStrutPointIfNeeded(a);
+      if (pt != null) {
+        pt.setT(segments[i]);
+        pt.sX = 0; // mark as set
+      }
+    }
   }
 
 }

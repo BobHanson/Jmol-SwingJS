@@ -217,11 +217,10 @@ public class XtalSymmetry {
     /**
      * 
      */
-    String spinFrame;
+    private String spinFrame;
     private String spinFrameExt;
-    M4d spinFramePp, spinFrameXyz;
-    V3d perpUVW;
-    private String spinFrameAxisType;
+    private M4d spinFramePp, spinFrameXyz;
+    private V3d perpUVW;
     private M3d spinFrameRotationMatrix;
     protected int nSpins;
     
@@ -268,6 +267,10 @@ public class XtalSymmetry {
           rot.rotate(perpUVW);
           toCartesian(perpUVW, true);
           spinFrameRotationMatrix = Qd.newVA(perpUVW, 0).getMatrix();
+        } else {
+          // not tested
+          // we could have a spinFrameRotationMatrix already from 
+          // the proposed _space_group_spin.coplanar_perp_xyz
         }
         // now set spinFrameXyz
         spinFrameXyz = new M4d();
@@ -312,7 +315,7 @@ public class XtalSymmetry {
       T3d[] spinABC = UnitCell.getMatrixAndUnitCell(unitCell, spinFrame, spinFramePp);
 //      UnitCell.getMatrixAndUnitCell((transform.indexOf("*") >= 0 ? unitCell : null), transform, spinFramePp);
 
-      spinFrameAxisType = "axisxyz";
+      String spinFrameAxisType = "axisxyz";
       String strAxis = getSpinExt(spinFrameExt, "axisxyz");
       if (strAxis == null)
         strAxis = getSpinExt(spinFrameExt, "axisxyz");

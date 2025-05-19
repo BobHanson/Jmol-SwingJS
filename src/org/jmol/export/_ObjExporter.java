@@ -412,7 +412,8 @@ public class _ObjExporter extends __CartesianExporter {
     }
 
     M4d matrix = M4d.newM4(null);
-    matrix.setTranslation(V3d.newV(meshSurface.offset));
+    if (meshSurface.offset != null)
+      matrix.setTranslation(V3d.newV(meshSurface.offset));
     BS bsValid = new BS();
     addMesh(name, data, matrix, null, colix, dim, bsValid);
   }
@@ -799,7 +800,7 @@ public class _ObjExporter extends __CartesianExporter {
       if (dim != null)
         outputFace2(faces[i], i, map, map2);
       else
-        outputFace1(faces[i], map, map2);
+        outputFace1(faces[i], map, map2, normals != null);
 
     // Increase the the current numbering start points for the vertices,
     // textures, and normals
@@ -840,11 +841,12 @@ public class _ObjExporter extends __CartesianExporter {
    * @param map2
    *          Map of data normal indexes to output indexes 
    */
-  private void outputFace1(int[] face, int[] map, int[] map2) {
+  private void outputFace1(int[] face, int[] map, int[] map2, boolean withNormals) {
     output("f");
     for (int i : face)
-      output(" " + ((map == null ? i : map[i]) + currentVertexOrigin) + "//"
-          + ((map2 == null ? i : map2[i]) + currentNormalOrigin));
+      output(" " + ((map == null ? i : map[i]) + currentVertexOrigin) 
+          + (withNormals ? "//"
+          + ((map2 == null ? i : map2[i]) + currentNormalOrigin): ""));
     output("\n");
   }
 

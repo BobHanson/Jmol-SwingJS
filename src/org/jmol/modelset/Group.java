@@ -30,6 +30,7 @@ import javajs.util.Qd;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.util.Point3fi;
 import org.jmol.viewer.JC;
 
 import javajs.util.P3d;
@@ -86,6 +87,7 @@ public class Group implements Structure {
   public int shapeVisibilityFlags;
 
   public Map<String, Object> dssrNT;
+  public Point3fi strutPoint;
 
 
   public Group() {}
@@ -552,6 +554,12 @@ public class Group implements Structure {
 
   public boolean isNucleicMonomer() {
     return false;
+  }
+
+  public void unsetStrutPoint() {
+    if (strutPoint == null)
+      strutPoint = new Point3fi();
+    strutPoint.sX = Integer.MIN_VALUE;
   }
 
 }

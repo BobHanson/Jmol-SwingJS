@@ -52,23 +52,15 @@ public class BackboneRenderer extends BioShapeRenderer {
           && (isDataFrame || atomA.distanceSquared(atomB) < 100)) {
         cA = C.getColixInherited(cA, atomA.colixAtom);
         cB = C.getColixInherited(cB, atomB.colixAtom);
-        if (!checkPass2 || setBioColix(cA) || setBioColix(cB))
+        if (!checkPass2 || setBioColix(cA) || setBioColix(cB)) {
           drawSegmentAB(atomA, atomB, cA, cB, 100);
+          if (renderStruts) {
+            setStrutPoint(atomA, null);
+            setStrutPoint(atomB, null);
+          }
+        }
       }
-      //      boolean showSteps = vwr.getBoolean(T.backbonesteps)
-      //          && bioShape.bioPolymer.isNucleic();
-      //      if (showSteps) {
-      //        NucleicMonomer g = (NucleicMonomer) monomers[i];
-      //        Lst<BasePair> bps = g.getBasePairs();
-      //        if (bps != null) {
-      //          for (int j = bps.size(); --j >= 0;) {
-      //            int iAtom = bps.get(j).getPartnerAtom(g);
-      //            if (iAtom > i)
-      //              drawSegment(atomA, atoms[iAtom], cA, cA, 1000, checkPass2);
-      //          }
-      //        }
-      //      }  
     }
   }
-  
+
 }

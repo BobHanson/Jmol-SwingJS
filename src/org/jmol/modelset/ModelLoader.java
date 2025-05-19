@@ -157,7 +157,6 @@ public final class ModelLoader {
   private boolean highPrecision;
   private boolean noH;
   
-  
 
   @SuppressWarnings("unchecked")
   private void initializeInfo(String name, Map<String, Object> info) {
@@ -170,8 +169,10 @@ public final class ModelLoader {
     //isMultiFile = getModelSetAuxiliaryInfoBoolean("isMultiFile"); -- no longer necessary
     ms.haveBioModels = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_ISPDB));
     isMutate = ms.getMSInfoB("isMutate");
-    if (ms.haveBioModels)
+    if (ms.haveBioModels) {
       jbr = vwr.getJBR().setLoader(this);
+      jbr.carbohydrates = (String) info.get("carbohydrates");
+    }
     jmolData = (adapterModelCount == 0 ? (String) ms.getInfoM("jmolData") : null);
     fileHeader = (String) ms.getInfoM("fileHeader");
     Lst<P3d[]> steps = (Lst<P3d[]>) ms.getInfoM(JC.INFO_TRAJECTORY_STEPS);

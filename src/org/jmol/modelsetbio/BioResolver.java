@@ -779,6 +779,8 @@ public final class BioResolver implements Comparator<String[]> {
   
   private BS bsAssigned;
 
+  public String carbohydrates;
+
   /**
    * Pull in all spans of helix, etc. in the file(s)
    * 
@@ -1074,9 +1076,12 @@ public final class BioResolver implements Comparator<String[]> {
    * @param group3 a potential group3 name
    * @return whether this is a carbohydrate from the list
    */
-  private final static boolean checkCarbohydrate(String group3) {
-    return (group3 != null 
-        && allCarbohydrates.indexOf("[" + group3.toUpperCase() + "]") >= 0);
+  private boolean checkCarbohydrate(String group3) {
+    if (group3 == null)
+      return false;
+    String key = "[" + group3.toUpperCase() + "]";
+    return (allCarbohydrates.indexOf(key) >= 0
+        || carbohydrates != null && carbohydrates.indexOf(key) >= 0);
   }
   private static int group3Count;
   final static char[] predefinedGroup1Names = {

@@ -94,15 +94,22 @@ public class RocketRenderer {
       return;
     P3d[] segments = proteinstructurePending.getSegments();
     boolean renderArrowHead = (renderArrowHeads && endIndexPending == proteinstructurePending.nRes - 1);
-    if (proteinstructurePending instanceof Helix)
+    if (proteinstructurePending instanceof Helix) {
       renderPendingRocketSegment(endIndexPending, segments[startIndexPending],
           segments[endIndexPending], segments[endIndexPending + 1],
           renderArrowHead);
-    else if (proteinstructurePending instanceof Sheet 
-        && ((Sheet)proteinstructurePending).apolymer instanceof AminoPolymer)
+    } else if (proteinstructurePending instanceof Sheet 
+        && ((Sheet)proteinstructurePending).apolymer instanceof AminoPolymer) {
       renderPendingSheetPlank(segments[startIndexPending],
           segments[endIndexPending], segments[endIndexPending + 1],
           renderArrowHead);
+    } else {
+      tPending = false;
+      return;
+    }
+    if (rr.renderStruts) {
+      rr.adjustStrut(segments, startIndexPending, endIndexPending, proteinstructurePending.monomerIndexFirst);
+    }
     tPending = false;
   }
 
@@ -132,8 +139,6 @@ public class RocketRenderer {
             (int) Math.floor(screenB.z), coneDiameter);
         g3d.fillConeScreen3f(GData.ENDCAPS_FLAT, coneDiameter, screenB,
             screenC, false);
-      } else {
-        
       }
       if (startIndexPending == endIndexPending)
         return;

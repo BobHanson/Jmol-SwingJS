@@ -4145,6 +4145,12 @@ public class Viewer extends JmolViewer
 
   public Map<String, Object> readCifData(String fileName, String type) {
     String fname = (fileName == null ? ms.getModelFileName(am.cmi) : fileName);
+    String[] keys = null;
+    int pt = (fname == null ? -1 : fname.indexOf(";keys="));
+    if (pt >= 0) {
+      keys = fname.substring(pt + 6).split(",");
+      fname = fname.substring(0, pt);
+    }
     if (type == null && fname != null
         && fname.toUpperCase().indexOf("BCIF") >= 0) {
       BufferedInputStream is = fm.getBufferedInputStream(fname);
@@ -4157,21 +4163,26 @@ public class Viewer extends JmolViewer
         return new Hashtable<String, Object>();
       }
     }
-    String data = (fileName == null || fileName.length() == 0
+    String data = (fname == null || fname.length() == 0
         ? getCurrentFileAsString("script")
-        : getFileAsString3(fileName, false, null));
+        : getFileAsString3(fname, false, null));
     if (data == null || data.length() < 2)
       return null;
     BufferedReader rdr = Rdr.getBR(data);
     if (type == null)
       type = getModelAdapter().getFileTypeName(rdr);
-    return (type == null ? null : readCifData(null, rdr, type));
+    return (type == null ? null : readCifDataKey(null, rdr, type, keys));
 
   }
 
   @Override
   public Map<String, Object> readCifData(String fileName,
                                          Object rdrOrStringData, String type) {
+    return readCifDataKey(fileName, rdrOrStringData, type, (String[]) null);
+  }
+
+  private Map<String, Object> readCifDataKey(String fileName,
+                                         Object rdrOrStringData, String type, String... keys) {
     if (rdrOrStringData == null)
       rdrOrStringData = getFileAsString(fileName);
     BufferedReader rdr = (rdrOrStringData instanceof BufferedReader
@@ -4180,7 +4191,7 @@ public class Viewer extends JmolViewer
     return Rdr.readCifData((GenericCifDataParser) Interface.getInterface(
         ("Cif2".equals(type) ? "org.jmol.adapter.readers.cif.Cif2DataParser"
             : "javajs.util.CifDataParser"),
-        this, "script"), rdr);
+        this, "script"), rdr, keys);
   }
 
   JmolStateCreator jsc;

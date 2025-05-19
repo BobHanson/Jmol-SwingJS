@@ -34,6 +34,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.api.GenericCifDataParser;
@@ -113,8 +114,9 @@ public class Rdr implements GenericLineReader {
 		return new String(streamToBytes(is));
 	}
 
-	public static Map<String, Object> readCifData(GenericCifDataParser parser, BufferedReader br) {
-		return parser.set(null, br, false).getAllCifData();
+	public static Map<String, Object> readCifData(GenericCifDataParser parser, BufferedReader br, String[] keys) {
+		parser.set(null, br, false);
+		return (keys == null ? parser.getAllCifData() : parser.getAllCifDataType(keys));
 	}
 
   ///////////

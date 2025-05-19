@@ -29,18 +29,23 @@ import org.jmol.c.PAL;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.script.T;
+import org.jmol.shape.Sticks;
 import org.jmol.util.C;
 import org.jmol.util.Edge;
 import org.jmol.util.GData;
+import org.jmol.util.Point3fi;
 import org.jmol.viewer.JC;
 
 import javajs.util.A4d;
 import javajs.util.BS;
 import javajs.util.M3d;
 import javajs.util.P3d;
+import javajs.util.P3i;
 import javajs.util.V3d;
 
 public class SticksRenderer extends FontLineShapeRenderer {
+
+  public static final int FLAG_STRUTS_ONLY = 1;
 
   private boolean showMultipleBonds;
   private double multipleBondSpacing;
@@ -58,6 +63,7 @@ public class SticksRenderer extends FontLineShapeRenderer {
   private boolean hbondsSolid;
 
   private Atom a, b;
+  private Point3fi pa, pb;
   private Bond bond;
   private int xA, yA, zA;
   private int xB, yB, zB;
@@ -77,9 +83,11 @@ public class SticksRenderer extends FontLineShapeRenderer {
   private final BS bsForPass2 = BS.newN(64);
   private boolean isPass2;
   private boolean isPymol;
+  private boolean strutsOnly;
 
   @Override
   protected boolean render() {
+
     Bond[] bonds = ms.bo;
     if (bonds == null)
       return false;
@@ -98,19 +106,20 @@ public class SticksRenderer extends FontLineShapeRenderer {
     bondsBackbone = hbondsBackbone | ssbondsBackbone;
     hbondsSolid = vwr.getBoolean(T.hbondssolid);
     isAntialiased = g3d.isAntialiased();
+    strutsOnly = ((flags & FLAG_STRUTS_ONLY) != 0);
     boolean needTranslucent = false;
     if (isPass2) {
-      if (!isExport)
-        for (int i = bsForPass2.nextSetBit(0); i >= 0; i = bsForPass2
-            .nextSetBit(i + 1)) {
-          bond = bonds[i];
-          if (bond != null)
-            renderBond();
-        }
+      for (int i = bsForPass2.nextSetBit(0); i >= 0; i = bsForPass2
+          .nextSetBit(i + 1)) {
+        bond = bonds[i];
+        if (bond != null)
+          renderBond(i);
+      }
     } else {
       for (int i = ms.bondCount; --i >= 0;) {
         bond = bonds[i];
-        if (bond != null && (bond.shapeVisibilityFlags & myVisibilityFlag) != 0 && renderBond()) {
+        if (bond != null && (bond.shapeVisibilityFlags & myVisibilityFlag) != 0
+            && renderBond(i)) {
           needTranslucent = true;
           bsForPass2.set(i);
         }
@@ -119,13 +128,13 @@ public class SticksRenderer extends FontLineShapeRenderer {
     return needTranslucent;
   }
 
-  private boolean renderBond() {
+  private boolean renderBond(int index) {
     Atom atomA0, atomB0;
-
     a = atomA0 = bond.atom1;
     b = atomB0 = bond.atom2;
 
     int order = bond.order & Edge.BOND_RENDER_MASK;
+
     if (bondsBackbone) {
       if (ssbondsBackbone && (order & Edge.BOND_SULFUR_MASK) != 0) {
         // for ssbonds, always render the sidechain,
@@ -174,21 +183,36 @@ public class SticksRenderer extends FontLineShapeRenderer {
       colixB = C.getColixInherited(colix, colixB);
     }
     boolean needTranslucent = false;
+    boolean skip = false;
+    bondOrder = order & Edge.BOND_RENDER_MASK;
+    boolean isStrut = (bondOrder == Edge.BOND_STRUT);
+    if (strutsOnly != isStrut) {
+      if (isStrut) {
+        ((Sticks) shape).haveStrutPoints = true;
+        if (!isPass2) {
+          a.group.unsetStrutPoint();
+          b.group.unsetStrutPoint();
+        }
+      }
+      skip = true;
+    }
+    
     if (!isExport && !isPass2) {
       boolean doA = !C.renderPass2(colixA);
       boolean doB = !C.renderPass2(colixB);
       if (!doA || !doB) {
-        if (!doA && !doB && !needTranslucent) {
-          g3d.setC(!doA ? colixA : colixB);
-          return true;
+        if (isStrut || !doA && !doB) {
+          skip = true;
         }
+        g3d.setC(!doA ? colixB : colixA);
         needTranslucent = true;
       }
     }
+    if (skip)
+      return needTranslucent;
 
     // set the rendered bond order
 
-    bondOrder = order & Edge.BOND_RENDER_MASK;
     boolean isPartial = bond.isPartial();
     if (!isPartial) {
       if ((bondOrder & Edge.BOND_SULFUR_MASK) != 0)
@@ -202,6 +226,9 @@ public class SticksRenderer extends FontLineShapeRenderer {
         }
       }
     }
+
+    pa = a;
+    pb = b;
 
     // set the mask
 
@@ -241,17 +268,23 @@ public class SticksRenderer extends FontLineShapeRenderer {
         bondOrder = 1;
         if (!hbondsSolid)
           mask = -1;
-      } else if (bondOrder == Edge.BOND_STRUT) {
+      } else if (isStrut) {
         bondOrder = 1;
+        Point3fi p1 = a.group.strutPoint;
+        Point3fi p2 = b.group.strutPoint;
+        pa = setStrutPoint(p1, pa);
+        pb = setStrutPoint(p2, pb);
+        zA = pa.sZ;
+        zB = pb.sZ;
       }
     }
 
-    // set the diameter
+    xA = pa.sX;
+    yA = pa.sY;
+    xB = pb.sX;
+    yB = pb.sY;
 
-    xA = a.sX;
-    yA = a.sY;
-    xB = b.sX;
-    yB = b.sY;
+    // set the diameter
 
     mad = bond.mad;
     if (multipleBondRadiusFactor > 0 && bondOrder > 1)
@@ -343,6 +376,16 @@ public class SticksRenderer extends FontLineShapeRenderer {
     return needTranslucent;
   }
 
+  private Point3fi setStrutPoint(Point3fi p, Point3fi a) {
+    if (p.sX == Integer.MIN_VALUE)
+      return a;
+    P3i pi = vwr.tm.transformPt(p);
+    p.sX = pi.x;
+    p.sY = pi.y;
+    p.sZ = pi.z;
+    return p;
+  }
+
   private void getMultipleBondSettings(int pymolBondOrder) {
     isPymol = (pymolBondOrder != 0);
     if (isPymol) {
@@ -351,6 +394,8 @@ public class SticksRenderer extends FontLineShapeRenderer {
       double scale = ((pymolBondOrder >> 2) & 0x3F) / 50d;
       showMultipleBonds = (scale != 0);
       int n = (pymolBondOrder & 3);
+      // This is a comb calculation where n teeth of width w are
+      // separated by a gap of width w/2. This actually looks pretty good!
       // The "teeth" span the width of the bond (mad/1000) * scale
       //
       // |//////  n teeth, each with fractional width fw
@@ -363,9 +408,10 @@ public class SticksRenderer extends FontLineShapeRenderer {
       // so fw = 1/(n + (n-1)/2)*scale = 2/(3n-1)*scale 
       // and w = fw*(mad/1000)
       // thus:      
-      multipleBondRadiusFactor = scale * 2 / (3 * n - 1); 
+      multipleBondRadiusFactor = scale * 2 / (3 * n - 1);
       // The center-to-center spacing is (3/2)w  (y, below)
-      multipleBondSpacing = multipleBondRadiusFactor * 3 / 2 * (bond.mad / 1000);
+      multipleBondSpacing = multipleBondRadiusFactor * 3 / 2
+          * (bond.mad / 1000);
       // And x, the starting offset from center, is (1-fw)/2, scaled appropriately
       // (one minus half the fractional width top and bottom, divided by two).
       // But we can also say for convenience that it is just half the spacing for 
@@ -402,21 +448,22 @@ public class SticksRenderer extends FontLineShapeRenderer {
   private void drawBond(int dottedMask) {
     boolean isDashed = (dottedMask & 1) != 0;
     byte endcaps = ((colixA & C.TRANSLUCENT_MASK) == C.TRANSPARENT
-        || (colixB & C.TRANSLUCENT_MASK) == C.TRANSPARENT ?
-            GData.ENDCAPS_FLAT : this.endcaps);
+        || (colixB & C.TRANSLUCENT_MASK) == C.TRANSPARENT ? GData.ENDCAPS_FLAT
+            : this.endcaps);
     if (isCartesian && bondOrder == 1 && !isDashed) {
       // bypass screen rendering and just use the atoms themselves
-      g3d.drawBond(a, b, colixA, colixB, endcaps, mad, -1);
+      g3d.drawBond(pa, pb, colixA, colixB, endcaps, mad, -1);
       return;
     }
     boolean isEndOn = (dx == 0 && dy == 0);
     if (isEndOn && asLineOnly && !isCartesian)
       return;
     int renderD = (!isExport || mad == 1 ? width : mad);
-    boolean doFixedSpacing = (bondOrder > 1 && (isPymol || multipleBondSpacing > 0));
+    boolean doFixedSpacing = (bondOrder > 1
+        && (isPymol || multipleBondSpacing > 0));
     boolean isPiBonded = doFixedSpacing
-        && (vwr.getHybridizationAndAxes(a.i, z, x, "pz") != null || vwr
-            .getHybridizationAndAxes(b.i, z, x, "pz") != null)
+        && (vwr.getHybridizationAndAxes(a.i, z, x, "pz") != null
+            || vwr.getHybridizationAndAxes(b.i, z, x, "pz") != null)
         && !Double.isNaN(x.x);
     if (isEndOn && !doFixedSpacing) {
       // end-on view
@@ -424,17 +471,19 @@ public class SticksRenderer extends FontLineShapeRenderer {
       int step = width + space;
       int y = yA - (bondOrder - 1) * step / 2;
       do {
-        fillCylinder(g3d, colixA, colixB, endcaps, xA, y, zA, xB, y, zB, renderD, asLineOnly );
+        fillCylinder(g3d, colixA, colixB, endcaps, xA, y, zA, xB, y, zB,
+            renderD, asLineOnly);
         y += step;
       } while (--bondOrder > 0);
       return;
     }
     if (bondOrder == 1) {
       if (isDashed)
-        drawDashedCylinder(g3d, xA, yA, zA, xB, yB, zB, dashDots, 
-            width, colixA, colixB, renderD, asLineOnly, s1);
+        drawDashedCylinder(g3d, xA, yA, zA, xB, yB, zB, dashDots, width, colixA,
+            colixB, renderD, asLineOnly, s1);
       else
-        fillCylinder(g3d, colixA, colixB, endcaps, xA, yA, zA, xB, yB, zB, renderD, asLineOnly);
+        fillCylinder(g3d, colixA, colixB, endcaps, xA, yA, zA, xB, yB, zB,
+            renderD, asLineOnly);
       return;
     }
     if (doFixedSpacing) {
@@ -484,8 +533,8 @@ public class SticksRenderer extends FontLineShapeRenderer {
           tm.transformPtScr(p1, s1);
           tm.transformPtScr(p2, s2);
           if (isDashed)
-            drawDashedCylinder(g3d, s1.x, s1.y, s1.z, s2.x, s2.y, s2.z, dashDots,
-                width, colixA, colixB, renderD, asLineOnly, s1);
+            drawDashedCylinder(g3d, s1.x, s1.y, s1.z, s2.x, s2.y, s2.z,
+                dashDots, width, colixA, colixB, renderD, asLineOnly, s1);
           else
             fillCylinder(g3d, colixA, colixB, endcaps, s1.x, s1.y, s1.z, s2.x,
                 s2.y, s2.z, renderD, asLineOnly);
@@ -505,8 +554,8 @@ public class SticksRenderer extends FontLineShapeRenderer {
     mag2d = Math.round((float) Math.sqrt(dxB + dyB));
     resetAxisCoordinates();
     if (isCartesian && bondOrder == 3) {
-      fillCylinder(g3d, colixA, colixB, endcaps, xAxis1, yAxis1, zA, xAxis2, yAxis2,
-          zB, renderD, asLineOnly);
+      fillCylinder(g3d, colixA, colixB, endcaps, xAxis1, yAxis1, zA, xAxis2,
+          yAxis2, zB, renderD, asLineOnly);
       stepAxisCoordinates();
       x.sub2(b, a);
       x.scale(0.05d);
@@ -514,14 +563,14 @@ public class SticksRenderer extends FontLineShapeRenderer {
       p2.add2(b, x);
       g3d.drawBond(p1, p2, colixA, colixB, endcaps, mad, -2);
       stepAxisCoordinates();
-      fillCylinder(g3d, colixA, colixB, endcaps, xAxis1, yAxis1, zA, xAxis2, yAxis2,
-          zB, renderD, asLineOnly);
+      fillCylinder(g3d, colixA, colixB, endcaps, xAxis1, yAxis1, zA, xAxis2,
+          yAxis2, zB, renderD, asLineOnly);
       return;
     }
     while (true) {
       if ((dottedMask & 1) != 0)
-        drawDashedCylinder(g3d, xAxis1, yAxis1, zA, xAxis2, yAxis2, zB, dashDots,
-            width, colixA, colixB, renderD, asLineOnly, s1);
+        drawDashedCylinder(g3d, xAxis1, yAxis1, zA, xAxis2, yAxis2, zB,
+            dashDots, width, colixA, colixB, renderD, asLineOnly, s1);
       else
         fillCylinder(g3d, colixA, colixB, endcaps, xAxis1, yAxis1, zA, xAxis2,
             yAxis2, zB, renderD, asLineOnly);

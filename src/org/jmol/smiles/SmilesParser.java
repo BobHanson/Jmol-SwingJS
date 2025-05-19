@@ -369,7 +369,7 @@ public class SmilesParser {
     char ch;
     SmilesBond bond = null;
     boolean wasMeasure = false;
-    boolean wasBranch = false;
+    //boolean wasBranch = false;
     loop: while (pattern != null && pattern.length() != 0) {
       int index = 0;
       if (currentAtom == null) {
@@ -405,7 +405,9 @@ public class SmilesParser {
             ch = getChar(pattern = pattern.substring(1), 0);
         } else {
           // measure, biosequence, or branch
-          wasMeasure = wasBranch = false;
+          wasMeasure = 
+              //wasBranch = 
+              false;
           if (subString.startsWith(".")) {
             parseMeasure(search, subString.substring(1), currentAtom);
             wasMeasure = true;
@@ -415,7 +417,7 @@ public class SmilesParser {
           } else {
             branchLevel++;
             parseSmiles(search, subString, currentAtom, true);
-            wasBranch = true;
+            //wasBranch = true;
             branchLevel--;
           }
           index = subString.length() + 2;
@@ -502,7 +504,9 @@ public class SmilesParser {
           parseConnection(search, ringNumber, currentAtom, bond);
           bond = null;
         } else if (isAtom) {
-          wasMeasure = wasBranch = false;
+          wasMeasure = 
+              //wasBranch = 
+              false;
           switch (ch) {
           case '[':
           case '_':

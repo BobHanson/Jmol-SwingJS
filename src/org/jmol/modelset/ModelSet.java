@@ -837,10 +837,6 @@ public class ModelSet extends BondCollection {
   }
 
   private void deleteModel(int modelIndex, BS bsModelAtoms, BS bsBonds) {
-    /*
-     *   ModelCollection.modelSetAuxiliaryInfo["group3Lists", "group3Counts, "models"]
-     * ModelCollection.stateScripts ?????
-     */
     if (modelIndex < 0) {
       return;
     }

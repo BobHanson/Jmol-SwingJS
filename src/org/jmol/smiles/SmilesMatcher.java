@@ -746,7 +746,7 @@ public class SmilesMatcher implements SmilesMatcherInterface {
     }
     clearExceptions();
     if (pattern instanceof String)
-    pattern = SmilesParser.cleanPattern((String) pattern);
+      pattern = SmilesParser.cleanPattern((String) pattern);
     try {
       // Note that additional flags are set when the pattern is parsed.
       SmilesSearch search = (pattern instanceof String ? SmilesParser.newSearch((String) pattern, true, false) : (SmilesSearch) pattern);

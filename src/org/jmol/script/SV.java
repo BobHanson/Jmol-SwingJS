@@ -1748,6 +1748,13 @@ public class SV extends T implements JSONEncodable {
     M3d m3 = null;
     M4d m4 = null;
     switch (tok) {
+    case bitset:
+      o2 = new  Lst<SV>();
+      BS bs = getBitSet(this, true);
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        o2.addLast(SV.newI(i));
+      }
+      return newV(varray, o2);
     case matrix3f:
       m3 = (M3d) value;
       dim = 3;

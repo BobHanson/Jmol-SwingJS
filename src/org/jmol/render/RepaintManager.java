@@ -33,6 +33,7 @@ import javajs.util.BS;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
 import org.jmol.shape.Shape;
+import org.jmol.shape.Sticks;
 import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.util.Rectangle;
@@ -84,7 +85,6 @@ public class RepaintManager implements JmolRepaintManager {
       holdRepaint = 0;
       if (andRepaint) {
         repaintPending = true;
-        //System.out.println("pophold repaintPending "+ why);
         repaintNow(why);
       }
     }
@@ -104,10 +104,8 @@ public class RepaintManager implements JmolRepaintManager {
 //    JmolToJSmolInterface jmol = (!Viewer.isJS || Viewer.isSwingJS ? null 
 //        :  /** @j2sNative (self.Jmol && Jmol.repaint ? Jmol : null) || */null); 
     if (jmol == null) {
-      //System.out.println("RM requestRepaintAndWait() " + (test++));
       try {
         repaintNow(why);
-        //System.out.println("repaintManager requestRepaintAndWait I am waiting for a repaint: thread=" + Thread.currentThread().getName());
         if (!Viewer.isJS) wait(vwr.g.repaintWaitMs); // more than a second probably means we are locked up here
         if (repaintPending) {
           Logger.error("repaintManager requestRepaintAndWait timeout");
@@ -124,11 +122,9 @@ public class RepaintManager implements JmolRepaintManager {
 
   @Override
   public boolean repaintIfReady(String why) {
-    //System.out.println("ifready repaintPending " + why);
     if (repaintPending)
       return false;
     repaintPending = true;
-    //System.out.println("ifready repaintPending set TRUE");
     if (holdRepaint == 0)
       repaintNow(why);
     return true;
@@ -142,14 +138,12 @@ public class RepaintManager implements JmolRepaintManager {
     // -- "Send me an asynchronous update() event!"
     if (!vwr.haveDisplay)
       return;    
-      //System.out.println("RepaintMan repaintNow " + why);
       vwr.apiPlatform.repaint(vwr.display);
   }
 
   @Override
   synchronized public void repaintDone() {
     repaintPending = false;
-    //System.out.println("repaintPending false");
 
     /**
      * @j2sNative
@@ -157,7 +151,6 @@ public class RepaintManager implements JmolRepaintManager {
      * 
      */
     {
-      //System.out.println("repaintManager repaintDone thread=" + Thread.currentThread().getName());
       // ignored in JavaScript
       notify(); // to cancel any wait in requestRepaintAndWait()
     }
@@ -212,20 +205,24 @@ public class RepaintManager implements JmolRepaintManager {
         vwr.noFrankEcho = true;
       }
       String msg = null;
+      Sticks sticks = (Sticks) shapeManager.getShape(JC.SHAPE_STICKS);
+      sticks.haveStrutPoints = false;
       for (int i = 0; i < JC.SHAPE_MAX && gdata.currentlyRendering; ++i) {
         Shape shape = shapeManager.getShape(i);
         if (shape == null)
           continue;
-
         if (logTime) {
           msg = "rendering " + JC.getShapeClassName(i, false);
           Logger.startTimer(msg);
         }
         if ((isFirstPass || bsTranslucent.get(i))
-            && getRenderer(i).renderShape(g3d, modelSet, shape))
+            && getRenderer(i).renderShape(g3d, modelSet, shape, 0))
           bsTranslucent.set(i);
         if (logTime)
           Logger.checkTimer(msg, false);
+      }
+      if (sticks.haveStrutPoints) {
+        getRenderer(JC.SHAPE_STICKS).renderShape(g3d, modelSet, sticks, SticksRenderer.FLAG_STRUTS_ONLY);
       }
       g3d.renderAllStrings(null);
     } catch (Exception e) {
@@ -265,6 +262,8 @@ public class RepaintManager implements JmolRepaintManager {
     try {
       boolean logTime = vwr.getBoolean(T.showtiming);
       exporter3D.renderBackground(exporter3D);
+      Sticks sticks = (Sticks) shapeManager.getShape(JC.SHAPE_STICKS);
+      sticks.haveStrutPoints = false;
       for (int i = 0; i < JC.SHAPE_MAX; ++i) {
         Shape shape = shapeManager.getShape(i);
         if (shape == null)
@@ -273,9 +272,12 @@ public class RepaintManager implements JmolRepaintManager {
           msg = "rendering " + JC.getShapeClassName(i, false);
           Logger.startTimer(msg);
         }
-        getRenderer(i).renderShape(exporter3D, modelSet, shape);
+        getRenderer(i).renderShape(exporter3D, modelSet, shape, 0);
         if (logTime)
           Logger.checkTimer(msg, false);
+      }
+      if (sticks.haveStrutPoints) {
+        getRenderer(JC.SHAPE_STICKS).renderShape(exporter3D, modelSet, sticks, SticksRenderer.FLAG_STRUTS_ONLY);
       }
       exporter3D.renderAllStrings(exporter3D);
       msg = exporter3D.finalizeOutput();

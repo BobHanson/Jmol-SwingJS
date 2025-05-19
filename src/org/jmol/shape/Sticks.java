@@ -48,7 +48,16 @@ public class Sticks extends Shape {
 
   private int myMask;
   public boolean reportAll;
-  
+
+  /**
+   * False here means strut points have not been calculated and need to be
+   * reset. True may mean that they have been calculated or at least have been
+   * reset and are ready for calculation. 
+   * 
+   * strut points themselves are stored in Group. 
+   * 
+   */
+  public boolean haveStrutPoints;
   public BS bsOrderSet;
   private BS selectedBonds;
 
@@ -243,7 +252,6 @@ public class Sticks extends Shape {
   private final static int MAX_BOND_CLICK_DISTANCE_SQUARED = 10 * 10;
   private final P3i ptXY = new P3i();
   private final static int XY_THREASHOLD = 40;
-
   /**
    * 
    * @param x

@@ -33,10 +33,13 @@ import org.jmol.modelsetbio.NucleicPolymer;
 import org.jmol.modelsetbio.PhosphorusPolymer;
 import org.jmol.render.ShapeRenderer;
 import org.jmol.script.T;
+import org.jmol.shape.Sticks;
 import org.jmol.shapebio.BioShape;
 import org.jmol.shapebio.BioShapeCollection;
 import org.jmol.util.C;
 import org.jmol.util.GData;
+import org.jmol.util.Point3fi;
+import org.jmol.viewer.JC;
 
 import javajs.api.Interface;
 import javajs.util.P3d;
@@ -83,6 +86,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
   
   protected boolean wireframeOnly;
   private boolean needTranslucent;
+  protected boolean renderStruts;
   BioMeshRenderer meshRenderer;
   BioShape bioShape;
   
@@ -157,6 +161,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
       invalidateMesh = true;
       invalidateSheets = true;
     }
+    renderStruts = ((Sticks) vwr.shm.getShape(JC.SHAPE_STICKS)).haveStrutPoints;
   }
   
   private void renderShapes() {
@@ -381,18 +386,29 @@ abstract class BioShapeRenderer extends ShapeRenderer {
     //cartoons, rockets, trace
     setNeighbors(i);
     colix = getLeadColix(i);
+    checkStruts(i);
     if (!setBioColix(colix))
       return;
     if (setMads(i, thisTypeOnly) || isExport) {
-      meshRenderer.setFancyConic(i, tension);
-      return;
+      if (!meshRenderer.setFancyConic(i, tension))
+        return;
+    } else {
+      if (diameterBeg == 0 && diameterEnd == 0 || wireframeOnly) {
+        g3d.drawLineAB(controlPointScreens[i], controlPointScreens[iNext]);
+      } else {
+        g3d.fillHermite(isNucleic ? 4 : 7, diameterBeg, diameterMid,
+            diameterEnd, controlPointScreens[iPrev], controlPointScreens[i],
+            controlPointScreens[iNext], controlPointScreens[iNext2]);
+      }
     }
-    if (diameterBeg == 0 && diameterEnd == 0 || wireframeOnly)
-      g3d.drawLineAB(controlPointScreens[i], controlPointScreens[iNext]);
-    else {
-      g3d.fillHermite(isNucleic ? 4 : 7, diameterBeg, diameterMid, diameterEnd,
-          controlPointScreens[iPrev], controlPointScreens[i],
-          controlPointScreens[iNext], controlPointScreens[iNext2]);
+  }
+
+  private void checkStruts(int i) {
+    if (renderStruts && monomers[i].isSheet() && monomers[i].strutPoint != null) {
+        Point3fi p = new Point3fi();
+        p.add2(controlPoints[i], controlPoints[i + 1]);
+        p.scale(0.5d);
+        setStrutPoint(monomers[i].getLeadAtom(), p);
     }
   }
 
@@ -406,6 +422,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
     // cartoons and meshRibbon
 
     setNeighbors(i);
+    checkStruts(i);
     short c0 = colix = getLeadColix(i);
     if (!setBioColix(colix))
       return;
@@ -485,5 +502,28 @@ abstract class BioShapeRenderer extends ShapeRenderer {
           yA, zA, xB, yB, zB);
     }
   }  
+
+  /**
+   * Get strut point for trace, rocket, strand
+   * @param a control atom
+   * @return point only if not null and not already set
+   */
+  protected Point3fi getStrutPointIfNeeded(Atom a) {
+    Point3fi p = a.group.strutPoint;
+    return (p != null && p.sX == Integer.MIN_VALUE ? p : null);   
+  }
+
+  protected void setStrutPoint(Atom a, Point3fi newPt) {
+    Point3fi p = getStrutPointIfNeeded(a);
+    if (p == null)
+      return;
+    if (newPt == null)
+      newPt = a; // backbone
+    p.setP(newPt);
+    p.sX = newPt.sX;
+    p.sY = newPt.sY;
+    p.sZ = newPt.sZ;
+  }
+  
 
 }

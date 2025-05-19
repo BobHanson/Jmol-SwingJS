@@ -44,10 +44,9 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.viewer.JC;
 /****************************************************************
- * Mps stands for Model-Polymer-Shape
  * 
  * When a Cartoon is instantiated with a call to setSize(),
- * it creates an MpsShape for each BioPolymer in the model set.
+ * it creates an BioShapeCollection for each BioPolymer in the model set.
  * 
  * It is these shapes that are the real "shapes". Unlike other
  * shapes, which are indexed by atom and throughout the entire

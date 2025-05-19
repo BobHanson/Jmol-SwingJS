@@ -441,7 +441,7 @@ public class CifReader extends AtomSetCollectionReader {
     //    _space_group_spin.transform_spinframe_P_abc  'a,b,c'
     //    _space_group_spin.collinear_direction . 
     //    _space_group_spin.coplanar_perp_uvw "0,0,1"
-    //    _space_group_spin.rotation_axis_xyz "0,0,1"
+    //    _space_group_spin.rotation_axis "0,0,1"
     //    _space_group_spin.rotation_angle 45
     String tag = key.substring(18);
     switch (tag) {

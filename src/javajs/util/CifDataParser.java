@@ -158,6 +158,8 @@ public class CifDataParser implements GenericCifDataParser {
 
   private boolean skipToken;
 
+  private int nTypesRemaining = Integer.MAX_VALUE;
+
 
   /**
    * Set the string value of what is returned for "." and "?"
@@ -246,14 +248,18 @@ public class CifDataParser implements GenericCifDataParser {
   public Map<String, Object> getAllCifData() {
     return getAllCifDataType();
   }
+  @Override
   public Map<String, Object> getAllCifDataType(String... types) {
     if (types != null) {
-      if (types.length == 0)
+      if (types.length == 0) {
         types = null;
-      else
-        for (int i = 0; i < types.length; i++)
+      } else {
+        for (int i = 0; i < types.length; i++) {
           types[i] = fixKey(types[i]);
+        }
+      }
     }
+    nTypesRemaining = (types == null ? Integer.MAX_VALUE : types.length);
     line = "";
     String key;
     Map<String, Object> data = null, data0 = null;
@@ -272,6 +278,8 @@ public class CifDataParser implements GenericCifDataParser {
         }
         if (key.startsWith("loop_")) {
           getAllCifLoopData(data, types);
+          if (nTypesRemaining == 0)
+            break;
           continue;
         }
         if (key.startsWith("save_")) {
@@ -322,9 +330,13 @@ public class CifDataParser implements GenericCifDataParser {
   
 
   private boolean checkKey(String[] types, String key) {
-    for (int i = 0; i < types.length; i++)
-      if (key.startsWith(types[i]))
+    for (int i = 0; i < types.length; i++) {
+      if (key.startsWith(types[i])) {
+        if (key.equals(types[i]))
+          nTypesRemaining--;
         return true;
+      }
+    }
     return false;
   }
 
@@ -946,7 +958,6 @@ public class CifDataParser implements GenericCifDataParser {
 
   @Override
   public String skipNextToken() throws Exception {
-    //Logger.error("CifReader skipping " + strPeeked);
     skipToken = true;
     getNextToken();
     skipToken = false;
@@ -968,29 +979,34 @@ public class CifDataParser implements GenericCifDataParser {
     String key;
     Lst<String> keyWords = new Lst<String>();
     Object o;
-    boolean skipping = false;
+    boolean havedata = (types == null);
     while ((o = peekToken()) != null && o instanceof String
         && ((String) o).charAt(0) == '_') {
       key = fixKey((String) getTokenPeeked());
 
       keyWords.addLast(key);
-      if (types == null || checkKey(types, key))
+      if (types == null || checkKey(types, key)) {
         data.put(key, new Lst<String>());
-      else
-        skipping = true;
+        havedata = true;
+      }
     }
+    boolean skipping = !havedata;
     columnCount = keyWords.size();
     if (columnCount == 0)
       return;
     isLoop = true;
-    if (skipping)
+    if (skipping) {
       skipLoop(false);
-    else
-      while (getData())
-        for (int i = 0; i < columnCount; i++)
-          ((Lst<Object>) data.get(keyWords.get(i))).addLast(columnData[i]);
+    } else {
+      while (getData()) {
+        for (int i = 0; i < columnCount; i++) {
+          Lst<Object> cdata = (Lst<Object>) data.get(keyWords.get(i));
+          if (cdata != null)
+            cdata.addLast(columnData[i]);
+        }
+      }
+    }
     isLoop = false;
   }
 
-
-}
+ }

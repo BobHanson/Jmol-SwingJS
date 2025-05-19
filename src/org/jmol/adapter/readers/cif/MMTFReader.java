@@ -41,6 +41,12 @@ import org.jmol.script.SV;
 import org.jmol.util.Logger;
 
 /**
+ * 
+ * Note: RCSB stopped using the MMTF format in July 2024
+ * 
+ * https://www.rcsb.org/news/feature/65a1af31c76ca3abcc925d0c
+ * 
+ * 
  * JmolData RCSB MMTF (macromolecular transmission format) file reader
  * 
  * see https://github.com/rcsb/mmtf/blob/master/spec.md
@@ -96,7 +102,6 @@ import org.jmol.util.Logger;
 public class MMTFReader extends MMCifReader {
 
   private boolean haveStructure;
-  private String pdbID;
 
 
   @Override
@@ -282,24 +287,27 @@ public class MMTFReader extends MMCifReader {
       boolean isHetero = vwr.getJBR().isHetero(group3);
       if (isHetero) {
         // looking for CHEM_COMP_NAME here... "IRON/SULFUR CLUSTER" for SF4 in 1blu
-        String hetName = "" + g.get("chemCompType");
+        // but this is type, not name!
+        String groupType = "" + g.get("chemCompType");
         if (htHetero == null || !htHetero.containsKey(group3)) {
-          
+          String hetName = groupType;          
           // this is not ideal -- see 1a37.mmtf, where PSE is LSQRQRST(PSE)TPNVHM
           // (actually that should be phosphoserine, SPE...)
           // It is still listed as NON-POLYMER even though it is just a modified AA.
           
-          if (entities != null && hetName.equals("NON-POLYMER"))
+          if (entities != null && hetName.equals("NON-POLYMER")) {
             out: for (int i = entities.length; --i >= 0;) {
               Map<String, Object> entity = (Map<String, Object>) entities[i];
               int[] chainList = (int[]) entity.get("chainIndexList");
-              for (int k = chainList.length; --k >= 0;)
+              for (int k = chainList.length; --k >= 0;) {
                 if (chainList[k] == iChain) {
                   hetName = "a component of the entity \"" + entity.get("description") + "\"";
                   break out;
                 }
+              }
             }
-          addHetero(group3, hetName, false, true);
+          }
+          addHetero(group3, hetName, groupType.toLowerCase(), false, true);
         }
       }
       String[] elementList = (String[]) g.get("elementList");

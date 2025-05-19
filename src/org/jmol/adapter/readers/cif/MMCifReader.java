@@ -33,6 +33,7 @@ import org.jmol.c.STR;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.viewer.JC;
 
 import javajs.util.BS;
 import javajs.util.Lst;
@@ -54,6 +55,7 @@ import javajs.util.SB;
  *   _audit_author.name
  *   _atom_site.
  * 
+ * BCIF (binary cif) is a type of mmCIF also processed by this reader.
  * 
  * @author Bob Hanson (hansonr@stolaf.edu)
  * 
@@ -77,6 +79,8 @@ public class MMCifReader extends CifReader {
   
   private P3d chainSum;
   private int[] chainAtomCount;
+
+  private String carbohydrateGroups;
   
   private boolean isLigandBondBug; 
   // Jmol-14.3.3_2014.07.27 broke mmCIF bond reading for ligands
@@ -255,7 +259,6 @@ public class MMCifReader extends CifReader {
     String spaceGroup = sgName;
     if (htSites != null)
       addSites(htSites);
-    
     if (haveBiomolecule) {
       asc.setCurrentModelInfo("biomolecules", vBiomolecules);
       setBiomolecules();
@@ -651,13 +654,15 @@ public class MMCifReader extends CifReader {
 
   final private static byte CHEM_COMP_ID = 0;
   final private static byte CHEM_COMP_NAME = 1;
+  final private static byte CHEM_COMP_TYPE = 2;
 
   final private static String CAT_CHEMCOMP_CAT = "_chem_comp.";
   final protected static String CAT_CHEMCOMP = "_chem_comp";
   
   final private static String[] chemCompFields = { 
     "_chem_comp_id",
-    "_chem_comp_name"
+    "_chem_comp_name",
+    "_chem_comp_type"
   };
 
   /**
@@ -670,11 +675,12 @@ public class MMCifReader extends CifReader {
    */
   protected boolean processChemCompLoopBlock() throws Exception {
     parseLoopParameters(chemCompFields);
-    String groupName, hetName;
+    String groupName, hetName, groupType;
     while (cifParser.getData())
       if (!isNull(groupName = getFieldString(CHEM_COMP_ID))
-          && !isNull(hetName = getFieldString(CHEM_COMP_NAME)))
-        addHetero(groupName, hetName, true, true);
+          && !isNull(hetName = getFieldString(CHEM_COMP_NAME))
+          && !isNull(groupType = getFieldString(CHEM_COMP_TYPE)))
+        addHetero(groupName, hetName, groupType, true, true);
     return true;
   }
 
@@ -708,14 +714,21 @@ public class MMCifReader extends CifReader {
 //    return true;
 //  }
 
-  protected void addHetero(String groupName, String hetName, boolean doCheck, boolean addNote) {
+  protected void addHetero(String groupName, String hetName, String groupType, boolean doCheck, boolean addNote) {
     if (doCheck && !vwr.getJBR().isHetero(groupName))
       return;
     if (htHetero == null)
-      htHetero = new Hashtable<String, String>();
+      htHetero = new Hashtable<>();
     if (doCheck && htHetero.containsKey(groupName))
       return;
     htHetero.put(groupName, hetName);
+    if (addNote)
+      appendLoadNote(groupName + " = " + hetName);
+    if (groupType != null && groupType.indexOf("accharide") >= 0) {
+      if (carbohydrateGroups == null) 
+        carbohydrateGroups = "";
+      carbohydrateGroups += "[" + groupName + "]";
+    }
     if (addNote)
       appendLoadNote(groupName + " = " + hetName);
   }
@@ -1029,6 +1042,8 @@ public class MMCifReader extends CifReader {
   // bond data
   ////////////////////////////////////////////////////////////////
 
+  // _STRUCT_CONN is only processed in the presence of _CHEM_CONN (2015 updated cif from EBI)
+  
   final private static byte STRUCT_CONN_ASYM1 = 0;
   final private static byte STRUCT_CONN_SEQ1  = 1;
   final private static byte STRUCT_CONN_COMP1 = 2;
@@ -1261,6 +1276,10 @@ public class MMCifReader extends CifReader {
     if (htHetero != null) {
       asc.setCurrentModelInfo("hetNames", htHetero);
       asc.setInfo("hetNames", htHetero);
+      if (carbohydrateGroups != null) {
+        asc.setInfo("carbohydrates", carbohydrateGroups);
+        asc.setCurrentModelInfo("carbohydrates", carbohydrateGroups);
+      }
     }    
   }
 

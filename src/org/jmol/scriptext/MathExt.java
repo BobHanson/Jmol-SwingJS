@@ -1972,6 +1972,10 @@ SymmetryInterface sym;
     // smiles1.find("SMILES", smiles2)
     // smiles1.find("SMILES", smiles2)
     // [smiles1, smiles2,...].find("SMARTS", pattern)
+    // array.find("xxx")
+    // array.find("xxx", "index")
+    // array.find("xxx","i|m|v")
+    // array.find("xxx","i|m|v", "index")
 
     SV x1 = mp.getX();
     boolean isList = (x1.tok == T.varray);
@@ -1983,6 +1987,7 @@ SymmetryInterface sym;
     int tokLast = (tok0 == T.nada ? T.nada : args[args.length - 1].tok);
     SV argLast = (tokLast == T.nada ? SV.vF : args[args.length - 1]);
     boolean isON = !isList && (tokLast == T.on);
+    boolean asIndex = (isList && argLast.tok == T.string && "index".equalsIgnoreCase(SV.sValue(argLast)));
     String flags = (args.length > 1 && args[1].tok != T.on
         && args[1].tok != T.off && args[1].tok != T.bitset ? SV.sValue(args[1])
             : "");
@@ -2023,6 +2028,7 @@ SymmetryInterface sym;
         isStr = !sFind.equals("SMILES");
         break;
       case 2:
+      case 3:
         // "xx".find("yyy",FALSE|TRUE|""|"m"|"i"|"v") or some combination of m,i,v
         if (isOff || isON) {
           isStr = true;
@@ -2408,7 +2414,7 @@ SymmetryInterface sym;
     boolean isCaseInsensitive = (flags.indexOf("i") >= 0) || isOff;
     boolean asMatch = (flags.indexOf("m") >= 0);
     boolean checkEmpty = (sFind.length() == 0);
-    boolean isPattern = (!checkEmpty && !isEquivalent && args.length == 2);
+    boolean isPattern = (!checkEmpty && !isEquivalent && args.length == (asIndex ? 3 : 2));
     if (isList || isPattern) {
       JmolPatternMatcher pm = (isPattern ? getPatternMatcher() : null);
       Pattern pattern = null;
@@ -2453,6 +2459,7 @@ SymmetryInterface sym;
         }
         if (asMatch && isMatch || !asMatch && isMatch == !isReverse) {
           n++;
+
           bs.set(i);
           if (asMatch)
             v.addLast(
@@ -2470,7 +2477,13 @@ SymmetryInterface sym;
       }
       // removed in 14.2/3.14 -- not documented and not expected      if (n == 1)
       //    return mp.addXStr(asMatch ? (String) v.get(0) : list[ipt]);
-
+      if (asIndex) {
+        Lst<SV> lst = new Lst<>();
+        for (int i = bs.nextSetBit(0); i >=0; i = bs.nextSetBit(i + 1)) {
+          lst.addLast(SV.newI(i + 1));
+        }
+        return mp.addXList(lst);
+      }
       if (asMatch) {
         String[] listNew = new String[n];
         if (n > 0)
@@ -4291,7 +4304,7 @@ SymmetryInterface sym;
     SV x = (isSelector ? mp.getX() : null);
     String sx = null;
     BS bsSelected = null;
-    if (x != null)
+    if (x != null) {
       switch (x.tok) {
       case T.bitset:
         bsSelected = (BS) x.value;
@@ -4303,6 +4316,7 @@ SymmetryInterface sym;
           return evaluateInChI(mp, new SV[] { SV.newS("SMILES " + (args.length > 0 ? args[0].asString() : sx.indexOf("/f") >= 0 ? "fixedh" : "amide")) });
         }
       }
+    }
     boolean isSelectedSmiles = isSelector && tok == T.smiles;
     if (isSelectedSmiles) {
       // just smple {*}.smiles()
@@ -4816,7 +4830,6 @@ SymmetryInterface sym;
     if (len == 1 && args[0].tok == T.bitset)
       return mp.addX(args[0]);
     BS bs = (isAtomProperty ? SV.getBitSet(mp.getX(), false) : null);
-    //boolean haveBS = (bs != null);
     double distance = 0;
     Object withinSpec = args[0].value;
     String withinStr = "" + withinSpec;

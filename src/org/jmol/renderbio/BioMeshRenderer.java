@@ -92,19 +92,19 @@ public class BioMeshRenderer extends MeshRenderer {
     }
   }
 
-  public void setFancyConic(int i, int tension) {
+  public boolean setFancyConic(int i, int tension) {
     try {
       if ((meshes[i] == null || !meshReady[i])
           && !createMesh(i, bsr.madBeg, bsr.madMid, bsr.madEnd, 1, tension))
-        return;
+        return false;
       meshes[i].setColix(bsr.colix);
       bsRenderMesh.set(i);
-      return;
+      return true;
     } catch (Exception e) {
       bsRenderMesh.clear(i);
       meshes[i] = null;
       Logger.error("render mesh error hermiteConic: " + e.toString());
-      //System.out.println(e.getMessage());
+      return false;
     }
   }
 

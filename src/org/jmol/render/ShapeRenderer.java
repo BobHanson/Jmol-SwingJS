@@ -35,10 +35,6 @@ import org.jmol.viewer.Viewer;
 
 public abstract class ShapeRenderer {
 
-  //public void finalize() {
-  //System.out.println("ShapeRenderer " + shapeID + " " + this + " finalized");
-  //}
-  
   public Viewer vwr;
   protected TransformManager tm;
   /**
@@ -56,6 +52,7 @@ public abstract class ShapeRenderer {
   public short mad;
   public int exportType;
   public boolean isExport;
+  protected int flags;
 
   protected void initRenderer() {}
 
@@ -69,8 +66,9 @@ public abstract class ShapeRenderer {
     initRenderer();
   }
 
-  public boolean renderShape(JmolRendererInterface g3d, ModelSet modelSet, Shape shape) {
+  public boolean renderShape(JmolRendererInterface g3d, ModelSet modelSet, Shape shape, int flags) {
     setup(g3d, modelSet, shape);
+    this.flags = flags;
     boolean needsTranslucent = render();
     exportType = GData.EXPORT_NOT;
     isExport = false;

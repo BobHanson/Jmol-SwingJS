@@ -12,6 +12,8 @@ public interface GenericCifDataParser {
 
   Map<String, Object> getAllCifData();
 
+  Map<String, Object> getAllCifDataType(String... types);
+
   boolean getData() throws Exception;
 
   String getColumnName(int i);
