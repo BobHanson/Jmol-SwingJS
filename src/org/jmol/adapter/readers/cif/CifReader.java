@@ -462,6 +462,7 @@ public class CifReader extends AtomSetCollectionReader {
             + "; use load ... FILTER \"spinframe xxxxx\" to modify");
         spinFrame = (String) field;
       }
+      spinFrame = spinFrame.replace('"', ' ').trim(); // matrix rep should not include quotes
       tag = "spinFrame";
       break;
     case "rotation_axis":
