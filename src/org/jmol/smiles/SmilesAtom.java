@@ -113,7 +113,7 @@ public class SmilesAtom extends P3d implements Node {
 
   private int atomicMass = Integer.MIN_VALUE;
   private int charge = Integer.MIN_VALUE;
-  private int matchingIndex = -1;
+  int matchingIndex = -1;
   public SmilesStereo stereo;
   
   public int getChiralClass() {

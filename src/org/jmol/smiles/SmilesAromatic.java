@@ -84,8 +84,12 @@ public class SmilesAromatic {
     }
     for (int r = vR.size(); --r >= 0;) {
       BS bs = (BS) vR.get(r);
+      // Jmol default 3D: /strict/ check bonding and planarity
+      // OpenSMILES 3D: /openstrict/ check bonding and planarity
+      // Jmol 0D: justCheckBonding
+      // OpenSMILES 0D: /open/, justCheckBonding
       boolean isOK = isSp2Ring(n, jmolAtoms, bsSelected, bs,
-          (justCheckBonding ? Double.MAX_VALUE : strictness > 0 ? 0.1d : 0.01f),
+          (justCheckBonding ? Double.MAX_VALUE : 0.1d),
           checkExplicit,
           strictness == 0);
       if (!isOK)
@@ -251,7 +255,7 @@ public class SmilesAromatic {
       return true;
 
     if (cutoff <= 0)
-      cutoff = 0.01f;
+      cutoff = 0.01d;
 
     V3d vNorm = null;
     V3d vTemp = null;

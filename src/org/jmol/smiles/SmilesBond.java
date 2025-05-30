@@ -98,6 +98,9 @@ public class SmilesBond extends Edge {
 
   SmilesAtom atom1;
   SmilesAtom atom2;
+  
+  boolean atom1HasSymbol;
+  boolean atom2HasSymbol;
 
   public SmilesAtom getAtom1() {
     return atom1;
@@ -192,10 +195,12 @@ public class SmilesBond extends Edge {
   void set2a(SmilesAtom a1, SmilesAtom a2) {
     if (a1 != null) {
       atom1 = a1;
+      atom1HasSymbol = a1.hasSymbol;
       a1.addBond(this);
     }
     if (a2 != null) {
       atom2 = a2;
+      atom2HasSymbol = a2.hasSymbol;
       if (a2.isBioAtomWild && atom1.isBioAtomWild)
         order = TYPE_BIO_SEQUENCE;
       a2.isFirst = false;
@@ -211,6 +216,7 @@ public class SmilesBond extends Edge {
   void setAtom2(SmilesAtom atom, SmilesSearch molecule) {
     atom2 = atom;
     if (atom2 != null) {
+      atom2HasSymbol = atom.hasSymbol;
       atom.addBond(this);
       isConnection = true;
     }
@@ -299,6 +305,8 @@ public class SmilesBond extends Edge {
     SmilesAtom a = atom1;
     atom1 = atom2;
     atom2 = a;
+    atom1HasSymbol = atom1.hasSymbol;
+    atom2HasSymbol = atom2.hasSymbol;
     switch (order & BOND_RENDER_MASK) {
     case TYPE_ATROPISOMER:
       order = TYPE_ATROPISOMER_REV;
