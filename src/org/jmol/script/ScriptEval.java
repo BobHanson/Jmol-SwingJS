@@ -69,7 +69,6 @@ import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.Base64;
 import javajs.util.Lst;
-import javajs.util.M34d;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
@@ -231,7 +230,9 @@ public class ScriptEval extends ScriptExpr {
 
   public boolean isJS;
   
-  private JmolThread scriptDelayThread, fileLoadThread;
+  private JmolThread fileLoadThread;
+
+  private ScriptDelayThread scriptDelayThread;
 
   private boolean allowJSThreads = true;
 
@@ -2095,7 +2096,7 @@ public class ScriptEval extends ScriptExpr {
         if (!script.startsWith("resume\1") && !script.startsWith("step\1"))
           pauseExecution(false);
       }
-      doDelay(ScriptDelayThread.PAUSE_DELAY);
+      doDelay(ScriptDelayThread.PAUSE_DELAY, null);
       // JavaScript will not reach this point, 
       // but no need to pop anyway, because
       // we will be out of this thread.
@@ -2107,6 +2108,10 @@ public class ScriptEval extends ScriptExpr {
   }
 
   public void delayScript(int millis) {
+    delayScriptAndRun(millis, null);
+  }
+  
+  void delayScriptAndRun(int millis, String script) {
     if (vwr.autoExit)
       return;
     stopScriptThreads();
@@ -2114,6 +2119,7 @@ public class ScriptEval extends ScriptExpr {
       vwr.captureParams.put("captureDelayMS", Integer.valueOf(millis));
     }
     scriptDelayThread = new ScriptDelayThread(this, vwr, millis);
+    scriptDelayThread.setScript(script);
     if (isJS && allowJSThreads) {
       // abort this; wait for delay to come back.
        pc = aatoken.length;
@@ -2125,14 +2131,15 @@ public class ScriptEval extends ScriptExpr {
    * 
    * @param millis
    *        negative here bypasses max check
+   * @param script TODO
    * @throws ScriptException
    */
-  private void doDelay(int millis) throws ScriptException {
+  private void doDelay(int millis, String script) throws ScriptException {
     if (!useThreads(false))
       return;
     if (isJS)
-      throw new ScriptInterruption(this, CONTEXT_DELAY, millis);
-    delayScript(millis);
+      throw new ScriptInterruption(this, CONTEXT_DELAY + (script == null ? "" : ":" + script), millis);
+    delayScriptAndRun(millis, script);
   }
 
   @Override
@@ -2293,7 +2300,7 @@ public class ScriptEval extends ScriptExpr {
     vwr.setTainted(true);
     vwr.requestRepaintAndWait("refresh cmd");
     if (isJS && doDelay)
-      doDelay(10); // need this to update JavaScript display
+      doDelay(10, null); // need this to update JavaScript display
   }
 
   @Override
@@ -2395,7 +2402,7 @@ public class ScriptEval extends ScriptExpr {
         // every 1 s check for interruptions
         if (!executionPaused && System.currentTimeMillis() - lastTime > DELAY_INTERRUPT_MS) {
           pc--;
-          doDelay(-1);
+          doDelay(-1, null);
         }
         lastTime = System.currentTimeMillis();
       }
@@ -2644,7 +2651,7 @@ public class ScriptEval extends ScriptExpr {
             if (Viewer.isJS) {
               // using vwr.showString here, as this is just a general message
               vwr.showString("InChI module initialized", false);
-              doDelay(1);
+              doDelay(1, null);
             }
           }
           break;
@@ -3558,7 +3565,7 @@ public class ScriptEval extends ScriptExpr {
       error(ERROR_numberExpected);
     }
     refresh(false);
-    doDelay(Math.abs(millis));
+    doDelay(Math.abs(millis), (slen == 3 && tokAt(2) == T.string ? SV.sValue(getToken(2)) : null));
   }
 
   private void cmdDelete() throws ScriptException {
@@ -6270,6 +6277,9 @@ public class ScriptEval extends ScriptExpr {
           if (nPoints == 1)
             invArg();
           rotAxis = V3d.newV(getPoint3f(i, true, true));
+          if (isSpin && slen == iToken + 1) {
+            degreesPerSecond = 2;
+          }
           break;
         }
         P3d pt1 = centerParameterForModel(i, vwr.am.cmi, null);
@@ -6287,10 +6297,11 @@ public class ScriptEval extends ScriptExpr {
       case T.vector:
         isVector = true;
         isMolecular = true;
-        // rotate vectors 45;
+        // rotate vectors 45; // default {0 0 1}
         // rotate vectors {0 0 1} 45;
         // rotate vectors {q1 q2 q3 q4} 45;
         // rotate vectors <matrix> 45;
+        // spin vectors {0 0 1};// default 2 deg/sec
         m3 = (M3d) getMatrixParam(i + 1, 3, false);
         if (m3 == null) {
           P4d p4 = getPoint4fNoError(i + 1);
@@ -6725,6 +6736,9 @@ public class ScriptEval extends ScriptExpr {
           q = (m3 == null ? Qd.newVA(rotAxis, deg) : Qd.newM(m3));
         }
         m3 = q.getMatrix();
+        if (rotAxis.lengthSquared() == 0) {
+          m3.m00 = Double.NaN;
+        }
         if (Double.isNaN(m3.getElement(0, 0)))
           m3.setElement(1, 1, deg);
         if (!isSpin || degreesPerSecond <= 0) {

@@ -56,7 +56,7 @@ public class Resolver {
     "simple.", ";Alchemy;Ampac;Cube;FoldingXyz;GhemicalMM;HyperChem;Jme;JSON;Mopac;MopacArchive;Tinker;Input;FAH;",
     "spartan.", ";Spartan;SpartanSmol;Odyssey;",
     "xtal.", ";Abinit;Aims;Bilbao;Castep;Cgd;Crystal;Dmol;Espresso;Gulp;Jana;Magres;Shelx;Siesta;VaspOutcar;" +
-             "VaspPoscar;Wien2k;Xcrysden;PWmat;Optimade;Cmdf;Cmdx;",
+             "VaspPoscar;Wien2k;Xcrysden;PWmat;Optimade;Cmdf;Cmdx;FSGOutput;",
     "xml.",  ";XmlCdx;XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlNmrml;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
   };
   
@@ -287,6 +287,9 @@ public class Resolver {
 
     String msg;
     boolean isJSONMap = (leader.charAt(0) == '{');
+    if (isJSONMap && (readerName = checkJsonHeader(leader)) != null) {
+      return readerName;      
+    }
     String[] lines = new String[16];
     int nLines = 0;
     for (int i = 0; i < lines.length; ++i) {
@@ -335,6 +338,12 @@ public class Resolver {
     // Failed to identify file type
 
     return msg;
+  }
+
+  private static String checkJsonHeader(String leader) {
+    if (leader.startsWith("{\"SSG_international_symbol"))
+        return "FSGOutput";
+    return null;
   }
 
   ////////////////////////////////////////////////////////////////

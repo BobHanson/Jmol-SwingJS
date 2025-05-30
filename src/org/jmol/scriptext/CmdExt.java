@@ -4397,6 +4397,9 @@ public class CmdExt extends ScriptExt {
         height = SV.iValue(tokenAt(pt++, args));
         if (height <= 0)
           invArg();
+        if (tokAtArray(pt, args) == T.integer) {
+          quality = SV.iValue(tokenAt(pt++, args));
+        }
       }
       break;
     }
@@ -4433,7 +4436,7 @@ public class CmdExt extends ScriptExt {
       // write [image|history|state] clipboard
 
       // write [optional image|history|state] [JPG quality|JPEG quality|JPG64
-      // quality|PNG|PPM|SPT] "filename"
+      // quality|PNG quality|PPM|SPT] "filename"
       // write script "filename"
       // write isosurface t.jvxl
       // write isosurface t.pmesh
@@ -4442,7 +4445,6 @@ public class CmdExt extends ScriptExt {
       if (type.equals("IMAGE")
           && PT.isOneOf(val.toLowerCase(), JC.IMAGE_OR_SCENE)) {
         type = val.toUpperCase();
-        quality = Integer.MIN_VALUE;
         pt++;
       }
     }
@@ -7000,8 +7002,10 @@ public class CmdExt extends ScriptExt {
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       if (uc == null)
         invArg();
-      if (!chk)
+      if (!chk) {
+        tr = SimpleUnitCell.parseSimpleMath(vwr, tr);
         ret[0] = uc.getV0abc(tr, null);
+      }
       return true;
     }
     if (e.isArrayParameter(i)) {

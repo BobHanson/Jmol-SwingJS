@@ -42,20 +42,21 @@
 
 package org.jmol.adapter.readers.xtal;
 
+import org.jmol.adapter.smarter.Atom;
+import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.api.SymmetryInterface;
+import org.jmol.symmetry.SymmetryOperation;
+import org.jmol.util.Logger;
+import org.jmol.util.SimpleUnitCell;
+import org.jmol.util.Tensor;
+
 import javajs.util.DF;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.P3d;
-import javajs.util.V3d;
 import javajs.util.PT;
-
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
-import org.jmol.api.SymmetryInterface;
-import org.jmol.symmetry.SymmetryOperation;
-import org.jmol.adapter.smarter.Atom;
-import org.jmol.util.Logger;
-import org.jmol.util.Tensor;
+import javajs.util.V3d;
 
 
 /**
@@ -529,6 +530,14 @@ public class CastepReader extends AtomSetCollectionReader {
     }
   }
 
+  private double parseCalcStr(String s) {
+    double f = SimpleUnitCell.parseCalcFunctions(vwr, null, s);
+    if (Double.isNaN(f)) {
+      Logger.error("CASTEP math error in " + s);
+    }
+    return f;
+  }
+  
   private M3d lattTr;
   
   private void readLatticeCart() throws Exception {

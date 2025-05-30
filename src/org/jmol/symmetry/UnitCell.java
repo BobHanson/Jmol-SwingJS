@@ -783,12 +783,13 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
   public static M4d toTrm(String transform, M4d trm) {
     if (trm == null)
       trm = new M4d();
-    getMatrixAndUnitCell(null, transform, trm);
+    getMatrixAndUnitCell(null, null, transform, trm);
     return trm;
   }
 
   /**
    * 
+   * @param vwr 
    * @param uc
    *        generally this or null
    * @param def
@@ -802,7 +803,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
    *        may be null to ignore
    * @return [origin va vb vc]
    */
-  public static T3d[] getMatrixAndUnitCell(SimpleUnitCell uc, Object def,
+  public static T3d[] getMatrixAndUnitCell(Viewer vwr, SimpleUnitCell uc, Object def,
                                            M4d retMatrix) {
     if (def == null)
       def = "a,b,c";
@@ -817,6 +818,23 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       return setAbcFromParams((double[]) def, pts);
     }
     boolean isString = def instanceof String;
+    if (isString && ((String) def).indexOf("(") >= 0)
+      def = SimpleUnitCell.parseSimpleMath(vwr, (String) def);
+    if (isString && ((String) def).charAt(0) == '[') {
+      // string representation of matrix
+      // generate matrix, save if nec. and continue on
+      def = Escape.unescapeMatrixD((String) def);
+      if (def instanceof M3d) {
+        def = M4d.newMV((M3d) def, new P3d());
+      } else if (!(def instanceof M4d)) {
+        return null;
+      }
+      if (retMatrix != null) {
+        retMatrix.setM4((M4d) def);
+        retMatrix = null;
+      }
+      isString = false;
+    }
     if (isString) {
       String sdef = (String) def;
       String strans;
@@ -834,7 +852,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         retMatrix.setIdentity();
         M4d m4 = new M4d();
         for (int i = sdefs.length; --i >= 0;) {
-          getMatrixAndUnitCell(null, sdefs[i], m4);
+          getMatrixAndUnitCell(null, null, sdefs[i], m4);
           retMatrix.mul2(m4, retMatrix);
         }
         return pts; // just not null
@@ -878,14 +896,11 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         // get the reciprocal lattice.
         // 
         M4d mSpinPp = M4d.newM4(null);
-        T3d[] oabc = getMatrixAndUnitCell(uc, "a,b,c", mSpinPp);
-        getMatrixAndUnitCell(null, sdef.replace('*', ' '),
-            mSpinPp);
+        T3d[] oabc = getMatrixAndUnitCell(vwr, uc, "a,b,c", mSpinPp);
+        getMatrixAndUnitCell(null, null, sdef.replace('*', ' '), mSpinPp);
         // this is in xyz, but we need it in abc
-        boolean[] flags = new boolean[] { 
-            (sdef.indexOf("a*") >= 0),
-            (sdef.indexOf("b*") >= 0), 
-            (sdef.indexOf("c*") >= 0) };
+        boolean[] flags = new boolean[] { (sdef.indexOf("a*") >= 0),
+            (sdef.indexOf("b*") >= 0), (sdef.indexOf("c*") >= 0) };
         m = M4d.newM4(null);
         adjustForReciprocal(uc, oabc, mSpinPp, flags, m, pts);
         uc = null; // pts are already set
@@ -1459,10 +1474,13 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         ptAngle = i;
       }
     }
+    V3d v = V3d.newV(aa);
+    toFractional(v, true);
+    v.normalize();
     String s = "rotation_axis="
-        + (aa.x == Math.round(aa.x) ? "" + Math.round(aa.x) : "" + aa.x) + ","
-        + (aa.y == Math.round(aa.y) ? "" + Math.round(aa.y) : "" + aa.y) + ","
-        + (aa.z == Math.round(aa.z) ? "" + Math.round(aa.z) : "" + aa.z);
+        + (v.x == Math.round(v.x) ? "" + Math.round(v.x) : round000(v.x)) + ","
+        + (v.y == Math.round(v.y) ? "" + Math.round(v.y) : round000(v.y)) + ","
+        + (v.z == Math.round(v.z) ? "" + Math.round(v.z) : round000(v.z));
     if (ptAxis < 0) {
       moreInfo.addLast(s);
       if (ptAngle > ptAxis)
@@ -1472,12 +1490,17 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     }
     double a = aa.angle * 180 / Math.PI;
     a = Math.round(a * 1000) / 1000;
-    s = "rotation_angle=" + (a == Math.round(a) ? "" + Math.round(a) : "" + a);
+    s = "rotation_angle=" + (a == Math.round(a) ? "" + Math.round(a) : round000(a));
     if (ptAngle < 0) {
       moreInfo.addLast(s);
     } else {
       moreInfo.set(ptAngle, s);
     }
+  }
+
+  private String round000(double y) {
+    y = Math.round(y*1000)/1000d;
+    return (y == Math.round(y) ? "" + Math.round(y) : "" + y);
   }
 
   void setMoreInfo(Lst<String> info) {

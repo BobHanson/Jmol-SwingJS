@@ -118,7 +118,7 @@ abstract public class JmolThread extends Thread {
   }
 
   double junk;
-  
+
   /**
    * 
    * @param millis  
@@ -189,4 +189,5 @@ abstract public class JmolThread extends Thread {
   public String toString() {
     return super.toString() + "[" + name + "]";
   }
+
 }

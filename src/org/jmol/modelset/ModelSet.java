@@ -2,7 +2,7 @@
  * $Author: hansonr $
  * $Date: 2017-12-13 21:57:36 -0600 (Wed, 13 Dec 2017) $
  * $Revision: 21766 $
-H
+
  *
  * Copyright (C) 2003-2005  The Jmol Development Team
  *
@@ -4815,7 +4815,8 @@ public class ModelSet extends BondCollection {
         return;     
     }
     boolean noref = Double.isNaN(rot.getElement(0, 0));
-    double deg = (noref ? rot.getElement(1, 1) : 0);
+    boolean isScreenZ = (noref && rot.getElement(2, 2) == 1);
+    double deg = (noref || isScreenZ ? rot.getElement(1, 1) : 0);
     if (noref && deg != 0) {
       rot.setElement(1, 1, 0);
       rotateModelSpinVectors(modelIndex, rot);
@@ -4834,8 +4835,16 @@ public class ModelSet extends BondCollection {
     M3d matInv = M3d.newM3(mat);
     matInv.invert();
     if (noref) {
-      Qd q = Qd.newM(mat);
-      V3d qn = q.getNormal();
+      V3d qn;
+      if (isScreenZ) {
+        P3d pt3 = P3d.new3(0,0,100);
+        P3d pt4 = P3d.new3(0,0,200);
+        vwr.tm.unTransformPoint(pt3, pt3);
+        vwr.tm.unTransformPoint(pt4, pt4);
+        qn = V3d.newVsub(pt3, pt4);
+      } else {
+        qn = Qd.newM(mat).getNormal();
+      }
       rot = Qd.newVA(qn, deg).getMatrix();
     }
     BS bs = am[modelIndex].bsAtoms;

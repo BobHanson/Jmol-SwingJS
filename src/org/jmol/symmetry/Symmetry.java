@@ -346,8 +346,7 @@ public class Symmetry implements SymmetryInterface {
     if (o == null && spaceGroup.finalOperations == null) {
       SymmetryOperation op = spaceGroup.symmetryOperations[i];
       // temporary spacegroups don't have to have finalOperations
-      if (!op.isFinalized)
-        op.doFinalize();
+      op.doFinalize();
       o = op;
     }
     SymmetryOperation.rotateAndTranslatePoint(
@@ -801,7 +800,7 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public T3d[] getV0abc(Object def, M4d retMatrix) {
     return (def instanceof T3d[] ? (T3d[]) def
-        : UnitCell.getMatrixAndUnitCell(unitCell, def, retMatrix));
+        : UnitCell.getMatrixAndUnitCell(vwr, unitCell, def, retMatrix));
   }
 
   @Override
@@ -2128,7 +2127,7 @@ public class Symmetry implements SymmetryInterface {
     }
     if (trm == null)
       trm = new M4d();
-    UnitCell.getMatrixAndUnitCell((transform.indexOf("*") >= 0 ? unitCell : null), transform, trm);
+    UnitCell.getMatrixAndUnitCell(vwr, (transform.indexOf("*") >= 0 ? unitCell : null), transform, trm);
     return trm;
   }
 

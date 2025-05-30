@@ -737,6 +737,7 @@ public class T {
   public final static int abs          = 10 | 1 << 9 | mathfunc;
   public final static int javascript   = 12 /* must be even */| 1 << 9 | mathfunc | implicitStringCommand;
   public final static int show         = 14 | 1 << 9 | mathfunc | scriptCommand;
+  public final static int tan          = 15 | 1 << 9 | mathfunc;
 
   
   // ___.xxx(a)
@@ -2197,6 +2198,7 @@ public class T {
         "sy",
         "sz",
         "sxyz",
+        "tan",
         "temperature",
         "relativeTemperature",
         "tensor",
@@ -3282,6 +3284,7 @@ public class T {
         screeny,                            // "sy"
         screenz,                            // "sz"
         screenxyz,                          // "sxyz"
+        tan,                                // "tan"
         temperature,                        // "temperature"
         -1,                                 // "relativeTemperature"
         tensor,                             // "tensor"

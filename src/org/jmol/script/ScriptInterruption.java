@@ -32,7 +32,10 @@ public class ScriptInterruption extends ScriptException {
     //willResume = (millis != Integer.MAX_VALUE && millis != Integer.MIN_VALUE);
     // the delay execution is here just to ensure that even a delay of 0 
     // still forces the interruption.
-    if (why.equals("delay"))
-      eval.delayScript(millis);
+    if (why.startsWith(ScriptEval.CONTEXT_DELAY)) {
+      int pt = why.indexOf(":");
+      String script = (pt > 0 ? why.substring(pt + 1) : null);
+      eval.delayScriptAndRun(millis, script);
+    }
   }  
 }

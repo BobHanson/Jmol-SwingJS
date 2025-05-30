@@ -330,8 +330,7 @@ public class SymmetryOperation extends M4d {
     timeReversal = op.timeReversal;
     spinU = op.spinU;
     setMatrix(false);
-    if (!op.isFinalized)
-      doFinalize();
+    doFinalize();
   }
 
   private void setGamma(boolean isReverse) {
@@ -373,6 +372,8 @@ public class SymmetryOperation extends M4d {
   }
 
   void doFinalize() {
+    if (isFinalized)
+      return;
     div12(this, divisor);
     if (modDim > 0) {
       double[][] a = rsvs.getArray();
@@ -1269,8 +1270,7 @@ public class SymmetryOperation extends M4d {
    * @return centering
    */
   V3d getCentering() {
-    if (!isFinalized)
-      doFinalize();
+    doFinalize();
     if (centering == null && !unCentered) {
       if (modDim == 0 
           && m00 == 1 && m01 == 0 && m02 == 0 
@@ -1304,7 +1304,7 @@ public class SymmetryOperation extends M4d {
     return xyz + getSpinString(m2, false);
   }
 
-  static String getSpinString(M4d m, boolean isUVW) {
+  public static String getSpinString(M4d m, boolean isUVW) {
      return "(" + getXYZFromMatrixFrac(m, false, false, false, isUVW, isUVW, (isUVW ? "uvw" : "mxyz")) + ")";
   }
 
@@ -1770,8 +1770,7 @@ public class SymmetryOperation extends M4d {
   }
 
   private void clearOp() {
-    if (!isFinalized)
-      doFinalize();
+    doFinalize();
     isIrrelevant = false; // this can be a problem. 
     opTrans = null;
     opPoint = opPoint2 = null;

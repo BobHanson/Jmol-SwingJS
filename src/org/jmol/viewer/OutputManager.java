@@ -98,11 +98,14 @@ abstract class OutputManager {
     int pt = fileName.indexOf("?POST?");
     if (pt >= 0)
       fileName = fileName.substring(0, pt);
+    Integer qualityActual = (Integer) params.get("qualityActual");
+    Integer dpi = (Integer) params.get("DPI");
     return (len < 0
         ? "Creation of " + fileName + " failed: "
             + (ret == null ? vwr.getErrorMessageUn() : ret)
         : "OK " + type + " " + (len > 0 ? len + " " : "") + fileName
-            + (quality == Integer.MIN_VALUE ? "" : "; quality=" + quality));
+            + (qualityActual == null || qualityActual.intValue() == Integer.MIN_VALUE ? "" : "; quality=" + qualityActual
+                + (dpi == null ? null : "; DPI=" + dpi)));
   }
 
   /**

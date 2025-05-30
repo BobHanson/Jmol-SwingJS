@@ -1566,7 +1566,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (isTrajectory)
       asc.setTrajectory();
     if (moreUnitCellInfo != null) {
-      asc.setCurrentModelInfo(JC.UC_MOREINFO, moreUnitCellInfo);
+      setMoreInfo();
       moreUnitCellInfo = null;
     }
     finalizeSubclassSymmetry(sym != null);
@@ -1579,6 +1579,14 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
     initializeSymmetry();
     return sym;
+  }
+
+  private void setMoreInfo() {
+    asc.setCurrentModelInfo(JC.UC_MOREINFO, moreUnitCellInfo);
+    for (int i = moreUnitCellInfo.size(); --i >= 0;) {
+      String[] s = moreUnitCellInfo.get(i).split("=");
+      asc.setCurrentModelInfo(s[0], s[1]);
+    }
   }
 
   /**
@@ -2111,16 +2119,4 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       latticeCells[0] = latticeCells[1] = latticeCells[2] = 1;
     }
   }
-
-  private static String[] functions = { "sqrt","sin","cos","tan", "+", "-", "*", "/"}; 
-
-  public double parseCalcStr(String s) {
-    double f = SimpleUnitCell.parseCalc(vwr, functions, s);
-    if (Double.isNaN(f)) {
-      Logger.error("CASTEP math error in " + s);
-    }
-    return f;
-  }
-
-
 }

@@ -90,6 +90,7 @@ public class SpinThread extends JmolThread {
       }
       if (vectorMatrix != null) {
         vm0 = M3d.newM3(vectorMatrix);
+        //isScreenZ = (Double.isNaN(vm0.m00) && vm0.m22 == 1);
         angle = endDegrees;
         endDegrees = Double.MAX_VALUE;
         bsAtoms = null;

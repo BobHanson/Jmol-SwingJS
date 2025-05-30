@@ -36,34 +36,31 @@ import javajs.util.T3d;
 import javajs.util.T4d;
 import javajs.util.V3d;
 
-
-
 /**
- * general-purpose simple unit cell for calculations 
- * and as a super-class of unitcell, which is only part of Symmetry
+ * general-purpose simple unit cell for calculations and as a super-class of
+ * unitcell, which is only part of Symmetry
  * 
- * allows one-dimensional (polymer) and two-dimensional (slab) 
- * periodicity
+ * allows one-dimensional (polymer) and two-dimensional (slab) periodicity
  * 
  */
 
 public class SimpleUnitCell {
 
-  public static final int PARAM_STD       = 6;  // a b c alpha beta gamma [0-5]
-  public static final int PARAM_VAX       = 6;  // ax ay az [6-8]
-  public static final int PARAM_VBX       = 9;  // bx by bz [9-11]
-  public static final int PARAM_VCX       = 12; // cx cy cz [12-14]
-  public static final int PARAM_VCZ       = 14; // last vector value - test for vabc
-  public static final int PARAM_OXYZ      = 15; // ox oy oz [15-17]
-  public static final int PARAM_M4        = 6;  // m00 m01 ... m44 (16 entries, [6-21)
-  public static final int PARAM_M33       = 21; // last matrix value - test for 4x4 matrix
+  public static final int PARAM_STD = 6; // a b c alpha beta gamma [0-5]
+  public static final int PARAM_VAX = 6; // ax ay az [6-8]
+  public static final int PARAM_VBX = 9; // bx by bz [9-11]
+  public static final int PARAM_VCX = 12; // cx cy cz [12-14]
+  public static final int PARAM_VCZ = 14; // last vector value - test for vabc
+  public static final int PARAM_OXYZ = 15; // ox oy oz [15-17]
+  public static final int PARAM_M4 = 6; // m00 m01 ... m44 (16 entries, [6-21)
+  public static final int PARAM_M33 = 21; // last matrix value - test for 4x4 matrix
   public static final int PARAM_SUPERCELL = 22; // na nb nc
-  public static final int PARAM_SCALE = 25;     // scale
-  public static final int PARAM_SLOP = 26;      // slop
-   public static final int PARAM_COUNT = 27;
- 
+  public static final int PARAM_SCALE = 25; // scale
+  public static final int PARAM_SLOP = 26; // slop
+  public static final int PARAM_COUNT = 27;
+
   public final static int INFO_IS_RHOMBOHEDRAL = 9;
-  public final static int INFO_IS_HEXAGONAL = 8;  
+  public final static int INFO_IS_HEXAGONAL = 8;
   public final static int INFO_DIMENSION_TYPE = 7;
   public final static int INFO_DIMENSIONS = 6;
   public final static int INFO_GAMMA = 5;
@@ -77,7 +74,7 @@ public class SimpleUnitCell {
 
   public static final String HEX_TO_RHOMB = "2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c";
   public static final String RHOMB_TO_HEX = "a-b,b-c,a+b+c";
-  
+
   protected final static double toRadians = Math.PI * 2 / 360;
 
   /**
@@ -86,21 +83,21 @@ public class SimpleUnitCell {
   public final static double SLOPSP = 0.0001d;
   public final static double SLOPDP = 0.000000000001d;
   public static final double SLOP_PARAMS = 0.001d; // generous
-  
+
   protected double[] unitCellParams;
 
   /**
    * initial value is set in subclass UnitCell
    */
   protected double slop = (Viewer.isHighPrecision ? SLOPDP : SLOPSP);
-  
+
   public double getPrecision() {
     return slop;
   }
 
   public void setPrecision(double slop) {
-    unitCellParams[PARAM_SLOP] = this.slop = (!Double.isNaN(slop) ? slop 
-        : !Double.isNaN(unitCellParams[PARAM_SLOP]) ? unitCellParams[PARAM_SLOP] 
+    unitCellParams[PARAM_SLOP] = this.slop = (!Double.isNaN(slop) ? slop
+        : !Double.isNaN(unitCellParams[PARAM_SLOP]) ? unitCellParams[PARAM_SLOP]
             : Viewer.isHighPrecision ? SLOPDP : SLOPSP);
   }
 
@@ -116,11 +113,11 @@ public class SimpleUnitCell {
    * 0x07 : z,y,x periodic
    */
   public int dimensionType = DIMENSION_TYPE_ALL;
- 
+
   private P3d fractionalOrigin;
 
   private int na, nb, nc;
-  
+
   public boolean isSupercell() {
     return (na > 1 || nb > 1 || nc > 1);
   }
@@ -133,10 +130,10 @@ public class SimpleUnitCell {
   protected double a_;
   protected double b_, c_;
 
-
   public static boolean isValid(double[] parameters) {
-    return (parameters != null && (parameters[0] > 0 || parameters.length > PARAM_VCZ
-        && !Double.isNaN(parameters[PARAM_VCZ])));
+    return (parameters != null
+        && (parameters[0] > 0 || parameters.length > PARAM_VCZ
+            && !Double.isNaN(parameters[PARAM_VCZ])));
   }
 
   protected SimpleUnitCell() {
@@ -155,17 +152,22 @@ public class SimpleUnitCell {
    * 
    *        or len = 15 [-1 -1 -1 -1 -1 -1 va[3] vb[3] vc[3]] // vectors only
    * 
-   *        or len = 15 [a -1 -1 -1 -1 -1 va[3] vb[3] vc[3]] // polymer, vectors only
+   *        or len = 15 [a -1 -1 -1 -1 -1 va[3] vb[3] vc[3]] // polymer, vectors
+   *        only
    * 
-   *        or len = 15 [a b -1 -1 -1 -1 va[3] vb[3] vc[3]] // slab, vectors only
+   *        or len = 15 [a b -1 -1 -1 -1 va[3] vb[3] vc[3]] // slab, vectors
+   *        only
    * 
-   *        or len = 22 [a b c alpha beta gamma m00 m01 .. m33] // matrix included
+   *        or len = 22 [a b c alpha beta gamma m00 m01 .. m33] // matrix
+   *        included
    * 
    *        and/or len = 25 [...................... na nb nc] // supercell
    * 
-   *        and/or len = 26 [...................... na nb nc scale] // scaled supercell
+   *        and/or len = 26 [...................... na nb nc scale] // scaled
+   *        supercell
    * 
-   *        and/or len = 27 [..................................... slop] // precision
+   *        and/or len = 27 [..................................... slop] //
+   *        precision
    * @return a simple unit cell
    */
   public static SimpleUnitCell newA(double[] params) {
@@ -182,11 +184,10 @@ public class SimpleUnitCell {
    */
   public static int getDimensionFromParams(double[] params) {
     return (params[0] <= 0 ? 3 // given elsewhere
-           : params[1] < 0 ? 1 // no b or c
-           : params[2] < 0 ? 2 // no c
-           : 3);
+        : params[1] < 0 ? 1 // no b or c
+            : params[2] < 0 ? 2 // no c
+                : 3);
   }
-
 
   protected void init(double[] params) {
     if (params == null)
@@ -335,7 +336,8 @@ public class SimpleUnitCell {
           params[PARAM_VBX + 2] * fb, 0);
       m.setColumn4(2, params[PARAM_VCX] * fc, params[PARAM_VCX + 1] * fc,
           params[PARAM_VCX + 2] * fc, 0);
-      if (params.length > PARAM_OXYZ + 2 && !Double.isNaN(params[PARAM_OXYZ + 2])) {
+      if (params.length > PARAM_OXYZ + 2
+          && !Double.isNaN(params[PARAM_OXYZ + 2])) {
         // cartesian offset
         m.setColumn4(3, params[PARAM_OXYZ], params[PARAM_OXYZ + 1],
             params[PARAM_OXYZ + 2], 1);
@@ -372,7 +374,7 @@ public class SimpleUnitCell {
   }
 
   private static V3d newV(double[] p, int i) {
-    return V3d.new3(p[i++], p[i++],p[i]);
+    return V3d.new3(p[i++], p[i++], p[i]);
   }
 
   public static double[] newParams(double[] params, double slop) {
@@ -389,15 +391,13 @@ public class SimpleUnitCell {
     SimpleUnitCell c = SimpleUnitCell.newA(params);
     M4d m = c.matrixFractionalToCartesian;
     for (int i = 0; i < 9; i++)
-    params[PARAM_M4 + i] = m.getElement(i%3, i/3);
+      params[PARAM_M4 + i] = m.getElement(i % 3, i / 3);
   }
 
-
-
   private void setParamsFromMatrix() {
-    V3d va = V3d.new3(1,  0,  0);
-    V3d vb = V3d.new3(0,  1,  0);
-    V3d vc = V3d.new3(0,  0,  1);
+    V3d va = V3d.new3(1, 0, 0);
+    V3d vb = V3d.new3(0, 1, 0);
+    V3d vc = V3d.new3(0, 0, 1);
     matrixFractionalToCartesian.rotate(va);
     matrixFractionalToCartesian.rotate(vb);
     matrixFractionalToCartesian.rotate(vc);
@@ -483,9 +483,7 @@ public class SimpleUnitCell {
 
   public final void toCartesian(T3d pt, boolean ignoreOffset) {
     if (matrixFractionalToCartesian != null)
-      (ignoreOffset ? 
-          matrixFtoCNoOffset : 
-            matrixFractionalToCartesian)
+      (ignoreOffset ? matrixFtoCNoOffset : matrixFractionalToCartesian)
           .rotTrans(pt);
   }
 
@@ -499,9 +497,7 @@ public class SimpleUnitCell {
   public final void toFractional(T3d pt, boolean ignoreOffset) {
     if (matrixCartesianToFractional == null)
       return;
-    (ignoreOffset ? 
-        matrixCtoFNoOffset 
-        : matrixCartesianToFractional)
+    (ignoreOffset ? matrixCtoFNoOffset : matrixCartesianToFractional)
         .rotTrans(pt);
   }
 
@@ -519,19 +515,14 @@ public class SimpleUnitCell {
 
   public final double[] getUnitCellAsArray(boolean vectorsOnly) {
     M4d m = matrixFractionalToCartesian;
-    return (vectorsOnly ? new double[] { 
-        m.m00, m.m10, m.m20, // Va
+    return (vectorsOnly ? new double[] { m.m00, m.m10, m.m20, // Va
         m.m01, m.m11, m.m21, // Vb
         m.m02, m.m12, m.m22, // Vc
-      } 
-      : new double[] { 
-        a, b, c, alpha, beta, gamma, 
-        m.m00, m.m10, m.m20, // Va
-        m.m01, m.m11, m.m21, // Vb
-        m.m02, m.m12, m.m22, // Vc
-        dimension, volume, dimensionType
-      } 
-    );
+    }
+        : new double[] { a, b, c, alpha, beta, gamma, m.m00, m.m10, m.m20, // Va
+            m.m01, m.m11, m.m21, // Vb
+            m.m02, m.m12, m.m22, // Vc
+            dimension, volume, dimensionType });
   }
 
   public final double getInfo(int infoType) {
@@ -555,7 +546,7 @@ public class SimpleUnitCell {
     case INFO_IS_HEXAGONAL:
       return (isHexagonal(unitCellParams) ? 1 : 0);
     case INFO_IS_RHOMBOHEDRAL:
-      return (isRhombohedral(unitCellParams) ? 1 : 0);      
+      return (isRhombohedral(unitCellParams) ? 1 : 0);
     }
     return Double.NaN;
   }
@@ -598,9 +589,12 @@ public class SimpleUnitCell {
    * set cell vectors by string. Does not set origin.
    * 
    * 
-   * @param abcabg "a=...,b=...,c=...,alpha=...,beta=..., gamma=..." or null  
-   * @param params to use if not null 
-   * @param ucnew  to create and return; null if only to set params
+   * @param abcabg
+   *        "a=...,b=...,c=...,alpha=...,beta=..., gamma=..." or null
+   * @param params
+   *        to use if not null
+   * @param ucnew
+   *        to create and return; null if only to set params
    * @return T3d[4] ucnew as [origin, a, b, c], with origin unchanged or {0 0 0}
    */
   public static T3d[] setAbc(String abcabg, double[] params, T3d[] ucnew) {
@@ -626,9 +620,10 @@ public class SimpleUnitCell {
   }
 
   /**
-   * Used for just about everything; via UnitCell
-   * including SpaceGroup.getSiteMultiplicity, Symmetry.getInvariantSymops, 
-   * Symmetry.removeDuplicates, Symmetry.unitize, Symmetry.toUnitCell, SymmetryDesc.getTransform.
+   * Used for just about everything; via UnitCell including
+   * SpaceGroup.getSiteMultiplicity, Symmetry.getInvariantSymops,
+   * Symmetry.removeDuplicates, Symmetry.unitize, Symmetry.toUnitCell,
+   * SymmetryDesc.getTransform.
    * 
    * Low precision here unless SET HIGHPRECISION TRUE has been issued.
    * 
@@ -638,7 +633,7 @@ public class SimpleUnitCell {
   public void unitizeDim(int dimension, T3d pt) {
     switch (dimension) {
     case 3:
-      pt.z = unitizeX(pt.z, slop);  
+      pt.z = unitizeX(pt.z, slop);
       //$FALL-THROUGH$
     case 2:
       pt.y = unitizeX(pt.y, slop);
@@ -649,18 +644,18 @@ public class SimpleUnitCell {
   }
 
   /**
-   * Only used for getting equivalent points and checking for duplicates. 
-   * Presumption here is that two points should not be close together
-   * regardless of lattice distances.
+   * Only used for getting equivalent points and checking for duplicates.
+   * Presumption here is that two points should not be close together regardless
+   * of lattice distances.
    * 
    * @param dimension
    * @param pt
-   * @param slop 
+   * @param slop
    */
   public static void unitizeDimRnd(int dimension, T3d pt, double slop) {
     switch (dimension) {
     case 3:
-      pt.z = unitizeXRnd(pt.z, slop);  
+      pt.z = unitizeXRnd(pt.z, slop);
       //$FALL-THROUGH$
     case 2:
       pt.y = unitizeXRnd(pt.y, slop);
@@ -669,26 +664,28 @@ public class SimpleUnitCell {
       pt.x = unitizeXRnd(pt.x, slop);
     }
   }
-  
+
   private static double unitizeX(double x, double slop) {
     // introduced in Jmol 11.7.36
     x = (x - Math.floor(x));
     // question - does this cause problems with dragatom?
-    if (x > 1 - slop || x < slop)  // 0.9999, 0.0001 was just too tight ams/jolliffeite
+    if (x > 1 - slop || x < slop) // 0.9999, 0.0001 was just too tight ams/jolliffeite
       x = 0;
     return x;
   }
 
   /**
-   * Slightly higher precision -- only used for cmdAssignSpaceGroup checking for duplicates
+   * Slightly higher precision -- only used for cmdAssignSpaceGroup checking for
+   * duplicates
+   * 
    * @param x
-   * @param slop 
+   * @param slop
    * @return rounded value +/-slop
    */
   private static double unitizeXRnd(double x, double slop) {
     // introduced in Jmol 11.7.36
     x = (x - Math.floor(x));
-    if (x > 1 - slop || x < slop) 
+    if (x > 1 - slop || x < slop)
       x = 0;
     return x;
   }
@@ -721,7 +718,7 @@ public class SimpleUnitCell {
   }
 
   ////// lattice methods //////
-  
+
   /**
    * Expanded cell notation:
    * 
@@ -753,23 +750,26 @@ public class SimpleUnitCell {
     offset -= (offset >= 0 ? 5 * f / 10 : offset);
     cell.x = ((nnn / f2) % f) + offset;
     cell.y = (nnn % f2) / f + offset;
-    cell.z = (kcode == 0 ? nnn % f 
-        : (offset == -500 ? kcode / f : kcode) % f) + offset;
+    cell.z = (kcode == 0 ? nnn % f : (offset == -500 ? kcode / f : kcode) % f)
+        + offset;
   }
-  
 
   /**
    * Convert user's {3 2 1} to {1500500500, 1503502501, 0 or 1, 1500501}
+   * 
    * @param pt
-   * @param scale 1 for block of unit cells; 0 for one large supercell
+   * @param scale
+   *        1 for block of unit cells; 0 for one large supercell
    * @return converted P4
    */
   public static P4d ptToIJK(T3d pt, int scale) {
     if (pt.x <= 5 && pt.y <= 5 && pt.z <= 5) {
-      return P4d.new4(555, (pt.x + 4) * 100 + (pt.y + 4) * 10 + pt.z + 4, scale, 0);
-    } 
+      return P4d.new4(555, (pt.x + 4) * 100 + (pt.y + 4) * 10 + pt.z + 4, scale,
+          0);
+    }
     int i555 = 1500500500;
-    return P4d.new4(i555, i555 + pt.x*1000000 + pt.y * 1000 + pt.z, scale, 1500500 + pt.z);
+    return P4d.new4(i555, i555 + pt.x * 1000000 + pt.y * 1000 + pt.z, scale,
+        1500500 + pt.z);
   }
 
   /**
@@ -783,11 +783,11 @@ public class SimpleUnitCell {
   public static String escapeMultiplier(T3d pt) {
     if (pt instanceof P4d) {
       P4d pt4 = (P4d) pt;
-      int x = (int) Math.floor(pt4.x / 1000)*1000 
-                  + (int) Math.floor(pt4.w / 1000) - 1000;
-      int y = (int) Math.floor(pt4.y / 1000)*1000 
+      int x = (int) Math.floor(pt4.x / 1000) * 1000
+          + (int) Math.floor(pt4.w / 1000) - 1000;
+      int y = (int) Math.floor(pt4.y / 1000) * 1000
           + (int) Math.floor(pt4.w) % 1000;
-      return "{" + x + " " + y + " " + pt.z + "}"; 
+      return "{" + x + " " + y + " " + pt.z + "}";
     }
     return Escape.eP(pt);
   }
@@ -805,8 +805,9 @@ public class SimpleUnitCell {
    *        renderer, but later -500 or -499 -- tells us which code we are
    *        looking at, the first one or the second one.
    */
-  public static void setMinMaxLatticeParameters(int dimension, P3i minXYZ, P3i maxXYZ, int kcode) {
-    
+  public static void setMinMaxLatticeParameters(int dimension, P3i minXYZ,
+                                                P3i maxXYZ, int kcode) {
+
     if (maxXYZ.x <= maxXYZ.y && maxXYZ.y >= 555) {
       //alternative format for indicatin.g a range of cells:
       //{111 666}
@@ -839,9 +840,9 @@ public class SimpleUnitCell {
    */
   public static boolean isHexagonal(double[] params) {
     // a == b && alpha = beta = 90 && gamma = 120 (gamma -1 is a "rotateHexCell" indicator for AFLOW
-    return (approx0(params[0] - params[1]) 
-        && approx0(params[3] - 90) && approx0(params[4] - 90) && (approx0(params[5] - 120) 
-            || params[5] == -1));
+    return (approx0(params[0] - params[1]) && approx0(params[3] - 90)
+        && approx0(params[4] - 90)
+        && (approx0(params[5] - 120) || params[5] == -1));
   }
 
   /**
@@ -865,17 +866,33 @@ public class SimpleUnitCell {
   }
 
   public static int getCellRange(T3d fset, P3d[] cellRange) {
-	    int t3w = (fset instanceof T4d ? (int) ((T4d) fset).w : 0);
-	    SimpleUnitCell.ijkToPoint3f((int) fset.x, cellRange[0], 0, t3w);
-	    SimpleUnitCell.ijkToPoint3f((int) fset.y, cellRange[1], 1, t3w);
-	    if (fset.z < 0) {
-	      cellRange[0].scale(-1 / fset.z);
-	      cellRange[1].scale(-1 / fset.z);
-	    }
-	    return t3w;
-	  }
+    int t3w = (fset instanceof T4d ? (int) ((T4d) fset).w : 0);
+    SimpleUnitCell.ijkToPoint3f((int) fset.x, cellRange[0], 0, t3w);
+    SimpleUnitCell.ijkToPoint3f((int) fset.y, cellRange[1], 1, t3w);
+    if (fset.z < 0) {
+      cellRange[0].scale(-1 / fset.z);
+      cellRange[1].scale(-1 / fset.z);
+    }
+    return t3w;
+  }
 
-  public static double parseCalc(Viewer vwr, String[] functions, String s) {
+  private static String[] functions = { "sqrt", "sin", "cos", "tan", "+", "-",
+      "*", "/" };
+
+  public static double parseCalc(Viewer vwr, String s) {
+    return parseCalcFunctions(vwr, functions, s);
+  }
+
+  /**
+   * 
+   * @param vwr
+   * @param functions
+   *        may be null to not parse any functions
+   * @param s
+   * @return value of the evaluated function
+   */
+  public static double parseCalcFunctions(Viewer vwr, String[] functions,
+                                          String s) {
     String[] parts;
     if (s.startsWith("+"))
       s = s.substring(1);
@@ -887,6 +904,8 @@ public class SimpleUnitCell {
       parts = PT.split(s, "(");
       for (int i = parts.length - 1; --i >= 0;) {
         String p = parts[i];
+        if (p.length() == 0)
+          continue;
         String f = null;
         for (int j = functions.length; --j >= 0;) {
           if (p.endsWith(functions[j])) {
@@ -915,7 +934,7 @@ public class SimpleUnitCell {
             break;
           } else if (c == ')') {
             if (haveDigit) {
-              return Double.NaN;              
+              return Double.NaN;
             }
             parts[i] += "*1.0";
             break;
@@ -937,10 +956,61 @@ public class SimpleUnitCell {
     return vwr.evaluateExpressionAsVariable(s).asDouble();
   }
 
+  public static String parseSimpleMath(Viewer vwr, String suvw) {
+    if (suvw.indexOf('(') < 0)
+      return suvw;
+    if (suvw.indexOf("PI") >= 0) {
+      suvw = PT.rep(suvw, "PI", "(180)");
+    }
+    // 1/sqrt(3)u-2/sqrt(3)v,2/sqrt(3)u-1/sqrt(3)v,w
+    String[] parts = suvw.split(",");
+    for (int p = 0; p < parts.length; p++) {
+      String part = parts[p];
+      if (part.indexOf('(') < 0)
+        continue;
+      part = ',' + part;
+      int n = part.length();
+      int pt = n;
+      // 1/sqrt(3)u-2/sqrt(3)v
+      for (int i = n; --i >= 0;) {
+        switch (part.charAt(i)) {
+        case 'n':
+        case 'o':
+          // tan, cos skip a or c
+          i--;
+          //$FALL-THROUGH$
+        default:
+          continue;
+        case ']':
+        case '[':
+        case ',':
+        case 'a':
+        case 'b':
+        case 'c':
+        case 'u':
+        case 'v':
+        case 'w':
+        case 'x':
+        case 'y':
+        case 'z':
+          if (pt > i + 1) {
+            double val = parseCalc(vwr, part.substring(i + 1, pt));
+            String sign = (i > 1 && val >= 0 ? "+" : "");
+            part = part.substring(0, i + 1) + sign + val + part.substring(pt);
+          }
+          pt = i;
+          break;
+        }
+      }
+      parts[p] = part.substring(1);
+    }
+    return PT.join(parts, ',', 0);
+  }
 
   @Override
   public String toString() {
-    return "[" + a + " " + b + " " + c + " " + alpha + " " + beta + " " + gamma + "]";
+    return "[" + a + " " + b + " " + c + " " + alpha + " " + beta + " " + gamma
+        + "]";
   }
 
 }

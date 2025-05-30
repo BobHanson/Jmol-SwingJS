@@ -845,8 +845,7 @@ public class SymmetryDesc {
                                    boolean isSpaceGroup,
                                    boolean isSpaceGroupAll, int nDim) {
 
-    if (!op.isFinalized)
-      op.doFinalize();
+    op.doFinalize();
 
     boolean matrixOnly = (bsInfo.get(RET_MATRIX) & (bsInfo.cardinality() == (bsInfo.get(RET_RXYZ) ? 2 : 1)));
     boolean isTimeReversed = (op.timeReversal == -1);
@@ -2365,7 +2364,7 @@ public class SymmetryDesc {
         P3d ret = sympt;
         return (type == T.atoms ? getAtom(uc, iModel, iatom, ret) : ret);
       }
-      info = createInfoArray(opTemp, uc, pt, null, (id == null ? "sym" : id),
+      info = createInfoArray(opTemp, uc, pt, null, (id == null || id.equals("array") ? "sym_" : id),
           scaleFactor, options, (translation != null), bsInfo, isSpaceGroup, isSpaceGroupAll, nDim);
       if (type == T.array && id != null && returnType != -1 - RET_MATRIX) {
         returnType = getKeyType(id);

@@ -33,6 +33,7 @@ import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.api.JmolAdapter;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
+import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Vibration;
 import org.jmol.viewer.JC;
 
@@ -438,6 +439,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   private void processSpinSpaceGroup() {
 
+    //    _space_group_spin.transform_spinframe_P_matrix  [[1 -1 0] [1 0 0] [0 0 1]]
     //    _space_group_spin.transform_spinframe_P_abc  'a,b,c'
     //    _space_group_spin.collinear_direction . 
     //    _space_group_spin.coplanar_perp_uvw "0,0,1"
@@ -448,9 +450,9 @@ public class CifReader extends AtomSetCollectionReader {
     case "number_spsg_chen":
     case "name_spsg_chen":
       break;
+    case "transform_spinframe_p_matrix":
     case "transform_spinframe_p_abc":
-    case "transform_spinframe_pp_abc":
-      addCellType(CELL_TYPE_SPIN_FRAME, (String) field, false);
+      addCellType(CELL_TYPE_SPIN_FRAME, parseUvwMath((String) field), false);
       if (spinFrameSetByFILTER) {
         System.out.println("CifReader spinFrame set by user to " + spinFrame
             + " file setting ignored: " + field);
@@ -473,10 +475,11 @@ public class CifReader extends AtomSetCollectionReader {
       field = addSpinFrameExt("coldir");
       break;
     case "coplanar_perp_uvw":
-      field = addSpinFrameExt("perpuvw");
-      break;
-    case "coplanar_perp_xyz": // TODO exists?
-      field = addSpinFrameExt("perpxyz");
+//      we don't need this value, because 
+//      it is only incidental information
+//      provided to point out the characteristics
+//      of the symmetry operation spin components
+//      field = addSpinFrameExt("perpuvw");
       break;
     default:
       System.err.println("CIFReader unrecognized spin key " + key);
@@ -1795,7 +1798,6 @@ public class CifReader extends AtomSetCollectionReader {
         case spin_moment_axis_u:
         case spin_moment_axis_v:
         case spin_moment_axis_w:
-        
         case spin_moment_magnitude:
         case spin_moment_symmform_uvw:
           haveMagneticMoments = true;
@@ -2107,7 +2109,8 @@ public class CifReader extends AtomSetCollectionReader {
                   continue;
                 }
                 ouvw = parseUvwMath(ouvw);
-                ouvw = asc.getXSymmetry().getBaseSymmetry().transformUVW(ouvw, spinFrame, spinFrameExt);
+                ouvw = asc.getXSymmetry().getBaseSymmetry().transformUVW(ouvw, 
+                    parseUvwMath(spinFrame), spinFrameExt);
                 field = oxyz + "(" + ouvw + ")";
                 timeRev = 0;// ignore here
               }               
@@ -2156,38 +2159,7 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private String parseUvwMath(String suvw) {
-    if (suvw.indexOf('(') < 0)
-      return suvw;
-    // 1/sqrt(3)u-2/sqrt(3)v,2/sqrt(3)u-1/sqrt(3)v,w
-    String[] parts = suvw.split(",");
-    if (parts.length != 3) {
-      System.err.println("CifReader.parseUvwMath? " + suvw);
-      return suvw;
-    }
-    for (int p = 0; p < parts.length; p++) {
-      String part = parts[p];
-      if (part.indexOf('(') < 0)
-        continue;
-      // 1/sqrt(3)u-2/sqrt(3)v
-      part = ',' + part;
-      for (int n = part.length(), i = n, pt = 0; --i >=0;) {
-        switch (part.charAt(i)) {
-        case ',':
-        case 'u':
-        case 'v':
-        case 'w':
-          if (pt > 0) {
-            double val = parseCalcStr(part.substring(i + 1, pt));
-            String sign = (i > 1 && val >= 0 ? "+" : "");
-            part = part.substring(0, i + 1) + sign + val + part.substring(pt);
-          }
-          pt = i;
-          break;
-        }
-      }
-      parts[p] = part.substring(1);
-    }   
-    return PT.join(parts, ',', 0);
+    return SimpleUnitCell.parseSimpleMath(vwr, suvw);
   }
 
   private int getTimeReversal(String field) {

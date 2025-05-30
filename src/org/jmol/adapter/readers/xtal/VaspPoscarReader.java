@@ -5,6 +5,7 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.api.JmolAdapter;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
+import org.jmol.util.Vibration;
 
 import javajs.util.Lst;
 import javajs.util.M3d;
@@ -36,6 +37,8 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
   protected boolean quiet;
   protected String[] defaultLabels;  
 
+  private int nMagMoments;
+
   @Override
   protected void initializeReader() throws Exception {
     isPrimitive = true;
@@ -55,15 +58,48 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
     readMolecularFormula();
     readCoordinates();
     asc.setAtomSetName(title + (titleMsg == null ? "" : "[" + titleMsg + "]"));
+    readMagneticMoments();
+  }
+
+  private void readMagneticMoments() throws Exception {
+    System.out.println(line);
+    while (rd() != null && line.indexOf("# MAGMOM") < 0) {
+    }
+    if (line == null)
+      return;
+    String[] data = line.substring(9).split(" ");
+    
+    for (int i = 0, pt = 0; i < ac; i++) {
+      Vibration v;
+      Atom a = 
+      asc.atoms[i];
+      a.vib = v = new Vibration().setType(Vibration.TYPE_SPIN);
+      v.set(parseDoubleStr(data[pt++]), parseDoubleStr(data[pt++]), parseDoubleStr(data[pt++]));
+      v.magMoment = round(v.length(), 1000);
+      if (v.magMoment != 0) {
+        nMagMoments++;
+        System.out.println("Vasp Moment[" + i + "]=" + a.getElementSymbol() + " " + v.magMoment + " " + v);
+      }
+    }
   }
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
     if (!iHaveFractionalCoordinates)
       fractionalizeCoordinates(true);
-    if (!haveAtomLabels && !atomsLabeledInline)     
+    if (!haveAtomLabels && !atomsLabeledInline)
       appendLoadNote("VASP POSCAR reader using pseudo atoms Al B C Db...");
+    if (nMagMoments > 0) {
+      asc.setNoAutoBond();
+      addJmolScript("vectors on;vectors 0.15;");
+      appendLoadNote(nMagMoments
+          + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
+    }
     finalizeReaderASCR();
+  }
+
+  private double round(double x, double prec) {
+    return Math.round(x * prec) / prec;
   }
 
   private double[] unitCellData;
@@ -174,7 +210,7 @@ public class VaspPoscarReader extends AtomSetCollectionReader {
           tokens[j] = "" + parseDoubleStr(tokens[j]) * scaleFac;
       Atom atom = addAtomXYZSymName(tokens, 0, null, label);
       if (!Double.isNaN(radius))
-        atom.radius = (double) (radius * scaleFac);
+        atom.radius = radius * scaleFac;
       if (asc.bsAtoms != null)
         asc.bsAtoms.set(atom.index);
     }

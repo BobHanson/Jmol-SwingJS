@@ -33,6 +33,10 @@ class ScriptDelayThread extends JmolThread {
 
   public static final int PAUSE_DELAY = -100;
   private int millis;
+  
+  private String script;
+  
+
 
   /**
    * 
@@ -91,8 +95,18 @@ class ScriptDelayThread extends JmolThread {
           vwr.pushHoldRepaintWhy("scriptdelaythread FINISH");
         if (isPauseDelay)
           eval.notifyResumeStatus();
+        if (script != null) {
+            ((ScriptEval) eval).popContext(false, false);
+            vwr.script(script);
+            return;
+        }
         resumeEval();
         return;
       }
   }
+  
+  public void setScript(String script) {
+    this.script = script;
+  }
+  
 }

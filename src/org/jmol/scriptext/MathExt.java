@@ -69,6 +69,7 @@ import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.A4d;
 import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.BS;
@@ -124,6 +125,7 @@ public class MathExt {
     case T.cos:
     case T.sin:
     case T.sqrt:
+    case T.tan:
       return (args.length == 1 && evaluateMath(mp, args, tok));
     case T.add:
     case T.div:
@@ -263,7 +265,8 @@ public class MathExt {
     // matrix([[,,][,,][,,]])
     // matrix([[,,,][,,,][,,,][,,,]])
     // matrix([[,,][,,][,,]])
-    // any of 4x4 with "abc" or "xyz"
+    // matrix({rx,ry,rz},degrees)
+    // any of 4x4 with "abc" or "xyz" or "uvw"
     // matrix("!b,c,a>a-c,b,2c;0,0,1/2>a,-a-c,b")
     // matrix("13>>15>>14>>2")
     // matrix("13>sub(...params..)>2", {})
@@ -383,6 +386,15 @@ public class MathExt {
         break;
       }
       break;
+    case 2:
+      M3d m3 = new M3d();
+      if (args[0].tok != T.point3f)
+        return false;
+      V3d v = V3d.newV(SV.ptValue(args[0]));
+      double angle = SV.dValue(args[1]);
+      m3.setAA(A4d.newVA(v, angle));
+      mp.addXM3(m3);
+      return mp.addXM3(m3);
     case 3:
     case 4:
       if (args[0].tok == T.varray) {
@@ -407,7 +419,7 @@ public class MathExt {
       }
     }
     return (m4 == null ? mp.addXStr("")
-        : asRXYZ || asABC || asXYZ ? mp.addXStr(matToString(m4, asRXYZ ? 0x1 : asABC ? 0xABC : 0)) : mp.addXM4(m4));
+        : asRXYZ || asABC || asUVW || asXYZ ? mp.addXStr(matToString(m4, asRXYZ ? 0x1 : asABC ? 0xABC : asUVW ? 0xDEF : 0)) : mp.addXM4(m4));
   }
 
   private String matToString(M4d m4, int mode) {
@@ -420,8 +432,9 @@ public class MathExt {
       return sym.staticGetTransformABC(m4, false);
     default:
     case SV.FORMAT_UVW:
+    case 0xDEF:
     case SV.FORMAT_XYZ:
-      return (String) vwr.getSymStatic().staticConvertOperation("", m4, (mode == SV.FORMAT_UVW ? "uvw" : "xyz"));
+      return (String) vwr.getSymStatic().staticConvertOperation("", m4, (mode == SV.FORMAT_UVW || mode == 0xDEF ? "uvw" : "xyz"));
     }
   }
 
@@ -3261,6 +3274,9 @@ SymmetryInterface sym;
     case T.cos:
       x = Math.cos(x * Math.PI / 180);
       break;
+    case T.tan:
+      x = Math.tan(x * Math.PI / 180);
+      break;
     case T.acos:
       x = Math.acos(x) * 180 / Math.PI;
       break;
@@ -3780,9 +3796,9 @@ SymmetryInterface sym;
     if (xyz.length != 3)
       return null;
     P3d pt = P3d.new3(
-        SimpleUnitCell.parseCalc(vwr, null, xyz[0]),
-        SimpleUnitCell.parseCalc(vwr, null, xyz[1]),
-        SimpleUnitCell.parseCalc(vwr, null, xyz[2])
+        SimpleUnitCell.parseCalcFunctions(vwr, null, xyz[0]),
+        SimpleUnitCell.parseCalcFunctions(vwr, null, xyz[1]),
+        SimpleUnitCell.parseCalcFunctions(vwr, null, xyz[2])
         );
     return pt;
   }

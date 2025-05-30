@@ -375,8 +375,6 @@ public class SpaceGroup implements Cloneable, HallReceiver {
             doNormalize);
       }
       if (doOffset && op.sigma == null) {
-        if (!op.isFinalized)
-          op.doFinalize();
         SymmetryOperation.normalizeOperationToCentroid(dim, op, atoms, atomIndex, count);
       }
       op.getCentering();
@@ -1524,9 +1522,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         SymmetryOperation op = symmetryOperations[i];
         op.doFinalize();
         SymmetryOperation newOp = new SymmetryOperation(op, 0, true); // must normalize these
-        newOp.doFinalize();
-        newOp.mul(latticeOp); // just xyz part
-        spinU.mul2(latU, op.spinU); // rev
+        newOp.mul2(op, latticeOp); // just xyz part
+        spinU.mul2(op.spinU, latU); // rev
         newOp.modDim = modDim; // todo
         newOp.divisor = op.divisor;
         String xyz = SymmetryOperation.getXYZFromMatrix(newOp, false, true,
@@ -1765,7 +1762,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     if (c != null) {
       int n = addCentering(trmInv, c, pc, p, cent, 0);
       for (int i = n0; --i >= 0 && n < 3;) {
-        SymmetryOperation.toPoint((String) cent.remove(i), pc);
+        SymmetryOperation.toPoint((String) cent.removeItemAt(i), pc);
         n = addCentering(trmInv, c, pc, p, cent, n);
       }
     }

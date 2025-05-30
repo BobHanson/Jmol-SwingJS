@@ -51,7 +51,6 @@ import javajs.util.M4d;
 import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.PT;
-import javajs.util.Qd;
 import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
@@ -70,10 +69,6 @@ public class XtalSymmetry {
    */
   public static class FileSymmetry extends Symmetry {
 
-    public FileSymmetry() {
-      // for Class.forName()
-    }
-
     //    public void setTimeReversal(int op, int val) {
     //      spaceGroup.operations[op].setTimeReversal(val);
     //    }
@@ -83,7 +78,7 @@ public class XtalSymmetry {
     }
 
     public boolean addSpinLattice(Lst<String> lstSpinFrames) {
-      return spaceGroup.addSpinLattice(lstSpinFrames);// testing, xyz2uvw);
+      return spaceGroup.addSpinLattice(lstSpinFrames);
     }
 
     public boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
@@ -217,10 +212,9 @@ public class XtalSymmetry {
     /**
      * 
      */
-    private String spinFrame;
+    protected String spinFrame;
     private String spinFrameExt;
-    private M4d spinFramePp, spinFrameXyz;
-    private V3d perpUVW;
+    private M4d spinFramePp, spinFrameCartXYZ;
     private M3d spinFrameRotationMatrix;
     protected int nSpins;
     
@@ -229,7 +223,7 @@ public class XtalSymmetry {
       if (!spinFrame.equals(this.spinFrame)) {
         this.spinFrame = spinFrame;
         this.spinFrameExt = spinFrameExt;
-        spinFramePp = spinFrameXyz = null;
+        spinFramePp = spinFrameCartXYZ = null;
       }
       return uvw;
     }
@@ -246,43 +240,30 @@ public class XtalSymmetry {
      * subsystems. This method must be run PRIOR to applying symmetry and thus
      * prior to creation of modulation sets.
      * 
+     * @param acr
      * @param asc
-     * @param unitCellParams
      * 
      */
-    protected void magneticMomentsToFractional(AtomSetCollection asc,
-                                               double[] unitCellParams) {
-      double a = unitCellParams[0];
-      double b = unitCellParams[1];
-      double c = unitCellParams[2];
+    protected void magneticMomentsToFractional(AtomSetCollectionReader acr, AtomSetCollection asc) {
+      double a = acr.unitCellParams[0];
+      double b = acr.unitCellParams[1];
+      double c = acr.unitCellParams[2];
       if (spinFrame != null) {
-        T3d[] spinABC = setSpinFrameMatrices(unitCellParams);
+        T3d[] spinABC = setSpinFrameMatrices(acr);
         a = spinABC[1].length();
         b = spinABC[2].length();
         c = spinABC[3].length();
-        if (perpUVW != null) {
-          M4d inv = M4d.newM4(spinFramePp).invert();
-          M3d rot = new M3d();
-          inv.getRotationScale(rot);
-          rot.rotate(perpUVW);
-          toCartesian(perpUVW, true);
-          spinFrameRotationMatrix = Qd.newVA(perpUVW, 0).getMatrix();
-        } else {
-          // not tested
-          // we could have a spinFrameRotationMatrix already from 
-          // the proposed _space_group_spin.coplanar_perp_xyz
-        }
-        // now set spinFrameXyz
-        spinFrameXyz = new M4d();
+        // now set spinFrameCartXYZ
+        spinFrameCartXYZ = new M4d();
         P3d v = new P3d();
         for (int i = 4; --i > 0;) {
           // the ABC vectors are already in Cartesian coord
           v.setT(spinABC[i]);
           if (spinFrameRotationMatrix != null)
             spinFrameRotationMatrix.rotate(v);
-          spinFrameXyz.setColumn4(i - 1, v.x, v.y, v.z, 0);
+          spinFrameCartXYZ.setColumn4(i - 1, v.x, v.y, v.z, 0);
         }
-        System.out.println("XtalSymmetry spinFramePp=" + spinFramePp + "\nspinFrameXyz=" + spinFrameXyz);
+        System.out.println("XtalSymmetry spinFramePp=" + spinFramePp + "\nspinFrameCartXYZ=" + spinFrameCartXYZ);
         if (spinFrameRotationMatrix != null)
           asc.setCurrentModelInfo(JC.SPIN_FRAME_ROTATION_MATRIX,
               spinFrameRotationMatrix);
@@ -301,26 +282,18 @@ public class XtalSymmetry {
 
     /**
      * Process the spin frame settings for SSGs.
-     * @param unitCellParams 
+     * @param acr 
      * @return spin frame [origin, a, b, c] 
      */
-    private T3d[] setSpinFrameMatrices(double[] unitCellParams) {
-      System.out.println("XtalSymmetry.transformUVW using frame " + spinFrame);
+    private T3d[] setSpinFrameMatrices(AtomSetCollectionReader acr) {
+      System.out.println("XtalSymmetry.setSpinFrameMatrices using frame " + spinFrame);
       // the vectors are based on the spin frame, not the real frame
       // we create a unit cell for this FileSymmetry just 
       // for this purpose
-      setUnitCellFromParams(unitCellParams, false, Double.NaN);
-      spinFramePp = (M4d) convertTransform(spinFrame, null);
+      setUnitCellFromParams(acr.unitCellParams, false, Double.NaN);
       spinFramePp = new M4d();
-      T3d[] spinABC = UnitCell.getMatrixAndUnitCell(unitCell, spinFrame, spinFramePp);
-//      UnitCell.getMatrixAndUnitCell((transform.indexOf("*") >= 0 ? unitCell : null), transform, spinFramePp);
-
-      String spinFrameAxisType = "axisxyz";
+      T3d[] spinABC = UnitCell.getMatrixAndUnitCell(acr.vwr, unitCell, spinFrame, spinFramePp);
       String strAxis = getSpinExt(spinFrameExt, "axisxyz");
-      if (strAxis == null)
-        strAxis = getSpinExt(spinFrameExt, "axisxyz");
-      if (strAxis == null)
-        strAxis = getSpinExt(spinFrameExt, spinFrameAxisType = "perpuvw");
       if (strAxis != null) {
         double angle = PT.parseDouble(getSpinExt(spinFrameExt, "angle"));
         if (!Double.isNaN(angle)) {
@@ -332,12 +305,11 @@ public class XtalSymmetry {
           }
           if (abc != null) {
             V3d axis = V3d.new3(abc[0], abc[1], abc[2]);
-            if (spinFrameAxisType.equals("perpuvw")) {
-              perpUVW = axis;
-            } else {
-              spinFrameRotationMatrix = new M3d()
-                  .setAA(A4d.newVA(axis, angle * (Math.PI / 180)));
-            }
+            // convert to cartesian rotation and normalize
+            unitCell.toCartesian(axis, true);
+            axis.normalize();
+            spinFrameRotationMatrix = new M3d()
+                .setAA(A4d.newVA(axis, angle * (Math.PI / 180)));
           }
         }
       }
@@ -392,8 +364,10 @@ public class XtalSymmetry {
             nSpins++;
           } else {
             v = (Vibration) v.clone(); // this could be a modulation set
-            if (spinFrameXyz != null) {
-              spinFrameXyz.rotate(v);
+            if (spinFrameCartXYZ != null) {
+              spinFrameCartXYZ.rotate(v);
+            } else {
+              toCartesian(v, true);
             }
             if (v.lengthSquared() > 0) {
               nSpins++;
@@ -411,10 +385,11 @@ public class XtalSymmetry {
 
   private static final double MAX_INTERCHAIN_BOND_2 = 25; // allowing for hydrogen bonds
   private final static double MINIMUM_FRACTIONAL_ATOM_DISTANCE = 0.0001d;
-  private final static int PARTICLE_CHAIN = 1;
-  private final static int PARTICLE_NONE = 0;
 
+  private final static int PARTICLE_NONE = 0;
+  private final static int PARTICLE_CHAIN = 1;
   private final static int PARTICLE_SYMOP = 2;
+  
   private static final double SQUARED_CARTESIAN_DISTANCE_CHECK_NOOPS = 0.0001d;
   private static final double SQUARED_CARTESIAN_DISTANCE_CHECK_OPS = 0.01d;
 
@@ -964,12 +939,12 @@ public class XtalSymmetry {
    * from XtalSymmetry.applySymmetryFromReader via CifReader and JanaReader doPreSymmetry
    */
   public void scaleFractionalVibs() {
-    getSymmetry().magneticMomentsToFractional(asc, acr.unitCellParams);
+    getSymmetry().magneticMomentsToFractional(acr, asc);
   }
 
   /**
    * One of the last things to do for a spin space group: 
-   * Set the spin vectors, possibly based on spinFrameXyz.
+   * Set the spin vectors, possibly based on spinFrameCartXYZ.
    * 
    * From CifReader.finalizeSubclassSymmetry after supercell business.
    * 
@@ -1850,6 +1825,11 @@ public class XtalSymmetry {
           continue;
 
         if (ms == null) {
+          
+          if (asc.ac == 125 && iSym == 97) {
+            System.out.println(sym.getSymmetryOperations()[iSym]);
+            System.out.println("??????");
+          }
           sym.newSpaceGroupPoint(a, iSym,
               (iSym >= nOp ? lstNCS.get(iSym - nOp) : null), transX, transY,
               transZ, pttemp);

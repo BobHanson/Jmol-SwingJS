@@ -521,6 +521,8 @@ public class ModelKit {
       Lst<Integer> colorList = new Lst<>();
       for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
           .nextSetBit(i + 1)) {
+        if (a[i] == null)
+          continue;
         String label = (String) mk.vwr.shm.getShapePropertyIndex(JC.SHAPE_LABELS, "label", i);
         if (label == null) {
           // any missing label results in no label assignments
@@ -4221,7 +4223,7 @@ public class ModelKit {
     for (int i = drawAtomSymmetry.size(); --i >= 0;) {
       DrawAtomSet a = drawAtomSymmetry.get(i);
       if (a.id.equals(id)) {
-        drawAtomSymmetry.remove(i);
+        drawAtomSymmetry.removeItemAt(i);
         return;
       }
     }
