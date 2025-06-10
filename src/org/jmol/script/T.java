@@ -364,7 +364,7 @@ public class T {
   public final static int selectionhalos = scriptCommand | 52 | deprecatedparam | defaultON;
 // public final static int show     see mathfunc
   public final static int slab         = scriptCommand | 53 | intparam | defaultON;
-  public final static int spin         = scriptCommand | 55 | deprecatedparam | defaultON;
+  public final static int spin         = scriptCommand | 1  | intproperty | defaultON;
   public final static int ssbond       = scriptCommand | 56 | deprecatedparam | defaultON;
   public final static int step         = scriptCommand | 58 | noArgs;
   public final static int stereo       = scriptCommand | 59 | defaultON;

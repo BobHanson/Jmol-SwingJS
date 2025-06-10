@@ -838,6 +838,9 @@ final public class CLEG {
     if (sym0 != null && sym != sym0)
       sym.getUnitCell(sym0.getV0abc(null, null), false, "modelkit");
     // change << to >super> 
+    if (cleg == null) {
+      return "!no CLEG id for this space group";
+    }
     if (cleg.indexOf("<") >= 0) {
       cleg = PT.rep(cleg, "<<", ">super>").replace('<', '>');
     }

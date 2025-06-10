@@ -474,7 +474,7 @@ public class MSRdr implements MSInterface {
       }
       fixDoubleA(pt);
       cr.appendLoadNote("W_" + (i + 1) + " = " + Escape.e(pt));
-      cr.appendUnitCellInfo("q" + (i + 1) + "=" + pt[0] + " " + pt[1] + " "
+      cr.addMoreUnitCellInfo("q" + (i + 1) + "=" + pt[0] + " " + pt[1] + " "
           + pt[2]);
       sigma.getArray()[i] = new double[] { pt[0], pt[1], pt[2] };
     }
@@ -902,7 +902,7 @@ public class MSRdr implements MSInterface {
     }
     if (Logger.debugging) {
       Logger.debug("setModulation iop = " + iop + " "
-          + symmetry.getSpaceGroupXyz(iop, false) + " " + a.bsSymmetry);
+          + symmetry.getSpaceGroupXyzOriginal(iop, false) + " " + a.bsSymmetry);
     }
 
     // The magic happens here. Note that we must preserve any spin "vibration"

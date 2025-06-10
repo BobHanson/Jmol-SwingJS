@@ -1247,6 +1247,8 @@ public class PropertyManager implements JmolPropertyManager {
       return getModel("PWMAT", bs, new Object[] { "slab"}, null);
     if (uc.equals("CIFP1"))
       return getModel("CIF", bs, new Object[] { "P1"}, null);
+    if (uc.equals("SCIF"))
+      return getModel("CIF", bs, null, null);
     if (uc.equals("CML"))
       return getModelCml(bs, Integer.MAX_VALUE, true, doTransform, allTrajectories);
     if (uc.equals("PDB") || uc.equals("PQR"))

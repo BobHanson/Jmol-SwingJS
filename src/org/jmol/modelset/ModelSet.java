@@ -497,7 +497,7 @@ public class ModelSet extends BondCollection {
                                                   int index, double scale,
                                                   T3d[] pts, P3d center, String id) {
     SymmetryInterface pointGroup = this.pointGroup;
-    SymmetryInterface symmetry = Interface.getSymmetry(vwr, "ms");
+    SymmetryInterface symmetry = Interface.getSymmetry(vwr, "calcPG");
     BS bs = null;
     boolean haveVibration = false;
     boolean isPolyhedron = false;
@@ -4401,7 +4401,7 @@ public class ModelSet extends BondCollection {
     haveChirality = true;
     for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) 
       at[i].setCIPChirality(0);
-    Interface.getSymmetry(vwr, "ms").calculateCIPChiralityForAtoms(bsAtoms);
+    Interface.getSymmetry(vwr, "calcChirality").calculateCIPChiralityForAtoms(bsAtoms);
     if (!withReturn)
       return null;
     String s = "";
@@ -4861,8 +4861,22 @@ public class ModelSet extends BondCollection {
     A4d aa = quat.toA4d();
     mat = M3d.newM3(rot);
     info.put(JC.SPIN_ROTATION_MATRIX_APPLIED, mat);
-    info.put(JC.SPIN_ROTATION_AXIS_ANGLE_APPLIED, aa);
+    info.put(JC.SPIN_ROTATION_ANGLE_APPLIED, aa);
     unitCells[modelIndex].setSpinAxisAngle(aa);
+  }
+
+  public int getSpin(int atomIndex) {
+    Atom a = at[atomIndex];
+    if (a == null)
+      return 0;
+    Vibration v = vibrations[atomIndex];
+    if (v == null || v.magMoment == 0)
+      return 0;
+    int op = a.getSymOp() - 1;
+    if (op < 0)
+      return 0;
+    SymmetryInterface uc = getUnitCellForAtom(atomIndex);
+    return (uc == null ? 0 : uc.getSpinIndex(op) + 1);
   }
 }
 

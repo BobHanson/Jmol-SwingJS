@@ -331,7 +331,7 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
 
     this.id = id;// + "_" + symmetry.getSpaceGroupName();
     this.symmetry = symmetry;
-    strop = symmetry.getSpaceGroupXyz(iop, false);
+    strop = symmetry.getSpaceGroupXyzOriginal(iop, false);
     this.iop = iop;
     this.nOps = nOps;
     

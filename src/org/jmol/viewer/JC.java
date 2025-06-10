@@ -230,8 +230,8 @@ public final class JC {
       "pdb",
       "https://files.rcsb.org/download/%FILE.pdb", // new Jmol 14.4.4 3/2016
       "pdb0", "https://files.rcsb.org/download/%FILE.pdb", // used in JSmol
-      "pdbe", "https://www.ebi.ac.uk/pdbe/entry-files/download/%FILE.cif",
-      "pdbe2", "https://www.ebi.ac.uk/pdbe/static/entry/%FILE_updated.cif",
+      "pdbe", "https://www.ebi.ac.uk/pdbe/entry-files/download/%file.cif",
+      "pdbe2", "https://www.ebi.ac.uk/pdbe/static/entry/%file_updated.cif",
       "pubchem",
       "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d",
       "map",
@@ -246,15 +246,15 @@ public final class JC {
       //"emdbmap", "https://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%file/map/emd_%file.map.gz", // https did not work in Java due to certificate issues
       // was considerably slower
       "emdbmap",
-      "https://www.ebi.ac.uk/pdbe/densities/emd/emd-%file/cell?detail=6&space=cartesian&encoding=bcif",
+      "https://www.ebi.ac.uk/pdbe/volume-server/emd/emd-%file/cell?detail=6&space=cartesian&encoding=bcif",
       "emdbquery",
       "https://www.ebi.ac.uk/emdb/api/search/fitted_pdbs:%file?fl=emdb_id,map_contour_level_value&wt=csv", // to get the EMDB id from the PDB id
       "emdbmapserver",
-      "https://www.ebi.ac.uk/pdbe/densities/emd/emd-%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif",
-      "xxxxresolverResolver", "https://chemapps.stolaf.edu/resolver",
-      "smiles2d", "https://cirx.chemicalcreatures.com/chemical/structure/%FILE/file?format=sdf&get3d=false",
-      "smiles3d", "https://cirx.chemicalcreatures.com/chemical/structure/%FILE/file?format=sdf&get3d=true",
-      };
+      "https://www.ebi.ac.uk/pdbe/volume-server/emd/emd-%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif",
+      "xxxresolverResolver", "https://chemapps.stolaf.edu/resolver", "smiles2d",
+      "https://cirx.chemicalcreatures.com/chemical/structure/%FILE/file?format=sdf&get3d=false",
+      "smiles3d",
+      "https://cirx.chemicalcreatures.com/chemical/structure/%FILE/file?format=sdf&get3d=true", };
 
   private final static String defaultOptimadeFieldsStr = 
         ",chemical_formula_descriptive"
@@ -981,7 +981,7 @@ public final class JC {
   public static final String MODELKIT_UPDATE_MODEL_KEYS = "updatemodelkeys";
   public static final String MODELKIT_UPDATE_ATOM_KEYS = "updateatomkeys";
   public static final String MODELKIT_ASSIGN_BOND = "assignbond";
-  public static final String MODELKIT_ROTATE_BOND_ATOM_INDEX = "rotatebloadond";
+  public static final String MODELKIT_ROTATE_BOND_ATOM_INDEX = "rotatebond";
   public static final String MODELKIT_BRANCH_ATOM_PICKED = "branchatomclicked";
   public static final String MODELKIT_BRANCH_ATOM_DRAGGED = "branchatomdragged";
   
@@ -1649,9 +1649,10 @@ public final class JC {
   public static final String FILE_DATA = "fileData";
   public static final String LOAD_OPTION_FILL_RANGE = "fillRange";
   public static final String SPIN_ROTATION_MATRIX_APPLIED = "spinRotationMatrixApplied";
-  public static final String SPIN_ROTATION_AXIS_ANGLE_APPLIED = "spinRotationAxisAngleApplied";
+  public static final String SPIN_ROTATION_ANGLE_APPLIED = "spinRotationAngleApplied";
   public static final String SPIN_FRAME_ROTATION_MATRIX = "spinFrameRotationMatrix";
   public static final String UC_MOREINFO = "moreUnitCellInfo";
+  public static final String DEFAULT_DRAW_SYM_ID = "sym_"; // do not change this; code on working pages needs this right
   
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.

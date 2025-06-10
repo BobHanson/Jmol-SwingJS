@@ -375,7 +375,9 @@ public class Cif2DataParser extends CifDataParser {
         int pt = s.indexOf('(');
         // guess type
         boolean isFloat = (s.indexOf(".") >= 0);
-        if (n > 1 && pt > 0 && s.indexOf(')', pt + 1) == n - 1)
+        if (n > 1 && pt > 1 
+            && PT.isDigit(s.charAt(pt - 1)) 
+            && s.indexOf(')', pt + 1) == n - 1)
           s = s.substring(0, pt);
         try {
           if (isFloat) {

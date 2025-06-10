@@ -4426,7 +4426,7 @@ public class CmdExt extends ScriptExt {
         if (tokAtArray(pt + 1, args) == T.integer)
           quality = SV.iValue(tokenAt(++pt, args));
       } else if (PT.isOneOf(val.toLowerCase(),
-          ";xyz;xyzrn;xyzvib;mol;mol67;sdf;v2000;v3000;json;pdb;pqr;cml;cif;cifp1;pwmat;pwslab;qcjson;xsf;")) {
+          ";xyz;xyzrn;xyzvib;mol;mol67;sdf;v2000;v3000;json;pdb;pqr;cml;cif;scif;cifp1;pwmat;pwslab;qcjson;xsf;")) {
         // this still could be overruled by a type indicated
         type = val.toUpperCase();
         if (pt + 1 == argCount)
@@ -4567,11 +4567,11 @@ public class CmdExt extends ScriptExt {
         type = "PNGJ";
     }
     if (!isImage && !isExport && !PT.isOneOf(type,
-        ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;PMB;PLY;PLB;ISOMESHBIN;ISOMESH;ISOPLY;ISOPLYBIN;VAR;FILE;FUNCTION;CFI;CIF;CIFP1;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;MOL67;PDB;PGRP;PQR;PWMAT;PWSLAB;QUAT;RAMA;SDF;V2000;V3000;QCJSON;XSF;INLINE;"))
+        ";SCENE;JMOL;ZIP;ZIPALL;SPT;HISTORY;MO;NBO;ISOSURFACE;MESH;PMESH;PMB;PLY;PLB;ISOMESHBIN;ISOMESH;ISOPLY;ISOPLYBIN;VAR;FILE;FUNCTION;CFI;CIF;SCIF;CIFP1;CML;JSON;XYZ;XYZRN;XYZVIB;MENU;MOL;MOL67;PDB;PGRP;PQR;PWMAT;PWSLAB;QUAT;RAMA;SDF;V2000;V3000;QCJSON;XSF;INLINE;"))
       eval.errorStr2(ScriptError.ERROR_writeWhat,
           "COORDS|FILE|FUNCTIONS|HISTORY|IMAGE|INLINE|ISOSURFACE|JMOL|MENU|MO|NBO|POINTGROUP|QUATERNION [w,x,y,z] [derivative]"
               + "|RAMACHANDRAN|SPT|STATE|VAR x|ZIP|ZIPALL|CLIPBOARD",
-          "CIF|CIFP1|CML|CFI|GIF|GIFT|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|PWMAT|PWSLAB|SDF|CD|JSON|QCJSON|V2000|V3000|SPT|XJVXL|XSF|XYZ|XYZRN|XYZVIB|ZIP"
+          "CIF|SCIF|CIFP1|CML|CFI|GIF|GIFT|JPG|JPG64|JMOL|JVXL|MESH|MOL|PDB|PMESH|PNG|PNGJ|PNGT|PPM|PQR|PWMAT|PWSLAB|SDF|CD|JSON|QCJSON|V2000|V3000|SPT|XJVXL|XSF|XYZ|XYZRN|XYZVIB|ZIP"
               + driverList.toUpperCase().replace(';', '|'));
     if (chk)
       return "";
@@ -4656,7 +4656,7 @@ public class CmdExt extends ScriptExt {
         else
           writeFileData = true;
       } else if (PT.isOneOf(data,
-          ";CIF;CIFP1;SDF;MOL;MOL67;V2000;V3000;CD;JSON;XYZ;XYZRN;XYZVIB;CML;QCJSON;PWMAT;PWSLAB;XSF;")) {
+          ";CIF;SCIF;CIFP1;SDF;MOL;MOL67;V2000;V3000;CD;JSON;XYZ;XYZRN;XYZVIB;CML;QCJSON;PWMAT;PWSLAB;XSF;")) {
         BS selected = vwr.bsA(), bsModel;
         // mechanism to pass information back from writer, changing the number of atoms written
         vwr.setErrorMessage(null, " (" + selected.cardinality() + " atoms)");
@@ -6145,8 +6145,6 @@ public class CmdExt extends ScriptExt {
     eval.checkLast(eval.iToken);
     if (chk || mad10 == Integer.MAX_VALUE)
       return;
-    if (mad10 == Integer.MAX_VALUE)
-      vwr.am.setUnitCellAtomIndex(-1);
     if (oabc == null && newUC != null)
       oabc = vwr.getV0abc(-1, newUC);
     if (icell != Integer.MAX_VALUE) {
@@ -6171,6 +6169,7 @@ public class CmdExt extends ScriptExt {
         }
       }
     }
+    SymmetryInterface sym0 = (isModelkit ?  vwr.ms.getUnitCell(-1 - vwr.am.cmi) : null);
     eval.setObjectMad10(JC.SHAPE_UCCAGE, "unitCell", mad10);
     if (pt != null) {
       sym = vwr.ms.getUnitCell(Integer.MIN_VALUE);
@@ -6178,9 +6177,8 @@ public class CmdExt extends ScriptExt {
         sym.setOffsetPt(pt);
     }
     if (isModelkit && sym.getFractionalOffset(true) == null) {
-      sym = vwr.ms.getUnitCell(-1 - vwr.am.cmi);
       assignSpaceGroup(vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi),
-          sym.getSpaceGroupClegId(), null, isPacked, false, e.fullCommand);
+          sym0.getSpaceGroupClegId(), null, isPacked, false, e.fullCommand);
     }
     if (tickInfo != null)
       setShapeProperty(JC.SHAPE_UCCAGE, "tickInfo", tickInfo);
@@ -6984,7 +6982,8 @@ public class CmdExt extends ScriptExt {
   /**
    * Accept "a,b,c:0,0,0" transformation matrix syntax or [origin a b c] or [a b
    * c alpha beta gamma]
-   * @param i 
+   * 
+   * @param i
    * 
    * @param ret
    *        return array to hold oabc or [params]
@@ -6994,7 +6993,7 @@ public class CmdExt extends ScriptExt {
   private boolean getUnitCellParameter(int i, Object[] ret)
       throws ScriptException {
     ret[0] = null;
-    if (tokAt(i) == T.point3f) 
+    if (tokAt(i) == T.point3f)
       return false;
     int ei = e.iToken;
     if (tokAt(i) == T.string) {
@@ -7012,6 +7011,7 @@ public class CmdExt extends ScriptExt {
       // from state [ pt3 pt3 pt3 pt4 ]
       e.ignoreError = true;
       if (tokAt(i + 2) != T.leftbrace) {
+        // [ a b c alpha beta gamma ]
         try {
           ret[0] = e.doubleParameterSet(i, 6, 6);
           e.ignoreError = false;
@@ -7024,8 +7024,42 @@ public class CmdExt extends ScriptExt {
         // [ Origin vA vB vC ]
         // these are VECTORS, though
         ret[0] = e.getPointArray(i, 4, false, true);
+        return true;
       } catch (Exception ee) {
         // ignore NullPointerException
+        e.iToken = ei;
+      }
+      try {
+        // [ [o] [va] [vb] [vc] ]
+        // or [ [va] [vb] [vc] ]
+        // note that in the second case, [[..]] will not work, as that will be a matrix
+        // and we will never get here. 
+        if (tokAt(i) == T.spacebeforesquare) {
+          i += 2;
+          P3d[] pts = new P3d[4];
+          for (int p = 0; p < 4; p++) {
+            if (e.isArrayParameter(i)) {
+              double[] a = e.doubleParameterSet(i, 3, 3);
+              pts[p] = P3d.newA(a);
+              i = e.iToken + 1;
+              if (tokAt(i) == T.comma)
+                i++;
+              e.iToken = i;
+            } else if (p == 3) {
+              for (i = p; i > 0; --i) {
+                pts[i] = pts[i - 1];
+              }
+              pts[0] = new P3d();
+            } else {
+              break;
+            }
+            if (p == 3) {
+              ret[0] = pts; 
+              return true;
+            }
+          }
+        }
+      } catch (Exception ee) {
         e.iToken = ei;
       }
       e.ignoreError = false;

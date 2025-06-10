@@ -1,13 +1,18 @@
 package org.jmol.adapter.readers.xtal;
 
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.api.JmolAdapter;
 import org.jmol.symmetry.SymmetryOperation;
+import org.jmol.util.BSUtil;
+import org.jmol.util.Logger;
 import org.jmol.util.Vibration;
 
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
@@ -27,70 +32,56 @@ import javajs.util.SB;
 
 public class FSGOutputReader extends AtomSetCollectionReader {
 
-  private String[] elementSymbols;
+  private short[] elementNumbers;
+//  private boolean addSymmetry;
+  private boolean spinOnly;
+  private Map<String, Object> json;
+  private String configuration;
+  private boolean isCoplanar;
+  private int firstTranslation;
+  private String spinFrame;
+  private String fullName;
+  private final static int DEFAULT_PRECISION = 5;
 
   @Override
-  protected void initializeReader() throws Exception {
+  public void initializeReader() throws Exception {
     super.initializeReader();
+    spinOnly = checkFilterKey("SPINONLY");
+    if (!filteredPrecision) {
+      precision = DEFAULT_PRECISION ;
+      filteredPrecision = true;
+    }      
+    System.out.println("FSGOutput using precision " + precision);
+  //  addSymmetry = checkFilterKey("ADDSYMMETRY");
     String symbols = getFilterWithCase("elements=");
     if (symbols != null) {
-      elementSymbols = PT.split(symbols.replace(',', ' '), " ");
+      String[] s = PT.split(symbols.replace(',', ' '), " ");
+      elementNumbers = new short[s.length];
+      for (int i = s.length; --i >= 0;) {
+        elementNumbers[i] = (short) JmolAdapter.getElementNumber(s[i]);
+      }
+        
     }
     SB sb = new SB();
     try {
       while (rd() != null)
         sb.append(line);
-      processJSON(vwr.parseJSONMap(sb.toString()));
+      json = vwr.parseJSONMap(sb.toString());
+      processJSON();
     } catch (Exception e) {
       e.printStackTrace();
     }
     continuing = false;
   }
 
-  private void setElementsFromFileName(String fname) {
-    if (fname == null)
-      return;
-    int pt = fname.lastIndexOf(".");
-    if (pt >= 0)
-      fname = fname.substring(0, pt);
-    fname = fname.substring(fname.lastIndexOf("/") + 1);
-    fname = fname.substring(fname.lastIndexOf("\\") + 1);
-    for (int i = fname.length(); --i >= 1;) {
-      if (fname.charAt(i) <= 'a')
-        fname = fname.substring(0, i) + " " + fname.substring(i);
-    }
-    Lst<String> list = new Lst<>();
-    String[] tokens = PT.split(
-        PT.rep(PT.replaceAllCharacters(fname, "0123456789-._", " "), "  ", " "),
-        " ");
-    int nt = 0;
-    for (int i = 0; i < tokens.length; i++) {
-      String e = tokens[i];
-      switch (e.length()) {
-      case 2:
-        if (e.charAt(1) < 'a')
-          continue;
-      case 1:
-        if (e.charAt(0) < 'A')
-          continue;
-        int n = JmolAdapter.getElementNumber(e);
-        if (n > 0) {
-          list.addLast(e);
-          nt++;
-        }
-      }
-    }
-    if (nt > 0) {
-      elementSymbols = new String[nt];
-      for (int i = nt; --i >= 0;)
-        elementSymbols[i] = list.get(i);
-    }
-  }
-
-  private void processJSON(Map<String, Object> json) {
-    getHeaderInfo(json);
+  private void processJSON() {
+    getHeaderInfo();
     Lst<Object> info = getList(json, "G0_std_Cell");
     getCellInfo(getListItem(info, 0));
+    configuration = (String) json.get("Configuration"); // "Coplanar"
+    isCoplanar = "Coplanar".equals(configuration);
+    addMoreUnitCellInfo("configuration=" + configuration);
+
     readAllOperators(getList(json, "G0_std_operations"));
     readAtomsAndMoments(info);
   }
@@ -105,10 +96,28 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     return (Lst<Object>) json.get(key);
   }
 
-  private void getHeaderInfo(Map<String, Object> json) {
-    setSpaceGroupName((String) json.get("FPG_symbol"));
-    appendUnitCellInfo(
-        "SSG_international_symbol=" + json.get("SSG_international_symbol"));
+  private void getHeaderInfo() {
+    fullName = (String) json.get("SSG_international_symbol");
+    setSpaceGroupName(fixName(fullName));
+  }
+
+  private String fixName(String name) {
+    // Setting space group name to {P}^{2_\frac{5\pi}{6}} {6_{3}/}^{1}{m}^{2_\frac{\pi}{3}} {m}^{2_{001}}{c}|(3^1_{001},3^1_{001},1)\\^m1
+    System.out.println("FSGOutput " + name);
+    int pt;
+    while ((pt = name.indexOf("\\frac{")) >= 0) {
+      int pt2 = name.indexOf("{", pt + 7);
+      int pt3 = name.indexOf("}", pt2 + 1);
+      name = name.substring(0, pt) 
+          + "(" + name.substring(pt+5, pt2) + "/" + name.substring(pt2, pt3) + ")" + name.substring(pt3);
+    }
+    name = PT.rep(name, "\\pi", "\u03C0");
+    name = PT.rep(name, "\\enspace", " ");
+    name = PT.rep(name, "\\infty", "\u221E");
+
+    name = PT.rep(name, "\\\\^", "^");
+    name = PT.replaceAllCharacters(name,  "{}", "");
+    return name;
   }
 
   private void getCellInfo(Lst<Object> list) {
@@ -129,16 +138,30 @@ public class FSGOutputReader extends AtomSetCollectionReader {
 
   @SuppressWarnings("unchecked")
   private void readAllOperators(Lst<Object> info) {
-    for (int i = 0, n = info.size(); i < n; i++) {
+    int n = info.size();
+    int nops = 0;
+    for (int i = 0; i < n; i++) {
       Lst<Object> op = (Lst<Object>) info.get(i);
       M4d mspin = readMatrix(getListItem(op, 0), null);
       M4d mop = readMatrix(getListItem(op, 1), getListItem(op, 2));
       String s = SymmetryOperation.getXYZFromMatrixFrac(mop, false, false,
-          false, true, true, "xyz")
-          + SymmetryOperation.getSpinString(mspin, true);
-      System.out.println("FSGOutput op[" + (i + 1) + "]=" + s);
-      setSymmetryOperator(s);
+          false, true, true, SymmetryOperation.MODE_XYZ)
+          + SymmetryOperation.getSpinString(mspin, true)
+          + (isCoplanar ? "+" : "");
+      int iop = setSymmetryOperator(s);
+      if (Logger.debugging)
+        System.out.println(
+            "FSGOutput op[" + (i + 1) + "]=" + s + (iop < 0 ? " SKIPPED" : ""));
+      if (iop >= 0) {
+        boolean isTranslation = SymmetryOperation.isTranslation(mop);
+        if (firstTranslation == 0 && isTranslation)
+          firstTranslation = nops;
+        nops++;
+      }
     }
+    if (firstTranslation == 0)
+      firstTranslation = nops;
+    System.out.println("FSGOutput G0_operationCount(initial)=" + n);
   }
 
   private M4d readMatrix(Lst<Object> rot, Lst<Object> trans) {
@@ -157,26 +180,85 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     for (int i = 0, n = atoms.size(); i < n; i++) {
       P3d xyz = getPoint(getListItem(atoms, i));
       int id = (int) getValue(ids, i);
+        
+      // this is only partially correct --
+      // an element may have more than one moment, but we
+      // cannot tell this from the JSON.
+      Atom a = new Atom();
       P3d moment = getPoint(getListItem(moments, i));
-      Atom a = asc.addNewAtom();
-      a.setT(xyz);  
-      setAtomCoord(a);
-      if (elementSymbols != null && id <= elementSymbols.length) {
-        a.elementSymbol = elementSymbols[id - 1];
+      double mag = moment.length();
+      if (mag > 0) {
+        if (Logger.debugging)
+          System.out.println("FGSOutput moment " + i + " " + moment + " " + mag);
+        Vibration v = new Vibration();
+        v.setType(Vibration.TYPE_SPIN);
+        v.setT(moment);
+        v.magMoment = mag;
+        a.vib = v;
       } else {
-        a.elementNumber = (short) (id + 2); // start with boron        
+        if (spinOnly)
+          continue;
       }
       // no element symbols!!
-      Vibration v = new Vibration().setType(Vibration.TYPE_SPIN);
-      v.set(moment.x, moment.y, moment.z);
-      v.magMoment = v.length();
-      if (v.magMoment > 0)
-        System.out
-            .println("FGSOutput moment " + i + " " + v.magMoment + " " + v);
-      a.vib = v;
+      if (elementNumbers != null && id <= elementNumbers.length) {
+        a.elementNumber = elementNumbers[id - 1];
+      } else {
+        
+        a.elementNumber = (short) (id + 2); // start with boron
+      }
+      a.setT(xyz);
+      setAtomCoord(a);
+      asc.addAtom(a);
     }
   }
   
+  @Override
+  protected void warnSkippingOperation(String xyz) {
+    // ignore - this is from Coplanar +/-w
+ }
+
+  @Override
+  public void doPreSymmetry(boolean doApplySymmetry) throws Exception {
+    FileSymmetry fs = asc.getSymmetry();
+    BS bs = BSUtil.newBitSet2(0, asc.ac);
+    excludeAtoms(0, bs, fs);
+    filterFsgAtoms(bs);
+    setMoments();
+    System.out.println("FSGOutputReader using atoms " + bs);
+    Lst<String> lst = fs.setSpinList(configuration);
+    if (lst != null) {
+      asc.setCurrentModelInfo("spinList", lst);
+      appendLoadNote(
+          lst.size() + " spin operations -- see _M.spinList and atom.spin");
+    }
+    System.out.println("FSGOutput operationCount=" + fs.getSpaceGroupOperationCount());
+    Map<String, Object> info = getSCIFInfo(fs, lst);
+    asc.setCurrentModelInfo("scifInfo", info);
+    asc.setCurrentModelInfo("spinFrame", spinFrame);
+  }
+
+  private void setMoments() {
+    for (int i = asc.ac; --i >= 0;) {
+      Vibration v = (Vibration) asc.atoms[i].vib;
+      if (v == null)
+        continue;
+      P3d p = P3d.newP(v);
+      symmetry.toFractional(v, true);
+      v.scale(v.magMoment / v.length());
+      v.setV0();
+      v.setT(p);      
+    }
+  }
+
+  private void filterFsgAtoms(BS bs) {
+    for (int p = 0, i = bs.nextSetBit(0); i >= 0; p++, i = bs.nextSetBit(i + 1)) {
+      asc.atoms[p] = asc.atoms[i];
+      asc.atoms[p].index = p;
+    }
+    asc.atomSetAtomCounts[0] = asc.ac = bs.cardinality();
+    
+  }
+
   @Override
   protected void finalizeSubclassReader() throws Exception {
       asc.setNoAutoBond();
@@ -184,6 +266,233 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       addJmolScript("vectors on;vectors 0.15;");
   }
 
+  private Map<String, Object> getSCIFInfo(FileSymmetry fs,
+                                          Lst<String> spinList) {
+    Map<String, Object> m = new Hashtable<>();
+    try {
+      System.out.println("FSGOutput SSG_international_symbol=" + fullName);
+      mput(m, "SSG_international_symbol", fullName);
 
+      System.out.println("FSGOutput simpleName=" + sgName);
+      mput(m, "simpleName", sgName);
+
+      Integer msgNum = (Integer) json.get("MSG_num");
+      System.out.println("FSGOutput MSG_num=" + msgNum);
+      mput(m, "MSG_num", msgNum);
+
+      System.out.println("FSGOutput Configuration=" + configuration);
+      mput(m, "configuration", configuration);
+
+      //int ik = ((Integer) json.get("ik")).intValue();
+
+      String gSymbol = (String) json.get("G_symbol");
+      System.out.println("FSGOutput G_symbol=" + gSymbol);
+      mput(m, "G_Symbol", gSymbol);
+            
+      String g0Symbol = (String) json.get("G0_symbol");
+      System.out.println("FSGOutput G0=" + g0Symbol);
+      mput(m, "G0_Symbol", g0Symbol);
+      int pt = g0Symbol.indexOf('(');
+      int g0ItaNo = Integer
+          .parseInt(g0Symbol.substring(pt + 1, g0Symbol.length() - 1));
+      String g0HMName = g0Symbol.substring(0, pt).trim();
+      mput(m, "G0_ItaNo", Integer.valueOf(g0ItaNo));
+      mput(m, "G0_HMName", g0HMName);
+
+      String l0Symbol = (String) json.get("L0_symbol");
+      System.out.println("FSGOutput L0=" + l0Symbol);
+      mput(m, "L0_Symbol", l0Symbol);
+      pt = l0Symbol.indexOf('(');
+      int l0ItaNo = Integer
+          .parseInt(l0Symbol.substring(pt + 1, l0Symbol.length() - 1));
+
+      int ik = ((Integer) json.get("ik")).intValue();
+
+      String fsgID = "" + l0ItaNo + "." + g0ItaNo + "." + ik + ".?";
+      appendLoadNote("FSG ID " + fsgID);
+      mput(m, "fsgID", fsgID);
+      System.out.println("fsgID=" + fsgID);
+
+      boolean isPrimitive = g0HMName.charAt(0) == 'P';
+      mput(m, "G0_isPrimitive", Boolean.valueOf(isPrimitive));
+      mput(m, "G0_atomCount", Integer.valueOf(asc.ac));
+      System.out.println("FSGOutput G0_atomCount=" + asc.ac);
+
+      symmetry.setUnitCellFromParams(unitCellParams, true, cellSlop);
+      String spinFrame = calculateSpinFrame();
+      System.out.println("FSGOutput G0 spinFrame=" + spinFrame);
+      addMoreUnitCellInfo("spinFrame=" + spinFrame);
+      this.spinFrame = spinFrame;
+      Lst<P3d> spinLattice = fs.getLatticeCentering();
+      Lst<String>lattice = SymmetryOperation.getLatticeCenteringStrings(fs.getSymmetryOperations());
+      if (!lattice.isEmpty()) {
+        lattice.add(0, "x,y,z(u,v,w)");
+        mput(m, "G0_spinLattice", lattice);
+      }
+      // DANGER HERE - what if G0 is not primitive?
+      String abc = calculateChildTransform(spinLattice);
+      mput(m, "childTransform", abc);
+      System.out.println("FSGOutput G0_childTransform=" + abc);
+
+      Lst<String> ops = new Lst<>();
+      SymmetryOperation[] symops = fs.getSymmetryOperations();
+      for (int i = 0; i < firstTranslation; i++) {
+        ops.addLast(symops[i].getXyz(false));
+      }
+      
+      if (spinList != null) {
+        mput(m, "G0_spinList", spinList);
+        Map<String, Integer> mapSpinToID = new Hashtable<>();
+        Lst<String> scifList = null;
+        int[] scifListTimeRev = new int[spinList.size()];
+        scifList = new Lst<String>();
+        M4d msf = null, msfInv = null;
+        if (!spinFrame.equals("a,b,c")) {
+          msf = (M4d) SymmetryOperation.staticConvertOperation(spinFrame, null,
+              null);
+          msf.transpose();
+          msfInv = M4d.newM4(msf);
+          msfInv.invert();
+        }
+        
+        for (int i = 0, n = spinList.size(); i < n; i++) {
+          String fsgOp = spinList.get(i);
+          mapSpinToID.put(fsgOp, Integer.valueOf(i));
+          M4d m4 = (M4d) symmetry.convertTransform(fsgOp, null);
+          if (msf != null) {
+            m4.mul2(m4, msfInv);
+            m4.mul2(msf, m4);
+          }
+          String s = SymmetryOperation.getXYZFromMatrixFrac(m4, false, false,
+              false, false, false, "uvw");
+          System.out.println(s + "\t <- " + fsgOp);
+          scifList.add(s);
+          int timeReversal = (int) Math.round(m4.determinant3());
+          scifListTimeRev[i] = timeReversal;
+        }
+        mput(m, "spinFrame", "a,b,c"); // because we are converting it
+        mput(m, "SCIF_spinList", scifList);
+        mput(m, "SCIF_spinListTR", scifListTimeRev);
+        ops = setSCIFSpinLists(m, mapSpinToID, ops, firstTranslation, "G0_operationURefs");
+        setSCIFSpinLists(m, mapSpinToID, lattice, lattice.size(), "G0_spinLatticeURefs");
+      }
+      mput(m, "G0_operations", ops);
+      mput(m, "G0_operationCount", Integer.valueOf(ops.size()));
+      System.out.println("FSGOutput G0_operationCount(w/o translations)=" + ops.size());
+      
+    } catch (Exception e) {
+      mput(m, "exception", e.toString());
+      e.printStackTrace();
+    }
+    return m;
+  }
+
+  private void excludeAtoms(int i0, BS bs, FileSymmetry fs) {
+    if (i0 < 0)
+      return;
+    for (int i = bs.nextSetBit(i0 + 1); i >= 0; i= bs.nextSetBit(i + 1)) {
+      if (findSymop(i0, i, fs)) {
+        bs.clear(i);
+      }
+    }
+    excludeAtoms(bs.nextSetBit(i0 + 1), bs, fs);
+  }
+  
+  private P3d p2 = new P3d();
+  
+  private boolean findSymop(int i1, int i2, FileSymmetry fs) {
+    Atom a = asc.atoms[i1];
+    Atom b = asc.atoms[i2];
+    if (a.elementNumber != b.elementNumber)
+      return false;
+    SymmetryOperation[] ops = fs.getSymmetryOperations();
+    int nops = fs.getSpaceGroupOperationCount();
+    for (int i = 1; i < nops; i++) {
+       p2.setP(a);
+       ops[i].rotTrans(p2);
+       symmetry.unitize(p2);
+       if (p2.distanceSquared(b) < 1e-6) {
+         return true;
+       }
+    }
+    return false;
+  }
+
+  private Lst<String> setSCIFSpinLists(Map<String, Object> m,
+                                Map<String, Integer> mapSpinToID,
+                                Lst<String> ops, int len, String key) {
+    Lst<Integer> lst = new Lst<>();
+    Lst<String> lstOpsIncluded = new Lst<>();
+    for (int i = 0, n = len; i < n; i++) {
+      String o = ops.get(i);
+      int pt = o.indexOf("(");
+      String uvw = o.substring(pt + 1, o.indexOf(')', pt + 1));
+      Integer ipt = mapSpinToID.get(uvw);
+      lst.addLast(ipt);
+      lstOpsIncluded.addLast(o);
+    }
+    int[] val = new int[lst.size()];
+    for (int i = val.length; --i >= 0;)
+      val[i] = lst.get(i).intValue();
+    m.put(key, val);
+    return lstOpsIncluded;
+  }
+
+  private static void mput(Map<String, Object> m, String key, Object val) {
+    if (val != null)
+      m.put(key, val);
+  }
+
+  private static String calculateChildTransform(Lst<P3d> spinLattice) {
+    if (spinLattice == null || spinLattice.isEmpty()) {
+      return "a,b,c";
+    }
+    double minx = 1, miny = 1, minz = 1;
+    for (int i = spinLattice.size(); --i >= 0;) {
+      P3d c = spinLattice.get(i);
+      if (c.x > 0 && c.x < minx)
+        minx = c.x;
+      if (c.y > 0 && c.y < miny)
+        miny = c.y;
+      if (c.z > 0 && c.z < minz)
+        minz = c.z;
+    }
+    return (minx > 0 && minx < 1 ? "" + Math.round(1 / minx) : "") + "a," //
+        + (miny > 0 && miny < 1 ? "" + Math.round(1 / miny) : "") + "b," //
+        + (minz > 0 && minz < 1 ? "" + Math.round(1 / minz) : "") + "c";
+  }
+
+  private String calculateSpinFrame() {
+    P3d[] oabc = symmetry.getUnitCellVectors();
+    P3d a = P3d.newP(oabc[1]);
+    a.normalize();
+    P3d b = P3d.newP(oabc[2]);
+    b.normalize();
+    P3d c = P3d.newP(oabc[3]);
+    c.normalize();
+    P3d cp = new P3d();
+    cp.cross(a, b);
+    cp.normalize();
+    if (Math.abs(cp.dot(a)) < 1e-6)
+      cp.setP(oabc[3]);
+    P3d bp = new P3d();
+    if (Math.abs(a.dot(b)) < 1e-6) {
+      bp.setP(oabc[2]);
+    } else {
+      bp.cross(cp, a);
+      bp.normalize();
+      bp.scale(oabc[1].length());
+    }
+    a.setP(oabc[1]);
+    M4d m4 = new M4d();
+    symmetry.toFractional(a, true);
+    symmetry.toFractional(bp, true);
+    symmetry.toFractional(cp, true);
+    m4.setColumn4(0, a.x, a.y, a.z, 0);
+    m4.setColumn4(1, bp.x, bp.y, bp.z, 0);
+    m4.setColumn4(2, cp.x, cp.y, cp.z, 0);
+    m4.transpose();
+    return SymmetryOperation.getXYZFromMatrixFrac(m4, false, false, false, true, true, SymmetryOperation.MODE_ABC);
+  }
 
 }

@@ -624,9 +624,9 @@ public class M3d extends M34d implements Serializable {
    */
   @Override
   public String toString() {
-    return "[\n  [" + m00 + "\t" + m01 + "\t" + m02 + "]" + "\n  [" + m10
+    return "[[" + m00 + "\t" + m01 + "\t" + m02 + "]" + "\n  [" + m10
         + "\t" + m11 + "\t" + m12 + "]" + "\n  [" + m20 + "\t" + m21 + "\t"
-        + m22 + "] ]";
+        + m22 + "]]";
   }
 
   /**

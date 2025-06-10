@@ -120,6 +120,8 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
    */
   private double[][] f2c;
 
+  private static V3d v0;
+
 
   /**
    * Private constructor. 
@@ -246,7 +248,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
        + "\ncartesian to fractional: " + matrixCartesianToFractional : "");
   }
 
-  private double fix000(double x) {
+  private double fix00000(double x) {
     return (Math.abs(x) < 0.001 ? 0 : x);
   }
 
@@ -775,9 +777,9 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     M4d m = matrixFractionalToCartesian;
     return new P3d[] { 
         P3d.newP(cartesianOffset),
-        P3d.new3(fix000(m.m00), fix000(m.m10), fix000(m.m20)), 
-        P3d.new3(fix000(m.m01), fix000(m.m11), fix000(m.m21)), 
-        P3d.new3(fix000(m.m02), fix000(m.m12), fix000(m.m22)) };
+        P3d.new3(fix00000(m.m00), fix00000(m.m10), fix00000(m.m20)), 
+        P3d.new3(fix00000(m.m01), fix00000(m.m11), fix00000(m.m21)), 
+        P3d.new3(fix00000(m.m02), fix00000(m.m12), fix00000(m.m22)) };
   }
   
   public static M4d toTrm(String transform, M4d trm) {
@@ -1465,22 +1467,27 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     if (moreInfo == null) {
       moreInfo = new Lst<>();
     }
+    String s = "rotation_axis_xyz=";
+    String a = "rotation_angle=";
     int ptAxis = -1, ptAngle = -1;
     for (int i = moreInfo.size(); --i >= 0 && (ptAxis < 0 || ptAngle < 0);) {
-      String s = moreInfo.get(i);
-      if (s.startsWith("rotation_axis=")) {
+      String s0 = moreInfo.get(i);
+      if (s0.startsWith(s)) {
         ptAxis = i;
-      } else if (s.startsWith("rotation_angle=")) {
+      } else if (s0.startsWith(a)) {
         ptAngle = i;
       }
     }
-    V3d v = V3d.newV(aa);
+    Qd q = Qd.newAA(aa);
+    V3d v = new V3d();
+    if (v0 == null)
+      v0 = V3d.new3(Math.PI, Math.E, Math.sqrt(2));
+    v = q.getNormalDirected(v0);
+    V3d.newV(aa);
     toFractional(v, true);
     v.normalize();
-    String s = "rotation_axis="
-        + (v.x == Math.round(v.x) ? "" + Math.round(v.x) : round000(v.x)) + ","
-        + (v.y == Math.round(v.y) ? "" + Math.round(v.y) : round000(v.y)) + ","
-        + (v.z == Math.round(v.z) ? "" + Math.round(v.z) : round000(v.z));
+    double f = getAxisMultiplier(v);
+    s += "" + Math.round(v.x * f) + "," + Math.round(v.y * f) + "," + Math.round(v.z * f);
     if (ptAxis < 0) {
       moreInfo.addLast(s);
       if (ptAngle > ptAxis)
@@ -1488,14 +1495,36 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     } else {
       moreInfo.set(ptAxis, s);
     }
-    double a = aa.angle * 180 / Math.PI;
-    a = Math.round(a * 1000) / 1000;
-    s = "rotation_angle=" + (a == Math.round(a) ? "" + Math.round(a) : round000(a));
+    f = Math.round(q.getThetaDirectedV(v0) * 1000) / 1000;
+    s = a + (f == Math.round(f) ? "" + Math.round(f) : round000(f));
     if (ptAngle < 0) {
       moreInfo.addLast(s);
     } else {
       moreInfo.set(ptAngle, s);
     }
+  }
+
+  private double getAxisMultiplier(V3d v) {
+    if (approx00(v.x - Math.round(v.x)) && approx00(v.y - Math.round(v.y))
+        && approx00(v.z - Math.round(v.z))) {
+      return 1;
+    }
+    double d = Math.min(approx00(v.x) ? 10000 : Math.abs(v.x),
+        approx00(v.y) ? 10000
+            : Math.min(Math.abs(v.y), approx00(v.z) ? 10000 : Math.abs(v.z)));
+    if (approx01(v.x / d) && approx01(v.y / d) && approx01(v.z / d)) {
+      return 1 / d;
+    }
+    return 1000;
+  }
+
+  private static boolean approx01(double f) {
+    f = f % 1;
+    return (approx00(f) || Math.abs(f) > 0.999d);
+  }
+
+  private static boolean approx00(double f) {
+    return (Math.abs(f) < 0.001d);
   }
 
   private String round000(double y) {

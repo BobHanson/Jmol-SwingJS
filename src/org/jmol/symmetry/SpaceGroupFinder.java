@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 
+import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.modelset.Atom;
 import org.jmol.util.BSUtil;
@@ -777,7 +778,7 @@ public class SpaceGroupFinder {
 
   private Symmetry setSpaceGroupAndUnitCell(SpaceGroup sg, double[] params,
                                            T3d[] oabc, boolean allowSame) {
-    Symmetry sym = new Symmetry().setViewer(vwr);
+    Symmetry sym = (Symmetry) Interface.getSymmetry(vwr, "sgf");
     sym.setSpaceGroupTo(sg);
     if (oabc == null) {
     double[] newParams = new double[6];
@@ -1196,7 +1197,7 @@ public class SpaceGroupFinder {
       scaling.z = n;
       break;
     }
-    (uc = new Symmetry()).setViewer(vwr).getUnitCell(oabc, false, "scaled");
+    (uc = (Symmetry) Interface.getSymmetry(vwr, "sgf")).getUnitCell(oabc, false, "scaled");
     // remove points not within this unitcell
     int f = 0;
     for (int i = bsPoints.nextSetBit(0); i >= 0; i = bsPoints

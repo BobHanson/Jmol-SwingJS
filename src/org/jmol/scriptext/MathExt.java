@@ -277,6 +277,7 @@ public class MathExt {
 
     int n = args.length;
     M4d m4 = null;
+    M3d m3 = null;
     String sarg0 = (n > 0 && args[0].tok == T.string ? (String) args[0].value
         : null);
     Map<String, SV> map = (n < 2 || sarg0 == null ? null : args[1].getMap());
@@ -287,7 +288,8 @@ public class MathExt {
     boolean asUVW = "uvw".equalsIgnoreCase(retType);
     boolean asABC = "abc".equalsIgnoreCase(retType);
     boolean asXYZ = asUVW || !asABC && "xyz".equalsIgnoreCase(retType);
-    boolean asRXYZ = !asUVW && !asABC && !asXYZ && "rxyz".equalsIgnoreCase(retType);
+    boolean asRXYZ = !asUVW && !asABC && !asXYZ
+        && "rxyz".equalsIgnoreCase(retType);
     double[] a = null;
     if (retType != null || lst != null || map != null)
       n--;
@@ -312,11 +314,11 @@ public class MathExt {
             if (sym == null)
               return false;
           } else {
-            sym = vwr.getSymTemp();           
+            sym = vwr.getSymTemp();
           }
           m4 = (M4d) sym.convertTransform(s, null);
         }
-        if (m4 != null) 
+        if (m4 != null)
           break;
         String select = null;
         if (retType != null && !asABC && !asXYZ && !asUVW) {
@@ -369,11 +371,30 @@ public class MathExt {
         case 4:
           a = new double[len * len];
           for (int i = 0, pt = 0; i < len; i++) {
-            Lst<SV> a2 = lst.get(i).getList();
-            if (a2 == null || a2.size() != len)
-              return false;
-            for (int j = 0; j < len; j++)
-              a[pt++] = SV.dValue(a2.get(j));
+            SV row = lst.get(i);
+            switch (row.tok) {
+            case T.point3f:
+              P3d p = (P3d) row.value;
+              a[pt++] = p.x;
+              a[pt++] = p.y;
+              a[pt++] = p.z;
+              break;
+            case T.point4f:
+              P4d p4 = (P4d) row.value;
+              a[pt++] = p4.x;
+              a[pt++] = p4.y;
+              a[pt++] = p4.z;
+              a[pt++] = p4.w;
+              break;
+            case T.varray:
+              Lst<SV> a2 = lst.get(i).getList();
+              if (a2 == null || a2.size() != len)
+                return false;
+              for (int j = 0; j < len; j++) {
+                a[pt++] = SV.dValue(a2.get(j));
+              }
+              break;
+            }
           }
           break;
         case 9:
@@ -387,13 +408,12 @@ public class MathExt {
       }
       break;
     case 2:
-      M3d m3 = new M3d();
+      m3 = new M3d();
       if (args[0].tok != T.point3f)
         return false;
       V3d v = V3d.newV(SV.ptValue(args[0]));
       double angle = SV.dValue(args[1]);
-      m3.setAA(A4d.newVA(v, angle));
-      mp.addXM3(m3);
+      m3.setAA(A4d.newVA(v, angle / 180 * Math.PI));
       return mp.addXM3(m3);
     case 3:
     case 4:
@@ -410,7 +430,8 @@ public class MathExt {
     if (a != null) {
       switch (a.length) {
       case 9:
-        return mp.addXObj(M3d.newA9(a));
+        m3 = M3d.newA9(a);
+        break;
       case 16:
         m4 = M4d.newA16(a);
         break;
@@ -418,8 +439,14 @@ public class MathExt {
         return false;
       }
     }
-    return (m4 == null ? mp.addXStr("")
-        : asRXYZ || asABC || asUVW || asXYZ ? mp.addXStr(matToString(m4, asRXYZ ? 0x1 : asABC ? 0xABC : asUVW ? 0xDEF : 0)) : mp.addXM4(m4));
+    if (asRXYZ || asABC || asUVW || asXYZ) {
+      if (m3 != null) {
+        m4 = M4d.newMV(m3,  new P3d());
+      }
+      return mp.addXStr(matToString(m4,
+          asRXYZ ? 0x1 : asABC ? 0xABC : asUVW ? 0xDEF : 0));
+    }
+    return (m3 != null ? mp.addXM3(m3) : m4 != null ? mp.addXM4(m4) : false);
   }
 
   private String matToString(M4d m4, int mode) {
@@ -4454,11 +4481,11 @@ SymmetryInterface sym;
 
     // x = symop("wyckoffm")  -- report Wyckoff letter with multiplicity "4a"
     // x = symop("wyckoff")  -- report Wyckoff letter
-	// x = symop("wyckoff", "c") -- just one position
+  	// x = symop("wyckoff", "c") -- just one position
     // x = {atom or point}.symop("wyckoff","a") -- find first "a"-type Wyckoff position for this point
     // x = {atom}.symop("wyckoff", "coord")  -- report Wyckoff coord
-	// x = {atom}.symop("wyckoff", "coords") -- get full coordinate list
-
+	  // x = {atom}.symop("wyckoff", "coords") -- get full coordinate list
+    // symop(@10, "list")
     // print symop([ops],type)
     Object o;
     if (!isProperty && args.length == 2 && args[0].tok == T.varray && args[1].tok == T.string) {
@@ -4511,7 +4538,8 @@ SymmetryInterface sym;
         break;
       }
       if (m != null || xyz != null)
-        return vwr.getSymStatic().staticConvertOperation(xyz, m, isrxyz ? "rxyz" : null);
+        return vwr.getSymStatic().staticConvertOperation(xyz, m,
+            isrxyz ? "rxyz" : null);
     }
 
     boolean isPoint = false;
@@ -4535,11 +4563,12 @@ SymmetryInterface sym;
     }
     String xyz = null;
     int tok = 0;
-    int iOp = Integer.MIN_VALUE;
+    int iOp = Integer.MIN_VALUE;  
     int apt = 0;
     P3d pt2 = null;
-    BS bs1 = null;
+    BS bs1 = null, bs2 = null;
     boolean isWyckoff = false;
+    boolean haveAtom2 = (narg > 1 && args[1].tok == T.bitset);    
     switch (args[0].tok) {
     case T.string:
       xyz = SV.sValue(args[0]);
@@ -4577,20 +4606,25 @@ SymmetryInterface sym;
     case T.bitset:
       if (!isPoint) {
         // @x.symop(@y, @z,....)
+        // symop(@y,....) // basis
+        // note that this:
         // @x.symop(@y,....)
-        bs1 = (args.length == 1 || args[1].tok != T.bitset ? bsAtoms : null);
-        bsAtoms = vwr.getModelUndeletedAtomsBitSet(
-            vwr.getModelIndexForAtom(bsAtoms.nextSetBit(0)));
+        // ONLY SETS that model using @x; @y is still the first atom
+
+        bs1 = (BS) args[0].value;
       }
       break;
     }
-
+    
     if (bsAtoms == null) {
       if (apt < narg && args[apt].tok == T.bitset)
         (bsAtoms = new BS()).or((BS) args[apt].value);
       if (apt + 1 < narg && args[apt + 1].tok == T.bitset)
         (bsAtoms == null ? (bsAtoms = new BS()) : bsAtoms)
             .or((BS) args[apt + 1].value);
+    } else {
+      bsAtoms = vwr.getModelUndeletedAtomsBitSet(
+          vwr.getModelIndexForAtom(bsAtoms.nextSetBit(0)));
     }
 
     // allow for [ h k l ] lattice translation
@@ -4612,7 +4646,19 @@ SymmetryInterface sym;
       apt++;
     if (pt1 != null && pt2 == null && bs1 != null && !bs1.isEmpty()) {
       pt2 = pt1;
-      pt1 = P3d.newP(vwr.ms.at[bs1.nextSetBit(0)]);
+      // if it is symop(@x, "basis") or @x.symop(@y, "basis")
+      
+      // but @x.symop(@y, "cif2") also could work here. 
+      
+      // get the basis atom for this site
+      bs1 = BSUtil.copy(bs1);
+      bs1.and(bsAtoms);
+      int a0 = vwr.ms.getSymmetryEquivAtoms(bs1, null, null).nextSetBit(0);
+      if ("basis".equals(str1)) {
+        return BSUtil.newAndSetBit(a0);
+      }
+      pt1 = vwr.ms.at[a0];
+      pt1 = P3d.newP(pt1);
     }
     int nth = (pt2 != null && args.length > apt && iOp == Integer.MIN_VALUE
         && args[apt].tok == T.integer ? args[apt].intValue : -1);
@@ -4726,8 +4772,9 @@ SymmetryInterface sym;
               || desc.equalsIgnoreCase("coords") ? desc : desc.substring(0, 1));
       SymmetryInterface sym = vwr.getOperativeSymmetry();
       return (sym == null ? null
-          : sym.getWyckoffPosition(pt, (letter == null ? (tok == T.wyckoffm ? "M" : null)
-              : (tok == T.wyckoffm ? "M" : "") + letter)));
+          : sym.getWyckoffPosition(pt,
+              (letter == null ? (tok == T.wyckoffm ? "M" : null)
+                  : (tok == T.wyckoffm ? "M" : "") + letter)));
     }
     desc = desc.toLowerCase();
     if (tok == T.var || desc.equals(JC.MODELKIT_INVARIANT) && isProperty) {
@@ -4759,7 +4806,7 @@ SymmetryInterface sym;
       }
       return ret;
     }
-    return(apt == args.length
+    return (apt == args.length
         ? vwr.getSymmetryInfo(iatom, xyz, index > 0 ? index : iOp, trans, pt1,
             pt2, T.array, desc, 0, nth, 0, null)
         : null);

@@ -28,6 +28,7 @@ package org.jmol.symmetry;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.jmol.api.Interface;
 import org.jmol.api.SymmetryInterface;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
@@ -364,6 +365,8 @@ public class SymmetryDesc {
       String slist = (haveRawName ? "" : null);
       int opCount = 0;
       if (ops != null) {
+        // next line added because otherwise atom.symmetry is lost from the "file" 
+        sym = Interface.getSymmetry(null, "desc");
         if (!matrixOnly) {
           if (isBio)
             sym.setSpaceGroupTo(SpaceGroup.getNull(false, false, false));
@@ -379,6 +382,7 @@ public class SymmetryDesc {
           String xyzOriginal = op.xyzOriginal;
           M4d spinUOrig = op.spinU;
           int timeReversal = op.timeReversal;
+          int spinIndex = op.spinIndex;
           int iop;
           if (matrixOnly) {
             iop = i;
@@ -396,6 +400,7 @@ public class SymmetryDesc {
             
             op.xyzOriginal = xyzOriginal;
             op.spinU = spinUOrig;
+            op.spinIndex = spinIndex;
             op.timeReversal = timeReversal;
           }
           if (op.timeReversal != 0 || op.modDim > 0)
@@ -428,6 +433,7 @@ public class SymmetryDesc {
       if (matrixOnly) {
         return info;
       }
+      
       sgNote = (opCount == 0 ? "\n no symmetry operations"
           : nth <= 0 && symOp <= 0
               ? "\n" + opCount + " symmetry operation"
@@ -590,6 +596,7 @@ public class SymmetryDesc {
    * 
    * @param io
    * @param type
+   * @param nDim 
    * @return object specified
    * 
    */
@@ -797,6 +804,7 @@ public class SymmetryDesc {
    *        DRAW SPACEGROUP
    * @param isSpaceGroupAll
    *        DRAW SPACEGROUP ALL
+   * @param nDim 
    * @return Object[] containing:
    * 
    *         [0] xyz (Jones-Faithful calculated from matrix)
@@ -1625,7 +1633,10 @@ public class SymmetryDesc {
             }
             color = (screwDir < 0 ? COLOR_SCREW_2 : COLOR_SCREW_1);
           }
-          String name = opType + "_" + nrot + "rotvector1";
+          // BH 2025.06.09 explicit naming should only be for DRAW SPACEGROUP 
+          // otherwise this breaks code designed to get information from the drawing 
+          // of specific operations, as in ITAOnLine
+          String name = (isSpaceGroup ? opType + "_" + nrot : "") + "rotvector1";
           drawOrderVector(drawSB, name, "vector", THICK_LINE + wp, pa1, nrot,
               screwDir, haveInversion && isSpaceGroupAll, isccw == Boolean.TRUE,
               vtemp, isTimeReversed ? COLOR_ARROW_TIME_REVERSED : color, title, isSpaceGroupAll);
@@ -2364,7 +2375,7 @@ public class SymmetryDesc {
         P3d ret = sympt;
         return (type == T.atoms ? getAtom(uc, iModel, iatom, ret) : ret);
       }
-      info = createInfoArray(opTemp, uc, pt, null, (id == null || id.equals("array") ? "sym_" : id),
+      info = createInfoArray(opTemp, uc, pt, null, (id == null || id.equals("array") ? JC.DEFAULT_DRAW_SYM_ID : id),
           scaleFactor, options, (translation != null), bsInfo, isSpaceGroup, isSpaceGroupAll, nDim);
       if (type == T.array && id != null && returnType != -1 - RET_MATRIX) {
         returnType = getKeyType(id);
@@ -2392,7 +2403,7 @@ public class SymmetryDesc {
         break;
       case T.draw:
         if (id == null)
-          id = (isSpaceGroup ? "sg" : "sym");
+          id = (isSpaceGroup ? "sg" : JC.DEFAULT_DRAW_SYM_ID);
         stype = "all";
         asString = true;
         break;

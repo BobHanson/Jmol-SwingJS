@@ -30,6 +30,14 @@ public class Vibration extends V3d {
   public int modDim = TYPE_VIBRATION;
   public double modScale = Double.NaN; // modulation only
   public double magMoment;
+  public boolean showTrace;
+  public V3d v0;
+  public int tracePt;
+  private P3d[] trace = null;
+
+  public Vibration() {
+    super();
+  }
 
   /**
    * @param pt 
@@ -67,11 +75,16 @@ public class Vibration extends V3d {
     v.setT(this);
     v.modDim = modDim;
     v.magMoment = magMoment;
+    v.v0 = v0;
     return v;
   }
 
   public void setXYZ(T3d vib) {
     setT(vib);
+  }
+
+  public void setV0() {
+    v0 = V3d.newV(this);
   }
 
   public Vibration setType(int type) {
@@ -91,10 +104,6 @@ public class Vibration extends V3d {
     return Integer.MIN_VALUE;
   }
 
-  public boolean showTrace;
-  private P3d[] trace = null;
-  public int tracePt;
-  
   public void startTrace(int n) {
     trace = new P3d[n];
     tracePt = n;

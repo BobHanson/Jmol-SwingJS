@@ -189,7 +189,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     return this;
   }
 
-  static SpaceGroup getNull(boolean doInit, boolean doNormalize, boolean doFinalize) {
+  public static SpaceGroup getNull(boolean doInit, boolean doNormalize, boolean doFinalize) {
     //  getSpaceGroups();
     SpaceGroup sg = new SpaceGroup(-1, null, doInit);
     sg.doNormalize = doNormalize;
@@ -841,7 +841,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       xyz0 = PT.rep(xyz0, "+m", "m");
       if (xyz0.equals("x,y,z,m") 
           || xyz0.equals("x,y,z(mx,my,mz)")
-          || xyz0.equals("x,y,z(u,v,w)")
+          || xyz0.startsWith("x,y,z(") && operationCount == 1 && symmetryOperations[0].suvw == null
           ) {
         xyzList.clear();
         operationCount = 0;
@@ -850,7 +850,6 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     }
     SymmetryOperation op = new SymmetryOperation(null, opId, doNormalize);
     if (!op.setMatrixFromXYZ(xyz0, modDim, allowScaling)) {
-      Logger.error("couldn't interpret symmetry operation: " + xyz0);
       return -1;
     }
     if (xyz0.charAt(0) == '!') {
@@ -862,8 +861,9 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   private int checkXYZlist(String xyz) {
     // problem was that in the case we are adding two half-cell translations,
     // we will get 2/2 --> nothing, instead of 1. 
-    return (xyzList.containsKey(xyz)// && !(latticeOp > 0 && xyz.indexOf("/") < 0)
+    int found = (xyzList.containsKey(xyz)// && !(latticeOp > 0 && xyz.indexOf("/") < 0)
         ? xyzList.get(xyz).intValue() : -1);
+    return found;
   }
 
   protected int addOp(SymmetryOperation op, String xyz0, boolean isSpecial) {
@@ -996,8 +996,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
 
   static boolean isXYZList(String name) {
     return (name != null && name.indexOf(",") >= 0 
-        && name.indexOf("(") < 0
-        && name.indexOf(":") < 0);
+        && name.indexOf('(') < 0
+        && name.indexOf(':') < 0);
   }
   
   private final static int determineSpaceGroupIndex(String name, double a,
@@ -1385,6 +1385,10 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   
   String strName;
   public String displayName;
+
+  Lst<String> spinList;
+
+  String spinConfiguration;
   
   public static final String PREFIX_FRIEZE = "f/";
   public static final String PREFIX_ROD    = "r/";
@@ -1502,18 +1506,29 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * spin space groups only
    * 
    * @param lstSpinFrames
-   * @return true if magnetic
+   * @param mapSpinIdToUVW
    */
-  public boolean addSpinLattice(Lst<String> lstSpinFrames) {
-    if (latticeOp >= 0 || lstSpinFrames.size() == 0)
-      return false;
+  public void addSpinLattice(Lst<String> lstSpinFrames,
+                             Map<String, String> mapSpinIdToUVW) {
+    if (lstSpinFrames == null || lstSpinFrames.size() == 0)
+      return;
     int nOps = operationCount;
     for (int j = 0; j < lstSpinFrames.size(); j++) {
       String frameXyzUvw = lstSpinFrames.get(j);
+      if (mapSpinIdToUVW != null) {
+        int p = frameXyzUvw.indexOf('(');
+        if (frameXyzUvw.indexOf(',', p) < 0) {
+          // "x,y,z(u2)"
+          String s = mapSpinIdToUVW
+              .get(frameXyzUvw.substring(p + 1, frameXyzUvw.length() - 1));
+
+          frameXyzUvw = frameXyzUvw.substring(0, p + 1) + s + ")";
+        }
+      }
       if (frameXyzUvw.equals("x,y,z(u,v,w)"))
         continue;
       SymmetryOperation latticeOp = new SymmetryOperation(null, 0, true); // must normalize these
-      latticeOp.setMatrixFromXYZ(frameXyzUvw, 0, false);
+      latticeOp.setMatrixFromXYZ(frameXyzUvw, 0, true);
       latticeOp.doFinalize();
       M4d latU = M4d.newM4(latticeOp.spinU);
       M4d spinU = new M4d();
@@ -1523,19 +1538,21 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         op.doFinalize();
         SymmetryOperation newOp = new SymmetryOperation(op, 0, true); // must normalize these
         newOp.mul2(op, latticeOp); // just xyz part
+        if (op.spinU == null) {
+          throw new RuntimeException(
+              "SpaceGroup operation " + i + " no spin indicated!");
+        }
         spinU.mul2(op.spinU, latU); // rev
         newOp.modDim = modDim; // todo
         newOp.divisor = op.divisor;
         String xyz = SymmetryOperation.getXYZFromMatrix(newOp, false, true,
-            false)
-            + SymmetryOperation.getSpinString(spinU, true);
+            false) + SymmetryOperation.getSpinString(spinU, true);
         int iop = addOperation(xyz, pt, true);
         symmetryOperations[iop].doFinalize();
         pt++;
       }
     }
     latticeOp = nOps;
-    return true;
   }
 
   int getSiteMultiplicity(P3d pt, UnitCell unitCell) {
@@ -3975,6 +3992,49 @@ intl#     H-M full       HM-abbr   HM-short  Hall
 //
   static {
     getSpaceGroups();
+  }
+
+  public void mapSpins(Map<String, String> mapSpinIdToUVW) {
+    SymmetryOperation op;
+    for (int i = operationCount; --i >= 0;) {
+      op = symmetryOperations[i];
+      String s = (op.suvwkey == null ? null : mapSpinIdToUVW.get(op.suvwkey));
+      if (s != null)
+        op.setSpin(s);
+    }
+  }
+
+  public void setMatrixOperationCount(int nOps) {
+    if (nOps == operationCount)
+      return;
+    SymmetryOperation[] newops = new SymmetryOperation[nOps];
+    for (int i = nOps; --i >= 0;)
+      newops[i] = symmetryOperations[i];
+    symmetryOperations = newops;
+    operationCount = nOps;
+  }
+
+  public Lst<String> setSpinList(String configuration) {
+    if (spinList != null)
+      return spinList;
+    this.spinConfiguration = configuration;
+    Lst<String> spinOps = new Lst<>();
+    spinOps.addLast("u,v,w");
+    boolean isCoplanar = "Coplanar".equals(configuration);
+    for (int i = 0; i < operationCount; i++) {
+      SymmetryOperation op = symmetryOperations[i];
+      if (op.suvw == null)
+        break;
+      if (isCoplanar && op.timeReversal < 0)
+        continue;
+      int pt = spinOps.indexOf(op.suvw);
+      if (pt < 0) {
+        pt = spinOps.size();
+        spinOps.addLast(op.suvw);
+      }
+      op.spinIndex = pt;
+    }
+    return spinList = spinOps;
   }
 
 }

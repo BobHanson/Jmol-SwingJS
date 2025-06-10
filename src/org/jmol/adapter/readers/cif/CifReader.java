@@ -147,6 +147,7 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean modulated;
   protected boolean isCourseGrained;
   boolean haveCellWaveVector;
+  private boolean haveSpinReferences;
 
   protected Map<String, String> htGroup1;
   protected int nAtoms0;
@@ -159,7 +160,11 @@ public class CifReader extends AtomSetCollectionReader {
   private String spinFrameExt;
   private boolean spinFrameSetByFILTER;
   private boolean spinOnly;
-
+  private int maxOps = -1;
+  private int nops;
+  private boolean noLattice;
+  
+  
   @Override
   public void initializeReader() throws Exception {
     initSubclass();
@@ -167,6 +172,7 @@ public class CifReader extends AtomSetCollectionReader {
     allowPDBFilter = true;
     appendedData = (String) htParams.get("appendedData");
     spinOnly = checkFilterKey("SPINONLY");
+    noLattice = checkFilterKey("NOLATTICE");
     String conf = getFilter("CONF ");
     if (conf != null)
       configurationPtr = parseIntStr(conf);
@@ -360,6 +366,14 @@ public class CifReader extends AtomSetCollectionReader {
     return true;
   }
 
+  @Override
+  public int setSymmetryOperator(String xyz) {
+    if (maxOps >= 0 && nops++ > maxOps)
+      return 0;
+    return super.setSymmetryOperator(xyz);
+    
+  }
+
   private boolean newData() throws Exception {
     if (!spinFrameSetByFILTER)
       spinFrame = null;        
@@ -452,28 +466,31 @@ public class CifReader extends AtomSetCollectionReader {
       break;
     case "transform_spinframe_p_matrix":
     case "transform_spinframe_p_abc":
-      addCellType(CELL_TYPE_SPIN_FRAME, parseUvwMath((String) field), false);
+      String sf = parseUvwMath((String) field);
       if (spinFrameSetByFILTER) {
         System.out.println("CifReader spinFrame set by user to " + spinFrame
             + " file setting ignored: " + field);
-        field = spinFrame;
       } else {
         System.out.println("CifReader spinFrame set to " + field
             + "; use load ... FILTER \"spinframe xxxxx\" to modify");
-        spinFrame = (String) field;
+        spinFrame = sf;
       }
+      addCellType(CELL_TYPE_SPIN_FRAME, sf, false);
+      field = spinFrame;
       spinFrame = spinFrame.replace('"', ' ').trim(); // matrix rep should not include quotes
       tag = "spinFrame";
       break;
-    case "rotation_axis":
+    case "rotation_axis_cartn":
+      field = addSpinFrameExt("axis", false);
+      return;
     case "rotation_axis_xyz":
-      field = addSpinFrameExt("axisxyz");
-      break;
+      field = addSpinFrameExt("axis", true);
+      return;
     case "rotation_angle":
-      field = addSpinFrameExt("angle");
-      break;
+      field = addSpinFrameExt("angle", false);
+      return;
     case "collinear_direction":
-      field = addSpinFrameExt("coldir");
+      field = addSpinFrameExt("coldir", true);
       break;
     case "coplanar_perp_uvw":
 //      we don't need this value, because 
@@ -484,13 +501,15 @@ public class CifReader extends AtomSetCollectionReader {
       break;
     default:
       System.err.println("CIFReader unrecognized spin key " + key);
-      break;
+      return;
     }
-    appendUnitCellInfo(tag + "=" + field);
+    addMoreUnitCellInfo(tag + "=" + field);
   }
 
-  private String addSpinFrameExt(String name) {
-    String val = PT.replaceAllCharacters(field.toString(), "[]\"", "");
+  private String addSpinFrameExt(String name, boolean doClean) {
+    String val = field.toString();
+    if (doClean)
+      val = PT.replaceAllCharacters(val, "[]\"", "");
     if (spinFrameExt == null)
       spinFrameExt = "";
     spinFrameExt += ";" + name + "=" + val + ";";
@@ -663,7 +682,14 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   @Override
-  public void doPreSymmetry() throws Exception {
+  public void doPreSymmetry(boolean doApplySymmetry) throws Exception {
+    if (mapSpinIdToUVW != null) {
+      asc.getSymmetry().mapSpins(mapSpinIdToUVW);
+    } else if (haveSpinReferences) {
+      lstSpinLattices = null;
+      appendLoadNote(
+          "Warning: CIF FILE contains _space_group_symop_spin_lattice_R.uvw_id but not _space_group_symop_spin_operation_U.uvw!");
+    }
     if (magCenterings != null || lstSpinLattices != null)
       addLatticeVectors();
     if (modDim > 0)
@@ -672,8 +698,17 @@ public class CifReader extends AtomSetCollectionReader {
       if (!haveMagneticMoments) {
         isMagCIF = isSpinCIF = false;
       } else {
-        asc.getXSymmetry().scaleFractionalVibs();
+        asc.getXSymmetry().finalizeMoments(spinFrame, spinFrameExt);
         vibsFractional = true;
+      }
+    }
+    if (isSpinCIF) {
+      Lst<String> lst = asc.getSymmetry().setSpinList(null);
+      if (lst != null) {
+        asc.setCurrentModelInfo("spinList", lst);
+        appendLoadNote(lst.size()
+            + " spin operations -- see _M.spinList"
+            + (doApplySymmetry ? " and atom.spin" : ""));
       }
     }
   }
@@ -786,6 +821,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   protected String pdbID;
   private Lst<String> lstSpinLattices;
+  private Map<String, String> mapSpinIdToUVW;
   private byte newAtomSetLabel = NONE;
 
   protected void nextAtomSet() {
@@ -870,13 +906,12 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private void addLatticeVectors() {
-    if (lstSpinLattices != null) {
-      if (asc.getSymmetry().addSpinLattice(lstSpinLattices))
-        appendLoadNote("Note! spin lattice added: " + lstSpinLattices);
-      lstSpinLattices = null;
-      return;
+    if (lstSpinLattices != null && !noLattice) {
+        asc.getSymmetry().addSpinLattice(lstSpinLattices, mapSpinIdToUVW);
     }
-    lattvecs = null;    
+    if (noLattice)
+      return;
+    lattvecs = null;
     if (magCenterings != null) {
       // could be x+1/2,y+1/2,z,+1
       // or   x+0.5,y+0.5,z,+1
@@ -1104,7 +1139,7 @@ public class CifReader extends AtomSetCollectionReader {
       while ((str = (String) cifParser.getNextDataToken()) != null) {
         s += str + (m % n == 0 ? "=" : " ");
         if (++m % n == 0) {
-          appendUnitCellInfo(s.trim());
+          addMoreUnitCellInfo(s.trim());
           s = "";
         }
       }
@@ -1802,7 +1837,7 @@ public class CifReader extends AtomSetCollectionReader {
         case spin_moment_magnitude:
         case spin_moment_symmform_uvw:
           haveMagneticMoments = true;
-          V3d pt = atom.vib;
+          Vibration pt = (Vibration) atom.vib;
           if (pt == null)
             atom.vib = pt = new Vibration().setType(Vibration.TYPE_SPIN);
           double v = parseDoubleField();
@@ -1833,6 +1868,8 @@ public class CifReader extends AtomSetCollectionReader {
             pt.z = v;
             if (pt.length() == 0)
               atom.vib = null;
+            else
+              pt.setV0();
             break;
           }
           break;
@@ -2003,10 +2040,14 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte SYM_MAGN_SSG_CENTERING = 10;
   final private static byte SYM_MAGN_SSG_CENT_XYZ = 11;
 
-  final private static byte SYM_SPIN_LATTICE_XYZ = 12;
+  final private static byte SYM_SPIN_LATTICE_XYZT = 12;
   final private static byte SYM_SPIN_LATTICE_UVW = 13;
-  final private static byte SYM_SPIN_OP_XYZ = 14;
-  final private static byte SYM_SPIN_OP_UVW = 15;
+  final private static byte SYM_SPIN_LATTICE_UVW_ID = 14;
+  final private static byte SYM_SPIN_OP_XYZT = 15;
+  final private static byte SYM_SPIN_OP_UVW = 16;
+  final private static byte SYM_SPIN_OP_UVW_ID = 17;
+  final private static byte SYM_SPIN_UPART_ID = 18;
+  final private static byte SYM_SPIN_UPART_UVW = 19;
   
   final private static String CAT_SGOP = "_space_group_symop";
   final private static String[] symmetryOperationsFields = { 
@@ -2025,11 +2066,17 @@ public class CifReader extends AtomSetCollectionReader {
       "*_magn_ssg_centering_algebraic",
       "*_magn_ssg_centering_xyz", // preliminary
       
-      "*_spin_lattice_xyz",
+      "*_spin_lattice_xyzt",
       "*_spin_lattice_uvw",
-      "*_spin_operation_xyz",
-      "*_spin_operation_uvw",
+      "*_spin_lattice_uvw_id",
 
+      "*_spin_operation_xyzt",
+      "*_spin_operation_uvw",
+      "*_spin_operation_uvw_id",
+      
+      "*_spin_upart_id",
+      "*_spin_upart_uvw",
+      
   };
 
   /**
@@ -2053,6 +2100,8 @@ public class CifReader extends AtomSetCollectionReader {
     boolean isMag = false;
     String sxyz = null;
     String suvw = null;
+    String suvwMapped = null;
+    String suvwId = null;
     while (cifParser.getData()) {
       boolean ssgop = false;
       String oxyz = null;
@@ -2081,19 +2130,20 @@ public class CifReader extends AtomSetCollectionReader {
         case SYM_XYZ:
         case SYM_EQ_XYZ:
         case SYM_MAGN_XYZ:
-        case SYM_SPIN_OP_XYZ:
+        case SYM_SPIN_OP_XYZT:
         case SYM_SPIN_OP_UVW:
+        case SYM_SPIN_OP_UVW_ID:
           if (allowRotations || timeRev != 0 || ++n == 1)
             if (!modulated || ssgop) {
-              switch(tok) {
+              switch (tok) {
               case SYM_MAGN_XYZ:
-              case SYM_MAGN_SSG_ALG:              
+              case SYM_MAGN_SSG_ALG:
                 isMag = isMagCIF = true;
                 timeRev = getTimeReversal(field);
                 if (timeRev != 0)
                   field = (String) this.field;
                 break;
-              case SYM_SPIN_OP_XYZ:
+              case SYM_SPIN_OP_XYZT:
                 isSpinCIF = true;
                 timeRev = getTimeReversal(field);
                 if (timeRev != 0)
@@ -2103,6 +2153,12 @@ public class CifReader extends AtomSetCollectionReader {
                   continue;
                 }
                 //$FALL-THROUGH$
+              case SYM_SPIN_OP_UVW_ID:
+                if (ouvw == null) {
+                  haveSpinReferences = true;
+                  ouvw = "u" + field;
+                }
+                //$FALL-THROUGH$
               case SYM_SPIN_OP_UVW:
                 if (ouvw == null)
                   ouvw = field;
@@ -2110,11 +2166,9 @@ public class CifReader extends AtomSetCollectionReader {
                   continue;
                 }
                 ouvw = parseUvwMath(ouvw);
-                ouvw = asc.getXSymmetry().getBaseSymmetry().transformUVW(ouvw, 
-                    parseUvwMath(spinFrame), spinFrameExt);
                 field = oxyz + "(" + ouvw + ")";
                 timeRev = 0;// ignore here
-              }               
+              }
               if (timeRev != 0)
                 field += "," + (timeRev == 1 ? "m" : "-m");
               field = field.replace(';', ' ');
@@ -2123,7 +2177,21 @@ public class CifReader extends AtomSetCollectionReader {
               if (modulated && modDim == 0 && modr != null)
                 modDim = modr.modDim;
             }
-          break;          
+          break;
+        case SYM_SPIN_UPART_ID:
+          suvwId = "u" + field;
+          if (suvwMapped == null)
+            continue;
+          field = suvwMapped;
+          //$FALL-THROUGH$
+        case SYM_SPIN_UPART_UVW:
+          suvwMapped = field;
+          if (suvwId == null)
+            continue;
+          if (mapSpinIdToUVW == null)
+            mapSpinIdToUVW = new Hashtable<String, String>();
+          mapSpinIdToUVW.put(suvwId, suvwMapped);
+          break;
         case SYM_MAGN_CENTERING:
         case SYM_MAGN_SSG_CENTERING:
         case SYM_MAGN_SSG_CENT_XYZ:
@@ -2132,10 +2200,14 @@ public class CifReader extends AtomSetCollectionReader {
             magCenterings = new Lst<String>();
           magCenterings.addLast(field);
           break;
-        case SYM_SPIN_LATTICE_XYZ:
+        case SYM_SPIN_LATTICE_XYZT:
           timeRev = getTimeReversal(field);
           sxyz = (String) this.field;
           break;
+        case SYM_SPIN_LATTICE_UVW_ID:
+          field = "u" + field;
+          haveSpinReferences = true;
+          //$FALL-THROUGH$
         case SYM_SPIN_LATTICE_UVW:
           suvw = field;
           break;
@@ -2149,7 +2221,7 @@ public class CifReader extends AtomSetCollectionReader {
           }
           suvw = parseUvwMath(suvw);
           lstSpinLattices.addLast(sxyz + "(" + suvw + ")");
-          suvw = null;
+          suvw = suvwMapped = suvwId = null;
         }
         sxyz = null;
       }

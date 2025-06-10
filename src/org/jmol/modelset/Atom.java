@@ -1221,6 +1221,8 @@ public class Atom extends Point3fi implements Node {
       return getResno();
     case T.site:
       return getAtomSite();
+    case T.spin:
+      return getSpin();
     case T.structure:
       return group.getProteinStructureType().getId();
     case T.substructure:
@@ -1233,6 +1235,10 @@ public class Atom extends Point3fi implements Node {
       return getValence();
     }
     return 0;      
+  }
+
+  private int getSpin() {
+    return group.chain.model.ms.getSpin(i);
   }
 
   int getSymOp() {

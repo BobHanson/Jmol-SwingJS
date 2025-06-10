@@ -72,7 +72,7 @@ public interface SymmetryInterface {
   
   int getSpaceGroupOperationCount();
   
-  String getSpaceGroupXyz(int i, boolean doNormalize);
+  String getSpaceGroupXyzOriginal(int i, boolean doNormalize);
 
   int getSpinOp(int op);
 
@@ -272,9 +272,10 @@ public interface SymmetryInterface {
   /**
    * for Viewer.getSymStatic only
    * @param vwr
+   * @param id TODO
    * @return this
    */
-  SymmetryInterface setViewer(Viewer vwr);
+  SymmetryInterface setViewer(Viewer vwr, String id);
 
   M4d staticGetMatrixTransform(String cleg, Object retLstOrMap);
 
@@ -292,5 +293,9 @@ public interface SymmetryInterface {
   Object staticConvertOperation(String xyz, M4d matrix, String labels);
 
   void setSpinAxisAngle(A4d aa);
+
+  int getSpinIndex(int op);
+
+  Lst<String> getSpinList();
 
 }

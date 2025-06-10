@@ -1,4 +1,4 @@
-/* $RCSfiodelle$allrueFFFF
+/* $RCSfile$
  * $Author: egonw $
  * $Date: 2005-11-10 09:52:44 -0600 (Thu, 10 Nov 2005) $
  * $Revision: 4255 $
@@ -114,7 +114,7 @@ public class Symmetry implements SymmetryInterface {
     int n = spaceGroup.operationCount;
     String[] list = new String[n];
     for (int i = 0; i < n; i++)
-      list[i] = "" + getSpaceGroupXyz(i, doNormalize);
+      list[i] = "" + getSpaceGroupXyzOriginal(i, doNormalize);
     return list;
   }
 
@@ -165,14 +165,14 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void setSpaceGroup(boolean doNormalize) {
-    symmetryInfo = null;
+    clearSymmetryInfo();
     if (spaceGroup == null)
       spaceGroup = SpaceGroup.getNull(true, doNormalize, false);
   }
 
   @Override
   public int addSpaceGroupOperation(String xyz, int opId) {
-    return spaceGroup.addSymmetry(xyz, opId, false);
+    return spaceGroup.addSymmetry(xyz, opId, true);
   }
 
   @Override
@@ -336,7 +336,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String getSpaceGroupXyz(int i, boolean doNormalize) {
+  public String getSpaceGroupXyzOriginal(int i, boolean doNormalize) {
     return spaceGroup.getXyz(i, doNormalize);
   }
 
@@ -438,6 +438,7 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public int[] getCellRange() {
+    // only available for the "file" object
     return symmetryInfo == null ? null : symmetryInfo.cellRange;
   }
 
@@ -635,7 +636,7 @@ public class Symmetry implements SymmetryInterface {
     UnitCell uc = unitCell.getUnitCellMultiplied();
     if (uc == unitCell)
       return this;
-   return new Symmetry().setViewer(vwr);
+   return new Symmetry().setViewer(vwr, "getUCM");
   }
 
   @Override
@@ -790,7 +791,7 @@ public class Symmetry implements SymmetryInterface {
     }
     SymmetryInterface cellInfo = null;
     if (cellParams != null) {
-      cellInfo = new Symmetry().setViewer(vwr).setUnitCellFromParams(cellParams, false,
+      cellInfo = new Symmetry().setViewer(vwr, "getSGI").setUnitCellFromParams(cellParams, false,
           Double.NaN);
     }
     return getDesc(modelSet).getSpaceGroupInfo(this, modelIndex, sgName, 0,
@@ -984,19 +985,25 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void setSpaceGroupName(String name) {
-    symmetryInfo = null;
+    clearSymmetryInfo();
     if (spaceGroup != null)
       spaceGroup.setName(name);
   }
 
   @Override
   public void setSpaceGroupTo(Object sg) {
-    symmetryInfo = null;
+    clearSymmetryInfo();
     if (sg instanceof SpaceGroup) {
       spaceGroup = (SpaceGroup) sg;
     } else {
       spaceGroup = SpaceGroup.getSpaceGroupFromJmolClegOrITA(vwr,
           sg.toString());
+    }
+  }
+
+  private void clearSymmetryInfo() {
+    if (symmetryInfo != null) {
+      symmetryInfo = null;
     }
   }
 
@@ -1325,7 +1332,6 @@ public class Symmetry implements SymmetryInterface {
                     : nameTo.substring(2),
                 false, false)));
     if (flags != 0) {
-      //System.out.println(Integer.toHexString(flags));
       String prefix = SpaceGroup.getGroupTypePrefix(groupType1);
       int indexMax = (flags >> 24) & 0xFF;
       int indexMin = (flags >> 16) & 0xFF;
@@ -1530,7 +1536,6 @@ public class Symmetry implements SymmetryInterface {
         : 1); step < i2; step++) {
       out: for (int i = 0, n = fromData.length; i < n; i++) {
         int group = fromData[i][0];
-        //System.out.println(step + "/" + i + "\t" + itaFrom + "-" + group + "\t" + bs + " " + bs.get(group));
         if (bs.get(group) && !isFirstA2A)
           continue;
         int index = fromData[i][1];
@@ -1551,7 +1556,6 @@ public class Symmetry implements SymmetryInterface {
             s += itaFrom + ">[" + index + "]>" + group;
             if (retAll != null) {
               retAll.addLast(s);
-              //System.out.println(retAll.size() + "\t" + s);
               // continue to step 2 finding more fits
               break out;
             }
@@ -1560,7 +1564,6 @@ public class Symmetry implements SymmetryInterface {
           }
           break;
         case 2:
-          //System.out.println("Step 2 checking group=" + group +  " itaTo=" + itaTo + " " + bs);
           if (group != itaTo && !bs.get(group)) {
             BS bsNew = BSUtil.copy(bs);
             bsNew.set(group);
@@ -1584,6 +1587,7 @@ public class Symmetry implements SymmetryInterface {
   @SuppressWarnings("unchecked")
   @Override
   public Object getSpaceGroupJSON(String name, String data, int index) {
+    int index0 = index;
     boolean isSetting = name.equals("setting");
     boolean isSettings = name.equals("settings");
     boolean isAFLOW = name.equalsIgnoreCase("AFLOWLIB");
@@ -1664,7 +1668,7 @@ public class Symmetry implements SymmetryInterface {
           return getAllITAData(vwr, specialType, true);
         }
         boolean isSpecial = (specialType > SpaceGroup.TYPE_SPACE);
-        Map<String, Object> resource = getITJSONResource(vwr, specialType, itno,
+        Map<String, Object> resource = getITJSONResource(vwr, specialType, (itno < 1 ? index0 : itno),
             data);
         if (resource != null) {
           if (index == 0 && tm == null)
@@ -2022,7 +2026,7 @@ public class Symmetry implements SymmetryInterface {
         unitCellParams);
     if (params != null) {
       setUnitCellFromParams(params, modelAuxiliaryInfo.containsKey("jmolData"),
-          Double.NaN);
+          symmetryInfo.slop);
       unitCell.setMoreInfo((Lst<String>) modelAuxiliaryInfo
           .get(JC.UC_MOREINFO));
       modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
@@ -2154,14 +2158,19 @@ public class Symmetry implements SymmetryInterface {
    * Viewer is needed to load json files. 
    */
   Viewer vwr;
+  public Lst<String> spinList;
+  public String id;
 
   /**
    * 
    * @param vwr
    */
   @Override
-  public Symmetry setViewer(Viewer vwr) {
-    this.vwr = vwr;
+  public Symmetry setViewer(Viewer vwr, String id) {
+    if (this.vwr == null) {
+      this.vwr = vwr;
+      this.id = id;
+    }
     return this;
   }
 
@@ -2217,8 +2226,6 @@ public class Symmetry implements SymmetryInterface {
    */
   @Override
   public Atom getConstrainableEquivAtom(Atom a) {
-    if (vwr == null)
-      System.out.println("???");
     BS bsEquiv = vwr.ms.getSymmetryEquivAtoms(BSUtil.newAndSetBit(a.i), this, null);
     SymmetryOperation[] sgOps = getSymmetryOperations();
     // start with the specified atom
@@ -2234,7 +2241,6 @@ public class Symmetry implements SymmetryInterface {
       int[] inv = getInvariantSymops(ai, null);
       if (inv.length > 0) {
         SymmetryOperation op = sgOps[inv[0] - 1];
-        //System.out.println(op.getOpDesc());
         switch (op.getOpType()) {
         case SymmetryOperation.TYPE_ROTATION:
         case SymmetryOperation.TYPE_REFLECTION:
@@ -2252,5 +2258,18 @@ public class Symmetry implements SymmetryInterface {
     if (unitCell != null)
       unitCell.setSpinAxisAngle(aa);
   }
+
+  @Override
+  public int getSpinIndex(int op) {
+    SymmetryOperation[] ops = getSymmetryOperations();
+    int id = (ops == null || op > ops.length ? -1 : ops[op].spinIndex);
+    return id;
+  }
+
+  @Override
+  public Lst<String> getSpinList() {
+    return (spaceGroup == null ? null : spaceGroup.spinList);
+  }
+
 
 }

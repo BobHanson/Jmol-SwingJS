@@ -944,9 +944,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       return -1;
     int isym = asc.getXSymmetry().addSpaceGroupOperation(xyz, true);
     if (isym < 0)
-      Logger.warn("Skipping symmetry operation " + xyz);
+      warnSkippingOperation(xyz);
     iHaveSymmetryOperators = true;
     return isym;
+  }
+
+  protected void warnSkippingOperation(String xyz) {
+    Logger.warn("Skipping symmetry operation " + xyz);
   }
 
   private int nMatrixElements = 0;
@@ -1597,7 +1601,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       throws Exception {
   }
 
-  protected void doPreSymmetry() throws Exception {
+  protected void doPreSymmetry(boolean doApplySymmetry) throws Exception {
   }
 
   @SuppressWarnings("unchecked")
@@ -2097,11 +2101,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return line;
   }
 
-  public void appendUnitCellInfo(String info) {
+  public void addMoreUnitCellInfo(String info) {
     if (moreUnitCellInfo == null)
       moreUnitCellInfo = new Lst<String>();
     moreUnitCellInfo.addLast(info);
-    appendLoadNote(info);
+    //appendLoadNote(info);
   }
 
   public Object getInterface(String className) {

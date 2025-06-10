@@ -1388,6 +1388,13 @@ public class ScriptMathProcessor {
           m = M3d.newM3((M3d) x2.value);
           m.mul2(m3, m);
           return addXM3(m);
+        case T.matrix4f:
+          // m3 x m4 = m3
+          M4d m4e = M4d.newM4((M4d) x2.value);
+          M3d m1 = new M3d();
+          m4e.getRotationScale(m1);
+          m1.mul2(m3, m1);
+          return addXM3(m1);
         case T.point4f:
           // m * q
           return addXM3(
@@ -1431,6 +1438,15 @@ public class ScriptMathProcessor {
           M4d m4b = M4d.newM4((M4d) x2.value);
           m4b.mul2(m4, m4b);
           return addXM4(m4b);
+        case T.matrix3f:
+          // m4 x m3 = m4
+          M3d m3e = M3d.newM3((M3d) x2.value);
+          M4d m4f = M4d.newM4(m4);
+          M3d m1 = new M3d();
+          m4f.getRotationScale(m1);
+          m1.mul(m3e);
+          m4f.setRotationScale(m1);
+          return addXM4(m4f);
         case T.varray:
           Lst<SV> l = x2.getList();
           Lst<P3d> lnew = new Lst<P3d>();

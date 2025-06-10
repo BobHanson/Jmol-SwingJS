@@ -65,7 +65,7 @@ public class Interface {
   }
 
   public static SymmetryInterface getSymmetry(Viewer vwr, String state) {
-    return ((SymmetryInterface) getInterface("org.jmol.symmetry.Symmetry", vwr, state)).setViewer(vwr);
+    return ((SymmetryInterface) getInterface("org.jmol.symmetry.Symmetry", vwr, state)).setViewer(vwr, state);
   }
 
 }

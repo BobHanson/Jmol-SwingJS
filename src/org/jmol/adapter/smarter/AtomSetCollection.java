@@ -85,7 +85,7 @@ public class AtomSetCollection {
 
   private int[] atomSetNumbers = new int[16];
   private int[] atomSetAtomIndexes = new int[16];
-  private int[] atomSetAtomCounts = new int[16];
+  public int[] atomSetAtomCounts = new int[16];
   private int[] atomSetBondCounts = new int[16];
   private Map<String, Object>[] atomSetAuxiliaryInfo = new Hashtable[16];
 

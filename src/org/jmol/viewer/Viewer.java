@@ -10687,7 +10687,7 @@ public class Viewer extends JmolViewer
    * @return org.jmol.symmetry.Symmetry object
    */
   public SymmetryInterface getSymTemp() {
-    return Interface.getSymmetry(this, "ms").setViewer(this);
+    return Interface.getSymmetry(this, "temp");
   }
 
   /**
@@ -10703,7 +10703,7 @@ public class Viewer extends JmolViewer
    */
   public SymmetryInterface getSymStatic() {
     return (symStatic == null
-        ? (symStatic = Interface.getSymmetry(this, "ms")).setViewer(this)
+        ? (symStatic = Interface.getSymmetry(this, "static"))
         : symStatic);
   }
 
@@ -10788,7 +10788,7 @@ public class Viewer extends JmolViewer
 
   public String[] calculateChiralityForSmiles(String smiles) {
     try {
-      return Interface.getSymmetry(this, "ms")
+      return Interface.getSymmetry(this, "smiles")
           .calculateCIPChiralityForSmiles(smiles);
     } catch (Exception e) {
       return null;

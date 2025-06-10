@@ -33,179 +33,157 @@ import javajs.util.Lst;
 import javajs.util.P3d;
 import javajs.util.V3d;
 
-
 /* **************************************************************
  * the frame iterators
  * **************************************************************/
 class AtomIterator implements JmolAdapterAtomIterator {
-	private int iatom;
-	private Atom atom;
-	private int ac;
-	private Atom[] atoms;
-	private BS bsAtoms;
+  private int iatom;
+  private Atom atom;
+  private int ac;
+  private Atom[] atoms;
+  private BS bsAtoms;
 
-	AtomIterator(AtomSetCollection asc) {
-		ac = asc.ac;
-		atoms = asc.atoms;		
-		bsAtoms = asc.bsAtoms;
-		iatom = 0;
-	}
+  AtomIterator(AtomSetCollection asc) {
+    ac = asc.ac;
+    atoms = asc.atoms;
+    bsAtoms = asc.bsAtoms;
+    iatom = 0;
+  }
 
-	@Override
+  @Override
   public boolean hasNext() {
-		if (iatom == ac)
-			return false;
-		while ((atom = atoms[iatom++]) == null
-				|| (bsAtoms != null && !bsAtoms.get(atom.index)))
-			if (iatom == ac)
-				return false;
-		atoms[iatom - 1] = null; // single pass
-		return true;
-	}
+    if (iatom == ac)
+      return false;
+    while ((atom = atoms[iatom++]) == null
+        || (bsAtoms != null && !bsAtoms.get(atom.index)))
+      if (iatom == ac)
+        return false;
+    atoms[iatom - 1] = null; // single pass
+    return true;
+  }
 
-	@Override
+  @Override
   public int getAtomSetIndex() {
-		return atom.atomSetIndex;
-	}
+    return atom.atomSetIndex;
+  }
 
-	
-	@Override
+  @Override
   public BS getSymmetry() {
-		return atom.bsSymmetry;
-	}
+    return atom.bsSymmetry;
+  }
 
-	
-	@Override
+  @Override
   public int getAtomSite() {
-		return atom.atomSite + 1;
-	}
+    return atom.atomSite + 1;
+  }
 
-	
-	@Override
+  @Override
   public Object getUniqueID() {
-		return Integer.valueOf(atom.index);
-	}
+    return Integer.valueOf(atom.index);
+  }
 
-	
-	@Override
+  @Override
   public int getElementNumber() {
-    return (atom.elementNumber > 0 ? atom.elementNumber : JmolAdapter
-				.getElementNumber(atom.getElementSymbol()));
-	}
+    return (atom.elementNumber > 0 ? atom.elementNumber
+        : JmolAdapter.getElementNumber(atom.getElementSymbol()));
+  }
 
-	
-	@Override
+  @Override
   public String getAtomName() {
-		return atom.atomName;
-	}
+    return atom.atomName;
+  }
 
-	
-	@Override
+  @Override
   public int getFormalCharge() {
-		return (atom.formalCharge == Integer.MIN_VALUE ? 0 : atom.formalCharge);
-	}
+    return (atom.formalCharge == Integer.MIN_VALUE ? 0 : atom.formalCharge);
+  }
 
-	
-	@Override
+  @Override
   public double getPartialCharge() {
-		return atom.partialCharge;
-	}
+    return atom.partialCharge;
+  }
 
-	
-	@Override
+  @Override
   public Lst<Object> getTensors() {
-		return atom.tensors;
-	}
+    return atom.tensors;
+  }
 
-	
-	@Override
+  @Override
   public double getRadius() {
-		return atom.radius;
-	}
-	
+    return atom.radius;
+  }
+
   @Override
   public double getBondRadius() {
     return atom.bondingRadius;
   }
-  
-	/**
-	 * Note that atom.vib also serves to deliver specific 
-	 * data items.
-	 */
-	@Override
+
+  /**
+   * Note that atom.vib also serves to deliver specific data items.
+   */
+  @Override
   public V3d getVib() {
-	  return (atom.vib == null || Double.isNaN(atom.vib.z) ? null : 
-	    atom.vib);
-	}
+    return (atom.vib == null || Double.isNaN(atom.vib.z) ? null : atom.vib);
+  }
 
   @Override
   public int getSeqID() {
-    return (atom.vib == null || !Double.isNaN(atom.vib.y) || atom.vib.z != T.seqid ? 0 : 
-      (int) atom.vib.x);
+    return (atom.vib == null || !Double.isNaN(atom.vib.y)
+        || atom.vib.z != T.seqid ? 0 : (int) atom.vib.x);
   }
 
-	
-	@Override
+  @Override
   public double getBfactor() {
-		return atom.bfactor;
-	}
+    return atom.bfactor;
+  }
 
-	
-	@Override
+  @Override
   public double getOccupancy() {
-		return (atom.foccupancy * 100);
-	}
+    return (atom.foccupancy * 100);
+  }
 
-	
-	@Override
+  @Override
   public boolean getIsHetero() {
-		return atom.isHetero;
-	}
+    return atom.isHetero;
+  }
 
-	
-	@Override
+  @Override
   public int getSerial() {
-		return atom.atomSerial;
-	}
+    return atom.atomSerial;
+  }
 
-	
-	@Override
+  @Override
   public int getChainID() {
-		return atom.chainID;
-	}
+    return atom.chainID;
+  }
 
-	
-	@Override
+  @Override
   public char getAltLoc() {
-		return JmolAdapter.canonizeAlternateLocationID(atom.altLoc);
-	}
+    return JmolAdapter.canonizeAlternateLocationID(atom.altLoc);
+  }
 
-	
-	@Override
+  @Override
   public String getGroup3() {
-		return atom.group3;
-	}
+    return atom.group3;
+  }
 
-	
-	@Override
+  @Override
   public int getSequenceNumber() {
-		return atom.sequenceNumber;
-	}
+    return atom.sequenceNumber;
+  }
 
-	
-	@Override
+  @Override
   public char getInsertionCode() {
-		return JmolAdapter.canonizeInsertionCode(atom.insertionCode);
-	}
+    return JmolAdapter.canonizeInsertionCode(atom.insertionCode);
+  }
 
-	
-	@Override
+  @Override
   public P3d getXYZ() {
-		return atom;
-	}
+    return atom;
+  }
 
-	@Override
-  public int getElement() {  
+  @Override
+  public int getElement() {
     return getElementNumber() & 0x7F;
   }
 
@@ -218,6 +196,5 @@ class AtomIterator implements JmolAdapterAtomIterator {
   public int getPart() {
     return atom.part;
   }
-
 
 }

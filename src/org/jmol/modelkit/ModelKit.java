@@ -1447,7 +1447,7 @@ public class ModelKit {
       for (int imodel = modelSyms.length; --imodel >= 0;) {
         SymmetryInterface sym = vwr.ms.getUnitCell(imodel);
         if (sym != null && sym.getSymmetryOperations() != null)
-          modelSyms[imodel] = sym.setViewer(vwr);
+          modelSyms[imodel] = sym.setViewer(vwr, "modelkit");
       }
     }
     return (iatom < 0 ? null : modelSyms[modelIndex]);
@@ -4348,12 +4348,12 @@ public class ModelKit {
         s = "";
     }
     if (thisId == null)
-      thisId = (isSymop ? "sym" : "sg");
+      thisId = (isSymop ? JC.DEFAULT_DRAW_SYM_ID : "sg");
     if (s == null)
       s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center, target,
           T.draw, thisId, intScale / 100, nth, options, opList);
     if (s != null) {
-      s = "draw ID \"" + (isSymop ? "sg" : "sym") + "*\" delete;" + s;
+      s = "draw ID \"" + (isSymop ? "sg" : JC.DEFAULT_DRAW_SYM_ID) + "*\" delete;" + s;
       s = "draw ID \"" + thisId + "*\" delete;" + s;
     }
     if (isModelkit)

@@ -173,7 +173,8 @@ public class LabelToken {
       T.chirality, // added in 14.11.4
       T.ciprule, // added in 14.17.0
       T.wyckoff, // added in 16.1.44
-      T.rxyz // added in 16.2.5
+      T.rxyz, // added in 16.2.5
+      T.spin // added in 16.3.28
   };
 
   public LabelToken() {

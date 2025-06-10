@@ -62,6 +62,7 @@ class SymmetryInfo {
   protected String strSUPERCELL;
   String intlTableIndexNdotM;
   String intlTableTransform;
+  double slop;
   
   SymmetryInfo() {    
   }
@@ -125,6 +126,9 @@ class SymmetryInfo {
       cellRange = null;
       infoStr = "";
       modelInfo.remove(JC.INFO_UNIT_CELL_PARAMS);
+      slop = Double.NaN;
+    } else if (unitCellParams.length > SimpleUnitCell.PARAM_SLOP){
+      slop = unitCellParams[SimpleUnitCell.PARAM_SLOP];
     }
     int symmetryCount = modelInfo.containsKey("symmetryCount")
         ? ((Integer) modelInfo.get("symmetryCount")).intValue()
