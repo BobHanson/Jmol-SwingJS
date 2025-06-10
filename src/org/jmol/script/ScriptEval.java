@@ -6299,8 +6299,8 @@ public class ScriptEval extends ScriptExpr {
         isMolecular = true;
         // rotate vectors 45; // default {0 0 1}
         // rotate vectors {0 0 1} 45;
-        // rotate vectors {q1 q2 q3 q4} 45;
-        // rotate vectors <matrix> 45;
+        // rotate vectors {q1 q2 q3 q4};
+        // rotate vectors <matrix>;
         // spin vectors {0 0 1};// default 2 deg/sec
         m3 = (M3d) getMatrixParam(i + 1, 3, false);
         if (m3 == null) {

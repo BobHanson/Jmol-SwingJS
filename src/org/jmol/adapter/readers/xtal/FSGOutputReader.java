@@ -319,10 +319,10 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       System.out.println("FSGOutput G0_atomCount=" + asc.ac);
 
       symmetry.setUnitCellFromParams(unitCellParams, true, cellSlop);
-      String spinFrame = calculateSpinFrame();
+      spinFrame = calculateSpinFrame();
       System.out.println("FSGOutput G0 spinFrame=" + spinFrame);
       addMoreUnitCellInfo("spinFrame=" + spinFrame);
-      this.spinFrame = spinFrame;
+      asc.setCurrentModelInfo("unitcell_spin", spinFrame);
       Lst<P3d> spinLattice = fs.getLatticeCentering();
       Lst<String>lattice = SymmetryOperation.getLatticeCenteringStrings(fs.getSymmetryOperations());
       if (!lattice.isEmpty()) {
