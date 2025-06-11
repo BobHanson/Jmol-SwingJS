@@ -281,10 +281,32 @@ public class XtalSymmetry {
       int i0 = asc.getAtomSetAtomIndex(asc.iSet);
       for (int i = asc.ac; --i >= i0;) {
         // note, these are already in Cartesian coordinates
+        // ??really??
         Vibration v = (Vibration) asc.atoms[i].vib;
         if (v != null) {
           v.scaleT(magneticScaling);
-          v.magMoment = v.length();
+          if (v.isFractional) {
+            // from CIF reader specifically, magCIF or spinCIF
+            // _atom_site_moment.crystalaxis_x
+            // _atom_site_moment.crystalaxis_y
+            // _atom_site_moment.crystalaxis_z
+            // _atom_site_moment.symmform
+            // Mn1_1 3.00(1) 3.00 0.00000 mx,my,0
+            // Mn1_2 0.00000 -3.00 0.00000 0,my,0
+            // these are in the file as "angstroms" but along the 
+            // unit cell axes, so now we need to 
+            // fractionalize them.
+            if (v.magMoment == 0) {
+              // magCIF files, specifically; possibly spinCIF
+              if (unitCell == null) {
+                setUnitCellFromParams(acr.unitCellParams, false, Double.NaN);
+              }
+              // we must convert to cartesians temporarily.
+              toCartesian(v, true);
+              v.magMoment = v.length();
+              toFractional(v, true);
+            }
+          }
         }
       }
     }
@@ -380,9 +402,10 @@ public class XtalSymmetry {
      * At the end, we need to rescale the vectors using SpinFramePp.
      * 
      * @param asc 
+     * @param isCartesian TODO
      * @return number of nonzero or incommensurate spins
      */
-    protected int postSymmetrySetMagneticMoments(AtomSetCollection asc) {
+    protected int postSymmetrySetMagneticMoments(AtomSetCollection asc, boolean isCartesian) {
       // return spin vectors to cartesians
       if (nSpins > 0)
         return nSpins; // already done
@@ -397,7 +420,7 @@ public class XtalSymmetry {
             Vibration v1 = (Vibration) v.clone(); // this could be a modulation set
             if (spinFrameCartXYZ != null) {
               spinFrameCartXYZ.rotate(v1);
-            } else {
+            } else if (!isCartesian) {
               toCartesian(v1, true);
             }
             if (v1.lengthSquared() > 0) {
@@ -406,6 +429,7 @@ public class XtalSymmetry {
               v1 = null;
             }
             asc.atoms[i].vib = v1;
+            v1.scale(v1.magMoment / v1.length());
           }
         }
       }
@@ -979,14 +1003,15 @@ public class XtalSymmetry {
    * Set the spin vectors, possibly based on spinFrameCartXYZ.
    * 
    * From CifReader.finalizeSubclassSymmetry after supercell business.
+   * @param isCartesian TODO
    * 
    * @return number of atoms with nonzero spin (atom.vib)
    */
-  public int setMagneticMoments() {
+  public int setMagneticMoments(boolean isCartesian) {
     // We use the base symmetry here, because we do not want to 
     // be working with a supercell or specific range.
     return (asc.iSet < 0 || !acr.vibsFractional ? 0 
-        : getBaseSymmetry().postSymmetrySetMagneticMoments(asc));
+        : getBaseSymmetry().postSymmetrySetMagneticMoments(asc, isCartesian));
   }
 
   void setTensors() {
@@ -1844,7 +1869,7 @@ public class XtalSymmetry {
 
       int pt0 = firstAtom
           + (checkNearAtoms ? pt : checkRange111 ? baseCount : 0);
-      int spinOp = (iSym >= nOp ? 0
+      int timeReversal = (iSym >= nOp ? 0
           : asc.vibScale == 0 ? sym.getSpinOp(iSym) : asc.vibScale);
       int i0 = Math.max(firstAtom,
           (bsAtoms == null ? 0 : bsAtoms.nextSetBit(0)));
@@ -1943,11 +1968,11 @@ public class XtalSymmetry {
           Atom atom1 = a.copyTo(pttemp, asc);
           if (asc.bsAtoms != null)
             asc.bsAtoms.set(atom1.index);
-          if (spinOp != 0 && atom1.vib != null) {
+          if (timeReversal != 0 && atom1.vib != null) {
             // spinOp is making the correction for spin being a pseudoVector, not a standard vector
             ((SymmetryOperation) sym.getSpaceGroupOperation(iSym))
                 .rotateSpin(atom1.vib);
-            atom1.vib.scale(spinOp);
+            atom1.vib.scale(timeReversal);
           }
           if (atom1.part < 0) {
             // special negative disorder group in CifReader

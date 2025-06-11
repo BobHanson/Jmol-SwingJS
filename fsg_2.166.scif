@@ -1,0 +1,89 @@
+#\#CIF_2.0
+## CIF file created by Jmol 16.3.28  2025-05-19 14:02
+data_global
+
+_space_group_spin.transform_spinframe_P_abc   a,b,c
+_space_group_spin.collinear_direction         .
+_space_group_spin.coplanar_perp_uvw           0,0,1
+_space_group_spin.rotation_axis_cartn         ?
+_space_group_spin.rotation_angle              ?
+_space_group_spin.number_SpSG_Chen            2.10.2.?
+_space_group_spin.name_SpSG_Chen              
+;
+P^2_1002/^2_010m|(2_001,2_001,1)^m1
+;
+
+
+_cell_length_a                10.7414
+_cell_length_b                18.5782
+_cell_length_c                 5.6533
+_cell_angle_alpha             90.0
+_cell_angle_beta             108.566
+_cell_angle_gamma             90.0
+
+loop_
+_space_group_symop_spin_operation.id
+_space_group_symop_spin_operation.xyzt
+_space_group_symop_spin_operation.uvw_id
+1   x,y,z,+1                       1   
+2   -x,-y,-z,+1                    2   
+3   -x,y,-z,+1                     3   
+4   x,-y,z,+1                      4   
+
+loop_
+_space_group_symop_spin_lattice.id
+_space_group_symop_spin_lattice.xyzt
+_space_group_symop_spin_lattice.uvw_id
+1   x,y,z,+1                       1   
+2   x+0.5,y+0.5,z,+1               1   
+3   x+0.5,y,z,+1                   2   
+4   x,y+0.5,z,+1                   2   
+
+loop_
+_space_group_symop_spin_Upart.id
+_space_group_symop_spin_Upart.time_reversal
+_space_group_symop_spin_Upart.uvw
+1   1   u,v,w                          
+2   1   -u+0.33515050801360546w,-v,w   
+3   1   u-0.33515050801360546w,-v,-w   
+4   1   -u,v,-w                        
+
+
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+C1    C       0.00000    0.25000    0.50000
+C2    C       0.25000    0.00000    0.50000
+C3    C       0.00000    0.41380    0.50000
+C4    C       0.25000    0.16380    0.50000
+B1    B       0.13650    0.17060    0.79470
+B2    B       0.38650    0.42060    0.79470
+B3    B       0.37555    0.00000    0.20440
+B4    B       0.12555    0.25000    0.20440
+Be1   Be      0.00000    0.00000    0.00000
+Be2   Be      0.25000    0.25000    0.00000
+Li1   Li      0.00000    0.33333    0.00000
+Li2   Li      0.25000    0.08335    0.00000
+
+loop_
+_atom_type_symbol
+C
+B
+Be
+Li
+
+
+loop_
+_atom_site_spin_moment.label
+_atom_site_spin_moment.axis_u
+_atom_site_spin_moment.axis_v
+_atom_site_spin_moment.axis_w
+_atom_site_spin_moment.symmform_uvw
+_atom_site_spin_moment.magnitude
+Li1       0.69000    0.00000    0.00000 ?     0.69000
+Li2       0.00000   -1.27000    0.00000 ?     1.27000
+
+_jmol_precision    5

@@ -787,7 +787,7 @@ public class CifReader extends AtomSetCollectionReader {
     }
     if (subParser != null)
       subParser.finalizeSymmetry(haveSymmetry);
-    if (sym != null && isMagCIF || isSpinCIF)
+    if (sym != null && (isMagCIF || isSpinCIF))
       finalizeMagneticMoments();
   }
 
@@ -800,7 +800,7 @@ public class CifReader extends AtomSetCollectionReader {
       return;
     asc.setNoAutoBond();
     addJmolScript("vectors on;vectors 0.15;");
-    int n = asc.xtalSymmetry.setMagneticMoments();
+    int n = asc.xtalSymmetry.setMagneticMoments(false);
     appendLoadNote(n
         + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
   }
@@ -1604,8 +1604,6 @@ public class CifReader extends AtomSetCollectionReader {
       int authSeq = Integer.MIN_VALUE;
       String authAsym = null;
       String wyckoff = null;
-      double spinMag = Double.NaN;
-      String symmform = null;
       boolean haveAuth = false;
       int seqID = 0;
       int n = cifParser.getColumnCount();
@@ -1846,10 +1844,10 @@ public class CifReader extends AtomSetCollectionReader {
           double v = parseDoubleField();
           switch (tok) {
           case spin_moment_magnitude:
-            spinMag = v;
+            pt.magMoment = v;
             continue;
           case spin_moment_symmform_uvw:
-            symmform = field;
+            pt.symmform = field;
             continue;
           case MOMENT_PRELIM_X:
           case MOMENT_X:
@@ -1869,10 +1867,11 @@ public class CifReader extends AtomSetCollectionReader {
           case SPIN_W_PRELIM:
           case spin_moment_axis_w:
             pt.z = v;
-            if (pt.length() == 0)
+            if (pt.length() == 0) {
               atom.vib = null;
-            else
-              pt.setV0();
+            } else {
+              pt.isFractional = true;
+            }
             break;
           }
           break;

@@ -31,9 +31,11 @@ public class Vibration extends V3d {
   public double modScale = Double.NaN; // modulation only
   public double magMoment;
   public boolean showTrace;
+  public boolean isFractional;
   public V3d v0;
   public int tracePt;
   private P3d[] trace = null;
+  public String symmform;
 
   public Vibration() {
     super();

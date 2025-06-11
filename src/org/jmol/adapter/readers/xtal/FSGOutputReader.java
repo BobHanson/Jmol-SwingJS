@@ -10,6 +10,7 @@ import org.jmol.api.JmolAdapter;
 import org.jmol.symmetry.SymmetryOperation;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
+import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Vibration;
 
 import javajs.util.BS;
@@ -189,6 +190,8 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       // an element may have more than one moment, but we
       // cannot tell this from the JSON.
       Atom a = new Atom();
+      a.setT(xyz);
+      setAtomCoord(a);
       P3d moment = getPoint(getListItem(moments, i));
       double mag = moment.length();
       if (mag > 0) {
@@ -199,6 +202,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
         v.setT(moment);
         v.magMoment = mag;
         a.vib = v;
+        System.out.println("FSGOutput atom/spin " + i + " " + a.vib + " " + mag);
       } else {
         if (spinOnly)
           continue;
@@ -210,8 +214,6 @@ public class FSGOutputReader extends AtomSetCollectionReader {
         
         a.elementNumber = (short) (id + 2); // start with boron
       }
-      a.setT(xyz);
-      setAtomCoord(a);
       asc.addAtom(a);
     }
   }
@@ -241,17 +243,36 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     asc.setCurrentModelInfo("spinFrame", spinFrame);
   }
 
+  /**
+   * We need to generate the moment for the SCIF file
+   */
   private void preSymmetrySetMoments() {
+    double a = symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_A);
+    double b = symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_B);
+    double c = symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_C);
     for (int i = asc.ac; --i >= 0;) {
       Vibration v = (Vibration) asc.atoms[i].vib;
-      if (v == null)
-        continue;
-      P3d p = P3d.newP(v);
-      symmetry.toFractional(v, true);
-      v.scale(v.magMoment / v.length());
-      v.setV0();
-      v.setT(p);     
+      if (v != null)
+        spinCartesianToFractional(v, a, b, c);
     }
+  }
+
+  /*
+   * After converting to fractional, we need to 
+   * scale the value by the dimensions of the cell
+   * in order to set the value that will go into the SCIF
+   * file. We save that value as Vibration.v0.
+   * We restore the cartesian value for the rotations.
+   * 
+   */
+  private void spinCartesianToFractional(Vibration v, double a, double b, double c) {
+    P3d p = P3d.newP(v);
+    symmetry.toFractional(v, true);
+    v.x *= a;
+    v.y *= b;
+    v.z *= c;
+    v.setV0();
+    v.setT(p);     
   }
 
   private void filterFsgAtoms(BS bs) {
@@ -265,12 +286,13 @@ public class FSGOutputReader extends AtomSetCollectionReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
-      asc.setNoAutoBond();
-      applySymmetryAndSetTrajectory();
-      addJmolScript("vectors on;vectors 0.15;");
-      int n = asc.getXSymmetry().setMagneticMoments();
-      appendLoadNote(n
-          + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");   
+    asc.setNoAutoBond();
+    applySymmetryAndSetTrajectory();
+    addJmolScript("vectors on;vectors 0.15;");
+    vibsFractional = true;
+    int n = asc.getXSymmetry().setMagneticMoments(true);
+    appendLoadNote(n
+        + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
   }
 
   private Map<String, Object> getSCIFInfo(FileSymmetry fs,
