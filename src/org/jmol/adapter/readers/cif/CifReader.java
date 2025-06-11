@@ -641,6 +641,7 @@ public class CifReader extends AtomSetCollectionReader {
     addHeader();
     if (haveAromatic)
       addJmolScript("calculate aromatic");
+    // Q: Isn't asc.xtalSymmetry already nulled?
     if (!isMMCIF && asc.xtalSymmetry != null) {
       asc.xtalSymmetry.setPartProperty();
     }
@@ -778,15 +779,6 @@ public class CifReader extends AtomSetCollectionReader {
       getModulationReader().setModulation(true, sym);
       modr.finalizeModulation();
     }
-    if (isMagCIF || isSpinCIF) {
-      asc.setNoAutoBond();
-      if (sym != null) {
-        addJmolScript("vectors on;vectors 0.15;");
-        int n = asc.getXSymmetry().setMagneticMoments();
-        appendLoadNote(n
-            + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
-      }
-    }
     if (sym != null && auditBlockCode != null
         && auditBlockCode.contains("REFRNCE")) {
       if (htAudit == null)
@@ -795,12 +787,23 @@ public class CifReader extends AtomSetCollectionReader {
     }
     if (subParser != null)
       subParser.finalizeSymmetry(haveSymmetry);
-
+    if (sym != null && isMagCIF || isSpinCIF)
+      finalizeMagneticMoments();
   }
 
   ////////////////////////////////////////////////////////////////
   // processing methods
   ////////////////////////////////////////////////////////////////
+
+  private void finalizeMagneticMoments() {
+    if (asc.xtalSymmetry == null)
+      return;
+    asc.setNoAutoBond();
+    addJmolScript("vectors on;vectors 0.15;");
+    int n = asc.xtalSymmetry.setMagneticMoments();
+    appendLoadNote(n
+        + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
+  }
 
   private Hashtable<String, Object> htAudit;
   public Lst<String> symops;

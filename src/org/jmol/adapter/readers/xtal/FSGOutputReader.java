@@ -35,9 +35,11 @@ public class FSGOutputReader extends AtomSetCollectionReader {
   private short[] elementNumbers;
 //  private boolean addSymmetry;
   private boolean spinOnly;
+  private boolean convertToABC = true;
   private Map<String, Object> json;
   private String configuration;
   private boolean isCoplanar;
+  private boolean isCollinear;
   private int firstTranslation;
   private String spinFrame;
   private String fullName;
@@ -46,7 +48,9 @@ public class FSGOutputReader extends AtomSetCollectionReader {
   @Override
   public void initializeReader() throws Exception {
     super.initializeReader();
+    //convertToABC = false;
     spinOnly = checkFilterKey("SPINONLY");
+    checkNearAtoms = !checkFilterKey("NOSPECIAL"); // as in "no special positions"
     if (!filteredPrecision) {
       precision = DEFAULT_PRECISION ;
       filteredPrecision = true;
@@ -80,8 +84,8 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     getCellInfo(getListItem(info, 0));
     configuration = (String) json.get("Configuration"); // "Coplanar"
     isCoplanar = "Coplanar".equals(configuration);
+    isCollinear = "Collinear".equals(configuration);
     addMoreUnitCellInfo("configuration=" + configuration);
-
     readAllOperators(getList(json, "G0_std_operations"));
     readAtomsAndMoments(info);
   }
@@ -223,7 +227,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     BS bs = BSUtil.newBitSet2(0, asc.ac);
     excludeAtoms(0, bs, fs);
     filterFsgAtoms(bs);
-    setMoments();
+    preSymmetrySetMoments();
     System.out.println("FSGOutputReader using atoms " + bs);
     Lst<String> lst = fs.setSpinList(configuration);
     if (lst != null) {
@@ -237,7 +241,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     asc.setCurrentModelInfo("spinFrame", spinFrame);
   }
 
-  private void setMoments() {
+  private void preSymmetrySetMoments() {
     for (int i = asc.ac; --i >= 0;) {
       Vibration v = (Vibration) asc.atoms[i].vib;
       if (v == null)
@@ -246,7 +250,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       symmetry.toFractional(v, true);
       v.scale(v.magMoment / v.length());
       v.setV0();
-      v.setT(p);      
+      v.setT(p);     
     }
   }
 
@@ -264,6 +268,9 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       asc.setNoAutoBond();
       applySymmetryAndSetTrajectory();
       addJmolScript("vectors on;vectors 0.15;");
+      int n = asc.getXSymmetry().setMagneticMoments();
+      appendLoadNote(n
+          + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");   
   }
 
   private Map<String, Object> getSCIFInfo(FileSymmetry fs,
@@ -312,11 +319,18 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       appendLoadNote("FSG ID " + fsgID);
       mput(m, "fsgID", fsgID);
       System.out.println("fsgID=" + fsgID);
-
       boolean isPrimitive = g0HMName.charAt(0) == 'P';
       mput(m, "G0_isPrimitive", Boolean.valueOf(isPrimitive));
       mput(m, "G0_atomCount", Integer.valueOf(asc.ac));
       System.out.println("FSGOutput G0_atomCount=" + asc.ac);
+
+      Lst<Object> r0 = getList(json, "transformation_matrix_ini_G0");
+      Lst<Object> t0 = getList(json, "origin_shift_ini_G0");
+      M4d m2g0 = readMatrix(r0, t0);
+      m2g0.transpose33();
+      String abcm = SymmetryOperation.getXYZFromMatrixFrac(m2g0, false, false, false, true, true, SymmetryOperation.MODE_ABC);
+      mput(m, "msgTransform", abcm);
+      asc.setCurrentModelInfo("unitcell_msg", abcm);
 
       symmetry.setUnitCellFromParams(unitCellParams, true, cellSlop);
       spinFrame = calculateSpinFrame();
@@ -333,6 +347,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       String abc = calculateChildTransform(spinLattice);
       mput(m, "childTransform", abc);
       System.out.println("FSGOutput G0_childTransform=" + abc);
+      
 
       Lst<String> ops = new Lst<>();
       SymmetryOperation[] symops = fs.getSymmetryOperations();
@@ -345,9 +360,11 @@ public class FSGOutputReader extends AtomSetCollectionReader {
         Map<String, Integer> mapSpinToID = new Hashtable<>();
         Lst<String> scifList = null;
         int[] scifListTimeRev = new int[spinList.size()];
+        String newSpinFrame = (convertToABC ? "a,b,c" : spinFrame);
+        
         scifList = new Lst<String>();
         M4d msf = null, msfInv = null;
-        if (!spinFrame.equals("a,b,c")) {
+        if (!spinFrame.equals(newSpinFrame)) {
           msf = (M4d) SymmetryOperation.staticConvertOperation(spinFrame, null,
               null);
           msf.transpose();
@@ -364,13 +381,13 @@ public class FSGOutputReader extends AtomSetCollectionReader {
             m4.mul2(msf, m4);
           }
           String s = SymmetryOperation.getXYZFromMatrixFrac(m4, false, false,
-              false, false, false, "uvw");
+              false, false, true, "uvw");
           System.out.println(s + "\t <- " + fsgOp);
-          scifList.add(s);
+          scifList.addLast(s);
           int timeReversal = (int) Math.round(m4.determinant3());
           scifListTimeRev[i] = timeReversal;
         }
-        mput(m, "spinFrame", "a,b,c"); // because we are converting it
+        mput(m, "spinFrame", newSpinFrame); // because we are converting it
         mput(m, "SCIF_spinList", scifList);
         mput(m, "SCIF_spinListTR", scifListTimeRev);
         ops = setSCIFSpinLists(m, mapSpinToID, ops, firstTranslation, "G0_operationURefs");
@@ -463,34 +480,23 @@ public class FSGOutputReader extends AtomSetCollectionReader {
   }
 
   private String calculateSpinFrame() {
-    P3d[] oabc = symmetry.getUnitCellVectors();
-    P3d a = P3d.newP(oabc[1]);
-    a.normalize();
-    P3d b = P3d.newP(oabc[2]);
-    b.normalize();
-    P3d c = P3d.newP(oabc[3]);
-    c.normalize();
-    P3d cp = new P3d();
-    cp.cross(a, b);
-    cp.normalize();
-    if (Math.abs(cp.dot(a)) < 1e-6)
-      cp.setP(oabc[3]);
-    P3d bp = new P3d();
-    if (Math.abs(a.dot(b)) < 1e-6) {
-      bp.setP(oabc[2]);
-    } else {
-      bp.cross(cp, a);
-      bp.normalize();
-      bp.scale(oabc[1].length());
-    }
-    a.setP(oabc[1]);
+    P3d a1 = P3d.new3(1, 0, 0);
+    P3d a2 = P3d.new3(0, 1, 0);
+    P3d a3 = P3d.new3(0, 0, 1);
+
+    symmetry.toFractional(a1, true);
+    symmetry.toFractional(a2, true);
+    symmetry.toFractional(a3, true);
+    double d = a1.length();
+    // TODO: what about cases where we have factor of two in cell?
+    // "hexagonal", just expanded x, not x and y.
+    a1.normalize();
+    a2.scale(1/d);
+    a3.scale(1/d);    
     M4d m4 = new M4d();
-    symmetry.toFractional(a, true);
-    symmetry.toFractional(bp, true);
-    symmetry.toFractional(cp, true);
-    m4.setColumn4(0, a.x, a.y, a.z, 0);
-    m4.setColumn4(1, bp.x, bp.y, bp.z, 0);
-    m4.setColumn4(2, cp.x, cp.y, cp.z, 0);
+    m4.setColumn4(0, a1.x, a1.y, a1.z, 0);
+    m4.setColumn4(1, a2.x, a2.y, a2.z, 0);
+    m4.setColumn4(2, a3.x, a3.y, a3.z, 0);
     m4.transpose();
     return SymmetryOperation.getXYZFromMatrixFrac(m4, false, false, false, true, true, SymmetryOperation.MODE_ABC);
   }

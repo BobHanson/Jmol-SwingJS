@@ -3998,9 +3998,13 @@ intl#     H-M full       HM-abbr   HM-short  Hall
     SymmetryOperation op;
     for (int i = operationCount; --i >= 0;) {
       op = symmetryOperations[i];
-      String s = (op.suvwkey == null ? null : mapSpinIdToUVW.get(op.suvwkey));
-      if (s != null)
+      String s = (op.suvwkey == null ? 
+          null : mapSpinIdToUVW.get(op.suvwkey));
+      if (op.suvwkey != null && s == null) {
+         System.err.println("SpaceGroup key " + op.suvwkey); 
+      } else {
         op.setSpin(s);
+      }
     }
   }
 

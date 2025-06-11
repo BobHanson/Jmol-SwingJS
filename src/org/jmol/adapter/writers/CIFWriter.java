@@ -39,7 +39,7 @@ public class CIFWriter extends XtlWriter implements JmolWriter {
   protected Atom[] atoms;
   protected int nops;
   protected String[] atomLabels;
-  private SB jmol_atoms;
+  protected SB jmol_atoms;
   protected Map<String, Object> modelInfo;
 
   private final static T3d fset0 = P3d.new3(555, 555, 1);

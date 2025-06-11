@@ -2262,7 +2262,7 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public int getSpinIndex(int op) {
     SymmetryOperation[] ops = getSymmetryOperations();
-    int id = (ops == null || op > ops.length ? -1 : ops[op].spinIndex);
+    int id = (ops == null || op >= ops.length ? -1 : ops[op].spinIndex);
     return id;
   }
 

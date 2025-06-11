@@ -195,13 +195,13 @@ public class FSG2SCIFConverter extends CIFWriter {
       if (m == null || m.magMoment == 0)
         continue;
       appendField(sb, label, 5);
-      V3d v = (m.v0 == null ? m 
-          : m.v0);
+      V3d v = (m.v0 == null ? m : m.v0);
       append3(sb, v);
       sb.append(" ?");
       sb.append(" ").append(clean(v.length()));
       sb.append("\n");
     }
+    jmol_atoms = null;
     return natoms;
   }
   

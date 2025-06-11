@@ -59,12 +59,7 @@ import javajs.util.V3d;
 public class SymmetryOperation extends M4d {
   String xyzOriginal;
   String xyzCanonical;
-  String xyz;
-  
-  static int test = 0;
-  
-
-
+  public String xyz;
   /**
    * "normalization" is the process of adjusting symmetry operator definitions
    * such that the center of geometry of a molecule is within the 555 unit cell
@@ -1183,8 +1178,8 @@ public class SymmetryOperation extends M4d {
         }
       }
       if ((is12ths ? row[3] : approx(row[3])) != 0) {
-        String f = xyzFraction12((is12ths ? row[3] : row[3] * denom), denom,
-            allPositive, halfOrLess);
+        String f = (fractionAsRational ? plusMinus(term, row[3], "", true, true) : xyzFraction12((is12ths ? row[3] : row[3] * denom), denom,
+            allPositive, halfOrLess));
         if (term == "")
           f = (f.charAt(0) == '+' ? f.substring(1) : f);
         term += f;
