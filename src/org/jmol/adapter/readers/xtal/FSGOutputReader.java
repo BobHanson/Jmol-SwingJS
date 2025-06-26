@@ -2,6 +2,7 @@ package org.jmol.adapter.readers.xtal;
 
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
@@ -88,7 +89,17 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     isCollinear = "Collinear".equals(configuration);
     addMoreUnitCellInfo("configuration=" + configuration);
     readAllOperators(getList(json, "G0_std_operations"));
-    readAtomsAndMoments(info);
+    @SuppressWarnings("unchecked")
+    String[] symbols = getSymbols((Map<String, Object>)json.get("AtomTypeDict"));
+    readAtomsAndMoments(info, symbols);
+  }
+
+  private String[] getSymbols(Map<String, Object> map) {
+    String[] symbols = new String[map.size() + 1];
+    for (Entry<String, Object> e : map.entrySet()) {
+      symbols[Integer.parseInt(e.getKey())] = (String) e.getValue();
+    }
+    return symbols;
   }
 
   @SuppressWarnings("unchecked")
@@ -178,7 +189,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     return M4d.newMV(r, t);
   }
 
-  private void readAtomsAndMoments(Lst<Object> info) {
+  private void readAtomsAndMoments(Lst<Object> info, String[] symbols) {
     Lst<Object> atoms = getListItem(info, 1);
     Lst<Object> ids = getListItem(info, 2);
     Lst<Object> moments = getListItem(info, 3);
@@ -208,10 +219,11 @@ public class FSGOutputReader extends AtomSetCollectionReader {
           continue;
       }
       // no element symbols!!
-      if (elementNumbers != null && id <= elementNumbers.length) {
+      if (symbols != null) {
+        a.elementSymbol = symbols[id];
+      } else if (elementNumbers != null && id <= elementNumbers.length) {
         a.elementNumber = elementNumbers[id - 1];
       } else {
-        
         a.elementNumber = (short) (id + 2); // start with boron
       }
       asc.addAtom(a);
@@ -355,7 +367,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       asc.setCurrentModelInfo("unitcell_msg", abcm);
 
       symmetry.setUnitCellFromParams(unitCellParams, true, cellSlop);
-      spinFrame = calculateSpinFrame();
+      spinFrame = calculateSpinFrame(readMatrix(getList(json, "transformation_matrix_spin_cartesian_lattice_G0"), null));
       System.out.println("FSGOutput G0 spinFrame=" + spinFrame);
       addMoreUnitCellInfo("spinFrame=" + spinFrame);
       asc.setCurrentModelInfo("unitcell_spin", spinFrame);
@@ -501,26 +513,31 @@ public class FSGOutputReader extends AtomSetCollectionReader {
         + (minz > 0 && minz < 1 ? "" + Math.round(1 / minz) : "") + "c";
   }
 
-  private String calculateSpinFrame() {
-    P3d a1 = P3d.new3(1, 0, 0);
-    P3d a2 = P3d.new3(0, 1, 0);
-    P3d a3 = P3d.new3(0, 0, 1);
+  private String calculateSpinFrame(M4d m4) {
+    if (m4 == null) {
+      m4 = new M4d();
+      P3d a1 = P3d.new3(1, 0, 0);
+      P3d a2 = P3d.new3(0, 1, 0);
+      P3d a3 = P3d.new3(0, 0, 1);
 
-    symmetry.toFractional(a1, true);
-    symmetry.toFractional(a2, true);
-    symmetry.toFractional(a3, true);
-    double d = a1.length();
-    // TODO: what about cases where we have factor of two in cell?
-    // "hexagonal", just expanded x, not x and y.
-    a1.normalize();
-    a2.scale(1/d);
-    a3.scale(1/d);    
-    M4d m4 = new M4d();
-    m4.setColumn4(0, a1.x, a1.y, a1.z, 0);
-    m4.setColumn4(1, a2.x, a2.y, a2.z, 0);
-    m4.setColumn4(2, a3.x, a3.y, a3.z, 0);
-    m4.transpose();
-    return SymmetryOperation.getXYZFromMatrixFrac(m4, false, false, false, true, true, SymmetryOperation.MODE_ABC);
+      symmetry.toFractional(a1, true);
+      symmetry.toFractional(a2, true);
+      symmetry.toFractional(a3, true);
+      double d = a1.length();
+      // TODO: what about cases where we have factor of two in cell?
+      // "hexagonal", just expanded x, not x and y.
+      a1.normalize();
+      a2.scale(1 / d);
+      a3.scale(1 / d);
+      m4.setColumn4(0, a1.x, a1.y, a1.z, 0);
+      m4.setColumn4(1, a2.x, a2.y, a2.z, 0);
+      m4.setColumn4(2, a3.x, a3.y, a3.z, 0);
+      m4.transpose();
+    } else {
+      m4.invert();
+    }
+    return SymmetryOperation.getXYZFromMatrixFrac(m4, false, false, false, true,
+        true, SymmetryOperation.MODE_ABC);
   }
 
 }

@@ -1,19 +1,18 @@
 package org.jmol.util;
 
 
+import org.jmol.api.GenericPlatform;
+import org.jmol.api.JmolGraphicsInterface;
+import org.jmol.api.JmolRendererInterface;
+import org.jmol.c.STER;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.AU;
 import javajs.util.M3d;
 import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.T3d;
 import javajs.util.V3d;
-
-
-import org.jmol.api.GenericPlatform;
-import org.jmol.api.JmolGraphicsInterface;
-import org.jmol.api.JmolRendererInterface;
-import org.jmol.c.STER;
-import org.jmol.viewer.Viewer;
 
 public class GData implements JmolGraphicsInterface {
 

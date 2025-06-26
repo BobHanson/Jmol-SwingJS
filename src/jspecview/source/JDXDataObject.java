@@ -545,9 +545,13 @@ public abstract class JDXDataObject extends JDXHeader {
   }
 
   public static int getNominalSpecFreq(String nuc, double freq) {
-    double d = freq * getGyromagneticRatio("1H") / getGyromagneticRatio(nuc);
+    double d = getProtonFreq(nuc, freq);
     int century = (int) Math.round(d / 100) * 100;
     return (Double.isNaN(d) ? -1 : Math.abs(d - century) < 2 ? century : (int) Math.round(d));
+  }
+  
+  public static double getProtonFreq(String nuc, double freq) {
+    return freq * getGyromagneticRatio("1H") / getGyromagneticRatio(nuc);
   }
   
   public static double getGyromagneticRatio(String nuc) {
