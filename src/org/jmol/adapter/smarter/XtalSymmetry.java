@@ -424,12 +424,12 @@ public class XtalSymmetry {
               toCartesian(v1, true);
             }
             if (v1.lengthSquared() > 0) {
+              v1.scale(v1.magMoment / v1.length());
               nSpins++;
             } else {
               v1 = null;
             }
             asc.atoms[i].vib = v1;
-            v1.scale(v1.magMoment / v1.length());
           }
         }
       }
