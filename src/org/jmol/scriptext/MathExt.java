@@ -4622,9 +4622,9 @@ SymmetryInterface sym;
       if (apt + 1 < narg && args[apt + 1].tok == T.bitset)
         (bsAtoms == null ? (bsAtoms = new BS()) : bsAtoms)
             .or((BS) args[apt + 1].value);
-    } else {
+    } else if (!bsAtoms.isEmpty()){
       bsAtoms = vwr.getModelUndeletedAtomsBitSet(
-          vwr.getModelIndexForAtom(bsAtoms.nextSetBit(0)));
+         vwr.getModelIndexForAtom(bsAtoms.nextSetBit(0)));
     }
 
     // allow for [ h k l ] lattice translation
@@ -4657,8 +4657,7 @@ SymmetryInterface sym;
       if ("basis".equals(str1)) {
         return BSUtil.newAndSetBit(a0);
       }
-      pt1 = vwr.ms.at[a0];
-      pt1 = P3d.newP(pt1);
+      pt1 = P3d.newP(vwr.ms.at[a0]);
     }
     int nth = (pt2 != null && args.length > apt && iOp == Integer.MIN_VALUE
         && args[apt].tok == T.integer ? args[apt].intValue : -1);
