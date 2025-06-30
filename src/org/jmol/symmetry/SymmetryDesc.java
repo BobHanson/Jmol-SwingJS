@@ -315,8 +315,6 @@ public class SymmetryDesc {
       bsInfo.setBits(0, keys.length);
       bsInfo.clear(RET_XYZNORMALIZED);
     }
-    int nDim = sym.getDimensionality();
-
     boolean matrixOnly = (bsInfo.cardinality() == 1 && bsInfo.get(RET_MATRIX));
     Map<String, Object> info = null;
     boolean isStandard = (!matrixOnly && pt1 == null && drawID == null
@@ -358,6 +356,7 @@ public class SymmetryDesc {
         sgName = cellInfo.getSpaceGroupName();
 
       }
+      int nDim = cellInfo.getDimensionality();
       info = new Hashtable<String, Object>();
       SymmetryOperation[] ops = (SymmetryOperation[]) cellInfo
           .getSymmetryOperations();
@@ -368,18 +367,28 @@ public class SymmetryDesc {
         // next line added because otherwise atom.symmetry is lost from the "file" 
         sym = Interface.getSymmetry(null, "desc");
         if (!matrixOnly) {
-          if (isBio)
+          if (isBio) {
             sym.setSpaceGroupTo(SpaceGroup.getNull(false, false, false));
-          else
+          } else {
             sym.setSpaceGroup(false);
+            if (cellInfo.getGroupType() != SpaceGroup.TYPE_SPACE) {
+              SpaceGroup sg0 = (SpaceGroup) cellInfo.getSpaceGroup();
+              SpaceGroup sg1 = (SpaceGroup) sym.getSpaceGroup();
+              sg1.nDim = nDim;
+              sg1.groupType = sg0.groupType;
+              sg1.setClegId(sg0.getClegId());
+            }
+          }
         }
         // check to make sure that new group has been created magnetic or not
         Object[][] infolist = new Object[ops.length][];
         String sops = "";
-        int i0 = (drawID == null || pt1 == null || pt2 == null && nth < 0 ? 0 : 1);
+        int i0 = (drawID == null || pt1 == null || pt2 == null && nth < 0 ? 0
+            : 1);
         for (int i = i0, nop = 0; i < ops.length && nop != nth; i++) {
           SymmetryOperation op = ops[i];
           String xyzOriginal = op.xyzOriginal;
+          String xyzCanonical = op.xyzCanonical;
           M4d spinUOrig = op.spinU;
           int timeReversal = op.timeReversal;
           int spinIndex = op.spinIndex;
@@ -397,8 +406,9 @@ public class SymmetryDesc {
             op = (SymmetryOperation) sym.getSpaceGroupOperation(i);
             if (op == null)
               continue;
-            
+
             op.xyzOriginal = xyzOriginal;
+            op.xyzCanonical = xyzCanonical;
             op.spinU = spinUOrig;
             op.spinIndex = spinIndex;
             op.timeReversal = timeReversal;
@@ -416,9 +426,10 @@ public class SymmetryDesc {
               continue;
             infolist[i] = ret;
             if (!matrixOnly)
-              sops += "\n" + (i + 1) + (drawID != null && nop == 1 ? "*" : "") 
-                  + "\t" + ret[bsInfo.get(RET_XYZNORMALIZED) ? RET_XYZNORMALIZED
-                      : RET_XYZ]
+              sops += "\n" + (i + 1) + (drawID != null && nop == 1 ? "*" : "")
+                  + "\t"
+                  + ret[bsInfo.get(RET_XYZNORMALIZED) ? RET_XYZNORMALIZED
+                      : nDim == 2 ? RET_XYZCANON : RET_XYZ]
                   + "\t  " + ret[RET_LABEL];
             opCount++;
             if (symOp > 0)
@@ -433,7 +444,7 @@ public class SymmetryDesc {
       if (matrixOnly) {
         return info;
       }
-      
+
       sgNote = (opCount == 0 ? "\n no symmetry operations"
           : nth <= 0 && symOp <= 0
               ? "\n" + opCount + " symmetry operation"
@@ -527,6 +538,8 @@ public class SymmetryDesc {
     if (id == null)
       return T.list;
     switch (id.toLowerCase()) {
+    case "xyzcanonical":
+      return T.x;
     case "xyzoriginal":
       return T.origin;
     case "matrix":
@@ -571,6 +584,7 @@ public class SymmetryDesc {
     case T.xyz:
     case T.fuxyz:
     case T.matrix3f:
+    case T.x:
     case T.origin:
     case T.rxyz:
     case T.spin:
@@ -620,13 +634,15 @@ public class SymmetryDesc {
       }
       return lst;
     case T.list:
-      return io[RET_ID] + "\t" + io[RET_XYZ] + "  \t" + io[RET_LABEL];
+      return io[RET_ID] + "\t" + io[nDim == 2 ? RET_XYZCANON : RET_XYZ] + "  \t" + io[RET_LABEL];
     case T.full:
       return io[RET_XYZ] + "  \t" + io[RET_LABEL];
     case T.xyz:
       return io[RET_XYZ];
     case T.fuxyz:
       return io[RET_XYZNORMALIZED];
+    case T.x:
+      return io[RET_XYZCANON];
     case T.origin:
       return io[RET_XYZORIGINAL];
     default:
@@ -716,6 +732,9 @@ public class SymmetryDesc {
     case T.fuxyz:
       bsInfo.set(RET_XYZNORMALIZED);
       break;
+    case T.x:
+      bsInfo.set(RET_XYZCANON);
+      break;
     case T.origin:
       bsInfo.set(RET_XYZORIGINAL);
       break;
@@ -727,6 +746,7 @@ public class SymmetryDesc {
       bsInfo.set(RET_XYZ);
       bsInfo.set(RET_LABEL);
       bsInfo.set(RET_DRAW);
+//      bsInfo.set(RET_XYZCANON);
       break;
     case T.fracxyz:
       bsInfo.set(RET_FTRANS);
@@ -1018,9 +1038,9 @@ public class SymmetryDesc {
      * Indicates that our vertical planes need to be shifted down 1/2 c
      */
     int periodicity = uc.getPeriodicity();
-    boolean shiftA = (isSpaceGroup && (periodicity & 0x1) == 0); // rod (ab)c
-    boolean shiftB = (isSpaceGroup && (periodicity & 0x2) == 0); // frieze a(b), rod (ab)c
-    boolean shiftC = (isSpaceGroup && (periodicity & 0x4) == 0); // plane ab, layer ab(c), frieze a(b)
+    boolean shiftA = ((periodicity & 0x1) == 0); // rod (ab)c
+    boolean shiftB = ((periodicity & 0x2) == 0); // frieze a(b), rod (ab)c
+    boolean shiftC = ((periodicity & 0x4) == 0); // plane ab, layer ab(c), frieze a(b)
 
     vShift = V3d.new3(0,  0,  1);
     if (nDim == 3) {
@@ -1385,10 +1405,12 @@ public class SymmetryDesc {
 
       // draw the initial frame
 
+      boolean drawFrameZ = (nDim == 3);
       if (!isSpaceGroup) {
         drawLine(drawSB, "frame1X", 0.15d, pta00, pta01, "red");
         drawLine(drawSB, "frame1Y", 0.15d, pta00, pta02, "green");
-        drawLine(drawSB, "frame1Z", 0.15d, pta00, pta03, "blue");
+        if (drawFrameZ)
+          drawLine(drawSB, "frame1Z", 0.15d, pta00, pta03, "blue");
       }
       String color;
       P3d planeCenter = null;
@@ -1397,7 +1419,7 @@ public class SymmetryDesc {
       boolean isSpecial = (pta00.distance(pt0) < 0.2d);
 
       String title = (isSpaceGroup
-          ? "<hover>" + id + ": " + op.xyz + "|" + info1 + "</hover>"
+          ? "<hover>" + id + ": " + (nDim == 2 ? op.xyz.replace(",z", "") : op.xyz) + "|" + info1 + "</hover>"
           : null);
 
       // now check for:
@@ -1688,7 +1710,8 @@ public class SymmetryDesc {
             drawFrameLine("X", ptref, vt1, 0.15d, ptemp, drawSB, opType, "red");
             drawFrameLine("Y", ptref, vt2, 0.15d, ptemp, drawSB, opType,
                 "green");
-            drawFrameLine("Z", ptref, vt3, 0.15d, ptemp, drawSB, opType,
+            if (drawFrameZ)
+              drawFrameLine("Z", ptref, vt3, 0.15d, ptemp, drawSB, opType,
                 "blue");
           }
         }
@@ -1701,7 +1724,7 @@ public class SymmetryDesc {
 
         // returns triangles and lines
         P3d[] points = uc.getCanonicalCopy(margin, true);
-        if (isSpaceGroup && (shiftA || shiftB || shiftC)) {
+        if ((shiftA || shiftB || shiftC)) {
           for (int i = 8; --i >= 0;) {
             points[i].add(vShift);
           }
@@ -1796,7 +1819,8 @@ public class SymmetryDesc {
                   "green");
               vtemp.setT(vt3);
               vtemp.scale(-1);
-              drawFrameLine("Z", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
+              if (drawFrameZ)
+                drawFrameLine("Z", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
                   "blue");
             }
           }
@@ -1861,7 +1885,8 @@ public class SymmetryDesc {
         drawLine(drawSB, "frame2Y", 0.2d, ptemp2, ptemp, "green");
         ptemp.sub2(pt3, pt0);
         ptemp.scaleAdd2(0.9d, ptemp, ptemp2);
-        drawLine(drawSB, "frame2Z", 0.2d, ptemp2, ptemp, "purple");
+        if (drawFrameZ)
+          drawLine(drawSB, "frame2Z", 0.2d, ptemp2, ptemp, "purple");
 
         // color the targeted atoms opaque and add another frame if necessary
 
@@ -1888,7 +1913,8 @@ public class SymmetryDesc {
           drawSB.append(getDrawID("offsetFrameY"))
               .append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
               .append(Escape.eP(vt2)).append("*0.9} color green");
-          drawSB.append(getDrawID("offsetFrameZ"))
+          if (drawFrameZ)
+            drawSB.append(getDrawID("offsetFrameZ"))
               .append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
               .append(Escape.eP(vt3)).append("*0.9} color purple");
         }
@@ -1938,6 +1964,8 @@ public class SymmetryDesc {
               : SymmetryOperation.getXYZFromMatrix(m2, false, false, false));
       if (isMagnetic)
         xyzNew = op.fixMagneticXYZ(m2, xyzNew);
+      else if (nDim == 2)
+        xyzNew = xyzNew.replace(",z", "");
     }
 
     Object[] ret = new Object[RET_COUNT];
@@ -2036,7 +2064,13 @@ public class SymmetryDesc {
                 + "]");
         break;
       case RET_XYZCANON:
-        ret[i] = op.xyzCanonical;
+        // removes the ",z" from plane and frieze
+        String s = op.xyzCanonical;
+        if (s == null)
+          s = op.xyz;
+        if (nDim == 2)
+          s = s.replace(",z", "");
+        ret[i] = s;
         break;
       }
     }
@@ -2287,6 +2321,7 @@ public class SymmetryDesc {
       case T.point:
       case T.element:
       case T.var:
+      case T.x:
       case T.origin:
         type = returnType;
         break;
@@ -2334,7 +2369,7 @@ public class SymmetryDesc {
       int i = (isBio
           ? symTemp.addBioMoleculeOperation(
               ((SpaceGroup) uc.getSpaceGroup()).finalOperations[iop], op < 0)
-          : symTemp.addSpaceGroupOperation((op < 0 ? "!" : "=") + xyz,
+          : symTemp.addSpaceGroupOperation((op < 0 ? "!" : "=") + (xyz.indexOf("x") >= 0 && xyz.indexOf("z") < 0 ? xyz + ",z" : xyz),
               Math.abs(op)));
 
       if (i < 0)

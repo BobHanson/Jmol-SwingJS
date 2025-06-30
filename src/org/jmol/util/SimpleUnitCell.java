@@ -956,16 +956,23 @@ public class SimpleUnitCell {
     return vwr.evaluateExpressionAsVariable(s).asDouble();
   }
 
+  /**
+   * parse math such as "1/sqrt(3)"
+   * @param vwr
+   * @param suvw
+   * @return suvw replacing functions with their values
+   */
   public static String parseSimpleMath(Viewer vwr, String suvw) {
     if (suvw.indexOf('(') < 0)
       return suvw;
     if (suvw.indexOf("PI") >= 0) {
       suvw = PT.rep(suvw, "PI", "(180)");
     }
+    // [[1,"1/sqrt(3)",0],[0,"2/sqrt(3)",0],[0,0,1]]
     // 1/sqrt(3)u-2/sqrt(3)v,2/sqrt(3)u-1/sqrt(3)v,w
-    String[] parts = suvw.split(",");
+    String[] parts = suvw.replace('"', ' ').replace('\'', ' ').split(",");
     for (int p = 0; p < parts.length; p++) {
-      String part = parts[p];
+      String part = parts[p].trim();
       if (part.indexOf('(') < 0)
         continue;
       part = ',' + part;

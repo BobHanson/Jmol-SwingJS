@@ -1069,9 +1069,24 @@ public class Symmetry implements SymmetryInterface {
     return (spaceGroup == null ? 0x7 : spaceGroup.periodicity);
   }
 
+  /**
+   * plane  2
+   * 
+   * freize 2
+   * 
+   * layer  3
+   * 
+   * rod    3
+   * 
+   */
   @Override
   public int getDimensionality() {
     return (spaceGroup == null ? 3 : spaceGroup.nDim);
+  }
+
+  @Override
+  public int getGroupType() {
+    return (spaceGroup == null ? SpaceGroup.TYPE_SPACE : spaceGroup.groupType);
   }
 
   @Override

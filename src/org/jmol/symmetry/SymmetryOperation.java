@@ -564,7 +564,7 @@ public class SymmetryOperation extends M4d {
   public void setSpin(String s) {
     suvw = s;
     double[] v = new double[16];
-    getRotTransArrayAndXYZ(null, s, v, true, false, false, "uvw");
+    getRotTransArrayAndXYZ(null, s, v, true, false, false, MODE_UVW);
     spinU = M4d.newA16(v);
     timeReversal = (int) spinU.determinant3();    
     suvwkey = null;
@@ -1128,10 +1128,13 @@ public class SymmetryOperation extends M4d {
   //    return iValue;
   //  }
   //
-  final public static String MODE_ABC = "abc";
-  final public static String MODE_XYZ = "xyz";
-  final public static String MODE_UVW = "uvw";
-  final public static String MODE_MXYZ = "mxyz";
+  /**
+   * Private because this does NOT column-based
+   */
+  final private static String MODE_ABC = "abc"; // for internal use only
+  final private static String MODE_XYZ = "xyz";
+  final private static String MODE_UVW = "uvw";
+  final private static String MODE_MXYZ = "mxyz";
   final static String[] labelsXYZ = new String[] { "x", "y", "z" };
   final static String[] labelsUVW = new String[] { "u", "v", "w" };
   final static String[] labelsABC = new String[] { "a", "b", "c" };
@@ -1147,7 +1150,22 @@ public class SymmetryOperation extends M4d {
     return getXYZFromMatrixFrac(mat, is12ths, allPositive, halfOrLess, false, false, null);
   }
 
-  public static String getXYZFromMatrixFrac(M4d mat, boolean is12ths,
+  /**
+   * package-private
+   * 
+   * NOTE: THIS METHOD DOES NOT transpose columns to rows for ABC format. 
+   * DO NOT use this method unless the matrix is already row-based but still ABC format.
+   * 
+   * @param mat
+   * @param is12ths
+   * @param allPositive
+   * @param halfOrLess
+   * @param allowFractions
+   * @param fractionAsRational
+   * @param labels  "abc", etc., or NULL for "xyz"
+   * @return string row-form of matrix with the given labels
+   */
+  static String getXYZFromMatrixFrac(M4d mat, boolean is12ths,
                                                   boolean allPositive,
                                                   boolean halfOrLess,
                                                   boolean allowFractions, 
@@ -2441,6 +2459,28 @@ public class SymmetryOperation extends M4d {
     return div12(M4d.newA16(a), divisor);
   }
 
+  public static String getTransformXYZ(M4d op) {
+    return getXYZFromMatrixFrac(op, false, false,
+        false, true, true, MODE_XYZ);
+  }
+
+  public static String getTransformUVW(M4d spin) {
+    return getXYZFromMatrixFrac(spin, false, false, false, false, true,
+        SymmetryOperation.MODE_UVW);
+  }
+
+
+  /**
+   * This method properly transposes the matrix for ABC format, converting
+   * columns to rows before passing the information to
+   * getXYZFromMatrixFrac(...,"ABC").
+   * 
+   * @param transform
+   * @param normalize
+   *        only set to true by (undocumented?) script unitcell(m4,true); normalize translation
+   *        to interval (-1/2,1/2]
+   * @return a,b,c format for the given matrix
+   */
   public static String getTransformABC(Object transform, boolean normalize) {
     if (transform == null)
       return "a,b,c";

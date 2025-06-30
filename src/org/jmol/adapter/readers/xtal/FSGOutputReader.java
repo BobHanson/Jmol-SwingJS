@@ -50,7 +50,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
   @Override
   public void initializeReader() throws Exception {
     super.initializeReader();
-    //convertToABC = false;
+    convertToABC = false;
     spinOnly = checkFilterKey("SPINONLY");
     checkNearAtoms = !checkFilterKey("NOSPECIAL"); // as in "no special positions"
     if (!filteredPrecision) {
@@ -95,6 +95,10 @@ public class FSGOutputReader extends AtomSetCollectionReader {
   }
 
   private String[] getSymbols(Map<String, Object> map) {
+    if (map == null) {
+      // old style files
+      return null;
+    }
     String[] symbols = new String[map.size() + 1];
     for (Entry<String, Object> e : map.entrySet()) {
       symbols[Integer.parseInt(e.getKey())] = (String) e.getValue();
@@ -160,8 +164,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       Lst<Object> op = (Lst<Object>) info.get(i);
       M4d mspin = readMatrix(getListItem(op, 0), null);
       M4d mop = readMatrix(getListItem(op, 1), getListItem(op, 2));
-      String s = SymmetryOperation.getXYZFromMatrixFrac(mop, false, false,
-          false, true, true, SymmetryOperation.MODE_XYZ)
+      String s = SymmetryOperation.getTransformXYZ(mop)
           + SymmetryOperation.getSpinString(mspin, true)
           + (isCoplanar ? "+" : "");
       int iop = setSymmetryOperator(s);
@@ -181,6 +184,8 @@ public class FSGOutputReader extends AtomSetCollectionReader {
   }
 
   private M4d readMatrix(Lst<Object> rot, Lst<Object> trans) {
+    if (rot == null)
+      return null;
     M3d r = new M3d();
     for (int i = 0; i < 3; i++) {
       r.setRowV(i, getPoint(getListItem(rot, i)));
@@ -218,7 +223,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
         if (spinOnly)
           continue;
       }
-      // no element symbols!!
+      // no element symbols!
       if (symbols != null) {
         a.elementSymbol = symbols[id];
       } else if (elementNumbers != null && id <= elementNumbers.length) {
@@ -361,8 +366,8 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       Lst<Object> r0 = getList(json, "transformation_matrix_ini_G0");
       Lst<Object> t0 = getList(json, "origin_shift_ini_G0");
       M4d m2g0 = readMatrix(r0, t0);
-      m2g0.transpose33();
-      String abcm = SymmetryOperation.getXYZFromMatrixFrac(m2g0, false, false, false, true, true, SymmetryOperation.MODE_ABC);
+      // no transpose, I think? m2g0.transpose33();
+      String abcm = SymmetryOperation.getTransformABC(m2g0, false);
       mput(m, "msgTransform", abcm);
       asc.setCurrentModelInfo("unitcell_msg", abcm);
 
@@ -414,8 +419,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
             m4.mul2(m4, msfInv);
             m4.mul2(msf, m4);
           }
-          String s = SymmetryOperation.getXYZFromMatrixFrac(m4, false, false,
-              false, false, true, "uvw");
+          String s = SymmetryOperation.getTransformUVW(m4);
           System.out.println(s + "\t <- " + fsgOp);
           scifList.addLast(s);
           int timeReversal = (int) Math.round(m4.determinant3());
@@ -532,12 +536,10 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       m4.setColumn4(0, a1.x, a1.y, a1.z, 0);
       m4.setColumn4(1, a2.x, a2.y, a2.z, 0);
       m4.setColumn4(2, a3.x, a3.y, a3.z, 0);
-      m4.transpose();
     } else {
       m4.invert();
     }
-    return SymmetryOperation.getXYZFromMatrixFrac(m4, false, false, false, true,
-        true, SymmetryOperation.MODE_ABC);
+    return SymmetryOperation.getTransformABC(m4, false);
   }
 
 }

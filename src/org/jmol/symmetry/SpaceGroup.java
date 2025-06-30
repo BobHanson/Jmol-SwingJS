@@ -81,7 +81,16 @@ import javajs.util.SB;
 public class SpaceGroup implements Cloneable, HallReceiver {
 
   protected String specialPrefix = "";
-
+  
+  /**
+   *  
+   *  
+   * @return [p/ | f/ | l/ | r/ | ""]
+   */
+  public String getSpecialPrefix() {
+    return specialPrefix; 
+  }
+  
   private static final String NEW_HALL_GROUP     = "0;--;--;0;--;--;";
   protected static final String NEW_NO_HALL_GROUP  = "0;--;--;0;--;--;--";
   private static final String SG_NONE = "--";
@@ -318,7 +327,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   }
 
   protected void setFinalOperations() {
-    setFinalOperationsForAtoms(3, null, 0, 0, false);
+    setFinalOperationsForAtoms(nDim == 0 ? 3 : nDim, null, 0, 0, false);
   }
 
   void setFinalOperationsForAtoms(int dim, P3d[] atoms, int atomIndex, int count,
@@ -385,7 +394,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * @return true if not incommensurate, not a subsystem, and not magnetic
    */
   private boolean allowCheckForReference() {
-    return (modDim == 0 && symmetryOperations != null
+    return (modDim == 0 && groupType == TYPE_SPACE && symmetryOperations != null
         && symmetryOperations.length > 0
         && symmetryOperations[0].timeReversal == 0
         && name.indexOf("[subsystem") < 0);
@@ -485,7 +494,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         return sg.dumpInfoObj();
       }
       SB sb = new SB();
-      while (sg != null) {
+      while (sg != null && sg.groupType == SpaceGroup.TYPE_SPACE) {
         // I don't know why there would be multiples here
         if (sg.index < SG.length || andNonstandard)
           break;
@@ -520,22 +529,24 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       sb.append("\ninternational table number: ").append(itaNumber);
     }
     if (crystalClass != null) {
-          sb.append("\ncrystal class: " + crystalClass);
+      sb.append("\ncrystal class: " + crystalClass);
     }
     if (jmolId != null) {
-      sb.append("\nJmol_ID: ").append(jmolId).append(" ("+itaIndex+")");
+      sb.append("\nJmol_ID: ").append(jmolId).append(" (" + itaIndex + ")");
     }
     if (clegId != null)
       sb.append("\nCLEG: " + clegId);
-    sb.append("\n\n")
-        .append(hallInfo == null ? "Hall symbol unknown" : Logger.debugging ?  hallInfo.dumpInfo() : "");
-    sb.append("\n\n").appendI(operationCount).append(" operators")
-        .append(hallInfo != null && !hallInfo.getHallSymbol().equals(SG_NONE)
-            ? " from Hall symbol " + hallInfo.getHallSymbol()
-            : "")
-        .append(": ");
-    for (int i = 0; i < operationCount; i++) {
-      sb.append("\n").append(symmetryOperations[i].xyz);
+    if (groupType == TYPE_SPACE) {
+      sb.append("\n\n").append(hallInfo == null ? "Hall symbol unknown"
+          : Logger.debugging ? hallInfo.dumpInfo() : "");
+      sb.append("\n\n").appendI(operationCount).append(" operators")
+          .append(hallInfo != null && !hallInfo.getHallSymbol().equals(SG_NONE)
+              ? " from Hall symbol " + hallInfo.getHallSymbol()
+              : "")
+          .append(": ");
+      for (int i = 0; i < operationCount; i++) {
+        sb.append("\n").append(symmetryOperations[i].xyz);
+      }
     }
 
     //sb.append("\n\ncanonical Seitz: ").append((String) info)

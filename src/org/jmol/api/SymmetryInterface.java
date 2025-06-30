@@ -298,4 +298,7 @@ public interface SymmetryInterface {
 
   Lst<String> getSpinList();
 
+  int getGroupType();
+
+
 }

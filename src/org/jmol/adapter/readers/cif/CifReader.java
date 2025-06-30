@@ -32,6 +32,8 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.api.JmolAdapter;
 import org.jmol.script.T;
+import org.jmol.symmetry.SymmetryOperation;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Vibration;
@@ -41,6 +43,8 @@ import javajs.api.GenericCifDataParser;
 import javajs.util.BS;
 import javajs.util.CifDataParser;
 import javajs.util.Lst;
+import javajs.util.M3d;
+import javajs.util.M4d;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
@@ -475,9 +479,15 @@ public class CifReader extends AtomSetCollectionReader {
             + "; use load ... FILTER \"spinframe xxxxx\" to modify");
         spinFrame = sf;
       }
-      addCellType(CELL_TYPE_SPIN_FRAME, sf, false);
+      if (spinFrame.charAt(0) == '[') {
+        // string representation of matrix
+        // generate matrix, save if nec. and continue on
+        M4d m4 = M4d.newM4(null);
+        m4.setRotationScale((M3d) Escape.unescapeMatrixD(spinFrame));
+        spinFrame = SymmetryOperation.getTransformABC(m4, false);
+      }
+      addCellType(CELL_TYPE_SPIN_FRAME, spinFrame, false);
       field = spinFrame;
-      spinFrame = spinFrame.replace('"', ' ').trim(); // matrix rep should not include quotes
       tag = "spinFrame";
       break;
     case "rotation_axis_cartn":
@@ -2233,6 +2243,11 @@ public class CifReader extends AtomSetCollectionReader {
     }
   }
 
+  /**
+   * converts sqrt(3) to decimal format
+   * @param suvw
+   * @return converted string
+   */
   private String parseUvwMath(String suvw) {
     return SimpleUnitCell.parseSimpleMath(vwr, suvw);
   }
