@@ -345,7 +345,9 @@ public class ModulationSet extends Vibration implements JmolModulationSet {
       isSubsystem = true;
       tFactorInv = factors[1].inverse();
     }
-    if (v != null) {
+    if (v == null) {
+      System.out.println("MODSET v == null");
+    } else {
       // An atom's modulation will take the place of its vibration, if it
       // has one, so we have to create a field here to hang onto that. 
       // It could be a magnetic moment being modulated, or it may be

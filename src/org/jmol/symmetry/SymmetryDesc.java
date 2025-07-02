@@ -1327,6 +1327,8 @@ public class SymmetryDesc {
         type = info1;
       } else if (trans != null) {
         String s = " " + strCoord(ftrans, op.isBio);
+        if (nDim == 2)
+          s = s.substring(0, s.lastIndexOf(' '));
         if (isTranslation) {
           type = info1 = "translation";
           info1 += ":" + s;
@@ -1337,6 +1339,8 @@ public class SymmetryDesc {
             uc.toCartesian(trans, true);
           }
           s = " " + strCoord(ftrans, op.isBio);
+          if (nDim == 2)
+            s = s.substring(0, s.lastIndexOf(' '));
           // set ITA Table 2.1.2.1
           glideType = SymmetryOperation.getGlideFromTrans(ftrans, ax1);
 

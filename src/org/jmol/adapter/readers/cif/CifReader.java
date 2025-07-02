@@ -1877,7 +1877,7 @@ public class CifReader extends AtomSetCollectionReader {
           case SPIN_W_PRELIM:
           case spin_moment_axis_w:
             pt.z = v;
-            if (pt.length() == 0) {
+            if (pt.length() == 0 && modDim == 0) {
               atom.vib = null;
             } else {
               pt.isFractional = true;

@@ -426,7 +426,7 @@ public class XtalSymmetry {
             if (v1.lengthSquared() > 0) {
               v1.scale(v1.magMoment / v1.length());
               nSpins++;
-            } else {
+            } else if (v1.modDim == 0){
               v1 = null;
             }
             asc.atoms[i].vib = v1;
