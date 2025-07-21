@@ -477,7 +477,8 @@ abstract class ScriptExpr extends ScriptParam {
         }
         SV var = getBitsetPropertySelector(i + 1, rpn.getXTok());
         // check for added min/max modifier
-        boolean isUserFunction = (var.intValue == T.function);
+        int tok1 = var.intValue;
+        boolean isUserFunction = (tok1 == T.function);
         boolean allowMathFunc = true;
         int tok2 = tokAt(iToken + 2);
         if (tokAt(iToken + 1) == T.per) {
@@ -495,12 +496,15 @@ abstract class ScriptExpr extends ScriptParam {
           case T.sum2:
           case T.average:
             // .pivot  but not .pivot()
-            allowMathFunc = (isUserFunction || var.intValue == T.distance
-                || tok2 == T.minmaxmask || tok2 == T.selectedfloat || tok2 == T.pivot);
+            allowMathFunc = (isUserFunction 
+            		|| tok1 == T.distance
+                    || tok2 == T.minmaxmask 
+                    || tok2 == T.selectedfloat 
+                    || tok2 == T.pivot);
             var.intValue |= tok2 & T.minmaxmask;
             getToken(iToken + 2);
-            if (tokAt(iToken + 1) == T.leftparen) {
-              // .pivot()
+            if (tokAt(iToken + 1) == T.leftparen && tok1 != T.distance) {
+              // .pivot(), .distance()
               iToken += 2;
             }
           }
@@ -1568,6 +1572,7 @@ abstract class ScriptExpr extends ScriptParam {
 
   private SV getBitsetPropertySelector(int i, int xTok) throws ScriptException {
     int tok = getToken(i).tok;
+    System.out.println("SE" + T.nameOf(tok));
     switch (tok) {
     case T.pivot:
     case T.min:

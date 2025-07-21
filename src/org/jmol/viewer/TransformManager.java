@@ -330,6 +330,15 @@ public class TransformManager {
     // The swapping of dx and dy, and their reversal in sign
     // probably has to do with the fact that we are changing
     // the signs of both screen Y and screen Z in the end.
+    //
+    // This transform is from Andrew Hanson SYGRAPH '99 course notes
+    // page 60, Quotient Space Decomposition, where n3 == 0. 
+    // https://argos.vu/wp-content/uploads/2016/04/course11.pdf
+    // 
+    // from Helgason
+    // 
+    // https://www.ams.org/books/chel/341/chel341-endmatter.pdf
+    // 
 
     if (matrixTemp3.setAsBallRotation(JC.radiansPerDegree, -yDeg, -xDeg))
       applyRotation(matrixTemp3, false, bsAtoms, null, false, null, true);

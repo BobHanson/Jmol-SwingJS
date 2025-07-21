@@ -241,8 +241,7 @@ public class DrawRenderer extends MeshRenderer {
       // as a percent 
       // just a Point3f with z = -Double.MAX_VALUE
       for (int i = 0; i < 2; i++)
-        if (vertices[i].z == Double.MAX_VALUE
-            || vertices[i].z == -Double.MAX_VALUE)
+	    if (Draw.is2DPoint(vertices[i]))
           ptXY += i + 1;
       if (--ptXY < 2) {
         renderXyArrow(ptXY);
@@ -439,7 +438,11 @@ public class DrawRenderer extends MeshRenderer {
     double d = pt0d.distance(pt2f);
     if (d == 0)
       return;
-    double headWidth = (width > 0 && !dmesh.noHead ? width * 3 : 0);
+    double headScale = (fScale < 0 ? -fScale : 1);
+    if (fScale < 0)
+      fScale = -fScale;
+    
+    double headWidth = (width > 0 && !dmesh.noHead ? width * headScale * 3 : 0);
     vTemp.sub2(pt2f, pt0d); // total length
     vTemp.normalize(); // unit length
     
@@ -464,7 +467,7 @@ public class DrawRenderer extends MeshRenderer {
       return;
     int headDiameter;
     if (diameter > 0) {
-      headDiameter = diameter * 3;
+      headDiameter = (int) (diameter * headScale * 3);
     } else {
       vTemp.set(s2f.x - s1f.x, s2f.y - s1f.y, s2f.z - s1f.z);
       headDiameter = (int) Math.round(vTemp.length() * .5d);
@@ -481,10 +484,8 @@ public class DrawRenderer extends MeshRenderer {
 
   private double getArrowScale() {
     double fScale = (dmesh.isScaleSet ? dmesh.scale : 0);
-    if (fScale == 0)
+    if (fScale == 0) 
       fScale = vwr.getDouble(T.defaultdrawarrowscale) * (dmesh.connectedAtoms == null ? 1d : 0.5d);
-    if (fScale <= 0)
-      fScale = 0.5d;
     return fScale;
   }
 

@@ -908,7 +908,7 @@ abstract public class AtomCollection {
     taintAtom(atomIndex, TAINT_SEQID);
   }
   
-  protected void setOccupancy(int atomIndex, double occupancy, boolean doTaint) {
+  public void setOccupancy(int atomIndex, double occupancy, boolean doTaint) {
     if (doTaint && occupancy == at[atomIndex].getOccupancy100())
       return;
     if (occupancies == null) {
