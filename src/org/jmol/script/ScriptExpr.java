@@ -1572,7 +1572,6 @@ abstract class ScriptExpr extends ScriptParam {
 
   private SV getBitsetPropertySelector(int i, int xTok) throws ScriptException {
     int tok = getToken(i).tok;
-    System.out.println("SE" + T.nameOf(tok));
     switch (tok) {
     case T.pivot:
     case T.min:

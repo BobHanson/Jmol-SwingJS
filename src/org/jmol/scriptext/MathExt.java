@@ -2832,6 +2832,10 @@ SymmetryInterface sym;
       if (args[0].tok == T.string) {
         format = SV.sValue(args[0]);
         x = args[1];
+        if (x.tok == T.string && !"string".equals(format)) {
+          x = args[0];
+          format = "string";
+        }
         // format("xxx%s","testing");
         // format("base64", x)
         // format("JSON", x)

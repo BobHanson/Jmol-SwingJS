@@ -1313,16 +1313,17 @@ public class SV extends T implements JSONEncodable {
   public final static int FORMAT_XYZ = 28;
   public final static int FORMAT_ABC = 32;
   public final static int FORMAT_UVW = 36;
+  public final static int FORMAT_STRING = 40;
   
   /**
    * 
    * @param format
-   * @return 0: JSON, 5: base64, 12: bytearray, 22: array, 28:xyz, 32:abc, 36:uvw
+   * @return 0: JSON, 5: base64, 12: bytearray, 22: array, 28:xyz, 32:abc, 36:uvw, 40:string
    */
   public static int getFormatType(String format) {
     return (format.indexOf(";") >= 0 ? -1 :
-        ";json;base64;bytearray;array;xyz;abc;uvw;"
-    //   0    5      12        22    28  32  36
+        ";json;base64;bytearray;array;xyz;abc;uvw;string;"
+    //   0    5      12        22    28  32  36  40
         .indexOf(";" + format.toLowerCase() + ";"));
   }
 
@@ -1379,6 +1380,7 @@ public class SV extends T implements JSONEncodable {
     case FORMAT_BASE64:
     case FORMAT_BYTEARRAY:
     case FORMAT_ARRAY:
+    case FORMAT_STRING:
       byte[] bytes;
       switch (sv.tok) {
       case barray:
@@ -1413,6 +1415,8 @@ public class SV extends T implements JSONEncodable {
         return JC.BASE64_TAG + javajs.util.Base64.getBase64(bytes).toString(); 
       case FORMAT_ARRAY:
         return getVariable(bytes);
+      case FORMAT_STRING:
+        return new String(bytes);
       }
     }
     return null;
