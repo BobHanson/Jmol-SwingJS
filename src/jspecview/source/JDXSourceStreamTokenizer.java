@@ -116,6 +116,8 @@ public class JDXSourceStreamTokenizer {
   public static String cleanLabel(String label) {
     if (label == null)
       return null;
+    if (!label.startsWith("#"))
+      return label;
     int i;
     SB str = new SB();
 

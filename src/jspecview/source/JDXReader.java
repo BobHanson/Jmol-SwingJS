@@ -20,6 +20,7 @@
 package jspecview.source;
 
 import java.io.BufferedReader;
+//import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,6 +49,7 @@ import jspecview.common.JSViewer;
 import jspecview.common.PeakInfo;
 import jspecview.common.Spectrum;
 import jspecview.exception.JSVException;
+import jspecview.source.JDXHeader.DataLDRTable;
 
 /**
  * <code>JDXFileReader</code> reads JDX data, including complex BLOCK files that
@@ -73,6 +75,8 @@ public class JDXReader implements JmolJDXMOLReader {
   private final static String[] VAR_LIST_TABLE = {
       "PEAKTABLE   XYDATA      XYPOINTS",
       " (XY..XY)    (X++(Y..Y)) (XY..XY)    " };
+
+  private String mnovaParamValue;
 
   public static String getVarList(String dataClass) {
     int index = VAR_LIST_TABLE[0].indexOf(dataClass);
@@ -144,13 +148,23 @@ public class JDXReader implements JmolJDXMOLReader {
   }
 
   public static Map<String, String> getHeaderMap(InputStream in, Map<String, String> map) throws Exception {
-    return getHeaderMapS(in, map, null);
+    return getHeaderMapS(in, map, -1, null);
   }
 
-  public static Map<String, String> getHeaderMapS(InputStream in, Map<String, String> map, String suffix) throws Exception {
+  /**
+   * 
+   * @param in
+   * @param map may be null
+   * @param index >= 0 for nth block; -1 for "last block"
+   * @param suffix
+   * @return map
+   * @throws Exception
+   */
+  public static Map<String, String> getHeaderMapS(InputStream in, Map<String, String> map, int index, String suffix) throws Exception {
+    Spectrum source = createJDXSource(null, in, null, false, false, 0, -1, 0).getJDXSpectrum(index);
+    Lst<String[]> hlist = source.headerTable;
     if (map == null)
       map = new LinkedHashMap<String, String>();
-    Lst<String[]> hlist = createJDXSource(null, in, null, false, false, 0, -1, 0).getJDXSpectrum(0).headerTable;
     for (int i = 0, n = hlist.size(); i < n; i++) {
       String[] h = hlist.get(i);
       // element [2] is the cleaned LABEL
@@ -314,21 +328,21 @@ public class JDXReader implements JmolJDXMOLReader {
         logError(
             "Warning - file is a concatenation without LINK record -- does not conform to JCAMP-DX standard 6.1.3!");
       Spectrum spectrum = new Spectrum();
-      Lst<String[]> dataLDRTable = new Lst<String[]>();
+      DataLDRTable dataLDRTable = new DataLDRTable();
       if (isHeaderOnly)
-        spectrum.setHeaderTable(dataLDRTable);
+        spectrum.setHeaderTable(dataLDRTable.table);
       while (!done && (label = t.getLabel()) != null
           && (value = getValue(label)) != null) {
         if (isTabularData) {
+          if (isHeaderOnly) {
+            dataLDRTable.addHeader(t.rawLabel, "<data>");
+            break;
+          }
           processTabularData(spectrum, dataLDRTable, label, isHeaderOnly);
           addSpectrum(spectrum, false);
           if (isSimulation && spectrum.getXUnits().equals("PPM"))
             spectrum.setHZtoPPM(true);
           spectrum = null;
-          if (isHeaderOnly) {
-            addHeader(dataLDRTable, t.rawLabel, "<data>");
-            break;
-          }
           continue;
         }
         if (!isHeaderOnly) {
@@ -361,7 +375,7 @@ public class JDXReader implements JmolJDXMOLReader {
     return source;
   }
 
-  private void processLabel(Spectrum spectrum, Lst<String[]> dataLDRTable,
+  private void processLabel(Spectrum spectrum, DataLDRTable dataLDRTable,
                             String label, String value, boolean isHeaderOnly)
       throws JSVException {
     // when reading the header only (for example, as a plugin for 
@@ -370,12 +384,27 @@ public class JDXReader implements JmolJDXMOLReader {
     if (!readDataLabel(spectrum, label, value, errorLog, obscure, isHeaderOnly)
         && !isHeaderOnly)
       return;
-    addHeader(dataLDRTable, t.rawLabel, value);
+    if (mnovaParamValue != null) {
+      // ##$PARAMETER FILE= (uxnmr.par, ASCII, /private/var/folders/f6/rjf_tdyn2v98c5c0wvkgn4s80000gn/T/ICmhQgkvR4K3GNzOG$oINA/41/uxnmr.par, 0)
+      int pt;
+      if (value.startsWith("(") && (pt = value.indexOf(',')) >= 0) {
+        String key = value.substring(1, pt).trim();
+        pt = value.indexOf(')', pt + 1);
+        if (pt > 0) {
+          value = value.substring(pt + 1).trim();
+        }
+        dataLDRTable.addHeader(key, value);
+      }
+      mnovaParamValue = null;
+    } else {
+      dataLDRTable.addHeader(t.rawLabel, value);
+    }
     if (!isHeaderOnly)
       checkCustomTags(spectrum, label, value);
   }
 
   String lastErrPath = null;
+
   private void logError(String err) {
     errorLog.append(filePath == null || filePath.equals(lastErrPath) ? "" : filePath).append("\n").append(err).append("\n");
     lastErrPath = filePath;
@@ -468,7 +497,7 @@ public class JDXReader implements JmolJDXMOLReader {
    * @return source
    * @throws JSVException
    */
-  private JDXSource getBlockSpectra(Lst<String[]> sourceLDRTable)
+  private JDXSource getBlockSpectra(DataLDRTable sourceLDRTable)
       throws JSVException {
 
     Logger.debug("--JDX block start--");
@@ -479,7 +508,7 @@ public class JDXReader implements JmolJDXMOLReader {
     while ((label = t.getLabel()) != null && !label.equals("##TITLE")) {
       value = getValue(label);
       if (isNew && !readHeaderLabel(source, label, value, errorLog, obscure))
-        addHeader(sourceLDRTable, t.rawLabel, value);
+        sourceLDRTable.addHeader(t.rawLabel, value);
       if (label.equals("##BLOCKS")) {
         int nBlocks = PT.parseInt(value);
         if (nBlocks > 100 && firstSpec <= 0)
@@ -491,12 +520,11 @@ public class JDXReader implements JmolJDXMOLReader {
     if (!"##TITLE".equals(label))
       throw new JSVException("Unable to read block source");
     if (isNew)
-      source.setHeaderTable(sourceLDRTable);
+      source.setHeaderTable(sourceLDRTable.table);
     source.type = JDXSource.TYPE_BLOCK;
     source.isCompoundSource = true;
-    Lst<String[]> dataLDRTable;
     Spectrum spectrum = new Spectrum();
-    dataLDRTable = new Lst<String[]>();
+    DataLDRTable dataLDRTable = new DataLDRTable();
     readDataLabel(spectrum, label, value, errorLog, obscure, false);
     try {
       String tmp;
@@ -532,7 +560,7 @@ public class JDXReader implements JmolJDXMOLReader {
           break;
         if (spectrum == null) {
           spectrum = new Spectrum();
-          dataLDRTable = new Lst<String[]>();
+          dataLDRTable = new DataLDRTable();
           if (label == "")
             continue;
           if (label == null) {
@@ -547,7 +575,7 @@ public class JDXReader implements JmolJDXMOLReader {
               && !addSpectrum(spectrum, forceSub))
             return source;
           spectrum = new Spectrum();
-          dataLDRTable = new Lst<String[]>();
+          dataLDRTable = new DataLDRTable();
           continue;
         }
         processLabel(spectrum, dataLDRTable, label, value, false);
@@ -594,7 +622,7 @@ public class JDXReader implements JmolJDXMOLReader {
    * @return source
    */
   @SuppressWarnings("null")
-  private JDXSource getNTupleSpectra(Lst<String[]> sourceLDRTable,
+  private JDXSource getNTupleSpectra(DataLDRTable sourceLDRTable,
                                      JDXDataObject spectrum0, String label)
       throws JSVException {
     double[] minMaxY = new double[] { Double.MAX_VALUE, Double.MIN_VALUE };
@@ -614,7 +642,7 @@ public class JDXReader implements JmolJDXMOLReader {
     if (isNew) {
       source.type = JDXSource.TYPE_NTUPLE;
       source.isCompoundSource = true;
-      source.setHeaderTable(sourceLDRTable);
+      source.setHeaderTable(sourceLDRTable.table);
     }
 
     // Read NTuple Table
@@ -676,11 +704,11 @@ public class JDXReader implements JmolJDXMOLReader {
         }
       }
 
-      Lst<String[]> dataLDRTable = new Lst<String[]>();
-      spectrum.setHeaderTable(dataLDRTable);
+      DataLDRTable dataLDRTable = new DataLDRTable();
+      spectrum.setHeaderTable(dataLDRTable.table);
 
       while (!label.equals("##DATATABLE")) {
-        addHeader(dataLDRTable, t.rawLabel, t.getValue());
+        dataLDRTable.addHeader(t.rawLabel, t.getValue());
         label = t.getLabel();
       }
 
@@ -714,12 +742,12 @@ public class JDXReader implements JmolJDXMOLReader {
       spectrum0.freq2dX = spectrum.freq2dX;
       spectrum0.freq2dY = spectrum.freq2dY;
       spectrum0.y2DUnits = spectrum.y2DUnits;
-      for (int i = 0; i < sourceLDRTable.size(); i++) {
-        String[] entry = sourceLDRTable.get(i);
+      for (int i = 0, n = sourceLDRTable.table.size(); i < n; i++) {
+        String[] entry = sourceLDRTable.table.get(i);
         String key = JDXSourceStreamTokenizer.cleanLabel(entry[0]);
         if (!key.equals("##TITLE") && !key.equals("##DATACLASS")
             && !key.equals("##NTUPLES"))
-          dataLDRTable.addLast(entry);
+          dataLDRTable.table.addLast(entry);
       }
       if (isOK)
         addSpectrum(spectrum, !isFirst);
@@ -846,49 +874,45 @@ public class JDXReader implements JmolJDXMOLReader {
     }
   }
 
-  private static boolean readHeaderLabel(JDXHeader jdxHeader, String label,
+  private boolean readHeaderLabel(JDXHeader jdxHeader, String label,
                                          String value, SB errorLog,
                                          boolean obscure) {
-    switch (("##TITLE###" +
-             "##JCAMPDX#" +
-             "##ORIGIN##" +
-             "##OWNER###" +
-             "##DATATYPE" +
-             "##LONGDATE" +
-             "##DATE####" +
-             "##TIME####").indexOf(label + "#")) {
-    case 0:
+    switch (label) {
+    case "##TITLE":
       jdxHeader.setTitle(obscure || value == null || value.equals("") ? "Unknown"
           : value);
       return false;
-    case 10:
+    case "##JCAMPDX":
       jdxHeader.jcampdx = value;
       double version = PT.parseDouble(value);
       if (version >= 6 || Double.isNaN(version)) {
         if (errorLog != null)
           errorLog
               .append("Warning: JCAMP-DX version may not be fully supported: "
-                  + value);
+                  + value + "\n");
       }
       return false;
-    case 20:
+    case "##ORIGIN": 
       jdxHeader.origin = (value != null && !value.equals("") ? value
           : "Unknown");
       return false;
-    case 30:
+    case "##OWNER":
       jdxHeader.owner = (value != null && !value.equals("") ? value : "Unknown");
       return false;
-    case 40:
+    case "##DATATYPE":
       jdxHeader.dataType = value;
       return false;
-    case 50:
+    case "##LONGDATE":
       jdxHeader.longDate = value;
       return false;
-    case 60:
+    case "##DATE":
       jdxHeader.date = value;
       return false;
-    case 70:
+    case "##TIME":
       jdxHeader.time = value;
+      return false;
+    case "##$PARAMETERFILE":
+      mnovaParamValue = value;
       return false;
     }
     return true;
@@ -910,10 +934,10 @@ public class JDXReader implements JmolJDXMOLReader {
 //    }
   }
 
-  private void processTabularData(JDXDataObject spec, Lst<String[]> table, String label, boolean isHeaderOnly)
+  private void processTabularData(JDXDataObject spec, DataLDRTable table, String label, boolean isHeaderOnly)
       throws JSVException {
     setTabularDataType(spec, label);   
-    spec.setHeaderTable(table);
+    spec.setHeaderTable(table.table);
     if (spec.dataClass.equals("XYDATA")) {
       spec.checkJDXRequiredTokens();
       if (!isHeaderOnly)
@@ -1091,17 +1115,6 @@ public class JDXReader implements JmolJDXMOLReader {
 
   }
 
-  public static void addHeader(Lst<String[]> table, String label, String value) {
-    String[] entry = null;
-    for (int i = 0; i < table.size(); i++)
-      if ((entry = table.get(i))[0].equals(label)) {
-        entry[1] = value;
-        return;
-      }
-    table.addLast(new String[] { label, value, JDXSourceStreamTokenizer.cleanLabel(label) });
-  }
-
-
   ////// JCAMP-DX/MOL reading //////
   
   private boolean checkCustomTags(Spectrum spectrum, String label,
@@ -1210,4 +1223,22 @@ public class JDXReader implements JmolJDXMOLReader {
     return line;
   }
 
+//  public static void main(String[] args) {
+//    try {
+//      Map<String, String> map = JDXReader.getHeaderMap(new FileInputStream("c:/temp/t.jdx"), null);
+//      for (String k : map.keySet()) {
+//        if (k.startsWith("##"))
+//          continue;
+//        String s = map.get(k);
+//        if (s.length() > 30) {
+//          s = s.substring(0, 30) + "...";
+//        }
+//        System.out.println(k + "=" + s);
+//      }
+//    } catch (Exception e) {
+//      e.printStackTrace();
+//    }
+//    System.out.println("done");
+//  }
+  
 }

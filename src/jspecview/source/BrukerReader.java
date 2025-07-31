@@ -13,10 +13,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javajs.util.BinaryDocument;
-import javajs.util.Lst;
 import javajs.util.Rdr;
 import jspecview.common.Coordinate;
 import jspecview.common.Spectrum;
+import jspecview.source.JDXHeader.DataLDRTable;
 
 /**
  * A class to read Bruker ZIP files and directories. The first acqus file found
@@ -102,7 +102,7 @@ public class BrukerReader {
           data2rr = getBytes(zis, (int) ze.getSize(), false);
         } else if (zeShortName.equals("proc2s") || zeShortName.equals("acqu2s")) {
           JDXReader.getHeaderMapS(new ByteArrayInputStream(
-              getBytes(zis, (int) ze.getSize(), false)), map, "_2");
+              getBytes(zis, (int) ze.getSize(), false)), map, 0, "_2");
         } else if (zeShortName.equals("procs")
             || (isacq = zeShortName.equals("acqus"))) {
           if (isacq) {
@@ -167,7 +167,7 @@ public class BrukerReader {
     if (!f.exists())
       return;
     InputStream is = new FileInputStream(f);
-    JDXReader.getHeaderMapS(is, map, suffix);
+    JDXReader.getHeaderMapS(is, map, 0, suffix);
     is.close();
   }
 
@@ -228,7 +228,7 @@ public class BrukerReader {
   private void setSource(double[] datar, double[] datai,
                          Map<String, String> map, JDXSource source,
                          boolean is2D) {
-    Lst<String[]> LDRTable = new Lst<String[]>();
+    DataLDRTable myLDRTable = new DataLDRTable();
 
     Spectrum spectrum0 = new Spectrum();
     spectrum0.setTitle(map.get("##TITLE"));
@@ -255,13 +255,13 @@ public class BrukerReader {
     double shift = ref - sw;
     String solvent = cleanJDXValue(map.get("##$SOLVENT"));
     String shiftType = "INTERNAL";
-    JDXReader.addHeader(LDRTable, "##.SHIFTREFERENCE",
+    myLDRTable.addHeader("##.SHIFTREFERENCE",
         shiftType + ", " + solvent + ", 1, " + ref);
-    JDXReader.addHeader(LDRTable, "##.OBSERVEFREQUENCY", "" + freq);
-    JDXReader.addHeader(LDRTable, "##.OBSERVENUCLEUS", nuc1);
-    JDXReader.addHeader(LDRTable, "##SPECTROMETER/DATA SYSTEM",
+    myLDRTable.addHeader("##.OBSERVEFREQUENCY", "" + freq);
+    myLDRTable.addHeader("##.OBSERVENUCLEUS", nuc1);
+    myLDRTable.addHeader("##SPECTROMETER/DATA SYSTEM",
         cleanJDXValue(map.get("##$INSTRUM")));
-    spectrum0.setHeaderTable(LDRTable);
+    spectrum0.setHeaderTable(myLDRTable.table);
 
     spectrum0.setObservedNucleus(nuc1);
     spectrum0.setObservedFreq(freq);
@@ -427,7 +427,10 @@ public class BrukerReader {
 
   private byte[] getBytes(InputStream in, int len, boolean andClose) {
     try {
-      return Rdr.getLimitedStreamBytes(in, len);
+      byte[] bytes = Rdr.getLimitedStreamBytes(in, len);
+      if (andClose)
+        in.close();
+      return bytes;
     } catch (Exception e) {
     }
     return new byte[0];

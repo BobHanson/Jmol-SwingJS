@@ -34,7 +34,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
-import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.api.GenericCifDataParser;

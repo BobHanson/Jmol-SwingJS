@@ -76,6 +76,8 @@ public class JDXSource extends JDXHeader {
    * @return the Spectrum at a given index in the list
    */
   public Spectrum getJDXSpectrum(int index) {
+    if (index < 0)
+      index += jdxSpectra.size();
     return (jdxSpectra.size() <= index ? null : jdxSpectra.get(index));
   }
 

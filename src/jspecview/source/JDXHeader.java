@@ -1,5 +1,8 @@
 package jspecview.source;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import javajs.util.Lst;
 
 /**
@@ -219,7 +222,34 @@ public class JDXHeader {
 
   // Table of header variables specific to the jdx source or spectrum
   protected Lst<String[]> headerTable = new Lst<String[]>();
-  
+
+  public static class DataLDRTable {
+    Lst<String[]> table;
+    Map<String, Integer> map;
+
+    
+    public DataLDRTable() {
+      table = new Lst<String[]>();
+      map = new Hashtable<String, Integer>();
+    }
+    
+    public void addHeader(String label, String value) {
+      Integer pt = map.get(label);
+      if (pt == null) {
+        pt = Integer.valueOf(table.size());
+        table.addLast(new String[] { label, value, JDXSourceStreamTokenizer.cleanLabel(label) });
+        map.put(label, pt);     
+      } else {
+        String[] entry = table.get(pt.intValue());
+        entry[1] = value;      
+      }
+    }
+
+
+
+  }
+
+
   /**
    * Sets the headerTable for this Source or spectrum
    * 

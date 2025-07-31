@@ -22,14 +22,13 @@ package jspecview.source;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-import javajs.util.Lst;
-import javajs.util.SB;
-
 import org.jmol.util.Logger;
 
+import javajs.util.SB;
 import jspecview.api.SourceReader;
 import jspecview.common.Coordinate;
 import jspecview.common.Spectrum;
+import jspecview.source.JDXHeader.DataLDRTable;
 
 /**
  * Representation of a XML Source.
@@ -104,7 +103,7 @@ abstract class XMLReader implements SourceReader {
     // end of import of CML document
     // now populate all the JSpecView spectrum variables.....
 
-    Lst<String[]> LDRTable = new Lst<String[]>();
+    DataLDRTable myLDRTable = new DataLDRTable();
     Spectrum spectrum = new Spectrum();
 
     spectrum.setTitle(title);
@@ -126,22 +125,22 @@ abstract class XMLReader implements SourceReader {
     //  syntax is:
     //      JDXFileReader.addHeader(LDRTable, )
     //      Key kk = new Key;
-    JDXReader.addHeader(LDRTable, "##PATHLENGTH", pathlength);
-    JDXReader.addHeader(LDRTable, "##RESOLUTION", resolution);
+    myLDRTable.addHeader("##PATHLENGTH", pathlength);
+    myLDRTable.addHeader("##RESOLUTION", resolution);
     if (!strObFreq.equals(""))
-      JDXReader.addHeader(LDRTable, "##.OBSERVEFREQUENCY", strObFreq);
+      myLDRTable.addHeader("##.OBSERVEFREQUENCY", strObFreq);
     if (!obNucleus.equals(""))
-      JDXReader.addHeader(LDRTable, "##.OBSERVENUCLEUS", obNucleus);
-    JDXReader.addHeader(LDRTable, "##$MANUFACTURER", vendor);
+      myLDRTable.addHeader("##.OBSERVENUCLEUS", obNucleus);
+    myLDRTable.addHeader("##$MANUFACTURER", vendor);
     if (!casRN.equals(""))
-      JDXReader.addHeader(LDRTable, "##CASREGISTRYNO", casRN);
+      myLDRTable.addHeader("##CASREGISTRYNO", casRN);
     if (!molForm.equals(""))
-      JDXReader.addHeader(LDRTable, "##MOLFORM", molForm);
+      myLDRTable.addHeader("##MOLFORM", molForm);
     if (!modelType.equals(""))
-      JDXReader.addHeader(LDRTable, "##SPECTROMETER/DATA SYSTEM", modelType);
+      myLDRTable.addHeader("##SPECTROMETER/DATA SYSTEM", modelType);
 
     //etc etc.
-    spectrum.setHeaderTable(LDRTable);
+    spectrum.setHeaderTable(myLDRTable.table);
 
     double xScale = 1; // NMR data stored internally as ppm
     if (obFreq != JDXDataObject.ERROR) {
