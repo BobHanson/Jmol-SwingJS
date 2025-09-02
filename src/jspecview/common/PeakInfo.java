@@ -5,7 +5,6 @@ package jspecview.common;
 import javajs.util.PT;
 
 public class PeakInfo {
-  public final static PeakInfo nullPeakInfo = new PeakInfo();
 
   private double xMin, xMax, yMin, yMax;
   private int px0, px1;
@@ -28,9 +27,12 @@ public class PeakInfo {
 
 
   public PeakInfo() {
+    // will be ignored by transpiler in Jmol legacy
   }
 
   public PeakInfo(String s) {
+    if (s == null)
+      return; // new PeakInfo(), for legacy
     stringInfo = s;
     type = PT.getQuotedAttribute(s, "type");
     if (type == null)
@@ -45,7 +47,7 @@ public class PeakInfo {
     id = PT.getQuotedAttribute(s, "id");
     index = PT.getQuotedAttribute(s, "index");
     file = PT.getQuotedAttribute(s, "file");
-    System.out.println("pi file=" + file);
+    System.out.println("PeakInfo file=" + file);
     filePathForwardSlash = (file == null ? null : file.replace('\\','/'));
 
     model = PT.getQuotedAttribute(s, "model");

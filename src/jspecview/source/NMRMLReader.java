@@ -100,7 +100,9 @@ public class NMRMLReader extends XMLReader {
 //    </acquisition1D>
 //    </acquisition>
         case NMRML_acquisitionnucleus:
-      obNucleus = Elements.getNmrNucleusFromName(parser.getAttrValueLC("name"));
+          String val = parser.getAttrValue("name").replace(" atom", "");
+          obNucleus = (PT.isDigit(val.charAt(0)) ? val
+              : Elements.getNmrNucleusFromName(val.toLowerCase()));
       return true;
     case NMRML_effectiveexcitationfield:
       strObFreq = parser.getAttrValueLC("value");
@@ -108,13 +110,21 @@ public class NMRMLReader extends XMLReader {
       return true;
     case NMRML_spectrum1d:
       dim = 1;
+      npoints = Integer.parseInt(parser.getAttrValue("numberOfDataPoints"));
       // <spectrum1D numberOfDataPoints= "6553"  id="1D-1H" >
       break;
     case NMRML_spectrumdataarray:
       // spectrumDataArray  compressed="false"  encodedLength="139800" byteFormat="complex128">    case NMRML_spectrumdataarray: // 31   
       String type = parser.getAttrValue("byteFormat");
-      if ("complex128".equals(type)) {
+      switch(type) {
+      case "complex128":
         getXYFromBase64Complex128(parser.getCharacters());
+        break;
+      case "float64":
+        getXYFromBase64Float64(parser.getCharacters());
+        break;
+      default:
+        System.err.println("NMRML spectrum data array type unknown: " + type);
       }
       break;
     case NMRML_identifier:
@@ -155,6 +165,36 @@ public class NMRMLReader extends XMLReader {
    * 
    * @param sdata
    */
+  private void getXYFromBase64Float64(String sdata) {
+    byte[] bytes = Base64.decodeBase64(sdata);
+    DoubleBuffer b = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asDoubleBuffer();
+    System.out.println(npoints + " " + bytes.length/16);
+    if ((bytes.length % 16) != 0) {
+      throw new RuntimeException("NMRMLReader byte length not multiple of 16 " + bytes.length);
+    }
+    try {
+      int n = bytes.length / 16;
+      xaxisData = new double[n];
+      yaxisData = new double[n];
+      //reverse order of list to make [0-16] for 1H, for example, not [16-0]
+      for (int i = 0; i < n; i++) {
+        xaxisData[i] = b.get();
+        yaxisData[i] = b.get();
+      }
+      npoints = n;
+      firstX = xaxisData[0];
+      deltaX = xaxisData[1] - firstX;
+      increasing = false;//(deltaX > 0);
+      continuous = true;
+      lastX = xaxisData[npoints - 1];
+      yUnits = "";
+      firstY = yaxisData[0];
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+  
+
   private void getXYFromBase64Complex128(String sdata) {
     byte[] bytes = Base64.decodeBase64(sdata);
     DoubleBuffer b = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asDoubleBuffer();

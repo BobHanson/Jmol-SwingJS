@@ -1272,7 +1272,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
       if (a.size() > 46)
         anisou = floatsAt(a, 41, new double[8], 6);
     }
-    double v = pymolScene.getUniqueFloatDef(uniqueID, PyMOL.valence);
+    double v = pymolScene.getUniqueDoubleDef(uniqueID, PyMOL.valence);
     if (forceValence  || v == 1) {
       bsValence.set(apt);
     }
@@ -1335,7 +1335,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     if (anisou != null && anisou[0] != 0)
       asc.setAnisoBorU(atom, anisou, 12);
     pymolScene.setAtomColor(atomColor);
-    if (pymolScene.getUniqueFloatDef(uniqueID, PyMOL.valence) == 1) {
+    if (pymolScene.getUniqueDoubleDef(uniqueID, PyMOL.valence) == 1) {
       bsValence.set(apt);
     }
 

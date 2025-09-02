@@ -22,6 +22,7 @@ package jspecview.application;
 import jspecview.source.XMLParser;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.Writer;
@@ -128,7 +129,11 @@ public class DisplaySchemesProcessor {
    * @return true if loaded successfully
    */
   public boolean load(String dispSchemeFileName){
-    fileName = dispSchemeFileName;        
+    fileName = dispSchemeFileName;       
+    if (!new File(fileName).exists()) {
+      System.out.println("DisplaySchemeProcessor ignored: " + dispSchemeFileName + " does not exist.");
+      return false;
+    }
     try{
       BufferedReader br = JSVFileManager.getBufferedReaderFromName(fileName);
     	return load(br);

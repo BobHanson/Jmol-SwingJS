@@ -961,7 +961,7 @@ public class SmilesGenerator {
           // then we need to switch the allene stereochemistry
           // note that we cannot process FC=C=C=C=CF, and neither can NCI/CADD
           if (!includeHs && sb.charAt(pt) != ')'
-              && ((Node) stereo[pt]).getAtomicAndIsotopeNumber() == 1) {
+              && ((Node) stereo[0]).getAtomicAndIsotopeNumber() == 1) {
                 SimpleNode s0 = stereo[0];
                 stereo[0] = stereo[1];
                 stereo[1] = s0;

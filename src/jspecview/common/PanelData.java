@@ -380,8 +380,8 @@ public class PanelData implements EventManager {
 		if (andCurrent)
 			currentGraphSet.selectSpectrum(filePath, type, model);
 		if ("ID".equals(type) ) {
-			jumpToSpectrumIndex(getCurrentSpectrumIndex(), true);
-			return;
+      jumpToSpectrumIndex(getCurrentSpectrumIndex(), true);
+      return;
 		}
 		
 		for (int i = 0; i < graphSets.size(); i++)
@@ -599,7 +599,7 @@ public class PanelData implements EventManager {
 
 	// //// currentGraphSet methods
 
-	private boolean setCurrentGraphSet(GraphSet gs, int yPixel) {
+	boolean setCurrentGraphSet(GraphSet gs, int yPixel) {
 		// Need to check for nSplit > 1 here because this could be a 
 		// mass spec that has been selected by clicking on a GC peak.
 		// In that case, there is no split, and we should not be changing

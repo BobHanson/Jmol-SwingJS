@@ -226,11 +226,19 @@ public class CDXMLParser {
       this.nodeType = nodeType;
       this.parentNode = parent;
       this.bsConnections = new BitSet();
+      // could also be a fragment if node type is "Unspecified"
       isFragment = "Fragment".equals(nodeType) || "Nickname".equals(nodeType);
       isExternalPt = "ExternalConnectionPoint".equals(nodeType);
       if (isFragment) {
         bsFragmentAtoms = new BitSet();
       } else if (parent != null && !isExternalPt) {
+        if (parent.bsFragmentAtoms == null) {
+          // problem valences may not indicate that a parent is a fragment
+          //<n id="4931" p="247.0 209.37" Warning="An atom in this label has an invalid valence." NodeType="Unspecified">
+          //<fragment id="40759">
+          parent.isFragment = true;
+          parent.bsFragmentAtoms = new BitSet();
+        }
         parent.bsFragmentAtoms.set(index);
       }
       // isGeneric = "GenericNickname".equals(nodeType);
@@ -363,7 +371,7 @@ public class CDXMLParser {
 				a.id = nextID();
 				mapCloned.put(id, a);
 				a.clonedIndex = index;
-        a.bsConnections = new BitSet();
+                a.bsConnections = new BitSet();
 				objectsByID.put(a.id, a);
 				// for minimization, don't put these on top of each other.
 

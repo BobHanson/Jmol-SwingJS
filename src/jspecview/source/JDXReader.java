@@ -20,11 +20,13 @@
 package jspecview.source;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 //import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -830,8 +832,8 @@ public class JDXReader implements JmolJDXMOLReader {
       }
       return false; // was true BH 2021.08.09
     default:
-      if (label.length() < 17)
-        return true;
+      if (label.length() < 17 || value.indexOf(",") >= 0)
+        return !isHeaderOnly;
       if (label.equals("##.OBSERVEFREQUENCY ")) {
         spectrum.setObservedFreq(parseAFFN(label, value));
         return false;
@@ -1223,22 +1225,23 @@ public class JDXReader implements JmolJDXMOLReader {
     return line;
   }
 
-//  public static void main(String[] args) {
-//    try {
-//      Map<String, String> map = JDXReader.getHeaderMap(new FileInputStream("c:/temp/t.jdx"), null);
-//      for (String k : map.keySet()) {
-//        if (k.startsWith("##"))
-//          continue;
-//        String s = map.get(k);
-//        if (s.length() > 30) {
-//          s = s.substring(0, 30) + "...";
-//        }
-//        System.out.println(k + "=" + s);
-//      }
-//    } catch (Exception e) {
-//      e.printStackTrace();
-//    }
-//    System.out.println("done");
-//  }
+  public static void main(String[] args) {
+    try {
+      System.out.println(new Date(1658593001000L).toGMTString());
+      Map<String, String> map = JDXReader.getHeaderMap(new FileInputStream("c:/temp/t6.jdx"), null);
+      for (String k : map.keySet()) {
+        if (k.startsWith("##"))
+          continue;
+        String s = map.get(k);
+        if (s.length() > 30) {
+          s = s.substring(0, 30) + "...";
+        }
+        System.out.println(k + "=" + s);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    System.out.println("done");
+  }
   
 }

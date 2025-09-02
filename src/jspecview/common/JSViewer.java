@@ -73,6 +73,8 @@ public class JSViewer implements PlatformViewer, BytePoster {
 
   private final static int NLEVEL_MAX = 100;
 
+  private static final String THIS_STRUCTURE = "<this structure>";
+
   public ScriptInterface si;
   public GenericGraphics g2d;
   public JSVTree spectraTree;
@@ -92,6 +94,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
 
   private IRMode irMode = IRMode.NO_CONVERT;
 
+  public boolean isEmbedded;
   public boolean loadImaginary;
   public boolean interfaceOverlaid;
   public boolean autoIntegrate;
@@ -126,7 +129,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
 
   public GenericPlatform apiPlatform;
 
-  public static JSVToJSmolInterface jmolObject;
+  public static JSVToJSmolInterface jsmolObject;
 
   public void setProperty(String key, String value) {
     if (properties != null)
@@ -160,8 +163,8 @@ public class JSViewer implements PlatformViewer, BytePoster {
     {
       
     }
-    jmolObject = jmol;
-    this.isSigned = si.isSigned();
+    jsmolObject = jmol;
+    isSigned = si.isSigned();
     apiPlatform = (GenericPlatform) getPlatformInterface("Platform");
     apiPlatform.setViewer(this, this.display);
     g2d = (GenericGraphics) getPlatformInterface("G2D");
@@ -694,6 +697,17 @@ public class JSViewer implements PlatformViewer, BytePoster {
         } catch (Exception e) {
           //
         }
+      return;
+    }
+    boolean isFirst = value.equalsIgnoreCase("first");
+    boolean isLast = value.equalsIgnoreCase("last");
+    if (isFirst || isLast) {
+      PanelData pd = selectedPanel.getPanelData();
+      Lst<GraphSet> gsets = pd.graphSets;
+      if (gsets == null || gsets.size() == 0)
+        return;
+      GraphSet gs = gsets.get(isFirst ? 0 : gsets.size() - 1);
+      pd.setCurrentGraphSet(gs, -1);
       return;
     }
     Lst<PanelNode> nodes = panelNodes;
@@ -1422,8 +1436,13 @@ public class JSViewer implements PlatformViewer, BytePoster {
       pt = 2;
     }
     boolean isAppend = filename.equalsIgnoreCase("APPEND");
+    if (isAppend) {
+      pt++;
+    if (pt > 0)
+      filename = tokens.get(pt);      
+    }
     boolean isCheck = filename.equalsIgnoreCase("CHECK");
-    if (isAppend || isCheck)
+    if (isCheck)
       pt++;
     if (pt > 0)
       filename = tokens.get(pt);
@@ -1971,21 +1990,29 @@ public class JSViewer implements PlatformViewer, BytePoster {
       selectedPanel.showMessage(msg, null);
   }
 
-  public void openFileFromDialog(boolean isAppend, boolean isURL,
+  public boolean openFileFromDialog(boolean isAppend, boolean isURL,
                                  String simulationType, String script) {
     String url = null;
     if (simulationType != null) {
+      // H1 or /C13
       url = fileHelper.getUrlFromDialog(
           "Enter the name or identifier of a compound", recentSimulation);
       if (url == null)
-        return;
+        return false;
       recentSimulation = url;
+      if (url.equals(THIS_STRUCTURE)) {
+        if (isEmbedded) {
+          si.syncToJmol("sync . \"" + simulationType + "Simulate:\";");
+          return true;
+        }
+        return false;
+      }
       url = "$" + simulationType + "/" + url;
     } else if (isURL) {
       url = fileHelper.getUrlFromDialog("Enter the URL of a JCAMP-DX File",
           recentURL == null ? recentOpenURL : recentURL);
       if (url == null)
-        return;
+        return false;
       recentOpenURL = url;
     } else {
       Object[] userData = new Object[] { Boolean.valueOf(isAppend), script };
@@ -1996,14 +2023,17 @@ public class JSViewer implements PlatformViewer, BytePoster {
         url = file.getFullPath();
       // it is not necessary to run the script in Java; we are not loading asynchronously
     }
-    if (url != null)
+    if (url != null) {
       runScriptNow("load " + (isAppend ? "APPEND " : "") + "\"" + url + "\""
           + (script == null ? "" : ";" + script));
+      return true;
+    }
+    return false;
   }
 
   private String recentOpenURL = "http://";
   private String recentURL;
-  private String recentSimulation = "tylenol";
+  public String recentSimulation = "tylenol";
 
   /**
    * Opens and displays a file
@@ -2222,6 +2252,12 @@ public class JSViewer implements PlatformViewer, BytePoster {
       selectedPanel.showMessage(s, "Help " + value);
     }
     System.out.println(s);
+  }
+
+  public void setRecentSimulation(String name) {
+    if (name == null)
+      name = THIS_STRUCTURE;
+    recentSimulation = name;
   }
 
 }

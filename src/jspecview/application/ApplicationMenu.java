@@ -47,9 +47,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.EventListener;
 
-import javajs.util.DF;
 import javajs.util.Lst;
-import javajs.util.PT;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
@@ -80,11 +78,11 @@ public class ApplicationMenu extends JMenuBar {
 
   private static final long serialVersionUID = 1L;
   protected MainFrame mainFrame;
-  protected JSViewer viewer;
+  protected JSViewer jsvViewer;
 
   public ApplicationMenu(MainFrame si) throws Exception {
     this.mainFrame = si;
-    viewer = si.vwr;
+    jsvViewer = si.jsvViewer;
     jbInit();
   }
 
@@ -128,28 +126,34 @@ public class ApplicationMenu extends JMenuBar {
         InputEvent.CTRL_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.openFileFromDialog(true, false, null, null);
+            if (jsvViewer.openFileFromDialog(true, false, null, null)) {
+              jsvViewer.runScript("view all");             
+            }
           }
         });
     JMenuItem openSimulationH1MenuItem = setMenuItem(null, 'H', "Add H1 Simulation...", 72,
         InputEvent.CTRL_MASK, new ActionListener() {
           @Override
-					public void actionPerformed(ActionEvent e) {
-            viewer.openFileFromDialog(true, false, "H1", null);
+          public void actionPerformed(ActionEvent e) {
+            if (jsvViewer.openFileFromDialog(true, false, "H1", null)) {
+              jsvViewer.runScript("view all");
+            }
           }
         });
     JMenuItem openSimulationC13MenuItem = setMenuItem(null, 'C', "Add C13 Simulation...", 67,
         InputEvent.CTRL_MASK, new ActionListener() {
           @Override
           public void actionPerformed(ActionEvent e) {
-            viewer.openFileFromDialog(true, false, "C13", null);
+            if (jsvViewer.openFileFromDialog(true, false, "C13", null)) {
+              jsvViewer.runScript("view all");
+            }
           }
         });
     JMenuItem openURLMenuItem = setMenuItem(null, 'U', "Add URL...", 85,
         InputEvent.CTRL_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.openFileFromDialog(true, true, null, null);
+            jsvViewer.openFileFromDialog(true, true, null, null);
           }
         });
     
@@ -157,28 +161,28 @@ public class ApplicationMenu extends JMenuBar {
         InputEvent.CTRL_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("print");
+            jsvViewer.runScript("print");
           }
         });
     closeMenuItem = setMenuItem(null, 'C', "Close", 115,
         InputEvent.CTRL_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("CLOSE");
+            jsvViewer.runScript("CLOSE");
           }
         });
     closeAllMenuItem = setMenuItem(null, 'L', "Close All", 0,
         InputEvent.CTRL_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("CLOSE ALL");
+            jsvViewer.runScript("CLOSE ALL");
           }
         });
     JMenuItem scriptMenuItem = setMenuItem(null, 'T', "Script...", 83,
         InputEvent.ALT_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("script INLINE");
+            jsvViewer.runScript("script INLINE");
           }
         });
     
@@ -186,7 +190,7 @@ public class ApplicationMenu extends JMenuBar {
         InputEvent.ALT_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            mainFrame.exitJSpecView(false);
+            mainFrame.exitJSpecView(false, true);
           }
         });
 
@@ -236,70 +240,70 @@ public class ApplicationMenu extends JMenuBar {
         InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("zoom next");
+            jsvViewer.runScript("zoom next");
           }
         });
     JMenuItem prevZoomMenuItem = setMenuItem(null, 'P', "Previous View", 80,
         InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("zoom previous");
+            jsvViewer.runScript("zoom previous");
           }
         });
     JMenuItem fullZoomMenuItem = setMenuItem(null, 'F', "Full View", 70,
         InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("zoom out");
+            jsvViewer.runScript("zoom out");
           }
         });
     JMenuItem clearZoomMenuItem = setMenuItem(null, 'C', "Clear Views", 67,
         InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("zoom clear");
+            jsvViewer.runScript("zoom clear");
           }
         });
     JMenuItem userZoomMenuItem = setMenuItem(null, 'Z', "Set Zoom...", 90,
         InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("zoom ?");
+            jsvViewer.runScript("zoom ?");
           }
         });
     JMenuItem viewAllMenuItem = setMenuItem(null, 'A', "All Spectra", 65,
         InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("view all");
+            jsvViewer.runScript("view all");
           }
         });
     JMenuItem spectraMenuItem = setMenuItem(null, 'S', "Selected Spectra...", 83,
         InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("view");
+            jsvViewer.runScript("view");
           }
         });
     JMenuItem overlayStackOffsetYMenuItem = setMenuItem(null, 'y', "Overlay Offset...", 0,
         0, new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						viewer.runScript("stackOffsetY ?");
+						jsvViewer.runScript("stackOffsetY ?");
 					}
         });
     sourceMenuItem = setMenuItem(null, 'S', "Source ...", 83,
         InputEvent.CTRL_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("showSource");
+            jsvViewer.runScript("showSource");
           }
         });
     errorLogMenuItem = setMenuItem(null, '\0', "Error Log ...", 0,
         0, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("showErrors");
+            jsvViewer.runScript("showErrors");
           }
         });
 
@@ -308,14 +312,14 @@ public class ApplicationMenu extends JMenuBar {
         InputEvent.CTRL_MASK, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("showProperties");
+            jsvViewer.runScript("showProperties");
           }
         });
     overlayKeyMenuItem = setMenuItem(null, '\0', "Overlay Key", 0,
         0, new ActionListener() {
           @Override
 					public void actionPerformed(ActionEvent e) {
-            viewer.runScript("showKey toggle");
+            jsvViewer.runScript("showKey toggle");
           }
         });
 
@@ -492,7 +496,7 @@ public class ApplicationMenu extends JMenuBar {
   }
 
 	protected void doMenuSelected() {
-		PanelData pd = mainFrame.vwr.pd();
+		PanelData pd = mainFrame.jsvViewer.pd();
     gridCheckBoxMenuItem.setSelected(pd != null && pd.getBoolean(ScriptToken.GRIDON));
     coordsCheckBoxMenuItem.setSelected(pd != null && pd.getBoolean(ScriptToken.COORDINATESON));
     pointsOnlyCheckBoxMenuItem.setSelected(pd != null && pd.getBoolean(ScriptToken.POINTSONLY));
@@ -504,42 +508,42 @@ public class ApplicationMenu extends JMenuBar {
 	    new ActionListener() {
 	      @Override
 				public void actionPerformed(ActionEvent e) {
-	        viewer.runScript("showIntegration");
+	        jsvViewer.runScript("showIntegration");
 	      }
 	    }));
 	menu.add(setMenuItem(null, 'M', "Measurements", 0, 0,
 	    new ActionListener() {
 	      @Override
 				public void actionPerformed(ActionEvent e) {
-	      	viewer.runScript("showMeasurements");
+	      	jsvViewer.runScript("showMeasurements");
 	      }
 	    }));
 	menu.add(setMenuItem(null, 'P', "Peaks", 0, 0,
 	    new ActionListener() {
 	      @Override
 				public void actionPerformed(ActionEvent e) {
-	        viewer.runScript("showPeakList");
+	        jsvViewer.runScript("showPeakList");
 	      }
 	    }));
 	menu.add(transmittanceMenuItem = setMenuItem(null, '\0', "Transmittance/Absorbance", 0, 0,
 	    new ActionListener() {
 	      @Override
 				public void actionPerformed(ActionEvent e) {
-	        viewer.runScript("IRMODE IMPLIED");
+	        jsvViewer.runScript("IRMODE IMPLIED");
 	      }
 	    }));
 	menu.add(solutionColorMenuItem = setMenuItem(null, 'C', "Predicted Solution Colour", 0, 0,
 	    new ActionListener() {
 	      @Override
 				public void actionPerformed(ActionEvent e) {
-	        viewer.runScript("GETSOLUTIONCOLOR");
+	        jsvViewer.runScript("GETSOLUTIONCOLOR");
 	      }
 	    }));
 	}
 
   protected void setBoolean(ScriptToken st, ItemEvent e) {
     boolean isOn = (e.getStateChange() == ItemEvent.SELECTED);
-    viewer.runScript(st + " " + isOn);
+    jsvViewer.runScript(st + " " + isOn);
   }
 
   public void setSourceEnabled(boolean b) {
@@ -631,7 +635,7 @@ public class ApplicationMenu extends JMenuBar {
       menuItem.addActionListener(new ActionListener() {
         @Override
 				public void actionPerformed(ActionEvent e) {
-          viewer.openFile(((JMenuItem) e.getSource()).getText(), false);
+          jsvViewer.openFile(((JMenuItem) e.getSource()).getText(), false);
         }
       });
     }
@@ -647,7 +651,7 @@ public class ApplicationMenu extends JMenuBar {
       menuItem.addActionListener(new ActionListener() {
         @Override
 				public void actionPerformed(ActionEvent e) {
-          viewer.openFile(((JMenuItem) e.getSource()).getText(), true);
+          jsvViewer.openFile(((JMenuItem) e.getSource()).getText(), true);
         }
       });
     }

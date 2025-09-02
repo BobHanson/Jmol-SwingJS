@@ -27,7 +27,7 @@ public class AppToolBar extends JToolBar {
 
   public AppToolBar(MainFrame mainFrame) {
     this.mainFrame = mainFrame;
-    this.vwr = mainFrame.vwr;
+    this.vwr = mainFrame.jsvViewer;
     jbInit();
   }
 

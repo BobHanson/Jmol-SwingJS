@@ -235,7 +235,7 @@ class JmolObject {
     switch (shape) {
     case JC.SHAPE_CGO:
       Map<String, Object> map = new Hashtable<>();
-      map.put("mesh_width", Double.valueOf(pymolScene.getDefaultFloat(PyMOL.mesh_width)));
+      map.put("mesh_width", Double.valueOf(pymolScene.getDefaultDouble(PyMOL.mesh_width)));
       map.put("info", info);
       sm.vwr.setCGO(map);
       break;

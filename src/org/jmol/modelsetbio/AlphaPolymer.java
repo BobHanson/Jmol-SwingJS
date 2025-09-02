@@ -76,9 +76,11 @@ public class AlphaPolymer extends BioPolymer {
     if ((indexStart = getIndex(startChainID, startSeqcode, i0, i1)) == -1
         || (indexEnd = getIndex(endChainID, endSeqcode, i0, i1)) == -1)
       return;
-    if (/*type != STR.ANNOTATION &&*/ istart >= 0 && bsAssigned != null) {
-      int pt = bsAssigned.nextSetBit(monomers[indexStart].firstAtomIndex);
-      if (pt >= 0 && pt < monomers[indexEnd].lastAtomIndex)
+    if (/*type != STR.ANNOTATION &&*/ istart >= 0) {
+      istart = monomers[indexStart].firstAtomIndex;
+      iend = monomers[indexEnd].lastAtomIndex;
+      int pt = bsAssigned.nextSetBit(istart);
+      if (pt >= 0 && pt < iend)
         return;
     }
     if (addStructureProtected(type, structureID, serialID, strandCount, indexStart,

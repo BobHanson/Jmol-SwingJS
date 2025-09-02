@@ -2065,7 +2065,7 @@ SymmetryInterface sym;
             return mp.addXStr(vwr.getInchi(null, x1.value, "SMILES" + flags));
           }
         }
-        isStr = !sFind.equals("SMILES");
+        isStr = !sFind.equalsIgnoreCase("SMILES");
         break;
       case 2:
       case 3:
@@ -2074,7 +2074,7 @@ SymmetryInterface sym;
           isStr = true;
         } else if (((String) x1.value).startsWith("InChI=")) {
           // InChI.find("SMARTS", ....);
-          if (sFind.equals("SMARTS")) {
+          if (sFind.equalsIgnoreCase("SMARTS")) {
             smiles = vwr.getInchi(null, x1.value, "SMILES");
           } else {
             isStr = true;
@@ -2831,8 +2831,9 @@ SymmetryInterface sym;
     case 2:
       if (args[0].tok == T.string) {
         format = SV.sValue(args[0]);
+        // format("base64","afdsadkjfaldkjfsfdl=") base64 decoding
         x = args[1];
-        if (x.tok == T.string && !"string".equals(format)) {
+        if (x.tok == T.string && !"string".equalsIgnoreCase(format)) {
           x = args[0];
           format = "string";
         }

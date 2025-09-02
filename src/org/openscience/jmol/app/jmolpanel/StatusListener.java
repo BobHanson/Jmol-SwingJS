@@ -533,12 +533,12 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     }
     if (doLoadCheck || jSpecViewForceNew || newSim) {
       String type = "" + vwr.getP("_modelType");
-      if (type.equalsIgnoreCase("jcampdx")) {
+      if (!isSimulation && type.equalsIgnoreCase("jcampdx")) {
         jSpecViewForceNew = false;
         String file = "" + vwr.getP("_modelFile");
         if (file.indexOf("/") < 0)
           return;
-        peaks = "hidden true; load CHECK " + PT.esc(file) + ";hidden false" + (newSim && isC13 ? ";scaleby 0.5" : null);
+        peaks = "hidden true; load APPEND CHECK " + PT.esc(file) + ";view all;select last;hidden false" + (newSim && isC13 ? ";scaleby 0.5" : "");
       } else if (isFileLoad && !jSpecViewForceNew && !newSim) {
         return;
       } else {
@@ -550,8 +550,8 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
           peaks = "hidden false";
         } else {
           data = PT.replaceAllCharacters(data, "&", "_");
-          peaks = "hidden true; load CHECK " + (peaks.equals("H1Simulate:") ? "H1 " : "C13 ")
-              + PT.esc("id='~" + model + "';" + data) + ";hidden false #SYNC_PEAKS";
+          peaks = "hidden true; load APPEND CHECK " + (peaks.equals("H1Simulate:") ? "H1 " : "C13 ")
+              + PT.esc("id='~" + model + "';" + data) + ";view all;select last;hidden false #SYNC_PEAKS";
         }
         isStartup = false;
       }

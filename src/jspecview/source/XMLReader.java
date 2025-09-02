@@ -117,6 +117,10 @@ abstract class XMLReader implements SourceReader {
     spectrum.setLongDate(LongDate);
     spectrum.setOrigin(origin);
     spectrum.setOwner(owner);
+    if (obNucleus.length() > 0) {
+      spectrum.setObservedNucleus(obNucleus);
+      spectrum.setObservedFreq(obFreq);
+    }
     spectrum.setNucleusAndFreq(obNucleus, true);
 
     //spectrum.setPathlength(pathlength);

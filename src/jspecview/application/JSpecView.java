@@ -86,11 +86,12 @@ import jspecview.source.JDXSource;
 public class JSpecView implements JSVInterface, ScriptInterface {
 
   private MainFrame mainFrame;
-  JSViewer vwr;
+  JSViewer jsvViewer;
   public String defaultDisplaySchemeName;
   private DisplaySchemesProcessor dsp;
   public JmolSyncInterface jmol;
-  private JSVPanel                prevPanel;
+  private JSVPanel prevPanel;
+  public boolean isEmbedded;
 
 
   public void setMainFrame(MainFrame mainFrame) {
@@ -101,9 +102,9 @@ public class JSpecView implements JSVInterface, ScriptInterface {
   //  ------------------------ Program Properties -------------------------
 
   public JSpecView(boolean hasDisplay, JSVInterface jmol) {
-    vwr = new JSViewer(this, false, false);
-    JSVFileManager.setDocumentBase(vwr, null);
-    vwr.mainPanel = new AwtMainPanel(new BorderLayout());
+    jsvViewer = new JSViewer(this, false, false);
+    JSVFileManager.setDocumentBase(jsvViewer, null);
+    jsvViewer.mainPanel = new AwtMainPanel(new BorderLayout());
     if (hasDisplay) {
       mainFrame = new MainFrame(this, null, jmol == null ? this : jmol);
     } else {
@@ -157,11 +158,11 @@ public class JSpecView implements JSVInterface, ScriptInterface {
       if (n == 2 && args[0].equalsIgnoreCase("-script")) {
         String script = args[1];
         System.out.println("JSpecView is running script " + script);
-        jsv.vwr.runScriptNow(args[1]);
+        jsv.jsvViewer.runScriptNow(args[1]);
       } else {
         for (int i = 0; i < args.length; i++) {
           System.out.println("JSpecView is attempting to open " + args[i]);
-          jsv.vwr.openFile(args[i], false);
+          jsv.jsvViewer.openFile(args[i], false);
         }
       }
     }
@@ -179,7 +180,7 @@ public class JSpecView implements JSVInterface, ScriptInterface {
    */
   @Override
 	public void runScript(String script) {
-    vwr.runScriptNow(script);
+    jsvViewer.runScriptNow(script);
   }
 
   @Override
@@ -221,13 +222,13 @@ public class JSpecView implements JSVInterface, ScriptInterface {
   public void siOpenDataOrFile(Object data, String name, Lst<Spectrum> specs,
                                String url, int firstSpec, int lastSpec,
                                boolean isAppend, String script, String id) {
-    boolean isOne = (vwr.currentSource == null);
+    boolean isOne = (jsvViewer.currentSource == null);
     switch (name == null && url == null ? JSViewer.FILE_OPEN_ERROR
-        : vwr.openDataOrFile(data, name, specs, url, firstSpec, lastSpec,
+        : jsvViewer.openDataOrFile(data, name, specs, url, firstSpec, lastSpec,
             isAppend, id)) {
     case JSViewer.FILE_OPEN_OK:
-      if (script == null && isOne && vwr.currentSource.isCompoundSource
-          && vwr.pd().getSpectrum().isGC())
+      if (script == null && isOne && jsvViewer.currentSource.isCompoundSource
+          && jsvViewer.pd().getSpectrum().isGC())
         script = "VIEW ALL;PEAK GC/MS ID=#1";
       if (script != null)
         runScript(script);
@@ -246,7 +247,7 @@ public class JSpecView implements JSVInterface, ScriptInterface {
 
   @Override
   public void siSetCurrentSource(JDXSource source) {
-    vwr.currentSource = source;
+    jsvViewer.currentSource = source;
     if (source != null && mainFrame != null)
       mainFrame.appMenu.setCloseMenuItem(JSVFileManager.getTagName(source.getFilePath()));
     boolean isError = (source != null && source.getErrorLog().length() > 0);
@@ -270,9 +271,9 @@ public class JSpecView implements JSVInterface, ScriptInterface {
       boolean includeMeasures) {
     ColorParameters ds = dsp.getDisplaySchemes().get(defaultDisplaySchemeName);
     jsvp.getPanelData().addListener(mainFrame);
-    vwr.parameters.setFor(jsvp, (ds == null ? dsp.getDefaultScheme() : ds),
+    jsvViewer.parameters.setFor(jsvp, (ds == null ? dsp.getDefaultScheme() : ds),
         includeMeasures);
-    vwr.checkAutoIntegrate();
+    jsvViewer.checkAutoIntegrate();
     jsvp.doRepaint(true);
   }
 
@@ -287,9 +288,9 @@ public class JSpecView implements JSVInterface, ScriptInterface {
     if (mainFrame != null)
       mainFrame.setSelectedPanel(jsvp);
     else {
-      vwr.mainPanel.setSelectedPanel(vwr, jsvp, vwr.panelNodes);
-      vwr.selectedPanel = jsvp;
-      vwr.spectraTree.setSelectedPanel(this, jsvp);
+      jsvViewer.mainPanel.setSelectedPanel(jsvViewer, jsvp, jsvViewer.panelNodes);
+      jsvViewer.selectedPanel = jsvp;
+      jsvViewer.spectraTree.setSelectedPanel(this, jsvp);
       if (jsvp != null) {
         jsvp.setEnabled(true);
         jsvp.setFocusable(true);
@@ -300,20 +301,20 @@ public class JSpecView implements JSVInterface, ScriptInterface {
 
   @Override
   public void siSendPanelChange() {
-    if (vwr.selectedPanel == prevPanel)
+    if (jsvViewer.selectedPanel == prevPanel)
       return;
-    prevPanel = vwr.selectedPanel;
-    vwr.sendPanelChange();
+    prevPanel = jsvViewer.selectedPanel;
+    jsvViewer.sendPanelChange();
   }
 
   @Override
   public void siSyncLoad(String filePath) {
-    vwr.closeSource(null);
+    jsvViewer.closeSource(null);
     siOpenDataOrFile(null, null, null, filePath, -1, -1, false, null, null);
-    if (vwr.currentSource == null)
+    if (jsvViewer.currentSource == null)
       return;
-    if (vwr.panelNodes.get(0).getSpectrum().isAutoOverlayFromJmolClick())
-      vwr.execView("*", false);
+    if (jsvViewer.panelNodes.get(0).getSpectrum().isAutoOverlayFromJmolClick())
+      jsvViewer.execView("*", false);
   }
 
   @Override
@@ -332,14 +333,14 @@ public class JSpecView implements JSVInterface, ScriptInterface {
 
   @Override
   public String siLoaded(String value) {
-    PanelData pd = vwr.pd();
+    PanelData pd = jsvViewer.pd();
     return (!pd.getSpectrum().is1D() && pd.getDisplay1D() ?
         "Click on the spectrum and use UP or DOWN keys to see subspectra." : null);
   }
 
   @Override
   public void siExecScriptComplete(String msg, boolean isOK) {
-    vwr.requestRepaint();
+    jsvViewer.requestRepaint();
     if (msg != null) {
       writeStatus(msg);
       if (msg.length() == 0)
@@ -407,17 +408,17 @@ public class JSpecView implements JSVInterface, ScriptInterface {
 
   @Override
   public JSVPanel siGetNewJSVPanel(Spectrum spec) {
-    return (spec == null ? null : AwtPanel.getPanelOne(vwr, spec));
+    return (spec == null ? null : AwtPanel.getPanelOne(jsvViewer, spec));
   }
 
   @Override
   public JSVPanel siGetNewJSVPanel2(Lst<Spectrum> specs) {
-    return AwtPanel.getPanelMany(vwr, specs);
+    return AwtPanel.getPanelMany(jsvViewer, specs);
   }
 
   @Override
   public void siExecTest(String value) {
-    System.out.println(PT.toJSON(null, vwr.getPropertyAsJavaObject(value)));
+    System.out.println(PT.toJSON(null, jsvViewer.getPropertyAsJavaObject(value)));
     //syncScript("Jmol sending to JSpecView: jmolApplet_object__5768809713073075__JSpecView: <PeakData file=\"file:/C:/jmol-dev/workspace/Jmol-documentation/script_documentation/examples-12/jspecview/acetophenone.jdx\" index=\"31\" type=\"13CNMR\" id=\"6\" title=\"carbonyl ~200\" peakShape=\"multiplet\" model=\"acetophenone\" atoms=\"1\" xMax=\"199\" xMin=\"197\"  yMax=\"10000\" yMin=\"0\" />");
   }
 
@@ -447,6 +448,7 @@ public class JSpecView implements JSVInterface, ScriptInterface {
       mainFrame.repaint();
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   public void setCursor(int id) {
     if (mainFrame != null)
@@ -460,7 +462,7 @@ public class JSpecView implements JSVInterface, ScriptInterface {
 
   @Override
   public boolean runScriptNow(String script) {
-    return vwr.runScriptNow(script);
+    return jsvViewer.runScriptNow(script);
   }
 
   @Override
@@ -473,7 +475,7 @@ public class JSpecView implements JSVInterface, ScriptInterface {
   public DisplaySchemesProcessor getDisplaySchemesProcessor(JSVInterface jmolOrAdvancedApplet) {
     // Initalize application properties with defaults
     // and load properties from file
-    Properties properties = vwr.properties = new Properties();
+    Properties properties = jsvViewer.properties = new Properties();
     // sets the list of recently opened files property to be initially empty
     properties.setProperty("recentFilePaths", "");
     properties.setProperty("confirmBeforeExit", "true");
@@ -507,12 +509,12 @@ public class JSpecView implements JSVInterface, ScriptInterface {
 
 
   public void setApplicationProperties(boolean shouldApplySpectrumDisplaySettings) {
-    Properties properties = vwr.properties;
-    vwr.interfaceOverlaid = Boolean.parseBoolean(properties
+    Properties properties = jsvViewer.properties;
+    jsvViewer.interfaceOverlaid = Boolean.parseBoolean(properties
         .getProperty("automaticallyOverlay"));
-    vwr.autoShowLegend = Boolean.parseBoolean(properties
+    jsvViewer.autoShowLegend = Boolean.parseBoolean(properties
         .getProperty("automaticallyShowLegend"));
-    AwtFileHelper fh = (AwtFileHelper) vwr.fileHelper; 
+    AwtFileHelper fh = (AwtFileHelper) jsvViewer.fileHelper; 
     fh.useDirLastOpened = Boolean.parseBoolean(properties
         .getProperty("useDirectoryLastOpenedFile"));
     fh.useDirLastExported = Boolean.parseBoolean(properties
@@ -525,13 +527,13 @@ public class JSpecView implements JSVInterface, ScriptInterface {
         .getProperty("defaultDisplaySchemeName");
 
     if (shouldApplySpectrumDisplaySettings) {
-      vwr.parameters.setBoolean(ScriptToken.GRIDON, Parameters.isTrue(properties
+      jsvViewer.parameters.setBoolean(ScriptToken.GRIDON, Parameters.isTrue(properties
           .getProperty("showGrid")));
-      vwr.parameters.setBoolean(ScriptToken.COORDINATESON, Parameters
+      jsvViewer.parameters.setBoolean(ScriptToken.COORDINATESON, Parameters
           .isTrue(properties.getProperty("showCoordinates")));
-      vwr.parameters.setBoolean(ScriptToken.XSCALEON, Parameters.isTrue(properties
+      jsvViewer.parameters.setBoolean(ScriptToken.XSCALEON, Parameters.isTrue(properties
           .getProperty("showXScale")));
-      vwr.parameters.setBoolean(ScriptToken.YSCALEON, Parameters.isTrue(properties
+      jsvViewer.parameters.setBoolean(ScriptToken.YSCALEON, Parameters.isTrue(properties
           .getProperty("showYScale")));
     }
 
@@ -539,17 +541,17 @@ public class JSpecView implements JSVInterface, ScriptInterface {
     // and update coordinates and grid CheckBoxMenuItems
 
     // Processing Properties
-    vwr.setIRmode(properties.getProperty("automaticTAConversion"));
+    jsvViewer.setIRmode(properties.getProperty("automaticTAConversion"));
     try {
-      vwr.autoIntegrate = Boolean.parseBoolean(properties
+      jsvViewer.autoIntegrate = Boolean.parseBoolean(properties
           .getProperty("automaticallyIntegrate"));
-      vwr.parameters.integralMinY = parseDoubleSafely(properties
-          .getProperty("integralMinY"), vwr.parameters.integralMinY);
-      vwr.parameters.integralRange = parseDoubleSafely(properties
-          .getProperty("integralRange"),vwr.parameters.integralRange);
-      vwr.parameters.integralOffset = parseDoubleSafely(properties
-          .getProperty("integralOffset"), vwr.parameters.integralOffset);
-      vwr.parameters.set(null, ScriptToken.INTEGRALPLOTCOLOR, properties
+      jsvViewer.parameters.integralMinY = parseDoubleSafely(properties
+          .getProperty("integralMinY"), jsvViewer.parameters.integralMinY);
+      jsvViewer.parameters.integralRange = parseDoubleSafely(properties
+          .getProperty("integralRange"),jsvViewer.parameters.integralRange);
+      jsvViewer.parameters.integralOffset = parseDoubleSafely(properties
+          .getProperty("integralOffset"), jsvViewer.parameters.integralOffset);
+      jsvViewer.parameters.set(null, ScriptToken.INTEGRALPLOTCOLOR, properties
           .getProperty("integralPlotColor"));
     } catch (Exception e) {
       System.err.println("Bad PropertyValue ");

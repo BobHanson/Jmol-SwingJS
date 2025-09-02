@@ -371,10 +371,10 @@ public class JSVApp implements PanelListener, JSVAppInterface, ScriptInterface {
 
     @SuppressWarnings("unused")
     JSVAppletObject applet = (vwr == null ? null : vwr.html5Applet);
-    if (JSViewer.jmolObject == null) {
+    if (JSViewer.jsmolObject == null) {
       appletFrame.repaint();
     } else if (applet != null) {
-      JSViewer.jmolObject.repaint(applet, true);
+      JSViewer.jsmolObject.repaint(applet, true);
     }
   }
 	

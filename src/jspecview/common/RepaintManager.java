@@ -20,7 +20,7 @@ public class RepaintManager {
     }
     repaintPending = true;
  	  JSVAppletObject applet = vwr.html5Applet;
-    JSVToJSmolInterface jmol = (JSViewer.isJS && !JSViewer.isSwingJS ? JSViewer.jmolObject : null);
+    JSVToJSmolInterface jmol = (JSViewer.isJS && !JSViewer.isSwingJS ? JSViewer.jsmolObject : null);
     if (jmol == null) {
       vwr.selectedPanel.repaint();
     } else {
