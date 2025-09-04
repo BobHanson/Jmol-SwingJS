@@ -150,7 +150,7 @@ public class JSVFileManager {
 
 	public final static int URL_LOCAL = 4;
     
-	private static final boolean newInterface = false;
+	private static final boolean newInterface = true;
 
 	public static boolean isURL(String name) {
 		for (int i = urlPrefixes.length; --i >= 0;)
@@ -243,6 +243,8 @@ public class JSVFileManager {
 	private static Map<String, String> htCorrelationCache = new Hashtable<String, String>();
 	
 	private static String cacheDir = null;//"C:/temp/cache/";
+	
+	
 	public static void cachePut(String name, String data) {
 		if (Logger.debugging)
 			Logger.debug("JSVFileManager cachePut " + data + " for " + name);
@@ -484,6 +486,7 @@ public class JSVFileManager {
 		  url = (is13C ? nmrdbServerC13Old : nmrdbServerH1Old);
 		}
 		url = url.replace("$MOLFILE", molFile);
+		cachePut("url", url);
     String json = getFileAsString(url);
 		if ((json == null ? (json = "Error: Error fetching simulation") : json).indexOf("Error:") >= 0) {
 		  return json;
