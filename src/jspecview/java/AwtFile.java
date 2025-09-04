@@ -55,7 +55,12 @@ class AwtFile extends File implements GenericFileInterface {
 			if (outputBytes != null) {
 				type = "application/octet-stream;";
 			} else if (post != null) {
+			  if (post.charAt(0) == '{') {
+			    type = "application/json";
+			    post = post.replace("\n", "\\n");
+			  } else {
 				type = "application/x-www-form-urlencoded";
+			  }
 			}
 			if (type != null) {
 				conn.setRequestProperty("Content-Type", type);
