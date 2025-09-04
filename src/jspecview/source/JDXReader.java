@@ -419,7 +419,7 @@ public class JDXReader implements JmolJDXMOLReader {
    */
   private void setVenderSpecificValues(String rawLine) {
     if (rawLine.indexOf("JEOL") >= 0) {
-      System.out.println("Skipping ##SHIFTREFERENCE for JEOL " + rawLine);
+      System.out.println("Skipping ##.SHIFTREFERENCE for JEOL " + rawLine);
       ignoreShiftReference = true;
     }
     if (rawLine.indexOf("MestReNova") >= 0) {
@@ -832,7 +832,7 @@ public class JDXReader implements JmolJDXMOLReader {
       }
       return false; // was true BH 2021.08.09
     default:
-      if (label.length() < 17 || value.indexOf(",") >= 0)
+      if (label.length() < 17 || isHeaderOnly && value.indexOf(",") >= 0)
         return !isHeaderOnly;
       if (label.equals("##.OBSERVEFREQUENCY ")) {
         spectrum.setObservedFreq(parseAFFN(label, value));
