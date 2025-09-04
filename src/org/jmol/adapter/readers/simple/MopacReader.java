@@ -58,6 +58,8 @@ public class MopacReader extends AtomSetCollectionReader {
         mopacVersion = 2002;
       else if (line.indexOf("MOPAC2") >= 0)
         mopacVersion = PT.parseInt(line.substring(line.indexOf("MOPAC2") + 5));
+      else if (line.indexOf("MOPAC v") >= 0)
+        mopacVersion = PT.parseInt(line.substring(line.indexOf("MOPAC v") + 7));
     }
     Logger.info("MOPAC version " + mopacVersion);
   }
