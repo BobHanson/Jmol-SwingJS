@@ -275,6 +275,9 @@ public class Exporter implements ExportInterface {
     	newName = newName.substring(1);
     int pt = newName.lastIndexOf(".");
     String name = (pt < 0 ? newName : newName.substring(0, pt));
+    if (name.startsWith("http:") || name.startsWith("https:")) {
+      name = name.substring(name.lastIndexOf('/') + 1);
+    }
     String ext = ".jdx";
     boolean isPrint = false;
     switch (imode) {
