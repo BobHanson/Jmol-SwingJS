@@ -68,6 +68,7 @@ public class Dipole {
   public Bond bond;
   public BS bsMolecule;
   public Lst<Object> lstDipoles;
+  public String error;
 
   final static short DIPOLE_TYPE_UNKNOWN = 0;
   final static short DIPOLE_TYPE_POINTS = 1;

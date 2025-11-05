@@ -70,6 +70,7 @@ public class Dipoles extends Shape {
   private V3d calculatedDipole;
   private String wildID;
   private short mad;  
+  private String calculationError;  
 
   @Override
   public void initShape() {
@@ -85,6 +86,7 @@ public class Dipoles extends Shape {
       tempDipole.mad = DEFAULT_MAD;
       atomIndex1 = -1;
       tempDipole.modelIndex = -1;
+      calculationError = null;
       dipoleValue = 0;
       calculatedDipole = null;
       mad = -1;
@@ -96,6 +98,8 @@ public class Dipoles extends Shape {
       try {
         calculatedDipole = vwr.calculateMolecularDipole((BS) value);
       } catch (Exception e) {
+        if (e instanceof RuntimeException)
+          calculationError = e.getMessage();
       }
       Logger.info("calculated molecular dipole = " + calculatedDipole + " "
           + (calculatedDipole == null ? "" : "" + calculatedDipole.length()));
@@ -304,7 +308,7 @@ public class Dipoles extends Shape {
     if ("set" == propertyName) {
       if (isBond || !iHaveTwoEnds && tempDipole.bsMolecule == null)
         return;
-      setDipole();
+      setDipole(calculationError);
       setModelIndex();
       return;
     }
@@ -333,10 +337,13 @@ public class Dipoles extends Shape {
       Logger.info("file molecular dipole = " + v + " "
           + (v != null ? "" + v.length() : ""));
     }
+    String err = null;
     if (v == null)
       try {
         calculatedDipole = v = vwr.calculateMolecularDipole(bsMolecule);
       } catch (Exception e) {
+        if (e instanceof RuntimeException)
+          err = e.getMessage();
       }
     if (v == null) {
       Logger
@@ -351,7 +358,7 @@ public class Dipoles extends Shape {
     tempDipole.type = Dipole.DIPOLE_TYPE_MOLECULAR;
     if (currentDipole == null || currentDipole.thisID == null || bsMolecule == null)
       tempDipole.thisID = "molecular";
-    setDipole();
+    setDipole(err);
   }
 
   private void getAllMolecularDipoles(BS bsAtoms) {
@@ -491,12 +498,13 @@ public class Dipoles extends Shape {
     }
   }
 
-  private void setDipole() {
+  private void setDipole(String err) {
     if (currentDipole == null)
       currentDipole = allocDipole("", "");
     currentDipole.set(tempDipole);
     currentDipole.isUserValue = isUserValue;
     currentDipole.modelIndex = vwr.am.cmi;
+    currentDipole.error = err;
   }
 
   final private static double E_ANG_PER_DEBYE = 0.208194d;

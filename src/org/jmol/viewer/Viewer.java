@@ -8223,6 +8223,12 @@ public class Viewer extends JmolViewer
     return ms.getModelDipole(am.cmi);
   }
 
+  /**
+   * 
+   * @param bsAtoms
+   * @return dipole vector
+   * @throws Exception 
+   */
   public V3d calculateMolecularDipole(BS bsAtoms) throws Exception {
     try {
       return ms.calculateMolecularDipole(am.cmi, bsAtoms);
@@ -8230,6 +8236,8 @@ public class Viewer extends JmolViewer
       if (eval != null)
         eval.loadFileResourceAsync(e.getFileName());
       return null;
+    } catch (RuntimeException er) {
+      throw er;
     }
   }
 

@@ -1,10 +1,8 @@
 package org.jmol.adapter.readers.pymol;
 
-import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
-//import java.math.BigInteger;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -161,7 +159,7 @@ private final static byte LONG = 76; /* L */
           dump("append", o);
         Lst<Object> lst = (Lst<Object>) peek();
         lst.addLast(o);
-        if (lst.size() < 10)
+        if (writer != null && lst.size() < 10)
           dump("appended to " + lst);
         break;
       case APPENDS:
@@ -548,6 +546,8 @@ private final static byte LONG = 76; /* L */
   }
 
   private void dump(String key, Object o) {
+    if (writer == null)
+      return;
     String s = null;
     if (o == null) {
       s = "null";
@@ -582,6 +582,8 @@ private final static byte LONG = 76; /* L */
   }
 
   private void dump(String string) {
+    if (writer == null)
+      return;
     try {
       writer.write(binaryDoc.getPosition() + "\t");
       writer.write(string + "\n"); 

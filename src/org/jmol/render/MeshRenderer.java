@@ -200,9 +200,9 @@ public abstract class MeshRenderer extends ShapeRenderer {
     isTranslucentInherit = (isGhostPass && C.getColixTranslucent3(mesh.slabColix, false, 0)== C.INHERIT_COLOR);
     isTranslucent = isGhostPass
         || C.renderPass2(mesh.colix);
-    if (isTranslucent || volumeRender || mesh.bsSlabGhost != null)
+    if (isTranslucent || volumeRender || mesh.bsSlabGhost != null || mesh.hasTranslucentVertices)
       needTranslucent = true;
-    doRender = (setColix(mesh.colix) || mesh.showContourLines);
+    doRender = (mesh.hasTranslucentVertices || setColix(mesh.colix) || mesh.showContourLines);
     if (!doRender || isGhostPass && !(doRender = g3d.setC(mesh.slabColix))) {
       vertices = mesh.vs;
       if (needTranslucent)
@@ -276,7 +276,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
   }
   
   protected void render2b(boolean generateSet) {
-    if (!g3d.setC(isGhostPass ? mesh.slabColix : colix))
+    if (!mesh.hasTranslucentVertices && !g3d.setC(isGhostPass ? mesh.slabColix : colix))
       return;
     if (renderLow || mesh.showPoints || mesh.pc <= 0)
       renderPoints(); 

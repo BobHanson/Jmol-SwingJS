@@ -78,24 +78,23 @@ public class XmlReader {
    */
   public String getXmlData(String name, String data, boolean withTag, boolean allowSelfCloseOption)
       throws Exception {
-    return getXmlDataLF(name, data, withTag, allowSelfCloseOption, false);
+    return getXmlDataLF(name, data, withTag, allowSelfCloseOption, false, null);
   }
-  public String getXmlDataLF(String name, String data, boolean withTag, boolean allowSelfCloseOption, boolean addLF)
+  
+  public String getXmlDataLF(String name, String data, boolean withTag, boolean allowSelfCloseOption, boolean addLF, int[] ptr)
       throws Exception {
     // crude
     String closer = "</" + name + ">";
     String tag = "<" + name;
     if (data == null) {
       SB sb = new SB();
-      try {
-        if (line == null)
-          line = br.readLine();
-        while (line.indexOf(tag) < 0) {
-          line = br.readLine();
-        }
-      } catch (Exception e) {
-        return null;
+      if (line == null)
+        line = br.readLine();
+      while (line != null && line.indexOf(tag) < 0) {
+        line = br.readLine();
       }
+      if (line == null)
+        return null;
       sb.append(line);
       if (addLF)
         sb.append("\n");
@@ -111,15 +110,17 @@ public class XmlReader {
       }
       data = sb.toString();
     }
-    return extractTag(data, tag, closer, withTag);
+    return extractTag(data, tag, closer, withTag, ptr);
   }
 
   public static String extractTagOnly(String data, String tag) {
-    return extractTag(data, "<" + tag + ">", "</" + tag  + ">", false);
+    return extractTag(data, "<" + tag + ">", "</" + tag  + ">", false, null);
   }
   
-  private static String extractTag(String data, String tag, String closer, boolean withTag) {
-    int pt1 = data.indexOf(tag);
+  private static String extractTag(String data, String tag, String closer, boolean withTag, int[] ptr) {
+    int pt1 = data.indexOf(tag, ptr == null  ? 0 : ptr[0]);
+    if (ptr != null)
+      ptr[0] = data.length();
     if (pt1 < 0)
       return "";
     int pt2 = data.indexOf(closer, pt1);
@@ -127,10 +128,13 @@ public class XmlReader {
       pt2 = data.indexOf("/>", pt1);
       closer = "/>";
     }
-    if (pt2 < 0)
+    if (pt2 < 0) {
       return "";
+    }
     if (withTag) {
       pt2 += closer.length();
+      if (ptr != null)
+       ptr[0] = pt2;
       return data.substring(pt1, pt2);
     }
     boolean quoted = false;
@@ -147,6 +151,8 @@ public class XmlReader {
       return "";
     while (PT.isWhitespace(data.charAt(++pt1))) {
     }
+    if (ptr != null)
+      ptr[0] = pt2;
     return unwrapCdata(data.substring(pt1, pt2));
   }
 

@@ -26,7 +26,6 @@ package org.jmol.shape;
 
 
 import java.util.Hashtable;
-import java.util.Map;
 
 import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
@@ -80,8 +79,7 @@ public class Mesh extends MeshSurface {
   public double width;
   public P3d ptCenter;
   public Mesh linkedMesh; //for lcaoOrbitals
-  public Map<String, BS> vertexColorMap;
-  
+
   public V3d vAB, vTemp;
 
   public int color;
@@ -282,7 +280,9 @@ public class Mesh extends MeshSurface {
 
   public short[] symopColixes;
 
-  public String scriptVariables;
+// BH 2025.11.02 no references?  public String scriptVariables;
+
+  public boolean hasTranslucentVertices;
 
   protected void sumVertexNormals(T3d[] vertices, V3d[] normals) {
     // subclassed in IsosurfaceMesh

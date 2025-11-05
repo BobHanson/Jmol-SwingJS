@@ -91,8 +91,8 @@ class SymmetryInfo {
   double[] setSymmetryInfoFromFile(Map<String, Object> modelInfo,
                                    double[] unitCellParams) {
     // from ModelAdapter only
-    spaceGroupIndex = ((Integer) modelInfo.remove(JC.INFO_SPACE_GROUP_INDEX))
-        .intValue();
+    Integer index = (Integer) modelInfo.remove(JC.INFO_SPACE_GROUP_INDEX);
+    spaceGroupIndex = (index == null ? 0 : index.intValue());
     //we need to be passing the unit cell that matches the symmetry
     //in the file -- primitive or otherwise -- 
     //then convert it here to the right multiple.

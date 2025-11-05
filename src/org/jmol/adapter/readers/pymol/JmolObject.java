@@ -235,7 +235,7 @@ class JmolObject {
     switch (shape) {
     case JC.SHAPE_CGO:
       Map<String, Object> map = new Hashtable<>();
-      map.put("mesh_width", Double.valueOf(pymolScene.getDefaultDouble(PyMOL.mesh_width)));
+      map.put("mesh_width", Double.valueOf(pymolScene.getDoubleOrDefault(PyMOL.mesh_width)));
       map.put("info", info);
       sm.vwr.setCGO(map);
       break;
@@ -249,7 +249,7 @@ class JmolObject {
     case JC.SHAPE_ISOSURFACE:
       if (info instanceof Object[]) {
         sm.loadShape(shape);
-        sm.setShapePropertyBs(shape, "params", info, bsAtoms);
+        sm.setShapePropertyBs(shape, "pymolparams", info, bsAtoms);
       }
       break;
     case JC.SHAPE_MEASURES:

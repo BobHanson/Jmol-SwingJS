@@ -412,6 +412,7 @@ public class IsosurfaceRenderer extends MeshRenderer {
     hasColorRange = !colorSolid && !isBicolorMap;
     int diam = getDiameter();
     int i0 = 0;
+    boolean checkTranslucent = mesh.hasTranslucentVertices;
     for (int i = mesh.pc; --i >= i0;) {
       int[] polygon = polygonIndexes[i];
       if (polygon == null || selectedPolyOnly && !bsPolygons.get(i))
@@ -447,6 +448,12 @@ public class IsosurfaceRenderer extends MeshRenderer {
         colixA = vertexColixes[iA];
         colixB = vertexColixes[iB];
         colixC = vertexColixes[iC];
+        if (checkTranslucent) {
+          int ok = (g3d.setC(colixA) ? 1 : 0)
+              + (g3d.setC(colixB) ? 2 : 0);
+          if (ok == 0 || ok != 3 && !g3d.setC(colixC))
+            continue;
+        }
         if (isBicolorMap) {
           if (colixA != colixB || colixB != colixC)
             continue;

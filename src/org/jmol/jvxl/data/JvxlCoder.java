@@ -88,37 +88,39 @@ public class JvxlCoder {
    * @param nSurfaces
    * @param state
    * @param comment
-   * @return JVXL file XML 
+   * @return JVXL file XML
    */
   public static String jvxlGetFile(JvxlData jvxlData, MeshData meshData,
                                    String[] title, String msg,
                                    boolean includeHeader, int nSurfaces,
                                    String state, String comment) {
-    
+
     SB data = new SB();
     if ("TRAILERONLY".equals(msg)) {
       XmlUtil.closeTag(data, "jvxlSurfaceSet");
       XmlUtil.closeTag(data, "jvxl");
       return data.toString();
     }
-    
+
     boolean vertexDataOnly = (meshData != null);
     boolean isHeaderOnly = ("HEADERONLY".equals(msg));
     if (includeHeader) {
       XmlUtil.openDocument(data);
-      XmlUtil.openTagAttr(data, "jvxl", new String[] {
-          "version", JVXL_VERSION_XML,
-          "jmolVersion", jvxlData.version,
-          "xmlns", "http://jmol.org/jvxl_schema",
-          "xmlns:cml", "http://www.xml-cml.org/schema" });
-      XmlUtil.appendCdata(data, "jvxlFileTitle", null, jvxlData.jvxlFileTitle == null ? "\n" : "\n" + jvxlData.jvxlFileTitle);
+      XmlUtil.openTagAttr(data, "jvxl",
+          new String[] { "version", JVXL_VERSION_XML, "jmolVersion",
+              jvxlData.version, "xmlns", "http://jmol.org/jvxl_schema",
+              "xmlns:cml", "http://www.xml-cml.org/schema" });
+      XmlUtil.appendCdata(data, "jvxlFileTitle", null,
+          jvxlData.jvxlFileTitle == null ? "\n"
+              : "\n" + jvxlData.jvxlFileTitle);
       if (jvxlData.moleculeXml != null)
         data.append(jvxlData.moleculeXml);
-      String volumeDataXml = (vertexDataOnly ? null : jvxlData.jvxlVolumeDataXml);
+      String volumeDataXml = (vertexDataOnly ? null
+          : jvxlData.jvxlVolumeDataXml);
       if (volumeDataXml == null)
         volumeDataXml = (new VolumeData()).setVolumetricXml();
       data.append(volumeDataXml);
-      XmlUtil.openTagAttr(data,"jvxlSurfaceSet", 
+      XmlUtil.openTagAttr(data, "jvxlSurfaceSet",
           new String[] { "count", "" + (nSurfaces > 0 ? nSurfaces : 1) });
       if (isHeaderOnly)
         return data.toString();
@@ -142,30 +144,39 @@ public class JvxlCoder {
       XmlUtil.appendCdata(data, "jvxlSurfaceTitle", null, sb.toString());
     }
     sb = new SB();
-    
-    XmlUtil.openTagAttr(sb, "jvxlSurfaceData", (vertexDataOnly || jvxlData.jvxlPlane == null ? null :
-      jvxlData.mapLattice == null ? new String[] { "plane", Escape.eP4(jvxlData.jvxlPlane) }
-      :  new String[] { "plane", Escape.eP4(jvxlData.jvxlPlane),  "maplattice", Escape.eP(jvxlData.mapLattice)  }));
+
+    XmlUtil.openTagAttr(sb, "jvxlSurfaceData",
+        (vertexDataOnly || jvxlData.jvxlPlane == null ? null
+            : jvxlData.mapLattice == null
+                ? new String[] { "plane", Escape.eP4(jvxlData.jvxlPlane) }
+                : new String[] { "plane", Escape.eP4(jvxlData.jvxlPlane),
+                    "maplattice", Escape.eP(jvxlData.mapLattice) }));
     if (vertexDataOnly) {
       appendXmlVertexOnlyData(sb, jvxlData, meshData, true);
     } else if (jvxlData.jvxlPlane == null) {
       if (jvxlData.jvxlEdgeData == null)
         return "";
       appendXmlEdgeData(sb, jvxlData);
-      appendXmlColorData(sb, jvxlData.jvxlColorData,
-          true, jvxlData.isJvxlPrecisionColor, jvxlData.valueMappedToRed,
+      appendXmlColorData(sb, jvxlData.jvxlColorData, true,
+          jvxlData.isJvxlPrecisionColor, jvxlData.valueMappedToRed,
           jvxlData.valueMappedToBlue);
     } else {
-      appendXmlColorData(sb, jvxlData.jvxlColorData,
-          true, jvxlData.isJvxlPrecisionColor, jvxlData.valueMappedToRed,
+      appendXmlColorData(sb, jvxlData.jvxlColorData, true,
+          jvxlData.isJvxlPrecisionColor, jvxlData.valueMappedToRed,
           jvxlData.valueMappedToBlue);
     }
-    appendEncodedBitSetTag(sb, "jvxlInvalidatedVertexData", jvxlData.jvxlExcluded[1], -1, null);
-    if (jvxlData.excludedVertexCount > 0) {
-      appendEncodedBitSetTag(sb, "jvxlExcludedVertexData", jvxlData.jvxlExcluded[0], jvxlData.excludedVertexCount, null);
-      appendEncodedBitSetTag(sb, "jvxlExcludedPlaneData", jvxlData.jvxlExcluded[2], -1, null);
+    if (!vertexDataOnly) {
+      appendEncodedBitSetTag(sb, "jvxlInvalidatedVertexData",
+          jvxlData.jvxlExcluded[1], -1, null);
+      if (jvxlData.excludedVertexCount > 0) {
+        appendEncodedBitSetTag(sb, "jvxlExcludedVertexData",
+            jvxlData.jvxlExcluded[0], jvxlData.excludedVertexCount, null);
+        appendEncodedBitSetTag(sb, "jvxlExcludedPlaneData",
+            jvxlData.jvxlExcluded[2], -1, null);
+      }
     }
-    appendEncodedBitSetTag(sb, "jvxlExcludedTriangleData", jvxlData.jvxlExcluded[3], jvxlData.excludedTriangleCount, null);
+    appendEncodedBitSetTag(sb, "jvxlExcludedTriangleData",
+        jvxlData.jvxlExcluded[3], jvxlData.excludedTriangleCount, null);
     XmlUtil.closeTag(sb, "jvxlSurfaceData");
     int len = sb.length();
     data.appendSB(sb);
@@ -176,9 +187,12 @@ public class JvxlCoder {
       if (jvxlData.baseColor == null)
         XmlUtil.openTag(data, "jvxlVertexColorData");
       else
-        XmlUtil.openTagAttr(data, "jvxlVertexColorData", new String[] {"baseColor", jvxlData.baseColor});
-      for (Map.Entry<String, BS> entry : jvxlData.vertexColorMap.entrySet())
-        appendEncodedBitSetTag(data, "jvxlColorMap", entry.getValue(), -1, new Object[] { "color", entry.getKey() });
+        XmlUtil.openTagAttr(data, "jvxlVertexColorData",
+            new String[] { "baseColor", jvxlData.baseColor });
+      for (Map.Entry<String, BS> entry : jvxlData.vertexColorMap.entrySet()) {
+        appendEncodedBitSetTag(data, "jvxlColorMap", entry.getValue(), -1,
+            new Object[] { "color", entry.getKey() });
+      }
       jvxlData.vertexColorMap = null;
       XmlUtil.closeTag(data, "jvxlVertexColorData");
     }
@@ -235,6 +249,9 @@ public class JvxlCoder {
         state = PT.split(state, "** XML **")[1].trim(); 
         XmlUtil.appendTag(data, "jvxlIsosurfaceState",  "\n" + state + "\n");
       } else {
+        int pt = state.indexOf("color isosurface [{");
+        if (pt >= 0)
+          state = state.substring(0, pt);
         XmlUtil.appendCdata(data, "jvxlIsosurfaceState", null, "\n" + state);
       }
     }
@@ -399,7 +416,7 @@ public class JvxlCoder {
               + (jvxlData.nPointsX - 1) + ")");
     addAttrib(attribs, "\n  xyzMin", Escape.eP(jvxlData.boundingBox[0]));
     addAttrib(attribs, "\n  xyzMax", Escape.eP(jvxlData.boundingBox[1]));
-    addAttrib(attribs, "\n  approximateCompressionRatio", "not calculated");
+    //addAttrib(attribs, "\n  approximateCompressionRatio", "not calculated");
     addAttrib(attribs, "\n  jmolVersion", jvxlData.version);
     
     SB info = new SB();

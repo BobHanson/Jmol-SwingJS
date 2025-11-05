@@ -187,11 +187,12 @@ public abstract class MeshCollection extends Shape {
       return;
     }
 
-    if ("variables" == propertyName) {
-      if (currentMesh != null && currentMesh.scriptCommand != null && !currentMesh.scriptCommand.startsWith("{"))
-        currentMesh.scriptVariables = StateManager.getVariableList((Map<String, SV>) value, 0, false, false) + "\n";// + currentMesh.scriptCommand;
-      return;
-    }
+// BH 2025.11.02 no references?
+//    if ("variables" == propertyName) {
+//      if (currentMesh != null && currentMesh.scriptCommand != null && !currentMesh.scriptCommand.startsWith("{"))
+//        currentMesh.scriptVariables = StateManager.getVariableList((Map<String, SV>) value, 0, false, false) + "\n";// + currentMesh.scriptCommand;
+//      return;
+//    }
 
     if ("thisID" == propertyName) {
       String id = (String) value;

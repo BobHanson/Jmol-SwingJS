@@ -8850,6 +8850,11 @@ public class ScriptEval extends ScriptExpr {
     if (isBackground)
       prefix = "bg";
     else if (isIsosurface) {
+      boolean isVertices = false;
+      if (theTok == T.vertices) {
+        getToken(++index);
+        isVertices = true;
+      }
       switch (theTok) {
       case T.mesh:
         getToken(++index);
@@ -8865,6 +8870,9 @@ public class ScriptEval extends ScriptExpr {
       case T.expressionBegin:
         if (theToken.value instanceof BondSet) {
           bs = (BondSet) theToken.value;
+          prefix = "vertex";
+        } else if (isVertices && theToken.value instanceof BS) {
+          bs = (BS) theToken.value;
           prefix = "vertex";
         } else {
           bs = atomExpressionAt(index);
@@ -9105,10 +9113,12 @@ public class ScriptEval extends ScriptExpr {
             colorvalue });
       else if (bs == null)
         setShapeProperty(shapeType, prefix + "color", colorvalue);
+      else if (prefix == "vertex")
+        setShapePropertyBs(shapeType, "vertexcolor", new Object[] { colorvalue, Double.valueOf(translucentLevel)}, bs);
       else
         setShapePropertyBs(shapeType, prefix + "color", colorvalue, bs);
     }
-    if (translucency != null)
+    if (translucency != null && prefix != "vertex")
       setShapeTranslucency(shapeType, prefix, translucency, translucentLevel,
           bs);
     if (isScale)

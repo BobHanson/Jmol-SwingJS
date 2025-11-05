@@ -318,7 +318,7 @@ public class Ellipsoids extends AtomShape {
       return;
     }
 
-    if ("params" == propertyName) {
+    if ("pymolparams" == propertyName) {
       Object[] data = (Object[]) value;
       data[2] = null;// Jmol does not allow setting sizes this way from PyMOL yet
       typeSelected = "0";

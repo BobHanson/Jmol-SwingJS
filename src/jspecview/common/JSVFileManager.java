@@ -535,6 +535,8 @@ public class JSVFileManager {
       jcamp = (String) map.get("jcamp");
       jcamp = hackNewNmriumSimulationJCAMP(jcamp);
       Lst<Object> signals = (Lst<Object>) map.get("signals");
+      String bf1 = getval(jcamp, "##$BF1");
+      double freq = (bf1 == null ? (is13C ? 100 : 400) : Double.parseDouble(bf1));
       SB sb = new SB();
 //    <Signal type="13C" atoms="5" multiplicity="" xMin="24.08991" xMax="24.11009" integral="1" ></Signal>
       for (int i = signals.size(); --i >= 0;) {
@@ -551,7 +553,6 @@ public class JSVFileManager {
         }
         setAttr(sb, "multiplicity", "multiplicity", signal);
         Number delta = (Number) signal.get("delta");
-        double freq = 400; // for now only
         double[] minmax = getSignalMinMax(signal, delta.doubleValue(), freq, is13C);
         setAttr(sb, "xMin", "" + minmax[0], null);
         setAttr(sb, "xMax", "" + minmax[1], null);
@@ -705,9 +706,8 @@ public class JSVFileManager {
     // ##.SHIFT REFERENCE=INTERNAL, undefined, 1, -10
 
     String shift = getline(jcamp, "##.SHIFT REFERENCE=INTERNAL");
-    String offset = getline(jcamp, "##$OFFSET");
+    String offset = getval(jcamp, "##$OFFSET");
     if (shift != null && offset != null) {
-      offset = offset.substring(offset.indexOf("=") + 1).trim();
       shift = shift.substring(0, shift.lastIndexOf(", ") + 2) + offset;
       jcamp = setline(jcamp, "##$OFFSET", null);
       jcamp = setline(jcamp, "##.SHIFT REFERENCE=INTERNAL", shift);
@@ -722,6 +722,17 @@ public class JSVFileManager {
     return jcamp.substring(pt, jcamp.indexOf("\n", pt));
   }
 
+  private static String getval(String jcamp, String record) {
+    int pt = jcamp.indexOf(record);
+    if (pt < 0)
+      return null;
+    String val = jcamp.substring(jcamp.indexOf("=", pt) + 1, jcamp.indexOf("\n", pt));
+    pt = val.indexOf("$$");
+    if (pt >= 0)
+      val = val.substring(pt);
+    return val.trim();
+  }
+  
   private static String setline(String jcamp, String record, String replacement) {
     int pt = jcamp.indexOf(record);
     if (pt < 0)

@@ -671,7 +671,7 @@ public class CmdExt extends ScriptExt {
         SymmetryInterface unitCell = vwr.getCurrentUnitCell();
         if (unitCell != null) {
           oabc = BoxInfo.toOABC(
-        		  unitCell.getUnitCellVerticesNoOffset(),
+              unitCell.getUnitCellVerticesNoOffset(),
                   unitCell.getCartesianOffset());
           break;
         }
@@ -4209,6 +4209,10 @@ public class CmdExt extends ScriptExt {
     switch (tok) {
     case T.nada:
       break;
+    case T.varray:
+    case T.hash:
+      type = "VAR";
+      break;
     case T.quaternion:
     case T.ramachandran:
     case T.property:
@@ -4244,16 +4248,25 @@ public class CmdExt extends ScriptExt {
     int width = -1;
     int height = -1;
     boolean isExport = false;
+    boolean asJSON = false;
     String fileName = null;
     int quality = Integer.MIN_VALUE;
 
     // accept write ...... AS type
 
     if (tok != T.nada && isCommand && slen > 1 && tokAt(slen - 2) == T.as) {
-      type = paramAsStr(slen - 1).toUpperCase();
-      pt0 = argCount;
+      String p = paramAsStr(slen - 1).toUpperCase();
+      if (p.equals("JSON")) {
+        asJSON = true;
+        argCount -= 2;
+      }
+      if (asJSON && type.equals("VAR")) {
+      } else {
+        type = p;
+        pt0 = argCount;
+        tok = T.nada;
+      }
       argCount -= 2;
-      tok = T.nada;
     }
 
     // check type
@@ -4261,7 +4274,7 @@ public class CmdExt extends ScriptExt {
     switch (tok) {
     case T.nada:
       break;
-    case T.barray:
+    case T.varray:
     case T.hash:
       type = "VAR";
       tVar = (SV) tokenAt(pt++, args);
@@ -4425,7 +4438,7 @@ public class CmdExt extends ScriptExt {
         }
         if (tokAtArray(pt + 1, args) == T.integer)
           quality = SV.iValue(tokenAt(++pt, args));
-      } else if (PT.isOneOf(val.toLowerCase(),
+      } else if (!"VAR".equals(type) && PT.isOneOf(val.toLowerCase(),
           ";xyz;xyzrn;xyzvib;mol;mol67;sdf;v2000;v3000;json;pdb;pqr;cml;cif;scif;cifp1;pwmat;pwslab;qcjson;xsf;")) {
         // this still could be overruled by a type indicated
         type = val.toUpperCase();
@@ -4453,14 +4466,8 @@ public class CmdExt extends ScriptExt {
       // type may be defined already, but that could be from a file name extension
       // here we override that
       // write PDB "xxx.pdb"
-      SV.sValue(tokenAt(++pt, args));
-      //System.out.println(val);
-      //    if (s.length() > 0 && s.charAt(0) != '.') {
-      //      if (val == null) {
-      //System.out.println("??");
-      //        type = val.toUpperCase();
-      //      }
-      //    }
+      ++pt;
+      //SV.sValue(tokenAt(++pt, args));
     }
 
     // set the file name
@@ -4477,17 +4484,14 @@ public class CmdExt extends ScriptExt {
       fileName = (type.equals("IMAGE") ? "?jmol.png"
           : "?jmol." + type.toLowerCase());
       break;
+    case T.hash:
+    case T.varray:
+      break;
     case T.identifier:
     case T.string:
       fileName = SV.sValue(tokenAt(pt, args));
       if (fileName.equalsIgnoreCase("clipboard") || !vwr.haveAccess(ACCESS.ALL))
         fileName = null;
-      //      else if (isCommand && argCount != slen 
-      //          && (tokAt(pt + 1) == T.per || tokAt(pt + 1) == T.colon)) {
-      //        fileName = "";
-      //        while (pt < argCount)
-      //          fileName += SV.sValue(tokenAt(pt++, args));
-      //      }
       break;
     default:
       invArg();
@@ -4495,70 +4499,89 @@ public class CmdExt extends ScriptExt {
 
     // adjust the type from the filename and set whether this is an export
 
-    if (type.equals("IMAGE") || type.equals("FRAME")
-        || type.equals("VIBRATION")) {
-      type = (fileName != null && fileName.indexOf(".") >= 0
-          ? fileName.substring(fileName.lastIndexOf(".") + 1).toUpperCase()
-          : "JPG");
+    switch (type) {
+    case "IMAGE":
+    case "FRAME":
+    case "VIBRATION":
+      type = getWriteType(fileName, "JPG");
       // Introduced in 14.3.9_2014.11.23; removed 14.3.12_2015.02.24
       // This was a bad idea; changing the file name automatically is not appropriate -- that is what AS is for
       // if (PT.isOneOf(type, ";PNGJ;PNGT;GIFT;"))
       //   fileName = fileName.substring(0, fileName.length() - 1);
-    }
-
-    if (type.equals("ISOSURFACE") || type.equals("CONTACT") || type.equals("PLB")) {
-      isContact = type.equals("CONTACT");
-      if (!type.equals("PLB"))
-        type = (fileName != null && fileName.indexOf(".") >= 0
-          ? fileName.substring(fileName.lastIndexOf(".") + 1).toUpperCase()
-          : "JVXL");
-      if (type.equals("PMESH"))
+      break;
+    case "CONTACT":
+      isContact = true;
+      //$FALL-THROUGH$
+    case "ISOSURFACE":
+      type = getWriteType(fileName, "JVXL");
+      //$FALL-THROUGH$
+    case "PLB":
+      switch (type) {
+      case "PMESH":
         type = "ISOMESH";
-      else if (type.equals("PMB"))
+        break;
+      case "PMB":
         type = "ISOMESHBIN";
-      if (type.equals("PLY"))
+        break;
+      case "PLY":
         type = "ISOPLY";
-      else if (type.equals("PLB"))
+        break;
+      case "PLB":
         type = "ISOPLYBIN";
+        break;
+      }
+      break;
     }
     boolean isImage = PT.isOneOf(type.toLowerCase(), JC.IMAGE_OR_SCENE);
     if (!isImage) {
-      if (type.equals("MNU")) {
+      switch (type) {
+      case "MNU":
         type = "MENU";
-      } else if (type.equals("WRL") || type.equals("VRML")) {
+        break;
+      case "WRL":
+      case "VRML":
         type = "Vrml";
         isExport = true;
-      } else if (type.equals("X3D")) {
+        break;
+      case "X3D":
         type = "X3d";
         isExport = true;
-      } else if (type.equals("STL")) {
+        break;
+      case "STL":
         type = "Stl";
         isExport = true;
-      } else if (type.equals("IDTF")) {
+        break;
+      case "IDTF":
         type = "Idtf";
         isExport = true;
-      } else if (type.equals("MA")) {
+        break;
+      case "MA":
         type = "Maya";
         isExport = true;
-      } else if (type.equals("JS")) {
+        break;
+      case "JS":
         type = "Js";
         isExport = true;
-      } else if (type.equals("OBJ")) {
+        break;
+      case "OBJ":
         type = "Obj";
         isExport = true;
-      } else if (type.equals("JVXL")) {
+        break;
+      case "JVXL":
+      case "XJVXL":
         type = "ISOSURFACE";
-      } else if (type.equals("XJVXL")) {
-        type = "ISOSURFACE";
-      } else if (type.equals("JMOL")) {
+        break;
+      case "JMOL":
         type = "ZIPALL";
-      } else if (type.equals("HIS")) {
+        break;
+      case "HIS":
         type = "HISTORY";
+        break;
+      case "COORD":
+      case "COORDS":
+        type = getWriteType(fileName, "XYZ");
+        break;
       }
-      if (type.equals("COORD") || type.equals("COORDS"))
-        type = (fileName != null && fileName.indexOf(".") >= 0
-            ? fileName.substring(fileName.lastIndexOf(".") + 1).toUpperCase()
-            : "XYZ");
     }
     if (scripts != null) {
       if (!FileManager.isJmolType(type))
@@ -4633,77 +4656,82 @@ public class CmdExt extends ScriptExt {
 
     Object bytes = null;
     boolean writeFileData = false;
+    //    int len = 0;
     if (data == null) {
-      int len = 0;
       data = type.intern();
-      if (data == "MENU") {
+      switch (data) {
+      case "MENU":
         data = vwr.getMenu("");
-      } else if (data == "PGRP") {
-        data = vwr.ms.getPointGroupAsString(vwr.bsA(), null, 0, 1, null,
-            null, type2.equals("draw") ? "" : null);
-      } else if (data == "PDB" || data == "PQR") {
+        break;
+      case "PGRP":
+        data = vwr.ms.getPointGroupAsString(vwr.bsA(), null, 0, 1, null, null,
+            type2.equals("draw") ? "" : null);
+        break;
+      case "PDB":
+      case "PQR":
         if (showOnly) {
           data = vwr.getPdbAtomData(null, null, (data == "PQR"), isCoord);
         } else {
           writeFileData = true;
           type = "PDB_" + data + "-coord " + isCoord;
         }
-      } else if (data == "FILE") {
+        break;
+      case "FILE":
         if ("?".equals(fileName))
           fileName = "?Jmol." + vwr.getP("_fileType");
         if (showOnly)
           data = e.getCurrentModelFileAsString(null);
         else
           writeFileData = true;
-      } else if (PT.isOneOf(data,
-          ";CIF;SCIF;CIFP1;SDF;MOL;MOL67;V2000;V3000;CD;JSON;XYZ;XYZRN;XYZVIB;CML;QCJSON;PWMAT;PWSLAB;XSF;")) {
-        BS selected = vwr.bsA(), bsModel;
-        // mechanism to pass information back from writer, changing the number of atoms written
-        vwr.setErrorMessage(null, " (" + selected.cardinality() + " atoms)");
-        data = vwr.getModelExtract(selected, isCoord, false, data);
-        msg = vwr.getErrorMessageUn();
-        vwr.setErrorMessage(null, null);
-        if (vwr.am.cmi >= 0 && !selected
-            .equals(bsModel = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi)))
-          msg += "\nNote! Selected atom set " + selected
-              + " is not the same as the current model " + bsModel;
-        if (data.startsWith("ERROR:"))
-          bytes = data;
-      } else if (data == "CFI") {
+        break;
+      case "CFI":
         data = vwr.getModelFileData("selected", "cfi", false);
-      } else if (data == "FUNCTION") {
+        break;
+      case "FUNCTION":
         data = vwr.getFunctionCalls(null);
         type = "TXT";
-      } else if (data == "VAR") {
+        break;
+      case "VAR":
         if (tVar == null) {
-          tVar = (SV) eval.getParameter(
-              SV.sValue(tokenAt(isCommand ? 2 : 1, args)), T.variable, true);
-        }
-        Lst<Object> v = null;
-        if (tVar.tok == T.barray) {
-          v = new Lst<Object>();
-          v.addLast(((BArray) tVar.value).data);
-        } else if (tVar.tok == T.hash) {
-          v = (fileName == null ? new Lst<Object>()
-              : prepareBinaryOutput(tVar));
-        }
-        if (v == null) {
-          //          if (bytes == null) {
-          data = tVar.asString();
-          type = "TXT";
-          //          }
-        } else {
-          if (fileName != null) {
-            params = new Hashtable<String, Object>();
-            params.put("data", v);
-            if ((bytes = data = (String) vwr.createZip(fileName,
-                v.size() == 1 || fileName.endsWith(".png")
-                    || fileName.endsWith(".pngj") ? "BINARY" : "ZIPDATA",
-                params)) == null)
-              eval.evalError("#CANCELED#", null);
+          T vtoken = tokenAt(isCommand ? 2 : 1, args);
+          switch (vtoken.tok) {
+          case T.varray:
+          case T.hash:
+            break;
+          default:
+            tVar = (SV) eval.getParameter(SV.sValue(vtoken), T.variable, true);
+            break;
           }
         }
-      } else if (data == "SPT") {
+        if (fileName != null && fileName.endsWith(".json"))
+          asJSON = true;
+        Lst<Object> v = null;
+        switch (tVar.tok) {
+        case T.varray:
+          break;
+        case T.barray:
+          v = new Lst<Object>();
+          v.addLast(((BArray) tVar.value).data);
+          break;
+        case T.hash:
+          v = (fileName == null ? null : prepareBinaryOutput(tVar));
+          break;
+        }
+        if (v == null) {
+          // noting that asString() does not include commas in arrays or hashes and does not escape strings
+          data = (asJSON ? tVar.toJSON() : tVar.asString());
+          type = "TXT";
+        } else if (fileName != null) {
+          params = new Hashtable<String, Object>();
+          params.put("data", v);
+          if ((bytes = data = (String) vwr.createZip(fileName,
+              v.size() == 1 || fileName.endsWith(".png")
+                  || fileName.endsWith(".pngj") ? "BINARY" : "ZIPDATA",
+              params)) == null)
+            eval.evalError("#CANCELED#", null);
+        }
+        break;
+      case "SPT":
         if (isCoord) {
           BS tainted = vwr.ms.getTaintedAtoms(AtomCollection.TAINT_COORD);
           vwr.setAtomCoordsRelative(P3d.new3(0, 0, 0), null);
@@ -4715,7 +4743,9 @@ public class CmdExt extends ScriptExt {
             data = FileManager.setScriptFileReferences(data, localPath,
                 remotePath, null);
         }
-      } else if (data == "ZIP" || data == "ZIPALL") {
+        break;
+      case "ZIP":
+      case "ZIPALL":
         if (fileName != null) {
           params = new Hashtable<String, Object>();
           if (scripts != null)
@@ -4724,37 +4754,48 @@ public class CmdExt extends ScriptExt {
               params)) == null)
             eval.evalError("#CANCELED#", null);
         }
-      } else if (data == "HISTORY") {
+        break;
+      case "HISTORY":
         data = vwr.getSetHistory(Integer.MAX_VALUE);
         type = "SPT";
-      } else if (data == "MO" || data == "NBO") {
+        break;
+      case "MO":
+      case "NBO":
         data = getMoJvxl(Integer.MAX_VALUE, data == "NBO");
         type = "XJVXL";
-      } else if (data == "PMESH" || data == "PMB") {
+        break;
+      case "PMESH":
+      case "PMB":
         if ((data = (String) getIsosurfaceJvxl(JC.SHAPE_PMESH, data)) == null)
           error(ScriptError.ERROR_noData);
         type = "XJVXL";
-      } else if (data == "ISOMESH") {
+        break;
+      case "ISOMESH":
         if ((data = (String) getIsosurfaceJvxl(JC.SHAPE_ISOSURFACE,
             data)) == null)
           error(ScriptError.ERROR_noData);
         type = "PMESH";
-      } else if (data == "ISOMESHBIN") {
+        break;
+      case "ISOMESHBIN":
         if ((bytes = getIsosurfaceJvxl(JC.SHAPE_ISOSURFACE,
             "ISOMESHBIN")) == null)
           error(ScriptError.ERROR_noData);
         type = "PMB";
-      } else if (data == "ISOPLY") {
+        break;
+      case "ISOPLY":
         if ((data = (String) getIsosurfaceJvxl(JC.SHAPE_ISOSURFACE,
             data)) == null)
           error(ScriptError.ERROR_noData);
         type = "PLY";
-      } else if (data == "ISOPLYBIN") {
+        break;
+      case "ISOPLYBIN":
         if ((bytes = getIsosurfaceJvxl(JC.SHAPE_ISOSURFACE,
             "ISOPLYBIN")) == null)
           error(ScriptError.ERROR_noData);
         type = "PLB";
-      } else if (data == "ISOSURFACE" || data == "MESH") {
+        break;
+      case "ISOSURFACE":
+      case "MESH":
         if ((data = (String) getIsosurfaceJvxl(
             isContact ? JC.SHAPE_CONTACT : JC.SHAPE_ISOSURFACE, data)) == null)
           error(ScriptError.ERROR_noData);
@@ -4763,22 +4804,40 @@ public class CmdExt extends ScriptExt {
           showString((String) getShapeProperty(
               isContact ? JC.SHAPE_CONTACT : JC.SHAPE_ISOSURFACE,
               "jvxlFileInfo"));
-      } else {
-        // image
-        if (isCommand && showOnly && fileName == null) {
-          showOnly = false;
-          fileName = "\1";
+        break;
+      default:
+        if (PT.isOneOf(data,
+            ";CIF;SCIF;CIFP1;SDF;MOL;MOL67;V2000;V3000;CD;JSON;XYZ;XYZRN;XYZVIB;CML;QCJSON;PWMAT;PWSLAB;XSF;")) {
+          BS selected = vwr.bsA(), bsModel;
+          // mechanism to pass information back from writer, changing the number of atoms written
+          vwr.setErrorMessage(null, " (" + selected.cardinality() + " atoms)");
+          data = vwr.getModelExtract(selected, isCoord, false, data);
+          msg = vwr.getErrorMessageUn();
+          vwr.setErrorMessage(null, null);
+          if (vwr.am.cmi >= 0 && !selected
+              .equals(bsModel = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi)))
+            msg += "\nNote! Selected atom set " + selected
+                + " is not the same as the current model " + bsModel;
+          if (data.startsWith("ERROR:"))
+            bytes = data;
+        } else {
+          // image
+          if (isCommand && showOnly && fileName == null) {
+            showOnly = false;
+            fileName = "\1";
+          }
+          //            len = -1;
+          if (sceneType == null && quality < 0)
+            quality = -1;
         }
-        len = -1;
-        if (sceneType == null && quality < 0)
-          quality = -1;
+        break;
       }
       if (data == null)
         data = "";
-      if (len == 0)
-        len = (bytes == null ? data.length()
-            : bytes instanceof String ? ((String) bytes).length()
-                : ((byte[]) bytes).length);
+      //      if (len == 0)
+      //        len = (bytes == null ? data.length()
+      //            : bytes instanceof String ? ((String) bytes).length()
+      //                : ((byte[]) bytes).length);
     }
 
     // if write() function, then just return data
@@ -4793,8 +4852,9 @@ public class CmdExt extends ScriptExt {
     if (bytes != null && bytes instanceof String)
       return writeMsg((String) bytes);
     // Just save the file data and return a confirmation message 
-    if (writeFileData)
+    if (writeFileData) {
       return writeMsg(vwr.writeFileData(fileName, type, 0, null));
+    }
     // use vwr.processWriteOrCapture(params) for all other situations
     if (type.equals("SCENE"))
       bytes = sceneType;
@@ -4857,6 +4917,15 @@ public class CmdExt extends ScriptExt {
     if (timeMsg)
       showString(Logger.getTimerMsg("write", 0));
     return writeMsg(ret + (msg == null ? "" : msg));
+  }
+
+  private String getWriteType(String fileName, String def) {
+    if (fileName != null) {
+      int pt = fileName.indexOf('.');
+      if (pt >= 0)
+        return fileName.substring(pt + 1).toUpperCase();
+    }
+    return def;
   }
 
   public Lst<Object> prepareBinaryOutput(SV tvar) {
@@ -5249,11 +5318,12 @@ public class CmdExt extends ScriptExt {
             break;
           }
           ret[0] = null;
-          if (tokAt(eval.iToken + 1) != 0 && tokAt(eval.iToken + 1) != T.string)
+          if (tokAt(eval.iToken + 1) != 0 && tokAt(eval.iToken + 1) != T.string) {
             pt2 = eval.centerParameter(++eval.iToken, ret);
-          if (ret[0] != null && ((BS) ret[0]).isEmpty()) {
-            len = slen;
-            break;
+            if (ret[0] != null && ((BS) ret[0]).isEmpty()) {
+              len = slen;
+              break;
+            }
           }
           if (iop == 0 && tokAt(eval.iToken + 1) == T.integer)
             nth = eval.getToken(++eval.iToken).intValue;
@@ -7108,7 +7178,7 @@ public class CmdExt extends ScriptExt {
     switch (type) {
     case "PMESH":
     case "MESH":
-      type = "jvxlMeshX";
+      type = "jvxlMeshXml";
       break;
     case "ISOMESH":
       type = "pmesh";

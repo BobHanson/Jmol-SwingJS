@@ -2033,33 +2033,32 @@ public class Symmetry implements SymmetryInterface {
    */
   @SuppressWarnings("unchecked")
   public void setSymmetryInfoFromFile(ModelSet ms, int modelIndex,
-                                      double[] unitCellParams) {
+                                                   double[] unitCellParams) {
     Map<String, Object> modelAuxiliaryInfo = ms
         .getModelAuxiliaryInfo(modelIndex);
     symmetryInfo = new SymmetryInfo();
     double[] params = symmetryInfo.setSymmetryInfoFromFile(modelAuxiliaryInfo,
         unitCellParams);
-    if (params != null) {
-      setUnitCellFromParams(params, modelAuxiliaryInfo.containsKey("jmolData"),
-          symmetryInfo.slop);
-      unitCell.setMoreInfo((Lst<String>) modelAuxiliaryInfo
-          .get(JC.UC_MOREINFO));
-      modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
-      setOffsetPt((T3d) modelAuxiliaryInfo.get(JC.INFO_UNIT_CELL_OFFSET));
-      M3d matUnitCellOrientation = (M3d) modelAuxiliaryInfo
-          .get("matUnitCellOrientation");
-      if (matUnitCellOrientation != null)
-        initializeOrientation(matUnitCellOrientation);
-      String s = symmetryInfo.strSUPERCELL;
-      if (s != null) {
-        T3d[] oabc = unitCell.getUnitCellVectors();
-        oabc[0] = new P3d();
-        ms.setModelCagePts(modelIndex, oabc, "conventional");
-      }
-      if (Logger.debugging)
-        Logger.debug("symmetryInfos[" + modelIndex + "]:\n"
-            + unitCell.dumpInfo(true, true));
+    if (params == null)
+      return;
+    setUnitCellFromParams(params, modelAuxiliaryInfo.containsKey("jmolData"),
+        symmetryInfo.slop);
+    unitCell.setMoreInfo((Lst<String>) modelAuxiliaryInfo.get(JC.UC_MOREINFO));
+    modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
+    setOffsetPt((T3d) modelAuxiliaryInfo.get(JC.INFO_UNIT_CELL_OFFSET));
+    M3d matUnitCellOrientation = (M3d) modelAuxiliaryInfo
+        .get("matUnitCellOrientation");
+    if (matUnitCellOrientation != null)
+      initializeOrientation(matUnitCellOrientation);
+    String s = symmetryInfo.strSUPERCELL;
+    if (s != null) {
+      T3d[] oabc = unitCell.getUnitCellVectors();
+      oabc[0] = new P3d();
+      ms.setModelCagePts(modelIndex, oabc, "conventional");
     }
+    if (Logger.debugging)
+      Logger.debug("symmetryInfos[" + modelIndex + "]:\n"
+          + unitCell.dumpInfo(true, true));
   }
 
   /**

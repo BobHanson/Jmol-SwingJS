@@ -1044,7 +1044,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
    * @return list of bonds
    */
   private Lst<Bond> getBondList(Lst<Object> bonds) {
-    boolean asSingle = !pymolScene.getDefaultBoolean(PyMOL.valence);
+    boolean asSingle = !pymolScene.getBooleanOrDefault(PyMOL.valence);
     byte[] b = null;
     int[] vArray = null;
     int n = bonds.size();

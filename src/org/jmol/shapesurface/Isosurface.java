@@ -261,30 +261,10 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       setPropertySuper("thisID", value, null);
       return;
     }
-
-    if ("params" == propertyName) {
+    if ("pymolparams" == propertyName) {
       if (thisMesh != null) {
         ensureMeshSource();
-        thisMesh.checkAllocColixes();
-        Object[] data = (Object[]) value;
-        short[] colixes = (short[]) data[0];
-        int[] atomMap = null;
-        //double[] atrans = (double[]) data[1];
-        if (colixes != null) {
-          for (int i = 0; i < colixes.length; i++) {
-            short colix = colixes[i];
-            double f = 0;//(atrans == null ? 0 : atrans[pt]);
-            if (f > 0.01f)
-              colix = C.getColixTranslucent3(colix, true, f);
-            colixes[i] = colix;
-          }
-          atomMap = new int[bs.length()];
-          for (int pt = 0, i = bs.nextSetBit(0); i >= 0; i = bs
-              .nextSetBit(i + 1), pt++)
-            atomMap[i] = pt;
-        }
-        thisMesh.setVertexColixesForAtoms(vwr, colixes, atomMap, bs);
-        thisMesh.setVertexColorMap();
+        thisMesh.setPymolVertexColixesForAtoms(vwr, (Object[]) value, bs);
       }
       return;
     }
@@ -307,7 +287,11 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
     if ("vertexcolor" == propertyName) {
       if (thisMesh != null) {
-        thisMesh.colorVertices(C.getColixO(value), bs, false);
+        short colix = C.getColixO(((Object[]) value)[0]);
+        double t = ((Number) ((Object[]) value)[1]).doubleValue();
+        if (t != Double.MAX_VALUE && t != 0)
+          colix = C.getColixTranslucent3(colix, true, t);
+        thisMesh.colorVertices(colix, bs, false);
       }
       return;
     }
@@ -321,18 +305,18 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
           : PT.isWild(previousMeshID) ? previousMeshID : null);
       Lst<Mesh> list = getMeshList(id, false);
       for (int i = list.size(); --i >= 0;)
-        setColorPhase((IsosurfaceMesh) list.get(i), colix0, colix1);
+        ((IsosurfaceMesh) list.get(i)).setPropertyColorPhase(colix0, colix1, translucentLevel);
       return;
     }
     if ("color" == propertyName) {
       String color = C.getHexCode(C.getColixO(value));
       if (thisMesh != null) {
-        setIsoMeshColor(thisMesh, color);
+        thisMesh.setPropertyColor(color);
       } else {
         Lst<Mesh> list = getMeshList(
             PT.isWild(previousMeshID) ? previousMeshID : null, false);
         for (int i = list.size(); --i >= 0;)
-          setIsoMeshColor((IsosurfaceMesh) list.get(i), color);
+         ((IsosurfaceMesh) list.get(i)).setPropertyColor(color);
       }
       setPropertySuper(propertyName, value, bs);
       return;
@@ -764,27 +748,6 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     return value;
   }
 
-  private void setIsoMeshColor(IsosurfaceMesh m, String color) {
-    // thisMesh.vertexColixes = null;
-    m.jvxlData.baseColor = color;
-    m.isColorSolid = true;
-    m.pcs = null;
-    m.colorsExplicit = false;
-    m.colorEncoder = null;
-    m.vertexColorMap = null;
-  }
-
-  private void setColorPhase(IsosurfaceMesh m, short colix0,
-                             short colix1) {
-    m.colorPhased = true;
-    m.colix = m.jvxlData.minColorIndex = colix0;
-    m.jvxlData.maxColorIndex = colix1;
-    m.jvxlData.isBicolorMap = true;
-    m.jvxlData.colorDensity = false;
-    m.isColorSolid = false;
-    m.remapColors(vwr, null, translucentLevel);
-  }
-
   private void ensureMeshSource() {
     boolean haveColors = (thisMesh.vertexSource != null);
     if (haveColors)
@@ -999,6 +962,10 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       SB sb = new SB();
       getMeshCommand(sb, m.index);
       m.setJvxlColorMap(true);
+      if (m.vertexColorMap != null)
+        jvxlData.vertexColorMap = m.copyVertexColorMap();
+      if (jvxlData.vertexColorMap != null)
+        jvxlData.nVertexColors = jvxlData.vertexColorMap.size();
       return JvxlCoder.jvxlGetFile(jvxlData, meshData, title, "", true, 1, sb.toString(), null);
     }
     if (property == "jvxlFileInfo") {
@@ -1099,9 +1066,6 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     IsosurfaceMesh imesh = (IsosurfaceMesh) meshes[i];
     if (imesh == null || imesh.scriptCommand == null)
       return;
-//    if (imesh.scriptVariables != null) {
-//      sb.append("{\n").append(imesh.scriptVariables);
-//    }
     String cmd = imesh.scriptCommand;
     int modelCount = ms.mc;
     if (modelCount > 1)
@@ -1152,19 +1116,16 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
             + encodeColor(imesh.jvxlData.minColorIndex) + " "
             + encodeColor(imesh.jvxlData.maxColorIndex));
       }
-      if (imesh.vertexColorMap != null) {
+      if (imesh.vertexColorMap != null && imesh.vertexColorMap != imesh.pymolVertexColorMap) {
         for (Map.Entry<String, BS> entry : imesh.vertexColorMap.entrySet()) {
           BS bs = entry.getValue();
-          if (!bs.isEmpty())
-            appendCmd(sb, "color " + myType + " " + Escape.eBS(bs)
+          if (!bs.isEmpty()) {
+            appendCmd(sb, "color " + myType + " " + Escape.eBond(bs)
                 + " " + entry.getKey());
+          }
         }
       }
     }
-//    if (imesh.scriptVariables != null) {
-//      sb.append("\n}\n");
-//    }
-
   }
 
   

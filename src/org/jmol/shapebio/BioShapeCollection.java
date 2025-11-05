@@ -164,7 +164,7 @@ public abstract class BioShapeCollection extends Shape {
       }
       return;
     }
-    if ("params" == propertyName) {
+    if ("pymolparams" == propertyName) {
       int n = bsSelected.length();
       int[] atomMap = new int[n];
       for (int pt = 0, i = bsSelected.nextSetBit(0); i >= 0; i = bsSelected.nextSetBit(i + 1), pt++)

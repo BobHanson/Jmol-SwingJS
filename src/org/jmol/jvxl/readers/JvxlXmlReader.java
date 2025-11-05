@@ -53,7 +53,8 @@ import javajs.util.V3d;
 
 public class JvxlXmlReader extends VolumeFileReader {
 
-  protected String JVXL_VERSION = "2.3";
+  protected String JVXL_VERSION = "2.4";
+  // 2.4 BH 2025.11.02 allows partial translucent PyMOL-derived surfaces
   // 2.3 adds encoding "none"
   // 2.2 adds full support for return of rendering information, 
   //     retrieval of triangle edge data when edges have been modified by slabbing.
@@ -117,35 +118,22 @@ public class JvxlXmlReader extends VolumeFileReader {
       if (hasColorData)
         jvxlColorDataRead = jvxlReadFractionData("color", colorDataCount);
       if (excludedVertexCount > 0) {
-        jvxlData.jvxlExcluded[0] = JvxlCoder.jvxlDecodeBitSet(xr.getXmlData(
-            "jvxlExcludedVertexData", null, false, false));
+        jvxlData.jvxlExcluded[0] = JvxlCoder.jvxlDecodeBitSet(
+            xr.getXmlData("jvxlExcludedVertexData", null, false, false));
         if (xr.isNext("jvxlExcludedPlaneData"))
-          jvxlData.jvxlExcluded[2] = JvxlCoder.jvxlDecodeBitSet(xr.getXmlData(
-              "jvxlExcludedPlaneData", null, false, false));
+          jvxlData.jvxlExcluded[2] = JvxlCoder.jvxlDecodeBitSet(
+              xr.getXmlData("jvxlExcludedPlaneData", null, false, false));
       }
       if (excludedTriangleCount > 0)
-        jvxlData.jvxlExcluded[3] = JvxlCoder.jvxlDecodeBitSet(xr.getXmlData(
-            "jvxlExcludedTriangleData", null, false, false));
+        jvxlData.jvxlExcluded[3] = JvxlCoder.jvxlDecodeBitSet(
+            xr.getXmlData("jvxlExcludedTriangleData", null, false, false));
       if (invalidatedVertexCount > 0)
-        jvxlData.jvxlExcluded[1] = JvxlCoder.jvxlDecodeBitSet(xr.getXmlData(
-            "jvxlInvalidatedVertexData", null, false, false));
+        jvxlData.jvxlExcluded[1] = JvxlCoder.jvxlDecodeBitSet(
+            xr.getXmlData("jvxlInvalidatedVertexData", null, false, false));
       if (haveContourData)
-        jvxlDecodeContourData(jvxlData, xr.getXmlData("jvxlContourData", null,
-            false, false));
-      if (jvxlDataIsColorMapped && jvxlData.nVertexColors > 0) {
-        jvxlData.vertexColorMap = new Hashtable<String, BS>();
-        String vdata = xr.getXmlData("jvxlVertexColorData", null, true, false);
-        String baseColor = XmlReader.getXmlAttrib(vdata, "baseColor");
-        jvxlData.baseColor = (baseColor.length() > 0 ? baseColor : null);
-        for (int i = 0; i < jvxlData.nVertexColors; i++) {
-          String s = xr.getXmlData("jvxlColorMap", vdata, true, false);
-          String color = XmlReader.getXmlAttrib(s, "color");
-          BS bs = JvxlCoder.jvxlDecodeBitSet(xr.getXmlData("jvxlColorMap",
-              s, false, false));
-          jvxlData.vertexColorMap.put(color, bs);
-        }
-      }
-
+        jvxlDecodeContourData(jvxlData,
+            xr.getXmlData("jvxlContourData", null, false, false));
+      getVertexColorData();
     } catch (Exception e) {
       Logger.error(e.toString());
       return false;
@@ -153,11 +141,33 @@ public class JvxlXmlReader extends VolumeFileReader {
     return true;
   }
   
+  public void getVertexColorData() throws Exception {
+    if (jvxlDataIsColorMapped && jvxlData.nVertexColors > 0) {
+      String vdata = xr.getXmlData("jvxlVertexColorData", null, true, false);
+      if (vdata == null) {
+        jvxlData.nVertexColors = 0;
+        jvxlDataIsColorMapped = false;
+        return;
+      }
+      jvxlData.vertexColorMap = new Hashtable<String, BS>();
+      String baseColor = XmlReader.getXmlAttrib(vdata, "baseColor");
+      jvxlData.baseColor = (baseColor.length() > 0 ? baseColor : null);
+      int[] ptr = new int[1];
+      for (int i = 0; i < jvxlData.nVertexColors; i++) {
+        String s = xr.getXmlDataLF("jvxlColorMap", vdata, true, false, false, ptr);
+        String color = XmlReader.getXmlAttrib(s, "color");
+        BS bs = JvxlCoder
+            .jvxlDecodeBitSet(xr.getXmlData("jvxlColorMap", s, false, false));
+        jvxlData.vertexColorMap.put(color, bs);
+      }
+    }
+  }
+
   String tempDataXml; 
   
   @Override
   protected void readParameters() throws Exception {
-    String s = xr.getXmlDataLF("jvxlFileTitle", null, false, false, true);
+    String s = xr.getXmlDataLF("jvxlFileTitle", null, false, false, true, null);
     jvxlFileHeaderBuffer = SB.newS(s == null ? "" : s);
     xr.toTag("jvxlVolumeData");
     String data = tempDataXml = xr.getXmlData("jvxlVolumeData", null, true, false);
@@ -745,6 +755,8 @@ public class JvxlXmlReader extends VolumeFileReader {
         n = CU.getArgbFromString(c);
         break;
       case '0': //0x
+        if (c.length() == 1)
+          break;
         n = PT.parseIntRadix(c.substring(2), 16);
         break;
       default:
@@ -784,7 +796,8 @@ public class JvxlXmlReader extends VolumeFileReader {
     // get contours
     if (haveContourData)
       jvxlDecodeContourData(jvxlData, xr.getXmlData("jvxlContourData", null, false, false));
-  }
+    getVertexColorData();
+ }
 
   private String getData(String sdata, String name) throws Exception {
     String data = XmlReader.getXmlAttrib(sdata, "data");

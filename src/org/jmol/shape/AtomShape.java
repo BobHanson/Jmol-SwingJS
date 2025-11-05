@@ -130,8 +130,7 @@ public abstract class AtomShape extends Shape {
         setColixAndPalette(colix, pid, i);
       return;
     }
-    if ("params" == propertyName) {
-      // PyMOL only
+    if ("pymolparams" == propertyName) {
       isActive = true;
       Object[] data = (Object[]) value;
       short[] colixes = (short[]) data[0];

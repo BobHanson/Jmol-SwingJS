@@ -1022,7 +1022,14 @@ public class ModelSet extends BondCollection {
         && unitCells[modelIndex] != null
         && unitCells[modelIndex].haveUnitCell())
       uc = unitCells[modelIndex];
-    if (uc != null) {
+    if (uc == null && ucSimple == null) {
+      double[] cellParams = (double[]) getInfo(modelIndex,
+          JC.INFO_UNIT_CELL_PARAMS);
+      if (cellParams != null) {
+        am[modelIndex].setSimpleCage(vwr.getSymTemp()
+            .setUnitCellFromParams(cellParams, false, Double.NaN));
+      }
+    } else if (uc != null) {
       if (returnCage) {
         int cai = vwr.getUnitCellAtomIndex();
         if (cai > 0)
@@ -1891,7 +1898,7 @@ public class ModelSet extends BondCollection {
     return dipole;
   }
 
-  public V3d calculateMolecularDipole(int modelIndex, BS bsAtoms) throws JmolAsyncException {
+  public V3d calculateMolecularDipole(int modelIndex, BS bsAtoms) throws JmolAsyncException, RuntimeException {
     if (bsAtoms != null) {
       int ia = bsAtoms.nextSetBit(0);
       if (ia < 0)
@@ -1925,9 +1932,10 @@ public class ModelSet extends BondCollection {
       }
     }
     if (Math.abs(cPos + cNeg) > 0.015) { // BH Jmol 14.22.2 was 0.01, but PubChem charges are only to 0.01 precision
-      Logger.info("Dipole calculation requires balanced charges: " + cPos + " "
-          + cNeg);
-      return null;
+      String err = "Dipole calculation requires balanced charges: " + cPos + " "
+          + cNeg;
+      Logger.info(err);
+      throw new RuntimeException(err);
     }
     if (nNeg == 0 || nPos == 0)
       return null;

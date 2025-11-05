@@ -621,6 +621,8 @@ abstract class OutputManager {
     // output stream all along. For JavaScript, this will be a ByteArrayOutputStream
     // which will then be posted to a server for a return that allows saving.
     out.setType(type);
+    //   one of: PDB PQR? FILE PLOT
+
     String msg = (type.startsWith("PDB")
         ? vwr.getPdbAtomData(null, out, false, false)
         : type.startsWith("PLOT")

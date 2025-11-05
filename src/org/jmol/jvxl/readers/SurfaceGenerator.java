@@ -1087,7 +1087,7 @@ public class SurfaceGenerator {
       surfaceReader.applyColorScale();
     }
     if (jvxlData.vertexColorMap != null) {
-      jvxlData.vertexColorMap = null;
+      //jvxlData.vertexColorMap = null;
       surfaceReader.hasColorData = false;
     }
     surfaceReader.jvxlUpdateInfo();
