@@ -334,7 +334,8 @@ public class MOCalculation extends QuantumCalculation {
     //System.out.println("shell " + iShell + " type " + basisType);
     if (atomIndex != lastAtom && (thisAtom = qmAtoms[atomIndex]) != null)
       thisAtom.setXYZ(this, true);
-    if (!allowType(basisType) || !setCoeffs(shell[1], true))
+    // order of terms here is critical -- setCoeffs increments moCoeff
+    if (!setCoeffs(shell[1], true) || !allowType(basisType))
       return;
     if (havePoints)
       setMinMax(-1);
