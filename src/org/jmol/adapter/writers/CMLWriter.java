@@ -1,6 +1,5 @@
 package org.jmol.adapter.writers;
 
-import org.jmol.api.Interface;
 import org.jmol.api.JmolWriter;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;

@@ -36,6 +36,9 @@ public class Vibration extends V3d {
   public int tracePt;
   private P3d[] trace = null;
   public String symmform;
+  
+  public boolean isFrom000;
+  
 
   public Vibration() {
     super();
@@ -77,6 +80,7 @@ public class Vibration extends V3d {
     v.setT(this);
     v.modDim = modDim;
     v.magMoment = magMoment;
+    v.isFrom000 = isFrom000;
     v.v0 = v0;
     return v;
   }

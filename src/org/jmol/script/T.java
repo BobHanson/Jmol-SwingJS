@@ -587,11 +587,14 @@ public class T {
   public final static int polymer       = intproperty | 18;
   public final static int polymerlength = intproperty | 19;
   public final static int resno         = intproperty | 20 | settable;
-  public final static int seqid         = intproperty | 21;
-  public final static int site          = intproperty | 22;
-  public final static int strucno       = intproperty | 23;
-  public final static int subsystem     = intproperty | 24;
-  public final static int valence       = intproperty | 26 | settable;
+  public final static int screenx       = intproperty | 21;
+  public final static int screeny       = intproperty | 22;
+  public final static int screenz       = intproperty | 23;
+  public final static int seqid         = intproperty | 24;
+  public final static int site          = intproperty | 25;
+  public final static int strucno       = intproperty | 26;
+  public final static int subsystem     = intproperty | 27;
+  public final static int valence       = intproperty | 28 | settable;
 
   // float values must be multiplied by 100 prior to comparing to integer values
 
@@ -607,9 +610,6 @@ public class T {
   public final static int omega           = floatproperty | 8;
   public final static int phi             = floatproperty | 9;
   public final static int psi             = floatproperty | 10;
-  public final static int screenx         = floatproperty | 11;
-  public final static int screeny         = floatproperty | 12;
-  public final static int screenz         = floatproperty | 13;
   public final static int straightness    = floatproperty | 14;
   public final static int surfacedistance = floatproperty | 15;
   public final static int theta           = floatproperty | 16; // Jmol 12.0.RC23
@@ -799,7 +799,8 @@ public class T {
   
   // ___.xxx(a,b,c,d)
   
-  public final static int symop        = 1 | 4 << 9 | mathfunc | mathproperty | intproperty; 
+  public final static int spinop       = 1 | 4 << 9 | mathfunc | mathproperty | intproperty; 
+  public final static int symop        = 2 | 4 << 9 | mathfunc | mathproperty | intproperty; 
 
   // set parameters 
   
@@ -2179,6 +2180,7 @@ public class T {
         "solid",
         "sort",
         "specialPosition",
+        "spinOp",
         "sqrt",
         "split",
         "starWidth",
@@ -3265,6 +3267,7 @@ public class T {
         solid,                              // "solid"
         sort,                               // "sort"
         specialposition,                    // "specialPosition"
+        spinop,
         sqrt,                               // "sqrt"
         split,                              // "split"
         starwidth,                         // "starWidth"

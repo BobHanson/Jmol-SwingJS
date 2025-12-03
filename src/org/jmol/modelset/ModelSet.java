@@ -462,6 +462,16 @@ public class ModelSet extends BondCollection {
     if (ac == 0)
       return -1;
     closest[0] = null;
+    if (vwr.am.splitFrame) {
+      x = vwr.am.setSplitFrameMouse(x);
+      BS bsFrame = vwr.am.getSplitFrameAtoms(false);
+      if (bsNot == null) {
+       bsNot = bsFrame;
+      } else {
+        bsNot = BSUtil.copy(bsNot);
+        bsNot.or(bsFrame);
+      }
+    }
     if (g3d.isAntialiased()) {
       x <<= 1;
       y <<= 1;
@@ -1710,7 +1720,9 @@ public class ModelSet extends BondCollection {
         if ((e.next()).intValue() == modelIndex) {
           e.remove();
         }
-      }
+      } 
+      if (df.isEmpty())
+        am[i].dataFrames = null;
     }
   }
 
@@ -3302,7 +3314,7 @@ public class ModelSet extends BondCollection {
                       double occupancy, double bfactor, Lst<Object> tensors,
                       boolean isHetero, boolean isNegDisorder, byte specialAtomID, BS atomSymmetry, double bondRadius) {
     Atom atom = new Atom().setAtom(modelIndex, ac, xyz, radius, atomSymmetry,
-        atomSite, (short) atomicAndIsotopeNumber, formalCharge, isHetero);
+        atomSite, (short) atomicAndIsotopeNumber, formalCharge, isHetero, isNegDisorder);
     am[modelIndex].act++;
     am[modelIndex].bsAtoms.set(ac);
     if (Elements.isElement(atomicAndIsotopeNumber, 1))

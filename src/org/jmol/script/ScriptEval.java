@@ -5480,6 +5480,7 @@ public class ScriptEval extends ScriptExpr {
     }
     boolean isPlay = false;
     boolean isRange = false;
+    boolean isSplit = false;
     String propName = null;
     Object prop = null;
     boolean isAll = false;
@@ -5493,6 +5494,24 @@ public class ScriptEval extends ScriptExpr {
     } else {
       for (int i = offset; i < slen; i++) {
         switch (getToken(i).tok) {
+        case T.split:
+          switch (i == slen - 1 ? nFrames : -1) {
+          case 2:
+            break;
+          case 0:
+            if (vwr.ms.mc == 2) {
+              // just take frame 0 and 1
+              frameList[0] = 0;
+              frameList[1] = 1;
+              nFrames = 2;
+              break;
+            }
+            //$FALL-THROUGH$
+          default:
+            invArg();            
+          }
+          isSplit = true;
+          break;
         case T.align:
           // model 2.3 align {0 0 0}  // from state 
           if (i != 2)
@@ -5594,7 +5613,7 @@ public class ScriptEval extends ScriptExpr {
         vwr.setCurrentModelIndex(-1);
       return;
     }
-    if (nFrames == 2 && !isRange)
+    if (nFrames == 2 && !isRange && !isSplit)
       isHyphen = true;
     if (haveFileSet)
       useModelNumber = false;
@@ -5648,15 +5667,21 @@ public class ScriptEval extends ScriptExpr {
 
     if (!isPlay && !isRange || modelIndex >= 0)
       vwr.setCurrentModelIndexClear(modelIndex, false);
-    if (isPlay && nFrames == 2 || isRange || isHyphen) {
+    if (isPlay && nFrames == 2 || isRange || isHyphen || isSplit) {
       if (modelIndex2 < 0)
         modelIndex2 = vwr.ms.getModelNumberIndex(frameList[1], useModelNumber,
             false);
       vwr.setAnimationOn(false);
       vwr.am.setAnimationDirection(1);
-      vwr.setAnimationRange(modelIndex, modelIndex2);
+      if (!isSplit)
+        vwr.setAnimationRange(modelIndex, modelIndex2);
       vwr.setCurrentModelIndexClear(isHyphen && !isRange ? -1
           : modelIndex >= 0 ? modelIndex : 0, false);
+    }
+    if (isSplit) {
+      vwr.am.setSplitFrame(modelIndex, modelIndex2);
+    } else {
+      vwr.am.setSplitFrame(-1, -1);
     }
     if (isPlay)
       vwr.setAnimation(T.resume);

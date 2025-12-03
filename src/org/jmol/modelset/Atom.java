@@ -87,13 +87,14 @@ public class Atom extends Point3fi implements Node {
   short atomNumberFlags;  
   public BS atomSymmetry;
 
-  private int formalChargeAndFlags; //  cccc CIP_ _CIP --hv
+  private int formalChargeAndFlags; //  cccc CIP_ _CIP -nhv
   
   private final static int CHARGE_OFFSET = 24;
 
   private final static int FLAG_MASK = 0xF;
   private final static int VIBRATION_VECTOR_FLAG = 1;
   private final static int IS_HETERO_FLAG = 2;
+  private final static int NEG_DISORDER_FLAG = 4;
   
   private final static int CIP_CHIRALITY_OFFSET = 4;
   private final static int CIP_CHIRALITY_MASK = 0x1F0;
@@ -130,6 +131,7 @@ public class Atom extends Point3fi implements Node {
    * @param atomicAndIsotopeNumber
    * @param formalCharge
    * @param isHetero
+   * @param isNegDisorder TODO
    * @return this
    */
   
@@ -137,7 +139,7 @@ public class Atom extends Point3fi implements Node {
         P3d xyz, double radius,
         BS atomSymmetry, int atomSite,
         short atomicAndIsotopeNumber, int formalCharge, 
-        boolean isHetero) {
+        boolean isHetero, boolean isNegDisorder) {
     this.mi = (short)modelIndex;
     this.atomSymmetry = atomSymmetry;
     this.atomSite = atomSite;
@@ -375,6 +377,14 @@ public class Atom extends Point3fi implements Node {
   
   void setVibrationVector() {
     formalChargeAndFlags |= VIBRATION_VECTOR_FLAG;
+  }
+  
+ void setNegativeDisorder() {
+    formalChargeAndFlags |= NEG_DISORDER_FLAG;
+  }
+  
+  boolean isNegativeDisorder() {
+    return ((formalChargeAndFlags & NEG_DISORDER_FLAG) != 0);
   }
   
   @Override
@@ -1160,11 +1170,10 @@ public class Atom extends Point3fi implements Node {
   /**
    * called by isosurface and int comparator via atomProperty()
    * and also by getBitsetProperty() 
-   * 
-   * @param tokWhat
+   * @param vwr   * @param tokWhat
    * @return         int value or Integer.MIN_VALUE
    */
-  public int atomPropertyInt(int tokWhat) {
+  public int atomPropertyInt(Viewer vwr, int tokWhat) {
     switch (tokWhat) {
     case T.atomno:
       return getAtomNumber();
@@ -1181,7 +1190,7 @@ public class Atom extends Point3fi implements Node {
     case T.chainno:
       return group.chain.chainNo;
     case T.color:
-      return group.chain.model.ms.vwr.gdata.getColorArgbOrGray(colixAtom);
+      return vwr.gdata.getColorArgbOrGray(colixAtom);
     case T.element:
     case T.elemno:
       return getElementNumber();
@@ -1201,7 +1210,7 @@ public class Atom extends Point3fi implements Node {
       return getModelNumber();
     case -T.model:
       //double is handled differently
-      return group.chain.model.ms.modelFileNumbers[mi];
+      return vwr.ms.modelFileNumbers[mi];
     case T.modelindex:
       return mi;
     case T.molecule:
@@ -1219,6 +1228,12 @@ public class Atom extends Point3fi implements Node {
       return getRasMolRadius();        
     case T.resno:
       return getResno();
+    case T.screenx:
+      return Math.round(vwr.antialiased ? sX / 2 : sX);
+    case T.screeny:
+      return Math.round(vwr.getScreenHeight() - (vwr.antialiased ? sY / 2 : sY));
+    case T.screenz:
+      return Math.round(vwr.antialiased ? sZ / 2 : sZ);
     case T.site:
       return getAtomSite();
     case T.spin:
@@ -1336,12 +1351,6 @@ public class Atom extends Point3fi implements Node {
     case T.radius:
     case T.spacefill:
       return getRadius();
-    case T.screenx:
-      return (vwr.antialiased ? sX / 2 : sX);
-    case T.screeny:
-      return vwr.getScreenHeight() - (vwr.antialiased ? sY / 2 : sY);
-    case T.screenz:
-      return (vwr.antialiased ? sZ / 2 : sZ);
     case T.selected:
       return (vwr.slm.isAtomSelected(i) ? 1 : 0);
     case T.surfacedistance:
@@ -1394,7 +1403,7 @@ public class Atom extends Point3fi implements Node {
       T3d v3 = atomPropertyTuple(vwr, tokWhat, ptTemp);
       return (v3 == null ? -1 : v3.length());
     }
-    return atomPropertyInt(tokWhat);
+    return atomPropertyInt(vwr, tokWhat);
   }
 
   public double getVib(char ch) {
@@ -1549,7 +1558,9 @@ public class Atom extends Point3fi implements Node {
       return (group.chain.model.isJmolDataFrame ? getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp) 
           : getFractionalUnitCoordPt(!vwr.g.legacyJavaFloat, false, ptTemp));
     case T.screenxyz:
-      return P3d.new3(vwr.antialiased ? sX / 2 : sX, vwr.getScreenHeight() - (vwr.antialiased ? sY / 2 : sY), vwr.antialiased ? sZ / 2 : sZ);
+      return P3d.new3(Math.round(vwr.antialiased ? sX / 2 : sX), 
+          Math.round(vwr.getScreenHeight() - (vwr.antialiased ? sY / 2 : sY)), 
+          Math.round(vwr.antialiased ? sZ / 2 : sZ));
     case T.vibxyz:
       return getVibrationVector();
     case T.modxyz:

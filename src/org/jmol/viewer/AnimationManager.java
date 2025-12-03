@@ -40,22 +40,22 @@ public class AnimationManager {
 
   public JmolThread animationThread;
   public Viewer vwr;
-  
+
   AnimationManager(Viewer vwr) {
     this.vwr = vwr;
   }
 
   // used by AnimationThread, Viewer, or StateCreator:
-  
+
   public boolean animationOn;
-  public int animationFps;  // set in stateManager
+  public int animationFps; // set in stateManager
   public int firstFrameDelayMs;
   public int lastFrameDelayMs;
 
   public void setAnimationOn(boolean animationOn) {
     if (animationOn == this.animationOn)
       return;
-    
+
     if (!animationOn || vwr.headless) {
       stopThread(false);
       return;
@@ -79,7 +79,7 @@ public class AnimationManager {
     animation(false);
     //stopModulationThread();
     vwr.setStatusFrameChanged(false, false);
-    
+
   }
 
   public boolean setAnimationNext() {
@@ -87,19 +87,19 @@ public class AnimationManager {
   }
 
   public boolean currentIsLast() {
-    return (isMovie ? lastFramePainted == caf
-        : lastModelPainted == cmi);
+    return (isMovie ? lastFramePainted == caf : lastModelPainted == cmi);
   }
 
   public boolean currentFrameIs(int f) {
     int i = cmi;
-    return (morphCount == 0 ? i == f : Math.abs(currentMorphModel - f) < 0.001f);
+    return (morphCount == 0 ? i == f
+        : Math.abs(currentMorphModel - f) < 0.001d);
   }
 
   // required by Viewer or stateCreator
-  
+
   // used by StateCreator or Viewer:
-  
+
   final static int FRAME_FIRST = -1;
   final static int FRAME_LAST = 1;
   final static int MODEL_CURRENT = 0;
@@ -114,13 +114,13 @@ public class AnimationManager {
 
   public boolean isMovie;
   boolean animationPaused;
-  
+
   /**
    * current model index
    * 
    */
   public int cmi;
-  
+
   /**
    * current animation frame
    * 
@@ -133,11 +133,11 @@ public class AnimationManager {
   int lastFrameIndex;
   int frameStep;
   int backgroundModelIndex = -1;
-  
+
   double currentMorphModel;
   double firstFrameDelay;
   double lastFrameDelay = 1;
-  
+
   void clear() {
     setMovie(null);
     initializePointers(0);
@@ -149,8 +149,9 @@ public class AnimationManager {
     setAnimationFps(10);
     setAnimationReplayMode(T.once, 0, 0);
     initializePointers(0);
+    setSplitFrame(-1, -1);
   }
-  
+
   String getModelSpecial(int i) {
     switch (i) {
     case FRAME_FIRST:
@@ -182,7 +183,7 @@ public class AnimationManager {
 
   public void morph(double modelIndex) {
     int m = (int) modelIndex;
-    if (Math.abs(m - modelIndex) < 0.001f)
+    if (Math.abs(m - modelIndex) < 0.001d)
       modelIndex = m;
     else if (Math.abs(m - modelIndex) > 0.999d)
       modelIndex = m = m + 1;
@@ -200,7 +201,7 @@ public class AnimationManager {
     if (m1 == m || m1 < 0 || m < 0)
       return;
     vwr.ms.morphTrajectories(m, m1, f);
-  }  
+  }
 
   void setModel(int modelIndex, boolean clearBackgroundModel) {
     if (modelIndex < 0)
@@ -224,11 +225,9 @@ public class AnimationManager {
         if (cmi != -1)
           vwr.saveModelOrientation();
         if (fromDataModel || toDataModel) {
-          ids = ms.getJmolFrameType(modelIndex) 
-          + " "  + modelIndex + " <-- " 
-          + " " + cmi + " " 
-          + ms.getJmolFrameType(cmi);
-          
+          ids = ms.getJmolFrameType(modelIndex) + " " + modelIndex + " <-- "
+              + " " + cmi + " " + ms.getJmolFrameType(cmi);
+
           isSameSource = (ms.getJmolDataSourceFrame(modelIndex) == ms
               .getJmolDataSourceFrame(cmi));
         }
@@ -237,10 +236,10 @@ public class AnimationManager {
       if (ids != null) {
         if (modelIndex >= 0)
           vwr.restoreModelOrientation(modelIndex);
-        if (isSameSource && (ids.indexOf("quaternion") >= 0 
-            || ids.indexOf("plot") < 0
-            && ids.indexOf("ramachandran") < 0
-            && ids.indexOf(" property ") < 0)) {
+        if (isSameSource
+            && (ids.indexOf("quaternion") >= 0 || ids.indexOf("spin") >= 0
+                || ids.indexOf("plot") < 0 && ids.indexOf("ramachandran") < 0
+                    && ids.indexOf(" property ") < 0)) {
           vwr.restoreModelRotation(formerModelIndex);
         }
       }
@@ -256,9 +255,9 @@ public class AnimationManager {
     if (modelIndex >= 0)
       vwr.ms.setTrajectory(modelIndex);
     vwr.setTainted(true);
-    setFrameRangeVisible(); 
+    setFrameRangeVisible();
   }
-  
+
   void initializePointers(int frameStep) {
     firstFrameIndex = 0;
     lastFrameIndex = (frameStep == 0 ? 0 : getFrameCount()) - 1;
@@ -269,7 +268,7 @@ public class AnimationManager {
   public void setAnimationDirection(int animationDirection) {
     this.animationDirection = animationDirection;
     //if (animationReplayMode != ANIMATION_LOOP)
-      //currentDirection = 1;
+    //currentDirection = 1;
   }
 
   void setAnimationFps(int fps) {
@@ -284,24 +283,28 @@ public class AnimationManager {
   // 0 = once
   // 1 = loop
   // 2 = palindrome
-  
+
   public void setAnimationReplayMode(int animationReplayMode,
                                      double firstFrameDelay,
                                      double lastFrameDelay) {
     this.firstFrameDelay = firstFrameDelay > 0 ? firstFrameDelay : 0;
-    firstFrameDelayMs = (int)(this.firstFrameDelay * 1000);
+    firstFrameDelayMs = (int) (this.firstFrameDelay * 1000);
     this.lastFrameDelay = lastFrameDelay > 0 ? lastFrameDelay : 0;
-    lastFrameDelayMs = (int)(this.lastFrameDelay * 1000);
+    lastFrameDelayMs = (int) (this.lastFrameDelay * 1000);
     this.animationReplayMode = animationReplayMode;
     vwr.setFrameVariables();
   }
 
   void setAnimationRange(int framePointer, int framePointer2) {
     int frameCount = getFrameCount();
-    if (framePointer < 0) framePointer = 0;
-    if (framePointer2 < 0) framePointer2 = frameCount;
-    if (framePointer >= frameCount) framePointer = frameCount - 1;
-    if (framePointer2 >= frameCount) framePointer2 = frameCount - 1;
+    if (framePointer < 0)
+      framePointer = 0;
+    if (framePointer2 < 0)
+      framePointer2 = frameCount;
+    if (framePointer >= frameCount)
+      framePointer = frameCount - 1;
+    if (framePointer2 >= frameCount)
+      framePointer2 = frameCount - 1;
     firstFrameIndex = framePointer;
     currentMorphModel = firstFrameIndex;
     lastFrameIndex = framePointer2;
@@ -312,20 +315,20 @@ public class AnimationManager {
   void pauseAnimation() {
     stopThread(true);
   }
-  
+
   void reverseAnimation() {
     currentDirection = -currentDirection;
     if (!animationOn)
       resumeAnimation();
   }
-  
+
   void repaintDone() {
     lastModelPainted = cmi;
     lastFramePainted = caf;
   }
-  
+
   void resumeAnimation() {
-    if(cmi < 0)
+    if (cmi < 0)
       setAnimationRange(firstFrameIndex, lastFrameIndex);
     if (getFrameCount() <= 1) {
       animation(false);
@@ -335,8 +338,10 @@ public class AnimationManager {
     animationPaused = false;
     if (animationThread == null) {
       intAnimThread++;
-      animationThread = (JmolThread) Interface.getOption("thread.AnimationThread", vwr, "script");
-      animationThread.setManager(this, vwr, new int[] {firstFrameIndex, lastFrameIndex, intAnimThread} );
+      animationThread = (JmolThread) Interface
+          .getOption("thread.AnimationThread", vwr, "script");
+      animationThread.setManager(this, vwr,
+          new int[] { firstFrameIndex, lastFrameIndex, intAnimThread });
       animationThread.start();
     }
   }
@@ -350,7 +355,7 @@ public class AnimationManager {
     currentDirection = 1;
     vwr.setFrameVariables();
   }
-  
+
   boolean setAnimationPrevious() {
     return setAnimationRelative(-animationDirection);
   }
@@ -371,8 +376,7 @@ public class AnimationManager {
   }
 
   /**
-   * support for PyMOL movies and 
-   * anim FRAMES [....]
+   * support for PyMOL movies and anim FRAMES [....]
    * 
    * currently no support for scripted movies
    * 
@@ -390,7 +394,7 @@ public class AnimationManager {
           caf = 0;
       }
       setFrame(caf);
-    } 
+    }
     if (!isMovie) {
       //movie = null;
       animationFrames = null;
@@ -411,34 +415,33 @@ public class AnimationManager {
 
   public void setFrame(int i) {
     try {
-    if (isMovie) {
-      int iModel = modelIndexForFrame(i);
-      caf = i;
-      i = iModel;
-    } else {
-      caf = i;
-    }
-    setModel(i, true);
+      if (isMovie) {
+        int iModel = modelIndexForFrame(i);
+        caf = i;
+        i = iModel;
+      } else {
+        caf = i;
+      }
+      setModel(i, true);
     } catch (Exception e) {
       // ignore
     }
   }
 
   // private methods and fields
-   
+
   private int lastFramePainted;
   private int lastModelPainted;
   private int intAnimThread;
   private int cai = -1;
-  
+
   public int getUnitCellAtomIndex() {
     return cai;
   }
-  
+
   public void setUnitCellAtomIndex(int iAtom) {
     cai = iAtom;
   }
-
 
   private void setViewer(boolean clearBackgroundModel) {
     vwr.ms.setTrajectory(cmi);
@@ -454,9 +457,9 @@ public class AnimationManager {
 
   void setSelectAllSubset(boolean justOne) {
     if (vwr.ms != null)
-      vwr.slm.setSelectionSubset(justOne ? vwr.ms
-          .getModelAtomBitSetIncludingDeleted(cmi, true) : vwr.ms
-          .getModelAtomBitSetIncludingDeletedBs(bsVisibleModels));
+      vwr.slm.setSelectionSubset(
+          justOne ? vwr.ms.getModelAtomBitSetIncludingDeleted(cmi, true)
+              : vwr.ms.getModelAtomBitSetIncludingDeletedBs(bsVisibleModels));
   }
 
   private int setFrameRangeVisible() {
@@ -475,7 +478,7 @@ public class AnimationManager {
     int frameDisplayed = 0;
     nDisplayed = 0;
     for (int iframe = firstFrameIndex; iframe != lastFrameIndex; iframe += frameStep) {
-      int i = modelIndexForFrame(iframe); 
+      int i = modelIndexForFrame(iframe);
       if (!vwr.ms.isJmolDataFrameForModel(i)) {
         bsVisibleModels.set(i);
         nDisplayed++;
@@ -491,15 +494,15 @@ public class AnimationManager {
       nDisplayed = 0;
     }
     if (nDisplayed == 1 && cmi < 0)
-      setFrame(frameDisplayed);   
+      setFrame(frameDisplayed);
     return nDisplayed;
   }
 
   private void animation(boolean TF) {
-    animationOn = TF; 
+    animationOn = TF;
     vwr.setBooleanProperty("_animating", TF);
   }
-  
+
   private boolean setAnimationRelative(int direction) {
     int frameStep = getFrameStep(direction);
     int thisFrame = (isMovie ? caf : cmi);
@@ -518,7 +521,8 @@ public class AnimationManager {
       case T.once:
         return false;
       case T.loop:
-        nextMorphFrame = frameNext = (animationDirection == currentDirection ? firstFrameIndex
+        nextMorphFrame = frameNext = (animationDirection == currentDirection
+            ? firstFrameIndex
             : lastFrameIndex);
         break;
       case T.palindrome:
@@ -538,15 +542,96 @@ public class AnimationManager {
   }
 
   private boolean isNotInRange(double frameNext) {
-    double f = frameNext - 0.001f;
-    return (f > firstFrameIndex && f > lastFrameIndex 
-        || (f = frameNext + 0.001f) < firstFrameIndex
-        && f < lastFrameIndex);
+    double f = frameNext - 0.001d;
+    return (f > firstFrameIndex && f > lastFrameIndex
+        || (f = frameNext + 0.001d) < firstFrameIndex && f < lastFrameIndex);
   }
 
   private int getFrameStep(int direction) {
     return frameStep * direction * currentDirection;
   }
 
+  /**
+   * left-right split-frame dual images; could be combined with stereo DTI
+   * 
+   */
+  public boolean splitFrame;
+  int splitFrameOffsetX;
+  public int currentSplitFrame = -1;
+  
+  void setSplitFrameOffsetX(int x) {
+    splitFrames[1].offsetX = x;
+  }
+
+  private class SplitFrame {
+
+    int index;
+    int modelIndex;
+    int offsetX;
+
+    public SplitFrame(int index, int modelIndex) {
+      this.index = index;
+      this.modelIndex = modelIndex;
+    }
+  }
+
+  public void setSplitFrame(int modelIndex1, int modelIndex2) {
+    splitFrame = (modelIndex1 >= 0 && modelIndex2 >= 0);
+    splitFrames = (splitFrame
+        ? new SplitFrame[] { new SplitFrame(0, modelIndex1),
+            new SplitFrame(1, modelIndex2) }
+        : null);
+  }
+
+  SplitFrame[] splitFrames;
+
+  int getSplitFrameModelIndex(int i) {
+    return (splitFrames == null ? -1 : splitFrames[i].modelIndex);
+  }
+
+  /**
+   * Adjust x-value of mouse action to be offset by the frame offset.
+   * This sets thisSplitFrame;
+   * 
+   * @param x
+   * @return x or offsetX
+   */
+  public int setSplitFrameMouse(int x) {
+    if (!splitFrame) {
+      currentSplitFrame = -1;
+      return x;
+    }
+    boolean isRight = (x >= splitFrames[1].offsetX);
+    currentSplitFrame = (isRight ? 1 : 0);
+    return x - splitFrames[currentSplitFrame].offsetX;
+  }
+
+  public int getSplitFrameModel() {
+    return (currentSplitFrame < 0 ? cmi : splitFrames[currentSplitFrame].modelIndex);
+  }
+
+  public boolean isSplitFrameSelectable(int atomIndex) {
+    int m = getSplitFrameModel();
+    return (m < 0 || m == vwr.ms.at[atomIndex].mi);
+  }
+
+  /**
+   * 
+   * @param active
+   * @return either the active set of atoms or the other model's set or null
+   */
+  public BS getSplitFrameAtoms(boolean active) {
+    if (currentSplitFrame < 0)
+      return null;
+    int m = splitFrames[active ? currentSplitFrame : 1 - currentSplitFrame].modelIndex;
+    return vwr.getModelUndeletedAtomsBitSet(m);
+  }
+
+  public void addSplitFrameModels(BS bs) {
+    if (splitFrame) {
+      bs.set(splitFrames[0].modelIndex);
+      bs.set(splitFrames[1].modelIndex);
+    }
+  }
 
 }

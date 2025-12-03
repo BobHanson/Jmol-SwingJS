@@ -28,10 +28,12 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.P3d;
+import javajs.util.V3d;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
+import org.jmol.util.Vibration;
 
 /**
  * JmolData file reader, for a modified PDB format
@@ -44,6 +46,8 @@ public class JmolDataReader extends PdbReader {
   private Map<String, double[]> props;
   private String[] residueNames;
   private String[] atomNames;
+  private boolean isSpin;
+  private double spinFactor;
   
   //  REMARK   6 Jmol PDB-encoded data: property atomno temperature;
   //  REMARK   6 Jmol atom names ... ... ...;
@@ -61,6 +65,7 @@ public class JmolDataReader extends PdbReader {
       switch ("Ppard".indexOf(line.substring(16, 17))) {
       case 0: //Jmol PDB-encoded data
         props = new Hashtable<String, double[]>();
+        isSpin = (line.indexOf(": spin;") >= 0);
         asc.setInfo("jmolData", line);
         if (!line.endsWith("#noautobond"))
           line += "#noautobond";
@@ -112,14 +117,18 @@ public class JmolDataReader extends PdbReader {
         // ramachandran, or other sort of plot.
 
         double[] data = new double[15];
-        Parser.parseStringInfestedDoubleArray(
-            line.substring(10).replace('=', ' ').replace('{', ' ')
-                .replace('}', ' '), null, data);
-        P3d minXYZ = P3d.new3((double) data[0], (double) data[1], (double) data[2]);
-        P3d maxXYZ = P3d.new3((double) data[3], (double) data[4], (double) data[5]);
-        fileScaling = P3d.new3((double) data[6], (double) data[7], (double) data[8]);
-        fileOffset = P3d.new3((double) data[9], (double) data[10], (double) data[11]);
-        P3d plotScale = P3d.new3((double) data[12], (double) data[13], (double) data[14]);
+        Parser.parseStringInfestedDoubleArray(line.substring(10)
+            .replace('=', ' ').replace('{', ' ').replace('}', ' '), null, data);
+        P3d minXYZ = P3d.new3((double) data[0], (double) data[1],
+            (double) data[2]);
+        P3d maxXYZ = P3d.new3((double) data[3], (double) data[4],
+            (double) data[5]);
+        fileScaling = P3d.new3((double) data[6], (double) data[7],
+            (double) data[8]);
+        fileOffset = P3d.new3((double) data[9], (double) data[10],
+            (double) data[11]);
+        P3d plotScale = P3d.new3((double) data[12], (double) data[13],
+            (double) data[14]);
         if (plotScale.x <= 0)
           plotScale.x = 100;
         if (plotScale.y <= 0)
@@ -130,25 +139,45 @@ public class JmolDataReader extends PdbReader {
           fileScaling.y = 1;
         if (fileScaling.z == 0)
           fileScaling.z = 1;
-        setFractionalCoordinates(true);
-        latticeCells = new int[4];
-        asc.xtalSymmetry = null;
-        setUnitCell(plotScale.x * 2 / (maxXYZ.x - minXYZ.x), plotScale.y * 2
-            / (maxXYZ.y - minXYZ.y), plotScale.z * 2
-            / (maxXYZ.z == minXYZ.z ? 1 : maxXYZ.z - minXYZ.z), 90, 90, 90);
-        unitCellOffset = P3d.newP(plotScale);
-        unitCellOffset.scale(-1);
-        getSymmetry();
-        symmetry.toFractional(unitCellOffset, false);
-        unitCellOffset.scaleAdd2(-1d, minXYZ, unitCellOffset);
-        symmetry.setOffsetPt(unitCellOffset);
+        if (isSpin) {
+          spinFactor = plotScale.x/maxXYZ.x;
+        } else {
+          setFractionalCoordinates(true);
+          latticeCells = new int[4];
+          asc.xtalSymmetry = null;
+          setUnitCell(plotScale.x * 2 / (maxXYZ.x - minXYZ.x),
+              plotScale.y * 2 / (maxXYZ.y - minXYZ.y),
+              plotScale.z * 2
+                  / (maxXYZ.z == minXYZ.z ? 1 : maxXYZ.z - minXYZ.z),
+              90, 90, 90);
+          unitCellOffset = P3d.newP(plotScale);
+          unitCellOffset.scale(-1);
+          getSymmetry();
+          symmetry.toFractional(unitCellOffset, false);
+          unitCellOffset.scaleAdd2(-1d, minXYZ, unitCellOffset);
+          symmetry.setOffsetPt(unitCellOffset);
+          doApplySymmetry = true;
+        }
         asc.setInfo("jmolDataScaling", new P3d[] { minXYZ, maxXYZ, plotScale });
-        doApplySymmetry = true;
         break;
       }
       break;
     }
     checkCurrentLineForScript();
+  }
+
+  @Override
+  protected void processAtom2(Atom atom, int serial, double x, double y, double z, int charge) {
+    if (isSpin) {
+      Vibration vib = new Vibration();
+      vib.set(x, y, z);
+      vib.isFrom000 = true;
+      atom.vib = vib;
+      x *= spinFactor;
+      y *= spinFactor;
+      z *= spinFactor;
+    }
+    super.processAtom2(atom, serial, x, y, z, charge);
   }
 
   @Override

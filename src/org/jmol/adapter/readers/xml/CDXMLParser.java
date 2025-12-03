@@ -23,12 +23,11 @@
  */
 package org.jmol.adapter.readers.xml;
 
-import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Stack;
+
+import javajs.util.BS;
+import javajs.util.Lst;
 
 /**
  * A reader for CambridgeSoft CDXML files.
@@ -106,21 +105,21 @@ public class CDXMLParser {
 
   private int idnext = 100000;
   
-  protected BitSet bsAtoms = new BitSet(), bsBonds = new BitSet();
+  protected BS bsAtoms = new BS(), bsBonds = new BS();
 
   /**
    * main list
    */
-  List<CDNode> atoms = new ArrayList<CDNode>();
+  Lst<CDNode> atoms = new Lst<CDNode>();
 
   /**
    * main list
    */
-  List<CDBond> bonds = new ArrayList<CDBond>();
+  Lst<CDBond> bonds = new Lst<CDBond>();
 
   Map<String, CDBond> bondIDMap = new HashMap<String, CDBond>();
 
-  private Stack<BracketedGroup> bracketedGroups;
+  private Lst<BracketedGroup> bracketedGroups;
 
   protected CDXReaderI rdr;
   public Map<String, CDNode> mapCloned;
@@ -170,7 +169,7 @@ public class CDXMLParser {
     /**
      * list of connection bonds, ordered by ID
      */
-    List<Object[]> orderedConnectionBonds;
+    Lst<Object[]> orderedConnectionBonds;
     /**
      * for an external point, the actual atom associated with it in the fragment  
      */
@@ -178,7 +177,7 @@ public class CDXMLParser {
     /**
      * for a fragment, the list of external points for a fragment, ordered by sequence in the label
      */
-    List<CDNode> orderedExternalPoints;
+    Lst<CDNode> orderedExternalPoints;
 
     /**
      * 0x0432 For multicenter attachment nodes or variable attachment nodes a
@@ -209,35 +208,37 @@ public class CDXMLParser {
     /**
      * atom-atom edges, including special points
      */
-    public BitSet bsConnections;
+    public BS bsConnections;
 
     /**
      * atoms of a nickname fragment
      */
-    BitSet bsFragmentAtoms;
+    BS bsFragmentAtoms;
     int clonedIndex= -1;
 
     CDNode(int index, String id, String nodeType, String fragmentID,
         CDNode parent) {
+      if (id == null)
+        return; // Jmol legacy J2S bug
       this.id = id;
       this.index = index;
       this.outerFragmentID = fragmentID;
       this.intID = Integer.parseInt(id);
       this.nodeType = nodeType;
       this.parentNode = parent;
-      this.bsConnections = new BitSet();
+      this.bsConnections = new BS();
       // could also be a fragment if node type is "Unspecified"
       isFragment = "Fragment".equals(nodeType) || "Nickname".equals(nodeType);
       isExternalPt = "ExternalConnectionPoint".equals(nodeType);
       if (isFragment) {
-        bsFragmentAtoms = new BitSet();
+        bsFragmentAtoms = new BS();
       } else if (parent != null && !isExternalPt) {
         if (parent.bsFragmentAtoms == null) {
           // problem valences may not indicate that a parent is a fragment
           //<n id="4931" p="247.0 209.37" Warning="An atom in this label has an invalid valence." NodeType="Unspecified">
           //<fragment id="40759">
           parent.isFragment = true;
-          parent.bsFragmentAtoms = new BitSet();
+          parent.bsFragmentAtoms = new BS();
         }
         parent.bsFragmentAtoms.set(index);
       }
@@ -274,7 +275,7 @@ public class CDXMLParser {
      */
     void addExternalPoint(CDNode externalPoint) {
       if (orderedExternalPoints == null)
-        orderedExternalPoints = new ArrayList<CDNode>();
+        orderedExternalPoints = new Lst<CDNode>();
       int i = orderedExternalPoints.size();
       while (--i >= 0 && orderedExternalPoints.get(i).intID >= externalPoint.internalAtom.intID) {
         // continue;
@@ -291,7 +292,7 @@ public class CDXMLParser {
 
     void addAttachedAtom(CDBond bond, int pt) {
       if (orderedConnectionBonds == null)
-        orderedConnectionBonds = new ArrayList<Object[]>();
+        orderedConnectionBonds = new Lst<Object[]>();
       int i = orderedConnectionBonds.size();
       while (--i >= 0
           && ((Integer) orderedConnectionBonds.get(i)[0]).intValue() > pt) {
@@ -371,7 +372,7 @@ public class CDXMLParser {
 				a.id = nextID();
 				mapCloned.put(id, a);
 				a.clonedIndex = index;
-                a.bsConnections = new BitSet();
+                a.bsConnections = new BS();
 				objectsByID.put(a.id, a);
 				// for minimization, don't put these on top of each other.
 
@@ -397,7 +398,7 @@ public class CDXMLParser {
       return Math.sqrt(dx * dx + dy * dy);
     }
 
-    public void addBracketedAtoms(BitSet bsBracketed) {
+    public void addBracketedAtoms(BS bsBracketed) {
       if (isFragment)
         bsBracketed.or(bsFragmentAtoms);
       else if (!isExternalPt)
@@ -419,6 +420,8 @@ public class CDXMLParser {
     boolean invalidated;
 
     CDBond(String id, String id1, String id2, int order) {
+      if (id1 == null)
+        return; // Jmol legacy J2S bug
       this.id = (id == null ? nextID() : id);
       this.id1 = id1;
       this.id2 = id2;
@@ -507,7 +510,7 @@ public class CDXMLParser {
 	      CDBond b2 = (CDBond) objectsByID.get(bondIDs[0]);
 	      CDNode a2o = b2.getOtherNode(a2i);
 	      
-	      BitSet bsTrailingAtoms = new BitSet();
+	      BS bsTrailingAtoms = new BS();
 	      buildBranch(a2i, a2o, null, null, bsTrailingAtoms, null, null);
 	      double[] offset = new double[] {a2o.x - a1i.x, a2o.y - a1i.y, a2o.z - a1i.z }; 
 	      // a1o-b1-a1i...a2i-b2-a2o
@@ -515,7 +518,7 @@ public class CDXMLParser {
 	      // becomes
 	      // a1o-b1-a1i...a2i-b1-a1i'...a2i'-b2-a2o
         // ....|------------|--------------|
-	      BitSet bsBracketed = new BitSet();
+	      BS bsBracketed = new BS();
 	      for (int i = ids.length; --i >= 0;) {
 	        CDNode node = (CDNode) objectsByID.get(ids[i]);
 	        node.addBracketedAtoms(bsBracketed);
@@ -536,7 +539,7 @@ public class CDXMLParser {
 	    }
 
     private void shiftAtoms(int firstAtom, double[] d, int multiplier,
-                            BitSet bs) {
+                            BS bs) {
       if (bs == null) {
         for (int i = getAtomCount(); --i >= firstAtom;) {
           CDNode a = getAtom(i);
@@ -555,16 +558,16 @@ public class CDXMLParser {
     }
 
 
-      private CDNode[] duplicateBracketAtoms(CDNode a1i, CDNode a2i, BitSet bsBracketed) {
+      private CDNode[] duplicateBracketAtoms(CDNode a1i, CDNode a2i, BS bsBracketed) {
 	      mapCloned = new HashMap<>();     CDNode aNew = a1i.clone();
 	      CDNode[] a12i = new CDNode[] {aNew, a1i == a2i ? aNew : null};
-        BitSet bsDone = new BitSet();
+        BS bsDone = new BS();
 	      buildBranch(null, a1i, a2i, aNew, bsDone, bsBracketed, a12i);
 	      return a12i;
 	    }
 
     private void buildBranch(CDNode prev, CDNode aRoot, CDNode aEnd, CDNode a,
-                             BitSet bsDone, BitSet bsBracketed, CDNode[] a12i) {
+                             BS bsDone, BS bsBracketed, CDNode[] a12i) {
       bsDone.set(aRoot.index);
       CDNode aNext = null;
       for (int i = aRoot.bsConnections
@@ -604,13 +607,13 @@ public class CDXMLParser {
     this.rdr = reader;
   }
 
-  private Stack<String> fragments = new Stack<String>();
+  private Lst<String> fragments = new Lst<String>();
   private String thisFragmentID;
   private CDNode thisNode;
   private CDNode thisAtom;
   private boolean ignoreText;
-  private Stack<CDNode> nodes = new Stack<CDNode>();
-  private List<CDNode> nostereo = new ArrayList<CDNode>();
+  private Lst<CDNode> nodes = new Lst<CDNode>();
+  private Lst<CDNode> nostereo = new Lst<CDNode>();
   Map<String, Object> objectsByID = new HashMap<String, Object>();
 
   /**
@@ -673,13 +676,13 @@ public class CDXMLParser {
   void processEndElement(String localName, String chars) {
     switch (localName) {
     case "fragment":
-      thisFragmentID = fragments.pop();
+      thisFragmentID = fragments.removeItemAt(fragments.size() - 1);
       return;
     case "objecttag":
       ignoreText = false;
       return;
     case "n":
-      thisNode = (nodes.size() == 0 ? null : nodes.pop());
+      thisNode = (nodes.size() == 0 ? null : nodes.removeItemAt(nodes.size() - 1));
       return;
     case "bracketedgroup":
       break;
@@ -746,7 +749,7 @@ public class CDXMLParser {
   private CDNode setNode(String id, Map<String, String> atts) {
     String nodeType = atts.get("nodetype");
     if (thisNode != null)
-      nodes.push(thisNode);
+      nodes.addLast(thisNode);
     if ("_".equals(nodeType)) {
       // internal Jmol code for ignored node
       thisAtom = thisNode = null;
@@ -797,7 +800,7 @@ public class CDXMLParser {
   }
   
   private CDNode setFragment(String id, Map<String, String> atts) {
-	    fragments.push(thisFragmentID = id);
+	    fragments.addLast(thisFragmentID = id);
 	    CDNode fragmentNode = (thisNode == null || !thisNode.isFragment ? null : thisNode);
 	    if (fragmentNode != null) {
 	      fragmentNode.setInnerFragmentID(id);
@@ -885,9 +888,9 @@ public class CDXMLParser {
 
     if (order == rdr.getBondOrder("either")) {
       if (!nostereo.contains(node1))
-        nostereo.add(node1);
+        nostereo.addLast(node1);
       if (!nostereo.contains(node2))
-        nostereo.add(node2);
+        nostereo.addLast(node2);
     }
 
     if (node1.hasMultipleAttachments) {
@@ -923,11 +926,11 @@ public class CDXMLParser {
   private void setBracketedGroup(String id, Map<String, String> atts) {
 	    String usage = atts.get("bracketusage");
 	    if (bracketedGroups == null)
-	      bracketedGroups = new Stack<>();
+	      bracketedGroups = new Lst<>();
 	    if ("MultipleGroup".equals(usage)) {
 	      String[] ids = getTokens(atts.get("bracketedobjectids"));
 	      int repeatCount = parseInt(atts.get("repeatcount"));
-	      bracketedGroups.add(new BracketedGroup(id, ids, repeatCount));
+	      bracketedGroups.addLast(new BracketedGroup(id, ids, repeatCount));
 	    }
 	  }
 
@@ -978,7 +981,7 @@ public class CDXMLParser {
     }
     reserializeAtoms();
 
-    bsBonds.clear();
+    bsBonds.clearAll();
     for (int i = getBondCount(); --i >= 0;) {
         CDBond b = getBond(i);
         if (b.isValid()) {
@@ -1049,7 +1052,7 @@ public class CDXMLParser {
     //dumpGraph();
     
     for (int i = bracketedGroups.size(); --i >= 0;) {
-      bracketedGroups.remove(i).process();
+      bracketedGroups.removeItemAt(i).process();
     }
     
     //dumpGraph();
@@ -1123,7 +1126,7 @@ public class CDXMLParser {
   }
 
   CDNode addAtom(CDNode atom) {
-    atoms.add(atom);
+    atoms.addLast(atom);
     bsAtoms.set(atom.index);
     return atom;
   }
@@ -1134,7 +1137,7 @@ public class CDXMLParser {
 
   CDBond addBond(CDBond b) {
     bsBonds.set(b.index = getBondCount());
-    bonds.add(b);
+    bonds.addLast(b);
     return b;
   }
 

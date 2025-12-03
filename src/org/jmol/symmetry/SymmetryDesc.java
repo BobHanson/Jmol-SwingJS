@@ -877,6 +877,7 @@ public class SymmetryDesc {
 
     boolean matrixOnly = (bsInfo.get(RET_MATRIX) & (bsInfo.cardinality() == (bsInfo.get(RET_RXYZ) ? 2 : 1)));
     boolean isTimeReversed = (op.timeReversal == -1);
+    boolean isMagnetic = (op.timeReversal != 0 || op.spinU != null);
     boolean isSpinSG = (op.spinU != null);
     if (scaleFactor == 0)
       scaleFactor = 1;
@@ -924,8 +925,6 @@ public class SymmetryDesc {
       m2.m22 = Math.round(m2.m22);
       m2.m23 = Math.round(m2.m23);
     }
-
-    boolean isMagnetic = (op.timeReversal != 0 || op.spinU != null);
 
     if (matrixOnly && !isMagnetic) {
       // quick-return -- note that this is not for magnetic!

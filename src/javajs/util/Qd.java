@@ -412,15 +412,15 @@ public class Qd {
 
     Qd q = newM(mat);
 
-     /*
-     System.out.println("Quaternion mat from q \n" + q.getMatrix());
-     System.out.println("Quaternion: " + q.getNormal() + " " + q.getTheta());
-     AxisAngle4f a = new AxisAngle4f();
-     a.set(mat);
-     Vector3f v = Vector3f.new3(a.x, a.y, a.z);
-     v.normalize();
-     System.out.println("angleAxis: " + v + " "+(a.angle/Math.PI * 180));
-     */
+     
+//     System.out.println("Quaternion mat from q \n" + q.getMatrix());
+//     System.out.println("Quaternion: " + q.getNormal() + " " + q.getTheta());
+//     A4d a = new A4d();
+//     a.setM(mat);
+//     V3d v = V3d.new3(a.x, a.y, a.z);
+//     v.normalize();
+//     System.out.println("angleAxis: " + v + " "+(a.angle/Math.PI * 180));
+     
      
     return q;
   }

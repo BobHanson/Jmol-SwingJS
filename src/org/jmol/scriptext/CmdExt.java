@@ -70,6 +70,7 @@ import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 import org.jmol.util.Point3fi;
 import org.jmol.util.SimpleUnitCell;
+import org.jmol.util.Vibration;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.ShapeManager;
@@ -3503,6 +3504,7 @@ public class CmdExt extends ScriptExt {
     String filename = null;
     boolean makeNewFrame = true;
     boolean isDraw = false;
+    boolean isSpinPointGroup = false;
     switch (tokCmd) {
     case T.plot:
     case T.quaternion:
@@ -3533,7 +3535,7 @@ public class CmdExt extends ScriptExt {
     }
     String qFrame = "";
     Object[] parameters = null;
-    String stateScript = "";
+    String startScript = "", endScript = "";
     boolean isQuaternion = false;
     boolean isDerivative = false;
     boolean isSecondDerivative = false;
@@ -3559,6 +3561,54 @@ public class CmdExt extends ScriptExt {
       e.iToken = 1;
       type = "data";
       preSelected = "";
+      break;
+    case T.spin:
+      isSpinPointGroup = (tokAt(pt0 + 1) == T.pointgroup);
+      type = "spin";
+      propToks[0] = T.vibx;
+      propToks[1] = T.viby;
+      propToks[2] = T.vibz;
+      props[0] = "spinX";
+      props[1] = "spinY";
+      props[2] = "spinZ";
+      if (bs.nextSetBit(0) < 0) {
+        bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+      }
+      if (bs.isEmpty())
+        return "";
+      // remove non-spin atoms
+      double len = 0;
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        Vibration v = vwr.ms.getVibration(i, false);
+        if (v == null)
+          bs.clear(i);
+        else 
+          len = Math.max(len, v.length());
+      }
+      if (len == 0)
+          return "";
+      
+      minXYZ = P3d.new3(-len, -len, -len);
+      maxXYZ = P3d.new3(len, len, len);
+      
+      Lst<Vibration> lst = new Lst<>();
+      
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        Vibration v = vwr.ms.getVibration(i, false);
+        boolean found = false;
+        for (int j = lst.size(); --j >= 0;) {
+          if (v.distance(lst.get(j)) < 0.1d) {
+            found = true;
+            bs.clear(i);
+            break;
+          }
+        }
+        if (!found)
+          lst.addLast(v);
+      }
+
+      startScript = "zap 2.1;select " + Escape.eBS(bs) + ";\n ";
+      endScript = ";axes unitcell;";
       break;
     case T.property:
       e.iToken = pt0 + 1;
@@ -3603,7 +3653,7 @@ public class CmdExt extends ScriptExt {
           + (props[2] == null ? "" : " " + props[2]);
       if (bs.nextSetBit(0) < 0)
         bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
-      stateScript = "select " + Escape.eBS(bs) + ";\n ";
+      startScript = "select " + Escape.eBS(bs) + ";\n ";
       break;
     case T.ramachandran:
       if (type.equalsIgnoreCase("draw")) {
@@ -3617,7 +3667,7 @@ public class CmdExt extends ScriptExt {
     case T.quaternion:
     case T.helix:
       qFrame = " \"" + vwr.getQuaternionFrame() + "\"";
-      stateScript = "set quaternionFrame" + qFrame + ";\n  ";
+      startScript = "set quaternionFrame" + qFrame + ";\n  ";
       isQuaternion = true;
       // working backward this time:
       if (type.equalsIgnoreCase("draw")) {
@@ -3650,10 +3700,10 @@ public class CmdExt extends ScriptExt {
     // if not just drawing check to see if there is already a plot of this type
 
     if (makeNewFrame) {
-      stateScript += "plot " + type;
-      int ptDataFrame = vwr.ms.getJmolDataFrameIndex(modelIndex, stateScript);
+      startScript += "plot " + type + endScript;
+      int ptDataFrame = vwr.ms.getJmolDataFrameIndex(modelIndex, startScript);
       if (ptDataFrame > 0 && tokCmd != T.write && tokCmd != T.show) {
-        // no -- this is that way we switch frames. vwr.deleteAtoms(vwr.getModelUndeletedAtomsBitSet(ptDataFrame), true);
+        // no -- this is that way weqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq switch frames. vwr.deleteAtoms(vwr.getModelUndeletedAtomsBitSet(ptDataFrame), true);
         // data frame can't be 0.
         vwr.setCurrentModelIndexClear(ptDataFrame, true);
         // BitSet bs2 = vwr.getModelAtomBitSet(ptDataFrame);
@@ -3666,9 +3716,10 @@ public class CmdExt extends ScriptExt {
 
     // prepare data for property plotting
 
+    double pdbFactor = 1;
     double[] dataX = null, dataY = null, dataZ = null;
     String[] propData = new String[3];
-    if (tok == T.property) {
+    if (tok == T.property || tok == T.spin) {
       dataX = getBitsetPropertyFloat(bs, propToks[0] | T.selectedfloat,
           propToks[0] == T.property ? props[0] : null,
           (minXYZ == null ? Double.NaN : minXYZ.x),
@@ -3699,13 +3750,14 @@ public class CmdExt extends ScriptExt {
       Logger.info("plot min/max: " + minXYZ + " " + maxXYZ);
       P3d center = null;
       P3d factors = null;
-
+      
       if (pdbFormat) {
         factors = P3d.new3(1, 1, 1);
         center = new P3d();
         center.ave(maxXYZ, minXYZ);
         factors.sub2(maxXYZ, minXYZ);
-        factors.set(factors.x / 200, factors.y / 200, factors.z / 200);
+        if (tok != T.spin)
+          factors.set(factors.x / 200, factors.y / 200, factors.z / 200);
         if (T.tokAttr(propToks[0], T.intproperty)) {
           factors.x = 1;
           center.x = 0;
@@ -3727,16 +3779,16 @@ public class CmdExt extends ScriptExt {
         if (props[2] == null || props[1] == null)
           center.z = minXYZ.z = maxXYZ.z = factors.z = 0;
         for (int i = 0; i < dataX.length; i++)
-          dataX[i] = (dataX[i] - center.x) / factors.x;
+          dataX[i] = (dataX[i] - center.x) / factors.x * pdbFactor;
         if (props[1] != null)
           for (int i = 0; i < dataY.length; i++)
-            dataY[i] = (dataY[i] - center.y) / factors.y;
+            dataY[i] = (dataY[i] - center.y) / factors.y * pdbFactor;
         if (props[2] != null)
           for (int i = 0; i < dataZ.length; i++)
-            dataZ[i] = (dataZ[i] - center.z) / factors.z;
+            dataZ[i] = (dataZ[i] - center.z) / factors.z * pdbFactor;
       }
       parameters = new Object[] { bs, dataX, dataY, dataZ, minXYZ, maxXYZ,
-          factors, center, format, propData };
+          factors, center, format, propData, Double.valueOf(1)};
     }
 
     // all set...
@@ -3745,8 +3797,17 @@ public class CmdExt extends ScriptExt {
       return vwr.writeFileData(filename, "PLOT_" + type, modelIndex,
           parameters);
 
-    String data = (type.equals("data") ? "1 0 H 0 0 0 # Jmol PDB-encoded data"
-        : vwr.getPdbData(modelIndex, type, null, parameters, null, true));
+    String data;
+    switch (type.substring(0, 4)) {
+    case "data":
+      data = "1 0 H 0 0 0 # Jmol PDB-encoded data";
+      break;
+    case "spin":
+    default:
+      // pdb
+      data = vwr.getPdbData(modelIndex, type, null, parameters, null, true);
+      break;
+    }
 
     if (tokCmd == T.show)
       return data;
@@ -3771,10 +3832,10 @@ public class CmdExt extends ScriptExt {
     if (!isOK)
       return "";
     int modelCount = vwr.ms.mc;
-    vwr.ms.setJmolDataFrame(stateScript, modelIndex, modelCount - 1);
+    vwr.ms.setJmolDataFrame(startScript, modelIndex, modelCount - 1);
     if (tok != T.property)
-      stateScript += ";\n" + preSelected;
-    StateScript ss = vwr.addStateScript(stateScript, true, false);
+      startScript += ";\n" + preSelected;
+    StateScript ss = vwr.addStateScript(startScript, true, false);
 
     // get post-processing script
 
@@ -3809,6 +3870,8 @@ public class CmdExt extends ScriptExt {
     case T.helix:
       vwr.setFrameTitle(modelCount - 1, type.replace('w', ' ') + qFrame
           + " for model " + vwr.getModelNumberDotted(modelIndex));
+      //$FALL-THROUGH$
+    case T.spin:      
       String color = (C.getHexCode(vwr.cm.colixBackgroundContrast));
       script = "frame 0.0; frame last; reset;"
           + "select visible; wireframe 0; spacefill 3.0; "
@@ -3818,7 +3881,8 @@ public class CmdExt extends ScriptExt {
           + "X {100 0 0} {-100 0 0} color red \"x\";" + "draw quatAxis"
           + modelCount + "Y {0 100 0} {0 -100 0} color green \"y\";"
           + "draw quatAxis" + modelCount
-          + "Z {0 0 100} {0 0 -100} color blue \"z\";" + "color structure;"
+          + "Z {0 0 100} {0 0 -100} color blue \"z\";" 
+          + (tok == T.spin ? "vectors 2.0;spacefill off;" : "color structure;")
           + "draw quatCenter" + modelCount + "{0 0 0} scale 0.02;";
       break;
     }
@@ -3828,6 +3892,18 @@ public class CmdExt extends ScriptExt {
     ss.setModelIndex(vwr.am.cmi);
     vwr.setRotationRadius(radius, true);
     e.sm.loadShape(JC.SHAPE_ECHO);
+    if (isSpinPointGroup) {
+      script = ";set symmetryhm;" + 
+          //"frame 2.1;" + 
+          "draw spin pointgroup;" + 
+          "var name = {2.1}.pointgroup().hmName;" + 
+          "set echo hmname 100% 100%;" + 
+          "set echo hmname RIGHT;" + 
+          "set echo hmname model 2.1;" + 
+          "echo @name;" + 
+          "frame 1.1 2.1 split;";
+      e.runScript(script);
+    }
     showString("frame " + vwr.getModelNumberDotted(modelCount - 1)
         + (type.length() > 0
             ? " created: " + type + (isQuaternion ? qFrame : "")

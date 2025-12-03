@@ -77,17 +77,17 @@ public class Measurement {
   private String strMeasurement;
   private String type;
 
-  // next three are used by MeaurementRenderer
-  
-  private boolean tainted;
   public A4d renderAxis;
   public P3d renderArc;
-  private String newUnits;
   public double fixedValue = Double.NaN;
-  private boolean isPending;
   public boolean inFront;
+  public int modelIndex;
+
+  private boolean isPending;
+  private boolean tainted;
   private boolean useDefaultLabel;
-  
+  private String newUnits;
+
   public boolean isTainted() {
     return (tainted && !(tainted = false));
   }
@@ -101,6 +101,7 @@ public class Measurement {
     this.colix = colix;
     this.strFormat = strFormat;
     if (m != null) {
+      modelIndex = m.modelIndex;
       tickInfo = m.tickInfo;
       pts = m.pts;
       mad = m.mad;
@@ -489,12 +490,13 @@ public class Measurement {
        );
   }
 
-  public void setModelIndex(short modelIndex) {
+  public void setModelIndex(int modelIndex) {
+    this.modelIndex = modelIndex;
     if (pts == null)
       return;
     for (int i = 0; i < count; i++) {
       if (pts[i] != null)
-        pts[i].mi = modelIndex;
+        pts[i].mi = (short) modelIndex;
     }
   }
 
@@ -636,6 +638,7 @@ public class Measurement {
   }
   
   public void setFromMD(MeasurementData md, boolean andText) {
+    modelIndex = md.modelIndex;
     if (md.thisID != null) {
       thisID = md.thisID;
       if (md.text != null && md.text.text != null)

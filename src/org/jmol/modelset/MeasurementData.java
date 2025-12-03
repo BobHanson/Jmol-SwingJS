@@ -109,6 +109,8 @@ public class MeasurementData implements JmolMeasurementClient {
       justOneModel = vwr.ms.getModelBS((BS) points.get(0), false)
           .equals(vwr.ms.getModelBS((BS) points.get(1), false));
     }
+    if (vwr.am.splitFrame)
+      justOneModel = true;
     this.bsSelected = bsSelected;
     this.htMin = htMin;
     this.radiusData = radiusData;
@@ -187,6 +189,8 @@ public class MeasurementData implements JmolMeasurementClient {
   private int iFirstAtom;
   private boolean justOneModel = true;
   public Map<String, Integer> htMin;
+
+  public int modelIndex;
   
   /**
    * called by the client to generate a set of measurements
@@ -210,7 +214,7 @@ public class MeasurementData implements JmolMeasurementClient {
     int nPoints = points.size();
     if (nPoints < 2)
       return;
-    int modelIndex = -1;
+    modelIndex = -1;
     Point3fi[] pts = new Point3fi[4];
     int[] indices = new int[5];
     Measurement m = new Measurement().setPoints(modelSet, indices, pts, null);
@@ -277,6 +281,8 @@ public class MeasurementData implements JmolMeasurementClient {
         else if (thisModel != modelIndex)
           continue;
       }
+      // note -- this could be multiple
+      this.modelIndex = modelIndex;
       indices[thispt + 1] = i;
       if (thispt == 0)
         iFirstAtom = pt;

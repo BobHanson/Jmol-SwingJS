@@ -755,7 +755,7 @@ public class Viewer extends JmolViewer
     // so don't try dim1.equals(dim2)
     height = Math.min(height, maximumSize);
     width = Math.min(width, maximumSize);
-    if (tm.stereoDoubleFull)
+    if (tm.stereoDoubleFull || am.splitFrame)
       width = (width + 1) / 2;
     if (dimScreen.width == width && dimScreen.height == height)
       return;
@@ -849,7 +849,7 @@ public class Viewer extends JmolViewer
    * @return a java.awt.Image in the case of standard Jmol; an int[] in the case
    *         of Jmol-Android a canvas in the case of JSmol
    */
-  private Object getImage(boolean isStereo, boolean isImageWrite) {
+  private Object getRenderedImage(boolean isStereo, boolean isImageWrite) {
     Object image = null;
     try {
       beginRendering(isStereo, isImageWrite);
@@ -866,8 +866,8 @@ public class Viewer extends JmolViewer
     return image;
   }
 
-  private void beginRendering(boolean isDouble, boolean isImageWrite) {
-    gdata.beginRendering(tm.getStereoRotationMatrix(isDouble), g.translucent,
+  private void beginRendering(boolean isStereo, boolean isImageWrite) {
+    gdata.beginRendering(tm.getStereoRotationMatrix(isStereo), g.translucent,
         isImageWrite, !checkMotionRendering(T.translucent));
   }
 
@@ -897,16 +897,16 @@ public class Viewer extends JmolViewer
    * @param graphic
    *        In JavaScript/HTML5, a Canvas.Context2d
    * @param img
-   * @param x
+   * @param x will be 0 or width/2 if DTI or split frame
    * @param y
-   * @param isDTI
+   * @param isDTIorSplit
    *        DTI format -- scrunch width by factor of two
    */
   private void drawImage(Object graphic, Object img, int x, int y,
-                         boolean isDTI) {
+                         boolean isDTIorSplit) {
     if (graphic != null && img != null) {
       apiPlatform.drawImage(graphic, img, x, y, dimScreen.width,
-          dimScreen.height, isDTI);
+          dimScreen.height, isDTIorSplit);
     }
     gdata.releaseScreenImage();
   }
@@ -925,10 +925,13 @@ public class Viewer extends JmolViewer
       return (isImageWrite
           ? apiPlatform.allocateRgbImage(0, 0, null, 0, false, true)
           : null);
-    boolean isDouble = tm.stereoDoubleFull || tm.stereoDoubleDTI;
+    boolean isTwoImages = haveTwoImages();
+    boolean isWidthCompressed = tm.stereoDoubleDTI;
     boolean isBicolor = tm.stereoMode.isBiColor();
-    boolean mergeImages = (g == null && isDouble);
+    boolean isStereo = (tm.stereoMode != STER.NONE);
+    boolean mergeImages = (g == null && isTwoImages);
     Object imageBuffer;
+    tm.splitFrameCurrentlyRendering = -1;
     if (isBicolor) {
       beginRendering(true, isImageWrite);
       render();
@@ -940,31 +943,57 @@ public class Viewer extends JmolViewer
       gdata.applyAnaglygh(tm.stereoMode, tm.stereoColors);
       imageBuffer = gdata.getScreenImage(isImageWrite);
     } else {
-      imageBuffer = getImage(isDouble, isImageWrite);
+      if (am.splitFrame) {
+        tm.splitFrameCurrentlyRendering = 0;
+        setCurrentModelIndex(am.getSplitFrameModelIndex(0));
+        setModelVisibility();        
+        imageBuffer = getRenderedImage(false, isImageWrite);
+      } else {
+        imageBuffer = getRenderedImage(isStereo, isImageWrite);
+      }
     }
     Object imageBuffer2 = null;
     if (mergeImages) {
+      // for half width, we just need width here; otherwise
+      // this is two full images, and we need a double width
       imageBuffer2 = apiPlatform.newBufferedImage(imageBuffer,
-          (tm.stereoDoubleDTI ? dimScreen.width : dimScreen.width << 1),
+          (isWidthCompressed ? dimScreen.width : dimScreen.width << 1),
           dimScreen.height);
       g = apiPlatform.getGraphics(imageBuffer2);
     }
     if (g == null)
       return imageBuffer;
-    if (isDouble) {
+    int x = 0;
+    if (isTwoImages) {
       if (tm.stereoMode == STER.DTI) {
         drawImage(g, imageBuffer, dimScreen.width >> 1, 0, true);
-        imageBuffer = getImage(false, false);
+        imageBuffer = getRenderedImage(false, false);
         drawImage(g, imageBuffer, 0, 0, true);
         g = null;
+      } else if (am.splitFrame) {
+        x = 0;
+        drawImage(g, imageBuffer, x, 0, false);
+        setCurrentModelIndex(am.getSplitFrameModelIndex(1));
+        setModelVisibility();
+        tm.splitFrameCurrentlyRendering = 1;
+        imageBuffer = getRenderedImage(isStereo, false);
+        setCurrentModelIndex(am.getSplitFrameModelIndex(0));
+        setModelVisibility();
+        tm.splitFrameCurrentlyRendering = 0;
+        x = dimScreen.width;
+        am.setSplitFrameOffsetX(x);
       } else {
         drawImage(g, imageBuffer, dimScreen.width, 0, false);
-        imageBuffer = getImage(false, false);
+        imageBuffer = getRenderedImage(false, false);
       }
     }
     if (g != null)
-      drawImage(g, imageBuffer, 0, 0, false);
+      drawImage(g, imageBuffer, x, 0, false);
     return (mergeImages ? imageBuffer2 : imageBuffer);
+  }
+
+  boolean haveTwoImages() {
+      return tm.stereoDoubleFull || tm.stereoDoubleDTI || am.splitFrame;
   }
 
   public synchronized Object evalStringWaitStatusQueued(String returnType,
@@ -2548,7 +2577,7 @@ public class Viewer extends JmolViewer
   }
 
   public int getCursorX() {
-    return (haveDisplay ? acm.getCurrentX() : 0);
+    return (haveDisplay ? am.setSplitFrameMouse(acm.getCurrentX()) : 0);
   }
 
   public int getCursorY() {
@@ -3880,6 +3909,10 @@ public class Viewer extends JmolViewer
 
   }
 
+  /**
+   * @param modelIndex
+   * @return modifiable copy of this bitset
+   */
   public BS getModelUndeletedAtomsBitSet(int modelIndex) {
     return slm.excludeAtoms(
         ms.getModelAtomBitSetIncludingDeleted(modelIndex, true), false);
@@ -4760,20 +4793,27 @@ public class Viewer extends JmolViewer
       if (!checkStereoSlave || gRight == null) {
         getScreenImageBuffer(gLeft, false);
       } else {
-        drawImage(gRight, getImage(true, false), 0, 0, tm.stereoDoubleDTI);
-        drawImage(gLeft, getImage(false, false), 0, 0, tm.stereoDoubleDTI);
+        drawImage(gRight, getRenderedImage(true, false), 0, 0, tm.stereoDoubleDTI);
+        drawImage(gLeft, getRenderedImage(false, false), 0, 0, tm.stereoDoubleDTI);
       }
     }
-    if (captureParams != null
-        && Boolean.FALSE != captureParams.get("captureEnabled")) {
-      captureParams.remove("imagePixels");
-      //showString(transformManager.matrixRotate.toString(), false);
-      long t = ((Long) captureParams.get("endTime")).longValue();
-      if (t > 0 && System.currentTimeMillis() + 50 > t)
-        captureParams.put("captureMode", "end");
-      processWriteOrCapture(captureParams);
-    }
+    if (isCapturing())
+      doCapture();
     notifyViewerRepaintDone();
+  }
+
+  public boolean isCapturing() {
+    return (captureParams != null
+        && Boolean.FALSE != captureParams.get("captureEnabled"));
+  }
+  
+  public void doCapture() {
+    captureParams.remove("imagePixels");
+    //showString(transformManager.matrixRotate.toString(), false);
+    long t = ((Long) captureParams.get("endTime")).longValue();
+    if (t > 0 && System.currentTimeMillis() + 50 > t)
+      captureParams.put("captureMode", "end");
+    processWriteOrCapture(captureParams);
   }
 
   public Map<String, Object> captureParams;
@@ -5417,6 +5457,11 @@ public class Viewer extends JmolViewer
     refresh(REFRESH_SYNC_MASK, "hover on atom");
   }
 
+  public boolean showHover() {
+   return !tm.isNavigating() && (!am.splitFrame
+        || am.currentSplitFrame == tm.splitFrameCurrentlyRendering);
+  }
+
   private boolean isModelkitPickingActive() {
     if (acm.getAtomPickingMode() == ActionManager.PICKING_ASSIGN_ATOM)
       return true;
@@ -6000,6 +6045,8 @@ public class Viewer extends JmolViewer
       return g.doublePrecision;
     case T.drawpicking:
       return g.drawPicking;
+    case T.elementkey:
+      return g.elementKey;
     case T.fontcaching:
       return g.fontCaching;
     case T.fontscaling:
@@ -8076,10 +8123,26 @@ public class Viewer extends JmolViewer
     setFloatProperty("stereoDegrees", degrees);
     setBooleanPropertyTok("greyscaleRendering", T.greyscalerendering,
         stereoMode.isBiColor());
-    if (twoColors != null)
+    if (twoColors != null) {
       tm.setStereoMode2(twoColors);
-    else
+      am.setSplitFrame(-1, -1);
+    } else {
+      // DTI or DOUBLE or NONE
       tm.setStereoMode(stereoMode);
+      switch (stereoMode) {
+      case NONE:
+      case DOUBLE:
+      case DTI:
+        // these are compatible with split frames
+        break;
+      case REDBLUE:
+      case REDCYAN:
+      case REDGREEN:
+      case CUSTOM:
+        am.setSplitFrame(-1, -1);
+        break;
+      }
+    }
   }
 
   // //////////////////////////////////////////////////////////////
@@ -8141,7 +8204,12 @@ public class Viewer extends JmolViewer
 
   public boolean checkObjectHovered(int x, int y) {
     return (x >= 0 && shm != null && shm.checkObjectHovered(x, y,
-        getVisibleFramesBitSet(), getBondsPickable()));
+        getClickableFramesBitSet(x), getBondsPickable()));
+  }
+
+  private BS getClickableFramesBitSet(int x) {
+    BS bs = (am.splitFrame ? BSUtil.newAndSetBit(am.getSplitFrameModelIndex(x < dimScreen.width ? 0 : 1)) : getVisibleFramesBitSet());
+    return bs;
   }
 
   boolean checkObjectDragged(int prevX, int prevY, int x, int y, int action) {
@@ -11425,6 +11493,7 @@ public class Viewer extends JmolViewer
     ms.rotateModelSpinVectors(modelIndex, rot);      
   }
 	  
+
   ////////////////// Jmol-SwingJS only //////////////
 
   private OpenChemLib ocl;

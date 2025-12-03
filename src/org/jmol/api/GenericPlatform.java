@@ -67,7 +67,7 @@ public interface GenericPlatform extends FontManager {
 
   int getImageHeight(Object image);
 
-  Object newBufferedImage(Object image, int i, int height);
+  Object newBufferedImage(Object image, int width, int height);
 
   Object newOffScreenImage(int w, int h);
   

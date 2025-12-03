@@ -178,7 +178,7 @@ public class VectorsRenderer extends ShapeRenderer {
         return false;
       standardVector = true;
       drawShaft = (0.1 + Math.abs(headScale / len) < Math.abs(vectorScale));
-      headOffsetVector.setT(vib);
+      headOffsetVector.setT(vib.isFrom000 ? atom : vib);
       headOffsetVector.scale(headScale / len);
     }
     ptTemp.setT(atom);
@@ -221,8 +221,14 @@ public class VectorsRenderer extends ShapeRenderer {
       } else {
         pointVectorStart.scaleAdd2(-0.5d * vectorScale, vib, ptTemp);
       }
-    } else {
-      pointVectorEnd.scaleAdd2(vectorScale, vib, ptTemp);
+    } else {      
+      if (vib.isFrom000){
+        pointVectorStart.set(0, 0, 0);
+        tm.transformPtScrT3(pointVectorStart, screenVectorStart);
+        pointVectorEnd.setP(atom);
+      } else {
+        pointVectorEnd.scaleAdd2(vectorScale, vib, ptTemp);
+      }
       pointArrowHead.add2(pointVectorEnd, headOffsetVector);
       if (vibrationOn) {
         P3i screen = tm.transformPtVib(pointVectorEnd, vib);
@@ -274,7 +280,7 @@ public class VectorsRenderer extends ShapeRenderer {
 
     if (drawShaft) {
       pTemp3.set(atom.sX, atom.sY, atom.sZ);
-      if (standardVector)
+      if (standardVector && !vib.isFrom000)
         g3d.fillCylinderBits(GData.ENDCAPS_FLAT, diameter, pTemp3, screenArrowHead);
       else 
         g3d.fillCylinderBits(GData.ENDCAPS_FLAT, diameter, screenVectorStart, screenArrowHead);

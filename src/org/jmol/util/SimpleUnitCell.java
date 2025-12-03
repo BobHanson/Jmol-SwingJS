@@ -613,6 +613,11 @@ public class SimpleUnitCell {
 
   public static T3d[] setAbcFromParams(double[] params, T3d[] ucnew) {
     double[] f = newA(params).getUnitCellAsArray(true);
+    if (ucnew[0] == null) {
+      for (int i = 4; --i >= 0;) {
+        ucnew[i] = new P3d();
+      }
+    }
     ucnew[1].set(f[0], f[1], f[2]);
     ucnew[2].set(f[3], f[4], f[5]);
     ucnew[3].set(f[6], f[7], f[8]);

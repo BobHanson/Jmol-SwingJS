@@ -35,7 +35,10 @@ public class MeasurementPending extends Measurement {
   public boolean haveTarget;
   public boolean haveModified;
   public int numSet = 0;
+
+  private int lastIndex = -1;
   
+
   public MeasurementPending set(ModelSet modelSet) {
     return (MeasurementPending) setM(modelSet, null, Double.NaN, (short) 0,
         null, 0);
@@ -62,9 +65,16 @@ public class MeasurementPending extends Measurement {
     numSet = count;
   }
 
-  private int lastIndex = -1;
-  
   synchronized public int addPoint(int atomIndex, Point3fi ptClicked, boolean doSet) {
+    if (atomIndex >= 0 && ms.vwr.am.splitFrame) {
+      int mi = ms.at[atomIndex].mi;
+      if (count > 0) {
+        if (mi != modelIndex)
+          return count;
+      } else {
+        this.modelIndex = mi;
+      }
+    }
     haveModified = (atomIndex != lastIndex);
     lastIndex = atomIndex;
     if (ptClicked == null) {

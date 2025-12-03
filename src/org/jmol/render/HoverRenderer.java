@@ -37,7 +37,7 @@ public class HoverRenderer extends ShapeRenderer {
   @Override
   protected boolean render() {
     // hover rendering always involves translucent pass
-    if (tm.isNavigating())
+    if (!vwr.showHover())
       return false;
     if (ptTemp == null)
       ptTemp = new P3d();

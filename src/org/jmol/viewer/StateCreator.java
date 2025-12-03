@@ -629,6 +629,14 @@ public class StateCreator extends JmolStateCreator {
             : "PLAYREV"));
     if (am.animationOn && am.animationPaused)
       app(commands, "animation PAUSE");
+    if (am.splitFrame) {
+      app(commands, "frame " 
+          +vwr.getModelNumberDotted(am.getSplitFrameModelIndex(0)) 
+          + " " 
+          +vwr.getModelNumberDotted(am.getSplitFrameModelIndex(1)) 
+          + " split"
+      );
+    }
     if (sfunc != null)
       commands.append("}\n\n");
     return commands.toString();
@@ -1365,11 +1373,15 @@ public class StateCreator extends JmolStateCreator {
     String type = JC.shapeClassBases[shape.shapeID];
     boolean isVector = (shape.shapeID == JC.SHAPE_VECTORS);
     int mad;
+    BS bs = vwr.getAllAtoms();
     if (shape.bsSizeSet != null)
       for (int i = shape.bsSizeSet.nextSetBit(0); i >= 0; i = shape.bsSizeSet
-          .nextSetBit(i + 1))
+          .nextSetBit(i + 1)) {
+        if (!bs.get(i))
+          continue;
         BSUtil.setMapBitSet(temp, i, i, type
             + " " + ((mad = shape.mads[i]) < 0 ? (isVector && mad < -1 ? "" + -mad :  "on") : PT.escD(mad / 2000d)));
+      }
     if (shape.bsColixSet != null)
       for (int i = shape.bsColixSet.nextSetBit(0); i >= 0; i = shape.bsColixSet
           .nextSetBit(i + 1))

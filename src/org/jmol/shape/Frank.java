@@ -33,8 +33,6 @@ import javajs.util.BS;
 
 public class Frank extends Shape {
 
-  // Axes, Bbcage, Frank, Uccage
-
   final static String defaultFontName = "SansSerif";
   final static String defaultFontStyle = "Plain";
   final static int defaultFontSize = 16;

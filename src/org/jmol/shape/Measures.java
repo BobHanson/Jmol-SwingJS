@@ -104,7 +104,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     Measurement mt;
     if ("clearModelIndex" == propertyName) {
       for (int i = 0; i < measurementCount; i++)
-        measurements.get(i).setModelIndex((short) 0);
+        measurements.get(i).setModelIndex(0);
       return;
     }
 
@@ -217,8 +217,7 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         setIndices();
         return;
       }
-      Measurement m = setSingleItem(md.points);
-      m.setFromMD(md, false);
+      Measurement m = setSingleItem(md);
       switch (md.tokAction) {
       case T.refresh:
         doAction(md, md.thisID, T.refresh);
@@ -357,7 +356,8 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
     }
   }
 
-  private Measurement setSingleItem(Lst<Object> vector) {
+  private Measurement setSingleItem(MeasurementData md) {    
+  Lst<Object> vector =  md.points;
     Point3fi[] points = new Point3fi[4];
     int[] indices = new int[5];
     indices[0] = vector.size();
@@ -368,12 +368,15 @@ public class Measures extends AtomShape implements JmolMeasurementClient {
         if (atomIndex < 0)
           return null;
         indices[i + 1] = atomIndex;
+        md.modelIndex = vwr.ms.at[atomIndex].mi;
       } else {
         points[i] = (Point3fi) value;
         indices[i + 1] = -2 - i;
       }
     }
-    return new Measurement().setPoints(ms, indices, points, tickInfo == null ? defaultTickInfo : tickInfo);
+    Measurement m = new Measurement().setPoints(ms, indices, points, tickInfo == null ? defaultTickInfo : tickInfo);
+    m.setFromMD(md, false);
+    return m;
   }
 
   @Override

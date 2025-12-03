@@ -833,6 +833,7 @@ public class IsoExt extends ScriptExt {
         // draw spacegroup @n
         // draw spacegroup @n index
       case T.symop:
+      case T.spinop:
         String xyz = null;
         int iSym = Integer.MAX_VALUE;
         plane = null;
@@ -842,10 +843,11 @@ public class IsoExt extends ScriptExt {
         P3d trans = null;
         int[] opList = null;
         boolean isSymop = (tok == T.symop);
+        boolean isSpinop = (tok == T.spinop);
         int nth = -1;
         Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
         boolean checkNth = false;
-        if (isSymop) {
+        if (isSymop || isSpinop) {
           iSym = 0;
           switch (tokAt(++i)) {
           case T.string:
@@ -902,13 +904,12 @@ public class IsoExt extends ScriptExt {
             bsAtoms = (eval.isAtomExpression(i) ? atomExpressionAt(i) : null);
             i = eval.iToken;
           }
-          nth = ((!isSymop && center != null || target != null)
+          nth = ((!isSymop && !isSpinop && center != null || target != null)
               && tokAt(i + 1) == T.integer ? eval.getToken(++i).intValue : -1);
           if (nth < -1)
             invArg();
           if (isSymop) {
             if (tokAt(i + 1) == T.unitcell) {
-              //??
               target = new P3d();
               options = T.offset;
               eval.iToken = ++i;
@@ -918,9 +919,11 @@ public class IsoExt extends ScriptExt {
               options = T.offset;
               i = eval.iToken;
             }
+          } else if (isSpinop) {
+            options = T.spinop;
           }
         }
-        if (isSymop && xyz != null) {
+        if ((isSymop || isSpinop) && xyz != null) {
           i++;
           if (eval.isCenterParameter(i)) {
             center = eval.centerParameter(i, ret);
@@ -935,12 +938,10 @@ public class IsoExt extends ScriptExt {
         if (bsAtoms == null && vwr.am.cmi >= 0)
           bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
         if (bsAtoms != null) {
-          s = vwr.getModelkit(false).drawSymmetry(thisId, isSymop, iatom, xyz,
-              iSym, trans, center, target, intScale, nth, options, opList,
-              false);
+          s = vwr.getModelkit(false).drawSymmetry(thisId, isSymop, iatom, xyz, iSym, trans, center, target, intScale, nth, options, opList, false);
           if (s == null)
             return;
-          if (isSymop && target instanceof Atom && center instanceof Atom) {
+          if ((isSymop || isSpinop) && target instanceof Atom && center instanceof Atom) {
             if (eval.fullCommand.indexOf(JC.SCRIPT_QUIET) >= 0)
               s = PT.rep(s, "print", "#print");
             s += "\nmodelkit set atomset "

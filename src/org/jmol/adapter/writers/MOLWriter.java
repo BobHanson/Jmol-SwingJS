@@ -298,7 +298,7 @@ public class MOLWriter {
   private String getAtomPropertyAsString(Atom a, int tok) {
     switch (tok & T.PROPERTYFLAGS) {
     case T.intproperty:
-      int i = a.atomPropertyInt(tok);
+      int i = a.atomPropertyInt(vwr, tok);
       return (tok == T.color ? PT.trim(Escape.escapeColor(i),"[x]").toUpperCase() : "" + i);
     case T.strproperty:
       return a.atomPropertyString(vwr, tok);

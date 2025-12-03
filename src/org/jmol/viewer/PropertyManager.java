@@ -1916,7 +1916,7 @@ public class PropertyManager implements JmolPropertyManager {
       // plot property x y z....
       bsAtoms = (BS) parameters[0];
       double[] dataX = (double[]) parameters[1];
-      double[] dataY = (double[]) parameters[2];
+        double[] dataY = (double[]) parameters[2];
       double[] dataZ = (double[]) parameters[3];
       boolean haveY = (dataY != null);
       boolean haveZ = (dataZ != null);
@@ -1926,6 +1926,7 @@ public class PropertyManager implements JmolPropertyManager {
       P3d center = (P3d) parameters[7];
       String format = (String) parameters[8];
       String[] properties = (String[]) parameters[9];
+      double pdbFactor = ((Number) parameters[10]).doubleValue();
       boolean isPDBFormat = (factors != null && format == null);
       Atom[] atoms = vwr.ms.at;
       if (isPDBFormat) {
@@ -1934,8 +1935,10 @@ public class PropertyManager implements JmolPropertyManager {
         out.append("REMARK   6 Jmol data").append(" min = ")
             .append(Escape.eP(minXYZ)).append(" max = ")
             .append(Escape.eP(maxXYZ)).append(" unScaledXyz = xyz * ")
-            .append(Escape.eP(factors)).append(" + ").append(Escape.eP(center))
-            .append(";\n");
+            .append(Escape.eP(factors)).append(" + ").append(Escape.eP(center));
+        if (pdbFactor != 1)        
+          out.append("pdbfactor = " + pdbFactor);
+        out.append(";\n");
         String atomNames = null;
         for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
             .nextSetBit(i + 1)) {
@@ -1989,15 +1992,27 @@ public class PropertyManager implements JmolPropertyManager {
           continue;
         Atom a = atoms[i];
         if (isPDBFormat) {
-          out.append(LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0',
-              null, ptTemp));
+          String line = LabelToken.formatLabelAtomArray(vwr, a, tokens, '\0',
+              null, ptTemp);
+          // 01234567890123456
+          // correct:
+          // ATOM  22     Co2 UNK     0    0.00    1.27    0.00           0.000         CO     
+          // incorrect:
+          // ATOM  1     Co1_1 UNK     0    1.63    0.00    0.00           0.000         CO     
+          while (line.charAt(16) !=' ') {
+             int pt = line.lastIndexOf(' ', 16);
+             if (pt < 0)
+               break;
+             line = line.substring(0, pt - 1) + line.substring(pt);
+          }
+          out.append(line);
           if (isPDB)
             bsWritten.set(i);
           out.append(PT.sprintf(
-              "%-8.2d%-8.2d%-10.2d    %6.3f          %2s    %s\n", "ssF",
+              "%-8.2f%-8.2f%-10.2f    %6.3f          %-2s    %s\n", "ssF",
               new Object[] { a.getElementSymbolIso(false).toUpperCase(),
                   strExtra, new double[] { x, y, z, 0d } }));
-          if (atomLast != null
+          if (isPDB && atomLast != null
               && atomLast.group.getBioPolymerIndexInModel() == a.group
                   .getBioPolymerIndexInModel())
             pdbCONECT.append("CONECT")

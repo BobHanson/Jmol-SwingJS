@@ -37,18 +37,18 @@ public class FrankRenderer extends ShapeRenderer {
 
   @Override
   protected boolean render() {
+    if (isExport
+        || !vwr.getShowFrank()
+        || !g3d.setC(colix)
+        || vwr.frankOn && !vwr.noFrankEcho
+        || vwr.tm.splitFrameCurrentlyRendering == 0)
+      return false;
     Frank frank = (Frank) shape;
     boolean allowKeys = vwr.getBooleanProperty("allowKeyStrokes");
     boolean modelKitMode = vwr.getBoolean(T.modelkitmode);
     colix = (modelKitMode && !vwr.getModelkit(false).isHidden() ? C.MAGENTA : vwr.isSignedApplet ? (allowKeys
         || (Viewer.isJS || Viewer.isSwingJS) && !vwr.isWebGL ? C.ORANGE : C.RED) : allowKeys ? C.BLUE
         : C.GRAY);
-    if (isExport
-        || !vwr.getShowFrank()
-        || !g3d.setC(colix))
-      return false;
-    if (vwr.frankOn && !vwr.noFrankEcho)
-      return vwr.noFrankEcho;
     vwr.noFrankEcho = true;
     double imageFontScaling = vwr.imageFontScaling;
     frank.getFont(imageFontScaling);

@@ -1,7 +1,6 @@
 package org.jmol.adapter.writers;
 
 import java.util.Hashtable;
-import java.util.Stack;
 
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
@@ -13,6 +12,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericBinaryDocumentReader;
 import javajs.util.BS;
+import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.P3d;
 import javajs.util.PT;
@@ -30,7 +30,7 @@ import javajs.util.SB;
 public class CDXMLWriter extends CMLWriter {
 
   private GenericBinaryDocumentReader doc;
-  private Stack<String> objects = new Stack<String>();
+  private Lst<String> objects = new Lst<String>();
   private SB sb = new SB();
   private int sbpt;
   private int id;
@@ -233,7 +233,7 @@ public class CDXMLWriter extends CMLWriter {
       break;
     }
     sbpt = sb.length();
-    objects.push(name);
+    objects.addLast(name);
     if (name != null) {
       startOpenTag(sb, name);
       if (id != Integer.MIN_VALUE) {

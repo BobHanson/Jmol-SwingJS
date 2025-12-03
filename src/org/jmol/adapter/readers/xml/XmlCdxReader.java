@@ -23,7 +23,6 @@
  */
 package org.jmol.adapter.readers.xml;
 
-import java.util.BitSet;
 import java.util.Map;
 
 import org.jmol.adapter.readers.xml.CDXMLParser.CDBond;
@@ -33,6 +32,8 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.Bond;
 import org.jmol.api.JmolAdapter;
 import org.jmol.util.Edge;
+
+import javajs.util.BS;
 
 /**
  * A reader for CambridgeSoft CDXML files.
@@ -187,7 +188,7 @@ public class XmlCdxReader extends XmlReader implements CDXReaderI {
   }
   
   public void createMolecule() {
-    BitSet bs = parser.bsAtoms;
+    BS bs = parser.bsAtoms;
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       CDNode atom = parser.getAtom(i);
       Atom a = new Atom();

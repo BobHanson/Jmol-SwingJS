@@ -401,6 +401,8 @@ public class ShapeManager {
     // so isTranslucent = isTranslucent || f() would NOT work.
 
     BS bs = vwr.getVisibleFramesBitSet();
+    if (vwr.am.splitFrame)
+      vwr.am.addSplitFrameModels(bs);
 
     // i=2 skips balls and sticks
     // as these are handled differently.

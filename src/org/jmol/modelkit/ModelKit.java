@@ -451,7 +451,7 @@ public class ModelKit {
           .nextSetBit(i + 1)) {
         String elem = a[i].getElementSymbol();
         int elemno = a[i].getElementNumber();
-        int color = a[i].atomPropertyInt(T.color);
+        int color = a[i].atomPropertyInt(null, T.color);
         int j = 0;
         int niso = isotopeCounts[elemno];
         for (; j < niso; j++) {
@@ -534,7 +534,7 @@ public class ModelKit {
         if (label.charAt(0) < 'a')
           label = "~_" + label;
 
-        int color = a[i].atomPropertyInt(T.color);  
+        int color = a[i].atomPropertyInt(null, T.color);  
         Integer iColor = labels.get(label);
         if (iColor == null) {
           iColor = Integer.valueOf(color);
@@ -4338,7 +4338,7 @@ public class ModelKit {
                              P3d target, int intScale, int nth, int options,
                              int[] opList, boolean isModelkit) {
     String s = null;
-    if (options != 0) {
+    if (options != 0 && options != T.spinop) {
       // options is T.offset, and target is an {i j k} offset from cell 555
       Object o = vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center, target,
           T.point, null, intScale / 100d, nth, options, opList);

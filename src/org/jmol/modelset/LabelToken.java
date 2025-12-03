@@ -578,7 +578,7 @@ public class LabelToken {
         strT = atom.getModelNumberForLabel();
         break;
       case T.occupancy:
-        strT = "" + atom.atomPropertyInt(t.tok);
+        strT = "" + atom.atomPropertyInt(vwr, t.tok);
         break;
       case T.radius:
         floatT = atom.atomPropertyFloat(vwr, t.tok, ptTemp);
@@ -638,9 +638,9 @@ public class LabelToken {
         switch (t.tok & T.PROPERTYFLAGS) {
         case T.intproperty:
           if (t.intAsFloat)
-            floatT = atom.atomPropertyInt(t.tok);
+            floatT = atom.atomPropertyInt(vwr, t.tok);
           else
-            strT = "" + atom.atomPropertyInt(t.tok);
+            strT = "" + atom.atomPropertyInt(vwr, t.tok);
           break;
         case T.floatproperty:
           floatT = atom.atomPropertyFloat(vwr, t.tok, ptTemp);

@@ -27,7 +27,6 @@ package org.jmol.symmetry;
 import java.io.BufferedReader;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Stack;
 
 import org.jmol.api.AtomIndexIterator;
 import org.jmol.api.GenericPlatform;
@@ -152,12 +151,6 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public Object getPointGroupInfo(int modelIndex, String drawID, boolean asInfo,
                                   String type, int index, double scale) {
-    if (drawID == null && !asInfo && pointGroup.textInfo != null)
-      return pointGroup.textInfo;
-    else if (drawID == null && pointGroup.isDrawType(type, index, scale))
-      return pointGroup.drawInfo;
-    else if (asInfo && pointGroup.info != null)
-      return pointGroup.info;
     return pointGroup.getInfo(modelIndex, drawID, asInfo, type, index, scale);
   }
 
@@ -1354,7 +1347,7 @@ public class Symmetry implements SymmetryInterface {
       int depthMin = flags & 0xFF;
       int[][][] data = getSubgroupIndexData(groupType1);
       Lst<String> lstAll = (retLst == null ? null : new Lst<>());
-      Stack<int[]> stack = new Stack<>();
+      Lst<int[]> stack = new Lst<>();
       String indexPath = findSubTransform(itaFrom, itaTo, indexMax, indexMin,
           depthMax, depthMin, data, 1, 1, 1, BSUtil.newAndSetBit(itaFrom),
           stack, lstAll);
@@ -1540,7 +1533,7 @@ public class Symmetry implements SymmetryInterface {
   private String findSubTransform(int itaFrom, int itaTo, int indexMax,
                                   int indexMin, int depthMax, int depthMin,
                                   int[][][] data, int depth, int indexLast,
-                                  int index0, BS bs, Stack<int[]> stack,
+                                  int index0, BS bs, Lst<int[]> stack,
                                   Lst<String> retAll) {
     int[][] fromData = data[itaFrom];
     if (depthMax > 0 && depth > depthMax)
@@ -1583,11 +1576,12 @@ public class Symmetry implements SymmetryInterface {
             BS bsNew = BSUtil.copy(bs);
             bsNew.set(group);
             // check further down
-            stack.push(new int[] { itaFrom, index });
+            int last = stack.size();
+            stack.addLast(new int[] { itaFrom, index });
             String s = findSubTransform(group, itaTo, indexMax, indexMin,
                 depthMax, depthMin, data, depth + 1, index, indexNew, bsNew,
                 stack, retAll);
-            stack.pop();
+            stack.removeItemAt(last);
             if (s != null && retAll == null)
               return s;
             // continue finding more fits

@@ -99,8 +99,9 @@ public class MeasuresRenderer extends LabelsRenderer {
     measures.setVisibilityInfo();
     for (int i = measures.measurementCount; --i >= 0;) {
       m = measures.measurements.get(i);
-      if (!m.isVisible || !m.isValid || (count = m.count) == 1 && m.traceX == Integer.MIN_VALUE)
-        continue;
+     if (!m.isVisible || !m.isValid || (count = m.count) == 1 && m.traceX == Integer.MIN_VALUE
+         || vwr.am.splitFrame && m.modelIndex != vwr.tm.splitFrameCurrentlyRendering)
+       continue;
       getPoints();
       colix = m.colix;
       if (colix == 0)
@@ -347,6 +348,8 @@ public class MeasuresRenderer extends LabelsRenderer {
   }
 
   private void renderPendingMeasurement() {
+    if (vwr.am.splitFrame && m.modelIndex != vwr.tm.splitFrameCurrentlyRendering)
+      return;
     try {
       getPoints();
     } catch (Exception e) {
@@ -361,6 +364,9 @@ public class MeasuresRenderer extends LabelsRenderer {
       return;
     }    
     Point3fi atomLast = p[count - 1];
+    if (vwr.am.splitFrame && 
+        vwr.am.getSplitFrameModel() != atomLast.mi)
+      return;
     if (count > 1)
       renderMeasurement(false);
     int lastZ = atomLast.sZ - atomLast.sD - 10;

@@ -35,6 +35,7 @@ import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.Node;
 import org.jmol.util.Point3fi;
+import org.jmol.util.Vibration;
 
 import javajs.util.BS;
 import javajs.util.Lst;
@@ -46,96 +47,307 @@ import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
-/*
+/**
+ * 
+ * A class to work with point group calculations.
+ * 
+ * Note that this check only goes up to C8. This was an arbitrary decision that
+ * could be expanded upon. Spin space groups, for example, are indexed up to
+ * C42.
+ * 
+ * Preliminary version was from BCCE20 meeting 2008
+ * 
+ * Many thanks to Sean Johnston for his all-night session with me!
+ * 
  * Bob Hanson 7/2008
  * 
- * brute force -- preliminary from BCCE20 meeting 2008
+ * 2025.12.01 BH Adapted for very high symmetry in relation to spin space groups
+ * by considering the limited possibilities for numbers of C2 axes and planes.
  * 
  * NEVER ACCESS THESE METHODS DIRECTLY! ONLY THROUGH CLASS Symmetry
  * 
- *
  */
 
 class PointGroup {
 
-  private final static int[] axesMaxN = new int[] { 
-     15, // used for plane count
+  private static class Operation {
+    int type;
+    int index;
+    V3d normalOrAxis;
+    private M3d mat;
+
+    private final int order;
+    private final int axisArrayIndex;
+
+    String schName;
+
+    static Operation newInversionCenter(int index) {
+      return new Operation(index, null, -1);
+    }
+    
+    static Operation newPlane(int index, V3d v) {
+      return new Operation(index, v, -1);
+    }
+    
+    static Operation newAxis(int index, V3d v, int arrayIndex) {
+      return new Operation(index, v, arrayIndex);
+    }
+ 
+    /**
+     * Constructor for proper and improper axes.
+     * 
+     * @param index
+     * @param v
+     * @param arrayIndex
+     */
+    private Operation(int index, V3d v, int arrayIndex) {
+      this.index = index;
+      if (v == null) {
+        type = OPERATION_INVERSION_CENTER;
+        axisArrayIndex = ci;
+        order = 2;
+        schName = "Ci";
+        mat = mInv;
+      } else {
+        normalOrAxis = Qd.newVA(v, 180).getNormal();
+        if (arrayIndex == -1) {
+          type = OPERATION_PLANE;
+          axisArrayIndex = cs;
+          order = 2;
+          schName = "Cs";
+        } else {
+          type = (arrayIndex < firstProper ? OPERATION_IMPROPER_AXIS
+              : OPERATION_PROPER_AXIS);
+          axisArrayIndex = arrayIndex;
+          order = arrayIndex % firstProper;
+          schName = (type == OPERATION_IMPROPER_AXIS ? "S" : "C") + order;
+        }
+      }
+      if (Logger.debugging)
+        Logger.debug("new operation -- " + schName
+            + (normalOrAxis == null ? "" : " " + normalOrAxis));
+    }
+
+    M3d getM3() {
+      if (mat != null)
+        return mat;
+      M3d m = M3d
+          .newM3(getQuaternion(normalOrAxis, axisArrayIndex).getMatrix());
+      if (type == OPERATION_PLANE || type == OPERATION_IMPROPER_AXIS)
+        m.mul(mInv);
+      m.clean();
+      return mat = m;
+    }
+
+    Lst<M3d> getUniqueMatrices() {
+      Lst<M3d> matrices = new Lst<>();
+      M3d m = new M3d();
+      m.m00 = m.m11 = m.m22 = 1;
+      // Example: S10
+      //
+      // 1/10*,2/10,3/10*,4/10,5/10*,6/10,7/10*,8/10,9/10*  
+      // only the * are unique; all others are covered by 
+      // lower-symmetry elements already
+      // S10(2) == C5(1)
+      // S10(4) == C5(2)
+      // S10(6) == C5(3) == C5(-2)
+      // S10(8) == C5(4) == C5(-1)
+      // We only need to go to order/2.
+      // S12:
+      // 1/12*,2/12,3/12,4/12,5/12*
+      //
+      // S9:
+      // 1/9*,2/9*,3/9,4/9*
+      BS bs = Operation.getUniqueFractions(order);
+      for (int i = 1; i < order; i++) {
+        m.mul(getM3());
+        if (bs.get(i))
+          matrices.add(M3d.newM3(m));
+      }
+      return matrices;
+    }
+
+    final static Map<Integer, BS> bsUnique = new Hashtable<>();
+    
+    private static BS getUniqueFractions(int order) {
+      BS bs = bsUnique.get(Integer.valueOf(order));
+      if (bs != null)
+        return bs;
+      bs = BSUtil.newBitSet2(1, order);
+      int n = order / 2;
+      for (int i = 1; i <= n; i++) {
+        // for C10, 1-5 -- using 2 and 5
+        // removing 2 4 6 8
+        // removing    5
+        // leaving 1 3 7 9 (S1 S-1 S3 S-3)
+        
+        // for C16, 1-8 -- using 2,(4,8)
+        // for C24, 1-12 -- using 2,3,(4,6,8)
+        // really we just need the lowest common denominators
+        int f = order / i;
+        if (f * i != order || !bs.get(f))
+          continue;
+        // for 24: 2,3,4,6,8
+        for (int j = f; j <= n; j += f) {
+          // 2: 2,4,6,8,10,12,14,16,18,20,22 cleared
+          // 3: 3,6,9,12,15,18,21
+          
+          // 4: 4,8,12,16,20 (unnec because we already have removed these)
+          // 6: 6,12,18 (unnec)
+          // 8: 8,16 (unnec)
+          // leaving 1/24,5/24,7/24,9/24,11/24,13/24,15/24,17/24,19/24,23/24
+          bs.clear(j);
+          bs.clear(order - j);
+        }
+      }
+      bsUnique.put(Integer.valueOf(order), bs);
+      return bs;
+    }
+    
+//    static {
+//      System.out.println(getUniqueFractions(6));
+//      System.out.println(getUniqueFractions(8));
+//      System.out.println(getUniqueFractions(9));
+//      System.out.println(getUniqueFractions(10));
+//      System.out.println(getUniqueFractions(15));
+//      System.out.println(getUniqueFractions(24));
+//      System.out.println(getUniqueFractions(36));
+//    }
+    
+    @Override
+    public String toString() {
+      return schName + " " + normalOrAxis;
+    }
+
+    public void setInfo(Lst<V3d> vinfo, Lst<M3d> minfo, Map<String, Object> e) {
+      if (vinfo != null) {
+        vinfo.addLast(normalOrAxis);
+        minfo.addLast(getM3());
+      }
+      e.put("typeSch", schName);
+      e.put("typeHM", getHMfromSFName(schName));
+      if (normalOrAxis != null)
+        e.put("direction", normalOrAxis);
+      Lst<M3d> mats = getUniqueMatrices();
+      e.put("matrices", mats);
+      if (mats.size() != order - 1)
+        e.put("matrixIndices", Operation.bsUnique.get(Integer.valueOf(order)));
+    }
+    
+}
+
+  final static int OPERATION_PLANE = 0;
+  final static int OPERATION_PROPER_AXIS = 1;
+  final static int OPERATION_IMPROPER_AXIS = 2;
+  final static int OPERATION_INVERSION_CENTER = 3;
+
+  final static String[] typeNames = { "plane", "proper axis",
+      "improper axis", "center of inversion" };
+
+  final static M3d mInv = M3d
+      .newA9(new double[] { -1, 0, 0, 0, -1, 0, 0, 0, -1 });
+
+  private final static int[] axesMaxN = new int[] { //
+      49, // cs up to D48h
       0, // n/a 
       0, // not used -- would be S2 (inversion)
       1, // S3
       3, // S4
       1, // S5
-      10,// S6
-      0, // n/a
+      10, // S6
+      1, // S7
       1, // S8
       0, // n/a
       6, // S10
       0, // n/a 
       1, // S12
-      0, // n/a
-      0, // n/a firstProper = 14
       0, // n/a 
-      15,// C2 
-      10,// C3 
+      1, // S14
+      0, // n/a 
+      1, // S16
+      0, // n/a
+      0, // n/a
+      0, // n/a
+      0, // n/a firstProper = 20
+      0, // n/a 
+      49, // C2 up to C48  
+      10, // C3 
       6, // C4
       6, // C5
-      10,// C6
-      0, // C7
+      10, // C6
+      1, // C7
       1, // C8
   };
 
-  private final static int[] nUnique = new int[] { 
-     1, // used for plane count
-     0, // n/a 
-     0, // not used -- would be S2 (inversion)
-     2, // S3
-     2, // S4
-     4, // S5
-     2, // S6
-     0, // n/a
-     4, // S8
-     0, // n/a
-     4, // S10
-     0, // n/a 
-     4, // S12
-     0, // n/a
-     0, // n/a firstProper = 14
-     0, // n/a 
-     1, // C2 
-     2, // C3 
-     2, // C4
-     4, // C5
-     2, // C6
-     0, // C7
-     4, // C8
- };
+  /**
+   * counts of operations that are not included in lower-symmetry sets
+   */
+  private final static int[] nUnique = new int[] { 1, // used for plane count
+      0, // n/a 
+      0, // not used -- would be S2 (inversion)
+      2, // S3
+      2, // S4
+      4, // S5
+      2, // S6
+      1, // S7
+      1, // S8
+      0, // n/a
+      6, // S10
+      0, // n/a 
+      1, // S12
+      0, // n/a 
+      1, // S14
+      0, // n/a 
+      1, // S16
+      0, // n/a
+      0, // n/a
+      0, // n/a
+      0, // n/a firstProper = 20
+      0, // n/a 
+      1, // C2 
+      2, // C3 C3(1),C3(2) 
+      2, // C4 C4(1),C4(3)
+      4, // C5 C5(1),C5(2),C5(3),C5(4)
+      2, // C6 C6(1),C6(5)
+      6, // C7 C7(1),C7(2),C7(3),C7(4),C7(5),C7(6)
+      4, // C8 C8(1),C8(3),C8(5),C8(7)
+  };
 
+  private final static int cs = 0;
+  private final static int ci = 1;
   private final static int s3 = 3;
   private final static int s4 = 4;
   private final static int s5 = 5;
   private final static int s6 = 6;
+  private final static int s7 = 6;
   private final static int s8 = 8;
   private final static int s10 = 10;
   private final static int s12 = 12;
-  private final static int firstProper = 14;
+  private final static int s14 = 14;
+  private final static int s16 = 16;
+  private final static int firstProper = 20;
   private final static int c2 = firstProper + 2;
   private final static int c3 = firstProper + 3;
   private final static int c4 = firstProper + 4;
   private final static int c5 = firstProper + 5;
   private final static int c6 = firstProper + 6;
+  private final static int c7 = firstProper + 7;
   private final static int c8 = firstProper + 8;
   private final static int maxAxis = axesMaxN.length;
 
-  private boolean isAtoms;
-  String drawInfo;
-  Map<String, Object> info;
-  String textInfo;
+  private int maxAtoms = 250;
 
+  private int maxElement = 0;
+  private int[] eCounts;
+
+  private int nOps = 0;
+
+  private boolean isAtoms;
   private CubeIterator iter;
   private String drawType = "";
   private int drawIndex;
-  private double scale = Double.NaN;  
-  private int[]  nAxes = new int[maxAxis];
+  private double scale = Double.NaN;
+  private int[] nAxes = new int[maxAxis];
   private Operation[][] axes = new Operation[maxAxis][];
   private int nAtoms;
   private double radius;
@@ -146,29 +358,23 @@ class PointGroup {
   private String name = "C_1?";
   private Operation principalAxis;
   private Operation principalPlane;
-
-
-  String getName() {
-    return getConventionalName(name);
-  }
   
-  String getHermannMauguinName() {
-    return getHMfromSFName(name);
-  }
-  
+  private Lst<Operation> highOperations;
+
+  // outputs:
+  private String drawInfo;
+  private Map<String, Object> info;
+  private String textInfo;
+
   private final static int CONVENTION_SCHOENFLIES = 0;
   private final static int CONVENTION_HERMANN_MAUGUIN = 1;
-  
+
   private int convention = CONVENTION_SCHOENFLIES;
-  
-  String getConventionalName(String name) {
-    return (convention == CONVENTION_HERMANN_MAUGUIN ? getHMfromSFName(name) : name);    
-  }
 
   private final V3d vTemp = new V3d();
   private int centerAtomIndex = -1;
   private boolean haveInversionCenter;
-  
+
   private T3d center;
 
   private T3d[] points;
@@ -184,39 +390,51 @@ class PointGroup {
   private boolean isLinear;
 
   private double sppa;
-
+  private boolean isSpinGroup;
 
   /**
-   * Determine the point group of a set of points or atoms, allowing additionally
-   * for considering the point group of vibrational modes.
+   * Determine the point group of a set of points or atoms, allowing
+   * additionally for considering the point group of vibrational modes.
    * 
    * The two parameters used are "distanceTolerance" and "linearTolerance"
    * 
-   * "distanceTolerance is the distance an atom must be within relative to its symmetry-projected
-   * idealized position. 
+   * "distanceTolerance is the distance an atom must be within relative to its
+   * symmetry-projected idealized position.
    * 
-   * "linearTolerance" has dimension degrees and sets the maximum
-   * deviation that two potential symmetry axes can have to be considered
-   * "colinear" or "perpendicular" in the final symmetry model. Its default is 8
-   * deg.
+   * "linearTolerance" has dimension degrees and sets the maximum deviation that
+   * two potential symmetry axes can have to be considered "colinear" or
+   * "perpendicular" in the final symmetry model. Its default is 8 deg.
    * 
    * 
-   * @param pgLast helpful to speed checking; may be null
-   * @param center  known center atom; may be null
-   * @param atomset the set of points or atoms to consider
-   * @param bsAtoms possibly some subset of atomset
+   * @param pgLast
+   *        helpful to speed checking; may be null
+   * @param center
+   *        known center atom; may be null
+   * @param atomset
+   *        the set of points or atoms to consider
+   * @param bsAtoms
+   *        possibly some subset of atomset
    * @param haveVibration
-   * @param distanceTolerance  atom-position tolerance
-   * @param linearTolerance    symmetry-axis direction tolerance
-   * @param localEnvOnly set false to additionally consider valence (number of bonds) of atoms
+   * @param distanceTolerance
+   *        atom-position tolerance
+   * @param linearTolerance
+   *        symmetry-axis direction tolerance
+   * @param maxAtoms
+   * @param localEnvOnly
+   *        set false to additionally consider valence (number of bonds) of
+   *        atoms
+   * @param isHM
+   * @param sppa
    * 
    * @return a PointGroup
    */
-  
-  static PointGroup getPointGroup(PointGroup pgLast, T3d center,
-                                         T3d[] atomset, BS bsAtoms,
-                                         boolean haveVibration,
-                                         double distanceTolerance, double linearTolerance, int maxAtoms, boolean localEnvOnly, boolean isHM, double sppa) {
+
+  static PointGroup getPointGroup(PointGroup pgLast, T3d center, T3d[] atomset,
+                                  BS bsAtoms, boolean haveVibration,
+                                  double distanceTolerance,
+                                  double linearTolerance, int maxAtoms,
+                                  boolean localEnvOnly, boolean isHM,
+                                  double sppa) {
     PointGroup pg = new PointGroup(isHM);
     if (distanceTolerance <= 0) {
       distanceTolerance = 0.01f;
@@ -244,28 +462,9 @@ class PointGroup {
   private PointGroup(boolean isHM) {
     convention = (isHM ? CONVENTION_HERMANN_MAUGUIN : CONVENTION_SCHOENFLIES);
   }
-  
-  private boolean isEqual(PointGroup pg) {
-    if (pg == null)
-      return false;
-    if (convention != pg.convention 
-        || linearTolerance != pg.linearTolerance 
-        || distanceTolerance != pg.distanceTolerance
-        || nAtoms != pg.nAtoms
-        || localEnvOnly != pg.localEnvOnly
-        || haveVibration != pg.haveVibration
-        || bsAtoms ==  null ? pg.bsAtoms != null : !bsAtoms.equals(pg.bsAtoms))
-      return false;
-    for (int i = 0; i < nAtoms; i++) {
-      // real floating == 0 here because they must be IDENTICAL POSITIONS
-      if (elements[i] != pg.elements[i] || !points[i].equals(pg.points[i]))
-        return false;
-    }
-    return true;
-  }
-  
+
   private boolean set(PointGroup pgLast, T3d[] atomset) {
-    cosTolerance =  (Math.cos(linearTolerance / 180 * Math.PI));
+    cosTolerance = (Math.cos(linearTolerance / 180 * Math.PI));
     if (!getPointsAndElements(atomset)) {
       Logger.error("Too many atoms for point group calculation");
       name = "point group not determined -- ac > " + maxAtoms
@@ -275,36 +474,45 @@ class PointGroup {
     getElementCounts();
     if (haveVibration) {
       P3d[] atomVibs = new P3d[points.length];
-      for (int i = points.length; --i >= 0;) {
+      for (int i = 0; i < points.length; i++) {
         atomVibs[i] = P3d.newP(points[i]);
-        V3d v = ((Atom) points[i]).getVibrationVector();
-        if (v != null)
+        Vibration v = ((Atom) points[i]).getVibrationVector();
+        if (v != null) {
+          if (v.isFrom000) {
+            isSpinGroup = true;
+            // just continue with these atoms
+            atomVibs = null;
+            break;
+          }
           atomVibs[i].add(v);
+        }
       }
-      points = atomVibs;
+      if (atomVibs != null)
+        points = atomVibs;
     }
+
     if (isEqual(pgLast))
       return false;
     try {
-
       findInversionCenter();
       isLinear = isLinear(points);
       if (isLinear) {
         if (haveInversionCenter) {
-          name = "D(infinity)h";
+          name = "D\u221eh";
         } else {
-          name = "C(infinity)v";
+          name = "C\u221ev";
         }
         vTemp.sub2(points[1], points[0]);
         addAxis(c2, vTemp);
         principalAxis = axes[c2][0];
         if (haveInversionCenter) {
-          axes[0] = new Operation[1];
-          principalPlane = axes[0][nAxes[0]++] = new Operation(vTemp);
+          axes[cs] = new Operation[] {
+              principalPlane = Operation.newPlane(++nOps, vTemp) };
+          nAxes[cs] = 1;
         }
         return true;
       }
-      axes[0] = new Operation[15];
+      axes[cs] = new Operation[axesMaxN[cs]];
       int nPlanes = 0;
       findCAxes();
       nPlanes = findPlanes();
@@ -340,6 +548,7 @@ class PointGroup {
         }
       } else {
         // Cs, Ci, C1
+        int n2 = nAxes[c2];
         if (n < 2) {
           if (nPlanes == 1) {
             name = "Cs";
@@ -350,8 +559,7 @@ class PointGroup {
             return true;
           }
           name = "C1";
-        } else if ((n % 2) == 1 && nAxes[c2] > 0
-            || (n % 2) == 0 && nAxes[c2] > 1) {
+        } else if ((n % 2) == 1 && n2 > 0 || (n % 2) == 0 && n2 > 1) {
           // Dnh, Dnd, Dn, S4
 
           // here based on the presence of C2 axes in any odd-order group
@@ -360,17 +568,32 @@ class PointGroup {
 
           principalAxis = setPrincipalAxis(n, nPlanes);
           if (nPlanes == 0) {
+            // Sn or Dn
             if (n < firstProper) {
               name = "S" + n;
             } else {
               name = "D" + (n - firstProper);
             }
           } else {
-            // highest axis may be S8, but this is really D4h/D4d
-            if (n < firstProper)
+            // Dnd or Dnh
+            int arrayIndexTop = n;
+            if (n < firstProper) {
+              // has S8, ...
               n = n / 2;
-            else
+            } else {
               n -= firstProper;
+            }
+            if (n2 > n + 1) {
+              addHighOperations(n2, nPlanes, arrayIndexTop, n);
+              // we missed some higher business
+              if (principalPlane == null) {
+                // Dnd
+                n = nPlanes;
+              } else {
+                n = nPlanes - 1;
+              }
+            } else {
+            }
             if (nPlanes == n) {
               name = "D" + n + "d";
             } else {
@@ -379,23 +602,31 @@ class PointGroup {
           }
         } else if (nPlanes == 0) {
           // Cn, S3, S6 
+          // we cannot find very high order axes
+          // if there are no other elements. 
           principalAxis = axes[n][0];
           if (n < firstProper) {
             name = "S" + n;
           } else {
             name = "C" + (n - firstProper);
           }
-        } else if (nPlanes == n - firstProper) {
-          principalAxis = axes[n][0];
-          name = "C" + nPlanes + "v";
         } else {
-          principalAxis = axes[n < firstProper ? n + firstProper : n][0];
-          principalPlane = axes[0][0];
-          if (n < firstProper)
-            n /= 2;
-          else
-            n -= firstProper;
-          name = "C" + n + "h";
+          // Cnv or Cnh
+          // C4h will have an S8 axis
+          if (nPlanes > 1) {
+            principalAxis = axes[n][0];
+            name = "C" + nPlanes + "v";
+          } else {
+            principalPlane = axes[cs][0];
+            principalAxis = axes[n < firstProper ? n + firstProper : n][0];
+            // TODO here we are stuck if order is very high
+            if (n < firstProper) {
+              n /= 2;
+            } else {
+              n -= firstProper;
+            }
+            name = "C" + n + "h";
+          }
         }
       }
     } catch (Exception e) {
@@ -406,48 +637,16 @@ class PointGroup {
     return true;
   }
 
-  private Operation setPrincipalAxis(int n, int nPlanes) {
-    Operation principalPlane = setPrincipalPlane(n, nPlanes);
-    if (nPlanes == 0 && n < firstProper || nAxes[n] == 1) {
-//      if (nPlanes > 0 && n < firstProper)
-//        n = firstProper + n / 2;
-        return axes[n][0];
+  private void addHighOperations(int n2, int nPlanes, int arrayIndexTop, int nTop) {
+    // TODO -- add more operations
+    // C20, S20 need to add operations
+    // C20 --> C10, C5, and all operators
+    // inbetween
+    boolean isS = (arrayIndexTop < firstProper);
+    if (isS) {
+      
     }
-    // D2, D2d, D2h -- which c2 axis is it?
-    if (principalPlane == null)
-      return null;
-    for (int i = 0; i < nAxes[c2]; i++)
-      if (isParallel(principalPlane.normalOrAxis, axes[c2][i].normalOrAxis)) {
-        if (i != 0) {
-          Operation o = axes[c2][0];
-          axes[c2][0] = axes[c2][i];
-          axes[c2][i] = o;
-        }
-        return axes[c2][0];
-      }
-    return null;
   }
-
-  private Operation setPrincipalPlane(int n, int nPlanes) {
-    // principal plane is perpendicular to more than two other planes
-    if (nPlanes == 1)
-      return principalPlane = axes[0][0];
-    if (nPlanes == 0 || nPlanes == n - firstProper)
-      return null;
-    for (int i = 0; i < nPlanes; i++)
-      for (int j = 0, nPerp = 0; j < nPlanes; j++)
-        if (isPerpendicular(axes[0][i].normalOrAxis, axes[0][j].normalOrAxis) && ++nPerp > 2) {
-          if (i != 0) {
-            Operation o = axes[0][0];
-            axes[0][0] = axes[0][i];
-            axes[0][i] = o;
-          }
-          return principalPlane = axes[0][0];
-        }
-    return null;
-  }
-
-  int maxAtoms = 250;
 
   private boolean getPointsAndElements(T3d[] atomset) {
     int ac = bsAtoms.cardinality();
@@ -503,8 +702,12 @@ class PointGroup {
         centerAtomIndex = i;
       radius = Math.max(radius, r2);
     }
-    radius =  Math.sqrt(radius);
-    if (radius < 1.5d && distanceTolerance > 0.15d) {
+    radius = Math.sqrt(radius);
+    if (radius > 90) {
+        // plot spin
+        distanceTolerance = 0.3;
+      }
+    if (radius > 90 || radius < 1.5d && distanceTolerance > 0.15d) {
       distanceTolerance = radius / 10;
       distanceTolerance2 = distanceTolerance * distanceTolerance;
       System.out
@@ -514,24 +717,18 @@ class PointGroup {
     return true;
   }
 
-  private void findInversionCenter() {
-    haveInversionCenter = checkOperation(null, center, -1);
-    if (haveInversionCenter) {
-      axes[1] = new Operation[1];
-      axes[1][0] = new Operation();
-    }
-  }
-
-  private boolean checkOperation(Qd q, T3d center, int iOrder) {
+  private boolean checkOperation(Qd q, T3d center, int arrayIndex) {
     P3d pt = new P3d();
     int nFound = 0;
-    boolean isInversion = (iOrder < firstProper);
+    boolean isInversion = (arrayIndex < firstProper);
 
     out: for (int n = points.length, i = n; --i >= 0 && nFound < n;) {
       if (i == centerAtomIndex)
         continue;
       T3d a1 = points[i];
       int e1 = elements[i];
+      
+      // check if point transforms to itself
       if (q != null) {
         pt.sub2(a1, center);
         q.transform2(pt, pt).add(center);
@@ -561,64 +758,80 @@ class PointGroup {
         if (a2 == a1)
           continue;
         int j = getPointIndex(((Point3fi) a2).i); // will be true atom index for an atom, not just in first molecule
-        
+
         if (centerAtomIndex >= 0 && j == centerAtomIndex 
             || j >= elements.length
-            || 
-            elements[j] != e1 )
+            || elements[j] != e1) {
           continue;
+        }
         if (pt.distanceSquared(a2) < distanceTolerance2) {
           nFound++;
-        //System.out.println("#pt=" + pt + " a2=" + a2 + " dist=" + pt.distanceSquared(a2));
-        //System.out.println("draw pt" + i + " " + pt + " color red");
-        //System.out.println("draw a" + i + " " + a2 + " color green");
           continue out;
-        } 
-//System.out.println("none found for " + a1 + " "  +a2 + " " + pt);
+        }
       }
       return false;
     }
     return true;
+  }
+
+  private void findInversionCenter() {
+    haveInversionCenter = checkOperation(null, center, -1);
+    if (haveInversionCenter) {
+      axes[ci] = new Operation[] { Operation.newInversionCenter(++nOps) };
+      nAxes[ci] = 1;
+    }
+  }
+
+  private Operation setPrincipalAxis(int n, int nPlanes) {
+    principalPlane = setPrincipalPlane(n, nPlanes);
+    if (nPlanes == 0 && n < firstProper || nAxes[n] == 1) {
+      //      if (nPlanes > 0 && n < firstProper)
+      //        n = firstProper + n / 2;
+      return axes[n][0];
+    }
+    // D2, D2d, D2h -- which c2 axis is it?
+    if (principalPlane == null)
+      return null;
+    Operation[] c2axes = axes[c2];
+
+    for (int i = 0; i < nAxes[c2]; i++)
+      if (isParallel(principalPlane.normalOrAxis, c2axes[i].normalOrAxis)) {
+        if (i != 0) {
+          Operation o = c2axes[0];
+          c2axes[0] = c2axes[i];
+          c2axes[i] = o;
+        }
+        return c2axes[0];
+      }
+    return null;
+  }
+
+  private Operation setPrincipalPlane(int n, int nPlanes) {
+    // principal plane is perpendicular to more than two other planes
+    Operation[] planes = axes[cs];
+    if (nPlanes == 1)
+      return principalPlane = planes[0];
+    if (nPlanes == 0 || nPlanes == n - firstProper)
+      return null;
+    for (int i = 0; i < nPlanes; i++) {
+      for (int j = 0, nPerp = 0; j < nPlanes; j++) {
+        if (isPerpendicular(planes[i].normalOrAxis, planes[j].normalOrAxis)
+            && ++nPerp > 2) {
+          if (i != 0) {
+            Operation o = planes[0];
+            planes[0] = planes[i];
+            planes[i] = o;
+          }
+          return principalPlane = planes[0];
+        }
+      }
+    }
+    return null;
   }
 
   private int getPointIndex(int j) {
     return (j < 0 ? -j : atomMap[j]) - 1;
   }
-
-  private boolean isLinear(T3d[] atoms) {
-    V3d v1 = null;
-    if (atoms.length < 2)
-      return false;
-    for (int i = atoms.length; --i >= 0;) {
-      if (i == centerAtomIndex)
-        continue;
-      if (v1 == null) {
-        v1 = new V3d();
-        v1.sub2(atoms[i], center);
-        v1.normalize();
-        vTemp.setT(v1);
-        continue;
-      }
-      vTemp.sub2(atoms[i], center);
-      vTemp.normalize();
-      if (!isParallel(v1, vTemp))
-        return false;
-    }
-    return true;
-  }
-
-  private boolean isParallel(V3d v1, V3d v2) {
-    // note -- these MUST be unit vectors
-    return (Math.abs(v1.dot(v2)) >= cosTolerance);
-  }
-
-  private boolean isPerpendicular(V3d v1, V3d v2) {
-    // note -- these MUST be unit vectors
-    return (Math.abs(v1.dot(v2)) <= 1 - cosTolerance);
-  }
-
-  int maxElement = 0;
-  int[] eCounts;
 
   private void getElementCounts() {
     for (int i = points.length; --i >= 0;) {
@@ -628,7 +841,7 @@ class PointGroup {
     }
     eCounts = new int[++maxElement];
     for (int i = points.length; --i >= 0;)
-      eCounts[elements[i]]++; 
+      eCounts[elements[i]]++;
   }
 
   private int findCAxes() {
@@ -669,14 +882,15 @@ class PointGroup {
 
         // look for the axis perpendicular to the A -- 0 -- B plane
 
-        double order =  (2 * Math.PI / v1.angle(v2));
+        double order = (2 * Math.PI / v1.angle(v2));
         int iOrder = (int) Math.floor(order + 0.01f);
         boolean isIntegerOrder = (order - iOrder <= 0.02f);
-        if (!isIntegerOrder || (iOrder = iOrder + firstProper) >= maxAxis)
+        int arrayIndex = iOrder + firstProper;
+        if (!isIntegerOrder || (arrayIndex) >= maxAxis)
           continue;
-        if (nAxes[iOrder] < axesMaxN[iOrder]) {
+        if (nAxes[arrayIndex] < axesMaxN[arrayIndex]) {
           v3.cross(v1, v2);
-          checkAxisOrder(iOrder, v3, center);
+          checkForAxis(arrayIndex, v3);
         }
       }
     }
@@ -699,7 +913,7 @@ class PointGroup {
           v3.add(vs[k]);
           if (v3.length() < 1)
             continue;
-          checkAxisOrder(c3, v3, center);
+          checkForAxis(c3, v3);
         }
 
     // Now check for triples of elements that will define
@@ -734,7 +948,7 @@ class PointGroup {
                 v2.normalize();
                 v3.cross(v1, v2);
                 getAllAxes(v3);
-//                checkAxisOrder(3, v3, center);
+                //                checkAxisOrder(3, v3, center);
                 v1.add2(points[i], points[j]);
                 v1.add(points[k]);
                 v1.normalize();
@@ -771,20 +985,21 @@ class PointGroup {
           if (i == j || vs[j] == null)
             continue;
           if (haveInversionCenter)
-           v1.cross(vs[i], vs[j]);
+            v1.cross(vs[i], vs[j]);
           else
             v1.sub2(vs[i], vs[j]);
-          checkAxisOrder(c2, v1, center);
-          
+          checkForAxis(c2, v1);
+
         }
 
     return getHighestOrder();
   }
 
   private void getAllAxes(V3d v3) {
-    for (int o = c2; o < maxAxis; o++)
-      if (nAxes[o] < axesMaxN[o])
-        checkAxisOrder(o, v3, center);
+    for (int o = c2; o < maxAxis; o++)     
+      if (nAxes[o] < axesMaxN[o]) {
+        checkForAxis(o, v3);
+      }
   }
 
   private int getHighestOrder() {
@@ -794,96 +1009,126 @@ class PointGroup {
     }
     // or highest C
     if (n > 1)
-      return (n + firstProper < maxAxis && nAxes[n + firstProper] > 0 ? n + firstProper : n);
+      return (n + firstProper < maxAxis && nAxes[n + firstProper] > 0
+          ? n + firstProper
+          : n);
     for (n = maxAxis; --n > 1 && nAxes[n] == 0;) {
     }
     return n;
   }
 
-  private boolean checkAxisOrder(int iOrder, V3d v, T3d center) {
-    switch (iOrder) {
-    case c8:
-      if (nAxes[c3] > 0)
-        return false;
-      //$FALL-THROUGH$;
-    case c6:
-    case c4:
-      if (nAxes[c5] > 0)
-        return false;
-      break;
-    case c3:
-      if (nAxes[c8] > 0)
-        return false;
-      break;
-    case c5:
-      if (nAxes[c4] > 0 || nAxes[c6] > 0 || nAxes[c8] > 0) 
-        return false;
-      break;
-    case c2:
-      break;
-    }
-
+  /**
+   * Check to see that this symmetry is allowed
+   * @param arrayIndex
+   * @param v
+   * @return true if OK
+   */
+  private boolean checkForAxis(int arrayIndex, V3d v) {
+    if (!isCompatible(arrayIndex))
+      return false;
     v.normalize();
-    if (haveAxis(iOrder, v))
+    if (haveAxis(arrayIndex, v))
       return false;
-    Qd q = getQuaternion(v, iOrder);
-    if (!checkOperation(q, center, iOrder))
+    Qd q = getQuaternion(v, arrayIndex);
+    if (!checkOperation(q, center, arrayIndex))
       return false;
-    addAxis(iOrder, v);
+    addAxis(arrayIndex, v);
+    checkForAssociatedAxes(arrayIndex, v);
+    return true;
+  }
+
+  private void checkForAssociatedAxes(int arrayIndex, V3d v) {
     // check for Sn:
-    switch (iOrder) {
+    switch (arrayIndex) {
     case c2:
-      checkAxisOrder(s4, v, center);//D2d, D4h, D6d
+      checkForAxis(s4, v);//D2d, D4h, D6d
       break;
     case c3:
-      checkAxisOrder(s3, v, center);//C3h, D3h
+      checkForAxis(s3, v);//C3h, D3h
       if (haveInversionCenter)
         addAxis(s6, v);
       break;
     case c4:
       addAxis(c2, v);
-      checkAxisOrder(s4, v, center);//D2d, D4h, D6d
-      checkAxisOrder(s8, v, center);//D4d
+      checkForAxis(s4, v);//D2d, D4h, D6d
+      checkForAxis(s8, v);//D4d
       break;
     case c5:
-      checkAxisOrder(s5, v, center); //C5h, D5h
+      checkForAxis(s5, v); //C5h, D5h
       if (haveInversionCenter)
         addAxis(s10, v);
       break;
     case c6:
       addAxis(c2, v);
       addAxis(c3, v);
-      checkAxisOrder(s3, v, center);//C6h, D6h
-      checkAxisOrder(s6, v, center);//C6h, D6h
-      checkAxisOrder(s12, v, center);//D6d
+      checkForAxis(s3, v);//C6h, D6h
+      checkForAxis(s6, v);//C6h, D6h
+      checkForAxis(s12, v);//D6d
+      break;
+    case c7:
+      checkForAxis(s7, v); //C7h, D7h
+      if (haveInversionCenter)
+        addAxis(s14, v);
       break;
     case c8:
-      //note -- D8d would have a S16 axis. This will not be found.
+      //note -- D8d would have a S16 axis
       addAxis(c2, v);
       addAxis(c4, v);
+      checkForAxis(s4, v);//C8h, D8h
+      checkForAxis(s8, v);//D8h, D8h
+      checkForAxis(s16, v);//D8d
+      break;
+    }
+  }
+
+  private boolean isCompatible(int arrayIndex) {
+    switch (arrayIndex) {
+    case c8:
+      if (nAxes[7] > 0 || nAxes[c3] > 0)
+        return false;
+      //$FALL-THROUGH$;
+    case c6:
+    case c4:
+      if (nAxes[c7] > 0 || nAxes[c5] > 0)
+        return false;
+      break;
+    case c2:
+      break;
+    case c3:
+      if (nAxes[c7] > 0 || nAxes[c8] > 0)
+        return false;
+      break;
+    case c5:
+      if (nAxes[c4] > 0 || nAxes[c6] > 0 || nAxes[c7] > 0 || nAxes[c8] > 0)
+        return false;
+      break;
+    case c7:
+      if (nAxes[c3] > 0 || nAxes[c4] > 0 || nAxes[c5] > 0 || nAxes[c6] > 0 || nAxes[c8] > 0)
+        return false;
       break;
     }
     return true;
   }
 
-  private void addAxis(int iOrder, V3d v) {
-    if (haveAxis(iOrder, v))
-      return;
-    if (axes[iOrder] == null)
-      axes[iOrder] = new Operation[axesMaxN[iOrder]];
-    axes[iOrder][nAxes[iOrder]++] = new Operation(v, iOrder);
-  }
-
-  private boolean haveAxis(int iOrder, V3d v) {
-    if (nAxes[iOrder] == axesMaxN[iOrder]) {
+  private boolean haveAxis(int arrayIndex, V3d v) {
+    if (nAxes[arrayIndex] == axesMaxN[arrayIndex]) {
       return true;
     }
-    if (nAxes[iOrder] > 0)
-      for (int i = nAxes[iOrder]; --i >= 0;) {
-        if (isParallel(v, axes[iOrder][i].normalOrAxis))
+    if (nAxes[arrayIndex] > 0)
+      for (int i = nAxes[arrayIndex]; --i >= 0;) {
+        if (isParallel(v, axes[arrayIndex][i].normalOrAxis))
           return true;
       }
     return false;
+  }
+
+  private void addAxis(int arrayIndex, V3d v) {
+    if (haveAxis(arrayIndex, v))
+      return;
+    if (axes[arrayIndex] == null)
+      axes[arrayIndex] = new Operation[axesMaxN[arrayIndex]];
+    axes[arrayIndex][nAxes[arrayIndex]++] = Operation.newAxis(++nOps, v,
+        arrayIndex);
   }
 
   private int findPlanes() {
@@ -917,14 +1162,14 @@ class PointGroup {
         if (!isParallel(v1, v2)) {
           v3.cross(v1, v2);
           v3.normalize();
-          nPlanes = getPlane(v3);
+          nPlanes = addPlane(v3);
         }
 
         // second, look for planes perpendicular to the A -- B line
 
         v3.sub2(a2, a1);
         v3.normalize();
-        nPlanes = getPlane(v3);
+        nPlanes = addPlane(v3);
         if (nPlanes == axesMaxN[0])
           return nPlanes;
       }
@@ -934,31 +1179,20 @@ class PointGroup {
     if (haveAxes)
       for (int i = c2; i < maxAxis; i++)
         for (int j = 0; j < nAxes[i]; j++)
-          nPlanes = getPlane(axes[i][j].normalOrAxis);
+          nPlanes = addPlane(axes[i][j].normalOrAxis);
     return nPlanes;
   }
 
-  private int getPlane(V3d v3) {
-    if (!haveAxis(0, v3)
-        && checkOperation(Qd.newVA(v3, 180), center,
-            -1))
-      axes[0][nAxes[0]++] = new Operation(v3);
-    return nAxes[0];
-  }
-
   private void findAdditionalAxes(int nPlanes) {
-
     Operation[] planes = axes[0];
     int Cn = 0;
-    if (nPlanes > 1
-        && ((Cn = nPlanes + firstProper) < maxAxis) 
+    if (nPlanes > 1 && ((Cn = nPlanes + firstProper) < maxAxis)
         && nAxes[Cn] == 0) {
       // cross pairs of plane normals. We don't need many.
       vTemp.cross(planes[0].normalOrAxis, planes[1].normalOrAxis);
-      if (!checkAxisOrder(Cn, vTemp, center)
-          && nPlanes > 2) {
+      if (!checkForAxis(Cn, vTemp) && nPlanes > 2) {
         vTemp.cross(planes[1].normalOrAxis, planes[2].normalOrAxis);
-        checkAxisOrder(Cn - 1, vTemp, center);
+        checkForAxis(Cn - 1, vTemp);
       }
     }
     if (nAxes[c2] == 0 && nPlanes > 2) {
@@ -967,107 +1201,36 @@ class PointGroup {
         for (int j = i + 1; j < nPlanes; j++) {
           vTemp.add2(planes[1].normalOrAxis, planes[2].normalOrAxis);
           //if (
-          checkAxisOrder(c2, vTemp, center);
+          checkForAxis(c2, vTemp);
           //)
-            //Logger.error("found a C2 axis by adding plane normals");
+          //Logger.error("found a C2 axis by adding plane normals");
         }
       }
     }
   }
 
-  final static int OPERATION_PLANE = 0;
-  final static int OPERATION_PROPER_AXIS = 1;
-  final static int OPERATION_IMPROPER_AXIS = 2;
-  final static int OPERATION_INVERSION_CENTER = 3;
-
-  final static String[] typeNames = { "plane", "proper axis", "improper axis",
-      "center of inversion" };
-
-  final static M3d mInv = M3d.newA9(new double[] {
-      -1, 0, 0, 
-      0, -1, 0,
-      0, 0, -1
-      });
-
-  static Qd getQuaternion(V3d v, int iOrder) {
-    return Qd.newVA(v, (iOrder < firstProper ? 180 : 0) + (iOrder == 0 ? 0 : 360 / (iOrder % firstProper)));
+  private int addPlane(V3d v3) {
+    if (!haveAxis(cs, v3) && checkOperation(Qd.newVA(v3, 180), center, -1))
+      axes[cs][nAxes[cs]++] = Operation.newPlane(++nOps, v3);
+    return nAxes[cs];
   }
 
-  int nOps = 0;
-  private class Operation {
-    int type;
-    int order;
-    int index;
-    V3d normalOrAxis;
-    private int typeOrder;
-
-    Operation() {
-      index = ++nOps;
-      type = OPERATION_INVERSION_CENTER;
-      order = 1;
-      typeOrder = 1;
-      if (Logger.debugging)
-        Logger.debug("new operation -- " + typeNames[type]);
-    }
-
-    Operation(V3d v, int i) {
-      index = ++nOps;
-      type = (i < firstProper ? OPERATION_IMPROPER_AXIS : OPERATION_PROPER_AXIS);
-      typeOrder = i;
-      order = i % firstProper;
-      normalOrAxis = Qd.newVA(v, 180).getNormal();
-      if (Logger.debugging)
-        Logger.debug("new operation -- " + (order == i ? "S" : "C") + order + " "
-            + normalOrAxis);
-    }
-
-    Operation(V3d v) {
-      if (v == null)
-        return;
-      index = ++nOps;
-      type = OPERATION_PLANE;
-      normalOrAxis = Qd.newVA(v, 180).getNormal();
-      if (Logger.debugging)
-        Logger.debug("new operation -- plane " + normalOrAxis);
-    }
-
-    String getLabel(boolean conventional) {
-      String s;
-      switch (type) {
-      case OPERATION_PLANE:
-        s ="Cs";
-        break;
-      case OPERATION_IMPROPER_AXIS:
-        s = "S" + order;
-        break;
-      default:
-        s = "C" + order;
-        break;
-      }
-      return (conventional ? getConventionalName(s) : s);
-    }
-
-    M3d mat;
-    
-    public M3d getM3() {
-      if (mat != null)
-        return mat;
-      M3d m = M3d.newM3(getQuaternion(normalOrAxis, typeOrder).getMatrix());
-      if (type == OPERATION_PLANE || type == OPERATION_IMPROPER_AXIS)
-        m.mul(mInv);
-      m.clean();
-      return mat = m;
-    }
-
-    public String toString() {
-      return getLabel(false) + " " + normalOrAxis;
-    }
+  String getName() {
+    return getNameByConvention(name);
   }
 
-  Object getInfo(int modelIndex, String drawID, boolean asInfo, String type,
+  Object getInfo(int modelIndex, String drawID, boolean asMap, String type,
                  int index, double scaleFactor) {
+    if (drawID == null && !asMap && textInfo != null)
+      return textInfo;
+    if (drawID == null && drawInfo != null && drawIndex == index
+        && this.scale == scale && drawType.equals(type == null ? "" : type))
+      return drawInfo;
+    if (asMap && info != null)
+      return info;
     boolean asDraw = (drawID != null);
-    info = (asInfo ? new Hashtable<String, Object>() : null);
+    info = null;
+    Lst<Map<String, Object>> elements = null;
     V3d v = new V3d();
     Operation op;
     if (scaleFactor == 0)
@@ -1078,87 +1241,100 @@ class PointGroup {
       for (int j = nAxes[i]; --j >= 0;)
         nType[axes[i][j].type][0]++;
     SB sb = new SB().append("# ").appendI(nAtoms).append(" atoms\n");
-    String name = getConventionalName(this.name);
+    String name = getNameByConvention(this.name);
     if (asDraw) {
       drawID = "draw " + drawID;
       boolean haveType = (type != null && type.length() > 0);
       drawType = type = (haveType ? type : "");
       drawIndex = index;
-      boolean anyProperAxis = (type.equalsIgnoreCase(getConventionalName("Cn")));
-      boolean anyImproperAxis = (type.equalsIgnoreCase(getConventionalName("Sn")));
-      sb.append("set perspectivedepth off;\n");
+      boolean anyProperAxis = (type
+          .equalsIgnoreCase(getNameByConvention("Cn")));
+      boolean anyImproperAxis = (type
+          .equalsIgnoreCase(getNameByConvention("Sn")));
+      sb.append("set perspectivedepth off;" + drawID + "* delete;\n");
       String m = "_" + modelIndex + "_";
       if (!haveType)
-        sb.append(drawID + "pg0").append(m).append("* delete;draw pgva").append(m
-           ).append("* delete;draw pgvp").append(m).append("* delete;");
+        sb.append(drawID + "pg0").append(m).append("* delete;draw pgva")
+            .append(m).append("* delete;draw pgvp").append(m)
+            .append("* delete;");
       if (!haveType || type.equalsIgnoreCase("Ci"))
-        sb.append(drawID + "pg0").append(m).append(
-            haveInversionCenter ? "inv " : " ").append(
-            Escape.eP(center)).append(haveInversionCenter ? "\"i\";\n" : ";\n");
+        sb.append(drawID + "pg0").append(m)
+            .append(haveInversionCenter ? "inv " : " ")
+            .append(Escape.eP(center))
+            .append(haveInversionCenter ? "\"i\";\n" : ";\n");
       double offset = 0.1d;
       for (int i = 2; i < maxAxis; i++) {
         if (i == firstProper)
           offset = 0.1d;
         if (nAxes[i] == 0)
           continue;
-        String sglabel = (!isLinear ? axes[i][0].getLabel(false) : "C_infinity");
-        String label = (!isLinear ? axes[i][0].getLabel(true) : "C_infinity");
+        String sglabel = (isLinear ? "C\u221e" : getOpName(axes[i][0], false));
+        String label = (isLinear ? "\u221e" : getOpName(axes[i][0], true));
         offset += 0.25d;
-        double scale = scaleFactor * 1.05d * radius + offset * 80/sppa;
+        double scale = scaleFactor * 1.05d * radius + offset * 80 / sppa;
         boolean isProper = (i >= firstProper);
-        if (!haveType || type.equalsIgnoreCase(label) || anyProperAxis
-            && isProper || anyImproperAxis && !isProper) {
+        if (!haveType || type.equalsIgnoreCase(label)
+            || anyProperAxis && isProper || anyImproperAxis && !isProper) {
           for (int j = 0; j < nAxes[i]; j++) {
             if (index > 0 && j + 1 != index)
               continue;
             op = axes[i][j];
             v.add2(op.normalOrAxis, center);
-            sb.append(drawID + "pgva").append(m).append(sglabel).append("_").appendI(
-                j + 1).append(" width 0.05 scale ").appendD(op.type == OPERATION_IMPROPER_AXIS ? -scale : scale).append(" ").append(
-                Escape.eP(v));
+            sb.append(drawID + "pgva").append(m).append(sglabel).append("_")
+                .appendI(j + 1).append(" width 0.05 scale ")
+                .appendD(op.type == OPERATION_IMPROPER_AXIS ? -scale : scale)
+                .append(" ").append(Escape.eP(v));
             v.scaleAdd2(-2, op.normalOrAxis, v);
-            boolean isPA = (!isLinear && principalAxis != null && op.index == principalAxis.index);
-            sb.append(Escape.eP(v)).append(
-                "\"").append(label).append(isPA ? "" : "").append("\" color ").append(
-                isPA ? "red" : op.type == OPERATION_IMPROPER_AXIS ? "blue"
-                    : "orange").append(";\n");
+            boolean isPA = (!isLinear && principalAxis != null
+                && op.index == principalAxis.index);
+            sb.append(Escape.eP(v)).append("\"").append(label)
+                .append(isPA ? "" : "").append("\" color ")
+                .append(isPA ? "red"
+                    : op.type == OPERATION_IMPROPER_AXIS ? "blue" : "orange")
+                .append(";\n");
           }
         }
       }
-      if (!haveType || type.equalsIgnoreCase(this.getConventionalName("Cs"))) {
-        for (int j = 0; j < nAxes[0]; j++) {
+      if (!haveType || type.equalsIgnoreCase(this.getNameByConvention("Cs"))) {
+        for (int j = 0; j < nAxes[cs]; j++) {
           if (index > 0 && j + 1 != index)
             continue;
-          op = axes[0][j];
-          sb.append(drawID + "pgvp").append(m).appendI(j + 1).append(
-              "disk scale ").appendD(scaleFactor * radius * 2).append(" CIRCLE PLANE ")
-              .append(Escape.eP(center));
+          op = axes[cs][j];
+          sb.append(drawID + "pgvp").append(m).appendI(j + 1)
+              .append("disk scale ").appendD(scaleFactor * radius * 2)
+              .append(" CIRCLE PLANE ").append(Escape.eP(center));
           v.add2(op.normalOrAxis, center);
           sb.append(Escape.eP(v)).append(" color translucent yellow;\n");
           v.add2(op.normalOrAxis, center);
-          sb.append(drawID + "pgvp").append(m).appendI(j + 1).append(
-              "ring width 0.05 scale ").appendD(scaleFactor * radius * 2).append(" arc ")
+          sb.append(drawID + "pgvp").append(m).appendI(j + 1)
+              .append("ring width 0.05 scale ")
+              .appendD(scaleFactor * radius * 2).append(" arc ")
               .append(Escape.eP(v));
           v.scaleAdd2(-2, op.normalOrAxis, v);
           sb.append(Escape.eP(v));
-          v.add3(0.011f,  0.012f,  0.013f);
-          sb.append(Escape.eP(v))
-              .append("{0 360 0.5} color ")
-              .append(
-                  principalPlane != null && op.index == principalPlane.index ? "red"
-                      : "blue").append(";\n");
+          v.add3(0.011f, 0.012f, 0.013f);
+          sb.append(Escape.eP(v)).append("{0 360 0.5} color ")
+              .append(principalPlane != null && op.index == principalPlane.index
+                  ? "red"
+                  : "blue")
+              .append(";\n");
         }
       }
 
       sb.append("# name=").append(name);
-      sb.append(", n" + getConventionalName("Ci") + "=").appendI(haveInversionCenter ? 1 : 0);
-      sb.append(", n" + getConventionalName("Cs") + "=").appendI(nAxes[OPERATION_PLANE]);
-      sb.append(", n" + getConventionalName("Cn") + "=").appendI(nType[OPERATION_PROPER_AXIS][0]);
-      sb.append(", n" + getConventionalName("Sn") + "=").appendI(nType[OPERATION_IMPROPER_AXIS][0]);
+      sb.append(", n" + getNameByConvention("Ci") + "=")
+          .appendI(haveInversionCenter ? 1 : 0);
+      sb.append(", n" + getNameByConvention("Cs") + "=")
+          .appendI(nAxes[OPERATION_PLANE]);
+      sb.append(", n" + getNameByConvention("Cn") + "=")
+          .appendI(nType[OPERATION_PROPER_AXIS][0]);
+      sb.append(", n" + getNameByConvention("Sn") + "=")
+          .appendI(nType[OPERATION_IMPROPER_AXIS][0]);
       sb.append(": ");
       for (int i = maxAxis; --i >= 2;)
         if (nAxes[i] > 0) {
-          String axisName = getConventionalName((i < firstProper ? "S" : "C") + (i % firstProper));
+          String axisName = getNameByConvention(
+              (i < firstProper ? "S" : "C") + (i % firstProper));
           sb.append(" n").append(axisName);
           sb.append("=").appendI(nAxes[i]);
         }
@@ -1172,89 +1348,94 @@ class PointGroup {
     int n = 0;
     int nTotal = 1;
     int nElements = 0; // planes Cs
-    
-    String ctype = (haveInversionCenter ? getConventionalName("Ci") : "center");
+
+    String ctype = (haveInversionCenter ? getNameByConvention("Ci") : "center");
     if (haveInversionCenter) {
       nTotal++;
       nElements++;
     }
-    if (asInfo) {
+    // get information, either as a String or a Map
+    if (asMap) {
+      info = new Hashtable<String, Object>();
+      elements = new Lst<>();
       if (center != null) {
-      info.put(ctype, center);
-      if (haveInversionCenter)
-        info.put("center", center);
-      info.put(ctype, center);
+        info.put(ctype, center);
+        if (haveInversionCenter)
+          info.put("center", center);
+        info.put(ctype, center);
+      }
+      info.put("elements", elements);
+      if (haveInversionCenter) {
+        info.put("Ci_m", M3d.newM3(mInv));
+        Map<String, Object> e = new Hashtable<String, Object>();
+        axes[ci][0].setInfo(null, null, e);
+        e.put("location", center);
+        e.put("type", getNameByConvention("Ci"));
+        elements.add(e);
       }
     } else {
-      sb.append("\n\n").append(name).append("\t").append(ctype).append("\t").append(Escape.eP(center));
+      sb.append("\n\n").append(name).append("\t").append(ctype).append("\t")
+          .append(Escape.eP(center));
     }
     for (int i = maxAxis; --i >= 0;) {
-      if (nAxes[i] > 0) {
-        // includes planes
-        n = nUnique[i];
-        String label = axes[i][0].getLabel(true);
-        String sglabel = axes[i][0].getLabel(false);
-        if (asInfo)
-          info.put("n" + sglabel, Integer.valueOf(nAxes[i]));
-        else
-          sb.append("\n\n").append(name).append("\tn").append(label).append("\t").appendI(nAxes[i]).append("\t").appendI(n);
-        n *= nAxes[i];
-        nTotal += n;
-        nElements += nAxes[i];
-        nType[axes[i][0].type][1] += n;
-        Lst<V3d> vinfo = (asInfo ? new  Lst<V3d>() : null);
-        Lst<M3d> minfo = (asInfo ? new  Lst<M3d>() : null);
-        for (int j = 0; j < nAxes[i]; j++) {
-          //axes[i][j].typeIndex = j + 1;
-          Operation aop = axes[i][j];
-          if (asInfo) {
-            vinfo.addLast(aop.normalOrAxis);
-            minfo.addLast(aop.getM3());
-          } else {
-            sb.append("\n").append(name).append("\t").append(sglabel).append("_").appendI(j + 1).append("\t"
-                ).appendO(aop.normalOrAxis);
-          }
-        }
-        if (asInfo) {
-          info.put(sglabel, vinfo);
-          info.put(sglabel + "_m", minfo);
+      if (i == ci || nAxes[i] == 0)
+        continue;
+      
+      // includes planes
+      n = nUnique[i];
+      String sglabel = getOpName(axes[i][0], false);
+      String label = getOpName(axes[i][0], true);
+      if (asMap) {
+        info.put("n" + sglabel, Integer.valueOf(nAxes[i]));
+      } else {
+        sb.append("\n\n").append(name).append("\tn").append(label).append("\t")
+            .appendI(nAxes[i]).append("\t").appendI(n);
+      }
+      n *= nAxes[i];
+      nTotal += n;
+      nElements += nAxes[i];
+      nType[axes[i][0].type][1] += n;
+      Lst<V3d> vinfo = (asMap ? new Lst<V3d>() : null);
+      Lst<M3d> minfo = (asMap ? new Lst<M3d>() : null);
+      for (int j = 0; j < nAxes[i]; j++) {
+        //axes[i][j].typeIndex = j + 1;
+        Operation aop = axes[i][j];
+        if (asMap) {
+          Map<String, Object> e = new Hashtable<String, Object>();
+          aop.setInfo(vinfo, minfo, e);
+          e.put("type", label);
+          elements.add(e);
+        } else {
+          sb.append("\n").append(name).append("\t").append(sglabel).append("_")
+              .appendI(j + 1).append("\t").appendO(aop.normalOrAxis);
         }
       }
+      if (asMap) {
+        info.put(sglabel, vinfo);
+        info.put(sglabel + "_m", minfo);
+      }
     }
-    
-    if (!asInfo) {
-      sb.append("\n");
-      sb.append("\n").append(name).append("\ttype\tnElements\tnUnique");
-      sb.append("\n").append(name).append("\t"+getConventionalName("E") +"\t  1\t  1");
-
-      n = (haveInversionCenter ? 1 : 0);
-      sb.append("\n").append(name).append("\t"+getConventionalName("Ci") +"\t  ").appendI(n).append("\t  ").appendI(n);
-
-      sb.append("\n").append(name).append("\t"+getConventionalName("Cs") +"\t");
-      PT.rightJustify(sb, "    ", nAxes[0] + "\t");
-      PT.rightJustify(sb, "    ", nAxes[0] + "\n");
-
-      sb.append(name).append("\t"+getConventionalName("Cn")+"\t");
-      PT.rightJustify(sb, "    ", nType[OPERATION_PROPER_AXIS][0] + "\t");
-      PT.rightJustify(sb, "    ", nType[OPERATION_PROPER_AXIS][1] + "\n");
-
-      sb.append(name).append("\t"+getConventionalName("Sn")+"\t");
-      PT.rightJustify(sb, "    ", nType[OPERATION_IMPROPER_AXIS][0] + "\t");
-      PT.rightJustify(sb, "    ", nType[OPERATION_IMPROPER_AXIS][1] + "\n");
-
-      sb.append(name).append("\t\tTOTAL\t");
-      PT.rightJustify(sb, "    ", nTotal + "\n");
-      return (textInfo = sb.toString());
+    if (asMap && highOperations != null) {
+      for (Operation o : highOperations) {
+        Map<String, Object> e = new Hashtable<String, Object>();
+        o.setInfo(null, null, e);
+        e.put("type", this.getNameByConvention(o.schName));
+        elements.add(e);        
+      }
     }
+
+    if (!asMap)
+      return textInfo = getTextInfo(sb, nType, nTotal);
+
     info.put("name", this.name);
     info.put("hmName", getHermannMauguinName());
     info.put("nAtoms", Integer.valueOf(nAtoms));
     info.put("nTotal", Integer.valueOf(nTotal));
     info.put("nElements", Integer.valueOf(nElements));
-    info.put("nCi", Integer.valueOf(haveInversionCenter ? 1 : 0));
-    if (haveInversionCenter)
-      info.put("Ci_m", M3d.newM3(mInv));
-    info.put("nCs", Integer.valueOf(nAxes[0]));
+    info.put("nCi", Integer.valueOf(nAxes[ci]));
+    info.put("nC2", Integer.valueOf(nAxes[c2]));
+    info.put("nC3", Integer.valueOf(nAxes[c3]));
+    info.put("nCs", Integer.valueOf(nAxes[cs]));
     info.put("nCn", Integer.valueOf(nType[OPERATION_PROPER_AXIS][0]));
     info.put("nSn", Integer.valueOf(nType[OPERATION_IMPROPER_AXIS][0]));
     info.put("distanceTolerance", Double.valueOf(distanceTolerance));
@@ -1268,35 +1449,137 @@ class PointGroup {
     return info;
   }
 
-  boolean isDrawType(String type, int index, double scale) {
-    return (drawInfo != null && drawType.equals(type == null ? "" : type) 
-        && drawIndex == index && this.scale  == scale);
+  // utilities
+  
+  private String getTextInfo(SB sb, int[][] nType, int nTotal) {
+    // finally, string tabulation only
+    
+    sb.append("\n");
+    sb.append("\n").append(name).append("\ttype\tnElements\tnUnique");
+    sb.append("\n").append(name).append("\t" + getNameByConvention("E") + "\t  1\t  1");
+
+    sb.append("\n").append(name).append("\t" + getNameByConvention("Ci") + "\t  ")
+        .appendI(nAxes[ci]).append("\t  ").appendI(nAxes[ci]);
+
+    sb.append("\n").append(name).append("\t" + getNameByConvention("Cs") + "\t");
+    PT.rightJustify(sb, "    ", nAxes[cs] + "\t");
+    PT.rightJustify(sb, "    ", nAxes[cs] + "\n");
+
+    sb.append(name).append("\t" + getNameByConvention("Cn") + "\t");
+    PT.rightJustify(sb, "    ", nType[OPERATION_PROPER_AXIS][0] + "\t");
+    PT.rightJustify(sb, "    ", nType[OPERATION_PROPER_AXIS][1] + "\n");
+
+    sb.append(name).append("\t" + getNameByConvention("Sn") + "\t");
+    PT.rightJustify(sb, "    ", nType[OPERATION_IMPROPER_AXIS][0] + "\t");
+    PT.rightJustify(sb, "    ", nType[OPERATION_IMPROPER_AXIS][1] + "\n");
+
+    sb.append(name).append("\t\tTOTAL\t");
+    PT.rightJustify(sb, "    ", nTotal + "\n");
+    return sb.toString();
   }
 
-  // Schoenfliess to Hermann-Mauguin
-  // using https://en.wikipedia.org/wiki/Hermann%E2%80%93Mauguin_notation
+  final static Qd getQuaternion(V3d v, int arrayIndex) {
+    return Qd.newVA(v, (arrayIndex < firstProper ? 180 : 0)
+        + (arrayIndex == 0 ? 0 : 360 / (arrayIndex % firstProper)));
+  }
 
+  private boolean isLinear(T3d[] atoms) {
+    V3d v1 = null;
+    if (atoms.length < 2)
+      return false;
+    for (int i = atoms.length; --i >= 0;) {
+      if (i == centerAtomIndex)
+        continue;
+      if (v1 == null) {
+        v1 = new V3d();
+        v1.sub2(atoms[i], center);
+        v1.normalize();
+        vTemp.setT(v1);
+        continue;
+      }
+      vTemp.sub2(atoms[i], center);
+      vTemp.normalize();
+      if (!isParallel(v1, vTemp))
+        return false;
+    }
+    return true;
+  }
+
+  private boolean isParallel(V3d v1, V3d v2) {
+    // note -- these MUST be unit vectors
+    return (Math.abs(v1.dot(v2)) >= cosTolerance);
+  }
+
+  private boolean isPerpendicular(V3d v1, V3d v2) {
+    // note -- these MUST be unit vectors
+    return (Math.abs(v1.dot(v2)) <= 1 - cosTolerance);
+  }
+
+  private boolean isEqual(PointGroup pg) {
+    if (pg == null)
+      return false;
+    if (convention != pg.convention || linearTolerance != pg.linearTolerance
+        || distanceTolerance != pg.distanceTolerance || nAtoms != pg.nAtoms
+        || localEnvOnly != pg.localEnvOnly || haveVibration != pg.haveVibration
+        || bsAtoms == null ? pg.bsAtoms != null : !bsAtoms.equals(pg.bsAtoms))
+      return false;
+    for (int i = 0; i < nAtoms; i++) {
+      // real floating == 0 here because they must be IDENTICAL POSITIONS
+      if (elements[i] != pg.elements[i] || !points[i].equals(pg.points[i]))
+        return false;
+    }
+    return true;
+  }
+
+
+  // Schoenflies to Hermann-Mauguin
+  
+  private String getHermannMauguinName() {
+    return getHMfromSFName(name);
+  }
+
+  private String getNameByConvention(String name) {
+    switch (convention) {
+    default:
+    case CONVENTION_SCHOENFLIES:
+      return name;
+    case CONVENTION_HERMANN_MAUGUIN:
+      return getHMfromSFName(name);
+    }
+  }
+
+  /**
+   * Get the label for the operation based on the convention chosen (H-M or
+   * Schoenflies). Note that inversion is not included here.
+   * 
+   * @param op
+   * @param conventional
+   *        if false, just return Schoenflies
+   * 
+   * @return label Cs, Cn, Sn (Schoenflies) or m n, -n
+   */
+  private String getOpName(Operation op, boolean conventional) {
+    return (conventional ? getNameByConvention(op.schName) : op.schName);
+  }
+
+
+  // using https://en.wikipedia.org/wiki/Hermann%E2%80%93Mauguin_notation
   // using https://en.wikipedia.org/wiki/Point_group with added infm and inf/mm
-  private final static String[] SF2HM = 
-      ("Cn,1,2,3,4,5,6,7,8,9,10,11,12"+
-      "|Cnv,m,2m,3m,4mm,5m,6mm,7m,8mm,9m,10mm,11m,12mm,\u221em"+
-      "|Sn,,-1,-6,-4,(-10),-3,(-14),-8,(-18),-5,(-22),(-12)"+
-      "|Cnh,m,2/m,-6,4/m,-10,6/m,-14,8/m,-18,10/m,-22,12/m"+
-      "|Dn,,222,32,422,52,622,72,822,92,(10)22,(11)2,(12)22"+
-      "|Dnd,,-42m,-3m,-82m,-5m,(-12)2m,-7m,(-16)2m,-9m,(-20)2m,(-11)m,(-24)2m"+
-      "|Dnh,,mmm,-6m2,4/mmm,(-10)m2,6/mmm,(-14)m2,8/mmm,(-18)m2,10/mmm,(-22)m2,12/mmm,\u221e/mm"+
-      "|Ci,-1"+
-      "|Cs,m"+
-      "|T,23"+
-      "|Th,m-3"+
-      "|Td,-43m"+
-      "|O,432"+
-      "|Oh,m-3m").split("\\|");
+  private final static String[] SF2HM = ("Cn,1,2,3,4,5,6,7,8,9,10,11,12"
+      + "|Cnv,m,2m,3m,4mm,5m,6mm,7m,8mm,9m,10mm,11m,12mm,\u221em"
+      + "|Sn,,-1,-6,-4,(-10),-3,(-14),-8,(-18),-5,(-22),(-12)"
+      + "|Cnh,m,2/m,-6,4/m,-10,6/m,-14,8/m,-18,10/m,-22,12/m"
+      + "|Dn,,222,32,422,52,622,72,822,92,(10)22,(11)2,(12)22"
+      + "|Dnd,,-42m,-3m,-82m,-5m,(-12)2m,-7m,(-16)2m,-9m,(-20)2m,(-11)m,(-24)2m"
+      + "|Dnh,,mmm,-6m2,4/mmm,(-10)m2,6/mmm,(-14)m2,8/mmm,(-18)m2,10/mmm,(-22)m2,12/mmm,\u221e/mm"
+      + "|Ci,-1" + "|Cs,m" + "|T,23" + "|Th,m-3" + "|Td,-43m" + "|O,432"
+      + "|Oh,m-3m").split("\\|");
 
   private static Map<String, String> htSFToHM;
-  
+
   /**
    * Get Hermann-Mauguin name from Schoenflies name
+   * 
    * @param name
    * @return HM name
    */
@@ -1313,7 +1596,6 @@ class PointGroup {
         String sym = list[0];
         if (list.length == 2) {
           addNames(sym, list[1]);
-//          System.out.println(sym + "\t" + list[1]);
           continue;
         }
         String type = sym.substring(0, 1);
@@ -1321,7 +1603,7 @@ class PointGroup {
         for (int n = 1; n < 13; n++) {
           String val = list[n];
           if (val.length() > 0) {
-            addNames(type + n + ext, val); 
+            addNames(type + n + ext, val);
             System.out.println(type + n + ext + "\t" + val);
           }
         }
@@ -1330,7 +1612,7 @@ class PointGroup {
           addNames(type + "\u221e" + ext, list[13]);
         }
       }
-      
+
     }
     String hm = htSFToHM.get(name);
     return (hm == null ? name : hm);
@@ -1340,89 +1622,88 @@ class PointGroup {
     htSFToHM.put(sch, hm);
     htSFToHM.put(hm, sch);
   }
-  
-  
-//  C1  1
-//  C2  2
-//  C3  3
-//  C4  4
-//  C5  5
-//  C6  6
-//  C7  7
-//  C8  8
-//  C9  9
-//  C10 10
-//  C11 11
-//  C12 12
-//  C1v 1m
-//  C2v 2m
-//  C3v 3m
-//  C4v 4mm
-//  C5v 5m
-//  C6v 6mm
-//  C7v 7m
-//  C8v 8mm
-//  C9v 9m
-//  C10v  10mm
-//  C11v  11m
-//  C12v  12mm
-//  S2  -1
-//  S4  -4
-//  S6  -3
-//  S8  -8
-//  S10 -5
-//  S12 (-12)
-//  C1h -2
-//  C2h 2/m
-//  C3h -6
-//  C4h 4/m
-//  C5h -10
-//  C6h 6/m
-//  C7h -14
-//  C8h 8/m
-//  C9h -18
-//  C10h  10/m
-//  C11h  -22
-//  C12h  12/m
-//  D2  22
-//  D3  32
-//  D4  422
-//  D5  52
-//  D6  622
-//  D7  72
-//  D8  822
-//  D9  92
-//  D10 (10)22
-//  D11 (11)2
-//  D12 (12)22
-//  D2d -42m
-//  D3d -32/m
-//  D4d -82m
-//  D5d -52/m
-//  D6d (-12)2m
-//  D7d -72/m
-//  D8d (-16)2m
-//  D9d -92/m
-//  D10d  (-20)2m
-//  D11d  (-11)2/m
-//  D12d  (-24)2m
-//  D2h 2/m2/m2/m
-//  D3h -6m2
-//  D4h 4/m2/m2/m
-//  D5h (-10)m2
-//  D6h 6/m2/m2/m
-//  D7h (-14)m2
-//  D8h 8/m2/m2/m
-//  D9h (-18)m2
-//  D10h  10/m2/m2/m
-//  D11h  (-22)m2
-//  D12h  12/m2/m2/mDn/2h
-//  Ci  -1
-//  Cs  -2
-//  T 23
-//  Th  m-3
-//  Td  -43m
-//  O 432
-//  Oh  m-3m
+
+  //  C1  1
+  //  C2  2
+  //  C3  3
+  //  C4  4
+  //  C5  5
+  //  C6  6
+  //  C7  7
+  //  C8  8
+  //  C9  9
+  //  C10 10
+  //  C11 11
+  //  C12 12
+  //  C1v 1m
+  //  C2v 2m
+  //  C3v 3m
+  //  C4v 4mm
+  //  C5v 5m
+  //  C6v 6mm
+  //  C7v 7m
+  //  C8v 8mm
+  //  C9v 9m
+  //  C10v  10mm
+  //  C11v  11m
+  //  C12v  12mm
+  //  S2  -1
+  //  S4  -4
+  //  S6  -3
+  //  S8  -8
+  //  S10 -5
+  //  S12 (-12)
+  //  C1h -2
+  //  C2h 2/m
+  //  C3h -6
+  //  C4h 4/m
+  //  C5h -10
+  //  C6h 6/m
+  //  C7h -14
+  //  C8h 8/m
+  //  C9h -18
+  //  C10h  10/m
+  //  C11h  -22
+  //  C12h  12/m
+  //  D2  22
+  //  D3  32
+  //  D4  422
+  //  D5  52
+  //  D6  622
+  //  D7  72
+  //  D8  822
+  //  D9  92
+  //  D10 (10)22
+  //  D11 (11)2
+  //  D12 (12)22
+  //  D2d -42m
+  //  D3d -32/m
+  //  D4d -82m
+  //  D5d -52/m
+  //  D6d (-12)2m
+  //  D7d -72/m
+  //  D8d (-16)2m
+  //  D9d -92/m
+  //  D10d  (-20)2m
+  //  D11d  (-11)2/m
+  //  D12d  (-24)2m
+  //  D2h 2/m2/m2/m
+  //  D3h -6m2
+  //  D4h 4/m2/m2/m
+  //  D5h (-10)m2
+  //  D6h 6/m2/m2/m
+  //  D7h (-14)m2
+  //  D8h 8/m2/m2/m
+  //  D9h (-18)m2
+  //  D10h  10/m2/m2/m
+  //  D11h  (-22)m2
+  //  D12h  12/m2/m2/mDn/2h
+  //  Ci  -1
+  //  Cs  -2
+  //  T 23
+  //  Th  m-3
+  //  Td  -43m
+  //  O 432
+  //  Oh  m-3m
 
 }

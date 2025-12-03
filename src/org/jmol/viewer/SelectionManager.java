@@ -237,7 +237,10 @@ public class SelectionManager {
   }
 
   boolean isInSelectionSubset(int atomIndex) {
-    return (atomIndex < 0 || bsSubset == null || bsSubset.get(atomIndex));
+    return (atomIndex < 0 
+        || vwr.am.splitFrame && !vwr.am.isSplitFrameSelectable(atomIndex)
+        || bsSubset == null 
+        || bsSubset.get(atomIndex));
   }
 
   void invertSelection() {

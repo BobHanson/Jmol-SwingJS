@@ -66,6 +66,8 @@ public class ActionManager implements EventManager {
   //private int LEFT_CLICKED;
   private int LEFT_DRAGGED;
   
+  protected MouseState current, moved, clicked, pressed, dragged;
+  
   /**
    * 
    * @param vwr
@@ -73,6 +75,12 @@ public class ActionManager implements EventManager {
    */
   public void setViewer(Viewer vwr, String commandOptions) {
     this.vwr = vwr;
+    current = new MouseState("current");
+    moved = new MouseState("moved");
+    clicked = new MouseState("clicked");
+    pressed = new MouseState("pressed");
+    dragged = new MouseState("dragged");
+
     if (!Viewer.isJS)
       createActions();
     setBinding(jmolBinding = new JmolBinding());
@@ -628,12 +636,6 @@ public class ActionManager implements EventManager {
     mouseWheelFactor = factor;
   }
 
-  protected final MouseState current = new MouseState("current");
-  protected final MouseState moved = new MouseState("moved");
-  private final MouseState clicked = new MouseState("clicked");
-  private final MouseState pressed = new MouseState("pressed");
-  private final MouseState dragged = new MouseState("dragged");
-
   protected void setCurrent(long time, int x, int y, int mods) {
     vwr.hoverOff();
     current.set(time, x, y, mods);
@@ -907,11 +909,15 @@ public class ActionManager implements EventManager {
 
   @Override
   public void mouseEnterExit(long time, int x, int y, boolean isExit) {
-    if (vwr.tm.stereoDoubleDTI)
-      x = x << 1;
+    x = fixMouseFrameX(x);
     setCurrent(time, x, y, 0);
     if (isExit)
       exitMeasurementMode("mouseExit"); //otherwise pending measurement can be left over.
+  }
+
+  private int fixMouseFrameX(int x) {
+    return (vwr.tm.stereoDoubleDTI ? x << 1 
+        : vwr.am.splitFrame ? vwr.am.setSplitFrameMouse(x) : x);
   }
 
   private int pressAction;
@@ -943,8 +949,6 @@ public class ActionManager implements EventManager {
       return;
     if (Logger.debuggingHigh && mode != Event.MOVED && vwr.getBoolean(T.testflag1))
       vwr.showString("mouse action: " + mode + " " + buttonMods + " " + Binding.getMouseActionName(Binding.getMouseAction(count, buttonMods, mode), false), false);
-    if (vwr.tm.stereoDoubleDTI)
-      x = x << 1;
     switch (mode) {
     case Event.MOVED:
       if (!hoverable) {
@@ -1711,7 +1715,7 @@ public class ActionManager implements EventManager {
   }
 
   private boolean isZoomArea(int x) {
-    return x > vwr.getScreenWidth() * (vwr.tm.stereoDoubleFull || vwr.tm.stereoDoubleDTI ? 2 : 1)
+    return x > vwr.getScreenWidth() * (vwr.haveTwoImages() ? 2 : 1)
         * SLIDE_ZOOM_X_PERCENT / 100d;
   }
 
@@ -1751,6 +1755,8 @@ public class ActionManager implements EventManager {
     vwr.setPicked(iAtom, true);
     vwr.setCursor(GenericPlatform.CURSOR_CROSSHAIR);
     vwr.setPendingMeasurement(mp = getMP());
+    if (iAtom >= 0)
+      mp.setModelIndex(vwr.ms.at[iAtom].mi);
     measurementQueued = mp;
   }
 

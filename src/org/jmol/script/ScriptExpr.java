@@ -1446,7 +1446,7 @@ abstract class ScriptExpr extends ScriptParam {
         continue;
       switch (tokWhat) {
       default:
-        ia = atom.atomPropertyInt(tokWhat);
+        ia = atom.atomPropertyInt(vwr, tokWhat);
         break;
       case T.subsystem:
       case T.configuration:
@@ -1883,7 +1883,7 @@ abstract class ScriptExpr extends ScriptParam {
             }
             break;
           default:
-            iv = atom.atomPropertyInt(tok);
+            iv = atom.atomPropertyInt(vwr, tok);
             break;
           }
           switch (minmaxtype) {

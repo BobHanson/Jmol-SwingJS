@@ -74,7 +74,7 @@ public class DrawRenderer extends MeshRenderer {
     //isPrecision = true;//vwr.tm.perspectiveDepth;
     for (int i = draw.meshCount; --i >= 0;) {
       Mesh mesh = dmesh = (DrawMesh) draw.meshes[i];
-      if (mesh == null) {
+      if (mesh == null || dmesh.drawType == null) {
         return false;
       }
       if (dmesh.thisModelOnly && vwr.am.cmi < 0)

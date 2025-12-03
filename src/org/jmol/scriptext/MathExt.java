@@ -791,6 +791,8 @@ SymmetryInterface sym;
     // unitcell(uc, "reciprocal")
     // unitcell(origin, [va, vb, vc])
     // unitcell(origin, pta, ptb, ptc)
+    // unitcell("a=5,b=10,c=15,alpha=90,beta=90,gamma=90")
+    // unitcell([5,10,15,90,90,90])
 
     // next can be without {1.1}, but then assume "all atoms"
     // {1.1}.unitcell()

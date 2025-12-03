@@ -93,6 +93,11 @@ public class TransformManager {
   protected final M4d matrixTemp = new M4d();
   protected final V3d vectorTemp = new V3d();
 
+  /**
+   *  right-hand split frame has fewer capabilities than right-hand
+   */  
+  public int splitFrameCurrentlyRendering = -1;
+
   public TransformManager() {
   }
 
@@ -2296,13 +2301,21 @@ public class TransformManager {
 
   STER stereoMode = STER.NONE;
   int[] stereoColors;
-  boolean stereoDoubleDTI, stereoDoubleFull;
+  /**
+   * full-frame stereo images
+   */
+  boolean stereoDoubleFull;
+  /**
+   * half-frame stereo images Dimension Technologies Inc. (DTI)
+   * 
+   */
+  boolean stereoDoubleDTI;
 
   void setStereoMode2(int[] twoColors) {
     stereoMode = STER.CUSTOM;
     stereoColors = twoColors;
   }
-
+  
   void setStereoMode(STER stereoMode) {
     stereoColors = null;
     this.stereoMode = stereoMode;
