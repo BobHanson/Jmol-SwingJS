@@ -3495,6 +3495,7 @@ public class CmdExt extends ScriptExt {
     int pt = args.length - 1;
     boolean isReturnOnly = (args != st);
     boolean pdbFormat = true;
+    boolean isSplit = false;
     T[] statementSave = st;
     if (isReturnOnly)
       e.st = st = args;
@@ -3509,6 +3510,9 @@ public class CmdExt extends ScriptExt {
     case T.plot:
     case T.quaternion:
     case T.ramachandran:
+      isSplit = (tokAt(pt) == T.split);
+      if (isSplit)
+        e.slen = slen = pt--;
       break;
     case T.draw:
       makeNewFrame = false;
@@ -3900,10 +3904,11 @@ public class CmdExt extends ScriptExt {
           "set echo hmname 100% 100%;" + 
           "set echo hmname RIGHT;" + 
           "set echo hmname model 2.1;" + 
-          "echo @name;" + 
-          "frame 1.1 2.1 split;";
+          "echo @name;";
       e.runScript(script);
     }
+    if (isSplit)
+      e.runScript("frame 1.1 2.1 split;");
     showString("frame " + vwr.getModelNumberDotted(modelCount - 1)
         + (type.length() > 0
             ? " created: " + type + (isQuaternion ? qFrame : "")
@@ -7387,7 +7392,9 @@ public class CmdExt extends ScriptExt {
                                          double min, double max)
       throws ScriptException {
 
-    Object odata = (property == null || tok == (T.wyckoff | T.allfloat)
+    Object odata = (property == null 
+        || tok == (T.wyckoff | T.allfloat)
+        || tok == (T.vibxyz | T.allfloat)
         || tok == (T.dssr | T.allfloat)
             ? e.getBitsetProperty(bs, null, tok, null, null, property, null,
                 false, Integer.MAX_VALUE, false)

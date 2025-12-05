@@ -34,6 +34,7 @@ import javajs.util.SB;
 
 public class FSGOutputReader extends AtomSetCollectionReader {
 
+  private final static double fsgPrecision = 1e-4d; 
   private short[] elementNumbers;
 //  private boolean addSymmetry;
   private boolean spinOnly;
@@ -165,7 +166,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       M4d mspin = readMatrix(getListItem(op, 0), null);
       M4d mop = readMatrix(getListItem(op, 1), getListItem(op, 2));
       String s = SymmetryOperation.getTransformXYZ(mop)
-          + SymmetryOperation.getSpinString(mspin, true)
+          + SymmetryOperation.getSpinString(mspin, true, true)
           + (isCoplanar ? "+" : "");
       int iop = setSymmetryOperator(s);
       if (Logger.debugging)
@@ -244,7 +245,14 @@ public class FSGOutputReader extends AtomSetCollectionReader {
   public void doPreSymmetry(boolean doApplySymmetry) throws Exception {
     FileSymmetry fs = asc.getSymmetry();
     BS bs = BSUtil.newBitSet2(0, asc.ac);
-    excludeAtoms(0, bs, fs);
+    int i = 0;
+    symmetry.setPrecision(fsgPrecision);
+    while ((i = excludeAtoms(i, bs, fs)) >= 0) {
+      // iterate
+    }
+    for (int n = 0, j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1)) {
+      asc.atoms[j].atomSite = n++;
+    }
     filterFsgAtoms(bs);
     preSymmetrySetMoments();
     System.out.println("FSGOutputReader using atoms " + bs);
@@ -254,7 +262,8 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       appendLoadNote(
           lst.size() + " spin operations -- see _M.spinList and atom.spin");
     }
-    System.out.println("FSGOutput operationCount=" + fs.getSpaceGroupOperationCount());
+    System.out.println(
+        "FSGOutput operationCount=" + fs.getSpaceGroupOperationCount());
     Map<String, Object> info = getSCIFInfo(fs, lst);
     asc.setCurrentModelInfo("scifInfo", info);
     asc.setCurrentModelInfo("spinFrame", spinFrame);
@@ -308,6 +317,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     addJmolScript("vectors on;vectors 0.15;");
     vibsFractional = true;
     int n = asc.getXSymmetry().setMagneticMoments(true);
+    asc.getXSymmetry().getSymmetry().setPrecision(fsgPrecision);
     appendLoadNote(n
         + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
   }
@@ -371,7 +381,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       mput(m, "msgTransform", abcm);
       asc.setCurrentModelInfo("unitcell_msg", abcm);
 
-      symmetry.setUnitCellFromParams(unitCellParams, true, cellSlop);
+      symmetry.setUnitCellFromParams(unitCellParams, true, fsgPrecision);
       spinFrame = calculateSpinFrame(readMatrix(getList(json, "transformation_matrix_spin_cartesian_lattice_G0"), null));
       System.out.println("FSGOutput G0 spinFrame=" + spinFrame);
       addMoreUnitCellInfo("spinFrame=" + spinFrame);
@@ -442,31 +452,33 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     return m;
   }
 
-  private void excludeAtoms(int i0, BS bs, FileSymmetry fs) {
-    if (i0 < 0)
-      return;
+  private int excludeAtoms(int i0, BS bs, FileSymmetry fs) {
     for (int i = bs.nextSetBit(i0 + 1); i >= 0; i= bs.nextSetBit(i + 1)) {
       if (findSymop(i0, i, fs)) {
         bs.clear(i);
       }
     }
-    excludeAtoms(bs.nextSetBit(i0 + 1), bs, fs);
+    return bs.nextSetBit(i0 + 1);
   }
   
-  private P3d p2 = new P3d();
+  private P3d p2 = new P3d(), p1 = new P3d();
   
   private boolean findSymop(int i1, int i2, FileSymmetry fs) {
     Atom a = asc.atoms[i1];
     Atom b = asc.atoms[i2];
     if (a.elementNumber != b.elementNumber)
       return false;
+    p2.setP(b);
+    symmetry.unitize(p2);
+    symmetry.toCartesian(p2, true);
     SymmetryOperation[] ops = fs.getSymmetryOperations();
     int nops = fs.getSpaceGroupOperationCount();
     for (int i = 1; i < nops; i++) {
-       p2.setP(a);
-       ops[i].rotTrans(p2);
-       symmetry.unitize(p2);
-       if (p2.distanceSquared(b) < 1e-6) {
+       p1.setP(a);
+       ops[i].rotTrans(p1);
+       symmetry.unitize(p1);
+       symmetry.toCartesian(p1, true);
+       if (p1.distanceSquared(p2) < 0.01) {
          return true;
        }
     }

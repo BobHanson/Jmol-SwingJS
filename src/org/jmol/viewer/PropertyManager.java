@@ -1931,7 +1931,7 @@ public class PropertyManager implements JmolPropertyManager {
       Atom[] atoms = vwr.ms.at;
       if (isPDBFormat) {
         out.append("REMARK   6 Jmol PDB-encoded data: ").append(type)
-            .append("; ").append(Viewer.getJmolVersion()).append("; ").append(vwr.apiPlatform.getDateFormat(null)).append("\n");
+            .append("; for model " + modelIndex + "; Jmol ").append(Viewer.getJmolVersion()).append("; ").append(vwr.apiPlatform.getDateFormat(null)).append("\n");
         out.append("REMARK   6 Jmol data").append(" min = ")
             .append(Escape.eP(minXYZ)).append(" max = ")
             .append(Escape.eP(maxXYZ)).append(" unScaledXyz = xyz * ")

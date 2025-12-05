@@ -388,7 +388,7 @@ public class ShapeManager {
    * ATOM_VIS_NOTHIDDEN.
    * 
    */
-  void setModelVisibility() {
+  void setModelVisibility(BS bs) {
     Shape[] shapes = this.shapes;
     if (shapes == null || shapes[JC.SHAPE_BALLS] == null)
       return;
@@ -400,10 +400,8 @@ public class ShapeManager {
     // in general f() does MORE than just check translucency. 
     // so isTranslucent = isTranslucent || f() would NOT work.
 
-    BS bs = vwr.getVisibleFramesBitSet();
-    if (vwr.am.splitFrame)
-      vwr.am.addSplitFrameModels(bs);
-
+    if (bs == null)
+      bs = vwr.getVisibleFramesBitSet();
     // i=2 skips balls and sticks
     // as these are handled differently.
 

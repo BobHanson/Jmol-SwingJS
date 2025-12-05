@@ -962,11 +962,11 @@ public class PdbReader extends AtomSetCollectionReader {
     }
     setAtomCoordXYZ(atom, x, y, z);
     atom.formalCharge = charge;
-    setAdditionalAtomParameters(atom);
     if (haveMappedSerials)
       asc.addAtomWithMappedSerialNumber(atom);
     else
       asc.addAtom(atom);
+    setAdditionalAtomParameters(atom);
     if (ac++ == 0 && !isCourseGrained)
       setModelPDB(true);
     // note that values are +1 in this serial map

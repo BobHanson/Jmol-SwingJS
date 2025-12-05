@@ -389,7 +389,7 @@ public class SymmetryDesc {
           SymmetryOperation op = ops[i];
           String xyzOriginal = op.xyzOriginal;
           String xyzCanonical = op.xyzCanonical;
-          M4d spinUOrig = op.spinU;
+          M3d spinUOrig = op.spinU;
           int timeReversal = op.timeReversal;
           int spinIndex = op.spinIndex;
           int iop;

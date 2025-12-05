@@ -78,7 +78,7 @@ public final class BioModel extends Model {
   String defaultStructure;
   
   BioModel(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex, 
-      String jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
+      Map<String, Object> jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
     vwr = modelSet.vwr;
     set(modelSet, modelIndex, trajectoryBaseIndex, jmolData, properties, auxiliaryInfo);
     

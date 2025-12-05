@@ -909,15 +909,11 @@ public class ActionManager implements EventManager {
 
   @Override
   public void mouseEnterExit(long time, int x, int y, boolean isExit) {
-    x = fixMouseFrameX(x);
+    x = (vwr.tm.stereoDoubleDTI ? x << 1 
+        : vwr.am.splitFrame ? vwr.am.setSplitFrameMouse(x) : x);
     setCurrent(time, x, y, 0);
     if (isExit)
       exitMeasurementMode("mouseExit"); //otherwise pending measurement can be left over.
-  }
-
-  private int fixMouseFrameX(int x) {
-    return (vwr.tm.stereoDoubleDTI ? x << 1 
-        : vwr.am.splitFrame ? vwr.am.setSplitFrameMouse(x) : x);
   }
 
   private int pressAction;

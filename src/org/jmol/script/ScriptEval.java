@@ -3404,6 +3404,7 @@ public class ScriptEval extends ScriptExpr {
       case T.temperature:
       case T.translucent:
       case T.vanderwaals:
+      case T.vibxyz:
         theTok = T.atoms;
         i = 1;
         break;
@@ -8976,7 +8977,7 @@ public class ScriptEval extends ScriptExpr {
                 && T.tokAttr((tok = getToken(++index).tok), T.atomproperty)
                 && (tok == T.wyckoff || !T.tokAttr(tok, T.strproperty))) {
               tok = getToken(index).tok;
-              String type = (tok == T.dssr ? getToken(++index).value.toString() : tok == T.wyckoff ? "color" : null);
+              String type = (tok == T.dssr ? getToken(++index).value.toString() : tok == T.wyckoff || tok == T.vibxyz ? "color" : null);
               if (!chk) {
                 data = getCmdExt().getBitsetPropertyFloat(bsSelected, tok
                     | T.allfloat, type, Double.NaN, Double.NaN);

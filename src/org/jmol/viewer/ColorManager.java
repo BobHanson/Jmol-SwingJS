@@ -344,7 +344,7 @@ public class ColorManager {
     double d;
     int i0 = (isAll ? data.length - 1 : bs.nextSetBit(0));
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bs.nextSetBit(i + 1))) {
-      if (Double.isNaN(d = data[i]))
+      if (i >= data.length || Double.isNaN(d = data[i]))
         continue;
       if (d > max)
         max = d;

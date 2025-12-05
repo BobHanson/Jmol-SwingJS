@@ -32,6 +32,7 @@ import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 
 import javajs.util.Lst;
+import javajs.util.M34d;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.Matrix;
@@ -93,9 +94,18 @@ public class SymmetryOperation extends M4d {
   private V3d opAxis;
   P4d opPlane;
   private Boolean opIsCCW;
-  M4d spinU;
+  M3d spinU;
   public String suvw = null;
-  public String suvwkey = null;
+ 
+  
+  /**
+   * CIF space_group_symop_spin_operation_uvw_id
+   * 
+   * was an idea Bob had to separate out the uvw part
+   * from the xyz part into separate CIF blocks. 
+   * The idea was not ultimately part of the SpinCIF dictionary.
+   */
+  public String suvwId = null;
   public int spinIndex = -1;
 
   private int opPerDim;
@@ -292,6 +302,7 @@ public class SymmetryOperation extends M4d {
   private T3d opX;
   private String opAxisCode;
   public boolean opIsLong;
+  private boolean isPointGroupOp;
 
   /**
    * Sets sigma and the subsystem code for modulated CIF
@@ -525,10 +536,17 @@ public class SymmetryOperation extends M4d {
       // FSGReader may append '+'
       boolean posDetOnly = xyz.endsWith("+");
       int pt = xyz.indexOf('(');
-      String s = xyz.substring(pt + 1, xyz.length() - (posDetOnly ? 2 : 1));
-      xyz = xyz.substring(0, pt);
+      String s;
+      if (pt < 0) {
+        s = xyz;
+        isPointGroupOp = true;
+      } else {
+        s = xyz.substring(pt + 1, xyz.length() - (posDetOnly ? 2 : 1));
+        xyz = xyz.substring(0, pt);
+      }
       if (s.indexOf(',') < 0) {
-        suvwkey = s;
+        // temporary CIF key identifier for this spin part
+        suvwId = s;
       } else {
         setSpin(s);
         if (posDetOnly && timeReversal < 0)
@@ -565,9 +583,11 @@ public class SymmetryOperation extends M4d {
     suvw = s;
     double[] v = new double[16];
     getRotTransArrayAndXYZ(null, s, v, true, false, false, MODE_UVW);
-    spinU = M4d.newA16(v);
+    M4d m4 = M4d.newA16(v);
+    spinU = new M3d();
+    m4.getRotationScale(spinU);
     timeReversal = (int) spinU.determinant3();    
-    suvwkey = null;
+    suvwId = null;
   }
 
   /**
@@ -604,7 +624,14 @@ public class SymmetryOperation extends M4d {
     if (linearRotTrans.length > 16) {
       setGamma(isReverse);
     } else {
-      setA(linearRotTrans);
+      if (linearRotTrans[15] == 0) {
+        // assume this was a 3x3
+        m33 = 1;
+        isPointGroupOp = true;
+        setRotationScale(spinU = M3d.newA9(linearRotTrans));     
+      } else {
+        setA(linearRotTrans);
+      }
       if (isReverse) {
         P3d p3 = P3d.new3(m03, m13, m23);
         invert();
@@ -1345,7 +1372,7 @@ public class SymmetryOperation extends M4d {
 
   String fixMagneticXYZ(M4d m, String xyz) {
     if (spinU != null)
-      return xyz + getSpinString(spinU, true);
+      return xyz + getSpinString(spinU, true, true);
     if (timeReversal == 0)
       return xyz;
     int pt = xyz.indexOf("m");
@@ -1353,25 +1380,33 @@ public class SymmetryOperation extends M4d {
     xyz = (pt < 0 ? xyz : xyz.substring(0, pt));
     //    if (!addMag) was always true
     //      return xyz + (timeReversal > 0 ? " +1" : " -1");
-    M4d m2 = M4d.newM4(m);
-    m2.m03 = m2.m13 = m2.m23 = 0;
+    M3d m3 = new M3d();
+    m.getRotationScale(m3);
     if (getMagneticOp() < 0)
-      m2.scale(-1); // does not matter that we flip m33 - it is never checked
-    return xyz + getSpinString(m2, false);
+      m3.scale(-1); // does not matter that we flip m33 - it is never checked
+    return xyz + getSpinString(m3, false, true);
   }
 
   /**
+   * allows for 3x3 rotation-only matrix;
    * @param m
-   * @param isUVW will allow 0.577.... not changing that to a fraction
-   * @return full x,y,...(u,v,....)
+   * @param isUVW
+   *        will allow 0.577.... not changing that to a fraction
+   * @return full x,y,...(u,v,....) or just u,v,w
    */
-  public static String getSpinString(M4d m, boolean isUVW) {
-    return "("
-        + getXYZFromMatrixFrac(m, false, false, false, isUVW, isUVW,
-            (isUVW ? SymmetryOperation.MODE_UVW : SymmetryOperation.MODE_MXYZ))
-        + ")";
+  public static String getSpinString(M34d m, boolean isUVW, boolean withParens) {
+    M4d m4;
+    if (m instanceof M3d) {
+      m4 = new M4d();
+      m4.setRotationScale((M3d) m);
+    } else {
+      m4 = (M4d) m;
+    }
+    String s = getXYZFromMatrixFrac(m4, false, false, false, isUVW, isUVW,
+        (isUVW ? SymmetryOperation.MODE_UVW : SymmetryOperation.MODE_MXYZ));
+    return (withParens ? "(" + s + ")" : s);
   }
-
+  
   public Map<String, Object> getInfo() {
     if (info == null) {
       info = new Hashtable<String, Object>();
@@ -1389,8 +1424,10 @@ public class SymmetryOperation extends M4d {
       info.put("id", Integer.valueOf(opId));
       if (timeReversal != 0)
         info.put("timeReversal", Integer.valueOf(timeReversal));
-      if (spinU != null)
+      if (spinU != null) {
         info.put("spinU", spinU);
+        info.put("uvw",xyz.replace('x', 'u').replace('y', 'v').replace('z', 'w'));
+      }
       if (xyzOriginal != null)
         info.put("xyzOriginal", xyzOriginal);
     }
@@ -2541,7 +2578,7 @@ public class SymmetryOperation extends M4d {
   }
 
   /**
-   * rxyz option creates tab-separated string representation of a 3x4 (r,t) matrix with rational fractions
+   * rxyz option creates tab-separated string representation of a 3x4 (r,t) or 3x3 matrix with rational fractions
    * 
    * adds "|" prior to translation; does NOT add last row of 0 0 0 1
    * 
@@ -2553,23 +2590,26 @@ public class SymmetryOperation extends M4d {
      )
    * </code>
    * 
+   * Also accepts 3x3 matrix, in which case there is no |... part.
+   * 
    * @param matrix
    * @return string representation
    */
-  public static Object matrixToRationalString(M4d matrix) {
+  public static String matrixToRationalString(M34d matrix) {
+    int dim = (matrix instanceof M4d ? 4 : 3);
     String ret = "(";
     for (int i = 0; i < 3; i++) {
       ret += "\n";
-      for (int j = 0; j < 4; j++) {
+      for (int j = 0; j < dim; j++) {
         if (j > 0)
           ret += "\t";
-        if (j == 3)
+        if (j == 3 && dim == 4)
           ret += "|  ";
-        double d = matrix.getElement(i, j);
+        double d = (dim == 4 ? ((M4d) matrix).getElement(i, j) : ((M3d) matrix).getElement(i, j));
         if (d == (int) d) {
           ret += (d < 0 ? " " + (int) d : "  " + (int) d);
         } else {
-          int n48 = Math.round((float) (d * 48));
+          int n48 = (int) Math.round((double) (d * 48));
           if (approx6(d * 48 - n48) != 0) {
             ret += d;
           } else {
@@ -2589,18 +2629,29 @@ public class SymmetryOperation extends M4d {
       spinU.rotate(vib);
   }
 
-  public static Object staticConvertOperation(String xyz, M4d matrix,
+  public static Object staticConvertOperation(String xyz, M34d matrix34,
                                               String labels) {
-    boolean toMat = (matrix == null);
+    boolean toMat = (matrix34 == null);
+    M4d matrix4 = null;
     if (toMat) {
-      
-        matrix = stringToMatrix(xyz, labels);
+        matrix4 = stringToMatrix(xyz, labels);
+        if (xyz.indexOf("u") >= 0) {
+          matrix34 = new M3d();
+          matrix4.getRotationScale((M3d) matrix34);
+          matrix4 = null;
+        } else {
+          matrix34 = matrix4;
+        }
+        // now matrix4 or matrix34 is null, but not both
+    } else if (matrix34 instanceof M3d) {
+      matrix4 = new M4d();
+      matrix4.setRotationScale((M3d) matrix34);
     }
     if ("rxyz".equals(labels)) {
-      return matrixToRationalString(matrix);
+      return matrixToRationalString(matrix34);
     }
-    return (toMat ? matrix
-        : getXYZFromMatrixFrac(matrix, false, false, false,
+    return (toMat ? matrix34
+        : getXYZFromMatrixFrac(matrix4, false, false, false,
             true, false, labels));
   }
 

@@ -977,8 +977,9 @@ public class Viewer extends JmolViewer
         setModelVisibility();
         tm.splitFrameCurrentlyRendering = 1;
         imageBuffer = getRenderedImage(isStereo, false);
+        // post-rendering settings
         setCurrentModelIndex(am.getSplitFrameModelIndex(0));
-        setModelVisibility();
+        shm.setModelVisibility(am.getSplitFrameModels());
         tm.splitFrameCurrentlyRendering = 0;
         x = dimScreen.width;
         am.setSplitFrameOffsetX(x);
@@ -987,6 +988,7 @@ public class Viewer extends JmolViewer
         imageBuffer = getRenderedImage(false, false);
       }
     }
+    // add the final image to the actual screen buffer
     if (g != null)
       drawImage(g, imageBuffer, x, 0, false);
     return (mergeImages ? imageBuffer2 : imageBuffer);
@@ -4911,7 +4913,6 @@ public class Viewer extends JmolViewer
 
   public String evalStringQuietSync(String strScript, boolean isQuiet,
                                     boolean allowSyncScript) {
-    //System.out.println("Viewer.evalsqs " + strScript);
     return (getScriptManager() == null ? null
         : scm.evalStringQuietSync(strScript, isQuiet, allowSyncScript));
   }
@@ -8092,7 +8093,7 @@ public class Viewer extends JmolViewer
   }
 
   public STR[] allocTempEnum(int size) {
-    // mps renderer
+    //  BioShapeRenderer
     return tempArray.allocTempEnum(size);
   }
 
@@ -9879,7 +9880,7 @@ public class Viewer extends JmolViewer
 
   public void setModelVisibility() {
     if (shm != null) // necessary for file chooser
-      shm.setModelVisibility();
+      shm.setModelVisibility(null);
   }
 
   public void resetShapes(boolean andCreateNew) {

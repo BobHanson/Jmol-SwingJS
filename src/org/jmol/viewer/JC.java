@@ -1639,6 +1639,12 @@ public final class JC {
   public static final String INFO_TRAJECTORY_STEPS = "trajectorySteps";
   public static final String INFO_VIBRATION_STEPS = "vibrationSteps";
 
+  public static final String INFO_JMOL_DATA = "jmolData";
+  public static final String INFO_JMOL_DATA_HEADER = "header";
+  public static final String INFO_JMOL_DATA_ORIGINATING_MODEL = "originatingModel";
+  public static final String INFO_JMOL_DATA_PROPERTIES = "properties";
+  public static final String INFO_JMOL_DATA_SCALING = "jmolDataScaling";
+
   /** 
    * used to set atom symmetry 555 556 etc. 
    */

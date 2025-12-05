@@ -39,6 +39,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
 import javajs.util.Lst;
+import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.P3d;
 import javajs.util.PT;
@@ -317,7 +318,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   public int addSymmetry(String xyz, int opId, boolean allowScaling) {
     xyz = xyz.toLowerCase();
     return (xyz.indexOf("[[") < 0 && xyz.indexOf("x4") < 0 && xyz.indexOf(";") < 0 &&
-        (xyz.indexOf("x") < 0 || xyz.indexOf("y") < 0 || xyz.indexOf("z") < 0) 
+        xyz.indexOf("u") < 0 && (xyz.indexOf("x") < 0 || xyz.indexOf("y") < 0 || xyz.indexOf("z") < 0) 
         ? -1 : addOperation(xyz, opId, allowScaling));
   }
 
@@ -496,7 +497,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       SB sb = new SB();
       while (sg != null && sg.groupType == SpaceGroup.TYPE_SPACE) {
         // I don't know why there would be multiples here
-        if (sg.index < SG.length || andNonstandard)
+        if (sg.index >= SG.length || andNonstandard)
           break;
         sg = SG[sg.index];
       }
@@ -1541,8 +1542,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       SymmetryOperation latticeOp = new SymmetryOperation(null, 0, true); // must normalize these
       latticeOp.setMatrixFromXYZ(frameXyzUvw, 0, true);
       latticeOp.doFinalize();
-      M4d latU = M4d.newM4(latticeOp.spinU);
-      M4d spinU = new M4d();
+      M3d latU = M3d.newM3(latticeOp.spinU);
+      M3d spinU = new M3d();
       int pt = operationCount;
       for (int i = 0; i < nOps; i++) {
         SymmetryOperation op = symmetryOperations[i];
@@ -1551,13 +1552,13 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         newOp.mul2(op, latticeOp); // just xyz part
         if (op.spinU == null) {
           throw new RuntimeException(
-              "SpaceGroup operation " + i + " no spin indicated!");
+              "SpaceGroup operation " + (i+1) + " no spin indicated!");
         }
         spinU.mul2(op.spinU, latU); // rev
         newOp.modDim = modDim; // todo
         newOp.divisor = op.divisor;
         String xyz = SymmetryOperation.getXYZFromMatrix(newOp, false, true,
-            false) + SymmetryOperation.getSpinString(spinU, true);
+            false) + SymmetryOperation.getSpinString(spinU, true, true);
         int iop = addOperation(xyz, pt, true);
         symmetryOperations[iop].doFinalize();
         pt++;
@@ -4009,10 +4010,10 @@ intl#     H-M full       HM-abbr   HM-short  Hall
     SymmetryOperation op;
     for (int i = operationCount; --i >= 0;) {
       op = symmetryOperations[i];
-      String s = (op.suvwkey == null ? 
-          null : mapSpinIdToUVW.get(op.suvwkey));
-      if (op.suvwkey != null && s == null) {
-         System.err.println("SpaceGroup key " + op.suvwkey); 
+      String s = (op.suvwId == null ? 
+          null : mapSpinIdToUVW.get(op.suvwId));
+      if (op.suvwId != null && s == null) {
+         System.err.println("SpaceGroup key " + op.suvwId); 
       } else {
         op.setSpin(s);
       }

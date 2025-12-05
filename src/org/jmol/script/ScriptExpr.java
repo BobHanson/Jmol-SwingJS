@@ -1926,7 +1926,12 @@ abstract class ScriptExpr extends ScriptParam {
           T3d t = atom.atomPropertyTuple(vwr, tok, ptTemp);
           switch (minmaxtype) {
           case T.allfloat:
-            fout[i] = (pt == null ? -1 : t == null ? 0 : t.length());
+            if (tok == T.vibxyz && t != null && pt != null) {
+              if (ptTemp == null)
+                ptTemp = new P3d();
+              ptTemp.set(0.91d, -0.41d, 1);
+            }
+            fout[i] = (pt == null ? -1 : t == null ? 0 : tok == T.vibxyz ? t.dot(ptTemp) : t.length());
             break;
           case T.all:
             vout.addLast(t == null ? Integer.valueOf(-1) : P3d.newP(t));

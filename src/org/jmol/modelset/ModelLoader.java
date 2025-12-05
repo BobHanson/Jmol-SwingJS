@@ -81,7 +81,7 @@ public final class ModelLoader {
   private boolean merging;
   private boolean appendNew;
 
-  private String jmolData; // from a PDB remark "Jmol PDB-encoded data"
+  private Map<String, Object> jmolData; // from a PDB remark "Jmol PDB-encoded data"
   public String[] group3Lists;
   public int[][] group3Counts;
   public int[] specialAtomIndexes;
@@ -173,7 +173,7 @@ public final class ModelLoader {
       jbr = vwr.getJBR().setLoader(this);
       jbr.carbohydrates = (String) info.get("carbohydrates");
     }
-    jmolData = (adapterModelCount == 0 ? (String) ms.getInfoM("jmolData") : null);
+    jmolData = (adapterModelCount == 0 ? (Map<String, Object>) ms.getInfoM(JC.INFO_JMOL_DATA) : null);
     fileHeader = (String) ms.getInfoM("fileHeader");
     Lst<P3d[]> steps = (Lst<P3d[]>) ms.getInfoM(JC.INFO_TRAJECTORY_STEPS);
     isTrajectory = (steps != null);
@@ -459,7 +459,7 @@ public final class ModelLoader {
           "atomProperties");
       // list of properties that are to be transfered to H atoms as well.
       if (jmolData != null)
-        addJmolDataProperties(ms.am[i], (Map<String, double[]>) ms.getInfo(i, "jmolDataProperties"));
+        addJmolDataProperties(ms.am[i], (Map<String, Object>) ms.getInfo(i, JC.INFO_JMOL_DATA));
       String groupList = (String) ms.getInfo(i,
           "groupPropertyList");
       if (ms.am[i].isBioModel && ms.getInfo(i, "dssr") != null)
@@ -577,10 +577,15 @@ public final class ModelLoader {
         vwr.setStringProperty("_fileType", ftype);
         vwr.fm.setFileType(ftype);
       }
-      if (modelName == null)
-        modelName = (jmolData != null && jmolData.indexOf(";") > 2 ? jmolData.substring(jmolData
-            .indexOf(":") + 2, jmolData.indexOf(";"))
-            : appendNew ? "" + (modelNumber % 1000000): "");
+      if (modelName == null) {
+        if (jmolData != null) {
+          modelName = (String) jmolData.get(JC.INFO_JMOL_DATA_HEADER);
+          modelName = (modelName.indexOf(";") > 2 ? modelName.substring(modelName
+              .indexOf(":") + 2, modelName.indexOf(";")) : null);
+        }
+        if (modelName == null)
+          modelName = (appendNew ? "" + (modelNumber % 1000000): "");
+      }
       setModelNameNumberProperties(ipt, iTrajectory,
           modelName, modelNumber, modelProperties, modelAuxiliaryInfo,
           jmolData);
@@ -628,7 +633,7 @@ public final class ModelLoader {
                                             int modelNumber,
                                             Properties modelProperties,
                                             Map<String, Object> modelAuxiliaryInfo,
-                                            String jmolData) {
+                                            Map<String, Object> jmolData) {
     if (appendNew) {
       boolean modelIsPDB = (modelAuxiliaryInfo != null && Boolean.TRUE == modelAuxiliaryInfo
           .get(JC.getBoolName(JC.GLOBAL_ISPDB)));
@@ -879,12 +884,14 @@ public final class ModelLoader {
   }
 
   private void addJmolDataProperties(Model m,
-                                     Map<String, double[]> jmolDataProperties) {
+                                     Map<String, Object> jmolDataProperties) {
     if (jmolDataProperties == null)
       return;
     BS bs = m.bsAtoms;
     int nAtoms = bs.cardinality();
-    for (Entry<String, double[]> e : jmolDataProperties.entrySet()) {
+    @SuppressWarnings("unchecked")
+    Map<String, double[]> props = (Map<String, double[]>) jmolDataProperties.get(JC.INFO_JMOL_DATA_PROPERTIES);
+    for (Entry<String, double[]> e : props.entrySet()) {
       String key = e.getKey();
       double[] data = e.getValue();
       if (data.length != nAtoms)

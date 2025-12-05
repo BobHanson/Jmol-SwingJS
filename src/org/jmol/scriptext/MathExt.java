@@ -75,6 +75,7 @@ import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.CU;
 import javajs.util.Lst;
+import javajs.util.M34d;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
@@ -4518,14 +4519,13 @@ SymmetryInterface sym;
 
     // static calls in SymmetryOperation
     Object o = null;
-
+    
     int narg = args.length;
     String str1 = (narg == 2 && args[1].tok == T.string
         ? ((String) args[1].value).toLowerCase()
         : null);
-    boolean isrxyz = "rxyz".equals(str1);
     if (str1 != null) {
-      M4d m = null;
+      M34d m = null;
       String xyz = null;
       switch (args[0].tok) {
       case T.string:
@@ -4533,6 +4533,15 @@ SymmetryInterface sym;
         case "rxyz":
         case "matrix":
           xyz = (String) args[0].value;
+        }
+        break;
+      case T.matrix3f:
+        switch (str1) {
+        case "rxyz":
+        case "xyz":
+        case "uvw":
+          m = (M3d) args[0].value;
+          break;
         }
         break;
       case T.matrix4f:
@@ -4546,7 +4555,7 @@ SymmetryInterface sym;
       }
       if (m != null || xyz != null)
         return vwr.getSymStatic().staticConvertOperation(xyz, m,
-            isrxyz ? "rxyz" : null);
+            str1);        
     }
 
     boolean isPoint = false;
@@ -4575,7 +4584,7 @@ SymmetryInterface sym;
     P3d pt2 = null;
     BS bs1 = null, bs2 = null;
     boolean isWyckoff = false;
-    boolean haveAtom2 = (narg > 1 && args[1].tok == T.bitset);    
+    //boolean haveAtom2 = (narg > 1 && args[1].tok == T.bitset);    
     switch (args[0].tok) {
     case T.string:
       xyz = SV.sValue(args[0]);
@@ -4602,6 +4611,7 @@ SymmetryInterface sym;
       }
       apt++;
       break;
+    case T.matrix3f:
     case T.matrix4f:
       xyz = args[0].escape();
       apt++;
@@ -4748,9 +4758,6 @@ SymmetryInterface sym;
             : tok == T.var ? "id"
                 : pt2 != null || pt1 == null ? "matrix" : "point")
         : SV.sValue(args[apt++]));
-    if (narg > 2)
-      isrxyz = "rxyz".equals(desc);
-
     boolean haveAtom = ((!isWyckoff || isProperty) && bsAtoms != null
         && !bsAtoms.isEmpty());
     int iatom = (haveAtom ? bsAtoms.nextSetBit(0) : -1);
@@ -4812,10 +4819,17 @@ SymmetryInterface sym;
       }
       return ret;
     }
-    return (apt == args.length
+    boolean isUVW = (xyz != null && xyz.indexOf("u") >= 0);
+    o = (apt == args.length
         ? vwr.getSymmetryInfo(iatom, xyz, index > 0 ? index : iOp, trans, pt1,
             pt2, T.array, desc, 0, nth, 0, null)
         : null);
+    if (isUVW && o instanceof M4d) {
+        M3d m3 = new M3d();
+        ((M4d)o).getRotationScale(m3);
+        o = m3;
+    }
+    return o;
   }
 
   private boolean evaluateTensor(ScriptMathProcessor mp, SV[] args)

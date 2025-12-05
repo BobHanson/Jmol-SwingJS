@@ -1625,7 +1625,7 @@ public class StateCreator extends JmolStateCreator {
     boolean isDefault = (type == AtomCollection.TAINT_COORD);
     if (bs != null)
       for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        if (AtomCollection.isDeleted(atoms[i]))
+        if (i >= atoms.length || AtomCollection.isDeleted(atoms[i]))
           continue;
         s.appendI(i + 1).append(" ").append(atoms[i].getElementSymbol())
             .append(" ").append(atoms[i].getInfo().replace(' ', '_')).append(

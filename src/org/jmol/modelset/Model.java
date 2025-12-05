@@ -147,8 +147,9 @@ public class Model {
   public long frameDelay;
   public int selectedTrajectory = -1;
 
-  String jmolData; // from a PDB remark "Jmol PDB-encoded data"
+  Map<String, Object> jmolData; // from a PDB remark "Jmol PDB-encoded data"
   String jmolFrameType;
+  int jmolDataOriginatingModel;
 
   public String pdbID;
 
@@ -156,7 +157,7 @@ public class Model {
   }
   
   public Model set(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex,
-      String jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
+      Map<String, Object> jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
     ms = modelSet;
     dataSourceFrame = this.modelIndex = modelIndex;
     isTrajectory = (trajectoryBaseIndex >= 0);
@@ -178,12 +179,16 @@ public class Model {
     if (jmolData == null) {
       jmolFrameType = "modelSet";
     } else {
+      String jmolDataHeader = (String) jmolData.get(JC.INFO_JMOL_DATA_HEADER);
       this.jmolData = jmolData;
       isJmolDataFrame = true;
+      jmolDataOriginatingModel = ((Integer) jmolData.get(JC.INFO_JMOL_DATA_ORIGINATING_MODEL)).intValue();
       auxiliaryInfo.put("jmolData", jmolData);
-      auxiliaryInfo.put("title", jmolData);
-      jmolFrameType = (jmolData.indexOf("ramachandran") >= 0 ? "ramachandran"
-          : jmolData.indexOf("quaternion") >= 0 ? "quaternion" : "data");
+      auxiliaryInfo.put("title", jmolDataHeader);
+      jmolFrameType = (jmolDataHeader.indexOf("ramachandran") >= 0 ? "ramachandran"
+          : jmolDataHeader.indexOf("quaternion") >= 0 ? "quaternion" 
+//          : jmolDataHeader.indexOf("spin") >= 0 ? "spin"
+          : "data");
     }
     return this;
   }

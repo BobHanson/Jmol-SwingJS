@@ -627,11 +627,13 @@ public class AnimationManager {
     return vwr.getModelUndeletedAtomsBitSet(m);
   }
 
-  public void addSplitFrameModels(BS bs) {
-    if (splitFrame) {
-      bs.set(splitFrames[0].modelIndex);
-      bs.set(splitFrames[1].modelIndex);
-    }
+  public BS getSplitFrameModels() {
+    if (!splitFrame)
+      return null;
+    BS bs = new BS();
+    bs.set(splitFrames[0].modelIndex);
+    bs.set(splitFrames[1].modelIndex);
+    return bs;    
   }
 
 }

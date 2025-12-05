@@ -28,12 +28,13 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import javajs.util.P3d;
-import javajs.util.V3d;
+import javajs.util.PT;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 import org.jmol.util.Vibration;
+import org.jmol.viewer.JC;
 
 /**
  * JmolData file reader, for a modified PDB format
@@ -48,8 +49,11 @@ public class JmolDataReader extends PdbReader {
   private String[] atomNames;
   private boolean isSpin;
   private double spinFactor;
+  private int originatingModel = -1;
+  private String jmolDataHeader;
+  private P3d[] jmolDataScaling;
   
-  //  REMARK   6 Jmol PDB-encoded data: property atomno temperature;
+  //  REMARK   6 Jmol PDB-encoded data: property atomno temperature; for model 0;
   //  REMARK   6 Jmol atom names ... ... ...;
   //  REMARK   6 Jmol residue names ... ... ...;
   //  REMARK   6 Jmol data min = {1.0 -41.87 0.0} max = {26.0 66.53 0.0} unScaledXyz = xyz * {1.0 1.0 0.0} + {0.0 12.33 0.0} plotscale = {100 100 100};
@@ -66,7 +70,11 @@ public class JmolDataReader extends PdbReader {
       case 0: //Jmol PDB-encoded data
         props = new Hashtable<String, double[]>();
         isSpin = (line.indexOf(": spin;") >= 0);
-        asc.setInfo("jmolData", line);
+        originatingModel = -1;
+        int pt = line.indexOf("for model ");
+        if (pt > 0)
+          originatingModel = PT.parseInt(line.substring(pt + 10));
+        jmolDataHeader = line;
         if (!line.endsWith("#noautobond"))
           line += "#noautobond";
         break;
@@ -158,7 +166,7 @@ public class JmolDataReader extends PdbReader {
           symmetry.setOffsetPt(unitCellOffset);
           doApplySymmetry = true;
         }
-        asc.setInfo("jmolDataScaling", new P3d[] { minXYZ, maxXYZ, plotScale });
+        jmolDataScaling = new P3d[] { minXYZ, maxXYZ, plotScale };
         break;
       }
       break;
@@ -190,7 +198,14 @@ public class JmolDataReader extends PdbReader {
   
   @Override
   protected void finalizeSubclassReader() throws Exception {
-    asc.setCurrentModelInfo("jmolDataProperties", props);
+    if (jmolDataHeader == null)
+      return;
+    Map<String, Object> info = new Hashtable<>();
+    info.put(JC.INFO_JMOL_DATA_HEADER, jmolDataHeader);
+    info.put(JC.INFO_JMOL_DATA_ORIGINATING_MODEL, Integer.valueOf(originatingModel));
+    info.put(JC.INFO_JMOL_DATA_PROPERTIES, props);
+    info.put(JC.INFO_JMOL_DATA_SCALING, jmolDataScaling);
+    asc.setInfo(JC.INFO_JMOL_DATA, info);
     finalizeReaderPDB();
   }
 

@@ -131,7 +131,7 @@ public final class BioResolver implements Comparator<String[]> {
   }
   
   public Model getBioModel(int modelIndex,
-                        int trajectoryBaseIndex, String jmolData,
+                        int trajectoryBaseIndex, Map<String, Object> jmolData,
                         Properties modelProperties,
                         Map<String, Object> modelAuxiliaryInfo) {
     return new BioModel(ms, modelIndex, trajectoryBaseIndex,
