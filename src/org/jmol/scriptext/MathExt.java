@@ -129,6 +129,7 @@ public class MathExt {
     case T.tan:
       return (args.length == 1 && evaluateMath(mp, args, tok));
     case T.add:
+    case T.length:
     case T.div:
     case T.mul:
     case T.mul3:
@@ -2984,6 +2985,7 @@ SymmetryInterface sym;
     // array.add(x) 
     // array.add(sep, x) 
     // array.sub(x) 
+    // array.length()
     // array.mul(x) 
     // array.mul3(x)
     // array.div(x) 
@@ -3005,6 +3007,7 @@ SymmetryInterface sym;
     
     int len = args.length;
     SV x1 = mp.getX();
+    boolean isArray1 = (x1.tok == T.varray);
     SV x2;
     switch (tok) {
     case T.push:
@@ -3017,6 +3020,10 @@ SymmetryInterface sym;
       if (len != 1 && len != 2)
         return false;
       break;
+    case T.length:
+      if (len != 0 || !isArray1)
+        return false;
+      break;
     case T.split:
     case T.join:
       break;
@@ -3024,22 +3031,22 @@ SymmetryInterface sym;
       if (len != 1)
         return false;
     }
-    boolean isArray1 = (x1.tok == T.varray);
     if (len == 2) {
       Object ret = listSpecial(tok, x1, SV.sValue(args[0]), args[1], isArray1);
       return (ret != null && mp.addXObj(ret));
     }
-    x2 = (len == 0 ? SV.newV(T.all, "all") : args[0]);
-    boolean isAll = (x2.tok == T.all);
+    // length() is not a binary op
+    x2 = (tok == T.length ? null : len == 0 ? SV.newV(T.all, "all") : args[0]);
+    boolean isAll = (x2 != null && x2.tok == T.all);
     if (!isArray1 && x1.tok != T.string)
       return mp.binaryOp(opTokenFor(tok), x1, x2);
     boolean isScalar1 = SV.isScalar(x1);
-    boolean isScalar2 = SV.isScalar(x2);
+    boolean isScalar2 = (x2 == null || SV.isScalar(x2));
 
     double[] list1 = null;
     double[] list2 = null;
     Lst<SV> alist1 = x1.getList();
-    Lst<SV> alist2 = x2.getList();
+    Lst<SV> alist2 = (x2 == null ? null : x2.getList());
 
     String[] sList1 = null, sList2 = null;
     if (isArray1) {
@@ -3122,11 +3129,30 @@ SymmetryInterface sym;
           a = SV.getVariableList(l);
         }
       }
-      if (!mp.binaryOp(token, a, b))
+      if (b == null ? !mp.propOp(token, a) : !mp.binaryOp(token, a, b))
         return false;
       olist[i] = mp.getX();
     }
     return (justVal ? mp.addXObj(olist[0]) : mp.addXAV(olist));
+  }
+
+  private static T opTokenFor(int tok) {
+    switch (tok) {
+    case T.add:
+    case T.join:
+      return T.tokenPlus;
+    case T.sub:
+      return T.tokenMinus;
+    case T.mul:
+      return T.tokenTimes;
+    case T.mul3:
+      return T.tokenMul3;
+    case T.div:
+      return T.tokenDivide;
+    case T.length:
+      return T.tokenLength;
+    }
+    return null;
   }
 
   private Object listSpecial(int tok, SV x1, String tab, SV x2, boolean isArray1) {
@@ -4582,7 +4608,7 @@ SymmetryInterface sym;
     int iOp = Integer.MIN_VALUE;  
     int apt = 0;
     P3d pt2 = null;
-    BS bs1 = null, bs2 = null;
+    BS bs1 = null;
     boolean isWyckoff = false;
     //boolean haveAtom2 = (narg > 1 && args[1].tok == T.bitset);    
     switch (args[0].tok) {
@@ -5523,23 +5549,6 @@ SymmetryInterface sym;
         ? pm = (JmolPatternMatcher) Interface.getUtil("PatternMatcher", e.vwr,
             "script")
         : pm);
-  }
-
-  private T opTokenFor(int tok) {
-    switch (tok) {
-    case T.add:
-    case T.join:
-      return T.tokenPlus;
-    case T.sub:
-      return T.tokenMinus;
-    case T.mul:
-      return T.tokenTimes;
-    case T.mul3:
-      return T.tokenMul3;
-    case T.div:
-      return T.tokenDivide;
-    }
-    return null;
   }
 
   public BS setContactBitSets(BS bsA, BS bsB, boolean localOnly,

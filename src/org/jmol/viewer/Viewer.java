@@ -294,7 +294,6 @@ public class Viewer extends JmolViewer
   public JmolScriptEvaluator eval;
   private TempArray tempArray;
 
-  public boolean allowArrayDotNotation;
   public boolean async;
   public Object executor;
 
@@ -694,7 +693,6 @@ public class Viewer extends JmolViewer
     stm.setJmolDefaults();
     // this code will be shared between Jmol 14.0 and 14.1
     Elements.covalentVersion = Elements.RAD_COV_BODR_2014_02_22;
-    allowArrayDotNotation = true;
     if (allowScripting)
       getScriptManager();
   }

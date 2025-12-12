@@ -500,14 +500,14 @@ public class CifReader extends AtomSetCollectionReader {
       field = addSpinFrameExt("angle", false);
       return;
     case "collinear_direction":
-      field = addSpinFrameExt("coldir", true);
+      // extraneous, for information only 
+      //field = addSpinFrameExt("coldir", true);
       break;
     case "coplanar_perp_uvw":
-//      we don't need this value, because 
-//      it is only incidental information
-//      provided to point out the characteristics
-//      of the symmetry operation spin components
-//      field = addSpinFrameExt("perpuvw");
+      // extraneous, for information only 
+      // provided to point out the characteristics
+      // of the symmetry operation spin components
+      // field = addSpinFrameExt("perpuvw");
       break;
     default:
       System.err.println("CIFReader unrecognized spin key " + key);

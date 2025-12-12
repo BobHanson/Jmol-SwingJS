@@ -894,7 +894,6 @@ public class ScriptMathProcessor {
     P3d pt;
     M3d m;
     M4d m4;
-    String s;
     SV x1;
     if (debugHigh) {
       dumpStacks("operate: " + op);
@@ -1006,94 +1005,7 @@ public class ScriptMathProcessor {
         return addXBool(!x2.asBoolean());
       }
     case T.propselector:
-      int iv = (op.intValue == T.opIf ? T.opIf : op.intValue & ~T.minmaxmask);
-      if (chk)
-        return addXObj(SV.newS(""));
-      if (vwr.allowArrayDotNotation)
-        switch (x2.tok) {
-        case T.hash:
-        case T.context:
-          switch (iv) {
-          // reserved words XXXX for x.XXXX
-          case T.array:
-          case T.keys:
-          case T.size:
-          case T.type:
-            break;
-          //$FALL-THROUGH$
-          default:
-            SV ret = x2.mapValue((String) op.value);
-            return addXObj(ret == null ? SV.newS("") : ret);
-          }
-          break;
-        }
-      switch (iv) {
-      case T.array:
-        return addX(x2.toArray());
-      case T.opIf: // '?'
-      case T.identifier:
-        // special flag to get all properties.
-        return (x2.tok == T.bitset
-            && (chk ? addXStr("") : getAllProperties(x2, (String) op.value)));
-      case T.type:
-        return addXStr(typeOf(x2));
-      case T.keys:
-        String[] keys = x2
-            .getKeys((op.intValue & T.minmaxmask) == T.minmaxmask); // keys.all
-        return (keys == null ? addXStr("") : addXAS(keys));
-      case T.length:
-        if (x2.tok == T.point3f) {
-          return addXDouble(((T3d) x2.value).distance(SV.pt0));
-        }
-        //$FALL-THROUGH$
-      case T.count:
-      case T.size:
-        if (iv == T.length && x2.value instanceof BondSet)
-          break;
-        return addXInt(SV.sizeOf(x2));
-      case T.lines:
-        switch (x2.tok) {
-        case T.matrix3f:
-        case T.matrix4f:
-          s = SV.sValue(x2);
-          s = PT.rep(s.substring(1, s.length() - 1), "],[", "]\n[");
-          break;
-        case T.string:
-          s = (String) x2.value;
-          break;
-        default:
-          s = SV.sValue(x2);
-        }
-        s = PT.rep(s, "\n\r", "\n").replace('\r', '\n');
-        return addXAS(PT.split(s, "\n"));
-      case T.color:
-        switch (x2.tok) {
-        case T.string:
-        case T.varray:
-          return addXPt(CU.colorPtFromString(SV.sValue(x2)));
-        case T.integer:
-        case T.decimal:
-          return addXPt(vwr.getColorPointForPropertyValue(SV.dValue(x2)));
-        case T.point3f:
-          return addXStr(Escape.escapeColor(CU.colorPtToFFRGB((P3d) x2.value)));
-        default:
-          // handle bitset later
-        }
-        break;
-      case T.boundbox:
-        return (chk ? addXStr("x") : getBoundBox(x2));
-      }
-      if (chk)
-        return addXStr(SV.sValue(x2));
-      if (x2.tok == T.string) {
-        Object v = SV.unescapePointOrBitsetAsVariable(SV.sValue(x2));
-        if (!(v instanceof SV))
-          return false;
-        x2 = (SV) v;
-      }
-      if (op.tok == x2.tok)
-        x2 = getX();
-      return getPointOrBitsetOperation(op, x2);
+      return propOp(op, x2);
     }
 
     // binary:
@@ -1105,6 +1017,98 @@ public class ScriptMathProcessor {
     }
 
     return binaryOp(op, x1, x2);
+  }
+
+  public boolean propOp(T op, SV x2) throws ScriptException {
+    int iv = (op.intValue == T.opIf ? T.opIf : op.intValue & ~T.minmaxmask);
+    if (chk)
+      return addXObj(SV.newS(""));
+    switch (x2.tok) {
+    case T.hash:
+    case T.context:
+      switch (iv) {
+      // reserved words XXXX for x.XXXX
+      case T.array:
+      case T.keys:
+      case T.size:
+      case T.type:
+        break;
+      //$FALL-THROUGH$
+      default:
+        SV ret = x2.mapValue((String) op.value);
+        return addXObj(ret == null ? SV.newS("") : ret);
+      }
+      break;
+    }
+    
+    switch (iv) {
+    case T.array:
+      return addX(x2.toArray());
+    case T.opIf: // '?'
+    case T.identifier:
+      // special flag to get all properties.
+      return (x2.tok == T.bitset
+          && (chk ? addXStr("") : getAllProperties(x2, (String) op.value)));
+    case T.type:
+      return addXStr(typeOf(x2));
+    case T.keys:
+      String[] keys = x2
+          .getKeys((op.intValue & T.minmaxmask) == T.minmaxmask); // keys.all
+      return (keys == null ? addXStr("") : addXAS(keys));
+    case T.length:
+      if (x2.tok == T.point3f) {
+        return addXDouble(((T3d) x2.value).distance(SV.pt0));
+      }
+      //$FALL-THROUGH$
+    case T.count:
+    case T.size:
+      if (iv == T.length && x2.value instanceof BondSet)
+        break;
+      return addXInt(SV.sizeOf(x2));
+    case T.lines:
+      String s;
+      switch (x2.tok) {
+      case T.matrix3f:
+      case T.matrix4f:
+        s = SV.sValue(x2);
+        s = PT.rep(s.substring(1, s.length() - 1), "],[", "]\n[");
+        break;
+      case T.string:
+        s = (String) x2.value;
+        break;
+      default:
+        s = SV.sValue(x2);
+      }
+      s = PT.rep(s, "\n\r", "\n").replace('\r', '\n');
+      return addXAS(PT.split(s, "\n"));
+    case T.color:
+      switch (x2.tok) {
+      case T.string:
+      case T.varray:
+        return addXPt(CU.colorPtFromString(SV.sValue(x2)));
+      case T.integer:
+      case T.decimal:
+        return addXPt(vwr.getColorPointForPropertyValue(SV.dValue(x2)));
+      case T.point3f:
+        return addXStr(Escape.escapeColor(CU.colorPtToFFRGB((P3d) x2.value)));
+      default:
+        // handle bitset later
+      }
+      break;
+    case T.boundbox:
+      return (chk ? addXStr("x") : getBoundBox(x2));
+    }
+    if (chk)
+      return addXStr(SV.sValue(x2));
+    if (x2.tok == T.string) {
+      Object v = SV.unescapePointOrBitsetAsVariable(SV.sValue(x2));
+      if (!(v instanceof SV))
+        return false;
+      x2 = (SV) v;
+    }
+    if (op.tok == x2.tok)
+      x2 = getX();
+    return getPointOrBitsetOperation(op, x2);
   }
 
   private static final String qMods = " w:0 x:1 y:2 z:3 normal:4 eulerzxz:5 eulerzyz:6 vector:-1 theta:-2 axisx:-3 axisy:-4 axisz:-5 axisangle:-6 matrix:-9";

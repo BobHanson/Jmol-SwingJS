@@ -766,7 +766,7 @@ public class Polyhedra extends AtomShape implements Comparator<Object[]>{
 
   private void buildPolyhedra() {
     Polyhedron p = null;
-    if (info == null && centers == null && (center == null || nPoints == 0))
+    if (info == null && centers == null && (center == null || nPoints == 0 && bsVertices == null))
       return;
     if (info != null && info.containsKey("id")) {
       Object o = info.get("id"); 

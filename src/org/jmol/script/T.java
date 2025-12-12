@@ -520,7 +520,7 @@ public class T {
     
   public final static int atoms     = 1 | mathproperty | strproperty;
   public final static int bonds     = 2 | mathproperty | deprecatedparam;
-  public final static int length           = 3 | mathproperty;
+  //see mathfunc public final static int length           = 3 | mathproperty;
   public final static int lines            = 4 | mathproperty;
   public final static int reverse   = 5 | mathproperty;
   public final static int size             = 6 | mathproperty;
@@ -699,7 +699,8 @@ public class T {
   public final static int in               = 16 | 0 << 9 | mathfunc | mathproperty;
   public final static int inchi            = 17 | 0 << 9 | mathfunc | mathproperty;
   public final static int label            = 18 /* must NOT be odd */| 0 << 9 | mathfunc | mathproperty | strproperty | settable | implicitStringCommand | shapeCommand | defaultON | deprecatedparam; 
-  public final static int measure          = 19 | 0 << 9| mathfunc | shapeCommand | deprecatedparam | defaultON;
+  public final static int length           = 19 | 0 << 9 | mathfunc | mathproperty;
+  public final static int measure          = 19 | 0 << 9 | mathfunc | shapeCommand | deprecatedparam | defaultON;
   public final static int modulation       = 20 | 0 << 9 | mathfunc | mathproperty | scriptCommand;
   public final static int pivot            = 21 | 0 << 9 | mathfunc | mathproperty | apivot;
   public final static int pivot2           = 21 | 0 << 9 | mathfunc | mathproperty;
@@ -1435,6 +1436,7 @@ public class T {
   public final static T tokenMul3 = o(mul3, "mul3"); // used only in internal calc.
   public final static T tokenTimes = o(times, "*");
   public final static T tokenDivide = o(divide, "/");
+  public final static T tokenLength = tv(propselector, T.length, "len3");
 
   public final static T tokenLeftParen = o(leftparen, "(");
   public final static T tokenRightParen = o(rightparen, ")");
