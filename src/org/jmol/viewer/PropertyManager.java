@@ -1263,7 +1263,6 @@ public class PropertyManager implements JmolPropertyManager {
     SB mol = new SB();
     ModelSet ms = vwr.ms;
     BS bsModels = vwr.ms.getModelBS(bs, true);
-    int modelIndex = bsModels.nextSetBit(0);
     boolean is2D = "2D".equals(vwr.getModelInfo("dimension"));
     Atom[] atoms = ms.at;
     BS bsAtoms = BSUtil.copy(bs);
@@ -1889,7 +1888,7 @@ public class PropertyManager implements JmolPropertyManager {
   @SuppressWarnings("static-access")
   public String getPdbData(int modelIndex, String type, BS bsSelected,
                            Object[] parameters, OC out, boolean addStructure) {
-    if (vwr.ms.isJmolDataFrameForModel(modelIndex))
+    if (vwr.ms.isJmolDataFrame(modelIndex))
       modelIndex = vwr.ms.getJmolDataSourceFrame(modelIndex);
     if (modelIndex < 0)
       return "";
@@ -1901,6 +1900,7 @@ public class PropertyManager implements JmolPropertyManager {
       out = vwr.getOutputChannel(null, null);
     SB pdbCONECT = new SB();
     boolean isDraw = (type.indexOf("draw") >= 0);
+    boolean isSpin = (type.indexOf("spin") >= 0);
     BS bsAtoms = null;
     BS bsWritten = new BS();
     char ctype = '\0';
@@ -1969,9 +1969,15 @@ public class PropertyManager implements JmolPropertyManager {
         }
         if (resNames != null)
           out.append("REMARK   6 Jmol residue names").append(resNames).append("\n");
-        for (int i = 0; i < properties.length; i++)
-          if (properties[i] != null)
-            out.append("REMARK   6 Jmol property ").append(properties[i]).append(";\n");
+        if (isSpin) {
+          M3d mat = (M3d) vwr.ms.getModelAuxiliaryInfo(modelIndex).get(JC.SPIN_ROTATION_MATRIX_APPLIED);
+          if (mat != null)
+            out.append("REMARK   6 Jmol spin matrix applied ").append(mat.toJSON()).append("\n");
+        } else {
+          for (int i = 0; i < properties.length; i++)
+            if (properties[i] != null)
+              out.append("REMARK   6 Jmol property ").append(properties[i]).append(";\n");
+        }       
       }
       String strExtra = "";
       Atom atomLast = null;

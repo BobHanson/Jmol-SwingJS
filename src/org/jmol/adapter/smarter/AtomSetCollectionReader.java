@@ -1165,8 +1165,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   private boolean polymerX;
 
-  boolean fixUnitCell;
-
   protected boolean filteredPrecision;
 
   // xtal structures -- SLAB
@@ -1226,7 +1224,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (filter == null)
       return;
 
-    fixUnitCell = checkFilterKey("FIXUNITCELL");
     if (checkFilterKey("LOWPRECISION")) {
       // adding filter "lowPrecision" overrides the CIF and PWMAT reader HIGH setting
       setLowPrecision();

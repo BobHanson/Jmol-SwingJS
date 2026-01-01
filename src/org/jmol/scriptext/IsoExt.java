@@ -74,7 +74,9 @@ import javajs.util.V3d;
 
 public class IsoExt extends ScriptExt {
 
-  private static final double DEFAULT_DRAW_LINE_WIDTH = 0.05;
+  private static final double DEFAULT_DRAW_LINE_WIDTH = 0.05d;
+
+  private static final double DEFAULT_DRAW_VECTOR_WIDTH = 0.1d;
 
   public IsoExt() {
     // used by Reflection
@@ -295,8 +297,11 @@ public class IsoExt extends ScriptExt {
     int iOn = -1;
     boolean isBest = false;
     boolean meshNoFill = false;
+    boolean drawAxes = false;
+    boolean drawUC = false;
     int tok = 0;
     P3d lattice = null;
+    SymmetryInterface uc = null;
     for (int i = eval.iToken; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
@@ -336,7 +341,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.axes:
         if (!chk)
-          vwr.getModelkit(false).drawAxes(thisId, swidth);
+          vwr.getModelkit(false).drawAxes(null, thisId, swidth);
         return;
       case T.lattice:
       case T.unitcell:
@@ -350,7 +355,6 @@ public class IsoExt extends ScriptExt {
         // 
 
         lattice = null;
-        SymmetryInterface uc = null;
         T3d ucLattice = null;
         BS bs = null;
         switch (tok) {
@@ -387,6 +391,7 @@ public class IsoExt extends ScriptExt {
         case T.unitcell:
           if (isBest)
             invArg();
+          drawUC = true;
           if (eval.isArrayParameter(i + 1)) {
             // unitcell [o a b c]
             uc = vwr.getSymTemp()
@@ -421,8 +426,10 @@ public class IsoExt extends ScriptExt {
             i = eval.iToken;
           }
           if (tokAt(i + 1) == T.axes) {
-            if (ucLattice == null)
+            drawAxes = true;
+            if (uc == null && ucLattice == null) {
               ucLattice = P3d.new3(555, 555, 1);
+            }
             i++;
           }
           break;
@@ -1213,16 +1220,21 @@ public class IsoExt extends ScriptExt {
         invArg();
       if (propertyName != null) {
         if (swidth == "") {
+          double d = 0;
           switch (propertyName) {
           case "vector":
-          case "line":
-            if (swidth == "") {
-              // new 16.3.9/10
-              swidth = "width " + DEFAULT_DRAW_LINE_WIDTH;
-              setShapeProperty(JC.SHAPE_DRAW, "width",
-                  Double.valueOf(DEFAULT_DRAW_LINE_WIDTH));
-            }
+              // new 16.3.44
+            d = DEFAULT_DRAW_VECTOR_WIDTH;
             break;
+          case "line":
+              // new 16.3.9/10
+            d = DEFAULT_DRAW_LINE_WIDTH;
+            break;
+          }
+          if (d != 0) {
+            swidth = "width " + d;
+            setShapeProperty(JC.SHAPE_DRAW, "width",
+                Double.valueOf(d));
           }
         }
         setShapeProperty(JC.SHAPE_DRAW, propertyName, propertyValue);
@@ -1231,8 +1243,21 @@ public class IsoExt extends ScriptExt {
     if (meshNoFill) {
       iptDisplayProperty = -1 - iptDisplayProperty;
     }
+    if (chk)
+      return;
     finalizeObject(JC.SHAPE_DRAW, colorArgb[0], translucentLevel, intScale,
         havePoints, connections, iptDisplayProperty, null);
+    if (drawUC) {
+      if (thisId == null) {
+        Object[] data = new Object[1];
+        vwr.shm.getShapePropertyData(JC.SHAPE_DRAW, "id", data);
+        thisId = (String) data[0];
+        int pt = thisId.indexOf("_");
+        if (pt >= 0)
+          thisId = thisId.substring(0, pt);
+      }
+      vwr.getModelkit(false).drawAxes(pts, thisId, (drawAxes ? swidth : "delete"));
+    }
   }
 
   private void mo(boolean isInitOnly, int iShape) throws ScriptException {

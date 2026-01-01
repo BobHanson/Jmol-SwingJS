@@ -1079,7 +1079,6 @@ public class T {
   public final static int monitorenergy                  = booleanparam | 109;
   public final static int multiplebondbananas            = booleanparam | 110;
   public final static int multiprocessor                 = booleanparam | 111;
-  public final static int navigatesurface                = booleanparam | 112;
   public final static int navigationmode                 = booleanparam | 113;
   public final static int navigationperiodic             = booleanparam | 114;
   public final static int nbocharges                     = booleanparam | 115;
@@ -2687,7 +2686,6 @@ public class T {
        "multipleBondRadiusFactor",
        "multipleBondSpacing",
        "multiProcessor",
-       "navigateSurface",
        "navigationMode",
        "navigationPeriodic",
        "partialDots",
@@ -3774,7 +3772,6 @@ public class T {
         multiplebondradiusfactor,           //        "multipleBondRadiusFactor"
         multiplebondspacing,                //        "multipleBondSpacing"
         multiprocessor,                     //        "multiProcessor"
-        navigatesurface,                    //        "navigateSurface"
         navigationmode,                     //        "navigationMode"
         navigationperiodic,                 //        "navigationPeriodic"
         partialdots,                        //        "partialDots"

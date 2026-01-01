@@ -463,7 +463,7 @@ public class ShapeManager {
       // translateSelected operation
       P3d ptCenter = ms.getAtomSetCenter(bsTranslateSelected);
       P3d pt = new P3d();
-      tm.transformPt3f(ptCenter, pt);
+      tm.transformPt3fSafe(ptCenter, pt);
       pt.add(tm.ptOffset);
       tm.unTransformPoint(pt, pt);
       pt.sub(ptCenter);
@@ -486,8 +486,8 @@ public class ShapeManager {
       // PDB objects such as cartoons and traces, which 
       // use Cartesian coordinates, not screen coordinates
       Atom atom = atoms[i];
-      P3i screen = (vibsOn && atom.hasVibration() ? tm.transformPtVib(atom,
-          vibrationVectors[i]) : tm.transformPt(atom));
+      P3i screen = (vibsOn && atom.hasVibration() ? tm.transformPtVibSafe(atom,
+          vibrationVectors[i]) : tm.transformPtSafe(atom));
       if (screen.z == 1 && tm.internalSlab && tm.xyzIsSlabbedInternal(atom)) {
         bsSlabbed.set(i);
       }
@@ -497,11 +497,10 @@ public class ShapeManager {
       int d = Math.abs(atom.madAtom);
       if (d == Atom.MAD_GLOBAL)
         d = (int) (vwr.getDouble(T.atoms) * 2000);
-      atom.sD = (short) vwr.tm.scaleToScreen(screen.z, d);
+      atom.sD = (int) vwr.tm.scaleToScreen(screen.z, d);
       if (checkOccupancy
           && vibrationVectors[i] != null
           && (occ = vibrationVectors[i].getOccupancy100(vibsOn)) != Integer.MIN_VALUE) {
-        //System.out.println(atom + " " + occ);
         haveMods = true;
         atom.setShapeVisibility(Atom.ATOM_VISSET, false);
         if (occ >= 0 && occ < 50)

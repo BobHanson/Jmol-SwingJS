@@ -499,7 +499,7 @@ public class StateCreator extends JmolStateCreator {
     Model[] models = ms.am;
     int modelCount = ms.mc;
     for (int i = 0; i < modelCount; i++) {
-      if (ms.isJmolDataFrameForModel(i) || ms.isTrajectorySubFrame(i))
+      if (ms.isJmolDataFrame(i) || ms.isTrajectorySubFrame(i))
         continue;
       Model m = models[i];
       int pt = commands.indexOf(m.loadState);
@@ -1662,12 +1662,17 @@ public class StateCreator extends JmolStateCreator {
           break;
         case AtomCollection.TAINT_VIBRATION:
           Vibration v = atoms[i].getVibrationVector();
-          if (v == null)
+          if (v == null) {
             s.append("0 0 0");
-          else if (Double.isNaN(v.modScale))
-            s.appendD(v.x).append(" ").appendD(v.y).append(" ").appendD(v.z);
-          else
+          } else if (Double.isNaN(v.modScale)) {
+            switch (v.modDim) {
+            case Vibration.TYPE_WYCKOFF:
+              continue;
+            }
+            s.appendD(v.x).append(" ").appendD(v.y).append(" ").appendD(v.z).append(" ").appendD(v.modDim).append(" ").appendD(v.magMoment);
+          } else {
             s.appendD(JC.FLOAT_MIN_SAFE).append(" ").appendD(JC.FLOAT_MIN_SAFE).append(" ").appendD(v.modScale);
+          }
           break;
         case AtomCollection.TAINT_SITE:
           s.appendI(atoms[i].getAtomSite());

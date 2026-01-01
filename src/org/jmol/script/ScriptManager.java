@@ -565,19 +565,16 @@ public class ScriptManager implements JmolScriptManager {
    * @param fname
    * @param flags
    * 
-   *        1=pdbCartoons, 
-   *        2=no scripting, 
-   *        4=append, 
-   *        8=no autoplay, 
-   *        16=file dropped, 
-   *        32=script only (dropped into console)
-   *        64=check dims for resize 
+   *        1=pdbCartoons, 2=no scripting, 4=append, 8=no autoplay, 16=file
+   *        dropped, 32=script only (dropped into console) 64=check dims for
+   *        resize
    * 
    */
   @Override
   public void openFileAsync(String fname, int flags, String type) {
     boolean scriptOnly = ((flags & SCRIPT_ONLY) != 0);
-    if (!scriptOnly && (flags & CHECK_DIMS) != 0 && FileManager.isEmbeddable(fname)) 
+    if (!scriptOnly && (flags & CHECK_DIMS) != 0
+        && FileManager.isEmbeddable(fname))
       checkResize(fname);
     boolean noScript = ((flags & NO_SCRIPT) != 0);
     boolean noAutoPlay = ((flags & NO_AUTOPLAY) != 0);
@@ -621,14 +618,15 @@ public class ScriptManager implements JmolScriptManager {
             cmd = "load MENU " + PT.esc(fname);
           } else {
             cmd = "if (_filetype == 'Pdb') { isosurface sigma 1.0 within 2.0 {*} "
-              + PT.esc(fname) + " mesh nofill }; else; { isosurface "
-              + PT.esc(fname) + "}";
+                + PT.esc(fname) + " mesh nofill }; else; { isosurface "
+                + PT.esc(fname) + "}";
           }
           return;
         }
         // these next will end with the escaped file name
         if (type.equals("spt::")) {
-          cmd = "script " + PT.esc((fname.startsWith("spt::") ? fname.substring(5) : fname));
+          cmd = "script " + PT
+              .esc((fname.startsWith("spt::") ? fname.substring(5) : fname));
           return;
         }
         if (type.equals("dssr")) {
@@ -641,7 +639,8 @@ public class ScriptManager implements JmolScriptManager {
           if (flags == FILE_DROPPED) {
             flags = PDB_CARTOONS;
             switch (vwr.ms.ac == 0 ? JOptionPane.OK_OPTION
-                : vwr.confirm(GT.$("Would you like to replace the current model with the selected model?"), 
+                : vwr.confirm(GT.$(
+                    "Would you like to replace the current model with the selected model?"),
                     GT.$("Would you like to append?"))) {
             case JOptionPane.CANCEL_OPTION:
               return;
@@ -656,15 +655,23 @@ public class ScriptManager implements JmolScriptManager {
           boolean pdbCartoons = ((flags & PDB_CARTOONS) != 0 && !isAppend);
 
           if (type.endsWith("::")) {
-            int pt = type.indexOf("|"); 
+            int pt = type.indexOf("|");
             if (pt >= 0) {
               fname += type.substring(pt, type.length() - 2);
               //type = type.substring(0, pt) + "::";
               type = "";
             }
-            fname = type + fname; 
+            fname = type + fname;
           }
           cmd = vwr.g.defaultDropScript;
+          if (cmd.equals(JC.DEFAULT_DRAG_DROP_SCRIPT)) {
+            if (!JC.isLikelyPDB(type) || !pdbCartoons) {
+              int pt = cmd.indexOf("if (");
+              if (pt >= 0) {
+                cmd = cmd.substring(0, pt).trim();
+              }
+            }
+          }
           cmd = PT.rep(cmd, "%FILE", fname);
           cmd = PT.rep(cmd, "%ALLOWCARTOONS", "" + pdbCartoons);
           if (cmd.toLowerCase().startsWith("zap") && (isCached || isAppend))

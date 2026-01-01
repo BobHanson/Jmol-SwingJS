@@ -26,7 +26,6 @@ package org.jmol.scriptext;
 
 import java.util.Date;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -273,7 +272,9 @@ public class MathExt {
     // matrix("13>>15>>14>>2")
     // matrix("13>sub(...params..)>2", {})
     // matrix("13>...>2", [])
-
+    // matrix("62.1>>62.5")
+    // matrix("[Pnma]>>[Pmcn]")
+    // matrix("-b,-a,-c",true) // normalizes
     // matrix("h")
     // matrix("r")
 
@@ -284,6 +285,9 @@ public class MathExt {
         : null);
     Map<String, SV> map = (n < 2 || sarg0 == null ? null : args[1].getMap());
     Lst<SV> lst = (n < 2 || sarg0 == null ? null : args[1].getList());
+    boolean normalize = (n > 1 && args[n - 1].tok == T.on);
+    if (normalize)
+      n--;
     String retType = (n > 1 && args[n - 1].tok == T.string
         ? (String) args[n - 1].value
         : null);
@@ -445,10 +449,26 @@ public class MathExt {
       if (m3 != null) {
         m4 = M4d.newMV(m3,  new P3d());
       }
+      if (normalize)
+        doNormalize(m4);
       return mp.addXStr(matToString(m4,
           asRXYZ ? 0x1 : asABC ? 0xABC : asUVW ? 0xDEF : 0));
     }
+    if (normalize)
+      doNormalize(m4);
     return (m3 != null ? mp.addXM3(m3) : m4 != null ? mp.addXM4(m4) : false);
+  }
+
+  private void doNormalize(M4d m4) {
+    if (m4 == null)
+      return;
+    // add offset to bring center into abc
+    double a = m4.m03 + (m4.m00 + m4.m01 + m4.m02)/2; 
+    double b = m4.m13 + (m4.m10 + m4.m11 + m4.m12)/2;
+    double c = m4.m23 + (m4.m20 + m4.m21 + m4.m22)/2;
+    m4.m03 -= Math.floor(a);
+    m4.m13 -= Math.floor(b);
+    m4.m23 -= Math.floor(c);
   }
 
   private String matToString(M4d m4, int mode) {
@@ -617,6 +637,7 @@ public class MathExt {
       if (o != null) {
         ret = vwr.getSymTemp().getSpaceGroupJSON("ITA", o.toString(), 0);
       }
+      // fail here?
     }
     return mp.addXObj(ret);
   }
@@ -783,7 +804,8 @@ SymmetryInterface sym;
                                    boolean isSelector, int tok)
       throws ScriptException {
     // {xxx}.boundbox()
-    // {xxx}.boundbox(volume)
+    // {xxx}.boundbox("center"|"volume"|"info"|null)
+
     // optional last parameter: scale
     // unitcell(T1) => a,b,c:ta,tb,tc;
     // unitcell("-a,-b,c;0,1/2,1/2") 
@@ -795,6 +817,9 @@ SymmetryInterface sym;
     // unitcell(origin, pta, ptb, ptc)
     // unitcell("a=5,b=10,c=15,alpha=90,beta=90,gamma=90")
     // unitcell([5,10,15,90,90,90])
+    // unitcell("info")
+    // unitcell(uc, "info")
+    // unitcell(matrix4x4)
 
     // next can be without {1.1}, but then assume "all atoms"
     // {1.1}.unitcell()
@@ -805,8 +830,42 @@ SymmetryInterface sym;
         : tok == T.boundbox ? vwr.getAllAtoms() : null);
     int iatom = ((x1 == null ? vwr.getAllAtoms() : x1).nextSetBit(0));
     int lastParam = args.length - 1;
+    if (tok == T.boundbox) {
+      if (lastParam > 1 || lastParam == 0 && args[0].tok != T.string)
+        return false;
+      // arg0: "center", "volume", "info"
+      BoxInfo b = vwr.ms.getBoxInfo(x1, 1);
+      return mp.addXObj(b.getInfo(lastParam == 0 ? null : args[0].asString()));
+    }
+    boolean isInfo = false;
+    if (lastParam >= 0 && args[lastParam].tok == T.string) {
+      String infoType = (String) args[lastParam].value;
+      isInfo = "info".equals(infoType); 
+      if (isInfo) {
+        if (isInfo && lastParam == 0) {
+          SymmetryInterface sym = vwr.getCurrentUnitCell();
+          return mp.addXMap(sym.getUnitCellInfoMap());      
+        }        
+        lastParam--;
+      } else {
+        double infoValue = vwr.getUnitCellInfoStr(infoType);
+        if (!Double.isNaN(infoValue)) {
+          return mp.addXDouble(infoValue);
+        }
+      }
+    }
+    Object o = getUnitCell(args, iatom, 0, lastParam);
+    if (isInfo && AU.isAP(o)) {
+        SymmetryInterface uc = vwr.getSymTemp().getUnitCell((P3d[]) o, false, null);
+        return mp.addXMap(uc.getUnitCellInfoMap()); 
+    }
+    return (o != null && mp.addXObj(o));
+  }
+
+  private Object getUnitCell(SV[] args, int iatom, int ipt, int lastParam) {
+    boolean isWithin = (ipt > 0);
     double scale = 1;
-    switch (lastParam < 0 ? T.nada : args[lastParam].tok) {
+    switch (lastParam < ipt ? T.nada : args[lastParam].tok) {
     case T.integer:
     case T.decimal:
       scale = args[lastParam].asDouble();
@@ -814,19 +873,22 @@ SymmetryInterface sym;
       break;
     }
     boolean normalize = false;
-    int tok0 = (lastParam < 0 ? T.nada : args[0].tok);
+    int tok0 = (ipt >= args.length || lastParam < ipt ? T.nada : args[ipt].tok);
     T3d[] ucnew = null;
     Lst<SV> uc = null;
     String arg0 = null;
     switch (tok0) {
     case T.varray:
-      uc = args[0].getList();
+      uc = args[ipt].getList();
       break;
     case T.matrix4f:
-      switch (lastParam > 1 ? T.error : lastParam < 1 ? T.nada : args[1].tok) {
+      if (isWithin)
+        return null;
+      switch (lastParam > 1 ? T.error
+          : lastParam < ipt + 1 ? T.nada : args[ipt + 1].tok) {
       default:
       case T.error:
-        return false;
+        return null;
       case T.nada:
       case T.off:
         break;
@@ -834,123 +896,116 @@ SymmetryInterface sym;
         normalize = true;
         break;
       }
-      return mp.addXStr(vwr.getSymStatic().staticGetTransformABC(args[0].value, normalize));
+      return vwr.getSymStatic().staticGetTransformABC(args[ipt].value,
+          normalize);
     case T.string:
-      arg0 = args[0].asString();
-      if (tok == T.unitcell) {
-        if (arg0.indexOf("a=") == 0) {
-          ucnew = new P3d[4];
-          for (int i = 0; i < 4; i++)
-            ucnew[i] = new P3d();
-          SimpleUnitCell.setAbc(arg0, null, ucnew);
-        } else if (arg0.indexOf(",") >= 0 || arg0.equals("r")) {
-          boolean asMatrix = (args.length == 2 && SV.bValue(args[1]));
-          Object ret;
-          if (asMatrix) {
-            ret = vwr.getSymTemp().convertTransform(arg0, null);
-          } else {
-            ret = vwr.getV0abc(-1, arg0);
-          }
-          return mp.addXObj(ret);
-        }
+      arg0 = args[ipt].asString();
+      if (arg0.indexOf("a=") == 0) {
+        ucnew = new P3d[4];
+        for (int i = 0; i < 4; i++)
+          ucnew[i] = new P3d();
+        SimpleUnitCell.setAbc(arg0, null, ucnew);
+      } else if (arg0.indexOf(",") >= 0 || arg0.equals("r")) {
+        boolean asMatrix = (lastParam > ipt && SV.bValue(args[ipt + 1]));
+        if (asMatrix)
+          return (isWithin ? null
+              : vwr.getSymTemp().convertTransform(arg0, null));
+        ucnew = vwr.getV0abc(-1, arg0);
       }
       break;
     }
-    if (tok == T.boundbox) {
-      // arg0: "center", "volume", "info" or null
-      BoxInfo b = vwr.ms.getBoxInfo(x1, 1);
-      return mp.addXObj(b.getInfo(arg0));
-    }
-    SymmetryInterface u = null;
-    boolean haveUC = (uc != null);
-    if (ucnew == null && haveUC && uc.size() < 4)
-      return false;
-    int ptParam = (haveUC ? 1 : 0);
-    if (ucnew == null && !haveUC && tok0 != T.point3f) {
-      // unitcell() or {1.1}.unitcell
-      u = (iatom < 0 ? vwr.getCurrentUnitCell()
-          : vwr.ms.getUnitCell(vwr.ms.at[iatom].mi));
-      ucnew = (u == null
-          ? new P3d[] { P3d.new3(0, 0, 0), P3d.new3(1, 0, 0), P3d.new3(0, 1, 0),
-              P3d.new3(0, 0, 1) }
-          : u.getUnitCellVectors());
-    }
     if (ucnew == null) {
-      ucnew = new P3d[4];
-      if (haveUC) {
-        switch (uc.size()) {
-        case 3:
-          // [va. vb. vc]
-          ucnew[0] = new P3d();
-          for (int i = 0; i < 3; i++)
-            ucnew[i + 1] = P3d.newP(SV.ptValue(uc.get(i)));
-          break;
-        case 4:
-          for (int i = 0; i < 4; i++)
-            ucnew[i] = P3d.newP(SV.ptValue(uc.get(i)));
-          break;
-        case 6:
-          // unitcell([a b c alpha beta gamma])
-          double[] params = new double[6];
-          for (int i = 0; i < 6; i++)
-            params[i] = uc.get(i).asDouble();
-          SimpleUnitCell.setAbc(null, params, ucnew);
-          break;
-        default:
-          return false;
-        }
-      } else {
-        ucnew[0] = P3d.newP(SV.ptValue(args[0]));
-        switch (lastParam) {
-        case 3:
-          // unitcell(origin, pa, pb, pc)
-          for (int i = 1; i < 4; i++)
-            (ucnew[i] = P3d.newP(SV.ptValue(args[i]))).sub(ucnew[0]);
-          break;
-        case 1:
-          // unitcell(origin, [va, vb, vc])
-          Lst<SV> l = args[1].getList();
-          if (l != null && l.size() == 3) {
+      SymmetryInterface u = null;
+      boolean haveUC = (uc != null);
+      if (haveUC && uc.size() < 4)
+        return null;
+      int ptParam = ipt + (haveUC ? 1 : 0);
+      if (!haveUC && tok0 != T.point3f) {
+        // unitcell() or {1.1}.unitcell
+        u = (iatom < 0 ? vwr.getCurrentUnitCell()
+            : vwr.ms.getUnitCell(vwr.ms.at[iatom].mi));
+        ucnew = (u == null
+            ? new P3d[] { P3d.new3(0, 0, 0), P3d.new3(1, 0, 0),
+                P3d.new3(0, 1, 0), P3d.new3(0, 0, 1) }
+            : u.getUnitCellVectors());
+      }
+      if (ucnew == null) {
+        ucnew = new P3d[4];
+        if (haveUC) {
+          switch (uc.size()) {
+          case 3:
+            // [va. vb. vc]
+            ucnew[0] = new P3d();
             for (int i = 0; i < 3; i++)
-              ucnew[i + 1] = P3d.newP(SV.ptValue(l.get(i)));
+              ucnew[i + 1] = P3d.newP(SV.ptValue(uc.get(i)));
             break;
+          case 4:
+            for (int i = 0; i < 4; i++)
+              ucnew[i] = P3d.newP(SV.ptValue(uc.get(i)));
+            break;
+          case 6:
+            // unitcell([a b c alpha beta gamma])
+            double[] params = new double[6];
+            for (int i = 0; i < 6; i++)
+              params[i] = uc.get(i).asDouble();
+            SimpleUnitCell.setAbc(null, params, ucnew);
+            break;
+          default:
+            return null;
           }
-          //$FALL-THROUGH$
-        default:
-          return false;
+        } else {
+          ucnew[0] = P3d.newP(SV.ptValue(args[ipt]));
+          switch (lastParam) {
+          case 3:
+            // unitcell(origin, pa, pb, pc)
+            for (int i = 1; i < 4; i++)
+              (ucnew[i] = P3d.newP(SV.ptValue(args[ipt + i]))).sub(ucnew[0]);
+            break;
+          case 1:
+            // unitcell(origin, [va, vb, vc])
+            Lst<SV> l = args[ipt + 1].getList();
+            if (l != null && l.size() == 3) {
+              for (int i = 0; i < 3; i++)
+                ucnew[i + 1] = P3d.newP(SV.ptValue(l.get(i)));
+              break;
+            }
+            //$FALL-THROUGH$
+          default:
+            return null;
+          }
         }
       }
-    }
 
-    String op = (ptParam <= lastParam ? args[ptParam].asString() : null);
+      String op = (ptParam <= lastParam ? args[ptParam].asString() : null);
 
-    boolean toPrimitive = "primitive".equalsIgnoreCase(op);
-    if (toPrimitive || "conventional".equalsIgnoreCase(op)) {
-      String stype = (++ptParam > lastParam ? ""
-          : args[ptParam].asString().toUpperCase());
-      if (stype.equals("BCC"))
-        stype = "I";
-      else if (stype.length() == 0)
-        stype = (String) vwr.getSymmetryInfo(iatom, null, 0, null, null, null,
-            T.lattice, null, 0, -1, 0, null);
-      if (stype == null || stype.length() == 0)
-        return false;
-      if (u == null)
-        u = vwr.getSymTemp();
-      M3d m3 = (M3d) vwr.getModelForAtomIndex(iatom).auxiliaryInfo
-          .get("primitiveToCrystal");
-      if (!u.toFromPrimitive(toPrimitive, stype.charAt(0), ucnew, m3))
-        return false;
-    } else if ("reciprocal".equalsIgnoreCase(op)) {
-      ucnew = SimpleUnitCell.getReciprocal(ucnew, null, scale);
-      scale = 1;
-    } else if ("vertices".equalsIgnoreCase(op)) {
-      return mp.addXObj(BoxInfo.getVerticesFromOABC(ucnew));
+      boolean toPrimitive = "primitive".equalsIgnoreCase(op);
+      if (toPrimitive || "conventional".equalsIgnoreCase(op)) {
+        String stype = (++ptParam > lastParam ? ""
+            : args[ptParam].asString().toUpperCase());
+        if (stype.equals("BCC"))
+          stype = "I";
+        else if (stype.length() == 0)
+          stype = (String) vwr.getSymmetryInfo(iatom, null, 0, null, null, null,
+              T.lattice, null, 0, -1, 0, null);
+        if (stype == null || stype.length() == 0)
+          return null;
+        if (u == null)
+          u = vwr.getSymTemp();
+        M3d m3 = (M3d) vwr.getModelForAtomIndex(iatom).auxiliaryInfo
+            .get("primitiveToCrystal");
+        if (!u.toFromPrimitive(toPrimitive, stype.charAt(0), ucnew, m3))
+          return null;
+      } else if ("reciprocal".equalsIgnoreCase(op)) {
+        ucnew = SimpleUnitCell.getReciprocal(ucnew, null, scale);
+        scale = 1;
+      } else if ("vertices".equalsIgnoreCase(op)) {
+        return (isWithin ? null : BoxInfo.getVerticesFromOABC(ucnew));
+      }
     }
     if (scale != 1)
       for (int i = 1; i < 4; i++)
         ucnew[i].scale(scale);
-    return mp.addXObj(ucnew);
+    return ucnew;
   }
 
   @SuppressWarnings("unchecked")
@@ -2117,15 +2172,15 @@ SymmetryInterface sym;
               .addXBs(vwr.ms.getSymmetryEquivAtoms((BS) x1.value, null, null));
         case T.point3f:
           return mp.addXList(
-              vwr.getSymmetryEquivPoints((P3d) x1.value, sFind + flags));
+              vwr.getSymmetryEquivPoints(Point3fi.newPF((P3d) x1.value, 0), sFind + flags));
         case T.varray:
-          Lst<P3d> lst = new Lst<P3d>();
+          Lst<Point3fi> lst = new Lst<Point3fi>();
           Lst<SV> l0 = x1.getList();
           for (int i = 0, n = l0.size(); i < n; i++) {
             P3d p = SV.ptValue(l0.get(i));
             if (p == null)
               return false;
-            lst.addLast(p);
+            lst.addLast(Point3fi.newPF(p, 0));
           }
           return mp.addXList(vwr.getSymmetryEquivPointList(lst, sFind + flags));
         }
@@ -3391,9 +3446,7 @@ SymmetryInterface sym;
           nBitSets++;
           break;
         case T.point3f:
-          Point3fi v = new Point3fi();
-          v.setT((P3d) args[i].value);
-          points.addLast(v);
+          points.addLast(Point3fi.newPF((P3d) args[i].value, 0));
           nPoints++;
           break;
         case T.integer:
@@ -3739,6 +3792,7 @@ SymmetryInterface sym;
     // point(["{1,2,3}", "{2,3,4}"])
     // point([[1,2,3], [2,3,4]])
     // point("(1/2,1/2,1/2)")
+    // point([1,2,3]))
 
     String s = null;
     switch (args.length) {
@@ -3765,7 +3819,14 @@ SymmetryInterface sym;
         switch (list.get(0).tok) {
         case T.integer:
         case T.decimal:
-          break;
+          switch (len) {
+          case 3:
+            return mp.addXPt(
+                P3d.new3(list.get(0).asDouble(), list.get(1).asDouble(), list.get(2).asDouble()));
+          case 4:
+            return mp.addXPt4(P4d.new4(list.get(0).asDouble(), list.get(1).asDouble(), list.get(2).asDouble(), list.get(3).asDouble()));
+          }          
+          return false;
         case T.varray:
           Lst<SV> ar = new Lst<SV>();
           for (int i = 0; i < len; i++) {
@@ -3810,7 +3871,7 @@ SymmetryInterface sym;
         }
         if (args[1].tok == T.on) {
           // this is TO screen coordinates, 0 at bottom left
-          vwr.tm.transformPt3f(pt3, pt3);
+          vwr.tm.transformPt3fSafe(pt3, pt3);
           pt3.y = vwr.tm.height - pt3.y;
           if (vwr.antialiased)
             pt3.scale(0.5d);
@@ -4103,7 +4164,7 @@ SymmetryInterface sym;
         return mp.addXAD(f);
       }
     case T.matrix4f:
-      if (n < 0 || n > 2)
+      if (n < 0 || n > 3)
         return false;
       M4d m4 = (M4d) x1.value;
       switch (tok) {
@@ -4673,7 +4734,7 @@ SymmetryInterface sym;
     // allow for [ h k l ] lattice translation
     P3d trans = null;
     if (narg > apt && args[apt].tok == T.varray) {
-      List<SV> a = args[apt++].getList();
+      Lst<SV> a = args[apt++].getList();
       if (a.size() != 3)
         return null;
       trans = P3d.new3(SV.dValue(a.get(0)), SV.dValue(a.get(1)),
@@ -5045,14 +5106,15 @@ SymmetryInterface sym;
       } else if (!isDistance) {
         return false;
       }
+      boolean isUnitCell = false;
       switch (len) {
       case 1:
-        // within (sheet)
-        // within (helix)
-        // within (boundbox)
-        // within (unitcell)
-        // within (basepair)
-        // within ("...a sequence...")
+        // within(sheet)
+        // within(helix)
+        // within(boundbox)
+        // within(unitcell)
+        // within(basepair)
+        // within("...a sequence...")
         switch (tok) {
         case T.sheet:
         case T.helix:
@@ -5070,7 +5132,8 @@ SymmetryInterface sym;
         return false;
       case 2:
         // within (atomName, "XX,YY,ZZZ")
-        // within (unitcell, u);
+        // within ("unitcell", u)
+        // within (0.1, "unitcell")
         switch (tok) {
         case T.varray:
           break;
@@ -5093,30 +5156,25 @@ SymmetryInterface sym;
           bsSelected = vwr.ms.getAtoms(tok, SV.ptValue(args[1]));
           break out;
         case T.unitcell:
-          Lst<SV> l = args[1].getList();
-          if (l == null)
-            return false;
-          P3d[] oabc = null;
-          SymmetryInterface uc = null;
-          if (l.size() != 4)
-            return false;
-          oabc = new P3d[4];
-          for (int i = 0; i < 4; i++) {
-            if ((oabc[i] = SV.ptValue(l.get(i))) == null)
-              return false;
+          if (isDistance && len == 2) {
+            bsSelected = vwr.ms.getAtoms(tok,
+                new Object[] { null, Double.valueOf(distance) });
+            break out;
           }
-          uc = vwr.getSymTemp().getUnitCell(oabc, false, null);
-          bsSelected = vwr.ms.getAtoms(tok, uc);
-          break out;
+          isUnitCell = true;
+          break;
         }
         break;
       case 3:
+        // within (distance, group, {atom collection})
+        // within (distance, true|false, {atom collection})
+        // within (distance, plane|hkl, [plane definition] )
+        // within (distance, coord, [point or atom center] )
         switch (tok) {
         case T.on:
         case T.off:
         case T.group:
         case T.vanderwaals:
-        case T.unitcell:
         case T.plane:
         case T.hkl:
         case T.coord:
@@ -5127,13 +5185,40 @@ SymmetryInterface sym;
           // within ("sequence", "CII", *.ca)
           withinStr = SV.sValue(args[1]);
           break;
+        case T.unitcell:
+          // within (0.1, "unitcell", u)
+          // within ("unitcell", u, scale);
+          isUnitCell = true;
+          break;
         default:
           return false;
         }
-        // within (distance, group, {atom collection})
-        // within (distance, true|false, {atom collection})
-        // within (distance, plane|hkl, [plane definition] )
-        // within (distance, coord, [point or atom center] )
+        break;
+      case 4:
+        switch (tok) {
+        case T.unitcell:
+          if (!isDistance)
+            return false;
+          // within (0.1, unitcell, u, scale)
+          isUnitCell = true;
+          break;
+        default:
+          return false;        
+        }
+        break;
+      }
+      if (isUnitCell) {
+        // u here is some form of the unitcell() function
+        // x = within("unitcell", u)
+        // x = within("unitcell", u, scale);
+        // x = within(0.1, "unitcell", u);
+        // x = within(0.1, "unitcell", u, scale);
+        Object o = getUnitCell(args, -1, (isDistance ? 2 : 1), args.length - 1);
+        if (o == null)
+            return false;
+        P3d[] oabc = (P3d[]) o;
+        SymmetryInterface uc = vwr.getSymTemp().getUnitCell(oabc, false, null);
+        bsSelected = vwr.ms.getAtoms(tok, new Object[] { uc, isDistance ? Double.valueOf(distance) : null });
         break;
       }
       P4d plane = null;
@@ -5159,10 +5244,10 @@ SymmetryInterface sym;
       if (plane != null) {
         bsSelected = ms.getAtomsNearPlane(distance, plane);
         break out;
-      } 
-      
+      }
+
       // from here we allow bs.within(...) or within(...,bs);
-      
+
       BS bsLast = (args[last].tok == T.bitset ? (BS) args[last].value : null);
       if (bs == null)
         bs = bsLast;

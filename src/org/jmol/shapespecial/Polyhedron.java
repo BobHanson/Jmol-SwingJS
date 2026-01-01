@@ -181,9 +181,8 @@ public class Polyhedron {
           o = lst.get(i);
           int n = (isSV ? ((SV)o).intValue : ((Integer) o).intValue());
           if (n > 0) {
-            Point3fi p = new Point3fi();
-            p.setT(vertices[i]);
-            p.sD = (short) n;
+            Point3fi p = Point3fi.newPF(vertices[i], 0);
+            p.sD = n;
             vertices[i] = p;
           }
         }

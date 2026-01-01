@@ -539,6 +539,7 @@ abstract class ScriptExpr extends ScriptParam {
       case T.smiles:
       case T.substructure:
       case T.structure:
+      case T.vibxyz:
         // these are "within" phrases ?
         if (!isWhere && i == ptWithin && tokAt(i + 1) == T.comma) {
           rpn.addX(SV.newT(theToken));

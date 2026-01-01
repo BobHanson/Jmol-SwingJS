@@ -218,12 +218,12 @@ public class AnimationManager {
     if (cmi != modelIndex) {
       if (modelCount > 0) {
         ModelSet ms = vwr.ms;
-        boolean toDataModel = ms.isJmolDataFrameForModel(modelIndex);
-        boolean fromDataModel = ms.isJmolDataFrameForModel(cmi);
+        boolean toDataModel = ms.isJmolDataFrame(modelIndex);
+        boolean fromDataModel = ms.isJmolDataFrame(cmi);
         if (fromDataModel)
           ms.setJmolDataFrame(null, -1, cmi);
         if (cmi != -1)
-          vwr.saveModelOrientation();
+          vwr.saveModelOrientation(cmi);
         if (fromDataModel || toDataModel) {
           ids = ms.getJmolFrameType(modelIndex) + " " + modelIndex + " <-- "
               + " " + cmi + " " + ms.getJmolFrameType(cmi);
@@ -240,7 +240,7 @@ public class AnimationManager {
             && (ids.indexOf("quaternion") >= 0 || ids.indexOf("spin") >= 0
                 || ids.indexOf("plot") < 0 && ids.indexOf("ramachandran") < 0
                     && ids.indexOf(" property ") < 0)) {
-          vwr.restoreModelRotation(formerModelIndex);
+          vwr.restoreModelRotationOnly(formerModelIndex);
         }
       }
     }
@@ -450,7 +450,8 @@ public class AnimationManager {
       setBackgroundModelIndex(-1);
     vwr.setTainted(true);
     int nDisplay = setFrameRangeVisible();
-    vwr.setStatusFrameChanged(false, false);
+    if (vwr.tm.splitFrameCurrentlyRendering != 1)
+      vwr.setStatusFrameChanged(false, false);
     if (!vwr.g.selectAllModels)
       setSelectAllSubset(nDisplay < 2);
   }
@@ -479,14 +480,14 @@ public class AnimationManager {
     nDisplayed = 0;
     for (int iframe = firstFrameIndex; iframe != lastFrameIndex; iframe += frameStep) {
       int i = modelIndexForFrame(iframe);
-      if (!vwr.ms.isJmolDataFrameForModel(i)) {
+      if (!vwr.ms.isJmolDataFrame(i)) {
         bsVisibleModels.set(i);
         nDisplayed++;
         frameDisplayed = iframe;
       }
     }
     int i = modelIndexForFrame(lastFrameIndex);
-    if (firstFrameIndex == lastFrameIndex || !vwr.ms.isJmolDataFrameForModel(i)
+    if (firstFrameIndex == lastFrameIndex || !vwr.ms.isJmolDataFrame(i)
         || nDisplayed == 0) {
       bsVisibleModels.set(i);
       if (nDisplayed == 0)
@@ -626,6 +627,10 @@ public class AnimationManager {
     int m = splitFrames[active ? currentSplitFrame : 1 - currentSplitFrame].modelIndex;
     return vwr.getModelUndeletedAtomsBitSet(m);
   }
+  
+  public int getCurrentSplitModelIndex() {
+    return currentSplitFrame < 0 ? cmi : splitFrames[currentSplitFrame].modelIndex;
+  }
 
   public BS getSplitFrameModels() {
     if (!splitFrame)
@@ -633,6 +638,8 @@ public class AnimationManager {
     BS bs = new BS();
     bs.set(splitFrames[0].modelIndex);
     bs.set(splitFrames[1].modelIndex);
+    bsVisibleModels.clearAll();
+    bsVisibleModels.or(bs);
     return bs;    
   }
 

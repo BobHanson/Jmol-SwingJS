@@ -60,7 +60,7 @@ public class AxesRenderer extends CageRenderer {
       return false; 
     // includes check here for background model present
     int modelIndex = vwr.am.cmi;
-    if (ms.isJmolDataFrameForModel(modelIndex)
+    if (ms.isJmolDataFrame(modelIndex)
         && !ms.getJmolFrameType(modelIndex).equals("plot data"))
       return false;
     boolean isUnitCell = (vwr.g.axesMode == T.axesunitcell);

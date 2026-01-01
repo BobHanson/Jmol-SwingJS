@@ -41,6 +41,7 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
 import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
+import org.jmol.util.Point3fi;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
@@ -102,8 +103,21 @@ public class Symmetry implements SymmetryInterface {
   public UnitCell unitCell;
   public boolean isBio;
 
-  PointGroup pointGroup;
-  CIPChirality cip;
+  public String id;
+
+  private Viewer vwr;
+  
+  /**
+   * This symmetry holds the unit cell data that transform to and from
+   * Cartesians for the file spin frame. It is used in the 
+   * MODELKIT SPACEGROUP >...> PACKED command.
+   * 
+   * This Symmetry object is ONLY for to/from Cartesian and fractional coordinates.
+   */
+  private Symmetry spinSym;
+  private PointGroup pointGroup;
+
+  private CIPChirality cip;
 
   private SymmetryInfo symmetryInfo;
   private SymmetryDesc desc;
@@ -159,7 +173,6 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void setSpaceGroup(boolean doNormalize) {
-    clearSymmetryInfo();
     if (spaceGroup == null)
       spaceGroup = SpaceGroup.getNull(true, doNormalize, false);
   }
@@ -194,7 +207,7 @@ public class Symmetry implements SymmetryInterface {
     case "list":
       // from spacegroup(n, "list")
       return getSpaceGroupList((Integer) params);
-    case "opsCtr":
+    case JC.INFO_OPS_CTR:
       return spaceGroup.getOpsCtr((String) params);
     case "itaTransform":
     case "itaNumber":
@@ -316,7 +329,7 @@ public class Symmetry implements SymmetryInterface {
           name + " *(" + filterSymop.trim() + ")", lst, -1);
     }
     spaceGroup.setFinalOperationsForAtoms(dim, atoms, iAtomFirst,
-        noSymmetryCount, doNormalize);
+      noSymmetryCount, doNormalize);
   }
 
   @Override
@@ -446,7 +459,7 @@ public class Symmetry implements SymmetryInterface {
       return symmetryInfo.infoStr;
     if (spaceGroup == null)
       return "";
-    (symmetryInfo = new SymmetryInfo()).setSymmetryInfoFromModelkit(spaceGroup);
+    (symmetryInfo = new SymmetryInfo(spaceGroup)).setSymmetryInfoFromModelkit(spaceGroup);
     return symmetryInfo.infoStr;
   }
 
@@ -597,11 +610,18 @@ public class Symmetry implements SymmetryInterface {
     return unitCell.getCartesianOffset();
   }
 
+  /**
+   * determine if an offset cell is a unit translation, so that
+   * the space group can be continued
+   */
   @Override
   public P3d getFractionalOffset(boolean onlyIfFractional) {
     P3d offset = unitCell.getFractionalOffset();
-    return (onlyIfFractional && offset != null && offset.x == (int) offset.x
-        && offset.y == (int) offset.y && offset.z == (int) offset.z ? null
+    return (onlyIfFractional 
+    	&& offset != null 
+    	&& offset.x == (int) offset.x
+        && offset.y == (int) offset.y 
+        && offset.z == (int) offset.z ? null
             : offset);
   }
 
@@ -630,7 +650,9 @@ public class Symmetry implements SymmetryInterface {
     UnitCell uc = unitCell.getUnitCellMultiplied();
     if (uc == unitCell)
       return this;
-   return new Symmetry().setViewer(vwr, "getUCM");
+   Symmetry sym = new Symmetry().setViewer(vwr, "getUCM");
+   sym.unitCell = uc;
+   return sym;
   }
 
   @Override
@@ -641,6 +663,11 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public double getUnitCellInfoType(int infoType) {
     return unitCell.getInfo(infoType);
+  }
+
+  @Override
+  public double getUnitCellInfoStr(String type) {
+    return unitCell.getInfoStr(type);
   }
 
   @Override
@@ -781,7 +808,7 @@ public class Symmetry implements SymmetryInterface {
         modelIndex = modelSet.vwr.am.cmi;
       Map<String, Object> info = modelSet.getModelAuxiliaryInfo(modelIndex);
       if (info != null)
-        sgName = (String) info.get(JC.INFO_SPACE_GROUP);
+        sgName = (String) info.get(JC.INFO_FILE_SPACE_GROUP_NAME);
     }
     SymmetryInterface cellInfo = null;
     if (cellParams != null) {
@@ -824,7 +851,7 @@ public class Symmetry implements SymmetryInterface {
           .append(SimpleUnitCell.escapeMultiplier(ptm));
       loadUC = true;
     }
-    String sg = (String) ms.getInfo(modelIndex, JC.INFO_SPACE_GROUP);
+    String sg = (String) ms.getInfo(modelIndex, JC.INFO_FILE_SPACE_GROUP_NAME);
     if (isAssigned && sg != null) {
       int ipt = sg.indexOf("#");
       if (ipt >= 0)
@@ -986,13 +1013,18 @@ public class Symmetry implements SymmetryInterface {
 
   @Override
   public void setSpaceGroupTo(Object sg) {
-    clearSymmetryInfo();
-    if (sg instanceof SpaceGroup) {
+    if (sg instanceof Symmetry) {
+      spaceGroup = ((Symmetry) sg).spaceGroup;
+      symmetryInfo = ((Symmetry) sg).symmetryInfo;
+      if (spaceGroup == null && symmetryInfo != null)
+        spaceGroup = symmetryInfo.fileSpaceGroup;
+    } else if (sg instanceof SpaceGroup) {
       spaceGroup = (SpaceGroup) sg;
     } else {
       spaceGroup = SpaceGroup.getSpaceGroupFromJmolClegOrITA(vwr,
           sg.toString());
     }
+    clearSymmetryInfo();
   }
 
   private void clearSymmetryInfo() {
@@ -1035,14 +1067,6 @@ public class Symmetry implements SymmetryInterface {
     return bs;
   }
 
-  @Override
-  public Lst<P3d> getEquivPoints(Lst<P3d> pts, P3d pt, String flags) {
-    M4d[] ops = getSymmetryOperations();
-    return (ops == null || unitCell == null ? null
-        : unitCell.getEquivPoints(pt, flags, ops,
-            pts == null ? new Lst<P3d>() : pts, 0, 0, 0, getPeriodicity()));
-  }
-
   /**
    * 0x1 a only  frieze, rod-a
    * 
@@ -1083,9 +1107,41 @@ public class Symmetry implements SymmetryInterface {
     return (spaceGroup == null ? SpaceGroup.TYPE_SPACE : spaceGroup.groupType);
   }
 
+  /**
+   * @param pt 
+   * @param flags 
+   * @param packing 
+   * @return A list of equivalent points
+   * 
+   */
   @Override
-  public void getEquivPointList(Lst<P3d> pts, int nInitial, String flags,
-                                M4d[] opsCtr) {
+  public Lst<Point3fi> getEquivPoints(Point3fi pt, String flags, double packing) {
+    M4d[] ops = getSymmetryOperations();
+    return (ops == null || unitCell == null ? null
+        : unitCell.getEquivalentPoints(pt, flags, ops,
+            new Lst<Point3fi>(), 0, 0, 0, getPeriodicity(), packing));
+  }
+
+  /**
+   * Load a list of initial current points, and one or more starting points with equivalent points. 
+   * 
+   * @param flags 
+   *     indicating input/output Cartesian or fractional options
+   * @param opsCtr 
+   *     centering operations for subgroup filling that are to be used rather than 
+   *     space group operations
+   * @param packing 
+   *     if .gte. 0, the fractional packing distance around the unit cell to include
+   * @param pts 
+   *     total list of initial (current) points, needed for duplication check;
+   *     additional points are those to be operated on, including the identity operation
+   * @param nInitial 
+   *     number of initial points
+   * 
+   */
+  @Override
+  public void getEquivPointList(int nInitial, String flags, M4d[] opsCtr,
+                                double packing, Lst<Point3fi> pts) {
     M4d[] ops = (opsCtr == null ? getSymmetryOperations() : opsCtr);
     boolean newPt = (flags.indexOf("newpt") >= 0);
     boolean zapped = (flags.indexOf("zapped") >= 0);
@@ -1114,7 +1170,7 @@ public class Symmetry implements SymmetryInterface {
     if (ops != null || unitCell != null) {
       int per = getPeriodicity();
       for (int i = nInitial; i < n; i++) {
-        unitCell.getEquivPoints(pts.get(i), flags, ops, pts, check0, n0, dup0, per);
+        unitCell.getEquivalentPoints(pts.get(i), flags, ops, pts, check0, n0, dup0, per, packing);
       }
     }
     // now remove the starting points, checking to see if perhaps our
@@ -1124,10 +1180,6 @@ public class Symmetry implements SymmetryInterface {
       n--;
     for (int i = n - nInitial; --i >= 0;)
       pts.removeItemAt(nInitial);
-    // final check for removing duplicates
-    //    if (nIgnored > 0)
-    //      UnitCell.checkDuplicate(pts, 0, nIgnored - 1, nIgnored);
-
     // and turn these to Cartesians if desired
     if (!tofractional) {
       for (int i = pts.size(); --i >= nInitial;)
@@ -1250,13 +1302,13 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public boolean isWithinUnitCell(P3d pt, double x, double y, double z) {
-    return unitCell.isWithinUnitCell(x, y, z, pt);
+  public boolean isWithinUnitCell(P3d pt, double x, double y, double z, double packing) {
+    return unitCell.isWithinUnitCell(x, y, z, packing, pt);
   }
 
   @Override
-  public boolean checkPeriodic(P3d pt) {
-    return unitCell.checkPeriodic(pt);
+  public boolean checkPeriodic(P3d pt, double packing) {
+    return unitCell.checkPeriodic(pt, packing);
   }
 
   @Override
@@ -2029,19 +2081,20 @@ public class Symmetry implements SymmetryInterface {
   @SuppressWarnings("unchecked")
   public void setSymmetryInfoFromFile(ModelSet ms, int modelIndex,
                                                    double[] unitCellParams) {
-    Map<String, Object> modelAuxiliaryInfo = ms
-        .getModelAuxiliaryInfo(modelIndex);
-    symmetryInfo = new SymmetryInfo();
-    double[] params = symmetryInfo.setSymmetryInfoFromFile(modelAuxiliaryInfo,
+    Map<String, Object> info = ms.getModelAuxiliaryInfo(modelIndex);
+    Symmetry fileSymmetry = (Symmetry) info.get(JC.INFO_FILE_SYMMETRY);
+    symmetryInfo = new SymmetryInfo(fileSymmetry == null ? null : fileSymmetry.spaceGroup);
+    double[] params = symmetryInfo.setSymmetryInfoFromFile(info,
         unitCellParams);
     if (params == null)
       return;
-    setUnitCellFromParams(params, modelAuxiliaryInfo.containsKey("jmolData"),
+    setUnitCellFromParams(params, info.containsKey("jmolData"),
         symmetryInfo.slop);
-    unitCell.setMoreInfo((Lst<String>) modelAuxiliaryInfo.get(JC.UC_MOREINFO));
-    modelAuxiliaryInfo.put("infoUnitCell", getUnitCellAsArray(false));
-    setOffsetPt((T3d) modelAuxiliaryInfo.get(JC.INFO_UNIT_CELL_OFFSET));
-    M3d matUnitCellOrientation = (M3d) modelAuxiliaryInfo
+    setSpinSym();
+    unitCell.setMoreInfo((Lst<String>) info.get(JC.UC_MOREINFO));
+    info.put("infoUnitCell", getUnitCellAsArray(false));
+    setOffsetPt((T3d) info.get(JC.INFO_UNIT_CELL_OFFSET));
+    M3d matUnitCellOrientation = (M3d) info
         .get("matUnitCellOrientation");
     if (matUnitCellOrientation != null)
       initializeOrientation(matUnitCellOrientation);
@@ -2129,6 +2182,56 @@ public class Symmetry implements SymmetryInterface {
     return spaceGroup.getOperationCount();
   }
 
+  /**
+   * A general method to handle converstions between string-based and
+   * matrix-based representations of transformations.
+   * 
+   * When the transform is non-null and other than the string "xyz", the trm
+   * matrix is filled with the matrix representation corresponding to the given
+   * string, which is expected to be in the form specified for the Bilbao
+   * Crystallographic Server/International Table of Crystallography "Pp" format
+   * (if containing "a", "b", and "c") for basis transformtions. For example,
+   * "a+b,-a+b,c;0,0,1/2".
+   * 
+   * The method includes support for expressions that contain reciprocal lattice
+   * descriptions "a*", "b*", and "c*", but only when this Symmetry object has a
+   * non-null unitCell field.
+   * 
+   * When involving "x", "y", or "z", then the string is expected to have the
+   * form for space group operations, for example: "x+y,-x+y,z+1/2"
+   * 
+   * @param transform
+   *        the string form to be converted to matrix format; if this string
+   *        involves abc, a 4x4 column matrix is returned; if xyz, a 4x4 row
+   *        matrix is returned. For example, "a+b,-a+b,c;0,0,1/2" will fill trm
+   *        as
+   * 
+   *        <pre>
+   * [
+   * [1 -1 0 0  ]
+   * [1  1 0 0  ] 
+   * [0  0 1 0.5]
+   * [0  0 0 1  ]
+   * ]
+   *        </pre>
+   * 
+   *        while"x+y,-x+y,z+1/2" will fill trm as
+   * 
+   *        <pre>
+   * [
+   * [ 1 1 0 0  ]
+   * [-1 1 0 0  ] 
+   * [ 0 0 1 0.5]
+   * [ 0 0 0 1  ]
+   * ]
+   *        </pre>
+   * 
+   * @param trm
+   * @return if transform is null, the abc-string equivalent to trm; if
+   *         transform is "xyz", the xyz-string equivalent to the operation matrix trm; 
+   *         otherwise, the 4x4 matrix representing this transform or operation.
+   * 
+   */
   @Override
   public Object convertTransform(String transform, M4d trm) {
     if (transform == null) {
@@ -2162,13 +2265,6 @@ public class Symmetry implements SymmetryInterface {
     }
     return clegInstance;
   }
-
-  /**
-   * Viewer is needed to load json files. 
-   */
-  Viewer vwr;
-  public Lst<String> spinList;
-  public String id;
 
   /**
    * 
@@ -2275,10 +2371,17 @@ public class Symmetry implements SymmetryInterface {
     return id;
   }
 
-  @Override
-  public Lst<String> getSpinList() {
-    return (spaceGroup == null ? null : spaceGroup.spinList);
+  private void setSpinSym() {
+    if (spinSym == null) {
+      spinSym = new Symmetry();
+      spinSym.spaceGroup = spaceGroup;
+      spinSym.unitCell = unitCell;
+    }
   }
 
+  @Override
+  public SymmetryInterface getSpinSym() {
+    return (spinSym == null ? this : spinSym);
+  }
 
 }

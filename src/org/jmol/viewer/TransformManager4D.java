@@ -24,6 +24,7 @@
 package org.jmol.viewer;
 
 import javajs.util.M4d;
+import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.T3d;
 import javajs.util.T4d;
@@ -161,7 +162,7 @@ public class TransformManager4D extends TransformManager {
   }
 
   @Override
-  protected void getScreenTemp(T3d ptXYZ) {
+  protected void getScreenTemp(T3d ptXYZ, P3d fScrPt) {
     if (doTransform4D && ptXYZ instanceof T4d) {
       p4.add2(ptXYZ, v1);                      // 3D centering
       m2_rotate.rotate(p4);                    // 4D rotation

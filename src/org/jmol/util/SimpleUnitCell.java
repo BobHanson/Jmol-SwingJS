@@ -59,6 +59,7 @@ public class SimpleUnitCell {
   public static final int PARAM_SLOP = 26; // slop
   public static final int PARAM_COUNT = 27;
 
+  public final static int INFO_VOLUME = 10;
   public final static int INFO_IS_RHOMBOHEDRAL = 9;
   public final static int INFO_IS_HEXAGONAL = 8;
   public final static int INFO_DIMENSION_TYPE = 7;
@@ -522,9 +523,46 @@ public class SimpleUnitCell {
         : new double[] { a, b, c, alpha, beta, gamma, m.m00, m.m10, m.m20, // Va
             m.m01, m.m11, m.m21, // Vb
             m.m02, m.m12, m.m22, // Vc
-            dimension, volume, dimensionType });
+            dimension, dimensionType, volume });
   }
 
+  public double getInfoStr(String type) {
+    int itype;
+    switch (type.toLowerCase()) {
+    case "a":
+      itype = INFO_A;
+      break;
+    case "b":
+      itype = INFO_B;
+      break;
+    case "c":
+      itype = INFO_C;
+      break;
+    case "alpha":
+      itype = INFO_ALPHA;
+      break;
+    case "beta":
+      itype = INFO_BETA;
+      break;
+    case "gamma":
+      itype = INFO_GAMMA;
+      break;
+    case "dim":
+      itype = INFO_DIMENSIONS;
+      break;
+    case "dimtype":
+      itype = INFO_DIMENSION_TYPE;
+      break;
+    case "volume":
+      itype = INFO_VOLUME;
+      break;
+    default:
+      itype = -1;
+      break;
+    }
+    return (itype < 0 ? Double.NaN : getInfo(itype));
+  }
+  
   public final double getInfo(int infoType) {
     switch (infoType) {
     case INFO_A:
@@ -547,6 +585,8 @@ public class SimpleUnitCell {
       return (isHexagonal(unitCellParams) ? 1 : 0);
     case INFO_IS_RHOMBOHEDRAL:
       return (isRhombohedral(unitCellParams) ? 1 : 0);
+    case INFO_VOLUME:
+      return volume;
     }
     return Double.NaN;
   }
@@ -963,6 +1003,7 @@ public class SimpleUnitCell {
 
   /**
    * parse math such as "1/sqrt(3)"
+   * 
    * @param vwr
    * @param suvw
    * @return suvw replacing functions with their values

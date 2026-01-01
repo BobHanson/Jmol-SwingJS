@@ -103,6 +103,8 @@ public class SpaceGroupFinder {
   private P3d zero;
 
   private boolean isQuery;
+
+  private boolean isTransformOnly;
   
   public SpaceGroupFinder() {
   }
@@ -168,8 +170,10 @@ public class SpaceGroupFinder {
     if (xyzList == null || isAssign) {
       bsAtoms = BSUtil.copy(atoms0);
       nAtoms = bsAtoms.cardinality();
+
     }
     isQuery = (xyzList != null && xyzList.indexOf("&") >= 0);
+    isTransformOnly = (xyzList != null && xyzList.startsWith(".:"));
     targets = BS.newN(nAtoms);
     // this will be set in checkSupercell
     scaling = P3d.new3(1, 1, 1);
@@ -177,7 +181,7 @@ public class SpaceGroupFinder {
     BS basis;
     isUnknown = true;
     // figure out the space group
-    boolean isITA = (xyzList != null
+    boolean isITA = (isTransformOnly || xyzList != null
         && xyzList.toUpperCase().startsWith("ITA/"));
     boolean isHall = (xyzList != null && !isITA
         && (xyzList.startsWith("[") || xyzList.startsWith("Hall:")));
@@ -186,14 +190,14 @@ public class SpaceGroupFinder {
         || !isHall && (isITA || (isITA = checkWyckoffHM()))) {
       isUnknown = false;
       if (isITA) {
-        xyzList = PT.rep(xyzList.substring(4), " ", "");
+        xyzList = PT.rep((isTransformOnly ? xyzList : xyzList.substring(4)), " ", "");
       } else if (xyzList.startsWith("Hall:")) {
         xyzList = xyzList.substring(5);
       } else {
         xyzList = PT.replaceAllCharacters(xyzList, "[]", "");
       }
-
       sg = setITA(isHall);
+      
       if (sg == null)
         return null;
       name = sg.getName();
@@ -313,7 +317,7 @@ public class SpaceGroupFinder {
       }
     }
     pt = xyzList.indexOf(".");
-    
+
     if (pt > 0 && (hasTransform || isJmolCode)) {
       xyzList = xyzList.substring(0, pt);
       pt = -1;
@@ -331,67 +335,77 @@ public class SpaceGroupFinder {
     Lst<Object> genPos;
     Map<String, Object> setting = null;
     String itaIndex = xyzList; // may be Hall or jmolId as well
+    String t0 = null;
     if (isHall) {
-      genPos = (Lst<Object>) uc.getSpaceGroupInfoObj("nameToXYZList", "Hall:" + xyzList, false, false);
+      genPos = (Lst<Object>) uc.getSpaceGroupInfoObj("nameToXYZList",
+          "Hall:" + xyzList, false, false);
       if (genPos == null)
         return null;
     } else {
       // get space group
       name = (hasTransform ? transform : itaIndex);// p/2 here for itaIndex?
-      sg = SpaceGroup.getSpaceGroupFromJmolClegOrITA(vwr, hasTransform ? clegId : itaIndex);
-      // get reference group data
-      Object allSettings = uc.getSpaceGroupJSON("ITA", itaIndex, 0);
-      if (allSettings == null || allSettings instanceof String) {
-        return null;
-      }
-      sgdata = (Map<String, Object>) allSettings;
-      if (isJmolCode || hasTransform) {
-        Lst<Object> its = (Lst<Object>) sgdata.get("its");
-        if (its == null)
-          return null;
-        sgdata = null;
-        for (int i = 0, c = its.size(); i < c; i++) {
-          setting = (Map<String, Object>) its.get(i);
-          if (name.equals(setting.get(hasTransform ? "trm" : "jmolId"))) {
-            sgdata = setting;
-            break;
-          }
-        }
-        // "more" type, from wp-list, does note contain gp or wpos
-        // also no jmolId for special groups
-        if (sgdata == null || !isSpecialGroup && !sgdata.containsKey("jmolId")) {
-          if (isJmolCode) {
-            // trying to get an ITA from a Jmol code with ITA like ITA/12:abc
-            return null;    
-          }
-          // nonstandard transform
-          setting = null;
-          if (sgdata != null)
-            transform = (String) sgdata.get("trm");
-          hasTransform = true;
-          sgdata = (Map<String, Object>) its.get(0);
-        } else {
-          // we have sgdata, and we have a jmolId
-          // we can just set this from the sg and the general positions
-          // if we also found the space group
-          setting = null;
-          // done here
-          hasTransform = false;
-          transform = null;
-        }
+      if (isTransformOnly) {
+        sg = uc.spaceGroup;
+        t0 = sg.itaTransform;
+        genPos = null;
       } else {
-        name = (String) sgdata.get("jmolId");
+        sg = SpaceGroup.getSpaceGroupFromJmolClegOrITA(vwr,
+            hasTransform ? clegId : itaIndex);
+        // get reference group data
+        Object allSettings = uc.getSpaceGroupJSON("ITA", itaIndex, 0);
+        if (allSettings == null || allSettings instanceof String) {
+          return null;
+        }
+        sgdata = (Map<String, Object>) allSettings;
+        if (isJmolCode || hasTransform) {
+          Lst<Object> its = (Lst<Object>) sgdata.get("its");
+          if (its == null)
+            return null;
+          sgdata = null;
+          for (int i = 0, c = its.size(); i < c; i++) {
+            setting = (Map<String, Object>) its.get(i);
+            if (name.equals(setting.get(hasTransform ? "trm" : "jmolId"))) {
+              sgdata = setting;
+              break;
+            }
+          }
+          // "more" type, from wp-list, does note contain gp or wpos
+          // also no jmolId for special groups
+          if (sgdata == null
+              || !isSpecialGroup && !sgdata.containsKey("jmolId")) {
+            if (isJmolCode) {
+              // trying to get an ITA from a Jmol code with ITA like ITA/12:abc
+              return null;
+            }
+            // nonstandard transform
+            setting = null;
+            if (sgdata != null)
+              transform = (String) sgdata.get("trm");
+            hasTransform = true;
+            sgdata = (Map<String, Object>) its.get(0);
+          } else {
+            // we have sgdata, and we have a jmolId
+            // we can just set this from the sg and the general positions
+            // if we also found the space group
+            setting = null;
+            // done here
+            hasTransform = false;
+            transform = null;
+          }
+        } else {
+          name = (String) sgdata.get("jmolId");
+        }
+        //      boolean isKnownToITAButNotToJmol = isJmolCode && (name.indexOf("?") < 0);
+        genPos = (Lst<Object>) sgdata.get("gp");
       }
-      //      boolean isKnownToITAButNotToJmol = isJmolCode && (name.indexOf("?") < 0);
-      genPos = (Lst<Object>) sgdata.get("gp");
     }
     if (sg != null && transform == null) {
       sg = SpaceGroup.createITASpaceGroup(sg.groupType, genPos, sg);
       return sg;
     }
     sg = SpaceGroup.transformSpaceGroup(groupType, null, sg, genPos,
-        (hasTransform ? transform : null),
-        (hasTransform ? new M4d() : null));
+        (hasTransform ? transform : null), 
+         (hasTransform ? new M4d() : null));
     if (sg == null)
       return null;
     name = "";
@@ -400,6 +414,9 @@ public class SpaceGroupFinder {
         transform = (String) sgdata.get("trm");
         String hm = (String) sgdata.get("hm");
         sg.setHMSymbol(hm);
+      } else if (isTransformOnly){
+        transform = multiplyTransforms(t0, transform);
+        sg.setITATableNames(null, itano, null, transform);
       } else {
         sg.setITATableNames(null, itano, null, transform);
       }
@@ -408,6 +425,25 @@ public class SpaceGroupFinder {
     }
     return sg;
   }
+
+  private String multiplyTransforms(String t0, String t1) {
+    M4d m0 = matFor(t0);
+    M4d m1 = matFor(t1);
+    m1.mul(m0);
+    return abcFor(m1);
+  }
+
+
+  private static String abcFor(M4d trm) {
+    return SymmetryOperation.getTransformABC(trm, false);
+  }
+
+  private M4d matFor(String trm) {
+    M4d m = new M4d();
+    UnitCell.getMatrixAndUnitCell(null, null, trm, m);
+    return m;
+  }
+
 
 
   private Object findGroupByOperations() {

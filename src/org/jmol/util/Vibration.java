@@ -2,6 +2,9 @@ package org.jmol.util;
 
 import java.util.Map;
 
+import org.jmol.modelset.Atom;
+
+import javajs.util.M3d;
 import javajs.util.P3d;
 import javajs.util.T3d;
 import javajs.util.V3d;
@@ -132,6 +135,27 @@ public class Vibration extends V3d {
       p.setT(ptNew);
     }      
     return trace;
+  }
+
+  public String getApproxString100() {
+    return Math.round(x * 100) + "," + Math.round(y * 100) + "," + Math.round(z * 100);
+  }
+
+  public void rotateSpin(M3d matInv, M3d rot, M3d dRot, Atom a) {
+    rot(matInv, rot, dRot, this);
+    if (isFrom000) {
+      rot(matInv, rot, dRot, a);
+    }
+
+  }
+
+  private static void rot(M3d matInv, M3d rot, M3d dRot, T3d t) {
+    if (matInv == null) {
+      dRot.rotate(t);
+    } else {
+      matInv.rotate(t);
+      rot.rotate(t);
+    }
   }
 
 }

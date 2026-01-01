@@ -26,6 +26,7 @@
 package org.jmol.renderspecial;
 
 
+import javajs.util.BS;
 import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.V3d;
@@ -36,6 +37,7 @@ import org.jmol.render.ShapeRenderer;
 import org.jmol.script.T;
 import org.jmol.shape.Shape;
 import org.jmol.shapespecial.Vectors;
+import org.jmol.util.C;
 import org.jmol.util.GData;
 import org.jmol.util.Point3fi;
 import org.jmol.util.Vibration;
@@ -61,7 +63,6 @@ public class VectorsRenderer extends ShapeRenderer {
   private boolean vectorSymmetry;
   private double headScale;
   private boolean drawShaft;
-  private Vibration vibTemp;
   private boolean vectorsCentered;
   private boolean standardVector = true;
   private boolean vibrationOn;
@@ -70,6 +71,8 @@ public class VectorsRenderer extends ShapeRenderer {
   private int vectorTrail;
   private P3d ptTemp4;
   private P3d ptTemp2;
+  private boolean displayVectorHalo;
+  private boolean isDisplayHaloPass1;
 
 
   @Override
@@ -81,10 +84,15 @@ public class VectorsRenderer extends ShapeRenderer {
     if (mads == null)
       return false;
     short[] colixes = vectors.colixes;
-    boolean needTranslucent = false;
     vectorScale = vwr.getDouble(T.vectorscale);
     vectorTrail = vwr.getInt(T.vectortrail);
     Atom[] atoms = ms.at;    
+    displayVectorHalo = (vwr.getSelectionHalosEnabled());
+    BS bsSelected = (displayVectorHalo ? vwr.bsA() : null); 
+    boolean needTranslucent = displayVectorHalo;
+    isDisplayHaloPass1 = displayVectorHalo & !vwr.gdata.isPass2;
+    displayVectorHalo &= vwr.gdata.isPass2;
+    colix = (displayVectorHalo ? C.getColixTranslucent3(C.GOLD, true, 0.5d) : -1);
     if (vectorScale < 0) {
         double maxScale = 0;
         for (int i = ms.ac; --i >= 0;) {
@@ -108,6 +116,7 @@ public class VectorsRenderer extends ShapeRenderer {
     vibrationOn = vwr.tm.vibrationOn;
     headScale = arrowHeadOffset;
     boolean haveModulations = false;
+    boolean isSelected = false;
     for (int i = ms.ac; --i >= 0;) {
       Atom atom = atoms[i];
       if (!isVisibleForMe(atom))
@@ -125,24 +134,26 @@ public class VectorsRenderer extends ShapeRenderer {
       // displacement modulation
       // modulated magnetic spin
       // magnetic spin and displacement modulation
-      // modulated magnetic spin and displacement modulation
-      if (!transform(mads[i], atom, vib, mod))
+      // modulated magnetic spin and displacement modulation      
+      isSelected = (bsSelected != null && bsSelected.get(i));
+      if (!transform(mads[i], atom, vib, mod, isSelected))
         continue;
-      if (!g3d.setC(Shape.getColix(colixes, i, atom))) {
+      if (!g3d.setC(colix == -1 || !isSelected ? Shape.getColix(colixes, i, atom) : colix)) {
         needTranslucent = true;
         continue;
       }
       renderVector(atom, vib);
       if (vectorSymmetry) {
+        // meaning <==>
         vectorScale = -vectorScale;
         headScale = -headScale;
-        transform(mads[i], atom, vib, null);
+        transform(mads[i], atom, vib, null, false);
         renderVector(atom, vib);
         vectorScale = -vectorScale;
         headScale = -headScale;
       }
     }
-    if (haveModulations)
+    if (haveModulations) {
       for (int i = ms.ac; --i >= 0;) {
         Atom atom = atoms[i];
         if (!isVisibleForMe(atom))
@@ -156,28 +167,29 @@ public class VectorsRenderer extends ShapeRenderer {
         }
         // now we focus on modulations 
         // this may involve a modulated atom or a spin modulation
-        if (!transform(mads[i], atom, null, mod))
+        if (!transform(mads[i], atom, null, mod, isSelected))
           continue;
         renderVector(atom, null);
       }
-
+    }
     return needTranslucent;
   }
 
   private boolean transform(short mad, Atom atom, Vibration vib,
-                            JmolModulationSet mod2) {
+                            JmolModulationSet mod2, boolean isSelected) {
     boolean isMod = (vib == null || vib.modDim >= 0);
     boolean isSpin = (!isMod && vib.modDim == Vibration.TYPE_SPIN);
     if (vib == null)
       vib = (Vibration) mod2;
-    drawCap = true;
+    boolean isHighlight = isSelected && displayVectorHalo;
     if (!isMod) {
       double len = vib.length();
       // to have the vectors move when vibration is turned on
       if (Math.abs(len * vectorScale) < 0.01)
         return false;
       standardVector = true;
-      drawShaft = (0.1 + Math.abs(headScale / len) < Math.abs(vectorScale));
+      drawShaft = !isHighlight
+          && (0.1d + Math.abs(headScale / len) < Math.abs(vectorScale));
       headOffsetVector.setT(vib.isFrom000 ? atom : vib);
       headOffsetVector.scale(headScale / len);
     }
@@ -204,58 +216,61 @@ public class VectorsRenderer extends ShapeRenderer {
       drawCap = (len + arrowHeadOffset > 0.001f);
       drawShaft = (len > 0.01f);
       headOffsetVector.scale(headScale / headOffsetVector.length());
-    } else if (vectorsCentered || isSpin) {
-      standardVector = false;
-      //     Vibration v;
-      //     if (mod2 == null || !mod2.isEnabled()) {
-      //       v = vib; 
-      //      } else {
-      //        v = vibTemp;
-      //        vibTemp.set(0,  0,  0);
-      //        v.setTempPoint(vibTemp, null, 1, vwr.g.modulationScale);
-      //        vwr.tm.getVibrationPoint(vib, v, Double.NaN);
-      //      }
-      pointVectorEnd.scaleAdd2(0.5d * vectorScale, vib, ptTemp);
-      if (vectorSymmetry) {
-        pointVectorStart.setP(ptTemp);
+    } else {
+      drawCap = !isSelected || !isDisplayHaloPass1;
+      if (vectorsCentered || isSpin) {
+        standardVector = false;
+        //     Vibration v;
+        //     if (mod2 == null || !mod2.isEnabled()) {
+        //       v = vib; 
+        //      } else {
+        //        v = vibTemp;
+        //        vibTemp.set(0,  0,  0);
+        //        v.setTempPoint(vibTemp, null, 1, vwr.g.modulationScale);
+        //        vwr.tm.getVibrationPoint(vib, v, Double.NaN);
+        //      }
+        pointVectorEnd.scaleAdd2(0.5d * vectorScale, vib, ptTemp);
+        if (vectorSymmetry) {
+          pointVectorStart.setP(ptTemp);
+        } else {
+          pointVectorStart.scaleAdd2(-0.5d * vectorScale, vib, ptTemp);
+        }
       } else {
-        pointVectorStart.scaleAdd2(-0.5d * vectorScale, vib, ptTemp);
-      }
-    } else {      
-      if (vib.isFrom000){
-        pointVectorStart.set(0, 0, 0);
-        tm.transformPtScrT3(pointVectorStart, screenVectorStart);
-        pointVectorEnd.setP(atom);
-      } else {
-        pointVectorEnd.scaleAdd2(vectorScale, vib, ptTemp);
-      }
-      pointArrowHead.add2(pointVectorEnd, headOffsetVector);
-      if (vibrationOn) {
-        P3i screen = tm.transformPtVib(pointVectorEnd, vib);
-        screenVectorEnd.set(screen.x, screen.y, screen.z);
-        screen = tm.transformPtVib(pointArrowHead, vib);
-        screenArrowHead.set(screen.x, screen.y, screen.z);
-      } else {
-        tm.transformPtScrT3(pointVectorEnd, screenVectorEnd);
-        tm.transformPtScrT3(pointArrowHead, screenArrowHead);
+        if (vib.isFrom000) {
+          pointVectorStart.set(0, 0, 0);
+          tm.transformPtScrT3(pointVectorStart, screenVectorStart);
+          pointVectorEnd.setP(atom);
+        } else {
+          pointVectorEnd.scaleAdd2(vectorScale, vib, ptTemp);
+        }
+        pointArrowHead.add2(pointVectorEnd, headOffsetVector);
+        if (vibrationOn) {
+          P3i screen = tm.transformPtVib(pointVectorEnd, vib);
+          screenVectorEnd.set(screen.x, screen.y, screen.z);
+          screen = tm.transformPtVib(pointArrowHead, vib);
+          screenArrowHead.set(screen.x, screen.y, screen.z);
+        } else {
+          tm.transformPtScrT3(pointVectorEnd, screenVectorEnd);
+          tm.transformPtScrT3(pointArrowHead, screenArrowHead);
+        }
       }
     }
 
     if (!standardVector) {
       tm.transformPtScrT3(pointVectorEnd, screenVectorEnd);
       tm.transformPtScrT3(pointVectorStart, screenVectorStart);
-      if (drawCap)
+      if (drawCap || isDisplayHaloPass1)
         pointArrowHead.add2(pointVectorEnd, headOffsetVector);
       else
         pointArrowHead.setT(pointVectorEnd);
       tm.transformPtScrT3(pointArrowHead, screenArrowHead);
     }
-    diameter = (int) (mad < 0 ? -mad : mad < 1 ? 1 : vwr.tm.scaleToScreen(
-        (int) screenVectorEnd.z, mad));
+    diameter = (int) (mad < 0 ? -mad
+        : mad < 1 ? 1 : vwr.tm.scaleToScreen((int) screenVectorEnd.z, mad));
     headWidthPixels = diameter << 1;
     if (headWidthPixels < diameter + 2)
       headWidthPixels = diameter + 2;
-    
+
     return true;
   }
   

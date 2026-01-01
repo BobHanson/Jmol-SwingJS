@@ -104,12 +104,7 @@ public class Model {
   public Map<String, Object> auxiliaryInfo;
   public Properties properties;
   public SymmetryInterface biosymmetry;
-  Map<String, Integer> dataFrames;
   P3d translation;
-
-  int dataSourceFrame = -1;
-
-
   public String loadState = "";
   public SB loadScript = new SB();
 
@@ -148,8 +143,12 @@ public class Model {
   public int selectedTrajectory = -1;
 
   Map<String, Object> jmolData; // from a PDB remark "Jmol PDB-encoded data"
+
   String jmolFrameType;
-  int jmolDataOriginatingModel;
+
+  Map<String, Integer> dataFrames;
+
+  int dataSourceFrame = -1;
 
   public String pdbID;
 
@@ -166,10 +165,10 @@ public class Model {
       auxiliaryInfo = new Hashtable<String, Object>();
     }
     this.auxiliaryInfo = auxiliaryInfo;
-    Integer bc = ((Integer) auxiliaryInfo.get("biosymmetryCount"));
+    Integer bc = ((Integer) auxiliaryInfo.get(JC.INFO_BIO_SYMMETRY_COUNT));
     if (bc != null) {
       biosymmetryCount = bc.intValue();
-      biosymmetry = (SymmetryInterface) auxiliaryInfo.get("biosymmetry");
+      biosymmetry = (SymmetryInterface) auxiliaryInfo.get(JC.INFO_BIO_SYMMETRY);
     }
     String fname = (String) auxiliaryInfo.get("fileName");
     if (fname != null)
@@ -182,7 +181,6 @@ public class Model {
       String jmolDataHeader = (String) jmolData.get(JC.INFO_JMOL_DATA_HEADER);
       this.jmolData = jmolData;
       isJmolDataFrame = true;
-      jmolDataOriginatingModel = ((Integer) jmolData.get(JC.INFO_JMOL_DATA_ORIGINATING_MODEL)).intValue();
       auxiliaryInfo.put("jmolData", jmolData);
       auxiliaryInfo.put("title", jmolDataHeader);
       jmolFrameType = (jmolDataHeader.indexOf("ramachandran") >= 0 ? "ramachandran"

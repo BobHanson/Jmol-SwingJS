@@ -275,8 +275,8 @@ public class MMCifReader extends CifReader {
         ignoreFileSpaceGroupName = true;
         sgName = spaceGroup;
         fractionalizeCoordinates(true);
-        asc.setCurrentModelInfo("biosymmetry", null);
-        asc.setCurrentModelInfo("biosymmetryCount", null);
+        asc.setCurrentModelInfo(JC.INFO_BIO_SYMMETRY, null);
+        asc.setCurrentModelInfo(JC.INFO_BIO_SYMMETRY_COUNT, null);
         checkNearAtoms = false;
         if (byChain)
           return true;

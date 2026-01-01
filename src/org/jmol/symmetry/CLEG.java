@@ -46,21 +46,21 @@ import javajs.util.T3d;
  * org.jmol.modelkit.Modelkit to process CLEG strings.
  * 
  * This code access multiple methods in Jmol, so it is not independently
- * implemented outside that context. But it enca  psulates the essentals of 
+ * implemented outside that context. But it enca psulates the essentals of
  * 
  */
 final public class CLEG {
 
   /**
-   * allows 300, 400, 500, 600 instead of p/ l/ r/ f/
-   * could be turned on; this is for Jmol testing
+   * allows 300, 400, 500, 600 instead of p/ l/ r/ f/ could be turned on; this
+   * is for Jmol testing
    * 
    */
   public static boolean allow300 = false;
 
   public static final String HEX_TO_RHOMB = "2/3a+1/3b+1/3c,-1/3a+1/3b+1/3c,-1/3a-2/3b+1/3c";
   public static final String RHOMB_TO_HEX = "a-b,b-c,a+b+c";
-  
+
   /**
    * running data items for assignSpaceGroup iteration
    */
@@ -140,7 +140,7 @@ final public class CLEG {
       if (s.startsWith("ITA/"))
         s = s.substring(4);
       else // 133.1
-        s = node.myIta + ":" + node.myTrm;
+        s = (node.myIta == null ? "." : node.myIta) + ":" + node.myTrm;
       setToken(index, s);
       if (node.calculated != null && index > 0)
         setToken(index - 1, node.calculated);
@@ -160,7 +160,7 @@ final public class CLEG {
 
     public void setNodeTransform(ClegNode node) {
       node.myTrm = abcFor(trMat);
-      node.setITAName();
+      node.setITAName(node.name);
     }
 
     public void addTransform(int index, String transform) {
@@ -207,69 +207,69 @@ final public class CLEG {
 
   }
 
-    public static class ClegNode {
-  
-      public final static String TYPE_REFERENCE = "ref";
-      public final static String CALC_SUB = "sub";
-      public final static String CALC_SUBP = "sub(";
-      public final static String CALC_SUPER = "super";
-      public final static String CALC_SUPERP = "super(";
-      public final static String CALC_SET = "set";
+  public static class ClegNode {
 
-      String name;
-      /**
-       * the number 1 to 230
-       */
-      String myIta;
-      
-      /**
-       * a Transformation(P,p) expression
-       */
-      String myTrm;
+    public final static String TYPE_REFERENCE = "ref";
+    public final static String CALC_SUB = "sub";
+    public final static String CALC_SUBP = "sub(";
+    public final static String CALC_SUPER = "super";
+    public final static String CALC_SUPERP = "super(";
+    public final static String CALC_SET = "set";
 
-      /**
-       * 0-based index of this node in a CLEG expression A > tt > B > tt >> C ...
-       */
-      int index;
-      
-      /**
-       * "sub" or "super" for Jmol >sub>  >super>
-       */
-      private String calcNext;
-      private int calcI1;
-      private int calcI2;
-      private int calcDepthMin;
-      private int calcDepthMax;
-      private int calcIndexMin;
-      private int calcIndexMax;
-      
-      String calculated; // transform car
-      boolean disabled;
-      //private boolean applySetting = true;
-      /**
-       * Cleg ends with >, implying we want a calculation of the final transform
-       * and use that to assign the final space group setting
-       * 
-       */
-      private boolean isThisModelCalc;
-  
-      private String hallSymbol;
-  
-      private int specialType = SpaceGroup.TYPE_SPACE;
-      
-      String specialPrefix = "";
-      
-      public ClegNode(ClegData data, int index, String name) {
-        if (name == null)
-          return;
-        this.index = index;
-        // sets this.name
-        init(data, name);
-      }
-      
-      public void disable() {
-        disabled = true;
-      }
+    String name;
+    /**
+     * the number 1 to 230
+     */
+    String myIta;
+
+    /**
+     * a Transformation(P,p) expression
+     */
+    String myTrm;
+
+    /**
+     * 0-based index of this node in a CLEG expression A > tt > B > tt >> C ...
+     */
+    int index;
+
+    /**
+     * "sub" or "super" for Jmol >sub> >super>
+     */
+    private String calcNext;
+    private int calcI1;
+    private int calcI2;
+    private int calcDepthMin;
+    private int calcDepthMax;
+    private int calcIndexMin;
+    private int calcIndexMax;
+
+    String calculated; // transform car
+    boolean disabled;
+    //private boolean applySetting = true;
+    /**
+     * Cleg ends with >, implying we want a calculation of the final transform
+     * and use that to assign the final space group setting
+     * 
+     */
+    private boolean isThisModelCalc;
+
+    private String hallSymbol;
+
+    private int specialType = SpaceGroup.TYPE_SPACE;
+
+    String specialPrefix = "";
+
+    public ClegNode(ClegData data, int index, String name) {
+      if (name == null)
+        return;
+      this.index = index;
+      // sets this.name
+      init(data, name);
+    }
+
+    public void disable() {
+      disabled = true;
+    }
 
     /**
      * Set specialType and specialPrefix and normalize name
@@ -339,11 +339,11 @@ final public class CLEG {
           hallSymbol = hallSymbol.substring(0, pt).trim();
           hallTrm = PT.rep(hallTrm, " ", "/12,");
           hallTrm = "a,b,c;" + hallTrm.substring(0, hallTrm.length() - 1);
-        } 
+        }
         pt = name.indexOf(":");
         if (pt > 0) {
           myTrm = name.substring(pt + 1);
-        }   
+        }
         name = "Hall:" + hallSymbol;
       } else if (name.startsWith("HM:")) {
         // not sure this is still useful; ok, leave this this way
@@ -372,7 +372,8 @@ final public class CLEG {
         // unit cell already. This call will build the space group if necessary
         // if it is from Wyckoff 
         myTrm = (name.endsWith(".1") ? "a,b,c"
-            : (String) data.sym.getSpaceGroupInfoObj("itaTransform", specialPrefix + name, false, false));
+            : (String) data.sym.getSpaceGroupInfoObj("itaTransform",
+                specialPrefix + name, false, false));
         if (myTrm == null) {
           data.errString = "Unknown ITA setting: " + specialPrefix + name + "!";
           return;
@@ -382,11 +383,11 @@ final public class CLEG {
       } else {
         // look-up for Hermann-Mauguin name. 
         if (myIta == null)
-          myIta = (String) data.sym.getSpaceGroupInfoObj("itaNumber", specialPrefix + name,
-              false, false);
+          myIta = (String) data.sym.getSpaceGroupInfoObj("itaNumber",
+              specialPrefix + name, false, false);
         if (myTrm == null)
-          myTrm = (String) data.sym.getSpaceGroupInfoObj("itaTransform", specialPrefix + name,
-              false, false);
+          myTrm = (String) data.sym.getSpaceGroupInfoObj("itaTransform",
+              specialPrefix + name, false, false);
 
         if (hallSymbol != null && hallTrm != null) {
           myTrm = hallTrm + (myTrm.equals("a,b,c") ? "" : ">" + myTrm);
@@ -399,13 +400,15 @@ final public class CLEG {
       if (isPrimitive) {
         myTrm = data.addPrimitiveTransform(myIta, myTrm);
       }
-      setITAName();
+      setITAName(name);
     }
-  
-      public String setITAName() {
-        return name = "ITA/" + specialPrefix + myIta + ":" + myTrm;
-      }
-  
+
+    public String setITAName(String name) {
+      return this.name = (".".equals(name) || myIta == null ? "."
+          : "ITA/" + specialPrefix + myIta)
+          + (myTrm == null ? "" : ":" + myTrm);
+    }
+
     public boolean update(ClegData data) {
       if (data.errString != null)
         return false;
@@ -427,11 +430,11 @@ final public class CLEG {
       boolean haveReferenceCell = (data.trLink == null && (myIta != null
           && (myIta.equals(prev.myIta) || prev.calcNext != null)));
 
-//      System.out.println("ClegNode update i=" + index + " n=" + name
-//          + "\n data.trLink=" + data.trLink + "\n " + prev + " " + prev.myIta
-//          + " " + prev.calcNext + " "
-//          //+ applySetting 
-//          + " haveref=" + haveReferenceCell);
+      //      System.out.println("ClegNode update i=" + index + " n=" + name
+      //          + "\n data.trLink=" + data.trLink + "\n " + prev + " " + prev.myIta
+      //          + " " + prev.calcNext + " "
+      //          //+ applySetting 
+      //          + " haveref=" + haveReferenceCell);
 
       if (!haveReferenceCell)
         return true;
@@ -464,19 +467,20 @@ final public class CLEG {
         int ita1 = PT.parseInt(prev.myIta);
         int ita2 = PT.parseInt(myIta);
         boolean unspecifiedSettingChangeOnly = !isCalcFunction
-            && (data.retLst == null && (data.retMap == null || data.asM4) 
-            && isImplicit && ita1 == ita2);
+            && (data.retLst == null && (data.retMap == null || data.asM4)
+                && isImplicit && ita1 == ita2);
         if (!unspecifiedSettingChangeOnly) {
           int flags = (prev.calcIndexMax << 24) | (prev.calcIndexMin << 16)
               | (prev.calcDepthMax << 8) | prev.calcDepthMin;
           trCalc = (String) data.sym.getSubgroupJSON((isSub ? prev.name : name),
-              (isSub ? name : prev.name), prev.calcI1, prev.calcI2, flags, data.retMap, data.retLst);
+              (isSub ? name : prev.name), prev.calcI1, prev.calcI2, flags,
+              data.retMap, data.retLst);
           boolean haveCalc = (trCalc != null);
           if (haveCalc) {
-              if (trCalc.endsWith("!")) {
-                data.errString = trCalc;
-                return false;
-              }
+            if (trCalc.endsWith("!")) {
+              data.errString = trCalc;
+              return false;
+            }
             if (!isSub)
               trCalc = "!" + trCalc;
           }
@@ -487,31 +491,35 @@ final public class CLEG {
             data.errString = calc + "!";
             return false;
           }
-//          System.out.println("CLEG sub := " + calc);
+          //          System.out.println("CLEG sub := " + calc);
           data.addSGTransform(trCalc, CALC_SUB);
         }
       }
       if (!disabled)
         data.addSGTransform(myTrm, "myTrm");
       calculated = data.calculate(trm0);
-      System.out.println("calculated is " + calculated + (data.retMap == null ? "" : " for the path " + data.retMap.get("indexPath")));
+      System.out
+          .println("calculated is " + calculated + (data.retMap == null ? ""
+              : " for the path " + data.retMap.get("indexPath")));
       return true;
     }
-  
-      public String getName() {
-        return name;
-      }
 
-      public String getCleanITAName() {
-        String s = (name.startsWith("ITA/") ? name.substring(4) : name);
-        if (specialType != SpaceGroup.TYPE_SPACE && !s.startsWith(specialPrefix))
-          s = specialPrefix + s;
-        return s;
-      }
-  
-      public boolean isDefaultSetting() {
-        return (myTrm == null || cleanCleg000(myTrm).equals("a,b,c"));
-      }
+    public String getName() {
+      return name;
+    }
+
+    public String getCleanITAName() {
+      if (name == null)
+        return (name = ".");
+      String s = (name.startsWith("ITA/") ? name.substring(4) : name);
+      if (specialType != SpaceGroup.TYPE_SPACE && !s.startsWith(specialPrefix))
+        s = specialPrefix + s;
+      return s;
+    }
+
+    public boolean isDefaultSetting() {
+      return (myTrm == null || cleanCleg000(myTrm).equals("a,b,c"));
+    }
 
     /**
      * sup(i0, i1, indexMax, depthMax)
@@ -527,7 +535,7 @@ final public class CLEG {
         if (data.retLst != null || data.retMap != null) {
           pt = 0;
           break;
-        }        
+        }
         //$FALL-THROUGH$
       case CALC_SUPER:
         calcI1 = 1;
@@ -560,8 +568,8 @@ final public class CLEG {
         } else {
           if (token.indexOf(")") != token.length() - 1)
             break;
-          String[] params = PT.split(PT.trim(token.toLowerCase().substring(-pt + 1), ")"),
-              ",");
+          String[] params = PT
+              .split(PT.trim(token.toLowerCase().substring(-pt + 1), ")"), ",");
           try {
             if (token.length() == 5 || token.indexOf('=') >= 0) {
               calcIndexMin = 2;
@@ -571,7 +579,8 @@ final public class CLEG {
               token = token.substring(0, -pt);
               for (int i = params.length; --i >= 0;) {
                 String p = params[i];
-                int val = Math.min(0xFF, Integer.parseInt(p.substring(p.indexOf('=') + 1)));
+                int val = Math.min(0xFF,
+                    Integer.parseInt(p.substring(p.indexOf('=') + 1)));
                 if (p.startsWith("indexmax="))
                   calcIndexMax = Math.max(2, val);
                 else if (p.startsWith("indexmin="))
@@ -610,168 +619,13 @@ final public class CLEG {
       calcNext = token;
       return true;
     }
-  
-      @Override
-      public String toString() {
-        return "[ClegNode #" + index + " " + name + "   " + myIta + ":" + myTrm + (disabled ? " disabled" : "") + "]";
-      }
-  
+
+    @Override
+    public String toString() {
+      return "[ClegNode #" + index + " " + name + "   " + myIta + ":" + myTrm
+          + (disabled ? " disabled" : "") + "]";
     }
 
-  public static void standardizeTokens(String[] tokens, boolean isEnd) {
-        for (int i = tokens.length; --i >= 0;) {
-          String t = tokens[i];
-          if (t.length() == 0) {
-            continue;
-          }
-          t = cleanCleg000(t);
-          if (t.endsWith(":h")) {
-            if (!t.startsWith("R"))
-            t = t.substring(0, t.length() - 2);
-          } else if (!isEnd && t.endsWith(":" + HEX_TO_RHOMB)) {
-  //don't do this          t = t.substring(0, t.lastIndexOf(":")) + ":r";
-          } else if (t.endsWith(":r")) {
-            if (!t.startsWith("R"))
-            t = t.substring(0, t.length() - 1)
-                + HEX_TO_RHOMB;
-          } else if (t.equals("r")) {
-            t = HEX_TO_RHOMB;
-          } else if (t.equals("h")) {
-            t = RHOMB_TO_HEX;
-          }
-  //        if (isEnd)
-  //          t = SpaceGroup.canonicalizeCleg(t);
-          tokens[i] = t;
-        }
-        System.out.println("MK StandardizeTokens " + Arrays.toString(tokens));
-      }
-
-  public static String cleanCleg000(String t) {
-    return (t.endsWith(";0,0,0") ? t.substring(0, t.length() - 6) : t);
-  }
-
-  /**
-   * Determine if the string is of the general form
-   * [<type>/]<n>:...,.... but not checking for details of the it number or the setting
-   * allows optional <type>/ prefix where <type> is one of 'p','l','r','f'
-   * @param name
-   * @return position of ":" or -1;
-   */
-  public static int isProbableClegSetting(String name) {
-    int p = name.indexOf(":");
-    int type = SpaceGroup.getExplicitSpecialGroupType(name);
-    return (type >= 0 && p > 0 
-        && SpaceGroup.getITNo(type == SpaceGroup.TYPE_SPACE ? name : name.substring(2), p) > 0 
-        && name.indexOf(",") > p ? p : 0);
-  }
-
-  /**
-   * Test nodes and transforms for valid syntax. 133:b1 is OK, perhaps, at
-   * this point, but 142:0,0,0 is not and P2/m:a,b,c is not
-   * and IT numbers must be in the appropriate range
-   * 
-   * @param tokens
-   * @param sym
-   * @param allow300 allow CLEG extension to 301-317 for plane, 401-480 for layer, 501-575 for rod, 601-607 for frieze
-   * @return true for OK syntax
-   */
-  public static boolean checkFullSyntax(String[] tokens,
-                                       SymmetryInterface sym, boolean allow300) {
-    for (int i = 0; i < tokens.length; i++) {
-      String s = tokens[i].trim();
-      if (s == null || s.length() == 0 || s.startsWith("sub") || s.startsWith("super"))
-        continue;
-      int groupType = SpaceGroup.getExplicitSpecialGroupType(s);
-      if (groupType > SpaceGroup.TYPE_SPACE)
-        s = s.substring(2);
-      int ptColon = s.indexOf(":");
-      int ptComma = s.indexOf(",", ptColon + 1);
-      int ptDot = s.indexOf(".");
-      boolean isClegSetting = (ptColon > 0 && ptComma > ptColon);
-      int ptHall = s.indexOf("]");
-      boolean isHall = (ptHall > 0 && s.charAt(0) == '['
-          && (ptColon < 0 || ptColon == ptHall + 1));
-      double itno = (isHall ? 1
-          : PT.parseDoubleStrict(ptColon > 0 ? s.substring(0, ptColon) : s));
-      if (Double.isNaN(itno)) {
-        // a transform or an H-M name without a cleg setting is ok, 
-        // but anything with a dot or a colon and an expression containing "," should not be here
-        if (ptDot > 0 || isClegSetting)
-          return false;
-      } else if (!SpaceGroup.isInRange(itno, groupType, !isClegSetting, allow300 && groupType == SpaceGroup.TYPE_SPACE)) {
-        return false;
-      }
-      if (ptComma < 0)
-        continue;
-      String transform = (ptColon > 0 ? s.substring(ptColon + 1) : s);
-      if (((M4d) sym.convertTransform(transform, null)).determinant3() == 0)
-        return false;
-    }
-    return true;
-  }
-
-  public static String getCalcType(String token) {
-    return (token.length() == 0 || token.equals(ClegNode.CALC_SUB) ? ClegNode.CALC_SUB
-            : token.charAt(0) != 's' ? null
-            : token.startsWith(ClegNode.CALC_SUBP) ? ClegNode.CALC_SUBP
-            : token.equals(ClegNode.CALC_SUPER) ? ClegNode.CALC_SUPER
-            : token.startsWith(ClegNode.CALC_SUPERP) ? ClegNode.CALC_SUPERP
-            : null);
-  }
-
-  public static boolean isTransformOnly(String token) {
-    return (isTransform(token, false) && token.indexOf(":") < 0);
-  }
-
-  public static boolean isTransform(String token, boolean checkColonRH) {
-    return (token.length() == 0 || token.indexOf(',') > 0
-        || "!r!h".indexOf(token) >= 0)
-        || checkColonRH && (token.endsWith(":r")|| token.endsWith(":h"));
-  }
-  
-  /**
-   * The main entry point for calculation of an overall transfrom. Allows a
-   * single space group to mean "current going to..."
-   * 
-   * @param vwr
-   * @param cleg
-   * @param retLstOrMap
-   *        a Map or Lst that are to return solutions
-   * @return matrix or null
-   */
-  @SuppressWarnings("unchecked")
-  M4d getMatrixTransform(Viewer vwr, String cleg, Object retLstOrMap) {
-    if (cleg.length() == 0)
-      cleg = ".";
-    
-    if (cleg.indexOf(">") < 0 && !cleg.equals("."))
-      cleg = ">>" + cleg;
-    String[] tokens = PT.split(cleg, ">");
-    if (tokens[0].length() == 0)
-      tokens[0] = ClegNode.TYPE_REFERENCE;
-    ClegData data = new ClegData(vwr.getSymTemp(), tokens);
-    Map<String, Object> retMap = (retLstOrMap instanceof Map<?, ?>
-        ? (Map<String, Object>) retLstOrMap
-        : null);
-    Lst<Object> retLst = (retMap == null && retLstOrMap instanceof Lst<?>
-        ? (Lst<Object>) retLstOrMap
-        : null);
-    data.setReturnMap(retMap);
-    data.setReturnLst(retLst);
-    String err = assignSpaceGroup(data, new AssignedSGParams(vwr, cleg.equals(".")));
-    if (err.indexOf("!") > 0) { 
-      System.err.println(err);
-      if (retMap != null)
-        retMap.put("error", err);
-      return null;
-    }
-    if (retLst == null && retMap == null) {
-      System.out.println("CLEG transform: " + PT.join(tokens, '>', 0));
-      cleg = data.abcFor(data.trMat);
-      System.out.println("CLEG transform: " + tokens[0] + ">" + cleg + ">"
-          + tokens[tokens.length - 1]);
-    }
-    return data.trMat;
   }
 
   private static class AssignedSGParams {
@@ -821,26 +675,26 @@ final public class CLEG {
     // for instantiation only
   }
 
-
   /**
    * 
    * @param vwr
    * @param bs
-   * @param cleg a CLEG expression or "."
+   * @param cleg
+   *        a CLEG expression or "."
    * @param paramsOrUC
    * @param sb
    * @return log message, which indicates an error if ending with "!"
    */
-  String transformSpaceGroup(Viewer vwr, BS bs, String cleg,
-                                           Object paramsOrUC, SB sb) {
+  String transformSpaceGroup(Viewer vwr, BS bs, String cleg, Object paramsOrUC,
+                             SB sb) {
     SymmetryInterface sym0 = vwr.getCurrentUnitCell();
     SymmetryInterface sym = vwr.getOperativeSymmetry();
     if (sym0 != null && sym != sym0)
       sym.getUnitCell(sym0.getV0abc(null, null), false, "modelkit");
-    // change << to >super> 
     if (cleg == null) {
       return "!no CLEG id for this space group";
     }
+    // change << to >super> 
     if (cleg.indexOf("<") >= 0) {
       cleg = PT.rep(cleg, "<<", ">super>").replace('<', '>');
     }
@@ -848,8 +702,8 @@ final public class CLEG {
     if (cleg.length() == 0 || cleg.endsWith(">"))
       cleg += ".";
     ClegData data = new ClegData(vwr.getSymTemp(), PT.split(cleg, ">"));
-    AssignedSGParams asgParams = new AssignedSGParams(vwr, sym, bs, paramsOrUC, 0,
-        false, sb, cleg.equals("."));
+    AssignedSGParams asgParams = new AssignedSGParams(vwr, sym, bs, paramsOrUC,
+        0, false, sb, cleg.equals("."));
     String ret = assignSpaceGroup(data, asgParams);
     if (ret.endsWith("!"))
       return ret;
@@ -1081,8 +935,8 @@ final public class CLEG {
     boolean isFinal = (index == tokens.length - 1);
     String token = tokens[index].trim();
     boolean isDot = token.equals(".");
-    boolean nextTransformExplicit = (isFinal ? isDot 
-        : isTransformOnly(tokens[index + 1])
+    boolean nextTransformExplicit = (isFinal ? isDot
+        : isTransformOnly(tokens[index + 1]) 
         && tokens[index + 1].length() > 0);
     if (index == 0) {
       if (token.length() == 0 || isDot) {
@@ -1174,7 +1028,7 @@ final public class CLEG {
           asgParams.mkSym00 = vwr.getOperativeSymmetry();
         }
         if (asgParams.mkSym00 == null)
-          return  "CLEG spacegroup initialization error!";
+          return "CLEG spacegroup initialization error!";
         zapped = false;
         restarted = true;
       }
@@ -1218,7 +1072,8 @@ final public class CLEG {
       }
       if (!asgParams.mkIsAssign) {
         data.setSymmetry(sym);
-        data.setPrevNode(new ClegNode(data, -1, ita0 == null ? null : ita0 + ":" + trm0));
+        data.setPrevNode(
+            new ClegNode(data, -1, ita0 == null ? null : ita0 + ":" + trm0));
         if (asgParams.mkIgnoreAllSettings)
           data.getPrevNode().disable();
         if (!data.getPrevNode().update(data))
@@ -1228,19 +1083,21 @@ final public class CLEG {
     if (isCalc) {
       if (!data.getPrevNode().setCalcNext(data, calcNext)) {
         return data.errString;
-      }      
+      }
     }
     if (isTransformOnly) {
       if (isFinal) {
         isUnknown = true;// now what?
-        return "CLEG pathway is incomplete!";
+        // just describe as a transform of the original space group
+        //return "CLEG pathway is incomplete!";
       }
       // not a setting, not a node; could be >>
       if (token.length() > 0)
         data.addTransform(index, token);
       // ITERATE  ...
       ++asgParams.mkIndex;
-      return assignSpaceGroup(data, asgParams);
+      if (!isUnknown)
+        return assignSpaceGroup(data, asgParams);
     }
 
     // thus ends consideration of chain of transforms
@@ -1362,12 +1219,13 @@ final public class CLEG {
       }
 
       if (oabc == null || zapped)
-         oabc = (P3d[]) sgInfo.get("unitcell");
+        oabc = (P3d[]) sgInfo.get("unitcell");
       token = (String) sgInfo.get("name");
       String jmolId = (String) sgInfo.get("jmolId");
       BS basis = (BS) sgInfo.get("basis");
       SpaceGroup sg = (SpaceGroup) sgInfo.remove("sg");
       sym.getUnitCell(oabc, false, null);
+
       sym.setSpaceGroupTo(sg == null ? jmolId : sg);
       sym.setSpaceGroupName(token);
       if (asgParams.mkCalcOnly) {
@@ -1391,6 +1249,7 @@ final public class CLEG {
       // don't change the first line of this message -- it will be used in packing.
 
       String finalTransform = data.abcFor(data.trMat);
+      tokens[index] = sg.getClegId();
       if (!initializing) {
         standardizeTokens(tokens, true);
         String msg = PT.join(tokens, '>', 0)
@@ -1406,5 +1265,172 @@ final public class CLEG {
     }
   }
 
-  
+  public static void standardizeTokens(String[] tokens, boolean isEnd) {
+    for (int i = tokens.length; --i >= 0;) {
+      String t = tokens[i];
+      if (t.length() == 0) {
+        continue;
+      }
+      t = cleanCleg000(t);
+      if (t.endsWith(":h")) {
+        if (!t.startsWith("R"))
+          t = t.substring(0, t.length() - 2);
+      } else if (!isEnd && t.endsWith(":" + HEX_TO_RHOMB)) {
+        //don't do this          t = t.substring(0, t.lastIndexOf(":")) + ":r";
+      } else if (t.endsWith(":r")) {
+        if (!t.startsWith("R"))
+          t = t.substring(0, t.length() - 1) + HEX_TO_RHOMB;
+      } else if (t.equals("r")) {
+        t = HEX_TO_RHOMB;
+      } else if (t.equals("h")) {
+        t = RHOMB_TO_HEX;
+      }
+      //        if (isEnd)
+      //          t = SpaceGroup.canonicalizeCleg(t);
+      tokens[i] = t;
+    }
+    System.out.println("MK StandardizeTokens " + Arrays.toString(tokens));
+  }
+
+  public static String cleanCleg000(String t) {
+    return (t.endsWith(";0,0,0") ? t.substring(0, t.length() - 6) : t);
+  }
+
+  /**
+   * Determine if the string is of the general form [<type>/]<n>:...,.... but
+   * not checking for details of the it number or the setting allows optional
+   * <type>/ prefix where <type> is one of 'p','l','r','f'
+   * 
+   * @param name
+   * @return position of ":" or -1;
+   */
+  public static int isProbableClegSetting(String name) {
+    int p = name.indexOf(":");
+    int type = SpaceGroup.getExplicitSpecialGroupType(name);
+    return (type >= 0 && p > 0
+        && SpaceGroup.getITNo(
+            type == SpaceGroup.TYPE_SPACE ? name : name.substring(2), p) > 0
+        && name.indexOf(",") > p ? p : 0);
+  }
+
+  /**
+   * Test nodes and transforms for valid syntax. 133:b1 is OK, perhaps, at this
+   * point, but 142:0,0,0 is not and P2/m:a,b,c is not and IT numbers must be in
+   * the appropriate range
+   * 
+   * @param tokens
+   * @param sym
+   * @param allow300
+   *        allow CLEG extension to 301-317 for plane, 401-480 for layer,
+   *        501-575 for rod, 601-607 for frieze
+   * @return true for OK syntax
+   */
+  public static boolean checkFullSyntax(String[] tokens, SymmetryInterface sym,
+                                        boolean allow300) {
+    for (int i = 0; i < tokens.length; i++) {
+      String s = tokens[i].trim();
+      if (s == null || s.length() == 0 || s.startsWith("sub")
+          || s.startsWith("super"))
+        continue;
+      int groupType = SpaceGroup.getExplicitSpecialGroupType(s);
+      if (groupType > SpaceGroup.TYPE_SPACE)
+        s = s.substring(2);
+      int ptColon = s.indexOf(":");
+      int ptComma = s.indexOf(",", ptColon + 1);
+      int ptDot = s.indexOf(".");
+      boolean isQuest = (s.indexOf("?:") == 0 || s.indexOf(".:") == 0
+          || s.indexOf("0:") == 0);
+      boolean isClegSetting = (ptColon > 0 && ptComma > ptColon);
+      int ptHall = s.indexOf("]");
+      boolean isHall = (ptHall > 0 && s.charAt(0) == '['
+          && (ptColon < 0 || ptColon == ptHall + 1));
+      double itno = (isQuest ? 0
+          : isHall ? 1
+              : PT.parseDoubleStrict(
+                  ptColon > 0 ? s.substring(0, ptColon) : s));
+      if (Double.isNaN(itno)) {
+        // a transform or an H-M name without a cleg setting is ok, 
+        // but anything with a dot or a colon and an expression containing "," should not be here
+        if (ptDot > 0 || isClegSetting)
+          return false;
+      } else if (!isQuest && !SpaceGroup.isInRange(itno, groupType,
+          !isClegSetting, allow300 && groupType == SpaceGroup.TYPE_SPACE)) {
+        return false;
+      }
+      if (ptComma < 0)
+        continue;
+      String transform = (ptColon > 0 ? s.substring(ptColon + 1) : s);
+      if (((M4d) sym.convertTransform(transform, null)).determinant3() == 0)
+        return false;
+    }
+    return true;
+  }
+
+  public static String getCalcType(String token) {
+    return (token.length() == 0 || token.equals(ClegNode.CALC_SUB)
+        ? ClegNode.CALC_SUB
+        : token.charAt(0) != 's' ? null
+            : token.startsWith(ClegNode.CALC_SUBP) ? ClegNode.CALC_SUBP
+                : token.equals(ClegNode.CALC_SUPER) ? ClegNode.CALC_SUPER
+                    : token.startsWith(ClegNode.CALC_SUPERP)
+                        ? ClegNode.CALC_SUPERP
+                        : null);
+  }
+
+  public static boolean isTransformOnly(String token) {
+    return (isTransform(token, false) && token.indexOf(":") < 0);
+  }
+
+  public static boolean isTransform(String token, boolean checkColonRH) {
+    return (token.length() == 0 || token.indexOf(',') > 0
+        || "!r!h".indexOf(token) >= 0)
+        || checkColonRH && (token.endsWith(":r") || token.endsWith(":h"));
+  }
+
+  /**
+   * The main entry point for calculation of an overall transfrom. Allows a
+   * single space group to mean "current going to..."
+   * 
+   * @param vwr
+   * @param cleg
+   * @param retLstOrMap
+   *        a Map or Lst that are to return solutions
+   * @return matrix or null
+   */
+  @SuppressWarnings("unchecked")
+  M4d getMatrixTransform(Viewer vwr, String cleg, Object retLstOrMap) {
+    if (cleg.length() == 0)
+      cleg = ".";
+
+    if (cleg.indexOf(">") < 0 && !cleg.equals("."))
+      cleg = ">>" + cleg;
+    String[] tokens = PT.split(cleg, ">");
+    if (tokens[0].length() == 0)
+      tokens[0] = ClegNode.TYPE_REFERENCE;
+    ClegData data = new ClegData(vwr.getSymTemp(), tokens);
+    Map<String, Object> retMap = (retLstOrMap instanceof Map<?, ?>
+        ? (Map<String, Object>) retLstOrMap
+        : null);
+    Lst<Object> retLst = (retMap == null && retLstOrMap instanceof Lst<?>
+        ? (Lst<Object>) retLstOrMap
+        : null);
+    data.setReturnMap(retMap);
+    data.setReturnLst(retLst);
+    String err = assignSpaceGroup(data,
+        new AssignedSGParams(vwr, cleg.equals(".")));
+    if (err.indexOf("!") > 0) {
+      System.err.println(err);
+      if (retMap != null)
+        retMap.put("error", err);
+      return null;
+    }
+    if (retLst == null && retMap == null) {
+      System.out.println("CLEG transform: " + PT.join(tokens, '>', 0));
+      cleg = data.abcFor(data.trMat);
+      System.out.println("CLEG transform: " + tokens[0] + ">" + cleg + ">"
+          + tokens[tokens.length - 1]);
+    }
+    return data.trMat;
+  }
+
 }

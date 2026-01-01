@@ -112,6 +112,7 @@ import org.jmol.util.JmolMolecule;
 import org.jmol.util.Logger;
 import org.jmol.util.Node;
 import org.jmol.util.Parser;
+import org.jmol.util.Point3fi;
 import org.jmol.util.Rectangle;
 import org.jmol.util.TempArray;
 import org.jmol.util.Triangulator;
@@ -942,8 +943,8 @@ public class Viewer extends JmolViewer
       imageBuffer = gdata.getScreenImage(isImageWrite);
     } else {
       if (am.splitFrame) {
-        tm.splitFrameCurrentlyRendering = 0;
         setCurrentModelIndex(am.getSplitFrameModelIndex(0));
+        tm.splitFrameCurrentlyRendering = 0;
         setModelVisibility();        
         imageBuffer = getRenderedImage(false, isImageWrite);
       } else {
@@ -970,15 +971,16 @@ public class Viewer extends JmolViewer
         g = null;
       } else if (am.splitFrame) {
         x = 0;
-        drawImage(g, imageBuffer, x, 0, false);
+        drawImage(g, imageBuffer, 0, 0, false);
+        //testWriteImage(imageBuffer);
         setCurrentModelIndex(am.getSplitFrameModelIndex(1));
-        setModelVisibility();
         tm.splitFrameCurrentlyRendering = 1;
+        setModelVisibility();
         imageBuffer = getRenderedImage(isStereo, false);
         // post-rendering settings
         setCurrentModelIndex(am.getSplitFrameModelIndex(0));
+        tm.splitFrameCurrentlyRendering = -1;
         shm.setModelVisibility(am.getSplitFrameModels());
-        tm.splitFrameCurrentlyRendering = 0;
         x = dimScreen.width;
         am.setSplitFrameOffsetX(x);
       } else {
@@ -991,6 +993,17 @@ public class Viewer extends JmolViewer
       drawImage(g, imageBuffer, x, 0, false);
     return (mergeImages ? imageBuffer2 : imageBuffer);
   }
+
+//  private void testWriteImage(Object imageBuffer) {
+//    ImageOutputStream ios;
+//    try {
+//      ios = ImageIO.createImageOutputStream(new File("c:/temp/test/image" + (++test) + ".png"));
+//      ImageIO.write((BufferedImage) imageBuffer, "png", ios);
+//      ios.close();
+//    } catch (IOException e) {
+//      System.out.println(e);
+//    }
+//  }
 
   boolean haveTwoImages() {
       return tm.stereoDoubleFull || tm.stereoDoubleDTI || am.splitFrame;
@@ -1911,8 +1924,8 @@ public class Viewer extends JmolViewer
     tm.setDefaultPerspective();
   }
 
-  void saveModelOrientation() {
-    ms.saveModelOrientation(am.cmi, stm.getOrientation());
+  void saveModelOrientation(int modelIndex) {
+    ms.saveModelOrientation(modelIndex, stm.getOrientation());
   }
 
   void restoreModelOrientation(int modelIndex) {
@@ -1921,7 +1934,7 @@ public class Viewer extends JmolViewer
       o.restore(-1, true);
   }
 
-  void restoreModelRotation(int modelIndex) {
+  void restoreModelRotationOnly(int modelIndex) {
     Orientation o = ms.getModelOrientation(modelIndex);
     if (o != null)
       o.restore(-1, false);
@@ -3822,6 +3835,12 @@ public class Viewer extends JmolViewer
         : (double) symmetry.getUnitCellInfoType(infoType));
   }
 
+  public double getUnitCellInfoStr(String type) {
+    SymmetryInterface symmetry = getCurrentUnitCell();
+    return (symmetry == null ? Double.NaN
+        : symmetry.getUnitCellInfoStr(type));
+  }
+
   /**
    * 
    * convert string abc;offset or M3d or M4d to origin and three vectors -- a,
@@ -4011,7 +4030,7 @@ public class Viewer extends JmolViewer
     return (!g.atomPicking ? -1
         : ms.findNearestAtomIndex(x, y,
             mustBeMovable ? slm.getMotionFixedAtoms() : null,
-            g.minPixelSelRadius));
+            (antialiased ? g.minPixelSelRadius << 1 : g.minPixelSelRadius)));
   }
 
   /**
@@ -4019,7 +4038,6 @@ public class Viewer extends JmolViewer
    * 
    * @param pt
    * @param ignoreOffset
-   *        TODO
    */
   public void toCartesian(T3d pt, boolean ignoreOffset) {
     toCartesianUC(null, pt, ignoreOffset);
@@ -4178,6 +4196,7 @@ public class Viewer extends JmolViewer
 
   public Map<String, Object> readCifData(String fileName, String type) {
     String fname = (fileName == null ? ms.getModelFileName(am.cmi) : fileName);
+    boolean isData = (fname != null && fname.indexOf("#CIF") >= 0);
     String[] keys = null;
     int pt = (fname == null ? -1 : fname.indexOf(";keys="));
     if (pt >= 0) {
@@ -4196,7 +4215,7 @@ public class Viewer extends JmolViewer
         return new Hashtable<String, Object>();
       }
     }
-    String data = (fname == null || fname.length() == 0
+    String data = (isData ? fname : fname == null || fname.length() == 0
         ? getCurrentFileAsString("script")
         : getFileAsString3(fname, false, null));
     if (data == null || data.length() < 2)
@@ -7436,10 +7455,6 @@ public class Viewer extends JmolViewer
     case T.navigationmode:
       setNavigationMode(value);
       break;
-    case T.navigatesurface:
-      // was experimental; abandoned in 13.1.10
-      return;//global.navigateSurface = value;
-    //break;
     case T.hidenavigationpoint:
       g.hideNavigationPoint = value;
       break;
@@ -8370,7 +8385,7 @@ public class Viewer extends JmolViewer
   }
 
   public boolean isJmolDataFrame() {
-    return ms.isJmolDataFrameForModel(am.cmi);
+    return ms.isJmolDataFrame(am.cmi);
   }
 
   public void setFrameTitle(int modelIndex, String title) {
@@ -8600,7 +8615,7 @@ public class Viewer extends JmolViewer
           if (ptNew == null) {
             tm.finalizeTransformParameters();
             double f = (g.antialiasDisplay ? 2 : 1);
-            tm.transformPt3f(ptCenter, ptScreen);
+            tm.transformPt3fSafe(ptCenter, ptScreen);
             SymmetryInterface uc = getOperativeSymmetry();
             if (deltaZ != Integer.MIN_VALUE) {
               if (uc != null)
@@ -11181,7 +11196,9 @@ public class Viewer extends JmolViewer
             : uc.findSpaceGroup(bsAtoms, null, unitCellParams, null,oabc, flags));
       }
     } else {
-      ret = getSymTemp().findSpaceGroup(bsAtoms, xyzList, unitCellParams, origin,
+      SymmetryInterface symTemp = getSymTemp();
+      symTemp.setSpaceGroupTo(sym);
+      ret = symTemp.findSpaceGroup(bsAtoms, xyzList, unitCellParams, origin,
           oabc, flags);
     }
     return (ret == null && (flags & JC.SG_AS_STRING) != 0 ? "" : ret);
@@ -11220,16 +11237,16 @@ public class Viewer extends JmolViewer
     return getModelUndeletedAtomsBitSet(getVisibleFramesBitSet().nextSetBit(0));
   }
 
-  public Lst<P3d> getSymmetryEquivPoints(P3d pt, String flags) {
+  public Lst<Point3fi> getSymmetryEquivPoints(Point3fi pt, String flags) {
     SymmetryInterface uc = getCurrentUnitCell();
-    return (uc == null ? new Lst<P3d>() : uc.getEquivPoints(null, pt, flags));
+    return (uc == null ? new Lst<Point3fi>() : uc.getEquivPoints(pt, flags, 0));
   }
 
-  public Lst<?> getSymmetryEquivPointList(Lst<P3d> pts, String flags) {
+  public Lst<Point3fi> getSymmetryEquivPointList(Lst<Point3fi> pts, String flags) {
     SymmetryInterface uc = getCurrentUnitCell();
     if (uc == null)
-      return new Lst<P3d>();
-    uc.getEquivPointList(pts, 0, flags.toLowerCase(), null);
+      return new Lst<Point3fi>();
+    uc.getEquivPointList(0, flags.toLowerCase(), null, 0, pts);
     return pts;
   }
 
@@ -11489,9 +11506,19 @@ public class Viewer extends JmolViewer
       return;
     if (rot == null)
       tm.setSpinOff();
-    ms.rotateModelSpinVectors(modelIndex, rot);      
+    ms.rotateModelSpinVectors(modelIndex, rot, false);      
   }
 	  
+  public void rotateSpins(int deltaX, int deltaY) {
+    M3d m = new M3d();
+    if (m.setAsBallRotation(JC.radiansPerDegree, -deltaY, -deltaX)) {
+      ms.rotateModelSpinVectors(am.splitFrame ? am.getSplitFrameModel() : am.cmi, m, true);
+      refresh(REFRESH_SYNC,
+          sm.syncingMouse ? "Mouse: rotateSpins " + deltaX + " " + deltaY
+              : "");
+    }
+  }
+
 
   ////////////////// Jmol-SwingJS only //////////////
 

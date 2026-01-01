@@ -66,10 +66,7 @@ public class PointIterator {
         if (p3 == null)
           return T.nada;
         if (bsSelected == null) {
-          p = new Point3fi();
-          p.setT(p3);
-          p.i = i;
-          pt3[i] = p;
+          pt3[i] = p = Point3fi.newPF(p3,  i);
           bspt.addTuple(p);
         } else {
           bspt.addTuple(p3);

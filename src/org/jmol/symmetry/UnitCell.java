@@ -31,6 +31,7 @@ import java.util.Map;
 import org.jmol.api.Interface;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Escape;
+import org.jmol.util.Point3fi;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
 import org.jmol.viewer.JC;
@@ -184,54 +185,62 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   /**
-   * 
-   * @param f1
-   * @param f2
-   * @param distance
-   * @param dx
-   * @param iRange
-   * @param jRange
-   * @param kRange
-   * @param ptOffset TODO
-   * @return       TRUE if pt has been set.
-   */
-  public boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
-                              int iRange, int jRange, int kRange, P3d ptOffset) {
-    P3d p1 = P3d.newP(f1);
-    toCartesian(p1, true);
-    for (int i = -iRange; i <= iRange; i++)
-      for (int j = -jRange; j <= jRange; j++)
-        for (int k = -kRange; k <= kRange; k++) {
-          ptOffset.set(f2.x + i, f2.y + j, f2.z + k);
-          toCartesian(ptOffset, true);
-          double d = p1.distance(ptOffset);
-          if (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1d) {
-            ptOffset.set(i, j, k);
-            return true;
-          }
-        }
-    return false;
-  }
-
-  /**
    * Check atom position for range [0, 1) allowing for rounding.
    * Used for SELECT UNITCELL only 
 
    * @param pt 
+   * @param packing
    * @return true if in [0, 1)
    */
-  boolean checkPeriodic(P3d pt) {
+  boolean checkPeriodic(P3d pt, double packing) {
+    double min, max;
+    if (Double.isNaN(packing)) {
+      min = -slop;
+      max = 1 - slop;
+    } else {
+      min = -packing;
+      max = 1 + packing;
+    }
     switch (dimension) {
     case 3:
-      if (pt.z < -slop || pt.z > 1 - slop)
+      if (pt.z < min || pt.z > max)
         return false;
       //$FALL-THROUGH$
     case 2:
-      if (pt.y < -slop || pt.y > 1 - slop)
+      if (pt.y < min || pt.y > max)
         return false;
       //$FALL-THROUGH$
     case 1:
-    if (pt.x < -slop || pt.x > 1 - slop)
+    if (pt.x < min || pt.x > max)
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Used for SELECT UNITCELL and for adding H atoms only.
+   * 
+   * @param a range on a axis
+   * @param b range on b axis
+   * @param c range on c axis
+   * @param packing fractional packing or NaN for slop
+   * @param pt
+   * @return true if within bounds [0,1]
+   */
+  boolean isWithinUnitCell(double a, double b, double c, double packing, P3d pt) {
+    if (Double.isNaN(packing))
+      packing = slop;
+    switch (dimension) {
+    case 3:
+      if (pt.z < c - 1 - packing || pt.z > c + packing)
+        return false;
+      //$FALL-THROUGH$
+    case 2:
+      if (pt.y < b - 1 - packing || pt.y > b + packing)
+        return false;
+      //$FALL-THROUGH$
+    case 1:
+    if (pt.x < a - 1 - packing || pt.x > a + packing)
       return false;
     }
     return true;
@@ -316,40 +325,50 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
    * @param i0
    *        the starting index of the list
    * @param n0
-   *        the first point that is to be duplicated; 
-   * @param dup0 
+   *        the first point that is to be duplicated;
+   * @param dup0
    *        start for checking for removing duplicates, either i0 or no?
-   * @param periodicity 
+   * @param periodicity
+   * @param packing
    * @return augmented list
    */
-  Lst<P3d> getEquivPoints(P3d pt, String flags, M4d[] ops, Lst<P3d> list,
-                                int i0, int n0, int dup0, int periodicity) {
+  Lst<Point3fi> getEquivalentPoints(Point3fi pt, String flags, M4d[] ops, Lst<Point3fi> list,
+                          int i0, int n0, int dup0, int periodicity,
+                          double packing) {
     boolean fromfractional = (flags.indexOf("fromfractional") >= 0);
     boolean tofractional = (flags.indexOf("tofractional") >= 0);
-    boolean packed = (flags.indexOf("packed") >= 0);
-    if (list == null)
-      list = new Lst<P3d>();
-    P3d pf = P3d.newP(pt);
-    if (!fromfractional)
-      toFractional(pf, true);
-    int n = list.size();
     boolean adjustA = ((periodicity & 0x1) != 0);
     boolean adjustB = ((periodicity & 0x2) != 0);
     boolean adjustC = ((periodicity & 0x4) != 0);
+    boolean haveSpin = (pt.sD >= 0);
+    if (list == null)
+      list = new Lst<Point3fi>();
+    int n = list.size();
+    Point3fi pf = Point3fi.newPF(pt, pt.i);
+    if (!fromfractional)
+      toFractional(pf, true);
     for (int i = 0, nops = ops.length; i < nops; i++) {
-      P3d p = P3d.newP(pf);
+      Point3fi p = Point3fi.newPF(pf, pt.i);
       ops[i].rotTrans(p);
       //not using unitize here, because it does some averaging
       if (adjustA)
-        p.x =  fixFloor(p.x - Math.floor(p.x));
+        p.x = fixFloor(p.x - Math.floor(p.x));
       if (adjustB)
-        p.y =  fixFloor(p.y - Math.floor(p.y));
+        p.y = fixFloor(p.y - Math.floor(p.y));
       if (adjustC)
-        p.z =  fixFloor(p.z - Math.floor(p.z));
+        p.z = fixFloor(p.z - Math.floor(p.z));
+      if (haveSpin) {
+        V3d v = V3d.new3(pt.sX, pt.sY, pt.sZ);
+        ((SymmetryOperation)ops[i]).rotateSpin(v);
+        p.sX = (int) Math.round(v.x);
+        p.sY = (int) Math.round(v.y);
+        p.sZ = (int) Math.round(v.z);
+        p.sD = pt.sD;
+      }
       list.addLast(p);
       n++;
     }
-    if (packed) {
+    if (packing >= 0) {
       // but when we lack periodicity, as in a layer group,
       // we need to duplicate based on 0.5!!! 
       // duplicate all the points. 
@@ -357,72 +376,104 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
         P3d offset = P3d.new3(0, 0, 0.5);
         for (int i = n0; i < n; i++) {
           list.get(i).add(offset);
-        }          
+        }
       }
       if (!adjustB) {
         P3d offset = P3d.new3(0, 0.5, 0);
         for (int i = n0; i < n; i++) {
           list.get(i).add(offset);
-        }          
+        }
       }
       if (!adjustA) {
         P3d offset = P3d.new3(0.5, 0, 0);
         for (int i = n0; i < n; i++) {
           list.get(i).add(offset);
-        }          
+        }
       }
       for (int i = n0; i < n; i++) {
-        pf.setT(list.get(i));
+        pf.setPF(pt = list.get(i));
         unitizeRnd(pf);
         if (pf.x == 0) {
-          list.addLast(P3d.new3(0,  pf.y,  pf.z));
-          list.addLast(P3d.new3(1,  pf.y,  pf.z));
+          list.addLast(newPt(pt,0, pf.y, pf.z, pf.i));
+          list.addLast(newPt(pt,1, pf.y, pf.z, pf.i));
           if (pf.y == 0) {
-            list.addLast(P3d.new3(1, 1,  pf.z));
-            list.addLast(P3d.new3(0, 0,  pf.z));
+            list.addLast(newPt(pt,1, 1, pf.z, pf.i));
+            list.addLast(newPt(pt,0, 0, pf.z, pf.i));
             if (pf.z == 0) {
-              list.addLast(P3d.new3(1, 1, 1));
-              list.addLast(P3d.new3(0, 0, 0));
+              list.addLast(newPt(pt,1, 1, 1, pf.i));
+              list.addLast(newPt(pt,0, 0, 0, pf.i));
             }
           }
         }
         if (pf.y == 0) {
-          list.addLast(P3d.new3( pf.x, 0,  pf.z));
-          list.addLast(P3d.new3( pf.x, 1,  pf.z));
+          list.addLast(newPt(pt,pf.x, 0, pf.z, pf.i));
+          list.addLast(newPt(pt,pf.x, 1, pf.z, pf.i));
           if (pf.z == 0) {
-            list.addLast(P3d.new3( pf.x, 0, 0));
-            list.addLast(P3d.new3( pf.x, 1, 1));
+            list.addLast(newPt(pt,pf.x, 0, 0, pf.i));
+            list.addLast(newPt(pt,pf.x, 1, 1, pf.i));
           }
         }
         if (pf.z == 0) {
-          list.addLast(P3d.new3( pf.x,  pf.y, 0));
-          list.addLast(P3d.new3( pf.x,  pf.y, 1));
+          list.addLast(newPt(pt,pf.x, pf.y, 0, pf.i));
+          list.addLast(newPt(pt,pf.x, pf.y, 1, pf.i));
           if (pf.x == 0) {
-            list.addLast(P3d.new3(0,  pf.y, 0));
-            list.addLast(P3d.new3(1,  pf.y, 1));
+            list.addLast(newPt(pt,0, pf.y, 0, pf.i));
+            list.addLast(newPt(pt,1, pf.y, 1, pf.i));
           }
         }
       }
+
+      if (packing > 0) {
+        if (adjustA) {
+          n = list.size();
+          for (int i = n0; i < n; i++) {
+            pf.setT(pt = list.get(i));
+            if (pf.x < packing)
+              list.addLast(pt = newPt(pt,pf.x + 1, pf.y, pf.z, pf.i));
+            if (pf.x > 1 - packing)
+              list.addLast(pt = newPt(pt,pf.x - 1, pf.y, pf.z, pf.i));
+          }
+        }
+        if (adjustB) {
+          n = list.size();
+          for (int i = n0; i < n; i++) {
+            pf.setT(list.get(i));
+            if (pf.y < packing)
+              list.addLast(newPt(pt,pf.x, pf.y + 1, pf.z, pf.i));
+            if (pf.y > 1 - packing)
+              list.addLast(newPt(pt,pf.x, pf.y - 1, pf.z, pf.i));
+          }
+        }
+        if (adjustC) {
+          n = list.size();
+          for (int i = n0; i < n; i++) {
+            pf.setT(list.get(i));
+            if (pf.z < packing)
+              list.addLast(newPt(pt,pf.x, pf.y, pf.z + 1, pf.i));
+            if (pf.z > 1 - packing)
+              list.addLast(newPt(pt,pf.x, pf.y, pf.z - 1, pf.i));
+          }
+        }
+      }
+
       n = list.size();
       if (!adjustA) {
         P3d offset = P3d.new3(-0.5, 0, 0);
         for (int i = n0; i < n; i++) {
           list.get(i).add(offset);
-        }          
+        }
       }
       if (!adjustB) {
-        n = list.size();
         P3d offset = P3d.new3(0, -0.5, 0);
         for (int i = n0; i < n; i++) {
           list.get(i).add(offset);
-        }          
+        }
       }
       if (!adjustC) {
-        n = list.size();
         P3d offset = P3d.new3(0, 0, -0.5);
         for (int i = n0; i < n; i++) {
           list.get(i).add(offset);
-        }          
+        }
       }
     }
     removeDuplicates(list, i0, dup0, -1);
@@ -433,6 +484,15 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     return list;
   }
   
+  private static Point3fi newPt(Point3fi pt, double x, double y, double z, int i) {
+    Point3fi p = Point3fi.new4(x, y, z, i);
+    p.sX = pt.sX;
+    p.sY = pt.sY;
+    p.sZ = pt.sZ;
+    p.sD = pt.sD;
+    return p;
+  }
+
   P3d getFractionalOffset() {
     return fractionalOffset;
   }
@@ -442,11 +502,28 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     if (m != this)
       return m.getInfo();       
     Map<String, Object> info = new Hashtable<String, Object>();
-    info.put("params", unitCellParams);
+    double[] a = new double[18];
+    System.arraycopy(getUnitCellAsArray(false), 0, a, 0, 18);
+    info.put("params", a);
     info.put("oabc", getUnitCellVectors());
     info.put("volume", Double.valueOf(volume));
     info.put("matFtoC", matrixFractionalToCartesian);
     info.put("matCtoF", matrixCartesianToFractional);
+    info.put("dimension", Integer.valueOf(dimension));
+    info.put("dimensionType", Integer.valueOf(dimensionType));
+    info.put("isHexagonal", Boolean.valueOf(getInfo(INFO_IS_HEXAGONAL) != 0));
+    info.put("isRhombohedral", Boolean.valueOf(getInfo(INFO_IS_RHOMBOHEDRAL) != 0));
+    if (fractionalOffset != null) {
+      info.put("cartesianOffset", cartesianOffset);
+      info.put("fractionalOffset", fractionalOffset);
+    }
+    if (unitCellMultiplier != null) {
+      info.put("unitCellMultiplier", unitCellMultiplier);
+    }
+    if (unitCellMultiplied != null) {
+      info.put("unitCellMultiplied", unitCellMultiplied);
+    }
+    info.put("slop", Double.valueOf(slop));
     return info;
   }
 
@@ -1144,32 +1221,6 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   /**
-   * Used for SELECT UNITCELL and for adding H atoms only.
-   * 
-   * @param a range on a axis
-   * @param b range on b axis
-   * @param c range on c axis
-   * @param pt
-   * @return true if within bounds
-   */
-  boolean isWithinUnitCell(double a, double b, double c, P3d pt) {
-    switch (dimension) {
-    case 3:
-      if (pt.z < c - 1d - slop || pt.z > c + slop)
-        return false;
-      //$FALL-THROUGH$
-    case 2:
-      if (pt.y < b - 1d - slop || pt.y > b + slop)
-        return false;
-      //$FALL-THROUGH$
-    case 1:
-    if (pt.x < a - 1d - slop || pt.x > a + slop)
-      return false;
-    }
-    return true;
-  }
-
-  /**
    * SpaceGroupFinder only
    * 
    * @param origin
@@ -1382,11 +1433,11 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
   }
 
   
-  private static void removeDuplicates(Lst<P3d> list, int i0, int n0, int n) {
+  private static void removeDuplicates(Lst<Point3fi> list, int i0, int n0, int n) {
     if (n < 0)
       n = list.size();
     for (int i = i0; i < n; i++) {
-      P3d p = list.get(i);
+      Point3fi p = list.get(i);
       for (int j = Math.max(i + 1, n0); j < n; j++) {
         if (list.get(j).distanceSquared(p) < JC.UC_TOLERANCE2) {
           list.removeItemAt(j);

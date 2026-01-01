@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.ModelSet;
+import org.jmol.util.Point3fi;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.A4d;
@@ -36,7 +37,9 @@ public interface SymmetryInterface {
 
   boolean getCoordinatesAreFractional();
 
-  void getEquivPointList(Lst<P3d> pts, int nIgnore, String flags, M4d[] opsCtr);
+  Lst<Point3fi> getEquivPoints(Point3fi pt, String flags, double packing);
+  
+  void getEquivPointList(int nIgnore, String flags, M4d[] opsCtr, double packing, Lst<Point3fi> pts);
 
   P3d getFractionalOffset(boolean onlyIfFractional);
 
@@ -218,17 +221,15 @@ public interface SymmetryInterface {
 
   int[] getInvariantSymops(P3d p3, int[] v0);
 
-  Lst<P3d> getEquivPoints(Lst<P3d> pts, P3d pt, String flags);
-  
   Lst<P3d> generateCrystalClass(P3d pt0);
 
   P3d getFractionalOrigin();
 
   AtomIndexIterator getIterator(Atom atom, BS bstoms, double radius);
 
-  boolean isWithinUnitCell(P3d pt, double x, double y, double z);
+  boolean isWithinUnitCell(P3d pt, double x, double y, double z, double packing);
 
-  boolean checkPeriodic(P3d pt);
+  boolean checkPeriodic(P3d pt, double packing);
 
   int getAdditionalOperationsCount();
 
@@ -297,9 +298,10 @@ public interface SymmetryInterface {
 
   int getSpinIndex(int op);
 
-  Lst<String> getSpinList();
-
   int getGroupType();
 
+  SymmetryInterface getSpinSym();
+
+  double getUnitCellInfoStr(String type);
 
 }

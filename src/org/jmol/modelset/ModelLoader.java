@@ -887,10 +887,12 @@ public final class ModelLoader {
                                      Map<String, Object> jmolDataProperties) {
     if (jmolDataProperties == null)
       return;
-    BS bs = m.bsAtoms;
-    int nAtoms = bs.cardinality();
     @SuppressWarnings("unchecked")
     Map<String, double[]> props = (Map<String, double[]>) jmolDataProperties.get(JC.INFO_JMOL_DATA_PROPERTIES);
+    if (props.containsKey("spinZ"))
+      return;
+    BS bs = m.bsAtoms;
+    int nAtoms = bs.cardinality();
     for (Entry<String, double[]> e : props.entrySet()) {
       String key = e.getKey();
       double[] data = e.getValue();
@@ -1133,9 +1135,10 @@ public final class ModelLoader {
       ms.unitCells = new SymmetryInterface[ms.mc];
       ms.haveUnitCells = true;
       for (int i = 0, pt = 0; i < ms.mc; i++) {
+        Map<String, Object> info = ms.getModelAuxiliaryInfo(i);
         if (haveMergeCells && i < baseModelCount) {
           ms.unitCells[i] = modelSet0.unitCells[i];
-        } else if (ms.getModelAuxiliaryInfo(i).get(JC.INFO_SPACE_GROUP_INDEX) != null) {
+        } else if (info.get(JC.INFO_SPACE_GROUP_INDEX) != null) {
           ms.unitCells[i] = Interface.getSymmetry(vwr, "file");
           double[] notionalCell = null;
           if (isTrajectory) {
@@ -1144,7 +1147,6 @@ public final class ModelLoader {
             if (lst != null)
               notionalCell = lst.get(pt++);
           }
-          
           ((Symmetry) ms.unitCells[i]).setSymmetryInfoFromFile(ms, i, notionalCell);
         }
       }

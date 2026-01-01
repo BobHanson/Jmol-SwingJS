@@ -149,7 +149,29 @@ public class Draw extends MeshCollection {
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
 
-    //System.out.println("DRAW " + propertyName + " value=" + value + " bs=" + bs);
+    if ("set" == propertyName) {
+      if (thisMesh == null) {
+        allocMesh(null, null);
+        thisMesh.colix = colix;
+        thisMesh.color = color;
+      }
+      thisMesh.isValid = (isValid ? setDrawing((int[]) value) : false);
+      if (thisMesh.isValid) {
+        if (thisMesh.vc > 2 && length != Double.MAX_VALUE && newScale == 1)
+          newScale = length;
+        scale(thisMesh, newScale);
+        thisMesh.initialize(T.fullylit, null, null);
+        setAxes(thisMesh);
+        thisMesh.title = title;
+        thisMesh.titleColor = titleColor;
+        thisMesh.fontID = thisFontID;
+        thisMesh.visible = true;
+      }
+      nPoints = -1; // for later scaling
+      vData = null;
+      lineData = null;
+      return;
+    }
 
     if ("init" == propertyName) {
       initDraw();
@@ -435,30 +457,6 @@ public class Draw extends MeshCollection {
 //      return;
 //    }
 //    
-    if ("set" == propertyName) {
-      if (thisMesh == null) {
-        allocMesh(null, null);
-        thisMesh.colix = colix;
-        thisMesh.color = color;
-      }
-      thisMesh.isValid = (isValid ? setDrawing((int[]) value) : false);
-      if (thisMesh.isValid) {
-        if (thisMesh.vc > 2 && length != Double.MAX_VALUE && newScale == 1)
-          newScale = length;
-        scale(thisMesh, newScale);
-        thisMesh.initialize(T.fullylit, null, null);
-        setAxes(thisMesh);
-        thisMesh.title = title;
-        thisMesh.titleColor = titleColor;
-        thisMesh.fontID = thisFontID;
-        thisMesh.visible = true;
-      }
-      nPoints = -1; // for later scaling
-      vData = null;
-      lineData = null;
-      return;
-    }
-
     if (propertyName == JC.PROP_DELETE_MODEL_ATOMS) {
       deleteModels(((int[]) ((Object[]) value)[2])[0]);
       return;
@@ -548,6 +546,11 @@ private void initDraw() {
 
   @Override
   public boolean getPropertyData(String property, Object[] data) {
+    if (property == "id") {
+      if (currentMesh != null)
+        data[0] = currentMesh.thisID;
+      return (currentMesh != null);
+    }
     if (property == "keys") {
       @SuppressWarnings("unchecked")
       Lst<String> keys = (data[1] instanceof Lst<?> ? (Lst<String>) data[1] : new Lst<String>());
@@ -1366,7 +1369,7 @@ private void initDraw() {
     P3d coord = P3d.newP(mesh.altVertices == null ? mesh.vs[ptVertex] : (P3d) mesh.altVertices[ptVertex]);
     P3d newcoord = new P3d();
     V3d move = new V3d();
-    vwr.tm.transformPt3f(coord, pt);
+    vwr.tm.transformPt3fSafe(coord, pt);
     pt.x = x;
     pt.y = y;
     vwr.tm.unTransformPoint(pt, newcoord);
@@ -1528,14 +1531,27 @@ private void initDraw() {
             || dmesh.drawType == EnumDrawType.CIRCLE
             || dmesh.drawType == EnumDrawType.ARC))
       str.append(" scale ").appendD(dmesh.scale);
-    if (dmesh.width != 0)
-      str.append(" diameter ").appendD(
-          (dmesh.drawType == EnumDrawType.CYLINDER ? Math.abs(dmesh.width)
-              : dmesh.drawType == EnumDrawType.CIRCULARPLANE
-                  ? Math.abs(dmesh.width * dmesh.scale)
-                  : dmesh.width));
-    else if (dmesh.diameter != 0)
+    if (dmesh.width != 0) {
+      double d;
+      switch (dmesh.drawType) {
+      case CYLINDER:
+        d = Math.abs(dmesh.width);
+        break;
+      case CIRCULARPLANE:
+        d = Math.abs(dmesh.width * dmesh.scale);
+        break;
+      case ARROW:
+        if (dmesh.diameter != 0) {
+          str.append(" diameter ").appendI(dmesh.diameter);
+        }
+        //$FALL-THROUGH$
+      default: 
+        d = dmesh.width;
+      }
+      str.append(" diameter ").appendD(d);
+    } else if (dmesh.diameter != 0) {
       str.append(" diameter ").appendI(dmesh.diameter);
+    }
     if (dmesh.lineData != null) {
       str.append("  lineData [");
       int n = dmesh.lineData.size();

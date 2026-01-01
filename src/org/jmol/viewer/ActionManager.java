@@ -456,10 +456,12 @@ public class ActionManager implements EventManager {
   public final static int PICKING_DRAG_LIGAND = 36;
   public final static int PICKING_DRAG_MODEL = 37;
   public final static int PICKING_SYMOP = 38;
+  public final static int PICKING_SELECT_SPIN = 39;
+  public final static int PICKING_DRAG_SPIN = 40;
 
   private final static String[] pickingModeNames;
   static {
-    pickingModeNames = "off identify label center draw spin symmetry deleteatom deletebond atom group chain molecule polymer structure site model element measure distance angle torsion sequence navigate connect struts dragselected dragmolecule dragatom dragminimize dragminimizemolecule invertstereo assignatom assignbond rotatebond identifybond dragligand dragmodel symop".split(" ");
+    pickingModeNames = "off identify label center draw spin symmetry deleteatom deletebond atom group chain molecule polymer structure site model element measure distance angle torsion sequence navigate connect struts dragselected dragmolecule dragatom dragminimize dragminimizemolecule invertstereo assignatom assignbond rotatebond identifybond dragligand dragmodel symop vxyz dragspin".split(" ");
   }
   
   public final static String getPickingModeName(int pickingMode) {
@@ -979,6 +981,8 @@ public class ActionManager implements EventManager {
           Event.PRESSED);
       vwr.setCursor(GenericPlatform.CURSOR_HAND);
       pressed.setCurrent(current, 1);
+      vwr.am.setSplitFrameMouse(x);
+      pressed.setModelIndex(vwr.am.getCurrentSplitModelIndex());
       dragged.setCurrent(current, 1);
       vwr.setFocus();
       dragGesture.setAction(dragAction, time);
@@ -999,6 +1003,7 @@ public class ActionManager implements EventManager {
           Event.DRAGGED);
       return;
     case Event.RELEASED:
+      pressed.setModelIndex(-1);
       setMouseActions(pressedCount, buttonMods, true);
       setCurrent(time, x, y, buttonMods);
       vwr.spinXYBy(0, 0, 0);
@@ -1066,6 +1071,7 @@ public class ActionManager implements EventManager {
     case PICKING_DRAG_LIGAND:
     case PICKING_DRAG_MODEL:
     case PICKING_DRAG_MOLECULE:
+    case PICKING_DRAG_SPIN:
       isBound = bnd(dragAction, ACTION_dragAtom, ACTION_dragZ, ACTION_rotateSelected);
       break;
     case PICKING_DRAG_MINIMIZE:
@@ -1131,7 +1137,8 @@ public class ActionManager implements EventManager {
 
     if (checkUserAction(dragWheelAction, x, y, deltaX, deltaY, time, mode))
       return;
-    int bi = (bondPickingMode == PICKING_ROTATE_BOND ? vwr.getModelkit(false).getRotateBondIndex()
+    int bi = (bondPickingMode == PICKING_ROTATE_BOND
+        ? vwr.getModelkit(false).getRotateBondIndex()
         : -1);
     if (bi >= 0) {
       if (dragAtomIndex >= 0 || mkBondPressed
@@ -1139,12 +1146,23 @@ public class ActionManager implements EventManager {
         if (dragAtomIndex >= 0) {
           updateModelkitBranch(bi, false);
         }
-        vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null, null, null, false,
-            false, dragAtomIndex >= 0 ? 0 : Event.VK_SHIFT);
+        vwr.moveSelected(deltaX, deltaY, Integer.MIN_VALUE, x, y, null, null,
+            null, false, false, dragAtomIndex >= 0 ? 0 : Event.VK_SHIFT);
         return;
       }
     }
-
+    if(apm == PICKING_DRAG_SPIN
+        || vwr.am.splitFrame
+        && vwr.ms.isJmolDataFrame(pressed.modelIndex)){
+      // we allow for SET PICKING DRAGSPIN
+      // or just pressing SHIFT-LEFT-DRAG
+      if (apm == PICKING_DRAG_SPIN || bnd(dragWheelAction, ACTION_rotateZorZoom)) {
+        vwr.rotateSpins(deltaX, deltaY);
+        return;
+      } else if (apm == PICKING_DRAG_SPIN) {
+        return;
+      }
+    }
     BS bs = null;
     if (dragAtomIndex >= 0 && apm != PICKING_LABEL) {
       switch (apm) {
@@ -1167,8 +1185,8 @@ public class ActionManager implements EventManager {
               true);
         setMotion(GenericPlatform.CURSOR_MOVE, true);
         if (bnd(dragWheelAction, ACTION_rotateSelected)) {
-          vwr.rotateSelected(getDegrees(deltaX, true), getDegrees(deltaY, false),
-              bs);
+          vwr.rotateSelected(getDegrees(deltaX, true),
+              getDegrees(deltaY, false), bs);
         } else {
           switch (apm) {
           case PICKING_DRAG_LIGAND:
@@ -1232,8 +1250,8 @@ public class ActionManager implements EventManager {
         vwr.undoMoveActionClear(iatom, AtomCollection.TAINT_COORD, true);
       else
         vwr.moveSelected(Integer.MAX_VALUE, 0, Integer.MIN_VALUE,
-            Integer.MIN_VALUE, Integer.MIN_VALUE, null, null, null, false, false,
-            buttonmods);
+            Integer.MIN_VALUE, Integer.MIN_VALUE, null, null, null, false,
+            false, buttonmods);
       dragSelected(dragWheelAction, deltaX, deltaY, false);
       return;
     }
@@ -1716,8 +1734,7 @@ public class ActionManager implements EventManager {
   }
 
   private Point3fi getPoint(Map<String, Object> t) {
-    Point3fi pt = new Point3fi();
-    pt.setT((P3d) t.get("pt"));
+    Point3fi pt = Point3fi.newPF((P3d) t.get("pt"), 0);
     pt.mi = (short) ((Integer) t.get("modelIndex")).intValue();
     return pt;
   }
@@ -2014,6 +2031,9 @@ public class ActionManager implements EventManager {
       break;
     case PICKING_SELECT_SITE:
       selectAtoms("visible and within(site, " + spec + ")");
+      break;
+    case PICKING_SELECT_SPIN:
+      selectAtoms("visible and within(vxyz, " + spec + ")");
       break;
     }
     vwr.clearClickCount();

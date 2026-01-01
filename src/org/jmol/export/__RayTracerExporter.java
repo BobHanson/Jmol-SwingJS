@@ -76,7 +76,7 @@ abstract class __RayTracerExporter extends ___Exporter {
   @Override
   protected void outputVertex(T3d pt, T3d offset) {
     setTempVertex(pt, offset, tempP1);
-    tm.transformPt3f(tempP1, tempP1);
+    tm.transformPt3fSafe(tempP1, tempP1);
     output(tempP1);
   }
 
@@ -108,8 +108,8 @@ abstract class __RayTracerExporter extends ___Exporter {
       return tempP3;
     }
     tempP1.add2(pt, normal);
-    tm.transformPt3f(pt, tempP2);
-    tm.transformPt3f(tempP1, tempP3);
+    tm.transformPt3fSafe(pt, tempP2);
+    tm.transformPt3fSafe(tempP1, tempP3);
     tempP3.sub(tempP2);
     tempP3.scale(factor);
     return tempP3;

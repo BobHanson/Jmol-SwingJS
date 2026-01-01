@@ -25,10 +25,11 @@
 package org.jmol.util;
 
 import javajs.util.P3d;
+import javajs.util.T3d;
 
 
 /**
- * the Point3fi class allows storage of critical information involving
+ * The Point3fi class allows storage of critical information involving
  * an atom, picked bond, or measurement point, including: 
  * 
  * xyz position 
@@ -36,6 +37,7 @@ import javajs.util.P3d;
  * screen radius (-1 for a simple point)
  * index (for atoms or for an associated bond that has be picked)
  * associated modelIndex (for measurement points)
+ * associated symmetry operation (generating equivalent atoms in UnitCell.java)
  * 
  */
 public class Point3fi extends P3d implements Cloneable {
@@ -65,14 +67,35 @@ public class Point3fi extends P3d implements Cloneable {
   /**
    * screen diameter
    */
-  public short sD = -1;
+  public int sD = -1;
 
- public Point3fi copy() {
+  public static Point3fi newPF(T3d p, int i) {
+    Point3fi pi = new Point3fi();
+    pi.setT(p);
+    pi.i = i;
+    return pi;
+  }
+
+  public static Point3fi new4(double x, double y, double z, int i) {
+    Point3fi pi = new Point3fi();
+    pi.set(x, y, z);
+    pi.i = i;
+    return pi;
+  }
+
+  public Point3fi copy() {
     try {
       return (Point3fi) clone();
     } catch (CloneNotSupportedException e) {
       return null;
     }
+  }
+
+  public void setPF(Point3fi p) {
+    x = p.x;
+    y = p.y;
+    z = p.z;
+    i = p.i;
   }
 
 }

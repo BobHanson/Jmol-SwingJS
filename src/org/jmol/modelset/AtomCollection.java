@@ -65,6 +65,7 @@ import javajs.util.P3d;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
+import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -540,9 +541,9 @@ abstract public class AtomCollection {
       }
   }
 
-  private void setAtomVibrationVector(int atomIndex, T3d vib) {
-    setVibrationVector(atomIndex, vib);  
+  public Vibration setAtomVibrationVector(int atomIndex, T3d vib) {
     taintAtom(atomIndex, TAINT_VIBRATION);
+    return setVibrationVector(atomIndex, vib);  
   }
 
   P3d[] doublCoord = null;
@@ -779,14 +780,14 @@ abstract public class AtomCollection {
     return (JmolModulationSet) (v != null && v.modDim > 0 ? v : null);
   }
 
-  public void setVibrationVector(int atomIndex, T3d vib) {
+  Vibration setVibrationVector(int atomIndex, T3d vib) {
     if (vib == null) {
       if (vibrations != null && vibrations.length > atomIndex)
         vibrations[atomIndex] = null;
-      return;
+      return null;
     }
     if (Double.isNaN(vib.x) || Double.isNaN(vib.y) || Double.isNaN(vib.z))
-      return;
+      return null;
     if (vibrations == null || vibrations.length <= atomIndex)
       vibrations = new Vibration[at.length];
     if (vib instanceof Vibration) {
@@ -797,6 +798,7 @@ abstract public class AtomCollection {
       vibrations[atomIndex].setXYZ(vib);
     }
     at[atomIndex].setVibrationVector();
+    return vibrations[atomIndex];
   }
 
   private void setVibrationVector2(int atomIndex, int tok, double fValue) {
@@ -1005,10 +1007,10 @@ abstract public class AtomCollection {
     BS bs = null;
     switch(type) {
     case TAINT_COORD:
-      loadCoordinates(dataString, false, !isDefault);
+      loadCoordinates(dataString, T.coord, !isDefault);
       return;
     case TAINT_VIBRATION:
-      loadCoordinates(dataString, true, true);
+      loadCoordinates(dataString, T.vibration, true);
       return;
     case TAINT_MAX:
       fData = new double[ac];
@@ -1092,9 +1094,9 @@ abstract public class AtomCollection {
     }  
   }
   
-  private void loadCoordinates(String data, boolean isVibrationVectors, boolean doTaint) {
+  private void loadCoordinates(String data, int type, boolean doTaint) {
     int[] lines = Parser.markLines(data, ';');
-    V3d v = (isVibrationVectors ? new V3d() : null);
+    V3d v = (type == T.vibration || type == T.spin ? new V3d() : null);
     try {
       int nData = PT.parseInt(data.substring(0, lines[0] - 1));
       for (int i = 1; i <= nData; i++) {
@@ -1106,13 +1108,21 @@ abstract public class AtomCollection {
         double x = (tokens[3].equalsIgnoreCase("1.4E-45") ? 1.4e-45d : PT.parseDouble(tokens[3]));
         double y = (tokens[4].equalsIgnoreCase("1.4E-45") ? 1.4e-45d : PT.parseDouble(tokens[4]));
         double z = PT.parseDouble(tokens[5]);
-        if (isVibrationVectors) {
+        switch (type) {
+        case T.vibration:
           v.set(x, y, z);
-          setAtomVibrationVector(atomIndex, v);
-        } else {
+          Vibration vib = setAtomVibrationVector(atomIndex, v);
+          if (tokens.length > 7) { // includes ";"
+            // spin and moment
+            vib.modDim = PT.parseInt(tokens[6]);
+            vib.magMoment = PT.parseDouble(tokens[7]);
+          }            
+          break;
+        default:
           setAtomCoord(atomIndex, x, y, z);
           if (!doTaint)
             untaint(atomIndex, TAINT_COORD);
+          break;
         }
       }
     } catch (Exception e) {
@@ -1535,7 +1545,7 @@ abstract public class AtomCollection {
     if (sym != null) {
       ptTemp.setT(pt);
       sym.toFractional(ptTemp, false);
-      if (!sym.isWithinUnitCell(ptTemp, 1, 1, 1)) {
+      if (!sym.isWithinUnitCell(ptTemp, 1, 1, 1, Double.NaN)) {
         return hPt;
       }
     }
@@ -2461,6 +2471,29 @@ abstract public class AtomCollection {
         bsTemp.andNot(bs);
       }
       return bs;
+    case T.spin:
+      for (int i = ac; --i >= 0;) {
+        Vibration v = getVibration(i, false);
+        if (v != null && v.modDim == Vibration.TYPE_SPIN)
+          bs.set(i);
+      }
+      return bs;
+    case T.vibxyz:
+      SB sb = new SB().append(";");
+      for (int i = i0; i >= 0; i = bsInfo.nextSetBit(i + 1)) {
+        Vibration v = getVibration(i, false);
+        if (v != null) {
+          String s = ";" + v.getApproxString100() + ";";
+          if (sb.indexOf(s) < 0)
+            sb.append(s);
+        }
+      }
+      for (int i = ac; --i >= 0;) {
+        Vibration v = getVibration(i, false);
+        if (v != null && sb.indexOf(";" + v.getApproxString100() + ";") >= 0)
+          bs.set(i);
+      }
+      return bs;
     case T.site:
       // within(site
       bsTemp = new BS();
@@ -2909,6 +2942,7 @@ abstract public class AtomCollection {
     m = max / m;
     boolean ok = false;
     for (int i = bsVib.nextSetBit(0); i >= 0; i = bsVib.nextSetBit(i + 1)) {
+      //{*}.vxyz = {*}.vxyz.all.mul(3.0/{*}.vxyz.all.max)
       Vibration v = getVibration(i, false);
       JmolModulationSet mod = getModulation(i);
       if (mod == null) {
@@ -2919,12 +2953,12 @@ abstract public class AtomCollection {
         mod.scaleVibration(m);
       }
       if (!ok) {
+        // ensure tainted[TAINT_VIBRATION] is not null
         taintAtom(i, TAINT_VIBRATION);
         ok = true;
       }
     }
     tainted[TAINT_VIBRATION].or(bsVib);
-    //{*}.vxyz = {*}.vxyz.all.mul(3.0/{*}.vxyz.all.max)
   }
 
   public BS getAtomsFromAtomNumberInFrame(int atomNumber) {

@@ -26,19 +26,22 @@
 package org.jmol.viewer;
 
 public class MouseState {
-  /**
-   * 
-   */
+
   public int x = -1000;
   public int y = -1000;
   int modifiers = 0;
   public long time = -1;
+  int modelIndex;
   
   public String name;
   public int keybuf;
   
   MouseState(String name) {
     this.name = name;
+  }
+  
+  void setModelIndex(int modelIndex) {
+    this.modelIndex = modelIndex;
   }
   
   void set(long time, int x, int y, int modifiers) {

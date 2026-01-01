@@ -190,6 +190,15 @@ public final class JC {
 
   public static final String SPACE_GROUP_LIST_BCS = "https://www.cryst.ehu.es/cgi-bin/cryst/programs/nph-getgen";
 
+  private final static String likelyPdbTypes = ";MMCif;MMTF;BCIF;Pdb;Pqr;P2n;JmolData;PyMOL;";
+  
+  public static boolean isLikelyPDB(String type) {
+    int pt = type.indexOf(":");
+    if (pt > 0)
+      type = type.substring(0, pt);
+    return PT.isOneOf(type, likelyPdbTypes);
+  }
+
   private final static String[] databaseArray = {
       // still http:
       "itatable", 
@@ -1611,13 +1620,26 @@ public final class JC {
 
   public final static double FLOAT_MIN_SAFE = Double.MIN_VALUE; // was 2E-45f; 
 
+  public static final String CELL_TYPE_MAGNETIC_PARENT = "parent";
+  public static final String CELL_TYPE_MAGNETIC_STANDARD = "standard";
+  public static final String CELL_TYPE_SPIN_FRAME = "spin";
+  public static final String CELL_TYPE_SPIN_L0 = "l0";
+  public static final String CELL_TYPE_SPIN_G0 = "g0";
+  public static final String CELL_TYPE_SPIN_MAG_PRIMITIVE = "magneticprimitive";
+  public static final String CELL_TYPE_SPIN_MAG_INPUT = "input";
+
   // these literals are used various places. Track them down with their INFO_ name.
-  
+
+  public static final String INFO_OPS_CTR = "opsCtr";
   public static final String INFO_HM = "HermannMauguinSymbol";
   public static final String INFO_HALL = "HallSymbol";
   public static final String INFO_ITA = "ita";
 
-  public static final String INFO_SPACE_GROUP = "spaceGroup";
+  public static final String INFO_BIO_SYMMETRY = "bioSymmetry";
+  public static final String INFO_BIO_SYMMETRY_COUNT = "biosymmetryCount";
+  public static final String INFO_FILE_SYMMETRY = "fileSymmetry";
+  public static final String INFO_FILE_SPACE_GROUP_NAME = "spaceGroup";
+  
   public static final String INFO_SPACE_GROUP_F2C_TITLE = "f2cTitle";
   public static final String INFO_SPACE_GROUP_ASSIGNED = "spaceGroupAssigned";
   public static final String INFO_SPACE_GROUP_INFO = "spaceGroupInfo";
@@ -1656,7 +1678,7 @@ public final class JC {
   public static final String FILE_DATA = "fileData";
   public static final String LOAD_OPTION_FILL_RANGE = "fillRange";
   public static final String SPIN_ROTATION_MATRIX_APPLIED = "spinRotationMatrixApplied";
-  public static final String SPIN_ROTATION_ANGLE_APPLIED = "spinRotationAngleApplied";
+  public static final String SPIN_ROTATION_AXIS_ANGLE_APPLIED = "spinRotationAxisAngleApplied";
   public static final String SPIN_FRAME_ROTATION_MATRIX = "spinFrameRotationMatrix";
   public static final String UC_MOREINFO = "moreUnitCellInfo";
   public static final String DEFAULT_DRAW_SYM_ID = "sym_"; // do not change this; code on working pages needs this right

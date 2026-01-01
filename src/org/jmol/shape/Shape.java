@@ -345,7 +345,7 @@ public abstract class Shape {
   }
 
   protected int coordinateInRange(int x, int y, T3d vertex, int dmin2, P3i ptXY) {
-    vwr.tm.transformPtScr(vertex, ptXY);
+    vwr.tm.transformPtScrSafe(vertex, ptXY);
     int d2 = (x - ptXY.x) * (x - ptXY.x) + (y - ptXY.y) * (y - ptXY.y);
     return (d2 <= dmin2 ? d2 : -1);
   }

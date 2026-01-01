@@ -70,7 +70,7 @@ public class Atom extends Point3fi implements Node {
   
   public static final int RADIUS_MAX = 16;
   public static final double RADIUS_GLOBAL = 16.1d;
-  public static short MAD_GLOBAL = 32200;
+  public static final short MAD_GLOBAL = 32200;
 
   public char altloc = '\0';
   public byte atomID;
@@ -1170,7 +1170,8 @@ public class Atom extends Point3fi implements Node {
   /**
    * called by isosurface and int comparator via atomProperty()
    * and also by getBitsetProperty() 
-   * @param vwr   * @param tokWhat
+   * @param vwr   
+   * @param tokWhat
    * @return         int value or Integer.MIN_VALUE
    */
   public int atomPropertyInt(Viewer vwr, int tokWhat) {

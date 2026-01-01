@@ -51,6 +51,9 @@ class SymmetryInfo {
    */
   String intlTableJmolId;
   private int spaceGroupIndex;
+  private String itaNo;
+  private boolean isSpinSpaceGroup; 
+  
 
   private String spaceGroupF2CTitle;
   double[][] spaceGroupF2C;
@@ -63,12 +66,17 @@ class SymmetryInfo {
   String intlTableIndexNdotM;
   String intlTableTransform;
   double slop;
+
+  SpaceGroup fileSpaceGroup;
+  private SpaceGroup sgDerived;
   
-  SymmetryInfo() {    
+  SymmetryInfo(SpaceGroup sg) {    
+    fileSpaceGroup = sg;
   }
   
   void setSymmetryInfoFromModelkit(SpaceGroup sg) {
     // from Symmetry.getSymmetryInfoStr
+    fileSpaceGroup = sg;
     cellRange = null;
     sgName = sg.getName();
     intlTableJmolId = sg.jmolId;
@@ -97,7 +105,8 @@ class SymmetryInfo {
     //in the file -- primitive or otherwise -- 
     //then convert it here to the right multiple.
     cellRange = (int[]) modelInfo.remove(JC.INFO_UNIT_CELL_RANGE);
-    sgName = (String) modelInfo.get(JC.INFO_SPACE_GROUP);
+    sgName = (String) modelInfo.get(JC.INFO_FILE_SPACE_GROUP_NAME);
+    isSpinSpaceGroup = (sgName != null && sgName.startsWith("spinSG:"));
     spaceGroupF2C = (double[][]) modelInfo.remove("f2c");
     spaceGroupF2CTitle = (String) modelInfo.remove(JC.INFO_SPACE_GROUP_F2C_TITLE);
     spaceGroupF2CParams = (double[]) modelInfo.remove("f2cParams");
@@ -168,8 +177,6 @@ class SymmetryInfo {
     return additionalOperations;
   }
 
-  private SpaceGroup sgDerived;
-  
   SpaceGroup getDerivedSpaceGroup() {
     if (sgDerived == null) {
       sgDerived = SpaceGroup.getSpaceGroupFromIndex(spaceGroupIndex);
@@ -199,7 +206,9 @@ class SymmetryInfo {
       if (sgName.startsWith("cell=!"))
         sgName = "cell=inverse[" + sgName.substring(6) + "]";
       sgName = PT.rep(sgName, ";0,0,0", "");
-      if (sgName.indexOf("#") < 0) {
+      if (isSpinSpaceGroup) {
+        // keep it
+      } else if (sgName.indexOf("#") < 0) {
         String trm = intlTableTransform;
         String intTab = intlTableIndexNdotM;
         if (!isSlab && !isPolymer && intTab != null) {
@@ -225,8 +234,6 @@ class SymmetryInfo {
     return displayName;
   }
 
-  private String itaNo; 
-  
   public String getClegId() {
     if (itaNo == null) {
       itaNo = intlTableIndexNdotM;
@@ -236,6 +243,10 @@ class SymmetryInfo {
       itaNo = (pt > 0 ? itaNo.substring(0, pt) : itaNo) + ":" + intlTableTransform;
     }
     return itaNo;
+  }
+
+  SpaceGroup getFileSpaceGroup() {
+    return fileSpaceGroup;
   }
 
 

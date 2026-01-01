@@ -412,13 +412,15 @@ abstract class OutputManager {
   }
 
   OC getOutputChannel(String fileName, String[] fullPath) {
-    if (!vwr.haveAccess(ACCESS.ALL))
-      return null;
     boolean isRemote = OC.isRemote(fileName);
-    if (fileName != null && !isRemote && !fileName.startsWith("cache://")) {
-      fileName = getOutputFileNameFromDialog(fileName, Integer.MIN_VALUE, null);
-      if (fileName == null)
+    if (fileName != null) {
+      if (!vwr.haveAccess(ACCESS.ALL))
         return null;
+      if (!isRemote && !fileName.startsWith("cache://")) {
+        fileName = getOutputFileNameFromDialog(fileName, Integer.MIN_VALUE, null);
+        if (fileName == null)
+          return null;
+      }
     }
     if (fullPath != null)
       fullPath[0] = fileName;
@@ -773,7 +775,8 @@ abstract class OutputManager {
                 } else {
                   if (out != null)
                     localName = out.getFileName();
-                  params.put("captureFileName", localName);
+                  if (localName != null)
+                    params.put("captureFileName", localName);
                   if (streaming) {
                     captureMsg = type + "_STREAM_OPEN " + localName;
                     params.put("captureMode", "movie");

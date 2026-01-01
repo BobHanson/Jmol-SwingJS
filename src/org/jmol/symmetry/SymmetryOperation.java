@@ -228,7 +228,7 @@ public class SymmetryOperation extends M4d {
     }
     int n48 = (int) Math.round(x * 48);
     if (PT.approxD(n48 / 48d - x, 1000) != 0)
-      return "" + PT.approxD(x, 1000);
+      return (neg ? "-" : "") + PT.approxD(x, 1000);
     int div;
     if (n48 % 48 == 0) {
       div = 1;
@@ -1378,8 +1378,6 @@ public class SymmetryOperation extends M4d {
     int pt = xyz.indexOf("m");
     pt -= (3 - timeReversal) / 2;
     xyz = (pt < 0 ? xyz : xyz.substring(0, pt));
-    //    if (!addMag) was always true
-    //      return xyz + (timeReversal > 0 ? " +1" : " -1");
     M3d m3 = new M3d();
     m.getRotationScale(m3);
     if (getMagneticOp() < 0)
@@ -2486,7 +2484,11 @@ public class SymmetryOperation extends M4d {
       }
       t.setColumnA(3, v);
     }
-    return getXYZFromMatrixFrac(t, false, true, false, allowFractions, false, null);
+    String s = getXYZFromMatrixFrac(t, false, true, false, allowFractions, false, null);
+    int pt = xyz.indexOf('(');
+    if (pt > 0)
+      s += xyz.substring(pt);
+    return s;
   }
 
   static M4d stringToMatrix(String xyz, String labels) {
@@ -2622,7 +2624,7 @@ public class SymmetryOperation extends M4d {
     return ret + "\n)";
   }
 
-  public void rotateSpin(V3d vib) {
+  public void rotateSpin(T3d vib) {
     if (spinU == null)
       rotate(vib);
     else 
@@ -2646,6 +2648,8 @@ public class SymmetryOperation extends M4d {
     } else if (matrix34 instanceof M3d) {
       matrix4 = new M4d();
       matrix4.setRotationScale((M3d) matrix34);
+    } else {
+      matrix4 = (M4d) matrix34;
     }
     if ("rxyz".equals(labels)) {
       return matrixToRationalString(matrix34);

@@ -59,6 +59,7 @@ public class DrawRenderer extends MeshRenderer {
   protected P3d pt2 = new P3d();
   protected final V3d vTemp = new V3d();
   protected final V3d vTemp2 = new V3d();
+  private int headFactor;
 
   @Override
   protected boolean render() {
@@ -72,7 +73,7 @@ public class DrawRenderer extends MeshRenderer {
     imageFontScaling = vwr.imageFontScaling;
     Draw draw = (Draw) shape;
     //isPrecision = true;//vwr.tm.perspectiveDepth;
-    for (int i = draw.meshCount; --i >= 0;) {
+    for (int i = 0, n = draw.meshCount; i < n;i++) {
       Mesh mesh = dmesh = (DrawMesh) draw.meshes[i];
       if (mesh == null || dmesh.drawType == null) {
         return false;
@@ -119,6 +120,9 @@ public class DrawRenderer extends MeshRenderer {
     drawType = dmesh.drawType;
     diameter = dmesh.diameter;
     width = dmesh.width;
+    headFactor = (diameter != 0 && width != 0 ? diameter : 0);
+    // diameter 3 width 1.0 means width 1.0 but headdepth 3 * width
+    // Admittedly this is pretty messed up. 
     if (mesh.connectedAtoms != null)
       getConnectionPoints();
     if (mesh.lineData != null) {
@@ -438,7 +442,8 @@ public class DrawRenderer extends MeshRenderer {
     double d = pt0d.distance(pt2f);
     if (d == 0)
       return;
-    double headScale = (fScale < 0 ? -fScale : 1);
+    boolean isNegScale = (fScale < 0);
+    double headScale = (headFactor == 0 && fScale < 0 ? -fScale : 1);
     if (fScale < 0)
       fScale = -fScale;
     
@@ -446,13 +451,14 @@ public class DrawRenderer extends MeshRenderer {
     vTemp.sub2(pt2f, pt0d); // total length
     vTemp.normalize(); // unit length
     
-    vTemp.scale(Math.min(headWidth == 0 ? fScale : headWidth*1.5, fScale) / 5); // 1/10
+    vTemp.scale((headFactor > 0 ? headFactor * width 
+        : Math.min(headWidth == 0 ? fScale : headWidth*1.5d, fScale)) / 5); // 1/10
     if (!withShaft)
-      pt2f.add(vTemp);
+      pt2f.add(vTemp); // adds 1/5 of head
     vTemp.scale(5);
     double len = vTemp.length();
-    if (len > headWidth * 1.5)
-      vTemp.scale(headWidth * 1.5/len);
+    if (len > headWidth * 1.5d)
+      vTemp.scale(headWidth * 1.5d/len);
     ///  pt0====pt1>>>>pt2
     pt1f.sub2(pt2f, vTemp);
     if (isTransformed) {

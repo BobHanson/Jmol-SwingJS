@@ -218,7 +218,7 @@ public final class Navigator extends JmolThread implements
     case T.percent: 
       if (tok == T.translate) {
         // Object[] { T.translate, Double seconds, P3 pt }
-        tm.transformPt3f((P3d) o[2], ptTemp);        
+        tm.transformPt3fSafe((P3d) o[2], ptTemp);        
       } else {
         // Object[] { T.percent, Double seconds, Double x, Double y }
         ptTemp.x = ((Double) o[2]).doubleValue();
@@ -275,7 +275,7 @@ public final class Navigator extends JmolThread implements
    }
 
   private void setNavPercent(P3d pt1) {
-    tm.transformPt3f(tm.navigationCenter, tm.navigationOffset);
+    tm.transformPt3fSafe(tm.navigationCenter, tm.navigationOffset);
     double x = pt1.x;
     double y = pt1.y;
     if (!Double.isNaN(x))
@@ -538,11 +538,11 @@ public final class Navigator extends JmolThread implements
             .rotTrans2(tm.navigationCenter, tm.navigationShiftXY);
       }
     }
-    tm.transformPt3f(tm.fixedRotationCenter, tm.fixedTranslation);
+    tm.transformPt3fSafe(tm.fixedRotationCenter, tm.fixedTranslation);
     tm.fixedRotationOffset.setT(tm.fixedTranslation);
     tm.previousX = tm.fixedTranslation.x;
     tm.previousY = tm.fixedTranslation.y;
-    tm.transformPt3f(tm.navigationCenter, tm.navigationOffset);
+    tm.transformPt3fSafe(tm.navigationCenter, tm.navigationOffset);
     tm.navigationOffset.z = tm.referencePlaneOffset;
     tm.navMode = TransformManager.NAV_MODE_NONE;
     calcNavSlabAndDepthValues();
@@ -591,7 +591,7 @@ public final class Navigator extends JmolThread implements
     tm.mode = tm.defaultMode;
     // get the rotation center's Z offset and move X and Y to 0,0
     P3d pt = new P3d();
-    tm.transformPt3f(tm.fixedRotationCenter, pt);
+    tm.transformPt3fSafe(tm.fixedRotationCenter, pt);
     pt.x -= tm.navigationOffset.x;
     pt.y -= tm.navigationOffset.y;
     // unapply the perspective as if IT were the navigation center
@@ -619,7 +619,7 @@ public final class Navigator extends JmolThread implements
     tm.rotateYRadians(JC.radiansPerDegree * .02f * tm.navX, null);
     P3d pt = tm.navigationCenter;
     P3d pts = new P3d();
-    tm.transformPt3f(pt, pts);
+    tm.transformPt3fSafe(pt, pts);
     pts.z += tm.navZ;
     tm.unTransformPoint(pts, pt);
     tm.setNavigatePt(pt);

@@ -99,7 +99,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
       if (mesh.haveXyPoints) {
         for (int i = vertexCount; --i >= 0;)
           if (vertices[i] != null)
-            tm.transformPtScrT32D(vertices[i], p3Screens[i]);
+            transformPtScrT32D(vertices[i], p3Screens[i]);
       } else {
         for (int i = vertexCount; --i >= 0;) {
           if (vertices[i] != null) {
@@ -177,6 +177,24 @@ public abstract class MeshRenderer extends ShapeRenderer {
     return true;
   }
 
+  private void transformPt2Df(T3d v, P3d pt) {
+    if (v.z == -Double.MAX_VALUE || v.z == Double.MAX_VALUE) {
+      P3i pi = (tm.transformPt2D(v));
+      pt.set(pi.x, pi.y, pi.z);
+    } else {
+      tm.transformPt3f(v, pt);
+    }
+  }
+  
+  private void transformPtScrT32D(T3d v, P3d pt) {
+    if (v.z == -Double.MAX_VALUE || v.z == Double.MAX_VALUE) {
+      P3i pi = (tm.transformPt2D(v));
+      pt.set(pi.x, pi.y, pi.z);
+    } else {
+      tm.transformPtScrT3(v, pt);
+    }
+  }
+  
   private boolean doRender;
   protected boolean volumeRender;
   protected BS bsPolygons;
@@ -493,6 +511,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
 
   protected void drawEdge(int iA, int iB, boolean fill, T3d vA, T3d vB, P3i sA,
                           @SuppressWarnings("unused") P3i sB) {
+    P3d pt1f = new P3d();
+    P3d pt2f = new P3d();
     byte endCap = (iA != iB && !fill ? GData.ENDCAPS_NONE : width < 0
         || width == -0.0 || iA != iB && isTranslucent ? GData.ENDCAPS_FLAT
             : GData.ENDCAPS_SPHERICAL);
@@ -522,8 +542,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
     if (diameter == 0)
       diameter = 1;
     // allows for 2D possibility for lines
-    tm.transformPt2Df(vA, pt1f);
-    tm.transformPt2Df(vB, pt2f);
+    transformPt2Df(vA, pt1f);
+    transformPt2Df(vB, pt2f);
     if (diameter == -1) {
       g3d.drawLineAB(pt1f, pt2f);
     } else if (diameter < 0) {

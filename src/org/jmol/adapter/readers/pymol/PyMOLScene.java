@@ -1132,7 +1132,7 @@ class PyMOLScene implements JmolSceneGenerator {
       if (isNew) {
         Lst<Object> points = new Lst<Object>();
         for (int i = 0; i < nCoord; i++, p += 3)
-          points.addLast(newP3i(PyMOLReader.pointAt(list, p, new P3d())));
+          points.addLast(Point3fi.newPF(PyMOLReader.pointAt(list, p, new P3d()), 0));
         offset = (PyMOLReader.floatsAt(PyMOLReader.listAt(offsets, index), 0, new double[7], 7));
         if (offset == null)
           offset = setLabelPosition(labelPosition, new double[7], false);
@@ -1156,12 +1156,6 @@ class PyMOLScene implements JmolSceneGenerator {
       addJmolObject(JC.SHAPE_MEASURES, bs, md);
     }
     return true;
-  }
-
-  private static Point3fi newP3i(P3d p) {
-    Point3fi pi = new Point3fi();
-    pi.set(p.x, p.y, p.z);
-    return pi;
   }
 
   SB getViewScript(Lst<Object> view) {

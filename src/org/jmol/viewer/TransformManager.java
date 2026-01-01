@@ -241,8 +241,8 @@ public class TransformManager {
     fixedRotationCenter.setT(center);
   }
 
-  void setRotationPointXY(P3d center) {
-    P3i newCenterScreen = transformPt(center);
+  private void setRotationPointXY(P3d center) {
+    P3i newCenterScreen = transformPtSafe(center);
     fixedTranslation.set(newCenterScreen.x, newCenterScreen.y, 0);
   }
 
@@ -259,7 +259,7 @@ public class TransformManager {
     clearSpin();
     P3d pt1 = P3d.newP(fixedRotationCenter);
     P3d ptScreen = new P3d();
-    transformPt3f(pt1, ptScreen);
+    transformPt3fSafe(pt1, ptScreen);
     P3d pt2 = P3d.new3(-yDelta, xDelta, 0);
     pt2.add(ptScreen);
     unTransformPoint(pt2, pt2);
@@ -810,7 +810,7 @@ public class TransformManager {
     if (windowCentered)
       vwr.setBooleanProperty("windowCentered", false);
     P3d pt = new P3d();
-    transformPt3f(fixedRotationCenter, pt);
+    transformPt3fSafe(fixedRotationCenter, pt);
     pt.set(x, y, pt.z);
     unTransformPoint(pt, pt);
     fixedTranslation.set(x, y, 0);
@@ -1395,10 +1395,21 @@ public class TransformManager {
   public final M4d matrixTransform = new M4d();
   public final M4d matrixTransformInv = new M4d();
 
-   protected final P3d fScrPt = new P3d();
-  protected final P3i iScrPt = new P3i();
+  /**
+   * for renderers only, thread-safe
+   */
+  private final P3d fScrPtSafe = new P3d();
+  private final P3i iScrPtSafe = new P3i();
+  private final Point3fi ptVibTempSafe = new Point3fi();
 
-  final Point3fi ptVibTemp = new Point3fi();
+  /**
+   * for all other uses, because rendering may be 
+   * simultaneous with non-rendering methods
+   */
+  private final P3d fScrPt = new P3d();
+  private final P3i iScrPt = new P3i();
+  private final Point3fi ptVibTemp = new Point3fi();
+  
 
   public boolean navigating = false;
   public int mode = MODE_STANDARD;
@@ -1464,7 +1475,7 @@ public class TransformManager {
     }
     if (zSlabPoint != null) {
       try {
-        transformPt3f(zSlabPoint, pointT2);
+        transformPt3fSafe(zSlabPoint, pointT2);
         zSlabValue = (int) pointT2.z;
       } catch (Exception e) {
         // don't care
@@ -1508,12 +1519,11 @@ public class TransformManager {
     try {
       matrixTransformInv.setM4(matrixTransform).invert();
     } catch (Exception e) {
-      System.out.println("ERROR INVERTING matrixTransform!");
+      System.err.println("ERROR INVERTING matrixTransform!");
       // ignore -- this is a Mac issue on applet startup
     }
     // note that the image is still centered at 0, 0 in the xy plane
 
-    //System.out.println("TM matrixTransform " + matrixTransform);
   }
 
   public void rotatePoint(T3d pt, T3d ptRot) {
@@ -1521,51 +1531,94 @@ public class TransformManager {
     ptRot.y = -ptRot.y;
   }
 
-  protected void getScreenTemp(T3d ptXYZ) {
+  protected void getScreenTemp(T3d ptXYZ, P3d fScrPt) {
     matrixTransform.rotTrans2(ptXYZ, fScrPt);
   }
 
+  /**
+   * RENDERERS ONLY
+   * @param ptXYZ
+   * @param pointScreen
+   */
   public void transformPtScr(T3d ptXYZ, P3i pointScreen) {
     pointScreen.setT(transformPt(ptXYZ));
   }
 
+  public void transformPtScrSafe(T3d ptXYZ, P3i pointScreen) {
+    pointScreen.setT(transformPtSafe(ptXYZ));
+  }
+
+
+  /**
+   * RENDERERS ONLY
+   * @param ptXYZ
+   * @param pointScreen
+   */
   public void transformPtScrT3(T3d ptXYZ, T3d pointScreen) {
     transformPt(ptXYZ);
     // note that this point may be returned as z=1 if the point is 
     // past the camera or slabbed internally
-    pointScreen.setT(fScrPt);
-  }
-
-  public void transformPt3f(T3d ptXYZ, P3d screen) {
-    applyPerspective(ptXYZ, ptXYZ);
-    screen.setT(fScrPt);
-  }
-
-  public void transformPtNoClip(T3d ptXYZ, T3d pointScreen) {
-    applyPerspective(ptXYZ, null);
-    pointScreen.setT(fScrPt);
+    pointScreen.setT(fScrPtSafe);
   }
 
   /**
+   * RENDERERS ONLY
+   * @param ptXYZ
+   * @param screen
+   */
+  public void transformPt3f(T3d ptXYZ, P3d screen) {
+    applyPerspective(ptXYZ, ptXYZ, fScrPtSafe, null);
+    screen.setT(fScrPtSafe);
+  }
+  
+  public void transformPt3fSafe(T3d ptXYZ, P3d screen) {
+    applyPerspective(ptXYZ, ptXYZ, fScrPt, null);
+    screen.setT(fScrPt);
+  }
+
+
+  /**
+   * RENDERERS ONLY
+   * @param ptXYZ
+   * @param pointScreen
+   */
+  public void transformPtNoClip(T3d ptXYZ, T3d pointScreen) {
+    applyPerspective(ptXYZ, null, fScrPtSafe, null);
+    pointScreen.setT(fScrPtSafe);
+  }
+
+  /**
+   * RENDERERS ONLY
    * CAUTION! returns a POINTER TO A TEMPORARY VARIABLE
    * 
    * @param ptXYZ
    * @return POINTER TO point3iScreenTemp
    */
   public synchronized P3i transformPt(T3d ptXYZ) {
-    return applyPerspective(ptXYZ, internalSlab ? ptXYZ : null);
+    return applyPerspective(ptXYZ, internalSlab ? ptXYZ : null, fScrPtSafe, iScrPtSafe);
+  }
+  
+  public P3i transformPtSafe(T3d ptXYZ) {
+    return applyPerspective(ptXYZ, internalSlab ? ptXYZ : null, fScrPt, iScrPt);
   }
 
+
+
   /**
+   * RENDERERS ONLY
    * @param ptXYZ
    * @param v
    * @return POINTER TO TEMPORARY VARIABLE (caution!) point3iScreenTemp
    */
   public P3i transformPtVib(P3d ptXYZ, Vibration v) {
-    ptVibTemp.setT(ptXYZ);
-    return applyPerspective(getVibrationPoint(v, ptVibTemp, Double.NaN), ptXYZ);
+    return applyPerspective(getVibrationPoint(v, ptVibTempSafe.setP(ptXYZ), Double.NaN), ptXYZ, fScrPtSafe, iScrPtSafe);
   }
   
+  public P3i transformPtVibSafe(P3d ptXYZ, Vibration v) {
+    return applyPerspective(getVibrationPoint(v, ptVibTemp.setP(ptXYZ), Double.NaN), ptXYZ, fScrPt, iScrPt);
+  }
+
+
   /**
    * return 
    * @param v
@@ -1578,42 +1631,29 @@ public class TransformManager {
         (Double.isNaN(scale) ? vibrationScale : scale), vwr.g.modulationScale);
   }
 
-  public void transformPt2Df(T3d v, P3d pt) {
-    if (v.z == -Double.MAX_VALUE || v.z == Double.MAX_VALUE) {
-      transformPt2D(v);
-      pt.set(iScrPt.x, iScrPt.y, iScrPt.z);
-    } else {
-      transformPt3f(v, pt);
-    }
-  }
-  
-  public void transformPtScrT32D(T3d v, P3d pt) {
-    if (v.z == -Double.MAX_VALUE || v.z == Double.MAX_VALUE) {
-      transformPt2D(v);
-      pt.set(iScrPt.x, iScrPt.y, iScrPt.z);
-    } else {
-      transformPtScrT3(v, pt);
-    }
-  }
-  
+  /**
+   * RENDERERS ONLY
+   * @param ptXyp
+   * @return P3i
+   */
   public synchronized P3i transformPt2D(T3d ptXyp) {
     // axes position [50 50]
     // just does the processing for [x y] and [x y %]
     if (ptXyp.z == -Double.MAX_VALUE) {
-      iScrPt.x = (int) Math.floor(ptXyp.x / 100 * screenWidth);
-      iScrPt.y = (int) Math
+      iScrPtSafe.x = (int) Math.floor(ptXyp.x / 100 * screenWidth);
+      iScrPtSafe.y = (int) Math
           .floor((1 - ptXyp.y / 100) * screenHeight);
     } else {
-      iScrPt.x = (int) ptXyp.x;
-      iScrPt.y = (screenHeight - (int) ptXyp.y);
+      iScrPtSafe.x = (int) ptXyp.x;
+      iScrPtSafe.y = (screenHeight - (int) ptXyp.y);
     }
     if (antialias) {
-      iScrPt.x <<= 1;
-      iScrPt.y <<= 1;
+      iScrPtSafe.x <<= 1;
+      iScrPtSafe.y <<= 1;
     }
-    matrixTransform.rotTrans2(fixedRotationCenter, fScrPt);
-    iScrPt.z = (int) fScrPt.z;
-    return iScrPt;
+    matrixTransform.rotTrans2(fixedRotationCenter, fScrPtSafe);
+    iScrPtSafe.z = (int) fScrPtSafe.z;
+    return iScrPtSafe;
   }
 
   /**
@@ -1621,13 +1661,13 @@ public class TransformManager {
    * 
    * @param ptXYZ
    * @param ptRef
+   * @param fScrPt 
+   * @param iScrPt 
    * @return temporary point!!!
    * 
    */
-  private P3i applyPerspective(T3d ptXYZ, T3d ptRef) {
-
-    getScreenTemp(ptXYZ);
-    //System.out.println(point3fScreenTemp);
+  private synchronized P3i applyPerspective(T3d ptXYZ, T3d ptRef, P3d fScrPt, P3i iScrPt) {
+    getScreenTemp(ptXYZ, fScrPt);
 
     // fixedRotation point is at the origin initially
 
@@ -1690,11 +1730,13 @@ public class TransformManager {
       haveNotifiedNaN = true;
     }
 
-    iScrPt.set((int) fScrPt.x, (int) fScrPt.y,
-        (int) fScrPt.z);
+    boolean z1 = (ptRef != null && xyzIsSlabbedInternal(ptRef));
+    if (z1) {
+      fScrPt.z = 1;
+    }    
+    if (iScrPt != null)
+      iScrPt.set((int) fScrPt.x, (int) fScrPt.y, (z1 ? 1 : (int) fScrPt.z));
 
-    if (ptRef != null && xyzIsSlabbedInternal(ptRef))
-      fScrPt.z = iScrPt.z = 1;
     return iScrPt;
   }
 
@@ -1909,7 +1951,7 @@ public class TransformManager {
     if (!Double.isNaN(zoom))
       zoomToPercent(zoom);
     if (!Double.isNaN(rotationRadius))
-      modelRadius = rotationRadius;
+      modelRadius = rotationRadius;    
     if (!Double.isNaN(pixelScale))
       scaleDefaultPixelsPerAngstrom = pixelScale;
     if (!Double.isNaN(xTrans) && !Double.isNaN(yTrans)) {
@@ -2622,8 +2664,8 @@ public class TransformManager {
       untransformedPoint.y -= navigationOffset.y;
       break;
     case MODE_PERSPECTIVE_PYMOL:
-      fScrPt.x += perspectiveShiftXY.x;
-      fScrPt.y += perspectiveShiftXY.y;
+      fScrPtSafe.x += perspectiveShiftXY.x;
+      fScrPtSafe.y += perspectiveShiftXY.y;
       //$FALL-THROUGH$
     case MODE_STANDARD:
       untransformedPoint.x -= fixedRotationOffset.x;
@@ -2698,7 +2740,7 @@ public class TransformManager {
   }
 
   public P3d getNavigationOffset() {
-    transformPt3f(navigationCenter, navigationOffset);
+    transformPt3fSafe(navigationCenter, navigationOffset);
     return navigationOffset;
   }
 

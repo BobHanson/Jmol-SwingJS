@@ -245,7 +245,7 @@ public class ScriptEval extends ScriptExpr {
     allowJSThreads = b;
   }
 
-  private boolean isFuncReturn;
+  public boolean isFuncReturn;
 
   // execution options:
   
@@ -4690,7 +4690,7 @@ public class ScriptEval extends ScriptExpr {
       default:
         modelName = "fileset";
       }
-      if (filename == null && filenames == null && getToken(i).tok != T.string)
+      if (!isInline && filename == null && filenames == null && getToken(i).tok != T.string)
         error(ERROR_filenameExpected);
     }
     // long timeBegin = System.currentTimeMillis();
@@ -8122,7 +8122,7 @@ public class ScriptEval extends ScriptExpr {
       return;
     }
     int i = 2;
-    // set picking select ATOM|CHAIN|GROUP|MOLECULE|MODEL|SITE
+    // set picking select ATOM|CHAIN|GROUP|MOLECULE|MODEL|SITE|VXYZ
     // set picking measure ANGLE|DISTANCE|TORSION
     // set picking spin fps
     String type = "SELECT";

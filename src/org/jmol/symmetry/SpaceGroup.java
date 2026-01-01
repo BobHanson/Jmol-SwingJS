@@ -81,16 +81,29 @@ import javajs.util.SB;
 
 public class SpaceGroup implements Cloneable, HallReceiver {
 
+  public static final String PREFIX_FRIEZE = "f/";
+  public static final String PREFIX_ROD    = "r/";
+  public static final String PREFIX_LAYER  = "l/";
+  public static final String PREFIX_PLANE  = "p/";
+  public static final String PREFIX_SPACE  = "";
+  public static final int TYPE_FRIEZE   = 600;
+  public static final int TYPE_ROD      = 500;
+  public static final int TYPE_LAYER    = 400;
+  public static final int TYPE_PLANE    = 300;
+  public static final int TYPE_SPACE    = 0;
+  public static final int TYPE_INVALID  = -1;
+  
   protected String specialPrefix = "";
   
-  /**
-   *  
-   *  
-   * @return [p/ | f/ | l/ | r/ | ""]
-   */
-  public String getSpecialPrefix() {
-    return specialPrefix; 
-  }
+  private M3d spinFrameTransform;
+
+  String strName;
+  public String displayName;
+
+  Lst<String> spinList;
+
+  String spinConfiguration;
+  private String ssgNumber;
   
   private static final String NEW_HALL_GROUP     = "0;--;--;0;--;--;";
   protected static final String NEW_NO_HALL_GROUP  = "0;--;--;0;--;--;--";
@@ -167,11 +180,21 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   private String hmSymbolAlternative;
   private String hmSymbolAbbrShort;
   private char ambiguityType = '\0';
+  boolean isSpinSpaceGroup;
 
+  
+  /**
+   *  
+   *  
+   * @return [p/ | f/ | l/ | r/ | ""]
+   */
+  public String getSpecialPrefix() {
+    return specialPrefix; 
+  }
   
   private SpaceGroup setFrom(SpaceGroup sg, boolean isITA) {
     if (isITA) {
-      setName(sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + sg.clegId);
+        setName((sg.isSpinSpaceGroup ? sg.name : sg.itaNumber.equals("0") ? clegId : "HM:" + sg.hmSymbolFull + " #" + sg.clegId));
       referenceIndex = SG_ITA; // prevents replacement in finalizeOperations
     } else {
       setName(sg.getName());
@@ -182,7 +205,11 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     periodicity = sg.periodicity;
     groupType = sg.groupType;
     setClegId(sg.getClegId());
+    isSpinSpaceGroup = sg.isSpinSpaceGroup;
     itaIndex = sg.itaIndex;
+    itaNumber = sg.itaNumber;
+    ssgNumber = sg.ssgNumber;
+    itaTransform = sg.itaTransform;
     crystalClass = sg.crystalClass;
     hallSymbol = sg.hallSymbol;
     hmSymbol = sg.hmSymbol;
@@ -191,8 +218,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     hmSymbolAlternative = sg.hmSymbolAlternative;
     hmSymbolExt = sg.hmSymbolExt;
     hmSymbolFull = sg.hmSymbolFull;
-    itaNumber = sg.itaNumber;
-    itaTransform = sg.itaTransform;
+    spinFrameTransform = sg.spinFrameTransform;
     jmolId = null;
     jmolIdExt = null;
     strName = displayName = null;
@@ -259,7 +285,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   public String getItaIndex() {
     return (itaIndex != null && !SG_NONE.equals(itaIndex) 
         ? itaIndex 
-            : !"0".equals(itaNumber) ? itaNumber : !SG_NONE.equals(hallSymbol) 
+            : !"0".equals(itaNumber) ? itaNumber 
+                : !SG_NONE.equals(hallSymbol) 
                 ? "[" + hallSymbol + "]" 
                     : "?");
   }
@@ -269,6 +296,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
   }
   
   public void setClegId(String cleg) {
+    if (cleg == null)
+      cleg = itaNumber + ":" + itaTransform;
     clegId = cleg;
     canonicalCLEG = canonicalizeCleg(cleg);
   }
@@ -497,9 +526,13 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       SB sb = new SB();
       while (sg != null && sg.groupType == SpaceGroup.TYPE_SPACE) {
         // I don't know why there would be multiples here
-        if (sg.index >= SG.length || andNonstandard)
+        if (sg.index < SG.length || andNonstandard)
           break;
-        sg = SG[sg.index];
+        if (!andNonstandard) {
+        	break;
+        }
+        if (sg.index < SG.length)
+          sg = SG[sg.index];
       }
       sg.getOperationCount();
       sb.append(sg.dumpInfo());
@@ -526,7 +559,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     else
       sb.append(hmSymbol)
           .append(hmSymbolExt.length() > 0 ? ":" + hmSymbolExt : "");
-    if (itaNumber != null) {
+    if (itaNumber != null && !"0".equals(itaNumber)) {
       sb.append("\ninternational table number: ").append(itaNumber);
     }
     if (crystalClass != null) {
@@ -1316,7 +1349,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
         || s.equals(SG_NONE) ? "a,b,c" 
         : s.equals("r") ? SimpleUnitCell.HEX_TO_RHOMB
         : PT.rep(s, "ab", SET_AB).replace('|', ';'));
-    setClegId(itaNumber + ":" + itaTransform);
+    setClegId(null);
    
     ////  terms[3] -- number of operators ////
 
@@ -1395,25 +1428,6 @@ public class SpaceGroup implements Cloneable, HallReceiver {
     return asString();
   }
   
-  String strName;
-  public String displayName;
-
-  Lst<String> spinList;
-
-  String spinConfiguration;
-  
-  public static final String PREFIX_FRIEZE = "f/";
-  public static final String PREFIX_ROD    = "r/";
-  public static final String PREFIX_LAYER  = "l/";
-  public static final String PREFIX_PLANE  = "p/";
-  public static final String PREFIX_SPACE  = "";
-  public static final int TYPE_FRIEZE   = 600;
-  public static final int TYPE_ROD      = 500;
-  public static final int TYPE_LAYER    = 400;
-  public static final int TYPE_PLANE    = 300;
-  public static final int TYPE_SPACE    = 0;
-  public static final int TYPE_INVALID  = -1;
-  
   public String asString() {
     return (strName == null 
         ? (strName = 
@@ -1440,6 +1454,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
       }
       if (name == null) {
         name = "[" + hallSymbol + "]"; // may still need setting
+      } else if (isSpinSpaceGroup) {
+        name = "spinSG:" + ssgNumber + ":" + itaTransform;
       } else if (getClegId() != null){
         name += " #" + getClegId();
       }
@@ -1589,13 +1605,28 @@ public class SpaceGroup implements Cloneable, HallReceiver {
 
   void setName(String name) {
     this.name = name;
-    if (name != null && name.startsWith("HM:")) {
-      setHMSymbol(name.substring(3));
+    if (name != null) {
+      if (name.equals("spinSG:")) {
+        itaNumber = ssgNumber = "0";
+        isSpinSpaceGroup = true;
+        hallSymbol = SG_NONE;
+        itaTransform = "a,b,c";
+        setClegId(null);
+        spinFrameTransform = M3d.newM3(null);
+      } else if (name.startsWith("HM:")) {
+        setHMSymbol(name.substring(3));
+      } else if (isSpinSpaceGroup) {
+        if (name.startsWith("spinSG:")) {
+          this.name = name;
+        } else {
+          this.name = "spinSG:" + name;
+        }
+        itaTransform = this.name.substring(this.name.indexOf(":", 7) + 1);
+      }
     }
-
-   strName = displayName = null;
+    strName = displayName = null;
   }
-
+  
   /**
    * Look for Jmol ID such as 10:b or 10 or 10.2 or 10:c,a,b
    * @param vwr
@@ -1692,7 +1723,7 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * @param tr
    */
   void setITATableNames(String jmolId, String sg, String set, String tr) {
-    itaNumber = sg;
+    itaNumber = (".".equals(sg) ? "0" : sg);
     itaIndex = (tr != null ? sg + ":" + tr : set.indexOf(".") >= 0 ? set : sg + "." + set);
     itaTransform = tr;
     setClegId(specialPrefix + sg + ":" + tr);
@@ -1841,7 +1872,6 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * @param clegId
    * @param itno
    * @param its0
-   * 
    * @return new map containing just gp and wpos
    */
   @SuppressWarnings("unchecked")
@@ -2120,6 +2150,8 @@ public class SpaceGroup implements Cloneable, HallReceiver {
    * @return full CLEG
    */
   public static String canonicalizeCleg(String t) {
+    if (t == null)
+      return null;
     if (t.indexOf(":") < 0) {
       t += ":a,b,c;0,0,0";
     } else if (t.indexOf(",") > 0 && t.indexOf(";") < 0) {

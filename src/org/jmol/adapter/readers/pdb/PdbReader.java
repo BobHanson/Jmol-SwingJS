@@ -462,7 +462,7 @@ public class PdbReader extends AtomSetCollectionReader {
       ignoreFileSpaceGroupName = true;
       sgName = fileSgName;
       fractionalizeCoordinates(true);
-      asc.setModelInfoForSet("biosymmetry", null, asc.iSet);
+      asc.setModelInfoForSet(JC.INFO_BIO_SYMMETRY, null, asc.iSet);
       checkNearAtoms = false;
     }
     if (latticeCells != null && latticeCells[0] != 0)
@@ -492,7 +492,7 @@ public class PdbReader extends AtomSetCollectionReader {
     if (iHaveUnitCell) {
       asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_PARAMS, unitCellParams);
       if (sgName != null)
-        asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP, sgName);
+        asc.setCurrentModelInfo(JC.INFO_FILE_SPACE_GROUP_NAME, sgName);
     }
   }
 

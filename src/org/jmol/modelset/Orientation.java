@@ -31,6 +31,11 @@ public class Orientation {
   private double[] pymolView;
 
   private Viewer vwr;
+
+  @Override
+  public String toString() {
+    return "[Orientation " + saveName + " " + rotationRadius + "]";
+  }
   
   public Orientation(Viewer vwr, boolean asDefault, double[] pymolView) {
     this.vwr = vwr;
@@ -54,9 +59,8 @@ public class Orientation {
     zoom = vwr.tm.getZoomSetting();
     center.setT(vwr.tm.fixedRotationCenter);
     windowCenteredFlag = vwr.tm.isWindowCentered();
-    rotationRadius = vwr.getDouble(T.rotationradius);
+    rotationRadius = vwr.tm.modelRadius;
     navigationMode = vwr.getBoolean(T.navigationmode);
-    //navigateSurface = vwr.getNavigateSurface();
     moveToText = vwr.tm.getMoveToText(-1, false);
     if (navigationMode) {
       xNav = vwr.tm.getNavigationOffsetPercent('X');
@@ -80,7 +84,6 @@ public class Orientation {
     if (isAll) {
       vwr.setBooleanProperty("windowCentered", windowCenteredFlag);
       vwr.setBooleanProperty("navigationMode", navigationMode);
-      //vwr.setBooleanProperty("navigateSurface", navigateSurface);
       if (pymolView == null)
         vwr.moveTo(vwr.eval, timeSeconds, center, null, Double.NaN, rotationMatrix, zoom, xTrans,
             yTrans, rotationRadius, navCenter, xNav, yNav, navDepth, cameraDepth, cameraX, cameraY);

@@ -681,9 +681,7 @@ class PointGroup {
         elements[nAtoms] = ((Node) p).getElementNumber() * bondIndex;
         atomMap[((Point3fi) p).i] = nAtoms + 1;
       } else {
-        Point3fi newPt = new Point3fi();
-        newPt.setT(p);
-        newPt.i = -1 - nAtoms;
+        Point3fi newPt = Point3fi.newPF(p, -1 - nAtoms);
         if (p instanceof Point3fi)
           elements[nAtoms] = Math.max(0, ((Point3fi) p).sD);
         p = newPt;

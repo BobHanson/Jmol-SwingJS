@@ -139,7 +139,7 @@ public class BioModelSet {
           if (!model.isBioModel || !(g instanceof Monomer) || g.getLeadAtom() == null)
             continue;
           boolean doCheck = checkConnections
-              && !ms.isJmolDataFrameForModel(ms.at[g.getLeadAtom().i].mi);
+              && !ms.isJmolDataFrame(ms.at[g.getLeadAtom().i].mi);
           BioPolymer bp = (((Monomer) g).bioPolymer == null ? BioResolver
               .allocateBioPolymer(groups, j, doCheck, pt) : null);
           if (bp == null || bp.monomerCount == 0)
@@ -1002,7 +1002,7 @@ public class BioModelSet {
       if (ms.at[i] == null)
           continue;
       int modelIndex = ms.am[ms.at[i].mi].trajectoryBaseIndex;
-      if (ms.isJmolDataFrameForModel(modelIndex))
+      if (ms.isJmolDataFrame(modelIndex))
         continue;
       bsModels.set(modelIndex);
       bsAtomsRet.set(i);

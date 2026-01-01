@@ -85,13 +85,6 @@ public class XtalSymmetry {
       return spaceGroup.setSpinList(configuration);
     }
 
-    public boolean checkDistance(P3d f1, P3d f2, double distance, double dx,
-                                 int iRange, int jRange, int kRange,
-                                 P3d ptOffset) {
-      return unitCell.checkDistance(f1, f2, distance, dx, iRange, jRange,
-          kRange, ptOffset);
-    }
-
     /**
      * 
      * @param desiredSpaceGroupIndex
@@ -1581,7 +1574,7 @@ public class XtalSymmetry {
 
   private void finalizeSymmetry(FileSymmetry symmetry) {
     String name = (String) asc.getAtomSetAuxiliaryInfoValue(-1,
-        JC.INFO_SPACE_GROUP);
+        JC.INFO_FILE_SPACE_GROUP_NAME);
     symmetry.setFinalOperations(ndims, name, asc.atoms, firstAtom,
         noSymmetryCount, doNormalize, filterSymop);
     if (filterSymop != null || name == null || name.equals("unspecified!")) {
@@ -1615,7 +1608,7 @@ public class XtalSymmetry {
     symmetry.setSpaceGroupName(spaceGroupName);
     String s = spaceGroupName + "";
     asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_F2C_TITLE, s);
-    asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP, s);
+    asc.setCurrentModelInfo(JC.INFO_FILE_SPACE_GROUP_NAME, s);
   }
 
   private void setCurrentModelInfo(int n, FileSymmetry sym, int[] unitCells) {
@@ -1623,9 +1616,10 @@ public class XtalSymmetry {
       // biomodel symmetry
       asc.setCurrentModelInfo("presymmetryAtomCount",
           Integer.valueOf(noSymmetryCount));
-      asc.setCurrentModelInfo("biosymmetryCount", Integer.valueOf(n));
-      asc.setCurrentModelInfo("biosymmetry", symmetry);
+      asc.setCurrentModelInfo(JC.INFO_BIO_SYMMETRY_COUNT, Integer.valueOf(n));
+      asc.setCurrentModelInfo(JC.INFO_BIO_SYMMETRY, symmetry);
     } else {
+      asc.setCurrentModelInfo(JC.INFO_FILE_SYMMETRY, symmetry);
       asc.setCurrentModelInfo("presymmetryAtomCount", Integer.valueOf(n));
       asc.setCurrentModelInfo("latticeDesignation",
           sym.getLatticeDesignation());
@@ -1731,12 +1725,12 @@ public class XtalSymmetry {
       }
     } else if (rangeType.equals("spin")) {
       rangeType = getBaseSymmetry().spinFrameStr;
+    } else if (rangeType.startsWith("unitcell_")) {
+      rangeType = (String) asc.getAtomSetAuxiliaryInfoValue(-1, rangeType);
     } else if (rangeType.indexOf(",") < 0 || rangeType.indexOf("a") < 0
         || rangeType.indexOf("b") < 0 || rangeType.indexOf("c") < 0) {
       // was not "a,b,c..."
       rangeType = null;
-    } else {
-//      rangeType = null;
     }
     if (rangeType != null && range == null
         && (range = symmetry.getV0abc(rangeType, null)) == null) {

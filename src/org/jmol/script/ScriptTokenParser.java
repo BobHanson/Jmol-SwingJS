@@ -789,6 +789,9 @@ abstract class ScriptTokenParser {
       case T.vanderwaals:
         key = (String) theValue;
         break;
+      case T.vibxyz:
+        key = "vxyz";
+        break;
       default:
         key = ((String) theValue).toLowerCase();
         break;
@@ -831,9 +834,15 @@ abstract class ScriptTokenParser {
             addTokenToPostfix(T.string, "$" + theValue);
             done = true;
             break;
+          case T.unitcell:
+            getToken();
+            addTokenToPostfix(T.string, T.nameOf(tok));
+            if (tokPeek() == T.rightparen) {
+              done = true;
+            }
+            break;
           case T.group:
           case T.vanderwaals:
-          case T.unitcell:
             getToken();
             addTokenToPostfix(T.string, T.nameOf(tok));
             break;
@@ -873,7 +882,8 @@ abstract class ScriptTokenParser {
             addTokenToPostfixToken(getToken());
           }
         }
-      } else if (!clauseOr(allowComma)) {// *expression*        return error(ERROR_badArgumentCount);
+      } else if (!clauseOr(allowComma)) {
+        // *expression*        return error(ERROR_badArgumentCount);
       }
     }
     if (!addNextTokenIf(T.rightparen))

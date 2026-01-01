@@ -766,7 +766,7 @@ public class Text {
       pTemp.set(0, 0, 0);
     pTemp.add3(pymolOffset[4], pymolOffset[5], pymolOffset[6]);
     //System.out.println("draw id \"Txt" + atomPt + "\" width 0.1 " + pTemp + "\""+text+"\"" + "//" + isPixel + Arrays.toString(pymolOffset));
-    vwr.tm.transformPtScr(pTemp, screen);
+    vwr.tm.transformPtScrSafe(pTemp, screen);
     if (isPixel) {
       screen.x += pymolOffset[1];
       screen.y += pymolOffset[2];

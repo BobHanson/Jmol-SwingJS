@@ -81,10 +81,6 @@ import javajs.util.V3d;
  */
 public class CifReader extends AtomSetCollectionReader {
 
-  protected static final String CELL_TYPE_MAGNETIC_PARENT = "parent";
-  protected static final String CELL_TYPE_MAGNETIC_STANDARD = "standard";
-  protected static final String CELL_TYPE_SPIN_FRAME = "spin";
-
   /**
    * Allows checking specific blocks
    * 
@@ -447,22 +443,32 @@ public class CifReader extends AtomSetCollectionReader {
     if (key.startsWith("_space_group_spin_")) {
           processSpinSpaceGroup();
     } else if (key.contains("_from_parent") || key.contains("child_transform")) {
-      addCellType(CELL_TYPE_MAGNETIC_PARENT, (String) field, true);
+      addCellType(JC.CELL_TYPE_MAGNETIC_PARENT, (String) field, true);
     } else if (key.contains("_to_standard")
         || key.contains("transform_bns_pp_abc")) {
-      addCellType(CELL_TYPE_MAGNETIC_STANDARD, (String) field, false);
+      addCellType(JC.CELL_TYPE_MAGNETIC_STANDARD, (String) field, false);
     }
     appendLoadNote(key + ": " + field);
   }
 
   private void processSpinSpaceGroup() {
 
+	//  _space_group_spin_spin_part_point_group: 12/mmm
+	//  _space_group_spin_transform_to_input_pp: 0.666667a+0.333333b,-0.333333a-0.666667b,-c;1/9,2/9,0
+	//  _space_group_spin_transform_to_magnetic_primitive_pp: -0.333333a-0.666667b,-0.333333a+0.333333b,-c;0,0,0
+	//  _space_group_spin_transform_to_l0std_pp: -0.333333a-0.666667b,-0.333333a+0.333333b,-c;0,0,0
+	//  _space_group_spin_transform_to_g0std_pp: -b,-a,-c;0,0,0
+	//  _space_group_spin_l0_number
+    //  _space_group_spin_ik
+	//  _space_group_spin_it
+	  
     //    _space_group_spin.transform_spinframe_P_matrix  [[1 -1 0] [1 0 0] [0 0 1]]
     //    _space_group_spin.transform_spinframe_P_abc  'a,b,c'
     //    _space_group_spin.collinear_direction . 
     //    _space_group_spin.coplanar_perp_uvw "0,0,1"
     //    _space_group_spin.rotation_axis "0,0,1"
     //    _space_group_spin.rotation_angle 45
+
     String tag = key.substring(18);
     switch (tag) {
     case "number_spsg_chen":
@@ -486,7 +492,7 @@ public class CifReader extends AtomSetCollectionReader {
         m4.setRotationScale((M3d) Escape.unescapeMatrixD(spinFrame));
         spinFrame = SymmetryOperation.getTransformABC(m4, false);
       }
-      addCellType(CELL_TYPE_SPIN_FRAME, spinFrame, false);
+      addCellType(JC.CELL_TYPE_SPIN_FRAME, spinFrame, false);
       field = spinFrame;
       tag = "spinFrame";
       break;
@@ -509,11 +515,41 @@ public class CifReader extends AtomSetCollectionReader {
       // of the symmetry operation spin components
       // field = addSpinFrameExt("perpuvw");
       break;
+    case "g0_number":
+      tag = "G0";
+      break;
+    case "l0_number":
+      tag = "L0";
+      break;
+    case "it":
+      break;
+    case "ik":
+      break;
+    case "spin_part_point_group":
+      tag = "SPG";
+      break;
+    case "transform_to_input_pp":
+      addCellType(JC.CELL_TYPE_SPIN_MAG_INPUT, "!" + field, true);
+      tag = null;
+      break;
+    case "transform_to_magnetic_primitive_pp":
+      addCellType(JC.CELL_TYPE_SPIN_MAG_PRIMITIVE, "!" + field, true);
+      tag = null;
+      break;
+    case "transform_to_l0std_pp":
+      addCellType(JC.CELL_TYPE_SPIN_L0, "!" + field, true);
+      tag = null;
+      break;
+    case "transform_to_g0std_pp":
+      addCellType(JC.CELL_TYPE_SPIN_G0, "!" + field, true);
+      tag = null;
+      break;
     default:
       System.err.println("CIFReader unrecognized spin key " + key);
       return;
     }
-    addMoreUnitCellInfo(tag + "=" + field);
+    if (tag != null)
+      addMoreUnitCellInfo(tag + "=" + field);
   }
 
   private String addSpinFrameExt(String name, boolean doClean) {
@@ -892,8 +928,7 @@ public class CifReader extends AtomSetCollectionReader {
   //  _space_group.magn_ssg_number_BNS 33.1.9.5.m145.?
   //  _space_group.magn_point_group "mm21'"
   //  _space_group_spin.number_SSG1  "47.123.1.1.L" 
-
-
+  
   /**
    * done by AtomSetCollectionReader
    * 
@@ -2587,7 +2622,7 @@ public class CifReader extends AtomSetCollectionReader {
       for (int j = bs1.nextSetBit(0); j >= 0; j = bs1.nextSetBit(j + 1)) {
         for (int k = bs2.nextSetBit(0); k >= 0; k = bs2.nextSetBit(k + 1)) {
           if ((!isMolecular || !bsConnected[j + firstAtom].get(k))
-              && checkBondDistance(atoms[j + firstAtom], atoms[k + firstAtom],
+              && checkBond(atoms[j + firstAtom], atoms[k + firstAtom],
                   distance, dx)) {
             addNewBond(j + firstAtom, k + firstAtom, order);
           }
@@ -2609,7 +2644,7 @@ public class CifReader extends AtomSetCollectionReader {
                 && (!checkAltLoc || atoms[k].altLoc == '\0'
                     || atoms[k].altLoc == atoms[i].altLoc)) {
               if (!bsConnected[i].get(k)
-                  && checkBondDistance(atoms[i], atoms[k], 1.1d, 0))
+                  && checkBond(atoms[i], atoms[k], 1.1d, 0))
                 addNewBond(i, k, 1);
             }
         }
@@ -2640,7 +2675,7 @@ public class CifReader extends AtomSetCollectionReader {
       if (!bsMolecule.get(i) && !bsExclude.get(i))
         for (int j = bsMolecule.nextSetBit(0); j >= 0; j = bsMolecule
             .nextSetBit(j + 1))
-          if (symmetry.checkDistance(atoms[j], atoms[i],
+          if (checkBondDistance(atoms[j], atoms[i],
               atomRadius[i] + atomRadius[j] + bondTolerance, 0, nFactor,
               nFactor, nFactor, ptOffset)) {
             setBs(atoms, i, bsConnected, bsBranch);
@@ -2667,17 +2702,51 @@ public class CifReader extends AtomSetCollectionReader {
     return false;
   }
 
-  private boolean checkBondDistance(Atom a, Atom b, double distance,
-                                    double dx) {
+  private boolean checkBond(Atom a, Atom b, 
+                            double distance, double dx) {
     boolean ret;
     if (iHaveFractionalCoordinates) {
-      ret = symmetry.checkDistance(a, b, distance, dx, 0, 0, 0, ptOffset);
+      ret = checkBondDistance(a, b, distance, dx, 0, 0, 0, ptOffset);
     } else {
       double d = a.distance(b);
       ret = (dx > 0 ? Math.abs(d - distance) <= dx : d <= distance && d > 0.1d); // same as in Symmetry
     }
     return ret;
   }
+
+  /**
+   * Used by CifReader to specifically find 
+   * a matching atom across a given range of i,j,k
+   * and within a given distance+-slop of each other. 
+   * 
+   * @param f1
+   * @param f2
+   * @param distance
+   * @param slop
+   * @param iRange
+   * @param jRange
+   * @param kRange
+   * @param ptOffset
+   * @return       TRUE if ptOffset has been set.
+   */
+  private boolean checkBondDistance(P3d f1, P3d f2, double distance, double slop,
+                              int iRange, int jRange, int kRange, P3d ptOffset) {
+    P3d p1 = P3d.newP(f1);
+    symmetry.toCartesian(p1, true);
+    for (int i = -iRange; i <= iRange; i++)
+      for (int j = -jRange; j <= jRange; j++)
+        for (int k = -kRange; k <= kRange; k++) {
+          ptOffset.set(f2.x + i, f2.y + j, f2.z + k);
+          symmetry.toCartesian(ptOffset, true);
+          double d = p1.distance(ptOffset);
+          if (slop > 0 ? Math.abs(d - distance) <= slop : d <= distance && d > 0.1d) {
+            ptOffset.set(i, j, k);
+            return true;
+          }
+        }
+    return false;
+  }
+
 
   /**
    * add the bond and mark it for molecular processing
