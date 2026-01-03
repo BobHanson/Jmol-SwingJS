@@ -61,58 +61,76 @@ final class LineRenderer extends PrecisionRenderer {
     this.g3d = g3d;
     shader = g3d.shader;
   }
+  private final static BS lbNone = new BS();
+  private static final int LINE_CACHE_MAX = 10000;
 
-  private BS lineBits;
-  private double slope;
+  private BS lineBits = new BS();
   private boolean lineTypeX;
   private int nBits;
-  //  private int nCached = 0;
-  //  private int nFound = 0;
-  //int test = 5;
-  private Map<Double, BS> lineCache = new Hashtable<Double, BS>();
-  private Double slopeKey;
+  private Map<Integer, BS> lineCache = new Hashtable<>();
 
+  /**
+   * Determine line bits, but only from Graphics3D.fillCylinderBits and
+   * Graphics3D.fillCylinderBits2. Caching of up to 10,000 lines speeds
+   * rendering.
+   * 
+   * Not for bonds, which use Graphics3D.fillCylinderXYZ
+   * and CylinderRenderer.renderBitsFloat, which calls
+   * CylinderRenderer.generateBaseEllipsePrecisely;
+   * 
+   * @param dx
+   * @param dy
+   */
   void setLineBits(double dx, double dy) {
-    // from cylinder
-    slope = (dx != 0 ? dy / dx : dy >= 0 ? Double.MAX_VALUE : -Double.MAX_VALUE);
+    float adx = Math.abs((float) dx);
+    float ady = Math.abs((float) dy);
+    float slope;
+    if (adx < 1 && ady < 0) {
+      lineBits = lbNone;
+      return;    
+    }
+    if (adx == 0) {
+      slope = (dy >= 0 ? Float.MAX_VALUE : -Float.MAX_VALUE);
+    } else {
+      slope = (float) (dy / dx);
+      if (slope > 1e5)
+        slope = Float.MAX_VALUE;
+      else if (slope < -1e5)
+        slope = -Float.MAX_VALUE;
+    }
     lineTypeX = (slope <= 1 && slope >= -1);
     nBits = (lineTypeX ? g3d.width : g3d.height);
 
     // get cached line bits or create new ones
 
-    slopeKey = Double.valueOf(slope);
-    if (lineCache.containsKey(slopeKey)) {
-      lineBits = lineCache.get(slopeKey);
-      //    if (Logger.debugging) {
-      //      nFound++;
-      //      if (nFound == 1000000)
-      //        Logger.debug("nCached/nFound lines: " + nCached + " " + nFound);
-      //    }
-      return;
-    }
-    lineBits = BS.newN(nBits);
-    dy = Math.abs(dy);
-    dx = Math.abs(dx);
-    if (dy > dx) {
-      double t = dx;
-      dx = dy;
-      dy = t;
-    }
-    int twoDError = 0;
-    double twoDx = dx + dx, twoDy = dy + dy;
-    for (int i = 0; i < nBits; i++) {
-      twoDError += twoDy;
-      if (twoDError > dx) {
-        lineBits.set(i);
-        twoDError -= twoDx;
+    Integer slopeKey = Integer.valueOf(Math.round(slope * 10000));
+    BS lb = lineCache.get(slopeKey);
+    if (lb == null) {
+      if (lineCache.size() > LINE_CACHE_MAX) {
+        lineCache.clear();
       }
+      lb = BS.newN(nBits);
+      if (ady > adx) {
+        float t = adx;
+        adx = ady;
+        ady = t;
+      }
+      float twoDError = 0;
+      float twoDx = adx + adx, twoDy = ady + ady;
+      for (int i = 0; i < nBits; i++) {
+        twoDError += twoDy;
+        if (twoDError > adx) {
+          lb.set(i);
+          twoDError -= twoDx;
+        }
+      }
+      lineCache.put(slopeKey, lb);
     }
-    lineCache.put(slopeKey, lineBits);
+    lineBits = lb;
   }
 
   void clearLineCache() {
     lineCache.clear();
-    //nCached = 0;
   }
 
   void plotLineOld(int argbA, int argbB, int xA, int yA, int zA, int xB,

@@ -838,6 +838,7 @@ SymmetryInterface sym;
       return mp.addXObj(b.getInfo(lastParam == 0 ? null : args[0].asString()));
     }
     boolean isInfo = false;
+    boolean asMatrix = (lastParam >= 0 && args[lastParam].tok == T.on);
     if (lastParam >= 0 && args[lastParam].tok == T.string) {
       String infoType = (String) args[lastParam].value;
       isInfo = "info".equals(infoType); 
@@ -855,9 +856,29 @@ SymmetryInterface sym;
       }
     }
     Object o = getUnitCell(args, iatom, 0, lastParam);
-    if (isInfo && AU.isAP(o)) {
-        SymmetryInterface uc = vwr.getSymTemp().getUnitCell((P3d[]) o, false, null);
+    if (AU.isAP(o)) {
+      P3d[] oabc = (P3d[]) o;
+      if (isInfo) { 
+        SymmetryInterface uc = vwr.getSymTemp().getUnitCell(oabc, false, null);
         return mp.addXMap(uc.getUnitCellInfoMap()); 
+      }
+      if (asMatrix) {
+        SymmetryInterface sym = vwr.getCurrentUnitCell();
+        M4d m4 = new M4d();
+        for (int i = 0; i < 4; i++) {
+          P3d p = oabc[i];
+          sym.toFractional(oabc[i], true);
+          if (i == 0) {
+            m4.m00 = p.x;
+            m4.m01 = p.y;
+            m4.m02 = p.z;
+            m4.m03 = 1;
+          } else {
+            m4.setColumn4(i - 1, p.x, p.y, p.z, 0);
+          }
+        }
+        return mp.addXM4(m4);
+      }
     }
     return (o != null && mp.addXObj(o));
   }
@@ -896,23 +917,43 @@ SymmetryInterface sym;
         normalize = true;
         break;
       }
-      return vwr.getSymStatic().staticGetTransformABC(args[ipt].value,
+      return vwr.getSymStatic().staticGetTransformABC((M4d) args[ipt].value,
           normalize);
     case T.string:
-      arg0 = args[ipt].asString();
+      arg0 = args[ipt].asString().toLowerCase();
       if (arg0.indexOf("a=") == 0) {
         ucnew = new P3d[4];
         for (int i = 0; i < 4; i++)
           ucnew[i] = new P3d();
         SimpleUnitCell.setAbc(arg0, null, ucnew);
+        arg0 = null;
       } else if (arg0.indexOf(",") >= 0 || arg0.equals("r")) {
-        boolean asMatrix = (lastParam > ipt && SV.bValue(args[ipt + 1]));
-        if (asMatrix)
-          return (isWithin ? null
-              : vwr.getSymTemp().convertTransform(arg0, null));
-        ucnew = vwr.getV0abc(-1, arg0);
+        // accept this
+      } else {
+        boolean isNot = arg0.startsWith("!");
+        if (isNot) {
+          arg0 = arg0.substring(1);
+        }
+        if (arg0.startsWith(JC.UNITCELL_PREFIX)) {
+          arg0 = (String) vwr.getCurrentModelAuxInfo().get(arg0);
+          if (arg0 == null)
+            return null;
+          if (isNot)
+            arg0 = "!" + arg0;
+        } else {
+          arg0 = null;
+        }
       }
       break;
+    }
+    if (arg0 != null) {
+      boolean asMatrix = (lastParam > ipt && SV.bValue(args[ipt + 1]));
+      if (asMatrix)
+        return (isWithin ? null
+            : vwr.getSymTemp().convertTransform(arg0, null));
+      ucnew = vwr.getV0abc(-1, arg0);
+      if (ucnew == null)
+        return null;
     }
     if (ucnew == null) {
       SymmetryInterface u = null;
@@ -977,7 +1018,9 @@ SymmetryInterface sym;
       }
 
       String op = (ptParam <= lastParam ? args[ptParam].asString() : null);
-
+      if ("vertices".equalsIgnoreCase(op)) {
+        return (isWithin ? null : BoxInfo.getVerticesFromOABC(ucnew));
+      }
       boolean toPrimitive = "primitive".equalsIgnoreCase(op);
       if (toPrimitive || "conventional".equalsIgnoreCase(op)) {
         String stype = (++ptParam > lastParam ? ""
@@ -998,8 +1041,6 @@ SymmetryInterface sym;
       } else if ("reciprocal".equalsIgnoreCase(op)) {
         ucnew = SimpleUnitCell.getReciprocal(ucnew, null, scale);
         scale = 1;
-      } else if ("vertices".equalsIgnoreCase(op)) {
-        return (isWithin ? null : BoxInfo.getVerticesFromOABC(ucnew));
       }
     }
     if (scale != 1)

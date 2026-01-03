@@ -1361,7 +1361,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   public void fillCylinderXYZ(short colixA, short colixB, byte endcaps,
                               int diameter, int xA, int yA, int zA, int xB,
                               int yB, int zB) {
-    //Backbone, Mps, Sticks
+    //Backbone, Mps, Sticks, Stars, more
     if (diameter > ht3)
       return;
     int screen = 0;
@@ -1380,15 +1380,6 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
         xB, yB, zB);
   }
 
-  //  @Override
-  //  public void fillCylinderScreen(byte endcaps, int diameter, int xA, int yA,
-  //                                 int zA, int xB, int yB, int zB) {
-  //    //measures, vectors, polyhedra
-  //    if (diameter <= ht3)
-  //      cylinder3d.renderOld(colixCurrent, colixCurrent, 0, endcaps, diameter, xA, yA,
-  //          zA, xB, yB, zB);
-  //  }
-  //
   @Override
   public void fillCylinderScreen3I(byte endcaps, int diameter, P3d screenA,
                                    P3d screenB, P3d pt0f, P3d pt1f, double radius) {
@@ -1431,7 +1422,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   @Override
   public void fillCylinderBits2(short colixA, short colixB, byte endcaps,
                                 int diameter, P3d screenA, P3d screenB) {
-    //Backbone, Mps, Sticks
+    //Mesh triangle fill
     if (diameter > ht3)
       return;
     int screen = 0;
@@ -1454,7 +1445,7 @@ final public class Graphics3D extends GData implements JmolRendererInterface {
   @Override
   public void fillConeScreen3f(byte endcap, int screenDiameter, P3d screenBase,
                                P3d screenTip, boolean isBarb) {
-    // cartoons, rockets
+    // cartoons, rockets, arrows
     if (screenDiameter <= ht3)
       cylinder3d.renderConeOld(colixCurrent, endcap, screenDiameter,
           screenBase.x, screenBase.y, screenBase.z, screenTip.x, screenTip.y,

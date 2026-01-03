@@ -1390,6 +1390,7 @@ public class SymmetryOperation extends M4d {
    * @param m
    * @param isUVW
    *        will allow 0.577.... not changing that to a fraction
+   * @param withParens 
    * @return full x,y,...(u,v,....) or just u,v,w
    */
   public static String getSpinString(M34d m, boolean isUVW, boolean withParens) {
@@ -2514,17 +2515,16 @@ public class SymmetryOperation extends M4d {
    * columns to rows before passing the information to
    * getXYZFromMatrixFrac(...,"ABC").
    * 
-   * @param transform
+   * @param transform the transform matrix
    * @param normalize
    *        only set to true by (undocumented?) script unitcell(m4,true); normalize translation
    *        to interval (-1/2,1/2]
    * @return a,b,c format for the given matrix
    */
-  public static String getTransformABC(Object transform, boolean normalize) {
+  public static String getTransformABC(M4d transform, boolean normalize) {
     if (transform == null)
       return "a,b,c";
-    M4d t = (M4d) transform;
-    M4d m = M4d.newM4(t);
+    M4d m = M4d.newM4(transform);
     V3d tr = new V3d();
     m.getTranslation(tr);
     tr.scale(-1);
@@ -2611,7 +2611,7 @@ public class SymmetryOperation extends M4d {
         if (d == (int) d) {
           ret += (d < 0 ? " " + (int) d : "  " + (int) d);
         } else {
-          int n48 = (int) Math.round((double) (d * 48));
+          int n48 = (int) Math.round((d * 48));
           if (approx6(d * 48 - n48) != 0) {
             ret += d;
           } else {

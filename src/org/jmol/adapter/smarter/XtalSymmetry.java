@@ -1725,7 +1725,7 @@ public class XtalSymmetry {
       }
     } else if (rangeType.equals("spin")) {
       rangeType = getBaseSymmetry().spinFrameStr;
-    } else if (rangeType.startsWith("unitcell_")) {
+    } else if (rangeType.startsWith(JC.UNITCELL_PREFIX)) {
       rangeType = (String) asc.getAtomSetAuxiliaryInfoValue(-1, rangeType);
     } else if (rangeType.indexOf(",") < 0 || rangeType.indexOf("a") < 0
         || rangeType.indexOf("b") < 0 || rangeType.indexOf("c") < 0) {

@@ -3843,10 +3843,9 @@ public class Viewer extends JmolViewer
 
   /**
    * 
-   * convert string abc;offset or M3d or M4d to origin and three vectors -- a,
+   * Convert string abc;offset or M3d or M4d to origin and three vectors -- a,
    * b, c. The string can be preceded by ! for "reverse of". For example,
-   * "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional, but it still needs a
-   * semicolon: "a/2,b/2,c;"
+   * "!a-b,-5a-5b,-c;7/8,0,1/8" offset is optional.
    * 
    * @param iModel
    * 

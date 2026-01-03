@@ -254,10 +254,10 @@ public class StateManager {
   
   public void saveUnitCell(String saveName) {
     if (saveName.equalsIgnoreCase("DELETE")) {
-      deleteSavedType("Unitcell_");
+      deleteSavedType(JC.UNITCELL_PREFIX);
       return;
     }
-    saveName = lastUnitcell = "Unitcell_" + saveName;
+    saveName = lastUnitcell = JC.UNITCELL_PREFIX + saveName;
     SymmetryInterface uc = vwr.getCurrentUnitCell();
     if (uc != null) {
       String state = "UNITCELL " + Escape.e(uc.getUnitCellVectors());
@@ -266,7 +266,7 @@ public class StateManager {
   }
 
   public String getSavedUnitCell(String saveName) {
-    String name = (saveName.length() > 0 ? "Unitcell_" + saveName
+    String name = (saveName.length() > 0 ? JC.UNITCELL_PREFIX + saveName
         : lastUnitcell);
     String ucstate = (String) getNoCase(saved, name);
     return ucstate;

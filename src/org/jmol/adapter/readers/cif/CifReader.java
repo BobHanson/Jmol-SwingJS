@@ -777,8 +777,10 @@ public class CifReader extends AtomSetCollectionReader {
               asc.getAtomSetAtomCount(modelIndex), maxSerial });
     }
     if (htCellTypes != null) {
-      for (Entry<String, String> e : htCellTypes.entrySet())
-        asc.setCurrentModelInfo("unitcell_" + e.getKey(), e.getValue());
+      for (Entry<String, String> e : htCellTypes.entrySet()) {
+        asc.setCurrentModelInfo(JC.UNITCELL_PREFIX + e.getKey(), e.getValue());
+        appendLoadNote(JC.UNITCELL_PREFIX + e.getKey() + " = " + e.getValue());
+      }
       htCellTypes = null;
     }
     if (!haveCellWaveVector)

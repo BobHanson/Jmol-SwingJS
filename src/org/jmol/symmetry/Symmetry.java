@@ -2054,7 +2054,7 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public String staticGetTransformABC(Object transform, boolean normalize) {
+  public String staticGetTransformABC(M4d transform, boolean normalize) {
     return SymmetryOperation.getTransformABC(transform, normalize);
   }
 

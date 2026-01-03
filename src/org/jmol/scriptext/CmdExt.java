@@ -6198,75 +6198,79 @@ public class CmdExt extends ScriptExt {
         newUC = s;
         break;
       }
-      String stype = null;
-      // parent, standard, conventional, primitive
-      vwr.ms.setModelCagePts(-1, null, null);
-      // reset -- presumes conventional, so if it is not, 
-      // _M.unitcell_conventional must be set in the reader.
+      if (!s.startsWith(JC.UNITCELL_PREFIX)) {
+        String stype = null;
+        // parent, standard, conventional, primitive
+        vwr.ms.setModelCagePts(-1, null, null);
+        // reset -- presumes conventional, so if it is not, 
+        // _M.unitcell_conventional must be set in the reader.
 
-      newUC = vwr.getModelInfo(JC.INFO_UNIT_CELL_CONVENTIONAL);
-      // If the file read was loaded as primitive, 
-      // newUC will be a T3[] indicating the conventional.
-      boolean modelIsPrimitive = vwr.getModelInfo("isprimitive") != null;
-      if (PT.isOneOf(ucname, ";parent;standard;primitive;")) {
-        if (newUC == null && modelIsPrimitive) {
-          showString(
-              "Cannot convert unit cell when file data is primitive and have no lattice information");
-          return;
-        }
-        // unitcell primitive "C"
-        if (ucname.equals("primitive") && tokAt(i + 1) == T.string)
-          stype = paramAsStr(++i).toUpperCase();
-      }
-      if (newUC instanceof T3d[]) {
-        // from reader -- getting us to conventional
-        oabc = (T3d[]) newUC;
-      }
-      if (stype == null)
-        stype = (String) vwr.getModelInfo("latticeType");
-      if (newUC != null) {
-        vwr.ms.setModelCagePts(-1, vwr.getV0abc(-1, newUC), "" + newUC);
-        newUC = null;
-      }
-      // now guaranteed to be "conventional"
-      if (!ucname.equals("conventional")) {
-        setShapeProperty(JC.SHAPE_AXES, "labels", null);
-        s = (String) vwr.getModelInfo("unitcell_" + ucname);
-        if (s == null) {
-          boolean isPrimitive = ucname.equals("primitive");
-          if (isPrimitive || ucname.equals("reciprocal")) {
-            double scale = (slen == i + 1 ? 1
-                : tokAt(i + 1) == T.integer ? intParameter(++i) * Math.PI
-                    : doubleParameter(++i));
-            ucname = (sym == null ? "" : sym.getSpaceGroupName() + " ")
-                + ucname;
-            oabc = (sym == null
-                ? new P3d[] { P3d.new3(0, 0, 0), P3d.new3(1, 0, 0),
-                    P3d.new3(0, 1, 0), P3d.new3(0, 0, 1) }
-                : sym.getUnitCellVectors());
-            if (stype == null)
-              stype = (String) vwr.getSymmetryInfo(
-                  vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null, null,
-                  T.lattice, null, 0, -1, 0, null);
-            if (sym == null)
-              sym = vwr.getSymTemp();
-            if (!modelIsPrimitive)
-              sym.toFromPrimitive(true,
-                  stype.length() == 0 ? 'P' : stype.charAt(0), oabc,
-                  (M3d) vwr.getCurrentModelAuxInfo().get("primitiveToCrystal"));
-            if (!isPrimitive) {
-              SimpleUnitCell.getReciprocal(oabc, oabc, scale);
-            }
-            break;
+        newUC = vwr.getModelInfo(JC.INFO_UNIT_CELL_CONVENTIONAL);
+        // If the file read was loaded as primitive, 
+        // newUC will be a T3[] indicating the conventional.
+        boolean modelIsPrimitive = vwr.getModelInfo("isprimitive") != null;
+        if (PT.isOneOf(ucname, ";parent;standard;primitive;")) {
+          if (newUC == null && modelIsPrimitive) {
+            showString(
+                "Cannot convert unit cell when file data is primitive and have no lattice information");
+            return;
           }
-        } else {
-          ucname = s;
-          if (s.indexOf(",") >= 0)
-            newUC = s;
+          // unitcell primitive "C"
+          if (ucname.equals("primitive") && tokAt(i + 1) == T.string)
+            stype = paramAsStr(++i).toUpperCase();
         }
+        if (newUC instanceof T3d[]) {
+          // from reader -- getting us to conventional
+          oabc = (T3d[]) newUC;
+        }
+        if (stype == null)
+          stype = (String) vwr.getModelInfo("latticeType");
+        if (newUC != null) {
+          vwr.ms.setModelCagePts(-1, vwr.getV0abc(-1, newUC), "" + newUC);
+          newUC = null;
+        }
+        // now guaranteed to be "conventional"
+        if (!ucname.equals("conventional")) {
+          setShapeProperty(JC.SHAPE_AXES, "labels", null);
+          s = (String) vwr.getModelInfo(JC.UNITCELL_PREFIX + ucname);
+          if (s == null) {
+            boolean isPrimitive = ucname.equals("primitive");
+            if (isPrimitive || ucname.equals("reciprocal")) {
+              double scale = (slen == i + 1 ? 1
+                  : tokAt(i + 1) == T.integer ? intParameter(++i) * Math.PI
+                      : doubleParameter(++i));
+              ucname = (sym == null ? "" : sym.getSpaceGroupName() + " ")
+                  + ucname;
+              oabc = (sym == null
+                  ? new P3d[] { P3d.new3(0, 0, 0), P3d.new3(1, 0, 0),
+                      P3d.new3(0, 1, 0), P3d.new3(0, 0, 1) }
+                  : sym.getUnitCellVectors());
+              if (stype == null)
+                stype = (String) vwr.getSymmetryInfo(
+                    vwr.getFrameAtoms().nextSetBit(0), null, 0, null, null,
+                    null, T.lattice, null, 0, -1, 0, null);
+              if (sym == null)
+                sym = vwr.getSymTemp();
+              if (!modelIsPrimitive)
+                sym.toFromPrimitive(true,
+                    stype.length() == 0 ? 'P' : stype.charAt(0), oabc, (M3d) vwr
+                        .getCurrentModelAuxInfo().get("primitiveToCrystal"));
+              if (!isPrimitive) {
+                SimpleUnitCell.getReciprocal(oabc, oabc, scale);
+              }
+              break;
+            }
+          } else {
+            ucname = s;
+            if (s.indexOf(",") >= 0)
+              newUC = s;
+          }
+        }
+        break;
       }
-      break;
+      //$FALL-THROUGH$  for unitcell_
     default:
+      // including "!" NOT
       Object[] ret = new Object[1];
       if (getUnitCellParameter(i, ret)) {
         oabc = (T3d[]) ret[0];
@@ -6329,7 +6333,8 @@ public class CmdExt extends ScriptExt {
         }
       }
     }
-    SymmetryInterface sym0 = (isModelkit ?  vwr.ms.getUnitCell(-1 - vwr.am.cmi) : null);
+    SymmetryInterface sym0 = (isModelkit ? vwr.ms.getUnitCell(-1 - vwr.am.cmi)
+        : null);
     eval.setObjectMad10(JC.SHAPE_UCCAGE, "unitCell", mad10);
     if (pt != null) {
       sym = vwr.ms.getUnitCell(Integer.MIN_VALUE);
@@ -6339,7 +6344,8 @@ public class CmdExt extends ScriptExt {
     if (isModelkit && sym.getFractionalOffset(true) == null) {
       sym.setSpaceGroupTo(sym0);
       if (packing >= 0)
-        vwr.getModelkit(false).packUnitCell(sym, vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi), packing);
+        vwr.getModelkit(false).packUnitCell(sym,
+            vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi), packing);
     }
     if (tickInfo != null)
       setShapeProperty(JC.SHAPE_UCCAGE, "tickInfo", tickInfo);
@@ -7155,16 +7161,30 @@ public class CmdExt extends ScriptExt {
   private boolean getUnitCellParameter(int i, Object[] ret)
       throws ScriptException {
     ret[0] = null;
-    if (tokAt(i) == T.point3f)
-      return false;
+    int tok =  tokAt(i);
     int ei = e.iToken;
-    if (tokAt(i) == T.string) {
-      String tr = paramAsStr(i);
+    boolean isNot = false;
+    if (tok == T.opNot) {
+      isNot = true;
+      tok = tokAt(++i);
+    }
+    switch (tok) {
+    case T.point3f:
+      return false;
+    case T.identifier:
+    case T.string:
+      String tr = paramAsStr(i).toLowerCase();
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       if (uc == null)
         invArg();
       if (!chk) {
-        tr = SimpleUnitCell.parseSimpleMath(vwr, tr);
+        if (tr.startsWith(JC.UNITCELL_PREFIX)) {
+          tr = (String) vwr.getCurrentModelAuxInfo().get(tr);
+        } else {
+          tr = SimpleUnitCell.parseSimpleMath(vwr, tr);
+        }
+        if (isNot)
+          tr = "!" + tr;
         ret[0] = uc.getV0abc(tr, null);
       }
       return true;

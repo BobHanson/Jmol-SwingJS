@@ -79,6 +79,21 @@ class CylinderRenderer {
   private int[][] xyzfRaster = new int[][] {new int[32], new int[32], new int[32], new int[32]};
 
 
+  /**
+   * Primary rendering for bonds ("Sticks"), Mesh triangle, axes, unit cells, stars
+   * 
+   * @param colixA
+   * @param colixB
+   * @param screen
+   * @param endcaps
+   * @param diameter
+   * @param xa
+   * @param ya
+   * @param za
+   * @param xb
+   * @param yb
+   * @param zb
+   */
   void renderOld(short colixA, short colixB, int screen, 
               byte endcaps, int diameter, int xa, int ya,
               int za, int xb, int yb, int zb) {
@@ -172,11 +187,6 @@ class CylinderRenderer {
   
   void renderBitsFloat(short colixA, short colixB, int screen, byte endcaps, int diameter, P3d ptA, P3d ptB) {
     Graphics3D g = this.g3d;
-// checked already
-//    if (diameter == 0 || diameter == 1) {
-//      line3d.plotLineBits(g.getColorArgbOrGray(colixA), g.getColorArgbOrGray(colixB), ptA, ptB);
-//      return;
-//    }
     if (ptA0 == null) {
       ptA0 = new P3d();
       ptB0 = new P3d();
@@ -497,8 +507,8 @@ class CylinderRenderer {
       cosPhi = 1;
       sinPhi = 0;
     } else {
-      double mag2d = (double) Math.sqrt(mag2d2);
-      double mag3d = (double) Math.sqrt(mag2d2 + dz * dz);
+      double mag2d = Math.sqrt(mag2d2);
+      double mag3d = Math.sqrt(mag2d2 + dz * dz);
       cosTheta = dz / mag3d;
       cosPhi = dx / mag2d;
       sinPhi = dy / mag2d;
@@ -517,9 +527,9 @@ class CylinderRenderer {
     double zR = (z2 > 0 ? Math.sqrt(z2) : 0);
 
     if (isPrecision) {
-      xyzt[0][i] = (double) xR;
-      xyzt[1][i] = (double) yR;
-      xyzt[2][i] = (double) zR;
+      xyzt[0][i] = xR;
+      xyzt[1][i] = yR;
+      xyzt[2][i] = zR;
     } else if (tEvenDiameter) {
       xyzf[0][i] = (int) (xR - 0.5);
       xyzf[1][i] = (int) (yR - 0.5);
@@ -529,7 +539,7 @@ class CylinderRenderer {
       xyzf[1][i] = (int) (yR);
       xyzf[2][i] = (int) (zR + 0.5);
     }
-    xyzf[3][i] = shader.getShadeFp8((double) xR, (double) yR, (double) zR);
+    xyzf[3][i] = shader.getShadeFp8(xR, yR, zR);
   }
 
   private int allocRaster(boolean isPrecision, int[][] xyzf, double[][] xyzt) {

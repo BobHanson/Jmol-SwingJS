@@ -1671,7 +1671,6 @@ public final class JC {
    * used to set atom symmetry 555 556 etc. 
    */
   public static final String INFO_UNIT_CELL_RANGE = "ML_unitCellRange";
-//  public static final String INFO_UNIT_CELL_TRANSLATIONS = "unitCellTranslations";
   public static final String INFO_UNIT_CELLS = "unitCells";
   public static final String INFO_UNIT_CELL = "unitcell";
 
@@ -1682,6 +1681,7 @@ public final class JC {
   public static final String SPIN_FRAME_ROTATION_MATRIX = "spinFrameRotationMatrix";
   public static final String UC_MOREINFO = "moreUnitCellInfo";
   public static final String DEFAULT_DRAW_SYM_ID = "sym_"; // do not change this; code on working pages needs this right
+  public static final String UNITCELL_PREFIX = "unitcell_";
   
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.

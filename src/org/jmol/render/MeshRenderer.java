@@ -353,7 +353,7 @@ public abstract class MeshRenderer extends ShapeRenderer {
 
   protected void renderTriangles(boolean fill, boolean iShowTriangles,
                                  boolean generateSet) {
-    
+
     g3d.addRenderer(T.triangles);
     int[][] polygons = mesh.pis;
     colix = (isGhostPass ? mesh.slabColix : mesh.colix);
@@ -376,9 +376,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
       int iC = polygon[2];
       if (iShowTriangles)
         setColix((short) (Math.round(Math.random() * 10) + 5));
-      if (haveBsDisplay
-          && (!mesh.bsDisplay.get(iA) || !mesh.bsDisplay.get(iB) || !mesh.bsDisplay
-              .get(iC)))
+      if (haveBsDisplay && (!mesh.bsDisplay.get(iA) || !mesh.bsDisplay.get(iB)
+          || !mesh.bsDisplay.get(iC)))
         continue;
       if (iB == iC) {
         // line or point
@@ -392,8 +391,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
         if (frontOnly && !isVisibleNormix(normix))
           continue;
         if (fill) {
-            g3d.fillTriangle3CNBits(p3Screens[iA], colix, normix,
-                p3Screens[iB], colix, normix, p3Screens[iC], colix, normix, true);
+          g3d.fillTriangle3CNBits(p3Screens[iA], colix, normix, p3Screens[iB],
+              colix, normix, p3Screens[iC], colix, normix, true);
           continue;
         }
         check = polygon[MeshSurface.P_CHECK];
@@ -424,12 +423,12 @@ public abstract class MeshRenderer extends ShapeRenderer {
             bsPolygonsToExport.set(i);
             continue;
           }
-            g3d.fillTriangle3CNBits(p3Screens[iA], colix, nA, p3Screens[iB],
-                colix, nB, p3Screens[iC], colix, nC, false);
+          g3d.fillTriangle3CNBits(p3Screens[iA], colix, nA, p3Screens[iB],
+              colix, nB, p3Screens[iC], colix, nC, false);
           continue;
         }
-          drawTriangleBits(p3Screens[iA], colix, p3Screens[iB], colix,
-              p3Screens[iC], colix, check, 1);
+        drawTriangleBits(p3Screens[iA], colix, p3Screens[iB], colix,
+            p3Screens[iC], colix, check, 1);
         continue;
       case 4:
         // simple quad -- DRAW only
@@ -448,8 +447,8 @@ public abstract class MeshRenderer extends ShapeRenderer {
               colix, nC, p3Screens[iD], colix, nD, false);
           continue;
         }
-        vwr.gdata.drawQuadrilateralBits(g3d, colix, p3Screens[iA], p3Screens[iB],
-            p3Screens[iC], p3Screens[iD]);
+        vwr.gdata.drawQuadrilateralBits(g3d, colix, p3Screens[iA],
+            p3Screens[iB], p3Screens[iC], p3Screens[iD]);
       }
     }
     if (generateSet)
