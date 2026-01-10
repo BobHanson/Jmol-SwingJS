@@ -109,7 +109,7 @@ public class Nmr extends JmolApp {
 
       startViewer(nmrPanel.vwr, splash, false);
 
-      if (haveConsole)
+      if (haveJavaConsole)
         nmrPanel.getJavaConsole();
 
       nmrPanel.vwr.script("set measureAllmodels ON;font measurements 18; font labels 18;measure '2:%1.1VALUE %UNITS//hz'");

@@ -28,12 +28,10 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.jvxl.data.JvxlData;
-import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import org.jmol.viewer.StateManager;
 
 import javajs.util.AU;
 import javajs.util.BS;
@@ -149,14 +147,8 @@ public abstract class MeshCollection extends Shape {
    color = 0xFFFFFFFF;
   }
 
-@SuppressWarnings("unchecked")
  protected void setPropMC(String propertyName, Object value, BS bs) {
 
-//   if (propertyName == "setXml") {
-//     if (currentMesh != null)
-//       currentMesh.xmlProperties = xmlProperties;
-//   }
-   
     if ("init" == propertyName) {
       title = null;
       return;
@@ -186,13 +178,6 @@ public abstract class MeshCollection extends Shape {
       }
       return;
     }
-
-// BH 2025.11.02 no references?
-//    if ("variables" == propertyName) {
-//      if (currentMesh != null && currentMesh.scriptCommand != null && !currentMesh.scriptCommand.startsWith("{"))
-//        currentMesh.scriptVariables = StateManager.getVariableList((Map<String, SV>) value, 0, false, false) + "\n";// + currentMesh.scriptCommand;
-//      return;
-//    }
 
     if ("thisID" == propertyName) {
       String id = (String) value;

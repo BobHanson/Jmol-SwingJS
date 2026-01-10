@@ -190,16 +190,20 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
 
    * @param pt 
    * @param packing
+   * @param packing2 
    * @return true if in [0, 1)
    */
-  boolean checkPeriodic(P3d pt, double packing) {
+  boolean checkPeriodic(P3d pt, double packing, double packing2) {
     double min, max;
     if (Double.isNaN(packing)) {
       min = -slop;
-      max = 1 - slop;
     } else {
       min = -packing;
-      max = 1 + packing;
+    }
+    if (Double.isNaN(packing2)) {
+      max = 1 - slop;
+    } else {
+      max = 1 + packing2;
     }
     switch (dimension) {
     case 3:

@@ -30,7 +30,7 @@ public interface SymmetryInterface {
   String[] calculateCIPChiralityForSmiles(String smiles)
       throws Exception;
 
-  boolean checkPeriodic(P3d pt, double packing);
+  boolean checkPeriodic(P3d pt, double packing, double packing2);
 
   Object convertTransform(String transform, M4d trm);
 

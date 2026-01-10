@@ -48,6 +48,7 @@ import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.ZipTools;
 
+import org.jmol.adapter.readers.pdb.JmolDataReader;
 import org.jmol.adapter.readers.spartan.SpartanUtil;
 import org.jmol.adapter.smarter.Resolver;
 import org.jmol.api.GenericFileInterface;
@@ -1710,6 +1711,14 @@ public class FileManager implements BytePoster {
 
   public boolean isZipStream(Object br) {
     return ZipTools.isZipStream(br);
+  }
+
+  private static JmolDataReader staticJmolDataReader;
+
+  public JmolDataReader getJmolDataReader() {
+    if (staticJmolDataReader == null)
+      staticJmolDataReader = (JmolDataReader) Resolver.getReader("JmolData", null);
+    return staticJmolDataReader;
   }
 
 

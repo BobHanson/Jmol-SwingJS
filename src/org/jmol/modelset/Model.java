@@ -29,9 +29,9 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jmol.api.SymmetryInterface;
+import org.jmol.script.T;
+
 import javajs.util.BS;
-
-
 import javajs.util.AU;
 import javajs.util.M4d;
 import javajs.util.P3d;
@@ -144,11 +144,15 @@ public class Model {
 
   Map<String, Object> jmolData; // from a PDB remark "Jmol PDB-encoded data"
 
-  String jmolFrameType;
+  public String jmolFrameType;
+  public int jmolFrameTypeInt;
 
-  Map<String, Integer> dataFrames;
+  public Map<String, Integer> dataFrames;
 
-  int dataSourceFrame = -1;
+  public int dataSourceFrame = -1;
+
+  public P3d[] uvw, uvw0;
+
 
   public String pdbID;
 
@@ -185,8 +189,10 @@ public class Model {
       auxiliaryInfo.put("title", jmolDataHeader);
       jmolFrameType = (jmolDataHeader.indexOf("ramachandran") >= 0 ? "ramachandran"
           : jmolDataHeader.indexOf("quaternion") >= 0 ? "quaternion" 
-//          : jmolDataHeader.indexOf("spin") >= 0 ? "spin"
+          : jmolDataHeader.indexOf("spin") >= 0 ? "spin"
           : "data");
+      jmolFrameTypeInt = T.getTokFromName(jmolFrameType);
+      System.out.println("JmolFrameType is " + T.nameOf(jmolFrameTypeInt));
     }
     return this;
   }

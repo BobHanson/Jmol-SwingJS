@@ -220,8 +220,6 @@ public class AnimationManager {
         ModelSet ms = vwr.ms;
         boolean toDataModel = ms.isJmolDataFrame(modelIndex);
         boolean fromDataModel = ms.isJmolDataFrame(cmi);
-        if (fromDataModel)
-          ms.setJmolDataFrame(null, -1, cmi);
         if (cmi != -1)
           vwr.saveModelOrientation(cmi);
         if (fromDataModel || toDataModel) {

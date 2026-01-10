@@ -47,7 +47,7 @@ public class JmolData {
     JmolApp jmolApp = new JmolApp();
     jmolApp.startupHeight = height;
     jmolApp.startupWidth = width;
-    jmolApp.haveConsole = false;
+    jmolApp.haveJavaConsole = false;
     jmolApp.isDataOnly = true;
     //jmolApp.info.put("exit", Boolean.TRUE);
 
@@ -61,7 +61,7 @@ public class JmolData {
     // in this case -n means "no GRAPHICS" for speed
     JmolApp jmolApp = new JmolApp();
     jmolApp.isDataOnly = true;
-    jmolApp.haveConsole = false;
+    jmolApp.haveJavaConsole = false;
     //jmolApp.haveDisplay = false;
     jmolApp.info.put("exit", Boolean.TRUE);
     jmolApp.info.put("isDataOnly", Boolean.TRUE);

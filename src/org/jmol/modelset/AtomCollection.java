@@ -199,6 +199,7 @@ abstract public class AtomCollection {
   int[] atomSeqIDs;
   double[] dssrData;
   public Vibration[] vibrations;
+  public Vibration vib;
   public double[] occupancies;
 //  public P3d[] precisionCoords;
   short[] bfactor100s;
@@ -791,7 +792,7 @@ abstract public class AtomCollection {
     if (vibrations == null || vibrations.length <= atomIndex)
       vibrations = new Vibration[at.length];
     if (vib instanceof Vibration) {
-      vibrations[atomIndex] = (Vibration) vib;
+      vibrations[atomIndex] = this.vib = (Vibration) vib;
     } else {
       if (vibrations[atomIndex] == null)
         vibrations[atomIndex] = new Vibration();

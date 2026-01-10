@@ -472,7 +472,10 @@ public class CifReader extends AtomSetCollectionReader {
     String tag = key.substring(18);
     switch (tag) {
     case "number_spsg_chen":
+      tag = "ssg_number";
+      break;
     case "name_spsg_chen":
+      tag = "ssg_name";
       break;
     case "transform_spinframe_p_matrix":
     case "transform_spinframe_p_abc":
@@ -494,7 +497,7 @@ public class CifReader extends AtomSetCollectionReader {
       }
       addCellType(JC.CELL_TYPE_SPIN_FRAME, spinFrame, false);
       field = spinFrame;
-      tag = "spinFrame";
+      tag = "ssg_spinFrame";
       break;
     case "rotation_axis_cartn":
       field = addSpinFrameExt("axis", false);
@@ -516,17 +519,19 @@ public class CifReader extends AtomSetCollectionReader {
       // field = addSpinFrameExt("perpuvw");
       break;
     case "g0_number":
-      tag = "G0";
+      tag = "ssg_G0";
       break;
     case "l0_number":
-      tag = "L0";
+      tag = "ssg_L0";
       break;
     case "it":
+      tag = "ssg_it";
       break;
     case "ik":
+      tag = "ssg_ik";
       break;
     case "spin_part_point_group":
-      tag = "SPG";
+      tag = "ssg_SPG";
       break;
     case "transform_to_input_pp":
       addCellType(JC.CELL_TYPE_SPIN_MAG_INPUT, "!" + field, true);

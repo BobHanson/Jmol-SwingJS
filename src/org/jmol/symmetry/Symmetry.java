@@ -1307,8 +1307,8 @@ public class Symmetry implements SymmetryInterface {
   }
 
   @Override
-  public boolean checkPeriodic(P3d pt, double packing) {
-    return unitCell.checkPeriodic(pt, packing);
+  public boolean checkPeriodic(P3d pt, double packing, double packing2) {
+    return unitCell.checkPeriodic(pt, packing, packing2);
   }
 
   @Override

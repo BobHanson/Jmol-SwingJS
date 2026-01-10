@@ -185,7 +185,7 @@ public class ModelSet extends BondCollection {
 
   private BoxInfo defaultBBox;
 
-  private boolean haveJmolDataFrames;
+  public boolean haveJmolDataFrames;
 
   ////////////////////////////////////////////////////////////////
 
@@ -1707,29 +1707,6 @@ public class ModelSet extends BondCollection {
     return haveJmolDataFrames && am[atom.mi].isJmolDataFrame;
   }
 
-  public void setJmolDataFrame(String type, int modelIndex,
-                               int modelDataIndex) {
-    haveJmolDataFrames = true;
-    Model model = am[type == null ? am[modelDataIndex].dataSourceFrame
-        : modelIndex];
-    if (type == null) {
-      //leaving a data frame -- just set generic to this one if quaternion
-      type = am[modelDataIndex].jmolFrameType;
-    }
-    if (modelIndex >= 0) {
-      if (model.dataFrames == null) {
-        model.dataFrames = new Hashtable<String, Integer>();
-      }
-      am[modelDataIndex].dataSourceFrame = modelIndex;
-      am[modelDataIndex].jmolFrameType = type;
-      model.dataFrames.put(type, Integer.valueOf(modelDataIndex));
-    }
-    if (type.startsWith("quaternion") && type.indexOf("deriv") < 0) { //generic quaternion
-      type = type.substring(0, type.indexOf(" "));
-      model.dataFrames.put(type, Integer.valueOf(modelDataIndex));
-    }
-  }
-
   public int getJmolDataFrameIndex(int modelIndex, String type) {
     if (am[modelIndex].dataFrames == null) {
       return -1;
@@ -1758,6 +1735,10 @@ public class ModelSet extends BondCollection {
   public String getJmolFrameType(int modelIndex) {
     return (modelIndex >= 0 && modelIndex < mc ? am[modelIndex].jmolFrameType
         : "modelSet");
+  }
+
+  public int getJmolFrameTypeInt(int modelIndex) {
+    return (haveJmolDataFrames && modelIndex >= 0 && modelIndex < mc ? am[modelIndex].jmolFrameTypeInt : T.nada);
   }
 
   public int getJmolDataSourceFrame(int modelIndex) {
@@ -2234,6 +2215,7 @@ public class ModelSet extends BondCollection {
 
   protected BS getAtomBitsMaybeDeleted(int tokType, Object specInfo) {
     BS bs;
+    Object[] o = null;
     switch (tokType) {
     default:
       return getAtomBitsMDa(tokType, specInfo, bs = new BS());
@@ -2315,13 +2297,17 @@ public class ModelSet extends BondCollection {
     case T.unitcell:
       // select UNITCELL (a relative quantity)
       boolean isSU = "unitcell".equals(specInfo);
-      Double d = (specInfo == null || isSU ? null : (Double)((Object[]) specInfo)[1]);
+      Double d = (specInfo == null || isSU ? null : (Double)(o = (Object[]) specInfo)[1]);
+      Double d2 = (o != null && o.length == 3 ? (Double)(o[2]) : null);           
       double packing = (d == null ? Double.NaN : d.doubleValue());
-      if (specInfo != null && !isSU)
-        specInfo = ((Object[]) specInfo)[0];
+      double packing2 = (d2 == null ? Double.NaN : d2.doubleValue());
+      if (o != null)
+        specInfo = o[0];
       boolean isWithin = (specInfo == null
           || (specInfo instanceof SymmetryInterface));
       if (isWithin) {
+        // x=within(0.1, unitcell)
+        // x=within(0.1,-0.1, unitcell)
         // this one is [0, 1)
         bs = new BS();
         boolean isStatic = (specInfo != null);
@@ -2349,7 +2335,7 @@ public class ModelSet extends BondCollection {
             }
             ptTemp1.setT(at[i]);
             uc.toFractional(ptTemp1, false);
-            if (uc.checkPeriodic(ptTemp1, packing))
+            if (uc.checkPeriodic(ptTemp1, packing, packing2))
               bs.set(i);
           }
         }
@@ -4930,81 +4916,6 @@ public class ModelSet extends BondCollection {
     bs = vwr.getModelUndeletedAtomsBitSetBs(bs);
     bs.and(getAtoms(T.spin, bs));
     return bs;
-  }
-
-  public void rotateModelSpinVectors(int modelIndex, M3d rot, boolean isdx) {
-    if (modelIndex < 0 || modelIndex >= mc || vibrations == null)
-      return;
-    if (am[modelIndex].isJmolDataFrame)
-      modelIndex = am[modelIndex].dataSourceFrame;
-    Map<String, Object> info = getModelAuxiliaryInfo(modelIndex);
-    if (rot == null) {
-      // reset
-      rot = (M3d) info.get(JC.SPIN_FRAME_ROTATION_MATRIX);
-      if (rot == null)
-        return;
-    }
-    boolean noref = Double.isNaN(rot.getElement(0, 0));
-    boolean isScreenZ = (noref && rot.getElement(2, 2) == 1);
-    double deg = (noref || isScreenZ ? rot.getElement(1, 1) : 0);
-    if (noref && deg != 0) {
-      rot.setElement(1, 1, 0);
-      rotateModelSpinVectors(modelIndex, rot, false);
-      rot.setElement(1, 1, deg);
-    }
-
-    M3d m0 = (M3d) info.get(JC.SPIN_FRAME_ROTATION_MATRIX);
-    M3d mat = (M3d) info.get(JC.SPIN_ROTATION_MATRIX_APPLIED);
-    if (mat == null && m0 == null) {
-      m0 = M3d.newM3(null);
-      info.put(JC.SPIN_FRAME_ROTATION_MATRIX, m0);
-    }
-    if (mat == null) {
-      mat = m0;
-    }
-    if (noref) {
-      V3d qn;
-      if (isScreenZ) {
-        P3d pt3 = P3d.new3(0, 0, 100);
-        P3d pt4 = P3d.new3(0, 0, 200);
-        vwr.tm.unTransformPoint(pt3, pt3);
-        vwr.tm.unTransformPoint(pt4, pt4);
-        qn = V3d.newVsub(pt3, pt4);
-      } else {
-        qn = Qd.newM(mat).getNormal();
-      }
-      rot = Qd.newVA(qn, deg).getMatrix();
-    }
-    BS bs = BSUtil.newAndSetBit(modelIndex);
-    includeAllRelatedFrames(bs, true);
-    bs = vwr.getModelUndeletedAtomsBitSetBs(bs);
-    M3d matInv;
-    M3d drot;
-    drot = matTemp;
-    if (isdx) {
-      drot.setM3(rot);
-      rot.mul2(rot, mat);
-      matInv = null;
-    } else {
-      matInv = this.matInv;
-      matInv.setM3(mat);
-      matInv.invert();
-    }
-    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-      if (i >= vibrations.length)
-        return;
-      Vibration v = vibrations[i];
-      if (v == null || !v.isFrom000 && v.magMoment == 0)
-        continue;
-      v.rotateSpin(matInv, rot, drot, at[i]);
-    }
-    Qd quat = Qd.newM(rot);
-    A4d aa = quat.toA4d();
-    mat = M3d.newM3(rot);
-    info.put(JC.SPIN_ROTATION_MATRIX_APPLIED, mat);
-    info.put(JC.SPIN_ROTATION_AXIS_ANGLE_APPLIED, aa);
-    if (unitCells[modelIndex] != null)
-      unitCells[modelIndex].setSpinAxisAngle(aa);
   }
 
   public int getSpin(int atomIndex) {

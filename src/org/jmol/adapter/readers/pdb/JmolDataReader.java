@@ -27,17 +27,28 @@ package org.jmol.adapter.readers.pdb;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.P3d;
-import javajs.util.PT;
-
 import org.jmol.adapter.smarter.Atom;
+import org.jmol.modelset.Model;
+import org.jmol.modelset.ModelSet;
+import org.jmol.script.ScriptEval;
+import org.jmol.script.ScriptException;
+import org.jmol.script.T;
+import org.jmol.util.C;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 import org.jmol.util.Vibration;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
+
+import javajs.util.BS;
+import javajs.util.P3d;
+import javajs.util.PT;
 
 /**
  * JmolData file reader, for a modified PDB format
+ * 
+ * This class also holds pseudo-static methods for spin
  *
  */
 
@@ -127,16 +138,16 @@ public class JmolDataReader extends PdbReader {
         double[] data = new double[15];
         Parser.parseStringInfestedDoubleArray(line.substring(10)
             .replace('=', ' ').replace('{', ' ').replace('}', ' '), null, data);
-        P3d minXYZ = P3d.new3((double) data[0], (double) data[1],
-            (double) data[2]);
-        P3d maxXYZ = P3d.new3((double) data[3], (double) data[4],
-            (double) data[5]);
-        fileScaling = P3d.new3((double) data[6], (double) data[7],
-            (double) data[8]);
-        fileOffset = P3d.new3((double) data[9], (double) data[10],
-            (double) data[11]);
-        P3d plotScale = P3d.new3((double) data[12], (double) data[13],
-            (double) data[14]);
+        P3d minXYZ = P3d.new3(data[0], data[1],
+            data[2]);
+        P3d maxXYZ = P3d.new3(data[3], data[4],
+            data[5]);
+        fileScaling = P3d.new3(data[6], data[7],
+            data[8]);
+        fileOffset = P3d.new3(data[9], data[10],
+            data[11]);
+        P3d plotScale = P3d.new3(data[12], data[13],
+            data[14]);
         if (plotScale.x <= 0)
           plotScale.x = 100;
         if (plotScale.y <= 0)
@@ -209,5 +220,214 @@ public class JmolDataReader extends PdbReader {
     finalizeReaderPDB();
   }
 
-}
+  public String[] getJmolDataFrameScripts(Viewer vwr, int tok,
+                                                 int modelIndex, int modelCount,
+                                                 String type, String qFrame,
+                                                 String[] props,
+                                                 boolean isSpinPointGroup) {
+    String script, script2 = null;
+    switch (tok) {
+    default:
+      script = "frame 0.0; frame last; reset;select visible;wireframe only;";
+      break;
+    case T.property:
+      vwr.setFrameTitle(modelCount - 1,
+          type + " plot for model " + vwr.getModelNumberDotted(modelIndex));
+      script = "frame 0.0; frame last; reset;" + "select visible; spacefill 3.0"
+          + "; wireframe 0;" + "draw plotAxisX" + modelCount
+          + " {100 -100 -100} {-100 -100 -100} \"" + props[0] + "\";"
+          + "draw plotAxisY" + modelCount
+          + " {-100 100 -100} {-100 -100 -100} \"" + props[1] + "\";";
+      if (props[2] != null)
+        script += "draw plotAxisZ" + modelCount
+            + " {-100 -100 100} {-100 -100 -100} \"" + props[2] + "\";";
+      break;
+    case T.ramachandran:
+      vwr.setFrameTitle(modelCount - 1, "ramachandran plot for model "
+          + vwr.getModelNumberDotted(modelIndex));
+      script = "frame 0.0; frame last; reset;"
+          + "select visible; color structure; spacefill 3.0; wireframe 0;"
+          + "draw ramaAxisX" + modelCount + " {100 0 0} {-100 0 0} \"phi\";"
+          + "draw ramaAxisY" + modelCount + " {0 100 0} {0 -100 0} \"psi\";";
+      break;
+    case T.quaternion:
+    case T.helix:
+      vwr.setFrameTitle(modelCount - 1, type.replace('w', ' ') + qFrame
+          + " for model " + vwr.getModelNumberDotted(modelIndex));
+      //$FALL-THROUGH$
+    case T.spin:
+      String color = (C.getHexCode(vwr.cm.colixBackgroundContrast));
+      script = "frame 0.0; frame last; reset;"
+          + "select visible; wireframe 0; spacefill 3.0; "
+          + "isosurface quatSphere" + modelCount + " color " + color
+          + " sphere 100.0 mesh nofill frontonly translucent 0.8;"
+          + "draw quatAxis" + modelCount
+          + "X {100 0 0} {-100 0 0} color red \"x\";" + "draw quatAxis"
+          + modelCount + "Y {0 100 0} {0 -100 0} color green \"y\";"
+          + "draw quatAxis" + modelCount
+          + "Z {0 0 100} {0 0 -100} color blue \"z\";"
+          + (tok == T.spin ? "vectors 2.0;spacefill off;" : "color structure;")
+          + "draw quatCenter" + modelCount + "{0 0 0} scale 0.02;";
+      if (isSpinPointGroup) {
+        script2 = ";set symmetryhm;" +
+        //"frame 2.1;" + 
+            "draw spin pointgroup;" + "var name = {2.1}.pointgroup().hmName;"
+            + "set echo hmname 100% 100%;" + "set echo hmname RIGHT;"
+            + "set echo hmname model 2.1;" + "echo @name;";
+      }
+      break;
+    }
+    return new String[] { script, script2 };
+  }
+     
+  public Object[] getJmolDataFrameProperties(ScriptEval e, int tok,
+                                                    int[] propToks,
+                                                    String[] props, BS bs,
+                                                    P3d minXYZ, P3d maxXYZ,
+                                                    String format,
+                                                    boolean isPdbFormat)
+      throws ScriptException {
+    // prepare data for property plotting
 
+    double pdbFactor = 1;
+    double[] dataX = null, dataY = null, dataZ = null;
+    dataX = e.getBitsetPropertyFloat(bs, propToks[0] | T.selectedfloat,
+        propToks[0] == T.property ? props[0] : null,
+        (minXYZ == null ? Double.NaN : minXYZ.x),
+        (maxXYZ == null ? Double.NaN : maxXYZ.x));
+    String[] propData = new String[3];
+    propData[0] = props[0] + " " + Escape.eAD(dataX);
+    if (props[1] != null) {
+      dataY = e.getBitsetPropertyFloat(bs, propToks[1] | T.selectedfloat,
+          propToks[1] == T.property ? props[1] : null,
+          (minXYZ == null ? Double.NaN : minXYZ.y),
+          (maxXYZ == null ? Double.NaN : maxXYZ.y));
+      propData[1] = props[1] + " " + Escape.eAD(dataY);
+    }
+    if (props[2] != null) {
+      dataZ = e.getBitsetPropertyFloat(bs, propToks[2] | T.selectedfloat,
+          propToks[2] == T.property ? props[2] : null,
+          (minXYZ == null ? Double.NaN : minXYZ.z),
+          (maxXYZ == null ? Double.NaN : maxXYZ.z));
+      propData[2] = props[2] + " " + Escape.eAD(dataZ);
+    }
+    if (minXYZ == null)
+      minXYZ = P3d.new3(getPlotMinMax(dataX, false, propToks[0]),
+          getPlotMinMax(dataY, false, propToks[1]),
+          getPlotMinMax(dataZ, false, propToks[2]));
+    if (maxXYZ == null)
+      maxXYZ = P3d.new3(getPlotMinMax(dataX, true, propToks[0]),
+          getPlotMinMax(dataY, true, propToks[1]),
+          getPlotMinMax(dataZ, true, propToks[2]));
+    Logger.info("plot min/max: " + minXYZ + " " + maxXYZ);
+    P3d center = null;
+    P3d factors = null;
+
+    if (isPdbFormat) {
+      factors = P3d.new3(1, 1, 1);
+      center = new P3d();
+      center.ave(maxXYZ, minXYZ);
+      factors.sub2(maxXYZ, minXYZ);
+      if (tok != T.spin)
+        factors.set(factors.x / 200, factors.y / 200, factors.z / 200);
+      if (T.tokAttr(propToks[0], T.intproperty)) {
+        factors.x = 1;
+        center.x = 0;
+      } else if (factors.x > 0.1 && factors.x <= 10) {
+        factors.x = 1;
+      }
+      if (T.tokAttr(propToks[1], T.intproperty)) {
+        factors.y = 1;
+        center.y = 0;
+      } else if (factors.y > 0.1 && factors.y <= 10) {
+        factors.y = 1;
+      }
+      if (T.tokAttr(propToks[2], T.intproperty)) {
+        factors.z = 1;
+        center.z = 0;
+      } else if (factors.z > 0.1 && factors.z <= 10) {
+        factors.z = 1;
+      }
+      if (props[2] == null || props[1] == null)
+        center.z = minXYZ.z = maxXYZ.z = factors.z = 0;
+      for (int i = 0; i < dataX.length; i++)
+        dataX[i] = (dataX[i] - center.x) / factors.x * pdbFactor;
+      if (props[1] != null)
+        for (int i = 0; i < dataY.length; i++)
+          dataY[i] = (dataY[i] - center.y) / factors.y * pdbFactor;
+      if (props[2] != null)
+        for (int i = 0; i < dataZ.length; i++)
+          dataZ[i] = (dataZ[i] - center.z) / factors.z * pdbFactor;
+    }
+    return new Object[] { bs, dataX, dataY, dataZ, minXYZ, maxXYZ, factors,
+        center, format, propData, Double.valueOf(1) };
+  }
+
+  private static double getPlotMinMax(double[] data, boolean isMax, int tok) {
+    if (data == null)
+      return 0;
+    switch (tok) {
+    case T.omega:
+    case T.phi:
+    case T.psi:
+      return (isMax ? 180 : -180);
+    case T.eta:
+    case T.theta:
+      return (isMax ? 360 : 0);
+    case T.straightness:
+      return (isMax ? 1 : -1);
+    }
+    double fmax = (isMax ? -1E10d : 1E10d);
+    for (int i = data.length; --i >= 0;) {
+      double f = data[i];
+      if (Double.isNaN(f))
+        continue;
+      if (isMax == (f > fmax))
+        fmax = f;
+    }
+    return fmax;
+  }
+
+  /**
+   * Set up the JmolDataFrame initially
+   * @param ms
+   * @param type
+   * @param modelIndex
+   * @param modelDataIndex
+   */
+  public void setJmolDataFrame(ModelSet ms, String type, int modelIndex,
+                               int modelDataIndex) {
+    ms.haveJmolDataFrames = true;
+    Model mdata = ms.am[modelDataIndex];
+    Model model0 = ms.am[type == null ? mdata.dataSourceFrame
+        : modelIndex];
+    if (type == null) {
+      //leaving a data frame -- just set generic to this one if quaternion
+      type = mdata.jmolFrameType;
+    }
+    if (modelIndex >= 0) {
+      // initializing
+      if (model0.dataFrames == null) {
+        model0.dataFrames = new Hashtable<String, Integer>();
+      }
+      mdata.dataSourceFrame = modelIndex;
+      mdata.jmolFrameType = type;
+      model0.dataFrames.put(type, Integer.valueOf(modelDataIndex));
+      if (mdata.jmolFrameTypeInt == T.quaternion && type.indexOf("deriv") < 0) { //generic quaternion
+        type = type.substring(0, type.indexOf(" "));
+        model0.dataFrames.put(type, Integer.valueOf(modelDataIndex));
+      }
+      mdata.uvw0 = (P3d[]) ms.getModelAuxiliaryInfo(modelIndex)
+          .get(JC.SSG_POINT_GROUP_AXES);
+      if (mdata.uvw0 != null) {
+        mdata.uvw0[0].scale(105);
+        mdata.uvw0[1].scale(105);
+        mdata.uvw0[2].scale(105);
+        mdata.uvw = new P3d[] { P3d.newP(mdata.uvw0[0]), P3d.newP(mdata.uvw0[1]),
+            P3d.newP(mdata.uvw0[2]) };
+      }
+    }
+  }
+  
+
+}

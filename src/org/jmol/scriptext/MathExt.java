@@ -5022,19 +5022,37 @@ SymmetryInterface sym;
   private boolean evaluateWithin(ScriptMathProcessor mp, SV[] args,
                                  boolean isAtomProperty)
       throws ScriptException {
-    // within({atoms})
-    // within (distance, group, {atom collection})
-    // within (distance, true|false, {atom collection})
-    // within (distance, plane|hkl, [plane definition] )
-    // within (distance, coord, [point or atom center] )
-    // within(distance, pt, [pt1, pt2, pt3...])
-    // within(distance, [pt1, pt2, pt3...])
-    // {atoms}.within(distance,[points])
-    // {atoms}.within(distance,{otheratoms})
-    // within("SMILES", "...", {atoms}) or {atoms}.within("SMILES", "...")
-    // within("SMARTS", "...", {atoms}) or {atoms}.within("SMARTS", "...") // returns all sets
-    // within("sequence", 
-    // ...several more 
+
+    // this is not a full set of the possibilities
+    // {atoms}.within(0.001, x) excludes atoms x 
+    // {atoms}.within(0.1, [points])
+    // {atoms}.within("smarts", "...")
+    // {atoms}.within("smiles", "...")
+    // within("helix")
+    // within("sheet")
+    // within("unitcell")
+    // within("...a sequence...")
+    // within("sequence", "CII", *.ca)
+    // within("smarts", "...", {atoms})
+    // within("smiles", "...", {atoms})
+    // within("unitcell", u)
+    // within("unitcell", u, scale);
+    // within(0.1, "unitcell")
+    // within(0.1, "unitcell", u)
+    // within(0.1, true, "unitcell") // include duplicates at 1 
+    // within(0.1, false, "unitcell") // don't include duplicates a 1
+    // within(0.1, unitcell, u, scale)
+    // within(atomName, "XX,YY,ZZZ")
+    // within(basepair)
+    // within(boundbox)
+    // within(branch,bs1, bs2)
+    // within(dist, [pt1, pt2, pt3...])
+    // within(dist, pt, [pt1, pt2, pt3...])
+    // within(distance, coord, [point or atom center] )
+    // within(distance, group, {atom collection})
+    // within(distance, plane|hkl, [plane definition] )
+    // within(distance, true|false, {atom collection}) UNDOCUMENTED
+
     int len = args.length;
     if (len < 1 || len > 5)
       return false;
@@ -5046,12 +5064,13 @@ SymmetryInterface sym;
     String withinStr = "" + withinSpec;
     ModelSet ms = vwr.ms;
     boolean isVdw = false;
-    boolean isWithinModelSet = false;
+    boolean isBooleanFlag = false;
     boolean isWithinGroup = false;
     boolean isDistance = false;
     BS bsSelected = null;
     RadiusData rd = null;
     int tok = args[0].tok;
+    boolean isUnitCell = false;
     out: while (true) {
       switch (tok == T.string ? tok = T.getTokFromName(withinStr) : tok) {
       case T.vanderwaals:
@@ -5068,12 +5087,15 @@ SymmetryInterface sym;
         switch (tok = args[1].tok) {
         case T.on:
         case T.off:
-          isWithinModelSet = args[1].asBoolean();
-          if (len > 2 && SV.sValue(args[2]).equalsIgnoreCase("unitcell"))
+          isBooleanFlag = args[1].asBoolean();
+          if (len > 2 && SV.sValue(args[2]).equalsIgnoreCase("unitcell")) {
             tok = T.unitcell;
-          else if (len > 2 && args[2].tok != T.bitset)
+            isUnitCell = (len == 3);
+          } else if (len > 2 && args[2].tok != T.bitset) {
             return false;
-          len = 0;
+          }
+          if (!isUnitCell)
+            len = 0;
           break;
         case T.string:
           String s = SV.sValue(args[1]);
@@ -5147,7 +5169,6 @@ SymmetryInterface sym;
       } else if (!isDistance) {
         return false;
       }
-      boolean isUnitCell = false;
       switch (len) {
       case 1:
         // within(sheet)
@@ -5172,9 +5193,9 @@ SymmetryInterface sym;
         }
         return false;
       case 2:
-        // within (atomName, "XX,YY,ZZZ")
-        // within ("unitcell", u)
-        // within (0.1, "unitcell")
+        // within(atomName, "XX,YY,ZZZ")
+        // within("unitcell", u)
+        // within(0.1, "unitcell")
         switch (tok) {
         case T.varray:
           break;
@@ -5197,7 +5218,8 @@ SymmetryInterface sym;
           bsSelected = vwr.ms.getAtoms(tok, SV.ptValue(args[1]));
           break out;
         case T.unitcell:
-          if (isDistance && len == 2) {
+          if (isDistance) {
+            // within(0.1, "unitcell")
             bsSelected = vwr.ms.getAtoms(tok,
                 new Object[] { null, Double.valueOf(distance) });
             break out;
@@ -5207,10 +5229,11 @@ SymmetryInterface sym;
         }
         break;
       case 3:
-        // within (distance, group, {atom collection})
-        // within (distance, true|false, {atom collection})
-        // within (distance, plane|hkl, [plane definition] )
-        // within (distance, coord, [point or atom center] )
+        // within(distance, group, {atom collection})
+        // within(distance, true|false, {atom collection})
+        // within(distance, plane|hkl, [plane definition] )
+        // within(distance, coord, [point or atom center] )
+        // within(0.1, -0.1, "unitcell")
         switch (tok) {
         case T.on:
         case T.off:
@@ -5223,13 +5246,30 @@ SymmetryInterface sym;
         case T.varray:
           break;
         case T.sequence:
-          // within ("sequence", "CII", *.ca)
+          // within("sequence", "CII", *.ca)
           withinStr = SV.sValue(args[1]);
           break;
-        case T.unitcell:
-          // within (0.1, "unitcell", u)
-          // within ("unitcell", u, scale);
+        case T.integer:
+        case T.decimal:
+          if (!isDistance || !"unitcell".equals(args[2].value)) {
+            return false;            
+          }
           isUnitCell = true;
+          //$FALL-THROUGH$
+        case T.unitcell:
+          if (isUnitCell) {
+            if (isDistance) {
+              // within(0.1, true/false, "unitcell")
+              isUnitCell = false;
+              bsSelected = vwr.ms.getAtoms(T.unitcell,
+                  new Object[] { null, Double.valueOf(distance), Double.valueOf(isBooleanFlag ? distance : -distance) });
+              break out;
+            }
+          } else {
+            // within(0.1, "unitcell", u)
+            // within("unitcell", u, scale);
+            isUnitCell = true;
+          }
           break;
         default:
           return false;
@@ -5240,7 +5280,7 @@ SymmetryInterface sym;
         case T.unitcell:
           if (!isDistance)
             return false;
-          // within (0.1, unitcell, u, scale)
+          // within(0.1, unitcell, u, scale)
           isUnitCell = true;
           break;
         default:
@@ -5253,6 +5293,7 @@ SymmetryInterface sym;
         // x = within("unitcell", u)
         // x = within("unitcell", u, scale);
         // x = within(0.1, "unitcell", u);
+        // x = within(0.1, FALSE, "unitcell");
         // x = within(0.1, "unitcell", u, scale);
         Object o = getUnitCell(args, -1, (isDistance ? 2 : 1), args.length - 1);
         if (o == null)
@@ -5296,7 +5337,7 @@ SymmetryInterface sym;
         return false;
       // if we have anything, it must have a point or an array or a plane or a bitset from here on out    
       if (tok == T.unitcell) {
-        boolean asMap = isWithinModelSet;
+        boolean asMap = isBooleanFlag;
         return ((bs != null || pt != null) && mp
             .addXObj(vwr.ms.getUnitCellPointsWithin(distance, bs, pt, asMap)));
       }
@@ -5360,7 +5401,7 @@ SymmetryInterface sym;
           distance = 0; // not used, but this prevents a diversion
       }
       BS bsret = vwr.ms.getAtomsWithinRadius(distance,
-          (isAtomProperty ? bsLast : bs), isWithinModelSet, rd,
+          (isAtomProperty ? bsLast : bs), isBooleanFlag, rd,
           isAtomProperty ? bs : null);
       if (isAtomProperty) {
         // {*}.within(0.001, x) excludes atoms x 

@@ -107,7 +107,7 @@ public class Jmol extends JmolPanel {
       t.printStackTrace();
     }
 
-    if (jmolApp.haveConsole  && allowJavaConsole )
+    if (jmolApp.haveJavaConsole  && allowJavaConsole )
       jmol.getJavaConsole();
 
     if (jmolApp.isKiosk) {

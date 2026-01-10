@@ -371,5 +371,4 @@ abstract public Object getAtomSetCollection(Object atomSetCollectionReader);
     return canonizeAlphaDigit(altLoc);
   }
 
-
 }

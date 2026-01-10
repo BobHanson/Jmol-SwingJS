@@ -215,6 +215,7 @@ public class XtalSymmetry {
     private M3d spinFrameToCartXYZ;
     private M3d spinFrameRotationMatrix;
     protected int nSpins;
+    private P3d[] spinPointGroupAxesXYZ;
      
     /**
      * Scale the magnetic moments of magCIF and spinCIF files.
@@ -258,6 +259,11 @@ public class XtalSymmetry {
           // now concatentate the axis/angle rotation matrix
           spinFrameToCartXYZ.mul2(spinFrameRotationMatrix,  spinFrameToCartXYZ);
         }
+        spinPointGroupAxesXYZ = new P3d[] { new P3d(), new P3d(), new P3d() };
+        spinPointGroupAxesXYZ[0].setP(spinABC[1]).scale(1/a); 
+        spinPointGroupAxesXYZ[1].setP(spinABC[2]).scale(1/b); 
+        spinPointGroupAxesXYZ[2].setP(spinABC[3]).scale(1/c); 
+        
         System.out.println("XtalSymmetry "
             + "spinFramePp=\n " + spinFrameStr 
             + "\nrotation=\n " + spinFrameRotationMatrix
@@ -265,6 +271,7 @@ public class XtalSymmetry {
         if (spinFrameRotationMatrix != null)
           asc.setCurrentModelInfo(JC.SPIN_FRAME_ROTATION_MATRIX,
               spinFrameRotationMatrix);
+        asc.setCurrentModelInfo(JC.SSG_POINT_GROUP_AXES, spinPointGroupAxesXYZ);
       }
       P3d magneticScaling = P3d.new3(1 / a, 1 / b, 1 / c);
       int i0 = asc.getAtomSetAtomIndex(asc.iSet);

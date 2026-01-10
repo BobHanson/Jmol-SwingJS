@@ -142,7 +142,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   public AtomSetChooser atomSetChooser;
   public JFrame frame;
   public SplashInterface splash;
-  protected JFrame consoleframe;
+  protected JFrame javaConsoleframe;
   protected JsonNioServer clientService;
   protected int qualityJPG = -1;
   protected int qualityPNG = -1;
@@ -533,16 +533,16 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   }
 
   public void getJavaConsole() {
-    if (!jmolApp.haveConsole || !allowJavaConsole)
+    if (!jmolApp.haveJavaConsole || !allowJavaConsole)
       return;
     // Adding console frame to grab System.out & System.err
-    consoleframe = new JFrame(GT.$("Jmol Java Console"));
-    consoleframe.setIconImage(frame.getIconImage());
+    javaConsoleframe = new JFrame(GT.$("Jmol Java Console"));
+    javaConsoleframe.setIconImage(frame.getIconImage());
     try {
       final ConsoleTextArea consoleTextArea = new ConsoleTextArea(true);
       vwr.showSystemInfo();
       consoleTextArea.setFont(Font.decode("monospaced"));
-      consoleframe.getContentPane().add(new JScrollPane(consoleTextArea),
+      javaConsoleframe.getContentPane().add(new JScrollPane(consoleTextArea),
           java.awt.BorderLayout.CENTER);
       JButton buttonClear = guimap.newJButton("JavaConsole.Clear");
       buttonClear.addActionListener(new ActionListener() {
@@ -551,12 +551,12 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
           consoleTextArea.setText("");
         }
       });
-      consoleframe.getContentPane().add(buttonClear,
+      javaConsoleframe.getContentPane().add(buttonClear,
           java.awt.BorderLayout.SOUTH);
     } catch (IOException e) {
       JTextArea errorTextArea = new JTextArea();
       errorTextArea.setFont(Font.decode("monospaced"));
-      consoleframe.getContentPane().add(new JScrollPane(errorTextArea),
+      javaConsoleframe.getContentPane().add(new JScrollPane(errorTextArea),
           java.awt.BorderLayout.CENTER);
       errorTextArea.append(GT.$("Could not create ConsoleTextArea: ") + e);
     }
@@ -583,7 +583,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       location.y = screenSize.height - size.height;
     if (location.x < 0 || location.x + size.width > screenSize.width)
       location.x = 0;
-    consoleframe.setBounds(location.x, location.y, size.width, size.height);
+    javaConsoleframe.setBounds(location.x, location.y, size.width, size.height);
 
     //Boolean consoleVisible = historyFile.getWindowVisibility(name);
     //if ((consoleVisible != null) && (consoleVisible.equals(Boolean.TRUE))) {
@@ -1124,8 +1124,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      if (consoleframe != null)
-        consoleframe.setVisible(true);
+      if (javaConsoleframe != null)
+        javaConsoleframe.setVisible(true);
     }
 
   }

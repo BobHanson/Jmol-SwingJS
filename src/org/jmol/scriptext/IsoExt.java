@@ -1920,10 +1920,10 @@ public class IsoExt extends ScriptExt {
         } else if (tokAt(eval.iToken + 1) == T.expressionBegin
             || tokAt(eval.iToken + 1) == T.bitset) {
           bs = BSUtil.andNot(atomExpressionAt(++eval.iToken), vwr.slm.bsDeleted);
-          bs.and(vwr.ms.getAtomsWithinRadius(5.0d, bsSelect, false, null, null));
+          bs.and(vwr.ms.getAtomsWithinRadius(5, bsSelect, false, null, null));
         } else {
           // default is "within(5.0, selected) and not within(molecule,selected)"
-          bs = vwr.ms.getAtomsWithinRadius(5.0d, bsSelect, true, null, null);
+          bs = vwr.ms.getAtomsWithinRadius(5, bsSelect, true, null, null);
           bs.andNot(vwr.ms.getAtoms(T.molecule, bsSelect));
         }
         bs.andNot(bsSelect);

@@ -8387,6 +8387,14 @@ public class Viewer extends JmolViewer
     return ms.isJmolDataFrame(am.cmi);
   }
 
+  public int getJmolDataSourceFrame() {
+    return ms.getJmolDataSourceFrame(am.cmi);
+  }
+
+  public int getJmolDataFrameTypeInt() {
+    return ms.getJmolFrameTypeInt(am.cmi);
+  }
+
   public void setFrameTitle(int modelIndex, String title) {
     ms.setFrameTitle(BSUtil.newAndSetBit(modelIndex), title);
   }
@@ -11499,19 +11507,23 @@ public class Viewer extends JmolViewer
   }
   
   public void rotateModelSpinVectors(int modelIndex, M3d rot) {
+    if (ms.vibrations == null)
+      return;
     if (modelIndex < 0)
       modelIndex = am.cmi;
     if (modelIndex < 0 || modelIndex >= ms.mc) 
       return;
     if (rot == null)
       tm.setSpinOff();
-    ms.rotateModelSpinVectors(modelIndex, rot, false);      
+    ms.vib.rotateModelSpinVectors(ms, modelIndex, rot, false);      
   }
 	  
   public void rotateSpins(int deltaX, int deltaY) {
+    if (ms.vib == null)
+      return;
     M3d m = new M3d();
     if (m.setAsBallRotation(JC.radiansPerDegree, -deltaY, -deltaX)) {
-      ms.rotateModelSpinVectors(am.splitFrame ? am.getSplitFrameModel() : am.cmi, m, true);
+      ms.vib.rotateModelSpinVectors(ms, am.splitFrame ? am.getSplitFrameModel() : am.cmi, m, true);
       refresh(REFRESH_SYNC,
           sm.syncingMouse ? "Mouse: rotateSpins " + deltaX + " " + deltaY
               : "");

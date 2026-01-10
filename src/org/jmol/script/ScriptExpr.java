@@ -22,6 +22,7 @@ import org.jmol.util.Elements;
 import org.jmol.util.Escape;
 import org.jmol.viewer.JC;
 
+import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.BS;
 import javajs.util.CU;
@@ -1595,6 +1596,31 @@ abstract class ScriptExpr extends ScriptParam {
       }
     }
     return SV.newSV(T.propselector, tok, paramAsStr(i));
+  }
+
+  public double[] getBitsetPropertyFloat(BS bs, int tok, String property,
+                                         double min, double max)
+      throws ScriptException {
+
+    Object odata = (property == null 
+        || tok == (T.wyckoff | T.allfloat)
+        || tok == (T.vibxyz | T.allfloat)
+        || tok == (T.dssr | T.allfloat)
+            ? getBitsetProperty(bs, null, tok, null, null, property, null,
+                false, Integer.MAX_VALUE, false)
+            : vwr.getDataObj(property, bs, JmolDataManager.DATA_TYPE_AD));
+    if (odata == null || !AU.isAD(odata))
+      return (bs == null ? null : new double[bs.cardinality()]);
+    double[] data = (double[]) odata;
+    if (!Double.isNaN(min))
+      for (int i = 0; i < data.length; i++)
+        if (data[i] < min)
+          data[i] = Double.NaN;
+    if (!Double.isNaN(max))
+      for (int i = 0; i < data.length; i++)
+        if (data[i] > max)
+          data[i] = Double.NaN;
+    return data;
   }
 
   @SuppressWarnings({ "unchecked", "cast" })

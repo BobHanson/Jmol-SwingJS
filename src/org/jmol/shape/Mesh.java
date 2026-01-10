@@ -280,8 +280,6 @@ public class Mesh extends MeshSurface {
 
   public short[] symopColixes;
 
-// BH 2025.11.02 no references?  public String scriptVariables;
-
   public boolean hasTranslucentVertices;
 
   protected void sumVertexNormals(T3d[] vertices, V3d[] normals) {

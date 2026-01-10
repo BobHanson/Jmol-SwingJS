@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.api.Interface;
+import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolParallelProcessor;
 import org.jmol.api.JmolScriptFunction;
 import org.jmol.api.SymmetryInterface;
@@ -8967,7 +8968,7 @@ public class ScriptEval extends ScriptExpr {
         if (pal == PAL.PROPERTY) {
           if (isColorIndex) {
             if (!chk) {
-              data = getCmdExt().getBitsetPropertyFloat(bsSelected, (isByElement ? T.elemno
+              data = getBitsetPropertyFloat(bsSelected, (isByElement ? T.elemno
                   : T.groupid) | T.allfloat, null, Double.NaN, Double.NaN);
             }
           } else {
@@ -8979,7 +8980,7 @@ public class ScriptEval extends ScriptExpr {
               tok = getToken(index).tok;
               String type = (tok == T.dssr ? getToken(++index).value.toString() : tok == T.wyckoff || tok == T.vibxyz ? "color" : null);
               if (!chk) {
-                data = getCmdExt().getBitsetPropertyFloat(bsSelected, tok
+                data = getBitsetPropertyFloat(bsSelected, tok
                     | T.allfloat, type, Double.NaN, Double.NaN);
               }
               index++;

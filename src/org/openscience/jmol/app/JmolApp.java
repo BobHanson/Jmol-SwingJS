@@ -63,7 +63,7 @@ public class JmolApp implements JmolAppAPI {
   public File userPropsFile;
   public HistoryFile historyFile, pluginFile;
 
-  public boolean haveConsole = true;
+  public boolean haveJavaConsole = true;
   public boolean haveDisplay = true;
   public boolean splashEnabled = /** @j2sNative false && */
       true;
@@ -338,8 +338,8 @@ public class JmolApp implements JmolAppAPI {
 
     // output to sysout
     if (/** @j2sNative true || */line.hasOption("o"))
-      haveConsole = false;
-    if (!haveConsole) // might also be set in JmolData
+      haveJavaConsole = false;
+    if (!haveJavaConsole) // might also be set in JmolData
       info.put("noConsole", Boolean.TRUE);
 
     // transparent background

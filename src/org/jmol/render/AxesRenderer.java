@@ -24,6 +24,7 @@
 package org.jmol.render;
 
 import org.jmol.api.SymmetryInterface;
+import org.jmol.modelset.Model;
 import org.jmol.script.T;
 import org.jmol.shape.Axes;
 import org.jmol.util.GData;
@@ -41,6 +42,10 @@ public class AxesRenderer extends CageRenderer {
 
   private P3d pt000;
 
+  private int modelIndex;
+
+  private boolean isDataSpin;
+
   @Override
   protected void initRenderer() {
     endcap = GData.ENDCAPS_FLAT; 
@@ -57,20 +62,33 @@ public class AxesRenderer extends CageRenderer {
       return false;
     if (isXY ? exportType == GData.EXPORT_CARTESIAN
         : tm.isNavigating() && vwr.getBoolean(T.navigationperiodic))
-      return false; 
-    // includes check here for background model present
-    int modelIndex = vwr.am.cmi;
-    if (ms.isJmolDataFrame(modelIndex)
-        && !ms.getJmolFrameType(modelIndex).equals("plot data"))
       return false;
+    // includes check here for background model present
+    modelIndex = vwr.am.cmi;
+    Model m = ms.am[modelIndex];
+    isDataSpin = false;
     boolean isUnitCell = (vwr.g.axesMode == T.axesunitcell);
+    if (ms.isJmolDataFrame(modelIndex)) {
+      switch (ms.getJmolFrameTypeInt(modelIndex)) {
+      case T.spin:
+        isDataSpin = (m.uvw != null);
+        isUnitCell = true;
+        //int source = m.dataSourceFrame;
+        //ms.getUnitCell(source);
+        break;
+      case T.data:
+        break;
+      default:
+        return false;
+      }
+    }
     SymmetryInterface unitcell = (isUnitCell ? vwr.getCurrentUnitCell() : null);
-    if (isUnitCell && (unitcell == null || modelIndex < 0))
+    if (!isDataSpin && isUnitCell && (unitcell == null || modelIndex < 0))
       return false;
     imageFontScaling = vwr.imageFontScaling;
-    if (vwr.areAxesTainted())
+    if (!isDataSpin && vwr.areAxesTainted())
       axes.reinitShape();
-    font3d = vwr.gdata.getFont3DScaled(axes.font3d, imageFontScaling);    
+    font3d = vwr.gdata.getFont3DScaled(axes.font3d, imageFontScaling);
     isUnitCell = isUnitCell && (unitcell != null && ms.unitCells != null);
     String axisType = (isUnitCell ? axes.axisType : null);
     boolean isabcxyz = (isXY && isUnitCell && axes.axes2 != null);
@@ -83,14 +101,17 @@ public class AxesRenderer extends CageRenderer {
     if (isabcxyz) {
       // both abc and xyz
       if ("xyzabc".equals(axes.axes2))
-        render1(axes, mad10, false, axisType, isUnitCell, 2, null);
+        render1(axes, mad10, false, axisType, isUnitCell, 2, null, null);
       if (!"abc".equals(axes.axes2))
         vwr.setBooleanProperty("axesmolecular", true);
       axes.reinitShape();
-      render1(axes, mad10, true, null, false, scale, axes.axes2);
+      render1(axes, mad10, true, null, false, scale, axes.axes2, null);
       vwr.setBooleanProperty("axesunitcell", true);
+    } else if (isDataSpin) {
+      pt0.set(0, 0, 0);
+      render1(null, 20000, false, null, true, 1, null, m.uvw);
     } else {
-      render1(axes, mad10, isXY, axisType, isUnitCell, scale, null);
+      render1(axes, mad10, isXY, axisType, isUnitCell, scale, null, null);
     }
     return true;
   }
@@ -98,15 +119,14 @@ public class AxesRenderer extends CageRenderer {
   private final P3d ptTemp = new P3d();
 
   private void render1(Axes axes, int mad10, boolean isXY, String axisType,
-                       boolean isUnitCell, double scale, String labels2) {
+                       boolean isUnitCell, double scale, String labels2, P3d[] pts) {
     boolean isDataFrame = vwr.isJmolDataFrame();
     pt000 = (isDataFrame ? pt0 : axes.originPoint);
-
     int nPoints = 6;
     int labelPtr = 0;
     if (isUnitCell) {
       nPoints = 3;
-      labelPtr = 6;
+      labelPtr = (isDataSpin ? 21 : 6);
     } else if (isXY) {
       nPoints = 3;
       labelPtr = 9;
@@ -114,7 +134,7 @@ public class AxesRenderer extends CageRenderer {
       nPoints = 6;
       labelPtr = (vwr.getBoolean(T.axesorientationrasmol) ? 15 : 9);
     }
-    if (axes.labels != null) {
+    if (axes != null && axes.labels != null) {
       if (nPoints != 3)
         nPoints = (axes.labels.length < 6 ? 3 : 6);
       labelPtr = -1;
@@ -151,7 +171,7 @@ public class AxesRenderer extends CageRenderer {
         if (pt2i.x < 0)
           offx = -offx;
         if (pt2i.y < 0)
-          offy = -offy;
+         offy = -offy;
         pt0i.x += offx;
         pt0i.y += offy;
       }
@@ -170,7 +190,7 @@ public class AxesRenderer extends CageRenderer {
       }
     } else {
       // !isXY
-      drawTicks = (axes.tickInfos != null);
+      drawTicks = (axes != null && axes.tickInfos != null);
       if (drawTicks) {
         checkTickTemps();
         tickA.setT(pt000);
@@ -178,7 +198,7 @@ public class AxesRenderer extends CageRenderer {
       tm.transformPtNoClip(pt000, ptTemp);
       diameter = getDiameter((int) ptTemp.z, mad10);
       for (int i = nPoints; --i >= 0;) {
-        P3d p = axes.getAxisPoint(i, !isDataFrame, pointT);
+        P3d p = (pts == null ? axes.getAxisPoint(i, !isDataFrame, pointT) : pts[i]);
         tm.transformPtNoClip(p, p3Screens[i]);
       }
       if (shifting) {
@@ -203,7 +223,7 @@ public class AxesRenderer extends CageRenderer {
     colixes[1] = vwr.getObjectColix(StateManager.OBJ_AXIS2);
     colixes[2] = vwr.getObjectColix(StateManager.OBJ_AXIS3);
     boolean showOrigin = (nDims == 3 && !isXY && nPoints == 3
-        && (scale == 2 || isUnitCell));
+        && (scale == 2 || isUnitCell && !isDataSpin));
     if (nDims == 2)
       nPoints = 2; // plane group
     for (int i = nPoints; --i >= 0;) {
@@ -219,7 +239,7 @@ public class AxesRenderer extends CageRenderer {
       colix = colixes[i % 3];
       g3d.setC(colix);
       String label = (labels2 != null ? labels2.substring(i, i + 1)
-          : axes.labels == null ? JC.axisLabels[i + labelPtr]
+          : axes == null || axes.labels == null ? JC.axisLabels[i + labelPtr]
               : i < axes.labels.length ? axes.labels[i] : null);
       if (label != null && label.length() > 0) {
         P3d p = (i == 0 && shiftA ? vvert[1] : i == 1 && shiftB ? vvert[3]
@@ -271,7 +291,6 @@ public class AxesRenderer extends CageRenderer {
     vvert[vpt].setT(axes.originPoint);
     axes.getAxisPoint(i, false, pt);// relative
     vvert[vpt].sub(pt);
-//    vvert[vpt].add(axes.originPoint);
     pt.add(axes.originPoint);
     tm.transformPtNoClip(vvert[vpt], vvert[vpt]);
     tm.transformPtNoClip(pt, vvert[vpt + 1]);

@@ -41,12 +41,14 @@ import javajs.util.V3d;
 public final class JC {
 
   public final static int AXIS_A = 6;
-  public final static String[] axisLabels = { "+X", "+Y", "+Z", null, null, null, 
+  public final static String[] axisLabels = { 
+      "+X", "+Y", "+Z", null, null, null, 
       "a", "b", "c", 
       "X", "Y", "Z", null, null, null,
-      "X", null, "Z", null, "(Y)", null};
+      "X", null, "Z", null, "(Y)", null,
+      "u", "v", "w" };
 
-  public final static String[] axesTypes = {"a", "b", "c", "x", "y", "z"};
+  public final static String[] axesTypes = {"a", "b", "c", "x", "y", "z", "u", "v" ,"w"};
 
   public static final String NBO_TYPES = ";" + "AO;;;;" // 31
       + "PNAO;;" // 32
@@ -1682,6 +1684,7 @@ public final class JC {
   public static final String UC_MOREINFO = "moreUnitCellInfo";
   public static final String DEFAULT_DRAW_SYM_ID = "sym_"; // do not change this; code on working pages needs this right
   public static final String UNITCELL_PREFIX = "unitcell_";
+  public static final String SSG_POINT_GROUP_AXES = "pointGroupAxes";
   
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.
@@ -1690,13 +1693,15 @@ public final class JC {
    * @return true to delete
    */
   public static boolean isSpaceGroupInfoKey(String key) {
-    return (key.indexOf("nitCell") >= 0
-        || key.equals("coordinatesAreFractional")
-        || key.startsWith("spaceGroup")
+    key = key.toLowerCase();
+    return (key.indexOf("nitcell") >= 0
+        || key.equals("coordinatesarerractional")
+        || key.startsWith("spacegroup")
+        || key.startsWith("ssg")
         || key.indexOf("ymmet") >= 0
         || key.startsWith("f2c")              
         || key.startsWith("lattice")
-        || key.startsWith("intlTable"));
+        || key.startsWith("intltable"));
   }
 
   /**

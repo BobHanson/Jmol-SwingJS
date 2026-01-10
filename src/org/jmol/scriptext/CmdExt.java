@@ -28,6 +28,7 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.jmol.adapter.readers.pdb.JmolDataReader;
 import org.jmol.api.Interface;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.SymmetryInterface;
@@ -2878,11 +2879,11 @@ public class CmdExt extends ScriptExt {
       if (T.tokAttrOr(tokProp1, T.intproperty, T.floatproperty)
           && T.tokAttrOr(tokProp2, T.intproperty, T.floatproperty)
           && T.tokAttrOr(tokKey, T.intproperty, T.floatproperty)) {
-        double[] data1 = getBitsetPropertyFloat(bsFrom,
+        double[] data1 = e.getBitsetPropertyFloat(bsFrom,
             tokProp1 | T.selectedfloat, null, Double.NaN, Double.NaN);
-        double[] data2 = getBitsetPropertyFloat(bsFrom,
+        double[] data2 = e.getBitsetPropertyFloat(bsFrom,
             tokKey | T.selectedfloat, null, Double.NaN, Double.NaN);
-        double[] data3 = getBitsetPropertyFloat(bsTo, tokKey | T.selectedfloat,
+        double[] data3 = e.getBitsetPropertyFloat(bsTo, tokKey | T.selectedfloat,
             null, Double.NaN, Double.NaN);
         boolean isProperty = (tokProp2 == T.property);
         double[] dataOut = new double[isProperty ? vwr.ms.ac : data3.length];
@@ -3481,7 +3482,7 @@ public class CmdExt extends ScriptExt {
         invArg();
       }
     }
-    if (!chk && !vwr.isJmolDataFrame() && !vwr.getBoolean(T.mode2d))
+    if (!chk && !vwr.isJmolDataFrame() && !vwr.is2D())
       vwr.tm.navigateList(eval, list);
   }
 
@@ -3496,7 +3497,8 @@ public class CmdExt extends ScriptExt {
     modelIndex = vwr.ms.getJmolDataSourceFrame(modelIndex);
     int pt = args.length - 1;
     boolean isReturnOnly = (args != st);
-    boolean pdbFormat = true;
+    boolean isQuaternion = false;
+    boolean isPdbFormat = true;
     boolean isSplit = false;
     T[] statementSave = st;
     if (isReturnOnly)
@@ -3522,7 +3524,7 @@ public class CmdExt extends ScriptExt {
       break;
     case T.show:
       makeNewFrame = false;
-      pdbFormat = false;
+      isPdbFormat = false;
       break;
     case T.write:
       makeNewFrame = false;
@@ -3540,9 +3542,7 @@ public class CmdExt extends ScriptExt {
       break;
     }
     String qFrame = "";
-    Object[] parameters = null;
     String startScript = "", endScript = "";
-    boolean isQuaternion = false;
     boolean isDerivative = false;
     boolean isSecondDerivative = false;
     boolean isRamachandranRelative = false;
@@ -3550,7 +3550,7 @@ public class CmdExt extends ScriptExt {
     int[] propToks = new int[3];
 
     BS bs = BSUtil.copy(vwr.bsA());
-    String preSelected = "; select " + Escape.eBS(bs) + ";\n ";
+    String preselected = "; select " + Escape.eBS(bs) + ";\n ";
     String type = e.optParameterAsString(pt).toLowerCase();
     P3d minXYZ = null;
     P3d maxXYZ = null;
@@ -3566,7 +3566,7 @@ public class CmdExt extends ScriptExt {
     case T.data:
       e.iToken = 1;
       type = "data";
-      preSelected = "";
+      preselected = "";
       break;
     case T.brillouin:
       type = "brillouin";
@@ -3620,7 +3620,7 @@ public class CmdExt extends ScriptExt {
       }
 
       startScript = "zap 2.1;select " + Escape.eBS(bs) + ";\n ";
-      endScript = ";axes unitcell;";
+      endScript = "";
       break;
     case T.property:
       e.iToken = pt0 + 1;
@@ -3650,7 +3650,7 @@ public class CmdExt extends ScriptExt {
       }
       if (tokAt(e.iToken) == T.format) {
         format = stringParameter(++e.iToken);
-        pdbFormat = false;
+        isPdbFormat = false;
         e.iToken++;
       }
       if (tokAt(e.iToken) == T.min) {
@@ -3724,90 +3724,13 @@ public class CmdExt extends ScriptExt {
         return "";
       }
     }
-
-    // prepare data for property plotting
-
-    double pdbFactor = 1;
-    double[] dataX = null, dataY = null, dataZ = null;
-    String[] propData = new String[3];
-    if (tok == T.property || tok == T.spin) {
-      dataX = getBitsetPropertyFloat(bs, propToks[0] | T.selectedfloat,
-          propToks[0] == T.property ? props[0] : null,
-          (minXYZ == null ? Double.NaN : minXYZ.x),
-          (maxXYZ == null ? Double.NaN : maxXYZ.x));
-      propData[0] = props[0] + " " + Escape.eAD(dataX);
-      if (props[1] != null) {
-        dataY = getBitsetPropertyFloat(bs, propToks[1] | T.selectedfloat,
-            propToks[1] == T.property ? props[1] : null,
-            (minXYZ == null ? Double.NaN : minXYZ.y),
-            (maxXYZ == null ? Double.NaN : maxXYZ.y));
-        propData[1] = props[1] + " " + Escape.eAD(dataY);
-      }
-      if (props[2] != null) {
-        dataZ = getBitsetPropertyFloat(bs, propToks[2] | T.selectedfloat,
-            propToks[2] == T.property ? props[2] : null,
-            (minXYZ == null ? Double.NaN : minXYZ.z),
-            (maxXYZ == null ? Double.NaN : maxXYZ.z));
-        propData[2] = props[2] + " " + Escape.eAD(dataZ);
-      }
-      if (minXYZ == null)
-        minXYZ = P3d.new3(getPlotMinMax(dataX, false, propToks[0]),
-            getPlotMinMax(dataY, false, propToks[1]),
-            getPlotMinMax(dataZ, false, propToks[2]));
-      if (maxXYZ == null)
-        maxXYZ = P3d.new3(getPlotMinMax(dataX, true, propToks[0]),
-            getPlotMinMax(dataY, true, propToks[1]),
-            getPlotMinMax(dataZ, true, propToks[2]));
-      Logger.info("plot min/max: " + minXYZ + " " + maxXYZ);
-      P3d center = null;
-      P3d factors = null;
-      
-      if (pdbFormat) {
-        factors = P3d.new3(1, 1, 1);
-        center = new P3d();
-        center.ave(maxXYZ, minXYZ);
-        factors.sub2(maxXYZ, minXYZ);
-        if (tok != T.spin)
-          factors.set(factors.x / 200, factors.y / 200, factors.z / 200);
-        if (T.tokAttr(propToks[0], T.intproperty)) {
-          factors.x = 1;
-          center.x = 0;
-        } else if (factors.x > 0.1 && factors.x <= 10) {
-          factors.x = 1;
-        }
-        if (T.tokAttr(propToks[1], T.intproperty)) {
-          factors.y = 1;
-          center.y = 0;
-        } else if (factors.y > 0.1 && factors.y <= 10) {
-          factors.y = 1;
-        }
-        if (T.tokAttr(propToks[2], T.intproperty)) {
-          factors.z = 1;
-          center.z = 0;
-        } else if (factors.z > 0.1 && factors.z <= 10) {
-          factors.z = 1;
-        }
-        if (props[2] == null || props[1] == null)
-          center.z = minXYZ.z = maxXYZ.z = factors.z = 0;
-        for (int i = 0; i < dataX.length; i++)
-          dataX[i] = (dataX[i] - center.x) / factors.x * pdbFactor;
-        if (props[1] != null)
-          for (int i = 0; i < dataY.length; i++)
-            dataY[i] = (dataY[i] - center.y) / factors.y * pdbFactor;
-        if (props[2] != null)
-          for (int i = 0; i < dataZ.length; i++)
-            dataZ[i] = (dataZ[i] - center.z) / factors.z * pdbFactor;
-      }
-      parameters = new Object[] { bs, dataX, dataY, dataZ, minXYZ, maxXYZ,
-          factors, center, format, propData, Double.valueOf(1)};
-    }
-
-    // all set...
-
+    JmolDataReader reader = vwr.fm.getJmolDataReader();    
+    Object[] parameters = (tok == T.property || tok == T.spin ?
+        reader.getJmolDataFrameProperties(e, 
+        tok, propToks, props, bs, minXYZ, maxXYZ, format, isPdbFormat): null);
     if (tokCmd == T.write)
       return vwr.writeFileData(filename, "PLOT_" + type, modelIndex,
           parameters);
-
     String data;
     switch (type.substring(0, 4)) {
     case "data":
@@ -3820,13 +3743,10 @@ public class CmdExt extends ScriptExt {
       data = vwr.getPdbData(modelIndex, type, null, parameters, null, true);
       break;
     }
-
     if (tokCmd == T.show)
       return data;
-
     if (Logger.debugging)
       Logger.debug(data);
-
     if (tokCmd == T.draw) {
       e.runScript(data);
       return "";
@@ -3844,83 +3764,55 @@ public class CmdExt extends ScriptExt {
     if (!isOK)
       return "";
     int modelCount = vwr.ms.mc;
-    vwr.ms.setJmolDataFrame(startScript, modelIndex, modelCount - 1);
+    reader.setJmolDataFrame(vwr.ms, startScript, modelIndex, modelCount - 1);
+
+    // create the state script
     if (tok != T.property)
-      startScript += ";\n" + preSelected;
+      startScript += ";\n" + preselected;
+    
     StateScript ss = vwr.addStateScript(startScript, true, false);
 
-    // get post-processing script
+    // get post-processing scripts
 
-    double radius = 150;
-    String script;
+    String[] scripts = reader.getJmolDataFrameScripts(vwr, tok, modelIndex, modelCount,
+        type, qFrame, props, isSpinPointGroup);
+    
+    // run script[0]
+    e.runScript(scripts[0] + preselected);
+
+    // set rotation radius and display frame title
+    
+    ss.setModelIndex(vwr.am.cmi);
+    double radius;
     switch (tok) {
-    default:
-      script = "frame 0.0; frame last; reset;select visible;wireframe only;";
-      radius = 10;
-      break;
     case T.property:
-      vwr.setFrameTitle(modelCount - 1,
-          type + " plot for model " + vwr.getModelNumberDotted(modelIndex));
-      script = "frame 0.0; frame last; reset;" + "select visible; spacefill 3.0"
-          + "; wireframe 0;" + "draw plotAxisX" + modelCount
-          + " {100 -100 -100} {-100 -100 -100} \"" + props[0] + "\";"
-          + "draw plotAxisY" + modelCount
-          + " {-100 100 -100} {-100 -100 -100} \"" + props[1] + "\";";
-      if (props[2] != null)
-        script += "draw plotAxisZ" + modelCount
-            + " {-100 -100 100} {-100 -100 -100} \"" + props[2] + "\";";
-      break;
     case T.ramachandran:
-      vwr.setFrameTitle(modelCount - 1, "ramachandran plot for model "
-          + vwr.getModelNumberDotted(modelIndex));
-      script = "frame 0.0; frame last; reset;"
-          + "select visible; color structure; spacefill 3.0; wireframe 0;"
-          + "draw ramaAxisX" + modelCount + " {100 0 0} {-100 0 0} \"phi\";"
-          + "draw ramaAxisY" + modelCount + " {0 100 0} {0 -100 0} \"psi\";";
-      break;
     case T.quaternion:
     case T.helix:
-      vwr.setFrameTitle(modelCount - 1, type.replace('w', ' ') + qFrame
-          + " for model " + vwr.getModelNumberDotted(modelIndex));
-      //$FALL-THROUGH$
-    case T.spin:      
-      String color = (C.getHexCode(vwr.cm.colixBackgroundContrast));
-      script = "frame 0.0; frame last; reset;"
-          + "select visible; wireframe 0; spacefill 3.0; "
-          + "isosurface quatSphere" + modelCount + " color " + color
-          + " sphere 100.0 mesh nofill frontonly translucent 0.8;"
-          + "draw quatAxis" + modelCount
-          + "X {100 0 0} {-100 0 0} color red \"x\";" + "draw quatAxis"
-          + modelCount + "Y {0 100 0} {0 -100 0} color green \"y\";"
-          + "draw quatAxis" + modelCount
-          + "Z {0 0 100} {0 0 -100} color blue \"z\";" 
-          + (tok == T.spin ? "vectors 2.0;spacefill off;" : "color structure;")
-          + "draw quatCenter" + modelCount + "{0 0 0} scale 0.02;";
+    case T.spin:
+      radius = 180;
+      break;
+    default:
+    //case T.data:
+    //case T.brillouin:
+      radius = 10;
       break;
     }
-
-    // run the post-processing script and set rotation radius and display frame title
-    e.runScript(script + preSelected);
-    ss.setModelIndex(vwr.am.cmi);
     vwr.setRotationRadius(radius, true);
     e.sm.loadShape(JC.SHAPE_ECHO);
-    if (isSpinPointGroup) {
-      script = ";set symmetryhm;" + 
-          //"frame 2.1;" + 
-          "draw spin pointgroup;" + 
-          "var name = {2.1}.pointgroup().hmName;" + 
-          "set echo hmname 100% 100%;" + 
-          "set echo hmname RIGHT;" + 
-          "set echo hmname model 2.1;" + 
-          "echo @name;";
-      e.runScript(script);
+    if (scripts[1] != null) {
+      e.runScript(scripts[1]);
     }
-    if (isSplit)
-      e.runScript("frame 1.1 2.1 split;");
-    showString("frame " + vwr.getModelNumberDotted(modelCount - 1)
+    
+    if (isSplit) {
+      String m = (String) vwr.getP("_modelNumber");
+      e.runScript("frame 1.1 " + m + " split;");
+    }
+    showString("frame " + vwr.getModelNumberDotted(vwr.ms.mc - 1)
         + (type.length() > 0
             ? " created: " + type + (isQuaternion ? qFrame : "")
             : ""));
+    
     return "";
   }
 
@@ -7350,31 +7242,6 @@ public class CmdExt extends ScriptExt {
     return (i < args.length && args[i] != null ? args[i].tok : T.nada);
   }
 
-  private double getPlotMinMax(double[] data, boolean isMax, int tok) {
-    if (data == null)
-      return 0;
-    switch (tok) {
-    case T.omega:
-    case T.phi:
-    case T.psi:
-      return (isMax ? 180 : -180);
-    case T.eta:
-    case T.theta:
-      return (isMax ? 360 : 0);
-    case T.straightness:
-      return (isMax ? 1 : -1);
-    }
-    double fmax = (isMax ? -1E10d : 1E10d);
-    for (int i = data.length; --i >= 0;) {
-      double f = data[i];
-      if (Double.isNaN(f))
-        continue;
-      if (isMax == (f > fmax))
-        fmax = f;
-    }
-    return fmax;
-  }
-
   private Object parseDataArray(String str, boolean is3D) {
     str = Parser.fixDataString(str);
     int[] lines = Parser.markLines(str, '\n');
@@ -7416,31 +7283,6 @@ public class CmdExt extends ScriptExt {
           + iX + " blocks read");
       return new double[1][1][1];
     }
-    return data;
-  }
-
-  public double[] getBitsetPropertyFloat(BS bs, int tok, String property,
-                                         double min, double max)
-      throws ScriptException {
-
-    Object odata = (property == null 
-        || tok == (T.wyckoff | T.allfloat)
-        || tok == (T.vibxyz | T.allfloat)
-        || tok == (T.dssr | T.allfloat)
-            ? e.getBitsetProperty(bs, null, tok, null, null, property, null,
-                false, Integer.MAX_VALUE, false)
-            : vwr.getDataObj(property, bs, JmolDataManager.DATA_TYPE_AD));
-    if (odata == null || !AU.isAD(odata))
-      return (bs == null ? null : new double[bs.cardinality()]);
-    double[] data = (double[]) odata;
-    if (!Double.isNaN(min))
-      for (int i = 0; i < data.length; i++)
-        if (data[i] < min)
-          data[i] = Double.NaN;
-    if (!Double.isNaN(max))
-      for (int i = 0; i < data.length; i++)
-        if (data[i] > max)
-          data[i] = Double.NaN;
     return data;
   }
 

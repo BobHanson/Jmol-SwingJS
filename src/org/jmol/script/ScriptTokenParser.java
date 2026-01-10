@@ -677,6 +677,8 @@ abstract class ScriptTokenParser {
     // within ( group|branch|etc, ....)
     // within ( distance, group, ....)
     // within ( annotation, "xxxx")
+    // within ( distance, unitcell)
+    // within ( distance, TRUE/FALSE, unitcell)
 
     addNextToken();
     if (!addNextTokenIf(T.leftparen))
@@ -817,6 +819,8 @@ abstract class ScriptTokenParser {
             if (!addNextTokenIf(T.comma))
               break;
             tok = tokPeek();
+          } else if (tok == T.integer || tok == T.decimal) {
+            allowComma = false;
           }
           break;
         }
@@ -835,6 +839,7 @@ abstract class ScriptTokenParser {
             done = true;
             break;
           case T.unitcell:
+            int n = ltokenPostfix.size();
             getToken();
             addTokenToPostfix(T.string, T.nameOf(tok));
             if (tokPeek() == T.rightparen) {

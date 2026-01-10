@@ -1336,8 +1336,7 @@ public class Atom extends Point3fi implements Node {
     case T.psi:
     case T.omega:
       if (group.chain.model.isJmolDataFrame
-          && group.chain.model.jmolFrameType
-              .startsWith("plot ramachandran")) {
+          && group.chain.model.jmolFrameTypeInt == T.ramachandran) {
         switch (tokWhat) {
         case T.phi:
           return getFractionalCoord(!vwr.g.legacyJavaFloat, 'X', false, ptTemp);

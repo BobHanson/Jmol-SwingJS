@@ -3,9 +3,16 @@ package org.jmol.util;
 import java.util.Map;
 
 import org.jmol.modelset.Atom;
+import org.jmol.modelset.Model;
+import org.jmol.modelset.ModelSet;
+import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 
+import javajs.util.A4d;
+import javajs.util.BS;
 import javajs.util.M3d;
 import javajs.util.P3d;
+import javajs.util.Qd;
 import javajs.util.T3d;
 import javajs.util.V3d;
 
@@ -62,7 +69,7 @@ public class Vibration extends V3d {
     case TYPE_WYCKOFF:
       break;
     default:
-      pt.scaleAdd2((double) (Math.cos(t456.x * twoPI) * scale), this, pt); 
+      pt.scaleAdd2((Math.cos(t456.x * twoPI) * scale), this, pt); 
       break;
     }
     return pt;
@@ -156,6 +163,94 @@ public class Vibration extends V3d {
       matInv.rotate(t);
       rot.rotate(t);
     }
+  }
+
+  private final M3d matTemp = new M3d(), matInv = new M3d();
+
+  public void rotateModelSpinVectors(ModelSet ms, int modelIndex, M3d rot, boolean isdx) {
+    if (modelIndex < 0 || modelIndex >= ms.mc || ms.vibrations == null)
+      return;
+    Viewer vwr = ms.vwr;
+    Model m = ms.am[modelIndex];
+    if (m.isJmolDataFrame)
+      modelIndex = m.dataSourceFrame;
+    Map<String, Object> info = ms.getModelAuxiliaryInfo(modelIndex);
+    if (rot == null) {
+      // reset
+      rot = (M3d) info.get(JC.SPIN_FRAME_ROTATION_MATRIX);
+      if (rot == null)
+        return;
+    }
+    boolean noref = Double.isNaN(rot.getElement(0, 0));
+    boolean isScreenZ = (noref && rot.getElement(2, 2) == 1);
+    double deg = (noref || isScreenZ ? rot.getElement(1, 1) : 0);
+    if (noref && deg != 0) {
+      rot.setElement(1, 1, 0);
+      rotateModelSpinVectors(ms, modelIndex, rot, false);
+      rot.setElement(1, 1, deg);
+    }
+
+    M3d m0 = (M3d) info.get(JC.SPIN_FRAME_ROTATION_MATRIX);
+    M3d mat = (M3d) info.get(JC.SPIN_ROTATION_MATRIX_APPLIED);
+    if (mat == null && m0 == null) {
+      m0 = M3d.newM3(null);
+      info.put(JC.SPIN_FRAME_ROTATION_MATRIX, m0);
+    }
+    if (mat == null) {
+      mat = m0;
+    }
+    if (noref) {
+      V3d qn;
+      if (isScreenZ) {
+        P3d pt3 = P3d.new3(0, 0, 100);
+        P3d pt4 = P3d.new3(0, 0, 200);
+        vwr.tm.unTransformPoint(pt3, pt3);
+        vwr.tm.unTransformPoint(pt4, pt4);
+        qn = V3d.newVsub(pt3, pt4);
+      } else {
+        qn = Qd.newM(mat).getNormal();
+      }
+      rot = Qd.newVA(qn, deg).getMatrix();
+    }
+    BS bs = BSUtil.newAndSetBit(modelIndex);
+    ms.includeAllRelatedFrames(bs, true);
+    BS bsModels = BSUtil.copy(bs);
+    bs = vwr.getModelUndeletedAtomsBitSetBs(bs);
+    M3d matInv;
+    M3d drot;
+    drot = matTemp;
+    if (isdx) {
+      drot.setM3(rot);
+      rot.mul2(rot, mat);
+      matInv = null;
+    } else {
+      matInv = this.matInv;
+      matInv.setM3(mat);
+      matInv.invert();
+    }
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      if (i >= ms.vibrations.length)
+        return;
+      Vibration v = ms.vibrations[i];
+      if (v == null || !v.isFrom000 && v.magMoment == 0)
+        continue;
+      v.rotateSpin(matInv, rot, drot, ms.at[i]);
+    }
+    Qd quat = Qd.newM(rot);
+    A4d aa = quat.toA4d();
+    mat = M3d.newM3(rot);
+    info.put(JC.SPIN_ROTATION_MATRIX_APPLIED, mat);
+    for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) {
+    	m = ms.am[i];
+    	if (m.uvw0 != null) {
+    	    mat.rotate2(m.uvw0[0], m.uvw[0]);
+    	    mat.rotate2(m.uvw0[1], m.uvw[1]);
+    	    mat.rotate2(m.uvw0[2], m.uvw[2]);
+    	}
+    }
+    info.put(JC.SPIN_ROTATION_AXIS_ANGLE_APPLIED, aa);
+    if (ms.unitCells[modelIndex] != null)
+      ms.unitCells[modelIndex].setSpinAxisAngle(aa);
   }
 
 }
