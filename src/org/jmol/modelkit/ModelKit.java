@@ -60,6 +60,7 @@ import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.MeasureD;
 import javajs.util.P3d;
+import javajs.util.P3i;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
@@ -1301,15 +1302,75 @@ public class ModelKit {
     return bs.cardinality();
   }
 
-  public int cmdAssignMoveAtoms(BS bsSelected, int iatom, P3d p, P3d[] pts,
-                                boolean allowProjection, boolean isMolecule) {
-    return assignMoveAtoms(bsSelected, iatom, p, pts, allowProjection,
-        isMolecule, true);
+  /**
+   * MODELKIT SPACEGROUP
+   * 
+   * @param transform
+   * @param sb
+   * 
+   * @param packing
+   * @param doDraw
+   * @param cmd
+   */
+  public void cmdAssignSpaceGroup(String transform, SB sb, String cmd,
+                                  double packing, boolean doDraw) {
+    clearAtomConstraints();
+    if (packing >= 0) {
+      int n;
+      if (doDraw) {
+        n = cmdAssignAddAtoms("N:G", null, null, packing, cmd);
+      } else {
+        BS bsModelAtoms = vwr.getThisModelAtoms();
+        n = packAssignedSpaceGroup(null, bsModelAtoms, transform, packing, null, cmd);
+      }
+      sb.append("\n").append(GT.i(GT.$("{0} atoms added"), n));
+    }
+    if (doDraw) {
+      String s = drawSymmetry("sg", false, -1, null, Integer.MAX_VALUE, null,
+          null, null, 0, -2, 0, null, true);
+      appRunScript(s);
+    }
   }
 
-  public int assignMoveAtoms(BS bsSelected, int iatom, P3d p, P3d[] pts,
-                             boolean allowProjection, boolean isMolecule,
-                             boolean isCommand) {
+  /**
+   * MODELKIT {1 0 0} PACKED
+   * 
+   * @param sym
+   * @param bsAtoms
+   * @param packing
+   */
+  public void cmdPackUnitCell(SymmetryInterface sym, BS bsAtoms,
+                              double packing) {
+    packAssignedSpaceGroup(sym, bsAtoms, null, packing, null, "packUC");
+  }
+
+  public int cmdFillOABC(T3d[] oabc, String cmd) {
+    BS bsAtoms = vwr.getThisModelAtoms();
+    int n0 = bsAtoms.cardinality();
+    if (n0 == 0)
+      return 0;
+    SymmetryInterface uc = vwr.getSymTemp().getUnitCell(oabc, false, "fill");
+    P3i min = new P3i();
+    P3i max = new P3i();
+    SymmetryInterface sym0 = vwr.getOperativeSymmetry();
+    sym0.adjustRangeMinMax(oabc, Double.NaN, null, null, null, null, min, max);
+    P3d p = new P3d();
+    for (int i = min.x; i < max.x; i++) {
+      for (int j = min.y; j < max.y; j++) {
+        for (int k = min.z; k < max.z; k++) {
+          p.set(i, j, k);
+          sym0.setOffsetPt(p);
+          packAssignedSpaceGroup(sym0, bsAtoms, null, 0, uc, cmd);
+        }
+      }
+    }
+    p.set(0, 0, 0);
+    sym0.setOffsetPt(p);
+    return vwr.getThisModelAtoms().cardinality() - n0;
+  }
+
+  public int cmdAssignMoveAtoms(BS bsSelected, int iatom, P3d p, P3d[] pts,
+                                boolean allowProjection, boolean isMolecule, boolean isCommand) {
     SymmetryInterface sym = getSym(iatom);
     int n;
     if (sym != null) {
@@ -2326,7 +2387,7 @@ public class ModelKit {
             pts[0] = allPts[i];
             String el = (i == 0 ? type
                 : elements.substring(ept, ept + 2).trim());
-            n += addAtoms(el, pts, bsAtoms, opsCtr, packing, cmd);
+            n += addAtoms(el, pts, bsAtoms, opsCtr, packing, null, cmd);
           }
           return n;
         }
@@ -2335,7 +2396,7 @@ public class ModelKit {
         pts = new P3d[] { (P3d) o };
       }
     }
-    return addAtoms(type, pts, bsAtoms, opsCtr, packing, cmd);
+    return addAtoms(type, pts, bsAtoms, opsCtr, packing, null, cmd);
   }
 
   /**
@@ -2348,12 +2409,13 @@ public class ModelKit {
    * @param bsAtoms
    * @param opsCtr
    * @param packing
+   * @param uc but ONLY add atoms if they are within this unitcell
    * @param cmd
    * @return 0 if nothing added; -n if added and no symmetry; n if added with
    *         symmetry
    */
   private int addAtoms(String type, P3d[] pts, BS bsAtoms, M4d[] opsCtr,
-                       double packing, String cmd) {
+                       double packing, SymmetryInterface uc, String cmd) {
     try {
       vwr.pushHoldRepaintWhy("modelkit");
       SymmetryInterface sym = vwr.getOperativeSymmetry();
@@ -2398,9 +2460,9 @@ public class ModelKit {
           n = -1;
         }
       } else {
-        // handle equilivalent positions
+        // handle equivalent positions
         n = addAtomsWithSymmetry(sym, bsAtoms, type, atomIndex, isPoint, pts,
-            opsCtr, packing);
+            opsCtr, packing, uc);
       }
       return n;
     } catch (Exception e) {
@@ -2430,11 +2492,12 @@ public class ModelKit {
    *        augmented operator set that includes lost translations for subgroups
    *        this set of operations will be used instead of the space group operations.
    * @param packing
+   * @param uc but only within this unitcell
    * @return number of atoms added
    */
   private int addAtomsWithSymmetry(SymmetryInterface sym, BS bsAtoms,
                                    String type, int atomIndex, boolean isPoint,
-                                   P3d[] pts, M4d[] opsCtr, double packing) {
+                                   P3d[] pts, M4d[] opsCtr, double packing, SymmetryInterface uc) {
     String flags = "";
     BS bsM = vwr.getThisModelAtoms();
     int n = bsM.cardinality();
@@ -2482,12 +2545,13 @@ public class ModelKit {
       for (int i = 0; i < pts.length; i++) {
         assignAtoms(Point3fi.newPF(pts[i], 1), atomIndex, bsEquiv, stype, true, // newPoint
             null, // cmd
-            false, site, sym, points, flags, null, packing);
+            false, site, sym, points, flags, null, packing, uc);
       }
     } else {
 
       // MODELKIT SPACEGROUP 
       // MODELKIT PACKED
+      // MODELKIT FILL <unitcell>
 
       // Go through site-by-site. There is no need to check
       // every atom of a given site, since any one will produce
@@ -2508,7 +2572,7 @@ public class ModelKit {
         // now assign atoms with consideration for equivalent atoms. 
 
         assignAtoms(encodeVib(spinSym, a), -1, null, stype, false, null, false,
-            site, sym, points, flags, opsCtr, packing);
+            site, sym, points, flags, opsCtr, packing, uc);
 
         // If we don't have augmented operations (subgroup generation), we can just
         // remove the new atoms from the list, because there won't be any
@@ -2541,6 +2605,7 @@ public class ModelKit {
   /**
    * Encode vib x, y, z as integer values, to be rotated
    * @param spinSym
+   * @param a 
    * @return new Point3fi
    */
   private Point3fi encodeVib(SymmetryInterface spinSym, Atom a) {
@@ -2658,7 +2723,7 @@ public class ModelKit {
                                          // strictly internal, for crystal work:
                                          int site) {
     assignAtoms(Point3fi.newPF(pt, 0), atomIndex, bs, type, newPoint, cmd,
-        false, site, null, null, null, null, 0);
+        false, site, null, null, null, null, 0, null);
   }
 
   /**
@@ -2705,7 +2770,7 @@ public class ModelKit {
                            int site, SymmetryInterface sym,
                            Lst<Point3fi> points, 
                            String flags, M4d[] opsCtr,
-                           double packing) {
+                           double packing, SymmetryInterface uc) {
     if (sym == null)
       sym = vwr.getOperativeSymmetry();
     boolean haveAtomByIndex = (atomIndex >= 0);
@@ -2734,8 +2799,8 @@ public class ModelKit {
         nIgnored++;
       }
       // this will convert points to the needed equivalent points
-      sym.getEquivPointList(nIgnored, flags + (newPoint && atomIndex < 0 ? "newpt" : ""),
-          opsCtr, packing, points);
+        sym.getEquivPointList(nIgnored, flags + (newPoint && atomIndex < 0 ? "newpt" : ""),
+          opsCtr, packing, points, uc);
     }
     BS bsEquiv = (atom == null ? null
         : sym != null ? vwr.ms.getSymmetryEquivAtoms(bsAtoms, sym, null)
@@ -4228,26 +4293,23 @@ public class ModelKit {
    * @param bsAtoms
    * @param transform
    * @param packing
+   * @param uc 
    * @param cmd
    * @return the number of new atoms
    */
   private int packAssignedSpaceGroup(SymmetryInterface sym, BS bsAtoms,
                                      String transform, double packing,
+                                     SymmetryInterface uc,
                                      String cmd) {
-    if (sym == null)
-      sym = vwr.getOperativeSymmetry();
-    if (sym == null)
+    if (sym == null && (sym = vwr.getOperativeSymmetry()) == null)
       return 0;
     M4d[] opsCtr = (transform == null ? null
   		: (M4d[]) sym.getSpaceGroupInfoObj(JC.INFO_OPS_CTR, transform, false, false));
     int n0 = bsAtoms.cardinality();
-    addAtoms(null, null, bsAtoms, opsCtr, packing, cmd);
-    vwr.ms.setSpaceGroup(vwr.am.cmi, sym, new BS());
+    addAtoms(null, null, bsAtoms, opsCtr, packing, uc, cmd);
+    if (uc == null)
+      vwr.ms.setSpaceGroup(vwr.am.cmi, sym, new BS());
     return vwr.getThisModelAtoms().cardinality() - n0;
-  }
-
-  public void packUnitCell(SymmetryInterface sym, BS bsAtoms, double packing) {
-    packAssignedSpaceGroup(sym, bsAtoms, null, packing, "packUC");
   }
 
   /**
@@ -4504,36 +4566,6 @@ public class ModelKit {
     if (isModelkit)
       s += ";draw ID sg_xes axes 0.05;";
     return s;
-  }
-
-  /**
-   * MODELKIT SPACEGROUP
-   * 
-   * @param transform
-   * @param sb
-   * 
-   * @param packing
-   * @param doDraw
-   * @param cmd
-   */
-  public void cmdAssignSpaceGroup(String transform, SB sb, String cmd,
-                                  double packing, boolean doDraw) {
-    clearAtomConstraints();
-    if (packing >= 0) {
-      int n;
-      if (doDraw) {
-        n = cmdAssignAddAtoms("N:G", null, null, packing, cmd);
-      } else {
-        BS bsModelAtoms = vwr.getThisModelAtoms();
-        n = packAssignedSpaceGroup(null, bsModelAtoms, transform, packing, cmd);
-      }
-      sb.append("\n").append(GT.i(GT.$("{0} atoms added"), n));
-    }
-    if (doDraw) {
-      String s = drawSymmetry("sg", false, -1, null, Integer.MAX_VALUE, null,
-          null, null, 0, -2, 0, null, true);
-      appRunScript(s);
-    }
   }
 
 }

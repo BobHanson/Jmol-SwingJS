@@ -442,7 +442,8 @@ public class XtalSymmetry {
         }
       }
       return nSpins;
-    } 
+    }
+
   }
 
   private static final double MAX_INTERCHAIN_BOND_2 = 25; // allowing for hydrogen bonds
@@ -516,7 +517,7 @@ public class XtalSymmetry {
    * range minima and maxima -- also usedf for cartesians comparisons
    * 
    */
-  private double rminx, rminy, rminz, rmaxx, rmaxy, rmaxz;
+  private P3d rmin, rmax;
   /**
    * the initial and main Symmetry object
    */
@@ -1037,67 +1038,17 @@ public class XtalSymmetry {
     }
   }
 
+  /**
+   * Adjust cell range for supercell and specified unitcell to fill.
+   * return is in minXYZ and maxXYZ.
+   * 
+   * oabc is adjusted for supercell if one is given.
+   * @param oabc
+   */
+  
   private void adjustRangeMinMax(T3d[] oabc) {
-
-    // be sure to add in packing error adjustments 
-    // so that we include all needed atoms
-    // load "" packed x.x supercell...
-    P3d pa = new P3d();
-    P3d pb = new P3d();
-    P3d pc = new P3d();
-    if (acr.forcePacked) {
-      pa.setT(oabc[1]);
-      pb.setT(oabc[2]);
-      pc.setT(oabc[3]);
-      pa.scale(packingRange);
-      pb.scale(packingRange);
-      pc.scale(packingRange);
-    }
-
-    // account for lattice specification
-    // load "" {x y z} supercell...
-    oabc[0].scaleAdd2(minXYZ.x, oabc[1], oabc[0]);
-    oabc[0].scaleAdd2(minXYZ.y, oabc[2], oabc[0]);
-    oabc[0].scaleAdd2(minXYZ.z, oabc[3], oabc[0]);
-    // add in packing adjustment
-    oabc[0].sub(pa);
-    oabc[0].sub(pb);
-    oabc[0].sub(pc);
-    // fractionalize and adjust min/max
-    P3d pt = P3d.newP(oabc[0]);
-    symmetry.toFractional(pt, true);
-    setSymmetryMinMax(pt);
-
-    // account for lattice specification
-    oabc[1].scale(maxXYZ.x - minXYZ.x);
-    oabc[2].scale(maxXYZ.y - minXYZ.y);
-    oabc[3].scale(maxXYZ.z - minXYZ.z);
-    // add in packing adjustment
-    oabc[1].scaleAdd2(2, pa, oabc[1]);
-    oabc[2].scaleAdd2(2, pb, oabc[2]);
-    oabc[3].scaleAdd2(2, pc, oabc[3]);
-    // run through six of the corners -- a, b, c, ab, ac, bc
-    for (int i = 0; i < 3; i++) {
-      for (int j = i + 1; j < 4; j++) {
-        pt.add2(oabc[i], oabc[j]);
-        if (i != 0)
-          pt.add(oabc[0]);
-        symmetry.toFractional(pt, false);
-        setSymmetryMinMax(pt);
-      }
-    }
-    // bc in the end, so we need abc
-    symmetry.toCartesian(pt, false);
-    pt.add(oabc[1]);
-    symmetry.toFractional(pt, false);
-    setSymmetryMinMax(pt);
-    // allow for some imprecision
-    minXYZ = P3i.new3((int) Math.min(0, Math.floor(rminx + 0.001f)),
-        (int) Math.min(0, Math.floor(rminy + 0.001f)),
-        (int) Math.min(0, Math.floor(rminz + 0.001f)));
-    maxXYZ = P3i.new3((int) Math.max(1, Math.ceil(rmaxx - 0.001f)),
-        (int) Math.max(1, Math.ceil(rmaxy - 0.001f)),
-        (int) Math.max(1, Math.ceil(rmaxz - 0.001f)));
+    symmetry.adjustRangeMinMax(oabc, 
+        (acr.forcePacked ? packingRange : Double.NaN), minXYZ, maxXYZ, rmin, rmax, minXYZ, maxXYZ);
   }
 
   /**
@@ -1184,8 +1135,8 @@ public class XtalSymmetry {
     boolean checkRangeNoSymmetry = (symmetryRange < 0);
     boolean checkRange111 = (symmetryRange > 0);
     if (checkCartesianRange) {
-      rminx = rminy = rminz = Double.MAX_VALUE;
-      rmaxx = rmaxy = rmaxz = -Double.MAX_VALUE;
+      rmin = P3d.new3(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+      rmax = P3d.new3(-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE);
     }
     // incommensurate symmetry can have lattice centering, resulting in 
     // duplication of operators. There's a bug later on that requires we 
@@ -1277,17 +1228,17 @@ public class XtalSymmetry {
             atom.bsSymmetry.set(iCell * operationCount);
             atom.bsSymmetry.set(0);
             if (checkCartesianRange)
-              setSymmetryMinMax(c);
+              UnitCell.setSymmetryMinMax(c, rmin, rmax);
             if (pt < cartesianCount)
               cartesians[pt] = c;
           }
           if (checkRangeNoSymmetry) {
-            rminx -= absRange;
-            rminy -= absRange;
-            rminz -= absRange;
-            rmaxx += absRange;
-            rmaxy += absRange;
-            rmaxz += absRange;
+            rmin.x -= absRange;
+            rmin.y -= absRange;
+            rmin.z -= absRange;
+            rmax.x += absRange;
+            rmax.y += absRange;
+            rmax.z += absRange;
           }
           cell555Count = pt = symmetryAddAtoms(0, 0, 0, 0, pt,
               iCell * operationCount, cartesians, ms, excludedOps, atomMap);
@@ -1295,12 +1246,12 @@ public class XtalSymmetry {
       }
     }
     if (checkRange111) {
-      rminx -= absRange;
-      rminy -= absRange;
-      rminz -= absRange;
-      rmaxx += absRange;
-      rmaxy += absRange;
-      rmaxz += absRange;
+      rmin.x -= absRange;
+      rmin.y -= absRange;
+      rmin.z -= absRange;
+      rmax.x += absRange;
+      rmax.y += absRange;
+      rmax.z += absRange;
     }
 
     // now apply all the translations
@@ -1452,8 +1403,8 @@ public class XtalSymmetry {
       updateBSAtoms();
       firstAtom = bsAtoms.nextSetBit(firstAtom);
     }
-    rminx = rminy = rminz = Double.MAX_VALUE;
-    rmaxx = rmaxy = rmaxz = -Double.MAX_VALUE;
+    rmin = P3d.new3(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+    rmax = P3d.new3(-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE);
     if (acr.latticeType == null)
       acr.latticeType = "" + symmetry.getLatticeType();
     if (acr.isPrimitive) {
@@ -1522,7 +1473,7 @@ public class XtalSymmetry {
     int iAtomFirst = asc.getLastAtomSetAtomIndex();
     if (bsAtoms != null)
       iAtomFirst = bsAtoms.nextSetBit(iAtomFirst);
-    if (rminx == Double.MAX_VALUE) {
+    if (rmin.x == Double.MAX_VALUE) {
       // just a standard load
       supercell = null;
       oabc = null;
@@ -1597,7 +1548,7 @@ public class XtalSymmetry {
     setUnitCellSafely();
   }
 
-  private boolean removePacking(int ndims, P3d pt, double minX, double maxX,
+  private static boolean removePacking(int ndims, P3d pt, double minX, double maxX,
                                 double minY, double maxY, double minZ,
                                 double maxZ, double slop) {
     return (pt.x > minX - slop && pt.x < maxX - slop
@@ -1755,21 +1706,6 @@ public class XtalSymmetry {
     SimpleUnitCell.setMinMaxLatticeParameters(dim, minXYZ, maxXYZ, kcode);
   }
 
-  private void setSymmetryMinMax(P3d c) {
-    if (rminx > c.x)
-      rminx = c.x;
-    if (rminy > c.y)
-      rminy = c.y;
-    if (rminz > c.z)
-      rminz = c.z;
-    if (rmaxx < c.x)
-      rmaxx = c.x;
-    if (rmaxy < c.y)
-      rmaxy = c.y;
-    if (rmaxz < c.z)
-      rmaxz = c.z;
-  }
-
   private void setUnitCell(double[] info, M3d matUnitCellOrientation,
                            P3d unitCellOffset) {
     unitCellParams = new double[info.length];
@@ -1919,13 +1855,13 @@ public class XtalSymmetry {
           }
         }
         if (checkSymmetryMinMax)
-          setSymmetryMinMax(c);
+          UnitCell.setSymmetryMinMax(c, rmin, rmax);
         Atom special = null;
         if (checkDistance) {
           // for range checking, we first make sure we are not out of range
           // for the cartesian
-          if (checkSymmetryRange && (c.x < rminx || c.y < rminy || c.z < rminz
-              || c.x > rmaxx || c.y > rmaxy || c.z > rmaxz))
+          if (checkSymmetryRange && (c.x < rmin.x || c.y < rmin.y || c.z < rmin.z
+              || c.x > rmax.x || c.y > rmax.y || c.z > rmax.z))
             continue;
           double minDist2 = Double.MAX_VALUE;
           // checkAll means we have to check against operations that have

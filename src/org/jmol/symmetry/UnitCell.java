@@ -43,6 +43,7 @@ import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.P3d;
+import javajs.util.P3i;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
@@ -1594,4 +1595,107 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
   Lst<String> getMoreInfo() {
     return moreInfo;
   }
+
+  public static void setSymmetryMinMax(P3d c, P3d rmin, P3d rmax) {
+    if (rmin.x > c.x)
+      rmin.x = c.x;
+    if (rmin.y > c.y)
+      rmin.y = c.y;
+    if (rmin.z > c.z)
+      rmin.z = c.z;
+    if (rmax.x < c.x)
+      rmax.x = c.x;
+    if (rmax.y < c.y)
+      rmax.y = c.y;
+    if (rmax.z < c.z)
+      rmax.z = c.z;
+  }
+
+  /**
+   * 
+   * @param oabc
+   * @param packingRange in Cartesian angstroms, usually 0.02, or NaN
+   * @param minXYZ
+   *        supercell lattice scaling minimum, may be null
+   * @param maxXYZ
+   *        supercell lattice scaling maximum, ignored if minXYZ is null
+   * @param rmin
+   *        preset minimum of range, or null
+   * @param rmax
+   *        preset maximum of range; ignored if rmin is null
+   * @param newMin
+   * @param newMax
+   */
+  public void adjustRangeMinMax(T3d[] oabc, double packingRange, P3i minXYZ,
+                                P3i maxXYZ, P3d rmin, P3d rmax, P3i newMin,
+                                P3i newMax) {
+    if (rmin == null) {
+      rmin = P3d.new3(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+      rmax = P3d.new3(-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE);
+    }
+    // be sure to add in packing error adjustments 
+    // so that we include all needed atoms
+    // load "" packed x.x supercell...
+    P3d pa = new P3d();
+    P3d pb = new P3d();
+    P3d pc = new P3d();
+    if (!Double.isNaN(packingRange)) {
+      pa.setT(oabc[1]);
+      pb.setT(oabc[2]);
+      pc.setT(oabc[3]);
+      pa.scale(packingRange);
+      pb.scale(packingRange);
+      pc.scale(packingRange);
+    }
+
+    // account for lattice specification
+    // load "" {x y z} supercell...
+    if (minXYZ != null) {
+      oabc[0].scaleAdd2(minXYZ.x, oabc[1], oabc[0]);
+      oabc[0].scaleAdd2(minXYZ.y, oabc[2], oabc[0]);
+      oabc[0].scaleAdd2(minXYZ.z, oabc[3], oabc[0]);
+    }
+    // add in packing adjustment
+    oabc[0].sub(pa);
+    oabc[0].sub(pb);
+    oabc[0].sub(pc);
+    // fractionalize and adjust min/max
+    P3d pt = P3d.newP(oabc[0]);
+    toFractional(pt, true);
+    setSymmetryMinMax(pt, rmin, rmax);
+
+    // account for lattice specification
+    if (minXYZ != null) {
+      oabc[1].scale(maxXYZ.x - minXYZ.x);
+      oabc[2].scale(maxXYZ.y - minXYZ.y);
+      oabc[3].scale(maxXYZ.z - minXYZ.z);
+    }
+    // add in packing adjustment
+    oabc[1].scaleAdd2(2, pa, oabc[1]);
+    oabc[2].scaleAdd2(2, pb, oabc[2]);
+    oabc[3].scaleAdd2(2, pc, oabc[3]);
+    // run through six of the corners -- a, b, c, ab, ac, bc
+    for (int i = 0; i < 3; i++) {
+      for (int j = i + 1; j < 4; j++) {
+        pt.add2(oabc[i], oabc[j]);
+        if (i != 0)
+          pt.add(oabc[0]);
+        toFractional(pt, false);
+        setSymmetryMinMax(pt, rmin, rmax);
+      }
+    }
+    // bc in the end, so we need abc
+    toCartesian(pt, false);
+    pt.add(oabc[1]);
+    toFractional(pt, false);
+    setSymmetryMinMax(pt, rmin, rmax);
+    // allow for some imprecision
+    newMin.set((int) Math.min(0, Math.floor(rmin.x + 0.001d)),
+        (int) Math.min(0, Math.floor(rmin.y + 0.001d)),
+        (int) Math.min(0, Math.floor(rmin.z + 0.001d)));
+    newMax.set((int) Math.max(1, Math.ceil(rmax.x - 0.001d)),
+        (int) Math.max(1, Math.ceil(rmax.y - 0.001d)),
+        (int) Math.max(1, Math.ceil(rmax.z - 0.001d)));
+  }
+
 }

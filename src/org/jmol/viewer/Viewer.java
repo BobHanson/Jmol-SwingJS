@@ -8637,7 +8637,7 @@ public class Viewer extends JmolViewer
             if (uc != null) {              
               ptNew.sub(ptCenter);
               ptNew.add(ms.at[iatom]);
-              getModelkit(false).assignMoveAtoms(bsSelected, iatom, ptNew, null,
+              getModelkit(false).cmdAssignMoveAtoms(bsSelected, iatom, ptNew, null,
                   true, !asAtoms, false);
             }
           }
@@ -11253,7 +11253,7 @@ public class Viewer extends JmolViewer
     SymmetryInterface uc = getCurrentUnitCell();
     if (uc == null)
       return new Lst<Point3fi>();
-    uc.getEquivPointList(0, flags.toLowerCase(), null, 0, pts);
+    uc.getEquivPointList(0, flags.toLowerCase(), null, 0, pts, null);
     return pts;
   }
 

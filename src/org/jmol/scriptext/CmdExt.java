@@ -203,7 +203,7 @@ public class CmdExt extends ScriptExt {
       stereo();
       break;
     case T.unitcell:
-      unitcell(flag ? 2 : 1, false);
+      unitcell(flag ? 2 : 1, 0);
       break;
     case T.write:
       return write(flag ? st : null);
@@ -5868,7 +5868,7 @@ public class CmdExt extends ScriptExt {
     return true;
   }
 
-  private void unitcell(int i, final boolean isModelkit)
+  private void unitcell(int i, final int modelkitTok)
       throws ScriptException {
     ScriptEval eval = e;
     int icell = Integer.MAX_VALUE;
@@ -6178,10 +6178,12 @@ public class CmdExt extends ScriptExt {
           i--;
         }
       } else if (newUC != null) {
-        if (!chk && isModelkit) {
+        if (!chk && modelkitTok != 0) {
           if (sym == null) {
+            if (modelkitTok == T.fill)
+              return;
             assignSpaceGroup(null, "P1", newUC, packing, false, "unitcell");
-          } else if (sym.fixUnitCell((double[]) newUC)) {
+          } else if (modelkitTok != T.fill && sym.fixUnitCell((double[]) newUC)) {
             eval.invArgStr(
                 "Unit cell is incompatible with current space group");
           }
@@ -6192,17 +6194,32 @@ public class CmdExt extends ScriptExt {
       }
       break;
     }
-    if (isModelkit && tokAt(i + 1) == T.packed) {
+    if (modelkitTok == T.unitcell && tokAt(i + 1) == T.packed) {
       // MODELKIT UNITCELL PACKED
       packing = (eval.isFloatParameter(++i + 1) ? doubleParameter(++i) : 0);
       eval.iToken = i;
     }
-    mad10 = eval.getSetAxesTypeMad10(++i);
+    mad10 = (modelkitTok ==  T.fill ? 0 : eval.getSetAxesTypeMad10(++i));
     eval.checkLast(eval.iToken);
     if (chk || mad10 == Integer.MAX_VALUE)
       return;
     if (oabc == null && newUC != null)
       oabc = vwr.getV0abc(-1, newUC);
+    if (modelkitTok == T.fill) {
+      if (sym == null 
+          || icell != Integer.MAX_VALUE 
+          || id != null 
+          || isReset)
+        invArg();
+      if (oabc == null && pt != null) {
+        oabc = sym.getUnitCellVectors();
+        sym.toCartesian(pt, true);
+        oabc[0] = pt;
+      }
+      vwr.getModelkit(false).cmdFillOABC(oabc, e.fullCommand);
+      return;
+    }
+      
     if (icell != Integer.MAX_VALUE) {
       // icell e.g. 555
       if (sym != null)
@@ -6210,11 +6227,11 @@ public class CmdExt extends ScriptExt {
     } else if (id != null) {
       vwr.setCurrentCage(id);
     } else if (isReset || oabc != null) {
-      isReset = (isModelkit || sym == null
+      isReset = (modelkitTok == T.unitcell || sym == null
           ? vwr.getModelkit(false).transformAtomsToUnitCell(sym, oabc, ucname)
           : true);
       if (isReset) {
-        if (isModelkit && sym != null) {
+        if (modelkitTok == T.unitcell && sym != null) {
           vwr.ms.setSpaceGroup(vwr.am.cmi, sym.getUnitCell(oabc, false, null),
               null);
           return;
@@ -6225,7 +6242,7 @@ public class CmdExt extends ScriptExt {
         }
       }
     }
-    SymmetryInterface sym0 = (isModelkit ? vwr.ms.getUnitCell(-1 - vwr.am.cmi)
+    SymmetryInterface sym0 = (modelkitTok == T.unitcell ? vwr.ms.getUnitCell(-1 - vwr.am.cmi)
         : null);
     eval.setObjectMad10(JC.SHAPE_UCCAGE, "unitCell", mad10);
     if (pt != null) {
@@ -6233,11 +6250,11 @@ public class CmdExt extends ScriptExt {
       if (sym != null)
         sym.setOffsetPt(pt);
     }
-    if (isModelkit && sym.getFractionalOffset(true) == null) {
+    if (modelkitTok == T.unitcell && sym.getFractionalOffset(true) == null) {
       sym.setSpaceGroupTo(sym0);
       if (packing >= 0)
-        vwr.getModelkit(false).packUnitCell(sym,
-            vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi), packing);
+        vwr.getModelkit(false).cmdPackUnitCell(sym,
+      vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi), packing);
     }
     if (tickInfo != null)
       setShapeProperty(JC.SHAPE_UCCAGE, "tickInfo", tickInfo);
@@ -6649,14 +6666,15 @@ public class CmdExt extends ScriptExt {
         if (!vwr.isModelKitOption('M', (String) value))
           invArg();
         break;
+      case T.fill:
       case T.unitcell:
         if (e.isArrayParameter(i + 1)) {
-          unitcell(2, true);
+          unitcell(2, tok);
           return;
         }
         value = (tokAt(i + 1) == T.string ? paramAsStr(++i).toLowerCase() : null);
         if (value == null || !vwr.isModelKitOption('U', (String) value)) {
-          unitcell(2, true);
+          unitcell(2, tok);
           return;
         }
         break;
@@ -6959,7 +6977,7 @@ public class CmdExt extends ScriptExt {
     case T.moveto:
       // allow projection using this command if ends with TRUE
       int nm = vwr.getModelkit(false).cmdAssignMoveAtoms(bs, index,
-          P3d.newP(pt), pts, true, false);
+          P3d.newP(pt), pts, true, false, true);
       if (nm > 0)
         vwr.checkCoordinatesChanged(bs);
       if (e.doReport())

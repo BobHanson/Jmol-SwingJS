@@ -15,6 +15,7 @@ import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.Matrix;
 import javajs.util.P3d;
+import javajs.util.P3i;
 import javajs.util.Qd;
 import javajs.util.SB;
 import javajs.util.T3d;
@@ -61,7 +62,7 @@ public interface SymmetryInterface {
 
   int getDimensionality();
 
-  void getEquivPointList(int nIgnore, String flags, M4d[] opsCtr, double packing, Lst<Point3fi> pts);
+  void getEquivPointList(int nIgnore, String flags, M4d[] opsCtr, double packing, Lst<Point3fi> pts, SymmetryInterface uc);
 
   Lst<Point3fi> getEquivPoints(Point3fi pt, String flags, double packing);
 
@@ -168,7 +169,7 @@ public interface SymmetryInterface {
 
   M4d getTransform(P3d fracA, P3d fracB, boolean debug);
 
-  SymmetryInterface getUnitCell(T3d[] points, boolean setRelative, String name);
+  SymmetryInterface getUnitCell(T3d[] oabc, boolean setRelative, String name);
   
    double[] getUnitCellAsArray(boolean vectorsOnly);
 
@@ -303,5 +304,9 @@ public interface SymmetryInterface {
   boolean unitCellEquals(SymmetryInterface uc2);
 
   void unitize(T3d ptFrac);
+
+  void adjustRangeMinMax(T3d[] oabc, double packingRange, P3i minXYZ,
+                         P3i maxXYZ, P3d rmin, P3d rmax, P3i newMin,
+                         P3i newMax);
 
 }

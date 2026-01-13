@@ -57,6 +57,7 @@ import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.Matrix;
 import javajs.util.P3d;
+import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.Qd;
 import javajs.util.Rdr;
@@ -1123,25 +1124,29 @@ public class Symmetry implements SymmetryInterface {
   }
 
   /**
-   * Load a list of initial current points, and one or more starting points with equivalent points. 
+   * Load a list of initial current points, and one or more starting points with
+   * equivalent points.
    * 
-   * @param flags 
-   *     indicating input/output Cartesian or fractional options
-   * @param opsCtr 
-   *     centering operations for subgroup filling that are to be used rather than 
-   *     space group operations
-   * @param packing 
-   *     if .gte. 0, the fractional packing distance around the unit cell to include
-   * @param pts 
-   *     total list of initial (current) points, needed for duplication check;
-   *     additional points are those to be operated on, including the identity operation
-   * @param nInitial 
-   *     number of initial points
+   * @param flags
+   *        indicating input/output Cartesian or fractional options
+   * @param opsCtr
+   *        centering operations for subgroup filling that are to be used rather
+   *        than space group operations
+   * @param packing
+   *        if .gte. 0, the fractional packing distance around the unit cell to
+   *        include
+   * @param pts
+   *        total list of initial (current) points, needed for duplication
+   *        check; additional points are those to be operated on, including the
+   *        identity operation
+   * @param nInitial
+   *        number of initial points
    * 
    */
   @Override
   public void getEquivPointList(int nInitial, String flags, M4d[] opsCtr,
-                                double packing, Lst<Point3fi> pts) {
+                                double packing, Lst<Point3fi> pts,
+                                SymmetryInterface uc) {
     M4d[] ops = (opsCtr == null ? getSymmetryOperations() : opsCtr);
     boolean newPt = (flags.indexOf("newpt") >= 0);
     boolean zapped = (flags.indexOf("zapped") >= 0);
@@ -1170,7 +1175,8 @@ public class Symmetry implements SymmetryInterface {
     if (ops != null || unitCell != null) {
       int per = getPeriodicity();
       for (int i = nInitial; i < n; i++) {
-        unitCell.getEquivalentPoints(pts.get(i), flags, ops, pts, check0, n0, dup0, per, packing);
+        unitCell.getEquivalentPoints(pts.get(i), flags, ops, pts, check0, n0,
+            dup0, per, packing);
       }
     }
     // now remove the starting points, checking to see if perhaps our
@@ -1182,10 +1188,27 @@ public class Symmetry implements SymmetryInterface {
       pts.removeItemAt(nInitial);
     // and turn these to Cartesians if desired
     if (!tofractional) {
-      for (int i = pts.size(); --i >= nInitial;)
-        toCartesian(pts.get(i), false);
+      P3d pt = (uc == null ? null : new P3d());
+      for (int i = pts.size(); --i >= nInitial;) {
+        P3d p = pts.get(i);
+        toCartesian(p, false);
+        if (uc != null) {
+          uc.toFractional(pt.setP(p), false);
+          if (!uc.isWithinUnitCell(pt, 1, 1, 1, Double.NaN)) {
+          pts.removeItemAt(i);          
+          continue;
+          }
+        }
+      }
     }
   }
+  
+  @Override
+  public void adjustRangeMinMax(T3d[] oabc, double packingRange, P3i minXYZ, P3i maxXYZ,
+                                P3d rmin, P3d rmax, P3i newMin, P3i newMax) {
+    unitCell.adjustRangeMinMax(oabc, packingRange, minXYZ, maxXYZ, rmin, rmax, newMin, newMax);
+  }
+
 
   /**
    * 
