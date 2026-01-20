@@ -907,7 +907,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_ORIENTATION_INFO:
       return vwr.tm.getOrientationInfo();
     case PROP_POINTGROUP_INFO:
-      return vwr.ms.getPointGroupInfo(vwr.getAtomBitSet(myParam));
+      return vwr.ms.getPointGroupInfo(vwr.getAtomBitSet(myParam), null);
     case PROP_POLYMER_INFO:
       return getAllPolymerInfo(vwr.getAtomBitSet(myParam));
     case PROP_SCRIPT_QUEUE_INFO:
@@ -1066,56 +1066,62 @@ public class PropertyManager implements JmolPropertyManager {
     BS bsModels = vwr.ms.getModelBS(vwr
         .getAtomBitSet(atomExpression), false);
 
-    ModelSet m = vwr.ms;
+    ModelSet ms = vwr.ms;
     Map<String, Object> info = new Hashtable<String, Object>();
-    info.put("modelSetName", m.modelSetName);
+    info.put("modelSetName", ms.modelSetName);
     info.put("modelIndex", Integer.valueOf(vwr.am.cmi));
-    info.put("modelCount", Integer.valueOf(m.mc));
-    info.put("isTainted", Boolean.valueOf(m.tainted != null));
-    info.put("canSkipLoad", Boolean.valueOf(m.canSkipLoad));
-    info.put("modelSetHasVibrationVectors", Boolean.valueOf(m
+    info.put("modelCount", Integer.valueOf(ms.mc));
+    info.put("isTainted", Boolean.valueOf(ms.tainted != null));
+    info.put("canSkipLoad", Boolean.valueOf(ms.canSkipLoad));
+    info.put("modelSetHasVibrationVectors", Boolean.valueOf(ms
         .modelSetHasVibrationVectors()));
-    if (m.modelSetProperties != null) {
-      info.put("modelSetProperties", m.modelSetProperties);
+    if (ms.modelSetProperties != null) {
+      info.put("modelSetProperties", ms.modelSetProperties);
     }
     info.put("modelCountSelected", Integer.valueOf(bsModels.cardinality()));
     info.put("modelsSelected", bsModels);
     Lst<Map<String, Object>> vModels = new  Lst<Map<String, Object>>();
-    m.getMolecules();
+    ms.getMolecules();
 
     for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) {
-      Map<String, Object> model = new Hashtable<String, Object>();
-      model.put("_ipt", Integer.valueOf(i));
-      model.put("num", Integer.valueOf(m.getModelNumber(i)));
-      model.put("file_model", m.getModelNumberDotted(i));
-      model.put("name", m.getModelName(i));
-      String s = m.getModelTitle(i);
+      Map<String, Object> minfo = new Hashtable<String, Object>();
+      minfo.put("_ipt", Integer.valueOf(i));
+      minfo.put("num", Integer.valueOf(ms.getModelNumber(i)));
+      minfo.put("file_model", ms.getModelNumberDotted(i));
+      minfo.put("name", ms.getModelName(i));
+      String s = ms.getModelTitle(i);
       if (s != null)
-        model.put("title", s);
-      s = m.getModelFileName(i);
+        minfo.put("title", s);
+      s = ms.getModelFileName(i);
       if (s != null)
-        model.put("file", s);
-      s = (String) m.getInfo(i, "modelID");
+        minfo.put("file", s);
+      s = (String) ms.getInfo(i, "modelID");
       if (s != null)
-        model.put("id", s);
-      model.put("vibrationVectors", Boolean.valueOf(vwr.modelHasVibrationVectors(i)));
-      Model mi = m.am[i];
-      model.put("atomCount", Integer.valueOf(mi.act));
-      model.put("bondCount", Integer.valueOf(mi.getBondCount()));
-      model.put("groupCount", Integer.valueOf(mi.getGroupCount()));
-      model.put("moleculeCount", Integer.valueOf(mi.moleculeCount));
-      if (mi.isBioModel)
-        model.put("polymerCount", Integer.valueOf(((BioModel) mi).getBioPolymerCount()));
-      model.put("chainCount", Integer.valueOf(m.getChainCountInModelWater(i, true)));
-      if (mi.properties != null) {
-        model.put("modelProperties", mi.properties);
+        minfo.put("id", s);
+      minfo.put("vibrationVectors", Boolean.valueOf(vwr.modelHasVibrationVectors(i)));
+      Model m = ms.am[i];
+      minfo.put("atomCount", Integer.valueOf(m.act));
+      minfo.put("bondCount", Integer.valueOf(m.getBondCount()));
+      minfo.put("groupCount", Integer.valueOf(m.getGroupCount()));
+      minfo.put("moleculeCount", Integer.valueOf(m.moleculeCount));
+      if (m.isBioModel)
+        minfo.put("polymerCount", Integer.valueOf(((BioModel) m).getBioPolymerCount()));
+      minfo.put("chainCount", Integer.valueOf(ms.getChainCountInModelWater(i, true)));
+      M3d m3 = m.getUVWMatrix(false);
+      if (m3 != null) {
+        minfo.put("uvwMatrix", m3);
+        m3 = m.getUVWMatrix(true);
+        if (m3 != null)
+          minfo.put("uvw0Matrix", m3);      }
+      if (m.properties != null) {
+        minfo.put("modelProperties", m.properties);
       }
-      Number energy = (Number) m.getInfo(i, "Energy");
+      Number energy = (Number) ms.getInfo(i, "Energy");
       if (energy != null) {
-        model.put("energy", energy);
+        minfo.put("energy", energy);
       }
-      model.put("atomCount", Integer.valueOf(mi.act));
-      vModels.addLast(model);
+      minfo.put("atomCount", Integer.valueOf(m.act));
+      vModels.addLast(minfo);
     }
     info.put("models", vModels);
     return info;

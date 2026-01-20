@@ -116,7 +116,7 @@ public class Symmetry implements SymmetryInterface {
    * This Symmetry object is ONLY for to/from Cartesian and fractional coordinates.
    */
   private Symmetry spinSym;
-  private PointGroup pointGroup;
+  PointGroup pointGroup;
 
   private CIPChirality cip;
 
@@ -167,7 +167,7 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public Object getPointGroupInfo(int modelIndex, String drawID, boolean asInfo,
                                   String type, int index, double scale) {
-    return pointGroup.getInfo(modelIndex, drawID, asInfo, type, index, scale);
+    return pointGroup.getInfo(modelIndex, null, null, drawID, asInfo, type, index, scale);
   }
 
   // SpaceGroup methods
@@ -1194,7 +1194,7 @@ public class Symmetry implements SymmetryInterface {
         toCartesian(p, false);
         if (uc != null) {
           uc.toFractional(pt.setP(p), false);
-          if (!uc.isWithinUnitCell(pt, 1, 1, 1, Double.NaN)) {
+          if (!uc.isWithinUnitCell(pt, 1, 1, 1, packing)) {
           pts.removeItemAt(i);          
           continue;
           }
@@ -2111,7 +2111,7 @@ public class Symmetry implements SymmetryInterface {
         unitCellParams);
     if (params == null)
       return;
-    setUnitCellFromParams(params, info.containsKey("jmolData"),
+    setUnitCellFromParams(params, info.containsKey(JC.INFO_JMOL_DATA),
         symmetryInfo.slop);
     setSpinSym();
     unitCell.setMoreInfo((Lst<String>) info.get(JC.UC_MOREINFO));
@@ -2405,6 +2405,11 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public SymmetryInterface getSpinSym() {
     return (spinSym == null ? this : spinSym);
+  }
+
+  @Override
+  public String updatePointGroup() {
+    return (pointGroup == null ? null : pointGroup.updateDraw());
   }
 
 }

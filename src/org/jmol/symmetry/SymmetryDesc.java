@@ -35,6 +35,7 @@ import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.util.Vibration;
 import org.jmol.viewer.JC;
 
 import javajs.util.A4d;
@@ -130,6 +131,8 @@ public class SymmetryDesc {
  
   private ModelSet modelSet;
   private String drawID;
+  private int iModel;
+  private int iModelSpin;
 
   public SymmetryDesc() {
     // for reflection
@@ -183,7 +186,9 @@ public class SymmetryDesc {
     SB sb = (asString ? new SB() : null);
     symOp--;
     boolean isAll = (!asString && symOp < 0);
-    String strOperations = (String) sginfo.get("symmetryInfo");
+    String strOperations = (String) sginfo.get(JC.INFO_SYMMETRY_INFO);
+    String strOpNote = (String) sginfo.get(JC.INFO_SPACE_GROUP_NOTE);
+    strOperations += "\n" + strOpNote.replace(':', ' ');
     boolean labelOnly = "label".equals(stype);
     int n = 0;
     for (int i = 0; i < infolist.length; i++) {
@@ -246,10 +251,10 @@ public class SymmetryDesc {
     if (type == 0)
       type = getType(id);
     Object ret = (type == T.atoms ? new BS() : "");
-    int iModel = (iAtom >= 0 ? modelSet.at[iAtom].mi : modelSet.vwr.am.cmi);
+    iModel = (iAtom >= 0 ? modelSet.at[iAtom].mi : modelSet.vwr.am.cmi);
     if (iModel < 0)
       return ret;
-
+    iModelSpin = modelSet.getJmolDataFrameInt(iModel, T.spin);
     // get model symmetry
 
     SymmetryInterface uc = modelSet.am[iModel].biosymmetry;
@@ -263,7 +268,7 @@ public class SymmetryDesc {
     // generally get the result from getSymmetryInfo
 
     if (type != T.draw || op != Integer.MAX_VALUE && opList == null) {
-      return getSymmetryInfo(iModel, iAtom, uc, xyz, op, translation, pt, pt2,
+      return getSymmetryInfo(iAtom, uc, xyz, op, translation, pt, pt2,
           id, type, scaleFactor, nth, options, false);
     }
 
@@ -288,12 +293,12 @@ public class SymmetryDesc {
           if (nth > 0 && nth != i + 1)
             continue;
           op = opList[i];
-          s += (String) getSymmetryInfo(iModel, iAtom, uc, xyz, op, translation,
+          s += (String) getSymmetryInfo(iAtom, uc, xyz, op, translation,
               pt, pt2, id + op, T.draw, scaleFactor, nth, options, pt == null);
         }
       } else {
         for (op = 1; op <= n; op++) {
-          s += (String) getSymmetryInfo(iModel, iAtom, uc, xyz, op, translation,
+          s += (String) getSymmetryInfo(iAtom, uc, xyz, op, translation,
               pt, pt2, id + op, T.draw, scaleFactor, nth, options, true);
         }
       }
@@ -341,7 +346,7 @@ public class SymmetryDesc {
           info = new Hashtable<String, Object>();
           info.put(JC.INFO_SPACE_GROUP_INFO, "");
           info.put(JC.INFO_SPACE_GROUP_NOTE, sgNote);
-          info.put("symmetryInfo", "");
+          info.put(JC.INFO_SYMMETRY_INFO, "");
         } else if (isStandard) {
           info = (Map<String, Object>) modelSet.getInfo(modelIndex,
               JC.INFO_SPACE_GROUP_INFO);
@@ -438,7 +443,7 @@ public class SymmetryDesc {
         }
         info.put("operations", infolist);
         if (!matrixOnly)
-          info.put("symmetryInfo",
+          info.put(JC.INFO_SYMMETRY_INFO,
               (sops.length() == 0 ? "" : sops.substring(1)));
       }
       if (matrixOnly) {
@@ -877,8 +882,8 @@ public class SymmetryDesc {
 
     boolean matrixOnly = (bsInfo.get(RET_MATRIX) & (bsInfo.cardinality() == (bsInfo.get(RET_RXYZ) ? 2 : 1)));
     boolean isTimeReversed = (op.timeReversal == -1);
-    boolean isMagnetic = (op.timeReversal != 0 || op.spinU != null);
     boolean isSpinSG = (op.spinU != null);
+    boolean isMagnetic = (op.timeReversal != 0 || isSpinSG);
     if (scaleFactor == 0)
       scaleFactor = 1;
     vtrans.set(0, 0, 0);
@@ -1381,10 +1386,11 @@ public class SymmetryDesc {
 
     boolean ignore = false;
     String cmds = null;
+    boolean createSpinDraw = (iModelSpin >= 0 && isSpinSG);
     while (true) {
       if (id == null || !bsInfo.get(RET_DRAW))
         break;
-
+      
       if (op.getOpType() == SymmetryOperation.TYPE_IDENTITY
           || isSpaceGroupAll && op.isIrrelevant) {
         if (Logger.debugging)
@@ -1398,14 +1404,8 @@ public class SymmetryDesc {
 
       // delete previous elements of this user-settable ID
       SB drawSB = new SB();
-
       drawSB.append(getDrawID("*")).append(" delete");
-      //    .append(
-      //    ("print " + PT.esc(
-      //        id + " " + (op.index + 1) + " " + op.fixMagneticXYZ(op, op.xyzOriginal, false) + "|"
-      //            + op.fixMagneticXYZ(op, xyzNew, true) + "|" + info1).replace(
-      //        '\n', ' '))).append("\n")
-
+      
       // draw the initial frame
 
       boolean drawFrameZ = (nDim == 3);
@@ -1710,11 +1710,11 @@ public class SymmetryDesc {
             break;
           }
           if (!isSpaceGroup) {
-            drawFrameLine("X", ptref, vt1, 0.15d, ptemp, drawSB, opType, "red");
-            drawFrameLine("Y", ptref, vt2, 0.15d, ptemp, drawSB, opType,
+            drawFrameLine("X", ptref, vt1, 0.15d, ptemp, drawSB, "glideframe", "red");
+            drawFrameLine("Y", ptref, vt2, 0.15d, ptemp, drawSB, "glideframe",
                 "green");
             if (drawFrameZ)
-              drawFrameLine("Z", ptref, vt3, 0.15d, ptemp, drawSB, opType,
+              drawFrameLine("Z", ptref, vt3, 0.15d, ptemp, drawSB, "glideframe",
                 "blue");
           }
         }
@@ -1927,8 +1927,29 @@ public class SymmetryDesc {
       if (Logger.debugging)
         Logger.info(cmds);
       drawSB = null;
+      if (createSpinDraw) {
+        SymmetryInterface sym = modelSet.getUnitCell(iModel);
+        Atom a1 = (ptFrom instanceof Atom ? (Atom) ptFrom : null);
+        Atom a2 = (ptTarget instanceof Atom ? (Atom) ptTarget : null);
+        if (a1 != null && a2 != null) {
+          BS bs = modelSet.vwr.getModelUndeletedAtomsBitSet(iModelSpin);
+          a1 = Vibration.find(modelSet, bs, modelSet.getVibration(a1.i, false));
+          a2 = Vibration.find(modelSet, bs, modelSet.getVibration(a2.i, false));          
+        } 
+        if (a1 == null || a2 == null)
+          a1 = a2 = null;
+        String s = (String) ((Symmetry) sym).pointGroup.getInfo(iModelSpin, 
+            (a1 == null ? null : P3d.newP(a1)), 
+            (a2 == null ? null : P3d.newP(a2)), 
+            id+"_pg", false, op.getSUVW(), 0, 1);
+        if (s != null)
+          cmds += ";\n" + s;
+      }
+
+
+      
       break;
-    }
+    }// end of while(true)
 
     // finalize returns
 
@@ -2289,7 +2310,7 @@ public class SymmetryDesc {
    *        true only for DRAW Spacegroup -- don't do all the targeting
    * @return a string or an Object[] containing information
    */
-  private Object getSymmetryInfo(int iModel, int iatom, SymmetryInterface uc,
+  private Object getSymmetryInfo(int iatom, SymmetryInterface uc,
                                  String xyz, int op, P3d translation, P3d pt,
                                  P3d pt2, String id, int type,
                                  double scaleFactor, int nth, int options,

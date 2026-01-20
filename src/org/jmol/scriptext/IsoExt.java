@@ -279,6 +279,7 @@ public class IsoExt extends ScriptExt {
     boolean isSavedState = false;
     boolean isIntersect = false;
     boolean isFrame = false;
+    int modelIndexPt = 0;
     P4d plane;
     P3d[] pts = null;
     int tokIntersectBox = 0;
@@ -696,8 +697,10 @@ public class IsoExt extends ScriptExt {
         if (tokAt(i) == T.scale)
           scale = floatParameter(++i);
         if (!chk)
-          eval.runScript(vwr.ms.getPointGroupAsString(vwr.bsA(), type, index,
-              scale, pts, center, thisId == null ? "" : thisId));
+          eval.runScript(vwr.ms.getPointGroupAsString(vwr.bsA(), 
+              (type.length() > 0 ? type : null), index,
+              scale, pts, center, 
+              (thisId == null ? "" : thisId)));
         return;
       case T.connect:
         connections = new int[4];
@@ -840,7 +843,7 @@ public class IsoExt extends ScriptExt {
         // draw spacegroup @n
         // draw spacegroup @n index
       case T.symop:
-      case T.spinop:
+      case T.spinop: // not implemented -- can just use uvw
         String xyz = null;
         int iSym = Integer.MAX_VALUE;
         plane = null;
@@ -852,7 +855,7 @@ public class IsoExt extends ScriptExt {
         boolean isSymop = (tok == T.symop);
         boolean isSpinop = (tok == T.spinop);
         int nth = -1;
-        Object[] ret = new Object[] { null, vwr.getFrameAtoms() };
+        Object[] ret = new Object[] { null, vwr.getVisibleFrameAtomsNoSplitData() };
         boolean checkNth = false;
         if (isSymop || isSpinop) {
           iSym = 0;
@@ -949,8 +952,9 @@ public class IsoExt extends ScriptExt {
           if (s == null)
             return;
           if ((isSymop || isSpinop) && target instanceof Atom && center instanceof Atom) {
-            if (eval.fullCommand.indexOf(JC.SCRIPT_QUIET) >= 0)
+            if (eval.fullCommand.indexOf(JC.SCRIPT_QUIET) >= 0) {
               s = PT.rep(s, "print", "#print");
+            }
             s += "\nmodelkit set atomset "
                 + PT.esc(thisId + "|" + ((Atom) center).i + "|"
                     + ((Atom) target).i + "|" + eval.fullCommand)
@@ -1085,6 +1089,12 @@ public class IsoExt extends ScriptExt {
         propertyValue = Double.valueOf(floatParameter(i));
         propertyName = "length";
         break;
+      case T.model:
+        // specially for spin JmolData 
+        propertyName = "imodel";
+        propertyValue = Integer.valueOf(intParameter(++i));
+        modelIndexPt = i;
+        break;
       case T.modelindex:
         propertyName = "modelIndex";
         propertyValue = Integer.valueOf(intParameter(++i));
@@ -1210,7 +1220,7 @@ public class IsoExt extends ScriptExt {
         i = eval.iToken;
         continue;
       }
-      idSeen = (eval.theTok != T.delete);
+      idSeen = (eval.theTok != T.delete  && (i > 2 || i > modelIndexPt));
       if (havePoints && !isInitialized && !isFrame) {
         setShapeProperty(JC.SHAPE_DRAW, "points", Integer.valueOf(intScale));
         isInitialized = true;

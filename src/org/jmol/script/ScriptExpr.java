@@ -415,7 +415,7 @@ abstract class ScriptExpr extends ScriptParam {
         i = iToken;
         break;
       case T.this_:
-        v = vwr.getFrameAtoms();
+        v = vwr.getVisibleFrameAtomsNoSplitData();
         i = iToken;
         break;
       case T.expressionBegin:
@@ -993,7 +993,7 @@ abstract class ScriptExpr extends ScriptParam {
         break;
       case T.this_:
       case T.thismodel:
-        rpn.addXBs(vwr.am.cmi < 0 ? vwr.getFrameAtoms() : vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi));
+        rpn.addXBs(vwr.getVisibleFrameAtomsNoSplitData());
         break;
       case T.hydrogen:
       case T.amino:

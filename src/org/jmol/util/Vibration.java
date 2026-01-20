@@ -48,7 +48,6 @@ public class Vibration extends V3d {
   public String symmform;
   
   public boolean isFrom000;
-  
 
   public Vibration() {
     super();
@@ -167,9 +166,9 @@ public class Vibration extends V3d {
 
   private final M3d matTemp = new M3d(), matInv = new M3d();
 
-  public void rotateModelSpinVectors(ModelSet ms, int modelIndex, M3d rot, boolean isdx) {
+  public int rotateModelSpinVectors(ModelSet ms, int modelIndex, M3d rot, boolean isdx) {
     if (modelIndex < 0 || modelIndex >= ms.mc || ms.vibrations == null)
-      return;
+      return -1;
     Viewer vwr = ms.vwr;
     Model m = ms.am[modelIndex];
     if (m.isJmolDataFrame)
@@ -179,7 +178,7 @@ public class Vibration extends V3d {
       // reset
       rot = (M3d) info.get(JC.SPIN_FRAME_ROTATION_MATRIX);
       if (rot == null)
-        return;
+        return -1;
     }
     boolean noref = Double.isNaN(rot.getElement(0, 0));
     boolean isScreenZ = (noref && rot.getElement(2, 2) == 1);
@@ -230,7 +229,7 @@ public class Vibration extends V3d {
     }
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       if (i >= ms.vibrations.length)
-        return;
+        break;
       Vibration v = ms.vibrations[i];
       if (v == null || !v.isFrom000 && v.magMoment == 0)
         continue;
@@ -240,17 +239,31 @@ public class Vibration extends V3d {
     A4d aa = quat.toA4d();
     mat = M3d.newM3(rot);
     info.put(JC.SPIN_ROTATION_MATRIX_APPLIED, mat);
+    int jmolSpinModel = -1;
     for (int i = bsModels.nextSetBit(0); i >= 0; i = bsModels.nextSetBit(i + 1)) {
     	m = ms.am[i];
     	if (m.uvw0 != null) {
+    	    jmolSpinModel = i;
     	    mat.rotate2(m.uvw0[0], m.uvw[0]);
     	    mat.rotate2(m.uvw0[1], m.uvw[1]);
     	    mat.rotate2(m.uvw0[2], m.uvw[2]);
     	}
+    	
     }
     info.put(JC.SPIN_ROTATION_AXIS_ANGLE_APPLIED, aa);
     if (ms.unitCells[modelIndex] != null)
       ms.unitCells[modelIndex].setSpinAxisAngle(aa);
+    return jmolSpinModel;
+  }
+
+  public static Atom find(ModelSet modelSet, BS bs, Vibration v0) {
+    if (v0 != null)
+      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+        Vibration v = modelSet.getVibration(i, false);
+        if (v != null && v.distance(v0) < 0.1d)
+          return modelSet.at[i];
+      }
+    return null;
   }
 
 }

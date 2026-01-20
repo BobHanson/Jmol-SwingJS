@@ -1344,7 +1344,7 @@ public class ModelKit {
     packAssignedSpaceGroup(sym, bsAtoms, null, packing, null, "packUC");
   }
 
-  public int cmdFillOABC(T3d[] oabc, String cmd) {
+  public int cmdFillOABC(T3d[] oabc, double packing, String cmd) {
     BS bsAtoms = vwr.getThisModelAtoms();
     int n0 = bsAtoms.cardinality();
     if (n0 == 0)
@@ -1353,14 +1353,14 @@ public class ModelKit {
     P3i min = new P3i();
     P3i max = new P3i();
     SymmetryInterface sym0 = vwr.getOperativeSymmetry();
-    sym0.adjustRangeMinMax(oabc, Double.NaN, null, null, null, null, min, max);
+    sym0.adjustRangeMinMax(oabc, packing, null, null, null, null, min, max);
     P3d p = new P3d();
     for (int i = min.x; i < max.x; i++) {
       for (int j = min.y; j < max.y; j++) {
         for (int k = min.z; k < max.z; k++) {
           p.set(i, j, k);
           sym0.setOffsetPt(p);
-          packAssignedSpaceGroup(sym0, bsAtoms, null, 0, uc, cmd);
+          packAssignedSpaceGroup(sym0, bsAtoms, null, packing, uc, cmd);
         }
       }
     }
@@ -4555,16 +4555,20 @@ public class ModelKit {
     }
     if (thisId == null)
       thisId = (isSymop ? JC.DEFAULT_DRAW_SYM_ID : "sg");
-    if (s == null)
+    if (s == null) {
+      // for symop just use uvw
       s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center, target,
           T.draw, thisId, intScale / 100, nth, options, opList);
+    }
     if (s != null) {
-      s = "draw ID \"" + (isSymop ? "sg" : JC.DEFAULT_DRAW_SYM_ID)
+      s = "draw ID \"" //
+          + (isSymop ? "sg" : JC.DEFAULT_DRAW_SYM_ID)
+          // because we are DELETING the other one
           + "*\" delete;" + s;
       s = "draw ID \"" + thisId + "*\" delete;" + s;
     }
     if (isModelkit)
-      s += ";draw ID sg_xes axes 0.05;";
+      s += ";draw ID sg_axes axes 0.05;";
     return s;
   }
 

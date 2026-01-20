@@ -583,9 +583,8 @@ public class SymmetryOperation extends M4d {
     suvw = s;
     double[] v = new double[16];
     getRotTransArrayAndXYZ(null, s, v, true, false, false, MODE_UVW);
-    M4d m4 = M4d.newA16(v);
     spinU = new M3d();
-    m4.getRotationScale(spinU);
+    M4d.newA16(v).getRotationScale(spinU);
     timeReversal = (int) spinU.determinant3();    
     suvwId = null;
   }
@@ -2210,6 +2209,7 @@ public class SymmetryOperation extends M4d {
     }
     xyzList.append(s);
     spinU = opThis.spinU;
+    suvw = opThis.suvw;
     timeReversal = opThis.timeReversal;
     lst.addLast(this);
     isFinalized = true;
@@ -2521,10 +2521,16 @@ public class SymmetryOperation extends M4d {
    *        to interval (-1/2,1/2]
    * @return a,b,c format for the given matrix
    */
-  public static String getTransformABC(M4d transform, boolean normalize) {
+  public static String getTransformABC(M34d transform, boolean normalize) {
     if (transform == null)
       return "a,b,c";
-    M4d m = M4d.newM4(transform);
+    M4d m;
+    if (transform instanceof M3d) {
+      m = M4d.newM4(null);
+      m.setRotationScale((M3d) transform);
+    } else {
+      m = M4d.newM4((M4d) transform);
+    }
     V3d tr = new V3d();
     m.getTranslation(tr);
     tr.scale(-1);
@@ -2668,6 +2674,13 @@ public class SymmetryOperation extends M4d {
 //        + " testid=" + testid + " " + spinIndex + " " + suvw 
 //        
         : super.toString() + " " + rsvs.toString());
+  }
+
+  public String getSUVW() {
+    if (suvw == null && spinU != null) {
+      suvw = getSpinString(spinU, true, false);
+    }
+    return suvw;
   }
 
 }

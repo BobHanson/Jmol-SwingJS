@@ -492,9 +492,9 @@ public class ModelSet extends BondCollection {
   }
 
   @SuppressWarnings("unchecked")
-  public Map<String, Object> getPointGroupInfo(BS bsAtoms) {
+  public Map<String, Object> getPointGroupInfo(BS bsAtoms, String type) {
     return (Map<String, Object>) calculatePointGroupForFirstModel(bsAtoms,
-        false, true, null, 0, 0, null, null, null);
+        false, true, type, 0, 0, null, null, null);
   }
 
   public String getPointGroupAsString(BS bsAtoms, String type, int index,
@@ -510,7 +510,6 @@ public class ModelSet extends BondCollection {
                                                   T3d[] pts, P3d center,
                                                   String id) {
     SymmetryInterface pointGroup = this.pointGroup;
-    SymmetryInterface symmetry = Interface.getSymmetry(vwr, "calcPG");
     BS bs = null;
     boolean haveVibration = false;
     boolean isPolyhedron = false;
@@ -569,6 +568,10 @@ public class ModelSet extends BondCollection {
         index = 0;
       type = type.substring(0, tp);
     }
+    int spinModel = getJmolDataFrameInt(index, T.spin);
+    SymmetryInterface symmetry = null;
+    if (spinModel < 0 || (symmetry = getUnitCell(index)) ==  null)
+      symmetry = Interface.getSymmetry(vwr, "calcPG");
     pointGroup = symmetry.setPointGroup(pointGroup, center, pts, bs,
         haveVibration,
         (isPoints ? 0 : vwr.getDouble(T.pointgroupdistancetolerance)),
@@ -580,9 +583,7 @@ public class ModelSet extends BondCollection {
       return pointGroup.getPointGroupName();
     Object ret = pointGroup.getPointGroupInfo(modelIndex, id, asInfo, type,
         index, scale);
-    return (asInfo ? ret
-        : (mc > 1 ? "frame " + getModelNumberDotted(modelIndex) + "; " : "")
-            + ret);
+    return ret;
   }
 
   public String getDefaultStructure(BS bsAtoms, BS bsModified) {
@@ -1713,6 +1714,26 @@ public class ModelSet extends BondCollection {
     }
     Integer index = am[modelIndex].dataFrames.get(type);
     return (index == null ? -1 : index.intValue());
+  }
+
+  /**
+   * 
+   * @param modelIndex
+   * @param type
+   *        T.spin, T.ramachandran, T.data, what else?
+   * @return modelIndex for the frame or -1
+   */
+  public int getJmolDataFrameInt(int modelIndex, int type) {
+    modelIndex = getJmolDataSourceFrame(modelIndex);
+    if (!haveJmolDataFrames || am[modelIndex].dataFrames == null) {
+      return -1;
+    }
+    for (Entry<String, Integer> e : am[modelIndex].dataFrames.entrySet()) {
+      int index = e.getValue().intValue();
+      if (am[index].jmolFrameTypeInt == type)
+        return index;
+    }
+    return -1;
   }
 
   protected void clearDataFrameReference(int modelIndex) {
@@ -4930,6 +4951,13 @@ public class ModelSet extends BondCollection {
       return 0;
     SymmetryInterface uc = getUnitCellForAtom(atomIndex);
     return (uc == null ? 0 : uc.getSpinIndex(op) + 1);
+  }
+
+  public void refreshDataFramePointGroup(int dataFrameIndex) {
+    SymmetryInterface sym = getUnitCell(-1 - dataFrameIndex);
+    if (sym != null) {
+      sym.updatePointGroup();
+    }
   }
 
 }

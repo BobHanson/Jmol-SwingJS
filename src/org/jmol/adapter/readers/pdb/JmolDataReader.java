@@ -42,6 +42,7 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
+import javajs.util.Lst;
 import javajs.util.P3d;
 import javajs.util.PT;
 
@@ -427,6 +428,52 @@ public class JmolDataReader extends PdbReader {
             P3d.newP(mdata.uvw0[2]) };
       }
     }
+  }
+
+  /**
+   * remove non-spin atoms and atoms with duplicated spin and set min/max XYZ for the plot
+   * @param vwr
+   * @param bs
+   * @param modelIndex
+   * @param minXYZ
+   * @param maxXYZ
+   * @return bitset for plot
+   */
+  public BS getPlotSpinSet(Viewer vwr, BS bs, int modelIndex, P3d minXYZ,
+                       P3d maxXYZ) {
+    if (bs.nextSetBit(0) < 0) {
+      bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+    }
+    if (bs.isEmpty())
+      return null;
+    // remove non-spin atoms
+    double len = 0;
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      Vibration v = vwr.ms.getVibration(i, false);
+      if (v == null)
+        bs.clear(i);
+      else
+        len = Math.max(len, v.length());
+    }
+    if (len == 0)
+      return null;
+    minXYZ.set(-len, -len, -len);
+    maxXYZ.set(len, len, len);
+    Lst<Vibration> lst = new Lst<>();
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      Vibration v = vwr.ms.getVibration(i, false);
+      boolean found = false;
+      for (int j = lst.size(); --j >= 0;) {
+        if (v.distance(lst.get(j)) < 0.1d) {
+          found = true;
+          bs.clear(i);
+          break;
+        }
+      }
+      if (!found)
+        lst.addLast(v);
+    }
+    return bs;
   }
   
 

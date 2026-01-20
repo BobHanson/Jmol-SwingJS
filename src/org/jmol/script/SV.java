@@ -1310,26 +1310,27 @@ public class SV extends T implements JSONEncodable {
   public final static int FORMAT_BASE64 = 5;
   public final static int FORMAT_BYTEARRAY = 12;
   public final static int FORMAT_ARRAY = 22;
-  public final static int FORMAT_XYZ = 28;
-  public final static int FORMAT_ABC = 32;
-  public final static int FORMAT_UVW = 36;
-  public final static int FORMAT_STRING = 40;
+  public final static int FORMAT_STRING = 28;
+  public final static int FORMAT_XYZ = 35;
+  public final static int FORMAT_ABC = 39;
+  public final static int FORMAT_UVW = 43;
+  public final static int FORMAT_RXYZ = 47;
   
   /**
    * 
    * @param format
-   * @return 0: JSON, 5: base64, 12: bytearray, 22: array, 28:xyz, 32:abc, 36:uvw, 40:string
+   * @return 0: JSON, 5: base64, 12: bytearray, 22: array, 28:string, etc.
    */
   public static int getFormatType(String format) {
     return (format.indexOf(";") >= 0 ? -1 :
-        ";json;base64;bytearray;array;xyz;abc;uvw;string;"
+        ";json;base64;bytearray;array;string;xyz;abc;uvw;rxyz;"
     //   0    5      12        22    28  32  36  40
         .indexOf(";" + format.toLowerCase() + ";"));
   }
 
   /**
    * Accepts arguments from the format() function First argument is a format
-   * string.
+   * string. 
    * 
    * @param args
    * @param pt
@@ -1345,7 +1346,7 @@ public class SV extends T implements JSONEncodable {
     case 2:
       if (pt == Integer.MAX_VALUE)
         pt = getFormatType(args[0].asString());
-      if (pt >= 0)
+      if (pt >= 0) // but also not the matrix types
         return getFormat(args[1], pt);
     }
     // use values to replace codes in format string
@@ -1405,6 +1406,9 @@ public class SV extends T implements JSONEncodable {
             return s;
           bytes = Base64.decodeBase64(s);
         } else {
+          if (pt >= FORMAT_STRING) {
+            return s;
+          }
           bytes = s.getBytes();
         }
       }
@@ -2019,7 +2023,7 @@ public class SV extends T implements JSONEncodable {
   public static Object safeJSON(String key, Object property) {
     return "{"
         + (property instanceof SV ? PT.esc(key) + " : " + format(new SV[] { null, (SV) property },
-            0) : PT.toJSON(key, property)) + "}";
+            FORMAT_JSON) : PT.toJSON(key, property)) + "}";
   }
 
   public boolean isNaN() {

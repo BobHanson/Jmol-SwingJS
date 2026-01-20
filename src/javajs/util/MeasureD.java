@@ -197,7 +197,7 @@ final public class MeasureD {
     return (plane == null ? Double.NaN : (plane.dot(pt) + plane.w) / d);
   }
 
-  public static double distanceToPlaneV(V3d norm, double w, P3d pt) {
+  public static double distanceToPlaneV(V3d norm, double w, T3d pt) {
     return (norm == null ? Double.NaN 
         : (norm.dot(pt) + w)  / Math.sqrt(norm.dot(norm)));
   }

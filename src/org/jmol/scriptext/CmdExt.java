@@ -3575,52 +3575,24 @@ public class CmdExt extends ScriptExt {
       }
       break;
     case T.spin:
-      isSpinPointGroup = (tokAt(pt0 + 1) == T.pointgroup);
-      type = "spin";
-      propToks[0] = T.vibx;
-      propToks[1] = T.viby;
-      propToks[2] = T.vibz;
-      props[0] = "spinX";
-      props[1] = "spinY";
-      props[2] = "spinZ";
-      if (bs.nextSetBit(0) < 0) {
-        bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+      if (!chk) {
+        type = "spin";
+        isSpinPointGroup = (tokAt(pt0 + 1) == T.pointgroup);
+        propToks[0] = T.vibx;
+        propToks[1] = T.viby;
+        propToks[2] = T.vibz;
+        props[0] = "spinX";
+        props[1] = "spinY";
+        props[2] = "spinZ";
+        bs = vwr.fm.getJmolDataReader().getPlotSpinSet(vwr, bs, modelIndex,
+            minXYZ = new P3d(), maxXYZ = new P3d());
+        if (bs == null || bs.cardinality() == 0)
+          return null;
+        int spinModel = vwr.ms.getJmolDataFrameInt(modelIndex, T.spin);
+        if (spinModel >= 0)
+          vwr.deleteModels(spinModel,  null);
+        vwr.setSelectionSet(bs);
       }
-      if (bs.isEmpty())
-        return "";
-      // remove non-spin atoms
-      double len = 0;
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        Vibration v = vwr.ms.getVibration(i, false);
-        if (v == null)
-          bs.clear(i);
-        else 
-          len = Math.max(len, v.length());
-      }
-      if (len == 0)
-          return "";
-      
-      minXYZ = P3d.new3(-len, -len, -len);
-      maxXYZ = P3d.new3(len, len, len);
-      
-      Lst<Vibration> lst = new Lst<>();
-      
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-        Vibration v = vwr.ms.getVibration(i, false);
-        boolean found = false;
-        for (int j = lst.size(); --j >= 0;) {
-          if (v.distance(lst.get(j)) < 0.1d) {
-            found = true;
-            bs.clear(i);
-            break;
-          }
-        }
-        if (!found)
-          lst.addLast(v);
-      }
-
-      startScript = "zap 2.1;select " + Escape.eBS(bs) + ";\n ";
-      endScript = "";
       break;
     case T.property:
       e.iToken = pt0 + 1;
@@ -4193,6 +4165,10 @@ public class CmdExt extends ScriptExt {
     case T.varray:
     case T.hash:
       type = "VAR";
+      break;
+    case T.spin:
+    case T.brillouin:
+      invArg();
       break;
     case T.quaternion:
     case T.ramachandran:
@@ -6194,12 +6170,28 @@ public class CmdExt extends ScriptExt {
       }
       break;
     }
-    if (modelkitTok == T.unitcell && tokAt(i + 1) == T.packed) {
-      // MODELKIT UNITCELL PACKED
-      packing = (eval.isFloatParameter(++i + 1) ? doubleParameter(++i) : 0);
-      eval.iToken = i;
+    switch (modelkitTok) {
+    case T.fill:
+      if (eval.isFloatParameter(i + 1)) {
+        // MODELKIT FILL "2a,2b,2c" 0.3
+        packing = doubleParameter(++i);
+        eval.iToken = i;
+      } else {
+        packing = 0;
+      }
+      mad10 = 0;
+      break;
+    case T.unitcell:
+      if (tokAt(i + 1) == T.packed) {
+        // MODELKIT UNITCELL PACKED
+        packing = (eval.isFloatParameter(++i + 1) ? doubleParameter(++i) : 0);
+        eval.iToken = i;
+      }
+      //$FALL-THROUGH$
+    default:
+      mad10 = eval.getSetAxesTypeMad10(++i);
+      break;
     }
-    mad10 = (modelkitTok ==  T.fill ? 0 : eval.getSetAxesTypeMad10(++i));
     eval.checkLast(eval.iToken);
     if (chk || mad10 == Integer.MAX_VALUE)
       return;
@@ -6211,12 +6203,14 @@ public class CmdExt extends ScriptExt {
           || id != null 
           || isReset)
         invArg();
-      if (oabc == null && pt != null) {
+      if (oabc == null) {
         oabc = sym.getUnitCellVectors();
+        if (pt == null)
+          pt = new P3d();
         sym.toCartesian(pt, true);
         oabc[0] = pt;
       }
-      vwr.getModelkit(false).cmdFillOABC(oabc, e.fullCommand);
+      vwr.getModelkit(false).cmdFillOABC(oabc, packing, e.fullCommand);
       return;
     }
       

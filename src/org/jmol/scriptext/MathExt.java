@@ -275,8 +275,11 @@ public class MathExt {
     // matrix("62.1>>62.5")
     // matrix("[Pnma]>>[Pmcn]")
     // matrix("-b,-a,-c",true) // normalizes
+    // matrix("u,v,w") // 3x3 matrix
     // matrix("h")
     // matrix("r")
+    // matrix(p4)
+    // matrix(m3)
 
     int n = args.length;
     M4d m4 = null;
@@ -306,6 +309,13 @@ public class MathExt {
       break;
     case 1:
       switch (args[0].tok) {
+      case T.point4f:
+        Qd q = Qd.newP4((P4d) args[0].value);
+        m3 = q.getMatrix();
+        break;
+      case T.matrix3f:
+        m3 = (M3d) args[0].value;
+        break;
       case T.matrix4f:
         m4 = (M4d) args[0].value;
         break;
@@ -323,6 +333,9 @@ public class MathExt {
             sym = vwr.getSymTemp();
           }
           m4 = (M4d) sym.convertTransform(s, null);
+          if (s.indexOf("u") >= 0)
+            m3 = new M3d();
+            m4.getRotationScale(m3);
         }
         if (m4 != null)
           break;
@@ -451,7 +464,7 @@ public class MathExt {
       }
       if (normalize)
         doNormalize(m4);
-      return mp.addXStr(matToString(m4,
+      return mp.addXStr(matToString((asRXYZ && m3 != null ? m3 : m4),
           asRXYZ ? 0x1 : asABC ? 0xABC : asUVW ? 0xDEF : 0));
     }
     if (normalize)
@@ -471,14 +484,16 @@ public class MathExt {
     m4.m23 -= Math.floor(c);
   }
 
-  private String matToString(M4d m4, int mode) {
+  private String matToString(M34d m4, int mode) {
     SymmetryInterface sym = vwr.getSymStatic();
     switch (mode) {
-    case 0x1:
+    case SV.FORMAT_RXYZ:
+    case 0x1: // rxyz
       return (String) sym.staticConvertOperation(null, m4, "rxyz");
     case SV.FORMAT_ABC:
     case 0xABC:
-      return sym.staticGetTransformABC(m4, false);
+      if (m4 instanceof M3d)
+      return sym.staticGetTransformABC((M4d) m4, false);
     default:
     case SV.FORMAT_UVW:
     case 0xDEF:
@@ -711,7 +726,16 @@ SymmetryInterface sym;
     double linearTolerance = -1;
     BS bsAtoms = null;
     boolean isSpaceGroup = false;
-    switch (args.length) {
+    int len = args.length;
+    String type = null;
+    if (len > 0 && args[len - 1].tok == T.string) {
+      String v = (String) args[len - 1].value;
+      if (v.indexOf("u") >= 0) {
+        type = v;
+        len--;
+      }
+    }
+    switch (len) {
     case 4:
       linearTolerance = args[3].asDouble();
       //$FALL-THROUGH$
@@ -766,7 +790,7 @@ SymmetryInterface sym;
       break;
     case 0:
       if (!isAtomProperty) {
-        return mp.addXObj(vwr.ms.getPointGroupInfo(null));
+        return mp.addXObj(vwr.ms.getPointGroupInfo(null, type));
       }
       bsAtoms = SV.getBitSet(mp.getX(), false);
       break;
@@ -797,7 +821,7 @@ SymmetryInterface sym;
             : linearTolerance,
         (bsAtoms == null ? pts.length : bsAtoms.cardinality()), true);
     return mp.addXMap((Map<String, ?>) pointGroup.getPointGroupInfo(-1, null,
-        true, null, 0, 1));
+        true, type, 0, 1));
   }
 
   private boolean evaluateUnitCell(ScriptMathProcessor mp, SV[] args,
@@ -2918,7 +2942,8 @@ SymmetryInterface sym;
         // {xxx}.label("....")
         // {xxx}.yyy.format("...")
         // (value).format("...")
-        // matrix4f.format("xyz" | "abc" | "uvw")
+        // matrix4f.format("xyz" | "abc" | "uvw", "rxyz")
+        // matrix3f.format("rxyz")
         format = (String) args[0].value;
         pt = SV.getFormatType(format);
         if (pt >= 0)
@@ -2973,16 +2998,19 @@ SymmetryInterface sym;
     case SV.FORMAT_XYZ:
     case SV.FORMAT_ABC:
     case SV.FORMAT_UVW:
-      return (x.tok == T.matrix4f && mp.addXStr(matToString((M4d) x.value, pt)));
+    case SV.FORMAT_RXYZ:
+      return ((x.tok == T.matrix4f || x.tok == T.matrix3f) && mp.addXStr(matToString((M34d) x.value, pt)));
+    case SV.FORMAT_JSON:
+    case SV.FORMAT_STRING:
+      return mp.addXStr((String)SV.getFormat(x, pt));
     default:
-//    case SV.FORMAT_JSON:
 //    case SV.FORMAT_BYTEARRAY:
 //    case SV.FORMAT_BASE64:
 //    case SV.FORMAT_ARRAY:
       return mp.addXObj(SV.getFormat(x, pt));
     }
     BS bs = (x1 != null && x1.tok == T.bitset ? (BS) x1.value : null);
-    if (!isLabel && args.length > 0 && bs == null && format != null) {
+    if (!isLabel && x1 != null && bs == null && args.length > 0 && format != null) {
       // x.format("xxxx")
       // x1.format("%5.3f %5s", ["energy", "pointGroup"])
       // but not x1.format() or {*}.format(....)
@@ -4813,7 +4841,7 @@ SymmetryInterface sym;
     Map<String, ?> map = null;
     if (tok == 0 && xyz != null && xyz.indexOf(",") < 0) {
       if (apt == narg) {
-        map = vwr.ms.getPointGroupInfo(null);
+        map = vwr.ms.getPointGroupInfo(null, null);
       } else if (args[apt].tok == T.hash) {
         map = args[apt].getMap();
       }

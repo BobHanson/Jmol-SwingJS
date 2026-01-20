@@ -152,6 +152,9 @@ public class FileManager implements BytePoster {
     		: lastFullPathName != null ? lastFullPathName : lastNameAsGiven);
   }
 
+  /**
+   * for LOAD "" only
+   */
   private String lastFileType;
 
   public String getFileType() {
@@ -159,7 +162,8 @@ public class FileManager implements BytePoster {
   }
 
   public void setFileType(String fileType) {
-    lastFileType = fileType;
+    if (!"JmolData".equals(fileType))
+      lastFileType = fileType;
   }
 
   public String getFileName() {
@@ -241,7 +245,7 @@ public class FileManager implements BytePoster {
       return names[0];
     String fullPathName = names[0];
     String fileName = names[1];
-    lastFileType= fileType;
+    setFileType(fileType);
     htParams.put("fullPathName", (fileType == null ? "" : fileType + "::")
         + fixDOSName(fullPathName));
     if (vwr.getBoolean(T.messagestylechime) && vwr.getBoolean(T.debugscript))
@@ -374,15 +378,6 @@ public class FileManager implements BytePoster {
         isAppend);
     return fr;
   }
-
-// this was never of any use
-//  Object createAtomSetCollectionFromDOM(Object DOMNode,
-//                                        Map<String, Object> htParams) {
-//    JmolDomReaderInterface aDOMReader = (JmolDomReaderInterface) Interface.getOption("io.DOMReader", vwr, "file");
-//    aDOMReader.set(this, vwr, DOMNode, htParams);
-//    aDOMReader.run();
-//    return aDOMReader.getAtomSetCollection();
-//  }
 
   /**
    * not used in Jmol project -- will close reader
@@ -967,6 +962,7 @@ public class FileManager implements BytePoster {
     name = vwr.resolveDatabaseFormat(name);
     if (name == null)
       return new String[] { null };
+    // check for file:///C|
     if (name.startsWith("file:///") && name.indexOf('|') == 9)
       name = name.substring(0, 9) + ':' + name.substring(10);      
     if (name.indexOf(":") < 0 && name.indexOf('/') != 0  && name.indexOf('\\') != 0)
@@ -1712,12 +1708,14 @@ public class FileManager implements BytePoster {
   public boolean isZipStream(Object br) {
     return ZipTools.isZipStream(br);
   }
-
-  private static JmolDataReader staticJmolDataReader;
+  
+  private JmolDataReader staticJmolDataReader;
 
   public JmolDataReader getJmolDataReader() {
-    if (staticJmolDataReader == null)
+    if (staticJmolDataReader == null) {
       staticJmolDataReader = (JmolDataReader) Resolver.getReader("JmolData", null);
+      staticJmolDataReader.vwr = vwr;
+    }
     return staticJmolDataReader;
   }
 

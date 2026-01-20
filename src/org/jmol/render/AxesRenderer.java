@@ -54,6 +54,8 @@ public class AxesRenderer extends CageRenderer {
 
   @Override
   protected boolean render() {
+    if (vwr.ms != ms)
+      return false;
     Axes axes = (Axes) shape;
     int mad10 = vwr.getObjectMad10(StateManager.OBJ_AXIS1);
     boolean isXY = (axes.axisXY.z != 0);
@@ -65,12 +67,13 @@ public class AxesRenderer extends CageRenderer {
       return false;
     // includes check here for background model present
     modelIndex = vwr.am.cmi;
-    Model m = ms.am[modelIndex];
+    Model m = null;
     isDataSpin = false;
     boolean isUnitCell = (vwr.g.axesMode == T.axesunitcell);
     if (ms.isJmolDataFrame(modelIndex)) {
       switch (ms.getJmolFrameTypeInt(modelIndex)) {
       case T.spin:
+        m = ms.am[modelIndex];
         isDataSpin = (m.uvw != null);
         isUnitCell = true;
         //int source = m.dataSourceFrame;
@@ -109,7 +112,7 @@ public class AxesRenderer extends CageRenderer {
       vwr.setBooleanProperty("axesunitcell", true);
     } else if (isDataSpin) {
       pt0.set(0, 0, 0);
-      render1(null, 20000, false, null, true, 1, null, m.uvw);
+      render1(null, 25000, false, null, true, 1, null, m.uvw);
     } else {
       render1(axes, mad10, isXY, axisType, isUnitCell, scale, null, null);
     }

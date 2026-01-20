@@ -2963,7 +2963,7 @@ abstract public class AtomCollection {
   }
 
   public BS getAtomsFromAtomNumberInFrame(int atomNumber) {
-    BS bs = vwr.getFrameAtoms();
+    BS bs = vwr.getVisibleFrameAtomsNoSplitData();
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
       if (at[i].getAtomNumber() != atomNumber)
         bs.clear(i);

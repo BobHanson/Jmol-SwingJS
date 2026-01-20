@@ -309,4 +309,6 @@ public interface SymmetryInterface {
                          P3i maxXYZ, P3d rmin, P3d rmax, P3i newMin,
                          P3i newMax);
 
+  String updatePointGroup();
+
 }

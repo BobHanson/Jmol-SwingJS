@@ -144,6 +144,13 @@ public class Draw extends MeshCollection {
   public int defaultFontId = -1;
   private int thisFontID = -1;
   private Integer titleColor;
+  /**
+   * specific model regardless of type;
+   * unlike modelIndex, which can be part of
+   * a sequence of drawings in a set
+   * 
+   */
+  private int imodel = -1;
 
   @SuppressWarnings("unchecked")
   @Override
@@ -240,13 +247,18 @@ public class Draw extends MeshCollection {
       return;
     }
 
+    if ("imodel" == propertyName) {
+        imodel = ((Integer) value).intValue();
+        return;
+    }
     if ("modelIndex" == propertyName) {
       //from saved state -- used to set modelVertices
+      // also used for drawing point group
       indicatedModelIndex = ((Integer) value).intValue();
       if (indicatedModelIndex < 0 || indicatedModelIndex >= ms.mc)
         return;
-      vData.addLast(new Object[] { Integer.valueOf(PT_MODEL_INDEX),
-          (modelInfo = new int[] { indicatedModelIndex, 0 }) });
+      modelInfo = new int[] { indicatedModelIndex, 0 };
+      vData.addLast(new Object[] { Integer.valueOf(PT_MODEL_INDEX), modelInfo });
       if (thisMesh.thisID.startsWith(JC.THIS_MODEL_ONLY))
         indicatedModelOnly = true;
       return;
@@ -640,13 +652,13 @@ private void initDraw() {
     thisMesh.width = width;
     if (plane != null) {
       if (intersectID != null) {
-        Lst<P3d[]> vData = new Lst<P3d[]>();
-        Object[] data = new Object[] { intersectID, plane, vData, null };
+        Lst<P3d[]> pts = new Lst<P3d[]>();
+        Object[] data = new Object[] { intersectID, plane, pts, null };
         vwr.shm.getShapePropertyData(JC.SHAPE_ISOSURFACE, "intersectPlane",
             data);
-        if (vData.size() > 0) {
+        if (pts.size() > 0) {
           indicatedModelIndex = ((Integer) data[3]).intValue();
-          lineData = vData;
+          lineData = pts;
         }
       } else if (slabData != null) {
         slabData.getMeshSlicer().getIntersection(0, plane, null, null, null,
@@ -662,14 +674,15 @@ private void initDraw() {
         || !isArrow && connections != null)
       return false; // connections only for arrows at this point
     int modelCount = ms.mc;
-    if (polygon != null || lineData != null
+    if (imodel >= 0 || polygon != null || lineData != null
         || indicatedModelIndex < 0 && (isFixed || isArrow || isCurve
             || isCircle || isCylinder || modelCount == 1)) {
       // make just ONE copy 
 
-      // arrows and curves simply can't be handled as
+      // arrows and curves including arcs) and circles
+      // simply can't be handled as
       // multiple frames yet
-      thisMesh.modelIndex = (lineData == null ? vwr.am.cmi
+      thisMesh.modelIndex = (imodel >= 0 ? imodel : lineData == null ? vwr.am.cmi
           : indicatedModelIndex);
       thisMesh.isFixed = (isFixed
           || lineData == null && thisMesh.modelIndex < 0 && modelCount > 1);
@@ -759,6 +772,7 @@ private void initDraw() {
   
   @Override
   protected void clean() {
+    imodel = -1;
     for (int i = meshCount; --i >= 0;)
       if (meshes[i] == null || meshes[i].vc == 0 
           && meshes[i].connectedAtoms == null && meshes[i].lineData == null)

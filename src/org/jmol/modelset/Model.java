@@ -32,6 +32,7 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.script.T;
 
 import javajs.util.BS;
+import javajs.util.M3d;
 import javajs.util.AU;
 import javajs.util.M4d;
 import javajs.util.P3d;
@@ -149,7 +150,7 @@ public class Model {
 
   public Map<String, Integer> dataFrames;
 
-  public int dataSourceFrame = -1;
+  public int dataSourceFrame; // will be modelIndex or something pointing to this data frame's source frame
 
   public P3d[] uvw, uvw0;
 
@@ -185,7 +186,7 @@ public class Model {
       String jmolDataHeader = (String) jmolData.get(JC.INFO_JMOL_DATA_HEADER);
       this.jmolData = jmolData;
       isJmolDataFrame = true;
-      auxiliaryInfo.put("jmolData", jmolData);
+      auxiliaryInfo.put(JC.INFO_JMOL_DATA, jmolData);
       auxiliaryInfo.put("title", jmolDataHeader);
       jmolFrameType = (jmolDataHeader.indexOf("ramachandran") >= 0 ? "ramachandran"
           : jmolDataHeader.indexOf("quaternion") >= 0 ? "quaternion" 
@@ -339,6 +340,19 @@ public class Model {
     if ((simpleCage = ucell) != null) {
       auxiliaryInfo.put(JC.INFO_UNIT_CELL_PARAMS, ucell.getUnitCellParams());
     }
+  }
+
+  public M3d getUVWMatrix(boolean isUVW0) {
+    if (uvw0 == null) {
+      return null;
+    }
+    M3d m = new M3d();
+    for (int i = 0; i < 3; i++) {
+      P3d p = P3d.newP(isUVW0 ? uvw0[i] : uvw[i]);
+      p.normalize();
+      m.setColumnV(i, p);
+    }
+    return m;
   }
 
  }

@@ -3918,6 +3918,10 @@ public class Viewer extends JmolViewer
     return getModelUndeletedAtomsBitSetBs(getVisibleFramesBitSet());
   }
 
+  public BS getVisibleFrameAtomsNoSplitData() {
+    return getModelUndeletedAtomsBitSetBs(getVisibleFramesBitSetNoJmolData());
+  }
+
   @Override
   public BS getVisibleFramesBitSet() {
     BS bs = BSUtil.copy(am.bsVisibleModels);
@@ -3925,6 +3929,18 @@ public class Viewer extends JmolViewer
       ms.trajectory.selectDisplayed(bs);
     return bs;
 
+  }
+
+  public BS getVisibleFramesBitSetNoJmolData() {
+    BS bs = getVisibleFramesBitSet();
+    if (am.splitFrame) {
+      for (int i = 0; i < 2; i++) {
+        int mi = am.getSplitFrameModelIndex(i);
+        if (ms.isJmolDataFrame(mi)) 
+          bs.clear(mi);
+      }         
+    }
+    return bs;
   }
 
   /**
@@ -11515,15 +11531,28 @@ public class Viewer extends JmolViewer
       return;
     if (rot == null)
       tm.setSpinOff();
-    ms.vib.rotateModelSpinVectors(ms, modelIndex, rot, false);      
+    int dataFrameIndex = ms.vib.rotateModelSpinVectors(ms, modelIndex, rot, false);
+    if (dataFrameIndex >= 0)
+      updatePointGroup(modelIndex);
   }
 	  
+  private void updatePointGroup(int modelIndex) {
+    if (true)
+      return;
+    String script = ms.getUnitCell(-1 - modelIndex).updatePointGroup();
+    if (script != null)
+      runScript(script);
+  }
+
   public void rotateSpins(int deltaX, int deltaY) {
     if (ms.vib == null)
       return;
     M3d m = new M3d();
     if (m.setAsBallRotation(JC.radiansPerDegree, -deltaY, -deltaX)) {
-      ms.vib.rotateModelSpinVectors(ms, am.splitFrame ? am.getSplitFrameModel() : am.cmi, m, true);
+      int modelIndex = (am.splitFrame ? am.getSplitFrameModel() : am.cmi);
+      int dataFrameIndex = ms.vib.rotateModelSpinVectors(ms, modelIndex, m, true);
+      if (dataFrameIndex >= 0)
+        updatePointGroup(modelIndex);
       refresh(REFRESH_SYNC,
           sm.syncingMouse ? "Mouse: rotateSpins " + deltaX + " " + deltaY
               : "");
