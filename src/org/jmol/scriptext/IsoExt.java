@@ -395,20 +395,23 @@ public class IsoExt extends ScriptExt {
           drawUC = true;
           if (eval.isArrayParameter(i + 1)) {
             // unitcell [o a b c]
-            uc = vwr.getSymTemp()
-                .getUnitCell(eval.getPointArray(i + 1, -1, false, true), false, null);
+            P3d[] oabc = eval.getPointArray(i + 1, -1, false, true);
             i = eval.iToken;
+            if (!chk)
+              uc = vwr.getSymTemp().getUnitCell(oabc, false, null);
           } else {
             switch (tokAt(i + 1)) {
             case T.string:
-              // modelkit spacegroup xx unitcell "a,b,2c"
-              String tr = stringParameter(i + 1);
+              // modelkit spacegroup xx unitcell "a,b,2c" or "unitcell_xxx"
+              String tr = stringParameter(i + 1).toLowerCase();
+              i = eval.iToken;
+              if (tr.startsWith(JC.UNITCELL_PREFIX))
+                tr = (String) vwr.getCurrentModelAuxInfo().get(tr);
               // empty string can be used here to skip this and add a title still
-              if (tr.length() > 0 && (uc = vwr.getCurrentUnitCell()) != null) {
+              if (!chk && tr.length() > 0 && (uc = vwr.getCurrentUnitCell()) != null) {
                 uc = vwr.getSymTemp().getUnitCell(uc.getV0abc(tr, null), false,
                     "draw");
               }
-              i = eval.iToken;
               break;
             case T.point3f:
             case T.leftbrace:

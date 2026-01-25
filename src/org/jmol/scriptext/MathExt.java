@@ -333,9 +333,10 @@ public class MathExt {
             sym = vwr.getSymTemp();
           }
           m4 = (M4d) sym.convertTransform(s, null);
-          if (s.indexOf("u") >= 0)
+          if (s.indexOf("u") >= 0) {
             m3 = new M3d();
             m4.getRotationScale(m3);
+          }
         }
         if (m4 != null)
           break;
@@ -486,20 +487,30 @@ public class MathExt {
 
   private String matToString(M34d m4, int mode) {
     SymmetryInterface sym = vwr.getSymStatic();
+    String smode;
     switch (mode) {
     case SV.FORMAT_RXYZ:
     case 0x1: // rxyz
-      return (String) sym.staticConvertOperation(null, m4, "rxyz");
+      smode = "rxyz";
+      break;
     case SV.FORMAT_ABC:
     case 0xABC:
-      if (m4 instanceof M3d)
-      return sym.staticGetTransformABC((M4d) m4, false);
-    default:
+      if (m4 instanceof M3d) {
+    	M4d m = M4d.newM4(null);
+    	m.setRotationScale((M3d) m4);
+        return sym.staticGetTransformABC(m, false);
+      }
+      smode = "abc";
+      break;
     case SV.FORMAT_UVW:
     case 0xDEF:
+      smode = "uvw";
+      break;
+    default:
     case SV.FORMAT_XYZ:
-      return (String) vwr.getSymStatic().staticConvertOperation("", m4, (mode == SV.FORMAT_UVW || mode == 0xDEF ? "uvw" : "xyz"));
+      smode = "xyz";
     }
+    return (String) vwr.getSymStatic().staticConvertOperation("", m4, smode);
   }
 
   /**
@@ -971,7 +982,7 @@ SymmetryInterface sym;
       break;
     }
     if (arg0 != null) {
-      boolean asMatrix = (lastParam > ipt && SV.bValue(args[ipt + 1]));
+      boolean asMatrix = (lastParam > ipt && args[ipt + 1].tok == T.on);
       if (asMatrix)
         return (isWithin ? null
             : vwr.getSymTemp().convertTransform(arg0, null));
