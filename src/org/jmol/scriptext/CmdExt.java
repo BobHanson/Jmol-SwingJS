@@ -71,7 +71,6 @@ import org.jmol.util.Logger;
 import org.jmol.util.Parser;
 import org.jmol.util.Point3fi;
 import org.jmol.util.SimpleUnitCell;
-import org.jmol.util.Vibration;
 import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.ShapeManager;

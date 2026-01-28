@@ -478,7 +478,7 @@ public class ShapeManager {
     boolean checkOccupancy = (ms.bsModulated != null && ms.occupancies != null);
     Atom[] atoms = ms.at;
     int occ;
-    int occMax = vwr.getInt(T.occupancythreashold);
+    int occMax = vwr.getInt(T.occupancythreshold);
     boolean haveMods = false;
     BS bsSlabbed = bsSlabbedInternal;
     bsSlabbed.clearAll();

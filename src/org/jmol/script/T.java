@@ -960,7 +960,7 @@ public class T {
   public final static int phongexponent                  = intparam | 28;
   public final static int pickingspinrate                = intparam | 29;
   public final static int platformspeed                  = intparam | 30;
-  public final static int occupancythreashold            = intparam | 31;
+  public final static int occupancythreshold             = intparam | 31;
   public final static int propertyatomnumberfield        = intparam | 32;
   public final static int propertyatomnumbercolumncount  = intparam | 33;
   public final static int propertydatacolumncount        = intparam | 34;
@@ -2688,7 +2688,7 @@ public class T {
        "multiProcessor",
        "navigationMode",
        "navigationPeriodic",
-       "occupancythreashold",
+       "occupancyThreshold",
        "partialDots",
        "pdbAddHydrogens",
        "pdbGetHeader",
@@ -3775,7 +3775,7 @@ public class T {
         multiprocessor,                     //        "multiProcessor"
         navigationmode,                     //        "navigationMode"
         navigationperiodic,                 //        "navigationPeriodic"
-        occupancythreashold,                //        "occupancyThreashold"
+        occupancythreshold,                //        "occupancyThreshold"
         partialdots,                        //        "partialDots
         pdbaddhydrogens,                    //        "pdbAddHydrogens"
         pdbgetheader,                       //        "pdbGetHeader"

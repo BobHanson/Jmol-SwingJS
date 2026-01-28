@@ -5949,8 +5949,8 @@ public class Viewer extends JmolViewer
   @Override
   public int getInt(int tok) {
     switch (tok) {
-    case T.occupancythreashold:
-      return g.occupancyThreashold;
+    case T.occupancythreshold:
+      return g.occupancyThreshold;
     case T.animationfps:
       return am.animationFps;
     case T.dotdensity:
@@ -6815,9 +6815,9 @@ public class Viewer extends JmolViewer
 
   public void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
-    case T.occupancythreashold:
+    case T.occupancythreshold:
     	// 16.3.47/48
-    	g.occupancyThreashold = value;
+    	g.occupancyThreshold = value;
     	break;
     case T.minimizationreportsteps:
       // 16.1.15 and 16.1.16

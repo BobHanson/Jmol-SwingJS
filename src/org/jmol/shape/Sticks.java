@@ -251,7 +251,7 @@ public class Sticks extends Shape {
 
   private final static int MAX_BOND_CLICK_DISTANCE_SQUARED = 10 * 10;
   private final P3i ptXY = new P3i();
-  private final static int XY_THREASHOLD = 40;
+  private final static int XY_THRESHOLD = 40;
   /**
    * 
    * @param x
@@ -281,7 +281,7 @@ public class Sticks extends Shape {
         continue;
       v.ave(atom1, atom2);
       int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
-      if (d2 >= 0 && Math.abs(atom1.sY - atom2.sY) + Math.abs(atom1.sX - atom2.sX)> XY_THREASHOLD  ) {
+      if (d2 >= 0 && Math.abs(atom1.sY - atom2.sY) + Math.abs(atom1.sX - atom2.sX)> XY_THRESHOLD  ) {
         double f = 1d * (ptXY.x - atom1.sX) / (atom2.sX - atom1.sX);
         if (f < 0.4d || f > 0.6d)
           continue;

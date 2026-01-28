@@ -340,7 +340,7 @@ public class GlobalSettings {
     setB("noDelay", noDelay);
     setO("nmrPredictFormat", nmrPredictFormat);
     setO("nmrUrlFormat", nmrUrlFormat);
-    setB("partialDots", partialDots);
+    setI("occupancyThreshold", occupancyThreshold);
     setB("pdbAddHydrogens", pdbAddHydrogens); // new 12.1.51
     setB("pdbGetHeader", pdbGetHeader); // new 11.5.39
     setB("pdbSequential", pdbSequential); // new 11.5.39
@@ -559,7 +559,7 @@ public class GlobalSettings {
 
   //atoms and bonds
 
-  int occupancyThreashold = 50;
+  int occupancyThreshold = 50;
   boolean partialDots = false;
   boolean bondModeOr = false;
   boolean hbondsBackbone = false;
