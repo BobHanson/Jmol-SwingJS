@@ -918,9 +918,7 @@ public class MSRdr implements MSInterface {
     // vibrations, and anisotropy tensors.
 
     if (!Double.isNaN(ms.vOcc)) {
-      // a.vib may be used to temporarily store an M40 site multiplicity
-      a.foccupancy = ms.setOccupancy(getMod("J_O#0;" + a.atomName), a.foccupancy, (a.vib == null ? 0 : a.vib.x));
-      //Logger.info("atom " + a.atomName + " occupancy = " + a.foccupancy);
+      a.foccupancy = ms.setOccupancy(getMod("J_O#0;" + a.atomName), a.foccupancy, a.getMult());
     }
     if (ms.htUij != null) {
       // Uiso or Uij. We add the displacements, create the tensor, then rotate it, 

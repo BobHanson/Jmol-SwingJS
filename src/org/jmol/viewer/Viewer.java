@@ -5949,6 +5949,8 @@ public class Viewer extends JmolViewer
   @Override
   public int getInt(int tok) {
     switch (tok) {
+    case T.occupancythreashold:
+      return g.occupancyThreashold;
     case T.animationfps:
       return am.animationFps;
     case T.dotdensity:
@@ -5971,8 +5973,6 @@ public class Viewer extends JmolViewer
       return g.percentVdwAtom;
     case T.pickingspinrate:
       return g.pickingSpinRate;
-    //    case T.pointgroupmaxatoms:
-    //      return g.pointGroupMaxAtoms;
     case T.ribbonaspectratio:
       return g.ribbonAspectRatio;
     case T.showscript:
@@ -6815,9 +6815,10 @@ public class Viewer extends JmolViewer
 
   public void setIntPropertyTok(String key, int tok, int value) {
     switch (tok) {
-    //    case T.pointgroupmaxatoms:
-    //      g.pointGroupMaxAtoms = value;
-    //      break;
+    case T.occupancythreashold:
+    	// 16.3.47/48
+    	g.occupancyThreashold = value;
+    	break;
     case T.minimizationreportsteps:
       // 16.1.15 and 16.1.16
       g.minimizationReportSteps = Math.min(Math.max(value, 1), 20);

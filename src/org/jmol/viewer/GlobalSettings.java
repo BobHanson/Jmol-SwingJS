@@ -559,6 +559,7 @@ public class GlobalSettings {
 
   //atoms and bonds
 
+  int occupancyThreashold = 50;
   boolean partialDots = false;
   boolean bondModeOr = false;
   boolean hbondsBackbone = false;

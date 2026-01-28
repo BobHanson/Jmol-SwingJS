@@ -51,6 +51,7 @@ public class Atom extends P3d implements Cloneable {
   public boolean isHetero;
   public int atomSerial = Integer.MIN_VALUE;
   public int chainID; // not public -- set using AtomSetCollectionReader.setChainID
+  public int seqIdOrWyckoffCode; // (siteMult << 16) + wyckoff.charAt(0)
 
   public double bondingRadius = Double.NaN; // only for CIF oxidation state and TopoCifParser; co-opted for Biomolecule 
 
@@ -318,6 +319,10 @@ public class Atom extends P3d implements Cloneable {
     Atom a = asc.newCloneAtom(this);
     a.setT(pt);
     return a;
+  }
+
+  public int getMult() {
+    return (seqIdOrWyckoffCode >> 16) & 0xEFFF; 
   }
 
 //  static {

@@ -48,7 +48,6 @@ import javajs.util.M4d;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
-import javajs.util.V3d;
 
 /**
  * A true line-free CIF file reader for CIF files.
@@ -1657,7 +1656,7 @@ public class CifReader extends AtomSetCollectionReader {
       String authAsym = null;
       String wyckoff = null;
       boolean haveAuth = false;
-      int seqID = 0;
+      int seqIdOrWyckoffCode = 0;
       int n = cifParser.getColumnCount();
       for (int i = 0; i < n; ++i) {
         int tok = fieldProperty(i);
@@ -1712,7 +1711,7 @@ public class CifReader extends AtomSetCollectionReader {
           haveAuth = true;
           break;
         case LABEL_SEQ_ID:
-          atom.sequenceNumber = seqID = parseIntField();
+          atom.sequenceNumber = seqIdOrWyckoffCode = parseIntField();
           break;
         case WYCKOFF_LABEL:
           if (allowWyckoff) {
@@ -1939,7 +1938,7 @@ public class CifReader extends AtomSetCollectionReader {
       }
       // auth_xxx are optional; label_xxx are required
       if (siteMult > 0 && wyckoff != null && wyckoff.length() > 0)
-        seqID = (siteMult << 16) + wyckoff.charAt(0);
+        seqIdOrWyckoffCode = ((siteMult << 16)) | (int) wyckoff.charAt(0);
       String strChain = componentId;
       if (haveAuth) {
         if (authAtom != null)
@@ -1958,15 +1957,13 @@ public class CifReader extends AtomSetCollectionReader {
         maxSerial = Math.max(maxSerial, atom.sequenceNumber);
       if (!addCifAtom(atom, id, componentId, strChain))
         continue;
-      if ((id != null || wyckoff != null) && seqID > 0) {
-        // co-op vibration vector when we have both id and seqID
-        V3d pt = atom.vib;
-        if (pt == null)
-          pt = asc.addVibrationVector(atom.index, 0, Double.NaN, T.seqid);
-        pt.x = seqID;
+      if ((id != null || wyckoff != null) && seqIdOrWyckoffCode > 0) {
+        // mark as valid for return with getSeqID()
+    	  atom.seqIdOrWyckoffCode = seqIdOrWyckoffCode | (1<<31);
       }
-      if (modDim > 0 && siteMult != 0)
-        atom.vib = V3d.new3(siteMult, 0, Double.NaN);
+      if (modDim > 0 && siteMult != 0) {
+        atom.seqIdOrWyckoffCode |= (siteMult << 16);
+      }
     }
     asc.setCurrentModelInfo("isCIF", Boolean.TRUE);
     if (isMMCIF)

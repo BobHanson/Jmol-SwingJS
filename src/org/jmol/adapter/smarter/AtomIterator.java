@@ -128,9 +128,9 @@ class AtomIterator implements JmolAdapterAtomIterator {
 
   @Override
   public int getSeqID() {
-    return (atom.vib == null || !Double.isNaN(atom.vib.y)
-        || atom.vib.z != T.seqid ? 0 : (int) atom.vib.x);
-  }
+    return ((atom.seqIdOrWyckoffCode & (1<<31)) == (1<<31) 
+        ? atom.seqIdOrWyckoffCode &~ (1<<31) : 0);
+   }
 
   @Override
   public double getBfactor() {

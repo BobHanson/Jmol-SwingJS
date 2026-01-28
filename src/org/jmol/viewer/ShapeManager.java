@@ -478,6 +478,7 @@ public class ShapeManager {
     boolean checkOccupancy = (ms.bsModulated != null && ms.occupancies != null);
     Atom[] atoms = ms.at;
     int occ;
+    int occMax = vwr.getInt(T.occupancythreashold);
     boolean haveMods = false;
     BS bsSlabbed = bsSlabbedInternal;
     bsSlabbed.clearAll();
@@ -503,7 +504,7 @@ public class ShapeManager {
           && (occ = vibrationVectors[i].getOccupancy100(vibsOn)) != Integer.MIN_VALUE) {
         haveMods = true;
         atom.setShapeVisibility(Atom.ATOM_VISSET, false);
-        if (occ >= 0 && occ < 50)
+        if (occ >= 0 && occ < occMax)
           atom.setShapeVisibility(Atom.ATOM_NOTHIDDEN | JC.VIS_BALLS_FLAG,
               false);
         else

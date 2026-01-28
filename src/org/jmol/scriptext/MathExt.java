@@ -2910,7 +2910,7 @@ SymmetryInterface sym;
     // (value).format("...")
     // array.format([headings])
     // map.format([headings])
-
+    // format("%0.-3s","testing") 
     // why did I do this???
     // format("base64", x)
     // format("JSON", x)
@@ -2927,6 +2927,7 @@ SymmetryInterface sym;
     // so now accept both!
 
     // format("....",a,b,c...)f -- could be format(format,"xx")
+    //   print format("%0.-3s","testing") 
     // format("....",[a1, a2, a3, a3....])
 
     // matrix4f.format("xyz" | "abc" | "uvw")
@@ -2965,20 +2966,10 @@ SymmetryInterface sym;
       }
       break;
     case 2:
-      if (args[0].tok == T.string) {
-        format = SV.sValue(args[0]);
-        // format("base64","afdsadkjfaldkjfsfdl=") base64 decoding
-        x = args[1];
-        if (x.tok == T.string && !"string".equalsIgnoreCase(format)) {
-          x = args[0];
-          format = "string";
-        }
-        // format("xxx%s","testing");
-        // format("base64", x)
-        // format("JSON", x)
-        // format("byteArray", x)
-        // format("array", x)
-      } else {
+      if (args[0].tok != T.string ||
+          args[1].tok == T.string && SV.getFormatType((String) args[1].value) >= 0) {
+        // format(";base64,MSwyLWJpcygzLWNobG9yby00LDUtZGltZXRob3h5cGhlbnlsKWV0aGFuZS56aXA=", "string")  // base64 decoding
+        // format("1,2-bis(3-chloro-4,5-dimethoxyphenyl)ethane.zip", "base64")
         // format(x, "base64")
         // format(x, "JSON")
         // format(x, "byteArray")
@@ -2988,6 +2979,16 @@ SymmetryInterface sym;
         // format(matrix, "uvw")
         x = args[0];
         format = SV.sValue(args[1]);
+      } else {
+        format = (String) args[0].value;
+        x = args[1];
+        // format("string", ";base64,MSwyLWJpcygzLWNobG9yby00LDUtZGltZXRob3h5cGhlbnlsKWV0aGFuZS56aXA=")  // base64 decoding
+        // format("base64","1,2-bis(3-chloro-4,5-dimethoxyphenyl)ethane.zip")
+        // format("base64", x)
+        // format("JSON", x)
+        // format("byteArray", x)
+        // format("array", x)
+        // format("xxx%s","testing");
       }
       pt = SV.getFormatType(format);
       break;
@@ -2999,7 +3000,7 @@ SymmetryInterface sym;
         return false;
       break;
     }
-    
+
     switch (pt) {
     case -1:
       // {*}.label();
@@ -3010,18 +3011,20 @@ SymmetryInterface sym;
     case SV.FORMAT_ABC:
     case SV.FORMAT_UVW:
     case SV.FORMAT_RXYZ:
-      return ((x.tok == T.matrix4f || x.tok == T.matrix3f) && mp.addXStr(matToString((M34d) x.value, pt)));
-    case SV.FORMAT_JSON:
+      return ((x.tok == T.matrix4f || x.tok == T.matrix3f)
+          && mp.addXStr(matToString((M34d) x.value, pt)));
     case SV.FORMAT_STRING:
-      return mp.addXStr((String)SV.getFormat(x, pt));
+    case SV.FORMAT_JSON:
+      return mp.addXStr((String) SV.getFormat(x, pt));
     default:
-//    case SV.FORMAT_BYTEARRAY:
-//    case SV.FORMAT_BASE64:
-//    case SV.FORMAT_ARRAY:
+      //    case SV.FORMAT_BYTEARRAY:
+      //    case SV.FORMAT_BASE64:
+      //    case SV.FORMAT_ARRAY:
       return mp.addXObj(SV.getFormat(x, pt));
     }
     BS bs = (x1 != null && x1.tok == T.bitset ? (BS) x1.value : null);
-    if (!isLabel && x1 != null && bs == null && args.length > 0 && format != null) {
+    if (!isLabel && x1 != null && bs == null && args.length > 0
+        && format != null) {
       // x.format("xxxx")
       // x1.format("%5.3f %5s", ["energy", "pointGroup"])
       // but not x1.format() or {*}.format(....)
@@ -3036,7 +3039,8 @@ SymmetryInterface sym;
       x1 = null;
     }
     if (x1 == null) {
-      if (format == null || pt >= 0 && args.length != 2)
+      if (format == null
+          || pt >= 0 && pt != SV.FORMAT_STRING && args.length != 2)
         return false;
       if (pt >= 0 || args.length < 2 || args[1].tok != T.varray) {
         //format("%i %i", 2,3);
@@ -3073,9 +3077,10 @@ SymmetryInterface sym;
       // but, yes, a single return here does give string, not an array.
       // 
       // boolean asArray = T.tokAttr(intValue, T.minmaxmask); // "all"
-      ret = e.getCmdExt().getBitsetIdent(bs, format, x1.value, true, x1.index,false);     
+      ret = e.getCmdExt().getBitsetIdent(bs, format, x1.value, true, x1.index,
+          false);
     }
-    return mp.addXObj(ret); 
+    return mp.addXObj(ret);
   }
 
   /**

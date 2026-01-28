@@ -763,14 +763,14 @@ public class SymmetryOperation extends M4d {
     //        draw symop "-x,-y,-z(mx,my,mz)"
     if (modDim > 0)
       xyz = replaceXn(xyz, modDim + 3);
-    int xpt = 0;
+    int xpt = -1;
     int tpt0 = 0;
     int rowPt = 0;
     char ch;
     double iValue = 0;
     int denom = 0;
     int numer = 0;
-    double itrans = 0;
+    double itrans = 0, itrans0 = 0;
     double decimalMultiplier = 1d;
     String strT = "";
     String strOut = (retString ? "" : null);
@@ -791,7 +791,15 @@ public class SymmetryOperation extends M4d {
       case '+':
         isNegative = (ch == '-');
         signPt = i;
-        itrans = iValue;
+        if (iValue != 0) {
+          if (xpt < 0) {
+            // 2/3-x-y danger
+            itrans0 = iValue;
+          } else {
+            // -x-y+2/3
+            itrans = iValue;
+          }
+        }
         iValue = 0;
         continue;
       case '/':
@@ -842,15 +850,15 @@ public class SymmetryOperation extends M4d {
             rotPt = i;
             i = transPt - 1;
             transPt = -i;
-            iValue = itrans = 0;
+            iValue = itrans = itrans0 = 0;
             denom = 0;
             continue;
           }
           transPt = i + 1;
           i = rotPt;
-        } else if (itrans != 0) {
-          iValue = itrans;
-          itrans = 0;
+        } else if (itrans != 0 || itrans0 != 0) {
+          iValue = itrans + itrans0;
+          itrans = itrans0 = 0;
         }
         // add translation in 12ths
         iValue = normalizeTwelfths(iValue,
@@ -867,11 +875,12 @@ public class SymmetryOperation extends M4d {
         }
         if (rowPt == nRows - 2)
           return (retString ? strOut : "ok");
-        iValue = itrans = 0;
+        iValue = itrans = itrans0 = 0;
         numer = 0;
         denom = 0;
         strT = "";
         tpt0 += 4;
+        xpt = -1;
         if (rowPt++ > 2 && modDim == 0) {
           Logger.warn("Symmetry Operation? " + xyz);
           return null;
