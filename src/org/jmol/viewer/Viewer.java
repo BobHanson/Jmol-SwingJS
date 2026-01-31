@@ -2704,13 +2704,13 @@ public class Viewer extends JmolViewer
    */
   @Override
   public void openFileAsyncSpecial(String fileName, int flags) {
-    getScriptManager().openFileAsync(fileName, flags, null);
+    fm.openFileAsync(fileName, flags, null);
   }
 
   @Override
   public void openFileAsyncSpecialType(String fileName, int flags,
                                        String type) {
-    getScriptManager().openFileAsync(fileName, flags, type);
+    fm.openFileAsync(fileName, flags, type);
   }
 
   /**
@@ -11559,7 +11559,6 @@ public class Viewer extends JmolViewer
               : "");
     }
   }
-
 
   ////////////////// Jmol-SwingJS only //////////////
 

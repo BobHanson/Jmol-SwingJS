@@ -79,7 +79,6 @@ import javax.swing.event.MenuListener;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
-import org.jmol.api.JmolScriptManager;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.awt.FileDropper;
 import org.jmol.awt.Platform;
@@ -91,6 +90,7 @@ import org.jmol.i18n.GT;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.util.Parser;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.HistoryFile;
@@ -1533,9 +1533,9 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
           return;
         if (selection.endsWith(" (*)"))
           vwr.openFileAsyncSpecial(
-              selection.substring(0, selection.length() - 4), JmolScriptManager.NO_AUTOPLAY | JmolScriptManager.PDB_CARTOONS);
+              selection.substring(0, selection.length() - 4), FileManager.NO_AUTOPLAY | FileManager.PDB_CARTOONS);
         else
-          vwr.openFileAsyncSpecial(selection, JmolScriptManager.NO_AUTOPLAY);
+          vwr.openFileAsyncSpecial(selection, FileManager.NO_AUTOPLAY);
       }
     }
   }
@@ -1715,7 +1715,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   }
 
   void openFile() {
-    int flags0 = JmolScriptManager.NO_AUTOPLAY | JmolScriptManager.PDB_CARTOONS; // cartoons+fileOpen
+    int flags0 = FileManager.NO_AUTOPLAY | FileManager.PDB_CARTOONS; // cartoons+fileOpen
     if (Viewer.isJS) {
       AsyncFileChooser chooser = new AsyncFileChooser();
       chooser.showOpenDialog(frame, new Runnable() {
@@ -1733,12 +1733,12 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         return;
       int flags = flags0;
       if (fileName.startsWith("#NOCARTOONS#;")) {
-        flags &= ~JmolScriptManager.PDB_CARTOONS;
+        flags &= ~FileManager.PDB_CARTOONS;
         fileName = fileName.substring(13);
       }
       if (fileName.startsWith("#APPEND#;")) {
         fileName = fileName.substring(9);
-        flags |= JmolScriptManager.IS_APPEND;
+        flags |= FileManager.IS_APPEND;
       }
       vwr.openFileAsyncSpecial(fileName, flags);
     }

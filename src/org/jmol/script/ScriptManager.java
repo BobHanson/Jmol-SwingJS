@@ -23,33 +23,25 @@
  */
 package org.jmol.script;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
-import javax.swing.JOptionPane;
-
-import javajs.util.AU;
-import javajs.util.BS;
-import javajs.util.Lst;
-import javajs.util.P3d;
-import javajs.util.PT;
-import javajs.util.Rdr;
-import javajs.util.SB;
 
 import org.jmol.api.Interface;
 import org.jmol.api.JmolScriptEvaluator;
 import org.jmol.api.JmolScriptManager;
-import org.jmol.i18n.GT;
 import org.jmol.modelset.Atom;
 import org.jmol.thread.JmolThread;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
-import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.StatusManager;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.SB;
 
 public class ScriptManager implements JmolScriptManager {
 
@@ -554,187 +546,6 @@ public class ScriptManager implements JmolScriptManager {
     strScript = vwr.wasmInchiHack(strScript);
     ScriptContext sc = newScriptEvaluator().checkScriptSilent(strScript);
     return (returnContext || sc.errorMessage == null ? sc : sc.errorMessage);
-  }
-
-  //////////////////////// open file async ///////////////////////
-
-  /**
-   * 
-   * From file dropping.
-   * 
-   * @param fname
-   * @param flags
-   * 
-   *        1=pdbCartoons, 2=no scripting, 4=append, 8=no autoplay, 16=file
-   *        dropped, 32=script only (dropped into console) 64=check dims for
-   *        resize
-   * 
-   */
-  @Override
-  public void openFileAsync(String fname, int flags, String type) {
-    boolean scriptOnly = ((flags & SCRIPT_ONLY) != 0);
-    if (!scriptOnly && (flags & CHECK_DIMS) != 0
-        && FileManager.isEmbeddable(fname))
-      checkResize(fname);
-    boolean noScript = ((flags & NO_SCRIPT) != 0);
-    boolean noAutoPlay = ((flags & NO_AUTOPLAY) != 0);
-
-    String cmd = null;
-    fname = fname.trim().replace('\\', '/');
-    boolean isCached = fname.startsWith("cache://");
-    if (vwr.isApplet && fname.indexOf("://") < 0)
-      fname = "file://" + (fname.startsWith("/") ? "" : "/") + fname;
-    try {
-      if (scriptOnly) {
-        cmd = "script " + PT.esc(fname);
-        return;
-      }
-      // using finally... here on return
-      if (fname.endsWith(".pse")) {
-        cmd = (isCached ? "" : "zap;") + "load SYNC " + PT.esc(fname)
-            + (vwr.isApplet ? "" : " filter 'DORESIZE'");
-        return;
-      }
-      if (fname.endsWith("jvxl")) {
-        cmd = "isosurface ";
-      } else if (!fname.toLowerCase().endsWith(".spt")) {
-        if (type == null)
-          type = getDragDropFileTypeName(fname);
-        else if (!type.endsWith("::"))
-          type += "::";
-        if (type == null) {
-          try {
-            BufferedInputStream bis = vwr.getBufferedInputStream(fname);
-            type = FileManager.determineSurfaceFileType(
-                Rdr.getBufferedReader(bis, "ISO-8859-1"));
-            if (type == null) {
-              cmd = "script " + PT.esc(fname);
-              return;
-            }
-          } catch (IOException e) {
-            return;
-          }
-          if (type == "MENU") {
-            cmd = "load MENU " + PT.esc(fname);
-          } else {
-            cmd = "if (_filetype == 'Pdb') { isosurface sigma 1.0 within 2.0 {*} "
-                + PT.esc(fname) + " mesh nofill }; else; { isosurface "
-                + PT.esc(fname) + "}";
-          }
-          return;
-        }
-        // these next will end with the escaped file name
-        if (type.equals("spt::")) {
-          cmd = "script " + PT
-              .esc((fname.startsWith("spt::") ? fname.substring(5) : fname));
-          return;
-        }
-        if (type.equals("dssr")) {
-          cmd = "model {visible} property dssr ";
-        } else if (type.equals("Jmol")) {
-          cmd = "script ";
-        } else if (type.equals("Cube")) {
-          cmd = "isosurface sign red blue ";
-        } else if (!type.equals("spt")) {
-          if (flags == FILE_DROPPED) {
-            flags = PDB_CARTOONS;
-            switch (vwr.ms.ac == 0 ? JOptionPane.OK_OPTION
-                : vwr.confirm(GT.$(
-                    "Would you like to replace the current model with the selected model?"),
-                    GT.$("Would you like to append?"))) {
-            case JOptionPane.CANCEL_OPTION:
-              return;
-            case JOptionPane.OK_OPTION:
-              break;
-            default:
-              flags |= JmolScriptManager.IS_APPEND;
-              break;
-            }
-          }
-          boolean isAppend = ((flags & IS_APPEND) != 0);
-          boolean pdbCartoons = ((flags & PDB_CARTOONS) != 0 && !isAppend);
-
-          if (type.endsWith("::")) {
-            int pt = type.indexOf("|");
-            if (pt >= 0) {
-              fname += type.substring(pt, type.length() - 2);
-              //type = type.substring(0, pt) + "::";
-              type = "";
-            }
-            fname = type + fname;
-          }
-          cmd = vwr.g.defaultDropScript;
-          if (cmd.equals(JC.DEFAULT_DRAG_DROP_SCRIPT)) {
-            if (!JC.isLikelyPDB(type) || !pdbCartoons) {
-              int pt = cmd.indexOf("if (");
-              if (pt >= 0) {
-                cmd = cmd.substring(0, pt).trim();
-              }
-            }
-          }
-          cmd = PT.rep(cmd, "%FILE", fname);
-          cmd = PT.rep(cmd, "%ALLOWCARTOONS", "" + pdbCartoons);
-          if (cmd.toLowerCase().startsWith("zap") && (isCached || isAppend))
-            cmd = cmd.substring(3);
-          if (isAppend) {
-            cmd = PT.rep(cmd, "load SYNC", "load append");
-          }
-          return;
-        }
-      }
-      if (cmd == null && !noScript && vwr.scriptEditorVisible)
-        vwr.showEditor(
-            new String[] { fname, vwr.getFileAsString3(fname, true, null) });
-      else
-        cmd = (cmd == null ? "script " : cmd) + PT.esc(fname);
-    } finally {
-      if (cmd != null)
-        vwr.evalString(cmd + (noAutoPlay ? "#!NOAUTOPLAY" : ""));
-    }
-  }
-
-  private void checkResize(String fname) {
-    try {
-      String data = vwr.fm.getEmbeddedFileState(fname, false, "state.spt");
-      if (data.indexOf("preferredWidthHeight") >= 0)
-        vwr.sm.resizeInnerPanelString(data);
-    } catch (Throwable e) {
-      // ignore
-    }
-  }
-
-  /**
-   * 
-   * @param fileName
-   * @return "pdb" or "dssr" or "Jmol" or <modelType> + "::"
-   */
-  private String getDragDropFileTypeName(String fileName) {
-    int pt = fileName.indexOf("::");
-    if (pt >= 0)
-      return fileName.substring(0, pt + 2);
-    if (fileName.startsWith("="))
-      return "pdb";
-    if (fileName.endsWith(".dssr"))
-      return "dssr";
-    Object br = vwr.fm.getUnzippedReaderOrStreamFromName(fileName, null, true,
-        false, true, true, null);
-    String modelType = null;
-    if (vwr.fm.isZipStream(br)) {
-      String zipDirectory = vwr.getZipDirectoryAsString(fileName);
-      if (zipDirectory.indexOf("JmolManifest") >= 0)
-        return "Jmol";
-      modelType = vwr.getModelAdapter()
-          .getFileTypeName(Rdr.getBR(zipDirectory));
-    } else if (br instanceof BufferedReader
-        || br instanceof BufferedInputStream) {
-      modelType = vwr.getModelAdapter().getFileTypeName(br);
-    }
-    if (modelType != null)
-      return modelType + "::";
-    if (AU.isAS(br)) {
-      return ((String[]) br)[0];
-    }
-    return null;
   }
 
   private static int prevCovalentVersion = 0;

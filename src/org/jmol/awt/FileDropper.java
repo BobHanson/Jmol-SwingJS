@@ -40,9 +40,9 @@ import java.io.File;
 import java.util.List;
 
 import org.jmol.api.JmolDropEditor;
-import org.jmol.api.JmolScriptManager;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.PT;
@@ -115,8 +115,8 @@ public class FileDropper implements DropTargetListener {
     String[] retType = new String[1];
     if (!vwr.setStatusDragDropped(0, x, y, fname, retType))
       return;
-    vwr.openFileAsyncSpecialType(fname, JmolScriptManager.FILE_DROPPED 
-        | (statusListener == null ? 0 : JmolScriptManager.CHECK_DIMS), retType[0]);
+    vwr.openFileAsyncSpecialType(fname, FileManager.FILE_DROPPED 
+        | (statusListener == null ? 0 : FileManager.CHECK_DIMS), retType[0]);
 //    vwr.openFileDropped(fname, statusListener != null);
   }
 

@@ -1742,7 +1742,7 @@ public class IsoExt extends ScriptExt {
     ScriptEval eval = e;
     eval.sm.loadShape(iShape);
     if (tokAt(1) == T.list && listIsosurface(iShape))
-      return; 
+      return;
     int iptDisplayProperty = 0;
     boolean isDisplay = false;
     boolean isBest = false;
@@ -1905,7 +1905,8 @@ public class IsoExt extends ScriptExt {
         if (eval.fullCommand.indexOf("# BBOX=") >= 0) {
           String[] bbox = PT
               .split(PT.getQuotedAttribute(eval.fullCommand, "# BBOX"), ",");
-          pts = new P3d[] { (P3d) Escape.uP(bbox[0]), (P3d) Escape.uP(bbox[1]) };
+          pts = new P3d[] { (P3d) Escape.uP(bbox[0]),
+              (P3d) Escape.uP(bbox[1]) };
         } else if (eval.isCenterParameter(i + 1)) {
           pts = new P3d[] { getPoint3f(i + 1, true),
               getPoint3f(eval.iToken + 1, true) };
@@ -1932,7 +1933,8 @@ public class IsoExt extends ScriptExt {
           bs = new BS();
         } else if (tokAt(eval.iToken + 1) == T.expressionBegin
             || tokAt(eval.iToken + 1) == T.bitset) {
-          bs = BSUtil.andNot(atomExpressionAt(++eval.iToken), vwr.slm.bsDeleted);
+          bs = BSUtil.andNot(atomExpressionAt(++eval.iToken),
+              vwr.slm.bsDeleted);
           bs.and(vwr.ms.getAtomsWithinRadius(5, bsSelect, false, null, null));
         } else {
           // default is "within(5.0, selected) and not within(molecule,selected)"
@@ -2158,7 +2160,7 @@ public class IsoExt extends ScriptExt {
         if (surfaceObjectSeen || isMapped) {
           sbCommand.append(" select " + Escape.eBS(bs1));
         } else {
-          bsSelect = BSUtil.andNot((BS) propertyValue, vwr.slm.bsDeleted);          
+          bsSelect = BSUtil.andNot((BS) propertyValue, vwr.slm.bsDeleted);
           if (modelIndex < 0 && bsSelect.nextSetBit(0) >= 0)
             modelIndex = vwr.ms.at[bsSelect.nextSetBit(0)].mi;
         }
@@ -2462,7 +2464,8 @@ public class IsoExt extends ScriptExt {
           break;
         default:
           if (eval.isArrayParameter(i)) {
-            linearCombination = eval.doubleParameterSet(i, 1, Integer.MAX_VALUE);
+            linearCombination = eval.doubleParameterSet(i, 1,
+                Integer.MAX_VALUE);
             i = eval.iToken;
           }
         }
@@ -2685,7 +2688,7 @@ public class IsoExt extends ScriptExt {
           propertyName = "cutoff";
           propertyValue = Double.valueOf(cutoff = floatParameter(i));
           sbCommand.appendO(propertyValue);
-        } else if (colorDensity){
+        } else if (colorDensity) {
           propertyName = "cutoffRange";
           propertyValue = eval.doubleParameterSet(i, 2, 2);
           addShapeProperty(propertyList, "cutoff", Double.valueOf(0));
@@ -3137,19 +3140,30 @@ public class IsoExt extends ScriptExt {
           int ipt = filename.indexOf("::");
           if (ipt > 0) {
             String ftype = filename.substring(0, ipt);
-            ftype = ftype.substring(0, 1).toUpperCase() + ftype.substring(1).toLowerCase();
+            ftype = ftype.substring(0, 1).toUpperCase()
+                + ftype.substring(1).toLowerCase();
             addShapeProperty(propertyList, "fileType", ftype);
             filename = filename.substring(ipt + 2);
           }
         } else if (tok == T.density) {
           filename = "=density/";
-        } 
-        if (filename == null || filename.length() == 0 || filename.equals("*") || filename.equals("=")) {
-          String pdbID = vwr.getPdbID();
-          if (pdbID == null)
-            eval.errorStr(ScriptError.ERROR_invalidArgument,
-                "no PDBID available");
-          filename = "*" + (tok == T.edsdiff ? "*" : "") + pdbID;
+        }
+        if (filename == null || filename.length() == 0 || filename.equals("*")
+            || filename.equals("=")) {
+          if (chk) {
+            filename = "";
+          } else {
+            filename = null;
+            String pdbID = vwr.getPdbID();
+            if (pdbID == null) {
+              filename = vwr.ms.getModelFileName(vwr.am.cmi);
+            } else {
+              filename = "*" + (tok == T.edsdiff ? "*" : "") + pdbID;
+            }
+            if (filename == null)
+              eval.errorStr(ScriptError.ERROR_invalidArgument,
+                  "no PDBID available");              
+          }
         }
 
         /*
@@ -3167,7 +3181,7 @@ public class IsoExt extends ScriptExt {
           // 0         1         2         3 xxxx
           // 0123456789012345678901234567890123456789
         }
-        
+
         if (filename.startsWith("*") || filename.startsWith("=")) {
           boolean haveCutoff = (!Double.isNaN(cutoff) || !Double.isNaN(sigma));
           boolean isFull = (filename.indexOf("/full") >= 0);
@@ -3177,7 +3191,8 @@ public class IsoExt extends ScriptExt {
             filename = "*" + filename.substring(0, filename.indexOf("/diff"));
           if (filename.startsWith("**")) {
             if (!haveCutoff)
-              addShapeProperty(propertyList, "sigma", Double.valueOf(sigma = 3));
+              addShapeProperty(propertyList, "sigma",
+                  Double.valueOf(sigma = 3));
             if (!isSign) {
               isSign = true;
               sbCommand.append(" sign");
@@ -3185,8 +3200,8 @@ public class IsoExt extends ScriptExt {
             }
           }
           String fn = filename;
-          filename = (String) vwr.setLoadFormat(false,
-              filename, (chk? '?' : isFull ? '_' : '-'), false);
+          filename = (String) vwr.setLoadFormat(false, filename,
+              (chk ? '?' : isFull ? '_' : '-'), false);
           if (filename == null)
             eval.errorStr(ScriptError.ERROR_invalidArgument,
                 "error parsing filename: " + fn);
@@ -3217,10 +3232,12 @@ public class IsoExt extends ScriptExt {
         int p = (filename == null ? -1 : filename.indexOf("#-"));
         if (Double.isNaN(sigma) && Double.isNaN(cutoff)) {
           if ((p = filename.indexOf("#-cutoff=")) >= 0) {
-            addShapeProperty(propertyList, "cutoff", Double.valueOf(cutoff = Double.parseDouble(filename.substring(p + 9))));            
+            addShapeProperty(propertyList, "cutoff", Double.valueOf(
+                cutoff = Double.parseDouble(filename.substring(p + 9))));
             sbCommand.append(" cutoff " + cutoff);
           } else if ((p = filename.indexOf("#-sigma=")) >= 0) {
-            addShapeProperty(propertyList, "sigma", Double.valueOf(sigma = Double.parseDouble(filename.substring(p + 8))));            
+            addShapeProperty(propertyList, "sigma", Double.valueOf(
+                sigma = Double.parseDouble(filename.substring(p + 8))));
             sbCommand.append(" sigma " + sigma);
           }
         }
@@ -3419,7 +3436,8 @@ public class IsoExt extends ScriptExt {
           modelIndex = vwr.am.cmi;
         bsSelect.and(vwr.getModelUndeletedAtomsBitSet(modelIndex));
         if (vwr.slm.bsDeleted != null && bsIgnore == null) {
-          propertyList.add(1, new Object[] { "ignore", BS.copy(vwr.slm.bsDeleted) });
+          propertyList.add(1,
+              new Object[] { "ignore", BS.copy(vwr.slm.bsDeleted) });
           sbCommand.insert(0, " ignore " + vwr.slm.bsDeleted);
         }
         if (onlyOneModel != null) {
@@ -3488,7 +3506,8 @@ public class IsoExt extends ScriptExt {
     if (doCalcVolume) {
       volume = (doCalcVolume ? getShapeProperty(iShape, "volume") : null);
       if (volume instanceof Double)
-        vwr.setFloatProperty("isosurfaceVolume", ((Number) volume).doubleValue());
+        vwr.setFloatProperty("isosurfaceVolume",
+            ((Number) volume).doubleValue());
       else
         vwr.g.setUserVariable("isosurfaceVolume",
             SV.getVariableAD((double[]) volume));
@@ -3500,8 +3519,7 @@ public class IsoExt extends ScriptExt {
       } else if (surfaceObjectSeen) {
         String cmd = sbCommand.toString();
         boolean isMapping = (cmd.indexOf("; isosurface map") == 0);
-        cmd = (isMapping ? ""
-                : " select " + Escape.eBS(bsSelect) + " ") + cmd;
+        cmd = (isMapping ? "" : " select " + Escape.eBS(bsSelect) + " ") + cmd;
         setShapeProperty(iShape, "finalize", cmd);
         s = (String) getShapeProperty(iShape, "ID");
         if (s != null && !eval.tQuiet && !isSilent) {

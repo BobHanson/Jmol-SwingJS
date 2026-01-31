@@ -62,7 +62,6 @@ import javax.swing.text.StyleConstants;
 
 import org.jmol.api.JmolAbstractButton;
 import org.jmol.api.JmolDropEditor;
-import org.jmol.api.JmolScriptManager;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.api.JmolViewer;
 import org.jmol.awt.FileDropper;
@@ -73,6 +72,7 @@ import org.jmol.i18n.GT;
 import org.jmol.script.T;
 import org.jmol.util.CommandHistory;
 import org.jmol.util.Logger;
+import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.PreferencesDialog;
@@ -114,7 +114,7 @@ public class AppConsole extends JmolConsole
     getScriptEditor().loadFile(fileName);
     if (!isVisible)
       se.setVisible(false);    
-    vwr.openFileAsyncSpecial(fileName, JmolScriptManager.NO_AUTOPLAY | JmolScriptManager.SCRIPT_ONLY | JmolScriptManager.PDB_CARTOONS);
+    vwr.openFileAsyncSpecial(fileName, FileManager.NO_AUTOPLAY | FileManager.SCRIPT_ONLY | FileManager.PDB_CARTOONS);
   }
 
   // note:  "Check" "Top" "Step" not included in 12.1
