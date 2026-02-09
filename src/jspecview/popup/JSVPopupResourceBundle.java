@@ -85,7 +85,7 @@ public class JSVPopupResourceBundle extends PopupResource {
   	{"Show_Header", "showProperties"},
 //  	{"Window","window"},
   	{"Show_Source","showSource"},
-  	{"Show_Overlay_Key...","showKey"},
+//  	{"Show_Overlay_Key...","showKey"},
   	{"Next_Zoom","zoom next;showMenu"},
   	{"Previous_Zoom","zoom prev;showMenu"},
   	{"Reset_Zoom","zoom clear"},

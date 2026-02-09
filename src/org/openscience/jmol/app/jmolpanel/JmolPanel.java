@@ -73,6 +73,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
@@ -154,7 +155,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected StatusListener myStatusListener;
   protected SurfaceTool surfaceTool;
   protected MeasurementTable measurementTable;
-  protected JMEJmol jmolJME;
+  protected JMEJmol jmeJmol;
 
   protected Map<String, Action> commands;
   protected Map<String, JMenuItem> menuItems;
@@ -642,8 +643,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   void dispose(JFrame f, boolean saveSize) {
     // Save window positions and status in the history
-    if (jmolJME != null)
-      jmolJME.dispose();
+    if (jmeJmol != null)
+      jmeJmol.dispose();
     if (webExport != null)
       WebExport.cleanUp();
     if (saveSize)
@@ -1462,12 +1463,20 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      if (jmolJME == null) {
-        jmolJME = new JMEJmol();
-        jmolJME.setViewer(null, vwr, getTopLevelAncestor(), "jmol");
+      if (jmeJmol == null) {
+        jmeJmol = new JMEJmol();
+        jmeJmol.setViewer(null, vwr, getTopLevelAncestor(), "jmol");
       }
-      jmolJME.setFrameVisible(true);
-      jmolJME.from3D();
+      jmeJmol.setFrameVisible(true);
+      SwingUtilities.invokeLater(new Runnable() {
+
+        @Override
+        public void run() {
+          jmeJmol.from3D();
+        }
+        
+        
+      });
     }
 
   }

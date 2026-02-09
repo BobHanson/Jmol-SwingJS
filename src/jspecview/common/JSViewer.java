@@ -11,6 +11,8 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.swing.JFrame;
+
 import org.jmol.api.GenericFileInterface;
 import org.jmol.api.GenericGraphics;
 import org.jmol.api.GenericPlatform;
@@ -66,14 +68,20 @@ public class JSViewer implements PlatformViewer, BytePoster {
   public static final int OVERLAY_DIALOG = -1;
   public static final int OVERLAY_OFFSET = 99;
   public static final int PORTRAIT = 1; // Printable
-  public static final int PAGE_EXISTS = 0;
-  public static final int NO_SUCH_PAGE = 1;
+  public static final int PDF_PAGE_EXISTS = 0;
+  public static final int PDF_NO_SUCH_PAGE = 1;
 
   private static String testScript = "<PeakData  index=\"1\" title=\"\" model=\"~1.1\" type=\"1HNMR\" xMin=\"3.2915\" xMax=\"3.2965\" atoms=\"15,16,17,18,19,20\" multiplicity=\"\" integral=\"1\"> src=\"JPECVIEW\" file=\"http://SIMULATION/$caffeine\"";
 
   private final static int NLEVEL_MAX = 100;
 
   private static final String THIS_STRUCTURE = "<this structure>";
+
+  private JFrame parentFrame;
+  
+  public void setParentFrame(JFrame parentFrame) {
+    this.parentFrame = parentFrame;
+  }
 
   public ScriptInterface si;
   public GenericGraphics g2d;
@@ -129,6 +137,8 @@ public class JSViewer implements PlatformViewer, BytePoster {
 
   public GenericPlatform apiPlatform;
 
+  public boolean hasDisplay;
+
   public static JSVToJSmolInterface jsmolObject;
 
   public void setProperty(String key, String value) {
@@ -147,10 +157,12 @@ public class JSViewer implements PlatformViewer, BytePoster {
    * @param si
    * @param isApplet
    * @param isJSApplet
+   * @param hasDisplay 
    */
-  public JSViewer(ScriptInterface si, boolean isApplet, boolean isJSApplet) {
+  public JSViewer(ScriptInterface si, boolean isApplet, boolean isJSApplet, boolean hasDisplay) {
     this.si = si;
     this.isApplet = isApplet;
+    this.hasDisplay = hasDisplay;
     isJS = isApplet && isJSApplet;
     JSVToJSmolInterface jmol = null;
     
@@ -378,7 +390,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
         case SHOWERRORS:
         case SHOWMEASUREMENTS:
         case SHOWMENU:
-        case SHOWKEY:
+        //case SHOWKEY:
         case SHOWPEAKLIST:
         case SHOWINTEGRATION:
         case SHOWPROPERTIES:
@@ -431,9 +443,9 @@ public class JSViewer implements PlatformViewer, BytePoster {
                 Parameters.getTFToggle(value));
             // execIntegrate(null);
             break;
-          case SHOWKEY:
-            setOverlayLegendVisibility(Parameters.getTFToggle(value), true);
-            break;
+//          case SHOWKEY:
+//            setOverlayLegendVisibility(Parameters.getTFToggle(value), true);
+//            break;
           case SHOWMEASUREMENTS:
             pd().showAnnotation(AType.Measurements,
                 Parameters.getTFToggle(value));
@@ -796,28 +808,28 @@ public class JSViewer implements PlatformViewer, BytePoster {
     }
   }
 
-  private boolean overlayLegendVisible;
+//  private boolean overlayLegendVisible;
 
-  private void setOverlayLegendVisibility(Boolean tftoggle, boolean doSet) {
-    if (doSet)
-      overlayLegendVisible = (tftoggle == null ? !overlayLegendVisible
-          : tftoggle == Boolean.TRUE);
-    PanelNode node = PanelNode.findNode(selectedPanel, panelNodes);
-    for (int i = panelNodes.size(); --i >= 0;)
-      showOverlayLegend(panelNodes.get(i), panelNodes.get(i) == node
-          && overlayLegendVisible);
-  }
+//  private void setOverlayLegendVisibility(Boolean tftoggle, boolean doSet) {
+//    if (doSet)
+//      overlayLegendVisible = (tftoggle == null ? !overlayLegendVisible
+//          : tftoggle == Boolean.TRUE);
+//    PanelNode node = PanelNode.findNode(selectedPanel, panelNodes);
+//    for (int i = panelNodes.size(); --i >= 0;)
+//      showOverlayLegend(panelNodes.get(i), panelNodes.get(i) == node
+//          && overlayLegendVisible);
+//  }
 
-  private void showOverlayLegend(PanelNode node, boolean visible) {
-    JSVDialog legend = node.legend;
-    if (legend == null && visible) {
-      legend = node.setLegend(node.pd().getNumberOfSpectraInCurrentSet() > 1
-          && node.pd().getNumberOfGraphSets() == 1 ? getDialog(
-          AType.OverlayLegend, null) : null);
-    }
-    if (legend != null)
-      legend.setVisible(visible);
-  }
+//  private void showOverlayLegend(PanelNode node, boolean visible) {
+//    JSVDialog legend = node.legend;
+//    if (legend == null && visible) {
+//      legend = node.setLegend(node.pd().getNumberOfSpectraInCurrentSet() > 1
+//          && node.pd().getNumberOfGraphSets() == 1 ? getDialog(
+//          AType.OverlayLegend, null) : null);
+//    }
+//    if (legend != null)
+//      legend.setVisible(visible);
+//  }
 
   // / from JavaScript
 
@@ -829,6 +841,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
    */
 
   public void syncScript(String peakScript) {
+    //Jmol>JSV
     if (peakScript.equals("TEST"))
       peakScript = testScript;
     Logger.info("JSViewer.syncScript Jmol>JSV " + peakScript);
@@ -842,7 +855,6 @@ public class JSViewer implements PlatformViewer, BytePoster {
         syncPeaksAfterSyncScript();
       return;
     }
-    Logger.info(">>toJSV>> " + peakScript);
     String sourceID = PT.getQuotedAttribute(peakScript, "sourceID");
     String type, model, file, jmolSource, index, atomKey;
     if (sourceID == null) {
@@ -1507,7 +1519,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
     JSVPanel jsvp = si.siGetNewJSVPanel2(specs);
     jsvp.setTitle(source.getTitle());
     if (jsvp.getTitle().equals("")) {
-      jsvp.getPanelData().setViewTitle(source.getFilePath());
+      jsvp.getPanelData().setViewTitle("");
       jsvp.setTitle(name);
     }
     si.siSetPropertiesFromPreferences(jsvp, true);
@@ -1523,12 +1535,14 @@ public class JSViewer implements PlatformViewer, BytePoster {
       pd().splitStack(true);
   }
 
+  @SuppressWarnings("cast")
   public void closeSource(JDXSource source) {
     // Remove nodes and dispose of frames
     JSVTreeNode rootNode = spectraTree.getRootNode();
     String fileName = (source == null ? null : source.getFilePath());
     Lst<JSVTreeNode> toDelete = new Lst<JSVTreeNode>();
-    Enumeration<?> enume = rootNode.children();
+    @SuppressWarnings("unchecked")
+    Enumeration<JSVTreeNode> enume = rootNode.children();
     while (enume.hasMoreElements()) {
       JSVTreeNode node = (JSVTreeNode) enume.nextElement();
       if (fileName == null
@@ -1588,7 +1602,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
     if (node == null)
       return null;
     spectraTree.setPath(spectraTree.newTreePath(node.treeNode.getPath()));
-    setOverlayLegendVisibility(null, false);
+//    setOverlayLegendVisibility(null, false);
     return node;
   }
 
@@ -1885,13 +1899,12 @@ public class JSViewer implements PlatformViewer, BytePoster {
   }
 
   private PrintLayout lastPrintLayout;
-  private Object offWindowFrame;
 
-  public PrintLayout getDialogPrint(boolean isJob) {
-    if (!isJS)
+  public PrintLayout getPrintLayout(boolean isJob) {
+    if (!isJS && hasDisplay)
       try {
         PrintLayout pl = ((JSVPrintDialog) getPlatformInterface("PrintDialog"))
-            .set(offWindowFrame, lastPrintLayout, isJob).getPrintLayout();
+            .set(parentFrame, lastPrintLayout, isJob).getPrintLayout();
         if (pl != null)
           lastPrintLayout = pl;
         return pl;
@@ -2054,6 +2067,13 @@ public class JSViewer implements PlatformViewer, BytePoster {
 
   }
 
+  /**
+   * From (AwtMainPanel or JsMainPanel).setSelectedPanel
+   * 
+   * @param jsvp
+   * @param panelNodes
+   * @return index of selected panel
+   */
   public int selectPanel(JSVPanel jsvp, Lst<PanelNode> panelNodes) {
     int iPanel = -1;
     if (panelNodes != null) {
@@ -2068,6 +2088,9 @@ public class JSViewer implements PlatformViewer, BytePoster {
         }
       }
       markSelectedPanels(panelNodes, iPanel);
+      selectedPanel = jsvp;
+      if (jsvp != null)
+        jsvp.getPanelData().clearMouseSet(null);
     }
     return iPanel;
   }
@@ -2258,6 +2281,10 @@ public class JSViewer implements PlatformViewer, BytePoster {
     if (name == null)
       name = THIS_STRUCTURE;
     recentSimulation = name;
+  }
+
+  public void setCreatingImage(boolean isSaving) {
+    pd().creatingImage = isSaving;
   }
 
 }

@@ -38,6 +38,7 @@ import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 import javajs.util.AU;
 import javajs.util.BC;
@@ -975,7 +976,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     addMolStructures();
     atoms = asc.atoms;
     if (!isStateScript) {
-      asc.setCurrentModelInfo("name", pymolScene.modelName);
+      asc.setCurrentModelInfo(JC.INFO_MODEL_NAME, pymolScene.modelName);
       createShapeObjects();
     }
     ssMapSeq = null;

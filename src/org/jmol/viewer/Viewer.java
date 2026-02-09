@@ -188,9 +188,9 @@ public class Viewer extends JmolViewer
   static public boolean isSwingJS = /** @j2sNative true|| */
       false;
 
-  public final static boolean isDoublePrecision = true;
+  public final static boolean isJmolD = true;
   
-  public final static boolean hasOCL = isDoublePrecision;
+  public final static boolean hasOCL = isJmolD;
 
   public boolean testAsync;// = true; // testing only
 
@@ -1192,13 +1192,13 @@ public class Viewer extends JmolViewer
     g.setF("_currentMorphFrame", currentMorphModel);
     g.setI("_frameID", frameID);
     g.setI("_modelIndex", modelIndex);
-    g.setO("_modelNumber", strModelNo);
-    g.setO("_modelName", (modelIndex < 0 ? "" : getModelName(modelIndex)));
+    g.setOrRemoveO("_modelNumber", strModelNo);
+    g.setOrRemoveO("_modelName", (modelIndex < 0 ? "" : getModelName(modelIndex)));
     String title = (modelIndex < 0 ? "" : ms.getModelTitle(modelIndex));
-    g.setO("_modelTitle", title == null ? "" : title);
-    g.setO("_modelFile",
+    g.setOrRemoveO("_modelTitle", title == null ? "" : title);
+    g.setOrRemoveO("_modelFile",
         (modelIndex < 0 ? "" : ms.getModelFileName(modelIndex)));
-    g.setO("_modelType",
+    g.setOrRemoveO(JC.PROP_MODEL_TYPE, // "_modelType"
         (modelIndex < 0 ? "" : ms.getModelFileType(modelIndex)));
 
     if (currentFrame == prevFrame && currentMorphModel == prevMorphModel)
@@ -1235,7 +1235,7 @@ public class Viewer extends JmolViewer
   private boolean doHaveJDX() {
     // once-on, never off
     return (haveJDX
-        || (haveJDX = getBooleanProperty("_JSpecView".toLowerCase())));
+        || (haveJDX = getBooleanProperty(JC.INFO_HAVE_JSPECVIEW)));
   }
 
   JmolJSpecView getJSV() {
@@ -1810,14 +1810,14 @@ public class Viewer extends JmolViewer
 
   private void setStartupBooleans() {
     setBooleanProperty("_applet", isApplet);
-    setBooleanProperty("_JSpecView".toLowerCase(), false);
+    setBooleanProperty(JC.INFO_HAVE_JSPECVIEW.toLowerCase(), false);
     setBooleanProperty("_signedApplet", isSignedApplet);
     setBooleanProperty("_headless", headless);
     setStringProperty("_restrict", "\"" + access + "\"");
     setBooleanProperty("_useCommandThread", useCommandThread);
     // default for legacy JavaScript and Java is false; for SwingJS Java/JavaScript true 
     setBooleanPropertyTok("doubleprecision", T.doubleprecision,
-        isDoublePrecision);
+        isJmolD);
   }
 
   public String getExportDriverList() {
@@ -5236,9 +5236,8 @@ public class Viewer extends JmolViewer
           } catch (Exception e) {
           }
         }
-        //http://cactus.nci.nih.gov/chemical/structure/C%28O%29CCC/file?format=sdf&get3d=true
-        format = PT.rep(g.smilesUrlFormat, "get3d", "get2d");
-        return PT.formatStringS(format, "FILE", PT.escapeUrl(id));
+        id = PT.escapeUrl(id);
+        return JC.resolveDataBase("smiles2d", id, null);
       }
       //$FALL-THROUGH$
     case 'M':

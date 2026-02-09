@@ -77,12 +77,16 @@ import jme.util.JMEUtil;
  * An extension of JME that adds features of Jmol, such as many more file types
  * for reading, writing of various formats, and substructure searching.
  * 
+ * ONLY FOR JmolD (Jmol-SwingJS)
+ * 
  * @author hansonr
  *
  */
 @SuppressWarnings("serial")
 public class JMEJmol extends JME implements WindowListener {
 
+  public final static boolean isJME_SwingJS = true;
+  
   Viewer vwr;
   private Container parentWindow;
   private String fileName;
@@ -357,17 +361,26 @@ public class JMEJmol extends JME implements WindowListener {
       return;
     }
     boolean is2D = "2D".equals(info.get("dimension"));
-    String mol = null;
+    String mol = null, smiles = null;
     try {
       if (is2D) {
         mol = vwr.getModelExtract("thisModel", false, false, "MOL");
       } else {
-        String smiles = vwr.getSmiles(vwr.getFrameAtoms());
+        smiles = vwr.getSmiles(vwr.getFrameAtoms());
         mol = getMolFromSmiles(smiles, false);
       }
       if (mol == null) {
-        sorry("Something went wrong.");
+        // JmolD only
+        if (smiles == null)
+          smiles = vwr.getSmiles(vwr.getFrameAtoms());
+        // backup only, for compatability with legacy Jmol
+        if (smiles != null) {
+          readSmiles(smiles);
+          return;
+        }
       }
+      if (mol == null) 
+        sorry("Something went wrong.");
       clear();
       readMolFile(mol);
     } catch (Exception e) {
@@ -420,7 +433,9 @@ public class JMEJmol extends JME implements WindowListener {
   /**
    * Resolve a SMILES using the NCI/CADD Chemical Identifier Resolver
    * 
-   * @param sm  iles
+   * In Jmol-SwingJS, we could just use jmol. 
+   * 
+   * @param smiles
    * @param is3D
    * @return SMILES
    */
@@ -697,7 +712,7 @@ public class JMEJmol extends JME implements WindowListener {
       cleaning = true;
       mol = getMolFromSmiles(smiles, false);
       if (mol == null) {
-        sorry("Something went wrong.");
+   	    sorry("Something went wrong.");
       } else {
         readMolFile(mol);
       }

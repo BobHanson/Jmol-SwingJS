@@ -201,6 +201,9 @@ public class CmdExt extends ScriptExt {
     case T.stereo:
       stereo();
       break;
+    case T.sync:
+      sync();
+      break;      
     case T.unitcell:
       unitcell(flag ? 2 : 1, 0);
       break;
@@ -7297,4 +7300,54 @@ public class CmdExt extends ScriptExt {
     return data;
   }
 
+  
+  private void sync() throws ScriptException {
+    // new 11.3.9
+    String text = "";
+    String applet = "";
+    int port = PT.parseInt(e.optParameterAsString(1));
+    if (port == Integer.MIN_VALUE) {
+      checkLength(-3);
+      port = 0;
+      switch (slen) {
+      case 1:
+        // sync
+        applet = "*";
+        text = "ON";
+        break;
+      case 2:
+        // sync (*) text
+        applet = paramAsStr(1);
+        if (applet.indexOf("jmolApplet") == 0
+            || PT.isOneOf(applet, ";*;.;^;")) {
+          text = "ON";
+          if (!chk)
+            vwr.syncScript(text, applet, 0);
+          applet = ".";
+          break;
+        }
+        text = applet;
+        applet = "*";
+        break;
+      case 3:
+        // sync applet text
+        // sync applet STEREO
+        applet = paramAsStr(1);
+        text = (tokAt(2) == T.stereo ? Viewer.SYNC_GRAPHICS_MESSAGE
+            : paramAsStr(2));
+        break;
+      }
+    } else {
+      SV v = null;
+      if (slen > 2 && (v = e.setVariable(2, -1, "", false)) == null)
+        return;
+      text = (slen == 2 ? null : v.tok == T.hash ? v.toJSON() : v.asString());
+      applet = null;
+    }
+    if (chk)
+      return;
+    vwr.syncScript(text, applet, port);
+  }
+
+  
 }

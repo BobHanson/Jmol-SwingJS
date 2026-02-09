@@ -96,8 +96,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
 
     // tells Jmol to start talking with JSpecView
 
-    vwr.setBooleanProperty("_JSpecView".toLowerCase(), true);
-    // necessary to not use "jspecview" here, as buildtojs.xml will change that to "JSV"
+    vwr.setBooleanProperty(JC.INFO_HAVE_JSPECVIEW, true);
     if (isTrajectory) {
       Logger.warn("TRAJECTORY keyword ignored");
       isTrajectory = false;
@@ -109,7 +108,8 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
     }
     selectedModel = desiredModelNumber;
     desiredModelNumber = Integer.MIN_VALUE;
-    if (!checkFilterKey("NOSYNC"))
+    boolean doStartJSV = !checkFilterKey("NOSYNC");
+    if (doStartJSV)
       addJmolScript("sync on");
   }
 
@@ -166,8 +166,8 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
     case 72:// PEAKASSIGNMENTS $UVIR_ASSIGNMENTS $MS_FRAGMENTS
     case 84:
     case 96:
-      acdAssignments = mpr.readACDAssignments(nPeaks, pt == 72);
-      break;
+      acdAssignments = new Lst<String[]>();
+      return mpr.readACDAssignments(nPeaks, pt == 72, acdAssignments);
     case 108:// .OBSERVENUCLEUS
       nucleus = value.substring(1);
       break;
@@ -347,10 +347,11 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
       }
       addType(i, type);
       String title = type + ": " + mpr.getAttribute(line, "title");
-      String key = "jdxAtomSelect_" + mpr.getAttribute(line, "type");
+      String key = JC.INFO_JDX_ATOM_SELECT + "_" + mpr.getAttribute(line, "type");
       bsModels.set(i);
       String s;
       if (mpr.getAttribute(line, "atoms").length() != 0) {
+        processPeakSelectModel(i, title);
         processPeakSelectAtom(i, key, line);
         s = type + ": ";
       } else if (processPeakSelectModel(i, title)) {
@@ -380,7 +381,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
           asc.removeAtomSet(i);
       if (n > 0)
         appendLoadNote((String) asc.getAtomSetAuxiliaryInfoValue(
-            0, "name"));
+            0, JC.INFO_MODEL_NAME));
     }
     for (int i = asc.atomSetCount; --i >= 0;)
       asc.setAtomSetNumber(i, i + 1);
@@ -439,11 +440,11 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
   }
 
   private boolean processPeakSelectModel(int i, String title) {
-    if (asc.getAtomSetAuxiliaryInfoValue(i, "jdxModelSelect") != null)
+    if (asc.getAtomSetAuxiliaryInfoValue(i, JC.INFO_JDX_MODEL_SELECT) != null)
       return false;
     // assign name and jdxModelSelect ONLY if first found.
-    asc.setModelInfoForSet("name", title, i);
-    asc.setModelInfoForSet("jdxModelSelect", line, i);
+    asc.setModelInfoForSet(JC.INFO_MODEL_NAME, title, i);
+    asc.setModelInfoForSet(JC.INFO_JDX_MODEL_SELECT, line, i);
     return true;
   }
 

@@ -119,6 +119,7 @@ public class DisplaySchemesProcessor {
     try {
       return load(JSVFileManager.getBufferedReaderForInputStream(stream));
     } catch (Exception e) {
+      System.out.println("DisplaySchemeProcessor ignored: " + e.getMessage());
       return false;
     }
   }
@@ -301,5 +302,17 @@ public class DisplaySchemesProcessor {
 						+ CU.toRGBHexString(ds.getElementColor(t)) + "\"/>")
 				.append(newLine);
 	}
+
+  public boolean loadDefaultXML() {
+    // try loading display scheme from the file system otherwise load it from
+    // the jar
+    if (!load("displaySchemes.xml")) {
+      if (!load(
+          getClass().getResourceAsStream("resources/displaySchemes.xml"))) {
+          return false;
+      }
+    }
+    return true;
+  }
 
 }

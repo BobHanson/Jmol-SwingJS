@@ -182,8 +182,8 @@ abstract public class JSVGenericPopup extends GenericPopup implements
   // /////// private methods /////////
 
   private void getViewerData() {
-    // cnmrPeaks = (JmolList<String>) modelInfo.get("jdxAtomSelect_13CNMR");
-    // hnmrPeaks = (JmolList<String>) modelInfo.get("jdxAtomSelect_1HNMR");
+    // cnmrPeaks = (JmolList<String>) modelInfo.get(JC.INFO_JDX_ATOM_SELECT + "_13CNMR");
+    // hnmrPeaks = (JmolList<String>) modelInfo.get(JC.INFO_JDX_ATOM_SELECT + "_1HNMR");
   }
 
   private void updateFileTypeDependentMenus() {

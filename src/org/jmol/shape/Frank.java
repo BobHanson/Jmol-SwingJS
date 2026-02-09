@@ -56,7 +56,7 @@ public class Frank extends Shape {
     baseFont3d = font3d = vwr.gdata.getFont3DFSS(defaultFontName, defaultFontStyle, defaultFontSize);
     if (Viewer.isJS || Viewer.isSwingJS)
       frankString = "JSmol";
-    else if (Viewer.isDoublePrecision)
+    else if (Viewer.isJmolD)
       frankString = "JmolD";
 //    else if (vwr.isSignedApplet)
 //      frankString = "Jmol_S";

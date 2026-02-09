@@ -66,6 +66,9 @@ public class IntegrationDialog extends JSVDialog {
 	}
 
 
+  private double lastNorm = 1;
+
+
 	@Override
 	public boolean callback(String id, String msg) {
 		double val;

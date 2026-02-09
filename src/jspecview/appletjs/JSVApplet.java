@@ -146,7 +146,7 @@ public class JSVApplet implements JSVAppletInterface,
   @Override
 	public String getParameter(String paramName) {
     Object o = htParams.get(paramName.toLowerCase());
-    return (o == null ? null : new String(o.toString()));
+    return (o == null ? null : o.toString());
   }
 
   private boolean getBooleanValue(String propertyName, boolean defaultValue) {
@@ -184,11 +184,6 @@ public class JSVApplet implements JSVAppletInterface,
 	// tab is open, actions from outside of Jmol act on the MainFrame, not here.
 	//
 	// BH - 8.3.2012
-
-	@Override
-	public void finalize() {
-		System.out.println("JSpecView " + this + " finalized");
-	}
 
 	@Override
 	public void destroy() {
@@ -467,39 +462,8 @@ public class JSVApplet implements JSVAppletInterface,
 
 	@Override
 	public void newWindow(boolean isSelected) {
-//		if (isSelected) {
-//			offWindowFrame = new JFrame("JSpecView");
-//			offWindowFrame.setSize(getSize());
-//			final Dimension d = spectrumPanel.getSize();
-//			offWindowFrame.add(spectrumPanel);
-//			offWindowFrame.validate();
-//			offWindowFrame.setVisible(true);
-//			remove(spectrumPanel);
-//			app.siValidateAndRepaint();
-//			offWindowFrame.addWindowListener(new WindowAdapter() {
-//				@Override
-//				public void windowClosing(WindowEvent e) {
-//					windowClosingEvent(d);
-//				}
-//			});
-//		} else {
-//			getContentPane().add(spectrumPanel);
-//			app.siValidateAndRepaint();
-//			offWindowFrame.removeAll();
-//			offWindowFrame.dispose();
-//			offWindowFrame = null;
-//		}
+	  // there are no new windows here, just the applet. 
 	}
-
-//	protected void windowClosingEvent(Dimension d) {
-//		spectrumPanel.setSize(d);
-//		getContentPane().add(spectrumPanel);
-//		setVisible(true);
-//		app.siValidateAndRepaint();
-//		offWindowFrame.removeAll();
-//		offWindowFrame.dispose();
-//		app.newWindow(false, true);
-//	}
 
 	/**
 	 * Calls a javascript function given by the function name passing to it the
@@ -532,7 +496,7 @@ public class JSVApplet implements JSVAppletInterface,
 
 	@Override
 	public void setPanelVisible(boolean b) {
-//		spectrumPanel.setVisible(b);
+	  // only one panel here
 	}
 
 	@Override
@@ -543,7 +507,7 @@ public class JSVApplet implements JSVAppletInterface,
 
 	@Override
 	public void setVisible(boolean b) {
-		// TODO Auto-generated method stub
+		// the applet panel cannot be removed
 		
 	}
 

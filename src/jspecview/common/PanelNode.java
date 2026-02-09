@@ -134,14 +134,13 @@ public class PanelNode {
 //    return specList;
 //  }
  
-	public static int isOpen(Lst<PanelNode> panelNodes, String filePath) {
-		int pt = -1;
+  public static int isOpen(Lst<PanelNode> panelNodes, String filePath) {
     if (filePath != null)
       for (int i = panelNodes.size(); --i >= 0;) {
       	//System.out.println("JSVPanelNode " + filePath + " " + panelNodes.get(i).source.getFilePath());
         if (panelNodes.get(i).source.matchesFilePath(filePath)
         		|| filePath.equals(panelNodes.get(i).frameTitle))
-          return pt;
+          return i;
       }
     return -1;
   }

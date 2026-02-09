@@ -282,14 +282,8 @@ public class MainFrame extends JFrame
     setIconImage(Toolkit.getDefaultToolkit().getImage(iconURL));
 
     dsp = jsv.getDisplaySchemesProcessor(jmolOrAdvancedApplet);
-
-    // try loading display scheme from the file system otherwise load it from
-    // the jar
-    if (!dsp.load("displaySchemes.xml")) {
-      if (!dsp.load(
-          getClass().getResourceAsStream("resources/displaySchemes.xml"))) {
+    if (!dsp.loadDefaultXML()){
         writeStatus("Problem loading Display Scheme");
-      }
     }
 
     setApplicationProperties(true);
@@ -645,13 +639,9 @@ public class MainFrame extends JFrame
 
   @Override
   public synchronized void syncScript(String peakScript) {
-    //System.out.println(Thread.currentThread() + "MainFrame Jmol>JSV sync 11"
-    //	+ Thread.currentThread());
     tree.setEnabled(false);
     jsvViewer.syncScript(peakScript);
     tree.setEnabled(true);
-    //System.out.println(Thread.currentThread() + "MainFrame Jmol>JSV sync 12"
-    //	+ Thread.currentThread());
   }
 
   // //////////////////////// script commands from JSViewer /////////////////
@@ -785,7 +775,6 @@ public class MainFrame extends JFrame
     if (jsvViewer.selectedPanel != null)
       mainSplitPosition = mainSplitPane.getDividerLocation();
     jsvViewer.mainPanel.setSelectedPanel(jsvViewer, jsvp, jsvViewer.panelNodes);
-    jsvViewer.selectedPanel = jsvp;
     jsvViewer.spectraTree.setSelectedPanel(jsv, jsvp);
     validate();
     if (jsvp != null) {
@@ -822,6 +811,8 @@ public class MainFrame extends JFrame
         break;
       case GRIDON:
         toolBar.gridToggleButton.setSelected(tf);
+        break;
+      default:
         break;
       }
   }

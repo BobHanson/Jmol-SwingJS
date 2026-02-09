@@ -34,6 +34,7 @@ import org.jmol.api.JmolAdapter;
 import org.jmol.quantum.QS;
 import org.jmol.util.Elements;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 import javajs.util.AU;
 import javajs.util.BS;
@@ -290,7 +291,7 @@ public class NWChemReader extends MOReader {
   private void setNames(String atomSetName, BS namedSets, int n) {
     for (int i = asc.iSet; --n >= 0 && i >= 0; --i)
       if (namedSets == null || !namedSets.get(i))
-        asc.setModelInfoForSet("name", atomSetName, i);
+        asc.setModelInfoForSet(JC.INFO_MODEL_NAME, atomSetName, i);
   }
 
   // NWChem Output coordinates

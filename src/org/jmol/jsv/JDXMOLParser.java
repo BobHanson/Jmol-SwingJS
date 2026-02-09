@@ -128,7 +128,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
   }
 
 	@Override
-	public Lst<String[]> readACDAssignments(int nPoints, boolean isPeakAssignment)
+	public boolean readACDAssignments(int nPoints, boolean isPeakAssignment, Lst<String[]> list)
 			throws Exception {
 		// NMR:
 		// ##PEAK ASSIGNMENTS=(XYMA)
@@ -152,15 +152,18 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 		//   select atomno=4; color atoms yellow; spacefill 90>
 
 
-		Lst<String[]> list = new Lst<String[]>();
+	  boolean overflow = false;
 		try {
-			readLine(); // flushes "XYMA"
+		  if (line == null || line.indexOf("#") >= 0)
+		    readLine(); // flushes "XYMA"
 			if (nPoints < 0)
 				nPoints = Integer.MAX_VALUE;
 			for (int i = 0; i < nPoints; i++) {
 				String s = readLine();
-				if (s == null || s.indexOf("#") == 0)
-					break;
+				if (s == null || s.indexOf("#") == 0) {
+				  overflow = true;
+          break;
+				}
 				if (isPeakAssignment) {
 					while (s.indexOf(">") < 0)
 						s += " " + readLine();
@@ -183,7 +186,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 		} catch (Exception e) {
 			Logger.error("Error reading peak assignments at " + line + ": " + e);
 		}
-		return list;
+		return !overflow;
 	}
 
 	@Override

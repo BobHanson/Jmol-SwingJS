@@ -1,10 +1,12 @@
 package jspecview.api;
 
+import javax.swing.JFrame;
+
 import jspecview.common.PrintLayout;
 
 public interface JSVPrintDialog {
 
-	JSVPrintDialog set(Object offWindowFrame, PrintLayout lastPrintLayout, boolean isJob);
+	JSVPrintDialog set(JFrame parentFrame, PrintLayout lastPrintLayout, boolean isJob);
 
 	PrintLayout getPrintLayout();
 

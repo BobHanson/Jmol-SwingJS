@@ -12,8 +12,12 @@ import javajs.util.OC;
 import jspecview.common.PanelData;
 import jspecview.common.PrintLayout;
 
-public interface JSVPanel extends JSVViewPanel {
+/**
+ * JSVPanel class represents a View combining one or more GraphSets, each with one or more JDXSpectra.
+ */
 
+public interface JSVPanel extends JSVViewPanel {
+  
 	public void repaint();
 
 	public void doRepaint(boolean andTaintAll);
@@ -34,7 +38,7 @@ public interface JSVPanel extends JSVViewPanel {
 
 	int getFontFaceID(String name);
 
-	String saveImage(String type, GenericFileInterface file, OC out);
+	String saveImage(String type, GenericFileInterface file, OC out, int width, int height);
 
 	public void printPanel(PrintLayout pl, OutputStream os, String printJobTitle);
 

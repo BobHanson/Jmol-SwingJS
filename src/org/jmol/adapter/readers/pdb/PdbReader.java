@@ -1378,7 +1378,7 @@ public class PdbReader extends AtomSetCollectionReader {
     asc.setCurrentModelInfo("pdbID", pdbID);
     if (asc.iSet == 0 || isTrajectory)
       asc.setAtomSetName(pdbID);
-    asc.setCurrentModelInfo("name", name);
+    asc.setCurrentModelInfo(JC.INFO_MODEL_NAME, name);
     checkUnitCellParams();
     if (!isCourseGrained)
       setModelPDB(true);

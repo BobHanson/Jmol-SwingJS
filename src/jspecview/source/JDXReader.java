@@ -119,9 +119,7 @@ public class JDXReader implements JmolJDXMOLReader {
     filePath = PT.trimQuotes(filePath);
     isSimulation = (filePath != null && filePath.startsWith(JSVFileManager.SIMULATION_PROTOCOL)); 
     if (isSimulation) {
-      //TODO: H1 vs. C13 here?
       nmrMaxY = (Double.isNaN(nmrNormalization) ? 10000 : nmrNormalization);
-      //filePath = JSVFileManager.getAbbrSimulationFileName(filePath);
     }
     // this.filePath is used for sending information back to Jmol
     // and also for setting the application tree label
@@ -1151,8 +1149,8 @@ public class JDXReader implements JmolJDXMOLReader {
       case 40:
       case 50:
       case 60:
-        acdAssignments = mpr.readACDAssignments(((JDXDataObject) spectrum).fileNPoints, pt == 40);
-        break;
+        acdAssignments = new Lst<String[]>();
+        return mpr.readACDAssignments(((JDXDataObject) spectrum).fileNPoints, pt == 40, acdAssignments);
       }       
     } catch (Exception e) {
       throw new JSVException(e.getMessage());
@@ -1227,7 +1225,6 @@ public class JDXReader implements JmolJDXMOLReader {
 
   public static void main(String[] args) {
     try {
-      System.out.println(new Date(1658593001000L).toGMTString());
       Map<String, String> map = JDXReader.getHeaderMap(new FileInputStream("c:/temp/t6.jdx"), null);
       for (String k : map.keySet()) {
         if (k.startsWith("##"))

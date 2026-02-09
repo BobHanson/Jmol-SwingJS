@@ -108,7 +108,7 @@ public enum ScriptToken {
   SHIFTX("dx or NONE", "shifts the x-axis of a 1D NMR spectrum by the given ppm; NONE resets (1D NMR only)"),
   SHOWERRORS("shows recent errors"),
   SHOWINTEGRATION("T", "shows an integration listing"),
-  SHOWKEY("T", "shows a color key when multiple spectra are displayed"),
+  //SHOWKEY("T", "shows a color key when multiple spectra are displayed"),
   SHOWMEASUREMENTS("T", "shows a listing of measurements"),
   SHOWMENU("displays the popup menu"),
   SHOWPEAKLIST("T", "shows a listing for peak picking"),

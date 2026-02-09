@@ -78,8 +78,8 @@ public class AppToolBar extends JToolBar {
 
 		addButton(spectraButton = new JButton(), "Overlay Display",
 				"overlay24", "view");
-		addButton(null, "Display Key for Overlaid Spectra",
-				"overlayKey24", "showKey TOGGLE");
+//		addButton(null, "Display Key for Overlaid Spectra",
+//				"overlayKey24", "showKey TOGGLE");
 
 		addSeparator();
 

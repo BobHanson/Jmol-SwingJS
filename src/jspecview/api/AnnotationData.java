@@ -21,4 +21,7 @@ public interface AnnotationData {
 	void setGraphSetKey(String key);
 	void setState(boolean b);
 
+  boolean isDialog();
+
 }
+

@@ -98,80 +98,26 @@ public class JSpecView implements JSVInterface, ScriptInterface {
     this.mainFrame = mainFrame;    
   }
 
+  public boolean isHeadless() {
+    return (mainFrame == null);
+  }
 
   //  ------------------------ Program Properties -------------------------
 
   public JSpecView(boolean hasDisplay, JSVInterface jmol) {
-    jsvViewer = new JSViewer(this, false, false);
-    JSVFileManager.setDocumentBase(jsvViewer, null);
+    jsvViewer = new JSViewer(this, false, false, hasDisplay);
     jsvViewer.mainPanel = new AwtMainPanel(new BorderLayout());
+    JSVFileManager.setDocumentBase(jsvViewer, null);
     if (hasDisplay) {
       mainFrame = new MainFrame(this, null, jmol == null ? this : jmol);
+      jsvViewer.setParentFrame(mainFrame);
     } else {
-      initHeadless();
+      dsp = getDisplaySchemesProcessor(this);
+      dsp.loadDefaultXML();
+      setApplicationProperties(true);
     }
   }
   
-  private void initHeadless() {
-    dsp = getDisplaySchemesProcessor(this);
-    setApplicationProperties(true);
-  }
-
-
-  public static void main(String args[]) {
-    try {
-      UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-    } catch (Exception e) {
-    }
-
-		Logger.info("JSpecView Application " + JSVersion.VERSION);
-
-
-    boolean noDisplay = GraphicsEnvironment.isHeadless();
-    boolean autoexit = noDisplay;
-
-    int n = args.length;
-    
-    // check for command-line arguments  "file" "file" "file" -script "xxxx" -nodisplay -exit
-    // IN THAT ORDER
-
-    if (n > 0 && args[n - 1].equalsIgnoreCase("-exit")) {
-        autoexit = true;
-        n--;
-    }
-    if (n > 0 && args[n - 1].equalsIgnoreCase("-nodisplay")) {
-      noDisplay = autoexit = true;
-        n--;
-    }
-
-    if (autoexit)
-      System.out.println("JSpecview running headless");
-
-
-    if (noDisplay)
-      System.out.println("JSpecview has no display");
-
-    JSpecView jsv = new JSpecView(!noDisplay, null);
-
-
-    if (n >= 2) {
-      if (n == 2 && args[0].equalsIgnoreCase("-script")) {
-        String script = args[1];
-        System.out.println("JSpecView is running script " + script);
-        jsv.jsvViewer.runScriptNow(args[1]);
-      } else {
-        for (int i = 0; i < args.length; i++) {
-          System.out.println("JSpecView is attempting to open " + args[i]);
-          jsv.jsvViewer.openFile(args[i], false);
-        }
-      }
-    }
-    
-    if (noDisplay || autoexit)
-      exitNow();
-    jsv.mainFrame.setVisible(true);
-  }
-
   private static String propertiesFileName = "jspecview.properties";
 
 
@@ -233,6 +179,12 @@ public class JSpecView implements JSVInterface, ScriptInterface {
       if (script != null)
         runScript(script);
       break;
+    case JSViewer.FILE_OPEN_ALREADY:
+      if (mainFrame != null) {
+        mainFrame.awaken(false);
+        mainFrame.awaken(true);
+      }
+      break;
     case JSViewer.FILE_OPEN_ERROR:
       if (mainFrame != null) {
         mainFrame.awaken(false);
@@ -289,7 +241,6 @@ public class JSpecView implements JSVInterface, ScriptInterface {
       mainFrame.setSelectedPanel(jsvp);
     else {
       jsvViewer.mainPanel.setSelectedPanel(jsvViewer, jsvp, jsvViewer.panelNodes);
-      jsvViewer.selectedPanel = jsvp;
       jsvViewer.spectraTree.setSelectedPanel(this, jsvp);
       if (jsvp != null) {
         jsvp.setEnabled(true);
@@ -430,12 +381,8 @@ public class JSpecView implements JSVInterface, ScriptInterface {
   @Override
   public synchronized void syncToJmol(String msg) {
     Logger.info("JSV>Jmol " + msg);
-    //System.out.println(Thread.currentThread() + "MainFrame sync JSV>Jmol 21"
-      //  + Thread.currentThread());
     if (jmol != null) { // MainFrame --> embedding application
       jmol.syncScript(msg);
-      //System.out.println(Thread.currentThread() + "MainFrame JSV>Jmol sync 22"
-        //  + Thread.currentThread());
       return;
     }
     if (mainFrame != null)
@@ -562,6 +509,61 @@ public class JSpecView implements JSVInterface, ScriptInterface {
 
   private static double parseDoubleSafely(String sval, double defVal) {
     return (sval == null ? defVal : Double.parseDouble(sval));
+  }
+
+
+  public static void main(String args[]) {
+    try {
+      UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+    } catch (Exception e) {
+    }
+
+    Logger.info("JSpecView Application " + JSVersion.VERSION);
+
+
+    boolean noDisplay = GraphicsEnvironment.isHeadless();
+    boolean autoexit = noDisplay;
+
+    int n = args.length;
+    
+    // check for command-line arguments  "file" "file" "file" -script "xxxx" -nodisplay -exit
+    // IN THAT ORDER
+
+    if (n > 0 && args[n - 1].equalsIgnoreCase("-exit")) {
+        autoexit = true;
+        n--;
+    }
+    if (n > 0 && args[n - 1].equalsIgnoreCase("-nodisplay")) {
+      noDisplay = autoexit = true;
+        n--;
+    }
+
+    if (autoexit)
+      System.out.println("JSpecview running headless");
+
+
+    if (noDisplay)
+      System.out.println("JSpecview has no display");
+
+    JSpecView jsv = new JSpecView(!noDisplay, null);
+
+
+    if (n >= 2) {
+      if (n == 2 && args[0].equalsIgnoreCase("-script")) {
+        String script = args[1];
+        System.out.println("JSpecView is running script " + script);
+        jsv.jsvViewer.runScriptNow(args[1]);
+      } else {
+        for (int i = 0; i < args.length; i++) {
+          System.out.println("JSpecView is attempting to open " + args[i]);
+          jsv.jsvViewer.openFile(args[i], false);
+        }
+      }
+    }
+    
+    if (noDisplay || autoexit)
+      exitNow();
+    jsv.mainFrame.setVisible(true);
   }
 
 

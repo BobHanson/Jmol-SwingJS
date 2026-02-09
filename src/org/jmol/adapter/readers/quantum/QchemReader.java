@@ -30,6 +30,7 @@ import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolAdapter;
 import org.jmol.quantum.QS;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 import java.io.IOException;
 
@@ -231,7 +232,7 @@ public class QchemReader extends MOReader {
     String energyString = tokens[tokens.length-1]; // value is last one
     asc.setAtomSetEnergy(energyString, parseDoubleStr(energyString));
     asc.setAtomSetName(energyKey + " = " + energyString);
-    asc.setModelInfoForSet("name", energyKey+" "+energyString, ac);
+    asc.setModelInfoForSet(JC.INFO_MODEL_NAME, energyKey+" "+energyString, ac);
   }
 
 

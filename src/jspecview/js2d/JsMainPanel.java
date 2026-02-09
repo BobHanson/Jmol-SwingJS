@@ -12,7 +12,7 @@ import jspecview.common.PanelNode;
 
 public class JsMainPanel implements JSVMainPanel {
 
-	private JSVPanel selectedPanel;
+	private JSVPanel mainSelectedPanel;
 	private int currentPanelIndex;
 	private String title;
 	private boolean visible;
@@ -38,23 +38,13 @@ public class JsMainPanel implements JSVMainPanel {
 	}
 
 	@Override
-	public void setSelectedPanel(JSViewer viewer, JSVPanel jsvp, Lst<PanelNode> panelNodes) {
-		if (jsvp != selectedPanel)
-			selectedPanel = jsvp;
-    int i = viewer.selectPanel(jsvp, panelNodes);
-    if (i >= 0)
-      currentPanelIndex = i;    
-		visible = true;
-	}
-
-	@Override
 	public int getHeight() {
-		return (selectedPanel == null ? 0 : selectedPanel.getHeight());
+		return (mainSelectedPanel == null ? 0 : mainSelectedPanel.getHeight());
 	}
 
 	@Override
 	public int getWidth() {
-		return (selectedPanel == null ? 0 : selectedPanel.getWidth());
+		return (mainSelectedPanel == null ? 0 : mainSelectedPanel.getWidth());
 	}
 
 	@Override
@@ -81,5 +71,16 @@ public class JsMainPanel implements JSVMainPanel {
 	public void setFocusable(boolean b) {
 		focusable = b;
 	}
+
+  @Override
+  public void setSelectedPanel(JSViewer viewer, JSVPanel jsvp, Lst<PanelNode> panelNodes) {
+    if (jsvp != mainSelectedPanel) {
+      mainSelectedPanel = jsvp;
+    }
+    int i = viewer.selectPanel(jsvp, panelNodes);
+    if (i >= 0)
+      currentPanelIndex = i;    
+    visible = true;
+  }
 
 }

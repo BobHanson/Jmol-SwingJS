@@ -1,5 +1,7 @@
 package jspecview.common;
 
+import javax.print.attribute.standard.MediaSizeName;
+
 /**
  * <code>PrintLayout</code> class stores all the information needed from the
  * <code>PrintLayoutDialog</code>
@@ -10,7 +12,7 @@ public class PrintLayout {
 	public PrintLayout(PanelData pd) {
 		if (pd != null) {
 			 asPDF = true;
-			 pd.setDefaultPrintOptions(this);					 
+			 pd.setDefaultPrintOptions(this);		
 		}
 	}
 	public int imageableX = 0;
@@ -44,7 +46,7 @@ public class PrintLayout {
 	/**
 	 * whether or not the title should be printed
 	 */
-	public boolean showTitle = true;
+	public boolean showTitles = true;
 	/**
 	 * The font of the elements
 	 */
@@ -52,11 +54,30 @@ public class PrintLayout {
 	/**
 	 * The size of the paper to be printed on
 	 */
-	public Object paper;
+	public Object paper = MediaSizeName.NA_LETTER;
 	
 	public boolean asPDF = true;
 	
 	public String title;
 	public String date;
+	
+//	@Override
+//	public String toString() {
+//	  return " imageableX = " + imageableX
+//	      + " imageableY = " + imageableY
+//	      + " paperHeight = " +  paperHeight
+//	      + " paperWidth = " +  paperWidth
+//	      + " imageableHeight " + imageableHeight
+//	      + " imageableWidth " +  imageableWidth
+//	      + " layout " + layout
+//	      + " position " + position
+//	      + " showGrid " + showGrid
+//	      + " showXScale " + showXScale
+//	      + " showYScale " + showYScale
+//	      + " showTitles " + showTitles
+//	      + " font " + font
+//	      + " paper " + paper
+//	      + " asPDF " + asPDF;
+//	}
 
 }

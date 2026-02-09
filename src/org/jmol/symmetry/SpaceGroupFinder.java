@@ -161,7 +161,7 @@ public class SpaceGroupFinder {
         : unitCellParams != null
             && unitCellParams.length > SimpleUnitCell.PARAM_SLOP
                 ? unitCellParams[SimpleUnitCell.PARAM_SLOP]
-                : Viewer.isDoublePrecision ? SimpleUnitCell.SLOPDP
+                : Viewer.isJmolD ? SimpleUnitCell.SLOPDP
                     : SimpleUnitCell.SLOPSP);
     if (Double.isNaN(slop))
       slop = 1E-6;

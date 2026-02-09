@@ -197,4 +197,9 @@ public class MeasurementData extends Lst<Measurement> implements
 			info.put("units", units);
 	}
 
+  @Override
+  public boolean isDialog() {
+    return false;
+  }
+
 }

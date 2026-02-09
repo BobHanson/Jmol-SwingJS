@@ -160,7 +160,7 @@ public class Spectrum extends JDXDataObject {
 				&& (atomKey == null || sourceID.equals(index)))
 			for (int i = 0; i < peakList.size(); i++)
 				if (peakList.get(i).checkFileIndex(filePath, index, atomKey)) {
-					System.out.println("selecting peak by FileIndex " + this + " "
+					System.out.println("JSV.Spectrum selecting peak by FileIndex " + this + " "
 							+ peakList.get(i));
 					return (selectedPeak = peakList.get(i));
 				}
@@ -171,7 +171,7 @@ public class Spectrum extends JDXDataObject {
     if (peakList != null && peakList.size() > 0)
       for (int i = 0; i < peakList.size(); i++)
         if (peakList.get(i).checkFileTypeModel(filePath, type, model)) {
-          System.out.println("selecting peak byFilePathTypeModel " + this + " " + peakList.get(i));
+          System.out.println("JSV.Spectrum selecting peak byFilePathTypeModel " + this + " " + peakList.get(i));
           return (selectedPeak = peakList.get(i));
         }
     return null;
@@ -240,7 +240,12 @@ public class Spectrum extends JDXDataObject {
   }
 
   public String getPeakTitle() {
-    return (selectedPeak != null ? selectedPeak.getTitle() : highlightedPeak != null ? highlightedPeak.getTitle() : getTitleLabel());
+    String s = (selectedPeak == null ? null : selectedPeak.getTitle());
+    if ((s == null || s.length() == 0) && highlightedPeak != null)
+      s = highlightedPeak.getTitle();
+    if (s == null || s.length() == 0)
+      s = getTitleLabel();
+    return s;
   }
 
   private String titleLabel;

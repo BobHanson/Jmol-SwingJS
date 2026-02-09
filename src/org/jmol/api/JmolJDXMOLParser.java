@@ -24,7 +24,7 @@ public interface JmolJDXMOLParser {
 
   public abstract String readACDMolFile() throws Exception;
 
-  Lst<String[]> readACDAssignments(int nPoints, boolean isPeakAssignment) throws Exception;
+  boolean readACDAssignments(int nPoints, boolean isPeakAssignment, Lst<String[]> list) throws Exception;
 
   int setACDAssignments(String model, String mytype, int peakCount,
                         Lst<String[]> acdlist, String molFile) throws Exception;

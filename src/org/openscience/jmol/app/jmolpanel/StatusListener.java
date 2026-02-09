@@ -41,6 +41,7 @@ import org.jmol.c.CBK;
 import org.jmol.dialog.Dialog;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.JmolPlugin;
 import org.openscience.jmol.app.jmolpanel.console.AppConsole;
@@ -526,13 +527,13 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
       jSpecViewFrame.setLocation(jmolPanel.frame.getLocation().x + 10, jmolPanel.frame
           .getLocation().y + 100);
       jSpecViewFrame.register("Jmol", this);
-      vwr.setBooleanProperty("_jspecview", true);
+      vwr.setBooleanProperty(JC.INFO_HAVE_JSPECVIEW, true); // was lowercase
       if (isStartup) {
         doLoadCheck = true;
       }
     }
     if (doLoadCheck || jSpecViewForceNew || newSim) {
-      String type = "" + vwr.getP("_modelType");
+      String type = "" + vwr.getP(JC.PROP_MODEL_TYPE);
       if (!isSimulation && type.equalsIgnoreCase("jcampdx")) {
         jSpecViewForceNew = false;
         String file = "" + vwr.getP("_modelFile");

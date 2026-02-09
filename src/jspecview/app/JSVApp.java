@@ -87,7 +87,7 @@ public class JSVApp implements PanelListener, JSVAppInterface, ScriptInterface {
 	}
 
 	private void initViewer(boolean isJS) {
-		vwr = new JSViewer(this, true, isJS);
+		vwr = new JSViewer(this, true, isJS, true);
 		appletFrame.setDropTargetListener(isSigned(), vwr);
 		URL path = appletFrame.getDocumentBase();
 		JSVFileManager.setDocumentBase(vwr, path);
@@ -593,10 +593,6 @@ public class JSVApp implements PanelListener, JSVAppInterface, ScriptInterface {
 			return;
 		}
 
-//		if (vwr.jsvpPopupMenu != null)
-//			vwr.jsvpPopupMenu
-//					.setCompoundMenu(vwr.panelNodes, vwr.allowCompoundMenu);
-
 		Logger.info(appletFrame.getAppletInfo() + " File "
 				+ vwr.currentSource.getFilePath() + " Loaded Successfully");
 
@@ -615,10 +611,9 @@ public class JSVApp implements PanelListener, JSVAppInterface, ScriptInterface {
 	@Override
 	public void siSetSelectedPanel(JSVPanel jsvp) {
 		vwr.mainPanel.setSelectedPanel(vwr, jsvp, vwr.panelNodes);
-		vwr.selectedPanel = jsvp;
 		vwr.spectraTree.setSelectedPanel(this, jsvp);
 		if (jsvp == null) {
-			vwr.selectedPanel = jsvp = appletFrame.getJSVPanel(vwr, null);
+			jsvp = appletFrame.getJSVPanel(vwr, null);
 			vwr.mainPanel.setSelectedPanel(vwr, jsvp, null);
 		}
 		appletFrame.validate();

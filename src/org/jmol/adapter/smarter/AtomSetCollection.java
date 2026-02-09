@@ -282,7 +282,7 @@ public class AtomSetCollection {
 
   void freeze(boolean reverseModels) {
     if (atomSetCount == 1 && collectionName == null)
-      collectionName = (String) getAtomSetAuxiliaryInfoValue(0, "name");
+      collectionName = (String) getAtomSetAuxiliaryInfoValue(0, JC.INFO_MODEL_NAME);
     //Logger.debug("AtomSetCollection.freeze; ac = " + ac);
     if (reverseModels)
       reverseAtomSets();
@@ -910,7 +910,7 @@ public class AtomSetCollection {
       return;
     }
     String name0 = (iSet < 0 ? null : getAtomSetName(iSet));
-    setModelInfoForSet("name", atomSetName, iSet);
+    setModelInfoForSet(JC.INFO_MODEL_NAME, atomSetName, iSet);
     if (reader != null && atomSetName.length() > 0 && !atomSetName.equals(name0))
       reader.appendLoadNote(atomSetName);
     // TODO -- trajectories could have different names. Need this for vibrations?
@@ -1066,7 +1066,7 @@ public class AtomSetCollection {
       return trajectoryNames.get(atomSetIndex);
     if (atomSetIndex >= atomSetCount)
       atomSetIndex = atomSetCount - 1;
-    return (String) getAtomSetAuxiliaryInfoValue(atomSetIndex, "name");
+    return (String) getAtomSetAuxiliaryInfoValue(atomSetIndex, JC.INFO_MODEL_NAME);
   }
 
   public Map<String, Object> getAtomSetAuxiliaryInfo(int atomSetIndex) {

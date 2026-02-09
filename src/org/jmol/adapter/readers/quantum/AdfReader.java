@@ -27,6 +27,7 @@ package org.jmol.adapter.readers.quantum;
 import org.jmol.api.JmolAdapter;
 import org.jmol.quantum.SlaterData;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 import javajs.util.AU;
 import javajs.util.Lst;
@@ -163,14 +164,13 @@ public class AdfReader extends SlaterReader {
     double frqNew = PT.parseDouble(tokens[4]);
     int finalModel = modelNumber + vibrationNumber;
     for (int i = modelNumber; i < finalModel; i++) {
-      String cname = (String) asc.getAtomSetAuxiliaryInfoValue(i, "name");
+      String cname = (String) asc.getAtomSetAuxiliaryInfoValue(i, JC.INFO_MODEL_NAME);
       String frqPrev = cname.replace(" cm^-1", "");
       String frqOldFmt = PT.formatStringD("%.3f", "f", frqOld);
       if (frqOldFmt.equals(frqPrev)) {
         String frqNewFmt = PT.formatStringD("%.3f", "f", frqNew);
         cname += " (now " + frqNewFmt + " cm^-1)";
-        asc.setAtomSetModelPropertyForSet("name", cname, i);
-        asc.setAtomSetModelPropertyForSet("modelName", cname, i);
+        asc.setAtomSetModelPropertyForSet(JC.INFO_MODEL_NAME, cname, i);
         break;
       }
     }

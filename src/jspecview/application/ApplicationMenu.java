@@ -100,7 +100,7 @@ public class ApplicationMenu extends JMenuBar {
   private JMenuItem printMenuItem;
   private JMenuItem sourceMenuItem;
 	private JMenuItem integrationMenuItem;
-  private JMenuItem overlayKeyMenuItem;
+  // not implemented private JMenuItem overlayKeyMenuItem;
 	private JMenuItem transmittanceMenuItem;
 	private JMenuItem solutionColorMenuItem;
 
@@ -315,13 +315,13 @@ public class ApplicationMenu extends JMenuBar {
             jsvViewer.runScript("showProperties");
           }
         });
-    overlayKeyMenuItem = setMenuItem(null, '\0', "Overlay Key", 0,
-        0, new ActionListener() {
-          @Override
-					public void actionPerformed(ActionEvent e) {
-            jsvViewer.runScript("showKey toggle");
-          }
-        });
+//    overlayKeyMenuItem = setMenuItem(null, '\0', "Overlay Key", 0,
+//        0, new ActionListener() {
+//          @Override
+//					public void actionPerformed(ActionEvent e) {
+//            jsvViewer.runScript("showKey toggle");
+//          }
+//        });
 
     JMenuItem preferencesMenuItem = setMenuItem(null, 'P', "Preferences...",
         0, 0, new ActionListener() {
@@ -449,7 +449,7 @@ public class ApplicationMenu extends JMenuBar {
     displayMenu.add(viewAllMenuItem);
     displayMenu.add(spectraMenuItem);
     displayMenu.add(overlayStackOffsetYMenuItem);
-    displayMenu.add(overlayKeyMenuItem).setEnabled(false);
+    //displayMenu.add(overlayKeyMenuItem).setEnabled(false);
     displayMenu.addSeparator();
     displayMenu.add(gridCheckBoxMenuItem);
     displayMenu.add(coordsCheckBoxMenuItem);
@@ -580,7 +580,7 @@ public class ApplicationMenu extends JMenuBar {
       PanelData pd = node.pd();
       Spectrum spec = pd.getSpectrum();
       setCheckBoxes(pd);
-      overlayKeyMenuItem.setEnabled(pd.getNumberOfGraphSets() > 1);
+      //overlayKeyMenuItem.setEnabled(pd.getNumberOfGraphSets() > 1);
       setCloseMenuItem(JSVFileManager.getTagName(node.source.getFilePath()));
       exportAsMenu.setEnabled(true);
       saveAsMenu.setEnabled(true);
@@ -592,10 +592,10 @@ public class ApplicationMenu extends JMenuBar {
 
   }
 
-  public boolean toggleOverlayKeyMenuItem() {
-    overlayKeyMenuItem.setSelected(overlayKeyMenuItem.isSelected());
-    return overlayKeyMenuItem.isSelected();
-  }
+//  public boolean toggleOverlayKeyMenuItem() {
+//    overlayKeyMenuItem.setSelected(overlayKeyMenuItem.isSelected());
+//    return overlayKeyMenuItem.isSelected();
+//  }
 
   ////////// MENU ACTIONS ///////////
 

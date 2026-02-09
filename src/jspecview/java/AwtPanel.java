@@ -41,12 +41,15 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -188,7 +191,7 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
 
   @Override
   public void setTitle(String title) {
-    pd.title = title;
+    pd.setTitle(title);
     setName(title);
   }
 
@@ -224,6 +227,11 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
     paint(g);
   }
 
+  @Override
+  public void paintComponent(Object display) {
+    super.paintComponent((Graphics) display);
+  }
+
   /**
    * Overrides paintComponent in class JPanel in order to draw the spectrum
    * 
@@ -242,15 +250,19 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
     try {
       // despite the above catch for pd == null, it can still get here 
       pd.g2d = pd.g2d0;
-      g.setColor(getBackground());
-      g.fillRect(0, 0, getWidth(), getHeight());
-      pd.drawGraph(g, g, g, getWidth(), getHeight(), false);
+      paintPanel(g, getWidth(), getHeight(), false);
     } catch (Exception e) {
       System.out.println("Exception while painting " + e);
       e.printStackTrace();
     }
 
     vwr.repaintDone();
+  }
+
+  private void paintPanel(Graphics g, int width, int height, boolean isImage) {
+    g.setColor(getBackground());
+    g.fillRect(0, 0, width, height);
+    pd.drawGraph(g, g, g, width, height, false, isImage);
   }
 
   @Override
@@ -374,12 +386,33 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
   }
 
   @Override
-  public String saveImage(String type, GenericFileInterface file, OC out) {
-    String msg = "OK";
+  public String saveImage(String type, GenericFileInterface file, OC out, int width, int height) {
+    if (width == 0)
+      width = getWidth() * 2;
+    if (height == 0) {
+      height = (int) (2.0 * width /getWidth() * getHeight());
+    }
+    String msg = "OK " + width + "x" + height + " ";
     try {
-      Image image = createImage(getWidth(), getHeight());
-      paint(image.getGraphics());
-      ImageIO.write((RenderedImage) image, type, (File) file);
+      Image image = createImage(width, height);
+      pd.setTaintedAll();
+      Graphics2D g = (Graphics2D) image.getGraphics();
+      paintPanel(g, width, height, true);
+      File f;
+      if (file == null) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ImageIO.write((RenderedImage) image, type, bos);
+        byte[] bytes = bos.toByteArray();
+        out.write(bytes);
+        out.closeChannel();
+        String sf = out.getFileName();
+        if (sf == null || new File(sf).exists())
+          return msg + bytes.length + " bytes";
+      } else {
+        f = (File) file;
+        ImageIO.write((RenderedImage) image, type, f);
+        return msg + f.length() + " bytes";
+      }
     } catch (IOException e) {
       msg = e.toString();
       showMessage(msg, "Error Saving Image");
@@ -433,11 +466,6 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
   @Override
   public void showMenu(int x, int y) {
     vwr.showMenu(x, y);
-  }
-
-  @Override
-  public void paintComponent(Object display) {
-    super.paintComponent((Graphics) display);
   }
 
 }

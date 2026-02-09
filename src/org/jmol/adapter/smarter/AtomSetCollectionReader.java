@@ -235,10 +235,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   private static final double OLD_PACKING_RANGE = 0.02d;
   private static final double LOW_PRECISION_PACKING_RANGE = SimpleUnitCell.SLOPSP;
 
-
   public double getPackingRangeValue(double def) {
     // def because we have used 0.001 for the MSRdr.trimAtoms()
-    return (packingRange != null ? packingRange.doubleValue() : def != 0 ? def : OLD_PACKING_RANGE);
+    return (packingRange != null ? packingRange.doubleValue()
+        : def != 0 ? def : OLD_PACKING_RANGE);
   }
 
   protected double cellSlop = SimpleUnitCell.SLOPSP; // initially just single precision
@@ -428,7 +428,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     asc.addAtom(new Atom());
     trajectorySteps = (Lst<P3d[]>) htParams.get(JC.INFO_TRAJECTORY_STEPS);
     if (trajectorySteps == null)
-      htParams.put(JC.INFO_TRAJECTORY_STEPS, trajectorySteps = new Lst<P3d[]>());
+      htParams.put(JC.INFO_TRAJECTORY_STEPS,
+          trajectorySteps = new Lst<P3d[]>());
   }
 
   /**
@@ -531,7 +532,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   private Object finish() {
-    if (Viewer.isDoublePrecision != highprecision0)
+    if (Viewer.isJmolD != highprecision0)
       vwr.setBooleanPropertyTok("doubleprecision", T.doubleprecision,
           highprecision0);
     String s = (String) htParams.get("loadState");
@@ -742,7 +743,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    * We assume that with the numbers 0.25 0.33333 that the precision is really
    * 5, not 2.
    * 
-   * Note that in the end, the precision will never be set lower than 4. 
+   * Note that in the end, the precision will never be set lower than 4.
    * 
    * @param s
    * @return parsed number
@@ -753,18 +754,18 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     // I considered subtracting the number of z digits, 
     // but I think that is probably too extreme. 
     // this fixes the Wyckoff calculation for CSD XAZTAW and BROFRM05
-    
+
     if (!filteredPrecision) {
       int pt = s.indexOf('.') + 1;
       if (pt >= 0) {
         int n = s.indexOf('(');
         if (n < 0) {
-          precision = Math.max(precision, s.length() - pt);          
+          precision = Math.max(precision, s.length() - pt);
         } else {
           if (precision == 0)
             precision = n;
           precision = Math.min(precision, n - 1 - pt);
-        } 
+        }
       }
     }
     return parseDoubleStr(s);
@@ -826,7 +827,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         symmetry.twelfthify(asc.atoms[i]);
       }
     }
-    appendLoadNote("Precision set to " + precision + "; packing set to " + (packingRange == null ? OLD_PACKING_RANGE : packingRange.floatValue()));
+    appendLoadNote("Precision set to " + precision + "; packing set to "
+        + (packingRange == null ? OLD_PACKING_RANGE
+            : packingRange.floatValue()));
   }
 
   protected void initializeSymmetryOptions() {
@@ -912,7 +915,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     } else {
       asc.setCollectionName(name);
     }
-    asc.setModelInfoForSet("name", name, Math.max(0, asc.iSet));
+    asc.setModelInfoForSet(JC.INFO_MODEL_NAME, name, Math.max(0, asc.iSet));
     asc.setAtomSetName(name);
   }
 
@@ -1086,7 +1089,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (!iHaveUnitCell)
       return null;
     if (symmetry == null) {
-      (symmetry = asc.newFileSymmetry()).setUnitCellFromParams(unitCellParams, false, cellSlop);
+      (symmetry = asc.newFileSymmetry()).setUnitCellFromParams(unitCellParams,
+          false, cellSlop);
       checkUnitCellOffset();
     }
     if (symmetry == null) // cif file with no symmetry triggers exception on LOAD {1 1 1}
@@ -1239,12 +1243,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       filterCased = PT.rep(filterCased, "ATOM", "HETATM-N");
     }
 
-    // can't use getFilter() here because form includes a semicolon:
-    // cell=a+b,a-b,c;0,1/2,1/2 
-    // also allows for NOPACKCELL by documentation 14.0
-    if (checkFilterKey("CELL="))
-      strSupercell = filter.substring(filter.indexOf("CELL=") + 5)
-          .toLowerCase(); // must be last filter option
     nameRequired = PT.getQuotedAttribute(filter, "NAME");
     if (nameRequired != null) {
       if (nameRequired.startsWith("'"))
@@ -1273,6 +1271,36 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     haveAtomFilter = filterAtomName || filterAtomType || filterElement
         || filterGroup3 || filterChain || filterAltLoc || filterHetero
         || filterEveryNth || checkFilterKey("/=");
+    // can't use getFilter() here because form includes a semicolon:
+    // cell=a+b,a-b,c;0,1/2,1/2 
+    // also allows for NOPACKCELL by documentation 14.0
+    if (checkFilterKey("CELL="))
+      strSupercell = filter.substring(filter.indexOf("CELL=") + 5)
+          .toLowerCase(); // must be last filter option
+    filter = ";" + filter + ";";
+    Logger.info("filtering with " + filter);
+    String s = getFilter("SYMOP=");
+    if (s != null)
+      filterSymop = " " + s.replace(',', ' ') + " ";
+    filter = filter.replace(',', ';');
+    String p = getFilter("PRECISION=");
+    if (p != null) {
+      int prec = PT.parseInt(p);
+      if (prec > 0 && prec <= 16) {
+        precision = 1000 + prec;
+        filteredPrecision = true;
+      }
+    }
+    s = getFilter("FILESCALING=");
+    if (s != null) {
+      double fs = parseDoubleStr(s);
+      fileScaling = P3d.new3(fs, fs, fs);
+      fileOffset = new P3d();
+    }
+    s = getFilter("LATTICESCALING=");
+    if (s != null && unitCellParams.length > SimpleUnitCell.PARAM_SCALE)
+      unitCellParams[SimpleUnitCell.PARAM_SCALE] = latticeScaling = parseDoubleStr(
+          s);
     if (bsFilter == null) {
       // bsFilter is usually null, but from MDTOP it gets set to indicate
       // which atoms were selected by the filter. This then
@@ -1280,23 +1308,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       // and it returns the bitset of filtered atoms
       bsFilter = new BS();
       htParams.put("bsFilter", bsFilter);
-      filter = (";" + filter + ";").replace(',', ';');
-      String p = getFilter("PRECISION=");
-      if (p != null) {
-        int prec = PT.parseInt(p);
-        if (prec > 0 && prec <= 16) {
-          precision = 1000 + prec;
-          filteredPrecision = true;
-        }
-      }
-      String s = getFilter("LATTICESCALING=");
-      if (s != null && unitCellParams.length > SimpleUnitCell.PARAM_SCALE)
-        unitCellParams[SimpleUnitCell.PARAM_SCALE] = latticeScaling = parseDoubleStr(
-            s);
-      s = getFilter("SYMOP=");
-      if (s != null)
-        filterSymop = " " + s + " ";
-      Logger.info("filtering with " + filter);
       if (haveAtomFilter) {
         int ipt;
         filter1Cased = filterCased;
@@ -1598,6 +1609,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       throws Exception {
   }
 
+  /**
+   * CIF, FSG, Jana readers only
+   * 
+   * @param doApplySymmetry  
+   */
   protected void doPreSymmetry(boolean doApplySymmetry) throws Exception {
   }
 

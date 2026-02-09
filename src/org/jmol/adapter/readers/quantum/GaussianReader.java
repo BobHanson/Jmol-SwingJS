@@ -39,6 +39,7 @@ import org.jmol.quantum.QS;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.Tensor;
+import org.jmol.viewer.JC;
 
 /**
  * Reader for Gaussian 94/98/03/09 output files.
@@ -308,7 +309,7 @@ public class GaussianReader extends MOReader {
   private void setNames(String atomSetName, BS namedSets, int n) {
     for (int i = asc.iSet; --n >= 0 && i >= 0; --i)
       if (namedSets == null || !namedSets.get(i))
-        asc.setModelInfoForSet("name", atomSetName, i);
+        asc.setModelInfoForSet(JC.INFO_MODEL_NAME, atomSetName, i);
   }
 
   /**

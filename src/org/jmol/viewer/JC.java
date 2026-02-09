@@ -263,10 +263,11 @@ public final class JC {
       "https://www.ebi.ac.uk/emdb/api/search/fitted_pdbs:%file?fl=emdb_id,map_contour_level_value&wt=csv", // to get the EMDB id from the PDB id
       "emdbmapserver",
       "https://www.ebi.ac.uk/pdbe/volume-server/emd/emd-%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif",
-      "xxxresolverResolver", "https://chemapps.stolaf.edu/resolver", "smiles2d",
-      "https://cirx.chemicalcreatures.com/chemical/structure/%FILE/file?format=sdf&get3d=false",
+      "xxxresolverResolver", "https://chemapps.stolaf.edu/resolver", 
+      "smiles2d",
+      "https://cactus.nci.nih.gov/chemical/structure/%FILE/file?format=sdf&operator=remove_hydrogens",
       "smiles3d",
-      "https://cirx.chemicalcreatures.com/chemical/structure/%FILE/file?format=sdf&get3d=true", };
+      "https://cactus.nci.nih.gov/chemical/structure//%FILE/file?format=sdf&get3d=true", };
 
   private final static String defaultOptimadeFieldsStr = 
         ",chemical_formula_descriptive"
@@ -1669,6 +1670,12 @@ public final class JC {
   public static final String INFO_JMOL_DATA_ORIGINATING_MODEL = "originatingModel";
   public static final String INFO_JMOL_DATA_PROPERTIES = "properties";
   public static final String INFO_JMOL_DATA_SCALING = "jmolDataScaling";
+
+  public static final String INFO_HAVE_JSPECVIEW = "_jspecview";
+  public static final String INFO_JDX_MODEL_SELECT = "jdxModelSelect";
+  public static final String INFO_JDX_ATOM_SELECT = "jdxAtomSelect";
+  public static final String INFO_MODEL_NAME = "name";
+  public static final String PROP_MODEL_TYPE = "_modelType";
 
   /** 
    * used to set atom symmetry 555 556 etc. 

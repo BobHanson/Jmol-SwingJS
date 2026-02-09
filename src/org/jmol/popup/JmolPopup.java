@@ -349,8 +349,8 @@ abstract public class JmolPopup extends JmolGenericPopup {
     isVibration = (vwr.modelHasVibrationVectors(modelIndex));
     haveCharges = (vwr.ms.getPartialCharges() != null);
     haveBFactors = (vwr.getBooleanProperty("haveBFactors"));
-    cnmrPeaks = (Lst<String>) modelInfo.get("jdxAtomSelect_13CNMR");
-    hnmrPeaks = (Lst<String>) modelInfo.get("jdxAtomSelect_1HNMR");
+    cnmrPeaks = (Lst<String>) modelInfo.get(JC.INFO_JDX_ATOM_SELECT + "_13CNMR");
+    hnmrPeaks = (Lst<String>) modelInfo.get(JC.INFO_JDX_ATOM_SELECT + "_1HNMR");
   }
 
   @Override

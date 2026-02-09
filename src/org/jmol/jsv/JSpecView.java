@@ -50,7 +50,7 @@ public class JSpecView implements JmolJSpecView {
       return null;
     }
     Lst<String> peaks = (Lst<String>) jmolViewer.ms.getInfo(iModel,
-        "jdxAtomSelect_" + type);
+        JC.INFO_JDX_ATOM_SELECT + "_" + type);
     if (peaks == null)
       return null;
     //vwr.modelSet.htPeaks = null;
@@ -100,7 +100,7 @@ public class JSpecView implements JmolJSpecView {
         : jmolViewer.sm.getSyncMode());
     if (syncMode != StatusManager.SYNC_DRIVER)
       return;
-    String peak = (String) jmolViewer.ms.getInfo(modelIndex, "jdxModelSelect");
+    String peak = (String) jmolViewer.ms.getInfo(modelIndex, JC.INFO_JDX_MODEL_SELECT);
     // problem is that SECOND load in jmol will not load new model in JSpecView
     if (peak != null)
       sendJSpecView(peak + " src=\"Jmol\"");
@@ -120,6 +120,7 @@ public class JSpecView implements JmolJSpecView {
 
   @Override
   public String processSync(String script, int jsvMode) {
+    // JSV>Jmol
     if (Logger.debugging)
       Logger.info(
           "org.jmol.jsv.JSpecView jsvMode=" + jsvMode + " script=" + script);
@@ -194,9 +195,8 @@ public class JSpecView implements JmolJSpecView {
       } else {
         if (isSimulation)
           filename += "#molfile";
-        script = "load " + PT.esc(filename);
+        script = (modelIndex >= 0 ? "" :  "load " + PT.esc(filename));
       }
-      //script = PT.rep(script, FileManager.SIMULATION_PROTOCOL, "");
       if (id != null)
         script += ";model " + PT.esc(id);
       // needs work here to use the atomMap if it exists.
@@ -219,8 +219,9 @@ public class JSpecView implements JmolJSpecView {
           type = "13CNMR";
         peaks.addLast(list[i]);
       }
-      jmolViewer.ms.setInfo(jmolViewer.am.cmi, "jdxAtomSelect_" + type, peaks);
+      jmolViewer.ms.setInfo(jmolViewer.am.cmi, JC.INFO_JDX_ATOM_SELECT + "_" + type, peaks);
       return null;
     }
   }
+
 }

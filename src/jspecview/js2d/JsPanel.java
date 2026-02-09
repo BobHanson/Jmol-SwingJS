@@ -39,31 +39,28 @@ package jspecview.js2d;
 
 import java.io.OutputStream;
 
-import javajs.api.GenericColor;
-import javajs.util.Base64;
-import javajs.util.Lst;
-import javajs.util.OC;
-
 import org.jmol.api.GenericFileInterface;
 import org.jmol.api.GenericMouseInterface;
 import org.jmol.api.GenericPlatform;
 import org.jmol.util.Font;
 import org.jmol.util.Logger;
 
+import javajs.api.GenericColor;
+import javajs.util.Base64;
+import javajs.util.Lst;
+import javajs.util.OC;
 import jspecview.api.JSVPanel;
 import jspecview.api.JSVPdfWriter;
-import jspecview.common.ExportType;
-import jspecview.common.Spectrum;
+import jspecview.common.ColorParameters;
 import jspecview.common.JSViewer;
 import jspecview.common.PanelData;
-import jspecview.common.ColorParameters;
 import jspecview.common.PrintLayout;
 import jspecview.common.ScriptToken;
+import jspecview.common.Spectrum;
 
 
 /**
- * JSVPanel class represents a View combining one or more GraphSets, each with one or more JDXSpectra.
- * 
+ * The JavaScript extension of a JSVPanel. 
  * @author Debbie-Ann Facey
  * @author Khari A. Bryan
  * @author Craig A.D. Walters
@@ -72,11 +69,6 @@ import jspecview.common.ScriptToken;
  */
 
 public class JsPanel implements JSVPanel {
-
-  @Override
-  public void finalize() {
-    Logger.info("JSVPanel " + this + " finalized");
-  }
 
 	private GenericPlatform apiPlatform;
 	@Override
@@ -149,7 +141,7 @@ public class JsPanel implements JSVPanel {
 
   @Override
 	public void setTitle(String title) {
-    pd.title = title;
+    pd.setTitle(title);
     this.name = title;
   }
 
@@ -259,7 +251,7 @@ public class JsPanel implements JSVPanel {
     if (pd.graphSets == null || pd.isPrinting)
       return;
     pd.g2d = pd.g2d0;
-    pd.drawGraph(context, contextFront, contextRear, getWidth(), getHeight(), false);
+    pd.drawGraph(context, contextFront, contextRear, getWidth(), getHeight(), false, false);
     vwr.repaintDone();
   }
 
@@ -288,8 +280,8 @@ public class JsPanel implements JSVPanel {
 	}
 
 	@Override
-	public String saveImage(String type, GenericFileInterface file, OC out) {
-	
+	public String saveImage(String type, GenericFileInterface file, OC out, int width, int height) {
+	  // for now we ignore w and h in JavaScript
 			String fname = file.getName();
 			boolean isPNG = type.equals("png");				
 			String s = (isPNG ? "png" : "jpeg");

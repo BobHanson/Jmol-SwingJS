@@ -33,6 +33,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.border.TitledBorder;
@@ -94,13 +95,14 @@ public class AwtPrintDialog extends JDialog implements JSVPrintDialog {
    * @return this
    */
   @Override
-	public AwtPrintDialog set(Object frame, PrintLayout pl, boolean isJob) {
+	public AwtPrintDialog set(JFrame frame, PrintLayout pl, boolean isJob) {
     if (pl == null)
       pl = new PrintLayout(null);
     this.pl = pl;
     try {
       jbInit(isJob);
       setSize(320, 250);
+      setLocationRelativeTo(frame);
       setResizable(false);
       pack();
       pdfButton.requestFocusInWindow();
@@ -414,7 +416,7 @@ public class AwtPrintDialog extends JDialog implements JSVPrintDialog {
     scaleXCheckBox.setSelected(pl.showXScale);
     scaleYCheckBox.setSelected(pl.showYScale);
     gridCheckBox.setSelected(pl.showGrid);
-    titleCheckBox.setSelected(pl.showTitle);    
+    titleCheckBox.setSelected(pl.showTitles);    
     fitToPageRadioButton.setSelected(pl.position.equals("fit to page"));
     centerRadioButton.setSelected(pl.position.equals("center"));
     topLeftRadioButton.setSelected(pl.position.equals("default"));
@@ -451,7 +453,7 @@ public class AwtPrintDialog extends JDialog implements JSVPrintDialog {
 		plNew.showGrid = gridCheckBox.isSelected();
 		plNew.showXScale = scaleXCheckBox.isSelected();
 		plNew.showYScale = scaleYCheckBox.isSelected();
-		plNew.showTitle = titleCheckBox.isSelected();
+		plNew.showTitles = titleCheckBox.isSelected();
 		plNew.paper = paperComboBox.getSelectedItem();
 		// pl.printer = services[printerNameComboBox.getSelectedIndex()];
 		// pl.numCopies = ((Integer)numCopiesSpinner.getValue()).intValue();

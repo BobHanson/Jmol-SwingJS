@@ -85,7 +85,6 @@ public class AwtG2D implements GenericGraphics {
   /*-----------------GRAPHICS METHODS----------------------------------- */
 	@Override
 	public void drawString(Object g, String text, int x, int y) {
-		//System.out.println("Awtg2d.drawString " + text + " " + x + " " + y);
 		((Graphics) g).drawString(text, x, y);
 	}
 	

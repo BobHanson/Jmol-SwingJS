@@ -2227,7 +2227,7 @@ abstract class ScriptExpr extends ScriptParam {
    * @throws ScriptException
    */
   @SuppressWarnings("unchecked")
-  protected SV setVariable(int pt, int ptMax, String key, boolean isSet)
+  public SV setVariable(int pt, int ptMax, String key, boolean isSet)
       throws ScriptException {
     BS bs = null;
     String propertyName = "";

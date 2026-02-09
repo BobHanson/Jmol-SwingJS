@@ -86,7 +86,7 @@ public final class BioModel extends Model {
     vwr.getJBR().getBioModelSet(modelSet);
     clearBioPolymers();
     modelSet.am[modelIndex] = this;
-    pdbID = (String) auxiliaryInfo.get("name");
+    pdbID = (String) auxiliaryInfo.get(JC.INFO_MODEL_NAME);
   }
 
   int addBioPolymer(BioPolymer polymer) {

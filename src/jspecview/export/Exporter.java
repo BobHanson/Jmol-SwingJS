@@ -1,25 +1,24 @@
 package jspecview.export;
 
 import java.io.BufferedReader;
+import java.io.File;
 
 import org.jmol.api.GenericFileInterface;
 
-import javajs.util.OC;
 import javajs.util.Lst;
+import javajs.util.OC;
 import javajs.util.PT;
-
-
 import jspecview.api.ExportInterface;
 import jspecview.api.JSVExporter;
 import jspecview.api.JSVFileHelper;
 import jspecview.api.JSVPanel;
+import jspecview.common.Annotation.AType;
 import jspecview.common.ExportType;
-import jspecview.common.Spectrum;
 import jspecview.common.JSVFileManager;
 import jspecview.common.JSViewer;
 import jspecview.common.PanelData;
 import jspecview.common.PrintLayout;
-import jspecview.common.Annotation.AType;
+import jspecview.common.Spectrum;
 
 public class Exporter implements ExportInterface {
 
@@ -33,10 +32,12 @@ public class Exporter implements ExportInterface {
 	public String write(JSViewer viewer, Lst<String> tokens, boolean forInkscape) {
 		// MainFrame or applet WRITE command
 		if (tokens == null)
-			return printPDF(viewer, null, false);
+			return printPDF(viewer, null, null, false);
 		
 		String type = null;
 		String fileName = null;
+		int width = 0, height = 0;
+		int ptFileName = 1;
 		ExportType eType;
 		OC out;
 		JSVPanel jsvp = viewer.selectedPanel;
@@ -46,16 +47,21 @@ public class Exporter implements ExportInterface {
 				return "WRITE what?";
 			case 1:
 				fileName = PT.trimQuotes(tokens.get(0));
-				if (fileName.indexOf(".") >= 0)
+				String ext = fileName;
+				int pt = fileName.lastIndexOf(".");
+				if (pt >= 0) {
+				  ext = fileName.substring(pt + 1);
 					type = "XY";
+				}
 				if (jsvp == null)
 					return null;
-				eType = ExportType.getType(fileName);
+				eType = ExportType.getType(ext);
 				switch (eType) {
 				case PDF:
 				case PNG:
 				case JPG:
-					return exportTheSpectrum(viewer, eType, null, null, -1, -1, null, false);
+				    out = (pt >= 0 ? viewer.getOutputChannel(new File(fileName).getAbsolutePath(), false) : null);				  
+					return exportTheSpectrum(viewer, eType, out, null, -1, -1, null, false);
 				default:
 					// select a spectrum
 					viewer.fileHelper.setFileChooser(eType);
@@ -67,16 +73,24 @@ public class Exporter implements ExportInterface {
 					if (file == null)
 						return null;
 					out = viewer.getOutputChannel(file.getFullPath(), false);
-			    String msg = exportSpectrumOrImage(viewer, eType, index, out);
+			    String msg = exportSpectrumOrImage(viewer, eType, index, out, 0, 0);
 			    boolean isOK = msg.startsWith("OK");
 			    if (isOK)
 			    	viewer.si.siUpdateRecentMenus(file.getFullPath());
 			    out.closeChannel();
 			    return msg;
 				}
-			case 2:
+      case 4:
+        // write PNG 300 400 xx.xxx       
+			  width = PT.parseInt(tokens.get(1)); 
+			  height = PT.parseInt(tokens.get(2));
+			  if (width < 0 || height < 0) 
+			    return "width and height must be positive: " + tokens.get(1) + " " + tokens.get(2);
+			  ptFileName = 3;
+        //$FALL-THROUGH$
+      case 2:
 				type = tokens.get(0).toUpperCase();
-				fileName = PT.trimQuotes(tokens.get(1));
+				fileName = PT.trimQuotes(tokens.get(ptFileName));
 				break;
 			}
 			String ext = fileName.substring(fileName.lastIndexOf(".") + 1)
@@ -96,7 +110,7 @@ public class Exporter implements ExportInterface {
 				eType = ExportType.SVGI;
 			
 			out = viewer.getOutputChannel(fileName, false);
-			return exportSpectrumOrImage(viewer, eType, -1, out);
+			return exportSpectrumOrImage(viewer, eType, -1, out, width, height);
 		} catch (Exception e) {
 			System.out.println(e);
 			return null;
@@ -111,10 +125,12 @@ public class Exporter implements ExportInterface {
    * @param eType
    * @param index
    * @param out
+   * @param width 
+   * @param height 
    * @return  status line message
    */
   private String exportSpectrumOrImage(JSViewer viewer, ExportType eType,
-                                              int index, OC out) {
+                                              int index, OC out, int width, int height) {
     Spectrum spec;
     PanelData pd = viewer.pd();    
     if (index < 0 && (index = pd.getCurrentSpectrumIndex()) < 0)
@@ -125,7 +141,7 @@ public class Exporter implements ExportInterface {
     String msg = null;
     try {
     	boolean asBase64 = out.isBase64();
-    	msg = exportTheSpectrum(viewer, eType, out, spec, startIndex, endIndex, pd, asBase64);
+    	msg = exportTheSpectrumWH(viewer, eType, out, spec, startIndex, endIndex, width, height, asBase64);
     	if (asBase64)
     		return msg;
     	if (msg.startsWith("OK"))
@@ -136,61 +152,75 @@ public class Exporter implements ExportInterface {
     return "Error exporting " + out.getFileName() + ": " + msg;
   }
   
-	@Override
-	public String exportTheSpectrum(JSViewer viewer, ExportType mode,
-			OC out, Spectrum spec, int startIndex, int endIndex,
-			PanelData pd, boolean asBase64) throws Exception {
-		JSVPanel jsvp = viewer.selectedPanel;
-		String type = mode.name();
-		switch (mode) {
-		case AML:
-		case CML:
-		case SVG:
-		case SVGI:
-			break;
-		case DIF:
-		case DIFDUP:
-		case FIX:
-		case PAC:
-		case SQZ:
-		case XY:
-			type = "JDX";
-			break;
-		case JPG:
-		case PNG:
-			if (jsvp == null)
-				return null;
-			viewer.fileHelper.setFileChooser(mode);
-			String name = getSuggestedFileName(viewer, mode);
-			GenericFileInterface file = viewer.fileHelper.getFile(name, jsvp, true);
-			if (file == null)
-				return null;
-			return jsvp.saveImage(type.toLowerCase(), file, out);
-		case PDF:
-			return printPDF(viewer, "PDF", asBase64);
-		case SOURCE:
-			if (jsvp == null)
-				return null;
-		  String data = jsvp.getPanelData().getSpectrum().getInlineData();
-		  if (data != null) {
-			  out.append(data);
-			  out.closeChannel();
-  	    return "OK " + out.getByteCount() + " bytes";
-		  }
-			String path = jsvp.getPanelData().getSpectrum().getFilePath();
-			return fileCopy(path, out);
-		case UNK:
-			return null;
-		}
-		return ((JSVExporter) JSViewer.getInterface("jspecview.export."
-				+ type.toUpperCase() + "Exporter")).exportTheSpectrum(viewer, mode,
-				out, spec, startIndex, endIndex, null, false);
-	}
+  @Override
+  public String exportTheSpectrum(JSViewer viewer, ExportType mode, OC out,
+                                  Spectrum spec, int startIndex, int endIndex,
+                                  PanelData pd, boolean asBase64)
+      throws Exception {
+    return exportTheSpectrumWH(viewer, mode, out, spec, startIndex, endIndex, 0, 0, asBase64);
+  }
 
-	@SuppressWarnings("resource")
-	private String printPDF(JSViewer viewer, String pdfFileName, boolean isBase64) {
+  private String exportTheSpectrumWH(JSViewer viewer, ExportType mode, OC out,
+                                  Spectrum spec, int startIndex, int endIndex,
+                                  int width, int height, boolean asBase64)
+      throws Exception {
+    GenericFileInterface file = null;
+    JSVPanel jsvp = viewer.selectedPanel;
+    String type = mode.name();
+    switch (mode) {
+    case AML:
+    case CML:
+    case SVG:
+    case SVGI:
+      break;
+    case DIF:
+    case DIFDUP:
+    case FIX:
+    case PAC:
+    case SQZ:
+    case XY:
+      type = "JDX";
+      break;
+    case JPG:
+    case PNG:
+      if (jsvp == null)
+        return null;
+      if (out == null) {
+        viewer.fileHelper.setFileChooser(mode);
+        String name = getSuggestedFileName(viewer, mode);
+        file = viewer.fileHelper.getFile(name, jsvp, true);
+        if (file == null)
+          return null;
+      }
+      viewer.setCreatingImage(true);
+      String ret = jsvp.saveImage(type.toLowerCase(), file, out, width, height);
+      viewer.setCreatingImage(false);
+      return ret;
+    case PDF:
+      return printPDF(viewer, (out == null ? "PDF" : null), out, asBase64);
+    case SOURCE:
+      if (jsvp == null)
+        return null;
+      String data = jsvp.getPanelData().getSpectrum().getInlineData();
+      if (data != null) {
+        out.append(data);
+        out.closeChannel();
+        return "OK " + out.getByteCount() + " bytes";
+      }
+      String path = jsvp.getPanelData().getSpectrum().getFilePath();
+      return fileCopy(path, out);
+    case UNK:
+      return null;
+    }
+    return ((JSVExporter) JSViewer
+        .getInterface("jspecview.export." + type.toUpperCase() + "Exporter"))
+            .exportTheSpectrum(viewer, mode, out, spec, startIndex, endIndex,
+                null, false);
+  }
 
-		boolean isJob = (pdfFileName == null || pdfFileName.length() == 0);
+	private String printPDF(JSViewer viewer, String pdfFileName, OC out, boolean isBase64) {
+
+		boolean isJob = (out != null);//pdfFileName == null || pdfFileName.length() == 0);
 		if (!isBase64 && !viewer.si.isSigned())
 			return "Error: Applet must be signed for the PRINT command.";
 		PanelData pd = viewer.pd();
@@ -201,27 +231,26 @@ public class Exporter implements ExportInterface {
 		/**
 		 * @j2sNative 
 		 * 
-		 * useDialog = false;
 		 * 
 		 */
 		{
 			pd.closeAllDialogsExcept(AType.NONE);
-			useDialog = true;
+			useDialog = (out == null || viewer.hasDisplay);
 		}
-    pl = viewer.getDialogPrint(isJob);
+    pl = viewer.getPrintLayout(isJob);
 		if (pl == null)
 			return null;
     if (!useDialog)
 			pl.asPDF = true; // JavaScript only
-		if (isJob && pl.asPDF) {
+		if (isJob && pl.asPDF && out == null) {
 			isJob = false;
 			pdfFileName = "PDF";
 		}
 		JSVPanel jsvp = viewer.selectedPanel;
-		if (!isBase64 && !isJob) {
+		if (!isBase64 && !isJob && viewer.hasDisplay) {
 			JSVFileHelper helper = viewer.fileHelper;
 			helper.setFileChooser(ExportType.PDF);
-			if (pdfFileName.equals("?") || pdfFileName.equalsIgnoreCase("PDF"))
+			if (pdfFileName == null || pdfFileName.equals("?") || pdfFileName.equalsIgnoreCase("PDF"))
 				pdfFileName = getSuggestedFileName(viewer, ExportType.PDF);
 			GenericFileInterface file = helper.getFile(pdfFileName, jsvp, true);
 			if (file == null)
@@ -233,18 +262,20 @@ public class Exporter implements ExportInterface {
 		}
 		String s = null;
 		try {
-			OC out = (isJob ? null : 
-				isBase64 ? new OC().setParams(null,  ";base64,", false, null)
+		  if (out == null) {
+		    out = (isJob ? null : 
+		      isBase64 ? new OC().setParams(null,  ";base64,", false, null)
 						: viewer.getOutputChannel(pdfFileName, true));
-			String printJobTitle = pd.getPrintJobTitle(true);
-			if (pl.showTitle) {
-				printJobTitle = jsvp.getInput("Title?", "Title for Printing",
-						printJobTitle);
-				if (printJobTitle == null)
-					return null;
-			}
+		  }
+			String printJobTitle = "";// abandoned pd.getPrintJobTitle(true);
+//			if (pl.showTitles && !isJob && viewer.hasDisplay) {
+//				printJobTitle = jsvp.getInput("Title?", "Title for Printing",
+//						printJobTitle);
+//				if (printJobTitle == null)
+//					return null;
+//			}
 			jsvp.printPanel(pl, out, printJobTitle);
-			s = out.toString();
+			s = "OK " + out.toString();
 		} catch (Exception e) {
 			jsvp.showMessage(e.toString(), "File Error");
 		}
@@ -279,7 +310,6 @@ public class Exporter implements ExportInterface {
       name = name.substring(name.lastIndexOf('/') + 1);
     }
     String ext = ".jdx";
-    boolean isPrint = false;
     switch (imode) {
     case XY:
     case FIX:
@@ -303,13 +333,12 @@ public class Exporter implements ExportInterface {
     case JPG:
     case PNG:
     case PDF:
-    	isPrint = true;
 			//$FALL-THROUGH$
 		default:
       ext = "." + imode.toString().toLowerCase();
     }
     if (viewer.currentSource.isView)
-    	name = pd.getPrintJobTitle(isPrint);
+    	name = "view"; //pd.getPrintJobTitle(isPrint);
     name += ext;
     return name;
 	}

@@ -19,7 +19,7 @@ import jspecview.common.PanelNode;
 public class AwtMainPanel extends JPanel implements JSVMainPanel {
 
 	private static final long serialVersionUID = 1L;
-	private JSVPanel selectedPanel;
+	private JSVPanel mainSelectedPanel;
 	private int currentPanelIndex;
 	@Override
 	public int getCurrentPanelIndex() {
@@ -45,12 +45,12 @@ public class AwtMainPanel extends JPanel implements JSVMainPanel {
 
 	@Override
 	public void setSelectedPanel(JSViewer viewer, JSVPanel jsvp, Lst<PanelNode> panelNodes) {
-		if (jsvp != selectedPanel) {
-			if (selectedPanel != null)
-				remove((AwtPanel) selectedPanel);
+		if (jsvp != mainSelectedPanel) {
+			if (mainSelectedPanel != null)
+				remove((AwtPanel) mainSelectedPanel);
 			if (jsvp != null)
 				add((AwtPanel) jsvp, BorderLayout.CENTER);
-			selectedPanel = jsvp;
+			mainSelectedPanel = jsvp;
 		}
 		int i = viewer.selectPanel(jsvp, panelNodes);
 		if (i >= 0)

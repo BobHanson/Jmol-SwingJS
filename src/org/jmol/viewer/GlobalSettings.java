@@ -794,6 +794,15 @@ public class GlobalSettings {
       setO(name, Double.valueOf(value));
   }
 
+
+  void setOrRemoveO(String name, Object value) {
+    if (value == null)
+      removeParam(name);
+    else
+      setO(name, value);
+  }
+
+
   public void setO(String name, Object value) {
     name = name.toLowerCase();
     if (value == null || htBooleanParameterFlags.containsKey(name))
