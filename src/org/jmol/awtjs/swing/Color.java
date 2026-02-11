@@ -8,6 +8,15 @@ public class Color implements GenericColor {
 
 
   @Override
+  public GenericColor addAlpha(int a) {
+    if (getOpacity255() != 0xFF)
+      return this;
+    Color c = new Color();
+    c.argb = (argb & 0xFFFFFF) | (a << 24);
+    return c;
+  }
+
+  @Override
   public int getRGB() {
 		return argb & 0x00FFFFFF;
 	}
@@ -19,11 +28,6 @@ public class Color implements GenericColor {
 	}
 
 	
-  @Override
-  public void setOpacity255(int a) {
-		argb = argb & 0xFFFFFF | ((a & 0xFF) << 24);
-	}
-
 	public static GenericColor get1(int rgb) {
 		Color c = new Color();
 		c.argb = rgb | 0xFF000000;
@@ -48,6 +52,7 @@ public class Color implements GenericColor {
     String s = ("00000000" + Integer.toHexString(argb));
     return "[0x" + s.substring(s.length() - 8, s.length()) + "]";
   }
+
 
 	
 }

@@ -7,22 +7,24 @@ import javajs.util.Lst;
 
 public interface JmolJDXMOLParser {
 
-  public abstract JmolJDXMOLParser set(JmolJDXMOLReader loader,
+  String getFirstModelWithPeaks();
+
+  JmolJDXMOLParser set(JmolJDXMOLReader loader,
                                              String filePath,
                                              Map<String, Object> htParams);
 
-  public abstract String getRecord(String key) throws Exception;
+  String getRecord(String key) throws Exception;
 
-  public abstract String getAttribute(String line, String tag);
+  String getAttribute(String line, String tag);
   
-  public abstract boolean readModels() throws Exception;
+  boolean readModels() throws Exception;
 
-  public abstract int readPeaks(boolean isSignals, int peakCount)
+  int readPeaks(boolean isSignals, int peakCount)
       throws Exception;
 
-  public abstract void setLine(String s);
+  void setLine(String s);
 
-  public abstract String readACDMolFile() throws Exception;
+  String readACDMolFile() throws Exception;
 
   boolean readACDAssignments(int nPoints, boolean isPeakAssignment, Lst<String[]> list) throws Exception;
 

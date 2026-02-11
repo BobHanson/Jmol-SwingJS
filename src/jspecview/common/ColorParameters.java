@@ -86,6 +86,7 @@ public abstract class ColorParameters extends Parameters {
     setColor(ScriptToken.BACKGROUNDCOLOR, getColor3(192, 192, 192));
     setColor(ScriptToken.INTEGRALPLOTCOLOR, RED);
     setColor(ScriptToken.PEAKTABCOLOR, RED);
+    setColor(ScriptToken.PEAKOVERCOLOR, RED);
     setColor(ScriptToken.HIGHLIGHTCOLOR, DARK_GRAY);
     for (int i = 0; i < 8; i++)
     	defaultPlotColors[i] = getColorFromString(defaultPlotColorNames[i]);
@@ -128,6 +129,7 @@ public abstract class ColorParameters extends Parameters {
 		case GRIDCOLOR:
 		case HIGHLIGHTCOLOR:
 		case INTEGRALPLOTCOLOR:
+		case PEAKOVERCOLOR:
 		case PEAKTABCOLOR:
 		case PLOTAREACOLOR:
 		case PLOTCOLOR:

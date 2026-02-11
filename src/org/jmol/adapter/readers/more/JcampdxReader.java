@@ -34,9 +34,9 @@ import org.jmol.adapter.smarter.Bond;
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
-import org.jmol.api.Interface;
-import org.jmol.api.JmolJDXMOLParser;
 import org.jmol.api.JmolJDXMOLReader;
+import org.jmol.jsv.JDXMOLParser;
+
 import javajs.util.BS;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
@@ -82,13 +82,15 @@ import org.jmol.viewer.JC;
 public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
 
   private int selectedModel;
-  private JmolJDXMOLParser mpr;
+  private JDXMOLParser mpr;
   private String acdMolFile;
   private int nPeaks;
   private Lst<String[]> acdAssignments; // JSV only 
   private String title;
   private String nucleus = "";
   private String type;
+  private String firstModel;
+  private boolean doStartJSV;
 
   @Override
   public void initializeReader() throws Exception {
@@ -96,7 +98,7 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
 
     // tells Jmol to start talking with JSpecView
 
-    vwr.setBooleanProperty(JC.INFO_HAVE_JSPECVIEW, true);
+    vwr.setBooleanProperty(JC.PROP_JSPECVIEW, true);
     if (isTrajectory) {
       Logger.warn("TRAJECTORY keyword ignored");
       isTrajectory = false;
@@ -108,9 +110,8 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
     }
     selectedModel = desiredModelNumber;
     desiredModelNumber = Integer.MIN_VALUE;
-    boolean doStartJSV = !checkFilterKey("NOSYNC");
-    if (doStartJSV)
-      addJmolScript("sync on");
+    doStartJSV = !checkFilterKey("NOSYNC");
+    
   }
 
   @Override
@@ -135,10 +136,10 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
     		     ).indexOf(label);    
     if (pt < 0)
       return true;
-    if (mpr == null)
-      mpr = ((JmolJDXMOLParser) Interface
-          .getOption("jsv.JDXMOLParser", vwr, "file")).set(this, filePath,
+    if (mpr == null) {
+      mpr = (JDXMOLParser) new JDXMOLParser().set(this, filePath,
           htParams);
+    }
     String value = line.substring(i + 1).trim();
     mpr.setLine(value);
     switch (pt) {
@@ -148,6 +149,10 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
     case 12:// $PEAKS or $SIGNALS
     case 24:
       mpr.readPeaks(pt == 24, -1);
+      String model = mpr.getFirstModelWithPeaks();
+      if (model != null && firstModel == null) {
+        firstModel = model;
+      }
       break;
     case 36:// $MOLFILE
       acdMolFile = mpr.readACDMolFile();
@@ -325,7 +330,8 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
   private void processPeakData() {
     if (acdAssignments != null) {
       try {
-        mpr.setACDAssignments(title, nucleus + type, 0, acdAssignments, acdMolFile);
+        mpr.setACDAssignments(title, nucleus + type, 0, acdAssignments,
+            acdMolFile);
       } catch (Exception e) {
         // ignore
       }
@@ -347,7 +353,8 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
       }
       addType(i, type);
       String title = type + ": " + mpr.getAttribute(line, "title");
-      String key = JC.INFO_JDX_ATOM_SELECT + "_" + mpr.getAttribute(line, "type");
+      String key = JC.INFO_JDX_ATOM_SELECT + "_"
+          + mpr.getAttribute(line, "type");
       bsModels.set(i);
       String s;
       if (mpr.getAttribute(line, "atoms").length() != 0) {
@@ -363,13 +370,27 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
     }
     n = asc.atomSetCount;
     for (int i = n; --i >= 0;) {
-      String id = (String) asc.getAtomSetAuxiliaryInfoValue(i,
-          "modelID");
+      String id = (String) asc.getAtomSetAuxiliaryInfoValue(i, "modelID");
       if (havePeaks && !bsModels.get(i) && id.indexOf(".") >= 0) {
         asc.removeAtomSet(i);
         n--;
       }
     }
+
+    if (JDXMOLParser.allowSameName) {
+      String names = "";
+      for (int i = 0; i < n; i++) {
+        String key = ";" + asc.getAtomSetAuxiliaryInfoValue(i, "modelID") + ";";
+        if (names.indexOf(key) >= 0) {
+          asc.removeAtomSet(i);
+          i--;
+          n--;
+        } else {
+          names += key;
+        }
+      }
+    }
+
     if (selectedModel == Integer.MIN_VALUE) {
       if (allTypes != null)
         appendLoadNote(allTypes);
@@ -380,8 +401,17 @@ public class JcampdxReader extends MolReader implements JmolJDXMOLReader {
         if (i + 1 != selectedModel)
           asc.removeAtomSet(i);
       if (n > 0)
-        appendLoadNote((String) asc.getAtomSetAuxiliaryInfoValue(
-            0, JC.INFO_MODEL_NAME));
+        appendLoadNote(
+            (String) asc.getAtomSetAuxiliaryInfoValue(0, JC.INFO_MODEL_NAME));
+      firstModel = (String) asc.getAtomSetAuxiliaryInfoValue(0, "modelID");
+    }
+    if (doStartJSV) {
+      addJmolScript("sync on;");
+      asc.setInfo(JC.INFO_START_JSPECVIEW, Boolean.TRUE);
+      if (firstModel != null) {
+        addJmolScript("sync > '" + JC.JSV_SYNC_KEYWORD_PREFIX + "';model "
+            + PT.esc(firstModel));
+      }
     }
     for (int i = asc.atomSetCount; --i >= 0;)
       asc.setAtomSetNumber(i, i + 1);

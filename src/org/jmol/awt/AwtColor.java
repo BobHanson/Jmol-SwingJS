@@ -9,14 +9,12 @@ public class AwtColor extends Color implements GenericColor {
 
 	private int opacity;
 
-	public GenericColor get4(int r, int g, int b, int a) {
-		return new AwtColor(r, g, b, a);
-	}
-
-	public GenericColor get3(int r, int g, int b) {
-		return new AwtColor(r, g, b);
-	}
-
+  @Override
+  public GenericColor addAlpha(int a) {
+    int ca = getAlpha();
+    return (ca == 0xFF ? new AwtColor(getRed(), getGreen(), getBlue(), a) : this);
+  }
+  
 	public AwtColor(int rgb) {
 		super(rgb | 0xFF000000);
 	}
@@ -34,11 +32,6 @@ public class AwtColor extends Color implements GenericColor {
 	@Override
 	public int getOpacity255() {
 		return opacity;
-	}
-	
-	@Override
-	public void setOpacity255(int a) {
-		opacity = a % 256;
 	}
 	
 }

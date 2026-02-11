@@ -1505,10 +1505,11 @@ class GraphSet implements XYScaleConverter {
           continue;
         Spectrum spec = spectra.get(i);
         boolean isContinuous = spec.isContinuous();
-        boolean onSpectrum = (iSpectrumMovedTo >= 0
-            && ((nSplit > 1 ? i == iSpectrumMovedTo
-                : isLinked || i == iSpectrumForScale) && !pd.isPrinting
-                && isContinuous));
+        boolean onSpectrum = ( //
+            !pd.isPrinting //
+            && iSpectrumMovedTo >= 0 //
+            && (nSplit > 1 ? i == iSpectrumMovedTo : isLinked || i == iSpectrumForScale) //
+         );
         boolean isGrey = (stackSelected && iSpectrumSelected >= 0
             && iSpectrumSelected != i);
         IntegralData ig = (!reversePlot
@@ -1529,7 +1530,7 @@ class GraphSet implements XYScaleConverter {
           resetPinsFromView();
           drawWidgets(gFront, g2, subIndex, needNewPins, doDraw1DObjects,
               doDraw1DY, false);
-        }
+        }          
         if (haveSingleYScale && i == iSpectrumForScale && doAll) {
           drawGrid(gMain);
           if (pd.isPrinting && nSplit == 1 && pd.graphSets.size() == 1)
@@ -1545,15 +1546,9 @@ class GraphSet implements XYScaleConverter {
           drawHighlightsAndPeakTabs(gFront, g2, i);
         if (doAll) {
           if ((onSpectrum || isPrintingOrSaving) && !is2DSpectrum) {
+            // not necessarily continuous (MS)
             if (pd.titleOn && !pd.titleDrawn) {
-              //String title = null;//(pd.isPrinting ? pd.getDrawTitle(pd.isPrinting, -1) : null);
-              //if (title == null || title.length() == 0)
-              String title = getSpectrumAt(i).getPeakTitle();
-              if (title.length() > 0) {
-                int y = (isPrintingOrSaving ? yPixel11 + 20 : height);
-                pd.drawTitle(gMain, y, width, title);
-                pd.titleDrawn = !isPrintingOrSaving;
-              }
+              drawTitle(i, gMain);
             }
           }
           if (haveSingleYScale && i == iSpectrumForScale) {
@@ -1572,12 +1567,11 @@ class GraphSet implements XYScaleConverter {
               isContinuous, offset, isGrey, null, onSpectrum,
               hasPendingIntegral, pointsOnly);
         }
-        drawIntegration(gFront, i, offset, isGrey, ig, isContinuous,
-            onSpectrum);
+        drawIntegration(gFront, i, offset, isGrey, ig, isContinuous && onSpectrum);
         drawMeasurements(gFront, i);
         if (pendingMeasurement != null && pendingMeasurement.spec == spec)
           drawMeasurement(gFront, pendingMeasurement);
-        if (onSpectrum && xPixelMovedTo >= 0) {
+        if (isContinuous && onSpectrum && xPixelMovedTo >= 0) {
           drawSpectrumPointer(gFront, spec, offset, ig);
         }
         if (nSpectra > 1 && nSplit == 1 && pd.isCurrentGraphSet(this)
@@ -1631,6 +1625,15 @@ class GraphSet implements XYScaleConverter {
     if (annotations != null)
       drawAnnotations(gFront, annotations, null);
     isPrintingOrSaving = false;
+  }
+
+  private void drawTitle(int i, Object gMain) {
+    String title = getSpectrumAt(i).getPeakTitle();
+    if (title.length() > 0) {
+      int y = (isPrintingOrSaving ? yPixel11 + 20 : height);
+      pd.drawTitle(gMain, y, width, title);
+      pd.titleDrawn = !isPrintingOrSaving;
+    }
   }
 
   private void drawSpectrumSource(Object g, int i) {
@@ -1764,7 +1767,7 @@ class GraphSet implements XYScaleConverter {
     if (list != null && list.size() > 0) {
       if (piMouseOver != null && piMouseOver.spectrum == spec
           && pd.isMouseUp()) {
-        g2d.setGraphicsColor(g2, g2d.getColor4(240, 240, 240, 140)); // very faint gray box
+        setColorFromToken(g2,ScriptToken.PEAKOVERCOLOR); // very faint gray box
         drawPeak(g2, piMouseOver, 0);
         spec.setHighlightedPeak(piMouseOver);
       } else {
@@ -1936,12 +1939,10 @@ class GraphSet implements XYScaleConverter {
    * @param yOffset
    * @param isGrey
    * @param iData
-   * @param isContinuous
    * @param isSelected
    */
   private void drawIntegration(Object gFront, int index, int yOffset,
-                               boolean isGrey, IntegralData iData,
-                               boolean isContinuous, boolean isSelected) {
+                               boolean isGrey, IntegralData iData, boolean isSelected) {
     // Check if specInfo in null or xyCoords is null
     if (iData != null) {
       if (haveIntegralDisplayed(index))
@@ -3681,10 +3682,11 @@ class GraphSet implements XYScaleConverter {
     }
   }
 
-  synchronized void mouseMovedEvent(int xPixel, int yPixel) {
+  synchronized PeakInfo mouseMovedEvent(int xPixel, int yPixel) {
     if (xPixel == Integer.MAX_VALUE) {
       iSpectrumMovedTo = -1;
-      return;
+      piMouseOver = null;
+      return null;
     }
     if (nSpectra > 1) {
       int iFrame = getSplitPoint(yPixel);
@@ -3748,6 +3750,7 @@ class GraphSet implements XYScaleConverter {
         }
       }
     }
+    return piMouseOver;
   }
 
   /**

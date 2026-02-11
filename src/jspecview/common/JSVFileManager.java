@@ -150,8 +150,6 @@ public class JSVFileManager {
 
 	public final static int URL_LOCAL = 4;
     
-	private static final boolean newInterface = true;
-
 	public static boolean isURL(String name) {
 		for (int i = urlPrefixes.length; --i >= 0;)
 			if (name.startsWith(urlPrefixes[i]))
@@ -249,7 +247,6 @@ public class JSVFileManager {
 		if (Logger.debugging)
 			Logger.debug("JSVFileManager cachePut " + data + " for " + name);
 		if (data != null) {
-      name = (newInterface ? "new" : "old") + "-" + name;
       htCorrelationCache.put(name,  data);
 		  if (cacheDir != null && name.indexOf(":") < 0) {
 		    try {
@@ -267,7 +264,6 @@ public class JSVFileManager {
 	}
 
 	public static String cacheGet(String key) {
-	  key = (newInterface ? "new" : "old") + "-" + key;
 		String data = htCorrelationCache.get(key);
 		if (Logger.debugging)
 			Logger.info("JSVFileManager cacheGet " + data +  " for " + key);
@@ -434,11 +430,9 @@ public class JSVFileManager {
 	}
 
 	private static String nciResolver = "https://cactus.nci.nih.gov/chemical/structure/%FILE/file?format=sdf&get3d=True";
-	private static String nmrdbServerH1Old = "https://www.nmrdb.org/tools/jmol/predict.php?POST?molfile=$MOLFILE";
-    private static String nmrdbServerC13Old = "https://www.nmrdb.org/service/jsmol13c?POST?molfile=$MOLFILE";
 
-    private static String nmrdbServerH1New = "https://nmr-prediction.service.zakodium.com/v1/predict/proton?POST?{\"molfile\":\"$MOLFILE\",\"includeJDX\":true}";
-    private static String nmrdbServerC13New = "https://nmr-prediction.service.zakodium.com/v1/predict/carbon?POST?{\"molfile\":\"$MOLFILE\",\"includeJDX\":true}";
+    private static String nmrdbServerH1 = "https://nmr-prediction.service.zakodium.com/v1/predict/proton?POST?{\"molfile\":\"$MOLFILE\",\"includeJDX\":true}";
+    private static String nmrdbServerC13 = "https://nmr-prediction.service.zakodium.com/v1/predict/carbon?POST?{\"molfile\":\"$MOLFILE\",\"includeJDX\":true}";
 
 	/**
 	 * Accepts either $chemicalname or MOL=molfiledata Queries NMRDB or NIH+NMRDB
@@ -480,14 +474,10 @@ public class JSVFileManager {
 		}
 		boolean is13C = type.equals("C13");
 		String url;
-		if (newInterface) {
-		  url = (is13C ? nmrdbServerC13New : nmrdbServerH1New);
-		} else {
-		  url = (is13C ? nmrdbServerC13Old : nmrdbServerH1Old);
-		}
+		url = (is13C ? nmrdbServerC13 : nmrdbServerH1);
 		url = url.replace("$MOLFILE", molFile);
 		cachePut("url", url);
-    String json = getFileAsString(url);
+        String json = getFileAsString(url);
 		if ((json == null ? (json = "Error: Error fetching simulation") : json).indexOf("Error:") >= 0) {
 		  return json;
 		}
@@ -499,13 +489,7 @@ public class JSVFileManager {
 
 	@SuppressWarnings("unchecked")
   private static String processJSON(String key, String src, String url, String name, String type, String molFile, Map<String, Object> json, boolean is13C, boolean isInline) {
-	  Map<String, Object> map; 
-    if (newInterface)
-      map = (Map<String, Object>) json.get("data");
-    else if (is13C)
-      map = (Map<String, Object>) json.get("result");
-    else
-      map = json;
+	  Map<String, Object> map = (Map<String, Object>) json.get("data");
     String jsonMolFile = (String) map.get("molfile");
     if (jsonMolFile == null) {
       System.out.println("JSVFileManager: no MOL file returned from EPFL");
@@ -524,13 +508,12 @@ public class JSVFileManager {
      * 
      */
     {
-      // JAVA only
+      // JAVA only -- simulation results
       viewer.syncScript("JSVSTR:" + molFile);
     }
     String xml = "<Signals src="
         + PT.esc(url.substring(0, url.indexOf('?'))) + ">\n";
     String jcamp;
-    if (newInterface) {
       type = (is13C ? "13C" : "1HNMR");
       jcamp = (String) map.get("jcamp");
       jcamp = hackNewNmriumSimulationJCAMP(jcamp);
@@ -540,98 +523,27 @@ public class JSVFileManager {
       SB sb = new SB();
 //    <Signal type="13C" atoms="5" multiplicity="" xMin="24.08991" xMax="24.11009" integral="1" ></Signal>
       for (int i = signals.size(); --i >= 0;) {
-        Map<String, Object> signal = (Map<String, Object>) signals.get(i);
-        sb.append("<Signal ");
-        setAttr(sb, "type", type, null);
-        Integer index = (Integer) ((Lst<?>)signal.get("atoms")).get(0);
-        if (atomMap == null) {
-          setAttr(sb, "atoms", index, null); // todo
-        } else {
-          sb.append("atoms=\"")
-              .appendI(atomMap[index.intValue()])
-              .append("\" ");
-        }
-        setAttr(sb, "multiplicity", "multiplicity", signal);
-        Number delta = (Number) signal.get("delta");
-        double[] minmax = getSignalMinMax(signal, delta.doubleValue(), freq, is13C);
-        setAttr(sb, "xMin", "" + minmax[0], null);
-        setAttr(sb, "xMax", "" + minmax[1], null);
-        setAttr(sb, "integral", "nbAtoms", signal);
-        sb.append("></Signal>\n");
+      Map<String, Object> signal = (Map<String, Object>) signals.get(i);
+      sb.append("<Signal ");
+      setAttr(sb, "type", type, null);
+      Integer index = (Integer) ((Lst<?>)signal.get("atoms")).get(0);
+      if (atomMap == null) {
+        setAttr(sb, "atoms", index, null); // todo
+      } else {
+        sb.append("atoms=\"")
+            .appendI(atomMap[index.intValue()])
+            .append("\" ");
       }
-      sb.append("</Signals>");
-      xml += sb.toString();
-    } else if (is13C) {
-      // 13C data -- no XML
-      Map<String, Object> spec = (Map<String, Object>) map.get("spectrum13C");
-      jcamp = (String) ((Map<String, Object>) spec.get("jcamp")).get("value");
-      Lst<Object> lst = (Lst<Object>) spec.get("predCSNuc");
-      SB sb = new SB();
-      for (int i = lst.size(); --i >= 0;) {
-//      <Signal type="13C" atoms="5" multiplicity="" xMin="24.08991" xMax="24.11009" integral="1" ></Signal>
-        map = (Map<String, Object>) lst.get(i);
-        sb.append("<Signal ");
-        setAttr(sb, "type", "nucleus", map);
-        if (atomMap == null)
-          setAttr(sb, "atoms", "assignment", map);
-        else
-          sb.append("atoms=\"")
-              .appendI(atomMap[PT.parseInt((String) map.get("assignment"))])
-              .append("\" ");
-        setAttr(sb, "multiplicity", "pattern", map);
-        map = (Map<String, Object>) map.get("integralData");
-        setAttr(sb, "xMin", "from", map);
-        setAttr(sb, "xMax", "to", map);
-        setAttr(sb, "integral", "value", map);
-        sb.append("></Signal>\n");
-      }
-      sb.append("</Signals>");
-      xml += sb.toString();
-    } else {
-      // old proton
-      // <Signals><Signal type="1HNMR" xMin="7.2226225" xMax="7.295377500000001"
-      // atoms="13" multiplicity="dd" integral="1"
-      // diaID="dcND`BePfTfYUYa``bX@GzP`HeT"><Couplings><Coupling atoms="16"
-      // value="4.752"/><Coupling atoms="15"
-      // value="8.799"/></Couplings></Signal><Signal type="1HNMR"
-      // xMin="7.222512500000001" xMax="7.2954875" atoms="14" multiplicity="dd"
-      // integral="1" diaID="dcND`BePfTfYUYa``bX@GzP`HeT"><Couplings><Coupling
-      // atoms="15" value="4.797"/><Coupling atoms="16"
-      // value="8.798"/></Couplings></Signal><Signal type="1HNMR" xMin="6.63251"
-      // xMax="6.705489999999999" atoms="15" multiplicity="dd" integral="1"
-      // diaID="dcND`AIPfTfYwYn``JX@GzP`HeT"><Couplings><Coupling atoms="13"
-      // value="8.799"/><Coupling atoms="14"
-      // value="4.797"/></Couplings></Signal><Signal type="1HNMR"
-      // xMin="6.632625" xMax="6.705374999999999" atoms="16" multiplicity="dd"
-      // integral="1" diaID="dcND`AIPfTfYwYn``JX@GzP`HeT"><Couplings><Coupling
-      // atoms="13" value="4.752"/><Coupling atoms="14"
-      // value="8.798"/></Couplings></Signal><Signal type="1HNMR" xMin="2.0125"
-      // xMax="2.0175" atoms="17" multiplicity="" integral="1"
-      // diaID="dcND`BsPfTeme^Uih@H@GzP`HeT"><Couplings></Couplings></Signal><Signal
-      // type="1HNMR" xMin="2.0125" xMax="2.0175" atoms="18" multiplicity=""
-      // integral="1"
-      // diaID="dcND`BsPfTeme^Uih@H@GzP`HeT"><Couplings></Couplings></Signal><Signal
-      // type="1HNMR" xMin="2.0125" xMax="2.0175" atoms="19" multiplicity=""
-      // integral="1"
-      // diaID="dcND`BsPfTeme^Uih@H@GzP`HeT"><Couplings></Couplings></Signal></Signals>
-      xml = PT.rep((String) map.get("xml"), "<Signals>", xml);
-      if (atomMap != null) {
-        SB sb = new SB();
-        String[] signals = PT.split(xml, " atoms=\"");
-        sb.append(signals[0]);
-        for (int i = 1; i < signals.length; i++) {
-          String s = signals[i];
-          int a = PT.parseInt(s);
-          sb.append(" atoms=\"").appendI(atomMap[a])
-              .append(s.substring(s.indexOf("\"")));
-        }
-        xml = sb.toString();
-      }
-      xml = PT.rep(xml, "</", "\n</");
-      xml = PT.rep(xml, "><", ">\n<");
-      xml = PT.rep(xml, "\\\"", "\"");
-      jcamp = (String) map.get("jcamp");
+      setAttr(sb, "multiplicity", "multiplicity", signal);
+      Number delta = (Number) signal.get("delta");
+      double[] minmax = getSignalMinMax(signal, delta.doubleValue(), freq, is13C);
+      setAttr(sb, "xMin", "" + minmax[0], null);
+      setAttr(sb, "xMax", "" + minmax[1], null);
+      setAttr(sb, "integral", "nbAtoms", signal);
+      sb.append("></Signal>\n");
     }
+    sb.append("</Signals>");
+    xml += sb.toString();
     if (Logger.debugging)
       Logger.info(xml);
     cachePut("xml", xml);
@@ -884,84 +796,3 @@ public class JSVFileManager {
 	}
 
 }
-
-// a nice idea, but never implemented; not relevant to JavaScript
-//
-// class JSVMonitorInputStream extends FilterInputStream {
-// int length;
-// int position;
-// int markPosition;
-// int readEventCount;
-//
-// JSVMonitorInputStream(InputStream in, int length) {
-// super(in);
-// this.length = length;
-// this.position = 0;
-// }
-//
-// /**
-// * purposely leaving off "Override" here for JavaScript
-// *
-// * @j2sIgnore
-// */
-// public int read() throws IOException {
-// ++readEventCount;
-// int nextByte = super.read();
-// if (nextByte >= 0)
-// ++position;
-// return nextByte;
-// }
-// /**
-// * purposely leaving off "Override" here for JavaScript
-// *
-// * @j2sIgnore
-// */
-// public int read(byte[] b) throws IOException {
-// ++readEventCount;
-// int cb = super.read(b);
-// if (cb > 0)
-// position += cb;
-// return cb;
-// }
-//
-// @Override
-// public int read(byte[] b, int off, int len) throws IOException {
-// ++readEventCount;
-// int cb = super.read(b, off, len);
-// if (cb > 0)
-// position += cb;
-// return cb;
-// }
-//
-// @Override
-// public long skip(long n) throws IOException {
-// long cb = super.skip(n);
-// // this will only work in relatively small files ... 2Gb
-// position = (int) (position + cb);
-// return cb;
-// }
-//
-// @Override
-// public synchronized void mark(int readlimit) {
-// super.mark(readlimit);
-// markPosition = position;
-// }
-//
-// @Override
-// public synchronized void reset() throws IOException {
-// position = markPosition;
-// super.reset();
-// }
-//
-// int getPosition() {
-// return position;
-// }
-//
-// int getLength() {
-// return length;
-// }
-//
-// int getPercentageRead() {
-// return position * 100 / length;
-// }
-// }

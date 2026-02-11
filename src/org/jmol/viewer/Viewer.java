@@ -1221,7 +1221,7 @@ public class Viewer extends JmolViewer
         (am.animationDirection < 0 ? -firstNo : firstNo),
         (am.currentDirection < 0 ? -lastNo : lastNo), currentFrame,
         currentMorphModel, entryName);
-    if (doHaveJDX())
+    if (doHaveJSV())
       getJSV().setModel(modelIndex);
     if (isJS && isApplet)
       updateJSView(modelIndex, -1);
@@ -1229,20 +1229,18 @@ public class Viewer extends JmolViewer
 
   // interaction with JSpecView
 
-  private boolean haveJDX;
+  private boolean haveJSV;
   private JmolJSpecView jsv;
 
-  private boolean doHaveJDX() {
+  private boolean doHaveJSV() {
     // once-on, never off
-    return (haveJDX
-        || (haveJDX = getBooleanProperty(JC.INFO_HAVE_JSPECVIEW)));
+    return (haveJSV
+        || (haveJSV = getBooleanProperty(JC.PROP_JSPECVIEW)));
   }
 
   JmolJSpecView getJSV() {
     if (jsv == null) {
-      jsv = (JmolJSpecView) Interface.getOption("jsv.JSpecView", this,
-          "script");
-      jsv.setViewer(this);
+      jsv = ((JmolJSpecView) Interface.getOption("jsv.JSV", this, "script")).setViewer(this);
     }
     return jsv;
   }
@@ -1259,7 +1257,7 @@ public class Viewer extends JmolViewer
    */
 
   public int getJDXBaseModelIndex(int modelIndex) {
-    if (!doHaveJDX())
+    if (!doHaveJSV())
       return modelIndex;
     return getJSV().getBaseModelIndex(modelIndex);
   }
@@ -1268,7 +1266,7 @@ public class Viewer extends JmolViewer
     // from getProperty("JSpecView...")
     Object o = sm.getJspecViewProperties("" + myParam);
     if (o != null)
-      haveJDX = true;
+      haveJSV = true;
     return o;
   }
 
@@ -1385,7 +1383,7 @@ public class Viewer extends JmolViewer
         ptLoad.getCode(), doCallback, isAsync);
     if (doCallback) {
       //       setStatusFrameChanged(false, true); // ensures proper title in JmolFrame but then we miss the file name
-      if (doHaveJDX())
+      if (doHaveJSV())
         getJSV().setModel(am.cmi);
       if (isJS && isApplet)
         updateJSView(am.cmi, -2);
@@ -1553,7 +1551,7 @@ public class Viewer extends JmolViewer
     if (atomIndex < 0)
       return;
     int syncMode = sm.getSyncMode();
-    if (syncMode == StatusManager.SYNC_DRIVER && doHaveJDX())
+    if (syncMode == StatusManager.SYNC_DRIVER && doHaveJSV())
       getJSV().atomPicked(atomIndex);
     if (isJS && isApplet)
       updateJSView(ms.at[atomIndex].mi, atomIndex);
@@ -1810,7 +1808,7 @@ public class Viewer extends JmolViewer
 
   private void setStartupBooleans() {
     setBooleanProperty("_applet", isApplet);
-    setBooleanProperty(JC.INFO_HAVE_JSPECVIEW.toLowerCase(), false);
+    setBooleanProperty(JC.PROP_JSPECVIEW, false);
     setBooleanProperty("_signedApplet", isSignedApplet);
     setBooleanProperty("_headless", headless);
     setStringProperty("_restrict", "\"" + access + "\"");

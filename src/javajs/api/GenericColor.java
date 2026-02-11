@@ -14,6 +14,6 @@ public interface GenericColor {
 
 	int getOpacity255();
 
-	void setOpacity255(int a);
-	
+  GenericColor addAlpha(int a);
+
 }

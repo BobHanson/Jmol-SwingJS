@@ -5,9 +5,9 @@ import java.util.Map;
 
 import org.jmol.api.JmolJDXMOLParser;
 import org.jmol.api.JmolJDXMOLReader;
-import javajs.util.BS;
 import org.jmol.util.Logger;
 
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.PT;
 import javajs.util.SB;
@@ -31,10 +31,13 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 
   private JmolJDXMOLReader loader;
 
-  private String modelIdList = "";
   private int[] peakIndex;
   private String peakFilePath;
+  private String firstModelWithPeaks;
 
+
+  public final static boolean allowSameName = false; // true messes up with picking
+  
   public JDXMOLParser() {
     // for reflection
   }
@@ -293,6 +296,7 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 				return 0;
 			String file = " file=" + PT.esc(peakFilePath.replace('\\', '/'));
 			String model = PT.getQuotedAttribute(line, "model");
+			model = fixModel(model, true);
 			model = " model=" + PT.esc(model == null ? thisModelID : model);
 			String mytype = PT.getQuotedAttribute(line, "type");
 			peakXLabel = PT.getQuotedAttribute(line, "xLabel");
@@ -312,9 +316,16 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 							.getQuotedAttribute(line, "xMin")) * 100))
 							+ "_"
 							+ ((int) (PT.parseDouble(PT.getQuotedAttribute(line, "xMax")) * 100));
-					getStringInfo(file, title, mytype,
-							(PT.getQuotedAttribute(line, "model") == null ? model : ""),
-							atoms, htSets, key, list, line.substring(tag2.length()).trim());
+					String peakModel = PT.getQuotedAttribute(line, "model");
+					String newID = fixModel(peakModel, true);
+					if (firstModelWithPeaks == null)
+					  firstModelWithPeaks = newID;
+					if (newID != null && !newID.equals(peakModel)) {
+					  line = PT.rep(line,  "model=\"" + peakModel + "\"", "model=\"" + newID + "\"");
+					  Logger.error("peak model changed from " + peakModel + " for " + line);
+					}
+          String more = line.substring(tag2.length()).trim();
+					getStringInfo(file, title, mytype, (peakModel == null ? model : ""), atoms, htSets, key, list, more);
 				}
 			}
 			return setPeakData(list, offset);
@@ -323,7 +334,35 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 		}
 	}
 
-	private int setPeakData(Lst<Object[]> list, int offset) {
+  private void checkDuplicateModelID() {
+    if (allowSameName)
+      return;
+    Integer idup = mapDup.get(thisModelID);
+    if (idup == null) {
+      mapDup.put(thisModelID, Integer.valueOf(1));
+    } else {
+      idup = Integer.valueOf(idup.intValue() + 1);
+      String newID = thisModelID + idup;
+      Logger.error("duplicate model id " + thisModelID + " now " + newID);
+      mapDup.put(thisModelID, idup);
+      thisModelID = newID;
+    }
+  }
+
+	private String fixModel(String model, boolean andIncrement) {
+    // must ensure not "1.1", which would be interpreted by the model command
+    if (model != null && PT.parseInt(model) != Integer.MIN_VALUE)
+      model = "_" + model;
+    if (allowSameName)
+      return model;
+    Integer idup = (model == null || !andIncrement ? null : mapDup.get(model));
+    if (idup != null && idup.intValue() > 1) {
+      model = thisModelID;
+    }
+    return model;
+  }
+
+  private int setPeakData(Lst<Object[]> list, int offset) {
 		int nH = 0;
 		int n = list.size();
 		for (int i = 0; i < n; i++) {
@@ -379,17 +418,14 @@ public class JDXMOLParser implements JmolJDXMOLParser {
 		}
 	}
 
+	private Map<String, Integer> mapDup = new Hashtable<>();
+	
 	private void getModelData(boolean isFirst) throws Exception {
+    baseModel = fixModel(getAttribute(line, "baseModel"), true);
     lastModel = thisModelID;
-    thisModelID = getAttribute(line, "id");
+    thisModelID = fixModel(getAttribute(line, "id"), false);
     // read model only once for a given ID
-    String key = ";" + thisModelID + ";";
-    if (modelIdList.indexOf(key) >= 0) {
-      line = loader.discardLinesUntilContains("</ModelData>");
-      return;
-    }
-    modelIdList += key;
-    baseModel = getAttribute(line, "baseModel");
+    checkDuplicateModelID();
     while (line.indexOf(">") < 0 && line.indexOf("type") < 0)
       readLine();
     String modelType = getAttribute(line, "type").toLowerCase();
@@ -425,6 +461,11 @@ public class JDXMOLParser implements JmolJDXMOLParser {
   @Override
   public void setLine(String s) {
     line = s;
+  }
+
+  @Override
+  public String getFirstModelWithPeaks() {
+    return firstModelWithPeaks;
   }
 
 }

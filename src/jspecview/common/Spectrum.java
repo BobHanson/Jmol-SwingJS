@@ -240,9 +240,14 @@ public class Spectrum extends JDXDataObject {
   }
 
   public String getPeakTitle() {
-    String s = (selectedPeak == null ? null : selectedPeak.getTitle());
-    if ((s == null || s.length() == 0) && highlightedPeak != null)
+    String s = null;
+    if (//(s == null || s.length() == 0) && 
+        highlightedPeak != null)
       s = highlightedPeak.getTitle();
+    
+    if ((s == null || s.length() == 0) && selectedPeak != null)
+      s = selectedPeak.getTitle();
+    
     if (s == null || s.length() == 0)
       s = getTitleLabel();
     return s;

@@ -687,7 +687,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected void saveWindowSizes() {
     if (historyFile == null)
       return;
-    if (frame != null) {
+    if (frame != null && display.dimSize.width >= 500 && display.dimSize.width >= 500) {
       historyFile.addWindowInfo(windowName, frame, null, display.dimSize);
     }
     AppConsole console = getConsole();

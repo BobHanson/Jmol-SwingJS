@@ -255,13 +255,13 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     case SYNC:
       //System.out.println("StatusListener sync; " + strInfo);
       String lc = (strInfo == null ? "" : strInfo.toLowerCase());
-      if (lc.startsWith("jspecview")) {
-        setJSpecView(strInfo.substring(9).trim(), false, false);
-        return;
-      }
       if (lc.equals("getpreference")) {
         data[0] = (data[2] == null ? jmolPanel.preferencesDialog
             : jmolPanel.getPreference(data[2].toString()));
+        return;
+      }
+      if (lc.startsWith("jspecview")) {
+        setJSpecView(strInfo.substring(9).trim(), false, false);
         return;
       }
       if (strInfo != null && strInfo.toLowerCase().startsWith("nbo:")) {
@@ -527,7 +527,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
       jSpecViewFrame.setLocation(jmolPanel.frame.getLocation().x + 10, jmolPanel.frame
           .getLocation().y + 100);
       jSpecViewFrame.register("Jmol", this);
-      vwr.setBooleanProperty(JC.INFO_HAVE_JSPECVIEW, true); // was lowercase
+      vwr.setBooleanProperty(JC.PROP_JSPECVIEW, true); // was lowercase
       if (isStartup) {
         doLoadCheck = true;
       }

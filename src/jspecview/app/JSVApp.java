@@ -314,7 +314,7 @@ public class JSVApp implements PanelListener, JSVAppInterface, ScriptInterface {
 
 	@Override
 	public void syncScript(String peakScript) {
-		vwr.syncScript(peakScript);
+	  vwr.syncScript(peakScript);
 	}
 
 	/**

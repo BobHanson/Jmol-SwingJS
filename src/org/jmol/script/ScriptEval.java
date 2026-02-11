@@ -5425,6 +5425,9 @@ public class ScriptEval extends ScriptExpr {
     case T.id:
       checkLength(3);
       String id = stringParameter(2);
+      // can't allow "1.1", for example
+      if (PT.parseInt(id) != Integer.MIN_VALUE)
+        invArg();
       if (!chk)
         vwr.setCurrentModelID(id);
       return;

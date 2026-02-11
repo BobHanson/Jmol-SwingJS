@@ -32,8 +32,6 @@ import org.jmol.util.Font;
 
 import javajs.api.GenericColor;
 import javajs.export.PDFCreator;
-import javajs.util.CU;
-
 import jspecview.api.JSVPanel;
 import jspecview.api.JSVPdfWriter;
 
@@ -150,9 +148,9 @@ public class PDFWriter implements GenericGraphics, JSVPdfWriter {
   @Override
 	public void setGraphicsColor(Object g, GenericColor c) {
     int p = c.getRGB();
-    rgb[0] = (p >> 16) & 0xFF;
-    rgb[1] = (p >> 8) & 0xFF;
-    rgb[2] = (p & 0xFF);
+    rgb[0] = ((p >> 16) & 0xFF)/255f;
+    rgb[1] = ((p >> 8) & 0xFF)/255f;
+    rgb[2] = ((p & 0xFF))/255f;
 		pdf.setColor(rgb, true);
 		pdf.setColor(rgb, false);
 	}

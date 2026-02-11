@@ -133,13 +133,13 @@ public class MainFrame extends JFrame
   private final JPanel nullPanel = new JPanel();
   private JSplitPane sideSplitPane = new JSplitPane();
 
-  //	public JSVTree spectraTree;
-  //	public JDXSource              currentSource;
+  //  public JSVTree spectraTree;
+  //  public JDXSource              currentSource;
   //  public JmolList<JSVPanelNode> panelNodes;  
-  //	public ColorParameters        parameters;
-  //	public RepaintManager         repaintManager;
-  //	public JSVPanel               selectedPanel;
-  //	public JSVMainPanel           viewPanel; // alias for spectrumPanel
+  //  public ColorParameters        parameters;
+  //  public RepaintManager         repaintManager;
+  //  public JSVPanel               selectedPanel;
+  //  public JSVMainPanel           viewPanel; // alias for spectrumPanel
 
   private JSVAppPro advancedApplet;
   private CommandHistory commandHistory;

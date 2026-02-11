@@ -1,7 +1,5 @@
 package jspecview.common;
 
-import javax.print.attribute.standard.MediaSizeName;
-
 /**
  * <code>PrintLayout</code> class stores all the information needed from the
  * <code>PrintLayoutDialog</code>
@@ -54,7 +52,7 @@ public class PrintLayout {
 	/**
 	 * The size of the paper to be printed on
 	 */
-	public Object paper = MediaSizeName.NA_LETTER;
+	public Object paper = null;
 	
 	public boolean asPDF = true;
 	

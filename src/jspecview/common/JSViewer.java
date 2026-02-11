@@ -18,6 +18,7 @@ import org.jmol.api.GenericGraphics;
 import org.jmol.api.GenericPlatform;
 import org.jmol.api.PlatformViewer;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
 import javajs.api.BytePoster;
 import javajs.util.CU;
@@ -70,8 +71,6 @@ public class JSViewer implements PlatformViewer, BytePoster {
   public static final int PORTRAIT = 1; // Printable
   public static final int PDF_PAGE_EXISTS = 0;
   public static final int PDF_NO_SUCH_PAGE = 1;
-
-  private static String testScript = "<PeakData  index=\"1\" title=\"\" model=\"~1.1\" type=\"1HNMR\" xMin=\"3.2915\" xMax=\"3.2965\" atoms=\"15,16,17,18,19,20\" multiplicity=\"\" integral=\"1\"> src=\"JPECVIEW\" file=\"http://SIMULATION/$caffeine\"";
 
   private final static int NLEVEL_MAX = 100;
 
@@ -132,14 +131,16 @@ public class JSViewer implements PlatformViewer, BytePoster {
   private int fileCount;
   private int nViews;
   private int scriptLevelCount;
-  private String returnFromJmolModel;
   private String integrationRatios;
 
   public GenericPlatform apiPlatform;
 
   public boolean hasDisplay;
-
+  
   public static JSVToJSmolInterface jsmolObject;
+
+  public String peakInfoModelSentToJmol;
+
 
   public void setProperty(String key, String value) {
     if (properties != null)
@@ -221,6 +222,9 @@ public class JSViewer implements PlatformViewer, BytePoster {
 
   public boolean runScriptNow(String script) {
     System.out.println(checkScript(script));
+    int pt = script.indexOf(JC.JSV_SYNC_KEYWORD_PREFIX);
+    if (pt >= 0)
+      script = script.substring(pt + JC.JSV_SYNC_KEYWORD_PREFIX_LENGTH);
     scriptLevelCount++;
     if (script == null)
       script = "";
@@ -232,7 +236,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
       return true;
     }
     if (script.indexOf("<PeakData") >= 0) {
-      syncScript(script);
+      syncScript(script); 
       return true;
     }
     Logger.info("RUNSCRIPT " + script);
@@ -316,7 +320,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
           execZoom("invertY");
           break;
         case JMOL:
-          si.syncToJmol(value);
+          syncToJmol(value);
           break;
         case JSV:
           syncScript(PT.trimQuotes(value));
@@ -764,7 +768,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
     repaint(true);
   }
 
-  private void repaint(boolean andTaintAll) {
+  void repaint(boolean andTaintAll) {
     selectedPanel.doRepaint(andTaintAll);
   }
 
@@ -833,196 +837,9 @@ public class JSViewer implements PlatformViewer, BytePoster {
 
   // / from JavaScript
 
-  /**
-   * incoming script processing of <PeakAssignment file="" type="xxx"...> record
-   * from Jmol
-   * 
-   * @param peakScript
-   */
-
-  public void syncScript(String peakScript) {
-    //Jmol>JSV
-    if (peakScript.equals("TEST"))
-      peakScript = testScript;
-    Logger.info("JSViewer.syncScript Jmol>JSV " + peakScript);
-    if (peakScript.indexOf("<PeakData") < 0) {
-      if (peakScript.startsWith("JSVSTR:")) {
-        si.syncToJmol(peakScript);
-        return;
-      }
-      runScriptNow(peakScript);
-      if (peakScript.indexOf("#SYNC_PEAKS") >= 0)
-        syncPeaksAfterSyncScript();
-      return;
-    }
-    String sourceID = PT.getQuotedAttribute(peakScript, "sourceID");
-    String type, model, file, jmolSource, index, atomKey;
-    if (sourceID == null) {
-      // todo: why the quotes??
-      //peakScript = PT.rep(peakScript, "\\\"", "");
-      file = PT.getQuotedAttribute(peakScript, "file");
-      index = PT.getQuotedAttribute(peakScript, "index");
-      if (file == null || index == null)
-        return;
-      file = PT.rep(file, "#molfile", "");// Jmol has loaded the model from the cache
-      model = PT.getQuotedAttribute(peakScript, "model");
-      jmolSource = PT.getQuotedAttribute(peakScript, "src");
-      String modelSent = (jmolSource != null && jmolSource.startsWith("Jmol") ? null
-          : returnFromJmolModel);
-      if (model != null && modelSent != null && !model.equals(modelSent)) {
-        Logger.info("JSV ignoring model " + model + "; should be " + modelSent);
-        return;
-      }
-      returnFromJmolModel = null;
-      if (panelNodes.size() == 0 || !checkFileAlreadyLoaded(file)) {
-        Logger.info("file " + file
-            + " not found -- JSViewer closing all and reopening");
-        si.siSyncLoad(file);
-      }
-      type = PT.getQuotedAttribute(peakScript, "type");
-      atomKey = null;
-    } else {
-      file = null;
-      index = model = sourceID;
-      atomKey = "," + PT.getQuotedAttribute(peakScript, "atom") + ",";
-      type = "ID";
-      jmolSource = sourceID; //??
-    }
-
-    PeakInfo pi = selectPanelByPeak(file, index, atomKey);
-    PanelData pd = pd();
-    pd.selectSpectrum(file, type, model, true);
-    si.siSendPanelChange();
-    pd.addPeakHighlight(pi);
-    repaint(true);
-    // round trip this so that Jmol highlights all equivalent atoms
-    // and appropriately starts or clears vibration
-    if (jmolSource == null || (pi != null && pi.getAtoms() != null))
-      si.syncToJmol(jmolSelect(pi));
-  }
-
-  private void syncPeaksAfterSyncScript() {
-    JDXSource source = currentSource;
-    if (source == null)
-      return;
-    try {
-      String file = "file=" + PT.esc(source.getFilePath());
-      Lst<PeakInfo> peaks = source.getSpectra().get(0).getPeakList();
-      SB sb = new SB();
-      sb.append("[");
-      int n = peaks.size();
-      for (int i = 0; i < n; i++) {
-        String s = peaks.get(i).toString();
-        s = s + " " + file;
-        sb.append(PT.esc(s));
-        if (i > 0)
-          sb.append(",");
-      }
-      sb.append("]");
-      si.syncToJmol("Peaks: " + sb);
-    } catch (Exception e) {
-      // ignore bad structures -- no spectrum
-    }
-  }
-
-  private boolean checkFileAlreadyLoaded(String fileName) {
-    if (isClosed())
-      return false;
-    if (pd().hasFileLoaded(fileName))
-      return true;
-    for (int i = panelNodes.size(); --i >= 0;)
-      if (panelNodes.get(i).pd().hasFileLoaded(fileName)) {
-        si.siSetSelectedPanel(panelNodes.get(i).jsvp);
-        return true;
-      }
-    return false;
-  }
-
-  /**
-   * @param file
-   * @param index
-   * @param atomKey
-   * @return PeakInfo entry if appropriate
-   */
-  private PeakInfo selectPanelByPeak(String file, String index, String atomKey) {
-    if (panelNodes == null)
-      return null;
-    PeakInfo pi = null;
-    for (int i = panelNodes.size(); --i >= 0;)
-      panelNodes.get(i).pd().addPeakHighlight(null);
-    pi = pd().selectPeakByFileIndex(file, index, atomKey);
-    if (pi != null) {
-      // found in current panel
-      setNode(PanelNode.findNode(selectedPanel, panelNodes));
-    } else {
-      // must look elsewhere
-      for (int i = panelNodes.size(); --i >= 0;) {
-        PanelNode node = panelNodes.get(i);
-        if ((pi = node.pd().selectPeakByFileIndex(file, index, atomKey)) != null) {
-          setNode(node);
-          break;
-        }
-      }
-    }
-    return pi;
-  }
-
-  /**
-   * this method is called as a result of the user clicking on a peak
-   * (eventObject instanceof PeakPickEvent) or from PEAK command execution
-   * 
-   * @param eventObj
-   * @param isApp
-   */
-  public void processPeakPickEvent(Object eventObj, boolean isApp) {
-    // trouble here is with round trip when peaks are clicked in rapid
-    // succession.
-
-    PeakInfo pi;
-    if (eventObj instanceof PeakInfo) {
-      // this is a call from the PEAK command, above.
-      pi = (PeakInfo) eventObj;
-      PeakInfo pi2 = pd().findMatchingPeakInfo(pi);
-      if (pi2 == null) {
-        if (!"ALL".equals(pi.getTitle()))
-          return;
-        PanelNode node = null;
-        for (int i = 0; i < panelNodes.size(); i++)
-          if ((pi2 = panelNodes.get(i).pd().findMatchingPeakInfo(pi)) != null) {
-            node = panelNodes.get(i);
-            break;
-          }
-        if (node == null)
-          return;
-        setNode(node);
-      }
-      pi = pi2;
-    } else {
-      PeakPickEvent e = ((PeakPickEvent) eventObj);
-      si.siSetSelectedPanel((JSVPanel) e.getSource());
-      pi = e.getPeakInfo();
-    }
-    pd().addPeakHighlight(pi);
-    // the above line is what caused problems with GC/MS selection
-    syncToJmol(pi);
-    //System.out.println(Thread.currentThread() +
-    // "processPeakEvent --selectSpectrum " + pi);
-    if (pi.isClearAll()) // was not in app version??
-      repaint(false);
-    else
-      pd().selectSpectrum(pi.getFilePath(), pi.getType(), pi.getModel(), true);
-    si.siCheckCallbacks(pi.getTitle());
-  }
-
   void newStructToJmol(String data) {
     Logger.info("sending new structure to Jmol:\n" + data);
-    si.syncToJmol("struct:" + data);
-  }
-
-  private void syncToJmol(PeakInfo pi) {
-    repaint(true);
-    returnFromJmolModel = pi.getModel();
-    si.syncToJmol(jmolSelect(pi));
+    syncToJmol("struct:" + data);
   }
 
   public void sendPanelChange() {
@@ -1036,15 +853,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
     pd.addPeakHighlight(pi);
     Logger.info(Thread.currentThread() + "JSViewer sendFrameChange "
         + selectedPanel);
-    syncToJmol(pi);
-  }
-
-  private String jmolSelect(PeakInfo pi) {
-    String script = ("IR".equals(pi.getType()) || "RAMAN".equals(pi.getType()) ? "vibration ON; selectionHalos OFF;"
-        : "vibration OFF; selectionhalos "
-            + (pi.getAtoms() == null ? "OFF" : "ON"));
-    return "Select: " + pi + " script=\"" + script + " \" sourceID=\""
-        + pd().getSpectrum().sourceID + "\"";
+    notifyJmol(pi);
   }
 
   public Map<String, Object> getPropertyAsJavaObject(String key) {
@@ -1231,8 +1040,8 @@ public class JSViewer implements PlatformViewer, BytePoster {
 
   public int getSolutionColor(boolean asFitted) {
     Spectrum spectrum = pd().getSpectrum();
-    VisibleInterface vi = (spectrum.canShowSolutionColor() ? (VisibleInterface) JSViewer
-        .getInterface("jspecview.common.Visible") : null);
+    VisibleInterface vi = (spectrum.canShowSolutionColor() ? (VisibleInterface) 
+        getInterface("jspecview.common.Visible") : null);
     return (vi == null ? -1 : vi.getColour(spectrum, asFitted));
   }
 
@@ -1836,7 +1645,6 @@ public class JSViewer implements PlatformViewer, BytePoster {
     if (dialogManager != null)
       return dialogManager;
     dialogManager = (DialogManager) getPlatformInterface("DialogManager");
-    //Interface.getInterface("jspecview.awtjs2d.JsDialogManager");
     return dialogManager.set(this);
   }
 
@@ -1935,8 +1743,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
   private String execWrite(String value) {
     if (isJS && value == null)
       value = "PDF";
-    String msg = ((ExportInterface) JSViewer
-        .getInterface("jspecview.export.Exporter")).write(this,
+    String msg = ((ExportInterface) getInterface("jspecview.export.Exporter")).write(this,
         value == null ? null : ScriptToken.getTokens(value), false);
     si.writeStatus(msg);
     return msg;
@@ -1951,8 +1758,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
       return "Maximum spectrum index (0-based) is " + (nMax - 1) + ".";
     Spectrum spec = (n < 0 ? pd.getSpectrum() : pd.getSpectrumAt(n));
     try {
-      return ((ExportInterface) JSViewer
-          .getInterface("jspecview.export.Exporter")).exportTheSpectrum(this,
+      return ((ExportInterface) getInterface("jspecview.export.Exporter")).exportTheSpectrum(this,
           ExportType.getType(type), null, spec, 0,
           spec.getXYCoords().length - 1, null, type.equalsIgnoreCase("PDF"));
     } catch (Exception e) {
@@ -2015,7 +1821,7 @@ public class JSViewer implements PlatformViewer, BytePoster {
       recentSimulation = url;
       if (url.equals(THIS_STRUCTURE)) {
         if (isEmbedded) {
-          si.syncToJmol("sync . \"" + simulationType + "Simulate:\";");
+          syncToJmol("sync . \"" + simulationType + "Simulate:\";");
           return true;
         }
         return false;
@@ -2286,5 +2092,83 @@ public class JSViewer implements PlatformViewer, BytePoster {
   public void setCreatingImage(boolean isSaving) {
     pd().creatingImage = isSaving;
   }
+
+  boolean checkFileAlreadyLoaded(String fileName) {
+    if (isClosed())
+      return false;
+    if (pd().hasFileLoaded(fileName))
+      return true;
+    for (int i = panelNodes.size(); --i >= 0;)
+      if (panelNodes.get(i).pd().hasFileLoaded(fileName)) {
+        si.siSetSelectedPanel(panelNodes.get(i).jsvp);
+        return true;
+      }
+    return false;
+  }
+
+  /**
+   * this method is called as a result of the user clicking on a peak
+   * (eventObject instanceof PeakPickEvent) or from PEAK command execution
+   * 
+   * @param eventObj
+   * @param isApp
+   */
+  public void processPeakPickEvent(Object eventObj, boolean isApp) {
+    // trouble here is with round trip when peaks are clicked in rapid
+    // succession.
+
+    PeakInfo pi;
+    if (eventObj instanceof PeakInfo) {
+      // this is a call from the PEAK command, above.
+      pi = (PeakInfo) eventObj;
+      PeakInfo pi2 = pd().findMatchingPeakInfo(pi);
+      if (pi2 == null) {
+        if (!"ALL".equals(pi.getTitle()))
+          return;
+        PanelNode node = null;
+        for (int i = 0; i < panelNodes.size(); i++)
+          if ((pi2 = panelNodes.get(i).pd().findMatchingPeakInfo(pi)) != null) {
+            node = panelNodes.get(i);
+            break;
+          }
+        if (node == null)
+          return;
+        setNode(node);
+      }
+      pi = pi2;
+    } else {
+      PeakPickEvent e = ((PeakPickEvent) eventObj);
+      si.siSetSelectedPanel((JSVPanel) e.getSource());
+      pi = e.getPeakInfo();
+    }
+    pd().addPeakHighlight(pi);
+    // the above line is what caused problems with GC/MS selection
+    notifyJmol(pi);
+    //System.out.println(Thread.currentThread() +
+    // "processPeakEvent --selectSpectrum " + pi);
+    if (pi.isClearAll()) // was not in app version??
+      repaint(false);
+    else
+      pd().selectSpectrum(pi.getFilePath(), pi.getType(), pi.getModel(), true);
+    si.siCheckCallbacks(pi.getTitle());
+  }
+
+  ////  Jmol sychronization
+  
+  public void syncScript(String peakScript) {
+    SyncManager.syncFromJmol(this, peakScript);
+  }
+ 
+  private void syncToJmol(String msg) {
+    si.syncToJmol(msg);
+    
+  }
+
+  private void notifyJmol(PeakInfo pi) {
+    repaint(true);
+    SyncManager.syncToJmol(this, pi);
+  }
+
+
 
 }

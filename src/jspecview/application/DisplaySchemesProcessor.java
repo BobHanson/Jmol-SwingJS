@@ -130,7 +130,7 @@ public class DisplaySchemesProcessor {
    * @return true if loaded successfully
    */
   public boolean load(String dispSchemeFileName){
-    fileName = dispSchemeFileName;       
+    fileName = dispSchemeFileName;        
     if (!new File(fileName).exists()) {
       System.out.println("DisplaySchemeProcessor ignored: " + dispSchemeFileName + " does not exist.");
       return false;

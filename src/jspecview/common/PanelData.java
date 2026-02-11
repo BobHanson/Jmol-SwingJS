@@ -38,20 +38,21 @@
 package jspecview.common;
 
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
+
+import org.jmol.api.EventManager;
+import org.jmol.api.GenericGraphics;
+import org.jmol.awtjs.Event;
+import org.jmol.util.Font;
+import org.jmol.util.Logger;
 
 import javajs.api.GenericColor;
-
-import org.jmol.awtjs.Event;
-
 import javajs.util.CU;
 import javajs.util.Lst;
-
 import jspecview.api.AnnotationData;
 import jspecview.api.JSVPanel;
 import jspecview.api.PanelListener;
@@ -59,11 +60,6 @@ import jspecview.api.VisibleInterface;
 import jspecview.common.Annotation.AType;
 import jspecview.common.Spectrum.IRMode;
 import jspecview.dialog.JSVDialog;
-
-import org.jmol.api.EventManager;
-import org.jmol.api.GenericGraphics;
-import org.jmol.util.Font;
-import org.jmol.util.Logger;
 
 /**
  * JSVPanel class draws a plot from the data contained a instance of one or more
@@ -1012,11 +1008,17 @@ public class PanelData implements EventManager {
 
   public int mouseX, mouseY;
 
-  public GraphSet mouseSet;
+  private GraphSet mouseSet;
+  private PeakInfo mousePeak;
+  
 
   public void clearMouseSet(GraphSet gs) {
-    if (mouseSet != null && mouseSet != gs)
+    if (gs == null) {
+      mousePeak = null;
+    }
+    if (mouseSet != null && mouseSet != gs) {
       mouseSet.mouseMovedEvent(Integer.MAX_VALUE, 0);
+    }
     mouseSet = gs;
     if (gs == null && graphSets.size() > 0) {
     	// newly selected Panel defaults to bottom spectrum titled
@@ -1033,7 +1035,11 @@ public class PanelData implements EventManager {
     if (gs == null)
       return;
     clearMouseSet(gs);
-    gs.mouseMovedEvent(xPixel, yPixel);
+    PeakInfo peak = gs.mouseMovedEvent(xPixel, yPixel);
+    if (mousePeak != peak) {
+      mousePeak = peak;
+      setTaintedAll();
+    }
   }
 
   public void doMouseClicked(int xPixel, int yPixel, boolean isControlDown) {
@@ -1264,6 +1270,7 @@ public class PanelData implements EventManager {
   public GenericColor gridColor;
   public GenericColor integralPlotColor;
   public GenericColor peakTabColor;
+  public GenericColor peakOverColor;
   public GenericColor plotAreaColor;
   public GenericColor scaleColor;
   public GenericColor titleColor;
@@ -1285,9 +1292,7 @@ public class PanelData implements EventManager {
       coordinatesColor = color;
       return;
     case HIGHLIGHTCOLOR:
-      highlightColor = color;
-      if (highlightColor.getOpacity255() == 255)
-        highlightColor.setOpacity255(150);
+      highlightColor = color.addAlpha(150);
       return;
     case ZOOMBOXCOLOR:
       zoomBoxColor = color;
@@ -1303,6 +1308,9 @@ public class PanelData implements EventManager {
       break;
     case INTEGRALPLOTCOLOR:
       integralPlotColor = color;
+      break;
+    case PEAKOVERCOLOR:      
+      peakOverColor = color.addAlpha(30);
       break;
     case PEAKTABCOLOR:
       peakTabColor = color;
@@ -1345,6 +1353,8 @@ public class PanelData implements EventManager {
       return integralPlotColor;
     case GRIDCOLOR:
       return gridColor;
+    case PEAKOVERCOLOR:
+      return peakOverColor;
     case PEAKTABCOLOR:
       return peakTabColor;
     case PLOTAREACOLOR:

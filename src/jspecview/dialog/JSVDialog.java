@@ -463,13 +463,13 @@ abstract public class JSVDialog extends Annotation implements AnnotationData {
   private void restoreDialogPosition(JSVPanel panel, int[] posXY) {
     if (panel != null) {
       if (posXY[0] == Integer.MIN_VALUE) {
-        posXY[0] = 0;
-        posXY[1] = -20;
+        posXY[0] = 50;
+        posXY[1] = 50;
       }
       int[] pt = manager.getLocationOnScreen(panel);
       int height = panel.getHeight();
       loc = new int[] { Math.max(0, pt[0] + posXY[0]),
-          Math.max(0, pt[1] + height + posXY[1]) };
+          Math.max(0, pt[1] + posXY[1]) };
       dialog.setIntLocation(loc);
     }
   }

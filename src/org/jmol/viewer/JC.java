@@ -1539,6 +1539,8 @@ public final class JC {
 
   // SYNC types
 
+  public static final String JSV_SYNC_KEYWORD_PREFIX = "JSpecView:";
+  public static final int JSV_SYNC_KEYWORD_PREFIX_LENGTH = 10;
   public static final int JSV_NOT = -1;
   public static final int JSV_SEND_JDXMOL = 0;
   public static final int JSV_SETPEAKS = 7;
@@ -1671,7 +1673,8 @@ public final class JC {
   public static final String INFO_JMOL_DATA_PROPERTIES = "properties";
   public static final String INFO_JMOL_DATA_SCALING = "jmolDataScaling";
 
-  public static final String INFO_HAVE_JSPECVIEW = "_jspecview";
+  public static final String PROP_JSPECVIEW = "_jspecview";
+  public static final String INFO_START_JSPECVIEW = "_startJSpecView";
   public static final String INFO_JDX_MODEL_SELECT = "jdxModelSelect";
   public static final String INFO_JDX_ATOM_SELECT = "jdxAtomSelect";
   public static final String INFO_MODEL_NAME = "name";
