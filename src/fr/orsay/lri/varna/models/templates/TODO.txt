@@ -1,0 +1,7 @@
+TODO for the template-based RNA drawing algorithm:
+- Calculer le tableau centers[] entièrement dans l'algo de tracé.
+- RNATemplateAlign.multiPassMap() is currently just an alias
+  for singlePassMap(), but it should me multi-pass.
+- Decalage des helices en absence de PK
+- Ellipses pour non-appariees
+- couts affine
