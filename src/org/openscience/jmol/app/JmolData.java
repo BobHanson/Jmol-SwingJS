@@ -25,17 +25,17 @@ package org.openscience.jmol.app;
 
 import javajs.util.PT;
 
+import org.jmol.api.JmolStatusListener;
 import org.jmol.util.Escape;
 import org.jmol.viewer.Viewer;
+import org.openscience.jmol.app.status.StatusListener;
 
 public class JmolData {
   
   /*
-   * no Java Swing to be found. No implementation of any graphics or 
-   * containers at all. No shapes, no export, no writing of images,
-   *  -- only the model and its associated data.
+   * full Java Swing and graphics, but no setVisible(true), no JFrame
    * 
-   * Just a great little answer machine that can load models, 
+   * a great answer machine that can load models, 
    * do scripted analysis of their structures, and spit out text
    * 
    */
@@ -79,7 +79,11 @@ public class JmolData {
   
   private JmolData(JmolApp jmolApp) {
     this.jmolApp = jmolApp;
-    vwr = new Viewer(jmolApp.info);
+    
+    vwr = new Viewer();
+    StatusListener syncStatusListener = new StatusListener(vwr, null, null);
+    jmolApp.info.put("statusListener", syncStatusListener);
+    vwr.setOptions(jmolApp.info);
     vwr.setScreenDimension(jmolApp.startupWidth, jmolApp.startupHeight);
     vwr.setWidthHeightVar();
     jmolApp.startViewer(vwr, null, true);

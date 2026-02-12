@@ -98,6 +98,8 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
         <include name="**/license.txt" />
         <include name="**/*.jpg" />
         <include name="**/*.gif" />
+        <include name="**/*.jdx" />
+        <include name="**/*.xml" />
       	<include name="**/*.png" />
         <include name="**/*.html" />
         <include name="**/*.js" />
@@ -213,6 +215,9 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
 	<include name="**/org/qcschema/**" />
     <include name="**/org/iupac/**" />
 	<include name="**/jmol/**" />
+	<include name="**/openscience/jmol/app/status/*" />
+		
+		
 	<exclude name="**/jmol/_documents/**" />
 	<exclude name="**/jmol/applet/**" />
 	<exclude name="**/jmol/*js/**" />
