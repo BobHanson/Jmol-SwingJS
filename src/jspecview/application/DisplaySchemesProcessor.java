@@ -19,24 +19,26 @@
 
 package jspecview.application;
 
-import jspecview.source.XMLParser;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Writer;
+import java.net.URL;
 import java.util.TreeMap;
 
 import javajs.api.GenericColor;
 import javajs.util.CU;
 import javajs.util.SB;
-
-
 import jspecview.common.ColorParameters;
 import jspecview.common.JSVFileManager;
 import jspecview.common.ScriptToken;
 import jspecview.java.AwtParameters;
+import jspecview.source.XMLParser;
 
 /**
  * <code>DisplaySchemesProcessor</code> loads and saves the display schemes of
@@ -48,7 +50,7 @@ import jspecview.java.AwtParameters;
  */
 public class DisplaySchemesProcessor {
 
-	private final String newLine = System.getProperty("line.separator");
+  private final String newLine = System.getProperty("line.separator");
 
   /** The Name of the XML file that contains the display schemes */
   private String fileName = "displaySchemes.xml";
@@ -90,11 +92,11 @@ public class DisplaySchemesProcessor {
   }
   
   public ColorParameters getDefaultScheme(){
-	  ColorParameters ds = displaySchemes.get("Default");
-	  if(ds == null){
-		  ds = loadDefault();
-	  }
-	  return ds;
+    ColorParameters ds = displaySchemes.get("Default");
+    if(ds == null){
+      ds = loadDefault();
+    }
+    return ds;
   }
 
 
@@ -115,35 +117,49 @@ public class DisplaySchemesProcessor {
     return displaySchemes;
   }
 
-  public boolean load(InputStream stream) {
+  /**
+   * Loads the display schemes into memory and stores them in a
+   * <code>Vector</code>
+   * 
+   * @param dispSchemeFileName
+   *        the name of the file to load
+   * @return true if loaded successfully
+   */
+  public boolean load(String dispSchemeFileName) {
+    fileName = dispSchemeFileName;
+    InputStream is = null;
     try {
-      return load(JSVFileManager.getBufferedReaderForInputStream(stream));
+      File f = new File(fileName);
+      if (f.exists()) {
+        is = new FileInputStream(f);
+        System.out.println("DisplaySchemeProcessor reading from " + f.getAbsolutePath());        
+      } else {
+        System.out.println("DisplaySchemeProcessor could not find " + f.getAbsolutePath());
+        URL u = getClass().getResource("resources/" + dispSchemeFileName);
+        if (u != null)
+          System.out.println("reading defaults from JAR resource " + u);        
+        else 
+          System.out.println("DisplaySchemeProcessor reading from JAR!/jspecview/application/resources/" + fileName);
+          
+        is = getClass().getResourceAsStream("resources/" + dispSchemeFileName);
+        if (is == null) {
+          System.out.println("DisplaySchemeProcessor could not find resource");
+          return false;
+        }
+      }
+      return load(new BufferedReader(new InputStreamReader(is)));
     } catch (Exception e) {
       System.out.println("DisplaySchemeProcessor ignored: " + e.getMessage());
       return false;
+    } finally {
+      if (is != null) {
+        try {
+          is.close();
+        } catch (IOException e) {
+        }
+      }
     }
-  }
 
-  /**
-   * Loads the display schemes into memory and stores them in a <code>Vector</code>
-   * @param dispSchemeFileName the name of the file to load
-   * @return true if loaded successfully
-   */
-  public boolean load(String dispSchemeFileName){
-    fileName = dispSchemeFileName;        
-    if (!new File(fileName).exists()) {
-      System.out.println("DisplaySchemeProcessor ignored: " + dispSchemeFileName + " does not exist.");
-      return false;
-    }
-    try{
-      BufferedReader br = JSVFileManager.getBufferedReaderFromName(fileName);
-    	return load(br);
-    }
-    catch(Exception e){
-      System.out.println("DisplaySchemeProcessor ignored: " + e.getMessage());
-    	return false;
-    }
-    
   }
 
   /**
@@ -159,6 +175,7 @@ public class DisplaySchemesProcessor {
     String defaultDS = "Default";
     ColorParameters ds = null;
     String attr;
+    String name = null;
     try {
       while (parser.hasNext()) {
         if (parser.nextEvent() != XMLParser.START_ELEMENT)
@@ -168,7 +185,8 @@ public class DisplaySchemesProcessor {
           defaultDS = parser.getAttrValue("default");
         }
         if (theTag.equals("displayscheme")) {
-          String name = parser.getAttrValue("name");
+          name = parser.getAttrValue("name");
+          System.out.print("\nDisplayScheme "  + (name + "              ").substring(0, 17));
           ds = (ColorParameters) new AwtParameters().setName(name);
           if (name.equals(defaultDS))
             ds.isDefault = true;
@@ -180,6 +198,7 @@ public class DisplaySchemesProcessor {
           attr = parser.getAttrValue("face");
           if (attr.length() > 0)
             ds.displayFontName = attr;
+          System.out.print((attr + "                         ").substring(0, 23));
         } else {
           if (theTag.equals("coordinateColor"))
             theTag = "coordinatesColor";
@@ -226,11 +245,14 @@ public class DisplaySchemesProcessor {
               if (def != null)
                 color = ds.getColorFromString(def);
             }
-            if (color != null)
+            if (color != null) {
               ds.setColor(st, color);
+              System.out.print(" " + st + " " + color);
+            }
           }
         }
       }
+      System.out.println("");
     } catch (Exception e) {
       return false;
     }
@@ -249,68 +271,65 @@ public class DisplaySchemesProcessor {
         : p.getColorFromString(value));
   }
 
-	/**
-	 * Serializes the display schemes to the given writer
-	 * 
-	 * @param writer
-	 *          the writer for the output
-	 * @throws Exception
-	 */
-	public void serializeDisplaySchemes(Writer writer) throws Exception {
-		if (displaySchemes.size() == 0) {
-			return;
-		}
+  /**
+   * Serializes the display schemes to the given writer
+   * 
+   * @param writer
+   *          the writer for the output
+   * @throws Exception
+   */
+  public void serializeDisplaySchemes(Writer writer) throws Exception {
+    if (displaySchemes.size() == 0) {
+      return;
+    }
 
-		// find the default scheme
-		// set default attr
-		SB buffer = new SB();
-		String defaultDSName = "";
+    // find the default scheme
+    // set default attr
+    SB buffer = new SB();
+    String defaultDSName = "";
 
-		for (ColorParameters ds : displaySchemes.values()) {
-			if (ds.isDefault)
-				defaultDSName = ds.name;
-			buffer.append("\t<displayScheme name=\"" + ds.name + "\">").append(newLine);
-			buffer.append("\t\t<font face=\"" + ds.displayFontName + "\"/>").append(newLine);
-			writeColor(buffer, ds, "titleColor", ScriptToken.TITLECOLOR);
-			writeColor(buffer, ds, "scaleColor", ScriptToken.SCALECOLOR);
-			writeColor(buffer, ds, "unitsColor", ScriptToken.UNITSCOLOR);
-			writeColor(buffer, ds, "coordinatesColor", ScriptToken.COORDINATESCOLOR);
-			writeColor(buffer, ds, "highlightColor", ScriptToken.HIGHLIGHTCOLOR);
-			writeColor(buffer, ds, "peakTabColor", ScriptToken.PEAKTABCOLOR);
-			writeColor(buffer, ds, "gridColor", ScriptToken.GRIDCOLOR);
-			writeColor(buffer, ds, "plotColor", ScriptToken.PLOTCOLOR);
-			writeColor(buffer, ds, "plotAreaColor", ScriptToken.PLOTAREACOLOR);
-			writeColor(buffer, ds, "backgroundColor", ScriptToken.BACKGROUNDCOLOR);
-			buffer.append("\t</displayScheme>").append(newLine);
-		}
-		buffer.append("</displaySchemes>");
+    for (ColorParameters ds : displaySchemes.values()) {
+      if (ds.isDefault)
+        defaultDSName = ds.name;
+      buffer.append("\t<displayScheme name=\"" + ds.name + "\">").append(newLine);
+      buffer.append("\t\t<font face=\"" + ds.displayFontName + "\"/>").append(newLine);
+      writeColor(buffer, ds, "titleColor", ScriptToken.TITLECOLOR);
+      writeColor(buffer, ds, "scaleColor", ScriptToken.SCALECOLOR);
+      writeColor(buffer, ds, "unitsColor", ScriptToken.UNITSCOLOR);
+      writeColor(buffer, ds, "coordinatesColor", ScriptToken.COORDINATESCOLOR);
+      writeColor(buffer, ds, "highlightColor", ScriptToken.HIGHLIGHTCOLOR);
+      writeColor(buffer, ds, "peakTabColor", ScriptToken.PEAKTABCOLOR);
+      writeColor(buffer, ds, "gridColor", ScriptToken.GRIDCOLOR);
+      writeColor(buffer, ds, "plotColor", ScriptToken.PLOTCOLOR);
+      writeColor(buffer, ds, "plotAreaColor", ScriptToken.PLOTAREACOLOR);
+      writeColor(buffer, ds, "backgroundColor", ScriptToken.BACKGROUNDCOLOR);
+      buffer.append("\t</displayScheme>").append(newLine);
+    }
+    buffer.append("</displaySchemes>");
 
-		SB outBuffer = new SB();
-		outBuffer.append("<?xml version=\"1.0\"?>" + newLine);
-		outBuffer.append("<displaySchemes default=\"" + defaultDSName + "\">"
-				+ newLine);
-		outBuffer.append(buffer.toString());
-		writer.write(outBuffer.toString());
-		writer.flush();
-		writer.close();
-	}
+    SB outBuffer = new SB();
+    outBuffer.append("<?xml version=\"1.0\"?>" + newLine);
+    outBuffer.append("<displaySchemes default=\"" + defaultDSName + "\">"
+        + newLine);
+    outBuffer.append(buffer.toString());
+    writer.write(outBuffer.toString());
+    writer.flush();
+    writer.close();
+  }
 
-	private void writeColor(SB buffer, ColorParameters ds, String name,
-			ScriptToken t) {
-		buffer.append(
-				"\t\t<" + name + " hex=\""
-						+ CU.toRGBHexString(ds.getElementColor(t)) + "\"/>")
-				.append(newLine);
-	}
+  private void writeColor(SB buffer, ColorParameters ds, String name,
+      ScriptToken t) {
+    buffer.append(
+        "\t\t<" + name + " hex=\""
+            + CU.toRGBHexString(ds.getElementColor(t)) + "\"/>")
+        .append(newLine);
+  }
 
   public boolean loadDefaultXML() {
     // try loading display scheme from the file system otherwise load it from
     // the jar
     if (!load("displaySchemes.xml")) {
-      if (!load(
-          getClass().getResourceAsStream("resources/displaySchemes.xml"))) {
-          return false;
-      }
+       return false;
     }
     return true;
   }

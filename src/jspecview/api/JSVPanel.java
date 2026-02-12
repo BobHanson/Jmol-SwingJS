@@ -18,9 +18,9 @@ import jspecview.common.PrintLayout;
 
 public interface JSVPanel extends JSVViewPanel {
   
-	public void repaint();
+	void repaint();
 
-	public void doRepaint(boolean andTaintAll);
+	void doRepaint(boolean andTaintAll);
   
   void getFocusNow(boolean asThread);
   String getInput(String message, String title, String sval);
@@ -40,16 +40,16 @@ public interface JSVPanel extends JSVViewPanel {
 
 	String saveImage(String type, GenericFileInterface file, OC out, int width, int height);
 
-	public void printPanel(PrintLayout pl, OutputStream os, String printJobTitle);
+	void printPanel(PrintLayout pl, OutputStream os, String printJobTitle);
 
-	public boolean processMouseEvent(int id, int x, int y, int modifiers, long time);
+	boolean processMouseEvent(int id, int x, int y, int modifiers, long time);
 
-	public void processTwoPointGesture(double[][][] touches);
+	void processTwoPointGesture(double[][][] touches);
 	
-	public void processKeyEvent(Object event);
+	void processKeyEvent(Object event);
 
-	public void showMenu(int x, int y);
+	void showMenu(int x, int y);
 
-	public void paintComponent(Object display);
+	void paintComponent(Object display);
 
 }

@@ -339,7 +339,8 @@ public class Viewer extends JmolViewer
     return new Viewer(info);
   }
 
-  final Dimension dimScreen;
+  final Dimension dimScreen = new Dimension(0, 0);
+  
   VDW defaultVdw;
 
   public RadiusData rd;
@@ -364,16 +365,10 @@ public class Viewer extends JmolViewer
    *        "headlessMaxTimeMs" "headlessImage" "isDataOnly" "async"
    **/
 
+  public Viewer() {
+    // next command needs to be setOptions(info);
+  }
   public Viewer(Map<String, Object> info) {
-    commandHistory = new CommandHistory();
-    dimScreen = new Dimension(0, 0);
-    rd = new RadiusData(null, 0, null, null);
-    defaultVdw = VDW.JMOL;
-    localFunctions = new Hashtable<String, JmolScriptFunction>();
-    privateKey = Math.random();
-    chainMap = new Hashtable<Object, Object>();
-    chainList = new Lst<String>();
-    info.put("isJava", Boolean.TRUE);
     setOptions(info);
   }
 
@@ -441,7 +436,14 @@ public class Viewer extends JmolViewer
 
   @SuppressWarnings({ "unchecked", "null", "unused" })
   public void setOptions(Map<String, Object> info) {
-
+    commandHistory = new CommandHistory();
+    rd = new RadiusData(null, 0, null, null);
+    defaultVdw = VDW.JMOL;
+    localFunctions = new Hashtable<String, JmolScriptFunction>();
+    privateKey = Math.random();
+    chainMap = new Hashtable<Object, Object>();
+    chainList = new Lst<String>();
+    info.put("isJava", Boolean.TRUE);
     vwrOptions = info;
     boolean isApp = info.containsKey("isApp");
     boolean isJava = info.containsKey("isJava");

@@ -43,34 +43,50 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import jspecview.app.JSVApp;
-import jspecview.app.JSVAppPro;
-//import jspecview.application.MainFrame;
 
 /**
- * A signed applet that has an Advanced... menu item that pulls up a MainFrame
  * 
+ * JSAppletPro was never implemented. 
+ * 
+ * 
+ * 
+ * A signed applet that has an Advanced... menu item that pulls up a MainFrame
+ * former class interactions: <code> 
+               JSVAppletPro    JSpecView
+                 /   |            /
+         [extension] |     [instantiation]
+               /     |         /
+          JSVApplet  |    MainFrame
+               \     |        \
+             [JavaScript]   [interface]
+                 \   |          \
+               JmolApplet       Jmol
+     
+ * </code> AwtAppletPro (formerly) and JSpecView can create a MainFrame
+ * MainFrame can interface with Jmol via JmolSyncInterface and JSVInterface
+ * AwtAppletPro and AwtApplet can interact with JmolApplet via JavaScript
+ * callbacks
+ * 
+ * 
+ * 
+<code> 
+               JSVAppletPro    JSpecView
+                 /   |            /
+         [extension] |     [instantiation]
+               /     |         /
+          JSVApplet  |    MainFrame
+               \     |        \
+             [JavaScript]   [interface]
+                 \   |          \
+               JmolApplet       Jmol
+     
+ * </code> 
  * @author Bob Hanson St. Olaf College hansonr@stolaf.edu
  */
 
 public class JSVAppletPro extends JSVApplet {
 
-  /*  class interactions:
-   * 
-      //           JSVAppletPro    JSpecView
-      //             /   |            /
-      //     [extension] |     [instantiation]
-      //           /     |         /
-      //      JSVApplet  |    MainFrame
-      //           \     |        \
-      //         [JavaScript]   [interface]
-      //             \   |          \
-      //           JmolApplet       Jmol
-      // 
-   * 
-   * AwtAppletPro (formerly) and JSpecView can create a MainFrame
-   * MainFrame can interface with Jmol via JmolSyncInterface and JSVInterface
-   * AwtAppletPro and AwtApplet can interact with JmolApplet via JavaScript callbacks
-   * 
+  /*
    */
 
   private static final long serialVersionUID = 1L;

@@ -42,6 +42,7 @@
 
 	<fileset id="jmolfiles" dir="${bin.dir}">
 		<include name="javajs/**/*"/>
+		
 		<include name="org/jmol/api/Generic*"/>
 		<include name="org/jmol/api/EventManager*"/>
 		<include name="org/jmol/api/FontManager*"/>
@@ -75,13 +76,14 @@
 	<target name="build">		
 
 		<echo message="getting application icons and resources"/>
-        <copy todir="${bin.dir}/jspecview/java/icons">
+
+		<copy todir="${bin.dir}/jspecview/java/icons">
           <fileset dir="${src.dir}/jspecview/java/icons"/>
         </copy>
-        <copy todir="${bin.dir}/jspecview/application/icons">
+        
+		<copy todir="${bin.dir}/jspecview/application/icons">
           <fileset dir="${src.dir}/jspecview/application/icons"/>
         </copy>
-        <mkdir dir="${bin.dir}/jspecview/application/resources"/>
         <copy todir="${bin.dir}/jspecview/application/resources">
           <fileset dir="${src.dir}/jspecview/application/resources"/>
         </copy>	

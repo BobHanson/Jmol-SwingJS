@@ -436,6 +436,7 @@ public class PanelData implements EventManager {
    * @param height
    *        the height to be drawn in pixels
    * @param addFilePath
+   * @param addBorder 
    */
   public synchronized void drawGraph(Object gMain, Object gFront, Object gRear,
                                      int width, int height,
@@ -457,16 +458,14 @@ public class PanelData implements EventManager {
         g2d.fillBackground(gMain, null);
       g2d.setStrokeBold(gMain, false);
     }
+    scalingFactor = 1;
     if (isPrinting) {
-      top *= 3; // for three-hole punching
-      bottom *= 3; // for file name
       scalingFactor = PRINT_SCALE_FACTOR; // for high resolution (zooming in within PDF)
       withCoords = false;
     } else if (addBorder) {
       bottom *= 2;
       withCoords = false;
     } else {
-      scalingFactor = 1;
       withCoords = !creatingImage && getBoolean(ScriptToken.COORDINATESON);
       titleOn = getBoolean(ScriptToken.TITLEON);
       gridOn = getBoolean(ScriptToken.GRIDON);
@@ -581,7 +580,7 @@ public class PanelData implements EventManager {
     }
     g2d.setGraphicsColor(g, titleColor);
     setCurrentFont(g2d.setFont(g, font));
-    y -= (int) (font.getHeight() * (isPrinting ? 2 : 0.4));
+    y -= (int) (font.getHeight() * (isPrinting ? -0.2 : creatingImage ? 1.2 : 0.4));
     g2d.drawString(g, title, (isPrinting ? left * scalingFactor : 5), y);
   }
 
@@ -1501,7 +1500,7 @@ public class PanelData implements EventManager {
     isPrinting = true;
     boolean addFilePath = false;
     if (g instanceof GenericGraphics) {// JsPdfCreator
-      g2d = (GenericGraphics) g;
+      g2d = (GenericGraphics) g; // PDFWriter
       g = gMain;
     }
     if (printGraphPosition.equals("default")) {
@@ -1534,6 +1533,7 @@ public class PanelData implements EventManager {
     drawGraph(g, g, g, (int) width, (int) height, addFilePath, false);
     if (g2d != g2d0 && g != gMain)
       ((Graphics2D) g).dispose();
+    g2d = g2d0;
     isPrinting = false;
     return JSViewer.PDF_PAGE_EXISTS;
   }

@@ -82,15 +82,11 @@ public class JSVApp implements PanelListener, JSVAppInterface, ScriptInterface {
 
 	public JSVApp(AppletFrame appletFrame, boolean isJS) {
 		this.appletFrame = appletFrame;
-		initViewer(isJS);
+    vwr = new JSViewer(this, true, isJS, true);
+    appletFrame.setDropTargetListener(isSigned(), vwr);
+    URL path = appletFrame.getDocumentBase();
+    JSVFileManager.setDocumentBase(vwr, path);
 		initParams(appletFrame.getParameter("script"));
-	}
-
-	private void initViewer(boolean isJS) {
-		vwr = new JSViewer(this, true, isJS, true);
-		appletFrame.setDropTargetListener(isSigned(), vwr);
-		URL path = appletFrame.getDocumentBase();
-		JSVFileManager.setDocumentBase(vwr, path);
 	}
 
 	protected AppletFrame appletFrame;
@@ -498,7 +494,6 @@ public class JSVApp implements PanelListener, JSVAppInterface, ScriptInterface {
 		appletFrame.callToJavaScript(syncCallbackFunctionName, new Object[] { vwr.fullName, msg });
 	}
 
-	@Override
 	public void setVisible(boolean b) {
 		appletFrame.setPanelVisible(b);
 	}

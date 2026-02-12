@@ -125,7 +125,7 @@ public class JSV implements JmolJSpecView {
     // JSV>Jmol
     if (Logger.debugging)
       Logger.info(
-          "org.jmol.jsv.JSpecView jsvMode=" + jsvMode + " script=" + script);
+          "org.jmol.jsv.JSV jsvMode=" + jsvMode + " script=" + script);
     switch (jsvMode) {
     case JC.JSV_SEND_JDXMOL:
     case JC.JSV_CLOSE:

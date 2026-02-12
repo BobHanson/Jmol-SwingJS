@@ -82,7 +82,7 @@ public class ApplicationMenu extends JMenuBar {
 
   public ApplicationMenu(MainFrame si) throws Exception {
     this.mainFrame = si;
-    jsvViewer = si.jsvViewer;
+    jsvViewer = si.vwr;
     jbInit();
   }
 
@@ -496,7 +496,7 @@ public class ApplicationMenu extends JMenuBar {
   }
 
 	protected void doMenuSelected() {
-		PanelData pd = mainFrame.jsvViewer.pd();
+		PanelData pd = mainFrame.vwr.pd();
     gridCheckBoxMenuItem.setSelected(pd != null && pd.getBoolean(ScriptToken.GRIDON));
     coordsCheckBoxMenuItem.setSelected(pd != null && pd.getBoolean(ScriptToken.COORDINATESON));
     pointsOnlyCheckBoxMenuItem.setSelected(pd != null && pd.getBoolean(ScriptToken.POINTSONLY));

@@ -76,6 +76,9 @@ public class JSViewer implements PlatformViewer, BytePoster {
 
   private static final String THIS_STRUCTURE = "<this structure>";
 
+  public static final int DEFAULT_WIDTH = 1200;
+  public static final int DEFAULT_HEIGHT = 800;
+
   private JFrame parentFrame;
   
   public void setParentFrame(JFrame parentFrame) {
@@ -1835,8 +1838,8 @@ public class JSViewer implements PlatformViewer, BytePoster {
       recentOpenURL = url;
     } else {
       Object[] userData = new Object[] { Boolean.valueOf(isAppend), script };
-      GenericFileInterface file = fileHelper.showFileOpenDialog(mainPanel,
-          userData);
+      GenericFileInterface file = (hasDisplay ? fileHelper.showFileOpenDialog(mainPanel,
+          userData) : null);
       // note that in JavaScript this will be asynchronous and file will be null.
       if (file != null)
         url = file.getFullPath();
@@ -2106,6 +2109,15 @@ public class JSViewer implements PlatformViewer, BytePoster {
     return false;
   }
 
+  public void advanceSpectrumBy(int n) {
+    int i = panelNodes.size();
+    for (; --i >= 0;)
+      if (panelNodes.get(i).jsvp == selectedPanel)
+        break;
+    setFrameAndTreeNode(i + n);
+    selectedPanel.getFocusNow(false);
+  }
+
   /**
    * this method is called as a result of the user clicking on a peak
    * (eventObject instanceof PeakPickEvent) or from PEAK command execution
@@ -2168,7 +2180,5 @@ public class JSViewer implements PlatformViewer, BytePoster {
     repaint(true);
     SyncManager.syncToJmol(this, pi);
   }
-
-
 
 }

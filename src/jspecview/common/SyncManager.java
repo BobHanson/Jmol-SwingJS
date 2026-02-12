@@ -25,6 +25,8 @@ public class SyncManager {
    */
   public static void syncFromJmol(JSViewer vwr, String peakScript) {
     //Jmol>JSV
+    //System.out.println("SyncManager syncFromJmol" + peakScript);
+
     if (peakScript.equals("TEST"))
       peakScript = testScript;
     //Logger.info("JSViewer.syncScript Jmol>JSV " + peakScript);

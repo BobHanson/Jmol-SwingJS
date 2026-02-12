@@ -47,11 +47,14 @@ import jspecview.api.ScriptInterface;
 import org.jmol.api.JSVInterface;
 
 /**
+ * This was an early (2014) idea to allow the applet to launch the
+ * full Java application. But the "doAdvanced" method was never implemented.
+ * 
  * @author Bob Hanson
  */
 
 public class JSVAppPro extends JSVApp implements
-    JSVInterface, ScriptInterface {
+    JSVInterface {
 
   public JSVAppPro(AppletFrame appletFrame, boolean isJS) {
 		super(appletFrame, isJS);

@@ -68,6 +68,7 @@ public class DisplayPanel extends JPanel
   
   protected DisplayPanel(JmolPanel jmolPanel) {
     this.jmolPanel = jmolPanel;
+    vwr = jmolPanel.vwr;
     frame = jmolPanel.frame;
     haveDisplay = jmolPanel.jmolApp.haveDisplay;
     startupDim = new Dimension(jmolPanel.startupWidth, jmolPanel.startupHeight);
@@ -88,7 +89,7 @@ public class DisplayPanel extends JPanel
     jmolPanel.say(msg);
   }
   
-  protected void setViewer(Viewer vwr) {
+  public void setViewer(Viewer vwr) {
     this.vwr = vwr;
     updateSize(false);
   }
@@ -105,8 +106,8 @@ public class DisplayPanel extends JPanel
     addComponentListener(this);
   }
 
-  AbstractButton buttonRotate;
-  AbstractButton buttonModelkit;
+  public AbstractButton buttonRotate;
+  public AbstractButton buttonModelkit;
   
   ButtonGroup toolbarButtonGroup = new ButtonGroup();
 

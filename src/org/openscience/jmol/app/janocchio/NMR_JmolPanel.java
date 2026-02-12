@@ -79,7 +79,7 @@ import org.openscience.jmol.app.jmolpanel.JmolPanel;
 import org.openscience.jmol.app.jmolpanel.JmolResourceHandler;
 import org.openscience.jmol.app.jmolpanel.Splash;
 import org.openscience.jmol.app.jmolpanel.StatusBar;
-import org.openscience.jmol.app.jmolpanel.StatusListener;
+import org.openscience.jmol.app.status.StatusListener;
 
 public class NMR_JmolPanel extends JmolPanel {
 
@@ -232,8 +232,6 @@ public class NMR_JmolPanel extends JmolPanel {
     vwr = new NMR_Viewer(vwrOptions);
     say(GT.$("Initializing 3D display...5"));
     nmrDisplay.setViewer(vwr);
-    myStatusListener.setViewer(vwr);
-
   }
 
   @Override

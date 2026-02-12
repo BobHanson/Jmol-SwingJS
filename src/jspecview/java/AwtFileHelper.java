@@ -72,37 +72,43 @@ public class AwtFileHelper implements JSVFileHelper {
 		return getFile("", panelOrFrame, false);
 	}
 
-	@Override
-	public GenericFileInterface getFile(String name, Object panelOrFrame, boolean isSave) {
-		Component c = (Component) panelOrFrame;
-		fc.setSelectedFile(new File(name));
-		if (isSave) {
-		    fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			if (useDirLastExported)
-				fc.setCurrentDirectory(new File(dirLastExported));
-		} else {
-		    fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-			if (useDirLastOpened)
-				fc.setCurrentDirectory(new File(dirLastOpened));
-		}
-		int returnVal = (isSave ? fc.showSaveDialog(c) : fc.showOpenDialog(c));
-		if (returnVal != JFileChooser.APPROVE_OPTION)
-			return null;
-		AwtFile file = new AwtFile(fc.getSelectedFile().getAbsolutePath());
-		if (isSave) {
-			vwr.setProperty("directoryLastExportedFile", dirLastExported = file.getParent());
-	    if (file.exists()) {
-	      int option = JOptionPane.showConfirmDialog(c,
-	          "Overwrite " + file.getName() + "?", "Confirm Overwrite Existing File",
-	          JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-	      if (option == JOptionPane.NO_OPTION)
-	        return null;
-	    }
-		} else {
-			vwr.setProperty("directoryLastOpenedFile", dirLastOpened = file.getParent());
-		}
-		return file;
-	}
+  @Override
+  public GenericFileInterface getFile(String name, Object panelOrFrame,
+                                      boolean isSave) {
+    if (!vwr.hasDisplay)
+      return null;
+    Component c = (Component) panelOrFrame;
+    fc.setSelectedFile(new File(name));
+    if (isSave) {
+      fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+      if (useDirLastExported)
+        fc.setCurrentDirectory(new File(dirLastExported));
+    } else {
+      fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+      if (useDirLastOpened)
+        fc.setCurrentDirectory(new File(dirLastOpened));
+    }
+    int returnVal = (isSave ? fc.showSaveDialog(c) : fc.showOpenDialog(c));
+    if (returnVal != JFileChooser.APPROVE_OPTION)
+      return null;
+    AwtFile file = new AwtFile(fc.getSelectedFile().getAbsolutePath());
+    if (isSave) {
+      vwr.setProperty("directoryLastExportedFile",
+          dirLastExported = file.getParent());
+      if (file.exists()) {
+        int option = JOptionPane.showConfirmDialog(c,
+            "Overwrite " + file.getName() + "?",
+            "Confirm Overwrite Existing File", JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE);
+        if (option == JOptionPane.NO_OPTION)
+          return null;
+      }
+    } else {
+      vwr.setProperty("directoryLastOpenedFile",
+          dirLastOpened = file.getParent());
+    }
+    return file;
+  }
 
 	@Override
 	public String setDirLastExported(String name) {

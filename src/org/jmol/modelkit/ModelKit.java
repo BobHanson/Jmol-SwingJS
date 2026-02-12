@@ -2763,6 +2763,7 @@ public class ModelKit {
    *        (deteriminent > 1), this is the expanded operation set that includes
    *        the lost translations
    * @param packing
+   * @param uc 
    */
   private void assignAtoms(Point3fi thisPt, int atomIndex, BS bsAtoms, String type,
                            boolean newPoint, String cmd, boolean isClick,

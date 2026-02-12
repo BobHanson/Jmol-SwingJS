@@ -506,12 +506,6 @@ public class JSVApplet implements JSVAppletInterface,
 	}
 
 	@Override
-	public void setVisible(boolean b) {
-		// the applet panel cannot be removed
-		
-	}
-
-	@Override
 	public URL getDocumentBase() {
 		try {
 			return new URL((URL) null, (String) viewerOptions.get("documentBase"), null);

@@ -10,7 +10,7 @@ public interface JSVAppletInterface {
    * @return Color
    */
 
-  public abstract String getSolnColour();
+  String getSolnColour();
 
   /**
    * Method that can be called from another applet or from javascript to return
@@ -19,7 +19,7 @@ public interface JSVAppletInterface {
    * 
    * @return A String representation of the coordinate
    */
-  public abstract String getCoordinate();
+  String getCoordinate();
 
   /**
    * Loads in-line JCAMP-DX data into the existing applet window
@@ -27,7 +27,7 @@ public interface JSVAppletInterface {
    * @param data
    *        String
    */
-  public abstract void loadInline(String data);
+  void loadInline(String data);
 
   /*
    * Deprecated -- fails in MSIE object JavaScript
@@ -37,7 +37,7 @@ public interface JSVAppletInterface {
    * @return data
    * 
   @Deprecated
-  public abstract String export(String type, int n);
+  String export(String type, int n);
    */
 
   /**
@@ -48,40 +48,40 @@ public interface JSVAppletInterface {
    * @return data
    * 
    */
-  public abstract String exportSpectrum(String type, int n);
+  String exportSpectrum(String type, int n);
 
-	public abstract void setFilePath(String tmpFilePath);
+	void setFilePath(String tmpFilePath);
 
   /**
    * Sets the spectrum to the specified block number
    * 
    * @param i
    */
-  public abstract void setSpectrumNumber(int i);
+  void setSpectrumNumber(int i);
 
   /**
    * Method that can be called from another applet or from javascript that
    * toggles the grid on a <code>JSVPanel</code>
    */
-  public abstract void toggleGrid();
+  void toggleGrid();
 
   /**
    * Method that can be called from another applet or from javascript that
    * toggles the coordinate on a <code>JSVPanel</code>
    */
-  public abstract void toggleCoordinate();
+  void toggleCoordinate();
 
   /**
    * Method that can be called from another applet or from javascript that
    * toggles the flag for points only on a <code>JSVPanel</code>
    */
-  public abstract void togglePointsOnly();
+  void togglePointsOnly();
 
   /**
    * Method that can be called from another applet or from javascript that
    * toggles the integration graph of a <code>JSVPanel</code>.
    */
-  public abstract void toggleIntegration();
+  void toggleIntegration();
 
   /**
    * Method that can be called from another applet or from javascript that adds
@@ -100,14 +100,14 @@ public interface JSVAppletInterface {
    * @param a
    *        the alpha portion of the highlight color
    */
-  public abstract void addHighlight(double x1, double x2, int r, int g, int b,
+  void addHighlight(double x1, double x2, int r, int g, int b,
                                     int a);
 
   /**
    * Method that can be called from another applet or from javascript that
    * removes all highlights from the plot area of a <code>JSVPanel</code>
    */
-  public abstract void removeAllHighlights();
+  void removeAllHighlights();
 
   /**
    * Method that can be called from another applet or from javascript that
@@ -118,13 +118,13 @@ public interface JSVAppletInterface {
    * @param x2
    *        the ending x value
    */
-  public abstract void removeHighlight(double x1, double x2);
+  void removeHighlight(double x1, double x2);
 
   /**
    * Method that can be called from another applet or from javascript that
    * toggles reversing the plot on a <code>JSVPanel</code>
    */
-  public abstract void reversePlot();
+  void reversePlot();
 
   /**
    * runs a script in proper order as listed
@@ -132,14 +132,14 @@ public interface JSVAppletInterface {
    * @param script
    */
 
-  public abstract void runScript(String script);
+  void runScript(String script);
 
   /**
    * precede <Peaks here with full name of Jmol applet (including syncID)
    * @param peakScript 
    * 
    */
-  public abstract void syncScript(String peakScript);
+  void syncScript(String peakScript);
 
   /**
    * Writes a message to the status label
@@ -147,22 +147,20 @@ public interface JSVAppletInterface {
    * @param msg
    *        the message
    */
-  public abstract void writeStatus(String msg);
+  void writeStatus(String msg);
 
-  public abstract Map<String, Object> getPropertyAsJavaObject(String key);
+  Map<String, Object> getPropertyAsJavaObject(String key);
 
-  public abstract String getPropertyAsJSON(String key);
+  String getPropertyAsJSON(String key);
 
-  public abstract boolean isSigned();
+  boolean isSigned();
 
-  public abstract boolean isPro();
+  boolean isPro();
 
-  public abstract void setVisible(boolean b);
-
-  public abstract boolean runScriptNow(String script);
+  boolean runScriptNow(String script);
   
-  public abstract String print(String fileName);
+  String print(String fileName);
 
-	public abstract String checkScript(String script);
+	String checkScript(String script);
 
 }

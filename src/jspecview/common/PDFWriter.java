@@ -42,7 +42,7 @@ import jspecview.api.JSVPdfWriter;
  */
 public class PDFWriter implements GenericGraphics, JSVPdfWriter {
  
-	private GenericGraphics g2d;
+	private GenericGraphics g2d0;
 	private String date;
 	private PDFCreator pdf;
 	private boolean inPath;
@@ -56,7 +56,7 @@ public class PDFWriter implements GenericGraphics, JSVPdfWriter {
 		boolean isLandscape = pl.layout.equals("landscape");
 		date = pl.date;
 		pdf.setOutputStream(os);
-		g2d = panel.getPanelData().g2d;
+		g2d0 = panel.getPanelData().g2d0;
 		try {
 			pdf.newDocument(pl.paperWidth, pl.paperHeight, isLandscape);
 	    Map<String, String> ht = new Hashtable<String, String>();
@@ -205,17 +205,17 @@ public class PDFWriter implements GenericGraphics, JSVPdfWriter {
 
 	@Override
 	public GenericColor getColor1(int argb) {
-		return g2d.getColor1(argb);
+		return g2d0.getColor1(argb);
 	}
 
 	@Override
 	public GenericColor getColor3(int red, int green, int blue) {
-		return g2d.getColor3(red, green, blue);
+		return g2d0.getColor3(red, green, blue);
 	}
 
 	@Override
 	public GenericColor getColor4(int r, int g, int b, int a) {
-		return g2d.getColor4(r, g, b, a);
+		return g2d0.getColor4(r, g, b, a);
 	}
 
 }

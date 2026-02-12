@@ -42,15 +42,14 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.RenderingHints;
-import java.awt.image.RenderedImage;
+import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -267,6 +266,8 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
 
   @Override
   public String getInput(String message, String title, String sval) {
+    if (!vwr.hasDisplay)
+      return null;
     String ret = (String) JOptionPane.showInputDialog(this, message, title,
         JOptionPane.QUESTION_MESSAGE, null, null, sval);
     getFocusNow(true);
@@ -276,6 +277,8 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
   @Override
   public void showMessage(String msg, String title) {
     Logger.info(msg);
+    if (!vwr.hasDisplay)
+      return;
     if (title != null)
       JOptionPane.showMessageDialog(this, msg, title,
           (msg.startsWith("<html>") ? JOptionPane.INFORMATION_MESSAGE
@@ -388,36 +391,47 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
   }
 
   @Override
-  public String saveImage(String type, GenericFileInterface file, OC out, int width, int height) {
-    if (width == 0)
-      width = getWidth() * 2;
+  public String saveImage(String type, GenericFileInterface file, OC out,
+                          int width, int height) {
+    int defw = getWidth() * 2;
+    if (defw == 0)
+      defw = JSViewer.DEFAULT_WIDTH;
+    width = (width == 0 ? defw : width);
     if (height == 0) {
-      height = (int) (2.0 * width /getWidth() * getHeight());
+      if ((height = getHeight() * 2) == 0)
+        height = JSViewer.DEFAULT_HEIGHT;
+      height *= width / defw;
     }
     String msg = "OK " + width + "x" + height + " ";
     try {
-      Image image = createImage(width, height);
+      BufferedImage image = new BufferedImage(width, height,
+          BufferedImage.TYPE_INT_ARGB);
       pd.setTaintedAll();
       Graphics2D g = (Graphics2D) image.getGraphics();
       paintPanel(g, width, height, true);
       File f;
       if (file == null) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ImageIO.write((RenderedImage) image, type, bos);
+        ImageIO.write(image, type, bos);
         byte[] bytes = bos.toByteArray();
         out.write(bytes);
         out.closeChannel();
         String sf = out.getFileName();
         if (sf == null || new File(sf).exists())
-          return msg + bytes.length + " bytes";
+          msg += bytes.length + " bytes";
       } else {
         f = (File) file;
-        ImageIO.write((RenderedImage) image, type, f);
-        return msg + f.length() + " bytes";
+        FileOutputStream fos = new FileOutputStream(f);
+        ImageIO.write(image, type, fos);
+        fos.close();
+        msg += f.length() + " bytes " + f.getName();
       }
+      Logger.info(msg);
+      return msg;
     } catch (IOException e) {
       msg = e.toString();
       showMessage(msg, "Error Saving Image");
+      e.printStackTrace();
     }
     return null;
   }
@@ -426,6 +440,8 @@ public class AwtPanel extends JPanel implements JSVPanel, Printable {
 
   @Override
   public void getFocusNow(boolean asThread) {
+    if (!vwr.hasDisplay)
+      return;
     if (asThread)
       SwingUtilities.invokeLater(new RequestThread());
     else

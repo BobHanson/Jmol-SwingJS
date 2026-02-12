@@ -365,7 +365,7 @@ class GraphSet implements XYScaleConverter {
     xPixels0 = xPixels = xPixel1 - xPixel0 + 1;
     // only the very top spectrum needs an offset
     // -- to move it below the coordinate string
-    yPixel000 = (fY0 == 0 ? 25 : 0) + (int) (height * fY0);
+    yPixel000 = (pd.isPrinting ? 100 : !isPrintingOrSaving && fY0 == 0 ? 25 : 0) + (int) (height * fY0);
     yPixel00 = yPixel000 + (int) (marginalHeight * fracY * iSplit);
     yPixel11 = yPixel00 + (int) (marginalHeight * fracY) - 1;
     yHArrows = yPixel11 - 12;
@@ -3392,7 +3392,8 @@ class GraphSet implements XYScaleConverter {
                                  boolean taintedAll, boolean pointsOnly) {
 
     zoomEnabled = pd.getBoolean(ScriptToken.ENABLEZOOM);
-    this.height = height * pd.scalingFactor;
+    isPrintingOrSaving = pd.isPrinting || pd.creatingImage;
+    this.height = (height - (pd.isPrinting? 20 : pd.creatingImage ? 0 : 0)) * pd.scalingFactor;
     this.width = width * pd.scalingFactor;
     this.left = left * pd.scalingFactor;
     this.right = right * pd.scalingFactor;
@@ -3402,7 +3403,6 @@ class GraphSet implements XYScaleConverter {
     haveSelectedSpectrum = false;
     selectedSpectrumIntegrals = null;
     selectedSpectrumMeasurements = null;
-    isPrintingOrSaving = pd.isPrinting || pd.creatingImage;
     if (!isPrintingOrSaving && widgets != null)
       for (int j = 0; j < widgets.length; j++)
         if (widgets[j] != null)
