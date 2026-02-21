@@ -1098,14 +1098,17 @@ public class ModelSet extends BondCollection {
   }
 
   public String getModelTitle(int modelIndex) {
+    modelIndex = getJmolDataSourceFrame(modelIndex);
     return (String) getInfo(modelIndex, "title");
   }
 
   public String getModelFileName(int modelIndex) {
+    modelIndex = getJmolDataSourceFrame(modelIndex);
     return (String) getInfo(modelIndex, "fileName");
   }
 
   public String getModelFileType(int modelIndex) {
+    modelIndex = getJmolDataSourceFrame(modelIndex);
     return (String) getInfo(modelIndex, "fileType");
   }
 

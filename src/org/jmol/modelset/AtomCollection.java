@@ -1124,9 +1124,11 @@ abstract public class AtomCollection {
         case T.vibration:
           v.set(x, y, z);
           Vibration vib = setAtomVibrationVector(atomIndex, v);
-          if (tokens.length > 7) { // includes ";"
+          // may be null if invalid atom index (as after PLOT SPIN and reading script)
+          if (vib != null && tokens.length > 7) { // includes ";"
             // spin and moment
-            vib.modDim = PT.parseInt(tokens[6]);
+            // spin and moment
+            vib.modDim = (int) PT.parseDouble(tokens[6]);
             vib.magMoment = PT.parseDouble(tokens[7]);
           }            
           break;
