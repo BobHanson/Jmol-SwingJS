@@ -3686,6 +3686,8 @@ public class CmdExt extends ScriptExt {
     // if not just drawing check to see if there is already a plot of this type
 
     if (makeNewFrame) {
+      if (isSplit)
+        endScript += " split";
       startScript += "plot " + type + endScript;
       int ptDataFrame = vwr.ms.getJmolDataFrameIndex(modelIndex, startScript);
       if (ptDataFrame > 0 && tokCmd != T.write && tokCmd != T.show) {

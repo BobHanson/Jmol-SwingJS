@@ -236,8 +236,11 @@ public class Draw extends MeshCollection {
 
     if ("lineData" == propertyName) {
       lineData = new Lst<P3d[]>();
-      if (indicatedModelIndex < 0)
-        indicatedModelIndex = vwr.am.cmi;
+      if (indicatedModelIndex < 0) {
+        indicatedModelIndex = vwr.am.cmi;        
+      }
+      if (modelInfo == null)
+        modelInfo = new int[] { indicatedModelIndex, 0 };
       double[] fdata = (double[]) value;
       int n = fdata.length / 6;
       for (int i = 0, pt = 0; i < n; i++)
@@ -410,8 +413,11 @@ public class Draw extends MeshCollection {
 
     if ("coord" == propertyName) {
       vData.addLast(new Object[] { Integer.valueOf(PT_COORD), value });
-      if (indicatedModelIndex >= 0)
+      if (indicatedModelIndex >= 0) {
+        if (modelInfo == null)
+          modelInfo = new int[] { indicatedModelIndex, 0 };
         modelInfo[1]++; // counts vertices
+      }
       return;
     }
 

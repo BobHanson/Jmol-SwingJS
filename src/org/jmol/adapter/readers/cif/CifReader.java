@@ -483,7 +483,7 @@ public class CifReader extends AtomSetCollectionReader {
         System.out.println("CifReader spinFrame set by user to " + spinFrame
             + " file setting ignored: " + field);
       } else {
-        System.out.println("CifReader spinFrame set to " + field
+        System.out.println("CifReader spinFrame set to " + field + " as " + sf
             + "; use load ... FILTER \"spinframe xxxxx\" to modify");
         spinFrame = sf;
       }

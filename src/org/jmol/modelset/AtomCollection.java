@@ -789,10 +789,21 @@ abstract public class AtomCollection {
     }
     if (Double.isNaN(vib.x) || Double.isNaN(vib.y) || Double.isNaN(vib.z))
       return null;
-    if (vibrations == null || vibrations.length <= atomIndex)
+    if (atomIndex >= at.length)
+      return null;
+    if (vibrations == null) {
       vibrations = new Vibration[at.length];
+    } else if (vibrations.length <= atomIndex) {
+      vibrations = (Vibration[]) AU.arrayCopyObject(vibrations, at.length);
+    }
+
     if (vib instanceof Vibration) {
-      vibrations[atomIndex] = this.vib = (Vibration) vib;
+      if (vibrations[atomIndex] == null) {
+        vibrations[atomIndex] = this.vib = (Vibration) vib;
+      } else {
+        this.vib = vibrations[atomIndex];
+        this.vib.setXYZ(vib);
+      }
     } else {
       if (vibrations[atomIndex] == null)
         vibrations[atomIndex] = new Vibration();
