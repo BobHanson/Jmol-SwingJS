@@ -3,7 +3,7 @@
  * of the secondary structure of RNA, designed as a companion software for
  * web servers and databases. Copyright (C) 2008 Kevin Darty, Alain Denise
  * and Yann Ponty. electronic mail : Yann.Ponty@lri.fr paper mail : LRI, bat
- * 490 Université Paris-Sud 91405 Orsay Cedex France
+ * 490 UniversitÃ© Paris-Sud 91405 Orsay Cedex France
  * 
  * This file is part of VARNA version 3.1. VARNA version 3.1 is free
  * software: you can redistribute it and/or modify it under the terms of the

@@ -2,7 +2,7 @@
  VARNA is a tool for the automated drawing, visualization and annotation of the secondary structure of RNA, designed as a companion software for web servers and databases.
  Copyright (C) 2008  Kevin Darty, Alain Denise and Yann Ponty.
  electronic mail : Yann.Ponty@lri.fr
- paper mail : LRI, bat 490 Université Paris-Sud 91405 Orsay Cedex France
+ paper mail : LRI, bat 490 UniversitÃ© Paris-Sud 91405 Orsay Cedex France
 
  This file is part of VARNA version 3.1.
  VARNA version 3.1 is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -256,7 +256,7 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 
 		_vpMaster.setBackground(_backgroundColor);
 		_vpMaster.addVARNAListener(this);
-		_vpMaster.setTitle("Meilleur repliement - Séquence courante");
+		_vpMaster.setTitle("Meilleur repliement - SÃ©quence courante");
 		_vpMaster.setBPStyle(BP_STYLE.SIMPLE);
 		_vpMaster.getVARNAUI().UIRadiate();
 		_vpMaster.setTitleFontSize(26f);
@@ -283,7 +283,7 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 
 		
 		_vpMaster.addVARNABasesListener(this);
-		setTitle("Fête de la science 2015 - Inria AMIB - Design d'ARN");
+		setTitle("FÃªte de la science 2015 - Inria AMIB - Design d'ARN");
 		
 		setTarget(secstr[0]);
 		
@@ -296,14 +296,14 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 		if ((sols.size()==1)&&(sols.get(0).equals(_struct.getSelectedItem().toString())))
 		{
 			/*JOptionPane.showMessageDialog(null, 
-					"Vous avez trouvé une séquence pour cette structure !!!\n Saurez vous faire le design de molécules plus complexes ?",
-					"Félicitations !", 
+					"Vous avez trouvÃ© une sÃ©quence pour cette structure !!!\n Saurez vous faire le design de molÃ©cules plus complexes ?",
+					"FÃ©licitations !", 
 					JOptionPane.INFORMATION_MESSAGE);*/
 			
 		}
 		else
 		{
-			this._vpMaster.setTitle("Meilleur repliement - Séquence courante");
+			this._vpMaster.setTitle("Meilleur repliement - SÃ©quence courante");
 		}
 	}
 	
@@ -945,7 +945,7 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 				}				
 				rfolded.drawRNARadiate(_vpMaster.getConfig());
 				if ((_sols.size()==1)&& (target.getStructDBN().equals(_sols.get(0))))					
-					rfolded.setName("Félicitations !");
+					rfolded.setName("FÃ©licitations !");
 				else
 					rfolded.setName("Repliement stable - "+(i+1)+"/"+_sols.size());
 		        _vpMaster.showRNAInterpolated(rfolded);

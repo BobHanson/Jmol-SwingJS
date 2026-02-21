@@ -2,7 +2,7 @@
  VARNA is a tool for the automated drawing, visualization and annotation of the secondary structure of RNA, designed as a companion software for web servers and databases.
  Copyright (C) 2008  Kevin Darty, Alain Denise and Yann Ponty.
  electronic mail : Yann.Ponty@lri.fr
- paper mail : LRI, bat 490 Université Paris-Sud 91405 Orsay Cedex France
+ paper mail : LRI, bat 490 UniversitÃ© Paris-Sud 91405 Orsay Cedex France
 
  This file is part of VARNA version 3.1.
  VARNA version 3.1 is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
@@ -103,7 +103,7 @@ public class NussinovDemo extends JFrame implements InterfaceVARNAListener,Inter
 	public static Font textFieldsFont = Font.decode("MonoSpaced-BOLD-16");
 	public static Font labelsFont = Font.decode("SansSerif-BOLD-20");
 	public static final int marginTools = 250;
-	public static String APP_TITLE = "Fête de la science 2015 - Inria AMIB - Repliement d'ARN";
+	public static String APP_TITLE = "FÃªte de la science 2015 - Inria AMIB - Repliement d'ARN";
 	
 
 	public static ModelBaseStyle createStyle(String txt) 
