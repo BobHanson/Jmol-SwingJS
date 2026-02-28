@@ -231,7 +231,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
         jmolPanel.notifyGaussian(type, data);
       break;
     case SYNC:
-      System.out.println("StatusListener sync; " + strInfo);
+      //System.out.println("StatusListener sync; " + strInfo);
       String lc = (strInfo == null ? "" : strInfo.toLowerCase());
       if (lc.equals("getpreference")) {
         if (jmolPanel != null)
