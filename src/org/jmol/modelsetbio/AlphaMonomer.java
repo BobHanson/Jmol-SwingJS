@@ -31,15 +31,20 @@ import org.jmol.c.STR;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Chain;
 import org.jmol.modelset.Structure;
+import org.jmol.viewer.JC;
 
 import javajs.util.P3d;
 import javajs.util.Qd;
 import javajs.util.V3d;
-import org.jmol.viewer.JC;
 
 public class AlphaMonomer extends Monomer {
 
-  final static byte[] alphaOffsets = { 0 };
+  /**
+   * maximum distance between CA atoms for CA-only structures 
+   */
+  // jan reichert in email to miguel on 10 May 2004 said 4.2 looked good
+  // 2026.02.28 BH for 4nia increased to 4.5
+  private static final double MAX_BACKBONE_DISTANCE = 4.5d;
 
   @Override
   public boolean isProtein() {
@@ -50,10 +55,15 @@ public class AlphaMonomer extends Monomer {
     validateAndAllocateA(Chain chain, String group3, int seqcode,
                         int firstIndex, int lastIndex,
                         int[] specialAtomIndexes) {
-    return (firstIndex != lastIndex ||
-        specialAtomIndexes[JC.ATOMID_ALPHA_CARBON] != firstIndex ? null : 
+    return (
+
+        // BH 2026.02.27 removed this condition
+        //firstIndex != lastIndex ||
+        
+        specialAtomIndexes[JC.ATOMID_ALPHA_CARBON] != firstIndex 
+        ? null : 
           new AlphaMonomer().set2(chain, group3, seqcode,
-                            firstIndex, lastIndex, alphaOffsets));
+                            firstIndex, lastIndex, new byte[1]));
   }
   
   ////////////////////////////////////////////////////////////////
@@ -181,8 +191,7 @@ public class AlphaMonomer extends Monomer {
       return true;
     Atom atom1 = getLeadAtom();
     Atom atom2 = possiblyPreviousMonomer.getLeadAtom();
-    return atom1.isBonded(atom2) || atom1.distance(atom2) <= 4.2d;
-    // jan reichert in email to miguel on 10 May 2004 said 4.2 looked good
+    return atom1.isBonded(atom2) || atom1.distance(atom2) <= MAX_BACKBONE_DISTANCE;
   }
   
   @Override
@@ -261,5 +270,6 @@ public class AlphaMonomer extends Monomer {
     return Qd.getQuaternionFrameV(vA, vB, vC, false);
   }
   
+
 
 }

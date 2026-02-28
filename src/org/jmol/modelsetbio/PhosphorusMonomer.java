@@ -37,8 +37,6 @@ public class PhosphorusMonomer extends Monomer {
 
   protected final static byte P = 0;
 
-  private final static byte[] phosphorusOffsets = { P };
-
   private static double MAX_ADJACENT_PHOSPHORUS_DISTANCE = 8.0d;
  
   @Override
@@ -53,7 +51,7 @@ public class PhosphorusMonomer extends Monomer {
     return (firstIndex != lastIndex
         || specialAtomIndexes[JC.ATOMID_NUCLEIC_PHOSPHORUS] != firstIndex ? null
         : new PhosphorusMonomer().set2(chain, group3, seqcode, firstIndex,
-            lastIndex, phosphorusOffsets));
+            lastIndex, new byte[1]));
   }
   
   ////////////////////////////////////////////////////////////////

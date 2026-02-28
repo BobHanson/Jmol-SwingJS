@@ -23,6 +23,7 @@
  */
 package org.jmol.modelset;
 
+import javajs.util.AU;
 import javajs.util.BS;
 
 /**
@@ -103,6 +104,14 @@ public final class Chain implements Structure {
   public void setAtomBitsAndClear(BS bs, BS bsOut) {
     for (int i = 0; i < groupCount; i++)
       groups[i].setAtomBitsAndClear(bs, bsOut);
+  }
+
+  public Group addGroup(Group group, int groupIndex) {
+      if (groupCount == groups.length)
+        groups = (Group[])AU.doubleLength(groups);
+      groups[groupCount++] = group;
+    group.groupIndex = groupIndex;
+    return group;
   }
 
 }

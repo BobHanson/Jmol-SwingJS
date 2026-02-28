@@ -1333,19 +1333,10 @@ public final class ModelLoader {
           group.group1 = g1.charAt(0);
       }
     }
-    addGroup(chain, group);
-    groups[groupIndex] = group;
-    group.groupIndex = groupIndex;
-
+    groups[groupIndex] = chain.addGroup(group, groupIndex);
     for (int i = lastAtomIndex + 1; --i >= firstAtomIndex;)
         ms.at[i].group = group;
 
-  }
-
-  private void addGroup(Chain chain, Group group) {
-    if (chain.groupCount == chain.groups.length)
-      chain.groups = (Group[])AU.doubleLength(chain.groups);
-    chain.groups[chain.groupCount++] = group;
   }
 
   private void countGroup(int modelIndex, String code, String group3) {

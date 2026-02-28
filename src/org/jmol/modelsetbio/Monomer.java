@@ -24,25 +24,23 @@
 package org.jmol.modelsetbio;
 
 
+import java.util.Map;
+
 import org.jmol.c.STR;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Chain;
 import org.jmol.modelset.Group;
-
-import javajs.util.Lst;
-import javajs.util.MeasureD;
-import javajs.util.Qd;
-
+import org.jmol.script.T;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
-import javajs.util.P3d;
 import org.jmol.viewer.JC;
-import org.jmol.script.T;
 
-import java.util.Arrays;
-import java.util.Map;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.MeasureD;
+import javajs.util.P3d;
+import javajs.util.Qd;
 
 /**
  * A class to maintain information about biomolecule groups that are (potentially)
@@ -83,7 +81,7 @@ public abstract class Monomer extends Group {
     int offset = offsets[0] & 0xFF;
     if (offset != 255)
       leadAtomIndex = firstAtomIndex + offset;
-  }
+    }
 
   void setBioPolymer(BioPolymer polymer, int index) {
     bioPolymer = polymer;
@@ -308,7 +306,7 @@ public abstract class Monomer extends Group {
     return (structure instanceof ProteinStructure ? ((ProteinStructure)structure).type.getBioStructureTypeName(false) : "");
   }
 
-  final boolean updateOffsetsForAlternativeLocations(Atom[] atoms, BS bsSelected) {
+  protected boolean updateOffsetsForAlternativeLocations(Atom[] atoms, BS bsSelected) {
       boolean updated = false;
       for (int offsetIndex = offsets.length; --offsetIndex >= 0;) {
         int offset = offsets[offsetIndex] & 0xFF;
