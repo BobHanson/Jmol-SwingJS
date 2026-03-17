@@ -411,7 +411,7 @@ public class CDXMLWriter extends CMLWriter {
     switch (prop) {
     case kCDXProp_Text:
       String text = readString(len);
-      System.out.println("CDXMLW text=" + text);
+      //System.out.println("CDXMLW text=" + text);
       openTag(sb, "s");
       // remove new line char
       sb.setLength(sb.length() - 1);

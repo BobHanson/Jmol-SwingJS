@@ -188,7 +188,7 @@ public class SymmetryDesc {
     boolean isAll = (!asString && symOp < 0);
     String strOperations = (String) sginfo.get(JC.INFO_SYMMETRY_INFO);
     String strOpNote = (String) sginfo.get(JC.INFO_SPACE_GROUP_NOTE);
-    strOperations += "\n" + strOpNote.replace(':', ' ');
+    strOperations += (strOpNote == null ? "" : "\n" + strOpNote.replace(':', ' '));
     boolean labelOnly = "label".equals(stype);
     int n = 0;
     for (int i = 0; i < infolist.length; i++) {

@@ -469,6 +469,8 @@ public class CifReader extends AtomSetCollectionReader {
     //    _space_group_spin.rotation_angle 45
 
     String tag = key.substring(18);
+    if (tag.indexOf("fsg_") >= 0)
+    		tag = PT.rep(tag, "fsg_", "");
     switch (tag) {
     case "number_spsg_chen":
       tag = "ssg_number";

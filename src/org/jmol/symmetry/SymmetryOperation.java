@@ -1124,9 +1124,18 @@ public class SymmetryOperation extends M4d {
   //    "15/16", "23/24", "47/48"
   //  };
   //
+  /**
+   * 
+   * @param strT current string; only checked to see if not empty string
+   * @param x  value
+   * @param sx label "x" "y" "z" "u" "v" "w" etc
+   * @param allowFractions
+   * @param fractionAsDecimal
+   * @return string for this term
+   */
   private static String plusMinus(String strT, double x, String sx,
                                   boolean allowFractions,
-                                  boolean fractionAsRational) {
+                                  boolean fractionAsDecimal) {
     double a = Math.abs(x);
     double afrac = a % 1; // -1.3333 and 1.3333 become 0.3333
     if (a < 0.0001d) {
@@ -1134,7 +1143,7 @@ public class SymmetryOperation extends M4d {
     }
     String s = (a > 0.9999d && a <= 1.0001d ? ""
         : afrac <= 0.001d && !allowFractions ? "" + (int) a
-            : fractionAsRational ? "" + a : twelfthsOf(a * 12));
+            : fractionAsDecimal ? "" + a : twelfthsOf(a * 12));
     return (x < 0 ? "-" : strT.length() == 0 ? "" : "+") 
         + (s.equals("1") ? "" : s) + sx;
   }
@@ -1196,15 +1205,15 @@ public class SymmetryOperation extends M4d {
    * @param allPositive
    * @param halfOrLess
    * @param allowFractions
-   * @param fractionAsRational
-   * @param labels  "abc", etc., or NULL for "xyz"
+   * @param fractionAsDecimal
+   * @param labels  "abc", "uvw", etc., or NULL for "xyz";
    * @return string row-form of matrix with the given labels
    */
   static String getXYZFromMatrixFrac(M4d mat, boolean is12ths,
                                                   boolean allPositive,
                                                   boolean halfOrLess,
                                                   boolean allowFractions, 
-                                                  boolean fractionAsRational,
+                                                  boolean fractionAsDecimal,
                                                   String labels) {
     String str = "";
     SymmetryOperation op = (mat instanceof SymmetryOperation
@@ -1227,11 +1236,11 @@ public class SymmetryOperation extends M4d {
       for (int j = 0; j < 3; j++) {
         double x = row[j];
         if (approx(x) != 0) {
-          term += plusMinus(term, x, labels_[j + lpt], allowFractions, fractionAsRational);
+          term += plusMinus(term, x, labels_[j + lpt], allowFractions, fractionAsDecimal);
         }
       }
       if ((is12ths ? row[3] : approx(row[3])) != 0) {
-        String f = (fractionAsRational ? plusMinus(term, row[3], "", true, true) : xyzFraction12((is12ths ? row[3] : row[3] * denom), denom,
+        String f = (fractionAsDecimal ? plusMinus(term, row[3], "", true, true) : xyzFraction12((is12ths ? row[3] : row[3] * denom), denom,
             allPositive, halfOrLess));
         if (term == "")
           f = (f.charAt(0) == '+' ? f.substring(1) : f);
@@ -2666,12 +2675,15 @@ public class SymmetryOperation extends M4d {
     } else {
       matrix4 = (M4d) matrix34;
     }
-    if ("rxyz".equals(labels)) {
+    if (labels == null)
+      labels = "xyz";
+    if ("rxyz".equalsIgnoreCase(labels)) {
       return matrixToRationalString(matrix34);
     }
+    boolean fractionsAsDecimal = (labels.equals(labels.toUpperCase()));
     return (toMat ? matrix34
         : getXYZFromMatrixFrac(matrix4, false, false, false,
-            true, false, labels));
+            true, fractionsAsDecimal, labels.toLowerCase()));
   }
 
   // https://crystalsymmetry.wordpress.com/space-group-diagrams/

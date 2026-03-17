@@ -64,7 +64,7 @@ import javajs.util.V3d;
  */
 
 public class UnitCell extends SimpleUnitCell implements Cloneable {
-  
+
   final private static double twoP2 = 2 * Math.PI * Math.PI;
 
   private final static V3d[] unitVectors = {
@@ -121,6 +121,9 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
    * used for fast comparison of fractional-to-Cartesian matrix
    */
   private double[][] f2c;
+
+  M3d spinFrameFromCartXYZ;
+  M3d spinFrameToCartXYZ;
 
   private static V3d v0;
 
@@ -346,6 +349,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     boolean adjustB = ((periodicity & 0x2) != 0);
     boolean adjustC = ((periodicity & 0x4) != 0);
     boolean haveSpin = (pt.sD >= 0);
+    V3d v = (haveSpin ? new V3d() : null);
     if (list == null)
       list = new Lst<Point3fi>();
     int n = list.size();
@@ -363,7 +367,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       if (adjustC)
         p.z = fixFloor(p.z - Math.floor(p.z));
       if (haveSpin) {
-        V3d v = V3d.new3(pt.sX, pt.sY, pt.sZ);
+        v.set(pt.sX, pt.sY, pt.sZ);
         ((SymmetryOperation)ops[i]).rotateSpin(v);
         p.sX = (int) Math.round(v.x);
         p.sY = (int) Math.round(v.y);
@@ -1696,6 +1700,26 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     newMax.set((int) Math.max(1, Math.ceil(rmax.x - 0.001d)),
         (int) Math.max(1, Math.ceil(rmax.y - 0.001d)),
         (int) Math.max(1, Math.ceil(rmax.z - 0.001d)));
+  } 
+
+  public void toFractionalSpin(T3d v) {
+    if (spinFrameToCartXYZ == null) {
+      toFractional(v, true);
+      return;
+    }
+    if (spinFrameFromCartXYZ == null) {
+      spinFrameFromCartXYZ = M3d.newM3(spinFrameToCartXYZ);
+      spinFrameFromCartXYZ.invert();
+    }
+    spinFrameFromCartXYZ.rotate(v);
+  }
+
+  public void toCartesianSpin(T3d v) {
+    if (spinFrameFromCartXYZ == null) {
+      toCartesian(v, true);
+      return;
+    }
+    spinFrameToCartXYZ.rotate(v);
   }
 
 }

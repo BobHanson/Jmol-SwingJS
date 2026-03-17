@@ -19,6 +19,7 @@ import javajs.util.P3i;
 import javajs.util.Qd;
 import javajs.util.SB;
 import javajs.util.T3d;
+import javajs.util.V3d;
 
 public interface SymmetryInterface {
 
@@ -310,5 +311,9 @@ public interface SymmetryInterface {
                          P3i newMax);
 
   String updatePointGroup();
+
+  void toFractionalSpin(T3d v);
+
+  void toCartesianSpin(T3d v);
 
 }

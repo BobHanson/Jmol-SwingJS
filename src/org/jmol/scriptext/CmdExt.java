@@ -6670,7 +6670,7 @@ public class CmdExt extends ScriptExt {
           unitcell(2, tok);
           return;
         }
-        value = (tokAt(i + 1) == T.string ? paramAsStr(++i).toLowerCase() : null);
+        value = (tokAt(i + 1) == T.string || tokAt(i + 1) == T.unitcell ? paramAsStr(++i).toLowerCase() : null);
         if (value == null || !vwr.isModelKitOption('U', (String) value)) {
           unitcell(2, tok);
           return;
@@ -7081,12 +7081,15 @@ public class CmdExt extends ScriptExt {
       return false;
     case T.identifier:
     case T.string:
+    case T.unitcell:
       String tr = paramAsStr(i).toLowerCase();
       SymmetryInterface uc = vwr.getCurrentUnitCell();
       if (uc == null)
         invArg();
       if (!chk) {
-        if (tr.startsWith(JC.UNITCELL_PREFIX)) {
+        if (tr.equalsIgnoreCase("unitcell")) {
+          tr = "a,b,c";
+        } else if (tr.startsWith(JC.UNITCELL_PREFIX)) {
           tr = (String) vwr.getCurrentModelAuxInfo().get(tr);
         } else {
           tr = SimpleUnitCell.parseSimpleMath(vwr, tr);

@@ -123,6 +123,7 @@ public class Symmetry implements SymmetryInterface {
   private SymmetryInfo symmetryInfo;
   private SymmetryDesc desc;
   private M4d transformMatrix;
+  protected M3d spinFrameToCartXYZ;
 
   @Override
   public String[] getSymopList(boolean doNormalize) {
@@ -2107,12 +2108,14 @@ public class Symmetry implements SymmetryInterface {
     Map<String, Object> info = ms.getModelAuxiliaryInfo(modelIndex);
     Symmetry fileSymmetry = (Symmetry) info.get(JC.INFO_FILE_SYMMETRY);
     symmetryInfo = new SymmetryInfo(fileSymmetry == null ? null : fileSymmetry.spaceGroup);
+    
     double[] params = symmetryInfo.setSymmetryInfoFromFile(info,
         unitCellParams);
     if (params == null)
       return;
     setUnitCellFromParams(params, info.containsKey(JC.INFO_JMOL_DATA),
         symmetryInfo.slop);
+    unitCell.spinFrameToCartXYZ = fileSymmetry.spinFrameToCartXYZ;
     setSpinSym();
     unitCell.setMoreInfo((Lst<String>) info.get(JC.UC_MOREINFO));
     info.put("infoUnitCell", getUnitCellAsArray(false));
@@ -2397,7 +2400,7 @@ public class Symmetry implements SymmetryInterface {
   private void setSpinSym() {
     if (spinSym == null) {
       spinSym = new Symmetry();
-      spinSym.spaceGroup = spaceGroup;
+      spinSym.spaceGroup = spaceGroup; // will be null
       spinSym.unitCell = unitCell;
     }
   }
@@ -2410,6 +2413,16 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public String updatePointGroup() {
     return (pointGroup == null ? null : pointGroup.updateDraw());
+  }
+
+  @Override
+  public void toFractionalSpin(T3d v) {
+    unitCell.toFractionalSpin(v);
+  }
+
+  @Override
+  public void toCartesianSpin(T3d v) {
+    unitCell.toCartesianSpin(v);
   }
 
 }

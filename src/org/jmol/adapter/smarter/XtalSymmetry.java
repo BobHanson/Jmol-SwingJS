@@ -211,11 +211,10 @@ public class XtalSymmetry {
      */
     protected String spinFrameStr;
     private String spinFrameExt;
-    private M4d spinFramePp;
-    private M3d spinFrameToCartXYZ;
     private M3d spinFrameRotationMatrix;
     protected int nSpins;
     private P3d[] spinPointGroupAxesXYZ;
+    private boolean doNormalizeSpinFrame = false; // old "legacy" FSG code
      
     /**
      * Scale the magnetic moments of magCIF and spinCIF files.
@@ -239,13 +238,13 @@ public class XtalSymmetry {
                                               String spinFrameStr, String spinFrameExt) {
       this.spinFrameStr = spinFrameStr;
       this.spinFrameExt = spinFrameExt;
-      spinFramePp = null;
       spinFrameToCartXYZ = null;
       double a = acr.unitCellParams[0];
       double b = acr.unitCellParams[1];
       double c = acr.unitCellParams[2];
       if (spinFrameStr != null) {
         T3d[] spinABC = preSymmetrySetSpinFrameMatrices(acr);
+        // note that these will all be 1 for SpinCIF
         a = spinABC[1].length();
         b = spinABC[2].length();
         c = spinABC[3].length();
@@ -281,7 +280,7 @@ public class XtalSymmetry {
         if (v != null) {
           v.scaleT(magneticScaling);
           if (v.isFractional) {
-            // from CIF reader specifically, magCIF or spinCIF
+            // from CIF reader specifically, magCIF, but not SpinCIF
             // _atom_site_moment.crystalaxis_x
             // _atom_site_moment.crystalaxis_y
             // _atom_site_moment.crystalaxis_z
@@ -330,10 +329,15 @@ public class XtalSymmetry {
       // we create a unit cell for this FileSymmetry just 
       // for this purpose
       setUnitCellFromParams(acr.unitCellParams, false, Double.NaN);
-      spinFramePp = new M4d();
+      // note that spinFramePp is never used
       T3d[] spinABC = UnitCell.getMatrixAndUnitCell(acr.vwr, unitCell,
-          spinFrameStr, spinFramePp);
-
+          spinFrameStr, null);
+      if (doNormalizeSpinFrame ) {
+          // not doing this
+         spinABC[1].normalize();
+         spinABC[2].normalize();
+         spinABC[3].normalize();
+      }
       // extended for axis and angle
       String strAxis = getSpinExt(spinFrameExt, "axis");
       if (strAxis != null) {

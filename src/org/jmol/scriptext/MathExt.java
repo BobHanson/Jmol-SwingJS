@@ -280,6 +280,8 @@ public class MathExt {
     // matrix("r")
     // matrix(p4)
     // matrix(m3)
+    // matrix(m,"uvw",false) // no fractions
+    
 
     int n = args.length;
     M4d m4 = null;
@@ -294,6 +296,7 @@ public class MathExt {
     String retType = (n > 1 && args[n - 1].tok == T.string
         ? (String) args[n - 1].value
         : null);
+    boolean noFractions= (retType != null && retType.equals(retType.toUpperCase()));
     boolean asUVW = "uvw".equalsIgnoreCase(retType);
     boolean asABC = "abc".equalsIgnoreCase(retType);
     boolean asXYZ = asUVW || !asABC && "xyz".equalsIgnoreCase(retType);
@@ -466,7 +469,7 @@ public class MathExt {
       if (normalize)
         doNormalize(m4);
       return mp.addXStr(matToString((asRXYZ && m3 != null ? m3 : m4),
-          asRXYZ ? 0x1 : asABC ? 0xABC : asUVW ? 0xDEF : 0));
+          (asRXYZ ? 0x1 : asABC ? 0xABC : asUVW ? 0xDEF : 0) | (noFractions ? 0x1000 : 0)));
     }
     if (normalize)
       doNormalize(m4);
@@ -488,6 +491,7 @@ public class MathExt {
   private String matToString(M34d m4, int mode) {
     SymmetryInterface sym = vwr.getSymStatic();
     String smode;
+    boolean noFractions = ((mode & 0x1000) != 0);
     switch (mode) {
     case SV.FORMAT_RXYZ:
     case 0x1: // rxyz
@@ -496,8 +500,8 @@ public class MathExt {
     case SV.FORMAT_ABC:
     case 0xABC:
       if (m4 instanceof M3d) {
-    	M4d m = M4d.newM4(null);
-    	m.setRotationScale((M3d) m4);
+        M4d m = M4d.newM4(null);
+        m.setRotationScale((M3d) m4);
         return sym.staticGetTransformABC(m, false);
       }
       smode = "abc";
@@ -510,6 +514,8 @@ public class MathExt {
     case SV.FORMAT_XYZ:
       smode = "xyz";
     }
+    if (noFractions)
+      smode = smode.toUpperCase();
     return (String) vwr.getSymStatic().staticConvertOperation("", m4, smode);
   }
 

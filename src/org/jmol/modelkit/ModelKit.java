@@ -2613,11 +2613,11 @@ public class ModelKit {
     Vibration vib = vwr.ms.getVibration(a.i, false);
     if (vib != null) {
       V3d v = V3d.newV(vib);
-      spinSym.toFractional(v, true);
-      p.sX = (int) Math.round(v.x * 1000);
-      p.sY = (int) Math.round(v.y * 1000);
-      p.sZ = (int) Math.round(v.z * 1000);
-      p.sD = (int) Math.round(vib.length() * 1000);
+      spinSym.toFractionalSpin(v);
+      p.sX = (int) Math.round(v.x * 100000);
+      p.sY = (int) Math.round(v.y * 100000);
+      p.sZ = (int) Math.round(v.z * 100000);
+      p.sD = (int) Math.round(vib.length() * 100000);
     }    
     return p;
   }
@@ -2632,12 +2632,12 @@ public class ModelKit {
       if (i0 < 0)
         i0 = p.i;
       Vibration vb = (Vibration) va.clone();
-      vb.x = p.sX / 1000d;
-      vb.y = p.sY / 1000d;
-      vb.z = p.sZ / 1000d;
-      spinSym.toCartesian(vb, true);
+      vb.x = p.sX / 100000d;
+      vb.y = p.sY / 100000d;
+      vb.z = p.sZ / 100000d;
+      spinSym.toCartesianSpin(vb);
       vb.normalize();
-      vb.scale(p.sD / 1000d);
+      vb.scale(p.sD / 100000d);
       vwr.ms.setAtomVibrationVector(i, vb);
     }
     if (i0 >= 0) {

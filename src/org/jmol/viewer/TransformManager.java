@@ -1415,9 +1415,10 @@ public class TransformManager {
   public int mode = MODE_STANDARD;
   public int defaultMode = MODE_STANDARD;
 
-  void setNavigationMode(boolean TF) {
-    mode = (TF ? MODE_NAVIGATION : defaultMode);
-    resetNavigationPoint(true);
+  void setNavigationMode(boolean TF) {    
+    int mode = this.mode;
+    this.mode = (TF ? MODE_NAVIGATION : defaultMode);
+    resetNavigationPoint(TF || mode == MODE_NAVIGATION);
   }
 
   public boolean isNavigating() {

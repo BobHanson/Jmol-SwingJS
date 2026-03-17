@@ -20,6 +20,9 @@ public class OpenChemLib {
       StereoMolecule mol = new SmilesParser().parseMolecule(smiles);
       new MolfileCreator(mol).writeMolfile(writer);
       writer.close();
+     
+      
+      
       return new String(bos.toByteArray());
     } catch (IOException e) {
       // TODO Auto-generated catch block

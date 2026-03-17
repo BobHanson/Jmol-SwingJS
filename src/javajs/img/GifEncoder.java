@@ -141,14 +141,13 @@ public class GifEncoder extends ImageEncoder {
     Integer ic = (Integer) params.get("transparentColor");
     if (ic == null) {
       ic = (Integer) params.get("backgroundColor");
-      if (ic != null)
-        backgroundColor = ic.intValue();
     } else {
-      backgroundColor = ic.intValue();
       isTransparent = true;
     }
+    if (ic != null)
+      backgroundColor = ic.intValue() & 0xFFFFFF;
 
-    if (backgroundColor == 0xFF000000) {
+    if (backgroundColor == 0x000000) {
       // fix speckling of text Jmol 14.32.69
       // must return background to true color
       for (int i = pixels.length; --i >= 0;)
