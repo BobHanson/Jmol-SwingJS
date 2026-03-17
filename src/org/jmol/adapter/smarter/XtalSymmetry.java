@@ -230,16 +230,23 @@ public class XtalSymmetry {
      * 
      * @param acr
      * @param asc
-     * @param spinFrameStr 
+     * @param spinFrameStr
      * @param spinFrameExt
      * 
      */
-    protected void preSymmetryFinalizeMoments(AtomSetCollectionReader acr, AtomSetCollection asc, 
-                                              String spinFrameStr, String spinFrameExt) {
+    protected void preSymmetryFinalizeMoments(AtomSetCollectionReader acr,
+                                              AtomSetCollection asc,
+                                              String spinFrameStr,
+                                              String spinFrameExt) {
       this.spinFrameStr = spinFrameStr;
       this.spinFrameExt = spinFrameExt;
       spinFrameToCartXYZ = null;
-      doNormalizeSpinFrame = acr.checkFilterKey("spinnorm");
+      String version = getSpinExt(spinFrameExt, "version");
+      if (version == null)
+        doNormalizeSpinFrame = acr.checkFilterKey("SPINNORM");
+      else
+        doNormalizeSpinFrame = (version.compareTo("0.13.0") < 0);
+      System.out.println("doNormalizeSpinFrame=" + doNormalizeSpinFrame);
       double a = acr.unitCellParams[0];
       double b = acr.unitCellParams[1];
       double c = acr.unitCellParams[2];
@@ -257,15 +264,14 @@ public class XtalSymmetry {
         }
         if (spinFrameRotationMatrix != null) {
           // now concatentate the axis/angle rotation matrix
-          spinFrameToCartXYZ.mul2(spinFrameRotationMatrix,  spinFrameToCartXYZ);
+          spinFrameToCartXYZ.mul2(spinFrameRotationMatrix, spinFrameToCartXYZ);
         }
         spinPointGroupAxesXYZ = new P3d[] { new P3d(), new P3d(), new P3d() };
-        spinPointGroupAxesXYZ[0].setP(spinABC[1]).scale(1/a); 
-        spinPointGroupAxesXYZ[1].setP(spinABC[2]).scale(1/b); 
-        spinPointGroupAxesXYZ[2].setP(spinABC[3]).scale(1/c); 
-        
-        System.out.println("XtalSymmetry "
-            + "spinFramePp=\n " + spinFrameStr 
+        spinPointGroupAxesXYZ[0].setP(spinABC[1]).scale(1 / a);
+        spinPointGroupAxesXYZ[1].setP(spinABC[2]).scale(1 / b);
+        spinPointGroupAxesXYZ[2].setP(spinABC[3]).scale(1 / c);
+
+        System.out.println("XtalSymmetry " + "spinFramePp=\n " + spinFrameStr
             + "\nrotation=\n " + spinFrameRotationMatrix
             + "\nspinFrameCartXYZ=\n " + spinFrameToCartXYZ);
         if (spinFrameRotationMatrix != null)

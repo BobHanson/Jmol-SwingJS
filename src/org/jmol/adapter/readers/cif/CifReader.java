@@ -751,6 +751,12 @@ public class CifReader extends AtomSetCollectionReader {
       if (!haveMagneticMoments) {
         isMagCIF = isSpinCIF = false;
       } else {
+        String header = cifParser.getFileHeader();
+        int pt = header.indexOf("version -");
+        if (pt >= 0) {
+          field = header.substring(pt + 9).trim();
+          addSpinFrameExt("version", false);
+        }
         asc.getXSymmetry().finalizeMoments(spinFrame, spinFrameExt);
         vibsFractional = true;
       }
