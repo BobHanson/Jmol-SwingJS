@@ -8,6 +8,7 @@ import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollection;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.MSInterface;
+import org.jmol.adapter.smarter.XtalSymmetry;
 import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Escape;
@@ -1090,7 +1091,7 @@ public class MSRdr implements MSInterface {
         sym.toFractional(pt, false);
 //        if (cr.fixJavaDouble)
 //          PT.fixPtDoubles(pt, PT.FRACTIONAL_PRECISION);
-        isOK = asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
+        isOK = XtalSymmetry.isWithinSupercell(3, pt, minXYZ0.x, maxXYZ0.x,
             minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packing); // TODO!!!  
         //          || (cr.legacyJavaFloat ? !asc.xtalSymmetry.isWithinCell(3, pt, minXYZ0.x, maxXYZ0.x,
         //          minXYZ0.y, maxXYZ0.y, minXYZ0.z, maxXYZ0.z, 0.001f) 

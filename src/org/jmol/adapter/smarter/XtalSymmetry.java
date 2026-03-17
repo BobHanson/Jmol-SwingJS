@@ -239,6 +239,7 @@ public class XtalSymmetry {
       this.spinFrameStr = spinFrameStr;
       this.spinFrameExt = spinFrameExt;
       spinFrameToCartXYZ = null;
+      doNormalizeSpinFrame = acr.checkFilterKey("spinnorm");
       double a = acr.unitCellParams[0];
       double b = acr.unitCellParams[1];
       double c = acr.unitCellParams[2];
@@ -901,7 +902,7 @@ public class XtalSymmetry {
         : V3d.newVsub(maxXYZ0, minXYZ0));
   }
 
-  public boolean isWithinCell(int ndims, P3d pt, double minX, double maxX,
+  public static boolean isWithinSupercell(int ndims, P3d pt, double minX, double maxX,
                               double minY, double maxY, double minZ,
                               double maxZ, double slop) {
     return (pt.x > minX - slop && pt.x < maxX + slop
@@ -1310,7 +1311,7 @@ public class XtalSymmetry {
       if (acr.noPack
           ? !removePacking(ndims, pt0, minXYZ2.x, maxXYZ2.x, minXYZ2.y,
               maxXYZ2.y, minXYZ2.z, maxXYZ2.z, packingRange)
-          : !isWithinCell(ndims, pt0, minXYZ2.x, maxXYZ2.x, minXYZ2.y,
+          : !isWithinSupercell(ndims, pt0, minXYZ2.x, maxXYZ2.x, minXYZ2.y,
               maxXYZ2.y, minXYZ2.z, maxXYZ2.z, packingRange))
         bsAtoms.clear(i);
     }
@@ -1853,7 +1854,7 @@ public class XtalSymmetry {
           sym.toUnitCellRnd(c, ptOffset);
           pttemp.setT(c);
           sym.toFractional(pttemp, false);
-          if (!isWithinCell(ndims, pttemp, minXYZ0.x, maxXYZ0.x, minXYZ0.y,
+          if (!isWithinSupercell(ndims, pttemp, minXYZ0.x, maxXYZ0.x, minXYZ0.y,
               maxXYZ0.y, minXYZ0.z, maxXYZ0.z, packingRange)) {
             continue;
           }
@@ -2033,7 +2034,7 @@ public class XtalSymmetry {
     } else {
       for (int i = bs.nextSetBit(iAtomFirst); i >= 0; i = bs
           .nextSetBit(i + 1)) {
-        if (!isWithinCell(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
+        if (!isWithinSupercell(ndims, atoms[i], minXYZ.x, maxXYZ.x, minXYZ.y,
             maxXYZ.y, minXYZ.z, maxXYZ.z, packingRange))
           bs.clear(i);
       }
