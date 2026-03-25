@@ -4469,7 +4469,7 @@ public class ScriptEval extends ScriptExpr {
     if (slen == 1) {
       i = 0;
     } else {
-      modelName = paramAsStr(i);
+      modelName = (tokAt(1) == T.hash ? "@" : paramAsStr(i));
       if (slen == 2 && !chk) {
         // spt, png, and pngj files may be
         // run using the LOAD command, but
@@ -4593,12 +4593,6 @@ public class ScriptEval extends ScriptExpr {
       case T.var:
         String var = paramAsStr(++i);
         filename = "@" + var;
-        Object o = getVarParameter(var, false);
-        if (o instanceof Map<?, ?>) {
-          checkLength(3);
-          loadPNGJVar(filename, o, htParams);
-          return;
-        }
         break;
       case T.file:
         i++;
@@ -4875,13 +4869,18 @@ public class ScriptEval extends ScriptExpr {
         htParams.put(JC.FILE_DATA, filename);
       } else if (filename.startsWith("@") && filename.length() > 1) {
         Object o = getVarParameter(filename.substring(1), false);
-        if (o instanceof Map<?, ?>) {
+        if (o instanceof Map<?, ?> && ((Map<?, ?>) o).containsKey("state.spt")) {
           checkLength(i + 1);
           loadPNGJVar(filename, o, htParams);
           return;
         }
         isVariable = true;
-        o = "" + o;
+        if (o instanceof Map<?, ?> && ((Map<?, ?>) o).containsKey("_DATA_")) {
+          o = ((Map<?, ?>) o).get("_DATA_");
+          o = Base64.getBase64(((BArray) o).data);
+        } else {
+          o = "" + o;
+        }
         loadScript = new SB().append("{\n    var ")
             .append(filename.substring(1)).append(" = ")
             .append(PT.esc((String) o)).append(";\n    ").appendSB(loadScript);
@@ -5117,7 +5116,7 @@ public class ScriptEval extends ScriptExpr {
     htParams.put("imageData", av[0].value);
     OC out = vwr.getOutputChannel(null, null);
     htParams.put("outputChannel", out);
-    vwr.createZip("", "BINARY", htParams);
+    vwr.createZip("", "ZIPDATA", htParams);
     String modelName = "cache://VAR_" + varName;
     vwr.cacheFileByName("cache://VAR_*",false);
     vwr.cachePut(modelName, out.toByteArray());

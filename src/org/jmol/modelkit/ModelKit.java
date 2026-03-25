@@ -2763,14 +2763,14 @@ public class ModelKit {
    *        (deteriminent > 1), this is the expanded operation set that includes
    *        the lost translations
    * @param packing
-   * @param uc 
+   * @param uc
    */
-  private void assignAtoms(Point3fi thisPt, int atomIndex, BS bsAtoms, String type,
-                           boolean newPoint, String cmd, boolean isClick,
+  private void assignAtoms(Point3fi thisPt, int atomIndex, BS bsAtoms,
+                           String type, boolean newPoint, String cmd,
+                           boolean isClick,
                            // strictly internal, for crystal work:
                            int site, SymmetryInterface sym,
-                           Lst<Point3fi> points, 
-                           String flags, M4d[] opsCtr,
+                           Lst<Point3fi> points, String flags, M4d[] opsCtr,
                            double packing, SymmetryInterface uc) {
     if (sym == null)
       sym = vwr.getOperativeSymmetry();
@@ -2800,8 +2800,9 @@ public class ModelKit {
         nIgnored++;
       }
       // this will convert points to the needed equivalent points
-        sym.getEquivPointList(nIgnored, flags + (newPoint && atomIndex < 0 ? "newpt" : ""),
-          opsCtr, packing, points, uc);
+      sym.getEquivPointList(nIgnored,
+          flags + (newPoint && atomIndex < 0 ? "newpt" : ""), opsCtr, packing,
+          points, uc);
     }
     BS bsEquiv = (atom == null ? null
         : sym != null ? vwr.ms.getSymmetryEquivAtoms(bsAtoms, sym, null)
@@ -2852,7 +2853,7 @@ public class ModelKit {
 
       Point3fi[] newPts;
       if (points == null) {
-         newPts = new Point3fi[] { thisPt };
+        newPts = new Point3fi[] { thisPt };
       } else {
         newPts = new Point3fi[Math.max(0, points.size() - np)];
         for (int i = newPts.length; --i >= 0;) {
@@ -2880,7 +2881,8 @@ public class ModelKit {
             bsAtoms.or(bsEquiv);
             Lst<Point3fi> list = sym.getEquivPoints(p, flags, packing);
             for (int j = 0, n = list.size(); j < n; j++) {
-              for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+              for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+                  .nextSetBit(i + 1)) {
                 if (vwr.ms.at[i].distanceSquared(list.get(j)) < 0.001d) {
                   vConnections.addLast(vwr.ms.at[i]);
                   bsAtoms.clear(i);
@@ -2939,12 +2941,23 @@ public class ModelKit {
       if (site > 0)
         htParams.put("fixedSite", Integer.valueOf(site));
       htParams.put("element", type);
-      BS bsNew = vwr.addHydrogensInline(bsAtoms, vConnections, newPts, htParams);
-      if (haveVibs && !bsNew.isEmpty()) {
-        setVibrations(sym.getSpinSym(), bsNew, newPts);
-     }
-      if (bd > 0 && !isConnected && vConnections.isEmpty()) {
-        connectAtoms(bd, 1, bs0, bsNew);
+      BS bsNew = vwr.addHydrogensInline(bsAtoms, vConnections, newPts,
+          htParams);
+      if (!bsNew.isEmpty()) {
+        if (points != null) {
+          if (newPts.length == bsNew.cardinality())
+          for (int p = 0, i = bsNew.nextSetBit(0); i >= 0; i = bsNew.nextSetBit(i + 1), p++) {
+            Point3fi pt = newPts[p];
+            if (pt.mi >= 0)
+              vwr.ms.at[i].atomSymmetry = BSUtil.newAndSetBit(pt.mi);
+          }
+        }
+        if (haveVibs) {
+          setVibrations(sym.getSpinSym(), bsNew, newPts);
+        }
+        if (bd > 0 && !isConnected && vConnections.isEmpty()) {
+          connectAtoms(bd, 1, bs0, bsNew);
+        }
       }
 
       // bs now points to the new atoms

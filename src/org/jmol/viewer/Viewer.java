@@ -302,7 +302,7 @@ public class Viewer extends JmolViewer
 
   public static String getJmolVersion() {
     return (version_date == null
-        ? version_date = (JC.version + "  " + JC.date).trim()
+        ? version_date = (JC.version + "  " + JC.date + (isJmolD ? "(D)" : "")).trim()
         : version_date);
   }
 

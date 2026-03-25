@@ -2115,7 +2115,7 @@ public class Symmetry implements SymmetryInterface {
       return;
     setUnitCellFromParams(params, info.containsKey(JC.INFO_JMOL_DATA),
         symmetryInfo.slop);
-    unitCell.spinFrameToCartXYZ = fileSymmetry.spinFrameToCartXYZ;
+    unitCell.spinFrameToCartXYZ = (fileSymmetry == null ? null : fileSymmetry.spinFrameToCartXYZ);
     setSpinSym();
     unitCell.setMoreInfo((Lst<String>) info.get(JC.UC_MOREINFO));
     info.put("infoUnitCell", getUnitCellAsArray(false));

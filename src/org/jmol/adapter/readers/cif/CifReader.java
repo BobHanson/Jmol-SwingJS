@@ -494,7 +494,7 @@ public class CifReader extends AtomSetCollectionReader {
         // generate matrix, save if nec. and continue on
         M4d m4 = M4d.newM4(null);
         m4.setRotationScale((M3d) Escape.unescapeMatrixD(spinFrame));
-        spinFrame = SymmetryOperation.getTransformABC(m4, false);
+        spinFrame = SymmetryOperation.getTransformABCd(m4, false, true);
       }
       addCellType(JC.CELL_TYPE_SPIN_FRAME, spinFrame, false);
       field = spinFrame;
@@ -751,11 +751,13 @@ public class CifReader extends AtomSetCollectionReader {
       if (!haveMagneticMoments) {
         isMagCIF = isSpinCIF = false;
       } else {
-        String header = cifParser.getFileHeader();
-        int pt = header.indexOf("version -");
-        if (pt >= 0) {
-          field = header.substring(pt + 9).trim();
-          addSpinFrameExt("version", false);
+        if (isSpinCIF) {
+          String header = cifParser.getFileHeader();
+          int pt = header.indexOf("version -");
+          if (pt >= 0) {
+            field = header.substring(pt + 9).trim();
+            addSpinFrameExt("version", false);
+          }
         }
         asc.getXSymmetry().finalizeMoments(spinFrame, spinFrameExt);
         vibsFractional = true;
@@ -765,8 +767,7 @@ public class CifReader extends AtomSetCollectionReader {
       Lst<String> lst = asc.getSymmetry().setSpinList(null);
       if (lst != null) {
         asc.setCurrentModelInfo("spinList", lst);
-        appendLoadNote(lst.size()
-            + " spin operations -- see _M.spinList"
+        appendLoadNote(lst.size() + " spin operations -- see _M.spinList"
             + (doApplySymmetry ? " and atom.spin" : ""));
       }
     }

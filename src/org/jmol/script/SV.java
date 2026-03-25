@@ -1809,7 +1809,12 @@ public class SV extends T implements JSONEncodable {
   SV mapValue(String key) {
     switch (tok) {
     case hash:
-      return ((Map<String, SV>) value).get(key);
+      SV sv = ((Map<String, SV>) value).get(key);
+      if (sv == null && key.equals("length") && ((Map<String, SV>) value).containsKey("_DATA_")) {
+        sv = ((Map<String, SV>) value).get("_DATA_");
+        return SV.newI(((BArray) sv.value ).data.length);
+      }
+      return sv;
     case context:
       ScriptContext sc = ((ScriptContext) value);
       return (key.equals("_path") ? newS(sc.contextPath) : sc.getVariable(key));

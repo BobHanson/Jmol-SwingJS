@@ -358,6 +358,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       toFractional(pf, true);
     for (int i = 0, nops = ops.length; i < nops; i++) {
       Point3fi p = Point3fi.newPF(pf, pt.i);
+      p.mi = (short) i; // operation
       ops[i].rotTrans(p);
       //not using unitize here, because it does some averaging
       if (adjustA)
@@ -499,6 +500,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     p.sY = pt.sY;
     p.sZ = pt.sZ;
     p.sD = pt.sD;
+    p.mi = pt.mi;
     return p;
   }
 

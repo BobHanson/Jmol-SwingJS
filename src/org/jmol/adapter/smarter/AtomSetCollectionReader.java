@@ -760,7 +760,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       if (pt >= 0) {
         int n = s.indexOf('(');
         if (n < 0) {
-          precision = Math.max(precision, s.length() - pt);
+          precision = Math.max(precision, s.length() - 1 - pt);
         } else {
           if (precision == 0)
             precision = n;

@@ -453,14 +453,14 @@ public class SymmetryOperation extends M4d {
     return sb.toString();
   }
 
+  /*
+   * sets symmetry based on an operator string "x,-y,z+1/2", for example
+   * 
+   **/
   boolean setMatrixFromXYZ(String xyz, int modDim, boolean allowScaling) {
-    /*
-     * sets symmetry based on an operator string "x,-y,z+1/2", for example
-     * 
-     */
+    
     if (xyz == null)
       return false;
-
     xyzOriginal = xyz;
     divisor = setDivisor(xyz);
     xyz = xyz.toLowerCase();
@@ -2539,7 +2539,11 @@ public class SymmetryOperation extends M4d {
    *        to interval (-1/2,1/2]
    * @return a,b,c format for the given matrix
    */
-  public static String getTransformABC(M34d transform, boolean normalize) {
+  public static String getTransformABC(M4d transform, boolean normalize) {
+    return getTransformABCd(transform, normalize, false);
+  }
+    
+  public static String getTransformABCd(M34d transform, boolean normalize, boolean fractionAsDecimal) {
     if (transform == null)
       return "a,b,c";
     M4d m;
@@ -2555,7 +2559,7 @@ public class SymmetryOperation extends M4d {
     m.add(tr);
     m.transpose();
     String s = SymmetryOperation
-        .getXYZFromMatrixFrac(m, false, true, false, true, false, SymmetryOperation.MODE_ABC);
+        .getXYZFromMatrixFrac(m, false, true, false, true, fractionAsDecimal, SymmetryOperation.MODE_ABC);
     if (tr.lengthSquared() < 1e-12d)
       return s;
     tr.scale(-1);
@@ -2649,10 +2653,15 @@ public class SymmetryOperation extends M4d {
   }
 
   public void rotateSpin(T3d vib) {
-    if (spinU == null)
+    if (spinU == null) {
+    	// MagCIF
       rotate(vib);
-    else 
+      if (getMagneticOp() == -1)
+        vib.scale(-1);
+    } else { 
+    	// SpinCIF
       spinU.rotate(vib);
+    }
   }
 
   public static Object staticConvertOperation(String xyz, M34d matrix34,
@@ -2664,12 +2673,12 @@ public class SymmetryOperation extends M4d {
         if (xyz.indexOf("u") >= 0) {
           matrix34 = new M3d();
           matrix4.getRotationScale((M3d) matrix34);
-          matrix4 = null;
         } else {
           matrix34 = matrix4;
         }
-        // now matrix4 or matrix34 is null, but not both
-    } else if (matrix34 instanceof M3d) {
+        return matrix34;
+    } 
+    if (matrix34 instanceof M3d) {
       matrix4 = new M4d();
       matrix4.setRotationScale((M3d) matrix34);
     } else {
@@ -2681,9 +2690,12 @@ public class SymmetryOperation extends M4d {
       return matrixToRationalString(matrix34);
     }
     boolean fractionsAsDecimal = (labels.equals(labels.toUpperCase()));
-    return (toMat ? matrix34
-        : getXYZFromMatrixFrac(matrix4, false, false, false,
-            true, fractionsAsDecimal, labels.toLowerCase()));
+    labels = labels.toLowerCase();
+    if (labels.equals("abc")) {
+      return getTransformABCd(matrix4, false, fractionsAsDecimal);
+    }
+    return getXYZFromMatrixFrac(matrix4, false, false, false,
+            true, fractionsAsDecimal, labels);
   }
 
   // https://crystalsymmetry.wordpress.com/space-group-diagrams/

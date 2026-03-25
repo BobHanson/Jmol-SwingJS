@@ -300,7 +300,7 @@ public class XtalSymmetry {
             if (v.magMoment == 0) {
               // magCIF files, specifically; possibly spinCIF
               if (unitCell == null) {
-                setUnitCellFromParams(acr.unitCellParams, false, Double.NaN);
+                setUnitCellFromParams(acr.unitCellParams, false, acr.cellSlop);
               }
               // we must convert to cartesians temporarily.
               toCartesian(vt.setP(v), true);
@@ -335,7 +335,7 @@ public class XtalSymmetry {
       // the vectors are based on the spin frame, not the real frame
       // we create a unit cell for this FileSymmetry just 
       // for this purpose
-      setUnitCellFromParams(acr.unitCellParams, false, Double.NaN);
+      setUnitCellFromParams(acr.unitCellParams, false, acr.cellSlop);
       // note that spinFramePp is never used
       T3d[] spinABC = UnitCell.getMatrixAndUnitCell(acr.vwr, unitCell,
           spinFrameStr, null);
@@ -1733,7 +1733,7 @@ public class XtalSymmetry {
     }
     asc.setGlobalBoolean(JC.GLOBAL_UNITCELLS);
     getSymmetry().setUnitCellFromParams(unitCellParams, false,
-        unitCellParams[SimpleUnitCell.PARAM_SLOP]);
+        acr.cellSlop);
     // we need to set the auxiliary info as well, because 
     // ModelLoader creates a new symmetry object.
     if (unitCellOffset != null)
@@ -1840,7 +1840,7 @@ public class XtalSymmetry {
         if (ms == null) {          
           sym.newSpaceGroupPoint(a, iSym,
               (iSym >= nOp ? lstNCS.get(iSym - nOp) : null), transX, transY,
-              transZ, pttemp);
+              transZ, pttemp);          
         } else {
           sym = ms.getAtomSymmetry(a, symmetry);
           sym.newSpaceGroupPoint(a, iSym, null, transX, transY, transZ, pttemp);
@@ -1928,7 +1928,6 @@ public class XtalSymmetry {
             // spinOp is making the correction for spin being a pseudoVector, not a standard vector
             ((SymmetryOperation) sym.getSpaceGroupOperation(iSym))
                 .rotateSpin(atom1.vib);
-            atom1.vib.scale(timeReversal);
           }
           if (atom1.part < 0) {
             // special negative disorder group in CifReader

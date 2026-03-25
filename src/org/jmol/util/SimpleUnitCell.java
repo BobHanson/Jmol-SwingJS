@@ -1002,17 +1002,18 @@ public class SimpleUnitCell {
   }
 
   /**
-   * parse math such as "1/sqrt(3)"
+   * parse math such as "1/sqrt(3)" or "2sqrt(3) or "2cos(3pi/2)"
    * 
    * @param vwr
    * @param suvw
    * @return suvw replacing functions with their values
    */
   public static String parseSimpleMath(Viewer vwr, String suvw) {
+    suvw = PT.rep(suvw.toLowerCase(), " ", "");
     if (suvw.indexOf('(') < 0)
       return suvw;
-    if (suvw.indexOf("PI") >= 0) {
-      suvw = PT.rep(suvw, "PI", "(180)");
+    if (suvw.indexOf("pi") >= 0) {
+      suvw = PT.rep(suvw, "pi", "(180)");
     }
     // [[1,"1/sqrt(3)",0],[0,"2/sqrt(3)",0],[0,0,1]]
     // 1/sqrt(3)u-2/sqrt(3)v,2/sqrt(3)u-1/sqrt(3)v,w
@@ -1047,9 +1048,28 @@ public class SimpleUnitCell {
         case 'y':
         case 'z':
           if (pt > i + 1) {
-            double val = parseCalc(vwr, part.substring(i + 1, pt));
-            String sign = (i > 1 && val >= 0 ? "+" : "");
-            part = part.substring(0, i + 1) + sign + val + part.substring(pt);
+            String exp = part.substring(i + 1, pt);
+            int k = exp.lastIndexOf('(');
+            if (k > 0) {
+              while (k > 0) {
+                // looking for 2sqrt(3)
+                // looking for cos(2(180)/3)
+                while (--k >= 0) {
+                  char c = exp.charAt(k);
+                  if (c < '0') // probably +-*/
+                    break;
+                  if (c <= '9') {
+                    exp = exp.substring(0, k + 1) + "*" + exp.substring(k + 1);
+                    break;
+                  }
+                  // probably a-z
+                }
+                k = exp.lastIndexOf('(', k);
+              }
+              double val = parseCalc(vwr, exp);
+              String sign = (i > 1 && val >= 0 ? "+" : "");
+              part = part.substring(0, i + 1) + sign + val + part.substring(pt);
+            }
           }
           pt = i;
           break;
