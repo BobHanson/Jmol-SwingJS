@@ -401,7 +401,7 @@ public class ModelSet extends BondCollection {
     P3d[] offsets = new P3d[mc];
     for (int i = mc; --i >= 0;)
       offsets[i] = new P3d();
-    int lastModel = -1;
+    int lastModel = 0;
     int n = 0;
     P3d lastOffset = null;
     boolean asTrajectory = (trajectory != null

@@ -36,6 +36,7 @@ import org.jmol.symmetry.Symmetry;
 import org.jmol.symmetry.SymmetryOperation;
 import org.jmol.symmetry.UnitCell;
 import org.jmol.util.BSUtil;
+import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Tensor;
@@ -232,13 +233,13 @@ public class XtalSymmetry {
      * @param asc
      * @param spinFrameStr
      * @param spinFrameExt
+     * @param htCellTypes 
      * 
      */
     protected void preSymmetryFinalizeMoments(AtomSetCollectionReader acr,
                                               AtomSetCollection asc,
                                               String spinFrameStr,
-                                              String spinFrameExt) {
-      this.spinFrameStr = spinFrameStr;
+                                              String spinFrameExt, Map<String, String> htCellTypes) {
       this.spinFrameExt = spinFrameExt;
       spinFrameToCartXYZ = null;
       String version = getSpinExt(spinFrameExt, "version");
@@ -250,7 +251,10 @@ public class XtalSymmetry {
       double a = acr.unitCellParams[0];
       double b = acr.unitCellParams[1];
       double c = acr.unitCellParams[2];
+      this.spinFrameStr = null;
       if (spinFrameStr != null) {
+        this.spinFrameStr = spinFrameStr = evaluateSpinFrameStr(acr, spinFrameStr, a, b, c);
+        htCellTypes.put(JC.CELL_TYPE_SPIN_FRAME, spinFrameStr);
         T3d[] spinABC = preSymmetrySetSpinFrameMatrices(acr);
         // note that these will all be 1 for SpinCIF
         a = spinABC[1].length();
@@ -309,6 +313,23 @@ public class XtalSymmetry {
           }
         }
       }
+    }
+
+    private String evaluateSpinFrameStr(AtomSetCollectionReader acr, String s, double a, double b, double c) {
+      if (s.indexOf("mod(") >= 0) {
+        s = PT.rep(s, "mod(a)", "(" + a + ")");
+        s = PT.rep(s, "mod(b)", "(" + b + ")");
+        s = PT.rep(s, "mod(c)", "(" + c + ")");        
+      }
+      String sf = SimpleUnitCell.parseSimpleMath(acr.vwr, s);
+      if (sf.charAt(0) == '[') {
+        // string representation of matrix
+        // generate matrix, save if nec. and continue on
+        M4d m4 = M4d.newM4(null);
+        m4.setRotationScale((M3d) Escape.unescapeMatrixD(sf));
+        sf = SymmetryOperation.getTransformABCd(m4, false, true);
+      }
+      return sf;
     }
 
     /**
@@ -1013,9 +1034,10 @@ public class XtalSymmetry {
    * from XtalSymmetry.applySymmetryFromReader via CifReader and JanaReader doPreSymmetry
    * @param spinFrameExt 
    * @param spinFrame 
+   * @param htCellTypes 
    */
-  public void finalizeMoments(String spinFrame, String spinFrameExt) {
-    getSymmetry().preSymmetryFinalizeMoments(acr, asc, spinFrame, spinFrameExt);
+  public void finalizeMoments(String spinFrame, String spinFrameExt, Map<String, String> htCellTypes) {
+    getSymmetry().preSymmetryFinalizeMoments(acr, asc, spinFrame, spinFrameExt, htCellTypes);
   }
 
   /**

@@ -112,13 +112,22 @@ public class CifReader extends AtomSetCollectionReader {
 
   GenericCifDataParser cifParser;
 
-  private boolean isAFLOW;
-
   private boolean filterAssembly;
   private boolean allowRotations = true;
   private boolean readIdeal = true;
   private int configurationPtr = Integer.MIN_VALUE;
   protected boolean useAuthorChainID = true;
+  private byte newAtomSetLabel = NONE;
+  private Hashtable<String, Object> htAudit;
+  public Lst<String> symops;
+
+  
+  protected boolean skipping;
+
+  private boolean isAFLOW;
+  protected String pdbID;
+  private Lst<String> lstSpinLattices;
+  private Map<String, String> mapSpinIdToUVW;
 
   protected String thisDataSetName = "", lastDataSetName;
   private String chemicalName = "";
@@ -127,27 +136,27 @@ public class CifReader extends AtomSetCollectionReader {
   protected boolean iHaveDesiredModel;
   protected boolean isMMCIF;
   protected boolean isLigand;
-  protected boolean isMagCIF, isSpinCIF;
+  private boolean haveAromatic;
   boolean haveHAtoms;
   private String molecularType = "GEOM_BOND default";
   private char lastAltLoc = '\0';
-  private boolean haveAromatic;
   private int conformationIndex;
   private int nMolecular = 0;
   private String appendedData;
-  protected boolean skipping;
   protected int nAtoms;
   protected int ac;
-  private boolean haveMagneticMoments;
-
+  
   private String auditBlockCode;
   private String lastSpaceGroupName;
-
-  private boolean modulated;
   protected boolean isCourseGrained;
-  boolean haveCellWaveVector;
-  private boolean haveSpinReferences;
 
+
+  private boolean noLattice;
+  
+  
+  boolean haveCellWaveVector;
+  private boolean modulated;
+  
   protected Map<String, String> htGroup1;
   protected int nAtoms0;
   private int titleAtomSet = 1;
@@ -155,14 +164,41 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean ignoreGeomBonds;
   private boolean allowWyckoff = true;
   private boolean stopOn_SHELX_HKL;
+  private boolean spinFrameSetByFILTER;
+
+  // need resets on data_ tag
+  
+  protected boolean isMagCIF, isSpinCIF;
+  private boolean haveSpinReferences;
+  private boolean haveMagneticMoments;
   private String spinFrame;
   private String spinFrameExt;
-  private boolean spinFrameSetByFILTER;
   private boolean spinOnly;
-  private int maxOps = -1;
-  private int nops;
-  private boolean noLattice;
-  
+  private int maxOps = -1; // never changed
+  private int nops; // never significant
+
+  protected void resetGlobalsForNewData() {
+    isAFLOW = false;
+    pdbID = null;
+    // general
+//    if (!ignoreFileSpaceGroupName)
+//      sgName = null;
+    System.out.println("sgName is " +sgName);
+    latticeType = null;
+    iHaveUnitCell = ignoreFileUnitCell;
+    iHaveSymmetryOperators = false;
+    nops = 0;
+    // magCIF, spinCIF
+    isSpinCIF = isMagCIF = false;
+    haveMagneticMoments = false;
+    isMagCIF = isSpinCIF = false;
+    haveSpinReferences = haveMagneticMoments = false;
+    lstSpinLattices = null;
+    mapSpinIdToUVW = null;
+    if (!spinFrameSetByFILTER)
+      spinFrame = null;        
+    spinFrameExt = null;    
+  }
   
   @Override
   public void initializeReader() throws Exception {
@@ -308,22 +344,7 @@ public class CifReader extends AtomSetCollectionReader {
         processUnitCellTransformMatrix();
       } else if (key.startsWith("_audit")) {
         if (key.equals("_audit_block_code")) {
-          auditBlockCode = fullTrim(field).toUpperCase();
-          appendLoadNote(auditBlockCode);
-          if (htAudit != null && auditBlockCode.contains("_MOD_")) {
-            String key = PT.rep(auditBlockCode, "_MOD_", "_REFRNCE_");
-            if (asc.setSymmetryFromAuditBlock(
-                (FileSymmetry) htAudit.get(key)) != null) {
-              unitCellParams = asc.getSymmetry().getUnitCellParams();
-              iHaveUnitCell = true;
-            }
-          } else if (htAudit != null) {
-            if (symops != null)
-              for (int i = 0; i < symops.size(); i++)
-                setSymmetryOperator(symops.get(i));
-          }
-          if (lastSpaceGroupName != null)
-            setSpaceGroupName(lastSpaceGroupName);
+          processsAuditBlock();
         } else if (key.equals("_audit_creation_date")) {
           symmetry = null;
         }
@@ -335,9 +356,9 @@ public class CifReader extends AtomSetCollectionReader {
           || key.startsWith("_symmetry_space_group_name_hall")
           || key.startsWith("_space_group_name") 
           || key.contains("_ssg_name")
+          || key.contains("_name_chen")
           || key.contains("_magn_name") 
-          || key.contains("_bns_name")
-          || key.contains("_spin_number_")) {
+          || key.contains("_bns_name")) {
         processSymmetrySpaceGroupName();
       } else if (key.startsWith("_space_group_transform")
           || key.startsWith("_parent_space_group")
@@ -365,6 +386,26 @@ public class CifReader extends AtomSetCollectionReader {
     return true;
   }
 
+  private void processsAuditBlock() {
+    auditBlockCode = fullTrim(field).toUpperCase();
+    appendLoadNote(auditBlockCode);
+    if (htAudit != null) {
+      if (auditBlockCode.contains("_MOD_")) {
+        String key = PT.rep(auditBlockCode, "_MOD_", "_REFRNCE_");
+        if (asc.setSymmetryFromAuditBlock(
+            (FileSymmetry) htAudit.get(key)) != null) {
+          unitCellParams = asc.getSymmetry().getUnitCellParams();
+          iHaveUnitCell = true;
+        }
+      }
+      if (symops != null)
+        for (int i = 0; i < symops.size(); i++)
+          setSymmetryOperator(symops.get(i));
+    }
+    if (lastSpaceGroupName != null)
+      setSpaceGroupName(lastSpaceGroupName);
+  }
+
   @Override
   public int setSymmetryOperator(String xyz) {
     if (maxOps >= 0 && nops++ > maxOps)
@@ -374,9 +415,6 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private boolean newData() throws Exception {
-    if (!spinFrameSetByFILTER)
-      spinFrame = null;        
-    spinFrameExt = null;
     isLigand = false;
     if (asc.atomSetCount == 0)
       iHaveDesiredModel = false;
@@ -420,9 +458,10 @@ public class CifReader extends AtomSetCollectionReader {
    * 
    * Process the unit cell transformation as indicated by _parent_space_group or
    * _space_group_magn (or older _magentic_space_group)
+   * @throws Exception 
    * 
    */
-  private void processUnitCellTransform() {
+  private void processUnitCellTransform() throws Exception {
     field = PT.replaceAllCharacters((String) field, " ", "");
 
     // old:
@@ -450,7 +489,7 @@ public class CifReader extends AtomSetCollectionReader {
     appendLoadNote(key + ": " + field);
   }
 
-  private void processSpinSpaceGroup() {
+  private void processSpinSpaceGroup() throws Exception {
 
 	//  _space_group_spin_spin_part_point_group: 12/mmm
 	//  _space_group_spin_transform_to_input_pp: 0.666667a+0.333333b,-0.333333a-0.666667b,-c;1/9,2/9,0
@@ -468,38 +507,45 @@ public class CifReader extends AtomSetCollectionReader {
     //    _space_group_spin.rotation_axis "0,0,1"
     //    _space_group_spin.rotation_angle 45
 
+//    _space_group_spin.fsg_oriented_spin_space_group_name_linear     "P 2_{alpha,beta,0}|-3 : (3^{2}_{001},3^{2}_{001},4^{1}_{001}) m_{001}|1"
+//    _space_group_spin.fsg_oriented_spin_space_group_name_latex     "P ^{2_{\alpha,\beta,0}}\bar{3} \mid (3^{2}_{001},3^{2}_{001},4^{1}_{001}) ^{m_{001}}1"
+//    _space_group_spin.fsg_G0_number  147
+//    _space_group_spin.fsg_L0_number  143
+//    _space_group_spin.fsg_it  2
+//    _space_group_spin.fsg_ik  12
+//    _space_group_spin.fsg_spin_space_point_group_name  "12/mmm"
+//    _space_group_spin.fsg_magnetic_phase  "AFM"
+//    _space_group_spin.fsg_spin_arithmetic_crystal_class_symbol  "-3P"
+//    _space_group_spin.fsg_magnetic_arithmetic_crystal_class_symbol  "-3P"
+//
+//    _space_group_spin.fsg_transform_to_input_Pp  '2/3a+1/3b,-1/3a-2/3b,-c;1/9,2/9,0'
+//    _space_group_spin.fsg_transform_to_magnetic_primitive_Pp  '2/3a+1/3b,-1/3a-2/3b,-c;1/9,2/9,0'
+//    _space_group_spin.fsg_transform_to_L0std_Pp  '2/3a+1/3b,-1/3a-2/3b,-c;1/3,2/3,0'
+//    _space_group_spin.fsg_transform_to_G0std_Pp  'a,b,c;0,0,0'
+//
+//    _space_group_spin.fsg_input_parent_space_group_name_H-M_alt  .
+//    _space_group_spin.fsg_input_parent_space_group_IT_number  .
+
     String tag = key.substring(18);
     if (tag.indexOf("fsg_") >= 0)
     		tag = PT.rep(tag, "fsg_", "");
     switch (tag) {
-    case "number_spsg_chen":
-      tag = "ssg_number";
+    case "number_chen":
+      tag = "spsg_number";
       break;
-    case "name_spsg_chen":
-      tag = "ssg_name";
-      break;
+    case "oriented_spin_space_group_name_linear":
+    case "name_chen":
+      processSymmetrySpaceGroupName();
+      return;
     case "transform_spinframe_p_matrix":
     case "transform_spinframe_p_abc":
-      String sf = parseUvwMath((String) field);
       if (spinFrameSetByFILTER) {
         System.out.println("CifReader spinFrame set by user to " + spinFrame
             + " file setting ignored: " + field);
       } else {
-        System.out.println("CifReader spinFrame set to " + field + " as " + sf
-            + "; use load ... FILTER \"spinframe xxxxx\" to modify");
-        spinFrame = sf;
+        spinFrame = (String) field;
       }
-      if (spinFrame.charAt(0) == '[') {
-        // string representation of matrix
-        // generate matrix, save if nec. and continue on
-        M4d m4 = M4d.newM4(null);
-        m4.setRotationScale((M3d) Escape.unescapeMatrixD(spinFrame));
-        spinFrame = SymmetryOperation.getTransformABCd(m4, false, true);
-      }
-      addCellType(JC.CELL_TYPE_SPIN_FRAME, spinFrame, false);
-      field = spinFrame;
-      tag = "ssg_spinFrame";
-      break;
+      return;
     case "rotation_axis_cartn":
       field = addSpinFrameExt("axis", false);
       return;
@@ -520,19 +566,20 @@ public class CifReader extends AtomSetCollectionReader {
       // field = addSpinFrameExt("perpuvw");
       break;
     case "g0_number":
-      tag = "ssg_G0";
+      tag = "spsg_G0";
       break;
     case "l0_number":
-      tag = "ssg_L0";
+      tag = "spsg_L0";
       break;
     case "it":
-      tag = "ssg_it";
+      tag = "spsg_it";
       break;
     case "ik":
-      tag = "ssg_ik";
+      tag = "spsg_ik";
       break;
-    case "spin_part_point_group":
-      tag = "ssg_SPG";
+    case "spin_part_point_group": // old
+    case "spin_space_point_group_name": // FSG 0.13.17
+      tag = "spsg_SPG";
       break;
     case "transform_to_input_pp":
       addCellType(JC.CELL_TYPE_SPIN_MAG_INPUT, "!" + field, true);
@@ -581,7 +628,7 @@ public class CifReader extends AtomSetCollectionReader {
    * @param isFrom
    *        TRUE for SUPERCELL or "_from_parent" or "child_transform"
    */
-  private void addCellType(String type, String data, boolean isFrom) {
+  public void addCellType(String type, String data, boolean isFrom) {
     if (htCellTypes == null)
       htCellTypes = new Hashtable<String, String>();
     if (data.startsWith("!")) {
@@ -759,7 +806,7 @@ public class CifReader extends AtomSetCollectionReader {
             addSpinFrameExt("version", false);
           }
         }
-        asc.getXSymmetry().finalizeMoments(spinFrame, spinFrameExt);
+        asc.getXSymmetry().finalizeMoments(spinFrame, spinFrameExt, htCellTypes);
         vibsFractional = true;
       }
     }
@@ -789,13 +836,6 @@ public class CifReader extends AtomSetCollectionReader {
           new int[] { asc.getAtomSetAtomIndex(modelIndex),
               asc.getAtomSetAtomCount(modelIndex), maxSerial });
     }
-    if (htCellTypes != null) {
-      for (Entry<String, String> e : htCellTypes.entrySet()) {
-        asc.setCurrentModelInfo(JC.UNITCELL_PREFIX + e.getKey(), e.getValue());
-        appendLoadNote(JC.UNITCELL_PREFIX + e.getKey() + " = " + e.getValue());
-      }
-      htCellTypes = null;
-    }
     if (!haveCellWaveVector)
       modDim = 0;
     if (doApplySymmetry && !iHaveFractionalCoordinates)
@@ -810,6 +850,13 @@ public class CifReader extends AtomSetCollectionReader {
       }
     }
     applySymTrajASCR();
+    if (htCellTypes != null) {
+      for (Entry<String, String> e : htCellTypes.entrySet()) {
+        asc.setCurrentModelInfo(JC.UNITCELL_PREFIX + e.getKey(), e.getValue());
+        appendLoadNote(JC.UNITCELL_PREFIX + e.getKey() + " = " + e.getValue());
+      }
+      htCellTypes = null;
+    }
     if (!haveCellWaveVector) {
       if (!isMolecular) {
         asc.setBSAtomsForSet(-1);
@@ -866,9 +913,6 @@ public class CifReader extends AtomSetCollectionReader {
         + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
   }
 
-  private Hashtable<String, Object> htAudit;
-  public Lst<String> symops;
-
   /**
    * initialize a new atom set
    * 
@@ -879,14 +923,9 @@ public class CifReader extends AtomSetCollectionReader {
     thisDataSetName = (key.length() < 6 ? "" : key.substring(5));
     if (thisDataSetName.length() > 0)
       nextAtomSet();
-    if (debugging)
-      Logger.debug(key);
+    Logger.info(key);
+    resetGlobalsForNewData();
   }
-
-  protected String pdbID;
-  private Lst<String> lstSpinLattices;
-  private Map<String, String> mapSpinIdToUVW;
-  private byte newAtomSetLabel = NONE;
 
   protected void nextAtomSet() {
     newAtomSetLabel = NONE;
@@ -961,7 +1000,7 @@ public class CifReader extends AtomSetCollectionReader {
     setSpaceGroupName(lastSpaceGroupName = (
         key.indexOf("h-m") > 0 ? "HM:"
         : modulated ? "SSG:" 
-        : key.indexOf("spin") > 0 ? "spinSG:"
+        : key.indexOf("spin") > 0 || key.indexOf("spsg") > 0 ? "spinSG:"
         : key.indexOf("bns") >= 0 ? "BNS:"
         : key.indexOf("hall") >= 0 ? "Hall:" 
         : "")

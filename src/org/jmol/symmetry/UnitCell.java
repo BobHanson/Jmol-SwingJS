@@ -909,7 +909,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     }
     boolean isString = def instanceof String;
     if (isString && ((String) def).indexOf("(") >= 0)
-      def = SimpleUnitCell.parseSimpleMath(vwr, (String) def);
+      def = parseSimpleMath(vwr, (String) def);
     if (isString && ((String) def).charAt(0) == '[') {
       // string representation of matrix
       // generate matrix, save if nec. and continue on

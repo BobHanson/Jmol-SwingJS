@@ -175,7 +175,7 @@ public class JanaReader extends AtomSetCollectionReader {
     // but I do not know if they will be fractional like this.
     // currently vibsFractional is false
     if (vibsFractional)
-      asc.getXSymmetry().finalizeMoments(null, null);
+      asc.getXSymmetry().finalizeMoments(null, null, null);
 
   }
 

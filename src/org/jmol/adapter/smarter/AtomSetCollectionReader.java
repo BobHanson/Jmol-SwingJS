@@ -173,10 +173,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   // protected/public state variables
 
-  protected String latticeType;
   public int[] latticeCells;
   public Object fillRange;
   public boolean doProcessLines;
+
+  protected String latticeType;
   public boolean iHaveUnitCell;
   public boolean iHaveSymmetryOperators;
   public boolean continuing = true;
@@ -205,6 +206,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean havePartialChargeFilter;
   public String calculationType = "?";
   protected String sgName;
+
   protected boolean ignoreFileUnitCell;
   protected boolean ignoreFileSpaceGroupName;
   public double[] unitCellParams; //0-5 a b c alpha beta gamma; 6-21 matrix c->f

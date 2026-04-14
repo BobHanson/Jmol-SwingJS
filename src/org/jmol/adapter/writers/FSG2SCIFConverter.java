@@ -56,8 +56,8 @@ public class FSG2SCIFConverter extends CIFWriter {
       "_space_group_spin.coplanar_perp_uvw",
       "_space_group_spin.rotation_axis_cartn",
       "_space_group_spin.rotation_angle",
-      "_space_group_spin.number_SpSG_Chen",
-      "_space_group_spin.name_SpSG_Chen", };
+      "_space_group_spin.number_Chen",
+      "_space_group_spin.name_Chen", };
 
   private final static String operationKeys = "\nloop_\n"
       +"_space_group_symop_spin_operation.id\n"

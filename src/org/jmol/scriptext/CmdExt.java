@@ -7092,7 +7092,8 @@ public class CmdExt extends ScriptExt {
         } else if (tr.startsWith(JC.UNITCELL_PREFIX)) {
           tr = (String) vwr.getCurrentModelAuxInfo().get(tr);
         } else {
-          tr = SimpleUnitCell.parseSimpleMath(vwr, tr);
+          String t = (String) vwr.getCurrentModelAuxInfo().get(JC.UNITCELL_PREFIX + tr);
+          tr = (t == null ? SimpleUnitCell.parseSimpleMath(vwr, tr) : t);
         }
         if (isNot)
           tr = "!" + tr;

@@ -1015,6 +1015,7 @@ public class SimpleUnitCell {
     if (suvw.indexOf("pi") >= 0) {
       suvw = PT.rep(suvw, "pi", "(180)");
     }
+    suvw = PT.rep(suvw, ")(", ")*(");
     // [[1,"1/sqrt(3)",0],[0,"2/sqrt(3)",0],[0,0,1]]
     // 1/sqrt(3)u-2/sqrt(3)v,2/sqrt(3)u-1/sqrt(3)v,w
     String[] parts = suvw.replace('"', ' ').replace('\'', ' ').split(",");
