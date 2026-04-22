@@ -100,8 +100,12 @@ public class VARNAGUI implements DropTargetListener,
   protected VARNAGUI(String title, boolean isDemo) {
     frameTitle = (title == null ? "VARNA" : "VARNA GUI");
     this.isDemo = isDemo;
-    app = new VARNAapp(true);
+    app = new VARNAapp(getEditable());
     // if isViewer, still need setFrame()
+  }
+
+  protected boolean getEditable() {
+    return true;
   }
 
   protected boolean getShowTitle() {
@@ -134,10 +138,6 @@ public class VARNAGUI implements DropTargetListener,
 
   public String getInfo() {
     return app.getInfo().getText();
-  }
-
-  public JFrame getFrame() {
-    return frame;
   }
 
   public JFrame setFrame(JFrame parentFrame, JFrame frame, int width,
@@ -321,7 +321,7 @@ public class VARNAGUI implements DropTargetListener,
           dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
           Object ob = tr.getTransferData(flavors[i]);
           if (ob instanceof List) {
-            List list = (List) ob;
+            List<?> list = (List<?>) ob;
             for (int j = 0; j < list.size(); j++) {
               Object o = list.get(j);
 
@@ -329,8 +329,6 @@ public class VARNAGUI implements DropTargetListener,
                 DropTarget dt = (DropTarget) dtde.getSource();
                 Component c = dt.getComponent();
                 if (c instanceof VARNAPanel) {
-                  String path = o.toString();
-                  VARNAPanel vp = (VARNAPanel) c;
                   try {
                     FullBackup bck = VARNAPanel.importSession(o); // BH SwingJS
                     app.addRNA(bck.rna, bck.config, bck.name, true);

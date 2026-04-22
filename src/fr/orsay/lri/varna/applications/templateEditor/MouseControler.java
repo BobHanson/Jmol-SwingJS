@@ -29,7 +29,8 @@ public class MouseControler implements MouseListener, MouseMotionListener, Mouse
 		_ui = ui;
 	}
 
-	public void mouseWheelMoved(MouseWheelEvent e) {
+	@Override
+  public void mouseWheelMoved(MouseWheelEvent e) {
 		if (e.getWheelRotation() == -1) {
 			_sp.zoomIn();
 		}
@@ -40,15 +41,18 @@ public class MouseControler implements MouseListener, MouseMotionListener, Mouse
 	}
 
 
-	public void mouseClicked(MouseEvent arg0) {
+	@Override
+  public void mouseClicked(MouseEvent arg0) {
 	}
 
-	public void mouseEntered(MouseEvent arg0) {
+	@Override
+  public void mouseEntered(MouseEvent arg0) {
 		// TODO Auto-generated method stub
 
 	}
 
-	public void mouseExited(MouseEvent arg0) {
+	@Override
+  public void mouseExited(MouseEvent arg0) {
 		// TODO Auto-generated method stub
 
 	}
@@ -63,7 +67,8 @@ public class MouseControler implements MouseListener, MouseMotionListener, Mouse
 		return new Point2D.Double(event.getX()/_sp.getScaleFactor(), event.getY()/_sp.getScaleFactor());
 	}
 
-	public void mousePressed(MouseEvent arg0) {
+	@Override
+  public void mousePressed(MouseEvent arg0) {
 		movingView = false;
 		_clickedPos = new Point2D.Double(arg0.getX(), arg0.getY());
 		_clickedPosScreen.x = arg0.getXOnScreen();
@@ -168,7 +173,8 @@ public class MouseControler implements MouseListener, MouseMotionListener, Mouse
 		}
 	}
 
-	public void mouseReleased(MouseEvent arg0) {
+	@Override
+  public void mouseReleased(MouseEvent arg0) {
 		movingView = false;
 		Point2D.Double logicalMousePos = getLogicalMouseCoords(arg0);
 		if (_elem!=null)
@@ -238,7 +244,8 @@ public class MouseControler implements MouseListener, MouseMotionListener, Mouse
 		return result;
 	}
 
-	public void mouseDragged(MouseEvent arg0) 
+	@Override
+  public void mouseDragged(MouseEvent arg0) 
 	{
 		if (movingView) {
 			Point trans = new Point(
@@ -338,7 +345,8 @@ public class MouseControler implements MouseListener, MouseMotionListener, Mouse
 		}
 	}
 
-	public void mouseMoved(MouseEvent arg0) {
+	@Override
+  public void mouseMoved(MouseEvent arg0) {
 		// TODO Auto-generated method stub
 
 	}

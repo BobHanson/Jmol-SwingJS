@@ -11,7 +11,6 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import fr.orsay.lri.varna.VARNAPanel;
-import fr.orsay.lri.varna.components.VARNAConsole;
 import fr.orsay.lri.varna.controlers.ControleurScriptParser;
 import fr.orsay.lri.varna.exceptions.ExceptionParameterError;
 import fr.orsay.lri.varna.interfaces.InterfaceParameterLoader;
@@ -36,13 +35,17 @@ import fr.orsay.lri.varna.models.rna.RNA;
 public class VARNAViewer extends VARNAGUI
     implements VARNAViewerI, InterfaceParameterLoader, ActionListener {
 
-  private VARNAConsole _console;
   private ActionListener actionListener;
 
   public VARNAViewer() {
     super("VARNA", false);
     app.setDoInterpolate(false);
     app.setParameterSource(this);
+  }
+
+  @Override
+  protected boolean getEditable() {
+    return false;
   }
 
   @Override
@@ -91,6 +94,47 @@ public class VARNAViewer extends VARNAGUI
   }
 
   @Override
+  @SuppressWarnings("unchecked") 
+  public Object notifyCallback(VARNACallBack type, Object[] data) {
+    switch (type) {
+    default:
+      System.err.println("Varna plugin callback for " + type);
+      return null;
+    case SETPLUGIN:
+      JFrame parentFrame = (JFrame) data[0];
+      actionListener = (ActionListener) data[1];
+      app.setActionListener(this);
+      app.setVarnaPanel(getConfiguredPanel());
+      return setFrame(parentFrame, null, 0, 0);
+    case GETFRAME:
+      return (getVarnaPanel() == null ? null : frame);
+    case SETDSSR:
+      String modelName = (String) data[0];      
+      Map<String, Object> dssrInfo = (Map<String, Object>) data[1];
+      newDSSRSequenceAndStructure(modelName, dssrInfo);
+      return null;
+    case ZAP:
+      if (app != null)
+        app.zap();
+      frame.setVisible(false);
+      return null;
+    case SCRIPT:
+      String cmd = ((String) data[1]).substring(6).trim();
+      script(cmd);
+      return null;
+    case SELECT:
+      HashSet<Integer> set = (HashSet<Integer>) data[1];
+      app.getVARNAPanel().selectBasesByResno(set);
+      app.repaint();
+      return null;
+    case DESTROY:
+      frame.setVisible(false);
+      setFrame(null, null, -1, -1);
+      return null;
+    }
+  }
+
+  @Override
   public void actionPerformed(ActionEvent e) {
     switch (e.getActionCommand()) {
     case "selectModel":
@@ -99,28 +143,35 @@ public class VARNAViewer extends VARNAGUI
       System.out.println("VV selectModel " + b.name);
       break;
     case "selectBases":
-      if (e.getID() != VARNAapp.SEL_COMPLETE) {
+      BaseList baseList = (BaseList) e.getSource();
+      switch (e.getID()) {
+      case VARNAapp.SEL_CLEAR:
+      case VARNAapp.SEL_SET:
+        actionListener.actionPerformed(e);
+        script("setSelectionColors(" + e.getSource() + ")");
+        //$FALL-THROUGH$
+      case VARNAapp.SEL_COMPLETE:
+        ArrayList<ModeleBase> bases = baseList.getBases();
+        int[] resnos = new int[bases.size()];
+        for (int i = bases.size(); --i >= 0;)
+          resnos[i] = bases.get(i).getResidueNumber();
+        e.setSource(resnos);
+        break;
+      default:
         return;
       }
-      BaseList baseList = (BaseList) e.getSource();
-      ArrayList<ModeleBase> bases = baseList.getBases();
-      int[] resnos = new int[bases.size()];
-      for (int i = bases.size(); --i >= 0;) 
-        resnos[i] = bases.get(i).getResidueNumber();
-      e.setSource(resnos);
       break;
     default:
       return;
     }
     // back to the Jmol plugin
-    SwingUtilities.invokeLater(()->{
-      actionListener.actionPerformed(e);      
+    SwingUtilities.invokeLater(() -> {
+      actionListener.actionPerformed(e);
     });
   }
 
-  @Override
   @SuppressWarnings("unchecked")
-  public void newDSSRSequenceAndStructure(String modelName, Map<String, Object> dssrInfo) {
+  private void newDSSRSequenceAndStructure(String modelName, Map<String, Object> dssrInfo) {
     Map<String, Object> dbn = (Map<String, Object>) dssrInfo.get("dbn");
     Map<String, Object> all = (Map<String, Object>) dbn.get("all_chains");
     String sstr = (String) all.get("sstr");
@@ -141,27 +192,6 @@ public class VARNAViewer extends VARNAGUI
       nums[i] = ((Number) res.get("nt_resnum")).intValue();
     }
     return nums;
-  }
-
-  /**
-   * 
-   * @param set a set of residue numbers to match 
-   */
-  public void selectResnoSet(HashSet<Integer> set) {
-    app.getVARNAPanel().selectBasesByResno(set);
-    
-  }
-
-  public JFrame finalizeFrame(JFrame parentFrame, ActionListener listener) {
-    actionListener = listener;
-    app.setActionListener(this);
-    app.setVarnaPanel(getConfiguredPanel());
-    return setFrame(parentFrame, null, 0, 0);
-  }
-
-  public void zap() {
-    if (app != null)
-      app.zap();
   }
 
   public void script(String cmd) {

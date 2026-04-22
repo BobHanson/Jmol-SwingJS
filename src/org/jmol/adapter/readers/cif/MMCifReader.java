@@ -234,17 +234,22 @@ public class MMCifReader extends CifReader {
     if (byChain && !isBiomolecule)
       for (String id : chainAtomMap.keySet())
         createParticle(id);
-    boolean haveBiomolecule = (isBiomolecule && vBiomolecules != null && vBiomolecules.size() > 0);
+    boolean haveBiomolecule = (isBiomolecule && vBiomolecules != null
+        && vBiomolecules.size() > 0);
     if (!isCourseGrained && asc.ac == nAtoms) {
       asc.removeCurrentAtomSet();
     } else {
-      if ((dssr != null || validation != null || addedData != null) && !isCourseGrained && !requiresSorting) {
-        MMCifValidationParser vs = ((MMCifValidationParser) getInterface("org.jmol.adapter.readers.cif.MMCifValidationParser"))
-            .set(this);
+      if ((dssr != null || validation != null || addedData != null)
+          && !isCourseGrained && !requiresSorting) {
+        MMCifValidationParser vs = ((MMCifValidationParser) getInterface(
+            "org.jmol.adapter.readers.cif.MMCifValidationParser")).set(this);
         String note = null;
         if (addedData == null) {
-          if (validation != null || dssr != null)
+          if (validation != null || dssr != null) {
             note = vs.finalizeValidations(vwr, modelMap);
+            if (dssr != null)
+              this.addJmolScript("cartoons only");
+          }
         } else if (addedDataKey.equals("_rna3d")) {
           note = vs.finalizeRna3d(modelMap);
         }
@@ -269,7 +274,7 @@ public class MMCifReader extends CifReader {
         asc.getXSymmetry().applySymmetryBio(thisBiomolecule,
             applySymmetryToBonds, filter);
         asc.xtalSymmetry = null;
-        
+
       }
       doCheckUnitCell &= iHaveUnitCell && doApplySymmetry;
       if (doCheckUnitCell) {

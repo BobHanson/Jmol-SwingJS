@@ -24,6 +24,7 @@
 package org.openscience.jmol.app.varna;
 
 import java.awt.event.ActionEvent;
+
 import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -34,11 +35,14 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import org.jmol.c.CBK;
+import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.JmolPlugin;
 
 import fr.orsay.lri.varna.applications.VARNAViewer;
+import fr.orsay.lri.varna.interfaces.VARNAViewerI;
+import fr.orsay.lri.varna.interfaces.VARNAViewerI.VARNACallBack;
 import javajs.util.BS;
 import swingjs.api.Interface;
 
@@ -46,13 +50,11 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
 
   public final static String version = "0.0.1";
 
-  private static final String MY_SCRIPT_ID = " #FROM_VARNA";
+  private static final String MY_SCRIPT_ID = JC.SCRIPT_EXT + "FROM_VARNA";
 
   protected Viewer vwr;
 
-  private VARNAViewer varna;
-
-  private VarnaDialog varnaDialog;
+  private VARNAViewerI varna;
 
   private Map<String, Object> options;
 
@@ -114,15 +116,22 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
   }
 
   private void showFrame(boolean b) {
-    if (b && varna == null)
-      varna = (VARNAViewer) Interface.getInstance("fr.orsay.lri.varna.applications.VARNAViewer", true);
-    if (varna == null || varna.getVarnaPanel() == null) 
+    if (b && varna == null) {
+      varna = (VARNAViewer) Interface
+          .getInstance("fr.orsay.lri.varna.applications.VARNAViewer", true);
       return;
-    if (varnaFrame == null)
-      varnaFrame = varna.getFrame();
-    varnaFrame.setVisible(b);
-    if (b)
-      varnaFrame.toFront(); 
+    }
+    if (varna == null)
+      return;
+    varnaFrame = (JFrame) varna.notifyCallback(VARNACallBack.GETFRAME, null);
+    if (varnaFrame == null) {
+      // too early in the process
+      System.out.println("VP???");
+    } else {
+      varnaFrame.setVisible(b);
+      if (b)
+        varnaFrame.toFront();
+    }
   }
 
 
@@ -131,11 +140,9 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
     if (varna == null)
       return;
     vwr = null;
-    varna.getFrame().setVisible(false);
-    varna.setFrame(null, null, -1, -1);
+    varna.notifyCallback(VARNACallBack.DESTROY, null);
     varna = null;
     varnaFrame = null;
-    varnaDialog = null;
   }
 
   private String mySelectColors;
@@ -154,25 +161,21 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
         checkDSSR(null);
       return;
     case LOADSTRUCT:
-      if (varna != null && "zapped".equals(data[2])) {
-        varna.zap();
-        varnaFrame.setVisible(false);
-      }
+      if (varna != null && "zapped".equals(data[2]))
+        varna.notifyCallback(VARNACallBack.ZAP, data);
       return;
     case SCRIPT:
-      System.out.println("Varna plugin SCRIPT " + data[1] + " " + data[2]);
+      //System.out.println("Varna plugin SCRIPT " + data[1] + " " + data[2]);
       return;
     case SYNC:
       cmd = (String) data[1];
       if (!cmd.startsWith("varna:"))
         return;
-      cmd = cmd.substring(6).trim();
-      if (cmd.equalsIgnoreCase("stop")) {
+      if (cmd.equalsIgnoreCase("varna:stop")) {
         destroy();
         return;
       }
-      varna.script(cmd);
-      
+      varna.notifyCallback(VARNACallBack.SCRIPT, data);
       return;
     case ANIMFRAME:
       String modelName = (String) data[2];
@@ -184,8 +187,8 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       String selectColors = (String) data[5];
       if (selectColors == null ? mySelectColors != null : !selectColors.equals(mySelectColors)) {
         mySelectColors = selectColors;
-        cmd = "setSelectionColors(" + selectColors + ")";
-        varna.script(cmd);
+        data[1] = "varna:setSelectionColors(" + selectColors + ")";
+        varna.notifyCallback(VARNACallBack.SCRIPT, data);
       }
       // limit the atoms to the current frame
       atoms.and(vwr.getFrameAtoms());
@@ -193,7 +196,8 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       for (int i = atoms.nextSetBit(0); i >= 0; i = atoms.nextSetBit(i + 1)) {
         set.add(Integer.valueOf(vwr.ms.at[i].getResno()));
       }
-      varna.selectResnoSet(set);
+      data[1] = set;
+      varna.notifyCallback(VARNACallBack.SELECT, data);
       return;
     }
   }
@@ -210,11 +214,9 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       return;
     String m = (modelName == null ? info.get("modelNumberDotted") + ": " + info.get("modelName") : modelName);  
     SwingUtilities.invokeLater(()->{
-      varna.newDSSRSequenceAndStructure(m, dssrInfo);
+      varna.notifyCallback(VARNACallBack.SETDSSR, new Object[] { m, dssrInfo });
       showFrame(true);
     });
-//    if (varnaDialog != null)
-//      varnaDialog.notifyCallback(type, data);
   }
 
 
@@ -222,7 +224,7 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
     if (varna == null) 
       return false;
     if (varnaFrame == null) {
-      varnaFrame = varna.finalizeFrame((JFrame) options.get("parentFrame"), this);
+      varnaFrame = (JFrame) varna.notifyCallback(VARNACallBack.SETPLUGIN, new Object [] { options.get("parentFrame"), this });
     }
     return true;
   }
@@ -230,6 +232,7 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
 
   @Override
   public void actionPerformed(ActionEvent e) {
+    String script = null;
     switch (e.getActionCommand()) {
     case "selectModel":
       // Model 1.1: 1EHZ
@@ -238,23 +241,33 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       if (pt <= 6)
         return;
       name = name.substring(6, pt);
-      if (!name.equals(vwr.getModelNumberDotted(vwr.am.cmi))) {
-        System.out.println("VP action performed " + name);
-        vwr.script("model " + name + MY_SCRIPT_ID);
+      if (name.equals(vwr.getModelNumberDotted(vwr.am.cmi))) {
+        return;
       }
+      script = "model " + name + MY_SCRIPT_ID;
       break;
     case "selectBases":
-      int[]resnos = (int[]) e.getSource();
-      if (resnos.length == 0) {
-        vwr.script("select none");
+      if (e.getSource() instanceof int[]) {
+        int[] resnos = (int[]) e.getSource();
+        if (resnos.length == 0) {
+          script = "select none";
+        } else {
+          script = "select model=" + vwr.getModelNumberDotted(vwr.am.cmi)
+              + " and resno=" + Arrays.toString(resnos);
+        }
       } else {
-        String s = Arrays.toString(resnos);
-        System.out.println(s);
-        vwr.script("select model=" + vwr.getModelNumberDotted(vwr.am.cmi) + " and resno=" + s);
+        // this is a request for information from CLEAR.
+        e.setSource(vwr.slm.getSelectionColors());
+        script = "select none";
       }
       break;
     }
-    
+    if (script != null) {
+      if (Logger.debugging)
+        System.out.println(script);
+      vwr.script(script);
+    }
+
   }
 
 

@@ -972,7 +972,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   public VARNAPanel(String seq, String str, int drawMode, String title)
       throws ExceptionNonEqualLength {
     _conf = new VARNAConfig();
-    drawRNA(seq, str, drawMode);
+    setRNA(seq, str, drawMode);
     init();
     setTitle(title);
     // VARNASecDraw._vp = this;
@@ -995,7 +995,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
     _blink = new ControleurBlinkingThread(this,
         ControleurBlinkingThread.DEFAULT_FREQUENCY, 0, 1.0, 0.0, 0.2);
-    _blink.start();
+//    _blink.start();
 
     _premierAffichage = true;
     _translation = new Point(0, 0);
@@ -1911,8 +1911,8 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
           vbp.x = (p2.x - p1.x) / dist;
           vbp.y = (p2.y - p1.y) / dist;
 
-          BackboneType bt = bck.getTypeBefore(i);
-          if (bt != BackboneType.DISCONTINUOUS_TYPE) {
+          if (!bck.isStrandEnd(i - 1)) {
+            BackboneType bt = bck.getTypeBefore(i);
             if (bt == BackboneType.MISSING_PART_TYPE) {
               g2D.setSelectionStroke();
             } else {
@@ -2611,8 +2611,8 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
    *        The secondary structure
    * @throws ExceptionNonEqualLength
    */
-  public void drawRNA(String seq, String str) throws ExceptionNonEqualLength {
-    drawRNA(seq, str, _RNA.get_drawMode());
+  public void setRNA(String seq, String str) throws ExceptionNonEqualLength {
+    setRNA(seq, str, _RNA.get_drawMode());
   }
 
   /**
@@ -2624,9 +2624,9 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
    * @param drawMode
    *        The drawing algorithm
    */
-  public void drawRNA(RNA r, int drawMode) {
+  public void setRNA(RNA r, int drawMode) {
     r.setDrawMode(drawMode);
-    drawRNA(r);
+    setRNA(r);
   }
 
   /**
@@ -2634,7 +2634,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
    * value using the current drawing algorithm.
    */
 
-  public void drawRNA() {
+  public void setRNA() {
     try {
       _RNA.drawRNA(_RNA.get_drawMode(), _conf);
     } catch (ExceptionNAViewAlgorithm e) {
@@ -2651,10 +2651,10 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
    * @param r
    *        The new secondary structure
    */
-  public void drawRNA(RNA r) {
+  public void setRNA(RNA r) {
     if (r != null) {
       _RNA = r;
-      drawRNA();
+      setRNA();
     }
   }
 
@@ -2676,12 +2676,12 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
    *        The drawing algorithm
    * @throws ExceptionNonEqualLength
    */
-  public void drawRNA(String seq, String str, int drawMode)
+  public void setRNA(String seq, String str, int drawMode)
       throws ExceptionNonEqualLength {
     _RNA.setDrawMode(drawMode);
     try {
       _RNA.setRNA(seq, str);
-      drawRNA();
+      setRNA();
     } catch (ExceptionUnmatchedClosingParentheses e) {
       errorDialog(e);
     }
@@ -2696,7 +2696,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
           "No RNA could be parsed from that source.");
     }
     _RNA = rnas.iterator().next();
-    drawRNA();
+    setRNA();
   }
 
   /**
@@ -3886,7 +3886,12 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   public void setSelection(ArrayList<Integer> indices) {
     setSelection(_RNA.getBasesAt(indices));
   }
-  
+
+  public void setSelection(int i0, int i1) {
+    setSelection(_RNA.getBasesBetween(i0, i1));
+  }
+
+
   public void selectBasesByResno(Iterable<Integer> set) {
     setSelection(_RNA.getBasesByResidueNumber(set));
   }
@@ -3897,10 +3902,10 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     BaseList bck = new BaseList(_selectedBases);
     _selectedBases.clear();
     _selectedBases.addBases(mbs);
-    if (selectionColored) {
-      _blink.setActive(false);
+    if (selectionColored || bck.size() == 0) {
+      setBlinkActive(false);
     } else {
-      _blink.setActive(true);
+      setBlinkActive(true);
     }
 
     fireSelectionChanged(VARNAapp.SEL_SET, bck, _selectedBases);
@@ -3951,7 +3956,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     BaseList bck = new BaseList(_selectedBases);
     ModeleBase mb = _RNA.getBaseAt(i);
     _selectedBases.addBase(mb);
-    _blink.setActive(true);
+    setBlinkActive(true);
     fireSelectionChanged(VARNAapp.SEL_ADD, bck, _selectedBases);
   }
 
@@ -3960,9 +3965,9 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     ModeleBase mb = _RNA.getBaseAt(i);
     _selectedBases.removeBase(mb);
     if (_selectedBases.size() == 0) {
-      _blink.setActive(false);
+      setBlinkActive(false);
     } else {
-      _blink.setActive(true);
+      setBlinkActive(true);
     }
     fireSelectionChanged(VARNAapp.SEL_REMOVE, bck, _selectedBases);
   }
@@ -3990,9 +3995,17 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   public void clearSelection() {
     BaseList bck = new BaseList(_selectedBases);
     _selectedBases.clear();
-    _blink.setActive(false);
+    setBlinkActive(false);
     repaint();
     fireSelectionChanged(VARNAapp.SEL_CLEAR, bck, _selectedBases);
+  }
+
+  private void setBlinkActive(boolean b) {
+    if (b) {
+      if (_selectedBases.size() == 0 || selectionColored)
+        b = false;
+    }
+    _blink.setActive(b);
   }
 
   public void saveSelection() {
@@ -4079,6 +4092,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   public void removeSelectedAnnotation() {
     _highlightAnnotation = false;
     _selectedAnnotation = null;
+    
   }
 
   public void highlightSelectedAnnotation() {

@@ -377,7 +377,7 @@ public class ControleurScriptParser {
       case SET_RNA: {
         String seq = cmd._argv.get(0).toString();
         String str = cmd._argv.get(1).toString();
-        vp.drawRNA(seq, str);
+        vp.setRNA(seq, str);
       }
         break;
       case SET_RNA_SMOOTH: {
@@ -434,7 +434,7 @@ public class ControleurScriptParser {
       case SET_STRUCT: {
         String seq = vp.getRNA().getSeq();
         String str = cmd._argv.get(0).toString();
-        vp.drawRNA(seq, str);
+        vp.setRNA(seq, str);
       }
         break;
       case SET_STRUCT_SMOOTH: {
@@ -474,7 +474,7 @@ public class ControleurScriptParser {
         else if (modeStr.equals("linear"))
           mode = RNA.DRAW_MODE_LINEAR;
         if (mode != -1)
-          vp.drawRNA(vp.getRNA(), mode);
+          vp.setRNA(vp.getRNA(), mode);
       }
         break;
       case TOGGLE_SHOW_COLOR_MAP: {
@@ -607,7 +607,7 @@ public class ControleurScriptParser {
     ArgumentType[] argtypes = getPrototype(f);
     if (argtypes.length != argv.size())
       throw new Exception(SCRIPT_ERROR_PREFIX
-          + ": Wrong number of argument for function \"" + f + "\".");
+          + ": Wrong number of argument for function \"" + f + "\"." + argv);
     for (int i = 0; i < argtypes.length; i++) {
       Argument a = argv.get(i);
       if (a != NULL && argtypes[i] != a._t) {

@@ -43,11 +43,14 @@ import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
+import javax.swing.text.Highlighter.HighlightPainter;
 
 import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.components.ZoomPanel;
@@ -56,7 +59,6 @@ import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
 import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionNonEqualLength;
 import fr.orsay.lri.varna.exceptions.ExceptionParameterError;
-import fr.orsay.lri.varna.exceptions.ExceptionPermissionDenied;
 import fr.orsay.lri.varna.exceptions.ExceptionUnmatchedClosingParentheses;
 import fr.orsay.lri.varna.exceptions.ExceptionWritingForbidden;
 import fr.orsay.lri.varna.factories.RNAFactory;
@@ -73,6 +75,8 @@ import fr.orsay.lri.varna.models.rna.RNA;
  * A generalized VARNA application interface that includes one or more
  * VARNAPanel instances (as for VARNAEditor and VARNAGUI) as well as maintaining
  * options for a command-line or library-based interface
+ * 
+ * @author Bob Hanson 2026.04.20
  */
 public class VARNAapp implements InterfaceParameterLoader {
 
@@ -214,32 +218,29 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   
   JPanel _tools = new JPanel();
-  JPanel _input = new JPanel();
 
   Color _backgroundColor = Color.white;
   
   private VARNAPanel _vp;
-  private JTextField _str = new JTextField(DEFAULT_STRUCTURE1);
-  private JTextField _seq = new JTextField(DEFAULT_SEQUENCE);
+  private final JTextField _str = new JTextField(DEFAULT_STRUCTURE1);
+  private final JTextField _seq = new JTextField(DEFAULT_SEQUENCE);
 
-  JPanel _seqPanel = new JPanel();
-  JPanel _strPanel = new JPanel();
-  JLabel _info = new JLabel();
+  private JLabel _info = new JLabel();
 
-  Object _hoverHighlightStr = null;
-  ArrayList<Object> _selectionHighlightStr = new ArrayList<Object>();
+  private Object _hoverHighlightStr = null;
+  private ArrayList<Object> _selectionHighlightStr = new ArrayList<Object>();
 
-  Object _hoverHighlightSeq = null;
-  ArrayList<Object> _selectionHighlightSeq = new ArrayList<Object>();
+  private Object _hoverHighlightSeq = null;
+  private ArrayList<Object> _selectionHighlightSeq = new ArrayList<Object>();
 
-  JLabel _strLabel = new JLabel(" Str:");
-  JLabel _seqLabel = new JLabel(" Seq:");
-  JButton _deleteButton, _duplicateButton;
+  private JButton _deleteButton, _duplicateButton;
+
+  protected JList<FullBackup> _sideList;
+  
   JPanel _listPanel;
-  JList<FullBackup> _sideList;
   ZoomPanel _zoomPanel;
 
-  protected BackupHolder _rnaList;
+  private BackupHolder _rnaList;
 
   static String errorOpt = "error";
   boolean _error;
@@ -260,10 +261,6 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   public JTextField getStruct() {
     return _str;
-  }
-
-  public void setStructure(JTextField struct) {
-    this._str = struct;
   }
 
   public JTextField getSeq() {
@@ -292,7 +289,6 @@ public class VARNAapp implements InterfaceParameterLoader {
    * 
    * @param w
    */
-  @SuppressWarnings("unchecked")
   void setSideList(MouseListener w) {
     DefaultListModel<FullBackup> dlm = new DefaultListModel<>();
     DefaultListSelectionModel m = new DefaultListSelectionModel();
@@ -363,7 +359,7 @@ public class VARNAapp implements InterfaceParameterLoader {
       _vp = new VARNAPanel(sequence, structure);
       _vp.setBackground(_backgroundColor);
     } else {
-      _vp.drawRNA(sequence, structure);
+      _vp.setRNA(sequence, structure);
     }
     _vp.setPreferredSize(
         new Dimension(width <= 0 ? VARNAPanel.DEFAULT_WIDTH : width,
@@ -417,32 +413,59 @@ public class VARNAapp implements InterfaceParameterLoader {
   void setPanels(JPanel goPanel, JPanel opsPanel, String listTitle) {
     Font textFieldsFont = Font.decode("MonoSpaced-PLAIN-12");
     int marginTools = 40;
-    _seqLabel.setHorizontalTextPosition(SwingConstants.LEFT);
-    _seqLabel.setPreferredSize(new Dimension(marginTools, 15));
     _seq.setFont(textFieldsFont);
-    _seq.setText(DEFAULT_SEQUENCE);
     _seq.setEditable(enableEditing);
-
-    _seqPanel.setLayout(new BorderLayout());
-    _seqPanel.add(_seqLabel, BorderLayout.WEST);
-    _seqPanel.add(_seq, BorderLayout.CENTER);
-
-    _strLabel.setPreferredSize(new Dimension(marginTools, 15));
-    _strLabel.setHorizontalTextPosition(SwingConstants.LEFT);
     _str.setFont(textFieldsFont);
     _str.setEditable(enableEditing);
-    _strPanel.setLayout(new BorderLayout());
-    _strPanel.add(_strLabel, BorderLayout.WEST);
-    _strPanel.add(_str, BorderLayout.CENTER);
 
-    _input.setLayout(new GridLayout(2, 0));
-    _input.add(_seqPanel);
-    _input.add(_strPanel);
+    if (!enableEditing) {
+      // VARNAViewer
+      _seq.addCaretListener(new CaretListener() {
+
+        @Override
+        public void caretUpdate(CaretEvent e) {
+          // fired upon mouse release
+          updateTextSelection(e);
+        }
+        
+      });
+      _str.addCaretListener(new CaretListener() {
+
+        @Override
+        public void caretUpdate(CaretEvent e) {
+          // fired upon mouse release
+          updateTextSelection(e);
+        }
+       
+      });
+    }
+
+    JLabel seqLabel = new JLabel(" Seq:");
+    seqLabel.setHorizontalTextPosition(SwingConstants.LEFT);
+    seqLabel.setPreferredSize(new Dimension(marginTools, 15));
+    
+    JPanel seqPanel = new JPanel();
+    seqPanel.setLayout(new BorderLayout());
+    seqPanel.add(seqLabel, BorderLayout.WEST);
+    seqPanel.add(_seq, BorderLayout.CENTER);
+
+    JLabel strLabel = new JLabel(" Str:");
+    strLabel.setPreferredSize(new Dimension(marginTools, 15));
+    strLabel.setHorizontalTextPosition(SwingConstants.LEFT);
+    
+    JPanel strPanel = new JPanel();
+    strPanel.setLayout(new BorderLayout());
+    strPanel.add(strLabel, BorderLayout.WEST);
+    strPanel.add(_str, BorderLayout.CENTER);
+
+    JPanel input = new JPanel();
+    input.setLayout(new GridLayout(2, 0));
+    input.add(seqPanel);
+    input.add(strPanel);
 
     _tools.setLayout(new BorderLayout());
-    _tools.add(_input, BorderLayout.CENTER);
+    _tools.add(input, BorderLayout.CENTER);
     _tools.add(_info, BorderLayout.SOUTH);
-
     if (opsPanel != null) {
 
       _deleteButton = new JButton("Delete");
@@ -482,6 +505,32 @@ public class VARNAapp implements InterfaceParameterLoader {
     JScrollPane listScroller = new JScrollPane(_sideList);
     listScroller.setPreferredSize(new Dimension(150, 0));
     _listPanel.add(listScroller, BorderLayout.CENTER);
+  }
+
+  /**
+   * user has dragged the mouse over text, or clicked
+   * 
+   * @param e
+   */
+  protected void updateTextSelection(CaretEvent e) {
+    int[] map = _vp.getRNA().caretToIndex;
+    if (map == null)
+      return;
+    JTextField f = (JTextField) e.getSource();
+    int len = f.getText().length();
+    int start = f.getSelectionStart();
+    int end = f.getSelectionEnd();
+    if (end == start)
+      end = start + 1;
+    if (start >= len) {
+      // caret off to side
+      return;
+    }
+    doTextSelection(map[start], map[--end]);
+  }
+
+  private void doTextSelection(int i0, int i1) {
+    _vp.setSelection(i0, i1);
   }
 
   protected void doDelete() {
@@ -558,7 +607,7 @@ public class VARNAapp implements InterfaceParameterLoader {
     }
     _selectionHighlightStr.clear();
 
-    int[] shifts = (enableEditing ? _vp.getRNA().getStrandShifts() : null);
+    int[] shifts = (true || enableEditing ? _vp.getRNA().getStrandShifts() : null);
     Color selectColor = _vp.getSelectColor(Color.ORANGE);
     DefaultHighlightPainter highlighter = new DefaultHighlighter.DefaultHighlightPainter(
         selectColor);
@@ -599,12 +648,12 @@ public class VARNAapp implements InterfaceParameterLoader {
       try {
         int i = newBase.getIndex();
         int[] shifts = _vp.getRNA().getStrandShifts();
+        HighlightPainter highlighter = 
+            new DefaultHighlighter.DefaultHighlightPainter(Color.green);
         _hoverHighlightSeq = _seq.getHighlighter().addHighlight(i + shifts[i],
-            i + shifts[i] + 1,
-            new DefaultHighlighter.DefaultHighlightPainter(Color.green));
+            i + shifts[i] + 1, highlighter);
         _hoverHighlightStr = _str.getHighlighter().addHighlight(i + shifts[i],
-            i + shifts[i] + 1,
-            new DefaultHighlighter.DefaultHighlightPainter(Color.green));
+            i + shifts[i] + 1, highlighter);
       } catch (BadLocationException e) {
         e.printStackTrace();
       }
@@ -630,11 +679,10 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   }
 
-  @SuppressWarnings({ "cast", "unchecked" })
   public boolean doMouseClicked(Window w, Point point) {
     int index = _sideList.locationToIndex(point);
-    ListModel<FullBackup> dlm = (ListModel<FullBackup>) _sideList.getModel();
-    FullBackup item = (FullBackup) dlm.getElementAt(index);
+    ListModel<FullBackup> dlm = _sideList.getModel();
+    FullBackup item = dlm.getElementAt(index);
     _sideList.ensureIndexIsVisible(index);
     Object newName = JOptionPane.showInputDialog(w,
         "Specify a new name for this RNA", "Rename RNA",
@@ -778,7 +826,7 @@ public class VARNAapp implements InterfaceParameterLoader {
       }
     } catch (ExceptionWritingForbidden | ExceptionParameterError
         | ExceptionUnmatchedClosingParentheses | ExceptionExportFailed
-        | ExceptionPermissionDenied | ExceptionLoadingFailed e) {
+        | ExceptionLoadingFailed e) {
       e.printStackTrace();
       return "exit1";
     } catch (ExceptionFileFormatOrSyntax e) {
@@ -955,7 +1003,7 @@ public class VARNAapp implements InterfaceParameterLoader {
       _str.setText(DEFAULT_STRUCTURE1);
     }
     try {
-      _vp.drawRNA(_seq.getText(), _str.getText(), _algoCode);
+      _vp.setRNA(_seq.getText(), _str.getText(), _algoCode);
     } catch (ExceptionNonEqualLength e) {
       e.printStackTrace();
     }

@@ -910,7 +910,7 @@ public class VARNAConfigLoader {
           }
           RNA rna = rnas.iterator().next();
           rna.drawRNA(algoCode, _vp.getConfig());
-          _vp.drawRNA(rna, algoCode);
+          _vp.setRNA(rna, algoCode);
         }
         if (!_title.isEmpty()) {
           _vp.setTitle(_title);
@@ -924,7 +924,7 @@ public class VARNAConfigLoader {
     } else if (_VARNAPanelList != null) {
       if (!_comparisonMode) {
         if (!_sstruct.equals("")) {
-          _vp.drawRNA(_sseq, _sstruct, algoCode);
+          _vp.setRNA(_sseq, _sstruct, algoCode);
         } else {
           try {
             System.err.println("Printing default RNA " + _defaultRNA);
@@ -932,7 +932,7 @@ public class VARNAConfigLoader {
           } catch (ExceptionDrawingAlgorithm e) {
             e.printStackTrace();
           }
-          _vp.drawRNA(_defaultRNA);
+          _vp.setRNA(_defaultRNA);
         }
       }
     }
@@ -1000,7 +1000,7 @@ public class VARNAConfigLoader {
 
       _vp.setDrawOutlineBases(_drawBases);
       _vp.setFillBases(_fillBases);
-      _vp.drawRNA();
+      _vp.setRNA();
 
       if (!_annotations.equals(""))
         applyAnnotations(_vp);

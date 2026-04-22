@@ -214,7 +214,7 @@ public class VARNAOnlineDemo extends JApplet {
 			_struct.setText(DEFAULT_STRUCTURE);
 		}
 		try {
-			_vp.drawRNA(_seq.getText(), _struct.getText(), _algoCode);
+			_vp.setRNA(_seq.getText(), _struct.getText(), _algoCode);
 		} catch (ExceptionNonEqualLength e) {
 			e.printStackTrace();
 		}

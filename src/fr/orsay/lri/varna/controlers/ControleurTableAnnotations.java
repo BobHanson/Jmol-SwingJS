@@ -58,7 +58,8 @@ public class ControleurTableAnnotations implements MouseListener,
 		_type = type;
 	}
 
-	public void mouseClicked(MouseEvent arg0) {
+	@Override
+  public void mouseClicked(MouseEvent arg0) {
 		switch (_type) {
 		case EDIT:
 			edit();
@@ -133,27 +134,33 @@ public class ControleurTableAnnotations implements MouseListener,
 
 	}
 
-	public void mouseEntered(MouseEvent arg0) {
+	@Override
+  public void mouseEntered(MouseEvent arg0) {
 	}
 
-	public void mouseExited(MouseEvent arg0) {
+	@Override
+  public void mouseExited(MouseEvent arg0) {
 		_vp.set_selectedAnnotation(null);
 		_vp.repaint();
 	}
 
-	public void mousePressed(MouseEvent arg0) {
+	@Override
+  public void mousePressed(MouseEvent arg0) {
 	}
 
-	public void mouseReleased(MouseEvent arg0) {
+	@Override
+  public void mouseReleased(MouseEvent arg0) {
 	}
 
-	public void mouseDragged(MouseEvent arg0) {
+	@Override
+  public void mouseDragged(MouseEvent arg0) {
 	}
 
 	/**
 	 * update selected annotation
 	 */
-	public void mouseMoved(MouseEvent arg0) {
+	@Override
+  public void mouseMoved(MouseEvent arg0) {
 		if (_table.rowAtPoint(arg0.getPoint()) < 0)
 			return;
 		Object o = _table.getValueAt(_table.rowAtPoint(arg0.getPoint()), 0);

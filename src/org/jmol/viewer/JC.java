@@ -218,9 +218,14 @@ public final class JC {
       "ams",
       "'https://www.rruff.net/AMS/jsmol_search.php?'+(0+'%file'==0? 'mineral':'id')+'=%file&filetype=cif#_DOCACHE_'",
  //pre-2025.11.14     "'https://rruff.geo.arizona.edu/AMS/viewJmol.php?'+(0+'%file'==0? 'mineral':('%file'.length==7? 'amcsd':'id'))+'=%file&action=showcif#_DOCACHE_'",
-      "dssr", "http://dssr-jmol.x3dna.org/report.php?id=%FILE&opts=--json=ebi", //for debugging: -blocks",
-      "dssrModel",
-      "http://dssr-jmol.x3dna.org/report.php?POST?opts=--json=ebi&model=", // called in DSSR1.java
+      
+      // updated 2026.04.22
+      "dssr", // for sending a PDB ID to the DSSR server
+      "https://jmol.x3dna-dssr.org/report.php?id=%FILE", //for debugging, add -blocks",     
+      "dssrModel", // for sending a PDB model to the DSSR server; called in DSSR1.java
+      //old "http://dssr-jmol.x3dna.org/report.php?POST?opts=--json=ebi&model="
+      "https://jmol.x3dna-dssr.org/report.php?POST?&model=",
+                
       "iucr", "http://scripts.iucr.org/cgi-bin/sendcif_yard?%FILE", // e.g. wf5113sup1
       "cod",
       "http://www.crystallography.net/cod/cif/%c1/%c2%c3/%c4%c5/%FILE.cif",

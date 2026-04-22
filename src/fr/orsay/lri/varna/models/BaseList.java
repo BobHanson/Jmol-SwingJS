@@ -196,5 +196,9 @@ public class BaseList {
 		return _bases.size();
 	}
 
+	@Override
+  public String toString() {
+	  return "["+size() + " " + _bases +"]";
+	}
 	
 }

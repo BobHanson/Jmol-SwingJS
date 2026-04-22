@@ -49,17 +49,15 @@ public class ControleurBlinkingThread extends Thread implements ActionListener {
 		_incr = incr;
 	}
 
-	public void setActive(boolean b) {
-		if (_active == b)
-		{}
-		else
-		{
-		_active = b;
-		if (_active) {
-			interrupt();
-		}
-		}
-	}
+  public void setActive(boolean b) {
+    if (_active != b) {
+      _active = b;
+      System.out.println("Cont.Blink setting active=" + b);
+      if (_active) {
+        interrupt();
+      }
+    }
+  }
 
 	public boolean getActive() {
 		return _active;
@@ -129,6 +127,7 @@ public class ControleurBlinkingThread extends Thread implements ActionListener {
 				case STOP:
 					break;
 				case LOOP:
+				  //System.out.println("CBLINK looping ");
 					if (_increasing) {
 						_val = Math.min(_val + _incr, _maxVal);
 						if (_val == _maxVal) {

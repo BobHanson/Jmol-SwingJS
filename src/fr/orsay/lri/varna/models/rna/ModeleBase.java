@@ -225,6 +225,10 @@ public abstract class ModeleBase
     return (nombre1 > nombre2 ? -1 : nombre1 == nombre2 ? 0 : 1);
   }
 
+  @Override
+  public String toString() {
+    return _label + " " + _resno;
+  }
   public static String XML_VAR_TYPE_NAME = "type";
   public static String XML_VAR_INDEX_NAME = "index";
   public static String XML_VAR_LABEL_NAME = "label";

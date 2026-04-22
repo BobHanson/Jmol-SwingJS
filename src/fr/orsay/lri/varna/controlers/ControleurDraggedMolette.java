@@ -58,7 +58,8 @@ public class ControleurDraggedMolette implements MouseListener,
 		_avant = _apres = _direction = new Point();
 	}
 
-	public void mouseDragged(MouseEvent e) {
+	@Override
+  public void mouseDragged(MouseEvent e) {
 		// si le bon boutton a été pressé
 		if (_rightButtonClick) {
 			_apres = e.getPoint();
@@ -71,19 +72,24 @@ public class ControleurDraggedMolette implements MouseListener,
 		}
 	}
 
-	public void mouseMoved(MouseEvent e) {
+	@Override
+  public void mouseMoved(MouseEvent e) {
 	}
 
-	public void mouseClicked(MouseEvent e) {
+	@Override
+  public void mouseClicked(MouseEvent e) {
 	}
 
-	public void mouseEntered(MouseEvent e) {
+	@Override
+  public void mouseEntered(MouseEvent e) {
 	}
 
-	public void mouseExited(MouseEvent e) {
+	@Override
+  public void mouseExited(MouseEvent e) {
 	}
 
-	public void mousePressed(MouseEvent e) {
+	@Override
+  public void mousePressed(MouseEvent e) {
 		// lors du clic, la position du curseur est enregistrée
 		_avant = e.getPoint();
 		// si le boutton molette est pressé ou si le boutton gauche et shift
@@ -100,7 +106,8 @@ public class ControleurDraggedMolette implements MouseListener,
 			
 	}
 
-	public void mouseReleased(MouseEvent e) {
+	@Override
+  public void mouseReleased(MouseEvent e) {
 		// si le boutton molette est relaché ou si le boutton gauche et shift
 		// sont relachés
 		if (e.getButton() == MouseEvent.BUTTON2)

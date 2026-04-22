@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EmptyStackException;
 import java.util.Hashtable;
 import java.util.List;
@@ -19,10 +18,8 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.xml.sax.InputSource;
 
-import fr.orsay.lri.varna.exceptions.ExceptionExportFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
 import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
-import fr.orsay.lri.varna.exceptions.ExceptionPermissionDenied;
 import fr.orsay.lri.varna.exceptions.ExceptionUnmatchedClosingParentheses;
 import fr.orsay.lri.varna.models.rna.ModeleBP;
 import fr.orsay.lri.varna.models.rna.ModeleBackboneElement;
@@ -46,8 +43,7 @@ public class RNAFactory {
   private static boolean isQuiet;
 
   public static ArrayList<RNA> loadSecStrRNAML(Reader r)
-      throws ExceptionPermissionDenied, ExceptionLoadingFailed,
-      ExceptionFileFormatOrSyntax {
+      throws ExceptionLoadingFailed {
 
     ArrayList<RNA> result = new ArrayList<RNA>();
     try {
@@ -105,6 +101,7 @@ public class RNAFactory {
     return result;
   }
 
+  @SuppressWarnings("boxing")
   public static int[] parseSecStr(String _secStr)
       throws ExceptionUnmatchedClosingParentheses {
     Hashtable<Character, Stack<Integer>> stacks = new Hashtable<Character, Stack<Integer>>();
@@ -126,25 +123,25 @@ public class RNAFactory {
           stacks.get(c).push(i);
           break;
         case '>': {
-          int j = stacks.get('<').pop();
+          int j = stacks.get('<').pop().intValue();
           result[i] = j;
           result[j] = i;
           break;
         }
         case '}': {
-          int j = stacks.get('{').pop();
+          int j = stacks.get('{').pop().intValue();
           result[i] = j;
           result[j] = i;
           break;
         }
         case ')': {
-          int j = stacks.get('(').pop();
+          int j = stacks.get('(').pop().intValue();
           result[i] = j;
           result[j] = i;
           break;
         }
         case ']': {
-          int j = stacks.get('[').pop();
+          int j = stacks.get('[').pop().intValue();
           result[i] = j;
           result[j] = i;
           break;
@@ -155,7 +152,7 @@ public class RNAFactory {
           if (Character.isLetter(c) && Character.isUpperCase(c)) {
             stacks.get(c).push(i);
           } else if (Character.isLetter(c) && Character.isLowerCase(c)) {
-            int j = stacks.get(Character.toUpperCase(c)).pop();
+            int j = stacks.get(Character.toUpperCase(c)).pop().intValue();
             result[i] = j;
             result[j] = i;
           }
@@ -169,8 +166,8 @@ public class RNAFactory {
   }
 
   public static ArrayList<RNA> loadSecStrDBN(Reader r)
-      throws ExceptionLoadingFailed, ExceptionPermissionDenied,
-      ExceptionUnmatchedClosingParentheses, ExceptionFileFormatOrSyntax {
+      throws ExceptionLoadingFailed,
+      ExceptionUnmatchedClosingParentheses {
     boolean loadOk = false;
     ArrayList<RNA> result = new ArrayList<RNA>();
     RNA current = new RNA();
@@ -347,8 +344,7 @@ public class RNAFactory {
   }
 
   private static ArrayList<RNA> loadSecStrDSSR(BufferedReader r)
-      throws ExceptionLoadingFailed, ExceptionPermissionDenied,
-      ExceptionUnmatchedClosingParentheses, ExceptionFileFormatOrSyntax {
+      throws ExceptionLoadingFailed, ExceptionUnmatchedClosingParentheses {
     boolean loadOk = false;
     ArrayList<RNA> result = new ArrayList<RNA>();
     RNA current = new RNA();
@@ -418,9 +414,7 @@ public class RNAFactory {
   }
 
   public static ArrayList<RNA> loadSecStr(String path)
-      throws ExceptionExportFailed, ExceptionPermissionDenied,
-      ExceptionLoadingFailed, ExceptionFileFormatOrSyntax,
-      ExceptionUnmatchedClosingParentheses, FileNotFoundException {
+      throws ExceptionFileFormatOrSyntax, FileNotFoundException {
     FileReader fr = null;
     try {
       fr = new FileReader(path);
@@ -447,8 +441,7 @@ public class RNAFactory {
   }
 
   public static ArrayList<RNA> loadSecStrBPSEQ(Reader r)
-      throws ExceptionPermissionDenied, ExceptionLoadingFailed,
-      ExceptionFileFormatOrSyntax {
+      throws ExceptionLoadingFailed {
     boolean loadOk = false;
     ArrayList<RNA> result = new ArrayList<RNA>();
     RNA current = new RNA();
@@ -472,7 +465,7 @@ public class RNAFactory {
         line = line.trim();
         String[] tokens = line.split("\\s+");
         ArrayList<Integer> numbers = new ArrayList<Integer>();
-        Hashtable<Integer, Integer> numberToIndex = new Hashtable<Integer, Integer>();
+        // unused Hashtable<Integer, Integer> numberToIndex = new Hashtable<Integer, Integer>();
         if ((tokens.length >= 3) && !tokens[0].contains("#")
             && !line.startsWith("Organism:") && !line.startsWith("Citation")
             && !line.startsWith("Filename:")
@@ -480,7 +473,7 @@ public class RNAFactory {
           base = tokens[1];
           seqTmp.add(base);
           bpFrom = (Integer.parseInt(tokens[0]));
-          numbers.add(bpFrom);
+          numbers.add(Integer.valueOf(bpFrom));
           if (minIndex < 0)
             minIndex = bpFrom;
 
@@ -502,9 +495,10 @@ public class RNAFactory {
           for (int i = 2; i < tokens.length; i++) {
             bpTo = (Integer.parseInt(tokens[i]));
             if ((bpTo != 0) || (i != tokens.length - 1)) {
-              if (!strTmp.containsKey(bpFrom))
-                strTmp.put(bpFrom, new Vector<Integer>());
-              strTmp.get(bpFrom).add(bpTo);
+              Integer k = Integer.valueOf(bpFrom);
+              if (!strTmp.containsKey(k))
+                strTmp.put(k, new Vector<Integer>());
+              strTmp.get(k).add(Integer.valueOf(bpTo));
             }
           }
         } else if (tokens[0].startsWith("#")) {
@@ -538,7 +532,7 @@ public class RNAFactory {
         current.setRNA(seq, str, minIndex);
         ArrayList<ModeleBP> allbps = new ArrayList<ModeleBP>();
         for (int i : strTmp.keySet()) {
-          for (int j : strTmp.get(i)) {
+          for (int j : strTmp.get(Integer.valueOf(i))) {
             if (i <= j) {
               ModeleBase mb = current.getBaseAt(i - minIndex);
               ModeleBase part = current.getBaseAt(j - minIndex);
@@ -567,8 +561,7 @@ public class RNAFactory {
   }
 
   public static ArrayList<RNA> loadSecStrTCoffee(Reader r)
-      throws ExceptionPermissionDenied, ExceptionLoadingFailed,
-      ExceptionFileFormatOrSyntax {
+      throws ExceptionLoadingFailed {
     boolean loadOk = false;
     ArrayList<RNA> result = new ArrayList<RNA>();
     try {
@@ -635,7 +628,7 @@ public class RNAFactory {
   }
 
   public static ArrayList<RNA> loadSecStrCT(Reader r)
-      throws ExceptionPermissionDenied, ExceptionLoadingFailed,
+      throws ExceptionLoadingFailed,
       ExceptionFileFormatOrSyntax {
     boolean loadOk = false;
     ArrayList<RNA> result = new ArrayList<RNA>();
@@ -671,10 +664,10 @@ public class RNAFactory {
             base = tokens[1];
             lbl = tokens[5];
             int before = Integer.parseInt(tokens[2]);
-            int after = Integer.parseInt(tokens[3]);
+            //int after = Integer.parseInt(tokens[3]);
 
             if (before == 0 && !seq.isEmpty()) {
-              newStrands.add(strTmp.size() - 1);
+              newStrands.add(Integer.valueOf(strTmp.size() - 1));
             }
             if (bpFrom != seq.size()) {
               if (noWarningYet) {
@@ -688,12 +681,12 @@ public class RNAFactory {
               }
               while (bpFrom > seq.size()) {
                 seq.add("X");
-                strTmp.add(-1);
+                strTmp.add(Integer.valueOf(-1));
                 lbls.add("");
               }
             }
             seq.add(base);
-            strTmp.add(bpTo);
+            strTmp.add(Integer.valueOf(bpTo));
             lbls.add(lbl);
           } catch (NumberFormatException e) {
             if (strTmp.size() != 0)

@@ -87,132 +87,144 @@ public class ControleurClicMovement
   }
 
   @Override
-  public void mousePressed(MouseEvent arg0) {
+  public void mouseMoved(MouseEvent me) {
+    int x = me.getX();
+    int y = me.getY();
+    _selectedBase = _vp.getNearestBase(x, y);
+    TextAnnotation selectedAnnotation = _vp.getNearestAnnotation(x,
+        me.getY());
+    _vp.setHoverBase(_selectedBase);
+    if (_selectedBase != null) {
+    } else if (selectedAnnotation != null) {
+      _vp.set_selectedAnnotation(selectedAnnotation);
+      _vp.highlightSelectedAnnotation();
+      _vp.repaint();
+    }
+    _vp.setLastSelectedPosition(new Point2D.Double(x, y));
+  }
+
+  @Override
+  public void mousePressed(MouseEvent me) {
     _vp.requestFocus();
-    boolean button1 = (arg0.getButton() == MouseEvent.BUTTON1);
-    boolean button2 = (arg0.getButton() == MouseEvent.BUTTON2);
-    boolean button3 = (arg0.getButton() == MouseEvent.BUTTON3);
-    boolean shift = arg0.isShiftDown();
-    boolean ctrl = arg0.isControlDown();
-    boolean alt = arg0.isAltDown();
+    boolean button1 = (me.getButton() == MouseEvent.BUTTON1);
+    boolean button3 = (me.getButton() == MouseEvent.BUTTON3);
+    boolean shift = me.isShiftDown();
+    boolean ctrl = me.isControlDown();
+    boolean alt = me.isAltDown();
+    int x = me.getX();
+    int y = me.getY();
+    int id = me.getID();
     _vp.removeSelectedAnnotation();
     if (button1 && !ctrl && !alt && !shift) {
       if (_vp.isModifiable()) {
-        _currentState = MouseStates.MOVE_OR_SELECT_ELEMENT;
-        if (_vp.getRealCoords() != null && _vp.getRealCoords().length != 0
-            && _vp.getRNA().get_listeBases().size() != 0) {
-          _selectedBase = _vp.getNearestBase(arg0.getX(), arg0.getY(), false,
-              false);
-          TextAnnotation selectedAnnotation = _vp
-              .getNearestAnnotation(arg0.getX(), arg0.getY());
-          _initialPoint = new Point(arg0.getX(), arg0.getY());
-          _currentPoint = new Point(_initialPoint);
-          _prevPoint = new Point(_initialPoint);
-          if (_selectedBase != null) {
-            if (_vp.getRNA().get_drawMode() == RNA.DRAW_MODE_RADIATE) {
-              _vp.highlightSelectedBase(_selectedBase);
-            } else {
-              if (!_vp.getSelectionIndices()
-                  .contains(Integer.valueOf(_selectedBase.getIndex()))) {
-                _vp.highlightSelectedBase(_selectedBase);
-              } else {
-                // Otherwise, keep current selection as it is and move it
-              }
-            }
-          } else {
-            if (selectedAnnotation != null) {
-              _currentState = MouseStates.MOVE_ANNOTATION;
-              _vp.set_selectedAnnotation(selectedAnnotation);
-              _vp.highlightSelectedAnnotation();
-            } else {
-              _vp.clearSelection();
-              _selectedBase = null;
-              _currentState = MouseStates.SELECT_REGION_OR_UNSELECT;
-              _initialPoint = new Point(arg0.getX(), arg0.getY());
-              _prevPoint = new Point(_initialPoint);
-              _currentPoint = new Point(_initialPoint);
-            }
-          }
-        }
+        doMoveElement(x, y, id);
       }
     } else if (button1 && ctrl && !alt && !shift) {
-      _selectedBase = _vp.getNearestBase(arg0.getX(), arg0.getY(), false,
-          false);
-      if (_selectedBase != null) {
-        _vp.clearSelection();
-        _currentState = MouseStates.CREATE_BP;
-        _vp.highlightSelectedBase(_selectedBase);
-        _vp.setOriginLink(_vp.logicToPanel(_selectedBase.getCoords()));
-        _initialPoint = new Point(arg0.getX(), arg0.getY());
-        _currentPoint = new Point(_initialPoint);
-      }
-    } else if (button1 && !ctrl && !alt && shift) {
-      _currentState = MouseStates.SELECT_ELEMENT;
-      _initialPoint = new Point(arg0.getX(), arg0.getY());
-      _currentPoint = new Point(_initialPoint);
+      doCreateBP(x, y, id);
+    } else if (button1 && shift && !ctrl && !alt) {
+      doSelectElement(x, y, id);
     } else if (button3) {
-      _currentState = MouseStates.POPUP_MENU;
-      if (_presenceMenuSelection) {
-        _vp.getPopupMenu().removeSelectionMenu();
-      }
-      if ((_vp.getRealCoords() != null)
-          && _vp.getRNA().get_listeBases().size() != 0) {
-        updateNearestBase(arg0);
-        // on insere dans le menu les nouvelles options
-        addMenu(arg0);
-        if (_vp.get_selectedAnnotation() != null)
-          _vp.highlightSelectedAnnotation();
-      }
-      // affichage du popup menu
-      if (_vp.getRNA().get_drawMode() == RNA.DRAW_MODE_LINEAR) {
-        _vp.getPopup().get_rotation().setEnabled(false);
-      } else {
-        _vp.getPopup().get_rotation().setEnabled(true);
-      }
-      _vp.getPopup().updateDialog();
-      _vp.getPopup().show(_vp, arg0.getX(), arg0.getY());
+      doPopupMenu(x, me.getY());
     }
     _vp.repaint();
   }
 
+  private void doPopupMenu(int x, int y) {
+    _currentState = MouseStates.POPUP_MENU;
+    if (_presenceMenuSelection) {
+      _vp.getPopupMenu().removeSelectionMenu();
+    }
+    if ((_vp.getRealCoords() != null)
+        && _vp.getRNA().get_listeBases().size() != 0) {
+      updateNearestBase(x, y);
+      // on insere dans le menu les nouvelles options
+      addMenu(x, y);
+      if (_vp.get_selectedAnnotation() != null)
+        _vp.highlightSelectedAnnotation();
+    }
+    // affichage du popup menu
+    if (_vp.getRNA().get_drawMode() == RNA.DRAW_MODE_LINEAR) {
+      _vp.getPopup().get_rotation().setEnabled(false);
+    } else {
+      _vp.getPopup().get_rotation().setEnabled(true);
+    }
+    _vp.getPopup().updateDialog();
+    _vp.getPopup().show(_vp, x, y);
+  }
+
+
   @Override
   public void mouseDragged(MouseEvent me) {
+    int x = me.getX();
+    int y = me.getY();
+    int id = me.getID();
     switch (_currentState) {
     case MOVE_OR_SELECT_ELEMENT:
     case MOVE_ELEMENT:
-      _vp.lockScrolling();
-      _currentState = MouseStates.MOVE_ELEMENT;
-      // si on deplace la souris et qu'une base est selectionnée
-      if (_selectedBase != null) {
-        if (_vp.getRNA().get_drawMode() == RNA.DRAW_MODE_RADIATE) {
-          _vp.highlightSelectedStem(_selectedBase);
-          // dans le cas radiale on deplace une helice
-          _vp.getVARNAUI().UIMoveHelixAtom(_selectedBase.getIndex(),
-              _vp.panelToLogicPoint(new Point2D.Double(me.getX(), me.getY())));
-        } else {
-          // dans le cas circulaire naview ou line on deplace une base
-          _currentPoint = new Point(me.getX(), me.getY());
-          moveSelection(_prevPoint, _currentPoint);
-          _prevPoint = new Point(_currentPoint);
-        }
-        _vp.repaint();
-      }
+      doMoveElement(x, y, id);
       break;
     case MOVE_ANNOTATION:
-      if (_vp.get_selectedAnnotation() != null) {
-        Point2D.Double p = _vp
-            .panelToLogicPoint(new Point2D.Double(me.getX(), me.getY()));
-        _vp.get_selectedAnnotation().setAncrage(p.x, p.y);
-        _vp.repaint();
-      }
+      doMoveAnnotation(x, y, id);
       break;
     case SELECT_ELEMENT:
     case SELECT_REGION_OR_UNSELECT:
-        if (_initialPoint.distance(me.getX(),me.getY())>HYSTERESIS_DISTANCE)
-            _currentState = MouseStates.SELECT_REGION;
-        break;
+      doSelectElement(x, y, id);
+      break;
     case SELECT_REGION:
-      _currentPoint = new Point(me.getX(), me.getY());
+      doSelectRegion(x, y, id);
+      break;
+    case CREATE_BP:
+      doCreateBP(x, y, id);
+      break;
+    default:
+      break;
+    }
+  }
+
+  @Override
+  public void mouseReleased(MouseEvent me) {
+    if (me.getButton() == MouseEvent.BUTTON1) {
+      int x = me.getX();
+      int y = me.getY();
+      int id = me.getID();
+      _vp.fireBaseClicked(_selectedBase, me);
+      switch (_currentState) {
+      case MOVE_ELEMENT:
+        doMoveElement(x, y, id);
+        break;
+      case SELECT_REGION_OR_UNSELECT:
+        doSelectOrUnselect(id);
+        break;
+      case SELECT_ELEMENT:
+        doSelectElement(x, y, id);
+        break;
+      case SELECT_REGION:
+        doSelectRegion(x, y, id);
+        break;
+      case CREATE_BP:
+        doCreateBP(x, y, id);
+        break;
+      default:
+        _vp.clearSelection();
+        break;
+      }
+    }
+    _currentState = MouseStates.NONE;
+    _vp.repaint();
+  }
+
+  private void doSelectRegion(int x, int y, int action) {
+    switch(action) {
+    case MouseEvent.MOUSE_PRESSED:
+      _vp.clearSelection();
+      _selectedBase = null;
+      _currentState = MouseStates.SELECT_REGION_OR_UNSELECT;
+      _initialPoint = new Point(x, y);
+      _prevPoint = new Point(_initialPoint);
+      _currentPoint = new Point(_initialPoint);
+      break;
+    case MouseEvent.MOUSE_DRAGGED:
+      _currentPoint = new Point(x, y);
       int minx = Math.min(_currentPoint.x, _initialPoint.x);
       int miny = Math.min(_currentPoint.y, _initialPoint.y);
       int maxx = Math.max(_currentPoint.x, _initialPoint.x);
@@ -220,13 +232,33 @@ public class ControleurClicMovement
       _vp.setSelectionRectangle(
           new Rectangle(minx, miny, maxx - minx, maxy - miny));
       break;
-    case CREATE_BP:
-      if (_initialPoint.distance(me.getX(), me.getY()) > HYSTERESIS_DISTANCE) {
-        ModeleBase newSelectedBase = _vp.getNearestBase(me.getX(), me.getY(),
+    case MouseEvent.MOUSE_RELEASED:
+      _vp.selectionComplete();      
+      break;
+    }
+  }
+
+  private void doCreateBP(int x, int y, int action) {
+    switch(action) {
+    case MouseEvent.MOUSE_PRESSED:
+      _selectedBase = _vp.getNearestBase(x, y, false,
+          false);
+      if (_selectedBase != null) {
+        _vp.clearSelection();
+        _currentState = MouseStates.CREATE_BP;
+        _vp.highlightSelectedBase(_selectedBase);
+        _vp.setOriginLink(_vp.logicToPanel(_selectedBase.getCoords()));
+        _initialPoint = new Point(x, y);
+        _currentPoint = new Point(_initialPoint);
+      }
+      break;
+    case MouseEvent.MOUSE_DRAGGED:
+      if (_initialPoint.distance(x, y) > HYSTERESIS_DISTANCE) {
+        ModeleBase newSelectedBase = _vp.getNearestBase(x, y,
             false, false);
         _vp.setHoverBase(newSelectedBase);
         if (newSelectedBase == null) {
-          _vp.setDestinationLink(new Point2D.Double(me.getX(), me.getY()));
+          _vp.setDestinationLink(new Point2D.Double(x, y));
           _vp.clearSelection();
           _vp.addToSelection(_selectedBase.getIndex());
         } else {
@@ -239,75 +271,150 @@ public class ControleurClicMovement
         _vp.repaint();
       }
       break;
-    case NONE:
-    case POPUP_MENU:
+    case MouseEvent.MOUSE_RELEASED:
+      if (_initialPoint.distance(x, y) > HYSTERESIS_DISTANCE) {
+        int selectedIndex = _vp.getNearestBaseIndex(x, y, false, false);
+        if (selectedIndex >= 0) {
+          ModeleBase mb = _vp.getNearestBase(x, y, false, false);
+          ModeleBase mborig = _selectedBase;
+          ModeleBP msbp = new ModeleBP(mb, mborig);
+          if (mb != mborig) {
+            _vp.getVARNAUI().UIAddBP(mb.getIndex(), mborig.getIndex(), msbp);
+          }
+        }
+      }
+      _vp.removeLink();
+      _vp.clearSelection();
+      _vp.repaint();
       break;
     }
   }
 
-  @Override
-  public void mouseReleased(MouseEvent arg0) {
-    if (arg0.getButton() == MouseEvent.BUTTON1) {
-      _vp.fireBaseClicked(_selectedBase, arg0);
-      //System.out.println(""+_currentState);
-      switch (_currentState) {
-      case MOVE_ELEMENT:
-        _vp.clearSelection();
-        _selectedBase = null;
-        _vp.unlockScrolling();
-        _vp.removeSelectedAnnotation();
-        break;
-      case SELECT_REGION_OR_UNSELECT:
-        _vp.clearSelection();
-        _selectedBase = null;
-        _vp.removeSelectedAnnotation();
-        break;
-      case SELECT_ELEMENT:
-        if (_vp.getRealCoords() != null && _vp.getRealCoords().length != 0
-            && _vp.getRNA().get_listeBases().size() != 0) {
-          int selectedIndex = _vp.getNearestBaseIndex(arg0.getX(), arg0.getY(),
-              false, false);
-          if (selectedIndex != -1) {
-            _vp.toggleSelection(selectedIndex);
-          }
-        }
-        _selectedBase = null;
-        break;
-      case SELECT_REGION:
-        _vp.selectionComplete();
-        break;
-      case CREATE_BP:
-        if (_initialPoint.distance(arg0.getX(),
-            arg0.getY()) > HYSTERESIS_DISTANCE) {
-          int selectedIndex = _vp.getNearestBaseIndex(arg0.getX(), arg0.getY(),
-              false, false);
-          if (selectedIndex >= 0) {
-            ModeleBase mb = _vp.getNearestBase(arg0.getX(), arg0.getY(), false,
-                false);
-            ModeleBase mborig = _selectedBase;
-            ModeleBP msbp = new ModeleBP(mb, mborig);
-            if (mb != mborig) {
-              _vp.getVARNAUI().UIAddBP(mb.getIndex(), mborig.getIndex(), msbp);
-            }
-          }
-        }
-        _vp.removeLink();
-        _vp.clearSelection();
+  private void doMoveAnnotation(int x, int y, int action) {
+    switch(action) {
+    case MouseEvent.MOUSE_PRESSED:
+      _currentState = MouseStates.MOVE_ANNOTATION;
+      _vp.set_selectedAnnotation(_selectedAnnotation);
+      _vp.highlightSelectedAnnotation();
+      break;
+    case MouseEvent.MOUSE_DRAGGED:
+      if (_vp.get_selectedAnnotation() != null) {
+        Point2D.Double p = _vp.panelToLogicPoint(new Point2D.Double(x, y));
+        _vp.get_selectedAnnotation().setAncrage(p.x, p.y);
         _vp.repaint();
-        break;
-      case MOVE_ANNOTATION:
-      case MOVE_OR_SELECT_ELEMENT:
-      case NONE:
-      case POPUP_MENU:
-        _vp.clearSelection();
-        break;
       }
+      break;
+    case MouseEvent.MOUSE_RELEASED:
+      // N/A
+      break;
     }
-    _currentState = MouseStates.NONE;
-    _vp.repaint();
   }
 
-  private void addMenu(MouseEvent arg0) {
+  
+  private ModeleBase movingBase;
+  private TextAnnotation _selectedAnnotation;
+
+  private void doMoveElement(int x, int y, int action) {
+    switch (action) {
+    case MouseEvent.MOUSE_PRESSED:
+      movingBase = null;
+      _currentState = MouseStates.MOVE_OR_SELECT_ELEMENT;
+      if (_vp.getRealCoords() != null && _vp.getRealCoords().length != 0
+          && _vp.getRNA().get_listeBases().size() != 0) {
+        _selectedBase = _vp.getNearestBase(x, y, false, false);
+        _selectedAnnotation = _vp.getNearestAnnotation(x, y);
+        _initialPoint = new Point(x, y);
+        _currentPoint = new Point(_initialPoint);
+        _prevPoint = new Point(_initialPoint);
+        if (_selectedBase != null) {
+          if (_vp.getRNA().get_drawMode() == RNA.DRAW_MODE_RADIATE) {
+            _vp.highlightSelectedBase(_selectedBase);
+          } else {
+            if (!_vp.getSelectionIndices()
+                .contains(Integer.valueOf(_selectedBase.getIndex()))) {
+              _vp.highlightSelectedBase(_selectedBase);
+            } else {
+              // Otherwise, keep current selection as it is and move it
+            }
+          }
+        } else {
+          if (_selectedAnnotation != null) {
+            doMoveAnnotation(0, 0, action);
+          } else {
+            doSelectRegion(x, y, action);
+          }
+        }
+      }
+      break;
+    case MouseEvent.MOUSE_DRAGGED:
+      _vp.lockScrolling();
+      _currentState = MouseStates.MOVE_ELEMENT;
+      // si on deplace la souris et qu'une base est selectionnée
+      if (_selectedBase == null) {
+        return;
+      }
+      if (_vp.getRNA().get_drawMode() == RNA.DRAW_MODE_RADIATE) {
+        if (movingBase == null) {
+          _vp.highlightSelectedStem(_selectedBase);
+          movingBase = _selectedBase;
+        }
+        // dans le cas radiale on deplace une helice
+        _vp.getVARNAUI().UIMoveHelixAtom(_selectedBase.getIndex(),
+            _vp.panelToLogicPoint(new Point2D.Double(x, y)));
+      } else {
+        // dans le cas circulaire naview ou line on deplace une base
+        _currentPoint = new Point(x, y);
+        moveSelection(_prevPoint, _currentPoint);
+        _prevPoint = new Point(_currentPoint);
+      }
+      _vp.repaint();
+      break;
+    case MouseEvent.MOUSE_RELEASED:
+      _vp.clearSelection();
+      _selectedBase = null;
+      _vp.unlockScrolling();
+      _vp.removeSelectedAnnotation();
+      break;
+    }
+  }
+
+  private void doSelectOrUnselect(int action) {
+    switch(action) {
+    case MouseEvent.MOUSE_DRAGGED:
+      break;
+    case MouseEvent.MOUSE_RELEASED:
+      _vp.clearSelection();
+      _selectedBase = null;
+      _vp.removeSelectedAnnotation();
+      break;
+    }
+  }
+
+  private void doSelectElement(int x, int y, int action) {
+    switch(action) {
+    case MouseEvent.MOUSE_PRESSED:
+      _currentState = MouseStates.SELECT_ELEMENT;
+      _initialPoint = new Point(x, y);
+      _currentPoint = new Point(_initialPoint);
+      break;
+    case MouseEvent.MOUSE_DRAGGED:
+      if (_initialPoint.distance(x, y)>HYSTERESIS_DISTANCE)
+        _currentState = MouseStates.SELECT_REGION;
+      break;
+    case MouseEvent.MOUSE_RELEASED:
+      if (_vp.getRealCoords() != null && _vp.getRealCoords().length != 0
+          && _vp.getRNA().get_listeBases().size() != 0) {
+        int selectedIndex = _vp.getNearestBaseIndex(x, y, false, false);
+        if (selectedIndex != -1) {
+          _vp.toggleSelection(selectedIndex);
+        }
+      }
+      _selectedBase = null;
+      break;
+    }
+  }
+
+  private void addMenu(int x, int y) {
     // creation du menu
     _submenuSelection = new JMenu("Selection");
     addCurrent();
@@ -334,13 +441,13 @@ public class ControleurClicMovement
     // Ajout de toutes bases
     addAllBase();
     // detection d'annotation
-    detectAnnotation(arg0);
+    detectAnnotation(x, y);
 
     _vp.getPopup().addSelectionMenu(_submenuSelection);
     _presenceMenuSelection = true;
   }
 
-  private void detectAnnotation(MouseEvent arg0) {
+  private void detectAnnotation(int x, int y) {
     if (_vp.getListeAnnotations().size() != 0) {
       double dist = Double.MAX_VALUE;
       double d2;
@@ -349,8 +456,8 @@ public class ControleurClicMovement
         // calcul de la distance
         position = textAnnot.getCenterPosition();
         position = _vp.transformCoord(position);
-        d2 = Math.sqrt(Math.pow((position.x - arg0.getX()), 2)
-            + Math.pow((position.y - arg0.getY()), 2));
+        d2 = Math.sqrt(Math.pow((position.x - x), 2)
+            + Math.pow((position.y - y), 2));
         // si la valeur est inferieur au minimum actuel
         if (dist > d2) {
           _vp.set_selectedAnnotation(textAnnot);
@@ -582,25 +689,10 @@ public class ControleurClicMovement
     }
   }
 
-  private void updateNearestBase(MouseEvent arg0) {
-    int i = _vp.getNearestBaseIndex(arg0.getX(), arg0.getY(), true, false);
+  private void updateNearestBase(int x, int y) {
+    int i = _vp.getNearestBaseIndex(x, y, true, false);
     if (i != -1)
       _vp.setNearestBase(i);
-  }
-
-  @Override
-  public void mouseMoved(MouseEvent arg0) {
-    _selectedBase = _vp.getNearestBase(arg0.getX(), arg0.getY());
-    TextAnnotation selectedAnnotation = _vp.getNearestAnnotation(arg0.getX(),
-        arg0.getY());
-    _vp.setHoverBase(_selectedBase);
-    if (_selectedBase != null) {
-    } else if (selectedAnnotation != null) {
-      _vp.set_selectedAnnotation(selectedAnnotation);
-      _vp.highlightSelectedAnnotation();
-      _vp.repaint();
-    }
-    _vp.setLastSelectedPosition(new Point2D.Double(arg0.getX(), arg0.getY()));
   }
 
   private void moveSelection(Point prev, Point cur) {

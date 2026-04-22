@@ -19,22 +19,14 @@ package fr.orsay.lri.varna.utils;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Stack;
 import java.util.TreeSet;
-import java.util.Vector;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -48,6 +40,7 @@ import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation.ChemProbAnnotati
 import fr.orsay.lri.varna.models.annotations.HighlightRegionAnnotation;
 import fr.orsay.lri.varna.models.annotations.TextAnnotation;
 import fr.orsay.lri.varna.models.annotations.TextAnnotation.AnchorType;
+import fr.orsay.lri.varna.models.rna.ModelBaseStyle;
 import fr.orsay.lri.varna.models.rna.ModeleBP;
 import fr.orsay.lri.varna.models.rna.ModeleBP.Edge;
 import fr.orsay.lri.varna.models.rna.ModeleBP.Stericity;
@@ -57,7 +50,6 @@ import fr.orsay.lri.varna.models.rna.ModeleBackboneElement;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.ModeleBaseNucleotide;
 import fr.orsay.lri.varna.models.rna.ModeleBasesComparison;
-import fr.orsay.lri.varna.models.rna.ModelBaseStyle;
 import fr.orsay.lri.varna.models.rna.RNA;
 import fr.orsay.lri.varna.models.rna.VARNAPoint;
 
@@ -98,7 +90,8 @@ public class VARNASessionParser extends DefaultHandler {
 		return new InputSource(new StringReader(""));
 	}
 	
-	public InputSource resolveEntity(String publicId, String systemId) {
+	@Override
+  public InputSource resolveEntity(String publicId, String systemId) {
 			return new InputSource(new StringReader(""));
 	}
 	
@@ -120,7 +113,8 @@ public class VARNASessionParser extends DefaultHandler {
 		return _context.contains(s);
 	}
 
-	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+	@Override
+  public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 		if (qName.equals(VARNAPanel.XML_ELEMENT_NAME)) {
 		}
 		else if (qName.equals(VARNAConfig.XML_ELEMENT_NAME)){
@@ -354,7 +348,8 @@ public class VARNASessionParser extends DefaultHandler {
 
 	
 	
-	public void endElement(String uri, String localName, String qName)
+	@Override
+  public void endElement(String uri, String localName, String qName)
 			throws SAXException {
 		if (qName.equals(ModeleBaseNucleotide.XML_VAR_CONTENT_NAME)){
 			if (_buffer==null){
@@ -455,17 +450,20 @@ public class VARNASessionParser extends DefaultHandler {
 		removeFromContext(qName);                                                                                                                                                       
 	}
 
-	public void characters(char[] ch, int start, int length)
+	@Override
+  public void characters(char[] ch, int start, int length)
 			throws SAXException {
 		String lecture = new String(ch, start, length);
 		if (_buffer != null)
 			_buffer.append(lecture);
 	}
 
-	public void startDocument() throws SAXException {
+	@Override
+  public void startDocument() throws SAXException {
 	}
 
-	public void endDocument() throws SAXException {
+	@Override
+  public void endDocument() throws SAXException {
 	}
 	
 	public RNA getRNA()

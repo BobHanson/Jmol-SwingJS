@@ -152,8 +152,8 @@ public class SuperpositionDemo extends JFrame implements InterfaceVARNAListener 
 		//_vpSlave.setModifiable(false);
 		_vpSlave.setBackground(Color.decode("#F0F0F0"));
 
-		_vpMaster.drawRNA(getRNA((_currentDisplay)%2));
-		_vpSlave.drawRNA(getRNA((_currentDisplay+1)%2));
+		_vpMaster.setRNA(getRNA((_currentDisplay)%2));
+		_vpSlave.setRNA(getRNA((_currentDisplay+1)%2));
 
 		/*ModeleStyleBase red = createStyle("label=#ff4d4d,fill=#ffdddd,outline=#ff4d4d");
 		int[] ired = {6,7,8,9,10};
@@ -183,8 +183,8 @@ public class SuperpositionDemo extends JFrame implements InterfaceVARNAListener 
 
 			public void actionPerformed(ActionEvent e) {
 				_currentDisplay = (_currentDisplay + 1) % 2;
-				_vpMaster.drawRNA(getRNA(_currentDisplay));
-				_vpSlave.drawRNA(getRNA((_currentDisplay + 1) % 2));
+				_vpMaster.setRNA(getRNA(_currentDisplay));
+				_vpSlave.setRNA(getRNA((_currentDisplay + 1) % 2));
 				onStructureRedrawn();
 			}
 		});

@@ -215,7 +215,7 @@ public class ModeleBaseNucleotide extends ModeleBase {
 
   @Override
   public String toString() {
-    return "" + this._resno + " (" + _index + ") (x,y):" + this._coords
+    return _label + "." + _resno + " (" + _index + ") (x,y):" + this._coords
         + " C:" + _center;
   }
 

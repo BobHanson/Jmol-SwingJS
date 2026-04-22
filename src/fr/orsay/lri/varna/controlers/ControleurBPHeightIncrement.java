@@ -33,7 +33,7 @@ public class ControleurBPHeightIncrement implements ChangeListener {
 
 	public void stateChanged(ChangeEvent e) {
 		_vsbb.get_vp().setBPHeightIncrement(_vsbb.getIncrement());
-		_vsbb.get_vp().drawRNA();
+		_vsbb.get_vp().setRNA();
 		_vsbb.get_vp().repaint();
 	}
 

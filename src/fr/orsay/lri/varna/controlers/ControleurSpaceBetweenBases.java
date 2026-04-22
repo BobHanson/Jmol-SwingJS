@@ -33,7 +33,7 @@ public class ControleurSpaceBetweenBases implements ChangeListener {
 
 	public void stateChanged(ChangeEvent e) {
 		_vsbb.get_vp().setSpaceBetweenBases(_vsbb.getSpace());
-		_vsbb.get_vp().drawRNA();
+		_vsbb.get_vp().setRNA();
 		_vsbb.get_vp().repaint();
 	}
 }

@@ -311,7 +311,7 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 	public void setTarget(String target)
 	{
 		try {
-			_vpTarget.drawRNA(String.format("%"+target.length()+"s", ""),target);
+			_vpTarget.setRNA(String.format("%"+target.length()+"s", ""),target);
 			_vpTarget.setBaseNumbersColor(Color.white);
 			_vpTarget.setBaseOutlineColor(Color.white);
 			//_vpTarget.toggleDrawOutlineBases();
@@ -340,7 +340,7 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 			rn.getBaseAt(mbp.getIndex5()).setContent("A"); 
 			rn.getBaseAt(mbp.getIndex3()).setContent("U"); 
 		}
-		_vpMaster.drawRNA(rn);
+		_vpMaster.setRNA(rn);
 		_vpMaster.repaint();
 		_seq1.setText(_vpMaster.getRNA().getSeq());
 		} catch (ExceptionUnmatchedClosingParentheses e) {

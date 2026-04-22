@@ -182,7 +182,7 @@ public class VARNA extends JApplet implements InterfaceParameterLoader,DropTarge
 		if (_vpl.size()>0)
 		{ 
 			try {
-				_vpl.get(0).drawRNA(seq, str);
+				_vpl.get(0).setRNA(seq, str);
 			} catch (ExceptionNonEqualLength e) {
 				e.printStackTrace();
 			} 

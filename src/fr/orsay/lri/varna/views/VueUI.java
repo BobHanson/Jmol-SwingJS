@@ -283,7 +283,7 @@ public class VueUI {
 					RNA.DRAW_MODE_RADIATE, _vp, !_vp.getFlatExteriorLoop()));
 			_vp.setFlatExteriorLoop(!_vp.getFlatExteriorLoop());
 			_vp.reset();
-			_vp.drawRNA(_vp.getRNA(), RNA.DRAW_MODE_RADIATE);
+			_vp.setRNA(_vp.getRNA(), RNA.DRAW_MODE_RADIATE);
 			_vp.repaint();
 			_vp.fireLayoutChanged(bck);
 		}
@@ -295,7 +295,7 @@ public class VueUI {
 			_undoableEditSupport.postEdit(new VARNAEdits.RedrawEdit(
 					RNA.DRAW_MODE_RADIATE, _vp));
 			_vp.reset();
-			_vp.drawRNA(_vp.getRNA(), RNA.DRAW_MODE_RADIATE);
+			_vp.setRNA(_vp.getRNA(), RNA.DRAW_MODE_RADIATE);
 			_vp.repaint();
 			_vp.fireLayoutChanged(bck);
 		}
@@ -307,7 +307,7 @@ public class VueUI {
 			_undoableEditSupport.postEdit(new VARNAEdits.RedrawEdit(
 					RNA.DRAW_MODE_MOTIFVIEW, _vp));
 			_vp.reset();
-			_vp.drawRNA(_vp.getRNA(), RNA.DRAW_MODE_MOTIFVIEW);
+			_vp.setRNA(_vp.getRNA(), RNA.DRAW_MODE_MOTIFVIEW);
 			_vp.repaint();
 			_vp.fireLayoutChanged(bck);
 		}
@@ -319,7 +319,7 @@ public class VueUI {
 			_undoableEditSupport.postEdit(new VARNAEdits.RedrawEdit(
 					RNA.DRAW_MODE_LINEAR, _vp));
 			_vp.reset();
-			_vp.drawRNA(_vp.getRNA(), RNA.DRAW_MODE_LINEAR);
+			_vp.setRNA(_vp.getRNA(), RNA.DRAW_MODE_LINEAR);
 			_vp.repaint();
 			_vp.fireLayoutChanged(bck);
 		}
@@ -331,7 +331,7 @@ public class VueUI {
 			_undoableEditSupport.postEdit(new VARNAEdits.RedrawEdit(
 					RNA.DRAW_MODE_CIRCULAR, _vp));
 			_vp.reset();
-			_vp.drawRNA(_vp.getRNA(), RNA.DRAW_MODE_CIRCULAR);
+			_vp.setRNA(_vp.getRNA(), RNA.DRAW_MODE_CIRCULAR);
 			_vp.repaint();
 			_vp.fireLayoutChanged(bck);
 		}
@@ -343,7 +343,7 @@ public class VueUI {
 			_undoableEditSupport.postEdit(new VARNAEdits.RedrawEdit(
 					RNA.DRAW_MODE_NAVIEW, _vp));
 			_vp.reset();
-			_vp.drawRNA(_vp.getRNA(), RNA.DRAW_MODE_NAVIEW);
+			_vp.setRNA(_vp.getRNA(), RNA.DRAW_MODE_NAVIEW);
 			_vp.repaint();
 			_vp.fireLayoutChanged(bck);
 		}
@@ -355,7 +355,7 @@ public class VueUI {
 			_undoableEditSupport.postEdit(new VARNAEdits.RedrawEdit(
 					RNA.DRAW_MODE_VARNA_VIEW, _vp));
 			_vp.reset();
-			_vp.drawRNA(_vp.getRNA(), RNA.DRAW_MODE_VARNA_VIEW);
+			_vp.setRNA(_vp.getRNA(), RNA.DRAW_MODE_VARNA_VIEW);
 			_vp.repaint();
 			_vp.fireLayoutChanged(bck);
 		}
@@ -367,7 +367,7 @@ public class VueUI {
 			_undoableEditSupport.postEdit(new VARNAEdits.RedrawEdit(_vp
 					.getRNA().get_drawMode(), _vp));
 			_vp.reset();
-			_vp.drawRNA(_vp.getRNA(), _vp.getRNA().get_drawMode());
+			_vp.setRNA(_vp.getRNA(), _vp.getRNA().get_drawMode());
 			_vp.repaint();
 			_vp.fireLayoutChanged(bck);
 		}
@@ -435,11 +435,8 @@ public class VueUI {
 					} else {
 					  _vp.loadSession(fc.getSelectedFile()); // was path
 					}
-				} catch (ExceptionExportFailed 
-				    | ExceptionPermissionDenied
-				    | ExceptionLoadingFailed
+				} catch (ExceptionLoadingFailed
 				    | ExceptionFileFormatOrSyntax
-				    | ExceptionUnmatchedClosingParentheses
 				    | FileNotFoundException e) {
 					_vp.errorDialog(e);
 				}
@@ -1054,7 +1051,7 @@ public class VueUI {
 				@Override
 				public void run() {
 					_vp.setSpaceBetweenBases(oldSpace);
-					_vp.drawRNA(_vp.getRNA());
+					_vp.setRNA(_vp.getRNA());
 					_vp.repaint();
 				}
 				
@@ -1073,7 +1070,7 @@ public class VueUI {
 				@Override
 				public void run() {
 					_vp.setBPHeightIncrement(oldSpace);
-					_vp.drawRNA(_vp.getRNA());
+					_vp.setRNA(_vp.getRNA());
 					_vp.repaint();
 				}
 				

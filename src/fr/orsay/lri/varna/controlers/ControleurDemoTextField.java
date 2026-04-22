@@ -109,7 +109,7 @@ public class ControleurDemoTextField implements CaretListener {
 			} else {
 				try {
 					// redraw the new RNA
-					_vod.get_varnaPanel().drawRNA(_vod.get_seq().getText(),
+					_vod.get_varnaPanel().setRNA(_vod.get_seq().getText(),
 							_vod.get_struct().getText(),
 							_vod.get_varnaPanel().getRNA().get_drawMode());
 				} catch (ExceptionNonEqualLength e1) {

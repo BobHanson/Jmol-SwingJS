@@ -352,6 +352,10 @@ public class Viewer extends JmolViewer
   private boolean dataOnly;
   public boolean isJSNoAWT;
 
+  public Viewer() {
+    // next command needs to be setOptions(info);
+  }
+
   /**
    * new way...
    * 
@@ -364,10 +368,6 @@ public class Viewer extends JmolViewer
    *        "silent" "access:READSPT" "access:NONE" "menuFile"
    *        "headlessMaxTimeMs" "headlessImage" "isDataOnly" "async"
    **/
-
-  public Viewer() {
-    // next command needs to be setOptions(info);
-  }
   public Viewer(Map<String, Object> info) {
     setOptions(info);
   }
@@ -1527,6 +1527,10 @@ public class Viewer extends JmolViewer
   * Sticks.checkObjectClicked (set bondPicking TRUE; set picking IDENTIFY)
   * actionManager.atomPicked (set atomPicking TRUE; set picking IDENTIFY)
   * actionManager.queueAtom (during measurements)
+   * @param atomIndex 
+   * @param info 
+   * @param map 
+   * @param andSelect 
   * 
   */
 

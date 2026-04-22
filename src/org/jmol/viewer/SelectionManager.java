@@ -23,18 +23,16 @@
  */
 package org.jmol.viewer;
 
-import org.jmol.script.T;
-import org.jmol.util.BSUtil;
-import org.jmol.util.C;
-import org.jmol.util.Escape;
-
-import javajs.util.AU;
-
 import org.jmol.api.JmolSelectionListener;
 import org.jmol.c.PAL;
 import org.jmol.i18n.GT;
-import javajs.util.BS;
 import org.jmol.modelset.ModelSet;
+import org.jmol.script.T;
+import org.jmol.util.BSUtil;
+import org.jmol.util.Escape;
+
+import javajs.util.AU;
+import javajs.util.BS;
 
 public class SelectionManager {
 
@@ -439,7 +437,7 @@ public class SelectionManager {
   }
 
   public String getSelectionColors() {
-    return (colorer == null ? null : colorer.toString());
+    return (colorer == null || colorer.disabled ? "NULL NULL" : colorer.toString());
   }
 
 }

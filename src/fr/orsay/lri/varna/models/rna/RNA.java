@@ -89,9 +89,7 @@ import fr.orsay.lri.varna.utils.XMLUtils;
  * 
  */
 public class RNA extends InterfaceVARNAObservable implements Serializable {
-  /**
-   * 
-   */
+
   private static final long serialVersionUID = 7541274455751497303L;
 
   /**
@@ -141,6 +139,9 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
   // a pair
   public static final double MULTILOOP_DISTANCE = 35.0;
   public static final double VIRTUAL_LOOP_RADIUS = 40.0;
+
+  public final static String DBNStrandSep = "&";
+
 
   public double CHEM_PROB_DIST = 14;
   public double CHEM_PROB_BASE_LENGTH = 30;
@@ -207,6 +208,9 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
 
   public BaseList selectedBases;
 
+  //unused private static final double MIN_DISTANCE = 10.;
+
+
   public RNA() {
     this("");
   }
@@ -237,6 +241,8 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
   }
 
   private Map<Integer, Integer> mapResnoToIndex;
+
+  public int[] caretToIndex;
   
   public void setResidueNumbers(int[] resnos) {
     if (mapResnoToIndex == null) {
@@ -712,60 +718,60 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
 
         if (dist > 0) {
           if (bt != BackboneType.DISCONTINUOUS_TYPE) {
-            Color c = _backbone.getColorBefore(i, conf._backboneColor);
-            if (bt == BackboneType.MISSING_PART_TYPE) {
-              c.brighter();
-            }
-            out.setColor(c);
+          Color c = _backbone.getColorBefore(i, conf._backboneColor);
+          if (bt == BackboneType.MISSING_PART_TYPE) {
+            c.brighter();
+          }
+          out.setColor(c);
 
-            vn.x = (x1 - x0) / dist;
-            vn.y = (y1 - y0) / dist;
-            if (consecutivePair && (getDrawMode() != RNA.DRAW_MODE_LINEAR)
-                && (getDrawMode() != RNA.DRAW_MODE_CIRCULAR)) {
-              int dir = 0;
-              if (i + 1 < coords.length) {
-                dir = (testDirectionality(i - 1, i, i + 1) ? 1 : -1);
-              } else if (i - 2 >= 0) {
-                dir = (testDirectionality(i - 2, i - 1, i) ? 1 : -1);
-              }
-              Point2D.Double centerSeg = new Point2D.Double((p1.x + p2.x) / 2.0,
-                  (p1.y + p2.y) / 2.0);
-              double centerDist = RNA.VIRTUAL_LOOP_RADIUS * scale;
-              Point2D.Double centerLoop = new Point2D.Double(
-                  centerSeg.x + centerDist * dir * vn.y,
-                  centerSeg.y - centerDist * dir * vn.x);
-              // Debug crosshair
-              //out.drawLine(centerLoop.x - 5, centerLoop.y,
-              //    centerLoop.x + 5, centerLoop.y, 2.0);
-              //out.drawLine(centerLoop.x, centerLoop.y - 5,
-              //    centerLoop.x, centerLoop.y + 5, 2.0);
-
-              double radius = centerLoop.distance(p1);
-              double a1 = 360.
-                  * (Math.atan2(p1.y - centerLoop.y, p1.x - centerLoop.x))
-                  / (2. * Math.PI);
-              double a2 = 360.
-                  * (Math.atan2(p2.y - centerLoop.y, p2.x - centerLoop.x))
-                  / (2. * Math.PI);
-              if (dir > 0) {
-                double tmp = a1;
-                a1 = a2;
-                a2 = tmp;
-              }
-              if (a1 < 0) {
-                a1 += 360.;
-              }
-              if (a2 < 0) {
-                a2 += 360.;
-              }
-              out.drawArc(centerLoop, 2. * radius, 2. * radius, a1, a2);
-            } else {
-              out.drawLine((x0 + BASE_RADIUS * vn.x), (y0 + BASE_RADIUS * vn.y),
-                  (x1 - BASE_RADIUS * vn.x), (y1 - BASE_RADIUS * vn.y), 1.0);
+          vn.x = (x1 - x0) / dist;
+          vn.y = (y1 - y0) / dist;
+          if (consecutivePair && (getDrawMode() != RNA.DRAW_MODE_LINEAR)
+              && (getDrawMode() != RNA.DRAW_MODE_CIRCULAR)) {
+            int dir = 0;
+            if (i + 1 < coords.length) {
+              dir = (testDirectionality(i - 1, i, i + 1) ? 1 : -1);
+            } else if (i - 2 >= 0) {
+              dir = (testDirectionality(i - 2, i - 1, i) ? 1 : -1);
             }
+            Point2D.Double centerSeg = new Point2D.Double((p1.x + p2.x) / 2.0,
+                (p1.y + p2.y) / 2.0);
+            double centerDist = RNA.VIRTUAL_LOOP_RADIUS * scale;
+            Point2D.Double centerLoop = new Point2D.Double(
+                centerSeg.x + centerDist * dir * vn.y,
+                centerSeg.y - centerDist * dir * vn.x);
+            // Debug crosshair
+            //out.drawLine(centerLoop.x - 5, centerLoop.y,
+            //    centerLoop.x + 5, centerLoop.y, 2.0);
+            //out.drawLine(centerLoop.x, centerLoop.y - 5,
+            //    centerLoop.x, centerLoop.y + 5, 2.0);
+
+            double radius = centerLoop.distance(p1);
+            double a1 = 360.
+                * (Math.atan2(p1.y - centerLoop.y, p1.x - centerLoop.x))
+                / (2. * Math.PI);
+            double a2 = 360.
+                * (Math.atan2(p2.y - centerLoop.y, p2.x - centerLoop.x))
+                / (2. * Math.PI);
+            if (dir > 0) {
+              double tmp = a1;
+              a1 = a2;
+              a2 = tmp;
+            }
+            if (a1 < 0) {
+              a1 += 360.;
+            }
+            if (a2 < 0) {
+              a2 += 360.;
+            }
+            out.drawArc(centerLoop, 2. * radius, 2. * radius, a1, a2);
+          } else {
+            out.drawLine((x0 + BASE_RADIUS * vn.x), (y0 + BASE_RADIUS * vn.y),
+                (x1 - BASE_RADIUS * vn.x), (y1 - BASE_RADIUS * vn.y), 1.0);
           }
         }
       }
+    }
     }
 
     // Drawing bonds
@@ -1191,6 +1197,9 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     }
   }
 
+  /**
+   * @param conf unused 
+   */
   public void drawRNAVARNAView(VARNAConfig conf) {
     _drawn = true;
     _drawMode = DRAW_MODE_VARNA_VIEW;
@@ -1252,6 +1261,14 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
         MULTILOOP_DISTANCE);
   }
 
+  /**
+   * @param nbHel 
+   * @param nbUnpaired 
+   * @param startRadius unused  
+   * @param bpdist 
+   * @param multidist 
+   * @return radius
+   */
   public static double determineRadius(int nbHel, int nbUnpaired,
                                        double startRadius, double bpdist,
                                        double multidist) {
@@ -2027,8 +2044,6 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     return result;
   }
 
-  public static String DBNStrandSep = "&";
-
   public void setRNA(String seq, String str)
       throws ExceptionUnmatchedClosingParentheses {
     ArrayList<String> al = RNA.explodeSequence(seq);
@@ -2384,8 +2399,10 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
       } else {
         result += "(";
       }
+      if (_backbone.isStrandEnd(i))
+        result += DBNStrandSep;
     }
-    return structure = addStrandSeparators(result);
+    return structure = result;//addStrandSeparators(result);
   }
 
   private ArrayList<ModeleBP> getNonCrossingSubset(ArrayList<ArrayList<ModeleBP>> rankedBPs) {
@@ -2465,11 +2482,12 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
   //
   //  }
 
+  
   public int[] getStrandShifts() {
     int[] result = new int[getSize()];
     int acc = 0;
     for (int i = 0; i < getSize(); i++) {
-      if (_backbone.getTypeBefore(i) == BackboneType.DISCONTINUOUS_TYPE) {
+      if (_backbone.isStrandEnd(i - 1)) {
         acc++;
       }
       result[i] = acc;
@@ -2478,16 +2496,16 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
 
   }
 
-  public String addStrandSeparators(String s) {
-    String res = "";
-    for (int i = 0; i < s.length(); i++) {
-      res += s.charAt(i);
-      if (_backbone.getTypeAfter(i) == BackboneType.DISCONTINUOUS_TYPE) {
-        res += DBNStrandSep;
-      }
-    }
-    return res;
-  }
+//  public String addStrandSeparators(String s) {
+//    String res = "";
+//    for (int i = 0; i < s.length(); i++) {
+//      res += s.charAt(i);
+//      if (_backbone.isStrandEnd(i)) {
+//        res += DBNStrandSep;
+//      }
+//    }
+//    return res;
+//  }
 
   public String getStructDBN(boolean includeMostPKs) {
     String result = getStructDBN();
@@ -2524,26 +2542,29 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
       result = "";
       for (int i = 0; i < res.length; i++) {
         result += res[i];
+        if (_backbone.isStrandEnd(i))
+          result += DBNStrandSep;
+
       }
 
     }
-    return addStrandSeparators(result);
+    return result;//addStrandSeparators(result);
 
   }
 
-  public String getStructDBN(int[] str) {
-    String result = "";
-    for (int i = 0; i < str.length; i++) {
-      if (str[i] == -1) {
-        result += ".";
-      } else if (str[i] > i) {
-        result += "(";
-      } else {
-        result += ")";
-      }
-    }
-    return addStrandSeparators(result);
-  }
+//  public String getStructDBN(int[] str) {
+//    String result = "";
+//    for (int i = 0; i < str.length; i++) {
+//      if (str[i] == -1) {
+//        result += ".";
+//      } else if (str[i] > i) {
+//        result += "(";
+//      } else {
+//        result += ")";
+//      }
+//    }
+//    return addStrandSeparators(result);
+//  }
 
   /**
    * Returns the raw nucleotides sequence for the displayed RNA
@@ -2554,10 +2575,16 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     if (sequence != null)
       return sequence;
     String result = "";
-    for (int i = 0; i < _listeBases.size(); i++) {
+    caretToIndex = new int[_listeBases.size()+_backbone.bsStrandEnds.cardinality()]; 
+    for (int i = 0, p = 0; i < _listeBases.size(); i++, p++) {
       result += _listeBases.get(i).getContent();
+      caretToIndex[p] = i;
+      if (_backbone.isStrandEnd(i)) {
+        result += DBNStrandSep;
+        caretToIndex[++p] = i;
+      }
     }
-    sequence = addStrandSeparators(result);
+    sequence = result;//addStrandSeparators(result);
     getStructDBN();
     return sequence;
   }
@@ -2650,8 +2677,11 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     String s = new String();
     for (int i = 0; i < _listeBases.size(); i++) {
       s += ((ModeleBaseNucleotide) _listeBases.get(i)).getContent();
+      if (_backbone.isStrandEnd(i))
+        s += DBNStrandSep;
+
     }
-    return addStrandSeparators(s);
+    return s;//addStrandSeparators(s);
   }
 
   public void applyBPs(ArrayList<ModeleBP> allbps) {
@@ -3758,6 +3788,7 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     return mbs;
   }
 
+  
   public ArrayList<ModeleBase> getBasesBetween(int from, int to) {
     ArrayList<ModeleBase> mbs = new ArrayList<ModeleBase>();
     int bck = Math.min(from, to);
@@ -3862,8 +3893,6 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
       }
     }
   }
-
-  private static double MIN_DISTANCE = 10.;
 
   /**
    * Flip an helix around its supporting base
