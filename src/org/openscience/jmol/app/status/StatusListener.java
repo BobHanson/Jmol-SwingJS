@@ -28,27 +28,21 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 
 import org.jmol.api.JSVInterface;
 import org.jmol.api.JmolAppConsoleInterface;
-import org.jmol.api.JmolCallbackListener;
 import org.jmol.api.JmolStatusListener;
 import org.jmol.api.JmolSyncInterface;
 import org.jmol.c.CBK;
-import org.jmol.dialog.Dialog;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
-import org.openscience.jmol.app.JmolPlugin;
 import org.openscience.jmol.app.jmolpanel.DisplayPanel;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
-import org.openscience.jmol.app.jmolpanel.JmolResourceHandler;
 import org.openscience.jmol.app.jmolpanel.console.AppConsole;
-import org.openscience.jmol.app.webexport.WebExport;
 
 import javajs.util.PT;
 import jspecview.application.JSpecView;
@@ -107,6 +101,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     case ATOMMOVED:
     case LOADSTRUCT:
     case SELECT:
+    case CALCULATION:
     case STRUCTUREMODIFIED:
     case SYNC:
       return true;
@@ -159,7 +154,13 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
       if (display == null)
         return;
       info = (Map<String, Object>) data[1];
-      jmolPanel.notifyNBO(info);
+      switch (info.get("service").toString()) {
+      case "nbo":
+        jmolPanel.notifyNBO(info);
+        break;
+      case "varna":
+        jmolPanel.notifyVARNA(info);
+      }
       return;
     case LOADSTRUCT:
       notifyFileLoaded(strInfo, (String) data[2], (String) data[3],
@@ -177,7 +178,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
       //int model = iData[2];
       if (vwr.haveDisplay) {
         String menuName = (String) data[2];
-        if (menuName. equals("0.0: "))
+        if (menuName.equals("0.0: "))
           menuName = "";
         jmolPanel.notifyMenu(menuName);
       }
@@ -247,9 +248,16 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
           jmolPanel.notifyNBO(strInfo);
         return;
       }
+      if (strInfo != null && strInfo.toLowerCase().startsWith("varna:")) {
+        if (strInfo.toLowerCase().startsWith("varna:start")) {
+          jmolPanel.notifyVARNA(strInfo);
+          return;
+        }
+        break;
+      }
       if (jmolPanel != null)
         jmolPanel.sendNioSyncRequest(null, ((Integer) data[3]).intValue(),
-          strInfo);
+            strInfo);
       return;
     case AUDIO:
     case IMAGE:
@@ -258,6 +266,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
       // see above -- not implemented in Jmol.jar
       return;
     // passed on to listener
+    case CALCULATION:
     case HOVER:
     case ATOMMOVED:
     case DRAGDROP:
@@ -270,7 +279,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
       break;
     }
     if (jmolPanel != null)
-      jmolPanel.notifyGeneralCallback(type, data, strInfo);    
+      jmolPanel.notifyGeneralCallback(type, data, strInfo);
   }
 
   

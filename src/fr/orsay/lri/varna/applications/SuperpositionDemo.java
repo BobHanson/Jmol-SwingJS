@@ -297,8 +297,6 @@ public class SuperpositionDemo extends JFrame implements InterfaceVARNAListener 
 				_RNA1.drawRNA(_vpMaster.getDrawMode(),_vpMaster.getConfig());
 			} catch (ExceptionUnmatchedClosingParentheses e) {
 				e.printStackTrace();
-			} catch (ExceptionFileFormatOrSyntax e1) {
-				_vpMaster.errorDialog(e1);
 			} catch (ExceptionDrawingAlgorithm e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -315,8 +313,6 @@ public class SuperpositionDemo extends JFrame implements InterfaceVARNAListener 
 				_RNA2.drawRNA(_vpMaster.getDrawMode(),_vpMaster.getConfig());
 			} catch (ExceptionUnmatchedClosingParentheses e) {
 				e.printStackTrace();
-			} catch (ExceptionFileFormatOrSyntax e1) {
-				_vpMaster.errorDialog(e1);
 			} catch (ExceptionDrawingAlgorithm e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

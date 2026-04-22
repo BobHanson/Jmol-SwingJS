@@ -45,6 +45,7 @@ import org.jmol.util.C;
 import org.jmol.util.Edge;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 /**
@@ -120,7 +121,7 @@ public class DSSR1 extends AnnotationParser {
       if (!vwr.ms.am[modelIndex].isBioModel)
         break;
       info = vwr.ms.getModelAuxiliaryInfo(modelIndex);
-      if (info.containsKey("dssr"))
+      if (info.containsKey(JC.INFO_DSSR))
         break;
       BS bs = vwr.restrictToModel(vwr.ms.getAtoms(T.nucleic, null), modelIndex);
       if (bs.nextClearBit(0) < 0) {
@@ -138,7 +139,7 @@ public class DSSR1 extends AnnotationParser {
         data = vwr.getFileAsString3(name + data, false, null);
         Map<String, Object> x = vwr.parseJSONMap(data);
         if (x != null) {
-          info.put("dssr", x);
+          info.put(JC.INFO_DSSR, x);
           setGroup1(vwr.ms, modelIndex);
           fixDSSRJSONMap(x);
           setBioPolymers((BioModel) vwr.ms.am[modelIndex], false);

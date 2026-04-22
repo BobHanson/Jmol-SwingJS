@@ -8,14 +8,12 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.IOException;
 
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import fr.orsay.lri.varna.VARNAPanel;
@@ -70,12 +68,14 @@ public class VARNAConsole extends JFrame implements ActionListener, FocusListene
 	  pack();
   }
 
+@Override
 public void actionPerformed(ActionEvent arg0) {
 	setVisible(false);
 }
 
 private boolean _firstFocus = true;
 
+@Override
 public void focusGained(FocusEvent arg0) {
 	if (_firstFocus)
 	{
@@ -85,23 +85,26 @@ public void focusGained(FocusEvent arg0) {
 	}
 }
 
+@Override
 public void focusLost(FocusEvent arg0) {
 	// TODO Auto-generated method stub
 	
 }
 
+@Override
 public void keyPressed(KeyEvent arg0) {
 	// TODO Auto-generated method stub
 	
 }
 
+@Override
 public void keyReleased(KeyEvent arg0) {
 	// TODO Auto-generated method stub
 	
 }
 
+@Override
 public void keyTyped(KeyEvent arg0) {
-	// TODO Auto-generated method stub
 	char c = arg0.getKeyChar();
 	if (c=='\n')
 	{

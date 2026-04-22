@@ -161,7 +161,7 @@ public class VARNASessionParser extends DefaultHandler {
 				mbn = new ModeleBaseNucleotide(rna.getSize());
 				if (mbn.getIndex()!=Integer.parseInt(attributes.getValue(ModeleBase.XML_VAR_INDEX_NAME)))
 					throw new SAXException("Index mismatch for Base");
-				mbn.setBaseNumber(Integer.parseInt(attributes.getValue(ModeleBase.XML_VAR_NUMBER_NAME)));
+				mbn.setResidueNumber(Integer.parseInt(attributes.getValue(ModeleBase.XML_VAR_NUMBER_NAME)));
 				mbn.setLabel(attributes.getValue(ModeleBase.XML_VAR_LABEL_NAME));
 				mbn.setColorie(Boolean.parseBoolean(attributes.getValue(ModeleBase.XML_VAR_CUSTOM_DRAWN_NAME)));
 				mbn.setValue(Double.parseDouble(attributes.getValue(ModeleBase.XML_VAR_VALUE_NAME)));
@@ -206,7 +206,7 @@ public class VARNASessionParser extends DefaultHandler {
 				mbc = new ModeleBasesComparison(rna.getSize());
 				if (mbc.getIndex()!=Integer.parseInt(attributes.getValue(ModeleBase.XML_VAR_INDEX_NAME)))
 					throw new SAXException("Index mismatch for Base");
-				mbc.setBaseNumber(Integer.parseInt(attributes.getValue(ModeleBase.XML_VAR_NUMBER_NAME)));
+				mbc.setResidueNumber(Integer.parseInt(attributes.getValue(ModeleBase.XML_VAR_NUMBER_NAME)));
 				mbc.setLabel(attributes.getValue(ModeleBase.XML_VAR_LABEL_NAME));
 				mbc.set_appartenance(Integer.parseInt(attributes.getValue(ModeleBasesComparison.XML_VAR_MEMBERSHIP_NAME)));
 				mbc.setColorie(Boolean.parseBoolean(attributes.getValue(ModeleBase.XML_VAR_CUSTOM_DRAWN_NAME)));

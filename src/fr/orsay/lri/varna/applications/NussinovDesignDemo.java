@@ -346,9 +346,6 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 		} catch (ExceptionUnmatchedClosingParentheses e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (ExceptionFileFormatOrSyntax e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
@@ -951,9 +948,6 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 		        _vpMaster.showRNAInterpolated(rfolded);
 		        _vpTarget.repaint();
 			} catch (ExceptionUnmatchedClosingParentheses e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExceptionFileFormatOrSyntax e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}

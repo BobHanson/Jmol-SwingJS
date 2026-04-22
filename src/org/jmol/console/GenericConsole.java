@@ -309,6 +309,7 @@ public abstract class GenericConsole implements JmolAppConsoleInterface, JmolCal
     case APPLETREADY:
     case ATOMMOVED:
     case AUDIO:
+    case CALCULATION:
     case CLICK:
     case DRAGDROP:
     case ERROR:

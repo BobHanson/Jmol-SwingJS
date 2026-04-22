@@ -254,7 +254,7 @@ public class ChemProbAnnotation implements Serializable {
 	
 	public String toString()
 	{
-		return "Chem. prob. "+this._type+" Base#"+this._mbfst.getBaseNumber()+"-"+this._mbsnd.getBaseNumber();
+		return "Chem. prob. "+this._type+" Base#"+this._mbfst.getResidueNumber()+"-"+this._mbsnd.getResidueNumber();
 	}
 	
 }

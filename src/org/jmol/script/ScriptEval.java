@@ -3395,6 +3395,7 @@ public class ScriptEval extends ScriptExpr {
       case T.property:
       case T.rasmol:
       case T.pymol:
+      case T.select:
       case T.spacefill:
       case T.shapely:
       case T.straightness:
@@ -8797,7 +8798,6 @@ public class ScriptEval extends ScriptExpr {
 
   private void colorShape(int shapeType, int index, boolean isBackground)
       throws ScriptException {
-
     boolean isScale = (Math.abs(shapeType) == T.scale);
     if (isScale) {
       shapeType = JC.SHAPE_ECHO;
@@ -8809,6 +8809,7 @@ public class ScriptEval extends ScriptExpr {
     Object colorvalue1 = null;
     BS bs = null;
     String prefix = (index == 2 && tokAt(1) == T.balls ? "ball" : "");
+    
     boolean isIsosurface = (shapeType == JC.SHAPE_ISOSURFACE || shapeType == JC.SHAPE_CONTACT);
     boolean doClearBondSet = false;
     double translucentLevel = Double.MAX_VALUE;
@@ -8822,6 +8823,10 @@ public class ScriptEval extends ScriptExpr {
       }
     }
     int tok = getToken(index).tok;
+    boolean isColorSelect = (tok == T.select);
+    if  (isColorSelect) {
+      tok = getToken(++index).tok;
+    }
     if (isBackground)
       getToken(index);
     else if ((isBackground = (tok == T.background)) == true)
@@ -8875,11 +8880,17 @@ public class ScriptEval extends ScriptExpr {
         translucentLevel = getTranslucentLevel(index++);
     }
     tok = 0;
+    
+
+
     boolean isColor = (index < slen && tokAt(index) != T.on && tokAt(index) != T.off);
     if (isColor) {
+      int argb = 0, argb1 = 0;
       tok = getToken(index).tok;
-      if ((!isIsosurface || tokAt(index + 1) != T.to) && isColorParam(index)) {
-        int argb = getArgbParamOrNone(index, false);
+      if ((!isIsosurface && tokAt(index + 1) != T.to) && 
+          (isColorSelect && tok == T.none
+          || isColorParam(index))) {
+        argb = getArgbParamOrNone(index, isColorSelect);
         colorvalue = (argb == 0 ? null : Integer.valueOf(argb));
         if (tokAt(index = iToken + 1) != T.nada && translucency == null) {
           getToken(index);
@@ -8890,12 +8901,18 @@ public class ScriptEval extends ScriptExpr {
               translucentLevel = getTranslucentLevel(index++);
           }
         }
-        if (isColorParam(index)) {
-          argb = getArgbParamOrNone(index, false);
-          colorvalue1 = (argb == 0 ? null : Integer.valueOf(argb));
+        tok = getToken(index).tok;
+        if (isColorSelect && tok == T.none
+            || isColorParam(index)) {
+          argb1 = getArgbParamOrNone(index, isColorSelect);
+          colorvalue1 = (argb1 == 0 ? null : Integer.valueOf(argb1));
           index = iToken + 1;
         }
         checkLength(index);
+        if (isColorSelect) {
+          vwr.setSelectionColors((Integer) colorvalue, (Integer) colorvalue1, translucency, translucentLevel);          
+          return;
+        }
       } else if (shapeType == JC.SHAPE_LCAOCARTOON) {
         iToken--; // back up one
       } else {

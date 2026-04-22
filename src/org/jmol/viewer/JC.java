@@ -1696,6 +1696,9 @@ public final class JC {
   public static final String DEFAULT_DRAW_SYM_ID = "sym_"; // do not change this; code on working pages needs this right
   public static final String UNITCELL_PREFIX = "unitcell_";
   public static final String SSG_POINT_GROUP_AXES = "pointGroupAxes";
+  public static final String INFO_DSSR = "dssr";
+  public static final String INFO_DSSR_JSON = "dssrJSON";
+  public static final String INFO_DSSR_VARNA = "dssrVARNA";
   
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.

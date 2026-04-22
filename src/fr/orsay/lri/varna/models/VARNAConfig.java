@@ -31,11 +31,6 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import fr.orsay.lri.varna.models.annotations.HighlightRegionAnnotation;
-import fr.orsay.lri.varna.models.annotations.TextAnnotation;
-import fr.orsay.lri.varna.models.rna.ModeleBP;
-import fr.orsay.lri.varna.models.rna.ModeleBPStyle;
-import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.ModeleColorMap;
 import fr.orsay.lri.varna.utils.XMLUtils;
 
@@ -60,9 +55,10 @@ public class VARNAConfig implements Serializable, Cloneable {
 	 * Enum types and internal classes
 	 */
 
-	public enum BP_STYLE implements Serializable {
+	public enum BP_STYLE {
 		NONE, SIMPLE, RNAVIZ, LW, LW_ALT;
-		public String toString()
+		@Override
+    public String toString()
 		{
 			switch(this)
 			{
@@ -95,7 +91,7 @@ public class VARNAConfig implements Serializable, Cloneable {
 			}
 			return null;
 		}
-	};
+	}
 
 	/**
 	 * Default values for config options
@@ -140,69 +136,69 @@ public class VARNAConfig implements Serializable, Cloneable {
 	public static final Color DEFAULT_COLOR_MAP_OUTLINE = Color.gray;
 	public static final double DEFAULT_BP_INCREMENT = 0.65;
 
-	public static double DEFAULT_COLOR_MAP_WIDTH = 120; 
-	public static double DEFAULT_COLOR_MAP_HEIGHT = 30; 
-	public static double DEFAULT_COLOR_MAP_X_OFFSET = 40; 
-	public static double DEFAULT_COLOR_MAP_Y_OFFSET = 0; 
-	public static int DEFAULT_COLOR_MAP_STRIPE_WIDTH = 2; 
-	public static int DEFAULT_COLOR_MAP_FONT_SIZE = 20; 
-	public static Color DEFAULT_COLOR_MAP_FONT_COLOR = Color.gray.darker(); 
+	public final static double DEFAULT_COLOR_MAP_WIDTH = 120; 
+	public final static double DEFAULT_COLOR_MAP_HEIGHT = 30; 
+	public final static double DEFAULT_COLOR_MAP_X_OFFSET = 40; 
+	public final static double DEFAULT_COLOR_MAP_Y_OFFSET = 0; 
+	public final static int DEFAULT_COLOR_MAP_STRIPE_WIDTH = 2; 
+	public final static int DEFAULT_COLOR_MAP_FONT_SIZE = 20; 
+	public final static Color DEFAULT_COLOR_MAP_FONT_COLOR = Color.gray.darker(); 
 
-	public static double DEFAULT_SPACE_BETWEEN_BASES = 1.0; 
+	public final static double DEFAULT_SPACE_BETWEEN_BASES = 1.0; 
 
 	/**
 	 * Various options.
 	 */
 	
-	public static String XML_VAR_DRAW_OUTLINE = "drawoutline";
-	public static String XML_VAR_FILL_BASE = "fillbase";
-	public static String XML_VAR_AUTO_FIT = "autofit";
-	public static String XML_VAR_AUTO_CENTER = "autocenter";
-	public static String XML_VAR_MODIFIABLE = "modifiable";
-	public static String XML_VAR_ERRORS = "errors";
-	public static String XML_VAR_SPECIAL_BASES = "specialbases";
-	public static String XML_VAR_DASH_BASES = "dashbases";
-	public static String XML_VAR_USE_BASE_BPS = "usebasebps";
-	public static String XML_VAR_DRAW_NC = "drawnc";
-	public static String XML_VAR_DRAW_NON_PLANAR = "drawnonplanar";
-	public static String XML_VAR_SHOW_WARNINGS = "warnings";
-	public static String XML_VAR_COMPARISON_MODE = "comparison";
-	public static String XML_VAR_FLAT = "flat";
-	public static String XML_VAR_DRAW_BACKGROUND = "drawbackground";
-	public static String XML_VAR_COLOR_MAP = "drawcm";
-	public static String XML_VAR_DRAW_BACKBONE = "drawbackbone";
+	public final static String XML_VAR_DRAW_OUTLINE = "drawoutline";
+	public final static String XML_VAR_FILL_BASE = "fillbase";
+	public final static String XML_VAR_AUTO_FIT = "autofit";
+	public final static String XML_VAR_AUTO_CENTER = "autocenter";
+	public final static String XML_VAR_MODIFIABLE = "modifiable";
+	public final static String XML_VAR_ERRORS = "errors";
+	public final static String XML_VAR_SPECIAL_BASES = "specialbases";
+	public final static String XML_VAR_DASH_BASES = "dashbases";
+	public final static String XML_VAR_USE_BASE_BPS = "usebasebps";
+	public final static String XML_VAR_DRAW_NC = "drawnc";
+	public final static String XML_VAR_DRAW_NON_PLANAR = "drawnonplanar";
+	public final static String XML_VAR_SHOW_WARNINGS = "warnings";
+	public final static String XML_VAR_COMPARISON_MODE = "comparison";
+	public final static String XML_VAR_FLAT = "flat";
+	public final static String XML_VAR_DRAW_BACKGROUND = "drawbackground";
+	public final static String XML_VAR_COLOR_MAP = "drawcm";
+	public final static String XML_VAR_DRAW_BACKBONE = "drawbackbone";
 	
-	public static String XML_VAR_CM_HEIGHT = "cmh";
-	public static String XML_VAR_CM_WIDTH = "cmw";
-	public static String XML_VAR_CM_X_OFFSET = "cmx";
-	public static String XML_VAR_CM_Y_OFFSET = "cmy";
-	public static String XML_VAR_DEFAULT_ZOOM = "defaultzoom";
-	public static String XML_VAR_ZOOM_AMOUNT = "zoominc";
-	public static String XML_VAR_BP_THICKNESS = "bpthick";
-	public static String XML_VAR_BASE_THICKNESS = "basethick";
-	public static String XML_VAR_DIST_NUMBERS = "distnumbers";
+	public final static String XML_VAR_CM_HEIGHT = "cmh";
+	public final static String XML_VAR_CM_WIDTH = "cmw";
+	public final static String XML_VAR_CM_X_OFFSET = "cmx";
+	public final static String XML_VAR_CM_Y_OFFSET = "cmy";
+	public final static String XML_VAR_DEFAULT_ZOOM = "defaultzoom";
+	public final static String XML_VAR_ZOOM_AMOUNT = "zoominc";
+	public final static String XML_VAR_BP_THICKNESS = "bpthick";
+	public final static String XML_VAR_BASE_THICKNESS = "basethick";
+	public final static String XML_VAR_DIST_NUMBERS = "distnumbers";
 	
-	public static String XML_VAR_NUM_PERIOD = "numperiod";
+	public final static String XML_VAR_NUM_PERIOD = "numperiod";
 	
-	public static String XML_VAR_MAIN_BP_STYLE = "bpstyle";
+	public final static String XML_VAR_MAIN_BP_STYLE = "bpstyle";
 
-	public static String XML_VAR_CM = "cm";
+	public final static String XML_VAR_CM = "cm";
 	
-	public static String XML_VAR_BACKBONE_COLOR = "backbonecol";
-	public static String XML_VAR_HOVER_COLOR = "hovercol";
-	public static String XML_VAR_BACKGROUND_COLOR = "backgroundcol";
-	public static String XML_VAR_BOND_COLOR = "bondcol";
-	public static String XML_VAR_TITLE_COLOR = "titlecol";
-	public static String XML_VAR_SPECIAL_BASES_COLOR = "specialco";
-	public static String XML_VAR_DASH_BASES_COLOR = "dashcol";
-	public static String XML_VAR_SPACE_BETWEEN_BASES = "spacebetweenbases";
+	public final static String XML_VAR_BACKBONE_COLOR = "backbonecol";
+	public final static String XML_VAR_HOVER_COLOR = "hovercol";
+	public final static String XML_VAR_BACKGROUND_COLOR = "backgroundcol";
+	public final static String XML_VAR_BOND_COLOR = "bondcol";
+	public final static String XML_VAR_TITLE_COLOR = "titlecol";
+	public final static String XML_VAR_SPECIAL_BASES_COLOR = "specialco";
+	public final static String XML_VAR_DASH_BASES_COLOR = "dashcol";
+	public final static String XML_VAR_SPACE_BETWEEN_BASES = "spacebetweenbases";
 	
-	public static String XML_VAR_TITLE_FONT = "titlefont";
-	public static String XML_VAR_NUMBERS_FONT = "numbersfont";
-	public static String XML_VAR_FONT_BASES = "basefont";
+	public final static String XML_VAR_TITLE_FONT = "titlefont";
+	public final static String XML_VAR_NUMBERS_FONT = "numbersfont";
+	public final static String XML_VAR_FONT_BASES = "basefont";
 	
-	public static String XML_VAR_CM_CAPTION = "cmcaption";
-	public static String XML_VAR_TITLE = "title";
+	public final static String XML_VAR_CM_CAPTION = "cmcaption";
+	public final static String XML_VAR_TITLE = "title";
 	
     
 	public boolean _drawOutlineBases = true;
@@ -255,7 +251,7 @@ public class VARNAConfig implements Serializable, Cloneable {
 	//public String _title = "";
 
 	
-	public static String XML_ELEMENT_NAME = "config";
+	public final static String XML_ELEMENT_NAME = "config";
 	
 	public void toXML(TransformerHandler hd) throws SAXException
 	{
@@ -365,6 +361,7 @@ public class VARNAConfig implements Serializable, Cloneable {
 	
 	
 	
+    @Override
     public VARNAConfig clone ()
     {
         try

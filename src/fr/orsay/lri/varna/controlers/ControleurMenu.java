@@ -22,7 +22,6 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.text.ParseException;
 import java.util.ArrayList;
 
 import javax.swing.JCheckBoxMenuItem;
@@ -31,15 +30,12 @@ import javax.swing.JOptionPane;
 
 import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.exceptions.ExceptionExportFailed;
-import fr.orsay.lri.varna.exceptions.ExceptionJPEGEncoding;
-import fr.orsay.lri.varna.exceptions.ExceptionNonEqualLength;
-import fr.orsay.lri.varna.exceptions.ExceptionPermissionDenied;
 import fr.orsay.lri.varna.exceptions.ExceptionWritingForbidden;
 import fr.orsay.lri.varna.interfaces.InterfaceVARNAListener;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.annotations.TextAnnotation;
-import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.ModeleBP;
+import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.RNA;
 import fr.orsay.lri.varna.views.VueBPThickness;
 import fr.orsay.lri.varna.views.VueMenu;
@@ -63,16 +59,18 @@ public class ControleurMenu implements InterfaceVARNAListener,
 	/**
 	 * Creates the menu listener
 	 * 
-	 * @param _varnaPanel
+	 * @param varnaPanel
 	 *            The VARNAPanel
+	 * @param vueMenu 
 	 */
-	public ControleurMenu(VARNAPanel _varnaPanel, VueMenu _vueMenu) {
-		_vp = _varnaPanel;
-		_vm = _vueMenu;
+	public ControleurMenu(VARNAPanel varnaPanel, VueMenu vueMenu) {
+		_vp = varnaPanel;
+		_vm = vueMenu;
 		_vp.getRNA().addVARNAListener(this);
 	}
 
-	public void actionPerformed(ActionEvent e) {
+	@Override
+  public void actionPerformed(ActionEvent e) {
 		String[] temp = e.getActionCommand().split(",");
 		_source = e.getSource();
 		_type = temp[0];
@@ -113,79 +111,93 @@ public class ControleurMenu implements InterfaceVARNAListener,
 		return true;
 	}
 
-	private boolean optionAnnotation() {
-		if (!_type.contains("annotation"))
-			return false;
-		// a partir du menu principale (gestion des annotations)
-		if (_type.equals("annotationsaddPosition")) {
-			_vp.getVARNAUI().UIAnnotationsAddPosition(_vp.getPopup().getSpawnPoint().x,_vp.getPopup().getSpawnPoint().y);
-		} else if (_type.equals("annotationsaddBase")) {
-			_vp.getVARNAUI().UIAnnotationsAddBase(_vp.getPopup().getSpawnPoint().x,_vp.getPopup().getSpawnPoint().y);
-		} else if (_type.equals("annotationsaddLoop")) {
-			_vp.getVARNAUI().UIAnnotationsAddLoop(_vp.getPopup().getSpawnPoint().x,_vp.getPopup().getSpawnPoint().y);
-		} else if (_type.equals("annotationsaddChemProb")) {
-			_vp.getVARNAUI().UIAnnotationsAddChemProb(_vp.getPopup().getSpawnPoint().x,_vp.getPopup().getSpawnPoint().y);
-		} else if (_type.equals("annotationsaddRegion")) {
-			_vp.getVARNAUI().UIAnnotationsAddRegion(_vp.getPopup().getSpawnPoint().x,_vp.getPopup().getSpawnPoint().y);
-		} else if (_type.equals("annotationsaddHelix")) {
-			_vp.getVARNAUI().UIAnnotationsAddHelix(_vp.getPopup().getSpawnPoint().x,_vp.getPopup().getSpawnPoint().y);
-		} else if (_type.equals("annotationsautohelices")) {
-			_vp.getVARNAUI().UIAutoAnnotateHelices();
-		} else if (_type.equals("annotationsautointerior")) {
-			_vp.getVARNAUI().UIAutoAnnotateInteriorLoops();
-		} else if (_type.equals("annotationsautoterminal")) {
-			_vp.getVARNAUI().UIAutoAnnotateTerminalLoops();
-		} else if (_type.equals("annotationsautohelices")) {
-			_vp.getVARNAUI().UIAutoAnnotateHelices();
-		} else if (_type.equals("annotationsremove")) {
-			_vp.getVARNAUI().UIAnnotationsRemove();
-		} else if (_type.equals("annotationsautoextremites")) {
-			_vp.getVARNAUI().UIAutoAnnotateStrandEnds();
-		} else if (_type.equals("annotationsedit")) {
-			_vp.getVARNAUI().UIAnnotationsEdit();
-			// a partir du menu selection (annotation la plus proche)
-		} else if (_type.equals("Selectionannotationremove")) {
-			_vp.getVARNAUI().UIAnnotationRemoveFromAnnotation(_vp.get_selectedAnnotation());
-		} else if (_type.equals("Selectionannotationedit")) {
-			_vp.getVARNAUI().UIAnnotationEditFromAnnotation(_vp.get_selectedAnnotation());
+  private boolean optionAnnotation() {
+    if (!_type.contains("annotation"))
+      return false;
+    // a partir du menu principale (gestion des annotations)
+    if (_type.equals("annotationsaddPosition")) {
+      _vp.getVARNAUI().UIAnnotationsAddPosition(
+          _vp.getPopup().getSpawnPoint().x, _vp.getPopup().getSpawnPoint().y);
+    } else if (_type.equals("annotationsaddBase")) {
+      _vp.getVARNAUI().UIAnnotationsAddBase(_vp.getPopup().getSpawnPoint().x,
+          _vp.getPopup().getSpawnPoint().y);
+    } else if (_type.equals("annotationsaddLoop")) {
+      _vp.getVARNAUI().UIAnnotationsAddLoop(_vp.getPopup().getSpawnPoint().x,
+          _vp.getPopup().getSpawnPoint().y);
+    } else if (_type.equals("annotationsaddChemProb")) {
+      _vp.getVARNAUI().UIAnnotationsAddChemProb(
+          _vp.getPopup().getSpawnPoint().x, _vp.getPopup().getSpawnPoint().y);
+    } else if (_type.equals("annotationsaddRegion")) {
+      _vp.getVARNAUI().UIAnnotationsAddRegion(_vp.getPopup().getSpawnPoint().x,
+          _vp.getPopup().getSpawnPoint().y);
+    } else if (_type.equals("annotationsaddHelix")) {
+      _vp.getVARNAUI().UIAnnotationsAddHelix(_vp.getPopup().getSpawnPoint().x,
+          _vp.getPopup().getSpawnPoint().y);
+    } else if (_type.equals("annotationsautohelices")) {
+      _vp.getVARNAUI().UIAutoAnnotateHelices();
+    } else if (_type.equals("annotationsautointerior")) {
+      _vp.getVARNAUI().UIAutoAnnotateInteriorLoops();
+    } else if (_type.equals("annotationsautoterminal")) {
+      _vp.getVARNAUI().UIAutoAnnotateTerminalLoops();
+    } else if (_type.equals("annotationsautohelices")) {
+      _vp.getVARNAUI().UIAutoAnnotateHelices();
+    } else if (_type.equals("annotationsremove")) {
+      _vp.getVARNAUI().UIAnnotationsRemove();
+    } else if (_type.equals("annotationsautoextremites")) {
+      _vp.getVARNAUI().UIAutoAnnotateStrandEnds();
+    } else if (_type.equals("annotationsedit")) {
+      _vp.getVARNAUI().UIAnnotationsEdit();
+      // a partir du menu selection (annotation la plus proche)
+    } else if (_type.equals("Selectionannotationremove")) {
+      _vp.getVARNAUI()
+          .UIAnnotationRemoveFromAnnotation(_vp.get_selectedAnnotation());
+    } else if (_type.equals("Selectionannotationedit")) {
+      _vp.getVARNAUI()
+          .UIAnnotationEditFromAnnotation(_vp.get_selectedAnnotation());
 
-			// a partir d'une structure(base, loop, helix) dans l'arn
-			// (annotation li� a la structure)
-		} else if (_type.endsWith("annotationadd")||_type.contains("annotationremove")||_type.contains("annotationedit")) 
-		{
-			try {
-				TextAnnotation.AnchorType type = trouverAncrage();
-				 ArrayList<Integer> listeIndex = new ArrayList<Integer>();
-				switch(type)
-				{
-				  	case BASE:
-				  		listeIndex.add(_vp.getNearestBase());
-				  	case LOOP:
-				  		if (_type.startsWith("loop1"))
-				  			listeIndex = _vp.getRNA().findLoopForward(_vp.getNearestBase());
-				  		else if (_type.startsWith("loop2"))
-				  			listeIndex = _vp.getRNA().findLoopBackward(_vp.getNearestBase());
-				  		else
-				  			listeIndex = _vp.getRNA().findLoop(_vp.getNearestBase());
-					break;
-				  	case HELIX:
-				  		listeIndex = _vp.getRNA().findHelix(_vp.getNearestBase());
-					break;				
-				}
-				if (_type.endsWith("annotationadd"))
-				{ _vp.getVARNAUI().UIAnnotationAddFromStructure(type,listeIndex); }
-				else if (_type.contains("annotationremove")) 
-				{ _vp.getVARNAUI().UIAnnotationRemoveFromStructure(trouverAncrage(),listeIndex); }
-				else if (_type.contains("annotationedit")) 
-				{ _vp.getVARNAUI().UIAnnotationEditFromStructure(trouverAncrage(),listeIndex); }
-					
-			} catch (Exception e2) {
-				e2.printStackTrace();
-			}
-			} else
-			return false;
-		return true;
-	}
+      // a partir d'une structure(base, loop, helix) dans l'arn
+      // (annotation li� a la structure)
+    } else if (_type.endsWith("annotationadd")
+        || _type.contains("annotationremove")
+        || _type.contains("annotationedit")) {
+      try {
+        TextAnnotation.AnchorType type = trouverAncrage();
+        ArrayList<Integer> listeIndex = new ArrayList<Integer>();
+        switch (type) {
+        case BASE:
+          listeIndex.add(Integer.valueOf(_vp.getNearestBase()));
+          break;/// BH CHECK was missing break
+        case LOOP:
+          if (_type.startsWith("loop1"))
+            listeIndex = _vp.getRNA().findLoopForward(_vp.getNearestBase());
+          else if (_type.startsWith("loop2"))
+            listeIndex = _vp.getRNA().findLoopBackward(_vp.getNearestBase());
+          else
+            listeIndex = _vp.getRNA().findLoop(_vp.getNearestBase());
+          break;
+        case HELIX:
+          listeIndex = _vp.getRNA().findHelix(_vp.getNearestBase());
+          break;
+        case POSITION:
+          break;
+        }
+        if (_type.endsWith("annotationadd")) {
+          _vp.getVARNAUI().UIAnnotationAddFromStructure(type, listeIndex);
+        } else if (_type.contains("annotationremove")) {
+          _vp.getVARNAUI().UIAnnotationRemoveFromStructure(trouverAncrage(),
+              listeIndex);
+        } else if (_type.contains("annotationedit")) {
+          _vp.getVARNAUI().UIAnnotationEditFromStructure(trouverAncrage(),
+              listeIndex);
+        }
+
+      } catch (Exception e2) {
+        e2.printStackTrace();
+      }
+    } else
+      return false;
+    return true;
+  }
 
 	private TextAnnotation.AnchorType trouverAncrage() {
 		if (_type.contains("loop"))
@@ -229,7 +241,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 			if (c != null) {
 				listBase = listSwitchType(_type);
 				for (int i = 0; i < listBase.size(); i++) {
-					_vp.getRNA().get_listeBases().get(listBase.get(i))
+					_vp.getRNA().get_listeBases().get(listBase.get(i).intValue())
 							.getStyleBase().setBaseInnerColor(c);
 				}
 				_vp.repaint();
@@ -241,7 +253,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 			if (c != null) {
 				listBase = listSwitchType(_type);
 				for (int i = 0; i < listBase.size(); i++) {
-					_vp.getRNA().get_listeBases().get(listBase.get(i))
+					_vp.getRNA().get_listeBases().get(listBase.get(i).intValue())
 							.getStyleBase().setBaseOutlineColor(c);
 				}
 				_vp.repaint();
@@ -253,7 +265,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 			if (c != null) {
 				listBase = listSwitchType(_type);
 				for (int i = 0; i < listBase.size(); i++) {
-					_vp.getRNA().get_listeBases().get(listBase.get(i))
+					_vp.getRNA().get_listeBases().get(listBase.get(i).intValue())
 							.getStyleBase().setBaseNameColor(c);
 				}
 				_vp.repaint();
@@ -265,7 +277,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 			if (c != null) {
 				listBase = listSwitchType(_type);
 				for (int i = 0; i < listBase.size(); i++) {
-					_vp.getRNA().get_listeBases().get(listBase.get(i))
+					_vp.getRNA().get_listeBases().get(listBase.get(i).intValue())
 							.getStyleBase().setBaseNumberColor(c);
 				}
 				_vp.repaint();
@@ -278,7 +290,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 				listBase = listSwitchType(_type);
 				for (int i = 0; i < listBase.size(); i++) 
 				{
-					for (ModeleBP msbp:_vp.getRNA().getBPsAt(listBase.get(i)))
+					for (ModeleBP msbp:_vp.getRNA().getBPsAt(listBase.get(i).intValue()))
 					{
 						if (msbp!=null) {
 							msbp.getStyle().setCustomColor(c);
@@ -295,7 +307,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 				listBase = listSwitchType(_type);
 				for (int i = 0; i < listBase.size(); i++) {
 					ModeleBase mb = _vp.getRNA().get_listeBases().get(
-							listBase.get(i));
+							listBase.get(i).intValue());
 					if (mb.getElementStructure() != -1) {
 						mb.getStyleBP().getStyle().setCustomColor(c);
 					}
@@ -308,7 +320,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 			ArrayList<ModeleBP> styleBPs = new ArrayList<ModeleBP>();
 			for (int i = 0; i < listBase.size(); i++) {
 				ModeleBase mb = _vp.getRNA().get_listeBases().get(
-						listBase.get(i));
+						listBase.get(i).intValue());
 				if (mb.getElementStructure() != -1) {
 					styleBPs.add(mb.getStyleBP());
 				}
@@ -343,30 +355,32 @@ public class ControleurMenu implements InterfaceVARNAListener,
 			return _vp.getRNA().findStem(_vp.getNearestBase());
 		if (_type.equals("base")) {
 			ArrayList<Integer> list = new ArrayList<Integer>();
-			list.add(_vp.getNearestBase());
+			list.add(Integer.valueOf(_vp.getNearestBase()));
 			return list;
 		}
 		if (_type.equals("basepair") || _type.equals("bpcolor")
 				|| _type.equals("bp")) {
 			ArrayList<Integer> list = new ArrayList<Integer>();
 			int i = _vp.getNearestBase();
-			list.add(i);
+			list.add(Integer.valueOf(i));
 			ModeleBase mb = _vp.getRNA().get_listeBases().get(i);
 			int j = mb.getElementStructure();
 			if (mb.getElementStructure() != -1) {
-				list.add(i);
-				list.add(j);
+				list.add(Integer.valueOf(i));
+				list.add(Integer.valueOf(j));
 			}
 			return list;
 		}
-		if (_type.equals("5'"))
-			return _vp.getRNA().findNonPairedBaseGroup(_vp.getNearestBase());
-		if (_type.equals("3'"))
-			return _vp.getRNA().findNonPairedBaseGroup(_vp.getNearestBase());
-		if (_type.equals("bulge"))
-			return _vp.getRNA().findNonPairedBaseGroup(_vp.getNearestBase());
-		if (_type.equals("all"))
-			return _vp.getRNA().findAll();
+		switch(_type) {
+		case "5'":
+      return _vp.getRNA().findNonPairedBaseGroup(_vp.getNearestBase());
+		case "3'":
+      return _vp.getRNA().findNonPairedBaseGroup(_vp.getNearestBase());
+		case "bulge":
+      return _vp.getRNA().findNonPairedBaseGroup(_vp.getNearestBase());
+		case "all":
+      return _vp.getRNA().findAll();		
+		}
 		return new ArrayList<Integer>();
 	}
 
@@ -378,9 +392,8 @@ public class ControleurMenu implements InterfaceVARNAListener,
 		if (_type.equals("baseChar")) {
 			_vp.getVARNAUI().UISetBaseCharacter();
 			return true;
-		} else {
-			return colorBases();
 		}
+		return colorBases();
 	}
 
 	private boolean optionBasePair() {
@@ -421,7 +434,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 				String factor = _type.substring("zoom".length());
 				double pc = Integer.parseInt(factor);
 				pc /= 100.0;
-				_vp.setZoom(new Double(pc));
+				_vp.setZoom(pc);
 				_vp.repaint();
 			}
 		} else if (_type.equals("rotation")) {
@@ -525,19 +538,9 @@ public class ControleurMenu implements InterfaceVARNAListener,
 
 	private boolean optionImport() {
 		if (_type.equals("userInput")) {
-			try {
 				_vp.getVARNAUI().UIManualInput();
-			} catch (ParseException e1) {
-				errorDialog(e1);
-			} catch (ExceptionNonEqualLength e2) {
-				errorDialog(e2);
-			}
 		} else if (_type.equals("file")) {
-			try {
 				_vp.getVARNAUI().UIFile();
-			} catch (ExceptionNonEqualLength e1) {
-				errorDialog(e1);
-			}
 		} else if (_type.equals("print")) {
 			_vp.getVARNAUI().UIPrint();
 		} else if (_type.equals("about")) {
@@ -575,15 +578,11 @@ public class ControleurMenu implements InterfaceVARNAListener,
 				_vp.getVARNAUI().UISaveAs();
 			} catch (ExceptionExportFailed e1) {
 				errorDialog(e1);
-			} catch (ExceptionPermissionDenied e1) {
-				errorDialog(e1);
 			}
 		} else if (_type.equals("dbn")) {
 			try {
 				_vp.getVARNAUI().UISaveAsDBN();
 			} catch (ExceptionExportFailed e) {
-				errorDialog(e);
-			} catch (ExceptionPermissionDenied e) {
 				errorDialog(e);
 			}
 		} else if (_type.equals("bpseq")) {
@@ -591,15 +590,11 @@ public class ControleurMenu implements InterfaceVARNAListener,
 				_vp.getVARNAUI().UISaveAsBPSEQ();
 			} catch (ExceptionExportFailed e) {
 				errorDialog(e);
-			} catch (ExceptionPermissionDenied e) {
-				errorDialog(e);
 			}
 		} else if (_type.equals("ct")) {
 			try {
 				_vp.getVARNAUI().UISaveAsCT();
 			} catch (ExceptionExportFailed e) {
-				errorDialog(e);
-			} catch (ExceptionPermissionDenied e) {
 				errorDialog(e);
 			}
 		} else if (_type.equals("eps")) {
@@ -607,47 +602,29 @@ public class ControleurMenu implements InterfaceVARNAListener,
 				_vp.getVARNAUI().UIExportEPS();
 			} catch (ExceptionWritingForbidden e1) {
 				errorDialog(e1);
-			} catch (ExceptionExportFailed e) {
-				errorDialog(e);
 			}
 		} else if (_type.equals("tikz")) {
 			try {
 				_vp.getVARNAUI().UIExportTIKZ();
 			} catch (ExceptionWritingForbidden e1) {
 				errorDialog(e1);
-			} catch (ExceptionExportFailed e) {
-				errorDialog(e);
 			}
 		} else if (_type.equals("xfig")) {
 			try {
 				_vp.getVARNAUI().UIExportXFIG();
 			} catch (ExceptionWritingForbidden e1) {
 				errorDialog(e1);
-			} catch (ExceptionExportFailed e) {
-				errorDialog(e);
 			}
 		} else if (_type.equals("svg")) {
 			try {
 				_vp.getVARNAUI().UIExportSVG();
 			} catch (ExceptionWritingForbidden e1) {
 				errorDialog(e1);
-			} catch (ExceptionExportFailed e) {
-				errorDialog(e);
 			}
 		} else if (_type.equals("jpeg")) {
-			try {
 				_vp.getVARNAUI().UIExportJPEG();
-			} catch (ExceptionJPEGEncoding e1) {
-				errorDialog(e1);
-			} catch (ExceptionExportFailed e1) {
-				errorDialog(e1);
-			}
 		} else if (_type.equals("png")) {
-			try {
 				_vp.getVARNAUI().UIExportPNG();
-			} catch (ExceptionExportFailed e1) {
-				errorDialog(e1);
-			}
 		} else
 			return false;
 		return true;
@@ -698,18 +675,20 @@ public class ControleurMenu implements InterfaceVARNAListener,
 					JOptionPane.ERROR_MESSAGE);
 	}
 
-	public void onStructureRedrawn() {
+	@Override
+  public void onStructureRedrawn() {
 		// TODO Auto-generated method stub
 		
 	}
 
-	public void onWarningEmitted(String s) {
+	@Override
+  public void onWarningEmitted(String s) {
 		if (_vp.isErrorsOn())
 			JOptionPane.showMessageDialog(_vp,s, "VARNA Warning",
 					JOptionPane.ERROR_MESSAGE);
 	}
 
-	public void onLoad(String path) {
+	public void onLoad(@SuppressWarnings("unused") String path) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -719,17 +698,20 @@ public class ControleurMenu implements InterfaceVARNAListener,
 		
 	}
 
-	public void onUINewStructure(VARNAConfig v, RNA r) {
+	@Override
+  public void onUINewStructure(VARNAConfig v, RNA r) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	public void onZoomLevelChanged() {
+	@Override
+  public void onZoomLevelChanged() {
 		// TODO Auto-generated method stub
 		
 	}
 
-	public void onTranslationChanged() {
+	@Override
+  public void onTranslationChanged() {
 		// TODO Auto-generated method stub
 		
 	}

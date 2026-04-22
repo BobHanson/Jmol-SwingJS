@@ -87,7 +87,7 @@ public class VueBaseValues extends JPanel implements TableModelListener {
 	    	ModeleBase mb = data.get(row);
 	    	if (col==0)
 	    	{
-	    		return new Integer(mb.getBaseNumber());
+	    		return new Integer(mb.getResidueNumber());
 	    	}
 	    	else if (col==1)
 	    	{

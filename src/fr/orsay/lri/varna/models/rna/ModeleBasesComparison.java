@@ -77,11 +77,12 @@ public class ModeleBasesComparison extends ModeleBase {
 
 	
 	
-	public void toXML(TransformerHandler hd) throws SAXException
+	@Override
+  public void toXML(TransformerHandler hd) throws SAXException
 	{
 		AttributesImpl atts = new AttributesImpl();
 		atts.addAttribute("","",XML_VAR_INDEX_NAME,"CDATA",""+_index);
-		atts.addAttribute("","",XML_VAR_NUMBER_NAME,"CDATA",""+_realIndex);
+		atts.addAttribute("","",XML_VAR_NUMBER_NAME,"CDATA",""+_resno);
 		atts.addAttribute("","",XML_VAR_CUSTOM_DRAWN_NAME,"CDATA",""+_colorie);
 		atts.addAttribute("","",XML_VAR_LABEL_NAME,"CDATA",""+_label);
 		atts.addAttribute("","",XML_VAR_MEMBERSHIP_NAME,"CDATA",""+_appartenance);
@@ -223,7 +224,8 @@ public class ModeleBasesComparison extends ModeleBase {
 	 * 
 	 * @return The display style associated to this comparison base.
 	 */
-	public ModelBaseStyle getStyleBase() {
+	@Override
+  public ModelBaseStyle getStyleBase() {
 		if (_colorie)
 			return _styleBase;
 		return new ModelBaseStyle();
@@ -261,11 +263,11 @@ public class ModeleBasesComparison extends ModeleBase {
 	/**
 	 * Sets the base of the first RNA in this comparison base.
 	 * 
-	 * @param _base1
+	 * @param base1
 	 *            - The base of the first RNA in this comparison base.
 	 */
-	public void setBase1(Character _base1) {
-		this._base1 = _base1;
+	public void setBase1(char base1) {
+	_base1 = Character.valueOf(base1);
 	}
 
 	/**
@@ -280,11 +282,11 @@ public class ModeleBasesComparison extends ModeleBase {
 	/**
 	 * Sets the base of the second RNA in this comparison base.
 	 * 
-	 * @param _base2
+	 * @param base2
 	 *            - The base of the second RNA in this comparison base.
 	 */
-	public void setBase2(Character _base2) {
-		this._base2 = _base2;
+	public void setBase2(char base2) {
+		this._base2 = Character.valueOf(base2);
 	}
 
 	/*
@@ -302,7 +304,8 @@ public class ModeleBasesComparison extends ModeleBase {
 		return String.valueOf(_base1) + String.valueOf(_base2);
 	}
 
-	public String getContent() {
+	@Override
+  public String getContent() {
 		return getBases();
 	}
 
@@ -341,7 +344,8 @@ public class ModeleBasesComparison extends ModeleBase {
 
 
 
-	public int getIndex() {
+	@Override
+  public int getIndex() {
 		return _index;
 	}
 

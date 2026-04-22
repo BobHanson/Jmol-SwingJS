@@ -10,7 +10,7 @@ import fr.orsay.lri.varna.models.rna.ModeleBase;
 public class BaseList {
 	private HashSet<ModeleBase> _bases = new HashSet<ModeleBase>(); 
 	private String _caption;
-
+	
 	public BaseList( BaseList b)
 	{
 		_caption = b._caption;
@@ -127,7 +127,7 @@ public class BaseList {
 			{ result += ","; }
 			else
 			{ first = false; }
-			result += "" + mb.getBaseNumber(); 
+			result += "" + mb.getResidueNumber(); 
 		}
 		result += "";
 		return result;
@@ -154,7 +154,7 @@ public class BaseList {
 		ArrayList<Integer> indices = new ArrayList<Integer>();
 		for (ModeleBase mb : _bases)
 		{
-			indices.add(mb.getIndex());
+			indices.add(Integer.valueOf(mb.getIndex()));
 		}
 		return indices;
 	}

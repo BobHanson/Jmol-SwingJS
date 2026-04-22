@@ -1447,7 +1447,7 @@ public class Viewer extends JmolViewer
     sm.setStatusMeasuring(status, intInfo, strMeasure, value);
   }
 
-  /*
+  /**
   * minimizationCallback reports the status of a currently running
   * minimization.
   * 
@@ -1461,7 +1461,6 @@ public class Viewer extends JmolViewer
   * Minimizer.getEnergyonly Minimizer.startMinimization
   * Minimizer.stepMinimization
   */
-
   public void notifyMinimizationStatus() {
     Object step = getP("_minimizationStep");
     String ff = (String) getP("_minimizationForceField");
@@ -1488,7 +1487,11 @@ public class Viewer extends JmolViewer
     }
   }
 
-  /*
+  public void notifyCalculation(String type, BS atoms, String result) {
+    sm.notifyCalculation(type, atoms, result);
+  }
+  
+  /**
   * pickCallback returns information about an atom, bond, or DRAW object that
   * has been picked by the user.
   * 
@@ -2832,7 +2835,7 @@ public class Viewer extends JmolViewer
       // 1) a set of file names
 
       if (loadScript == null) {
-        loadScript = new SB().append("load files");
+        loadScript = new SB().append("load ").append(isAppend ? "append " : "").append("files");
         for (int i = 0; i < fileNames.length; i++)
           loadScript.append(i == 0 || filecat == null ? " " : filecat)
               .append("/*file*/$FILENAME" + (i + 1) + "$");
@@ -11559,6 +11562,11 @@ public class Viewer extends JmolViewer
     }
   }
 
+  public void setSelectionColors(Integer colorSelected, Integer colorUnselected, String translucency, double translucentLevel) {
+	    slm.setSelectionColors(colorSelected, colorUnselected, translucency, translucentLevel);
+	    
+	  }
+
   ////////////////// Jmol-SwingJS only //////////////
 
   private OpenChemLib ocl;
@@ -11568,5 +11576,13 @@ public class Viewer extends JmolViewer
       ocl = (OpenChemLib) Interface.getInterface("org.jmol.ocl.OpenChemLib", this, "script");
     return ocl;
   }
+
+  public void startVARNA(String options) {
+	    Map<String, Object> htParams = new Hashtable<String, Object>();
+	    htParams.put("service", "varna");
+	    htParams.put("action", "start");
+	    htParams.put("options", options);
+	    sm.processService(htParams);
+	  }
 
 }

@@ -137,11 +137,11 @@ public class VueBPList extends JPanel implements TableModelListener, ActionListe
 	    	}
 	    	else if (col==1)
 	    	{
-	    		return new String(""+mb.getPartner5().getBaseNumber()+"-"+mb.getPartner5().getContent());
+	    		return new String(""+mb.getPartner5().getResidueNumber()+"-"+mb.getPartner5().getContent());
 	    	} 
 	    	else if (col==2)
 	    	{
-	    		return new String(""+mb.getPartner3().getBaseNumber()+"-"+mb.getPartner3().getContent());
+	    		return new String(""+mb.getPartner3().getResidueNumber()+"-"+mb.getPartner3().getContent());
 	    	} 
 	    	else if (col==3)
 	    	{

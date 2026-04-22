@@ -50,17 +50,11 @@ public class Mapping implements Serializable {
 	}
 
 	public int getPartner(int i) {
-		if (!_mapping.containsKey(i))
-			return UNKNOWN;
-		else
-			return _mapping.get(i);
+		return (_mapping.containsKey(i) ? _mapping.get(i).intValue() : UNKNOWN);
 	}
 
-	public int getAncestor(int j) {
-		if (!_invMapping.containsKey(j))
-			return UNKNOWN;
-		else
-			return _invMapping.get(j);
+	public int getAncestor(int i) {
+	  return (_invMapping.containsKey(i) ? _invMapping.get(i).intValue() : UNKNOWN);
 	}
 
 	public int[] getSourceElems() {

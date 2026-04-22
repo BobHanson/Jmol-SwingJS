@@ -23,11 +23,6 @@ import java.io.Serializable;
 import javax.xml.transform.sax.TransformerHandler;
 
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributesImpl;
-
-import fr.orsay.lri.varna.models.annotations.HighlightRegionAnnotation;
-import fr.orsay.lri.varna.models.annotations.TextAnnotation;
-
 
 /**
  * The abstract rna base model
@@ -35,228 +30,208 @@ import fr.orsay.lri.varna.models.annotations.TextAnnotation;
  * @author darty
  * 
  */
-public abstract class ModeleBase implements Serializable, java.lang.Comparable<ModeleBase> {
+public abstract class ModeleBase
+    implements Serializable, java.lang.Comparable<ModeleBase> {
 
-	private ModeleBP _BP;
-	/**
-	 * The base style.
-	 */
-	protected ModelBaseStyle _styleBase = new ModelBaseStyle();
-	/**
-	 * TRUE if this InterfaceBase has to be colored, else FALSE.
-	 */
-	protected Boolean _colorie = new Boolean(true);
-	/**
-	 * The coordinate representation of this InterfaceBase on the final graphic.
-	 */
-	protected VARNAPoint _coords = new VARNAPoint();
-	/**
-	 * The nearest loop center of this InterfaceBase.
-	 */
-	protected VARNAPoint _center = new VARNAPoint();
+  private ModeleBP _BP;
+  /**
+   * The base style.
+   */
+  protected ModelBaseStyle _styleBase = new ModelBaseStyle();
+  /**
+   * TRUE if this InterfaceBase has to be colored, else FALSE.
+   */
+  protected boolean _colorie = true;
+  /**
+   * The coordinate representation of this InterfaceBase on the final graphic.
+   */
+  protected VARNAPoint _coords = new VARNAPoint();
+  /**
+   * The nearest loop center of this InterfaceBase.
+   */
+  protected VARNAPoint _center = new VARNAPoint();
 
-	/**
-	 * The label of this base.
-	 */
-	protected String _label = "";
+  /**
+   * The label of this base.
+   */
+  protected String _label = "";
 
-	protected double _value;
-	protected int _realIndex = -1;
+  protected double _value;
+  protected int _resno = -1;
 
-	public abstract void toXML(TransformerHandler hd) throws SAXException;
-	
-	
-	
-	/**
-	 * The internal index for this Base
-	 */
-	public abstract int getIndex();
+  public abstract void toXML(TransformerHandler hd) throws SAXException;
 
-	public abstract String getContent();
-	public abstract void setContent(String s);
+  /**
+   * 
+   * @return the internal index for this base
+   */
+  public abstract int getIndex();
 
-	/**
-	 * Gets this InterfaceBase style.
-	 * 
-	 * @return this InterfaceBase style.
-	 */
-	public ModelBaseStyle getStyleBase() {
-		return _styleBase;
-	}
+  public abstract String getContent();
 
-	public double getValue()
-	{
-		return _value;
-	}
+  public abstract void setContent(String s);
 
-	public void setValue(double d)
-	{
-		_value = d;
-	}
-	
-	
-	/**
-	 * Sets this InterfaceBase style.
-	 * 
-	 * @param base
-	 *            - This InterfaceBase new style.
-	 */
-	public void setStyleBase(ModelBaseStyle base) {
-		_styleBase = new ModelBaseStyle(base);
-	}
+  /**
+   * Gets this InterfaceBase style.
+   * 
+   * @return this InterfaceBase style.
+   */
+  public ModelBaseStyle getStyleBase() {
+    return _styleBase;
+  }
 
-	/**
-	 * Gets this InterfaceBase color statement.
-	 * 
-	 * @return TRUE if this InterfaceBase has to be colored, else FALSE.
-	 */
-	public final Boolean getColorie() {
-		return _colorie;
-	}
+  public double getValue() {
+    return _value;
+  }
 
-	/**
-	 * Sets this InterfaceBase color statement.
-	 * 
-	 * @param _colorie
-	 *            - TRUE if you want this InterfaceBase to be colored, else
-	 *            FALSE
-	 */
-	public final void setColorie(Boolean _colorie) {
-		this._colorie = _colorie;
-	}
+  public void setValue(double d) {
+    _value = d;
+  }
 
+  /**
+   * Sets this InterfaceBase style.
+   * 
+   * @param base
+   *        - This InterfaceBase new style.
+   */
+  public void setStyleBase(ModelBaseStyle base) {
+    _styleBase = new ModelBaseStyle(base);
+  }
 
-	/**
-	 * Gets this InterfaceBase associated structure element.
-	 * 
-	 * @return this InterfaceBase associated structure element.
-	 */
-	public int getElementStructure() {
-		if (_BP==null)
-			return -1;
-		else
-		{
-		  if (_BP.getPartner5()==this)
-			  return _BP.getPartner3().getIndex();
-		  else
-			  return _BP.getPartner5().getIndex();
-		}
-	}
+  /**
+   * Gets this InterfaceBase color statement.
+   * 
+   * @return TRUE if this InterfaceBase has to be colored, else FALSE.
+   */
+  public final boolean getColorie() {
+    return _colorie;
+  }
 
+  /**
+   * Sets this InterfaceBase color statement.
+   * 
+   * @param _colorie
+   *        - TRUE if you want this InterfaceBase to be colored, else FALSE
+   */
+  public final void setColorie(boolean _colorie) {
+    this._colorie = _colorie;
+  }
 
-	/**
-	 * Sets this InterfaceBase assiocated structure element.
-	 * 
-	 * @param structure
-	 *            - This new assiocated structure element.
-	
-	public void setElementStructure(int structure) {
-		setElementStructure(structure, new ModeleBP());
-	} */
+  /**
+   * Gets this InterfaceBase associated structure element.
+   * 
+   * @return this InterfaceBase associated structure element.
+   */
+  public int getElementStructure() {
+    if (_BP == null)
+      return -1;
+    if (_BP.getPartner5() == this)
+      return _BP.getPartner3().getIndex();
+    return _BP.getPartner5().getIndex();
+  }
 
-	/**
-	 * Sets this InterfaceBase associated structure element.
-	 * 
-	 * @param structure
-	 *            - This new associated structure element.
-	 * @param type
-	 *            - The type of this base pair.
-	 */
-	public void setElementStructure(int structure, ModeleBP type) {
-//		_elementStructure = structure;
-		_BP = type;
+  /**
+   * Sets this InterfaceBase assiocated structure element.
+   * 
+   * @param structure
+   *        - This new assiocated structure element.
+   * 
+   *        public void setElementStructure(int structure) {
+   *        setElementStructure(structure, new ModeleBP()); }
+   */
 
-	}
+  /**
+   * Sets this InterfaceBase associated structure element.
+   * 
+   * @param structure
+   *        - This new associated structure element.
+   * @param type
+   *        - The type of this base pair.
+   */
+  public void setElementStructure(int structure, ModeleBP type) {
+    //		_elementStructure = structure;
+    _BP = type;
 
-	public void removeElementStructure() {
-//		_elementStructure = -1;
-		_BP = null;
-	}
-	
-	
-	/**
-	 * Gets the base pair type for this element.
-	 * 
-	 * @return the base pair type for this element.
-	 */
-	public ModeleBP getStyleBP() {
-		return _BP;
-	}
+  }
 
-	/**
-	 * Sets the base pair type for this element.
-	 * 
-	 * @param type
-	 *            - The new base pair type for this element.
-	 */
-	public void setStyleBP(ModeleBP type) {
-		_BP = type;
-	}
+  public void removeElementStructure() {
+    //		_elementStructure = -1;
+    _BP = null;
+  }
 
-	public int getBaseNumber() {
-		return _realIndex;
-	}
+  /**
+   * Gets the base pair type for this element.
+   * 
+   * @return the base pair type for this element.
+   */
+  public ModeleBP getStyleBP() {
+    return _BP;
+  }
 
-	public void setBaseNumber(int bn) {
-		_realIndex = bn;
-	}
-	
-	public Point2D.Double getCoords() {
-		return new Point2D.Double(_coords.x,_coords.y);
-	}
+  /**
+   * Sets the base pair type for this element.
+   * 
+   * @param type
+   *        - The new base pair type for this element.
+   */
+  public void setStyleBP(ModeleBP type) {
+    _BP = type;
+  }
 
-	public void setCoords(Point2D.Double coords) {
-		this._coords.x = coords.x;
-		this._coords.y = coords.y;
-	}
+  public int getResidueNumber() {
+    return _resno;
+  }
 
-	public Point2D.Double getCenter() {
-		return new Point2D.Double(_center.x,_center.y);
-	}
+  public void setResidueNumber(int bn) {
+    _resno = bn;
+  }
 
-	public void setCenter(Point2D.Double center) {
-		this._center.x = center.x;
-		this._center.y = center.y;
-	}
+  public Point2D.Double getCoords() {
+    return new Point2D.Double(_coords.x, _coords.y);
+  }
 
-	public String getLabel() {
-		if (_label==null || _label.equals(""))
-		{
-			return ""+this.getBaseNumber();
-		}
-		else
-		{
-			return _label;
-		}
-			
-	}
+  public void setCoords(Point2D.Double coords) {
+    this._coords.x = coords.x;
+    this._coords.y = coords.y;
+  }
 
-	public void setLabel(String s) {
-		_label= s;
-	}
+  public Point2D.Double getCenter() {
+    return new Point2D.Double(_center.x, _center.y);
+  }
 
-	public void setLabel(Point2D.Double center) {
-		this._center.x = center.x;
-		this._center.y = center.y;
-	}
+  public void setCenter(Point2D.Double center) {
+    this._center.x = center.x;
+    this._center.y = center.y;
+  }
 
+  public String getLabel() {
+    return (_label == null || _label.equals("") ? "" + this.getResidueNumber()
+        : _label);
+  }
 
-	public int compareTo(ModeleBase other) { 
-	    int nombre1 = ((ModeleBase) other).getIndex(); 
-	    int nombre2 = this.getIndex(); 
-	    if (nombre1 > nombre2)  return -1; 
-	    else if(nombre1 == nombre2) return 0; 
-	    else return 1; 
-	} 
-	
-	public static String XML_VAR_TYPE_NAME = "type";
-	public static String XML_VAR_INDEX_NAME = "index";
-	public static String XML_VAR_LABEL_NAME = "label";
-	public static String XML_VAR_VALUE_NAME = "val";
-	public static String XML_VAR_POSITION_NAME = "pos";
-	public static String XML_VAR_CENTER_NAME = "center";
-	public static String XML_VAR_NUMBER_NAME = "num";
-	public static String XML_VAR_CUSTOM_DRAWN_NAME = "custom";
-	
-	
+  public void setLabel(String s) {
+    _label = s;
+  }
+
+  public void setLabel(Point2D.Double center) {
+    this._center.x = center.x;
+    this._center.y = center.y;
+  }
+
+  @Override
+  public int compareTo(ModeleBase other) {
+    int nombre1 = other.getIndex();
+    int nombre2 = getIndex();
+    return (nombre1 > nombre2 ? -1 : nombre1 == nombre2 ? 0 : 1);
+  }
+
+  public static String XML_VAR_TYPE_NAME = "type";
+  public static String XML_VAR_INDEX_NAME = "index";
+  public static String XML_VAR_LABEL_NAME = "label";
+  public static String XML_VAR_VALUE_NAME = "val";
+  public static String XML_VAR_POSITION_NAME = "pos";
+  public static String XML_VAR_CENTER_NAME = "center";
+  public static String XML_VAR_NUMBER_NAME = "num";
+  public static String XML_VAR_CUSTOM_DRAWN_NAME = "custom";
+
 }

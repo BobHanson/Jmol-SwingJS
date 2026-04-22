@@ -155,6 +155,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public Lst<P3d[]> trajectorySteps;
   private Object domains;
   public Object validation, dssr;
+  public boolean openVarna;
+
   protected boolean isConcatenated;
   public String addedData, addedDataKey;
   //  /**
@@ -496,11 +498,14 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
           }
         }
         if (dssr != null) {
-          info.put("dssrJSON", Boolean.TRUE);
-          for (int i = asc.atomSetCount; --i >= 0;) {
-            info = asc.getAtomSetAuxiliaryInfo(i);
-            info.put("dssr", dssr);
-          }
+          info.put(JC.INFO_DSSR_JSON, Boolean.TRUE);
+          info.put(JC.INFO_DSSR, dssr);
+          if (openVarna)
+            vwr.startVARNA("dssr");
+          // first model only
+//          for (int i = asc.atomSetCount; --i >= 0;) {
+//            info = asc.getAtomSetAuxiliaryInfo(i);
+//          }
         }
       }
     }
@@ -729,7 +734,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
     domains = htParams.get("domains");
     validation = htParams.get("validation");
-    dssr = htParams.get("dssr");
+    dssr = htParams.get(JC.INFO_DSSR);
     isConcatenated = htParams.containsKey("concatenate");
   }
 

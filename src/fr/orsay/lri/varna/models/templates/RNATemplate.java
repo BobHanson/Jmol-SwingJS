@@ -746,11 +746,7 @@ public class RNATemplate {
 		String[] seqAsArray = new String[strAsArray.length];
 		Arrays.fill(seqAsArray, " ");
 		RNA rna = new RNA();
-		try {
-			rna.setRNA(seqAsArray, strAsArray);
-		} catch (ExceptionFileFormatOrSyntax e) {
-			throw (new RuntimeException("Bug in toRNA(): setRNA() threw an ExceptionFileFormatOrSyntax exception."));
-		}
+		rna.setRNA(seqAsArray, strAsArray);
 		return rna;
 	}
 	

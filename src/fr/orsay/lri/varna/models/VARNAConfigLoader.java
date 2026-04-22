@@ -37,9 +37,7 @@ package fr.orsay.lri.varna.models;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.Point;
-import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -57,7 +55,6 @@ import fr.orsay.lri.varna.exceptions.ExceptionDrawingAlgorithm;
 import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
 import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionModeleStyleBaseSyntaxError;
-import fr.orsay.lri.varna.exceptions.ExceptionNAViewAlgorithm;
 import fr.orsay.lri.varna.exceptions.ExceptionNonEqualLength;
 import fr.orsay.lri.varna.exceptions.ExceptionParameterError;
 import fr.orsay.lri.varna.factories.RNAFactory;
@@ -65,10 +62,10 @@ import fr.orsay.lri.varna.interfaces.InterfaceParameterLoader;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation;
 import fr.orsay.lri.varna.models.annotations.HighlightRegionAnnotation;
 import fr.orsay.lri.varna.models.annotations.TextAnnotation;
+import fr.orsay.lri.varna.models.rna.ModelBaseStyle;
+import fr.orsay.lri.varna.models.rna.ModeleBP;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.ModeleColorMap;
-import fr.orsay.lri.varna.models.rna.ModeleBP;
-import fr.orsay.lri.varna.models.rna.ModelBaseStyle;
 import fr.orsay.lri.varna.models.rna.RNA;
 
 /**
@@ -84,91 +81,91 @@ public class VARNAConfigLoader {
 
 	// Applet Options
 
-	public static String algoOpt = "algorithm";
-	public static String annotationsOpt = "annotations";
-	public static String applyBasesStyleOpt = "applyBasesStyle";
-	public static String auxBPsOpt = "auxBPs";
-	public static String autoHelicesOpt = "autoHelices";
-	public static String autoInteriorLoopsOpt = "autoInteriorLoops";
-	public static String autoTerminalLoopsOpt = "autoTerminalLoops";
+	public final static String algoOpt = "algorithm";
+	public final static String annotationsOpt = "annotations";
+	public final static String applyBasesStyleOpt = "applyBasesStyle";
+	public final static String auxBPsOpt = "auxBPs";
+	public final static String autoHelicesOpt = "autoHelices";
+	public final static String autoInteriorLoopsOpt = "autoInteriorLoops";
+	public final static String autoTerminalLoopsOpt = "autoTerminalLoops";
 
-	public static String backboneColorOpt = "backbone";
-	public static String backgroundColorOpt = "background";
-	public static String baseInnerColorOpt = "baseInner";
-	public static String baseNameColorOpt = "baseName";
-	public static String baseNumbersColorOpt = "baseNum";
-	public static String baseOutlineColorOpt = "baseOutline";
-	public static String basesStyleOpt = "basesStyle";
-	public static String borderOpt = "border";
-	public static String bondColorOpt = "bp";
-	public static String bpIncrementOpt = "bpIncrement";
-	public static String bpStyleOpt = "bpStyle";
+	public final static String backboneColorOpt = "backbone";
+	public final static String backgroundColorOpt = "background";
+	public final static String baseInnerColorOpt = "baseInner";
+	public final static String baseNameColorOpt = "baseName";
+	public final static String baseNumbersColorOpt = "baseNum";
+	public final static String baseOutlineColorOpt = "baseOutline";
+	public final static String basesStyleOpt = "basesStyle";
+	public final static String borderOpt = "border";
+	public final static String bondColorOpt = "bp";
+	public final static String bpIncrementOpt = "bpIncrement";
+	public final static String bpStyleOpt = "bpStyle";
 
-	public static String colorMapOpt = "colorMap";
-	public static String colorMapCaptionOpt = "colorMapCaption";
-	public static String colorMapDefOpt = "colorMapStyle";
-	public static String colorMapMinOpt = "colorMapMin";
-	public static String colorMapMaxOpt = "colorMapMax";
-	public static String comparisonModeOpt = "comparisonMode";
-	public static String chemProbOpt = "chemProb";
-	public static String customBasesOpt = "customBases";
-	public static String customBPsOpt = "customBPs";
+	public final static String colorMapOpt = "colorMap";
+	public final static String colorMapCaptionOpt = "colorMapCaption";
+	public final static String colorMapDefOpt = "colorMapStyle";
+	public final static String colorMapMinOpt = "colorMapMin";
+	public final static String colorMapMaxOpt = "colorMapMax";
+	public final static String comparisonModeOpt = "comparisonMode";
+	public final static String chemProbOpt = "chemProb";
+	public final static String customBasesOpt = "customBases";
+	public final static String customBPsOpt = "customBPs";
 
-	public static String drawNCOpt = "drawNC";
-	public static String drawBasesOpt = "drawBases";
-	public static String drawTertiaryOpt = "drawTertiary";
-	public static String drawColorMapOpt = "drawColorMap";
-	public static String drawBackboneOpt = "drawBackbone";
+	public final static String drawNCOpt = "drawNC";
+	public final static String drawBasesOpt = "drawBases";
+	public final static String drawTertiaryOpt = "drawTertiary";
+	public final static String drawColorMapOpt = "drawColorMap";
+	public final static String drawBackboneOpt = "drawBackbone";
 
-	public static String errorOpt = "error";
+	public final static String errorOpt = "error";
 
-	public static String fillBasesOpt = "fillBases";
-	public static String firstSequenceForComparisonOpt = "firstSequence";
-	public static String firstStructureForComparisonOpt = "firstStructure";
-	public static String flatExteriorLoopOpt = "flat";
-	public static String flipOpt = "flip";
+	public final static String fillBasesOpt = "fillBases";
+	public final static String firstSequenceForComparisonOpt = "firstSequence";
+	public final static String firstStructureForComparisonOpt = "firstStructure";
+	public final static String flatExteriorLoopOpt = "flat";
+	public final static String flipOpt = "flip";
 
-	public static String gapsBaseColorOpt = "gapsColor";
+	public final static String gapsBaseColorOpt = "gapsColor";
 
-	public static String highlightRegionOpt = "highlightRegion";
+	public final static String highlightRegionOpt = "highlightRegion";
 
-	public static String nonStandardColorOpt = "nsBasesColor";
-	public static String numColumnsOpt = "rows";
-	public static String numRowsOpt = "columns";
+	public final static String nonStandardColorOpt = "nsBasesColor";
+	public final static String numColumnsOpt = "rows";
+	public final static String numRowsOpt = "columns";
 
-	public static String orientationOpt = "orientation";
+	public final static String orientationOpt = "orientation";
 
-	public static String modifiableOpt = "modifiable";
+	public final static String modifiableOpt = "modifiable";
 
-	public static String periodNumOpt = "periodNum";
+	public final static String periodNumOpt = "periodNum";
 
-	public static String rotationOpt = "rotation";
+	public final static String rotationOpt = "rotation";
 
-	public static String secondSequenceForComparisonOpt = "secondSequence";
-	public static String secondStructureForComparisonOpt = "secondStructure";
-	public static String sequenceOpt = "sequenceDBN";
-	public static String spaceBetweenBasesOpt = "spaceBetweenBases";
-	public static String structureOpt = "structureDBN";
+	public final static String secondSequenceForComparisonOpt = "secondSequence";
+	public final static String secondStructureForComparisonOpt = "secondStructure";
+	public final static String sequenceOpt = "sequenceDBN";
+	public final static String spaceBetweenBasesOpt = "spaceBetweenBases";
+	public final static String structureOpt = "structureDBN";
 
-	public static String titleOpt = "title";
-	public static String titleColorOpt = "titleColor";
-	public static String titleSizeOpt = "titleSize";
+	public final static String titleOpt = "title";
+	public final static String titleColorOpt = "titleColor";
+	public final static String titleSizeOpt = "titleSize";
 
-	public static String URLOpt = "url";
+	public final static String URLOpt = "url";
 
-	public static String warningOpt = "warning";
+	public final static String warningOpt = "warning";
 
-	public static String zoomOpt = "zoom";
-	public static String zoomAmountOpt = "zoomAmount";
+	public final static String zoomOpt = "zoom";
+	public final static String zoomAmountOpt = "zoomAmount";
 
 	// Applet assignable parameters
-	private String _algo;
+	private String _algorithm;
 	public String _annotations;
 	public String _chemProbs;
 	private double _rotation;
 
-	private String _sseq;
-	private String _sstruct;
+	private String _sseq = "";
+	private String _sstruct = "";
 
 	private int _numRows;
 	private int _numColumns;
@@ -238,7 +235,7 @@ public class VARNAConfigLoader {
 	private String _firstStructure;
 	private String _secondStructure;
 
-	private VARNAPanel _mainSurface;
+	private VARNAPanel _vp;
 
 	private boolean _useNonStandardColor;
 	private boolean _useGapsColor;
@@ -251,22 +248,27 @@ public class VARNAConfigLoader {
 
 	private String _URL;
 
-	protected ArrayList<VARNAPanel> _VARNAPanelList = new ArrayList<VARNAPanel>();
+	protected ArrayList<VARNAPanel> _VARNAPanelList;
 
-	InterfaceParameterLoader _optionProducer;
+	InterfaceParameterLoader _parameterSource;
 
-	public VARNAConfigLoader(InterfaceParameterLoader il) {
-		_optionProducer = il;
+
+	public VARNAConfigLoader(InterfaceParameterLoader parameterSource) {
+		_parameterSource = parameterSource;
 	}
 
 	public ArrayList<VARNAPanel> createVARNAPanels()
-			throws ExceptionParameterError,
-			ExceptionModeleStyleBaseSyntaxError, ExceptionNonEqualLength,
-			IOException, ExceptionFileFormatOrSyntax, ExceptionLoadingFailed {
-		_VARNAPanelList.clear();
+			throws ExceptionParameterError {
+	  _VARNAPanelList = new ArrayList<VARNAPanel>();
 		retrieveParametersValues();
 		return _VARNAPanelList;
 	}
+
+	 public static VARNAPanel createVARNAPanel(InterfaceParameterLoader source)
+	      throws ExceptionParameterError {
+	    return new VARNAConfigLoader(source).retrieveParametersValues();
+	  }
+
 
 	public int getNbRows() {
 		return this._numRows;
@@ -279,7 +281,7 @@ public class VARNAConfigLoader {
 	private void initValues() {
 
 		// Applet assignable parameters
-		_algo = "radiate";
+		_algorithm = "radiate";
 		_auxBPs = "";
 		_autoHelices = false;
 		_autoInteriorLoops = false;
@@ -300,10 +302,8 @@ public class VARNAConfigLoader {
 		_drawNC = true;
 		_drawTertiary = true;
 		_border = new Dimension(0, 0);
-		_sseq = "";// =
-		// "CAGCACGACACUAGCAGUCAGUGUCAGACUGCAIACAGCACGACACUAGCAGUCAGUGUCAGACUGCAIACAGCACGACACUAGCAGUCAGUGUCAGACUGCAIA";
-		_sstruct = "";// =
-		// "..(((((...(((((...(((((...(((((.....)))))...))))).....(((((...(((((.....)))))...))))).....)))))...)))))..";
+//		_sseq = "CAGCACGACACUAGCAGUCAGUGUCAGACUGCAIACAGCACGACACUAGCAGUCAGUGUCAGACUGCAIACAGCACGACACUAGCAGUCAGUGUCAGACUGCAIA";
+//		_sstruct =  "..(((((...(((((...(((((...(((((.....)))))...))))).....(((((...(((((.....)))))...))))).....)))))...)))))..";
 		_periodResNum = VARNAConfig.DEFAULT_PERIOD;
 		_rotation = 0.0;
 		_title = "";
@@ -379,12 +379,7 @@ public class VARNAConfigLoader {
 	private VARNAConfig.BP_STYLE getSafeBPStyle(String opt,
 			VARNAConfig.BP_STYLE def) {
 		VARNAConfig.BP_STYLE b = VARNAConfig.BP_STYLE.getStyle(opt);
-		if (b!= null)
-		{
-			return b;
-		} else {
-			return def;
-		}
+		return (b == null ? def : b);
 	}
 
 	public static String[][] getParameterInfo() {
@@ -394,10 +389,10 @@ public class VARNAConfigLoader {
 						algoOpt,
 						"String",
 						"Drawing algorithm, choosen from ["
-								+ VARNAConfigLoader.ALGORITHM_NAVIEW + ","
-								+ VARNAConfigLoader.ALGORITHM_LINE + ","
-								+ VARNAConfigLoader.ALGORITHM_RADIATE + ","
-								+ VARNAConfigLoader.ALGORITHM_CIRCULAR + "]" },
+								+ ALGORITHM_NAVIEW + ","
+								+ ALGORITHM_LINE + ","
+								+ ALGORITHM_RADIATE + ","
+								+ ALGORITHM_CIRCULAR + "]" },
 				{ annotationsOpt, "string", "A set of textual annotations" },
 				{ applyBasesStyleOpt, "String", "Base style application" },
 				{
@@ -427,11 +422,11 @@ public class VARNAConfigLoader {
 						bpStyleOpt,
 						"String",
 						"Look and feel for base pairs drawings, choosen from ["
-								+ VARNAConfigLoader.LEONTIS_WESTHOF_BP_STYLE+ "," 
-								+ VARNAConfigLoader.LEONTIS_WESTHOF_BP_STYLE_ALT+ "," 
-								+ VARNAConfigLoader.NONE_BP_STYLE + ","
-								+ VARNAConfigLoader.SIMPLE_BP_STYLE + ","
-								+ VARNAConfigLoader.RNAVIZ_BP_STYLE + "]" },
+								+ LEONTIS_WESTHOF_BP_STYLE+ "," 
+								+ LEONTIS_WESTHOF_BP_STYLE_ALT+ "," 
+								+ NONE_BP_STYLE + ","
+								+ SIMPLE_BP_STYLE + ","
+								+ RNAVIZ_BP_STYLE + "]" },
 				{ chemProbOpt, "", "" },
 				{
 						colorMapOpt,
@@ -502,27 +497,27 @@ public class VARNAConfigLoader {
 		return info;
 	}
 
-	private void retrieveParametersValues() throws ExceptionParameterError {
+	private VARNAPanel retrieveParametersValues() throws ExceptionParameterError {
 
 		_numRows = 1;
 		_numColumns = 1;
 		_basesStyleList = new ArrayList<ModelBaseStyle>();
 
 		try {
-			_numRows = Integer.parseInt(_optionProducer.getParameterValue(
+			_numRows = Integer.parseInt(_parameterSource.getParameterValue(
 					numRowsOpt, "" + _numRows));
 		} catch (NumberFormatException e) {
 			throw new ExceptionParameterError(e.getMessage(), "'"
-					+ _optionProducer.getParameterValue(numRowsOpt, ""
+					+ _parameterSource.getParameterValue(numRowsOpt, ""
 							+ _numRows)
 					+ "' is not a integer value for the number of rows !");
 		}
 		try {
-			_numColumns = Integer.parseInt(_optionProducer.getParameterValue(
+			_numColumns = Integer.parseInt(_parameterSource.getParameterValue(
 					numColumnsOpt, "" + _numColumns));
 		} catch (NumberFormatException e) {
 			throw new ExceptionParameterError(e.getMessage(), "'"
-					+ _optionProducer.getParameterValue(numColumnsOpt, ""
+					+ _parameterSource.getParameterValue(numColumnsOpt, ""
 							+ _numColumns)
 					+ "' is not a integer value for the number of columns !");
 		}
@@ -530,7 +525,7 @@ public class VARNAConfigLoader {
 		String tmp = null;
 		for (int i = 0; i < MAXSTYLE; i++) {
 			String opt = basesStyleOpt + i;
-			tmp = _optionProducer.getParameterValue(opt, null);
+			tmp = _parameterSource.getParameterValue(opt, null);
 			// System.out.println(opt+"->"+tmp);
 			if (tmp != null) {
 				ModelBaseStyle msb = new ModelBaseStyle();
@@ -561,246 +556,246 @@ public class VARNAConfigLoader {
 					_useGapsColor = false;
 					_useNonStandardColor = false;
 
-					tmp = _optionProducer.getParameterValue(baseNameColorOpt
+					tmp = _parameterSource.getParameterValue(baseNameColorOpt
 							+ n, "");
 					if (!tmp.equals("")) {
 						_useBaseNameColor = true;
 						_baseNameColor = getSafeColor(tmp, _baseNameColor);
 					}
-					tmp = _optionProducer.getParameterValue(baseNumbersColorOpt
+					tmp = _parameterSource.getParameterValue(baseNumbersColorOpt
 							+ n, "");
 					if (!tmp.equals("")) {
 						_useBaseNumbersColor = true;
 						_baseNumColor = getSafeColor(tmp, _baseNumColor);
 					}
-					tmp = _optionProducer.getParameterValue(baseOutlineColorOpt
+					tmp = _parameterSource.getParameterValue(baseOutlineColorOpt
 							+ n, "");
 					if (!tmp.equals("")) {
 						_useBaseOutlineColor = true;
 						_baseOutlineColor = getSafeColor(tmp, _baseOutlineColor);
 					}
-					tmp = _optionProducer.getParameterValue(baseInnerColorOpt
+					tmp = _parameterSource.getParameterValue(baseInnerColorOpt
 							+ n, "");
 					if (!tmp.equals("")) {
 						_useInnerBaseColor = true;
 						_baseInnerColor = getSafeColor(tmp, _baseInnerColor);
 					}
 
-					tmp = _optionProducer.getParameterValue(nonStandardColorOpt
+					tmp = _parameterSource.getParameterValue(nonStandardColorOpt
 							+ n, "");
 					if (!tmp.equals("")) {
 						_nonStandardColor = getSafeColor(tmp, _nonStandardColor);
 						_useNonStandardColor = true;
 					}
-					tmp = _optionProducer.getParameterValue(gapsBaseColorOpt
+					tmp = _parameterSource.getParameterValue(gapsBaseColorOpt
 							+ n, _gapsColor.toString());
 					if (!tmp.equals("")) {
 						_gapsColor = getSafeColor(tmp, _gapsColor);
 						_useGapsColor = true;
 					}
 					try {
-						_rotation = Double.parseDouble(_optionProducer
+						_rotation = Double.parseDouble(_parameterSource
 								.getParameterValue(rotationOpt + n,
 										Double.toString(_rotation)));
 					} catch (NumberFormatException e) {
 						throw new ExceptionParameterError(e.getMessage(), "'"
-								+ _optionProducer.getParameterValue(rotationOpt
+								+ _parameterSource.getParameterValue(rotationOpt
 										+ n, "" + _rotation)
 								+ "' is not a valid float value for rotation!");
 					}
 
 					try {
-						_colorMapMin = Double.parseDouble(_optionProducer
+						_colorMapMin = Double.parseDouble(_parameterSource
 								.getParameterValue(colorMapMinOpt + n,
 										Double.toString(this._colorMapMin)));
 					} catch (NumberFormatException e) {
 						throw new ExceptionParameterError(
 								e.getMessage(),
 								"'"
-										+ _optionProducer.getParameterValue(
+										+ _parameterSource.getParameterValue(
 												colorMapMinOpt + n, ""
 														+ _colorMapMin)
 										+ "' is not a valid double value for min color map values range!");
 					}
 
 					try {
-						_colorMapMax = Double.parseDouble(_optionProducer
+						_colorMapMax = Double.parseDouble(_parameterSource
 								.getParameterValue(colorMapMaxOpt + n,
 										Double.toString(this._colorMapMax)));
 					} catch (NumberFormatException e) {
 						throw new ExceptionParameterError(
 								e.getMessage(),
 								"'"
-										+ _optionProducer.getParameterValue(
+										+ _parameterSource.getParameterValue(
 												colorMapMaxOpt + n, ""
 														+ _colorMapMax)
 										+ "' is not a valid double value for max color map values range!");
 					}
 
 					try {
-						_bpIncrement = Double.parseDouble(_optionProducer
+						_bpIncrement = Double.parseDouble(_parameterSource
 								.getParameterValue(bpIncrementOpt + n,
 										Double.toString(_bpIncrement)));
 					} catch (NumberFormatException e) {
 					}
 
 					try {
-						_periodResNum = Integer.parseInt(_optionProducer
+						_periodResNum = Integer.parseInt(_parameterSource
 								.getParameterValue(periodNumOpt + n, ""
 										+ _periodResNum));
 					} catch (NumberFormatException e) {
 						throw new ExceptionParameterError(
 								e.getMessage(),
 								"'"
-										+ _optionProducer.getParameterValue(
+										+ _parameterSource.getParameterValue(
 												periodNumOpt + n, ""
 														+ _periodResNum)
 										+ "' is not a valid integer value for the period of residue numbers!");
 					}
 					try {
-						_titleSize = Integer.parseInt(_optionProducer
+						_titleSize = Integer.parseInt(_parameterSource
 								.getParameterValue(titleSizeOpt + n, ""
 										+ _titleSize));
 					} catch (NumberFormatException e) {
 						throw new ExceptionParameterError(
 								e.getMessage(),
 								"'"
-										+ _optionProducer.getParameterValue(
+										+ _parameterSource.getParameterValue(
 												titleSizeOpt + n, ""
 														+ _titleSize)
 										+ "' is not a valid integer value for the number of rows !");
 					}
 
 					try {
-						_zoom = Double.parseDouble(_optionProducer
+						_zoom = Double.parseDouble(_parameterSource
 								.getParameterValue(zoomOpt + n, "" + _zoom));
 					} catch (NumberFormatException e) {
 						throw new ExceptionParameterError(
 								e.getMessage(),
 								"'"
-										+ _optionProducer.getParameterValue(
+										+ _parameterSource.getParameterValue(
 												zoomOpt + n, "" + _zoom)
 										+ "' is not a valid integer value for the zoom !");
 					}
 
 					try {
-						_zoomAmount = Double.parseDouble(_optionProducer
+						_zoomAmount = Double.parseDouble(_parameterSource
 								.getParameterValue(zoomAmountOpt + n, ""
 										+ _zoomAmount));
 					} catch (NumberFormatException e) {
 						throw new ExceptionParameterError(
 								e.getMessage(),
 								"'"
-										+ _optionProducer.getParameterValue(
+										+ _parameterSource.getParameterValue(
 												zoomAmountOpt + n, ""
 														+ _zoomAmount)
 										+ "' is not a valid integer value for the zoom amount!");
 					}
 
 					try {
-						_spaceBetweenBases = Double.parseDouble(_optionProducer
+						_spaceBetweenBases = Double.parseDouble(_parameterSource
 								.getParameterValue(spaceBetweenBasesOpt + n, ""
 										+ _spaceBetweenBases));
 					} catch (NumberFormatException e) {
 						throw new ExceptionParameterError(
 								e.getMessage(),
 								"'"
-										+ _optionProducer.getParameterValue(
+										+ _parameterSource.getParameterValue(
 												spaceBetweenBasesOpt + n, ""
 														+ _spaceBetweenBases)
 										+ "' is not a valid integer value for the base spacing!");
 					}
 
-					_drawBases = Boolean.parseBoolean(_optionProducer
+					_drawBases = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(drawBasesOpt + n, ""
 									+ _drawBases));
-					_fillBases = Boolean.parseBoolean(_optionProducer
+					_fillBases = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(fillBasesOpt + n, ""
 									+ _fillBases));
-					_autoHelices = Boolean.parseBoolean(_optionProducer
+					_autoHelices = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(autoHelicesOpt + n, ""
 									+ _autoHelices));
-					_drawColorMap = Boolean.parseBoolean(_optionProducer
+					_drawColorMap = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(drawColorMapOpt + n, ""
 									+ _drawColorMap));
-					_drawBackbone = Boolean.parseBoolean(_optionProducer
+					_drawBackbone = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(drawBackboneOpt + n, ""
 									+ _drawBackbone));
-					_colorMapValues = _optionProducer.getParameterValue(
+					_colorMapValues = _parameterSource.getParameterValue(
 							colorMapOpt + n, _colorMapValues);
-					_autoTerminalLoops = Boolean.parseBoolean(_optionProducer
+					_autoTerminalLoops = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(autoTerminalLoopsOpt + n, ""
 									+ _autoTerminalLoops));
-					_autoInteriorLoops = Boolean.parseBoolean(_optionProducer
+					_autoInteriorLoops = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(autoInteriorLoopsOpt + n, ""
 									+ _autoInteriorLoops));
-					_drawNC = Boolean.parseBoolean(_optionProducer
+					_drawNC = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(drawNCOpt + n, "" + _drawNC));
-					_flatExteriorLoop = Boolean.parseBoolean(_optionProducer
+					_flatExteriorLoop = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(flatExteriorLoopOpt + n, ""
 									+ _flatExteriorLoop));
-					_drawTertiary = Boolean.parseBoolean(_optionProducer
+					_drawTertiary = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(drawTertiaryOpt + n, ""
 									+ _drawTertiary));
-					_warning = Boolean.parseBoolean(_optionProducer
+					_warning = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(warningOpt + n, "false"));
-					_error = Boolean.parseBoolean(_optionProducer
+					_error = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(errorOpt + n, "true"));
-					_border = parseDimension(_optionProducer.getParameterValue(
+					_border = parseDimension(_parameterSource.getParameterValue(
 							borderOpt + n, "0X0"));
-					_comparisonMode = Boolean.parseBoolean(_optionProducer
+					_comparisonMode = Boolean.parseBoolean(_parameterSource
 							.getParameterValue(comparisonModeOpt + n, "false"));
-					_firstSequence = _optionProducer.getParameterValue(
+					_firstSequence = _parameterSource.getParameterValue(
 							firstSequenceForComparisonOpt + n, _firstSequence);
-					_firstStructure = _optionProducer
+					_firstStructure = _parameterSource
 							.getParameterValue(firstStructureForComparisonOpt
 									+ n, _firstStructure);
-					_secondSequence = _optionProducer
+					_secondSequence = _parameterSource
 							.getParameterValue(secondSequenceForComparisonOpt
 									+ n, _secondSequence);
-					_secondStructure = _optionProducer.getParameterValue(
+					_secondStructure = _parameterSource.getParameterValue(
 							secondStructureForComparisonOpt + n,
 							_secondStructure);
-					_annotations = _optionProducer.getParameterValue(
+					_annotations = _parameterSource.getParameterValue(
 							annotationsOpt + n, _annotations);
-					_URL = _optionProducer.getParameterValue(URLOpt + n, _URL);
-					_algo = _optionProducer.getParameterValue(algoOpt + n,
-							_algo);
-					_customBases = _optionProducer.getParameterValue(
+					_URL = _parameterSource.getParameterValue(URLOpt + n, _URL);
+					_algorithm = _parameterSource.getParameterValue(algoOpt + n,
+							_algorithm);
+					_customBases = _parameterSource.getParameterValue(
 							customBasesOpt + n, _customBases);
-					_auxBPs = _optionProducer.getParameterValue(auxBPsOpt + n,
+					_auxBPs = _parameterSource.getParameterValue(auxBPsOpt + n,
 							_auxBPs);
-					_highlightRegion = _optionProducer.getParameterValue(
+					_highlightRegion = _parameterSource.getParameterValue(
 							highlightRegionOpt + n, _highlightRegion);
-					_chemProbs = _optionProducer.getParameterValue(chemProbOpt
+					_chemProbs = _parameterSource.getParameterValue(chemProbOpt
 							+ n, _chemProbs);
-					_customBPs = _optionProducer.getParameterValue(customBPsOpt
+					_customBPs = _parameterSource.getParameterValue(customBPsOpt
 							+ n, _customBPs);
-					_colorMapStyle = _optionProducer.getParameterValue(
+					_colorMapStyle = _parameterSource.getParameterValue(
 							colorMapDefOpt + n, _colorMapStyle);
-					_colorMapCaption = _optionProducer.getParameterValue(
+					_colorMapCaption = _parameterSource.getParameterValue(
 							colorMapCaptionOpt + n, _colorMapCaption);
 					_backboneColor = getSafeColor(
-							_optionProducer.getParameterValue(backboneColorOpt
+							_parameterSource.getParameterValue(backboneColorOpt
 									+ n, _backboneColor.toString()),
 							_backboneColor);
 					_backgroundColor = getSafeColor(
-							_optionProducer.getParameterValue(
+							_parameterSource.getParameterValue(
 									backgroundColorOpt + n,
 									_backgroundColor.toString()),
 							_backgroundColor);
 					_bondColor = getSafeColor(
-							_optionProducer.getParameterValue(bondColorOpt + n,
+							_parameterSource.getParameterValue(bondColorOpt + n,
 									_bondColor.toString()), _bondColor);
 					_bpStyle = getSafeBPStyle(
-							_optionProducer.getParameterValue(bpStyleOpt + n,
+							_parameterSource.getParameterValue(bpStyleOpt + n,
 									""), _bpStyle);
-					_flip = _optionProducer.getParameterValue(
+					_flip = _parameterSource.getParameterValue(
 							flipOpt + n, _flip);
-					_orientation = _optionProducer.getParameterValue(
+					_orientation = _parameterSource.getParameterValue(
 							orientationOpt + n, _orientation);
 					_titleColor = getSafeColor(
-							_optionProducer.getParameterValue(
+							_parameterSource.getParameterValue(
 									titleColorOpt + n, _titleColor.toString()),
 							_titleColor);
 
@@ -811,16 +806,16 @@ public class VARNAConfigLoader {
 						_sseq = "";
 						_title = "";
 					}
-					_title = _optionProducer.getParameterValue(titleOpt + n, _title);
+					_title = _parameterSource.getParameterValue(titleOpt + n, _title);
 
 					if (_comparisonMode && _firstSequence != null
 							&& _firstStructure != null
 							&& _secondSequence != null
 							&& _secondStructure != null) {
 					} else {
-						_sseq = _optionProducer.getParameterValue(sequenceOpt
+						_sseq = _parameterSource.getParameterValue(sequenceOpt
 								+ n, _sseq);
-						_sstruct = _optionProducer.getParameterValue(
+						_sstruct = _parameterSource.getParameterValue(
 								structureOpt + n, _sstruct);
 						if (!_sseq.equals("") && !_sstruct.equals("")) {
 							_URL = "";
@@ -829,20 +824,22 @@ public class VARNAConfigLoader {
 					}
 
 					// applique les valeurs des parametres recuperees
-					applyValues(n);
-				} catch (ExceptionParameterError e) {
-					VARNAPanel.errorDialogStatic(e, _mainSurface);
-				} catch (ExceptionNonEqualLength e) {
-					VARNAPanel.errorDialogStatic(e, _mainSurface);
-				} catch (IOException e) {
-					VARNAPanel.errorDialogStatic(e, _mainSurface);
-				} catch (ExceptionFileFormatOrSyntax e) {
-					VARNAPanel.errorDialogStatic(e, _mainSurface);
-				} catch (ExceptionLoadingFailed e) {
-					VARNAPanel.errorDialogStatic(e, _mainSurface);
+					
+					_vp = applyValues(n);
+					if (_VARNAPanelList != null) {
+					  _VARNAPanelList.add(_vp);
+					  _vp = null;
+					}
+					
+				} catch (ExceptionParameterError
+				    | ExceptionNonEqualLength
+				    | IOException
+				    | ExceptionLoadingFailed e) {
+					VARNAPanel.errorDialogStatic(e, _vp);
 				}
 			}// fin de boucle sur les lignes
 		}// fin de boucle sur les colonnes
+		return _vp;
 	}
 
 	private RNA _defaultRNA = new RNA();
@@ -858,201 +855,192 @@ public class VARNAConfigLoader {
 	public static final String ALGORITHM_VARNA_VIEW = "varnaview";
 	public static final String ALGORITHM_MOTIF_VIEW = "motifview";
 
-	private void applyValues(String n) throws ExceptionParameterError,
-			ExceptionNonEqualLength, IOException, ExceptionFileFormatOrSyntax,
-			ExceptionLoadingFailed {
-		boolean applyOptions = true;
-		int algoCode;
-		if (_algo.equals(ALGORITHM_CIRCULAR))
-			algoCode = RNA.DRAW_MODE_CIRCULAR;
-		else if (_algo.equals(ALGORITHM_NAVIEW))
-			algoCode = RNA.DRAW_MODE_NAVIEW;
-		else if (_algo.equals(ALGORITHM_LINE))
-			algoCode = RNA.DRAW_MODE_LINEAR;
-		else if (_algo.equals(ALGORITHM_RADIATE))
-			algoCode = RNA.DRAW_MODE_RADIATE;
-		else if (_algo.equals(ALGORITHM_VARNA_VIEW))
-			algoCode = RNA.DRAW_MODE_VARNA_VIEW;
-		else if (_algo.equals(ALGORITHM_MOTIF_VIEW))
-			algoCode = RNA.DRAW_MODE_MOTIFVIEW;
-		else
-			algoCode = RNA.DRAW_MODE_RADIATE;
+  private VARNAPanel applyValues(String n) throws ExceptionParameterError,
+      ExceptionNonEqualLength, IOException, ExceptionLoadingFailed {
+    boolean applyOptions = true;
+    int algoCode;
+    if (_algorithm.equals(ALGORITHM_CIRCULAR))
+      algoCode = RNA.DRAW_MODE_CIRCULAR;
+    else if (_algorithm.equals(ALGORITHM_NAVIEW))
+      algoCode = RNA.DRAW_MODE_NAVIEW;
+    else if (_algorithm.equals(ALGORITHM_LINE))
+      algoCode = RNA.DRAW_MODE_LINEAR;
+    else if (_algorithm.equals(ALGORITHM_RADIATE))
+      algoCode = RNA.DRAW_MODE_RADIATE;
+    else if (_algorithm.equals(ALGORITHM_VARNA_VIEW))
+      algoCode = RNA.DRAW_MODE_VARNA_VIEW;
+    else if (_algorithm.equals(ALGORITHM_MOTIF_VIEW))
+      algoCode = RNA.DRAW_MODE_MOTIFVIEW;
+    else
+      algoCode = RNA.DRAW_MODE_RADIATE;
 
-		if (_comparisonMode) {
-			_mainSurface = new VARNAPanel(_firstSequence, _firstStructure,
-					_secondSequence, _secondStructure, algoCode, "");
-		} else {
-			_mainSurface = new VARNAPanel();
-		}
+    if (_comparisonMode) {
+      _vp = new VARNAPanel(_firstSequence, _firstStructure, _secondSequence,
+          _secondStructure, algoCode, "");
+    } else {
+      _vp = new VARNAPanel();
+    }
+    _vp.setSpaceBetweenBases(_spaceBetweenBases);
+    _vp.setTitle(_title);
 
-		_VARNAPanelList.add(_mainSurface);
-		_mainSurface.setSpaceBetweenBases(_spaceBetweenBases);
-		_mainSurface.setTitle(_title);
+    if (!_URL.equals("")) {
+      URL url = null;
+      try {
 
-		if (!_URL.equals("")) {
-			URL url = null;
-			try {
+        _vp.setSpaceBetweenBases(_spaceBetweenBases);
 
-				_mainSurface.setSpaceBetweenBases(_spaceBetweenBases);
+        url = new URL(_URL);
+        URLConnection connexion = url.openConnection();
+        connexion.setUseCaches(false);
+        InputStream r = connexion.getInputStream();
+        InputStreamReader inr = new InputStreamReader(r);
 
-				url = new URL(_URL);
-				URLConnection connexion = url.openConnection();
-				connexion.setUseCaches(false);
-				InputStream r = connexion.getInputStream();
-				InputStreamReader inr = new InputStreamReader(r);
+        if (_URL.toLowerCase().endsWith(VARNAPanel.VARNA_SESSION_EXTENSION)) {
+          FullBackup f;
+          f = VARNAPanel.importSession(r, _URL);
+          _vp.setConfig(f.config);
+          _vp.showRNA(f.rna);
+          applyOptions = false;
+        } else {
+          Collection<RNA> rnas = RNAFactory.loadSecStr(new BufferedReader(inr),
+              RNAFactory.guessFileTypeFromExtension(_URL));
+          if (rnas.isEmpty()) {
+            throw new ExceptionFileFormatOrSyntax(
+                "No RNA in file '" + _URL + "'.");
+          }
+          RNA rna = rnas.iterator().next();
+          rna.drawRNA(algoCode, _vp.getConfig());
+          _vp.drawRNA(rna, algoCode);
+        }
+        if (!_title.isEmpty()) {
+          _vp.setTitle(_title);
+        }
+      } catch (ExceptionFileFormatOrSyntax e) {
+        e.setPath(url.getPath());
+      } catch (ExceptionDrawingAlgorithm e) {
+        _vp.emitWarning(e.getMessage());
+      }
 
-				if (_URL.toLowerCase().endsWith(
-						VARNAPanel.VARNA_SESSION_EXTENSION)) {
-					FullBackup f;
-					f = VARNAPanel.importSession(r, _URL);
-					_mainSurface.setConfig(f.config);
-					_mainSurface.showRNA(f.rna);
-					applyOptions = false;
-				} else {
-					Collection<RNA> rnas = RNAFactory.loadSecStr(
-							new BufferedReader(inr),
-							RNAFactory.guessFileTypeFromExtension(_URL));
-					if (rnas.isEmpty()) {
-						throw new ExceptionFileFormatOrSyntax(
-								"No RNA in file '" + _URL + "'.");
-					}
-					RNA rna = rnas.iterator().next();
-					rna.drawRNA(algoCode, _mainSurface.getConfig());
-					_mainSurface.drawRNA(rna, algoCode);
-				}
-				if (!_title.isEmpty())
-				{
-					_mainSurface.setTitle(_title);
-				}
-			} catch (ExceptionFileFormatOrSyntax e) {
-				if (url != null)
-					e.setPath(url.getPath());
-			} catch (ExceptionDrawingAlgorithm e) {
-				_mainSurface.emitWarning(e.getMessage());
-			}
+    } else if (_VARNAPanelList != null) {
+      if (!_comparisonMode) {
+        if (!_sstruct.equals("")) {
+          _vp.drawRNA(_sseq, _sstruct, algoCode);
+        } else {
+          try {
+            System.err.println("Printing default RNA " + _defaultRNA);
+            _defaultRNA.drawRNA(algoCode, _vp.getConfig());
+          } catch (ExceptionDrawingAlgorithm e) {
+            e.printStackTrace();
+          }
+          _vp.drawRNA(_defaultRNA);
+        }
+      }
+    }
+    if (applyOptions) {
+      if (_useInnerBaseColor) {
+        _vp.setBaseInnerColor(_baseInnerColor);
+      }
+      if (_useBaseOutlineColor) {
+        _vp.setBaseOutlineColor(_baseOutlineColor);
+      }
+      if (_useBaseNameColor) {
+        _vp.setBaseNameColor(_baseNameColor);
+      }
+      if (_useBaseNumbersColor) {
+        _vp.setBaseNumbersColor(_baseNumColor);
+      }
 
-		} else {
-			if (!_comparisonMode) {
-				if (!_sstruct.equals("")) {
-					_mainSurface.drawRNA(_sseq, _sstruct, algoCode);
-				} else {
-					try {
-						System.err.println("Printing default RNA "+_defaultRNA);
-						_defaultRNA.drawRNA(algoCode, _mainSurface.getConfig());
-					} catch (ExceptionDrawingAlgorithm e) {
-						e.printStackTrace();
-					}
-					_mainSurface.drawRNA(_defaultRNA);
-				}
-			}
-		}
-		if (applyOptions)
-		{
-			if (_useInnerBaseColor) {
-				_mainSurface.setBaseInnerColor(_baseInnerColor);
-			}
-			if (_useBaseOutlineColor) {
-				_mainSurface.setBaseOutlineColor(_baseOutlineColor);
-			}
-			if (_useBaseNameColor) {
-				_mainSurface.setBaseNameColor(_baseNameColor);
-			}
-			if (_useBaseNumbersColor) {
-				_mainSurface.setBaseNumbersColor(_baseNumColor);
-			}
+      _vp.setBackground(_backgroundColor);
+      _vp.setNumPeriod(_periodResNum);
+      _vp.setBackboneColor(_backboneColor);
+      _vp.setDefaultBPColor(_bondColor);
+      _vp.setBPHeightIncrement(_bpIncrement);
+      _vp.setBPStyle(_bpStyle);
+      _vp.setDrawBackbone(_drawBackbone);
 
-			_mainSurface.setBackground(_backgroundColor);
-			_mainSurface.setNumPeriod(_periodResNum);
-			_mainSurface.setBackboneColor(_backboneColor);
-			_mainSurface.setDefaultBPColor(_bondColor);
-			_mainSurface.setBPHeightIncrement(_bpIncrement);
-			_mainSurface.setBPStyle(_bpStyle);
-			_mainSurface.setDrawBackbone(_drawBackbone);
+      _vp.setTitleFontColor(_titleColor);
+      _vp.setTitleFontSize(_titleSize);
 
-			_mainSurface.setTitleFontColor(_titleColor);
-			_mainSurface.setTitleFontSize(_titleSize);
+      _vp.getPopupMenu().get_itemShowWarnings().setState(_warning);
+      _vp.setErrorsOn(_error);
+      _vp.setFlatExteriorLoop(_flatExteriorLoop);
+      _vp.setZoom(_zoom);
+      _vp.setZoomIncrement(_zoomAmount);
+      _vp.setBorderSize(_border);
 
-			_mainSurface.getPopupMenu().get_itemShowWarnings()
-					.setState(_warning);
-			_mainSurface.setErrorsOn(_error);
-			_mainSurface.setFlatExteriorLoop(_flatExteriorLoop);
-			_mainSurface.setZoom(_zoom);
-			_mainSurface.setZoomIncrement(_zoomAmount);
-			_mainSurface.setBorderSize(_border);
+      if (_useGapsColor) {
+        _vp.setGapsBasesColor(this._gapsColor);
+        _vp.setColorGapsBases(true);
+      }
 
-			if (_useGapsColor) {
-				_mainSurface.setGapsBasesColor(this._gapsColor);
-				_mainSurface.setColorGapsBases(true);
-			}
+      if (_useNonStandardColor) {
+        _vp.setNonStandardBasesColor(_nonStandardColor);
+        _vp.setColorNonStandardBases(true);
+      }
 
-			if (_useNonStandardColor) {
-				_mainSurface.setNonStandardBasesColor(_nonStandardColor);
-				_mainSurface.setColorNonStandardBases(true);
-			}
+      _vp.setShowNonPlanarBP(_drawTertiary);
+      _vp.setShowNonCanonicalBP(_drawNC);
 
-			_mainSurface.setShowNonPlanarBP(_drawTertiary);
-			_mainSurface.setShowNonCanonicalBP(_drawNC);
+      applyBasesStyle(n);
 
-			applyBasesStyle(n);
+      if (!_customBases.equals(""))
+        applyBasesCustomStyles(_vp);
 
-			if (!_customBases.equals(""))
-				applyBasesCustomStyles(_mainSurface);
+      if (!_highlightRegion.equals(""))
+        applyHighlightRegion(_vp);
 
-			if (!_highlightRegion.equals(""))
-				applyHighlightRegion(_mainSurface);
+      if (!_auxBPs.equals(""))
+        applyAuxBPs(_vp);
 
-			if (!_auxBPs.equals(""))
-				applyAuxBPs(_mainSurface);
+      if (!_chemProbs.equals(""))
+        applyChemProbs(_vp);
 
-			if (!_chemProbs.equals(""))
-				applyChemProbs(_mainSurface);
+      if (!_customBPs.equals(""))
+        applyBPsCustomStyles(_vp);
 
-			if (!_customBPs.equals(""))
-				applyBPsCustomStyles(_mainSurface);
+      _vp.setDrawOutlineBases(_drawBases);
+      _vp.setFillBases(_fillBases);
+      _vp.drawRNA();
 
-			_mainSurface.setDrawOutlineBases(_drawBases);
-			_mainSurface.setFillBases(_fillBases);
-			_mainSurface.drawRNA();
+      if (!_annotations.equals(""))
+        applyAnnotations(_vp);
+      if (_autoHelices)
+        _vp.getVARNAUI().UIAutoAnnotateHelices();
+      if (_autoTerminalLoops)
+        _vp.getVARNAUI().UIAutoAnnotateTerminalLoops();
+      if (_autoInteriorLoops)
+        _vp.getVARNAUI().UIAutoAnnotateInteriorLoops();
 
-			if (!_annotations.equals(""))
-				applyAnnotations(_mainSurface);
-			if (_autoHelices)
-				_mainSurface.getVARNAUI().UIAutoAnnotateHelices();
-			if (_autoTerminalLoops)
-				_mainSurface.getVARNAUI().UIAutoAnnotateTerminalLoops();
-			if (_autoInteriorLoops)
-				_mainSurface.getVARNAUI().UIAutoAnnotateInteriorLoops();
+      if (!_orientation.equals("")) {
+        try {
+          double d = 360 * _vp.getOrientation() / (2. * Math.PI);
+          _rotation = Double.parseDouble(_orientation) - d;
+        } catch (NumberFormatException e) {
+          // TODO : Add some code here...
+        }
 
-			if (!_orientation.equals("")) {
-				try {
-					double d = 360 * _mainSurface.getOrientation()
-							/ (2. * Math.PI);
-					_rotation = Double.parseDouble(_orientation) - d;
-				} catch (NumberFormatException e) {
-					// TODO : Add some code here...
-				}
+      }
+      _vp.globalRotation(_rotation);
 
-			}
-			_mainSurface.globalRotation(_rotation);
+      _vp.setModifiable(_modifiable);
 
-			_mainSurface.setModifiable(_modifiable);
+      _vp.setColorMapCaption(_colorMapCaption);
+      applyColorMapStyle(_vp);
+      applyFlips(_vp);
+      applyColorMapValues(_vp);
 
-			_mainSurface.setColorMapCaption(_colorMapCaption);
-			applyColorMapStyle(_mainSurface);
-			applyFlips(_mainSurface);
-			applyColorMapValues(_mainSurface);
-			
-			// if (!_drawColorMap)
-			// _mainSurface.drawColorMap(_drawColorMap);
-		}
-		// ajoute le VARNAPanel au conteneur
-	}
+      // if (!_drawColorMap)
+      // _mainSurface.drawColorMap(_drawColorMap);
+    }
+    return _vp;
+    // ajoute le VARNAPanel au conteneur
+  }
 
 	private void applyBasesStyle(String n) throws ExceptionParameterError {
 		String tmp = null;
 		for (int numStyle = 0; numStyle < _basesStyleList.size(); numStyle++) {
 			if (_basesStyleList.get(numStyle) != null) {
-				tmp = _optionProducer.getParameterValue(applyBasesStyleOpt
+				tmp = _parameterSource.getParameterValue(applyBasesStyleOpt
 						+ (numStyle) + "on" + n, null);
 
 				ArrayList<Integer> indicesList = new ArrayList<Integer>();
@@ -1064,23 +1052,23 @@ public class VARNAConfigLoader {
 							String[] args = cand.split("-");
 							if (args.length == 1) {
 								int baseNum = Integer.parseInt(cand);
-								int index = _mainSurface.getRNA()
+								int index = _vp.getRNA()
 										.getIndexFromBaseNumber(baseNum);
 								if (index != -1) {
-									indicesList.add(index);
+									indicesList.add(Integer.valueOf(index));
 								}
 							} else if (args.length == 2) {
 								int baseNumFrom = Integer.parseInt(args[0]
 										.trim());
-								int indexFrom = _mainSurface.getRNA()
+								int indexFrom = _vp.getRNA()
 										.getIndexFromBaseNumber(baseNumFrom);
 								int baseNumTo = Integer
 										.parseInt(args[1].trim());
-								int indexTo = _mainSurface.getRNA()
+								int indexTo = _vp.getRNA()
 										.getIndexFromBaseNumber(baseNumTo);
 								if ((indexFrom != -1) && (indexTo != -1)) {
 									for (int l = indexFrom; l <= indexTo; l++)
-										indicesList.add(l);
+										indicesList.add(Integer.valueOf(l));
 								}
 							}
 						} catch (NumberFormatException e) {
@@ -1089,11 +1077,11 @@ public class VARNAConfigLoader {
 						}
 					}
 					for (int k = 0; k < indicesList.size(); k++) {
-						int index = indicesList.get(k);
+						int index = indicesList.get(k).intValue();
 						if ((index >= 0)
-								&& (index < _mainSurface.getRNA()
+								&& (index < _vp.getRNA()
 										.get_listeBases().size())) {
-							_mainSurface
+							_vp
 									.getRNA()
 									.get_listeBases()
 									.get(index)
@@ -1130,7 +1118,7 @@ public class VARNAConfigLoader {
 				ArrayList<Double> vals = new ArrayList<Double>();
 				for (int i = 0; i < values.length; i++) {
 					try {
-						vals.add(Double.parseDouble(values[i]));
+						vals.add(Double.valueOf(values[i]));
 					} catch (Exception e) {
 	
 					}
@@ -1159,7 +1147,7 @@ public class VARNAConfigLoader {
 			try {
 				if (data.length == 2) {
 					int baseNum = Integer.parseInt(data[0]);
-					int index = _mainSurface.getRNA().getIndexFromBaseNumber(
+					int index = _vp.getRNA().getIndexFromBaseNumber(
 							baseNum);
 					if (index != -1) {
 						String style = data[1];

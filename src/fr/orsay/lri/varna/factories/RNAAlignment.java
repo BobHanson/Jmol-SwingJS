@@ -40,67 +40,50 @@ public class RNAAlignment {
 	  _accession.put(id,AC);
   }
    
-   public ArrayList<RNA> getRNAs() throws ExceptionUnmatchedClosingParentheses
-   {
-	   ArrayList<RNA> result = new ArrayList<RNA>(); 
-	   int[] str = RNAFactory.parseSecStr(_secStr);
-	   ArrayList<String> ids = new ArrayList<String>(_index.keySet());
-	   Collections.sort(ids,new Comparator<String>(){
-		public int compare(String o1, String o2) {
-			return o1.compareToIgnoreCase(o2);
-		}});
-	   for (String id: ids )
-	   {
-		   int n = _index.get(id);
-		   String seq = _lst.get(n);
-		   if (seq.length() != str.length)
-			   throw new ArrayIndexOutOfBoundsException(); // BH SwingJS -- must explicitly check for array out of bounds
-		   String nseq ="";
-		   String nstr ="";
-		   for(int i=0;i<seq.length();i++)
-		   {
-			   char c = seq.charAt(i);
-			   int j = str[i];
-			   
-			   if (!(c=='.' || c==':' || c=='-'))
-			   {
-				   nseq += c;
-				   if (j==-1)
-				   {
-					   nstr += '.';
-				   }
-				   else
-				   {
-					   int cp = seq.charAt(j);
-					   if (cp=='.' || cp==':' || cp=='-')
-					   {
-						   nstr += '.';						   
-					   }
-					   else
-					   {
-						   nstr += _secStr.charAt(i);
-					   }
-				   }
-			   }
-		   }
-		   RNA r = new RNA();
-		   try {
-			r.setRNA(nseq, nstr);
-			r.setName(id);
-			if (_accession.containsKey(id))
-			{
-				r.setID(_accession.get(id));
-			}
-			else
-			{
-				r.setID(id);
-			}
-			result.add(r);
-		} catch (ExceptionFileFormatOrSyntax e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	   }
-	   return result;
-   }
+  public ArrayList<RNA> getRNAs() throws ExceptionUnmatchedClosingParentheses {
+    ArrayList<RNA> result = new ArrayList<RNA>();
+    int[] str = RNAFactory.parseSecStr(_secStr);
+    ArrayList<String> ids = new ArrayList<String>(_index.keySet());
+    Collections.sort(ids, new Comparator<String>() {
+      public int compare(String o1, String o2) {
+        return o1.compareToIgnoreCase(o2);
+      }
+    });
+    for (String id : ids) {
+      int n = _index.get(id);
+      String seq = _lst.get(n);
+      if (seq.length() != str.length)
+        throw new ArrayIndexOutOfBoundsException(); // BH SwingJS -- must explicitly check for array out of bounds
+      String nseq = "";
+      String nstr = "";
+      for (int i = 0; i < seq.length(); i++) {
+        char c = seq.charAt(i);
+        int j = str[i];
+
+        if (!(c == '.' || c == ':' || c == '-')) {
+          nseq += c;
+          if (j == -1) {
+            nstr += '.';
+          } else {
+            int cp = seq.charAt(j);
+            if (cp == '.' || cp == ':' || cp == '-') {
+              nstr += '.';
+            } else {
+              nstr += _secStr.charAt(i);
+            }
+          }
+        }
+      }
+      RNA r = new RNA();
+      r.setRNA(nseq, nstr);
+      r.setName(id);
+      if (_accession.containsKey(id)) {
+        r.setID(_accession.get(id));
+      } else {
+        r.setID(id);
+      }
+      result.add(r);
+    }
+    return result;
+  }
 }

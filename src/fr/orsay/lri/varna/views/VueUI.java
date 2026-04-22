@@ -27,7 +27,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -53,15 +52,12 @@ import fr.orsay.lri.varna.applications.FileNameExtensionFilter;
 import fr.orsay.lri.varna.applications.VARNAPrinter;
 import fr.orsay.lri.varna.exceptions.ExceptionExportFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
-import fr.orsay.lri.varna.exceptions.ExceptionJPEGEncoding;
 import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionNAViewAlgorithm;
-import fr.orsay.lri.varna.exceptions.ExceptionNonEqualLength;
 import fr.orsay.lri.varna.exceptions.ExceptionPermissionDenied;
 import fr.orsay.lri.varna.exceptions.ExceptionUnmatchedClosingParentheses;
 import fr.orsay.lri.varna.exceptions.ExceptionWritingForbidden;
 import fr.orsay.lri.varna.factories.RNAFactory;
-import fr.orsay.lri.varna.models.FullBackup;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.VARNAEdits;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation;
@@ -103,12 +99,6 @@ public class VueUI {
 
 	public Throwable dialogError;
 	
-	/**
-	 * BH SwingJS
-	 * 
-	 * 
-	 * @return
-	 */
 	public Throwable getDialogError() {
 		return dialogError;
 	}
@@ -121,6 +111,7 @@ public class VueUI {
 	 * 
 	 * @param messagePanel
 	 * @param title
+	 * @param messageType 
 	 * @param ok
 	 * @param close
 	 */
@@ -178,8 +169,7 @@ public class VueUI {
 	 * 
 	 * @param message
 	 * @param initialValue
-	 * @param input
-	 * @param close_final_error optional [close,finally,error]
+	 * @param ret 
 	 */
 	public void showColorDialog(String message, Object initialValue, Runnable ret) {
 		objectCallback = ret;
@@ -193,6 +183,7 @@ public class VueUI {
 	 * A general method to handle all the showInputDialog, JFileChooser, and JColorChooser callbacks from all the VueXXX classes.
 	 * 
 	 * The initial return to be ignored is an object that is an instanceof UIResource.
+	 * @param value 
 	 * 
 	 */
 	public void onDialogReturn(Object value) {
@@ -209,6 +200,7 @@ public class VueUI {
 	 * 
 	 * The initial return to be ignored is NaN, testable as 
 	 * value != Math.floor(value).
+	 * @param value 
 	 * 
 	 */
 	public void onDialogReturn(int value) {
@@ -278,7 +270,7 @@ public class VueUI {
 	public Hashtable<Integer, Point2D.Double> backupAllCoords() {
 		Hashtable<Integer, Point2D.Double> tmp = new Hashtable<Integer, Point2D.Double>();
 		for (int i = 0; i < _vp.getRNA().getSize(); i++) {
-			tmp.put(i, _vp.getRNA().getCoords(i));
+			tmp.put(Integer.valueOf(i), _vp.getRNA().getCoords(i));
 		}
 		return tmp;
 	}
@@ -424,7 +416,7 @@ public class VueUI {
 		}
 	}
 
-	public void UIFile() throws ExceptionNonEqualLength {
+	public void UIFile() {
 		if (_vp.isModifiable()) {
 			JFileChooser fc = new JFileChooser();
 			fc.setFileSelectionMode(JFileChooser.OPEN_DIALOG);
@@ -438,23 +430,17 @@ public class VueUI {
 						ArrayList<RNA> rnas = RNAFactory.loadSecStr(path);
 						if (rnas.isEmpty()) {
 							throw new ExceptionFileFormatOrSyntax("No RNA could be parsed from that source.");
-						} else {
-							UIChooseRNAs(rnas);
 						}
+					UIChooseRNAs(rnas);
 					} else {
-						FullBackup bck = _vp.loadSession(fc.getSelectedFile()); // was path
+					  _vp.loadSession(fc.getSelectedFile()); // was path
 					}
-				} catch (ExceptionExportFailed e1) {
-					_vp.errorDialog(e1);
-				} catch (ExceptionPermissionDenied e1) {
-					_vp.errorDialog(e1);
-				} catch (ExceptionLoadingFailed e1) {
-					_vp.errorDialog(e1);
-				} catch (ExceptionFileFormatOrSyntax e1) {
-					_vp.errorDialog(e1);
-				} catch (ExceptionUnmatchedClosingParentheses e1) {
-					_vp.errorDialog(e1);
-				} catch (FileNotFoundException e) {
+				} catch (ExceptionExportFailed 
+				    | ExceptionPermissionDenied
+				    | ExceptionLoadingFailed
+				    | ExceptionFileFormatOrSyntax
+				    | ExceptionUnmatchedClosingParentheses
+				    | FileNotFoundException e) {
 					_vp.errorDialog(e);
 				}
 			}
@@ -513,7 +499,7 @@ public class VueUI {
 		showConfirmDialog(vbv, "Choose base values", null, cancel);
 	}
 
-	public void UIManualInput() throws ParseException, ExceptionNonEqualLength {
+	public void UIManualInput() {
 		if (_vp.isModifiable()) {
 			final VueManualInput manualInput = new VueManualInput(_vp);
 			Runnable ok = new Runnable() {
@@ -530,9 +516,6 @@ public class VueUI {
 						r.drawRNA(_vp.getRNA().get_drawMode(), cfg);
 						_vp.drawRNAInterpolated(r);
 						_vp.repaint();
-					} catch (ExceptionFileFormatOrSyntax e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
 					} catch (ExceptionNAViewAlgorithm e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -655,9 +638,7 @@ public class VueUI {
 	FileNameExtensionFilter _tikzFilter = new FileNameExtensionFilter(
 			"PGF/Tikz diagram", "tex", "pgf");
 
-	public void UIExport() throws ExceptionExportFailed,
-			ExceptionPermissionDenied, ExceptionWritingForbidden,
-			ExceptionJPEGEncoding {
+	public void UIExport() throws ExceptionWritingForbidden {
 		ArrayList<FileNameExtensionFilter> v = new ArrayList<FileNameExtensionFilter>();
 		v.add(_epsFilter);
 		v.add(_svgFilter);
@@ -686,8 +667,7 @@ public class VueUI {
 		}
 	}
 
-	public void UIExportJPEG() throws ExceptionJPEGEncoding,
-			ExceptionExportFailed {
+	public void UIExportJPEG() {
 		String dest = UIChooseOutputFile(_jpgFilter);
 		if (dest != null) {
 			saveToJPEG(dest);
@@ -698,22 +678,21 @@ public class VueUI {
 		VARNAPrinter.printComponent(_vp);
 	}
 
-	public void UIExportPNG() throws ExceptionExportFailed {
+	public void UIExportPNG() {
 		String dest = UIChooseOutputFile(_pngFilter);
 		if (dest != null) {
 			saveToPNG(dest);
 		}
 	}
 
-	public void UIExportXFIG() throws ExceptionExportFailed,
-			ExceptionWritingForbidden {
+	public void UIExportXFIG() throws ExceptionWritingForbidden {
 		String dest = UIChooseOutputFile(_xfigFilter);
 		if (dest != null) {
 			_vp.getRNA().saveRNAXFIG(dest, _vp.getConfig());
 		}
 	}
 
-	public void UIExportTIKZ() throws ExceptionExportFailed,
+	public void UIExportTIKZ() throws 
 			ExceptionWritingForbidden {
 		String dest = UIChooseOutputFile(_tikzFilter);
 		if (dest != null) {
@@ -721,7 +700,7 @@ public class VueUI {
 		}
 	}
 
-	public void UIExportEPS() throws ExceptionExportFailed,
+	public void UIExportEPS() throws
 			ExceptionWritingForbidden {
 		String dest = UIChooseOutputFile(_epsFilter);
 		if (dest != null) {
@@ -729,7 +708,7 @@ public class VueUI {
 		}
 	}
 
-	public void UIExportSVG() throws ExceptionExportFailed,
+	public void UIExportSVG() throws 
 			ExceptionWritingForbidden {
 		String dest = UIChooseOutputFile(_svgFilter);
 		if (dest != null) {
@@ -737,29 +716,25 @@ public class VueUI {
 		}
 	}
 
-	public void UISaveAsDBN() throws ExceptionExportFailed,
-			ExceptionPermissionDenied {
+	public void UISaveAsDBN() throws ExceptionExportFailed {
 		String name = _vp.getVARNAUI().UIChooseOutputFile(_dbnFilter);
 		if (name != null)
 			_vp.getRNA().saveAsDBN(name, _vp.getTitle());
 	}
 
-	public void UISaveAsCT() throws ExceptionExportFailed,
-			ExceptionPermissionDenied {
+	public void UISaveAsCT() throws ExceptionExportFailed {
 		String name = _vp.getVARNAUI().UIChooseOutputFile(_ctFilter);
 		if (name != null)
 			_vp.getRNA().saveAsCT(name, _vp.getTitle());
 	}
 
-	public void UISaveAsBPSEQ() throws ExceptionExportFailed,
-			ExceptionPermissionDenied {
+	public void UISaveAsBPSEQ() throws ExceptionExportFailed {
 		String name = _vp.getVARNAUI().UIChooseOutputFile(_bpseqFilter);
 		if (name != null)
 			_vp.getRNA().saveAsBPSEQ(name, _vp.getTitle());
 	}
 
-	public void UISaveAs() throws ExceptionExportFailed,
-			ExceptionPermissionDenied {
+	public void UISaveAs() throws ExceptionExportFailed {
 		ArrayList<FileNameExtensionFilter> v = new ArrayList<FileNameExtensionFilter>();
 		v.add(_bpseqFilter);
 		v.add(_dbnFilter);
@@ -1073,7 +1048,7 @@ public class VueUI {
 		if (_vp.isModifiable()) {
 
 			final VueSpaceBetweenBases vsbb = new VueSpaceBetweenBases(_vp);
-			final Double oldSpace = _vp.getSpaceBetweenBases();
+			final double oldSpace = _vp.getSpaceBetweenBases();
 			Runnable cancel = new Runnable () {
 
 				@Override
@@ -1092,7 +1067,7 @@ public class VueUI {
 		if (_vp.isModifiable()) {
 
 			VueBPHeightIncrement v = new VueBPHeightIncrement(_vp);
-			final Double oldSpace = _vp.getBPHeightIncrement();
+			final double oldSpace = _vp.getBPHeightIncrement();
 			Runnable cancel = new Runnable() {
 
 				@Override
@@ -1190,7 +1165,7 @@ public class VueUI {
 
 			@Override
 			public void run() {
-				Double scale = jpeg.getScaleSlider().getValue() / 100.0;
+				double scale = jpeg.getScaleSlider().getValue() / 100.0;
 				BufferedImage myImage = new BufferedImage((int) Math.round(_vp.getWidth() * scale),
 						(int) Math.round(_vp.getHeight() * scale), BufferedImage.TYPE_INT_ARGB);
 				// BH j2s SwingJS: was BufferedImage.TRANSLUCENT, which is TYPE_INT_ARGB_PRE ?? no transparent background?
@@ -1218,9 +1193,9 @@ public class VueUI {
 
 			@Override
 			public void run() {
-				Double scale;
+				double scale;
 				if (jpeg.getScaleSlider().getValue() == 0)
-					scale = 1. / 100.;
+					scale = 1 / 100.;
 				else
 					scale = jpeg.getScaleSlider().getValue() / 100.;
 			BufferedImage myImage = new BufferedImage((int) Math.round(_vp
@@ -1401,14 +1376,14 @@ public class VueUI {
 		switch (type) {
 		case BASE:
 			textAnnot = new TextAnnotation("", _vp.getRNA().get_listeBases()
-					.get(listeIndex.get(0)));
+					.get(listeIndex.get(0).intValue()));
 			vue = new VueAnnotation(_vp, textAnnot, true);
 			vue.show();
 			break;
 		case LOOP:
 			listeBase = new ArrayList<ModeleBase>();
 			for (Integer i : listeIndex) {
-				listeBase.add(_vp.getRNA().get_listeBases().get(i));
+				listeBase.add(_vp.getRNA().get_listeBases().get(i.intValue()));
 			}
 			textAnnot = new TextAnnotation("", listeBase, type);
 			vue = new VueAnnotation(_vp, textAnnot, true);
@@ -1417,7 +1392,7 @@ public class VueUI {
 		case HELIX:
 			listeBase = new ArrayList<ModeleBase>();
 			for (Integer i : listeIndex) {
-				listeBase.add(_vp.getRNA().get_listeBases().get(i));
+				listeBase.add(_vp.getRNA().get_listeBases().get(i.intValue()));
 			}
 			textAnnot = new TextAnnotation("", listeBase, type);
 			vue = new VueAnnotation(_vp, textAnnot, true);
@@ -1433,7 +1408,7 @@ public class VueUI {
 			ArrayList<Integer> listeIndex) {
 		if (_vp.isModifiable()) {
 			ModeleBase mb = _vp.getRNA().get_listeBases()
-					.get(listeIndex.get(0));
+					.get(listeIndex.get(0).intValue());
 			TextAnnotation ta = _vp.getRNA().getAnnotation(type, mb);
 			if (ta != null)
 				UIAnnotationEditFromAnnotation(ta);
@@ -1444,7 +1419,7 @@ public class VueUI {
 			ArrayList<Integer> listeIndex) {
 		if (_vp.isModifiable()) {
 			ModeleBase mb = _vp.getRNA().get_listeBases()
-					.get(listeIndex.get(0));
+					.get(listeIndex.get(0).intValue());
 			TextAnnotation ta = _vp.getRNA().getAnnotation(type, mb);
 			if (ta != null)
 				UIAnnotationRemoveFromAnnotation(ta);
@@ -1673,7 +1648,7 @@ public class VueUI {
 			for (int index : indices) {
 				ModeleBase mb = _vp.getRNA().getBaseAt(index);
 				Point2D.Double d = mb.getCoords();
-				backupPos.put(index, d);
+				backupPos.put(Integer.valueOf(index), d);
 				_vp.getRNA().setCoord(index, d.x + dx, d.y + dy);
 				_vp.getRNA().setCenter(index, mb.getCenter().x + dx, mb.getCenter().y + dy);
 			}
@@ -1693,7 +1668,7 @@ public class VueUI {
 			ModeleBase mb = _vp.getRNA().getBaseAt(index);
 			Point2D.Double d = mb.getCoords();
 			Hashtable<Integer, Point2D.Double> backupPos = new Hashtable<Integer, Point2D.Double>();
-			backupPos.put(index, d);
+			backupPos.put(Integer.valueOf(index), d);
 			_undoableEditSupport.postEdit(new VARNAEdits.SingleBaseMoveEdit(
 					index, nx, ny, _vp));
 			_vp.getRNA().setCoord(index, nx, ny);
@@ -1759,6 +1734,7 @@ public class VueUI {
 
 	/**
 	 * Flip an helix around its supporting base
+	 * @param h 
 	 */
 	public void UIFlipHelix(Point h) {
 		int hBeg = h.x;
@@ -1775,7 +1751,7 @@ public class VueUI {
 		for (int i = hBeg + 1; i < hEnd; i++) {
 			Point2D.Double P = _vp.getRNA().getCoords(i);
 			Point2D.Double nP = RNA.project(O, Ox, P);
-			old.put(i, nP);
+			old.put(Integer.valueOf(i), nP);
 		}
 		_vp.getRNA().flipHelix(h);
 		_vp.fireLayoutChanged(old);
@@ -1783,6 +1759,9 @@ public class VueUI {
 
 	/**
 	 * Tests if an helix needs to be flipped.
+	 * @param index 
+	 * @param P 
+	 * @return true if this is a flip
 	 */
 	boolean shouldFlip(int index, Point2D.Double P) {
 		Point h = _vp.getRNA().getHelixInterval(index);

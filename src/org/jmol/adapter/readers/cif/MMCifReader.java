@@ -103,6 +103,7 @@ public class MMCifReader extends CifReader {
       asc.setInfo("isMutate",Boolean.TRUE);      
     doSetBonds = checkFilterKey("ADDBONDS");
     byChain = checkFilterKey("BYCHAIN");
+    openVarna = checkFilterKey("VARNA");
     if (checkFilterKey("BIOMOLECULE")) // PDB format
       filter = PT.rep(filter, "BIOMOLECULE", "ASSEMBLY");
     isBiomolecule = checkFilterKey("ASSEMBLY");

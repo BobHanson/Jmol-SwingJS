@@ -1,4 +1,5 @@
 package fr.orsay.lri.varna;
+import java.awt.Color;
 /*
  VARNA is a tool for the automated drawing, visualization and annotation of the secondary structure of RNA, designed as a companion software for web servers and databases.
  Copyright (C) 2008  Kevin Darty, Alain Denise and Yann Ponty.
@@ -17,6 +18,7 @@ package fr.orsay.lri.varna;
  If not, see http://www.gnu.org/licenses.
  */
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -27,29 +29,30 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JApplet;
-import javax.swing.JOptionPane;
+import javax.swing.JFrame;
 
 import fr.orsay.lri.varna.controlers.ControleurScriptParser;
-import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
-import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
-import fr.orsay.lri.varna.exceptions.ExceptionModeleStyleBaseSyntaxError;
 import fr.orsay.lri.varna.exceptions.ExceptionNonEqualLength;
 import fr.orsay.lri.varna.exceptions.ExceptionParameterError;
 import fr.orsay.lri.varna.interfaces.InterfaceParameterLoader;
 import fr.orsay.lri.varna.models.VARNAConfigLoader;
-import fr.orsay.lri.varna.models.rna.RNA;
 
-
-// @j2s issues -- see README_SWINGJS.txt
-
+/**
+ * Adapted from VARNA by Bob Hanson for Jmol integration in Java and JavaScript. 
+ * 
+ * 
+ *  Switched from JApplet to JPanel
+ */
 public class VARNA extends JApplet implements InterfaceParameterLoader,DropTargetListener {
 	ArrayList<VARNAPanel> _vpl = null;
+  private JFrame frame;
+  private Map<String, String> htParams = new HashMap<>();
 	static{
 		/**
 		 * 
@@ -70,46 +73,48 @@ public class VARNA extends JApplet implements InterfaceParameterLoader,DropTarge
 	
 //	private static final_long serialVersionUID = -2598221520127067670L;
 
-	public VARNA() {
-		super();
+  public VARNA() {
+    this(null);
+  }
+  
+	public VARNA(JFrame frame) {
+	  if (frame == null)
+	    return;
+	  this.frame = frame;
+    setSize(600,600);
+	  setPreferredSize(new Dimension(600,600));
+	  init();
+	  frame.add(this);
+	  frame.pack();
+	  frame.setVisible(true);
 	}
 
-	public void init() {
-		try {
-			VARNAConfigLoader VARNAcfg = new VARNAConfigLoader(this);
-			
-			try {
-				_vpl = VARNAcfg.createVARNAPanels();
-				for (int i=0;i<_vpl.size();i++)
-				{
-				    new DropTarget(_vpl.get(i), this);
-				}
-			} catch (IOException e) {
-				JOptionPane.showMessageDialog(this, e.getMessage(),
-						"VARNA Error", JOptionPane.ERROR_MESSAGE);
-			} catch (ExceptionFileFormatOrSyntax e) {
-				JOptionPane.showMessageDialog(this, e.getMessage(),
-						"VARNA Error", JOptionPane.ERROR_MESSAGE);
-			} catch (ExceptionLoadingFailed e) {
-				JOptionPane.showMessageDialog(this, e.getMessage(),
-						"VARNA Error", JOptionPane.ERROR_MESSAGE);
-			}
-			setLayout(new GridLayout(VARNAcfg.getNbColumns(), VARNAcfg
-					.getNbRows()));
-			for (int i = 0; i < _vpl.size(); i++) {
-				getContentPane().add(_vpl.get(i));
-			}
-		} catch (ExceptionParameterError e) {
-			VARNAPanel.errorDialogStatic(e, this);
-		} catch (ExceptionModeleStyleBaseSyntaxError e) {
-			VARNAPanel.errorDialogStatic(e, this);
-		} catch (ExceptionNonEqualLength e) {
-			VARNAPanel.errorDialogStatic(e, this);
-		}
+  @Override
+  public void init() {
+    try {
+      VARNAConfigLoader VARNAcfg = new VARNAConfigLoader(this);
 
-	}
+      _vpl = VARNAcfg.createVARNAPanels();
+      for (int i = 0; i < _vpl.size(); i++) {
+        new DropTarget(_vpl.get(i), this);
+      }
+      setLayout(new GridLayout(VARNAcfg.getNbColumns(), VARNAcfg.getNbRows()));
+      for (int i = 0; i < _vpl.size(); i++) {
+        VARNAPanel vp = _vpl.get(i);
+        if (vp.getWidth() == 0) {
+          vp.setPreferredSize(new Dimension(600, 600));
+          vp.setSize(600, 600);
+        }
+        add(vp);
+      }
+    } catch (ExceptionParameterError e) {
+      VARNAPanel.errorDialogStatic(e, this);
+    }
 
-	public void start() {
+  }
+
+	@Override
+  public void start() {
 		//setVisible(true);
 		//repaint();
 		//getContentPane().setVisible(true);		
@@ -120,15 +125,14 @@ public class VARNA extends JApplet implements InterfaceParameterLoader,DropTarge
 		System.out.println("update");
 	}
 	
-	public String getParameterValue(String key, String def) {
-		if (getParameter(key) == null) {
-			return def;
-		} else {
-			return getParameter(key);
-		}
+	@Override
+  public String getParameterValue(String key, String def) {
+	  String p = htParams .get(key);
+	  return (p == null ? def : p);
 	}
 
-	public String[][] getParameterInfo() {
+	@Override
+  public String[][] getParameterInfo() {
 		return VARNAConfigLoader.getParameterInfo();
 	}
 	
@@ -149,7 +153,7 @@ public class VARNA extends JApplet implements InterfaceParameterLoader,DropTarge
 		List<Integer> l = v.getSelectionIndices();
 		for(int i=0;i<l.size();i++)
 		{
-			int n = l.get(i);
+			int n = l.get(i).intValue();
 			if (i>0)
 			{result += ",";}
 			result += n;
@@ -200,16 +204,20 @@ public class VARNA extends JApplet implements InterfaceParameterLoader,DropTarge
 		}
 	}
 
-	public void dragEnter(DropTargetDragEvent arg0) {
+	@Override
+  public void dragEnter(DropTargetDragEvent arg0) {
 	}
 
-	public void dragExit(DropTargetEvent arg0) {
+	@Override
+  public void dragExit(DropTargetEvent arg0) {
 	}
 
-	public void dragOver(DropTargetDragEvent arg0) {
+	@Override
+  public void dragOver(DropTargetDragEvent arg0) {
 	}
 
-	public void drop(DropTargetDropEvent dtde) 
+	@Override
+  public void drop(DropTargetDropEvent dtde) 
 	{
 	  try 
 	  {
@@ -220,7 +228,7 @@ public class VARNA extends JApplet implements InterfaceParameterLoader,DropTarge
 	      if (flavors[i].isFlavorJavaFileListType()) 
 	      {
 	    	  dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
-	    	  List list = (List) tr.getTransferData(flavors[i]);
+	    	  List<?> list = (List<?>) tr.getTransferData(flavors[i]);
 	    	  for (int j = 0; j < list.size(); j++) 
 	    	  {
 	    		  Object o = list.get(j);
@@ -252,9 +260,32 @@ public class VARNA extends JApplet implements InterfaceParameterLoader,DropTarge
 	  }
 	}
 
-	public void dropActionChanged(DropTargetDragEvent arg0) {
+	@Override
+  public void dropActionChanged(DropTargetDragEvent arg0) {
 	}
 
+	public static void main(String[] args) {
+	  JFrame frame = new JFrame("VARNA");
+	  frame.setSize(800,400);
+    frame = new JFrame("VARNA");
+	  VARNA v = new VARNA(frame);
+	  v.setBackground(Color.BLUE);
+	  System.out.println(v._vpl);	  
+	  frame.pack();
+    frame.setVisible(true);
+	  System.out.println(v.isVisible());
+    System.out.println(v.getSize());
+	}
+
+  public void close() {
+    if (frame != null)
+      frame.setVisible(false);
+    frame = null;
+  }
+
+  public JFrame getFrame() {
+    return frame;
+  }
 	
 }
 

@@ -33,6 +33,7 @@ public enum CBK {
   APPLETREADY,
   ATOMMOVED,
   AUDIO,
+  CALCULATION,
   CLICK,
   DRAGDROP,
   ECHO,

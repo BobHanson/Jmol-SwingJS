@@ -648,6 +648,7 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
     case AUDIO: // Jmol 14.29.2
     case APPLETREADY: // Jmol 12.1.48
     case ATOMMOVED: // Jmol 12.1.48
+    case CALCULATION:
     case CLICK:
     case HOVER:
     case MINIMIZATION:
@@ -683,6 +684,7 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
       data[3] = appletObject;
       break;
     case AUDIO:
+    case CALCULATION:
     case ERROR:
     case EVAL:
     case HOVER:

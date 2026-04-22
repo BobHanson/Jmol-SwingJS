@@ -70,8 +70,8 @@ public class VueAnnotation {
 	public VueAnnotation(VARNAPanel vp, boolean limited) {
 		this(
 				vp,
-				(int) (vp.getExtendedRNABBox().x + vp.getExtendedRNABBox().width / 2.0),
-				(int) (vp.getExtendedRNABBox().y + vp.getExtendedRNABBox().height / 2.0),
+				(int) (vp.addRNABBoxMargins().x + vp.addRNABBoxMargins().width / 2.0),
+				(int) (vp.addRNABBoxMargins().y + vp.addRNABBoxMargins().height / 2.0),
 				limited);
 	}
 
@@ -155,9 +155,9 @@ public class VueAnnotation {
 		px.setLayout(new FlowLayout(FlowLayout.LEFT));
 
 		ySlider = new JSlider(JSlider.HORIZONTAL, 0, (int) (_vp
-				.getExtendedRNABBox().height), Math.max(0, Math.min((int) (_vp
-				.getExtendedRNABBox().height), (int) (position.y - _vp
-				.getExtendedRNABBox().y))));
+				.addRNABBoxMargins().height), Math.max(0, Math.min((int) (_vp
+				.addRNABBoxMargins().height), (int) (position.y - _vp
+				.addRNABBoxMargins().y))));
 		// Turn on labels at major tick marks.
 		ySlider.setMajorTickSpacing(500);
 		ySlider.setMinorTickSpacing(100);
@@ -167,7 +167,7 @@ public class VueAnnotation {
 				ySlider.getPreferredSize().height));
 
 		JLabel yValueLabel = new JLabel(String.valueOf((int) position.y
-				- _vp.getExtendedRNABBox().y));
+				- _vp.addRNABBoxMargins().y));
 		yValueLabel.setPreferredSize(new Dimension(50, yValueLabel
 				.getPreferredSize().height));
 		ySlider
@@ -175,9 +175,9 @@ public class VueAnnotation {
 		ySlider.addChangeListener(_controleurVueAnnotation);
 
 		xSlider = new JSlider(JSlider.HORIZONTAL, 0, (int) (_vp
-				.getExtendedRNABBox().width), Math.max(0, Math.min((int) _vp
-				.getExtendedRNABBox().width, (int) (position.x - _vp
-				.getExtendedRNABBox().x))));
+				.addRNABBoxMargins().width), Math.max(0, Math.min((int) _vp
+				.addRNABBoxMargins().width, (int) (position.x - _vp
+				.addRNABBoxMargins().x))));
 		// Turn on labels at major tick marks.
 		xSlider.setMajorTickSpacing(500);
 		xSlider.setMinorTickSpacing(100);
@@ -187,7 +187,7 @@ public class VueAnnotation {
 				xSlider.getPreferredSize().height));
 
 		JLabel xValueLabel = new JLabel(String.valueOf((int) position.x
-				- _vp.getExtendedRNABBox().x));
+				- _vp.addRNABBoxMargins().x));
 		xValueLabel.setPreferredSize(new Dimension(50, xValueLabel
 				.getPreferredSize().height));
 		xSlider
@@ -284,8 +284,8 @@ public class VueAnnotation {
 		applyFont();
 		if (textAnnotation.getType() == TextAnnotation.AnchorType.POSITION)
 			textAnnotation.setAncrage((double) xSlider.getValue()
-					+ _vp.getExtendedRNABBox().x, ySlider.getValue()
-					+ _vp.getExtendedRNABBox().y);
+					+ _vp.addRNABBoxMargins().x, ySlider.getValue()
+					+ _vp.addRNABBoxMargins().y);
 		textAnnotation.setText(textArea.getText());
 		textAnnotation.setAngleInDegres(rotationSlider.getValue());
 		_vp.clearSelection();

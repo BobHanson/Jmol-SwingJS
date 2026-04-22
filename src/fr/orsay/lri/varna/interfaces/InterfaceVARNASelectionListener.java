@@ -2,6 +2,7 @@ package fr.orsay.lri.varna.interfaces;
 
 import fr.orsay.lri.varna.models.BaseList;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
+import fr.orsay.lri.varna.models.rna.RNA;
 
 public interface InterfaceVARNASelectionListener {
 	/**
@@ -17,5 +18,5 @@ public interface InterfaceVARNASelectionListener {
 	 * @param addedBases The list of bases added since previous selection event
 	 * @param removedBases The list of bases removed since previous selection event
 	 */
-	public void onSelectionChanged(BaseList selection, BaseList addedBases, BaseList removedBases);
+	public void onSelectionChanged(int selID, BaseList selection, BaseList addedBases, BaseList removedBases);
 }

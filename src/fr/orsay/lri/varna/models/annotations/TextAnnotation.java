@@ -262,7 +262,7 @@ public class TextAnnotation implements Serializable {
 		int minB = Integer.MAX_VALUE,maxB = Integer.MIN_VALUE;
 		for(ModeleBase mb : listeBase)
 		{
-			int i = mb.getBaseNumber();
+			int i = mb.getResidueNumber();
 			if (mb.getElementStructure()>i)
 			{
 				minA = Math.min(minA, i);
@@ -283,7 +283,7 @@ public class TextAnnotation implements Serializable {
 		int min = Integer.MAX_VALUE,max = Integer.MIN_VALUE;
 		for(ModeleBase mb : listeBase)
 		{
-			int i = mb.getBaseNumber();
+			int i = mb.getResidueNumber();
 				min = Math.min(min, i);
 				max = Math.max(max, i);
 		}
@@ -297,7 +297,7 @@ public class TextAnnotation implements Serializable {
 			NumberFormat formatter = new DecimalFormat(".00"); 
 			return tmp+" at ("+formatter.format(getCenterPosition().x)+","+formatter.format(getCenterPosition().y)+")";
 		case BASE:
-			return tmp+" on base "+((ModeleBase) _anchor).getBaseNumber();
+			return tmp+" on base "+((ModeleBase) _anchor).getResidueNumber();
 		case HELIX:
 			return tmp+" on helix "+getHelixDescription();
 		case LOOP:

@@ -2,21 +2,16 @@ package fr.orsay.lri.varna.components;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Polygon;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.geom.Point2D.Double;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
 
 import javax.swing.JPanel;
 
@@ -24,15 +19,16 @@ import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.models.export.SwingGraphics;
 import fr.orsay.lri.varna.models.export.VueVARNAGraphics;
 
-public class ZoomWindow extends JPanel implements ImageObserver, Runnable, MouseMotionListener, MouseListener {
+public class ZoomPanel extends JPanel implements Runnable, MouseMotionListener, MouseListener {
 
 	VARNAPanel _vp = null;
 	BufferedImage _bi = null;
 	Rectangle2D.Double rnaRect = null;
 	
-	public ZoomWindow(VARNAPanel vp)
+	public ZoomPanel(VARNAPanel vp)
 	{
 		_vp = vp;
+		setPreferredSize(new Dimension(-1, 200));
 		addMouseMotionListener(this);
 		addMouseListener(this);
 	}
@@ -67,8 +63,8 @@ public class ZoomWindow extends JPanel implements ImageObserver, Runnable, Mouse
 			double ratiox = w/rnaBox.width;
 			double ratioy = h/rnaBox.height;
 			
-			Rectangle2D.Double rvisible = new Rectangle2D.Double(rnaRect.x+rnaRect.width*(double)(p1.x-rnaBox.x)/(double)rnaBox.width,
-					rnaRect.y+rnaRect.height*(double)(p1.y-rnaBox.y)/(double)rnaBox.height,
+			Rectangle2D.Double rvisible = new Rectangle2D.Double(rnaRect.x+rnaRect.width*(p1.x-rnaBox.x)/rnaBox.width,
+					rnaRect.y+rnaRect.height*(p1.y-rnaBox.y)/rnaBox.height,
 					ratiox*rnaRect.width,
 					ratioy*rnaRect.height);
 			
@@ -110,7 +106,8 @@ public class ZoomWindow extends JPanel implements ImageObserver, Runnable, Mouse
 		}
 	}
 	
-	public void paintComponent(Graphics g)
+	@Override
+  public void paintComponent(Graphics g)
 	{
 		setBackground(_vp.getBackground());
 		super.paintComponent(g);
@@ -121,7 +118,8 @@ public class ZoomWindow extends JPanel implements ImageObserver, Runnable, Mouse
 		}
 	}
 
-	public void run() {
+	@Override
+  public void run() {
 		while(true)
 		{
 			repaint();
@@ -135,49 +133,56 @@ public class ZoomWindow extends JPanel implements ImageObserver, Runnable, Mouse
 	}
 
 
-	public void mouseDragged(MouseEvent e) {
+	@Override
+  public void mouseDragged(MouseEvent e) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
-	public void mouseMoved(MouseEvent e) {
+	@Override
+  public void mouseMoved(MouseEvent e) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
-	public void mouseClicked(MouseEvent e) {
+	@Override
+  public void mouseClicked(MouseEvent e) {
 		/*if (rnaRect!=null)
 		{
 			int x= e.getX();
 			int y= e.getY();
-			double ratioX = ((double)(x-rnaRect.getMinX())/((double)rnaRect.width));
-			double ratioY = ((double)(y-rnaRect.getMinY())/((double)rnaRect.height));
+			double ratioX = ((x-rnaRect.getMinX())/(rnaRect.width));
+			double ratioY = ((y-rnaRect.getMinY())/(rnaRect.height));
 			_vp.centerViewOn(ratioX,ratioY );
 		}*/
 	}
 
 
-	public void mousePressed(MouseEvent e) {
+	@Override
+  public void mousePressed(MouseEvent e) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
-	public void mouseReleased(MouseEvent e) {
+	@Override
+  public void mouseReleased(MouseEvent e) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
-	public void mouseEntered(MouseEvent e) {
+	@Override
+  public void mouseEntered(MouseEvent e) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
-	public void mouseExited(MouseEvent e) {
+	@Override
+  public void mouseExited(MouseEvent e) {
 		// TODO Auto-generated method stub
 		
 	}

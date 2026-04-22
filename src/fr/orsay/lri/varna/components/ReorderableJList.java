@@ -29,6 +29,10 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 
+/**
+ * BH: deprecated. A nice idea, but it totally messes up the model when this is done.
+ * 
+ */
 public class ReorderableJList extends JList 
 implements DragSourceListener, DropTargetListener, DragGestureListener {
 

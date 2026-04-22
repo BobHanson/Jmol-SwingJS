@@ -25,18 +25,20 @@ package org.jmol.viewer;
 
 import org.jmol.script.T;
 import org.jmol.util.BSUtil;
+import org.jmol.util.C;
+import org.jmol.util.Escape;
 
 import javajs.util.AU;
 
-
 import org.jmol.api.JmolSelectionListener;
+import org.jmol.c.PAL;
 import org.jmol.i18n.GT;
 import javajs.util.BS;
 import org.jmol.modelset.ModelSet;
 
 public class SelectionManager {
 
-  private Viewer vwr;
+  Viewer vwr;
 
   private JmolSelectionListener[] listeners = new JmolSelectionListener[0];
 
@@ -48,21 +50,21 @@ public class SelectionManager {
   private final BS bsSelection = new BS();
   final BS bsFixed = new BS();
 
-  public BS bsSubset; 
+  public BS bsSubset;
   public BS bsDeleted;
   /**
-   * a flag to indicate that labels and fonts should be set to default values; set only by SELECT NONE;
+   * a flag to indicate that labels and fonts should be set to default values;
+   * set only by SELECT NONE;
    */
   public Boolean noneSelected;
 
-
-//  void deleteModelAtoms(BS bsDeleted) {
-//    BSUtil.deleteBits(bsHidden, bsDeleted);
-//    BSUtil.deleteBits(bsSelection, bsDeleted);
-//    BSUtil.deleteBits(bsSubset, bsDeleted);
-//    BSUtil.deleteBits(bsFixed, bsDeleted);
-//    BSUtil.deleteBits(this.bsDeleted, bsDeleted);
-//  }
+  //  void deleteModelAtoms(BS bsDeleted) {
+  //    BSUtil.deleteBits(bsHidden, bsDeleted);
+  //    BSUtil.deleteBits(bsSelection, bsDeleted);
+  //    BSUtil.deleteBits(bsSubset, bsDeleted);
+  //    BSUtil.deleteBits(bsFixed, bsDeleted);
+  //    BSUtil.deleteBits(this.bsDeleted, bsDeleted);
+  //  }
 
   void processDeletedModelAtoms(BS bsAtoms) {
     BSUtil.deleteBits(bsDeleted, bsAtoms);
@@ -74,7 +76,6 @@ public class SelectionManager {
     setSelectionSet(bs, 0);
     selectionChanged(false);
   }
-
 
   // this is a tri-state. the value -1 means unknown
   private final static int TRUE = 1;
@@ -95,7 +96,8 @@ public class SelectionManager {
   void display(ModelSet modelSet, BS bs, int addRemove, boolean isQuiet) {
     switch (addRemove) {
     default:
-      BS bsNotSubset = (bsSubset == null ? null : BSUtil.andNot(BSUtil.copy(bsHidden), bsSubset));
+      BS bsNotSubset = (bsSubset == null ? null
+          : BSUtil.andNot(BSUtil.copy(bsHidden), bsSubset));
       BS bsAll = modelSet.getModelAtomBitSetIncludingDeleted(-1, false);
       bsHidden.or(bsAll);
       if (bsNotSubset != null) {
@@ -115,18 +117,21 @@ public class SelectionManager {
     BSUtil.andNot(bsHidden, bsDeleted);
     modelSet.setBsHidden(bsHidden);
     if (!isQuiet)
-      vwr.reportSelection(GT.i(GT.$("{0} atoms hidden"), bsHidden.cardinality()));
+      vwr.reportSelection(
+          GT.i(GT.$("{0} atoms hidden"), bsHidden.cardinality()));
   }
 
   void hide(ModelSet modelSet, BS bs, int addRemove, boolean isQuiet) {
-    BS bsNotSubset = (addRemove == 0 || bsSubset == null ? null : BSUtil.andNot(BSUtil.copy(bsHidden), bsSubset));
+    BS bsNotSubset = (addRemove == 0 || bsSubset == null ? null
+        : BSUtil.andNot(BSUtil.copy(bsHidden), bsSubset));
     setBitSet(bsHidden, bs, addRemove);
     if (bsNotSubset != null)
       bsHidden.or(bsNotSubset);
     if (modelSet != null)
       modelSet.setBsHidden(bsHidden);
     if (!isQuiet)
-      vwr.reportSelection(GT.i(GT.$("{0} atoms hidden"), bsHidden.cardinality()));
+      vwr.reportSelection(
+          GT.i(GT.$("{0} atoms hidden"), bsHidden.cardinality()));
   }
 
   void setSelectionSet(BS set, int addRemove) {
@@ -211,12 +216,10 @@ public class SelectionManager {
   }
 
   public boolean isAtomSelected(int atomIndex) {
-    return (
-        (bsSubset == null || bsSubset.get(atomIndex))
-        && bsDeleted == null || !bsDeleted.get(atomIndex))
-        && bsSelection.get(atomIndex);
+    return ((bsSubset == null || bsSubset.get(atomIndex)) && bsDeleted == null
+        || !bsDeleted.get(atomIndex)) && bsSelection.get(atomIndex);
   }
-  
+
   public void setSelectedAtom(int atomIndex, boolean TF) {
     if (atomIndex < 0) {
       selectionChanged(true);
@@ -237,10 +240,9 @@ public class SelectionManager {
   }
 
   boolean isInSelectionSubset(int atomIndex) {
-    return (atomIndex < 0 
+    return (atomIndex < 0
         || vwr.am.splitFrame && !vwr.am.isSplitFrameSelectable(atomIndex)
-        || bsSubset == null 
-        || bsSubset.get(atomIndex));
+        || bsSubset == null || bsSubset.get(atomIndex));
   }
 
   void invertSelection() {
@@ -270,7 +272,7 @@ public class SelectionManager {
       bsTemp.or(bsSubset);
       bsTemp.and(bsSelection);
       bs = bsTemp;
-   }
+    }
     int count = bs.cardinality();
     if (count > 0)
       empty = FALSE;
@@ -347,6 +349,97 @@ public class SelectionManager {
 
   public BS getMotionFixedAtoms() {
     return bsFixed;
+  }
+
+  private SelectionColorer colorer;
+
+  private static class SelectionColorer implements JmolSelectionListener {
+
+    Object colorSelected;
+    Object colorUnselected;
+    boolean disabled;
+    BS bsUnselected;
+    public String translucency;
+    public Double translucentLevel;
+    private Viewer vwr;
+
+    public SelectionColorer(Viewer vwr) {
+      this.vwr = vwr;
+      bsUnselected = new BS();
+    }
+
+    @Override
+    public void selectionChanged(BS selection) {
+      if (disabled)
+        return;
+      bsUnselected.clearAll();
+      bsUnselected.or(vwr.ms.getVisibleSet(false));
+      bsUnselected.andNot(selection);
+      vwr.shm.setShapePropertyBs(JC.SHAPE_BALLS, "color", colorSelected,
+          selection);
+      vwr.shm.setShapePropertyBs(JC.SHAPE_BALLS, "color", colorUnselected,
+          bsUnselected);
+      if (translucency != null) {
+        vwr.shm.setShapePropertyBs(JC.SHAPE_BALLS, "translucency", translucency,
+            bsUnselected);
+        vwr.shm.setShapePropertyBs(JC.SHAPE_BALLS, "translucentLevel",
+            translucentLevel, bsUnselected);
+      }
+    }
+
+    private String colorString(Object c, boolean isTranslucent) {
+      // note that this does not report translucency
+      if (c == PAL.NONE)
+        return "NULL";
+      int ic = ((Integer) c).intValue();
+      if (isTranslucent)
+        ic = getShade(ic);
+      return "#" + Escape.getHexColorFromRGB(ic);
+    }
+
+    private int getShade(int ic) {
+      double opacity = 1 - translucentLevel.doubleValue();
+      return shade(ic, 16, opacity) | shade(ic, 8, opacity)
+          | shade(ic, 0, opacity);
+    }
+
+    private static int shade(int ic, int off, double opacity) {
+      return Math.max(0, Math.min(
+          (int) ((((ic >> off) & 0xFF) - 0xFF) * opacity + 0xFF), 0xFF)) << off;
+    }
+
+    @Override
+    public String toString() {
+      return colorString(colorSelected, false) + " "
+          + colorString(colorUnselected, translucency != null);
+
+    }
+
+  }
+
+  public void setSelectionColors(Integer colorSelected, Integer colorUnselected,
+                                 String translucency, double translucentLevel) {
+    if (colorSelected == null && colorUnselected == null) {
+      if (colorer != null)
+        colorer.disabled = true;
+      return;
+    }
+    if (colorer == null) {
+      colorer = new SelectionColorer(vwr);
+      addListener(colorer);
+    }
+    colorer.disabled = false;
+    colorer.colorSelected = (colorSelected == null ? PAL.NONE : colorSelected);
+    colorer.colorUnselected = (colorUnselected == null ? PAL.NONE
+        : colorUnselected);
+    if (translucentLevel != 0) {
+      colorer.translucency = translucency;
+      colorer.translucentLevel = Double.valueOf(translucentLevel);
+    }
+  }
+
+  public String getSelectionColors() {
+    return (colorer == null ? null : colorer.toString());
   }
 
 }

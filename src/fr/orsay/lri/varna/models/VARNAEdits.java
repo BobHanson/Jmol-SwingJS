@@ -10,12 +10,9 @@ import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoableEdit;
 
 import fr.orsay.lri.varna.VARNAPanel;
-import fr.orsay.lri.varna.applications.templateEditor.GraphicalTemplateElement;
-import fr.orsay.lri.varna.applications.templateEditor.TemplatePanel;
-import fr.orsay.lri.varna.applications.templateEditor.TemplateEdits.ElementEdgeMoveTemplateEdit;
 import fr.orsay.lri.varna.exceptions.ExceptionNAViewAlgorithm;
-import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.ModeleBP;
+import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.RNA;
 
 public class VARNAEdits {
@@ -33,7 +30,8 @@ public class VARNAEdits {
 			_dy = dy;
 			_vp = p;
 		}
-		public void undo() throws CannotUndoException {
+		@Override
+    public void undo() throws CannotUndoException {
 			for (int index: _indices)
 			{
 				ModeleBase mb = _vp.getRNA().getBaseAt(index);
@@ -42,7 +40,8 @@ public class VARNAEdits {
 			}
 			_vp.repaint();			
 		}
-		public void redo() throws CannotRedoException {
+		@Override
+    public void redo() throws CannotRedoException {
 			for (int index: _indices)
 			{
 				ModeleBase mb = _vp.getRNA().getBaseAt(index);
@@ -51,10 +50,14 @@ public class VARNAEdits {
 			}
 			_vp.repaint();
 		}
-		public boolean canUndo() { return true; }
-		public boolean canRedo() { return true; }
-		public String getPresentationName() { return "Base #"+_indices+" shifted"; }
-		public boolean addEdit(UndoableEdit anEdit)
+		@Override
+    public boolean canUndo() { return true; }
+		@Override
+    public boolean canRedo() { return true; }
+		@Override
+    public String getPresentationName() { return "Base #"+_indices+" shifted"; }
+		@Override
+    public boolean addEdit(UndoableEdit anEdit)
 		{
 			if (anEdit instanceof BasesShiftEdit)
 			{
@@ -72,7 +75,7 @@ public class VARNAEdits {
 			}
 			return false;
 		}
-	};
+	}
 
 	public static  class HelixRotateEdit extends AbstractUndoableEdit
 	{
@@ -93,18 +96,24 @@ public class VARNAEdits {
 			_ml = ml;
 			_vp = vp;
 		}
-		public void undo() throws CannotUndoException {
+		@Override
+    public void undo() throws CannotUndoException {
 			_vp.getVARNAUI().UIRotateEverything(-_delta, _base, _pLimL, _pLimR, _h, _ml);
 			_vp.repaint();			
 		}
-		public void redo() throws CannotRedoException {
+		@Override
+    public void redo() throws CannotRedoException {
 			_vp.getVARNAUI().UIRotateEverything(_delta, _base, _pLimL, _pLimR, _h, _ml);
 			_vp.repaint();
 		}
-		public boolean canUndo() { return true; }
-		public boolean canRedo() { return true; }
-		public String getPresentationName() { return "Helix #"+_h+" rotated angle:"+_delta; }
-		public boolean addEdit(UndoableEdit anEdit)
+		@Override
+    public boolean canUndo() { return true; }
+		@Override
+    public boolean canRedo() { return true; }
+		@Override
+    public String getPresentationName() { return "Helix #"+_h+" rotated angle:"+_delta; }
+		@Override
+    public boolean addEdit(UndoableEdit anEdit)
 		{
 			if (anEdit instanceof HelixRotateEdit)
 			{
@@ -123,7 +132,7 @@ public class VARNAEdits {
 			}
 			return false;
 		}
-	};
+	}
 	
 	
 	public static  class SingleBaseMoveEdit extends AbstractUndoableEdit
@@ -144,18 +153,24 @@ public class VARNAEdits {
 			_ny = ny;
 			_vp = p;
 		}
-		public void undo() throws CannotUndoException {
+		@Override
+    public void undo() throws CannotUndoException {
 			_vp.getRNA().setCoord(_index,new Point2D.Double(_ox,_oy));
 			_vp.repaint();			
 		}
-		public void redo() throws CannotRedoException {
+		@Override
+    public void redo() throws CannotRedoException {
 			_vp.getRNA().setCoord(_index,new Point2D.Double(_nx,_ny));
 			_vp.repaint();
 		}
-		public boolean canUndo() { return true; }
-		public boolean canRedo() { return true; }
-		public String getPresentationName() { return "Base #"+_index+" moved"; }
-		public boolean addEdit(UndoableEdit anEdit)
+		@Override
+    public boolean canUndo() { return true; }
+		@Override
+    public boolean canRedo() { return true; }
+		@Override
+    public String getPresentationName() { return "Base #"+_index+" moved"; }
+		@Override
+    public boolean addEdit(UndoableEdit anEdit)
 		{
 			if (anEdit instanceof SingleBaseMoveEdit)
 			{
@@ -176,7 +191,7 @@ public class VARNAEdits {
 			}
 			return false;
 		}
-	};
+	}
 
 	public static  class HelixFlipEdit extends AbstractUndoableEdit
 	{
@@ -187,22 +202,28 @@ public class VARNAEdits {
 			_h = h;
 			_vp = vp;
 		}
-		public void undo() throws CannotUndoException {
+		@Override
+    public void undo() throws CannotUndoException {
 			_vp.getVARNAUI().UIFlipHelix(_h);
 			_vp.repaint();			
 		}
-		public void redo() throws CannotRedoException {
+		@Override
+    public void redo() throws CannotRedoException {
 			_vp.getVARNAUI().UIFlipHelix(_h);
 			_vp.repaint();
 		}
-		public boolean canUndo() { return true; }
-		public boolean canRedo() { return true; }
-		public String getPresentationName() { return "Helix #"+_h+" flipped";}
-		public boolean addEdit(UndoableEdit anEdit)
+		@Override
+    public boolean canUndo() { return true; }
+		@Override
+    public boolean canRedo() { return true; }
+		@Override
+    public String getPresentationName() { return "Helix #"+_h+" flipped";}
+		@Override
+    public boolean addEdit(UndoableEdit anEdit)
 		{
 			return false;
 		}
-	};
+	}
 
 	public static  class AddBPEdit extends AbstractUndoableEdit
 	{
@@ -217,22 +238,28 @@ public class VARNAEdits {
 			_j = j;
 			_vp = vp;
 		}
-		public void undo() throws CannotUndoException {
+		@Override
+    public void undo() throws CannotUndoException {
 			_vp.getRNA().removeBP(_msbp);
 			_vp.repaint();			
 		}
-		public void redo() throws CannotRedoException {
+		@Override
+    public void redo() throws CannotRedoException {
 			_vp.getRNA().addBP(_i,_j,_msbp);
 			_vp.repaint();
 		}
-		public boolean canUndo() { return true; }
-		public boolean canRedo() { return true; }
-		public String getPresentationName() { return "Add BP ("+_i+","+_j+")";}
-		public boolean addEdit(UndoableEdit anEdit)
+		@Override
+    public boolean canUndo() { return true; }
+		@Override
+    public boolean canRedo() { return true; }
+		@Override
+    public String getPresentationName() { return "Add BP ("+_i+","+_j+")";}
+		@Override
+    public boolean addEdit(UndoableEdit anEdit)
 		{
 			return false;
 		}
-	};
+	}
 
 	public static  class RemoveBPEdit extends AbstractUndoableEdit
 	{
@@ -247,22 +274,28 @@ public class VARNAEdits {
 			_j = j;
 			_vp = vp;
 		}
-		public void undo() throws CannotUndoException {
+		@Override
+    public void undo() throws CannotUndoException {
 			_vp.getRNA().addBP(_i,_j,_msbp);
 			_vp.repaint();			
 		}
-		public void redo() throws CannotRedoException {
+		@Override
+    public void redo() throws CannotRedoException {
 			_vp.getRNA().removeBP(_msbp);
 			_vp.repaint();
 		}
-		public boolean canUndo() { return true; }
-		public boolean canRedo() { return true; }
-		public String getPresentationName() { return "Remove BP ("+_i+","+_j+")";}
-		public boolean addEdit(UndoableEdit anEdit)
+		@Override
+    public boolean canUndo() { return true; }
+		@Override
+    public boolean canRedo() { return true; }
+		@Override
+    public String getPresentationName() { return "Remove BP ("+_i+","+_j+")";}
+		@Override
+    public boolean addEdit(UndoableEdit anEdit)
 		{
 			return false;
 		}
-	};
+	}
 
 	public static  class RescaleRNAEdit extends AbstractUndoableEdit
 	{
@@ -273,18 +306,24 @@ public class VARNAEdits {
 			_factor = angle;
 			_vp = vp;
 		}
-		public void undo() throws CannotUndoException {
+		@Override
+    public void undo() throws CannotUndoException {
 			_vp.getRNA().rescale(1.0/_factor);
 			_vp.repaint();			
 		}
-		public void redo() throws CannotRedoException {
+		@Override
+    public void redo() throws CannotRedoException {
 			_vp.getRNA().rescale(_factor);
 			_vp.repaint();
 		}
-		public boolean canUndo() { return true; }
-		public boolean canRedo() { return true; }
-		public String getPresentationName() { return "Rescale RNA factor:"+_factor+"";}
-		public boolean addEdit(UndoableEdit anEdit)
+		@Override
+    public boolean canUndo() { return true; }
+		@Override
+    public boolean canRedo() { return true; }
+		@Override
+    public String getPresentationName() { return "Rescale RNA factor:"+_factor+"";}
+		@Override
+    public boolean addEdit(UndoableEdit anEdit)
 		{
 			if (anEdit instanceof RescaleRNAEdit)
 			{
@@ -298,7 +337,7 @@ public class VARNAEdits {
 			}
 			return false;
 		}
-	};
+	}
 
 	public static  class RotateRNAEdit extends AbstractUndoableEdit
 	{
@@ -309,18 +348,24 @@ public class VARNAEdits {
 			_angle = angle;
 			_vp = vp;
 		}
-		public void undo() throws CannotUndoException {
+		@Override
+    public void undo() throws CannotUndoException {
 			_vp.getRNA().globalRotation(-_angle);
 			_vp.repaint();			
 		}
-		public void redo() throws CannotRedoException {
+		@Override
+    public void redo() throws CannotRedoException {
 			_vp.getRNA().globalRotation(_angle);
 			_vp.repaint();
 		}
-		public boolean canUndo() { return true; }
-		public boolean canRedo() { return true; }
-		public String getPresentationName() { return "Rotate RNA angle:"+_angle+"";}
-		public boolean addEdit(UndoableEdit anEdit)
+		@Override
+    public boolean canUndo() { return true; }
+		@Override
+    public boolean canRedo() { return true; }
+		@Override
+    public String getPresentationName() { return "Rotate RNA angle:"+_angle+"";}
+		@Override
+    public boolean addEdit(UndoableEdit anEdit)
 		{
 			if (anEdit instanceof RotateRNAEdit)
 			{
@@ -333,7 +378,7 @@ public class VARNAEdits {
 			}
 			return false;
 		}
-	};
+	}
 
 	public static  class RedrawEdit extends AbstractUndoableEdit
 	{
@@ -369,7 +414,8 @@ public class VARNAEdits {
 			}
 			_prevMode = _vp.getDrawMode();
 		}
-		public void undo() throws CannotUndoException {
+		@Override
+    public void undo() throws CannotUndoException {
 			RNA r = _vp.getRNA();
 			_vp.setFlatExteriorLoop(_prevFlat);
 			r.setDrawMode(_prevMode);
@@ -382,7 +428,8 @@ public class VARNAEdits {
 			}
 			_vp.repaint();			
 		}
-		public void redo() throws CannotRedoException {
+		@Override
+    public void redo() throws CannotRedoException {
 			try {
 				_vp.setFlatExteriorLoop(_newFlat);
 				_vp.getRNA().drawRNA(_newMode,_vp.getConfig());
@@ -391,13 +438,17 @@ public class VARNAEdits {
 			}
 			_vp.repaint();
 		}
-		public boolean canUndo() { return true; }
-		public boolean canRedo() { return true; }
-		public String getPresentationName() { return "Redraw whole RNA";}
-		public boolean addEdit(UndoableEdit anEdit)
+		@Override
+    public boolean canUndo() { return true; }
+		@Override
+    public boolean canRedo() { return true; }
+		@Override
+    public String getPresentationName() { return "Redraw whole RNA";}
+		@Override
+    public boolean addEdit(UndoableEdit anEdit)
 		{
 			return false;
 		}
-	};
+	}
 
 }

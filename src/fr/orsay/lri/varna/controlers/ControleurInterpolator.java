@@ -133,17 +133,17 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 			if (indices[i] == mappedIndices[j]) {
 				res.add(tmp);
 				tmp = new Vector<Integer>();
-				tmp.add(indices[i]);
+				tmp.add(Integer.valueOf(indices[i]));
 				res.add(tmp);
 				tmp = new Vector<Integer>();
 				j++;
 			} else {
-				tmp.add(indices[i]);
+				tmp.add(Integer.valueOf(indices[i]));
 			}
 		}
 		k = i;
 		for (i = k; (i < indices.length); i++) {
-			tmp.add(indices[i]);
+			tmp.add(Integer.valueOf(indices[i]));
 		}
 		res.add(tmp);
 		return res;
@@ -151,7 +151,8 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 	
 	
 
-	public void run() {
+	@Override
+  public void run() {
 		while (true)
 		{
 			TargetsHolder d = _d.get();
@@ -177,6 +178,9 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 	/**
 	 * Compute the centroid of the RNA bases that have their indexes
 	 * in the given array.
+	 * @param rnaBases 
+	 * @param indexes 
+	 * @return centroid
 	 */
 	private static Point2D.Double computeCentroid(ArrayList<ModeleBase> rnaBases, int[] indexes) {		
 		double centroidX = 0, centroidY = 0;
@@ -212,6 +216,8 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 		 * A function such that minimizing it is equivalent to
 		 * minimize the RMSD between between the two arrays of vectors,
 		 * supposing we rotate the points in [X2,Y2] by theta.
+		 * @param theta 
+		 * @return f
 		 */
 		private double f(double theta) {
 		    double cos_theta = Math.cos(theta);
@@ -228,6 +234,8 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 		
 		/**
 		 * d/dtheta f(theta)
+		 * @param theta 
+		 * @return fprime
 		 */
 		private double fprime(double theta) {
 		    double cos_theta = Math.cos(theta);
@@ -244,6 +252,8 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 		
 		/**
 		 * d^2/dtheta^2 f(theta)
+		 * @param theta 
+		 * @return fsecond
 		 */
 		private double fsecond(double theta) {
 		    double cos_theta = Math.cos(theta);
@@ -262,6 +272,7 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 		/**
 		 * Find the theta that minimizes f(theta).
 		 * We use Newton's method.
+		 * @return theta
 		 */
 		public  double computeOptimalTheta() {
 			final double epsilon = 1E-5;
@@ -317,6 +328,11 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 	 * This function computes the rotation to apply to the second set of
 	 * points such that the RMSD (Root mean square deviation) between them
 	 * is minimum. The returned angle is in radians.
+	 * @param X1 
+	 * @param Y1 
+	 * @param X2 
+	 * @param Y2 
+	 * @return theta
 	 */
 	private static double minimizeRotateRMSD(double[] X1, double[] Y1, double[] X2, double[] Y2) {
 		MinimizeRMSD minimizer = new MinimizeRMSD(X1, Y1, X2, Y2);
@@ -328,6 +344,9 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 	 * Move rna2 using a rotation so that it would move as little as possible
 	 * (in the sense that we minimize the RMSD) when transforming
 	 * it to rna1 using the given mapping.
+	 * @param rna1 
+	 * @param rna2 
+	 * @param mapping 
 	 */
 	public static void moveNearOtherRNA(RNA rna1, RNA rna2, Mapping mapping) {
 		int[] rna1MappedElems = mapping.getSourceElems();
@@ -380,6 +399,10 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 	 * be rotated so that bases move as little as possible when switching
 	 * from the current RNA to _target using the animation.
 	 * Note that this will modify the _target object directly.
+	 * @param _target 
+	 * @param _conf 
+	 * @param _mapping 
+	 * @param moveTarget 
 	 */
 	public void nextTarget(final RNA _target, final VARNAConfig _conf, Mapping _mapping, boolean moveTarget)
 	{
@@ -431,10 +454,13 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 			final Point2D.Double[] finalPosSource = new Point2D.Double[initPosSource.length];
 			final Point2D.Double[] initPosTarget = new Point2D.Double[finalPosTarget.length];
 			// Final position of source model
-			for (int i = 0; i < finalPosSource.length; i++) {
-				if (_mapping.getPartner(i) != Mapping.UNKNOWN) {
+			for (int i = 0, n = finalPosSource.length; i < n; i++) {
+			  int m = _mapping.getPartner(i);
+			  if (m >= n)
+			    break;
+				if (m != Mapping.UNKNOWN) {
 					Point2D dest;
-					dest = finalPosTarget[_mapping.getPartner(i)];
+					dest = finalPosTarget[m];
 					finalPosSource[i] = new Point2D.Double(dest.getX(), dest
 							.getY());
 				}
@@ -443,20 +469,20 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 			for (int i = 0; i < intArrSource.size(); i += 2) {
 				int matchedNeighborLeft, matchedNeighborRight;
 				if (i == 0) {
-					matchedNeighborLeft = intArrSource.get(1).get(0);
-					matchedNeighborRight = intArrSource.get(1).get(0);
+					matchedNeighborLeft = intArrSource.get(1).get(0).intValue();
+					matchedNeighborRight = intArrSource.get(1).get(0).intValue();
 				} else if (i == intArrSource.size() - 1) {
 					matchedNeighborLeft = intArrSource.get(
-							intArrSource.size() - 2).get(0);
+							intArrSource.size() - 2).get(0).intValue();
 					matchedNeighborRight = intArrSource.get(
-							intArrSource.size() - 2).get(0);
+							intArrSource.size() - 2).get(0).intValue();
 				} else {
-					matchedNeighborLeft = intArrSource.get(i - 1).get(0);
-					matchedNeighborRight = intArrSource.get(i + 1).get(0);
+					matchedNeighborLeft = intArrSource.get(i - 1).get(0).intValue();
+					matchedNeighborRight = intArrSource.get(i + 1).get(0).intValue();
 				}
 				Vector<Integer> v = intArrSource.get(i);
 				for (int j = 0; j < v.size(); j++) {
-					int index = v.get(j);
+					int index = v.get(j).intValue();
 					finalPosSource[index] = computeDestination(
 							initPosSource[matchedNeighborLeft],
 							initPosSource[matchedNeighborRight],
@@ -475,20 +501,20 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 			for (int i = 0; i < intArrTarget.size(); i += 2) {
 				int matchedNeighborLeft, matchedNeighborRight;
 				if (i == 0) {
-					matchedNeighborLeft = intArrTarget.get(1).get(0);
-					matchedNeighborRight = intArrTarget.get(1).get(0);
+					matchedNeighborLeft = intArrTarget.get(1).get(0).intValue();
+					matchedNeighborRight = intArrTarget.get(1).get(0).intValue();
 				} else if (i == intArrTarget.size() - 1) {
 					matchedNeighborLeft = intArrTarget.get(
-							intArrTarget.size() - 2).get(0);
+							intArrTarget.size() - 2).get(0).intValue();
 					matchedNeighborRight = intArrTarget.get(
-							intArrTarget.size() - 2).get(0);
+							intArrTarget.size() - 2).get(0).intValue();
 				} else {
-					matchedNeighborLeft = intArrTarget.get(i - 1).get(0);
-					matchedNeighborRight = intArrTarget.get(i + 1).get(0);
+					matchedNeighborLeft = intArrTarget.get(i - 1).get(0).intValue();
+					matchedNeighborRight = intArrTarget.get(i + 1).get(0).intValue();
 				}
 				Vector<Integer> v = intArrTarget.get(i);
 				for (int j = 0; j < v.size(); j++) {
-					int index = v.get(j);
+					int index = v.get(j).intValue();
 					initPosTarget[index] = computeDestination(
 							finalPosTarget[matchedNeighborLeft],
 							finalPosTarget[matchedNeighborRight],
@@ -527,6 +553,8 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 							mpc = initPosTarget[j];
 							mnc = finalPosTarget[j];
 						}
+						if (mpc == null || mnc == null)
+						  break;
 						m.setCoords(new Point2D.Double(((_numSteps - 1 - i)
 								* mpc.getX() + (i) * mnc.getX())
 								/ (_numSteps - 1), ((_numSteps - 1 - i)
@@ -567,13 +595,13 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 	
 	private class Targets
 	{
-		LinkedList<TargetsHolder> _d = new LinkedList<TargetsHolder>();
+		LinkedList<TargetsHolder> targetList = new LinkedList<TargetsHolder>();
 		public Targets() {
 			// BH j2s SwingJS added only to remove Eclipse warning
 		}
 		public synchronized void add(TargetsHolder d)
 		{
-			_d.addLast(d);
+			targetList.addLast(d);
 			
 			@SuppressWarnings("unused")
 			Runnable interpolator = ControleurInterpolator.this;
@@ -599,7 +627,7 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 			 * 
 			 */
 			{
-				while (_d.size() == 0) {
+				while (targetList.size() == 0) {
 					try {
 						wait();
 					} catch (InterruptedException e) {
@@ -607,8 +635,8 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 					}
 				}
 			}
-			TargetsHolder x = _d.getLast();
-			_d.clear();
+			TargetsHolder x = targetList.getLast();
+			targetList.clear();
 			return x;
 		}
 	}
@@ -628,7 +656,8 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 			_step = 0;
 			mode = LOOP;
 			// Fall through
-		case LOOP:
+      //$FALL-THROUGH$
+    case LOOP:
 			if (_step < _numSteps) {
 				_loop.run();
 				++_step;
@@ -636,7 +665,8 @@ public class ControleurInterpolator extends Thread implements ActionListener {
 			}
 			mode = END;
 			// Fall through
-		case END:
+      //$FALL-THROUGH$
+    case END:
 			_end.run();
 			return;
 		}

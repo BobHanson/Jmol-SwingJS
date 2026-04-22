@@ -908,6 +908,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
           .getResourceAsStream(
               "/org/openscience/jmol/app/plugins/plugin.properties"));
       Enumeration<String> keys = bundle.getKeys();
+      //System.out.println(bundle);
       while (keys.hasMoreElements()) {
         final String key = keys.nextElement();
         JmolPlugin p = plugins.get(key);
@@ -1250,12 +1251,21 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
    *        e.g. NOZAP;VIEWER unused
    */
   public void startNBO(Map<String, Object> jmolOptions) {
-
     showPlugin("NBO", "org.gennbo.NBOPlugin", jmolOptions);
+  }
+
+  /**
+   * @param jmolOptions
+   *        e.g. NOZAP;VIEWER unused
+   */
+  public void startVARNA(Map<String, Object> jmolOptions) {
+    jmolOptions.put("parentFrame", this.getTopLevelAncestor());
+    showPlugin("VARNA", null, jmolOptions);
   }
 
   void showPlugin(String name, String path, Map<String, Object> jmolOptions) {
     try {
+      setPlugins();
       JmolPlugin p = getAndRegisterPlugin(name, path);
       if (!p.isStarted())
         p.start(frame, vwr, jmolOptions);
@@ -1264,6 +1274,11 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       System.out.println("Error creating plugin " + name);
       e.printStackTrace();
     }
+  }
+
+  boolean isPluginActive(String name) {
+    JmolPlugin p = plugins.get(name);
+    return (p != null && p.isStarted());
   }
 
   protected JmolPlugin getAndRegisterPlugin(String name, String path) {
@@ -2114,6 +2129,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   private Map<String, Object> nboOptions;
   
   public void notifyNBO(String strInfo) {
+    setPlugins();
     if (nboOptions == null)
       nboOptions = new Hashtable<String, Object>();
     nboOptions.put("options", strInfo);
@@ -2132,6 +2148,22 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     } catch (Exception e) {
       // ignore
     }
+  }
+
+  private Map<String, Object> varnaOptions;
+  
+  public void notifyVARNA(String strInfo) {
+    if (varnaOptions == null)
+      varnaOptions = new Hashtable<String, Object>();
+    varnaOptions.put("command", strInfo);
+    startVARNA(varnaOptions);
+  }
+
+  public void notifyVARNA(Map<String, Object> info) {
+    if (varnaOptions == null)
+      varnaOptions = new Hashtable<String, Object>();
+    varnaOptions.put("options", info);
+    startVARNA(varnaOptions);
   }
 
   public void notifyGaussian(CBK type, Object[] data) {

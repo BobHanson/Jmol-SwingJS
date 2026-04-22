@@ -346,6 +346,16 @@ public class StatusManager {
       fireJmolScriptCallback(isEnabled, CBK.ATOMMOVED,
           new Object[] { sJmol, bsMoved, Integer.valueOf(bsMoved.cardinality()) }, true);   
   }
+  
+  synchronized void notifyCalculation(String type, BS atoms, String result) {
+    String sJmol = getJmolScriptCallback(CBK.CALCULATION);
+    boolean isEnabled =  notifyEnabled(CBK.CALCULATION);
+    if (isEnabled || sJmol != null)
+      fireJmolScriptCallback(isEnabled, CBK.CALCULATION,
+          new Object[] { sJmol, atoms, type, result }, true);   
+  }
+
+
 
   /**
    * Callback for selection change. Data will include
@@ -363,7 +373,8 @@ public class StatusManager {
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.SELECT,
           new Object[] { sJmol, atoms, Integer.valueOf(atoms.cardinality()), 
-              Integer.valueOf(atoms.nextSetBit(0)), Integer.valueOf(atoms.length()) }, true);
+              Integer.valueOf(atoms.nextSetBit(0)), Integer.valueOf(atoms.length()),
+              vwr.slm.getSelectionColors()}, true);
   }
 
   public void setStatusStructureModified(int atomIndex, int modelIndex,
