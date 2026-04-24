@@ -763,7 +763,7 @@ public class StatusManager {
    */
   public Object processService(Map<String, Object> info) {
     Object s = info.get("service");
-    if (s == null)
+    if (s == null || !notifyEnabled(CBK.SERVICE))
       return null;
     if (s instanceof SV) {
       Map<String, Object> m = new Hashtable<String, Object>();
@@ -771,8 +771,7 @@ public class StatusManager {
         m.put(e.getKey(), SV.oValue(e.getValue()));
       info = m;
     }
-    if (notifyEnabled(CBK.SERVICE))
-      cbl.notifyCallback(CBK.SERVICE, new Object[] { null, info });
+    cbl.notifyCallback(CBK.SERVICE, new Object[] { null, info });
     return info;
   }
 

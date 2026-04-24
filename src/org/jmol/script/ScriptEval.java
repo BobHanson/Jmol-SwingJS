@@ -7173,7 +7173,7 @@ public class ScriptEval extends ScriptExpr {
       return;
     }
 
-    int addRemove = 0;
+    int addRemove = T.nada;
     boolean isGroup = false;
     boolean reportStatus = (tokAt(i) == T.comma);
     if (reportStatus)
@@ -8901,7 +8901,7 @@ public class ScriptEval extends ScriptExpr {
               translucentLevel = getTranslucentLevel(index++);
           }
         }
-        tok = getToken(index).tok;
+        tok = tokAt(index);//getToken(index).tok;
         if (isColorSelect && tok == T.none
             || isColorParam(index)) {
           argb1 = getArgbParamOrNone(index, isColorSelect);
@@ -8910,7 +8910,8 @@ public class ScriptEval extends ScriptExpr {
         }
         checkLength(index);
         if (isColorSelect) {
-          vwr.setSelectionColors((Integer) colorvalue, (Integer) colorvalue1, translucency, translucentLevel);          
+          if (!chk)
+            vwr.setSelectionColors((Integer) colorvalue, (Integer) colorvalue1, translucency, translucentLevel);          
           return;
         }
       } else if (shapeType == JC.SHAPE_LCAOCARTOON) {

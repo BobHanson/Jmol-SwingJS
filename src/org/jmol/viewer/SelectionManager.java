@@ -420,20 +420,22 @@ public class SelectionManager {
     if (colorSelected == null && colorUnselected == null) {
       if (colorer != null)
         colorer.disabled = true;
-      return;
+    } else {
+      if (colorer == null) {
+        colorer = new SelectionColorer(vwr);
+        addListener(colorer);
+      }
+      colorer.disabled = false;
+      colorer.colorSelected = (colorSelected == null ? PAL.NONE
+          : colorSelected);
+      colorer.colorUnselected = (colorUnselected == null ? PAL.NONE
+          : colorUnselected);
+      if (translucentLevel != 0) {
+        colorer.translucency = translucency;
+        colorer.translucentLevel = Double.valueOf(translucentLevel);
+      }
     }
-    if (colorer == null) {
-      colorer = new SelectionColorer(vwr);
-      addListener(colorer);
-    }
-    colorer.disabled = false;
-    colorer.colorSelected = (colorSelected == null ? PAL.NONE : colorSelected);
-    colorer.colorUnselected = (colorUnselected == null ? PAL.NONE
-        : colorUnselected);
-    if (translucentLevel != 0) {
-      colorer.translucency = translucency;
-      colorer.translucentLevel = Double.valueOf(translucentLevel);
-    }
+    vwr.selectStatus(getSelectedAtoms(), false, T.nada, false, false);
   }
 
   public String getSelectionColors() {

@@ -247,6 +247,8 @@ public class SmarterJmolAdapter extends JmolAdapter {
             htParams.put(type, (type.equals("dssr") ? x : SV.getVariableMap(x)));
           continue;
         }
+        if (f.startsWith("java.net."))
+          System.err.println(f + " reading " + name);
         if (name.indexOf("|") >= 0)
           name = PT.rep(name, "_", "/");
         if (i == 1) {
