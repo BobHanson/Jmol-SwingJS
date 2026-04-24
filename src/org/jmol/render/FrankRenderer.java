@@ -26,6 +26,7 @@ import org.jmol.modelkit.ModelKit;
 import org.jmol.script.T;
 import org.jmol.shape.Frank;
 import org.jmol.util.C;
+import org.jmol.viewer.StateManager;
 import org.jmol.viewer.Viewer;
 
 public class FrankRenderer extends ShapeRenderer {
@@ -49,6 +50,8 @@ public class FrankRenderer extends ShapeRenderer {
     colix = (modelKitMode && !vwr.getModelkit(false).isHidden() ? C.MAGENTA : vwr.isSignedApplet ? (allowKeys
         || (Viewer.isJS || Viewer.isSwingJS) && !vwr.isWebGL ? C.ORANGE : C.RED) : allowKeys ? C.BLUE
         : C.GRAY);
+    if (colix == vwr.getObjectColix(StateManager.OBJ_BACKGROUND))
+      colix = C.BLACK;
     vwr.noFrankEcho = true;
     double imageFontScaling = vwr.imageFontScaling;
     frank.getFont(imageFontScaling);
