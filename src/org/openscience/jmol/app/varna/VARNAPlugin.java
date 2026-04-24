@@ -117,8 +117,8 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
 
   private void showFrame(boolean b) {
     if (b && varna == null) {
-      varna = (VARNAViewer) Interface
-          .getInstance("fr.orsay.lri.varna.applications.VARNAViewer", true);
+      varna = (VARNAViewer) javajs.api.Interface
+          .getInterface("fr.orsay.lri.varna.applications.VARNAViewer");
       return;
     }
     if (varna == null)
