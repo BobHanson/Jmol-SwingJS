@@ -576,7 +576,7 @@ public class ControleurScriptParser {
   private static Command parseCommand(String cmd) throws Exception {
     int cut = cmd.indexOf("(");
     if (cut == -1) {
-      throw new Exception(SCRIPT_ERROR_PREFIX + ": Syntax error");
+      throw new Exception(SCRIPT_ERROR_PREFIX + ": Syntax error for " + cmd);
     }
     String fun = cmd.substring(0, cut);
     Function f = getFunction(fun);
