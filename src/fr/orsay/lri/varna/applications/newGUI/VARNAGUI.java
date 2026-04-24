@@ -61,6 +61,7 @@ import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -219,7 +220,7 @@ public class VARNAGUI extends JFrame implements TreeModelListener, MouseListener
 		_toolbar.add(removeLowerButton);
 		
 		// Scroller for File tree
-	    _listScroller = new JScrollPane(_sideList,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+	    _listScroller = new JScrollPane(_sideList,ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 	    _listScroller.setPreferredSize(new Dimension(300, 200));
 	    _listScroller.addComponentListener(this);
 
@@ -497,7 +498,7 @@ public class VARNAGUI extends JFrame implements TreeModelListener, MouseListener
 			_infoTxt.setPreferredSize(new Dimension(200,0));
 			_infoTxt.setContentType("text/html");
 
-			JScrollPane scroll = new JScrollPane(_infoTxt,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS); 
+			JScrollPane scroll = new JScrollPane(_infoTxt,ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS); 
 
 			_infoPanel = new JPanel();
 			_infoPanel.setLayout(new BorderLayout());

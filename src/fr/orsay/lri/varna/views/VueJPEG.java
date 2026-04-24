@@ -24,6 +24,7 @@ import java.awt.GridLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.SwingConstants;
 
 public class VueJPEG {
 	private JSlider qualitySlider;
@@ -35,12 +36,12 @@ public class VueJPEG {
 //	}
 
 	public VueJPEG(boolean showQuality, boolean showScale) {
-		qualitySlider = new JSlider(JSlider.HORIZONTAL, 10, 100, 75);
+		qualitySlider = new JSlider(SwingConstants.HORIZONTAL, 10, 100, 75);
 		qualitySlider.setMajorTickSpacing(5);
 		qualitySlider.setPaintTicks(true);
 		qualitySlider.setPaintLabels(true);
 		qualitySlider.setPreferredSize(new Dimension(400, 50));
-		scaleSlider = new JSlider(JSlider.HORIZONTAL, 0, 600, 100);
+		scaleSlider = new JSlider(SwingConstants.HORIZONTAL, 0, 600, 100);
 		scaleSlider.setPreferredSize(new Dimension(400, 50));
 		scaleSlider.setMajorTickSpacing(100);
 		scaleSlider.setPaintTicks(true);

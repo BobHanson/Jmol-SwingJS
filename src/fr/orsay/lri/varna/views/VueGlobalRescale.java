@@ -23,7 +23,7 @@ import java.awt.FlowLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-
+import javax.swing.SwingConstants;
 
 import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurGlobalRescale;
@@ -38,7 +38,7 @@ public class VueGlobalRescale {
 
 	public VueGlobalRescale(VARNAPanel vp) {
 		_vp = vp;
-		rescaleSlider = new JSlider(JSlider.HORIZONTAL, 1, 500, 100);
+		rescaleSlider = new JSlider(SwingConstants.HORIZONTAL, 1, 500, 100);
 		rescaleSlider.setMajorTickSpacing(100);
 		rescaleSlider.setPaintTicks(true);
 		rescaleSlider.setPaintLabels(true);

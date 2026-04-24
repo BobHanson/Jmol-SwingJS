@@ -24,7 +24,7 @@ import java.awt.GridLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-
+import javax.swing.SwingConstants;
 
 import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurBorder;
@@ -46,7 +46,7 @@ public class VueBorder {
 		pup.setLayout(new FlowLayout(FlowLayout.LEFT));
 		pdown.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-		borderHeightSlider = new JSlider(JSlider.HORIZONTAL, 0,
+		borderHeightSlider = new JSlider(SwingConstants.HORIZONTAL, 0,
 				_vp.getHeight() / 2 - 10, _vp.getBorderSize().height);
 		// Turn on labels at major tick marks.
 		borderHeightSlider.setMajorTickSpacing(50);
@@ -61,7 +61,7 @@ public class VueBorder {
 				borderHeightLabel, false));
 		borderHeightSlider.addChangeListener(new ControleurBorder(this));
 
-		borderWidthSlider = new JSlider(JSlider.HORIZONTAL, 0,
+		borderWidthSlider = new JSlider(SwingConstants.HORIZONTAL, 0,
 				_vp.getWidth() / 2 - 10, _vp.getBorderSize().width);
 		// Turn on labels at major tick marks.
 		borderWidthSlider.setMajorTickSpacing(50);

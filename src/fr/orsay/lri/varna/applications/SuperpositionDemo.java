@@ -30,6 +30,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
 import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurInterpolator;
@@ -172,7 +173,7 @@ public class SuperpositionDemo extends JFrame implements InterfaceVARNAListener 
 		
 		Font textFieldsFont = Font.decode("MonoSpaced-PLAIN-12");
 
-		_seqLabel.setHorizontalTextPosition(JLabel.LEFT);
+		_seqLabel.setHorizontalTextPosition(SwingConstants.LEFT);
 		_seqLabel.setPreferredSize(new Dimension(marginTools, 15));
 		_seq1.setFont(textFieldsFont);
 		_seq1.setText(getRNA1().getSeq());
@@ -221,14 +222,14 @@ public class SuperpositionDemo extends JFrame implements InterfaceVARNAListener 
 		_seqPanel.add(_seq1, BorderLayout.CENTER);
 
 		_struct1Label.setPreferredSize(new Dimension(marginTools, 15));
-		_struct1Label.setHorizontalTextPosition(JLabel.LEFT);
+		_struct1Label.setHorizontalTextPosition(SwingConstants.LEFT);
 		_struct1.setFont(textFieldsFont);
 		_struct1Panel.setLayout(new BorderLayout());
 		_struct1Panel.add(_struct1Label, BorderLayout.WEST);
 		_struct1Panel.add(_struct1, BorderLayout.CENTER);
 
 		_struct2Label.setPreferredSize(new Dimension(marginTools, 15));
-		_struct2Label.setHorizontalTextPosition(JLabel.LEFT);
+		_struct2Label.setHorizontalTextPosition(SwingConstants.LEFT);
 		_struct2.setFont(textFieldsFont);
 		_struct2Panel.setLayout(new BorderLayout());
 		_struct2Panel.add(_struct2Label, BorderLayout.WEST);

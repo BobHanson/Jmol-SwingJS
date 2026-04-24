@@ -39,6 +39,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.SwingConstants;
 import javax.swing.border.BevelBorder;
 
 import fr.orsay.lri.varna.VARNAPanel;
@@ -149,7 +150,7 @@ public class NussinovDemo extends JFrame implements InterfaceVARNAListener,Inter
 
 	public static void formatLabel(JLabel j)
 	{
-		j.setHorizontalTextPosition(JLabel.LEFT);
+		j.setHorizontalTextPosition(SwingConstants.LEFT);
 		j.setPreferredSize(new Dimension(marginTools, 15));
 		j.setFont(labelsFont);
 	}
@@ -203,7 +204,7 @@ public class NussinovDemo extends JFrame implements InterfaceVARNAListener,Inter
 		_seqPanel.add(_seq1, BorderLayout.CENTER);
 
 		_structLabel.setPreferredSize(new Dimension(marginTools, 15));
-		_structLabel.setHorizontalTextPosition(JLabel.LEFT);
+		_structLabel.setHorizontalTextPosition(SwingConstants.LEFT);
 		_struct.setFont(textFieldsFont);
 		_structPanel.setLayout(new BorderLayout());
 		_structPanel.add(_structLabel, BorderLayout.WEST);

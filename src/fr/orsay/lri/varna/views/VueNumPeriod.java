@@ -23,7 +23,7 @@ import java.awt.FlowLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-
+import javax.swing.SwingConstants;
 
 import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurNumPeriod;
@@ -39,7 +39,7 @@ public class VueNumPeriod {
 		panel = new JPanel();
 
 		int maxPeriod = _vp.getRNA().get_listeBases().size();
-		numPeriodSlider = new JSlider(JSlider.HORIZONTAL, 1, maxPeriod, Math
+		numPeriodSlider = new JSlider(SwingConstants.HORIZONTAL, 1, maxPeriod, Math
 				.min(_vp.getNumPeriod(), maxPeriod));
 		// Turn on labels at major tick marks.
 		numPeriodSlider.setMajorTickSpacing(10);

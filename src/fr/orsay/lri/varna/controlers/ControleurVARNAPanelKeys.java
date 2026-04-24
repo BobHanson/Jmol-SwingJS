@@ -20,6 +20,7 @@ package fr.orsay.lri.varna.controlers;
 import java.awt.Point;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -64,9 +65,9 @@ public class ControleurVARNAPanelKeys implements KeyListener, FocusListener {
 	}
 
 	public void keyPressed(KeyEvent e) {
-		boolean controlDown = (e.getModifiersEx() & (KeyEvent.CTRL_DOWN_MASK)) == KeyEvent.CTRL_DOWN_MASK;
-		boolean shiftDown = (e.getModifiersEx() & (KeyEvent.SHIFT_DOWN_MASK)) == KeyEvent.SHIFT_DOWN_MASK;
-		boolean altDown = (e.getModifiersEx() & (KeyEvent.ALT_DOWN_MASK)) == KeyEvent.ALT_DOWN_MASK;
+		boolean controlDown = (e.getModifiersEx() & (InputEvent.CTRL_DOWN_MASK)) == InputEvent.CTRL_DOWN_MASK;
+		boolean shiftDown = (e.getModifiersEx() & (InputEvent.SHIFT_DOWN_MASK)) == InputEvent.SHIFT_DOWN_MASK;
+		boolean altDown = (e.getModifiersEx() & (InputEvent.ALT_DOWN_MASK)) == InputEvent.ALT_DOWN_MASK;
 		VueUI ui = _vp.getVARNAUI();
 		try {
 			switch (e.getKeyCode()) {

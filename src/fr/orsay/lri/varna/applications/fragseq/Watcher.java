@@ -28,7 +28,7 @@ public class Watcher  extends Thread {
 			  System.out.println("Watching ["+path+"]");
 			}
 			try {
-				this.sleep(1000);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 			}
 		}

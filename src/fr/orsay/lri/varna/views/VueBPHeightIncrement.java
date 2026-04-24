@@ -23,6 +23,7 @@ import java.awt.FlowLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.SwingConstants;
 
 import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurBPHeightIncrement;
@@ -39,7 +40,7 @@ public class VueBPHeightIncrement {
 		_vp = vp;
 		panel = new JPanel();
 
-		spaceSlider = new JSlider(JSlider.HORIZONTAL, 10, 200, Integer
+		spaceSlider = new JSlider(SwingConstants.HORIZONTAL, 10, 200, Integer
 				.valueOf(String.valueOf(Math
 						.round(vp.getRNA().getBPHeightIncrement() * 100))));
 		// Turn on labels at major tick marks.

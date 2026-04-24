@@ -23,7 +23,7 @@ import java.awt.FlowLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-
+import javax.swing.SwingConstants;
 
 import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurGlobalRotation;
@@ -37,7 +37,7 @@ public class VueGlobalRotation {
 
 	public VueGlobalRotation(VARNAPanel vp) {
 		_vp = vp;
-		rotationSlider = new JSlider(JSlider.HORIZONTAL, -360, 360, 0);
+		rotationSlider = new JSlider(SwingConstants.HORIZONTAL, -360, 360, 0);
 		rotationSlider.setMajorTickSpacing(60);
 		rotationSlider.setPaintTicks(true);
 		rotationSlider.setPaintLabels(true);

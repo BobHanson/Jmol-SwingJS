@@ -45,6 +45,7 @@ import javax.swing.JApplet;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
 import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurDemoTextField;
@@ -115,7 +116,7 @@ public class VARNAOnlineDemo extends JApplet {
 
 		Font textFieldsFont = Font.decode("MonoSpaced-PLAIN-12");
 
-		_seqLabel.setHorizontalTextPosition(JLabel.LEFT);
+		_seqLabel.setHorizontalTextPosition(SwingConstants.LEFT);
 		_seqLabel.setPreferredSize(new Dimension(marginTools, 15));
 		_seq.setFont(textFieldsFont);
 		_seq.setText(_vp.getRNA().getSeq());
@@ -125,7 +126,7 @@ public class VARNAOnlineDemo extends JApplet {
 		_seqPanel.add(_seq, BorderLayout.CENTER);
 
 		_structLabel.setPreferredSize(new Dimension(marginTools, 15));
-		_structLabel.setHorizontalTextPosition(JLabel.LEFT);
+		_structLabel.setHorizontalTextPosition(SwingConstants.LEFT);
 		_struct.setFont(textFieldsFont);
 		_struct.setText(_vp.getRNA().getStructDBN());
 		_structPanel.setLayout(new BorderLayout());

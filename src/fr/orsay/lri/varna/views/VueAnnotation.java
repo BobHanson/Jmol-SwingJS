@@ -29,6 +29,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.plaf.basic.BasicBorders;
 
@@ -154,7 +155,7 @@ public class VueAnnotation {
 		py.setLayout(new FlowLayout(FlowLayout.LEFT));
 		px.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-		ySlider = new JSlider(JSlider.HORIZONTAL, 0, (int) (_vp
+		ySlider = new JSlider(SwingConstants.HORIZONTAL, 0, (int) (_vp
 				.addRNABBoxMargins().height), Math.max(0, Math.min((int) (_vp
 				.addRNABBoxMargins().height), (int) (position.y - _vp
 				.addRNABBoxMargins().y))));
@@ -174,7 +175,7 @@ public class VueAnnotation {
 				.addChangeListener(new ControleurSliderLabel(yValueLabel, false));
 		ySlider.addChangeListener(_controleurVueAnnotation);
 
-		xSlider = new JSlider(JSlider.HORIZONTAL, 0, (int) (_vp
+		xSlider = new JSlider(SwingConstants.HORIZONTAL, 0, (int) (_vp
 				.addRNABBoxMargins().width), Math.max(0, Math.min((int) _vp
 				.addRNABBoxMargins().width, (int) (position.x - _vp
 				.addRNABBoxMargins().x))));
@@ -240,7 +241,7 @@ public class VueAnnotation {
 
 		JPanel rotationPanel = new JPanel();
 
-		rotationSlider = new JSlider(JSlider.HORIZONTAL, -360, 360,
+		rotationSlider = new JSlider(SwingConstants.HORIZONTAL, -360, 360,
 				(int) textAnnotation.getAngleInDegres());
 		rotationSlider.setMajorTickSpacing(60);
 		rotationSlider.setPaintTicks(true);

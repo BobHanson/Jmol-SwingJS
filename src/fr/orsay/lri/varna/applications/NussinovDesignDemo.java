@@ -43,6 +43,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.SwingConstants;
 import javax.swing.border.BevelBorder;
 
 import fr.orsay.lri.varna.VARNAPanel;
@@ -200,7 +201,7 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 		_seqPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
 		_structLabel.setPreferredSize(new Dimension(marginTools, 15));
-		_structLabel.setHorizontalTextPosition(JLabel.LEFT);
+		_structLabel.setHorizontalTextPosition(SwingConstants.LEFT);
 		_structPanel.setLayout(new BorderLayout());
 		_structPanel.add(_structLabel, BorderLayout.WEST);
 		_structPanel.add(_struct, BorderLayout.CENTER);
@@ -776,7 +777,7 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 		}
 		public void run() {
             try {
-				this.sleep(1000);
+				Thread.sleep(1000);
 				if (_vpMaster.getRNA().getSeq().equalsIgnoreCase(_seq))
 				{
 					showSolution();
@@ -805,7 +806,7 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 	
 	public static void formatLabel(JLabel j)
 	{
-		j.setHorizontalTextPosition(JLabel.LEFT);
+		j.setHorizontalTextPosition(SwingConstants.LEFT);
 		j.setPreferredSize(new Dimension(NussinovDemo.marginTools, 25));
 		j.setFont(labelsFont);
 		j.setForeground(Color.white);

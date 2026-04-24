@@ -24,6 +24,7 @@ import java.awt.GridLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -48,7 +49,7 @@ public class VueZoom implements ChangeListener {
 		pup.setLayout(new FlowLayout(FlowLayout.LEFT));
 		pdown.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-		zoomSlider = new JSlider(JSlider.HORIZONTAL,
+		zoomSlider = new JSlider(SwingConstants.HORIZONTAL,
 				(int) (VARNAConfig.MIN_ZOOM * 100),
 				(int) (VARNAConfig.MAX_ZOOM * 100), (int) (_vp.getZoom() * 100));
 		// Turn on labels at major tick marks.
@@ -66,7 +67,7 @@ public class VueZoom implements ChangeListener {
 		zoomSlider.addChangeListener(new ControleurSliderLabel(zoomValueLabel,
 				true));
 
-		zoomAmountSlider = new JSlider(JSlider.HORIZONTAL,
+		zoomAmountSlider = new JSlider(SwingConstants.HORIZONTAL,
 				(int) (VARNAConfig.MIN_AMOUNT * 100),
 				(int) (VARNAConfig.MAX_AMOUNT * 100), (int) (_vp
 						.getZoomIncrement() * 100));

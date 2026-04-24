@@ -73,7 +73,7 @@ public class LinesIntersect {
             double y4,
             boolean expectedResult) {
 		boolean a = linesIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
-		boolean b = Line2D.Double.linesIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
+		boolean b = Line2D.linesIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
 		System.out.println("ours says " + a + " which is " + (a == expectedResult ? "correct" : "INCORRECT") +
 				" / Line2D.Double says " + b + " which is " + (b == expectedResult ? "correct" : "INCORRECT"));
 	}

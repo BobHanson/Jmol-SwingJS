@@ -30,6 +30,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
 import fr.orsay.lri.varna.VARNAPanel;
 
@@ -113,7 +114,7 @@ public class AlignmentDemo extends JFrame{
 		});
 
 		
-		_seq1Label.setHorizontalTextPosition(JLabel.LEFT);
+		_seq1Label.setHorizontalTextPosition(SwingConstants.LEFT);
 		_seq1Label.setPreferredSize(new Dimension(marginTools, 15));
 		_seq1.setFont(textFieldsFont);
 
@@ -121,7 +122,7 @@ public class AlignmentDemo extends JFrame{
 		_seq1Panel.add(_seq1Label, BorderLayout.WEST);
 		_seq1Panel.add(_seq1, BorderLayout.CENTER);
 
-		_seq2Label.setHorizontalTextPosition(JLabel.LEFT);
+		_seq2Label.setHorizontalTextPosition(SwingConstants.LEFT);
 		_seq2Label.setPreferredSize(new Dimension(marginTools, 15));
 		_seq2.setFont(textFieldsFont);
 		
@@ -130,14 +131,14 @@ public class AlignmentDemo extends JFrame{
 		_seq2Panel.add(_seq2, BorderLayout.CENTER);
 
 		_struct1Label.setPreferredSize(new Dimension(marginTools, 15));
-		_struct1Label.setHorizontalTextPosition(JLabel.LEFT);
+		_struct1Label.setHorizontalTextPosition(SwingConstants.LEFT);
 		_struct1.setFont(textFieldsFont);
 		_struct1Panel.setLayout(new BorderLayout());
 		_struct1Panel.add(_struct1Label, BorderLayout.WEST);
 		_struct1Panel.add(_struct1, BorderLayout.CENTER);
 
 		_struct2Label.setPreferredSize(new Dimension(marginTools, 15));
-		_struct2Label.setHorizontalTextPosition(JLabel.LEFT);
+		_struct2Label.setHorizontalTextPosition(SwingConstants.LEFT);
 		_struct2.setFont(textFieldsFont);
 		_struct2Panel.setLayout(new BorderLayout());
 		_struct2Panel.add(_struct2Label, BorderLayout.WEST);

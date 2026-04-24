@@ -46,6 +46,8 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.filechooser.FileFilter;
@@ -197,7 +199,7 @@ public class TemplateEditor extends JFrame implements KeyListener, ActionListene
 
 		JToolBar toolBar = new JToolBar();
 		ButtonGroup bg = new ButtonGroup(); 
-		toolBar.setOrientation(JToolBar.VERTICAL);
+		toolBar.setOrientation(SwingConstants.VERTICAL);
 		//toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.PAGE_AXIS));
 		JToggleButton selectButton = new JToggleButton("Select"); 
 		selectButton.setActionCommand("select");
@@ -237,7 +239,7 @@ public class TemplateEditor extends JFrame implements KeyListener, ActionListene
 	   _sk.addUndoableEditListener(manager);
 	   _sk.addKeyListener(this);
 		
-		jp = new JScrollPane(_sk,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+		jp = new JScrollPane(_sk,ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		p.add(jp);
 		p.add(_vp);
 		JPanel bars = new JPanel();

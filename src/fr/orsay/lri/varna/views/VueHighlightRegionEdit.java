@@ -17,6 +17,7 @@ import javax.swing.JOptionPane;
 	import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -42,13 +43,13 @@ import fr.orsay.lri.varna.models.rna.ModeleBase;
 		public VueHighlightRegionEdit(VARNAPanel vp, HighlightRegionAnnotation an) {
 			_an = an;
 			_vp = vp;
-			_toSlider = new JSlider(JSlider.HORIZONTAL, 0,vp.getRNA().getSize()-1,0);
+			_toSlider = new JSlider(SwingConstants.HORIZONTAL, 0,vp.getRNA().getSize()-1,0);
 			_toSlider.setMajorTickSpacing(10);
 			_toSlider.setPaintTicks(true);
 			_toSlider.setPaintLabels(true);
 			_toSlider.setPreferredSize(new Dimension(CONTROL_WIDTH, CONTROL_HEIGHT));
 
-			_fromSlider = new JSlider(JSlider.HORIZONTAL, 0,vp.getRNA().getSize()-1,0);
+			_fromSlider = new JSlider(SwingConstants.HORIZONTAL, 0,vp.getRNA().getSize()-1,0);
 			_fromSlider.setMajorTickSpacing(10);
 			_fromSlider.setPaintTicks(true);
 			_fromSlider.setPaintLabels(true);

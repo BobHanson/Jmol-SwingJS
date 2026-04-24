@@ -23,6 +23,7 @@ import java.awt.GraphicsEnvironment;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.SwingConstants;
 
 import fr.orsay.lri.varna.VARNAPanel;
 
@@ -53,7 +54,7 @@ public class VueFont {
 		String[] polices = ge.getAvailableFontFamilyNames();
 		boxPolice = new JComboBox(polices);
 
-		sizeSlider = new JSlider(JSlider.HORIZONTAL, 4, 88, 14);
+		sizeSlider = new JSlider(SwingConstants.HORIZONTAL, 4, 88, 14);
 		// Turn on labels at major tick marks.
 		sizeSlider.setMajorTickSpacing(10);
 		sizeSlider.setMinorTickSpacing(5);

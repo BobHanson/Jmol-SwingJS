@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -48,7 +49,7 @@ public class VueBPThickness implements ChangeListener {
 		_msbp = msbp;
 		backupThicknesses();
 
-		_thicknessSlider = new JSlider(JSlider.HORIZONTAL, 1, 100,
+		_thicknessSlider = new JSlider(SwingConstants.HORIZONTAL, 1, 100,
 				(int) (msbp.get(0).getStyle().getThickness(
 						VARNAConfig.DEFAULT_BP_THICKNESS) * FACTOR));
 		_thicknessSlider.setMajorTickSpacing(10);
