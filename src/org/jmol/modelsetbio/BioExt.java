@@ -936,9 +936,9 @@ public class BioExt {
    * @param sequence
    * @param phipsi
    * @param helixType
-   * @return true if even partially successful
+   * @return err if there is a problem
    */
-  boolean mutate(Viewer vwr, BS bs, String group, String[] sequence,
+  String mutate(Viewer vwr, BS bs, String group, String[] sequence,
                  String helixType, double[] phipsi) {
     boolean addH = vwr.getBoolean(T.pdbaddhydrogens);
     if (sequence == null)
@@ -952,7 +952,7 @@ public class BioExt {
         isTurn = (helixType.startsWith("turn"));
         phipsi = getPhiPsiForHelixType(helixType);
         if (phipsi == null)
-          return false;
+          return "could not get phi/psi angles for " + helixType;
       }
       BS bs0 = vwr.getAllAtoms();
       // The number of residues is determined by whether we have given a helix type or not.
@@ -975,7 +975,7 @@ public class BioExt {
     if (isFile)
       group = sequence[0];
     Group[] groups = vwr.ms.getGroups();
-    boolean isOK = false;
+    String errs = "";
     for (int i = 0, pt = 0; i < groups.length; i++) {
       Group g = (groups[i].isProtein() ? groups[i] : null);
       if (g == null || !g.isSelected(bs))
@@ -983,16 +983,15 @@ public class BioExt {
       if (!isFile) {
         group = sequence[pt++ % sequence.length];
         if (group.equals("UNK") || isCreate && (group.equals("ALA") || group.equals("GLY"))) {
-          isOK = true;
           continue;
         }
         group = "==" + group;
       }
-      if (mutateAtom(vwr, g.firstAtomIndex, group, addH)) {
-        isOK = true;
-      }
+      String err = mutateAtom(vwr, g.firstAtomIndex, group, addH);
+        if (err != null)
+          errs += "Group " + (i + 1) + " " + err + "\n";
     }
-    return isOK;
+    return (errs.length() == 0 ? null : errs);
   }
 
   static String helixScript = 
@@ -1207,20 +1206,20 @@ public class BioExt {
       + "    }\n"
       + "  }\n" + "}catch(e){print e}\n";
 
-  private static boolean mutateAtom(Viewer vwr, int iatom, String fileName, boolean addH) {
+  private static String mutateAtom(Viewer vwr, int iatom, String fileName, boolean addH) {
     // no mutating a trajectory. What would that mean???
     ModelSet ms = vwr.ms;
     int iModel = ms.at[iatom].mi;
     Model m = ms.am[iModel];
     if (ms.isTrajectory(iModel))
-      return false;
+      return "Cannot mutate a trajectory!";
 
     String[] info = vwr.fm.getFileInfo();
     Group g = ms.at[iatom].group;
     //try {
     // get the initial group -- protein for now
     if (!(g instanceof AminoMonomer))
-      return false;
+      return "Group is not a protein!";
     ((BioModel) m).isMutated = true;
     AminoMonomer res0 = (AminoMonomer) g;
     int ac = ms.ac;
@@ -1244,7 +1243,7 @@ public class BioExt {
     }
     ms = vwr.ms; // has been replaced
     if (ms.ac == ac)
-      return false;
+      return "no changes";
     m = ms.am[iModel];
     SB sb = m.loadScript;
     String s = PT.rep(sb.toString(), "load mutate ",
@@ -1255,15 +1254,14 @@ public class BioExt {
     BS bs = vwr.getModelUndeletedAtomsBitSet(iModel);
     int ia = bs.length() - 1;
     if (ms.at[ia] == null) {
-      System.out.println("BioExt fail ");
-      return false;
+      return "mutation failed";
     }
     g = ms.at[ia].group;
     if (g != ms.at[ac + 1].group || !(g instanceof AminoMonomer)) {
       BS bsAtoms = new BS();
       g.setAtomBits(bsAtoms);
       vwr.deleteAtoms(bsAtoms, false);
-      return false;
+      return "group was not an amino acid";
     }
     AminoMonomer res1 = (AminoMonomer) g;
 
@@ -1280,7 +1278,7 @@ public class BioExt {
     //System.out.println("" + e);
     // }
     vwr.fm.setFileInfo(info);
-    return true;
+    return null;
 
   }
 

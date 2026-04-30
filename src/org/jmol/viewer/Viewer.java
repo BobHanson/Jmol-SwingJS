@@ -2540,8 +2540,19 @@ public class Viewer extends JmolViewer
     g.setB("hideNotSelected", false);
   }
 
+  /**
+   * Get the currently selected atoms.
+   * 
+   * Note that for performance, returns the actual bsSelection rather
+   * then a copy unless SUBSET has been issued. (Which is very rare
+   * and never recommended.) 
+   * 
+   * DO NOT MODIFY THIS BITSET!
+   * 
+   * @return BS
+   */
   public BS bsA() {
-    return slm.getSelectedAtoms();
+    return slm.getSelectedAtoms(false);
   }
 
   @Override
@@ -5169,11 +5180,11 @@ public class Viewer extends JmolViewer
         return PT.rep(JC.resolveDataBase("rna3d", id, null), "%TYPE", format);
       } else if (name.startsWith("*dssr--")) {
         id = name.substring(pt + 1);
-        id = JC.resolveDataBase("dssr", id, null);
+        id = JC.resolveDataBase(JC.INFO_DSSR, id, null);
         return id + "%20" + PT.rep(name.substring(5, pt), " ", "%20");
       } else if (name.startsWith("*dssr/")) {
         id = name.substring(pt + 1);
-        return JC.resolveDataBase("dssr", id, null);
+        return JC.resolveDataBase(JC.INFO_DSSR, id, null);
       } else if (name.startsWith("*dssr1/")) {
         id = name.substring(pt + 1);
         return JC.resolveDataBase("dssr1", id, null);
@@ -9120,6 +9131,10 @@ public class Viewer extends JmolViewer
     sm.syncScript(script, applet, port);
   }
 
+  public String syncScriptErr(String script) {
+    return sm.syncScriptErr(script);
+  }
+
   @Override
   public int getModelIndexFromId(String id) {
     // from JSpecView peak pick and model "ID"
@@ -11546,6 +11561,7 @@ public class Viewer extends JmolViewer
   private void updatePointGroup(int modelIndex) {
     if (true)
       return;
+    // TODO
     String script = ms.getUnitCell(-1 - modelIndex).updatePointGroup();
     if (script != null)
       runScript(script);

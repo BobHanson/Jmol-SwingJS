@@ -28,7 +28,6 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.api.Interface;
-import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolParallelProcessor;
 import org.jmol.api.JmolScriptFunction;
 import org.jmol.api.SymmetryInterface;
@@ -61,6 +60,7 @@ import org.jmol.viewer.FileManager;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.ShapeManager;
 import org.jmol.viewer.StateManager;
+import org.jmol.viewer.StatusManager;
 import org.jmol.viewer.TransformManager;
 import org.jmol.viewer.Viewer;
 
@@ -2132,7 +2132,7 @@ public class ScriptEval extends ScriptExpr {
    * 
    * @param millis
    *        negative here bypasses max check
-   * @param script TODO
+   * @param script
    * @throws ScriptException
    */
   private void doDelay(int millis, String script) throws ScriptException {
@@ -2826,6 +2826,7 @@ public class ScriptEval extends ScriptExpr {
     case T.ramachandran:
     case T.show:
     case T.sync:
+    case T.varna:
     case T.write:      
       getCmdExt().dispatch(tok, false, st);
       break;
@@ -5590,7 +5591,7 @@ public class ScriptEval extends ScriptExpr {
           propName = paramAsStr(++i);
           SV sv = setVariable(++i, -1, "", false);
           if (sv != null && !chk) {
-            if (propName.equalsIgnoreCase("DSSR")) {
+            if (propName.equalsIgnoreCase(JC.INFO_DSSR)) {
               loadDssr(modelIndex, (String) sv.value);
               return;
             }
@@ -5698,7 +5699,7 @@ public class ScriptEval extends ScriptExpr {
     clearDefinedVariableAtomSets();
     Map<String, Object> map = vwr.parseJSONMap(data);
     showString(vwr.getAnnotationParser(true).fixDSSRJSONMap(map));
-    vwr.ms.setInfo(modelIndex, "dssr", map);
+    vwr.ms.setInfo(modelIndex, JC.INFO_DSSR, map);
   }
 
   private void cmdMove() throws ScriptException {
@@ -6690,7 +6691,6 @@ public class ScriptEval extends ScriptExpr {
           // a fixed quaternion rotation of a set of atoms
           // currently rotateAxisAngleAtCenter cannot return true
           // if isSpin is true. But that is what we are working on
-          // TODO: not exactly clear here if this will work
           if (isJS && isSpin && bsAtoms == null && vwr.g.waitForMoveTo
               && endDegrees != Double.MAX_VALUE)
             throw new ScriptInterruption(this, "rotate", 1);
@@ -8313,7 +8313,6 @@ public class ScriptEval extends ScriptExpr {
       }
     }else{//command to slice object, not show slice planes
       String name = (String)getToken(1).value;
-      //TODO - should accept "all"  for now "all" will fail silently.
       // Should check it is a valid  isosurface name
       //Should be followed by two angles, and two percents (double values)
       double[] param = new double[4];
@@ -9099,6 +9098,9 @@ public class ScriptEval extends ScriptExpr {
       case T.monomer:
         vwr.ms.calcSelectedMonomersCount();
         break;
+      case T.structure:
+        vwr.ms.getStructureAssignments();
+        break;
       case T.molecule:
         vwr.ms.calcSelectedMoleculesCount();
         break;
@@ -9125,8 +9127,10 @@ public class ScriptEval extends ScriptExpr {
           Integer.valueOf(Edge.BOND_COVALENT_MASK));
     if (doClearBondSet)
       vwr.selectBonds(null);
-    if (shapeType == JC.SHAPE_BALLS)
+    if (shapeType == JC.SHAPE_BALLS) {      
       vwr.shm.checkInheritedShapes();
+      vwr.sm.setStatusStructureModified(-1, -1, StatusManager.NOTIFY_MOD_ATOM_COLORED, null, 0, bs);
+    }
   }
 
   /*

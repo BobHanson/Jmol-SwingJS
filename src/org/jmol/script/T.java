@@ -279,6 +279,9 @@ public class T {
 //public final static int label        see mathfunc
   public final static int message      = 5 /* must be odd */ | implicitStringCommand;
   public final static int pause        = 7 /* must be odd */ | implicitStringCommand;
+  public final static int varna        = 9 /* must be odd */ | implicitStringCommand;
+  
+  
 
   //these commands control flow
   //sorry about GOTO!
@@ -1417,6 +1420,8 @@ public class T {
   
   // predefined Tokens: 
   
+  public final static int dssx = dssp | dssr;
+  
   public final static T tokenSpaceBeforeSquare = o(spacebeforesquare, " ");
   public final static T tokenOn  = tv(on, 1, "on");
   public final static T tokenOff = tv(off, 0, "off");
@@ -1460,6 +1465,7 @@ public class T {
   public final static T tokenScript          = o(script, "script");
   public final static T tokenSwitch          = o(switchcmd, "switch");
     
+  
   private static Map<String, T> tokenMap = new Hashtable<String, T>();
 
   public static void addToken(String ident, T token) {
@@ -1893,6 +1899,7 @@ public class T {
         "unbind",
         "unitcell",
         "var",
+        "varna",
         "vector",
         "vectors",
         "vibration",
@@ -2980,6 +2987,7 @@ public class T {
         unbind,                             // "unbind"
         unitcell,                           // "unitcell"
         var,                                // "var"
+        varna,
         vector,                             // "vector"
         -1,                                 // "vectors"
         vibration,                          // "vibration"

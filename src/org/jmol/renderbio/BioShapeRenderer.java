@@ -250,7 +250,7 @@ abstract class BioShapeRenderer extends ShapeRenderer {
   private void setStructureTypes() {
     STR[] types = structureTypes = vwr.allocTempEnum(monomerCount + 1);
     for (int i = monomerCount; --i >= 0;)
-      if ((types[i] = monomers[i].getProteinStructureType()) == STR.TURN)
+      if ((types[i] = monomers[i].getBioStructureType()) == STR.TURN)
         types[i] = STR.NONE;
     types[monomerCount] = types[monomerCount - 1];
   }

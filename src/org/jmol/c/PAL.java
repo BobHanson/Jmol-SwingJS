@@ -39,6 +39,7 @@ public enum PAL {
   FIXEDTEMP("fixedtemperature",PAL.PALETTE_FIXEDTEMP),
   SURFACE("surfacedistance",PAL.PALETTE_SURFACE),
   STRUCTURE("structure",PAL.PALETTE_STRUCTURE),
+  DSSR_BASEPAIR("basepairtype",PAL.PALETTE_DSSR_BASEPAIR),
   AMINO("amino",PAL.PALETTE_AMINO),
   SHAPELY("shapely",PAL.PALETTE_SHAPELY),
   CHAIN("chain",PAL.PALETTE_CHAIN),
@@ -68,23 +69,24 @@ public enum PAL {
   public final static byte PALETTE_FIXEDTEMP = 5;
   public final static byte PALETTE_SURFACE = 6 | PAL.PALETTE_VOLATILE;
   public final static byte PALETTE_STRUCTURE = 7;
-  public final static byte PALETTE_AMINO = 8;
-  public final static byte PALETTE_SHAPELY = 9;
-  public final static byte PALETTE_CHAIN = 10;
-  public final static byte PALETTE_GROUP = 11 | PAL.PALETTE_VOLATILE;
-  public final static byte PALETTE_MONOMER = 12 | PAL.PALETTE_VOLATILE;
-  public final static byte PALETTE_MOLECULE = 13 | PAL.PALETTE_VOLATILE;
-  public final static byte PALETTE_ALTLOC = 14;
-  public final static byte PALETTE_INSERTION = 15;
-  public final static byte PALETTE_JMOL = 16;
-  public final static byte PALETTE_RASMOL = 17;
-  public final static byte PALETTE_TYPE = 18;
-  public final static byte PALETTE_ENERGY = 19;
-  public final static byte PALETTE_PROPERTY = 20 | PAL.PALETTE_VOLATILE;
-  public final static byte PALETTE_VARIABLE = 21 | PAL.PALETTE_VOLATILE;
-  public final static byte PALETTE_STRAIGHTNESS = 22 | PAL.PALETTE_VOLATILE;
-  public final static byte PALETTE_POLYMER = 23 | PAL.PALETTE_VOLATILE;
-  public final static byte PALETTE_NUCLEIC = 24;
+  public final static byte PALETTE_DSSR_BASEPAIR = 8;
+  public final static byte PALETTE_AMINO = 9;
+  public final static byte PALETTE_SHAPELY = 10;
+  public final static byte PALETTE_CHAIN = 11;
+  public final static byte PALETTE_GROUP = 12 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_MONOMER = 13 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_MOLECULE = 14 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_ALTLOC = 15;
+  public final static byte PALETTE_INSERTION = 16;
+  public final static byte PALETTE_JMOL = 17;
+  public final static byte PALETTE_RASMOL = 18;
+  public final static byte PALETTE_TYPE = 19;
+  public final static byte PALETTE_ENERGY = 20;
+  public final static byte PALETTE_PROPERTY = 21 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_VARIABLE = 22 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_STRAIGHTNESS = 23 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_POLYMER = 24 | PAL.PALETTE_VOLATILE;
+  public final static byte PALETTE_NUCLEIC = 25;
 
   private PAL(String name, int id) {
     this.name = name;

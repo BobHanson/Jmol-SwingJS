@@ -242,7 +242,10 @@ public class ColorManager {
       argb = getJmolOrRasmolArgb(id, T.rasmol);
       break;
     case PAL.PALETTE_STRUCTURE:
-      argb = atom.group.getProteinStructureSubType().getColor();
+      argb = atom.group.getBioStructureSubType(T.dssx).getColor();
+      break;
+    case PAL.PALETTE_DSSR_BASEPAIR:
+      argb = atom.group.getBioStructureSubType(T.basepair).getColor();
       break;
     case PAL.PALETTE_CHAIN:
       int chain = atom.getChainID();

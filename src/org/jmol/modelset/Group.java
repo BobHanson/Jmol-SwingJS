@@ -188,12 +188,23 @@ public class Group implements Structure {
     return 0;
   }
   
-  public STR getProteinStructureType() {
+  public STR getBioStructureType() {
     return STR.NOT;
   }
 
-  public STR getProteinStructureSubType() {
-    return getProteinStructureType();
+  /**
+   * 
+   * @param type T.dssx or T.basepair
+   * @return STR for this
+   */
+  public STR getBioStructureSubType(int type) {
+    return getBioStructureType();
+  }
+
+  /**
+   * @param type  
+   */
+  public void setDSSRStructureSubType(STR type) {
   }
 
 
@@ -391,14 +402,22 @@ public class Group implements Structure {
     return false;
   }
   
+  public Atom getLeadAtom() {
+    return null; // but see Monomer class
+  }
+  
   public Atom getLeadAtomOr(Atom atom) { //for sticks
     Atom a = getLeadAtom();
     return (a == null ? atom : a);
   }
   
-  public Atom getLeadAtom() {
-    return null; // but see Monomer class
+  public int getLeadOrFirstAtomIndex() {
+    Atom a = getLeadAtom();
+    return (a == null ? firstAtomIndex : leadAtomIndex);
   }
+
+
+
 
   /**
    * 

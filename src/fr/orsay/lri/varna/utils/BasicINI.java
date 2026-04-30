@@ -1,4 +1,4 @@
-package fr.orsay.lri.varna.applications;
+package fr.orsay.lri.varna.utils;
 
 import java.io.File;
 import java.io.FileReader;
@@ -10,6 +10,9 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Set;
 
+/**
+ * I have no idea what this is for.
+ */
 public class BasicINI {
 
 	private Hashtable<String,Hashtable<String,String>> _data = new Hashtable<String,Hashtable<String,String>>();

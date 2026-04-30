@@ -228,7 +228,7 @@ public class BioShape extends AtomShape {
     case -2: // trace structure
       if (mad == -1 && shape.madOn >= 0)
         return shape.madOn;
-      switch (monomers[groupIndex].getProteinStructureType()) {
+      switch (monomers[groupIndex].getBioStructureType()) {
       case SHEET:
       case HELIX:
         return shape.madHelixSheet;

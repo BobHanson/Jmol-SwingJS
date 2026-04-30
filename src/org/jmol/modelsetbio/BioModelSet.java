@@ -1,6 +1,7 @@
 package org.jmol.modelsetbio;
 
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 import javajs.util.AU;
@@ -24,6 +25,7 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 public class BioModelSet {
@@ -32,6 +34,8 @@ public class BioModelSet {
 
   private static final int DEFAULT_DSSP_VERSION = 2;
   
+  public boolean haveDSSR;
+
   private Viewer vwr;
   private ModelSet ms;
   private BioExt ext;
@@ -245,6 +249,13 @@ public class BioModelSet {
       }
   }
 
+  /** 
+   * 
+   * @param specInfo  can be a set of unitIDs
+   * @param bsAtoms subset to check
+   * @param bsResult will be ORed with the atoms
+   * @return bsResult
+   */
   public BS getAllSequenceBits(String specInfo, BS bsAtoms, BS bsResult) {
     if (specInfo.length() > 0) {
       if (bsAtoms == null)
@@ -393,20 +404,20 @@ public class BioModelSet {
     default:
       return new BS();
     case T.domains:
-      return getAnnotationBits("domains", T.domains, specInfo);
+      return getAnnotationBits("domains", T.domains, specInfo, null);
     case T.validation:
-      return getAnnotationBits("validation", T.validation, specInfo);
+      return getAnnotationBits("validation", T.validation, specInfo, null);
       //    case T.annotations:
       //      TODO -- generalize this
     case T.rna3d:
-      return getAnnotationBits("rna3d", T.rna3d, specInfo);
+      return getAnnotationBits("rna3d", T.rna3d, specInfo, null);
     case T.basepair:
       String s = specInfo;
       bs = new BS();
       return (s.length() % 2 != 0 ? bs : ms.getAtomBitsMDa(T.group,
           getAllBasePairBits(s), bs));
     case T.dssr:
-      return getAnnotationBits("dssr", T.dssr, specInfo);
+      return getAnnotationBits(JC.INFO_DSSR, T.dssr, specInfo, null);
     case T.sequence:
       return getAllSequenceBits(specInfo, null, bs);
     }
@@ -548,7 +559,7 @@ public class BioModelSet {
     return bs;
   }
 
-  public boolean mutate(BS bs, String group, String[] sequence, String alphaType, double[] phipsi) {
+  public String mutate(BS bs, String group, String[] sequence, String alphaType, double[] phipsi) {
     return getBioExt().mutate(vwr, bs, group, sequence, alphaType, phipsi);
   }
 
@@ -869,15 +880,28 @@ public class BioModelSet {
     return (bsTemp.nextSetBit(0) >= 0);
   }
 
-  private BS getAnnotationBits(String name, int tok, String specInfo) {
+  private BS getAnnotationBits(String key, int tok, String specInfo, STR type) {
     BS bs = new BS();
-    JmolAnnotationParser pa = vwr.getAnnotationParser(name.equals("dssr"));
+    boolean isDSSR = (tok == T.dssr);
+    if (isDSSR && !haveDSSR)
+      return bs;
+    JmolAnnotationParser pa = vwr.getAnnotationParser(isDSSR);
     Object ann;
-    for (int i = ms.mc; --i >= 0;)
-      if ((ann = ms.getInfo(i, name)) != null)
-        bs.or(pa.getAtomBits(vwr, specInfo,
-            ((BioModel) ms.am[i]).getCachedAnnotationMap(name + " V ", ann),
-            ms.am[i].dssrCache, tok, i, ms.am[i].bsAtoms));
+    String keyV = key + " V ";
+    for (int i = ms.mc; --i >= 0;) {
+      if ((ann = ms.getInfo(i, key)) != null) {
+        BS b = pa.getAtomBits(vwr, specInfo,
+            ((BioModel) ms.am[i]).getCachedAnnotationMap(keyV, ann),
+            ms.am[i].annotationCache, tok, i, ms.am[i].bsAtoms);
+        bs.or(b);
+      }
+    }
+    if (tok == T.dssr && type != null) {
+      List<Group> groups = ms.getGroupsForAtoms(bs);
+      for (int i = groups.size(); --i >= 0;) {
+        groups.get(i).setDSSRStructureSubType(type);
+      }
+    }
     return bs;
   }
 
@@ -1022,6 +1046,20 @@ public class BioModelSet {
   public boolean getAminoAcidValenceAndCharge(String s, String atomName,
                                               int[] aaRet) {
     return getBioExt().getAminoAcidValenceAndCharge(s, atomName, aaRet);
+  }
+
+  public void getStructureDSSRAssignments() {
+    if (!haveDSSR)
+      return;
+    getAnnotationBits(JC.INFO_DSSR, T.dssr, "iloops", STR.DSSRINTERNALLOOP);
+    getAnnotationBits(JC.INFO_DSSR, T.dssr, "hairpins", STR.DSSRHAIRPINLOOP);
+    getAnnotationBits(JC.INFO_DSSR, T.dssr, "bulges", STR.DSSRBULGELOOP);
+    getAnnotationBits(JC.INFO_DSSR, T.dssr, "junctions", STR.DSSRJUNCTIONLOOP);
+    getAnnotationBits(JC.INFO_DSSR, T.dssr, "stems", STR.DSSRSTEM); // stems last here
+  }
+
+  public void setHaveDSSR(boolean b) {
+    haveDSSR = b;
   }
 
 }

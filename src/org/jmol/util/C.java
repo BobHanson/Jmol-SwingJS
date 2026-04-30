@@ -485,4 +485,23 @@ public final class C {
         : BLACK);
   }
 
+  public static int getColixShadedRGB(short colix) {
+    return getShadedRGB(getArgb(colix), getColixTranslucencyFractional(colix));
+  }
+  public static int getShadedRGB(int ic, double translucentLevel) {
+    return (translucentLevel == 0 ? ic : getShade(ic, translucentLevel));
+  }
+
+  private static int getShade(int ic, double translucentLevel) {
+    double opacity = 1 - translucentLevel;
+    return shade(ic, 16, opacity) | shade(ic, 8, opacity)
+        | shade(ic, 0, opacity);
+  }
+
+  private static int shade(int ic, int off, double opacity) {
+    return Math.max(0, Math.min(
+        (int) ((((ic >> off) & 0xFF) - 0xFF) * opacity + 0xFF), 0xFF)) << off;
+  }
+
+
 }

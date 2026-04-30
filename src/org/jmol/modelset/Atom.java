@@ -1139,7 +1139,7 @@ public class Atom extends Point3fi implements Node {
   
   @Override
   public String getBioStructureTypeName() {
-    return group.getProteinStructureType().getBioStructureTypeName(true);
+    return group.getBioStructureType().getBioStructureTypeName(true);
   }
   
   @Override
@@ -1240,9 +1240,9 @@ public class Atom extends Point3fi implements Node {
     case T.spin:
       return getSpin();
     case T.structure:
-      return group.getProteinStructureType().getId();
+      return group.getBioStructureType().getId();
     case T.substructure:
-      return group.getProteinStructureSubType().getId();
+      return group.getBioStructureSubType(T.dssx).getId();
     case T.strucno:
       return group.getStrucNo();
     case T.symop:
@@ -1470,9 +1470,9 @@ public class Atom extends Point3fi implements Node {
     case T.rxyz:
       return vwr.getSymStatic().staticToRationalXYZ(getFractionalCoordPt(!vwr.g.legacyJavaFloat, false, null), " "); 
     case T.structure:
-      return group.getProteinStructureType().getBioStructureTypeName(false);
+      return group.getBioStructureType().getBioStructureTypeName(false);
     case T.substructure:
-      return group.getProteinStructureSubType().getBioStructureTypeName(false);
+      return group.getBioStructureSubType(T.dssx).getBioStructureTypeName(false);
     case T.strucid:
       return group.getStructureId();
     case T.shape:

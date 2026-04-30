@@ -76,6 +76,8 @@ public final class BioModel extends Model {
   boolean isMutated;
 
   String defaultStructure;
+
+  public boolean haveDSSR;
   
   BioModel(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex, 
       Map<String, Object> jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
@@ -135,7 +137,7 @@ public final class BioModel extends Model {
       s += ((DSSP) Interface.getOption("dssx.DSSP", vwr, "ms"))
         .calculateDssp(bioPolymers, bioPolymerCount, vHBonds, doReport,
             dsspIgnoreHydrogen, setStructure, version);
-    if (haveNucl && auxiliaryInfo.containsKey("dssr") && vHBonds != null)
+    if (haveNucl && haveDSSR && vHBonds != null)
       s += vwr.getAnnotationParser(true).getHBonds(ms, modelIndex, vHBonds, doReport);
     return s;
   }
@@ -197,8 +199,8 @@ public final class BioModel extends Model {
   }
 
   Object getCachedAnnotationMap(String key, Object ann) {
-    Map<String, Object> cache = (dssrCache == null && ann != null ? dssrCache = new Hashtable<String, Object>()
-        : dssrCache);
+    Map<String, Object> cache = (annotationCache == null && ann != null ? annotationCache = new Hashtable<String, Object>()
+        : annotationCache);
     if (cache == null)
       return null;
     Object annotv = cache.get(key);
@@ -505,7 +507,7 @@ public final class BioModel extends Model {
   }
 
   public void getAtomicDSSRData(double[] dssrData, String dataType) {
-    if (auxiliaryInfo.containsKey("dssr"))
+    if (haveDSSR)
       vwr.getAnnotationParser(true).getAtomicDSSRData(ms, modelIndex, dssrData, dataType);
   }
 

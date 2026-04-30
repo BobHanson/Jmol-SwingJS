@@ -36,6 +36,7 @@ import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Chain;
 import org.jmol.modelset.Group;
+import org.jmol.script.T;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
@@ -203,7 +204,7 @@ public class NucleicMonomer extends PhosphorusMonomer {
   public boolean isGuanine() { return have(offsets, N2); }
 
   @Override
-  public STR getProteinStructureType() {
+  public STR getBioStructureType() {
     return (hasRnaO2Prime
             ? STR.RNA
             : STR.DNA);

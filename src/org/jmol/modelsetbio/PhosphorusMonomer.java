@@ -31,6 +31,7 @@ import javajs.util.V3d;
 import org.jmol.c.STR;
 import org.jmol.modelset.Chain;
 import org.jmol.modelset.Structure;
+import org.jmol.script.T;
 import org.jmol.viewer.JC;
 
 public class PhosphorusMonomer extends Monomer {
@@ -95,7 +96,7 @@ public class PhosphorusMonomer extends Monomer {
   public Structure getStructure() { return chain; }
 
   @Override
-  public STR getProteinStructureType() {
+  public STR getBioStructureType() {
     return STR.NONE;
   }
 
@@ -148,5 +149,34 @@ public class PhosphorusMonomer extends Monomer {
     return getHelixData2(tokType, qType, mStep);
   }
   
+
+  /**
+   * STR.DSSR_STEM STR.DSSR_LOOP
+   */
+  STR dssrSubType = STR.NONE; // 
+  
+  STR basepairSubType = STR.NONE; // or STR.BP_CANONICAL
+  
+  /// LOOP or STEM
+  @Override
+  public STR getBioStructureSubType(int dssx) {
+    switch (dssx) {
+    case T.dssx:
+      return dssrSubType;
+    case T.basepair:
+      return basepairSubType;
+    }
+    return STR.NONE;
+  }
+
+
+  @Override
+  public void setDSSRStructureSubType(STR type) {
+    // note that STEM will override loops
+    // because it is registered last in BioModelSet
+      dssrSubType = type;
+  }
+
+
 
 }

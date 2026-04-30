@@ -39,6 +39,7 @@ import org.jmol.c.CBK;
 import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.StatusManager;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.DisplayPanel;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
@@ -159,7 +160,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
         jmolPanel.notifyNBO(info);
         break;
       case "varna":
-        jmolPanel.notifyVARNA(info);
+        jmolPanel.notifyVARNA(type, data);
       }
       return;
     case LOADSTRUCT:
@@ -210,7 +211,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
         switch (jmolPanel.notifyMeasure(data)) {
         case CLICK:
           return;
-        case PICK:
+         case PICK:
           notifyAtomPicked(strInfo);
           break;
         default:
@@ -228,8 +229,9 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
       int atomIndex = ((Integer) data[2]).intValue();
       int modelIndexx = ((Integer) data[3]).intValue();
       notifyStructureModified(atomIndex, modelIndexx, mode);
-      if (jmolPanel != null)
+      if (jmolPanel != null) {
         jmolPanel.notifyGaussian(type, data);
+      }
       break;
     case SYNC:
       //System.out.println("StatusListener sync; " + strInfo);
@@ -250,7 +252,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
       }
       if (strInfo != null && strInfo.toLowerCase().startsWith("varna:")) {
         if (strInfo.toLowerCase().startsWith("varna:start")) {
-          jmolPanel.notifyVARNA(strInfo);
+          jmolPanel.notifyVARNA(type, data);
           return;
         }
         break;
@@ -281,15 +283,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
     if (jmolPanel != null)
       jmolPanel.notifyGeneralCallback(type, data, strInfo);
   }
-
   
-private static final int MOD_COMPLETE = 0; 
-private static final int MOD_ASSIGN_ATOM   = -1; 
-private static final int MOD_ASSIGN_BOND   = -2;
-private static final int MOD_CONNECT_ATOM  = -3;
-private static final int MOD_DELETE_ATOM   = -4;
-private static final int MOD_DELETE_MODELS = -5;
-
   /**
    * @param atomIndex  
    * @param modelIndex 
@@ -300,11 +294,11 @@ private static final int MOD_DELETE_MODELS = -5;
     // only looking for ends here
     modificationMode = mode;
       switch (mode) {
-      case MOD_ASSIGN_ATOM:
-      case MOD_ASSIGN_BOND:
-      case MOD_CONNECT_ATOM:
-      case MOD_DELETE_ATOM:
-      case MOD_DELETE_MODELS:
+      case StatusManager.NOTIFY_MOD_ASSIGN_ATOM:
+      case StatusManager.NOTIFY_MOD_ASSIGN_BOND:
+      case StatusManager.NOTIFY_MOD_CONNECT_ATOM:
+      case StatusManager.NOTIFY_MOD_DELETE_ATOM:
+      case StatusManager.NOTIFY_MOD_DELETE_MODELS:
         checkJSpecView(false);
         return;
       }
@@ -419,7 +413,7 @@ private static final int MOD_DELETE_MODELS = -5;
   }
 
   private void checkJSpecView(boolean closeAll) {
-    boolean isAfterChange = (modificationMode <= MOD_COMPLETE);
+    boolean isAfterChange = (modificationMode <= StatusManager.NOTIFY_MOD_COMPLETE);
     if (jsv != null && isAfterChange) {
       jSpecViewForceNew = (jSpecViewFrame != null && jSpecViewFrame.isVisible());
       setJSpecView(closeAll ? "none" : "", true, true);

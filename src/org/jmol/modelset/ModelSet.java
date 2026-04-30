@@ -4963,5 +4963,10 @@ public class ModelSet extends BondCollection {
     }
   }
 
+  public void getStructureAssignments() {
+    if (bioModelset != null && bioModelset.haveDSSR)
+      bioModelset.getStructureDSSRAssignments();
+  }
+
 }
 

@@ -120,7 +120,7 @@ public abstract class ProteinStructure implements Structure {
       nRes = index - monomerIndexFirst;
       Monomer[] monomers = apolymer.monomers;
       //System.out.println("bp removing protein structure " + index + " " + n);
-      STR type = monomers[++index].getProteinStructureType();
+      STR type = monomers[++index].getBioStructureType();
       int mLast = -1;
       for (int i = 0, pt = index; i < n; i++, pt++) {
         ((AlphaMonomer) monomers[pt]).setStructure(null);//, false);

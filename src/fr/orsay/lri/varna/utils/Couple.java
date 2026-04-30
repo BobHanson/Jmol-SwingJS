@@ -1,4 +1,4 @@
-package fr.orsay.lri.varna.applications.templateEditor;
+package fr.orsay.lri.varna.utils;
 
 
 public class Couple<T,U> {

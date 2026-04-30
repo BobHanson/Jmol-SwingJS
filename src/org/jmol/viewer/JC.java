@@ -282,6 +282,7 @@ public final class JC {
       + ",species_at_sites"
       + ",species,"; 
     
+  
   /**
    * Get all necessary response fields if an optimade call.
    * Note that the only conditions we have here is that this is http

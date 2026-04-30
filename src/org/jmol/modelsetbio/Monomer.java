@@ -187,7 +187,7 @@ public abstract class Monomer extends Group {
   ////////////////////////////////////////////////////////////////
 
   @Override
-  public STR getProteinStructureType() { return STR.NONE; }
+  public STR getBioStructureType() { return STR.NONE; }
   public boolean isHelix() { return false; }
   public boolean isSheet() { return false; }
   @Override

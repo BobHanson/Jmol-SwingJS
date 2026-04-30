@@ -139,6 +139,7 @@ public class DSSR1 extends AnnotationParser {
         data = vwr.getFileAsString3(name + data, false, null);
         Map<String, Object> x = vwr.parseJSONMap(data);
         if (x != null) {
+          info.put(JC.INFO_DSSR_JSON, Boolean.TRUE);
           info.put(JC.INFO_DSSR, x);
           setGroup1(vwr.ms, modelIndex);
           fixDSSRJSONMap(x);
@@ -150,7 +151,7 @@ public class DSSR1 extends AnnotationParser {
       }
       break;
     }
-    return (info != null ? PT.rep(Escape.escapeMap((Map<String, Object>) ((Map<String, Object>) info.get("dssr"))
+    return (info != null ? PT.rep(Escape.escapeMap((Map<String, Object>) ((Map<String, Object>) info.get(JC.INFO_DSSR))
         .get("counts")),",",",\n") : out == null ? "model has no nucleotides" : out);
   }
 
@@ -239,7 +240,7 @@ public class DSSR1 extends AnnotationParser {
   public void getBasePairs(Viewer vwr, int modelIndex) {
     ModelSet ms = vwr.ms;
     Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex,
-        "dssr");
+        JC.INFO_DSSR);
     Lst<Map<String, Object>> pairs = (info == null ? null
         : (Lst<Map<String, Object>>) info.get("pairs"));
     Lst<Map<String, Object>> singles = (info == null ? null
@@ -304,7 +305,7 @@ public class DSSR1 extends AnnotationParser {
    */
   public BS getAtomBits(Viewer vwr, String key, Object dbObj,
                         Map<String, Object> annotationCache, int type,
-                        int modelIndex, BS bsModel) {
+                        int modelIndex, BS bsModelAtoms) {
     if (dbObj == null)
       return new BS();
     //boolean isStruc = (type == T.rna3d);
@@ -380,7 +381,7 @@ public class DSSR1 extends AnnotationParser {
         dbObj = ((Lst<?>) dbObj).get(n - 1);        
       }
       bs.or(vwr.ms.getAtoms(T.sequence, dbObj.toString()));
-      bs.and(bsModel);
+      bs.and(bsModelAtoms);
     } catch (Throwable e) {
       // "Throwable" because array out of bounds in JavaScript is not an Exception
       System.out.println(e.toString() + " in AnnotationParser");
@@ -393,7 +394,7 @@ public class DSSR1 extends AnnotationParser {
   @Override
   public String getHBonds(ModelSet ms, int modelIndex, Lst<Bond> vHBonds,
                           boolean doReport) {
-    Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex, "dssr");
+    Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex, JC.INFO_DSSR);
     Lst<Object> list;
     if (info == null || (list = (Lst<Object>) info.get("hbonds")) == null)
       return "no DSSR hydrogen-bond data";
@@ -431,14 +432,15 @@ public class DSSR1 extends AnnotationParser {
   @Override
   public void setGroup1(ModelSet ms, int modelIndex) {
     Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex,
-        "dssr");
+        JC.INFO_DSSR);
     Lst<Map<String, Object>> list;
     if (info == null
         || (list = (Lst<Map<String, Object>>) info.get("nts")) == null)
       return;
-    Model m = ms.am[modelIndex];
+    BioModel m = (BioModel) ms.am[modelIndex];
     BS bsAtoms = m.bsAtoms;
     Atom[] atoms = ms.at;
+    ms.bioModelset.setHaveDSSR(m.haveDSSR = true);
     BS bs = new BS();
     for (int i = list.size(); --i >= 0;) {
       Map<String, Object> map = list.get(i);
@@ -458,7 +460,7 @@ public class DSSR1 extends AnnotationParser {
   @SuppressWarnings("unchecked")
   @Override
   public void getAtomicDSSRData(ModelSet ms, int modelIndex, double[] dssrData, String dataType) {
-    Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex, "dssr");
+    Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex, JC.INFO_DSSR);
     Lst<Object> list;
     if (info == null || (list = (Lst<Object>) info.get(dataType)) == null)
       return;

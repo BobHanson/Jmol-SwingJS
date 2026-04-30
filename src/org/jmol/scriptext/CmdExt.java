@@ -207,6 +207,9 @@ public class CmdExt extends ScriptExt {
     case T.unitcell:
       unitcell(flag ? 2 : 1, 0);
       break;
+    case T.varna:
+      varna();
+      break;
     case T.write:
       return write(flag ? st : null);
     case JC.SHAPE_MEASURES:
@@ -903,7 +906,7 @@ public class CmdExt extends ScriptExt {
           String s = 
               vwr.getAnnotationParser(true).calculateDSSRStructure(vwr, bs1);
           e.showString(s);
-          vwr.notifyCalculation("DSSR", bs1, s);
+          vwr.notifyCalculation(JC.INFO_DSSR, bs1, s);
           return;
         case T.dssp:
           asDSSP = true;
@@ -3277,9 +3280,12 @@ public class CmdExt extends ScriptExt {
       }
     }
     e.iToken = e.slen;
-    if (list.length > 0 && !vwr.getJBR().getBioModelSet(vwr.ms).mutate(bs,
-        sequence, list, alphaType, phipsi))
-      invArg();
+    if (list.length > 0) {
+      String err = vwr.getJBR().getBioModelSet(vwr.ms).mutate(bs,
+        sequence, list, alphaType, phipsi);
+      if (err != null)
+        e.showString(err);
+    }
   }
 
   private void navigate() throws ScriptException {
@@ -5029,7 +5035,7 @@ public class CmdExt extends ScriptExt {
       eval.checkLength23();
       len = st.length;
       if (!chk) {
-        Object d = vwr.getModelInfo("dssr");
+        Object d = vwr.getModelInfo(JC.INFO_DSSR);
         msg = (d == null ? "no DSSR information has been read"
             : len > 2
                 ? SV.getVariable(vwr.extractProperty(d, stringParameter(2), -1))
@@ -7357,5 +7363,14 @@ public class CmdExt extends ScriptExt {
     vwr.syncScript(text, applet, port);
   }
 
-  
+  private void varna() throws ScriptException {
+      String message = e.paramAsStr(1);
+      if (chk)
+        return;
+      String err = vwr.syncScriptErr("varna:" + message);
+      if (err != null)
+        e.showString(err);
+  }
+
+
 }

@@ -633,7 +633,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
       menuEnable(htMenus.get("PDBnucleicMenu"), (nItems > 0));
       @SuppressWarnings("unchecked")
       Map<String, Object> dssr = (nItems > 0 && modelIndex >= 0
-          ? (Map<String, Object>) vwr.ms.getInfo(modelIndex, "dssr")
+          ? (Map<String, Object>) vwr.ms.getInfo(modelIndex, JC.INFO_DSSR)
           : null);
       if (dssr != null)
         setSecStrucMenu(htMenus.get("aaStructureMenu"), dssr);

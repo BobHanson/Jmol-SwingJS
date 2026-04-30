@@ -31,6 +31,7 @@ import org.jmol.c.STR;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Chain;
 import org.jmol.modelset.Structure;
+import org.jmol.script.T;
 import org.jmol.viewer.JC;
 
 import javajs.util.P3d;
@@ -108,15 +109,20 @@ public class AlphaMonomer extends Monomer {
   }
 
   @Override
-  public STR getProteinStructureType() {
+  public STR getBioStructureType() {
     return proteinStructure == null ? STR.NONE
         : proteinStructure.type;
   }
 
   @Override
-  public STR getProteinStructureSubType() {
-    return proteinStructure == null ? STR.NONE
-        : proteinStructure.subtype;
+  public STR getBioStructureSubType(int dssx) {
+    switch (dssx) {
+    case T.dssx:
+      if (proteinStructure != null)
+        return proteinStructure.subtype;
+      break;
+    }
+    return STR.NONE;
   }
 
   @Override

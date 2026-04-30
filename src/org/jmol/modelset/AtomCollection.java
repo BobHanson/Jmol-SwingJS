@@ -25,9 +25,11 @@
 
 package org.jmol.modelset;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -2995,6 +2997,21 @@ abstract public class AtomCollection {
   public static boolean isDeleted(Atom atom) {
     return (atom == null || atom.isDeleted());
   }
+
+  public List<Group> getGroupsForAtoms(BS bsAtoms) {
+    List<Group> groups = new ArrayList<>();
+    Group lastGroup = null;
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+        .nextSetBit(i + 1)) {
+      Group group = at[i].group;
+      if (group != lastGroup) {
+        lastGroup = group;
+        groups.add(group);
+      }
+    }
+    return groups;
+  }
+
 
 }
 

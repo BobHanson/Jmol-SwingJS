@@ -176,7 +176,7 @@ public class ChimeMessenger implements JmolChimeMessenger {
         if (a.mi == 0) {
           if ((id = g.getStrucNo()) != lastid && id != 0) {
             lastid = id;
-            switch (g.getProteinStructureType()) {
+            switch (g.getBioStructureType()) {
             case HELIX:
               nH++;
               break;

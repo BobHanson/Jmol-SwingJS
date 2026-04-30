@@ -1581,7 +1581,7 @@ public class PropertyManager implements JmolPropertyManager {
       info.put("groupID", Integer.valueOf(atom.group.groupID));
       if (atom.altloc != '\0')
         info.put("altLocation", "" + atom.altloc);
-      info.put("structure", Integer.valueOf(atom.group.getProteinStructureType()
+      info.put("structure", Integer.valueOf(atom.group.getBioStructureType()
           .getId()));
       info.put("polymerLength", Integer.valueOf(atom.group.getBioPolymerLength()));
       info.put("occupancy", Integer.valueOf(atom.getOccupancy100()));

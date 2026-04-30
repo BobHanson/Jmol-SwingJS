@@ -100,7 +100,7 @@ public class Model {
   public Chain[] chains = new Chain[8];
 
   public SymmetryInterface simpleCage;
-  public Map<String, Object> dssrCache;
+  public Map<String, Object> annotationCache;
   public Orientation orientation;
   public Map<String, Object> auxiliaryInfo;
   public Properties properties;
@@ -294,9 +294,9 @@ public class Model {
    * @param totally set TRUE if atoms have moved so we force a new DSSR calculation.
    */
   public void resetDSSR(boolean totally) {
-    dssrCache = null;
+    annotationCache = null;
     if (totally)
-      auxiliaryInfo.remove("dssr");
+      auxiliaryInfo.remove(JC.INFO_DSSR);
   }
 
   public void fixIndices(int modelIndex, int nAtomsDeleted, BS bsDeleted) {

@@ -2152,17 +2152,21 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   private Map<String, Object> varnaOptions;
   
-  public void notifyVARNA(String strInfo) {
+  public void notifyVARNA(CBK type, Object[] data) {
+    switch (type) {
+    case SYNC:
+    case SERVICE:
+      break;
+    case STRUCTUREMODIFIED:
+      if (!isPluginActive("VARNA"))
+        return;
+      break;
+    default:
+      return;
+    }
     if (varnaOptions == null)
       varnaOptions = new Hashtable<String, Object>();
-    varnaOptions.put("command", strInfo);
-    startVARNA(varnaOptions);
-  }
-
-  public void notifyVARNA(Map<String, Object> info) {
-    if (varnaOptions == null)
-      varnaOptions = new Hashtable<String, Object>();
-    varnaOptions.put("options", info);
+    varnaOptions.put("data", data);
     startVARNA(varnaOptions);
   }
 

@@ -377,17 +377,34 @@ public class StatusManager {
               vwr.slm.getSelectionColors()}, true);
   }
 
+  public static final int NOTIFY_MOD_COMPLETE = 0; 
+  public static final int NOTIFY_MOD_ASSIGN_ATOM   = -1; 
+  public static final int NOTIFY_MOD_ASSIGN_BOND   = -2;
+  public static final int NOTIFY_MOD_CONNECT_ATOM  = -3;
+  public static final int NOTIFY_MOD_DELETE_ATOM   = -4;
+  public static final int NOTIFY_MOD_DELETE_MODELS = -5;
+  public static final int NOTIFY_MOD_ATOM_COLORED = 1; 
+
   public void setStatusStructureModified(int atomIndex, int modelIndex,
                                          int mode, String msg, int n, BS bsAtoms) {
-    if (atomIndex >= 0 && bsAtoms == null)
-      bsAtoms = BSUtil.newAndSetBit(atomIndex);
+     if (bsAtoms == null) {
+       if (atomIndex >= 0)
+         bsAtoms = BSUtil.newAndSetBit(atomIndex);
+       else
+         bsAtoms = vwr.bsA();
+     }
     String sJmol = getJmolScriptCallback(CBK.STRUCTUREMODIFIED);
     boolean isEnabled =  notifyEnabled(CBK.STRUCTUREMODIFIED);
     if (isEnabled || sJmol != null)
       fireJmolScriptCallback(isEnabled, CBK.STRUCTUREMODIFIED,
-          new Object[] { sJmol, Integer.valueOf(mode),
-              Integer.valueOf(atomIndex), Integer.valueOf(modelIndex), msg,
-              Integer.valueOf(n), bsAtoms }, true);
+          new Object[] { sJmol, // [0]
+              Integer.valueOf(mode), // [1]
+              Integer.valueOf(atomIndex), // [2]
+              Integer.valueOf(modelIndex), // [3]
+              msg, // [4]
+              Integer.valueOf(n), // [5]
+              bsAtoms // [6]
+              }, true);
   }
   
 
@@ -990,14 +1007,18 @@ public class StatusManager {
       registerAudio((String) htParams.get("id"), null);
   }
   
-  
- void syncScript(String script, String applet, int port) {
+
+ String syncScriptErr(String script) {
+   return syncScript(script, "?", 0);
+ }
+
+ String syncScript(String script, String applet, int port) {
     if (Viewer.SYNC_GRAPHICS_MESSAGE.equalsIgnoreCase(script)) {
       setSyncDriver(StatusManager.SYNC_STEREO);
       syncSend(script, applet, 0);
       vwr.setBooleanProperty("_syncMouse", false);
       vwr.setBooleanProperty("_syncScript", false);
-      return;
+      return null;
     }
     // * : all applets
     // > : all OTHER applets
@@ -1011,25 +1032,26 @@ public class StatusManager {
     boolean disableSend = "~".equals(applet);
     // null same as ">" -- "all others"
     if (port > 0 || !disableSend && !".".equals(applet)) {
-      syncSend(script, applet, port);
+      Object msg = syncSend(script, applet, port);
       if (!"*".equals(applet) || script.startsWith("{"))
-        return;
+        return ("?".equals(applet) ? (String) msg : null);
     }
-    if (script.equalsIgnoreCase("on") || script.equalsIgnoreCase("true")) {
+    switch (script.toLowerCase()) {
+    case "on":
+    case "true":
       setSyncDriver(StatusManager.SYNC_DRIVER);
-      return;
-    }
-    if (script.equalsIgnoreCase("off") || script.equalsIgnoreCase("false")) {
+      return null;
+    case "off":
+    case "false":
       setSyncDriver(StatusManager.SYNC_OFF);
-      return;
-    }
-    if (script.equalsIgnoreCase("slave")) {
+      return null;
+    case "slave":
       setSyncDriver(StatusManager.SYNC_SLAVE);
-      return;
+      return null;
     }
     int syncMode = getSyncMode();
     if (syncMode == StatusManager.SYNC_OFF)
-      return;
+      return null;
     if (syncMode != StatusManager.SYNC_DRIVER)
       disableSend = false;
     if (Logger.debugging)
@@ -1049,7 +1071,7 @@ public class StatusManager {
       case JC.NBO_VIEW:
       case JC.NBO_SEARCH:
         syncSend(script, ".", port);
-        return;        
+        return null;        
       case JC.JSV_NOT:
         break;
       case JC.JSV_SEND_JDXMOL:
@@ -1057,22 +1079,23 @@ public class StatusManager {
       case JC.JSV_SEND_H1SIMULATE:
       case JC.JSV_SEND_C13SIMULATE:
         if (disableSend)
-          return;
+          return null;
         //$FALL-THROUGH$
       case JC.JSV_STRUCTURE:
       case JC.JSV_SETPEAKS:
       case JC.JSV_SELECT:
         // from JSpecView...
         if ((script = vwr.getJSV().processSync(script, serviceMode)) == null)
-          return;
+          return null;
       }
       //System.out.println("Jmol executing script for JSpecView: " + script);
       vwr.evalStringQuietSync(script, true, false);
-      return;
+      return null;
     }
     mouseScript(script);
     if (disableSend)
       vwr.setSyncDriver(StatusManager.SYNC_ENABLE);
+    return null;
   }
 
   void mouseScript(String script) {

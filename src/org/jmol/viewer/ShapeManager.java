@@ -36,6 +36,7 @@ import org.jmol.modelset.ModelSet;
 import org.jmol.script.T;
 import org.jmol.shape.Shape;
 import org.jmol.util.BSUtil;
+import org.jmol.util.C;
 import org.jmol.util.Edge;
 import org.jmol.util.GData;
 import org.jmol.util.JmolMolecule;
@@ -591,9 +592,8 @@ public class ShapeManager {
    * 
    */
   public void checkInheritedShapes() {
-    if (shapes[JC.SHAPE_ISOSURFACE] == null)
-      return;
-    setShapePropertyBs(JC.SHAPE_ISOSURFACE, "remapInherited", null, null);
+    if (shapes[JC.SHAPE_ISOSURFACE] != null)
+      setShapePropertyBs(JC.SHAPE_ISOSURFACE, "remapInherited", null, null);
   }
 
   public void restrictSelected(boolean isBond, boolean doInvert) {
@@ -635,4 +635,12 @@ public class ShapeManager {
     vwr.selectStatus(bsSelected, false, 0, true, false);
   }
 
+  public int getAtomColorRGBShaded(short[] colixes, Atom atom) {    
+    short colix = Shape.getColix(colixes, atom.i, atom);
+    if (colix < 0) // for example, color {*} NONE
+      colix = vwr.gdata.fixChangeableColix(colix);
+    return C.getColixShadedRGB(colix);
+  }
+  
+  
 }

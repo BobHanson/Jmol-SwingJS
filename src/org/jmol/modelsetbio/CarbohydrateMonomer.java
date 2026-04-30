@@ -45,7 +45,7 @@ public class CarbohydrateMonomer extends Monomer {
   public boolean isCarbohydrate() { return true; }
 
   @Override
-  public STR getProteinStructureType() {
+  public STR getBioStructureType() {
     return STR.CARBOHYDRATE;
   }
 
