@@ -26,7 +26,7 @@ import java.util.*;
  */
 public class TreeAlign<ValueType1, ValueType2> {
 	
-	private class TreeData<ValueType> {
+	protected class TreeData<ValueType> {
 		/**
 		 * The tree.
 		 */

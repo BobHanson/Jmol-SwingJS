@@ -16,7 +16,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
-import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurScriptParser;
 import fr.orsay.lri.varna.models.VARNAConfig;
 
@@ -87,19 +86,19 @@ public void focusGained(FocusEvent arg0) {
 
 @Override
 public void focusLost(FocusEvent arg0) {
-	// TODO Auto-generated method stub
+	
 	
 }
 
 @Override
 public void keyPressed(KeyEvent arg0) {
-	// TODO Auto-generated method stub
+	
 	
 }
 
 @Override
 public void keyReleased(KeyEvent arg0) {
-	// TODO Auto-generated method stub
+	
 	
 }
 

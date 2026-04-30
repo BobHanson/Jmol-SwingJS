@@ -25,16 +25,16 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurBPHeightIncrement;
 import fr.orsay.lri.varna.controlers.ControleurSliderLabel;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.rna.RNA;
 
 public class VueBPHeightIncrement {
-	private VARNAPanel _vp;
-	private JPanel panel;
-	private JSlider spaceSlider;
+	protected VARNAPanel _vp;
+	protected JPanel panel;
+	protected JSlider spaceSlider;
 
 	public VueBPHeightIncrement(VARNAPanel vp) {
 		_vp = vp;

@@ -25,16 +25,16 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurGlobalRescale;
 import fr.orsay.lri.varna.controlers.ControleurGlobalRotation;
 import fr.orsay.lri.varna.controlers.ControleurSliderLabel;
 
 public class VueGlobalRescale {
 
-	private VARNAPanel _vp;
-	private JSlider rescaleSlider;
-	private JPanel panel;
+	protected VARNAPanel _vp;
+	protected JSlider rescaleSlider;
+	protected JPanel panel;
 
 	public VueGlobalRescale(VARNAPanel vp) {
 		_vp = vp;

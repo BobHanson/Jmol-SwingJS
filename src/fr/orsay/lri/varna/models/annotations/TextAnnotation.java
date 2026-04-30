@@ -32,7 +32,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 import fr.orsay.lri.varna.models.rna.ModeleBase;
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.VARNAConfigLoader;
 import fr.orsay.lri.varna.models.rna.ModelBaseStyle;
 import fr.orsay.lri.varna.models.rna.VARNAPoint;
@@ -79,11 +79,11 @@ public class TextAnnotation implements Serializable {
 	private Object _anchor;
 	private Font _font;
 	
-	public static String XML_ELEMENT_NAME = "textAnnotation";
-	public static String XML_VAR_TYPE_NAME = "type";
-	public static String XML_VAR_COLOR_NAME = "color";
-	public static String XML_VAR_ANGLE_NAME = "angle";
-	public static String XML_VAR_TEXT_NAME = "text";
+	public static final String XML_ELEMENT_NAME = "textAnnotation";
+	public static final String XML_VAR_TYPE_NAME = "type";
+	public static final String XML_VAR_COLOR_NAME = "color";
+	public static final String XML_VAR_ANGLE_NAME = "angle";
+	public static final String XML_VAR_TEXT_NAME = "text";
 
 	public void toXML(TransformerHandler hd) throws SAXException
 	{

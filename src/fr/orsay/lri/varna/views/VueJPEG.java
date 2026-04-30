@@ -27,9 +27,9 @@ import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 
 public class VueJPEG {
-	private JSlider qualitySlider;
-	private JSlider scaleSlider;
-	private JPanel panel;
+	protected JSlider qualitySlider;
+	protected JSlider scaleSlider;
+	protected JPanel panel;
 
 	// Turn on labels at major tick marks.
 //	public VueJPEG() {

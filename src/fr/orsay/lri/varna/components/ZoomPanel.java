@@ -15,7 +15,6 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 
-import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.models.export.SwingGraphics;
 import fr.orsay.lri.varna.models.export.VueVARNAGraphics;
 
@@ -25,15 +24,35 @@ public class ZoomPanel extends JPanel implements Runnable, MouseMotionListener, 
 	BufferedImage _bi = null;
 	Rectangle2D.Double rnaRect = null;
 	
+	
 	public ZoomPanel(VARNAPanel vp)
 	{
-		_vp = vp;
+	  setVP(vp);
 		setPreferredSize(new Dimension(-1, 200));
 		addMouseMotionListener(this);
 		addMouseListener(this);
 	}
 	
+	/**
+	 * for dynamic loading
+	 */
+  public ZoomPanel() {
+	  this(null);
+	}
 	
+  /**
+   * for chaining dynamic loading
+   * Interface.getInterface(....).setVP()
+   * 
+   * @param vp
+   * @return this
+   */
+  public ZoomPanel setVP(VARNAPanel vp) {
+    _vp = vp;
+    return this;
+  }
+
+  
 	public synchronized void setPanel(VARNAPanel vp)
 	{
 		_vp = vp; 
@@ -135,14 +154,14 @@ public class ZoomPanel extends JPanel implements Runnable, MouseMotionListener, 
 
 	@Override
   public void mouseDragged(MouseEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 
 	@Override
   public void mouseMoved(MouseEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
@@ -162,28 +181,28 @@ public class ZoomPanel extends JPanel implements Runnable, MouseMotionListener, 
 
 	@Override
   public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 
 	@Override
   public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 
 	@Override
   public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 
 	@Override
   public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	

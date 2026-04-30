@@ -4,15 +4,9 @@ package fr.orsay.lri.varna.views;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyVetoException;
-import java.beans.VetoableChangeListener;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -24,20 +18,16 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 
-import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.components.ColorRenderer;
-import fr.orsay.lri.varna.models.rna.ModeleBase;
-import fr.orsay.lri.varna.models.rna.ModeleBaseNucleotide;
-import fr.orsay.lri.varna.models.rna.ModeleColorMap;
 import fr.orsay.lri.varna.models.rna.RNA;
 
 public class VueRNAList extends JPanel implements TableModelListener, ActionListener {
 
-	private JTable table;
-	private ValueTableModel _tm;
-	private ArrayList<RNA> data;
-	private ArrayList<Object> columns;
-	private ArrayList<Boolean> included;
+	protected JTable table;
+	protected ValueTableModel _tm;
+	protected ArrayList<RNA> data;
+	protected ArrayList<Object> columns;
+	protected ArrayList<Boolean> included;
 	
 	
 	public VueRNAList( ArrayList<RNA> rnas)
@@ -52,7 +42,7 @@ public class VueRNAList extends JPanel implements TableModelListener, ActionList
 		ArrayList<RNA> result = new ArrayList<RNA>();
 		for (int i = 0; i < data.size(); i++)
 		{
-			if (included.get(i))
+			if (included.get(i).booleanValue())
 			{
 				result.add(data.get(i));
 			}
@@ -60,7 +50,7 @@ public class VueRNAList extends JPanel implements TableModelListener, ActionList
 		return result;
 	}
 	
-	private void init()
+	protected void init()
 	{
 		Object[] col = {"Num","Selected","Name","ID","Length"};
 		columns = new ArrayList<Object>();
@@ -117,13 +107,17 @@ public class VueRNAList extends JPanel implements TableModelListener, ActionList
 	
 
 
-	private class ValueTableModel extends AbstractTableModel {
-	    public String getColumnName(int col) {
+	protected class ValueTableModel extends AbstractTableModel {
+	    @Override
+      public String getColumnName(int col) {
 	        return columns.get(col).toString();
 	    }
-	    public int getRowCount() { return data.size(); }
-	    public int getColumnCount() { return columns.size(); }
-	    public Object getValueAt(int row, int col) {
+	    @Override
+      public int getRowCount() { return data.size(); }
+	    @Override
+      public int getColumnCount() { return columns.size(); }
+	    @Override
+      public Object getValueAt(int row, int col) {
 	    	RNA r = data.get(row);
 	    	if (col==0)
 	    	{
@@ -131,7 +125,7 @@ public class VueRNAList extends JPanel implements TableModelListener, ActionList
 	    	}
 	    	else if (col==1)
 	    	{
-	    		return new Boolean(included.get(row));
+	    		return new Boolean(included.get(row).booleanValue());
 	    	}
 	    	else if (col==2)
 	    	{
@@ -147,25 +141,29 @@ public class VueRNAList extends JPanel implements TableModelListener, ActionList
 	    	} 
 	    	return "N/A";
 	    }
-	    public boolean isCellEditable(int row, int col)
+	    @Override
+      public boolean isCellEditable(int row, int col)
 	        { 
 	    		if (col==1) 
 	    			return true;
 	    		return false;
 	        }
-	    public void setValueAt(Object value, int row, int col) {
+	    @Override
+      public void setValueAt(Object value, int row, int col) {
 	    	if (col==1)
 	    	{
 	    	  included.set(row, (Boolean)value);
 	          fireTableCellUpdated(row, col);
 	    	}
 	    }
-	    public Class getColumnClass(int c) {
+	    @Override
+      public Class<?> getColumnClass(int c) {
 	        return getValueAt(0, c).getClass();
 	    }
 	}
 
-	public void tableChanged(TableModelEvent e) {
+	@Override
+  public void tableChanged(TableModelEvent e) {
 		if (e.getType() == TableModelEvent.UPDATE)
 		{
 			table.repaint();
@@ -173,12 +171,13 @@ public class VueRNAList extends JPanel implements TableModelListener, ActionList
 		
 	}
 
-	public void actionPerformed(ActionEvent e) {
+	@Override
+  public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals("none"))
 		{
 			for(int i=0;i<this.included.size();i++)
 			{
-				included.set(i, false);
+				included.set(i, Boolean.FALSE);
 			}
 			_tm.fireTableRowsUpdated(0, included.size()-1);
 		}
@@ -186,7 +185,7 @@ public class VueRNAList extends JPanel implements TableModelListener, ActionList
 		{
 			for(int i=0;i<this.included.size();i++)
 			{
-				included.set(i, true);
+				included.set(i, Boolean.TRUE);
 			}
 			_tm.fireTableRowsUpdated(0, included.size()-1);
 		}

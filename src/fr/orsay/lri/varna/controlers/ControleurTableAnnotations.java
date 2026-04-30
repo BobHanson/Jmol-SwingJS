@@ -23,7 +23,7 @@ import java.awt.event.MouseMotionListener;
 
 import javax.swing.JTable;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation;
 import fr.orsay.lri.varna.models.annotations.HighlightRegionAnnotation;
 import fr.orsay.lri.varna.models.annotations.TextAnnotation;

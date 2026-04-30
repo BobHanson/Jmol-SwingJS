@@ -29,7 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.Timer;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.exceptions.ExceptionNonEqualLength;
 import fr.orsay.lri.varna.models.VARNAConfig;
 
@@ -42,17 +42,17 @@ public class VueAboutPanel extends JPanel {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 4525998278180950602L;
+	protected static final long serialVersionUID = 4525998278180950602L;
 
-	private AboutAnimator _anim;
-	private JPanel _textPanel;
-	private JTextArea _textArea;
+	protected AboutAnimator _anim;
+	protected JPanel _textPanel;
+	protected JTextArea _textArea;
 
 	public VueAboutPanel() {
 		init();
 	}
 
-	private void init() {
+	protected void init() {
 		try {
 			setBorder(BorderFactory.createEtchedBorder());
 			setLayout(new BorderLayout());
@@ -122,7 +122,7 @@ public class VueAboutPanel extends JPanel {
 		_anim.gracefulStop();
 	}
 
-	private class AboutAnimator implements ActionListener {
+	protected class AboutAnimator implements ActionListener {
 		VARNAPanel _vp;
 		ArrayList<String> _structures = new ArrayList<String>();
 		ArrayList<String> _sequences = new ArrayList<String>();

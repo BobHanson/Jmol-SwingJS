@@ -33,7 +33,7 @@ import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.plaf.basic.BasicBorders;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurSliderLabel;
 import fr.orsay.lri.varna.controlers.ControleurVueAnnotation;
 import fr.orsay.lri.varna.models.annotations.TextAnnotation;
@@ -50,16 +50,16 @@ import fr.orsay.lri.varna.models.annotations.TextAnnotation;
 public class VueAnnotation {
 
 	protected VARNAPanel _vp;
-	private JSlider ySlider, xSlider;
-	private JButton colorButton;
-	private JTextArea textArea;
-	private JPanel panel;
+	protected JSlider ySlider, xSlider;
+	protected JButton colorButton;
+	protected JTextArea textArea;
+	protected JPanel panel;
 	protected TextAnnotation textAnnotation, textAnnotationSave;
-	private VueFont vueFont;
-	private ControleurVueAnnotation _controleurVueAnnotation;
+	protected VueFont vueFont;
+	protected ControleurVueAnnotation _controleurVueAnnotation;
 	protected boolean newAnnotation, limited;
-	private Double position;
-	private JSlider rotationSlider;
+	protected Double position;
+	protected JSlider rotationSlider;
 
 	/**
 	 * creates a view for a new annoted text
@@ -274,7 +274,7 @@ public class VueAnnotation {
 		
 	}
 
-	private void applyFont() {
+	protected void applyFont() {
 		textAnnotation.setFont(vueFont.getFont());
 	}
 

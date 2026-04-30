@@ -3,11 +3,7 @@ package fr.orsay.lri.varna.views;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyVetoException;
-import java.beans.VetoableChangeListener;
 import java.util.ArrayList;
-import java.util.Vector;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -16,21 +12,18 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 
-import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.components.ColorRenderer;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
-import fr.orsay.lri.varna.models.rna.ModeleBaseNucleotide;
-import fr.orsay.lri.varna.models.rna.ModeleColorMap;
-import fr.orsay.lri.varna.models.rna.RNA;
 
 public class VueBaseValues extends JPanel implements TableModelListener {
 
-	private JTable table;
-	private ValueTableModel _tm;
-	private VARNAPanel _vp;
-	private ArrayList<ModeleBase> data;
-	private ArrayList<Double> _backup;
-	private ArrayList<Object> columns;
+	protected JTable table;
+	protected ValueTableModel _tm;
+	protected VARNAPanel _vp;
+	protected ArrayList<ModeleBase> data;
+	protected ArrayList<Double> _backup;
+	protected ArrayList<Object> columns;
 	
 	
 	public VueBaseValues(VARNAPanel vp)
@@ -40,7 +33,7 @@ public class VueBaseValues extends JPanel implements TableModelListener {
 		init();
 	}
 	
-	private void init()
+	protected void init()
 	{
 		Object[] col = {"Number","Base","Value","Preview"};
 		columns = new ArrayList<Object>();
@@ -55,7 +48,7 @@ public class VueBaseValues extends JPanel implements TableModelListener {
 		{
 			ModeleBase mb = _vp.getRNA().get_listeBases().get(i);
 			data.add(mb);
-			_backup.add(mb.getValue());
+			_backup.add(Double.valueOf(mb.getValue()));
 		}
 		_tm = new ValueTableModel();
 		table = new JTable(_tm);
@@ -72,18 +65,22 @@ public class VueBaseValues extends JPanel implements TableModelListener {
 		for (int i = 0; i < _vp.getRNA().get_listeBases().size(); i++) 
 		{
 			ModeleBase mb = _vp.getRNA().get_listeBases().get(i);
-			mb.setValue(_backup.get(i));
+			mb.setValue(_backup.get(i).doubleValue());
 		}
   	  _vp.getRNA().rescaleColorMap(_vp.getColorMap());
 	}
 
-	private class ValueTableModel extends AbstractTableModel {
-	    public String getColumnName(int col) {
+	protected class ValueTableModel extends AbstractTableModel {
+	    @Override
+      public String getColumnName(int col) {
 	        return columns.get(col).toString();
 	    }
-	    public int getRowCount() { return data.size(); }
-	    public int getColumnCount() { return columns.size(); }
-	    public Object getValueAt(int row, int col) {
+	    @Override
+      public int getRowCount() { return data.size(); }
+	    @Override
+      public int getColumnCount() { return columns.size(); }
+	    @Override
+      public Object getValueAt(int row, int col) {
 	    	ModeleBase mb = data.get(row);
 	    	if (col==0)
 	    	{
@@ -103,27 +100,31 @@ public class VueBaseValues extends JPanel implements TableModelListener {
 	    	}
 	    	return "N/A";
 	    }
-	    public boolean isCellEditable(int row, int col)
+	    @Override
+      public boolean isCellEditable(int row, int col)
 	        { 
 	    		if (getColumnName(col).equals("Value")) 
 	    			return true;
 	    		return false;
 	        }
-	    public void setValueAt(Object value, int row, int col) {
+	    @Override
+      public void setValueAt(Object value, int row, int col) {
 	    	if (getColumnName(col).equals("Value"))
 	    	{
-	    	  data.get(row).setValue(((Double)value));
+	    	  data.get(row).setValue(((Double)value).doubleValue());
 	    	  _vp.getRNA().rescaleColorMap(_vp.getColorMap());
 	    	  _vp.repaint();
 	          fireTableCellUpdated(row, col);
 	    	}
 	    }
-	    public Class getColumnClass(int c) {
+	    @Override
+      public Class<?> getColumnClass(int c) {
 	        return getValueAt(0, c).getClass();
 	    }
 	}
 
-	public void tableChanged(TableModelEvent e) {
+	@Override
+  public void tableChanged(TableModelEvent e) {
 		if (e.getType() == TableModelEvent.UPDATE)
 		{
 			table.repaint();

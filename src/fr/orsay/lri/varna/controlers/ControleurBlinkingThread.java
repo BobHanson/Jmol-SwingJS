@@ -22,7 +22,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.Timer;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 
 /**
  * BH SwingJS converted to Timer mechanism for compatibility with JavaScript 
@@ -76,7 +76,8 @@ public class ControleurBlinkingThread extends Thread implements ActionListener {
 	private Timer timer;
 	
 	
-	public void interrupt() {
+	@Override
+  public void interrupt() {
 		super.interrupt();
 		stopTimer();
 		run();
@@ -86,7 +87,9 @@ public class ControleurBlinkingThread extends Thread implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		run();
 	}
-	public void run() {
+	@Override
+  public void run() {
+	// by Bob Hanson, for SwingJS
 	//   same as:
 	//			while (true) {
 	//			try {

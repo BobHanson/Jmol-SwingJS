@@ -54,7 +54,7 @@ public class ModeleBackbone implements Serializable {
   }
 
 
-  public static String XML_ELEMENT_NAME = "backbone";
+  public static final String XML_ELEMENT_NAME = "backbone";
 
   public void toXML(TransformerHandler hd) throws SAXException {
     AttributesImpl atts = new AttributesImpl();

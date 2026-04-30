@@ -54,13 +54,13 @@ public class ModeleBP implements Serializable, Comparable<ModeleBP> {
 	private ModeleBPStyle _style;
 
 	
-	public static String XML_ELEMENT_NAME = "bp";
-	public static String XML_VAR_PARTNER5_NAME = "part5";
-	public static String XML_VAR_EDGE5_NAME = "edge5";
-	public static String XML_VAR_PARTNER3_NAME = "part3";
-	public static String XML_VAR_EDGE3_NAME = "edge3";
-	public static String XML_VAR_STERICITY_NAME = "orient";
-	public static String XML_VAR_SEC_STR_NAME = "secstr";
+	public static final String XML_ELEMENT_NAME = "bp";
+	public static final String XML_VAR_PARTNER5_NAME = "part5";
+	public static final String XML_VAR_EDGE5_NAME = "edge5";
+	public static final String XML_VAR_PARTNER3_NAME = "part3";
+	public static final String XML_VAR_EDGE3_NAME = "edge3";
+	public static final String XML_VAR_STERICITY_NAME = "orient";
+	public static final String XML_VAR_SEC_STR_NAME = "secstr";
 
 	public void toXML(TransformerHandler hd, boolean inSecondaryStructure) throws SAXException
 	{

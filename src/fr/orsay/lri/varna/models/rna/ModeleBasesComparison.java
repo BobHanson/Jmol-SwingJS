@@ -65,15 +65,10 @@ public class ModeleBasesComparison extends ModeleBase {
 	 */
 	private int _appartenance = -1;
 
-	/**
-	 * This base's offset in the sequence
-	 */
-	private int _index;
-
-	public static String XML_ELEMENT_NAME = "NTPair";
-	public static String XML_VAR_FIRST_CONTENT_NAME = "base1";
-	public static String XML_VAR_SECOND_CONTENT_NAME = "base2";
-	public static String XML_VAR_MEMBERSHIP_NAME = "type";
+	public static final String XML_ELEMENT_NAME = "NTPair";
+	public static final String XML_VAR_FIRST_CONTENT_NAME = "base1";
+	public static final String XML_VAR_SECOND_CONTENT_NAME = "base2";
+	public static final String XML_VAR_MEMBERSHIP_NAME = "type";
 
 	
 	
@@ -83,7 +78,7 @@ public class ModeleBasesComparison extends ModeleBase {
 		AttributesImpl atts = new AttributesImpl();
 		atts.addAttribute("","",XML_VAR_INDEX_NAME,"CDATA",""+_index);
 		atts.addAttribute("","",XML_VAR_NUMBER_NAME,"CDATA",""+_resno);
-		atts.addAttribute("","",XML_VAR_CUSTOM_DRAWN_NAME,"CDATA",""+_colorie);
+		atts.addAttribute("","",XML_VAR_CUSTOM_DRAWN_NAME,"CDATA",""+_colored);
 		atts.addAttribute("","",XML_VAR_LABEL_NAME,"CDATA",""+_label);
 		atts.addAttribute("","",XML_VAR_MEMBERSHIP_NAME,"CDATA",""+_appartenance);
 		atts.addAttribute("","","VALUE","CDATA",""+_value);
@@ -99,7 +94,7 @@ public class ModeleBasesComparison extends ModeleBase {
 		
 		_coords.toXML(hd,XML_VAR_POSITION_NAME);
 		_center.toXML(hd,XML_VAR_CENTER_NAME);
-		if (_colorie)
+		if (_colored)
 		{ _styleBase.toXML(hd); }
 		hd.endElement("","",XML_ELEMENT_NAME);
 
@@ -122,6 +117,7 @@ public class ModeleBasesComparison extends ModeleBase {
 	/**
 	 * Creates a new comparison base with the default display style and no
 	 * nitrogenous bases.
+	 * @param index 
 	 */
 	public ModeleBasesComparison(int index) {
 		this(' ', ' ', index);
@@ -134,6 +130,7 @@ public class ModeleBasesComparison extends ModeleBase {
 	 * @param coords
 	 *            - The coordinates in which the comparison base has to be
 	 *            placed.
+	 * @param index 
 	 */
 	public ModeleBasesComparison(Point2D coords, int index) {
 		this(' ', ' ', new Point2D.Double(coords.getX(), coords.getY()), index);
@@ -146,6 +143,7 @@ public class ModeleBasesComparison extends ModeleBase {
 	 *            - The first RNA' nitrogenous base
 	 * @param base2
 	 *            - The second RNA' nitrogenous base
+	 * @param index 
 	 */
 	public ModeleBasesComparison(char base1, char base2, int index) {
 		this(base1, base2, -1, index);
@@ -162,6 +160,7 @@ public class ModeleBasesComparison extends ModeleBase {
 	 * @param coords
 	 *            - The coordinates in which the comparison base has to be
 	 *            placed.
+	 * @param index 
 	 */
 	public ModeleBasesComparison(char base1, char base2, Point2D coords,
 			int index) {
@@ -176,6 +175,8 @@ public class ModeleBasesComparison extends ModeleBase {
 	 *            - The first RNA' nitrogenous base
 	 * @param base2
 	 *            - The second RNA' nitrogenous base
+	 * @param elementStructure 
+	 * @param index 
 	 */
 	public ModeleBasesComparison(char base1, char base2, int elementStructure,
 			int index) {
@@ -203,9 +204,9 @@ public class ModeleBasesComparison extends ModeleBase {
 	 */
 	public ModeleBasesComparison(Point2D coords, char base1, char base2,
 			boolean colorie, ModelBaseStyle mb, int elementStructure, int index) {
-		_colorie = colorie;
-		_base1 = base1;
-		_base2 = base2;
+		_colored = colorie;
+		_base1 = Character.valueOf(base1);
+		_base2 = Character.valueOf(base2);
 		_styleBase = mb;
 		_coords = new VARNAPoint(coords.getX(), coords.getY());
 		_index = index;
@@ -226,7 +227,7 @@ public class ModeleBasesComparison extends ModeleBase {
 	 */
 	@Override
   public ModelBaseStyle getStyleBase() {
-		if (_colorie)
+		if (_colored)
 			return _styleBase;
 		return new ModelBaseStyle();
 	}
@@ -236,8 +237,8 @@ public class ModeleBasesComparison extends ModeleBase {
 	 * 
 	 * @return TRUE if this comparison base is colored, else FALSE.
 	 */
-	public Boolean getColored() {
-		return _colorie;
+	public boolean getColored() {
+		return _colored;
 	}
 
 	/**
@@ -246,8 +247,8 @@ public class ModeleBasesComparison extends ModeleBase {
 	 * @param colored
 	 *            - TRUE if this comparison base has to be colored, else FALSE.
 	 */
-	public void set_colored(Boolean colored) {
-		this._colorie = colored;
+	public void set_colored(boolean colored) {
+		this._colored = colored;
 	}
 
 
@@ -340,13 +341,6 @@ public class ModeleBasesComparison extends ModeleBase {
 			this.getStyleBase().setBaseInnerColor(DEFAULT_RNA_COLOR);
 		}
 		this._appartenance = _appartenance;
-	}
-
-
-
-	@Override
-  public int getIndex() {
-		return _index;
 	}
 
 	@Override

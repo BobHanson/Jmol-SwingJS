@@ -50,7 +50,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.exceptions.ExceptionDrawingAlgorithm;
 import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
 import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;

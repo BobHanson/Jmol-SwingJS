@@ -26,21 +26,21 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 
 
 public class VueManualInput {
 
-	private VARNAPanel _vp;
-	private JPanel panel;
-	private JTextField tseq, tstr;
+	protected VARNAPanel _vp;
+	protected JPanel panel;
+	protected JTextField tseq, tstr;
 
 	public VueManualInput(VARNAPanel vp) {
 		_vp = vp;
 		buildView();
 	}
 
-	private void buildView() {
+	protected void buildView() {
 		panel = new JPanel();
 		JPanel pup = new JPanel();
 		JPanel pdown = new JPanel();

@@ -42,13 +42,13 @@ public class ChemProbAnnotation implements Serializable {
 	private ChemProbAnnotationType _type;
 	private boolean _outward;
 	
-	public static String XML_ELEMENT_NAME = "ChemProbAnnotation";
-	public static String XML_VAR_INDEX5_NAME = "Index5";
-	public static String XML_VAR_INDEX3_NAME = "Index3";
-	public static String XML_VAR_COLOR_NAME = "Color";
-	public static String XML_VAR_INTENSITY_NAME = "Intensity";
-	public static String XML_VAR_TYPE_NAME = "Type";
-	public static String XML_VAR_OUTWARD_NAME = "Outward";
+	public static final String XML_ELEMENT_NAME = "ChemProbAnnotation";
+	public static final String XML_VAR_INDEX5_NAME = "Index5";
+	public static final String XML_VAR_INDEX3_NAME = "Index3";
+	public static final String XML_VAR_COLOR_NAME = "Color";
+	public static final String XML_VAR_INTENSITY_NAME = "Intensity";
+	public static final String XML_VAR_TYPE_NAME = "Type";
+	public static final String XML_VAR_OUTWARD_NAME = "Outward";
 
 	public void toXML(TransformerHandler hd) throws SAXException
 	{

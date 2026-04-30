@@ -41,20 +41,20 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileFilter;
 
-import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.components.GradientEditorPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.rna.ModeleColorMap;
 import fr.orsay.lri.varna.models.rna.ModeleColorMap.NamedColorMapTypes;
 
 public class VueColorMapStyle extends JPanel implements ActionListener, ItemListener, PropertyChangeListener {
-	private VARNAPanel _vp;
-	private GradientEditorPanel _gp;
-	private JComboBox _cb; 
-	private JTextField _code; 
-	private ModeleColorMap _backup;
+	protected VARNAPanel _vp;
+	protected GradientEditorPanel _gp;
+	protected JComboBox _cb; 
+	protected JTextField _code; 
+	protected ModeleColorMap _backup;
 	// TODO BH SwingJS note that the save dialog is never used in JavaScript 
-	private static JFileChooser fc = new JFileChooser(){
+	protected static JFileChooser fc = new JFileChooser(){
 	    public void approveSelection(){
 	        File f = getSelectedFile();
 	        if(f.exists() && getDialogType() == SAVE_DIALOG){
@@ -83,7 +83,7 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 		init();
 	}
 
-	private void init()
+	protected void init()
 	{
 		JLabel gradientCaption = new JLabel("Click gradient to add new color...");
 		_gp = new GradientEditorPanel(_vp.getColorMap().clone());
@@ -247,12 +247,12 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 	}
 	
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	
-	private void refreshCode()
+	protected void refreshCode()
 	{
 		int selected = -1;
 		NamedColorMapTypes n = null;

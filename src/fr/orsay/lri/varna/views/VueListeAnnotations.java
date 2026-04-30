@@ -46,8 +46,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.filechooser.FileFilter;
 
-import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.components.AnnotationTableModel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurTableAnnotations;
 import fr.orsay.lri.varna.models.annotations.TextAnnotation;
 import fr.orsay.lri.varna.models.rna.ModeleColorMap;
@@ -62,7 +62,7 @@ public class VueListeAnnotations extends JPanel {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	protected static final long serialVersionUID = 1L;
 
 	/**
 	 * if this view is for removing annoted texts
@@ -73,13 +73,13 @@ public class VueListeAnnotations extends JPanel {
 	 */
 	public static final int EDIT = 1;
 
-	private VARNAPanel _vp;
-	private ArrayList<Object> data;
-	private JTable table;
-	private int type;
-	private AnnotationTableModel specialTableModel;
+	protected VARNAPanel _vp;
+	protected ArrayList<Object> data;
+	protected JTable table;
+	protected int type;
+	protected AnnotationTableModel specialTableModel;
 	// BH SwingJS - this is never used in JavaScript
-	private static JFileChooser fc = new JFileChooser(){
+	protected static JFileChooser fc = new JFileChooser(){
 	    public void approveSelection(){
 	        File f = getSelectedFile();
 	        if(f.exists() && getDialogType() == SAVE_DIALOG){
@@ -120,7 +120,7 @@ public class VueListeAnnotations extends JPanel {
 		createView();
 	}
 
-	private void createView() {
+	protected void createView() {
 		specialTableModel = new AnnotationTableModel(data);
 		table = new JTable(specialTableModel);
 		ControleurTableAnnotations ctrl = new ControleurTableAnnotations(table,

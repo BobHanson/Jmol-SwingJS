@@ -122,7 +122,7 @@ public class RNATree {
 		return converter.convert(alignment);
 	}
 	
-	private static class ConvertToMapping {
+	protected static class ConvertToMapping {
 		private Mapping m;
 		
 		public Mapping convert(Tree<AlignedNode<RNANodeValue,RNANodeValue>> tree) throws MappingException {

@@ -28,7 +28,7 @@ public class SecStrProducerGraphics implements VueVARNAGraphics{
 	
 	public void drawArc(double x, double y, double rx, double ry,
 			double angleStart, double angleEnd) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
@@ -41,13 +41,13 @@ public class SecStrProducerGraphics implements VueVARNAGraphics{
 	}
 
 	public void drawRect(double x, double y, double w, double h) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
 	public void drawRoundRect(double x, double y, double w, double h,
 			double rx, double ry) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
@@ -64,13 +64,13 @@ public class SecStrProducerGraphics implements VueVARNAGraphics{
 	}
 
 	public void fillRect(double x, double y, double w, double h) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void fillRoundRect(double x, double y, double w, double h,
 			double rx, double ry) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	public Color getColor() {
@@ -78,7 +78,7 @@ public class SecStrProducerGraphics implements VueVARNAGraphics{
 	}
 	
 	public Dimension getStringDimension(String s) {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
@@ -87,7 +87,7 @@ public class SecStrProducerGraphics implements VueVARNAGraphics{
 	}
 	
 	public void setSelectionStroke() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 	
@@ -97,7 +97,7 @@ public class SecStrProducerGraphics implements VueVARNAGraphics{
 	}
 
 	public void setPlainStroke() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 

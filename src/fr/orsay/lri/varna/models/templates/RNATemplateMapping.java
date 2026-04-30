@@ -5,11 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import fr.orsay.lri.varna.applications.templateEditor.Couple;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.RNA;
 import fr.orsay.lri.varna.models.templates.RNATemplate.RNATemplateElement;
 import fr.orsay.lri.varna.models.templates.RNATemplate.RNATemplateHelix;
+import fr.orsay.lri.varna.utils.Couple;
 
 /**
  * A RNATemplateMapping is a mapping between bases in an RNA sequence

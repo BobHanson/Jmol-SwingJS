@@ -42,10 +42,9 @@ public class ModeleBaseNucleotide extends ModeleBase {
    */
   private static final long serialVersionUID = -5493938366569588113L;
   private String _c;
-  private int _index;
 
-  public static String XML_ELEMENT_NAME = "nt";
-  public static String XML_VAR_CONTENT_NAME = "base";
+  public static final String XML_ELEMENT_NAME = "nt";
+  public static final String XML_VAR_CONTENT_NAME = "base";
 
   @Override
   public void toXML(TransformerHandler hd) throws SAXException {
@@ -53,7 +52,7 @@ public class ModeleBaseNucleotide extends ModeleBase {
     atts.addAttribute("", "", XML_VAR_INDEX_NAME, "CDATA", "" + _index);
     atts.addAttribute("", "", XML_VAR_NUMBER_NAME, "CDATA", "" + _resno);
     atts.addAttribute("", "", XML_VAR_CUSTOM_DRAWN_NAME, "CDATA",
-        "" + _colorie);
+        "" + _colored);
     atts.addAttribute("", "", XML_VAR_VALUE_NAME, "CDATA", "" + _value);
     atts.addAttribute("", "", XML_VAR_LABEL_NAME, "CDATA", "" + _label);
     hd.startElement("", "", XML_ELEMENT_NAME, atts);
@@ -64,7 +63,7 @@ public class ModeleBaseNucleotide extends ModeleBase {
 
     _coords.toXML(hd, XML_VAR_POSITION_NAME);
     _center.toXML(hd, XML_VAR_CENTER_NAME);
-    if (_colorie) {
+    if (_colored) {
       _styleBase.toXML(hd);
     }
     hd.endElement("", "", XML_ELEMENT_NAME);
@@ -173,7 +172,7 @@ public class ModeleBaseNucleotide extends ModeleBase {
   public ModeleBaseNucleotide(Point2D.Double coords, Point2D.Double center,
       boolean colorie, String label, ModelBaseStyle mb, int elementStruct,
       int index) {
-    _colorie = colorie;
+    _colored = colorie;
     _c = label;
     _styleBase = mb;
     _coords = new VARNAPoint(coords);
@@ -185,7 +184,7 @@ public class ModeleBaseNucleotide extends ModeleBase {
 
   @Override
   public ModelBaseStyle getStyleBase() {
-    if (_colorie)
+    if (_colored)
       return _styleBase;
     return new ModelBaseStyle();
   }
@@ -206,11 +205,6 @@ public class ModeleBaseNucleotide extends ModeleBase {
   @Override
   public void setContent(String s) {
     setBase(s);
-  }
-
-  @Override
-  public int getIndex() {
-    return _index;
   }
 
   @Override

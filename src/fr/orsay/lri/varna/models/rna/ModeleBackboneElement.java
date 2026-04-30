@@ -91,10 +91,10 @@ public class ModeleBackboneElement implements Serializable{
 	  return "[" + _index + " " + _type + "]"; 
 	}
 	
-	public static String XML_ELEMENT_NAME = "BackboneElement";
-	public static String XML_VAR_INDEX_NAME = "index";
-	public static String XML_VAR_TYPE_NAME = "type";
-	public static String XML_VAR_COLOR_NAME = "color";	
+	public static final String XML_ELEMENT_NAME = "BackboneElement";
+	public static final String XML_VAR_INDEX_NAME = "index";
+	public static final String XML_VAR_TYPE_NAME = "type";
+	public static final String XML_VAR_COLOR_NAME = "color";	
 	
 	public void toXML(TransformerHandler hd) throws SAXException
 	{

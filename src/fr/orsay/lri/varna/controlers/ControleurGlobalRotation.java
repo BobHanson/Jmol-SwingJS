@@ -20,7 +20,7 @@ package fr.orsay.lri.varna.controlers;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.VARNAEdits;
 import fr.orsay.lri.varna.views.VueGlobalRotation;
 

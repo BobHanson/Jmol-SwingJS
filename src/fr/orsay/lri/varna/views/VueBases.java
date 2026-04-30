@@ -31,12 +31,11 @@ import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-
-import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.components.BaseSpecialColorEditor;
 import fr.orsay.lri.varna.components.BaseTableModel;
 import fr.orsay.lri.varna.components.ColorRenderer;
-import fr.orsay.lri.varna.models.BaseList;
+import fr.orsay.lri.varna.components.VARNAPanel;
+import fr.orsay.lri.varna.models.BaseSet;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.ModeleBaseNucleotide;
 
@@ -44,7 +43,7 @@ public class VueBases extends JPanel {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	protected static final long serialVersionUID = 1L;
 
 	/**
 	 * for bases by kind
@@ -59,17 +58,17 @@ public class VueBases extends JPanel {
 	 */
 	public final static int COUPLE_MODE = 3;
 
-	private int _mode;
+	protected int _mode;
 
-	private VARNAPanel _vp;
+	protected VARNAPanel _vp;
 
-	private ArrayList<BaseList> data = new ArrayList<BaseList>();
+	protected ArrayList<BaseSet> data = new ArrayList<BaseSet>();
 	
-	private Hashtable<String,BaseList> revdata = new Hashtable<String,BaseList>();
+	protected Hashtable<String,BaseSet> revdata = new Hashtable<String,BaseSet>();
 	
-	private JTable table;
+	protected JTable table;
 
-	private BaseTableModel specialTableModel;
+	protected BaseTableModel specialTableModel;
 
 	public VueBases(VARNAPanel vp, int mode) {
 		super(new GridLayout(1, 0));
@@ -92,18 +91,18 @@ public class VueBases extends JPanel {
 		}
 	}
 	
-	private BaseList locateOrAddList(String caption)
+	protected BaseSet locateOrAddList(String caption)
 	{
 	  if (!revdata.containsKey(caption))
 	  {
-		  BaseList mbl = new BaseList(caption);
+		  BaseSet mbl = new BaseSet(caption);
 		  revdata.put(caption,mbl);
 		  data.add(mbl);
 	  }
 	  return revdata.get(caption);
 	}
 
-	private void coupleMode() {
+	protected void coupleMode() {
 		String pairString;
 		for (int i = 0; i < _vp.getRNA().get_listeBases().size(); i++) {
 			
@@ -112,7 +111,7 @@ public class VueBases extends JPanel {
 				String tmp1 = (_vp.getRNA().get_listeBases().get(i).getContent()); 
 				String tmp2 = (_vp.getRNA().get_listeBases().get(j).getContent()); 
 				pairString = tmp1 +"-"+ tmp2;
-				BaseList bl = locateOrAddList(pairString);
+				BaseSet bl = locateOrAddList(pairString);
 				bl.addBase(_vp.getRNA().get_listeBases().get(i));
 				bl.addBase(_vp.getRNA().get_listeBases().get(j));
 			}
@@ -120,26 +119,26 @@ public class VueBases extends JPanel {
 		createView();
 	}
 
-	private void allMode() {
+	protected void allMode() {
 		for (int i = 0; i < _vp.getRNA().get_listeBases().size(); i++) {
 			ModeleBase mb = _vp.getRNA().get_listeBases().get(i);
-			BaseList bl = locateOrAddList(""+i);
+			BaseSet bl = locateOrAddList(""+i);
 			bl.addBase(mb);
 		}
 		createView();
 	}
 
-	private void kindMode() {
+	protected void kindMode() {
 		for (int i = 0; i < _vp.getRNA().get_listeBases().size(); i++) {
 			ModeleBase mb = _vp.getRNA().get_listeBases().get(i);
 			String tmp1 = (mb.getContent()); 
-			BaseList bl = locateOrAddList(tmp1);
+			BaseSet bl = locateOrAddList(tmp1);
 			bl.addBase(mb);
 		}
 		createView();
 	}
 
-	private void createView() {
+	protected void createView() {
 		specialTableModel = new BaseTableModel(data);
 		table = new JTable(specialTableModel);
 		table.setPreferredScrollableViewportSize(new Dimension(500, 300));
@@ -183,12 +182,12 @@ public class VueBases extends JPanel {
 		return _mode;
 	}
 
-	public BaseList getDataAt(int i) {
+	public BaseSet getDataAt(int i) {
 		return data.get(i);
 	}
 
 	
-	public ArrayList<BaseList> getData() {
+	public ArrayList<BaseSet> getData() {
 		return data;
 	}
 

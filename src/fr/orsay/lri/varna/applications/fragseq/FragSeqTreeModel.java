@@ -244,7 +244,7 @@ public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException 
 
 public void treeWillCollapse(TreeExpansionEvent event)
 		throws ExpandVetoException {
-	// TODO Auto-generated method stub
+	
 	TreePath t = event.getPath();
 	FragSeqNode n = (FragSeqNode) t.getLastPathComponent();
 	_isExpanded.put(n, false);

@@ -113,7 +113,7 @@ public class RNATree2 {
 		return converter.convert(alignment);
 	}
 	
-	private static class ConvertToMapping {
+	protected static class ConvertToMapping {
 		private Mapping m;
 		ExampleDistance3 sequenceAligner = new ExampleDistance3();
 		

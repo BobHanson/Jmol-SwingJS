@@ -26,6 +26,7 @@ public class FullBackup implements Serializable{
     	name = n;
     }
     
+    @Override
     public String toString()
     {
     	return name;

@@ -26,15 +26,15 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurBorder;
 import fr.orsay.lri.varna.controlers.ControleurSliderLabel;
 
 public class VueBorder {
 
-	private VARNAPanel _vp;
-	private JSlider borderHeightSlider, borderWidthSlider;
-	private JPanel panel;
+	protected VARNAPanel _vp;
+	protected JSlider borderHeightSlider, borderWidthSlider;
+	protected JPanel panel;
 
 	public VueBorder(VARNAPanel vp) {
 		_vp = vp;

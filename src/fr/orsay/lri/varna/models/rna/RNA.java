@@ -31,7 +31,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.Serializable;
 import java.io.StreamTokenizer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,8 +50,7 @@ import javax.xml.transform.sax.TransformerHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import fr.orsay.lri.varna.VARNAPanel;
-import fr.orsay.lri.varna.applications.templateEditor.Couple;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.exceptions.ExceptionExportFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
 import fr.orsay.lri.varna.exceptions.ExceptionNAViewAlgorithm;
@@ -61,7 +59,7 @@ import fr.orsay.lri.varna.exceptions.ExceptionWritingForbidden;
 import fr.orsay.lri.varna.factories.RNAFactory;
 import fr.orsay.lri.varna.interfaces.InterfaceVARNAListener;
 import fr.orsay.lri.varna.interfaces.InterfaceVARNAObservable;
-import fr.orsay.lri.varna.models.BaseList;
+import fr.orsay.lri.varna.models.BaseSet;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.VARNAConfig.BP_STYLE;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation;
@@ -79,6 +77,7 @@ import fr.orsay.lri.varna.models.templates.DrawRNATemplateMethod;
 import fr.orsay.lri.varna.models.templates.RNATemplate;
 import fr.orsay.lri.varna.models.templates.RNATemplateDrawingAlgorithmException;
 import fr.orsay.lri.varna.models.templates.RNATemplateMapping;
+import fr.orsay.lri.varna.utils.Couple;
 import fr.orsay.lri.varna.utils.RNAMLParser;
 import fr.orsay.lri.varna.utils.XMLUtils;
 
@@ -88,9 +87,7 @@ import fr.orsay.lri.varna.utils.XMLUtils;
  * @author darty
  * 
  */
-public class RNA extends InterfaceVARNAObservable implements Serializable {
-
-  private static final long serialVersionUID = 7541274455751497303L;
+public class RNA implements InterfaceVARNAObservable {
 
   /**
    * Selects the "Feynman diagram" drawing algorithm that places the bases on a
@@ -142,7 +139,6 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
 
   public final static String DBNStrandSep = "&";
 
-
   public double CHEM_PROB_DIST = 14;
   public double CHEM_PROB_BASE_LENGTH = 30;
   public double CHEM_PROB_ARROW_HEIGHT = 10;
@@ -169,6 +165,7 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
   private int _drawMode = DRAW_MODE_RADIATE;
   private boolean _drawn = false;
   private String _name = "";
+  public Integer modelID = Integer.valueOf(0);
   private String _id = "";
   private String sequence;
   private String structure;
@@ -176,7 +173,11 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
   /**
    * the base list
    */
-  private ArrayList<ModeleBase> _listeBases;
+  protected ArrayList<ModeleBase> _listeBases = new ArrayList<ModeleBase>();
+
+  private BaseSet _selectedBases = new BaseSet("selection");
+
+
   /**
    * the strand list
    */
@@ -192,21 +193,19 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
 
   private boolean _strandEndsAnnotated = false;
 
-  public static String XML_ELEMENT_NAME = "RNA";
-  public static String XML_VAR_BASE_SPACING_NAME = "spacing";
-  public static String XML_VAR_DRAWN_NAME = "drawn";
-  public static String XML_VAR_NAME_NAME = "name";
-  public static String XML_VAR_DRAWN_MODE_NAME = "mode";
-  public static String XML_VAR_ID_NAME = "id";
-  public static String XML_VAR_BP_HEIGHT_NAME = "delta";
-  public static String XML_VAR_BASES_NAME = "bases";
-  public static String XML_VAR_BASEPAIRS_NAME = "BPs";
-  public static String XML_VAR_ANNOTATIONS_NAME = "annotations";
-  public static String XML_VAR_BACKBONE_NAME = "backbone";
+  public static final String XML_ELEMENT_NAME = "RNA";
+  public static final String XML_VAR_BASE_SPACING_NAME = "spacing";
+  public static final String XML_VAR_DRAWN_NAME = "drawn";
+  public static final String XML_VAR_NAME_NAME = "name";
+  public static final String XML_VAR_DRAWN_MODE_NAME = "mode";
+  public static final String XML_VAR_ID_NAME = "id";
+  public static final String XML_VAR_BP_HEIGHT_NAME = "delta";
+  public static final String XML_VAR_BASES_NAME = "bases";
+  public static final String XML_VAR_BASEPAIRS_NAME = "BPs";
+  public static final String XML_VAR_ANNOTATIONS_NAME = "annotations";
+  public static final String XML_VAR_BACKBONE_NAME = "backbone";
 
   transient private ArrayList<InterfaceVARNAListener> _listeVARNAListener = new ArrayList<InterfaceVARNAListener>();
-
-  public BaseList selectedBases;
 
   //unused private static final double MIN_DISTANCE = 10.;
 
@@ -217,7 +216,6 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
 
   public RNA(String name) {
     _name = name;
-    _listeBases = new ArrayList<ModeleBase>();
     _drawn = false;
   }
 
@@ -226,6 +224,11 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     _listeBases.addAll(r._listeBases);
     _listeVARNAListener = r._listeVARNAListener;
     _drawn = r._drawn;
+  }
+
+  public RNA(String name, Integer modelID) {
+    this(name);
+    this.modelID = (modelID == null ? Integer.valueOf(0) : modelID);
   }
 
   public ArrayList<ModeleBase> getListeBases() {
@@ -254,6 +257,11 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     }
   }
   
+  /**
+   * return null if set is not empty but there are no applicable residues
+   * @param set
+   * @return array of indices or null
+   */
   public ArrayList<Integer> getBasesByResidueNumber(Iterable<Integer> set) {
     ArrayList<Integer> list = new ArrayList<>();
     if (mapResnoToIndex != null) {
@@ -265,8 +273,6 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     }
     return list;
   }
-
-
 
   public void saveRNADBN(String path, String title)
       throws ExceptionWritingForbidden {
@@ -298,10 +304,14 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
   }
 
   public Color getBaseInnerColor(int i, VARNAConfig conf) {
-    Color result = _listeBases.get(i).getStyleBase().getBaseInnerColor();
-    String res = _listeBases.get(i).getContent();
+    ModeleBase base = _listeBases.get(i);
+    ModelBaseStyle style = base.getStyleBase();
+    if (style.getBaseColor() != null)
+      return style.getBaseColor();
+    Color result = style.getBaseInnerColor();
+    String res = base.getContent();
     if (conf._drawColorMap) {
-      result = conf._cm.getColorForValue(_listeBases.get(i).getValue());
+      result = conf._cm.getColorForValue(base.getValue());
     } else if ((conf._colorDashBases && (res.contains("-")))) {
       result = conf._dashBasesColor;
     } else if ((conf._colorSpecialBases
@@ -2130,6 +2140,9 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     applyStruct(str);
   }
 
+  public boolean isSet() {
+    return (_listeBases.size() > 1);
+  }
   /**
    * Sets the RNA to be drawn. Uses when comparison mode is on. Will draw the
    * super-structure passed in parameters and apply specials styles to the bases
@@ -2473,28 +2486,17 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     }
     return result;
   }
-
-  //  private void showBasic(int[] res) {
-  //    for (int i = 0; i < res.length; i++) {
-  //      System.out.print(res[i] + ",");
-  //    }
-  //    System.out.println();
-  //
-  //  }
-
-  
-  public int[] getStrandShifts() {
-    int[] result = new int[getSize()];
+  public void setTextIndexes() {
     int acc = 0;
     for (int i = 0; i < getSize(); i++) {
       if (_backbone.isStrandEnd(i - 1)) {
         acc++;
       }
-      result[i] = acc;
+      _listeBases.get(i).setTextIndex(i + acc);
     }
-    return result;
 
   }
+
 
 //  public String addStrandSeparators(String s) {
 //    String res = "";
@@ -2530,7 +2532,6 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
 
       for (int p = 0; p < Math.min(pages.size(), open.length); p++) {
         int[] page = pages.get(p);
-        //showBasic(page);
         for (int i = 0; i < res.length; i++) {
           if (page[i] != -1 && page[i] > i && res[i] == '.'
               && res[page[i]] == '.') {
@@ -2566,6 +2567,19 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
 //    return addStrandSeparators(result);
 //  }
 
+  protected int[] getCaretToIndex() {
+    if (caretToIndex != null)
+      return caretToIndex;
+    caretToIndex = new int[_listeBases.size()+_backbone.bsStrandEnds.cardinality()]; 
+    for (int i = 0, p = 0; i < _listeBases.size(); i++, p++) {
+      caretToIndex[p] = i;
+      if (_backbone.isStrandEnd(i)) {
+        caretToIndex[++p] = i;
+      }
+    }
+    return caretToIndex;
+  }
+  
   /**
    * Returns the raw nucleotides sequence for the displayed RNA
    * 
@@ -2575,13 +2589,10 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     if (sequence != null)
       return sequence;
     String result = "";
-    caretToIndex = new int[_listeBases.size()+_backbone.bsStrandEnds.cardinality()]; 
-    for (int i = 0, p = 0; i < _listeBases.size(); i++, p++) {
+    for (int i = 0, n = _listeBases.size(); i < n; i++) {
       result += _listeBases.get(i).getContent();
-      caretToIndex[p] = i;
       if (_backbone.isStrandEnd(i)) {
         result += DBNStrandSep;
-        caretToIndex[++p] = i;
       }
     }
     sequence = result;//addStrandSeparators(result);
@@ -3307,8 +3318,12 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     return _name;
   }
 
+  /**
+   * do not allow null name, for .equals()
+   * @param n
+   */
   public void setName(String n) {
-    _name = n;
+    _name = (n == null ? "" : n);
   }
 
   public ArrayList<TextAnnotation> getAnnotations() {
@@ -4107,7 +4122,7 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
 
    @Override
   public String toString() {
-    return (_name == null || _name.equals("") ? getStructDBN() : _name);
+    return (!isSet() ? "unset" : "") + (_name == null || _name.equals("") ? getSeq() : _name);
   }
 
   @Override
@@ -4115,13 +4130,87 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     if (!(o instanceof RNA))
       return false;
     RNA rna = (RNA) o;
-    return rna.getSeq().equals(getSeq())
+    return rna.modelID.equals(modelID)        
+    && rna.getSeq().equals(getSeq())
         && rna.getStructDBN().equals(getStructDBN());
   }
 
   @Override
   public int hashCode() {
     return getSeq().hashCode();
+  }
+
+  public void colorResidues(List<Integer> resnos,
+                            List<Integer> colorIndexes, List<Color> colors) {
+    // note that colorIndex null indicates same as previous
+    Color lastColor = null;
+    for (int i = 0; i < resnos.size(); i++) {
+      Integer index = mapResnoToIndex.get(resnos.get(i));
+      if (index != null) {
+        Integer ci = colorIndexes.get(i);
+        Color c = (ci == null ? lastColor
+            : (lastColor = colors.get(ci.intValue())));
+        _listeBases.get(index.intValue()).setColor(c);
+      }
+    }
+  }
+
+  public void clearSelections() {
+    _selectedBases.clear();
+    for (int i = _listeBases.size(); --i >= 0;) {
+      _listeBases.get(i).setSelected(false);
+    }
+  }
+
+  public boolean isSelected(int index) {
+    return _selectedBases.contains(getBaseAt(index));
+  }
+
+  public BaseSet getSelectedBases() {
+    return _selectedBases;
+  }
+
+  public void setSelections(Collection<? extends ModeleBase> mbs) {
+    clearSelections();
+    _selectedBases.clear();
+    _selectedBases.addBases(mbs);
+    for (ModeleBase m : mbs) {
+      m.setSelected(true);
+    }
+  }
+
+  public void addSelection(int i) {
+    setSelected(getBaseAt(i));
+  }
+
+  public void removeSelection(int i) {
+    ModeleBase mb = getBaseAt(i);
+    mb.setSelected(false);
+    _selectedBases.removeBase(mb);
+    
+  }
+
+  public void setSelected(ModeleBase m) {    
+    _selectedBases.addBase(m);
+    System.out.println("setSelected  " + _selectedBases.size());
+
+    m.setSelected(true);
+  }
+
+  public void selectBasesByResno(List<Integer> resnos) {
+    clearSelections();
+    if (resnos == null)
+      return;
+    for (int i = resnos.size(); --i >= 0;) {
+      Integer index = mapResnoToIndex.get(resnos.get(i));
+      if (index != null)
+        addSelection(index.intValue());
+    }
+  }
+
+  public int getCaretToIndex(int p0) {
+    getCaretToIndex();
+    return (p0 < caretToIndex.length ? caretToIndex[p0] : -1);
   }
 
 }

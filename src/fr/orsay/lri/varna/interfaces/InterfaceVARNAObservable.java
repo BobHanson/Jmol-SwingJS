@@ -23,6 +23,6 @@ package fr.orsay.lri.varna.interfaces;
  * @author darty
  * 
  */
-public abstract class InterfaceVARNAObservable {
-	public abstract void addVARNAListener(InterfaceVARNAListener rl);
+public interface InterfaceVARNAObservable {
+	public void addVARNAListener(InterfaceVARNAListener rl);
 }

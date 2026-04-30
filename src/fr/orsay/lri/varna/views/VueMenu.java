@@ -34,7 +34,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurMenu;
 import fr.orsay.lri.varna.models.rna.RNA;
 
@@ -42,46 +42,46 @@ public class VueMenu extends JPopupMenu {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 1L;
+	protected static final long serialVersionUID = 1L;
 
-	private VARNAPanel _vp;
+	protected VARNAPanel _vp;
 
-	private ControleurMenu _controlerMenu;
+	protected ControleurMenu _controlerMenu;
 
-	private JCheckBoxMenuItem _itemOptionSpecialBaseColored = new JCheckBoxMenuItem(
+	protected JCheckBoxMenuItem _itemOptionSpecialBaseColored = new JCheckBoxMenuItem(
 			"Custom colored", false);
-	private JCheckBoxMenuItem _itemShowWarnings = new JCheckBoxMenuItem(
+	protected JCheckBoxMenuItem _itemShowWarnings = new JCheckBoxMenuItem(
 			"Show warnings", false);
-	private JCheckBoxMenuItem _itemDrawBackbone = new JCheckBoxMenuItem(
+	protected JCheckBoxMenuItem _itemDrawBackbone = new JCheckBoxMenuItem(
 			"Draw backbone", true);
-	private JCheckBoxMenuItem _itemOptionGapsBaseColored = new JCheckBoxMenuItem(
+	protected JCheckBoxMenuItem _itemOptionGapsBaseColored = new JCheckBoxMenuItem(
 			"Custom colored", false);
-	private JCheckBoxMenuItem _itemOptionBondsColored = new JCheckBoxMenuItem(
+	protected JCheckBoxMenuItem _itemOptionBondsColored = new JCheckBoxMenuItem(
 			"Use base color for base-pairs", false);
-	private JCheckBoxMenuItem _itemShowNCBP = new JCheckBoxMenuItem(
+	protected JCheckBoxMenuItem _itemShowNCBP = new JCheckBoxMenuItem(
 			"Show non-canonical BPs", true);
-	private JCheckBoxMenuItem _itemShowOnlyPlanar = new JCheckBoxMenuItem(
+	protected JCheckBoxMenuItem _itemShowOnlyPlanar = new JCheckBoxMenuItem(
 			"Hide tertiary BPs", false);
-	private JCheckBoxMenuItem _itemFlatExteriorLoop = new JCheckBoxMenuItem(
+	protected JCheckBoxMenuItem _itemFlatExteriorLoop = new JCheckBoxMenuItem(
 			"Flat exterior loop", false);
 	
-	private JCheckBoxMenuItem _itemShowColorMap = new JCheckBoxMenuItem(
+	protected JCheckBoxMenuItem _itemShowColorMap = new JCheckBoxMenuItem(
 			"Show color map", false);
-	private JMenuItem _dashBasesColor;
+	protected JMenuItem _dashBasesColor;
 
-	private ArrayList<JComponent> _disabled = new ArrayList<JComponent>();
+	protected ArrayList<JComponent> _disabled = new ArrayList<JComponent>();
 
-	private JMenuItem _rotation;
-	private JMenuItem _bpHeightIncrement;
+	protected JMenuItem _rotation;
+	protected JMenuItem _bpHeightIncrement;
 
-	private Point _spawnOrigin = new Point(-1,-1);
+	protected Point _spawnOrigin = new Point(-1,-1);
 	
 	public VueMenu(VARNAPanel vp) {
 		_vp = vp;
 		_controlerMenu = new ControleurMenu(_vp, this);
 	}
 
-	private void addTitle(String title, boolean keep) {
+	protected void addTitle(String title, boolean keep) {
 		// TOD BH SwingJS -- this should not be necessary
 		JSeparator sep = new JPopupMenu.Separator(); // BH SWingJS needs JPopupMenu.Separator
 		//JSeparator sep = new JSeparator();
@@ -104,10 +104,10 @@ public class VueMenu extends JPopupMenu {
 		}
 	}
 	
-	private void configMenuItem(JMenuItem mi, String command, String keyStroke, Container par)
+	protected void configMenuItem(JMenuItem mi, String command, String keyStroke, Container par)
 	{ configMenuItem(mi,command,keyStroke,par,false); }
 
-	private void configMenuItem(JMenuItem mi, String command, String keyStroke, Container par, boolean disabled)
+	protected void configMenuItem(JMenuItem mi, String command, String keyStroke, Container par, boolean disabled)
 	{ 
 		mi.setActionCommand(command);
 		mi.addActionListener(_controlerMenu);
@@ -119,14 +119,14 @@ public class VueMenu extends JPopupMenu {
 		par.add(mi);
 	}
 	
-	private JMenuItem createMenuItem(String caption, String command, String keyStroke, Container par, boolean disabled)
+	protected JMenuItem createMenuItem(String caption, String command, String keyStroke, Container par, boolean disabled)
 	{
 		JMenuItem mi = new JMenuItem(caption);
 		configMenuItem(mi, command,keyStroke, par, disabled);
 		return mi;
 	}
 
-	private JMenuItem createMenuItem(String caption, String command, String keyStroke, Container par)
+	protected JMenuItem createMenuItem(String caption, String command, String keyStroke, Container par)
 	{ return createMenuItem(caption, command, keyStroke, par,false); }
 
 
@@ -181,7 +181,7 @@ public class VueMenu extends JPopupMenu {
 		aboutMenu();
 	}
 
-	private void annotationMenu() {
+	protected void annotationMenu() {
 		JMenu submenuAnnotations = new JMenu("Annotations");
 		JMenu addAnnotations = new JMenu("New");
 		createMenuItem("Here", "annotationsaddPosition", "", addAnnotations);
@@ -205,7 +205,7 @@ public class VueMenu extends JPopupMenu {
 		add(submenuAnnotations);
 	}
 
-	private void fileMenu() {
+	protected void fileMenu() {
 		createMenuItem("New...", "userInput", "control N", this,true);
 		createMenuItem("Open...", "file", "control O", this,true);
 		createMenuItem("Save...", "saveas", "control S", this,true);
@@ -216,7 +216,7 @@ public class VueMenu extends JPopupMenu {
 		add(submenuSave);
 	}
 
-	private void exportMenu() {
+	protected void exportMenu() {
 		// Export menu
 		JMenu submenuExport = new JMenu("Export");
 		createMenuItem("SVG", "svg", "", submenuExport);
@@ -231,7 +231,7 @@ public class VueMenu extends JPopupMenu {
 	}
 
 
-	private void displayMenu() {
+	protected void displayMenu() {
 		
 		// SubMenu Base-pairs
 		JMenu subMenuBasePairs = new JMenu("Base Pairs");
@@ -292,13 +292,13 @@ public class VueMenu extends JPopupMenu {
 
 	}
 	
-	private void editRNAMenu()
+	protected void editRNAMenu()
 	{
 		createMenuItem("Bases...","editallbases","",this,true);
 		createMenuItem("BasePairs...","editallbps","",this,true);
 	}
 
-	private void redrawMenu() {
+	protected void redrawMenu() {
 		JMenu submenuRedraw = new JMenu("Redraw");
 		_disabled.add(submenuRedraw);
 
@@ -325,12 +325,12 @@ public class VueMenu extends JPopupMenu {
 	}
 
 	@SuppressWarnings("unused")
-	private void warningMenu() {
+	protected void warningMenu() {
 		// Menu showWarning
 		configMenuItem(_itemShowWarnings, "showwarnings", "", this, true);
 	}
 
-	private void viewMenu() {
+	protected void viewMenu() {
 		// View menu
 		JMenu submenuView = new JMenu("View");
 
@@ -354,7 +354,7 @@ public class VueMenu extends JPopupMenu {
 
 	JMenu _subMenuBases;
 
-	private Component _selectionMenuIndex = null;
+	protected Component _selectionMenuIndex = null;
 
 	public void addSelectionMenu(JMenuItem s) {
 		_selectionMenuIndex = s;
@@ -369,7 +369,7 @@ public class VueMenu extends JPopupMenu {
 		}
 	}
 
-	private void colorClassesMenu() {
+	protected void colorClassesMenu() {
 		// Menu Bases
 		_subMenuBases = new JMenu("Colors");
 		_disabled.add(_subMenuBases);
@@ -393,7 +393,7 @@ public class VueMenu extends JPopupMenu {
 		createMenuItem("Number Color",submenu.getActionCommand() + ",NumberColor","",submenu,true);		
 	}
 
-	private void aboutMenu() {
+	protected void aboutMenu() {
 		addSeparator();
 		createMenuItem("About VARNA", "about", "control A", this);
 	}

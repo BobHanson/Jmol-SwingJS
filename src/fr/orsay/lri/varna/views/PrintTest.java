@@ -104,13 +104,13 @@ class PrintTestFrame extends JFrame {
 		contentPane.add(buttonPanel, BorderLayout.NORTH);
 	}
 
-	private PrintPanel canvas;
+	protected PrintPanel canvas;
 
-	private PrintRequestAttributeSet attributes;
+	protected PrintRequestAttributeSet attributes;
 
-	private static final int WIDTH = 300;
+	protected static final int WIDTH = 300;
 
-	private static final int HEIGHT = 300;
+	protected static final int HEIGHT = 300;
 }
 
 /**

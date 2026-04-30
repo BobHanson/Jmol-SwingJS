@@ -17,6 +17,7 @@
  */
 package fr.orsay.lri.varna.models.rna;
 
+import java.awt.Color;
 import java.awt.geom.Point2D;
 import java.io.Serializable;
 
@@ -33,6 +34,15 @@ import org.xml.sax.SAXException;
 public abstract class ModeleBase
     implements Serializable, java.lang.Comparable<ModeleBase> {
 
+  public static final String XML_VAR_TYPE_NAME = "type";
+  public static final String XML_VAR_INDEX_NAME = "index";
+  public static final String XML_VAR_LABEL_NAME = "label";
+  public static final String XML_VAR_VALUE_NAME = "val";
+  public static final String XML_VAR_POSITION_NAME = "pos";
+  public static final String XML_VAR_CENTER_NAME = "center";
+  public static final String XML_VAR_NUMBER_NAME = "num";
+  public static final String XML_VAR_CUSTOM_DRAWN_NAME = "custom";
+
   private ModeleBP _BP;
   /**
    * The base style.
@@ -41,7 +51,7 @@ public abstract class ModeleBase
   /**
    * TRUE if this InterfaceBase has to be colored, else FALSE.
    */
-  protected boolean _colorie = true;
+  protected boolean _colored = true;
   /**
    * The coordinate representation of this InterfaceBase on the final graphic.
    */
@@ -58,14 +68,39 @@ public abstract class ModeleBase
 
   protected double _value;
   protected int _resno = -1;
+  protected boolean selected;
+  
+  public void setColor(Color color) {
+    getStyleBase().setBaseColor(color);
+    if (color != null)
+      setColorie(true);
+  }
 
+  public void setSelected(boolean b) {
+    selected = b;
+  }
+
+  public boolean getSelected() {
+    return selected;
+  }
+
+
+  protected int _index;
+  protected int textIndex;
+
+  public int getIndex() {
+    return _index;
+  }
+
+  public int getTextIndex() {
+    return (textIndex >= 0 ? textIndex : _index);
+  }
+
+  public void setTextIndex(int index) {
+    textIndex = index;
+  }
+  
   public abstract void toXML(TransformerHandler hd) throws SAXException;
-
-  /**
-   * 
-   * @return the internal index for this base
-   */
-  public abstract int getIndex();
 
   public abstract String getContent();
 
@@ -103,8 +138,8 @@ public abstract class ModeleBase
    * 
    * @return TRUE if this InterfaceBase has to be colored, else FALSE.
    */
-  public final boolean getColorie() {
-    return _colorie;
+  public final boolean isColored() {
+    return _colored;
   }
 
   /**
@@ -114,7 +149,7 @@ public abstract class ModeleBase
    *        - TRUE if you want this InterfaceBase to be colored, else FALSE
    */
   public final void setColorie(boolean _colorie) {
-    this._colorie = _colorie;
+    this._colored = _colorie;
   }
 
   /**
@@ -229,13 +264,4 @@ public abstract class ModeleBase
   public String toString() {
     return _label + " " + _resno;
   }
-  public static String XML_VAR_TYPE_NAME = "type";
-  public static String XML_VAR_INDEX_NAME = "index";
-  public static String XML_VAR_LABEL_NAME = "label";
-  public static String XML_VAR_VALUE_NAME = "val";
-  public static String XML_VAR_POSITION_NAME = "pos";
-  public static String XML_VAR_CENTER_NAME = "center";
-  public static String XML_VAR_NUMBER_NAME = "num";
-  public static String XML_VAR_CUSTOM_DRAWN_NAME = "custom";
-
 }

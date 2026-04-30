@@ -9,7 +9,7 @@ import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoableEdit;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.exceptions.ExceptionNAViewAlgorithm;
 import fr.orsay.lri.varna.models.rna.ModeleBP;
 import fr.orsay.lri.varna.models.rna.ModeleBase;

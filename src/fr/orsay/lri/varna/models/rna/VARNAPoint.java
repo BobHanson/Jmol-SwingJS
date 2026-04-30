@@ -22,10 +22,10 @@ public class VARNAPoint implements Serializable {
 	}	
 	
 
-	public static String XML_ELEMENT_NAME = "p";
-	public static String XML_VAR_ROLE_NAME = "r";
-	public static String XML_VAR_X_NAME = "x";
-	public static String XML_VAR_Y_NAME = "y";
+	public static final String XML_ELEMENT_NAME = "p";
+	public static final String XML_VAR_ROLE_NAME = "r";
+	public static final String XML_VAR_X_NAME = "x";
+	public static final String XML_VAR_Y_NAME = "y";
 
 	public void toXML(TransformerHandler hd, String role) throws SAXException
 	{

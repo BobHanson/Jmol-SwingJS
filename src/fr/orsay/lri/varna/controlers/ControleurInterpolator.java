@@ -27,7 +27,7 @@ import java.util.Vector;
 
 import javax.swing.Timer;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.exceptions.MappingException;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.rna.Mapping;

@@ -28,16 +28,16 @@ import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurSliderLabel;
 import fr.orsay.lri.varna.controlers.ControleurZoom;
 import fr.orsay.lri.varna.models.VARNAConfig;
 
 public class VueZoom implements ChangeListener {
 
-	private VARNAPanel _vp;
-	private JSlider zoomSlider, zoomAmountSlider;
-	private JPanel panel;
+	protected VARNAPanel _vp;
+	protected JSlider zoomSlider, zoomAmountSlider;
+	protected JPanel panel;
 
 	public VueZoom(VARNAPanel vp) {
 		_vp = vp;

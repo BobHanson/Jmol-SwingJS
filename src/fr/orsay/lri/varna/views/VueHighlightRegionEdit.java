@@ -21,23 +21,22 @@ import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.annotations.HighlightRegionAnnotation;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
 
 	public class VueHighlightRegionEdit implements ChangeListener, ActionListener {
 
-		private VARNAPanel _vp;
-		private JSlider _fromSlider;
-		private JSlider _toSlider;
-		private JPanel panel;
-		private HighlightRegionAnnotation _an;
-		private static int CONTROL_HEIGHT = 50;
-		private static int TITLE_WIDTH = 70;
-		private static int CONTROL_WIDTH = 200;
-		private JButton fillShow  = new JButton();
-		private JButton outlineShow  = new JButton();
+		protected VARNAPanel _vp;
+		protected JSlider _fromSlider;
+		protected JSlider _toSlider;
+		protected JPanel panel;
+		protected HighlightRegionAnnotation _an;
+		protected static int CONTROL_HEIGHT = 50;
+		protected static int TITLE_WIDTH = 70;
+		protected static int CONTROL_WIDTH = 200;
+		protected JButton fillShow  = new JButton();
+		protected JButton outlineShow  = new JButton();
 		JSpinner rad;
 
 		public VueHighlightRegionEdit(VARNAPanel vp, HighlightRegionAnnotation an) {

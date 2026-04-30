@@ -33,7 +33,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation.ChemProbAnnotationType;
@@ -323,6 +323,7 @@ public class VARNASessionParser extends DefaultHandler {
 			msb = new ModelBaseStyle();
 			msb.setBaseOutlineColor(Color.decode(attributes.getValue(ModelBaseStyle.XML_VAR_OUTLINE_NAME)));
 			msb.setBaseInnerColor(Color.decode(attributes.getValue(ModelBaseStyle.XML_VAR_INNER_NAME)));
+      msb.setBaseColor(Color.decode(attributes.getValue(ModelBaseStyle.XML_VAR_COLOR_NAME)));
 			msb.setBaseNameColor(Color.decode(attributes.getValue(ModelBaseStyle.XML_VAR_NAME_NAME)));
 			msb.setBaseNumberColor(Color.decode(attributes.getValue(ModelBaseStyle.XML_VAR_NUMBER_NAME)));
 			if (mbn!=null)

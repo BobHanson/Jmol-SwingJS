@@ -39,7 +39,7 @@ import java.util.Set;
 import javax.swing.JFrame;
 import javax.swing.JSplitPane;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
 import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
 import fr.orsay.lri.varna.factories.RNAFactory;
@@ -70,9 +70,9 @@ public class VARNAEditor extends JFrame
   }
 
   private void RNAPanelDemoInit() {
-    app.setSideList(this);
+    app.setSideListListener(this);
     app.setupTwoRNADemo();
-    setBackground(app._backgroundColor);
+    setBackground(app.getBackgroundColor());
 
     app.setPanels(null, null, "Structures");
     VARNAPanel vp = app.getVARNAPanel();
@@ -126,19 +126,19 @@ public class VARNAEditor extends JFrame
 
   @Override
   public void dragEnter(DropTargetDragEvent arg0) {
-    // TODO Auto-generated method stub
+    
 
   }
 
   @Override
   public void dragExit(DropTargetEvent arg0) {
-    // TODO Auto-generated method stub
+    
 
   }
 
   @Override
   public void dragOver(DropTargetDragEvent arg0) {
-    // TODO Auto-generated method stub
+    
 
   }
 
@@ -210,7 +210,7 @@ public class VARNAEditor extends JFrame
 
   @Override
   public void onStructureRedrawn() {
-    // TODO Auto-generated method stub
+    
 
   }
 
@@ -221,7 +221,7 @@ public class VARNAEditor extends JFrame
 
   @Override
   public void onWarningEmitted(String s) {
-    // TODO Auto-generated method stub
+    
 
   }
 
@@ -234,37 +234,37 @@ public class VARNAEditor extends JFrame
 
   @Override
   public void mouseEntered(MouseEvent arg0) {
-    // TODO Auto-generated method stub
+    
 
   }
 
   @Override
   public void mouseExited(MouseEvent arg0) {
-    // TODO Auto-generated method stub
+    
 
   }
 
   @Override
   public void mousePressed(MouseEvent arg0) {
-    // TODO Auto-generated method stub
+    
 
   }
 
   @Override
   public void mouseReleased(MouseEvent arg0) {
-    // TODO Auto-generated method stub
+    
 
   }
 
   @Override
   public void onZoomLevelChanged() {
-    // TODO Auto-generated method stub
+    
 
   }
 
   @Override
   public void onTranslationChanged() {
-    // TODO Auto-generated method stub
+    
 
   }
 }

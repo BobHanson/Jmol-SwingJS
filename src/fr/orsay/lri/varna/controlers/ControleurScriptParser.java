@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation.ChemProbAnnotationType;
 import fr.orsay.lri.varna.models.rna.ModeleColorMap;
@@ -36,7 +36,7 @@ import fr.orsay.lri.varna.models.rna.RNA;
  * clear what most of the commands do. All are very simple syntaxes.
  */
 public class ControleurScriptParser {
-  private static String SCRIPT_ERROR_PREFIX = "Error";
+  private final static String SCRIPT_ERROR_PREFIX = "VARNA Error";
 
   private static class Command {
     Function _f;
@@ -414,7 +414,7 @@ public class ControleurScriptParser {
           }
         }
         if (byResidueNumber)
-          vp.selectBasesByResno(vals);
+          vp.doSelectBasesByResno(vals);
         else
           vp.setSelection(vals);
         vp.repaint();
@@ -576,7 +576,7 @@ public class ControleurScriptParser {
   private static Command parseCommand(String cmd) throws Exception {
     int cut = cmd.indexOf("(");
     if (cut == -1) {
-      throw new Exception(SCRIPT_ERROR_PREFIX + ": Syntax error for " + cmd);
+      throw new Exception(SCRIPT_ERROR_PREFIX + ": Syntax error for '" + cmd + "'");
     }
     String fun = cmd.substring(0, cut);
     Function f = getFunction(fun);

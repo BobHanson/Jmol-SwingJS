@@ -28,7 +28,7 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JColorChooser;
 import javax.swing.JOptionPane;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.exceptions.ExceptionExportFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionWritingForbidden;
 import fr.orsay.lri.varna.interfaces.InterfaceVARNAListener;
@@ -66,7 +66,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 	public ControleurMenu(VARNAPanel varnaPanel, VueMenu vueMenu) {
 		_vp = varnaPanel;
 		_vm = vueMenu;
-		_vp.getRNA().addVARNAListener(this);
+	  _vp.getRNA().addVARNAListener(this);
 	}
 
 	@Override
@@ -677,7 +677,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 
 	@Override
   public void onStructureRedrawn() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
@@ -689,30 +689,30 @@ public class ControleurMenu implements InterfaceVARNAListener,
 	}
 
 	public void onLoad(@SuppressWarnings("unused") String path) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void onLoaded() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	@Override
   public void onUINewStructure(VARNAConfig v, RNA r) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	@Override
   public void onZoomLevelChanged() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	@Override
   public void onTranslationChanged() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 

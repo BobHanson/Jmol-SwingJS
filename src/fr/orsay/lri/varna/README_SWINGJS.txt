@@ -2,6 +2,18 @@
 Status
 ======
 
+4/29/2026
+
+Full integration into Jmol-SwingJS and Jmol-legacy/Java
+
+Substantial refactoring, including centralized VARNAapp.java
+
+Additional command-line option:
+
+     setSelectionColors <colorSelected> <colorUnselected>
+
+
+
 2/12/2026  
 
 Interest with DSSR revived.

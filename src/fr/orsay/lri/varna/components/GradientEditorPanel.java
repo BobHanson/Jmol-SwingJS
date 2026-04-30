@@ -230,12 +230,12 @@ public class GradientEditorPanel extends JPanel implements MouseListener, MouseM
 		}
 
 		public void mouseEntered(MouseEvent arg0) {
-			// TODO Auto-generated method stub
+			
 			
 		}
 
 		public void mouseExited(MouseEvent arg0) {
-			// TODO Auto-generated method stub
+			
 			
 		}
 

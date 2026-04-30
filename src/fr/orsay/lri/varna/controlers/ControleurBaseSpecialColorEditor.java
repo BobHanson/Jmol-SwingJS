@@ -24,7 +24,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
 import fr.orsay.lri.varna.components.BaseSpecialColorEditor;
-import fr.orsay.lri.varna.models.BaseList;
+import fr.orsay.lri.varna.models.BaseSet;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
 
 /**
@@ -81,8 +81,8 @@ public class ControleurBaseSpecialColorEditor implements ActionListener, Compone
 
 			_selectedColTitle = _specialColorEditor.get_vueBases()
 					.getSpecialTableModel().getColumnName(_selectedCol);
-			BaseList lb = _specialColorEditor.get_vueBases().getDataAt(_selectedRow);
-			for(ModeleBase mb: lb.getBases())
+			BaseSet lb = _specialColorEditor.get_vueBases().getDataAt(_selectedRow);
+			for(ModeleBase mb: lb.getBaseList())
 			{
 				applyColor(_selectedColTitle, _selectedColor,mb);
 			}

@@ -14,7 +14,7 @@ import javax.xml.transform.sax.TransformerHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurClicMovement;
 import fr.orsay.lri.varna.models.VARNAConfigLoader;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
@@ -38,10 +38,10 @@ public class HighlightRegionAnnotation implements Serializable {
 	private double _radius = DEFAULT_RADIUS;
 	private ArrayList<ModeleBase> _bases;
 	
-	public static String XML_ELEMENT_NAME = "region";
-	public static String XML_VAR_OUTLINE_NAME = "outline";
-	public static String XML_VAR_FILL_NAME = "fill";
-	public static String XML_VAR_RADIUS_NAME = "radius";
+	public static final String XML_ELEMENT_NAME = "region";
+	public static final String XML_VAR_OUTLINE_NAME = "outline";
+	public static final String XML_VAR_FILL_NAME = "fill";
+	public static final String XML_VAR_RADIUS_NAME = "radius";
 
 	public void toXML(TransformerHandler hd) throws SAXException
 	{

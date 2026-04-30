@@ -20,7 +20,7 @@ package fr.orsay.lri.varna.controlers;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 
 
 /**

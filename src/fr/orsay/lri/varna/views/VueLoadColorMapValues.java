@@ -24,13 +24,13 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 
 public class VueLoadColorMapValues extends JPanel implements ActionListener {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -1648400107478203724L;
+	protected static final long serialVersionUID = -1648400107478203724L;
 	VARNAPanel _vp;
 	
   public VueLoadColorMapValues(VARNAPanel vp)
@@ -48,7 +48,7 @@ public class VueLoadColorMapValues extends JPanel implements ActionListener {
   JTextField fileTxt = new JTextField(); 
   JButton load = new JButton("Choose file");
   
-  private void init()
+  protected void init()
   {
 	  setLayout(new GridLayout(2,1));
 	  JPanel choice = new JPanel();

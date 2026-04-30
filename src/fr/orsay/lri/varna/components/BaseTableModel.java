@@ -17,15 +17,12 @@
  */
 package fr.orsay.lri.varna.components;
 
-import java.awt.Color;
 import java.util.ArrayList;
 
 import javax.swing.table.AbstractTableModel;
 
-import fr.orsay.lri.varna.models.BaseList;
-import fr.orsay.lri.varna.models.VARNAConfig;
+import fr.orsay.lri.varna.models.BaseSet;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
-import fr.orsay.lri.varna.models.rna.ModelBaseStyle;
 
 
 public class BaseTableModel extends AbstractTableModel {
@@ -37,15 +34,15 @@ public class BaseTableModel extends AbstractTableModel {
 	private String[] columnNames = { "Numbers", "Base", "Outline Color", "Inner Color",
 			"Name Color", "Number Color" };
 	private ArrayList<ArrayList<Object>> data = new ArrayList<ArrayList<Object>>();
-	private ArrayList<BaseList> _bases;
+	private ArrayList<BaseSet> _bases;
 	private boolean _singleBases = true;
 
-	public BaseTableModel(ArrayList<BaseList> bases) {
+	public BaseTableModel(ArrayList<BaseSet> bases) {
 		_bases = bases;
 		ArrayList<Object> ligne;
 		for (int i = 0; i < bases.size(); i++) {
 			ligne = new ArrayList<Object>();
-			BaseList bl  = bases.get(i);
+			BaseSet bl  = bases.get(i);
 			if (bl.size()!=1)
 			{
 				_singleBases = false;
@@ -61,47 +58,52 @@ public class BaseTableModel extends AbstractTableModel {
 
 	}
 
-	public int getColumnCount() {
+	@Override
+  public int getColumnCount() {
 		return columnNames.length;
 	}
 
-	public int getRowCount() {
+	@Override
+  public int getRowCount() {
 		return data.size();
 	}
 
-	public String getColumnName(int col) {
+	@Override
+  public String getColumnName(int col) {
 		return columnNames[col];
 	}
 
-	public Object getValueAt(int row, int col) {
+	@Override
+  public Object getValueAt(int row, int col) {
 		return data.get(row).get(col);
 	}
 
-	/*
+	/**
 	 * JTable uses this method to determine the default renderer/ editor for
 	 * each cell. If we didn't implement this method, then the last column would
 	 * contain text ("true"/"false"), rather than a check box.
 	 */
-	@SuppressWarnings("unchecked")
-	public Class getColumnClass(int c) {
+	@Override
+  public Class<?> getColumnClass(int c) {
 		return getValueAt(0, c).getClass();
 	}
 
-	public boolean isCellEditable(int row, int col) {
+	@Override
+  public boolean isCellEditable(int row, int col) {
 		// Note that the data/cell address is constant,
 		// no matter where the cell appears onscreen.
 		if (col < 1) {
 			return false;
-		} else {
-			return true;
 		}
+			return true;
 	}
 
-	public void setValueAt(Object value, int row, int col) {
+	@Override
+  public void setValueAt(Object value, int row, int col) {
 		data.get(row).set(col, value);
 		if (col == 1 && _singleBases)
 		{
-			ModeleBase mb = _bases.get(row).getBases().get(0);
+			ModeleBase mb = _bases.get(row).getBaseList().get(0);
 			mb.setContent(value.toString());
 		}
 		fireTableCellUpdated(row, col);

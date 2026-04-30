@@ -25,14 +25,14 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurNumPeriod;
 import fr.orsay.lri.varna.controlers.ControleurSliderLabel;
 
 public class VueNumPeriod {
-	private VARNAPanel _vp;
-	private JPanel panel;
-	private JSlider numPeriodSlider;
+	protected VARNAPanel _vp;
+	protected JPanel panel;
+	protected JSlider numPeriodSlider;
 
 	public VueNumPeriod(VARNAPanel vp) {
 		_vp = vp;

@@ -26,7 +26,7 @@ import java.awt.print.Printable;
 import java.awt.print.PrinterJob;
 
 public class Imprimer implements Printable {
-	private String phrase;
+	protected String phrase;
 
 	public Imprimer(String phrase) {
 		this.phrase = phrase;

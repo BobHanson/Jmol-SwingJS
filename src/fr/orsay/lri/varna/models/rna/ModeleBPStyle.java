@@ -48,11 +48,11 @@ public class ModeleBPStyle implements Serializable {
 	private double _thickness = -1.0;
 	private double _bent = 0.0;
 	
-	public static String XML_ELEMENT_NAME = "BPstyle";
-	public static String XML_VAR_CUSTOM_STYLED_NAME = "custom";
-	public static String XML_VAR_COLOR_NAME = "color";
-	public static String XML_VAR_THICKNESS_NAME = "thickness";
-	public static String XML_VAR_BENT_NAME = "bent";
+	public static final String XML_ELEMENT_NAME = "BPstyle";
+	public static final String XML_VAR_CUSTOM_STYLED_NAME = "custom";
+	public static final String XML_VAR_COLOR_NAME = "color";
+	public static final String XML_VAR_THICKNESS_NAME = "thickness";
+	public static final String XML_VAR_BENT_NAME = "bent";
 
 	public void toXML(TransformerHandler hd) throws SAXException
 	{

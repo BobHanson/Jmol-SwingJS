@@ -16,24 +16,21 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import fr.orsay.lri.varna.exceptions.ExceptionExportFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
-import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionNAViewAlgorithm;
-import fr.orsay.lri.varna.exceptions.ExceptionPermissionDenied;
-import fr.orsay.lri.varna.exceptions.ExceptionUnmatchedClosingParentheses;
 import fr.orsay.lri.varna.exceptions.ExceptionXmlLoading;
 import fr.orsay.lri.varna.factories.RNAFactory;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.rna.RNA;
 
 
+@SuppressWarnings("javadoc")
 public class BatchBenchmark {
 	private VARNAConfig conf = new VARNAConfig();
 	
 	final boolean DEFAULT_STRAIGHT_BULGES = false;
 	
-	public static RNA loadRNA(File file) throws ExceptionFileFormatOrSyntax, ExceptionUnmatchedClosingParentheses, FileNotFoundException, ExceptionExportFailed, ExceptionPermissionDenied, ExceptionLoadingFailed {
+	public static RNA loadRNA(File file) throws ExceptionFileFormatOrSyntax, FileNotFoundException {
 		Collection<RNA> rnas = RNAFactory.loadSecStr(file.getPath());
 		if (rnas.isEmpty()) {
 			throw new ExceptionFileFormatOrSyntax(
@@ -42,7 +39,7 @@ public class BatchBenchmark {
 		return rnas.iterator().next();
 	}
 	
-	public void benchmarkRNA(File templatePath, File rnaPath, BufferedWriter outbuf) throws ExceptionXmlLoading, RNATemplateDrawingAlgorithmException, ExceptionFileFormatOrSyntax, ExceptionUnmatchedClosingParentheses, ExceptionExportFailed, ExceptionPermissionDenied, ExceptionLoadingFailed, ExceptionNAViewAlgorithm, IOException {
+	public void benchmarkRNA(File templatePath, File rnaPath, BufferedWriter outbuf) throws ExceptionXmlLoading, RNATemplateDrawingAlgorithmException, ExceptionFileFormatOrSyntax, ExceptionNAViewAlgorithm, IOException {
 		// load template
 		RNATemplate template = RNATemplate.fromXMLFile(templatePath);
 		
@@ -190,7 +187,7 @@ public class BatchBenchmark {
 	 * - keep the same nucleotides as in original sequence
 	 * - keep base pairs where both bases of the pair are non-gaps in our sequence
 	 */
-	public void benchmarkAllDir(File rootdir) throws Exception {
+  public void benchmarkAllDir(File rootdir) throws Exception {
 		File seqdir = new File(rootdir, "sequences");
 		File templateFile = new File(rootdir, "template.xml");
 		File sequenceFiles[] = seqdir.listFiles();

@@ -25,15 +25,15 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.VARNAConfig;
 
 
 public class VueStyleBP implements ActionListener {
 
-	private VARNAPanel _vp;
-	private JComboBox _cmb;
-	private JPanel panel;
+	protected VARNAPanel _vp;
+	protected JComboBox _cmb;
+	protected JPanel panel;
 
 	public VueStyleBP(VARNAPanel vp) {
 		_vp = vp;

@@ -16,7 +16,7 @@ import java.util.Random;
 import java.util.Stack;
 import java.util.Vector;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 
 public class VARNASecDraw {
 	public static VARNAPanel _vp = null;
@@ -41,7 +41,7 @@ public class VARNASecDraw {
 		}
 		@Override
 		public ArrayList<Integer> getBaseList() {
-			// TODO Auto-generated method stub
+			
 			return null;
 		}		
 		public String toString()
@@ -86,7 +86,7 @@ public class VARNASecDraw {
 
 		@Override
 		public ArrayList<Integer> getBaseList() {
-			// TODO Auto-generated method stub
+			
 			return null;
 		}
 		

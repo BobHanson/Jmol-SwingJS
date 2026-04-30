@@ -33,7 +33,7 @@ import javax.swing.JMenuItem;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.annotations.TextAnnotation;
 import fr.orsay.lri.varna.models.rna.ModeleBP;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
@@ -594,7 +594,7 @@ public class ControleurClicMovement
   }
 
   private void addCurrent() {
-    Collection<? extends ModeleBase> mbs = _vp.getSelection().getBases();
+    Collection<? extends ModeleBase> mbs = _vp.getSelection().getBaseList();
     if (mbs.size() > 0) {
       JMenu submenuAll = new JMenu("Current");
       submenuAll.addChangeListener(

@@ -24,10 +24,10 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 
-import fr.orsay.lri.varna.VARNAPanel;
 import fr.orsay.lri.varna.components.ActionEditor;
 import fr.orsay.lri.varna.components.ActionRenderer;
 import fr.orsay.lri.varna.components.ColorRenderer;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.ModeleBaseNucleotide;
 import fr.orsay.lri.varna.models.rna.ModeleColorMap;
@@ -37,12 +37,12 @@ import fr.orsay.lri.varna.models.rna.RNA;
 public class VueBPList extends JPanel implements TableModelListener, ActionListener
 {
 
-	private JTable table;
-	private BPTableModel _tm;
-	private VARNAPanel _vp;
-	private ArrayList<ModeleBP> data;
-	private ArrayList<Double> _backup;
-	private ArrayList<Object> columns;
+	protected JTable table;
+	protected BPTableModel _tm;
+	protected VARNAPanel _vp;
+	protected ArrayList<ModeleBP> data;
+	protected ArrayList<Double> _backup;
+	protected ArrayList<Object> columns;
 	
 	
 	public enum Actions{
@@ -69,7 +69,7 @@ public class VueBPList extends JPanel implements TableModelListener, ActionListe
 		init();
 	}
 	
-	private void init()
+	protected void init()
 	{
 		Object[] col = {"Sec.Str.","5' partner","3' partner","5' edge","3' edge","Orientation","Remove"};
 		columns = new ArrayList<Object>();
@@ -119,11 +119,11 @@ public class VueBPList extends JPanel implements TableModelListener, ActionListe
   	  _vp.getRNA().rescaleColorMap(_vp.getColorMap());
 	}
 
-	private class BPTableModel extends AbstractTableModel {
+	protected class BPTableModel extends AbstractTableModel {
 	    /**
 		 * 
 		 */
-		private static final long serialVersionUID = 1L;
+		protected static final long serialVersionUID = 1L;
 		public String getColumnName(int col) {
 	        return columns.get(col).toString();
 	    }
@@ -189,7 +189,7 @@ public class VueBPList extends JPanel implements TableModelListener, ActionListe
 	    	}
 	    }
 	    
-	    public Class getColumnClass(int c) {
+	    public Class<?> getColumnClass(int c) {
 	        return getValueAt(0, c).getClass();
 	    }
 	}

@@ -28,21 +28,21 @@ import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurSliderLabel;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.rna.ModeleBP;
 
 public class VueBPThickness implements ChangeListener {
 
-	private VARNAPanel _vp;
+	protected VARNAPanel _vp;
 	ArrayList<ModeleBP> _msbp;
-	private JSlider _thicknessSlider;
-	private JPanel panel;
+	protected JSlider _thicknessSlider;
+	protected JPanel panel;
 
-	private ArrayList<Double> _backupThicknesses = new ArrayList<Double>();
+	protected ArrayList<Double> _backupThicknesses = new ArrayList<Double>();
 
-	private double FACTOR = 10.0;
+	protected double FACTOR = 10.0;
 
 	public VueBPThickness(VARNAPanel vp, ArrayList<ModeleBP> msbp) {
 		_vp = vp;
@@ -75,7 +75,7 @@ public class VueBPThickness implements ChangeListener {
 		panel.add(thicknessLabel);
 	}
 
-	private void backupThicknesses() {
+	protected void backupThicknesses() {
 		for (int i = 0; i < _msbp.size(); i++) {
 			this._backupThicknesses.add(_msbp.get(i).getStyle().getThickness(
 					VARNAConfig.DEFAULT_BP_THICKNESS));

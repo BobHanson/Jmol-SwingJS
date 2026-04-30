@@ -20,7 +20,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation;
 import fr.orsay.lri.varna.models.annotations.HighlightRegionAnnotation;
 
@@ -28,11 +28,11 @@ import fr.orsay.lri.varna.models.annotations.HighlightRegionAnnotation;
 public class VueChemProbAnnotation implements ChangeListener, ActionListener, ItemListener {
 
 		protected VARNAPanel _vp;
-		private JPanel panel;
+		protected JPanel panel;
 		protected ChemProbAnnotation _an;
-		private static int CONTROL_HEIGHT = 50;
-		private static int TITLE_WIDTH = 70;
-		private static int CONTROL_WIDTH = 200;
+		protected static int CONTROL_HEIGHT = 50;
+		protected static int TITLE_WIDTH = 70;
+		protected static int CONTROL_WIDTH = 200;
 		protected JButton color  = new JButton();
 		JSpinner intensity;
 		JComboBox outward = new JComboBox(new String[]{"Inward","Outward"});

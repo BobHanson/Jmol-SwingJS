@@ -78,11 +78,11 @@ import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import fr.orsay.lri.varna.VARNAPanel;
-import fr.orsay.lri.varna.applications.BasicINI;
+import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionNonEqualLength;
 import fr.orsay.lri.varna.models.FullBackup;
+import fr.orsay.lri.varna.utils.BasicINI;
 
 
 public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListener,DropTargetListener, WindowListener, ComponentListener, ActionListener, TreeSelectionListener {
@@ -450,17 +450,17 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 	}
 
 	public void treeNodesRemoved(TreeModelEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void treeStructureChanged(TreeModelEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void mouseClicked(MouseEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
@@ -471,7 +471,7 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 	int index = 0;
 	
 	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
+		
 		if (e.getSource() == this._sideList)
 		{
 			if (e.getClickCount() == 1)
@@ -687,22 +687,22 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 
 	
 	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void dragEnter(DropTargetDragEvent arg0) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void dragExit(DropTargetEvent arg0) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
@@ -751,12 +751,12 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 	}
 
 	public void dropActionChanged(DropTargetDragEvent arg0) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void windowOpened(WindowEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
@@ -766,27 +766,27 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 	}
 
 	public void windowClosed(WindowEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void windowIconified(WindowEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void windowDeiconified(WindowEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void windowActivated(WindowEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 	public void windowDeactivated(WindowEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
@@ -824,19 +824,19 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 
 
 	public void componentMoved(ComponentEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 
 	public void componentShown(ComponentEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
 
 	public void componentHidden(ComponentEvent e) {
-		// TODO Auto-generated method stub
+		
 		
 	}
 

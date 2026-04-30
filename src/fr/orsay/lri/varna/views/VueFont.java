@@ -25,16 +25,16 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 
-import fr.orsay.lri.varna.VARNAPanel;
+import fr.orsay.lri.varna.components.VARNAPanel;
 
 public class VueFont {
 
-	private VARNAPanel _vp;
-	private Font font;
-	private JComboBox stylesBox;
-	private JComboBox boxPolice;
-	private JPanel panel;
-	private JSlider sizeSlider;
+	protected VARNAPanel _vp;
+	protected Font font;
+	protected JComboBox stylesBox;
+	protected JComboBox boxPolice;
+	protected JPanel panel;
+	protected JSlider sizeSlider;
 
 	public VueFont(VARNAPanel vp) {
 		_vp = vp;
@@ -48,7 +48,7 @@ public class VueFont {
 		buildViewFont();
 	}
 
-	private void init() {
+	protected void init() {
 		GraphicsEnvironment ge = GraphicsEnvironment
 				.getLocalGraphicsEnvironment();
 		String[] polices = ge.getAvailableFontFamilyNames();
@@ -70,13 +70,13 @@ public class VueFont {
 		panel.add(stylesBox);
 	}
 
-	private void buildViewFont() {
+	protected void buildViewFont() {
 		boxPolice.setSelectedItem(font.getFamily());
 		sizeSlider.setValue(font.getSize());
 		stylesBox.setSelectedItem(styleIntToString(font.getStyle()));
 	}
 
-	private void buildViewVPTitle() {
+	protected void buildViewVPTitle() {
 		boxPolice.setSelectedItem(_vp.getTitleFont().getFamily());
 		sizeSlider.setValue(_vp.getTitleFont().getSize());
 		stylesBox.setSelectedItem(styleIntToString(_vp.getTitleFont()
