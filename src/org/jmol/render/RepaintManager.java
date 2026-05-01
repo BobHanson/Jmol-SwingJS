@@ -186,6 +186,9 @@ public class RepaintManager implements JmolRepaintManager {
   @Override
   public void render(GData gdata, ModelSet modelSet, boolean isFirstPass,
                      int[] navMinMax) {
+    
+    //System.out.println("-------------------------------------------------------------REPAINTMAN render " + isFirstPass);
+    
     JmolRendererInterface g3d = (JmolRendererInterface) gdata;
     if (renderers == null)
       renderers = new ShapeRenderer[JC.SHAPE_MAX];
@@ -231,6 +234,8 @@ public class RepaintManager implements JmolRepaintManager {
         throw new NullPointerException();
       Logger.error("rendering error? " + e);
     }
+    //System.out.println("-------------------------------------------------------------REPAINTMAN render DONE");
+    
   }
   
   private void getAllRenderers() {

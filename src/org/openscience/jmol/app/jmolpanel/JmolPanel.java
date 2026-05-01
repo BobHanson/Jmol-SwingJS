@@ -1276,7 +1276,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     }
   }
 
-  boolean isPluginActive(String name) {
+  public boolean isPluginActive(String name) {
     JmolPlugin p = plugins.get(name);
     return (p != null && p.isStarted());
   }

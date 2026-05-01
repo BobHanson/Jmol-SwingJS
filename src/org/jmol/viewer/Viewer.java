@@ -1356,12 +1356,19 @@ public class Viewer extends JmolViewer
   * myLoadStructCallback(fullPathName, fileName, modelName, errorMsg, ptLoad)
   * {}
   * 
-  * ptLoad == JmolConstants.FILE_STATUS_NOT_LOADED == -1 ptLoad == JmolConstants.FILE_STATUS_ZAPPED == 0
-  * ptLoad == JmolConstants.FILE_STATUS_CREATING_MODELSET == 2 ptLoad ==
-  * JmolConstants.FILE_STATUS_MODELSET_CREATED == 3 ptLoad == JmolConstants.FILE_STATUS_MODELS_DELETED == 5
+  * ptLoad == JmolConstants.FILE_STATUS_NOT_LOADED == -1 
+  * 
+  * ptLoad == JmolConstants.FILE_STATUS_ZAPPED == 0
+  * ptLoad == JmolConstants.FILE_STATUS_CREATING_MODELSET == 2 
+  * 
+  * ptLoad ==
+  * JmolConstants.FILE_STATUS_MODELSET_CREATED == 3 
+  * 
+  * ptLoad == JmolConstants.FILE_STATUS_MODELS_DELETED == 5
   * 
   * Only -1 (error loading), 0 (zapped), and 3 (model set created) messages are
-  * passed on to the callback function. The others can be detected using
+  * passed on to the callback function. 
+  * The others can be detected using
   * 
   * set loadStructCallback "jmolscript:someFunctionName"
   * 
@@ -5465,7 +5472,7 @@ public class Viewer extends JmolViewer
     g.setB("_hoverEnabled", tf);
   }
 
-  /*
+  /**
    * hoverCallback reports information about the atom being hovered over.
    * 
    * jmolSetCallback("hoverCallback", "myHoverCallback") function
@@ -5476,8 +5483,18 @@ public class Viewer extends JmolViewer
    * 
    * Viewer.setStatusAtomHovered Hover.setProperty("target") Viewer.hoverOff
    * Viewer.hoverOn
+   * @param atomIndex 
+   * @param isLabel 
    */
-  void hoverOn(int atomIndex, boolean isLabel) {
+  public void hoverOn(int atomIndex, boolean isLabel) {
+    hoverOnPtr(atomIndex, isLabel, false);
+  }
+
+  public void hoverOnPtr(int atomIndex, boolean isLabel, boolean withPointer) {
+    if (atomIndex < 0) {
+      hoverOff();
+      return;
+    }
     g.removeParam("_objecthovered");
     g.setI("_atomhovered", atomIndex);
     g.setO("_hoverLabel", hoverLabel);
@@ -5501,6 +5518,7 @@ public class Viewer extends JmolViewer
         && (!isLabel || ms.at[atomIndex].isVisible(JC.VIS_LABEL_FLAG))) {
       setShapeProperty(JC.SHAPE_HOVER, "specialLabel", label);
     }
+    setShapeProperty(JC.SHAPE_HOVER, "pointer", Boolean.valueOf(withPointer));
     setShapeProperty(JC.SHAPE_HOVER, "text", hoverText = null);
     setShapeProperty(JC.SHAPE_HOVER, "target",
         Integer.valueOf(hoverAtomIndex = atomIndex));
@@ -5569,7 +5587,7 @@ public class Viewer extends JmolViewer
     refresh(REFRESH_SYNC_MASK, "hover on point");
   }
 
-  void hoverOff() {
+  public void hoverOff() {
     try {
       if ((isModelKitOpen() || modelkit != null && modelkit.wasRotating())
           && !isModelkitPickingRotateBond())

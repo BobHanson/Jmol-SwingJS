@@ -255,6 +255,9 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface, JS
           jmolPanel.notifyVARNA(type, data);
           return;
         }
+        if (!jmolPanel.isPluginActive("varna")) {
+          data[0] = "VARNA has not been started. Use VARNA START first.";
+        }
         break;
       }
       if (jmolPanel != null)

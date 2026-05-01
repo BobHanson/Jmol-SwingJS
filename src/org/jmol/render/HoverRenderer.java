@@ -26,6 +26,7 @@ package org.jmol.render;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Text;
 import org.jmol.shape.Hover;
+import org.jmol.viewer.JC;
 
 import javajs.util.P3d;
 
@@ -45,6 +46,9 @@ public class HoverRenderer extends ShapeRenderer {
     boolean antialias = g3d.isAntialiased();
     Text text = hover.hoverText;
     String label;
+    boolean withPointer = (hover.withPointer == Boolean.TRUE);
+    int pointerWidth = 15;
+    int pointerMode = (withPointer ? JC.LABEL_POINTER_ON : JC.LABEL_POINTER_NONE);
     if (hover.atomIndex >= 0) {
       Atom atom = ms.at[hover.atomIndex];
       label = (hover.specialLabel != null ? hover.specialLabel 
@@ -55,6 +59,11 @@ public class HoverRenderer extends ShapeRenderer {
               : null);
       if (label == null)
         return false;
+      if (pointerMode == JC.LABEL_POINTER_ON) {
+        text.atomX = atom.sX;
+        text.atomY = atom.sY;
+        text.atomZ = text.z;
+      }
       text.setXYZs(atom.sX, atom.sY, 1, Integer.MIN_VALUE);
     } else if (hover.text != null) {
       label = hover.text;
@@ -65,8 +74,9 @@ public class HoverRenderer extends ShapeRenderer {
     if (vwr != null)
       label = vwr.formatText(label);
     text.setText(label);
+    short pointerColix = text.bgcolix;
     //System.out.println("hoverRenderer " + text.getText());
-    TextRenderer.render(null, text, g3d, 0, antialias ? 2 : 1, null, tempXY, null, (short) 0, 0, 0);
+    TextRenderer.render(null, text, g3d, 0, antialias ? 2 : 1, null, tempXY, null, pointerColix, pointerWidth, pointerMode);
     return true;
   }
   

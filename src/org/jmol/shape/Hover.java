@@ -43,6 +43,7 @@ public class Hover extends TextShape {
 
   public Text hoverText;
   public int atomIndex = -1;
+  public Boolean withPointer;
   public P3i xy;
   public String text;
   public String labelFormat = "%U";
@@ -52,6 +53,7 @@ public class Hover extends TextShape {
   @Override
   public void initShape() {
     isHover = true;
+    withPointer = null;
     Font font3d = vwr.gdata.getFont3DFSS(FONTFACE, FONTSTYLE, FONTSIZE);
     short bgcolix = C.getColixS("#FFFFC3"); // 255, 255, 195
     short colix = C.BLACK;
@@ -72,6 +74,11 @@ public class Hover extends TextShape {
       else {
         atomIndex = ((Integer) value).intValue();
       }
+      return;
+    }
+
+    if ("pointer" == propertyName) {
+      withPointer = (Boolean) (value);
       return;
     }
 
