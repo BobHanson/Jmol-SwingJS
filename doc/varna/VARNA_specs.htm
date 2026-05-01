@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>VARNA: Visualization Applet for RNA secondary structure</title>
+<link rel="stylesheet" type="text/css" href="VARNA_specs_files/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="VARNA_specs_files/VARNA.css">
+	<script type="text/javascript" async="" src="VARNA_specs_files/ga.js"></script><script type="text/javascript" src="VARNA_specs_files/VARNA.js"></script>
+	<style type="text/css"><!--
+	.ui-state-highlight a
+	{
+		text-decoration: underline;
+	}
+	li .menuElementsecurityfix
+	{
+		font-weight: bold;
+	}
+	   .primary-nav .menuElementspecs
+	   {
+		 display: block;
+		 border:1px solid;
+	   }
+
+	   .primary-nav #listspecs
+	   {
+		 display: block;
+		}
+
+	   .primary-nav .menuElementmanual
+	   {
+		 display: block;
+		 border:1px solid;
+	   }
+
+	   .primary-nav #listmanual
+	   {
+		 display: block;
+		}
+
+	   .primary-nav a.menuElementspecs
+	   {
+		 background-color:#fff5d4;
+		 display: block;
+		}
+	--></style>
+</head>
+<body>
+<div id="container">
+	<div id="header">
+		<h1>VARNA: Visualization Applet for RNA</h1>
+		<h6>A Java lightweight component and applet for drawing the RNA secondary structure</h6>
+	</div>
+	<div id="navbox">
+		<div id="sidebar">
+			<div id="menu">
+				<div id="menuwrapper">
+					<ul class="primary-nav menuElementhome">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=home&amp;css=varna" class="menuElementhome">Home</a>
+						<ul id="listhome" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementdemo">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=demo&amp;css=varna" class="menuElementdemo">Demo</a>
+						<ul id="listdemo" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementmanual">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=manual&amp;css=varna" class="menuElementmanual">User Manual</a>
+						<ul id="listmanual" class="menusublist">
+							<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=mouse&amp;css=varna" class="menuElementmouse">Mouse</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=popup&amp;css=varna" class="menuElementpopup">Popup Menu</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=howto&amp;css=varna" class="menuElementhowto">How to...</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=command&amp;css=varna" class="menuElementcommand">Command-line Usage</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=specs&amp;css=varna" class="menuElementspecs">Applet Parameters</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=features&amp;css=varna" class="menuElementfeatures">Full Features List</a>
+						</li></ul>
+					</li></ul>
+					<ul class="primary-nav menuElementtutorial">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial&amp;css=varna" class="menuElementtutorial">Tutorials</a>
+						<ul id="listtutorial" class="menusublist">
+							<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial1&amp;css=varna" class="menuElementtutorial1">Hello RNA World!</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial2&amp;css=varna" class="menuElementtutorial2">Round we go...</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial3&amp;css=varna" class="menuElementtutorial3">Pitch black</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial4&amp;css=varna" class="menuElementtutorial4">Funky !</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial5&amp;css=varna" class="menuElementtutorial5">Multiple panels</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial6&amp;css=varna" class="menuElementtutorial6">Algorithms</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial7&amp;css=varna" class="menuElementtutorial7">Base-pairs styles</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial8&amp;css=varna" class="menuElementtutorial8">Load from URL</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial9&amp;css=varna" class="menuElementtutorial9">Planarized</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial10&amp;css=varna" class="menuElementtutorial10">Base Styles</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial11&amp;css=varna" class="menuElementtutorial11">Color Maps</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial12&amp;css=varna" class="menuElementtutorial12">Adding Labels</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial13&amp;css=varna" class="menuElementtutorial13">Higlighting Regions</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial14&amp;css=varna" class="menuElementtutorial14">Glyphs</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial15&amp;css=varna" class="menuElementtutorial15">Comparing RNAs</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial16&amp;css=varna" class="menuElementtutorial16">JS Interactions I</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial17&amp;css=varna" class="menuElementtutorial17">JS Interactions II</a>
+						</li></ul>
+					</li></ul>
+					<ul class="primary-nav menuElementdownloads">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=downloads&amp;css=varna" class="menuElementdownloads">Downloads</a>
+						<ul id="listdownloads" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementsecurityfix">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=securityfix&amp;css=varna" class="menuElementsecurityfix"><span class="focus">Java Security Fix</span></a>
+						<ul id="listsecurityfix" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementlinks">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=links&amp;css=varna" class="menuElementlinks">Links</a>
+						<ul id="listlinks" class="menusublist">
+						</ul>
+					</li></ul>
+				</div>
+			</div>
+			<div class="shadow">
+				<div class="contentbox">
+					<div class="title">
+						<h4>Announcement</h4>
+					</div>
+					<div class="content">
+						<div class="NewsSummaryLink">
+				 <a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=downloads">VARNA 3.93 released</a>
+						</div>
+						<div class="NewsSummaryPostdate">
+							19/06/2015
+						</div>
+						<div class="NewsSummaryContent">
+							<p><em>XML Save/Load bug fix...</em></p><em>
+						</em></div><em>
+					</em></div><em>
+				</em></div><em>
+			</em></div><em>
+			<div class="shadow">
+				<div class="contentbox">
+					<div class="title">
+						<h4>Support</h4>
+					</div>
+					<div class="content">
+						<table style="padding:0px;border:0px;">
+							<tbody><tr>
+								<td align="center" colspan="2"><a href="http://www.inria.fr/"><img src="VARNA_specs_files/logoinria.png" width="120px" style="border:0px;" alt="Inria"></a></td>
+							</tr>
+							<tr>
+								<td align="center"><a href="http://www.agence-nationale-recherche.fr/"><img src="VARNA_specs_files/logoanr.png" width="60px" style="border:0px;" alt="Agence Nationale de la Recherche"></a></td>
+								<td align="center"><a href="http://www.cnrs.fr/"><img src="VARNA_specs_files/logocnrs.png" width="60px" style="border:0px;" alt="Centre National de la Recherche Scientifique"></a></td>
+							</tr>
+							<tr>
+								<td align="center" colspan="1"><a href="http://www.lix.polytechnique.fr/"><img src="VARNA_specs_files/logolix.png" width="60px" style="border:0px;" alt="Laboratoire d'Informatique de l'Ecole Polytechnique (X)"><br>LIX, Palaiseau</a></td>
+								<td align="center"><a href="http://www.lri.fr/"><img src="VARNA_specs_files/logolri.png" width="50px" style="border:0px;" alt="Laboratoire de Recherche en Informatique (LRI)"><br>LRI, Orsay</a></td>
+							</tr>
+							<tr>
+								<td align="center" colspan="1"><a href="http://www.polytechnique.fr/"><img src="VARNA_specs_files/logox.png" width="60px" style="border:0px;" alt="Ecole Polytechnique"><br>Polytechnique, Palaiseau</a></td>
+								<td align="center"><a href="http://www.igmors.u-psud.fr/"><img src="VARNA_specs_files/logoigm.png" width="60px" style="border:0px;" alt="Institut de G�n�tique et Microbiologie (IGM)"><br`>IGM, Orsay</br`></a></td>
+							</tr>
+							<tr>
+								<td align="center" colspan="2"><a href="http://www.u-psud.fr/"><img src="VARNA_specs_files/logoups.png" width="120px" style="border:0px;" alt="Universit� Paris XI-Paris Sud"></a></td>
+							</tr>
+						</tbody></table>
+					</div>
+				</div>
+			</div>
+		</em></div><em>
+	</em></div><em>
+	<div id="box">
+		 		<div class="shadow">
+			<div class="contentbox">
+				<div class="title">
+					<h2>For Java developpers: VARNAPanel API specifications</h2>
+				</div>
+				<div class="content">
+			<p>
+				VARNA relies heavily on a custom Swing component, the RNA2DPanel.
+				Developpers might be interested in using the VARNAPanel component as a fast and simple solution for the
+				vizualisation aspects of their own secondary structure software GUI. The VARNAPanel component is
+				free-software as defined by the GNU GPL.
+			</p>
+			<p>
+				The API for the VARNAPanel component is documented through an Javadoc-generated bunch of HTML files.<br>
+					</p><center><a href="https://varna.lisn.upsaclay.fr/doc/fr/orsay/lri/varna/VARNAPanel.html">[Browse VARNAPanel API documentation]</a></center>
+			<p></p>
+			<p>
+				Please let me know if you are using it, or request/suggest some fixes/additional features.
+			</p>
+				</div>
+			</div>
+		</div>
+		<div class="shadow">
+			<div class="contentbox">
+				<div class="title">
+					<h2>VARNA applet specifications</h2>
+				</div>
+				<div class="content">
+					<h5>Description</h5>
+					<p>
+						You will find in the <a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=downloads">downloads section</a>, a light applet that allows you to 						 draw a
+						single or multiple secondary structure. The secondary structure, as well as a bunch of additional 						display options,
+						can be sent to the applet through the usual <code>&lt;param name=... value=...&gt;</code> tags.
+					</p>
+					<h5>References</h5>
+					<p> The applet gets its options from the following name/value couples for the <em>param</em> tag. <br>
+							<b>Note:</b> Parameters names are case-sensitive.
+					</p>
+
+					<div class="full">
+						<table align="center" border="1" cellpadding="0" cellspacing="0">
+							<tbody><tr>
+								<td><a name="paramalgorithm"></a>algorithm</td>
+								<td>String<br><code>naview</code></td>
+								<td>Redraws the current RNA secondary using one of the implemented algorithms. <br> Supported algorithms are <code>line</code>,<code>circular</code>,<code>radiate</code> and <code>naview</code>.</td>
+							</tr>
+							<tr>
+								<td><a name="paramannotations"></a>annotations</td>
+								<td>String<br><code>"L1:anchor=19"</code></td>
+								<td>Defines a set of annotations of the form <div class="example"><code>text1:opt1=val1,...;type=T2,opt2=val2;...</code></div> where <code>texti</code> is the annotation caption, and the options alter the way each annotation is rendered.<br> The first and most important one is the <code>type=[P,B,H,L]</code> one, which specifies whether the annotation is:<ul> <li>Static (<code>P</code>)</li> <li>Anchored on a base (<code>B</code>)</li> <li>Anchored on an helix (<code>H</code>)</li> <li>Anchored on a loop (<code>L</code>)</li> </ul> For static annotations, a position needs be specified through options <code>y</code> and <code>y</code>.  For every other type, a supporting base needs be specified through option <code>anchor</code>. The <code>type</code> default to <code>L</code>.<br> Additionally, <em>cosmetic</em> factors such as the font size (<code>size=int</code>) and color (<code>color=#HHHHHH</code>) can be specified to customize the rendering of annotations.</td>
+							</tr>
+							<tr>
+								<td><a name="paramapplyBasesStyleXon"></a>applyBasesStyleXon</td>
+								<td>String<br><code>"1,2,5"</code></td>
+								<td>Applies a custom base style to a list of bases. <div class="example">E.g.: <code> &lt;parameter name="applyBasesStyle5on" <br>value="1,6,7,10"/&gt;</code></div> will apply the <b>5th</b> base style, defined with <code>basesStyle5</code> to bases numbered 1, 6, 7 and 10.</td>
+							</tr>
+							<tr>
+								<td><a name="paramautoHelices"></a>autoHelices</td>
+								<td>boolean<br><code>True</code></td>
+								<td>Annotates each and every helix in the RNA with a unique "Hn" label.</td>
+							</tr>
+							<tr>
+								<td><a name="paramautoInteriorLoops"></a>autoInteriorLoops</td>
+								<td>boolean<br><code>True</code></td>
+								<td>Annotates each and every interior loop of the RNA with a unique "In" label.</td>
+							</tr>
+							<tr>
+								<td><a name="paramautoTerminalLoops"></a>autoTerminalLoops</td>
+								<td>boolean<br><code>True</code></td>
+								<td>Annotates each and every terminal loop of the RNA with a unique "Tn" label.</td>
+							</tr>
+							<tr>
+								<td><a name="paramauxBPs"></a>auxBPs</td>
+								<td>String<br><code>"(1,10);(2,11)"</code></td>
+								<td>Creates a set of additional base-pairs, possibly defining and using custom styles for the additional base-pairs. <div class="example">E.g.: <code>(1,10);(2,11):thickness=4</code></div> will create a base-pair <code>(1,10)</code> using current style and a base-pairs <code>(2,11)</code> with a <b>thickness of 4 points</b>. Admissible options for a base-pair custom style are: <ul> <li><code>edge5</code>, <code>edge3</code>:
+ Edge (5' or 3') used for interaction in non-canonical base-pairs, as 
+defined by the Leontis/Westhof classification of base-pairs. Admissible 
+values are <code>wc</code> (Watson/Crick edge), <code>h</code> (Hoogsteen edge) and <code>s</code> (Sugar edge). </li> <li><code>stericity</code>: Orientation of the strands. Admissible values are <code>cis</code> and <code>trans</code></li> <li><code>color</code>: Base-pair color</li> <li><code>Thickness</code>: Base-pair thickness</li> </ul></td>
+							</tr>
+							<tr>
+								<td><a name="parambackbone"></a>backbone</td>
+								<td>Color<br><code><span style="color:#FF0000;">#FF0000</span></code></td>
+								<td>Lets the user pick a custom color for rendering the phosphate-sugar backbone (aka skeleton) of the RNA.</td>
+							</tr>
+							<tr>
+								<td><a name="parambackground"></a>background</td>
+								<td>Color<br><code><span style="color:#99AA0F;">#99AA0F</span></code></td>
+								<td>Defines the background color used within this panel.</td>
+							</tr>
+							<tr>
+								<td><a name="parambaseInner"></a>baseInner</td>
+								<td>Color<br><code><span style="color:#334455;">#334455</span></code></td>
+								<td>Default value for inner base color</td>
+							</tr>
+							<tr>
+								<td><a name="parambaseName"></a>baseName</td>
+								<td>Color<br><code><span style="color:#334455;">#334455</span></code></td>
+								<td>Sets the color used to draw the nucleotide name</td>
+							</tr>
+							<tr>
+								<td><a name="parambaseNum"></a>baseNum</td>
+								<td>Color<br><code><span style="color:#334455;">#334455</span></code></td>
+								<td>Sets the color used to draw base numbers</td>
+							</tr>
+							<tr>
+								<td><a name="parambaseOutline"></a>baseOutline</td>
+								<td>Color<br><code><span style="color:#334455;">#334455</span></code></td>
+								<td>Default value for outer base color</td>
+							</tr>
+							<tr>
+								<td><a name="parambasesStyleX"></a>basesStyleX</td>
+								<td>String<br><code>fill=#FF0000</code></td>
+								<td>Defines a custom base-style, to be applied later to a set of bases (See <code>applyBasesStyle</code>). Styles are numbered starting from 1 using a specific syntax. <div class="example">E.g.: <code> &lt;parameter name="basesStyle3" <br>value="fill=<span style="color:#FF0000;">#FF0000</span>,outline=<span style="color:#00FF00;">#00FF00</span>"/&gt;</code></div> will create a base-style numbered <b>3</b>, having <span style="color:#FF0000;">red inner color</span> and <span style="color:#00FF00;">green outline</span>.<br> For each base style, four parameters can be assigned: <ul> <li><code>fill</code> colors the inner part of base</li> <li><code>outline</code> the outline of the base</li> <li><code>label</code> will color the base text</li> <li><code>number</code> color the base number</li> </ul></td>
+							</tr>
+							<tr>
+								<td><a name="paramborder"></a>border</td>
+								<td>Dimension<br><code>"20x30"</code></td>
+								<td> Sets the width and height of the panel border, i.e. the gap
+ between the panel boundaries and those of the surface used to draw the 
+RNA.</td>
+							</tr>
+							<tr>
+								<td><a name="parambp"></a>bp</td>
+								<td>Color<br><code><span style="color:#334455;">#334455</span></code></td>
+								<td>Sets the default value for base-pair colors.</td>
+							</tr>
+							<tr>
+								<td><a name="parambpIncrement"></a>bpIncrement</td>
+								<td>Double<br><code>1.3</code></td>
+								<td>In linear drawing mode, defines the vertical increment used to separate two successive, nested base-pairs.</td>
+							</tr>
+							<tr>
+								<td><a name="parambpStyle"></a>bpStyle</td>
+								<td>String<br><code>lw</code></td>
+								<td>Lets the user picks his/her favorite style for base-pairs rendering, chosen among: <ul> <li><code>none</code>, base-pairs are not drawn, but can be implicitly seen from "ladders", ie helix structures</li> <li><code>line</code> (Line), a simple line is used to draw any base-pair, regardless of its type</li> <li><code>rnaviz</code>, a small square is drawn at equal distance of the two partners</li> <li><code>lw</code> (Leontis/Westhof), both canonical and non-canonical base-pairs are rendered according to the Leontis/Westhof nomenclature.</li> </ul></td>
+							</tr>
+							<tr>
+								<td><a name="paramchemProb"></a>chemProb</td>
+								<td>String<br><code>"11-12:glyph=dot;"</code></td>
+								<td>Attaches a sequence of chemical probing annotations of the form:<br> <code>a1-b1:opt1=v1,...;a2-b2:opt1=v1,...</code><br> where <code>a1</code> and <code>b1</code> are adjacent bases, and each option is chosen among: <ul> <li><code>glyph=[<b>arrow</b>|dot|pin|triangle]</code>: Sets the shape of the annotation </li> <li><code>dir=[in|out]</code>: The direction of the annotation</li> <li><code>intensity=</code><em>real</em>: The annotation intensity (i.e. thickness)</li> <li><code>color=</code><em>color</em>: The color used to draw the annotation</li> </ul></td>
+							</tr>
+							<tr>
+								<td><a name="paramcolorMap"></a>colorMap</td>
+								<td>List<br><code>"0.1;2;3.5"</code></td>
+								<td>Assigns a list of real values, used for color map rendering,
+ to the bases of an RNA. The values are assigned sequentially in the 5' 
+to 3' order. If list is shorter than the list of bases, the remaining 
+bases will remain unaffected. Default value for each base is 0.0.</td>
+							</tr>
+							<tr>
+								<td><a name="paramcolorMapCaption"></a>colorMapCaption</td>
+								<td>String<br><code>"Boltz. prob."</code></td>
+								<td>Sets the caption of current color map. Setting the caption 
+to the empty strings hides the color map caption (ie no space is used 
+for the caption).</td>
+							</tr>
+							<tr>
+								<td><a name="paramcolorMapMax"></a>colorMapMax</td>
+								<td>Real<br><code>"10.0"</code></td>
+								<td>Sets the upper bound of the color map to a given value. That way, the color map can span between <em>natural</em> values (e.g. <code>[0,10]</code>) no matter what the actual values are.</td>
+							</tr>
+							<tr>
+								<td><a name="paramcolorMapMin"></a>colorMapMin</td>
+								<td>Real<br><code>"0.0"</code></td>
+								<td>Sets the lower bound of the color map to a given value. That way, the color map can span between <em>natural</em> values (e.g. <code>[0,10]</code>) no matter what the actual values are.</td>
+							</tr>
+							<tr>
+								<td><a name="paramcolorMapStyle"></a>colorMapStyle</td>
+								<td>String<br><code>heat</code></td>
+								<td>Sets the color map palette to be used within a color map 
+drawing. One can either choose a predefined palette of define a custom 
+palette. Predefined palettes are: "red", "blue", "green", "heat", 
+"energy", and "bw". A custom palette is defined as a 
+semi-colon-separated sequence of (value/rgb color) couples (e.g. 
+"0:#000000;1:#FFFFFF" for a black to white color map). The colors are 
+obtained from a set of values through linear interpolations on each RGB 
+component. For instance, a custom map "0:#000000;1:#808080" going from 
+black (#000000) to gray (#808080) will assign a dark gray color 
+(#404040) to a base of value "0.5". Also, the color map range is 
+automatically scaled as to match the range of base values, so it should 
+not be necessary to manually account for the range.</td>
+							</tr>
+							<tr>
+								<td><a name="paramcolumns"></a>columns</td>
+								<td>Integer<br><code>2</code></td>
+								<td>Sets the number of columns in a multipanel layout <br> (See <a href="https://varna.lisn.upsaclay.fr/index.php?page=specs#multiplePanels">Multiple Panels</a> section below).</td>
+							</tr>
+							<tr>
+								<td><a name="paramcomparisonMode"></a>comparisonMode</td>
+								<td>Boolean<br><code>True</code></td>
+								<td> Toggles on/off "comparison mode", where two previously 
+aligned secondary structures can be jointly drawn within a single 
+"super-secondary structure". Both sequences and structures MUST be 
+specified within this mode, using the <code>firstSequence</code>, <code>secondSequence</code>, <code>firstStructure</code> and <code>secondStructure</code>
+ applet parameters. Additionally, the merged secondary structures must 
+currently be without any crossing interactions (e.g. pseudoknots), and 
+merging them should give a secondary structure.</td>
+							</tr>
+							<tr>
+								<td><a name="paramdrawBackbone"></a>drawBackbone</td>
+								<td>Boolean<br><code>false</code></td>
+								<td>Toggles on/off backbone drawing.</td>
+							</tr>
+							<tr>
+								<td><a name="paramdrawBases"></a>drawBases</td>
+								<td>Boolean<br><code>True</code></td>
+								<td>Displays/hide the outline of a nucleotide base.</td>
+							</tr>
+							<tr>
+								<td><a name="paramdrawNC"></a>drawNC</td>
+								<td>Boolean<br><code>False</code></td>
+								<td>Switches on/off the display of non-canonical base-pairs.</td>
+							</tr>
+							<tr>
+								<td><a name="paramdrawTertiary"></a>drawTertiary</td>
+								<td>Boolean<br><code>True</code></td>
+								<td> Toggles on/off display of "non-planar" base-pairs, i.e. 
+pseudoknots. Since there is no canonical definition of pseudoknotted 
+portions, a maximal planar subset is extracted from the input structure,
+ defined to be the planar portion, and used as a scaffold for the 
+drawing algorithms. The remaining base-pairs can either be displayed or 
+not with this option.</td>
+							</tr>
+							<tr>
+								<td><a name="paramerror"></a>error</td>
+								<td>Boolean<br><code>True</code></td>
+								<td>Toggles on/off <b>error</b> messages, e.g. when unexpected values are encountered.</td>
+							</tr>
+							<tr>
+								<td><a name="paramfillBases"></a>fillBases</td>
+								<td>Boolean<br><code>True</code></td>
+								<td>Displays/hide the outline of a nucleotide base.</td>
+							</tr>
+							<tr>
+								<td><a name="paramfirstSequence"></a>firstSequence</td>
+								<td>String<br><code>"GG.AG..C"</code></td>
+								<td>Sets the gapped nucleotide sequence (gap character is ".") 
+for the first RNA sequence/structure in comparison mode. Note that both 
+sequences and structures MUST be specified, using the <code>firstSequence</code>, <code>secondSequence</code>, <code>firstStructure</code> and <code>secondStructure</code> applet parameters, and that the comparison mode must be activated using the <code>comparisonMode</code> parameter.</td>
+							</tr>
+							<tr>
+								<td><a name="paramfirstStructure"></a>firstStructure</td>
+								<td>String<br><code>"((...))"</code></td>
+								<td>Sets the secondary structure for the first displayed RNA in 
+Dot-Bracket Notation (DBN). The dot character "." is used both for 
+unpaired nucleotides and for gaps. Pseudoknots are not currently 
+supported in comparison mode (but they are supported for single 
+structures). Note that both sequences and structures MUST be specified, 
+using the <code>firstSequence</code>, <code>secondSequence</code>, <code>firstStructure</code> and <code>secondStructure</code> applet parameters, and that the comparison mode must be activated using the <code>comparisonMode</code>
+ parameter. Also, the two structures must be compatible, i.e. their 
+joint structure should represent a valid (e.g. pseudoknot-free) 
+secondary structure .</td>
+							</tr>
+							<tr>
+								<td><a name="paramflat"></a>flat</td>
+								<td>boolean<br><code>true</code></td>
+								<td>In radiate drawing mode, redraws the whole structure, 
+aligning to a baseline the base featured on the exterior loops (aka 
+"dangling ends") .</td>
+							</tr>
+							<tr>
+								<td><a name="paramgapsColor"></a>gapsColor</td>
+								<td>Color<br><code><span style="color:#8FFF00;">#8FFF00</span></code></td>
+								<td>Defines and uses a special color to draw "Gaps" bases in 
+comparison mode. "Gaps" bases correspond to insertion/deletions in one 
+of the structures.</td>
+							</tr>
+							<tr>
+								<td><a name="paramhighlightRegion"></a>highlightRegion</td>
+								<td>String<br><code>"10-16:fill=#FF0000"</code></td>
+								<td>Highlights a region by drawing a polygon of predefined 
+radius, fill color and outline color around it. The highlight can be 
+further edited in the annotation submenu.<br> Each region consist in an 
+interval followed by options. Some features can be customized for each 
+region using the following, comma-separated, assignations: <ul> <li><code>radius=</code><em>real</em>: Thickness of the highlight </li> <li><code>fill=</code><em>color</em>: The color used to fill the highlight</li> <li><code>outline=</code><em>color</em>: The color used to draw the line around the highlight</li> </ul></td>
+							</tr>
+							<tr>
+								<td><a name="parammodifiable"></a>modifiable</td>
+								<td>Boolean<br><code>False</code></td>
+								<td>If <code>true</code>, prohibits any modification performed by the user, except for basic cosmetic operations. Default to <code>true</code>.</td>
+							</tr>
+							<tr>
+								<td><a name="paramnsBasesColor"></a>nsBasesColor</td>
+								<td>Color<br><code><span style="color:#00FFFF;">#00FFFF</span></code></td>
+								<td>Defines and uses a special color to render non-standard bases (Anything but A,C,G or U)</td>
+							</tr>
+							<tr>
+								<td><a name="paramperiodNum"></a>periodNum</td>
+								<td>Integer<br><code>10</code></td>
+								<td>Sets the interval between two successive base numbers. More 
+specifically, if k is the period, then the first and last bases of the 
+RNA are numbered, along with each base whose number is a multiple of k. 
+The base number is used for this operation as opposed to the base index,
+ which might differ if bases are missing in the RNA.</td>
+							</tr>
+							<tr>
+								<td><a name="paramresolution"></a>resolution</td>
+								<td>Real<br><code>"2.0"</code></td>
+								<td>Chooses the resolution of a bitmap export, i.e. the 
+multiplier in the number of pixels in each dimension of the exported 
+picture.</td>
+							</tr>
+							<tr>
+								<td><a name="paramrotation"></a>rotation</td>
+								<td>Double<br><code>1.0</code></td>
+								<td>Rotates the whole RNA of a certain angular increment. (Doesn't rotate the captions)</td>
+							</tr>
+							<tr>
+								<td><a name="paramrows"></a>rows</td>
+								<td>Integer<br><code>2</code></td>
+								<td>Sets the number of rows in a multipanel layout <br> (See <a href="https://varna.lisn.upsaclay.fr/index.php?page=specs#multiplePanels">Multiple Panels</a> section below).</td>
+							</tr>
+							<tr>
+								<td><a name="paramsecondSequence"></a>secondSequence</td>
+								<td>String<br><code>"G..G..C"</code></td>
+								<td>Sets the gapped nucleotide sequence (gap character is ".") 
+for the second RNA sequence/structure in comparison mode. Note that both
+ sequences and structures MUST be specified, using the <code>firstSequence</code>, <code>secondSequence</code>, <code>firstStructure</code> and <code>secondStructure</code> applet parameters, and that the comparison mode must be activated using the <code>comparisonMode</code> parameter.</td>
+							</tr>
+							<tr>
+								<td><a name="paramsecondStructure"></a>secondStructure</td>
+								<td>String<br><code>"((...))"</code></td>
+								<td>Sets the secondary structure for the second displayed RNA in
+ Dot-Bracket Notation (DBN). The dot character "." is used both for 
+unpaired nucleotides and for gaps. Pseudoknots are not currently 
+supported in comparison mode (but they are supported for single 
+structures). Note that both sequences and structures MUST be specified, 
+using the <code>firstSequence</code>, <code>secondSequence</code>, <code>firstStructure</code> and <code>secondStructure</code> applet parameters, and that the comparison mode must be activated using the <code>comparisonMode</code>
+ parameter. Also, the two structures must be compatible, i.e. their 
+joint structure should represent a valid (e.g. pseudoknot-free) 
+secondary structure .</td>
+							</tr>
+							<tr>
+								<td><a name="paramsequenceDBN"></a>sequenceDBN</td>
+								<td>String<br><code>"GGAGUCC"</code></td>
+								<td>Sets the raw nucleotide sequence for the displayed RNA Each base <b>must</b> be encoded in a single character. Letters others than [A,C,G,U] are tolerated</td>
+							</tr>
+							<tr>
+								<td><a name="paramspaceBetweenBases"></a>spaceBetweenBases</td>
+								<td>Real<br><code>1.0</code></td>
+								<td>Lets the user define the multiplier used for inter-base 
+distance. Since the applet adapts it zoom factor to the dimension of the
+ RNA bounding box, this option might be mistaken for a increase of the 
+base radius.</td>
+							</tr>
+							<tr>
+								<td><a name="paramspaceBetweenBases"></a>spaceBetweenBases</td>
+								<td>Real<br><code>"1.0"</code></td>
+								<td>Set the distance between consecutive bases</td>
+							</tr>
+							<tr>
+								<td><a name="paramstructureDBN"></a>structureDBN</td>
+								<td>String<br><code>"((...))"</code></td>
+								<td>Sets the secondary structure of the displayed RNA in 
+Dot-Bracket Notation (DBN). Valid structures in DBN format are 
+well-parenthesized words consisting of dots '<b>.</b>', opening '<b>(</b>' and closing '<b>)</b>'
+ parentheses. Dotted positions will be unpaired, whereas matching 
+parenthesized positions will represent base-pairing nucleotides. 
+Pseudoknots can be specified by using the two alternative parentheses 
+system '<b>{}</b>' and '<b>[]</b>'.</td>
+							</tr>
+							<tr>
+								<td><a name="paramtitle"></a>title</td>
+								<td>String<br><code>"My RNA"</code></td>
+								<td>Lets the user type a new title, displayed on the bottom of the panel.</td>
+							</tr>
+							<tr>
+								<td><a name="paramtitleColor"></a>titleColor</td>
+								<td>Color<br><code><span style="color:#808080;">#808080</span></code></td>
+								<td>Selects the color used for rendering the panel title.</td>
+							</tr>
+							<tr>
+								<td><a name="paramtitleSize"></a>titleSize</td>
+								<td>Integer<br><code>10</code></td>
+								<td>Lets the user select the font family, style and size used for displaying the title.</td>
+							</tr>
+							<tr>
+								<td><a name="paramurl"></a>url</td>
+								<td>String<br><code>"http://varna.lri.fr/ex1.ct"</code></td>
+								<td>Loads and displays a file that describes a secondary 
+structure of RNA in this panel. Supported files are in Vienna 
+dot-bracket notation, MFold/Unafold Connect format, Gutell's BPSeq 
+format, and RNAML as produced by RNAView.</td>
+							</tr>
+							<tr>
+								<td><a name="paramwarning"></a>warning</td>
+								<td>Boolean<br><code>True</code></td>
+								<td>Toggles on/off <b>warning</b> messages.</td>
+							</tr>
+							<tr>
+								<td><a name="paramzoom"></a>zoom</td>
+								<td>Double<br><code>1.2</code></td>
+								<td>Defines the level of zoom and zoom increment used to display
+ the RNA within this panel. For zoom levels greater than one, the arrows
+ or the mouse (middle button or both button simultaneously) can be used 
+to scroll visible portion.</td>
+							</tr>
+						</tbody></table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="shadow">
+			<div class="contentbox">
+				<div class="title">
+					<h2>Multiple panels<a name="multiplePanels"></a></h2>
+				</div>
+				<div class="content">
+					<h5>Motivation</h5>
+					<p>
+						Certain websites, like webservers hosting applications that generate <em>candidate</em> secondary
+						structures, might want to display several secondary structures in a single applet. This would allow
+						users with limited ressources (memory especially, of which Java doesn't seem to get enough) to benefit
+						from a graphical representation of their results.
+					</p>
+					<h5>Description/Examples</h5>
+					<p>
+						The VARNA applet addresses this issue through the <code>rows</code> and <code>columns</code> Applet 						 parameters.
+						When these values are assigned such that at least one differs from 1, the space occupied by the VARNA 						 applet
+						is plit as a grid. The set of <code>rows*columns</code> RNA, numbered from <code>1</code> to 						 <code>rows*columns</code>
+						is then displayed in the following way:
+					</p>
+					<div class="full">
+						<table align="center" border="1" cellpadding="15" cellspacing="0">
+							<tbody><tr>
+								<td><code>RNA<sub>1</sub></code></td>
+								<td><code>RNA<sub>2</sub></code></td>
+								<td><code>...</code></td>
+								<td><code>RNA<sub>columns</sub></code></td>
+							</tr>
+							<tr>
+								<td><code>RNA<sub>columns+1</sub></code></td>
+								<td><code>RNA<sub>columns+2</sub></code></td>
+								<td><code>...</code></td>
+								<td><code>RNA<sub>2*columns</sub></code></td>
+							</tr>
+							<tr><td><code>...</code></td><td><code>...</code></td><td><code>...</code></td><td><code>...</code></td></tr>
+							<tr>
+								<td><code>RNA<sub>(rows-1)*columns+1</sub></code></td>
+								<td><code>RNA<sub>(rows-1)*columns+2</sub></code></td>
+								<td><code>...</code></td>
+								<td><code>RNA<sub>rows*columns</sub></code></td>
+							</tr>
+						</tbody></table>
+					</div><br>
+					<p>
+						Each of the RNA drawing panels can be configured independently through the <code>param</code> tag,
+						using some of the parameters names suffixed by the number <code>n</code> of the RNA.<br>
+						For instance, the following parameters produces a grid having 3 columns and 2 rows.<br>
+					</p>
+						<table align="center" cellpadding="15">
+							<tbody><tr>
+							<td>
+<pre>&lt;param name="rows" value="2"&gt;
+&lt;param name="columns" value="3"&gt;</pre>
+							</td>
+							<td> <code>=&gt;</code>
+							</td>
+							<td>
+							<table border="1" cellpadding="15" cellspacing="0">
+							<tbody><tr>
+								<td>&nbsp;</td>
+								<td>&nbsp;</td>
+								<td>&nbsp;</td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td>&nbsp;</td>
+								<td>&nbsp;</td>
+							</tr>
+						</tbody></table>
+						</td>
+						</tr>
+						</tbody></table>
+					<p>
+						We can color each panel the way we want to:
+					</p>
+						<table align="center" cellpadding="15">
+							<tbody><tr>
+							<td>
+<pre>&lt;param name="rows" value="2"&gt;
+&lt;param name="columns" value="3"&gt;
+&lt;param name="background1" value="#000000"&gt;
+&lt;param name="background2" value="#303030"&gt;
+&lt;param name="background3" value="#606060"&gt;
+&lt;param name="background4" value="#909090"&gt;
+&lt;param name="background5" value="#C0C0C0"&gt;
+&lt;param name="background6" value="#F0F0F0"&gt;
+</pre>
+							</td>
+							<td> <code>=&gt;</code>
+							</td>
+							<td>
+							<table border="1" cellpadding="15" cellspacing="0">
+							<tbody><tr>
+								<td style="background:#000000;">&nbsp;</td>
+								<td style="background:#303030;">&nbsp;</td>
+								<td style="background:#606060;">&nbsp;</td>
+							</tr>
+							<tr>
+								<td style="background:#909090 ;">&nbsp;</td>
+								<td style="background:#C0C0C0;">&nbsp;</td>
+								<td style="background:#F0F0F0;">&nbsp;</td>
+							</tr>
+						</tbody></table>
+						</td>
+						</tr>
+						</tbody></table>
+					<p>
+						The same goes for every other parameters. Assigning different structures to each
+						panel will be performed in the same way, through defining different values to parameters
+						<code>structureDBN1</code>, <code>structureDBN2</code>, ...
+					</p>
+					<h5>Persistence</h5>
+					<p>
+						Although they can be assigned independantly for each panel, parameters are said to be
+						<em>persistent</em>. This means that a value, assigned to a parameter in panel <code>i</code>, will
+						be used for the subsequent panels <code>i+1</code>, <code>i+2</code> ... unless explicitly re-assigned.
+						That way, it is possible to define a common property, such that the <code>background</code> color 						through a
+						single assignment of this property for panel <code>1</code>:
+					</p>
+						<table align="center" cellpadding="15">
+							<tbody><tr>
+							<td>
+<pre>&lt;param name="rows" value="2"&gt;
+&lt;param name="columns" value="3"&gt;
+&lt;param name="background1" value="#606060"&gt;
+</pre>
+							</td>
+							<td> <code>=&gt;</code>
+							</td>
+							<td>
+							<table border="1" cellpadding="15" cellspacing="0">
+							<tbody><tr>
+								<td style="background:#606060;">&nbsp;</td>
+								<td style="background:#606060;">&nbsp;</td>
+								<td style="background:#606060;">&nbsp;</td>
+							</tr>
+							<tr>
+								<td style="background:#606060 ;">&nbsp;</td>
+								<td style="background:#606060;">&nbsp;</td>
+								<td style="background:#606060;">&nbsp;</td>
+							</tr>
+						</tbody></table>
+						</td>
+						</tr>
+						</tbody></table>
+
+					<p>
+						It also makes it possible to split the set of displayed RNAs in two families, identified by different 						 backgrounds.
+					</p>
+						<table align="center" cellpadding="15">
+							<tbody><tr>
+							<td>
+<pre>&lt;param name="rows" value="2"&gt;
+&lt;param name="columns" value="3"&gt;
+&lt;param name="background1" value="#FF0000"&gt;
+&lt;param name="background4" value="#00FF00"&gt;
+</pre>
+							</td>
+							<td> <code>=&gt;</code>
+							</td>
+							<td>
+							<table border="1" cellpadding="15" cellspacing="0">
+							<tbody><tr>
+								<td style="background:#FF0000;">&nbsp;</td>
+								<td style="background:#FF0000;">&nbsp;</td>
+								<td style="background:#FF0000;">&nbsp;</td>
+							</tr>
+							<tr>
+								<td style="background:#00FF00 ;">&nbsp;</td>
+								<td style="background:#00FF00;">&nbsp;</td>
+								<td style="background:#00FF00;">&nbsp;</td>
+							</tr>
+						</tbody></table>
+						</td>
+						</tr>
+						</tbody></table>
+				</div>
+			</div>
+		</div>
+
+		<div id="flat">
+			<div class="right49">
+				<p><a href="#box">^ Top</a></p>
+			</div>
+			<div class="left49">
+				<p>
+					Previous page: <a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=command">Command-line Usage</a> <br>
+					Next page: <a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features">Full Features List</a>
+				</p>
+			</div>
+		</div>
+	</div>
+	<div class="debug">
+    <ul>
+    </ul>
+</div>
+	<div id="footer">
+		<hr>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-36426009-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+		<p>Website maintained by <a href="http://lix.polytechnique.fr/~ponty">Yann Ponty</a></p>
+	</div>
+</em></div><em>
+
+
+
+ </em></body></html>

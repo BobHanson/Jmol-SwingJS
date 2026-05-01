@@ -74,7 +74,7 @@ public class VARNAConsoleDemo extends JApplet implements InterfaceParameterLoade
     goPanel.setLayout(new BorderLayout());
     goPanel.add(_go, BorderLayout.CENTER);
     
-    app.setPanels(goPanel, null, null);
+    app.setPanels(goPanel, null, null, false);
     
     getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(vp, BorderLayout.CENTER);
@@ -104,7 +104,7 @@ public class VARNAConsoleDemo extends JApplet implements InterfaceParameterLoade
 
   @Override
   public void actionPerformed(ActionEvent arg0) {
-    app.updateVP();
+    app.updateVP(null, null, null);
   }
   
     public VARNAPanel getVarnaPanel() {

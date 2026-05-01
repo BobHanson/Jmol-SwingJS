@@ -654,7 +654,6 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Stroke;
-import java.awt.Window;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
@@ -698,7 +697,6 @@ import javax.xml.transform.stream.StreamResult;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import fr.orsay.lri.varna.applications.VARNAapp;
 import fr.orsay.lri.varna.controlers.ControleurBlinkingThread;
 import fr.orsay.lri.varna.controlers.ControleurClicMovement;
 import fr.orsay.lri.varna.controlers.ControleurDraggedMolette;
@@ -859,8 +857,6 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   private TextAnnotation _selectedAnnotation;
 
 
-  private Window window;
-
   /**
    * Creates an RNA 2D panel with initially displays the empty structure.
    * 
@@ -925,10 +921,6 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     setTitle(title);
   }
   
-  public void setWindow(Window w) {
-    window = w;    
-  }
-
   public void setOriginLink(Point2D.Double p) {
     _linkOrigin = (p);
   }
@@ -3910,7 +3902,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     BaseSet oldSelected = new BaseSet(_RNA.getSelectedBases());
     _RNA.setSelections(mbs);
     setBlinkActive(true);
-    fireSelectionChanged(VARNAapp.SEL_SET, oldSelected, _RNA.getSelectedBases());
+    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_SET, oldSelected, _RNA.getSelectedBases());
   }
 
   public ArrayList<Integer> getBasesInRectangleDiff(Rectangle recIn,
@@ -3958,14 +3950,14 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     BaseSet bck = new BaseSet(_RNA.getSelectedBases());
     _RNA.addSelection(i);
     setBlinkActive(true);
-    fireSelectionChanged(VARNAapp.SEL_ADD, bck, _RNA.getSelectedBases());
+    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_ADD, bck, _RNA.getSelectedBases());
   }
 
   public void removeFromSelection(int i) {
     BaseSet bck = new BaseSet(_RNA.getSelectedBases());
     _RNA.removeSelection(i);
     setBlinkActive(true);
-    fireSelectionChanged(VARNAapp.SEL_REMOVE, bck, _RNA.getSelectedBases());
+    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_REMOVE, bck, _RNA.getSelectedBases());
   }
 
   public boolean isInSelection(int i) {
@@ -3992,7 +3984,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     BaseSet bck = new BaseSet(_RNA.getSelectedBases());
     _RNA.clearSelections();
     setBlinkActive(false);
-    fireSelectionChanged(VARNAapp.SEL_CLEAR, bck, _RNA.getSelectedBases());
+    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_CLEAR, bck, _RNA.getSelectedBases());
     repaint();
   }
 
@@ -4077,11 +4069,11 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     return done;
   }
 
-  public TextAnnotation get_selectedAnnotation() {
+  public TextAnnotation getSelectedAnnotation() {
     return _selectedAnnotation;
   }
 
-  public void set_selectedAnnotation(TextAnnotation annotation) {
+  public void setSelectedAnnotation(TextAnnotation annotation) {
     _selectedAnnotation = annotation;
   }
 
@@ -4318,7 +4310,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
   public void fireTranslationChanged() {
     for (InterfaceVARNAListener v2 : _VARNAListeners) {
-      v2.onTranslationChanged();
+      v2.onZoomTranslationChanged();
     }
   }
 
@@ -4368,10 +4360,10 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     }
   }
 
-  public void fireBaseClicked(ModeleBase mb, MouseEvent me) {
+  public void fireBaseClicked(ModeleBase mb, int id) {
     if (mb != null) {
       for (InterfaceVARNABasesListener v2 : _basesListeners) {
-        v2.onBaseClicked(mb, me);
+        v2.onBaseClicked(mb, id);
       }
     }
   }
@@ -4520,7 +4512,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
   public void selectionComplete() {
     removeSelectionRectangle();
-    fireSelectionChanged(VARNAapp.SEL_COMPLETE, null, _RNA.getSelectedBases());
+    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_COMPLETE, null, _RNA.getSelectedBases());
   }
 
   public void zap() {
@@ -4543,6 +4535,24 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
   public Color getUnselectedColor(Color initialColor) {
     return (!selectionColored || colorUnselected == null ? initialColor : colorUnselected);
+  }
+
+  public void fireMouseEvent(int id, ModeleBase base, boolean before) {
+    switch (id) {
+    case MouseEvent.MOUSE_PRESSED:
+      if (before) {
+        requestFocus();
+        removeSelectedAnnotation();
+      } else {
+        repaint();
+      }
+      break;
+    case MouseEvent.MOUSE_DRAGGED:
+      break;
+    case MouseEvent.MOUSE_RELEASED:
+      fireBaseClicked(base, id);
+      break;
+    }
   }
 
 }

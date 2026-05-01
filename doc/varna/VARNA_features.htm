@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>VARNA: Visualization Applet for RNA secondary structure</title>
+<link rel="stylesheet" type="text/css" href="VARNA_features_files/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="VARNA_features_files/VARNA.css">
+	<script type="text/javascript" async="" src="VARNA_features_files/ga.js"></script><script type="text/javascript" src="VARNA_features_files/VARNA.js"></script>
+	<style type="text/css"><!--
+	.ui-state-highlight a
+	{
+		text-decoration: underline;
+	}
+	li .menuElementsecurityfix
+	{
+		font-weight: bold;
+	}
+	   .primary-nav .menuElementfeatures
+	   {
+		 display: block;
+		 border:1px solid;
+	   }
+
+	   .primary-nav #listfeatures
+	   {
+		 display: block;
+		}
+
+	   .primary-nav .menuElementmanual
+	   {
+		 display: block;
+		 border:1px solid;
+	   }
+
+	   .primary-nav #listmanual
+	   {
+		 display: block;
+		}
+
+	   .primary-nav a.menuElementfeatures
+	   {
+		 background-color:#fff5d4;
+		 display: block;
+		}
+	--></style>
+</head>
+<body>
+<div id="container">
+	<div id="header">
+		<h1>VARNA: Visualization Applet for RNA</h1>
+		<h6>A Java lightweight component and applet for drawing the RNA secondary structure</h6>
+	</div>
+	<div id="navbox">
+		<div id="sidebar">
+			<div id="menu">
+				<div id="menuwrapper">
+					<ul class="primary-nav menuElementhome">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=home&amp;css=varna" class="menuElementhome">Home</a>
+						<ul id="listhome" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementdemo">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=demo&amp;css=varna" class="menuElementdemo">Demo</a>
+						<ul id="listdemo" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementmanual">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=manual&amp;css=varna" class="menuElementmanual">User Manual</a>
+						<ul id="listmanual" class="menusublist">
+							<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=mouse&amp;css=varna" class="menuElementmouse">Mouse</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=popup&amp;css=varna" class="menuElementpopup">Popup Menu</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=howto&amp;css=varna" class="menuElementhowto">How to...</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=command&amp;css=varna" class="menuElementcommand">Command-line Usage</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=specs&amp;css=varna" class="menuElementspecs">Applet Parameters</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=features&amp;css=varna" class="menuElementfeatures">Full Features List</a>
+						</li></ul>
+					</li></ul>
+					<ul class="primary-nav menuElementtutorial">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial&amp;css=varna" class="menuElementtutorial">Tutorials</a>
+						<ul id="listtutorial" class="menusublist">
+							<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial1&amp;css=varna" class="menuElementtutorial1">Hello RNA World!</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial2&amp;css=varna" class="menuElementtutorial2">Round we go...</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial3&amp;css=varna" class="menuElementtutorial3">Pitch black</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial4&amp;css=varna" class="menuElementtutorial4">Funky !</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial5&amp;css=varna" class="menuElementtutorial5">Multiple panels</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial6&amp;css=varna" class="menuElementtutorial6">Algorithms</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial7&amp;css=varna" class="menuElementtutorial7">Base-pairs styles</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial8&amp;css=varna" class="menuElementtutorial8">Load from URL</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial9&amp;css=varna" class="menuElementtutorial9">Planarized</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial10&amp;css=varna" class="menuElementtutorial10">Base Styles</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial11&amp;css=varna" class="menuElementtutorial11">Color Maps</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial12&amp;css=varna" class="menuElementtutorial12">Adding Labels</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial13&amp;css=varna" class="menuElementtutorial13">Higlighting Regions</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial14&amp;css=varna" class="menuElementtutorial14">Glyphs</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial15&amp;css=varna" class="menuElementtutorial15">Comparing RNAs</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial16&amp;css=varna" class="menuElementtutorial16">JS Interactions I</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial17&amp;css=varna" class="menuElementtutorial17">JS Interactions II</a>
+						</li></ul>
+					</li></ul>
+					<ul class="primary-nav menuElementdownloads">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=downloads&amp;css=varna" class="menuElementdownloads">Downloads</a>
+						<ul id="listdownloads" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementsecurityfix">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=securityfix&amp;css=varna" class="menuElementsecurityfix"><span class="focus">Java Security Fix</span></a>
+						<ul id="listsecurityfix" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementlinks">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=links&amp;css=varna" class="menuElementlinks">Links</a>
+						<ul id="listlinks" class="menusublist">
+						</ul>
+					</li></ul>
+				</div>
+			</div>
+			<div class="shadow">
+				<div class="contentbox">
+					<div class="title">
+						<h4>Announcement</h4>
+					</div>
+					<div class="content">
+						<div class="NewsSummaryLink">
+				 <a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=downloads">VARNA 3.93 released</a>
+						</div>
+						<div class="NewsSummaryPostdate">
+							19/06/2015
+						</div>
+						<div class="NewsSummaryContent">
+							<p><em>XML Save/Load bug fix...</em></p><em>
+						</em></div><em>
+					</em></div><em>
+				</em></div><em>
+			</em></div><em>
+			<div class="shadow">
+				<div class="contentbox">
+					<div class="title">
+						<h4>Support</h4>
+					</div>
+					<div class="content">
+						<table style="padding:0px;border:0px;">
+							<tbody><tr>
+								<td align="center" colspan="2"><a href="http://www.inria.fr/"><img src="VARNA_features_files/logoinria.png" width="120px" style="border:0px;" alt="Inria"></a></td>
+							</tr>
+							<tr>
+								<td align="center"><a href="http://www.agence-nationale-recherche.fr/"><img src="VARNA_features_files/logoanr.png" width="60px" style="border:0px;" alt="Agence Nationale de la Recherche"></a></td>
+								<td align="center"><a href="http://www.cnrs.fr/"><img src="VARNA_features_files/logocnrs.png" width="60px" style="border:0px;" alt="Centre National de la Recherche Scientifique"></a></td>
+							</tr>
+							<tr>
+								<td align="center" colspan="1"><a href="http://www.lix.polytechnique.fr/"><img src="VARNA_features_files/logolix.png" width="60px" style="border:0px;" alt="Laboratoire d'Informatique de l'Ecole Polytechnique (X)"><br>LIX, Palaiseau</a></td>
+								<td align="center"><a href="http://www.lri.fr/"><img src="VARNA_features_files/logolri.png" width="50px" style="border:0px;" alt="Laboratoire de Recherche en Informatique (LRI)"><br>LRI, Orsay</a></td>
+							</tr>
+							<tr>
+								<td align="center" colspan="1"><a href="http://www.polytechnique.fr/"><img src="VARNA_features_files/logox.png" width="60px" style="border:0px;" alt="Ecole Polytechnique"><br>Polytechnique, Palaiseau</a></td>
+								<td align="center"><a href="http://www.igmors.u-psud.fr/"><img src="VARNA_features_files/logoigm.png" width="60px" style="border:0px;" alt="Institut de G�n�tique et Microbiologie (IGM)"><br`>IGM, Orsay</br`></a></td>
+							</tr>
+							<tr>
+								<td align="center" colspan="2"><a href="http://www.u-psud.fr/"><img src="VARNA_features_files/logoups.png" width="120px" style="border:0px;" alt="Universit� Paris XI-Paris Sud"></a></td>
+							</tr>
+						</tbody></table>
+					</div>
+				</div>
+			</div>
+		</em></div><em>
+	</em></div><em>
+	<div id="box">
+		
+
+		<div class="shadow">
+			<div class="contentbox">
+				<div class="ui-state-highlight ui-corner-all" style="padding: 0 .7em;"><p>Recent changes in Java security policy might prevent you from running VARNA.<br><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=securityfix&amp;css=varna">Check out this page for details and ways to solve the problem.</a></p></div>
+				<div class="title">
+					<h2><a name="description"></a>Features description</h2>
+				</div>
+				<div class="content">
+					<p>
+						</p><div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature38"></a>Add a static annotation</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Shift+H</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Annotations&gt;New&gt;Here</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Creates and edits a static 
+text annotation. An annotation is said to be static if its position does
+ not depend on the position of any base. Static annotations can be 
+selected and moved using the mouse.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.6</span>
+							<div class="manualentrytitle"><a name="feature39"></a>Add base textual annotation</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Annotations&gt;New&gt;Base</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Creates and edits a textual annotation anchored on and displayed on the side of the closest base.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.6</span>
+							<div class="manualentrytitle"><a name="feature43"></a>Add chemical probing annotation</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Annotations&gt;New&gt;Chem. Prob.</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Creates and edits a chemical probing type of annotation, targeting the closest couple of bases.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.6</span>
+							<div class="manualentrytitle"><a name="feature41"></a>Add helix textual annotation</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Annotations&gt;New&gt;Helix</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Creates and edits a textual annotation anchored on and displayed on the closest helix.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.6</span>
+							<div class="manualentrytitle"><a name="feature40"></a>Add loop textual annotation</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Annotations&gt;New&gt;Loop</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Creates and edits a textual annotation anchored on and displayed on the closest loop.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.6</span>
+							<div class="manualentrytitle"><a name="feature42"></a>Add region highlight annotation</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Annotations&gt;New&gt;Region</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Creates and edits an 
+highlight annotation, based on the largest contiguous sequence of bases 
+within current selection (or closest base if selection empty).</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature20"></a>Align the exterior loop to a base line</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+F</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Redraw&gt;Flat exterior loop</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">In radiate drawing mode, 
+redraws the whole structure, aligning to a baseline the base featured on
+ the exterior loops (aka "dangling ends") .</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature46"></a>Automatically annotate helices</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Q</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Annotations&gt;Auto helices</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Annotates each and every helix in the RNA with a unique "Hn" label.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature47"></a>Automatically annotate interior loops</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Alt+Shift+Q</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Annotations&gt;Auto interior loops</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Annotates each and every interior loop of the RNA with a unique "In" label.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature48"></a>Automatically annotate terminal loops</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Shift+Q</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Annotations&gt;Auto terminal loops</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Annotates each and every terminal loop of the RNA with a unique "Tn" label.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature27"></a>Choose backbone color</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+K</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;RNA Style&gt;Backbone color</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Lets the user pick a custom color for rendering the phosphate-sugar backbone (aka skeleton) of the RNA.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature26"></a>Choose background color</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+G</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;Misc&gt;Background color</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Defines the background color used within this panel.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature10"></a>Choose non-standard bases custom color</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Shift+J</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;RNA Style&gt;Non-standard bases&gt;Color</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Defines and uses a special color to render non-standard bases (Anything but A,C,G or U)</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.1.0</span>
+							<div class="manualentrytitle"><a name="feature34"></a>Choose title color</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Alt+T</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;Misc&gt;Title&gt;Color</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Selects the color used for rendering the panel title.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature5"></a>Customize border size</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+B</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;View&gt;Border size</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription"> Sets the width and height of
+ the panel border, i.e. the gap between the panel boundaries and those 
+of the surface used to draw the RNA.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature37"></a>Customize colors (All)</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Alt+U</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Colors&gt;By position</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Lets the user select custom colors (inner, outer, label...) for each base, selected by base numbers.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature35"></a>Customize colors (By base type)</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+U</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Colors&gt;By base</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Lets the user select custom 
+colors (inner, outer, label...) for each type of base. One can then set 
+the colors of a bunch of bases in a single operation.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature36"></a>Customize colors (By base-pair)</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Shift+U</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Colors&gt;By BP</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Lets the user select custom 
+colors (inner, outer, label...) for each type of base-pair. One can then
+ set the colors of a bunch of bases in a single operation.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature13"></a>Define "Gaps" bases color</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Shift+D</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;RNA Style&gt;'Gaps' bases&gt;Color</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Defines and uses a special 
+color to draw "Gaps" bases in comparison mode. "Gaps" bases correspond 
+to insertion/deletions in one of the structures.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature44"></a>Edit annotations from list</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Annotations&gt;Edit from list...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Spawns a complete list of annotations, allowing for a quick edition of all text annotations.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature56"></a>Edit/annotate all bases of an RNA</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Selection&gt;All</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Pops up a menu allowing for a
+ simultaneous customization of all of the bases comprised between the 
+selected base and all terminal loops. Available options are exactly the 
+same as for single bases and are applied to all of the bases in the loop
+ at once, except for annotations which is not available for this 
+selection.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature54"></a>Edit/annotate all bases of the closest helix</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Selection&gt;Helix</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Pops up a menu allowing for a
+ customization of how all of the bases involved in the helix containing 
+the selected base-pair are to be rendered. Available options are exactly
+ the same as for single bases and are applied to all of the bases in the
+ loop at once, except for annotations. In case of an annotation, the 
+text is displayed only once on the barycenter of the bases involved in 
+the helix.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature53"></a>Edit/annotate all bases of the closest loop</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Selection&gt;Loop</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Pops up a menu allowing for a
+ customization of how all of the bases involved in a loop containing the
+ selected base are to be rendered. Available options are exactly the 
+same as for single bases and are applied to all of the bases in the loop
+ at once.  If the selected base is involved in a basepair, then there is
+ ambiguity as to which loop the user wants to apply the modifications 
+to. In this case, two options "Forward loop"/"Backward loop" replace the
+ classic "Loop", with the "Backward loop" being the closest to the 5'/3'
+ dangling end.  In case of an annotation, the text is displayed only 
+once on the barycenter of the bases involved in the loop.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature55"></a>Edit/annotate all bases of the closest stem</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Selection&gt;Stem</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Pops up a menu allowing for a
+ simultaneous customization of all of the bases comprised between the 
+selected base and all terminal loops. Available options are exactly the 
+same as for single bases and are applied to all of the bases in the loop
+ at once, except for annotations which is not available for this 
+selection.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature52"></a>Edit/annotate all bases of the closest unpaired region/bulge</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Selection&gt;Bulge</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Pops up a menu allowing for a
+ customization of how all of the unpaired bases contiguous to the 
+selected base-pair are to be rendered. Available options are exactly the
+ same as for single bases and are applied to all of the bases in the 
+loop at once, except for annotations which are not available.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature51"></a>Edit/annotate both bases of the closest base-pair</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Selection&gt;Base-pair</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Pops up a menu allowing for a
+ customization of how both of the bases involved in the closest 
+base-pair are to be rendered. Available options are exactly the same as 
+for single bases minus text annotations.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature50"></a>Edit/annotate closest base</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Selection&gt;Base</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Pops up a submenu allowing for a customization of how this single base is rendered. More specifically, it is possible to: <ul> <li>Set the base content (amino-acid)</li> <li>Change the color used to fill this base</li> <li>Change outline color</li> <li>Change caption color</li> <li>If involved in a base-pair, change base-pair color/thickness</li> <li>Change base number color</li> <li>Add/edit/remove a text annotation for this base.</li> </ul>
+ Note: For single bases, annotations are drawn on the side of the base, 
+using a similar approach as the one used for base numbers.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.6</span>
+							<div class="manualentrytitle"><a name="feature49"></a>Edit/annotate current selection</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Selection&gt;Current</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Pops up a submenu allowing for a customization of how selected base are rendered.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature58"></a>Export picture</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+X</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>File&gt;Export</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Exports the current image of 
+the RNA in one of supported formats. As of version 3.1, Encapsulated 
+Postscript (EPS), Scalable Vector Graphics (SVG), XFIG, Portable Network
+ Graphics (PNG) and JPEG are supported for export. Some formats might 
+require additional parameters such as quality and/or resolution 
+(pixel-based graphics).</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature57"></a>Learn more about VARNA</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+A</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>About</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Spawns a dialog featuring current version, licence status, current contributors and funding institution.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature1"></a>Manual input of an RNA</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+N</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>File&gt;New...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Allow the user to manually 
+input a structure/sequence of RNA using the dot-bracket notation. The 
+structure is then rendering using the current algorithm/settings.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature2"></a>Open new file</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+O</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>File&gt;Open...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Opens a file containing an 
+RNA description. The file content is matched against the four file 
+formats supported for input (Vienna, CT, BPSeq and RNAML), and the RNA 
+is drawn using current settings and algorithm.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.6</span>
+							<div class="manualentrytitle"><a name="feature59"></a>Print current view</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+P</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>File&gt;Print...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Outputs to printer current RNA secondary structure.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.7</span>
+							<div class="manualentrytitle"><a name="feature25"></a>Read color map values from file</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Shift+K</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;Color Map&gt;Load values...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Loads a list of values from an external file/URL.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature16"></a>Redraw in Circular mode</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+2</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Redraw&gt;Algorithm&gt;Circular</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Redraws the current RNA secondary structure using the circular "Feynman's diagram" representation.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature15"></a>Redraw in Linear mode</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+1</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Redraw&gt;Algorithm&gt;Linear</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Redraws the current RNA secondary structure using the linear representation.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature18"></a>Redraw in NAView mode</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+4</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Redraw&gt;Algorithm&gt;NAView</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Redraws the current RNA secondary structure in a planar representation, using the NAView algorithm.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature17"></a>Redraw in Radiate mode</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+3</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Redraw&gt;Algorithm&gt;Radiate</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Redraws the current RNA 
+secondary structure using the "radiate" planar representation. Using the
+ mouse, helices can be spined around for aesthetic purpose.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.2</span>
+							<div class="manualentrytitle"><a name="feature45"></a>Remove annotations from list</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span></div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Annotations&gt;Remove from list...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Spawns a complete list of annotations, allowing for a quick deletion of numerous annotations.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.1</span>
+							<div class="manualentrytitle"><a name="feature30"></a>Reset drawing</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Shift+R</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Redraw&gt;Reset</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Lets the user cancel any changes performed on the structure since the initial drawing.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature4"></a>Rotate RNA</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+R</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;View&gt;Rotation...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Rotates the whole RNA of a certain angular increment. (Doesn't rotate the captions)</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature31"></a>Save RNA structure</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+S</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>File&gt;Save...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Saves the displayed RNA 
+secondary structure using one of the supported formats (As of version 
+3.1: Vienna DBN, connect CT and CRW BPSeq).</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.1.0</span>
+							<div class="manualentrytitle"><a name="feature33"></a>Select title font size</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Shift+T</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;Misc&gt;Title&gt;Font</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Lets the user select the font family, style and size used for displaying the title.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature19"></a>Set BP increment in linear mode</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+H</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Redraw&gt;BP height increment</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">In linear drawing mode, defines the vertical increment used to separate two successive, nested base-pairs.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature6"></a>Set base-pairs display style</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Shift+P</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;RNA Style&gt;Base pairs&gt;Base-pairs style...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Lets the user picks his/her favorite style for base-pairs rendering, chosen among: <ul> <li><code>none</code>, base-pairs are not drawn, but can be implicitly seen from "ladders", ie helix structures</li> <li><code>line</code> (Line), a simple line is used to draw any base-pair, regardless of its type</li> <li><code>rnaviz</code>, a small square is drawn at equal distance of the two partners</li> <li><code>lw</code> (Leontis/Westhof), both canonical and non-canonical base-pairs are rendered according to the Leontis/Westhof nomenclature.</li> </ul></div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.4</span>
+							<div class="manualentrytitle"><a name="feature22"></a>Set color map caption</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Shift+C</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;Color Map&gt;Caption</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Sets the caption of current 
+color map. Setting the caption to the empty strings hides the color map 
+caption (ie no space is used for the caption).</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.4</span>
+							<div class="manualentrytitle"><a name="feature23"></a>Set color map palette</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+L</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;Color Map&gt;Style...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Sets the color map palette to
+ be used within a color map drawing. One can either choose a predefined 
+palette of define a custom palette. Predefined palettes are: "red", 
+"blue", "green", "heat", "energy", and "bw". A custom palette is defined
+ as a semi-colon-separated sequence of (value/rgb color) couples (e.g. 
+"0:#000000;1:#FFFFFF" for a black to white color map). The colors are 
+obtained from a set of values through linear interpolations on each RGB 
+component. For instance, a custom map "0:#000000;1:#808080" going from 
+black (#000000) to gray (#808080) will assign a dark gray color 
+(#404040) to a base of value "0.5". Also, the color map range is 
+automatically scaled as to match the range of base values, so it should 
+not be necessary to manually account for the range.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.4</span>
+							<div class="manualentrytitle"><a name="feature24"></a>Set color map values</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Shift+L</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;Color Map&gt;Edit values...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Assigns a list of real 
+values, used for color map rendering, to the bases of an RNA. The values
+ are assigned sequentially in the 5' to 3' order. If list is shorter 
+than the list of bases, the remaining bases will remain unaffected. 
+Default value for each base is 0.0.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature29"></a>Set inter-base distance factor</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Shift+S</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Edit&gt;Redraw&gt;Space between bases</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Lets the user define the 
+multiplier used for inter-base distance. Since the applet adapts it zoom
+ factor to the dimension of the RNA bounding box, this option might be 
+mistaken for a increase of the base radius.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature28"></a>Set numbering period</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+M</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;Misc&gt;Num. periodicity</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Sets the interval between two
+ successive base numbers. More specifically, if k is the period, then 
+the first and last bases of the RNA are numbered, along with each base 
+whose number is a multiple of k. The base number is used for this 
+operation as opposed to the base index, which might differ if bases are 
+missing in the RNA.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature32"></a>Set title</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+T</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;Misc&gt;Title&gt;Set title...</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Lets the user type a new title, displayed on the bottom of the panel.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature3"></a>Set zoom level</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Z</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;View&gt;Zoom</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Defines the level of zoom and
+ zoom increment used to display the RNA within this panel. For zoom 
+levels greater than one, the arrows or the mouse (middle button or both 
+button simultaneously) can be used to scroll visible portion.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.4</span>
+							<div class="manualentrytitle"><a name="feature21"></a>Toggle color map view</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+Shift+L</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;Color Map&gt;Show color map</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Sets the caption of current 
+color map. Setting the caption to the empty strings hides the color map 
+caption (ie no space is used for the caption).</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature7"></a>Toggle non-canonical base-pairs display</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+W</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;RNA Style&gt;Base pairs&gt;Show non-canonical BPs</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription">Switches on/off the display of non-canonical base-pairs.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature8"></a>Toggle non-planar portions (pseudoknots) display</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+E</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;RNA Style&gt;Base pairs&gt;Hide tertiary base-pairs</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>No</div>
+							<div class="manualentrydescription"> Toggles on/off display of 
+"non-planar" base-pairs, i.e. pseudoknots. Since there is no canonical 
+definition of pseudoknotted portions, a maximal planar subset is 
+extracted from the input structure, defined to be the planar portion, 
+and used as a scaffold for the drawing algorithms. The remaining 
+base-pairs can either be displayed or not with this option.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature11"></a>Toggle on/off custom color for non-standard base</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+J</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;RNA Style&gt;Non-standard bases&gt;Custom colored</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Toggles on and off using a custom color for rendering non-standard base pairs (Anything but A,C,G or U).</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.9</span>
+							<div class="manualentrytitle"><a name="feature90"></a>Toggle show/hide base outlines and fillings (formerly known as "Gaspin/Gautheret" mode)</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Alt+G</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;RNA Style&gt;Non-standard bases&gt;Toggle draw bases</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Toggles on/off the display of
+ circles around bases (i.e. "Vienna style"-like). Thanks for Christine 
+Gaspin and Daniel Gautheret for suggesting this popular feature.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.3.0</span>
+							<div class="manualentrytitle"><a name="feature12"></a>Toggle using custom color for "Gaps"</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>Ctrl+D</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span>Display&gt;RNA Style&gt;'Gaps' bases&gt;Custom colored</div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Toggles on/off using a special color to draw "Gaps" bases in comparison mode.</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature60"></a>Zoom in</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>+</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span></div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Zooms in on the center of the currently drawn RNA</div>
+						</div>
+						<div class="manualentry"><span class="manualentrysince">Since v.2.0</span>
+							<div class="manualentrytitle"><a name="feature61"></a>Zoom out</div>
+							<div class="manualentryshortcut"><span class="important">Shortcut: </span>-</div>
+							<div class="manualentrymenu"><span class="important">Popup-menu: </span></div>
+							<div class="manualentrymodifying"><span class="important">Enabled when non "modifiable"? </span>Yes</div>
+							<div class="manualentrydescription">Zooms out on the center of the currently drawn RNA</div>
+						</div>
+					<p></p>
+				</div>
+			</div>
+		</div>
+
+
+		<div id="flat">
+			<div class="right49">
+				<p><a href="#box">^ Top</a></p>
+			</div>
+			<div class="left49">
+				<p>
+					Previous page: <a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=specs">Applet Parameters</a> <br>
+					Next page: <a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=tutorial">Tutorials</a>
+				</p>
+			</div>
+		</div>
+	</div>
+	<div class="debug">
+    <ul>
+    </ul>
+</div>
+	<div id="footer">
+		<hr>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-36426009-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+		<p>Website maintained by <a href="http://lix.polytechnique.fr/~ponty">Yann Ponty</a></p>
+	</div>
+</em></div><em>
+
+
+
+ </em></body></html>

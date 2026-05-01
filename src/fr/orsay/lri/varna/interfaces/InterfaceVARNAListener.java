@@ -31,6 +31,6 @@ public abstract interface InterfaceVARNAListener {
 	public abstract void onStructureRedrawn();
 	public abstract void onUINewStructure(VARNAConfig v, RNA r);
 	public abstract void onZoomLevelChanged();
-	public abstract void onTranslationChanged();
+	public abstract void onZoomTranslationChanged();
 }
  

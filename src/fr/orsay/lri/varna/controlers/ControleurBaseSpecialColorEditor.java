@@ -46,7 +46,8 @@ public class ControleurBaseSpecialColorEditor implements ActionListener, Compone
 	/**
 	 * Handles events from the editor button and from the dialog's OK button.
 	 */
-	public void actionPerformed(ActionEvent e) {
+	@Override
+  public void actionPerformed(ActionEvent e) {
 		if (BaseSpecialColorEditor.getEDIT().equals(e.getActionCommand())) {
 			// The user has clicked the cell, so
 			// bring up the dialog.

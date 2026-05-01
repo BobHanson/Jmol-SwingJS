@@ -320,7 +320,7 @@ public class VueAnnotation {
 	 * 
 	 */
 	public void show() {
-		_vp.set_selectedAnnotation(textAnnotation);
+		_vp.setSelectedAnnotation(textAnnotation);
 		_vp.highlightSelectedAnnotation();
 		
 		// BH SwingjS using asynchronous dialog
@@ -338,7 +338,7 @@ public class VueAnnotation {
 			@Override
 			public void run() {
 				if (newAnnotation) {
-					_vp.set_selectedAnnotation(null);
+					_vp.setSelectedAnnotation(null);
 					if (!_vp.removeAnnotation(textAnnotation))
 						_vp.errorDialog(new Exception("Impossible de supprimer"));
 				} else {
@@ -353,7 +353,7 @@ public class VueAnnotation {
 			@Override
 			public void run() {
 				_vp.resetAnnotationHighlight();
-				_vp.set_selectedAnnotation(null);
+				_vp.setSelectedAnnotation(null);
 				_vp.repaint();
 			}
 			

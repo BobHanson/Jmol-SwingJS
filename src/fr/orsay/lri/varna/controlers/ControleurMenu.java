@@ -150,10 +150,10 @@ public class ControleurMenu implements InterfaceVARNAListener,
       // a partir du menu selection (annotation la plus proche)
     } else if (_type.equals("Selectionannotationremove")) {
       _vp.getVARNAUI()
-          .UIAnnotationRemoveFromAnnotation(_vp.get_selectedAnnotation());
+          .UIAnnotationRemoveFromAnnotation(_vp.getSelectedAnnotation());
     } else if (_type.equals("Selectionannotationedit")) {
       _vp.getVARNAUI()
-          .UIAnnotationEditFromAnnotation(_vp.get_selectedAnnotation());
+          .UIAnnotationEditFromAnnotation(_vp.getSelectedAnnotation());
 
       // a partir d'une structure(base, loop, helix) dans l'arn
       // (annotation li� a la structure)
@@ -711,7 +711,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 	}
 
 	@Override
-  public void onTranslationChanged() {
+  public void onZoomTranslationChanged() {
 		
 		
 	}

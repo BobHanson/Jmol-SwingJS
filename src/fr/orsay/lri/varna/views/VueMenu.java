@@ -407,7 +407,7 @@ public class VueMenu extends JPopupMenu {
 		if (existingAnnot)
 		{
 			String debut = "";
-			String texte = _vp.get_selectedAnnotation().getTexte();
+			String texte = _vp.getSelectedAnnotation().getTexte();
 			if (texte.length() < 5)
 				debut = texte;
 			else

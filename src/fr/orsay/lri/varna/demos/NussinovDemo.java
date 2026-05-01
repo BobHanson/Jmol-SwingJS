@@ -24,10 +24,8 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collections;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
@@ -37,29 +35,21 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
 import javax.swing.border.BevelBorder;
 
 import fr.orsay.lri.varna.components.VARNAPanel;
-import fr.orsay.lri.varna.controlers.ControleurInterpolator;
-import fr.orsay.lri.varna.exceptions.ExceptionDrawingAlgorithm;
-import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
 import fr.orsay.lri.varna.exceptions.ExceptionModeleStyleBaseSyntaxError;
-import fr.orsay.lri.varna.exceptions.ExceptionNAViewAlgorithm;
 import fr.orsay.lri.varna.exceptions.ExceptionNonEqualLength;
 import fr.orsay.lri.varna.exceptions.ExceptionParameterError;
 import fr.orsay.lri.varna.exceptions.ExceptionUnmatchedClosingParentheses;
-import fr.orsay.lri.varna.exceptions.MappingException;
+import fr.orsay.lri.varna.interfaces.InterfaceVARNABasesListener;
+import fr.orsay.lri.varna.interfaces.InterfaceVARNAListener;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.VARNAConfig.BP_STYLE;
-import fr.orsay.lri.varna.models.rna.Mapping;
-import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.ModelBaseStyle;
-import fr.orsay.lri.varna.models.rna.RNA;
-import fr.orsay.lri.varna.interfaces.InterfaceVARNABasesListener;
-import fr.orsay.lri.varna.interfaces.InterfaceVARNAListener;;
+import fr.orsay.lri.varna.models.rna.ModeleBase;
+import fr.orsay.lri.varna.models.rna.RNA;;
 
 public class NussinovDemo extends JFrame implements InterfaceVARNAListener,InterfaceVARNABasesListener {
 
@@ -176,14 +166,16 @@ public class NussinovDemo extends JFrame implements InterfaceVARNAListener,Inter
 		formatLabel(_structLabel);
 
 		_goButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			@Override
+      public void actionPerformed(ActionEvent e) {
 				showSolution();
 				onStructureRedrawn();
 			}
 		});
 
 		_switchButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			@Override
+      public void actionPerformed(ActionEvent e) {
 				try {
 							RNA r = new RNA();
 							r.setRNA("", "");
@@ -649,11 +641,13 @@ public class NussinovDemo extends JFrame implements InterfaceVARNAListener,Inter
 		d.setVisible(true);
 	}
 
-	public void onStructureRedrawn() {
+	@Override
+  public void onStructureRedrawn() {
 		_vpMaster.repaint();
 	}
 
-	public void onWarningEmitted(String s) {
+	@Override
+  public void onWarningEmitted(String s) {
 		
 		
 	}
@@ -668,7 +662,8 @@ public class NussinovDemo extends JFrame implements InterfaceVARNAListener,Inter
 		
 	}
 
-	public void onUINewStructure(VARNAConfig v, RNA r) {
+	@Override
+  public void onUINewStructure(VARNAConfig v, RNA r) {
 		
 		
 	}
@@ -676,15 +671,18 @@ public class NussinovDemo extends JFrame implements InterfaceVARNAListener,Inter
 	static final String[] _bases =     {"A","C","G","U"};
 	static final String[] _basesComp = {"U","G","C","A"};
 	
-	public void onBaseClicked(ModeleBase mb, MouseEvent e) {
+	@Override
+  public void onBaseClicked(ModeleBase mb, int id) {
 	}
 	
-	public void onZoomLevelChanged() {
+	@Override
+  public void onZoomLevelChanged() {
 		
 		
 	}
 
-	public void onTranslationChanged() {
+	@Override
+  public void onZoomTranslationChanged() {
 		
 		
 	}
@@ -707,7 +705,8 @@ public class NussinovDemo extends JFrame implements InterfaceVARNAListener,Inter
 			add(_suboptCount,BorderLayout.NORTH);
 			
 			next.addActionListener(new ActionListener(){
-				public void actionPerformed(ActionEvent arg0) {
+				@Override
+        public void actionPerformed(ActionEvent arg0) {
 					if (_sols.size()>0)
 					{
 						setSelectedIndex((_selectedIndex+1)%_sols.size());
@@ -716,7 +715,8 @@ public class NussinovDemo extends JFrame implements InterfaceVARNAListener,Inter
 			});
 
 			previous.addActionListener(new ActionListener(){
-				public void actionPerformed(ActionEvent arg0) {
+				@Override
+        public void actionPerformed(ActionEvent arg0) {
 					if (_sols.size()>0)
 					{
 						setSelectedIndex((_selectedIndex+_sols.size()-1)%_sols.size());
@@ -778,7 +778,8 @@ public class NussinovDemo extends JFrame implements InterfaceVARNAListener,Inter
 			formatDescription();
 		}
 		
-		public void setFont(Font f)
+		@Override
+    public void setFont(Font f)
 		{
 			super.setFont(f);
 			if(_text!=null)

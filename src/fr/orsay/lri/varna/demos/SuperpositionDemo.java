@@ -457,7 +457,7 @@ public class SuperpositionDemo extends JFrame implements InterfaceVARNAListener 
 		
 	}
 
-	public void onTranslationChanged() {
+	public void onZoomTranslationChanged() {
 		
 		
 	}

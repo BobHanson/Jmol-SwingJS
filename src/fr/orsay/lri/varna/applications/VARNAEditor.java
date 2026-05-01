@@ -70,11 +70,11 @@ public class VARNAEditor extends JFrame
   }
 
   private void RNAPanelDemoInit() {
-    app.setSideListListener(this);
+    app.setSideList(this);
     app.setupTwoRNADemo();
     setBackground(app.getBackgroundColor());
 
-    app.setPanels(null, null, "Structures");
+    app.setPanels(null, null, "Structures", true);
     VARNAPanel vp = app.getVARNAPanel();
     JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
         app._listPanel, vp);
@@ -263,7 +263,7 @@ public class VARNAEditor extends JFrame
   }
 
   @Override
-  public void onTranslationChanged() {
+  public void onZoomTranslationChanged() {
     
 
   }

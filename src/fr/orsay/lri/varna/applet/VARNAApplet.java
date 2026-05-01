@@ -1,4 +1,5 @@
 package fr.orsay.lri.varna.applet;
+
 import java.awt.Color;
 /*
  VARNA is a tool for the automated drawing, visualization and annotation of the secondary structure of RNA, designed as a companion software for web servers and databases.
@@ -46,51 +47,51 @@ import fr.orsay.lri.varna.interfaces.InterfaceParameterLoader;
 import fr.orsay.lri.varna.models.VARNAConfigLoader;
 
 /**
- * Adapted from VARNA by Bob Hanson for Jmol integration in Java and JavaScript. 
+ * Adapted from VARNA by Bob Hanson for Jmol integration in Java and JavaScript.
  * 
  * 
- *  Switched from JApplet to JPanel
+ * Switched from JApplet to JPanel
  */
-public class VARNAApplet extends JApplet implements InterfaceParameterLoader,DropTargetListener {
+public class VARNAApplet extends JApplet
+    implements InterfaceParameterLoader, DropTargetListener {
   VARNAapp app;
   private JFrame frame;
   private Map<String, String> htParams = new HashMap<>();
   private ArrayList<VARNAPanel> _vpl;
-	static{
-		/**
-		 * 
-		 * @j2sNative
-		 * 
-		 * 
-		 * if (!thisApplet.__Info.sequenceDBN) {
-		 *  thisApplet.__Info.sequenceDBN = "GGGGCCAAUAUGGCCAUCC";
-		 *  thisApplet.__Info.structureDBN = "((((((.....))))..))";
-		 *  thisApplet.__Info.title = "Hello RNA world, from SwingJS!";//prompt("Title?","Hello RNA world!");
-		 * } 
-		 * 
-		 * 
-		 * 
-		 */		
-	}
+  static {
+    /**
+     * 
+     * @j2sNative
+     * 
+     * 
+     *            if (!thisApplet.__Info.sequenceDBN) {
+     *            thisApplet.__Info.sequenceDBN = "GGGGCCAAUAUGGCCAUCC";
+     *            thisApplet.__Info.structureDBN = "((((((.....))))..))";
+     *            thisApplet.__Info.title = "Hello RNA world, from
+     *            SwingJS!";//prompt("Title?","Hello RNA world!"); }
+     * 
+     * 
+     * 
+     */
+  }
 
-	
-//	private static final_long serialVersionUID = -2598221520127067670L;
+  //	private static final_long serialVersionUID = -2598221520127067670L;
 
   public VARNAApplet() {
     this(null);
   }
-  
-	public VARNAApplet(JFrame frame) {
-	  if (frame == null)
-	    return;
-	  this.frame = frame;
-    setSize(600,600);
-	  setPreferredSize(new Dimension(600,600));
-	  init();
-	  frame.add(this);
-	  frame.pack();
-	  frame.setVisible(true);
-	}
+
+  public VARNAApplet(JFrame frame) {
+    if (frame == null)
+      return;
+    this.frame = frame;
+    setSize(600, 600);
+    setPreferredSize(new Dimension(600, 600));
+    init();
+    frame.add(this);
+    frame.pack();
+    frame.setVisible(true);
+  }
 
   @Override
   public void init() {
@@ -116,166 +117,140 @@ public class VARNAApplet extends JApplet implements InterfaceParameterLoader,Dro
 
   }
 
-	@Override
+  @Override
   public void start() {
-		//setVisible(true);
-		//repaint();
-		//getContentPane().setVisible(true);		
-		//getContentPane().repaint();		
-	}
-	
-	public void update() {
-		System.out.println("update");
-	}
-	
-	@Override
+    //setVisible(true);
+    //repaint();
+    //getContentPane().setVisible(true);		
+    //getContentPane().repaint();		
+  }
+
+  public void update() {
+    System.out.println("update");
+  }
+
+  @Override
   public String getParameterValue(String key, String def) {
-	  String p = htParams .get(key);
-	  return (p == null ? def : p);
-	}
+    String p = htParams.get(key);
+    return (p == null ? def : p);
+  }
 
-	@Override
+  @Override
   public String[][] getParameterInfo() {
-		return VARNAConfigLoader.getParameterInfo();
-	}
-	
-	public ArrayList<VARNAPanel> getPanels()
-	{
-		return _vpl;
-	}
-	
-	public String getSelection()
-	{
-		return getSelection(0);
-	}
-	
-	public String getSelection(int panel)
-	{
-		String result = "[";
-		VARNAPanel v = _vpl.get(panel);
-		List<Integer> l = v.getSelectionIndices();
-		for(int i=0;i<l.size();i++)
-		{
-			int n = l.get(i).intValue();
-			if (i>0)
-			{result += ",";}
-			result += n;
-			
-		}
-		result += "]";
-		return result;
-	}
+    return VARNAConfigLoader.getParameterInfo();
+  }
 
-	public void runScript(String script)
-	{
-		if (_vpl.size()>0)
-		{ 
-			VARNAPanel _vp = _vpl.get(0);
-			try {
-				ControleurScriptParser.executeScript(_vp, script);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	
-	public void setRNA(String seq, String str) 
-	{
-		if (_vpl.size()>0)
-		{ 
-			try {
-				_vpl.get(0).setRNA(seq, str);
-			} catch (ExceptionNonEqualLength e) {
-				e.printStackTrace();
-			} 
-		}
-	}
+  public ArrayList<VARNAPanel> getPanels() {
+    return _vpl;
+  }
 
-	public void setSmoothedRNA(String seq, String str) 
-	{
-		if (_vpl.size()>0)
-		{ 
-			try {
-				  
-				  _vpl.get(0).drawRNAInterpolated(seq, str);
-				  _vpl.get(0).repaint();
-			} catch (ExceptionNonEqualLength e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
-		}
-	}
+  public String getSelection() {
+    return getSelection(0);
+  }
 
-	@Override
+  public String getSelection(int panel) {
+    String result = "[";
+    VARNAPanel v = _vpl.get(panel);
+    List<Integer> l = v.getSelectionIndices();
+    for (int i = 0; i < l.size(); i++) {
+      int n = l.get(i).intValue();
+      if (i > 0) {
+        result += ",";
+      }
+      result += n;
+
+    }
+    result += "]";
+    return result;
+  }
+
+  public void runScript(String script) {
+    if (_vpl.size() > 0) {
+      VARNAPanel _vp = _vpl.get(0);
+      try {
+        ControleurScriptParser.executeScript(_vp, script);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  public void setRNA(String seq, String str) {
+    if (_vpl.size() > 0) {
+      try {
+        _vpl.get(0).setRNA(seq, str);
+      } catch (ExceptionNonEqualLength e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  public void setSmoothedRNA(String seq, String str) {
+    if (_vpl.size() > 0) {
+      app.updateVP(_vpl.get(0), seq, str);
+    }
+  }
+
+  @Override
   public void dragEnter(DropTargetDragEvent arg0) {
-	}
+  }
 
-	@Override
+  @Override
   public void dragExit(DropTargetEvent arg0) {
-	}
+  }
 
-	@Override
+  @Override
   public void dragOver(DropTargetDragEvent arg0) {
-	}
+  }
 
-	@Override
-  public void drop(DropTargetDropEvent dtde) 
-	{
-	  try 
-	  {
-	    Transferable tr = dtde.getTransferable();
-	    DataFlavor[] flavors = tr.getTransferDataFlavors();
-	    for (int i = 0; i < flavors.length; i++) 
-	    {
-	      if (flavors[i].isFlavorJavaFileListType()) 
-	      {
-	    	  dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
-	    	  List<?> list = (List<?>) tr.getTransferData(flavors[i]);
-	    	  for (int j = 0; j < list.size(); j++) 
-	    	  {
-	    		  Object o = list.get(j);
-	    		  if (dtde.getSource() instanceof DropTarget)
-	    		  {
-	    			  DropTarget dt = (DropTarget) dtde.getSource();
-	    			  Component c = dt.getComponent();
-	    			  if (c instanceof VARNAPanel)
-	    			  {
-	    				  VARNAPanel vp = (VARNAPanel) c;
-	    				  // BH -- in JavaScript, the File object has a .bytes 
-	    				  // property that we need to maintain.
-	    				  //String path = o.toString();
-	    				  vp.loadFile((File) o,true);
-	    				  //vp.repaint(); BH unnecessary
-	    			  }
-	    		  }
-	    	  }
-	    	  dtde.dropComplete(true);
-	    	  return;
-	      }
-	    }
-        dtde.rejectDrop();
-	 } 
-	 catch (Exception e) 
-	 {
-		 e.printStackTrace();
-	     dtde.rejectDrop();
-	  }
-	}
+  @Override
+  public void drop(DropTargetDropEvent dtde) {
+    try {
+      Transferable tr = dtde.getTransferable();
+      DataFlavor[] flavors = tr.getTransferDataFlavors();
+      for (int i = 0; i < flavors.length; i++) {
+        if (flavors[i].isFlavorJavaFileListType()) {
+          dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
+          List<?> list = (List<?>) tr.getTransferData(flavors[i]);
+          for (int j = 0; j < list.size(); j++) {
+            Object o = list.get(j);
+            if (dtde.getSource() instanceof DropTarget) {
+              DropTarget dt = (DropTarget) dtde.getSource();
+              Component c = dt.getComponent();
+              if (c instanceof VARNAPanel) {
+                VARNAPanel vp = (VARNAPanel) c;
+                // BH -- in JavaScript, the File object has a .bytes 
+                // property that we need to maintain.
+                //String path = o.toString();
+                vp.loadFile((File) o, true);
+                //vp.repaint(); BH unnecessary
+              }
+            }
+          }
+          dtde.dropComplete(true);
+          return;
+        }
+      }
+      dtde.rejectDrop();
+    } catch (Exception e) {
+      e.printStackTrace();
+      dtde.rejectDrop();
+    }
+  }
 
-	@Override
+  @Override
   public void dropActionChanged(DropTargetDragEvent arg0) {
-	}
+  }
 
-	public static void main(String[] args) {
-	  JFrame frame = new JFrame("VARNA");
-	  frame.setSize(800,400);
+  public static void main(String[] args) {
+    JFrame frame = new JFrame("VARNA");
+    frame.setSize(800, 400);
     frame = new JFrame("VARNA");
-	  VARNAApplet v = new VARNAApplet(frame);
-	  v.setBackground(Color.BLUE);
-	  frame.pack();
+    VARNAApplet v = new VARNAApplet(frame);
+    v.setBackground(Color.BLUE);
+    frame.pack();
     frame.setVisible(true);
-	}
+  }
 
   public void close() {
     if (frame != null)
@@ -286,6 +261,5 @@ public class VARNAApplet extends JApplet implements InterfaceParameterLoader,Dro
   public JFrame getFrame() {
     return frame;
   }
-	
-}
 
+}

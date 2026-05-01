@@ -246,6 +246,7 @@ public class RNA implements InterfaceVARNAObservable {
   private Map<Integer, Integer> mapResnoToIndex;
 
   public int[] caretToIndex;
+  private transient int textOffset;
   
   public void setResidueNumbers(int[] resnos) {
     if (mapResnoToIndex == null) {
@@ -4211,6 +4212,14 @@ public class RNA implements InterfaceVARNAObservable {
   public int getCaretToIndex(int p0) {
     getCaretToIndex();
     return (p0 < caretToIndex.length ? caretToIndex[p0] : -1);
+  }
+
+  public void setTextOffset(int scrollOffset) {
+    this.textOffset = scrollOffset;
+  }
+  
+  public int getTextOffset() {
+    return textOffset;
   }
 
 }

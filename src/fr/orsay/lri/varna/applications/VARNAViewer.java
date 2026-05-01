@@ -15,7 +15,8 @@ import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurScriptParser;
 import fr.orsay.lri.varna.exceptions.ExceptionParameterError;
 import fr.orsay.lri.varna.interfaces.InterfaceParameterLoader;
-import fr.orsay.lri.varna.interfaces.VARNAviewerI;
+import fr.orsay.lri.varna.interfaces.InterfaceVARNASelectionListener;
+import fr.orsay.lri.varna.interfaces.VARNAViewerI;
 import fr.orsay.lri.varna.models.BaseSet;
 import fr.orsay.lri.varna.models.FullBackup;
 import fr.orsay.lri.varna.models.VARNAConfigLoader;
@@ -34,48 +35,17 @@ import fr.orsay.lri.varna.models.rna.RNA;
  * 
  */
 
-public class VARNAviewer extends VARNA
-    implements VARNAviewerI, InterfaceParameterLoader, ActionListener {
+public class VARNAViewer extends VARNA
+    implements VARNAViewerI, InterfaceParameterLoader, ActionListener {
 
   private ActionListener actionListener;
   private boolean notifyJmol;
 
-  public VARNAviewer() {
-    super("VARNA", false);
+  public VARNAViewer() {
+    super("VARNA", VARNA_GUI_SHOW_LISTING | VARNA_GUI_SHOW_ZOOM_PANEL);
     app.setDoInterpolate(false);
     app.setParameterSource(this);
   }
-
-  @Override
-  protected boolean getEditable() {
-    return false;
-  }
-
-  @Override
-  protected boolean getShowTitle() {
-    return false;
-  }
-
-  @Override
-  protected boolean getAllowCreate() {
-    return false;
-  }
-
-  @Override
-  protected boolean getShowListing() {
-    return true;
-  }
-
-  @Override
-  protected boolean allowDoubleClick() {
-    return false;
-  }
-
-  @Override
-  protected boolean showZoomWindow() {
-    return false;
-  }
-
 
   /**
    * Create a VARNAPanel using this app's configuration, 
@@ -98,7 +68,7 @@ public class VARNAviewer extends VARNA
     case VARNAConfigLoader.bpStyleOpt:
       return VARNAConfigLoader.SIMPLE_BP_STYLE;
     }
-    System.out.println("VV setting " + key + " to " + def);
+    //System.out.println("VV setting " + key + " to " + def);
     return def;
   }
 
@@ -131,7 +101,8 @@ public class VARNAviewer extends VARNA
     case ZAP:
       if (app != null)
         app.zap();
-      frame.setVisible(false);
+      if (frame != null)
+        frame.setVisible(false);
       return null;
     case SCRIPT:
       String cmd = ((String) data[1]).substring(6).trim();
@@ -172,44 +143,55 @@ public class VARNAviewer extends VARNA
   public void actionPerformed(ActionEvent e) {
     if (!notifyJmol)
       return;
-    switch (e.getActionCommand()) {
-    case "selectModel":
-      FullBackup b = (FullBackup) e.getSource();
-      e.setSource(b.name);
-      System.out.println("VV selectModel " + b.name);
-      break;
-    case "selectBases":
-      BaseSet baseList = (BaseSet) e.getSource();
-      String jmolScript = null;
-      switch (e.getID()) {
-      case VARNAapp.SEL_CLEAR:
-        jmolScript = "select none";
-        //$FALL-THROUGH$
-      case VARNAapp.SEL_SET:
-        e.setSource(jmolScript);
-        actionListener.actionPerformed(e);
-        // now source is "<color1> <color2>"
-        String script = "setSelectionColors(" + e.getSource() + ")";
-        script(script);
-        //$FALL-THROUGH$
-      case VARNAapp.SEL_COMPLETE:
-        ArrayList<ModeleBase> bases = baseList.getBaseList();
-        int[] resnos = new int[bases.size()];
-        for (int i = bases.size(); --i >= 0;)
-          resnos[i] = bases.get(i).getResidueNumber();
-        e.setSource(resnos);
+    try {
+      switch (e.getActionCommand()) {
+      case VARNAViewerI.ACTION_HOVER:
+        ModeleBase base = ((ModeleBase[]) e.getSource())[0];
+        
+        e.setSource(base == null ? null : new int[] { app.getRNA().modelID.intValue(),
+            base.getResidueNumber() });
+        break; // pass through
+      case VARNAViewerI.ACTION_SELECT_MODEL:
+        FullBackup b = (FullBackup) e.getSource();
+        e.setSource(b.name);
+        System.out.println("VV selectModel " + b.name);
+        break;
+      case VARNAViewerI.ACTION_SELECT_BASES:
+        BaseSet baseSet = (BaseSet) e.getSource();
+        System.out.println("VV selectBases " + baseSet);
+        String jmolScript = null;
+        switch (e.getID()) {
+        case InterfaceVARNASelectionListener.SEL_CLEAR:
+          jmolScript = "select none";
+          //$FALL-THROUGH$
+        case InterfaceVARNASelectionListener.SEL_SET:
+          e.setSource(jmolScript);
+          actionListener.actionPerformed(e);
+          // now source is "<color1> <color2>"
+          String script = "setSelectionColors(" + e.getSource() + ")";
+          script(script);
+          //$FALL-THROUGH$
+        case InterfaceVARNASelectionListener.SEL_COMPLETE:
+          ArrayList<ModeleBase> bases = baseSet.getBaseList();
+          int[] resnos = new int[bases.size()];
+          for (int i = bases.size(); --i >= 0;)
+            resnos[i] = bases.get(i).getResidueNumber();
+          e.setSource(resnos);
+          break;
+        default:
+          return;
+        }
         break;
       default:
         return;
       }
-      break;
-    default:
-      return;
+      // back to the Jmol plugin
+      SwingUtilities.invokeLater(() -> {
+        actionListener.actionPerformed(e);
+      });
+    } catch (Exception ee) {
+      ee.printStackTrace();
     }
-    // back to the Jmol plugin
-    SwingUtilities.invokeLater(() -> {
-      actionListener.actionPerformed(e);
-    });
   }
 
   @SuppressWarnings("unchecked")

@@ -747,7 +747,9 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 	static final String[] _basesComp = {"U","G","C","A"};
 	
 	@Override
-  public void onBaseClicked(ModeleBase mb, MouseEvent e) {
+  public void onBaseClicked(ModeleBase mb, int id) {
+	  if (mb == null)
+	    return;
 		int index = -1;
 		for(int i =0;i<_bases.length;i++)
 		{
@@ -796,7 +798,7 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 	}
 
 	@Override
-  public void onTranslationChanged() {
+  public void onZoomTranslationChanged() {
 		
 		
 	}

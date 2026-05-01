@@ -76,7 +76,7 @@ public class ControleurTableAnnotations implements MouseListener,
 	 * if remove case
 	 */
 	private void remove() {
-		_vp.set_selectedAnnotation(null);
+		_vp.setSelectedAnnotation(null);
 		Object o = _table.getValueAt(_table.getSelectedRow(), 0);
 		if (o instanceof TextAnnotation) {
 			if (!_vp.removeAnnotation((TextAnnotation) o))
@@ -140,7 +140,7 @@ public class ControleurTableAnnotations implements MouseListener,
 
 	@Override
   public void mouseExited(MouseEvent arg0) {
-		_vp.set_selectedAnnotation(null);
+		_vp.setSelectedAnnotation(null);
 		_vp.repaint();
 	}
 
@@ -165,8 +165,8 @@ public class ControleurTableAnnotations implements MouseListener,
 			return;
 		Object o = _table.getValueAt(_table.rowAtPoint(arg0.getPoint()), 0);
 		if (o.getClass().equals(TextAnnotation.class)
-				&& o != _vp.get_selectedAnnotation()) {
-			_vp.set_selectedAnnotation((TextAnnotation) o);
+				&& o != _vp.getSelectedAnnotation()) {
+			_vp.setSelectedAnnotation((TextAnnotation) o);
 			_vp.repaint();
 		}
 	}

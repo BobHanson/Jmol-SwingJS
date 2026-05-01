@@ -15,6 +15,17 @@ import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.RNA;
 
 public class XMLUtils {
+  
+  public static Color colorFromHTML(String s) {
+    Color result = null;
+    try {
+      result = Color.decode(s);
+    } catch (Exception e) {
+      result = Color.black;
+    }
+    return result;
+  }  
+  
   public static String toHTMLNotation(Color c) {
     Formatter f = new Formatter();
     f.format("#%02X%02X%02X", Integer.valueOf(c.getRed()),

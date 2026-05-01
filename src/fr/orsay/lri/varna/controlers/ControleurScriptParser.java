@@ -12,6 +12,7 @@ import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation.ChemProbAnnotationType;
 import fr.orsay.lri.varna.models.rna.ModeleColorMap;
 import fr.orsay.lri.varna.models.rna.RNA;
+import fr.orsay.lri.varna.utils.XMLUtils;
 
 /**
  * A class to parse VARNA scripts, which are semicolon-separated strings of
@@ -493,15 +494,6 @@ public class ControleurScriptParser {
     return (a == NULL ? null : ((ColorArgument) a).getColor());
   }
 
-  private static Color parseColor(String s) {
-    Color result = null;
-    try {
-      result = Color.decode(s);
-    } catch (Exception e) {
-    }
-    return result;
-  }
-
   private static Boolean parseBoolean(String s) {
     Boolean result = null;
     if (s.toLowerCase().equals("true"))
@@ -528,7 +520,7 @@ public class ControleurScriptParser {
         } else {
           // note that "0x....." is not valid here, as it is broken into "0" and "x...."
           // only "#" (parser would also take "0..." for an octal, but...)
-          Color c = (st.sval.startsWith("#") ? parseColor(st.sval) : null);
+          Color c = (st.sval.startsWith("#") ? XMLUtils.colorFromHTML(st.sval) : null);
           if (c != null) {
             result.add(new ColorArgument(c));
           } else {

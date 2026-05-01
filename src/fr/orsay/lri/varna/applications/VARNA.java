@@ -35,8 +35,6 @@ import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Point2D.Double;
@@ -66,11 +64,33 @@ import fr.orsay.lri.varna.models.rna.RNA;
 /**
  * Formerly VARNAGUI
  * 
- * Adapted by Bob Hanson for Jmol-SwingJS. 
+ * Adapted by Bob Hanson for Jmol-SwingJS.
  * 
  */
-public class VARNA implements DropTargetListener,
-    InterfaceVARNAListener, MouseListener, AdjustmentListener {
+public class VARNA
+    implements DropTargetListener, InterfaceVARNAListener, MouseListener {
+
+  protected final static int VARNA_GUI_ALLOW_CREATE = 0x01;
+  protected final static int VARNA_GUI_ALLOW_DELETE_DUPLICATE = 0x02;
+  protected final static int VARNA_GUI_ALLOW_DOUBLE_CLICK = 0x04;
+  protected final static int VARNA_GUI_EDITABLE = 0x08;
+  protected final static int VARNA_GUI_SHOW_LISTING = 0x10;
+  protected final static int VARNA_GUI_SHOW_TITLE = 0x20;
+  protected final static int VARNA_GUI_SHOW_ZOOM_PANEL = 0x40;
+
+  protected final static int VARNA_GUI_FULL_OPTIONS = //
+      VARNA_GUI_ALLOW_CREATE | //
+          VARNA_GUI_ALLOW_DELETE_DUPLICATE | //
+          VARNA_GUI_ALLOW_DOUBLE_CLICK | //
+          VARNA_GUI_EDITABLE | //
+          VARNA_GUI_SHOW_LISTING | //
+          VARNA_GUI_SHOW_ZOOM_PANEL; //
+
+  private int guiOptions;
+
+  private boolean hasOption(int op) {
+    return ((guiOptions & op) != 0);
+  }
 
   protected VARNAapp app;
 
@@ -80,58 +100,27 @@ public class VARNA implements DropTargetListener,
 
   private static int _nextID = 1;
   @SuppressWarnings("unused")
-  
+
   private int _algoCode;
 
-  private JScrollBar _vert = new JScrollBar(Adjustable.VERTICAL);
-  private JScrollBar _horiz = new JScrollBar(Adjustable.HORIZONTAL);
+  private JScrollBar _vertZoomSlider = new JScrollBar(Adjustable.VERTICAL);
+  private JScrollBar _horizZoomSlider = new JScrollBar(Adjustable.HORIZONTAL);
 
   private JButton _createButton = new JButton("Create");
-  
+
   private String structureListTitle = "         Structures         ";
 
-  protected boolean isDemo;
   private String frameTitle;
 
   public VARNA() {
-    this("VARNA GUI", false);
+    this("VARNA", VARNA_GUI_FULL_OPTIONS);
     setFrame(null, null, 0, 0);
   }
 
-  public VARNA(boolean isDemo) {
-    this("VARNA GUI", isDemo);
-    setFrame(null, null, 0, 0);
-  }
-
-  protected VARNA(String title, boolean isDemo) {
+  protected VARNA(String title, int options) {
+    guiOptions = options;
     frameTitle = (title == null ? "VARNA" : "VARNA GUI");
-    this.isDemo = isDemo;
-    app = new VARNAapp(getEditable());
-    // if isViewer, still need setFrame()
-  }
-
-  protected boolean getEditable() {
-    return true;
-  }
-
-  protected boolean getShowTitle() {
-    return true;
-  }
-
-  protected boolean getAllowCreate() {
-    return true;
-  }
-
-  protected boolean getShowListing() {
-    return true;
-  }
-
-  protected boolean allowDoubleClick() {
-    return true;
-  }
-  
-  protected boolean showZoomWindow() {
-    return true;
+    app = new VARNAapp(hasOption(VARNA_GUI_EDITABLE));
   }
 
   public VARNAPanel getVarnaPanel() {
@@ -151,7 +140,7 @@ public class VARNA implements DropTargetListener,
   }
 
   public JFrame setFrame(JFrame parentFrame, JFrame frame, int width,
-                       int height) {
+                         int height) {
     this.parentFrame = parentFrame;
     this.frame = frame;
     setFrame(width, height);
@@ -162,7 +151,8 @@ public class VARNA implements DropTargetListener,
 
   /**
    * 
-   * @param width use 0 for default, -1 for frameless
+   * @param width
+   *        use 0 for default, -1 for frameless
    * @param height
    */
   private void setFrame(int width, int height) {
@@ -177,8 +167,8 @@ public class VARNA implements DropTargetListener,
         if (parentFrame != null) {
           frame.setLocationRelativeTo(parentFrame);
           Point loc = frame.getLocation();
-          loc.x += frame.getWidth()/2;
-          loc.y += frame.getHeight()/2;
+          loc.x += frame.getWidth() / 2;
+          loc.y += frame.getHeight() / 2;
           frame.setLocation(loc);
         }
         app.setFrame(frame);
@@ -187,21 +177,18 @@ public class VARNA implements DropTargetListener,
   }
 
   private void setupVarnaGUI() {
-    app.setSideListListener(this);
-    if (isDemo)
-      app.setupTwoRNADemo();
-    else
-      app.setupNoDemo();
+    app.setSideList(this);
+    setupDemo();
     VARNAPanel vp = app.getVARNAPanel();
-    vp.setShowTitle(getShowTitle());
+    vp.setShowTitle(hasOption(VARNA_GUI_SHOW_TITLE));
     if (frame != null) {
       frame.setBackground(app.getBackgroundColor());
     }
-    if (showZoomWindow())
-    app.addZoomWindow();
+    if (hasOption(VARNA_GUI_SHOW_ZOOM_PANEL))
+      app.addZoomWindow();
 
     JPanel goPanel = null, opsPanel = null;
-    if (getAllowCreate()) {
+    if (hasOption(VARNA_GUI_ALLOW_CREATE)) {
       _createButton.addActionListener(new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -211,53 +198,38 @@ public class VARNA implements DropTargetListener,
       goPanel = new JPanel();
       goPanel.setLayout(new BorderLayout());
       goPanel.add(_createButton, BorderLayout.CENTER);
-      opsPanel = new JPanel(new BorderLayout());
     }
-    app.setPanels(goPanel, opsPanel, structureListTitle);
+    opsPanel = new JPanel(new BorderLayout());
+    app.setPanels(goPanel, opsPanel, structureListTitle,
+        hasOption(VARNA_GUI_ALLOW_DELETE_DUPLICATE));
 
     frame.getContentPane().setLayout(new BorderLayout());
     frame.getContentPane().add(app._tools, BorderLayout.NORTH);
-    if (getShowListing()) {
+    if (hasOption(VARNA_GUI_SHOW_LISTING)) {
       JSplitPane split = getMySplitPanel();
       frame.getContentPane().add(split, BorderLayout.CENTER);
     } else {
-      frame.getContentPane().add(vp, BorderLayout.CENTER);      
+      frame.getContentPane().add(vp, BorderLayout.CENTER);
     }
     frame.setVisible(true);
 
     new DropTarget(vp, this);
 
     vp.addRNAListener(new InterfaceVARNARNAListener() {
+
       @Override
       public void onSequenceModified(int index, String oldseq, String newseq) {
-        //System.out.println("Sequence changed: Index:"+index+" ["+oldseq+"]=>["+newseq+"]");
       }
 
       @Override
       public void onStructureModified(Set<ModeleBP> current,
                                       Set<ModeleBP> addedBasePairs,
                                       Set<ModeleBP> removedBasePairs) {
-        //        String result = "";
-        //        System.out.println("Structure changed: ");
-        //        for (ModeleBP s : addedBasePairs) {
-        //          result += s;
-        //        }
-        //        System.out.println("     Added: "+result);
-        //        result = "";
-        //        for (ModeleBP s : removedBasePairs) {
-        //          result += s;
-        //        }
-        //        System.out.println("   Removed: "+result);
       }
 
       @Override
       public void onRNALayoutChanged(Hashtable<Integer, Double> previousPositions) {
-        //        System.out.print("Layout changed, bases#: ");
-        //        String result = "";
-        //        for (Integer s : previousPositions.keySet()) {
-        //          result += s + " ";
-        //        }
-        //        System.out.println(result);
+        app.setHovering(false);
       }
 
     });
@@ -266,18 +238,29 @@ public class VARNA implements DropTargetListener,
 
     app.getVARNAPanel().addVARNAListener(this);
 
-    new Thread(app._zoomPanel).start();
+    app.startZoomThread();
+  }
+
+  /**
+   * this could be adapted
+   */
+  protected void setupDemo() {
+    app.setupNoDemo();
   }
 
   private JSplitPane getMySplitPanel() {
     JPanel vpScroll = new JPanel();
     vpScroll.setLayout(new BorderLayout());
-    _horiz.setVisible(false);
-    _horiz.addAdjustmentListener(this);
-    _vert.setVisible(false);
-    _vert.addAdjustmentListener(this);
-    vpScroll.add(_horiz, BorderLayout.SOUTH);
-    vpScroll.add(_vert, BorderLayout.EAST);
+    _horizZoomSlider.setVisible(false);
+    _horizZoomSlider.addAdjustmentListener((e -> {
+      doAdjustZoomTranslation(e.getValue(), true);
+    }));
+    _vertZoomSlider.setVisible(false);
+    _vertZoomSlider.addAdjustmentListener((e -> {
+      doAdjustZoomTranslation(e.getValue(), false);
+    }));
+    vpScroll.add(_horizZoomSlider, BorderLayout.SOUTH);
+    vpScroll.add(_vertZoomSlider, BorderLayout.EAST);
     vpScroll.add(app.getVARNAPanel(), BorderLayout.CENTER);
     JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true,
         app._listPanel, vpScroll);
@@ -285,7 +268,7 @@ public class VARNA implements DropTargetListener,
   }
 
   public void addRNA(RNA r, VARNAConfig cfg) {
-    app.addRNA( r, cfg);
+    app.addRNA(r, cfg);
   }
 
   public static String generateDefaultName() {
@@ -304,22 +287,18 @@ public class VARNA implements DropTargetListener,
     app.init();
   }
 
-
- @Override
+  @Override
   public void dragEnter(DropTargetDragEvent arg0) {
-    
 
   }
 
   @Override
   public void dragExit(DropTargetEvent arg0) {
-    
 
   }
 
   @Override
   public void dragOver(DropTargetDragEvent arg0) {
-    
 
   }
 
@@ -394,7 +373,6 @@ public class VARNA implements DropTargetListener,
 
   @Override
   public void onStructureRedrawn() {
-    
 
   }
 
@@ -406,39 +384,33 @@ public class VARNA implements DropTargetListener,
 
   @Override
   public void onWarningEmitted(String s) {
-    
 
   }
 
   @Override
   public void mouseClicked(MouseEvent e) {
-    if (allowDoubleClick() && e.getClickCount() == 2 && app.doMouseClicked(frame, e.getPoint())) {
+    if (hasOption(VARNA_GUI_ALLOW_DOUBLE_CLICK) && e.getClickCount() == 2
+        && app.doMouseClicked(frame, e.getPoint())) {
       app.repaint();
     }
   }
 
   @Override
   public void mouseEntered(MouseEvent arg0) {
-    
 
   }
 
   @Override
   public void mouseExited(MouseEvent arg0) {
-    
 
   }
 
   @Override
   public void mousePressed(MouseEvent arg0) {
-    
-
   }
 
   @Override
   public void mouseReleased(MouseEvent arg0) {
-    
-
   }
 
   @Override
@@ -446,55 +418,57 @@ public class VARNA implements DropTargetListener,
     VARNAPanel vp = app.getVARNAPanel();
     if (vp.getZoom() > 1.02) {
       Rectangle r = vp.getZoomedInTranslationBox();
-      _horiz.setMinimum(r.x);
-      _horiz.setMaximum(r.x + r.width + vp.getWidth());
-      _horiz.getModel().setExtent(vp.getWidth());
-      _horiz.getModel().setValue(vp.getTranslation().x);
-      _horiz.doLayout();
-      _horiz.setVisible(true);
+      _horizZoomSlider.setMinimum(r.x);
+      _horizZoomSlider.setMaximum(r.x + r.width + vp.getWidth());
+      _horizZoomSlider.getModel().setExtent(vp.getWidth());
+      _horizZoomSlider.getModel().setValue(vp.getTranslation().x);
+      _horizZoomSlider.doLayout();
+      _horizZoomSlider.setVisible(true);
 
-      _vert.setMinimum(r.y);
-      _vert.setMaximum(r.y + r.height + vp.getHeight());
-      _vert.getModel().setExtent(vp.getHeight());
-      _vert.getModel().setValue(vp.getTranslation().y);
-      _vert.doLayout();
-      _vert.setVisible(true);
+      _vertZoomSlider.setMinimum(r.y);
+      _vertZoomSlider.setMaximum(r.y + r.height + vp.getHeight());
+      _vertZoomSlider.getModel().setExtent(vp.getHeight());
+      _vertZoomSlider.getModel().setValue(vp.getTranslation().y);
+      _vertZoomSlider.doLayout();
+      _vertZoomSlider.setVisible(true);
     } else {
-      _horiz.setVisible(false);
-      _vert.setVisible(false);
+      _horizZoomSlider.setVisible(false);
+      _vertZoomSlider.setVisible(false);
     }
   }
 
   @Override
-  public void onTranslationChanged() {
+  public void onZoomTranslationChanged() {
     VARNAPanel vp = app.getVARNAPanel();
     if (vp.getZoom() > 1.02) {
-      int nx = _horiz.getMaximum()
-          - (vp.getTranslation().x - _horiz.getMinimum()) - vp.getWidth();
-      int ny = _vert.getMaximum()
-          - (vp.getTranslation().y - _vert.getMinimum()) - vp.getHeight();
-      _horiz.getModel().setValue(nx);
-      _horiz.doLayout();
-      _vert.getModel().setValue(ny);
-      _vert.doLayout();
+      int nx = _horizZoomSlider.getMaximum()
+          - (vp.getTranslation().x - _horizZoomSlider.getMinimum())
+          - vp.getWidth();
+      int ny = _vertZoomSlider.getMaximum()
+          - (vp.getTranslation().y - _vertZoomSlider.getMinimum())
+          - vp.getHeight();
+      _horizZoomSlider.getModel().setValue(nx);
+      _horizZoomSlider.doLayout();
+      _vertZoomSlider.getModel().setValue(ny);
+      _vertZoomSlider.doLayout();
     }
   }
 
-  @Override
-  public void adjustmentValueChanged(AdjustmentEvent arg0) {
+  public void doAdjustZoomTranslation(int value, boolean isHorizontal) {
     VARNAPanel vp = app.getVARNAPanel();
-    if (arg0.getSource() == _horiz) {
-      vp.setTranslation(new Point(_horiz.getMaximum()
-          - (arg0.getValue() - _horiz.getMinimum()) - vp.getWidth(),
+    if (isHorizontal) {
+      vp.setTranslation(new Point(
+          _horizZoomSlider.getMaximum()
+              - (value - _horizZoomSlider.getMinimum()) - vp.getWidth(),
           vp.getTranslation().y));
-      vp.repaint();
-    } else if (arg0.getSource() == _vert) {
-      vp.setTranslation(new Point(vp.getTranslation().x, _vert.getMaximum()
-          - (arg0.getValue() - _vert.getMinimum()) - vp.getHeight()));
-      vp.repaint();
+    } else {
+      vp.setTranslation(
+          new Point(vp.getTranslation().x, _vertZoomSlider.getMaximum()
+              - (value - _vertZoomSlider.getMinimum()) - vp.getHeight()));
     }
+    vp.repaint();
   }
-  
+
   public void pack() {
     frame.pack();
     frame.setVisible(true);
@@ -506,10 +480,12 @@ public class VARNA implements DropTargetListener,
     icons.add(Toolkit.getDefaultToolkit().getImage("./VARNA16x16.png"));
     icons.add(Toolkit.getDefaultToolkit().getImage("./VARNA32x32.png"));
     icons.add(Toolkit.getDefaultToolkit().getImage("./VARNA64x64.png"));
-    VARNA d = new VARNA(true);
+    VARNA d = new VARNA();
     d.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     d.pack();
   }
 
- 
+  public VARNAapp getApp() {
+    return app;
+  }
 }

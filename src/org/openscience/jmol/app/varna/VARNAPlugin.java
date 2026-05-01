@@ -46,11 +46,51 @@ import org.jmol.viewer.StatusManager;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.JmolPlugin;
 
-import fr.orsay.lri.varna.applications.VARNAviewer;
-import fr.orsay.lri.varna.interfaces.VARNAviewerI;
-import fr.orsay.lri.varna.interfaces.VARNAviewerI.VARNACallBack;
+import fr.orsay.lri.varna.applications.VARNAViewer;
+import fr.orsay.lri.varna.interfaces.VARNAViewerI;
+import fr.orsay.lri.varna.interfaces.VARNAViewerI.VARNACallBack;
+
 import javajs.util.BS;
 
+/**
+ * The Jmol VARNA plugin receives standard callbacks from Jmol, selecting ones
+ * that are either generally useful or are that are targeting this plugin with a
+ * string starting with "varna:".
+ * 
+ * All communication is with the VARNAViewer class, which is part of the
+ * VARNA-SwingJS code. VARNAViewer subclasses VARNA (formerly "VARNAGUI").
+ * 
+ * The entire operation is designed to work headlessly, optionally with a
+ * JFrame, and optionally with a parent JFrame.
+ * 
+ * The information received from Jmol relating to changes to model, selection,
+ * and atom colors is received by VARNAPlugin using the single method in the
+ * JmolPlugin interface:
+ * 
+ * Object notifyCallback(VARNACallBack type, Object[] data)
+ * 
+ * and is passed on to VARNAViewer usng the VARNAViewerI interface, with the
+ * identical method.
+ * 
+ * Note that this interface allows a return value. For example, an error message
+ * from VARNA script execution is passed back to Jmol and displayed to the user
+ * using Viewer.showString().
+ * 
+ * Messages coming from VARNAViewer take the form of an ActionPerformed() call
+ * to the VARNAPLugin, which implements ActionListener. This interface also
+ * allows for return values. These are simply placed in the source field of the
+ * ActionEvent. Thus, communication between VARNAViewer and VARNAPlugin can
+ * continue back and forth as many times as necessary, just using setSource()
+ * and getSource().
+ * 
+ * VARNAPlugin can access all public components of Jmol, mustly through Viewer,
+ * which it holds a reference to. Likewise, VARNAViewer can access all of VARNA,
+ * primarily through its reference to VARNAapp. (VARNAapp is a consolidation of
+ * fields and methods that formerly were duplicated in VARNAGUI, VARNAEditor,
+ * VARNAcmd, among other applications.)
+ * 
+ * @author Bob Hanson
+ */
 public class VARNAPlugin implements JmolPlugin, ActionListener {
 
   public final static String version = "0.0.1";
@@ -59,7 +99,7 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
 
   protected Viewer vwr;
 
-  private VARNAviewerI varna;
+  private VARNAViewerI varna;
 
   private Map<String, Object> options;
 
@@ -75,7 +115,7 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
     this.vwr = vwr;
     if (jmolOptions != null)
       this.options = jmolOptions;
-    System.out.println("VARNA Plugin started.");
+    System.out.println("VARNAPlugin started.");
   }
 
   @Override
@@ -121,8 +161,8 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
 
   private void showFrame(boolean b) {
     if (b && varna == null) {
-      varna = (VARNAviewer) javajs.api.Interface
-          .getInterface("fr.orsay.lri.varna.applications.VARNAviewer");
+      varna = (VARNAViewerI) javajs.api.Interface
+          .getInterface("fr.orsay.lri.varna.applications.VARNAViewer");
       return;
     }
     if (varna == null)
@@ -157,14 +197,26 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
     BS bsAtoms;
     String cmd;
     switch (type) {
+    case STRUCTUREMODIFIED:
+    case CALCULATION:
+    case LOADSTRUCT:
+    case SYNC:
+    case ANIMFRAME:
+    case SELECT:
+      break;
     default:
-      //      System.out.println("Varna plugin callback for " + type + data);
+      return;
+    }
+
+    switch (type) {
+    default:
       return;
     case STRUCTUREMODIFIED:
       if (((Integer) data[1])
           .intValue() != StatusManager.NOTIFY_MOD_ATOM_COLORED)
         return;
       bsAtoms = (BS) data[6];
+      System.out.println("VARNAPlugin Jmol >> " + type + " " + data[6]);
       if (bsAtoms.isEmpty())
         return;
       Object d1 = data[1];
@@ -172,23 +224,17 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
           colors };
       varna.notifyCallback(VARNACallBack.COLOR, data);
       data[1] = d1;
-      return;
-    case SERVICE:
-      return;
+      break;
     case CALCULATION:
       //      if (JC.INFO_DSSR.equals(data[2]))
+      System.out.println("VARNAPlugin Jmol >> " + type);
       checkDSSR(null);
       return;
     case LOADSTRUCT:
-      if (varna != null && data[7].equals(data[6])) {
-        // only zap VARNA if ZAP, or LOAD without APPEND
-        varna.notifyCallback(VARNACallBack.ZAP, data);
-      }
-      return;
-    case SCRIPT:
-      //System.out.println("Varna plugin SCRIPT " + data[1] + " " + data[2]);
+      System.out.println("VARNAPlugin Jmol >> " + type + " " + data[2]);
       return;
     case SYNC:
+      System.out.println("VARNAPlugin Jmol >> " + type + " " + data[1]);
       cmd = (String) data[1];
       if (!cmd.startsWith("varna:"))
         break;
@@ -196,8 +242,8 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       case "stop":
         destroy();
         break;
-      // case "start":
-      // is handled by JmolPanel
+      case "start":
+        break;
       case "on":
       case "show":
         if (varnaFrame != null)
@@ -215,10 +261,18 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       }      
       return;
     case ANIMFRAME:
+      System.out.println("VARNAPlugin Jmol >> " + type + " " + data[2]);
       String modelName = (String) data[2];
-      checkDSSR(modelName);
+      int modelCount = ((int[]) data[1])[1];
+      if (varna != null && modelCount == 0) {
+        // only zap VARNA if ZAP, or LOAD without APPEND
+        varna.notifyCallback(VARNACallBack.ZAP, data);
+      } else {
+        checkDSSR(modelName);
+      }
       return;
     case SELECT:
+      System.out.println("VARNAPlugin Jmol >> " + type + " " + data[1]);
       bsAtoms = (BS) data[1];
       String selectColors = (String) data[5];
       if (selectColors == null ? mySelectColors != null
@@ -332,11 +386,21 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
     return true;
   }
 
+
   @Override
   public void actionPerformed(ActionEvent e) {
     String jmolScript = null;
+    System.out.println("VARNAPlugin VARNA >> " + e.getActionCommand());
     switch (e.getActionCommand()) {
-    case "selectModel":
+    case VARNAViewerI.ACTION_HOVER:
+      int[] modelResno = (int[]) e.getSource();
+      Group g = null;
+      if (modelResno != null) {
+        g = vwr.ms.getGroupForResno(modelResno[0], modelResno[1]);
+      }
+      vwr.hoverOnPtr((g == null ? -1 : g.getLeadOrFirstAtomIndex()), false, true);
+      break;
+    case VARNAViewerI.ACTION_SELECT_MODEL:
       // Model 1.1: 1EHZ
       String name = (String) e.getSource();
       int pt = name.indexOf(":");
@@ -348,7 +412,7 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       }
       jmolScript = "model " + name + MY_SCRIPT_ID;
       break;
-    case "selectBases":
+    case VARNAViewerI.ACTION_SELECT_BASES:
       if (e.getSource() instanceof int[]) {
         int[] resnos = (int[]) e.getSource();
         if (resnos.length == 0) {

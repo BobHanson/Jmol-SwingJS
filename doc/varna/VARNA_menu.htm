@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>VARNA: Visualization Applet for RNA secondary structure</title>
+<link rel="stylesheet" type="text/css" href="VARNA_menu_files/jquery-ui.css">
+<link rel="stylesheet" type="text/css" href="VARNA_menu_files/VARNA.css">
+	<script type="text/javascript" async="" src="VARNA_menu_files/ga.js"></script><script type="text/javascript" src="VARNA_menu_files/VARNA.js"></script>
+	<style type="text/css"><!--
+	.ui-state-highlight a
+	{
+		text-decoration: underline;
+	}
+	li .menuElementsecurityfix
+	{
+		font-weight: bold;
+	}
+	   .primary-nav .menuElementpopup
+	   {
+		 display: block;
+		 border:1px solid;
+	   }
+
+	   .primary-nav #listpopup
+	   {
+		 display: block;
+		}
+
+	   .primary-nav .menuElementmanual
+	   {
+		 display: block;
+		 border:1px solid;
+	   }
+
+	   .primary-nav #listmanual
+	   {
+		 display: block;
+		}
+
+	   .primary-nav a.menuElementpopup
+	   {
+		 background-color:#fff5d4;
+		 display: block;
+		}
+	--></style>
+</head>
+<body>
+<div id="container">
+	<div id="header">
+		<h1>VARNA: Visualization Applet for RNA</h1>
+		<h6>A Java lightweight component and applet for drawing the RNA secondary structure</h6>
+	</div>
+	<div id="navbox">
+		<div id="sidebar">
+			<div id="menu">
+				<div id="menuwrapper">
+					<ul class="primary-nav menuElementhome">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=home&amp;css=varna" class="menuElementhome">Home</a>
+						<ul id="listhome" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementdemo">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=demo&amp;css=varna" class="menuElementdemo">Demo</a>
+						<ul id="listdemo" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementmanual">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=manual&amp;css=varna" class="menuElementmanual">User Manual</a>
+						<ul id="listmanual" class="menusublist">
+							<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=mouse&amp;css=varna" class="menuElementmouse">Mouse</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=popup&amp;css=varna" class="menuElementpopup">Popup Menu</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=howto&amp;css=varna" class="menuElementhowto">How to...</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=command&amp;css=varna" class="menuElementcommand">Command-line Usage</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=specs&amp;css=varna" class="menuElementspecs">Applet Parameters</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=features&amp;css=varna" class="menuElementfeatures">Full Features List</a>
+						</li></ul>
+					</li></ul>
+					<ul class="primary-nav menuElementtutorial">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial&amp;css=varna" class="menuElementtutorial">Tutorials</a>
+						<ul id="listtutorial" class="menusublist">
+							<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial1&amp;css=varna" class="menuElementtutorial1">Hello RNA World!</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial2&amp;css=varna" class="menuElementtutorial2">Round we go...</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial3&amp;css=varna" class="menuElementtutorial3">Pitch black</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial4&amp;css=varna" class="menuElementtutorial4">Funky !</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial5&amp;css=varna" class="menuElementtutorial5">Multiple panels</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial6&amp;css=varna" class="menuElementtutorial6">Algorithms</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial7&amp;css=varna" class="menuElementtutorial7">Base-pairs styles</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial8&amp;css=varna" class="menuElementtutorial8">Load from URL</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial9&amp;css=varna" class="menuElementtutorial9">Planarized</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial10&amp;css=varna" class="menuElementtutorial10">Base Styles</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial11&amp;css=varna" class="menuElementtutorial11">Color Maps</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial12&amp;css=varna" class="menuElementtutorial12">Adding Labels</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial13&amp;css=varna" class="menuElementtutorial13">Higlighting Regions</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial14&amp;css=varna" class="menuElementtutorial14">Glyphs</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial15&amp;css=varna" class="menuElementtutorial15">Comparing RNAs</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial16&amp;css=varna" class="menuElementtutorial16">JS Interactions I</a>
+							</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=tutorial17&amp;css=varna" class="menuElementtutorial17">JS Interactions II</a>
+						</li></ul>
+					</li></ul>
+					<ul class="primary-nav menuElementdownloads">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=downloads&amp;css=varna" class="menuElementdownloads">Downloads</a>
+						<ul id="listdownloads" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementsecurityfix">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=securityfix&amp;css=varna" class="menuElementsecurityfix"><span class="focus">Java Security Fix</span></a>
+						<ul id="listsecurityfix" class="menusublist">
+						</ul>
+					</li></ul>
+					<ul class="primary-nav menuElementlinks">
+						<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;page=links&amp;css=varna" class="menuElementlinks">Links</a>
+						<ul id="listlinks" class="menusublist">
+						</ul>
+					</li></ul>
+				</div>
+			</div>
+			<div class="shadow">
+				<div class="contentbox">
+					<div class="title">
+						<h4>Announcement</h4>
+					</div>
+					<div class="content">
+						<div class="NewsSummaryLink">
+				 <a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=downloads">VARNA 3.93 released</a>
+						</div>
+						<div class="NewsSummaryPostdate">
+							19/06/2015
+						</div>
+						<div class="NewsSummaryContent">
+							<p><em>XML Save/Load bug fix...</em></p><em>
+						</em></div><em>
+					</em></div><em>
+				</em></div><em>
+			</em></div><em>
+			<div class="shadow">
+				<div class="contentbox">
+					<div class="title">
+						<h4>Support</h4>
+					</div>
+					<div class="content">
+						<table style="padding:0px;border:0px;">
+							<tbody><tr>
+								<td align="center" colspan="2"><a href="http://www.inria.fr/"><img src="VARNA_menu_files/logoinria.png" width="120px" style="border:0px;" alt="Inria"></a></td>
+							</tr>
+							<tr>
+								<td align="center"><a href="http://www.agence-nationale-recherche.fr/"><img src="VARNA_menu_files/logoanr.png" width="60px" style="border:0px;" alt="Agence Nationale de la Recherche"></a></td>
+								<td align="center"><a href="http://www.cnrs.fr/"><img src="VARNA_menu_files/logocnrs.png" width="60px" style="border:0px;" alt="Centre National de la Recherche Scientifique"></a></td>
+							</tr>
+							<tr>
+								<td align="center" colspan="1"><a href="http://www.lix.polytechnique.fr/"><img src="VARNA_menu_files/logolix.png" width="60px" style="border:0px;" alt="Laboratoire d'Informatique de l'Ecole Polytechnique (X)"><br>LIX, Palaiseau</a></td>
+								<td align="center"><a href="http://www.lri.fr/"><img src="VARNA_menu_files/logolri.png" width="50px" style="border:0px;" alt="Laboratoire de Recherche en Informatique (LRI)"><br>LRI, Orsay</a></td>
+							</tr>
+							<tr>
+								<td align="center" colspan="1"><a href="http://www.polytechnique.fr/"><img src="VARNA_menu_files/logox.png" width="60px" style="border:0px;" alt="Ecole Polytechnique"><br>Polytechnique, Palaiseau</a></td>
+								<td align="center"><a href="http://www.igmors.u-psud.fr/"><img src="VARNA_menu_files/logoigm.png" width="60px" style="border:0px;" alt="Institut de G�n�tique et Microbiologie (IGM)"><br`>IGM, Orsay</br`></a></td>
+							</tr>
+							<tr>
+								<td align="center" colspan="2"><a href="http://www.u-psud.fr/"><img src="VARNA_menu_files/logoups.png" width="120px" style="border:0px;" alt="Universit� Paris XI-Paris Sud"></a></td>
+							</tr>
+						</tbody></table>
+					</div>
+				</div>
+			</div>
+		</em></div><em>
+	</em></div><em>
+	<div id="box">
+		
+		<div class="shadow">
+			<div class="contentbox">
+				<div class="title">
+					<h2><a name="popup"></a>Popup menu hierarchy</h2>
+				</div>
+				<div class="content">
+					<p>
+						Any of VARNA's interactive features can be accessed through a 
+popup menu, invoked anywhere on the panel via a platform-dependent 
+gesture (typically right mouse click, or Ctrl+left mouse click). Below 
+is the current menu hierachy:
+					</p>
+					<p>
+						</p><ul>
+								<li>File
+								<ul>
+									<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature1">New...</a> (Ctrl+N)
+									</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature2">Open...</a> (Ctrl+O)
+									</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature31">Save...</a> (Ctrl+S)
+									</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature58">Export</a> (Ctrl+X)
+									</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature59">Print...</a> (Ctrl+P)
+								</li></ul>
+								</li><li>Display
+								<ul>
+									<li>View
+									<ul>
+										<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature3">Zoom</a> (Ctrl+Z)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature4">Rotation...</a> (Ctrl+R)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature5">Border size</a> (Ctrl+B)
+									</li></ul>
+									</li><li>RNA Style
+									<ul>
+										<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature27">Backbone color</a> (Ctrl+K)
+										</li><li>Base pairs
+										<ul>
+											<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature6">Base-pairs style...</a> (Ctrl+Shift+P)
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature7">Show non-canonical BPs</a> (Ctrl+W)
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature8">Hide tertiary base-pairs</a> (Ctrl+E)
+										</li></ul>
+										</li><li>Non-standard bases
+										<ul>
+											<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature10">Color</a> (Ctrl+Shift+J)
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature11">Custom colored</a> (Ctrl+J)
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature90">Toggle draw bases</a> (Alt+G)
+										</li></ul>
+										</li><li>'Gaps' bases
+										<ul>
+											<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature12">Custom colored</a> (Ctrl+D)
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature13">Color</a> (Ctrl+Shift+D)
+										</li></ul>
+									</li></ul>
+									</li><li>Color Map
+									<ul>
+										<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature21">Show color map</a> (Ctrl+Shift+L)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature22">Caption</a> (Ctrl+Shift+C)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature23">Style...</a> (Ctrl+L)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature24">Edit values...</a> (Shift+L)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature25">Load values...</a> (Ctrl+Shift+K)
+									</li></ul>
+									</li><li>Misc
+									<ul>
+										<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature26">Background color</a> (Ctrl+G)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature28">Num. periodicity</a> (Ctrl+M)
+										</li><li>Title
+										<ul>
+											<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature32">Set title...</a> (Ctrl+T)
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature33">Font</a> (Ctrl+Shift+T)
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature34">Color</a> (Ctrl+Alt+T)
+										</li></ul>
+									</li></ul>
+								</li></ul>
+								</li><li>Edit
+								<ul>
+									<li>Redraw
+									<ul>
+										<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature19">BP height increment</a> (Ctrl+H)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature20">Flat exterior loop</a> (Ctrl+F)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature29">Space between bases</a> (Ctrl+Shift+S)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature30">Reset</a> (Ctrl+Shift+R)
+										</li><li>Algorithm
+										<ul>
+											<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature15">Linear</a> (Ctrl+1)
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature16">Circular</a> (Ctrl+2)
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature17">Radiate</a> (Ctrl+3)
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature18">NAView</a> (Ctrl+4)
+										</li></ul>
+									</li></ul>
+									</li><li>Colors
+									<ul>
+										<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature35">By base</a> (Ctrl+U)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature36">By BP</a> (Shift+U)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature37">By position</a> (Alt+U)
+									</li></ul>
+									</li><li>Annotations
+									<ul>
+										<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature44">Edit from list...</a> 
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature45">Remove from list...</a> 
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature46">Auto helices</a> (Ctrl+Q)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature47">Auto interior loops</a> (Alt+Shift+Q)
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature48">Auto terminal loops</a> (Ctrl+Shift+Q)
+										</li><li>New
+										<ul>
+											<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature38">Here</a> (Ctrl+Shift+H)
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature39">Base</a> 
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature40">Loop</a> 
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature41">Helix</a> 
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature42">Region</a> 
+											</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature43">Chem. Prob.</a> 
+										</li></ul>
+									</li></ul>
+									</li><li>Selection
+									<ul>
+										<li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature49">Current</a> 
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature50">Base</a> 
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature51">Base-pair</a> 
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature52">Bulge</a> 
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature53">Loop</a> 
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature54">Helix</a> 
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature55">Stem</a> 
+										</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature56">All</a> 
+									</li></ul>
+								</li></ul>
+						</li><li><a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=features#feature57">About</a>
+						</li></ul>
+					<p></p>
+				</div>
+			</div>
+		</div>
+
+
+		<div id="flat">
+			<div class="right49">
+				<p><a href="#box">^ Top</a></p>
+			</div>
+			<div class="left49">
+				<p>
+					Previous page: <a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=mouse">Mouse</a> <br>
+					Next page: <a href="https://varna.lisn.upsaclay.fr/index.php?lang=en&amp;css=varna&amp;page=howto">How to...</a>
+				</p>
+			</div>
+		</div>
+	</div>
+	<div class="debug">
+    <ul>
+    </ul>
+</div>
+	<div id="footer">
+		<hr>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-36426009-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+		<p>Website maintained by <a href="http://lix.polytechnique.fr/~ponty">Yann Ponty</a></p>
+	</div>
+</em></div><em>
+
+
+
+ </em></body></html>

@@ -1,12 +1,10 @@
 package fr.orsay.lri.varna.models.annotations;
 
 import java.awt.Color;
-import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 
 import javax.xml.transform.sax.TransformerHandler;
@@ -15,14 +13,10 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 import fr.orsay.lri.varna.components.VARNAPanel;
-import fr.orsay.lri.varna.controlers.ControleurClicMovement;
 import fr.orsay.lri.varna.models.VARNAConfigLoader;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.RNA;
-import fr.orsay.lri.varna.models.rna.VARNAPoint;
 import fr.orsay.lri.varna.utils.XMLUtils;
-import fr.orsay.lri.varna.views.VueHighlightRegionEdit;
-import fr.orsay.lri.varna.views.VueUI;
 
 public class HighlightRegionAnnotation implements Serializable {
 	

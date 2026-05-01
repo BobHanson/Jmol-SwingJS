@@ -96,7 +96,7 @@ public class ControleurClicMovement
     _vp.setHoverBase(_selectedBase);
     if (_selectedBase != null) {
     } else if (selectedAnnotation != null) {
-      _vp.set_selectedAnnotation(selectedAnnotation);
+      _vp.setSelectedAnnotation(selectedAnnotation);
       _vp.highlightSelectedAnnotation();
       _vp.repaint();
     }
@@ -105,7 +105,6 @@ public class ControleurClicMovement
 
   @Override
   public void mousePressed(MouseEvent me) {
-    _vp.requestFocus();
     boolean button1 = (me.getButton() == MouseEvent.BUTTON1);
     boolean button3 = (me.getButton() == MouseEvent.BUTTON3);
     boolean shift = me.isShiftDown();
@@ -114,7 +113,7 @@ public class ControleurClicMovement
     int x = me.getX();
     int y = me.getY();
     int id = me.getID();
-    _vp.removeSelectedAnnotation();
+    _vp.fireMouseEvent(id, _selectedBase, true);
     if (button1 && !ctrl && !alt && !shift) {
       if (_vp.isModifiable()) {
         doMoveElement(x, y, id);
@@ -126,7 +125,7 @@ public class ControleurClicMovement
     } else if (button3) {
       doPopupMenu(x, me.getY());
     }
-    _vp.repaint();
+    _vp.fireMouseEvent(id, _selectedBase, false);
   }
 
   private void doPopupMenu(int x, int y) {
@@ -139,7 +138,7 @@ public class ControleurClicMovement
       updateNearestBase(x, y);
       // on insere dans le menu les nouvelles options
       addMenu(x, y);
-      if (_vp.get_selectedAnnotation() != null)
+      if (_vp.getSelectedAnnotation() != null)
         _vp.highlightSelectedAnnotation();
     }
     // affichage du popup menu
@@ -158,6 +157,7 @@ public class ControleurClicMovement
     int x = me.getX();
     int y = me.getY();
     int id = me.getID();
+    _vp.fireMouseEvent(id, _selectedBase, true);
     switch (_currentState) {
     case MOVE_OR_SELECT_ELEMENT:
     case MOVE_ELEMENT:
@@ -187,7 +187,7 @@ public class ControleurClicMovement
       int x = me.getX();
       int y = me.getY();
       int id = me.getID();
-      _vp.fireBaseClicked(_selectedBase, me);
+      _vp.fireMouseEvent(id, _selectedBase, true);
       switch (_currentState) {
       case MOVE_ELEMENT:
         doMoveElement(x, y, id);
@@ -208,6 +208,7 @@ public class ControleurClicMovement
         _vp.clearSelection();
         break;
       }
+      _vp.fireMouseEvent(id, _selectedBase, false);
     }
     _currentState = MouseStates.NONE;
     _vp.repaint();
@@ -294,13 +295,13 @@ public class ControleurClicMovement
     switch(action) {
     case MouseEvent.MOUSE_PRESSED:
       _currentState = MouseStates.MOVE_ANNOTATION;
-      _vp.set_selectedAnnotation(_selectedAnnotation);
+      _vp.setSelectedAnnotation(_selectedAnnotation);
       _vp.highlightSelectedAnnotation();
       break;
     case MouseEvent.MOUSE_DRAGGED:
-      if (_vp.get_selectedAnnotation() != null) {
+      if (_vp.getSelectedAnnotation() != null) {
         Point2D.Double p = _vp.panelToLogicPoint(new Point2D.Double(x, y));
-        _vp.get_selectedAnnotation().setAncrage(p.x, p.y);
+        _vp.getSelectedAnnotation().setAncrage(p.x, p.y);
         _vp.repaint();
       }
       break;
@@ -460,7 +461,7 @@ public class ControleurClicMovement
             + Math.pow((position.y - y), 2));
         // si la valeur est inferieur au minimum actuel
         if (dist > d2) {
-          _vp.set_selectedAnnotation(textAnnot);
+          _vp.setSelectedAnnotation(textAnnot);
           dist = d2;
         }
       }

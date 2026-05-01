@@ -1387,7 +1387,7 @@ public class VueUI {
 
   public void UIAnnotationRemoveFromAnnotation(TextAnnotation textAnnotation) {
     if (_vp.isModifiable()) {
-      _vp.set_selectedAnnotation(null);
+      _vp.setSelectedAnnotation(null);
       _vp.getListeAnnotations().remove(textAnnotation);
       _vp.repaint();
     }
