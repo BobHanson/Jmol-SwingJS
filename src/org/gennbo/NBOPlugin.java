@@ -38,8 +38,8 @@ public class NBOPlugin implements JmolPlugin {
   protected NBODialog nboDialog;
   protected Viewer vwr;
   
-  public final static String version = "0.1.2b";
-
+  public final static String version = "NBO plugin 0.1.2b";
+  public final static String license = "NBO(FORTRAN) is licensed independently of this plugin, through the University of Minnesota";
 
   @Override
   public boolean isStarted() {
@@ -83,6 +83,11 @@ public class NBOPlugin implements JmolPlugin {
   @Override
   public String getVersion() {
     return version;
+  }
+ 
+  @Override
+  public String getLicense() {
+    return license;
   }
  
   @Override

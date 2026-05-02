@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -79,6 +78,50 @@ public class VARNAViewer extends VARNA
     default:
       System.err.println("Varna plugin callback for " + type);
       return null;
+    case COLOR:
+      data = (Object[]) data[1];
+      List<Color> colors = (List<Color>) data[1];
+      app.colorBasesByResno(colors,
+          (Map<Integer, Map<String, List<Integer>>>) data[0]);
+      app.repaint();
+      return null;
+    case DESTROY:
+      destroy();
+      return null;
+    case GETFRAME:
+      return (getVarnaPanel() == null ? null : frame);
+    case HOVER:
+      int id, regno;
+      if (data[1] == null) {
+        id = regno = -1;
+      } else {
+        int[] info = (int[]) data[0];
+        id = info[0];
+        regno = info[1];
+      }
+      SwingUtilities.invokeLater(() -> {
+        app.setHoverFor(id, regno);
+      });
+      return null;
+    case SCRIPT:
+      String cmd = ((String) data[1]).substring(6).trim();
+      String err = script(cmd);
+      return err;
+    case SELECT:
+      notifyJmol = false;
+      app.selectBasesByResno(
+          (Map<Integer, Map<String, List<Integer>>>) data[1]);
+      notifyJmol = true;
+      app.repaint();
+      return null;
+    case SETDSSR:
+      String modelName = (String) data[0];
+      Integer modelID = (Integer) data[1];
+      Map<String, Object> dssrInfo = (Map<String, Object>) data[2];
+      notifyJmol = false;
+      newDSSRSequenceAndStructure(modelName, modelID, dssrInfo);
+      notifyJmol = true;
+      return null;
     case SETPLUGIN:
       JFrame parentFrame = (JFrame) data[0];
       actionListener = (ActionListener) data[1];
@@ -88,40 +131,11 @@ public class VARNAViewer extends VARNA
       JFrame varnaFrame = setFrame(parentFrame, null, 0, 0);
       notifyJmol = true;
       return varnaFrame;
-    case GETFRAME:
-      return (getVarnaPanel() == null ? null : frame);
-    case SETDSSR:
-      String modelName = (String) data[0];
-      Integer modelID = (Integer) data[1];
-      Map<String, Object> dssrInfo = (Map<String, Object>) data[2];
-      notifyJmol = false;
-      newDSSRSequenceAndStructure(modelName, modelID, dssrInfo);
-      notifyJmol = true;
-      return null;
     case ZAP:
       if (app != null)
         app.zap();
       if (frame != null)
         frame.setVisible(false);
-      return null;
-    case SCRIPT:
-      String cmd = ((String) data[1]).substring(6).trim();
-      String err = script(cmd);
-      return err;
-    case COLOR:
-      data = (Object[]) data[1];
-      List<Color> colors = (List<Color>) data[1];
-      app.colorBasesByResno(colors, (Map<Integer, Map<String, List<Integer>>>) data[0]);
-      app.repaint();
-      return null;
-    case SELECT:
-      notifyJmol = false;
-      app.selectBasesByResno((Map<Integer, Map<String, List<Integer>>>) data[1]);
-      notifyJmol = true;
-      app.repaint();
-      return null;
-    case DESTROY:
-      destroy();
       return null;
     }
   }
@@ -147,7 +161,6 @@ public class VARNAViewer extends VARNA
       switch (e.getActionCommand()) {
       case VARNAViewerI.ACTION_HOVER:
         ModeleBase base = ((ModeleBase[]) e.getSource())[0];
-        
         e.setSource(base == null ? null : new int[] { app.getRNA().modelID.intValue(),
             base.getResidueNumber() });
         break; // pass through

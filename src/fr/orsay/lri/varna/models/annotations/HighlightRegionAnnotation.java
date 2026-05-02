@@ -305,8 +305,8 @@ public class HighlightRegionAnnotation implements Serializable {
 		String[] coords = parts[0].split("-");
 		int from = Integer.parseInt(coords[0]);
 		int to = Integer.parseInt(coords[1]);
-		int  i = vp.getRNA().getIndexFromBaseNumber(from);
-		int  j = vp.getRNA().getIndexFromBaseNumber(to);
+		int  i = vp.getRNA().getIndexFromResidueNumber(from);
+		int  j = vp.getRNA().getIndexFromResidueNumber(to);
 		Color fill = HighlightRegionAnnotation.DEFAULT_FILL_COLOR;
 		Color outline = HighlightRegionAnnotation.DEFAULT_OUTLINE_COLOR;
 		double radius = HighlightRegionAnnotation.DEFAULT_RADIUS;

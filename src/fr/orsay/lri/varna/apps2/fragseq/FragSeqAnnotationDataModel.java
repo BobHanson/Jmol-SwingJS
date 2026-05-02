@@ -1,4 +1,4 @@
-package fr.orsay.lri.varna.applications.fragseq;
+package fr.orsay.lri.varna.apps2.fragseq;
 
 import java.awt.Color;
 import java.awt.datatransfer.DataFlavor;
@@ -91,8 +91,8 @@ public class FragSeqAnnotationDataModel extends FragSeqModel {
 		public void applyTo(RNA r)
 		{
 			System.out.println(this);
-			int i = r.getIndexFromBaseNumber(_baseNumber1);
-			int j = r.getIndexFromBaseNumber(_baseNumber2);
+			int i = r.getIndexFromResidueNumber(_baseNumber1);
+			int j = r.getIndexFromResidueNumber(_baseNumber2);
 			if (i!=-1 && j!=-1)
 			{
 				ModeleBase mb1 = r.getBaseAt(i);

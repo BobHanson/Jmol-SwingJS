@@ -14,8 +14,9 @@ public interface InterfaceVARNASelectionListener {
 	 * Specifies an action that should be performed upon changing the hovered base.
 	 * @param oldbase Previously hovered base (possibly null).
 	 * @param newBase Newly hovered base (possibly null).
+   * @param doNotify only true if this is a plugin and hover is originating from VARNA
 	 */
-	public void onHoverChanged(ModeleBase oldbase, ModeleBase newBase);
+	public void onHoverChanged(ModeleBase oldbase, ModeleBase newBase, boolean doNotify);
 
   /**
 	 * Specifies the action to be performed upon changing the selection.

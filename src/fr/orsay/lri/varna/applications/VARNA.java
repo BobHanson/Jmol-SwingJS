@@ -64,12 +64,24 @@ import fr.orsay.lri.varna.models.rna.RNA;
 /**
  * Formerly VARNAGUI
  * 
+ * Most of this file originated as part of VARNA version 3.9. VARNA version 3.9 is free software:
+ * you can redistribute it and/or modify it under the terms of the GNU General
+ * Public License as published by the Free Software Foundation, either version 3
+ * of the License, or (at your option) any later version.
+ * 
  * Adapted by Bob Hanson for Jmol-SwingJS.
  * 
  */
 public class VARNA
     implements DropTargetListener, InterfaceVARNAListener, MouseListener {
 
+  public final static String version = "VARNA-SwingJS 16.3"; // Jmol's major version
+  public final static String license = version + " is published under the GPL GNU Public License Version 3";
+  
+  static {
+    System.out.println(license);
+  }
+  
   protected final static int VARNA_GUI_ALLOW_CREATE = 0x01;
   protected final static int VARNA_GUI_ALLOW_DELETE_DUPLICATE = 0x02;
   protected final static int VARNA_GUI_ALLOW_DOUBLE_CLICK = 0x04;

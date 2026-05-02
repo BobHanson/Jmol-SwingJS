@@ -37,6 +37,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import org.jmol.c.CBK;
+import org.jmol.modelset.Atom;
 import org.jmol.modelset.Group;
 import org.jmol.modelset.Model;
 import org.jmol.shape.Balls;
@@ -93,8 +94,6 @@ import javajs.util.BS;
  */
 public class VARNAPlugin implements JmolPlugin, ActionListener {
 
-  public final static String version = "0.0.1";
-
   private static final String MY_SCRIPT_ID = JC.SCRIPT_EXT + "FROM_VARNA";
 
   protected Viewer vwr;
@@ -149,7 +148,12 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
 
   @Override
   public String getVersion() {
-    return version;
+    return VARNAViewerI.version;
+  }
+
+  @Override
+  public String getLicense() {
+    return VARNAViewerI.license;
   }
 
   @Override
@@ -197,12 +201,13 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
     BS bsAtoms;
     String cmd;
     switch (type) {
-    case STRUCTUREMODIFIED:
-    case CALCULATION:
-    case LOADSTRUCT:
-    case SYNC:
     case ANIMFRAME:
+    case CALCULATION:
+    case HOVER:
+    case LOADSTRUCT:
     case SELECT:
+    case STRUCTUREMODIFIED:
+    case SYNC:
       break;
     default:
       return;
@@ -210,6 +215,51 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
 
     switch (type) {
     default:
+      return;
+    case ANIMFRAME:
+      System.out.println("VARNAPlugin Jmol >> " + type + " " + data[2]);
+      String modelName = (String) data[2];
+      int modelCount = ((int[]) data[1])[1];
+      if (varna != null && modelCount == 0) {
+        // only zap VARNA if ZAP, or LOAD without APPEND
+        varna.notifyCallback(VARNACallBack.ZAP, data);
+      } else {
+        checkDSSR(modelName);
+      }
+      return;
+    case CALCULATION:
+      //      if (JC.INFO_DSSR.equals(data[2]))
+      System.out.println("VARNAPlugin Jmol >> " + type);
+      checkDSSR(null);
+      return;
+    case HOVER:
+      System.out.println("VARNAPlugin Jmol >> " + type);
+      if (data[1] != null) {
+        // hover ON
+        Atom a = vwr.ms.at[((Integer)data[2]).intValue()];
+        int resno = a.group.getResno();
+        int modelID = vwr.getModelFileNumber(a.getModelIndex());
+        data[0] = new int[] { modelID, resno };
+      }
+      varna.notifyCallback(VARNACallBack.HOVER, data);
+      return;
+    case LOADSTRUCT:
+      System.out.println("VARNAPlugin Jmol >> " + type + " " + data[2]);
+      return;
+    case SELECT:
+      System.out.println("VARNAPlugin Jmol >> " + type + " " + data[1]);
+      bsAtoms = (BS) data[1];
+      String selectColors = (String) data[5];
+      if (selectColors == null ? mySelectColors != null
+          : !selectColors.equals(mySelectColors)) {
+        mySelectColors = selectColors;
+        data[1] = "varna:setSelectionColors(" + selectColors + ")";
+        varna.notifyCallback(VARNACallBack.SCRIPT, data);
+      }
+      // limit the atoms to the current frame
+      data[1] = getModelGroupMap(bsAtoms, VARNACallBack.SELECT);
+      varna.notifyCallback(VARNACallBack.SELECT, data);
+      data[1] = bsAtoms;
       return;
     case STRUCTUREMODIFIED:
       if (((Integer) data[1])
@@ -225,14 +275,6 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       varna.notifyCallback(VARNACallBack.COLOR, data);
       data[1] = d1;
       break;
-    case CALCULATION:
-      //      if (JC.INFO_DSSR.equals(data[2]))
-      System.out.println("VARNAPlugin Jmol >> " + type);
-      checkDSSR(null);
-      return;
-    case LOADSTRUCT:
-      System.out.println("VARNAPlugin Jmol >> " + type + " " + data[2]);
-      return;
     case SYNC:
       System.out.println("VARNAPlugin Jmol >> " + type + " " + data[1]);
       cmd = (String) data[1];
@@ -259,32 +301,6 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
         data[0] = err;
         break;
       }      
-      return;
-    case ANIMFRAME:
-      System.out.println("VARNAPlugin Jmol >> " + type + " " + data[2]);
-      String modelName = (String) data[2];
-      int modelCount = ((int[]) data[1])[1];
-      if (varna != null && modelCount == 0) {
-        // only zap VARNA if ZAP, or LOAD without APPEND
-        varna.notifyCallback(VARNACallBack.ZAP, data);
-      } else {
-        checkDSSR(modelName);
-      }
-      return;
-    case SELECT:
-      System.out.println("VARNAPlugin Jmol >> " + type + " " + data[1]);
-      bsAtoms = (BS) data[1];
-      String selectColors = (String) data[5];
-      if (selectColors == null ? mySelectColors != null
-          : !selectColors.equals(mySelectColors)) {
-        mySelectColors = selectColors;
-        data[1] = "varna:setSelectionColors(" + selectColors + ")";
-        varna.notifyCallback(VARNACallBack.SCRIPT, data);
-      }
-      // limit the atoms to the current frame
-      data[1] = getModelGroupMap(bsAtoms, VARNACallBack.SELECT);
-      varna.notifyCallback(VARNACallBack.SELECT, data);
-      data[1] = bsAtoms;
       return;
     }
   }

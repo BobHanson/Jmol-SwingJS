@@ -40,7 +40,8 @@ import org.openscience.jmol.app.jmolpanel.Splash;
 
 public class Nmr extends JmolApp {
 
-  public static final String VERSION = "0.1.0";
+  public static final String VERSION = "Janocchio 0.1.0";
+  public static final String LICENSE = "Janocchio GNU Lesser General Public License (LGPL)";
 
   public static String path;
   static {

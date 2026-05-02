@@ -1053,7 +1053,7 @@ public class VARNAConfigLoader {
 							if (args.length == 1) {
 								int baseNum = Integer.parseInt(cand);
 								int index = _vp.getRNA()
-										.getIndexFromBaseNumber(baseNum);
+										.getIndexFromResidueNumber(baseNum);
 								if (index != -1) {
 									indicesList.add(Integer.valueOf(index));
 								}
@@ -1061,11 +1061,11 @@ public class VARNAConfigLoader {
 								int baseNumFrom = Integer.parseInt(args[0]
 										.trim());
 								int indexFrom = _vp.getRNA()
-										.getIndexFromBaseNumber(baseNumFrom);
+										.getIndexFromResidueNumber(baseNumFrom);
 								int baseNumTo = Integer
 										.parseInt(args[1].trim());
 								int indexTo = _vp.getRNA()
-										.getIndexFromBaseNumber(baseNumTo);
+										.getIndexFromResidueNumber(baseNumTo);
 								if ((indexFrom != -1) && (indexTo != -1)) {
 									for (int l = indexFrom; l <= indexTo; l++)
 										indicesList.add(Integer.valueOf(l));
@@ -1147,7 +1147,7 @@ public class VARNAConfigLoader {
 			try {
 				if (data.length == 2) {
 					int baseNum = Integer.parseInt(data[0]);
-					int index = _vp.getRNA().getIndexFromBaseNumber(
+					int index = _vp.getRNA().getIndexFromResidueNumber(
 							baseNum);
 					if (index != -1) {
 						String style = data[1];
@@ -1237,8 +1237,8 @@ public class VARNAConfigLoader {
 					if (data2.length == 2) {
 						int a = Integer.parseInt(data2[0]);
 						int b = Integer.parseInt(data2[1]);
-						int c = vp.getRNA().getIndexFromBaseNumber(a);
-						int d = vp.getRNA().getIndexFromBaseNumber(b);
+						int c = vp.getRNA().getIndexFromResidueNumber(a);
+						int d = vp.getRNA().getIndexFromResidueNumber(b);
 						ArrayList<ModeleBase> mbl = vp.getRNA()
 								.get_listeBases();
 						ChemProbAnnotation cpa = new ChemProbAnnotation(
@@ -1269,8 +1269,8 @@ public class VARNAConfigLoader {
 							int a = Integer.parseInt(s1.substring(1));
 							int b = Integer.parseInt(s2.substring(0,
 									s2.length() - 1));
-							int c = vp.getRNA().getIndexFromBaseNumber(a);
-							int d = vp.getRNA().getIndexFromBaseNumber(b);
+							int c = vp.getRNA().getIndexFromResidueNumber(a);
+							int d = vp.getRNA().getIndexFromResidueNumber(b);
 
 							ModeleBP msbp = new ModeleBP(vp.getRNA()
 									.get_listeBases().get(c), vp.getRNA()
@@ -1312,7 +1312,7 @@ public class VARNAConfigLoader {
 					}
 					if (number!=-1)
 					{
-						int i = vp.getRNA().getIndexFromBaseNumber(number);
+						int i = vp.getRNA().getIndexFromResidueNumber(number);
 						Point h = vp.getRNA().getExteriorHelix(i);
 						vp.getRNA().flipHelix(h);
 					}

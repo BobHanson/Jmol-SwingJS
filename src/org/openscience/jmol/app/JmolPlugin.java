@@ -9,15 +9,16 @@ import org.jmol.c.CBK;
 import org.jmol.viewer.Viewer;
 
 public interface JmolPlugin { 
-  void start(JFrame frame, Viewer vwr, Map<String, Object> jmolOptions);
   void destroy();
-  String getVersion();
-  String getName();
-  void setVisible(boolean b);
-  void notifyCallback(CBK type, Object[] data);
+  String getLicense();
   ImageIcon getMenuIcon();
   String getMenuText();
-  boolean isStarted();
+  String getName();
+  String getVersion();
   String getWebSite();
-
+  boolean isStarted();
+  void notifyCallback(CBK type, Object[] data);
+  void setVisible(boolean b);
+  void start(JFrame frame, Viewer vwr, Map<String, Object> jmolOptions);
+  
 }

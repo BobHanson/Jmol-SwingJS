@@ -1,4 +1,4 @@
-package fr.orsay.lri.varna.applications.fragseq;
+package fr.orsay.lri.varna.apps2.fragseq;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;

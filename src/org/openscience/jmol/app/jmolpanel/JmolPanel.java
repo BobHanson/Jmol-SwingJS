@@ -1286,6 +1286,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     if (p == null) {
       plugins.put(name,
           p = (JmolPlugin) Interface.getInterface(path, vwr, "plugin"));
+      System.out.println(p.getVersion());
+      System.out.println(p.getLicense());
     }
     return p;
   }

@@ -697,6 +697,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
+import fr.orsay.lri.varna.applications.VARNAapp;
 import fr.orsay.lri.varna.controlers.ControleurBlinkingThread;
 import fr.orsay.lri.varna.controlers.ControleurClicMovement;
 import fr.orsay.lri.varna.controlers.ControleurDraggedMolette;
@@ -855,6 +856,9 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   private VueUI _UI = new VueUI(this);
 
   private TextAnnotation _selectedAnnotation;
+
+
+  private int hoverBaseIndex;
 
 
   /**
@@ -1607,11 +1611,11 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     ModeleBase mb = _RNA.get_listeBases().get(i);
     g2D.setFont(_conf._fontBasesGeneral);
     Color baseInnerColor = highlightFilterBase(i,
-        _RNA.getBaseInnerColor(i, _conf), true, blinkVal, localView);
+        _RNA.getBaseInnerColor(i, _conf), true, blinkVal, localView, 0);
     Color baseOuterColor = highlightFilterBase(i,
-        _RNA.getBaseOuterColor(i, _conf), false, blinkVal, localView);
+        _RNA.getBaseOuterColor(i, _conf), false, blinkVal, localView, 1);
     Color baseNameColor = highlightFilterBase(i,
-        _RNA.getBaseNameColor(i, _conf), false, blinkVal, localView);
+        _RNA.getBaseNameColor(i, _conf), false, blinkVal, localView, 2);
     if (RNA.whiteLabelPreferrable(baseInnerColor)) {
       baseNameColor = Color.white;
     }
@@ -1703,10 +1707,10 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   }
 
   private Color highlightFilterBase(int index, Color initialColor, boolean whiteFirst,
-                                    double blinkVal, boolean localView) {
+                                    double blinkVal, boolean localView, int mode) {
     Color c1 = (whiteFirst ? Color.white: initialColor);
     Color c2 = (whiteFirst ? initialColor : Color.white);
-    return (localView && _RNA.isSelected(index)
+    return (mode == 0 && hoverBaseIndex == index ? VARNAapp.hoverColor : localView && _RNA.isSelected(index)
         ? getSelectedColor(c1, c2, blinkVal)
         : getUnselectedColor(initialColor));
   }
@@ -3985,6 +3989,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     _RNA.clearSelections();
     setBlinkActive(false);
     fireSelectionChanged(InterfaceVARNASelectionListener.SEL_CLEAR, bck, _RNA.getSelectedBases());
+    _selectedBase = null;
     repaint();
   }
 
@@ -4326,9 +4331,9 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     }
   }
 
-  public void fireHoverChanged(ModeleBase mold, ModeleBase mnew) {
+  public void fireHoverChanged(ModeleBase mold, ModeleBase mnew, boolean doNotify) {
     for (InterfaceVARNASelectionListener v2 : _selectionListeners) {
-      v2.onHoverChanged(mold, mnew);
+      v2.onHoverChanged(mold, mnew, doNotify);
     }
   }
 
@@ -4372,12 +4377,13 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     return _RNA.getOrientation();
   }
 
-  public void setHoverBase(ModeleBase m) {
+  public void setHoverBase(ModeleBase m, boolean doNotify) {
     if (m != _hoveredBase) {
       ModeleBase bck = _hoveredBase;
       _hoveredBase = m;
+      hoverBaseIndex = (m == null ? -1 : m.getIndex());
       repaint();
-      fireHoverChanged(bck, m);
+      fireHoverChanged(bck, m, doNotify);
     }
   }
 
@@ -4537,7 +4543,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     return (!selectionColored || colorUnselected == null ? initialColor : colorUnselected);
   }
 
-  public void fireMouseEvent(int id, ModeleBase base, boolean before) {
+  public void fireMouseEvent(int id, boolean before) {
     switch (id) {
     case MouseEvent.MOUSE_PRESSED:
       if (before) {
@@ -4550,9 +4556,175 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     case MouseEvent.MOUSE_DRAGGED:
       break;
     case MouseEvent.MOUSE_RELEASED:
-      fireBaseClicked(base, id);
+      fireBaseClicked(_selectedBase, id);
       break;
     }
+  }
+
+  
+  public ModeleBase _selectedBase = null;
+
+  public void doMouseMove(int x, int y) {
+    _selectedBase = getNearestBase(x, y);
+    TextAnnotation selectedAnnotation = getNearestAnnotation(x, y);
+    setHoverBase(_selectedBase, true);
+    if (_selectedBase == null && selectedAnnotation != null) {
+      setSelectedAnnotation(selectedAnnotation);
+      highlightSelectedAnnotation();
+      repaint();
+    }
+    setLastSelectedPosition(new Point2D.Double(x, y));
+  }
+
+  public void showPopup(int x, int y) {
+    // affichage du popup menu
+    VueMenu p = getPopup();
+    if (getRNA().get_drawMode() == RNA.DRAW_MODE_LINEAR) {
+      p.get_rotation().setEnabled(false);
+    } else {
+       p.get_rotation().setEnabled(true);
+    }
+    p.updateDialog();
+    p.show(this, x, y);
+  }
+  
+  public void endPopup() {
+    resetAnnotationHighlight();
+    _selectedBase = null;
+  }
+  
+  public void setSelectedBase(ModeleBase base) {
+    clearSelection();
+    _selectedBase = base;
+    highlightSelectedBase(_selectedBase);
+    setOriginLink(logicToPanel(_selectedBase.getCoords()));
+  }
+
+  public void dragBase(ModeleBase base, int x, int y) {
+    setHoverBase(base, true);
+    if (base == null) {
+      setDestinationLink(new Point2D.Double(x, y));
+      clearSelection();
+      addToSelection(_selectedBase.getIndex());
+    } else {
+      ModeleBase mborig = _selectedBase;
+      clearSelection();
+      addToSelection(base.getIndex());
+      addToSelection(mborig.getIndex());
+      setDestinationLink(logicToPanel(base.getCoords()));
+    }
+    repaint();
+
+    // TODO
+    
+  }
+
+  public void addBP(ModeleBase mb) {
+    if (mb != null) {
+      ModeleBase mborig = _selectedBase;
+      ModeleBP msbp = new ModeleBP(mb, mborig);
+      if (mb != mborig) {
+        getVARNAUI().UIAddBP(mb.getIndex(), mborig.getIndex(), msbp);
+      }
+    }
+    removeLink();
+    clearSelection();
+    repaint();
+  }
+
+  public void moveSelectedBase(ModeleBase base) {
+    _selectedBase = base;
+    if (getRNA().get_drawMode() == RNA.DRAW_MODE_RADIATE) {
+      highlightSelectedBase(base);
+    } else if (!getSelectionIndices()
+        .contains(Integer.valueOf(base.getIndex()))) {
+      highlightSelectedBase(base);
+    } else {
+      // Otherwise, keep current selection as it is and move it
+    }
+
+  }
+
+  public void endDragging() {
+    clearSelection();
+    _selectedBase = null;
+    unlockScrolling();
+    removeSelectedAnnotation();
+  }
+
+  public void endSelectOrUnselect() {
+    clearSelection();
+    _selectedBase = null;
+    removeSelectedAnnotation();
+  }
+
+  public void endSelect(int x, int y) {
+    if (getRealCoords() != null && getRealCoords().length != 0
+        && getRNA().get_listeBases().size() != 0) {
+      int selectedIndex = getNearestBaseIndex(x, y, false, false);
+      if (selectedIndex != -1) {
+        toggleSelection(selectedIndex);
+      }
+    }
+    _selectedBase = null;
+  }
+
+  public void moveSelection(Point prev, Point cur) {
+    Point2D.Double p1 = panelToLogicPoint(new Point2D.Double(prev.x, prev.y));
+    Point2D.Double p2 = panelToLogicPoint(new Point2D.Double(cur.x, cur.y));
+    double dx = (p2.x - p1.x);
+    double dy = (p2.y - p1.y);
+
+    if (isModifiable()) {
+      double ndx = dx;
+      double ndy = dy;
+      if (getRNA().get_drawMode() == RNA.DRAW_MODE_LINEAR) {
+        ndy = 0.0;
+      }
+      getVARNAUI().UIShiftBaseCoord(getSelectionIndices(), ndx, ndy);
+      fireLayoutChanged();
+    }
+  }
+
+  public boolean setNearestBase(int x, int y) {
+    if (getRealCoords() == null || getRNA().get_listeBases().size() == 0)
+      return false;
+    int i = getNearestBaseIndex(x, y, true, false);
+    if (i != -1)
+      setNearestBase(i);
+    // on insere dans le menu les nouvelles options
+    if (getSelectedAnnotation() != null)
+      highlightSelectedAnnotation();
+    return true;
+  }
+
+  public ModeleBase moveElement(ModeleBase movingBase, int x, int y) {
+    if (movingBase == null) {
+      highlightSelectedStem(_selectedBase);
+      movingBase = _selectedBase;
+    }
+    // dans le cas radiale on deplace une helice
+    getVARNAUI().UIMoveHelixAtom(_selectedBase.getIndex(),
+        panelToLogicPoint(new Point2D.Double(x, y)));
+    return movingBase;
+  }
+
+  public void dragAnnotation(int x, int y) {
+    if (getSelectedAnnotation() != null) {
+      Point2D.Double p = panelToLogicPoint(new Point2D.Double(x, y));
+      getSelectedAnnotation().setAncrage(p.x, p.y);
+      repaint();
+    }
+  }
+
+  public void startMoveAnnotation() {
+    setSelectedAnnotation(_selectedAnnotation);
+    highlightSelectedAnnotation();
+  }
+
+  public TextAnnotation setNearestAnnotation(int x, int y) {
+    _selectedAnnotation = getNearestAnnotation(x, y);
+    return _selectedAnnotation;
   }
 
 }

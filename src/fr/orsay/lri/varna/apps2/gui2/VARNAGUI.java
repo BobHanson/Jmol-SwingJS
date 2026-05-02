@@ -15,7 +15,7 @@
  You should have received a copy of the GNU General Public License along with VARNA version 3.1.
  If not, see http://www.gnu.org/licenses.
  */
-package fr.orsay.lri.varna.applications.fragseq;
+package fr.orsay.lri.varna.apps2.gui2;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -47,7 +47,6 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -62,30 +61,22 @@ import javax.swing.JTextPane;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
-import javax.swing.LookAndFeel;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import fr.orsay.lri.varna.components.VARNAPanel;
-import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionNonEqualLength;
-import fr.orsay.lri.varna.models.FullBackup;
 import fr.orsay.lri.varna.utils.BasicINI;
 
 
-public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListener,DropTargetListener, WindowListener, ComponentListener, ActionListener, TreeSelectionListener {
+public class VARNAGUI extends JFrame implements TreeModelListener, MouseListener,DropTargetListener, WindowListener, ComponentListener, ActionListener {
 
 	private enum Commands
 	{
@@ -97,8 +88,6 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 		SORT_ID,
 		SORT_FILENAME,
 		REFRESH_ALL,
-		CHANGE_LNF,
-		TEST_XML,
 	};
 	
 	
@@ -110,6 +99,7 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 
 		
 	private String _INIFilename = "FragSeqUI.ini";
+	private Color _backgroundColor = Color.white;
 	private boolean redrawOnSlide = false;
 	private int dividerWidth = 5;
 	
@@ -118,10 +108,10 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 
 	private JPanel _listPanel = new JPanel();
 	private JPanel _infoPanel = new JPanel();
-	private FragSeqTree _sideList = null;
+	private VARNAGUITree _sideList = null;
 
 	
-	private FragSeqTreeModel _treeModel;
+	private VARNAGUITreeModel _treeModel;
 	private JToolBar _toolbar = new JToolBar();
 	private JFileChooser _choice = new JFileChooser();
 	
@@ -132,10 +122,9 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 	private JSplitPane _splitRight;
 	private JSplitPane _splitVARNA;
 	
-	private JComboBox _lnf;	
 
 
-	public FragSeqGUI() {
+	public VARNAGUI() {
 		super("VARNA Explorer");
 		RNAPanelDemoInit();
 	}
@@ -147,26 +136,22 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 		this.addWindowListener(this);
 	    
 		_selectedElems = new JList();
-
-		_lnf = new JComboBox(UIManager.getInstalledLookAndFeels());
 		
 		// Initializing Custom Tree Model
-		_treeModel = new FragSeqTreeModel();
+		_treeModel = new VARNAGUITreeModel();
 		_treeModel.addTreeModelListener(this);
 		
-		_sideList = new FragSeqTree(_treeModel);
+		_sideList = new VARNAGUITree(_treeModel);
 		_sideList.addMouseListener(this);
 		_sideList.setLargeModel(true);
 		_sideList.setEditable(true);
-		_sideList.addTreeWillExpandListener(_treeModel);
-		FragSeqCellRenderer renderer = new FragSeqCellRenderer(_sideList,_treeModel);
+		VARNAGUIRenderer renderer = new VARNAGUIRenderer(_sideList,_treeModel);
 		//_sideList.setUI(new CustomTreeUI());
 		_sideList.setCellRenderer(renderer);
-		_sideList.setCellEditor(new FragSeqCellEditor(_sideList,renderer,_treeModel));
+		_sideList.setCellEditor(new VARNAGUICellEditor(_sideList,renderer,_treeModel));
 		TreeSelectionModel m = _sideList.getSelectionModel();
-		m.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		m.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
 		_sideList.setSelectionModel(m);
-		m.addTreeSelectionListener(this);
 		_sideList.setShowsRootHandles(true);
 		_sideList.setDragEnabled(true);
 		_sideList.setRootVisible(false);
@@ -181,10 +166,10 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 				if (tp!=null)
 				{
 					DefaultMutableTreeNode node = (DefaultMutableTreeNode) tp.getLastPathComponent();
-					if (node.getUserObject() instanceof FragSeqRNASecStrModel) {
+					if (node.getUserObject() instanceof VARNAGUIModel) {
 						return new Transferable(){
 							public DataFlavor[] getTransferDataFlavors() {
-								DataFlavor[] dt = {FragSeqRNASecStrModel.Flavor};
+								DataFlavor[] dt = {VARNAGUIModel.Flavor};
 								return dt;
 							}
 							public Object getTransferData(DataFlavor df)
@@ -195,27 +180,10 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 								return node.getUserObject();
 							}
 							public boolean isDataFlavorSupported(DataFlavor df) {
-								return FragSeqRNASecStrModel.Flavor.equals(df);
+								return VARNAGUIModel.Flavor.equals(df);
 							}
 						};
-					} else	if (node.getUserObject() instanceof FragSeqAnnotationDataModel) {
-							return new Transferable(){
-								public DataFlavor[] getTransferDataFlavors() {
-									DataFlavor[] dt = { FragSeqAnnotationDataModel.Flavor};
-									return dt;
-								}
-								public Object getTransferData(DataFlavor df)
-								throws UnsupportedFlavorException, IOException {
-									if (!isDataFlavorSupported(df))
-										throw new UnsupportedFlavorException(df);
-									DefaultMutableTreeNode node = (DefaultMutableTreeNode) _sideList.getSelectionPath().getLastPathComponent();
-									return node.getUserObject();
-								}
-								public boolean isDataFlavorSupported(DataFlavor df) {
-									return FragSeqAnnotationDataModel.Flavor.equals(df);
-								}
-							};
-						} else {
+					} else {
 						return null;
 					}
 				}
@@ -227,34 +195,21 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 		JButton refreshAllFoldersButton = new JButton("Refresh All");
 		refreshAllFoldersButton.setActionCommand(""+Commands.REFRESH_ALL);
 		refreshAllFoldersButton.addActionListener(this);
-		
 		JButton watchFolderButton = new JButton("Add folder");
 		watchFolderButton.setActionCommand("" +Commands.NEW_FOLDER);
 		watchFolderButton.addActionListener(this);
-		
 		JButton addUpperButton = new JButton("+Up");
 		addUpperButton.setActionCommand(""+Commands.ADD_PANEL_UP);
 		addUpperButton.addActionListener(this);
-		
 		JButton removeUpperButton = new JButton("-Up");
 		removeUpperButton.setActionCommand(""+Commands.REMOVE_PANEL_UP);
 		removeUpperButton.addActionListener(this);
-		
 		JButton addLowerButton = new JButton("+Down");
 		addLowerButton.setActionCommand(""+Commands.ADD_PANEL_DOWN);
 		addLowerButton.addActionListener(this);
-		
 		JButton removeLowerButton = new JButton("-Down");
 		removeLowerButton.setActionCommand(""+Commands.REMOVE_PANEL_DOWN);
 		removeLowerButton.addActionListener(this);
-		
-		JButton changeLNFButton = new JButton("Change");
-		changeLNFButton.setActionCommand(""+Commands.CHANGE_LNF);
-		changeLNFButton.addActionListener(this);
-
-		JButton XMLButton = new JButton("Test XML");
-		XMLButton.setActionCommand(""+Commands.TEST_XML);
-		XMLButton.addActionListener(this);
 
 		_toolbar.setFloatable(false);
 		_toolbar.add(refreshAllFoldersButton);
@@ -263,11 +218,6 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 		_toolbar.add(removeUpperButton);
 		_toolbar.add(addLowerButton);
 		_toolbar.add(removeLowerButton);
-		_toolbar.addSeparator();
-		_toolbar.add(XMLButton);
-		_toolbar.addSeparator();
-		_toolbar.add(_lnf);
-		_toolbar.add(changeLNFButton);
 		
 		// Scroller for File tree
 	    _listScroller = new JScrollPane(_sideList,ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
@@ -288,7 +238,7 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 		_varnaLowerPanels.setLayout(new GridLayout());
 		_varnaLowerPanels.setPreferredSize(new Dimension(800, 000));
 		
-	    JRadioButton sortFileName = new JRadioButton("Directory");
+	    JRadioButton sortFileName = new JRadioButton("Filename");
 	    sortFileName.setActionCommand("sortfilename");
 	    sortFileName.setSelected(true);
 	    sortFileName.setOpaque(false);
@@ -333,15 +283,15 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 		_infoPanel.setLayout(new GridLayout(0,1));
 		
 		this.restoreConfig();		
+		this.setBackground(_backgroundColor);
 		this.getContentPane().setLayout(new BorderLayout());
 		this.getContentPane().add(_splitRight, BorderLayout.CENTER);
 		this.getContentPane().add(_toolbar, BorderLayout.NORTH);
 		addUpperPanel();
-		addUpperPanel();
 		this.setVisible(true);
 	}
 	
-	public FragSeqGUI getSelf()
+	public VARNAGUI getSelf()
 	{
 		return this;
 	}
@@ -402,6 +352,22 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 		_splitLeft.validate();
 	}
 
+	public static void main(String[] args) {
+		try {
+		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+		        if ("Nimbus".equals(info.getName())) {
+		            UIManager.setLookAndFeel(info.getClassName());
+		            break;
+		        }
+		    }
+		} catch (Exception e) {
+		    // If Nimbus is not available, you can set the GUI to another look and feel.
+		}
+		VARNAGUI d = new VARNAGUI();
+		d.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		d.pack();
+		d.setVisible(true);
+	}
 
 	public void treeNodesChanged(TreeModelEvent e) {
 	       DefaultMutableTreeNode node;
@@ -474,80 +440,16 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 		
 		if (e.getSource() == this._sideList)
 		{
-			if (e.getClickCount() == 1)
-			{
-				/*TreePath t = _sideList.getSelectionPath();
-				if (t!=null)
-				{
-				DefaultMutableTreeNode node = (DefaultMutableTreeNode) t.getLastPathComponent();
-				if (node.getUserObject() instanceof FragSeqFileModel)
-				{
-					int row = _sideList.getRowForPath(t);
-					System.out.println("[A]"+row);
-					if (!_sideList.isExpanded(row))
-					{
-						try {
-							_sideList.fireTreeWillExpand(t);
-							_sideList.expandPath(t);
-						} catch (ExpandVetoException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-					}
-					else 
-					{
-						try {
-							_sideList.fireTreeWillCollapse(t);
-							_sideList.collapsePath(t);
-						} catch (ExpandVetoException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-					}
-				}
-				}*/
-			}
-			else if (e.getClickCount() == 2)
+			if (e.getClickCount() == 2)
 			{
 				TreePath t = _sideList.getSelectionPath();
 				if (t!= null)
 				{
 					DefaultMutableTreeNode node = (DefaultMutableTreeNode) t.getLastPathComponent();
-					if (node.getUserObject() instanceof FragSeqFileModel)
+					if (node.getUserObject() instanceof VARNAGUIModel)
 					{
-						if (!_sideList.isExpanded(t))
-						{
-							try {
-								_sideList.fireTreeWillExpand(t);
-								_sideList.expandPath(t);
-							} catch (ExpandVetoException e1) {
-								e1.printStackTrace();
-							}
-						}
-						else 
-						{
-							try {
-								_sideList.fireTreeWillCollapse(t);
-								_sideList.collapsePath(t);
-							} catch (ExpandVetoException e1) {
-								e1.printStackTrace();
-							}
-						}
-					}
-					else if (node.getUserObject() instanceof FragSeqModel)
-					{
-						FragSeqModel model = (FragSeqModel) node.getUserObject();
-						
-						// Figuring out which panel to add object to...
-						int res;
-						if (model instanceof FragSeqRNASecStrModel)
-						{
-							res = index % (_varnaUpperPanels.getComponentCount()+_varnaLowerPanels.getComponentCount());
-						}
-						else 
-						{
-							res = (index+_varnaUpperPanels.getComponentCount()+_varnaLowerPanels.getComponentCount()-1) % (_varnaUpperPanels.getComponentCount()+_varnaLowerPanels.getComponentCount());
-						}
+						VARNAGUIModel model = (VARNAGUIModel) node.getUserObject();
+						int res = index % (_varnaUpperPanels.getComponentCount()+_varnaLowerPanels.getComponentCount());
 						Component c = null;
 						if (res<_varnaUpperPanels.getComponentCount())
 						{
@@ -558,20 +460,12 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 							res -= _varnaUpperPanels.getComponentCount();
 							c = (VARNAHolder)_varnaLowerPanels.getComponent(res);
 						}
-						
 						if (c instanceof VARNAHolder)
 						{
 							VARNAHolder h = (VARNAHolder) c;
-							if (model instanceof FragSeqRNASecStrModel)
-							{
-								h.setSecStrModel((FragSeqRNASecStrModel)model);
-								index ++;
-							}
-							else if (model instanceof FragSeqAnnotationDataModel)
-							{
-								h.setDataModel((FragSeqAnnotationDataModel)model);
-							}
+							h.setModel(model);
 						}
+						index ++;
 					}
 				}
 			}
@@ -584,12 +478,9 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 	class VARNAHolder extends JPanel
 	{
 		VARNAPanel vp;
-		FragSeqRNASecStrModel _m;
-		FragSeqAnnotationDataModel _data;
+		VARNAGUIModel _m;
 		JPanel _infoPanel;
 		JTextPane _infoTxt;
-		
-		
 		public VARNAHolder(DropTargetListener f)
 		{
 			super();
@@ -601,6 +492,7 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 				public void focusLost(FocusEvent e) {
 				}});
 			vp.setPreferredSize(new Dimension(800, 400));
+			vp.setBackground(_backgroundColor);
 
 			_infoTxt = new JTextPane(); 
 			_infoTxt.setPreferredSize(new Dimension(200,0));
@@ -627,7 +519,7 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 		{
 			return vp;
 		}
-		void setSecStrModel(FragSeqRNASecStrModel m)
+		void setModel(VARNAGUIModel m)
 		{
 			_m = m;
 			vp.showRNAInterpolated(m.getRNA());
@@ -636,14 +528,7 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 			_infoPanel.setBorder(BorderFactory.createTitledBorder("Info ("+_m+")"));
 			vp.requestFocus();
 		}
-		void setDataModel(FragSeqAnnotationDataModel data)
-		{
-			_data = data;
-			data.applyTo(vp.getRNA());
-			vp.repaint();
-			vp.requestFocus();
-		}
-		FragSeqModel getModel()
+		VARNAGUIModel getModel()
 		{
 			setBorder(BorderFactory.createTitledBorder(_m.toString()));
 			return _m;
@@ -719,26 +604,7 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 					VARNAHolder h = getHolder(o.getComponent());
 					if (h!=null)
 					{
-						System.out.println("[X]");
-						Transferable t = arg0.getTransferable();
-						if (t.isDataFlavorSupported(FragSeqRNASecStrModel.Flavor))
-						{
-							Object data = t.getTransferData(FragSeqRNASecStrModel.Flavor);
-							if (data instanceof FragSeqRNASecStrModel)
-							{
-								h.setSecStrModel((FragSeqRNASecStrModel) data);
-							}
-						}
-						else if (t.isDataFlavorSupported(FragSeqAnnotationDataModel.Flavor))
-						{							
-							System.out.println("[Y]");
-							Object data = t.getTransferData(FragSeqAnnotationDataModel.Flavor);
-							if (data instanceof FragSeqAnnotationDataModel)
-							{
-								FragSeqAnnotationDataModel d = (FragSeqAnnotationDataModel) data;
-								h.setDataModel(d);
-							}
-						}
+						h.setModel((VARNAGUIModel) arg0.getTransferable().getTransferData(VARNAGUIModel.Flavor));
 					}
 				}
 			} catch (UnsupportedFlavorException e) {
@@ -876,84 +742,10 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 		{
 			removeUpperPanel();
 		}
-		else if (cmd.equals(""+Commands.SORT_FILENAME))
-		{
-			_sideList.switchToPath();
-		}
-		else if (cmd.equals(""+Commands.SORT_ID))
-		{
-			_sideList.switchToID();
-		}
-		else if (cmd.equals(""+Commands.TEST_XML))
-		{
-			String path = "temp.xml";
-			VARNAHolder vh = (VARNAHolder) _varnaUpperPanels.getComponent(0);
-			vh.vp.toXML(path);
-			try {
-				FullBackup b = vh.vp.importSession(path);
-				VARNAHolder vh2 = (VARNAHolder) _varnaUpperPanels.getComponent(1);
-				vh2.vp.setConfig(b.config);
-				vh2.vp.showRNAInterpolated(b.rna);
-				vh2.vp.repaint();
-			} catch (ExceptionLoadingFailed e1) {
-				e1.printStackTrace();
-			}
-		}
-		else if (cmd.equals(""+Commands.CHANGE_LNF))
-		{
-			try {
-				
-				Object o  = _lnf.getModel().getSelectedItem();
-				System.out.println(o);
-				UIManager.setLookAndFeel(((LookAndFeelInfo)_lnf.getModel().getSelectedItem()).getClassName());
-				SwingUtilities.updateComponentTreeUI(this);
-				this.pack();
-			} catch (UnsupportedLookAndFeelException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (ClassNotFoundException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			} catch (InstantiationException e3) {
-				// TODO Auto-generated catch block
-				e3.printStackTrace();
-			} catch (IllegalAccessException e4) {
-				// TODO Auto-generated catch block
-				e4.printStackTrace();
-			}
-		}
 		else
 		{
 			JOptionPane.showMessageDialog(this, "Command '"+cmd+"' not implemented yet.");
 		}
 	}
-
-
-	public void valueChanged(TreeSelectionEvent e) {
-		int[] t = _sideList.getSelectionRows();
-		if (t==null)
-		{
-			System.out.print("null");
-		}
-		else
-		{
-			System.out.print("[");
-			for(int i=0;i<t.length;i++)
-			{
-				System.out.print(t[i]+",");
-			}
-			System.out.println("]");
-		}
-	}
-
-	
-	public static void main(String[] args) {
-		FragSeqGUI d = new FragSeqGUI();
-		d.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		d.pack();
-		d.setVisible(true);
-	}
-
-
 }
 

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package fr.orsay.lri.varna.applications.templateeditor;
+package fr.orsay.lri.varna.apps2.templateeditor;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -27,7 +27,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.undo.UndoManager;
 
-import fr.orsay.lri.varna.applications.templateeditor.GraphicalTemplateElement.RelativePosition;
+import fr.orsay.lri.varna.apps2.templateeditor.GraphicalTemplateElement.RelativePosition;
 import fr.orsay.lri.varna.controlers.ControleurMolette;
 import fr.orsay.lri.varna.exceptions.ExceptionInvalidRNATemplate;
 import fr.orsay.lri.varna.exceptions.ExceptionXmlLoading;

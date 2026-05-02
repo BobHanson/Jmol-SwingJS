@@ -1,11 +1,11 @@
-package fr.orsay.lri.varna.applications.templateeditor;
+package fr.orsay.lri.varna.apps2.templateeditor;
 
 import java.awt.geom.Point2D;
 
 import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEditSupport;
 
-import fr.orsay.lri.varna.applications.templateeditor.GraphicalTemplateElement.RelativePosition;
+import fr.orsay.lri.varna.apps2.templateeditor.GraphicalTemplateElement.RelativePosition;
 import fr.orsay.lri.varna.models.templates.RNATemplate;
 
 public class TemplateEditorPanelUI {

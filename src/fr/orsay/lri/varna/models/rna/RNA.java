@@ -165,6 +165,12 @@ public class RNA implements InterfaceVARNAObservable {
   private int _drawMode = DRAW_MODE_RADIATE;
   private boolean _drawn = false;
   private String _name = "";
+  /**
+   * from Jmol, this is modelFileNumber, an integer encoding of "2.1" as 2000001
+   * using
+   * 
+   * file * 1000000 + modelInFile (1-based)
+   */
   public Integer modelID = Integer.valueOf(0);
   private String _id = "";
   private String sequence;
@@ -3058,7 +3064,7 @@ public class RNA implements InterfaceVARNAObservable {
    *         <code>num</code>, <code>-1</code> of no such base model exists.
    */
 
-  public int getIndexFromBaseNumber(int num) {
+  public int getIndexFromResidueNumber(int num) {
     for (int i = 0; i < this._listeBases.size(); i++) {
       if (_listeBases.get(i).getResidueNumber() == num) {
         return i;
@@ -3079,8 +3085,8 @@ public class RNA implements InterfaceVARNAObservable {
    */
 
   public void addBPToStructureUsingNumbers(int baseNumber5, int baseNumber3) {
-    int i = getIndexFromBaseNumber(baseNumber5);
-    int j = getIndexFromBaseNumber(baseNumber3);
+    int i = getIndexFromResidueNumber(baseNumber5);
+    int j = getIndexFromResidueNumber(baseNumber3);
     addBP(i, j);
   }
 
@@ -3098,7 +3104,7 @@ public class RNA implements InterfaceVARNAObservable {
 
   public void addBPToStructureUsingNumbers(int number5, int number3,
                                            ModeleBP msbp) {
-    addBP(getIndexFromBaseNumber(number5), getIndexFromBaseNumber(number3),
+    addBP(getIndexFromResidueNumber(number5), getIndexFromResidueNumber(number3),
         msbp);
   }
 

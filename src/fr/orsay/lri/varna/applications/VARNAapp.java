@@ -30,7 +30,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
@@ -97,8 +96,10 @@ import javajs.api.Interface;
 
 /**
  * A generalized VARNA application interface that includes one or more
- * VARNAPanel instances (as for VARNAEditor and VARNAGUI) as well as maintaining
- * options for a command-line or library-based interface
+ * VARNAPanel instances (as for VARNAEditor and VARNAGUI and VARNAApplet) as
+ * well as maintaining options for a command-line or "headless" library-based interface
+ * 
+ * There are many changes here to the original VARNA 3.9 code. 
  * 
  * @author Bob Hanson 2026.04.20
  */
@@ -109,6 +110,7 @@ public class VARNAapp implements InterfaceParameterLoader {
   private static final String DEFAULT_STRUCTURE1 = "..(((((...(((((...(((((...(((((.....)))))...))))).....(((((...(((((.....)))))...))))).....)))))...)))))..";
   private static final String DEFAULT_STRUCTURE2 = "..(((((...(((((...(((((........(((((...(((((.....)))))...)))))..................))))).....)))))...)))))..";
 
+  // BH: These are not necessary. It is enough to just have a lighlighter for individual residues
   //  private class HoverTextHighlight extends DefaultHighlightPainter {
   //
   //    public HoverTextHighlight(Color c) {
@@ -123,17 +125,17 @@ public class VARNAapp implements InterfaceParameterLoader {
   //
   //  }
   //
-  private class SelectionTextHighlight extends DefaultHighlightPainter {
-
-    public SelectionTextHighlight() {
-      super(null);
-    }
-
-    @Override
-    public Color getColor() {
-      return _vp.getSelectColor(Color.ORANGE);
-    }
-  }
+//  private class SelectionTextHighlight extends DefaultHighlightPainter {
+//
+//    public SelectionTextHighlight() {
+//      super(null);
+//    }
+//
+//    @Override
+//    public Color getColor() {
+//      return _vp.getSelectColor(Color.ORANGE);
+//    }
+//  }
 
   private class RNATextHighlight extends DefaultHighlightPainter {
 
@@ -315,6 +317,16 @@ public class VARNAapp implements InterfaceParameterLoader {
       }
 
     }
+
+    public RNA getRNAForModelID(int modelID) {
+      if (modelID > 0) {
+        for (RNA rna : _rnas) {
+          if (rna.modelID.intValue() == modelID)
+            return rna;
+        }
+      }
+      return null;
+    }
   }
 
   private ActionListener actionListener;
@@ -348,14 +360,15 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   private JLabel _info = new JLabel();
 
-  //  private HoverTextHighlight hoverHighlight;
-  private SelectionTextHighlight selectionHighlight;
   private RNATextHighlight rnaHighlight;
 
+  // BH removing old system of highlighting; unnecessarily complex
+  //  private HoverTextHighlight hoverHighlight;
+  //  private SelectionTextHighlight selectionHighlight;
   //  private Object _hoverHighlightStr;
   //  private Object _hoverHighlightSeq;
-  private ArrayList<Object> _selectionHighlightStr;
-  private ArrayList<Object> _selectionHighlightSeq;
+  //  private ArrayList<Object> _selectionHighlightStr;
+  //  private ArrayList<Object> _selectionHighlightSeq;
 
   /**
    * turns off rna highlighting
@@ -417,7 +430,7 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   };
 
-  protected static Color hoverColor = XMLUtils.colorFromHTML("#FFFFC3");
+  public final static Color hoverColor = XMLUtils.colorFromHTML("#A3FFA3");//("#FFFFC3");
 
   protected int hoverBaseIndex;
 
@@ -701,7 +714,7 @@ public class VARNAapp implements InterfaceParameterLoader {
    * @param structure
    * @param name
    *        " MODEL 1.1" for example
-   * @param modelID
+   * @param modelID   Jmol modelFileNumber
    * @return RNA that is created, or null if it is already present in the given
    *         model
    */
@@ -778,12 +791,13 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   private void installModelRNA(RNA rna) {
     showRNA(rna);
-    if (rna != _vp.getRNA())
-      System.out.println("????");
+    if (rna != _vp.getRNA()) {
+      // just checking -- interpolation does not immediately set _RNA to rna
+    }
     _seq.setText(rna.getSeq());
     _str.setText(rna.getStructDBN(true));
     _seq.setScrollOffset(rna.getTextOffset());
-    setHighlighters(_vp.getRNA());
+    setHighlighters(rna);
   }
 
   private void doTextSelection(int i0, int i1) {
@@ -846,8 +860,8 @@ public class VARNAapp implements InterfaceParameterLoader {
     _vp.addSelectionListener(new InterfaceVARNASelectionListener() {
 
       @Override
-      public void onHoverChanged(ModeleBase oldBase, ModeleBase newBase) {
-        doHoverChange(oldBase, newBase);
+      public void onHoverChanged(ModeleBase oldBase, ModeleBase newBase, boolean doNotify) {
+        doHoverChange(oldBase, newBase, doNotify);
       }
 
       @Override
@@ -864,36 +878,20 @@ public class VARNAapp implements InterfaceParameterLoader {
   /**
    * @param oldBase
    * @param newBase
+   * @param doNotify 
    */
-  protected void doHoverChange(ModeleBase oldBase, ModeleBase newBase) {
-    if (actionListener != null) {
+  protected void doHoverChange(ModeleBase oldBase, ModeleBase newBase, boolean doNotify) {
+    if (doNotify && actionListener != null) {
       actionListener.actionPerformed(new ActionEvent(
           new ModeleBase[] { newBase }, 1, VARNAViewerI.ACTION_HOVER));
     }
-    //    if (_hoverHighlightSeq != null) {
-    //      _seq.getHighlighter().removeHighlight(_hoverHighlightSeq);
-    //      _hoverHighlightSeq = null;
-    //    }
-    //    if (_hoverHighlightStr != null) {
-    //      _str.getHighlighter().removeHighlight(_hoverHighlightStr);
-    //      _hoverHighlightStr = null;
-    //    }
     setHovering(newBase != null);
-    hoverBaseIndex = (newBase == null ? -1 : newBase.getIndex());
+    setHoverBaseIndex(newBase == null ? -1 : newBase.getIndex());
     repaintText();
-    //    if (hovering) {
-    //      try {
-    //        if (hoverHighlight == null)
-    //          hoverHighlight = new HoverTextHighlight(hoverColor );
-    //        int i = newBase.getTextIndex();
-    //        _hoverHighlightSeq = _seq.getHighlighter().addHighlight(i, i + 1,
-    //            hoverHighlight);
-    //        _hoverHighlightStr = _str.getHighlighter().addHighlight(i, i + 1,
-    //            hoverHighlight);
-    //      } catch (BadLocationException e) {
-    //        e.printStackTrace();
-    //      }
-    //    }
+  }
+
+  private void setHoverBaseIndex(int i) {
+    hoverBaseIndex = i;
   }
 
   RNA getRNA() {
@@ -1317,35 +1315,35 @@ public class VARNAapp implements InterfaceParameterLoader {
   }
 
   protected void doSelectionChanged(int selMode, BaseSet selection) {
-    clearSelectionHighlights();
+    //clearSelectionHighlights();
     selectionColor = _vp.getSelectColor(Color.ORANGE);
-    if (getRNAHighlight() != null) {
+//    if (getRNAHighlight() != null) {
       _vp.getRNA().setSelections(selection.getBaseList());
-    } else {
-      if (selectionHighlight == null) {
-        selectionHighlight = new SelectionTextHighlight();
-        _selectionHighlightStr = new ArrayList<Object>();
-        _selectionHighlightSeq = new ArrayList<Object>();
-      }
-
-      BitSet bsSelect = new BitSet();
-      for (ModeleBase m : selection.getBaseList()) {
-        _vp.getRNA().setSelected(m);
-        bsSelect.set(m.getTextIndex());
-      }
-      for (int i = bsSelect.nextSetBit(0); i >= 0; i = bsSelect
-          .nextSetBit(i + 1)) {
-        int j = bsSelect.nextClearBit(i + 1);
-        try {
-          _selectionHighlightSeq.add(
-              _seq.getHighlighter().addHighlight(i, j, selectionHighlight));
-          _selectionHighlightStr.add(
-              _str.getHighlighter().addHighlight(i, j, selectionHighlight));
-        } catch (BadLocationException e) {
-          e.printStackTrace();
-        }
-      }
-    }
+//    } else {
+//      if (selectionHighlight == null) {
+//        selectionHighlight = new SelectionTextHighlight();
+//        _selectionHighlightStr = new ArrayList<Object>();
+//        _selectionHighlightSeq = new ArrayList<Object>();
+//      }
+//
+//      BitSet bsSelect = new BitSet();
+//      for (ModeleBase m : selection.getBaseList()) {
+//        _vp.getRNA().setSelected(m);
+//        bsSelect.set(m.getTextIndex());
+//      }
+//      for (int i = bsSelect.nextSetBit(0); i >= 0; i = bsSelect
+//          .nextSetBit(i + 1)) {
+//        int j = bsSelect.nextClearBit(i + 1);
+//        try {
+//          _selectionHighlightSeq.add(
+//              _seq.getHighlighter().addHighlight(i, j, selectionHighlight));
+//          _selectionHighlightStr.add(
+//              _str.getHighlighter().addHighlight(i, j, selectionHighlight));
+//        } catch (BadLocationException e) {
+//          e.printStackTrace();
+//        }
+//      }
+//    }
     if (actionListener != null) {
       actionListener.actionPerformed(new ActionEvent(selection, selMode,
           VARNAViewerI.ACTION_SELECT_BASES));
@@ -1353,25 +1351,26 @@ public class VARNAapp implements InterfaceParameterLoader {
     repaintText();
   }
 
-  /**
-   * selectionHighlight has been abandonded as unnecessary, since now we have
-   * rnaHighlight working, but leaving it here just in case.
-   */
-  private void clearSelectionHighlights() {
-    if (rnaHighlight != null || _selectionHighlightSeq == null) {
-      //_vp.getRNA().clearSelections();
-      // this will take care of itself
-      return;
-    }
-    for (Object tag : _selectionHighlightSeq) {
-      _seq.getHighlighter().removeHighlight(tag);
-    }
-    _selectionHighlightSeq.clear();
-    for (Object tag : _selectionHighlightStr) {
-      _str.getHighlighter().removeHighlight(tag);
-    }
-    _selectionHighlightStr.clear();
-  }
+// no longer necessary  
+//  /**
+//   * selectionHighlight has been abandonded as unnecessary, since now we have
+//   * rnaHighlight working, but leaving it here just in case.
+//   */
+//  private void clearSelectionHighlights() {
+////    if (rnaHighlight != null || _selectionHighlightSeq == null) {
+////      //_vp.getRNA().clearSelections();
+////      // this will take care of itself
+////      return;
+////    }
+////    for (Object tag : _selectionHighlightSeq) {
+////      _seq.getHighlighter().removeHighlight(tag);
+////    }
+////    _selectionHighlightSeq.clear();
+////    for (Object tag : _selectionHighlightStr) {
+////      _str.getHighlighter().removeHighlight(tag);
+////    }
+////    _selectionHighlightStr.clear();
+//  }
 
   public void setHighlighters(RNA rna) {
     if (rnaHighlight != null)
@@ -1602,7 +1601,20 @@ public class VARNAapp implements InterfaceParameterLoader {
       t2.setScrollOffset(left);
       setAdjusting(false);
     }
+  }
 
+  public void setHoverFor(int modelID, int regno) {
+    RNA rna = _vp.getRNA();
+    int index = (modelID < 0 || rna.modelID.intValue() != modelID ? -1
+        : rna.getIndexFromResidueNumber(regno));
+    if (index == hoverBaseIndex)
+      return;
+    setHoverBaseIndex(index);
+    _vp.setHoverBase(index < 0 ? null : rna.getBaseAt(index), false);
+  }
+
+  public RNA getRNAForModelID(int modelID) {
+    return _rnaList.getRNAForModelID(modelID);
   }
 
 }

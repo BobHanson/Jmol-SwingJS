@@ -127,6 +127,11 @@ public class NmrPlugin implements JmolPlugin {
   }
 
   @Override
+  public String getLicense() {
+    return Nmr.LICENSE;
+  }
+
+  @Override
   public String getName() {
     return "Janocchio";
   }

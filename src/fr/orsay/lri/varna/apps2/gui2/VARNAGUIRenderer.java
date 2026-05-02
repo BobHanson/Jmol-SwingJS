@@ -1,4 +1,4 @@
-package fr.orsay.lri.varna.applications.gui2;
+package fr.orsay.lri.varna.apps2.gui2;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

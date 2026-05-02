@@ -1,4 +1,4 @@
-package fr.orsay.lri.varna.applications.templateeditor;
+package fr.orsay.lri.varna.apps2.templateeditor;
 
 import java.awt.geom.Point2D;
 

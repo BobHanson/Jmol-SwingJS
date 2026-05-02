@@ -1,4 +1,4 @@
-package fr.orsay.lri.varna.applications.gui2;
+package fr.orsay.lri.varna.apps2.fragseq;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -10,10 +10,10 @@ import fr.orsay.lri.varna.models.rna.RNA;
 
 public class Watcher  extends Thread {
 	
-	private VARNAGUITreeModel _model;
+	private FragSeqTreeModel _model;
 	private boolean _terminated = false; 
 	
-	public Watcher(VARNAGUITreeModel model)
+	public Watcher(FragSeqTreeModel model)
 	{
 		_model = model;
 	}

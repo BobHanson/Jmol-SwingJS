@@ -491,7 +491,7 @@ public class TextAnnotation implements Serializable {
 					break;
 				case BASE:
 					if (anchor != -1) {
-						int index = vp.getRNA().getIndexFromBaseNumber(
+						int index = vp.getRNA().getIndexFromResidueNumber(
 								anchor);
 						ModeleBase mb = vp.getRNA().get_listeBases()
 								.get(index);
@@ -501,7 +501,7 @@ public class TextAnnotation implements Serializable {
 				case HELIX:
 					if (anchor != -1) {
 						ArrayList<ModeleBase> mbl = new ArrayList<ModeleBase>();
-						int index = vp.getRNA().getIndexFromBaseNumber(
+						int index = vp.getRNA().getIndexFromResidueNumber(
 								anchor);
 						ArrayList<Integer> il = vp.getRNA()
 								.findHelix(index);
@@ -514,7 +514,7 @@ public class TextAnnotation implements Serializable {
 				case LOOP:
 					if (anchor != -1) {
 						ArrayList<ModeleBase> mbl = new ArrayList<ModeleBase>();
-						int index = vp.getRNA().getIndexFromBaseNumber(
+						int index = vp.getRNA().getIndexFromResidueNumber(
 								anchor);
 						ArrayList<Integer> il = vp.getRNA().findLoop(index);
 						for (int k : il) {

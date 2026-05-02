@@ -1,4 +1,4 @@
-package fr.orsay.lri.varna.applications.templateeditor;
+package fr.orsay.lri.varna.apps2.templateeditor;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Shape;
@@ -8,7 +8,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Point2D.Double;
 import java.util.ArrayList;
 
-import fr.orsay.lri.varna.applications.templateeditor.GraphicalTemplateElement.RelativePosition;
+import fr.orsay.lri.varna.apps2.templateeditor.GraphicalTemplateElement.RelativePosition;
 import fr.orsay.lri.varna.exceptions.ExceptionEdgeEndpointAlreadyConnected;
 import fr.orsay.lri.varna.exceptions.ExceptionInvalidRNATemplate;
 import fr.orsay.lri.varna.models.geom.CubicBezierCurve;

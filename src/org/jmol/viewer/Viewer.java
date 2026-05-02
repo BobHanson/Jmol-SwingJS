@@ -5598,6 +5598,8 @@ public class Viewer extends JmolViewer
       if (hoverAtomIndex >= 0) {
         setShapeProperty(JC.SHAPE_HOVER, "target", null);
         hoverAtomIndex = -1;
+        if (sm.haveHoverCallback())
+          sm.setStatusAtomHovered(-1, null);
       }
       if (hoverText != null) {
         setShapeProperty(JC.SHAPE_HOVER, "text", null);
