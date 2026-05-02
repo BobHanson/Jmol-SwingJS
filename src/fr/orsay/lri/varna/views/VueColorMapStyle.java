@@ -1,23 +1,14 @@
 package fr.orsay.lri.varna.views;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -31,9 +22,7 @@ import java.util.Comparator;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -43,19 +32,19 @@ import javax.swing.filechooser.FileFilter;
 
 import fr.orsay.lri.varna.components.GradientEditorPanel;
 import fr.orsay.lri.varna.components.VARNAPanel;
-import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.rna.ModeleColorMap;
 import fr.orsay.lri.varna.models.rna.ModeleColorMap.NamedColorMapTypes;
 
 public class VueColorMapStyle extends JPanel implements ActionListener, ItemListener, PropertyChangeListener {
 	protected VARNAPanel _vp;
 	protected GradientEditorPanel _gp;
-	protected JComboBox _cb; 
+	protected JComboBox<String> _cb; 
 	protected JTextField _code; 
 	protected ModeleColorMap _backup;
 	// TODO BH SwingJS note that the save dialog is never used in JavaScript 
 	protected static JFileChooser fc = new JFileChooser(){
-	    public void approveSelection(){
+	    @Override
+      public void approveSelection(){
 	        File f = getSelectedFile();
 	        if(f.exists() && getDialogType() == SAVE_DIALOG){
 	            int result = JOptionPane.showConfirmDialog(this,"The file exists, overwrite?","Existing file",JOptionPane.YES_NO_OPTION);
@@ -99,23 +88,26 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 		_code.setEditable(true);
 		_code.addFocusListener(new FocusListener(){
 
-			public void focusGained(FocusEvent arg0) {
+			@Override
+      public void focusGained(FocusEvent arg0) {
 						_code.setSelectionStart(0);
 						_code.setSelectionEnd(_code.getText().length());
 			}
 
-			public void focusLost(FocusEvent arg0) {
+			@Override
+      public void focusLost(FocusEvent arg0) {
 			}			
 		});		
 		_code.setVisible(false);
 		
 		NamedColorMapTypes[] palettes =  ModeleColorMap.NamedColorMapTypes.values();
 		Arrays.sort(palettes,new Comparator<ModeleColorMap.NamedColorMapTypes>(){
-			public int compare(ModeleColorMap.NamedColorMapTypes arg0, ModeleColorMap.NamedColorMapTypes arg1) {
+			@Override
+      public int compare(ModeleColorMap.NamedColorMapTypes arg0, ModeleColorMap.NamedColorMapTypes arg1) {
 				return arg0.getId().compareTo(arg1.getId());
 			}			
 		});
-		Object[] finalArray = new Object[palettes.length+1];
+		String[] finalArray = new String[palettes.length+1];
 		int selected = -1;
 		for (int i=0;i<palettes.length;i++)
 		{ 
@@ -124,18 +116,18 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 				selected = i; 
 				//System.out.println(selected);
 			}
-			finalArray[i] = palettes[i]; 
+			finalArray[i] = palettes[i].toString(); 
 		}
 		String custom = new String("Custom...");
 		finalArray[palettes.length] = custom;
-		_cb = new JComboBox(finalArray);
+		_cb = new JComboBox<String>(finalArray);
 		if (selected!=-1)
 		{
 			_cb.setSelectedIndex(selected);
 		}
 		else
 		{
-			_cb.setSelectedItem(finalArray.length-1);
+			_cb.setSelectedItem(Integer.valueOf(finalArray.length-1));
 		}
 		_cb.addItemListener(this);
 		
@@ -144,11 +136,13 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 		
 		
 		FileFilter CMSFiles = new FileFilter(){
-			public boolean accept(File f) {
+			@Override
+      public boolean accept(File f) {
 				return f.getName().toLowerCase().endsWith(".cms") || f.isDirectory();
 			}
 
-			public String getDescription() {
+			@Override
+      public String getDescription() {
 				return "Color Map (*.cms) Files";
 			}
 			
@@ -161,7 +155,8 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 		codePanel.add(_code);
 		JButton loadStyleButton = new JButton("Load");
 		loadStyleButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e) {
+			@Override
+      public void actionPerformed(ActionEvent e) {
 				if (fc.showOpenDialog(VueColorMapStyle.this)==JFileChooser.APPROVE_OPTION)
 				{
 					File file = fc.getSelectedFile();
@@ -185,7 +180,8 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 		});
 		JButton saveStyleButton = new JButton("Save");
 		saveStyleButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e) {
+			@Override
+      public void actionPerformed(ActionEvent e) {
 				if (fc.showSaveDialog(VueColorMapStyle.this)==JFileChooser.APPROVE_OPTION)
 				{
 					try {
@@ -193,8 +189,6 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 						out.println(_gp.getColorMap().getParamEncoding());
 						out.close();
 					} catch (FileNotFoundException e1) {
-						e1.printStackTrace();
-					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
 				}
@@ -230,10 +224,7 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 		{
 			return ((NamedColorMapTypes) _cb.getSelectedItem()).getId(); 
 		}
-		else
-		{
 			return _gp.getColorMap().getParamEncoding();
-		}
 	}
 	
 	public void cancelChanges()
@@ -246,7 +237,8 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 		return _gp.getColorMap();
 	}
 	
-	public void actionPerformed(ActionEvent e) {
+	@Override
+  public void actionPerformed(ActionEvent e) {
 		
 		
 	}
@@ -277,7 +269,8 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 		_gp.repaint();
 	}
 
-	public void itemStateChanged(ItemEvent arg0) {
+	@Override
+  public void itemStateChanged(ItemEvent arg0) {
 		if (arg0.getStateChange()==ItemEvent.SELECTED)
 		{
 		Object o = arg0.getItem();
@@ -293,12 +286,13 @@ public class VueColorMapStyle extends JPanel implements ActionListener, ItemList
 		}
 	}
 
-	public void propertyChange(PropertyChangeEvent arg0) {
+	@Override
+  public void propertyChange(PropertyChangeEvent arg0) {
 		if (arg0.getPropertyName().equals("PaletteChanged"))
 		{
 			_cb.setSelectedIndex(_cb.getItemCount()-1);
 			refreshCode();
-		};
+		}
 	}
 
 

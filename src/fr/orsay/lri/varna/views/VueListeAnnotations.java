@@ -22,13 +22,10 @@ package fr.orsay.lri.varna.views;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -50,7 +47,6 @@ import fr.orsay.lri.varna.components.AnnotationTableModel;
 import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.controlers.ControleurTableAnnotations;
 import fr.orsay.lri.varna.models.annotations.TextAnnotation;
-import fr.orsay.lri.varna.models.rna.ModeleColorMap;
 
 /**
  * a view for all annoted texts on the VARNAPanel
@@ -80,7 +76,8 @@ public class VueListeAnnotations extends JPanel {
 	protected AnnotationTableModel specialTableModel;
 	// BH SwingJS - this is never used in JavaScript
 	protected static JFileChooser fc = new JFileChooser(){
-	    public void approveSelection(){
+	    @Override
+      public void approveSelection(){
 	        File f = getSelectedFile();
 	        if(f.exists() && getDialogType() == SAVE_DIALOG){
 	            int result = JOptionPane.showConfirmDialog(this,"The file exists, overwrite?","Existing file",JOptionPane.YES_NO_OPTION);
@@ -136,11 +133,13 @@ public class VueListeAnnotations extends JPanel {
 		add(scrollPane, BorderLayout.CENTER);
 		
 		FileFilter CPAFiles = new FileFilter(){
-			public boolean accept(File f) {
+			@Override
+      public boolean accept(File f) {
 				return f.getName().toLowerCase().endsWith(".cpa") || f.isDirectory();
 			}
 
-			public String getDescription() {
+			@Override
+      public String getDescription() {
 				return "Chemical Probing Annotations (*.cpa) Files";
 			}
 			
@@ -151,12 +150,12 @@ public class VueListeAnnotations extends JPanel {
 		
 		JButton loadStyleButton = new JButton("Load");
 		loadStyleButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e) {
+			@Override
+      public void actionPerformed(ActionEvent e) {
 				if (fc.showOpenDialog(VueListeAnnotations.this)==JFileChooser.APPROVE_OPTION)
 				{
 					File file = fc.getSelectedFile();
-					try {
-						BufferedReader br = new BufferedReader(new FileReader(file));
+					try(BufferedReader br = new BufferedReader(new FileReader(file))) {
 						String s = br.readLine();
 						while(s != null)
 						{
@@ -175,7 +174,8 @@ public class VueListeAnnotations extends JPanel {
 		});
 		JButton saveStyleButton = new JButton("Save");
 		saveStyleButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e) {
+			@Override
+      public void actionPerformed(ActionEvent e) {
 				if (fc.showSaveDialog(VueListeAnnotations.this)==JFileChooser.APPROVE_OPTION)
 				{
 					try {
@@ -183,8 +183,6 @@ public class VueListeAnnotations extends JPanel {
 						// TODO out.println(_gp.getColorMap().getParamEncoding());
 						out.close();
 					} catch (FileNotFoundException e1) {
-						e1.printStackTrace();
-					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
 				}
