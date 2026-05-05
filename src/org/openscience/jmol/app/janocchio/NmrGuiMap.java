@@ -42,16 +42,16 @@ public class NmrGuiMap extends GuiMap {
     labels.put("NMR.saveNmr", GT.$("Save NMR Data"));
     labels.put("NMR.readNmr", GT.$("Read NMR Data"));
     labels.put("NMR.labelNmr", GT.$("NMR"));
-    labels.put("NMR.detach", GT.$("Detach"));
-    labels.put("NMR.detachApplet", GT.$("Detach Applet from Page"));
-    labels.put("NMR.reattachApplet", GT.$("Put Applet back in Page"));
-    labels.put("NMR.namfis", GT.$("Analysis"));
-    labels.put("NMR.chemicalShifts", GT.$("Calculate chemical &shifts..."));
-    labels.put("NMRjumpBestFrame", GT.$("Jump to Frame with Lowest Error"));
-    labels.put("NMR.writeNamfis", GT.$("Write NAMFIS input files"));
-    labels.put("NMR.readNamfis", GT.$("Read NAMFIS output file"));
-    labels.put("NMR.populationDisplayCheck", GT.$("Show NAMFIS populations"));
-    labels.put("NMR.frameDeltaDisplayCheck", GT.$("Show Frame Errors"));
+//    labels.put("NMR.detach", GT.$("Detach"));
+//    labels.put("NMR.detachApplet", GT.$("Detach Applet from Page"));
+//    labels.put("NMR.reattachApplet", GT.$("Put Applet back in Page"));
+//    labels.put("NMR.namfis", GT.$("Analysis"));
+//    labels.put("NMR.chemicalShifts", GT.$("Calculate chemical &shifts..."));
+//    labels.put("NMRjumpBestFrame", GT.$("Jump to Frame with Lowest Error"));
+//    labels.put("NMR.writeNamfis", GT.$("Write NAMFIS input files"));
+//    labels.put("NMR.readNamfis", GT.$("Read NAMFIS output file"));
+//    labels.put("NMR.populationDisplayCheck", GT.$("Show NAMFIS populations"));
+//    labels.put("NMR.frameDeltaDisplayCheck", GT.$("Show Frame Errors"));
   }
 
 }

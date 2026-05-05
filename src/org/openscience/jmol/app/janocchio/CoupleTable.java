@@ -348,7 +348,8 @@ public class CoupleTable extends JTabbedPane {
 
     @Override
     public Object getValueAt(int row, int col) {
-
+      if (expCouples == null)
+        allocateExpCouples(nmrPanel.getFrameAtomCount());
       // Always check that the CDK conversion is current  
       if (!molCDKuptodate) {
         addMol();

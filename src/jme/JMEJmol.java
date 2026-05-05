@@ -67,6 +67,9 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.P3d;
 import javajs.util.PT;
+import jme.JME;
+import jme.JMEmol;
+import jme.JMEmolList;
 import jme.core.Atom;
 import jme.core.Bond;
 import jme.core.JMECore;
@@ -122,7 +125,7 @@ public class JMEJmol extends JME implements WindowListener {
       if (frame == null) {
         frame = getJmolFrame(frameType, (parent == null));
       }
-      setFrame(frame);
+      setFrame(frame); // will be super.myFrame
     }
     initialize(args);
     if (parent != null) {
@@ -135,6 +138,14 @@ public class JMEJmol extends JME implements WindowListener {
     }
   }
 
+  public boolean isFrameVisible() {
+    return myFrame != null && myFrame.isVisible();
+  }
+
+  public void setFrameVisible(boolean b) {
+    if (myFrame != null && !headless)
+      myFrame.setVisible(b);
+  }
   private JFrame getJmolFrame(String type, boolean exit0) {
 
     JFrame frame = new JFrame(
@@ -477,11 +488,6 @@ public class JMEJmol extends JME implements WindowListener {
       vwr.refresh(Viewer.REFRESH_REPAINT, "JmolJME");
     }
 
-  }
-
-  public void setFrameVisible(boolean b) {
-    if (myFrame != null)
-      myFrame.setVisible(b);
   }
 
   protected String toMOL(String filename) {

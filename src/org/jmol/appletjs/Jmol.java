@@ -55,5 +55,5 @@ public class Jmol extends GenericApplet  {
     isJS = true;
     init(this);
   }
-  
+
 }

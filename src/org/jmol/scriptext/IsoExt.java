@@ -1291,7 +1291,7 @@ public class IsoExt extends ScriptExt {
           || e.optParameterAsString(1).equals("options")) {
         if (!chk) {
           String options = (isViewOnly ? "VIEW" : e.optParameterAsString(2));
-          vwr.startNBO(options);
+          vwr.plugin("NBO", JC.PLUGIN_START, options);
         }
         return;
       }

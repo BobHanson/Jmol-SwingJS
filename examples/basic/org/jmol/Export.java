@@ -247,7 +247,7 @@ class MyStatusListener implements JmolStatusListener {
   }
 
   @Override
-  public Map<String, Object> getJSpecViewProperty(String type) {
+  public Object processPluginRequest(String name, String action, Object value) {
     // TODO
     return null;
   }

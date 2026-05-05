@@ -55,22 +55,23 @@ import javax.swing.event.ChangeListener;
 import org.jmol.i18n.GT;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.GuiMap;
+import org.openscience.jmol.app.plugins.NBOPlugin;
 
-class NBOConfig  {
+public class NBOConfig  {
 
-  protected static final String NBO_WEB_SITE = "http://nbo7.chem.wisc.edu";
-  protected static final String ARCHIVE_DIR = NBO_WEB_SITE + "/jmol_nborxiv/";
+  public static final String NBO_WEB_SITE = "http://nbo7.chem.wisc.edu";
+  public static final String ARCHIVE_DIR = NBO_WEB_SITE + "/jmol_nborxiv/";
 
-  protected static final String DEFAULT_SCRIPT = "zap;set nbocharges false;set antialiasdisplay;set fontscaling;" +
+  public static final String DEFAULT_SCRIPT = "zap;set nbocharges false;set antialiasdisplay;set fontscaling;" +
   		"set bondpicking true;set multipleBondSpacing -0.2; set multipleBondRadiusFactor 0.6;" +
   		"set zoomlarge false;select none;";
 
-  protected static final String INPUT_FILE_EXTENSIONS = "adf;cfi;com;g09;gau;gms;jag;log;mm2;mnd;mol;mp;nw;orc;pqs;qc;vfi;xyz;47";
-  protected static final String OUTPUT_FILE_EXTENSIONS = "adf;cfi;gau;gms;jag;mm2;mnd;mp;nw;orc;pqs;qc;mol;xyz;vfi;g09;com";
-  protected static final String JMOL_EXTENSIONS = "xyz;mol";
-  protected static final String SCRIPT_VIDEO_EXTENSIONS="script";
-  protected static final String GIF_VIDEO_EXTENSIONS="gif";
-  //  protected static final String RUN_EXTENSIONS = "47;gau;gms";
+  public static final String INPUT_FILE_EXTENSIONS = "adf;cfi;com;g09;gau;gms;jag;log;mm2;mnd;mol;mp;nw;orc;pqs;qc;vfi;xyz;47";
+  public static final String OUTPUT_FILE_EXTENSIONS = "adf;cfi;gau;gms;jag;mm2;mnd;mp;nw;orc;pqs;qc;mol;xyz;vfi;g09;com";
+  public static final String JMOL_EXTENSIONS = "xyz;mol";
+  public static final String SCRIPT_VIDEO_EXTENSIONS="script";
+  public static final String GIF_VIDEO_EXTENSIONS="gif";
+  //  public static final String RUN_EXTENSIONS = "47;gau;gms";
 
   protected final static String JMOL_FONT_SCRIPT = ";set fontscaling true;select _H; font label 10 arial plain 0.025;select !_H;font label 10 arial bold 0.025;select none;";
 
@@ -182,13 +183,13 @@ class NBOConfig  {
 
   // Jmol/NBO visual settings
 
-  protected static Color orbColor1, orbColor2, backgroundColor;
-  protected static String orbColorJmol1, orbColorJmol2;
-  protected static double opacityOp;
-  protected static boolean nboView;
-  protected static boolean useWireMesh;
-  protected static boolean showAtNum;
-  protected static boolean debugVerbose;
+  public static Color orbColor1, orbColor2, backgroundColor;
+  public static String orbColorJmol1, orbColorJmol2;
+  public static double opacityOp;
+  public static boolean nboView;
+  public static boolean useWireMesh;
+  public static boolean showAtNum;
+  public static boolean debugVerbose;
 
   protected NBOConfig(NBODialog dialog) {
     this.dialog = dialog;
@@ -447,7 +448,7 @@ class NBOConfig  {
    * @param isNegative
    * @return Jmol ISOSURFACE command string
    */
-  protected static String getJmolIsosurfaceScript(String id, String type,
+  public static String getJmolIsosurfaceScript(String id, String type,
                                            int orbitalNumber, boolean isBeta,
                                            boolean isNegative) {
     return ";select 1.1;isosurface ID \""

@@ -25,9 +25,15 @@ package org.openscience.jmol.app;
 
 import java.awt.Cursor;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
@@ -42,6 +48,7 @@ import org.openscience.jmol.app.jsonkiosk.JsonNioService;
 import org.openscience.jmol.app.jsonkiosk.KioskFrame;
 
 import javajs.util.MeasureD;
+import javajs.util.Rdr;
 
 /**
  * This application is produced in both Java and JavaScript using 

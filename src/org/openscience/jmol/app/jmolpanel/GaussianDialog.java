@@ -650,4 +650,5 @@ public class GaussianDialog extends JDialog implements ActionListener,
   public void mouseReleased(MouseEvent arg0) {
   }
 
+
 }

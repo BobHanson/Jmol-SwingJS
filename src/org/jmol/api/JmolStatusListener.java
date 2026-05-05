@@ -27,7 +27,8 @@ package org.jmol.api;
 import java.util.Map;
 
 public interface JmolStatusListener extends JmolCallbackListener {
-/*
+  
+  /**
  * These methods specifically provide notification from 
  * Viewer.StatusManager to the two main classes, applet or app.
  * so that they can handle them slightly differently. This might be
@@ -80,6 +81,6 @@ public interface JmolStatusListener extends JmolCallbackListener {
 
   public int[] resizeInnerPanel(String data);
 
-  public Map<String, Object> getJSpecViewProperty(String type);
+  public Object processPluginRequest(String name, String action, Object value);
 
 }

@@ -501,7 +501,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
           info.put(JC.INFO_DSSR_JSON, Boolean.TRUE);
           info.put(JC.INFO_DSSR, dssr);
           if (openVarna)
-            vwr.startVARNA("dssr");
+            vwr.plugin("VARNA", JC.PLUGIN_SHOW, "dssr");
           // first model only
 //          for (int i = asc.atomSetCount; --i >= 0;) {
 //            info = asc.getAtomSetAuxiliaryInfo(i);

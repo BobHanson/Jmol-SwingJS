@@ -435,7 +435,12 @@ public class StatusManager {
     return m[0];
   }
 
-  synchronized void setStatusResized(int width, int height){
+  // this synchronized was causing a treelok with ScriptEditor
+  // during resizing of the display for JSpecView display
+  // load $caffeine
+  // sync jspecview
+
+  /*synchronized*/ void setStatusResized(int width, int height){
     String sJmol = getJmolScriptCallback(CBK.RESIZE);
     boolean isEnabled =  notifyEnabled(CBK.RESIZE);
     if (isEnabled || sJmol != null)
@@ -895,11 +900,6 @@ public class StatusManager {
     return outputFileName;
   }
 
-  Map<String, Object> getJspecViewProperties(String myParam) {
-    return (jsl == null ? null : jsl
-        .getJSpecViewProperty(myParam == null || myParam.length() == 0 ? "" : ":" + myParam));
-  }
-
   public int[] resizeInnerPanel(int width, int height) {
     return (jsl == null || width == vwr.getScreenWidth()
         && height == vwr.getScreenHeight() ? new int[] { width, height } : jsl
@@ -1167,6 +1167,10 @@ public class StatusManager {
       //
     }
     vwr.showString("error reading SYNC command: " + script, false);
+  }
+
+  public Object processPluginRequest(String name, String action, Object value) {
+    return (jsl == null ? null : jsl.processPluginRequest(name, action, value));
   }
 
 }

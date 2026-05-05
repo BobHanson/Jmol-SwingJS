@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
+import java.util.TreeSet;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
@@ -73,7 +74,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
@@ -115,18 +115,19 @@ import org.openscience.jmol.app.webexport.WebExport;
 import javajs.async.AsyncFileChooser;
 import javajs.util.JSJSONParser;
 import javajs.util.PT;
-import jme.JMEJmol;
 
 public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient {
 
   public static HistoryFile historyFile, pluginFile;
 
+  // isSwingJS means Jmol-SwingJS/JS
   private static final boolean addPreferencesDialog = !Viewer.isSwingJS;
   private static final boolean addMacrosMenu = !Viewer.isSwingJS;
   private static final boolean allowRecentFiles = !Viewer.isSwingJS;
   private static final boolean addAtomChooser = !Viewer.isSwingJS;
   private static final boolean allowPreferences = !Viewer.isSwingJS;
-  private static final boolean allowGaussian = !Viewer.isSwingJS;
+
+  private static final String disallowedPlugins = (Viewer.isSwingJS ? ";gaussian;" : "");
 
   public Viewer vwr;
 
@@ -141,7 +142,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected String appletContext;
   public PropertyChangeSupport pcs = new PropertyChangeSupport(this);
   public DisplayPanel display;
-  protected GaussianDialog gaussianDialog; // not in SwingJS
   protected RecentFilesDialog recentFiles; // not in SwingJS
   public AtomSetChooser atomSetChooser;
   public JFrame frame;
@@ -158,7 +158,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected StatusListener myStatusListener;
   protected SurfaceTool surfaceTool;
   protected MeasurementTable measurementTable;
-  protected JMEJmol jmeJmol;
 
   protected Map<String, Action> commands;
   protected Map<String, JMenuItem> menuItems;
@@ -166,7 +165,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   // --- action implementations -----------------------------------
 
-  protected TwoDEditorAction twoDEditorAction = new TwoDEditorAction();
   protected ExportAction exportAction = new ExportAction();
   protected PovrayAction povrayAction = new PovrayAction();
   protected ToWebAction toWebAction = new ToWebAction();
@@ -210,8 +208,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected static final String openurlAction = "openurl";
   protected static final String openpdbAction = "openpdb";
   protected static final String openmolAction = "openmol";
-  protected static final String newAction = "new";
-  protected static final String twoDEditorActionProperty = "twoDEditor";
+  protected static final String newAction = "new";  
   protected static final String exportActionProperty = "export";
   protected static final String closeAction = "close";
   protected static final String exitAction = "exit";
@@ -231,14 +228,12 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected static final String copyScriptActionProperty = "copyScript";
   protected static final String surfaceToolActionProperty = "surfaceTool";
   protected static final String pasteClipboardActionProperty = "pasteClipboard";
-  protected static final String gaussianAction = "gauss";
+  // protected static final String gaussianAction = "gauss";
   //  protected static final String nboAction = "nbo";
   protected static final String resizeAction = "resize";
 
   //protected static final String saveasAction = "saveas";
   //protected static final String vibAction = "vibrate";
-
-  
   
   public JmolPanel(JmolApp jmolApp, Splash splash, JFrame frame,
       JmolPanel parent, int startupWidth, int startupHeight,
@@ -416,8 +411,11 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         new ScriptEditorAction(),
         (addAtomChooser ? new AtomSetChooserAction() : null),
         viewMeasurementTableAction,
-        (allowGaussian ? new GaussianAction() : null), /*new NBOAction(),*/
-        new ResizeAction(), surfaceToolAction, twoDEditorAction };
+        //(allowGaussian ? new GaussianAction() : null), 
+        /*new NBOAction(),*/
+        new ResizeAction(), surfaceToolAction
+    };
+//    , twoDEditorAction };
 
     List<Action> actions = new ArrayList<Action>();
     actions.addAll(Arrays.asList(defaultActions));
@@ -466,7 +464,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
           loc.y += 40;
           if (loc.x > maxX || loc.y > maxY)
             loc.setLocation(0, 0);
-        } else if (historyFile == null || (loc = historyFile.getWindowPosition(windowName)) == null) {
+        } else if (historyFile == null
+            || (loc = historyFile.getWindowPosition(windowName)) == null) {
           return;
         }
       }
@@ -645,8 +644,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
   void dispose(JFrame f, boolean saveSize) {
     // Save window positions and status in the history
-    if (jmeJmol != null)
-      jmeJmol.dispose();
     if (webExport != null)
       WebExport.cleanUp();
     if (saveSize)
@@ -780,10 +777,11 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   protected AbstractButton createToolbarButton(String key) {
 
     ImageIcon ii = JmolResourceHandler.getIconX(key + "Image");
-    boolean isHoldButton = (key.startsWith("animatePrev") || key
-        .startsWith("animateNext"));
-    AbstractButton b = (isHoldButton ? new AnimButton(ii,
-        JmolResourceHandler.getStringX(key)) : new JmolButton(ii));
+    boolean isHoldButton = (key.startsWith("animatePrev")
+        || key.startsWith("animateNext"));
+    AbstractButton b = (isHoldButton
+        ? new AnimButton(ii, JmolResourceHandler.getStringX(key))
+        : new JmolButton(ii));
     String isToggleString = JmolResourceHandler.getStringX(key + "Toggle");
     if (isToggleString != null) {
       boolean isToggle = Boolean.valueOf(isToggleString).booleanValue();
@@ -796,8 +794,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
           display.buttonModelkit = b;
         }
         display.toolbarButtonGroup.add(b);
-        String isSelectedString = JmolResourceHandler.getStringX(key
-            + "ToggleSelected");
+        String isSelectedString = JmolResourceHandler
+            .getStringX(key + "ToggleSelected");
         if (isSelectedString != null) {
           boolean isSelected = Boolean.valueOf(isSelectedString).booleanValue();
           b.setSelected(isSelected);
@@ -897,57 +895,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     pluginMenu.setEnabled(isOK);
   }
 
-  boolean pluginsSet = false;
-  
-  void setPlugins() {
-    if (pluginsSet)
-      return;
-    pluginsSet = true;
-    try {
-      PropertyResourceBundle bundle = new PropertyResourceBundle(getClass()
-          .getResourceAsStream(
-              "/org/openscience/jmol/app/plugins/plugin.properties"));
-      Enumeration<String> keys = bundle.getKeys();
-      //System.out.println(bundle);
-      while (keys.hasMoreElements()) {
-        final String key = keys.nextElement();
-        JmolPlugin p = plugins.get(key);
-        if (p != null)
-          continue;
-        String path = bundle.getString(key);
-        if (path == null | path.length() == 0 || path.indexOf("disabled") >= 0)
-          continue;
-        try {
-          p = getAndRegisterPlugin(key, path);
-          if (p != null) {
-            String text = p.getMenuText();
-            ImageIcon icon = p.getMenuIcon();
-            if (text == null)
-              text = key;
-            JMenuItem item = new JMenuItem(text);
-            if (icon != null) {
-              item.setHorizontalTextPosition(SwingConstants.RIGHT);
-              item.setIcon(icon);
-            }
-            pluginMenu.add(item);
-            item.addActionListener(new ActionListener() {
-
-              @Override
-              public void actionPerformed(ActionEvent e) {
-                showPlugin(key, null, null);
-              }
-
-            });
-          }
-        } catch (Exception e) {
-          System.out.println("Cannot create plugin " + key + " " + path);
-        }
-      }
-    } catch (IOException ex) {
-      throw new RuntimeException(ex.toString());
-    }
-    pluginMenu.setEnabled(pluginMenu.getPopupMenu().getComponentCount() > 0);
-  }
   protected void addMacrosMenu(JMenuBar menuBar) {
     // ok, here needs to be added the funny stuff
     JMenu macroMenu = guimap.newJMenu("macros");
@@ -1023,24 +970,23 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
    * @param key
    * @return Menu created
    */
-  public JMenu createMenu(String key) {
+  public KeyJMenu createMenu(String key) {
 
     // Get list of items from resource file:
     String[] itemKeys = PT.getTokens(setMenuKeys(key,
         JmolResourceHandler.getStringX(key)));
     // Get label associated with this menu:
-    JMenu menu = guimap.newJMenu(key);
+    KeyJMenu menu = guimap.newJMenu(key);
     ImageIcon f = JmolResourceHandler.getIconX(key + "Image");
     if (f != null) {
       menu.setHorizontalTextPosition(SwingConstants.RIGHT);
       menu.setIcon(f);
     }
-    KeyJMenu jmenu = (KeyJMenu) menu;
-    jmenu.itemKeys = itemKeys;
+    menu.itemKeys = itemKeys;
     menu.addMenuListener(new MenuListener() {
       @Override
       public void menuSelected(MenuEvent e) {
-        jmenu.createItemKeys(JmolPanel.this);
+        menu.createItemKeys(JmolPanel.this);
         switch (key) {
         case "display":
           guimap.setSelected("perspectiveCheck", vwr.tm.perspectiveDepth);
@@ -1177,19 +1123,19 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     }
   }
 
-  public class GaussianAction extends AbstractAction {
-    public GaussianAction() {
-      super(gaussianAction);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-      if (gaussianDialog == null)
-        gaussianDialog = new GaussianDialog(frame, vwr);
-      gaussianDialog.setVisible(true);
-    }
-  }
-
+//  public class GaussianAction extends AbstractAction {
+//    public GaussianAction() {
+//      super(gaussianAction);
+//    }
+//
+//    @Override
+//    public void actionPerformed(ActionEvent e) {
+//      showPlugin("gaussian", null, null);
+//    }
+//  }
+//
+  // NBO has been disabled. If originators will agree to 
+  // upgrading Jmol, it can be enabled
   //  public class NBOAction extends AbstractAction {
   //    public NBOAction() {
   //      super(nboAction);
@@ -1197,7 +1143,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   //
   //    @Override
   //    public void actionPerformed(ActionEvent arg0) {
-  //      startNBO(null);
+  //      pluginAction("nbo", "start", null);
   //    }
   //  }
 
@@ -1219,77 +1165,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     new Jmol(jmolApp, null, newFrame, (Jmol) JmolPanel.this, startupWidth,
         startupHeight, vwrOptions, null);
     newFrame.setVisible(true);
-  }
-
-  /**
-   * @param item
-   */
-  void setMenuNBO(JMenu item) {
-    // no longer used - causes delay in hovering over NBO menu item
-    //    Component[] nodes = item.getMenuComponents();
-    //    
-    //    for (int i = nodes.length; --i >= 0;) {
-    //      String text = ((JMenuItem) nodes[i]).getText();
-    //      nodes[i].setEnabled(text.equals("Config"));
-    //    }
-    //    getNBOService();
-    //    if (!nboService.restartIfNecessary()) {
-    //      return;
-    //    }
-    //    if (nboDialog == null)
-    //      nboDialog = new NBODialog(frame, vwr, nboService);
-    //    // individual nodes here
-    //    nodes[1].setEnabled(true); // model
-    //    nodes[2].setEnabled(true);//vwr.ms.at.length > 0); // run
-    //    //boolean viewOK = "gennbo".equals(vwr.ms.getInfo(vwr.am.cmi, "fileType"));
-    //    nodes[3].setEnabled(true); // view    
-    //    nodes[4].setEnabled(true); // search
-  }
-
-  /**
-   * @param jmolOptions
-   *        e.g. NOZAP;VIEWER unused
-   */
-  public void startNBO(Map<String, Object> jmolOptions) {
-    showPlugin("NBO", "org.gennbo.NBOPlugin", jmolOptions);
-  }
-
-  /**
-   * @param jmolOptions
-   *        e.g. NOZAP;VIEWER unused
-   */
-  public void startVARNA(Map<String, Object> jmolOptions) {
-    jmolOptions.put("parentFrame", this.getTopLevelAncestor());
-    showPlugin("VARNA", null, jmolOptions);
-  }
-
-  void showPlugin(String name, String path, Map<String, Object> jmolOptions) {
-    try {
-      setPlugins();
-      JmolPlugin p = getAndRegisterPlugin(name, path);
-      if (!p.isStarted())
-        p.start(frame, vwr, jmolOptions);
-      p.setVisible(true);
-    } catch (Throwable e) {
-      System.out.println("Error creating plugin " + name);
-      e.printStackTrace();
-    }
-  }
-
-  public boolean isPluginActive(String name) {
-    JmolPlugin p = plugins.get(name);
-    return (p != null && p.isStarted());
-  }
-
-  protected JmolPlugin getAndRegisterPlugin(String name, String path) {
-    JmolPlugin p = plugins.get(name);
-    if (p == null) {
-      plugins.put(name,
-          p = (JmolPlugin) Interface.getInterface(path, vwr, "plugin"));
-      System.out.println(p.getVersion());
-      System.out.println(p.getLicense());
-    }
-    return p;
   }
 
   public static Object getInstanceWithParams(String name, Class<?>[] classes,
@@ -1350,8 +1225,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      vwr.clipImageOrPasteText((String) vwr.getProperty("string", "stateInfo",
-          null));
+      vwr.clipImageOrPasteText(
+          (String) vwr.getProperty("string", "stateInfo", null));
     }
   }
 
@@ -1474,33 +1349,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     }
   }
 
-  public class TwoDEditorAction extends AbstractAction {
-
-    public TwoDEditorAction() {
-      super(twoDEditorActionProperty);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-      if (jmeJmol == null) {
-        jmeJmol = new JMEJmol();
-        jmeJmol.setViewer(null, vwr, getTopLevelAncestor(), "jmol");
-      }
-      jmeJmol.setFrameVisible(true);
-      SwingUtilities.invokeLater(new Runnable() {
-
-        @Override
-        public void run() {
-          jmeJmol.from3D();
-        }
-        
-        
-      });
-    }
-
-  }
-
-
   final static String[] imageChoices = { "JPEG", "PNG", "GIF", "PPM", "PDF" };
   final static String[] imageExtensions = { "jpg", "png", "gif", "ppm", "pdf" };
 
@@ -1561,7 +1409,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
           return;
         if (selection.endsWith(" (*)"))
           vwr.openFileAsyncSpecial(
-              selection.substring(0, selection.length() - 4), FileManager.NO_AUTOPLAY | FileManager.PDB_CARTOONS);
+              selection.substring(0, selection.length() - 4),
+              FileManager.NO_AUTOPLAY | FileManager.PDB_CARTOONS);
         else
           vwr.openFileAsyncSpecial(selection, FileManager.NO_AUTOPLAY);
       }
@@ -1864,16 +1713,12 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       atomSetChooser.dispose();
       atomSetChooser = null;
     }
-    if (gaussianDialog != null) {
-      gaussianDialog.dispose();
-      gaussianDialog = null;
-    }
-
     boolean doTranslate = GT.setDoTranslate(true);
     getDialogs();
     getMeasurementTable();
     GT.setDoTranslate(doTranslate);
     guimap.updateLabels();
+    pluginAction("gaussian",  JC.PLUGIN_STOP, null);
   }
 
   ////////// JSON/NIO SERVICE //////////
@@ -1907,14 +1752,16 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         } else if (serverService == null) {
           serverService = getJsonNioServer();
           if (serverService != null)
-            serverService.startService(port, this, vwr, "-JmolNioServer", JsonNioService.VERSION);
+            serverService.startService(port, this, vwr, "-JmolNioServer",
+                JsonNioService.VERSION);
         }
         if (serverService != null && serverService.getPort() == -port
             && strInfo != null) {
           if (clientService == null) {
             clientService = getJsonNioServer();
             if (clientService != null)
-              clientService.startService(-port, this, vwr, "-JmolNioClient(self)",  JsonNioService.VERSION);
+              clientService.startService(-port, this, vwr,
+                  "-JmolNioClient(self)", JsonNioService.VERSION);
           }
           if (clientService != null)
             clientService.sendToJmol(-port, strInfo);
@@ -1938,7 +1785,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       if (clientService == null) {
         clientService = getJsonNioServer();
         if (clientService != null)
-          clientService.startService(port, this, vwr, "-JmolNioClient",  JsonNioService.VERSION);
+          clientService.startService(port, this, vwr, "-JmolNioClient",
+              JsonNioService.VERSION);
       }
       if (clientService != null) {
         if (data == null)
@@ -1974,10 +1822,10 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       long t = System.currentTimeMillis();
       if (t - lastPressTime > jmolApp.autoAnimationDelay * 2000
           && jmolApp.autoAnimationDelay > 0) // 0.2 s
-        vwr.evalStringQuiet("timeout '__animBtn' OFF;animation_running = true; delay "
+        vwr.evalStringQuiet(
+            "timeout '__animBtn' OFF;animation_running = true; delay "
             + jmolApp.autoAnimationDelay
-            + "; if(animation_running){timeout '__animBtn' -200 \""
-            + script
+                + "; if(animation_running){timeout '__animBtn' -200 \"" + script
             + "\"}");
       lastPressTime = t;
     }
@@ -1985,7 +1833,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     @Override
     public void mouseReleased(MouseEvent e) {
       if (jmolApp.autoAnimationDelay > 0)
-        vwr.evalStringQuiet("animation_running = false; timeout '__animBtn' OFF");
+        vwr.evalStringQuiet(
+            "animation_running = false; timeout '__animBtn' OFF");
     }
 
     @Override
@@ -2018,21 +1867,22 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   }
 
   public static String getJmolProperty(String key, String defaultValue) {
-    return (historyFile == null ? defaultValue : historyFile.getProperty(key,
-        defaultValue));
+    return (historyFile == null ? defaultValue
+        : historyFile.getProperty(key, defaultValue));
   }
 
-  public static void setPluginOption(String pluginName, String key, String value) {
+  public static void setPluginOption(String pluginName, String key,
+                                     String value) {
     if (pluginFile == null)
       return;
-    pluginFile.addProperty(pluginName + "_" + key, value);
+    pluginFile.addProperty(pluginName.toLowerCase() + "_" + key, value);
     pluginFile.save();
   }
 
   public static String getPluginOption(String pluginName, String key,
                                        String defaultValue) {
     return (pluginFile == null ? defaultValue : pluginFile.getProperty(
-        pluginName + "_" + key, defaultValue));
+        pluginName.toLowerCase() + "_" + key, defaultValue));
   }
 
   public static void addJmolProperties(Properties props) {
@@ -2118,78 +1968,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     return serverService != null;
   }
 
-  public void notifyServer(CBK type, Object[] data) {
-    if (isServer() && data != null && "SYNC".equals(data[0])) {
-      data[0] = type.toString();
-      sendNioSyncRequest(data, OUTSOCKET, null);
-    }
-    if (!plugins.isEmpty())
-      for (JmolPlugin p : plugins.values())
-        p.notifyCallback(type, data);
-  }
-
-  private Map<String, Object> nboOptions;
-  
-  public void notifyNBO(String strInfo) {
-    setPlugins();
-    if (nboOptions == null)
-      nboOptions = new Hashtable<String, Object>();
-    nboOptions.put("options", strInfo);
-    startNBO(nboOptions);
-  }
-
-  public void notifyNBO(Map<String, Object> info) {
-    try {
-      String service = (String) info.get("service");
-      if ("nbo".equals(service)) {
-        if ("showPanel".equals(info.get("action")))
-          startNBO(info);
-        //else
-        //jmol.getNBOService().processRequest(info, 0);
-      }
-    } catch (Exception e) {
-      // ignore
-    }
-  }
-
-  private Map<String, Object> varnaOptions;
-  
-  public void notifyVARNA(CBK type, Object[] data) {
-    switch (type) {
-    case SYNC:
-    case SERVICE:
-      break;
-    case STRUCTUREMODIFIED:
-      if (!isPluginActive("VARNA"))
-        return;
-      break;
-    default:
-      return;
-    }
-    if (varnaOptions == null)
-      varnaOptions = new Hashtable<String, Object>();
-    varnaOptions.put("data", data);
-    startVARNA(varnaOptions);
-  }
-
-  public void notifyGaussian(CBK type, Object[] data) {
-    if (gaussianDialog == null)
-      return;
-    switch (type) {
-    case LOADSTRUCT:
-      gaussianDialog.updateModel(-2);
-      break;
-    case PICK:
-      gaussianDialog.updateModel(((Integer) data[2]).intValue());
-      break;
-    case STRUCTUREMODIFIED:
-      gaussianDialog.updateModel(-1);
-      break;
-    default:
-      break;
-    }
-  }
-
   public void notifyMenu(String menuName) {
     setStatus(1, menuName);
     if (frame != null) {
@@ -2252,5 +2030,271 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       appConsole.notifyCallback(type, data);
   }
 
+  /**
+   * @param item
+   */
+  void setMenuNBO(JMenu item) {
+    // no longer used - causes delay in hovering over NBO menu item
+    //    Component[] nodes = item.getMenuComponents();
+    //    
+    //    for (int i = nodes.length; --i >= 0;) {
+    //      String text = ((JMenuItem) nodes[i]).getText();
+    //      nodes[i].setEnabled(text.equals("Config"));
+    //    }
+    //    getNBOService();
+    //    if (!nboService.restartIfNecessary()) {
+    //      return;
+    //    }
+    //    if (nboDialog == null)
+    //      nboDialog = new NBODialog(frame, vwr, nboService);
+    //    // individual nodes here
+    //    nodes[1].setEnabled(true); // model
+    //    nodes[2].setEnabled(true);//vwr.ms.at.length > 0); // run
+    //    //boolean viewOK = "gennbo".equals(vwr.ms.getInfo(vwr.am.cmi, "fileType"));
+    //    nodes[3].setEnabled(true); // view    
+    //    nodes[4].setEnabled(true); // search
+  }
+
+  boolean pluginsSet = false;
+  
+  void setPlugins() {
+    if (pluginsSet)
+      return;
+    pluginsSet = true;
+    try {
+      PropertyResourceBundle bundle = new PropertyResourceBundle(getClass()
+          .getResourceAsStream(
+              "/org/openscience/jmol/app/plugins/plugin.properties"));
+      Enumeration<String> keys = bundle.getKeys();
+      //System.out.println(bundle);
+      TreeSet<String> map = new TreeSet<>();
+      while (keys.hasMoreElements()) {
+        map.add(keys.nextElement());
+      }
+      for (String mkey : map) {
+        String key = mkey.substring(mkey.indexOf("_") + 1);
+        JmolPlugin p = getPlugin(key);
+        if (p != null)
+          continue;
+        String path = bundle.getString(mkey);
+        if (path == null | path.length() == 0 || path.indexOf("disabled") >= 0)
+          continue;
+        try {
+          p = getAndRegisterPlugin(key, path);
+          if (p != null) {
+            String text = p.getMenuText();
+            ImageIcon icon = p.getMenuIcon();
+            if (text == null)
+              text = key;
+            // add menu item
+            JMenuItem item = new JMenuItem(text);
+            if (icon != null) {
+              item.setHorizontalTextPosition(SwingConstants.RIGHT);
+              item.setIcon(icon);
+            }
+            pluginMenu.add(item);
+            item.addActionListener(new ActionListener() {
+
+              @Override
+              public void actionPerformed(ActionEvent e) {
+                showPlugin(key, null, null);
+              }
+
+            });
+          }
+        } catch (Exception e) {
+          System.out.println("Cannot create plugin " + key + " " + path);
+        }
+      }
+    } catch (IOException ex) {
+      throw new RuntimeException(ex.toString());
+    }
+    pluginMenu.setEnabled(pluginMenu.getPopupMenu().getComponentCount() > 0);
+  }
+
+  /**
+   * Note this could be added for an unregistered plugin
+   * 
+   * @param name
+   * @param path
+   * @return plugin
+   */
+  public JmolPlugin getAndRegisterPlugin(String name, String path) {
+    JmolPlugin p = getPlugin(name);
+    if (p == null) {
+      try {
+        addPlugin(name,
+            p = (JmolPlugin) Interface.getInterface(path, vwr, "plugin"));
+        if (p != null) {
+          System.out.println(p.getVersion());
+          System.out.println(p.getLicense());
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+    return p;
+  }
+
+  @SuppressWarnings("unchecked")
+  public void initService(Object[] data) {
+    Map<String, Object> info = (Map<String, Object>) data[1];
+    String service = info.get("service").toString().toLowerCase();
+    String action = info.get("action").toString().toLowerCase();
+    pluginAction(service, action, data);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Boolean pluginAction(String service, String action, Object[] data) {
+    JmolPlugin p = getPlugin(service);
+    switch (action) {
+    case JC.PLUGIN_HIDE:
+    case JC.PLUGIN_STOP:
+      if (p == null)
+        return Boolean.TRUE;
+      //$FALL-THROUGH$
+    case "":
+    case JC.PLUGIN_START:
+    case JC.PLUGIN_SHOW:
+      boolean hasCommand = (T.getTokenFromName(action) != null);
+      boolean isStarted = isPluginActive(service);
+      switch (action) {
+      case "":
+      case JC.PLUGIN_START:
+        if (isStarted) {
+          data[0] = service + " has already been started.";
+          return Boolean.FALSE;
+        }
+        Object o = data[1];
+        Map<String, Object> options = (o instanceof Map ? (Map<String, Object>) o : null);
+        p = ensurePluginActive(service, null, options);
+        if (p == null) {
+          data[0] = service + " could not be started";
+        } else {
+          data[0] = service + " has been started"
+              + (hasCommand && !p.isVisible()
+                  ? "use " + service.toUpperCase() + " SHOW to display."
+                  : "");
+        }
+        return Boolean.FALSE;
+      case JC.PLUGIN_SHOW:
+        if (isStarted && p.isVisible()) {
+          return Boolean.TRUE;
+        }
+        p = showPlugin(service, null, (Map<String, Object>) data[1]);
+        if (p == null) {
+          data[0] = service + " could not be started.";
+        } else {
+          data[0] = service + " has been started.";
+        }
+        return Boolean.FALSE;
+      case JC.PLUGIN_HIDE:
+        p.setVisible(false);
+        return Boolean.TRUE;
+      case JC.PLUGIN_STOP:
+        stopPlugin(service);
+        return Boolean.TRUE;
+      }
+      // mot reachable
+      return Boolean.FALSE;
+    default:
+      return (p == null ? null : Boolean.TRUE);
+    }
+  }
+
+private JmolPlugin getPlugin(String service) {
+   return plugins.get(service.toLowerCase());
+  }
+
+ private JmolPlugin addPlugin(String service, JmolPlugin p) {
+   String name = service.toLowerCase();
+   if (disallowedPlugins.indexOf(";" + name + ";") >= 0) 
+     return null;
+   plugins.put(name, p);
+   return p;
+  }
+
+private JmolPlugin ensurePluginActive(String name, String path,
+                                 Map<String, Object> jmolOptions) {
+   try {
+     setPlugins();
+     JmolPlugin p = getAndRegisterPlugin(name, path);
+     if (!p.isStarted()) {
+       p.start(frame, vwr, jmolOptions);
+     }
+     return p;
+   } catch (Throwable e) {
+     System.out.println("Error creating plugin " + name);
+     e.printStackTrace();
+   }
+   return null;
+ }
+
+ public boolean isPluginActive(String name) {
+   JmolPlugin p = getPlugin(name);
+   return (p != null && p.isStarted());
+ }
+
+ JmolPlugin showPlugin(String name, String path, Map<String, Object> jmolOptions) {
+   JmolPlugin p = ensurePluginActive(name, path, jmolOptions);
+   if (p != null)
+     p.setVisible(!vwr.headless);   
+   return p;
+ }
+
+ public void stopPlugin(String name) {
+   JmolPlugin p = getPlugin(name);
+   if (p != null)
+     p.destroy();
+ }
+
+ public void notifyServer(CBK type, Object[] data) {
+   if (isServer() && data != null && "SYNC".equals(data[0])) {
+     data[0] = type.toString();
+     sendNioSyncRequest(data, OUTSOCKET, null);
+   } else if (!plugins.isEmpty()) {
+     for (JmolPlugin p : plugins.values())
+       p.notifyCallback(type, data);
+   }
+ }
+
+// private Map<String, Object> nboOptions;
+ 
+// public void notifyNBO(String strInfo) {
+//   if (nboOptions == null)
+//     nboOptions = new Hashtable<String, Object>();
+//   nboOptions.put("options", strInfo);
+//   startNBO(nboOptions);
+// }
+
+ /**
+  * from VARNA ....   or  SYNC "varna:...."   or SYNC "nbo:...." 
+  * @param type
+  * @param data
+  * @return TRUE if successful
+  */
+public Boolean notifyPluginCommand(CBK type, Object[] data) {
+  setPlugins();
+  String strInfo = data[1].toString();
+  int pt = strInfo.indexOf(":");
+  if (pt < 0 && getPlugin(strInfo) != null) {
+    pt = strInfo.length();
+    strInfo += ":";
+  }
+  String name = null;
+  JmolPlugin p = (pt > 0 ? getPlugin(name = strInfo.substring(0, pt)) : null);
+  if (p != null) {
+    return pluginAction(name, strInfo.substring(pt + 1), data);
+  }
+  return null;
+}
+
+public Object processPluginRequest(String name, String action, Object value) {
+  if (action.equals(JC.PLUGIN_REQUEST_ISACTIVE)) {
+    return (isPluginActive(name) ? Boolean.TRUE : Boolean.FALSE);
+  }
+  JmolPlugin p = getPlugin(name);
+  return (p == null ? null : p.processRequest(action, value));
+}
 
 }

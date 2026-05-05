@@ -140,7 +140,6 @@ public class DisplayPanel extends JPanel
 
   @Override
   public void componentResized(java.awt.event.ComponentEvent e) {
-    //System.out.println("DisplayPanel.componentResized");
     updateSize(true);
   }
 

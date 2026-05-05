@@ -27,16 +27,20 @@
 package org.openscience.jmol.app.janocchio;
 
 import java.awt.Cursor;
+import java.awt.Window;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 import javax.swing.UIManager;
 
 import org.jmol.dialog.Dialog;
 import org.jmol.i18n.GT;
 import org.jmol.util.Logger;
+import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.JmolApp;
 import org.openscience.jmol.app.jmolpanel.Splash;
+import org.openscience.jmol.app.plugins.NmrPlugin;
 
 public class Nmr extends JmolApp {
 
@@ -120,6 +124,22 @@ public class Nmr extends JmolApp {
       t.printStackTrace();
     }
 
+  }
+
+  public NMR_JmolPanel getPanel() {
+    return nmrPanel;
+  }
+  
+  public JFrame getFrame() {
+    return mainFrame;
+  }
+
+  public CoupleTable getCoupleTable() {
+    return nmrPanel.coupleTable;
+  }
+
+  public Viewer getViewer() {
+    return nmrPanel.vwr;
   }
 
 //  public static CdkConvertor getCDKConverter() {

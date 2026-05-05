@@ -186,7 +186,7 @@ public class AppConsole extends JmolConsole
   @Override
   public void updateFontSize() {
     int scale = (Viewer.isJS || noPrefs ? vwr.getConsoleFontScale()
-        : PT.parseInt("" + (String) vwr.getProperty("DATA_API", "getPreference",
+        : PT.parseInt("" + (String) vwr.getProperty("DATA_API", JC.SYNC_GET_PREFERENCE,
             "consoleFontScale")));
     scale = (scale < 0 ? 1 : scale) % 5;
     fontSize = scale * 4 + 12;

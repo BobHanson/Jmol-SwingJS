@@ -1569,9 +1569,9 @@ public final class JC {
                 .indexOf(script.substring(0, 7).toUpperCase()));
   }
 
-  public static String READER_NOT_FOUND = "File reader was not found:";
-  public static String BASE64_TAG = ";base64,";
-
+  public final static String READER_NOT_FOUND = "File reader was not found:";
+  public final static String BASE64_TAG = ";base64,";
+  
   public final static int UNITID_MODEL = 1;
   public final static int UNITID_RESIDUE = 2;
   public final static int UNITID_ATOM = 4;
@@ -1705,7 +1705,16 @@ public final class JC {
   public static final String INFO_DSSR = "dssr";
   public static final String INFO_DSSR_JSON = "dssrJSON";
   public static final String INFO_DSSR_VARNA = "dssrVARNA";
+
+  public final static String PLUGIN_REQUEST_ISACTIVE = "isactive";
+  public final static String PLUGIN_START = "start";
+  public static final String PLUGIN_SHOW = "show";
+  public static final String PLUGIN_HIDE = "hide";
+  public final static String PLUGIN_STOP = "stop";
+  public static final String PLUGIN_REQUEST_PROPERTY = "property";
+  public static final String SYNC_GET_PREFERENCE = "getPreference";
   
+
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.
    * 

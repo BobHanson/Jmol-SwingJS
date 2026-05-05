@@ -887,7 +887,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_JMOL_VIEWER:
       return vwr;
     case PROP_JSPECVIEW:
-      return vwr.getJspecViewProperties(myParam);
+      return vwr.getJspecViewProperties(myParam.toString());
     case PROP_LIGAND_INFO:
       return getLigandInfo(vwr.getAtomBitSet(myParam));
     case PROP_MEASUREMENT_INFO:

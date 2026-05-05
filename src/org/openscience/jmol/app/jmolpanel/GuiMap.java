@@ -56,7 +56,7 @@ public class GuiMap {
 
   private static Object language;
 
-  Map<String, Object> map = new Hashtable<String, Object>();
+  public Map<String, Object> map = new Hashtable<String, Object>();
 
   protected Map<String, String> labels;
 
@@ -184,8 +184,6 @@ public class GuiMap {
     labels.put("transform", GT.$("Tr&ansform..."));
     labels.put("definecenter", GT.$("Define &Center"));
     labels.put("tools", GT.$("&Tools"));
-    labels.put("twoDEditor", GT.$("2-D &Editor"));
-    labels.put("gauss", GT.$("&Gaussian..."));
     labels.put("viewMeasurementTable", GT.$("&Measurements") + "...");
     labels.put("distanceUnitsMenu", GT.$("Distance &Units"));
     labels.put("distanceNanometersScript", GT.$("&Nanometers 1E-9"));
@@ -269,6 +267,11 @@ public class GuiMap {
     //labels.put("plugins", GT.$("&Plugins"));
   }
 
+  public int getSize() {
+    return (labels == null ? 0 : labels.size());
+  }
+
+
   public String getLabel(String key) {
     if (labels == null)
       setupLabels();
@@ -280,7 +283,7 @@ public class GuiMap {
     return s;
   }
 
-  public JMenu newJMenu(String key) {
+  public KeyJMenu newJMenu(String key) {
     return new KeyJMenu(key, getLabel(key), map);
   }
 

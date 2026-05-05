@@ -47,9 +47,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import javajs.util.BS;
-import javajs.util.JSJSONParser;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.Box;
@@ -59,6 +56,7 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -80,6 +78,9 @@ import org.openscience.jmol.app.jmolpanel.JmolResourceHandler;
 import org.openscience.jmol.app.jmolpanel.Splash;
 import org.openscience.jmol.app.jmolpanel.StatusBar;
 import org.openscience.jmol.app.status.StatusListener;
+
+import javajs.util.BS;
+import javajs.util.JSJSONParser;
 
 public class NMR_JmolPanel extends JmolPanel {
 
@@ -112,6 +113,12 @@ public class NMR_JmolPanel extends JmolPanel {
 
   @Override
   public JMenuItem getMenuItem(String name) {
+//    System.out.println("NMR_JP " + nmrguimap.map.size());
+//    for (Entry<String, Object> e : nmrguimap.map.entrySet()) {
+//      if (e.getKey().startsWith("NMR"))
+//        System.out.println(e.toString());
+//    }
+//      
     return (JMenuItem) nmrguimap.get(name);
   }
 
@@ -182,6 +189,16 @@ public class NMR_JmolPanel extends JmolPanel {
   protected ImageIcon getIconX(String img) {
     return (img.indexOf("NMR.") == 0 ? NmrResourceHandler.getIconX(img)
         : JmolResourceHandler.getIconX(img));
+  }
+
+  @Override
+  protected void addPluginMenu(JMenuBar mb) {
+    // don't add this
+  }
+  
+  @Override
+  protected void addMacrosMenu(JMenuBar menuBar) {
+    // nor this
   }
 
   @Override
@@ -957,9 +974,10 @@ public class NMR_JmolPanel extends JmolPanel {
       t.start();
   }
 
+  protected String defaultFormat = "set measurementUnits noe_hz";
+
   class MyStatusListener extends StatusListener {
 
-    private String defaultFormat = "set measurementUnits noe_hz";
 
     MyStatusListener(JmolPanel jmol, DisplayPanel display) {
       super(jmol, display);
@@ -978,45 +996,11 @@ public class NMR_JmolPanel extends JmolPanel {
       if (errorMsg != null) {
         return;
       }
-      if (jmolApp.haveDisplay)
-        pcs.firePropertyChange(chemFileProperty, null, fullPathName);
-
-      int nmodel = ((NMR_Viewer) vwr).getModelCount();
-
-      frameCounter.setFrameCount(nmodel);
-
-      populationDisplay.setVisible(false);
-      frameDeltaDisplay.setVisible(true);
-      JCheckBoxMenuItem mi = (JCheckBoxMenuItem) getMenuItem("NMR.frameDeltaDisplayCheck");
-      mi.setSelected(true);
-      if (defaultFormat != null)
-        vwr.script(defaultFormat);
+      doNotifyFileLoaded(fullPathName, defaultFormat);
     }
 
     public void notifyFrameChanged(int modelIndex) {
-      if (vwr == null || modelIndex < 0)
-        return;
-      if (modelIndex == Integer.MIN_VALUE)
-        modelIndex = ((NMR_Viewer) vwr).getCurrentModelIndex();
-      int modelAtomCount = getFrameAtomCount();
-      if (labelSetter.getLabelArray() == null || modelAtomCount != labelSetter.getLabelArray().length) {
-        labelSetter.allocateLabelArray(modelAtomCount);
-
-        noeTable.allocateLabelArray(modelAtomCount);
-        noeTable.allocateExpNoes(modelAtomCount);
-        coupleTable.allocateLabelArray(modelAtomCount);
-        coupleTable.allocateExpCouples(modelAtomCount);
-      }
-
-      frameCounter.setFrameNumberFromViewer(modelIndex + 1);
-      populationDisplay.setFrameNumberFromViewer(modelIndex + 1);
-
-      coupleTable.setmolCDKuptodate(false);
-      noeTable.setmolCDKuptodate(false);
-      noeTable.addMol();
-
-      coupleTable.updateTables();
-      noeTable.updateTables();
+      updateModel(modelIndex);
     }
 
     /**
@@ -1124,7 +1108,7 @@ public class NMR_JmolPanel extends JmolPanel {
 
     public void notifyStructureModified() {    
       vwr.deleteMeasurement(vwr.getMeasurementCount() - 1);
-      notifyFrameChanged(Integer.MIN_VALUE);
+      updateModel(Integer.MIN_VALUE);
     }
 
 
@@ -1132,6 +1116,51 @@ public class NMR_JmolPanel extends JmolPanel {
 
   public int getFrameAtomCount() {
     return vwr.getFrameAtoms().cardinality();
+  }
+
+  public void updateModel(int modelIndex) {
+    if (vwr == null || modelIndex < 0)
+      return;
+    if (modelIndex == Integer.MIN_VALUE)
+      modelIndex = ((NMR_Viewer) vwr).getCurrentModelIndex();
+    int modelAtomCount = getFrameAtomCount();
+    if (labelSetter.getLabelArray() == null || modelAtomCount != labelSetter.getLabelArray().length) {
+      labelSetter.allocateLabelArray(modelAtomCount);
+
+      noeTable.allocateLabelArray(modelAtomCount);
+      noeTable.allocateExpNoes(modelAtomCount);
+      coupleTable.allocateLabelArray(modelAtomCount);
+      coupleTable.allocateExpCouples(modelAtomCount);
+    }
+
+    frameCounter.setFrameNumberFromViewer(modelIndex + 1);
+    populationDisplay.setFrameNumberFromViewer(modelIndex + 1);
+
+    coupleTable.setmolCDKuptodate(false);
+    noeTable.setmolCDKuptodate(false);
+    noeTable.addMol();
+
+    coupleTable.updateTables();
+    noeTable.updateTables();
+  }
+
+  public void doNotifyFileLoaded(String fullPathName, String defaultFormat) {
+    if (jmolApp.haveDisplay)
+      pcs.firePropertyChange(chemFileProperty, null, fullPathName);
+
+    int nmodel = ((NMR_Viewer) vwr).getModelCount();
+
+    frameCounter.setFrameCount(nmodel);
+
+    populationDisplay.setVisible(false);
+    frameDeltaDisplay.setVisible(true);
+//    JCheckBoxMenuItem mi = (JCheckBoxMenuItem) getMenuItem("NMR.frameDeltaDisplayCheck");
+//    if (mi == null) {
+//      System.out.println("????");
+//      mi = (JCheckBoxMenuItem) getMenuItem("NMR.frameDeltaDisplayCheck");
+//    }
+//    if (defaultFormat != null)
+//      vwr.script(defaultFormat);
   }
 
   Atom[] getViewerMeasurement(int vRow, int type) {

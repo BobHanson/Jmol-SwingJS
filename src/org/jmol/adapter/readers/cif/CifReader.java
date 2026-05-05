@@ -806,6 +806,8 @@ public class CifReader extends AtomSetCollectionReader {
             addSpinFrameExt("version", false);
           }
         }
+        if (htCellTypes == null)
+          htCellTypes = new Hashtable<String, String>();
         asc.getXSymmetry().finalizeMoments(spinFrame, spinFrameExt, htCellTypes);
         vibsFractional = true;
       }

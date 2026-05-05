@@ -24,11 +24,11 @@
 
 package org.jmol.adapter.smarter;
 
-import java.util.HashSet;
+import java.util.HashSet; // SwingJS only
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
+import java.util.Set; // SwingJS only
 
 import org.jmol.api.JmolModulationSet;
 import org.jmol.symmetry.SpaceGroup;
@@ -446,6 +446,7 @@ public class XtalSymmetry {
      * @return number of nonzero or incommensurate spins
      */
     protected int postSymmetrySetMagneticMoments(AtomSetCollection asc, boolean isCartesian) {
+      // return spin vectors to cartesians
       if (nSpins > 0)
         return nSpins; // already done
       int i0 = asc.getAtomSetAtomIndex(asc.iSet);
@@ -1177,7 +1178,6 @@ public class XtalSymmetry {
     FileSymmetry sym = symmetry;
     FileSymmetry lastSymmetry = sym;
     checkAll = (crystalReaderLatticeOpsOnly
-        // was acr.checkNearAtoms
         || asc.atomSetCount == 1 && checkNearAtoms && latticeOp >= 0);
     Lst<M4d> lstNCS = acr.lstNCS;
     if (lstNCS != null && lstNCS.get(0).m33 == 0) {

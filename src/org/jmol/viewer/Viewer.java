@@ -188,6 +188,8 @@ public class Viewer extends JmolViewer
   static public boolean isSwingJS = /** @j2sNative true|| */
       false;
 
+  public final static boolean isJmolSwingJS = true;
+  
   public final static boolean isJmolD = true;
   
   public final static boolean hasOCL = isJmolD;
@@ -220,6 +222,9 @@ public class Viewer extends JmolViewer
 
   public static String jsDocumentBase = "";
 
+  /**
+   * SwingJS and Java 
+   */
   public static boolean isHighPrecision = true;
 
 
@@ -1264,12 +1269,9 @@ public class Viewer extends JmolViewer
     return getJSV().getBaseModelIndex(modelIndex);
   }
 
-  public Object getJspecViewProperties(Object myParam) {
+  public Object getJspecViewProperties(String myParam) {
     // from getProperty("JSpecView...")
-    Object o = sm.getJspecViewProperties("" + myParam);
-    if (o != null)
-      haveJSV = true;
-    return o;
+    return pluginRequest("jspecview", JC.PLUGIN_REQUEST_PROPERTY, myParam);
   }
 
   /*
@@ -10879,27 +10881,6 @@ public class Viewer extends JmolViewer
     return (am.cmi >= 0 ? ms.getModelAuxiliaryInfo(am.cmi) : null);
   }
 
-  public void startNBO(String options) {
-    Map<String, Object> htParams = new Hashtable<String, Object>();
-    htParams.put("service", "nbo");
-    htParams.put("action", "showPanel");
-    htParams.put("options", options);
-    sm.processService(htParams);
-  }
-
-  /**
-   * startup -U nbo option
-   * 
-   * @param plugin
-   */
-  public void startPlugin(String plugin) {
-
-    // for now, just NBO; need a way to bootstrap this
-
-    if ("nbo".equalsIgnoreCase(plugin))
-      startNBO("all");
-  }
-
   private NBOParser nboParser;
 
   public void connectNBO(String type) {
@@ -11617,12 +11598,40 @@ public class Viewer extends JmolViewer
     return ocl;
   }
 
-  public void startVARNA(String options) {
-	    Map<String, Object> htParams = new Hashtable<String, Object>();
-	    htParams.put("service", "varna");
-	    htParams.put("action", "start");
-	    htParams.put("options", options);
-	    sm.processService(htParams);
+  /**
+   * 
+   * @param service "VARNA" "NBO" "NMR"
+   * @param action  see JC.PLUGIN_...
+   * @param options
+   * @return ht, possibly with additions
+   */
+  public Map<String, Object> plugin(String service, String action, String options) {
+	    Map<String, Object> ht = new Hashtable<String, Object>();
+	    ht.put("service", service);
+	    ht.put("action", action);
+	    ht.put("options", options);
+	    sm.processService(ht);
+	    return ht;
 	  }
+
+  
+  
+  public boolean isPluginAtive(String name) {
+    return ((Boolean) pluginRequest(name, JC.PLUGIN_REQUEST_ISACTIVE, null)).booleanValue();
+  }
+  
+  /**
+   * startup -U nbo option
+   * 
+   * @param name
+   */
+  public void startPlugin(String name) {
+    plugin(name, JC.PLUGIN_START, null);
+  }
+
+  public Object pluginRequest(String name, String action, Object value) {
+    return sm.processPluginRequest(name, action, value);
+
+  }
 
 }

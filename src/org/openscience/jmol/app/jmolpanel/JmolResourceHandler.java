@@ -48,7 +48,7 @@ public class JmolResourceHandler {
   private ResourceBundle stringsResourceBundle;
   private ResourceBundle generalResourceBundle;
   
-  public static Object codePath;
+  public static String codePath;
 
   private JmolResourceHandler() {
     String language = "en";
@@ -103,18 +103,20 @@ public class JmolResourceHandler {
   }
 
   private URL getImageURLImpl(String key) {
-
     String resourceName = null;
     try {
       resourceName = getString(key);
-      if (resourceName == key)
-        return null;
+      if (resourceName == key) {
+        if (key.indexOf(".") < 0)
+          return null;
+      }
     } catch (MissingResourceException e) {
     }
     URL url = null;
     if (resourceName != null) {
-      url = getClass().getClassLoader()
-          .getResource("org/openscience/jmol/app/images/" + resourceName);
+      if (resourceName.indexOf("/") < 0)
+        resourceName = "org/openscience/jmol/app/images/" + resourceName;
+      url = getClass().getClassLoader().getResource(resourceName);
       if (codePath == null) {
         String s = url.toString();
         codePath = s.substring(0, s.indexOf("org/openscience"));

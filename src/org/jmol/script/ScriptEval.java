@@ -8886,7 +8886,7 @@ public class ScriptEval extends ScriptExpr {
     if (isColor) {
       int argb = 0, argb1 = 0;
       tok = getToken(index).tok;
-      if ((!isIsosurface && tokAt(index + 1) != T.to) && 
+      if ((!isIsosurface || tokAt(index + 1) != T.to) && 
           (isColorSelect && tok == T.none
           || isColorParam(index))) {
         argb = getArgbParamOrNone(index, isColorSelect);

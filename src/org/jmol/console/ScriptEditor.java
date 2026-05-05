@@ -468,7 +468,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
     PreferencesDialog d = null;
     try {
       d = (PreferencesDialog) vwr.getProperty("DATA_API",
-          "getPreference", null);
+          JC.SYNC_GET_PREFERENCE, null);
       if (d != null)
         d.setFontScale(-1);
       return true;
@@ -498,7 +498,7 @@ public final class ScriptEditor extends JDialog implements JmolScriptEditorInter
 
   public void updateFontSize() {
     int scale = (Viewer.isJS || noPrefs ? vwr.getConsoleFontScale()
-        : PT.parseInt("" + (String) vwr.getProperty("DATA_API", "getPreference",
+        : PT.parseInt("" + (String) vwr.getProperty("DATA_API", JC.SYNC_GET_PREFERENCE,
             "consoleFontScale")));
     scale = (scale < 0 ? 1 : scale) % 5;
     fontSize = scale * 4 + 12;

@@ -80,6 +80,7 @@ import javajs.util.BS;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
+import org.openscience.jmol.app.plugins.NBOPlugin;
 
 /**
  * A dialog for interacting with NBOServer
@@ -152,8 +153,9 @@ public class NBODialog extends JDialog {
    * @param jmolOptions
    */
   protected void setJmolOptions(Map<String, Object> jmolOptions) {
-    String options = ("" + (jmolOptions == null ? "" : jmolOptions
-        .get("options"))).toUpperCase();
+    Object o = (jmolOptions == null ? "" : jmolOptions
+        .get("options"));
+    String options = (o == null ? "all" : o.toString().toUpperCase());
     if (options.equals("VIEW"))
       options = "VIEW;NOZAP;NOSET;NONBO";
     jmolOptionVIEW = (options.indexOf("VIEW") >= 0);

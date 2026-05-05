@@ -1,5 +1,6 @@
 package org.jmol.api;
 
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -8,10 +9,11 @@ import java.util.Properties;
  */
 public interface JSVInterface {
   
-  public void exitJSpecView(boolean withDialog, Object frame);
-  public void runScript(String script);
-  public void saveProperties(Properties properties);
-  public void setProperties(Properties properties);  
-  public void syncToJmol(String msg);
+  void exitJSpecView(boolean withDialog, Object frame);
+  void runScript(String script);
+  void saveProperties(Properties properties);
+  void setProperties(Properties properties);  
+  void syncToJmol(String msg);
+  Map<String, Object> getJSpecViewProperty(String key);
 
 }

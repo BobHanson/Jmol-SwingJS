@@ -322,15 +322,6 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
     checkIn(id, jsi);
   }
 
-  /**
-   * JSpecView shares the JmolSyncInterface; used to get JSpecView
-   */
-  @Override
-  public Map<String, Object> getJSpecViewProperty(String key) {
-    // only on JSpecView side, as it is also JmolSyncInterface
-    return null;
-  }
-
   @Override
   synchronized public void syncScript(String script) {
     viewer.syncScript(script, "~", 0);
@@ -1279,5 +1270,11 @@ public abstract class GenericApplet implements JSInterface, JmolAppletInterface,
   public String getFullName() {
     return fullName;
   }
+
+  @Override
+  public Object processPluginRequest(String name, String action, Object value) {
+    return null;
+  }
+
 
 }

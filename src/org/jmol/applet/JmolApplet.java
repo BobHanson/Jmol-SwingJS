@@ -218,11 +218,6 @@ JmolAppletInterface {
   }
 
   @Override
-  public Map<String, Object> getJSpecViewProperty(String infoType) {
-    return null;
-  }
-
-  @Override
   public Object getProperty(String infoType, String paramInfo) {
     return (jmol == null ? null : ((GenericApplet) jmol).getProperty(""
         + infoType, "" + paramInfo));

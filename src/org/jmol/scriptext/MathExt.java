@@ -3439,7 +3439,7 @@ SymmetryInterface sym;
       return false;
     String file = FileManager.fixDOSName(SV.sValue(args[0]));
     boolean asMap = (args.length > 1 && args[1].tok == T.on);
-    boolean async = (vwr.async
+    boolean async = (vwr.async || file.startsWith("cache://")
         || args.length > 2 && args[args.length - 1].tok == T.on);
     int nBytesMax = (args.length > 1 && args[1].tok == T.integer
         ? args[1].asInt()
@@ -3447,7 +3447,8 @@ SymmetryInterface sym;
     boolean asJSON = (args.length > 1
         && args[1].asString().equalsIgnoreCase("JSON"));
     if (asMap)
-      return mp.addXMap((Map<String, Object>) vwr.fm.getFileAsMap(file, null, false));
+      return mp.addXMap(
+          (Map<String, Object>) vwr.fm.getFileAsMap(file, null, false));
     boolean isQues = file.startsWith("?");
     if (Viewer.isJS && (isQues || async)) {
       if (isFile && isQues)
