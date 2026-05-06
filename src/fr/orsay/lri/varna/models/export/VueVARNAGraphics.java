@@ -27,5 +27,6 @@ public interface VueVARNAGraphics {
 	public void setSelectionStroke();
 	public void setPlainStroke();
 	public void setStrokeThickness(double t);
+	public boolean isVarnaPanel();
 
 }

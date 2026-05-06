@@ -128,7 +128,7 @@ public class ControleurDemoTextField implements CaretListener {
 					_vod.get_struct().setForeground(Color.black);
 				}
 			}
-			_vod.get_varnaPanel().getVARNAUI().UIReset();
+			_vod.get_varnaPanel().getVARNAUI().reset();
 			String info = new String();
 			if (infos.size() != 0) {
 				info += infos.get(0);

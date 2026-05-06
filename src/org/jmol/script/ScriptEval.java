@@ -9349,7 +9349,7 @@ public class ScriptEval extends ScriptExpr {
     if (filename == null)
       invArg();
     if (withType && !"string".equals(filename) && !JC.ZAP_TITLE.equals(filename)) {
-      String ft = vwr.fm.getFileType();
+      String ft = vwr.fm.getLastReadFileType();
       if (ft != null && ft.length() > 0)
         filename = ft + "::" + filename;
     }

@@ -64,6 +64,7 @@ import org.jmol.util.Edge;
 import org.jmol.util.Elements;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
+import org.openscience.jmol.app.plugins.JMEJmolI;
 
 import javajs.util.P3d;
 import javajs.util.PT;
@@ -86,7 +87,7 @@ import jme.util.JMEUtil;
  *
  */
 @SuppressWarnings("serial")
-public class JMEJmol extends JME implements WindowListener {
+public class JMEJmol extends JME implements JMEJmolI, WindowListener {
 
   public final static boolean isJME_SwingJS = true;
   
@@ -107,6 +108,12 @@ public class JMEJmol extends JME implements WindowListener {
   public JMEJmol() {
     super(null, true, new String[0]);
   }
+  
+  public void setHeadless() {
+    headless = true;
+    parentWindow = myFrame = null;
+    options("headless");
+  }
 
   public JMEJmol(String[] args) {
     super(null, true, args);
@@ -114,14 +121,17 @@ public class JMEJmol extends JME implements WindowListener {
     setRemoveHsC();
   }
 
+  @Override
   public void setViewer(JFrame frame, Viewer vwr, Container parent,
-                        String frameType) {
+                        String frameType, boolean headless) {
     // from JmolPanel
     parentWindow = parent;
     this.vwr = vwr;
     if (parent == null && frame == null && !"search".equals(frameType))
-      headless = vwr.headless;
-    if (!headless) {
+      headless = true;
+    if (headless) {
+      setHeadless();
+    } else {
       if (frame == null) {
         frame = getJmolFrame(frameType, (parent == null));
       }
@@ -138,10 +148,12 @@ public class JMEJmol extends JME implements WindowListener {
     }
   }
 
+  @Override
   public boolean isFrameVisible() {
     return myFrame != null && myFrame.isVisible();
   }
 
+  @Override
   public void setFrameVisible(boolean b) {
     if (myFrame != null && !headless)
       myFrame.setVisible(b);
@@ -363,6 +375,7 @@ public class JMEJmol extends JME implements WindowListener {
     return drawMolecularArea(null, new Point(marginX, marginY));
   }
 
+  @Override
   public void from3D() {
     if (vwr.getFrameAtoms().isEmpty())
       return;
@@ -913,30 +926,30 @@ public class JMEJmol extends JME implements WindowListener {
     info.put("noDisplay", Boolean.TRUE);
     info.put("repaintManager", "NONE");
     Viewer vwr = new Viewer(info);
-    JMEJmol jjme = new JMEJmol(new String[] { JME.NO_INIT });
-    jjme.vwr = vwr;
+    JMEJmol jme = new JMEJmol(new String[] { JME.NO_INIT });
+    jme.vwr = vwr;
 
     String type = null;
 
     boolean dostart = true;
     if (args.length > 0) {
       if (args[0].equals("headless")) {
-        jjme.initialize(args);
-        jjme.options("headless");
+        jme.initialize(args);
+        jme.options("headless");
         dostart = false;
       } else if (args[0].equals("search")) {
-        jjme.initialize(args);
+        jme.initialize(args);
         type = "search";
       } else if (args[0].equals("test")) {
         switch (args[1]) {
         case "headless":
-          jjme.initialize(args);
-          testJMEHeadless(jjme);
+          jme.initialize(args);
+          testJMEHeadless(jme);
           dostart = false;
           break;
         case "data":
-          jjme.initialize(args);
-          testJmolData(jjme, args);
+          jme.initialize(args);
+          testJmolData(jme, args);
           dostart = false;
           break;
         case "jmol":
@@ -946,7 +959,7 @@ public class JMEJmol extends JME implements WindowListener {
       }
     }
     if (dostart)
-      startJmolJME(frame, jjme, type);
+      startJmolJME(frame, jme, type);
     /**
      * @j2sNative
      * 
@@ -975,7 +988,7 @@ public class JMEJmol extends JME implements WindowListener {
       });
     }
 
-    jjme.setViewer(frame, jjme.vwr, embeddingFrame, type);
+    jjme.setViewer(frame, jjme.vwr, embeddingFrame, type, false);
     jjme.vwr.getInchi(null, null, null); // initialize InChI
 
     // jjme.openMolByName( "cholesterol");
@@ -1014,7 +1027,7 @@ public class JMEJmol extends JME implements WindowListener {
     });
     frame.setBounds(300, 200, 24 * 18, 24 * 16); // urcuje dimensions pre
     jjme.vwr.getInchi(null, null, null); // initialize InChI
-    jjme.setViewer(frame, jjme.vwr, null, null);
+    jjme.setViewer(frame, jjme.vwr, null, null, false);
 
     //jjme.openMolByName( "cholesterol");
     //jjme.openMolByName("morphine");

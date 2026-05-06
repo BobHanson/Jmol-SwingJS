@@ -183,7 +183,6 @@ public class RNA implements InterfaceVARNAObservable {
 
   private BaseSet _selectedBases = new BaseSet("selection");
 
-
   /**
    * the strand list
    */
@@ -214,7 +213,6 @@ public class RNA implements InterfaceVARNAObservable {
   transient private ArrayList<InterfaceVARNAListener> _listeVARNAListener = new ArrayList<InterfaceVARNAListener>();
 
   //unused private static final double MIN_DISTANCE = 10.;
-
 
   public RNA() {
     this("");
@@ -251,28 +249,44 @@ public class RNA implements InterfaceVARNAObservable {
 
   private Map<Integer, Integer> mapResnoToIndex;
 
+  public void setResidueNumbers(int[] resnos) {
+	    if (mapResnoToIndex == null) {
+	      mapResnoToIndex  = new HashMap<>();
+	    }
+	    for (int i = _listeBases.size(); --i >= 0;) {
+	      _listeBases.get(i).setResidueNumber(resnos[i]);
+	      mapResnoToIndex.put(Integer.valueOf(resnos[i]), Integer.valueOf(i));
+	    }
+	  }
+  /**
+   * these are guarranteed to be unique
+   */
+  private Map<String, Integer> mapGroupIDToIndex;
+
+  public void setGroupIDs(String[] GroupIDs) {
+	    if (mapGroupIDToIndex == null) {
+	      mapGroupIDToIndex = new HashMap<>();
+	    }
+	    for (int i = _listeBases.size(); --i >= 0;) {
+	      _listeBases.get(i).setGroupID(GroupIDs[i]);
+	      mapGroupIDToIndex.put(GroupIDs[i], Integer.valueOf(i));
+	    }
+	  }
+
+  
   public int[] caretToIndex;
   private transient int textOffset;
-  
-  public void setResidueNumbers(int[] resnos) {
-    if (mapResnoToIndex == null) {
-      mapResnoToIndex  = new HashMap<>();
-    }
-    for (int i = _listeBases.size(); --i >= 0;) {
-      _listeBases.get(i).setResidueNumber(resnos[i]);
-      mapResnoToIndex.put(Integer.valueOf(resnos[i]), Integer.valueOf(i));
-    }
-  }
-  
+
   /**
    * return null if set is not empty but there are no applicable residues
+   * 
    * @param set
    * @return array of indices or null
    */
-  public ArrayList<Integer> getBasesByResidueNumber(Iterable<Integer> set) {
+  public ArrayList<Integer> getBasesByResidueNumber(Iterable<?> set) {
     ArrayList<Integer> list = new ArrayList<>();
-    if (mapResnoToIndex != null) {
-      for (Integer resno : set) {
+     if (mapResnoToIndex != null) {
+      for (Object resno : set) {
         Integer index = mapResnoToIndex.get(resno);
         if (index != null)
           list.add(index);
@@ -360,12 +374,14 @@ public class RNA implements InterfaceVARNAObservable {
   }
 
   public Color getBaseNameColor(int i, VARNAConfig conf) {
-    Color result = _listeBases.get(i).getStyleBase().getBaseNameColor();
-    if (RNA.whiteLabelPreferrable(getBaseInnerColor(i, conf))) {
-      result = Color.white;
-    }
-
-    return result;
+    //Color result = _listeBases.get(i).getStyleBase().getBaseNameColor();
+    return ModeleColorMap.getBgContrast(getBaseInnerColor(i, conf));
+    // just make it black or white contrast
+//    if (RNA.whiteLabelPreferrable(getBaseInnerColor(i, conf))) {
+//      result = Color.white;
+//    }
+//
+//    return result;
   }
 
   public Color getBasePairColor(ModeleBP bp, VARNAConfig conf) {
@@ -735,60 +751,60 @@ public class RNA implements InterfaceVARNAObservable {
 
         if (dist > 0) {
           if (bt != BackboneType.DISCONTINUOUS_TYPE) {
-          Color c = _backbone.getColorBefore(i, conf._backboneColor);
-          if (bt == BackboneType.MISSING_PART_TYPE) {
-            c.brighter();
-          }
-          out.setColor(c);
+            Color c = _backbone.getColorBefore(i, conf._backboneColor);
+            if (bt == BackboneType.MISSING_PART_TYPE) {
+              c.brighter();
+            }
+            out.setColor(c);
 
-          vn.x = (x1 - x0) / dist;
-          vn.y = (y1 - y0) / dist;
-          if (consecutivePair && (getDrawMode() != RNA.DRAW_MODE_LINEAR)
-              && (getDrawMode() != RNA.DRAW_MODE_CIRCULAR)) {
-            int dir = 0;
-            if (i + 1 < coords.length) {
-              dir = (testDirectionality(i - 1, i, i + 1) ? 1 : -1);
-            } else if (i - 2 >= 0) {
-              dir = (testDirectionality(i - 2, i - 1, i) ? 1 : -1);
-            }
-            Point2D.Double centerSeg = new Point2D.Double((p1.x + p2.x) / 2.0,
-                (p1.y + p2.y) / 2.0);
-            double centerDist = RNA.VIRTUAL_LOOP_RADIUS * scale;
-            Point2D.Double centerLoop = new Point2D.Double(
-                centerSeg.x + centerDist * dir * vn.y,
-                centerSeg.y - centerDist * dir * vn.x);
-            // Debug crosshair
-            //out.drawLine(centerLoop.x - 5, centerLoop.y,
-            //    centerLoop.x + 5, centerLoop.y, 2.0);
-            //out.drawLine(centerLoop.x, centerLoop.y - 5,
-            //    centerLoop.x, centerLoop.y + 5, 2.0);
+            vn.x = (x1 - x0) / dist;
+            vn.y = (y1 - y0) / dist;
+            if (consecutivePair && (getDrawMode() != RNA.DRAW_MODE_LINEAR)
+                && (getDrawMode() != RNA.DRAW_MODE_CIRCULAR)) {
+              int dir = 0;
+              if (i + 1 < coords.length) {
+                dir = (testDirectionality(i - 1, i, i + 1) ? 1 : -1);
+              } else if (i - 2 >= 0) {
+                dir = (testDirectionality(i - 2, i - 1, i) ? 1 : -1);
+              }
+              Point2D.Double centerSeg = new Point2D.Double((p1.x + p2.x) / 2.0,
+                  (p1.y + p2.y) / 2.0);
+              double centerDist = RNA.VIRTUAL_LOOP_RADIUS * scale;
+              Point2D.Double centerLoop = new Point2D.Double(
+                  centerSeg.x + centerDist * dir * vn.y,
+                  centerSeg.y - centerDist * dir * vn.x);
+              // Debug crosshair
+              //out.drawLine(centerLoop.x - 5, centerLoop.y,
+              //    centerLoop.x + 5, centerLoop.y, 2.0);
+              //out.drawLine(centerLoop.x, centerLoop.y - 5,
+              //    centerLoop.x, centerLoop.y + 5, 2.0);
 
-            double radius = centerLoop.distance(p1);
-            double a1 = 360.
-                * (Math.atan2(p1.y - centerLoop.y, p1.x - centerLoop.x))
-                / (2. * Math.PI);
-            double a2 = 360.
-                * (Math.atan2(p2.y - centerLoop.y, p2.x - centerLoop.x))
-                / (2. * Math.PI);
-            if (dir > 0) {
-              double tmp = a1;
-              a1 = a2;
-              a2 = tmp;
+              double radius = centerLoop.distance(p1);
+              double a1 = 360.
+                  * (Math.atan2(p1.y - centerLoop.y, p1.x - centerLoop.x))
+                  / (2. * Math.PI);
+              double a2 = 360.
+                  * (Math.atan2(p2.y - centerLoop.y, p2.x - centerLoop.x))
+                  / (2. * Math.PI);
+              if (dir > 0) {
+                double tmp = a1;
+                a1 = a2;
+                a2 = tmp;
+              }
+              if (a1 < 0) {
+                a1 += 360.;
+              }
+              if (a2 < 0) {
+                a2 += 360.;
+              }
+              out.drawArc(centerLoop, 2. * radius, 2. * radius, a1, a2);
+            } else {
+              out.drawLine((x0 + BASE_RADIUS * vn.x), (y0 + BASE_RADIUS * vn.y),
+                  (x1 - BASE_RADIUS * vn.x), (y1 - BASE_RADIUS * vn.y), 1.0);
             }
-            if (a1 < 0) {
-              a1 += 360.;
-            }
-            if (a2 < 0) {
-              a2 += 360.;
-            }
-            out.drawArc(centerLoop, 2. * radius, 2. * radius, a1, a2);
-          } else {
-            out.drawLine((x0 + BASE_RADIUS * vn.x), (y0 + BASE_RADIUS * vn.y),
-                (x1 - BASE_RADIUS * vn.x), (y1 - BASE_RADIUS * vn.y), 1.0);
           }
         }
       }
-    }
     }
 
     // Drawing bonds
@@ -865,10 +881,11 @@ public class RNA implements InterfaceVARNAObservable {
       Color baseInnerColor = getBaseInnerColor(i, conf);
       Color baseOuterColor = getBaseOuterColor(i, conf);
       Color baseNameColor = getBaseNameColor(i, conf);
-      if (RNA.whiteLabelPreferrable(baseInnerColor)) {
-        baseNameColor = Color.white;
-      }
-
+//
+//      if (RNA.whiteLabelPreferrable(baseInnerColor)) {
+//        baseNameColor = Color.white;
+//      }
+//
       if (_listeBases.get(i) instanceof ModeleBasesComparison) {
         ModeleBasesComparison mb = (ModeleBasesComparison) _listeBases.get(i);
         if (conf._fillBases) {
@@ -1215,7 +1232,8 @@ public class RNA implements InterfaceVARNAObservable {
   }
 
   /**
-   * @param conf unused 
+   * @param conf
+   *        unused
    */
   public void drawRNAVARNAView(VARNAConfig conf) {
     _drawn = true;
@@ -1279,11 +1297,12 @@ public class RNA implements InterfaceVARNAObservable {
   }
 
   /**
-   * @param nbHel 
-   * @param nbUnpaired 
-   * @param startRadius unused  
-   * @param bpdist 
-   * @param multidist 
+   * @param nbHel
+   * @param nbUnpaired
+   * @param startRadius
+   *        unused
+   * @param bpdist
+   * @param multidist
    * @return radius
    */
   public static double determineRadius(int nbHel, int nbUnpaired,
@@ -2150,6 +2169,7 @@ public class RNA implements InterfaceVARNAObservable {
   public boolean isSet() {
     return (_listeBases.size() > 1);
   }
+
   /**
    * Sets the RNA to be drawn. Uses when comparison mode is on. Will draw the
    * super-structure passed in parameters and apply specials styles to the bases
@@ -2493,6 +2513,7 @@ public class RNA implements InterfaceVARNAObservable {
     }
     return result;
   }
+
   public void setTextIndexes() {
     int acc = 0;
     for (int i = 0; i < getSize(); i++) {
@@ -2504,17 +2525,16 @@ public class RNA implements InterfaceVARNAObservable {
 
   }
 
-
-//  public String addStrandSeparators(String s) {
-//    String res = "";
-//    for (int i = 0; i < s.length(); i++) {
-//      res += s.charAt(i);
-//      if (_backbone.isStrandEnd(i)) {
-//        res += DBNStrandSep;
-//      }
-//    }
-//    return res;
-//  }
+  //  public String addStrandSeparators(String s) {
+  //    String res = "";
+  //    for (int i = 0; i < s.length(); i++) {
+  //      res += s.charAt(i);
+  //      if (_backbone.isStrandEnd(i)) {
+  //        res += DBNStrandSep;
+  //      }
+  //    }
+  //    return res;
+  //  }
 
   public String getStructDBN(boolean includeMostPKs) {
     String result = getStructDBN();
@@ -2560,24 +2580,25 @@ public class RNA implements InterfaceVARNAObservable {
 
   }
 
-//  public String getStructDBN(int[] str) {
-//    String result = "";
-//    for (int i = 0; i < str.length; i++) {
-//      if (str[i] == -1) {
-//        result += ".";
-//      } else if (str[i] > i) {
-//        result += "(";
-//      } else {
-//        result += ")";
-//      }
-//    }
-//    return addStrandSeparators(result);
-//  }
+  //  public String getStructDBN(int[] str) {
+  //    String result = "";
+  //    for (int i = 0; i < str.length; i++) {
+  //      if (str[i] == -1) {
+  //        result += ".";
+  //      } else if (str[i] > i) {
+  //        result += "(";
+  //      } else {
+  //        result += ")";
+  //      }
+  //    }
+  //    return addStrandSeparators(result);
+  //  }
 
   protected int[] getCaretToIndex() {
     if (caretToIndex != null)
       return caretToIndex;
-    caretToIndex = new int[_listeBases.size()+_backbone.bsStrandEnds.cardinality()]; 
+    caretToIndex = new int[_listeBases.size()
+        + _backbone.bsStrandEnds.cardinality()];
     for (int i = 0, p = 0; i < _listeBases.size(); i++, p++) {
       caretToIndex[p] = i;
       if (_backbone.isStrandEnd(i)) {
@@ -2586,7 +2607,7 @@ public class RNA implements InterfaceVARNAObservable {
     }
     return caretToIndex;
   }
-  
+
   /**
    * Returns the raw nucleotides sequence for the displayed RNA
    * 
@@ -3058,6 +3079,8 @@ public class RNA implements InterfaceVARNAObservable {
    * be unique, base numbers are not necessarily contiguous, and indices should
    * be preferred for any reasonably complex algorithmic treatment.
    * 
+   * BH: Uniqueness is only true if they are all in the same chain.
+   * 
    * @param num
    *        The base number
    * @return The first index whose associated Base model has base number
@@ -3065,12 +3088,18 @@ public class RNA implements InterfaceVARNAObservable {
    */
 
   public int getIndexFromResidueNumber(int num) {
+
     for (int i = 0; i < this._listeBases.size(); i++) {
       if (_listeBases.get(i).getResidueNumber() == num) {
         return i;
       }
     }
     return -1;
+  }
+
+  public int getIndexFromGroupID(String id) {
+    Integer n = mapGroupIDToIndex.get(id);
+    return (n == null ? -1 : n.intValue());
   }
 
   /**
@@ -3104,8 +3133,8 @@ public class RNA implements InterfaceVARNAObservable {
 
   public void addBPToStructureUsingNumbers(int number5, int number3,
                                            ModeleBP msbp) {
-    addBP(getIndexFromResidueNumber(number5), getIndexFromResidueNumber(number3),
-        msbp);
+    addBP(getIndexFromResidueNumber(number5),
+        getIndexFromResidueNumber(number3), msbp);
   }
 
   public void addBP(int index5, int index3) {
@@ -3327,6 +3356,7 @@ public class RNA implements InterfaceVARNAObservable {
 
   /**
    * do not allow null name, for .equals()
+   * 
    * @param n
    */
   public void setName(String n) {
@@ -3810,7 +3840,6 @@ public class RNA implements InterfaceVARNAObservable {
     return mbs;
   }
 
-  
   public ArrayList<ModeleBase> getBasesBetween(int from, int to) {
     ArrayList<ModeleBase> mbs = new ArrayList<ModeleBase>();
     int bck = Math.min(from, to);
@@ -4127,9 +4156,10 @@ public class RNA implements InterfaceVARNAObservable {
     hd.endElement("", "", XML_ELEMENT_NAME);
   }
 
-   @Override
+  @Override
   public String toString() {
-    return (!isSet() ? "unset" : "") + (_name == null || _name.equals("") ? getSeq() : _name);
+    return (!isSet() ? "unset" : "")
+        + (_name == null || _name.equals("") ? getSeq() : _name);
   }
 
   @Override
@@ -4137,8 +4167,7 @@ public class RNA implements InterfaceVARNAObservable {
     if (!(o instanceof RNA))
       return false;
     RNA rna = (RNA) o;
-    return rna.modelID.equals(modelID)        
-    && rna.getSeq().equals(getSeq())
+    return rna.modelID.equals(modelID) && rna.getSeq().equals(getSeq())
         && rna.getStructDBN().equals(getStructDBN());
   }
 
@@ -4147,19 +4176,19 @@ public class RNA implements InterfaceVARNAObservable {
     return getSeq().hashCode();
   }
 
-  public void colorResidues(List<Integer> resnos,
-                            List<Integer> colorIndexes, List<Color> colors) {
+  public void colorResidues(List<?> GroupIDs, List<?> colorIndexes,
+                            List<Color> colors) {
     // note that colorIndex null indicates same as previous
-    Color lastColor = null;
-    for (int i = 0; i < resnos.size(); i++) {
-      Integer index = mapResnoToIndex.get(resnos.get(i));
+    for (int i = 0; i < GroupIDs.size(); i++) {
+      String GroupID = (String) GroupIDs.get(i);
+      Integer index = mapGroupIDToIndex.get(GroupID);
       if (index != null) {
-        Integer ci = colorIndexes.get(i);
-        Color c = (ci == null ? lastColor
-            : (lastColor = colors.get(ci.intValue())));
+        Color c = colors.get(((Integer) colorIndexes.get(i)).intValue());
+        //System.out.println(" i=" + i + " index=" + index + " c=" + c);
         _listeBases.get(index.intValue()).setColor(c);
       }
     }
+    System.out.println("???");
   }
 
   public void clearSelections() {
@@ -4194,22 +4223,20 @@ public class RNA implements InterfaceVARNAObservable {
     ModeleBase mb = getBaseAt(i);
     mb.setSelected(false);
     _selectedBases.removeBase(mb);
-    
+
   }
 
-  public void setSelected(ModeleBase m) {    
+  public void setSelected(ModeleBase m) {
     _selectedBases.addBase(m);
-    System.out.println("setSelected  " + _selectedBases.size());
-
     m.setSelected(true);
   }
 
-  public void selectBasesByResno(List<Integer> resnos) {
+  public void selectBasesByGroupID(List<?> GroupIDs) {
     clearSelections();
-    if (resnos == null)
+    if (GroupIDs == null)
       return;
-    for (int i = resnos.size(); --i >= 0;) {
-      Integer index = mapResnoToIndex.get(resnos.get(i));
+    for (int i = GroupIDs.size(); --i >= 0;) {
+      Integer index = mapGroupIDToIndex.get(GroupIDs.get(i));
       if (index != null)
         addSelection(index.intValue());
     }
@@ -4223,7 +4250,7 @@ public class RNA implements InterfaceVARNAObservable {
   public void setTextOffset(int scrollOffset) {
     this.textOffset = scrollOffset;
   }
-  
+
   public int getTextOffset() {
     return textOffset;
   }

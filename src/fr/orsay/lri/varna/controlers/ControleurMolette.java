@@ -41,11 +41,11 @@ public class ControleurMolette implements MouseWheelListener {
 		{
 			// Roulement vers le haut => zoom in
 			if (e.getWheelRotation() == -1) {
-				_vp.getVARNAUI().UIZoomIn();
+				_vp.getVARNAUI().zoomIn();
 			}
 			// Roulement vers le bas => zoom out
 			else {
-				_vp.getVARNAUI().UIZoomOut();
+				_vp.getVARNAUI().zoomOut();
 			}
 		}
 	}

@@ -102,10 +102,10 @@ public class ControleurMenu implements InterfaceVARNAListener,
 	private boolean optionEditRNA()
 	{
 		if (_type.equals("editallbps")) {
-			_vp.getVARNAUI().UIEditAllBasePairs();
+			_vp.getVARNAUI().editAllBasePairs();
 		}
 		else if (_type.equals("editallbases")) {
-			_vp.getVARNAUI().UIEditAllBases();
+			_vp.getVARNAUI().editAllBases();
 		}
 		else return false;
 		return true;
@@ -116,44 +116,44 @@ public class ControleurMenu implements InterfaceVARNAListener,
       return false;
     // a partir du menu principale (gestion des annotations)
     if (_type.equals("annotationsaddPosition")) {
-      _vp.getVARNAUI().UIAnnotationsAddPosition(
+      _vp.getVARNAUI().annotationsAddPosition(
           _vp.getPopup().getSpawnPoint().x, _vp.getPopup().getSpawnPoint().y);
     } else if (_type.equals("annotationsaddBase")) {
-      _vp.getVARNAUI().UIAnnotationsAddBase(_vp.getPopup().getSpawnPoint().x,
+      _vp.getVARNAUI().annotationsAddBase(_vp.getPopup().getSpawnPoint().x,
           _vp.getPopup().getSpawnPoint().y);
     } else if (_type.equals("annotationsaddLoop")) {
-      _vp.getVARNAUI().UIAnnotationsAddLoop(_vp.getPopup().getSpawnPoint().x,
+      _vp.getVARNAUI().annotationsAddLoop(_vp.getPopup().getSpawnPoint().x,
           _vp.getPopup().getSpawnPoint().y);
     } else if (_type.equals("annotationsaddChemProb")) {
-      _vp.getVARNAUI().UIAnnotationsAddChemProb(
+      _vp.getVARNAUI().annotationsAddChemProb(
           _vp.getPopup().getSpawnPoint().x, _vp.getPopup().getSpawnPoint().y);
     } else if (_type.equals("annotationsaddRegion")) {
-      _vp.getVARNAUI().UIAnnotationsAddRegion(_vp.getPopup().getSpawnPoint().x,
+      _vp.getVARNAUI().annotationsAddRegion(_vp.getPopup().getSpawnPoint().x,
           _vp.getPopup().getSpawnPoint().y);
     } else if (_type.equals("annotationsaddHelix")) {
-      _vp.getVARNAUI().UIAnnotationsAddHelix(_vp.getPopup().getSpawnPoint().x,
+      _vp.getVARNAUI().annotationsAddHelix(_vp.getPopup().getSpawnPoint().x,
           _vp.getPopup().getSpawnPoint().y);
     } else if (_type.equals("annotationsautohelices")) {
-      _vp.getVARNAUI().UIAutoAnnotateHelices();
+      _vp.getVARNAUI().autoAnnotateHelices();
     } else if (_type.equals("annotationsautointerior")) {
-      _vp.getVARNAUI().UIAutoAnnotateInteriorLoops();
+      _vp.getVARNAUI().autoAnnotateInteriorLoops();
     } else if (_type.equals("annotationsautoterminal")) {
-      _vp.getVARNAUI().UIAutoAnnotateTerminalLoops();
+      _vp.getVARNAUI().autoAnnotateTerminalLoops();
     } else if (_type.equals("annotationsautohelices")) {
-      _vp.getVARNAUI().UIAutoAnnotateHelices();
+      _vp.getVARNAUI().autoAnnotateHelices();
     } else if (_type.equals("annotationsremove")) {
-      _vp.getVARNAUI().UIAnnotationsRemove();
+      _vp.getVARNAUI().annotationsRemove();
     } else if (_type.equals("annotationsautoextremites")) {
-      _vp.getVARNAUI().UIAutoAnnotateStrandEnds();
+      _vp.getVARNAUI().autoAnnotateStrandEnds();
     } else if (_type.equals("annotationsedit")) {
-      _vp.getVARNAUI().UIAnnotationsEdit();
+      _vp.getVARNAUI().annotationsEdit();
       // a partir du menu selection (annotation la plus proche)
     } else if (_type.equals("Selectionannotationremove")) {
       _vp.getVARNAUI()
-          .UIAnnotationRemoveFromAnnotation(_vp.getSelectedAnnotation());
+          .annotationRemoveFromAnnotation(_vp.getSelectedAnnotation());
     } else if (_type.equals("Selectionannotationedit")) {
       _vp.getVARNAUI()
-          .UIAnnotationEditFromAnnotation(_vp.getSelectedAnnotation());
+          .annotationEditFromAnnotation(_vp.getSelectedAnnotation());
 
       // a partir d'une structure(base, loop, helix) dans l'arn
       // (annotation li� a la structure)
@@ -182,12 +182,12 @@ public class ControleurMenu implements InterfaceVARNAListener,
           break;
         }
         if (_type.endsWith("annotationadd")) {
-          _vp.getVARNAUI().UIAnnotationAddFromStructure(type, listeIndex);
+          _vp.getVARNAUI().annotationAddFromStructure(type, listeIndex);
         } else if (_type.contains("annotationremove")) {
-          _vp.getVARNAUI().UIAnnotationRemoveFromStructure(trouverAncrage(),
+          _vp.getVARNAUI().annotationRemoveFromStructure(trouverAncrage(),
               listeIndex);
         } else if (_type.contains("annotationedit")) {
-          _vp.getVARNAUI().UIAnnotationEditFromStructure(trouverAncrage(),
+          _vp.getVARNAUI().annotationEditFromStructure(trouverAncrage(),
               listeIndex);
         }
 
@@ -390,7 +390,7 @@ public class ControleurMenu implements InterfaceVARNAListener,
 
 	private boolean optionBase() {
 		if (_type.equals("baseChar")) {
-			_vp.getVARNAUI().UISetBaseCharacter();
+			_vp.getVARNAUI().setBaseCharacter();
 			return true;
 		}
 		return colorBases();
@@ -398,13 +398,13 @@ public class ControleurMenu implements InterfaceVARNAListener,
 
 	private boolean optionBasePair() {
 		if (_type.equals("basepair")) {
-			_vp.getVARNAUI().UIEditBasePair();
+			_vp.getVARNAUI().editBasePair();
 			return true;
 		} else if (_type.equals("bpcolor")) {
-			_vp.getVARNAUI().UIColorBasePair();
+			_vp.getVARNAUI().colorBasePair();
 			return true;
 		} else if (_type.equals("thickness")) {
-			_vp.getVARNAUI().UIThicknessBasePair();
+			_vp.getVARNAUI().thicknessBasePair();
 			return true;
 		}
 		return false;
@@ -414,22 +414,22 @@ public class ControleurMenu implements InterfaceVARNAListener,
 	
 	private boolean optionView() {
 		if (_type.equals("background")) {
-			_vp.getVARNAUI().UISetBackground();
+			_vp.getVARNAUI().setBackground();
 		} else if (_type.equals("shownc")) {
-			_vp.getVARNAUI().UIToggleShowNCBP();
+			_vp.getVARNAUI().toggleShowNCBP();
 		} else if (_type.equals("showbackbone")) {
-			_vp.getVARNAUI().UIToggleDrawBackbone();
+			_vp.getVARNAUI().toggleDrawBackbone();
 		} else if (_type.equals("shownp")) {
-			_vp.getVARNAUI().UIToggleShowNonPlanar();
+			_vp.getVARNAUI().toggleShowNonPlanar();
 		} else if (_type.equals("spaceBetweenBases")) {
-			_vp.getVARNAUI().UISetSpaceBetweenBases();
+			_vp.getVARNAUI().setSpaceBetweenBases();
 		} else if (_type.equals("bpheightincrement")) {
-			_vp.getVARNAUI().UISetBPHeightIncrement();
+			_vp.getVARNAUI().setBPHeightIncrement();
 		} else if (_type.equals("borderSize")) {
-			_vp.getVARNAUI().UISetBorder();
+			_vp.getVARNAUI().setBorder();
 		} else if (_type.startsWith("zoom")) {
 			if (_type.equals("zoom")) {
-				_vp.getVARNAUI().UICustomZoom();
+				_vp.getVARNAUI().customZoom();
 			} else {
 				String factor = _type.substring("zoom".length());
 				double pc = Integer.parseInt(factor);
@@ -438,9 +438,9 @@ public class ControleurMenu implements InterfaceVARNAListener,
 				_vp.repaint();
 			}
 		} else if (_type.equals("rotation")) {
-			_vp.getVARNAUI().UIGlobalRotation();
+			_vp.getVARNAUI().globalRotation();
 		} else if (_type.equals("rescale")) {
-			_vp.getVARNAUI().UIGlobalRescale();
+			_vp.getVARNAUI().globalRescale();
 		} else
 			return false;
 		return true;
@@ -449,11 +449,11 @@ public class ControleurMenu implements InterfaceVARNAListener,
 	
 	private boolean optionTitle() {
 		if (_type.equals("titleDisplay")) {
-			_vp.getVARNAUI().UISetTitleFont();
+			_vp.getVARNAUI().setTitleFont();
 		} else if (_type.equals("setTitle")) {
-			_vp.getVARNAUI().UISetTitle();
+			_vp.getVARNAUI().setTitle();
 		} else if (_type.equals("titleColor")) {
-			_vp.getVARNAUI().UISetTitleColor();
+			_vp.getVARNAUI().setTitleColor();
 		} else
 			return false;
 		return true;
@@ -462,15 +462,15 @@ public class ControleurMenu implements InterfaceVARNAListener,
 		
 	private boolean optionColorMap() {
 		if (_type.equals("toggleshowcolormap")) {
-			_vp.getVARNAUI().UIToggleColorMap();
+			_vp.getVARNAUI().toggleColorMap();
 		} else 	if (_type.equals("colormapcaption")) {
-			_vp.getVARNAUI().UISetColorMapCaption();
+			_vp.getVARNAUI().setColorMapCaption();
 		} else 	if (_type.equals("colormapstyle")) {
-			_vp.getVARNAUI().UISetColorMapStyle();
+			_vp.getVARNAUI().setColorMapStyle();
 		} else 	if (_type.equals("colormaploadvalues")) {
-			_vp.getVARNAUI().UILoadColorMapValues();
+			_vp.getVARNAUI().loadColorMapValues();
 		} else 	if (_type.equals("colormapvalues")) {
-			_vp.getVARNAUI().UISetColorMapValues();
+			_vp.getVARNAUI().setColorMapValues();
 		} else
 			return false;
 		return true;
@@ -479,9 +479,9 @@ public class ControleurMenu implements InterfaceVARNAListener,
 	private boolean optionRNADisplay() {
 		// les options d'affichages generales
 		if (_type.equals("gaspin")) {
-			_vp.getVARNAUI().UIToggleGaspinMode();
+			_vp.getVARNAUI().toggleGaspinMode();
 		} else if (_type.equals("backbone")) {
-			_vp.getVARNAUI().UISetBackboneColor();
+			_vp.getVARNAUI().setBackboneColor();
 		} else if (_type.equals("bonds")) {
 			Color c = JColorChooser.showDialog(_vp, "Choose new bonds color",
 					_vp.getBackground());
@@ -498,39 +498,39 @@ public class ControleurMenu implements InterfaceVARNAListener,
 				}
 			}
 		} else if (_type.equals("bpstyle")) {
-			_vp.getVARNAUI().UISetBPStyle();
+			_vp.getVARNAUI().setBPStyle();
 		} else if (_type.equals("specialbasecolored")) {
-			_vp.getVARNAUI().UIToggleColorSpecialBases();
+			_vp.getVARNAUI().toggleColorSpecialBases();
 		} else if (_type.equals("showwarnings")) {
-			_vp.getVARNAUI().UIToggleShowWarnings();
+			_vp.getVARNAUI().toggleShowWarnings();
 		} else if (_type.equals("dashbasecolored")) {
-			_vp.getVARNAUI().UIToggleColorGapsBases();
+			_vp.getVARNAUI().toggleColorGapsBases();
 		} else if (_type.equals("numPeriod")) {
-			_vp.getVARNAUI().UISetNumPeriod();
+			_vp.getVARNAUI().setNumPeriod();
 		} else if (_type.equals("eachKind")) {
 			if (_vp.getRNA().get_listeBases() != null) {
-				_vp.getVARNAUI().UIBaseTypeColor();
+				_vp.getVARNAUI().baseTypeColor();
 			} else {
 				_vp.emitWarning("No base");
 			}
 		} else if (_type.equals("eachCouple")) {
 			if (_vp.getRNA().get_listeBases() != null
 					&& _vp.getRNA().get_listeBases().size() != 0) {
-				_vp.getVARNAUI().UIBasePairTypeColor();
+				_vp.getVARNAUI().basePairTypeColor();
 			} else {
 				_vp.emitWarning("No base");
 			}
 		} else if (_type.equals("eachBase")) {
 			if (_vp.getRNA().get_listeBases() != null
 					&& _vp.getRNA().get_listeBases().size() != 0) {
-				_vp.getVARNAUI().UIBaseAllColor();
+				_vp.getVARNAUI().baseAllColor();
 			} else {
 				_vp.emitWarning("No base");
 			}
 		} else if (_type.equals("specialBasesColor")) {
-			_vp.getVARNAUI().UIPickSpecialBasesColor();
+			_vp.getVARNAUI().pickSpecialBasesColor();
 		} else if (_type.equals("dashBasesColor")) {
-			_vp.getVARNAUI().UIPickGapsBasesColor();
+			_vp.getVARNAUI().pickGapsBasesColor();
 		} else
 			return colorBases();
 		return true;
@@ -538,13 +538,13 @@ public class ControleurMenu implements InterfaceVARNAListener,
 
 	private boolean optionImport() {
 		if (_type.equals("userInput")) {
-				_vp.getVARNAUI().UIManualInput();
+				_vp.getVARNAUI().manualInput();
 		} else if (_type.equals("file")) {
-				_vp.getVARNAUI().UIFile();
+				_vp.getVARNAUI().openFileAsync();
 		} else if (_type.equals("print")) {
-			_vp.getVARNAUI().UIPrint();
+			_vp.getVARNAUI().print();
 		} else if (_type.equals("about")) {
-			_vp.getVARNAUI().UIAbout();
+			_vp.getVARNAUI().about();
 		} else
 			return false;
 		return true;
@@ -552,21 +552,21 @@ public class ControleurMenu implements InterfaceVARNAListener,
 
 	private boolean optionRedraw() {
 		if (_type.equals("reset")) {
-			_vp.getVARNAUI().UIReset();
+			_vp.getVARNAUI().reset();
 		} else if (_type.equals("circular")) {
-			_vp.getVARNAUI().UICircular();
+			_vp.getVARNAUI().circular();
 		} else if (_type.equals("radiate")) {
-			_vp.getVARNAUI().UIRadiate();
+			_vp.getVARNAUI().radiate();
 		} else if (_type.equals("naview")) {
-			_vp.getVARNAUI().UINAView();
+			_vp.getVARNAUI().aNAView();
 		} else if (_type.equals("varnaview")) {
-			_vp.getVARNAUI().UIVARNAView();
+			_vp.getVARNAUI().varnaView();
 		} else if (_type.equals("motifview")) {
-			_vp.getVARNAUI().UIMOTIFView();
+			_vp.getVARNAUI().motifView();
 		} else if (_type.equals("line")) {
-			_vp.getVARNAUI().UILine();
+			_vp.getVARNAUI().line();
 		} else if (_type.equals("flat")) {
-			_vp.getVARNAUI().UIToggleFlatExteriorLoop();
+			_vp.getVARNAUI().toggleFlatExteriorLoop();
 		} else
 			return false;
 		return true;
@@ -575,56 +575,56 @@ public class ControleurMenu implements InterfaceVARNAListener,
 	private boolean optionExport() {
 		if (_type.equals("saveas")) {
 			try {
-				_vp.getVARNAUI().UISaveAs();
+				_vp.getVARNAUI().saveAs();
 			} catch (ExceptionExportFailed e1) {
 				errorDialog(e1);
 			}
 		} else if (_type.equals("dbn")) {
 			try {
-				_vp.getVARNAUI().UISaveAsDBN();
+				_vp.getVARNAUI().saveAsDBN();
 			} catch (ExceptionExportFailed e) {
 				errorDialog(e);
 			}
 		} else if (_type.equals("bpseq")) {
 			try {
-				_vp.getVARNAUI().UISaveAsBPSEQ();
+				_vp.getVARNAUI().saveAsBPSEQ();
 			} catch (ExceptionExportFailed e) {
 				errorDialog(e);
 			}
 		} else if (_type.equals("ct")) {
 			try {
-				_vp.getVARNAUI().UISaveAsCT();
+				_vp.getVARNAUI().saveAsCT();
 			} catch (ExceptionExportFailed e) {
 				errorDialog(e);
 			}
 		} else if (_type.equals("eps")) {
 			try {
-				_vp.getVARNAUI().UIExportEPS();
+				_vp.getVARNAUI().exportEPS();
 			} catch (ExceptionWritingForbidden e1) {
 				errorDialog(e1);
 			}
 		} else if (_type.equals("tikz")) {
 			try {
-				_vp.getVARNAUI().UIExportTIKZ();
+				_vp.getVARNAUI().exportTIKZ();
 			} catch (ExceptionWritingForbidden e1) {
 				errorDialog(e1);
 			}
 		} else if (_type.equals("xfig")) {
 			try {
-				_vp.getVARNAUI().UIExportXFIG();
+				_vp.getVARNAUI().exportXFIG();
 			} catch (ExceptionWritingForbidden e1) {
 				errorDialog(e1);
 			}
 		} else if (_type.equals("svg")) {
 			try {
-				_vp.getVARNAUI().UIExportSVG();
+				_vp.getVARNAUI().exportSVG();
 			} catch (ExceptionWritingForbidden e1) {
 				errorDialog(e1);
 			}
 		} else if (_type.equals("jpeg")) {
-				_vp.getVARNAUI().UIExportJPEG();
+				_vp.getVARNAUI().exportJPEG();
 		} else if (_type.equals("png")) {
-				_vp.getVARNAUI().UIExportPNG();
+				_vp.getVARNAUI().exportPNG();
 		} else
 			return false;
 		return true;

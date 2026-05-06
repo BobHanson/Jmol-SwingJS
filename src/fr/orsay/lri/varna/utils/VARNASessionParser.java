@@ -20,6 +20,11 @@ package fr.orsay.lri.varna.utils;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.geom.Point2D;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -28,12 +33,18 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import fr.orsay.lri.varna.components.VARNAPanel;
+import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
+import fr.orsay.lri.varna.models.FullBackup;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation;
 import fr.orsay.lri.varna.models.annotations.ChemProbAnnotation.ChemProbAnnotationType;
@@ -476,5 +487,96 @@ public class VARNASessionParser extends DefaultHandler {
 	{
 		return config;
 	}
+
+  /**
+   * A VARNA session file is expected. If it is not, but the input stream is
+   * valid, then return null; if it is a Varna XML file and there is a problem,
+   * then throw an exception.
+   * 
+   * @param path
+   *        Accepts a File or String
+   * @return null if not a session file;
+   * @throws ExceptionLoadingFailed if there is a problem reading the XML
+   */
+	public static FullBackup importSession(Object path) // BH was String
+      throws ExceptionLoadingFailed {
+	  FileInputStream fis = null;
+    try {
+      fis = (path instanceof File
+          ? new FileInputStream((File) path)
+          : new FileInputStream(path.toString()));
+      // fis is clsed in importSession
+      return importSession(new BufferedInputStream(fis), path.toString());
+    } catch (FileNotFoundException e) {
+      throw new ExceptionLoadingFailed("File not found.", path.toString());
+    }
+  }
+
+  /**
+   * A VARNA session file is expected. If it is not, but the input stream is
+   * valid, then return null; if it is a Varna XML file and there is a problem,
+   * then throw an exception.
+   * 
+   * the buffered input stream is closed
+   * 
+   * @param bis
+   *        closed if requested or this is a VARNA session file and there is a
+   *        read error
+   * 
+   * @param path
+   *        for reporting only
+   * @return null on failure
+   * 
+   * @throws ExceptionLoadingFailed
+   */
+  public static FullBackup importSession(BufferedInputStream bis, String path)
+      throws ExceptionLoadingFailed {
+    FullBackup ret = null;
+    String err = null;
+    if (isVarnaXML(bis)) {
+      System.setProperty("javax.xml.parsers.SAXParserFactory",
+          "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
+      SAXParserFactory saxFact = javax.xml.parsers.SAXParserFactory
+          .newInstance();
+      saxFact.setValidating(false);
+      saxFact.setXIncludeAware(false);
+      saxFact.setNamespaceAware(false);
+      try {
+        SAXParser sp = saxFact.newSAXParser();
+        VARNASessionParser sessionData = new VARNASessionParser();
+        sp.parse(bis, sessionData);
+        ret = new FullBackup(sessionData.getVARNAConfig(), sessionData.getRNA(),
+            "test");
+      } catch (ParserConfigurationException e) {
+        err = "Bad XML parser configuration";
+      } catch (SAXException e) {
+        err = "XML parser Exception";
+      } catch (IOException e) {
+        err = "I/O error";
+      }
+    }
+    try {
+      bis.close();
+    } catch (IOException e) {
+    }
+    if (err != null)
+      throw new ExceptionLoadingFailed(err, path);
+    return ret;
+  }
+
+  public static boolean isVarnaXML(BufferedInputStream bis) {
+    if (!XMLUtils.isXML(bis))
+      return false;
+    bis.mark(110);
+    byte[] head = new byte[110];
+    try {
+      bis.read(head);
+      bis.reset();
+      return new String(head).contains("<VARNASession>");
+    } catch (IOException e) {
+      return false;
+    }
+  }
+
 
 }

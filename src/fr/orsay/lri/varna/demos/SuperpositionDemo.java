@@ -261,8 +261,8 @@ public class SuperpositionDemo extends JFrame implements InterfaceVARNAListener 
 
 		setVisible(true);
 
-		_vpMaster.getVARNAUI().UIRadiate();
-		_vpSlave.getVARNAUI().UIRadiate();		
+		_vpMaster.getVARNAUI().radiate();
+		_vpSlave.getVARNAUI().radiate();		
 		
 		onStructureRedrawn();
 	}

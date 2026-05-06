@@ -79,7 +79,7 @@ public class VARNAConsoleDemo extends JApplet implements InterfaceParameterLoade
     getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(vp, BorderLayout.CENTER);
 		getContentPane().add(app._tools, BorderLayout.SOUTH);
-		vp.getVARNAUI().UIRadiate();
+		vp.getVARNAUI().radiate();
 		setPreferredSize(new Dimension(400,400));
 		setVisible(true);
 		_console.setVisible(true);	

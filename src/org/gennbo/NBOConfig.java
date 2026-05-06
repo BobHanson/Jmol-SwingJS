@@ -55,11 +55,11 @@ import javax.swing.event.ChangeListener;
 import org.jmol.i18n.GT;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.GuiMap;
-import org.openscience.jmol.app.plugins.NBOPlugin;
+import org.openscience.jmol.app.plugins.NBOInterface;
 
 public class NBOConfig  {
 
-  public static final String NBO_WEB_SITE = "http://nbo7.chem.wisc.edu";
+  public static final String NBO_WEB_SITE = NBOInterface.NBO_WEB_SITE;
   public static final String ARCHIVE_DIR = NBO_WEB_SITE + "/jmol_nborxiv/";
 
   public static final String DEFAULT_SCRIPT = "zap;set nbocharges false;set antialiasdisplay;set fontscaling;" +
@@ -173,7 +173,7 @@ public class NBOConfig  {
   
   protected final NBODialog dialog;
   protected final Viewer vwr;
-  private final NBOPlugin nboPlugin;
+  private final NBOInterface nboPlugin;
   private final NBOService nboService;
 
   protected JSlider opacity = new JSlider(0, 10);

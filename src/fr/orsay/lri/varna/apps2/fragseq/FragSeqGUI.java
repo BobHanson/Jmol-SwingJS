@@ -83,6 +83,7 @@ import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
 import fr.orsay.lri.varna.exceptions.ExceptionNonEqualLength;
 import fr.orsay.lri.varna.models.FullBackup;
 import fr.orsay.lri.varna.utils.BasicINI;
+import fr.orsay.lri.varna.utils.VARNASessionParser;
 
 
 public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListener,DropTargetListener, WindowListener, ComponentListener, ActionListener, TreeSelectionListener {
@@ -890,7 +891,7 @@ public class FragSeqGUI extends JFrame implements TreeModelListener, MouseListen
 			VARNAHolder vh = (VARNAHolder) _varnaUpperPanels.getComponent(0);
 			vh.vp.toXML(path);
 			try {
-				FullBackup b = vh.vp.importSession(path);
+				FullBackup b = VARNASessionParser.importSession(path);
 				VARNAHolder vh2 = (VARNAHolder) _varnaUpperPanels.getComponent(1);
 				vh2.vp.setConfig(b.config);
 				vh2.vp.showRNAInterpolated(b.rna);

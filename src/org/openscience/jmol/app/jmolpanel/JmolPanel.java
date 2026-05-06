@@ -1594,12 +1594,14 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
   void openFile() {
     int flags0 = FileManager.NO_AUTOPLAY | FileManager.PDB_CARTOONS; // cartoons+fileOpen
     if (Viewer.isJS) {
+      // note that this is Jmol-SwingJS only
       AsyncFileChooser chooser = new AsyncFileChooser();
       chooser.showOpenDialog(frame, new Runnable() {
 
         @Override
         public void run() {
-          vwr.openFileAsyncSpecial(chooser.getSelectedFile().toString(), flags0);
+          vwr.openFileAsyncSpecial(chooser.getSelectedFile().toString(),
+              flags0);
         }
       }, null);
       
@@ -1684,13 +1686,12 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
     info = JOptionPane.showInputDialog(GT.$("width height?"), data);
     if (info == null)
       return new int[] { width, height };
-    double[] dims = new double[2];
-    int n = Parser.parseStringInfestedDoubleArray(info.replace(',', ' '), null,
-        dims);
+    int[] dims = new int[2];
+    int n = Parser.parseStringInfestedIntArray(info.replace(',', ' '), dims);
     if (n < 2)
       return new int[] { width, height };
-    resizeDisplay((int) dims[0], (int) dims[1]);
-    return new int[] { (int) dims[0], (int) dims[1] };
+    resizeDisplay(dims[0], dims[1]);
+    return new int[] { dims[0], dims[1] };
   }
 
   void resizeDisplay(int width, int height) {
@@ -1704,8 +1705,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       toolbar.setPreferredSize(d);
     menubar.setPreferredSize(new Dimension(width, menubar.getHeight()));  
     Platform.getWindow(this).pack();
-    d = new Dimension(width, height);
-    System.out.println("resizeDisplay " + display.getSize(d));
   }
 
   void updateLabels() {
@@ -2125,10 +2124,6 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       try {
         addPlugin(name,
             p = (JmolPlugin) Interface.getInterface(path, vwr, "plugin"));
-        if (p != null) {
-          System.out.println(p.getVersion());
-          System.out.println(p.getLicense());
-        }
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -2154,20 +2149,22 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         return Boolean.TRUE;
       //$FALL-THROUGH$
     case "":
+    case JC.PLUGIN_HEADLESS:
     case JC.PLUGIN_START:
     case JC.PLUGIN_SHOW:
       boolean hasCommand = (T.getTokenFromName(action) != null);
       boolean isStarted = isPluginActive(service);
+      Object o = data[1];
+      Map<String, Object>  options = (o instanceof Map ? (Map<String, Object>) o : null);
       switch (action) {
       case "":
+      case JC.PLUGIN_HEADLESS:
       case JC.PLUGIN_START:
         if (isStarted) {
           data[0] = service + " has already been started.";
           return Boolean.FALSE;
         }
-        Object o = data[1];
-        Map<String, Object> options = (o instanceof Map ? (Map<String, Object>) o : null);
-        p = ensurePluginActive(service, null, options);
+        p = ensurePluginActive(service, null, options, action.equals(JC.PLUGIN_HEADLESS));
         if (p == null) {
           data[0] = service + " could not be started";
         } else {
@@ -2181,7 +2178,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         if (isStarted && p.isVisible()) {
           return Boolean.TRUE;
         }
-        p = showPlugin(service, null, (Map<String, Object>) data[1]);
+        p = showPlugin(service, null, options);
         if (p == null) {
           data[0] = service + " could not be started.";
         } else {
@@ -2211,16 +2208,17 @@ private JmolPlugin getPlugin(String service) {
    if (disallowedPlugins.indexOf(";" + name + ";") >= 0) 
      return null;
    plugins.put(name, p);
+   System.out.println("Adding plugin " + p.getName());
    return p;
   }
 
 private JmolPlugin ensurePluginActive(String name, String path,
-                                 Map<String, Object> jmolOptions) {
+                                 Map<String, Object> jmolOptions, boolean isHeadless) {
    try {
      setPlugins();
      JmolPlugin p = getAndRegisterPlugin(name, path);
      if (!p.isStarted()) {
-       p.start(frame, vwr, jmolOptions);
+       p.start(frame, vwr, jmolOptions, isHeadless);
      }
      return p;
    } catch (Throwable e) {
@@ -2236,9 +2234,9 @@ private JmolPlugin ensurePluginActive(String name, String path,
  }
 
  JmolPlugin showPlugin(String name, String path, Map<String, Object> jmolOptions) {
-   JmolPlugin p = ensurePluginActive(name, path, jmolOptions);
-   if (p != null)
-     p.setVisible(!vwr.headless);   
+   JmolPlugin p = ensurePluginActive(name, path, jmolOptions, vwr.headless);
+   if (p != null && !vwr.headless && !p.isHeadless())
+     p.setVisible(true);   
    return p;
  }
 

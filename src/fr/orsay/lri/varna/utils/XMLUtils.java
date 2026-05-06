@@ -2,8 +2,9 @@ package fr.orsay.lri.varna.utils;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Formatter;
 
 import javax.xml.transform.sax.TransformerHandler;
 
@@ -12,6 +13,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 import fr.orsay.lri.varna.models.rna.ModeleBase;
+import fr.orsay.lri.varna.models.rna.ModeleColorMap;
 import fr.orsay.lri.varna.models.rna.RNA;
 
 public class XMLUtils {
@@ -27,12 +29,7 @@ public class XMLUtils {
   }  
   
   public static String toHTMLNotation(Color c) {
-    Formatter f = new Formatter();
-    f.format("#%02X%02X%02X", Integer.valueOf(c.getRed()),
-        Integer.valueOf(c.getGreen()), Integer.valueOf(c.getBlue()));
-    String ret = f.toString();
-    f.close();
-    return ret;
+    return ModeleColorMap.toHex(c);
   }
 
   public static void toXML(TransformerHandler hd, Font f) throws SAXException {
@@ -151,6 +148,18 @@ public class XMLUtils {
       return Double.parseDouble(val);
     }
     return defVal;
+  }
+
+  public static boolean isXML(BufferedInputStream bis) {
+    bis.mark(5);
+    byte[] head = new byte[5];
+    try {
+      bis.read(head);
+      bis.reset();
+      return new String(head).equals("<?xml");
+    } catch (IOException e) {
+      return false;
+    }
   }
 
 }

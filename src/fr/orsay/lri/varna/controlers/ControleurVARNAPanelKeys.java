@@ -73,220 +73,220 @@ public class ControleurVARNAPanelKeys implements KeyListener, FocusListener {
 			switch (e.getKeyCode()) {
 			case (KeyEvent.VK_A):
 				if (controlDown) {
-					ui.UIAbout();
+					ui.about();
 				}
 				break;
 			case (KeyEvent.VK_B):
 				if (controlDown) {
-					ui.UISetBorder();
+					ui.setBorder();
 				}
 				else
 					if (altDown) {
-						ui.UIToggleDrawBackbone();
+						ui.toggleDrawBackbone();
 					}
 				break;
 			case (KeyEvent.VK_C):
 				if (shiftDown && controlDown) {
-					ui.UISetColorMapCaption();
+					ui.setColorMapCaption();
 				}
 				break;
 			case (KeyEvent.VK_D):
 				if (controlDown) {
 					if (shiftDown) {
-						ui.UIPickGapsBasesColor();
+						ui.pickGapsBasesColor();
 					} else {
-						ui.UIToggleColorGapsBases();
+						ui.toggleColorGapsBases();
 					}
 				}
 				break;
 			case (KeyEvent.VK_E):
 				if (controlDown) {
-					ui.UIToggleShowNonPlanar();
+					ui.toggleShowNonPlanar();
 				}
 				break;
 			case (KeyEvent.VK_F):
 				if (controlDown) {
-					ui.UIToggleFlatExteriorLoop();
+					ui.toggleFlatExteriorLoop();
 				}
 				break;
 			case (KeyEvent.VK_G):
 				if (controlDown) {
-					ui.UISetBackground();
+					ui.setBackground();
 				}
 				else if (!shiftDown && altDown) {
-				  ui.UIToggleGaspinMode();
+				  ui.toggleGaspinMode();
 				}
 				break;
 			case (KeyEvent.VK_H):
 				if (controlDown && !shiftDown) {
-					ui.UISetBPHeightIncrement();
+					ui.setBPHeightIncrement();
 				}
 				else if (controlDown && shiftDown)
 				{
 					Point2D.Double p = _vp.getLastSelectedPosition();
-					ui.UIAnnotationsAddPosition((int)p.x,(int)p.y);
+					ui.annotationsAddPosition((int)p.x,(int)p.y);
 				}
 				break;
 			case (KeyEvent.VK_J):
 				if (controlDown) {
 					if (shiftDown) {
-						ui.UIPickSpecialBasesColor();
+						ui.pickSpecialBasesColor();
 					} else {
-						ui.UIToggleColorSpecialBases();
+						ui.toggleColorSpecialBases();
 					}
 				}
 				break;
 			case (KeyEvent.VK_K):
 				if (controlDown && shiftDown) {
-					ui.UILoadColorMapValues();
+					ui.loadColorMapValues();
 				}
 				else if (controlDown) {
-					ui.UISetBackboneColor();
+					ui.setBackboneColor();
 				}
 				break;
 			case (KeyEvent.VK_L):
 				if (shiftDown && controlDown) {
-					ui.UIToggleColorMap();
+					ui.toggleColorMap();
 				} else if (controlDown)
 				{
-					ui.UISetColorMapStyle();
+					ui.setColorMapStyle();
 				} else if (shiftDown)
 				{
-					ui.UISetColorMapValues();
+					ui.setColorMapValues();
 				} 
 				break;
 			case (KeyEvent.VK_M):
 				if (controlDown) {
-					ui.UISetNumPeriod();
+					ui.setNumPeriod();
 				} else if (shiftDown && altDown) {
-					ui.UIToggleModifiable();
+					ui.toggleModifiable();
 				}
 				break;
 			case (KeyEvent.VK_N):
 				if (controlDown) {
-					ui.UIManualInput();
+					ui.manualInput();
 				}
 				break;
 			case (KeyEvent.VK_O):
 				if (controlDown) {
-					ui.UIFile();
+					ui.openFileAsync();
 				}
 				break;
 			case (KeyEvent.VK_P):
 				if (controlDown && shiftDown) {
-					ui.UISetBPStyle();
+					ui.setBPStyle();
 				}
 				else if (controlDown && !shiftDown) {
-					ui.UIPrint();
+					ui.print();
 				}
 				break;
 			case (KeyEvent.VK_Q):
 				if      (controlDown && !shiftDown && !altDown) {
-					_vp.getVARNAUI().UIAutoAnnotateHelices();
+					_vp.getVARNAUI().autoAnnotateHelices();
 				}
 				else if (controlDown && shiftDown && !altDown) {
-					_vp.getVARNAUI().UIAutoAnnotateTerminalLoops();					
+					_vp.getVARNAUI().autoAnnotateTerminalLoops();					
 				}
 				else if (!controlDown && shiftDown && altDown) {
-					_vp.getVARNAUI().UIAutoAnnotateInteriorLoops();					
+					_vp.getVARNAUI().autoAnnotateInteriorLoops();					
 				}
 				else if (controlDown && !shiftDown && altDown) {
-					_vp.getVARNAUI().UIAutoAnnotateStrandEnds();					
+					_vp.getVARNAUI().autoAnnotateStrandEnds();					
 				}
 				break;
 			case (KeyEvent.VK_R):
 				if (controlDown) {
 					if (shiftDown) {
-						ui.UIReset();
+						ui.reset();
 					} else {
-						ui.UIGlobalRotation();
+						ui.globalRotation();
 					}
 				}
 				break;
 			case (KeyEvent.VK_S):
 				if (controlDown) {
 					if (shiftDown) {
-						ui.UISetSpaceBetweenBases();
+						ui.setSpaceBetweenBases();
 					} else {
-						ui.UISaveAs();
+						ui.saveAs();
 					}
 				}
 				break;
 			case (KeyEvent.VK_T):
 				if (controlDown) {
 					if (shiftDown) {
-						ui.UISetTitleFont();
+						ui.setTitleFont();
 					} else if (altDown) {
-						ui.UISetTitleColor();
+						ui.setTitleColor();
 					} else {
-						ui.UISetTitle();
+						ui.setTitle();
 					}
 				}
 				break;
 			case (KeyEvent.VK_U):
 				if (controlDown && !shiftDown && !altDown) {
-					_vp.getVARNAUI().UIBaseTypeColor();
+					_vp.getVARNAUI().baseTypeColor();
 				} else if (!controlDown && shiftDown && !altDown) {
-					_vp.getVARNAUI().UIBasePairTypeColor();
+					_vp.getVARNAUI().basePairTypeColor();
 				} else if (!controlDown && !shiftDown && altDown) {
-					_vp.getVARNAUI().UIBaseAllColor();
+					_vp.getVARNAUI().baseAllColor();
 				}
 				break;
 			case (KeyEvent.VK_W):
 				if (controlDown) {
-					ui.UIToggleShowNCBP();
+					ui.toggleShowNCBP();
 				}
 				break;
 			case (KeyEvent.VK_X):
 				if (controlDown) {
-					ui.UIExport();
+					ui.export();
 				}
 				break;
 			case (KeyEvent.VK_Y):
 				if (controlDown) {
-					ui.UIRedo();
+					ui.redo();
 				}
 			break;
 
 			case (KeyEvent.VK_Z):
 				if (controlDown && !shiftDown) {
-					ui.UIUndo();
+					ui.undo();
 				}
 				else if (controlDown && shiftDown) {
-					ui.UIRedo();
+					ui.redo();
 				}
 				else if (!controlDown && !shiftDown) {
-					ui.UICustomZoom();
+					ui.customZoom();
 				}
 				break;
 			case (KeyEvent.VK_1):
 				if (controlDown) {
-					ui.UILine();
+					ui.line();
 				}
 				break;
 			case (KeyEvent.VK_2):
 				if (controlDown) {
-					ui.UICircular();
+					ui.circular();
 				}
 				break;
 			case (KeyEvent.VK_3):
 				if (controlDown) {
-					ui.UIRadiate();
+					ui.radiate();
 				}
 				break;
 			case (KeyEvent.VK_4):
 				if (controlDown) {
-					ui.UINAView();
+					ui.aNAView();
 				}
 				break;
 			case (KeyEvent.VK_5):
 				if (controlDown) {
-					ui.UIVARNAView();
+					ui.varnaView();
 				}
 				break;
 			case (KeyEvent.VK_6):
 				if (controlDown) {
-					ui.UIMOTIFView();
+					ui.motifView();
 				}
 				break;
 
@@ -317,10 +317,10 @@ public class ControleurVARNAPanelKeys implements KeyListener, FocusListener {
 				break;
 			case (KeyEvent.VK_EQUALS):
 			case (KeyEvent.VK_PLUS):
-				ui.UIZoomIn();
+				ui.zoomIn();
 				break;
 			case (KeyEvent.VK_MINUS):
-				ui.UIZoomOut();
+				ui.zoomOut();
 				break;
 			}
 		} catch (Exception e1) {

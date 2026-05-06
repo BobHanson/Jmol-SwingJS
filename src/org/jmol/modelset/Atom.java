@@ -1606,6 +1606,20 @@ public class Atom extends Point3fi implements Node {
     return group.chain.model.ms.vwr.getAtomBitSet(atomExpression);
   }
 
+  /**
+   * Get the UnitID for the atoms. Flags are a bitset containing:
+   * 
+   * <code>
+     JC.UNITID_MODEL = 1;
+     JC.UNITID_RESIDUE = 2;
+     JC.UNITID_ATOM = 4;
+     JC.UNITID_INSCODE = 8;
+     JC.UNITID_TRIM = 16;
+  </code>
+   * 
+   * @param flags
+   * @return unitID string
+   */
   public String getUnitID(int flags) {
     Model m = group.chain.model;
     return (m.isBioModel ? ((BioModel) m).getUnitID(this, flags) : "");

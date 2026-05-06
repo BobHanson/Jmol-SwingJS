@@ -34,14 +34,14 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.JmolPlugin;
 import org.openscience.jmol.app.jmolpanel.JmolResourceHandler;
-import org.openscience.jmol.app.jspecview.JSVJmol;
+//import org.openscience.jmol.app.jspecview.JSVJmol;
 
 public class JSpecViewPlugin implements JmolPlugin {
 
   private JFrame parentFrame;
   @SuppressWarnings("unused")
   private Map<String, Object> options;
-  private JSVJmol app;
+  private JSVJmolI app;
 
   @Override
   public void destroy() {
@@ -104,12 +104,12 @@ public class JSpecViewPlugin implements JmolPlugin {
   }
 
   @Override
-  public void start(JFrame frame, Viewer vwr, Map<String, Object> jmolOptions) {
+  public void start(JFrame frame, Viewer vwr, Map<String, Object> jmolOptions, boolean headless) {
     parentFrame = frame;
     if (jmolOptions != null) {
       options = jmolOptions;
     }
-    app = (JSVJmol) Interface.getInterface("org.openscience.jmol.app.jspecview.JSVJmol", vwr, "plugin");
+    app = (JSVJmolI) Interface.getInterface("org.openscience.jmol.app.jspecview.JSVJmol", vwr, "plugin");
     app.setViewer(vwr, parentFrame);
     System.out.println("JSpecViewPlugin started.");
   }
@@ -124,6 +124,11 @@ public class JSpecViewPlugin implements JmolPlugin {
       return app.getJSpecViewProperty((String) value);
     }
     return null;
+  }
+
+  @Override
+  public boolean isHeadless() {
+    return false;
   }
 
 }

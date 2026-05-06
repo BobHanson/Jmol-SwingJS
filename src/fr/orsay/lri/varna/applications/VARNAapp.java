@@ -25,7 +25,6 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -36,6 +35,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.function.Consumer;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -91,19 +91,23 @@ import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.VARNAConfigLoader;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.RNA;
+import fr.orsay.lri.varna.utils.VARNASessionParser;
 import fr.orsay.lri.varna.utils.XMLUtils;
 import javajs.api.Interface;
 
 /**
  * A generalized VARNA application interface that includes one or more
  * VARNAPanel instances (as for VARNAEditor and VARNAGUI and VARNAApplet) as
- * well as maintaining options for a command-line or "headless" library-based interface
+ * well as maintaining options for a command-line or "headless" library-based
+ * interface
  * 
- * There are many changes here to the original VARNA 3.9 code. 
+ * There are many changes here to the original VARNA 3.9 code.
  * 
  * @author Bob Hanson 2026.04.20
  */
 public class VARNAapp implements InterfaceParameterLoader {
+
+  public static String NO_RNA_TEXT = "No RNA here";
 
   private static final String DEFAULT_SEQUENCE = "CAGCACGACACUAGCAGUCAGUGUCAGACUGCAIACAGCACGACACUAGCAGUCAGUGUCAGACUGCAIACAGCACGACACUAGCAGUCAGUGUCAGACUGCAIA";
 
@@ -125,17 +129,17 @@ public class VARNAapp implements InterfaceParameterLoader {
   //
   //  }
   //
-//  private class SelectionTextHighlight extends DefaultHighlightPainter {
-//
-//    public SelectionTextHighlight() {
-//      super(null);
-//    }
-//
-//    @Override
-//    public Color getColor() {
-//      return _vp.getSelectColor(Color.ORANGE);
-//    }
-//  }
+  //  private class SelectionTextHighlight extends DefaultHighlightPainter {
+  //
+  //    public SelectionTextHighlight() {
+  //      super(null);
+  //    }
+  //
+  //    @Override
+  //    public Color getColor() {
+  //      return _vp.getSelectColor(Color.ORANGE);
+  //    }
+  //  }
 
   private class RNATextHighlight extends DefaultHighlightPainter {
 
@@ -296,24 +300,24 @@ public class VARNAapp implements InterfaceParameterLoader {
       model.clear();
     }
 
-    public void colorBasesByResno(List<Color> colors,
-                                  Map<Integer, Map<String, List<Integer>>> map) {
+    public void colorBasesByGroupID(List<Color> colors,
+                                  Map<Integer, Map<String, List<?>>> map) {
       for (RNA rna : _rnas) {
-        Map<String, List<Integer>> modelData = map.get(rna.modelID);
+        Map<String, List<?>> modelData = map.get(rna.modelID);
         if (modelData != null) {
-          List<Integer> resnos = modelData.get("resnos");
-          List<Integer> colorIndexes = modelData.get("colorIndexes");
-          rna.colorResidues(resnos, colorIndexes, colors);
+          List<?> GroupIDs = modelData.get(VARNAViewerI.PROPERTY_GROUPIDS);
+          List<?> colorIndexes = modelData.get(VARNAViewerI.PROPERTY_COLOR_INDEXES);
+          rna.colorResidues(GroupIDs, colorIndexes, colors);
         }
       }
     }
 
-    public void selectBasesByResno(Map<Integer, Map<String, List<Integer>>> map) {
+    public void selectBasesByGroupID(Map<Integer, Map<String, List<?>>> map) {
       for (RNA rna : _rnas) {
-        Map<String, List<Integer>> modelData = (map == null ? null
+        Map<String, List<?>> modelData = (map == null ? null
             : map.get(rna.modelID));
-        rna.selectBasesByResno(
-            modelData == null ? null : modelData.get("resnos"));
+        rna.selectBasesByGroupID(
+            modelData == null ? null : modelData.get(VARNAViewerI.PROPERTY_GROUPIDS));
       }
 
     }
@@ -367,8 +371,8 @@ public class VARNAapp implements InterfaceParameterLoader {
   //  private SelectionTextHighlight selectionHighlight;
   //  private Object _hoverHighlightStr;
   //  private Object _hoverHighlightSeq;
-  //  private ArrayList<Object> _selectionHighlightStr;
-  //  private ArrayList<Object> _selectionHighlightSeq;
+  //  private ArrayList<?> _selectionHighlightStr;
+  //  private ArrayList<?> _selectionHighlightSeq;
 
   /**
    * turns off rna highlighting
@@ -400,13 +404,17 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   public void setFrame(JFrame frame) {
     this.frame = frame;
-    frame.addComponentListener(new ComponentAdapter() {
+    if (frame == null) {
+      headless = true;
+    } else {
+      frame.addComponentListener(new ComponentAdapter() {
 
-      @Override
-      public void componentResized(ComponentEvent e) {
-      }
+        @Override
+        public void componentResized(ComponentEvent e) {
+        }
 
-    });
+      });
+    }
   }
 
   private static int _nextID = 1;
@@ -438,8 +446,8 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   public VARNAapp(boolean enableEditing) {
     this.enableEditing = enableEditing;
-    _seq = newJTextField(DEFAULT_SEQUENCE, "seq");
-    _str = newJTextField(DEFAULT_STRUCTURE1, "str");
+    _seq = newJTextField("", "seq");
+    _str = newJTextField("", "str");
     sequenceSlider = new ButtonSlider();
     sequenceSlider.setPreferredSize(new Dimension(-1, 10));
   }
@@ -467,9 +475,6 @@ public class VARNAapp implements InterfaceParameterLoader {
     JTextField f2 = (f == _seq ? _str : _seq);
     f2.setScrollOffset(offset);
 
-    
-    
-    
     //    FontMetrics fm = _seq.getFontMetrics(_seq.getFont());
     //    double x =fm.stringWidth("X");
     //    String text = _seq.getText();
@@ -550,8 +555,8 @@ public class VARNAapp implements InterfaceParameterLoader {
     });
 
     input = new JPanel();
-    input.setMaximumSize(new Dimension(4000,55));
-    input.setPreferredSize(new Dimension(-1,55));
+    input.setMaximumSize(new Dimension(4000, 55));
+    input.setPreferredSize(new Dimension(-1, 55));
     input.setLayout(new BoxLayout(input, BoxLayout.Y_AXIS));
     input.add(newInput(" Seq:", _seq));
     input.add(newInput(" Str:", _str));
@@ -610,8 +615,8 @@ public class VARNAapp implements InterfaceParameterLoader {
     Component l;
     if (label == null) {
       l = Box.createHorizontalStrut(margin);
-      p.setPreferredSize(new Dimension(-1,10));
-      p.setMaximumSize(new Dimension(100000,10));
+      p.setPreferredSize(new Dimension(-1, 10));
+      p.setMaximumSize(new Dimension(100000, 10));
     } else {
       JLabel jl = new JLabel(label);
       jl.setHorizontalTextPosition(SwingConstants.LEFT);
@@ -714,7 +719,8 @@ public class VARNAapp implements InterfaceParameterLoader {
    * @param structure
    * @param name
    *        " MODEL 1.1" for example
-   * @param modelID   Jmol modelFileNumber
+   * @param modelID
+   *        Jmol modelFileNumber
    * @return RNA that is created, or null if it is already present in the given
    *         model
    */
@@ -782,8 +788,7 @@ public class VARNAapp implements InterfaceParameterLoader {
       frame.setTitle("VARNA " + sel.name);
     _vp.setConfig(sel.config);
     installModelRNA(sel.rna);
-    if (actionListener == null) {
-    } else {
+    if (actionListener != null) {
       actionListener.actionPerformed(
           new ActionEvent(sel, 0, VARNAViewerI.ACTION_SELECT_MODEL));
     }
@@ -860,7 +865,8 @@ public class VARNAapp implements InterfaceParameterLoader {
     _vp.addSelectionListener(new InterfaceVARNASelectionListener() {
 
       @Override
-      public void onHoverChanged(ModeleBase oldBase, ModeleBase newBase, boolean doNotify) {
+      public void onHoverChanged(ModeleBase oldBase, ModeleBase newBase,
+                                 boolean doNotify) {
         doHoverChange(oldBase, newBase, doNotify);
       }
 
@@ -878,9 +884,10 @@ public class VARNAapp implements InterfaceParameterLoader {
   /**
    * @param oldBase
    * @param newBase
-   * @param doNotify 
+   * @param doNotify
    */
-  protected void doHoverChange(ModeleBase oldBase, ModeleBase newBase, boolean doNotify) {
+  protected void doHoverChange(ModeleBase oldBase, ModeleBase newBase,
+                               boolean doNotify) {
     if (doNotify && actionListener != null) {
       actionListener.actionPerformed(new ActionEvent(
           new ModeleBase[] { newBase }, 1, VARNAViewerI.ACTION_HOVER));
@@ -947,6 +954,15 @@ public class VARNAapp implements InterfaceParameterLoader {
   };
 
   ArrayList<VARNAPanel> appletPanels;
+
+  boolean headless;
+  
+  public void setHeadless() {
+    headless = true;
+    _vp.setHeadless();
+  }
+
+  public final static String VARNA_SESSION_EXTENSION = "varna";
 
   public String setCLIOptions(Vector<String> args, String[] err) {
 
@@ -1023,21 +1039,22 @@ public class VARNAapp implements InterfaceParameterLoader {
             getParameterValue("structureDBN", ""));
         confs.add(new FullBackup(r, "From Params"));
       } else if (_inFile.toLowerCase().endsWith(".varna")) {
-        confs.add(VARNAPanel.importSession(_inFile));
+        confs.add(VARNASessionParser.importSession(_inFile));
       } else {
         Collection<RNA> rnas = RNAFactory.loadSecStr(_inFile);
         if (rnas.isEmpty()) {
-          FullBackup f = null;
+          FullBackup bck = null;
           try {
-            f = VARNAPanel.importSession(new FileInputStream(_inFile), _inFile);
-            confs.add(f);
+            // just in case this is a VARNA session file, but isn't xxx.varna
+            bck = VARNASessionParser.importSession(_inFile);
           } catch (Exception e) {
             e.printStackTrace();
           }
-          if (f == null) {
+          if (bck == null) {
             throw new ExceptionFileFormatOrSyntax(
                 "No RNA could be parsed from file '" + _inFile + "'.");
           }
+          confs.add(bck);
         } else {
           for (RNA r : rnas) {
             confs.add(new FullBackup(r, _inFile));
@@ -1288,15 +1305,17 @@ public class VARNAapp implements InterfaceParameterLoader {
    * 
    * @param map
    */
-  public void selectBasesByResno(Map<Integer, Map<String, List<Integer>>> map) {
-    _rnaList.selectBasesByResno(map);
+  public void selectBasesByGroupID(Map<Integer, Map<String, List<?>>> map) {
+    if (_rnaList == null)
+      return;
+    _rnaList.selectBasesByGroupID(map);
     _vp.setBlinkActive(true);
     repaintText();
   }
 
-  public void colorBasesByResno(List<Color> colors,
-                                Map<Integer, Map<String, List<Integer>>> map) {
-    _rnaList.colorBasesByResno(colors, map);
+  public void colorBasesByGroupID(List<Color> colors,
+                                Map<Integer, Map<String, List<?>>> map) {
+    _rnaList.colorBasesByGroupID(colors, map);
     repaintText();
   }
 
@@ -1317,33 +1336,33 @@ public class VARNAapp implements InterfaceParameterLoader {
   protected void doSelectionChanged(int selMode, BaseSet selection) {
     //clearSelectionHighlights();
     selectionColor = _vp.getSelectColor(Color.ORANGE);
-//    if (getRNAHighlight() != null) {
-      _vp.getRNA().setSelections(selection.getBaseList());
-//    } else {
-//      if (selectionHighlight == null) {
-//        selectionHighlight = new SelectionTextHighlight();
-//        _selectionHighlightStr = new ArrayList<Object>();
-//        _selectionHighlightSeq = new ArrayList<Object>();
-//      }
-//
-//      BitSet bsSelect = new BitSet();
-//      for (ModeleBase m : selection.getBaseList()) {
-//        _vp.getRNA().setSelected(m);
-//        bsSelect.set(m.getTextIndex());
-//      }
-//      for (int i = bsSelect.nextSetBit(0); i >= 0; i = bsSelect
-//          .nextSetBit(i + 1)) {
-//        int j = bsSelect.nextClearBit(i + 1);
-//        try {
-//          _selectionHighlightSeq.add(
-//              _seq.getHighlighter().addHighlight(i, j, selectionHighlight));
-//          _selectionHighlightStr.add(
-//              _str.getHighlighter().addHighlight(i, j, selectionHighlight));
-//        } catch (BadLocationException e) {
-//          e.printStackTrace();
-//        }
-//      }
-//    }
+    //    if (getRNAHighlight() != null) {
+    _vp.getRNA().setSelections(selection.getBaseList());
+    //    } else {
+    //      if (selectionHighlight == null) {
+    //        selectionHighlight = new SelectionTextHighlight();
+    //        _selectionHighlightStr = new ArrayList<?>();
+    //        _selectionHighlightSeq = new ArrayList<?>();
+    //      }
+    //
+    //      BitSet bsSelect = new BitSet();
+    //      for (ModeleBase m : selection.getBaseList()) {
+    //        _vp.getRNA().setSelected(m);
+    //        bsSelect.set(m.getTextIndex());
+    //      }
+    //      for (int i = bsSelect.nextSetBit(0); i >= 0; i = bsSelect
+    //          .nextSetBit(i + 1)) {
+    //        int j = bsSelect.nextClearBit(i + 1);
+    //        try {
+    //          _selectionHighlightSeq.add(
+    //              _seq.getHighlighter().addHighlight(i, j, selectionHighlight));
+    //          _selectionHighlightStr.add(
+    //              _str.getHighlighter().addHighlight(i, j, selectionHighlight));
+    //        } catch (BadLocationException e) {
+    //          e.printStackTrace();
+    //        }
+    //      }
+    //    }
     if (actionListener != null) {
       actionListener.actionPerformed(new ActionEvent(selection, selMode,
           VARNAViewerI.ACTION_SELECT_BASES));
@@ -1351,26 +1370,26 @@ public class VARNAapp implements InterfaceParameterLoader {
     repaintText();
   }
 
-// no longer necessary  
-//  /**
-//   * selectionHighlight has been abandonded as unnecessary, since now we have
-//   * rnaHighlight working, but leaving it here just in case.
-//   */
-//  private void clearSelectionHighlights() {
-////    if (rnaHighlight != null || _selectionHighlightSeq == null) {
-////      //_vp.getRNA().clearSelections();
-////      // this will take care of itself
-////      return;
-////    }
-////    for (Object tag : _selectionHighlightSeq) {
-////      _seq.getHighlighter().removeHighlight(tag);
-////    }
-////    _selectionHighlightSeq.clear();
-////    for (Object tag : _selectionHighlightStr) {
-////      _str.getHighlighter().removeHighlight(tag);
-////    }
-////    _selectionHighlightStr.clear();
-//  }
+  // no longer necessary  
+  //  /**
+  //   * selectionHighlight has been abandonded as unnecessary, since now we have
+  //   * rnaHighlight working, but leaving it here just in case.
+  //   */
+  //  private void clearSelectionHighlights() {
+  ////    if (rnaHighlight != null || _selectionHighlightSeq == null) {
+  ////      //_vp.getRNA().clearSelections();
+  ////      // this will take care of itself
+  ////      return;
+  ////    }
+  ////    for (Object tag : _selectionHighlightSeq) {
+  ////      _seq.getHighlighter().removeHighlight(tag);
+  ////    }
+  ////    _selectionHighlightSeq.clear();
+  ////    for (Object tag : _selectionHighlightStr) {
+  ////      _str.getHighlighter().removeHighlight(tag);
+  ////    }
+  ////    _selectionHighlightStr.clear();
+  //  }
 
   public void setHighlighters(RNA rna) {
     if (rnaHighlight != null)
@@ -1507,16 +1526,16 @@ public class VARNAapp implements InterfaceParameterLoader {
     public boolean isAdjusting() {
       return adjusting;
     }
-    
+
     private void createSlider() {
       setBackground(Color.LIGHT_GRAY);
-      setMaximumSize(new Dimension(-1,10));
+      setMaximumSize(new Dimension(-1, 10));
 
       thumb = new JPanel();
       thumb.setOpaque(true);
       thumb.setBackground(Color.GRAY);
       thumb.setBounds(0, 0, 0, 0); // x, y, width, height
-//      thumb.setMaximumSize(new Dimension(-1,10));
+      //      thumb.setMaximumSize(new Dimension(-1,10));
       add(thumb);
       MouseListener listener = new MouseAdapter() {
         @Override
@@ -1590,7 +1609,8 @@ public class VARNAapp implements InterfaceParameterLoader {
       int range = trackWidth - thumbWidth;
       thumbX = Math.max(0, Math.min(range, thumbX0 + (mouseX - x0)));
       thumb.setLocation(thumbX, thumb.getY());
-      int left = (int) (1d * thumbX * (textWidth - trackWidth) / (trackWidth - thumbWidth));
+      int left = (int) (1d * thumbX * (textWidth - trackWidth)
+          / (trackWidth - thumbWidth));
       setScrollOffset(text, left);
     }
 
@@ -1603,10 +1623,10 @@ public class VARNAapp implements InterfaceParameterLoader {
     }
   }
 
-  public void setHoverFor(int modelID, int regno) {
+  public void setHoverFor(Integer modelID, String groupID) {
     RNA rna = _vp.getRNA();
-    int index = (modelID < 0 || rna.modelID.intValue() != modelID ? -1
-        : rna.getIndexFromResidueNumber(regno));
+    int index = (modelID == null || !rna.modelID.equals(modelID) ? -1
+        : rna.getIndexFromGroupID(groupID));
     if (index == hoverBaseIndex)
       return;
     setHoverBaseIndex(index);
@@ -1615,6 +1635,74 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   public RNA getRNAForModelID(int modelID) {
     return _rnaList.getRNAForModelID(modelID);
+  }
+
+  /**
+   * Load one or more VARNA session files or one RNA-type files. This method is
+   * designed to be asynchronous so
+   * 
+   * @param list
+   * @param onError
+   *        asynchronous method to deliver error message to
+   */
+  public void loadFileListAsync(List<File> list, Consumer<String> onError) {
+    // first check for Jmol-readable structure files. 
+    // only the first will be processed.
+    for (int j = 0; j < list.size(); j++) {
+      File f = list.get(j);
+      if (checkJmolFileLoad(f))
+        return;
+    }
+    // now asynchronously get multiple files
+    nextFile(0, list, onError);
+  }
+
+  private void nextFile(int j, List<File> list, Consumer<String> onError) {
+    if (j < list.size()) {
+      SwingUtilities.invokeLater(() -> {
+        getListFileAsync(list, j, onError); 
+      });
+    }
+  }
+
+  private void getListFileAsync(List<File> list, int j,
+                                Consumer<String> onError) {
+    String err = null;
+    File f = list.get(j);
+    try {
+      FullBackup bck = VARNASessionParser.importSession(f); // BH SwingJS File Object here
+      if (bck == null) {
+        ArrayList<RNA> rnas = null;
+        try {
+          rnas = RNAFactory.loadSecStr(f);
+        } catch (ExceptionFileFormatOrSyntax e) {
+          err = e.getMessage();
+        }
+        if (rnas == null || rnas.isEmpty()) {
+          err = "No RNA could be parsed from " + f
+              + (err == null ? "" : "" + err);
+        } else {
+          getVARNAPanel().getVARNAUI().chooseRNAsAsync(rnas, () -> {
+            nextFile(j + 1, list, onError);
+          }, onError);
+        }
+      } else {
+        addRNA(bck.rna, bck.config, bck.name, true);
+      }
+    } catch (ExceptionLoadingFailed e3) {
+      err = e3.getMessage();
+    }
+    if (err != null)
+      onError.accept(err);
+    nextFile(j + 1, list, onError);
+  }
+
+  private boolean checkJmolFileLoad(File f) {
+    if (actionListener == null)
+      return false;
+    ActionEvent e = new ActionEvent(f, 0, VARNAViewerI.ACTION_FILE_DROPPED);
+    actionListener.actionPerformed(e);
+    return (e.getSource() == Boolean.TRUE);
   }
 
 }

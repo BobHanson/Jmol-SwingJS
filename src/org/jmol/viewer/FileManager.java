@@ -160,7 +160,7 @@ public class FileManager implements BytePoster {
    */
   private String lastFileType;
 
-  public String getFileType() {
+  public String getLastReadFileType() {
     return lastFileType;
   }
 
@@ -1869,7 +1869,7 @@ public class FileManager implements BytePoster {
    * @param fileName
    * @return "pdb" or "dssr" or "Jmol" or <modelType> + "::"
    */
-  private String getDragDropFileTypeName(String fileName) {
+  public String getDragDropFileTypeName(String fileName) {
     int pt = fileName.indexOf("::");
     if (pt >= 0)
       return fileName.substring(0, pt + 2);

@@ -664,12 +664,10 @@ import java.awt.print.PrinterJob;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.text.NumberFormat;
@@ -683,9 +681,6 @@ import javax.print.attribute.PrintRequestAttributeSet;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.undo.UndoManager;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -739,6 +734,8 @@ import fr.orsay.lri.varna.views.VueUI;
  * 
  * BH j2s SwingJS Added PropertyChangeListener for returns from VueUI.
  * 
+ * and many other additions!
+ * 
  * 
  * 
  * 
@@ -769,20 +766,19 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   public void propertyChange(PropertyChangeEvent event) {
     Object val = event.getNewValue();
     switch (event.getPropertyName()) {
-    case "value":
+    case VueUI.PROPERTY_INPUT:
       _UI.onDialogReturn(
           val == null ? JOptionPane.CLOSED_OPTION : ((Integer) val).intValue());
       return;
-    case "SelectedFile":
-    case "SelectedColor":
-    case "inputValue":
+    case VueUI.PROPERTY_SELECTED_FILE:
+    case VueUI.PROPERTY_SELECTED_COLOR:
+    case VueUI.PROPERTY_INPUT_VALUE:
       _UI.onDialogReturn(val);
       break;
     }
   }
 
   private static final long serialVersionUID = 8194421570308956001L;
-
 
   public static final int DEFAULT_HEIGHT = 600;
 
@@ -843,7 +839,6 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   private boolean _horsCadre;
   private boolean _premierAffichage;
 
-  
   private ControleurInterpolator _interpolator;
   /**
    * If comparison mode is TRUE (ON), then the application will be used to
@@ -857,9 +852,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
   private TextAnnotation _selectedAnnotation;
 
-
   private int hoverBaseIndex;
-
 
   /**
    * Creates an RNA 2D panel with initially displays the empty structure.
@@ -869,7 +862,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
     _conf = new VARNAConfig();
     init();
-//    drawRNA();
+    //    drawRNA();
   }
 
   /**
@@ -924,7 +917,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     drawRNA(r, drawMode);
     setTitle(title);
   }
-  
+
   public void setOriginLink(Point2D.Double p) {
     _linkOrigin = (p);
   }
@@ -997,7 +990,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
     _blink = new ControleurBlinkingThread(this,
         ControleurBlinkingThread.DEFAULT_FREQUENCY, 0, 1.0, 0.0, 0.2);
-//    _blink.start();
+    //    _blink.start();
 
     _premierAffichage = true;
     _translation = new Point(0, 0);
@@ -1605,25 +1598,25 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
   private void drawBase(VueVARNAGraphics g2D, int i, Point2D.Double[] points,
                         Point2D.Double[] centers, double newRadius,
-                        double _scaleFactor, double blinkVal,
-                        boolean localView) {
+                        double _scaleFactor, double blinkVal) {
     Point2D.Double p = points[i];
     ModeleBase mb = _RNA.get_listeBases().get(i);
     g2D.setFont(_conf._fontBasesGeneral);
     Color baseInnerColor = highlightFilterBase(i,
-        _RNA.getBaseInnerColor(i, _conf), true, blinkVal, localView, 0);
+        _RNA.getBaseInnerColor(i, _conf), true, blinkVal, g2D.isVarnaPanel(), 0);
     Color baseOuterColor = highlightFilterBase(i,
-        _RNA.getBaseOuterColor(i, _conf), false, blinkVal, localView, 1);
-    Color baseNameColor = highlightFilterBase(i,
-        _RNA.getBaseNameColor(i, _conf), false, blinkVal, localView, 2);
-    if (RNA.whiteLabelPreferrable(baseInnerColor)) {
-      baseNameColor = Color.white;
-    }
+        _RNA.getBaseOuterColor(i, _conf), false, blinkVal, g2D.isVarnaPanel(), 1);
+    Color baseNameColor = ModeleColorMap.getBgContrast(baseInnerColor);
+//        highlightFilterBase(i,
+//        _RNA.getBaseNameColor(i, _conf), false, blinkVal, g2D.isVarnaPanel(), 2));
+//    if (RNA.whiteLabelPreferrable(baseInnerColor)) {
+//      baseNameColor = Color.white;
+//    }
 
     if (mb instanceof ModeleBaseNucleotide) {
       ModeleBaseNucleotide mbn = (ModeleBaseNucleotide) mb;
       String res = mbn.getBase();
-      if (_hoveredBase == mb && localView && isModifiable()) {
+      if (_hoveredBase == mb && g2D.isVarnaPanel() && isModifiable()) {
         g2D.setColor(_conf._hoverColor);
         g2D.fillCircle(p.getX() - 1.5 * newRadius, p.getY() - 1.5 * newRadius,
             3.0 * newRadius);
@@ -1706,17 +1699,20 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     }
   }
 
-  private Color highlightFilterBase(int index, Color initialColor, boolean whiteFirst,
-                                    double blinkVal, boolean localView, int mode) {
-    Color c1 = (whiteFirst ? Color.white: initialColor);
+  private Color highlightFilterBase(int index, Color initialColor,
+                                    boolean whiteFirst, double blinkVal,
+                                    boolean isVarnaPanel, int mode) {
+    Color c1 = (whiteFirst ? Color.white : initialColor);
     Color c2 = (whiteFirst ? initialColor : Color.white);
-    return (mode == 0 && hoverBaseIndex == index ? VARNAapp.hoverColor : localView && _RNA.isSelected(index)
-        ? getSelectedColor(c1, c2, blinkVal)
-        : getUnselectedColor(initialColor));
+    return (mode == 0 && hoverBaseIndex == index ? VARNAapp.hoverColor
+        : isVarnaPanel && _RNA.isSelected(index)
+            ? getSelectedColor(c1, c2, blinkVal)
+            : getUnselectedColor(initialColor));
   }
 
   private Color getSelectedColor(Color c1, Color c2, double blinkVal) {
-    return (!selectionColored || colorSelected == null ? getHighlightedVersion(c1, c2, blinkVal)
+    return (!selectionColored || colorSelected == null
+        ? getHighlightedVersion(c1, c2, blinkVal)
         : colorSelected);
   }
 
@@ -1873,7 +1869,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
    * Get the logical bounding box.
    * 
    * @return Rectangle accounting for numbers and loop radius
-   */ 
+   */
   public Rectangle2D.Double addRNABBoxMargins() {
     Rectangle2D.Double rnabbox = _RNA.getBBox();
     double margin = _RNA.BASE_RADIUS * _conf._distNumbers;
@@ -1974,12 +1970,13 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
   }
 
-  public Rectangle2D.Double renderRNA(VueVARNAGraphics g2D,
-                                      Rectangle2D.Double bbox) {
-    return renderRNA(g2D, bbox, false, true);
-  }
+  //  public Rectangle2D.Double renderRNA(VueVARNAGraphics g2D,
+  //                                      Rectangle2D.Double bbox) {
+  //    return renderRNA(g2D, bbox, false, true);
+  //  }
 
-  private double computeScaleFactor(Rectangle2D.Double bbox, boolean localView,
+  private double computeScaleFactor(Rectangle2D.Double bbox,
+                                    boolean isVarnaPanel,
                                     @SuppressWarnings("unused") boolean autoCenter) {
     Rectangle2D.Double rnabbox = addRNABBoxMargins();
     double scaleFactor = Math.min(bbox.width / rnabbox.width,
@@ -2000,7 +1997,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     // Now, compute the final scaling factor and corresponding font size
     scaleFactor = Math.min(bbox.width / rnabbox.width,
         bbox.height / rnabbox.height);
-    if (localView) {
+    if (isVarnaPanel) {
       if (_conf._autoFit)
         setScaleFactor(scaleFactor);
       scaleFactor = getScaleFactor();
@@ -2008,13 +2005,21 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     return scaleFactor;
   }
 
+  /**
+   * 
+   * @param g2D
+   * @param bbox
+   * @param isVarnaPanel not ZOOMPanel 
+   * @param autoCenter
+   * @return bounds
+   */
   public synchronized Rectangle2D.Double renderRNA(VueVARNAGraphics g2D,
                                                    Rectangle2D.Double bbox,
-                                                   boolean localView,
+                                                   boolean isVarnaPanel,
                                                    boolean autoCenter) {
-    
+
     Rectangle2D.Double rnaMultiBox = new Rectangle2D.Double(0, 0, 1, 1);
-    double scaleFactor = computeScaleFactor(bbox, localView, autoCenter);
+    double scaleFactor = computeScaleFactor(bbox, g2D.isVarnaPanel(), autoCenter);
     float newFontSize = Math.max(1,
         (int) ((1.7 * _RNA.BASE_RADIUS) * scaleFactor));
     double newRadius = Math.max(1.0, (scaleFactor * _RNA.BASE_RADIUS));
@@ -2033,7 +2038,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
             + (bbox.width - Math.round(rnabbox.width * scaleFactor)) / 2.0);
         offY = (bbox.y
             + (bbox.height - Math.round(rnabbox.height * scaleFactor)) / 2.0);
-        if (localView) {
+        if (g2D.isVarnaPanel()) {
           _offX = offX;
           _offY = offY;
           _offsetPanel = new Point2D.Double(_offX, _offY);
@@ -2041,7 +2046,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
         }
       }
 
-      if (localView) {
+      if (g2D.isVarnaPanel()) {
         offX = _offX;
         offY = _offY;
         offsetRNA = _offsetRNA;
@@ -2087,7 +2092,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
             offY + (scaleFactor * (centerBck.y - offsetRNA.y)));
       }
       // Keep track of coordinates for mouse interactions
-      if (localView) {
+      if (g2D.isVarnaPanel()) {
         _realCoords = newCoords;
         _realCenters = newCenters;
       }
@@ -2169,14 +2174,14 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
       for (int i = 0; i < Math.min(_RNA.get_listeBases().size(),
           newCoords.length); i++) {
         drawBase(g2D, i, newCoords, newCenters, newRadius, scaleFactor,
-            blinkVal, localView);
+            blinkVal);
       }
 
       rnaMultiBox = new Rectangle2D.Double(offX, offY,
           (scaleFactor * rnabbox.width) - 1,
           (scaleFactor * rnabbox.height) - 1);
 
-      if (localView) {
+      if (g2D.isVarnaPanel()) {
         // Drawing bbox
         if (_debug || _drawBBox) {
           g2D.setColor(Color.RED);
@@ -2216,8 +2221,9 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
       g2D.setColor(VARNAConfig.DEFAULT_MESSAGE_COLOR);
       g2D.setFont(VARNAConfig.DEFAULT_MESSAGE_FONT);
       rnaMultiBox = new Rectangle2D.Double(0, 0, 10, 10);
-      g2D.drawStringCentered("No RNA here", bbox.getCenterX(),
-          bbox.getCenterY());
+      if (g2D.isVarnaPanel())
+        g2D.drawStringCentered(VARNAapp.NO_RNA_TEXT, bbox.getCenterX(),
+            bbox.getCenterY());
     }
     return rnaMultiBox;
   }
@@ -2233,7 +2239,6 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
   Point2D.Double _target = new Point2D.Double(0, 0);
   Point2D.Double _target2 = new Point2D.Double(0, 0);
-
 
   public ModeleBase getBaseAt(Point2D.Double po) {
     ModeleBase mb = null;
@@ -2395,7 +2400,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
     Graphics2D g2 = (Graphics2D) g;
     Stroke dflt = g2.getStroke();
-    VueVARNAGraphics g2D = new SwingGraphics(g2);
+    VueVARNAGraphics g2D = new SwingGraphics(g2, true);
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
         RenderingHints.VALUE_ANTIALIAS_ON);
     //this.removeAll();
@@ -2448,7 +2453,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     if (getMinimumSize().height < getSize().height
         && getMinimumSize().width < getSize().width) {
       // Draw Title
-      if (showTitle  && !getTitle().equals("")) {
+      if (showTitle && !getTitle().equals("")) {
         g2D.setColor(_conf._titleColor);
         g2D.setFont(_conf._titleFont);
         g2D.drawStringCentered(getTitle(), this.getWidth() / 2,
@@ -2474,7 +2479,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
       double blinkVal = _blink.getVal();
       for (int i : getSelection().getIndices())
         drawBase(g2D, i, _realCoords, _realCenters,
-            scaleFactor * _RNA.BASE_RADIUS, scaleFactor, blinkVal, true);
+            scaleFactor * _RNA.BASE_RADIUS, scaleFactor, blinkVal);
     }
 
     if (_debug) {
@@ -2936,7 +2941,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
         && firstStruct.length() == secondStruct.length()) {
       // First RNA
       if (firstSeq.length() != firstStruct.length()) {
-        if (_conf._showWarnings) {
+        if (getShowWarnings()) {
           emitWarning("First sequence length " + firstSeq.length()
               + " differs from that of it's secondary structure "
               + firstStruct.length()
@@ -3893,20 +3898,21 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     setSelection(_RNA.getBasesBetween(i0, i1));
   }
 
-
   /**
    * from script only
+   * 
    * @param vals
    */
-  public void doSelectBasesByResno(ArrayList<Integer> vals) {
+  public void doSelectBasesByResno(ArrayList<?> vals) {
     setSelection(_RNA.getBasesByResidueNumber(vals));
   }
-  
+
   public void setSelection(Collection<? extends ModeleBase> mbs) {
     BaseSet oldSelected = new BaseSet(_RNA.getSelectedBases());
     _RNA.setSelections(mbs);
     setBlinkActive(true);
-    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_SET, oldSelected, _RNA.getSelectedBases());
+    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_SET, oldSelected,
+        _RNA.getSelectedBases());
   }
 
   public ArrayList<Integer> getBasesInRectangleDiff(Rectangle recIn,
@@ -3954,14 +3960,16 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     BaseSet bck = new BaseSet(_RNA.getSelectedBases());
     _RNA.addSelection(i);
     setBlinkActive(true);
-    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_ADD, bck, _RNA.getSelectedBases());
+    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_ADD, bck,
+        _RNA.getSelectedBases());
   }
 
   public void removeFromSelection(int i) {
     BaseSet bck = new BaseSet(_RNA.getSelectedBases());
     _RNA.removeSelection(i);
     setBlinkActive(true);
-    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_REMOVE, bck, _RNA.getSelectedBases());
+    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_REMOVE, bck,
+        _RNA.getSelectedBases());
   }
 
   public boolean isInSelection(int i) {
@@ -3988,7 +3996,8 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     BaseSet bck = new BaseSet(_RNA.getSelectedBases());
     _RNA.clearSelections();
     setBlinkActive(false);
-    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_CLEAR, bck, _RNA.getSelectedBases());
+    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_CLEAR, bck,
+        _RNA.getSelectedBases());
     _selectedBase = null;
     repaint();
   }
@@ -4085,7 +4094,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   public void removeSelectedAnnotation() {
     _highlightAnnotation = false;
     _selectedAnnotation = null;
-    
+
   }
 
   public void highlightSelectedAnnotation() {
@@ -4140,56 +4149,13 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
   public FullBackup loadSession(File path) throws ExceptionLoadingFailed {
 
-    FullBackup bck = importSession(path);
+    FullBackup bck = VARNASessionParser.importSession(path);
     Mapping map = Mapping.DefaultOutermostMapping(getRNA().getSize(),
         bck.rna.getSize());
     showRNAInterpolated(bck.rna, map);
     _conf = bck.config;
     repaint();
     return bck;
-  }
-
-  public static String VARNA_SESSION_EXTENSION = "varna";
-
-  public static FullBackup importSession(Object path) // BH was String
-      throws ExceptionLoadingFailed {
-    try {
-      FileInputStream fis = (path instanceof File
-          ? new FileInputStream((File) path)
-          : new FileInputStream(path.toString()));
-      // ZipInputStream zis = new
-      // ZipInputStream(new BufferedInputStream(fis));
-      // zis.getNextEntry();
-      FullBackup h = importSession(fis, path.toString());
-      // zis.close();
-      return h;
-    } catch (FileNotFoundException e) {
-      throw (new ExceptionLoadingFailed("File not found.", path.toString()));
-    }
-  }
-
-  public static FullBackup importSession(InputStream fis, String path)
-      throws ExceptionLoadingFailed {
-    System.setProperty("javax.xml.parsers.SAXParserFactory",
-        "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
-    SAXParserFactory saxFact = javax.xml.parsers.SAXParserFactory.newInstance();
-    saxFact.setValidating(false);
-    saxFact.setXIncludeAware(false);
-    saxFact.setNamespaceAware(false);
-    try {
-      SAXParser sp = saxFact.newSAXParser();
-      VARNASessionParser sessionData = new VARNASessionParser();
-      sp.parse(fis, sessionData);
-      FullBackup res = new FullBackup(sessionData.getVARNAConfig(),
-          sessionData.getRNA(), "test");
-      return res;
-    } catch (ParserConfigurationException e) {
-      throw new ExceptionLoadingFailed("Bad XML parser configuration", path);
-    } catch (SAXException e) {
-      throw new ExceptionLoadingFailed("XML parser Exception", path);
-    } catch (IOException e) {
-      throw new ExceptionLoadingFailed("I/O error", path);
-    }
   }
 
   public void loadFile(File path) {
@@ -4331,7 +4297,8 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     }
   }
 
-  public void fireHoverChanged(ModeleBase mold, ModeleBase mnew, boolean doNotify) {
+  public void fireHoverChanged(ModeleBase mold, ModeleBase mnew,
+                               boolean doNotify) {
     for (InterfaceVARNASelectionListener v2 : _selectionListeners) {
       v2.onHoverChanged(mold, mnew, doNotify);
     }
@@ -4518,18 +4485,19 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
   public void selectionComplete() {
     removeSelectionRectangle();
-    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_COMPLETE, null, _RNA.getSelectedBases());
+    fireSelectionChanged(InterfaceVARNASelectionListener.SEL_COMPLETE, null,
+        _RNA.getSelectedBases());
   }
 
   public void zap() {
-     _RNA = new RNA();
+    _RNA = new RNA();
     setRNA();
   }
 
   private Color colorSelected, colorUnselected;
   public boolean selectionColored;
-  public void setSelectionColors(Color colorSelected,
-                                 Color colorUnselected) {
+
+  public void setSelectionColors(Color colorSelected, Color colorUnselected) {
     this.colorSelected = colorSelected;
     this.colorUnselected = colorUnselected;
     selectionColored = (colorSelected != null || colorUnselected != null);
@@ -4540,7 +4508,8 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   }
 
   public Color getUnselectedColor(Color initialColor) {
-    return (!selectionColored || colorUnselected == null ? initialColor : colorUnselected);
+    return (!selectionColored || colorUnselected == null ? initialColor
+        : colorUnselected);
   }
 
   public void fireMouseEvent(int id, boolean before) {
@@ -4561,8 +4530,9 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     }
   }
 
-  
   public ModeleBase _selectedBase = null;
+
+  private boolean headless;
 
   public void doMouseMove(int x, int y) {
     _selectedBase = getNearestBase(x, y);
@@ -4582,17 +4552,17 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     if (getRNA().get_drawMode() == RNA.DRAW_MODE_LINEAR) {
       p.get_rotation().setEnabled(false);
     } else {
-       p.get_rotation().setEnabled(true);
+      p.get_rotation().setEnabled(true);
     }
     p.updateDialog();
     p.show(this, x, y);
   }
-  
+
   public void endPopup() {
     resetAnnotationHighlight();
     _selectedBase = null;
   }
-  
+
   public void setSelectedBase(ModeleBase base) {
     clearSelection();
     _selectedBase = base;
@@ -4616,7 +4586,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     repaint();
 
     // TODO
-    
+
   }
 
   public void addBP(ModeleBase mb) {
@@ -4624,7 +4594,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
       ModeleBase mborig = _selectedBase;
       ModeleBP msbp = new ModeleBP(mb, mborig);
       if (mb != mborig) {
-        getVARNAUI().UIAddBP(mb.getIndex(), mborig.getIndex(), msbp);
+        getVARNAUI().addBP(mb.getIndex(), mborig.getIndex(), msbp);
       }
     }
     removeLink();
@@ -4681,7 +4651,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
       if (getRNA().get_drawMode() == RNA.DRAW_MODE_LINEAR) {
         ndy = 0.0;
       }
-      getVARNAUI().UIShiftBaseCoord(getSelectionIndices(), ndx, ndy);
+      getVARNAUI().shiftBaseCoord(getSelectionIndices(), ndx, ndy);
       fireLayoutChanged();
     }
   }
@@ -4704,7 +4674,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
       movingBase = _selectedBase;
     }
     // dans le cas radiale on deplace une helice
-    getVARNAUI().UIMoveHelixAtom(_selectedBase.getIndex(),
+    getVARNAUI().moveHelixAtom(_selectedBase.getIndex(),
         panelToLogicPoint(new Point2D.Double(x, y)));
     return movingBase;
   }
@@ -4725,6 +4695,11 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   public TextAnnotation setNearestAnnotation(int x, int y) {
     _selectedAnnotation = getNearestAnnotation(x, y);
     return _selectedAnnotation;
+  }
+
+  public void setHeadless() {
+    headless = true;
+    _conf._showWarnings = false;
   }
 
 }

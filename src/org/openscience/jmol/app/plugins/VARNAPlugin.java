@@ -26,8 +26,8 @@ package org.openscience.jmol.app.plugins;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +52,7 @@ import org.openscience.jmol.app.jmolpanel.JmolResourceHandler;
 import fr.orsay.lri.varna.interfaces.VARNAViewerI;
 import fr.orsay.lri.varna.interfaces.VARNAViewerI.VARNACallBack;
 import javajs.util.BS;
+import javajs.util.PT;
 
 /**
  * The Jmol VARNA plugin receives standard callbacks from Jmol, selecting ones
@@ -116,7 +117,7 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
   }
 
   @Override
-  public void start(JFrame frame, Viewer vwr, Map<String, Object> jmolOptions) {
+  public void start(JFrame frame, Viewer vwr, Map<String, Object> jmolOptions, boolean headless) {
     this.vwr = vwr;
     parentFrame = frame;
     if (jmolOptions != null) {
@@ -178,6 +179,8 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
 
 
   private void showFrame(boolean b) {
+    if (headless)
+      return;
     if (b && varna == null) {
       varna = (VARNAViewerI) Interface
           .getInterface("fr.orsay.lri.varna.applications.VARNAViewer", vwr, "plugin");
@@ -251,9 +254,9 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       if (data[1] != null) {
         // hover ON
         Atom a = vwr.ms.at[((Integer)data[2]).intValue()];
-        int resno = a.group.getResno();
+        String groupID = a.group.getUnitID();
         int modelID = vwr.getModelFileNumber(a.getModelIndex());
-        data[0] = new int[] { modelID, resno };
+        data[0] = new Object[] { Integer.valueOf(modelID), groupID };
       }
       varna.notifyCallback(VARNACallBack.HOVER, data);
       return;
@@ -285,7 +288,7 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
         return;
       Object d1 = data[1];
       data[1] = new Object[] { getModelGroupMap(bsAtoms, VARNACallBack.COLOR),
-          colors };
+          colorTable };
       varna.notifyCallback(VARNACallBack.COLOR, data);
       data[1] = d1;
       break;
@@ -295,20 +298,18 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       if (!cmd.startsWith("varna:"))
         break;
       switch (cmd.substring(6).toLowerCase()) {
-      case "stop":
-        destroy();
+      case JC.PLUGIN_START:
         break;
-      case "start":
-        break;
-      case "on":
-      case "show":
+      case JC.PLUGIN_SHOW:
         if (varnaFrame != null)
           varnaFrame.setVisible(true);
         break;
-      case "off":
-      case "hide":
+      case JC.PLUGIN_HIDE:
         if (varnaFrame != null)
           varnaFrame.setVisible(false);
+        break;
+      case JC.PLUGIN_STOP:
+        destroy();
         break;
       default:
         String err = (String) varna.notifyCallback(VARNACallBack.SCRIPT, data);
@@ -319,29 +320,41 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
     }
   }
 
-  private List<Color> colors;
+  private List<Color> colorTable;
   private List<Integer> colorRGBs;
 
-  private Map<Integer, Map<String, List<Integer>>> getModelGroupMap(BS bsAtoms,
+  private boolean headless;
+
+  /**
+   * Get a map to deliver to VARNAViewer for the selected atoms. 
+   * Include group UnitIDs and, if needed, colors
+   * 
+   * @param bsAtoms
+   * @param cbk
+   * @return map
+   */
+  private Map<Integer, Map<String, List<?>>> getModelGroupMap(BS bsAtoms,
                                                                     VARNACallBack cbk) {
     if (bsAtoms.cardinality() == 0)
       return null;
     boolean setColors = (cbk.equals(VARNACallBack.COLOR));
-    if (setColors && colors == null) {
-      colors = new ArrayList<Color>();
+    if (setColors && colorTable == null) {
+      colorTable = new ArrayList<Color>();
       colorRGBs = new ArrayList<Integer>();
     }
     short[] colixes = (setColors
         ? ((Balls) vwr.shm.getShape(JC.SHAPE_BALLS)).colixes
         : null);
     List<Group> groups = vwr.ms.getGroupsForAtoms(bsAtoms);
-    Map<Integer, Map<String, List<Integer>>> modelMap = new HashMap<>();
+    Map<Integer, Map<String, List<?>>> modelMap = new HashMap<>();
     int ngroups = groups.size();
-    Map<String, List<Integer>> modelData = null;
+    Map<String, List<?>> modelData = null;
     int lastRGB = 1;
-    List<Integer> resnos = null;
+    Integer lastCI = null;
+    //List<Integer> resnos = null;
+    List<String> groupIDs = null;
     List<Integer> colorIndexes = null;
-    int nColors = (setColors ? colors.size() : 0);
+    int nColors = (setColors ? colorTable.size() : 0);
     for (int i = 0, modelID = -1; i < ngroups; i++) {
       Group g = groups.get(i);
       Model m = g.getModel();
@@ -350,34 +363,37 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
         modelID = id;
         modelData = new HashMap<>();
         modelMap.put(Integer.valueOf(modelID), modelData);
-        resnos = new ArrayList<Integer>();
-        modelData.put("resnos", resnos);
+ //       resnos = new ArrayList<Integer>();
+        groupIDs = new ArrayList<String>();
+ //       modelData.put("resnos", resnos);
+        modelData.put(VARNAViewerI.PROPERTY_GROUPIDS, groupIDs);
         if (setColors) {
           colorIndexes = new ArrayList<Integer>();
-          modelData.put("colorIndexes", colorIndexes);
+          modelData.put(VARNAViewerI.PROPERTY_COLOR_INDEXES, colorIndexes);
         }
-        lastRGB = 1;
       }
+   //   resnos.add(Integer.valueOf(g.getResno()));
+      groupIDs.add(g.getUnitID());
       if (setColors) {
         Integer ci;
         int rgb = vwr.shm.getAtomColorRGBShaded(colixes, vwr.ms.at[g.getLeadOrFirstAtomIndex()]);
         if (rgb == lastRGB) {
-          colorIndexes.add(null);
+          ci = lastCI;
         } else {
           lastRGB = rgb;
-          Integer rgbI = Integer.valueOf(rgb);
+          Integer rgbI = Integer.valueOf(rgb);         
           int ip = colorRGBs.indexOf(rgbI);
           if (ip >= 0) {
             ci = Integer.valueOf(ip);
           } else {
-            colors.add(new Color(rgb));
+            colorTable.add(new Color(rgb));
             colorRGBs.add(rgbI);
             ci = Integer.valueOf(nColors++);
           }
-          colorIndexes.add(ci);
+          lastCI = ci;
         }
+        colorIndexes.add(ci);
       }
-      resnos.add(Integer.valueOf(g.getResno()));
     }
     return modelMap;
   }
@@ -393,7 +409,7 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
     int modelID = vwr.getModelFileNumber(vwr.am.cmi);
     Map<String, Object> dssrInfo = (info == null ? null
         : (Map<String, Object>) info.get(JC.INFO_DSSR));
-    if (dssrInfo == null || !checkFrame())
+    if (!checkFrame() || dssrInfo == null)
       return;
     String m = (modelName == null
         ? info.get("modelNumberDotted") + ": " + info.get("modelName")
@@ -417,16 +433,30 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
   }
 
 
+  /**
+   * from VARNAViewer
+   */
   @Override
   public void actionPerformed(ActionEvent e) {
     String jmolScript = null;
     System.out.println("VARNAPlugin VARNA >> " + e.getActionCommand());
     switch (e.getActionCommand()) {
+    case VARNAViewerI.ACTION_CHECK_HEADLESS:
+      e.setSource(Boolean.valueOf(headless));
+      break;
+    case VARNAViewerI.ACTION_FILE_DROPPED:
+      String path = ((File) e.getSource()).getAbsolutePath();
+      String type = vwr.fm.getDragDropFileTypeName(path);
+      if (type == null)
+        return;
+      e.setSource(Boolean.TRUE);
+      jmolScript = "load " + PT.esc(path.replace('\\', '/')) + " filter \"VARNA\"";
+      break;
     case VARNAViewerI.ACTION_HOVER:
-      int[] modelResno = (int[]) e.getSource();
+      Object[] modelGroupID = (Object[]) e.getSource();
       Group g = null;
-      if (modelResno != null) {
-        g = vwr.ms.getGroupForResno(modelResno[0], modelResno[1]);
+      if (modelGroupID != null) {
+        g = getGroupForGroupID((Integer)modelGroupID[0], (String)modelGroupID[1]);
       }
       vwr.hoverOnPtr((g == null ? -1 : g.getLeadOrFirstAtomIndex()), false, true);
       break;
@@ -443,13 +473,13 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       jmolScript = "model " + name + MY_SCRIPT_ID;
       break;
     case VARNAViewerI.ACTION_SELECT_BASES:
-      if (e.getSource() instanceof int[]) {
-        int[] resnos = (int[]) e.getSource();
-        if (resnos.length == 0) {
+      if (e.getSource() instanceof String[]) {
+        String[] groupIDs = (String[]) e.getSource();
+        if (groupIDs.length == 0) {
           jmolScript = "select none";
         } else {
-          jmolScript = "select model=" + vwr.getModelNumberDotted(vwr.am.cmi)
-              + " and resno=" + Arrays.toString(resnos);
+          BS bsAtoms = getAtomsForGroupIDS(groupIDs);
+          jmolScript = "select " + bsAtoms;
         }
       } else {
         // this is a request for information from CLEAR or set.
@@ -466,6 +496,17 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
 
   }
 
+  private BS getAtomsForGroupIDS(String[] groupIDs) {
+    BS bsAtoms = new BS();
+    Map<String, Group> map = getModelGroupMap(Integer.valueOf(vwr.getModelFileNumber(vwr.am.cmi)));
+    for (int i = groupIDs.length; --i >= 0;) {
+      Group g = map.get(groupIDs[i]);
+      if (g != null)
+        g.setAtomBits(bsAtoms);
+    }
+    return bsAtoms;
+  }
+
   private void script(String script) {
     vwr.evalStringQuiet(script);
   }
@@ -475,5 +516,38 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
     // TODO
     return null;
   }
+
+  @Override
+  public boolean isHeadless() {
+    return headless || vwr.headless;
+  }
+
+  
+  Map<Integer, Map<String, Group>> mapGroupIDtoGroup = new HashMap<>();
+  
+  private Group getGroupForGroupID(Integer modelID, String groupID) {    
+    return getModelGroupMap(modelID).get(groupID);
+  }
+
+  private Map<String, Group> getModelGroupMap(Integer modelID) {
+    Map<String, Group> map = mapGroupIDtoGroup.get(modelID);
+    if (map == null) {
+      mapGroupIDtoGroup.put(modelID, map = new HashMap<>());
+      Group glast = null;
+      int modelIndex = vwr.ms.getModelIndexFromFileModel(modelID.intValue());
+      BS bsAtoms = vwr.ms.am[modelIndex].bsAtoms;
+      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+        Group g = vwr.ms.at[i].group;
+        if (g != glast) {
+          map.put(g.getUnitID(), g);
+          glast = g;
+          i = g.lastAtomIndex;
+        }
+      }
+    }
+    return map;
+  }
+
+
 
 }

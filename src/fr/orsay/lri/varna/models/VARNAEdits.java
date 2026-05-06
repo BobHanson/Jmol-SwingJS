@@ -98,12 +98,12 @@ public class VARNAEdits {
 		}
 		@Override
     public void undo() throws CannotUndoException {
-			_vp.getVARNAUI().UIRotateEverything(-_delta, _base, _pLimL, _pLimR, _h, _ml);
+			_vp.getVARNAUI().rotateEverything(-_delta, _base, _pLimL, _pLimR, _h, _ml);
 			_vp.repaint();			
 		}
 		@Override
     public void redo() throws CannotRedoException {
-			_vp.getVARNAUI().UIRotateEverything(_delta, _base, _pLimL, _pLimR, _h, _ml);
+			_vp.getVARNAUI().rotateEverything(_delta, _base, _pLimL, _pLimR, _h, _ml);
 			_vp.repaint();
 		}
 		@Override
@@ -204,12 +204,12 @@ public class VARNAEdits {
 		}
 		@Override
     public void undo() throws CannotUndoException {
-			_vp.getVARNAUI().UIFlipHelix(_h);
+			_vp.getVARNAUI().flipHelix(_h);
 			_vp.repaint();			
 		}
 		@Override
     public void redo() throws CannotRedoException {
-			_vp.getVARNAUI().UIFlipHelix(_h);
+			_vp.getVARNAUI().flipHelix(_h);
 			_vp.repaint();
 		}
 		@Override

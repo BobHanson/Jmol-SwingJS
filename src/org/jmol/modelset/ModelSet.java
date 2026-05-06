@@ -1156,22 +1156,6 @@ public class ModelSet extends BondCollection {
     return groups;
   }
   
-  public Group getGroupForResno(int modelIndex, int resno) {
-    if (modelIndex >= 1000001) 
-      modelIndex = getModelIndexFromFileModel(modelIndex);
-    if (modelIndex < 0)
-      return null;
-    Model m = am[modelIndex];
-    for (int j = 0; j < m.chainCount; j++) {
-      for (int k = 0; k < m.chains[j].groupCount; k++) {
-        Group g = m.chains[j].groups[k];
-        if (g.getResno() == resno)
-          return g;
-      }
-    }    
-    return null;
-  }
-
   //  /**
   //   * deprecated due to multimodel issues, but required by an interface -- do NOT
   //   * remove.

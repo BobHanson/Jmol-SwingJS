@@ -16,12 +16,13 @@ import org.jmol.viewer.JC;
 import org.jmol.viewer.StatusManager;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.DisplayPanel;
+import org.openscience.jmol.app.plugins.JSVJmolI;
 
 import javajs.util.PT;
 import jspecview.application.JSpecView;
 import jspecview.application.MainFrame;
 
-public class JSVJmol implements JSVInterface, JmolSyncInterface {
+public class JSVJmol implements JSVJmolI, JSVInterface, JmolSyncInterface {
   
   private JSpecView jsv;
   private MainFrame jSpecViewFrame;
@@ -36,6 +37,7 @@ public class JSVJmol implements JSVInterface, JmolSyncInterface {
   public JSVJmol() {
   }
 
+  @Override
   public void setViewer(Viewer vwr, JFrame jmolFrame) {
     this.vwr = vwr;
     this.jmolFrame = jmolFrame;
@@ -201,10 +203,12 @@ public class JSVJmol implements JSVInterface, JmolSyncInterface {
     // register the JSpecView applet in the JmolAppletRegistry. 
   }
 
+  @Override
   public boolean isVisible() {
     return (jSpecViewFrame != null && jSpecViewFrame.isVisible());
   }
 
+  @Override
   public void setVisible(boolean b) {
     if (jSpecViewFrame != null)
       jSpecViewFrame.setVisible(b);
@@ -222,6 +226,7 @@ public class JSVJmol implements JSVInterface, JmolSyncInterface {
   }  
   
   
+  @Override
   public void notifyCallback(CBK type, Object[] data) {
     switch (type) {
     default:

@@ -38,7 +38,7 @@ public class ControleurGlobalRotation implements ChangeListener {
 	}
 
 	public void stateChanged(ChangeEvent e) {
-		_vp.getVARNAUI().UIGlobalRotation(_vGR.getAngle() - _oldAngle);
+		_vp.getVARNAUI().globalRotation(_vGR.getAngle() - _oldAngle);
 		_oldAngle = _vGR.getAngle();
 	}
 }

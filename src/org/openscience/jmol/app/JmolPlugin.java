@@ -16,11 +16,12 @@ public interface JmolPlugin {
   String getName();
   String getVersion();
   String getWebSite();
+  boolean isHeadless();
   boolean isStarted();
   boolean isVisible();
   void notifyCallback(CBK type, Object[] data);
   Object processRequest(String action, Object value);
   void setVisible(boolean b);
-  void start(JFrame parentFrame, Viewer vwr, Map<String, Object> jmolOptions);
+  void start(JFrame parentFrame, Viewer vwr, Map<String, Object> jmolOptions, boolean headless);
   
 }

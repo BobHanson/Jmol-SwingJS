@@ -3,14 +3,11 @@ package fr.orsay.lri.varna.models.export;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Shape;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
 import java.io.FileWriter;
 import java.io.IOException;
 
 import fr.orsay.lri.varna.exceptions.ExceptionWritingForbidden;
-import fr.orsay.lri.varna.models.rna.RNA;
 
 public class SecStrProducerGraphics implements VueVARNAGraphics{
 	SecStrDrawingProducer _ss;
@@ -22,86 +19,104 @@ public class SecStrProducerGraphics implements VueVARNAGraphics{
 		_ss = ss;
 	}
 
-	public void draw(GeneralPath s) {
+	@Override
+  public void draw(GeneralPath s) {
 			_ss.fillPolygon(s, getColor());
 	}
 	
-	public void drawArc(double x, double y, double rx, double ry,
+	@Override
+  public void drawArc(double x, double y, double rx, double ry,
 			double angleStart, double angleEnd) {
 		
 		
 	}
 	
-	public void drawLine(double x1, double y1, double x2, double y2) {
+	@Override
+  public void drawLine(double x1, double y1, double x2, double y2) {
 		_ss.drawLine(x1, -y1, x2, -y2, _thickness);
 	}
 	
-	public void drawCircle(double x, double y, double r) {
+	@Override
+  public void drawCircle(double x, double y, double r) {
 		_ss.drawCircle(x+0.5*r, -y-0.5*r, 0.5*r, _thickness);
 	}
 
-	public void drawRect(double x, double y, double w, double h) {
+	@Override
+  public void drawRect(double x, double y, double w, double h) {
 		
 		
 	}
 	
-	public void drawRoundRect(double x, double y, double w, double h,
+	@Override
+  public void drawRoundRect(double x, double y, double w, double h,
 			double rx, double ry) {
 		
 		
 	}
 
-	public void drawStringCentered(String res, double x, double y) {
+	@Override
+  public void drawStringCentered(String res, double x, double y) {
 		_ss.drawText(x, -y, res);
 	}
 
-	public void fill(GeneralPath s) {
+	@Override
+  public void fill(GeneralPath s) {
 		_ss.fillPolygon(s, getColor());
 	}
 	
-	public void fillCircle(double x, double y, double r) {
+	@Override
+  public void fillCircle(double x, double y, double r) {
 		_ss.fillCircle(x+0.5*r, -y-0.5*r, 0.5*r,  _thickness, _ss.getCurrentColor());
 	}
 
-	public void fillRect(double x, double y, double w, double h) {
+	@Override
+  public void fillRect(double x, double y, double w, double h) {
 		
 		
 	}
 
-	public void fillRoundRect(double x, double y, double w, double h,
+	@Override
+  public void fillRoundRect(double x, double y, double w, double h,
 			double rx, double ry) {
 		
 		
 	}
-	public Color getColor() {
+	@Override
+  public Color getColor() {
 		return _ss.getCurrentColor();
 	}
 	
-	public Dimension getStringDimension(String s) {
+	@Override
+  public Dimension getStringDimension(String s) {
 		
 		return null;
 	}
 
-	public void setColor(Color c) {
+	@Override
+  public void setColor(Color c) {
 		_ss.setColor(c);
 	}
 	
-	public void setSelectionStroke() {
+	@Override
+  public void setSelectionStroke() {
 		
 		
 	}
 	
-	public void setFont(Font f) {
+	@Override
+  public void setFont(Font f) {
 		//System.out.println("Font "+f.getSize2D());
-		_ss.setFont(_ss.FONT_HELVETICA_BOLD,f.getSize2D());
+		_ss.setFont(SecStrDrawingProducer.FONT_HELVETICA_BOLD,f.getSize2D());
 	}
 
-	public void setPlainStroke() {
+	@Override
+  public void setPlainStroke() {
 		
 		
 	}
 
-	public void setStrokeThickness(double t) {
+	@Override
+  public void setStrokeThickness(double t) {
 		_thickness = t;
 	}
 	
@@ -116,4 +131,10 @@ public class SecStrProducerGraphics implements VueVARNAGraphics{
 			throw new ExceptionWritingForbidden(e.getMessage());
 		}
 	}
+
+  @Override
+  public boolean isVarnaPanel() {
+    // irrelevant
+    return true;
+  }
 }

@@ -5,22 +5,22 @@ import java.util.Map;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
+import org.jmol.api.Interface;
 import org.jmol.c.CBK;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.JmolPlugin;
-import org.openscience.jmol.app.jmolpanel.GaussianDialog;
 import org.openscience.jmol.app.jmolpanel.JmolResourceHandler;
 
 public class GaussianPlugin implements JmolPlugin {
 
-  protected GaussianDialog gaussianDialog; // not in SwingJS
+  protected GaussianI gaussian; // not in SwingJS
 
   public GaussianPlugin() {
-    gaussianDialog = null;
   }
+
   @Override
   public void destroy() {
-    gaussianDialog = null;
+    gaussian = null;
   }
 
   @Override
@@ -55,25 +55,28 @@ public class GaussianPlugin implements JmolPlugin {
 
   @Override
   public boolean isStarted() {
-    return (gaussianDialog != null);
+    return (gaussian != null);
   }
 
   @Override
   public boolean isVisible() {
-    return gaussianDialog != null && gaussianDialog.isVisible();
+    return gaussian != null && gaussian.isVisible();
   }
 
   @Override
   public void setVisible(boolean b) {
-    if (gaussianDialog != null)
-      gaussianDialog.setVisible(b);
+    if (gaussian != null)
+      gaussian.setVisible(b);
   }
 
   @Override
-  public void start(JFrame frame, Viewer vwr, Map<String, Object> jmolOptions) {
-    gaussianDialog = new GaussianDialog(frame, vwr);
-    // TODO
+  public void start(JFrame frame, Viewer vwr, Map<String, Object> jmolOptions, boolean headless) {
+ 
     
+    gaussian = 
+        (GaussianI) Interface
+        .getInterface("org.openscience.jmol.app.gaussian.Gaussian", vwr, "plugin");
+    gaussian.newDialog(frame, vwr);
   }
 
   @Override
@@ -88,18 +91,21 @@ public class GaussianPlugin implements JmolPlugin {
       return;
     switch (type) {
     case LOADSTRUCT:
-      gaussianDialog.updateModel(-2);
+      gaussian.updateModel(-2);
       break;
     case PICK:
-      gaussianDialog.updateModel(((Integer) data[2]).intValue());
+      gaussian.updateModel(((Integer) data[2]).intValue());
       break;
     case STRUCTUREMODIFIED:
-      gaussianDialog.updateModel(-1);
+      gaussian.updateModel(-1);
       break;
     default:
       break;
     }
   }
- 
+  @Override
+  public boolean isHeadless() {
+    return false;
+  }
   
 }

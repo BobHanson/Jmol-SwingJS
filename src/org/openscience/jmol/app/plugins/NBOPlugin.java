@@ -23,21 +23,24 @@
  */
 package org.openscience.jmol.app.plugins;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Map;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
 import org.gennbo.NBOConfig;
-import org.gennbo.NBODialog;
+import org.jmol.api.Interface;
 import org.jmol.c.CBK;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.JmolPlugin;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
+import org.openscience.jmol.app.jmolpanel.JmolResourceHandler;
 
-public class NBOPlugin implements JmolPlugin {
+public class NBOPlugin implements JmolPlugin, ActionListener {
 
-  protected NBODialog nboDialog;
+  protected NBOInterface nbo;
   protected Viewer vwr;
   
   public final static String version = "NBO plugin 0.1.2b";
@@ -48,22 +51,23 @@ public class NBOPlugin implements JmolPlugin {
     return vwr != null;
   }
 
-
   @Override
-  public void start(JFrame frame, Viewer vwr, Map<String, Object> jmolOptions) {
+  public void start(JFrame frame, Viewer vwr, Map<String, Object> jmolOptions, boolean headless) {
     this.vwr = vwr;
     if (getNBOProperty("serverPath", null) == null) {
-        vwr.alert("NBOServe has not been installed. See " + NBOConfig.NBO_WEB_SITE + "/new6_css.htm for additional information");
+        vwr.alert("NBOServe has not been installed. See " + getWebSite() + "/new6_css.htm for additional information");
     }
-    nboDialog = new NBODialog(this, frame, vwr, jmolOptions);
+    nbo = (NBOInterface) Interface.getInterface("org.gennbo.NBO", vwr, "plugin");
+    nbo.newDialog(this, frame, vwr, jmolOptions);
     System.out.println("NBO Plugin started.");    
     setVisible(true);
   }
 
   @Override
   public String getWebSite() {
-    return NBOConfig.NBO_WEB_SITE;
+    return NBOInterface.NBO_WEB_SITE;
   }
+  
   @Override
   public String getName() {
     return "NBOPro@Jmol";
@@ -71,7 +75,7 @@ public class NBOPlugin implements JmolPlugin {
   
   @Override
   public ImageIcon getMenuIcon() {
-    return getIcon("nbo7logo20x20");
+    return JmolResourceHandler.getIconX("nbo7logo20x20.gif");
   }
 
   @Override
@@ -80,7 +84,7 @@ public class NBOPlugin implements JmolPlugin {
   }
 
   public ImageIcon getIcon(String name) {
-    return new ImageIcon(this.getClass().getResource("assets/" + name + ".gif"));
+    return nbo.getIcon(name);
   }
 
   @Override
@@ -95,29 +99,29 @@ public class NBOPlugin implements JmolPlugin {
  
   @Override
   public void setVisible(boolean b) {
-    if (nboDialog == null)
+    if (nbo == null)
       return;
-    nboDialog.setVisible(b);
+    nbo.setVisible(b);
   }
   
   @Override
   public boolean isVisible() {
-    return nboDialog != null && nboDialog.isVisible();
+    return nbo != null && nbo.isVisible();
   }
 
   @Override
   public void destroy() {
-    if (nboDialog == null)
+    if (nbo == null)
       return;
-    nboDialog.close();
-    nboDialog = null;
+    nbo.close();
+    nbo = null;
   }
 
   @Override
   public void notifyCallback(CBK type, Object[] data) {
-    if (nboDialog == null)
+    if (nbo == null)
       return;
-    nboDialog.notifyCallback(type, data);
+    nbo.notifyCallback(type, data);
   }
 
   /**
@@ -146,8 +150,34 @@ public class NBOPlugin implements JmolPlugin {
 
   @Override
   public Object processRequest(String action, Object value) {
-    // TODO
     return null;
+  }
+
+  @Override
+  public boolean isHeadless() {
+    return false;
+  }
+
+  @Override
+  public void actionPerformed(ActionEvent e) {
+    Object o = e.getSource();
+    String[] data;
+    switch (e.getActionCommand()) {
+    case "getProperty":
+      data = (String[]) o;
+      e.setSource(getNBOProperty(data[0], data[1]));
+      break;
+    case "setProperty":
+      data = (String[]) o;
+      setNBOProperty(data[0], data[1]);
+      break;
+    case "version":
+      e.setSource(getVersion());
+      break;
+    case "name":
+      e.setSource(getName());
+      break;
+    }
   }
 
 

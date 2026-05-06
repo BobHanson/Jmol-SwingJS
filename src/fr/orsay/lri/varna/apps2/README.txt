@@ -1,0 +1,1 @@
+SwingJS note -- the files in apps2 are not relevant to Jmol.

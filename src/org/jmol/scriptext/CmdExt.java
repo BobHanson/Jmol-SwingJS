@@ -7365,6 +7365,7 @@ public class CmdExt extends ScriptExt {
 
   private void varna() throws ScriptException {
       String message = e.paramAsStr(1);
+      // options include start,show,hide,stop, and VARNA commands
       if (chk)
         return;
       String err = vwr.syncScriptErr("varna:" + message);

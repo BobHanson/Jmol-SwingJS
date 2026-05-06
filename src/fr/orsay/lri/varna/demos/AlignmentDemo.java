@@ -168,7 +168,7 @@ public class AlignmentDemo extends JFrame{
 		getContentPane().add(_tools, BorderLayout.SOUTH);
 
 		setVisible(true);
-		_vpMaster.getVARNAUI().UIRadiate();
+		_vpMaster.getVARNAUI().radiate();
 	}
 
 	public RNA getRNA() {

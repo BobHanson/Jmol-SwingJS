@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -51,12 +52,8 @@ import javax.swing.JScrollBar;
 import javax.swing.JSplitPane;
 
 import fr.orsay.lri.varna.components.VARNAPanel;
-import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
-import fr.orsay.lri.varna.exceptions.ExceptionLoadingFailed;
-import fr.orsay.lri.varna.factories.RNAFactory;
 import fr.orsay.lri.varna.interfaces.InterfaceVARNAListener;
 import fr.orsay.lri.varna.interfaces.InterfaceVARNARNAListener;
-import fr.orsay.lri.varna.models.FullBackup;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.rna.ModeleBP;
 import fr.orsay.lri.varna.models.rna.RNA;
@@ -77,7 +74,7 @@ public class VARNA
 
   public final static String version = "VARNA-SwingJS 16.3"; // Jmol's major version
   public final static String license = version + " is published under the GPL GNU Public License Version 3";
-  
+
   static {
     System.out.println(license);
   }
@@ -106,7 +103,7 @@ public class VARNA
 
   protected VARNAapp app;
 
-  private JFrame parentFrame;
+  protected JFrame parentFrame;
 
   protected JFrame frame;
 
@@ -123,10 +120,16 @@ public class VARNA
   private String structureListTitle = "         Structures         ";
 
   private String frameTitle;
+  protected boolean headless;
 
   public VARNA() {
     this("VARNA", VARNA_GUI_FULL_OPTIONS);
-    setFrame(null, null, 0, 0);
+    setFrame(null, null, 0, 0, true);
+  }
+
+  public VARNA(boolean haveDisplay) {
+    this("VARNA", VARNA_GUI_FULL_OPTIONS);
+    setFrame(null, null, 0, 0, haveDisplay);
   }
 
   protected VARNA(String title, int options) {
@@ -135,6 +138,11 @@ public class VARNA
     app = new VARNAapp(hasOption(VARNA_GUI_EDITABLE));
   }
 
+  public void setHeadless() {
+    headless = true;
+    app.setHeadless();
+  }
+  
   public VARNAPanel getVarnaPanel() {
     return (app == null ? null : app.getVARNAPanel());
   }
@@ -152,12 +160,18 @@ public class VARNA
   }
 
   public JFrame setFrame(JFrame parentFrame, JFrame frame, int width,
-                         int height) {
+                         int height, boolean haveDisplay) {
     this.parentFrame = parentFrame;
-    this.frame = frame;
-    setFrame(width, height);
-    if (this.frame != null)
-      setupVarnaGUI();
+    boolean haveFrameAlready = (this.frame != null);
+    if (!haveFrameAlready) {
+      this.frame = frame;
+      if (frame == null && !haveDisplay)
+        setHeadless();
+      // must set headless here if that is the case
+      setFrame(width, height);
+      if (this.frame != null)
+        setupVarnaGUI();
+    }
     return frame;
   }
 
@@ -174,14 +188,16 @@ public class VARNA
         height = VARNAPanel.DEFAULT_HEIGHT;
       }
       if (width > 0) {
-        frame = new JFrame(frameTitle);
-        frame.setSize(new Dimension(width, height));
-        if (parentFrame != null) {
-          frame.setLocationRelativeTo(parentFrame);
-          Point loc = frame.getLocation();
-          loc.x += frame.getWidth() / 2;
-          loc.y += frame.getHeight() / 2;
-          frame.setLocation(loc);
+        if (!headless) {
+          frame = new JFrame(frameTitle);
+          frame.setSize(new Dimension(width, height));
+          if (parentFrame != null) {
+            frame.setLocationRelativeTo(parentFrame);
+            Point loc = frame.getLocation();
+            loc.x += frame.getWidth() / 2;
+            loc.y += frame.getHeight() / 2;
+            frame.setLocation(loc);
+          }
         }
         app.setFrame(frame);
       }
@@ -214,7 +230,7 @@ public class VARNA
     opsPanel = new JPanel(new BorderLayout());
     app.setPanels(goPanel, opsPanel, structureListTitle,
         hasOption(VARNA_GUI_ALLOW_DELETE_DUPLICATE));
-
+    
     frame.getContentPane().setLayout(new BorderLayout());
     frame.getContentPane().add(app._tools, BorderLayout.NORTH);
     if (hasOption(VARNA_GUI_SHOW_LISTING)) {
@@ -318,51 +334,26 @@ public class VARNA
   public void drop(DropTargetDropEvent dtde) {
     try {
       Transferable tr = dtde.getTransferable();
-      DataFlavor[] flavors = tr.getTransferDataFlavors();
-      for (int i = 0; i < flavors.length; i++) {
-        if (flavors[i].isFlavorJavaFileListType()) {
-          dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
-          Object ob = tr.getTransferData(flavors[i]);
-          if (ob instanceof List) {
-            List<?> list = (List<?>) ob;
-            for (int j = 0; j < list.size(); j++) {
-              Object o = list.get(j);
+      if (dtde.getSource() instanceof DropTarget) {
+        DropTarget dt = (DropTarget) dtde.getSource();
+        Component c = dt.getComponent();
+        if (c instanceof VARNAPanel) {
+          DataFlavor[] flavors = tr.getTransferDataFlavors();
+          for (int i = 0; i < flavors.length; i++) {
+            if (flavors[i].isFlavorJavaFileListType()) {
+              dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
+              @SuppressWarnings("unchecked")
+              List<File> list = (List<File>) tr.getTransferData(flavors[i]);
+              app.loadFileListAsync(list, new Consumer<String>() {
 
-              if (dtde.getSource() instanceof DropTarget) {
-                DropTarget dt = (DropTarget) dtde.getSource();
-                Component c = dt.getComponent();
-                if (c instanceof VARNAPanel) {
-                  try {
-                    FullBackup bck = VARNAPanel.importSession(o); // BH SwingJS
-                    app.addRNA(bck.rna, bck.config, bck.name, true);
-                  } catch (ExceptionLoadingFailed e3) {
-                    ArrayList<RNA> rnas = RNAFactory.loadSecStr((File) o); // BH SwingJS
-                    if (rnas.isEmpty()) {
-                      throw new ExceptionFileFormatOrSyntax(
-                          "No RNA could be parsed from that source.");
-                    }
-
-                    dtde.dropComplete(true);
-                    app.getVARNAPanel().getVARNAUI().UIChooseRNAs(rnas);
-                    return;
-                    /*
-                    for(RNA r: rnas)
-                    {
-                      r.drawRNA(vp.getConfig());
-                      String name = r.getName();
-                      if (name.equals(""))
-                      { 
-                    	  name = path.substring(path.lastIndexOf(File.separatorChar)+1);
-                      }
-                      if (rnas.size()>1)
-                      {
-                    	  name += " - Molecule# "+id++;
-                      }
-                      _rnaList.add(vp.getConfig().clone(),r,name,true);
-                    }*/
-                  }
+                @Override
+                public void accept(String err) {
+                  
+                  throw new RuntimeException(err);                
                 }
-              }
+                
+              });
+              break;
             }
           }
           // If we made it this far, everything worked.
@@ -500,4 +491,17 @@ public class VARNA
   public VARNAapp getApp() {
     return app;
   }
+  
+  protected void destroy() {
+    try {
+      if (frame != null)
+        frame.setVisible(false);
+    frame = parentFrame = null;
+    app.destroy();
+    } catch (Exception e) {
+      // ignore
+    }
+  }
+
+
 }

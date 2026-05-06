@@ -50,6 +50,15 @@ public class Parser {
     return Parser.parseDoubleArrayBsData(PT.getTokens(str), bs, data);
   }
 
+  public static int parseStringInfestedIntArray(String str, int[] dims) {
+    double[] doubles = new double[dims.length];
+    int n = parseStringInfestedDoubleArray(str, null, doubles);
+    for (int i = dims.length; --i >= 0;) {
+      dims[i] = (int) doubles[i];
+    }
+    return n;
+  }
+
 //  public static int parseFloatArrayBsData(String[] tokens, BS bs, float[] data) {
 //    int len = data.length;
 //    int nTokens = tokens.length;
@@ -258,6 +267,5 @@ public class Parser {
     lines[nLines] = data.length();
     return lines;
   }
-
 
 }

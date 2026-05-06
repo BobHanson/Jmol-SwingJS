@@ -252,7 +252,7 @@ public class NussinovDesignDemo extends JFrame implements InterfaceVARNAListener
 		_vpMaster.addVARNAListener(this);
 		_vpMaster.setTitle("Meilleur repliement - Séquence courante");
 		_vpMaster.setBPStyle(BP_STYLE.SIMPLE);
-		_vpMaster.getVARNAUI().UIRadiate();
+		_vpMaster.getVARNAUI().radiate();
 		_vpMaster.setTitleFontSize(26f);
 		_vpMaster.setTitleFontStyle(Font.PLAIN);
 		

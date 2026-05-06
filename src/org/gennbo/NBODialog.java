@@ -41,18 +41,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.io.FilenameFilter;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
-import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-
-import javajs.util.PT;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -76,11 +74,13 @@ import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.jmol.c.CBK;
-import javajs.util.BS;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.jmolpanel.JmolPanel;
-import org.openscience.jmol.app.plugins.NBOPlugin;
+import org.openscience.jmol.app.plugins.NBOInterface;
+
+import javajs.util.BS;
+import javajs.util.PT;
 
 /**
  * A dialog for interacting with NBOServer
@@ -114,7 +114,6 @@ public class NBODialog extends JDialog {
   protected NBOView viewPanel;
 
   protected JPanel viewSettingsBox;
-
 
   protected static final int DIALOG_HOME = 0;
   protected static final int DIALOG_MODEL = 1;
@@ -171,7 +170,7 @@ public class NBODialog extends JDialog {
    * Jmol plugin object for NBO
    * 
    */
-  protected NBOPlugin nboPlugin;
+  protected NBOInterface nboPlugin;
 
   // private/protected variables
 
@@ -238,17 +237,17 @@ public class NBODialog extends JDialog {
    * @param vwr
    *        The interacting display we are reproducing (source of view angle
    *        info etc)
-   * @param plugin
+   * @param nbo 
    * @param jmolOptions
    */
-  public NBODialog(NBOPlugin plugin, JFrame jmolFrame, Viewer vwr,
+  public NBODialog(NBOInterface nbo, JFrame jmolFrame, Viewer vwr,
       Map<String, Object> jmolOptions) {
     super(jmolFrame);
-    setName(plugin.getName());
-    setTitle(getName() + " " + plugin.getVersion());
+    setName(nbo.getName());
+    setTitle(getName() + " " + nbo.getVersion());
     setJmolOptions(jmolOptions);
     this.vwr = vwr;
-    nboPlugin = plugin;
+    nboPlugin = nbo;
     nboService = new NBOService(this, vwr, !jmolOptionNONBO);
     config = new NBOConfig(this);
     setIconImage(nboPlugin.getIcon("nbo7logo").getImage());
@@ -1426,7 +1425,8 @@ public class NBODialog extends JDialog {
     File dir = new File(directory);
 
     return dir.listFiles(new FilenameFilter() { 
-             public boolean accept(File dir, String filename)
+             @Override
+            public boolean accept(File dir, String filename)
                   { return filename.endsWith(".48"); }
     } );
   }

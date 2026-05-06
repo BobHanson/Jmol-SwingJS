@@ -149,7 +149,7 @@ public class VARNAOnlineDemo extends JApplet {
 		getContentPane().add(_tools, BorderLayout.SOUTH);
 
 		setVisible(true);
-		_vp.getVARNAUI().UIRadiate();
+		_vp.getVARNAUI().radiate();
 	}
 
 	public String[][] getParameterInfo() {

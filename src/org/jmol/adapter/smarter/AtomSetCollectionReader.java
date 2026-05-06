@@ -506,6 +506,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 //          for (int i = asc.atomSetCount; --i >= 0;) {
 //            info = asc.getAtomSetAuxiliaryInfo(i);
 //          }
+          addJmolScript("set cartoonblocks;cartoons only;color structure");
+        } else if (openVarna) {
+          addJmolScript("calculate structure dssr;set cartoonblocks;cartoons only;color structure");
         }
       }
     }
@@ -621,7 +624,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     paramsLattice = (T3d) htParams.get("lattice");
     Object o = htParams.get("supercell");
     // noPack does not work as advertised
-    noPack = checkFilterKey("NOPACK");
     if (strSupercell != null && !noPack) {
       // only for filter cell=
       forcePacked = true;
@@ -1217,39 +1219,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (filter0 != null)
       filter0 = filter0.toUpperCase();
     filter = filter0;
-    doSetOrientation = !checkFilterKey("NOORIENT");
-    doCentralize = (!checkFilterKey("NOCENTER") && checkFilterKey("CENTER"));
-    addVibrations = !checkFilterKey("NOVIB");
-    ignoreStructure = checkFilterKey("DSSP");
-    isDSSP1 = checkFilterKey("DSSP1");
-    doReadMolecularOrbitals = !checkFilterKey("NOMO");
-    useAltNames = checkFilterKey("ALTNAME");
-    reverseModels = checkFilterKey("REVERSEMODELS");
-    allow_a_len_1 = checkFilterKey("TOPOS");
-    slabXY = checkFilterKey("SLABXY");
-    polymerX = !slabXY && checkFilterKey("POLYMERX");
-    noHydrogens = checkFilterKey("NOH");
-    noMinimize = checkFilterKey("NOMIN");
-    optimize2D = checkFilterKey("2D") && !noHydrogens && !noMinimize;
-
     if (filter == null)
       return;
-
-    if (checkFilterKey("LOWPRECISION")) {
-      // adding filter "lowPrecision" overrides the CIF and PWMAT reader HIGH setting
-      setLowPrecision();
-    }
-    if (checkFilterKey("HETATM")) {
-      filterHetero = true;
-      filter = PT.rep(filter, "HETATM", "HETATM-Y");
-      filterCased = PT.rep(filterCased, "HETATM", "HETATM-Y");
-    }
-    if (checkFilterKey("ATOM")) {
-      filterHetero = true;
-      filter = PT.rep(filter, "ATOM", "HETATM-N");
-      filterCased = PT.rep(filterCased, "ATOM", "HETATM-N");
-    }
-
+    checkFilterKeys();
     nameRequired = PT.getQuotedAttribute(filter, "NAME");
     if (nameRequired != null) {
       if (nameRequired.startsWith("'"))
@@ -1328,6 +1300,46 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
             : filter2Cased.toUpperCase());
       }
     }
+  }
+
+  /**
+   * not necessarily all the checks, but the bulk of them that 
+   * are used by more than one reader
+   * 
+   */
+  private void checkFilterKeys() {
+    doSetOrientation = !checkFilterKey("NOORIENT");
+    doCentralize = (!checkFilterKey("NOCENTER") && checkFilterKey("CENTER"));
+    addVibrations = !checkFilterKey("NOVIB");
+    ignoreStructure = checkFilterKey("DSSP");
+    isDSSP1 = checkFilterKey("DSSP1");
+    doReadMolecularOrbitals = !checkFilterKey("NOMO");
+    useAltNames = checkFilterKey("ALTNAME");
+    reverseModels = checkFilterKey("REVERSEMODELS");
+    allow_a_len_1 = checkFilterKey("TOPOS");
+    slabXY = checkFilterKey("SLABXY");
+    polymerX = !slabXY && checkFilterKey("POLYMERX");
+    noHydrogens = checkFilterKey("NOH");
+    noMinimize = checkFilterKey("NOMIN");
+    optimize2D = checkFilterKey("2D") && !noHydrogens && !noMinimize;
+    noPack = checkFilterKey("NOPACK");
+    openVarna = checkFilterKey("VARNA");
+
+    if (checkFilterKey("LOWPRECISION")) {
+      // adding filter "lowPrecision" overrides the CIF and PWMAT reader HIGH setting
+      setLowPrecision();
+    }
+    if (checkFilterKey("HETATM")) {
+      filterHetero = true;
+      filter = PT.rep(filter, "HETATM", "HETATM-Y");
+      filterCased = PT.rep(filterCased, "HETATM", "HETATM-Y");
+    }
+    if (checkFilterKey("ATOM")) {
+      filterHetero = true;
+      filter = PT.rep(filter, "ATOM", "HETATM-N");
+      filterCased = PT.rep(filterCased, "ATOM", "HETATM-N");
+    }
+
   }
 
   private String filter1, filter2, filter1Cased, filter2Cased;

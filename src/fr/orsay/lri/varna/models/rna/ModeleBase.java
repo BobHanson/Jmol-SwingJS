@@ -68,6 +68,7 @@ public abstract class ModeleBase
 
   protected double _value;
   protected int _resno = -1;
+  protected String groupID = null;
   protected boolean selected;
   
   public void setColor(Color color) {
@@ -214,11 +215,19 @@ public abstract class ModeleBase
   }
 
   public int getResidueNumber() {
-    return _resno;
+	    return _resno;
+	  }
+
+	  public void setResidueNumber(int bn) {
+	    _resno = bn;
+	  }
+
+  public String getGroupID() {
+    return groupID;
   }
 
-  public void setResidueNumber(int bn) {
-    _resno = bn;
+  public void setGroupID(String id) {
+    groupID = id;
   }
 
   public Point2D.Double getCoords() {
@@ -262,6 +271,7 @@ public abstract class ModeleBase
 
   @Override
   public String toString() {
-    return _label + " " + _resno;
+    return _label + " " + groupID;
   }
+
 }

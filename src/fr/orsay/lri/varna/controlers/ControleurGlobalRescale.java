@@ -39,7 +39,7 @@ public class ControleurGlobalRescale implements ChangeListener {
 	}
 
 	public void stateChanged(ChangeEvent e) {
-		_vp.getVARNAUI().UIGlobalRescale(_vGR.getScale()/_oldScale);
+		_vp.getVARNAUI().globalRescale(_vGR.getScale()/_oldScale);
 		_oldScale = _vGR.getScale();
 	}
 }

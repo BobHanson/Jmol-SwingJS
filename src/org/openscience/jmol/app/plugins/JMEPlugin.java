@@ -35,8 +35,6 @@ import org.jmol.viewer.Viewer;
 import org.openscience.jmol.app.JmolPlugin;
 import org.openscience.jmol.app.jmolpanel.JmolResourceHandler;
 
-import jme.JMEJmol;
-
 /**
  * SAME as for legacy Jmol, except for the location of JMEJmol
  * 
@@ -48,7 +46,8 @@ import jme.JMEJmol;
  */
 public class JMEPlugin implements JmolPlugin {
 
-  JMEJmol jmeJmol;
+  JMEJmolI jmeJmol;
+  private boolean headless;
   
   @Override
   public void destroy() {
@@ -78,7 +77,7 @@ public class JMEPlugin implements JmolPlugin {
   @Override
   public String getVersion() {
     // TODO
-    return null;
+    return "";
   }
 
   @Override
@@ -111,21 +110,21 @@ public class JMEPlugin implements JmolPlugin {
   }
 
   @Override
-  public void start(JFrame parentFrame, Viewer vwr, Map<String, Object> jmolOptions) {
+  public void start(JFrame parentFrame, Viewer vwr, Map<String, Object> jmolOptions, boolean headless) {
+    this.headless = headless;
     if (jmeJmol == null) {
       String classFile = (Viewer.isJmolSwingJS ? "jme.JMEJmol" : "org.openscience.jmol.app.jme.JMEJmol");      
-      jmeJmol = (JMEJmol) Interface.getInterface(classFile, vwr, "plugin");
-      jmeJmol.setViewer(null, vwr, parentFrame, "jmol");
+      jmeJmol = (JMEJmolI) Interface.getInterface(classFile, vwr, "plugin");
+      jmeJmol.setViewer(null, vwr, (headless ? null : parentFrame), "jmol", headless);
     }
-    jmeJmol.setFrameVisible(true);
+    if (!headless)
+      jmeJmol.setFrameVisible(true);
     SwingUtilities.invokeLater(new Runnable() {
 
       @Override
       public void run() {
         jmeJmol.from3D();
-      }
-      
-      
+      }      
     });
   }
 
@@ -133,6 +132,11 @@ public class JMEPlugin implements JmolPlugin {
   public Object processRequest(String action, Object value) {
     // TODO
     return null;
+  }
+
+  @Override
+  public boolean isHeadless() {
+    return headless;
   }
 
 }

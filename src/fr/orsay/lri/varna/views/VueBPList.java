@@ -209,7 +209,7 @@ public class VueBPList extends JPanel implements TableModelListener, ActionListe
 		if (data2[0].equals("Delete"))
 		{
 			ModeleBP ms = data.get(row);
-			_vp.getVARNAUI().UIRemoveBP(ms);
+			_vp.getVARNAUI().removeBP(ms);
 			
 			
 			data.remove(row);

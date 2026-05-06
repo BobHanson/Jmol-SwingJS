@@ -232,7 +232,7 @@ public class NussinovDemo extends JFrame implements InterfaceVARNAListener,Inter
 
 		setVisible(true);
 
-		_vpMaster.getVARNAUI().UIRadiate();
+		_vpMaster.getVARNAUI().radiate();
 		_vpMaster.setTitleFontSize(26f);
 		_vpMaster.setTitleFontStyle(Font.PLAIN);
 		_vpMaster.addVARNABasesListener(this);

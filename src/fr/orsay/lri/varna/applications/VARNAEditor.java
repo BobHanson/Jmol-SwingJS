@@ -49,6 +49,7 @@ import fr.orsay.lri.varna.models.FullBackup;
 import fr.orsay.lri.varna.models.VARNAConfig;
 import fr.orsay.lri.varna.models.rna.ModeleBP;
 import fr.orsay.lri.varna.models.rna.RNA;
+import fr.orsay.lri.varna.utils.VARNASessionParser;
 
 public class VARNAEditor extends JFrame
     implements DropTargetListener, InterfaceVARNAListener, MouseListener {
@@ -163,7 +164,7 @@ public class VARNAEditor extends JFrame
                   String path = o.toString();
                   VARNAPanel vp = (VARNAPanel) c;
                   try {
-                    FullBackup bck = VARNAPanel.importSession(o); // BH SwingJS
+                    FullBackup bck = VARNASessionParser.importSession(o); // BH SwingJS
                     app.addRNA(bck.rna, bck.config, bck.name, true);
                   } catch (ExceptionLoadingFailed e3) {
                     Collection<RNA> rnas = RNAFactory.loadSecStr((File) o); // BH SwingJS 

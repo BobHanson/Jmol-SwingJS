@@ -581,4 +581,15 @@ public class Group implements Structure {
     strutPoint.sX = Integer.MIN_VALUE;
   }
 
+  private String unitID;
+  
+  public String getUnitID() {
+    if (unitID == null) {
+      int ia = getLeadOrFirstAtomIndex();
+      unitID = chain.model.ms.at[ia]
+          .getUnitID(JC.UNITID_RESIDUE);
+    }
+    return unitID;
+  }
+
 }

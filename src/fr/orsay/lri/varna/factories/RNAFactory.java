@@ -178,6 +178,8 @@ public class RNAFactory {
       String seqTmp = "";
       String strTmp = "";
       while ((line != null) && (strTmp.equals(""))) {
+        if (line.startsWith("HEADER"))
+          return new ArrayList<RNA>();
         line = line.trim();
         if (!line.startsWith(">")) {
           if (seqTmp.equals("")) {

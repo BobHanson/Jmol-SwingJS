@@ -38,18 +38,19 @@ package fr.orsay.lri.varna.models;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import fr.orsay.lri.varna.applications.VARNAapp;
 import fr.orsay.lri.varna.components.VARNAPanel;
 import fr.orsay.lri.varna.exceptions.ExceptionDrawingAlgorithm;
 import fr.orsay.lri.varna.exceptions.ExceptionFileFormatOrSyntax;
@@ -67,6 +68,7 @@ import fr.orsay.lri.varna.models.rna.ModeleBP;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.ModeleColorMap;
 import fr.orsay.lri.varna.models.rna.RNA;
+import fr.orsay.lri.varna.utils.VARNASessionParser;
 
 /**
  * An RNA 2d Panel demo applet
@@ -892,16 +894,17 @@ public class VARNAConfigLoader {
         url = new URL(_URL);
         URLConnection connexion = url.openConnection();
         connexion.setUseCaches(false);
-        InputStream r = connexion.getInputStream();
-        InputStreamReader inr = new InputStreamReader(r);
-
-        if (_URL.toLowerCase().endsWith(VARNAPanel.VARNA_SESSION_EXTENSION)) {
-          FullBackup f;
-          f = VARNAPanel.importSession(r, _URL);
-          _vp.setConfig(f.config);
-          _vp.showRNA(f.rna);
-          applyOptions = false;
+        BufferedInputStream bis = new BufferedInputStream(
+            connexion.getInputStream());
+        if (_URL.toLowerCase().endsWith(VARNAapp.VARNA_SESSION_EXTENSION)) {
+          FullBackup f = VARNASessionParser.importSession(bis, _URL);
+          if (f != null) {
+            _vp.setConfig(f.config);
+            _vp.showRNA(f.rna);
+            applyOptions = false;
+          }
         } else {
+          InputStreamReader inr = new InputStreamReader(bis);
           Collection<RNA> rnas = RNAFactory.loadSecStr(new BufferedReader(inr),
               RNAFactory.guessFileTypeFromExtension(_URL));
           if (rnas.isEmpty()) {
@@ -1005,11 +1008,11 @@ public class VARNAConfigLoader {
       if (!_annotations.equals(""))
         applyAnnotations(_vp);
       if (_autoHelices)
-        _vp.getVARNAUI().UIAutoAnnotateHelices();
+        _vp.getVARNAUI().autoAnnotateHelices();
       if (_autoTerminalLoops)
-        _vp.getVARNAUI().UIAutoAnnotateTerminalLoops();
+        _vp.getVARNAUI().autoAnnotateTerminalLoops();
       if (_autoInteriorLoops)
-        _vp.getVARNAUI().UIAutoAnnotateInteriorLoops();
+        _vp.getVARNAUI().autoAnnotateInteriorLoops();
 
       if (!_orientation.equals("")) {
         try {

@@ -1708,6 +1708,7 @@ public final class JC {
 
   public final static String PLUGIN_REQUEST_ISACTIVE = "isactive";
   public final static String PLUGIN_START = "start";
+  public final static String PLUGIN_HEADLESS = "headless";
   public static final String PLUGIN_SHOW = "show";
   public static final String PLUGIN_HIDE = "hide";
   public final static String PLUGIN_STOP = "stop";
