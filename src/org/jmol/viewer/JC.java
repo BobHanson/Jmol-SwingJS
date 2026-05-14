@@ -561,6 +561,7 @@ public final class JC {
   public final static String SCRIPT_EDITOR_IGNORE = SCRIPT_EXT + " EDITOR_IGNORE ##";
   public final static String SCRIPT_CONSOLE = SCRIPT_GUI + SCRIPT_EDITOR_IGNORE + SCRIPT_GUI;
   public final static String REPAINT_IGNORE = SCRIPT_EXT + " REPAINT_IGNORE ##";
+  public static final String REPAINT_CLEAR_HOLD = "CLEAR HOLD";
 
   public static final int SG_AS_STRING = 1;
   public static final int SG_IS_ASSIGN = 2;
@@ -1743,13 +1744,13 @@ public final class JC {
     if (type == "openPDB") {
       return "var x__id__ = _modelTitle; if (x__id__.length != 4) { x__id__ = '1crn'};x__id__ = prompt('"
           + GT.$("Enter a four-digit PDB model ID or \"=\" and a three-digit ligand ID")
-          + "',x__id__);if (!x__id__) { quit }; load @{'=' + x__id__}";
+          + "',x__id__);if (!x__id__ || x__id__=='null') { quit }; load @{'=' + x__id__}";
 
     }
     if (type == "openMOL") {
       return "var x__id__ = _smilesString; if (!x__id__) { x__id__ = 'tylenol'};x__id__ = prompt('"
           + GT.$("Enter the name or identifier (SMILES, InChI, CAS) of a compound. Preface with \":\" to load from PubChem; otherwise Jmol will use the NCI/NIH Resolver.")
-          + "',x__id__);if (!x__id__) { quit }; load @{(x__id__[1]==':' ? x__id__ : '$' + x__id__)}";
+          + "',x__id__);if (!x__id__ || x__id__=='null') { quit }; load @{(x__id__[1]==':' ? x__id__ : '$' + x__id__)}";
 
     }
     return null;

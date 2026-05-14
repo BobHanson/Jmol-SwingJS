@@ -187,8 +187,8 @@ class TextRenderer {
     double offsetY = y1 - y0;
 
     // Set picking label and then drag!
-
-    if (offsetX <= 0 && -offsetX <= w && offsetY <= 0 && -offsetY <= h)
+    if (offsetX <= 0 && -offsetX <= w
+      && offsetY <= 0 && -offsetY <= h)
       return;
 
     boolean setX = (offsetY > 0 || offsetY < -h);

@@ -17,6 +17,7 @@ public interface JmolDataManager {
   public final static int DATA_TYPE_AD = 1;
   public final static int DATA_TYPE_ADD = 2;
   public final static int DATA_TYPE_ADDD = 3;
+  public final static int DATA_TYPE_JSON = 4;
 
   // indexes into Object[] data
   
@@ -24,6 +25,7 @@ public interface JmolDataManager {
   public final static int DATA_VALUE = 1;
   public final static int DATA_SELECTION = 2;
   public final static int DATA_TYPE = 3;
+
   /**
    * optional; defaults to TRUE
    */

@@ -9,6 +9,7 @@ import javajs.util.PT;
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.script.SV;
+import org.jmol.script.T;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
 
@@ -42,7 +43,7 @@ public class MMCifValidationParser {
     @SuppressWarnings("unchecked")
     Map<String, Object> map = (Map<String, Object>) reader.dssr;
     if (map != null)
-      return vwr.getAnnotationParser(true).fixDSSRJSONMap(map);
+      return vwr.getAnnotationParser(T.dssr).fixDSSRJSONMap(map);
 
     mapAtomResIDs(modelMap);
 
@@ -50,7 +51,7 @@ public class MMCifValidationParser {
     // name(String), data(double[]), modelIndex (Integer), isGroup (Boolean);
 
     SV svMap = (SV) reader.validation;
-    Lst<Object> retProps = reader.vwr.getAnnotationParser(false).catalogValidations(
+    Lst<Object> retProps = reader.vwr.getAnnotationParser(T.val).catalogValidations(
         reader.vwr, svMap, getModelAtomIndices(), resMap,
         (asResidues ? null : atomMap), modelMap);
 
@@ -64,7 +65,7 @@ public class MMCifValidationParser {
     mapAtomResIDs(modelMap);
     SV svMap = getRna3dMap(reader.addedData);
     
-    String note = reader.vwr.getAnnotationParser(false).catalogStructureUnits(
+    String note = reader.vwr.getAnnotationParser(T.rna3d).catalogStructureUnits(
         reader.vwr, svMap, getModelAtomIndices(), resMap, null, modelMap);
     svMap.mapPut("_note", SV.newS(note));
     for (int i = reader.asc.atomSetCount; --i >= 0;) {

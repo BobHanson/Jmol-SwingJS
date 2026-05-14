@@ -3643,16 +3643,21 @@ public class Viewer extends JmolViewer
 
   private JmolAnnotationParser annotationParser, dssrParser;
 
-  public JmolAnnotationParser getAnnotationParser(boolean isDSSR) {
-    return (isDSSR
-        ? (dssrParser == null
+  public JmolAnnotationParser getAnnotationParserIfPresent(int type) {
+    return (type == T.dssr ? dssrParser : annotationParser);
+  }
+  
+  public JmolAnnotationParser getAnnotationParser(int type) {
+    if (type == T.dssr) {
+    	return (dssrParser == null
             ? (dssrParser = (JmolAnnotationParser) Interface
                 .getOption("dssx.DSSR1", this, "script"))
-            : dssrParser)
-        : (annotationParser == null
+            : dssrParser);
+    }
+    return (annotationParser == null
             ? (annotationParser = (JmolAnnotationParser) Interface
                 .getOption("dssx.AnnotationParser", this, "script"))
-            : annotationParser));
+            : annotationParser);
   }
 
   @Override
@@ -4426,6 +4431,8 @@ public class Viewer extends JmolViewer
    *         data[5] -- ModelLoader atomProperty Map.Entry for revising array data
    */
   public Object getDataObj(String key, BS bsSelected, int dataType) {
+    if (dataType == JmolDataManager.DATA_TYPE_JSON)
+      return ms.getDSSRProperties(key);
     return (key == null && dataType == JmolDataManager.DATA_TYPE_LAST ? lastData
         : getDataManager().getData(key, bsSelected, dataType));
   }
@@ -10738,12 +10745,12 @@ public class Viewer extends JmolViewer
   }
 
   public String getAnnotationInfo(SV d, String match, int type) {
-    return getAnnotationParser(type == T.dssr).getAnnotationInfo(this, d, match,
+    return getAnnotationParser(T.dssr).getAnnotationInfo(this, d, match,
         type, am.cmi);
   }
 
   public Lst<Double> getAtomValidation(String type, Atom atom) {
-    return getAnnotationParser(false).getAtomValidation(this, type, atom);
+    return getAnnotationParser(T.validation).getAtomValidation(this, type, atom);
   }
 
   void dragMinimizeAtom(final int iAtom) {

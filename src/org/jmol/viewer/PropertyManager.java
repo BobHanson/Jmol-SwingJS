@@ -1805,17 +1805,31 @@ public class PropertyManager implements JmolPropertyManager {
     return info;
   }
 
+  /**
+   * 
+   * @param atomExpression
+   * @param type T.domains or T.validations
+   * @return SV map
+   */
   private SV getAnnotationInfo(Object atomExpression, int type) {
     BS bsAtoms = vwr.getAtomBitSet(atomExpression);
     int iModel = vwr.ms.getModelBS(bsAtoms, false).nextSetBit(0);
     if (iModel < 0)
       return null;
+    String key = null;
+    switch(type) {
+    case T.domains:
+    	key = "domains";
+    	break;
+    case T.validation:
+    	key = "validation";
+    	break;
+    }
     Map<String, Object> modelinfo = vwr.ms.getModelAuxiliaryInfo(iModel);
-    SV objAnn = (SV) modelinfo.get(type == T.domains ? "domains"
-        : "validation");
+    SV objAnn = (SV) modelinfo.get(key);
     if (objAnn == null || objAnn.tok != T.hash)
       return null;
-    vwr.getAnnotationParser(false).initializeAnnotation(objAnn, type, iModel);
+    vwr.getAnnotationParser(type).initializeAnnotation(objAnn, type, iModel);
     return objAnn.mapGet("_list");    
   }
 

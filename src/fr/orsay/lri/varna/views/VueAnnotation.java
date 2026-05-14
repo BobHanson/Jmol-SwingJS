@@ -90,6 +90,8 @@ public class VueAnnotation {
 	 * limited option
 	 * 
 	 * @param vp
+	 * @param x 
+	 * @param y 
 	 */
 	public VueAnnotation(VARNAPanel vp, int x, int y) {
 		this(vp, x, y, false);
@@ -100,6 +102,9 @@ public class VueAnnotation {
 	 * limited option
 	 * 
 	 * @param vp
+	 * @param x 
+	 * @param y 
+	 * @param limited 
 	 */
 	public VueAnnotation(VARNAPanel vp, int x, int y, boolean limited) {
 		this(vp, new TextAnnotation("", x, y), false, true);
@@ -110,6 +115,7 @@ public class VueAnnotation {
 	 * 
 	 * @param vp
 	 * @param textAnnot
+	 * @param newAnnotation 
 	 */
 	public VueAnnotation(VARNAPanel vp, TextAnnotation textAnnot,
 			boolean newAnnotation) {
@@ -284,7 +290,7 @@ public class VueAnnotation {
 	public void update() {
 		applyFont();
 		if (textAnnotation.getType() == TextAnnotation.AnchorType.POSITION)
-			textAnnotation.setAncrage((double) xSlider.getValue()
+			textAnnotation.setAncrage(xSlider.getValue()
 					+ _vp.addRNABBoxMargins().x, ySlider.getValue()
 					+ _vp.addRNABBoxMargins().y);
 		textAnnotation.setText(textArea.getText());

@@ -31,6 +31,7 @@ import java.util.Map;
 
 
 import org.jmol.util.BSUtil;
+import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
 
@@ -531,7 +532,7 @@ class IsoSolventReader extends AtomDataReader {
       }
     }
     if (params.thePlane != null && params.slabInfo == null)
-      params.addSlabInfo(MeshSurface.getSlabWithinRange(-100, 0));
+      params.addSlabInfo(GData.getSlabWithinRange(-100, 0));
   }
 
   /////////////// calculation methods //////////////

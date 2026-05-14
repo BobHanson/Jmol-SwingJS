@@ -28,14 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.P3d;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import org.jmol.api.JmolAnnotationParser;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Group;
@@ -46,6 +39,13 @@ import org.jmol.script.T;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.SB;
 
 /**
  * 
@@ -899,16 +899,17 @@ public class AnnotationParser implements JmolAnnotationParser {
   }
 
   @Override
-  public void getAtomicDSSRData(ModelSet ms, int modelIndex, double[] dssrData, String dataType) {
-  }
-
-  @Override
   public void setGroup1(ModelSet ms, int modelIndex) {
   }
   
   @Override
   public P3d[] getDSSRFrame(Map<String, Object> dssrNT) {
     return null;
+  }
+
+  @Override
+  public void getAtomicDSSRData(ModelSet ms, int modelIndex,
+                                ModelSet.DataList dataList) {
   }
 
 

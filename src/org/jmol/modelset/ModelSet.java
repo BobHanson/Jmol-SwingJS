@@ -105,6 +105,51 @@ import javajs.util.V3d;
  */
 public class ModelSet extends BondCollection {
 
+  public static class DataList {
+  
+    public boolean isValid;
+    public String dataPath;
+    public String key;
+    public double[] floatData;
+    public String[] stringData;
+    public String[] parts;
+    
+  
+    public DataList(String dataPath) {
+      this.dataPath = dataPath;
+      parts = dataPath.split("\\.");
+    }
+  
+    public double[] setFloats(int nAtoms) {
+      if (floatData != null && floatData.length >= nAtoms) 
+        return floatData;
+      stringData = null;
+      floatData = new double[nAtoms];
+      for (int i = 0; i < nAtoms; i++)
+        floatData[i] = Double.NaN;
+      isValid = true;
+      return floatData;
+    }
+  
+    public String[] setStringData(int nAtoms) {
+      if (stringData != null && stringData.length >= nAtoms)
+        return stringData;
+      floatData = null;
+      stringData = new String[nAtoms];
+      isValid = true;
+      return stringData;
+    }
+  
+    public boolean isFloat() {
+      return floatData != null;
+    }
+    
+    public Object getData() {
+      return (isFloat() ? floatData : stringData);
+    }
+  
+  }
+
   public boolean haveBioModels;
 
   protected BS bsSymmetry;
@@ -248,6 +293,9 @@ public class ModelSet extends BondCollection {
     bsSymmetry = null;
     bsAll = null;
     unitCells = null;
+    if (bioModelset != null)
+      bioModelset.releaseModelSet();
+    bioModelset = null;
     releaseModelSetBC();
   }
 
@@ -4493,22 +4541,10 @@ public class ModelSet extends BondCollection {
   }
 
   public void calculateDssrProperty(String dataType) {
-    if (dataType == null)
-      return;
-    if (dssrData == null || dssrData.length < ac)
-      dssrData = new double[ac];
-    for (int i = 0; i < ac; i++)
-      dssrData[i] = Double.NaN;
-    for (int i = mc; --i >= 0;)
-      if (am[i].isBioModel)
-        ((BioModel) am[i]).getAtomicDSSRData(dssrData, dataType);
+    if (bioModelset == null || !bioModelset.haveDSSR)
+      return;    
+    bioModelset.getDSSRProperties(dataType);
   }
-
-  public double getAtomicDSSRData(int i) {
-    return (dssrData == null || dssrData.length <= i ? Double.NaN
-        : dssrData[i]);
-  }
-
   /**
    * Determine the Cahn-Ingold-Prelog R/S chirality of an atom
    * 
@@ -4979,6 +5015,15 @@ public class ModelSet extends BondCollection {
   public void getStructureAssignments() {
     if (bioModelset != null && bioModelset.haveDSSR)
       bioModelset.getStructureDSSRAssignments();
+  }
+
+  public double getAtomicDSSRDataFloat(String key, int i) {
+    return (bioModelset != null && bioModelset.haveDSSR
+        ? bioModelset.getAtomicDSSRDataFloat(key, i) : Double.NaN);
+  }
+
+  public DataList getDSSRProperties(String prop) {
+    return (bioModelset != null && bioModelset.haveDSSR ? bioModelset.getDSSRProperties(prop) : null);
   }
 
 }

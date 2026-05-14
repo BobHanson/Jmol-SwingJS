@@ -1523,6 +1523,12 @@ public class SV extends T implements JSONEncodable {
         && PT.isLike((String)x1.value, (String) x2.value));
   }
 
+  public static boolean contains(SV x1, SV x2) {
+    return (x1 != null && x2 != null 
+        && x1.tok == string && x2.tok == string
+        && ((String)x1.value).contains((String) x2.value));
+  }
+  
   protected class Sort implements Comparator<SV> {
     private int arrayPt;
     private String myKey;

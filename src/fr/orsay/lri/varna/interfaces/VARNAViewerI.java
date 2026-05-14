@@ -25,11 +25,15 @@ public interface VARNAViewerI {
   String ACTION_HOVER = "hover";
   String ACTION_FILE_DROPPED = "fileDropped";
   String ACTION_CHECK_HEADLESS = "checkHeadless";
+  String ACTION_SELECT_TEXT = "selectText";
+  
+  int ACTION_ID_JMOL_SELECT = 1;
+  int ACTION_ID_TEXT_SELECT = 0;
+
   String PROPERTY_GROUPIDS = "groupIDs";
   String PROPERTY_COLOR_TABLE = "colorTable";
   String PROPERTY_COLOR_INDEXES = "colorIndexes";
   String PROPERTY_RESIDUE_NUMBERS = "resnos";
-  
   
 
   

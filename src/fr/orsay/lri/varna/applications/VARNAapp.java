@@ -9,6 +9,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
@@ -34,7 +35,6 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.util.function.Consumer;
 
 import javax.imageio.IIOImage;
@@ -45,6 +45,7 @@ import javax.imageio.stream.FileImageOutputStream;
 import javax.swing.BoundedRangeModel;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.Icon;
@@ -55,6 +56,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
@@ -301,12 +303,13 @@ public class VARNAapp implements InterfaceParameterLoader {
     }
 
     public void colorBasesByGroupID(List<Color> colors,
-                                  Map<Integer, Map<String, List<?>>> map) {
+                                    Map<Integer, Map<String, List<?>>> map) {
       for (RNA rna : _rnas) {
         Map<String, List<?>> modelData = map.get(rna.modelID);
         if (modelData != null) {
           List<?> GroupIDs = modelData.get(VARNAViewerI.PROPERTY_GROUPIDS);
-          List<?> colorIndexes = modelData.get(VARNAViewerI.PROPERTY_COLOR_INDEXES);
+          List<?> colorIndexes = modelData
+              .get(VARNAViewerI.PROPERTY_COLOR_INDEXES);
           rna.colorResidues(GroupIDs, colorIndexes, colors);
         }
       }
@@ -316,8 +319,8 @@ public class VARNAapp implements InterfaceParameterLoader {
       for (RNA rna : _rnas) {
         Map<String, List<?>> modelData = (map == null ? null
             : map.get(rna.modelID));
-        rna.selectBasesByGroupID(
-            modelData == null ? null : modelData.get(VARNAViewerI.PROPERTY_GROUPIDS));
+        rna.selectBasesByGroupID(modelData == null ? null
+            : modelData.get(VARNAViewerI.PROPERTY_GROUPIDS));
       }
 
     }
@@ -346,7 +349,7 @@ public class VARNAapp implements InterfaceParameterLoader {
     return this;
   }
 
-  boolean enableEditing;
+  boolean editable = true;
 
   /**
    * Where to get parameter values from.
@@ -444,8 +447,12 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   private ButtonSlider sequenceSlider;
 
+  private int width = -1;
+
+  private int height = -1;
+
   public VARNAapp(boolean enableEditing) {
-    this.enableEditing = enableEditing;
+    this.editable = enableEditing;
     _seq = newJTextField("", "seq");
     _str = newJTextField("", "str");
     sequenceSlider = new ButtonSlider();
@@ -465,6 +472,7 @@ public class VARNAapp implements InterfaceParameterLoader {
           doCheckTextOverflow(name == "seq");
         });
     });
+    f.setMargin(new Insets(1, 2, 1, 2));
     return f;
   }
 
@@ -530,9 +538,9 @@ public class VARNAapp implements InterfaceParameterLoader {
                         boolean allowDeleteDuplicate) {
     Font textFieldsFont = Font.decode("MonoSpaced-PLAIN-12");
     _seq.setFont(textFieldsFont);
-    _seq.setEditable(enableEditing);
+    _seq.setEditable(editable);
     _str.setFont(textFieldsFont);
-    _str.setEditable(enableEditing);
+    _str.setEditable(editable);
 
     // VARNAViewer
     _seq.addCaretListener(new CaretListener() {
@@ -652,9 +660,9 @@ public class VARNAapp implements InterfaceParameterLoader {
     _rnaList = new BackupHolder(dlm, _sideList);
   }
 
-  public void setupNoDemo() {
+  public void setupDefault() {
     try {
-      newVARNAPanel("", "", -1, -1);
+      newVARNAPanel(_seq.getText(), _str.getText(), width, height);
     } catch (Exception e) {
 
     }
@@ -694,13 +702,6 @@ public class VARNAapp implements InterfaceParameterLoader {
     _vp.setPreferredSize(
         new Dimension(width <= 0 ? VARNAPanel.DEFAULT_WIDTH : width,
             height <= 0 ? VARNAPanel.DEFAULT_HEIGHT : height));
-  }
-
-  public VARNAPanel setupVarnaPanel(String sequence, String structure) {
-    _seq.setText(sequence);
-    _str.setText(structure);
-    setupOneRNA();
-    return _vp;
   }
 
   public void setupOneRNA() {
@@ -915,11 +916,6 @@ public class VARNAapp implements InterfaceParameterLoader {
     return info;
   }
 
-  public void init() {
-    // TODO
-
-  }
-
   public boolean doMouseClicked(Window w, Point point) {
     int index = _sideList.locationToIndex(point);
     ListModel<FullBackup> dlm = _sideList.getModel();
@@ -937,26 +933,18 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   ////// CLI options, from VARNAcmd //////
 
-  private Hashtable<String, String> _optsValues = new Hashtable<String, String>();
-  Hashtable<String, String> _basicOptsInv = new Hashtable<String, String>();
+  protected Hashtable<String, String> _optsValues = new Hashtable<>();
+
   private String _inFile = "";
   private String _outFile = "";
   int _baseWidth = 400;
   double _scale = 1.0;
   float _quality = 0.9f;
 
-  private String[] _basicOptions = { VARNAConfigLoader.algoOpt,
-      VARNAConfigLoader.bpStyleOpt, VARNAConfigLoader.bondColorOpt,
-      VARNAConfigLoader.backboneColorOpt, VARNAConfigLoader.periodNumOpt,
-      VARNAConfigLoader.baseInnerColorOpt,
-      VARNAConfigLoader.baseOutlineColorOpt,
-
-  };
-
   ArrayList<VARNAPanel> appletPanels;
 
   boolean headless;
-  
+
   public void setHeadless() {
     headless = true;
     _vp.setHeadless();
@@ -964,53 +952,42 @@ public class VARNAapp implements InterfaceParameterLoader {
 
   public final static String VARNA_SESSION_EXTENSION = "varna";
 
-  public String setCLIOptions(Vector<String> args, String[] err) {
-
-    for (int j = 0; j < _basicOptions.length; j++) {
-      _basicOptsInv.put(_basicOptions[j], _basicOptions[j]);
-    }
-    int i = 0;
-    while (i < args.size()) {
-      String opt = args.elementAt(i);
-      if (opt.charAt(0) != '-') {
-        err[0] = "Missing or unknown option \"" + opt + "\"";
-        return null;
-      }
-      if (opt.equals("-h")) {
-        return "-h";
-      }
-      if (opt.equals("-x")) {
-        return "-x";
-      }
-      if (i + 1 >= args.size()) {
-        err[0] = "Missing argument for option \"" + opt + "\"";
-        return null;
-      }
-      String val = args.get(i + 1);
-      if (opt.equals("-i")) {
-        _inFile = val;
-      } else if (opt.equals("-o")) {
-        _outFile = val;
-      } else if (opt.equals("-quality")) {
-        _quality = Float.parseFloat(val);
-      } else if (opt.equals("-resolution")) {
-        _scale = Float.parseFloat(val);
-      } else {
-        addOption(opt, val);
-      }
-      i += 2;
-    }
-    return null;
+  void setupDemo() {
+    addOptionWithValue("-sequenceDBN", DEFAULT_SEQUENCE);
+    addOptionWithValue("-structureDBN", DEFAULT_STRUCTURE1);
   }
 
-  public void addOption(String key, String value) {
-    if (key.equals("-i")) {
-      _inFile = value;
-    } else if (key.equals("-o")) {
-      _outFile = value;
-    } else {
-      _optsValues.put(key.substring(1), value);
+  public String addOptionWithValue(String key, String val) {
+    switch (key) {
+    case "-i":
+    case "-infile":
+      _inFile = val;
+      break;
+    case "-o":
+    case "-outfile":
+      if (_inFile == null) {
+        return "Outfile with no infile indicated";
+      }
+      _outFile = val;
+      setHeadless();
+      break;
+    case "-width":
+      width = Math.max(300, Integer.parseInt(val));
+      break;
+    case "-height":
+      height = Math.max(300, Integer.parseInt(val));
+      break;
+    case "-quality":
+      _quality = Float.parseFloat(val);
+      break;
+    case "-resolution":
+      _scale = Float.parseFloat(val);
+      break;
+    default:
+      _optsValues.put(key.substring(1), val);
+      break;
     }
+    return null;
   }
 
   @Override
@@ -1034,10 +1011,10 @@ public class VARNAapp implements InterfaceParameterLoader {
       VARNAConfigLoader varnaCFG = new VARNAConfigLoader(this);
       ArrayList<FullBackup> confs = new ArrayList<FullBackup>();
       if (_inFile.equals("")) {
-        RNA r = new RNA();
-        r.setRNA(getParameterValue("sequenceDBN", ""),
-            getParameterValue("structureDBN", ""));
-        confs.add(new FullBackup(r, "From Params"));
+        String seq = getParameterValue("sequenceDBN", "");
+        String str = getParameterValue("structureDBN", "");
+        _seq.setText(seq);
+        _str.setText(str);
       } else if (_inFile.toLowerCase().endsWith(".varna")) {
         confs.add(VARNASessionParser.importSession(_inFile));
       } else {
@@ -1068,8 +1045,7 @@ public class VARNAapp implements InterfaceParameterLoader {
             varnaCFG);
       }
     } catch (ExceptionWritingForbidden | ExceptionParameterError
-        | ExceptionUnmatchedClosingParentheses | ExceptionExportFailed
-        | ExceptionLoadingFailed e) {
+        | ExceptionExportFailed | ExceptionLoadingFailed e) {
       e.printStackTrace();
       return "exit1";
     } catch (ExceptionFileFormatOrSyntax e) {
@@ -1089,48 +1065,65 @@ public class VARNAapp implements InterfaceParameterLoader {
       throws ExceptionParameterError, ExceptionWritingForbidden,
       ExceptionExportFailed {
     int index = 1;
+    int n = confs.size();
     for (FullBackup r : confs) {
-      loader.setRNA(r.rna);
-      ArrayList<VARNAPanel> vpl = loader.createVARNAPanels();
-      if (vpl.size() > 0) {
-        VARNAPanel vp = vpl.get(0);
-        if (r.hasConfig()) {
-          vp.setConfig(r.config);
-        }
-        RNA rna = vp.getRNA();
-        Rectangle2D.Double bbox = vp.getRNA().getBBox();
+      String err = write(index++, n, loader, r, outFile, quality, scale,
+          baseWidth);
+      if (err != null)
+        return err;
+    }
+    return null;
+  }
 
-        if (outFile.toLowerCase().endsWith(".jpeg")
-            || outFile.toLowerCase().endsWith(".jpg")
-            || outFile.toLowerCase().endsWith(".png")) {
-          vp.setTitleFontSize((int) (scale * vp.getTitleFont().getSize()));
-          vp.setSize((int) (baseWidth * scale),
-              (int) ((scale * baseWidth * bbox.height) / bbox.width));
-        }
-
-        if (outFile.toLowerCase().endsWith(".eps")) {
-          rna.saveRNAEPS(formatOutputPath(outFile, index, confs.size()),
-              vp.getConfig());
-        } else if (outFile.toLowerCase().endsWith(".xfig")
-            || outFile.toLowerCase().endsWith(".fig")) {
-          rna.saveRNAXFIG(formatOutputPath(outFile, index, confs.size()),
-              vp.getConfig());
-        } else if (outFile.toLowerCase().endsWith(".svg")) {
-          rna.saveRNASVG(formatOutputPath(outFile, index, confs.size()),
-              vp.getConfig());
-        } else if (outFile.toLowerCase().endsWith(".jpeg")
-            || outFile.toLowerCase().endsWith(".jpg")) {
-          saveToJPEG(formatOutputPath(outFile, index, confs.size()), quality,
-              vp);
-        } else if (outFile.toLowerCase().endsWith(".png")) {
-          saveToPNG(formatOutputPath(outFile, index, confs.size()), vp);
-        } else if (outFile.toLowerCase().endsWith(".varna")) {
-          vp.saveSession(formatOutputPath(outFile, index, confs.size()));
-        } else {
-          return "Unknown extension for output file \"" + outFile + "\"";
-        }
-      }
-      index++;
+  private static String write(int index, int n, VARNAConfigLoader loader,
+                              FullBackup r, String outFile, float quality,
+                              double scale, double baseWidth)
+      throws ExceptionParameterError, ExceptionWritingForbidden,
+      ExceptionExportFailed {
+    loader.setRNA(r.rna);
+    ArrayList<VARNAPanel> vpl = loader.createVARNAPanels();
+    if (vpl.size() == 0)
+      return null;
+    VARNAPanel vp = vpl.get(0);
+    if (r.hasConfig()) {
+      vp.setConfig(r.config);
+    }
+    RNA rna = vp.getRNA();
+    Rectangle2D.Double bbox = vp.getRNA().getBBox();
+    int pt = outFile.lastIndexOf(".");
+    String ext = (pt > 0 ? outFile.toLowerCase().substring(pt) : "");
+    switch (ext) {
+    case ".jpeg":
+    case ".jpg":
+    case ".png":
+      vp.setTitleFontSize((int) (scale * vp.getTitleFont().getSize()));
+      vp.setSize((int) (baseWidth * scale),
+          (int) ((scale * baseWidth * bbox.height) / bbox.width));
+      break;
+    }
+    switch (ext) {
+    case ".eps":
+      rna.saveRNAEPS(formatOutputPath(outFile, index, n), vp.getConfig());
+      break;
+    case ".xfig":
+    case ".fig":
+      rna.saveRNAXFIG(formatOutputPath(outFile, index, n), vp.getConfig());
+      break;
+    case ".svg":
+      rna.saveRNASVG(formatOutputPath(outFile, index, n), vp.getConfig());
+      break;
+    case ".jpeg":
+    case ".jpg":
+      saveToJPEG(formatOutputPath(outFile, index, n), quality, vp);
+      break;
+    case ".png":
+      saveToPNG(formatOutputPath(outFile, index, n), vp);
+      break;
+    case ".varna":
+      vp.saveSession(formatOutputPath(outFile, index, n));
+      break;
+    default:
+      return "Unknown extension for output file \"" + outFile + "\"";
     }
     return null;
   }
@@ -1138,6 +1131,9 @@ public class VARNAapp implements InterfaceParameterLoader {
   private static void openGUI(ArrayList<FullBackup> confs,
                               VARNAConfigLoader loader)
       throws ExceptionParameterError {
+    if (confs.size() == 0) {
+      return;
+    }
     VARNA d = new VARNA();
     d.pack();
     for (FullBackup b : confs) {
@@ -1314,7 +1310,7 @@ public class VARNAapp implements InterfaceParameterLoader {
   }
 
   public void colorBasesByGroupID(List<Color> colors,
-                                Map<Integer, Map<String, List<?>>> map) {
+                                  Map<Integer, Map<String, List<?>>> map) {
     _rnaList.colorBasesByGroupID(colors, map);
     repaintText();
   }
@@ -1660,7 +1656,7 @@ public class VARNAapp implements InterfaceParameterLoader {
   private void nextFile(int j, List<File> list, Consumer<String> onError) {
     if (j < list.size()) {
       SwingUtilities.invokeLater(() -> {
-        getListFileAsync(list, j, onError); 
+        getListFileAsync(list, j, onError);
       });
     }
   }
@@ -1703,6 +1699,37 @@ public class VARNAapp implements InterfaceParameterLoader {
     ActionEvent e = new ActionEvent(f, 0, VARNAViewerI.ACTION_FILE_DROPPED);
     actionListener.actionPerformed(e);
     return (e.getSource() == Boolean.TRUE);
+  }
+
+  public void getSelectPanel(JPanel selectPanel) {
+    JLabel label = new JLabel(" Select: ");
+    selectPanel.add(label, BorderLayout.WEST);
+    JTextField select = new JTextField();
+    select.setMargin(new Insets(0,2,0,2));
+    selectPanel.add(select, BorderLayout.CENTER);
+    JPanel p = new JPanel();
+    JRadioButton bJmol = new JRadioButton("Jmol");
+    JRadioButton bText = new JRadioButton("Text");
+    ActionListener doSelect = (e) -> {
+      doSelectText(select.getText(), bJmol.isSelected());
+    };
+    select.addActionListener(doSelect);
+    bJmol.addActionListener(doSelect);    
+    bText.addActionListener(doSelect);
+    bText.setSelected(true);
+    ButtonGroup g = new ButtonGroup();
+    g.add(bText);
+    g.add(bJmol);
+    p.add(bText);
+    p.add(bJmol);
+    selectPanel.add(p, BorderLayout.EAST);
+  }
+
+  private void doSelectText(String text, boolean isJmol) {
+    if (actionListener != null)
+      actionListener.actionPerformed(new ActionEvent(text, 
+          (isJmol ? VARNAViewerI.ACTION_ID_JMOL_SELECT : VARNAViewerI.ACTION_ID_TEXT_SELECT), 
+          VARNAViewerI.ACTION_SELECT_TEXT));
   }
 
 }

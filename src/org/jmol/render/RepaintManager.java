@@ -71,14 +71,17 @@ public class RepaintManager implements JmolRepaintManager {
   
   @Override
   public void pushHoldRepaint(String why) {
+    //System.out.println("!!!!!!!!!pushHoldRepaint " + why + holdRepaint + " " + repaintPending);
     ++holdRepaint;
   }
   
   @Override
   public void popHoldRepaint(boolean andRepaint, String why) {
-    if (why != null && why.startsWith("CLEAR HOLD")) {
+    //System.out.println("!!!!!!!!popHoldRepaint " + why + holdRepaint + " " + repaintPending);
+    if (why != null && why.startsWith(JC.REPAINT_CLEAR_HOLD)) {
       holdRepaint = 0;
-      andRepaint = true;
+      //BH 2026.05.14 problem with early repaint
+      // andRepaint = true;
     }
     --holdRepaint;
     if (holdRepaint <= 0) {
@@ -93,17 +96,17 @@ public class RepaintManager implements JmolRepaintManager {
   @SuppressWarnings({ "null", "unused" })
   @Override
   synchronized public void requestRepaintAndWait(String why) {
-    JmolToJSmolInterface jmol = null;
+    JmolToJSmolInterface jsmol = null;
     if (Viewer.isJS && !Viewer.isSwingJS) {
       /**
-       *  @j2sNative jmol = (self.Jmol && Jmol.repaint ? Jmol : null) 
+       *  @j2sNative jsmol = (self.Jmol && Jmol.repaint ? Jmol : null) 
        */
       {}
     }    
 // don't inline, as the old transpiler cannot handle that.    
 //    JmolToJSmolInterface jmol = (!Viewer.isJS || Viewer.isSwingJS ? null 
 //        :  /** @j2sNative (self.Jmol && Jmol.repaint ? Jmol : null) || */null); 
-    if (jmol == null) {
+    if (jsmol == null) {
       try {
         repaintNow(why);
         if (!Viewer.isJS) wait(vwr.g.repaintWaitMs); // more than a second probably means we are locked up here
@@ -115,7 +118,7 @@ public class RepaintManager implements JmolRepaintManager {
         System.out.println("repaintManager requestRepaintAndWait interrupted thread=" + Thread.currentThread().getName());
       }
     } else {
-      jmol.repaint(vwr.html5Applet,  false);
+      jsmol.repaint(vwr.html5Applet,  false);
       repaintDone();
     }
   }
@@ -187,7 +190,8 @@ public class RepaintManager implements JmolRepaintManager {
   public void render(GData gdata, ModelSet modelSet, boolean isFirstPass,
                      int[] navMinMax) {
     
-    //System.out.println("-------------------------------------------------------------REPAINTMAN render " + isFirstPass);
+//    System.out.println("-------------------------------------------------------------REPAINTMAN render " + isFirstPass + "\n" + modelSet + "\n" 
+//    + vwr.ms + " " + vwr.ms.ac + " " + vwr.ms.mc);
     
     JmolRendererInterface g3d = (JmolRendererInterface) gdata;
     if (renderers == null)
@@ -234,7 +238,7 @@ public class RepaintManager implements JmolRepaintManager {
         throw new NullPointerException();
       Logger.error("rendering error? " + e);
     }
-    //System.out.println("-------------------------------------------------------------REPAINTMAN render DONE");
+    //System.out.println("-------------------------------------------------------------REPAINTMAN render DONE" + "\n" + modelSet + "\n" + vwr.ms);
     
   }
   

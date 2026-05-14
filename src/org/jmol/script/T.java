@@ -471,6 +471,7 @@ public class T {
   public final static int opEQ         = 4 | comparator | 9 << PREC_OFFSET;
   public final static int opNE         = 5 | comparator | 9 << PREC_OFFSET;
   public final static int opLIKE       = 6 | comparator | 9 << PREC_OFFSET;
+  public final static int opCONTAINS   = 7 | comparator | 9 << PREC_OFFSET;
    
   public final static int minus        = 0 | mathop | 10 << PREC_OFFSET;
   public final static int plus         = 1 | mathop | 10 << PREC_OFFSET;
@@ -716,7 +717,7 @@ public class T {
   public final static int sort             = 28 | 0 << 9 | mathfunc | mathproperty;
   public final static int tensor           = 29 | 0 << 9 | mathfunc | mathproperty;
   public final static int unitcell         = 30 | 0 << 9 | mathfunc | mathproperty | shapeCommand | deprecatedparam | predefinedset | defaultON;
-  public final static int __               = 30 | 0 << 9 | mathfunc | mathproperty; // same as getProperty 
+  public final static int __               = 30 | 0 << 9 | mathfunc | mathproperty; // single underscore, same as getProperty 
   public final static int within           = 31 | 0 << 9 | mathfunc;
   public final static int pointgroup       = 31 | 0 << 9 | mathfunc | mathproperty;
   // NO mathproperty AFTER 31, as F << 5 is the minmax mask
@@ -1513,8 +1514,11 @@ public class T {
     + "("+(tok%1000)+"/0x" + Integer.toHexString(tok) + ")"
     + ((intValue == Integer.MAX_VALUE) ? "" : " intValue=" + intValue
         + "(0x" + Integer.toHexString(intValue) + ")")
-    + ((value == null) ? "" : value instanceof String ? " value=\"" + value
-        + "\"" : " value=" + value) + "]";
+    + ((value == null) ? "" 
+        : value instanceof String ? " value=\"" + value + "\""
+            : value instanceof SV ? 
+                " value=\"" + ((SV) value).asString() + "\"" 
+                : " value=" + value) + "]";
   }
 
   /**
@@ -1698,6 +1702,7 @@ public class T {
         "!=",
         "<>",
         "LIKE",
+        "CONTAINS",
         "within",
         ".",
         "..",
@@ -2786,6 +2791,7 @@ public class T {
         opNE,                               // "!="
         -1,                                 // "<>"
         opLIKE,                             // "like"
+        opCONTAINS,                         // "contains"
         within,                             // "within"
         per,                                // "."
         perper,                             // ".."
@@ -3028,7 +3034,7 @@ public class T {
          
          // misc
          
-        __,                                  // "__" (getProperty function)
+        __,                                  // "_" (getProperty function)
         abs,                                // "abs"
         absolute,                           // "absolute"
         _args,                              // "_args"

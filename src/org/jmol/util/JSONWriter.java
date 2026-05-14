@@ -25,20 +25,9 @@ public class JSONWriter {
     modifiedKeys = mapNewToOld; 
   }
 
-  private boolean writeNullAsString = false;
   private boolean whiteSpace;
   private String ws = "";
   
-  /**
-   * Set option to write a null as the string "null" or just null itself.
-   * 
-   * @param b
-   */
-  public void setWriteNullAsString(boolean b) {
-    writeNullAsString = b;
-  }
-
-
   private final static String SPACES = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
   
 
@@ -86,7 +75,7 @@ public class JSONWriter {
   }
 
   public void writeNull() {
-    oc.append(writeNullAsString ? "\"null\"" : "null");
+    oc.append("null");
   }
 
   public void writeNumber(Number o) {

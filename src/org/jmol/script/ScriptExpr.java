@@ -1014,16 +1014,23 @@ abstract class ScriptExpr extends ScriptParam {
       case T.opEQ:
       case T.opNE:
       case T.opLIKE:
+      case T.opCONTAINS:
         int tok = instruction.tok;
         int tokWhat = instruction.intValue;
         if ((tokWhat == T.configuration) && tok != T.opEQ)
           invArg();
-        double[] data = null;
+        Object data = null;
         if (tokWhat == T.property) {
           if (pc + 2 == code.length)
             invArg();
-          if (!chk)
-            data = (double[]) vwr.getDataObj((String) code[++pc].value, null, JmolDataManager.DATA_TYPE_AD);
+          if (!chk) {
+            SV sv = (SV) code[++pc];
+            String prop = sv.myName;
+            int type = (prop.startsWith("property_dssr.") ? JmolDataManager.DATA_TYPE_JSON : JmolDataManager.DATA_TYPE_AD);
+            data = vwr.getDataObj(prop, null, type);
+            if (data == null)
+              return new BS();
+          }
         }
         if (++pc == code.length)
           invArg(); // compiler would not let this happen, actually
@@ -1098,7 +1105,8 @@ abstract class ScriptExpr extends ScriptParam {
   }
 
   private BS getComparison(T t, int tokWhat, int tokOp, String strOp,
-                           double[] data) throws ScriptException {
+                           Object data)
+      throws ScriptException {
     int tokValue = t.tok;
     if (tokValue == T.varray) {
       BS bs = new BS();
@@ -1114,122 +1122,143 @@ abstract class ScriptExpr extends ScriptParam {
       }
       return bs;
     }
-    
-    int comparisonInt = t.intValue;
-    double comparisonFloat = Double.NaN;
-
-    boolean isModel = (tokWhat == T.model);
-    boolean isIntProperty = T.tokAttr(tokWhat, T.intproperty);
-    boolean isFloatProperty = (T.tokAttr(tokWhat, T.floatproperty)
-        || (tokWhat & T.PROPERTYFLAGS) == T.atomproperty); // point
-    boolean isIntOrFloat = isIntProperty && isFloatProperty;
-    boolean isStringProperty = !isIntProperty
-        && T.tokAttr(tokWhat, T.strproperty);
-    // element comparisons must be numerical
-    if (tokWhat == T.element)
-      isIntProperty = !(isStringProperty = false);
 
     Object val = t.value;
-    if (T.tokAttr(tokValue, T.identifier)) {
-      if ("_modelNumber".equalsIgnoreCase((String) val)) {
-        int modelIndex = vwr.am.cmi;
-        val = Integer.valueOf(comparisonInt = (modelIndex < 0 ? 0 : vwr
-            .getModelFileNumber(modelIndex)));
-      } else {
-        SV v = (SV) getParameter((String) val, T.variable, false);
-        if (v != null) {
-          if (v.tok == T.varray)
-            return getComparison(v, tokWhat, tokOp, strOp, data);
-          comparisonInt = v.intValue;
-          val = (isStringProperty || tokWhat == T.configuration && v.tok != T.integer ? SV.sValue(v) : SV.nValue(v));
-          t = v;
-        }          
-      }
-    }
+    int comparisonInt = t.intValue;
+    double comparisonFloat = Double.NaN;
+    boolean isModel = (tokWhat == T.model);
+    boolean isIntProperty, isFloatProperty, isStringProperty, isIntOrFloat;
 
-    if (val instanceof P3d) {
-      if (tokWhat == T.color) {
-        comparisonInt = CU.colorPtToFFRGB((P3d) val);
-        tokValue = T.integer;
-        isIntProperty = true;
-      }
-    } else if (val instanceof String) {
-      if (tokWhat == T.color) {
-        comparisonInt = CU.getArgbFromString((String) val);
-        if (comparisonInt == 0 && T.tokAttr(tokValue, T.identifier)) {
-          val = getVarParameter((String) val, true);
-          if (((String) val).startsWith("{")) {
-            val = Escape.uP((String) val);
-            if (val instanceof P3d)
-              comparisonInt = CU.colorPtToFFRGB((P3d) val);
-            else
-              comparisonInt = 0;
-          } else {
-            comparisonInt = CU.getArgbFromString((String) val);
+    ModelSet.DataList dataList = (data instanceof ModelSet.DataList ? (ModelSet.DataList) data : null);
+    if (dataList != null) {
+      data = dataList.getData();
+      isIntProperty = false;
+      isFloatProperty = dataList.isFloat();
+      isStringProperty = !isFloatProperty;
+      if (isFloatProperty) {
+        if (val instanceof String)
+          comparisonFloat = PT.parseDouble((String) val);
+        else
+          comparisonFloat = ((Number) val).doubleValue();
+      } else if (!(val instanceof String)) {
+        val = val.toString();
+     }
+    } else {
+      isIntProperty = T.tokAttr(tokWhat, T.intproperty);
+      isFloatProperty = (T.tokAttr(tokWhat, T.floatproperty)
+          || (tokWhat & T.PROPERTYFLAGS) == T.atomproperty); // point
+      isIntOrFloat = isIntProperty && isFloatProperty;
+      isStringProperty = !isIntProperty && T.tokAttr(tokWhat, T.strproperty);
+      // element comparisons must be numerical
+      if (tokWhat == T.element)
+        isIntProperty = !(isStringProperty = false);
+      if (T.tokAttr(tokValue, T.identifier)) {
+        if ("_modelNumber".equalsIgnoreCase((String) val)) {
+          int modelIndex = vwr.am.cmi;
+          val = Integer.valueOf(comparisonInt = (modelIndex < 0 ? 0
+              : vwr.getModelFileNumber(modelIndex)));
+        } else {
+          SV v = (SV) getParameter((String) val, T.variable, false);
+          if (v != null) {
+            if (v.tok == T.varray)
+              return getComparison(v, tokWhat, tokOp, strOp, data);
+            comparisonInt = v.intValue;
+            val = (isStringProperty
+                || tokWhat == T.configuration && v.tok != T.integer
+                    ? SV.sValue(v)
+                    : SV.nValue(v));
+            t = v;
           }
         }
-        tokValue = T.integer;
-        isIntProperty = true;
-      } else if (!isStringProperty) {
-        if (tokWhat == T.configuration) {
-          val = Integer.valueOf(t.tok == T.integer ? t.intValue : -1000 - (val + " ").codePointAt(0));
-        } else if (tokWhat == T.structure || tokWhat == T.substructure
-            || tokWhat == T.element)
-          isStringProperty = !(isIntProperty = (comparisonInt != Integer.MAX_VALUE));
-        else
-          val = SV.nValue(t);
-        if (val instanceof Integer)
-          comparisonFloat = comparisonInt = ((Integer) val).intValue();
-        else if (val instanceof Double && isModel)
-          comparisonInt = ModelSet
-              .modelFileNumberFromFloat(((Number) val).doubleValue());
       }
-    }
-    if (isStringProperty && !(val instanceof String)) {
-      val = "" + val;
-    } 
-    if (val instanceof Integer || tokValue == T.integer) {
-      if (isModel) {
-        if (comparisonInt >= 1000000)
-          tokWhat = -T.model;
-      } else if (isIntOrFloat) {
-        isFloatProperty = false;
-      } else if (isFloatProperty) {
-        comparisonFloat = comparisonInt;
-      }        
-    } else if (val instanceof Double
-        || val instanceof Double) {
-      if (isModel) {
-        tokWhat = -T.model;
-      } else {
-        comparisonFloat = ((Number) val).doubleValue();
-        if (isIntOrFloat) {
-          isIntProperty = false;
-        } else if (isIntProperty) {
-          comparisonInt = (int) (comparisonFloat);
+      if (val instanceof P3d) {
+        if (tokWhat == T.color) {
+          comparisonInt = CU.colorPtToFFRGB((P3d) val);
+          tokValue = T.integer;
+          isIntProperty = true;
+        }
+      } else if (val instanceof String) {
+        if (tokWhat == T.color) {
+          comparisonInt = CU.getArgbFromString((String) val);
+          if (comparisonInt == 0 && T.tokAttr(tokValue, T.identifier)) {
+            val = getVarParameter((String) val, true);
+            if (((String) val).startsWith("{")) {
+              val = Escape.uP((String) val);
+              if (val instanceof P3d)
+                comparisonInt = CU.colorPtToFFRGB((P3d) val);
+              else
+                comparisonInt = 0;
+            } else {
+              comparisonInt = CU.getArgbFromString((String) val);
+            }
+          }
+          tokValue = T.integer;
+          isIntProperty = true;
+        } else if (!isStringProperty) {
+          if (tokWhat == T.configuration) {
+            val = Integer.valueOf(t.tok == T.integer ? t.intValue
+                : -1000 - (val + " ").codePointAt(0));
+          } else if (tokWhat == T.structure || tokWhat == T.substructure
+              || tokWhat == T.element) {
+            isStringProperty = !(isIntProperty = (comparisonInt != Integer.MAX_VALUE));
+          } else {
+            val = SV.nValue(t);
+          }
+          if (val instanceof Integer)
+            comparisonFloat = comparisonInt = ((Integer) val).intValue();
+          else if (val instanceof Double && isModel)
+            comparisonInt = ModelSet
+                .modelFileNumberFromFloat(((Number) val).doubleValue());
         }
       }
-    } else if (!isStringProperty) {
-      iToken++;
-      invArg();
-    }
-    if (isModel && comparisonInt >= 1000000 && comparisonInt % 1000000 == 0) {
-      comparisonInt /= 1000000;
-      tokWhat = T.file;
-      isModel = false;
-    }
-    if (tokWhat == -T.model && tokOp == T.opEQ) {
-      return bitSetForModelFileNumber(comparisonInt);
-    }
-    if (strOp != null && strOp.indexOf("-") >= 0) {
-      if (isIntProperty)
-        comparisonInt = -comparisonInt;
-      else if (!Double.isNaN(comparisonFloat))
-        comparisonFloat = -comparisonFloat;
+
+      if (isStringProperty && !(val instanceof String)) {
+        val = "" + val;
+      }
+      if (val instanceof Integer || tokValue == T.integer) {
+        if (isModel) {
+          if (comparisonInt >= 1000000)
+            tokWhat = -T.model;
+        } else if (isIntOrFloat) {
+          isFloatProperty = false;
+        } else if (isFloatProperty) {
+          comparisonFloat = comparisonInt;
+        }
+      } else if (val instanceof Double || val instanceof Double) {
+        if (isModel) {
+          tokWhat = -T.model;
+        } else {
+          comparisonFloat = ((Number) val).doubleValue();
+          if (isIntOrFloat) {
+            isIntProperty = false;
+          } else if (isIntProperty) {
+            comparisonInt = (int) (comparisonFloat);
+          }
+        }
+      } else if (!isStringProperty) {
+        iToken++;
+        invArg();
+      }
+      if (isModel && comparisonInt >= 1000000 && comparisonInt % 1000000 == 0) {
+        comparisonInt /= 1000000;
+        tokWhat = T.file;
+        isModel = false;
+      }
+      if (tokWhat == -T.model && tokOp == T.opEQ) {
+        return bitSetForModelFileNumber(comparisonInt);
+      }
+      if (strOp != null && strOp.indexOf("-") >= 0) {
+        if (isIntProperty)
+          comparisonInt = -comparisonInt;
+        else if (!Double.isNaN(comparisonFloat))
+          comparisonFloat = -comparisonFloat;
+      }
     }
     return (isIntProperty ? compareInt(tokWhat, tokOp, comparisonInt)
-        : isStringProperty ? compareString(tokWhat, tokOp, (String) val)
-            : compareFloatData(tokWhat, data, tokOp, comparisonFloat));
+        : isStringProperty || tokOp == T.opLIKE || tokOp == T.opCONTAINS
+            ? compareString(tokWhat, data, tokOp, (String) val)
+            : compareFloatData(tokWhat, (double[]) data, tokOp,
+                comparisonFloat));
 
   }
   protected boolean noCopy(int i, int dir) {
@@ -1355,20 +1384,38 @@ abstract class ScriptExpr extends ScriptParam {
     return false;
   }
 
-  private BS compareString(int tokWhat, int tokOperator, String comparisonString)
+  private BS compareString(int tokWhat, Object data, int tokOperator,
+                           String comparisonString)
       throws ScriptException {
     BS bs = new BS();
     Atom[] atoms = vwr.ms.at;
     int ac = vwr.ms.ac;
-    boolean isCaseSensitive = (tokOperator == T.opLIKE || tokWhat == T.chain && vwr
-        .getBoolean(T.chaincasesensitive));
+    boolean isCaseSensitive = (tokOperator == T.opLIKE 
+        || tokOperator == T.opCONTAINS
+        || tokWhat == T.chain && vwr.getBoolean(T.chaincasesensitive));
     if (!isCaseSensitive)
       comparisonString = comparisonString.toLowerCase();
+    boolean isProp = (tokWhat == T.property);
+    String[] sdata = null;
+    if (isProp && data != null) {
+      if (!AU.isAS(data)) {
+        return bs;
+      }
+      sdata = (String[]) data;
+    }
     for (int i = ac; --i >= 0;) {
       if (atoms[i] == null)
         continue;
-      String propertyString = atoms[i]
-          .atomPropertyString(vwr, tokWhat);
+      String propertyString;
+      if (isProp) {
+        if (sdata == null || sdata.length <= i)
+          continue;
+        propertyString = sdata[i];
+        if (propertyString == null)
+          continue;
+      } else {
+        propertyString = atoms[i].atomPropertyString(vwr, tokWhat);
+      }
       if (!isCaseSensitive)
         propertyString = propertyString.toLowerCase();
       if (compareStringValues(tokOperator, propertyString, comparisonString))
@@ -1386,6 +1433,8 @@ abstract class ScriptExpr extends ScriptParam {
       return (PT.isMatch(propertyValue, comparisonValue, true, true) == (tokOperator == T.opEQ));
     case T.opLIKE:
       return PT.isLike(propertyValue, comparisonValue);
+    case T.opCONTAINS:
+      return propertyValue.contains(comparisonValue);
     default:
       invArg();
     }
@@ -1755,10 +1804,6 @@ abstract class ScriptExpr extends ScriptParam {
       bsAtom = BS.newN(ac);
       tokenAtom = SV.newV(T.bitset, bsAtom);
       break;
-    case T.dssr:
-      for (int j = fout.length; --j >= 0;)
-        fout[j] = Double.NaN;
-      //$FALL-THROUGH$
     case T.straightness:
     case T.surfacedistance:
       vwr.autoCalculate(tok, (String) tokenValue);
@@ -1769,6 +1814,10 @@ abstract class ScriptExpr extends ScriptParam {
       break;
     case T.color:
       ptT = new P3d();
+      break;
+    case T.dssr:
+      data = (double[]) vwr.getDataObj((String) opValue, null,
+          JmolDataManager.DATA_TYPE_JSON);
       break;
     case T.property:
       data = (double[]) vwr.getDataObj((String) opValue, null,
@@ -1845,6 +1894,7 @@ abstract class ScriptExpr extends ScriptParam {
                 .getUserFunctionResult(userFunction, params, tokenAtom));
             bsAtom.clear(i);
             break;
+          case T.dssr:
           case T.property:
             fv = (data == null || i >= data.length ? 0 : data[i]);
             break;

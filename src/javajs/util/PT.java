@@ -1427,8 +1427,6 @@ public class PT {
   }
 
   public static double parseDouble(String str) {
-    if (str == "-1.0")
-      System.out.println("???");
     return parseDoubleNext(str, new int[] {0});
   }
 

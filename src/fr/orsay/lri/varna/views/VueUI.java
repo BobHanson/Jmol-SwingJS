@@ -873,17 +873,17 @@ public class VueUI {
     }
   }
 
-  public void motifView() {
-    if (_vp.isModifiable()) {
-      Hashtable<Integer, Point2D.Double> bck = backupAllCoords();
-      _undoableEditSupport
-          .postEdit(new VARNAEdits.RedrawEdit(RNA.DRAW_MODE_MOTIFVIEW, _vp));
-      _vp.reset();
-      _vp.setRNA(_vp.getRNA(), RNA.DRAW_MODE_MOTIFVIEW);
-      _vp.repaint();
-      _vp.fireLayoutChanged(bck);
-    }
-  }
+//  public void motifView() {
+//    if (_vp.isModifiable()) {
+//      Hashtable<Integer, Point2D.Double> bck = backupAllCoords();
+//      _undoableEditSupport
+//          .postEdit(new VARNAEdits.RedrawEdit(RNA.DRAW_MODE_MOTIFVIEW, _vp));
+//      _vp.reset();
+//      _vp.setRNA(_vp.getRNA(), RNA.DRAW_MODE_MOTIFVIEW);
+//      _vp.repaint();
+//      _vp.fireLayoutChanged(bck);
+//    }
+//  }
 
   /**
    * Move a helix of the rna

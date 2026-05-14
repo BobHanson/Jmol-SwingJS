@@ -25,21 +25,16 @@ package org.jmol.dssx;
 
 import java.util.Map;
 
-import javajs.util.Lst;
-import javajs.util.P3d;
-import javajs.util.PT;
-
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.HBond;
-import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelsetbio.BasePair;
 import org.jmol.modelsetbio.BioModel;
 import org.jmol.modelsetbio.BioPolymer;
 import org.jmol.modelsetbio.NucleicMonomer;
 import org.jmol.modelsetbio.NucleicPolymer;
+import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.util.C;
 import org.jmol.util.Edge;
@@ -47,6 +42,11 @@ import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3d;
+import javajs.util.PT;
 
 /**
  * 
@@ -456,28 +456,6 @@ public class DSSR1 extends AnnotationParser {
       bs.clearAll();
     }
   }
-  
-  @SuppressWarnings("unchecked")
-  @Override
-  public void getAtomicDSSRData(ModelSet ms, int modelIndex, double[] dssrData, String dataType) {
-    Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex, JC.INFO_DSSR);
-    Lst<Object> list;
-    if (info == null || (list = (Lst<Object>) info.get(dataType)) == null)
-      return;
-    BS bsAtoms = ms.am[modelIndex].bsAtoms; 
-    try {
-      BS bs = new BS();
-      for (int i = list.size(); --i >= 0;) {
-        Map<String, Object> map = (Map<String, Object>) list.get(i);
-        bs.clearAll();
-        ms.getSequenceBits(map.toString(), bsAtoms, bs);
-        for (int j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1))
-          dssrData[j] = i;
-      }
-    } catch (Throwable e) {
-    }
-  }
-
 
   @SuppressWarnings("unchecked")
   @Override
@@ -589,4 +567,89 @@ public class DSSR1 extends AnnotationParser {
 //  ]
 
   
+  
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  public void getAtomicDSSRData(ModelSet ms, int modelIndex, ModelSet.DataList dataList) {
+    // note that we have three possibilities:
+    // dssr.junctions -- ends with List -> register list index as in color property dssr "junctions"
+    // dssr.nts.summary -- ends with a String
+    // dssr.nts.phase_angle -- ends with float or int
+    try {
+      Map<String, Object> info = (Map<String, Object>) ms.getInfo(modelIndex,
+          JC.INFO_DSSR);
+      if (info == null)
+        return;
+      Lst<Map<String, Object>> list = null;
+      // dssr.junctions
+      // dssr.nts.summary
+      String[] parts = dataList.parts;
+      int n = parts.length - 1;
+      int pt = -1;
+      for (int i = 1; i <= n && info != null; i++) {
+        Object o = info.get(parts[i]);
+        if (o instanceof Lst) {
+          list = (Lst<Map<String, Object>>) o;
+          pt = i + 1;
+          break;
+        }
+        info = (o instanceof Map<?, ?> ? (Map<String, Object>) o : null);
+      }
+      if ((pt <= n - 1 || pt > n + 1) && info == null || list.isEmpty())
+        return;
+      int nAtoms = ms.ac;
+      int[] atomIndexToData = new int[nAtoms];
+      BS bsAtoms = ms.am[modelIndex].bsAtoms;
+      BS bs = new BS();
+      BS bsAll = new BS();
+      for (int i = list.size(); --i >= 0;) {
+        Object map = list.get(i);
+        bs.clearAll();
+        ms.getSequenceBits(map.toString(), bsAtoms, bs);
+        for (int j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1))
+          atomIndexToData[j] = i;
+        bsAll.or(bs);
+      }
+      double[] floatData = dataList.floatData;
+      String[] stringData = dataList.stringData;
+      if (pt > n) {
+        //System.out.println("DSSR1 " + bsAll);
+        // just dssr.junctions -- index to the specific junction
+        floatData = dataList.setFloats(nAtoms);
+        for (int i = bsAll.nextSetBit(0); i >= 0; i = bsAll.nextSetBit(i + 1)) {
+            floatData[i] = atomIndexToData[i];            
+        }
+      } else {
+        Map<String, Object> map = list.get(0);
+        String key = dataList.key = parts[pt];
+        Object o = map.get(key);
+        if (o instanceof String) {
+          // dssr.nts.summary
+          stringData = dataList.setStringData(nAtoms);
+          for (int i = bsAll.nextSetBit(0); i >= 0; i = bsAll.nextSetBit(i + 1)) {
+            stringData[i] = list.get(atomIndexToData[i]).get(key).toString();
+          }
+        } else {
+          // dss.nts.phase_angle
+          floatData = dataList.setFloats(nAtoms);
+          for (int i = bsAll.nextSetBit(0); i >= 0; i = bsAll.nextSetBit(i + 1)) {
+            o = list.get(atomIndexToData[i]).get(key);
+            floatData[i] = (o instanceof Number ? ((Number) o).doubleValue() : Double.NaN);                      
+          }
+        }
+      }
+    } catch (Throwable e) {
+      e.printStackTrace();
+    }
+
+  }
+  
+  @Override
+  public void fixAtoms(int modelIndex, SV dbObj, BS bsAddedMask, int type,
+                       int margin) {
+    // not applicable
+  }
+
+
 }

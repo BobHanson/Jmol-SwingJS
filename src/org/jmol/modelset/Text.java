@@ -363,10 +363,8 @@ public class Text {
         xAdj = (fontScale >= 2 ? 8 : 4);
         yAdj = -descent;
         // a bit of a hack here.
-//        boxXY[0] = movableX - xAdj - ascent/8;
         boxXY[0] = movableX - xAdj;
         boxXY[1] = movableY - yAdj + (descent -ascent)/2 + 8; //  empirical only
-//        boxXY[1] = movableY - yAdj;
         isAbsolute = true;
         boxYoff2 = -2; // empirical fudge factor
       } else {
@@ -765,7 +763,6 @@ public class Text {
     else
       pTemp.set(0, 0, 0);
     pTemp.add3(pymolOffset[4], pymolOffset[5], pymolOffset[6]);
-    //System.out.println("draw id \"Txt" + atomPt + "\" width 0.1 " + pTemp + "\""+text+"\"" + "//" + isPixel + Arrays.toString(pymolOffset));
     vwr.tm.transformPtScrSafe(pTemp, screen);
     if (isPixel) {
       screen.x += pymolOffset[1];

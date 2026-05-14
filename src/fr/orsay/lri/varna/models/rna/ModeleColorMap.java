@@ -19,14 +19,14 @@ public class ModeleColorMap implements Cloneable, Serializable {
   public static final Color DEFAULT_COLOR = Color.GREEN;
 
   public enum NamedColorMapTypes {
-    RED("red", ModeleColorMap.redColorMap()), BLUE("blue",
-        ModeleColorMap.blueColorMap()), GREEN("green",
-            ModeleColorMap.greenColorMap()), HEAT("heat",
-                ModeleColorMap.heatColorMap()), ENERGY("energy",
-                    ModeleColorMap.energyColorMap()), ROCKNROLL("rocknroll",
-                        ModeleColorMap.rockNRollColorMap()), VIENNA("vienna",
-                            ModeleColorMap.viennaColorMap()), BW("bw",
-                                ModeleColorMap.bwColorMap());
+    RED("red", ModeleColorMap.redColorMap()), //
+    BLUE("blue", ModeleColorMap.blueColorMap()), //
+    GREEN("green", ModeleColorMap.greenColorMap()), //
+    HEAT("heat", ModeleColorMap.heatColorMap()), //
+    ENERGY("energy", ModeleColorMap.energyColorMap()), //
+    ROCKNROLL("rocknroll", ModeleColorMap.rockNRollColorMap()), //
+    VIENNA("vienna", ModeleColorMap.viennaColorMap()), //
+    BW("bw", ModeleColorMap.bwColorMap());
 
     String _id;
     ModeleColorMap _cm;
@@ -315,7 +315,6 @@ public class ModeleColorMap implements Cloneable, Serializable {
     sb.append(Integer.toHexString(i));
   }
 
-  
   private final static Map<Color, Color> mapContrast = new HashMap<>();
 
   public static Color getBgContrast(Color c) {
@@ -329,23 +328,22 @@ public class ModeleColorMap implements Cloneable, Serializable {
 
   /**
    * Return a greyscale rgb value 0-FF using NTSC color lightness algorithm
-   *<p>
-   * the alpha component is set to 0xFF. If you want a value in the
-   * range 0-255 then & the result with 0xFF;
+   * <p>
+   * the alpha component is set to 0xFF. If you want a value in the range 0-255
+   * then & the result with 0xFF;
    *
-   * @param rgb the rgb value
+   * @param rgb
+   *        the rgb value
    * @return a grayscale value in the range 0 - 255 decimal
    */
   public static int toFFGGGfromRGB(int rgb) {
-    int grey = (((2989 * ((rgb >> 16) & 0xFF)) +
-                (5870 * ((rgb >> 8) & 0xFF)) +
-                (1140 * (rgb & 0xFF)) + 5000) / 10000) & 0xFFFFFF;
+    int grey = (((2989 * ((rgb >> 16) & 0xFF)) + (5870 * ((rgb >> 8) & 0xFF))
+        + (1140 * (rgb & 0xFF)) + 5000) / 10000) & 0xFFFFFF;
     return argb(grey, grey, grey);
   }
-  
+
   public static int argb(int red, int grn, int blu) {
     return 0xFF000000 | (red << 16) | (grn << 8) | blu;
   }
-
 
 }

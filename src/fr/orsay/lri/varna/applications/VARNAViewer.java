@@ -21,6 +21,8 @@ import fr.orsay.lri.varna.models.FullBackup;
 import fr.orsay.lri.varna.models.VARNAConfigLoader;
 import fr.orsay.lri.varna.models.rna.ModeleBase;
 import fr.orsay.lri.varna.models.rna.RNA;
+import javajs.util.PT;
+import javajs.util.SB;
 
 /**
  * 
@@ -42,7 +44,9 @@ public class VARNAViewer extends VARNA
   private boolean notifyJmol;
 
   public VARNAViewer() {
-    super("VARNA", VARNA_GUI_SHOW_LISTING | VARNA_GUI_SHOW_ZOOM_PANEL);
+    super("VARNA", VARNA_GUI_SHOW_LISTING 
+        | VARNA_GUI_SHOW_ZOOM_PANEL
+        | VARNA_GUI_SHOW_SELECT);
     VARNAapp.NO_RNA_TEXT = DROP_RNA_TEXT;
     app.setDoInterpolate(false);
     app.setParameterSource(this);
@@ -133,13 +137,13 @@ public class VARNAViewer extends VARNA
         app.setActionListener(this);
         app.setVarnaPanel(getConfiguredPanel());
         ActionEvent e = new ActionEvent(this, 0,
-            VARNAViewerI.ACTION_CHECK_HEADLESS);
+            ACTION_CHECK_HEADLESS);
         actionListener.actionPerformed(e);
         if (e.getSource() == Boolean.TRUE)
           setHeadless();
       }
       notifyJmol = false;
-      JFrame varnaFrame = setFrame(parentFrame, frame, 0, 0, !headless);
+      JFrame varnaFrame = setFrame(parentFrame, frame, 0, 0, !app.headless);
       notifyJmol = true;
       return varnaFrame;
     case ZAP:
@@ -159,26 +163,28 @@ public class VARNAViewer extends VARNA
     if (!notifyJmol)
       return;
     try {
+      String jmolScript = null;
       switch (e.getActionCommand()) {
-      case VARNAViewerI.ACTION_FILE_DROPPED:
+      case ACTION_FILE_DROPPED:
         // VARNAPlugin will set source to Boolean.TRUE if Jmol recognized this file source and handled it.
         actionListener.actionPerformed(e);
         return; // needs to be synchronous
-      case VARNAViewerI.ACTION_HOVER:
+      case ACTION_HOVER:
         ModeleBase base = ((ModeleBase[]) e.getSource())[0];
         e.setSource(base == null ? null
             : new Object[] { app.getRNA().modelID,
                 base.getGroupID() });
         break;
-      case VARNAViewerI.ACTION_SELECT_MODEL:
+      case ACTION_SELECT_TEXT:
+        break;
+      case ACTION_SELECT_MODEL:
         FullBackup b = (FullBackup) e.getSource();
         e.setSource(b.name);
         System.out.println("VV selectModel " + b.name);
         break;
-      case VARNAViewerI.ACTION_SELECT_BASES:
+      case ACTION_SELECT_BASES:
         BaseSet baseSet = (BaseSet) e.getSource();
         System.out.println("VV selectBases " + baseSet);
-        String jmolScript = null;
         switch (e.getID()) {
         case InterfaceVARNASelectionListener.SEL_CLEAR:
           jmolScript = "select none";
@@ -226,6 +232,7 @@ public class VARNAViewer extends VARNA
       newRNA.setGroupIDs(groupIDs);
       int[] resnos = getDSSRModelResNos(nts);
       newRNA.setResidueNumbers(resnos);
+      newRNA.setDSSRInfo(dssrInfo);
     }
   }
 

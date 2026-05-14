@@ -23,11 +23,11 @@ import fr.orsay.lri.varna.utils.XMLUtils;
  * Arguments are of the following types:
  * 
  * <code>
-  BOOLEAN  true/false
-  NUMBER   
-  STRING   xxxx or "xxxx"
-  COLOR    #00FF00
-  NULL     NULL (with no quotes)
+    BOOLEAN  true/false
+    NUMBER   
+    STRING   xxxx or "xxxx"
+    COLOR    #00FF00
+    NULL     NULL (with no quotes)
  * </code>
  *
  * NULL was added for the setSelectionColors command, introduced for
@@ -35,15 +35,84 @@ import fr.orsay.lri.varna.utils.XMLUtils;
  * 
  * I cannot find any documentation on this command scripting. But it is pretty
  * clear what most of the commands do. All are very simple syntaxes.
+ * 
+ * Commands include:
+ * 
+ * <code>
+    
+    addChemProb(NUMBER firstBase, NUMBER lastBase, STRING type, NUMBER intensity, COLOR color, BOOLEAN outward)
+      firstBase/lastBase    range indices
+      type                  one of     TRIANGLE, ARROW, PIN, DOT
+      intensity             thickness of lines (relative to 1)
+      color                 color for thi annotation
+      outward               position of the annotation (?)
+
+    eraseSeq()
+    
+    redraw()
+    
+    resetChemProb()
+    
+    setColorMap(STRING mapName) 
+      mapName is either one of RED, BLUE, GREEN, HEAT, ENERGY, ROCKNROLL, VIENNA, BW,
+              or a single string consisting of "v:c v:c v:c..." where v is a decimal value
+              and c is a hex color starting with "#". For example, "0:#ff0000 1:#0000FF"
+    
+    setColorMapMaxValue(NUMBER)
+
+    setColorMapMinValue(NUMBER)
+    
+    setCustomColormMp(ARRAY colorValues)
+      colorVaues is an array of [value,color], such as [0.5, #FF0000]
+    
+    setrna(STRING sequence, STRING structure)
+    
+    setrnasmooth(STRING sequence, STRING structure)
+      same as setrna, except the contruction is animated
+    
+    setselection(ARRAY selection)
+      selection is either an array of index starting with 0 : [0,3,6,...]
+      or an array starting with "[resno" indicating these numbers are residue numbers
+    
+    setselectioncolors(COLOR selected or NULL, COLOR unselected or NULL)
+      selected color for selected bases; NULL to not color selected
+      unselected color for unselected bases; NULL to not color unselected bases
+    
+    setseq(STRING)
+    
+    setstruct(STRING)
+    
+    setstructsmooth(STRING)
+    
+    settitle(STRING)
+    
+    setvalues(ARRAY values)
+      values is an array of property values that will be color-mapped.
+      If this is shorter than the number of bases, then missing residues will be given the value 0.
+
+    showColorMap(BOOLEAN doShow)
+      doShow true or missing to show the color map; FALSE to hide it
+    
+    toggleShowColormap()
+      toggle the color map on or off
+
+    write(STRING filename, NUMBER width, NUMBER height, NUMBER resolution, NUMBER quality)
+      filename with extension indicating type
+      width,height dimensions of the image (optional), -1 or absent for "same as current
+      resolution (default 1)
+      quality (?)
+ </code>
+ * 
+ * 
  */
 public class ControleurScriptParser {
   private final static String SCRIPT_ERROR_PREFIX = "VARNA Error";
 
   private static class Command {
-    Function _f;
+    CommandFunction _f;
     Vector<Argument> _argv;
 
-    public Command(Function f, Vector<Argument> argv) {
+    public Command(CommandFunction f, Vector<Argument> argv) {
       _f = f;
       _argv = argv;
     }
@@ -54,6 +123,10 @@ public class ControleurScriptParser {
       for (int i = 0; i < _argv.size(); i++)
         s += " " + _argv.get(i);
       return s;
+    }
+
+    protected Argument getArgument(int i) {
+      return (i < _argv.size() ? _argv.get(i) : null);
     }
   }
 
@@ -85,7 +158,7 @@ public class ControleurScriptParser {
     }
   }
 
-  private final static NullArgument NULL = new NullArgument();
+  protected final static NullArgument NULL = new NullArgument();
 
   private static class NumberArgument extends Argument {
     Number _val;
@@ -155,7 +228,7 @@ public class ControleurScriptParser {
 
     @Override
     public String toString() {
-      return _val.toString();
+      return _val;
     }
   }
 
@@ -185,7 +258,15 @@ public class ControleurScriptParser {
     STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, ARRAY_TYPE, COLOR_TYPE
   }
 
-  private enum Function {
+  private enum CommandFunction {
+    WRITE("write", //
+        new ArgumentType[] { //
+            ArgumentType.STRING_TYPE, // file
+            ArgumentType.NUMBER_TYPE, // width
+            ArgumentType.NUMBER_TYPE, // height
+            ArgumentType.NUMBER_TYPE, // resolution
+            ArgumentType.NUMBER_TYPE, // quality
+        }, 1), //
     ADD_CHEM_PROB("addchemprob", //
         new ArgumentType[] { //
             ArgumentType.NUMBER_TYPE, //
@@ -194,117 +275,124 @@ public class ControleurScriptParser {
             ArgumentType.NUMBER_TYPE, // 
             ArgumentType.COLOR_TYPE, //
             ArgumentType.BOOLEAN_TYPE //
-        }), //
+        }, 2), //
     ERASE_SEQ("eraseseq", //
-        new ArgumentType[] {}), //
+        new ArgumentType[] {}, 0), //
     RESET_CHEM_PROB("resetchemprob", //
-        new ArgumentType[] {}), //
+        new ArgumentType[] {}, 0), //
+    REDRAW("redraw", //
+        new ArgumentType[] { //
+            ArgumentType.STRING_TYPE //
+        }, 1), //
     SET_COLOR_MAP_MIN("setcolormapminvalue", //
         new ArgumentType[] { //
             ArgumentType.NUMBER_TYPE //
-        }), //
+        }, 1), //
     SET_COLOR_MAP_MAX("setcolormapmaxvalue", new ArgumentType[] { //
         ArgumentType.NUMBER_TYPE //
-    }), //
+    }, 1), //
     SET_COLOR_MAP("setcolormap", //
         new ArgumentType[] { //
             ArgumentType.STRING_TYPE //
-        }), //
+        }, 1), //
     SET_CUSTOM_COLOR_MAP("setcustomcolormap", //
         new ArgumentType[] { //
             ArgumentType.ARRAY_TYPE //
-        }), //
+        }, 1), //
     SET_SEQ("setseq", //
         new ArgumentType[] { //
             ArgumentType.STRING_TYPE //
-        }), //
+        }, 1), //
     SET_STRUCT("setstruct", //
         new ArgumentType[] { //
             ArgumentType.STRING_TYPE //
-        }), //
+        }, 1), //
     SET_STRUCT_SMOOTH("setstructsmooth", //
         new ArgumentType[] { //
             ArgumentType.STRING_TYPE //
-        }), //
+        }, 1), //
     SET_TITLE("settitle", //
         new ArgumentType[] { //
             ArgumentType.STRING_TYPE //
-        }), //
+        }, 1), //
     SET_RNA("setrna", //
         new ArgumentType[] { //
             ArgumentType.STRING_TYPE, //
             ArgumentType.STRING_TYPE //
-        }), //
+        }, 2), //
     SET_RNA_SMOOTH("setrnasmooth", //
         new ArgumentType[] { //
             ArgumentType.STRING_TYPE, //
             ArgumentType.STRING_TYPE //
-        }), //
+        }, 2), //
     SET_SELECTION("setselection", //
         new ArgumentType[] { //
             ArgumentType.ARRAY_TYPE //
-        }), //
+        }, 1), //
     SET_SELECTION_COLORS("setselectioncolors", //
         new ArgumentType[] { //
             ArgumentType.COLOR_TYPE, //
             ArgumentType.COLOR_TYPE //
-        }), //
+        }, 0), //
     SET_VALUES("setvalues", //
         new ArgumentType[] { //
             ArgumentType.ARRAY_TYPE //
-        }), //
-    TOGGLE_SHOW_COLOR_MAP("toggleshowcolormap", //
-        new ArgumentType[] {}), //
-    REDRAW("redraw", //
+        }, 1), //
+    SHOW_COLOR_MAP("showcolormap", //
         new ArgumentType[] { //
-            ArgumentType.STRING_TYPE //
-        }), //
-    UNKNOWN("N/A", new ArgumentType[] {});
+            ArgumentType.BOOLEAN_TYPE //
+        }, 0), //
+    TOGGLE_SHOW_COLOR_MAP("toggleshowcolormap", //
+        new ArgumentType[] {}, 1), //
+    UNKNOWN("N/A", new ArgumentType[] {}, 0);
 
-    String _funName;
-    ArgumentType[] _args;
+    protected String _funName;
+    protected ArgumentType[] _args;
+    protected int minArgCount;
 
-    Function(String funName, ArgumentType[] args) {
+    private static Hashtable<String, CommandFunction> _name2Fun = new Hashtable<String, CommandFunction>();
+
+    CommandFunction(String funName, ArgumentType[] args, int minArgCount) {
       _funName = funName;
       _args = args;
+      this.minArgCount = minArgCount;
     }
 
-    ArgumentType[] getPrototype() {
-      return this._args;
+    public static CommandFunction fromString(String cmd) {
+      CommandFunction func = _name2Fun.get(cmd.trim().toLowerCase());
+      return (func == null ? CommandFunction.UNKNOWN : func);
     }
 
-    String getFunName() {
-      return this._funName;
+    public static void initFunctions() {
+      if (_name2Fun.size() > 0) {
+        return;
+      }
+      CommandFunction[] funs = CommandFunction.values();
+      for (int i = 0; i < funs.length; i++) {
+        CommandFunction fun = funs[i];
+        _name2Fun.put(fun._funName, fun);
+      }
     }
 
-  }
-
-  private static Hashtable<String, Function> _name2Fun = new Hashtable<String, Function>();
-  private static Hashtable<Function, ArgumentType[]> _fun2Prot = new Hashtable<Function, ArgumentType[]>();
-
-  private static void initFunctions() {
-    if (_name2Fun.size() > 0) {
-      return;
+    public void checkArgs(Vector<Argument> givenArguments) throws Exception {
+      int nArgs = givenArguments.size();
+      if (nArgs < minArgCount)
+        throw new Exception(SCRIPT_ERROR_PREFIX
+            + ": Wrong number of argument for function \"" + _funName + "\"." + givenArguments);
+      int i = 0;
+      for (; i < nArgs; i++) {
+        Argument given = givenArguments.get(i);
+        if (given != NULL && _args[i] != given._t) {
+          throw new Exception(SCRIPT_ERROR_PREFIX + ": Bad type (" + _args[i]
+              + "!=" + givenArguments.get(i)._t + ") for argument #" + (i + 1)
+              + " in function \"" + _funName + "\".");
+        }
+      }
+      for (; i < _args.length; i++) {
+        givenArguments.add(NULL);
+      }
     }
-    Function[] funs = Function.values();
-    for (int i = 0; i < funs.length; i++) {
-      Function fun = funs[i];
-      _name2Fun.put(fun.getFunName(), fun);
-      _fun2Prot.put(fun, fun.getPrototype());
-    }
-  }
 
-  private static Function getFunction(String f) {
-    String s = f.trim().toLowerCase();
-    if (_name2Fun.containsKey(s))
-      return _name2Fun.get(s);
-    return Function.UNKNOWN;
-  }
-
-  private static ArgumentType[] getPrototype(Function f) {
-    if (_fun2Prot.containsKey(f))
-      return _fun2Prot.get(f);
-    return new ArgumentType[0];
   }
 
   public static void executeScript(VARNAPanel vp, String cmdtxt)
@@ -312,18 +400,21 @@ public class ControleurScriptParser {
     Vector<Command> cmds = parseScript(cmdtxt);
     for (int i = 0; i < cmds.size(); i++) {
       Command cmd = cmds.get(i);
+
       switch (cmd._f) {
       case ADD_CHEM_PROB: {
-        int from = ((NumberArgument) cmd._argv.get(0)).intValue();
-        int to = ((NumberArgument) cmd._argv.get(1)).intValue();
-        ChemProbAnnotationType t = ChemProbAnnotation.annotTypeFromString(
-            ((StringArgument) cmd._argv.get(2)).toString());
-        double intensity = ((NumberArgument) cmd._argv.get(3)).doubleValue();
-        Color c = ((ColorArgument) cmd._argv.get(4)).getColor();
-        boolean out = ((BooleanArgument) cmd._argv.get(5)).getBoolean();
+        int firstBase = getInt(cmd.getArgument(0));
+        int lastBase = getInt(cmd.getArgument(1));
+        ChemProbAnnotationType t = ChemProbAnnotationType
+            .annotTypeFromString(cmd.getArgument(2).toString());
+        double intensity = getDouble(cmd.getArgument(3),
+            ChemProbAnnotation.DEFAULT_INTENSITY);
+        Color c = getColor(cmd.getArgument(4),
+            ChemProbAnnotation.DEFAULT_COLOR);
+        boolean outward = getBoolean(cmd.getArgument(5), true);
         vp.getRNA().addChemProbAnnotation(
-            new ChemProbAnnotation(vp.getRNA().getBaseAt(from),
-                vp.getRNA().getBaseAt(to), t, intensity, c, out));
+            new ChemProbAnnotation(vp.getRNA().getBaseAt(firstBase),
+                vp.getRNA().getBaseAt(lastBase), t, intensity, c, outward));
       }
         break;
       case ERASE_SEQ: {
@@ -336,24 +427,22 @@ public class ControleurScriptParser {
       }
         break;
       case SET_COLOR_MAP_MIN: {
-        vp.setColorMapMinValue(
-            ((NumberArgument) cmd._argv.get(0)).doubleValue());
+        vp.setColorMapMinValue(getDouble(cmd.getArgument(0), 0));
       }
         break;
       case SET_COLOR_MAP_MAX: {
-        vp.setColorMapMaxValue(
-            ((NumberArgument) cmd._argv.get(0)).doubleValue());
+        vp.setColorMapMaxValue(getDouble(cmd.getArgument(0), 0));
       }
         break;
       case SET_COLOR_MAP: {
         vp.setColorMap(
-            ModeleColorMap.parseColorMap(cmd._argv.get(0).toString()));
+            ModeleColorMap.parseColorMap(getString(cmd.getArgument(0))));
       }
         break;
       case SET_CUSTOM_COLOR_MAP: {
         ModeleColorMap cm = new ModeleColorMap();
-        //System.out.println("a"+cmd._argv.get(0));
-        ArrayArgument arg = (ArrayArgument) cmd._argv.get(0);
+        //System.out.println("a"+cmd.getArgument(0));
+        ArrayArgument arg = (ArrayArgument) cmd.getArgument(0);
         for (int j = 0; j < arg.getSize(); j++) {
           Argument a = arg.getArgument(j);
           if (a._t == ArgumentType.ARRAY_TYPE) {
@@ -366,8 +455,7 @@ public class ControleurScriptParser {
               if ((a1.getType() == ArgumentType.NUMBER_TYPE)
                   && (a2.getType() == ArgumentType.COLOR_TYPE)) {
                 //System.out.println("+");
-                cm.addColor(((NumberArgument) a1).doubleValue(),
-                    ((ColorArgument) a2).getColor());
+                cm.addColor(getDouble(a1, 0), getColor(a2, null));
               }
             }
           }
@@ -376,21 +464,21 @@ public class ControleurScriptParser {
       }
         break;
       case SET_RNA: {
-        String seq = cmd._argv.get(0).toString();
-        String str = cmd._argv.get(1).toString();
+        String seq = cmd.getArgument(0).toString();
+        String str = cmd.getArgument(1).toString();
         vp.setRNA(seq, str);
       }
         break;
       case SET_RNA_SMOOTH: {
         // do the interpolation
-        String seq = cmd._argv.get(0).toString();
-        String str = cmd._argv.get(1).toString();
+        String seq = cmd.getArgument(0).toString();
+        String str = cmd.getArgument(1).toString();
         vp.drawRNAInterpolated(seq, str);
         vp.repaint();
       }
         break;
       case SET_SELECTION: {
-        ArrayArgument arg = (ArrayArgument) cmd._argv.get(0);
+        ArrayArgument arg = (ArrayArgument) cmd.getArgument(0);
         ArrayList<Integer> vals = new ArrayList<Integer>();
         boolean byResidueNumber = false;
         // accepts setSelection([resno 2 3 4])
@@ -403,8 +491,7 @@ public class ControleurScriptParser {
             vals.add(Integer.valueOf(narg.intValue()));
             break;
           case STRING_TYPE:
-            StringArgument sarg = (StringArgument) a;
-            if ("resno".equals(sarg._val))
+            if ("resno".equals(getString(a)))
               byResidueNumber = true;
             break;
           case ARRAY_TYPE:
@@ -422,41 +509,40 @@ public class ControleurScriptParser {
       }
         break;
       case SET_SELECTION_COLORS: {
-        Color colorSelected = getColor(cmd._argv.get(0));
-        Color colorUnselected = getColor(cmd._argv.get(1));
+        Color colorSelected = getColor(cmd.getArgument(0), null);
+        Color colorUnselected = getColor(cmd.getArgument(1), null);
         vp.setSelectionColors(colorSelected, colorUnselected);
       }
         break;
       case SET_SEQ: {
-        String seq = cmd._argv.get(0).toString();
+        String seq = cmd.getArgument(0).toString();
         vp.setSequence(seq);
       }
         break;
       case SET_STRUCT: {
         String seq = vp.getRNA().getSeq();
-        String str = cmd._argv.get(0).toString();
+        String str = cmd.getArgument(0).toString();
         vp.setRNA(seq, str);
       }
         break;
       case SET_STRUCT_SMOOTH: {
         String seq = vp.getRNA().getSeq();
-        String str = cmd._argv.get(0).toString();
+        String str = cmd.getArgument(0).toString();
         vp.drawRNAInterpolated(seq, str);
         vp.repaint();
       }
         break;
       case SET_TITLE: {
-        vp.setTitle(cmd._argv.get(0).toString());
+        vp.setTitle(cmd.getArgument(0).toString());
       }
         break;
       case SET_VALUES: {
-        ArrayArgument arg = (ArrayArgument) cmd._argv.get(0);
-        Double[] vals = new Double[arg.getSize()];
+        ArrayArgument arg = (ArrayArgument) cmd.getArgument(0);
+        double[] vals = new double[arg.getSize()];
         for (int j = 0; j < arg.getSize(); j++) {
           Argument a = arg.getArgument(j);
           if (a._t == ArgumentType.NUMBER_TYPE) {
-            NumberArgument narg = (NumberArgument) a;
-            vals[j] = Double.valueOf(narg.doubleValue());
+            vals[j] = getDouble(a, 0);
           }
         }
         vp.setColorMapValues(vals);
@@ -465,7 +551,7 @@ public class ControleurScriptParser {
         break;
       case REDRAW: {
         int mode = -1;
-        String modeStr = cmd._argv.get(0).toString().toLowerCase();
+        String modeStr = cmd.getArgument(0).toString().toLowerCase();
         if (modeStr.equals("radiate"))
           mode = RNA.DRAW_MODE_RADIATE;
         else if (modeStr.equals("circular"))
@@ -478,9 +564,12 @@ public class ControleurScriptParser {
           vp.setRNA(vp.getRNA(), mode);
       }
         break;
-      case TOGGLE_SHOW_COLOR_MAP: {
+      case SHOW_COLOR_MAP:
+        boolean doShow = getBoolean(cmd.getArgument(0), true);
+        vp.setColorMapVisible(doShow);
+      break;
+      case TOGGLE_SHOW_COLOR_MAP:
         vp.setColorMapVisible(!vp.getColorMapVisible());
-      }
         break;
       default:
         throw new Exception(
@@ -490,17 +579,36 @@ public class ControleurScriptParser {
     }
   }
 
-  private static Color getColor(Argument a) {
-    return (a == NULL ? null : ((ColorArgument) a).getColor());
+  private static int getInt(Argument a) {
+    return (a == NULL ? 0 : ((NumberArgument) a).intValue());
+  }
+
+  private static boolean getBoolean(Argument a, boolean def) {
+    return (a == NULL ? def : ((BooleanArgument) a).getBoolean());
+  }
+
+  private static double getDouble(Argument a,
+                                  double defaultIntensity) {
+    return (a == NULL ? defaultIntensity : ((NumberArgument) a).doubleValue());
+  }
+
+  private static Color getColor(Argument a, Color defaultColor) {
+    return (a == NULL ? defaultColor : ((ColorArgument) a).getColor());
+  }
+
+  private static String getString(Argument a) {
+    return (a == NULL ? null : ((StringArgument) a).toString());
   }
 
   private static Boolean parseBoolean(String s) {
-    Boolean result = null;
-    if (s.toLowerCase().equals("true"))
-      result = new Boolean(true);
-    if (s.toLowerCase().equals("false"))
-      result = new Boolean(false);
-    return result;
+    switch (s.toLowerCase()) {
+    case "true":
+      return Boolean.TRUE;
+    case "false":
+      return Boolean.FALSE;
+    default:
+      return null;
+    }
   }
 
   private static Vector<Argument> parseArguments(StreamTokenizer st,
@@ -571,8 +679,8 @@ public class ControleurScriptParser {
       throw new Exception(SCRIPT_ERROR_PREFIX + ": Syntax error for '" + cmd + "'");
     }
     String fun = cmd.substring(0, cut);
-    Function f = getFunction(fun);
-    if (f == Function.UNKNOWN) {
+    CommandFunction f = CommandFunction.fromString(fun);
+    if (f == CommandFunction.UNKNOWN) {
       throw new Exception(
           SCRIPT_ERROR_PREFIX + ": Unknown function \"" + fun + "\"");
     }
@@ -589,30 +697,13 @@ public class ControleurScriptParser {
     st.ordinaryChar(')');
     st.wordChars('#', '#');
     Vector<Argument> argv = parseArguments(st, true);
-    checkArgs(f, argv);
+    f.checkArgs(argv);
     Command result = new Command(f, argv);
     return result;
   }
 
-  private static boolean checkArgs(Function f, Vector<Argument> argv)
-      throws Exception {
-    ArgumentType[] argtypes = getPrototype(f);
-    if (argtypes.length != argv.size())
-      throw new Exception(SCRIPT_ERROR_PREFIX
-          + ": Wrong number of argument for function \"" + f + "\"." + argv);
-    for (int i = 0; i < argtypes.length; i++) {
-      Argument a = argv.get(i);
-      if (a != NULL && argtypes[i] != a._t) {
-        throw new Exception(SCRIPT_ERROR_PREFIX + ": Bad type (" + argtypes[i]
-            + "!=" + argv.get(i)._t + ") for argument #" + (i + 1)
-            + " in function \"" + f + "\".");
-      }
-    }
-    return true;
-  }
-
   private static Vector<Command> parseScript(String cmd) throws Exception {
-    initFunctions();
+    CommandFunction.initFunctions();
     Vector<Command> cmds = new Vector<Command>();
     String[] data = cmd.split(";");
     for (int i = 0; i < data.length; i++) {

@@ -5,6 +5,7 @@ import org.jmol.api.GenericPlatform;
 import org.jmol.api.JmolGraphicsInterface;
 import org.jmol.api.JmolRendererInterface;
 import org.jmol.c.STER;
+import org.jmol.script.T;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
@@ -767,5 +768,13 @@ public class GData implements JmolGraphicsInterface {
     return;
   }
 
+  public static Object[] getSlabWithinRange(double min, double max) {
+    return new Object[] { Integer.valueOf(T.range), 
+        new Double[] {Double.valueOf(min), Double.valueOf(max)}, Boolean.FALSE, null };
+  }
+
+  public static Object[] getSlabObjectType(int tok, Object data, boolean isCap, Object colorData) {
+    return new Object[] { Integer.valueOf(tok), data, Boolean.valueOf(isCap), colorData };
+  }
 
 }

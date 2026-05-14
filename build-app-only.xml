@@ -142,7 +142,9 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
     <unjar dest="${appjars.dir}" src="${lib.dir}/${naga.jar}"/>
     <unjar dest="${appjars.dir}" src="${lib.dir}/${commons-cli.jar}"/>
   	<delete dir="${appjars.dir}/javajs" />
+    <delete dir="${appjars.dir}/fr" />
   	<delete dir="${appjars.dir}/org/jmol" />
+    <delete dir="${appjars.dir}/org/openscience/jmol" />
   	<delete dir="${appjars.dir}/org/apache/tools" />
   	<delete dir="${appjars.dir}/META-INF" />
   	<echo>Unjar for ${lib.dir}/${jme.jar} provides InChI as well"</echo>
@@ -163,18 +165,14 @@ build-app-min just builds JmolD.jar with no internationalization, just for quick
         <include name="io/github/**" />
         <include name="com/**" />
         <include name="jspecview/**" />
-        <include name="javajs/api/**" />
-        <include name="javajs/awt/**" />
-        <include name="javajs/export/**" />
-        <include name="javajs/img/**" />
-        <include name="javajs/util/**" />
+        <include name="javajs/**" />
         <include name="fr/**" />
         <include name="jme/**" />
         <include name="**/org/gennbo/**" />
         <include name="**/org/apache/**" />
         <include name="**/org/qcschema/**" />
         <include name="**/org/iupac/**" />
-         <include name="**/jmol/**" />
+        <include name="**/jmol/**" />
         <exclude name="**/Test*.class" />
         <exclude name="**/jmol/jcamp/**" />
         <exclude name="**/jmol/applet/*" />

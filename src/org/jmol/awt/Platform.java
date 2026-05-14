@@ -97,8 +97,13 @@ public class Platform implements GenericPlatform {
     Display.requestFocusInWindow(display);
   }
 
+  //static int npaint = 0;
+  
   @Override
   public void repaint(Object display) {
+//    System.out.println("!!!!! repaint requested " + ++npaint);
+//    if (npaint == 7)
+//      System.out.println("????");
     Display.repaint(display);
   }
 

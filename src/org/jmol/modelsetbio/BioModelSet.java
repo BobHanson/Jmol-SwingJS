@@ -4,16 +4,9 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.P3d;
-import javajs.util.PT;
-import javajs.util.SB;
-
 import org.jmol.api.Interface;
 import org.jmol.api.JmolAnnotationParser;
 import org.jmol.c.STR;
-import javajs.util.BS;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
 import org.jmol.modelset.Group;
@@ -28,12 +21,19 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.P3d;
+import javajs.util.PT;
+import javajs.util.SB;
+
 public class BioModelSet {
 
   // general methods
 
   private static final int DEFAULT_DSSP_VERSION = 2;
-  
+
   public boolean haveDSSR;
 
   private Viewer vwr;
@@ -42,17 +42,21 @@ public class BioModelSet {
   private Map<String, BS>[] unitIdSets;
 
   BioExt getBioExt() {
-    return (ext == null ? (ext = ((BioExt) Interface.getInterface(
-        "org.jmol.modelsetbio.BioExt", vwr, "script"))).set(vwr, vwr.ms) : ext);
+    return (ext == null
+        ? (ext = ((BioExt) Interface.getInterface("org.jmol.modelsetbio.BioExt",
+            vwr, "script"))).set(vwr, vwr.ms)
+        : ext);
   }
 
   public BioModelSet set(Viewer vwr, ModelSet ms) {
     // note that in ModelLoader when merging with set appendnew false, 
     // ms (new) is not the same as vwr.ms (old).
-    
+
     this.vwr = vwr;
     this.ms = ms;
+    System.err.println("BioModelset need to delete the DataList map");
     unitIdSets = null;
+    
     if (ext != null)
       ext.set(vwr, ms);
     return this;
@@ -140,12 +144,14 @@ public class BioModelSet {
         for (int pt = 0, j = baseGroupIndex; j < groupCount; ++j, pt++) {
           Group g = groups[j];
           Model model = g.getModel();
-          if (!model.isBioModel || !(g instanceof Monomer) || g.getLeadAtom() == null)
+          if (!model.isBioModel || !(g instanceof Monomer)
+              || g.getLeadAtom() == null)
             continue;
           boolean doCheck = checkConnections
               && !ms.isJmolDataFrame(ms.at[g.getLeadAtom().i].mi);
-          BioPolymer bp = (((Monomer) g).bioPolymer == null ? BioResolver
-              .allocateBioPolymer(groups, j, doCheck, pt) : null);
+          BioPolymer bp = (((Monomer) g).bioPolymer == null
+              ? BioResolver.allocateBioPolymer(groups, j, doCheck, pt)
+              : null);
           if (bp == null || bp.monomerCount == 0)
             continue;
           int n = ((BioModel) model).addBioPolymer(bp);
@@ -159,7 +165,8 @@ public class BioModelSet {
                                              boolean doReport,
                                              boolean dsspIgnoreHydrogen,
                                              boolean setStructure,
-                                             boolean includeAlpha, int version) {
+                                             boolean includeAlpha,
+                                             int version) {
     String ret = "";
     BS bsModels = BSUtil.copyInvert(alreadyDefined, ms.mc);
     //working here -- testing reset
@@ -185,8 +192,8 @@ public class BioModelSet {
     BS bsModelsExcluded = BSUtil.copyInvert(modelsOf(bsAtoms, bsAllAtoms),
         ms.mc);
     if (!setStructure)
-      return ms.calculateStructuresAllExcept(bsModelsExcluded, asDSSP,
-          doReport, dsspIgnoreHydrogen, false, false, version);
+      return ms.calculateStructuresAllExcept(bsModelsExcluded, asDSSP, doReport,
+          dsspIgnoreHydrogen, false, false, version);
     ms.recalculatePolymers(bsModelsExcluded);
     String ret = ms.calculateStructuresAllExcept(bsModelsExcluded, asDSSP,
         doReport, dsspIgnoreHydrogen, true, false, version);
@@ -218,8 +225,8 @@ public class BioModelSet {
     for (int i = ms.mc; --i >= 0;)
       if (modelIndex < 0 || i == modelIndex) {
         @SuppressWarnings("unchecked")
-        Map<String, String> ht = (Map<String, String>) ms
-            .getInfo(i, "hetNames");
+        Map<String, String> ht = (Map<String, String>) ms.getInfo(i,
+            "hetNames");
         if (ht == null)
           continue;
         ok = true;
@@ -249,11 +256,14 @@ public class BioModelSet {
       }
   }
 
-  /** 
+  /**
    * 
-   * @param specInfo  can be a set of unitIDs
-   * @param bsAtoms subset to check
-   * @param bsResult will be ORed with the atoms
+   * @param specInfo
+   *        can be a set of unitIDs
+   * @param bsAtoms
+   *        subset to check
+   * @param bsResult
+   *        will be ORed with the atoms
    * @return bsResult
    */
   public BS getAllSequenceBits(String specInfo, BS bsAtoms, BS bsResult) {
@@ -407,15 +417,15 @@ public class BioModelSet {
       return getAnnotationBits("domains", T.domains, specInfo, null);
     case T.validation:
       return getAnnotationBits("validation", T.validation, specInfo, null);
-      //    case T.annotations:
-      //      TODO -- generalize this
+    //    case T.annotations:
+    //      TODO -- generalize this
     case T.rna3d:
       return getAnnotationBits("rna3d", T.rna3d, specInfo, null);
     case T.basepair:
       String s = specInfo;
       bs = new BS();
-      return (s.length() % 2 != 0 ? bs : ms.getAtomBitsMDa(T.group,
-          getAllBasePairBits(s), bs));
+      return (s.length() % 2 != 0 ? bs
+          : ms.getAtomBitsMDa(T.group, getAllBasePairBits(s), bs));
     case T.dssr:
       return getAnnotationBits(JC.INFO_DSSR, T.dssr, specInfo, null);
     case T.sequence:
@@ -435,9 +445,9 @@ public class BioModelSet {
           polymerCount += ((BioModel) ms.am[i]).getBioPolymerCount();
       return polymerCount;
     }
-    return (ms.isTrajectorySubFrame(modelIndex)
-        || !ms.am[modelIndex].isBioModel ? 0 : ((BioModel) ms.am[modelIndex])
-        .getBioPolymerCount());
+    return (ms.isTrajectorySubFrame(modelIndex) || !ms.am[modelIndex].isBioModel
+        ? 0
+        : ((BioModel) ms.am[modelIndex]).getBioPolymerCount());
   }
 
   public String getFullProteinStructureState(BS bsAtoms, int mode) {
@@ -452,7 +462,8 @@ public class BioModelSet {
     if (bsAtoms != null && mode == T.ramachandran) {
       bsAtoms = BSUtil.copy(bsAtoms);
       for (int i = ms.ac; --i >= 0;)
-        if (atoms[i] == null || Double.isNaN(atoms[i].group.getGroupParameter(T.phi))
+        if (atoms[i] == null
+            || Double.isNaN(atoms[i].group.getGroupParameter(T.phi))
             || Double.isNaN(atoms[i].group.getGroupParameter(T.psi)))
           bsAtoms.clear(i);
     }
@@ -483,7 +494,7 @@ public class BioModelSet {
       }
       ProteinStructure ps;
       for (int i = i0; i >= 0; i = bsA.nextSetBit(i + 1)) {
-        Atom a = atoms[i]; 
+        Atom a = atoms[i];
         if (a == null || !(a.group instanceof AlphaMonomer)
             || (ps = ((AlphaMonomer) a.group).proteinStructure) == null
             || map.containsKey(ps))
@@ -559,7 +570,8 @@ public class BioModelSet {
     return bs;
   }
 
-  public String mutate(BS bs, String group, String[] sequence, String alphaType, double[] phipsi) {
+  public String mutate(BS bs, String group, String[] sequence, String alphaType,
+                       double[] phipsi) {
     return getBioExt().mutate(vwr, bs, group, sequence, alphaType, phipsi);
   }
 
@@ -757,15 +769,16 @@ public class BioModelSet {
     BS bsModelChain = null;
     String lastModelChain = null;
     BS bsTemp = new BS();
-    String[] units = PT.getTokens(PT.replaceAllCharacters(specInfo,
-        ", \t\n[]\"=", " "));
+    String[] units = PT
+        .getTokens(PT.replaceAllCharacters(specInfo, ", \t\n[]\"=", " "));
     int[] ptrs = new int[8];
     for (int i = units.length; --i >= 0;) {
       String unit = units[i] + "|";
       if (unit.length() < 5)
         continue;
       int bsPtr = 0;
-      for (int j = 0, n = 0, pt = unit.lastIndexOf('|') + 1; j < pt && n < 8; j++) {
+      for (int j = 0, n = 0, pt = unit.lastIndexOf('|') + 1; j < pt
+          && n < 8; j++) {
         if (unit.charAt(j) == '|')
           ptrs[n++] = j;
         else
@@ -797,18 +810,18 @@ public class BioModelSet {
 
       if (!addUnit(T.resno, unit.substring(ptrs[3] + 1, ptrs[4]), bsTemp,
           maps[2])
-          || !addUnit(
-              T.inscode,
-              ((bsPtr & (1 << 7)) == 0 ? "\0" : unit.substring(ptrs[6] + 1,
-                  ptrs[7])), bsTemp, maps[3])
-          || (haveAtom ? !addUnit(T.atomname,
-              unit.substring(ptrs[4] + 1, ptrs[5]).toUpperCase(), bsTemp,
-              maps[4])
-              || !addUnit(T.spec_alternate,
-                  unit.substring(ptrs[5] + 1, ptrs[6]), bsTemp, maps[5])
-              : haveAlt
-                  && !addUnit(T.configuration,
-                      unit.substring(ptrs[5] + 1, ptrs[6]), bsTemp, maps[6])))
+          || !addUnit(T.inscode,
+              ((bsPtr & (1 << 7)) == 0 ? "\0"
+                  : unit.substring(ptrs[6] + 1, ptrs[7])),
+              bsTemp, maps[3])
+          || (haveAtom
+              ? !addUnit(T.atomname,
+                  unit.substring(ptrs[4] + 1, ptrs[5]).toUpperCase(), bsTemp,
+                  maps[4])
+                  || !addUnit(T.spec_alternate,
+                      unit.substring(ptrs[5] + 1, ptrs[6]), bsTemp, maps[5])
+              : haveAlt && !addUnit(T.configuration,
+                  unit.substring(ptrs[5] + 1, ptrs[6]), bsTemp, maps[6])))
         continue;
       bsResult.or(bsTemp);
     }
@@ -874,7 +887,8 @@ public class BioModelSet {
         o = (key.length() == 0 ? null : key);
         break;
       }
-      map.put(key, bs = ms.getAtomBitsMDa(tok, o, (bs == null ? new BS() : bs)));
+      map.put(key,
+          bs = ms.getAtomBitsMDa(tok, o, (bs == null ? new BS() : bs)));
     }
     bsTemp.and(bs);
     return (bsTemp.nextSetBit(0) >= 0);
@@ -882,10 +896,9 @@ public class BioModelSet {
 
   private BS getAnnotationBits(String key, int tok, String specInfo, STR type) {
     BS bs = new BS();
-    boolean isDSSR = (tok == T.dssr);
-    if (isDSSR && !haveDSSR)
+    if ((tok == T.dssr) && !haveDSSR)
       return bs;
-    JmolAnnotationParser pa = vwr.getAnnotationParser(isDSSR);
+    JmolAnnotationParser pa = vwr.getAnnotationParser(tok);
     Object ann;
     String keyV = key + " V ";
     for (int i = ms.mc; --i >= 0;) {
@@ -925,8 +938,9 @@ public class BioModelSet {
       if (m1 == null || m2 == null)
         continue;
       int iModel = ps.apolymer.model.modelIndex;
-      String comment = (scriptMode ? "    \t# model="
-          + ms.getModelNumberDotted(iModel) : null);
+      String comment = (scriptMode
+          ? "    \t# model=" + ms.getModelNumberDotted(iModel)
+          : null);
       int res1 = m1.getResno();
       int res2 = m2.getResno();
       STR subtype = ps.subtype;
@@ -1024,7 +1038,7 @@ public class BioModelSet {
     int i0 = (isAll ? ms.ac - 1 : bsAtoms.nextSetBit(0));
     for (int i = i0; i >= 0; i = (isAll ? i - 1 : bsAtoms.nextSetBit(i + 1))) {
       if (ms.at[i] == null)
-          continue;
+        continue;
       int modelIndex = ms.am[ms.at[i].mi].trajectoryBaseIndex;
       if (ms.isJmolDataFrame(modelIndex))
         continue;
@@ -1060,6 +1074,52 @@ public class BioModelSet {
 
   public void setHaveDSSR(boolean b) {
     haveDSSR = b;
+  }
+
+  private Map<String, ModelSet.DataList> dssrDataMap;
+
+  public ModelSet.DataList getDSSRProperties(String dataType) {
+    if (!haveDSSR || dataType == null)
+      return null;
+    String dataPath = (dataType.indexOf('.') < 0 ? JC.INFO_DSSR + "." + dataType
+        : dataType);
+    if (dssrDataMap == null) {
+      dssrDataMap = new Hashtable<>();
+    }
+    ModelSet.DataList dataList = dssrDataMap.get(dataType);
+    if (dataList == null) {
+      dssrDataMap.put(dataType, dataList = new ModelSet.DataList(dataPath));
+    }
+    for (int i = ms.mc; --i >= 0;)
+      if (ms.am[i].isBioModel && ((BioModel) ms.am[i]).haveDSSR)
+        vwr.getAnnotationParser(T.dssr).getAtomicDSSRData(ms, i, dataList);
+    return dataList;
+  }
+
+  public double getAtomicDSSRDataFloat(String dataType, int atomIndex) {
+    ModelSet.DataList dl = (dssrDataMap == null ? null : dssrDataMap.get(dataType));
+    return (dl != null && dl.floatData != null
+        && dl.floatData.length > atomIndex ? dl.floatData[atomIndex]
+            : Double.NaN);
+  }
+
+  public String getAtomicDSSRDataString(String dataType, int atomIndex) {
+    ModelSet.DataList dl = (dssrDataMap == null ? null : dssrDataMap.get(dataType));
+    return (dl != null && dl.stringData != null
+        && dl.stringData.length > atomIndex ? dl.stringData[atomIndex] : null);
+  }
+
+  public void releaseModelSet() {
+    // this should be OK, but it is not 
+    System.err.println("can't remove ms here??");
+//    vwr = null;
+//    ms = null;
+//    unitIdSets = null;
+//    dssrDataMap = null;
+  }
+
+  public void clearDSSR() {
+    dssrDataMap = null;
   }
 
 }

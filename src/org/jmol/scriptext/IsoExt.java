@@ -50,9 +50,9 @@ import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
 import org.jmol.util.Font;
+import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshCapper;
-import org.jmol.util.MeshSurface;
 import org.jmol.util.Parser;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Triangulator;
@@ -4127,7 +4127,7 @@ public class IsoExt extends ScriptExt {
       throws ScriptException {
     if (i < 0) {
       // standard range -100 to 0
-      return MeshSurface.getSlabWithinRange(i, 0);
+      return GData.getSlabWithinRange(i, 0);
     }
     ScriptEval eval = e;
     Object data = null;
@@ -4293,7 +4293,7 @@ public class IsoExt extends ScriptExt {
     }
     Object colorData = (slabMeshType == null ? null
         : new Object[] { slabMeshType, slabColix });
-    return MeshSurface.getSlabObjectType(tok, data, !isSlab, colorData);
+    return GData.getSlabObjectType(tok, data, !isSlab, colorData);
   }
 
   private String setColorOptions(SB sb, int index, int iShape, int nAllowed)

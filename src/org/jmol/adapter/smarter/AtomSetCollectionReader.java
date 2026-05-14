@@ -1629,11 +1629,11 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   /**
-   * CIF, FSG, Jana readers only
-   * 
    * @param doApplySymmetry  
+   * @throws Exception 
    */
   protected void doPreSymmetry(boolean doApplySymmetry) throws Exception {
+    // CIF, FSG, Jana readers only
   }
 
   @SuppressWarnings("unchecked")

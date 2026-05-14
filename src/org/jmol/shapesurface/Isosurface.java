@@ -129,6 +129,7 @@ import org.jmol.shape.MeshCollection;
 import org.jmol.util.C;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.Escape;
+import org.jmol.util.GData;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
 import org.jmol.viewer.ActionManager;
@@ -1200,13 +1201,13 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     try {
       if (s.indexOf("array") == 0) {
         String[] pts = PT.split(s.substring(6, s.length() - 1), ",");
-        return MeshSurface.getSlabObjectType(T.boundbox,
+        return GData.getSlabObjectType(T.boundbox,
             new P3d[] { (P3d) Escape.uP(pts[0]), (P3d) Escape.uP(pts[1]),
                 (P3d) Escape.uP(pts[2]), (P3d) Escape.uP(pts[3]) }, isCap, null);
       }
       Object plane = Escape.uP(s);
       if (plane instanceof P4d)
-        return MeshSurface.getSlabObjectType(T.plane, plane, isCap, null);
+        return GData.getSlabObjectType(T.plane, plane, isCap, null);
     } catch (Exception e) {
       //
     }

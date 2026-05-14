@@ -428,7 +428,7 @@ public class BZone {
         return true;
       }
       vwr.shm.setShapePropertyBs(JC.SHAPE_PMESH, "slab",
-          MeshSurface.getSlabObjectType(T.plane, plane, false, null), null);
+          GData.getSlabObjectType(T.plane, plane, false, null), null);
       double[] a = (double[]) getProperty(pid, "area");
       //System.out.println(pid + " " + plane + " " + a[0]);
       return (a != null && a[0] != 0);

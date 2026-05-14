@@ -541,8 +541,12 @@ abstract class ScriptTokenParser {
       if (T.tokAttr(tok, T.atomproperty)) {
         int itemp = itokenInfix;
         boolean isOK = clauseComparator(true);
-        if (isOK || itokenInfix != itemp)
+        if (isOK || itokenInfix >= 0 && itokenInfix != itemp)
           return isOK;
+        if (itokenInfix < 0) {
+          // reset, but OK after dss.junction and no comparator
+          itokenInfix = -itokenInfix;
+        }
         if (tok == T.substructure) {
           return clauseSubstructure(); 
         }
@@ -555,6 +559,42 @@ abstract class ScriptTokenParser {
     }
 //    return error(ERROR_unrecognizedExpressionToken, "" + valuePeek());
   }
+
+  private T getPropertyDotted() {
+    T t = tokenNext(); // property
+    if (!tokPeekIs(T.per) && !tokPeekIs(T.leftsquare))
+      return t;
+    String s = "";
+    while (tokPeekIs(T.per) || tokPeekIs(T.leftsquare)) {
+      if (tokPeekIs(T.leftsquare)) {
+        getToken();
+        s += theToken.value;
+        while (!tokPeekIs(T.nada) && !tokPeekIs(T.rightsquare)) {
+          getToken();
+          s += theToken.value;
+        }
+        if (!tokPeekIs(T.nada))
+          s += getToken().value.toString();
+      }
+      while (tokPeekIs(T.per)) {
+        getToken();
+        s += ".";
+        if (!tokPeekIs(T.nada))
+          s += getToken().value.toString();
+      }
+    }
+
+    SV v = (t.tok == T.property ? (SV) t : null);
+    // property_dssr.xxx or  dssr.xxx or something.xxx
+    if (v == null) {
+      String val = "property_" + t.value.toString().toLowerCase();
+      v = SV.newV(T.property, val);
+      v.myName = val;
+    }
+    v.myName += s;
+    return v;
+  }
+
 
   private boolean checkForCoordinate(boolean isImplicitExpression) {
     /*
@@ -987,19 +1027,26 @@ abstract class ScriptTokenParser {
   }
   
   private boolean clauseComparator(boolean isOptional) {
-    T tokenAtomProperty = tokenNext();
+    int ipt0 = itokenInfix;
+    T tokenAtomProperty = getPropertyDotted();
+    int ipt1 = itokenInfix - 1;
     T tokenComparator = tokenNext();
     if (!tokenAttr(tokenComparator, T.comparator)) {
       if (!isOptional)
         return errorStr(ERROR_tokenExpected, "== != < > <= >=");
       if (tokenComparator != null)
         returnToken();
-      returnToken();
+      if (ipt1 == ipt0) {
+        returnToken();
+        return false;
+      }
+      itokenInfix = -ipt1;
       return false;
     }
     if (tokenAttr(tokenAtomProperty, T.strproperty) 
         && tokenComparator.tok != T.opEQ 
         && tokenComparator.tok != T.opLIKE
+        && tokenComparator.tok != T.opCONTAINS
         && tokenComparator.tok != T.opNE)
       return errorStr(ERROR_tokenExpected, "== !=");
     if (tokPeek() == T.leftsquare) {

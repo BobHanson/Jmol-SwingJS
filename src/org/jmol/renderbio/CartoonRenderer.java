@@ -35,7 +35,7 @@ public class CartoonRenderer extends RocketsRenderer {
   private NucleicRenderer nucleicRenderer;
   
   @Override
-  protected void renderBioShape(BioShape bioShape) {
+  protected void renderBioShape(BioShape bioShape) { 
     if (!setupRR(bioShape, false))
       return;
     if (isNucleic || isPhosphorusOnly) {

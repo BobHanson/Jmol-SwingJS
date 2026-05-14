@@ -53,8 +53,8 @@ import org.jmol.util.BoxInfo;
 import org.jmol.util.ColorEncoder;
 import org.jmol.util.ContactPair;
 import org.jmol.util.Escape;
+import org.jmol.util.GData;
 import org.jmol.util.Logger;
-import org.jmol.util.MeshSurface;
 
 public class Contact extends Isosurface {
 
@@ -369,7 +369,7 @@ public class Contact extends Isosurface {
     }
     Logger.setLogLevel(logLevel);
     if (jvxlData.boundingBox == null) {
-      System.out.println("???");
+      System.out.println("Contact box null???");
     } else {
       jvxlData.boundingBox[0] = box.bbCorner0;
       jvxlData.boundingBox[1] = box.bbCorner1;
@@ -630,7 +630,7 @@ public class Contact extends Isosurface {
       break;
     }
     if (iSlab0 != iSlab1)
-      thisMesh.getMeshSlicer().slabPolygons(MeshSurface.getSlabWithinRange(iSlab0, iSlab1),
+      thisMesh.getMeshSlicer().slabPolygons(GData.getSlabWithinRange(iSlab0, iSlab1),
           false);
     if (displayType != T.surface)
       thisMesh.setMerged(true);

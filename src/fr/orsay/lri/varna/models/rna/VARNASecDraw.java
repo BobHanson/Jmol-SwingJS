@@ -159,13 +159,15 @@ public class VARNASecDraw {
       return _portions.get(i);
     }
 
-    Character space = new Character(' ');
+    @SuppressWarnings("boxing")
     @Override
     public String toString() {
+      // it is not boxed.
       String result = "";
       _depth++;
+      String f = "%1$" + _depth + "s";
       for (int i = 0; i < _portions.size(); i++) {
-        result += String.format("%1$#" + _depth + "s", space);
+        result += String.format(f, ' ');
         result += _portions.get(i).toString();
         if (i < _portions.size() - 1)
           result += "\n";
@@ -781,7 +783,7 @@ public class VARNASecDraw {
   public RNATree drawRNA(double dirAngle, RNA r) {
     RNATree t = new RNATree();
     buildTree(0, r.get_listeBases().size() - 1, t, r);
-    System.out.println(t);
+    System.out.println(t.toString());
     ArrayList<HelixEmbedding> all = new ArrayList<HelixEmbedding>();
     try {
       HelixEmbedding root = new HelixEmbedding(new Point2D.Double(0.0, 0.0),

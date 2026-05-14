@@ -456,7 +456,6 @@ public class ScriptManager implements JmolScriptManager {
     
   private String evalStringParamsQuietSync(String strScript, Object[] params, boolean isQuiet,
                                       boolean allowSyncScript) {
-
     // central point for all incoming script processing
     // all menu items, all mouse movement -- everything goes through this method
     // by setting syncScriptTarget = ">" the user can direct that all scripts

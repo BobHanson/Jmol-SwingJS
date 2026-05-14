@@ -1298,39 +1298,39 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     distance = dest.x - orig.x;
     switch (_conf._mainBPStyle) {
     case LW: {
-      double radiusCircle = ((RNA.BASE_PAIR_DISTANCE - _RNA.BASE_RADIUS) / 5.0)
+      double radiusCircle = ((RNA.BASE_PAIR_DISTANCE - RNA.BASE_RADIUS) / 5.0)
           * scaleFactor;
       if (style.isCanonical()) {
         if (style.isCanonicalGC()) {
           if ((orig.x != dest.x) || (orig.y != dest.y)) {
             g2D.drawArc((dest.x + orig.x) / 2.,
-                dest.y - scaleFactor * _RNA.BASE_RADIUS / 2.0,
-                (distance - scaleFactor * _RNA.BASE_RADIUS / 3.0),
-                (distance * coef - scaleFactor * _RNA.BASE_RADIUS / 3.0), 0,
+                dest.y - scaleFactor * RNA.BASE_RADIUS / 2.0,
+                (distance - scaleFactor * RNA.BASE_RADIUS / 3.0),
+                (distance * coef - scaleFactor * RNA.BASE_RADIUS / 3.0), 0,
                 180);
             g2D.drawArc((dest.x + orig.x) / 2.,
-                dest.y - scaleFactor * _RNA.BASE_RADIUS / 2.0,
-                (distance + scaleFactor * _RNA.BASE_RADIUS / 3.0),
-                (distance * coef + scaleFactor * _RNA.BASE_RADIUS / 3.0), 0,
+                dest.y - scaleFactor * RNA.BASE_RADIUS / 2.0,
+                (distance + scaleFactor * RNA.BASE_RADIUS / 3.0),
+                (distance * coef + scaleFactor * RNA.BASE_RADIUS / 3.0), 0,
                 180);
           }
         } else if (style.isCanonicalAU()) {
           g2D.drawArc((dest.x + orig.x) / 2.,
-              dest.y - scaleFactor * _RNA.BASE_RADIUS / 2.0, (distance),
+              dest.y - scaleFactor * RNA.BASE_RADIUS / 2.0, (distance),
               (distance * coef), 0, 180);
         } else if (style.isWobbleUG()) {
           Point2D.Double midtop = new Point2D.Double((dest.x + orig.x) / 2.,
               dest.y - distance * coef / 2.
-                  - scaleFactor * _RNA.BASE_RADIUS / 2.0);
-          g2D.drawArc(midtop.x, dest.y - scaleFactor * _RNA.BASE_RADIUS / 2.0,
+                  - scaleFactor * RNA.BASE_RADIUS / 2.0);
+          g2D.drawArc(midtop.x, dest.y - scaleFactor * RNA.BASE_RADIUS / 2.0,
               (distance), (distance * coef), 0, 180);
           drawSymbol(g2D, midtop.x, midtop.y, 1., 0., radiusCircle, false,
               ModeleBP.Edge.WC);
         } else {
           Point2D.Double midtop = new Point2D.Double((dest.x + orig.x) / 2.,
               dest.y - distance * coef / 2.
-                  - scaleFactor * _RNA.BASE_RADIUS / 2.0);
-          g2D.drawArc(midtop.x, dest.y - scaleFactor * _RNA.BASE_RADIUS / 2.0,
+                  - scaleFactor * RNA.BASE_RADIUS / 2.0);
+          g2D.drawArc(midtop.x, dest.y - scaleFactor * RNA.BASE_RADIUS / 2.0,
               (distance), (distance * coef), 0, 180);
           drawSymbol(g2D, midtop.x, midtop.y, 1., 0., radiusCircle,
               style.isCIS(), style.getEdgePartner5());
@@ -1340,23 +1340,23 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
         ModeleBP.Edge p2 = style.getEdgePartner3();
         Point2D.Double midtop = new Point2D.Double((dest.x + orig.x) / 2.,
             dest.y - distance * coef / 2.
-                - scaleFactor * _RNA.BASE_RADIUS / 2.0);
-        g2D.drawArc(midtop.x, dest.y - scaleFactor * _RNA.BASE_RADIUS / 2.0,
+                - scaleFactor * RNA.BASE_RADIUS / 2.0);
+        g2D.drawArc(midtop.x, dest.y - scaleFactor * RNA.BASE_RADIUS / 2.0,
             (distance), (distance * coef), 0, 180);
         if (p1 == p2) {
           drawSymbol(g2D, midtop.x, midtop.y, 1., 0., radiusCircle, false,
               style.getEdgePartner5());
         } else {
-          drawSymbol(g2D, midtop.x - scaleFactor * _RNA.BASE_RADIUS, midtop.y,
+          drawSymbol(g2D, midtop.x - scaleFactor * RNA.BASE_RADIUS, midtop.y,
               1., 0., radiusCircle, style.isCIS(), p1);
-          drawSymbol(g2D, midtop.x + scaleFactor * _RNA.BASE_RADIUS, midtop.y,
+          drawSymbol(g2D, midtop.x + scaleFactor * RNA.BASE_RADIUS, midtop.y,
               -1., 0., radiusCircle, style.isCIS(), p2);
         }
       }
     }
       break;
     case LW_ALT: {
-      double radiusCircle = ((RNA.BASE_PAIR_DISTANCE - _RNA.BASE_RADIUS) / 5.0)
+      double radiusCircle = ((RNA.BASE_PAIR_DISTANCE - RNA.BASE_RADIUS) / 5.0)
           * scaleFactor;
       double distFromBaseCenter = DISTANCE_FACT * scaleFactor;
       orig = new Point2D.Double(orig.x,
@@ -1367,19 +1367,19 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
         if (style.isCanonicalGC()) {
           if ((orig.x != dest.x) || (orig.y != dest.y)) {
             g2D.drawArc((dest.x + orig.x) / 2.,
-                dest.y - scaleFactor * _RNA.BASE_RADIUS / 2.0,
-                (distance - scaleFactor * _RNA.BASE_RADIUS / 3.0),
-                (distance * coef - scaleFactor * _RNA.BASE_RADIUS / 3.0), 0,
+                dest.y - scaleFactor * RNA.BASE_RADIUS / 2.0,
+                (distance - scaleFactor * RNA.BASE_RADIUS / 3.0),
+                (distance * coef - scaleFactor * RNA.BASE_RADIUS / 3.0), 0,
                 180);
             g2D.drawArc((dest.x + orig.x) / 2.,
-                dest.y - scaleFactor * _RNA.BASE_RADIUS / 2.0,
-                (distance + scaleFactor * _RNA.BASE_RADIUS / 3.0),
-                (distance * coef + scaleFactor * _RNA.BASE_RADIUS / 3.0), 0,
+                dest.y - scaleFactor * RNA.BASE_RADIUS / 2.0,
+                (distance + scaleFactor * RNA.BASE_RADIUS / 3.0),
+                (distance * coef + scaleFactor * RNA.BASE_RADIUS / 3.0), 0,
                 180);
           }
         } else if (style.isCanonicalAU()) {
           g2D.drawArc((dest.x + orig.x) / 2.,
-              dest.y - scaleFactor * _RNA.BASE_RADIUS / 2.0, (distance),
+              dest.y - scaleFactor * RNA.BASE_RADIUS / 2.0, (distance),
               (distance * coef), 0, 180);
         }
       } else {
@@ -1387,8 +1387,8 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
         ModeleBP.Edge p2 = style.getEdgePartner3();
         Point2D.Double midtop = new Point2D.Double((dest.x + orig.x) / 2.,
             dest.y - distance * coef / 2.
-                - scaleFactor * _RNA.BASE_RADIUS / 2.0);
-        g2D.drawArc(midtop.x, dest.y - scaleFactor * _RNA.BASE_RADIUS / 2.0,
+                - scaleFactor * RNA.BASE_RADIUS / 2.0);
+        g2D.drawArc(midtop.x, dest.y - scaleFactor * RNA.BASE_RADIUS / 2.0,
             (distance), (distance * coef), 0, 180);
         drawSymbol(g2D, orig.x, orig.y - radiusCircle * .95, 1., 0.,
             radiusCircle, style.isCIS(), p1);
@@ -1399,7 +1399,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
       break;
     default:
       g2D.drawArc((dest.x + orig.x) / 2.,
-          dest.y - scaleFactor * _RNA.BASE_RADIUS / 2.0, (distance),
+          dest.y - scaleFactor * RNA.BASE_RADIUS / 2.0, (distance),
           (distance * coef), 0, 180);
       break;
     }
@@ -1424,13 +1424,13 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     dest = new Point2D.Double(dest.x - newRadius * dx, dest.y - newRadius * dy);
     switch (_conf._mainBPStyle) {
     case LW: {
-      double radiusCircle = ((RNA.BASE_PAIR_DISTANCE - _RNA.BASE_RADIUS) / 5.0)
+      double radiusCircle = ((RNA.BASE_PAIR_DISTANCE - RNA.BASE_RADIUS) / 5.0)
           * scaleFactor;
       if (style.isCanonical()) {
         if (style.isCanonicalGC()) {
           if ((orig.x != dest.x) || (orig.y != dest.y)) {
-            nx *= scaleFactor * _RNA.BASE_RADIUS / 4.0;
-            ny *= scaleFactor * _RNA.BASE_RADIUS / 4.0;
+            nx *= scaleFactor * RNA.BASE_RADIUS / 4.0;
+            ny *= scaleFactor * RNA.BASE_RADIUS / 4.0;
             g2D.drawLine((orig.x + nx), (orig.y + ny), (dest.x + nx),
                 (dest.y + ny));
             g2D.drawLine((orig.x - nx), (orig.y - ny), (dest.x - nx),
@@ -1474,7 +1474,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     }
       break;
     case LW_ALT: {
-      double radiusCircle = ((RNA.BASE_PAIR_DISTANCE - _RNA.BASE_RADIUS) / 5.0)
+      double radiusCircle = ((RNA.BASE_PAIR_DISTANCE - RNA.BASE_RADIUS) / 5.0)
           * scaleFactor;
       double distFromBaseCenter = DISTANCE_FACT * scaleFactor;
       Point2D.Double norig = new Point2D.Double(
@@ -1486,8 +1486,8 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
       if (style.isCanonical()) {
         if (style.isCanonicalGC()) {
           if ((norig.x != ndest.x) || (norig.y != ndest.y)) {
-            nx *= scaleFactor * _RNA.BASE_RADIUS / 4.0;
-            ny *= scaleFactor * _RNA.BASE_RADIUS / 4.0;
+            nx *= scaleFactor * RNA.BASE_RADIUS / 4.0;
+            ny *= scaleFactor * RNA.BASE_RADIUS / 4.0;
             g2D.drawLine((norig.x + nx), (norig.y + ny), (ndest.x + nx),
                 (ndest.y + ny));
             g2D.drawLine((norig.x - nx), (norig.y - ny), (ndest.x - nx),
@@ -1603,15 +1603,17 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     ModeleBase mb = _RNA.get_listeBases().get(i);
     g2D.setFont(_conf._fontBasesGeneral);
     Color baseInnerColor = highlightFilterBase(i,
-        _RNA.getBaseInnerColor(i, _conf), true, blinkVal, g2D.isVarnaPanel(), 0);
+        _RNA.getBaseInnerColor(i, _conf), true, blinkVal, g2D.isVarnaPanel(),
+        0);
     Color baseOuterColor = highlightFilterBase(i,
-        _RNA.getBaseOuterColor(i, _conf), false, blinkVal, g2D.isVarnaPanel(), 1);
+        _RNA.getBaseOuterColor(i, _conf), false, blinkVal, g2D.isVarnaPanel(),
+        1);
     Color baseNameColor = ModeleColorMap.getBgContrast(baseInnerColor);
-//        highlightFilterBase(i,
-//        _RNA.getBaseNameColor(i, _conf), false, blinkVal, g2D.isVarnaPanel(), 2));
-//    if (RNA.whiteLabelPreferrable(baseInnerColor)) {
-//      baseNameColor = Color.white;
-//    }
+    //        highlightFilterBase(i,
+    //        _RNA.getBaseNameColor(i, _conf), false, blinkVal, g2D.isVarnaPanel(), 2));
+    //    if (RNA.whiteLabelPreferrable(baseInnerColor)) {
+    //      baseNameColor = Color.white;
+    //    }
 
     if (mb instanceof ModeleBaseNucleotide) {
       ModeleBaseNucleotide mbn = (ModeleBaseNucleotide) mb;
@@ -1719,8 +1721,8 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
   void drawChemProbAnnotation(VueVARNAGraphics g2D, ChemProbAnnotation cpa,
                               Point2D.Double anchor, double scaleFactor) {
     g2D.setColor(cpa.getColor());
-    g2D.setStrokeThickness(
-        RNA.CHEM_PROB_ARROW_THICKNESS * scaleFactor * cpa.getIntensity());
+    double d = cpa.getIntensity() * scaleFactor;
+    g2D.setStrokeThickness(RNA.CHEM_PROB_ARROW_THICKNESS * d);
     g2D.setPlainStroke();
     Point2D.Double v = cpa.getDirVector();
     Point2D.Double vn = cpa.getNormalVector();
@@ -1728,26 +1730,20 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
         (anchor.x + _RNA.CHEM_PROB_DIST * scaleFactor * v.x),
         (anchor.y + _RNA.CHEM_PROB_DIST * scaleFactor * v.y));
     Point2D.Double edge = new Point2D.Double(
-        (base.x + _RNA.CHEM_PROB_BASE_LENGTH * cpa.getIntensity() * scaleFactor
-            * v.x),
-        (base.y + _RNA.CHEM_PROB_BASE_LENGTH * cpa.getIntensity() * scaleFactor
-            * v.y));
+        (base.x + _RNA.CHEM_PROB_BASE_LENGTH * d * v.x),
+        (base.y + _RNA.CHEM_PROB_BASE_LENGTH * d * v.y));
     switch (cpa.getType()) {
     case ARROW: {
       Point2D.Double arrowTip1 = new Point2D.Double(
-          (base.x + cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_ARROW_WIDTH * vn.x
-                  + _RNA.CHEM_PROB_ARROW_HEIGHT * v.x)),
-          (base.y + cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_ARROW_WIDTH * vn.y
-                  + _RNA.CHEM_PROB_ARROW_HEIGHT * v.y)));
+          (base.x + d * (_RNA.CHEM_PROB_ARROW_WIDTH * vn.x
+              + _RNA.CHEM_PROB_ARROW_HEIGHT * v.x)),
+          (base.y + d * (_RNA.CHEM_PROB_ARROW_WIDTH * vn.y
+              + _RNA.CHEM_PROB_ARROW_HEIGHT * v.y)));
       Point2D.Double arrowTip2 = new Point2D.Double(
-          (base.x + cpa.getIntensity() * scaleFactor
-              * (-_RNA.CHEM_PROB_ARROW_WIDTH * vn.x
-                  + _RNA.CHEM_PROB_ARROW_HEIGHT * v.x)),
-          (base.y + cpa.getIntensity() * scaleFactor
-              * (-_RNA.CHEM_PROB_ARROW_WIDTH * vn.y
-                  + _RNA.CHEM_PROB_ARROW_HEIGHT * v.y)));
+          (base.x + d * (-_RNA.CHEM_PROB_ARROW_WIDTH * vn.x
+              + _RNA.CHEM_PROB_ARROW_HEIGHT * v.x)),
+          (base.y + d * (-_RNA.CHEM_PROB_ARROW_WIDTH * vn.y
+              + _RNA.CHEM_PROB_ARROW_HEIGHT * v.y)));
       g2D.drawLine(base.x, base.y, edge.x, edge.y);
       g2D.drawLine(base.x, base.y, arrowTip1.x, arrowTip1.y);
       g2D.drawLine(base.x, base.y, arrowTip2.x, arrowTip2.y);
@@ -1755,25 +1751,17 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
       break;
     case PIN: {
       Point2D.Double side1 = new Point2D.Double(
-          (edge.x - cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_PIN_SEMIDIAG * v.x)),
-          (edge.y - cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_PIN_SEMIDIAG * v.y)));
+          (edge.x - d * (_RNA.CHEM_PROB_PIN_SEMIDIAG * v.x)),
+          (edge.y - d * (_RNA.CHEM_PROB_PIN_SEMIDIAG * v.y)));
       Point2D.Double side2 = new Point2D.Double(
-          (edge.x - cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_PIN_SEMIDIAG * vn.x)),
-          (edge.y - cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_PIN_SEMIDIAG * vn.y)));
+          (edge.x - d * (_RNA.CHEM_PROB_PIN_SEMIDIAG * vn.x)),
+          (edge.y - d * (_RNA.CHEM_PROB_PIN_SEMIDIAG * vn.y)));
       Point2D.Double side3 = new Point2D.Double(
-          (edge.x + cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_PIN_SEMIDIAG * v.x)),
-          (edge.y + cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_PIN_SEMIDIAG * v.y)));
+          (edge.x + d * (_RNA.CHEM_PROB_PIN_SEMIDIAG * v.x)),
+          (edge.y + d * (_RNA.CHEM_PROB_PIN_SEMIDIAG * v.y)));
       Point2D.Double side4 = new Point2D.Double(
-          (edge.x + cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_PIN_SEMIDIAG * vn.x)),
-          (edge.y + cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_PIN_SEMIDIAG * vn.y)));
+          (edge.x + d * (_RNA.CHEM_PROB_PIN_SEMIDIAG * vn.x)),
+          (edge.y + d * (_RNA.CHEM_PROB_PIN_SEMIDIAG * vn.y)));
       GeneralPath p2 = new GeneralPath();
       p2.moveTo((float) side1.x, (float) side1.y);
       p2.lineTo((float) side2.x, (float) side2.y);
@@ -1786,15 +1774,11 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
       break;
     case TRIANGLE: {
       Point2D.Double arrowTip1 = new Point2D.Double(
-          (edge.x + cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_TRIANGLE_WIDTH * vn.x)),
-          (edge.y + cpa.getIntensity() * scaleFactor
-              * (_RNA.CHEM_PROB_TRIANGLE_WIDTH * vn.y)));
+          (edge.x + d * (_RNA.CHEM_PROB_TRIANGLE_WIDTH * vn.x)),
+          (edge.y + d * (_RNA.CHEM_PROB_TRIANGLE_WIDTH * vn.y)));
       Point2D.Double arrowTip2 = new Point2D.Double(
-          (edge.x + cpa.getIntensity() * scaleFactor
-              * (-_RNA.CHEM_PROB_TRIANGLE_WIDTH * vn.x)),
-          (edge.y + cpa.getIntensity() * scaleFactor
-              * (-_RNA.CHEM_PROB_TRIANGLE_WIDTH * vn.y)));
+          (edge.x + d * (-_RNA.CHEM_PROB_TRIANGLE_WIDTH * vn.x)),
+          (edge.y + d * (-_RNA.CHEM_PROB_TRIANGLE_WIDTH * vn.y)));
       GeneralPath p2 = new GeneralPath();
       p2.moveTo((float) base.x, (float) base.y);
       p2.lineTo((float) arrowTip1.x, (float) arrowTip1.y);
@@ -1828,7 +1812,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     }
     Point2D.Double center = mb.getCenter();
     Point2D.Double p = mb.getCoords();
-    double realDistance = _RNA.BASE_RADIUS * radius + heightEstimate;
+    double realDistance = RNA.BASE_RADIUS * radius + heightEstimate;
     return new Point2D.Double(
         center.getX() + (p.getX() - center.getX())
             * ((p.distance(center) + realDistance) / p.distance(center)),
@@ -1872,7 +1856,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
    */
   public Rectangle2D.Double addRNABBoxMargins() {
     Rectangle2D.Double rnabbox = _RNA.getBBox();
-    double margin = _RNA.BASE_RADIUS * _conf._distNumbers;
+    double margin = RNA.BASE_RADIUS * _conf._distNumbers;
     rnabbox.y -= margin;// * 1.5;
     rnabbox.height += 2 * margin;
     rnabbox.x -= margin;
@@ -1984,7 +1968,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
     // Use it to get an estimate of the font size for numbers ...
     float newFontSize = Math.max(1,
-        (int) ((1.7 * _RNA.BASE_RADIUS) * scaleFactor));
+        (int) ((1.7 * RNA.BASE_RADIUS) * scaleFactor));
     // ... and increase bounding box accordingly
     rnabbox.y -= newFontSize;
     rnabbox.height += newFontSize;
@@ -2009,7 +1993,8 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
    * 
    * @param g2D
    * @param bbox
-   * @param isVarnaPanel not ZOOMPanel 
+   * @param isVarnaPanel
+   *        not ZOOMPanel
    * @param autoCenter
    * @return bounds
    */
@@ -2019,10 +2004,11 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
                                                    boolean autoCenter) {
 
     Rectangle2D.Double rnaMultiBox = new Rectangle2D.Double(0, 0, 1, 1);
-    double scaleFactor = computeScaleFactor(bbox, g2D.isVarnaPanel(), autoCenter);
+    double scaleFactor = computeScaleFactor(bbox, g2D.isVarnaPanel(),
+        autoCenter);
     float newFontSize = Math.max(1,
-        (int) ((1.7 * _RNA.BASE_RADIUS) * scaleFactor));
-    double newRadius = Math.max(1.0, (scaleFactor * _RNA.BASE_RADIUS));
+        (int) ((1.7 * RNA.BASE_RADIUS) * scaleFactor));
+    double newRadius = Math.max(1.0, (scaleFactor * RNA.BASE_RADIUS));
     setBaseFontSize(newFontSize);
     setNumbersFontSize(newFontSize);
     double offX = bbox.x;
@@ -2254,7 +2240,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
     return mb;
   }
 
-  public void setColorMapValues(Double[] values) {
+  public void setColorMapValues(double[] values) {
     _RNA.setColorMapValues(values, _conf._cm, true);
     _conf._drawColorMap = true;
     repaint();
@@ -2479,7 +2465,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
       double blinkVal = _blink.getVal();
       for (int i : getSelection().getIndices())
         drawBase(g2D, i, _realCoords, _realCenters,
-            scaleFactor * _RNA.BASE_RADIUS, scaleFactor, blinkVal);
+            scaleFactor * RNA.BASE_RADIUS, scaleFactor, blinkVal);
     }
 
     if (_debug) {
@@ -4532,7 +4518,7 @@ public class VARNAPanel extends JPanel implements PropertyChangeListener {
 
   public ModeleBase _selectedBase = null;
 
-  private boolean headless;
+  public boolean headless;
 
   public void doMouseMove(int x, int y) {
     _selectedBase = getNearestBase(x, y);

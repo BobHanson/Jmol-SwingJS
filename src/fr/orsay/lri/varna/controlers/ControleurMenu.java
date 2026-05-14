@@ -561,8 +561,8 @@ public class ControleurMenu implements InterfaceVARNAListener,
 			_vp.getVARNAUI().aNAView();
 		} else if (_type.equals("varnaview")) {
 			_vp.getVARNAUI().varnaView();
-		} else if (_type.equals("motifview")) {
-			_vp.getVARNAUI().motifView();
+//		} else if (_type.equals("motifview")) {
+//			_vp.getVARNAUI().motifView();
 		} else if (_type.equals("line")) {
 			_vp.getVARNAUI().line();
 		} else if (_type.equals("flat")) {

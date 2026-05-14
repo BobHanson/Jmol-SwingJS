@@ -53,6 +53,7 @@ import fr.orsay.lri.varna.interfaces.VARNAViewerI;
 import fr.orsay.lri.varna.interfaces.VARNAViewerI.VARNACallBack;
 import javajs.util.BS;
 import javajs.util.PT;
+import javajs.util.SB;
 
 /**
  * The Jmol VARNA plugin receives standard callbacks from Jmol, selecting ones
@@ -460,6 +461,26 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       }
       vwr.hoverOnPtr((g == null ? -1 : g.getLeadOrFirstAtomIndex()), false, true);
       break;
+    case VARNAViewerI.ACTION_SELECT_TEXT:
+      boolean isJmol = (e.getID() == VARNAViewerI.ACTION_ID_JMOL_SELECT);
+      String text = (String) e.getSource();
+      if (text.startsWith("jmol:")) {
+        isJmol = true;
+        text = text.substring(5);
+      }
+      if (isJmol) {
+        jmolScript = "SELECT , " + text; // comma is a request to callback
+      } else {
+        jmolScript = "within(dssr, \"nts[WHERE summary like \\\"*" + text + "*\\\"]\")";
+        BS bs = vwr.getAtomBitSet(jmolScript);
+        jmolScript = "SELECT , " + bs;
+        // x='select within(dssr, "nts[where summary like '*helix*'"]")'
+ //       jmolScript = "SELECT , within(dssr, \"nts[WHERE summary like '*" + text + "*']\")";
+      }
+      e.setSource(jmolScript);
+
+      jmolScript = (String) e.getSource(); // select , ....
+      break;
     case VARNAViewerI.ACTION_SELECT_MODEL:
       // Model 1.1: 1EHZ
       String name = (String) e.getSource();
@@ -546,6 +567,36 @@ public class VARNAPlugin implements JmolPlugin, ActionListener {
       }
     }
     return map;
+  }
+
+
+  private final static String escapable = "\\\\\tt\rr\nn\"\""; 
+
+  public static String esc(String str) {
+    if (str == null || str.length() == 0)
+      return "\"\"";
+    boolean haveEscape = false;
+    int i = 0;
+    for (; i < escapable.length(); i += 2)
+      if (str.indexOf(escapable.charAt(i)) >= 0) {
+        haveEscape = true;
+        break;
+      }
+    if (haveEscape)
+      while (i < escapable.length()) {
+        int pt = -1;
+        char ch = escapable.charAt(i++);
+        char ch2 = escapable.charAt(i++);
+        SB sb = new SB();
+        int pt0 = 0;
+        while ((pt = str.indexOf(ch, pt + 1)) >= 0) {
+          sb.append(str.substring(pt0, pt)).appendC('\\').appendC(ch2);
+          pt0 = pt + 1;
+        }
+        sb.append(str.substring(pt0, str.length()));
+        str = sb.toString();
+      }    
+    return "\"" + str + "\"";
   }
 
 

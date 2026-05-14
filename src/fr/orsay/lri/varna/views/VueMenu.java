@@ -22,12 +22,10 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.Point;
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -385,7 +383,7 @@ public class VueMenu extends JPopupMenu {
 	public void addColorOptions(JMenu submenu) {
 		createMenuItem("Fill Color",submenu.getActionCommand() + ",InnerColor","",submenu,true);
 		createMenuItem("Stroke Color",submenu.getActionCommand() + ",OutlineColor","",submenu,true);
-		createMenuItem("Label Color",submenu.getActionCommand() + ",NameColor","",submenu,true);		
+//BH now black or white only		createMenuItem("Label Color",submenu.getActionCommand() + ",NameColor","",submenu,true);		
 		submenu.addSeparator();
 		createMenuItem("BP Color",submenu.getActionCommand() + ",BPColor","",submenu,true);		
 		createMenuItem("BP Thickness",submenu.getActionCommand() + ",BPThickness","",submenu,true);		
@@ -482,7 +480,8 @@ public class VueMenu extends JPopupMenu {
 	}
 
 
-	public void show(Component invoker,int x,int y) {
+	@Override
+  public void show(Component invoker,int x,int y) {
 		 _spawnOrigin = new Point(x,y);
 		 super.show(invoker,x,y); 
 	 }

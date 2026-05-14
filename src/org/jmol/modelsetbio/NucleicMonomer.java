@@ -591,7 +591,7 @@ public boolean isCrossLinked(Group g) {
    */
   public Lst<BasePair> getBasePairs() {
     if (bioPolymer != null && !((NucleicPolymer) bioPolymer).isDssrSet)
-      bioPolymer.model.ms.vwr.getAnnotationParser(true).getBasePairs(bioPolymer.model.ms.vwr, bioPolymer.model.modelIndex);    
+      bioPolymer.model.ms.vwr.getAnnotationParser(T.dssr).getBasePairs(bioPolymer.model.ms.vwr, bioPolymer.model.modelIndex);    
     return bps;
   }
 
@@ -606,7 +606,7 @@ public boolean isCrossLinked(Group g) {
     if (dssrFrame != null)
       return dssrFrame;
     if (dssrNT != null)
-      return dssrFrame = vwr.getAnnotationParser(true).getDSSRFrame(dssrNT);
+      return dssrFrame = vwr.getAnnotationParser(T.dssr).getDSSRFrame(dssrNT);
     P3d[] oxyz = dssrFrame = new P3d[4];
     for (int i = 4; --i >= 0;)
       oxyz[i] = new P3d();

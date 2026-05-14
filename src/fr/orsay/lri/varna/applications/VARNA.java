@@ -21,10 +21,8 @@ import java.awt.Adjustable;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
@@ -39,14 +37,15 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Point2D.Double;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
+import java.util.Vector;
 import java.util.function.Consumer;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JSplitPane;
@@ -61,10 +60,10 @@ import fr.orsay.lri.varna.models.rna.RNA;
 /**
  * Formerly VARNAGUI
  * 
- * Most of this file originated as part of VARNA version 3.9. VARNA version 3.9 is free software:
- * you can redistribute it and/or modify it under the terms of the GNU General
- * Public License as published by the Free Software Foundation, either version 3
- * of the License, or (at your option) any later version.
+ * Most of this file originated as part of VARNA version 3.9. VARNA version 3.9
+ * is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
  * 
  * Adapted by Bob Hanson for Jmol-SwingJS.
  * 
@@ -73,12 +72,13 @@ public class VARNA
     implements DropTargetListener, InterfaceVARNAListener, MouseListener {
 
   public final static String version = "VARNA-SwingJS 16.3"; // Jmol's major version
-  public final static String license = version + " is published under the GPL GNU Public License Version 3";
+  public final static String license = version
+      + " is published under the GPL GNU Public License Version 3";
 
   static {
     System.out.println(license);
   }
-  
+
   protected final static int VARNA_GUI_ALLOW_CREATE = 0x01;
   protected final static int VARNA_GUI_ALLOW_DELETE_DUPLICATE = 0x02;
   protected final static int VARNA_GUI_ALLOW_DOUBLE_CLICK = 0x04;
@@ -86,13 +86,15 @@ public class VARNA
   protected final static int VARNA_GUI_SHOW_LISTING = 0x10;
   protected final static int VARNA_GUI_SHOW_TITLE = 0x20;
   protected final static int VARNA_GUI_SHOW_ZOOM_PANEL = 0x40;
+  protected final static int VARNA_GUI_SHOW_SELECT = 0x80;
 
-  protected final static int VARNA_GUI_FULL_OPTIONS = //
+  protected final static int VARNA_GUI_STANDARD_OPTIONS = //
       VARNA_GUI_ALLOW_CREATE | //
           VARNA_GUI_ALLOW_DELETE_DUPLICATE | //
           VARNA_GUI_ALLOW_DOUBLE_CLICK | //
           VARNA_GUI_EDITABLE | //
           VARNA_GUI_SHOW_LISTING | //
+          VARNA_GUI_SHOW_SELECT |  // Jmol only
           VARNA_GUI_SHOW_ZOOM_PANEL; //
 
   private int guiOptions;
@@ -120,29 +122,78 @@ public class VARNA
   private String structureListTitle = "         Structures         ";
 
   private String frameTitle;
-  protected boolean headless;
 
   public VARNA() {
-    this("VARNA", VARNA_GUI_FULL_OPTIONS);
+    this("VARNA", VARNA_GUI_STANDARD_OPTIONS);
     setFrame(null, null, 0, 0, true);
   }
 
+  Vector<String> opts = new Vector<String>();
+
+  /**
+   * modified by Bob Hanson to not automatically run()
+   * 
+   * @param opts
+   */
+  public VARNA(Vector<String> opts) {
+    this.opts = opts;
+  }
+
+  /**
+   * @param args
+   * @throws ExitCode 
+   */
+  public VARNA(String[] args) throws ExitCode {
+    for (int i = 0; i < args.length; i++) {
+      opts.add(args[i]);
+    }
+    run();
+  }
+
+  private void run() throws ExitCode {
+    init("VARNA", VARNA_GUI_STANDARD_OPTIONS);
+    String[] err = new String[1];
+    String opt = VARNAcmd.setCLIOptions(opts, app);
+    if (opt != null) {
+      errorExit(err[0]);
+    }
+    String msg = app.processCLI();
+    if (msg == null) {
+      setFrame(null, null, 0, 0, !app.headless);
+      return;
+    }
+    switch (msg) {
+    case "exit0":
+      if (app.headless) {
+        throw new ExitCode(0, "");
+      }
+      return;
+    case "exit1":
+      throw new ExitCode(1, "");
+    default:
+      errorExit(msg);
+    }
+  }
+
   public VARNA(boolean haveDisplay) {
-    this("VARNA", VARNA_GUI_FULL_OPTIONS);
+    this("VARNA", VARNA_GUI_STANDARD_OPTIONS);
     setFrame(null, null, 0, 0, haveDisplay);
   }
 
   protected VARNA(String title, int options) {
+    init(title, options);
+  }
+
+  private void init(String title, int options) {
     guiOptions = options;
     frameTitle = (title == null ? "VARNA" : "VARNA GUI");
-    app = new VARNAapp(hasOption(VARNA_GUI_EDITABLE));
+    app = new VARNAapp(hasOption(VARNA_GUI_EDITABLE));  
   }
 
   public void setHeadless() {
-    headless = true;
     app.setHeadless();
   }
-  
+
   public VARNAPanel getVarnaPanel() {
     return (app == null ? null : app.getVARNAPanel());
   }
@@ -188,7 +239,7 @@ public class VARNA
         height = VARNAPanel.DEFAULT_HEIGHT;
       }
       if (width > 0) {
-        if (!headless) {
+        if (!app.headless) {
           frame = new JFrame(frameTitle);
           frame.setSize(new Dimension(width, height));
           if (parentFrame != null) {
@@ -230,7 +281,7 @@ public class VARNA
     opsPanel = new JPanel(new BorderLayout());
     app.setPanels(goPanel, opsPanel, structureListTitle,
         hasOption(VARNA_GUI_ALLOW_DELETE_DUPLICATE));
-    
+
     frame.getContentPane().setLayout(new BorderLayout());
     frame.getContentPane().add(app._tools, BorderLayout.NORTH);
     if (hasOption(VARNA_GUI_SHOW_LISTING)) {
@@ -238,6 +289,12 @@ public class VARNA
       frame.getContentPane().add(split, BorderLayout.CENTER);
     } else {
       frame.getContentPane().add(vp, BorderLayout.CENTER);
+    }
+    if (hasOption(VARNA_GUI_SHOW_SELECT)) {
+      JPanel selectPanel = new JPanel(new BorderLayout());
+      selectPanel.add(new JLabel("Select:"), BorderLayout.WEST);
+      app.getSelectPanel(selectPanel);
+      frame.getContentPane().add(selectPanel, BorderLayout.SOUTH);
     }
     frame.setVisible(true);
 
@@ -273,7 +330,7 @@ public class VARNA
    * this could be adapted
    */
   protected void setupDemo() {
-    app.setupNoDemo();
+    app.setupDefault();
   }
 
   private JSplitPane getMySplitPanel() {
@@ -311,10 +368,6 @@ public class VARNA
     return app.getParameterInfo();
   }
 
-  public void init() {
-    app.init();
-  }
-
   @Override
   public void dragEnter(DropTargetDragEvent arg0) {
 
@@ -348,10 +401,10 @@ public class VARNA
 
                 @Override
                 public void accept(String err) {
-                  
-                  throw new RuntimeException(err);                
+
+                  throw new RuntimeException(err);
                 }
-                
+
               });
               break;
             }
@@ -477,31 +530,69 @@ public class VARNA
     frame.setVisible(true);
   }
 
-  public static void main(String[] args) {
-    List<Image> icons = new ArrayList<Image>();
-    //JOptionPane.showMessageDialog(null, ""+Toolkit.getDefaultToolkit().getImage("./VARNA16x16.png"), "Check", JOptionPane.INFORMATION_MESSAGE);
-    icons.add(Toolkit.getDefaultToolkit().getImage("./VARNA16x16.png"));
-    icons.add(Toolkit.getDefaultToolkit().getImage("./VARNA32x32.png"));
-    icons.add(Toolkit.getDefaultToolkit().getImage("./VARNA64x64.png"));
-    VARNA d = new VARNA();
-    d.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    d.pack();
-  }
-
   public VARNAapp getApp() {
     return app;
   }
-  
+
   protected void destroy() {
     try {
       if (frame != null)
         frame.setVisible(false);
-    frame = parentFrame = null;
-    app.destroy();
+      frame = parentFrame = null;
+      app.destroy();
     } catch (Exception e) {
       // ignore
     }
   }
 
+  protected static class ExitCode extends Exception {
+    private int _c;
+    private String _msg;
+
+    public ExitCode(int c, String msg) {
+      _c = c;
+      _msg = msg;
+    }
+
+    public int getExitCode() {
+      return _c;
+    }
+
+    public String getExitMessage() {
+      return _msg;
+    }
+  }
+
+  private static void errorExit(String msg) throws ExitCode {
+    System.out.println(VARNAcmd.getDescription());
+    System.out.println("Error: " + msg + "\n");
+    VARNAcmd.printUsage();
+    VARNAcmd.printHelpOptions();
+    throw (new ExitCode(1, ""));
+  }
+
+  public static void main(String[] args) {
+    //List<Image> icons = new ArrayList<Image>();
+    //JOptionPane.showMessageDialog(null, ""+Toolkit.getDefaultToolkit().getImage("./VARNA16x16.png"), "Check", JOptionPane.INFORMATION_MESSAGE);
+    //    icons.add(Toolkit.getDefaultToolkit().getImage("./VARNA16x16.png"));
+    //    icons.add(Toolkit.getDefaultToolkit().getImage("./VARNA32x32.png"));
+    //    icons.add(Toolkit.getDefaultToolkit().getImage("./VARNA64x64.png"));
+    VARNA varna = null;
+    if (args.length > 0) {
+      try {
+        varna = new VARNA(args);
+        if (varna.app.headless)
+          System.exit(0);
+      } catch (ExitCode e) {
+        System.err.println(e.getExitMessage());
+        System.exit(e.getExitCode());
+      }
+    } else {
+      varna = new VARNA();
+    }
+    varna.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    varna.pack();
+
+  }
 
 }

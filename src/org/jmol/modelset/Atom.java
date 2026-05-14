@@ -1289,7 +1289,8 @@ public class Atom extends Point3fi implements Node {
     case T.z:
       return z;
     case T.dssr:
-      return group.chain.model.ms.getAtomicDSSRData(i);
+    	// no longer accessed?
+      return group.chain.model.ms.getAtomicDSSRDataFloat("dssr", i);
     case T.backbone:
     case T.cartoon:
     case T.dots:

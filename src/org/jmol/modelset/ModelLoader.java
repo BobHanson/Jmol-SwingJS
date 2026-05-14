@@ -463,7 +463,7 @@ public final class ModelLoader {
       String groupList = (String) ms.getInfo(i,
           "groupPropertyList");
       if (ms.am[i].isBioModel && ms.getInfo(i, JC.INFO_DSSR) != null)
-        vwr.getAnnotationParser(true).setGroup1(ms, i);
+        vwr.getAnnotationParser(T.dssr).setGroup1(ms, i);
       if (atomProperties == null)
         continue;
       for (Map.Entry<String, Object> entry : atomProperties.entrySet()) {

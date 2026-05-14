@@ -395,7 +395,7 @@ public class SelectionManager {
 
     private String colorString(Object c, boolean isTranslucent) {
       // note that this does not report translucency
-      if (c == PAL.NONE)
+      if (c == null || c == PAL.NONE)
         return "NULL";
       int ic = C.getShadedRGB(((Integer) c).intValue(), (isTranslucent ? translucentLevel.doubleValue() : 0));
       return "#" + Escape.getHexColorFromRGB(ic);

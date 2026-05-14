@@ -33,6 +33,7 @@ import java.util.Properties;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterAtomIterator;
 import org.jmol.api.JmolAdapterStructureIterator;
+import org.jmol.api.JmolAnnotationParser;
 import org.jmol.c.STR;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.AtomCollection;
@@ -597,17 +598,33 @@ public final class BioResolver implements Comparator<String[]> {
     bsAddedMask = BSUtil.deleteBits(bsAddedMask, bsDeletedAtoms);
     //System.out.println("res bsAddedMask = " + bsAddedMask);
     for (int i = ml.baseModelIndex; i < ms.mc; i++) { 
-      fixAnnotations(i, "domains", T.domains);
-      fixAnnotations(i, "validation", T.validation);
+      fixAnnotations(i, T.domains);
+      fixAnnotations(i, T.validation);
+      fixAnnotations(i, T.dssr);
     }
   }
 
-  private void fixAnnotations(int i, String name, int type) {
-    Object o = ml.ms.getInfo(i, name);
+  private void fixAnnotations(int modelIndex, int type) {
+    JmolAnnotationParser parser = vwr.getAnnotationParserIfPresent(type);
+    if (parser == null)
+      return;
+    String key = null;
+    switch (type) {
+    case T.dssr:
+      vwr.ms.bioModelset.clearDSSR();
+      return;
+    case T.validation:
+      key = "validation";
+      break;
+    case T.domains:
+      key = "domains";
+      break;
+    }
+    Object o = ml.ms.getInfo(modelIndex, key);
     if (o != null) {
-      Object dbObj = ((BioModel) ms.am[i]).getCachedAnnotationMap(name, o);
+      Object dbObj = ((BioModel) ms.am[modelIndex]).getCachedAnnotationMap(key, o);
       if (dbObj != null)
-        vwr.getAnnotationParser(false).fixAtoms(i, (SV) dbObj, bsAddedMask, type, 20);
+        parser.fixAtoms(modelIndex, (SV) dbObj, bsAddedMask, type, 20);
     }
   }
 

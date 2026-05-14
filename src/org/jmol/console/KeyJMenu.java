@@ -55,20 +55,26 @@ public class KeyJMenu extends JMenu implements JmolAbstractButton {
   public void createItemKeys(JmolPanel jmolPanel) {
     if (itemKeys == null)
       return;
-    //System.out.println("late binding for " + getActionCommand());
-    // Loop over the items in this menu:
-    for (int i = 0; i < itemKeys.length; i++) {
-      String item = itemKeys[i];
-      if (item.equals("-")) {
-        addSeparator();
-      } else if (item.endsWith("Menu")) {
-        add(jmolPanel.createMenu(item));
-      } else {
-        JMenuItem mi = jmolPanel.createMenuItem(item);
-        add(mi);
+    String item = null;
+    try {
+      //System.out.println("late binding for " + getActionCommand());
+      // Loop over the items in this menu:
+      for (int i = 0; i < itemKeys.length; i++) {
+        item = itemKeys[i];
+      if (item.equals("-")) {        addSeparator();
+        } else if (item.endsWith("Menu")) {
+          add(jmolPanel.createMenu(item));
+        } else {
+          JMenuItem mi = jmolPanel.createMenuItem(item);
+          add(mi);
+        }
       }
+    } catch (Exception e) {
+      System.out.println("KeyMenu exception for " + key + "." + item);
+      e.printStackTrace(System.out);
     }
     itemKeys = null;
+
   }
 
 

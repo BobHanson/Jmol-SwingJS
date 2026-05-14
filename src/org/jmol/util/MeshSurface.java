@@ -300,7 +300,7 @@ public class MeshSurface {
 
   public void resetSlab() {
     if (slicer != null)
-      slicer.slabPolygons(MeshSurface.getSlabObjectType(T.none, null, false, null), false);
+      slicer.slabPolygons(GData.getSlabObjectType(T.none, null, false, null), false);
   }
 
   public void slabPolygonsList(Lst<Object[]> slabInfo, boolean allowCap) {
@@ -363,17 +363,6 @@ public class MeshSurface {
    */
   public void setBoundingBox(P3d[] boundBoxPoints) {
     // isosurfaceMesh only
-  }
-
-  // in Legacy Jmol, these two methods are in org.jmol.util.TempArray
-  
-  public static Object[] getSlabObjectType(int tok, Object data, boolean isCap, Object colorData) {
-    return new Object[] { Integer.valueOf(tok), data, Boolean.valueOf(isCap), colorData };
-  }
-
-  public static Object[] getSlabWithinRange(double min, double max) {
-    return new Object[] { Integer.valueOf(T.range), 
-        new Double[] {Double.valueOf(min), Double.valueOf(max)}, Boolean.FALSE, null };
   }
 
   public static double getSphericalInterpolationFraction(double r,

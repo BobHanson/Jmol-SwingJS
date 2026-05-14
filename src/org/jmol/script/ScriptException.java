@@ -40,7 +40,7 @@ public class ScriptException extends Exception {
    *  
    */
   ScriptException(ScriptError se, String msg, String untranslated, boolean isError) {
-    eval = (ScriptEval) se;
+     eval = (ScriptEval) se;
     message = msg;
     this.isError = isError;
     if (!isError) // ScriptInterruption

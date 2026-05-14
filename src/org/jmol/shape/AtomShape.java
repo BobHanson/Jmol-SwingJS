@@ -61,7 +61,6 @@ public abstract class AtomShape extends Shape {
   
   @Override
   protected void initModelSet() {
-//    atoms = ms.at;
     isSet = true;
     int ac = ms.ac;
     // in case this is due to "load append"

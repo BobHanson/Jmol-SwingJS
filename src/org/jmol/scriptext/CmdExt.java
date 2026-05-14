@@ -904,7 +904,7 @@ public class CmdExt extends ScriptExt {
           if (chk)
             return;
           String s = 
-              vwr.getAnnotationParser(true).calculateDSSRStructure(vwr, bs1);
+              vwr.getAnnotationParser(T.dssr).calculateDSSRStructure(vwr, bs1);
           e.showString(s);
           vwr.notifyCalculation(JC.INFO_DSSR, bs1, s);
           return;
@@ -3243,6 +3243,8 @@ public class CmdExt extends ScriptExt {
       i = ++e.iToken;
       break;
     }
+    if (!isCreate && !vwr.ms.haveBioModels)
+      invArg();
     if (!chk && bs != null) {
       bs.and(vwr.getFrameAtoms());
       int iatom = bs.nextSetBit(0);

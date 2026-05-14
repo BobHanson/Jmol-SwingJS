@@ -44,6 +44,7 @@ import org.jmol.modelset.LabelToken;
 import org.jmol.modelset.Model;
 import org.jmol.modelset.ModelSet;
 import org.jmol.script.SV;
+import org.jmol.script.T;
 import org.jmol.util.Edge;
 import org.jmol.util.Escape;
 import org.jmol.viewer.JC;
@@ -138,7 +139,7 @@ public final class BioModel extends Model {
         .calculateDssp(bioPolymers, bioPolymerCount, vHBonds, doReport,
             dsspIgnoreHydrogen, setStructure, version);
     if (haveNucl && haveDSSR && vHBonds != null)
-      s += vwr.getAnnotationParser(true).getHBonds(ms, modelIndex, vHBonds, doReport);
+      s += vwr.getAnnotationParser(T.dssr).getHBonds(ms, modelIndex, vHBonds, doReport);
     return s;
   }
 
@@ -504,11 +505,6 @@ public final class BioModel extends Model {
     if (bsDelete.nextSetBit(0) >= 0)
       ms.deleteBonds(bsDelete, false);
     getRasmolHydrogenBonds(bs, bs, null, false, Integer.MAX_VALUE, false, null, dsspVersion);
-  }
-
-  public void getAtomicDSSRData(double[] dssrData, String dataType) {
-    if (haveDSSR)
-      vwr.getAnnotationParser(true).getAtomicDSSRData(ms, modelIndex, dssrData, dataType);
   }
 
 }

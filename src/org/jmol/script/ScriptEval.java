@@ -493,7 +493,7 @@ public class ScriptEval extends ScriptExpr {
     }     
     if (haveError || !isJS || !allowJSThreads || params != null) {
       vwr.setTainted(true);
-      vwr.popHoldRepaint("CLEAR HOLD - executeCommands" + " "
+      vwr.popHoldRepaint(JC.REPAINT_CLEAR_HOLD + " - executeCommands" + " "
           + (scriptLevel > 0 ? JC.REPAINT_IGNORE : ""));
       if (haveError)
         resumeViewer("exception", true);
@@ -691,7 +691,7 @@ public class ScriptEval extends ScriptExpr {
       sb = new SB();
     int pc = (sc.lineNumbers == null ? sc.pc : Math.min(sc.pc, sc.lineNumbers[sc.lineNumbers.length - 1]));
     sb.append(getErrorLineMessage(sc.functionName, sc.scriptFileName,
-        sc.lineNumbers[pc], pc, ScriptEval.statementAsString(vwr,
+        (sc.lineNumbers == null ? 0 : sc.lineNumbers[pc]), pc, ScriptEval.statementAsString(vwr,
             sc.statement, (isTop ? sc.iToken : 9999), false)));
     if (sc.parentContext != null)
       getContextTrace(vwr, sc.parentContext, sb, false);
@@ -5698,7 +5698,7 @@ public class ScriptEval extends ScriptExpr {
       data = vwr.getFileAsString3(data, true, "script");
     clearDefinedVariableAtomSets();
     Map<String, Object> map = vwr.parseJSONMap(data);
-    showString(vwr.getAnnotationParser(true).fixDSSRJSONMap(map));
+    showString(vwr.getAnnotationParser(T.dssr).fixDSSRJSONMap(map));
     vwr.ms.setInfo(modelIndex, JC.INFO_DSSR, map);
   }
 
@@ -8947,7 +8947,7 @@ public class ScriptEval extends ScriptExpr {
                 && T.tokAttr((tok = getToken(++index).tok), T.atomproperty)
                 && (tok == T.wyckoff || !T.tokAttr(tok, T.strproperty))) {
               tok = getToken(index).tok;
-              String type = (tok == T.dssr ? getToken(++index).value.toString() : tok == T.wyckoff || tok == T.vibxyz ? "color" : null);
+              String type = (tok == T.dssr ? "property_dssr." + getToken(++index).value.toString() : tok == T.wyckoff || tok == T.vibxyz ? "color" : null);
               if (!chk) {
                 data = getBitsetPropertyFloat(bsSelected, tok
                     | T.allfloat, type, Double.NaN, Double.NaN);

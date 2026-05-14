@@ -56,7 +56,6 @@ public class QCJSONWriter extends JSONWriter implements JmolWriter {
   public void set(Viewer viewer, OC oc, Object[] data) {
     vwr = viewer;
     this.oc = (oc == null ? vwr.getOutputChannel(null,  null) : oc);
-    setWriteNullAsString(false);
     setStream(oc);
   }
 
@@ -428,9 +427,9 @@ public class QCJSONWriter extends JSONWriter implements JmolWriter {
    * writing so that the order is always Gaussian/Molden order.
    * 
    * @param coeffs
-   * @return
+   * @return double[]
    */
-  private Object fixCoefficients(double[] coeffs) {
+  private double[] fixCoefficients(double[] coeffs) {
     double[] c = new double[coeffs.length];
     for (int i = 0, n = shells.size(); i < n; i++) {
       int[] shell = shells.get(i);

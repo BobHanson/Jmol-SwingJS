@@ -24,7 +24,6 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.geom.Point2D;
 
 import fr.orsay.lri.varna.components.VARNAPanel;
@@ -37,6 +36,7 @@ import fr.orsay.lri.varna.views.VueUI;
  * @author darty
  * 
  */
+@SuppressWarnings("unused")
 public class ControleurVARNAPanelKeys implements KeyListener, FocusListener {
 
 	private VARNAPanel _vp;
@@ -46,7 +46,7 @@ public class ControleurVARNAPanelKeys implements KeyListener, FocusListener {
 		_vp = vp;
 	}
 
-	public void mouseClicked(MouseEvent e) {
+  public void mouseClicked(MouseEvent e) {
 	}
 
 	public void mouseEntered(MouseEvent e) {
@@ -64,7 +64,8 @@ public class ControleurVARNAPanelKeys implements KeyListener, FocusListener {
 	public void mouseReleased(MouseEvent e) {
 	}
 
-	public void keyPressed(KeyEvent e) {
+	@Override
+  public void keyPressed(KeyEvent e) {
 		boolean controlDown = (e.getModifiersEx() & (InputEvent.CTRL_DOWN_MASK)) == InputEvent.CTRL_DOWN_MASK;
 		boolean shiftDown = (e.getModifiersEx() & (InputEvent.SHIFT_DOWN_MASK)) == InputEvent.SHIFT_DOWN_MASK;
 		boolean altDown = (e.getModifiersEx() & (InputEvent.ALT_DOWN_MASK)) == InputEvent.ALT_DOWN_MASK;
@@ -284,11 +285,11 @@ public class ControleurVARNAPanelKeys implements KeyListener, FocusListener {
 					ui.varnaView();
 				}
 				break;
-			case (KeyEvent.VK_6):
-				if (controlDown) {
-					ui.motifView();
-				}
-				break;
+//			case (KeyEvent.VK_6):
+//				if (controlDown) {
+//					ui.motifView();
+//				}
+//				break;
 
 			// Navigation control keys (Zoom in/out, arrow keys ...)
 			case (KeyEvent.VK_DOWN):
@@ -329,85 +330,89 @@ public class ControleurVARNAPanelKeys implements KeyListener, FocusListener {
 		_vp.repaint();
 	}
 
-	/**
-	 * if ((e.getKeyCode() == KeyEvent.VK_PLUS)||(e.getKeyChar() == '+')) {
-	 * _vp.getVARNAUI().UIZoomIn(); } else if (e.getKeyCode() ==
-	 * KeyEvent.VK_MINUS) { _vp.getVARNAUI().UIZoomOut(); } // 1 pour Redraw
-	 * Radiate else if (e.getKeyChar() == KeyEvent.VK_1) {
-	 * _vp.getVARNAUI().UIRadiate(); } // 2 pour Redraw Circular else if
-	 * (e.getKeyChar() == KeyEvent.VK_2) { _vp.getVARNAUI().UICircular(); } // 3
-	 * pour Redraw NAView else if (e.getKeyChar() == KeyEvent.VK_3) {
-	 * _vp.getVARNAUI().UINAView(); }
-	 * 
-	 * // 4 for RNA on a line else if (e.getKeyChar() == KeyEvent.VK_4) {
-	 * _vp.getVARNAUI().UILine(); } // 5 fun arn random coord else if
-	 * (e.isControlDown() && e.getKeyChar() == KeyEvent.VK_9) { for (int i = 0;
-	 * i < _vp.getRNA().get_listeBases().size(); i++) {
-	 * _vp.getRNA().get_listeBases().get(i).set_coords( new
-	 * Point2D.Double(_vp.getWidth() * Math.random(), _vp.getHeight() *
-	 * Math.random())); _vp.getRNA().get_listeBases().get(i).set_center( new
-	 * Point2D.Double(_vp.getWidth() / 2 Math.random(), _vp.getHeight() / 2
-	 * Math.random())); } } // 6 fun random arn structure else if
-	 * (e.isControlDown() & e.getKeyChar() == KeyEvent.VK_8) { try {
-	 * _vp.drawRNA(_vp.getRNA().getListeBasesToString(), getRandomRNA(), _vp
-	 * .getRNA().get_drawMode()); } catch (ExceptionNonEqualLength e1) {
-	 * _vp.errorDialog(e1); } } _vp.repaint(); }
-	 **/
+//	/**
+//	 * if ((e.getKeyCode() == KeyEvent.VK_PLUS)||(e.getKeyChar() == '+')) {
+//	 * _vp.getVARNAUI().UIZoomIn(); } else if (e.getKeyCode() ==
+//	 * KeyEvent.VK_MINUS) { _vp.getVARNAUI().UIZoomOut(); } // 1 pour Redraw
+//	 * Radiate else if (e.getKeyChar() == KeyEvent.VK_1) {
+//	 * _vp.getVARNAUI().UIRadiate(); } // 2 pour Redraw Circular else if
+//	 * (e.getKeyChar() == KeyEvent.VK_2) { _vp.getVARNAUI().UICircular(); } // 3
+//	 * pour Redraw NAView else if (e.getKeyChar() == KeyEvent.VK_3) {
+//	 * _vp.getVARNAUI().UINAView(); }
+//	 * 
+//	 * // 4 for RNA on a line else if (e.getKeyChar() == KeyEvent.VK_4) {
+//	 * _vp.getVARNAUI().UILine(); } // 5 fun arn random coord else if
+//	 * (e.isControlDown() && e.getKeyChar() == KeyEvent.VK_9) { for (int i = 0;
+//	 * i < _vp.getRNA().get_listeBases().size(); i++) {
+//	 * _vp.getRNA().get_listeBases().get(i).set_coords( new
+//	 * Point2D.Double(_vp.getWidth() * Math.random(), _vp.getHeight() *
+//	 * Math.random())); _vp.getRNA().get_listeBases().get(i).set_center( new
+//	 * Point2D.Double(_vp.getWidth() / 2 Math.random(), _vp.getHeight() / 2
+//	 * Math.random())); } } // 6 fun random arn structure else if
+//	 * (e.isControlDown() & e.getKeyChar() == KeyEvent.VK_8) { try {
+//	 * _vp.drawRNA(_vp.getRNA().getListeBasesToString(), getRandomRNA(), _vp
+//	 * .getRNA().get_drawMode()); } catch (ExceptionNonEqualLength e1) {
+//	 * _vp.errorDialog(e1); } } _vp.repaint(); }
+//	 * @return random rna
+//	 **/
+//	public String getRandomRNA() {
+//		int pile = 0, j, i = 0;
+//		double l;
+//		String fun = "";
+//		while (i < 2000) {
+//			if (Math.random() > 0.5) {
+//				j = 0;
+//				l = Math.random() * 10;
+//				while (j < l) {
+//					fun += '.';
+//					i++;
+//					j++;
+//				}
+//			} else {
+//				if (Math.random() > 0.5 && pile > 0) {
+//					j = 0;
+//					l = Math.random() * 5;
+//					while (j < l && pile > 0) {
+//						fun += ')';
+//						pile--;
+//						j++;
+//						i++;
+//					}
+//				} else {
+//					j = 0;
+//					l = Math.random() * 5;
+//					while (j < l) {
+//						fun += '(';
+//						pile++;
+//						j++;
+//						i++;
+//					}
+//
+//				}
+//			}
+//		}
+//		while (pile > 0) {
+//			fun += ')';
+//			pile--;
+//		}
+//		return fun;
+//	}
 
-	public String getRandomRNA() {
-		int pile = 0, j, i = 0;
-		double l;
-		String fun = "";
-		while (i < 2000) {
-			if (Math.random() > 0.5) {
-				j = 0;
-				l = Math.random() * 10;
-				while (j < l) {
-					fun += '.';
-					i++;
-					j++;
-				}
-			} else {
-				if (Math.random() > 0.5 && pile > 0) {
-					j = 0;
-					l = Math.random() * 5;
-					while (j < l && pile > 0) {
-						fun += ')';
-						pile--;
-						j++;
-						i++;
-					}
-				} else {
-					j = 0;
-					l = Math.random() * 5;
-					while (j < l) {
-						fun += '(';
-						pile++;
-						j++;
-						i++;
-					}
-
-				}
-			}
-		}
-		while (pile > 0) {
-			fun += ')';
-			pile--;
-		}
-		return fun;
+	@Override
+  public void keyReleased(KeyEvent e) {
 	}
 
-	public void keyReleased(KeyEvent e) {
+	@Override
+  public void keyTyped(KeyEvent e) {
 	}
 
-	public void keyTyped(KeyEvent e) {
-	}
-
-	public void focusGained(FocusEvent arg0) {
+	@Override
+  public void focusGained(FocusEvent arg0) {
 		_vp.repaint();
 	}
 
-	public void focusLost(FocusEvent arg0) {
+	@Override
+  public void focusLost(FocusEvent arg0) {
 		_vp.repaint();
 	}
 }

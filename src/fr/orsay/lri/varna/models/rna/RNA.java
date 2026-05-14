@@ -122,13 +122,13 @@ public class RNA implements InterfaceVARNAObservable {
   /**
    * Selects the RNAView algorithm.
    */
-  public static final int DRAW_MODE_MOTIFVIEW = 6;
+//  public static final int DRAW_MODE_MOTIFVIEW = 6;
 
   public static final int DRAW_MODE_TEMPLATE = 7;
 
   public static final int DEFAULT_DRAW_MODE = DRAW_MODE_RADIATE;
 
-  public int BASE_RADIUS = 10;
+  public final static int BASE_RADIUS = 10;
   public static final double LOOP_DISTANCE = 40.0; // distance between base
   // pairs in an helix
   public static final double BASE_PAIR_DISTANCE = 65.0; // distance between
@@ -276,6 +276,7 @@ public class RNA implements InterfaceVARNAObservable {
   
   public int[] caretToIndex;
   private transient int textOffset;
+  private Map<String, Object> dssrInfo;
 
   /**
    * return null if set is not empty but there are no applicable residues
@@ -663,7 +664,7 @@ public class RNA implements InterfaceVARNAObservable {
 
   }
 
-  private void saveRNA(String path, VARNAConfig conf, double scale,
+  private static void saveRNA(RNA r, String path, VARNAConfig conf, double scale,
                        SecStrDrawingProducer out)
       throws ExceptionWritingForbidden {
     out.setScale(scale);
@@ -675,7 +676,11 @@ public class RNA implements InterfaceVARNAObservable {
     double maxY = Double.MIN_VALUE;
 
     double x0, y0, x1, y1, xc, yc, xp, yp, dx, dy, norm;
+    
+    ArrayList<ModeleBase> _listeBases = r._listeBases;
 
+    int drawMode = r.getDrawMode();
+    
     for (int i = 0; i < _listeBases.size(); i++) {
       minX = Math.min(minX,
           (_listeBases.get(i).getCoords().getX() - BASE_RADIUS - EPSMargin));
@@ -695,13 +700,13 @@ public class RNA implements InterfaceVARNAObservable {
       yp = -(_listeBases.get(i).getCoords().getY() - minY);
       coords[i] = new Point2D.Double(xp, yp);
 
-      Point2D.Double centerBck = getCenter(i);
-      if (get_drawMode() == RNA.DRAW_MODE_NAVIEW
-          || get_drawMode() == RNA.DRAW_MODE_RADIATE) {
+      Point2D.Double centerBck = r.getCenter(i);
+      if (r.get_drawMode() == RNA.DRAW_MODE_NAVIEW
+          || r.get_drawMode() == RNA.DRAW_MODE_RADIATE) {
         if ((_listeBases.get(i).getElementStructure() != -1)
             && i < _listeBases.size() - 1 && i > 1) {
-          ModeleBase b1 = get_listeBases().get(i - 1);
-          ModeleBase b2 = get_listeBases().get(i + 1);
+          ModeleBase b1 = _listeBases.get(i - 1);
+          ModeleBase b2 = _listeBases.get(i + 1);
           int j1 = b1.getElementStructure();
           int j2 = b2.getElementStructure();
           if ((j1 == -1) ^ (j2 == -1)) {
@@ -731,7 +736,7 @@ public class RNA implements InterfaceVARNAObservable {
       out.setBackgroundColor(conf._backgroundColor);
 
     // Drawing region highlights
-    renderRegionHighlights(out, coords, centers);
+    r.renderRegionHighlights(out, coords, centers);
 
     // Drawing backbone
     if (conf._drawBackbone) {
@@ -746,12 +751,12 @@ public class RNA implements InterfaceVARNAObservable {
         double dist = p1.distance(p2);
         int a = _listeBases.get(i - 1).getElementStructure();
         int b = _listeBases.get(i).getElementStructure();
-        BackboneType bt = _backbone.getTypeBefore(i);
+        BackboneType bt = r._backbone.getTypeBefore(i);
         boolean consecutivePair = (a == i) && (b == i - 1);
 
         if (dist > 0) {
           if (bt != BackboneType.DISCONTINUOUS_TYPE) {
-            Color c = _backbone.getColorBefore(i, conf._backboneColor);
+            Color c = r._backbone.getColorBefore(i, conf._backboneColor);
             if (bt == BackboneType.MISSING_PART_TYPE) {
               c.brighter();
             }
@@ -759,13 +764,13 @@ public class RNA implements InterfaceVARNAObservable {
 
             vn.x = (x1 - x0) / dist;
             vn.y = (y1 - y0) / dist;
-            if (consecutivePair && (getDrawMode() != RNA.DRAW_MODE_LINEAR)
-                && (getDrawMode() != RNA.DRAW_MODE_CIRCULAR)) {
+            if (consecutivePair && (drawMode != RNA.DRAW_MODE_LINEAR)
+                && (drawMode != RNA.DRAW_MODE_CIRCULAR)) {
               int dir = 0;
               if (i + 1 < coords.length) {
-                dir = (testDirectionality(i - 1, i, i + 1) ? 1 : -1);
+                dir = (r.testDirectionality(i - 1, i, i + 1) ? 1 : -1);
               } else if (i - 2 >= 0) {
-                dir = (testDirectionality(i - 2, i - 1, i) ? 1 : -1);
+                dir = (r.testDirectionality(i - 2, i - 1, i) ? 1 : -1);
               }
               Point2D.Double centerSeg = new Point2D.Double((p1.x + p2.x) / 2.0,
                   (p1.y + p2.y) / 2.0);
@@ -812,7 +817,7 @@ public class RNA implements InterfaceVARNAObservable {
       if (_listeBases.get(i).getElementStructure() > i) {
         ModeleBP style = _listeBases.get(i).getStyleBP();
         if (style.isCanonical() || conf._drawnNonCanonicalBP) {
-          Color bpcol = getBasePairColor(style, conf);
+          Color bpcol = r.getBasePairColor(style, conf);
           out.setColor(bpcol);
 
           int j = _listeBases.get(i).getElementStructure();
@@ -826,12 +831,12 @@ public class RNA implements InterfaceVARNAObservable {
           dx /= norm;
           dy /= norm;
 
-          if (_drawMode == DRAW_MODE_CIRCULAR || _drawMode == DRAW_MODE_RADIATE
-              || _drawMode == DRAW_MODE_NAVIEW) {
-            drawBasePair(out, new Point2D.Double(x0, y0),
+          if (drawMode == DRAW_MODE_CIRCULAR || drawMode == DRAW_MODE_RADIATE
+              || drawMode == DRAW_MODE_NAVIEW) {
+            r.drawBasePair(out, new Point2D.Double(x0, y0),
                 new Point2D.Double(x1, y1), style, conf);
-          } else if (_drawMode == DRAW_MODE_LINEAR) {
-            drawBasePairArc(out, i, j, new Point2D.Double(x0, y0),
+          } else if (drawMode == DRAW_MODE_LINEAR) {
+            r.drawBasePairArc(out, i, j, new Point2D.Double(x0, y0),
                 new Point2D.Double(x1, y1), style, conf);
           }
         }
@@ -840,9 +845,9 @@ public class RNA implements InterfaceVARNAObservable {
 
     // Drawing additional bonds
     if (conf._drawnNonPlanarBP) {
-      for (int i = 0; i < _structureAux.size(); i++) {
-        ModeleBP bp = _structureAux.get(i);
-        out.setColor(getBasePairColor(bp, conf));
+      for (int i = 0; i < r._structureAux.size(); i++) {
+        ModeleBP bp = r._structureAux.get(i);
+        out.setColor(r.getBasePairColor(bp, conf));
 
         int a = bp.getPartner5().getIndex();
         int b = bp.getPartner3().getIndex();
@@ -857,13 +862,13 @@ public class RNA implements InterfaceVARNAObservable {
           norm = Math.sqrt(dx * dx + dy * dy);
           dx /= norm;
           dy /= norm;
-          if ((_drawMode == DRAW_MODE_CIRCULAR)
-              || (_drawMode == DRAW_MODE_RADIATE)
-              || _drawMode == DRAW_MODE_NAVIEW) {
-            drawBasePair(out, new Point2D.Double(x0, y0),
+          if ((drawMode == DRAW_MODE_CIRCULAR)
+              || (drawMode == DRAW_MODE_RADIATE)
+              || drawMode == DRAW_MODE_NAVIEW) {
+            r.drawBasePair(out, new Point2D.Double(x0, y0),
                 new Point2D.Double(x1, y1), bp, conf);
-          } else if (_drawMode == DRAW_MODE_LINEAR) {
-            drawBasePairArc(out, a, b, new Point2D.Double(x0, y0),
+          } else if (drawMode == DRAW_MODE_LINEAR) {
+            r.drawBasePairArc(out, a, b, new Point2D.Double(x0, y0),
                 new Point2D.Double(x1, y1), bp, conf);
           }
         }
@@ -878,9 +883,9 @@ public class RNA implements InterfaceVARNAObservable {
       x0 = coords[i].x;
       y0 = coords[i].y;
 
-      Color baseInnerColor = getBaseInnerColor(i, conf);
-      Color baseOuterColor = getBaseOuterColor(i, conf);
-      Color baseNameColor = getBaseNameColor(i, conf);
+      Color baseInnerColor = r.getBaseInnerColor(i, conf);
+      Color baseOuterColor = r.getBaseOuterColor(i, conf);
+      Color baseNameColor = r.getBaseNameColor(i, conf);
 //
 //      if (RNA.whiteLabelPreferrable(baseInnerColor)) {
 //        baseNameColor = Color.white;
@@ -926,7 +931,7 @@ public class RNA implements InterfaceVARNAObservable {
         basenum = i + 1;
       }
       ModeleBase mb = _listeBases.get(i);
-      if (this.isNumberDrawn(mb, conf._numPeriod)) {
+      if (r.isNumberDrawn(mb, conf._numPeriod)) {
         out.setColor(mb.getStyleBase().getBaseNumberColor());
         x0 = coords[i].x;
         y0 = coords[i].y;
@@ -948,11 +953,11 @@ public class RNA implements InterfaceVARNAObservable {
             mb.getLabel());
       }
     }
-    renderAnnotations(out, minX, minY, conf);
+    r.renderAnnotations(out, minX, minY, conf);
 
     // Draw color map
     if (conf._drawColorMap) {
-      drawColorMap(conf, out);
+      r.drawColorMap(conf, out);
     }
 
     // Drawing Title
@@ -961,8 +966,8 @@ public class RNA implements InterfaceVARNAObservable {
     out.setColor(conf._titleColor);
     out.setFont(SecStrDrawingProducer.FONT_HELVETICA, titleFontSize);
     double yTitle = currentBBox.y - titleFontSize / 2.0;
-    if (!getName().equals("")) {
-      out.drawText((maxX - minX) / 2.0, yTitle, getName());
+    if (!r.getName().equals("")) {
+      out.drawText((maxX - minX) / 2.0, yTitle, r.getName());
     }
 
     OutputStreamWriter fout;
@@ -1106,34 +1111,35 @@ public class RNA implements InterfaceVARNAObservable {
   }
 
   public boolean isNumberDrawn(ModeleBase mb, int numPeriod) {
-    if (numPeriod <= 0)
-      return false;
-    return ((mb.getIndex() == 0) || ((mb.getResidueNumber()) % numPeriod == 0)
-        || (mb.getIndex() == get_listeBases().size() - 1));
+    return (numPeriod > 0 && (
+           mb.getIndex() == 0 
+        || mb.getResidueNumber() % numPeriod == 0
+        || mb.getIndex() == get_listeBases().size() - 1
+        ));
   }
 
   public void saveRNAEPS(String path, VARNAConfig conf)
       throws ExceptionWritingForbidden {
     PSExport out = new PSExport();
-    saveRNA(path, conf, 0.4, out);
+    saveRNA(this, path, conf, 0.4, out);
   }
 
   public void saveRNAXFIG(String path, VARNAConfig conf)
       throws ExceptionWritingForbidden {
     XFIGExport out = new XFIGExport();
-    saveRNA(path, conf, 20, out);
+    saveRNA(this, path, conf, 20, out);
   }
 
   public void saveRNATIKZ(String path, VARNAConfig conf)
       throws ExceptionWritingForbidden {
     TikzExport out = new TikzExport();
-    saveRNA(path, conf, 0.15, out);
+    saveRNA(this, path, conf, 0.15, out);
   }
 
   public void saveRNASVG(String path, VARNAConfig conf)
       throws ExceptionWritingForbidden {
     SVGExport out = new SVGExport();
-    saveRNA(path, conf, 0.5, out);
+    saveRNA(this, path, conf, 0.5, out);
   }
 
   public Rectangle2D.Double getBBox() {
@@ -1238,8 +1244,7 @@ public class RNA implements InterfaceVARNAObservable {
   public void drawRNAVARNAView(VARNAConfig conf) {
     _drawn = true;
     _drawMode = DRAW_MODE_VARNA_VIEW;
-    VARNASecDraw vs = new VARNASecDraw();
-    vs.drawRNA(1, this);
+    new VARNASecDraw().drawRNA(1, this);
   }
 
   public void drawRNALine(VARNAConfig conf) {
@@ -1344,7 +1349,7 @@ public class RNA implements InterfaceVARNAObservable {
   public void drawRNA(int mode, VARNAConfig conf)
       throws ExceptionNAViewAlgorithm {
     _drawMode = mode;
-    switch (get_drawMode()) {
+    switch (mode) {
     case RNA.DRAW_MODE_RADIATE:
       drawRNARadiate(conf);
       break;
@@ -1360,6 +1365,7 @@ public class RNA implements InterfaceVARNAObservable {
     case RNA.DRAW_MODE_VARNA_VIEW:
       drawRNAVARNAView(conf);
       break;
+      // skipping MOTIF view here. 
     default:
       break;
     }
@@ -3583,7 +3589,7 @@ public class RNA implements InterfaceVARNAObservable {
     return _chemProbAnnotations;
   }
 
-  public void setColorMapValues(Double[] values, ModeleColorMap cm) {
+  public void setColorMapValues(double[] values, ModeleColorMap cm) {
     setColorMapValues(values, cm, false);
   }
 
@@ -3694,9 +3700,9 @@ public class RNA implements InterfaceVARNAObservable {
           vals.add(curVals.get(curVals.size() - 1));
       }
 
-      Double[] v = new Double[vals.size()];
+      double[] v = new double[vals.size()];
       for (int i = 0; i < Math.min(vals.size(), getSize()); i++) {
-        v[i] = vals.get(i);
+        v[i] = vals.get(i).doubleValue();
       }
       setColorMapValues(v, cm, true);
       if (isDotPlot) {
@@ -3708,12 +3714,12 @@ public class RNA implements InterfaceVARNAObservable {
     }
   }
 
-  public void setColorMapValues(Double[] values, ModeleColorMap cm,
+  public void setColorMapValues(double[] values, ModeleColorMap cm,
                                 boolean rescaleColorMap) {
     if (values.length > 0) {
-      for (int i = 0; i < Math.min(values.length, _listeBases.size()); i++) {
+      for (int i = 0, n = Math.min(values.length, _listeBases.size()); i < n; i++) {
         ModeleBase mb = _listeBases.get(i);
-        mb.setValue(values[i].doubleValue());
+        mb.setValue(values[i]);
       }
       if (rescaleColorMap) {
         adaptColorMapToValues(cm);
@@ -4188,7 +4194,6 @@ public class RNA implements InterfaceVARNAObservable {
         _listeBases.get(index.intValue()).setColor(c);
       }
     }
-    System.out.println("???");
   }
 
   public void clearSelections() {
@@ -4253,6 +4258,14 @@ public class RNA implements InterfaceVARNAObservable {
 
   public int getTextOffset() {
     return textOffset;
+  }
+
+  public void setDSSRInfo(Map<String, Object> dssrInfo) {
+    this.dssrInfo = dssrInfo;
+  }
+
+  public Map<String, Object> getDSSRInfo() {
+    return dssrInfo;
   }
 
 }
