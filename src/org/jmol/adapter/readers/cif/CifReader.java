@@ -32,8 +32,6 @@ import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.api.JmolAdapter;
 import org.jmol.script.T;
-import org.jmol.symmetry.SymmetryOperation;
-import org.jmol.util.Escape;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Vibration;
@@ -43,8 +41,6 @@ import javajs.api.GenericCifDataParser;
 import javajs.util.BS;
 import javajs.util.CifDataParser;
 import javajs.util.Lst;
-import javajs.util.M3d;
-import javajs.util.M4d;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.Rdr;
@@ -165,14 +161,14 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean allowWyckoff = true;
   private boolean stopOn_SHELX_HKL;
   private boolean spinFrameSetByFILTER;
+  private String spinFrame;
+  private String spinFrameExt;
 
   // need resets on data_ tag
   
   protected boolean isMagCIF, isSpinCIF;
   private boolean haveSpinReferences;
   private boolean haveMagneticMoments;
-  private String spinFrame;
-  private String spinFrameExt;
   private boolean spinOnly;
   private int maxOps = -1; // never changed
   private int nops; // never significant
@@ -628,7 +624,7 @@ public class CifReader extends AtomSetCollectionReader {
    * @param isFrom
    *        TRUE for SUPERCELL or "_from_parent" or "child_transform"
    */
-  public void addCellType(String type, String data, boolean isFrom) {
+  private void addCellType(String type, String data, boolean isFrom) {
     if (htCellTypes == null)
       htCellTypes = new Hashtable<String, String>();
     if (data.startsWith("!")) {
@@ -851,14 +847,14 @@ public class CifReader extends AtomSetCollectionReader {
         bs.setBitTo(i, asc.atoms[i].vib != null && asc.atoms[i].vib.lengthSquared() > 0);
       }
     }
-    applySymTrajASCR();
     if (htCellTypes != null) {
       for (Entry<String, String> e : htCellTypes.entrySet()) {
         asc.setCurrentModelInfo(JC.UNITCELL_PREFIX + e.getKey(), e.getValue());
         appendLoadNote(JC.UNITCELL_PREFIX + e.getKey() + " = " + e.getValue());
       }
-      htCellTypes = null;
     }
+    applySymTrajASCR();
+    htCellTypes = null;
     if (!haveCellWaveVector) {
       if (!isMolecular) {
         asc.setBSAtomsForSet(-1);
@@ -925,7 +921,8 @@ public class CifReader extends AtomSetCollectionReader {
     thisDataSetName = (key.length() < 6 ? "" : key.substring(5));
     if (thisDataSetName.length() > 0)
       nextAtomSet();
-    Logger.info(key);
+    if (debugging)
+        Logger.debug(key);
     resetGlobalsForNewData();
   }
 
@@ -1988,7 +1985,7 @@ public class CifReader extends AtomSetCollectionReader {
       }
       // auth_xxx are optional; label_xxx are required
       if (siteMult > 0 && wyckoff != null && wyckoff.length() > 0)
-        seqIdOrWyckoffCode = ((siteMult << 16)) | (int) wyckoff.charAt(0);
+        seqIdOrWyckoffCode = ((siteMult << 16)) | wyckoff.charAt(0);
       String strChain = componentId;
       if (haveAuth) {
         if (authAtom != null)

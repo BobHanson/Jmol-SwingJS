@@ -317,7 +317,7 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     addJmolScript("vectors on;vectors 0.15;");
     vibsFractional = true;
     int n = asc.getXSymmetry().setMagneticMoments(true);
-    asc.getXSymmetry().getSymmetry().setPrecision(fsgPrecision);
+    asc.getXSymmetry().getFileSymmetry().setPrecision(fsgPrecision);
     appendLoadNote(n
         + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
   }

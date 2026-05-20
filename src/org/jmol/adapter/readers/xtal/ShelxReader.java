@@ -379,7 +379,7 @@ public class ShelxReader extends AtomSetCollectionReader {
       if (!haveXYZ) {
         setSymmetryOperator("x,y,z");
       }
-      asc.getXSymmetry().getSymmetry().addInversion();
+      asc.getXSymmetry().getFileSymmetry().addInversion();
       isCentroSymmetric = false;
       haveXYZ = false;
     }

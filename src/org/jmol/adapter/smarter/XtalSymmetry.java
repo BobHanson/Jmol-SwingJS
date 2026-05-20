@@ -61,6 +61,11 @@ import javajs.util.V3d;
  * A class used by AtomSetCollection for building the symmetry of a model and
  * generating new atoms based on that symmetry.
  * 
+ * (I should have called this XtalBuilder, but it is what it is;
+ * XtalSymmetry.FileSymmetry is the actual Symmetry object.)
+ * 
+ * @author Bob Hanson
+ * 
  */
 public class XtalSymmetry {
 
@@ -554,7 +559,7 @@ public class XtalSymmetry {
   /**
    * the initial and main Symmetry object
    */
-  private FileSymmetry symmetry;
+  private FileSymmetry fileSymmetry;
 
   private double symmetryRange;
   private Lst<double[]> trajectoryUnitCells;
@@ -622,7 +627,7 @@ public class XtalSymmetry {
         : filter.indexOf("BYSYMOP") >= 0 ? PARTICLE_SYMOP : PARTICLE_NONE);
     doNormalize = false;
     Lst<String> biomtchains = (Lst<String>) thisBiomolecule.get("chains");
-    (symmetry = new FileSymmetry()).setSpaceGroup(doNormalize);
+    (fileSymmetry = new FileSymmetry()).setSpaceGroup(doNormalize);
     addSpaceGroupOperation("x,y,z", false);
     String name = (String) thisBiomolecule.get("name");
     setAtomSetSpaceGroupName(acr.sgName = name);
@@ -760,7 +765,7 @@ public class XtalSymmetry {
       // not the identity, which is always the first entry (set by Jmol in reader)
       // symmetry always has first operation x,y,z
       if (notIdentity)
-        symmetry.addBioMoleculeOperation(mat, false);
+        fileSymmetry.addBioMoleculeOperation(mat, false);
       if (addBonds) {
         // Clone bonds
         for (int bondNum = asc.bondIndex0; bondNum < bondCount0; bondNum++) {
@@ -896,7 +901,7 @@ public class XtalSymmetry {
 
     }
     noSymmetryCount = atomMax - firstAtom;
-    finalizeSymmetry(symmetry);
+    finalizeSymmetry(fileSymmetry);
     setCurrentModelInfo(len, null, null);
     reset();
 
@@ -911,7 +916,7 @@ public class XtalSymmetry {
    * @return base symmetry
    */
   public FileSymmetry getBaseSymmetry() {
-    return (baseSymmetry == null ? symmetry : baseSymmetry);
+    return (baseSymmetry == null ? fileSymmetry : baseSymmetry);
   }
 
   /**
@@ -919,8 +924,8 @@ public class XtalSymmetry {
    *  
    * @return symmetry field
    */
-  public FileSymmetry getSymmetry() {
-    return (symmetry == null ? (symmetry = new FileSymmetry()) : symmetry);
+  public FileSymmetry getFileSymmetry() {
+    return (fileSymmetry == null ? (fileSymmetry = new FileSymmetry()) : fileSymmetry);
   }
 
   public T3d getOverallSpan() {
@@ -941,7 +946,7 @@ public class XtalSymmetry {
   public XtalSymmetry set(AtomSetCollectionReader reader) {
     this.acr = reader;
     this.asc = reader.asc;
-    getSymmetry();
+    getFileSymmetry();
     return this;
   }
 
@@ -951,15 +956,15 @@ public class XtalSymmetry {
    * @param latt
    */
   public void setLatticeParameter(int latt) {
-    symmetry.setSpaceGroup(doNormalize);
-    symmetry.setLattice(latt);
+    fileSymmetry.setSpaceGroup(doNormalize);
+    fileSymmetry.setLattice(latt);
   }
 
   int addSpaceGroupOperation(String xyz, boolean andSetLattice) {
-    symmetry.setSpaceGroup(doNormalize);
-    if (andSetLattice && symmetry.getSpaceGroupOperationCount() == 1)
+    fileSymmetry.setSpaceGroup(doNormalize);
+    if (andSetLattice && fileSymmetry.getSpaceGroupOperationCount() == 1)
       setLatticeCells();
-    return symmetry.addSpaceGroupOperation(xyz, 0);
+    return fileSymmetry.addSpaceGroupOperation(xyz, 0);
   }
 
   /**
@@ -969,7 +974,7 @@ public class XtalSymmetry {
    * @return FileSymmetry
    */
   FileSymmetry setSymmetryFromAuditBlock(FileSymmetry symmetry) {
-    return (this.symmetry = symmetry);
+    return (this.fileSymmetry = symmetry);
   }
 
   /**
@@ -1005,7 +1010,7 @@ public class XtalSymmetry {
       packingRange = acr.getPackingRangeValue(0);
       if (doApplySymmetry) {
         if (readerSymmetry != null)
-          getSymmetry().setSpaceGroupTo(readerSymmetry.getSpaceGroup());
+          getFileSymmetry().setSpaceGroupTo(readerSymmetry.getSpaceGroup());
         //parameters are counts of unit cells as [a b c]
 
         applySymmetryLattice();
@@ -1028,7 +1033,7 @@ public class XtalSymmetry {
       // when the file to be appended has fractional coordinates and vibrations
       acr.addVibrations = false;
     }
-    return symmetry;
+    return fileSymmetry;
   }
 
   /**
@@ -1038,7 +1043,7 @@ public class XtalSymmetry {
    * @param htCellTypes 
    */
   public void finalizeMoments(String spinFrame, String spinFrameExt, Map<String, String> htCellTypes) {
-    getSymmetry().preSymmetryFinalizeMoments(acr, asc, spinFrame, spinFrameExt, htCellTypes);
+    getFileSymmetry().preSymmetryFinalizeMoments(acr, asc, spinFrame, spinFrameExt, htCellTypes);
   }
 
   /**
@@ -1064,7 +1069,7 @@ public class XtalSymmetry {
       if (a.anisoBorU == null)
         continue;
       // getTensor will return correct type
-      a.addTensor(symmetry.getTensor(acr.vwr, a.anisoBorU), null, false);
+      a.addTensor(fileSymmetry.getTensor(acr.vwr, a.anisoBorU), null, false);
       if (Double.isNaN(a.bfactor))
         a.bfactor = a.anisoBorU[7] * 100d;
       // prevent multiple additions
@@ -1081,7 +1086,7 @@ public class XtalSymmetry {
    */
   
   private void adjustRangeMinMax(T3d[] oabc) {
-    symmetry.adjustRangeMinMax(oabc, 
+    fileSymmetry.adjustRangeMinMax(oabc, 
         (acr.forcePacked ? packingRange : Double.NaN), minXYZ, maxXYZ, rmin, rmax, minXYZ, maxXYZ);
   }
 
@@ -1104,12 +1109,12 @@ public class XtalSymmetry {
     doPackUnitCell = acr.doPackUnitCell && !applySymmetryToBonds;
     bondCount0 = asc.bondCount;
     ndims = SimpleUnitCell.getDimensionFromParams(acr.unitCellParams);
-    finalizeSymmetry(symmetry);
-    int operationCount = symmetry.getSpaceGroupOperationCount();
+    finalizeSymmetry(fileSymmetry);
+    int operationCount = fileSymmetry.getSpaceGroupOperationCount();
     BS excludedOps = (acr.thisBiomolecule == null ? null : new BS());
     checkNearAtoms = acr.checkNearAtoms || excludedOps != null;
     SimpleUnitCell.setMinMaxLatticeParameters(ndims, minXYZ, maxXYZ, 0);
-    latticeOp = symmetry.getLatticeOp();
+    latticeOp = fileSymmetry.getLatticeOp();
     crystalReaderLatticeOpsOnly = (asc.crystalReaderLatticeOpsOnly
         && latticeOp >= 0); // CrystalReader
     if (doCentroidUnitCell)
@@ -1175,7 +1180,7 @@ public class XtalSymmetry {
     // incommensurate symmetry can have lattice centering, resulting in 
     // duplication of operators. There's a bug later on that requires we 
     // only do this with the first atom set for now, at least.
-    FileSymmetry sym = symmetry;
+    FileSymmetry sym = fileSymmetry;
     FileSymmetry lastSymmetry = sym;
     checkAll = (crystalReaderLatticeOpsOnly
         || asc.atomSetCount == 1 && checkNearAtoms && latticeOp >= 0);
@@ -1226,7 +1231,7 @@ public class XtalSymmetry {
             Atom atom = atoms[firstAtom + pt];
             if (ms != null) {
               // incommensurately modulated structure
-              sym = ms.getAtomSymmetry(atom, this.symmetry);
+              sym = ms.getAtomSymmetry(atom, this.fileSymmetry);
               if (sym != lastSymmetry) {
                 if (sym.getSpaceGroupOperationCount() == 0)
                   finalizeSymmetry(sym);
@@ -1333,7 +1338,7 @@ public class XtalSymmetry {
     Atom[] atoms = asc.atoms;
     for (int i = asc.ac; --i >= firstAtom;) {
       pt0.setT(atoms[i]);
-      symmetry.toCartesian(pt0, false);
+      fileSymmetry.toCartesian(pt0, false);
       superSymmetry.toFractional(pt0, false);
       //acr.fixFloatPt(pt0, PT.FRACTIONAL_PRECISION); // LEGACY ONLY
       if (acr.noPack
@@ -1360,7 +1365,7 @@ public class XtalSymmetry {
     Atom[] atoms = asc.atoms;
     int atomCount = asc.ac;
     for (int i = iAtomFirst; i < atomCount; i++) {
-      symmetry.toCartesian(atoms[i], true);
+      fileSymmetry.toCartesian(atoms[i], true);
       bsAtoms.set(i);
     }
 
@@ -1369,11 +1374,11 @@ public class XtalSymmetry {
     //      oldParams = symmetry.getUnitCellParams();
 
     asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_CONVENTIONAL,
-        symmetry.getV0abc("a,b,c", null));
+        fileSymmetry.getV0abc("a,b,c", null));
     V3d va = vabc[0];
     V3d vb = vabc[1];
     V3d vc = vabc[2];
-    symmetry = new FileSymmetry();
+    fileSymmetry = new FileSymmetry();
     setUnitCell(new double[] { // 27 values
         0, 0, 0, 0, 0, 0, // abc al be ga
         va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z, 0, 0, 0, 0, 0, 0, // m21 22 23 30 31 32 33
@@ -1384,18 +1389,18 @@ public class XtalSymmetry {
     String name = oabc == null || supercell == null ? "P1"
         : "cell=" + supercell;
     setAtomSetSpaceGroupName(name);
-    symmetry.setSpaceGroupName(name);
-    symmetry.setSpaceGroup(doNormalize);
-    symmetry.addSpaceGroupOperation("x,y,z", 0);
+    fileSymmetry.setSpaceGroupName(name);
+    fileSymmetry.setSpaceGroup(doNormalize);
+    fileSymmetry.addSpaceGroupOperation("x,y,z", 0);
 
     // 4) reset atoms to fractional values in this new system
 
     if (pt0 != null && pt0.length() == 0)
       pt0 = null;
     if (pt0 != null)
-      symmetry.toFractional(pt0, true);
+      fileSymmetry.toFractional(pt0, true);
     for (int i = iAtomFirst; i < atomCount; i++) {
-      symmetry.toFractional(atoms[i], true);
+      fileSymmetry.toFractional(atoms[i], true);
       if (pt0 != null)
         atoms[i].sub(pt0);
     }
@@ -1416,7 +1421,7 @@ public class XtalSymmetry {
    * @throws Exception
    */
   private void applySymmetryLattice() throws Exception {
-    if (!asc.coordinatesAreFractional || symmetry.getSpaceGroup() == null)
+    if (!asc.coordinatesAreFractional || fileSymmetry.getSpaceGroup() == null)
       return;
     int maxX = latticeCells[0];
     int maxY = latticeCells[1];
@@ -1439,20 +1444,20 @@ public class XtalSymmetry {
     rmin = P3d.new3(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
     rmax = P3d.new3(-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE);
     if (acr.latticeType == null)
-      acr.latticeType = "" + symmetry.getLatticeType();
+      acr.latticeType = "" + fileSymmetry.getLatticeType();
     if (acr.isPrimitive) {
       asc.setCurrentModelInfo("isprimitive", Boolean.TRUE);
       if (!"P".equals(acr.latticeType) || acr.primitiveToCrystal != null) {
-        asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_CONVENTIONAL, symmetry
+        asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_CONVENTIONAL, fileSymmetry
             .getConventionalUnitCell(acr.latticeType, acr.primitiveToCrystal));
       }
     }
     setUnitCellSafely();
-    asc.setCurrentModelInfo("f2c", symmetry.getUnitCellF2C());
-    String s = symmetry.getSpaceGroupTitle();
+    asc.setCurrentModelInfo("f2c", fileSymmetry.getUnitCellF2C());
+    String s = fileSymmetry.getSpaceGroupTitle();
     if (s.indexOf("--") < 0)
       asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_F2C_TITLE, s);
-    asc.setCurrentModelInfo("f2cParams", symmetry.getUnitCellParams());
+    asc.setCurrentModelInfo("f2cParams", fileSymmetry.getUnitCellParams());
     if (acr.latticeType != null) {
       asc.setCurrentModelInfo("latticeType", acr.latticeType);
       if (acr.fillRange instanceof String) {
@@ -1466,7 +1471,7 @@ public class XtalSymmetry {
         }
       }
     }
-    baseSymmetry = symmetry;
+    baseSymmetry = fileSymmetry;
     if (acr.fillRange != null) {
       setMinMax(ndims, kcode, maxX, maxY, maxZ);
       applyRangeSymmetry(bsAtoms);
@@ -1487,7 +1492,7 @@ public class XtalSymmetry {
       if (mident == null)
         mident = new M4d();
       setUnitCellSafely();
-      oabc = symmetry.getV0abc(supercell, matSuper);
+      oabc = fileSymmetry.getV0abc(supercell, matSuper);
       matSuper.transpose33();
       if (oabc != null && !matSuper.equals(mident)) {
         // flag this to set symmetry to P1 in the end
@@ -1512,7 +1517,7 @@ public class XtalSymmetry {
       oabc = null;
     } else {
       bsAtoms = updateBSAtoms();
-      slop = symmetry.getPrecision();
+      slop = fileSymmetry.getPrecision();
       applySuperSymmetry(supercell, bsAtoms, iAtomFirst, oabc, pt0, vabc, slop);
     }
     setMinMax(ndims, kcode, maxX, maxY, maxZ);
@@ -1596,7 +1601,7 @@ public class XtalSymmetry {
   }
 
   private void setAtomSetSpaceGroupName(String spaceGroupName) {
-    symmetry.setSpaceGroupName(spaceGroupName);
+    fileSymmetry.setSpaceGroupName(spaceGroupName);
     String s = spaceGroupName + "";
     asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_F2C_TITLE, s);
     asc.setCurrentModelInfo(JC.INFO_FILE_SPACE_GROUP_NAME, s);
@@ -1608,9 +1613,9 @@ public class XtalSymmetry {
       asc.setCurrentModelInfo("presymmetryAtomCount",
           Integer.valueOf(noSymmetryCount));
       asc.setCurrentModelInfo(JC.INFO_BIO_SYMMETRY_COUNT, Integer.valueOf(n));
-      asc.setCurrentModelInfo(JC.INFO_BIO_SYMMETRY, symmetry);
+      asc.setCurrentModelInfo(JC.INFO_BIO_SYMMETRY, fileSymmetry);
     } else {
-      asc.setCurrentModelInfo(JC.INFO_FILE_SYMMETRY, symmetry);
+      asc.setCurrentModelInfo(JC.INFO_FILE_SYMMETRY, fileSymmetry);
       asc.setCurrentModelInfo("presymmetryAtomCount", Integer.valueOf(n));
       asc.setCurrentModelInfo("latticeDesignation",
           sym.getLatticeDesignation());
@@ -1620,29 +1625,29 @@ public class XtalSymmetry {
         asc.setCurrentModelInfo("supercell", acr.strSupercell);
     }
     asc.setCurrentModelInfo("presymmetryAtomIndex", Integer.valueOf(firstAtom));
-    int operationCount = symmetry.getSpaceGroupOperationCount();
+    int operationCount = fileSymmetry.getSpaceGroupOperationCount();
     if (operationCount > 0) {
       asc.setCurrentModelInfo(JC.INFO_SYMMETRY_OPERATIONS,
-          symmetry.getSymopList(doNormalize));
+          fileSymmetry.getSymopList(doNormalize));
       asc.setCurrentModelInfo(JC.INFO_SYMOPS_TEMP,
-          symmetry.getSymmetryOperations());
+          fileSymmetry.getSymmetryOperations());
     }
     asc.setCurrentModelInfo("symmetryCount", Integer.valueOf(operationCount));
     asc.setCurrentModelInfo("latticeType",
         acr.latticeType == null ? "P" : acr.latticeType);
-    asc.setCurrentModelInfo("intlTableNo", symmetry.getIntTableNumber());
+    asc.setCurrentModelInfo("intlTableNo", fileSymmetry.getIntTableNumber());
     asc.setCurrentModelInfo("intlTableIndex",
-        symmetry.getSpaceGroupInfoObj("itaIndex", null, false, false));
+        fileSymmetry.getSpaceGroupInfoObj("itaIndex", null, false, false));
     asc.setCurrentModelInfo("intlTableTransform",
-        symmetry.getSpaceGroupInfoObj("itaTransform", null, false, false));
-    asc.setCurrentModelInfo("intlTableJmolId", symmetry.getSpaceGroupJmolId());
+        fileSymmetry.getSpaceGroupInfoObj("itaTransform", null, false, false));
+    asc.setCurrentModelInfo("intlTableJmolId", fileSymmetry.getSpaceGroupJmolId());
     asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_INDEX,
-        Integer.valueOf(symmetry.getSpaceGroupIndex()));
+        Integer.valueOf(fileSymmetry.getSpaceGroupIndex()));
     asc.setCurrentModelInfo(JC.INFO_SPACE_GROUP_TITLE,
-        symmetry.getSpaceGroupTitle());
+        fileSymmetry.getSpaceGroupTitle());
     if (acr.sgName == null || acr.sgName.indexOf("?") >= 0
         || acr.sgName.indexOf("!") >= 0)
-      setAtomSetSpaceGroupName(acr.sgName = symmetry.getSpaceGroupName());
+      setAtomSetSpaceGroupName(acr.sgName = fileSymmetry.getSpaceGroupName());
   }
 
   private void setCurrentModelUCInfo(double[] unitCellParams,
@@ -1695,20 +1700,20 @@ public class XtalSymmetry {
     T3d[] range = null;
     boolean isRhombohedral = "R".equals(latticetype);
     if (rangeType.equals(AtomSetCollectionReader.CELL_TYPE_CONVENTIONAL)) {
-      range = symmetry.getConventionalUnitCell(latticetype,
+      range = fileSymmetry.getConventionalUnitCell(latticetype,
           acr.primitiveToCrystal);
     } else if (rangeType.equals(AtomSetCollectionReader.CELL_TYPE_PRIMITIVE)) {
-      range = symmetry.getUnitCellVectors();
-      symmetry.toFromPrimitive(true, latticetype.charAt(0), range,
+      range = fileSymmetry.getUnitCellVectors();
+      fileSymmetry.toFromPrimitive(true, latticetype.charAt(0), range,
           acr.primitiveToCrystal);
     } else if (isRhombohedral && rangeType.equals("rhombohedral")) {
-      if (symmetry.getUnitCellInfoType(SimpleUnitCell.INFO_IS_HEXAGONAL) == 1) {
+      if (fileSymmetry.getUnitCellInfoType(SimpleUnitCell.INFO_IS_HEXAGONAL) == 1) {
         rangeType = SimpleUnitCell.HEX_TO_RHOMB;
       } else {
         rangeType = null;
       }
     } else if (isRhombohedral && rangeType.equals("trigonal")) {
-      if (symmetry
+      if (fileSymmetry
           .getUnitCellInfoType(SimpleUnitCell.INFO_IS_RHOMBOHEDRAL) == 1) {
         rangeType = SimpleUnitCell.RHOMB_TO_HEX;
       } else {
@@ -1717,14 +1722,14 @@ public class XtalSymmetry {
     } else if (rangeType.equals("spin")) {
       rangeType = getBaseSymmetry().spinFrameStr;
     } else if (rangeType.startsWith(JC.UNITCELL_PREFIX)) {
-      rangeType = (String) asc.getAtomSetAuxiliaryInfoValue(-1, rangeType);
+        rangeType = (String) asc.getAtomSetAuxiliaryInfoValue(-1, rangeType);
     } else if (rangeType.indexOf(",") < 0 || rangeType.indexOf("a") < 0
         || rangeType.indexOf("b") < 0 || rangeType.indexOf("c") < 0) {
       // was not "a,b,c..."
       rangeType = null;
     }
     if (rangeType != null && range == null
-        && (range = symmetry.getV0abc(rangeType, null)) == null) {
+        && (range = fileSymmetry.getV0abc(rangeType, null)) == null) {
       rangeType = null;
     }
     if (rangeType == null)
@@ -1754,14 +1759,14 @@ public class XtalSymmetry {
       trajectoryUnitCells.addLast(unitCellParams);
     }
     asc.setGlobalBoolean(JC.GLOBAL_UNITCELLS);
-    getSymmetry().setUnitCellFromParams(unitCellParams, false,
+    getFileSymmetry().setUnitCellFromParams(unitCellParams, false,
         acr.cellSlop);
     // we need to set the auxiliary info as well, because 
     // ModelLoader creates a new symmetry object.
     if (unitCellOffset != null)
-      symmetry.setOffsetPt(unitCellOffset);
+      fileSymmetry.setOffsetPt(unitCellOffset);
     if (matUnitCellOrientation != null)
-      symmetry.initializeOrientation(matUnitCellOrientation);
+      fileSymmetry.initializeOrientation(matUnitCellOrientation);
     setCurrentModelUCInfo(unitCellParams, unitCellOffset,
         matUnitCellOrientation);
   }
@@ -1794,7 +1799,7 @@ public class XtalSymmetry {
     boolean checkRange111 = (symmetryRange > 0);
     boolean checkSymmetryMinMax = (isBaseCell && checkRange111);
     checkRange111 &= !isBaseCell;
-    int nOp = symmetry.getSpaceGroupOperationCount();
+    int nOp = fileSymmetry.getSpaceGroupOperationCount();
     Lst<M4d> lstNCS = acr.lstNCS;
     int nNCS = (lstNCS == null ? 0 : lstNCS.size());
     int nOperations = nOp + nNCS;
@@ -1811,7 +1816,7 @@ public class XtalSymmetry {
     boolean checkOps = (excludedOps != null);
     boolean addCartesian = (checkNearAtoms || checkSymmetryMinMax);
     BS bsAtoms = (acr.isMolecular ? null : asc.bsAtoms);
-    FileSymmetry sym = symmetry;
+    FileSymmetry sym = fileSymmetry;
     if (checkRangeNoSymmetry)
       baseCount = noSymmetryCount;
     int atomMax = firstAtom + noSymmetryCount;
@@ -1864,7 +1869,7 @@ public class XtalSymmetry {
               (iSym >= nOp ? lstNCS.get(iSym - nOp) : null), transX, transY,
               transZ, pttemp);          
         } else {
-          sym = ms.getAtomSymmetry(a, symmetry);
+          sym = ms.getAtomSymmetry(a, fileSymmetry);
           sym.newSpaceGroupPoint(a, iSym, null, transX, transY, transZ, pttemp);
           // COmmensurate structures may use a symmetry operator
           // to changes space groups.
@@ -2098,7 +2103,7 @@ public class XtalSymmetry {
       }
       p.atomSerial = a.atomSite;// ORIGINAL atomSite
       p.atomSite = a.atomSite;
-      symmetry.unitize(p);
+      fileSymmetry.unitize(p);
       boolean found = false;
       for (int ib = 0; ib < nbase; ib++) {
         Atom b = baseAtoms[ib];

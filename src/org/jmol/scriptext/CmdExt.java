@@ -5858,13 +5858,26 @@ public class CmdExt extends ScriptExt {
     return true;
   }
 
-  private void unitcell(int i, final int modelkitTok)
-      throws ScriptException {
+  /**
+   * 
+   * @param i
+   *        will be 2 for MODELKIT UNITCELL or SET UNITCELL; otherwise 1
+   * @param tok2
+   *        will be 0 generally, but could be T.fill or T.unitcell
+   * @throws ScriptException
+   */
+  private void unitcell(int i, final int tok2) throws ScriptException {
+    /**
+     * not a command; just resetting
+     */
+    boolean justReset = (tok2 == T.reset);
     ScriptEval eval = e;
     int icell = Integer.MAX_VALUE;
     int mad10 = Integer.MAX_VALUE;
     T3d pt = null;
-    TickInfo tickInfo = eval.tickParamAsStr(i, true, false, false);
+    TickInfo tickInfo = (tok2 == T.nada
+        ? eval.tickParamAsStr(i, true, false, false)
+        : null);
     i = eval.iToken;
     String id = null;
     T3d[] oabc = null;
@@ -5874,7 +5887,7 @@ public class CmdExt extends ScriptExt {
     boolean isReset = false;
     double packing = -1;
     SymmetryInterface sym = (chk ? null : vwr.getCurrentUnitCell());
-    int tok = tokAt(++i);
+    int tok = (justReset ? T.reset : tokAt(++i));
     switch (tok) {
     case T.none:
       if (!chk)
@@ -5884,7 +5897,10 @@ public class CmdExt extends ScriptExt {
     case T.reset:
       isReset = true;
       pt = P4d.new4(0, 0, 0, -1); // reset offset and range
-      eval.iToken++;
+      if (!justReset) {
+        eval.iToken++;
+      }
+      // it is possible to follow this by an axis diameter
       break;
     case T.surface:
       P4d plane = eval.hklParameter(i + 1, null, false);
@@ -6080,7 +6096,9 @@ public class CmdExt extends ScriptExt {
         newUC = s;
         break;
       }
-      if (!s.startsWith(JC.UNITCELL_PREFIX)) {
+      if (s.startsWith(JC.UNITCELL_PREFIX)) {
+        unitcell(0, T.reset);
+      } else {
         String stype = null;
         // parent, standard, conventional, primitive
         vwr.ms.setModelCagePts(-1, null, null);
@@ -6154,7 +6172,7 @@ public class CmdExt extends ScriptExt {
     default:
       // including "!" NOT
       Object[] ret = new Object[1];
-      if (getUnitCellParameter(i, ret)) {
+      if (!justReset & getUnitCellParameter(i, ret)) {
         oabc = (T3d[]) ret[0];
       } else {
         newUC = ret[0];
@@ -6168,12 +6186,12 @@ public class CmdExt extends ScriptExt {
           i--;
         }
       } else if (newUC != null) {
-        if (!chk && modelkitTok != 0) {
+        if (!chk && tok2 != T.nada) {
           if (sym == null) {
-            if (modelkitTok == T.fill)
+            if (tok2 == T.fill)
               return;
             assignSpaceGroup(null, "P1", newUC, packing, false, "unitcell");
-          } else if (modelkitTok != T.fill && sym.fixUnitCell((double[]) newUC)) {
+          } else if (tok2 != T.fill && sym.fixUnitCell((double[]) newUC)) {
             eval.invArgStr(
                 "Unit cell is incompatible with current space group");
           }
@@ -6184,7 +6202,7 @@ public class CmdExt extends ScriptExt {
       }
       break;
     }
-    switch (modelkitTok) {
+    switch (tok2) {
     case T.fill:
       if (eval.isFloatParameter(i + 1)) {
         // MODELKIT FILL "2a,2b,2c" 0.3
@@ -6203,19 +6221,17 @@ public class CmdExt extends ScriptExt {
       }
       //$FALL-THROUGH$
     default:
-      mad10 = eval.getSetAxesTypeMad10(++i);
+      mad10 = (justReset ? 1 : eval.getSetAxesTypeMad10(++i));
       break;
     }
-    eval.checkLast(eval.iToken);
+    if (!justReset)
+      eval.checkLast(eval.iToken);
     if (chk || mad10 == Integer.MAX_VALUE)
       return;
     if (oabc == null && newUC != null)
       oabc = vwr.getV0abc(-1, newUC);
-    if (modelkitTok == T.fill) {
-      if (sym == null 
-          || icell != Integer.MAX_VALUE 
-          || id != null 
-          || isReset)
+    if (tok2 == T.fill) {
+      if (sym == null || icell != Integer.MAX_VALUE || id != null || isReset)
         invArg();
       if (oabc == null) {
         oabc = sym.getUnitCellVectors();
@@ -6227,7 +6243,7 @@ public class CmdExt extends ScriptExt {
       vwr.getModelkit(false).cmdFillOABC(oabc, packing, e.fullCommand);
       return;
     }
-      
+
     if (icell != Integer.MAX_VALUE) {
       // icell e.g. 555
       if (sym != null)
@@ -6235,11 +6251,11 @@ public class CmdExt extends ScriptExt {
     } else if (id != null) {
       vwr.setCurrentCage(id);
     } else if (isReset || oabc != null) {
-      isReset = (modelkitTok == T.unitcell || sym == null
+      isReset = (tok2 == T.unitcell || sym == null
           ? vwr.getModelkit(false).transformAtomsToUnitCell(sym, oabc, ucname)
           : true);
       if (isReset) {
-        if (modelkitTok == T.unitcell && sym != null) {
+        if (tok2 == T.unitcell && sym != null) {
           vwr.ms.setSpaceGroup(vwr.am.cmi, sym.getUnitCell(oabc, false, null),
               null);
           return;
@@ -6250,7 +6266,8 @@ public class CmdExt extends ScriptExt {
         }
       }
     }
-    SymmetryInterface sym0 = (modelkitTok == T.unitcell ? vwr.ms.getUnitCell(-1 - vwr.am.cmi)
+    SymmetryInterface sym0 = (tok2 == T.unitcell
+        ? vwr.ms.getUnitCell(-1 - vwr.am.cmi)
         : null);
     eval.setObjectMad10(JC.SHAPE_UCCAGE, "unitCell", mad10);
     if (pt != null) {
@@ -6258,11 +6275,11 @@ public class CmdExt extends ScriptExt {
       if (sym != null)
         sym.setOffsetPt(pt);
     }
-    if (modelkitTok == T.unitcell && sym.getFractionalOffset(true) == null) {
+    if (tok2 == T.unitcell && sym.getFractionalOffset(true) == null) {
       sym.setSpaceGroupTo(sym0);
       if (packing >= 0)
         vwr.getModelkit(false).cmdPackUnitCell(sym,
-      vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi), packing);
+            vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi), packing);
     }
     if (tickInfo != null)
       setShapeProperty(JC.SHAPE_UCCAGE, "tickInfo", tickInfo);

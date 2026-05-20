@@ -52,6 +52,7 @@ import org.jmol.util.Logger;
 import org.jmol.viewer.Viewer.ACCESS;
 
 import javajs.api.BytePoster;
+import javajs.api.GenericCifDataParser;
 import javajs.util.AU;
 import javajs.util.BArray;
 import javajs.util.Base64;
@@ -1884,11 +1885,10 @@ public class FileManager implements BytePoster {
       String zipDirectory = vwr.getZipDirectoryAsString(fileName);
       if (zipDirectory.indexOf("JmolManifest") >= 0)
         return "Jmol";
-      modelType = vwr.getModelAdapter()
-          .getFileTypeName(Rdr.getBR(zipDirectory));
+      modelType = getFileTypeName(Rdr.getBR(zipDirectory));
     } else if (br instanceof BufferedReader
         || br instanceof BufferedInputStream) {
-      modelType = vwr.getModelAdapter().getFileTypeName(br);
+      modelType = getFileTypeName(br);
     }
     if (modelType != null)
       return modelType + "::";
@@ -1897,6 +1897,7 @@ public class FileManager implements BytePoster {
     }
     return null;
   }
+
 
   private void checkResize(String fname) {
     try {
@@ -1918,5 +1919,64 @@ public class FileManager implements BytePoster {
     return staticJmolDataReader;
   }
 
+  public Map<String, Object> readCifData(String fnameOrCifData,
+                                         String type) {
+    boolean isData = (fnameOrCifData != null && fnameOrCifData.indexOf("#CIF") >= 0);
+    String[] keys = null;
+    int pt = (fnameOrCifData == null ? -1 : fnameOrCifData.indexOf(";keys="));
+    if (pt >= 0) {
+      keys = fnameOrCifData.substring(pt + 6).split(",");
+      fnameOrCifData = fnameOrCifData.substring(0, pt);
+    }
+    if (type == null && fnameOrCifData != null
+        && fnameOrCifData.toUpperCase().indexOf("BCIF") >= 0) {
+      BufferedInputStream is = getBufferedInputStream(fnameOrCifData);
+      try {
+        return ((javajs.util.MessagePackReader) Interface
+            .getInterface("javajs.util.MessagePackReader", vwr, "script"))
+                .getMapForStream(is);
+      } catch (Exception e) {
+        e.printStackTrace();
+        return new Hashtable<String, Object>();
+      }
+    }
+    String data = (isData ? fnameOrCifData : fnameOrCifData == null || fnameOrCifData.length() == 0
+        ? vwr.getCurrentFileAsString("script")
+        : getAsciiFileOrNull(fnameOrCifData));
+    if (data == null || data.length() < 2)
+      return null;
+    BufferedReader rdr = Rdr.getBR(data);
+    if (type == null)
+      type = getFileTypeName(rdr);
+    return (type == null ? null : readCifDataKey(rdr, type, keys));
+  }
+
+  /**
+   * 
+   * @param rdrOrStringData
+   * @param type CIF (default) or BCIF
+   * @param keys
+   * @return map of CIF data
+   */
+  Map<String, Object> readCifDataKey(Object rdrOrStringData,
+                                     String type, String[] keys) {
+    BufferedReader rdr = (rdrOrStringData instanceof BufferedReader
+        ? (BufferedReader) rdrOrStringData
+        : Rdr.getBR((String) rdrOrStringData));
+    return Rdr.readCifData((GenericCifDataParser) Interface.getInterface(
+        ("Cif2".equals(type) ? "org.jmol.adapter.readers.cif.Cif2DataParser"
+            : "javajs.util.CifDataParser"),
+        vwr, "script"), rdr, keys);
+  }
+
+  public String getAsciiFileOrNull(String name) {
+    String[] data = new String[] { name, null };
+    return (getFileDataAsString(data, -1, false, false, false) ? data[1]
+        : null);
+  }
+
+  private String getFileTypeName(Object br) {
+    return vwr.getModelAdapter().getFileTypeName(br);
+  }
 
 }

@@ -434,7 +434,7 @@ public class MSRdr implements MSInterface {
     //cr.symmetry = cr.asc.getSymmetry();
     if (symmetry != null)
       nOps = symmetry.getSpaceGroupOperationCount();
-    supercellSymmetry = cr.asc.getXSymmetry().getSymmetry();
+    supercellSymmetry = cr.asc.getXSymmetry().getFileSymmetry();
     if (supercellSymmetry  == symmetry)
       supercellSymmetry = null;
     iopLast = -1;

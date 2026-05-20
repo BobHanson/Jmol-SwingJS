@@ -860,7 +860,7 @@ public class PropertyManager implements JmolPropertyManager {
     case PROP_FILE_INFO:
       return getFileInfo(vwr.getFileData(), myParam.toString());
     case PROP_CIF_INFO:
-      return vwr.readCifData(myParam.toString(), null);
+      return vwr.fm.readCifData(myParam.toString(), null);
     case PROP_FILENAME:
       return vwr.fm.getFullPathName(false);
     case PROP_FILEHEADER:

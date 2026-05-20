@@ -719,7 +719,7 @@ public class AtomSetCollection {
     return getXSymmetry().newFileSymmetry();
   }
   public FileSymmetry getSymmetry() {
-    return getXSymmetry().getSymmetry();
+    return getXSymmetry().getFileSymmetry();
   }
 
   public FileSymmetry setSymmetryFromAuditBlock(FileSymmetry symmetry) {
