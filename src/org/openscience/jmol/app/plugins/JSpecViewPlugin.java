@@ -60,9 +60,16 @@ public class JSpecViewPlugin implements JmolPlugin {
     return JmolResourceHandler.getIconX("jspecview.png");
   }
 
+  private final static String openJSpecViewScript="|Open...=sync on; sync . \"" + JC.JSV_SYNC_KEYWORD_PREFIX + "\"";
+  private final static String  simulate1HSpectrum="|Simulated 1H Spectrum=sync on; sync . \"H1Simulate:\"";
+  private final static String  simulate13CSpectrum="|Simulated 13C Spectrum=sync on; sync . \"C13Simulate:\"";
+
   @Override
-  public String getMenuText() {
-    return "JSpecView";
+  public String getMenuText() {    
+    return "JSpecView" 
+        + openJSpecViewScript
+        + simulate1HSpectrum
+        + simulate13CSpectrum;
   }
 
   @Override

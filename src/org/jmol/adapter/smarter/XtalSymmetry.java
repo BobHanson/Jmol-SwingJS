@@ -1062,7 +1062,7 @@ public class XtalSymmetry {
         : getBaseSymmetry().postSymmetrySetMagneticMoments(asc, isCartesian));
   }
 
-  void setTensors() {
+  void setTensors(boolean andSetBFactor) {
     int n = asc.ac;
     for (int i = asc.getLastAtomSetAtomIndex(); i < n; i++) {
       Atom a = asc.atoms[i];
@@ -1070,7 +1070,7 @@ public class XtalSymmetry {
         continue;
       // getTensor will return correct type
       a.addTensor(fileSymmetry.getTensor(acr.vwr, a.anisoBorU), null, false);
-      if (Double.isNaN(a.bfactor))
+      if (Double.isNaN(a.bfactor) && andSetBFactor)
         a.bfactor = a.anisoBorU[7] * 100d;
       // prevent multiple additions
       a.anisoBorU = null;

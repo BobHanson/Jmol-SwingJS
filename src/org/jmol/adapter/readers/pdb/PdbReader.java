@@ -334,6 +334,8 @@ public class PdbReader extends AtomSetCollectionReader {
         return remark350();
       if (line.startsWith("REMARK 290"))
         return remark290();
+      if (line.startsWith("REMARK 998"))
+        return remark998();
       if (line.contains("This file does not adhere to the PDB standard")) {
         gromacsWideFormat = true;
       }
@@ -848,6 +850,16 @@ public class PdbReader extends AtomSetCollectionReader {
     return false;
   } 
   
+  private boolean remark998() {
+    // looking for 
+    //  REMARK 998   This file has been modified by ConSurf. 
+    if (asc.isConSurf == null) {
+      if (line.indexOf("ConSurf") >= 0)
+         asc.isConSurf = Boolean.TRUE;
+    }
+    return true;
+  }
+
   private int getSerial(int i, int j) {
     char c = line.charAt(i);
     boolean isBase10 = (c == ' ' || line.charAt(j - 1) == ' ');
@@ -1084,7 +1096,6 @@ public class PdbReader extends AtomSetCollectionReader {
        * read the bfactor from cols 61-66 (1-based)
        ****************************************************************/
         atom.bfactor = parseDoubleRange(line, 60, 66);
-        
     }
     
     atom.foccupancy = (Double.isNaN(floatOccupancy) ? 1 : floatOccupancy);

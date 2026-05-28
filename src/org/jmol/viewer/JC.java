@@ -1564,10 +1564,20 @@ public final class JC {
 
   public static int getServiceCommand(String script) {
     return (script.length() < 7 ? -1
-        : ("" + "JSPECVI" + "PEAKS: " + "SELECT:" + "JSVSTR:" + "H1SIMUL"
-            + "C13SIMU" + "NBO:MOD" + "NBO:RUN" + "NBO:VIE" + "NBO:SEA"
-            + "NBO:CON" + "NONESIM")
-                .indexOf(script.substring(0, 7).toUpperCase()));
+        : ("" //
+            + "JSPECVI"// 
+            + "PEAKS: "// 
+            + "SELECT:"// 
+            + "JSVSTR:"// 
+            + "H1SIMUL"//
+            + "C13SIMU"// 
+            + "NBO:MOD"// 
+            + "NBO:RUN"//
+            + "NBO:VIE"//
+            + "NBO:SEA"//
+            + "NBO:CON"// 
+            + "NONESIM"//
+        ).indexOf(script.substring(0, 7).toUpperCase()));
   }
 
   public final static String READER_NOT_FOUND = "File reader was not found:";

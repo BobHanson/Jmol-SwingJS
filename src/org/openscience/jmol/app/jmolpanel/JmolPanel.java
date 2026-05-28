@@ -2061,8 +2061,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       return;
     pluginsSet = true;
     try {
-      PropertyResourceBundle bundle = new PropertyResourceBundle(getClass()
-          .getResourceAsStream(
+      PropertyResourceBundle bundle = new PropertyResourceBundle(
+          getClass().getResourceAsStream(
               "/org/openscience/jmol/app/plugins/plugin.properties"));
       Enumeration<String> keys = bundle.getKeys();
       //System.out.println(bundle);
@@ -2081,25 +2081,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
         try {
           p = getAndRegisterPlugin(key, path);
           if (p != null) {
-            String text = p.getMenuText();
-            ImageIcon icon = p.getMenuIcon();
-            if (text == null)
-              text = key;
-            // add menu item
-            JMenuItem item = new JMenuItem(text);
-            if (icon != null) {
-              item.setHorizontalTextPosition(SwingConstants.RIGHT);
-              item.setIcon(icon);
-            }
-            pluginMenu.add(item);
-            item.addActionListener(new ActionListener() {
-
-              @Override
-              public void actionPerformed(ActionEvent e) {
-                showPlugin(key, null, null);
-              }
-
-            });
+            pluginMenu.add(getPluginMenu(p, key));
           }
         } catch (Exception e) {
           System.out.println("Cannot create plugin " + key + " " + path);
@@ -2109,6 +2091,59 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       throw new RuntimeException(ex.toString());
     }
     pluginMenu.setEnabled(pluginMenu.getPopupMenu().getComponentCount() > 0);
+  }
+
+  private JMenuItem getPluginMenu(JmolPlugin p, String key) {
+    String text = p.getMenuText();
+    ImageIcon icon = p.getMenuIcon();
+    if (text == null)
+      text = key;
+    JMenuItem item = null;
+    try {
+      if (text.indexOf("|") < 0) {
+        // add menu item
+        item = new JMenuItem(text);
+        item.addActionListener(new ActionListener() {
+
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            showPlugin(key, null, null);
+          }
+
+        });
+      } else {
+        // menulabel|label=script|label=script....
+        String[] items = PT.split(text, "|");
+        item = new JMenu(items[0]);
+        for (int i = 1; i < items.length; i++) {
+          String[] a = PT.split(items[i], "=");
+          String label = a[0];
+          String jmolScript = a[1];
+          addPluginMenuItem(item, label, jmolScript);
+        }
+      }
+      if (icon != null) {
+        item.setHorizontalTextPosition(SwingConstants.RIGHT);
+        item.setIcon(icon);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return item;
+  }
+
+  private void addPluginMenuItem(JMenuItem item, String label,
+                                 String jmolScript) {
+    JMenuItem m = new JMenuItem(label);
+    m.addActionListener(new ActionListener() {
+
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        vwr.script(jmolScript);
+      }
+      
+    });
+    item.add(m);
   }
 
   /**
@@ -2195,6 +2230,8 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       // mot reachable
       return Boolean.FALSE;
     default:
+      if (p != null)
+        p.notifyCallback(CBK.SYNC, data);
       return (p == null ? null : Boolean.TRUE);
     }
   }

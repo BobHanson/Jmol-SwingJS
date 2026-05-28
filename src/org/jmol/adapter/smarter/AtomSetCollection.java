@@ -82,7 +82,6 @@ public class AtomSetCollection {
   public int atomSetCount;
   public int iSet = -1;
 
-
   private int[] atomSetNumbers = new int[16];
   private int[] atomSetAtomIndexes = new int[16];
   public int[] atomSetAtomCounts = new int[16];
@@ -122,19 +121,19 @@ public class AtomSetCollection {
     p.put("PATH_SEPARATOR", SmarterJmolAdapter.PATH_SEPARATOR);
     setInfo("properties", p);
     if (reader != null) {
-    Integer ii = (Integer) reader.htParams.get("appendToModelIndex");   
-    if (ii != null)
-      this.setInfo("appendToModelIndex",ii);
-    ii = (Integer) reader.htParams.get("fixedSite");   
-    if (ii != null)
-      fixedSite = ii.intValue();    
+      Integer ii = (Integer) reader.htParams.get("appendToModelIndex");
+      if (ii != null)
+        this.setInfo("appendToModelIndex", ii);
+      ii = (Integer) reader.htParams.get("fixedSite");
+      if (ii != null)
+        fixedSite = ii.intValue();
     }
     if (array != null) {
       int n = 0;
       readerList = new Lst<AtomSetCollectionReader>();
       for (int i = 0; i < array.length; i++)
-        if (array[i] != null && (array[i].ac > 0 || array[i].reader != null
-            && array[i].reader.mustFinalizeModelSet))
+        if (array[i] != null && (array[i].ac > 0
+            || array[i].reader != null && array[i].reader.mustFinalizeModelSet))
           appendAtomSetCollection(n++, array[i]);
       if (n > 1)
         setInfo("isMultiFile", Boolean.TRUE);
@@ -169,11 +168,11 @@ public class AtomSetCollection {
     if (n <= 1)
       return;
     P3d[] trajectoryStep = new P3d[n];
-    boolean haveVibrations = (n > 0 && atoms[0].vib != null && !Double
-        .isNaN(atoms[0].vib.z));
+    boolean haveVibrations = (n > 0 && atoms[0].vib != null
+        && !Double.isNaN(atoms[0].vib.z));
     V3d[] vibrationStep = (haveVibrations ? new V3d[n] : null);
-    P3d[] prevSteps = (trajectoryStepCount == 0 ? null : (P3d[]) trajectorySteps
-        .get(trajectoryStepCount - 1));
+    P3d[] prevSteps = (trajectoryStepCount == 0 ? null
+        : (P3d[]) trajectorySteps.get(trajectoryStepCount - 1));
     for (int i = 0, ii = 0; i < ac; i++) {
       if (bsAtoms != null && !bsAtoms.get(i))
         continue;
@@ -193,7 +192,7 @@ public class AtomSetCollection {
       }
       vibrationSteps.addLast(vibrationStep);
     }
-    
+
     trajectorySteps.addLast(trajectoryStep);
     trajectoryStepCount++;
   }
@@ -282,7 +281,8 @@ public class AtomSetCollection {
 
   void freeze(boolean reverseModels) {
     if (atomSetCount == 1 && collectionName == null)
-      collectionName = (String) getAtomSetAuxiliaryInfoValue(0, JC.INFO_MODEL_NAME);
+      collectionName = (String) getAtomSetAuxiliaryInfoValue(0,
+          JC.INFO_MODEL_NAME);
     //Logger.debug("AtomSetCollection.freeze; ac = " + ac);
     if (reverseModels)
       reverseAtomSets();
@@ -491,8 +491,8 @@ public class AtomSetCollection {
     if (atomIncrement > 0)
       for (int i = 0; i < nBonds; i++) {
         Bond bond = bonds[bondCount - nBonds];
-        addNewBondWithOrder(bond.atomIndex1 + atomIncrement, bond.atomIndex2
-            + atomIncrement, bond.order);
+        addNewBondWithOrder(bond.atomIndex1 + atomIncrement,
+            bond.atomIndex2 + atomIncrement, bond.order);
       }
   }
 
@@ -537,7 +537,7 @@ public class AtomSetCollection {
     if (atomSetCount == 0)
       newAtomSet();
     atom.index = ac;
-    atoms[ac++] = atom;    
+    atoms[ac++] = atom;
     atom.atomSetIndex = iSet;
     atom.atomSite = (fixedSite > 0 ? fixedSite - 1 : atomSetAtomCounts[iSet]++);
     return atom;
@@ -567,7 +567,7 @@ public class AtomSetCollection {
       String name = e.getKey();
       String uc = name.toUpperCase();
       if (!uc.equals(name))
-        newMap.put(uc, e.getValue());      
+        newMap.put(uc, e.getValue());
     }
     atomSymbolicMap = newMap;
   }
@@ -581,41 +581,42 @@ public class AtomSetCollection {
 
   public Bond addNewBondWithOrder(int atomIndex1, int atomIndex2, int order) {
     Bond b = null;
-    if (atomIndex1 >= 0 && atomIndex1 < ac && atomIndex2 >= 0
-        && atomIndex2 < ac && atomIndex1 != atomIndex2) {
+    if (atomIndex1 >= 0 && atomIndex1 < ac && atomIndex2 >= 0 && atomIndex2 < ac
+        && atomIndex1 != atomIndex2) {
       b = new Bond(atomIndex1, atomIndex2, order);
       addBond(b);
     }
     return b;
   }
 
-  public Bond addNewBondFromNames(String atomName1, String atomName2, int order) {
-    return addNewBondWithOrderA(getAtomFromName(atomName1), getAtomFromName(atomName2), order);
+  public Bond addNewBondFromNames(String atomName1, String atomName2,
+                                  int order) {
+    return addNewBondWithOrderA(getAtomFromName(atomName1),
+        getAtomFromName(atomName2), order);
   }
 
-  public Bond addNewBondWithOrderA(Atom atom1, Atom atom2,
-                                    int order) {
-    return (atom1 != null && atom2 != null ? addNewBondWithOrder(atom1.index, atom2.index, order) : null);
+  public Bond addNewBondWithOrderA(Atom atom1, Atom atom2, int order) {
+    return (atom1 != null && atom2 != null
+        ? addNewBondWithOrder(atom1.index, atom2.index, order)
+        : null);
   }
 
   public void addBond(Bond bond) {
     if (trajectoryStepCount > 0)
       return;
-    if (bond.atomIndex1 < 0 || bond.atomIndex2 < 0
-        || bond.order < 0
-        || bond.atomIndex1 == bond.atomIndex2
-        ||
+    if (bond.atomIndex1 < 0 || bond.atomIndex2 < 0 || bond.order < 0
+        || bond.atomIndex1 == bond.atomIndex2 ||
         //do not allow bonds between models
         atoms[bond.atomIndex1].atomSetIndex != atoms[bond.atomIndex2].atomSetIndex) {
       if (Logger.debugging) {
-        Logger.debug(">>>>>>BAD BOND:" + bond.atomIndex1 + "-"
-            + bond.atomIndex2 + " order=" + bond.order);
+        Logger.debug(">>>>>>BAD BOND:" + bond.atomIndex1 + "-" + bond.atomIndex2
+            + " order=" + bond.order);
       }
       return;
     }
     addBondNoCheck(bond);
   }
-  
+
   public void addBondNoCheck(Bond bond) {
     if (bondCount == bonds.length)
       bonds = (Bond[]) AU.arrayCopyObject(bonds, bondCount + 1024);
@@ -711,24 +712,27 @@ public class AtomSetCollection {
   public XtalSymmetry getXSymmetry() {
     if (xtalSymmetry == null)
       xtalSymmetry = ((XtalSymmetry) Interface
-          .getOption("adapter.smarter.XtalSymmetry", reader.vwr, "file")).set(reader);
+          .getOption("adapter.smarter.XtalSymmetry", reader.vwr, "file"))
+              .set(reader);
     return xtalSymmetry;
   }
 
   public FileSymmetry newFileSymmetry() {
     return getXSymmetry().newFileSymmetry();
   }
+
   public FileSymmetry getSymmetry() {
     return getXSymmetry().getFileSymmetry();
   }
 
   public FileSymmetry setSymmetryFromAuditBlock(FileSymmetry symmetry) {
-    return (symmetry == null ? null : getXSymmetry().setSymmetryFromAuditBlock(symmetry));
+    return (symmetry == null ? null
+        : getXSymmetry().setSymmetryFromAuditBlock(symmetry));
   }
 
   public void setTensors() {
     if (haveAnisou)
-      getXSymmetry().setTensors();
+      getXSymmetry().setTensors(isConSurf != Boolean.TRUE);
   }
 
   int bondIndex0;
@@ -740,6 +744,8 @@ public class AtomSetCollection {
   public int vibScale;
 
   public int firstAtomToBond = -1; // topology dic only
+
+  public Boolean isConSurf;
 
   public void setInfo(String key, Object value) {
     if (value == null)
@@ -804,11 +810,9 @@ public class AtomSetCollection {
     if (trajectoryStepCount == 0)
       return;
     //reset atom positions to original trajectory
-    
-    
+
     P3d[] trajectory = trajectorySteps.get(0);
-    
-    
+
     V3d[] vibrations = (vibrationSteps == null ? null : vibrationSteps.get(0));
     int n = (bsAtoms == null ? ac : bsAtoms.cardinality());
     if (vibrationSteps != null && vibrations != null && vibrations.length < n
@@ -844,7 +848,8 @@ public class AtomSetCollection {
   /**
    * Create a new atom set, optionally clearing the atom map.
    * 
-   * @param doClearMap set to false only in CastepReader
+   * @param doClearMap
+   *        set to false only in CastepReader
    */
   public void newAtomSetClear(boolean doClearMap) {
 
@@ -911,7 +916,8 @@ public class AtomSetCollection {
     }
     String name0 = (iSet < 0 ? null : getAtomSetName(iSet));
     setModelInfoForSet(JC.INFO_MODEL_NAME, atomSetName, iSet);
-    if (reader != null && atomSetName.length() > 0 && !atomSetName.equals(name0))
+    if (reader != null && atomSetName.length() > 0
+        && !atomSetName.equals(name0))
       reader.appendLoadNote(atomSetName);
     // TODO -- trajectories could have different names. Need this for vibrations?
     if (!allowMultiple)
@@ -973,20 +979,20 @@ public class AtomSetCollection {
     Properties p = (Properties) getAtomSetAuxiliaryInfoValue(atomSetIndex,
         "modelProperties");
     if (p == null)
-      setModelInfoForSet("modelProperties", p = new Properties(),
-          atomSetIndex);
+      setModelInfoForSet("modelProperties", p = new Properties(), atomSetIndex);
     p.put(key, value);
     if (key.startsWith(".")) //.PATH will not be usable in Jmol
       p.put(key.substring(1), value);
   }
 
   /**
-   * @param key 
-   * @param data 
-   * @param atomSetIndex 
-   * @param isGroup  
+   * @param key
+   * @param data
+   * @param atomSetIndex
+   * @param isGroup
    */
-  public void setAtomProperties(String key, Object data, int atomSetIndex, boolean isGroup) {
+  public void setAtomProperties(String key, Object data, int atomSetIndex,
+                                boolean isGroup) {
     if (data instanceof String && !((String) data).endsWith("\n"))
       data = data + "\n";
     if (atomSetIndex < 0)
@@ -994,8 +1000,8 @@ public class AtomSetCollection {
     Map<String, Object> p = (Map<String, Object>) getAtomSetAuxiliaryInfoValue(
         atomSetIndex, "atomProperties");
     if (p == null)
-      setModelInfoForSet("atomProperties",
-          p = new Hashtable<String, Object>(), atomSetIndex);
+      setModelInfoForSet("atomProperties", p = new Hashtable<String, Object>(),
+          atomSetIndex);
     p.put(key, data);
   }
 
@@ -1045,8 +1051,7 @@ public class AtomSetCollection {
    * @param atomSetIndex
    *        The index of the AtomSet to get the property
    */
-  public void setModelInfoForSet(String key, Object value,
-                                            int atomSetIndex) {
+  public void setModelInfoForSet(String key, Object value, int atomSetIndex) {
     if (atomSetIndex < 0)
       return;
     if (atomSetAuxiliaryInfo[atomSetIndex] == null)
@@ -1066,12 +1071,12 @@ public class AtomSetCollection {
       return trajectoryNames.get(atomSetIndex);
     if (atomSetIndex >= atomSetCount)
       atomSetIndex = atomSetCount - 1;
-    return (String) getAtomSetAuxiliaryInfoValue(atomSetIndex, JC.INFO_MODEL_NAME);
+    return (String) getAtomSetAuxiliaryInfoValue(atomSetIndex,
+        JC.INFO_MODEL_NAME);
   }
 
   public Map<String, Object> getAtomSetAuxiliaryInfo(int atomSetIndex) {
-    int i = (atomSetIndex >= atomSetCount ? atomSetCount - 1
-        : atomSetIndex);
+    int i = (atomSetIndex >= atomSetCount ? atomSetCount - 1 : atomSetIndex);
     return (i < 0 ? null : atomSetAuxiliaryInfo[i]);
   }
 
@@ -1097,9 +1102,10 @@ public class AtomSetCollection {
     setModelInfoForSet("vibrationalMode", Integer.valueOf(mode), iSet);
     if (label != null)
       setAtomSetModelProperty("FrequencyLabel", label);
-    setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY, (pathKey == null ? ""
-        : pathKey + SmarterJmolAdapter.PATH_SEPARATOR + "Frequencies")
-        + "Frequencies");
+    setAtomSetModelProperty(SmarterJmolAdapter.PATH_KEY,
+        (pathKey == null ? ""
+            : pathKey + SmarterJmolAdapter.PATH_SEPARATOR + "Frequencies")
+            + "Frequencies");
     return name;
   }
 
@@ -1136,8 +1142,8 @@ public class AtomSetCollection {
   }
 
   /**
-   * note that sets must be iterated from LAST to FIRST
-   * not a general method -- would mess up if we had unit cells
+   * note that sets must be iterated from LAST to FIRST not a general method --
+   * would mess up if we had unit cells
    * 
    * @param imodel
    */
@@ -1182,13 +1188,13 @@ public class AtomSetCollection {
     int nremoved = 0;
     int i0 = getLastAtomSetAtomIndex();
     int nnow = 0;
-    for (int i = i0; i < n; i++) { 
+    for (int i = i0; i < n; i++) {
       if (!bsAtoms.get(i)) {
         nremoved++;
         ac--;
         atoms[i] = null;
         continue;
-      } 
+      }
       if (nremoved > 0) {
         atoms[atoms[i].index = i - nremoved] = atoms[i];
         atoms[i] = null;
@@ -1212,13 +1218,15 @@ public class AtomSetCollection {
   /**
    * Create bsAtoms if it is null, and set bits if desired.
    * 
-   * @param n  if created only, -1 to set all atoms, 0 for no setting, otherwise, set [0,n)
+   * @param n
+   *        if created only, -1 to set all atoms, 0 for no setting, otherwise,
+   *        set [0,n)
    * @return bsAtoms
    */
   public BS getBSAtoms(int n) {
     if (bsAtoms == null) {
       bsAtoms = new BS();
-      if (n != 0) 
+      if (n != 0)
         bsAtoms.setBits(0, (n < 0 ? ac : n));
     }
     return bsAtoms;
@@ -1226,6 +1234,7 @@ public class AtomSetCollection {
 
   /**
    * Add a full set of atoms to BSAtoms if they are not already indicated there.
+   * 
    * @param iSet
    */
   public void setBSAtomsForSet(int iSet) {
@@ -1247,16 +1256,14 @@ public class AtomSetCollection {
       if (atoms[b.atomIndex2].elementSymbol.equals("H")
           && b.order != JmolAdapter.ORDER_STEREO_NEAR
           && b.order != JmolAdapter.ORDER_STEREO_FAR
-          && atoms[b.atomIndex1].elementSymbol.equals("C")
-          ) {
+          && atoms[b.atomIndex1].elementSymbol.equals("C")) {
         bsAtoms.clear(b.atomIndex2);
       } else if (atoms[b.atomIndex1].elementSymbol.equals("H")
-          && atoms[b.atomIndex2].elementSymbol.equals("C")
-          ) {
+          && atoms[b.atomIndex2].elementSymbol.equals("C")) {
         // includes backward C-H wedge/hash here, which makes no sense.
         bsAtoms.clear(b.atomIndex1);
       }
     }
   }
-  
+
 }

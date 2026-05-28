@@ -210,8 +210,11 @@ public class JSVJmol implements JSVJmolI, JSVInterface, JmolSyncInterface {
 
   @Override
   public void setVisible(boolean b) {
-    if (jSpecViewFrame != null)
-      jSpecViewFrame.setVisible(b);
+    if (jSpecViewFrame == null)
+      return;
+    jSpecViewFrame.awaken(false);
+    if (b)
+      jSpecViewFrame.awaken(true);    
   }
 
   @Override
@@ -230,6 +233,12 @@ public class JSVJmol implements JSVJmolI, JSVInterface, JmolSyncInterface {
   public void notifyCallback(CBK type, Object[] data) {
     switch (type) {
     default:
+      break;
+    case SYNC:
+      String cmd = (String) data[1];
+      if (cmd.startsWith(JC.JSV_SYNC_KEYWORD_PREFIX)) {
+        setJSpecView(cmd.substring(JC.JSV_SYNC_KEYWORD_PREFIX_LENGTH), false, false);
+      }
       break;
     case LOADSTRUCT:
       String fullPathName = (String) data[2];

@@ -66,6 +66,7 @@ import javajs.util.V3d;
 public class UnitCell extends SimpleUnitCell implements Cloneable {
 
   final private static double twoP2 = 2 * Math.PI * Math.PI;
+  final private static double eightP2_3 = 8 * Math.PI * Math.PI / 3;
 
   private final static V3d[] unitVectors = {
       JC.axisX, JC.axisY, JC.axisZ};
@@ -795,7 +796,7 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
       Bcart[4] = parBorU[4] * twoP2 * 2;
       Bcart[5] = parBorU[5] * twoP2 * 2;
 
-      parBorU[7] = (parBorU[0] + parBorU[1] + parBorU[3]) / 3;
+      parBorU[7] = (parBorU[0] + parBorU[1] + parBorU[3]) * eightP2_3;
 
     } else {
 

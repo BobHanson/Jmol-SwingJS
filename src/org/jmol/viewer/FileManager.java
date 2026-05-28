@@ -1808,8 +1808,8 @@ public class FileManager implements BytePoster {
           cmd = (vwr.ms.ac == 0 ? "load " + PT.esc(fname) + ";" : "");
           cmd += "isosurface sign red blue ";
        } else if (!type.equals("spt")) {
-          if (flags == FILE_DROPPED) {
-            flags = PDB_CARTOONS;
+          if ((flags & FILE_DROPPED) != 0) {
+            flags = (flags & ~FILE_DROPPED) | PDB_CARTOONS;
             switch (vwr.ms.ac == 0 ? JOptionPane.OK_OPTION
                 : vwr.confirm(GT.$(
                     "Would you like to replace the current model with the selected model?"),

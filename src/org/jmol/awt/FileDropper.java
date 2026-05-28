@@ -117,7 +117,6 @@ public class FileDropper implements DropTargetListener {
       return;
     vwr.openFileAsyncSpecialType(fname, FileManager.FILE_DROPPED 
         | (statusListener == null ? 0 : FileManager.CHECK_DIMS), retType[0]);
-//    vwr.openFileDropped(fname, statusListener != null);
   }
 
   private void loadFiles(List<File> fileList) {

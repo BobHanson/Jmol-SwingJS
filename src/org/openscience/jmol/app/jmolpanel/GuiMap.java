@@ -32,25 +32,24 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.PT;
-
-import javax.swing.JButton;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 import javax.swing.AbstractButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JMenuItem;
+import javax.swing.JRadioButtonMenuItem;
 
 import org.jmol.console.GenericConsole;
 import org.jmol.console.JmolButton;
-import org.jmol.console.KeyJMenu;
-import org.jmol.console.KeyJMenuItem;
 import org.jmol.console.KeyJCheckBox;
 import org.jmol.console.KeyJCheckBoxMenuItem;
+import org.jmol.console.KeyJMenu;
+import org.jmol.console.KeyJMenuItem;
 import org.jmol.console.KeyJRadioButtonMenuItem;
 import org.jmol.i18n.GT;
 import org.jmol.viewer.Viewer;
+
+import javajs.util.PT;
 
 public class GuiMap {
 
@@ -60,7 +59,7 @@ public class GuiMap {
 
   protected Map<String, String> labels;
 
-  // keys here refer to keys listed in org.openscience.jmol.Properties.Jmol-resources.properties
+  // keys here refer to keys listed in org.openscience.jmol.jmolpanel.Properties.Jmol-resources.properties
   // actions are either defined there, as xxxScript=, or by 
   // Actions created in DisplayPanel.java
 
@@ -76,12 +75,6 @@ public class GuiMap {
     labels.put("openpdb", GT.$("&Get PDB"));
     labels.put("openmol", GT.$("Get &MOL"));
     labels.put("reloadScript", GT.$("&Reload"));
-
-    labels.put("spectrumMenu", GT.$("&Spectra"));
-
-    labels.put("openJSpecViewScript", "JSpecView");
-    labels.put("simulate1HSpectrumScript", GT.$("Simulated 1H Spectrum"));
-    labels.put("simulate13CSpectrumScript", GT.$("Simulated 13C Spectrum"));
 
     labels.put("editor", GT.$("Scrip&t Editor...")); // new %t 11.7.45
     labels.put("console", GT.$("Conso&le..."));
