@@ -31,6 +31,8 @@ import javajs.util.T3d;
 import javajs.util.V3d;
 
 import javajs.util.BS;
+
+import org.jmol.modelset.Atom;
 import org.jmol.render.MeshRenderer;
 import org.jmol.render.ShapeRenderer;
 import org.jmol.script.T;
@@ -340,7 +342,7 @@ public class BioMeshRenderer extends MeshRenderer {
     }
     meshReady[i] = true;
     adjustCartoonSeamNormals(i, nPer);
-    mesh.setVisibilityFlags(1);
+    mesh.setVisibilityFlags(Atom.ATOM_INFRAME);
     return true;
   }
 

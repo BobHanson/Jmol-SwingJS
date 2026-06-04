@@ -27,16 +27,17 @@ package org.jmol.shapecgo;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.PT;
-import javajs.util.SB;
-
-import javajs.util.BS;
 import org.jmol.script.T;
 import org.jmol.shape.Mesh;
 import org.jmol.shape.MeshCollection;
 import org.jmol.viewer.JC;
+
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
+import javajs.util.PT;
+import javajs.util.SB;
+import javajs.util.T3d;
 
 /**
  * PyMOL Compiled Graphic Object (CGO) meshes 
@@ -48,7 +49,7 @@ public class CGO extends MeshCollection {
   private boolean useColix; // not implemented?
   private double newScale; // not implemented
   private int indicatedModelIndex = Integer.MIN_VALUE;
-
+  private double indicatedWidth;
   
   public CGO() {
     // for reflection
@@ -58,6 +59,7 @@ public class CGO extends MeshCollection {
 
   private void initCGO() {
     indicatedModelIndex = Integer.MIN_VALUE;
+    indicatedWidth = 0;
   }
 
   @Override
@@ -86,23 +88,40 @@ public class CGO extends MeshCollection {
       return;
     }
     
+    if ("cacheAll" == propertyName) {
+      for (int i = meshCount; --i >= 0;) {
+        if (meshes[i] != null) {
+          ((CGOMesh) meshes[i]).doCache = true;
+        }
+      }
+      return;
+    }
+    if ("cache" == propertyName) {
+      if (cgoMesh != null)
+        cgoMesh.doCache = true;
+      return;
+    }
     if ("setCGO" == propertyName) {
+      // from PyMOL
       Map<String, Object> map = (Map<String, Object>) value;
-      Lst<Object> list = (Lst<Object>) map.get("info");
+      Lst<Object> list = (Lst<Object>) map.get(JC.INFO_CGO_INFO);
       setProperty("init", null, null);
       int n = list.size() - 1;
       setProperty("thisID", list.get(n), null);
       propertyName = "set";
       setProperty("set", list, null);
-      cgoMesh.meshWidth = ((Double) map.get("mesh_width")).floatValue();
+      cgoMesh.width = ((Double) map.get(JC.INFO_CGO_MESH_WIDTH)).floatValue() / 20;
       return;
-    }
+    } 
     
     if ("modelIndex" == propertyName) {
       indicatedModelIndex = Math.max(((Integer) value).intValue(), -1);
       return;
     }
-
+    if ("width" == propertyName) {
+      indicatedWidth = ((Number) value).doubleValue();
+      return;
+    }
     if ("set" == propertyName) {
       if (cgoMesh == null) {
         allocMesh(null, null);
@@ -111,6 +130,8 @@ public class CGO extends MeshCollection {
         cgoMesh.useColix = useColix;
       }
       cgoMesh.modelIndex = (indicatedModelIndex == Integer.MIN_VALUE ? vwr.am.cmi : indicatedModelIndex);
+      if (indicatedWidth != 0)  
+        cgoMesh.width = indicatedWidth;      
       cgoMesh.isValid = setCGO((Lst<Object>) value);
       if (cgoMesh.isValid) {
         scale(cgoMesh, newScale );
@@ -170,7 +191,8 @@ public class CGO extends MeshCollection {
         .deleteElements(meshes, i, 1);
   }
 
-  private void setPropertySuper(String propertyName, Object value, BS bs) {
+  @Override
+  protected void setPropertySuper(String propertyName, Object value, BS bs) {
     currentMesh = cgoMesh;
     setPropMC(propertyName, value, bs);
     cgoMesh = (CGOMesh)currentMesh;  
@@ -192,6 +214,7 @@ public class CGO extends MeshCollection {
 
   private void scale(Mesh mesh, double newScale) {
     // TODO
+    // not implemented
     
   }
   
@@ -217,9 +240,9 @@ public class CGO extends MeshCollection {
       CGOMesh mesh = cmeshes[i];
       if (mesh == null || mesh.cmds == null || mesh.modelIndex >= modelCount)
         continue;
-      if (sb.length() == 0) {
+      if (mesh.doCache) {
         sb.append("\n");
-        appendCmd(sb, myType + " delete");
+        appendCmd(sb, myType + " ID " + PT.esc(mesh.thisID) + " delete");
       }
       sb.append(getCommand2(mesh, modelCount));
       if (!mesh.visible)
@@ -249,26 +272,91 @@ public class CGO extends MeshCollection {
     SB str = new SB();
     int iModel = mesh.modelIndex;
     str.append("  CGO ID ").append(PT.esc(mesh.thisID));
-    if (iModel >= -1 && modelCount > 1)
-      str.append(" modelIndex " + iModel);
-    str.append(" [");
-    int n = cmesh.cmds.size();
-    for (int i = 0; i < n; i++)
-      str.append(" " + cmesh.cmds.get(i));
-    str.append(" ];\n");
+    if (cmesh.doCache) {
+      if (iModel >= -1 && modelCount > 1)
+        str.append(" modelIndex " + iModel);
+      if (cmesh.width > 0)
+        str.append(" width " + (float) cmesh.width);
+      int n = cmesh.cmds.size();
+      if (cmesh.cmdsAllNumbers) {
+        cmesh.encodeCommands(str);
+      } else {
+        str.append(" [");
+        for (int i = 0; i < n; i++)
+          str.append(" " + cmesh.cmds.get(i));
+        str.append(" ];\n");
+      }
+    } else {
+      str.append(";\n");
+    }
     appendCmd(str, cmesh.getState("cgo"));
     if (cmesh.useColix)
-      appendCmd(str, getColorCommandUnk("cgo", cmesh.colix, translucentAllowed));
+      appendCmd(str,
+          getColorCommandUnk("cgo", cmesh.colix, translucentAllowed));
     return str.toString();
   }
   
   @Override
   public void setModelVisibilityFlags(BS bsModels) {
     for (int i = 0; i < meshCount; i++) {
-      CGOMesh m = cmeshes[i];
+      Mesh m = cmeshes[i];
       if (m != null)
         m.setVisibilityFlags(m.isValid && m.visible && (m.modelIndex < 0 || bsModels.get(m.modelIndex)) ? vf : 0);
     }
   }
- 
+
+  @Override
+  public boolean checkObjectHovered(int x, int y, BS bsVisible) {
+    if (!vwr.getDrawHover())
+      return false;
+    String s = findValue(x, y, false, bsVisible);
+    if (s == null)
+      return false;
+    vwr.hoverOnPt(x, y, s, pickedMesh.thisID, pickedPt);
+    return true;
+  }
+
+  /**
+   * 
+   * @param x
+   * @param y
+   * @param isPicking
+   *        IGNORED
+   * @param bsVisible
+   * @return value found
+   */
+  private String findValue(int x, int y, boolean isPicking, BS bsVisible) {
+    int dmin2 = MAX_OBJECT_CLICK_DISTANCE_SQUARED;
+    if (vwr.gdata.isAntialiased()) {
+      x <<= 1;
+      y <<= 1;
+      dmin2 <<= 1;
+    }
+    int pickedVertex = -1;
+    CGOMesh m = null;
+    for (int i = 0; i < meshCount; i++) {
+      m = cmeshes[i];
+      if (!isPickable(m, bsVisible))
+        continue;
+      if (m.vs != null) {
+        T3d[] vertices = m.vs;
+        for (int k = m.vs.length; --k >= 0;) {
+          T3d v = vertices[k];
+          int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
+          if (d2 >= 0) {
+            dmin2 = d2;
+            pickedVertex = k;
+            pickedMesh = m;
+            pickedPt = v;
+          }
+        }
+      }
+      if (pickedVertex != -1)
+        break;
+    }
+    return (pickedVertex == -1 ? null
+        : m.thisID);
+  }
+
+
 }

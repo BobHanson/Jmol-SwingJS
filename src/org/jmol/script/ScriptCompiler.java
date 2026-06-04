@@ -1123,7 +1123,7 @@ public class ScriptCompiler extends ScriptTokenParser {
                   || tokCommand == T.background || tokCommand == T.script
                   || tokCommand == T.macro));
       iHaveQuotedString = true;
-      if ((tokCommand == T.load || tokCommand == T.cgo)
+      if (allowsData(tokCommand)
           && lastToken.tok == T.data
           || tokCommand == T.data && str.indexOf("@") < 0) {
         if (!getData(str)) {
@@ -1464,6 +1464,17 @@ public class ScriptCompiler extends ScriptTokenParser {
       }
     }
     return OK;
+  }
+
+  private static boolean allowsData(int tokCommand) {
+    switch (tokCommand) {
+    case T.load:
+    case T.cgo:
+    case T.isosurface:
+      return true;
+    default:
+      return false;
+    }
   }
 
   private void addNumber(int tok, int i, Object v) {

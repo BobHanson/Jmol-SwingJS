@@ -94,7 +94,8 @@ public class JvxlCoder {
                                    String[] title, String msg,
                                    boolean includeHeader, int nSurfaces,
                                    String state, String comment) {
-
+    if (state != null && state.indexOf("<jvxl") >= 0)
+      state = "";
     SB data = new SB();
     if ("TRAILERONLY".equals(msg)) {
       XmlUtil.closeTag(data, "jvxlSurfaceSet");
@@ -363,6 +364,7 @@ public class JvxlCoder {
       addAttrib(attribs, "\n  meshColor", jvxlData.meshColor);
     if (jvxlData.colorScheme != null)
       addAttrib(attribs, "\n  colorScheme", jvxlData.colorScheme);
+    boolean colorInherited = "inherit".equals(jvxlData.colorScheme);
     if (jvxlData.rendering != null)
       addAttrib(attribs, "\n  rendering", jvxlData.rendering);
     if (jvxlData.thisSet != null) {
@@ -384,7 +386,7 @@ public class JvxlCoder {
     double blue = (jvxlData.isColorReversed ? jvxlData.valueMappedToRed : jvxlData.valueMappedToBlue);
     double red = (jvxlData.isColorReversed ? jvxlData.valueMappedToBlue : jvxlData.valueMappedToRed);
 
-    if (jvxlData.jvxlColorData != null && jvxlData.jvxlColorData.length() > 0 && !jvxlData.isBicolorMap) {
+    if (jvxlData.jvxlColorData != null && jvxlData.jvxlColorData.length() > 0 && !jvxlData.isBicolorMap && !colorInherited) {
       addAttrib(attribs, "\n  dataMinimum", "" + min);
       addAttrib(attribs, "\n  dataMaximum", "" + jvxlData.mappedDataMax);
       addAttrib(attribs, "\n  valueMappedToRed", "" + red);

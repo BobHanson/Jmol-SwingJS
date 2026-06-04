@@ -1744,6 +1744,7 @@ public class IsoExt extends ScriptExt {
     if (tokAt(1) == T.list && listIsosurface(iShape))
       return;
     int iptDisplayProperty = 0;
+    String filename = null;
     boolean isDisplay = false;
     boolean isBest = false;
     boolean isIsosurface = (iShape == JC.SHAPE_ISOSURFACE);
@@ -1762,7 +1763,8 @@ public class IsoExt extends ScriptExt {
     boolean isBeta = false;
     boolean isCavity = false;
     boolean haveRadius = false;
-    boolean toCache = false;
+    boolean doCache = false;
+    boolean cacheAll = false;
     boolean isFxy = false;
     boolean haveSlab = false;
     boolean haveIntersection = false;
@@ -1798,6 +1800,7 @@ public class IsoExt extends ScriptExt {
     boolean colorDensity = false;
     Object onlyOneModel = null;
     Object[] filesData = null;
+    String jvxlData = null;
     String translucency = null;
     String colorScheme = null;
     String mepOrMlp = null;
@@ -2288,7 +2291,22 @@ public class IsoExt extends ScriptExt {
       case T.cache:
         if (!isIsosurface)
           invArg();
-        toCache = !chk;
+        doCache = !chk;
+        if (tokAt(i + 1) == T.all) {
+          checkLength(i + 2);
+          cacheAll = true;
+          i++;
+        }
+        continue;
+      case T.data:
+        if (tokAt(i + 3) != T.end)
+          invArg();
+        if (!chk) {
+          filename = "cache://" + stringParameter(i + 1);
+          jvxlData = getToken(i + 2).value.toString();
+          vwr.cachePut(filename, jvxlData);
+        }
+        i += 2;
         continue;
       case T.file:
         if (tokAt(i + 1) != T.string)
@@ -3132,10 +3150,11 @@ public class IsoExt extends ScriptExt {
       case T.edsdiff:
       case T.density:
       case T.string:
+      case T.end: // data
         boolean firstPass = (!surfaceObjectSeen && !planeSeen);
-        String filename = null;
         propertyName = (firstPass && !isMapped ? "readFile" : "mapColor");
-        if (tok == T.string) {
+        switch (tok) {
+        case T.string:
           filename = paramAsStr(i);
           int ipt = filename.indexOf("::");
           if (ipt > 0) {
@@ -3145,8 +3164,13 @@ public class IsoExt extends ScriptExt {
             addShapeProperty(propertyList, "fileType", ftype);
             filename = filename.substring(ipt + 2);
           }
-        } else if (tok == T.density) {
+          break;
+        case T.density:
           filename = "=density/";
+          break;
+        case T.end:
+          filename = "cache://" + stringParameter(++i);
+          break;
         }
         if (filename == null || filename.length() == 0 || filename.equals("*")
             || filename.equals("=")) {
@@ -3162,7 +3186,7 @@ public class IsoExt extends ScriptExt {
             }
             if (filename == null)
               eval.errorStr(ScriptError.ERROR_invalidArgument,
-                  "no PDBID available");              
+                  "no PDBID available");
           }
         }
 
@@ -3562,8 +3586,8 @@ public class IsoExt extends ScriptExt {
     if (translucency != null)
       setShapeProperty(iShape, "translucency", translucency);
     setShapeProperty(iShape, "clear", null);
-    if (toCache)
-      setShapeProperty(iShape, "cache", null);
+    if (doCache)
+      setShapeProperty(iShape, (cacheAll ? "cacheAll" : "cache"), null);
     if (!isSilent && !isDisplay && !haveSlab && eval.theTok != T.delete)
       listIsosurface(iShape);
   }
@@ -4011,6 +4035,8 @@ public class IsoExt extends ScriptExt {
     boolean idSeen = (thisId != null);
     boolean isWild = (idSeen && getShapeProperty(JC.SHAPE_CGO, "ID") == null);
     boolean isInitialized = false;
+    boolean doCache = false;
+    boolean cacheAll = false;
     int modelIndex = -1;
     Lst<Object> data = null;
     double translucentLevel = Double.MAX_VALUE;
@@ -4021,6 +4047,15 @@ public class IsoExt extends ScriptExt {
       Object propertyValue = null;
       int tok = getToken(i).tok;
       switch (tok) {
+      case T.cache:
+        doCache = !chk;
+        if (tokAt(i + 1) == T.all) {
+          checkLength(i + 2);
+          cacheAll = true;
+          i++;
+        }
+        continue;
+      case T.data:
       case T.leftsquare:
       case T.spacebeforesquare:
       case T.varray:
@@ -4069,6 +4104,10 @@ public class IsoExt extends ScriptExt {
         isWild = (getShapeProperty(JC.SHAPE_CGO, "ID") == null);
         i = eval.iToken;
         break;
+      case T.width:
+        propertyName = "width";
+        propertyValue =Double.valueOf(floatParameter(++i));
+        break;
       default:
         if (!eval.setMeshDisplayProperty(JC.SHAPE_CGO, 0, eval.theTok)) {
           if (eval.theTok == T.times || T.tokAttr(eval.theTok, T.identifier)) {
@@ -4093,6 +4132,8 @@ public class IsoExt extends ScriptExt {
       if (propertyName != null)
         setShapeProperty(JC.SHAPE_CGO, propertyName, propertyValue);
     }
+    if (doCache)
+      setShapeProperty(JC.SHAPE_CGO, (cacheAll ? "cacheAll" : "cache"), null);
     finalizeObject(JC.SHAPE_CGO, colorArgb[0], translucentLevel, intScale,
         data != null, data, iptDisplayProperty, null);
     return true;

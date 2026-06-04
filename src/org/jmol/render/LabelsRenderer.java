@@ -201,7 +201,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
       text.atomX = atomPt.sX; // just for pointer
       text.atomY = atomPt.sY;
       text.atomZ = zSlab;
-      if (text.pymolOffset == null) {
+      if (text.getPymolOffset() == null) {
         text.setXYZs(atomPt.sX, atomPt.sY, zBox, zSlab);
         text.colix = labelColix;
         text.bgcolix = bgcolix;
@@ -209,7 +209,7 @@ public class LabelsRenderer extends FontLineShapeRenderer {
         text.getPymolScreenOffset(atomPt, screen, zSlab, pTemp, sppa);
       }
     }
-    if (text.pymolOffset == null) {
+    if (text.getPymolOffset() == null) {
       if (text.font == null)
         text.setFontFromFid(font3d.fid);
       text.setOffset(offset);

@@ -237,6 +237,7 @@ public class ShapeManager {
     JC.SHAPE_CONTACT,
     JC.SHAPE_ISOSURFACE,
     JC.SHAPE_DRAW,
+    JC.SHAPE_CGO,
     JC.SHAPE_FRANK
   };
   
@@ -387,6 +388,7 @@ public class ShapeManager {
   /**
    * Sets shape visibility flags, including ATOM_VIS_INFRAME and
    * ATOM_VIS_NOTHIDDEN.
+   * @param bs 
    * 
    */
   void setModelVisibility(BS bs) {

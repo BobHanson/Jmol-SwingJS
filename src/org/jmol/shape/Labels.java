@@ -464,7 +464,7 @@ public class Labels extends AtomShape {
           scalePixelsPerMicron);
       setPymolLabel(i, text, formats[i]);
     }
-    text.pymolOffset = value;
+    text.setPymolOffset(value);
   }
 
   private final static LabelToken[][] nullToken = new LabelToken[][] { null };

@@ -24,38 +24,33 @@
 
 package org.jmol.shapespecial;
 
-import javajs.util.AU;
-import javajs.util.Lst;
-import javajs.util.SB;
-
 import java.util.Hashtable;
-
 import java.util.Map;
 
-
+import org.jmol.script.SV;
+import org.jmol.script.T;
+import org.jmol.shape.Mesh;
+import org.jmol.shape.MeshCollection;
 import org.jmol.util.BSUtil;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Font;
 import org.jmol.util.Logger;
 import org.jmol.util.MeshSurface;
+import org.jmol.viewer.ActionManager;
+import org.jmol.viewer.JC;
 
+import javajs.util.AU;
+import javajs.util.BS;
+import javajs.util.Lst;
 import javajs.util.MeasureD;
 import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.P4d;
 import javajs.util.PT;
+import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.V3d;
-
-import org.jmol.viewer.ActionManager;
-import org.jmol.viewer.JC;
-import javajs.util.BS;
-
-import org.jmol.script.SV;
-import org.jmol.script.T;
-import org.jmol.shape.Mesh;
-import org.jmol.shape.MeshCollection;
 
 
 public class Draw extends MeshCollection {
@@ -90,7 +85,8 @@ public class Draw extends MeshCollection {
       htObjects.put(thisID.toUpperCase(), currentMesh);
   }
 
-  private void setPropertySuper(String propertyName, Object value, BS bs) {
+  @Override
+  protected void setPropertySuper(String propertyName, Object value, BS bs) {
     currentMesh = thisMesh;
     setPropMC(propertyName, value, bs);
     thisMesh = (DrawMesh)currentMesh;  
@@ -1274,9 +1270,6 @@ private void initDraw() {
     }
   }
   
-  private final static int MAX_OBJECT_CLICK_DISTANCE_SQUARED = 10 * 10;
-
-  private final P3i ptXY = new P3i();
   private double defaultFontSize = JC.DRAW_DEFAULT_FONTSIZE;
   
   @Override

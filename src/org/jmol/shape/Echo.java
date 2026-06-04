@@ -317,14 +317,14 @@ public class Echo extends TextShape {
 
     if ("offset" == propertyName) {
       if (currentObject != null) {
-        currentObject.pymolOffset = (double[]) value;
+        currentObject.setPymolOffset((double[]) value);
       }
       return;
     }
 
     if ("align" == propertyName) {
       if (currentObject != null) {
-        currentObject.pymolOffset = null;
+        currentObject.setPymolOffset(null);
       }
       // pass through
     }

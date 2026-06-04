@@ -846,13 +846,14 @@ class PyMOLScene implements JmolSceneGenerator {
 
   /**
    * create all objects for a given molecule or scene
+   * 
    * @param reps
    * @param allowSurface
-   * @param ac0     > 0 for a molecule; -1 for a scene
+   * @param ac0
+   *        > 0 for a molecule; -1 for a scene
    * @param ac
    */
-  void createShapeObjects(BS[] reps, boolean allowSurface, int ac0,
-                          int ac) {
+  void createShapeObjects(BS[] reps, boolean allowSurface, int ac0, int ac) {
     if (ac >= 0) {
       // initial creation, not just going to this scene
       bsAtoms = BSUtil.newBitSet2(ac0, ac);
@@ -876,10 +877,15 @@ class PyMOLScene implements JmolSceneGenerator {
       case PyMOL.REP_LINES:
       case PyMOL.REP_STICKS:
         continue;
+      case PyMOL.REP_NBSPHERES:
+      case PyMOL.REP_SPHERES:
+      case PyMOL.REP_NONBONDED:
+        createShapeObject(i, reps[i]);
+        continue;
       case PyMOL.REP_MESH:
       case PyMOL.REP_SURFACE:
         // surfaces depend upon global flags
-        if (!allowSurface)
+        if (!allowSurface || reader.isStateScript)
           continue;
 
         //    #define cRepSurface_by_flags       0
@@ -902,7 +908,8 @@ class PyMOLScene implements JmolSceneGenerator {
         }
         //$FALL-THROUGH$
       default:
-        createShapeObject(i, reps[i]);
+        if (!reader.isStateScript)
+          createShapeObject(i, reps[i]);
         continue;
       }
     bsAtoms = null;
@@ -920,40 +927,6 @@ class PyMOLScene implements JmolSceneGenerator {
       labelPos = setLabelPosition(
           getUniquePoint(uniqueID, PyMOL.label_position, labelPosition),
           labelPos, false);
-
-      // from pymol/data/setting_help.csv
-      //
-      //      "label_position","controls the position and alignment of labels in camera X, Y, and Z.  
-      //      Values between -1.0 and 1.0 affect alignment only, with the label attached to the atom position.  
-      //      Values beyond that range represent coordinate displacements.  
-      //      For the z dimension, values from -1 to 1 do not mean anything.  Values above 1 and below -1 are offsets 
-      //      (minus 1 of the absolute value) in world coordinates.  For example, the default 1.75 is .75 angstroms closer 
-      //      to the viewer.","vector","[0.0, 0.0, 1.75]","4"
-      //
-      //      "label_placement_offset","controls the position of labels in camera X, Y, and Z.  
-      //      This value is changed at the atom-state level when the labels are dragged with the mouse.  
-      //      This setting behaves similar to the label_position 
-      //      setting without the alignment functionality.","vector","[0.0, 0.0, 0.0]","4"
-      //
-      // THIS IS NOT HELPFUL!!!
-      // It is actually not this at all. 
-      // These are two completely different (and additive) parameters.
-      //
-      // label_placement sets the base location of the center of the label. 
-      // It is not in camera coordinates; it is in CARTESIAN space, a relative 
-      // offset from the atom coordinate.
-      // It is static, unless the atom is moved.
-      //
-      // label_position is completely different. "-1 to 1" relates to an alignment relative to centered:
-      //   -- horizontally, -1 is right-justified; +1 is left-justified
-      //      anything beyond 1 or -1 is ADDED to this justification in Angstroms
-      //   -- vertically -1 is top-aligned; +1 is bottom aligned, then similarly, 
-      //      any additional value is added in Angstroms (converted to screen coordinates).
-      //   -- forward/back is just the same, but there is no alignment, and the 
-      //      shift is Math.max(0, abs(value) - 1)*sign(value)
-      // This value is adjusted at rendering time, keeping the offset the same no matter how the
-      // molecule is rotated.
-
     }
     P3d offset = getUniquePoint(uniqueID, PyMOL.label_placement_offset, null);
     if (offset != null) {
@@ -961,6 +934,65 @@ class PyMOLScene implements JmolSceneGenerator {
     }
     labels.put(Integer.valueOf(atomIndex),
         newTextLabel(label, labelPos, icolor));
+  }
+
+  /**
+   * See modelset/Text.java for implementation of this in Jmol.
+   * 
+   * @param offset
+   * @param labelPos
+   * @param isPlacement
+   * @return [mode, ox,oy,oz, px,py,pz]
+   */
+  static double[] setLabelPosition(P3d offset, double[] labelPos, boolean isPlacement) {
+    // from pymol/data/setting_help.csv
+    //
+    //      "label_position","controls the position and alignment of labels in camera X, Y, and Z.  
+    //      Values between -1.0 and 1.0 affect alignment only, with the label attached to the atom position.  
+    //      Values beyond that range represent coordinate displacements.  
+    //      For the z dimension, values from -1 to 1 do not mean anything.  Values above 1 and below -1 are offsets 
+    //      (minus 1 of the absolute value) in world coordinates.  For example, the default 1.75 is .75 angstroms closer 
+    //      to the viewer.","vector","[0.0, 0.0, 1.75]","4"
+    //
+    //      "label_placement_offset","controls the position of labels in camera X, Y, and Z.  
+    //      This value is changed at the atom-state level when the labels are dragged with the mouse.  
+    //      This setting behaves similar to the label_position 
+    //      setting without the alignment functionality.","vector","[0.0, 0.0, 0.0]","4"
+    //
+    // THIS IS NOT HELPFUL!!!
+    // It is actually not this at all. 
+    // These are two completely different (and additive) parameters.
+    //
+    // label_placement_offset [4:6] sets the base location of the center of the label. 
+    // It is not in camera coordinates; it is in CARTESIAN space, a relative 
+    // offset from the atom coordinate.
+    // It is static, unless the atom is moved.
+    //
+    // label_position [1:3] is completely different. "-1 to 1" relates to an alignment relative to centered:
+    //   -- horizontally, -1 is right-justified; +1 is left-justified
+    //      anything beyond 1 or -1 is ADDED to this justification in Angstroms
+    //   -- vertically -1 is top-aligned; +1 is bottom aligned, then similarly, 
+    //      any additional value is added in Angstroms (converted to screen coordinates).
+    //   -- forward/back is just the same, but there is no alignment, and the 
+    //      shift is Math.max(0, abs(value) - 1)*sign(value)
+    // This value is adjusted at rendering time, keeping the offset the same no matter how the
+    // molecule is rotated.
+
+    if (labelPos == null)
+      labelPos = new double[7];
+    labelPos[0] = Text.PYMOL_LABEL_OFFSET_REL_ANG;
+    if (isPlacement) {
+      // label_placement_offset (Cartesian)
+      labelPos[4] = offset.x;
+      labelPos[5] = offset.y;
+      labelPos[6] = offset.z;
+    } else {
+      // label_position (Screen coordinates, pixels)
+      labelPos[1] = offset.x;
+      labelPos[2] = offset.y;
+      labelPos[3] = offset.z;
+    } 
+    return labelPos;
   }
 
   boolean isDefaultSettingID(int id, int key) {
@@ -1037,10 +1069,9 @@ class PyMOLScene implements JmolSceneGenerator {
   
   double doubleSetting(int i) {
     Lst<Object> setting = getSetting(i);
-    double d = (setting != null && setting.size() == 3
+    return (setting != null && setting.size() == 3
         ? ((Number) setting.get(2)).doubleValue()
         : PyMOL.getDefaultSetting(i, pymolVersion));
-    return d;
   }
 
   String stringSetting(int i) {
@@ -1074,22 +1105,6 @@ class PyMOLScene implements JmolSceneGenerator {
     if (setting == null && i < globalSettings.size())
       setting = (Lst<Object>) globalSettings.get(i);
     return setting;
-  }
-
-  double[] setLabelPosition(P3d offset, double[] labelPos, boolean isPlacement) {
-    if (labelPos == null)
-      labelPos = new double[7];
-    labelPos[0] = Text.PYMOL_LABEL_OFFSET_REL_ANG;
-    if (isPlacement) {
-      labelPos[4] = offset.x;
-      labelPos[5] = offset.y;
-      labelPos[6] = offset.z;
-    } else {
-      labelPos[1] = offset.x;
-      labelPos[2] = offset.y;
-      labelPos[3] = offset.z;
-    }
-    return labelPos;
   }
 
   String addCGO(Lst<Object> data, int color) {
@@ -1141,7 +1156,7 @@ class PyMOLScene implements JmolSceneGenerator {
         md.note = objectName;
       } else {
         md = mdList[index];
-        offset = md.text.pymolOffset;
+        offset = md.text.getPymolOffset();
       }
       offset = PyMOL.fixAllZeroLabelPosition(offset);
       if (offset == null)
@@ -1318,7 +1333,7 @@ class PyMOLScene implements JmolSceneGenerator {
     Text t = Text.newLabel(vwr, font, label, getColix(
         colorIndex, 0), (short) 0, 0, 0);
     if (t != null)
-      t.pymolOffset = labelOffset;
+      t.setPymolOffset(labelOffset);
     return t;
   }
 
@@ -1330,7 +1345,7 @@ class PyMOLScene implements JmolSceneGenerator {
     if (pymolVersion < 100) {
       addVersionSetting(PyMOL.movie_fps, 2, Integer.valueOf(0));
       addVersionSetting(PyMOL.label_digits, 2, Integer.valueOf(2));
-      addVersionSetting(PyMOL.label_position, 4, new double[] { 1, 1, 0 });
+      // abandoned in V. 3.0 rendering addVersionSetting(PyMOL.label_position, 4, new double[] { 1, 1, 0 });
       if (pymolVersion < 99) {
         addVersionSetting(PyMOL.cartoon_ladder_mode, 2, Integer.valueOf(0));
         addVersionSetting(PyMOL.cartoon_tube_cap, 2, Integer.valueOf(0));

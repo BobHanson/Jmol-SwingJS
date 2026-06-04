@@ -1998,7 +1998,7 @@ public class CmdExt extends ScriptExt {
           || strFormat != null && (isRefreshID || strFormat.indexOf('\n') >= 0))
         text = Text.newMeasure(vwr, font, colix);
       if (text != null) {
-        text.pymolOffset = offset;
+        text.setPymolOffset(offset);
         text.setAlignmentLCR(alignment);
       }
       setShapeProperty(JC.SHAPE_MEASURES, "measure",

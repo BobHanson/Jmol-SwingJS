@@ -1697,6 +1697,10 @@ public final class JC {
   public static final String INFO_MODEL_NAME = "name";
   public static final String PROP_MODEL_TYPE = "_modelType";
 
+  public static final String INFO_CGO_MESH_WIDTH = "cgoMeshWidth";
+  public static final String INFO_CGO_INFO = "cgoMeshInfo";
+  
+
   /** 
    * used to set atom symmetry 555 556 etc. 
    */
@@ -1726,6 +1730,10 @@ public final class JC {
   public static final String PLUGIN_REQUEST_PROPERTY = "property";
   public static final String SYNC_GET_PREFERENCE = "getPreference";
   
+  public static final int PYMOL_COLIXES = 0;
+  public static final int PYMOL_TRANSPARENCIES = 1;
+  public static final int PYMOL_RADII = 2;
+
 
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.

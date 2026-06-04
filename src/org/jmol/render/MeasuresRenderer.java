@@ -176,7 +176,7 @@ public class MeasuresRenderer extends LabelsRenderer {
     } else {
       mad = (short) m.mad;
       dotsOrDashes = true;
-      dashDots = (m.text != null && m.text.pymolOffset != null ?
+      dashDots = (m.text != null && m.text.getPymolOffset() != null ?
           pymoldashes
           : mad < 0 ? null : ndots);
     }

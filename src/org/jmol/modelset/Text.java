@@ -104,7 +104,29 @@ public class Text {
 
   public P3d pointerPt; // for echo
 
-  public double[] pymolOffset;
+  /**
+   * [0], offset type is OR of: 
+   * 
+   *   PYMOL_LABEL_OFFSET_ANG = 0;
+   *   
+   *   PYMOL_LABEL_OFFSET_REL = 1;
+   *   
+   *   PYMOL_LABEL_OFFSET_PIX = 2; 
+   * 
+   * [1],[2],[3]   Screen pixel offset from Cartesion coordinate "label_position"
+   * 
+   * [4],[5],[6]   Cartesian coordinate for label "label_placement_offset"
+   * 
+   */
+  private double[] pymolOffset;
+
+  public void setPymolOffset(double[] offset) {
+    pymolOffset = offset;
+  }
+
+  public double[] getPymolOffset() {
+    return pymolOffset;
+  }
 
   protected int windowWidth;
   protected int windowHeight;
@@ -403,6 +425,13 @@ public class Text {
   }
 
   private static double getPymolXYOffset(double x, int width, double ppa) {
+    // label_position [1:3] 
+    //   -- horizontally, -1 is right-justified; +1 is left-justified
+    //      anything beyond 1 or -1 is ADDED to this justification in Angstroms
+    //   -- vertically -1 is top-aligned; +1 is bottom aligned, then similarly, 
+    //      any additional value is added in Angstroms (converted to screen coordinates).
+    //   -- forward/back is just the same, but there is no alignment, and the 
+    //      shift is Math.max(0, abs(value) - 1)*sign(value)
     double f = (x < -1 ? -1 : x > 1 ? 0 : (x - 1) / 2);
     //  x   f/width    offset/ppa
     // -3     -1         -2

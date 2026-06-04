@@ -93,7 +93,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   private boolean allowSurface = true;
   private boolean doResize;
   private boolean doCache;
-  private boolean isStateScript;
+  boolean isStateScript;
   private boolean sourcePNGJ;
 
   private int ac0;
@@ -168,7 +168,6 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     asc.setInfo("noAutoBond",
         Boolean.TRUE);
     asc.setCurrentModelInfo("pdbNoHydrogens", Boolean.TRUE);
-    asc.setInfo("isPyMOL", Boolean.TRUE);
     if (isTrajectory)
       trajectorySteps = new Lst<P3d[]>();
     isStateScript = htParams.containsKey("isStateScript");
@@ -819,8 +818,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
    * @param pymolObject
    */
   private void processCGO(Lst<Object> pymolObject) {
-    if (isStateScript)
-      return;
+//    if (isStateScript)
+//      return;
     if (isHidden)
       return;
     Lst<Object> data = sublistAt(pymolObject, 2, 0);
@@ -975,10 +974,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     addBonds(getBondList(listAt(pymolObject, 6)));
     addMolStructures();
     atoms = asc.atoms;
-    if (!isStateScript) {
-      asc.setCurrentModelInfo(JC.INFO_MODEL_NAME, pymolScene.modelName);
-      createShapeObjects();
-    }
+    asc.setCurrentModelInfo(JC.INFO_MODEL_NAME, pymolScene.modelName);
+    createShapeObjects();
     ssMapSeq = null;
 
     Logger.info("reading " + (ac - ac0) + " atoms and " + nBonds + " bonds");

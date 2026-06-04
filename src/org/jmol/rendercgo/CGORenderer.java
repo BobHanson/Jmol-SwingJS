@@ -65,11 +65,12 @@ public class CGORenderer extends DrawRenderer {
   private double alpha;
   private int nPts;
   private int glMode;
+  private boolean needVertices;
+  private Lst<P3d> vertexList;
 
   
   @Override
   protected boolean render() {
-//    isPrecision = true;
     needTranslucent = false;
     imageFontScaling = vwr.imageFontScaling;
     CGO cgo = (CGO) shape;
@@ -79,11 +80,14 @@ public class CGORenderer extends DrawRenderer {
   }
   
   private void render2(Mesh mesh) {
+    needVertices = (mesh.vs == null && vwr.getDrawHover());
+    if (needVertices)
+      vertexList = new Lst<P3d>();
     diameter = cgoMesh.diameter;
     width = cgoMesh.width;
     cmds = cgoMesh.cmds;
-//    if (cmds == null || !cgoMesh.visible || cgoMesh.visibilityFlags == 0)
-//      return;
+    if (cmds == null || !cgoMesh.visible || cgoMesh.visibilityFlags == 0)
+      return;
     if (!g3d.setC(cgoMesh.colix)) {
       needTranslucent = true;
       return;
@@ -93,7 +97,6 @@ public class CGORenderer extends DrawRenderer {
     nPts = 0;
     ptNormal = 0;
     ptColor = 0;
-    width = cgoMesh.meshWidth / 1000 * 50;
     screenZ = Integer.MAX_VALUE;
     doColor = !mesh.useColix;
     g3d.addRenderer(T.triangles);
@@ -231,6 +234,10 @@ public class CGORenderer extends DrawRenderer {
         break;
       }
       j += len;
+    }
+    if (needVertices) {
+      mesh.vs = vertexList.toArray(new P3d[vertexList.size()]);
+      vertexList = null;
     }
   }
 
@@ -390,22 +397,30 @@ public class CGORenderer extends DrawRenderer {
     return colix;
   }
 
- void getPoint(int i, P3d pt, P3i pti) {
+ private P3d lastPoint;
+ 
+  private void getPoint(int i, P3d pt, P3i pti) {
     cgoMesh.getPoint(i + 1, pt);
-    if (isMapped) { 
+    if (isMapped) {
       // The vertex coordinates x and y are map coordinates
       // on a plane with origin map0 and axis vectors vX and vY;
       // x0, dx, y0, dy are scalings on the plane 
       double fx = (pt.x * scaleX - x0) / dx;
       double fy = (pt.y * scaleY - y0) / dy;
       pt.scaleAdd2(fx, vX, map0);
-      pt.scaleAdd2(fy, vY, pt);      
+      pt.scaleAdd2(fy, vY, pt);
     } else if (is2D) {
       pti.x = (is2DPercent ? tm.percentToPixels('x', pt.x) : (int) pt.x);
       pti.y = (is2DPercent ? tm.percentToPixels('y', pt.y) : (int) pt.y);
       pti.z = screenZ;
       tm.unTransformPoint(pt, pt);
       return;
+    }
+    if (needVertices && !pt.equals(lastPoint)) {
+      // will be some duplication still
+      P3d v = P3d.newP(pt);
+      vertexList.addLast(v);
+      lastPoint = v;
     }
     tm.transformPtScr(pt, pti);
   }

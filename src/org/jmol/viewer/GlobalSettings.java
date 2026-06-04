@@ -1018,8 +1018,10 @@ public class GlobalSettings {
       + ";selecthetero;selecthydrogen"
       // removed in Jmol 14.32.68
       + ";pointgrouplineartolerance;pointgroupdistancetolerance"//;pointgroupmmaxatoms"
-      + ";minimizationreportsteps;labelkey;elementkey;symmetryhermannmauguin;mode2d;")
-      .toLowerCase();
+      + ";minimizationreportsteps;labelkey;elementkey;symmetryhermannmauguin;mode2d"
+      // removed in Jmol 16.4.6 (already in load state; reverses PyMOL settings
+      + ";percentVdwAtom;"
+      ).toLowerCase();
 
   Object getAllVariables() {
     Map<String, Object> map = new Hashtable<String, Object>();

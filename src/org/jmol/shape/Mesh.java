@@ -609,4 +609,9 @@ public class Mesh extends MeshSurface {
         : normalsTemp);
   }
 
+  @Override
+  public String toString() {
+    return meshType + "." + thisID;
+  }
+
 }

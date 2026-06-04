@@ -32,12 +32,14 @@ import org.jmol.script.T;
 import org.jmol.util.C;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.ActionManager;
 
 import javajs.util.AU;
 import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.M4d;
 import javajs.util.P3d;
+import javajs.util.P3i;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3d;
@@ -45,12 +47,12 @@ import javajs.util.T3d;
 public abstract class MeshCollection extends Shape {
 
   // CGO, Draw, Isosurface(Contact LcaoCartoon MolecularOrbital Pmesh)
-    
+
   protected JvxlData jvxlData;
   public int meshCount;
   public Mesh[] meshes = new Mesh[4];
   public Mesh currentMesh;
-  public boolean isFixed;  
+  public boolean isFixed;
   public int nUnnamed;
   public short colix;
   public boolean explicitID;
@@ -64,12 +66,12 @@ public abstract class MeshCollection extends Shape {
   protected BS bsDisplay;
 
   public String[] title;
-  
+
   protected Mesh pickedMesh;
   protected int pickedModel;
   protected int pickedVertex;
   protected T3d pickedPt;
-  
+
   protected int[] connections;
 
   private Mesh setMesh(String thisID) {
@@ -100,13 +102,15 @@ public abstract class MeshCollection extends Shape {
   protected Map<String, Mesh> htObjects;
   protected int color;
   public final static String PREVIOUS_MESH_ID = "+PREVIOUS_MESH+";
-  
+
   public void allocMesh(String thisID, Mesh m) {
     // this particular version is only run from privately;
     // isosurface and draw both have overriding methods
     int index = meshCount++;
-    meshes = (Mesh[])AU.ensureLength(meshes, meshCount * 2);
-    currentMesh = meshes[index] = (m == null ? new Mesh().mesh1(vwr, thisID, colix, index) : m);
+    meshes = (Mesh[]) AU.ensureLength(meshes, meshCount * 2);
+    currentMesh = meshes[index] = (m == null
+        ? new Mesh().mesh1(vwr, thisID, colix, index)
+        : m);
     currentMesh.color = color;
     currentMesh.index = index;
     if (thisID != null && htObjects != null)
@@ -117,7 +121,7 @@ public abstract class MeshCollection extends Shape {
   /**
    * called by ParallelProcessor at completion
    * 
-   * @param mc 
+   * @param mc
    * 
    */
   public void merge(MeshCollection mc) {
@@ -131,7 +135,7 @@ public abstract class MeshCollection extends Shape {
           meshes[m0.index] = m;
           m.index = m0.index;
         }
-      }      
+      }
     }
     previousMeshID = null;
     currentMesh = null;
@@ -141,13 +145,13 @@ public abstract class MeshCollection extends Shape {
   public void initShape() {
     setMeshColor();
   }
-  
+
   protected void setMeshColor() {
-   colix = C.ORANGE;
-   color = 0xFFFFFFFF;
+    colix = C.ORANGE;
+    color = 0xFFFFFFFF;
   }
 
- protected void setPropMC(String propertyName, Object value, BS bs) {
+  protected void setPropMC(String propertyName, Object value, BS bs) {
 
     if ("init" == propertyName) {
       title = null;
@@ -174,7 +178,8 @@ public abstract class MeshCollection extends Shape {
         int n = currentMesh.symops.length;
         currentMesh.symopColixes = new short[n];
         for (int i = n; --i >= 0;)
-        currentMesh.symopColixes[i] = C.getColix(vwr.cm.ce.getArgbMinMax(i + 1, 1, n));        
+          currentMesh.symopColixes[i] = C
+              .getColix(vwr.cm.ce.getArgbMinMax(i + 1, 1, n));
       }
       return;
     }
@@ -200,7 +205,7 @@ public abstract class MeshCollection extends Shape {
       String thisID = (String) value;
       if (setMesh(thisID) == null)
         return;
-//      deleteMesh();
+      //      deleteMesh();
       setMesh(thisID);
       return;
     }
@@ -218,12 +223,13 @@ public abstract class MeshCollection extends Shape {
     }
 
     if ("translucency" == propertyName) {
-      setTokenProperty(T.translucent, (((String) value).equals("translucent")), false);
+      setTokenProperty(T.translucent, (((String) value).equals("translucent")),
+          false);
       return;
     }
 
     if ("hidden" == propertyName) {
-      value = Integer.valueOf(((Boolean)value).booleanValue() ? T.off: T.on);
+      value = Integer.valueOf(((Boolean) value).booleanValue() ? T.off : T.on);
       propertyName = "token";
       //continue
     }
@@ -291,7 +297,7 @@ public abstract class MeshCollection extends Shape {
       }
       setTokenProperty(tok, test, false);
       if (tok2 != 0)
-          setTokenProperty(tok2, test, true);
+        setTokenProperty(tok2, test, true);
       return;
     }
     setPropS(propertyName, value, bs);
@@ -319,8 +325,7 @@ public abstract class MeshCollection extends Shape {
       value = null;
     }
     return (title = (value == null ? null : (String[]) value));
-  }  
-
+  }
 
   protected void checkExplicit(String id) {
     if (explicitID) // not twice
@@ -328,8 +333,8 @@ public abstract class MeshCollection extends Shape {
     explicitID = (id != null && !id.equals(MeshCollection.PREVIOUS_MESH_ID));
     if (explicitID)
       previousMeshID = id;
-  } 
-  
+  }
+
   protected void setTokenProperty(int tokProp, boolean bProp, boolean testD) {
     if (tokProp == T.only) {
       if (meshCount == 0)
@@ -339,7 +344,8 @@ public abstract class MeshCollection extends Shape {
       tokProp = T.on;
     }
     if (currentMesh == null) {
-      String key = (explicitID && PT.isWild(previousMeshID) ? previousMeshID : null);
+      String key = (explicitID && PT.isWild(previousMeshID) ? previousMeshID
+          : null);
       Lst<Mesh> list = getMeshList(key, false);
       for (int i = list.size(); --i >= 0;)
         setMeshTokenProperty(list.get(i), tokProp, bProp, testD);
@@ -351,15 +357,18 @@ public abstract class MeshCollection extends Shape {
         setMeshTokenProperty(linkedMesh, tokProp, bProp, testD);
     }
   }
- 
-  private void setMeshTokenProperty(Mesh m, int tokProp, boolean bProp, boolean testD) {
-    if (testD && (!m.havePlanarContours || m.drawTriangles == m.showContourLines))
+
+  private void setMeshTokenProperty(Mesh m, int tokProp, boolean bProp,
+                                    boolean testD) {
+    if (testD
+        && (!m.havePlanarContours || m.drawTriangles == m.showContourLines))
       return;
     switch (tokProp) {
     case T.display:
       m.bsDisplay = bsDisplay;
-      if (bsDisplay == null && displayWithinPoints != null) 
-        m.setShowWithin(displayWithinPoints, displayWithinDistance2, isDisplayWithinNot);
+      if (bsDisplay == null && displayWithinPoints != null)
+        m.setShowWithin(displayWithinPoints, displayWithinDistance2,
+            isDisplayWithinNot);
       return;
     case T.on:
       m.visible = bProp;
@@ -374,7 +383,7 @@ public abstract class MeshCollection extends Shape {
         m.resetSlab();
       // color isosurface translucent or opaque clears all special translucent polygons
       //if (m.bsTransPolygons != null)
-        //m.resetTransPolygons();
+      //m.resetTransPolygons();
       return;
     default:
       m.setTokenProperty(tokProp, bProp);
@@ -384,7 +393,8 @@ public abstract class MeshCollection extends Shape {
   @SuppressWarnings("unchecked")
   protected boolean getPropDataMC(String property, Object[] data) {
     if (property == "keys") {
-      Lst<String> keys = (data[1] instanceof Lst<?> ? (Lst<String>) data[1] : new Lst<String>());
+      Lst<String> keys = (data[1] instanceof Lst<?> ? (Lst<String>) data[1]
+          : new Lst<String>());
       data[1] = keys;
       keys.addLast("count");
       keys.addLast("getCenter");
@@ -431,7 +441,7 @@ public abstract class MeshCollection extends Shape {
       Mesh m = getMesh((String) data[0]);
       data[1] = Integer.valueOf(m == null ? -1 : m.index);
       return true;
-    }    
+    }
     if (property == "getCenter") {
       String id = (String) data[0];
       int index = ((Integer) data[1]).intValue();
@@ -463,8 +473,7 @@ public abstract class MeshCollection extends Shape {
     // important that this counts down because sometimes
     // we want just the MOST RECENT mesh.
     for (int i = meshCount; --i >= 0;) {
-      if (key == null
-          || (id = meshes[i].thisID.toUpperCase()).equals(key) 
+      if (key == null || (id = meshes[i].thisID.toUpperCase()).equals(key)
           || isWild && PT.isMatch(id, key, true, true)) {
         list.addLast(meshes[i]);
         if (justOne)
@@ -561,11 +570,11 @@ public abstract class MeshCollection extends Shape {
   protected Object getValues(Mesh mesh) {
     return (mesh == null ? null : mesh.vvs);
   }
- 
+
   protected Object getVertices(Mesh mesh) {
     return (mesh == null ? null : mesh.vs);
   }
- 
+
   protected void clean() {
     for (int i = meshCount; --i >= 0;)
       if (meshes[i] == null || meshes[i].vc == 0)
@@ -576,15 +585,16 @@ public abstract class MeshCollection extends Shape {
     if (explicitID && currentMesh != null)
       deleteMeshI(currentMesh.index);
     else
-      deleteMeshKey(explicitID && previousMeshID != null
-          && PT.isWild(previousMeshID) ?  
-              previousMeshID : null);
+      deleteMeshKey(
+          explicitID && previousMeshID != null && PT.isWild(previousMeshID)
+              ? previousMeshID
+              : null);
     currentMesh = null;
   }
 
   protected void deleteMeshKey(String key) {
     if (key == null || key.length() == 0) {
-      for (int i = meshCount; --i >= 0; )
+      for (int i = meshCount; --i >= 0;)
         meshes[i] = null;
       meshCount = 0;
       nUnnamed = 0;
@@ -594,7 +604,7 @@ public abstract class MeshCollection extends Shape {
       Lst<Mesh> list = getMeshList(key, false);
       int n = list.size();
       // this will count DOWN since list is reverse order
-      for (int i = 0; i < n; i++) 
+      for (int i = 0; i < n; i++)
         deleteMeshI(list.get(i).index);
     }
   }
@@ -606,21 +616,21 @@ public abstract class MeshCollection extends Shape {
       meshes[--meshes[j].index] = meshes[j];
     meshes[--meshCount] = null;
   }
-  
+
   protected void resetObjects() {
     htObjects.clear();
     for (int i = 0; i < meshCount; i++) {
       Mesh m = meshes[i];
       m.index = i;
       htObjects.put(m.thisID.toUpperCase(), m);
-    }    
+    }
   }
 
   public Mesh getMesh(String thisID) {
     int i = getIndexFromName(thisID);
     return (i < 0 ? null : meshes[i]);
   }
-  
+
   @Override
   public int getIndexFromName(String id) {
     if (MeshCollection.PREVIOUS_MESH_ID.equals(id))
@@ -641,7 +651,7 @@ public abstract class MeshCollection extends Shape {
     }
     return -1;
   }
-  
+
   @Override
   public void setModelVisibilityFlags(BS bsModels) {
     /*
@@ -651,21 +661,23 @@ public abstract class MeshCollection extends Shape {
     BS bsDeleted = vwr.slm.bsDeleted;
     for (int i = meshCount; --i >= 0;) {
       Mesh mesh = meshes[i];
-      mesh.setVisibilityFlags(mesh.visible
-          && mesh.isValid
+      mesh.setVisibilityFlags(mesh.visible && mesh.isValid
           && (mesh.modelIndex < 0 || bsModels.get(mesh.modelIndex)
               && (mesh.atomIndex < 0 || !ms.isAtomHidden(mesh.atomIndex)
-                  && !(bsDeleted != null && bsDeleted.get(mesh.atomIndex)))) ? vf
-          : 0);
+                  && !(bsDeleted != null && bsDeleted.get(mesh.atomIndex))))
+                      ? vf
+                      : 0);
     }
   }
- 
+
   protected void setStatusPicked(int flag, T3d v, Map<String, Object> map) {
     // for draw and isosurface
-    vwr.setStatusAtomPicked(flag, "[\"" + myType + "\"," + PT.esc(pickedMesh.thisID) + "," +
-        + pickedModel + "," + pickedVertex + "," + v.x + "," + v.y + "," + v.z + "," 
-        + (pickedMesh.title == null ? "\"\"" 
-               : PT.esc(pickedMesh.title[0]))+"]", map, false);
+    vwr.setStatusAtomPicked(flag,
+        "[\"" + myType + "\"," + PT.esc(pickedMesh.thisID) + "," + +pickedModel
+            + "," + pickedVertex + "," + v.x + "," + v.y + "," + v.z + ","
+            + (pickedMesh.title == null ? "\"\"" : PT.esc(pickedMesh.title[0]))
+            + "]",
+        map, false);
   }
 
   protected Map<String, Object> getPickedPoint(T3d v, int modelIndex) {
@@ -681,6 +693,73 @@ public abstract class MeshCollection extends Shape {
     return map;
   }
 
-}
+  protected final static int MAX_OBJECT_CLICK_DISTANCE_SQUARED = 10 * 10;
+  
+  protected final P3i ptXY = new P3i();
+  public int[] keyXy;
+
+  @Override
+  public Map<String, Object> checkObjectClicked(int x, int y, int action,
+                                                BS bsVisible,
+                                                boolean drawPicking) {
+    if (!drawPicking)// || vwr.getNavigationMode() && vwr.getNavigateSurface())) 
+      return null;
+    if (!vwr.isBound(action, ActionManager.ACTION_pickIsosurface))
+      return null;
+    int dmin2 = MAX_OBJECT_CLICK_DISTANCE_SQUARED;
+    if (vwr.gdata.isAntialiased()) {
+      x <<= 1;
+      y <<= 1;
+      dmin2 <<= 1;
+    }
+    int imesh = -1;
+    int maxz = Integer.MIN_VALUE;
+    int minz = Integer.MAX_VALUE;
+    for (int i = 0; i < meshCount; i++) {
+      Mesh m = meshes[i];
+      if (!isPickable(m, bsVisible))
+        continue;
+      T3d[] centers = m.vs;
+      if (centers == null)
+        continue;
+      for (int j = centers.length; --j >= 0;) {
+        T3d v = centers[j];
+        if (v == null)
+          continue;
+        int d2 = coordinateInRange(x, y, v, dmin2, ptXY);
+        if (d2 >= 0) {
+          if (ptXY.z < minz) {
+           imesh = i;
+            minz = ptXY.z;
+          }
+          if (ptXY.z > maxz) {
+            maxz = ptXY.z;
+          }
+        }
+      }
+    }
+    if (imesh < 0)
+      return null;
+    pickedMesh = meshes[imesh];
+    setPropertySuper("thisID", pickedMesh.thisID, null);
+    P3d ptRet = new P3d();
+    ptRet.setT(pickedMesh.vs[pickedVertex]);
+    pickedModel = (short) pickedMesh.modelIndex;
+    Map<String, Object> map = getPickedPoint(ptRet, pickedModel);
+    setStatusPicked(-4, ptRet, map);
+    return map;
+  }
+
+  protected void setPropertySuper(String propertyName, Object value, BS bs) {
+    setPropMC(propertyName, value, bs);
+  }
+
+  protected boolean isPickable(Mesh m, BS bsVisible) {
+    return m.visibilityFlags != 0
+        && (m.modelIndex < 0 || bsVisible.get(m.modelIndex))
+        && !C.isColixTranslucent(m.colix);
+  }
+
+ }
 
  

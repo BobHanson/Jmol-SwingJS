@@ -27,19 +27,19 @@ package org.jmol.shapecgo;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javajs.util.BS;
+import org.jmol.modelset.Atom;
 import org.jmol.script.T;
 import org.jmol.shapespecial.DrawMesh;
 import org.jmol.util.C;
-
-import javajs.util.CU;
-import javajs.util.Lst;
-import javajs.util.PT;
-
 import org.jmol.util.Logger;
 import org.jmol.util.Normix;
 import org.jmol.viewer.Viewer;
 
+import javajs.util.BS;
+import javajs.util.CU;
+import javajs.util.Lst;
+import javajs.util.PT;
+import javajs.util.SB;
 import javajs.util.T3d;
 
 /*
@@ -51,10 +51,25 @@ import javajs.util.T3d;
 public class CGOMesh extends DrawMesh {
 
   public Lst<Object> cmds;
+  public Lst<Short> nList = new Lst<Short>();
+  public Lst<Short> cList = new Lst<Short>();
+  
+  /**
+   * set TRUE in PymolReader using filter "CGOSCRIPTED"
+   * in order to save CGO commands (Protopedia only)
+   */
+  public boolean doCache;
+  /**
+   * 
+   */
+  public boolean cmdsAllNumbers;
+
+  private static Map<String, Integer> keyMap;
+  
 
   CGOMesh(Viewer vwr, String thisID, short colix, int index) {
     super(vwr, thisID, colix, index);
-    setVisibilityFlags(1);
+    setVisibilityFlags(Atom.ATOM_INFRAME);
   }
 
   public final static int GL_POINTS = 0;
@@ -187,8 +202,6 @@ public class CGOMesh extends DrawMesh {
     return keyMap;
   }
 
-  private static Map<String, Integer> keyMap;
-  
   static boolean getData(Object[] d) {
     if (keyMap == null)
       keyMap = getKeyMap();
@@ -203,15 +216,24 @@ public class CGOMesh extends DrawMesh {
     i = (tok == T.leftsquare ? i + 1 : i + 2);
     if (i >= slen)
       return false;
-    String s = st[i].value.toString().toUpperCase();
-    int type = ";PS;BEGIN;SCREEN;UVMAP;".indexOf(";" + s + ";");
-    i = addItems(i, st, slen, data, vwr);
-    if (type == 0) {
-      if (i + 5 >= slen || st[i + 1].tok != T.data)
-        return false;
-      if (!parseEPSData(st[i + 3].value.toString(), data))
-        return false;
-      i += 5;
+    int type;
+    if (tok == T.data) {
+      decodeCommands(st[i].value.toString(), data);
+      i += 2;
+    } else {
+      if (st[i].tok == T.decimal)
+        type = -1;
+      else
+        type = ";PS;BEGIN;SCREEN;UVMAP;"
+            .indexOf(";" + st[i].value.toString().toUpperCase() + ";");
+      i = addItems(i, st, slen, data, vwr);
+      if (type == 0) {
+        if (i + 5 >= slen || st[i + 1].tok != T.data)
+          return false;
+        if (!parseEPSData(st[i + 3].value.toString(), data))
+          return false;
+        i += 5;
+      }
     }
     ai[0] = i;
     return true;
@@ -307,7 +329,8 @@ public class CGOMesh extends DrawMesh {
   @SuppressWarnings("unchecked")
   boolean set(Lst<Object> list) {
     // vertices will be in list.get(0). normals?
-    width = 200;
+    if (width == 0)
+      width = 200;
     diameter = 0;//200;
     useColix = true;
     bsTemp = new BS();
@@ -321,9 +344,17 @@ public class CGOMesh extends DrawMesh {
           cmds = (Lst<Object>) list.get(0);
         cmds = (Lst<Object>) cmds.get(1);
       }
-
       int n = cmds.size();
       boolean is2D = false;
+      cmdsAllNumbers = true;
+      // I do not know if all CGO commands are Double values. I THINK so.
+      for (int i = cmds.size(); --i >= 0;) {
+        Object o = cmds.get(i);
+        if (!(o instanceof Number)) {
+          cmdsAllNumbers = false;
+          break;
+        }
+      }      
       for (int i = 0; i < n; i++) {
         int type = ((Number) cmds.get(i)).intValue();
         int len = getSize(type, is2D);
@@ -450,10 +481,6 @@ public class CGOMesh extends DrawMesh {
     cList.clear();
   }
   
-  public Lst<Short> nList = new Lst<Short>();
-  public Lst<Short> cList = new Lst<Short>();
-  public float meshWidth;
-
   /**
    * 
    * @param i
@@ -482,6 +509,25 @@ public class CGOMesh extends DrawMesh {
    */
   public double getFloat(int i) {
     return ((Number) cmds.get(i)).doubleValue();
+  }
+
+  public void encodeCommands(SB sb) {
+    sb.append(" data \"cgo\"");
+    for (int i = 0, n = cmds.size(); i < n; i++) {
+      int idec = (int) (((Number) cmds.get(i)).doubleValue() * 10000);
+      sb.appendI(idec);
+      sb.appendC(' ');
+    }
+    sb.append("end \"cgo\";\n");
+  }
+
+  private static void decodeCommands(String s, Lst<Object> data) {
+    int v;
+    int[] next = new int[1];
+    while ((v = PT.parseIntNext(s, next)) != Integer.MIN_VALUE) {
+      data.addLast(Double.valueOf(v / 10000d));
+      next[0]++;
+    }
   }
 
 }

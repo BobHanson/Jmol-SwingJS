@@ -132,9 +132,9 @@ public abstract class AtomShape extends Shape {
     if ("pymolparams" == propertyName) {
       isActive = true;
       Object[] data = (Object[]) value;
-      short[] colixes = (short[]) data[0];
-      double[] atrans = (double[]) data[1];
-      double[] sizes = (double[]) data[2];
+      short[] colixes = (short[]) data[JC.PYMOL_COLIXES];
+      double[] atrans = (double[]) data[JC.PYMOL_TRANSPARENCIES];
+      double[] sizes = (double[]) data[JC.PYMOL_RADII]; 
       RadiusData rd = new RadiusData(null, 0, RadiusData.EnumType.FACTOR,
           VDW.AUTO);
       if (bsColixSet == null)
@@ -148,8 +148,6 @@ public abstract class AtomShape extends Shape {
       int n = checkColixLength(colixes == null ? 0 : C.BLACK, bs.length());
       for (int i = i0, pt = 0; i >= 0 && i < n; i = bs.nextSetBit(i + 1), pt++) {
         short colix = (colixes == null ? 0 : colixes[pt]);
-        //if (colix == 0)
-          //colix = C.INHERIT_ALL;  IS 0 already
         double f = (atrans == null ? 0 : atrans[pt]);
         if (f > 0.01f)
           colix = C.getColixTranslucent3(colix, true, f);
@@ -157,6 +155,8 @@ public abstract class AtomShape extends Shape {
         if (sizes == null)
           continue;
         boolean isVisible = ((rd.value = sizes[pt]) > 0);
+        if (rd.value == 0 && bsSizeSet.get(i))
+          continue;
         setSizeRD2(i, rd, isVisible);
       }
       return;

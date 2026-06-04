@@ -705,6 +705,10 @@ public class IsosurfaceMesh extends Mesh {
    *  just sets the color command for this isosurface. 
    */
   void setColorCommand() {
+    if ("inherit".equals(jvxlData.colorScheme)) {
+      colorCommand = "#inherit;";
+      return;
+    }
     if (colorEncoder == null || (colorCommand = colorEncoder.getColorScheme()) == null)
       return;
     if (colorCommand.equals("inherit")) {
@@ -750,7 +754,8 @@ public class IsosurfaceMesh extends Mesh {
 
     isColorSolid = !jvxlData.isBicolorMap && jvxlData.vertexColors == null
         && jvxlData.vertexColorMap == null;
-    if (colorEncoder == null && jvxlData.vertexColorMap == null)
+    if (colorEncoder == null 
+        && ("inherit".equals(jvxlData.colorScheme) || jvxlData.vertexColorMap == null))
       return false;
     // bicolor map will be taken care of with params.isBicolorMap
     if (jvxlData.vertexColorMap == null) {
@@ -1094,8 +1099,9 @@ public class IsosurfaceMesh extends Mesh {
   }
   
   double[] getDataRange() {
-    return (jvxlData.jvxlPlane != null
-        && colorEncoder == null ? null : new double[] {
+    return ("inherit".equals(jvxlData.colorScheme) 
+        || jvxlData.jvxlPlane != null && colorEncoder == null 
+        ? null : new double[] {
         jvxlData.mappedDataMin,
         jvxlData.mappedDataMax,
         (jvxlData.isColorReversed ? jvxlData.valueMappedToBlue

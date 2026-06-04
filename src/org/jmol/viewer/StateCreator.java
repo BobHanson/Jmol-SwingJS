@@ -1006,8 +1006,8 @@ public class StateCreator extends JmolStateCreator {
           sb.append(" font ").append(m.text.font.getInfo());
         if (m.text.align != JC.TEXT_ALIGN_NONE)
           sb.append(" align ").append(JC.getHorizAlignmentName(m.text.align));
-        if (m.text.pymolOffset != null)
-          sb.append(" offset ").append(Escape.eAD(m.text.pymolOffset));
+        if (m.text.getPymolOffset() != null)
+          sb.append(" offset ").append(Escape.eAD(m.text.getPymolOffset()));
       } 
       TickInfo tickInfo = m.tickInfo;
       if (tickInfo != null)
@@ -1243,8 +1243,8 @@ public class StateCreator extends JmolStateCreator {
           cmd += PT.esc(l.formats[i]);
         } else {
           cmd += PT.esc(t.textUnformatted);
-          if (t.pymolOffset != null)
-            cmd += ";set labelOffset " + Escape.eAD(t.pymolOffset);
+          if (t.getPymolOffset() != null)
+            cmd += ";set labelOffset " + Escape.eAD(t.getPymolOffset());
         }
         BSUtil.setMapBitSet(temp, i, i, cmd);
         
@@ -1374,7 +1374,7 @@ public class StateCreator extends JmolStateCreator {
     boolean isVector = (shape.shapeID == JC.SHAPE_VECTORS);
     int mad;
     BS bs = vwr.getAllAtoms();
-    if (shape.bsSizeSet != null)
+    if (shape.bsSizeSet != null) {
       for (int i = shape.bsSizeSet.nextSetBit(0); i >= 0; i = shape.bsSizeSet
           .nextSetBit(i + 1)) {
         if (!bs.get(i))
@@ -1382,6 +1382,7 @@ public class StateCreator extends JmolStateCreator {
         BSUtil.setMapBitSet(temp, i, i, type
             + " " + ((mad = shape.mads[i]) < 0 ? (isVector && mad < -1 ? "" + -mad :  "on") : PT.escD(mad / 2000d)));
       }
+    }
     if (shape.bsColixSet != null)
       for (int i = shape.bsColixSet.nextSetBit(0); i >= 0; i = shape.bsColixSet
           .nextSetBit(i + 1))
@@ -1455,9 +1456,9 @@ public class StateCreator extends JmolStateCreator {
                   : Escape.eP(t.pointerPt))
           .append(";\n");
     }
-    if (t.pymolOffset != null) {
+    if (t.getPymolOffset() != null) {
       sb.append("  ").append(echoCmd).append(" offset ")
-          .append(Escape.escapeDoubleA(t.pymolOffset, true)).append(";\n");
+          .append(Escape.escapeDoubleA(t.getPymolOffset(), true)).append(";\n");
     }
     //isDefine and target==top: do all
     //isDefine and target!=top: just start
