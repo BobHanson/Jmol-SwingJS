@@ -892,6 +892,9 @@ public final class JC {
       "@turn structure=1", "@sheet structure=2", "@helix structure=3",
       "@helix310 substructure=7", "@helixalpha substructure=8",
       "@helixpi substructure=9",
+      
+      // magnetic structures
+      "@magnetic vxyz>0",
 
       // nucleic acid structures
       "@bulges within(dssr,'bulges')", "@coaxStacks within(dssr,'coaxStacks')",

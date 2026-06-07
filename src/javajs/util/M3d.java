@@ -695,4 +695,55 @@ public class M3d extends M34d implements Serializable {
     return (Math.abs(determinant3() - 1) < 0.001f);
   }
 
+  public static M3d fromEulerZXZ(double alpha, double beta, double gamma) {
+    alpha *= (Math.PI / 180);
+    beta *= (Math.PI / 180);
+    gamma *= (Math.PI / 180);
+    double ca = Math.cos(alpha);
+    double sa = Math.sin(alpha);
+    double cb = Math.cos(beta);
+    double sb = Math.sin(beta);
+    double cg = Math.cos(gamma);
+    double sg = Math.sin(gamma);
+    M3d m = new M3d();
+    // https://en.wikipedia.org/wiki/Euler_angles
+    m.m00 = ca * cg - cb * sa * sg;
+    m.m01 = -ca * sg - cb * cg * sa;
+    m.m02 = sa * sb;
+    m.m10 = cg*sa + ca*cb*sg;
+    m.m11 = ca * cb * cg - sa*sg;
+    m.m12 = -ca*sb;
+    m.m20 = sb * sg;
+    m.m21 = cg * sb;
+    m.m22 = cb;
+    return m;
+  }
+
+//  static {
+//    M3d m;
+//    Qd q;
+//    m = fromEulerZXZ(30, 45, 30);
+//    q = Qd.newM(m);
+//    System.out.println(m + "\n" + q);
+//    System.out.println(Arrays.toString(q.getEulerZXZ()));
+//  
+//    m = fromEulerZXZ(-90, -35, 45);
+//    q = Qd.newM(m);
+//    System.out.println(m + "\n" + q);
+//    System.out.println(Arrays.toString(q.getEulerZXZ()));
+//    
+//    m = fromEulerZXZ(83, 42, 12);
+//    q = Qd.newM(m);
+//    System.out.println(m + "\n" + q);
+//    System.out.println(Arrays.toString(q.getEulerZXZ()));
+//
+//    m = fromEulerZXZ(12.000000000000004, 41.99999999999998, 83.0);
+//    q = Qd.newM(m);
+//    System.out.println(m + "\n" + q);
+//    System.out.println(Arrays.toString(q.getEulerZXZ()));
+//   System.out.println(Arrays.toString(q.getEulerZXZ()));
+//    
+//    
+//    
+//  }
 }

@@ -260,7 +260,7 @@ public class XtalSymmetry {
       if (spinFrameStr != null) {
         this.spinFrameStr = spinFrameStr = evaluateSpinFrameStr(acr, spinFrameStr, a, b, c);
         htCellTypes.put(JC.CELL_TYPE_SPIN_FRAME, spinFrameStr);
-        T3d[] spinABC = preSymmetrySetSpinFrameMatrices(acr);
+        T3d[] spinABC = preSymmetrySetSpinFrameMatrices(acr, spinFrameStr);
         // note that these will all be 1 for SpinCIF
         a = spinABC[1].length();
         b = spinABC[2].length();
@@ -321,20 +321,31 @@ public class XtalSymmetry {
     }
 
     private String evaluateSpinFrameStr(AtomSetCollectionReader acr, String s, double a, double b, double c) {
-      if (s.indexOf("mod(") >= 0) {
-        s = PT.rep(s, "mod(a)", "(" + a + ")");
-        s = PT.rep(s, "mod(b)", "(" + b + ")");
-        s = PT.rep(s, "mod(c)", "(" + c + ")");        
-      }
-      String sf = SimpleUnitCell.parseSimpleMath(acr.vwr, s);
-      if (sf.charAt(0) == '[') {
-        // string representation of matrix
-        // generate matrix, save if nec. and continue on
-        M4d m4 = M4d.newM4(null);
-        m4.setRotationScale((M3d) Escape.unescapeMatrixD(sf));
-        sf = SymmetryOperation.getTransformABCd(m4, false, true);
-      }
-      return sf;
+      int pt = s.indexOf(":");
+      String type = s.substring(0, pt);
+      s = s.substring(pt + 1);
+      switch (type) {
+      case "abc":
+      case "matrix":
+        if (s.indexOf("mod(") >= 0) {
+          s = PT.rep(s, "mod(a)", "(" + a + ")");
+          s = PT.rep(s, "mod(b)", "(" + b + ")");
+          s = PT.rep(s, "mod(c)", "(" + c + ")");        
+        }
+        String sf = SimpleUnitCell.parseSimpleMath(acr.vwr, s);
+        if (sf.charAt(0) == '[') {
+          // string representation of matrix
+          // generate matrix, save if nec. and continue on
+          M4d m4 = M4d.newM4(null);
+          m4.setRotationScale((M3d) Escape.unescapeMatrixD(sf));
+          sf = SymmetryOperation.getTransformABCd(m4, false, true);
+        }
+        return sf;
+      case "hex":
+      case "cartn":
+        return type.substring(0, 1) + "::" + s.replace(',', ' ');
+      }       
+      return null;
     }
 
     /**
@@ -353,9 +364,10 @@ public class XtalSymmetry {
      *   _space_group_spin.rotation_angle
      *   
      * @param acr
+     * @param spinFrameStr 
      * @return spin frame [origin, a, b, c]
      */
-    private T3d[] preSymmetrySetSpinFrameMatrices(AtomSetCollectionReader acr) {
+    private T3d[] preSymmetrySetSpinFrameMatrices(AtomSetCollectionReader acr, String spinFrameStr) {
       System.out.println(
           "XtalSymmetry.setSpinFrameMatrices using frame " + spinFrameStr);
       // the vectors are based on the spin frame, not the real frame
@@ -363,8 +375,21 @@ public class XtalSymmetry {
       // for this purpose
       setUnitCellFromParams(acr.unitCellParams, false, acr.cellSlop);
       // note that spinFramePp is never used
+      char orient = '0';
+      if (spinFrameStr.indexOf("::") == 1) {
+        orient = spinFrameStr.charAt(0);
+        String s = spinFrameStr.substring(3);
+        double[] ca = PT.parseDoubleArray(s.substring(1, s.length() - 1));
+        spinFrameRotationMatrix = fromEulerZXZ(ca[0], ca[1], ca[2]);
+        spinFrameStr = null;
+      }
       T3d[] spinABC = UnitCell.getMatrixAndUnitCell(acr.vwr, unitCell,
           spinFrameStr, null);
+      if (orient != '0') {
+        setSpinOrientationBasis(spinABC, orient == 'h');
+      }
+      
+      
       if (doNormalizeSpinFrame ) {
           // not doing this
          spinABC[1].normalize();
@@ -372,9 +397,9 @@ public class XtalSymmetry {
          spinABC[3].normalize();
       }
       // extended for axis and angle
-      String strAxis = getSpinExt(spinFrameExt, "axis");
+      String strAxis = getSpinExt(spinFrameExt, ROT_AXIS);
       if (strAxis != null) {
-        double angle = PT.parseDouble(getSpinExt(spinFrameExt, "angle"));
+        double angle = PT.parseDouble(getSpinExt(spinFrameExt, ROT_ANGLE));
         if (!Double.isNaN(angle)) {
           V3d axis = getAxis(strAxis);
           if (axis != null) {
@@ -387,6 +412,50 @@ public class XtalSymmetry {
         }
       }
       return spinABC;
+    }
+
+    public static M3d fromEulerZXZ(double alpha, double beta, double gamma) {
+      alpha *= (Math.PI / 180);
+      beta *= (Math.PI / 180);
+      gamma *= (Math.PI / 180);
+      double ca = Math.cos(alpha);
+      double sa = Math.sin(alpha);
+      double cb = Math.cos(beta);
+      double sb = Math.sin(beta);
+      double cg = Math.cos(gamma);
+      double sg = Math.sin(gamma);
+      M3d m = new M3d();
+      // https://en.wikipedia.org/wiki/Euler_angles
+      m.m00 = ca * cg - cb * sa * sg;
+      m.m01 = -ca * sg - cb * cg * sa;
+      m.m02 = sa * sb;
+      m.m10 = cg*sa + ca*cb*sg;
+      m.m11 = ca * cb * cg - sa*sg;
+      m.m12 = -ca*sb;
+      m.m20 = sb * sg;
+      m.m21 = cg * sb;
+      m.m22 = cb;
+      return m;
+    }
+
+    /**
+     * Modify spinABC in place to be either orthonormal or hex-normal
+     * @param spinABC
+     * @param isHex
+     */
+    private void setSpinOrientationBasis(T3d[] spinABC, boolean isHex) {    
+      T3d x = spinABC[1];
+      T3d y = spinABC[2];
+      T3d z = spinABC[3];
+      z.cross(x, y);
+      y.cross(z, x);
+      double len = x.length();  
+      y.scale(len / y.length());
+      z.scale(len / z.length());
+      if (isHex) {
+        y.scale(Math.sqrt(3) / 2);
+        y.scaleAdd(-0.5, x, y);
+      }
     }
 
     private double[] getVariableAxis(String strAxis) {
@@ -493,6 +562,9 @@ public class XtalSymmetry {
   
   private static final double SQUARED_CARTESIAN_DISTANCE_CHECK_NOOPS = 0.0001d;
   private static final double SQUARED_CARTESIAN_DISTANCE_CHECK_OPS = 0.01d;
+
+  public static final String ROT_AXIS = "axis";
+  public static final String ROT_ANGLE = "angle";
 
   private AtomSetCollectionReader acr;
   private boolean applySymmetryToBonds;
@@ -2124,4 +2196,5 @@ public class XtalSymmetry {
     return new FileSymmetry();
   }
 
+  
 }

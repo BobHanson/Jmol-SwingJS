@@ -4,8 +4,8 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.jmol.adapter.readers.cif.CifReader;
 import org.jmol.adapter.smarter.Atom;
-import org.jmol.adapter.smarter.AtomSetCollectionReader;
 import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.api.JmolAdapter;
 import org.jmol.symmetry.SymmetryOperation;
@@ -13,6 +13,7 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Vibration;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
 import javajs.util.Lst;
@@ -20,6 +21,7 @@ import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.P3d;
 import javajs.util.PT;
+import javajs.util.Rdr;
 import javajs.util.SB;
 
 /**
@@ -32,7 +34,7 @@ import javajs.util.SB;
  * @author Bob Hanson hansonr@stolaf.edu
  */
 
-public class FSGOutputReader extends AtomSetCollectionReader {
+public class FSGOutputReader extends CifReader {
 
   private final static double fsgPrecision = 1e-4d; 
   private short[] elementNumbers;
@@ -42,15 +44,61 @@ public class FSGOutputReader extends AtomSetCollectionReader {
   private Map<String, Object> json;
   private String configuration;
   private boolean isCoplanar;
-  private boolean isCollinear;
+ // private boolean isCollinear;
   private int firstTranslation;
   private String spinFrame;
   private String fullName;
+  private boolean readingSCIF;
+  private Map<String, Object> scifOutputs;
   private final static int DEFAULT_PRECISION = 5;
+
+  private String loadNote;
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  protected void setup(String fullPath, Map<String, Object> htParams,
+                       Object reader) {
+    try {
+      setupASCR(fullPath, htParams, reader);
+      vwr = (Viewer) htParams.get("vwr");
+      getJSON();
+      scifOutputs = (Map<String, Object>) json.get("scif_outputs");
+      readingSCIF = (scifOutputs != null);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+
+  @Override
+  protected Object readData() throws Exception {
+    if (readingSCIF) {
+      // get CIF data
+      String s = "";
+      loadNote = "";
+      int n = 0;
+      for (Entry<String, Object> e : scifOutputs.entrySet()) {
+        String name = e.getKey();
+        loadNote += "\nmodel " + ++n + " is " + name;
+        String scif = (String) e.getValue();
+        scif.replace("\ndata_", "\ndata_" + name + "_");
+        s += scif + "\n";
+      }
+      loadNote = n + " models were read from the FSG JSON:" + loadNote;
+      reader = Rdr.getBR(s);
+      return super.readData();
+    }
+    return super.readData();
+  }
+  
 
   @Override
   public void initializeReader() throws Exception {
     super.initializeReader();
+    if (readingSCIF) {
+      // done in CifReader
+      return;
+    }
     convertToABC = false;
     spinOnly = checkFilterKey("SPINONLY");
     checkNearAtoms = !checkFilterKey("NOSPECIAL"); // as in "no special positions"
@@ -69,30 +117,91 @@ public class FSGOutputReader extends AtomSetCollectionReader {
       }
         
     }
-    SB sb = new SB();
     try {
-      while (rd() != null)
-        sb.append(line);
-      json = vwr.parseJSONMap(sb.toString());
-      processJSON();
+        processOldJSON();
     } catch (Exception e) {
       e.printStackTrace();
     }
     continuing = false;
   }
 
-  private void processJSON() {
+  private void getJSON() throws Exception {
+    SB sb = new SB();
+    while (rd() != null)
+      sb.append(line);
+    json = vwr.parseJSONMap(sb.toString());
+  }
+
+
+  private void processOldJSON() {
     getHeaderInfo();
     Lst<Object> info = getList(json, "G0_std_Cell");
     getCellInfo(getListItem(info, 0));
     configuration = (String) json.get("Configuration"); // "Coplanar"
     isCoplanar = "Coplanar".equals(configuration);
-    isCollinear = "Collinear".equals(configuration);
+    //isCollinear = "Collinear".equals(configuration);
     addMoreUnitCellInfo("configuration=" + configuration);
     readAllOperators(getList(json, "G0_std_operations"));
     @SuppressWarnings("unchecked")
     String[] symbols = getSymbols((Map<String, Object>)json.get("AtomTypeDict"));
     readAtomsAndMoments(info, symbols);
+  }
+
+  @Override
+  protected void warnSkippingOperation(String xyz) {
+    if (readingSCIF)
+      super.warnSkippingOperation(xyz);    
+    // ignore - this is from Coplanar +/-w
+ }
+
+  @Override
+  public void doPreSymmetry(boolean doApplySymmetry) throws Exception {
+    if (readingSCIF) {
+      super.doPreSymmetry(doApplySymmetry);
+      return;
+    }
+    FileSymmetry fs = asc.getSymmetry();
+    BS bs = BSUtil.newBitSet2(0, asc.ac);
+    int i = 0;
+    symmetry.setPrecision(fsgPrecision);
+    while ((i = excludeAtoms(i, bs, fs)) >= 0) {
+      // iterate
+    }
+    for (int n = 0, j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1)) {
+      asc.atoms[j].atomSite = n++;
+    }
+    filterFsgAtoms(bs);
+    preSymmetrySetMoments();
+    System.out.println("FSGOutputReader using atoms " + bs);
+    Lst<String> lst = fs.setSpinList(configuration);
+    if (lst != null) {
+      asc.setCurrentModelInfo("spinList", lst);
+      appendLoadNote(
+          lst.size() + " spin operations -- see _M.spinList and atom.spin");
+    }
+    System.out.println(
+        "FSGOutput operationCount=" + fs.getSpaceGroupOperationCount());
+    Map<String, Object> info = getSCIFInfo(fs, lst);
+    asc.setCurrentModelInfo("scifInfo", info);
+    asc.setCurrentModelInfo("spinFrame", spinFrame);
+  }
+
+  @Override
+  protected void finalizeSubclassReader() throws Exception {
+    if (readingSCIF) {
+      super.finalizeSubclassReader();
+      appendLoadNote(loadNote);
+      setLoadNote();
+      return;
+    }
+    asc.setNoAutoBond();
+    applySymmetryAndSetTrajectory();
+    addJmolScript("vectors on;vectors 0.15;");
+    vibsFractional = true;
+    int n = asc.getXSymmetry().setMagneticMoments(true);
+    asc.getXSymmetry().getFileSymmetry().setPrecision(fsgPrecision);
+    appendLoadNote(n
+        + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
   }
 
   private String[] getSymbols(Map<String, Object> map) {
@@ -236,39 +345,6 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     }
   }
   
-  @Override
-  protected void warnSkippingOperation(String xyz) {
-    // ignore - this is from Coplanar +/-w
- }
-
-  @Override
-  public void doPreSymmetry(boolean doApplySymmetry) throws Exception {
-    FileSymmetry fs = asc.getSymmetry();
-    BS bs = BSUtil.newBitSet2(0, asc.ac);
-    int i = 0;
-    symmetry.setPrecision(fsgPrecision);
-    while ((i = excludeAtoms(i, bs, fs)) >= 0) {
-      // iterate
-    }
-    for (int n = 0, j = bs.nextSetBit(0); j >= 0; j = bs.nextSetBit(j + 1)) {
-      asc.atoms[j].atomSite = n++;
-    }
-    filterFsgAtoms(bs);
-    preSymmetrySetMoments();
-    System.out.println("FSGOutputReader using atoms " + bs);
-    Lst<String> lst = fs.setSpinList(configuration);
-    if (lst != null) {
-      asc.setCurrentModelInfo("spinList", lst);
-      appendLoadNote(
-          lst.size() + " spin operations -- see _M.spinList and atom.spin");
-    }
-    System.out.println(
-        "FSGOutput operationCount=" + fs.getSpaceGroupOperationCount());
-    Map<String, Object> info = getSCIFInfo(fs, lst);
-    asc.setCurrentModelInfo("scifInfo", info);
-    asc.setCurrentModelInfo("spinFrame", spinFrame);
-  }
-
   /**
    * We need to generate the moment for the SCIF file
    */
@@ -308,18 +384,6 @@ public class FSGOutputReader extends AtomSetCollectionReader {
     }
     asc.atomSetAtomCounts[0] = asc.ac = bs.cardinality();
     
-  }
-
-  @Override
-  protected void finalizeSubclassReader() throws Exception {
-    asc.setNoAutoBond();
-    applySymmetryAndSetTrajectory();
-    addJmolScript("vectors on;vectors 0.15;");
-    vibsFractional = true;
-    int n = asc.getXSymmetry().setMagneticMoments(true);
-    asc.getXSymmetry().getFileSymmetry().setPrecision(fsgPrecision);
-    appendLoadNote(n
-        + " magnetic moments - use VECTORS ON/OFF or VECTOR MAX x.x or SELECT VXYZ>0");
   }
 
   private Map<String, Object> getSCIFInfo(FileSymmetry fs,

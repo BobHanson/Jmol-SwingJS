@@ -158,7 +158,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface {
         modelIndex = -2 - modelIndex; // animation is running
       //int file = iData[1];
       //int model = iData[2];
-      if (vwr.haveDisplay) {
+      if (vwr.haveDisplay && !vwr.am.splitFrame) {
         String menuName = (String) data[2];
         if (menuName.equals("0.0: "))
           menuName = "";

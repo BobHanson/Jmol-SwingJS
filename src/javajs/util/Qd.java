@@ -53,6 +53,12 @@ public class Qd {
     q0 = 1;
   }
 
+  public static Qd newEulerZXZ(double alpha, double beta, double gamma) {
+    Qd q = new Qd();
+    q.setEulerZXZ(alpha, beta, gamma);
+    return q;    
+  }
+  
   public static Qd newQ(Qd q) {
     Qd q1 = new Qd();
     q1.set(q);
@@ -307,6 +313,19 @@ public class Qd {
 
      */
   }
+
+  /**
+   * 
+   * @param alpha
+   *        in degrees
+   * @param beta
+   *        in degrees
+   * @param gamma
+   *        in degrees
+   */
+  public void setEulerZXZ(double alpha, double beta, double gamma) {
+    setM(M3d.fromEulerZXZ(alpha, beta, gamma));
+   }
 
   /*
    * if qref is null, "fix" this quaternion
@@ -829,18 +848,25 @@ public class Qd {
     return new double[]  {(rA / RAD_PER_DEG), (rB / RAD_PER_DEG), (rG / RAD_PER_DEG)};
   } 
 
+  /**
+   * There is a question here what we are reporting. 
+   * Is [a1 a2 a3] the order of operation, or it is it
+   * the "Euler Angle Vector" [alpha beta gamma] or [phi,theta,psi]?
+   * In which case gamma or psi come first.
+   * @return [alpha beta gamma]
+   */
   public double[] getEulerZXZ() {
-    // NOT http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-    // http://www.swarthmore.edu/NatSci/mzucker1/e27/diebel2006attitude.pdf
+    // http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles (pre-multiplication)
+	// Diebel paper: https://www.astro.rug.nl/software/kapteyn-beta/_downloads/attitude.pdf (post-multiplication, so transposed)
     double rA, rB, rG;
     if (q1 == 0 && q2 == 0) {
       double theta = getTheta();
       // pure Z rotation - ambiguous
       return new double[] { q3 < 0 ? -theta : theta , 0, 0 };
     }
-    rA = Math.atan2(2 * (q1 * q3 - q0 * q2), 2 * (q0 * q1 + q2 * q3 ));
+    rA = Math.atan2( 2 * (q1 * q3 + q0 * q2), 2 * (-q2 * q3 + q0 * q1));
     rB = Math.acos(q3 * q3 - q2 * q2 - q1 * q1 + q0 * q0);
-    rG = Math.atan2( 2 * (q1 * q3 + q0 * q2), 2 * (-q2 * q3 + q0 * q1));
+    rG = Math.atan2(2 * (q1 * q3 - q0 * q2), 2 * (q0 * q1 + q2 * q3 ));
     return new double[]  {(rA / RAD_PER_DEG), (rB / RAD_PER_DEG), (rG / RAD_PER_DEG)};
   }
 

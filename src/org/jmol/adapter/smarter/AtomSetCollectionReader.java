@@ -310,7 +310,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       binaryDoc = (GenericBinaryDocument) readerOrDocument;
   }
 
-  Object readData() throws Exception {
+  protected Object readData() throws Exception {
     initialize();
     asc = new AtomSetCollection(readerName, this, null, null);
     try {

@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.AtomSetCollectionReader;
+import org.jmol.adapter.smarter.XtalSymmetry;
 import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
 import org.jmol.api.JmolAdapter;
 import org.jmol.script.T;
@@ -527,29 +528,33 @@ public class CifReader extends AtomSetCollectionReader {
     		tag = PT.rep(tag, "fsg_", "");
     switch (tag) {
     case "number_chen":
+    case "number_chen_liu":
       tag = "spsg_number";
       break;
     case "oriented_spin_space_group_name_linear":
     case "name_chen":
+    case "name_chen_liu":
       processSymmetrySpaceGroupName();
       return;
     case "transform_spinframe_p_matrix":
     case "transform_spinframe_p_abc":
+    case "spinframe_orientation_cartn":
+    case "spinframe_orientation_hex":
       if (spinFrameSetByFILTER) {
         System.out.println("CifReader spinFrame set by user to " + spinFrame
             + " file setting ignored: " + field);
       } else {
-        spinFrame = (String) field;
+        spinFrame = tag.substring(tag.lastIndexOf("_") + 1) + ":" + field;
       }
       return;
     case "rotation_axis_cartn":
-      field = addSpinFrameExt("axis", false);
+      field = addSpinFrameExt(XtalSymmetry.ROT_AXIS, false);
       return;
     case "rotation_axis_xyz":
-      field = addSpinFrameExt("axis", true);
+      field = addSpinFrameExt(XtalSymmetry.ROT_AXIS, true);
       return;
     case "rotation_angle":
-      field = addSpinFrameExt("angle", false);
+      field = addSpinFrameExt(XtalSymmetry.ROT_ANGLE, false);
       return;
     case "collinear_direction":
       // extraneous, for information only 
@@ -1444,8 +1449,8 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte spin_moment_axis_w = 82;
   final private static byte spin_moment_symmform_uvw = 83;
   final private static byte spin_moment_magnitude = 84; // required if missing 
-  final private static byte spin_moment_spherical_azimuthal = 85;
-  final private static byte spin_moment_spherical_polar = 86;
+  //final private static byte spin_moment_spherical_azimuthal = 85;
+  //final private static byte spin_moment_spherical_polar = 86;
   
   
   final protected static String CAT_ATOM_SITE = "_atom_site";
