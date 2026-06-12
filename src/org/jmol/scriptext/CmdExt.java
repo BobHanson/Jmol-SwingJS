@@ -663,9 +663,8 @@ public class CmdExt extends ScriptExt {
       boolean isRaw = false;
       switch (tok) {
       case T.string:
-        isRaw = true;
-        //$FALL-THROUGH$
       case T.spin:
+        isRaw = true;
         i--;
         //$FALL-THROUGH$
      case T.unitcell:
@@ -675,7 +674,7 @@ public class CmdExt extends ScriptExt {
             || type.indexOf(",") >= 0 && (type.indexOf("a") >= 0
                 && type.indexOf("b") >= 0 && type.indexOf("c") >= 0)) {
           htParams.put("fillRange", type); // "conventional" or "primitive" or names cell in file
-          sOptions.append(" FILL " + (isRaw ? "" : "UNITCELL " + "\"" + type + "\""));
+          sOptions.append(" FILL " + (isRaw ? "" : "UNITCELL ") + "\"" + type + "\"");
           return i;
         }
         SymmetryInterface unitCell = vwr.getCurrentUnitCell();

@@ -266,4 +266,12 @@ public class Vibration extends V3d {
     return null;
   }
 
+  public void resetMoment() {
+    if (magMoment == 0)
+      return;
+    double d = lengthSquared();
+    if (d != 0)
+      scale(magMoment / Math.sqrt(d));
+  }
+
 }

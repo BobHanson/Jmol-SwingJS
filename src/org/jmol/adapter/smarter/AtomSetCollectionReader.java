@@ -870,8 +870,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean haveModel;
 
   public boolean doGetModel(int modelNumber, String title) {
-    if (title != null && nameRequired != null && nameRequired.length() > 0
-        && title.toUpperCase().indexOf(nameRequired) < 0)
+    if (title != null && modelNameRequired != null && modelNameRequired.length() > 0
+        && title.toUpperCase().indexOf(modelNameRequired) < 0)
       return false;
     // modelNumber is 1-based, but firstLastStep is 0-based
     boolean isOK = (bsModels == null
@@ -1167,7 +1167,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean allowPDBFilter;
   public boolean doReadMolecularOrbitals;
   protected boolean reverseModels;
-  private String nameRequired;
+  private String modelNameRequired;
   public boolean doCentroidUnitCell;
   public boolean centroidPacked;
   public String strSupercell;
@@ -1219,18 +1219,21 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (filter0 != null)
       filter0 = filter0.toUpperCase();
     filter = filter0;
+    checkFilterKeys();
     if (filter == null)
       return;
-    checkFilterKeys();
-    nameRequired = PT.getQuotedAttribute(filter, "NAME");
-    if (nameRequired != null) {
-      if (nameRequired.startsWith("'"))
-        nameRequired = PT.split(nameRequired, "'")[1];
-      else if (nameRequired.startsWith("\""))
-        nameRequired = PT.split(nameRequired, "\"")[1];
-      filter = PT.rep(filter, nameRequired, "");
-      filter0 = filter = PT.rep(filter, "NAME=", "");
+    filterAtoms();
+    filterModelName();
+    filterSymmetry();
+    String s = getFilter("FILESCALING=");
+    if (s != null) {
+      double fs = parseDoubleStr(s);
+      fileScaling = P3d.new3(fs, fs, fs);
+      fileOffset = new P3d();
     }
+  }
+
+  private void filterAtoms() {
     filterAtomName = checkFilterKey("*.") || checkFilterKey("!.");
     if (filter.startsWith("_") || filter.startsWith("!_")
         || filter.indexOf(";_") >= 0)
@@ -1250,36 +1253,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     haveAtomFilter = filterAtomName || filterAtomType || filterElement
         || filterGroup3 || filterChain || filterAltLoc || filterHetero
         || filterEveryNth || checkFilterKey("/=");
-    // can't use getFilter() here because form includes a semicolon:
-    // cell=a+b,a-b,c;0,1/2,1/2 
-    // also allows for NOPACKCELL by documentation 14.0
-    if (checkFilterKey("CELL="))
-      strSupercell = filter.substring(filter.indexOf("CELL=") + 5)
-          .toLowerCase(); // must be last filter option
-    filter = ";" + filter + ";";
-    Logger.info("filtering with " + filter);
-    String s = getFilter("SYMOP=");
-    if (s != null)
-      filterSymop = " " + s.replace(',', ' ') + " ";
-    filter = filter.replace(',', ';');
-    String p = getFilter("PRECISION=");
-    if (p != null) {
-      int prec = PT.parseInt(p);
-      if (prec > 0 && prec <= 16) {
-        precision = 1000 + prec;
-        filteredPrecision = true;
-      }
-    }
-    s = getFilter("FILESCALING=");
-    if (s != null) {
-      double fs = parseDoubleStr(s);
-      fileScaling = P3d.new3(fs, fs, fs);
-      fileOffset = new P3d();
-    }
-    s = getFilter("LATTICESCALING=");
-    if (s != null && unitCellParams.length > SimpleUnitCell.PARAM_SCALE)
-      unitCellParams[SimpleUnitCell.PARAM_SCALE] = latticeScaling = parseDoubleStr(
-          s);
     if (bsFilter == null) {
       // bsFilter is usually null, but from MDTOP it gets set to indicate
       // which atoms were selected by the filter. This then
@@ -1300,6 +1273,45 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
             : filter2Cased.toUpperCase());
       }
     }
+  }
+
+  private void filterModelName() {
+    modelNameRequired = PT.getQuotedAttribute(filter, "NAME");
+    if (modelNameRequired != null) {
+      if (modelNameRequired.startsWith("'"))
+        modelNameRequired = PT.split(modelNameRequired, "'")[1];
+      else if (modelNameRequired.startsWith("\""))
+        modelNameRequired = PT.split(modelNameRequired, "\"")[1];
+      filter = PT.rep(filter, modelNameRequired, "");
+      filter = PT.rep(filter, "NAME=", "");
+    }
+  }
+
+  private void filterSymmetry() {
+    // can't use getFilter() here because form includes a semicolon:
+    // cell=a+b,a-b,c;0,1/2,1/2 
+    // also allows for NOPACKCELL by documentation 14.0
+    if (checkFilterKey("CELL="))
+      strSupercell = filter.substring(filter.indexOf("CELL=") + 5)
+          .toLowerCase(); // must be last filter option
+    filter = ";" + filter + ";";
+    Logger.info("filtering with " + filter);
+    String s = getFilter("SYMOP=");
+    if (s != null)
+      filterSymop = " " + s.replace(',', ' ') + " ";
+    filter = filter.replace(',', ';');
+    String p = getFilter("PRECISION=");
+    if (p != null) {
+      int prec = PT.parseInt(p);
+      if (prec > 0 && prec <= 16) {
+        precision = 1000 + prec;
+        filteredPrecision = true;
+      }
+    }
+    s = getFilter("LATTICESCALING=");
+    if (s != null && unitCellParams.length > SimpleUnitCell.PARAM_SCALE)
+      unitCellParams[SimpleUnitCell.PARAM_SCALE] = latticeScaling = parseDoubleStr(
+          s);
   }
 
   /**

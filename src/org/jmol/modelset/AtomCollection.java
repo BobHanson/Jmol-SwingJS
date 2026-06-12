@@ -2947,7 +2947,8 @@ abstract public class AtomCollection {
     for (int i = vibrations.length; --i >= 0;) {
       Vibration v = getVibration(i, false);
       if (v != null && (v.modDim == Vibration.TYPE_VIBRATION
-          || v.modDim == Vibration.TYPE_SPIN)) {
+          || v.modDim == Vibration.TYPE_SPIN) && v.lengthSquared() > 0) {
+        v.resetMoment();
         m = Math.max(m, v.length());
         bsVib.set(i);
       }
