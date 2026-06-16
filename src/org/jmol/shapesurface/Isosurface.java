@@ -1111,7 +1111,13 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       if (AU.isAB(o))
         o = new String((byte[]) o);
       String jvxl = " data " + PT.esc(jvxlID) + o + "end " + PT.esc(jvxlID);
-      cmd = PT.rep(cmd,  "/*file*/" + PT.esc(fname), jvxl);
+      // don't use PT.rep here because the JVXL is just too complicated 
+      // for legacy java2script String.$replace, which uses an escaped regex
+      // anyway, this is much faster
+      String old = "/*file*/" + PT.esc(fname);
+      while ((pt = cmd.indexOf(old)) >= 0) {
+        cmd = cmd.substring(0, pt) + jvxl + cmd.substring(pt + old.length());
+      }
     }
     if (imesh.linkedMesh != null)
       cmd += " LINK"; // for lcaoCartoon state
