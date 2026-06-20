@@ -5103,7 +5103,7 @@ public class ScriptEval extends ScriptExpr {
     if (!strModel.startsWith(JC.BASE64_TAG))
       strModel = Viewer.fixInlineString(strModel, vwr.getInlineChar());
     htParams.put(JC.FILE_DATA, strModel);
-    htParams.put("isData", Boolean.TRUE);
+    htParams.put(JC.IS_DATA, Boolean.TRUE);
     //note: ScriptCompiler will remove an initial \n if present
     loadScript.appendC('\n').append(strModel).append(" end ")
         .append(PT.esc(key));

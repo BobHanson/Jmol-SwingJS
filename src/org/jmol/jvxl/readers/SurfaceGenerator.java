@@ -115,6 +115,7 @@ package org.jmol.jvxl.readers;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 
@@ -122,6 +123,8 @@ import org.jmol.atomdata.AtomData;
 import org.jmol.atomdata.AtomDataServer;
 import org.jmol.atomdata.RadiusData;
 import javajs.util.BS;
+import javajs.util.Base64;
+
 import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.jvxl.data.JvxlData;
 import org.jmol.jvxl.data.VolumeData;
@@ -134,6 +137,7 @@ import javajs.util.AU;
 import javajs.util.Lst;
 import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.M4d;
@@ -1170,11 +1174,11 @@ public class SurfaceGenerator {
   }
 
   /**
-   * @param vwr  
-   * @param value 
+   * @param vwr
+   * @param value
    * @return SurfaceReader
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "resource" })
   private SurfaceReader setFileData(Viewer vwr, Object value) {
     // comes from "readFile" or "mapColors"
     String fileType = this.fileType;
@@ -1185,7 +1189,7 @@ public class SurfaceGenerator {
         readerData = map;
         return newReaderBr("PyMOLMeshReader", null);
       }
-      value = map.get("volumeData");      
+      value = map.get("volumeData");
     }
     if (value instanceof VolumeData) {
       // never implemented? 
@@ -1196,9 +1200,16 @@ public class SurfaceGenerator {
     if (value instanceof String) {
       // inline string data
       data = (String) value;
-      // this will be OK, because any string will be a simple string, 
-      // not a binary file.
-      value = Rdr.getBR((String) value);
+      if (data.startsWith(JC.BASE64_TAG)) {
+        try {
+          value = new Rdr.StreamReader(Rdr.getBIS(Base64.decodeBase64(data)), null);
+        } catch (UnsupportedEncodingException e) {
+        }
+      } else {
+        // this will be OK, because any string will be a simple string, 
+        // not a binary file.
+        value = Rdr.getBR((String) value);
+      }
     }
     if (value instanceof Object[]) {
       // [BufferedFileReader[], double[]] -> [VolumeFileReader[], double[]]
@@ -1223,8 +1234,7 @@ public class SurfaceGenerator {
 
       String fname = params.fileName;
       fname = fname.substring(0, fname.indexOf("/", 10));
-      fname += PT.getQuotedStringAt(fileType,
-          fileType.indexOf("A HREF") + 1);
+      fname += PT.getQuotedStringAt(fileType, fileType.indexOf("A HREF") + 1);
       params.fileName = fname;
       value = atomDataServer.getBufferedInputStream(fname);
       if (value == null) {
@@ -1243,7 +1253,7 @@ public class SurfaceGenerator {
     Logger.info("data file type was determined to be " + fileType);
     if (fileType.equals("Jvxl+"))
       return newReaderBr("JvxlReader", br);
-    
+
     readerData = new Object[] { params.fileName, data };
 
     if ("MRC DELPHI DSN6".indexOf(fileType.toUpperCase()) >= 0) {

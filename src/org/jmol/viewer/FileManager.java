@@ -314,7 +314,7 @@ public class FileManager implements BytePoster {
                                            SB loadScript,
                                            Map<String, Object> htParams,
                                            boolean isAppend) {
-    if (!htParams.containsKey("isData")) {
+    if (!htParams.containsKey(JC.IS_DATA)) {
       String oldSep = "\"" + vwr.getDataSeparator() + "\"";
       String tag = "\"" + (isAppend ? "append" : "model") + " inline\"";
       SB sb = new SB();

@@ -2919,7 +2919,7 @@ public class Viewer extends JmolViewer
       return loadAtomDataAndReturnError(atomSetCollection, tokType);
     }
 
-    if (htParams.containsKey("isData"))
+    if (htParams.containsKey(JC.IS_DATA))
       return (String) atomSetCollection;
 
     // now we fix the load script (possibly) with the full path name
@@ -3085,7 +3085,7 @@ public class Viewer extends JmolViewer
     String strModel = null;
     if (haveFileData) {
       strModel = (String) htParams.get(JC.FILE_DATA);
-      if (htParams.containsKey("isData")) {
+      if (htParams.containsKey(JC.IS_DATA)) {
         Object o = loadInlineScript(strModel, '\0', isAppend, htParams);
         lastData = (g.preserveState ? getDataManager().createFileData(strModel)
             : null);
@@ -3319,7 +3319,7 @@ public class Viewer extends JmolViewer
 
     htParams = setLoadParameters(htParams, isAppend);
     SB loadScript = (SB) htParams.get("loadScript");
-    boolean isLoadCommand = htParams.containsKey("isData");
+    boolean isLoadCommand = htParams.containsKey(JC.IS_DATA);
     if (!strModel.startsWith(JC.BASE64_TAG)) {
       String type = getModelAdapter().getFileTypeName(htParams.get("filter"));
       if (type == null && (type = getModelAdapter()
