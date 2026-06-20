@@ -2663,7 +2663,7 @@ abstract class ScriptExpr extends ScriptParam {
         Object v;
         // compiler can indicate that a definition MUST
         // be interpreted as a String
-        boolean forceString = (theToken.intValue == T.string);
+        boolean forceString = (st[i - 2].tok == T.inline || theToken.intValue == T.string);
         // Object var_set;
         String s;
         String var = paramAsStr(i);
