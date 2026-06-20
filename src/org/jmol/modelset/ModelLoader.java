@@ -182,11 +182,11 @@ public final class ModelLoader {
       ms.trajectory = newTrajectory(ms, steps);
     isPyMOLsession = ms.getMSInfoB("isPyMOL");
     doAddPDBHydrogens = (jbr != null && !isTrajectory && !isPyMOLsession
-        && !ms.getMSInfoB("pdbNoHydrogens") && (ms
-        .getMSInfoB("pdbAddHydrogens") || vwr.getBoolean(T.pdbaddhydrogens)));
+        && !ms.getMSInfoB(JC.INFO_PDB_NO_HYDROGENS) && (ms
+        .getMSInfoB(T.PDB_ADD_HYDROGENS) || vwr.getBoolean(T.pdbaddhydrogens)));
     if (info != null) {
-      info.remove("pdbNoHydrogens");
-      info.remove("pdbAddHydrogens");
+      info.remove(JC.INFO_PDB_NO_HYDROGENS);
+      info.remove(T.PDB_ADD_HYDROGENS);
       info.remove(JC.INFO_TRAJECTORY_STEPS);
       if (isTrajectory)
         ms.vibrationSteps = (Lst<V3d[]>) info.remove(JC.INFO_VIBRATION_STEPS);

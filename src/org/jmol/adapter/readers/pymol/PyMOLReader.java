@@ -65,7 +65,7 @@ import javajs.util.V3d;
  * 
  * trajectories are not supported yet.
  * 
- * Basic idea is as follows: 
+ * Basic idea is as follows:
  * 
  * 1) Pickle file is read into a Hashtable.
  * 2) Atoms, bonds, and structures are created, as per other readers, from MOLECULE objects
@@ -75,8 +75,8 @@ import javajs.util.V3d;
  * 3) JmolObjects are finalized after file reading takes place by a call from ModelLoader
  *    back here to finalizeModelSet(), which runs PyMOLScene.setObjects, which runs JmolObject.finalizeObject.
  * 
- *  TODO: Handle discrete objects, DiscreteAtmToIdx? 
- *     
+ * TODO: Handle discrete objects, DiscreteAtmToIdx?
+ * 
  * @author Bob Hanson hansonr@stolaf.edu
  * 
  * 
@@ -92,9 +92,60 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
 
   private boolean allowSurface = true;
   private boolean doResize;
-  private boolean doCache;
+
+  /**
+   * a flag to indicate that this file is being read as part of a state script;
+   * effects when TRUE:
+   * 
+   * does not initialize Jmol for file reading
+   * 
+   * does not set the viewpoint
+   * 
+   * does not check frame size
+   * 
+   * does not ask user about wanting to change the frame size
+   * 
+   * does not process PyMOL movies
+   * 
+   * does not process mesh or surface representation (already taken care of with
+   * ISOSURFACE commands)
+   * 
+   * does not process atom-representations (radius, bond widths, dots, labels,
+   * ellipsoids
+   * 
+   * does not process measurements
+   * 
+   */
   boolean isStateScript;
-  private boolean sourcePNGJ;
+
+  /**
+   * a flag from LOAD xxx.pse FILTER "DOCACHE"
+   * 
+   * logic is as follows:
+   * 
+   * isStateScript --> some of this is already done for us. For example,
+   * everything is already colored and scaled, and there is no need to set the
+   * perspective.
+   * 
+   * sourcePNGJ --> not just any state script; one from a PNGJ file
+   * 
+   * !doCache && !sourcePNGJ --> standard PSE loading
+   * 
+   * doCache && !sourcePNGJ --> we need to cache surfaces
+   * 
+   * doCache && sourcePNGJ --> reading from a PNGJ that was created with DOCACHE
+   * filter --> no need for caching.
+   * 
+   * !doCache && sourcePNGJ --> "standard" PNGJ created without caching -->
+   * ignore the fact that this is from a PNGJ file
+   * 
+   */
+  private boolean doCache;
+
+  /**
+   * set true if the source is a PNGJ file and FILTER "DOCACHE"
+   */
+  private boolean ignoreObjects;
 
   private int ac0;
   private int ac;
@@ -107,7 +158,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   private BS bsBytesExcluded;
   private BS bsValence = new BS();
   private int[] pymolToAdapterAtom;
-  
+
   private Map<String, BS> ssMapSeq;
   private PyMOLScene pymolScene;
 
@@ -148,14 +199,14 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   private byte[] aTemp = new byte[16];
   private final P3d ptTemp = new P3d();
 
-
   /**
    * set TRUE using FILTER "SHOWVALENCE" to force multiple bonding
    */
   private boolean forceValence;
 
   @Override
-  protected void setup(String fullPath, Map<String, Object> htParams, Object reader) {
+  protected void setup(String fullPath, Map<String, Object> htParams,
+                       Object reader) {
     isBinary = mustFinalizeModelSet = true;
     setupASCR(fullPath, htParams, reader);
   }
@@ -165,39 +216,23 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     baseAtomIndex = ((Integer) htParams.get("baseAtomIndex")).intValue();
     baseModelIndex = ((Integer) htParams.get("baseModelIndex")).intValue();
     forceValence = checkFilterKey("SHOWVALENCE");
-    asc.setInfo("noAutoBond",
-        Boolean.TRUE);
-    asc.setCurrentModelInfo("pdbNoHydrogens", Boolean.TRUE);
+    asc.setInfo("noAutoBond", Boolean.TRUE);
+    asc.setCurrentModelInfo(JC.INFO_PDB_NO_HYDROGENS, Boolean.TRUE);
     if (isTrajectory)
       trajectorySteps = new Lst<P3d[]>();
-    isStateScript = htParams.containsKey("isStateScript");
-    sourcePNGJ = htParams.containsKey("sourcePNGJ");
+    isStateScript = htParams.containsKey(JC.INFO_SOURCE_STATE_SCRIPT);
+    boolean sourcePNGJ = htParams.containsKey(JC.INFO_SOURCE_PNGJ);
     doResize = checkFilterKey("DORESIZE");
     allowSurface = !checkFilterKey("NOSURFACE");
     doCache = checkFilterKey("DOCACHE");
-    
-    // logic is as follows:
-    //
-    // isStateScript --> some of this is already done for us. For example, everything is
-    //                   already colored and scaled, and there is no need to set the perspective. 
-    //
-    // doCache && sourcePNGJ   --> reading from a PNGJ that was created with DOCACHE filter
-    //                         --> no need for caching.
-    //
-    // !doCache && sourcePNGJ  --> "standard" PNGJ created without caching
-    //                         --> ignore the fact that this is from a PNGJ file
-    //
-    // doCache && !sourcePNGJ  --> we need to cache surfaces
-    //
-    // !doCache && !sourcePNGJ --> standard PSE loading
-
-    if (doCache && sourcePNGJ)
-      doCache = false;
-    else if (sourcePNGJ && !doCache)
-      sourcePNGJ = false;
+    if (sourcePNGJ && doCache) {
+      // the PNGJ will already be cached, no need to do that again
+      ignoreObjects = true;
+    }
     if (doCache)
       bsBytesExcluded = new BS();
     //logging = true; // specifically for Pickle
+    System.out.println("PyMOLReader doResize=" + doResize + " doCache=" + doCache + " ignoreObject=" + ignoreObjects);
     super.initializeReader();
   }
 
@@ -205,7 +240,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   public void processBinaryDocument() throws Exception {
     String logFile = vwr.getLogFileName();
     logging = (logFile.length() > 0);
-    Logger.info(logging ? "PyMOL (1) file data streaming to " + logFile : "To view raw PyMOL file data, use 'set logFile \"some_filename\" ");
+    Logger.info(logging ? "PyMOL (1) file data streaming to " + logFile
+        : "To view raw PyMOL file data, use 'set logFile \"some_filename\" ");
 
     PickleReader reader = new PickleReader(binaryDoc, vwr);
     Map<String, Object> map = reader.getMap(logging && Logger.debuggingHigh);
@@ -221,11 +257,13 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
 
   @Override
   protected void finalizeSubclassReader() throws Exception {
-    if (asc.atomSetCount == 1 && pymolScene.modelName != null && pymolScene.modelName.length() == 4)
+    if (asc.atomSetCount == 1 && pymolScene.modelName != null
+        && pymolScene.modelName.length() == 4)
       pdbID = pymolScene.modelName;
     super.finalizeSubclassReader();
     asc.setTensors();
   }
+
   /**
    * At the end of the day, we need to finalize all the JmolObjects, set the
    * trajectories, and, if filtered with DOCACHE, cache a streamlined binary
@@ -236,33 +274,34 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   public void finalizeModelSet() {
 
     pymolScene.setReaderObjects();
-    
+
     if (haveMeasurements) {
       appendLoadNote(vwr.getMeasurementInfoAsString());
       setLoadNote();
     }
-    
+
     if (haveScenes) {
       String[] scenes = new String[sceneOrder.size()];
       for (int i = scenes.length; --i >= 0;)
         scenes[i] = stringAt(sceneOrder, i);
       vwr.ms.msInfo.put("scenes", scenes);
     }
-    
-    vwr.ms.setTrajectoryBs(BSUtil.newBitSet2(baseModelIndex,
-        vwr.ms.mc));
+
+    vwr.ms.setTrajectoryBs(BSUtil.newBitSet2(baseModelIndex, vwr.ms.mc));
     if (!isStateScript)
       pymolScene.setFrameObject(0, null);
 
-    // exclude unnecessary named objects
-
     if (bsBytesExcluded != null) {
+      // prune cached PyMOL file of unnecessary hidden named objects
       int nExcluded = bsBytesExcluded.cardinality();
       byte[] bytes0 = (byte[]) vwr.fm.getFileAsBytes(filePath, null);
       byte[] bytes = new byte[bytes0.length - nExcluded];
-      for (int i = bsBytesExcluded.nextClearBit(0), n = bytes0.length, pt = 0; i < n; i = bsBytesExcluded
-          .nextClearBit(i + 1))
+      for (int i = bsBytesExcluded.nextClearBit(
+          0), n = bytes0.length, pt = 0; i < n; i = bsBytesExcluded
+              .nextClearBit(i + 1))
         bytes[pt++] = bytes0[i];
+      System.out.println("PyMOLReader caching " + bytes.length + " of "
+          + bytes0.length + " bytes for " + fileName);
       bytes0 = null;
       String fileName = filePath;
       vwr.cachePut(fileName, bytes);
@@ -283,7 +322,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     // create settings and uniqueSettings lists
     Lst<Object> settings = fixSettings(getMapList(map, "settings"));
     Lst<Object> lst = listAt(settings, PyMOL.dump_binary);
-    haveBinaryArrays = (lst != null  && floatAt(lst, 2) == 1);
+    haveBinaryArrays = (lst != null && floatAt(lst, 2) == 1);
     sceneOrder = getMapList(map, "scene_order");
     haveScenes = getFrameScenes(map);
     Lst<Object> file = listAt(settings, PyMOL.session_file);
@@ -291,14 +330,16 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
       Logger.info("PyMOL session file: " + file.get(2));
     //asc.setAtomSetCollectionAuxiliaryInfo("settings", settings);
     setUniqueSettings(getMapList(map, "unique_settings"));
-    pymolScene = new PyMOLScene(this, vwr, settings, uniqueSettings, 
-        pymolVersion, haveScenes, baseAtomIndex, baseModelIndex, doCache, filePath);
+    pymolScene = new PyMOLScene(this, vwr, settings, uniqueSettings,
+        pymolVersion, haveScenes, baseAtomIndex, baseModelIndex, doCache,
+        filePath);
     //just doing this based on having binaryStrings. haveBinaryArrays = pymolScene.booleanSetting(PyMOL.dump_binary);
 
     // just log and display some information here
     String logFile = vwr.getLogFileName();
     logging = (logFile.length() > 0);
-    Logger.info(logging ? "PyMOL file data streaming to " + logFile : "To view raw PyMOL file data, use 'set logFile \"some_filename\" ");
+    Logger.info(logging ? "PyMOL file data streaming to " + logFile
+        : "To view raw PyMOL file data, use 'set logFile \"some_filename\" ");
     Lst<Object> names = getMapList(map, "names");
     for (Map.Entry<String, Object> e : map.entrySet()) {
       String name = e.getKey();
@@ -318,8 +359,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
         String name = e.getKey();
         if (!"names".equals(name)) {
           vwr.log("\n===" + name + "===");
-          vwr.log(PT.rep(e.getValue().toString(), "[",
-              "\n["));
+          vwr.log(PT.rep(e.getValue().toString(), "[", "\n["));
         }
       }
       vwr.log("\n===names===");
@@ -337,8 +377,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
 
     // set up additional colors
     // not 100% sure what color clamping is, but this seems to work.
-    addColors(getMapList(map, "colors"), pymolScene
-        .globalSetting(PyMOL.clamp_colors) != 0);
+    addColors(getMapList(map, "colors"),
+        pymolScene.globalSetting(PyMOL.clamp_colors) != 0);
 
     // set a few global flags
     allStates = (pymolScene.globalSetting(PyMOL.all_states) != 0);
@@ -349,8 +389,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
 
     int pymolState = (int) pymolScene.globalSetting(PyMOL.state);
     if (!isMovie)
-      pymolScene.setFrameObject(T.frame, (allStates ? Integer.valueOf(-1)
-          : Integer.valueOf(pymolState - 1)));
+      pymolScene.setFrameObject(T.frame,
+          (allStates ? Integer.valueOf(-1) : Integer.valueOf(pymolState - 1)));
     appendLoadNote("frame=" + pymolFrame + " state=" + pymolState
         + " all_states=" + allStates);
 
@@ -366,8 +406,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
       String note;
       if (width > 0 && height > 0) {
         note = "PyMOL dimensions width=" + width + " height=" + height;
-        asc.setInfo(
-            "preferredWidthHeight", new int[] { width, height });
+        asc.setInfo("preferredWidthHeight", new int[] { width, height });
         //Dimension d = 
         vwr.resizeInnerPanel(width, height);
       } else {
@@ -396,15 +435,16 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
       default:
         desiredModelNumber = frames[(desiredModelNumber > 0
             && desiredModelNumber <= frames.length ? desiredModelNumber
-            : pymolFrame) - 1];
-        pymolScene.setFrameObject(T.frame, Integer
-            .valueOf(desiredModelNumber - 1));
+                : pymolFrame)
+            - 1];
+        pymolScene.setFrameObject(T.frame,
+            Integer.valueOf(desiredModelNumber - 1));
         break;
       }
     } else if (desiredModelNumber == 0) {
       // otherwise if you specify model "0", only load the current PyMOL state
       desiredModelNumber = pymolState;
-    } else if (desiredModelNumber == Integer.MIN_VALUE && !allStates){
+    } else if (desiredModelNumber == Integer.MIN_VALUE && !allStates) {
       addJmolScript("frame 1");
     } else {
       // load only the state you request, or all states, if you don't specify
@@ -438,7 +478,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
 
     // meshes are special objects that depend upon grid map data
     if (mapObjects != null && allowSurface)
-      processMeshes(); 
+      processMeshes();
 
     // trajectories are not supported yet
     if (isTrajectory) {
@@ -453,12 +493,11 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     if (!isStateScript) {
       // same idea as for a Jmol state -- session reinitializes
       vwr.initialize(false, true);
-      addJmolScript(pymolScene.getViewScript(getMapList(map, "view"))
-          .toString());
+      addJmolScript(
+          pymolScene.getViewScript(getMapList(map, "view")).toString());
     }
     if (ac == 0)
-      asc.setInfo("dataOnly",
-          Boolean.TRUE);
+      asc.setInfo("dataOnly", Boolean.TRUE);
     pymolScene.offsetObjects();
   }
 
@@ -490,8 +529,9 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
 
   /**
    * remove all scenes that do not define a frame.
+   * 
    * @param map
-   * @return  true if there are scenes that define a frame
+   * @return true if there are scenes that define a frame
    */
   @SuppressWarnings("unchecked")
   private boolean getFrameScenes(Map<String, Object> map) {
@@ -508,8 +548,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   }
 
   /**
-   * Create uniqueSettings from the "unique_settings" map item.
-   * This will be used later in processing molecule objects.
+   * Create uniqueSettings from the "unique_settings" map item. This will be
+   * used later in processing molecule objects.
    * 
    * @param list
    * @return max id
@@ -526,7 +566,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
         if (id > max)
           max = id;
         Lst<Object> mySettings = (Lst<Object>) atomSettings.get(1);
- 
+
         for (int j = mySettings.size(); --j >= 0;) {
           Lst<Object> setting = (Lst<Object>) mySettings.get(j);
           int type = intAt(setting, 0);
@@ -544,8 +584,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   }
 
   /**
-   * Add new colors from the main "colors" map object.
-   * Not 100% clear how color clamping works.
+   * Add new colors from the main "colors" map object. Not 100% clear how color
+   * clamping works.
    * 
    * @param colors
    * @param isClamped
@@ -556,15 +596,16 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     // note, we are ignoring lookup-table colors
     for (int i = colors.size(); --i >= 0;) {
       Lst<Object> c = listAt(colors, i);
-      PyMOL.addColor((Integer) c.get(1), isClamped ? colorSettingClamped(c, ptTemp)
-          : getColorPt(c.get(2), ptTemp));
+      PyMOL.addColor((Integer) c.get(1),
+          isClamped ? colorSettingClamped(c, ptTemp)
+              : getColorPt(c.get(2), ptTemp));
     }
   }
 
   /**
-   * Look through all named objects for molecules, counting
-   * atoms and also states; see if trajectories are compatible (experimental).
-   *  
+   * Look through all named objects for molecules, counting atoms and also
+   * states; see if trajectories are compatible (experimental).
+   * 
    * @param names
    */
   private void getAtomAndStateCount(Lst<Object> names) {
@@ -589,7 +630,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
           nBonds = listAt(pymolObject, 6).size();
           nAtoms = listAt(pymolObject, 7).size();
         }
-        System.out.println("Object " + objectName + " nBonds=" + nBonds + ", nAtoms = " + nAtoms);
+        System.out.println("Object " + objectName + " nBonds=" + nBonds
+            + ", nAtoms = " + nAtoms);
         for (int j = 0; j < ns; j++) {
           Lst<Object> state = listAt(states, j);
           Lst<Object> idxToAtm = listAt(state, 3);
@@ -612,12 +654,12 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   private boolean checkObject(Lst<Object> execObject) {
     objectName = stringAt(execObject, 0);
     isHidden = (intAt(execObject, 2) != 1);
-    return (objectName !=null && objectName.indexOf("_") != 0);
+    return (objectName != null && objectName.indexOf("_") != 0);
   }
 
   /**
-   * Create a JmolObject that will represent the movie.
-   * For now, only process unscripted movies without views.
+   * Create a JmolObject that will represent the movie. For now, only process
+   * unscripted movies without views.
    * 
    * @param mov
    * @param frameCount
@@ -684,7 +726,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   }
 
   /**
-   * Could possibly implement something here that interprets PyMOL script commands.
+   * Could possibly implement something here that interprets PyMOL script
+   * commands.
    * 
    * @param cmds
    * @return new cmds
@@ -693,7 +736,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     // TODO -- PyMOL to Jmol commands
     return cmds;
   }
-  
+
   /**
    * The main object processor. Not implemented: ALIGNMENT, CALLBACK, SLICE,
    * SURFACE
@@ -726,19 +769,19 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
         return intAt(pymolObject, 3);
       }
       stateSettings = listAt(state, 7);
-   } else if (iState > 0) {
+    } else if (iState > 0) {
       return 0;
     }
 
-      Logger.info("PyMOL model " + (nModels) + " state " + iState + " Object " + objectName
-          + (isHidden ? " (hidden)" : " (visible)"));
-      if (!isHidden && !isMovie && !allStates) {
-        if (pymolFrame > 0 && pymolFrame != nModels) {
-          pymolFrame = nModels;
-          allStates = true;
-          pymolScene.setFrameObject(T.frame, Integer.valueOf(-1));
-        }
+    Logger.info("PyMOL model " + (nModels) + " state " + iState + " Object "
+        + objectName + (isHidden ? " (hidden)" : " (visible)"));
+    if (!isHidden && !isMovie && !allStates) {
+      if (pymolFrame > 0 && pymolFrame != nModels) {
+        pymolFrame = nModels;
+        allStates = true;
+        pymolScene.setFrameObject(T.frame, Integer.valueOf(-1));
       }
+    }
     Lst<Object> objectHeader = listAt(pymolObject, 0);
     String parentGroupName = (execObject.size() < 8 ? null
         : stringAt(execObject, 6));
@@ -748,7 +791,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
         listAt(objectHeader, 8), stateSettings,
         (moleculeOnly ? "_" + (iState + 1) : ""));
     BS bsAtoms = null;
-    boolean doExclude = (bsBytesExcluded != null);
+    boolean pruneCachedPymolFile = (bsBytesExcluded != null);
     String msg = null;
     switch (type) {
     default:
@@ -758,11 +801,11 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
       pymolScene.processSelection(execObject);
       break;
     case PyMOL.OBJECT_MOLECULE:
-      doExclude = false;
+      pruneCachedPymolFile = false;
       bsAtoms = processMolecule(pymolObject, iState);
       break;
     case PyMOL.OBJECT_MEASURE:
-      doExclude = false;
+      pruneCachedPymolFile = false;
       processMeasure(pymolObject);
       break;
     case PyMOL.OBJECT_MAPMESH:
@@ -777,6 +820,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
         parentGroupName = ""; // force creation
       break;
     case PyMOL.OBJECT_CGO:
+      pruneCachedPymolFile = false;
       processCGO(pymolObject);
       break;
 
@@ -800,12 +844,12 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     }
     if (parentGroupName != null || bsAtoms != null)
       pymolScene.addGroup(execObject, parentGroupName, type, bsAtoms);
-    if (doExclude) {
+    if (pruneCachedPymolFile) {
       int i0 = intAt(startLen, 0);
       int len = intAt(startLen, 1);
       bsBytesExcluded.setBits(i0, i0 + len);
       Logger.info("cached PSE file excludes PyMOL object type " + type
-          + " name=" + objectName + " len=" + len);
+          + " name=" + objectName + " at " + i0 + " len=" + len);
     }
     if (msg != null)
       Logger.error("Unprocessed object type " + msg + " " + objectName);
@@ -813,13 +857,13 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   }
 
   /**
-   * Create a CGO JmolObject, just passing on key information. 
+   * Create a CGO JmolObject, just passing on key information.
    * 
    * @param pymolObject
    */
   private void processCGO(Lst<Object> pymolObject) {
-//    if (isStateScript)
-//      return;
+    //    if (isStateScript)
+    //      return;
     if (isHidden)
       return;
     Lst<Object> data = sublistAt(pymolObject, 2, 0);
@@ -830,7 +874,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   }
 
   /**
-   * Only process _e_pot objects -- which we need for color settings 
+   * Only process _e_pot objects -- which we need for color settings
+   * 
    * @param pymolObject
    */
   private void processGadget(Lst<Object> pymolObject) {
@@ -843,11 +888,12 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
    * 
    * @param pymolObject
    * @param isObject
-   * @param isGadget 
+   * @param isGadget
    */
-  private void processMap(Lst<Object> pymolObject, boolean isObject, boolean isGadget) {
+  private void processMap(Lst<Object> pymolObject, boolean isObject,
+                          boolean isGadget) {
     if (isObject) {
-      if (sourcePNGJ)
+      if (ignoreObjects)
         return;
       if (isHidden && !isGadget)
         return; // for now
@@ -877,9 +923,9 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     Logger.info("PyMOL measure " + objectName);
     Lst<Object> measure = sublistAt(pymolObject, 2, 0);
     int pt;
-    int nCoord = (measure.get(pt = 1) instanceof Lst<?> ? 2 : measure
-        .get(pt = 4) instanceof Lst<?> ? 3
-        : measure.get(pt = 6) instanceof Lst<?> ? 4 : 0);
+    int nCoord = (measure.get(pt = 1) instanceof Lst<?> ? 2
+        : measure.get(pt = 4) instanceof Lst<?> ? 3
+            : measure.get(pt = 6) instanceof Lst<?> ? 4 : 0);
     if (nCoord == 0)
       return;
     Lst<Object> setting = listAt(pymolObject, 0);
@@ -888,8 +934,9 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     Lst<Object> offsets = listAt(measure, 8);
     boolean haveLabels = (measure.size() > 8);
     int color = intAt(setting, 2);
-    if (pymolScene.addMeasurements(null, nCoord, list, bsReps, color, offsets, haveLabels))
-      haveMeasurements = true;    
+    if (pymolScene.addMeasurements(null, nCoord, list, bsReps, color, offsets,
+        haveLabels))
+      haveMeasurements = true;
   }
 
   /**
@@ -955,18 +1002,18 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
       byte[] atomArray = null;
       int[] vArray = null;
       if (haveBinaryArrays) {
-        int ver = intAt(pymolAtoms,  0);
-        atomArray = (byte[])pymolAtoms.get(1);
-        lexStr = getLexStr((byte[])pymolAtoms.get(2));
+        int ver = intAt(pymolAtoms, 0);
+        atomArray = (byte[]) pymolAtoms.get(1);
+        lexStr = getLexStr((byte[]) pymolAtoms.get(2));
         System.out.println("PyMOL atom dump version " + ver);
         vArray = (haveBinaryArrays ? PyMOL.getVArray(ver) : null);
       }
       for (int idx = 0; idx < n; idx++) {
         int index = (idxToAtm != null ? intAt(idxToAtm, idx)
             : idxArray != null ? idxArray[idx] : idx);
-        P3d a = addAtom(pymolAtoms, index,
-            atomArray, vArray, lexStr, idx, coords,
-            coordsArray, labelPositions, uniqueIds, labelArray, bsAtoms, iState);
+        P3d a = addAtom(pymolAtoms, index, atomArray, vArray, lexStr, idx,
+            coords, coordsArray, labelPositions, uniqueIds, labelArray, bsAtoms,
+            iState);
         if (a != null)
           trajectoryStep[trajectoryPtr++] = a;
       }
@@ -1003,7 +1050,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     }
     return tokens;
   }
-  
+
   private String getCStr(byte[] lex, int pt) {
     try {
       byte[] a = aTemp;
@@ -1050,7 +1097,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     if (haveBinaryArrays && n == 2) {
       int ver = intAt(bonds, 0);
       System.out.println("PyMOL bond dump version " + ver);
-      vArray  = PyMOL.getVArrayB(ver);
+      vArray = PyMOL.getVArrayB(ver);
       b = (byte[]) bonds.get(1);
       len = vArray[PyMOL.LEN];
       n = b.length / len;
@@ -1062,7 +1109,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
       if (haveBinaryArrays) {
         ia = BC.bytesToInt(b, apt + vArray[PyMOL.BATOM1], false);
         ib = BC.bytesToInt(b, apt + vArray[PyMOL.BATOM2], false);
-        uid = (b[apt + vArray[PyMOL.BHASSETTING]] == 0 ? -1: BC.bytesToInt(b, apt + vArray[PyMOL.BUNIQUEID], false));
+        uid = (b[apt + vArray[PyMOL.BHASSETTING]] == 0 ? -1
+            : BC.bytesToInt(b, apt + vArray[PyMOL.BUNIQUEID], false));
         order = b[apt + vArray[PyMOL.BORDER]];
         apt += len;
       } else {
@@ -1077,10 +1125,10 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
       boolean isSpecial = (order > 1 && bsValence.get(ia) && bsValence.get(ib));
       boolean isSingle = (order == 1 || asSingle && !isSpecial);
       order |= (isSingle ? JmolAdapter.ORDER_PYMOL_SINGLE
-              : pymolScene.encodeMultipleBond(uid, isSpecial));
- 
+          : pymolScene.encodeMultipleBond(uid, isSpecial));
+
       // initially this is an apt
-      
+
       Bond bond = new Bond(ia, ib, order);
       bond.uniqueID = uid;
       bondList.addLast(bond);
@@ -1088,6 +1136,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     bsValence.clearAll();
     return bondList;
   }
+
   private void fillIntArrayFromBytes(byte[] b, int[] array) {
     for (int i = 0, pt = 0; i < b.length; i += 4)
       array[pt++] = BC.bytesToInt(b, i, false);
@@ -1101,8 +1150,6 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
       // not possible?
     }
   }
-
-  
 
   // [0] Int        resv
   // [1] String     chain
@@ -1271,7 +1318,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
         anisou = floatsAt(a, 41, new double[8], 6);
     }
     double v = pymolScene.getUniqueDoubleDef(uniqueID, PyMOL.valence);
-    if (forceValence  || v == 1) {
+    if (forceValence || v == 1) {
       bsValence.set(apt);
     }
     if (insCode == null) {
@@ -1390,9 +1437,10 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     }
   }
 
-  private String atomStr(byte[] atomArray, int pt, int offset, String[] lexStr) {
+  private String atomStr(byte[] atomArray, int pt, int offset,
+                         String[] lexStr) {
     if (offset < 0)
-      return  lexStr[BC.bytesToInt(atomArray, pt - offset, false)];
+      return lexStr[BC.bytesToInt(atomArray, pt - offset, false)];
     String s = getCStr(atomArray, pt + offset);
     return (s.length() == 0 ? " " : s);
   }
@@ -1400,7 +1448,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   private int atomInt(byte[] atomArray, int pt, int offset) {
     return BC.bytesToInt(atomArray, pt + offset, false);
   }
-  
+
   private void addBonds(Lst<Bond> bonds) {
     int n = bonds.size();
     for (int i = 0; i < n; i++) {
@@ -1476,9 +1524,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
         if (pt >= 0 && pt <= iend)
           continue;
         bsStructureDefined.setBits(istart, iend + 1);
-        Structure structure = new Structure(imodel, type, type,
-            type.toString(),"" + (++structureCount), type == STR.SHEET ? 1
-                : 0, null);
+        Structure structure = new Structure(imodel, type, type, type.toString(),
+            "" + (++structureCount), type == STR.SHEET ? 1 : 0, null);
         Atom a = atoms[istart];
         Atom b = atoms[iend];
         int i0 = asc.getAtomSetAtomIndex(thisModel);
@@ -1510,7 +1557,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
    * 
    */
   private void processMeshes() {
-    String fileName = vwr.fm.getFilePath(pymolScene.surfaceInfoName, true, false);
+    String fileName = vwr.fm.getFilePath(pymolScene.surfaceInfoName, true,
+        false);
     vwr.cachePut(fileName, volumeData);
     for (int i = mapObjects.size(); --i >= 0;) {
       Lst<Object> obj = mapObjects.get(i);
@@ -1545,7 +1593,6 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     }
   }
 
-
   /**
    * Create a JmolObject that will define atom sets based on PyMOL objects
    * 
@@ -1567,12 +1614,12 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   private void processSelectionsAndScenes(Map<String, Object> map) {
     if (!pymolScene.needSelections())
       return;
-    Map<String, Lst<Object>> htObjNames = listToMap(getMapList(
-        map, "names"));
+    Map<String, Lst<Object>> htObjNames = listToMap(getMapList(map, "names"));
     if (haveScenes) {
       Map<String, Object> scenes = (Map<String, Object>) map.get("scene_dict");
       finalizeSceneData();
-      Map<String, Lst<Object>> htSecrets = listToMap(getMapList(map, "selector_secrets"));
+      Map<String, Lst<Object>> htSecrets = listToMap(
+          getMapList(map, "selector_secrets"));
       for (int i = 0; i < sceneOrder.size(); i++) {
         String name = stringAt(sceneOrder, i);
         Lst<Object> thisScene = getMapList(scenes, name);
@@ -1611,8 +1658,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
         lastAtomSet = atoms[i].atomSetIndex;
       }
     }
-    pymolScene.setAtomInfo(uniqueIDs, cartoonTypes, sequenceNumbers,
-        newChain, radii);
+    pymolScene.setAtomInfo(uniqueIDs, cartoonTypes, sequenceNumbers, newChain,
+        radii);
   }
 
   // generally useful static methods
@@ -1636,7 +1683,8 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   }
 
   static double floatAt(Lst<Object> list, int i) {
-    return (list == null || i >= list.size() ? 0 : ((Number) list.get(i)).doubleValue());
+    return (list == null || i >= list.size() ? 0
+        : ((Number) list.get(i)).doubleValue());
   }
 
   @SuppressWarnings("unchecked")
@@ -1646,15 +1694,13 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     Object o = list.get(i);
     return (o instanceof Lst<?> ? (Lst<Object>) o : null);
   }
-  
+
   @SuppressWarnings("unchecked")
   public static Lst<Object> sublistAt(Lst<Object> mesh, int... pt) {
     for (int i = 0; i < pt.length; i++)
       mesh = (Lst<Object>) mesh.get(pt[i]);
     return mesh;
   }
-
-
 
   /**
    * return a map of lists of the type: [ [name1,...], [name2,...], ...]
@@ -1694,8 +1740,10 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
 
   @SuppressWarnings("unchecked")
   static int getColorPt(Object o, P3d ptTemp) {
-    return (o == null ? 0 : o instanceof Integer ? ((Integer) o).intValue() : CU
-        .colorPtToFFRGB(PyMOLReader.pointAt((Lst<Object>) o, 0, ptTemp)));
+    return (o == null ? 0
+        : o instanceof Integer ? ((Integer) o).intValue()
+            : CU.colorPtToFFRGB(
+                PyMOLReader.pointAt((Lst<Object>) o, 0, ptTemp)));
   }
 
   @SuppressWarnings("unchecked")
@@ -1704,9 +1752,9 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   }
 
   /**
-   * @param apt  
-   * @param setting 
-   * @param pt 
+   * @param apt
+   * @param setting
+   * @param pt
    * @return bitset representation of reps int
    */
   private static BS getBsReps(int apt, Lst<Object> setting, int pt) {
@@ -1737,28 +1785,28 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   }
 
   /// PymolAtomReader interface
-  
-//  @Override
+
+  //  @Override
   public int getUniqueID(int iAtom) {
     return (int) atoms[iAtom].vib.x;
   }
 
-//  @Override
+  //  @Override
   public int getCartoonType(int iAtom) {
     return (int) atoms[iAtom].vib.y;
   }
 
-//  @Override
+  //  @Override
   public double getVDW(int iAtom) {
     return atoms[iAtom].radius;
   }
 
-//  @Override
+  //  @Override
   public int getSequenceNumber(int iAtom) {
     return atoms[iAtom].sequenceNumber;
   }
 
-//  @Override
+  //  @Override
   public boolean compareAtoms(int iPrev, int i) {
     return atoms[iPrev].chainID != atoms[i].chainID;
   }

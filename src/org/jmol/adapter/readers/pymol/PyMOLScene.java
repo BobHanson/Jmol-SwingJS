@@ -676,16 +676,24 @@ class PyMOLScene implements JmolSceneGenerator {
    */
   private void finalizeObjects() {
     vwr.setStringProperty("defaults", "PyMOL");
+    boolean needToCache = false;
     for (int i = 0; i < jmolObjects.size(); i++) {
       try {
         JmolObject obj = jmolObjects.get(i);
-        obj.finalizeObject(this, vwr.ms, mepList, doCache);
+        if (obj.finalizeObject(this, vwr.ms, mepList, doCache)) {
+          needToCache = true;
+        }
       } catch (Exception e) {
         System.out.println(e);
           e.printStackTrace();
       }
     }
     finalizeUniqueBonds();
+    if (needToCache) {
+      // isosurface only -- never a need to cache CGO
+      // as it is just a list of numbers that we have stored anyway.
+      vwr.runScriptCautiously("isosurface cache all");
+    }
     jmolObjects.clear();
   }
   

@@ -1006,7 +1006,7 @@ abstract class OutputManager {
             ? PT.replaceAllCharacters(name, "/:?\"'=&", "_")
             : FileManager.stripPath(name));
         newName = PT.replaceAllCharacters(newName, "[]", "_");
-        newName = PT.rep(newName, "#_DOCACHE_", "");
+        newName = PT.rep(newName, JC.FILE_DOCACHE_, "");
         newName = PT.rep(newName, "localLOAD_", "");
         newName = PT.rep(newName, "DROP_", "");
         boolean isSparDir = (fm.spardirCache != null
@@ -1024,7 +1024,7 @@ abstract class OutputManager {
           newName = addPngFileBytes(name, (byte[]) ret, iFile, crcMap,
               isSparDir, newName, ptSlash, v);
         }
-        name = type + "$SCRIPT_PATH$" + newName;
+        name = type + JC.SCRIPT_PATH + newName;
       }
       crcMap.put(newName, newName);
       newFileNames.addLast(PT.escUnicode(name));
@@ -1209,7 +1209,7 @@ abstract class OutputManager {
   protected String wrapPathForAllFiles(String cmd, String strCatch) {
     String vname = "v__" + ("" + Math.random()).substring(3);
     return "# Jmol script\n{\n\tVar " + vname
-        + " = pathForAllFiles\n\tpathForAllFiles=\"$SCRIPT_PATH$\"\n\ttry{\n\t\t"
+        + " = pathForAllFiles\n\tpathForAllFiles=\"" + JC.SCRIPT_PATH + "\"\n\ttry{\n\t\t"
         + cmd + "\n\t}catch(e){" + strCatch + "}\n\tpathForAllFiles = " + vname
         + "\n}\n";
   }

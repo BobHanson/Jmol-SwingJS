@@ -1585,7 +1585,8 @@ public final class JC {
 
   public final static String READER_NOT_FOUND = "File reader was not found:";
   public final static String BASE64_TAG = ";base64,";
-  
+  public final static String BASE90_35_TAG = ";base90+35,";
+
   public final static int UNITID_MODEL = 1;
   public final static int UNITID_RESIDUE = 2;
   public final static int UNITID_ATOM = 4;
@@ -1679,6 +1680,10 @@ public final class JC {
   public static final String INFO_SYMOPS_TEMP = "symOpsTemp";
   public static final String INFO_SYMMETRY_INFO = "symmetryInfo";
 
+  public static final String INFO_DO_NOT_ADD_HYDROGENS = "doNotAddHydrogens";
+  public static final String INFO_SOURCE_STATE_SCRIPT = "isStateScript";
+  public static final String INFO_SOURCE_PNGJ = "sourcePNGJ";
+
   public static final String PROP_DELETE_MODEL_ATOMS = "deleteModelAtoms";
   public static final String PROP_ATOMS_DELETED = "atomsDeleted";
   public static final String PROP_ATOMS_MOVED = "atomsMoved";
@@ -1703,6 +1708,8 @@ public final class JC {
   public static final String INFO_CGO_MESH_WIDTH = "cgoMeshWidth";
   public static final String INFO_CGO_INFO = "cgoMeshInfo";
   
+  public static final String INFO_PDB_NO_HYDROGENS = "pdbNoHydrogens";
+
 
   /** 
    * used to set atom symmetry 555 556 etc. 
@@ -1736,7 +1743,10 @@ public final class JC {
   public static final int PYMOL_COLIXES = 0;
   public static final int PYMOL_TRANSPARENCIES = 1;
   public static final int PYMOL_RADII = 2;
-
+  
+  public static final String FILE_DOCACHE_ = "#_DOCACHE_";
+  public static final String SCRIPT_PATH = "$SCRIPT_PATH$";
+  
 
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.

@@ -35,7 +35,7 @@ class PickleReader {
   private Viewer vwr;
   private GenericBinaryDocument binaryDoc;
   private Lst<Object> stack = new Lst<Object>();
-  private Lst<Integer> marks = new Lst<Integer>();
+  private Lst<Mark> marks = new Lst<Mark>();
   private Lst<Object> build = new Lst<Object>();
 
   private Map<Object, Object> memo = new Hashtable<Object, Object>();
@@ -43,13 +43,10 @@ class PickleReader {
   private boolean logging;
   private int id;
   private int markCount;
-  private int filePt; 
   private int emptyListPt;
   private Object thisSection;
   private boolean inMovie;
   private boolean inNames;
-  private String thisName;
-  private int lastMark;
   private int retrieveCount;
   private OutputStreamWriter writer;
   
@@ -133,11 +130,12 @@ private final static byte LONG = 76; /* L */
       throws Exception {
     this.logging = logging;
     byte b;
-    int i, mark;
+    int i;
     double d;
     Object o;
     byte[] a;
     Map<String, Object> map;
+    Mark mark;
     Lst<Object> l;
     ipt = 0;
     boolean going = true;
@@ -145,16 +143,15 @@ private final static byte LONG = 76; /* L */
     while (going) {
       b = binaryDoc.readByte();
       ipt++;
-      //log(b + " "+ binaryDoc.getPosition());
+//      int pt = (int) binaryDoc.getPosition();
+//      if (pt < 200 || pt > 7337710 && (b < 71 || b > 77))
+//        System.out.println("pos " + pt + " " + b);
       switch (b) {
       case EMPTY_DICT: //}
         push(new Hashtable<String, Object>());
         break;
       case APPEND:
         o = pop();
-//        if (o instanceof byte[])
-//System.out.println("APPEND " + o);
-//
         if (writer != null)
           dump("append", o);
         Lst<Object> lst = (Lst<Object>) peek();
@@ -163,15 +160,10 @@ private final static byte LONG = 76; /* L */
           dump("appended to " + lst);
         break;
       case APPENDS:
-        l = getObjects(getMark());
-        if (inNames && markCount == 2) {// && l.size() > 0 && l.get(0) == thisName) {
-          int pt = (int) binaryDoc.getPosition();
-//System.out.println(" " + thisName + " " + filePt + " "
-//              + (pt - filePt));
-          Lst<Object> l2 = new Lst<Object>();
-          l2.addLast(Integer.valueOf(filePt));
-          l2.addLast(Integer.valueOf(pt - filePt));
-          l.addLast(l2); // [ptr to start of this PyMOL object, length in bytes ] 
+        mark = getMark();
+        l = getObjects(mark);
+        if (inNames && markCount == 2) {
+          addStartlen(l, mark);
         }
         ((Lst<Object>) peek()).addAll(l);
         break;
@@ -213,26 +205,22 @@ private final static byte LONG = 76; /* L */
         i = binaryDoc.readByte() & 0xff;
         a = new byte[i];
         binaryDoc.readByteArray(a, 0, i);
-        if (inNames && markCount == 3 && lastMark == stack.size()) {
-          thisName = bytesToString(a);
-          filePt = emptyListPt;
-        }
+        //System.out.println(bytesToString(a));
         push(a);
         break;
       case BINSTRING:
         i = binaryDoc.readIntLE();
         a = new byte[i];
         binaryDoc.readByteArray(a, 0, i);
-        //System.out.println("binstring " + a);
         //System.out.println(bytesToString(a));
-        push(a);//new String(a, "utf-8"));
+        push(a);
         break;
       case BINUNICODE:
         i = binaryDoc.readIntLE();
         a = new byte[i];
         binaryDoc.readByteArray(a, 0, i);
-        //System.out.println("binstring " + a);
-        push(a);//new String(a, "utf-8"));
+        //System.out.println("binstring " + new String(a, "utf-8"));
+        push(a);
         break;
       case EMPTY_LIST:
         emptyListPt = (int) binaryDoc.getPosition() - 1;
@@ -261,6 +249,7 @@ private final static byte LONG = 76; /* L */
       case SETITEM:
         o = pop();
         String s = bytesToString(pop());
+        //System.out.println("setItem " + s);
         ((Map<String, Object>) peek()).put(s, o);
         break;
       case SETITEMS:
@@ -281,7 +270,7 @@ private final static byte LONG = 76; /* L */
             String key = bytesToString(l.get(--i));
             if (writer != null)
               dump("key=" + key);
-            //System.out.println("map " + key + " " + o);
+            //System.out.println("map " + key);
             map.put(key, o);
           }
         }
@@ -404,7 +393,8 @@ private final static byte LONG = 76; /* L */
       for (i = stack.size(); --i >= 0;) {
         o = stack.get(i--);
         a = (byte[]) stack.get(i);
-        map.put(bytesToString(a), o);
+        String key = bytesToString(a); 
+        map.put(key, o);
       }
     memo = null;
     if (writer != null)
@@ -412,6 +402,16 @@ private final static byte LONG = 76; /* L */
     return map;
   }
   
+private void addStartlen(Lst<Object> l, Mark mark) {
+  int pt = (int) binaryDoc.getPosition();
+  int filePt = mark.filePt;
+  //System.out.println("addStartLen " + filePt + " " + pt + " " + bytesToString(l.get(0)));
+  Lst<Object> startLen = new Lst<Object>();
+  startLen.addLast(Integer.valueOf(filePt));
+  startLen.addLast(Integer.valueOf(pt - filePt));
+  l.addLast(startLen); // [ptr to start of this PyMOL object, length in bytes ] 
+  }
+
 //  public Number optimizeBigint(BigInteger bigint) {
 //    // final BigInteger MAXINT=BigInteger.valueOf(Integer.MAX_VALUE);
 //    // final BigInteger MININT=BigInteger.valueOf(Integer.MIN_VALUE);
@@ -446,6 +446,7 @@ private final static byte LONG = 76; /* L */
   }
 
   private void putMemo(int i, boolean doCheck) {
+    // will be PyMOL unique identifier
     Object o = peek();
     if (AU.isAB(o))
       o = bytesToString(o);
@@ -472,18 +473,19 @@ private final static byte LONG = 76; /* L */
     return o;
   }
 
-  private Lst<Object> getObjects(int mark) {
-    int n = stack.size() - mark;
+  private Lst<Object> getObjects(Mark mark) {
+    int imark = mark.stackPt;
+    int n = stack.size() - imark;
     Lst<Object> args = new  Lst<Object>();
     args.ensureCapacity(n);
-    for (int i = mark; i < stack.size(); ++i) {
-      Object oo = stack.get(i);
-//      if (oo instanceof byte[])
-//System.out.println("getObjects " + oo);
-      args.addLast(oo);
+    for (int i = imark; i < stack.size(); ++i) {
+      args.addLast(stack.get(i));
     }
-    for (int i = stack.size(); --i >= mark;)
+    for (int i = stack.size(); --i >= imark;)
       stack.removeItemAt(i);
+//    if (inNames && markCount < 4) {
+//      System.out.println("names " + n + "   " + marks + " " + markCount);
+//    }
     return args;
   }
 
@@ -513,7 +515,7 @@ private final static byte LONG = 76; /* L */
   private void putMark(int i) {
     if (logging)
       log("\n " + Integer.toHexString((int) binaryDoc.getPosition()) + " [");
-    marks.addLast(Integer.valueOf(lastMark = i));
+    marks.addLast(new Mark(i, emptyListPt));
     markCount++;
     switch (markCount) {
     case 2:
@@ -530,9 +532,24 @@ private final static byte LONG = 76; /* L */
       break;
     }
   }
+  
+  private class Mark {
+    int stackPt;
+    int filePt;
+    
+    Mark(int mark, int filePt) {
+      this.stackPt = mark;
+      this.filePt = filePt;
+    }
+    
+    @Override
+    public String toString() {
+      return "[Mark " + stackPt + " " + filePt + "]";
+    }
+  }
 
-  private int getMark() {
-    return marks.removeItemAt(--markCount).intValue();
+  private Mark getMark() {
+    return marks.removeItemAt(--markCount);
   }
 
   private void push(Object o) {

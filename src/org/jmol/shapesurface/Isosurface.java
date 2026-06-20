@@ -194,6 +194,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
 
   //private boolean allowContourLines;
   boolean allowMesh = true;
+  private boolean haveCached;
 
   @Override
   public void setProperty(String propertyName, Object value, BS bs) {
@@ -231,26 +232,12 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if ("cache" == propertyName) {
       if (currentMesh == null)
         return;
-      int imodel = currentMesh.modelIndex;
-      String id = currentMesh.thisID;
-      String fname = "cache://isosurface_" + id;
-      String jvxl = ((String) getPropI("jvxlDataXml", -1));
-      vwr.cachePut(fname, jvxl.getBytes());
-      deleteMeshI(currentMesh.index);
-      setPropI("init", null, null);
-      setPropI("thisID", id, null);
-      setPropI("modelIndex", Integer.valueOf(imodel), null);
-      setPropI("fileName", fname, null);
-      setPropI("readFile", null, null);
-      setPropI("finalize",
-          "isosurface ID " + PT.esc(id)
-              + (imodel >= 0 ? " modelIndex " + imodel : "") + " /*file*/"
-              + PT.esc(fname),
-          null);
-      setPropI("clear", null, null);
+      cacheIsosurface();
       return;
     }
     if ("delete" == propertyName) {
+      if (thisMesh != null && haveCached)
+        vwr.cachePut("cache://" + thisMesh.getDataName(), null);
       setPropertySuper(propertyName, value, bs);
       if (!explicitID)
         nLCAO = nUnnamed = 0;
@@ -282,7 +269,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if ("pymolparams" == propertyName) {
       if (thisMesh != null) {
         ensureMeshSource();
-        thisMesh.setPymolVertexColixesForAtoms(vwr, (Object[]) value, bs);
+        boolean needToCache = thisMesh.setPymolVertexColixesForAtoms(vwr, (Object[]) value, bs);
+        if (needToCache)
+          cacheIsosurface();
       }
       return;
     }
@@ -750,6 +739,28 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     setPropertySuper(propertyName, value, bs);
   }
 
+  private void cacheIsosurface() {
+    haveCached = true;
+    int imodel = currentMesh.modelIndex;
+    String id = currentMesh.thisID;
+    String jvxl = ((String) getPropI("jvxlDataXml", -1));
+    String cacheName = thisMesh.getDataName();
+    String fname= "cache://" + cacheName;
+    vwr.cachePut(fname, jvxl.getBytes());
+    deleteMeshI(currentMesh.index);
+    setPropI("init", null, null);
+    setPropI("thisID", id, null);
+    setPropI("modelIndex", Integer.valueOf(imodel), null);
+    setPropI("fileName", fname, null);
+    setPropI("readFile", null, null);
+    setPropI("finalize",
+        "isosurface ID " + PT.esc(id)
+            + (imodel >= 0 ? " modelIndex " + imodel : "") + " /*file*/"
+            + PT.esc(fname),
+        null);
+    setPropI("clear", null, null);
+  }
+
   private Object getFileReader(String fileName) {
     Object value = vwr.fm.getBufferedReaderOrErrorMessageFromName(
         fileName, null, true, true);
@@ -1103,20 +1114,26 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     if (imesh.connectedAtoms != null)
       cmd += " connect " + Escape.eAI(imesh.connectedAtoms);
     cmd = PT.trim(cmd, ";");
+    boolean writeJVXL = false;
     if (cmd.indexOf("cache://") >= 0) {
-      String id = imesh.thisID;
-      String jvxlID = "isosurface_" + id;
-      String fname = "cache://isosurface_" + id;
-      Object o = vwr.fm.cacheGet(fname, false);
-      if (AU.isAB(o))
-        o = new String((byte[]) o);
-      String jvxl = " data " + PT.esc(jvxlID) + o + "end " + PT.esc(jvxlID);
-      // don't use PT.rep here because the JVXL is just too complicated 
-      // for legacy java2script String.$replace, which uses an escaped regex
-      // anyway, this is much faster
-      String old = "/*file*/" + PT.esc(fname);
-      while ((pt = cmd.indexOf(old)) >= 0) {
+      String dataName = thisMesh.getDataName();
+      String cacheName = "cache://" + dataName;
+      String old = "/*file*/" + PT.esc(cacheName);
+      pt = cmd.indexOf(old);
+      if (pt < 0) {
+        System.err.println(
+            "Isosurface no cache string found in command " + old);
+      } else {
+        Object o = vwr.fm.cacheGet(cacheName, false);
+        if (AU.isAB(o))
+          o = new String((byte[]) o);
+        String jvxl = " data " + PT.esc(dataName) + o + "end "
+            + PT.esc(dataName);
+        // don't use PT.rep here because the JVXL is just too complicated 
+        // for legacy java2script String.$replace, which uses an escaped regex
+        // anyway, this is much faster
         cmd = cmd.substring(0, pt) + jvxl + cmd.substring(pt + old.length());
+        writeJVXL = true;
       }
     }
     if (imesh.linkedMesh != null)
@@ -1146,7 +1163,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
           && C.isColixTranslucent(imesh.colix))
         appendCmd(sb,
             "color " + myType + " " + getTranslucentLabel(imesh.colix));
-      if (imesh.colorCommand != null && imesh.colorType == 0
+      if (!writeJVXL && imesh.colorCommand != null && imesh.colorType == 0
           && !imesh.colorCommand.equals("#inherit;")) {
         appendCmd(sb, imesh.colorCommand);
       }
@@ -1634,7 +1651,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     thisMesh.isColorSolid = false;
     thisMesh.colorDensity = jvxlData.colorDensity;
     thisMesh.volumeRenderPointSize = jvxlData.pointSize;
-    thisMesh.colorEncoder = sg.params.colorEncoder;
+    thisMesh.colorEncoder = (jvxlData.vertexColorMap == null ? sg.params.colorEncoder : null);
     thisMesh.getContours();
     if (thisMesh.jvxlData.nContours != 0 && thisMesh.jvxlData.nContours != -1)
       explicitContours = true;

@@ -68,6 +68,7 @@ class JmolObject {
   boolean visible = true;
   RadiusData rd;
   public String cacheID;
+  private boolean doCache;
 
   /**
    * 
@@ -132,8 +133,8 @@ class JmolObject {
   }
 
   @SuppressWarnings("unchecked")
-  void finalizeObject(PyMOLScene pymolScene, ModelSet m, String mepList,
-                      boolean doCache) {
+  boolean finalizeObject(PyMOLScene pymolScene, ModelSet m, String mepList,
+                         boolean doCache) {
     ShapeManager sm = m.sm;
     String color = "color";
     String sID;
@@ -144,14 +145,14 @@ class JmolObject {
     case T.hidden:
       // bsHidden
       sm.vwr.displayAtoms(bsAtoms, false, false, T.add, true);
-      return;
+      return false;
     case T.restrict:
       // start of generating shapes; argb is modelIndex
       BS bs = sm.vwr.getModelUndeletedAtomsBitSet(argb);
       BSUtil.invertInPlace(bs, sm.vwr.ms.ac);
       sm.vwr.select(bs, false, 0, true);
       sm.restrictSelected(false, true);
-      return;
+      return false;
     case T.display:
     case T.hide:
       // from PyMOLScene after restore scene
@@ -163,14 +164,14 @@ class JmolObject {
       } else {
         sm.vwr.displayAtoms(bsAtoms, shape == T.display, false, T.add, true);
       }
-      return;
+      return false;
     case T.define:
       // executed even for states
       sm.vwr.defineAtomSets((Map<String, Object>) info);
-      return;
+      return false;
     case T.movie:
       sm.vwr.am.setMovie((Map<String, Object>) info);
-      return;
+      return false;
     case T.frame:
       int frame = ((Integer) info).intValue();
       if (frame >= 0) {
@@ -179,16 +180,16 @@ class JmolObject {
         sm.vwr.setAnimationRange(-1, -1);
         sm.vwr.setCurrentModelIndex(-1);
       }
-      return;
+      return false;
     case T.scene:
       sm.vwr.stm.saveScene(jmolName, (Map<String, Object>) info);
       sm.vwr.stm.saveOrientation(jmolName,
           (double[]) ((Map<String, Object>) info).get("pymolView"));
-      return;
+      return false;
     case JC.SHAPE_LABELS:
       sm.loadShape(shape);
       sm.setShapePropertyBs(shape, "pymolLabels", info, bsAtoms);
-      return;
+      return false;
     case T.bonds:
       break;
     case T.wireframe:
@@ -197,14 +198,14 @@ class JmolObject {
         sm.setShapeSizeBs(JC.SHAPE_STICKS, size, null, bsAtoms);
         BS bsBonds = sm.vwr.getBondsForSelectedAtoms(bsAtoms);
         if (info != null) {
-            Object[] o = (Object[]) info;
-            BS bsH = (BS) o[0];
-            float stick_h_scale = ((Number) o[1]).floatValue();
-            int hsize = (int) (size * stick_h_scale);
-            sm.vwr.setBooleanProperty("bondmodeor", true);
-            sm.setShapeSizeBs(JC.SHAPE_STICKS, hsize, null, bsH);
-            sm.vwr.setBooleanProperty("bondmodeor", false);
-          }
+          Object[] o = (Object[]) info;
+          BS bsH = (BS) o[0];
+          float stick_h_scale = ((Number) o[1]).floatValue();
+          int hsize = (int) (size * stick_h_scale);
+          sm.vwr.setBooleanProperty("bondmodeor", true);
+          sm.setShapeSizeBs(JC.SHAPE_STICKS, hsize, null, bsH);
+          sm.vwr.setBooleanProperty("bondmodeor", false);
+        }
         pymolScene.setUniqueBonds(bsBonds, shape == JC.SHAPE_STICKS);
         size = -1;
       }
@@ -228,33 +229,17 @@ class JmolObject {
       break;
     default:
       if (!visible)
-        return; // for now -- could be occluded by a nonvisible group
+        return false; // for now -- could be occluded by a nonvisible group
       break;
     }
 
     switch (shape) {
-    case JC.SHAPE_CGO:
-      Map<String, Object> map = new Hashtable<>();
-      map.put(JC.INFO_CGO_MESH_WIDTH, Double.valueOf(pymolScene.getDoubleOrDefault(PyMOL.mesh_width)));
-      map.put(JC.INFO_CGO_INFO, info);
-      sm.vwr.setCGO(map);
-      break;
-    case JC.SHAPE_DOTS:
-    case JC.SHAPE_BALLS:
-    case JC.SHAPE_STARS:
-    case JC.SHAPE_ELLIPSOIDS:
-    case JC.SHAPE_CARTOON:
-    case JC.SHAPE_BACKBONE:
-    case JC.SHAPE_TRACE:
-    case JC.SHAPE_ISOSURFACE:
-      if (info instanceof Object[]) {
-        sm.loadShape(shape);
-        sm.setShapePropertyBs(shape, "pymolparams", info, bsAtoms);
-      }
+    case T.script:
+      sb = (SB) info;
       break;
     case JC.SHAPE_MEASURES:
       if (modelIndex < 0)
-        return;
+        return false;
       sm.loadShape(shape);
       MeasurementData md = (MeasurementData) info;
       md.setModelSet(m);
@@ -262,13 +247,41 @@ class JmolObject {
       for (int i = points.size(); --i >= 0;)
         ((Point3fi) points.get(i)).mi = (short) modelIndex;
       sm.setShapePropertyBs(shape, "measure", md, bsAtoms);
-      return;
-    case T.isosurface:
+      return false;
+    case T.trace:
+      sm.loadShape(shape = JC.SHAPE_TRACE);
+      sm.setShapePropertyBs(shape, "putty", info, bsAtoms);
+      break;
+    case JC.SHAPE_ISOSURFACE: // 24
+      System.out.println("JO ISO");
+      //$FALL-THROUGH$
+    case JC.SHAPE_DOTS:
+    case JC.SHAPE_BALLS:
+    case JC.SHAPE_STARS:
+    case JC.SHAPE_ELLIPSOIDS:
+    case JC.SHAPE_CARTOON:
+    case JC.SHAPE_BACKBONE:
+    case JC.SHAPE_TRACE:
+      if (info instanceof Object[]) {
+        sm.loadShape(shape);
+        sm.setShapePropertyBs(shape, "pymolparams", info, bsAtoms);
+      }
+      break;
+    case JC.SHAPE_CGO:
+      Map<String, Object> map = new Hashtable<>();
+      map.put(JC.INFO_CGO_MESH_WIDTH,
+          Double.valueOf(pymolScene.getDoubleOrDefault(PyMOL.mesh_width)));
+      map.put(JC.INFO_CGO_INFO, info);
+      sm.vwr.setCGO(map);
+      // this is not necessary -- we provide the same list here
+      // this.doCache = doCache;
+      break;
+    case T.isosurface: // 135180
       sID = (bsAtoms == null ? (String) info : jmolName);
       // when getting a scene, ignore creation of this surface
       if (sm.getShapeIdFromObjectName(sID) >= 0) {
         sm.vwr.setObjectProp(sID, T.display);
-        return;
+        return this.doCache;
       }
       sb = new SB();
       sb.append("isosurface ID ").append(PT.esc(sID));
@@ -280,7 +293,7 @@ class JmolObject {
             .append(" color density sigma 1.0 ").append(PT.esc(cacheID))
             .append(" ").append(PT.esc(sID));
         if (doCache)
-          sb.append(";isosurface cache");
+          this.doCache = true;
       } else {
         String lighting = (String) ((Object[]) info)[0];
         String only = (String) ((Object[]) info)[1];
@@ -318,7 +331,7 @@ class JmolObject {
           sb.append(";isosurface slab within " + carveDistance + " {" + model
               + " and " + Escape.eBS(bsCarve) + "}");
         if (doCache && !haveMep)
-          sb.append(";isosurface cache");
+          this.doCache = true;
       }
       break;
     case T.mep:
@@ -334,8 +347,7 @@ class JmolObject {
               + ";isosurface colorscheme rwb;set isosurfacekey true");
       if (translucency > 0)
         sb.append(";color isosurface translucent " + translucency);
-      if (doCache)
-        sb.append(";isosurface cache");
+      this.doCache = doCache;
       break;
     case T.mesh:
       modelIndex = sm.vwr.am.cmi;
@@ -358,33 +370,26 @@ class JmolObject {
         }
         sb.append(" ]");
       }
-      if (doCache && !PT.isOneOf(sID, mepList))
-        sb.append(";isosurface cache");
       sb.append(";set meshScale ").appendI(size / 500);
-      break;
-    case T.script:
-      sb = (SB) info;
-      break;
-    case T.trace:
-      sm.loadShape(shape = JC.SHAPE_TRACE);
-      sm.setShapePropertyBs(shape, "putty", info, bsAtoms);
+      this.doCache = (doCache && !PT.isOneOf(sID, mepList));
       break;
     }
-    if (sb != null) {
+    if (sb == null) {
+      // cartoon, trace, etc.
+      if (size != -1 || rd != null)
+        sm.setShapeSizeBs(shape, size, rd, bsAtoms);
+      if (argb != 0)
+        sm.setShapePropertyBs(shape, color, Integer.valueOf(argb), bsAtoms);
+      if (translucency > 0) {
+        sm.setShapePropertyBs(shape, "translucentLevel",
+            Double.valueOf(translucency), bsAtoms);
+        sm.setShapePropertyBs(shape, "translucency", "translucent", bsAtoms);
+      } else if (colors != null)
+        sm.setShapePropertyBs(shape, "colors", colors, bsAtoms);
+    } else {
       sm.vwr.runScriptCautiously(sb.toString());
-      return;
     }
-    // cartoon, trace, etc.
-    if (size != -1 || rd != null)
-      sm.setShapeSizeBs(shape, size, rd, bsAtoms);
-    if (argb != 0)
-      sm.setShapePropertyBs(shape, color, Integer.valueOf(argb), bsAtoms);
-    if (translucency > 0) {
-      sm.setShapePropertyBs(shape, "translucentLevel",
-          Double.valueOf(translucency), bsAtoms);
-      sm.setShapePropertyBs(shape, "translucency", "translucent", bsAtoms);
-    } else if (colors != null)
-      sm.setShapePropertyBs(shape, "colors", colors, bsAtoms);
+    return this.doCache;
   }
 
   private int getModelIndex(ModelSet m) {

@@ -78,6 +78,7 @@ import org.jmol.c.STER;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
+import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.minimize.Minimizer;
 import org.jmol.modelkit.ModelKit;
 import org.jmol.modelkit.ModelKitPopup;
@@ -5067,15 +5068,21 @@ public class Viewer extends JmolViewer
                               boolean withPrefix) {
     String format = null;
     String id = name.substring(1);
+    String suffix = "";
+    if (name.endsWith(JC.FILE_DOCACHE_)) {
+      suffix= JC.FILE_DOCACHE_;
+      name = name.substring(0, name.length() - suffix.length());
+      id = id.substring(0, id.length() - suffix.length());
+    }
     switch (type) {
     case 'c': // cache:local//... legacyResolver....
-      return name;
+      return name + suffix;
     case 'h':
       // legacy resolver https://
       if (g.checkCIR)
         checkCIR(false);
       return g.nihResolverFormat
-          + name.substring(name.indexOf("/structure") + 10);
+          + name.substring(name.indexOf("/structure") + 10) + suffix;
     case '=':
       if (name.startsWith("==")) {
         id = id.substring(1);
@@ -5106,64 +5113,70 @@ public class Viewer extends JmolViewer
             id = JC.resolveDataBase(database, id, null);
             if (id != null && id.startsWith("'"))
               id = evaluateExpression(id).toString();
-            return (id == null || id.length() == 0 ? name : id);
+            name = (id == null || id.length() == 0 ? name : id);
           } catch (Exception e) {
-            return name;
           }
+          return name + suffix;
         }
+        name = null;
         if (!isSurface && id.endsWith(".bcif")) {
           id = id.substring(0, id.indexOf(".bcif"));
-          return JC.resolveDataBase("bcif", id.toLowerCase(), null);
+          name = JC.resolveDataBase("bcif", id.toLowerCase(), null);
         }
         if (id.endsWith(".mmtf")) {
           id = id.substring(0, id.indexOf(".mmtf"));
-          return JC.resolveDataBase("mmtf", id.toUpperCase(), null);
+          name = JC.resolveDataBase("mmtf", id.toUpperCase(), null);
         }
+        if (name != null)
+          return name + suffix;
         format = g.loadFormat;
       }
       //$FALL-THROUGH$
     case '#': // ligand
       if (format == null)
         format = g.pdbLoadLigandFormat;
-      return JC.resolveDataBase(null, id, format);
+      return JC.resolveDataBase(null, id, format) + suffix;
     case '*':
       // European Bioinformatics Institute
       if (id.equals("?") && (id = getDBID("PDB ID from EBI")) == null)
         return null;
+      String ret = null;
       int pt = name.lastIndexOf("/");
       if (name.startsWith("*dom/")) {
         //  *dom/.../.../.../xxxx
         id = name.substring(pt + 1);
         format = (pt > 4 ? name.substring(5) : "mappings");
-        return PT.rep(JC.resolveDataBase("map", id, null), "%TYPE", format);
+        ret = PT.rep(JC.resolveDataBase("map", id, null), "%TYPE", format);
       } else if (name.startsWith("*val/")) {
         //  *val/.../.../.../xxxx
         id = name.substring(pt + 1);
         format = (pt > 4 ? name.substring(5) : "validation/outliers/all");
-        return PT.rep(JC.resolveDataBase("map", id, null), "%TYPE", format);
+        ret = PT.rep(JC.resolveDataBase("map", id, null), "%TYPE", format);
       } else if (name.startsWith("*rna3d/")) {
         //  *rna3d/.../.../.../xxxx
         id = name.substring(pt + 1);
         format = (pt > 6 ? name.substring(6) : "loops");
-        return PT.rep(JC.resolveDataBase("rna3d", id, null), "%TYPE", format);
+        ret = PT.rep(JC.resolveDataBase("rna3d", id, null), "%TYPE", format);
       } else if (name.startsWith("*dssr--")) {
         id = name.substring(pt + 1);
         id = JC.resolveDataBase(JC.INFO_DSSR, id, null);
-        return id + "%20" + PT.rep(name.substring(5, pt), " ", "%20");
+        ret = id + "%20" + PT.rep(name.substring(5, pt), " ", "%20");
       } else if (name.startsWith("*dssr/")) {
         id = name.substring(pt + 1);
-        return JC.resolveDataBase(JC.INFO_DSSR, id, null);
+        ret = JC.resolveDataBase(JC.INFO_DSSR, id, null);
       } else if (name.startsWith("*dssr1/")) {
         id = name.substring(pt + 1);
-        return JC.resolveDataBase("dssr1", id, null);
+        ret = JC.resolveDataBase("dssr1", id, null);
       }
+      if (ret != null)
+        return ret + suffix;
       // these are processed in SmarterJmolAdapter
       String pdbe = "pdbe";
       if (id.length() == 5 && id.charAt(4) == '*') {
         pdbe = "pdbe2";
         id = id.substring(0, 4);
       }
-      return JC.resolveDataBase(pdbe, id, null);
+      return JC.resolveDataBase(pdbe, id, null) + suffix;
     case ':': // PubChem
       format = g.pubChemFormat;
       if (id.equals("?") && (id = getDBID("structure from PubChem")) == null)
@@ -5202,7 +5215,7 @@ public class Viewer extends JmolViewer
           id = "name/" + PT.escapeUrl(id);
         }
       }
-      return PT.formatStringS(format, "FILE", id);
+      return PT.formatStringS(format, "FILE", id) + suffix;
     case '$':
       checkCIR(false);
       if (id.equals("?") && (id = getDBID("structure from NCI/CADD")) == null)
@@ -5223,7 +5236,7 @@ public class Viewer extends JmolViewer
           }
         }
         id = PT.escapeUrl(id);
-        return JC.resolveDataBase("smiles2d", id, null);
+        return JC.resolveDataBase("smiles2d", id, null) + suffix;
       }
       //$FALL-THROUGH$
     case 'M':
@@ -5262,7 +5275,7 @@ public class Viewer extends JmolViewer
         break;
       }
       return (withPrefix ? "MOL3D::" : "")
-          + PT.formatStringS(format, "FILE", id);
+          + PT.formatStringS(format, "FILE", id) + suffix;
     case '?': // check only
     case '-': // localized version using the PDBe density server and box....
     case '_': // isosurface "=...", but we code that type as '_'
@@ -5332,7 +5345,7 @@ public class Viewer extends JmolViewer
         }
         if (emdext != null)
           return JC.resolveDataBase("emdbmap" + (type == '-' ? "server" : ""),
-              id, null) + emdext;
+              id, null) + emdext + suffix;
       }
       id = JC.resolveDataBase(
           (isDiff ? "pdbemapdiff" : "pdbemap") + (type == '-' ? "server" : ""),
@@ -5342,7 +5355,7 @@ public class Viewer extends JmolViewer
       }
       break;
     }
-    return id;
+    return id + suffix;
   }
 
   private String getDBID(String type) {
@@ -11591,6 +11604,23 @@ public class Viewer extends JmolViewer
   public Object pluginRequest(String name, String action, Object value) {
     return sm.processPluginRequest(name, action, value);
 
+  }
+
+  private JvxlCoder jvxlCoder;
+  
+  private JvxlCoder getJvxlCoder() {
+    if (jvxlCoder == null)
+      jvxlCoder = (JvxlCoder) Interface.getInterface("org.jmol.jvxl.data.JvxlCoder", this, "script");
+    return jvxlCoder;
+  }
+
+  public Object unescapePointOrBitsetAsVariable(String s) {
+    return (s.startsWith(JC.BASE90_35_TAG) ? getJvxlCoder().jvxlDecodeBitSet90_35(s)
+        : BS.unescape(s));
+  }
+
+  public String encodeBitSet90_35(BS bs) {
+    return getJvxlCoder().jvxlEncodeBitSet90_35(bs);
   }
 
 }

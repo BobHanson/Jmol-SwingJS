@@ -4840,8 +4840,11 @@ public class CmdExt extends ScriptExt {
         height = (is2D ? 250 : vwr.getScreenHeight());
     }
     params = new Hashtable<String, Object>();
-    if (fileName != null)
+    boolean isCache = false;
+    if (fileName != null) {
       params.put("fileName", fileName);
+      isCache = fileName.startsWith("cache://");
+    }
     params.put("backgroundColor", Integer.valueOf(vwr.getBackgroundArgb()));
     params.put("type", type);
     if (is2D) {
@@ -4866,10 +4869,17 @@ public class CmdExt extends ScriptExt {
       }
       bytes = ret;
     }
+    String btype = null;
     if (bytes instanceof String && quality == Integer.MIN_VALUE)
-      params.put("text", bytes);
+      params.put(btype = "text", bytes);
     else if (bytes instanceof byte[])
-      params.put("bytes", bytes);
+      params.put(btype = "bytes", bytes);
+    if (isCache) {
+      if (btype == null)
+        return null;
+      vwr.cachePut(fileName, bytes);
+      return writeMsg("OK " + (btype == "text" ? ((String) bytes).length() : ((byte[]) bytes).length));
+    }
     if (scripts != null)
       params.put("scripts", scripts);
     if (bsFrames != null)
@@ -5029,6 +5039,7 @@ public class CmdExt extends ScriptExt {
       }
       break;
     case T.cache:
+      // see also print cache()
       if (!chk)
         msg = Escape.e(vwr.fm.cacheList());
       break;

@@ -44,6 +44,14 @@ public class T {
   public int tok;
   public Object value;
   public int intValue = Integer.MAX_VALUE;
+
+  /**
+   * script name of flag T.pdbaddhydrogens -- do not change!
+   * 
+   * referred to in ScriptEval.compileScript; 
+   * 
+   */
+  public static final String PDB_ADD_HYDROGENS = "pdbAddHydrogens";
   
   public final static T t(int tok) {
     T token = new T();
@@ -2702,7 +2710,7 @@ public class T {
        "navigationPeriodic",
        "occupancyThreshold",
        "partialDots",
-       "pdbAddHydrogens",
+       PDB_ADD_HYDROGENS, // "pdbAddHydrogens"
        "pdbGetHeader",
        "pdbSequential",
        "perspectiveDepth",

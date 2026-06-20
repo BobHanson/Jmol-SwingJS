@@ -163,9 +163,8 @@ final public class OutputManagerAwt extends OutputManager {
     // extract scenes based on "pause scene ..." commands
     int iSceneLast = 0;
     int iScene = 0;
-    SB sceneScript = new SB().append(SCENE_TAG).append(
-        " Jmol ").append(Viewer.getJmolVersion()).append(
-        "\n{\nsceneScripts={");
+    SB sceneScript = new SB().append(SCENE_TAG).append(" Jmol ")
+        .append(Viewer.getJmolVersion()).append("\n{\nsceneScripts={");
     for (int i = 1; i < scenes.length; i++) {
       scenes[i - 1] = PT.trim(scenes[i - 1], "\t\n\r ");
       int[] pt = new int[1];
@@ -186,38 +185,32 @@ final public class OutputManagerAwt extends OutputManager {
     if (list.size() == 0)
       return "no lines 'pause scene n'";
     sceneScript
-         .append("\nthisSceneRoot = '$SCRIPT_PATH$'.split('_scene_')[1];\n")
-         .append(
-             "thisSceneID = 0 + ('$SCRIPT_PATH$'.split('_scene_')[2]).split('.')[1];\n")
-         .append(
-             "var thisSceneState = '$SCRIPT_PATH$'.replace('.min.png','.all.png') + 'state.spt';\n")
-         .append("var spath = ''+currentSceneID+'-'+thisSceneID;\n")
-         .append("print thisSceneRoot + ' ' + spath;\n")
-         .append("var sscript = sceneScripts[spath];\n")
-         .append("var isOK = true;\n")
-         .append("try{\n")
-         .append("if (thisSceneRoot != currentSceneRoot){\n")
-         .append(" isOK = false;\n")
-         .append("} else if (sscript != '') {\n")
-         .append(" isOK = true;\n")
-         .append("} else if (thisSceneID <= currentSceneID){\n")
-         .append(" isOK = false;\n")
-         .append("} else {\n")
-         .append(" sscript = '';\n")
-         .append(" for (var i = currentSceneID; i < thisSceneID; i++){\n")
-         .append(
-             "  var key = ''+i+'-'+(i + 1); var script = sceneScripts[key];\n")
-         .append("  if (script = '') {isOK = false;break;}\n")
-         .append("  sscript += ';'+script;\n")
-         .append(" }\n")
-         .append("}\n}catch(e){print e;isOK = false}\n")
-         .append(
-             "if (isOK) {"
-                 + wrapPathForAllFiles("script inline @sscript",
-                     "print e;isOK = false") + "}\n")
-         .append("if (!isOK){script @thisSceneState}\n")
-         .append(
-             "currentSceneRoot = thisSceneRoot; currentSceneID = thisSceneID;\n}\n");
+        .append(
+            "\nthisSceneRoot = '" + JC.SCRIPT_PATH + "'.split('_scene_')[1];\n")
+        .append("thisSceneID = 0 + ('" + JC.SCRIPT_PATH
+            + "'.split('_scene_')[2]).split('.')[1];\n")
+        .append("var thisSceneState = '" + JC.SCRIPT_PATH
+            + "'.replace('.min.png','.all.png') + 'state.spt';\n")
+        .append("var spath = ''+currentSceneID+'-'+thisSceneID;\n")
+        .append("print thisSceneRoot + ' ' + spath;\n")
+        .append("var sscript = sceneScripts[spath];\n")
+        .append("var isOK = true;\n").append("try{\n")
+        .append("if (thisSceneRoot != currentSceneRoot){\n")
+        .append(" isOK = false;\n").append("} else if (sscript != '') {\n")
+        .append(" isOK = true;\n")
+        .append("} else if (thisSceneID <= currentSceneID){\n")
+        .append(" isOK = false;\n").append("} else {\n")
+        .append(" sscript = '';\n")
+        .append(" for (var i = currentSceneID; i < thisSceneID; i++){\n")
+        .append(
+            "  var key = ''+i+'-'+(i + 1); var script = sceneScripts[key];\n")
+        .append("  if (script = '') {isOK = false;break;}\n")
+        .append("  sscript += ';'+script;\n").append(" }\n")
+        .append("}\n}catch(e){print e;isOK = false}\n")
+        .append("if (isOK) {" + wrapPathForAllFiles("script inline @sscript",
+            "print e;isOK = false") + "}\n")
+        .append("if (!isOK){script @thisSceneState}\n").append(
+            "currentSceneRoot = thisSceneRoot; currentSceneID = thisSceneID;\n}\n");
     return sceneScript.toString();
   }
 }

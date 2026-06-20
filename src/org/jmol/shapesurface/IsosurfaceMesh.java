@@ -514,19 +514,26 @@ public class IsosurfaceMesh extends Mesh {
     jvxlData.vContours = null;
   }
 
-  void setPymolVertexColixesForAtoms(Viewer vwr, Object[] data, BS bs) {
+  /**
+   * Handles translucency by caching the JVXL version.
+   * @param vwr
+   * @param data
+   * @param bs
+   * @return true if we have translucent vertices (and so need to cache)
+   */
+  boolean setPymolVertexColixesForAtoms(Viewer vwr, Object[] data, BS bs) {
     checkAllocColixes();
     short[] colixes = (short[]) data[0];
     int[] atomMap = null;
     double[] atrans = (double[]) data[1];
     short[] ctrans = (atrans == null ? null : new short[atrans.length]);
+    boolean haveTransparentVertices = false;
     if (colixes != null) {
       for (int i = 0; i < colixes.length; i++) {
-        short colix = colixes[i];
-        colixes[i] = colix;
         double f = (atrans == null ? 0 : atrans[i]);
         if (f > 0.01d) {
-          ctrans[i] = C.getColixTranslucent3(colix, true, f);
+          ctrans[i] = C.getColixTranslucent3(colixes[i], true, f);
+          haveTransparentVertices = true;
         }
       }
       atomMap = new int[bs.length()];
@@ -534,9 +541,9 @@ public class IsosurfaceMesh extends Mesh {
           .nextSetBit(i + 1), pt++)
         atomMap[i] = pt;
     }
-//    jvxlData.vertexDataOnly = true;
     jvxlData.vertexColors = new int[vc];
     jvxlData.nVertexColors = vc;
+    colorEncoder = null;
     Atom[] atoms = vwr.ms.at;
     GData gdata = vwr.gdata;
     boolean isTranslucent = C.isTransparent(this.colix);
@@ -559,6 +566,7 @@ public class IsosurfaceMesh extends Mesh {
         vcs[i] = C.copyColixTranslucency(trans, colix);
     }
     setPymolColors();
+    return haveTransparentVertices;
   }
 
   private void setPymolColors() {
@@ -754,11 +762,11 @@ public class IsosurfaceMesh extends Mesh {
 
     isColorSolid = !jvxlData.isBicolorMap && jvxlData.vertexColors == null
         && jvxlData.vertexColorMap == null;
-    if (colorEncoder == null 
-        && ("inherit".equals(jvxlData.colorScheme) || jvxlData.vertexColorMap == null))
-      return false;
     // bicolor map will be taken care of with params.isBicolorMap
     if (jvxlData.vertexColorMap == null) {
+      if (colorEncoder == null 
+          && ("inherit".equals(jvxlData.colorScheme) || jvxlData.vertexColorMap == null))
+        return false;
       if (jvxlData.colorScheme != null) {
         String colorScheme = jvxlData.colorScheme;
         boolean isTranslucent = colorScheme.startsWith("translucent ");
@@ -774,6 +782,7 @@ public class IsosurfaceMesh extends Mesh {
         for (int i = vc; --i >= 0;)
           vcs[i] = colix;
       }
+      System.out.println("mapping color from PyMOL vertex colors");
       for (Map.Entry<String, BS> entry : jvxlData.vertexColorMap.entrySet()) {
         BS bsMap = entry.getValue();
         String key = entry.getKey();
@@ -1217,5 +1226,8 @@ public class IsosurfaceMesh extends Mesh {
     remapColors(vwr, null, translucentLevel);
   }
 
+  public String getDataName() {
+    return "isosurface_" + thisID + ".jvxl";
+  }
 
 }

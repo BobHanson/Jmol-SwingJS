@@ -1253,9 +1253,80 @@ SymmetryInterface sym;
   }
 
   private boolean evaluateCache(ScriptMathProcessor mp, SV[] args) {
-    if (args.length > 0)
+    int pt = -1;
+    Object data;
+    int len = args.length; 
+    if (len == 0)
+      return mp.addXMap(vwr.fm.cacheList());
+    // get x
+    // get x format
+    // put x value
+    if (len < 2 || len > 3 || args[0].tok != T.string || args[1].tok != T.string)
       return false;
-    return mp.addXMap(vwr.fm.cacheList());
+    String key = (String) args[1].value;
+    switch (args[0].asString().toLowerCase()) {
+    case "get":
+      break;
+    case "put":
+      if (len != 3)
+        return false;
+      Object o = args[2].value;
+      switch (args[2].tok) {
+      case T.string:
+        if (args[2].asString().length() == 0) {
+          o = null;
+        }
+        break;
+      case T.barray:
+        o = args[2].value;
+        break;
+      default:
+        o = args[2].asString();
+        break;
+      }
+      len = (o == null ? 0 : o instanceof String ? ((String) o).length() : ((byte[]) o).length);
+      if (len == 0)
+        o = null;
+      vwr.cachePut(key, o);
+      return mp.addXInt(len);
+    default:
+      return false;
+    }
+    // get
+    switch (args.length) {
+    case 3:
+      pt = SV.getFormatType(args[2].asString().toLowerCase());
+      //$FALL-THROUGH$
+    case 2:
+      data = vwr.fm.cacheGet(key, false);
+      if (data == null)
+        data = "";
+      break;
+    default:
+      return false;
+    }
+    if (pt < 0)
+      pt = SV.getFormatType("string");
+    boolean isDataString = (data instanceof String);
+    switch (pt) {
+    default:
+      return false;
+    case SV.FORMAT_STRING:
+      if (isDataString)
+        return mp.addXStr((String) data);
+      //$FALL-THROUGH$
+    case SV.FORMAT_BASE64:
+    case SV.FORMAT_BYTEARRAY:
+      if (data instanceof String) {
+        data = ((String) data).getBytes();
+      } else if (!AU.isAB(data)) {
+        return false;
+      }
+      data = SV.fromBytes((byte[]) data, pt);
+      if (data instanceof String)
+        return mp.addXStr((String) data);
+      return mp.addXObj(data);
+    }
   }
 
   private boolean evaluateColor(ScriptMathProcessor mp, SV[] args) {
@@ -3013,6 +3084,12 @@ SymmetryInterface sym;
       // {*}.label("xxx")
       // format("xxx%s","testing");
       break;
+    case SV.FORMAT_BASE90_35:
+      BS bs = SV.getBitSet(x, true);
+      return (bs != null && mp.addXStr(vwr.encodeBitSet90_35(bs)));
+    case SV.FORMAT_BITSET:
+      return (x.tok == T.string && ((String) x.value).startsWith(JC.BASE90_35_TAG)
+      && mp.addXBs((BS) vwr.unescapePointOrBitsetAsVariable((String) x.value)));
     case SV.FORMAT_XYZ:
     case SV.FORMAT_ABC:
     case SV.FORMAT_UVW:
@@ -3026,7 +3103,8 @@ SymmetryInterface sym;
       //    case SV.FORMAT_BYTEARRAY:
       //    case SV.FORMAT_BASE64:
       //    case SV.FORMAT_ARRAY:
-      return mp.addXObj(SV.getFormat(x, pt));
+      Object o = SV.getFormat(x, pt);
+      return (o instanceof String ? mp.addXStr((String) o) : mp.addXObj(o));
     }
     BS bs = (x1 != null && x1.tok == T.bitset ? (BS) x1.value : null);
     if (!isLabel && x1 != null && bs == null && args.length > 0
@@ -3257,14 +3335,14 @@ SymmetryInterface sym;
       else if (x2.tok == T.varray)
         b = alist2.get(i);
       else if (Double.isNaN(list2[i]))
-        b = SV.getVariable(SV.unescapePointOrBitsetAsVariable(sList2[i]));
+        b = SV.getVariable(vwr.unescapePointOrBitsetAsVariable(sList2[i]));
       else
         b = SV.newD(list2[i]);
       if (!isScalar1) {
         if (isArray1)
           a = alist1.get(i);
         else if (Double.isNaN(list1[i]))
-          a = SV.getVariable(SV.unescapePointOrBitsetAsVariable(sList1[i]));
+          a = SV.getVariable(vwr.unescapePointOrBitsetAsVariable(sList1[i]));
         else
           a = SV.newD(list1[i]);
       }
@@ -4763,7 +4841,6 @@ SymmetryInterface sym;
     P3d pt2 = null;
     BS bs1 = null;
     boolean isWyckoff = false;
-    //boolean haveAtom2 = (narg > 1 && args[1].tok == T.bitset);    
     switch (args[0].tok) {
     case T.string:
       xyz = SV.sValue(args[0]);

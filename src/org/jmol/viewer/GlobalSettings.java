@@ -341,7 +341,8 @@ public class GlobalSettings {
     setO("nmrPredictFormat", nmrPredictFormat);
     setO("nmrUrlFormat", nmrUrlFormat);
     setI("occupancyThreshold", occupancyThreshold);
-    setB("pdbAddHydrogens", pdbAddHydrogens); // new 12.1.51
+    setB("partialDots", partialDots);
+    setB(T.PDB_ADD_HYDROGENS, pdbAddHydrogens); // new 12.1.51
     setB("pdbGetHeader", pdbGetHeader); // new 11.5.39
     setB("pdbSequential", pdbSequential); // new 11.5.39
     setI("percentVdwAtom", percentVdwAtom);
@@ -1097,7 +1098,7 @@ public class GlobalSettings {
     app(str,
         "set pdbAddHydrogens "
             + (htParams != null
-                && htParams.get("pdbNoHydrogens") != Boolean.TRUE ? pdbAddHydrogens
+                && htParams.get(JC.INFO_PDB_NO_HYDROGENS) != Boolean.TRUE ? pdbAddHydrogens
                 : false));
     app(str, "set pdbGetHeader " + pdbGetHeader);
     app(str, "set pdbSequential " + pdbSequential);

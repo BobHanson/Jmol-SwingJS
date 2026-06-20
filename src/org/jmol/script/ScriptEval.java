@@ -1026,7 +1026,7 @@ public class ScriptEval extends ScriptExpr {
     if (thisContext != null)
       thisContext.privateFuncs = pf;
     isStateScript = compiler.isStateScript;
-    forceNoAddHydrogens = (isStateScript && script.indexOf("pdbAddHydrogens") < 0);
+    forceNoAddHydrogens = (isStateScript && script.indexOf(T.PDB_ADD_HYDROGENS) < 0);
     String s = script;
     isGUI = (s.indexOf(JC.SCRIPT_GUI) >= 0);
     if (isGUI) {
@@ -1041,14 +1041,14 @@ public class ScriptEval extends ScriptExpr {
   }
 
   private String fixScriptPath(String strScript, String filename) {
-    if (filename != null && strScript.indexOf("$SCRIPT_PATH$") >= 0) {
+    if (filename != null && strScript.indexOf(JC.SCRIPT_PATH) >= 0) {
       String path = filename;
       // we first check for paths into ZIP files and adjust accordingly
       int pt = Math.max(filename.lastIndexOf("|"), filename.lastIndexOf("/"));
       path = path.substring(0, pt + 1);
-      strScript = PT.rep(strScript, "$SCRIPT_PATH$/", path);
+      strScript = PT.rep(strScript, JC.SCRIPT_PATH + "/", path);
       // now replace the variable itself
-      strScript = PT.rep(strScript, "$SCRIPT_PATH$", path);
+      strScript = PT.rep(strScript, JC.SCRIPT_PATH, path);
     }
     return strScript;
   }
@@ -4454,9 +4454,9 @@ public class ScriptEval extends ScriptExpr {
     Map<String, Object> htParams = new Hashtable<String, Object>();
     // ignore optional file format
     if (isStateScript) {
-      htParams.put("isStateScript", Boolean.TRUE);
+      htParams.put(JC.INFO_SOURCE_STATE_SCRIPT, Boolean.TRUE);
       if (forceNoAddHydrogens)
-        htParams.put("doNotAddHydrogens", Boolean.TRUE);
+        htParams.put(JC.INFO_DO_NOT_ADD_HYDROGENS, Boolean.TRUE);
     }
     String modelName = null;
     String[] filenames = null;
@@ -4847,7 +4847,7 @@ public class ScriptEval extends ScriptExpr {
       filter = vwr.g.defaultLoadFilter;
     if (filter.length() > 0) {
       if (filter.toUpperCase().indexOf("DOCACHE") >= 0) {
-        if (!isStateScript && !isAppend)
+        if (!isStateScript && !isAppend && !Viewer.isJS)
           vwr.cacheClear();
       }
       htParams.put("filter", filter);
@@ -8670,7 +8670,7 @@ public class ScriptEval extends ScriptExpr {
     if (slen == 1 || !isZapCommand) {
       boolean doAll = (isZapCommand && !isStateScript);
       if (doAll)
-        vwr.cacheFileByName(null, false);
+        vwr.cacheClear();
       vwr.zap(true, doAll, true);
       refresh(false);
       return;

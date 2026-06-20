@@ -1308,13 +1308,15 @@ public class SV extends T implements JSONEncodable {
 
   public final static int FORMAT_JSON = 0;
   public final static int FORMAT_BASE64 = 5;
-  public final static int FORMAT_BYTEARRAY = 12;
-  public final static int FORMAT_ARRAY = 22;
-  public final static int FORMAT_STRING = 28;
-  public final static int FORMAT_XYZ = 35;
-  public final static int FORMAT_ABC = 39;
-  public final static int FORMAT_UVW = 43;
-  public final static int FORMAT_RXYZ = 47;
+  public final static int FORMAT_BASE90_35 = 12;
+  public final static int FORMAT_BYTEARRAY = 22;
+  public final static int FORMAT_ARRAY = 32;
+  public final static int FORMAT_STRING = 38;
+  public final static int FORMAT_BITSET = 45;
+  public final static int FORMAT_XYZ = 52;
+  public final static int FORMAT_ABC = 56;
+  public final static int FORMAT_UVW = 60;
+  public final static int FORMAT_RXYZ = 64;
   
   /**
    * 
@@ -1323,8 +1325,8 @@ public class SV extends T implements JSONEncodable {
    */
   public static int getFormatType(String format) {
     return (format.indexOf(";") >= 0 ? -1 :
-        ";json;base64;bytearray;array;string;xyz;abc;uvw;rxyz;"
-    //   0    5      12        22    28  32  36  40
+        ";json;base64;base90+35;bytearray;array;string;bitset;xyz;abc;uvw;rxyz;"
+    //   0    5      12        22        32    38     45     52  56  60  64
         .indexOf(";" + format.toLowerCase() + ";"));
   }
 
@@ -1402,7 +1404,7 @@ public class SV extends T implements JSONEncodable {
       default:
         String s = sv.asString();
         if (s.startsWith(JC.BASE64_TAG)) {
-          if (pt == 5)
+          if (pt == FORMAT_BASE64)
             return s;
           bytes = Base64.decodeBase64(s);
         } else {
@@ -1412,16 +1414,21 @@ public class SV extends T implements JSONEncodable {
           bytes = s.getBytes();
         }
       }
-      switch (pt) {
-      case FORMAT_BYTEARRAY:
-        return new BArray(bytes);
-      case FORMAT_BASE64:
-        return JC.BASE64_TAG + javajs.util.Base64.getBase64(bytes).toString(); 
-      case FORMAT_ARRAY:
-        return getVariable(bytes);
-      case FORMAT_STRING:
-        return new String(bytes);
-      }
+      return fromBytes(bytes, pt);
+    }
+    return null;
+  }
+
+  public static Object fromBytes(byte[] bytes, int pt) {
+    switch (pt) {
+    case FORMAT_BYTEARRAY:
+      return new BArray(bytes);
+    case FORMAT_BASE64:
+      return JC.BASE64_TAG + javajs.util.Base64.getBase64(bytes).toString(); 
+    case FORMAT_ARRAY:
+      return getVariable(bytes);
+    case FORMAT_STRING:
+      return new String(bytes);
     }
     return null;
   }

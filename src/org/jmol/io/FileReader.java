@@ -35,6 +35,7 @@ import java.util.zip.ZipInputStream;
 
 import org.jmol.api.Interface;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.api.GenericBinaryDocument;
@@ -97,7 +98,7 @@ public class FileReader {
       vwr.zap(false, true, false);
     String errorMessage = null;
     Object t = null;
-    if (fullPathNameIn.contains("#_DOCACHE_"))
+    if (fullPathNameIn.contains(JC.FILE_DOCACHE_))
       readerOrDocument = getChangeableReader(vwr, nameAsGivenIn, fullPathNameIn);
     if (readerOrDocument == null) {
       // note that since bytes comes from reader, bytes will never be non-null here

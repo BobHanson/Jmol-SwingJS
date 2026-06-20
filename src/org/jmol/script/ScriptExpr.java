@@ -831,25 +831,37 @@ abstract class ScriptExpr extends ScriptParam {
         break;
       case T.string:
         String s = (String) value;
-        if (s.indexOf("({") == 0) {
-          bs = BS.unescape(s);
-          if (bs != null) {
-            rpn.addXBs(bs);
+        switch (s.length() == 0 ? '0' : s.charAt(0)) {
+        case '(':
+          if (s.indexOf("({") == 0) {
+            bs = BS.unescape(s);
+            if (bs != null) {
+              rpn.addXBs(bs);
+              break;
+            }
+          }
+          break;
+        case ';':
+          if (s.startsWith(JC.BASE90_35_TAG)) {
+            rpn.addXBs((BS) vwr.unescapePointOrBitsetAsVariable(s));
             break;
           }
-        } else if (s.indexOf("|") >= 0 && ptWithin != pc - 4) {
-          // looking for unit IDs;
-          // of course this means that no string can have "|" in it
-          // other than unit ids. 
-          // avoiding within ( dssr , "pairs where xxxx | xxx")
-          rpn.addXBs(vwr.ms.getAtoms(T.sequence, s));
-          break;
-        }
-        rpn.addX(SV.newT(instruction));
-        // note that the compiler has changed all within() types to strings.
-        if (s.equals("hkl")) {
-          rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, null, true)));
-          pc = iToken;
+          //$FALL-THROUGH$
+        default:
+          if (s.indexOf("|") >= 0 && ptWithin != pc - 4) {
+            // looking for unit IDs;
+            // of course this means that no string can have "|" in it
+            // other than unit ids. 
+            // avoiding within ( dssr , "pairs where xxxx | xxx")
+            rpn.addXBs(vwr.ms.getAtoms(T.sequence, s));
+            break;
+          }
+          rpn.addX(SV.newT(instruction));
+          // note that the compiler has changed all within() types to strings.
+          if (s.equals("hkl")) {
+            rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, null, true)));
+            pc = iToken;
+          }
         }
         break;
       case T.within:
@@ -2237,7 +2249,7 @@ abstract class ScriptExpr extends ScriptParam {
       String s = (String) obj;
       if (s.length() == 0)
         return s;
-      return SV.unescapePointOrBitsetAsVariable(s);
+      return vwr.unescapePointOrBitsetAsVariable(s);
     }
     @SuppressWarnings("unchecked")
     Lst<SV> lst = (Lst<SV>) obj;

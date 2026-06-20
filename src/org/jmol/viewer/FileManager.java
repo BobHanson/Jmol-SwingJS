@@ -570,6 +570,8 @@ public class FileManager implements BytePoster {
     String name = names[0];
     String fullPath = fixDOSName(names[0]);
     name = Rdr.getZipRoot(name);
+    if (name.endsWith(JC.FILE_DOCACHE_))
+      name = name.substring(0, name.length() - JC.FILE_DOCACHE_.length());
     Object errMsg = getBufferedInputStreamOrErrorMessageFromName(name, fullPath, false, !getStream, null, false, !getStream);
     ret[0] = fullPath;
     if (errMsg instanceof String)
@@ -641,8 +643,8 @@ public class FileManager implements BytePoster {
     if (bytesOrStream == null
         && (bytesOrStream = getCachedPngjBytes(name)) != null
         && htParams != null)
-      htParams.put("sourcePNGJ", Boolean.TRUE);
-    name = name.replace("#_DOCACHE_", "");
+      htParams.put(JC.INFO_SOURCE_PNGJ, Boolean.TRUE);
+    name = name.replace(JC.FILE_DOCACHE_, "");
     String fullName = name;
     String[] subFileList = null;
     if (name.indexOf("|") >= 0) {
@@ -1370,7 +1372,7 @@ public class FileManager implements BytePoster {
    */
   
   public static String getManifestScriptPath(String manifest) {
-    if (manifest.indexOf("$SCRIPT_PATH$") >= 0)
+    if (manifest.indexOf(JC.SCRIPT_PATH) >= 0)
       return "";
     String ch = (manifest.indexOf('\n') >= 0 ? "\n" : "\r");
     if (manifest.indexOf(".spt") >= 0) {
@@ -1519,8 +1521,6 @@ public class FileManager implements BytePoster {
     }    
     if (data == null)
       data = cache.get(key);
-     if (data != null)
-       Logger.info("cacheGet " + key);
     return (bytesOnly && (data instanceof String) ? null : data);
   }
 

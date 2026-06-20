@@ -1101,7 +1101,7 @@ public class ScriptMathProcessor {
     if (chk)
       return addXStr(SV.sValue(x2));
     if (x2.tok == T.string) {
-      Object v = SV.unescapePointOrBitsetAsVariable(SV.sValue(x2));
+      Object v = vwr.unescapePointOrBitsetAsVariable(SV.sValue(x2));
       if (!(v instanceof SV))
         return false;
       x2 = (SV) v;

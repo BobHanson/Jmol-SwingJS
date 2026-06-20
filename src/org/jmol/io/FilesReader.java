@@ -4,15 +4,17 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.util.Map;
 
+import javajs.api.GenericBinaryDocument;
+import javajs.util.DataReader;
+import javajs.util.Rdr;
+
 import org.jmol.api.Interface;
 import org.jmol.api.JmolFilesReaderInterface;
 import org.jmol.util.Logger;
 import org.jmol.viewer.FileManager;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
-import javajs.api.GenericBinaryDocument;
-import javajs.util.DataReader;
-import javajs.util.Rdr;
 
 /**
  * open a set of models residing in different files
@@ -94,7 +96,7 @@ public class FilesReader implements JmolFilesReaderInterface {
 //      subFileList = PT.split(name, "|");
 //      name = subFileList[0];
 //    }
-    if (name.contains("#_DOCACHE_"))
+    if (name.contains(JC.FILE_DOCACHE_))
       return FileReader.getChangeableReader(vwr, namesAsGivenIn[i], name);
     Object t = fm.getUnzippedReaderOrStreamFromName(name, null, false,
         forceInputStream, false, true, htParams);

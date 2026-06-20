@@ -181,6 +181,11 @@ public class JvxlData {
   public String baseColor;
   public double integration = Double.NaN;
   public SB sbOut;
+  /**
+   * because some vertices of a surface are translucent, we must
+   * cache this surface when saving a state
+   */
+  public boolean mustCacheForState;
 
   public void clear() {
     allowVolumeRender = true;
