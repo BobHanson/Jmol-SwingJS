@@ -414,7 +414,7 @@ public class BioModelSet {
     default:
       return new BS();
     case T.domains:
-      return getAnnotationBits("domains", T.domains, specInfo, null);
+      return getAnnotationBits(JC.INFO_DOMAINS, T.domains, specInfo, null);
     case T.validation:
       return getAnnotationBits("validation", T.validation, specInfo, null);
     //    case T.annotations:

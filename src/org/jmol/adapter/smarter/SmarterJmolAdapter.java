@@ -241,7 +241,7 @@ public class SmarterJmolAdapter extends JmolAdapter {
           // JSON domains and validations; could have both
           // hack to determine type:
           String type = (f.contains("version\":\"DSSR") ? "dssr" : f
-              .contains("/outliers/") ? "validation" : "domains");
+              .contains("/outliers/") ? "validation" : JC.INFO_DOMAINS);
           Map<String, Object> x = vwr.parseJSONMap(f);
           if (x != null)
             htParams.put(type, (type.equals("dssr") ? x : SV.getVariableMap(x)));

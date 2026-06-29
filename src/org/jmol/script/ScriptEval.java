@@ -1853,7 +1853,7 @@ public class ScriptEval extends ScriptExpr {
         tval = null;
         break;
       case T.hash:
-         if (Boolean.TRUE == ((Map<String, Object>)token.value).get("$_BINARY_$")) {
+         if (Boolean.TRUE == ((Map<String, Object>)token.value).get(JC.FILE_MARK_$BINARY$)) {
            sb.append("<BINARY DATA>");
            tval = null;
            break;
@@ -2214,7 +2214,7 @@ public class ScriptEval extends ScriptExpr {
       return filename;
     }
     if (prefix != null)
-      prefix = "cache://local" + prefix;
+      prefix = JC.CACHE_PROTOCOL + "local" + prefix;
     String key = pc + "_" + i + "_" + filename;
     String cacheName;
     if (thisContext == null) {
@@ -4877,8 +4877,8 @@ public class ScriptEval extends ScriptExpr {
           return;
         }
         isVariable = true;
-        if (o instanceof Map<?, ?> && ((Map<?, ?>) o).containsKey("_DATA_")) {
-          o = ((Map<?, ?>) o).get("_DATA_");
+        if (o instanceof Map<?, ?> && ((Map<?, ?>) o).containsKey(JC.INFO_DATA)) {
+          o = ((Map<?, ?>) o).get(JC.INFO_DATA);
           o = Base64.getBase64(((BArray) o).data);
         } else {
           o = "" + o;
@@ -4897,7 +4897,7 @@ public class ScriptEval extends ScriptExpr {
           type = filename.substring(0, pt + 2);
           filename = filename.substring(pt + 2);
         }
-        if (filename.startsWith("cache://")) { 
+        if (filename.startsWith(JC.CACHE_PROTOCOL)) { 
           localName = null;
         } else if (!isMutate || filename.length() > 0) {
           filename = checkFileExists("LOAD" + (isAppend ? "_APPEND_" : "_"), isAsync,
@@ -4906,7 +4906,7 @@ public class ScriptEval extends ScriptExpr {
             error(ERROR_operationCanceled);
           filename = type + filename;
         }
-        if (filename.startsWith("cache://"))
+        if (filename.startsWith(JC.CACHE_PROTOCOL))
           localName = null;
         // on first pass, a ScriptInterruption will be thrown; 
         // on the second pass, we will have the file name, which will be cache://localLoad_n__m
@@ -5072,7 +5072,7 @@ public class ScriptEval extends ScriptExpr {
   }
 
   public String checkFileExists(String prefix, boolean isAsync, String filename, int i, boolean doClear) throws ScriptException {
-    if (chk || filename.startsWith("cache://")) 
+    if (chk || filename.startsWith(JC.CACHE_PROTOCOL)) 
        return filename;
     if ((vwr.testAsync || Viewer.isJS)
         && (isAsync || filename.startsWith("?"))
@@ -5119,8 +5119,8 @@ public class ScriptEval extends ScriptExpr {
     OC out = vwr.getOutputChannel(null, null);
     htParams.put("outputChannel", out);
     vwr.createZip("", "ZIPDATA", htParams);
-    String modelName = "cache://VAR_" + varName;
-    vwr.cacheFileByName("cache://VAR_*",false);
+    String modelName = JC.CACHE_PROTOCOL + "VAR_" + varName;
+    vwr.cacheFileByName(JC.CACHE_PROTOCOL + "VAR_*",false);
     vwr.cachePut(modelName, out.toByteArray());
     cmdScript(0, modelName, null, null);
   }

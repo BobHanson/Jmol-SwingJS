@@ -341,6 +341,7 @@ public class PngEncoder extends CRCEncoder {
   private void writePhysicalSize() {
 
     writeInt4(9);
+    startPos = bytePos;
     writeString("pHYs");
     int ppm = (int) Math.round(inchesPerMeter * dpi);
     writeInt4(ppm);

@@ -422,7 +422,7 @@ public class FileManager implements BytePoster {
     BufferedInputStream bis = null;
     Object ret = null;
     String errorMessage = null;
-    allowCached = allowCached || name.startsWith("cache://");
+    allowCached = allowCached || name.startsWith(JC.CACHE_PROTOCOL);
     byte[] cacheBytes = (allowCached && outputBytes == null ? cacheBytes = getPngjOrDroppedBytes(
         fullName, name) : null);
     try {
@@ -587,7 +587,7 @@ public class FileManager implements BytePoster {
     Object data = cacheGet(name, false);
     boolean isBytes = AU.isAB(data);
     byte[] bytes = (isBytes ? (byte[]) data : null);
-    if (name.startsWith("cache://")) {
+    if (name.startsWith(JC.CACHE_PROTOCOL)) {
       if (data == null)
         return "cannot read " + name;
       if (isBytes) {
@@ -895,8 +895,8 @@ public class FileManager implements BytePoster {
         return vwr.loadImageData(Boolean.FALSE, "\1close", echoName, null);
     }
     if (nameOrBytes instanceof Map) {
-      nameOrBytes = (((Map<String, Object>) nameOrBytes).containsKey("_DATA_") ? ((Map<String, Object>) nameOrBytes)
-          .get("_DATA_") : ((Map<String, Object>) nameOrBytes).get("_IMAGE_"));
+      nameOrBytes = (((Map<String, Object>) nameOrBytes).containsKey(JC.INFO_DATA) ? ((Map<String, Object>) nameOrBytes)
+          .get(JC.INFO_DATA) : ((Map<String, Object>) nameOrBytes).get(JC.FILE_PNG_IMAGE));
     }
     if (nameOrBytes instanceof SV)
       nameOrBytes = ((SV) nameOrBytes).value;
@@ -959,7 +959,7 @@ public class FileManager implements BytePoster {
     GenericFileInterface file = null;
     URL url = null;
     String[] names = null;
-    if (name.startsWith("cache://")) {
+    if (name.startsWith(JC.CACHE_PROTOCOL)) {
       names = new String[3];
       names[0] = names[2] = name;
       names[1] = stripPath(names[0]);
@@ -1277,6 +1277,12 @@ public class FileManager implements BytePoster {
       if (line.indexOf("Menu") >= 0)
         return "MENU";
       break;
+    case '<':
+      if (line.startsWith("<?xml") && line.indexOf("<jvxl ") > 0)
+        return "JvxlXml";
+      if (line.indexOf("<efvet ") >= 0)
+        return "Efvet";
+      break;
     case '&':
       if (line.indexOf("&plot") == 0)
         return "Jaguar";
@@ -1295,8 +1301,6 @@ public class FileManager implements BytePoster {
       return "Pmesh4";
     if (line.indexOf("! nspins") >= 0)
       return "CastepDensity";
-    if (line.indexOf("<jvxl") >= 0 && line.indexOf("<?xml") >= 0)
-      return "JvxlXml";
     if (line.indexOf("#JVXL+") >= 0)
       return "Jvxl+";
     if (line.indexOf("#JVXL") >= 0)
@@ -1307,8 +1311,6 @@ public class FileManager implements BytePoster {
       return "Obj";
     if (line.indexOf("#pmesh") >= 0)
       return "Obj";
-    if (line.indexOf("<efvet ") >= 0)
-      return "Efvet";
     if (line.indexOf("usemtl") >= 0)
       return "Obj";
     if (line.indexOf("# object with") == 0)
@@ -1595,7 +1597,7 @@ public class FileManager implements BytePoster {
     // BytePoster interface - for javajs.util.OC (output channel)
     // in principle, could have sftp or ftp here
     // but sftp is not implemented
-    if (fileName.startsWith("cache://")) {
+    if (fileName.startsWith(JC.CACHE_PROTOCOL)) {
       cachePut(fileName, bytes);
       return "OK " + bytes.length + "cached";
     }
@@ -1752,7 +1754,7 @@ public class FileManager implements BytePoster {
 
     String cmd = null;
     fname = fname.trim().replace('\\', '/');
-    boolean isCached = fname.startsWith("cache://");
+    boolean isCached = fname.startsWith(JC.CACHE_PROTOCOL);
     if (vwr.isApplet && fname.indexOf("://") < 0)
       fname = "file://" + (fname.startsWith("/") ? "" : "/") + fname;
     try {
@@ -1766,7 +1768,7 @@ public class FileManager implements BytePoster {
             + (vwr.isApplet ? "" : " filter 'DORESIZE'");
         return;
       }
-      if (fname.endsWith("jvxl")) {
+      if (fname.endsWith(".jvxl")) {
         cmd = "isosurface ";
       } else if (!fname.toLowerCase().endsWith(".spt")) {
         if (type == null)

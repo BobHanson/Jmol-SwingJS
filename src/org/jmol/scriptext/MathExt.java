@@ -3517,7 +3517,7 @@ SymmetryInterface sym;
       return false;
     String file = FileManager.fixDOSName(SV.sValue(args[0]));
     boolean asMap = (args.length > 1 && args[1].tok == T.on);
-    boolean async = (vwr.async || file.startsWith("cache://")
+    boolean async = (vwr.async || file.startsWith(JC.CACHE_PROTOCOL)
         || args.length > 2 && args[args.length - 1].tok == T.on);
     int nBytesMax = (args.length > 1 && args[1].tok == T.integer
         ? args[1].asInt()

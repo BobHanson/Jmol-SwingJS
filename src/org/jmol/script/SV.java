@@ -1823,8 +1823,8 @@ public class SV extends T implements JSONEncodable {
     switch (tok) {
     case hash:
       SV sv = ((Map<String, SV>) value).get(key);
-      if (sv == null && key.equals("length") && ((Map<String, SV>) value).containsKey("_DATA_")) {
-        sv = ((Map<String, SV>) value).get("_DATA_");
+      if (sv == null && key.equals("length") && ((Map<String, SV>) value).containsKey(JC.INFO_DATA)) {
+        sv = ((Map<String, SV>) value).get(JC.INFO_DATA);
         return SV.newI(((BArray) sv.value ).data.length);
       }
       return sv;

@@ -4696,7 +4696,7 @@ public class CmdExt extends ScriptExt {
           params.put("data", v);
           if ((bytes = data = (String) vwr.createZip(fileName,
               v.size() == 1 || fileName.endsWith(".png")
-                  || fileName.endsWith(".pngj") ? "BINARY" : "ZIPDATA",
+                  || fileName.endsWith(".pngj") ? JC.FILE_TYPE_BINARY : "ZIPDATA",
               params)) == null)
             eval.evalError("#CANCELED#", null);
         }
@@ -4843,7 +4843,7 @@ public class CmdExt extends ScriptExt {
     boolean isCache = false;
     if (fileName != null) {
       params.put("fileName", fileName);
-      isCache = fileName.startsWith("cache://");
+      isCache = fileName.startsWith(JC.CACHE_PROTOCOL);
     }
     params.put("backgroundColor", Integer.valueOf(vwr.getBackgroundArgb()));
     params.put("type", type);
@@ -4910,12 +4910,12 @@ public class CmdExt extends ScriptExt {
 
   public Lst<Object> prepareBinaryOutput(SV tvar) {
     Map<String, SV> m = tvar.getMap();
-    if (m == null || !m.containsKey("$_BINARY_$"))
+    if (m == null || !m.containsKey(JC.FILE_MARK_$BINARY$))
       return null;
     Lst<Object> v = new Lst<Object>();
     for (Entry<String, SV> e : m.entrySet()) {
       String key = e.getKey();
-      if (key.equals("$_BINARY_$"))
+      if (key.equals(JC.FILE_MARK_$BINARY$))
         continue;
       SV o = e.getValue();
       byte[] bytes = (o.tok == T.barray ? ((BArray) o.value).data : null);
@@ -4924,12 +4924,12 @@ public class CmdExt extends ScriptExt {
         bytes = (s.startsWith(JC.BASE64_TAG) ? Base64.decodeBase64(s)
             : s.getBytes());
       }
-      if (key.equals("_DATA_")) {
+      if (key.equals(JC.INFO_DATA)) {
         // just return this binary data value
         v = new Lst<Object>();
         v.addLast(bytes);
         return v;
-      } else if (key.equals("_IMAGE_")) {
+      } else if (key.equals(JC.FILE_PNG_IMAGE)) {
         v.add(0, key);
         v.add(1, null);
         v.add(2, bytes);
@@ -5014,7 +5014,7 @@ public class CmdExt extends ScriptExt {
       eval.checkLength23();
       len = st.length;
       if (!chk) {
-        Object d = vwr.getModelInfo("domains");
+        Object d = vwr.getModelInfo(JC.INFO_DOMAINS);
         if (d instanceof SV)
           msg = vwr.getAnnotationInfo((SV) d, eval.optParameterAsString(2),
               T.domains);

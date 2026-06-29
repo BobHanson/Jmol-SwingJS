@@ -2302,7 +2302,7 @@ public class IsoExt extends ScriptExt {
         if (tokAt(i + 3) != T.end)
           invArg();
         if (!chk) {
-          filename = "cache://" + stringParameter(i + 1);
+          filename = JC.CACHE_PROTOCOL + stringParameter(i + 1);
           jvxlData = getToken(i + 2).value.toString();
           vwr.cachePut(filename, jvxlData);
         }
@@ -3169,7 +3169,7 @@ public class IsoExt extends ScriptExt {
           filename = "=density/";
           break;
         case T.end:
-          filename = "cache://" + stringParameter(++i);
+          filename = JC.CACHE_PROTOCOL + stringParameter(++i);
           break;
         }
         if (filename == null || filename.length() == 0 || filename.equals("*")

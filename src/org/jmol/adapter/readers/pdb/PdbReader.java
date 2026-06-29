@@ -44,40 +44,33 @@ import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
-
 /**
  * PDB file reader.
  *
- *<p>
- * <a href='http://www.rcsb.org'>
- * http://www.rcsb.org
- * </a>
+ * <p>
+ * <a href='http://www.rcsb.org'> http://www.rcsb.org </a>
  *
  * @author Miguel, Egon, and Bob (hansonr@stolaf.edu)
  * 
- * pqr and gromacs pdb_wide_format added by Bob 
- * see http://repo.or.cz/w/gromacs.git/blob/HEAD:/src/gmxlib/pdbio.c line 244
- * see http://repo.or.cz/w/gromacs.git/blob/HEAD:/src/gmxlib/pdbio.c line 323
+ *         pqr and gromacs pdb_wide_format added by Bob see
+ *         http://repo.or.cz/w/gromacs.git/blob/HEAD:/src/gmxlib/pdbio.c line
+ *         244 see http://repo.or.cz/w/gromacs.git/blob/HEAD:/src/gmxlib/pdbio.c
+ *         line 323
  * 
- * TLS Motion Determination:
- *  
- *    J Painter & E A Merritt (2006) Acta Cryst. D62, 439-450 
- *    http://skuld.bmsc.washington.edu/~tlsmd
- *    
- * symmetry added by Bob Hanson:
+ *         TLS Motion Determination:
  * 
- *  setFractionalCoordinates()
- *  setSpaceGroupName()
- *  setUnitCell()
- *  initializeCartesianToFractional();
- *  setUnitCellItem()
- *  setAtomCoord()
- *  applySymmetryAndSetTrajectory()
- *  
+ *         J Painter & E A Merritt (2006) Acta Cryst. D62, 439-450
+ *         http://skuld.bmsc.washington.edu/~tlsmd
+ * 
+ *         symmetry added by Bob Hanson:
+ * 
+ *         setFractionalCoordinates() setSpaceGroupName() setUnitCell()
+ *         initializeCartesianToFractional(); setUnitCellItem() setAtomCoord()
+ *         applySymmetryAndSetTrajectory()
+ * 
  */
 
 public class PdbReader extends AtomSetCollectionReader {
-
 
   // serial number and sequence number extensions added Jan 2012 by BH, Jmol 13.1.12
   // Schroedinger HEX solution: 
@@ -86,56 +79,55 @@ public class PdbReader extends AtomSetCollectionReader {
   // assumes sequential numbering with no surprises
   // incompatible with CONECT
   // because there can be two atoms with atom number "10000", one base 10 and one base 16 
-  
+
   // hybrid-36 solution:
   // cci.lbl.gov/cctbx_sources/iotbx/pdb/hybrid_36.py
   // allows for about 87,000,000 atoms
   // no problem with sequential numbering or CONECT
-  
+
   private final static int MODE_PDB = 0;
   private final static int MODE_HEX = 1;
   private final static int MODE_HYBRID36 = 2;
 
   private int serMode = MODE_PDB;
   private int seqMode = MODE_PDB;
-  
+
   private int serial;
 
-  
   private int lineLength;
 
   private SB pdbHeader;
 
   private boolean applySymmetry;
   private boolean getTlsGroups;
-  
-  private boolean isMultiModel;  // MODEL ...
+
+  private boolean isMultiModel; // MODEL ...
   private boolean haveMappedSerials;
   private boolean isConnectStateBug;
   private boolean isLegacyModelType;
 
   protected boolean gromacsWideFormat;
-  
+
   private final Map<String, Map<String, Boolean>> htFormul = new Hashtable<String, Map<String, Boolean>>();
   private Map<String, String> htHetero;
   private Map<String, Map<String, Object>> htSites;
   private Map<String, Boolean> htElementsInCurrentGroup;
   private Map<String, Map<String, String>> htMolIds;
-  
-  private  Lst<Map<String, String>> vCompnds;
-  private  Lst<Map<String, Object>> vBiomolecules;
-  private  Lst<Map<String, Object>> vTlsModels;
+
+  private Lst<Map<String, String>> vCompnds;
+  private Lst<Map<String, Object>> vBiomolecules;
+  private Lst<Map<String, Object>> vTlsModels;
   private SB sbTlsErrors;
 
-  protected int[] biomtChainAtomCounts;  
-  
+  protected int[] biomtChainAtomCounts;
+
   private SB sbIgnored, sbSelected, sbConect, sb;
 
   private int ac;
   private int maxSerial;
   private int nUNK;
   private int nRes;
-  
+
   private Map<String, String> currentCompnd;
   private String currentGroup3;
   private String currentKey;
@@ -159,86 +151,93 @@ public class PdbReader extends AtomSetCollectionReader {
   private double cryst1;
   private String fileSgName;
 
-  final private static String lineOptions = 
-   "ATOM    " + //0
-   "HETATM  " + //1
-   "MODEL   " + //2
-   "CONECT  " + //3
-   "HELIX   " + //4,5,6
-   "SHEET   " +
-   "TURN    " +
-   "HET     " + //7
-   "HETNAM  " + //8
-   "ANISOU  " + //9
-   "SITE    " + //10
-   "CRYST1  " + //11
-   "SCALE1  " + //12,13,14
-   "SCALE2  " +
-   "SCALE3  " +
-   "EXPDTA  " + //15
-   "FORMUL  " + //16
-   "REMARK  " + //17
-   "HEADER  " + //18
-   "COMPND  " + //19
-   "SOURCE  " + //20
-   "TITLE   " + //21
-   "SEQADV  ";  //22
+  private final static int REC_ATOM = 0;
+  private final static int REC_HETATM = 1;
+  private final static int REC_MODEL = 2;
+  private final static int REC_SCALE = 12;
+  private final static int REC_COMPND = 19;
+  private final static int REC_SOURCE = 20;
+  
+  final private static String lineOptions = //
+      "ATOM    " + //0
+      "HETATM  " + //1
+      "MODEL   " + //2
+      "CONECT  " + //3
+      "HELIX   " + //4
+      "SHEET   " + //5
+      "TURN    " + //6
+      "HET     " + //7
+      "HETNAM  " + //8
+      "ANISOU  " + //9
+      "SITE    " + //10
+      "CRYST1  " + //11
+      "SCALE1  " + //12
+      "SCALE2  " + //13
+      "SCALE3  " + //14
+      "EXPDTA  " + //15
+      "FORMUL  " + //16
+      "REMARK  " + //17
+      "HEADER  " + //18
+      "COMPND  " + //19
+      "SOURCE  " + //20
+      "TITLE   " + //21
+      "SEQADV  "; //22
 
-
- @SuppressWarnings("unchecked")
-@Override
- protected void initializeReader() throws Exception {
-   allowPDBFilter = true;
-   pdbHeader = (getHeader ? new SB() : null);
-   applySymmetry = !checkFilterKey("NOSYMMETRY");
-   if (isDSSP1)
-     asc.setInfo("isDSSP1",Boolean.TRUE);      
-   getTlsGroups = checkFilterKey("TLS");
-   if (checkFilterKey("ASSEMBLY")) // CIF syntax
-     filter = PT.rep(filter, "ASSEMBLY", "BIOMOLECULE");
-   isbiomol = checkFilterKey("BIOMOLECULE");
-   if (isbiomol)
-     filter = filter.replace(':', ' '); // no chain choices if biomolecule
-   boolean byChain = isbiomol && checkFilterKey("BYCHAIN");
-   boolean bySymop = isbiomol && checkFilterKey("BYSYMOP");
-   isCourseGrained = byChain || bySymop;
-   if (!isCourseGrained)
-     setIsPDB();
-   isConcatenated |= filePath.endsWith(".dssr");
-   if (htParams.containsKey("vTlsModels")) {
-     // from   load files "tls.out" "xxxx.pdb"
-     vTlsModels = ( Lst<Map<String, Object>>) htParams.remove("vTlsModels");
-   }
-   String s = getFilter("TYPE ");
-   if (s != null) {
-     // first column, nColumns;
-     String[] tokens = PT.getTokens(s.replace(',', ' '));
-     atomTypePt0 = Integer.parseInt(tokens[0]) - 1;
-     int pt = tokens[1].indexOf("=");
-     if (pt >= 0) {
-       setFilterAtomTypeStr(tokens[1].substring(pt + 1).toUpperCase());
-     } else {
-       pt = tokens[1].length();
-     }
-     atomTypeLen = Integer.parseInt(tokens[1].substring(0, pt));
-   }
-   String conf = getFilter("CONF ");
-   if (conf != null) {
-     configurationPtr = parseIntStr(conf);
-     sbIgnored = new SB();
-     sbSelected = new SB();
-   }
-   isLegacyModelType = (stateScriptVersionInt < 120000);
-   isConnectStateBug = (stateScriptVersionInt >= 120151 && stateScriptVersionInt <= 120220
-         || stateScriptVersionInt >= 120300 && stateScriptVersionInt <= 120320);
- }
+  @SuppressWarnings("unchecked")
+  @Override
+  protected void initializeReader() throws Exception {
+    allowPDBFilter = true;
+    pdbHeader = (getHeader ? new SB() : null);
+    applySymmetry = !checkFilterKey("NOSYMMETRY");
+    if (isDSSP1)
+      asc.setInfo("isDSSP1", Boolean.TRUE);
+    getTlsGroups = checkFilterKey("TLS");
+    if (checkFilterKey("ASSEMBLY")) // CIF syntax
+      filter = PT.rep(filter, "ASSEMBLY", "BIOMOLECULE");
+    isbiomol = checkFilterKey("BIOMOLECULE");
+    if (isbiomol)
+      filter = filter.replace(':', ' '); // no chain choices if biomolecule
+    boolean byChain = isbiomol && checkFilterKey("BYCHAIN");
+    boolean bySymop = isbiomol && checkFilterKey("BYSYMOP");
+    isCourseGrained = byChain || bySymop;
+    if (!isCourseGrained)
+      setIsPDB();
+    isConcatenated |= filePath.endsWith(".dssr");
+    if (htParams.containsKey("vTlsModels")) {
+      // from   load files "tls.out" "xxxx.pdb"
+      vTlsModels = (Lst<Map<String, Object>>) htParams.remove("vTlsModels");
+    }
+    String s = getFilter("TYPE ");
+    if (s != null) {
+      // first column, nColumns;
+      String[] tokens = PT.getTokens(s.replace(',', ' '));
+      atomTypePt0 = Integer.parseInt(tokens[0]) - 1;
+      int pt = tokens[1].indexOf("=");
+      if (pt >= 0) {
+        setFilterAtomTypeStr(tokens[1].substring(pt + 1).toUpperCase());
+      } else {
+        pt = tokens[1].length();
+      }
+      atomTypeLen = Integer.parseInt(tokens[1].substring(0, pt));
+    }
+    String conf = getFilter("CONF ");
+    if (conf != null) {
+      configurationPtr = parseIntStr(conf);
+      sbIgnored = new SB();
+      sbSelected = new SB();
+    }
+    isLegacyModelType = (stateScriptVersionInt < 120000);
+    isConnectStateBug = (stateScriptVersionInt >= 120151
+        && stateScriptVersionInt <= 120220
+        || stateScriptVersionInt >= 120300 && stateScriptVersionInt <= 120320);
+  }
 
   @Override
   protected boolean checkLine() throws Exception {
-    int ptOption = ((lineLength = line.length()) < 6 ? -1 : lineOptions
-        .indexOf(line.substring(0, 6))) >> 3;
-    boolean isAtom = (ptOption == 0 || ptOption == 1);
-    boolean isModel = (ptOption == 2);
+    int ptOption = ((lineLength = line.length()) < 6 ? -1
+        : lineOptions.indexOf(line.substring(0, 6))) >> 3;
+    boolean isAtom = (ptOption == REC_ATOM || ptOption == REC_HETATM);
+    boolean isModel = (ptOption == REC_MODEL);
     serial = (isAtom ? getSerial(6, 11) : 0);
     boolean forceNewModel = ((isTrajectory || isSequential) && !isMultiModel
         && isAtom && serial == 1);
@@ -268,7 +267,7 @@ public class PdbReader extends AtomSetCollectionReader {
         applySymmetryAndSetTrajectory();
       // supposedly MODEL is only for NMR
       model(modelNo, modelName);
-      
+
       if (isLegacyModelType || !isAtom) // Jmol 12.0.RC24 fixed this bug, but for earlier scripts we need to unfix it.
         return true;
     }
@@ -313,13 +312,13 @@ public class PdbReader extends AtomSetCollectionReader {
     case 11:
       cryst1();
       return true;
-    case 12:
-    case 13:
-    case 14:
+    case REC_SCALE:
+    case REC_SCALE + 1:
+    case REC_SCALE + 2:
       // if (line.startsWith("SCALE1")) {
       // if (line.startsWith("SCALE2")) {
       // if (line.startsWith("SCALE3")) {
-      scale(ptOption - 11);
+      scale(ptOption - REC_SCALE + 1);
       return true;
     case 15:
       expdta();
@@ -328,7 +327,7 @@ public class PdbReader extends AtomSetCollectionReader {
       formul();
       return true;
     case 17:
-      if (line.startsWith("REMARK 285")) 
+      if (line.startsWith("REMARK 285"))
         return remark285();
       if (line.startsWith("REMARK 350"))
         return remark350();
@@ -348,9 +347,9 @@ public class PdbReader extends AtomSetCollectionReader {
     case 18:
       header();
       return true;
-    case 19:
-    case 20:
-      compnd(ptOption == 20);
+    case REC_COMPND:
+    case REC_SOURCE:
+      compnd(ptOption == REC_SOURCE);
       return true;
     case 21:
       title();
@@ -366,27 +365,26 @@ public class PdbReader extends AtomSetCollectionReader {
     checkCurrentLineForScript();
   }
 
-
-//SEQADV 1EHZ 2MG A   10  GB   M10263      G    10 TRNA                           
-//SEQADV 1EHZ H2U A   16  GB   M10263      U    16 TRNA                           
-//SEQADV 1EHZ H2U A   17  GB   M10263      U    17 TRNA                           
-//SEQADV 1EHZ M2G A   26  GB   M10263      G    26 TRNA                           
-//SEQADV 1EHZ OMC A   32  GB   M10263      C    32 TRNA                           
-//SEQADV 1EHZ OMG A   34  GB   M10263      G    34 TRNA                           
-//SEQADV 1EHZ YYG A   37  GB   M10263      G    37 TRNA                           
-//SEQADV 1EHZ PSU A   39  GB   M10263      U    39 TRNA                           
-//SEQADV 1EHZ 5MC A   40  GB   M10263      C    40 TRNA                           
-//SEQADV 1EHZ 7MG A   46  GB   M10263      G    46 TRNA                           
-//SEQADV 1EHZ 5MC A   49  GB   M10263      C    49 TRNA                           
-//SEQADV 1EHZ 5MU A   54  GB   M10263      U    54 TRNA                           
-//SEQADV 1EHZ PSU A   55  GB   M10263      U    55 TRNA                           
-//SEQADV 1EHZ 1MA A   58  GB   M10263      A    58 TRNA                           
-//SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT                       
+  //SEQADV 1EHZ 2MG A   10  GB   M10263      G    10 TRNA                           
+  //SEQADV 1EHZ H2U A   16  GB   M10263      U    16 TRNA                           
+  //SEQADV 1EHZ H2U A   17  GB   M10263      U    17 TRNA                           
+  //SEQADV 1EHZ M2G A   26  GB   M10263      G    26 TRNA                           
+  //SEQADV 1EHZ OMC A   32  GB   M10263      C    32 TRNA                           
+  //SEQADV 1EHZ OMG A   34  GB   M10263      G    34 TRNA                           
+  //SEQADV 1EHZ YYG A   37  GB   M10263      G    37 TRNA                           
+  //SEQADV 1EHZ PSU A   39  GB   M10263      U    39 TRNA                           
+  //SEQADV 1EHZ 5MC A   40  GB   M10263      C    40 TRNA                           
+  //SEQADV 1EHZ 7MG A   46  GB   M10263      G    46 TRNA                           
+  //SEQADV 1EHZ 5MC A   49  GB   M10263      C    49 TRNA                           
+  //SEQADV 1EHZ 5MU A   54  GB   M10263      U    54 TRNA                           
+  //SEQADV 1EHZ PSU A   55  GB   M10263      U    55 TRNA                           
+  //SEQADV 1EHZ 1MA A   58  GB   M10263      A    58 TRNA                           
+  //SEQADV 1BLU GLU      7  SWS  P00208    GLN     7 CONFLICT                       
 
   private void seqAdv() {
-    
+
     // Note: this will be overridden by DSSR if present
-    
+
     String g1 = line.substring(39, 42).trim().toLowerCase();
     if (g1.length() != 1)
       return;
@@ -399,7 +397,7 @@ public class PdbReader extends AtomSetCollectionReader {
   Map<String, String> htGroup1;
   private int maxLength = 80;
   protected String pdbID;
-  
+
   private String readHeader(boolean getLine) throws Exception {
     if (getLine) {
       rd();
@@ -414,7 +412,7 @@ public class PdbReader extends AtomSetCollectionReader {
   protected void finalizeSubclassReader() throws Exception {
     finalizeReaderPDB();
   }
- 
+
   protected void finalizeReaderPDB() throws Exception {
     checkNotPDB();
     if (pdbID != null && pdbID.length() > 0) {
@@ -422,7 +420,7 @@ public class PdbReader extends AtomSetCollectionReader {
         asc.setAtomSetName(pdbID);
       asc.setCurrentModelInfo("pdbID", pdbID);
     }
-    
+
     checkUnitCellParams();
     if (!isCourseGrained)
       connectAll(maxSerial, isConnectStateBug);
@@ -430,9 +428,9 @@ public class PdbReader extends AtomSetCollectionReader {
     if (vBiomolecules != null && vBiomolecules.size() > 0 && asc.ac > 0) {
       asc.setCurrentModelInfo("biomolecules", vBiomolecules);
       setBiomoleculeAtomCounts();
-     if (thisBiomolecule != null && applySymmetry) {
-        asc.getXSymmetry().applySymmetryBio(thisBiomolecule, applySymmetryToBonds,
-            filter);
+      if (thisBiomolecule != null && applySymmetry) {
+        asc.getXSymmetry().applySymmetryBio(thisBiomolecule,
+            applySymmetryToBonds, filter);
         vTlsModels = null; // for now, no TLS groups for biomolecules
         asc.xtalSymmetry = null;
       }
@@ -444,11 +442,11 @@ public class PdbReader extends AtomSetCollectionReader {
         for (int i = n; --i >= 0;)
           setTlsGroups(i, i, symmetry);
       } else {
-        Logger.info(n + " models but " + vTlsModels.size()
-            + " TLS descriptions");
+        Logger
+            .info(n + " models but " + vTlsModels.size() + " TLS descriptions");
         if (vTlsModels.size() == 1) {
-          Logger
-              .info(" -- assuming all models have the same TLS description -- check REMARK 3 for details.");
+          Logger.info(
+              " -- assuming all models have the same TLS description -- check REMARK 3 for details.");
           for (int i = n; --i >= 0;)
             setTlsGroups(0, i, symmetry);
         }
@@ -487,9 +485,10 @@ public class PdbReader extends AtomSetCollectionReader {
   }
 
   private void checkUnitCellParams() {
-    if (isbiomol && (unitCellParams == null || Double.isNaN(unitCellParams[0]))) {
-        setUnitCell(1, 1, 1, 90, 90, 90);
-        addSpaceGroupName("P1");
+    if (isbiomol
+        && (unitCellParams == null || Double.isNaN(unitCellParams[0]))) {
+      setUnitCell(1, 1, 1, 90, 90, 90);
+      addSpaceGroupName("P1");
     }
     if (iHaveUnitCell) {
       asc.setCurrentModelInfo(JC.INFO_UNIT_CELL_PARAMS, unitCellParams);
@@ -501,39 +500,41 @@ public class PdbReader extends AtomSetCollectionReader {
   private void checkForResidualBFactors(FileSymmetry symmetry) {
     Atom[] atoms = asc.atoms;
     boolean isResidual = false;
-     for (int i = asc.ac; --i >= 0;) {
+    for (int i = asc.ac; --i >= 0;) {
       double[] anisou = tlsU.get(atoms[i]);
       if (anisou == null)
         continue;
-      double resid = anisou[7] - (anisou[0] + anisou[1] + anisou[2])/3;
+      double resid = anisou[7] - (anisou[0] + anisou[1] + anisou[2]) / 3;
       if (resid < 0 || Double.isNaN(resid)) {
         isResidual = true; // can't be total
         break;
       }
-     }
-     
-     Logger.info("TLS analysis suggests Bfactors are " + (isResidual ? "" : "NOT") + " residuals");
+    }
 
-     for (Map.Entry<Atom, double[]> entry : tlsU.entrySet()) {
-       double[] anisou = entry.getValue();
-       double resid = anisou[7];
-       if (resid == 0)
-         continue;
-       if (!isResidual)
-         resid -= (anisou[0] + anisou[1] + anisou[2])/3;         
-       anisou[0] += resid;
-       anisou[1] += resid;
-       anisou[2] += resid;
-       entry.getKey().addTensor(symmetry.getTensor(vwr, anisou).setType(null), "TLS-R", false);
-       
-       // check for equal: 
-       
-       Logger.info("TLS-U:  " + Escape.eAD(anisou));
-       anisou = (entry.getKey().anisoBorU);
-       if (anisou != null)
-         Logger.info("ANISOU: " + Escape.eAD(anisou));       
-     }
-     tlsU = null;
+    Logger.info("TLS analysis suggests Bfactors are "
+        + (isResidual ? "" : "NOT") + " residuals");
+
+    for (Map.Entry<Atom, double[]> entry : tlsU.entrySet()) {
+      double[] anisou = entry.getValue();
+      double resid = anisou[7];
+      if (resid == 0)
+        continue;
+      if (!isResidual)
+        resid -= (anisou[0] + anisou[1] + anisou[2]) / 3;
+      anisou[0] += resid;
+      anisou[1] += resid;
+      anisou[2] += resid;
+      entry.getKey().addTensor(symmetry.getTensor(vwr, anisou).setType(null),
+          "TLS-R", false);
+
+      // check for equal: 
+
+      Logger.info("TLS-U:  " + Escape.eAD(anisou));
+      anisou = (entry.getKey().anisoBorU);
+      if (anisou != null)
+        Logger.info("ANISOU: " + Escape.eAD(anisou));
+    }
+    tlsU = null;
   }
 
   private void header() {
@@ -554,9 +555,10 @@ public class PdbReader extends AtomSetCollectionReader {
 
   private void title() {
     if (lineLength > 10)
-      appendLoadNote(line.substring(10, Math.min(maxLength , line.length())).trim());
+      appendLoadNote(
+          line.substring(10, Math.min(maxLength, line.length())).trim());
   }
-  
+
   private void compnd(boolean isSource) {
     if (!isSource) {
       if (compnd == null)
@@ -572,8 +574,8 @@ public class PdbReader extends AtomSetCollectionReader {
     if (vCompnds == null) {
       if (isSource)
         return;
-      vCompnds = new  Lst<Map<String,String>>();
-      htMolIds = new Hashtable<String, Map<String,String>>();
+      vCompnds = new Lst<Map<String, String>>();
+      htMolIds = new Hashtable<String, Map<String, String>>();
       currentCompnd = new Hashtable<String, String>();
       currentCompnd.put("select", "(*)");
       currentKey = "MOLECULE";
@@ -617,9 +619,8 @@ public class PdbReader extends AtomSetCollectionReader {
       value = value.substring(0, value.length() - 1);
     currentCompnd.put(currentKey, value);
     if (currentKey.equals("CHAIN"))
-      currentCompnd.put("select", "(:"
-          + PT.rep(javajs.util.PT
-              .rep(value, ", ", ",:"), " ", "") + ")");
+      currentCompnd.put("select",
+          "(:" + PT.rep(javajs.util.PT.rep(value, ", ", ",:"), " ", "") + ")");
   }
 
   @SuppressWarnings("unchecked")
@@ -640,38 +641,37 @@ public class PdbReader extends AtomSetCollectionReader {
     }
   }
 
-//  REMARK 350 BIOMOLECULE: 1                                                       
-//  REMARK 350 APPLY THE FOLLOWING TO CHAINS: 1, 2, 3, 4, 5, 6,  
-//  REMARK 350 A, B, C
-//  REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000            
-//  REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000            
-//  REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000            
-//  REMARK 350   BIOMT1   2  0.309017 -0.809017  0.500000        0.00000            
-//  REMARK 350   BIOMT2   2  0.809017  0.500000  0.309017        0.00000            
-//  REMARK 350   BIOMT3   2 -0.500000  0.309017  0.809017        0.00000
-//   
-//               
-//               or, as fount in http://www.ebi.ac.uk/msd-srv/pqs/pqs-doc/macmol/1k28.mmol
-//               
-//  REMARK 350 AN OLIGOMER OF TYPE :HEXAMERIC : CAN BE ASSEMBLED BY
-//  REMARK 350 APPLYING THE FOLLOWING TO CHAINS:
-//  REMARK 350 A, D
-//  REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000
-//  REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000
-//  REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000
-//  REMARK 350 IN ADDITION APPLY THE FOLLOWING TO CHAINS:
-//  REMARK 350 A, D
-//  REMARK 350   BIOMT1   2  0.000000 -1.000000  0.000000        0.00000
-//  REMARK 350   BIOMT2   2  1.000000 -1.000000  0.000000        0.00000
-//  REMARK 350   BIOMT3   2  0.000000  0.000000  1.000000        0.00000
-//  REMARK 350 IN ADDITION APPLY THE FOLLOWING TO CHAINS:
-//  REMARK 350 A, D
-//  REMARK 350   BIOMT1   3 -1.000000  1.000000  0.000000        0.00000
-//  REMARK 350   BIOMT2   3 -1.000000  0.000000  0.000000        0.00000
-//  REMARK 350   BIOMT3   3  0.000000  0.000000  1.000000        0.00000
+  //  REMARK 350 BIOMOLECULE: 1                                                       
+  //  REMARK 350 APPLY THE FOLLOWING TO CHAINS: 1, 2, 3, 4, 5, 6,  
+  //  REMARK 350 A, B, C
+  //  REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000            
+  //  REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000            
+  //  REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000            
+  //  REMARK 350   BIOMT1   2  0.309017 -0.809017  0.500000        0.00000            
+  //  REMARK 350   BIOMT2   2  0.809017  0.500000  0.309017        0.00000            
+  //  REMARK 350   BIOMT3   2 -0.500000  0.309017  0.809017        0.00000
+  //   
+  //               
+  //               or, as fount in http://www.ebi.ac.uk/msd-srv/pqs/pqs-doc/macmol/1k28.mmol
+  //               
+  //  REMARK 350 AN OLIGOMER OF TYPE :HEXAMERIC : CAN BE ASSEMBLED BY
+  //  REMARK 350 APPLYING THE FOLLOWING TO CHAINS:
+  //  REMARK 350 A, D
+  //  REMARK 350   BIOMT1   1  1.000000  0.000000  0.000000        0.00000
+  //  REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000
+  //  REMARK 350   BIOMT3   1  0.000000  0.000000  1.000000        0.00000
+  //  REMARK 350 IN ADDITION APPLY THE FOLLOWING TO CHAINS:
+  //  REMARK 350 A, D
+  //  REMARK 350   BIOMT1   2  0.000000 -1.000000  0.000000        0.00000
+  //  REMARK 350   BIOMT2   2  1.000000 -1.000000  0.000000        0.00000
+  //  REMARK 350   BIOMT3   2  0.000000  0.000000  1.000000        0.00000
+  //  REMARK 350 IN ADDITION APPLY THE FOLLOWING TO CHAINS:
+  //  REMARK 350 A, D
+  //  REMARK 350   BIOMT1   3 -1.000000  1.000000  0.000000        0.00000
+  //  REMARK 350   BIOMT2   3 -1.000000  0.000000  0.000000        0.00000
+  //  REMARK 350   BIOMT3   3  0.000000  0.000000  1.000000        0.00000
 
-
- private boolean remark350() throws Exception {
+  private boolean remark350() throws Exception {
     Lst<M4d> biomts = null;
     Lst<String> biomtchains = null;
     vBiomolecules = new Lst<Map<String, Object>>();
@@ -693,8 +693,8 @@ public class PdbReader extends AtomSetCollectionReader {
       try {
         if (line.startsWith("REMARK 350 BIOMOLECULE:")) {
           if (nBiomt > 0)
-            Logger.info("biomolecule " + id + ": number of transforms: "
-                + nBiomt);
+            Logger.info(
+                "biomolecule " + id + ": number of transforms: " + nBiomt);
           info = new Hashtable<String, Object>();
           id = line.substring(line.indexOf(":") + 1).trim();
           title = line.trim();
@@ -722,7 +722,8 @@ public class PdbReader extends AtomSetCollectionReader {
           needLine = false;
           while (readHeader(true) != null && line.indexOf("BIOMT") < 0
               && line.indexOf("350") == 7)
-            chainlist += ":" + line.substring(11).trim().replace(',',';').replace(' ', ':');
+            chainlist += ":"
+                + line.substring(11).trim().replace(',', ';').replace(' ', ':');
           chainlist += ";";
           if (checkFilterKey("BIOMOLECULE " + id + ";")
               || checkFilterKey("BIOMOLECULE=" + id + ";")) {
@@ -733,9 +734,9 @@ public class PdbReader extends AtomSetCollectionReader {
           }
           continue;
         }
-//         0         1         2         3         4         5         6         7
-//         0123456789012345678901234567890123456789012345678901234567890123456789
-//         REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000
+        //         0         1         2         3         4         5         6         7
+        //         0123456789012345678901234567890123456789012345678901234567890123456789
+        //         REMARK 350   BIOMT2   1  0.000000  1.000000  0.000000        0.00000
 
         if (line.startsWith("REMARK 350   BIOMT1 ")) {
           nBiomt++;
@@ -773,67 +774,66 @@ public class PdbReader extends AtomSetCollectionReader {
     return false;
   }
 
- 
-// REMARK 285           (1QL2)                                                           
-// REMARK 285 CRYST1                                                               
-// REMARK 285  THE ANALOGUE OF THE CRYSTALLOGRAPHIC SPACE GROUP FOR                
-// REMARK 285  HELICAL STRUCTURES IS THE LINE GROUP (A.KLUG, F.H.C.CRICK,          
-// REMARK 285  H.W.WYCKOFF, ACTA CRYSTALLOG. V.11, 199, 1958).  THE                
-// REMARK 285  LINE GROUP OF PF1 IS S.  THE UNIT CELL DIMENSIONS ARE THE           
-// REMARK 285  HELIX PARAMETERS (UNIT TWIST TAU, UNIT HEIGHT P).                   
-// REMARK 285                                                                      
-// REMARK 285  FOR THE PERTURBED MODEL OF PF1,                                     
-// REMARK 285    TAU = 200. DEGREES, P = 8.70 ANGSTROMS.                           
-// REMARK 285                                                                      
-// REMARK 285  THE INDEXING OF UNITS ALONG THE BASIC HELIX IS ILLUSTRATED          
-// REMARK 285  IN REFERENCE 4.  TO GENERATE COORDINATES X(K), Y(K), Z(K)           
-// REMARK 285  OF UNIT K FROM THE GIVEN COORDINATES X(0), Y(0), Z(0) OF            
-// REMARK 285  UNIT 0 IN A UNIT CELL WITH HELIX PARAMETERS                         
-// REMARK 285         (TAU, P) = (66.667, 2.90),                                   
-// REMARK 285  APPLY THE MATRIX AND VECTOR:                                        
-// REMARK 285                                                                      
-// REMARK 285     |    COS(TAU*K)   -SIN(TAU*K)   0 |    |   0         |           
-// REMARK 285     |    SIN(TAU*K)   COS(TAU*K)    0 | +  |   0         |           
-// REMARK 285     |    0            0             1 |    |   P*K       |           
-// REMARK 285                                                                      
-// REMARK 285  THE NEIGHBORS IN CONTACT WITH UNIT 0 ARE UNITS                      
-// REMARK 285         K = +/-1, +/-5, +/-6, +/-11 AND +/-17.                       
-// REMARK 285  THESE SYMMETRY-RELATED COPIES ARE USED TO DETERMINE INTERCHAIN      
-// REMARK 285  NON-BONDED CONTACTS DURING THE REFINEMENT.                          
-// REMARK 285                                                                      
-// REMARK 285  [ THE LOWER-TEMPERATURE FORM OF PF1 HAS HELIX PARAMETERS,           
-// REMARK 285     TAU = 65.915 DEGREES,                                            
-// REMARK 285      P = 3.05 ANGSTROMS. ]
- 
- private boolean remark285() {
-   // helical data could be here
-   return true; // haven't read anything;
- }
+  // REMARK 285           (1QL2)                                                           
+  // REMARK 285 CRYST1                                                               
+  // REMARK 285  THE ANALOGUE OF THE CRYSTALLOGRAPHIC SPACE GROUP FOR                
+  // REMARK 285  HELICAL STRUCTURES IS THE LINE GROUP (A.KLUG, F.H.C.CRICK,          
+  // REMARK 285  H.W.WYCKOFF, ACTA CRYSTALLOG. V.11, 199, 1958).  THE                
+  // REMARK 285  LINE GROUP OF PF1 IS S.  THE UNIT CELL DIMENSIONS ARE THE           
+  // REMARK 285  HELIX PARAMETERS (UNIT TWIST TAU, UNIT HEIGHT P).                   
+  // REMARK 285                                                                      
+  // REMARK 285  FOR THE PERTURBED MODEL OF PF1,                                     
+  // REMARK 285    TAU = 200. DEGREES, P = 8.70 ANGSTROMS.                           
+  // REMARK 285                                                                      
+  // REMARK 285  THE INDEXING OF UNITS ALONG THE BASIC HELIX IS ILLUSTRATED          
+  // REMARK 285  IN REFERENCE 4.  TO GENERATE COORDINATES X(K), Y(K), Z(K)           
+  // REMARK 285  OF UNIT K FROM THE GIVEN COORDINATES X(0), Y(0), Z(0) OF            
+  // REMARK 285  UNIT 0 IN A UNIT CELL WITH HELIX PARAMETERS                         
+  // REMARK 285         (TAU, P) = (66.667, 2.90),                                   
+  // REMARK 285  APPLY THE MATRIX AND VECTOR:                                        
+  // REMARK 285                                                                      
+  // REMARK 285     |    COS(TAU*K)   -SIN(TAU*K)   0 |    |   0         |           
+  // REMARK 285     |    SIN(TAU*K)   COS(TAU*K)    0 | +  |   0         |           
+  // REMARK 285     |    0            0             1 |    |   P*K       |           
+  // REMARK 285                                                                      
+  // REMARK 285  THE NEIGHBORS IN CONTACT WITH UNIT 0 ARE UNITS                      
+  // REMARK 285         K = +/-1, +/-5, +/-6, +/-11 AND +/-17.                       
+  // REMARK 285  THESE SYMMETRY-RELATED COPIES ARE USED TO DETERMINE INTERCHAIN      
+  // REMARK 285  NON-BONDED CONTACTS DURING THE REFINEMENT.                          
+  // REMARK 285                                                                      
+  // REMARK 285  [ THE LOWER-TEMPERATURE FORM OF PF1 HAS HELIX PARAMETERS,           
+  // REMARK 285     TAU = 65.915 DEGREES,                                            
+  // REMARK 285      P = 3.05 ANGSTROMS. ]
 
-//REMARK 290                                                                      
-//REMARK 290 CRYSTALLOGRAPHIC SYMMETRY                                            
-//REMARK 290 SYMMETRY OPERATORS FOR SPACE GROUP: P 1 21 1                         
-//REMARK 290                                                                      
-//REMARK 290      SYMOP   SYMMETRY                                                
-//REMARK 290     NNNMMM   OPERATOR                                                
-//REMARK 290       1555   X,Y,Z                                                   
-//REMARK 290       2555   -X,Y+1/2,-Z                                             
-//REMARK 290                                                                      
-//REMARK 290     WHERE NNN -> OPERATOR NUMBER                                     
-//REMARK 290           MMM -> TRANSLATION VECTOR                                  
-//REMARK 290                                                                      
-//REMARK 290 CRYSTALLOGRAPHIC SYMMETRY TRANSFORMATIONS                            
-//REMARK 290 THE FOLLOWING TRANSFORMATIONS OPERATE ON THE ATOM/HETATM             
-//REMARK 290 RECORDS IN THIS ENTRY TO PRODUCE CRYSTALLOGRAPHICALLY                
-//REMARK 290 RELATED MOLECULES.                                                   
-//REMARK 290   SMTRY1   1  1.000000  0.000000  0.000000        0.00000            
-//REMARK 290   SMTRY2   1  0.000000  1.000000  0.000000        0.00000            
-//REMARK 290   SMTRY3   1  0.000000  0.000000  1.000000        0.00000            
-//REMARK 290   SMTRY1   2 -1.000000  0.000000  0.000000        0.00000            
-//REMARK 290   SMTRY2   2  0.000000  1.000000  0.000000        9.32505            
-//REMARK 290   SMTRY3   2  0.000000  0.000000 -1.000000        0.00000            
-//REMARK 290                                                                      
-//REMARK 290 REMARK: NULL                                                         
+  private boolean remark285() {
+    // helical data could be here
+    return true; // haven't read anything;
+  }
+
+  //REMARK 290                                                                      
+  //REMARK 290 CRYSTALLOGRAPHIC SYMMETRY                                            
+  //REMARK 290 SYMMETRY OPERATORS FOR SPACE GROUP: P 1 21 1                         
+  //REMARK 290                                                                      
+  //REMARK 290      SYMOP   SYMMETRY                                                
+  //REMARK 290     NNNMMM   OPERATOR                                                
+  //REMARK 290       1555   X,Y,Z                                                   
+  //REMARK 290       2555   -X,Y+1/2,-Z                                             
+  //REMARK 290                                                                      
+  //REMARK 290     WHERE NNN -> OPERATOR NUMBER                                     
+  //REMARK 290           MMM -> TRANSLATION VECTOR                                  
+  //REMARK 290                                                                      
+  //REMARK 290 CRYSTALLOGRAPHIC SYMMETRY TRANSFORMATIONS                            
+  //REMARK 290 THE FOLLOWING TRANSFORMATIONS OPERATE ON THE ATOM/HETATM             
+  //REMARK 290 RECORDS IN THIS ENTRY TO PRODUCE CRYSTALLOGRAPHICALLY                
+  //REMARK 290 RELATED MOLECULES.                                                   
+  //REMARK 290   SMTRY1   1  1.000000  0.000000  0.000000        0.00000            
+  //REMARK 290   SMTRY2   1  0.000000  1.000000  0.000000        0.00000            
+  //REMARK 290   SMTRY3   1  0.000000  0.000000  1.000000        0.00000            
+  //REMARK 290   SMTRY1   2 -1.000000  0.000000  0.000000        0.00000            
+  //REMARK 290   SMTRY2   2  0.000000  1.000000  0.000000        9.32505            
+  //REMARK 290   SMTRY3   2  0.000000  0.000000 -1.000000        0.00000            
+  //REMARK 290                                                                      
+  //REMARK 290 REMARK: NULL                                                         
 
   private boolean remark290() throws Exception {
     while (readHeader(true) != null && line.startsWith("REMARK 290")) {
@@ -848,14 +848,14 @@ public class PdbReader extends AtomSetCollectionReader {
       }
     }
     return false;
-  } 
-  
+  }
+
   private boolean remark998() {
     // looking for 
     //  REMARK 998   This file has been modified by ConSurf. 
     if (asc.isConSurf == null) {
       if (line.indexOf("ConSurf") >= 0)
-         asc.isConSurf = Boolean.TRUE;
+        asc.isConSurf = Boolean.TRUE;
     }
     return true;
   }
@@ -879,7 +879,8 @@ public class PdbReader extends AtomSetCollectionReader {
       //  26973856 = Integer.parseInt("100000", 10) - Integer.parseInt("A0000",36) 
       //           + (Integer.parseInt("100000",36) - Integer.parseInt("A0000",36))
       return (isBase10 || PT.isDigit(c) ? parseIntRange(line, i, j)
-          : PT.parseIntRadix(line.substring(i, j), 36) + (PT.isUpperCase(c) ? -16696160 : 26973856));
+          : PT.parseIntRadix(line.substring(i, j), 36)
+              + (PT.isUpperCase(c) ? -16696160 : 26973856));
     case MODE_HEX:
       if (!isBase10)
         return serial = PT.parseIntRadix(line.substring(i, j), 16);
@@ -919,26 +920,19 @@ public class PdbReader extends AtomSetCollectionReader {
     }
   }
 
-// Note that segID (columns 73-76) is not generally read, 
+  // Note that segID (columns 73-76) is not generally read, 
   // but can be read into the atomType atom property 
   // starting in Jmol 13.1.12 using FILTER "type 73,4"
-  
+
   // Gromacs pdb_wide_format:
   //%-6s%5u %-4.4s %3.3s %c%4d%c   %10.5f%10.5f%10.5f%8.4f%8.4f    %2s\n")
   //0         1         2         3         4         5         6         7
   //01234567890123456789012345678901234567890123456789012345678901234567890123456789
   //aaaaaauuuuu ssss sss cnnnnc   xxxxxxxxxxyyyyyyyyyyzzzzzzzzzzccccccccrrrrrrrr
- 
-  protected Atom processAtom(Atom atom,
-        String name, 
-        char altID, 
-        String group3, 
-        int chainID, 
-        int seqNo,
-        char insCode,
-        boolean isHetero,
-        String sym
-        ) {
+
+  protected Atom processAtom(Atom atom, String name, char altID, String group3,
+                             int chainID, int seqNo, char insCode,
+                             boolean isHetero, String sym) {
     atom.atomName = name;
     if (altID != ' ')
       atom.altLoc = altID;
@@ -948,12 +942,13 @@ public class PdbReader extends AtomSetCollectionReader {
       biomtChainAtomCounts[chainID % 256]++;
     atom.sequenceNumber = seqNo;
     atom.insertionCode = JmolAdapter.canonizeInsertionCode(insCode);
-    atom.isHetero = isHetero;    
+    atom.isHetero = isHetero;
     atom.elementSymbol = sym;
     return atom;
   }
-  
-  protected void processAtom2(Atom atom, int serial, double x, double y, double z, int charge) {
+
+  protected void processAtom2(Atom atom, int serial, double x, double y,
+                              double z, int charge) {
     atom.atomSerial = serial;
     if (serial > maxSerial)
       maxSerial = serial;
@@ -990,24 +985,17 @@ public class PdbReader extends AtomSetCollectionReader {
     }
   }
 
-
   private void atom() {
     boolean isHetero = line.startsWith("HETATM");
-    Atom atom = processAtom(new Atom(),
-        line.substring(12, 16).trim(), 
-        line.charAt(16),
-        parseTokenRange(line, 17, 20),
-        vwr.getChainID(line.substring(21, 22), true),
-        getSeqNo(22, 26),
-        line.charAt(26),
-        isHetero,
-        deduceElementSymbol(isHetero)
-    );
+    Atom atom = processAtom(new Atom(), line.substring(12, 16).trim(),
+        line.charAt(16), parseTokenRange(line, 17, 20),
+        vwr.getChainID(line.substring(21, 22), true), getSeqNo(22, 26),
+        line.charAt(26), isHetero, deduceElementSymbol(isHetero));
     if (atomTypeLen > 0) {
       // becomes atomType
       String s = line.substring(atomTypePt0, atomTypePt0 + atomTypeLen).trim();
       if (s.length() > 0)
-      atom.atomName += "\0" + s;
+        atom.atomName += "\0" + s;
     }
     if (!filterPDBAtom(atom, fileAtomIndex++))
       return;
@@ -1037,15 +1025,16 @@ public class PdbReader extends AtomSetCollectionReader {
       x = parseDoubleRange(line, 30, 38);
       y = parseDoubleRange(line, 38, 46);
       z = parseDoubleRange(line, 46, 54);
-    }    
+    }
     processAtom2(atom, serial, x, y, z, charge);
   }
-  
+
   protected boolean filterPDBAtom(Atom atom, int iAtom) {
     if (!filterAtom(atom, iAtom))
       return false;
     if (configurationPtr > 0) {
-      if (atom.sequenceNumber != lastGroup || atom.insertionCode != lastInsertion) {
+      if (atom.sequenceNumber != lastGroup
+          || atom.insertionCode != lastInsertion) {
         conformationIndex = configurationPtr - 1;
         lastGroup = atom.sequenceNumber;
         lastInsertion = atom.insertionCode;
@@ -1054,12 +1043,10 @@ public class PdbReader extends AtomSetCollectionReader {
       // ignore atoms that have no designation
       if (atom.altLoc != '\0') {
         // count down until we get the desired index into the list
-        String msg = " atom [" + atom.group3 + "]"
-                           + atom.sequenceNumber 
-                           + (atom.insertionCode == '\0' ? "" : "^" + atom.insertionCode)
-                           + (atom.chainID == 0 ? "" : ":" + vwr.getChainIDStr(atom.chainID))
-                           + "." + atom.atomName
-                           + "%" + atom.altLoc + "\n";
+        String msg = " atom [" + atom.group3 + "]" + atom.sequenceNumber
+            + (atom.insertionCode == '\0' ? "" : "^" + atom.insertionCode)
+            + (atom.chainID == 0 ? "" : ":" + vwr.getChainIDStr(atom.chainID))
+            + "." + atom.atomName + "%" + atom.altLoc + "\n";
         if (conformationIndex >= 0 && atom.altLoc != lastAltLoc) {
           lastAltLoc = atom.altLoc;
           conformationIndex--;
@@ -1080,49 +1067,48 @@ public class PdbReader extends AtomSetCollectionReader {
    * @param atom
    */
   protected void setAdditionalAtomParameters(Atom atom) {
-    double floatOccupancy;    
+    double floatOccupancy;
     if (gromacsWideFormat) {
       floatOccupancy = parseDoubleRange(line, 60, 68);
       atom.bfactor = fixRadius(parseDoubleRange(line, 68, 76));
     } else {
       /****************************************************************
-       * read the occupancy from cols 55-60 (1-based) 
-       * --should be in the range 0.00 - 1.00
+       * read the occupancy from cols 55-60 (1-based) --should be in the range
+       * 0.00 - 1.00
        ****************************************************************/
-    
+
       floatOccupancy = parseDoubleRange(line, 54, 60);
 
       /****************************************************************
        * read the bfactor from cols 61-66 (1-based)
        ****************************************************************/
-        atom.bfactor = parseDoubleRange(line, 60, 66);
+      atom.bfactor = parseDoubleRange(line, 60, 66);
     }
-    
+
     atom.foccupancy = (Double.isNaN(floatOccupancy) ? 1 : floatOccupancy);
-    
+
   }
 
   /**
-   * The problem here stems from the fact that developers have not fully 
-   * understood the PDB specifications -- and that those have changed. 
-   * The actual rules are as follows (using 1-based numbering:
+   * The problem here stems from the fact that developers have not fully
+   * understood the PDB specifications -- and that those have changed. The
+   * actual rules are as follows (using 1-based numbering:
    * 
-   * 1) Chemical symbols may be in columns 77 and 78 for total disambiguity.
-   * 2) Only valid chemical symbols should be in columns 13 and 14
-   *    These are the first two characters of a four-character field.
-   * 3) Four-character atom names for hydrogen necessarily start in 
-   *    column 13, so when that is the case, if the four-letter 
-   *    name starts with "H" then it is hydrogen regardless of what
-   *    letter comes next. For example, "HG3 " is mercury (and should
-   *    be in a HETATM record, not an ATOM record, anyway), but "HG33"
-   *    is hydrogen, presumably.
-   *    
-   *    This leave open the ambiguity of a four-letter H name in a 
-   *    heteroatom set where the symbol is really H, not Hg or Ha, or Ho or Hf, etc.
-   *     
+   * 1) Chemical symbols may be in columns 77 and 78 for total disambiguity. 2)
+   * Only valid chemical symbols should be in columns 13 and 14 These are the
+   * first two characters of a four-character field. 3) Four-character atom
+   * names for hydrogen necessarily start in column 13, so when that is the
+   * case, if the four-letter name starts with "H" then it is hydrogen
+   * regardless of what letter comes next. For example, "HG3 " is mercury (and
+   * should be in a HETATM record, not an ATOM record, anyway), but "HG33" is
+   * hydrogen, presumably.
+   * 
+   * This leave open the ambiguity of a four-letter H name in a heteroatom set
+   * where the symbol is really H, not Hg or Ha, or Ho or Hf, etc.
+   * 
    * 
    * @param isHetero
-   * @return           an atom symbol
+   * @return an atom symbol
    */
   protected String deduceElementSymbol(boolean isHetero) {
     if (lineLength >= 78) {
@@ -1137,34 +1123,36 @@ public class PdbReader extends AtomSetCollectionReader {
     char ch13 = line.charAt(13);
     // PDB atom symbols are supposed to be in these two characters
     // But they could be right-aligned or left-aligned
-    if ((htElementsInCurrentGroup == null ||
-         htElementsInCurrentGroup.get(line.substring(12, 14)) != null) &&
-        Atom.isValidSymNoCase(ch12, ch13))
+    if ((htElementsInCurrentGroup == null
+        || htElementsInCurrentGroup.get(line.substring(12, 14)) != null)
+        && Atom.isValidSymNoCase(ch12, ch13))
       return (isHetero || ch12 != 'H' ? "" + ch12 + ch13 : "H");
     // not a known two-letter code
     if (ch12 == 'H') // added check for PQR files "HD22" for example
       return "H";
     // check for " NZ" for example
-    if ((htElementsInCurrentGroup == null ||
-         htElementsInCurrentGroup.get("" + ch13) != null) &&
-        Atom.isValidSym1(ch13))
+    if ((htElementsInCurrentGroup == null
+        || htElementsInCurrentGroup.get("" + ch13) != null)
+        && Atom.isValidSym1(ch13))
       return "" + ch13;
     // check for misplaced "O   " for example
-    if (ch12 != ' ' && (htElementsInCurrentGroup == null ||
-         htElementsInCurrentGroup.get("" + ch12) != null) &&
-        Atom.isValidSym1(ch12))
+    if (ch12 != ' '
+        && (htElementsInCurrentGroup == null
+            || htElementsInCurrentGroup.get("" + ch12) != null)
+        && Atom.isValidSym1(ch12))
       return "" + ch12;
     // could be GLX or ASX;
     // probably a bad file. But we will make ONE MORE ATTEMPT
     // and read columns 14/15 instead of 12/13. What the heck!
     char ch14 = line.charAt(14);
-    if (ch12 == ' ' && ch13 != 'X' && (htElementsInCurrentGroup == null ||
-        htElementsInCurrentGroup.get(line.substring(13, 15)) != null) &&
-        Atom.isValidSymNoCase(ch13, ch14))
-     return  "" + ch13 + ch14;
+    if (ch12 == ' ' && ch13 != 'X'
+        && (htElementsInCurrentGroup == null
+            || htElementsInCurrentGroup.get(line.substring(13, 15)) != null)
+        && Atom.isValidSymNoCase(ch13, ch14))
+      return "" + ch13 + ch14;
     return "Xx";
   }
-  
+
   private boolean haveDoubleBonds;
 
   // ancient provisions:
@@ -1196,7 +1184,6 @@ public class PdbReader extends AtomSetCollectionReader {
   //  012345678901234567890123456789012345678901234567890123456789012
   //  CONECT   15   14                                493                     1BNA 635
 
-
   private void conect() {
     if (sbConect == null) {
       sbConect = new SB();
@@ -1223,7 +1210,8 @@ public class PdbReader extends AtomSetCollectionReader {
       int targetSerial = getSerial(pt, pt + 5);
       if (targetSerial < 0) // ancient gap in numbers 
         continue;
-      boolean isDoubleBond = (sourceSerial == lastSourceSerial && targetSerial == lastTargetSerial);
+      boolean isDoubleBond = (sourceSerial == lastSourceSerial
+          && targetSerial == lastTargetSerial);
       if (isDoubleBond)
         haveDoubleBonds = true;
       lastSourceSerial = sourceSerial;
@@ -1286,7 +1274,7 @@ public class PdbReader extends AtomSetCollectionReader {
   //Left-handed gamma 8
   //27 ribbon/helix 9
   //Polyproline 10
-  
+
   private void structure() {
     STR structureType = STR.NONE;
     STR substructureType = STR.NONE;
@@ -1302,7 +1290,7 @@ public class PdbReader extends AtomSetCollectionReader {
       endChainIDIndex = 31;
       endIndex = 33;
       if (line.length() >= 40)
-      substructureType = Structure.getHelixType(parseIntRange(line, 38, 40));
+        substructureType = Structure.getHelixType(parseIntRange(line, 38, 40));
     } else if (line.startsWith("SHEET ")) {
       structureType = STR.SHEET;
       startChainIDIndex = 21;
@@ -1324,10 +1312,12 @@ public class PdbReader extends AtomSetCollectionReader {
 
     String structureID = line.substring(11, 15).trim();
     String strandID = line.substring(7, 10).trim();
-    int startChainID = vwr.getChainID(line.substring(startChainIDIndex, startChainIDIndex + 1), true);
+    int startChainID = vwr.getChainID(
+        line.substring(startChainIDIndex, startChainIDIndex + 1), true);
     int startSequenceNumber = parseIntRange(line, startIndex, startIndex + 4);
     char startInsertionCode = line.charAt(startIndex + 4);
-    int endChainID = vwr.getChainID(line.substring(endChainIDIndex, endChainIDIndex + 1), true);
+    int endChainID = vwr
+        .getChainID(line.substring(endChainIDIndex, endChainIDIndex + 1), true);
     int endSequenceNumber = parseIntRange(line, endIndex, endIndex + 4);
     // some files are chopped to remove trailing whitespace
     char endInsertionCode = ' ';
@@ -1341,8 +1331,8 @@ public class PdbReader extends AtomSetCollectionReader {
       substructureType = structureType;
     Structure structure = new Structure(-1, structureType, substructureType,
         structureID, strandID, strandCount, null);
-    structure.set(startChainID, startSequenceNumber,
-        startInsertionCode, endChainID, endSequenceNumber, endInsertionCode, 0, 0);
+    structure.set(startChainID, startSequenceNumber, startInsertionCode,
+        endChainID, endSequenceNumber, endInsertionCode, 0, 0);
     asc.addStructure(structure);
   }
 
@@ -1365,7 +1355,8 @@ public class PdbReader extends AtomSetCollectionReader {
   }
 
   /**
-   * A Jmol add-on -- allows for model name on MODEL line starting in column 15 (0-based)
+   * A Jmol add-on -- allows for model name on MODEL line starting in column 15
+   * (0-based)
    * 
    * @return name or null
    */
@@ -1375,7 +1366,7 @@ public class PdbReader extends AtomSetCollectionReader {
     if (line.startsWith("ATOM"))
       return "";
     String name = line.substring(15, lineLength).trim();
-    return (name.length() == 0 ? null  : name);
+    return (name.length() == 0 ? null : name);
   }
 
   protected void model(int modelNumber, String name) {
@@ -1414,8 +1405,8 @@ public class PdbReader extends AtomSetCollectionReader {
     double a = cryst1 = getFloat(6, 9);
     if (a == 1)
       a = Double.NaN; // 1 for a means no unit cell
-    setUnitCell(a, getFloat(15, 9), getFloat(24, 9), getFloat(33,
-        7), getFloat(40, 7), getFloat(47, 7));
+    setUnitCell(a, getFloat(15, 9), getFloat(24, 9), getFloat(33, 7),
+        getFloat(40, 7), getFloat(47, 7));
     addSpaceGroupName(PT.parseTrimmedRange(line, 55, 66));
   }
 
@@ -1425,25 +1416,25 @@ public class PdbReader extends AtomSetCollectionReader {
     if (sgName == null || sgName.equals("unspecified!"))
       setSpaceGroupName(name);
     fileSgName = sgName;
- }
+  }
 
   private double getFloat(int ich, int cch) throws Exception {
-    return parseDoubleRange(line, ich, ich+cch);
+    return parseDoubleRange(line, ich, ich + cch);
   }
 
   private void scale(int n) throws Exception {
     if (unitCellParams == null)
-      return; 
+      return;
     // Could be an EM image
     // this information will only be processed
     // if a lattice is requested.
-    
+
     int pt = n * 4 + 2;
     unitCellParams[0] = cryst1;
-    setUnitCellItem(pt++,getFloat(10, 10));
-    setUnitCellItem(pt++,getFloat(20, 10));
-    setUnitCellItem(pt++,getFloat(30, 10));
-    setUnitCellItem(pt++,getFloat(45, 10));
+    setUnitCellItem(pt++, getFloat(10, 10));
+    setUnitCellItem(pt++, getFloat(20, 10));
+    setUnitCellItem(pt++, getFloat(30, 10));
+    setUnitCellItem(pt++, getFloat(45, 10));
     if (isbiomol)
       doConvertToFractional = false;
   }
@@ -1459,14 +1450,15 @@ public class PdbReader extends AtomSetCollectionReader {
     int ichLeftParen = formula.indexOf('(');
     if (ichLeftParen >= 0) {
       int ichRightParen = formula.indexOf(')');
-      if (ichRightParen < 0 || ichLeftParen >= ichRightParen ||
-          ichLeftParen + 1 == ichRightParen ) // pick up () case in 1SOM.pdb
+      if (ichRightParen < 0 || ichLeftParen >= ichRightParen
+          || ichLeftParen + 1 == ichRightParen) // pick up () case in 1SOM.pdb
         return; // invalid formula;
       formula = PT.parseTrimmedRange(formula, ichLeftParen + 1, ichRightParen);
     }
     Map<String, Boolean> htElementsInGroup = htFormul.get(groupName);
     if (htElementsInGroup == null)
-      htFormul.put(groupName, htElementsInGroup = new Hashtable<String, Boolean>());
+      htFormul.put(groupName,
+          htElementsInGroup = new Hashtable<String, Boolean>());
     // now, look for atom names in the formula
     next[0] = 0;
     String elementWithCount;
@@ -1481,7 +1473,7 @@ public class PdbReader extends AtomSetCollectionReader {
         htElementsInGroup.put("" + chFirst, Boolean.TRUE);
     }
   }
-  
+
   private void het() {
     if (line.length() < 30) {
       return;
@@ -1496,7 +1488,7 @@ public class PdbReader extends AtomSetCollectionReader {
     String hetName = PT.parseTrimmedRange(line, 30, 70);
     htHetero.put(groupName, hetName);
   }
-  
+
   private void hetnam() {
     if (htHetero == null) {
       htHetero = new Hashtable<String, String>();
@@ -1504,7 +1496,8 @@ public class PdbReader extends AtomSetCollectionReader {
     String groupName = parseTokenRange(line, 11, 14);
     String hetName = PT.parseTrimmedRange(line, 15, 70);
     if (groupName == null) {
-      Logger.error("ERROR: HETNAM record does not contain a group name: " + line);
+      Logger
+          .error("ERROR: HETNAM record does not contain a group name: " + line);
       return;
     }
     String htName = htHetero.get(groupName);
@@ -1516,55 +1509,55 @@ public class PdbReader extends AtomSetCollectionReader {
 
     //Logger.debug("hetero: "+groupName+" "+hetName);
   }
-  
-//  The ANISOU records present the anisotropic temperature factors.
-//
-//
-//  Record Format
-//
-//  COLUMNS        DATA TYPE       FIELD         DEFINITION                  
-//  ----------------------------------------------------------------------
-//  1 -  6        Record name     "ANISOU"                                  
-//
-//  7 - 11        Integer         serial        Atom serial number.         
-//
-//  13 - 16        Atom            name          Atom name.                  
-//
-//  17             Character       altLoc        Alternate location indicator.                  
-//
-//  18 - 20        Residue name    resName       Residue name.               
-//
-//  22             Character       chainID       Chain identifier.           
-//
-//  23 - 26        Integer         resSeq        Residue sequence number.    
-//
-//  27             AChar           iCode         Insertion code.             
-//
-//  29 - 35        Integer         u[0][0]       U(1,1)                
-//
-//  36 - 42        Integer         u[1][1]       U(2,2)                
-//
-//  43 - 49        Integer         u[2][2]       U(3,3)                
-//
-//  50 - 56        Integer         u[0][1]       U(1,2)                
-//
-//  57 - 63        Integer         u[0][2]       U(1,3)                
-//
-//  64 - 70        Integer         u[1][2]       U(2,3)                
-//
-//  73 - 76        LString(4)      segID         Segment identifier, left-justified. 
-//
-//  77 - 78        LString(2)      element       Element symbol, right-justified.
-//
-//  79 - 80        LString(2)      charge        Charge on the atom.       
-//
-//  Details
-//
-//  * Columns 7 - 27 and 73 - 80 are identical to the corresponding ATOM/HETATM record.
-//
-//  * The anisotropic temperature factors (columns 29 - 70) are scaled by a factor of 10**4 (Angstroms**2) and are presented as integers.
-//
-//  * The anisotropic temperature factors are stored in the same coordinate frame as the atomic coordinate records. 
+
+  //  The ANISOU records present the anisotropic temperature factors.
+  //
+  //
+  //  Record Format
+  //
+  //  COLUMNS        DATA TYPE       FIELD         DEFINITION                  
+  //  ----------------------------------------------------------------------
+  //  1 -  6        Record name     "ANISOU"                                  
+  //
+  //  7 - 11        Integer         serial        Atom serial number.         
+  //
+  //  13 - 16        Atom            name          Atom name.                  
+  //
+  //  17             Character       altLoc        Alternate location indicator.                  
+  //
+  //  18 - 20        Residue name    resName       Residue name.               
+  //
+  //  22             Character       chainID       Chain identifier.           
+  //
+  //  23 - 26        Integer         resSeq        Residue sequence number.    
+  //
+  //  27             AChar           iCode         Insertion code.             
+  //
+  //  29 - 35        Integer         u[0][0]       U(1,1)                
+  //
+  //  36 - 42        Integer         u[1][1]       U(2,2)                
+  //
+  //  43 - 49        Integer         u[2][2]       U(3,3)                
+  //
+  //  50 - 56        Integer         u[0][1]       U(1,2)                
+  //
+  //  57 - 63        Integer         u[0][2]       U(1,3)                
+  //
+  //  64 - 70        Integer         u[1][2]       U(2,3)                
+  //
+  //  73 - 76        LString(4)      segID         Segment identifier, left-justified. 
+  //
+  //  77 - 78        LString(2)      element       Element symbol, right-justified.
+  //
+  //  79 - 80        LString(2)      charge        Charge on the atom.       
+  //
+  //  Details
+  //
+  //  * Columns 7 - 27 and 73 - 80 are identical to the corresponding ATOM/HETATM record.
+  //
+  //  * The anisotropic temperature factors (columns 29 - 70) are scaled by a factor of 10**4 (Angstroms**2) and are presented as integers.
+  //
+  //  * The anisotropic temperature factors are stored in the same coordinate frame as the atomic coordinate records. 
 
   private void anisou() {
     double[] data = new double[8];
@@ -1574,7 +1567,7 @@ public class PdbReader extends AtomSetCollectionReader {
       for (int i = asc.getAtomSetAtomIndex(asc.iSet); i < asc.ac; i++) {
         int atomSerial = asc.atoms[i].atomSerial;
         if (atomSerial != Integer.MIN_VALUE)
-          asc.atomSymbolicMap.put(""+ atomSerial, asc.atoms[i]);
+          asc.atomSymbolicMap.put("" + atomSerial, asc.atoms[i]);
       }
       haveMappedSerials = true;
     }
@@ -1599,35 +1592,34 @@ public class PdbReader extends AtomSetCollectionReader {
     // Ortep Type 8: D = 2pi^2, C = 2, a*b*
     // Ortep Type 10: D = 2pi^2, C = 2, Cartesian
   }
-  
-//
-//   * http://www.wwpdb.org/documentation/format23/sect7.html
-//   * 
-// Record Format
-//
-//COLUMNS       DATA TYPE         FIELD            DEFINITION
-//------------------------------------------------------------------------
-// 1 -  6       Record name       "SITE    "
-// 8 - 10       Integer           seqNum      Sequence number.
-//12 - 14       LString(3)        siteID      Site name.
-//16 - 17       Integer           numRes      Number of residues comprising 
-//                                            site.
-//
-//19 - 21       Residue name      resName1    Residue name for first residue
-//                                            comprising site.
-//23            Character         chainID1    Chain identifier for first residue
-//                                            comprising site.
-//24 - 27       Integer           seq1        Residue sequence number for first
-//                                            residue comprising site.
-//28            AChar             iCode1      Insertion code for first residue
-//                                            comprising site.
-//30 - 32       Residue name      resName2    Residue name for second residue
-//...
-//41 - 43       Residue name      resName3    Residue name for third residue
-//...
-//52 - 54       Residue name      resName4    Residue name for fourth residue
- 
-  
+
+  //
+  //   * http://www.wwpdb.org/documentation/format23/sect7.html
+  //   * 
+  // Record Format
+  //
+  //COLUMNS       DATA TYPE         FIELD            DEFINITION
+  //------------------------------------------------------------------------
+  // 1 -  6       Record name       "SITE    "
+  // 8 - 10       Integer           seqNum      Sequence number.
+  //12 - 14       LString(3)        siteID      Site name.
+  //16 - 17       Integer           numRes      Number of residues comprising 
+  //                                            site.
+  //
+  //19 - 21       Residue name      resName1    Residue name for first residue
+  //                                            comprising site.
+  //23            Character         chainID1    Chain identifier for first residue
+  //                                            comprising site.
+  //24 - 27       Integer           seq1        Residue sequence number for first
+  //                                            residue comprising site.
+  //28            AChar             iCode1      Insertion code for first residue
+  //                                            comprising site.
+  //30 - 32       Residue name      resName2    Residue name for second residue
+  //...
+  //41 - 43       Residue name      resName3    Residue name for third residue
+  //...
+  //52 - 54       Residue name      resName4    Residue name for fourth residue
+
   private void site() {
     if (htSites == null) {
       htSites = new Hashtable<String, Map<String, Object>>();
@@ -1643,7 +1635,7 @@ public class PdbReader extends AtomSetCollectionReader {
       htSite.put("groups", "");
       htSites.put(siteID, htSite);
     }
-    String groups = (String)htSite.get("groups");
+    String groups = (String) htSite.get("groups");
     for (int i = 0; i < 4; i++) {
       int pt = 18 + i * 11;
       String resName = PT.parseTrimmedRange(line, pt, pt + 3);
@@ -1661,45 +1653,45 @@ public class PdbReader extends AtomSetCollectionReader {
     }
   }
 
-//  REMARK   3  TLS DETAILS                                                         
-//  REMARK   3   NUMBER OF TLS GROUPS  : NULL
-//   or 
-//  REMARK   3  TLS DETAILS                                                         
-//  REMARK   3   NUMBER OF TLS GROUPS  : 20                                         
-//  REMARK   3                                                                      
-//  REMARK   3   TLS GROUP : 1                                                      
-//  REMARK   3    NUMBER OF COMPONENTS GROUP : 1                                    
-//  REMARK   3    COMPONENTS        C SSSEQI   TO  C SSSEQI                         
-//  REMARK   3    RESIDUE RANGE :   A     2        A     8                          
-//  REMARK   3    ORIGIN FOR THE GROUP (A):  17.3300  62.7550  29.2560              
-//  REMARK   3    T TENSOR                                                          
-//  REMARK   3      T11:   0.0798 T22:   0.0357                                     
-//  REMARK   3      T33:   0.0678 T12:   0.0530                                     
-//  REMARK   3      T13:  -0.0070 T23:   0.0011                                     
-//  REMARK   3    L TENSOR                                                          
-//  REMARK   3      L11:  13.1074 L22:   7.9735                                     
-//  REMARK   3      L33:   2.5703 L12:  -6.5507                                     
-//  REMARK   3      L13:  -1.5297 L23:   4.1172                                     
-//  REMARK   3    S TENSOR                                                          
-//  REMARK   3      S11:  -0.4246 S12:  -0.4216 S13:   0.1672                       
-//  REMARK   3      S21:   0.5307 S22:   0.3071 S23:   0.0385                       
-//  REMARK   3      S31:   0.0200 S32:  -0.2454 S33:   0.1174                       
-//  REMARK   3                                                                      
-//  REMARK   3   TLS GROUP : 2
-//   ...                                                      
-//   or (1zy8)
-//  REMARK   7                                                                      
-//  REMARK   7 TLS DEFINITIONS USED IN A FEW FINAL ROUNDS                           
-//  REMARK   7 OF REFINEMENT:                                                       
-//  REMARK   7 TLS DETAILS                                                          
+  //  REMARK   3  TLS DETAILS                                                         
+  //  REMARK   3   NUMBER OF TLS GROUPS  : NULL
+  //   or 
+  //  REMARK   3  TLS DETAILS                                                         
+  //  REMARK   3   NUMBER OF TLS GROUPS  : 20                                         
+  //  REMARK   3                                                                      
+  //  REMARK   3   TLS GROUP : 1                                                      
+  //  REMARK   3    NUMBER OF COMPONENTS GROUP : 1                                    
+  //  REMARK   3    COMPONENTS        C SSSEQI   TO  C SSSEQI                         
+  //  REMARK   3    RESIDUE RANGE :   A     2        A     8                          
+  //  REMARK   3    ORIGIN FOR THE GROUP (A):  17.3300  62.7550  29.2560              
+  //  REMARK   3    T TENSOR                                                          
+  //  REMARK   3      T11:   0.0798 T22:   0.0357                                     
+  //  REMARK   3      T33:   0.0678 T12:   0.0530                                     
+  //  REMARK   3      T13:  -0.0070 T23:   0.0011                                     
+  //  REMARK   3    L TENSOR                                                          
+  //  REMARK   3      L11:  13.1074 L22:   7.9735                                     
+  //  REMARK   3      L33:   2.5703 L12:  -6.5507                                     
+  //  REMARK   3      L13:  -1.5297 L23:   4.1172                                     
+  //  REMARK   3    S TENSOR                                                          
+  //  REMARK   3      S11:  -0.4246 S12:  -0.4216 S13:   0.1672                       
+  //  REMARK   3      S21:   0.5307 S22:   0.3071 S23:   0.0385                       
+  //  REMARK   3      S31:   0.0200 S32:  -0.2454 S33:   0.1174                       
+  //  REMARK   3                                                                      
+  //  REMARK   3   TLS GROUP : 2
+  //   ...                                                      
+  //   or (1zy8)
+  //  REMARK   7                                                                      
+  //  REMARK   7 TLS DEFINITIONS USED IN A FEW FINAL ROUNDS                           
+  //  REMARK   7 OF REFINEMENT:                                                       
+  //  REMARK   7 TLS DETAILS                                                          
 
   private boolean remarkTls() throws Exception {
     int nGroups = 0;
     int iGroup = 0;
     String components = null;
-     Lst<Map<String, Object>> tlsGroups = null;
+    Lst<Map<String, Object>> tlsGroups = null;
     Map<String, Object> tlsGroup = null;
-     Lst<Map<String, Object>> ranges = null;
+    Lst<Map<String, Object>> ranges = null;
     Map<String, Object> range = null;
     String remark = line.substring(0, 11);
     while (readHeader(true) != null && line.startsWith(remark)) {
@@ -1710,7 +1702,7 @@ public class PdbReader extends AtomSetCollectionReader {
         Logger.info(line);
         if (tokens[1].equalsIgnoreCase("GROUP")) {
           tlsGroup = new Hashtable<String, Object>();
-          ranges = new  Lst<Map<String, Object>>();
+          ranges = new Lst<Map<String, Object>>();
           tlsGroup.put("ranges", ranges);
           tlsGroups.addLast(tlsGroup);
           tlsGroupID = parseIntStr(tokens[tokens.length - 1]);
@@ -1723,8 +1715,8 @@ public class PdbReader extends AtomSetCollectionReader {
             if (nGroups < 1)
               break;
             if (vTlsModels == null)
-              vTlsModels = new  Lst<Map<String, Object>>();
-            tlsGroups = new  Lst<Map<String, Object>>();
+              vTlsModels = new Lst<Map<String, Object>>();
+            tlsGroups = new Lst<Map<String, Object>>();
             appendLoadNote(line.substring(11).trim());
           }
         } else if (tokens[0].equalsIgnoreCase("COMPONENTS")) {
@@ -1756,10 +1748,11 @@ public class PdbReader extends AtomSetCollectionReader {
               range.put("residues", new int[] { res1, res2 });
               ranges.addLast(range);
             } else {
-              tlsAddError(" TLS group residues are not in order (range ignored)");            
+              tlsAddError(
+                  " TLS group residues are not in order (range ignored)");
             }
           } else {
-            tlsAddError(" TLS group chains are different (range ignored)");            
+            tlsAddError(" TLS group chains are different (range ignored)");
           }
         } else if (tokens[0].equalsIgnoreCase("SELECTION")) {
           /*
@@ -1777,7 +1770,8 @@ public class PdbReader extends AtomSetCollectionReader {
             if (resno == Integer.MIN_VALUE)
               continue;
             range = new Hashtable<String, Object>();
-            range.put("residues", new int[] { resno, parseIntStr(tokens[++i]) });
+            range.put("residues",
+                new int[] { resno, parseIntStr(tokens[++i]) });
             if (chain != '\0')
               range.put("chains", "" + chain + chain);
             ranges.addLast(range);
@@ -1798,9 +1792,11 @@ public class PdbReader extends AtomSetCollectionReader {
           } else {
             int n = line.length();
             origin.set(parseDoubleRange(line, n - 27, n - 18),
-                parseDoubleRange(line, n - 18, n - 9), parseDoubleRange(line, n - 9, n));
+                parseDoubleRange(line, n - 18, n - 9),
+                parseDoubleRange(line, n - 9, n));
           }
-          if (Double.isNaN(origin.x) || Double.isNaN(origin.y) || Double.isNaN(origin.z)) {
+          if (Double.isNaN(origin.x) || Double.isNaN(origin.y)
+              || Double.isNaN(origin.z)) {
             origin.set(Double.NaN, Double.NaN, Double.NaN);
             tlsAddError("invalid origin: " + line);
           }
@@ -1813,8 +1809,8 @@ public class PdbReader extends AtomSetCollectionReader {
            */
           char tensorType = tokens[0].charAt(0);
           String s = (readHeader(true).substring(10)
-              + readHeader(true).substring(10) + readHeader(true).substring(10)).replace(
-                  tensorType, ' ').replace(':', ' ');
+              + readHeader(true).substring(10) + readHeader(true).substring(10))
+                  .replace(tensorType, ' ').replace(':', ' ');
           //System.out.println("Tensor data = " + s);
           tokens = PT.getTokens(s);
           double[][] data = new double[3][3];
@@ -1829,7 +1825,8 @@ public class PdbReader extends AtomSetCollectionReader {
           for (int i = 0; i < 3; i++)
             for (int j = 0; j < 3; j++)
               if (Double.isNaN(data[i][j]))
-                tlsAddError("invalid tensor: " + Escape.escapeDoubleAA(data, false));
+                tlsAddError(
+                    "invalid tensor: " + Escape.escapeDoubleAA(data, false));
           //System.out.println("Tensor t" + tensorType + " = " + Escape.escape(tensor));
           if (tensorType == 'S' && ++iGroup == nGroups) {
             Logger.info(nGroups + " TLS groups read");
@@ -1861,12 +1858,12 @@ public class PdbReader extends AtomSetCollectionReader {
   }
 
   /**
-   * Sets the atom property property_tlsGroup based on TLS group ranges
-   * and adds "TLS" key to model's auxiliaryInfo.
+   * Sets the atom property property_tlsGroup based on TLS group ranges and adds
+   * "TLS" key to model's auxiliaryInfo.
    * 
    * @param iGroup
    * @param iModel
-   * @param symmetry 
+   * @param symmetry
    */
   @SuppressWarnings("unchecked")
   private void setTlsGroups(int iGroup, int iModel, FileSymmetry symmetry) {
@@ -1889,10 +1886,10 @@ public class PdbReader extends AtomSetCollectionReader {
     //  ellipsoids ON
     //
     //
-    
+
     Logger.info("TLS model " + (iModel + 1) + " set " + (iGroup + 1));
     Map<String, Object> tlsGroupInfo = vTlsModels.get(iGroup);
-    Lst<Map<String, Object>> groups = ( Lst<Map<String, Object>>) tlsGroupInfo
+    Lst<Map<String, Object>> groups = (Lst<Map<String, Object>>) tlsGroupInfo
         .get("groups");
     int index0 = asc.getAtomSetAtomIndex(iModel);
     double[] data = new double[asc.getAtomSetAtomCount(iModel)];
@@ -1901,7 +1898,7 @@ public class PdbReader extends AtomSetCollectionReader {
     int nGroups = groups.size();
     for (int i = 0; i < nGroups; i++) {
       Map<String, Object> group = groups.get(i);
-      Lst<Map<String, Object>> ranges = ( Lst<Map<String, Object>>) group
+      Lst<Map<String, Object>> ranges = (Lst<Map<String, Object>>) group
           .get("ranges");
       tlsGroupID = ((Integer) group.get("id")).intValue();
       for (int j = ranges.size(); --j >= 0;) {
@@ -1912,26 +1909,27 @@ public class PdbReader extends AtomSetCollectionReader {
         int res0 = residues[0];
         int res1 = residues[1];
         int index1 = findAtomForRange(index0, indexMax, chain0, res0, false);
-        int index2 = (index1 >= 0 ? findAtomForRange(index1, indexMax, chain1,
-            res1, false) : -1);
+        int index2 = (index1 >= 0
+            ? findAtomForRange(index1, indexMax, chain1, res1, false)
+            : -1);
         if (index2 < 0) {
           Logger.info("TLS processing terminated");
           return;
         }
-        Logger.info("TLS ID=" + tlsGroupID + " model atom index range "
-            + index1 + "-" + index2);
-        boolean isSameChain = (chain0 == chain1);  // will be true
+        Logger.info("TLS ID=" + tlsGroupID + " model atom index range " + index1
+            + "-" + index2);
+        boolean isSameChain = (chain0 == chain1); // will be true
         // could demand a contiguous section here for each range.
         for (int iAtom = index0; iAtom < indexMax; iAtom++) {
           Atom atom = atoms[iAtom];
-          if (isSameChain ? atom.sequenceNumber >= res0 && atom.sequenceNumber <= res1
-            : atom.chainID > chain0 && atom.chainID < chain1 
-              || atom.chainID == chain0 && atom.sequenceNumber >= res0
-              || atom.chainID == chain1 && atom.sequenceNumber <= res1
-          ) {
-              data[iAtom - index0] = tlsGroupID;
-              setTlsTensor(atom, group, symmetry);
-            }
+          if (isSameChain
+              ? atom.sequenceNumber >= res0 && atom.sequenceNumber <= res1
+              : atom.chainID > chain0 && atom.chainID < chain1
+                  || atom.chainID == chain0 && atom.sequenceNumber >= res0
+                  || atom.chainID == chain1 && atom.sequenceNumber <= res1) {
+            data[iAtom - index0] = tlsGroupID;
+            setTlsTensor(atom, group, symmetry);
+          }
         }
       }
     }
@@ -1941,20 +1939,23 @@ public class PdbReader extends AtomSetCollectionReader {
   }
 
   private int findAtomForRange(int atom1, int atom2, int chain, int resno,
-                          boolean isLast) {
+                               boolean isLast) {
     int iAtom = findAtom(atom1, atom2, chain, resno, true);
-    return (isLast && iAtom >= 0 ? findAtom(iAtom, atom2, chain, resno, false) : iAtom);
+    return (isLast && iAtom >= 0 ? findAtom(iAtom, atom2, chain, resno, false)
+        : iAtom);
   }
 
-  private int findAtom(int atom1, int atom2, int chain, int resno, boolean isTrue) {
+  private int findAtom(int atom1, int atom2, int chain, int resno,
+                       boolean isTrue) {
     Atom[] atoms = asc.atoms;
     for (int i = atom1; i < atom2; i++) {
-     Atom atom = atoms[i];
-     if ((atom.chainID == chain && atom.sequenceNumber == resno) == isTrue)
-       return i;
+      Atom atom = atoms[i];
+      if ((atom.chainID == chain && atom.sequenceNumber == resno) == isTrue)
+        return i;
     }
     if (isTrue) {
-      Logger.warn("PdbReader findAtom chain=" + chain + " resno=" + resno + " not found");
+      Logger.warn("PdbReader findAtom chain=" + chain + " resno=" + resno
+          + " not found");
       tlsAddError("atom not found: chain=" + chain + " resno=" + resno);
     }
     return (isTrue ? -1 : atom2);
@@ -1964,13 +1965,14 @@ public class PdbReader extends AtomSetCollectionReader {
 
   private static final double RAD_PER_DEG = (Math.PI / 180);
   private static final double _8PI2_ = (8 * Math.PI * Math.PI);
-  private Map<Atom, double[]>tlsU;
-  
-  private void setTlsTensor(Atom atom, Map<String, Object> group, FileSymmetry symmetry) {
+  private Map<Atom, double[]> tlsU;
+
+  private void setTlsTensor(Atom atom, Map<String, Object> group,
+                            FileSymmetry symmetry) {
     P3d origin = (P3d) group.get("origin");
     if (Double.isNaN(origin.x))
       return;
-    
+
     double[][] T = (double[][]) group.get("tT");
     double[][] L = (double[][]) group.get("tL");
     double[][] S = (double[][]) group.get("tS");
@@ -2010,37 +2012,38 @@ public class PdbReader extends AtomSetCollectionReader {
 
     double bresidual = (Double.isNaN(atom.bfactor) ? 0 : atom.bfactor / _8PI2_);
 
-    anisou[0] /*u11*/= dataT[0] + L[1][1] * zz + L[2][2] * yy - 2 * L[1][2]
-        * yz + 2 * S[1][0] * z - 2 * S[2][0] * y;
-    anisou[1] /*u22*/= dataT[1] + L[0][0] * zz + L[2][2] * xx - 2 * L[2][0]
-        * xz - 2 * S[0][1] * z + 2 * S[2][1] * x;
-    anisou[2] /*u33*/= dataT[2] + L[0][0] * yy + L[1][1] * xx - 2 * L[0][1]
-        * xy - 2 * S[1][2] * x + 2 * S[0][2] * y;
-    anisou[3] /*u12*/= dataT[3] - L[2][2] * xy + L[1][2] * xz + L[2][0] * yz
+    anisou[0] /*u11*/ = dataT[0] + L[1][1] * zz + L[2][2] * yy
+        - 2 * L[1][2] * yz + 2 * S[1][0] * z - 2 * S[2][0] * y;
+    anisou[1] /*u22*/ = dataT[1] + L[0][0] * zz + L[2][2] * xx
+        - 2 * L[2][0] * xz - 2 * S[0][1] * z + 2 * S[2][1] * x;
+    anisou[2] /*u33*/ = dataT[2] + L[0][0] * yy + L[1][1] * xx
+        - 2 * L[0][1] * xy - 2 * S[1][2] * x + 2 * S[0][2] * y;
+    anisou[3] /*u12*/ = dataT[3] - L[2][2] * xy + L[1][2] * xz + L[2][0] * yz
         - L[0][1] * zz - S[0][0] * z + S[1][1] * z + S[2][0] * x - S[2][1] * y;
-    anisou[4] /*u13*/= dataT[4] - L[1][1] * xz + L[1][2] * xy - L[2][0] * yy
+    anisou[4] /*u13*/ = dataT[4] - L[1][1] * xz + L[1][2] * xy - L[2][0] * yy
         + L[0][1] * yz + S[0][0] * y - S[2][2] * y + S[1][2] * z - S[1][0] * x;
-    anisou[5] /*u23*/= dataT[5] - L[0][0] * yz - L[1][2] * xx + L[2][0] * xy
+    anisou[5] /*u23*/ = dataT[5] - L[0][0] * yz - L[1][2] * xx + L[2][0] * xy
         + L[0][1] * xz - S[1][1] * x + S[2][2] * x + S[0][1] * y - S[0][2] * z;
     anisou[6] = 12; // macromolecular Cartesian
     anisou[7] = bresidual;
     if (tlsU == null)
       tlsU = new Hashtable<Atom, double[]>();
-     tlsU.put(atom, anisou);
+    tlsU.put(atom, anisou);
 
     // symmetry is set to [1 1 1 90 90 90] -- Cartesians, not actual unit cell
 
-    atom.addTensor(symmetry.getTensor(vwr, dataT).setType(null), "TLS-U", false);
+    atom.addTensor(symmetry.getTensor(vwr, dataT).setType(null), "TLS-U",
+        false);
   }
 
   private void tlsAddError(String error) {
     if (sbTlsErrors == null)
       sbTlsErrors = new SB();
-    sbTlsErrors.append(fileName).appendC('\t').append("TLS group ").appendI(
-        tlsGroupID).appendC('\t').append(error).appendC('\n');
+    sbTlsErrors.append(fileName).appendC('\t').append("TLS group ")
+        .appendI(tlsGroupID).appendC('\t').append(error).appendC('\n');
   }
 
-  protected static double fixRadius(double r) {    
+  protected static double fixRadius(double r) {
     return (r < 0.9 ? 1 : r);
     // based on parameters in http://pdb2pqr.svn.sourceforge.net/viewvc/pdb2pqr/trunk/pdb2pqr/dat/
     // AMBER forcefield, H atoms may be given 0 (on O) or 0.6 (on N) for radius
@@ -2100,10 +2103,9 @@ public class PdbReader extends AtomSetCollectionReader {
       connectAllBad(maxSerial);
       return;
     }
-    a.setCurrentModelInfo(
-        "PDB_CONECT_firstAtom_count_max",
-        new int[] { a.getAtomSetAtomIndex(index),
-            a.getAtomSetAtomCount(index), maxSerial });
+    a.setCurrentModelInfo("PDB_CONECT_firstAtom_count_max",
+        new int[] { a.getAtomSetAtomIndex(index), a.getAtomSetAtomCount(index),
+            maxSerial });
     if (vConnect == null)
       return;
     int firstAtom = connectNextAtomIndex;
@@ -2116,6 +2118,5 @@ public class PdbReader extends AtomSetCollectionReader {
     connectNextAtomSet = index + 1;
     connectNextAtomIndex = firstAtom;
   }
-  
-}
 
+}

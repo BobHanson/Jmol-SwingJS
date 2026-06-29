@@ -1819,7 +1819,7 @@ public class PropertyManager implements JmolPropertyManager {
     String key = null;
     switch(type) {
     case T.domains:
-    	key = "domains";
+    	key = JC.INFO_DOMAINS;
     	break;
     case T.validation:
     	key = "validation";

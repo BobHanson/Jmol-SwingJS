@@ -75,7 +75,7 @@ abstract class OutputManager {
           out = openOutputChannel(privateKey, fileName, false, false);
         out.write(bytes, 0, bytes.length);
       } else if (text != null && !type.equals("ZIPDATA")
-          && !type.equals("BINARY")) {
+          && !type.equals(JC.FILE_TYPE_BINARY)) {
         if (out == null)
           out = openOutputChannel(privateKey, fileName, true, false);
         out.append(text);
@@ -139,7 +139,7 @@ abstract class OutputManager {
     boolean asBytes = (out == null && fileName == null);
     boolean closeChannel = (out == null && fileName != null);
     boolean releaseImage = (objImage == null);
-    Object image = (type.equals("BINARY") || type.equals("ZIPDATA") ? ""
+    Object image = (type.equals(JC.FILE_TYPE_BINARY) || type.equals("ZIPDATA") ? ""
         : rgbbuf != null ? rgbbuf
             : objImage != null ? objImage : vwr.getScreenImage());
     boolean isOK = false;
@@ -149,7 +149,7 @@ abstract class OutputManager {
       if (fileName != null && fileName.startsWith("\1")) {
         isOK = true;
         Map<String, Object> info = new Hashtable<String, Object>();
-        info.put("_IMAGE_", image);
+        info.put(JC.FILE_PNG_IMAGE, image);
         vwr.fm.loadImage(info, fileName, false);
         return errMsg = "OK - viewing " + fileName.substring(1);
       }
@@ -236,6 +236,10 @@ abstract class OutputManager {
         return fileName;
       }
     }
+    
+    
+    
+    
     return (errMsg == null ? bytes : errMsg);
   }
 
@@ -291,7 +295,7 @@ abstract class OutputManager {
     if (isZipData || type.equals("Binary")) {
       @SuppressWarnings("unchecked")
       Lst<Object> v = (Lst<Object>) params.get("imageData");
-      if (v.size() >= 2 && v.get(0).equals("_IMAGE_")) {
+      if (v.size() >= 2 && v.get(0).equals(JC.FILE_PNG_IMAGE)) {
         if (isZipData) {
           errRet[0] = writeZipFile(out, v, "OK JMOL", null);
           return true;
@@ -416,7 +420,7 @@ abstract class OutputManager {
     if (fileName != null) {
       if (!vwr.haveAccess(ACCESS.ALL))
         return null;
-      if (!isRemote && !fileName.startsWith("cache://")) {
+      if (!isRemote && !fileName.startsWith(JC.CACHE_PROTOCOL)) {
         fileName = getOutputFileNameFromDialog(fileName, Integer.MIN_VALUE, null);
         if (fileName == null)
           return null;
@@ -1151,7 +1155,7 @@ abstract class OutputManager {
           fname = fname.substring(5);
           if (fname.length() > 2 && fname.charAt(2) == ':') // "/C:..." DOS/Windows
             fname = fname.substring(1);
-        } else if (fname.indexOf("cache://") == 0) {
+        } else if (fname.indexOf(JC.CACHE_PROTOCOL) == 0) {
           fname = fname.substring(8);
         }
         if (fnameShort == null)

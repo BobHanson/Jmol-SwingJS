@@ -11513,7 +11513,7 @@ public class Viewer extends JmolViewer
     lst.addLast(bytes);
     params.put("imageData", lst);
     params.put("fileName", fname);
-    params.put("type", "BINARY");
+    params.put("type", JC.FILE_TYPE_BINARY);
     return getOutputManager().outputToFile(params);
   }
   

@@ -488,7 +488,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
           appendLoadNote("\nDomains loaded:\n   " + s);
           for (int i = asc.atomSetCount; --i >= 0;) {
             info = asc.getAtomSetAuxiliaryInfo(i);
-            info.put("domains", domains);
+            info.put(JC.INFO_DOMAINS, domains);
           }
         }
         if (validation != null) {
@@ -734,7 +734,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         setFractionalCoordinates(false);
       // with appendNew == false and UNITCELL parameter, we assume fractional coordinates
     }
-    domains = htParams.get("domains");
+    domains = htParams.get(JC.INFO_DOMAINS);
     validation = htParams.get("validation");
     dssr = htParams.get(JC.INFO_DSSR);
     isConcatenated = htParams.containsKey("concatenate");
@@ -1219,12 +1219,12 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (filter0 != null)
       filter0 = filter0.toUpperCase();
     filter = filter0;
-    checkFilterKeys();
     if (filter == null)
       return;
-    filterAtoms();
+    checkFilterKeys();
+    filterSymmetry(); // must come first, because it chagnes ',' to ';' and adds ';'...';'
     filterModelName();
-    filterSymmetry();
+    filterAtoms();
     String s = getFilter("FILESCALING=");
     if (s != null) {
       double fs = parseDoubleStr(s);
@@ -1234,6 +1234,16 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   private void filterAtoms() {
+    if (checkFilterKey("HETATM")) {
+      filterHetero = true;
+      filter = PT.rep(filter, "HETATM", "HETATM-Y");
+      filterCased = PT.rep(filterCased, "HETATM", "HETATM-Y");
+    }
+    if (checkFilterKey("ATOM")) {
+      filterHetero = true;
+      filter = PT.rep(filter, "ATOM", "HETATM-N");
+      filterCased = PT.rep(filterCased, "ATOM", "HETATM-N");
+    }
     filterAtomName = checkFilterKey("*.") || checkFilterKey("!.");
     if (filter.startsWith("_") || filter.startsWith("!_")
         || filter.indexOf(";_") >= 0)
@@ -1277,14 +1287,17 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   private void filterModelName() {
     modelNameRequired = PT.getQuotedAttribute(filter, "NAME");
-    if (modelNameRequired != null) {
-      if (modelNameRequired.startsWith("'"))
-        modelNameRequired = PT.split(modelNameRequired, "'")[1];
-      else if (modelNameRequired.startsWith("\""))
-        modelNameRequired = PT.split(modelNameRequired, "\"")[1];
-      filter = PT.rep(filter, modelNameRequired, "");
-      filter = PT.rep(filter, "NAME=", "");
+    if (modelNameRequired == null)
+      return;
+    if (modelNameRequired.length() == 0) {
+        modelNameRequired = getFilter("NAME=");
+        if (modelNameRequired.startsWith("'"))
+          modelNameRequired = PT.split(modelNameRequired, "'")[1];
     }
+    filter = PT.rep(filter, modelNameRequired, "");
+    filter = PT.rep(filter, "NAME=", "");
+    filter = PT.rep(filter, "\"\"","");
+    filter = PT.rep(filter, "''","");
   }
 
   private void filterSymmetry() {
@@ -1341,17 +1354,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       // adding filter "lowPrecision" overrides the CIF and PWMAT reader HIGH setting
       setLowPrecision();
     }
-    if (checkFilterKey("HETATM")) {
-      filterHetero = true;
-      filter = PT.rep(filter, "HETATM", "HETATM-Y");
-      filterCased = PT.rep(filterCased, "HETATM", "HETATM-Y");
-    }
-    if (checkFilterKey("ATOM")) {
-      filterHetero = true;
-      filter = PT.rep(filter, "ATOM", "HETATM-N");
-      filterCased = PT.rep(filterCased, "ATOM", "HETATM-N");
-    }
-
   }
 
   private String filter1, filter2, filter1Cased, filter2Cased;

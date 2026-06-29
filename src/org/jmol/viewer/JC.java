@@ -893,7 +893,7 @@ public final class JC {
       "@helix310 substructure=7", "@helixalpha substructure=8",
       "@helixpi substructure=9",
       
-      // magnetic structures
+      // magnetic structures -- atoms with spin
       "@magnetic vxyz>0",
 
       // nucleic acid structures
@@ -1710,6 +1710,9 @@ public final class JC {
   
   public static final String INFO_PDB_NO_HYDROGENS = "pdbNoHydrogens";
 
+  public final static String INFO_DOMAINS = "domains";
+  
+
 
   /** 
    * used to set atom symmetry 555 556 etc. 
@@ -1748,8 +1751,11 @@ public final class JC {
   
   public static final String FILE_DOCACHE_ = "#_DOCACHE_";
   public static final String SCRIPT_PATH = "$SCRIPT_PATH$";
-  
-
+  public static final String CACHE_PROTOCOL = "cache://";
+  public static final String FILE_PNG_IMAGE = "_IMAGE_";
+  public static final String FILE_TYPE_BINARY = "BINARY";
+  public static final String INFO_DATA = "_DATA_";
+  public static final String FILE_MARK_$BINARY$ = "$_BINARY_$";
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.
    * 

@@ -2025,7 +2025,7 @@ public class T {
         "distance",
         "div",
         "DNA",
-        "domains",
+        "domains", // JC.INFO_DOMAINS
         "dotted",
         "DSSP",
         "DSSR",

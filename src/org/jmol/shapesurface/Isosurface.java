@@ -237,7 +237,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     }
     if ("delete" == propertyName) {
       if (thisMesh != null && haveCached)
-        vwr.cachePut("cache://" + thisMesh.getDataName(), null);
+        vwr.cachePut(JC.CACHE_PROTOCOL + thisMesh.getDataName(), null);
       setPropertySuper(propertyName, value, bs);
       if (!explicitID)
         nLCAO = nUnnamed = 0;
@@ -745,7 +745,7 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
     String id = currentMesh.thisID;
     String jvxl = ((String) getPropI("jvxlDataXml", -1));
     String cacheName = thisMesh.getDataName();
-    String fname= "cache://" + cacheName;
+    String fname= JC.CACHE_PROTOCOL + cacheName;
     vwr.cachePut(fname, jvxl.getBytes());
     deleteMeshI(currentMesh.index);
     setPropI("init", null, null);
@@ -1115,9 +1115,9 @@ public class Isosurface extends MeshCollection implements MeshDataServer {
       cmd += " connect " + Escape.eAI(imesh.connectedAtoms);
     cmd = PT.trim(cmd, ";");
     boolean writeJVXL = false;
-    if (cmd.indexOf("cache://") >= 0) {
-      String dataName = thisMesh.getDataName();
-      String cacheName = "cache://" + dataName;
+    if (cmd.indexOf(JC.CACHE_PROTOCOL) >= 0) {
+      String dataName = imesh.getDataName();
+      String cacheName = JC.CACHE_PROTOCOL + dataName;
       String old = "/*file*/" + PT.esc(cacheName);
       pt = cmd.indexOf(old);
       if (pt < 0) {

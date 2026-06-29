@@ -617,7 +617,7 @@ public final class BioResolver implements Comparator<String[]> {
       key = "validation";
       break;
     case T.domains:
-      key = "domains";
+      key = JC.INFO_DOMAINS;
       break;
     }
     Object o = ml.ms.getInfo(modelIndex, key);
