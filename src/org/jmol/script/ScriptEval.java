@@ -4863,7 +4863,7 @@ public class ScriptEval extends ScriptExpr {
       if (vwr.am.cmi >= 0 && ("::" + filename).endsWith("::string")) {
         // at this point it could be zapped, in which case
         // getCurrentFileAsString would use "zapped" file name
-        filename = getCurrentModelFileAsString("null");
+        filename = (String) vwr.getCurrentModelFile("null", false);
         loadScript = new SB().append("load inline ");
         isInline = true;
       }
@@ -5118,7 +5118,7 @@ public class ScriptEval extends ScriptExpr {
     htParams.put("imageData", av[0].value);
     OC out = vwr.getOutputChannel(null, null);
     htParams.put("outputChannel", out);
-    vwr.createZip("", "ZIPDATA", htParams);
+    vwr.createZip("", JC.FILE_TYPE_ZIPDATA, htParams);
     String modelName = JC.CACHE_PROTOCOL + "VAR_" + varName;
     vwr.cacheFileByName(JC.CACHE_PROTOCOL + "VAR_*",false);
     vwr.cachePut(modelName, out.toByteArray());
@@ -9968,12 +9968,6 @@ public class ScriptEval extends ScriptExpr {
     }
     str.append("END\n");
     return str.toString();
-  }
-
-  public String getCurrentModelFileAsString(String fname) {
-    if (fname == null)
-      fname = (String) vwr.getParameter("_modelFile");
-    return ((""+fname).equals("null") ? vwr.ms.getInlineData(vwr.am.cmi) : vwr.getFileAsString(fname));
   }
 
 }

@@ -363,7 +363,8 @@ public class OC extends OutputStream implements GenericOutputChannel {
         if (os == null && bw == null && sb != null && fileName != null) {
           try {
             os = new FileOutputStream(fileName);
-            os.write(sb.toBytes(0, -1));
+            byte[] b = sb.toBytes(0, -1);
+            os.write(b, 0, b.length);
             os.close();
           } catch (FileNotFoundException e) {
             e.printStackTrace();

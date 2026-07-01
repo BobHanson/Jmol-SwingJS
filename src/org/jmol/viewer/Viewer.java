@@ -120,6 +120,7 @@ import org.jmol.viewer.binding.Binding;
 
 import javajs.util.AU;
 import javajs.util.BS;
+import javajs.util.Base64;
 import javajs.util.CU;
 import javajs.util.DF;
 import javajs.util.JSJSONParser;
@@ -9361,15 +9362,20 @@ public class Viewer extends JmolViewer
     if (image == null && nameOrError != null)
       scriptEcho(nameOrError);
     if (echoName == null) {
+      // background
       setBackgroundImage((image == null ? null : nameOrError), image);
     } else if (echoName.startsWith("\1")) {
+      // show image
       sm.showImage(echoName, image);
     } else if (echoName.startsWith("\0")) {
+      // set dimensions to this image
       if (image != null) {
+        // MUST be image
         setWindowDimensions(new double[] { apiPlatform.getImageWidth(image),
             apiPlatform.getImageHeight(image) });
       }
     } else {
+      // ECHO image
       shm.loadShape(JC.SHAPE_ECHO);
       setShapeProperty(JC.SHAPE_ECHO, "text", nameOrError);
       if (image != null)
@@ -11621,6 +11627,17 @@ public class Viewer extends JmolViewer
 
   public String encodeBitSet90_35(BS bs) {
     return getJvxlCoder().jvxlEncodeBitSet90_35(bs);
+  }
+
+  public Object getCurrentModelFile(String fname, boolean asBytes) {
+      if (fname == null)
+        fname = (String) getParameter("_modelFile");
+      if ((""+fname).equals("null")) {
+        String s = ms.getInlineData(am.cmi);
+        return (!asBytes ? s : s.startsWith(JC.BASE64_TAG) ? Base64.decodeBase64(s)
+              : s.getBytes());
+      }
+      return (asBytes ? fm.getFileAsBytes(fname, null) : getFileAsString(fname));
   }
 
 }

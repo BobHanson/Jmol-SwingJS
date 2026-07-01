@@ -95,9 +95,11 @@ public abstract class ImageEncoder implements GenericImageEncoder {
       throws Exception {
     this.out = out;
     logging = (Boolean.TRUE == params.get("logging"));
-    width = ((Integer) params.get("imageWidth")).intValue();
-    height = ((Integer) params.get("imageHeight")).intValue();
     pixels = (int[]) params.get("imagePixels");
+    if (pixels != null) {
+      width = ((Integer) params.get("imageWidth")).intValue();
+      height = ((Integer) params.get("imageHeight")).intValue();
+    }
     date = (String) params.get("date");
     Integer q = (Integer) params.get("quality");
     quality = (q == null ? -1 : q.intValue());

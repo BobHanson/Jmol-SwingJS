@@ -1754,6 +1754,7 @@ public final class JC {
   public static final String CACHE_PROTOCOL = "cache://";
   public static final String FILE_PNG_IMAGE = "_IMAGE_";
   public static final String FILE_TYPE_BINARY = "BINARY";
+  public static final String FILE_TYPE_ZIPDATA = "ZIPDATA";
   public static final String INFO_DATA = "_DATA_";
   public static final String FILE_MARK_$BINARY$ = "$_BINARY_$";
   /**
