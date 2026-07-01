@@ -119,7 +119,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
   boolean isStateScript;
 
   /**
-   * a flag from LOAD xxx.pse FILTER "DOCACHE"
+   * a flag that can be set false using LOAD xxx.pse FILTER "NOCACHE" (default true)
    * 
    * logic is as follows:
    * 
@@ -129,21 +129,25 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
    * 
    * sourcePNGJ --> not just any state script; one from a PNGJ file
    * 
-   * !doCache && !sourcePNGJ --> standard PSE loading
+   * !doCache && !sourcePNGJ --> minimal isosurface caching (only when necessary -- some multicolored surfaces)
    * 
-   * doCache && !sourcePNGJ --> we need to cache surfaces
+   * optimizePSE && doCache && !sourcePNGJ --> default -- we need to cache surfaces; optimize the PSE
    * 
-   * doCache && sourcePNGJ --> reading from a PNGJ that was created with DOCACHE
-   * filter --> no need for caching.
+   * doCache && sourcePNGJ --> standard reading from a PNGJ that was created with DOCACHE
    * 
-   * !doCache && sourcePNGJ --> "standard" PNGJ created without caching -->
-   * ignore the fact that this is from a PNGJ file
+   * !doCache && sourcePNGJ --> no isosurface caching; ignore the fact that this is from a PNGJ file
    * 
    */
-  private boolean doCache;
+  
+  private boolean doCache = true;
 
   /**
-   * set true if the source is a PNGJ file and FILTER "DOCACHE"
+   * a flag set that can be set false using FILTER "noOptimizePSE"
+   */
+  private boolean optimizePSE = true;
+  
+  /**
+   * set true if the source is a PNGJ file and and not FILTER "NOCACHE"
    */
   private boolean ignoreObjects;
 
@@ -224,15 +228,18 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
     boolean sourcePNGJ = htParams.containsKey(JC.INFO_SOURCE_PNGJ);
     doResize = checkFilterKey("DORESIZE");
     allowSurface = !checkFilterKey("NOSURFACE");
-    doCache = checkFilterKey("DOCACHE");
+    doCache = !checkFilterKey("NOCACHE");
+    optimizePSE = !checkFilterKey("NOOPTIMIZEPSE");
     if (sourcePNGJ && doCache) {
       // the PNGJ will already be cached, no need to do that again
       ignoreObjects = true;
     }
-    if (doCache)
+    if (optimizePSE)
       bsBytesExcluded = new BS();
-    //logging = true; // specifically for Pickle
-    System.out.println("PyMOLReader doResize=" + doResize + " doCache=" + doCache + " ignoreObject=" + ignoreObjects);
+    //logging = true; // specifically for Pickle debugging
+    System.out.println("PyMOLReader doResize=" + doResize + " doCache=" + doCache + " optimizePSE=" + optimizePSE
+          + "\n  use FILTER 'DORESIZE' or 'NOCACHE' or 'NOOPTIMIZEPSE' to change these settings");
+    //ignoreObject=" + ignoreObjects);
     super.initializeReader();
   }
 

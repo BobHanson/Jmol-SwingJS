@@ -71,7 +71,7 @@ class JSFile extends File implements GenericFileInterface {
           wr.write(post);
           wr.flush();
         } else {
-          conn.getOutputStream().write(outputBytes);
+          conn.getOutputStream().write(outputBytes, 0, outputBytes.length);
           conn.getOutputStream().flush();
         }
       }

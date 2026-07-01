@@ -30,16 +30,7 @@ public class BC {
         : (bytes[j++] & 0xff) | (bytes[j++] & 0xff) << 8
             | (bytes[j++] & 0xff) << 16 | (bytes[j++] & 0xff) << 24);
     
-    return (/** @j2sNative (n|0) || */ n); 
-//    /**
-//     * xxxxxxj2sNative
-//     * 
-//     * return (n > 0x7FFFFFFF ? n - 0x100000000 : n);
-//     *   
-//     */
-//    {
-//      return n;
-//    }
+    return n | 0; 
   }
 
   public static int intToSignedInt(int n) {

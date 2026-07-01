@@ -2742,28 +2742,43 @@ public class CmdExt extends ScriptExt {
       id = e.optParameterAsString(++pt);
       pt++;
     }
-    String fileName = e.optParameterAsString(pt);
+    Object fileName = null;
     boolean isClose = e.optParameterAsString(slen - 1)
         .equalsIgnoreCase("close");
-    if (!isClose && (slen == pt || slen == pt + 2)) {
-      // image
-      // image 400 400
-      // image id "testing"
-      // image id "testing" 400 400
-      int width = (slen == pt + 2 ? intParameter(pt++) : -1);
-      int height = (width < 0 ? -1 : intParameter(pt));
-      Map<String, Object> params = new Hashtable<String, Object>();
-      params.put("fileName", "\1\1" + id);
-      params.put("backgroundColor", Integer.valueOf(vwr.getBackgroundArgb()));
-      params.put("type", "png");
-      params.put("quality", Integer.valueOf(-1));
-      params.put("width", Integer.valueOf(width));
-      params.put("height", Integer.valueOf(height));
-      if (!chk)
-        vwr.processWriteOrCapture(params);
-      return;
+    switch (tokAt(pt)) {
+    case T.barray:
+      if (isClose)
+        invArg();
+      fileName = ((BArray) getToken(pt).value).data;
+      break;
+    case T.hash:
+      if (isClose)
+        invArg();
+      fileName = ((SV) getToken(pt)).getMap();
+      break;
+    case T.string:
+    case T.nada:
+      fileName = e.optParameterAsString(pt);
+      if (!isClose && (slen == pt || slen == pt + 2)) {
+        // image
+        // image 400 400
+        // image id "testing"
+        // image id "testing" 400 400
+        int width = (slen == pt + 2 ? intParameter(pt++) : -1);
+        int height = (width < 0 ? -1 : intParameter(pt));
+        Map<String, Object> params = new Hashtable<String, Object>();
+        params.put("fileName", "\1\1" + id);
+        params.put("backgroundColor", Integer.valueOf(vwr.getBackgroundArgb()));
+        params.put("type", "png");
+        params.put("quality", Integer.valueOf(-1));
+        params.put("width", Integer.valueOf(width));
+        params.put("height", Integer.valueOf(height));
+        if (!chk)
+          vwr.processWriteOrCapture(params);
+        return;
+      }
+      break;
     }
-    pt++;
     if (isClose) {
       switch (slen) {
       case 2:
@@ -2779,10 +2794,12 @@ public class CmdExt extends ScriptExt {
         checkLength(0);
       }
     }
-    if (!chk)
+    if (!chk) {
+      String echoName = (fileName instanceof String ? (String) fileName : "");
       vwr.fm.loadImage(isClose ? "\1close" : fileName,
-          "\1" + fileName + "\1" + ("".equals(id) || id == null ? null : id),
+          "\1" + echoName + "\1" + ("".equals(id) || id == null ? null : id),
           false);
+    }
   }
 
   private void invertSelected() throws ScriptException {
@@ -4176,6 +4193,7 @@ public class CmdExt extends ScriptExt {
     case T.nada:
       break;
     case T.varray:
+    case T.barray:
     case T.hash:
       type = "VAR";
       break;
@@ -4244,6 +4262,7 @@ public class CmdExt extends ScriptExt {
     switch (tok) {
     case T.nada:
       break;
+    case T.barray:
     case T.varray:
     case T.hash:
       type = "VAR";
@@ -4454,8 +4473,9 @@ public class CmdExt extends ScriptExt {
       fileName = (type.equals("IMAGE") ? "?jmol.png"
           : "?jmol." + type.toLowerCase());
       break;
-    case T.hash:
+    case T.barray:
     case T.varray:
+    case T.hash:
       break;
     case T.identifier:
     case T.string:
@@ -4650,7 +4670,7 @@ public class CmdExt extends ScriptExt {
         if ("?".equals(fileName))
           fileName = "?Jmol." + vwr.getP("_fileType");
         if (showOnly)
-          data = e.getCurrentModelFileAsString(null);
+          data = (String) vwr.getCurrentModelFile(null, false);
         else
           writeFileData = true;
         break;
@@ -4665,6 +4685,7 @@ public class CmdExt extends ScriptExt {
         if (tVar == null) {
           T vtoken = tokenAt(isCommand ? 2 : 1, args);
           switch (vtoken.tok) {
+          case T.barray:
           case T.varray:
           case T.hash:
             break;
@@ -4696,7 +4717,7 @@ public class CmdExt extends ScriptExt {
           params.put("data", v);
           if ((bytes = data = (String) vwr.createZip(fileName,
               v.size() == 1 || fileName.endsWith(".png")
-                  || fileName.endsWith(".pngj") ? JC.FILE_TYPE_BINARY : "ZIPDATA",
+                  || fileName.endsWith(".pngj") ? JC.FILE_TYPE_BINARY : JC.FILE_TYPE_ZIPDATA,
               params)) == null)
             eval.evalError("#CANCELED#", null);
         }
@@ -5590,7 +5611,7 @@ public class CmdExt extends ScriptExt {
         if (!chk) {
           if (filter == null && !eval.isFuncReturn)
             vwr.sm.clearConsole();
-          msg = e.getCurrentModelFileAsString(null);
+          msg = (String) vwr.getCurrentModelFile(null, false);
         }
         if (msg == null)
           msg = "<unavailable>";

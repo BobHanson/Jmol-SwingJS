@@ -20,7 +20,6 @@ import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.OC;
 import javajs.util.PT;
-import javajs.util.Rdr;
 import javajs.util.SB;
 import javajs.util.ZipTools;
 
@@ -62,7 +61,7 @@ abstract class OutputManager {
     String fileName = (String) params.get("fileName");
     String text = (String) params.get("text");
     byte[] bytes = (byte[]) params.get("bytes");
-    int quality = getInt(params, "quality", Integer.MIN_VALUE);
+    //not needed here int quality = getInt(params, "quality", Integer.MIN_VALUE);
     OC out = (OC) params.get("outputChannel");
     boolean closeStream = (out == null);
     int len = -1;
@@ -74,7 +73,7 @@ abstract class OutputManager {
         if (out == null)
           out = openOutputChannel(privateKey, fileName, false, false);
         out.write(bytes, 0, bytes.length);
-      } else if (text != null && !type.equals("ZIPDATA")
+      } else if (text != null && !type.equals(JC.FILE_TYPE_ZIPDATA)
           && !type.equals(JC.FILE_TYPE_BINARY)) {
         if (out == null)
           out = openOutputChannel(privateKey, fileName, true, false);
@@ -139,7 +138,7 @@ abstract class OutputManager {
     boolean asBytes = (out == null && fileName == null);
     boolean closeChannel = (out == null && fileName != null);
     boolean releaseImage = (objImage == null);
-    Object image = (type.equals(JC.FILE_TYPE_BINARY) || type.equals("ZIPDATA") ? ""
+    Object image = (type.equals(JC.FILE_TYPE_BINARY) || type.equals(JC.FILE_TYPE_ZIPDATA) ? ""
         : rgbbuf != null ? rgbbuf
             : objImage != null ? objImage : vwr.getScreenImage());
     boolean isOK = false;
@@ -310,8 +309,8 @@ abstract class OutputManager {
         params.put("type", "PNGJ");
         type = "Png";
         params.put("pngAppPrefix", "Jmol Type");
-
-        if (Rdr.isPngZipB(bytes)) {
+        if (isPNG(bytes)) {
+          // have a PNG image
           params.put("pngImgData", bytes);
         } else {
           // bytes will not be ready yet in JavaScript
@@ -351,6 +350,14 @@ abstract class OutputManager {
     return errRet[0] == null;
   }
 
+  private static boolean isPNG(byte[] bytes) {
+    return (bytes.length > 10
+        && bytes[0] == -119
+            && bytes[1] == 80
+                && bytes[2] == 78
+                    && bytes[3] == 71);
+  }
+
   void finishImage(String[] errRet, String type, OC out,
                            Object objImage, Map<String, Object> params) {
     GenericImageEncoder ie = (GenericImageEncoder) Interface
@@ -363,7 +370,7 @@ abstract class OutputManager {
     try {
       if (type.equals("Gif") && vwr.getBoolean(T.testflag2))
         params.put("reducedColors", Boolean.TRUE);
-      if (params.get("imagePixels") == null)
+      if (params.get("imagePixels") == null && objImage != null)
         getImagePixels(objImage, params);
       params.put("logging", Boolean.valueOf(Logger.debugging));
       // GIF capture may not close output channel

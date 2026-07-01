@@ -5566,7 +5566,13 @@ SymmetryInterface sym;
       String type = args[0].asString().toUpperCase();
       if (type.equals("PNGJ")) {
         Object o = vwr.fm.getFileAsMap(null, "PNGJ", asBytes);
-        return (asBytes ? mp.addX(SV.newV(T.barray, new BArray((byte[]) o))) : mp.addXMap((Map<String, Object>) o));
+        return (asBytes ? mp.addX(SV.newV(T.barray, new BArray((byte[]) o))) 
+            : mp.addXMap((Map<String, Object>) o));
+      }
+      if (type.equals("FILE")) {
+        Object o = vwr.getCurrentModelFile(null, asBytes);
+        return (asBytes ? mp.addX(SV.newV(T.barray, new BArray((byte[]) o))) 
+            : mp.addXStr((String) o));         
       }
       if (PT.isOneOf(type, ";ZIP;ZIPALL;JMOL;")) {
         Map<String, Object> params = new Hashtable<String, Object>();

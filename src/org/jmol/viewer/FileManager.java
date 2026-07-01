@@ -784,7 +784,7 @@ public class FileManager implements BytePoster {
         return bdata;
       }
       if (asBytes)
-        return new byte[0];
+        return bytes;
       t = Rdr.getBIS(bytes);
     } else {
       String[] data = new String[2];
@@ -906,6 +906,8 @@ public class FileManager implements BytePoster {
       bytes = Base64.decodeBase64(name);
     } else if (nameOrBytes instanceof BArray) {
       bytes = ((BArray) nameOrBytes).data;
+    } else if (AU.isAB(nameOrBytes)) {
+      bytes = (byte[]) nameOrBytes;
     } else if (echoName == null || nameOrBytes instanceof String) {
       String[] names = getClassifiedName((String) nameOrBytes, true);
       nameOrError = (names == null ? "cannot read file name: " + nameOrBytes
