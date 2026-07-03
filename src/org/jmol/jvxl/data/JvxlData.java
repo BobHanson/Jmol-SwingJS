@@ -107,10 +107,10 @@ public class JvxlData {
   public boolean isColorReversed;
   public BS thisSet = null;
   
-  public int edgeFractionBase = JvxlCoder.defaultEdgeFractionBase;
-  public int edgeFractionRange = JvxlCoder.defaultEdgeFractionRange;
-  public int colorFractionBase = JvxlCoder.defaultColorFractionBase;
-  public int colorFractionRange = JvxlCoder.defaultColorFractionRange;
+  public int edgeFractionBase = 35;//JvxlCoder.defaultEdgeFractionBase;
+  public int edgeFractionRange = 90;//JvxlCoder.defaultEdgeFractionRange;
+  public int colorFractionBase = 35;//JvxlCoder.defaultColorFractionBase;
+  public int colorFractionRange = 90;//JvxlCoder.defaultColorFractionRange;
 
   public boolean isValid = true; // set false if calculation gave no surface
   public boolean insideOut;

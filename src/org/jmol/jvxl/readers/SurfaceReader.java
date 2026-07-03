@@ -259,7 +259,7 @@ public abstract class SurfaceReader implements VertexDataServer {
     jvxlData = sg.jvxlData;
     setVolumeDataV(sg.volumeDataTemp); // initialize volume data to surfaceGenerator's
     meshDataServer = sg.meshDataServer;
-    cJvxlEdgeNaN = (char) (JvxlCoder.defaultEdgeFractionBase + JvxlCoder.defaultEdgeFractionRange);
+    cJvxlEdgeNaN = JvxlCoder.cJvxlEdgeNaN;
   }
 
   final static double ANGSTROMS_PER_BOHR = 0.5291772f;
@@ -480,10 +480,10 @@ public abstract class SurfaceReader implements VertexDataServer {
     jvxlData.jvxlColorData = "";
     //TODO: more resets of jvxlData?
     edgeCount = 0;
-    edgeFractionBase = JvxlCoder.defaultEdgeFractionBase;
-    edgeFractionRange = JvxlCoder.defaultEdgeFractionRange;
-    colorFractionBase = JvxlCoder.defaultColorFractionBase;
-    colorFractionRange = JvxlCoder.defaultColorFractionRange;
+    edgeFractionBase = 35;//JvxlCoder.defaultEdgeFractionBase;
+    edgeFractionRange = 90;//JvxlCoder.defaultEdgeFractionRange;
+    colorFractionBase = 35;//JvxlCoder.defaultColorFractionBase;
+    colorFractionRange = 90;//JvxlCoder.defaultColorFractionRange;
     params.mappedDataMin = Double.MAX_VALUE;
   }
 
@@ -787,8 +787,8 @@ public abstract class SurfaceReader implements VertexDataServer {
   }
 
   void applyColorScale() {
-    colorFractionBase = jvxlData.colorFractionBase = JvxlCoder.defaultColorFractionBase;
-    colorFractionRange = jvxlData.colorFractionRange = JvxlCoder.defaultColorFractionRange;
+    colorFractionBase = jvxlData.colorFractionBase = 35;//JvxlCoder.defaultColorFractionBase;
+    colorFractionRange = jvxlData.colorFractionRange = 90;//JvxlCoder.defaultColorFractionRange;
     if (params.colorPhase == 0)
       params.colorPhase = 1;
     if (meshDataServer == null) {

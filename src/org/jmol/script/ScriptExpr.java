@@ -843,7 +843,7 @@ abstract class ScriptExpr extends ScriptParam {
           break;
         case ';':
           if (s.startsWith(JC.BASE90_35_TAG)) {
-            rpn.addXBs((BS) vwr.unescapePointOrBitsetAsVariable(s));
+            rpn.addXBs(SV.decodeBase90_35(s));
             break;
           }
           //$FALL-THROUGH$
@@ -2247,9 +2247,7 @@ abstract class ScriptExpr extends ScriptParam {
       return  obj;
     if (obj instanceof String) {
       String s = (String) obj;
-      if (s.length() == 0)
-        return s;
-      return vwr.unescapePointOrBitsetAsVariable(s);
+      return (s.length() == 0 ? s : SV.unescapePointOrBitsetAsVariable(s));
     }
     @SuppressWarnings("unchecked")
     Lst<SV> lst = (Lst<SV>) obj;
@@ -2734,6 +2732,8 @@ abstract class ScriptExpr extends ScriptParam {
           if (v instanceof SV) {
             // was a bitset 
             fixed[j] = (T) v;
+          } else if (v instanceof BS) {
+            fixed[j] = T.o(T.bitset, v);          
           } else {
             s = (String) v;
             if (isExpression && !forceString) {

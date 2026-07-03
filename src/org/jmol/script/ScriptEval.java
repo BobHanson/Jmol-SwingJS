@@ -990,6 +990,8 @@ public class ScriptEval extends ScriptExpr {
     
     if (atomExpression instanceof BS)
       return (BS) atomExpression;
+    if (atomExpression instanceof String && ((String) atomExpression).startsWith(JC.BASE90_35_TAG))
+      return SV.decodeBase90_35((String) atomExpression);
     BS bs = new BS();
     boolean executing = this.executing;
     try {

@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.jmol.api.Interface;
+import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.modelset.BondSet;
 import org.jmol.util.BSUtil;
 import org.jmol.util.Escape;
@@ -1213,6 +1215,24 @@ public class SV extends T implements JSONEncodable {
     }
   }
 
+
+  private static JvxlCoder jvxlCoder;
+  
+  private static JvxlCoder getJvxlCoder() {
+    return (jvxlCoder == null
+        ? (jvxlCoder = (JvxlCoder) Interface
+            .getInterface("org.jmol.jvxl.data.JvxlCoder", null, "script"))
+        : jvxlCoder);
+  }
+
+  public static String encodeBitSet90_35(BS bs) {
+    return getJvxlCoder().jvxlEncodeBitSet90_35(bs);
+  }
+
+  public static BS decodeBase90_35(String s) {
+    return getJvxlCoder().jvxlDecodeBitSet90_35(s);    // TODO
+  }
+
   public static Object unescapePointOrBitsetAsVariable(Object o) {
     if (o == null)
       return o;
@@ -1230,6 +1250,7 @@ public class SV extends T implements JSONEncodable {
         break;
       case string:
         s = (String) sv.value;
+        // note that this does not allow for s[3] but that is probably OK
         break;
       default:
         s = sValue(sv);
@@ -1238,8 +1259,13 @@ public class SV extends T implements JSONEncodable {
     } else if (o instanceof String) {
       s = (String) o;
     }
-    if (s != null && s.length() == 0)
-      return s;
+    if (s != null) {
+      if (s.length() == 0)
+        return s;
+      if (s.startsWith(JC.BASE90_35_TAG))
+        return decodeBase90_35(s);
+      // otherwise continue...
+    }
     if (v == null)
       v = Escape.uABsM(s);
     if (v instanceof P3d)
@@ -1510,6 +1536,10 @@ public class SV extends T implements JSONEncodable {
       case matrix4f:
         return ((M4d) x1.value).equals(x2.value);
       }
+    } else if (x1.tok == T.bitset && x2.tok == T.string
+         && ((String) x2.value).startsWith(JC.BASE90_35_TAG)) {
+          // allow {*.CA} == ";base90+35,....."
+          return (x1.value.equals(decodeBase90_35((String) x2.value)));
     }
     return (x1.isNaN() ? x2.isNaN() : Math.abs(dValue(x1) - dValue(x2)) < 1e-15);
   }

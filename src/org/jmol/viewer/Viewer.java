@@ -11612,23 +11612,6 @@ public class Viewer extends JmolViewer
 
   }
 
-  private JvxlCoder jvxlCoder;
-  
-  private JvxlCoder getJvxlCoder() {
-    if (jvxlCoder == null)
-      jvxlCoder = (JvxlCoder) Interface.getInterface("org.jmol.jvxl.data.JvxlCoder", this, "script");
-    return jvxlCoder;
-  }
-
-  public Object unescapePointOrBitsetAsVariable(String s) {
-    return (s.startsWith(JC.BASE90_35_TAG) ? getJvxlCoder().jvxlDecodeBitSet90_35(s)
-        : BS.unescape(s));
-  }
-
-  public String encodeBitSet90_35(BS bs) {
-    return getJvxlCoder().jvxlEncodeBitSet90_35(bs);
-  }
-
   public Object getCurrentModelFile(String fname, boolean asBytes) {
       if (fname == null)
         fname = (String) getParameter("_modelFile");

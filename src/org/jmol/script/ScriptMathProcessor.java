@@ -31,6 +31,7 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.BoxInfo;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.A4d;
@@ -1101,7 +1102,7 @@ public class ScriptMathProcessor {
     if (chk)
       return addXStr(SV.sValue(x2));
     if (x2.tok == T.string) {
-      Object v = vwr.unescapePointOrBitsetAsVariable(SV.sValue(x2));
+      Object v = SV.unescapePointOrBitsetAsVariable(SV.sValue(x2));
       if (!(v instanceof SV))
         return false;
       x2 = (SV) v;
@@ -1152,6 +1153,12 @@ public class ScriptMathProcessor {
           int x = x2.asInt();
           if (x >= 0) {
             bs.set(x);
+          }
+          break;
+        case T.string:
+          if (((String) x2.value).startsWith(JC.BASE90_35_TAG)) {
+            bs = BSUtil.copy((BS) x1.value);
+            bs.or(SV.decodeBase90_35((String) x2.value));
           }
           break;
         case T.varray:

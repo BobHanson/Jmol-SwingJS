@@ -9,8 +9,11 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Edge;
 import org.jmol.util.Escape;
 import org.jmol.util.Logger;
+import org.jmol.viewer.JC;
 
+import javajs.util.BArray;
 import javajs.util.BS;
+import javajs.util.Base64;
 import javajs.util.CU;
 import javajs.util.Lst;
 import javajs.util.M34d;
@@ -145,6 +148,10 @@ abstract public class ScriptParam extends ScriptError {
         }
         return SV.newS("");
       }
+    } else if (var.startsWith(JC.BASE90_35_TAG)) {
+     return SV.newV(T.bitset, SV.decodeBase90_35(var));
+    } else if (var.startsWith(JC.BASE64_TAG)) {
+      return SV.newV(T.barray, new BArray(Base64.decodeBase64(var)));
     }
     var = var.toLowerCase();
     SV v = (contextVariables == null ? null : contextVariables.get(var));

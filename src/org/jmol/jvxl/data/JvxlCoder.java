@@ -23,24 +23,20 @@
  */
 package org.jmol.jvxl.data;
 
-import java.util.Arrays;
 import java.util.Map;
 
+import org.jmol.util.BSUtil;
+import org.jmol.util.C;
+import org.jmol.util.Escape;
+import org.jmol.util.Logger;
+
+import javajs.util.BS;
 import javajs.util.Lst;
 import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 import javajs.util.T3d;
 import javajs.util.XmlUtil;
-
-import javajs.util.BS;
-
-import org.jmol.api.Interface;
-import org.jmol.util.BSUtil;
-import org.jmol.util.C;
-import org.jmol.util.Escape;
-import org.jmol.util.Logger;
-import org.jmol.viewer.Viewer;
 
 /**
  * A class to create and uncompress JVXL data strings. The compression uses an
@@ -91,8 +87,7 @@ public class JvxlCoder {
 
   public BS jvxlDecodeBitSet90_35(String data) {
     // it must start with ";base90+35,-" actually.
-    return jvxlDecodeBitPtSetRange(data, 12, defaultEdgeFractionBase,
-        defaultEdgeFractionRange);
+    return jvxlDecodeBitPtSetRange(data, 12, 35, 90);
   }
 
   /**
@@ -603,10 +598,8 @@ public class JvxlCoder {
       while (pt < nBuf && PT.isWhitespace(c2 = fData.charAt(pt++))) {
         // skip whitespace
       }
-      double f1 = jvxlFractionFromCharacter(c1, defaultEdgeFractionBase,
-          defaultEdgeFractionRange, 0);
-      double f2 = jvxlFractionFromCharacter(c2, defaultEdgeFractionBase,
-          defaultEdgeFractionRange, 0);
+      double f1 = jvxlFractionFromCharacter(c1, 35, 90, 0);
+      double f2 = jvxlFractionFromCharacter(c2, 35, 90, 0);
       int i1, i2, i3, i4;
       /*
        *     char type ('3', '6', '5') indicating which two edges
@@ -992,10 +985,11 @@ public class JvxlCoder {
 
   // NEVER change the numbers for these next defaults
 
-  final public static int defaultEdgeFractionBase = 35; //#$%.......
-  final public static int defaultEdgeFractionRange = 90;
-  final public static int defaultColorFractionBase = 35;
-  final public static int defaultColorFractionRange = 90;
+//  final public static int defaultEdgeFractionBase = 35; //#$%.......
+//  final public static int defaultEdgeFractionRange = 90;
+//  final public static int defaultColorFractionBase = 35;
+//  final public static int defaultColorFractionRange = 90;
+   public static final char cJvxlEdgeNaN = (char) (35 + 90);//JvxlCoder.defaultEdgeFractionBase + JvxlCoder.defaultEdgeFractionRange);
 
   /** character-encoding of factions in base 90:
    * 
@@ -1004,11 +998,12 @@ public class JvxlCoder {
    * ASC(125)'}' is reserved for "NaN".
    * Double-quote is not in this range, but '<' and '&' are, so this
    * is only XML-safe when quoted as an attribute. 
+   * @param fraction 
+   * @return char 
    * 
    */
   public static char jvxlFractionAsCharacter(double fraction) {
-    return jvxlFractionAsCharacterRange(fraction, defaultEdgeFractionBase,
-        defaultEdgeFractionRange);
+    return jvxlFractionAsCharacterRange(fraction, 35, 90);
   }
 
   public static char jvxlFractionAsCharacterRange(double fraction, int base,
@@ -1126,15 +1121,13 @@ public class JvxlCoder {
 	      if (isset == bs.get(i)) {
 	        dataCount++;
 	      } else {
-	        jvxlAppendEncodedNumber(sb, dataCount, defaultEdgeFractionBase,
-	            defaultEdgeFractionRange);
+	        jvxlAppendEncodedNumber(sb, dataCount, 35, 90);
 	        n++;
 	        dataCount = 1;
 	        isset = !isset;
 	      }
 	    }
-	    jvxlAppendEncodedNumber(sb, dataCount, defaultEdgeFractionBase,
-	        defaultEdgeFractionRange);
+	    jvxlAppendEncodedNumber(sb, dataCount, 35, 90);
 	    sb.appendC('\n');
 	    return n;
 	  }
@@ -1174,8 +1167,7 @@ public class JvxlCoder {
       }
     }
     if (ptr >= 0)
-      return jvxlDecodeBitPtSetRange(data, ptr, defaultEdgeFractionBase,
-          defaultEdgeFractionRange);
+      return jvxlDecodeBitPtSetRange(data, ptr, 35, 90);
     // just space-separated numbers
     // nunset nset nunset ...
     BS bs = new BS();
@@ -1274,6 +1266,9 @@ public class JvxlCoder {
    *   "~%nnn "
    *
    *</code>
+   * @param data 
+   * @param escapeXml 
+   * @return compressed string
    */
   public static String jvxlCompressString(String data, boolean escapeXml) {
 

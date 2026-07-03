@@ -3086,10 +3086,10 @@ SymmetryInterface sym;
       break;
     case SV.FORMAT_BASE90_35:
       BS bs = SV.getBitSet(x, true);
-      return (bs != null && mp.addXStr(vwr.encodeBitSet90_35(bs)));
+      return (bs != null && mp.addXStr(SV.encodeBitSet90_35(bs)));
     case SV.FORMAT_BITSET:
       return (x.tok == T.string && ((String) x.value).startsWith(JC.BASE90_35_TAG)
-      && mp.addXBs((BS) vwr.unescapePointOrBitsetAsVariable((String) x.value)));
+      && mp.addXBs(SV.decodeBase90_35((String) x.value)));
     case SV.FORMAT_XYZ:
     case SV.FORMAT_ABC:
     case SV.FORMAT_UVW:
@@ -3335,14 +3335,14 @@ SymmetryInterface sym;
       else if (x2.tok == T.varray)
         b = alist2.get(i);
       else if (Double.isNaN(list2[i]))
-        b = SV.getVariable(vwr.unescapePointOrBitsetAsVariable(sList2[i]));
+        b = SV.getVariable(SV.unescapePointOrBitsetAsVariable(sList2[i]));
       else
         b = SV.newD(list2[i]);
       if (!isScalar1) {
         if (isArray1)
           a = alist1.get(i);
         else if (Double.isNaN(list1[i]))
-          a = SV.getVariable(vwr.unescapePointOrBitsetAsVariable(sList1[i]));
+          a = SV.getVariable(SV.unescapePointOrBitsetAsVariable(sList1[i]));
         else
           a = SV.newD(list1[i]);
       }
