@@ -163,7 +163,7 @@ abstract class OutputManager {
       }
       String comment = null;
       Object stateData = null;
-      params.put("date", vwr.apiPlatform.getDateFormat("8601"));
+      params.put("date", vwr.apiPlatform.getDateFormat(type.equals("PDF") ? "32000" : "8601"));
       if (type.startsWith("JP")) {
         type = PT.rep(type, "E", "");
         if (type.equals("JPG64")) {
@@ -215,7 +215,7 @@ abstract class OutputManager {
       if (isOK) {
         if (params.containsKey("captureMsg")
             && !params.containsKey("captureSilent"))
-          vwr.prompt((String) params.get("captureMsg"), "OK", null, true);
+          vwr.prompt((String) params.get("captureMsg"), "OK", true);
         if (asBytes)
           bytes = out.toByteArray();
         else if (params.containsKey("captureByteCount"))

@@ -1,5 +1,7 @@
 package javajs.api.js;
 
+import org.jmol.api.js.JSmolAppletObject;
+
 /**
  * methods in j2s JavaScript accessed in Jmol -- note that there is a different  interface in SwingJS
  */
@@ -34,5 +36,9 @@ public interface J2SObjectInterface {
 	boolean isBinaryUrl(String filename);
 
 	void saveFile(String fileName, Object data, String mimeType, String encoding);
+
+  void promptAsynchronously(Object dialogThread,
+                            JSmolAppletObject html5Applet, String label, String[] options);
+
 
 }

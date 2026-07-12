@@ -1261,7 +1261,9 @@ abstract public class ScriptParam extends ScriptError {
 
   public boolean isColorParam(int i) {
     int tok = tokAt(i);
-    return tok != T.nada && (tok == T.navy || tok == T.spacebeforesquare || tok == T.leftsquare
+    return tok != T.nada && (
+        tok == T.navy || tok == T.tan
+        || tok == T.spacebeforesquare || tok == T.leftsquare
         || tok == T.varray || tok == T.point3f || isPoint3f(i) || (tok == T.string || T
         .tokAttr(tok, T.identifier))
         && CU.getArgbFromString((String) st[i].value) != 0);
@@ -1288,6 +1290,7 @@ abstract public class ScriptParam extends ScriptError {
           break;
         //$FALL-THROUGH$
       case T.navy:
+      case T.tan:
       case T.string:
         return CU.getArgbFromString(paramAsStr(index));
       case T.spacebeforesquare:

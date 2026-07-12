@@ -50,6 +50,7 @@ import org.jmol.modelset.ModelSet;
 import org.jmol.script.SV;
 import org.jmol.script.ScriptEval;
 import org.jmol.script.ScriptException;
+import org.jmol.script.ScriptInterruption;
 import org.jmol.script.ScriptMathProcessor;
 import org.jmol.script.ScriptParam;
 import org.jmol.script.T;
@@ -3517,7 +3518,8 @@ SymmetryInterface sym;
       return false;
     String file = FileManager.fixDOSName(SV.sValue(args[0]));
     boolean asMap = (args.length > 1 && args[1].tok == T.on);
-    boolean async = (vwr.async || file.startsWith(JC.CACHE_PROTOCOL)
+    boolean async = (vwr.async 
+        || file.startsWith(JC.CACHE_PROTOCOL)
         || args.length > 2 && args[args.length - 1].tok == T.on);
     int nBytesMax = (args.length > 1 && args[1].tok == T.integer
         ? args[1].asInt()
@@ -4095,7 +4097,7 @@ SymmetryInterface sym;
     return pt;
   }
 
-  private boolean evaluatePrompt(ScriptMathProcessor mp, SV[] args) {
+  private boolean evaluatePrompt(ScriptMathProcessor mp, SV[] args) throws ScriptException {
     //x = prompt("testing")
     //x = prompt("testing","defaultInput")
     //x = prompt("testing","yes|no|cancel", true)
@@ -4111,7 +4113,13 @@ SymmetryInterface sym;
         || args.length == 3 && args[2].asBoolean());
     String input = (buttonArray != null ? null
         : args.length >= 2 ? SV.sValue(args[1]) : "OK");
-    String s = "" + vwr.prompt(label, input, buttonArray, asButtons);
+    String s;
+    try {
+      s = "" + vwr.promptButtons(label, input, buttonArray, asButtons);
+    } catch (Exception e) {
+      // JavaScript only
+      throw new ScriptInterruption((ScriptEval) vwr.eval, "prompt", 1);
+    }
     return (asButtons && buttonArray != null
         ? mp.addXInt(Integer.parseInt(s) + 1)
         : mp.addXStr(s));

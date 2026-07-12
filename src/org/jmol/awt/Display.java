@@ -11,6 +11,9 @@ import java.awt.image.MemoryImageSource;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.jmol.api.PlatformViewer;
+import org.jmol.viewer.Viewer;
+
 import javajs.util.P3d;
 import javajs.util.PT;
 
@@ -59,8 +62,33 @@ class Display {
     ((Container) display).setCursor(Cursor.getPredefinedCursor(c));
   }
 
-  public static String prompt(String label, String data, String[] list,
-                              boolean asButtons) {
+  public static String prompt(PlatformViewer vwr, String label, String data, String[] list,
+                              boolean asButtons) throws Exception {
+    if (Viewer.isJS) {
+      if (!asButtons) {
+        /**
+         * @j2sNative
+         * 
+         *            var s = (data == null ? alert(label) : prompt(label, data));
+         *            return "" + s;
+         */
+        {
+        }
+      }
+      if (data != null)
+        list = PT.split(data, "|");
+      // JavaScript async will throw ScriptInterrupt
+      String option = ((Viewer) vwr).eval.promptAsync(label, list);
+      if (option != null) {
+        if (data == null) {
+          for (int i = 0; i < list.length; i++)
+            if (list[i].equals(data))
+              return "" + i;
+        }
+        return option;
+      }
+      return "null";
+    }
     try {
       if (!asButtons)
         return JOptionPane.showInputDialog(label, data);

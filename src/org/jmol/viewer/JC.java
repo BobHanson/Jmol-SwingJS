@@ -1593,7 +1593,7 @@ public final class JC {
   public final static int UNITID_INSCODE = 8;
   public final static int UNITID_TRIM = 16;
 
-  public static final String DEFAULT_DRAG_DROP_SCRIPT = "zap; load SYNC \"%FILE\";if (%ALLOWCARTOONS && _loadScript == '' && defaultLoadScript == '' && _filetype == 'Pdb') {if ({(protein or nucleic)&*/1.1} && {*/1.1}[1].groupindex != {*/1.1}[0].groupindex){select protein or nucleic;cartoons only;}if ({visible && cartoons > 0}){color structure}else{wireframe -0.1};if (!{visible}){spacefill 23%};select *}";
+  public static final String DEFAULT_DRAG_DROP_SCRIPT = "zap; load SYNC \"%FILE\";if (%ALLOWCARTOONS && _loadScript == '' && defaultLoadScript == '' && _filetype == 'Pdb') {if ({(protein or nucleic)&*/1.1} && {*/1.1}[1].groupindex != {*/1.1}[0].groupindex){select protein or nucleic;cartoons only;}if ({visible && cartoons > 0}){color structure}else{wireframe -0.1};if (!{visible}){select !visible;wireframe 0.15;color none;select !visible;spacefill 23%};select *}";
   /**
    * used to compare two atom *fractional* positions in order to see if they are at the same position.
    * 
@@ -1757,6 +1757,8 @@ public final class JC {
   public static final String FILE_TYPE_ZIPDATA = "ZIPDATA";
   public static final String INFO_DATA = "_DATA_";
   public static final String FILE_MARK_$BINARY$ = "$_BINARY_$";
+  public static final String CACHE_DIALOG = " DIALOG";
+  public static final String ASYNC_CANCELED = "#CANCELED#";
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.
    * 

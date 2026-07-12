@@ -30,7 +30,4 @@ public interface JmolToJSmolInterface extends J2SObjectInterface {
   
   void playAudio(JSmolAppletObject applet, Map<String, Object> htParams);
 
-
-  
-
 }

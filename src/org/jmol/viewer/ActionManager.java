@@ -1583,7 +1583,7 @@ public class ActionManager implements EventManager {
   private void pickLabel(int iatom) {
     String label = vwr.ms.at[iatom].atomPropertyString(vwr,  T.label);
     if (pressedCount == 2) {
-      label = vwr.apiPlatform.prompt("Set label for atomIndex=" + iatom, label, null, false);
+      label = vwr.prompt("Set label for atomIndex=" + iatom, label, false);
       if (label != null) {
         vwr.shm.setAtomLabel(label, iatom);
         vwr.refresh(Viewer.REFRESH_REPAINT, "label atom");

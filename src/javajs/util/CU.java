@@ -180,7 +180,7 @@ public class CU {
     "snow",                 // FFFAFA 16775930
     "springgreen",          // 00FF7F
     "steelblue",            // 4682B4
-    "tan",                  // D2B48C
+    "tan",                  // D2B48C // also TANGENT!!
     "teal",                 // 008080
     "thistle",              // D8BFD8
     "tomato",               // FF6347

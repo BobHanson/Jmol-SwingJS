@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.Map;
 
 import org.jmol.util.Font;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.P3d;
 
@@ -31,7 +32,7 @@ public interface GenericPlatform extends FontManager {
   
   boolean hasFocus(Object display);
 
-  String prompt(String label, String data, String[] list, boolean asButtons);
+  String prompt(String label, String data, String[] list, boolean asButtons) throws Exception;
 
   void repaint(Object display);
 

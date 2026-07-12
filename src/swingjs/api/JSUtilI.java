@@ -386,4 +386,6 @@ public interface JSUtilI {
    */
     String getJ2SPath();
 
+  String getDateFormat(String isoType);
+
 }

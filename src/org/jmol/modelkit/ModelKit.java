@@ -4039,7 +4039,7 @@ public class ModelKit {
   }
 
   private String promptUser(String msg, String def) {
-    return vwr.prompt(msg, def, null, false);
+    return vwr.prompt(msg, def, false);
   }
 
   private void resetBondFields() {

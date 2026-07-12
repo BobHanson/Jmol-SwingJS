@@ -955,7 +955,7 @@ public class FileManager implements BytePoster {
     boolean doSetPathForAllFiles = (pathForAllFiles.length() > 0);
     if (name.startsWith("?") || name.startsWith("http://?") || name.startsWith("https://?")) {
       if (!Viewer.isJS && (name = vwr.dialogAsk("Load", name, null)) == null)
-        return new String[] { isFullLoad ? "#CANCELED#" : null };
+        return new String[] { isFullLoad ? JC.ASYNC_CANCELED : null };
       doSetPathForAllFiles = false;
     }
     GenericFileInterface file = null;

@@ -2,6 +2,9 @@ package org.jmol.awtsw;
 
 import org.jmol.util.Font;
 
+/**
+ * not implemented -- see jmol.awt
+ */
 public class Platform extends org.jmol.awt.Platform {
 
   @Override

@@ -94,4 +94,6 @@ public interface JmolScriptEvaluator {
 
   int setStatic(int tok, int value);
 
+  String promptAsync(String label, String[] list) throws ScriptException;
+
 }

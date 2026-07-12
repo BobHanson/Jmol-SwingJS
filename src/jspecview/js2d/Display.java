@@ -93,14 +93,14 @@ class Display {
 	 */
   public static String prompt(String label, String data, String[] list,
                               boolean asButtons) {
-    /**
-     * @j2sNative
-     * 
-     * var s = prompt(label, data);
-     * if (s != null)return s;
-     */
-    {}
-    //TODO -- list and asButtons business
+    if (list == null) {
+      /**
+       * @j2sNative
+       * 
+       *            var s = prompt(label, data); if (s != null)return s;
+       */
+      {}
+    }
     return "null";
   }
 

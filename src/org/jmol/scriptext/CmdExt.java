@@ -4719,7 +4719,7 @@ public class CmdExt extends ScriptExt {
               v.size() == 1 || fileName.endsWith(".png")
                   || fileName.endsWith(".pngj") ? JC.FILE_TYPE_BINARY : JC.FILE_TYPE_ZIPDATA,
               params)) == null)
-            eval.evalError("#CANCELED#", null);
+            eval.evalError(JC.ASYNC_CANCELED, null);
         }
         break;
       case "SPT":
@@ -4743,7 +4743,7 @@ public class CmdExt extends ScriptExt {
             params.put("data", scripts);
           if ((bytes = data = (String) vwr.createZip(fileName, type,
               params)) == null)
-            eval.evalError("#CANCELED#", null);
+            eval.evalError(JC.ASYNC_CANCELED, null);
         }
         break;
       case "HISTORY":

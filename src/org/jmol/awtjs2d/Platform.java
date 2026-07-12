@@ -25,6 +25,9 @@ import javajs.util.SB;
 import swingjs.api.JSUtilI;
 
 /**
+ * 
+ * Not used in Jmol-SwingJS
+ * 
  * JavaScript 2D canvas version requires Ajax-based URL stream processing.
  * 
  * Jmol "display" --> HTML5 "canvas"
@@ -146,8 +149,8 @@ public class Platform implements GenericPlatform {
 
 	@Override
   public String prompt(String label, String data, String[] list,
-			boolean asButtons) {
-		return Display.prompt(label, data, list, asButtons);
+			boolean asButtons) throws Exception {
+		return Display.prompt(vwr, label, data, list, asButtons);
 	}
 
 //	/**

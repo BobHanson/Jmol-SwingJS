@@ -231,7 +231,7 @@ public class ScriptEval extends ScriptExpr {
 
   public boolean isJS;
   
-  private JmolThread fileLoadThread;
+  private JmolThread fdThread; // also for prompts
 
   private ScriptDelayThread scriptDelayThread;
 
@@ -301,6 +301,10 @@ public class ScriptEval extends ScriptExpr {
   private static final int EXEC_ASYNC = -1;
   private static final int EXEC_ERR   = 1;
   private static final int EXEC_OK    = 0;
+
+  private static final String THREAD_DIALOG = "Dialog";
+
+  private static final String THREAD_FILELOAD = "FileLoad";
 
   public static int commandHistoryLevelMax = 0;
   private static int contextDepthMax = 100; // mutable using set scriptLevelMax
@@ -2175,6 +2179,8 @@ public class ScriptEval extends ScriptExpr {
   }
   
   /**
+   * JavaScript only
+   * 
    * Allows asynchronous file loading from the LOAD or SCRIPT command. Saves the
    * context, initiates a FileLoadThread instance. When the file loading
    * completes, the file data (sans filename) is saved in the FileManager cache
@@ -2212,7 +2218,7 @@ public class ScriptEval extends ScriptExpr {
             filename + ":" + fullPathNameOrError[1]);
     }
     if (vwr.fm.cacheGet(filename, false) != null) {
-      cancelFileThread();
+      cancelFDThread(THREAD_FILELOAD);
       return filename;
     }
     if (prefix != null)
@@ -2221,44 +2227,87 @@ public class ScriptEval extends ScriptExpr {
     String cacheName;
     if (thisContext == null) {
       // add temp context
-      pushContext(null, "loadFileAsync");
+      pushContext(null, THREAD_FILELOAD);
     }
     if (thisContext.htFileCache == null) {
       thisContext.htFileCache = new Hashtable<String, String>();
     }
     cacheName = thisContext.htFileCache.get(key);
     if (cacheName != null && cacheName.length() > 0) {
-      cancelFileThread();
+      cancelFDThread(THREAD_FILELOAD);
       //no, problems with isosurface "?" map "?": popContext(false, false);
       vwr.queueOnHold = false;
-      if ("#CANCELED#".equals(cacheName)
-          || "#CANCELED#".equals(vwr.fm.cacheGet(cacheName, false)))
-        evalError("#CANCELED#", null);
+      if (JC.ASYNC_CANCELED.equals(cacheName)
+          || JC.ASYNC_CANCELED.equals(vwr.fm.cacheGet(cacheName, false)))
+        evalError(JC.ASYNC_CANCELED, null);
       return cacheName;
     }
     thisContext.htFileCache.put(key,
         cacheName = prefix + System.currentTimeMillis());
     //    if (fileLoadThread != null && i >= 0)
-    //      evalError("#CANCELED#", null);
+    //      evalError(JC.CACHE_CANCELED, null);
     if (doClear)
       vwr.cacheFileByName(prefix + "*", false);
-    fileLoadThread = new FileLoadThread(this, vwr, filename, key, cacheName);
+    fdThread = ((FileLoadThread) newAsyncThread(THREAD_FILELOAD)).initialize(this, vwr, filename, key, cacheName);
     if (vwr.testAsync)
-      fileLoadThread.start();
+      fdThread.start();
     else
-      fileLoadThread.run();
+      fdThread.run();
     if (i < 0) // no need to hang on to this - never "canceled"
-      fileLoadThread = null;
+      fdThread = null;
     throw new ScriptInterruption(this, "load", 1);
   }
 
-  private void cancelFileThread() {
+  /**
+   * JavaScript only
+   * 
+   * Allows asynchronous prompt with buttons in JavaScript. Saves the context,
+   * initiates a DialogThread instance. When the dialog closes, the selected
+   * option is saved in the FileManager cache under cache://DIALOG. Context is
+   * resumed at this command in the script, and the option is then retrieved
+   * from the cache. Only run from JSmol/HTML5 when vwr.isJS;
+   * 
+   * @param label
+   * @param options
+   * @return selected option or "#CANCELED#"
+   * @throws ScriptException
+   */
+  @Override
+  public String promptAsync(String label, String[] options) throws ScriptException {
+    
+    // note that we will never know the actual file name
+    // so we construct one and point to it in the scriptContext
+    // with a key to this point in the script. 
+    if (thisContext == null) {
+      // add temp context -- throws ScriptException
+      pushContext(null, THREAD_DIALOG);
+    }
+    if (thisContext.htFileCache == null) {
+      thisContext.htFileCache = new Hashtable<String, String>();
+    }
+    String key = JC.CACHE_PROTOCOL + JC.CACHE_DIALOG;
+    String value = thisContext.htFileCache.get(key);
+    if (value != null) {
+      cancelFDThread(THREAD_DIALOG);
+      return (value == JC.ASYNC_CANCELED ? null : value);
+    }
+    fdThread = ((DialogThread) newAsyncThread(THREAD_DIALOG)).initialize(this, vwr, label, options);
+    fdThread.run();
+    fdThread = null;
+    throw new ScriptInterruption(this, "prompt", 1);
+  }
+
+  private void cancelFDThread(String name) {
     // file has been loaded
-    fileLoadThread = null;
-    if (thisContext != null && thisContext.why == "loadFileAsync") {
+    fdThread = null;
+    if (thisContext != null && thisContext.why == name) {
       // remove temp context
       popContext(false, false);
     }
+  }
+
+  private JmolThread newAsyncThread(String name) {
+    return (JmolThread) Interface.getInterface("org.jmol.script." + name + "Thread", null, "async");
   }
 
   @SuppressWarnings("unchecked")
@@ -2312,10 +2361,11 @@ public class ScriptEval extends ScriptExpr {
       scriptDelayThread.interrupt();
       scriptDelayThread = null;
     }
-    if (fileLoadThread != null) {
-      fileLoadThread.interrupt();
-      fileLoadThread.resumeEval();
-      cancelFileThread();
+    if (fdThread != null) {
+      fdThread.interrupt();
+      fdThread.resumeEval();
+      cancelFDThread(THREAD_FILELOAD);
+      cancelFDThread(THREAD_DIALOG);
     }
   }
   
@@ -6079,7 +6129,7 @@ public class ScriptEval extends ScriptExpr {
       msg = parameterExpressionString(1, 0);
     }
     if (!chk)
-      vwr.prompt(msg, null, null, true);
+      vwr.prompt(msg, null, true);
   }
 
   private void cmdReset() throws ScriptException {

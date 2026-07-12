@@ -78,7 +78,6 @@ import org.jmol.c.STER;
 import org.jmol.c.STR;
 import org.jmol.c.VDW;
 import org.jmol.i18n.GT;
-import org.jmol.jvxl.data.JvxlCoder;
 import org.jmol.minimize.Minimizer;
 import org.jmol.modelkit.ModelKit;
 import org.jmol.modelkit.ModelKitPopup;
@@ -3404,7 +3403,7 @@ public class Viewer extends JmolViewer
     if (atomSetCollection instanceof String) {
       errMsg = (String) atomSetCollection;
       setFileLoadStatus(FIL.NOT_LOADED, fullPathName, null, null, errMsg, null);
-      if (displayLoadErrors && !isAppend && !errMsg.equals("#CANCELED#")
+      if (displayLoadErrors && !isAppend && !errMsg.equals(JC.ASYNC_CANCELED)
           && !errMsg.startsWith(JC.READER_NOT_FOUND))
         zapMsg(errMsg);
       return errMsg;
@@ -5360,7 +5359,7 @@ public class Viewer extends JmolViewer
   }
 
   private String getDBID(String type) {
-    return prompt("load a " + type, "", null, false);
+    return prompt("load a " + type, "", false);
   }
 
   boolean cirChecked;
@@ -10094,11 +10093,19 @@ public class Viewer extends JmolViewer
   }
 
   public void alert(String msg) {
-    prompt(msg, null, null, true);
+    prompt(msg, null, true);
   }
 
-  public String prompt(String label, String data, String[] list,
-                       boolean asButtons) {
+  public String prompt(String label, String data, boolean asButtons) {
+    try {
+      return promptButtons(label, data, null, asButtons);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  public String promptButtons(String label, String data, String[] list,
+                       boolean asButtons) throws Exception {
     return (isKiosk ? "null"
         : apiPlatform.prompt(label, data, list, asButtons));
   }
