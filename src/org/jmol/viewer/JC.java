@@ -1711,6 +1711,7 @@ public final class JC {
   public static final String INFO_PDB_NO_HYDROGENS = "pdbNoHydrogens";
 
   public final static String INFO_DOMAINS = "domains";
+  public static final String INFO_TITLE = "title";
   
 
 
@@ -1759,6 +1760,7 @@ public final class JC {
   public static final String FILE_MARK_$BINARY$ = "$_BINARY_$";
   public static final String CACHE_DIALOG = " DIALOG";
   public static final String ASYNC_CANCELED = "#CANCELED#";
+  
   /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.
    * 

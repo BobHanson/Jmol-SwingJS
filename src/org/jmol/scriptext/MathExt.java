@@ -92,6 +92,7 @@ import javajs.util.V3d;
 public class MathExt {
 
   private static final Double nan = Double.valueOf(Double.NaN);
+  
   private Viewer vwr;
   private ScriptEval e;
 
@@ -112,10 +113,11 @@ public class MathExt {
       throws ScriptException {
     switch (tok) {
     case T.now:
+      String msg = (args.length > 1 ? SV.sValue(args[0]).trim() : "");
       return (args.length >= 1 && args[0].tok == T.string
           ? mp.addXStr((args.length == 1 ? new Date().toString()
-              : vwr.apiPlatform.getDateFormat(SV.sValue(args[1]))) + "\t"
-              + SV.sValue(args[0]).trim())
+              : vwr.apiPlatform.getDateFormat(SV.sValue(args[1]))) 
+        		  + (msg.length() == 0 ? "" : "\t" + msg))
           : mp.addXInt(((int) (System.currentTimeMillis() - t0))
               - (args.length == 0 ? 0 : args[0].asInt())));
     case T.abs:
@@ -470,7 +472,7 @@ public class MathExt {
       if (normalize)
         doNormalize(m4);
       return mp.addXStr(matToString((asRXYZ && m3 != null ? m3 : m4),
-          (asRXYZ ? 0x1 : asABC ? 0xABC : asUVW ? 0xDEF : 0) | (noFractions ? 0x1000 : 0)));
+          (asRXYZ ? 0x1 : asABC ? 0xABC : asUVW ? 0xDEF : 0) | (noFractions ? MATRIX_NO_FRACTIONS : 0)));
     }
     if (normalize)
       doNormalize(m4);
@@ -489,11 +491,13 @@ public class MathExt {
     m4.m23 -= Math.floor(c);
   }
 
+  private static final int MATRIX_NO_FRACTIONS = 0x1000;
+
   private String matToString(M34d m4, int mode) {
     SymmetryInterface sym = vwr.getSymStatic();
     String smode;
-    boolean noFractions = ((mode & 0x1000) != 0);
-    switch (mode) {
+    boolean noFractions = ((mode & MATRIX_NO_FRACTIONS) != 0);
+    switch (mode & ~MATRIX_NO_FRACTIONS) {
     case SV.FORMAT_RXYZ:
     case 0x1: // rxyz
       smode = "rxyz";
@@ -881,20 +885,34 @@ SymmetryInterface sym;
     }
     boolean isInfo = false;
     boolean asMatrix = (lastParam >= 0 && args[lastParam].tok == T.on);
+    boolean asString = false;
+    boolean noFractions = false;
     if (lastParam >= 0 && args[lastParam].tok == T.string) {
       String infoType = (String) args[lastParam].value;
-      isInfo = "info".equals(infoType); 
-      if (isInfo) {
-        if (isInfo && lastParam == 0) {
+      switch (infoType) {
+      case "info":
+        isInfo = true;
+        if (lastParam == 0) {
           SymmetryInterface sym = vwr.getCurrentUnitCell();
           return mp.addXMap(sym.getUnitCellInfoMap());      
         }        
         lastParam--;
-      } else {
+        break;
+      case "ABC":
+        noFractions = true;
+        infoType = "abc";
+        //$FALL-THROUGH$
+      case "abc":
+        asString = asMatrix = true;
+        lastParam--;
+        break;
+      default:
+        // a, b, c, alpha, beta, gamma, volume, dim, dimtype
         double infoValue = vwr.getUnitCellInfoStr(infoType);
         if (!Double.isNaN(infoValue)) {
           return mp.addXDouble(infoValue);
         }
+        break;
       }
     }
     Object o = getUnitCell(args, iatom, 0, lastParam);
@@ -919,7 +937,7 @@ SymmetryInterface sym;
             m4.setColumn4(i - 1, p.x, p.y, p.z, 0);
           }
         }
-        return mp.addXM4(m4);
+        return (asString ? mp.addXStr(matToString(m4, 0xABC|(noFractions ? MATRIX_NO_FRACTIONS : 0))) : mp.addXM4(m4));
       }
     }
     return (o != null && mp.addXObj(o));
@@ -980,11 +998,11 @@ SymmetryInterface sym;
           arg0 = (String) vwr.getCurrentModelAuxInfo().get(arg0);
           if (arg0 == null)
             return null;
-          if (isNot)
-            arg0 = "!" + arg0;
         } else {
-          arg0 = null;
+          arg0 = (String) vwr.getCurrentModelAuxInfo().get(JC.UNITCELL_PREFIX + arg0);
         }
+        if (arg0 != null && isNot)
+          arg0 = "!" + arg0;
       }
       break;
     }

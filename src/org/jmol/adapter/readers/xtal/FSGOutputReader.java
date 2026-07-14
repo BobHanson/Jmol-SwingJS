@@ -13,6 +13,7 @@ import org.jmol.util.BSUtil;
 import org.jmol.util.Logger;
 import org.jmol.util.SimpleUnitCell;
 import org.jmol.util.Vibration;
+import org.jmol.viewer.JC;
 import org.jmol.viewer.Viewer;
 
 import javajs.util.BS;
@@ -53,6 +54,9 @@ public class FSGOutputReader extends CifReader {
   private final static int DEFAULT_PRECISION = 5;
 
   private String loadNote;
+
+  private Lst<String> modelNames;
+  private Lst<String> modelSCIF;
   
   @SuppressWarnings("unchecked")
   @Override
@@ -74,23 +78,46 @@ public class FSGOutputReader extends CifReader {
   protected Object readData() throws Exception {
     if (readingSCIF) {
       // get CIF data
+      if (htParams.containsKey("modelNumber"))
+        desiredModelNumber = ((Integer) htParams.get("modelNumber")).intValue();
       String s = "";
       loadNote = "";
       int n = 0;
+      modelNames = new Lst<>();
+      modelSCIF = new Lst<>();
       for (Entry<String, Object> e : scifOutputs.entrySet()) {
         String name = e.getKey();
-        loadNote += "\nmodel " + ++n + " is " + name;
+        ++n;
         String scif = (String) e.getValue();
-        scif.replace("\ndata_", "\ndata_" + name + "_");
+        int pt = scif.indexOf("\ndata_");
+        int pt1 = scif.indexOf('\n', pt + 1);
+        scif = scif.substring(0, pt + 6) + name + scif.substring(pt1);
         s += scif + "\n";
+        if (desiredModelNumber < 1 || desiredModelNumber == n) {
+          modelNames.addLast(name);
+          modelSCIF.addLast(scif);
+        }
       }
-      loadNote = n + " models were read from the FSG JSON:" + loadNote;
       reader = Rdr.getBR(s);
-      return super.readData();
+      Object o = super.readData();
+      appendLoadNote((asc.iSet + 1) + " models were read from the FSG JSON");
+      return  o;
     }
     return super.readData();
   }
-  
+
+  @Override
+  protected void newAtomSet() {
+    super.newAtomSet();
+    int n = 0;
+    if (modelNames != null) {
+      String name = modelNames.removeItemAt(0);
+      String note = "model " + ++n + " is " + name;
+      appendLoadNote(note);
+      asc.setCurrentModelInfo("scif", modelSCIF.removeItemAt(0));
+      asc.setCurrentModelInfo(JC.INFO_TITLE, name);
+    }
+  }
 
   @Override
   public void initializeReader() throws Exception {

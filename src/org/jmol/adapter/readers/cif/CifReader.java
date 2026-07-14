@@ -174,6 +174,10 @@ public class CifReader extends AtomSetCollectionReader {
   private int maxOps = -1; // never changed
   private int nops; // never significant
 
+  public Map<String, Integer> modelMap;
+  private boolean haveGlobalDummy;
+  private String structureId;
+
   protected void resetGlobalsForNewData() {
     isAFLOW = false;
     pdbID = null;
@@ -355,6 +359,7 @@ public class CifReader extends AtomSetCollectionReader {
           || key.contains("_ssg_name")
           || key.contains("_name_chen")
           || key.contains("_magn_name") 
+          || key.contains("_magn_number") 
           || key.contains("_bns_name")) {
         processSymmetrySpaceGroupName();
       } else if (key.startsWith("_space_group_transform")
@@ -375,6 +380,8 @@ public class CifReader extends AtomSetCollectionReader {
         pdbID = (String) field;
       } else if (key.startsWith("_topol_")) {
         getTopologyParser().ProcessRecord(key, (String) field);
+      } else if (key.equals("_structure_id")) {
+        structureId = (String) field;
       } else {
         // see MMCifReader or MSRdr
         processSubclassEntry();
@@ -412,6 +419,7 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private boolean newData() throws Exception {
+    System.out.println("newData " + key);
     isLigand = false;
     if (asc.atomSetCount == 0)
       iHaveDesiredModel = false;
@@ -499,7 +507,7 @@ public class CifReader extends AtomSetCollectionReader {
 	  
     //    _space_group_spin.transform_spinframe_P_matrix  [[1 -1 0] [1 0 0] [0 0 1]]
     //    _space_group_spin.transform_spinframe_P_abc  'a,b,c'
-    //    _space_group_spin.collinear_direction . 
+    //    _space_group_spin.collinear_direction_xyz . 
     //    _space_group_spin.coplanar_perp_uvw "0,0,1"
     //    _space_group_spin.rotation_axis "0,0,1"
     //    _space_group_spin.rotation_angle 45
@@ -557,7 +565,8 @@ public class CifReader extends AtomSetCollectionReader {
       field = addSpinFrameExt(XtalSymmetry.ROT_ANGLE, false);
       return;
     case "collinear_direction":
-      // extraneous, for information only 
+    case "collinear_direction_xyz":
+      // extraneous, for information only (but required for collinear?
       //field = addSpinFrameExt("coldir", true);
       break;
     case "coplanar_perp_uvw":
@@ -679,10 +688,6 @@ public class CifReader extends AtomSetCollectionReader {
   //    return magr;
   //  }
 
-  public Map<String, Integer> modelMap;
-
-  private boolean haveGlobalDummy;
-
   protected void newModel(int modelNo) throws Exception {
     if (modelNo < 0) {
       if (modelNumber == 1 && asc.ac == 0 && nAtoms == 0 && !haveGlobalDummy
@@ -714,6 +719,7 @@ public class CifReader extends AtomSetCollectionReader {
     } else if (asc.iSet >= 0) {
       applySymmetryAndSetTrajectory();
     }
+    structureId = null;
     isMolecular = false;
     if (auditBlockCode == null) {
       modDim = 0;
@@ -830,15 +836,17 @@ public class CifReader extends AtomSetCollectionReader {
     // be no center of symmetry, no rotation-inversions, 
     // no atom-centered rotation axes, and no mirror or glide planes.
     
-    if (isMMCIF)
-      checkNearAtoms = false;
     boolean doCheckBonding = doCheckUnitCell && !isMMCIF;
-    if (isMMCIF && asc.iSet >= 0) {
-      int modelIndex = asc.iSet;
-      asc.setCurrentModelInfo("PDB_CONECT_firstAtom_count_max",
-          new int[] { asc.getAtomSetAtomIndex(modelIndex),
-              asc.getAtomSetAtomCount(modelIndex), maxSerial });
+    if (isMMCIF) {
+      checkNearAtoms = false;
+      if (asc.iSet >= 0) {
+        int modelIndex = asc.iSet;
+        asc.setCurrentModelInfo("PDB_CONECT_firstAtom_count_max",
+            new int[] { asc.getAtomSetAtomIndex(modelIndex),
+                asc.getAtomSetAtomCount(modelIndex), maxSerial });
+      }
     }
+    
     if (!haveCellWaveVector)
       modDim = 0;
     if (doApplySymmetry && !iHaveFractionalCoordinates)
@@ -847,19 +855,25 @@ public class CifReader extends AtomSetCollectionReader {
       modDim = 0;
     }
     if (spinOnly) {
+      // have to keep updating this for additional models from 0
+      // don't know why exactly, but it is important to do that
+      // between models
       BS bs = asc.getBSAtoms(-1);
-      for (int i = asc.getAtomSetAtomIndex(asc.iSet); i < asc.ac; i++) {
-        bs.setBitTo(i, asc.atoms[i].vib != null && asc.atoms[i].vib.lengthSquared() > 0);
+      for (int i = 0; i < asc.ac; i++) {
+        boolean isVib = (asc.atoms[i].vib != null && asc.atoms[i].vib.lengthSquared() > 0);
+        if (!isVib)
+          bs.clear(i);
       }
     }
+    applySymTrajASCR();
+    // htCellTypes will be augmented by "spin" in applySymTrajASCR() if warranted
     if (htCellTypes != null) {
       for (Entry<String, String> e : htCellTypes.entrySet()) {
         asc.setCurrentModelInfo(JC.UNITCELL_PREFIX + e.getKey(), e.getValue());
         appendLoadNote(JC.UNITCELL_PREFIX + e.getKey() + " = " + e.getValue());
       }
+      htCellTypes = null;
     }
-    applySymTrajASCR();
-    htCellTypes = null;
     if (!haveCellWaveVector) {
       if (!isMolecular) {
         asc.setBSAtomsForSet(-1);
@@ -942,7 +956,7 @@ public class CifReader extends AtomSetCollectionReader {
         if (pdbID != null)
           asc.setCurrentModelInfo("pdbID", pdbID);
       }
-      asc.newAtomSet();
+      newAtomSet();
       if (isMMCIF) {
         setModelPDB(true);
         if (pdbID != null)
@@ -951,6 +965,10 @@ public class CifReader extends AtomSetCollectionReader {
     } else {
       asc.setCollectionName(thisDataSetName);
     }
+  }
+
+  protected void newAtomSet() {
+    asc.newAtomSet();
   }
 
   /**
@@ -1001,14 +1019,19 @@ public class CifReader extends AtomSetCollectionReader {
     }
     
     String s = cifParser.toUnicode((String) field);
-    setSpaceGroupName(lastSpaceGroupName = (
-        key.indexOf("h-m") > 0 ? "HM:"
-        : modulated ? "SSG:" 
-        : key.indexOf("spin") > 0 || key.indexOf("spsg") > 0 ? "spinSG:"
-        : key.indexOf("bns") >= 0 ? "BNS:"
-        : key.indexOf("hall") >= 0 ? "Hall:" 
-        : "")
-        + s);
+    if (key.indexOf("number_bns") >= 0) {
+      s = (lastSpaceGroupName == null ? "BNS #" + s : lastSpaceGroupName + " #" + s);
+    } else {
+      s = (
+          key.indexOf("h-m") > 0 ? "HM:"
+          : modulated ? "SSG:" 
+          : key.indexOf("spin") > 0 || key.indexOf("spsg") > 0 ? "spinSG:"
+          : key.indexOf("bns") >= 0 ? "BNS:"
+          : key.indexOf("hall") >= 0 ? "Hall:" 
+          : "")
+          + s;
+    }
+    setSpaceGroupName(lastSpaceGroupName = s);
   }
 
   private void addLatticeVectors() {
@@ -1166,17 +1189,8 @@ public class CifReader extends AtomSetCollectionReader {
     boolean isLigand = false;
     if (key.startsWith(CAT_ATOM_SITE)
         || (isLigand = key.startsWith("_chem_comp_atom_"))) {
-      if (!processAtomSiteLoopBlock(isLigand))
-        return;
-      if (thisDataSetName.equals("global"))
-        asc.setCollectionName(thisDataSetName = chemicalName);
-      if (!thisDataSetName.equals(lastDataSetName)) {
-        asc.setAtomSetName(thisDataSetName);
-        lastDataSetName = thisDataSetName;
-      }
-      asc.setCurrentModelInfo("chemicalName", chemicalName);
-      asc.setCurrentModelInfo("structuralFormula", thisStructuralFormula);
-      asc.setCurrentModelInfo("formula", thisFormula);
+      if (processAtomSiteLoopBlock(isLigand))
+        setModelInfoForAtoms();
       return;
     }
     if (key.startsWith(CAT_SGOP) || key.startsWith("_symmetry_equiv_pos")
@@ -1213,6 +1227,23 @@ public class CifReader extends AtomSetCollectionReader {
       return;
     }
     skipLoop(false);
+  }
+
+  private void setModelInfoForAtoms() {
+    if (structureId != null) {
+      asc.setAtomSetName(structureId);
+      thisDataSetName = structureId;
+      asc.setCurrentModelInfo("structureID", structureId);
+    }
+    if (thisDataSetName.equals("global"))
+      asc.setCollectionName(thisDataSetName = chemicalName);
+    if (!thisDataSetName.equals(lastDataSetName)) {
+      asc.setAtomSetName(thisDataSetName);
+      lastDataSetName = thisDataSetName;
+    }
+    asc.setCurrentModelInfo("chemicalName", chemicalName);
+    asc.setCurrentModelInfo("structuralFormula", thisStructuralFormula);
+    asc.setCurrentModelInfo("formula", thisFormula);
   }
 
   protected boolean processSubclassLoopBlock() throws Exception {
@@ -1452,7 +1483,7 @@ public class CifReader extends AtomSetCollectionReader {
   //final private static byte spin_moment_spherical_azimuthal = 85;
   //final private static byte spin_moment_spherical_polar = 86;
   
-  
+
   final protected static String CAT_ATOM_SITE = "_atom_site";
   final private static String[] atomFields = { //
       "*_type_symbol", //0
@@ -1693,8 +1724,8 @@ public class CifReader extends AtomSetCollectionReader {
           if (fNewAtomSet != NONE) {
             if (asc.iSet < 0 && newAtomSetLabel == NONE) {
               nextAtomSet();
-              asc.newAtomSet();
-              newAtomSetLabel = label;
+              newAtomSet();
+              newAtomSetLabel = label;              
             }
             asc.atomSymbolicMap.put(field, atom);
           }

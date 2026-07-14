@@ -1012,6 +1012,9 @@ public class SimpleUnitCell {
     suvw = PT.rep(suvw.toLowerCase(), " ", "");
     if (suvw.indexOf('(') < 0)
       return suvw;
+    boolean isNeg = suvw.startsWith("!");
+    if (isNeg)
+      suvw = suvw.substring(1);
     if (suvw.indexOf("pi") >= 0) {
       suvw = PT.rep(suvw, "pi", "(180)");
     }
@@ -1078,7 +1081,8 @@ public class SimpleUnitCell {
       }
       parts[p] = part.substring(1);
     }
-    return PT.join(parts, ',', 0);
+    String ret = (isNeg ? "!" : "") + PT.join(parts, ',', 0);
+    return ret;
   }
 
   @Override

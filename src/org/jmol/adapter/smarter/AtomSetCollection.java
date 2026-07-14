@@ -235,7 +235,7 @@ public class AtomSetCollection {
       int[] atomInfo = (int[]) info.get("PDB_CONECT_firstAtom_count_max");
       if (atomInfo != null)
         atomInfo[0] += existingAtomsCount;
-      setCurrentModelInfo("title", collection.collectionName);
+      setCurrentModelInfo(JC.INFO_TITLE, collection.collectionName);
       setAtomSetName(collection.getAtomSetName(atomSetNum));
       for (int atomNum = 0; atomNum < collection.atomSetAtomCounts[atomSetNum]; atomNum++) {
         if (bsAtoms != null)
@@ -881,7 +881,7 @@ public class AtomSetCollection {
     if (doClearMap) { // false for CASTEP reader only
       clearMap();
     }
-    setCurrentModelInfo("title", collectionName);
+    setCurrentModelInfo(JC.INFO_TITLE, collectionName);
   }
 
   private void clearMap() {
