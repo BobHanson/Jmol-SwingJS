@@ -301,8 +301,8 @@ public class IsoExt extends ScriptExt {
     boolean drawAxes = false;
     boolean drawUC = false;
     int tok = 0;
-    P3d lattice = null;
-    SymmetryInterface uc = null;
+    P3d lattice = null, offset = null;
+    SymmetryInterface uc = null, ucHKL = null;
     for (int i = eval.iToken; i < slen; ++i) {
       String propertyName = null;
       Object propertyValue = null;
@@ -342,7 +342,7 @@ public class IsoExt extends ScriptExt {
         break;
       case T.axes:
         if (!chk)
-          vwr.getModelkit(false).drawAxes(null, thisId, swidth);
+          vwr.getModelkit(false).drawAxes(null, thisId, swidth, offset);
         return;
       case T.lattice:
       case T.unitcell:
@@ -393,33 +393,13 @@ public class IsoExt extends ScriptExt {
           if (isBest)
             invArg();
           drawUC = true;
-          if (eval.isArrayParameter(i + 1)) {
-            // unitcell [o a b c]
-            P3d[] oabc = eval.getPointArray(i + 1, -1, false, true);
-            i = eval.iToken;
-            if (!chk)
-              uc = vwr.getSymTemp().getUnitCell(oabc, false, null);
-          } else {
-            switch (tokAt(i + 1)) {
-            case T.string:
-              // modelkit spacegroup xx unitcell "a,b,2c" or "unitcell_xxx"
-              String tr = stringParameter(i + 1).toLowerCase();
-              i = eval.iToken;
-              if (tr.startsWith(JC.UNITCELL_PREFIX))
-                tr = (String) vwr.getCurrentModelAuxInfo().get(tr);
-              // empty string can be used here to skip this and add a title still
-              if (!chk && tr.length() > 0 && (uc = vwr.getCurrentUnitCell()) != null) {
-                uc = vwr.getSymTemp().getUnitCell(uc.getV0abc(tr, null), false,
-                    "draw");
-              }
-              break;
-            case T.point3f:
-            case T.leftbrace:
-              // draw unitcell {444 666 1}
-              ucLattice = eval.getFractionalPoint(i + 1);
-              i = eval.iToken;
-              break;
-            }
+          Object o = getUnitCellParameter(i, true);
+          if (o instanceof T3d) {
+            ucLattice = (T3d) o;
+            i = e.iToken;
+          } else if (o != null){
+            uc = (SymmetryInterface) o;
+            i = e.iToken;
           }
           if (tokAt(i + 1) == T.lattice) {
             if (tokIntersectBox == T.unitcell)
@@ -521,17 +501,22 @@ public class IsoExt extends ScriptExt {
           iOn = ++i;
         }
         break;
-      case T.line:
       case T.hkl:
+        if (tokAt(i + 1) == T.unitcell) {
+          ucHKL = (SymmetryInterface) getUnitCellParameter(++i, false);
+          i = e.iToken;
+        }      
+        //$FALL-THROUGH$
+      case T.line:
       case T.plane:
         boolean isProjection = (iOn == i - 1);
         if (!havePoints && !isIntersect && tokIntersectBox == 0) {
           // no intersection
-          if (eval.theTok == T.hkl) {
+          if (tok == T.hkl) {
             havePoints = true;
             setShapeProperty(JC.SHAPE_DRAW, "plane", null);
             Lst<P3d> list = new Lst<P3d>();
-            plane = eval.hklParameter(++i, list, true);
+            plane = eval.hklParameterUC(++i, list, true, ucHKL);
             i = eval.iToken;
             propertyName = "coords";
             propertyValue = list;
@@ -561,7 +546,7 @@ public class IsoExt extends ScriptExt {
           plane = eval.planeParameter(i, isBest);
           break;
         case T.hkl:
-          plane = eval.hklParameter(++i, null, true);
+          plane = eval.hklParameterUC(++i, null, true, ucHKL);
           if (tokAt(eval.iToken + 1) == T.all) {
             isAll = true;
             eval.iToken++;
@@ -1128,10 +1113,10 @@ public class IsoExt extends ScriptExt {
         propertyValue = Boolean.TRUE;
         break;
       case T.offset:
-        P3d pt = getPoint3f(++i, true);
+        offset = getPoint3f(++i, true);
         i = eval.iToken;
         propertyName = "offset";
-        propertyValue = pt;
+        propertyValue = offset;
         break;
       case T.crossed:
         propertyName = "crossed";
@@ -1269,8 +1254,43 @@ public class IsoExt extends ScriptExt {
         if (pt >= 0)
           thisId = thisId.substring(0, pt);
       }
-      vwr.getModelkit(false).drawAxes(pts, thisId, (drawAxes ? swidth : "delete"));
+      vwr.getModelkit(false).drawAxes(pts, thisId, (drawAxes ? swidth : "delete"), offset);
     }
+  }
+
+  private Object getUnitCellParameter(int i, boolean allowLattice) throws ScriptException {
+    if (e.isArrayParameter(i + 1)) {
+      // unitcell [o a b c]
+      P3d[] oabc = e.getPointArray(i + 1, -1, false, true);
+      i = e.iToken;
+      if (!chk)
+        return vwr.getSymTemp().getUnitCell(oabc, false, null);
+    } else {
+      switch (tokAt(i + 1)) {
+      case T.string:
+        // modelkit spacegroup xx unitcell "a,b,2c" or "unitcell_xxx"
+        String tr = stringParameter(i + 1).toLowerCase();
+        i = e.iToken;
+        if (tr.startsWith(JC.UNITCELL_PREFIX))
+          tr = (String) vwr.getCurrentModelAuxInfo().get(tr);
+        // empty string can be used here to skip this and add a title still
+        SymmetryInterface uc = null;
+        if (!chk && tr.length() > 0 && (uc = vwr.getCurrentUnitCell()) != null) {
+          uc = vwr.getSymTemp().getUnitCell(uc.getV0abc(tr, null), false,
+              "draw");
+        }
+        return uc;
+      case T.point3f:
+      case T.leftbrace:
+        // draw unitcell {444 666 1}
+        T3d ucLattice = e.getFractionalPoint(i + 1);
+        i = e.iToken;
+        if (!allowLattice)
+          invArg();
+        return ucLattice;
+      }
+    }
+    return null;
   }
 
   private void mo(boolean isInitOnly, int iShape) throws ScriptException {

@@ -188,8 +188,9 @@ public class JmolDataReader extends PdbReader {
 
   @Override
   protected void processAtom2(Atom atom, int serial, double x, double y, double z, int charge) {
+    Vibration vib = null;
     if (isSpin) {
-      Vibration vib = new Vibration();
+      vib = new Vibration();
       vib.set(x, y, z);
       vib.isFrom000 = true;
       atom.vib = vib;
@@ -198,11 +199,16 @@ public class JmolDataReader extends PdbReader {
       z *= spinFactor;
     }
     super.processAtom2(atom, serial, x, y, z, charge);
+    if (vib != null) {
+      vib.spin = (int) atom.bfactor;
+      atom.bfactor = Double.NaN;
+    }    
   }
 
   @Override
   protected void setAdditionalAtomParameters(Atom atom) {
-    if (residueNames != null && atom.index < residueNames.length)
+    super.setAdditionalAtomParameters(atom);
+       if (residueNames != null && atom.index < residueNames.length)
       atom.group3 = residueNames[atom.index];
     if (atomNames != null && atom.index < atomNames.length)
       atom.atomName = atomNames[atom.index];
@@ -291,12 +297,12 @@ public class JmolDataReader extends PdbReader {
     // prepare data for property plotting
 
     double pdbFactor = 1;
-    double[] dataX = null, dataY = null, dataZ = null;
+    double[] dataX = null, dataY = null, dataZ = null, data3 = null;
     dataX = e.getBitsetPropertyFloat(bs, propToks[0] | T.selectedfloat,
         propToks[0] == T.property ? props[0] : null,
         (minXYZ == null ? Double.NaN : minXYZ.x),
         (maxXYZ == null ? Double.NaN : maxXYZ.x));
-    String[] propData = new String[3];
+    String[] propData = new String[4];
     propData[0] = props[0] + " " + Escape.eAD(dataX);
     if (props[1] != null) {
       dataY = e.getBitsetPropertyFloat(bs, propToks[1] | T.selectedfloat,
@@ -311,6 +317,11 @@ public class JmolDataReader extends PdbReader {
           (minXYZ == null ? Double.NaN : minXYZ.z),
           (maxXYZ == null ? Double.NaN : maxXYZ.z));
       propData[2] = props[2] + " " + Escape.eAD(dataZ);
+    }
+    if (props[3] != null) {
+      data3 = e.getBitsetPropertyFloat(bs, propToks[3] | T.selectedfloat,
+          propToks[3] == T.property ? props[3] : null, Double.NaN, Double.NaN);
+      propData[3] = props[3] + " " + Escape.eAD(data3);
     }
     if (minXYZ == null)
       minXYZ = P3d.new3(getPlotMinMax(dataX, false, propToks[0]),
@@ -361,7 +372,7 @@ public class JmolDataReader extends PdbReader {
           dataZ[i] = (dataZ[i] - center.z) / factors.z * pdbFactor;
     }
     return new Object[] { bs, dataX, dataY, dataZ, minXYZ, maxXYZ, factors,
-        center, format, propData, Double.valueOf(1) };
+        center, format, propData, Double.valueOf(1), data3 };
   }
 
   private static double getPlotMinMax(double[] data, boolean isMax, int tok) {
@@ -462,6 +473,8 @@ public class JmolDataReader extends PdbReader {
     Lst<Vibration> lst = new Lst<>();
     for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
       Vibration v = vwr.ms.getVibration(i, false);
+      int spin = vwr.ms.getSpin(i);
+      v.spin = spin;
       boolean found = false;
       for (int j = lst.size(); --j >= 0;) {
         if (v.distance(lst.get(j)) < 0.1d) {

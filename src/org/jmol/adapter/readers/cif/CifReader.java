@@ -77,6 +77,11 @@ import javajs.util.Rdr;
  */
 public class CifReader extends AtomSetCollectionReader {
 
+  private boolean ignoreCollinearSpinBasisIfGiven = false; // no plan to set this true; just for testing.
+  private boolean flagCollinearSpinBasisIfGiven = true; // no plan to set this true; just for testing.
+
+  private boolean isCollinear;
+
   /**
    * Allows checking specific blocks
    * 
@@ -118,7 +123,6 @@ public class CifReader extends AtomSetCollectionReader {
   private Hashtable<String, Object> htAudit;
   public Lst<String> symops;
 
-  
   protected boolean skipping;
 
   private boolean isAFLOW;
@@ -142,18 +146,16 @@ public class CifReader extends AtomSetCollectionReader {
   private String appendedData;
   protected int nAtoms;
   protected int ac;
-  
+
   private String auditBlockCode;
   private String lastSpaceGroupName;
   protected boolean isCourseGrained;
 
-
   private boolean noLattice;
-  
-  
+
   boolean haveCellWaveVector;
   private boolean modulated;
-  
+
   protected Map<String, String> htGroup1;
   protected int nAtoms0;
   private int titleAtomSet = 1;
@@ -163,10 +165,10 @@ public class CifReader extends AtomSetCollectionReader {
   private boolean stopOn_SHELX_HKL;
   private boolean spinFrameSetByFILTER;
   private String spinFrame;
-  private String spinFrameExt;
+  private Map<String, String> spinFrameExt;
 
   // need resets on data_ tag
-  
+
   protected boolean isMagCIF, isSpinCIF;
   private boolean haveSpinReferences;
   private boolean haveMagneticMoments;
@@ -182,9 +184,9 @@ public class CifReader extends AtomSetCollectionReader {
     isAFLOW = false;
     pdbID = null;
     // general
-//    if (!ignoreFileSpaceGroupName)
-//      sgName = null;
-    System.out.println("sgName is " +sgName);
+    //    if (!ignoreFileSpaceGroupName)
+    //      sgName = null;
+    System.out.println("sgName is " + sgName);
     latticeType = null;
     iHaveUnitCell = ignoreFileUnitCell;
     iHaveSymmetryOperators = false;
@@ -197,14 +199,14 @@ public class CifReader extends AtomSetCollectionReader {
     lstSpinLattices = null;
     mapSpinIdToUVW = null;
     if (!spinFrameSetByFILTER)
-      spinFrame = null;        
-    spinFrameExt = null;    
+      spinFrame = null;
+    spinFrameExt = null;
   }
-  
+
   @Override
   public void initializeReader() throws Exception {
     initSubclass();
-    stopOn_SHELX_HKL = checkFilterKey("STOPONSHELXHKL");    
+    stopOn_SHELX_HKL = checkFilterKey("STOPONSHELXHKL");
     allowPDBFilter = true;
     appendedData = (String) htParams.get("appendedData");
     spinOnly = checkFilterKey("SPINONLY");
@@ -212,7 +214,8 @@ public class CifReader extends AtomSetCollectionReader {
     String conf = getFilter("CONF ");
     if (conf != null)
       configurationPtr = parseIntStr(conf);
-    if (filterCased != null && filterCased.toLowerCase().startsWith("spinframe=")) {
+    if (filterCased != null
+        && filterCased.toLowerCase().startsWith("spinframe=")) {
       spinFrame = filterCased.substring(10).trim();
       int pt = spinFrame.indexOf(";");
       if (pt >= 0)
@@ -277,9 +280,11 @@ public class CifReader extends AtomSetCollectionReader {
 
   private boolean continueWith(String key) {
     boolean isHKL = false;
-    boolean ret = key != null && (!stopOn_SHELX_HKL || (ac == 0 || !key.equals("_shelx_hkl_file")));
+    boolean ret = key != null
+        && (!stopOn_SHELX_HKL || (ac == 0 || !key.equals("_shelx_hkl_file")));
     if (ret && isHKL)
-      System.err.println("CIFReader reading _shelx_hkl_file; use FILTER 'StopOnShelxHKL' to stop reading when this is found");
+      System.err.println(
+          "CIFReader reading _shelx_hkl_file; use FILTER 'StopOnShelxHKL' to stop reading when this is found");
     return ret;
   }
 
@@ -355,18 +360,15 @@ public class CifReader extends AtomSetCollectionReader {
       } else if (key.startsWith("_symmetry_space_group_name_h-m")
           || key.equals("_space_group_it_number")
           || key.startsWith("_symmetry_space_group_name_hall")
-          || key.startsWith("_space_group_name") 
-          || key.contains("_ssg_name")
-          || key.contains("_name_chen")
-          || key.contains("_magn_name") 
-          || key.contains("_magn_number") 
-          || key.contains("_bns_name")) {
+          || key.startsWith("_space_group_name") || key.contains("_ssg_name")
+          || key.contains("_name_chen") || key.contains("_magn_name")
+          || key.contains("_magn_number") || key.contains("_bns_name")) {
         processSymmetrySpaceGroupName();
       } else if (key.startsWith("_space_group_transform")
           || key.startsWith("_parent_space_group")
           || key.startsWith("_space_group_magn_transform")
           || key.contains("_space_group_spin")) {
-                  processUnitCellTransform();
+        processUnitCellTransform();
       } else if (key.contains("_database_code")) {
         addModelTitle("ID");
       } else if (titleRecords.contains("_" + key + "__")) {
@@ -415,7 +417,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (maxOps >= 0 && nops++ > maxOps)
       return 0;
     return super.setSymmetryOperator(xyz);
-    
+
   }
 
   private boolean newData() throws Exception {
@@ -463,7 +465,8 @@ public class CifReader extends AtomSetCollectionReader {
    * 
    * Process the unit cell transformation as indicated by _parent_space_group or
    * _space_group_magn (or older _magentic_space_group)
-   * @throws Exception 
+   * 
+   * @throws Exception
    * 
    */
   private void processUnitCellTransform() throws Exception {
@@ -484,8 +487,9 @@ public class CifReader extends AtomSetCollectionReader {
     // _parent_space_group.transform_Pp_abc   'a,b,c;0,0,0'             -- no interest to us
 
     if (key.startsWith("_space_group_spin_")) {
-          processSpinSpaceGroup();
-    } else if (key.contains("_from_parent") || key.contains("child_transform")) {
+      processSpinSpaceGroup();
+    } else if (key.contains("_from_parent")
+        || key.contains("child_transform")) {
       addCellType(JC.CELL_TYPE_MAGNETIC_PARENT, (String) field, true);
     } else if (key.contains("_to_standard")
         || key.contains("transform_bns_pp_abc")) {
@@ -496,15 +500,15 @@ public class CifReader extends AtomSetCollectionReader {
 
   private void processSpinSpaceGroup() throws Exception {
 
-	//  _space_group_spin_spin_part_point_group: 12/mmm
-	//  _space_group_spin_transform_to_input_pp: 0.666667a+0.333333b,-0.333333a-0.666667b,-c;1/9,2/9,0
-	//  _space_group_spin_transform_to_magnetic_primitive_pp: -0.333333a-0.666667b,-0.333333a+0.333333b,-c;0,0,0
-	//  _space_group_spin_transform_to_l0std_pp: -0.333333a-0.666667b,-0.333333a+0.333333b,-c;0,0,0
-	//  _space_group_spin_transform_to_g0std_pp: -b,-a,-c;0,0,0
-	//  _space_group_spin_l0_number
+    //  _space_group_spin_spin_part_point_group: 12/mmm
+    //  _space_group_spin_transform_to_input_pp: 0.666667a+0.333333b,-0.333333a-0.666667b,-c;1/9,2/9,0
+    //  _space_group_spin_transform_to_magnetic_primitive_pp: -0.333333a-0.666667b,-0.333333a+0.333333b,-c;0,0,0
+    //  _space_group_spin_transform_to_l0std_pp: -0.333333a-0.666667b,-0.333333a+0.333333b,-c;0,0,0
+    //  _space_group_spin_transform_to_g0std_pp: -b,-a,-c;0,0,0
+    //  _space_group_spin_l0_number
     //  _space_group_spin_ik
-	//  _space_group_spin_it
-	  
+    //  _space_group_spin_it
+
     //    _space_group_spin.transform_spinframe_P_matrix  [[1 -1 0] [1 0 0] [0 0 1]]
     //    _space_group_spin.transform_spinframe_P_abc  'a,b,c'
     //    _space_group_spin.collinear_direction_xyz . 
@@ -512,48 +516,47 @@ public class CifReader extends AtomSetCollectionReader {
     //    _space_group_spin.rotation_axis "0,0,1"
     //    _space_group_spin.rotation_angle 45
 
-//    _space_group_spin.fsg_oriented_spin_space_group_name_linear     "P 2_{alpha,beta,0}|-3 : (3^{2}_{001},3^{2}_{001},4^{1}_{001}) m_{001}|1"
-//    _space_group_spin.fsg_oriented_spin_space_group_name_latex     "P ^{2_{\alpha,\beta,0}}\bar{3} \mid (3^{2}_{001},3^{2}_{001},4^{1}_{001}) ^{m_{001}}1"
-//    _space_group_spin.fsg_G0_number  147
-//    _space_group_spin.fsg_L0_number  143
-//    _space_group_spin.fsg_it  2
-//    _space_group_spin.fsg_ik  12
-//    _space_group_spin.fsg_spin_space_point_group_name  "12/mmm"
-//    _space_group_spin.fsg_magnetic_phase  "AFM"
-//    _space_group_spin.fsg_spin_arithmetic_crystal_class_symbol  "-3P"
-//    _space_group_spin.fsg_magnetic_arithmetic_crystal_class_symbol  "-3P"
-//
-//    _space_group_spin.fsg_transform_to_input_Pp  '2/3a+1/3b,-1/3a-2/3b,-c;1/9,2/9,0'
-//    _space_group_spin.fsg_transform_to_magnetic_primitive_Pp  '2/3a+1/3b,-1/3a-2/3b,-c;1/9,2/9,0'
-//    _space_group_spin.fsg_transform_to_L0std_Pp  '2/3a+1/3b,-1/3a-2/3b,-c;1/3,2/3,0'
-//    _space_group_spin.fsg_transform_to_G0std_Pp  'a,b,c;0,0,0'
-//
-//    _space_group_spin.fsg_input_parent_space_group_name_H-M_alt  .
-//    _space_group_spin.fsg_input_parent_space_group_IT_number  .
+    //    _space_group_spin.fsg_oriented_spin_space_group_name_linear     "P 2_{alpha,beta,0}|-3 : (3^{2}_{001},3^{2}_{001},4^{1}_{001}) m_{001}|1"
+    //    _space_group_spin.fsg_oriented_spin_space_group_name_latex     "P ^{2_{\alpha,\beta,0}}\bar{3} \mid (3^{2}_{001},3^{2}_{001},4^{1}_{001}) ^{m_{001}}1"
+    //    _space_group_spin.fsg_G0_number  147
+    //    _space_group_spin.fsg_L0_number  143
+    //    _space_group_spin.fsg_it  2
+    //    _space_group_spin.fsg_ik  12
+    //    _space_group_spin.fsg_spin_space_point_group_name  "12/mmm"
+    //    _space_group_spin.fsg_magnetic_phase  "AFM"
+    //    _space_group_spin.fsg_spin_arithmetic_crystal_class_symbol  "-3P"
+    //    _space_group_spin.fsg_magnetic_arithmetic_crystal_class_symbol  "-3P"
+    //
+    //    _space_group_spin.fsg_transform_to_input_Pp  '2/3a+1/3b,-1/3a-2/3b,-c;1/9,2/9,0'
+    //    _space_group_spin.fsg_transform_to_magnetic_primitive_Pp  '2/3a+1/3b,-1/3a-2/3b,-c;1/9,2/9,0'
+    //    _space_group_spin.fsg_transform_to_L0std_Pp  '2/3a+1/3b,-1/3a-2/3b,-c;1/3,2/3,0'
+    //    _space_group_spin.fsg_transform_to_G0std_Pp  'a,b,c;0,0,0'
+    //
+    //    _space_group_spin.fsg_input_parent_space_group_name_H-M_alt  .
+    //    _space_group_spin.fsg_input_parent_space_group_IT_number  .
 
     String tag = key.substring(18);
     if (tag.indexOf("fsg_") >= 0)
-    		tag = PT.rep(tag, "fsg_", "");
+      tag = PT.rep(tag, "fsg_", "");
     switch (tag) {
-    case "number_chen":
-    case "number_chen_liu":
-      tag = "spsg_number";
+    case "collinear_direction":
+    case "collinear_direction_xyz":
+      isCollinear = true;
+      // required for collinear structures
+      // formerly: extraneous, for information only (but required for collinear?
+      // field = addSpinFrameExt("collinear_direction_xyz", true);
       break;
-    case "oriented_spin_space_group_name_linear":
-    case "name_chen":
-    case "name_chen_liu":
-      processSymmetrySpaceGroupName();
-      return;
-    case "transform_spinframe_p_matrix":
     case "transform_spinframe_p_abc":
-    case "spinframe_orientation_cartn":
-    case "spinframe_orientation_hex":
       if (spinFrameSetByFILTER) {
         System.out.println("CifReader spinFrame set by user to " + spinFrame
             + " file setting ignored: " + field);
-      } else {
-        spinFrame = tag.substring(tag.lastIndexOf("_") + 1) + ":" + field;
+        field = spinFrame;
       }
+      //$FALL-THROUGH$
+    case "transform_spinframe_p_matrix":
+    case "spinframe_orientation_cartn":
+    case "spinframe_orientation_hex":
+      addSpinFrameExt(tag, false);
       return;
     case "rotation_axis_cartn":
       field = addSpinFrameExt(XtalSymmetry.ROT_AXIS, false);
@@ -564,17 +567,21 @@ public class CifReader extends AtomSetCollectionReader {
     case "rotation_angle":
       field = addSpinFrameExt(XtalSymmetry.ROT_ANGLE, false);
       return;
-    case "collinear_direction":
-    case "collinear_direction_xyz":
-      // extraneous, for information only (but required for collinear?
-      //field = addSpinFrameExt("coldir", true);
-      break;
     case "coplanar_perp_uvw":
       // extraneous, for information only 
       // provided to point out the characteristics
       // of the symmetry operation spin components
       // field = addSpinFrameExt("perpuvw");
       break;
+    case "number_chen":
+    case "number_chen_liu":
+      tag = "spsg_number";
+      break;
+    case "oriented_spin_space_group_name_linear":
+    case "name_chen":
+    case "name_chen_liu":
+      processSymmetrySpaceGroupName();
+      return;
     case "g0_number":
       tag = "spsg_G0";
       break;
@@ -608,7 +615,7 @@ public class CifReader extends AtomSetCollectionReader {
       tag = null;
       break;
     default:
-      System.err.println("CIFReader unrecognized spin key " + key);
+      System.err.println("CIFReader unrecognized spin key " + key + " " + field);
       return;
     }
     if (tag != null)
@@ -619,9 +626,10 @@ public class CifReader extends AtomSetCollectionReader {
     String val = field.toString();
     if (doClean)
       val = PT.replaceAllCharacters(val, "[]\"", "");
-    if (spinFrameExt == null)
-      spinFrameExt = "";
-    spinFrameExt += ";" + name + "=" + val + ";";
+    if (spinFrameExt == null) {
+      spinFrameExt = new Hashtable<String, String>();
+    }
+    spinFrameExt.put(name, val);
     return val;
   }
 
@@ -812,10 +820,19 @@ public class CifReader extends AtomSetCollectionReader {
             field = header.substring(pt + 9).trim();
             addSpinFrameExt("version", false);
           }
+          if (ignoreCollinearSpinBasisIfGiven && isCollinear) {
+            // not implemented
+            field = "true";
+            addSpinFrameExt("ignoreForCollinear", false);
+          } else if (flagCollinearSpinBasisIfGiven && isCollinear) {
+            field = "true";
+            addSpinFrameExt("flagForCollinear", false);
+          }
         }
         if (htCellTypes == null)
           htCellTypes = new Hashtable<String, String>();
-        asc.getXSymmetry().finalizeMoments(spinFrame, spinFrameExt, htCellTypes);
+        asc.getXSymmetry().finalizeMoments(spinFrameExt,
+            htCellTypes);
         vibsFractional = true;
       }
     }
@@ -835,7 +852,7 @@ public class CifReader extends AtomSetCollectionReader {
     // No special-position atoms in mmCIF files, because there will
     // be no center of symmetry, no rotation-inversions, 
     // no atom-centered rotation axes, and no mirror or glide planes.
-    
+
     boolean doCheckBonding = doCheckUnitCell && !isMMCIF;
     if (isMMCIF) {
       checkNearAtoms = false;
@@ -846,7 +863,7 @@ public class CifReader extends AtomSetCollectionReader {
                 asc.getAtomSetAtomCount(modelIndex), maxSerial });
       }
     }
-    
+
     if (!haveCellWaveVector)
       modDim = 0;
     if (doApplySymmetry && !iHaveFractionalCoordinates)
@@ -860,7 +877,8 @@ public class CifReader extends AtomSetCollectionReader {
       // between models
       BS bs = asc.getBSAtoms(-1);
       for (int i = 0; i < asc.ac; i++) {
-        boolean isVib = (asc.atoms[i].vib != null && asc.atoms[i].vib.lengthSquared() > 0);
+        boolean isVib = (asc.atoms[i].vib != null
+            && asc.atoms[i].vib.lengthSquared() > 0);
         if (!isVib)
           bs.clear(i);
       }
@@ -890,8 +908,7 @@ public class CifReader extends AtomSetCollectionReader {
       throws Exception {
     // called by applySymTrajASCR
     // just for modulated, audit block, and magnetic structures
-    FileSymmetry sym = (haveSymmetry
-        ? asc.getXSymmetry().getBaseSymmetry()
+    FileSymmetry sym = (haveSymmetry ? asc.getXSymmetry().getBaseSymmetry()
         : null);
     if (sym != null && sym.getSpaceGroup() == null) {
       if (!isBinary && !isMMCIF) // ignore this for MMTF
@@ -941,7 +958,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (thisDataSetName.length() > 0)
       nextAtomSet();
     if (debugging)
-        Logger.debug(key);
+      Logger.debug(key);
     resetGlobalsForNewData();
   }
 
@@ -1004,7 +1021,7 @@ public class CifReader extends AtomSetCollectionReader {
   //  _space_group.magn_ssg_number_BNS 33.1.9.5.m145.?
   //  _space_group.magn_point_group "mm21'"
   //  _space_group_spin.number_SSG1  "47.123.1.1.L" 
-  
+
   /**
    * done by AtomSetCollectionReader
    * 
@@ -1017,18 +1034,17 @@ public class CifReader extends AtomSetCollectionReader {
     } else if (modulated) {
       return;
     }
-    
+
     String s = cifParser.toUnicode((String) field);
     if (key.indexOf("number_bns") >= 0) {
-      s = (lastSpaceGroupName == null ? "BNS #" + s : lastSpaceGroupName + " #" + s);
+      s = (lastSpaceGroupName == null ? "BNS #" + s
+          : lastSpaceGroupName + " #" + s);
     } else {
-      s = (
-          key.indexOf("h-m") > 0 ? "HM:"
-          : modulated ? "SSG:" 
-          : key.indexOf("spin") > 0 || key.indexOf("spsg") > 0 ? "spinSG:"
-          : key.indexOf("bns") >= 0 ? "BNS:"
-          : key.indexOf("hall") >= 0 ? "Hall:" 
-          : "")
+      s = (key.indexOf("h-m") > 0 ? "HM:"
+          : modulated ? "SSG:"
+              : key.indexOf("spin") > 0 || key.indexOf("spsg") > 0 ? "spinSG:"
+                  : key.indexOf("bns") >= 0 ? "BNS:"
+                      : key.indexOf("hall") >= 0 ? "Hall:" : "")
           + s;
     }
     setSpaceGroupName(lastSpaceGroupName = s);
@@ -1036,7 +1052,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   private void addLatticeVectors() {
     if (lstSpinLattices != null && !noLattice) {
-        asc.getSymmetry().addSpinLattice(lstSpinLattices, mapSpinIdToUVW);
+      asc.getSymmetry().addSpinLattice(lstSpinLattices, mapSpinIdToUVW);
     }
     if (noLattice)
       return;
@@ -1344,7 +1360,7 @@ public class CifReader extends AtomSetCollectionReader {
     }
     return true;
   }
-  
+
   //final private static byte JMOL_ATOM_INDEX = 0;
   final private static byte JMOL_ATOM_NAME = 1;
   final private static byte JMOL_ATOM_SITE_LABEL = 2;
@@ -1355,18 +1371,18 @@ public class CifReader extends AtomSetCollectionReader {
       "_jmol_atom_site_label" 
       };
 
-//  loop_
-//  _jmol_atom_index
-//  _jmol_atom_name
-//  _jmol_atom_site_label
-//    0 FE1    Fe1
-//    1 CL1    Cl1
-//    2 P1     P1
-//    3 N1     N1
-//  143 Q11   Xx11
+  //  loop_
+  //  _jmol_atom_index
+  //  _jmol_atom_name
+  //  _jmol_atom_site_label
+  //    0 FE1    Fe1
+  //    1 CL1    Cl1
+  //    2 P1     P1
+  //    3 N1     N1
+  //  143 Q11   Xx11
 
   private Map<String, String> htJmolNames;
-  
+
   private void processJmolBlock() throws Exception {
     htJmolNames = new Hashtable<>();
     parseLoopParameters(jmolAtomFields);
@@ -1375,7 +1391,7 @@ public class CifReader extends AtomSetCollectionReader {
       String cifName = getFieldString(JMOL_ATOM_SITE_LABEL);
       if (jmolName == null || cifName == null)
         continue;
-      htJmolNames.put(cifName,  jmolName);
+      htJmolNames.put(cifName, jmolName);
     }
   }
 
@@ -1470,7 +1486,7 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte LABEL_COMP_ID = 72;
   final private static byte LABEL_ATOM_ID = 73;
   final private static byte WYCKOFF_LABEL = 74;
-  final private static byte SITE_SYMMETRY_MULTIPLICITY= 75;
+  final private static byte SITE_SYMMETRY_MULTIPLICITY = 75;
   final private static byte SPIN_U_PRELIM = 76;
   final private static byte SPIN_V_PRELIM = 77;
   final private static byte SPIN_W_PRELIM = 78;
@@ -1482,7 +1498,6 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte spin_moment_magnitude = 84; // required if missing 
   //final private static byte spin_moment_spherical_azimuthal = 85;
   //final private static byte spin_moment_spherical_polar = 86;
-  
 
   final protected static String CAT_ATOM_SITE = "_atom_site";
   final private static String[] atomFields = { //
@@ -1574,7 +1589,6 @@ public class CifReader extends AtomSetCollectionReader {
       "*_spin_moment_spherical_azimuthal",
       "*_spin_moment_spherical_polar", //86
 
-      
   };
 
   //  final private static String singleAtomID = atomFields[CC_COMP_ID];
@@ -1651,7 +1665,7 @@ public class CifReader extends AtomSetCollectionReader {
     if (key2col[SPIN_U_PRELIM] != NONE || key2col[spin_moment_axis_u] != NONE) {
       disableField(MOMENT_X);
       disableField(MOMENT_Y);
-      disableField(MOMENT_Z);      
+      disableField(MOMENT_Z);
     }
     int modelField = key2col[MODEL_NO];
     int siteMult = 0;
@@ -1685,14 +1699,21 @@ public class CifReader extends AtomSetCollectionReader {
         int fNewAtomSet = NONE;
         int f0 = NONE;
         byte label = NONE; // will be set to the fNewAtomSet type
-        if ((f0 = fNewAtomSet = fieldProperty(key2col[LABEL])) != NONE && (label = LABEL) != NONE
-            || (fNewAtomSet = fieldProperty(key2col[CC_ATOM_ID])) != NONE && (label = CC_ATOM_ID) != NONE
-            || (fNewAtomSet = fieldProperty(key2col[LABEL_ATOM_ID])) != NONE && (label = LABEL_ATOM_ID) != NONE
-            || (f0 = fNewAtomSet = fieldProperty(key2col[ANISO_LABEL])) != NONE && (label = ANISO_LABEL) != NONE
-            || (fNewAtomSet = fieldProperty(key2col[ANISO_MMCIF_ID])) != NONE && (label = ANISO_MMCIF_ID) != NONE
-            || (f0 = fNewAtomSet = fieldProperty(key2col[MOMENT_LABEL])) != NONE && (label = MOMENT_LABEL) != NONE
-            || (f0 = fNewAtomSet = fieldProperty(key2col[spin_moment_label])) != NONE && (label = spin_moment_label) != NONE
-            ) {
+        if ((f0 = fNewAtomSet = fieldProperty(key2col[LABEL])) != NONE
+            && (label = LABEL) != NONE
+            || (fNewAtomSet = fieldProperty(key2col[CC_ATOM_ID])) != NONE
+                && (label = CC_ATOM_ID) != NONE
+            || (fNewAtomSet = fieldProperty(key2col[LABEL_ATOM_ID])) != NONE
+                && (label = LABEL_ATOM_ID) != NONE
+            || (f0 = fNewAtomSet = fieldProperty(key2col[ANISO_LABEL])) != NONE
+                && (label = ANISO_LABEL) != NONE
+            || (fNewAtomSet = fieldProperty(key2col[ANISO_MMCIF_ID])) != NONE
+                && (label = ANISO_MMCIF_ID) != NONE
+            || (f0 = fNewAtomSet = fieldProperty(key2col[MOMENT_LABEL])) != NONE
+                && (label = MOMENT_LABEL) != NONE
+            || (f0 = fNewAtomSet = fieldProperty(
+                key2col[spin_moment_label])) != NONE
+                && (label = spin_moment_label) != NONE) {
           if (f0 != NONE && atomLabels != null) {
             atom = asc.getAtomFromName((String) field);
             if (addAtomLabelNumbers || atom != null) {
@@ -1725,7 +1746,7 @@ public class CifReader extends AtomSetCollectionReader {
             if (asc.iSet < 0 && newAtomSetLabel == NONE) {
               nextAtomSet();
               newAtomSet();
-              newAtomSetLabel = label;              
+              newAtomSetLabel = label;
             }
             asc.atomSymbolicMap.put(field, atom);
           }
@@ -1868,34 +1889,34 @@ public class CifReader extends AtomSetCollectionReader {
           }
           atom.altLoc = (atom.part < 0 ? field.charAt(1) : firstChar);
 
-            // disorder group -1
+          // disorder group -1
 
-            // email exchange with Brian McMahon 22.10.11
-            //            see
-            //            https://journals.iucr.org/c/issues/2015/01/00/fa3356/ (in the below I
-            //            take PART to be the same as
-            //            _atom_site_disorder_group):
-            //
-            //            "The use of PART numbers, introduced in SHELXL93, has proved invaluable
-            //            in the refinement of disordered structures. Two atoms are considered to
-            //            be bonded if they have the same PART number or if one of them is in
-            //            PART 0. The resulting connectivity table is used for the generation of
-            //            H atoms (HFIX and AFIX), for setting up restraints such as DELU, SIMU,
-            //            RIGU, CHIV, BUMP and SAME, and for generating tables of geometric
-            //            parameters (BOND, CONF, HTAB). Usually, most of the atoms are in
-            //            PART 0, but, for example, a molecule or side chain dis­ordered over
-            //            three positions could use PART 1, PART 2 and PART 3. If the PART
-            //            number is negative, bonds are not generated to symmetry-equivalent
-            //            atoms. It should be noted that positive PART numbers 1, 2, 3 etc.
-            //            correspond to the alternative location indicators A, B, C etc. in
-            //            PDB format. However, this notation is difficult to use when there
-            //            is a disorder within a disorder."
+          // email exchange with Brian McMahon 22.10.11
+          //            see
+          //            https://journals.iucr.org/c/issues/2015/01/00/fa3356/ (in the below I
+          //            take PART to be the same as
+          //            _atom_site_disorder_group):
+          //
+          //            "The use of PART numbers, introduced in SHELXL93, has proved invaluable
+          //            in the refinement of disordered structures. Two atoms are considered to
+          //            be bonded if they have the same PART number or if one of them is in
+          //            PART 0. The resulting connectivity table is used for the generation of
+          //            H atoms (HFIX and AFIX), for setting up restraints such as DELU, SIMU,
+          //            RIGU, CHIV, BUMP and SAME, and for generating tables of geometric
+          //            parameters (BOND, CONF, HTAB). Usually, most of the atoms are in
+          //            PART 0, but, for example, a molecule or side chain dis­ordered over
+          //            three positions could use PART 1, PART 2 and PART 3. If the PART
+          //            number is negative, bonds are not generated to symmetry-equivalent
+          //            atoms. It should be noted that positive PART numbers 1, 2, 3 etc.
+          //            correspond to the alternative location indicators A, B, C etc. in
+          //            PDB format. However, this notation is difficult to use when there
+          //            is a disorder within a disorder."
 
-            // atom.part < 0 indicates the negative case; atom.altloc is the "n" of "-n"
-            // as symmetry is applied, if atom.isNegDisorder is true, then 
-            // the cloned atom is given an incremented altloc
-            // this only works with C2 and m; with higher-order symmetry, this
-            // will dump all the symmetry-related groups into the same configuration=2
+          // atom.part < 0 indicates the negative case; atom.altloc is the "n" of "-n"
+          // as symmetry is applied, if atom.isNegDisorder is true, then 
+          // the cloned atom is given an incremented altloc
+          // this only works with C2 and m; with higher-order symmetry, this
+          // will dump all the symmetry-related groups into the same configuration=2
 
           break;
         case GROUP_PDB:
@@ -2042,7 +2063,7 @@ public class CifReader extends AtomSetCollectionReader {
         continue;
       if ((id != null || wyckoff != null) && seqIdOrWyckoffCode > 0) {
         // mark as valid for return with getSeqID()
-    	  atom.seqIdOrWyckoffCode = seqIdOrWyckoffCode | (1<<31);
+        atom.seqIdOrWyckoffCode = seqIdOrWyckoffCode | (1 << 31);
       }
       if (modDim > 0 && siteMult != 0) {
         atom.seqIdOrWyckoffCode |= (siteMult << 16);
@@ -2182,12 +2203,13 @@ public class CifReader extends AtomSetCollectionReader {
   final private static byte SYM_SPIN_OP_UVW_ID = 17;
   final private static byte SYM_SPIN_UPART_ID = 18;
   final private static byte SYM_SPIN_UPART_UVW = 19;
-  
+
   final private static String CAT_SGOP = "_space_group_symop";
   final private static String[] symmetryOperationsFields = { 
       "*_operation_xyz",
       "*_magn_operation_xyz",
-      "*_ssg_operation_algebraic", 
+
+      "*_ssg_operation_algebraic",
       "*_magn_ssg_operation_algebraic",
       "_symmetry_equiv_pos_as_xyz", // old
       "_symmetry_ssg_equiv_pos_as_xyz", // old
@@ -2199,7 +2221,7 @@ public class CifReader extends AtomSetCollectionReader {
       "*_magn_centering_xyz", 
       "*_magn_ssg_centering_algebraic",
       "*_magn_ssg_centering_xyz", // preliminary
-      
+
       "*_spin_lattice_xyzt",
       "*_spin_lattice_uvw",
       "*_spin_lattice_uvw_id",
@@ -2207,10 +2229,10 @@ public class CifReader extends AtomSetCollectionReader {
       "*_spin_operation_xyzt",
       "*_spin_operation_uvw",
       "*_spin_operation_uvw_id",
-      
+
       "*_spin_upart_id",
       "*_spin_upart_uvw",
-      
+
   };
 
   /**
@@ -2367,6 +2389,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   /**
    * converts sqrt(3) to decimal format
+   * 
    * @param suvw
    * @return converted string
    */
@@ -2683,11 +2706,13 @@ public class CifReader extends AtomSetCollectionReader {
       Atom a1 = getAtomFromNameCheckCase((String) o[0]);
       Atom a2 = getAtomFromNameCheckCase((String) o[1]);
       if (a1 == null || a2 == null) {
-        System.err.println("CifReader checking GEOM_BOND " + o[0] + "-" + o[1] + " found " + a1 + " " + a2);
+        System.err.println("CifReader checking GEOM_BOND " + o[0] + "-" + o[1]
+            + " found " + a1 + " " + a2);
         continue;
       }
       if (Double.isNaN(a1.x) || Double.isNaN(a2.x)) {
-        System.err.println("CifReader checking GEOM_BOND " + o[0] + "-" + o[1] + " found x coord NaN");
+        System.err.println("CifReader checking GEOM_BOND " + o[0] + "-" + o[1]
+            + " found x coord NaN");
         continue;
       }
       int iatom1 = a1.index;
@@ -2708,9 +2733,8 @@ public class CifReader extends AtomSetCollectionReader {
         haveH = true;
       for (int j = bs1.nextSetBit(0); j >= 0; j = bs1.nextSetBit(j + 1)) {
         for (int k = bs2.nextSetBit(0); k >= 0; k = bs2.nextSetBit(k + 1)) {
-          if ((!isMolecular || !bsConnected[j + firstAtom].get(k))
-              && checkBond(atoms[j + firstAtom], atoms[k + firstAtom],
-                  distance, dx)) {
+          if ((!isMolecular || !bsConnected[j + firstAtom].get(k)) && checkBond(
+              atoms[j + firstAtom], atoms[k + firstAtom], distance, dx)) {
             addNewBond(j + firstAtom, k + firstAtom, order);
           }
         }
@@ -2789,8 +2813,7 @@ public class CifReader extends AtomSetCollectionReader {
     return false;
   }
 
-  private boolean checkBond(Atom a, Atom b, 
-                            double distance, double dx) {
+  private boolean checkBond(Atom a, Atom b, double distance, double dx) {
     boolean ret;
     if (iHaveFractionalCoordinates) {
       ret = checkBondDistance(a, b, distance, dx, 0, 0, 0, ptOffset);
@@ -2802,9 +2825,8 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   /**
-   * Used by CifReader to specifically find 
-   * a matching atom across a given range of i,j,k
-   * and within a given distance+-slop of each other. 
+   * Used by CifReader to specifically find a matching atom across a given range
+   * of i,j,k and within a given distance+-slop of each other.
    * 
    * @param f1
    * @param f2
@@ -2814,10 +2836,11 @@ public class CifReader extends AtomSetCollectionReader {
    * @param jRange
    * @param kRange
    * @param ptOffset
-   * @return       TRUE if ptOffset has been set.
+   * @return TRUE if ptOffset has been set.
    */
-  private boolean checkBondDistance(P3d f1, P3d f2, double distance, double slop,
-                              int iRange, int jRange, int kRange, P3d ptOffset) {
+  private boolean checkBondDistance(P3d f1, P3d f2, double distance,
+                                    double slop, int iRange, int jRange,
+                                    int kRange, P3d ptOffset) {
     P3d p1 = P3d.newP(f1);
     symmetry.toCartesian(p1, true);
     for (int i = -iRange; i <= iRange; i++)
@@ -2826,14 +2849,14 @@ public class CifReader extends AtomSetCollectionReader {
           ptOffset.set(f2.x + i, f2.y + j, f2.z + k);
           symmetry.toCartesian(ptOffset, true);
           double d = p1.distance(ptOffset);
-          if (slop > 0 ? Math.abs(d - distance) <= slop : d <= distance && d > 0.1d) {
+          if (slop > 0 ? Math.abs(d - distance) <= slop
+              : d <= distance && d > 0.1d) {
             ptOffset.set(i, j, k);
             return true;
           }
         }
     return false;
   }
-
 
   /**
    * add the bond and mark it for molecular processing

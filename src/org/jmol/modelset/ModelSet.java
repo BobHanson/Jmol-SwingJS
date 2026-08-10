@@ -1103,8 +1103,8 @@ public class ModelSet extends BondCollection {
       double[] cellParams = (double[]) getInfo(modelIndex,
           JC.INFO_UNIT_CELL_PARAMS);
       if (cellParams != null) {
-        am[modelIndex].setSimpleCage(vwr.getSymTemp()
-            .setUnitCellFromParams(cellParams, false, Double.NaN));
+        setModelCage(modelIndex, vwr.getSymTemp()
+            .setUnitCellFromParams(cellParams, false, Double.NaN), false);
       }
     } else if (uc != null) {
       if (returnCage) {
@@ -1132,7 +1132,7 @@ public class ModelSet extends BondCollection {
     SymmetryInterface sym = vwr.getSymTemp();//Interface.getSymmetry(vwr, "cage");
     try {
       return setModelCage(iModel,
-          originABC == null ? null : sym.getUnitCell(originABC, false, name));
+          originABC == null ? null : sym.getUnitCell(originABC, false, name), true);
     } catch (Exception e) {
       e.printStackTrace();
       return null;
@@ -4680,7 +4680,7 @@ public class ModelSet extends BondCollection {
       // remove any cage created by UNITCELL command
       // move any origin offset into atom positions
       if (nops > 1)
-        setModelCage(mi, null);
+        setModelCage(mi, null, false);
       // reset Wyckoff positions
       int nid = (atomSeqIDs == null ? 0 : atomSeqIDs.length);
       if (nid > 0) {
@@ -4753,7 +4753,7 @@ public class ModelSet extends BondCollection {
       sg.getUnitCell(am[mi].simpleCage.getUnitCellVectors(), false, null);
       setInfo(mi, JC.INFO_UNIT_CELL_PARAMS, sg.getUnitCellParams());
     }
-    setModelCage(mi, null);
+    setModelCage(mi, null, false);
   }
 
   private void setAsymmetricUnit(int mi, BS bsModelAtoms, BS basis,
@@ -4787,12 +4787,15 @@ public class ModelSet extends BondCollection {
    * 
    * @param modelIndex
    * @param simpleCage
+   * @param andSetInfo 
    * @return simpleCage
    */
   public SymmetryInterface setModelCage(int modelIndex,
-                                        SymmetryInterface simpleCage) {
+                                        SymmetryInterface simpleCage, boolean andSetInfo) {
     if (modelIndex >= 0 && modelIndex < mc) {
-      am[modelIndex].setSimpleCage(simpleCage);
+      am[modelIndex].simpleCage = simpleCage;
+      if (simpleCage != null && andSetInfo)
+        setInfo(modelIndex, JC.INFO_UNIT_CELL_PARAMS, simpleCage.getUnitCellParams());
       haveUnitCells = true;
     }
     return simpleCage;
@@ -4996,8 +4999,10 @@ public class ModelSet extends BondCollection {
     if (a == null)
       return 0;
     Vibration v = vibrations[atomIndex];
-    if (v == null || v.magMoment == 0)
+    if (v == null)
       return 0;
+    if (v.magMoment == 0)
+      return v.spin; // from plot spin
     int op = a.getSymOp() - 1;
     if (op < 0)
       return 0;

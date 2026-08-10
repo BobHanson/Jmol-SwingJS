@@ -86,16 +86,16 @@ public class Model {
   public ModelSet ms;
 
   /**
-   * mat4 tracks the rotation/translation of the full model using  rotateSelected or translateSelected 
+   * mat4 tracks the rotation/translation of the full model using rotateSelected
+   * or translateSelected
    */
   public M4d mat4;
-  
+
   public int modelIndex; // our 0-based reference
   int fileIndex; // 0-based file reference
   public boolean isBioModel;
   public boolean isPdbWithMultipleBonds;
   public boolean isModelKit;
-
 
   public Chain[] chains = new Chain[8];
 
@@ -115,23 +115,24 @@ public class Model {
   boolean isTrajectory;
 
   public int trajectoryBaseIndex;
-  
+
   public int altLocCount;
   int insertionCount;
   /**
-   * atom count; includes deleted atoms only if not being nulled (Jmol 14.31 or below)
+   * atom count; includes deleted atoms only if not being nulled (Jmol 14.31 or
+   * below)
    */
-  public int act = 0; 
+  public int act = 0;
   private int bondCount = -1;
   protected int chainCount = 0;
   public int groupCount = -1;
   public int hydrogenCount;
   public int moleculeCount;
   int biosymmetryCount;
-  
+
   public int firstAtomIndex;
   int firstMoleculeIndex;
-  
+
   /**
    * Note that this bitset may or may not include bsAtomsDeleted
    * 
@@ -154,18 +155,19 @@ public class Model {
 
   public P3d[] uvw, uvw0;
 
-
   public String pdbID;
 
-  public Model() { 
+  public Model() {
   }
-  
+
   public Model set(ModelSet modelSet, int modelIndex, int trajectoryBaseIndex,
-      Map<String, Object> jmolData, Properties properties, Map<String, Object> auxiliaryInfo) {
+                   Map<String, Object> jmolData, Properties properties,
+                   Map<String, Object> auxiliaryInfo) {
     ms = modelSet;
     dataSourceFrame = this.modelIndex = modelIndex;
     isTrajectory = (trajectoryBaseIndex >= 0);
-    this.trajectoryBaseIndex = (isTrajectory ? trajectoryBaseIndex : modelIndex);
+    this.trajectoryBaseIndex = (isTrajectory ? trajectoryBaseIndex
+        : modelIndex);
     if (auxiliaryInfo == null) {
       auxiliaryInfo = new Hashtable<String, Object>();
     }
@@ -178,7 +180,7 @@ public class Model {
     String fname = (String) auxiliaryInfo.get("fileName");
     if (fname != null)
       auxiliaryInfo.put("fileName", FileManager.stripTypePrefix(fname));
-    
+
     this.properties = properties;
     if (jmolData == null) {
       jmolFrameType = "modelSet";
@@ -188,10 +190,10 @@ public class Model {
       isJmolDataFrame = true;
       auxiliaryInfo.put(JC.INFO_JMOL_DATA, jmolData);
       auxiliaryInfo.put("title", jmolDataHeader);
-      jmolFrameType = (jmolDataHeader.indexOf("ramachandran") >= 0 ? "ramachandran"
-          : jmolDataHeader.indexOf("quaternion") >= 0 ? "quaternion" 
-          : jmolDataHeader.indexOf("spin") >= 0 ? "spin"
-          : "data");
+      jmolFrameType = (jmolDataHeader.indexOf("ramachandran") >= 0
+          ? "ramachandran"
+          : jmolDataHeader.indexOf("quaternion") >= 0 ? "quaternion"
+              : jmolDataHeader.indexOf("spin") >= 0 ? "spin" : "data");
       jmolFrameTypeInt = T.getTokFromName(jmolFrameType);
       System.out.println("JmolFrameType is " + T.nameOf(jmolFrameTypeInt));
     }
@@ -200,6 +202,7 @@ public class Model {
 
   /**
    * not actually accessed -- just pointing out what it is
+   * 
    * @return true atom count
    */
   // this one is variable and calculated only if necessary:
@@ -212,16 +215,18 @@ public class Model {
   boolean hasChirality;
 
   /**
-   * a flag that, when false, indicates that the model has atoms in different regions of the Atom[] array
+   * a flag that, when false, indicates that the model has atoms in different
+   * regions of the Atom[] array
    * 
    */
   public boolean isOrderly = true;
 
   /**
-   * tracks all presymmetry asymmetric unit atoms; atoms added using the ModelKit will add to this.
+   * tracks all presymmetry asymmetric unit atoms; atoms added using the
+   * ModelKit will add to this.
    */
   public BS bsAsymmetricUnit;
-  
+
   /**
    * 
    * @param bs
@@ -288,10 +293,12 @@ public class Model {
   }
 
   /**
-   * Something has changed; clear the DSSR cache and possibly remove DSSR entirely.
+   * Something has changed; clear the DSSR cache and possibly remove DSSR
+   * entirely.
    * 
    * 
-   * @param totally set TRUE if atoms have moved so we force a new DSSR calculation.
+   * @param totally
+   *        set TRUE if atoms have moved so we force a new DSSR calculation.
    */
   public void resetDSSR(boolean totally) {
     annotationCache = null;
@@ -327,19 +334,13 @@ public class Model {
         for (int j = i + 1; j < chainCount; j++)
           chains[j - 1] = chains[j];
         chainCount--;
-      }    
+      }
     chains = (Chain[]) AU.arrayCopyObject(chains, chainCount);
     groupCount = -1;
     getGroupCount();
     for (int i = 0; i < chainCount; ++i)
       chains[i].groups = (Group[]) AU.arrayCopyObject(chains[i].groups,
           chains[i].groupCount);
-  }
-
-  public void setSimpleCage(SymmetryInterface ucell) {
-    if ((simpleCage = ucell) != null) {
-      auxiliaryInfo.put(JC.INFO_UNIT_CELL_PARAMS, ucell.getUnitCellParams());
-    }
   }
 
   public M3d getUVWMatrix(boolean isUVW0) {
@@ -355,4 +356,4 @@ public class Model {
     return m;
   }
 
- }
+}

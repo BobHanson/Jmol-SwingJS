@@ -212,11 +212,8 @@ public class XtalSymmetry {
 
     //////////////////////  Magnetic and Spin Space Groups ///////////////
     
-    /**
-     * 
-     */
     protected String spinFrameStr;
-    private String spinFrameExt;
+    private Map<String, String> spinFrameExt;
     private M3d spinFrameRotationMatrix;
     protected int nSpins;
     private P3d[] spinPointGroupAxesXYZ;
@@ -236,16 +233,14 @@ public class XtalSymmetry {
      * 
      * @param acr
      * @param asc
-     * @param spinFrameStr
-     * @param spinFrameExt
+     * @param ext
      * @param htCellTypes 
      * 
      */
     protected void preSymmetryFinalizeMoments(AtomSetCollectionReader acr,
                                               AtomSetCollection asc,
-                                              String spinFrameStr,
-                                              String spinFrameExt, Map<String, String> htCellTypes) {
-      this.spinFrameExt = spinFrameExt;
+                                              Map<String, String> ext, Map<String, String> htCellTypes) {
+      this.spinFrameExt = ext;
       spinFrameToCartXYZ = null;
       String version = getSpinExt(spinFrameExt, "version");
       if (version == null)
@@ -257,8 +252,9 @@ public class XtalSymmetry {
       double b = acr.unitCellParams[1];
       double c = acr.unitCellParams[2];
       this.spinFrameStr = null;
-      if (spinFrameStr != null) {
-        this.spinFrameStr = spinFrameStr = evaluateSpinFrameStr(acr, spinFrameStr, a, b, c);
+      if (spinFrameExt != null) {
+        String spinFrame = fixSpinFrameInfo(spinFrameExt);
+        this.spinFrameStr = evaluateSpinFrameStr(acr, spinFrame, a, b, c);
         htCellTypes.put(JC.CELL_TYPE_SPIN_FRAME, spinFrameStr);
         T3d[] spinABC = preSymmetrySetSpinFrameMatrices(acr, spinFrameStr);
         // note that these will all be 1 for SpinCIF
@@ -318,6 +314,54 @@ public class XtalSymmetry {
           }
         }
       }
+    }
+
+    private final static String[] transformTags = { "spinframe_orientation_hex",
+        "spinframe_orientation_cartn", "transform_spinframe_p_matrix",
+        "transform_spinframe_p_abc" };
+
+    private String fixSpinFrameInfo(Map<String, String> spinFrameExt) {
+      BS bs = new BS();
+      String errMsg = "";
+      for (int i = 0; i < 4; i++) {
+        if (spinFrameExt.containsKey(transformTags[i]))
+          bs.set(i);
+      }
+      if (bs.cardinality() > 1) {
+        // only accept the last in the array order
+        bs.clearBits(0, bs.length() - 1);
+      }
+      for (int i = 0; i < 4; i++) {
+        if (!bs.get(i)) {
+          String s = spinFrameExt.remove(transformTags[i]);
+          if (s != null)
+            errMsg += "Redundant spin transform removed: " + transformTags[i]
+                + "\n";
+        }
+      }
+      int t = Math.max(0, bs.nextSetBit(0));
+      String spinFrame = spinFrameExt.get(transformTags[t]);
+      if (spinFrame == null) {
+        t = 3;
+        spinFrame = "a,b,c";
+      } else if (spinFrameExt.containsKey("ignoreForCollinear")) {
+        // never implemented -- instead we just accept that sometimes people might do this.
+        errMsg = "Structure is collinear, but spinFrame is present. Spin frame "
+            + spinFrame + " ignored; using 'a,b,c'\n";
+        t = 3;
+        spinFrame = "a,b,c";
+      } else if (spinFrameExt.containsKey("flagForCollinear") && !spinFrame.equals("a,b,c")) {
+        // might have Euler angles or matrix here, but this is only a message
+        errMsg = "Structure is collinear, but spinFrame is present. Collinear nature ignored. Spin frame "
+            + spinFrame + " is being used\n";
+      }
+      spinFrame = transformTags[t] + ":" + spinFrame;
+      System.out.println("XtalSymmetry using " + spinFrame);
+      if (errMsg.length() > 0)
+        System.err.print(errMsg);
+      spinFrame = spinFrame
+          .substring(spinFrame.lastIndexOf("_", spinFrame.indexOf(':')) + 1);
+      return spinFrame;
     }
 
     private String evaluateSpinFrameStr(AtomSetCollectionReader acr, String s, double a, double b, double c) {
@@ -503,12 +547,8 @@ public class XtalSymmetry {
       return a;
     }
 
-    private String getSpinExt(String spinFrameExt, String name) {
-      if (spinFrameExt == null)
-        return null;
-      name = ";" + name + "=";
-      int pt = spinFrameExt.indexOf(name);
-      return (pt < 0 ? null : spinFrameExt.substring(pt + name.length(), spinFrameExt.indexOf(';', pt + 1)));
+    private String getSpinExt(Map<String, String> spinFrameExt, String name) {
+      return (spinFrameExt == null ? null : spinFrameExt.get(name));
     }
 
     /**
@@ -1111,11 +1151,10 @@ public class XtalSymmetry {
   /**
    * from XtalSymmetry.applySymmetryFromReader via CifReader and JanaReader doPreSymmetry
    * @param spinFrameExt 
-   * @param spinFrame 
    * @param htCellTypes 
    */
-  public void finalizeMoments(String spinFrame, String spinFrameExt, Map<String, String> htCellTypes) {
-    getFileSymmetry().preSymmetryFinalizeMoments(acr, asc, spinFrame, spinFrameExt, htCellTypes);
+  public void finalizeMoments(Map<String, String> spinFrameExt, Map<String, String> htCellTypes) {
+    getFileSymmetry().preSymmetryFinalizeMoments(acr, asc, spinFrameExt, htCellTypes);
   }
 
   /**

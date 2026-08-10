@@ -3574,8 +3574,8 @@ public class CmdExt extends ScriptExt {
     boolean isDerivative = false;
     boolean isSecondDerivative = false;
     boolean isRamachandranRelative = false;
-    String[] props = new String[3];
-    int[] propToks = new int[3];
+    String[] props = new String[4];
+    int[] propToks = new int[4];
 
     BS bs = BSUtil.copy(vwr.bsA());
     String preselected = "; select " + Escape.eBS(bs) + ";\n ";
@@ -3609,9 +3609,11 @@ public class CmdExt extends ScriptExt {
         propToks[0] = T.vibx;
         propToks[1] = T.viby;
         propToks[2] = T.vibz;
+        propToks[3] = T.spin;
         props[0] = "spinX";
         props[1] = "spinY";
         props[2] = "spinZ";
+        props[3] = "spin";
         bs = vwr.fm.getJmolDataReader().getPlotSpinSet(vwr, bs, modelIndex,
             minXYZ = new P3d(), maxXYZ = new P3d());
         if (bs == null || bs.cardinality() == 0)

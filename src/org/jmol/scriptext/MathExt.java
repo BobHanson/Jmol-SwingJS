@@ -3817,12 +3817,28 @@ SymmetryInterface sym;
       //$FALL-THROUGH$
     case 3:
     case 4:
+    case 5:
       switch (tok) {
       case T.hkl:
+        // hkl(uc,i,j,k)
+        // hkl(i,j,k, offset)
+        // hkl (uc, i, j, k, offset)
         // hkl(i,j,k)
-        double offset = (args.length == 4 ? SV.dValue(args[3]) : Double.NaN);
-        plane = e.getHklPlane(P3d.new3(SV.dValue(args[0]), SV.dValue(args[1]),
-            SV.dValue(args[2])), offset, null);
+        int pt = 0;
+        SymmetryInterface uc = null;
+        if (args[0].tok == T.varray) {
+          pt++;
+          Lst<SV> v = args[0].getList();  
+          if (v.size() != 4)
+            return false;
+          P3d[] oabc = new P3d[4];
+          for (int j = 0; j < 4; j++) 
+            oabc[j] = SV.ptValue(v.get(j));
+          uc = vwr.getSymTemp().getUnitCell(oabc, false, null);
+        }
+        double offset = (args.length == pt + 4 ? SV.dValue(args[pt + 3]) : Double.NaN);
+        plane = e.getHklPlane(P3d.new3(SV.dValue(args[pt]), SV.dValue(args[pt + 1]),
+            SV.dValue(args[pt + 2])), offset, null, uc);
         if (isSelector) {
           break;
         }
@@ -5468,7 +5484,7 @@ SymmetryInterface sym;
       case T.point3f:
         pt = (P3d) args[last].value;
         if (SV.sValue(args[1]).equalsIgnoreCase("hkl"))
-          plane = e.getHklPlane(pt, Double.NaN, null);
+          plane = e.getHklPlane(pt, Double.NaN, null, null);
         break;
       case T.varray:
         pts1 = (last == 2 && args[1].tok == T.varray ? args[1].getList()

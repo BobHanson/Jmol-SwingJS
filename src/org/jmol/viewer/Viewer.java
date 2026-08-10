@@ -4139,7 +4139,7 @@ public class Viewer extends JmolViewer
   public void setCurrentCage(String isosurfaceId) {
     Object[] data = new Object[] { isosurfaceId, null };
     shm.getShapePropertyData(JC.SHAPE_ISOSURFACE, "unitCell", data);
-    ms.setModelCage(am.cmi, (SymmetryInterface) data[1]);
+    ms.setModelCage(am.cmi, (SymmetryInterface) data[1], true);
   }
 
   public void addUnitCellOffset(P3d pt) {
@@ -5884,7 +5884,10 @@ public class Viewer extends JmolViewer
   }
 
   public JmolAppConsoleInterface getConsole() {
+    boolean addCallBack = (sm.cbl == null && appConsole == null);
     getProperty("DATA_API", "getAppConsole", Boolean.TRUE);
+    if (addCallBack && appConsole instanceof JmolCallbackListener)
+      setJmolCallbackListener((JmolCallbackListener) appConsole);
     return appConsole;
   }
 

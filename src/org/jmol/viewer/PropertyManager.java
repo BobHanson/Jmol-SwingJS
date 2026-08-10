@@ -1938,6 +1938,7 @@ public class PropertyManager implements JmolPropertyManager {
       double[] dataX = (double[]) parameters[1];
         double[] dataY = (double[]) parameters[2];
       double[] dataZ = (double[]) parameters[3];
+      double[] data3 = (double[]) parameters[11];
       boolean haveY = (dataY != null);
       boolean haveZ = (dataZ != null);
       P3d minXYZ = (P3d) parameters[4];
@@ -2014,6 +2015,7 @@ public class PropertyManager implements JmolPropertyManager {
         double x = dataX[n];
         double y = (haveY ? dataY[n] : 0d);
         double z = (haveZ ? dataZ[n] : 0d);
+        double spin = (isSpin ? data3[n] : 0d);
         if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z))
           continue;
         Atom a = atoms[i];
@@ -2037,7 +2039,7 @@ public class PropertyManager implements JmolPropertyManager {
           out.append(PT.sprintf(
               "%-8.2f%-8.2f%-10.2f    %6.3f          %-2s    %s\n", "ssF",
               new Object[] { a.getElementSymbolIso(false).toUpperCase(),
-                  strExtra, new double[] { x, y, z, 0d } }));
+                  strExtra, new double[] { x, y, z, spin } }));
           if (isPDB && atomLast != null
               && atomLast.group.getBioPolymerIndexInModel() == a.group
                   .getBioPolymerIndexInModel())

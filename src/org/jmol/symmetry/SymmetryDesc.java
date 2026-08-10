@@ -388,7 +388,10 @@ public class SymmetryDesc {
         // check to make sure that new group has been created magnetic or not
         Object[][] infolist = new Object[ops.length][];
         String sops = "";
-        int i0 = (drawID == null || pt1 == null || pt2 == null && nth < 0 ? 0
+        int i0 = (drawID == null || pt1 == null || pt2 != null
+            //|| 
+            //pt2 == null && nth < 0 
+            ? 0
             : 1);
         for (int i = i0, nop = 0; i < ops.length && nop != nth; i++) {
           SymmetryOperation op = ops[i];
@@ -879,7 +882,7 @@ public class SymmetryDesc {
                                    boolean isSpaceGroupAll, int nDim) {
 
     op.doFinalize();
-
+    boolean isIdentity = (op.getOpType() == SymmetryOperation.TYPE_IDENTITY);
     boolean matrixOnly = (bsInfo.get(RET_MATRIX) & (bsInfo.cardinality() == (bsInfo.get(RET_RXYZ) ? 2 : 1)));
     boolean isTimeReversed = (op.timeReversal == -1);
     boolean isSpinSG = (op.spinU != null);
@@ -912,6 +915,10 @@ public class SymmetryDesc {
       if (pta01.distanceSquared(pta02) >= JC.UC_TOLERANCE2)
         return null;
       vtrans.sub(ptemp);
+      if (isIdentity) {
+        // allow identity for two atoms
+        isIdentity = false;
+      }
     }
     M4d m2 = M4d.newM4(op);
     m2.add(vtrans);
@@ -1391,8 +1398,7 @@ public class SymmetryDesc {
       if (id == null || !bsInfo.get(RET_DRAW))
         break;
       
-      if (op.getOpType() == SymmetryOperation.TYPE_IDENTITY
-          || isSpaceGroupAll && op.isIrrelevant) {
+      if (isIdentity || isSpaceGroupAll && op.isIrrelevant) {
         if (Logger.debugging)
           System.out
               .println("!!SD irrelevent " + op.getOpTitle() + op.getOpPoint());
@@ -2290,7 +2296,6 @@ public class SymmetryDesc {
    * creating a temporary space group for an xyz operator
    * 
    * 
-   * @param iModel
    * @param iatom
    * @param uc
    * @param xyz

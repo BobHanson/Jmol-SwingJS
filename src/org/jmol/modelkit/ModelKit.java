@@ -4459,17 +4459,17 @@ public class ModelKit {
         }
       }
     }
-    s += getDrawAxes(null, id, swidth);
+    s += getDrawAxes(null, id, swidth, null);
     appRunScript(s);
   }
 
-  public void drawAxes(P3d[] points, String id, String swidth) {
-    String s = getDrawAxes(points, id, swidth);
+  public void drawAxes(P3d[] points, String id, String swidth, P3d offset) {
+    String s = getDrawAxes(points, id, swidth, offset);
     if (s.length() > 0)
       appRunScript(s);
   }
 
-  private String getDrawAxes(P3d[] points, String id, String swidth) {
+  private String getDrawAxes(P3d[] points, String id, String swidth, P3d offset) {
     boolean havePoints = (points != null);
     if (vwr.g.axesMode != T.axesunitcell || vwr.shm
         .getShapePropertyIndex(JC.SHAPE_AXES, "axesTypeXY", 0) == Boolean.TRUE)
@@ -4540,9 +4540,10 @@ public class ModelKit {
 
     String s = "";
     String[] colors = new String[] { "red", "green", "blue" };
+    String soff = (offset == null ? "" : " offset " + offset);
     for (int i = 0, a = JC.AXIS_A; i < 3; i++, a++) {
       s += "\ndraw ID " + PT.esc(id + "_axis_" + JC.axisLabels[a]) + " "
-          + swidth + " line "
+          + swidth + soff + " line "
           + (opts == null 
             || i == 0 && !shiftA 
             || i == 1 && !shiftB

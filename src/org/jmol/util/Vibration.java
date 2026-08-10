@@ -46,6 +46,7 @@ public class Vibration extends V3d {
   public int tracePt;
   private P3d[] trace = null;
   public String symmform;
+  public int spin;
   
   public boolean isFrom000;
 

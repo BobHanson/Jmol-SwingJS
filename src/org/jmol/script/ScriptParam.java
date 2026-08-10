@@ -480,7 +480,12 @@ abstract public class ScriptParam extends ScriptError {
 
   public P4d hklParameter(int i, Lst<P3d> pts, boolean allowOffset)
       throws ScriptException {
-    if (!chk && vwr.getCurrentUnitCell() == null)
+    return hklParameterUC(i, pts, allowOffset, null);
+  }
+
+  public P4d hklParameterUC(int i, Lst<P3d> pts, boolean allowOffset, SymmetryInterface ucHKL)
+      throws ScriptException {
+    if (!chk && ucHKL == null && vwr.getCurrentUnitCell() == null)
       error(ERROR_noUnitCell);
     T3d pt = getPointOrPlane(i, MODE_P34 | MODE_P_IMPLICIT_FRACTIONAL);
     double offset = Double.NaN;
@@ -492,7 +497,7 @@ abstract public class ScriptParam extends ScriptError {
       }
     }
     
-    P4d p = getHklPlane(pt, offset, pts);
+    P4d p = getHklPlane(pt, offset, pts, ucHKL);
     if (p == null)
       error(ERROR_badMillerIndices);
     if (!chk && Logger.debugging)
@@ -500,7 +505,7 @@ abstract public class ScriptParam extends ScriptError {
     return p;
   }
 
-  public P4d getHklPlane(T3d pt, double offset, Lst<P3d> pts) {
+  public P4d getHklPlane(T3d pt, double offset, Lst<P3d> pts, SymmetryInterface ucHKL) {
     P3d pt1 = P3d.new3(pt.x == 0 ? 1 : 1 / pt.x, 0, 0);
     P3d pt2 = P3d.new3(0, pt.y == 0 ? 1 : 1 / pt.y, 0);
     P3d pt3 = P3d.new3(0, 0, pt.z == 0 ? 1 : 1 / pt.z);
@@ -524,9 +529,15 @@ abstract public class ScriptParam extends ScriptError {
       pt3.set(pt1.x, 0, 1);
     }
     // base this one on the currently defined unit cell
-    vwr.toCartesian(pt1, false);
-    vwr.toCartesian(pt2, false);
-    vwr.toCartesian(pt3, false);    
+    if (ucHKL == null) {
+      vwr.toCartesian(pt1, false);
+      vwr.toCartesian(pt2, false);
+      vwr.toCartesian(pt3, false);    
+    } else {
+      ucHKL.toCartesian(pt1, false);
+      ucHKL.toCartesian(pt2, false);
+      ucHKL.toCartesian(pt3, false);    
+    }
     V3d v3 = new V3d();
     P4d plane = MeasureD.getPlaneThroughPoints(pt1,  pt2, pt3, new V3d(), v3, new P4d());
     if (!Double.isNaN(offset)) {
@@ -1541,7 +1552,7 @@ abstract public class ScriptParam extends ScriptError {
           offset = 0;
         //$FALL-THROUGH$
       case 33: // c>value removed
-        p4 = getHklPlane(vc = P3d.new3(0, 0, 1), 0, null);
+        p4 = getHklPlane(vc = P3d.new3(0, 0, 1), 0, null, null);
         p4.scale4(f = -f);
         break;
       case 21: // bc, outside unitcell removed
@@ -1549,7 +1560,7 @@ abstract public class ScriptParam extends ScriptError {
           offset = 0;
         //$FALL-THROUGH$
       case 27: // a>value removed
-        p4 = getHklPlane(vc = P3d.new3(1, 0, 0), 0, null);
+        p4 = getHklPlane(vc = P3d.new3(1, 0, 0), 0, null, null);
         p4.scale4(-(f = -f));
         break;
       case 24: // ac, outside unitcell removed
@@ -1557,7 +1568,7 @@ abstract public class ScriptParam extends ScriptError {
           offset = 0;
         //$FALL-THROUGH$
       case 30: // b>value removed
-        p4 = getHklPlane(vc = P3d.new3(0, 1, 0), 0, null);
+        p4 = getHklPlane(vc = P3d.new3(0, 1, 0), 0, null, null);
         p4.scale4(-f);
         break;
       }
