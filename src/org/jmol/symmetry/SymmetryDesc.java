@@ -222,8 +222,8 @@ public class SymmetryDesc {
     return sb.toString();
   }
 
-  private String getDrawID(String id) {
-    return drawID + id +"\" ";
+  private String getDrawID(String name) {
+    return drawID + name + "\" ";
   }
 
   /**
@@ -832,7 +832,7 @@ public class SymmetryDesc {
    *        DRAW SPACEGROUP
    * @param isSpaceGroupAll
    *        DRAW SPACEGROUP ALL
-   * @param nDim 
+   * @param nDim
    * @return Object[] containing:
    * 
    *         [0] xyz (Jones-Faithful calculated from matrix)
@@ -883,7 +883,8 @@ public class SymmetryDesc {
 
     op.doFinalize();
     boolean isIdentity = (op.getOpType() == SymmetryOperation.TYPE_IDENTITY);
-    boolean matrixOnly = (bsInfo.get(RET_MATRIX) & (bsInfo.cardinality() == (bsInfo.get(RET_RXYZ) ? 2 : 1)));
+    boolean matrixOnly = (bsInfo.get(RET_MATRIX)
+        & (bsInfo.cardinality() == (bsInfo.get(RET_RXYZ) ? 2 : 1)));
     boolean isTimeReversed = (op.timeReversal == -1);
     boolean isSpinSG = (op.spinU != null);
     boolean isMagnetic = (op.timeReversal != 0 || isSpinSG);
@@ -942,7 +943,9 @@ public class SymmetryDesc {
       // quick-return -- note that this is not for magnetic!
       int im = getKeyType("matrix");
       Object[] o = new Object[-im];
-      o[-1 - im] = (bsInfo.get(RET_RXYZ) ? SymmetryOperation.matrixToRationalString(m2) : m2);
+      o[-1 - im] = (bsInfo.get(RET_RXYZ)
+          ? SymmetryOperation.matrixToRationalString(m2)
+          : m2);
       return o;
     }
 
@@ -1053,17 +1056,17 @@ public class SymmetryDesc {
     boolean shiftB = ((periodicity & 0x2) == 0); // frieze a(b), rod (ab)c
     boolean shiftC = ((periodicity & 0x4) == 0); // plane ab, layer ab(c), frieze a(b)
 
-    vShift = V3d.new3(0,  0,  1);
+    vShift = V3d.new3(0, 0, 1);
     if (nDim == 3) {
       // special issue with rods
       switch (periodicity) {
       case 0x1:
-        vShift = V3d.new3(1,  0,  0);
+        vShift = V3d.new3(1, 0, 0);
         notC = true;
         break;
       case 0x2:
         notC = true;
-        vShift = V3d.new3(0,  1,  0);
+        vShift = V3d.new3(0, 1, 0);
         break;
       case 0x4:
         notC = true;
@@ -1397,7 +1400,7 @@ public class SymmetryDesc {
     while (true) {
       if (id == null || !bsInfo.get(RET_DRAW))
         break;
-      
+
       if (isIdentity || isSpaceGroupAll && op.isIrrelevant) {
         if (Logger.debugging)
           System.out
@@ -1406,12 +1409,14 @@ public class SymmetryDesc {
         break;
       }
       String opType = null;
+      if (!id.endsWith("_"))
+        id += "_";
       drawID = "\ndraw ID \"" + id;
 
       // delete previous elements of this user-settable ID
       SB drawSB = new SB();
       drawSB.append(getDrawID("*")).append(" delete");
-      
+
       // draw the initial frame
 
       boolean drawFrameZ = (nDim == 3);
@@ -1428,7 +1433,9 @@ public class SymmetryDesc {
       boolean isSpecial = (pta00.distance(pt0) < 0.2d);
 
       String title = (isSpaceGroup
-          ? "<hover>" + id + ": " + (nDim == 2 ? op.xyz.replace(",z", "") : op.xyz) + "|" + info1 + "</hover>"
+          ? "<hover>" + id + ": "
+              + (nDim == 2 ? op.xyz.replace(",z", "") : op.xyz) + "|" + info1
+              + "</hover>"
           : null);
 
       // now check for:
@@ -1667,10 +1674,12 @@ public class SymmetryDesc {
           // BH 2025.06.09 explicit naming should only be for DRAW SPACEGROUP 
           // otherwise this breaks code designed to get information from the drawing 
           // of specific operations, as in ITAOnLine
-          String name = (isSpaceGroup ? opType + "_" + nrot : "") + "rotvector1";
+          String name = (isSpaceGroup ? opType + "_" + nrot : "")
+              + "rotvector1";
           drawOrderVector(drawSB, name, "vector", THICK_LINE + wp, pa1, nrot,
               screwDir, haveInversion && isSpaceGroupAll, isccw == Boolean.TRUE,
-              vtemp, isTimeReversed ? COLOR_ARROW_TIME_REVERSED : color, title, isSpaceGroupAll);
+              vtemp, isTimeReversed ? COLOR_ARROW_TIME_REVERSED : color, title,
+              isSpaceGroupAll);
           if (p2 != null) {
             // second standard rotation arrow on other side of unit cell only
             drawOrderVector(drawSB, name + "2", "vector", THICK_LINE + wp, ptr,
@@ -1716,12 +1725,13 @@ public class SymmetryDesc {
             break;
           }
           if (!isSpaceGroup) {
-            drawFrameLine("X", ptref, vt1, 0.15d, ptemp, drawSB, "glideframe", "red");
+            drawFrameLine("X", ptref, vt1, 0.15d, ptemp, drawSB, "glideframe",
+                "red");
             drawFrameLine("Y", ptref, vt2, 0.15d, ptemp, drawSB, "glideframe",
                 "green");
             if (drawFrameZ)
               drawFrameLine("Z", ptref, vt3, 0.15d, ptemp, drawSB, "glideframe",
-                "blue");
+                  "blue");
           }
         }
 
@@ -1830,7 +1840,7 @@ public class SymmetryDesc {
               vtemp.scale(-1);
               if (drawFrameZ)
                 drawFrameLine("Z", ptinv, vtemp, 0.15d, ptemp, drawSB, opType,
-                  "blue");
+                    "blue");
             }
           }
         }
@@ -1860,14 +1870,12 @@ public class SymmetryDesc {
             ptemp.setT(ptref);
             vtrans.setT(trans);
           }
-          color = (isGlide ? (isTimeReversed ? COLOR_ARROW_TIME_REVERSED 
-              : COLOR_GLIDE_ARROW)
-              : isTimeReversed 
-              && (isSpinSG || !haveInversion 
-              && !isMirrorPlane
-              && !isRotation) 
-              ? COLOR_CENTERING_ARROW_TIME_REVERSED 
-                  : COLOR_CENTERING_ARROW);
+          color = (isGlide
+              ? (isTimeReversed ? COLOR_ARROW_TIME_REVERSED : COLOR_GLIDE_ARROW)
+              : isTimeReversed && (isSpinSG
+                  || !haveInversion && !isMirrorPlane && !isRotation)
+                      ? COLOR_CENTERING_ARROW_TIME_REVERSED
+                      : COLOR_CENTERING_ARROW);
           drawVector(drawSB,
               (isCentered ? "centering_" : glideType + "_g") + "trans_vector",
               "vector", (isGlide || isTranslationOnly ? THICK_LINE : THIN_LINE),
@@ -1902,15 +1910,29 @@ public class SymmetryDesc {
         drawSB.append("\nsym_point = " + Escape.eP(pta00));
         drawSB.append("\nvar p0 = " + Escape.eP(ptemp2));
 
+        Atom fromAtom = null;
         if (pta00 instanceof Atom) {
+          fromAtom = (Atom) pta00;
           drawSB.append(
               "\nvar set2 = within(0.2,p0);if(!set2){set2 = within(0.2,p0.uxyz.xyz)}");
           drawSB.append(
-              "\n set2 &= {_" + ((Atom) pta00).getElementSymbol() + "}");
+              "\n set2 &= {_" + fromAtom.getElementSymbol() + "}");
         } else {
           drawSB.append("\nvar set2 = p0.uxyz");
         }
         drawSB.append("\nsym_target = set2;if (set2) {");
+        if (fromAtom != null && ptTarget == null) { 
+          String cmd = "\n modelkit set " + JC.PROP_ATOMSET + " "
+            + "@{"+PT.esc(id)
+            + "+'|'+" 
+            + fromAtom.i
+            + "+'|'+"
+            + "set2"
+            + "+'|'+"
+            + "'draw ID " + id + " symop ({" + fromAtom.i + "})' + set2" 
+            + "}";
+          drawSB.append(cmd);
+        }
         //      if (haveCentering)
         //      drawSB.append(drawid).append(
         //        "cellOffsetVector arrow @p0 @set2 color grey");
@@ -1924,8 +1946,8 @@ public class SymmetryDesc {
               .append(Escape.eP(vt2)).append("*0.9} color green");
           if (drawFrameZ)
             drawSB.append(getDrawID("offsetFrameZ"))
-              .append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
-              .append(Escape.eP(vt3)).append("*0.9} color purple");
+                .append(" diameter 0.20 @{set2.xyz} @{set2.xyz + ")
+                .append(Escape.eP(vt3)).append("*0.9} color purple");
         }
         drawSB.append("\n}\n");
       } // end !isSpaceGroup
@@ -1935,27 +1957,30 @@ public class SymmetryDesc {
       drawSB = null;
       if (createSpinDraw) {
         SymmetryInterface sym = modelSet.getUnitCell(iModel);
-        Atom a1 = (ptFrom instanceof Atom ? (Atom) ptFrom : null);
-        Atom a2 = (ptTarget instanceof Atom ? (Atom) ptTarget : null);
-        if (a1 != null && a2 != null) {
-          BS bs = modelSet.vwr.getModelUndeletedAtomsBitSet(iModelSpin);
-          a1 = Vibration.find(modelSet, bs, modelSet.getVibration(a1.i, false));
-          a2 = Vibration.find(modelSet, bs, modelSet.getVibration(a2.i, false));          
-        } 
-        if (a1 == null || a2 == null)
-          a1 = a2 = null;
-        String s = (String) ((Symmetry) sym).pointGroup.getInfo(iModelSpin, 
-            (a1 == null ? null : P3d.newP(a1)), 
-            (a2 == null ? null : P3d.newP(a2)), 
-            id+"_pg", false, op.getSUVW(), 0, 1);
-        if (s != null)
-          cmds += ";\n" + s;
+        PointGroup pg = ((Symmetry) sym).pointGroup;
+        if (pg != null) {
+          Atom a1 = (ptFrom instanceof Atom ? (Atom) ptFrom : null);
+          Atom a2 = (ptTarget instanceof Atom ? (Atom) ptTarget : null);
+          if (a1 != null && a2 != null) {
+            BS bs = modelSet.vwr.getModelUndeletedAtomsBitSet(iModelSpin);
+            a1 = Vibration.find(modelSet, bs,
+                modelSet.getVibration(a1.i, false));
+            a2 = Vibration.find(modelSet, bs,
+                modelSet.getVibration(a2.i, false));
+          }
+          if (a1 == null || a2 == null)
+            a1 = a2 = null;
+          String s = (String) pg.getInfo(iModelSpin,
+              (a1 == null ? null : P3d.newP(a1)),
+              (a2 == null ? null : P3d.newP(a2)), id + "_pg", false,
+              op.getSUVW(), 0, 1);
+          if (s != null)
+            cmds += ";\n" + s;
+        }
       }
 
-
-      
       break;
-    }// end of while(true)
+    } // end of while(true)
 
     // finalize returns
 
@@ -2064,7 +2089,7 @@ public class SymmetryDesc {
       case RET_PLANE:
         if (plane != null && bsInfo.get(RET_INVARIANT)) {
           double d = MeasureD.distanceToPlane(plane, pta00);
-          plane.w -= d;          
+          plane.w -= d;
         }
         ret[i] = plane;
         break;
@@ -2439,7 +2464,7 @@ public class SymmetryDesc {
         P3d ret = sympt;
         return (type == T.atoms ? getAtom(uc, iModel, iatom, ret) : ret);
       }
-      info = createInfoArray(opTemp, uc, pt, null, (id == null || id.equals("array") ? JC.DEFAULT_DRAW_SYM_ID : id),
+      info = createInfoArray(opTemp, uc, pt, null, (id == null || id.equals("array") ? JC.DEFAULT_DRAW_SYM_ID_PREFIX : id),
           scaleFactor, options, (translation != null), bsInfo, isSpaceGroup, isSpaceGroupAll, nDim);
       if (type == T.array && id != null && returnType != -1 - RET_MATRIX) {
         returnType = getKeyType(id);
@@ -2467,7 +2492,7 @@ public class SymmetryDesc {
         break;
       case T.draw:
         if (id == null)
-          id = (isSpaceGroup ? "sg" : JC.DEFAULT_DRAW_SYM_ID);
+          id = (isSpaceGroup ? "sg" : JC.DEFAULT_DRAW_SYM_ID_PREFIX);
         stype = "all";
         asString = true;
         break;

@@ -42,6 +42,7 @@ import javajs.util.AU;
 import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
+import javajs.util.MeasureD;
 import javajs.util.P3d;
 import javajs.util.P3i;
 import javajs.util.P4d;
@@ -1724,5 +1725,63 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     }
     spinFrameToCartXYZ.rotate(v);
   }
+
+  public Qd getQuaternionRotationForHKL(T3d uvw, P4d planeHKL) {
+    P3d c = new P3d();
+    toCartesian(c, false);
+    V3d m = new V3d();
+    V3d a1 = new V3d();
+    MeasureD.getPlaneProjection(c, planeHKL, a1, m);
+    if (uvw == null) {
+      uvw = P3d.new3(1, 1, 1);
+    }
+    int type = 0;
+    if (uvw.x != 0)
+      type |= 4;
+    if (uvw.y != 0)
+      type |= 2;
+    if (uvw.z != 0)
+      type |= 1;
+    V3d ref = new V3d();
+    switch (type) {
+    case 1://0b001:
+      ref.x = -1;
+      break;
+    case 2://0b010:
+      ref.z = -1;
+      break;
+    case 4://0b100:
+      ref.y = -1;
+      break;
+    case 3://0b011:
+      ref.x = 1;
+      break;
+    case 5://0b101:
+      ref.y = 1;
+      break;
+    case 6://0b110:
+      ref.z = 1;
+      break;
+    case 7://0b111:
+      ref.x = 1;
+      break;      
+    }
+    a1 = new V3d();
+    V3d a2 = new V3d();
+    a1.cross(m, ref);
+    a2.cross(a1, m);
+    a1.cross(a2, m);
+    a2.normalize();
+    a1.normalize();
+    //    System.out.println("isosurface ID hkl plane " + planeHKL);
+    //   System.out.println("draw a1 width 0.1 {0 0 0} " + a1 + " color red");
+    //   System.out.println("draw a2 width 0.1 {0 0 0} " + a2 + " color green");
+    Qd q = Qd.getQuaternionFrame(null, a1, a2);
+    return q;
+  }
+  
+//  void showQ(Qd qt, String name) {
+//    System.out.println(name  + " = quaternion(" + qt.getNormal() + " " + qt.getTheta() + ")\n# " + qt);
+//  }
 
 }

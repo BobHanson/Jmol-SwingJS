@@ -1060,14 +1060,14 @@ public class ScriptEval extends ScriptExpr {
   }
 
   private int setScriptExtensions() {
+    fromMenu = false;
     String extensions = scriptExtensions;
     if (extensions == null)
       return 0;
-    int pt = extensions.indexOf(JC.SCRIPT_STEP);
-    if (pt >= 0) {
+    fromMenu = (extensions.indexOf(JC.SCRIPT_MENU) >= 0);
+    if (extensions.indexOf(JC.SCRIPT_STEP) >= 0)
       executionStepping = true;
-    }
-    pt = extensions.indexOf(JC.SCRIPT_START);
+    int pt = extensions.indexOf(JC.SCRIPT_START);
     if (pt < 0)
       return 0;
     pt = PT.parseInt(extensions.substring(pt + JC.SCRIPT_START.length()));
@@ -5789,30 +5789,32 @@ public class ScriptEval extends ScriptExpr {
         vwr.tm.stopMotion();
       return;
     }
-    double floatSecondsTotal;
+    double secondsTotal;
     if (slen == 2 && isFloatParameter(1)) {
-      floatSecondsTotal = floatParameter(1);
+      secondsTotal = floatParameter(1);
       if (chk)
         return;
       if (!useThreads(true))
-        floatSecondsTotal = 0;
-      if (floatSecondsTotal > 0)
+        secondsTotal = 0;
+      if (secondsTotal > 0)
         refresh(false);
-      vwr.moveTo(this, floatSecondsTotal, null, JC.axisZ, 0, null, 100, 0, 0, 0,
-          null, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN,
-          Double.NaN);
-      if (isJS && floatSecondsTotal > 0 && vwr.g.waitForMoveTo)
+      vwr.movetoHome(this, secondsTotal);
+      if (isJS && secondsTotal > 0 && vwr.g.waitForMoveTo)
         throw new ScriptInterruption(this, "moveTo", 1);
       return;
     }
     V3d axis = V3d.new3(Double.NaN, 0, 0);
     P3d center = null;
     int i = 1;
-    floatSecondsTotal = (isFloatParameter(i) ? floatParameter(i++) : 2.0d);
+    secondsTotal = (isFloatParameter(i) ? floatParameter(i++) : 2.0d);
     double degrees = 90;
     BS bsCenter = null;
     boolean isChange = true;
     boolean isMolecular = false;
+    boolean isUnitCell = false;
+    P4d planeUVW = null;
+    P3d uvw = null;
+    String abc = null;
     double xTrans = 0;
     double yTrans = 0;
     double zoom = Double.NaN;
@@ -5909,21 +5911,32 @@ public class ScriptEval extends ScriptExpr {
       axis.set(-1, 0, 0);
       checkLength(++i);
       break;
+    case T.hkl:
+    case T.uvw:
+      isMolecular = true;
+      isUnitCell = true;
+      uvw = new P3d();
+      planeUVW = hklParameter(i + 1, null, true, uvw);
+      if (Double.isNaN(uvw.x))
+        uvw = null;
+      checkLength(i = iToken + 1);
+      break;
     case T.plane:
     case T.direction:
-      P4d v = planeParameter(i, false);
+      P4d v = planeParameter(++i, false);
       V3d x = V3d.new3(0, 0, 1);
       x.cross(x, v);
       if (x.length() < 0.001d) {
         x.set(0, 1, 0);
         x.cross(x, v);
-      }      
+      }
       v.cross(x, v);
-      q =  Qd.getQuaternionFrame(null, v, x).inv();
+      q = Qd.getQuaternionFrame(null, v, x).inv();
       i = iToken + 1;
       break;
     case T.axis:
-      String abc = paramAsStr(++i);
+    case T.axes:
+      abc = paramAsStr(++i);
       if (abc.equals("-"))
         abc += paramAsStr(++i);
       checkLength(++i);
@@ -5939,14 +5952,8 @@ public class ScriptEval extends ScriptExpr {
         break;
       default:
         // a b c
-        SymmetryInterface uc;
-        uc = vwr.getCurrentUnitCell();
-        if (uc == null) {
-          uc = vwr.getSymTemp().setUnitCellFromParams(null, false, Double.NaN);
-        }
-        q = uc.getQuaternionRotation(abc);
-        if (q == null)
-          invArg();
+        isUnitCell = true;
+        break;
       }
       break;
     default:
@@ -5954,6 +5961,18 @@ public class ScriptEval extends ScriptExpr {
       axis = V3d.new3(floatParameter(i++), floatParameter(i++),
           floatParameter(i++));
       degrees = floatParameter(i++);
+    }
+    if (isUnitCell) {
+      SymmetryInterface uc = vwr.getCurrentUnitCell();
+      if (planeUVW == null) {
+        if (uc == null)
+          uc = vwr.getSymTemp().setUnitCellFromParams(null, false, Double.NaN);
+        q = uc.getQuaternionRotation(abc);
+      } else if (uc != null) {
+        q = uc.getQuaternionRotationForUVW(uvw, planeUVW);
+      }
+      if (q == null)
+        invArg();
     }
     if (q != null) {
       A4d aa;
@@ -6058,21 +6077,22 @@ public class ScriptEval extends ScriptExpr {
     if (chk)
       return;
     if (!isChange)
-      floatSecondsTotal = 0;
-    if (floatSecondsTotal > 0)
+      secondsTotal = 0;
+    if (secondsTotal > 0)
       refresh(false);
     if (!useThreads(true))
-      floatSecondsTotal = 0;
+      secondsTotal = 0;
     if (cameraDepth == 0) {
       cameraDepth = cameraX = cameraY = Double.NaN;
     }
-    if (pymolView != null)
-      vwr.tm.moveToPyMOL(this, floatSecondsTotal, pymolView);
-    else
-      vwr.moveTo(this, floatSecondsTotal, center, axis, degrees, null, zoom,
+    if (pymolView != null) {
+      vwr.tm.moveToPyMOL(this, secondsTotal, pymolView);
+    } else {
+      vwr.moveTo(this, secondsTotal, center, axis, degrees, null, zoom,
           xTrans, yTrans, rotationRadius, navCenter, xNav, yNav, navDepth,
           cameraDepth, cameraX, cameraY);
-    if (isJS && floatSecondsTotal > 0 && vwr.g.waitForMoveTo)
+    }
+    if (isJS && secondsTotal > 0 && vwr.g.waitForMoveTo)
       throw new ScriptInterruption(this, "moveTo", 1);
   }
 
@@ -8315,7 +8335,7 @@ public class ScriptEval extends ScriptExpr {
       case T.minus:
         str = paramAsStr(2);
         if (str.equalsIgnoreCase("hkl"))
-          plane = hklParameter(3, null, true);
+          plane = hklParameter(3, null, true, null);
         else if (str.equalsIgnoreCase("plane"))
           plane = planeParameter(2, false);
         if (plane == null)
@@ -8331,7 +8351,7 @@ public class ScriptEval extends ScriptExpr {
         }
         break;
       case T.hkl:
-        plane = (getToken(2).tok == T.none ? null : hklParameter(2, null, true));
+        plane = (getToken(2).tok == T.none ? null : hklParameter(2, null, true, null));
         break;
       case T.reference:
         // only in 11.2; deprecated

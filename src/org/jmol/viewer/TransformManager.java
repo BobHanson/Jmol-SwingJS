@@ -1756,13 +1756,13 @@ public class TransformManager {
    ****************************************************************/
 
   void move(JmolScriptEvaluator eval, V3d dRot, double dZoom, V3d dTrans,
-            double dSlab, double floatSecondsTotal, int fps) {
+            double dSlab, double secondsTotal, int fps) {
 
     movetoThread = (JmolThread) Interface.getOption("thread.MoveToThread", vwr,
         "tm");
     movetoThread.setManager(this, vwr, new Object[] { dRot, dTrans,
-        new double[] { dZoom, dSlab, floatSecondsTotal, fps } });
-    if (floatSecondsTotal > 0)
+        new double[] { dZoom, dSlab, secondsTotal, fps } });
+    if (secondsTotal > 0)
       movetoThread.setEval(eval);
     movetoThread.run();
   }
@@ -1784,7 +1784,7 @@ public class TransformManager {
     return (ptTest3.distance(ptTest2) < 0.1);
   }
 
-  public boolean moveToPyMOL(JmolScriptEvaluator eval, double floatSecondsTotal,
+  public boolean moveToPyMOL(JmolScriptEvaluator eval, double secondsTotal,
                              double[] pymolView) {
     // PyMOL matrices are inverted (row-based)
     M3d m3 = M3d.newA9(pymolView);
@@ -1854,14 +1854,14 @@ public class TransformManager {
         }
       }
     }
-    moveTo(eval, floatSecondsTotal, center, null, 0, m3, 100, Double.NaN,
+    moveTo(eval, secondsTotal, center, null, 0, m3, 100, Double.NaN,
         Double.NaN, rotationRadius, null, Double.NaN, Double.NaN, Double.NaN,
         cameraDepth, cameraX, cameraY);
     return true;
   }
 
   // from Viewer
-  void moveTo(JmolScriptEvaluator eval, double floatSecondsTotal, P3d center,
+  void moveTo(JmolScriptEvaluator eval, double secondsTotal, P3d center,
               T3d rotAxis, double degrees, M3d matrixEnd, double zoom,
               double xTrans, double yTrans, double newRotationRadius,
               P3d navCenter, double xNav, double yNav, double navDepth,
@@ -1878,7 +1878,7 @@ public class TransformManager {
         if (axis.x == 0 && axis.y == 0 && axis.z == 0) {
           // invalid ... no rotation
           /*
-           * why were we then sleeping? int sleepTime = (int) (floatSecondsTotal
+           * why were we then sleeping? int sleepTime = (int) (secondsTotal
            * * 1000) - 30; if (sleepTime > 0) { try { Thread.sleep(sleepTime); }
            * catch (InterruptedException ie) { } }
            */
@@ -1901,11 +1901,11 @@ public class TransformManager {
       yTrans = cameraY * 50 / newRotationRadius / height * screenPixelCount;
     double pixelScale = (center == null ? scaleDefaultPixelsPerAngstrom
         : defaultScaleToScreen(newRotationRadius));
-    if (floatSecondsTotal <= 0) {
+    if (secondsTotal <= 0) {
       setAll(center, matrixEnd, navCenter, zoom, xTrans, yTrans,
           newRotationRadius, pixelScale, navDepth, xNav, yNav, cameraDepth,
           cameraX, cameraY);
-      vwr.moveUpdate(floatSecondsTotal);
+      vwr.moveUpdate(secondsTotal);
       vwr.finalizeTransformParameters();
       return;
     }
@@ -1918,12 +1918,12 @@ public class TransformManager {
           center,
           matrixEnd,
           navCenter,
-          new double[] { floatSecondsTotal, zoom, xTrans, yTrans,
+          new double[] { secondsTotal, zoom, xTrans, yTrans,
               newRotationRadius, pixelScale, navDepth, xNav, yNav, cameraDepth,
               cameraX, cameraY } });
       if (nSteps <= 0 || vwr.g.waitForMoveTo) {
         if (nSteps > 0)
-          movetoThread.setEval(eval);
+          movetoThread.setEval(eval == null ? vwr.eval : eval);
         movetoThread.run();
         if (!vwr.isSingleThreaded)
           movetoThread = null;

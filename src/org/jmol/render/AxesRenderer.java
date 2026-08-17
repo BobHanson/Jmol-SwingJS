@@ -92,7 +92,9 @@ public class AxesRenderer extends CageRenderer {
     if (!isDataSpin && vwr.areAxesTainted())
       axes.reinitShape();
     font3d = vwr.gdata.getFont3DScaled(axes.font3d, imageFontScaling);
-    isUnitCell = isUnitCell && (unitcell != null && ms.unitCells != null);
+    isUnitCell = isUnitCell && (unitcell != null
+    //&& ms.unitCells != null
+    );
     String axisType = (isUnitCell ? axes.axisType : null);
     boolean isabcxyz = (isXY && isUnitCell && axes.axes2 != null);
     isPolymer = isUnitCell && unitcell.isPolymer();

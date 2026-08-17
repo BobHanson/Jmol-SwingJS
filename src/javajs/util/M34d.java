@@ -107,7 +107,7 @@ public abstract class M34d implements JSONEncodable {
    * vecOut.
    * 
    * @param t
-   *        the single precision vector to be transformed
+   *        the vector to be transformed
    * @param result
    *        the vector into which the transformed values are placed
    */

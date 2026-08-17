@@ -1688,9 +1688,13 @@ public class ModelKit {
         return null;
       }
 
-      if (key == "atomset") {
+      if (key == JC.PROP_ATOMSET) {
         addAtomSet((String) value);
         return null;
+      }
+
+      if (key == JC.PROP_STATE) {
+        return getAtomSetState();
       }
 
       if (key == JC.PROP_ATOMS_MOVED) {
@@ -2722,7 +2726,7 @@ public class ModelKit {
                                          String cmd,
                                          // strictly internal, for crystal work:
                                          int site) {
-    assignAtoms(Point3fi.newPF(pt, 0), atomIndex, bs, type, newPoint, cmd,
+    assignAtoms((pt == null ? null : Point3fi.newPF(pt, 0)), atomIndex, bs, type, newPoint, cmd,
         false, site, null, null, null, null, 0, null);
   }
 
@@ -4335,11 +4339,17 @@ public class ModelKit {
     BS bsAtoms;
     String cmd;
     String id;
+    private String data;
 
-    DrawAtomSet(BS bs, String id, String cmd) {
+    DrawAtomSet(BS bs, String id, String cmd, String data) {
       bsAtoms = bs;
       this.cmd = cmd;
       this.id = id;
+      this.data = data;
+    }
+
+    public String getState() {
+      return "modelkit set " + JC.PROP_ATOMSET + " " + PT.esc(data) + "\n";
     }
 
   }
@@ -4394,15 +4404,34 @@ public class ModelKit {
    */
   public void drawSymop(int a1, int a2) {
     String s = "({" + a1 + "}) ({" + a2 + "}) ";
-    String cmd = "draw ID 'sym' symop " + s;
+    String cmd = "draw ID " + JC.DEFAULT_DRAW_SYM_ID + " symop " + s;
     vwr.evalStringGUI(cmd);
+  }
+
+  private String getAtomSetState() {
+    if (drawAtomSymmetry == null || drawAtomSymmetry.isEmpty())
+      return null;
+    String s = "";
+    for (int i = 0; i < drawAtomSymmetry.size(); i++) {
+      s += drawAtomSymmetry.get(i).getState();
+    }
+    return s;
   }
 
   public void addAtomSet(String data) {
     String[] tokens = PT.split(data, "|");
     String id = tokens[0];
+    if (id.equals("null")) {
+      id = JC.DEFAULT_DRAW_SYM_ID_PREFIX;
+    }
+    if (!id.endsWith("_"))
+      id += "_";
     clearAtomSets(id);
+    if (tokens.length == 1)
+      return;
     int a1 = PT.parseInt(tokens[1]);
+    if (tokens[2].startsWith("({"))
+      tokens[2] = tokens[2].substring(2);
     int a2 = PT.parseInt(tokens[2]);
     String cmd = tokens[3];
     BS bs = BSUtil.newAndSetBit(a1);
@@ -4410,7 +4439,7 @@ public class ModelKit {
     if (drawAtomSymmetry == null) {
       drawAtomSymmetry = new Lst<DrawAtomSet>();
     }
-    drawAtomSymmetry.addLast(new DrawAtomSet(bs, id, cmd));
+    drawAtomSymmetry.addLast(new DrawAtomSet(bs, id, cmd, data));
   }
 
   private void clearAtomSets(String id) {
@@ -4569,7 +4598,7 @@ public class ModelKit {
         s = "";
     }
     if (thisId == null)
-      thisId = (isSymop ? JC.DEFAULT_DRAW_SYM_ID : "sg");
+      thisId = (isSymop ? JC.DEFAULT_DRAW_SYM_ID_PREFIX : "sg");
     if (s == null) {
       // for symop just use uvw
       s = (String) vwr.getSymmetryInfo(iatom, xyz, iSym, trans, center, target,
@@ -4577,7 +4606,7 @@ public class ModelKit {
     }
     if (s != null) {
       s = "draw ID \"" //
-          + (isSymop ? "sg" : JC.DEFAULT_DRAW_SYM_ID)
+          + (isSymop ? "sg" : JC.DEFAULT_DRAW_SYM_ID_PREFIX)
           // because we are DELETING the other one
           + "*\" delete;" + s;
       s = "draw ID \"" + thisId + "*\" delete;" + s;
@@ -4586,5 +4615,7 @@ public class ModelKit {
       s += ";draw ID sg_axes axes 0.05;";
     return s;
   }
+
+
 
 }

@@ -31,6 +31,8 @@ public class CIPData {
    * 
    */
   static final double TRIGONALITY_MIN = 0.2d;
+
+  private static final double N_OUT_OF_PLANE_CUTOFF = 0.1;
   
   /**
    * Subclass identifier
@@ -97,6 +99,7 @@ public class CIPData {
 
   /**
    * all N atoms that are sp3-hybridized and at small ring fusions
+   * and not too flat (tested later)
    */
   BS bsAzacyclic;
   
@@ -129,6 +132,12 @@ public class CIPData {
    *  
    */
   BS[] lstSmallRings;
+
+  /**
+   * amide atoms
+   * 
+   */
+  BS bsAmide = new BS();
 
   /**
    * atoms that need specially-calculated element number in Rule 1a
@@ -300,12 +309,14 @@ public class CIPData {
    * designations. See AY-236.203 P-93.5.4.1
    * 
    * Sets a bit set of bridgehead nitrogens
+   * @throws Exception 
    */
-  private void getAzacyclic() {
+  private void getAzacyclic() throws Exception {
+    bsAmide.or(match("{N}C=O"));
     out: for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
       SimpleNode atom = atoms[i];
       if (atom.getElementNumber() != 7 || atom.getCovalentBondCount() != 3
-          || bsKekuleAmbiguous.get(i))
+          || bsKekuleAmbiguous.get(i) || bsAmide.get(i))
         continue;
       // bridgehead N must be in two rings that have at least three atoms in common.
       // or in a three-membered ring? 
@@ -360,11 +371,14 @@ public class CIPData {
   }
 
   private void addAzacyclicN(int i) {
+    if (isTooFlatNitrogen(atoms[i]))
+      return;
     if (bsAzacyclic == null)
       bsAzacyclic = new BS();
     bsAzacyclic.set(i);
   }
 
+  
   /**
    * Determine whether an atom is one we need to consider.
    * 
@@ -493,7 +507,7 @@ public class CIPData {
 
   // temporary fields
 
-  protected V3d vNorm = new V3d(), vTemp = new V3d();
+  protected V3d vNorm = new V3d(), vTemp = new V3d(), vTemp2 = new V3d();
 
 
 //  public boolean canBeChiralBond(SimpleEdge bond) {
@@ -602,4 +616,89 @@ public class CIPData {
   public void setRule6Full(boolean rrrr) {
     testRule6Full = rrrr;
   }
+
+  /**
+   * Using the "Wilson" angle between one atom and the plane of the other three.
+   * 
+   * Experimentation suggests 0.01 radians is about right
+   * 
+   * @param n
+   * @return too flat
+   */
+  public boolean isTooFlatNitrogen(SimpleNode n) {
+    SimpleEdge[] bonds = n.getEdges();
+    int count = n.getCovalentBondCount();
+    if (count != 3)
+      return true;
+    SimpleNode[] others = new SimpleNode[3];
+    for (int j = 0, i = bonds.length; --i >= 0;) {
+      if (bonds[i].isCovalent())
+      others[j++] = bonds[i].getOtherNode(n);
+    }
+    double angle = pointPlaneAngle(n.getXYZ(), others[0].getXYZ(), others[1].getXYZ(), others[2].getXYZ(), vTemp, vTemp2, vNorm);
+    return (angle < N_OUT_OF_PLANE_CUTOFF);
+  }
+  
+  /**
+   * From MM2
+   * calculates angle of a to plane bcd, returning a value > pi/2 in 
+   * highly distorted trigonal pyramidal situations 
+   * 
+   * @param a
+   * @param b
+   * @param c
+   * @param d
+   * @param v1
+   * @param v2
+   * @param norm
+   * @return  (Wilson angle)^2
+   */
+  public static double pointPlaneAngle(P3d a, P3d b,
+                                              P3d c, P3d d,
+                                              V3d v1,V3d v2, 
+                                              V3d norm) {
+    
+    v1.sub2(b, c);
+    v2.sub2(b, d);
+    norm.cross(v1, v2);    
+    v2.add(v1);
+    v1.sub2(b, a);
+    double angleA_CD = Math.PI; 
+    // normally angleA_CD is > pi/2, because v1 is from a to b
+    double angleNorm = vectorAngleRadians(norm, v1);
+    // angleNorm could be > PI/2, so we correct for that here:
+    if (angleNorm > Math.PI / 2)
+      angleNorm = Math.PI - angleNorm;
+    // for highly distorted groups, return will be > pi/2
+    double val = Math.PI / 2.0 + (angleA_CD > Math.PI / 2.0 ? 
+        -angleNorm 
+        : angleNorm) ;    
+    return val;
+  }
+
+  private static double vectorAngleRadians(V3d v1, V3d v2) {
+    // simple -- no check for lengths near 0
+    double l1 = v1.length();
+    double l2 = v2.length();
+    return Math.acos(v1.dot(v2) / (l1 * l2));
+  }
+
+
+//  static {
+//    // trimethylamine from 
+//    double z0 = 0.0898 + 0.36150000000000004;
+//    double dz = z0/20;
+//    P3d a = P3d.new3(-0.0, 0.0, 0);
+//    P3d b = P3d.new3(0.916, 1.056, z0);
+//    P3d c = P3d.new3(0.4565, -1.3213, z0);
+//    P3d d = P3d.new3(-1.3725, 0.26530000000000004, z0);
+//    V3d v1 = new V3d(), v2 = new V3d(), v3 = new V3d();    
+//    for (int i = 0; i <= 20; i++) {
+//      P3d a1 = P3d.newP(a);
+//      a1.z = i * dz;
+//      double dtheta = pointPlaneAngle(a1, b, c, d, v1, v2, v3);
+//      System.out.println(i + "\t" + dtheta*180/Math.PI + "\t" + z0 + "\t" + a1.z + "\t" + (dtheta * dtheta));
+//    }
+//  }
+//  
 }

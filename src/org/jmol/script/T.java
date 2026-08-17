@@ -1390,6 +1390,7 @@ public class T {
   public final static int triangles      = misc  | 358;
   public final static int url            = misc  | 360;
   public final static int user           = misc  | 362;
+  public final static int uvw            = misc  | 363;
   public final static int val            = misc  | 364;
   public final static int validation     = misc  | 365;
   public final static int variable       = misc  | 366;
@@ -2242,6 +2243,7 @@ public class T {
         "uz",
         "uxyz",
         "user",
+        "uvw",
         "valence",
         "vanderWaals",
         "vdw",
@@ -3331,6 +3333,7 @@ public class T {
         unitz,                              // "uz"
         unitxyz,                            // "uxyz"
         user,                               // "user"
+        uvw,                                // "uvw"
         valence,                            // "valence"
         vanderwaals,                        // "vanderWaals"
         -1,                                 // "vdw"

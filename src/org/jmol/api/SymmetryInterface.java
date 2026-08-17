@@ -16,10 +16,10 @@ import javajs.util.M4d;
 import javajs.util.Matrix;
 import javajs.util.P3d;
 import javajs.util.P3i;
+import javajs.util.P4d;
 import javajs.util.Qd;
 import javajs.util.SB;
 import javajs.util.T3d;
-import javajs.util.V3d;
 
 public interface SymmetryInterface {
 
@@ -315,5 +315,7 @@ public interface SymmetryInterface {
   void toFractionalSpin(T3d v);
 
   void toCartesianSpin(T3d v);
+
+  Qd getQuaternionRotationForUVW(T3d uvw, P4d planeUVW);
 
 }

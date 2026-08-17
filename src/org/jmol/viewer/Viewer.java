@@ -2026,13 +2026,13 @@ public class Viewer extends JmolViewer
   }
 
   public void move(JmolScriptEvaluator eval, V3d dRot, double dZoom, V3d dTrans,
-                   double dSlab, double doubleSecondsTotal, int fps) {
+                   double dSlab, double secondsTotal, int fps) {
     // from Eval
-    tm.move(eval, dRot, dZoom, dTrans, dSlab, doubleSecondsTotal, fps);
-    moveUpdate(doubleSecondsTotal);
+    tm.move(eval, dRot, dZoom, dTrans, dSlab, secondsTotal, fps);
+    moveUpdate(secondsTotal);
   }
 
-  public void moveTo(JmolScriptEvaluator eval, double doubleSecondsTotal,
+  public void moveTo(JmolScriptEvaluator eval, double secondsTotal,
                      P3d center, V3d rotAxis, double degrees,
                      M3d rotationMatrix, double zoom, double xTrans,
                      double yTrans, double rotationRadius, P3d navCenter,
@@ -2040,17 +2040,17 @@ public class Viewer extends JmolViewer
                      double cameraDepth, double cameraX, double cameraY) {
     // from StateManager -- -1 for time --> no repaint
     if (!haveDisplay)
-      doubleSecondsTotal = 0;
+      secondsTotal = 0;
     setTainted(true);
-    tm.moveTo(eval, doubleSecondsTotal, center, rotAxis, degrees,
+    tm.moveTo(eval, secondsTotal, center, rotAxis, degrees,
         rotationMatrix, zoom, xTrans, yTrans, rotationRadius, navCenter, xNav,
         yNav, navDepth, cameraDepth, cameraX, cameraY);
   }
 
-  public void moveUpdate(double doubleSecondsTotal) {
-    if (doubleSecondsTotal > 0)
+  public void moveUpdate(double secondsTotal) {
+    if (secondsTotal > 0)
       requestRepaintAndWait("moveUpdate");
-    else if (doubleSecondsTotal == 0)
+    else if (secondsTotal == 0)
       setSync();
   }
 
@@ -11631,6 +11631,12 @@ public class Viewer extends JmolViewer
               : s.getBytes());
       }
       return (asBytes ? fm.getFileAsBytes(fname, null) : getFileAsString(fname));
+  }
+
+  public void movetoHome(ScriptEval eval, double secondsTotal) {
+    moveTo(eval, secondsTotal, null, JC.axisZ, 0, null, 100, 0, 0, 0,
+        null, Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN,
+        Double.NaN);
   }
 
 }

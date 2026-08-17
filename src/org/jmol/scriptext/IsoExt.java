@@ -397,7 +397,7 @@ public class IsoExt extends ScriptExt {
           if (o instanceof T3d) {
             ucLattice = (T3d) o;
             i = e.iToken;
-          } else if (o != null){
+          } else if (o != null) {
             uc = (SymmetryInterface) o;
             i = e.iToken;
           }
@@ -505,7 +505,7 @@ public class IsoExt extends ScriptExt {
         if (tokAt(i + 1) == T.unitcell) {
           ucHKL = (SymmetryInterface) getUnitCellParameter(++i, false);
           i = e.iToken;
-        }      
+        }
         //$FALL-THROUGH$
       case T.line:
       case T.plane:
@@ -516,7 +516,7 @@ public class IsoExt extends ScriptExt {
             havePoints = true;
             setShapeProperty(JC.SHAPE_DRAW, "plane", null);
             Lst<P3d> list = new Lst<P3d>();
-            plane = eval.hklParameterUC(++i, list, true, ucHKL);
+            plane = eval.hklParameterUC(++i, list, true, ucHKL, null);
             i = eval.iToken;
             propertyName = "coords";
             propertyValue = list;
@@ -546,7 +546,7 @@ public class IsoExt extends ScriptExt {
           plane = eval.planeParameter(i, isBest);
           break;
         case T.hkl:
-          plane = eval.hklParameterUC(++i, null, true, ucHKL);
+          plane = eval.hklParameterUC(++i, null, true, ucHKL, null);
           if (tokAt(eval.iToken + 1) == T.all) {
             isAll = true;
             eval.iToken++;
@@ -624,7 +624,8 @@ public class IsoExt extends ScriptExt {
         // draw pointgroup {atoms} CENTER xx
         // draw pointgroup SPACEGROUP
         // draw pointgroup [C2|C3|Cs|Ci|etc.] [n] [scale x]
-        pts = (eval.isArrayParameter(++i) ? eval.getPointArray(i, -1, false, true)
+        pts = (eval.isArrayParameter(++i)
+            ? eval.getPointArray(i, -1, false, true)
             : null);
         if (pts == null && eval.isAtomExpression(i)) {
           bs = eval.atomExpressionAt(i);
@@ -685,9 +686,8 @@ public class IsoExt extends ScriptExt {
         if (tokAt(i) == T.scale)
           scale = floatParameter(++i);
         if (!chk)
-          eval.runScript(vwr.ms.getPointGroupAsString(vwr.bsA(), 
-              (type.length() > 0 ? type : null), index,
-              scale, pts, center, 
+          eval.runScript(vwr.ms.getPointGroupAsString(vwr.bsA(),
+              (type.length() > 0 ? type : null), index, scale, pts, center,
               (thisId == null ? "" : thisId)));
         return;
       case T.connect:
@@ -843,7 +843,8 @@ public class IsoExt extends ScriptExt {
         boolean isSymop = (tok == T.symop);
         boolean isSpinop = (tok == T.spinop);
         int nth = -1;
-        Object[] ret = new Object[] { null, vwr.getVisibleFrameAtomsNoSplitData() };
+        Object[] ret = new Object[] { null,
+            vwr.getVisibleFrameAtomsNoSplitData() };
         boolean checkNth = false;
         if (isSymop || isSpinop) {
           iSym = 0;
@@ -936,17 +937,20 @@ public class IsoExt extends ScriptExt {
         if (bsAtoms == null && vwr.am.cmi >= 0)
           bsAtoms = vwr.getModelUndeletedAtomsBitSet(vwr.am.cmi);
         if (bsAtoms != null) {
-          s = vwr.getModelkit(false).drawSymmetry(thisId, isSymop, iatom, xyz, iSym, trans, center, target, intScale, nth, options, opList, false);
+          s = vwr.getModelkit(false).drawSymmetry(thisId, isSymop, iatom, xyz,
+              iSym, trans, center, target, intScale, nth, options, opList,
+              false);
           if (s == null)
             return;
-          if ((isSymop || isSpinop) && target instanceof Atom && center instanceof Atom) {
+          if ((isSymop || isSpinop) && target instanceof Atom
+              && center instanceof Atom) {
             if (eval.fullCommand.indexOf(JC.SCRIPT_QUIET) >= 0) {
               s = PT.rep(s, "print", "#print");
             }
-            s += "\nmodelkit set atomset "
-                + PT.esc(thisId + "|" + ((Atom) center).i + "|"
-                    + ((Atom) target).i + "|" + eval.fullCommand)
-                + ";";
+            if (thisId == null)
+              thisId = JC.DEFAULT_DRAW_SYM_ID_PREFIX;
+            s += getAtomSetScript(thisId, ((Atom) center).i, ((Atom) target).i,
+                eval.fullCommand);
           }
         }
         eval.runBufferedSafely(
@@ -988,7 +992,7 @@ public class IsoExt extends ScriptExt {
       case T.define:
       case T.bitset:
       case T.expressionBegin:
-        propertyName = "atomSet";
+        propertyName = JC.PROP_ATOMSET;
         propertyValue = atomExpressionAt(i);
         if (isFrame)
           center = centerParameter(i);
@@ -1069,7 +1073,7 @@ public class IsoExt extends ScriptExt {
         propertyName = "vector";
         break;
       case T.length:
-        propertyValue = Double.valueOf(floatParameter(++i));
+//        propertyValue = Double.valueOf(floatParameter(++i));
         propertyName = "length";
         break;
       case T.decimal:
@@ -1208,7 +1212,7 @@ public class IsoExt extends ScriptExt {
         i = eval.iToken;
         continue;
       }
-      idSeen = (eval.theTok != T.delete  && (i > 2 || i > modelIndexPt));
+      idSeen = (eval.theTok != T.delete && (i > 2 || i > modelIndexPt));
       if (havePoints && !isInitialized && !isFrame) {
         setShapeProperty(JC.SHAPE_DRAW, "points", Integer.valueOf(intScale));
         isInitialized = true;
@@ -1221,18 +1225,17 @@ public class IsoExt extends ScriptExt {
           double d = 0;
           switch (propertyName) {
           case "vector":
-              // new 16.3.44
+            // new 16.3.44
             d = DEFAULT_DRAW_VECTOR_WIDTH;
             break;
           case "line":
-              // new 16.3.9/10
+            // new 16.3.9/10
             d = DEFAULT_DRAW_LINE_WIDTH;
             break;
           }
           if (d != 0) {
             swidth = "width " + d;
-            setShapeProperty(JC.SHAPE_DRAW, "width",
-                Double.valueOf(d));
+            setShapeProperty(JC.SHAPE_DRAW, "width", Double.valueOf(d));
           }
         }
         setShapeProperty(JC.SHAPE_DRAW, propertyName, propertyValue);
@@ -1254,8 +1257,14 @@ public class IsoExt extends ScriptExt {
         if (pt >= 0)
           thisId = thisId.substring(0, pt);
       }
-      vwr.getModelkit(false).drawAxes(pts, thisId, (drawAxes ? swidth : "delete"), offset);
+      vwr.getModelkit(false).drawAxes(pts, thisId,
+          (drawAxes ? swidth : "delete"), offset);
     }
+  }
+
+  private final static String getAtomSetScript(String id, int i1, int i2,
+                                              String cmd) {
+    return "\nmodelkit set " + JC.PROP_ATOMSET + PT.esc(id + "|" + i1 + "|" + i2 + "|" + cmd + ";");
   }
 
   private Object getUnitCellParameter(int i, boolean allowLattice) throws ScriptException {
@@ -2415,7 +2424,7 @@ public class IsoExt extends ScriptExt {
         // miller indices hkl
         planeSeen = true;
         propertyName = "plane";
-        propertyValue = eval.hklParameter(++i, null, true);
+        propertyValue = eval.hklParameter(++i, null, true, null);
         i = eval.iToken;
         sbCommand.append(" plane ").append(Escape.eP4((P4d) propertyValue));
         break;

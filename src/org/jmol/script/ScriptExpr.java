@@ -816,7 +816,7 @@ abstract class ScriptExpr extends ScriptParam {
         break;
       case T.hkl:
         rpn.addX(SV.newT(instruction));
-        rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, null, true)));
+        rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, null, true, null)));
         pc = iToken;
         break;
       case T.plane:
@@ -859,7 +859,7 @@ abstract class ScriptExpr extends ScriptParam {
           rpn.addX(SV.newT(instruction));
           // note that the compiler has changed all within() types to strings.
           if (s.equals("hkl")) {
-            rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, null, true)));
+            rpn.addX(SV.newV(T.point4f, hklParameter(pc + 2, null, true, null)));
             pc = iToken;
           }
         }
@@ -1332,6 +1332,7 @@ abstract class ScriptExpr extends ScriptParam {
   }
 
   private P3d ptTemp;
+
 
   /**
    * 

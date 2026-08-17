@@ -174,6 +174,8 @@ public class GuiMap {
     labels.put("axisxScript", GT.$("Axis x"));
     labels.put("axisyScript", GT.$("Axis y"));
     labels.put("axiszScript", GT.$("Axis z"));
+    labels.put("hklScript", GT.$("Miller plane"));
+    
     labels.put("transform", GT.$("Tr&ansform..."));
     labels.put("definecenter", GT.$("Define &Center"));
     labels.put("tools", GT.$("&Tools"));

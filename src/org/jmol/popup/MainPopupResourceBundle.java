@@ -101,7 +101,7 @@ public class MainPopupResourceBundle extends PopupResource {
               + "Ligand exceptWater nonWaterSolvent" },
 
       {   "viewMenu",
-          "best front left right top bottom back - axisX axisY axisZ - axisA axisB axisC" },
+          "best front left right top bottom back - axisX axisY axisZ - axisA axisB axisC - hkl" },
 
       {   "renderMenu",
           "renderSchemeMenu - atomMenu labelMenu bondMenu hbondMenu ssbondMenu - "
@@ -300,6 +300,7 @@ public class MainPopupResourceBundle extends PopupResource {
         "axisA", GT.$("Axis a"),
         "axisB", GT.$("Axis b"),
         "axisC", GT.$("Axis c"),
+        "hkl", GT.$("Miller plane"),
         "axisX", GT.$("Axis x"),
         "axisY", GT.$("Axis y"),
         "axisZ", GT.$("Axis z"),
@@ -758,6 +759,7 @@ public class MainPopupResourceBundle extends PopupResource {
       { "axisX", "moveto axis x"},
       { "axisY", "moveto axis y"},
       { "axisZ", "moveto axis z"},
+      { "hkl", "moveto hkl ?"},
 
       { "renderCpkSpacefill", "restrict bonds not selected;select not selected;spacefill 100%;color cpk" },
       { "renderBallAndStick", "restrict bonds not selected;select not selected;spacefill 23%AUTO;wireframe 0.15;color cpk" },

@@ -1654,7 +1654,7 @@ public class JmolPanel extends JPanel implements SplashInterface, JsonNioClient 
       if (script.indexOf("#showMeasurementTable") >= 0)
         measurementTable.activate();
       //      vwr.script("set picking measure distance;set pickingstyle measure");
-      vwr.evalStringQuiet(script);
+      vwr.evalStringQuiet(script + JC.SCRIPT_MENU);
     }
   }
 

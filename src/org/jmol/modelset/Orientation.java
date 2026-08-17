@@ -85,7 +85,7 @@ public class Orientation {
       vwr.setBooleanProperty("windowCentered", windowCenteredFlag);
       vwr.setBooleanProperty("navigationMode", navigationMode);
       if (pymolView == null)
-        vwr.moveTo(vwr.eval, timeSeconds, center, null, Double.NaN, rotationMatrix, zoom, xTrans,
+        vwr.moveTo(null, timeSeconds, center, null, Double.NaN, rotationMatrix, zoom, xTrans,
             yTrans, rotationRadius, navCenter, xNav, yNav, navDepth, cameraDepth, cameraX, cameraY);
       else
         vwr.tm.moveToPyMOL(vwr.eval, timeSeconds, pymolView);

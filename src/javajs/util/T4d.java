@@ -103,13 +103,13 @@ public abstract class T4d extends T3d {
 
   /**
    * Returns a string that contains the values of this Tuple4f. The form is
-   * (x,y,z,w).
+   * {x,y,z,w}.
    * 
    * @return the String representation
    */
   @Override
   public String toString() {
-    return "(" + x + ", " + y + ", " + z + ", " + w + ")";
+    return "{" + x + ", " + y + ", " + z + ", " + w + "}";
   }
 
   @Override

@@ -18,7 +18,10 @@ public abstract class ScriptError implements JmolScriptEvaluator {
   public Viewer vwr;
   public boolean chk;
 
+  protected boolean fromMenu;
+
   public boolean ignoreError;
+
   protected boolean error;
   protected String errorMessage;
   protected String errorMessageUntranslated;
@@ -100,6 +103,9 @@ public abstract class ScriptError implements JmolScriptEvaluator {
     if (strUntranslated == null)
       strUntranslated = message;
     if (!chk) {
+      if (fromMenu)
+        vwr.alert("Script Error: " + message);
+        
       // String s = vwr.getSetHistory(1);
       // vwr.addCommand(s + CommandHistory.ERROR_FLAG);
       setCursorWait(false);

@@ -121,7 +121,7 @@ public class Axes extends FontLineShape {
   
   public void setPoints(int axesMode) {
     SymmetryInterface unitcell;
-    if (axesMode != T.axesunitcell || ms.unitCells == null
+    if (axesMode != T.axesunitcell 
         || (unitcell = vwr.getCurrentUnitCell()) == null) {
       originPoint.setT(fixedOrigin != null ? fixedOrigin
           : axesMode == T.axeswindow ? vwr.getBoundBoxCenter() : pt0);

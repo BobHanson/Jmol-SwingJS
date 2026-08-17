@@ -43,6 +43,7 @@ import javajs.util.Lst;
 import javajs.util.M3d;
 import javajs.util.M4d;
 import javajs.util.P3d;
+import javajs.util.P3i;
 import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
@@ -1869,6 +1870,16 @@ public class ScriptMathProcessor {
         return (op.intValue == T.unitxyz ? addXPt(ptu)
             : addXDouble(op.intValue == T.unitx ? ptu.x
                 : op.intValue == T.unity ? ptu.y : ptu.z));
+      case T.screenx:
+      case T.screeny:
+      case T.screenz:
+      case T.screenxyz:
+        P3d pts = P3d.newP((P3d) x2.value);
+        P3i sc = vwr.tm.transformPt(pts);
+        pts.set(sc.x, sc.y, sc.z);
+        return (op.intValue == T.screenxyz ? addXPt(pts)
+            : addXDouble(op.intValue == T.screenx ? pts.x
+                : op.intValue == T.screeny ? pts.y : pts.z));
       }
       break;
     case T.point4f:

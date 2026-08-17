@@ -2849,7 +2849,7 @@ public class CmdExt extends ScriptExt {
       plane = e.planeParameter(1, false);
       break;
     case T.hkl:
-      plane = e.hklParameter(2, null, true);
+      plane = e.hklParameter(2, null, true, null);
       break;
     }
     e.checkLengthErrorPt(e.iToken + 1, 1);
@@ -5936,7 +5936,7 @@ public class CmdExt extends ScriptExt {
       // it is possible to follow this by an axis diameter
       break;
     case T.surface:
-      P4d plane = eval.hklParameter(i + 1, null, false);
+      P4d plane = eval.hklParameter(i + 1, null, false, null);
       T3d hkl = eval.getPointOrPlane(i + 1, ScriptParam.MODE_P34);
       i = eval.iToken;
       double zscale = Double.NaN;
@@ -6645,7 +6645,7 @@ public class CmdExt extends ScriptExt {
           value = null;
           break;
         case T.hkl:
-          plane = e.hklParameter(++i, null, true);
+          plane = e.hklParameter(++i, null, true, null);
           value = null;
           break;
         case T.plane:

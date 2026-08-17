@@ -424,7 +424,7 @@ public class Draw extends MeshCollection {
       return;
     }
 
-    if ("atomSet" == propertyName) {
+    if (JC.PROP_ATOMSET == propertyName) {
       BS bsAtoms = (BS) value;
       if (bsAtoms.isEmpty())
         return;
@@ -1797,6 +1797,9 @@ private void initDraw() {
       if (!mesh.visible)
         s.append(" " + myType + " ID " + PT.esc(mesh.thisID) + " off;\n");
     }
+    String mkstate = (String) vwr.getModelkitPropertySafely(JC.PROP_STATE);
+    if (mkstate != null)
+      s.append(mkstate);
     return s.toString();
   }
 

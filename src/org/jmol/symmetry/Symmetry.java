@@ -58,6 +58,7 @@ import javajs.util.M4d;
 import javajs.util.Matrix;
 import javajs.util.P3d;
 import javajs.util.P3i;
+import javajs.util.P4d;
 import javajs.util.PT;
 import javajs.util.Qd;
 import javajs.util.Rdr;
@@ -2423,6 +2424,11 @@ public class Symmetry implements SymmetryInterface {
   @Override
   public void toCartesianSpin(T3d v) {
     unitCell.toCartesianSpin(v);
+  }
+
+  @Override
+  public Qd getQuaternionRotationForUVW(T3d uvw, P4d planeUVW) {
+    return (unitCell == null ? null : unitCell.getQuaternionRotationForHKL(uvw, planeUVW));
   }
 
 }

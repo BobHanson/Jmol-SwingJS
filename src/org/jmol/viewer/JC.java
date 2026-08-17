@@ -38,6 +38,9 @@ import org.jmol.util.Logger;
 import javajs.util.PT;
 import javajs.util.V3d;
 
+/**
+ * Jmol Constants
+ */
 public final class JC {
 
   public final static int AXIS_A = 6;
@@ -211,7 +214,9 @@ public final class JC {
       "http://img.chem.ucl.ac.uk/sgp/large/%FILEaz1.htm",
       "aflowbin",
       "http://aflowlib.mems.duke.edu/users/jmolers/binary_new/%FILE.aflow_binary",
-      "aflowlib", "https://aflow.org/p/%FILE.cif", // updated 2024.04.22
+      // old "aflowlib", "https://aflow.org/p/%FILE.cif", // updated 2024.04.22
+      // 2026.08.14 Jmol 16.4.18
+      "aflowlib", "https://raw.githubusercontent.com/aflow-org/aflow_prototype_encyclopedia/refs/heads/main/data/%FILE/aflow.cif",  
       "aflowpro","$aflowlib",
       // _#DOCACHE_ flag indicates that the loaded file should be saved in any state in full
       // ' at start indicates a Jmol script evaluation
@@ -553,6 +558,7 @@ public final class JC {
 
   public static final String SCRIPT_EXT = "\1##";
   public final static String SCRIPT_GUI = "; ## GUI ##";
+  public final static String SCRIPT_MENU = SCRIPT_EXT + "MENU";
   public static final String SCRIPT_QUIET = "#quiet";
   public static final String SCRIPT_STEP = SCRIPT_EXT + "SCRIPT_STEP";
   public static final String SCRIPT_START = SCRIPT_EXT + "SCRIPT_START";
@@ -1688,6 +1694,8 @@ public final class JC {
   public static final String PROP_ATOMS_DELETED = "atomsDeleted";
   public static final String PROP_ATOMS_MOVED = "atomsMoved";
   public static final String PROP_ATOMS_LABELED = "atomslabeled";
+
+  public static final String PROP_ATOMSET = "atomset";  
   
   public static final String INFO_TRAJECTORY_STEPS = "trajectorySteps";
   public static final String INFO_VIBRATION_STEPS = "vibrationSteps";
@@ -1730,7 +1738,8 @@ public final class JC {
   public static final String SPIN_ROTATION_AXIS_ANGLE_APPLIED = "spinRotationAxisAngleApplied";
   public static final String SPIN_FRAME_ROTATION_MATRIX = "spinFrameRotationMatrix";
   public static final String UC_MOREINFO = "moreUnitCellInfo";
-  public static final String DEFAULT_DRAW_SYM_ID = "sym_"; // do not change this; code on working pages needs this right
+  public static final String DEFAULT_DRAW_SYM_ID = "sym";         // do not change this; code on working pages needs this right
+  public static final String DEFAULT_DRAW_SYM_ID_PREFIX = "sym_"; // do not change this; code on working pages needs this right
   public static final String UNITCELL_PREFIX = "unitcell_";
   public static final String SSG_POINT_GROUP_AXES = "pointGroupAxes";
   public static final String INFO_DSSR = "dssr";
@@ -1760,8 +1769,9 @@ public final class JC {
   public static final String FILE_MARK_$BINARY$ = "$_BINARY_$";
   public static final String CACHE_DIALOG = " DIALOG";
   public static final String ASYNC_CANCELED = "#CANCELED#";
-  
-  /**
+  public static final String PROP_STATE = "state";
+
+/**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.
    * 
    * @param key

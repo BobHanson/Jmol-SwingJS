@@ -478,31 +478,70 @@ abstract public class ScriptParam extends ScriptError {
     return data;
   }
 
-  public P4d hklParameter(int i, Lst<P3d> pts, boolean allowOffset)
+  public P4d hklParameter(int i, Lst<P3d> pts, boolean allowOffset, P3d retHKL)
       throws ScriptException {
-    return hklParameterUC(i, pts, allowOffset, null);
+    return hklParameterUC(i, pts, allowOffset, null, retHKL);
   }
 
-  public P4d hklParameterUC(int i, Lst<P3d> pts, boolean allowOffset, SymmetryInterface ucHKL)
+  public P4d hklParameterUC(int i, Lst<P3d> pts, boolean allowOffset,
+                            SymmetryInterface ucHKL, P3d retHKL)
       throws ScriptException {
-    if (!chk && ucHKL == null && vwr.getCurrentUnitCell() == null)
+    if (!chk && ucHKL == null && vwr.getCurrentUnitCell() == null) {
       error(ERROR_noUnitCell);
-    T3d pt = getPointOrPlane(i, MODE_P34 | MODE_P_IMPLICIT_FRACTIONAL);
-    double offset = Double.NaN;
-    if (allowOffset) {
-      offset = (pt instanceof P4d ? ((P4d) pt).w : Double.NaN);
-      if (tokAt(iToken + 1) == T.offset) {
-        iToken++;
-        offset = floatParameter(++iToken);
-      }
     }
-    
-    P4d p = getHklPlane(pt, offset, pts, ucHKL);
-    if (p == null)
+    P4d retPt = null;
+    out: while (true) {
+      T3d pt;
+      switch (tokAt(i)) {
+      case T.string:
+      case T.opIf: // quote or '?'
+        String s = paramAsStr(i);
+        if (s.equals("?")) {
+          s = (chk ? "1 1 1" : vwr.prompt("Enter h k l", "", false));
+        }
+        s = PT.clean(PT.rep(s, ",", " "));
+        String[] shkl = PT.split(s, " ");
+        if (shkl.length != 3) {
+          error(ERROR_badMillerIndices);
+        }
+        int[] data = new int[3];
+        for (int j = 0; j < 3; j++) {
+          data[j] = PT.parseInt(shkl[j]);
+          if (data[j] == Integer.MIN_VALUE)
+            break out;
+        }
+        pt = P3d.new3(data[0], data[1], data[2]);
+        break;
+      case T.integer:
+        pt = P3d.new3(intParameter(i++), intParameter(i++), intParameter(i++));
+        break;
+      default:
+        pt = getPointOrPlane(i, MODE_P34 | MODE_P_IMPLICIT_FRACTIONAL);
+      }
+      boolean isPlane = (pt instanceof P4d);
+      if (retHKL != null) {
+        if (isPlane) {
+          retHKL.setT(pt);
+        } else {
+          retHKL.x = Double.NaN;
+        }
+      }
+      double offset = Double.NaN;
+      if (allowOffset) {
+        offset = (isPlane ? ((P4d) pt).w : Double.NaN);
+        if (tokAt(iToken + 1) == T.offset) {
+          iToken++;
+          offset = floatParameter(++iToken);
+        }
+      }
+      retPt = getHklPlane(pt, offset, pts, ucHKL);
+      break;
+    }
+    if (retPt == null)
       error(ERROR_badMillerIndices);
     if (!chk && Logger.debugging)
-      Logger.debug("defined plane: " + p);
-    return p;
+      Logger.debug("defined plane: " + retPt);
+    return retPt;
   }
 
   public P4d getHklPlane(T3d pt, double offset, Lst<P3d> pts, SymmetryInterface ucHKL) {
