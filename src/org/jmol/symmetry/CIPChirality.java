@@ -823,8 +823,7 @@ public class CIPChirality {
    * @param lstEZ
    */
   private void clearSmallRingEZ(SimpleNode[] atoms, Lst<int[]> lstEZ) {
-    for (int j = data.lstSmallRings.length; --j >= 0;)
-      data.lstSmallRings[j].andNot(data.bsAtropisomeric);
+    data.clearAtropisomericRings();
     for (int i = lstEZ.size(); --i >= 0;) {
       int[] ab = lstEZ.get(i);
       for (int j = data.lstSmallRings.length; --j >= 0;) {
@@ -850,16 +849,16 @@ public class CIPChirality {
     int index = atom.getIndex();
     SimpleEdge[] bonds = atom.getEdges();
     int c = NO_CHIRALITY;
-    boolean isAtropic = data.bsAtropisomeric.get(index);
+    boolean isAtropic = data.isAtropisomeric(atom);
     for (int j = bonds.length; --j >= 0;) {
       SimpleEdge bond = bonds[j];
       SimpleNode atom1;
       int index1;
       if (isAtropic) {
         atom1 = bonds[j].getOtherNode(atom);
-        index1 = atom1.getIndex();
-        if (!data.bsAtropisomeric.get(index1))
+        if (!data.isAtropisomeric(atom))
           continue;
+        index1 = atom1.getIndex();
         c = setBondChirality(atom, atom1, atom, atom1, true);
       } else if (data.getBondOrder(bond) == 2) {
         atom1 = getLastCumuleneAtom(bond, atom, null, null);
@@ -1156,8 +1155,7 @@ public class CIPChirality {
     int c = (atop >= 0 && btop >= 0 ? getEneChirality(b2.atoms[btop], b2, a1,
         a1.atoms[atop], isAxial, true) : NO_CHIRALITY);
     if (c != NO_CHIRALITY
-        && (isAxial || !data.bsAtropisomeric.get(a.getIndex())
-            && !data.bsAtropisomeric.get(b.getIndex()))) {
+        && (isAxial || !data.isAtropisomeric(a) && !data.isAtropisomeric(b))) {
       //
       // We must check maxRules. 
       // 
@@ -1560,8 +1558,13 @@ public class CIPChirality {
           parent.getKekuleElementNumber() 
           : atom.getElementNumber());
       bondCount = atom.getCovalentBondCount();
-      isSP3 = (bondCount == 4 || bondCount == 3 && !isAlkene
-          && (elemNo > 10 || data.bsAzacyclic != null && data.bsAzacyclic.get(atomIndex)));
+      isSP3 = (bondCount == 4 
+          || bondCount == 3 
+            && !isAlkene 
+            && (elemNo > 10 
+                 || elemNo == 7 && data.isAzacyclic(atom)
+                )
+          );
       if (parent != null)
         sphere = parent.sphere + 1;
       if (sphere == 1) {
@@ -2337,7 +2340,7 @@ public class CIPChirality {
           || !b.parent.alkeneParent.isEvenEne)
         return TIED;
       int ret = Integer.compare(parent.auxEZ,  b.parent.auxEZ);
-      System.out.println("RULE 3 " + ret + " for " + parent + "," + this + " " + b.parent + "," + b);
+      //System.out.println("RULE 3 " + ret + " for " + parent + "," + this + " " + b.parent + "," + b);
       return ret;
     }
 
@@ -2830,7 +2833,7 @@ public class CIPChirality {
         path.addLast(oldParent = oldParent.parent);
       }
       if (oldParent.parent != null && newParent != null)
-        path.add(oldParent.parent);
+        path.addLast(oldParent.parent);
       path.addLast(null);
       for (int i = 0, n = path.size(); i < n; i++) {
         oldParent = path.get(i);

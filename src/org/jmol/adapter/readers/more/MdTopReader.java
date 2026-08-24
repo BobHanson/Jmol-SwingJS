@@ -28,6 +28,7 @@ import javajs.util.Lst;
 
 import org.jmol.adapter.smarter.Atom;
 import org.jmol.adapter.smarter.Bond;
+import org.jmol.adapter.smarter.Resolver;
 import org.jmol.util.Logger;
 
 /**
@@ -141,7 +142,7 @@ public class MdTopReader extends ForceFieldReader {
     }
     Logger.info("Total number of atoms used=" + nAtoms);
     setModelPDB(true);
-    htParams.put("defaultType", "mdcrd");
+    Resolver.setDefaultType("mdcrd", htParams);
   }
 
   private void createBonds(String[] bonds) {

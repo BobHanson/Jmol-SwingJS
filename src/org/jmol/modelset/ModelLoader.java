@@ -168,11 +168,11 @@ public final class ModelLoader {
     ms.modelSetProperties = (Properties) ms.getInfoM("properties");
     //isMultiFile = getModelSetAuxiliaryInfoBoolean("isMultiFile"); -- no longer necessary
     ms.haveBioModels = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_ISPDB));
-    isMutate = ms.getMSInfoB("isMutate");
     if (ms.haveBioModels) {
       jbr = vwr.getJBR().setLoader(this);
       jbr.carbohydrates = (String) info.get("carbohydrates");
     }
+    isMutate = ms.getMSInfoB("isMutate");
     jmolData = (adapterModelCount == 0 ? (Map<String, Object>) ms.getInfoM(JC.INFO_JMOL_DATA) : null);
     fileHeader = (String) ms.getInfoM("fileHeader");
     Lst<P3d[]> steps = (Lst<P3d[]>) ms.getInfoM(JC.INFO_TRAJECTORY_STEPS);

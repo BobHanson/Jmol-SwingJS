@@ -86,6 +86,8 @@ public class MMCifReader extends CifReader {
   // Jmol-14.3.3_2014.07.27 broke mmCIF bond reading for ligands
   // Jmol-14.3.9_2014.11.11 fixes this. 
 
+  private String assemblyID;
+
   M4d mident;
 
   @Override
@@ -107,8 +109,15 @@ public class MMCifReader extends CifReader {
       filter = PT.rep(filter, "BIOMOLECULE", "ASSEMBLY");
     isBiomolecule = checkFilterKey("ASSEMBLY");
     if (isBiomolecule) {
+      assemblyID = (getFilter("ASSEMBLY").replace('=',' ') + " 1");
+      assemblyID = PT.split(PT.rep(assemblyID, "  ", " "), " ")[1];
+      // allow for default assembly 1
       filter = filter.replace(':', ' '); // no chain selection for biomolecules
       bySymop = checkFilterKey("BYSYMOP");
+      // incompatible with building biomolecules
+      dssr = null;
+      validation = null;
+      domains = null;  
     }    
     isCourseGrained = byChain || bySymop;
     if (isCourseGrained) {
@@ -130,17 +139,24 @@ public class MMCifReader extends CifReader {
         || key0.startsWith(CAT_STRUCTCONN_CAT)
         || key0.startsWith(CAT_SEQUENCEDIF_CAT)
         || key0.startsWith(CAT_STRUCTCONF_CAT)
-        || key0.startsWith(CAT_SHEET_CAT)
+        || key0.startsWith(CAT_SHEET_CAT) 
         
 //        || key0.startsWith(CAT_PDBX_NONPOLY_CAT)
-        )
+        ) {
       processSubclassLoopBlock();
-    else if (key.equals("_rna3d")) {
+    } else if (key.equals("_rna3d")) {
       addedData = (String) field;
       addedDataKey = key;
     } else if (key.equals("_dssr")) {
       dssr = vwr.parseJSONMap(reader.readLine());
       reader.readLine(); // sometimes there is a null character here
+    }  
+    
+    if (isBiomolecule) {
+      // information read, but not compatible
+      addedData = null;
+      dssr = null;
+      
     }
   }
   
@@ -227,19 +243,71 @@ public class MMCifReader extends CifReader {
       asc.atomSetCount = lastSet;
   }
 
+  @Override
+  public void applySymmetryAndSetTrajectory() throws Exception {
+    if (isBiomolecule) {
+      applyBiomoleculeSymmetry();
+    } else {
+      super.applySymmetryAndSetTrajectory();
+    }
+  }
+
+  String sgName0 = null;
+  
+  private void applyBiomoleculeSymmetry() {
+    if (vBiomolecules != null && vBiomolecules.size() > 0) {
+      if (sgName0 == null)
+        sgName0 = sgName;
+      Lst<Map<String, Object>> modelBiomolecules = updateBiomolecule(vBiomolecules);
+      asc.setCurrentModelInfo("biomolecules", modelBiomolecules);
+      setBiomolecules(modelBiomolecules);
+      if (thisBiomolecule != null) {
+        if (iHaveFractionalCoordinates)
+          fractionalizeCoordinates(false);
+        BS bs = BSUtil.copy(asc.bsAtoms);
+        int pt = asc.getAtomSetAtomIndex(asc.iSet);
+        int n = asc.getAtomSetAtomCount(asc.iSet);
+        BS bsModel = BSUtil.newBitSet2(pt, pt + n);
+        if (bs != null)
+          asc.bsAtoms.or(bsModel);
+        asc.getXSymmetry().applySymmetryBio(thisBiomolecule,
+            applySymmetryToBonds, filter);
+        if (bs != null)
+          asc.bsAtoms.or(bs);
+        asc.bsAtoms.andNot(bsModel);
+        asc.xtalSymmetry = null;
+        ac = asc.ac;
+      }
+    }
+  }
+
+
+  private Lst<Map<String, Object>> updateBiomolecule(Lst<Map<String, Object>> vb) {
+    Lst<Map<String, Object>> map = new Lst<>();
+//    BS bsModel = BSUtil.newBitSet2(asc.atomSetAtomCounts(), i1)
+    for (Map<String, Object> m : vb) {
+      Map<String, Object> mnew = new Hashtable<>();
+      mnew.putAll(m);
+      if (checkFilterAssembly(mnew)) {
+        mnew.put("biomts", new Lst<M4d>());
+        mnew.put("chains", new Lst<String>());
+      }
+      map.addLast(mnew);
+    }
+    return map;
+  }
 
   @Override
   protected boolean finalizeSubclass() throws Exception {
-    if (byChain && !isBiomolecule)
+    if (byChain) {
       for (String id : chainAtomMap.keySet())
         createParticle(id);
-    boolean haveBiomolecule = (isBiomolecule && vBiomolecules != null
-        && vBiomolecules.size() > 0);
+    }
     if (!isCourseGrained && asc.ac == nAtoms) {
       asc.removeCurrentAtomSet();
     } else {
       if ((dssr != null || validation != null || addedData != null)
-          && !isCourseGrained && !requiresSorting) {
+          && !isBiomolecule && !isCourseGrained && !requiresSorting) {
         MMCifValidationParser vs = ((MMCifValidationParser) getInterface(
             "org.jmol.adapter.readers.cif.MMCifValidationParser")).set(this);
         String note = null;
@@ -261,36 +329,23 @@ public class MMCifReader extends CifReader {
     }
     if (asc.ac == 0 && !isCourseGrained)
       return false;
-    String spaceGroup = sgName;
     if (htSites != null)
       addSites(htSites);
-    if (haveBiomolecule) {
-      asc.setCurrentModelInfo("biomolecules", vBiomolecules);
-      setBiomolecules();
-      if (thisBiomolecule != null) {
-        if (iHaveFractionalCoordinates)
-          fractionalizeCoordinates(false);
-        asc.getXSymmetry().applySymmetryBio(thisBiomolecule,
-            applySymmetryToBonds, filter);
-        asc.xtalSymmetry = null;
-
-      }
-      doCheckUnitCell &= iHaveUnitCell && doApplySymmetry;
-      if (doCheckUnitCell) {
-        ignoreFileSpaceGroupName = true;
-        sgName = spaceGroup;
-        fractionalizeCoordinates(true);
-        asc.setCurrentModelInfo(JC.INFO_BIO_SYMMETRY, null);
-        asc.setCurrentModelInfo(JC.INFO_BIO_SYMMETRY_COUNT, null);
-        checkNearAtoms = false;
-        if (byChain)
-          return true;
-      }
-    }
     if (latticeCells != null && latticeCells[0] != 0)
       addJmolScript("unitcell;axes on;axes unitcell;");
     if (requiresSorting)
       sortAssemblyModels();
+    if (isBiomolecule) {
+      doCheckUnitCell &= sgName0 != null && iHaveUnitCell && doApplySymmetry;
+      if (doCheckUnitCell) {
+        ignoreFileSpaceGroupName = true;
+        sgName = sgName0;
+        fractionalizeCoordinates(true);
+        asc.setCurrentModelInfo(JC.INFO_BIO_SYMMETRY, null);
+        asc.setCurrentModelInfo(JC.INFO_BIO_SYMMETRY_COUNT, null);
+        checkNearAtoms = false;
+      }
+    }
     return true;
   }
 
@@ -539,6 +594,7 @@ public class MMCifReader extends CifReader {
     if (info == null) {
       info = new Hashtable<String, Object>();
       info.put("name", name);
+      info.put("id", id);
       int iMolecule = parseIntStr(id);
       info.put("molecule",
         iMolecule == Integer.MIN_VALUE ? id : Integer.valueOf(iMolecule));
@@ -547,15 +603,24 @@ public class MMCifReader extends CifReader {
       info.put("assemblies", new Lst<String>()); 
       info.put("operators", new Lst<String>());
       vBiomolecules.addLast(info);
+      checkFilterAssembly(info);
     }
     ((Lst<String>) info.get("assemblies")).addLast("$" + list.replace(',', '$'));
     ((Lst<String>) info.get("operators")).addLast(decodeAssemblyOperators(operators));
-    checkFilterAssembly(id, info);
   }
 
-  protected void checkFilterAssembly(String id, Map<String, Object> info) {
-    if (checkFilterKey("ASSEMBLY " + id + ";") || checkFilterKey("ASSEMBLY=" + id + ";"))
+  /**
+   * sets thisBiomolecule
+   * 
+   * @param info
+   * @return true if found
+   */
+  protected boolean checkFilterAssembly(Map<String, Object> info) {
+    if (info.get("id").equals(assemblyID)) {
       thisBiomolecule = info;
+      return true;
+    }
+    return false;
   }
 
   private String decodeAssemblyOperators(String ops) {
@@ -932,22 +997,34 @@ public class MMCifReader extends CifReader {
     return true;
   }
 
-  private void setBiomolecules() {
+  private void setBiomolecules(Lst<Map<String, Object>> modelBiomolecules) {
     if (assemblyIdAtoms == null && chainAtomCounts == null)
       return;
     BS bsAll = new BS();
-    for (int i = vBiomolecules.size(); --i >= 0;) {
-      Map<String, Object> biomolecule = vBiomolecules.get(i);
+    for (int i = modelBiomolecules.size(); --i >= 0;) {
+      Map<String, Object> biomolecule = modelBiomolecules.get(i);
       setBiomolecule(biomolecule, (biomolecule == thisBiomolecule ? bsAll : null));
     }
-    if (isBiomolecule && bsAll.cardinality() < asc.ac) {
-      if (asc.bsAtoms != null)
-        asc.bsAtoms.and(bsAll);
-      else if (!isCourseGrained)
+    int pt = asc.getAtomSetAtomIndex(asc.iSet);
+    int n = asc.getAtomSetAtomCount(asc.iSet);
+    assemblyIdAtoms = null;
+    if (isBiomolecule && bsAll.cardinality() < n) {
+      if (asc.bsAtoms != null) {
+        asc.bsAtoms.clearBits(pt, pt + n);
+        asc.bsAtoms.or(bsAll);
+      } else if (!isCourseGrained) {
         asc.bsAtoms = bsAll;
+      }
     }
   }
   
+  /**
+   * 
+   * @param biomolecule
+   * @param bsAll if a specific biomolecule is specified using "ASSEMBLY id",
+   * this bsAll will be returned with the new set of atoms
+   * @return the total number of atoms
+   */
   @SuppressWarnings("unchecked")
   private int setBiomolecule(Map<String, Object> biomolecule, BS bsAll) {
     Lst<String> biomtchains = (Lst<String>) biomolecule.get("chains");
@@ -956,8 +1033,10 @@ public class MMCifReader extends CifReader {
     Lst<String> assemblies = (Lst<String>) biomolecule.get("assemblies");
     P3d sum = new P3d();
     int count = 0;
-    BS bsAtoms = new BS();
     int nAtomsTotal = 0;
+    if (assemblyIdAtoms != null) {
+      biomolecule.put("assemblyIdAtoms", assemblyIdAtoms);
+    }
     boolean isBioCourse = (isBiomolecule && isCourseGrained);
     for (int i = operators.size(); --i >= 0;) {
       String[] ops = PT.split(operators.get(i), ",");
@@ -968,10 +1047,8 @@ public class MMCifReader extends CifReader {
         String id = ids[j];
         chainlist += ":" + id + ";";
         if (assemblyIdAtoms != null) {
-          biomolecule.put("asemblyIdAtoms", assemblyIdAtoms);
           BS bs = assemblyIdAtoms.get(id);
           if (bs != null) {
-            bsAtoms.or(bs);
             if (bsAll != null)
               bsAll.or(bs);
             nAtoms += bs.cardinality();
@@ -1242,13 +1319,10 @@ public class MMCifReader extends CifReader {
   protected int incrementModel(int modelNo) throws Exception {
     boolean isAssembly = (thisDataSetName != null && thisDataSetName.indexOf("-assembly-") >= 0);
     if (isAssembly) {
-      // Files such as http://www.ebi.ac.uk/pdbe/static/entry/download/2lev-assembly-1.cif.gz
-      // may require sorting if there are multiple models, since the models are by chain, not by model.
-
       useFileModelNumbers = true;
       String key = "," + modelNo + ",";
       if (modelStrings.indexOf(key) >= 0) {
-        requiresSorting = true;
+        setFileIsAssembly();
       } else {
         modelStrings += key;
       }
@@ -1275,6 +1349,23 @@ public class MMCifReader extends CifReader {
           .put("_" + Math.max(0, asc.iSet), Integer.valueOf(modelNo));
     }
   return modelNo;
+  }
+
+  private void setFileIsAssembly() {
+    // Files such as http://www.ebi.ac.uk/pdbe/static/entry/download/2lev-assembly-1.cif.gz
+    // may require sorting if there are multiple models, since the models are by chain, not by model.
+    requiresSorting = true;
+    if (isBiomolecule) {
+      appendLoadNote("ASSEMBLY filter ignored -- file is already an assembly");
+      isBiomolecule = false;
+    }
+    if (bySymop) {
+      appendLoadNote("BYSYMOP filter ignored -- file is already an assembly");
+      isCourseGrained = false;
+      chainAtomMap = null;
+      chainAtomCounts = null;
+      bySymop = false;
+    }
   }
 
   private void setHetero() {

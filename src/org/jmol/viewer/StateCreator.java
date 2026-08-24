@@ -288,9 +288,7 @@ public class StateCreator extends JmolStateCreator {
           }
           haveModulation |= (vwr.ms.getLastVibrationVector(i, T.modulation) >= 0);
         }
-        if (loadUC)
-          vwr.shm.loadShape(JC.SHAPE_UCCAGE); // just in case
-        getShapeStatePriv(commands, isAll, JC.SHAPE_UCCAGE);
+        getUnitCellState(commands, isAll, loadUC);
         if (haveModulation) {
           Map<String, BS> temp = new Hashtable<String, BS>();
           int ivib;
@@ -392,7 +390,7 @@ public class StateCreator extends JmolStateCreator {
           sb.append("  unitcell ")
               .append(Escape.eAP(m.simpleCage.getUnitCellVectors()))
               .append(";\n");
-          getShapeStatePriv(sb, isAll, JC.SHAPE_UCCAGE);
+          getUnitCellState(sb, isAll, true);
         }
         if (sb.length() > 0)
           commands.append("  frame " + ms.getModelNumberDotted(i) + ";\n")
@@ -410,6 +408,12 @@ public class StateCreator extends JmolStateCreator {
     if (sfunc != null)
       commands.append("\n}\n\n");
     return commands.toString();
+  }
+
+  private void getUnitCellState(SB commands, boolean isAll, boolean loadUC) {
+    if (loadUC)
+      vwr.shm.loadShape(JC.SHAPE_UCCAGE); // just in case
+    getShapeStatePriv(commands, isAll, JC.SHAPE_UCCAGE);
   }
 
   private String getWindowState(SB sfunc, int width, int height) {
@@ -1074,6 +1078,7 @@ public class StateCreator extends JmolStateCreator {
     Shape[] shapes = vwr.shm.shapes;
     if (shapes == null)
       return;
+    Shape shape = null;
     int i;
     int imax;
     if (iShape == Integer.MAX_VALUE) {
@@ -1083,7 +1088,7 @@ public class StateCreator extends JmolStateCreator {
       imax = (i = iShape) + 1;
     }
     for (; i < imax; ++i) {
-      Shape shape = shapes[i];
+      shape = shapes[i];
       if (shape != null
           && (isAll || i >= JC.SHAPE_MIN_SECONDARY
               && i < JC.SHAPE_MAX_SECONDARY)) {
@@ -1093,7 +1098,7 @@ public class StateCreator extends JmolStateCreator {
       }
     }
     commands.append("  select *;\n");
-  }
+ }
 
   private String getBondState(Sticks shape) {
     BS bsOrderSet = shape.bsOrderSet;

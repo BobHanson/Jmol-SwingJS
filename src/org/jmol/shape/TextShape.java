@@ -80,8 +80,10 @@ public abstract class TextShape extends Shape {
         currentObject.setFont(currentFont, true);
         currentObject.setFontScale(0);
       } else if (isAll) {
-        for (Text t : objects.values())
+        for (Text t : objects.values()) {
           t.setFont(currentFont, true);
+          t.setFontScale(0);
+        }
       }
       return;
     }

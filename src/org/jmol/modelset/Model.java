@@ -342,7 +342,7 @@ public class Model {
       chains[i].groups = (Group[]) AU.arrayCopyObject(chains[i].groups,
           chains[i].groupCount);
   }
-
+  
   public M3d getUVWMatrix(boolean isUVW0) {
     if (uvw0 == null) {
       return null;

@@ -397,7 +397,8 @@ public class MMTFReader extends MMCifReader {
       Map<String, Object> info = new Hashtable<String, Object>();
       vBiomolecules.addLast(info);
       int iMolecule = i + 1;
-      checkFilterAssembly("" + iMolecule, info);
+      info.put("id", "" + iMolecule);
+      checkFilterAssembly(info);
       info.put("name", "biomolecule " + iMolecule);
       info.put("molecule", Integer.valueOf(iMolecule));
       Lst<String> assemb = new Lst<String>();

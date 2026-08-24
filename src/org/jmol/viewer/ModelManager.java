@@ -43,14 +43,29 @@ class ModelManager {
     this.vwr = vwr;
   }
 
-  void zap() {
+  synchronized void zap() {
+    /* 
+     * Loading a model replaces state shared by the whole Viewer: vwr.ms, the
+     * ModelSet's bioModelset, and the Viewer's single BioResolver, whose loader
+     * reference each ModelLoader sets on entry and clears again on exit
+     * (ModelLoader lines 171 and 121). Two loads running at once on one Viewer
+     * therefore trample each other, and the failures surface far from the cause,
+     * for example "this.ml.group3Lists is null" in BioResolver.setGroupLists.
+     *
+     * These two methods are the only places a ModelLoader is constructed, so
+     * synchronizing them makes a load atomic per Viewer: a second thread waits
+     * rather than observing a half-built model set. Both are reentrant-safe;
+     * createModelSet calls zap. Single-threaded callers are unaffected, and
+     * synchronized is a no-op under SwingJS.   - Amr ALHOSSARY
+     */
     modelSetPathName = fileName = null;
     new ModelLoader(vwr, vwr.getZapName(), null, null, null, null);
   }
   
-  void createModelSet(String fullPathName, String fileName,
+  synchronized void createModelSet(String fullPathName, String fileName,
                           SB loadScript, Object atomSetCollection,
                           BS bsNew, boolean isAppend) {
+    // synchronization  - Amr ALHOSSARY
     String modelSetName = null;
     if (isAppend) {
       modelSetName = modelSet.modelSetName;

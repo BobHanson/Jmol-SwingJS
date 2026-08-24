@@ -4924,7 +4924,7 @@ public class CmdExt extends ScriptExt {
 
   private String getWriteType(String fileName, String def) {
     if (fileName != null) {
-      int pt = fileName.indexOf('.');
+      int pt = fileName.lastIndexOf('.');
       if (pt >= 0)
         return fileName.substring(pt + 1).toUpperCase();
     }

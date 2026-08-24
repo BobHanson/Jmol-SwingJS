@@ -32,8 +32,6 @@ public class CIPData {
    */
   static final double TRIGONALITY_MIN = 0.2d;
 
-  private static final double N_OUT_OF_PLANE_CUTOFF = 0.1;
-  
   /**
    * Subclass identifier
    * 
@@ -99,9 +97,9 @@ public class CIPData {
 
   /**
    * all N atoms that are sp3-hybridized and at small ring fusions
-   * and not too flat (tested later)
+   * and not too flat
    */
-  BS bsAzacyclic;
+  private BS bsAzacyclic;
   
   /**
    * bit set of all biphenyl-like connections
@@ -109,7 +107,7 @@ public class CIPData {
    * "[!H](.t1:-20,20)a{a(.t2:-20,20)-a}a[!H]"
    * 
    */
-  BS bsAtropisomeric = new BS();
+  private BS bsAtropisomeric;
 
   /**
    * aromatic atoms at the end of a negative helical turn
@@ -187,7 +185,11 @@ public class CIPData {
       }
       bsAromatic = match("a");
       if (!bsAromatic.isEmpty()) {
-        bsAtropisomeric = match("[!H](.t1:-20,20)a{a(.t2:-20,20)-a}a[!H]");
+        BS bs = match("[!H](.t1:-20,20)a{a(.t2:-20,20)-a}a[!H]");
+        if (!bs.isEmpty()) {
+          // note that this will NOT work for Mercury no-multiple bond systems
+          bsAtropisomeric = bs;
+        }
         bsHelixM = match("A{a}(.t:-10,-40)a(.t:-10,-40)aaa");
         bsHelixP = match("A{a}(.t:10,40)a(.t:10,40)aaa");
         bsXAromatic = match("[r5v3n+0,r5v2o+0]");
@@ -336,6 +338,7 @@ public class CIPData {
           continue;
         nRings.addLast(bsRing);
         if (j == 0) {
+          // just the smallest of the rings
           addAzacyclicN(i);
           continue out;
         }
@@ -370,15 +373,16 @@ public class CIPData {
     }
   }
 
+
+  
   private void addAzacyclicN(int i) {
-    if (isTooFlatNitrogen(atoms[i]))
+    if (isApproxPlanar(atoms[i]))
       return;
     if (bsAzacyclic == null)
       bsAzacyclic = new BS();
     bsAzacyclic.set(i);
   }
 
-  
   /**
    * Determine whether an atom is one we need to consider.
    * 
@@ -388,22 +392,22 @@ public class CIPData {
    */
   boolean couldBeChiralAtom(SimpleNode a) {
     boolean mustBePlanar = false;
-    switch (a.getCovalentBondCount()) {
+    int n = a.getCovalentBondCount();
+    switch (n) {
     default:
-      System.out.println("?? too many bonds! " + a);
+      System.out.println("CIPData: too many bonds! " + n + " for " + a);
       return false;
     case 0:
       return false;
     case 1:
       return false;
     case 2:
-      return a.getElementNumber() == 7; // could be diazine or imine
+      // could be diazene or imine
+      return a.getElementNumber() == 7; 
     case 3:
       switch (a.getElementNumber()) {
       case 7: // N
-        if (bsAzacyclic != null && bsAzacyclic.get(a.getIndex()))
-          break;
-        return false;
+        return isAzacyclic(a);
       case 6: // C
         mustBePlanar = true;
         break;
@@ -425,19 +429,22 @@ public class CIPData {
     case 4:
       break;
     }
-    // check that the atom has at most one 1H atom and whether it must be planar and has a double bond
+    // check that the atom has at most one 1H atom
+    // and whether it must be planar and has a double bond
+    boolean isSmiles = false;
     SimpleEdge[] edges = a.getEdges();
-    int nH = 0;
-    boolean haveDouble = false;
-    for (int j = edges.length; --j >= 0;) {
-      if (mustBePlanar && edges[j].getCovalentOrder() == 2)
-        haveDouble = true;
-      if (edges[j].getOtherNode(a).getIsotopeNumber() == 1)
-        nH++;
+    for (int nH = 0, j = edges.length; --j >= 0;) {
+      if (edges[j].getOtherNode(a).getIsotopeNumber() == 1
+          && ++nH > 1)
+          return false;
+      if (mustBePlanar && !isSmiles && edges[j].getCovalentOrder() == 2)
+    	  return isApproxPlanar(a);
     }
-    return (nH < 2 && (haveDouble 
-        || isSmiles() || mustBePlanar == Math.abs(getTrigonality(a,
-        vNorm)) < TRIGONALITY_MIN));
+    return isSmiles || (mustBePlanar == isApproxPlanar(a));
+  }
+
+  private boolean isApproxPlanar(SimpleNode a) {
+    return (Math.abs(getTrigonality(a, vNorm)) < TRIGONALITY_MIN);
   }
 
   /**
@@ -617,88 +624,19 @@ public class CIPData {
     testRule6Full = rrrr;
   }
 
-  /**
-   * Using the "Wilson" angle between one atom and the plane of the other three.
-   * 
-   * Experimentation suggests 0.01 radians is about right
-   * 
-   * @param n
-   * @return too flat
-   */
-  public boolean isTooFlatNitrogen(SimpleNode n) {
-    SimpleEdge[] bonds = n.getEdges();
-    int count = n.getCovalentBondCount();
-    if (count != 3)
-      return true;
-    SimpleNode[] others = new SimpleNode[3];
-    for (int j = 0, i = bonds.length; --i >= 0;) {
-      if (bonds[i].isCovalent())
-      others[j++] = bonds[i].getOtherNode(n);
-    }
-    double angle = pointPlaneAngle(n.getXYZ(), others[0].getXYZ(), others[1].getXYZ(), others[2].getXYZ(), vTemp, vTemp2, vNorm);
-    return (angle < N_OUT_OF_PLANE_CUTOFF);
-  }
-  
-  /**
-   * From MM2
-   * calculates angle of a to plane bcd, returning a value > pi/2 in 
-   * highly distorted trigonal pyramidal situations 
-   * 
-   * @param a
-   * @param b
-   * @param c
-   * @param d
-   * @param v1
-   * @param v2
-   * @param norm
-   * @return  (Wilson angle)^2
-   */
-  public static double pointPlaneAngle(P3d a, P3d b,
-                                              P3d c, P3d d,
-                                              V3d v1,V3d v2, 
-                                              V3d norm) {
-    
-    v1.sub2(b, c);
-    v2.sub2(b, d);
-    norm.cross(v1, v2);    
-    v2.add(v1);
-    v1.sub2(b, a);
-    double angleA_CD = Math.PI; 
-    // normally angleA_CD is > pi/2, because v1 is from a to b
-    double angleNorm = vectorAngleRadians(norm, v1);
-    // angleNorm could be > PI/2, so we correct for that here:
-    if (angleNorm > Math.PI / 2)
-      angleNorm = Math.PI - angleNorm;
-    // for highly distorted groups, return will be > pi/2
-    double val = Math.PI / 2.0 + (angleA_CD > Math.PI / 2.0 ? 
-        -angleNorm 
-        : angleNorm) ;    
-    return val;
+  boolean isAzacyclic(SimpleNode atom) {
+    return (bsAzacyclic != null && bsAzacyclic.get(atom.getIndex()));
   }
 
-  private static double vectorAngleRadians(V3d v1, V3d v2) {
-    // simple -- no check for lengths near 0
-    double l1 = v1.length();
-    double l2 = v2.length();
-    return Math.acos(v1.dot(v2) / (l1 * l2));
+  boolean isAtropisomeric(SimpleNode atom) {
+    return (bsAtropisomeric != null && bsAtropisomeric.get(atom.getIndex()));
   }
 
+  void clearAtropisomericRings() {
+    if (bsAtropisomeric == null)
+      return;
+    for (int j = lstSmallRings.length; --j >= 0;)
+      lstSmallRings[j].andNot(bsAtropisomeric);
+  }
 
-//  static {
-//    // trimethylamine from 
-//    double z0 = 0.0898 + 0.36150000000000004;
-//    double dz = z0/20;
-//    P3d a = P3d.new3(-0.0, 0.0, 0);
-//    P3d b = P3d.new3(0.916, 1.056, z0);
-//    P3d c = P3d.new3(0.4565, -1.3213, z0);
-//    P3d d = P3d.new3(-1.3725, 0.26530000000000004, z0);
-//    V3d v1 = new V3d(), v2 = new V3d(), v3 = new V3d();    
-//    for (int i = 0; i <= 20; i++) {
-//      P3d a1 = P3d.newP(a);
-//      a1.z = i * dz;
-//      double dtheta = pointPlaneAngle(a1, b, c, d, v1, v2, v3);
-//      System.out.println(i + "\t" + dtheta*180/Math.PI + "\t" + z0 + "\t" + a1.z + "\t" + (dtheta * dtheta));
-//    }
-//  }
-//  
 }

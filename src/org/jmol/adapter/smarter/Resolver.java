@@ -60,6 +60,12 @@ public class Resolver {
     "xml.",  ";XmlCdx;XmlArgus;XmlCml;XmlChem3d;XmlMolpro;XmlNmrml;XmlOdyssey;XmlXsd;XmlVasp;XmlQE;",
   };
   
+  /**
+   * a default type -- for example, "mdcrd" (from MdTopReader) -- given the next
+   * file in a set of files being read, provided that file's type is not found.
+   */
+  private static final String INFO_DEFAULT_TYPE = "defaultType";
+
 
   // Tinker is only as explicit Tinker::fileName.xyz
   
@@ -121,15 +127,6 @@ public class Resolver {
         Logger.info("The Resolver assumes " + readerName + " file=" + fullName);
     } else {
       readerName = determineAtomSetCollectionReader(readerOrDocument, htParams);
-      if (readerName.charAt(0) == '\n') {
-        type = (htParams == null ? null : (String) htParams.get("defaultType"));
-        if (type != null) {
-          // allow for MDTOP to specify default MDCRD
-          type = getReaderFromType(type);
-          if (type != null)
-            readerName = type;
-        }
-      }
       if (readerName.charAt(0) == '\n')
         errMsg = "unrecognized file format for file\n" + fullName + "\n"
             + split(readerName, 50);
@@ -172,18 +169,21 @@ public class Resolver {
   }
 
   private final static String getReaderFromType(String type) {
-    if (type.endsWith("(XML)")) {
-      type = "Xml" + type.substring(0, type.length() - 5);
-    }
-    type = ";" + type.toLowerCase() + ";";
-    if (";zmatrix;cfi;c;vfi;v;mnd;jag;gms;g;gau;mp;nw;orc;pqs;qc;".indexOf(type) >= 0)
-      return "Input";
+    if (type != null) {
+      if (type.endsWith("(XML)")) {
+        type = "Xml" + type.substring(0, type.length() - 5);
+      }
+      type = ";" + type.toLowerCase() + ";";
+      if (";zmatrix;cfi;c;vfi;v;mnd;jag;gms;g;gau;mp;nw;orc;pqs;qc;"
+          .indexOf(type) >= 0)
+        return "Input";
 
-    String set;
-    int pt;
-    for (int i = readerSets.length; --i >= 0;) {
-      if ((pt = (set = readerSets[i--]).toLowerCase().indexOf(type)) >= 0)
-        return set.substring(pt + 1, set.indexOf(";", pt + 2));
+      String set;
+      int pt;
+      for (int i = readerSets.length; --i >= 0;) {
+        if ((pt = (set = readerSets[i--]).toLowerCase().indexOf(type)) >= 0)
+          return set.substring(pt + 1, set.indexOf(";", pt + 2));
+      }
     }
     return null;
   }
@@ -234,11 +234,9 @@ public class Resolver {
    * @throws Exception
    */
   public static String determineAtomSetCollectionReader(Object readerOrDocument,
-                                                         Map<String, Object> htParams)
+                                                        Map<String, Object> htParams)
       throws Exception {
 
-    
-    
     // We must do this in a very specific order. DON'T MESS WITH THIS!
 
     String readerName;
@@ -259,36 +257,38 @@ public class Resolver {
     BufferedReader rdr = (BufferedReader) readerOrDocument;
     LimitedLineReader llr = new LimitedLineReader(rdr, 16384);
 
-    String leader = llr.getHeader(LEADER_CHAR_MAX).trim();
+    String leader = llr.getHeader(LEADER_CHAR_MAX);
     if (leader.length() == 0)
       throw new EOFException("File contains no data.");
     // Test 1. check magic number for embedded Jmol script or PNGJ
+    leader = leader.trim();
+    boolean isJSONMap = false;
+    if (leader.length() > 0) {
+      // PNG or BCD-encoded JPG or JPEG
+      if (leader.indexOf("PNG") == 1 && leader.indexOf("PNGJ") >= 0)
+        return "pngj"; // presume appended JMOL file
+      if (leader.indexOf("PNG") == 1 || leader.indexOf("JPG") == 1
+          || leader.indexOf("JFIF") == 6)
+        return "spt"; // presume embedded script --- allows dragging into Jmol
+      if (leader.indexOf("\"num_pairs\"") >= 0)
+        return "dssr";
+      if (leader.indexOf("output.31\n") >= 0)
+        return "GenNBO|output.31";
 
-    // PNG or BCD-encoded JPG or JPEG
-    if (leader.indexOf("PNG") == 1 && leader.indexOf("PNGJ") >= 0)
-      return "pngj"; // presume appended JMOL file
-    if (leader.indexOf("PNG") == 1 || leader.indexOf("JPG") == 1
-        || leader.indexOf("JFIF") == 6)
-      return "spt"; // presume embedded script --- allows dragging into Jmol
-    if (leader.indexOf("\"num_pairs\"") >= 0)
-      return "dssr";
-    if (leader.indexOf("output.31\n") >= 0)
-      return "GenNBO|output.31";
+      // Test 2. check starting 64 bytes of file
 
-    // Test 2. check starting 64 bytes of file
+      if ((readerName = checkFileStart(leader)) != null) {
+        return (readerName.equals("Xml") ? getXmlType(llr.getHeader(0))
+            : readerName);
+      }
 
-    if ((readerName = checkFileStart(leader)) != null) {
-      return (readerName.equals("Xml") ? getXmlType(llr.getHeader(0))
-          : readerName);
-    }
+      // now allow identification in first 16 lines
+      // excluding those starting with "#"
 
-    // now allow identification in first 16 lines
-    // excluding those starting with "#"
-
-    String msg;
-    boolean isJSONMap = (leader.charAt(0) == '{');
-    if (isJSONMap && (readerName = checkJsonHeader(leader)) != null) {
-      return readerName;      
+      isJSONMap = (leader.charAt(0) == '{');
+      if (isJSONMap && (readerName = checkJsonHeader(leader)) != null) {
+        return readerName;
+      }
     }
     String[] lines = new String[16];
     int nLines = 0;
@@ -319,6 +319,7 @@ public class Resolver {
     if ((readerName = checkSpecial2(lines)) != null)
       return readerName;
 
+    String msg;
     if (isJSONMap) {
       // unfortunately, we need to read this data fully from the reader.
       //
@@ -330,9 +331,15 @@ public class Resolver {
       }
       msg = (htParams == null ? null
           : json.substring(0, Math.min(100, json.length())));
+    } else if (htParams == null) {
+      msg = null;
     } else {
-      msg = (htParams == null ? null
-          : "\n" + lines[0] + "\n" + lines[1] + "\n" + lines[2] + "\n");
+      if ((readerName = getReaderFromType(
+          (String) htParams.get(INFO_DEFAULT_TYPE))) != null) {
+        // allow for MDTOP to specify default MDCRD
+        return readerName;
+      }
+      msg = "\n" + lines[0] + "\n" + lines[1] + "\n" + lines[2] + "\n";
     }
 
     // Failed to identify file type
@@ -1080,6 +1087,18 @@ public class Resolver {
 
   public static String fixDOSName(String fileName) {
     return (fileName.indexOf(":\\") >= 0 ? fileName.replace('\\', '/') : fileName);
+  }
+
+  /**
+   * MdTop reader will set the type "mdcrd" for any following files failing to resolve to a type.
+   * Any reader could do this in order to process additional files. 
+   * 
+   * @param type
+   * @param htParams
+   */
+  public static void setDefaultType(String type,
+                                    Map<String, Object> htParams) {
+    htParams.put(INFO_DEFAULT_TYPE, type);
   }
 
 }

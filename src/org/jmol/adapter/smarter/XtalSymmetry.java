@@ -800,7 +800,7 @@ public class XtalSymmetry {
       break;
     }
     Map<String, BS> assemblyIdAtoms = (Map<String, BS>) thisBiomolecule
-        .get("asemblyIdAtoms");
+        .get("assemblyIdAtoms");
 
     if (filter.indexOf("#<") >= 0) {
       // ??
@@ -838,8 +838,10 @@ public class XtalSymmetry {
         // must use label_asym_id, not auth_asym_id // bug fix 11/18/2015 
         bsAtoms = new BS();
         for (Entry<String, BS> e : assemblyIdAtoms.entrySet())
-          if (chains.indexOf(":" + e.getKey() + ";") >= 0)
+          if (chains.indexOf(":" + e.getKey() + ";") >= 0) {
+//            System.out.println("op " + (imt + 1) + " adding chain " + e);
             bsAtoms.or(e.getValue());
+          }
         if (asc.bsAtoms != null)
           bsAtoms.and(asc.bsAtoms);
         chains = null;

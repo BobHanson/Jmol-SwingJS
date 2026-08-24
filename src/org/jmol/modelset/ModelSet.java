@@ -151,6 +151,8 @@ public class ModelSet extends BondCollection {
   }
 
   public boolean haveBioModels;
+  
+  public boolean haveMultipleChains;
 
   protected BS bsSymmetry;
 
@@ -1230,7 +1232,7 @@ public class ModelSet extends BondCollection {
   }
 
   public boolean setCrystallographicDefaults() {
-    return !haveBioModels
+    return !haveBioModels && !haveMultipleChains
         && (someModelsHaveSymmetry && someModelsHaveFractionalCoordinates
             || getUnitCell(vwr.am.cmi) != null);
   }
@@ -1563,8 +1565,12 @@ public class ModelSet extends BondCollection {
 
   void freezeModels() {
     haveBioModels = false;
-    for (int iModel = mc; --iModel >= 0;)
+    haveMultipleChains = false;
+    for (int iModel = mc; --iModel >= 0;) {
       haveBioModels |= am[iModel].freeze();
+      if (am[iModel].chainCount > 1)
+        haveMultipleChains = true;
+    }
   }
 
   public Map<STR, double[]> getStructureList() {

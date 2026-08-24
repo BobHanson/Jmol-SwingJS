@@ -153,7 +153,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected String readerName;
   public Map<String, Object> htParams;
   public Lst<P3d[]> trajectorySteps;
-  private Object domains;
+  public Object domains;
   public Object validation, dssr;
   public boolean openVarna;
 
@@ -1246,7 +1246,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     }
     filterAtomName = checkFilterKey("*.") || checkFilterKey("!.");
     if (filter.startsWith("_") || filter.startsWith("!_")
-        || filter.indexOf(";_") >= 0)
+        || filter.indexOf(";_") >= 0 || filter.indexOf(";!_") >= 0)
       filterElement = checkFilterKey("_");
 
     filterGroup3 = checkFilterKey("[");
