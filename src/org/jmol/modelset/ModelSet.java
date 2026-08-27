@@ -1071,7 +1071,11 @@ public class ModelSet extends BondCollection {
     modelNames = mergeModelSet.modelNames;
     modelNumbers = mergeModelSet.modelNumbers;
     frameTitles = mergeModelSet.frameTitles;
+    haveBioModels = mergeModelSet.haveBioModels;
+    someModelsHaveSymmetry = mergeModelSet.someModelsHaveSymmetry;
+    haveMultipleChains = mergeModelSet.haveMultipleChains;   
     haveChirality = mergeModelSet.haveChirality;
+
     boxInfo.setBoundBox(mergeModelSet.boxInfo.bbCorner0,
         mergeModelSet.boxInfo.bbCorner1, true, 1);
     if (msInfo != null)

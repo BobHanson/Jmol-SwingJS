@@ -1243,8 +1243,10 @@ public class ScriptCompiler extends ScriptTokenParser {
         boolean isAppend = (tokAt(1) == T.append);
         if (nTokens == 1 
             || isAppend 
-              && (nTokens == 2 || nTokens == 3 && tokAt(2) == T.integer)) {
-          if (isAppend && nTokens == 2 && PT.isDigit(charAt(ichToken))) 
+              && (nTokens == 2 
+              || nTokens == 3 && tokAt(2) == T.integer)
+            ) {
+          if (isAppend && nTokens == 2 && peekingAtLoneInteger()) 
                 break out;
           boolean isDataBase = Viewer.isDatabaseCode(charAt(ichToken));
           if (lookingAtLoadFormat(isDataBase)) {
@@ -2963,6 +2965,20 @@ public class ScriptCompiler extends ScriptTokenParser {
       return false;
     cchToken = ichT - ichToken;
     return true;
+  }
+
+  /**
+   * Just check to see if this is <integer><whitespace>.
+   * Used for load append 3 xxx.pdb  vs 3xxx.pdb
+   * @return true if a lone integer
+   */
+  private boolean peekingAtLoneInteger() {
+    int pt = cchToken;
+    if (lookingAtInteger() == Integer.MAX_VALUE)
+      return false;
+    int pt2 = ichToken + cchToken;
+    cchToken = pt;
+    return PT.isWhitespace(charAt(pt2));
   }
 
   private int lookingAtInteger() {

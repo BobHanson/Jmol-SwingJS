@@ -1159,13 +1159,13 @@ public class StateCreator extends JmolStateCreator {
       s = getAxesState((Axes) shape);
       break;
     case JC.SHAPE_UCCAGE:
-      if (!vwr.ms.haveUnitCells)
+      SymmetryInterface uc = vwr.getCurrentUnitCell();
+      if (uc == null && !vwr.ms.haveUnitCells)
         return "";
       String st = s = getFontLineShapeState((FontLineShape) shape);
       int iAtom = vwr.am.getUnitCellAtomIndex();
       if (iAtom >= 0)
         s += "  unitcell ({" + iAtom + "});\n";
-      SymmetryInterface uc = vwr.getCurrentUnitCell();
       if (uc != null) {
         s += uc.getUnitCellState();
         s += st; // needs to be after this state as well.

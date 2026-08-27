@@ -4562,19 +4562,18 @@ public class ScriptEval extends ScriptExpr {
       switch (tok) {
       case T.append:
         // we are looking out for state scripts after model 1.1 deletion.
-        modelName = optParameterAsString(++i);
-        int ami = PT.parseInt(modelName);
+  	    int ami = (tokAt(++i) == T.integer ? intParameter(i++) : -1);
+        modelName = optParameterAsString(i);
         isAppend = (!isStateScript || vwr.ms.mc > 0);
-        if (isAppend)
+        if (isAppend) {
           loadScript.append(" append");
-        if (ami >= 0) {
-          modelName = optParameterAsString(++i);
-          if (isAppend) {
+          if (ami >= 0) {
             loadScript.append(" " + ami);
             appendNew = false;
             htParams.put("appendToModelIndex", Integer.valueOf(ami));
           }
-        }
+        }        
+        // could be DATA
         tok = T.getTokFromName(modelName);
         break;
       case T.audio:

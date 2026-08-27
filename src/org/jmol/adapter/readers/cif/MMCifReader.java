@@ -582,7 +582,7 @@ public class MMCifReader extends CifReader {
     String name = "biomolecule " + id;
     Logger.info(name + " operators " + operators
         + " ASYM_IDs " + list);
-    appendLoadNote("found " + name + ": " + list);
+    appendLoadNote("found " + name + " chains:" + list + "\t operations:" + operators);
     if (vBiomolecules == null)
       vBiomolecules = new Lst<Map<String, Object>>();
     Map<String, Object> info = null;

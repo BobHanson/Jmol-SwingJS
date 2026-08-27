@@ -879,7 +879,6 @@ abstract class ScriptTokenParser {
             done = true;
             break;
           case T.unitcell:
-            int n = ltokenPostfix.size();
             getToken();
             addTokenToPostfix(T.string, T.nameOf(tok));
             if (tokPeek() == T.rightparen) {
