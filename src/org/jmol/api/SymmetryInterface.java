@@ -168,7 +168,7 @@ public interface SymmetryInterface {
 
   String[] getSymopList(boolean normalize);
 
-  M4d getTransform(P3d fracA, P3d fracB, boolean debug);
+  M4d getTransform(P3d fracA, P3d fracB);
 
   SymmetryInterface getUnitCell(T3d[] oabc, boolean setRelative, String name);
   

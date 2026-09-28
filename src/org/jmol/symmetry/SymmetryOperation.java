@@ -2243,7 +2243,7 @@ public class SymmetryOperation extends M4d {
     }
   }
 
-  public static void normalize12ths(V3d vtrans) {
+  public static void normalize12ths(T3d vtrans) {
     vtrans.x = PT.approxD(vtrans.x, 12);
     vtrans.y = PT.approxD(vtrans.y, 12);
     vtrans.z = PT.approxD(vtrans.z, 12);

@@ -1350,6 +1350,7 @@ public class T {
   public final static int radical        = misc  | 288;
   public final static int range          = misc  | 290;
   public final static int rasmol         = misc  | 292;
+  public final static int reciprocallattice = misc  | 293;
   public final static int reference      = misc  | 294;
   public final static int remove         = misc  | 295;
   public final static int residue        = misc  | 296;
@@ -2172,6 +2173,7 @@ public class T {
         "random",
         "range",
         "rasmol",
+        "reciprocalLattice",
         "replace",
         "resno",
         "resume",
@@ -2713,6 +2715,7 @@ public class T {
        "occupancyThreshold",
        "partialDots",
        PDB_ADD_HYDROGENS, // "pdbAddHydrogens"
+       "pdbAddHydrogen",
        "pdbGetHeader",
        "pdbSequential",
        "perspectiveDepth",
@@ -3262,6 +3265,7 @@ public class T {
         random,                             // "random"
         range,                              // "range"
         rasmol,                             // "rasmol"
+        reciprocallattice,                  // "reciprocalLattice"
         replace,                            // "replace"
         resno,                              // "resno"
         resume,                             // "resume"
@@ -3803,6 +3807,7 @@ public class T {
         occupancythreshold,                //        "occupancyThreshold"
         partialdots,                        //        "partialDots
         pdbaddhydrogens,                    //        "pdbAddHydrogens"
+        -1,                                 //        "pdbAddHydrogen"
         pdbgetheader,                       //        "pdbGetHeader"
         pdbsequential,                      //        "pdbSequential"
         perspectivedepth,                   //        "perspectiveDepth"

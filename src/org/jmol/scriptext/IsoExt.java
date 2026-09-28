@@ -392,7 +392,7 @@ public class IsoExt extends ScriptExt {
         case T.unitcell:
           if (isBest)
             invArg();
-          drawUC = true;
+          drawUC = !isIntersect;
           Object o = getUnitCellParameter(i, true);
           if (o instanceof T3d) {
             ucLattice = (T3d) o;

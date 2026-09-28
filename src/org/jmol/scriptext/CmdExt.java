@@ -524,7 +524,7 @@ public class CmdExt extends ScriptExt {
         distance = doubleParameter(i++);
         sOptions.append(" range " + distance);
       }
-      htParams.put("symmetryRange", Double.valueOf(distance));
+      htParams.put(JC.INFO_SYMMETRY_RANGE, Double.valueOf(distance));
 
       // {i j k} ... SPACEGROUP "nameOrNumber"
       // {i j k} ... SPACEGROUP "IGNOREOPERATORS"
@@ -3576,7 +3576,7 @@ public class CmdExt extends ScriptExt {
     boolean isRamachandranRelative = false;
     String[] props = new String[4];
     int[] propToks = new int[4];
-
+    double[][] data = null;
     BS bs = BSUtil.copy(vwr.bsA());
     String preselected = "; select " + Escape.eBS(bs) + ";\n ";
     String type = e.optParameterAsString(pt).toLowerCase();
@@ -3598,9 +3598,59 @@ public class CmdExt extends ScriptExt {
       break;
     case T.brillouin:
       type = "brillouin";
-      if (bs.nextSetBit(0) < 0) {
+      if (bs.isEmpty()) {
         bs = vwr.getModelUndeletedAtomsBitSet(modelIndex);
       }
+      break;
+    case T.reciprocallattice:
+      type = "reciprocalLattice";
+      isPdbFormat = false;
+      int rlSize = 10;
+      double rlScale = 1;
+      int n = (rlSize + 1);
+      n *= n * n;
+      if (tokAtArray(pt0 + 1, args) == T.integer) {
+        rlSize = args[++pt0].intValue;        
+        type += " " + rlSize;
+      }
+      if (tokAtArray(pt0 + 1, args) == T.decimal) {
+        rlScale = ((SV) args[++pt0]).asDouble();
+        type += " " + rlScale;
+      }
+      if (pt0 != pt)
+        invArg();
+      props = new String[] {"h", "k", "l", null};
+      double[] datax = new double[n];
+      double[] datay = new double[n];
+      double[] dataz = new double[n];
+      SymmetryInterface sym = vwr.getOperativeSymmetry();
+      if (sym == null)
+        invArg();
+      if (chk)
+        break;
+      P3d[] oabc = sym.getUnitCellVectors();
+      SimpleUnitCell.getReciprocal(oabc, oabc, rlScale);
+      P3d a = oabc[1];
+      P3d b = oabc[2];
+      P3d c = oabc[3];
+      P3d p = new P3d();
+      data = new double[][] {datax, datay, dataz};
+      for (int h = 0, i = 0; h <= rlSize; h++) {
+        for (int k = 0; k <= rlSize; k++) {
+          for (int l = 0; l <= rlSize; l++, i++) {
+            p.set(0, 0, 0);
+            p.scaleAdd2(h, a, p);
+            p.scaleAdd2(k, b, p);
+            p.scaleAdd2(l, c, p);
+            datax[i] = p.x;
+            datay[i] = p.y;
+            dataz[i] = p.z;
+          }
+        }
+      }
+      int rlModel = vwr.ms.getJmolDataFrameInt(modelIndex, T.reciprocallattice);
+      if (rlModel >= 0)
+        vwr.deleteModels(rlModel,  null);
       break;
     case T.spin:
       if (!chk) {
@@ -3729,30 +3779,37 @@ public class CmdExt extends ScriptExt {
       }
     }
     JmolDataReader reader = vwr.fm.getJmolDataReader();    
-    Object[] parameters = (tok == T.property || tok == T.spin ?
-        reader.getJmolDataFrameProperties(e, 
-        tok, propToks, props, bs, minXYZ, maxXYZ, format, isPdbFormat): null);
+    Object[] parameters = null;
+    switch (tok) {
+    case T.property:
+    case T.spin:
+    case T.reciprocallattice:
+      parameters = reader.getJmolDataFrameProperties(e, 
+        tok, propToks, props, data, bs, minXYZ, maxXYZ, format, isPdbFormat);
+      break;
+    }
     if (tokCmd == T.write)
       return vwr.writeFileData(filename, "PLOT_" + type, modelIndex,
           parameters);
-    String data;
+    String molData;
     switch (type.substring(0, 4)) {
     case "data":
-      data = "1 0 H 0 0 0 # Jmol PDB-encoded data";
+      molData = "1 0 H 0 0 0 # Jmol PDB-encoded data";
       break;
     case "spin":
     case "bril":
+    case "reci": 
     default:
       // pdb
-      data = vwr.getPdbData(modelIndex, type, null, parameters, null, true);
+      molData = vwr.getPdbData(modelIndex, tok, type, null, parameters, null, isPdbFormat);
       break;
     }
     if (tokCmd == T.show)
-      return data;
+      return molData;
     if (Logger.debugging)
-      Logger.debug(data);
+      Logger.debug(molData);
     if (tokCmd == T.draw) {
-      e.runScript(data);
+      e.runScript(molData);
       return "";
     }
 
@@ -3761,8 +3818,8 @@ public class CmdExt extends ScriptExt {
     String[] savedFileInfo = vwr.fm.getFileInfo();
     boolean oldAppendNew = vwr.getBoolean(T.appendnew);
     vwr.g.appendNew = true;
-    boolean isOK = (data != null
-        && vwr.openStringInlineParamsAppend(data, null, true) == null);
+    boolean isOK = (molData != null
+        && vwr.openStringInlineParamsAppend(molData, null, true) == null);
     vwr.g.appendNew = oldAppendNew;
     vwr.fm.setFileInfo(savedFileInfo);
     if (!isOK)
@@ -5379,12 +5436,28 @@ public class CmdExt extends ScriptExt {
     case T.url:
       // in a new window
       if ((len = slen) == 2) {
-        if (!chk)
-          vwr.showUrl(eval.getFullPathName(false));
+        if (!chk) {
+          String url = eval.getFullPathName(false);
+          vwr.showUrl(url);
+        }
       } else {
         name = paramAsStr(2);
-        if (!chk)
+        if (!chk) {
+          if (name.equalsIgnoreCase("dataDOI")) {
+            name = (String) vwr.ms.getInfo(vwr.am.cmi, "dataDOI");
+            if (name == null)
+              return;
+            if (!name.startsWith("https"))
+              name = "https://doi.org/" + name;
+          } else if (name.equalsIgnoreCase("pubDOI")) {
+            name = (String) vwr.ms.getInfo(vwr.am.cmi, "pubDOI");
+            if (name == null)
+              return;
+            if (!name.startsWith("https"))
+              name = "https://doi.org/" + name;
+          }
           vwr.showUrl(name);
+        }
       }
       return;
     case T.color:

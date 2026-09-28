@@ -329,7 +329,6 @@ public class CifReader extends AtomSetCollectionReader {
     } else if (!getData()) {
       return true;
     }
-
     if (!skipping) {
       key = cifParser.fixKey(key0 = key);
       if (key.startsWith("_chemical_name") || key.equals("_chem_comp_name")) {
@@ -421,7 +420,6 @@ public class CifReader extends AtomSetCollectionReader {
   }
 
   private boolean newData() throws Exception {
-    System.out.println("newData " + key);
     isLigand = false;
     if (asc.atomSetCount == 0)
       iHaveDesiredModel = false;
@@ -878,7 +876,7 @@ public class CifReader extends AtomSetCollectionReader {
       BS bs = asc.getBSAtoms(-1);
       for (int i = 0; i < asc.ac; i++) {
         boolean isVib = (asc.atoms[i].vib != null
-            && asc.atoms[i].vib.lengthSquared() > 0);
+            && (modDim > 0 || asc.atoms[i].vib.lengthSquared() > 0));
         if (!isVib)
           bs.clear(i);
       }
@@ -1202,10 +1200,9 @@ public class CifReader extends AtomSetCollectionReader {
         return;
       }
     }
-    boolean isLigand = false;
     if (key.startsWith(CAT_ATOM_SITE)
-        || (isLigand = key.startsWith("_chem_comp_atom_"))) {
-      if (processAtomSiteLoopBlock(isLigand))
+        || key.startsWith("_chem_comp_atom")) {
+      if (processAtomSiteLoopBlock())
         setModelInfoForAtoms();
       return;
     }
@@ -1624,13 +1621,10 @@ public class CifReader extends AtomSetCollectionReader {
   /**
    * reads atom data in any order
    * 
-   * @param isLigand
-   * 
-   * @return TRUE if successful; FALS if EOF encountered
+   * @return TRUE if successful; FALSE if EOF encountered
    * @throws Exception
    */
-  boolean processAtomSiteLoopBlock(boolean isLigand) throws Exception {
-    this.isLigand = isLigand;
+  boolean processAtomSiteLoopBlock() throws Exception {
     int pdbModelNo = -1; // PDBX
     boolean haveCoord = true;
     boolean noPreviousReferences = asc.atomSymbolicMap.isEmpty();
@@ -1827,6 +1821,7 @@ public class CifReader extends AtomSetCollectionReader {
           authSeq = parseIntField();
           break;
         case CC_ATOM_X_IDEAL:
+          this.isLigand = true;
           double x = parseDoubleField();
           if (readIdeal && !Double.isNaN(x))
             atom.x = x;
@@ -1845,6 +1840,8 @@ public class CifReader extends AtomSetCollectionReader {
           atom.x = parsePrecision(field);
           break;
         case CC_ATOM_X:
+          this.isLigand = true;
+          //$FALL-THROUGH$
         case CARTN_X:
           atom.x = parseCartesianField();
           break;
@@ -2022,11 +2019,7 @@ public class CifReader extends AtomSetCollectionReader {
           case SPIN_W_PRELIM:
           case spin_moment_axis_w:
             pt.z = v;
-            if (pt.length() == 0 && modDim == 0) {
-              atom.vib = null;
-            } else {
-              pt.isFractional = true;
-            }
+            pt.isFractional = true;
             break;
           }
           break;
@@ -2660,7 +2653,7 @@ public class CifReader extends AtomSetCollectionReader {
     // Set return info to enable desired defaults.
 
     if (bondTypes.size() > 0)
-      asc.setCurrentModelInfo("hasBonds", Boolean.TRUE);
+      asc.setCurrentModelInfo(JC.INFO_CIF_HAS_BONDS, Boolean.TRUE);
 
     // Clear temporary fields.
 

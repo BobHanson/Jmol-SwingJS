@@ -292,6 +292,10 @@ public class XtalSymmetry {
         if (v != null) {
           v.scaleT(magneticScaling);
           if (v.isFractional) {
+            if (acr.modDim == 0 && v.length() == 0) {
+              asc.atoms[i].vib = null;
+              continue;
+            }
             // from CIF reader specifically, magCIF, but not SpinCIF
             // _atom_site_moment.crystalaxis_x
             // _atom_site_moment.crystalaxis_y
@@ -1103,7 +1107,7 @@ public class XtalSymmetry {
     asc.setCoordinatesAreFractional(acr.iHaveFractionalCoordinates);
     setAtomSetSpaceGroupName(acr.sgName);
     symmetryRange = acr.symmetryRange;
-    asc.setInfo("symmetryRange", Double.valueOf(symmetryRange));
+    asc.setInfo(JC.INFO_SYMMETRY_RANGE, Double.valueOf(symmetryRange));
     if (acr.doConvertToFractional || acr.fileCoordinatesAreFractional) {
       setLatticeCells();
       boolean doApplySymmetry = true;
@@ -1709,7 +1713,7 @@ public class XtalSymmetry {
 
   private void reset() {
     asc.coordinatesAreFractional = false;
-    asc.setCurrentModelInfo("hasSymmetry", Boolean.TRUE);
+    asc.setCurrentModelInfo(JC.INFO_HAS_SYMMETRY, Boolean.TRUE);
     asc.setGlobalBoolean(JC.GLOBAL_SYMMETRY);
   }
 

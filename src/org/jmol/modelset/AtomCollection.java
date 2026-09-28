@@ -557,8 +557,6 @@ abstract public class AtomCollection {
     a.set(x, y, z);
     fixTrajectory(a);
     taintAtom(atomIndex, TAINT_COORD);
-//    if (getPrecisionCoord(atomIndex) != null)
-//      setPrecisionCoord(atomIndex, null, false);
   }
 
   private void fixTrajectory(Atom a) {
@@ -942,23 +940,6 @@ abstract public class AtomCollection {
     return (occupancies == null || i >= occupancies.length? 100 : occupancies[i]);
   }
 
-//  protected void setPrecisionCoord(int atomIndex, P3d coord, boolean doTaint) {
-//    if (coord != null && coord.equals(at[atomIndex]))
-//      return;
-//    boolean valid = (coord != null && !Double.isNaN(coord.x));
-//    if (valid) {
-//      at[atomIndex].setT(coord);
-//      if (doTaint)
-//        taintAtom(atomIndex, TAINT_COORD);
-//    }
-//  }
-//  
-//  public P3d getPrecisionCoord(int i) {
-//    return at[i];
-////    P3d coord = (precisionCoords == null || i >= precisionCoords.length ? null : precisionCoords[i]);
-////    return (coord == null || Double.isNaN(coord.x) ? null : coord);
-//  }
-  
   protected void setPartialCharge(int atomIndex, double partialCharge, boolean doTaint) {
     if (Double.isNaN(partialCharge))
       return;

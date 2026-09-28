@@ -545,12 +545,12 @@ class SpartanArchive {
 
   @SuppressWarnings("unchecked")
   private void setVibrationsFromProperties() throws Exception {
-    Lst<Lst<Double>> freq_modes = (Lst<Lst<Double>>) r.asc.atomSetInfo.get("FREQ_MODES");
+    Lst<Lst<Double>> freq_modes = (Lst<Lst<Double>>) r.asc.getInfo("FREQ_MODES");
     if (freq_modes == null) {
       return;
     }
-    Lst<String> freq_lab = (Lst<String>) r.asc.atomSetInfo.get("FREQ_LAB");
-    Lst<Double> freq_val = (Lst<Double>) r.asc.atomSetInfo.get("FREQ_VAL");
+    Lst<String> freq_lab = (Lst<String>) r.asc.getInfo("FREQ_LAB");
+    Lst<Double> freq_val = (Lst<Double>) r.asc.getInfo("FREQ_VAL");
     int frequencyCount = freq_val.size();
     Lst<Lst<Lst<Double>>> vibrations = new  Lst<Lst<Lst<Double>>>();
     Lst<Map<String, Object>> freqs = new  Lst<Map<String,Object>>();

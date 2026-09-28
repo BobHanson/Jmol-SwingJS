@@ -565,9 +565,10 @@ public class ScriptManager implements JmolScriptManager {
               + minor;
           vwr.setBooleanProperty("legacyautobonding", (ver < 110924));
           vwr.setBooleanProperty("legacyHAddition", (ver < 130117));
-          if (!vwr.getBoolean(T.doubleprecision))
-            vwr.setBooleanProperty("legacyjavafloat",
-              (ver < 140206 || ver >= 140300 && ver < 140306));
+// Jmol-SwingJS JmolD no effect          
+//          if (!vwr.getBoolean(T.doubleprecision))
+//            vwr.setBooleanProperty(JC.TOKEN_LEGACY_JAVA_FLOAT,
+//              (ver < 140206 || ver >= 140300 && ver < 140306));
           vwr.setIntProperty("bondingVersion", ver < 140111 ? 0 : 1);
           return;
         }

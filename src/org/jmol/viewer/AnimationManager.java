@@ -584,7 +584,7 @@ public class AnimationManager {
 
   SplitFrame[] splitFrames;
 
-  int getSplitFrameModelIndex(int i) {
+  public int getSplitFrameModelIndex(int i) {
     return (splitFrames == null ? -1 : splitFrames[i].modelIndex);
   }
 

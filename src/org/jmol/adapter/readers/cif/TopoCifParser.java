@@ -674,7 +674,7 @@ public class TopoCifParser implements Parser {
     // If we have a network, remove all unconnected atoms.
     if (!bsConnected.isEmpty()) {
       reader.asc.bsAtoms = bsAtoms;
-      reader.asc.atomSetInfo.put("bsExcludeBonding", bsExclude);
+      reader.asc.setInfo("bsExcludeBonding", bsExclude);
     }
     reader.appendLoadNote("TopoCifParser created " + bsConnected.cardinality()
         + " nodes and " + nLinks + " links");

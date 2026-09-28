@@ -59,7 +59,7 @@ public class AtomSetCollection {
       this.collectionName = collectionName;
   }
 
-  public Map<String, Object> atomSetInfo = new Hashtable<String, Object>();
+  Map<String, Object> atomSetInfo = new Hashtable<String, Object>();
 
   public void clearGlobalBoolean(int globalIndex) {
     atomSetInfo.remove(JC.getBoolName(globalIndex));
@@ -70,7 +70,7 @@ public class AtomSetCollection {
   }
 
   boolean getGlobalBoolean(int globalIndex) {
-    return (atomSetInfo.get(JC.getBoolName(globalIndex)) == Boolean.TRUE);
+    return (getInfo(JC.getBoolName(globalIndex)) == Boolean.TRUE);
   }
 
   public Atom[] atoms = new Atom[256];
@@ -215,7 +215,7 @@ public class AtomSetCollection {
     int existingAtomsCount = ac;
 
     // auxiliary info
-    setInfo("loadState", collection.atomSetInfo.get("loadState"));
+    setInfo("loadState", collection.getInfo("loadState"));
 
     // append to bsAtoms if necessary (CIF reader molecular mode)
     if (collection.bsAtoms != null) {
@@ -291,9 +291,9 @@ public class AtomSetCollection {
     getList(true);
     getList(false);
     for (int i = 0; i < atomSetCount; i++) {
-      setModelInfoForSet("initialAtomCount",
+      setModelInfoForSet(JC.INFO_INITIAL_ATOM_COUNT,
           Integer.valueOf(atomSetAtomCounts[i]), i);
-      setModelInfoForSet("initialBondCount",
+      setModelInfoForSet(JC.INFO_INITIAL_BOND_COUNT,
           Integer.valueOf(atomSetBondCounts[i]), i);
     }
   }
@@ -580,6 +580,7 @@ public class AtomSetCollection {
   }
 
   public Bond addNewBondWithOrder(int atomIndex1, int atomIndex2, int order) {
+    
     Bond b = null;
     if (atomIndex1 >= 0 && atomIndex1 < ac && atomIndex2 >= 0 && atomIndex2 < ac
         && atomIndex1 != atomIndex2) {
@@ -747,6 +748,11 @@ public class AtomSetCollection {
 
   public Boolean isConSurf;
 
+  
+  public Object getInfo(String key) {
+    return atomSetInfo.get(key);
+  }
+
   public void setInfo(String key, Object value) {
     if (value == null)
       atomSetInfo.remove(key);
@@ -763,9 +769,10 @@ public class AtomSetCollection {
    */
 
   public boolean setAtomSetCollectionPartialCharges(String auxKey) {
-    if (!atomSetInfo.containsKey(auxKey))
-      return false;
     Lst<Double> atomData = (Lst<Double>) atomSetInfo.get(auxKey);
+    if (atomData == null)
+      return false;
+
     int n = atomData.size();
     for (int i = ac; --i >= 0;)
       atoms[i].partialCharge = atomData.get(i % n).doubleValue();
@@ -1138,7 +1145,7 @@ public class AtomSetCollection {
     for (int i = 0; i < a.trajectoryStepCount; i++)
       trajectorySteps.add(trajectoryStepCount++, a.trajectorySteps.get(i));
     setInfo(JC.INFO_TRAJECTORY_STEPS, trajectorySteps);
-    setInfo("ignoreUnitCell", a.atomSetInfo.get("ignoreUnitCell"));
+    setInfo("ignoreUnitCell", a.getInfo("ignoreUnitCell"));
   }
 
   /**

@@ -340,7 +340,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
       modelInfo = new Hashtable<String, Object>();
     isPDB = checkBoolean(JC.getBoolName(JC.GLOBAL_ISPDB));
     isMultiFrame = (modelCount > 1);
-    hasSymmetry = !isPDB && modelInfo.containsKey("hasSymmetry");
+    hasSymmetry = !isPDB && modelInfo.containsKey(JC.INFO_HAS_SYMMETRY);
     isUnitCell = modelInfo.containsKey(JC.INFO_UNIT_CELL_PARAMS);
     fileHasUnitCell = (isPDB && isUnitCell || checkBoolean("fileHasUnitCell"));
     isLastFrame = (modelIndex == modelCount - 1);
@@ -609,10 +609,10 @@ abstract public class JmolPopup extends JmolGenericPopup {
     if (modelSetInfo == null || !haveMenu)
       return;
     int n = (modelIndex < 0 ? 0 : modelIndex + 1);
-    String[] lists = ((String[]) modelSetInfo.get("group3Lists"));
+    String[] lists = ((String[]) modelSetInfo.get(JC.INFO_GROUP3_LISTS));
     group3List = (lists == null ? null : lists[n]);
     group3Counts = (lists == null ? null
-        : ((int[][]) modelSetInfo.get("group3Counts"))[n]);
+        : ((int[][]) modelSetInfo.get(JC.INFO_GROUP3_COUNTS))[n]);
 
     if (group3List == null)
       return;
@@ -623,12 +623,12 @@ abstract public class JmolPopup extends JmolGenericPopup {
       for (int i = 1; i < JC.GROUPID_AMINO_MAX; ++i)
         nItems += updateGroup3List(menu3,
             groupList.substring(i * 6 - 4, i * 6 - 1).trim());
-      nItems += augmentGroup3List(menu3, "p>", true);
+      nItems += augmentGroup3List(menu3, JC.GROUP_MENU_PROTEIN, true);
       menuEnable(menu3, (nItems > 0));
       menuEnable(htMenus.get("PDBproteinMenu"), (nItems > 0));
     }
     if (menu1 != null) {
-      nItems = augmentGroup3List(menu1, "n>", false);
+      nItems = augmentGroup3List(menu1, JC.GROUP_MENU_NUCLEIC, false);
       menuEnable(menu1, nItems > 0);
       menuEnable(htMenus.get("PDBnucleicMenu"), (nItems > 0));
       @SuppressWarnings("unchecked")
@@ -639,7 +639,7 @@ abstract public class JmolPopup extends JmolGenericPopup {
         setSecStrucMenu(htMenus.get("aaStructureMenu"), dssr);
     }
     if (menu2 != null) {
-      nItems = augmentGroup3List(menu2, "c>", false);
+      nItems = augmentGroup3List(menu2, JC.GROUP_MENU_CARBOHYDRATE, false);
       menuEnable(menu2, nItems > 0);
       menuEnable(htMenus.get("PDBcarboMenu"), (nItems > 0));
     }

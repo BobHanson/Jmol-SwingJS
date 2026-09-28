@@ -176,7 +176,7 @@ public class BCIFReader extends MMCifReader {
     case CAT_ENTRY:
       return processEntry();
     case CAT_ATOM_SITE:
-      return processAtomSiteLoopBlock(false);
+      return processAtomSiteLoopBlock();
     case CAT_ATOM_TYPE:
       return processAtomTypeLoopBlock();
     case CAT_ATOM_SITES:

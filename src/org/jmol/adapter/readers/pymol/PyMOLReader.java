@@ -279,7 +279,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
    */
   @Override
   public void finalizeModelSet() {
-
+    super.finalizeModelSet();
     pymolScene.setReaderObjects();
 
     if (haveMeasurements) {

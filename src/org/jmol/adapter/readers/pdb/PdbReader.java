@@ -546,7 +546,7 @@ public class PdbReader extends AtomSetCollectionReader {
     pdbID = (lineLength >= 66 ? line.substring(62, 66).trim() : "");
     if (pdbID.length() == 4) {
       asc.setCollectionName(pdbID);
-      asc.setInfo("havePDBHeaderName", Boolean.TRUE);
+      asc.setInfo(JC.INFO_PDB_HAVE_HEADER_NAME, Boolean.TRUE);
     }
     if (lineLength > 50)
       line = line.substring(0, 50);

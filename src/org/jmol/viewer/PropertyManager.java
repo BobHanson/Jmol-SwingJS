@@ -1882,21 +1882,21 @@ public class PropertyManager implements JmolPropertyManager {
     return getModel("PDB", bs, new Object[] { isPQR, doTransform, allTrajectories}, out);
   }
 
-//
-//  /**
-//   * PDB line sorter 
-//   * @param s1 
-//   * @param s2 
-//   * @return -1, 0, or 1
-//   */
-//  public int compare(String s1, String s2) {
-//    int atA = PT.parseInt(s1.substring(10, 16));
-//    int atB = PT.parseInt(s2.substring(10, 16));
-//    int resA = PT.parseInt(s1.substring(26, 30));
-//    int resB = PT.parseInt(s2.substring(26, 30));
-//    return (resA < resB ? -1 : resA > resB ? 1 : atA < atB ? -1
-//        : atA > atB ? 1 : 0);
-//  }
+  //
+  //  /**
+  //   * PDB line sorter 
+  //   * @param s1 
+  //   * @param s2 
+  //   * @return -1, 0, or 1
+  //   */
+  //  public int compare(String s1, String s2) {
+  //    int atA = PT.parseInt(s1.substring(10, 16));
+  //    int atB = PT.parseInt(s2.substring(10, 16));
+  //    int resA = PT.parseInt(s1.substring(26, 30));
+  //    int resB = PT.parseInt(s2.substring(26, 30));
+  //    return (resA < resB ? -1 : resA > resB ? 1 : atA < atB ? -1
+  //        : atA > atB ? 1 : 0);
+  //  }
 
   /* **********************
    * 
@@ -1905,8 +1905,7 @@ public class PropertyManager implements JmolPropertyManager {
    *****************************/
 
   @Override
-  @SuppressWarnings("static-access")
-  public String getPdbData(int modelIndex, String type, BS bsSelected,
+  public String getPdbData(int modelIndex, int tok, String type, BS bsSelected,
                            Object[] parameters, OC out, boolean addStructure) {
     if (vwr.ms.isJmolDataFrame(modelIndex))
       modelIndex = vwr.ms.getJmolDataSourceFrame(modelIndex);
@@ -1919,103 +1918,67 @@ public class PropertyManager implements JmolPropertyManager {
     if (out == null)
       out = vwr.getOutputChannel(null, null);
     SB pdbCONECT = new SB();
-    boolean isDraw = (type.indexOf("draw") >= 0);
-    boolean isSpin = (type.indexOf("spin") >= 0);
+    boolean isDataOnly = (type.indexOf("reciprocalLattice") >= 0);
     BS bsAtoms = null;
+    Atom[] atoms = null;
     BS bsWritten = new BS();
     char ctype = '\0';
-    LabelToken[] tokens = vwr.ms.getLabeler().compile(vwr,
+    vwr.ms.getLabeler();
+    LabelToken[] tokens = LabelToken.compile(vwr,
         "ATOM  %-6i%4a%1A%3.-3n %1c%4R%1E   ", '\0', null);
     if (parameters == null) {
-      ctype = (type.length() > 11 && type.indexOf("quaternion ") >= 0 ? type
-          .charAt(11) : 'R');
-      ((BioModel) model).getPdbData(type, ctype, isDraw, bsSelected, out, tokens, pdbCONECT,
-          bsWritten);
+      ctype = (type.length() > 11 && type.indexOf("quaternion ") >= 0
+          ? type.charAt(11)
+          : 'R');
+      ((BioModel) model).getPdbData(type, ctype, tok == T.draw, bsSelected, out,
+          tokens, pdbCONECT, bsWritten);
       bsAtoms = vwr.getModelUndeletedAtomsBitSet(modelIndex);
     } else {
       // plot property x y z....
-      bsAtoms = (BS) parameters[0];
       double[] dataX = (double[]) parameters[1];
-        double[] dataY = (double[]) parameters[2];
+      double[] dataY = (double[]) parameters[2];
       double[] dataZ = (double[]) parameters[3];
       double[] data3 = (double[]) parameters[11];
       boolean haveY = (dataY != null);
       boolean haveZ = (dataZ != null);
-      P3d minXYZ = (P3d) parameters[4];
-      P3d maxXYZ = (P3d) parameters[5];
       P3d factors = (P3d) parameters[6];
-      P3d center = (P3d) parameters[7];
       String format = (String) parameters[8];
-      String[] properties = (String[]) parameters[9];
-      double pdbFactor = ((Number) parameters[10]).doubleValue();
       boolean isPDBFormat = (factors != null && format == null);
-      Atom[] atoms = vwr.ms.at;
-      if (isPDBFormat) {
-        out.append("REMARK   6 Jmol PDB-encoded data: ").append(type)
-            .append("; for model " + modelIndex + "; Jmol ").append(Viewer.getJmolVersion()).append("; ").append(vwr.apiPlatform.getDateFormat(null)).append("\n");
-        out.append("REMARK   6 Jmol data").append(" min = ")
-            .append(Escape.eP(minXYZ)).append(" max = ")
-            .append(Escape.eP(maxXYZ)).append(" unScaledXyz = xyz * ")
-            .append(Escape.eP(factors)).append(" + ").append(Escape.eP(center));
-        if (pdbFactor != 1)        
-          out.append("pdbfactor = " + pdbFactor);
-        out.append(";\n");
-        String atomNames = null;
-        for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
-            .nextSetBit(i + 1)) {
-          String name = "" + atoms[i].getAtomName();
-          if (atomNames != null || name.length() > 4) {
-            if (atomNames == null) {
-              atomNames = "";
-              i = -1;
-              continue;
-            }
-            atomNames += " " + name;
-          }
-        }
-        if (atomNames != null)
-          out.append("REMARK   6 Jmol atom names").append(atomNames).append("\n");
-        String resNames = null;
-        for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
-            .nextSetBit(i + 1)) {
-          String name = "" + atoms[i].getGroup3(true);
-          if (resNames != null || name.length() > 3) {
-            if (resNames == null) {
-              resNames = "";
-              i = -1;
-              continue;
-            }
-            resNames += " " + name;
-          }
-        }
-        if (resNames != null)
-          out.append("REMARK   6 Jmol residue names").append(resNames).append("\n");
-        if (isSpin) {
-          M3d mat = (M3d) vwr.ms.getModelAuxiliaryInfo(modelIndex).get(JC.SPIN_ROTATION_MATRIX_APPLIED);
-          if (mat != null)
-            out.append("REMARK   6 Jmol spin matrix applied ").append(mat.toJSON()).append("\n");
-        } else {
-          for (int i = 0; i < properties.length; i++)
-            if (properties[i] != null)
-              out.append("REMARK   6 Jmol property ").append(properties[i]).append(";\n");
-        }       
-      }
       String strExtra = "";
       Atom atomLast = null;
       P3d ptTemp = new P3d();
-      if (!isPDBFormat) {
-        if (format == null)
-          format = "%-5i %-10s %-13.5f "
-              + (haveZ ? "%-13.5f %-13.5f" : haveY ? "%-13.5f" : "");
+      if (!isDataOnly) {
+        atoms = vwr.ms.at;
+        bsAtoms = (BS) parameters[0];
+      }
+      if (isPDBFormat) {
+        addPDBHeader(tok, type, modelIndex, bsAtoms, factors, parameters, out);
+      } else {
+        if (format == null) {
+          if (isDataOnly) {
+            format = "%-10s %-13.5f %-13.5f %-13.5f";
+          } else {
+            format = "%-5i %-10s %-13.5f "
+                + (haveZ ? "%-13.5f %-13.5f" : haveY ? "%-13.5f" : "");
+          }
+        }
         format += "\n";
-
+      }
+      if (isDataOnly) {
+        int n = dataX.length;
+        out.append(n + "\n\n");
+        for (int i = 0; i < n; i++) {
+          out.append(PT.sprintf(format, "sF", new Object[] { "Xx",
+              new double[] { dataX[i], dataY[i], dataZ[i] } }));
+        }
+        return out.toString();
       }
       for (int i = bsAtoms.nextSetBit(0), n = 0; i >= 0; i = bsAtoms
           .nextSetBit(i + 1), n++) {
         double x = dataX[n];
         double y = (haveY ? dataY[n] : 0d);
         double z = (haveZ ? dataZ[n] : 0d);
-        double spin = (isSpin ? data3[n] : 0d);
+        double spin = (tok == T.spin ? data3[n] : 0d);
         if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z))
           continue;
         Atom a = atoms[i];
@@ -2027,11 +1990,11 @@ public class PropertyManager implements JmolPropertyManager {
           // ATOM  22     Co2 UNK     0    0.00    1.27    0.00           0.000         CO     
           // incorrect:
           // ATOM  1     Co1_1 UNK     0    1.63    0.00    0.00           0.000         CO     
-          while (line.charAt(16) !=' ') {
-             int pt = line.lastIndexOf(' ', 16);
-             if (pt < 0)
-               break;
-             line = line.substring(0, pt - 1) + line.substring(pt);
+          while (line.charAt(16) != ' ') {
+            int pt = line.lastIndexOf(' ', 16);
+            if (pt < 0)
+              break;
+            line = line.substring(0, pt - 1) + line.substring(pt);
           }
           out.append(line);
           if (isPDB)
@@ -2047,36 +2010,92 @@ public class PropertyManager implements JmolPropertyManager {
                 .append(PT.formatStringI("%5i", "i", atomLast.getAtomNumber()))
                 .append(PT.formatStringI("%5i", "i", a.getAtomNumber()))
                 .appendC('\n');
-        } else if (haveZ) {
-          out.append(PT.sprintf(
-              format,
-              "isF",
-              new Object[] { Integer.valueOf(a.getAtomNumber()),
-                  a.getAtomName(), new double[] { x, y, z } }));
-        } else if (haveY) {
-          out.append(PT.sprintf(
-              format,
-              "isF",
-              new Object[] { Integer.valueOf(a.getAtomNumber()),
-                  a.getAtomName(), new double[] { x, y } }));
         } else {
-          out.append(PT.sprintf(
-              format,
-              "isF",
-              new Object[] { Integer.valueOf(a.getAtomNumber()),
-                  a.getAtomName(), new double[] { x } }));
+          writeDataFormat(format, a.getAtomNumber(), a.getAtomName(), x,
+              (haveY ? y : Double.NaN), (haveZ ? z : Double.NaN), out);
         }
         atomLast = a;
       }
     }
     out.append(pdbCONECT.toString());
-    if (isDraw)
+    if (tok == T.draw)
       return out.toString();
     bsSelected.and(bsAtoms);
     if (isPDB && addStructure)
-      out.append("\n\n"
-          + vwr.ms.getProteinStructureState(bsWritten, ctype == 'R' ? T.ramachandran : T.pdb));
+      out.append("\n\n" + vwr.ms.getProteinStructureState(bsWritten,
+          ctype == 'R' ? T.ramachandran : T.pdb));
     return out.toString();
+  }
+
+  private void writeDataFormat(String format, int atomNumber, String atomName,
+                               double x, double y, double z, OC out) {
+    double[] d = (Double.isNaN(z) ? new double[] { x, y, z }
+        : Double.isNaN(y) ? new double[] { x, y } : new double[] { x });
+    out.append(PT.sprintf(format, "isF",
+        new Object[] { Integer.valueOf(atomNumber), atomName, d }));
+  }
+
+  private void addPDBHeader(int tok, String type, int modelIndex, BS bsAtoms, P3d factors, Object[] parameters,
+                            OC out) {
+    
+    P3d minXYZ = (P3d) parameters[4];
+    P3d maxXYZ = (P3d) parameters[5];
+    P3d center = (P3d) parameters[7];
+    String[] properties = (String[]) parameters[9];
+    double pdbFactor = ((Number) parameters[10]).doubleValue();
+
+    out.append("REMARK   6 Jmol PDB-encoded data: ").append(type)
+        .append("; for model " + modelIndex + "; Jmol ")
+        .append(Viewer.getJmolVersion()).append("; ")
+        .append(vwr.apiPlatform.getDateFormat(null)).append("\n");
+    out.append("REMARK   6 Jmol data").append(" min = ")
+        .append(Escape.eP(minXYZ)).append(" max = ").append(Escape.eP(maxXYZ))
+        .append(" unScaledXyz = xyz * ").append(Escape.eP(factors))
+        .append(" + ").append(Escape.eP(center));
+    if (pdbFactor != 1)
+      out.append("pdbfactor = " + pdbFactor);
+    out.append(";\n");
+    String atomNames = null;
+    Atom[] atoms = vwr.ms.at;
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      String name = "" + atoms[i].getAtomName();
+      if (atomNames != null || name.length() > 4) {
+        if (atomNames == null) {
+          atomNames = "";
+          i = -1;
+          continue;
+        }
+        atomNames += " " + name;
+      }
+    }
+    if (atomNames != null)
+      out.append("REMARK   6 Jmol atom names").append(atomNames).append("\n");
+    String resNames = null;
+    for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      String name = "" + atoms[i].getGroup3(true);
+      if (resNames != null || name.length() > 3) {
+        if (resNames == null) {
+          resNames = "";
+          i = -1;
+          continue;
+        }
+        resNames += " " + name;
+      }
+    }
+    if (resNames != null)
+      out.append("REMARK   6 Jmol residue names").append(resNames).append("\n");
+    if (tok == T.spin) {
+      M3d mat = (M3d) vwr.ms.getModelAuxiliaryInfo(modelIndex)
+          .get(JC.SPIN_ROTATION_MATRIX_APPLIED);
+      if (mat != null)
+        out.append("REMARK   6 Jmol spin matrix applied ").append(mat.toJSON())
+            .append("\n");
+    } else {
+      for (int i = 0; i < properties.length; i++)
+        if (properties[i] != null)
+          out.append("REMARK   6 Jmol property ").append(properties[i])
+              .append(";\n");
+    }
   }
 
   @SuppressWarnings("boxing")

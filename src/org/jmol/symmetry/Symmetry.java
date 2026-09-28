@@ -1259,7 +1259,7 @@ public class Symmetry implements SymmetryInterface {
     SpaceGroup sg = spaceGroup;
     if (sg == null && symmetryInfo != null) {
       sg = SpaceGroup.determineSpaceGroupN(symmetryInfo.sgName);
-      if (sg == null) {
+      if (sg == null || !sg.getDisplayName().equals(symmetryInfo.fileSpaceGroup.getDisplayName())) {
         String id = getSpaceGroupJmolId();
         if (id == null)
           id = getSpaceGroupClegId();
@@ -1315,15 +1315,18 @@ public class Symmetry implements SymmetryInterface {
     return wyckoffFinder;
   }
 
+  private P3d[] temp4;
+
   /**
    * @param fracA
    * @param fracB
    * @return matrix
    */
   @Override
-  public M4d getTransform(P3d fracA, P3d fracB, boolean best) {
-    return getDesc(null).getTransform(unitCell, getSymmetryOperations(), fracA,
-        fracB, best);
+  public M4d getTransform(P3d fracA, P3d fracB) {
+    if (temp4 == null)
+      temp4 = new P3d[] { new P3d(), new P3d(), new P3d(), new P3d() };
+    return unitCell.getTransform(getSymmetryOperations(), fracA, fracB, temp4);
   }
 
   @Override

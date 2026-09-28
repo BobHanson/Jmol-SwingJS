@@ -177,6 +177,9 @@ public class PhosphorusMonomer extends Monomer {
       dssrSubType = type;
   }
 
-
+  @Override
+  public String getGroupMenuKey() {
+    return JC.GROUP_MENU_NUCLEIC;
+  }
 
 }

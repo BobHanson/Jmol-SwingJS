@@ -276,6 +276,9 @@ public class AlphaMonomer extends Monomer {
     return Qd.getQuaternionFrameV(vA, vB, vC, false);
   }
   
-
+  @Override
+  public String getGroupMenuKey() {
+    return JC.GROUP_MENU_PROTEIN;
+  }
 
 }

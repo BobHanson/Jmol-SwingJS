@@ -76,9 +76,13 @@ public class MMCifReader extends CifReader {
 
   private int thisChain = -1;
   private int modelIndex = 0;
-  
+
   private P3d chainSum;
   private int[] chainAtomCount;
+
+  private boolean doSetBonds;
+  private boolean doSetAllBonds; // not just hetero
+  private String pubDOI, dataDOI;
 
   private String carbohydrateGroups;
   
@@ -104,6 +108,10 @@ public class MMCifReader extends CifReader {
     if (htParams.containsKey("isMutate"))
       asc.setInfo("isMutate",Boolean.TRUE);      
     doSetBonds = checkFilterKey("ADDBONDS");
+    doSetAllBonds = checkFilterKey("ALLBONDS");
+    if (doSetAllBonds) {
+      asc.setInfo(JC.INFO_MMCIF_ALL_BONDS,Boolean.TRUE);      
+    }
     byChain = checkFilterKey("BYCHAIN");
     if (checkFilterKey("BIOMOLECULE")) // PDB format
       filter = PT.rep(filter, "BIOMOLECULE", "ASSEMBLY");
@@ -152,6 +160,18 @@ public class MMCifReader extends CifReader {
       reader.readLine(); // sometimes there is a null character here
     }  
     
+    if (key0.startsWith(CAT_DATABASE2_CAT)) {
+      if (key.endsWith("_pdbx_doi")) {
+        setDataDOI((String) field);
+      }
+    }
+
+    if (key0.startsWith(CAT_CITATION_CAT)) {
+      if (key.endsWith("_doi")) {
+        setPubDOI((String) field);
+      }
+    }
+        
     if (isBiomolecule) {
       // information read, but not compatible
       addedData = null;
@@ -189,13 +209,21 @@ public class MMCifReader extends CifReader {
     // the problem was that these files were not recognized as mmCIF 
     // files by the resolver when this MMCifReader was created.
 
-    if (isLigandBondBug)
-      return false;
-    if (key0.startsWith(CAT_COMPBOND_CAT))
-      return processCompBondLoopBlock();
-    if (key0.startsWith(CAT_STRUCTCONN_CAT))
-      return processStructConnLoopBlock();
-    
+    if (!isLigandBondBug) {
+      if (key0.startsWith(CAT_COMPBOND_CAT))
+        return processCompBondLoopBlock();
+      if (key0.startsWith(CAT_STRUCTCONN_CAT))
+        return processStructConnLoopBlock();
+    }
+
+    if (key0.startsWith(CAT_DATABASE2_CAT))
+      return processDatabase2LoopBlock();
+
+    if (key0.startsWith(CAT_CITATION_CAT)) {
+      processCitationListBlock();
+      return true;
+    }
+
     return false;
 
   }
@@ -324,9 +352,16 @@ public class MMCifReader extends CifReader {
           appendLoadNote(note);
       }
       setHetero();
-      if (doSetBonds)
+      if (doSetBonds) {
         setBonds();
+        if (doSetAllBonds)
+          setFormalCharges();
+      }
     }
+    if (dataDOI != null)
+      asc.setCurrentModelInfo("dataDOI", dataDOI);
+    if (pubDOI != null)
+      asc.setCurrentModelInfo("pubDOI", pubDOI);
     if (asc.ac == 0 && !isCourseGrained)
       return false;
     if (htSites != null)
@@ -347,6 +382,20 @@ public class MMCifReader extends CifReader {
       }
     }
     return true;
+  }
+
+  private void setFormalCharges() {
+    int modelIndex = asc.iSet;
+    int i = asc.getAtomSetAtomIndex(modelIndex);
+    int i2 = asc.getAtomSetAtomCount(modelIndex);
+    for (;--i2 >= 0;i++) {
+      Atom a = asc.atoms[i];
+      if (a.isHetero)
+        continue;
+      if ("NH2".equals(a.atomName))
+        a.formalCharge = 1;
+      
+    }
   }
 
   ////////////////////////////////////////////////////////////////
@@ -1177,7 +1226,6 @@ public class MMCifReader extends CifReader {
 
   private Lst<Object[]> structConnMap;
   private String structConnList = "";
-  private boolean doSetBonds;
 
   protected boolean processStructConnLoopBlock() throws Exception {
     parseLoopParametersFor(CAT_STRUCTCONN, structConnFields);
@@ -1231,6 +1279,84 @@ public class MMCifReader extends CifReader {
     "*_pdbx_aromatic_flag"
   };
 
+  final private static String CAT_DATABASE2_CAT = "_database_2.";
+  final private static String CAT_DATABASE2 = "_database_2";
+  final private static String[] database2Fields = {
+    "*_database_id",
+    "*_pdbx_doi"
+  };
+
+  final private static byte DB_ID = 0;
+  final private static byte DB_DOI = 1;
+  
+  
+  /**
+   * Get the DOI for the data.
+   * 
+   * @return true
+   * @throws Exception
+   */
+  protected boolean processDatabase2LoopBlock() throws Exception {
+    parseLoopParametersFor(CAT_DATABASE2, database2Fields);
+    while (cifParser.getData()) {
+      if (key2col[DB_DOI] != NONE) {
+        if (getFieldString(DB_ID).equals("PDB")) {
+          setDataDOI(getFieldString(DB_DOI));
+        }
+      }
+    }
+    return true;
+  }
+
+  private void setDataDOI(String doi) {
+    if (!isNull(doi)) {
+      dataDOI = doi;
+      System.out.println("dataDOI is " + dataDOI);
+    }
+  }
+
+  final private static String CAT_CITATION_CAT = "_citation.";
+  final private static String CAT_CITATION = "_citation";
+  final private static String[] citationFields = {
+    "*_id",
+    "*_title",
+    "*_pdbx_database_id_doi"
+  };
+
+  final private static byte PUB_ID = 0;
+  final private static byte PUB_TITLE = 1;
+  final private static byte PUB_DOI = 2;
+  
+  
+  /**
+   * Get the DOI for the publication
+   * 
+   */
+  @Override
+  protected void processCitationListBlock() {
+    try {
+      parseLoopParametersFor(CAT_CITATION, citationFields);
+      while (cifParser.getData()) {
+        if (key2col[PUB_DOI] != NONE) {
+          if (getFieldString(PUB_ID).equalsIgnoreCase("PRIMARY")) {
+            getFieldString(PUB_TITLE);
+            setPubDOI(getFieldString(PUB_DOI));
+          }
+        }
+      }
+    } catch (Exception e) {
+      System.err
+          .println("mmCIF Reader error reading _citation " + e.getMessage());
+    }
+  }
+
+  private void setPubDOI(String doi) {
+    if (!isNull(doi)) {
+      pubDOI = doi;
+      System.out.println("pubDOI is " + pubDOI);
+    }
+  }
+
   protected boolean processCompBondLoopBlock() throws Exception {
     doSetBonds = true;
     parseLoopParametersFor(CAT_COMPBOND, chemCompBondFields);
@@ -1251,14 +1377,16 @@ public class MMCifReader extends CifReader {
       if (isLigand) {
         asc.addNewBondWithOrderA(asc.getAtomFromName(atom1),
             asc.getAtomFromName(atom2), order);
-      } else if (haveHAtoms || htHetero != null && htHetero.containsKey(comp)) {
+      } else if (haveHAtoms || doSetAllBonds || htHetero != null && htHetero.containsKey(comp)) {
         if (htBondMap == null)
           htBondMap = new Hashtable<String, Lst<Object[]>>();
         Lst<Object[]> cmap = htBondMap.get(comp);
         if (cmap == null)
           htBondMap.put(comp, cmap = new Lst<Object[]>());
         cmap.addLast(new Object[] { atom1, atom2,
-            Integer.valueOf(haveHAtoms ? order : 1) });
+            Integer.valueOf(order
+ //BH 2026.09.26 why this?               haveHAtoms ? order : 1
+                    ) });
       }
     }
     return true;
@@ -1373,8 +1501,8 @@ public class MMCifReader extends CifReader {
       asc.setCurrentModelInfo("hetNames", htHetero);
       asc.setInfo("hetNames", htHetero);
       if (carbohydrateGroups != null) {
-        asc.setInfo("carbohydrates", carbohydrateGroups);
-        asc.setCurrentModelInfo("carbohydrates", carbohydrateGroups);
+        asc.setInfo(JC.INFO_CARBOHYDRATES, carbohydrateGroups);
+        asc.setCurrentModelInfo(JC.INFO_CARBOHYDRATES, carbohydrateGroups);
       }
     }    
   }

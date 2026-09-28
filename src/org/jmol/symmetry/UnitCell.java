@@ -1779,6 +1779,40 @@ public class UnitCell extends SimpleUnitCell implements Cloneable {
     Qd q = Qd.getQuaternionFrame(null, a1, a2);
     return q;
   }
+
+  M4d getTransform(SymmetryOperation[] ops, P3d fracA, P3d fracB, P3d[] temp) {
+    P3d p0 = temp[0];
+    P3d p1 = temp[1];
+    P3d vtrans = temp[2];
+    P3d ptemp = temp[3];
+    p1.setT(fracB);
+    vtrans.setT(p1);
+    unitize(p1);
+    for (int i = 0, n = ops.length; i < n; i++) {
+      SymmetryOperation op = ops[i];
+      p0.setT(fracA);
+      op.rotTrans(p0);
+      ptemp.setT(p0);
+      unitize(p0);
+      double d = p0.distanceSquared(p1);
+      if (d < JC.UC_TOLERANCE2) {
+        vtrans.sub(ptemp);
+        SymmetryOperation.normalize12ths(vtrans);
+        M4d m2 = M4d.newM4(op);
+        m2.add(vtrans);
+        // but check...
+        p0.setT(fracA);
+        m2.rotTrans(p0);
+        unitize(p0);
+        d = p0.distanceSquared(p1);
+        if (d >= JC.UC_TOLERANCE2) {
+          continue;
+        }
+        return m2;
+      }
+    }
+    return null;
+  }
   
 //  void showQ(Qd qt, String name) {
 //    System.out.println(name  + " = quaternion(" + qt.getNormal() + " " + qt.getTheta() + ")\n# " + qt);

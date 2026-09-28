@@ -25,6 +25,7 @@
 package org.jmol.adapter.smarter;
 
 import java.io.BufferedReader;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
@@ -155,7 +156,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public Lst<P3d[]> trajectorySteps;
   public Object domains;
   public Object validation, dssr;
-  public boolean openVarna;
 
   protected boolean isConcatenated;
   public String addedData, addedDataKey;
@@ -175,11 +175,17 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   // protected/public state variables
 
+  /**
+   * set false for MMCIF; considered false when there is only one operation or
+   * no packing
+   */
+  public boolean checkNearAtoms = true;
+
+  protected String latticeType;
   public int[] latticeCells;
   public Object fillRange;
   public boolean doProcessLines;
 
-  protected String latticeType;
   public boolean iHaveUnitCell;
   public boolean iHaveSymmetryOperators;
   public boolean continuing = true;
@@ -193,9 +199,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean doCheckUnitCell;
   protected boolean getHeader;
   protected boolean isSequential;
-  public boolean optimize2D;
-  public boolean noHydrogens;
-  public boolean noMinimize;
   public boolean is2D;
 
   public boolean isMolecular; // only for CIF so that it can read multiple unit cells
@@ -221,12 +224,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected boolean mustFinalizeModelSet;
   protected boolean forcePacked;
   /**
-   * set false for MMCIF; considered false when there is only one operation or
-   * no packing
-   */
-  public boolean checkNearAtoms = true;
-
-  /**
    * the range outside the unit cell that will still be considered packing
    * range;
    */
@@ -251,7 +248,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public int modDim; // modulation dimension
 
   protected boolean lowPrecision;
-  private boolean highprecision0 = Viewer.isHighPrecision;
+// n/a Jmol-SwingJS
+//  private boolean highprecision0 = Viewer.isHighPrecision;
 
   // private state variables
 
@@ -449,7 +447,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
 
   protected boolean isFinalized;
 
-  protected boolean noPack;
 
   /**
    * actual SUPERCELL keyword, not just "cell="
@@ -469,7 +466,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         asc.centralize();
       if (fillRange != null)// && previousUnitCell == null)
         asc.setInfo("boundbox", fillRange);
-
+      if (filterN > 0)
+        asc.setNoAutoBond();
       Map<String, Object> info = asc.getAtomSetAuxiliaryInfo(0);
       if (info != null) {
         if (domains != null) {
@@ -542,9 +540,12 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   private Object finish() {
-    if (Viewer.isJmolD != highprecision0)
-      vwr.setBooleanPropertyTok("doubleprecision", T.doubleprecision,
-          highprecision0);
+// n/a Jmol-SwingJS setting doublePrecision has no effect; it is always TRUE
+    // legacy only, when highprecision0 has been set TRUE
+    // setting this back to its original value before the structure was loaded
+//    if (Viewer.isJmolD != highprecision0)
+//      vwr.setBooleanPropertyTok("doubleprecision", T.doubleprecision,
+//          highprecision0);
     String s = (String) htParams.get("loadState");
     asc.setInfo("loadState", s == null ? "" : s);
     s = (String) htParams.get("smilesString");
@@ -574,7 +575,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (!merging
         && (asc.bsAtoms == null ? asc.ac == 0 : asc.bsAtoms.nextSetBit(0) < 0)
         && fileType.indexOf("DataOnly") < 0
-        && asc.atomSetInfo.get("dataOnly") == null)
+        && asc.getInfo("dataOnly") == null)
       return "No atoms found\nfor file " + filePath + "\ntype " + name;
     fixBaseIndices();
     return asc;
@@ -683,8 +684,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (bsModels != null && (firstLastStep == null || firstLastStep[1] != -1))
       lastModelNumber = bsModels.length();
 
-    symmetryRange = (htParams.containsKey("symmetryRange")
-        ? ((Double) htParams.get("symmetryRange")).doubleValue()
+    symmetryRange = (htParams.containsKey(JC.INFO_SYMMETRY_RANGE)
+        ? ((Double) htParams.get(JC.INFO_SYMMETRY_RANGE)).doubleValue()
         : 0);
     paramsCentroid = htParams.containsKey("centroid");
     paramsPacked = htParams.containsKey("packed");
@@ -694,17 +695,17 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     //with this flag, we convert any nonfractional coordinates to fractional
     //if a unit cell is available.
 
-    if (htParams.containsKey("spaceGroupIndex")) {
+    if (htParams.containsKey(JC.INFO_SPACE_GROUP_INDEX)) {
       // three options include:
       // = -1: normal -- use operators if present or name if not
       // = -2: user is supplying operators or name
       // >=0: spacegroup fully determined
       // = -999: ignore -- just the operators
 
-      desiredSpaceGroupIndex = ((Integer) htParams.get("spaceGroupIndex"))
+      desiredSpaceGroupIndex = ((Integer) htParams.get(JC.INFO_SPACE_GROUP_INDEX))
           .intValue();
       if (desiredSpaceGroupIndex == -2)
-        sgName = (String) htParams.get("spaceGroupName");
+        sgName = (String) htParams.get(JC.INFO_SPACE_GROUP_NAME);
       ignoreFileSpaceGroupName = (desiredSpaceGroupIndex == -2
           || desiredSpaceGroupIndex >= 0);
       ignoreFileSymmetryOperators = (desiredSpaceGroupIndex != -1);
@@ -780,6 +781,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     return parseDoubleStr(s);
   }
 
+  /**
+   * called by FILTER "lowPrecision"
+   */
   private void setLowPrecision() {
     lowPrecision = true;
     cellSlop = LOW_PRECISION_PACKING_RANGE;
@@ -809,18 +813,21 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       }
       isHigh = (precision >= 7);
       if (isHigh) {
-        vwr.setBooleanProperty("doubleprecision", true);
-        if (Viewer.isHighPrecision) {
+// n/a Jmol-SwingJS
+//        vwr.setBooleanProperty("doubleprecision", true);
+        // true for Jmol-SwingJS
+//        if (Viewer.isHighPrecision) {
           cellSlop = SimpleUnitCell.SLOPDP;
           if (!paramsPacked)
             packingRange = Double.valueOf(cellSlop);
-          asc.setInfo("highPrecision", Boolean.TRUE);
-        } else {
-          isHigh = false;
-          precision = 6;
-          appendLoadNote(
-              "Structure read has high precision but this version of Jmol uses float precision.\nUse JmolD.jar or JavaScript for full precision.");
-        }
+          asc.setInfo(JC.INFO_HIGH_PRECISION, Boolean.TRUE);
+// n/a Jmol-SwingJS
+//        } else {
+//          isHigh = false;
+//          precision = 6;
+//          appendLoadNote(
+//              "Structure read has high precision but this version of Jmol uses float precision.\nUse JmolD.jar or JavaScript for full precision.");
+//        }
       }
     }
     if (!isHigh) {
@@ -1158,27 +1165,38 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   String filterSymop;
   private int filterN;
   private int nFiltered;
-  private boolean doSetOrientation;
+  
+  // FILTER DEFAULT TRUE
+  protected boolean addVibrations = true;
+  public boolean doReadMolecularOrbitals = true;
+  private boolean doSetOrientation = true;
+
+  // FILTER DEFAULT FALSE
+  public boolean allow_a_len_1;
   protected boolean doCentralize;
-  protected boolean addVibrations;
-  protected boolean useAltNames;
   protected boolean ignoreStructure;
-  protected boolean isDSSP1;
-  protected boolean allowPDBFilter;
-  public boolean doReadMolecularOrbitals;
+  protected boolean isDSSP1; 
+  public boolean noHydrogens;
+  protected boolean noMinimize;
+  protected boolean noPack;
+  protected boolean openVarna;
   protected boolean reverseModels;
+  protected boolean slabXY;
+  protected boolean useAltNames;
+
+  // DEFAULT FALSE, DERIVED
+  protected boolean optimize2D;
+  private boolean polymerX;
+  protected boolean filteredPrecision;
+
+  // SPECIALIZED; SET IN READERS, NOT HERE
+  protected boolean allowPDBFilter;
   private String modelNameRequired;
+  
+  // NOT SET BY FILTER
   public boolean doCentroidUnitCell;
   public boolean centroidPacked;
   public String strSupercell;
-
-  public boolean allow_a_len_1 = false;
-
-  public boolean slabXY;
-
-  private boolean polymerX;
-
-  protected boolean filteredPrecision;
 
   // xtal structures -- SLAB
 
@@ -1222,7 +1240,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     if (filter == null)
       return;
     checkFilterKeys();
-    filterSymmetry(); // must come first, because it chagnes ',' to ';' and adds ';'...';'
+    filterSymmetry(); // must come first, because it changes ',' to ';' and adds ';'...';'
     filterModelName();
     filterAtoms();
     String s = getFilter("FILESCALING=");
@@ -1333,22 +1351,26 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
    * 
    */
   private void checkFilterKeys() {
-    doSetOrientation = !checkFilterKey("NOORIENT");
-    doCentralize = (!checkFilterKey("NOCENTER") && checkFilterKey("CENTER"));
+    // default true
     addVibrations = !checkFilterKey("NOVIB");
+    doReadMolecularOrbitals = !checkFilterKey("NOMO");
+    doSetOrientation = !checkFilterKey("NOORIENT");
+
+    // default false
+    allow_a_len_1 = checkFilterKey("TOPOS");
+    doCentralize = (checkFilterKey("CENTER") && !checkFilterKey("NOCENTER"));
     ignoreStructure = checkFilterKey("DSSP");
     isDSSP1 = checkFilterKey("DSSP1");
-    doReadMolecularOrbitals = !checkFilterKey("NOMO");
-    useAltNames = checkFilterKey("ALTNAME");
-    reverseModels = checkFilterKey("REVERSEMODELS");
-    allow_a_len_1 = checkFilterKey("TOPOS");
-    slabXY = checkFilterKey("SLABXY");
-    polymerX = !slabXY && checkFilterKey("POLYMERX");
     noHydrogens = checkFilterKey("NOH");
     noMinimize = checkFilterKey("NOMIN");
-    optimize2D = checkFilterKey("2D") && !noHydrogens && !noMinimize;
     noPack = checkFilterKey("NOPACK");
     openVarna = checkFilterKey("VARNA");
+    reverseModels = checkFilterKey("REVERSEMODELS");
+    slabXY = checkFilterKey("SLABXY");
+    useAltNames = checkFilterKey("ALTNAME");
+
+    optimize2D = checkFilterKey("2D") && !noHydrogens && !noMinimize;
+    polymerX = checkFilterKey("POLYMERX") && !slabXY;
 
     if (checkFilterKey("LOWPRECISION")) {
       // adding filter "lowPrecision" overrides the CIF and PWMAT reader HIGH setting
@@ -1592,21 +1614,13 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       initializeSymmetryOptions();
     boolean doApply = (iHaveUnitCell && doCheckUnitCell);
     FileSymmetry sym = null;
-    //    int n = asc.getLastAtomSetAtomIndex();
-    //    int n1 = asc.ac;
     if (doApply) {
       sym = getSymmetry();
       setPrecision();
-      //      for (int i = n1; --i >= n;) {
-      //        System.out.println(P3d.newP(asc.atoms[i]));
-      //      }
       sym = asc.getXSymmetry().applySymmetryFromReader(sym);
     } else {
       asc.setTensors();
     }
-    //    for (int i = n1; --i >= n;) {
-    //      System.out.println(asc.atoms[i].atomName + " " + P3d.newP(asc.atoms[i]));
-    //    }
 
     if (isTrajectory)
       asc.setTrajectory();
@@ -2169,4 +2183,5 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       latticeCells[0] = latticeCells[1] = latticeCells[2] = 1;
     }
   }
+  
 }

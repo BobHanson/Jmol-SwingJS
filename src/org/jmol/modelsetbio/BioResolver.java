@@ -70,9 +70,14 @@ import javajs.util.V3d;
  *
  * 
  */
-public final class BioResolver implements Comparator<String[]> {
+public final class BioResolver {
 
-  public final static Map<String, Short> htGroup = new Hashtable<String, Short>();
+  protected static int group3Count;
+
+  private static short group3NameCount;
+
+  private final static Map<String, Short> htGroup = new Hashtable<String, Short>();
+
 
   private Viewer vwr;
 
@@ -80,40 +85,13 @@ public final class BioResolver implements Comparator<String[]> {
     // only implemented via reflection, and only for PDB/mmCIF files
   }
 
-  private V3d vAB;
-  private V3d vNorm;
-  private P4d plane;
-
-  private ModelLoader ml;
-  private ModelSet ms;
-
-  private BS bsAddedMask;
-//  private int lastSetH = Integer.MIN_VALUE;
-  //private int maxSerial = 0;
-  private boolean haveHsAlready;
-
-  public BioResolver setLoader(ModelLoader modelLoader) {
-    ml = modelLoader;
-    bsAddedMask = null;
-//    lastSetH = Integer.MIN_VALUE;
-    //maxSerial = 0;
-    haveHsAlready = false;
-    if (modelLoader == null) {
-      ms = null;
-      bsAddedHydrogens = bsAtomsForHs = bsAssigned = null;
-      htBondMap = null;
-      htGroupBonds = null;
-      hNames = null;
-    } else {
-      Group.specialAtomNames = specialAtomNames;
-      ms = modelLoader.ms;
-      vwr = modelLoader.ms.vwr;
-      modelLoader.specialAtomIndexes = new int[ATOMID_MAX];
-      hasCONECT = (ms.getInfoM(JC.getBoolName(JC.GLOBAL_CONECT)) == Boolean.TRUE);
-    }
-    return this;
-  }
-  
+  /**
+   * Immediately upon dynamic loading by Viewer.
+   * Note that this sets only the "standard" carbohydrate list. 
+   * 
+   * @param vwr
+   * @return this
+   */
   public BioResolver setViewer(Viewer vwr) {
     this.vwr = vwr;
     if (Group.standardGroupList == null) {
@@ -131,631 +109,19 @@ public final class BioResolver implements Comparator<String[]> {
     return this;
   }
   
-  public Model getBioModel(int modelIndex,
-                        int trajectoryBaseIndex, Map<String, Object> jmolData,
-                        Properties modelProperties,
-                        Map<String, Object> modelAuxiliaryInfo) {
-    return new BioModel(ms, modelIndex, trajectoryBaseIndex,
-        jmolData, modelProperties, modelAuxiliaryInfo);
-  }
-
-  public Group distinguishAndPropagateGroup(Chain chain, String group3,
-                                            int seqcode, int firstAtomIndex,
-                                            int lastAtomIndex,
-                                            int[] specialAtomIndexes,
-                                            Atom[] atoms) {
-    /*
-     * called by finalizeGroupBuild()
-     * 
-     * first: build array of special atom names, for example "CA" for the alpha
-     * carbon is assigned #2 see JmolConstants.specialAtomNames[] the special
-     * atoms all have IDs based on Atom.lookupSpecialAtomID(atomName) these will
-     * be the same for each conformation
-     * 
-     * second: creates the monomers themselves based on this information thus
-     * building the byte offsets[] array for each monomer, indicating which
-     * position relative to the first atom in the group is which atom. Each
-     * monomer.offsets[i] then points to the specific atom of that type these
-     * will NOT be the same for each conformation
-     */
-
-    int mask = 0;
-
-    // clear previous specialAtomIndexes
-    for (int i = ATOMID_MAX; --i >= 0;)
-      specialAtomIndexes[i] = Integer.MIN_VALUE;
-
-    // go last to first so that FIRST confirmation is default
-    for (int i = lastAtomIndex; i >= firstAtomIndex; --i) {
-      int specialAtomID = atoms[i].atomID;
-      if (specialAtomID <= 0)
-        continue;
-      if (specialAtomID < JC.ATOMID_DISTINGUISHING_ATOM_MAX) {
-        /*
-         * save for future option -- turns out the 1jsa bug was in relation to
-         * an author using the same group number for two different groups
-         * 
-         * if ((distinguishingBits & (1 << specialAtomID) != 0) {
-         * 
-         * //bh 9/21/2006: //
-         * "if the group has two of the same, that cannot be right." // Thus,
-         * for example, two C's doth not make a protein "carbonyl C"
-         * distinguishingBits = 0; break; }
-         */
-        mask |= (1 << specialAtomID);
-      }
-      specialAtomIndexes[specialAtomID] = i;
-    }
-
-    Monomer m = null;
-    if ((mask & JC.ATOMID_PROTEIN_MASK) == JC.ATOMID_PROTEIN_MASK)
-      m = AminoMonomer.validateAndAllocate(chain, group3, seqcode,
-          firstAtomIndex, lastAtomIndex, specialAtomIndexes, atoms);
-    else if (mask == JC.ATOMID_ALPHA_ONLY_MASK)
-      m = AlphaMonomer.validateAndAllocateA(chain, group3, seqcode,
-          firstAtomIndex, lastAtomIndex, specialAtomIndexes);
-    else if (((mask & JC.ATOMID_NUCLEIC_MASK) == JC.ATOMID_NUCLEIC_MASK))
-      m = NucleicMonomer.validateAndAllocate(chain, group3, seqcode,
-          firstAtomIndex, lastAtomIndex, specialAtomIndexes);
-    else if (mask == JC.ATOMID_PHOSPHORUS_ONLY_MASK)
-      m = PhosphorusMonomer.validateAndAllocateP(chain, group3, seqcode,
-          firstAtomIndex, lastAtomIndex, specialAtomIndexes);
-    else if (checkCarbohydrate(group3))
-      m = CarbohydrateMonomer.validateAndAllocate(chain, group3, seqcode,
-          firstAtomIndex, lastAtomIndex);
-    return ( m != null && m.leadAtomIndex >= 0 ? m : null);
-  }   
-  
-  //////////// ADDITION OF HYDROGEN ATOMS /////////////
-  // Bob Hanson and Erik Wyatt, Jmol 12.1.51, 7/1/2011
-  
-  /*
-   * for each group, as it is finished in the file reading:
-   * 
-   * 1) get and store atom/bond information for group type
-   * 2) add placeholder (deleted) hydrogen atoms to a group
-   * 
-   * in the end:
-   * 
-   * 3) set multiple bonding and charges
-   * 4) determine actual number of required hydrogen atoms
-   * 5) set hydrogen atom names, atom numbers, and positions 
-   * 6) undelete those atoms  
-   * 
-   */
-  
-  public void setHaveHsAlready(boolean b) {
-    haveHsAlready = b;
-  }
-
-  private BS bsAddedHydrogens;
-  private BS bsAtomsForHs;
-  private Map<String, String>htBondMap;
-  private Map<String, Boolean>htGroupBonds;
-  private String[] hNames;
-  private int baseBondIndex = 0;
-
-  private boolean hasCONECT;
-
-  public void initializeHydrogenAddition() {
-    baseBondIndex = ms.bondCount;
-    bsAddedHydrogens = new BS();
-    bsAtomsForHs = new BS();
-    htBondMap = new Hashtable<String, String>();
-    htGroupBonds = new Hashtable<String, Boolean>();
-    hNames = new String[3];
-    vAB = new V3d();
-    vNorm = new V3d();
-    plane = new P4d();
-  }
-  
   /**
-   * Get bonding info for double bonds and add implicit hydrogen atoms, if needed.
    * 
-   * @param adapter
-   * @param iGroup this group
-   * @param nH legacy quirk
+   * @param modelLoader null will release all loading resources
+   * @return bml
    */
-  public void addImplicitHydrogenAtoms(JmolAdapter adapter, int iGroup, int nH) {
-    String group3 = ml.getGroup3(iGroup);
-    int nH1;
-    if (haveHsAlready && hasCONECT 
-        || group3 == null
-        || (nH1 = getStandardPdbHydrogenCount(group3)) == 0)
-      return;
-    nH = (nH1 < 0 ? -1 : nH1 + nH);
-    Object model = null;
-    int iFirst = ml.getFirstAtomIndex(iGroup);
-    int ac = ms.ac;
-    if (nH < 0) {
-      if (ac - iFirst == 1) // CA or P-only, or simple metals, also HOH, DOD
-        return;
-      model = vwr.getLigandModel(group3, "ligand_", "_data", null);
-      if (model == null)
-        return;
-      nH = adapter.getHydrogenAtomCount(model);
-      if (nH < 1)
-        return;
-    }
-    getBondInfo(adapter, group3, model);
-    ms.am[ms.at[iFirst].mi].isPdbWithMultipleBonds = true;
-    if (haveHsAlready)
-      return;
-    bsAtomsForHs.setBits(iFirst, ac);
-    bsAddedHydrogens.setBits(ac, ac + nH);
-    boolean isHetero = ms.at[iFirst].isHetero();
-    P3d xyz = P3d.new3(Double.NaN, Double.NaN, Double.NaN);
-    Atom a = ms.at[iFirst];
-    for (int i = 0; i < nH; i++)
-      ms.addAtom(a.mi, a.group, 1, "H", null, 0, a.getSeqID(), 0, xyz,
-          Double.NaN, null, 0, 0, 1, 0, null, isHetero, false, (byte) 0, null, Double.NaN)
-          .delete(null);
-  }
-
-  private void getBondInfo(JmolAdapter adapter, String group3, Object model) {
-    if (htGroupBonds.get(group3) != null)
-      return;
-    String[][] bondInfo = (model == null ? getPdbBondInfo(group3,
-        vwr.getBoolean(T.legacyhaddition)) : getLigandBondInfo(adapter, model, group3));
-    if (bondInfo == null)
-      return;
-    htGroupBonds.put(group3, Boolean.TRUE);
-    for (int i = 0; i < bondInfo.length; i++) {
-      if (bondInfo[i] == null)
-        continue;
-      if (bondInfo[i][1].charAt(0) == 'H')
-        htBondMap.put(group3 + "." + bondInfo[i][0], bondInfo[i][1]);
-      else
-        htBondMap.put(group3 + ":" + bondInfo[i][0] + ":" + bondInfo[i][1],
-            bondInfo[i][2]);
-    }
-  }
-
-  /**
-   * reads PDB ligand CIF info and creates a bondInfo object.
-   * 
-   * @param adapter
-   * @param model
-   * @param group3 
-   * @return      [[atom1, atom2, order]...]
-   */
-  private String[][] getLigandBondInfo(JmolAdapter adapter, Object model, String group3) {
-    String[][] dataIn = adapter.getBondList(model);
-    Map<String, P3d> htAtoms = new Hashtable<String, P3d>();
-    JmolAdapterAtomIterator iterAtom = adapter.getAtomIterator(model);
-    while (iterAtom.hasNext())
-      htAtoms.put(iterAtom.getAtomName(), iterAtom.getXYZ());      
-    String[][] bondInfo = new String[dataIn.length * 2][];
-    int n = 0;
-    for (int i = 0; i < dataIn.length; i++) {
-      String[] b = dataIn[i];
-      if (b[0].charAt(0) != 'H')
-        bondInfo[n++] = new String[] { b[0], b[1], b[2],
-            b[1].startsWith("H") ? "0" : "1" };
-      if (b[1].charAt(0) != 'H')
-        bondInfo[n++] = new String[] { b[1], b[0], b[2],
-            b[0].startsWith("H") ? "0" : "1" };
-    }
-    Arrays.sort(bondInfo, this);
-    // now look for 
-    String[] t;
-    for (int i = 0; i < n;) {
-      t = bondInfo[i];
-      String a1 = t[0];
-      int nH = 0;
-      int nC = 0;
-      for (; i < n && (t = bondInfo[i])[0].equals(a1); i++) {
-        if (t[3].equals("0")) {
-          nH++;
-          continue;
-        }
-        if (t[3].equals("1"))
-          nC++;
-      }
-      int pt = i - nH - nC;
-      if (nH == 1)
-        continue;
-      switch (nC) {
-      case 1:
-        char sep = (nH == 2 ? '@' : '|');
-        for (int j = 1; j < nH; j++) {
-          bondInfo[pt][1] += sep + bondInfo[pt + j][1];
-          bondInfo[pt + j] = null;
-        }
-        continue;
-      case 2:
-        if (nH != 2)
-          continue;
-        String name = bondInfo[pt][0];
-        String name1 = bondInfo[pt + nH][1];
-        String name2 = bondInfo[pt + nH + 1][1];
-        int factor = name1.compareTo(name2);
-        MeasureD.getPlaneThroughPoints(htAtoms.get(name1), htAtoms.get(name), htAtoms.get(name2), vNorm, vAB,
-            plane);
-        double d = MeasureD.distanceToPlane(plane, htAtoms.get(bondInfo[pt][1])) * factor;
-        bondInfo[pt][1] = (d > 0 ? bondInfo[pt][1] + "@" + bondInfo[pt + 1][1]
-            :  bondInfo[pt + 1][1] + "@" + bondInfo[pt][1]);
-        bondInfo[pt + 1] = null;
-      }
-    }
-    for (int i = 0; i < n; i++) {
-      if ((t = bondInfo[i]) != null && t[1].charAt(0) != 'H' && t[0].compareTo(t[1]) > 0) {
-        bondInfo[i] = null;
-        continue;
-      }
-      if (t != null)
-        Logger.info(" ligand " + group3 + ": " + bondInfo[i][0] + " - " + bondInfo[i][1] + " order " + bondInfo[i][2]);
-    }
-    return bondInfo;
+  public BioModelLoader getBioModelLoader(ModelLoader modelLoader) {
+    return new BioModelLoader(modelLoader);
   }
   
-  @Override
-  public int compare(String[] a, String[] b) {
-    return (b == null ? (a == null ? 0 : -1) : a == null ? 1 : a[0]
-        .compareTo(b[0]) < 0 ? -1 : a[0].compareTo(b[0]) > 0 ? 1 : a[3]
-        .compareTo(b[3]) < 0 ? -1 : a[3].compareTo(b[3]) > 0 ? 1 : a[1]
-        .compareTo(b[1]) < 0 ? -1 : a[1].compareTo(b[1]) > 0 ? 1 : 0);
-  }
-  
-  public void finalizeHydrogens() {
-    vwr.getLigandModel(null, null, null, null);
-    finalizePdbMultipleBonds();
-    addHydrogens();
-  }
-
-  private void addHydrogens() {
-    if (bsAddedHydrogens.nextSetBit(0) < 0)
-      return;
-    bsAddedMask = BSUtil.copy(bsAddedHydrogens);
-    finalizePdbCharges();
-    int[] nTotal = new int[1];
-    P3d[][] pts = ms.calculateHydrogens(bsAtomsForHs, nTotal, null, AtomCollection.CALC_H_DOALL);
-    Group groupLast = null;
-    int ipt = 0;
-    Atom atom;
-    for (int i = 0; i < pts.length; i++) {
-      if (pts[i] == null || (atom = ms.at[i]) == null)
-        continue;
-      Group g = atom.group;
-      if (g != groupLast) {
-        groupLast = g;
-        ipt = g.lastAtomIndex;
-        while (bsAddedHydrogens.get(ipt))
-          ipt--;
-      }
-      String gName = atom.getGroup3(false);
-      String aName = atom.getAtomName();
-      String hName = htBondMap.get(gName + "." + aName);
-      if (hName == null)
-        continue;
-      boolean isChiral = hName.contains("@");
-      boolean isMethyl = (hName.endsWith("?") || hName.indexOf("|") >= 0);
-      int n = pts[i].length;
-      if (n == 3 && !isMethyl && hName.equals("H@H2")) {
-        hName = "H|H2|H3";
-        isMethyl = true;
-        isChiral = false;
-      }
-      if (isChiral && n == 3 || isMethyl != (n == 3)) {
-        Logger.info("Error adding H atoms to " + gName + g.getResno() + ": "
-            + pts[i].length + " atoms should not be added to " + aName);
-        continue;
-      }
-      int pt = hName.indexOf("@");
-      switch (pts[i].length) {
-      case 1:
-        if (pt > 0)
-          hName = hName.substring(0, pt);
-        setHydrogen(i, ++ipt, hName, pts[i][0]);
-        break;
-      case 2:
-        String hName1,
-        hName2;
-        double d = -1;
-        Bond[] bonds = atom.bonds;
-        if (bonds != null)
-          switch (bonds.length) {
-          case 2:
-            // could be nitrogen?
-            Atom atom1 = bonds[0].getOtherAtom(atom);
-            Atom atom2 = bonds[1].getOtherAtom(atom);
-            int factor = atom1.getAtomName().compareTo(atom2.getAtomName());
-            d = MeasureD.distanceToPlane(MeasureD.getPlaneThroughPoints(atom1, atom, atom2, vNorm, vAB,
-                plane), pts[i][0]) * factor;
-            break;
-          }
-        if (pt < 0) {
-          Logger.info("Error adding H atoms to " + gName + g.getResno()
-              + ": expected to only need 1 H but needed 2");
-          hName1 = hName2 = "H";
-        } else if (d < 0) {
-          hName2 = hName.substring(0, pt);
-          hName1 = hName.substring(pt + 1);
-        } else {
-          hName1 = hName.substring(0, pt);
-          hName2 = hName.substring(pt + 1);
-        }
-        setHydrogen(i, ++ipt, hName1, pts[i][0]);
-        setHydrogen(i, ++ipt, hName2, pts[i][1]);
-        break;
-      case 3:
-        int pt1 = hName.indexOf('|');
-        if (pt1 >= 0) {
-          int pt2 = hName.lastIndexOf('|');
-          hNames[0] = hName.substring(0, pt1);
-          hNames[1] = hName.substring(pt1 + 1, pt2);
-          hNames[2] = hName.substring(pt2 + 1);
-        } else {
-          hNames[0] = hName.replace('?', '1');
-          hNames[1] = hName.replace('?', '2');
-          hNames[2] = hName.replace('?', '3');
-        }
-        //          Measure.getPlaneThroughPoints(pts[i][0], pts[i][1], pts[i][2], vNorm, vAB,
-        //            vAC, plane);
-        //      d = Measure.distanceToPlane(plane, atom);
-        //    int hpt = (d < 0 ? 1 : 2);
-        setHydrogen(i, ++ipt, hNames[0], pts[i][0]);
-        setHydrogen(i, ++ipt, hNames[1], pts[i][2]);
-        setHydrogen(i, ++ipt, hNames[2], pts[i][1]);
-        break;
-      }
-    }
-    deleteUnneededAtoms();
-    ms.fixFormalCharges(BSUtil.newBitSet2(ml.baseAtomIndex, ml.ms.ac));
-  }
-
-  /**
-   * Delete hydrogen atoms that are still in bsAddedHydrogens, 
-   * because they were not actually added.
-   * Also delete ligand hydrogen atoms from CO2- and PO3(2-)
-   * 
-   * Note that we do this AFTER all atoms have been added. That means that
-   * this operation will not mess up atom indexing
-   * 
-   */
-  private void deleteUnneededAtoms() {
-    BS bsBondsDeleted = new BS();
-    for (int i = bsAtomsForHs.nextSetBit(0); i >= 0; i = bsAtomsForHs
-        .nextSetBit(i + 1)) {
-      Atom atom = ms.at[i];
-      // specifically look for neutral HETATM O with a bond count of 2: 
-      if (!atom.isHetero() || atom.getElementNumber() != 8 || atom.getFormalCharge() != 0
-          || atom.getCovalentBondCount() != 2)
-        continue;
-      Bond[] bonds = atom.bonds;
-      Atom atom1 = bonds[0].getOtherAtom(atom);
-      Atom atomH = bonds[1].getOtherAtom(atom);
-      if (atom1.getElementNumber() == 1) {
-        Atom a = atom1;
-        atom1 = atomH;
-        atomH = a;
-      }
-      
-      // Does it have an H attached?
-      if (atomH.getElementNumber() != 1)
-        continue;
-      // If so, does it have an attached atom that is doubly bonded to O?
-      // so this could be RSO4H or RPO3H2 or RCO2H
-      Bond[] bonds1 = atom1.bonds;
-      for (int j = 0; j < bonds1.length; j++) {
-        if (bonds1[j].order == 2) {
-          Atom atomO = bonds1[j].getOtherAtom(atom1);
-          if (atomO.getElementNumber() == 8) {
-            bsAddedHydrogens.set(atomH.i);
-            atomH.delete(bsBondsDeleted);
-            break;
-          }
-        }
-
-      }
-    }
-    ms.deleteBonds(bsBondsDeleted, true);
-    deleteAtoms(bsAddedHydrogens);
-  }
-  
-  /**
-   * called from org.jmol.modelsetbio.resolver when adding hydrogens.
-   * 
-   * @param bsDeletedAtoms
-   */
-  private void deleteAtoms(BS bsDeletedAtoms) {
-    // get map
-    int[] mapOldToNew = new int[ms.ac];
-    int[] mapNewToOld = new int[ms.ac - bsDeletedAtoms.cardinality()];
-    int n = ml.baseAtomIndex;
-    Model[] models = ms.am;
-    Atom[] atoms = ms.at;
-    for (int i = ml.baseAtomIndex; i < ms.ac; i++) {
-      Atom a = atoms[i];
-      if (a == null)
-        continue;
-      models[a.mi].bsAtoms.clear(i);
-      models[a.mi].bsAtomsDeleted.clear(i);
-      if (bsDeletedAtoms.get(i)) {
-        mapOldToNew[i] = n - 1;
-        models[atoms[i].mi].act--;
-      } else {
-        mapNewToOld[n] = i;
-        mapOldToNew[i] = n++;
-      }
-    }
-    ms.msInfo.put("bsDeletedAtoms", bsDeletedAtoms);
-    // adjust group pointers
-    for (int i = ml.baseGroupIndex; i < ml.groups.length; i++) {
-      Group g = ml.groups[i];
-      if (g.firstAtomIndex >= ml.baseAtomIndex) {
-        g.firstAtomIndex = mapOldToNew[g.firstAtomIndex];
-        g.lastAtomIndex = mapOldToNew[g.lastAtomIndex];
-        if (g.leadAtomIndex >= 0)
-          g.leadAtomIndex = mapOldToNew[g.leadAtomIndex];
-      }
-    }
-    // adjust atom arrays
-    ms.adjustAtomArrays(mapNewToOld, ml.baseAtomIndex, n);
-    ms.calcBoundBoxDimensions(null, 1);
-    ms.resetMolecules();
-    ms.validateBspf(false);
-    bsAddedMask = BSUtil.deleteBits(bsAddedMask, bsDeletedAtoms);
-    //System.out.println("res bsAddedMask = " + bsAddedMask);
-    for (int i = ml.baseModelIndex; i < ms.mc; i++) { 
-      fixAnnotations(i, T.domains);
-      fixAnnotations(i, T.validation);
-      fixAnnotations(i, T.dssr);
-    }
-  }
-
-  private void fixAnnotations(int modelIndex, int type) {
-    JmolAnnotationParser parser = vwr.getAnnotationParserIfPresent(type);
-    if (parser == null)
-      return;
-    String key = null;
-    switch (type) {
-    case T.dssr:
-      vwr.ms.bioModelset.clearDSSR();
-      return;
-    case T.validation:
-      key = "validation";
-      break;
-    case T.domains:
-      key = JC.INFO_DOMAINS;
-      break;
-    }
-    Object o = ml.ms.getInfo(modelIndex, key);
-    if (o != null) {
-      Object dbObj = ((BioModel) ms.am[modelIndex]).getCachedAnnotationMap(key, o);
-      if (dbObj != null)
-        parser.fixAtoms(modelIndex, (SV) dbObj, bsAddedMask, type, 20);
-    }
-  }
-
-  private void finalizePdbCharges() {
-    Atom[] atoms = ms.at;
-    // fix terminal N groups as +1
-    for (int i = bsAtomsForHs.nextSetBit(0); i >= 0; i = bsAtomsForHs.nextSetBit(i + 1)) {
-      Atom a = atoms[i];
-      if (a.group.getNitrogenAtom() == a && a.getCovalentBondCount() == 1)
-        a.setFormalCharge(1);
-      if ((i = bsAtomsForHs.nextClearBit(i + 1)) < 0)
-        break;
-    }
-  }
-  
-  private void finalizePdbMultipleBonds() {
-    Map<String, Boolean> htKeysUsed = new Hashtable<String, Boolean>();
-    int bondCount = ms.bondCount;
-    Bond[] bonds = ms.bo;
-    for (int i = baseBondIndex; i < bondCount; i++) {
-      if (bonds[i] == null)
-        continue;
-      Atom a1 = bonds[i].atom1;
-      Atom a2 = bonds[i].atom2;
-      Group g = a1.group;
-      if (g != a2.group)
-        continue;
-      SB key = new SB().append(g.getGroup3());
-      key.append(":");
-      String n1 = a1.getAtomName();
-      String n2 = a2.getAtomName();
-      if (n1.compareTo(n2) > 0)
-        key.append(n2).append(":").append(n1);
-      else
-        key.append(n1).append(":").append(n2);
-      String skey = key.toString();
-      String type = htBondMap.get(skey);
-      if (type == null)
-        continue;
-      htKeysUsed.put(skey, Boolean.TRUE);
-      bonds[i].setOrder(PT.parseInt(type));
-    }
-
-    for (String key : htBondMap.keySet()) {
-      if (htKeysUsed.get(key) != null)
-        continue;
-      if (key.indexOf(":") < 0) {
-        htKeysUsed.put(key, Boolean.TRUE);
-        continue;
-      }
-      String value = htBondMap.get(key);
-      Logger.info("bond " + key + " was not used; order=" + value);
-      if (htBondMap.get(key).equals("1")) {
-        htKeysUsed.put(key, Boolean.TRUE);
-        continue; // that's ok
-      }
-    }
-    Map<String, String> htKeysBad = new Hashtable<String, String>();
-    for (String key : htBondMap.keySet()) {
-      if (htKeysUsed.get(key) != null)
-        continue;
-      htKeysBad.put(key.substring(0, key.lastIndexOf(":")), htBondMap.get(key));
-    }
-    if (htKeysBad.isEmpty())
-      return;
-    for (int i = 0; i < bondCount; i++) {
-      Atom a1 = bonds[i].atom1;
-      Atom a2 = bonds[i].atom2;
-      if (a1.group == a2.group)
-        continue;
-      String value;
-      if ((value = htKeysBad.get(a1.getGroup3(false) + ":" + a1.getAtomName())) == null
-          && ((value = htKeysBad.get(a2.getGroup3(false) + ":" + a2.getAtomName())) == null))
-        continue;
-      bonds[i].setOrder(PT.parseInt(value));
-      Logger.info("assigning order " + bonds[i].order + " to bond " + bonds[i]);
-    }
-  }
-
-  private void setHydrogen(int iTo, int iAtom, String name, P3d pt) {
-    if (!bsAddedHydrogens.get(iAtom))
-      return;
-    Atom[] atoms = ms.at;
-//    if (lastSetH == Integer.MIN_VALUE || atoms[iAtom].mi != atoms[lastSetH].mi) 
-//      maxSerial = ((int[]) ms.getInfo(atoms[lastSetH = iAtom].mi, "PDB_CONECT_firstAtom_count_max"))[2];
-    bsAddedHydrogens.clear(iAtom);
-    ms.setAtomName(iAtom, name, false);
-    atoms[iAtom].setT(pt);
-//2023.04.08 error -- maxSerial is for groups, not atoms    ms.setAtomNumber(iAtom, ++maxSerial, false);
-    atoms[iAtom].atomSymmetry = atoms[iTo].atomSymmetry;
-    ml.undeleteAtom(iAtom);
-
-    ms.bondAtoms(atoms[iTo], atoms[iAtom], Edge.BOND_COVALENT_SINGLE, 
-        ms.getDefaultMadFromOrder(Edge.BOND_COVALENT_SINGLE), null, 0, true, false);
-  }
-
-  public Object fixPropertyValue(BS bsAtoms, Object data, boolean toHydrogens) {
-    Atom[] atoms = ms.at;
-    // we aren't doing this anymore
-    // it was for TLS groups
-//    if (data instanceof String) {
-//      String[] sData = PT.split((String) data, "\n");
-//      String[] newData = new String[bsAtoms.cardinality()];
-//      String lastData = "";
-//      for (int pt = 0, iAtom = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
-//          .nextSetBit(i + 1), iAtom++) {
-//        if (atoms[i].getElementNumber() == 1) {
-//          if (!toHydrogens)
-//            continue;
-//        } else {
-//          lastData = sData[pt++];
-//        }
-//        newData[iAtom] = lastData;
-//      }
-//      return PT.join(newData, '\n', 0);
-//    }
-    // already double data
-    double[] fData = (double[]) data;
-    double[] newData = new double[bsAtoms.cardinality()];
-    double lastData = 0;
-    for (int pt = 0, iAtom = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
-        .nextSetBit(i + 1), iAtom++) {
-      if (atoms[i].getElementNumber() == 1) {
-        if (!toHydrogens)
-          continue;
-      } else {
-        lastData = fData[pt++];
-      }
-      newData[iAtom] = lastData;
-    }
-    return newData;
+  public /*pseudostatic*/ BioModelSet getBioModelSet(ModelSet modelSet) {
+    if (modelSet.bioModelset == null)
+      modelSet.bioModelset = new BioModelSet().set(vwr, modelSet);
+    return modelSet.bioModelset;
   }
 
   static BioPolymer allocateBioPolymer(Group[] groups, int firstGroupIndex,
@@ -794,123 +160,29 @@ public final class BioResolver implements Comparator<String[]> {
     throw new NullPointerException();
   }
   
-  private BS bsAssigned;
-
-  public String carbohydrates;
-
-  /**
-   * Pull in all spans of helix, etc. in the file(s)
-   * 
-   * We do turn first, because sometimes a group is defined twice, and this way
-   * it gets marked as helix or sheet if it is both one of those and turn.
-   * 
-   * Jmol 14.3 - adds sequence ANNOTATION
-   * 
-   * @param adapter
-   * @param atomSetCollection
-   */
-  public void iterateOverAllNewStructures(JmolAdapter adapter,
-                                          Object atomSetCollection) {
-    JmolAdapterStructureIterator iterStructure = adapter
-        .getStructureIterator(atomSetCollection);
-    if (iterStructure == null)
-      return;
-    BS bs = iterStructure.getStructuredModels();
-    if (bs != null)
-      for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
-        ml.structuresDefinedInFile.set(ml.baseModelIndex + i);
-    while (iterStructure.hasNext())
-      if (iterStructure.getStructureType() != STR.TURN)
-        setStructure(iterStructure);
-
-    // define turns LAST. (pulled by the iterator first)
-    // so that if they overlap they get overwritten:
-
-    iterStructure = adapter.getStructureIterator(atomSetCollection);
-    while (iterStructure.hasNext())
-      if (iterStructure.getStructureType() == STR.TURN)
-        setStructure(iterStructure);
-  }
-
-  private static STR[] types = { STR.HELIXPI, STR.HELIXALPHA,
-    STR.SHEET, STR.HELIX310, STR.TURN };
-
-  private static int[] mytypes = {0, 2, 3, 4, 6};
-
-  /**
-   * note that istart and iend will be adjusted.
-   * 
-   * @param iterStructure
-   */
-  private void setStructure(JmolAdapterStructureIterator iterStructure) {
-    STR t = iterStructure.getSubstructureType();
-    String id = iterStructure.getStructureID();
-    String serID = iterStructure.getStrandID();
-    int count = iterStructure.getStrandCount();
-    int[] atomRange = iterStructure.getAtomIndices();
-    int[] modelRange = iterStructure.getModelIndices();
-    BS[] bsAll = iterStructure.getBSAll();
-    int m0, m1;
-    Model[] models = ms.am;
-    if (ml.isTrajectory) { //from PDB file
-      m0 = m1 = modelRange[0];
-    } else {
-      m0 = modelRange[0] + ml.baseModelIndex;
-      m1 = modelRange[1] + ml.baseModelIndex;
-    }
-    ml.structuresDefinedInFile.setBits(m0, m1 + 1);
-
-    BS bs;
-    Model m;
-    if (bsAll != null) {
-      for (int i = m0, t0; i <= m1; i++)
-        if ((m = models[i]) instanceof BioModel)
-          for (int j = 0; j < 5; j++)
-            if ((bs = bsAll[t0 = mytypes[j]]) != null && !bs.isEmpty())
-              ((BioModel) m).addStructureByBS(0, t0, types[j], bs);
-      return;
-    }
-
-    int startChainID = iterStructure.getStartChainID();
-    int startSequenceNumber = iterStructure.getStartSequenceNumber();
-    char startInsertionCode = iterStructure.getStartInsertionCode();
-    int endSequenceNumber = iterStructure.getEndSequenceNumber();
-    int endChainID = iterStructure.getEndChainID();
-    char endInsertionCode = iterStructure.getEndInsertionCode();
-    STR type = (t == STR.NOT ? STR.NONE : t);
-    int startSeqCode = Group.getSeqcodeFor(startSequenceNumber,
-        startInsertionCode);
-    int endSeqCode = Group.getSeqcodeFor(endSequenceNumber, endInsertionCode);
-    if (bsAssigned == null)
-      bsAssigned = new BS();
-    for (int i = m0, i0 = 0; i <= m1; i++)
-      if ((m = models[i]) instanceof BioModel)
-        ((BioModel) m).addSecondaryStructure(type, id, serID, count,
-            startChainID, startSeqCode, endChainID, endSeqCode,
-            (i0 = m.firstAtomIndex) + atomRange[0], i0 + atomRange[1],
-            bsAssigned);
-  }
-
-  public void setGroupLists(int ipt) {
-    ml.group3Lists[ipt + 1] = Group.standardGroupList;
-    ml.group3Counts[ipt + 1] = new int[group3Count + 10];
-    if (ml.group3Lists[0] == null) {
-      ml.group3Lists[0] = Group.standardGroupList;
-      ml.group3Counts[0] = new int[group3Count + 10];
-    }
-  }
-
   /**
    * @param g3
    * @param max max ID (e.g. 20); can be Integer.MAX_VALUE to allow carbohydrate
    * @return true if found
    */
-  public boolean isKnownPDBGroup(String g3, int max) {
+  public /*pseudostatic */ boolean isKnownPDBGroup(String g3, int max) {
     int pt = knownGroupID(g3);
     return (pt > 0 ? pt < max : max == Integer.MAX_VALUE && checkCarbohydrate(g3));
   }
 
-  public byte lookupSpecialAtomID(String name) {
+  /**
+   * @param group3 a potential group3 name
+   * @return whether this is a carbohydrate from the list
+   */
+  protected boolean checkCarbohydrate(String group3) {
+    return checkCarbohydrateStatic(group3);
+  }
+  
+  protected static boolean checkCarbohydrateStatic(String group3) {
+    return (group3 != null && allCarbohydrates.indexOf("[" + group3.toUpperCase() + "]") >= 0);
+  }
+
+  public byte /*pseudostatic */ lookupSpecialAtomID(String name) {
     if (htSpecialAtoms == null) {
       htSpecialAtoms = new Hashtable<String, Byte>();
       for (int i = specialAtomNames.length; --i >= 0;) {
@@ -923,184 +195,103 @@ public final class BioResolver implements Comparator<String[]> {
     return (boxedAtomID == null ? 0 : boxedAtomID.byteValue());
   }
 
-  private static Map<String, String[][]> htPdbBondInfo;
-
-  private String[][] getPdbBondInfo(String group3, boolean isLegacy) {
-    if (htPdbBondInfo == null)
-      htPdbBondInfo = new Hashtable<String, String[][]>();
-    String[][] info = htPdbBondInfo.get(group3);
-    if (info != null)
-      return info;
-    int pt = knownGroupID(group3);
-    if (pt < 0 || pt > pdbBondInfo.length)
-      return null;
-    String s = pdbBondInfo[pt];
-    // unfortunately, this change is not backward compatible.
-    if (isLegacy && (pt = s.indexOf("O3'")) >= 0)
-      s = s.substring(0, pt);
-    String[] temp = PT.getTokens(s);
-    info = new String[temp.length / 2][];
-    for (int i = 0, p = 0; i < info.length; i++) {
-      String source = temp[p++];
-      String target = temp[p++];
-      // a few shortcuts here:
-      if (target.length() == 1)
-        switch (target.charAt(0)) {
-        case 'N':
-          target = "H@H2";
-          break;
-        case 'B': // CB
-          target = "HB3@HB2";
-          break;
-        case 'D': // CD
-          target = "HD3@HD2";
-          break;
-        case 'G': // CG
-          target = "HG3@HG2";
-          break;
-        case '2': // C2'
-          target = "H2'@H2''";
-          break;
-        case '5': // C5'
-          target = "H5''@H5'";
-          break;
-        }
-      if (target.charAt(0) != 'H' && source.compareTo(target) > 0) {
-        s = target;
-        target = source;
-        source = s;
-      }
-      info[i] = new String[] { source, target,
-          (target.startsWith("H") ? "1" : "2") };
-    }
-    htPdbBondInfo.put(group3, info);
-    return info;
+  static /*pseudostatic */ short getGroupIdStatic(String group3) {
+    if (group3 != null)
+      group3 = group3.trim();
+    short groupID = knownGroupID(group3);
+    return (groupID == -1 ? addGroup3Name(group3) : groupID);
   }
-  /**
-   * pdbBondInfo describes in a compact way what the hydrogen atom
-   * names are for each standard amino acid. This list consists
-   * of pairs of attached atom/hydrogen atom names, with abbreviations
-   * N, C, O, B, D, G, 1, and 2 (for N, C, O, CB, CD, CG, C1', and C2', respectively)
-   * given in pdbHAttachments, above. Note that we never add HXT or NH3
-   * "?" here is for methyl groups with H1, H2, H3.
-   * "@" indicates a prochiral center, with the assignment order given here
-   * 
-   */
-  public final static String[] pdbBondInfo = {
-    // added O3' HO3' O5' HO5' for nucleic and added 1 H atom for res 1 for 13.1.17
-    // this could throw off states from previous versions
-    // CH2 and NH2 labeling revised 2015.02.07
-    
-    "",
-    /*ALA*/ "N N CA HA C O CB HB?",
-    /*ARG*/ "N N CA HA C O CB B CG G CD D NE HE CZ NH1 NH1 HH11@HH12 NH2 HH22@HH21", 
-    /*ASN*/ "N N CA HA C O CB B CG OD1 ND2 HD21@HD22", 
-    /*ASP*/ "N N CA HA C O CB B CG OD1", 
-    /*CYS*/ "N N CA HA C O CB B SG HG", 
-    /*GLN*/ "N N CA HA C O CB B CG G CD OE1 NE2 HE22@HE21", 
-    /*GLU*/ "N N CA HA C O CB B CG G CD OE1", 
-    /*GLY*/ "N N CA HA2@HA3 C O", 
-    /*HIS*/ "N N CA HA C O CB B CG CD2 ND1 CE1 ND1 HD1 CD2 HD2 CE1 HE1 NE2 HE2", 
-    /*ILE*/ "N N CA HA C O CB HB CG1 HG13@HG12 CG2 HG2? CD1 HD1?", 
-    /*LEU*/ "N N CA HA C O CB B CG HG CD1 HD1? CD2 HD2?", 
-    /*LYS*/ "N N CA HA C O CB B CG G CD HD2@HD3 CE HE3@HE2 NZ HZ?", 
-    /*MET*/ "N N CA HA C O CB B CG G CE HE?", 
-    /*PHE*/ "N N CA HA C O CB B CG CD1 CD1 HD1 CD2 CE2 CD2 HD2 CE1 CZ CE1 HE1 CE2 HE2 CZ HZ", 
-    /*PRO*/ "N H CA HA C O CB B CG G CD D", 
-    /*SER*/ "N N CA HA C O CB B OG HG", 
-    /*THR*/ "N N CA HA C O CB HB OG1 HG1 CG2 HG2?", 
-    /*TRP*/ "N N CA HA C O CB B CG CD1 CD1 HD1 CD2 CE2 NE1 HE1 CE3 CZ3 CE3 HE3 CZ2 CH2 CZ2 HZ2 CZ3 HZ3 CH2 HH2", 
-    /*TYR*/ "N N CA HA C O CB B CG CD1 CD1 HD1 CD2 CE2 CD2 HD2 CE1 CZ CE1 HE1 CE2 HE2 OH HH", 
-    /*VAL*/ "N N CA HA C O CB HB CG1 HG1? CG2 HG2?",
-    /*ASX*/ "N N CA HA C O CB B",
-    /*GLX*/ "N N CA HA C O CB B CG G", 
-    /*UNK*/ "",
-    /*G*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 N2 H22@H21 O3' HO3' O5' HO5'", 
-    /*C*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C2 O2 N3 C4 N4 H41@H42 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'", 
-    /*A*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C8 N7 C8 H8 C5 C4 C6 N1 N6 H61@H62 C2 N3 C2 H2 O3' HO3' O5' HO5'",
-    /*T*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C7 H7? C6 H6 O3' HO3' O5' HO5'",
-    /*U*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'", 
-    /*I*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 C2 H2 O3' HO3' O5' HO5'",
-    /*DG*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 N2 H22@H21 O3' HO3' O5' HO5'", 
-    /*DC*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 C4 N4 H41@H42 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'", 
-    /*DA*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C8 N7 C8 H8 C5 C4 C6 N1 N6 H61@H62 C2 N3 C2 H2 O3' HO3' O5' HO5'", 
-    /*DT*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C7 H7? C6 H6 O3' HO3' O5' HO5'",
-    /*DU*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'",  
-    /*DI*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 C2 H2 O3' HO3' O5' HO5'",  
-      };
-  private final static int[] pdbHydrogenCount = {
-            0,
-    /*ALA*/ 6,
-    /*ARG*/ 16,
-    /*ASN*/ 7,
-    /*ASP*/ 6,
-    /*CYS*/ 6,
-    /*GLN*/ 9,
-    /*GLU*/ 8,
-    /*GLY*/ 4,
-    /*HIS*/ 9,
-    /*ILE*/ 12,
-    /*LEU*/ 12,
-    /*LYS*/ 14,
-    /*MET*/ 10,
-    /*PHE*/ 10,
-    /*PRO*/ 8,
-    /*SER*/ 6,
-    /*THR*/ 8,
-    /*TRP*/ 11,
-    /*TYR*/ 10,
-    /*VAL*/ 10,  
-    /*ASX*/ 3,
-    /*GLX*/ 5,
-    /*UNK*/ 0,
-    /*G*/ 13,
-    /*C*/ 13,
-    /*A*/ 13,
-    /*T*/ -1,
-    /*U*/ 12,
-    /*I*/ 12,
-    /*DG*/ 13,
-    /*DC*/ 13,
-    /*DA*/ 13,
-    /*DT*/ 14,
-    /*DU*/ 12,
-    /*DI*/ 12,
-  };
-  
-  /**
-   *  this form is used for counting groups in ModelSet
-   *  
-   *  GLX added for 13.1.16
-   *
-   */
-  private final static String allCarbohydrates = 
-    ",[AHR],[ALL],[AMU],[ARA],[ARB],[BDF],[BDR],[BGC],[BMA]" +
-    ",[FCA],[FCB],[FRU],[FUC],[FUL],[GAL],[GLA],[GLC],[GXL]" +
-    ",[GUP],[LXC],[MAN],[RAM],[RIB],[RIP],[XYP],[XYS]" +
-    ",[CBI],[CT3],[CTR],[CTT],[LAT],[MAB],[MAL],[MLR],[MTT]" +
-    ",[SUC],[TRE],[GCU],[MTL],[NAG],[NDG],[RHA],[SOR],[SOL],[SOE]" +  
-    ",[XYL],[A2G],[LBT],[NGA],[SIA],[SLB]" + 
-    ",[AFL],[AGC],[GLB],[NAN],[RAA]"; //these 4 are deprecated in PDB
 
   // from Eric Martz; revision by Angel Herraez
-  public static short knownGroupID(String group3) {
+  protected static short knownGroupID(String group3) {
     if (group3 == null || group3.length() == 0)
       return 0;
     Short boxedGroupID = htGroup.get(group3);
     return (boxedGroupID == null ? -1 : boxedGroupID.shortValue());
   }
+
   /**
-   * @param group3 a potential group3 name
-   * @return whether this is a carbohydrate from the list
+   * MMCif, Gromacs, MdTop, Mol2 readers only
+   * @param group3 
+   * @return true if an identified hetero group
+   * 
    */
-  private boolean checkCarbohydrate(String group3) {
-    if (group3 == null)
-      return false;
-    String key = "[" + group3.toUpperCase() + "]";
-    return (allCarbohydrates.indexOf(key) >= 0
-        || carbohydrates != null && carbohydrates.indexOf(key) >= 0);
+  public boolean isHetero(String group3) {
+    switch (group3.length()) {
+    case 1:
+      group3 += "  ";
+      break;
+    case 2:
+      group3 += " ";
+      break;
+    case 3:
+      break;
+    default:
+      return true;
+    }
+    int pt = Group.standardGroupList.indexOf(group3);
+    return (pt < 0 || pt / 6 + 1 >= JC.GROUPID_WATER);
   }
-  private static int group3Count;
+  
+  /*
+   * Convert "AVG" to "ALA VAL GLY"; unknowns to UNK
+   * 
+   */
+  public /*pseudostatic*/ String toStdAmino3(String g1) {
+    if (g1.length() == 0)
+      return "";
+    SB s = new SB();
+    int pt = knownGroupID("==A");
+    if (pt < 0) {
+      // just the amino acids
+      for (int i = 1; i <= 20; i++) {
+        pt = knownGroupID(predefinedGroup3Names[i]);
+        htGroup.put("==" + predefinedGroup1Names[i], Short.valueOf((short) pt));
+      }
+    }
+    for (int i = 0, n = g1.length(); i < n; i++) {
+      char ch = g1.charAt(i);
+      pt = knownGroupID("==" + ch);
+      if (pt < 0)
+        pt = 23;
+      s.append(" ").append(predefinedGroup3Names[pt]);
+    }
+    return s.toString().substring(1);
+  }
+  
+  public static String getPDBHAtomForH(String group3, String name) {
+    if (pdbAtomForH == null) {
+      pdbAtomForH = new Hashtable<String, String>();
+      // start with abbreviations
+      assignPDBH("",
+          "N H H1 H2 H3 CB HB2 HB3 CD HD2 HD3 CG HG2 HG3 C2' H2'' H2' C5' H5'' H5' OXT HXT");
+
+      for (int i = pdbBondInfo.length; --i >= 1;) {
+        assignPDBH(Group.group3Names[i], pdbBondInfo[i]);
+      }
+    }
+    String a = pdbAtomForH.get(name);
+    if (a == null)
+      a = pdbAtomForH.get(group3 + name);
+    return (a == null ? name : a);
+  }
+
+  
+  /**
+   * These can overrun 3 characters; that is not significant.
+   * 
+   * @param group3
+   * @return  a short group ID
+   */
+  private synchronized static short addGroup3Name(String group3) {
+    if (group3NameCount == Group.group3Names.length)
+      Group.group3Names = AU.doubleLengthS(Group.group3Names);
+    short groupID = group3NameCount++;
+    Group.group3Names[groupID] = group3;
+    htGroup.put(group3, Short.valueOf(groupID));
+    return groupID;
+  }
+
   final static char[] predefinedGroup1Names = {
   /* rmh
    * 
@@ -1165,29 +356,84 @@ public final class BioResolver implements Comparator<String[]> {
 
 
   /**
-   * MMCif, Gromacs, MdTop, Mol2 readers only
-   * @param group3 
-   * @return true if an identified hetero group
+   *  This form is used for counting groups in ModelSet.
+   *  
+   *  It can grow if an mmCIF files is loaded that contains additional carbohydrate groups.
+   *  
+   *  GLX added for 13.1.16
+   *
+   */
+  protected static String allCarbohydrates = 
+    ",[AHR],[ALL],[AMU],[ARA],[ARB],[BDF],[BDR],[BGC],[BMA]" +
+    ",[FCA],[FCB],[FRU],[FUC],[FUL],[GAL],[GLA],[GLC],[GXL]" +
+    ",[GUP],[LXC],[MAN],[RAM],[RIB],[RIP],[XYP],[XYS]" +
+    ",[CBI],[CT3],[CTR],[CTT],[LAT],[MAB],[MAL],[MLR],[MTT]" +
+    ",[SUC],[TRE],[GCU],[MTL],[NAG],[NDG],[RHA],[SOR],[SOL],[SOE]" +  
+    ",[XYL],[A2G],[LBT],[NGA],[SIA],[SLB]" + 
+    ",[AFL],[AGC],[GLB],[NAN],[RAA],[IDS],[SGN]";
+
+  /**
+   * used by AnnotationParser
+   */
+  private static Map<String, String> pdbAtomForH;
+
+  /**
+   * pdbBondInfo describes in a compact way what the hydrogen atom
+   * names are for each standard amino acid. This list consists
+   * of pairs of attached atom/hydrogen atom names, with abbreviations
+   * 
+   * N, C, O, B, b, D, G, g, 1, and 2 
+   * (for N, C, O, CB, CB(ARG,LEU), CD, CG, CG(ARG), C1', and C2', respectively)
+   * 
+   * given in pdbHAttachments, above. Note that we never add HXT or NH3
+   * "?" here is for methyl groups with H1, H2, H3.
+   * "@" indicates a prochiral center, with the assignment order given here.
    * 
    */
-  public boolean isHetero(String group3) {
-    switch (group3.length()) {
-    case 1:
-      group3 += "  ";
-      break;
-    case 2:
-      group3 += " ";
-      break;
-    case 3:
-      break;
-    default:
-      return true;
-    }
-    int pt = Group.standardGroupList.indexOf(group3);
-    return (pt < 0 || pt / 6 + 1 >= JC.GROUPID_WATER);
-  }
-  
-  public static short group3NameCount;
+  protected final static String[] pdbBondInfo = {
+    // added O3' HO3' O5' HO5' for nucleic and added 1 H atom for res 1 for 13.1.17
+    // this could throw off states from previous versions
+    // CH2 and NH2 labeling revised 2015.02.07
+    // ARG HB2HB3 and HG2HG3 switched 2026.09.26
+    // LEU HB2HB3 switched 2026.09.26
+    "",
+    /*ALA*/ "N N CA HA C O CB HB?",
+    /*ARG'*/ "N N CA HA C O CB b CG g CD D NE HE CZ NH2 NH2 HH21@HH22 NH1 HH11@HH12", 
+    /*ASN*/ "N N CA HA C O CB B CG OD1 ND2 HD21@HD22", 
+    /*ASP*/ "N N CA HA C O CB B CG OD1", 
+    /*CYS*/ "N N CA HA C O CB B SG HG", 
+    /*GLN*/ "N N CA HA C O CB B CG G CD OE1 NE2 HE22@HE21", 
+    /*GLU*/ "N N CA HA C O CB B CG G CD OE1", 
+    /*GLY*/ "N N CA HA2@HA3 C O", 
+    /*HIS*/ "N N CA HA C O CB B CG CD2 ND1 CE1 ND1 HD1 CD2 HD2 CE1 HE1 NE2 HE2", 
+    /*ILE*/ "N N CA HA C O CB HB CG1 HG13@HG12 CG2 HG2? CD1 HD1?", 
+    /*LEU'*/ "N N CA HA C O CB b CG HG CD1 HD1? CD2 HD2?", 
+    /*LYS*/ "N N CA HA C O CB B CG G CD HD2@HD3 CE HE3@HE2 NZ HZ?", 
+    /*MET*/ "N N CA HA C O CB B CG G CE HE?", 
+    /*PHE*/ "N N CA HA C O CB B CG CD1 CD1 HD1 CD2 CE2 CD2 HD2 CE1 CZ CE1 HE1 CE2 HE2 CZ HZ", 
+    /*PRO*/ "N H CA HA C O CB B CG G CD D", 
+    /*SER*/ "N N CA HA C O CB B OG HG", 
+    /*THR*/ "N N CA HA C O CB HB OG1 HG1 CG2 HG2?", 
+    /*TRP*/ "N N CA HA C O CB B CG CD1 CD1 HD1 CD2 CE2 NE1 HE1 CE3 CZ3 CE3 HE3 CZ2 CH2 CZ2 HZ2 CZ3 HZ3 CH2 HH2", 
+    /*TYR*/ "N N CA HA C O CB B CG CD1 CD1 HD1 CD2 CE2 CD2 HD2 CE1 CZ CE1 HE1 CE2 HE2 OH HH", 
+    /*VAL*/ "N N CA HA C O CB HB CG1 HG1? CG2 HG2?",
+    /*ASX*/ "N N CA HA C O CB B",
+    /*GLX*/ "N N CA HA C O CB B CG G", 
+    /*UNK*/ "",
+    /*G*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 N2 H22@H21 O3' HO3' O5' HO5'", 
+    /*C*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C2 O2 N3 C4 N4 H41@H42 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'", 
+    /*A*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C8 N7 C8 H8 C5 C4 C6 N1 N6 H61@H62 C2 N3 C2 H2 O3' HO3' O5' HO5'",
+    /*T*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C7 H7? C6 H6 O3' HO3' O5' HO5'",
+    /*U*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'", 
+    /*I*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' H2' O2' HO2' C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 C2 H2 O3' HO3' O5' HO5'",
+    /*DG*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 N2 H22@H21 O3' HO3' O5' HO5'", 
+    /*DC*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 C4 N4 H41@H42 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'", 
+    /*DA*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C8 N7 C8 H8 C5 C4 C6 N1 N6 H61@H62 C2 N3 C2 H2 O3' HO3' O5' HO5'", 
+    /*DT*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C7 H7? C6 H6 O3' HO3' O5' HO5'",
+    /*DU*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C2 O2 N3 H3 C4 O4 C5 C6 C5 H5 C6 H6 O3' HO3' O5' HO5'",  
+    /*DI*/ "P OP1 C5' 5 C4' H4' C3' H3' C2' 2 C1' H1' C8 N7 C8 H8 C5 C4 C6 O6 N1 H1 C2 N3 C2 H2 O3' HO3' O5' HO5'",  
+      };
+
   private final static String[] predefinedGroup3Names = {
     // taken from PDB spec
     "   ", //  0 this is the null group
@@ -1255,67 +501,7 @@ public final class BioResolver implements Comparator<String[]> {
     
   };
   
-  /*
-   * Convert "AVG" to "ALA VAL GLY"; unknowns to UNK
-   * 
-   */
-  public String toStdAmino3(String g1) {
-    if (g1.length() == 0)
-      return "";
-    SB s = new SB();
-    int pt = knownGroupID("==A");
-    if (pt < 0) {
-      // just the amino acids
-      for (int i = 1; i <= 20; i++) {
-        pt = knownGroupID(predefinedGroup3Names[i]);
-        htGroup.put("==" + predefinedGroup1Names[i], Short.valueOf((short) pt));
-      }
-    }
-    for (int i = 0, n = g1.length(); i < n; i++) {
-      char ch = g1.charAt(i);
-      pt = knownGroupID("==" + ch);
-      if (pt < 0)
-        pt = 23;
-      s.append(" ").append(predefinedGroup3Names[pt]);
-    }
-    return s.toString().substring(1);
-  }
-  
-  public short getGroupID(String g3) {
-    return getGroupIdFor(g3);
-  }
-
-  static short getGroupIdFor(String group3) {
-    if (group3 != null)
-      group3 = group3.trim();
-    short groupID = knownGroupID(group3);
-    return (groupID == -1 ? addGroup3Name(group3) : groupID);
-  }
-
-  /**
-   * These can overrun 3 characters; that is not significant.
-   * 
-   * @param group3
-   * @return  a short group ID
-   */
-  private synchronized static short addGroup3Name(String group3) {
-    if (group3NameCount == Group.group3Names.length)
-      Group.group3Names = AU.doubleLengthS(Group.group3Names);
-    short groupID = group3NameCount++;
-    Group.group3Names[groupID] = group3;
-    htGroup.put(group3, Short.valueOf(groupID));
-    return groupID;
-  }
-
-  private static int getStandardPdbHydrogenCount(String group3) {
-    int pt = knownGroupID(group3);
-    return (pt < 0 || pt >= pdbHydrogenCount.length ? -1 : pdbHydrogenCount[pt]);
-  }
-  ////////////////////////////////////////////////////////////////
-  // static stuff for group ids
-  ////////////////////////////////////////////////////////////////
-
-  private final static String[] specialAtomNames = {
+  protected final static String[] specialAtomNames = {
     
     ////////////////////////////////////////////////////////////////
     // The ordering of these entries can be changed ... BUT ...
@@ -1476,12 +662,6 @@ public final class BioResolver implements Comparator<String[]> {
         
   };
   
-  public final static int ATOMID_MAX = specialAtomNames.length;
-
-  final static String getSpecialAtomName(int atomID) {
-    return specialAtomNames[atomID];
-  }
-
   private static Map<String, Byte> htSpecialAtoms;
 
   private final static int[] argbsAmino = {
@@ -1710,7 +890,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
 
   }
 
-  public int[] getArgbs(int tok) {
+  public /*pseudostatic*/ int[] getArgbs(int tok) {
     switch (tok) {
     case T.nucleic:
       return argbsNucleic;
@@ -1726,12 +906,937 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
     return null;
   }
 
-  public BioModelSet getBioModelSet(ModelSet modelSet) {
-    if (modelSet.bioModelset == null)
-      modelSet.bioModelset = new BioModelSet().set(vwr, modelSet);
-    return modelSet.bioModelset;
+
+  /**
+   * This code is all disposable after a file is loaded.
+   */
+  public static class BioModelLoader implements Comparator<String[]> {
+
+    private static Map<String, String[][]> htPdbBondInfo;
+
+    private final static int[] pdbHydrogenCount = {
+              0,
+      /*ALA*/ 6,
+      /*ARG*/ 16,
+      /*ASN*/ 7,
+      /*ASP*/ 6,
+      /*CYS*/ 6,
+      /*GLN*/ 9,
+      /*GLU*/ 8,
+      /*GLY*/ 4,
+      /*HIS*/ 9,
+      /*ILE*/ 12,
+      /*LEU*/ 12,
+      /*LYS*/ 14,
+      /*MET*/ 10,
+      /*PHE*/ 10,
+      /*PRO*/ 8,
+      /*SER*/ 6,
+      /*THR*/ 8,
+      /*TRP*/ 11,
+      /*TYR*/ 10,
+      /*VAL*/ 10,  
+      /*ASX*/ 3,
+      /*GLX*/ 5,
+      /*UNK*/ 0,
+      /*G*/ 13,
+      /*C*/ 13,
+      /*A*/ 13,
+      /*T*/ -1,
+      /*U*/ 12,
+      /*I*/ 12,
+      /*DG*/ 13,
+      /*DC*/ 13,
+      /*DA*/ 13,
+      /*DT*/ 14,
+      /*DU*/ 12,
+      /*DI*/ 12,
+    };
+    
+    private static STR[] types = { STR.HELIXPI, STR.HELIXALPHA,
+        STR.SHEET, STR.HELIX310, STR.TURN };
+
+    private static int[] mytypes = {0, 2, 3, 4, 6};
+
+    private final static int ATOMID_MAX = specialAtomNames.length;
+
+    private BS bsAddedMask;
+    private boolean haveHsAlready;
+    private BS bsAddedHydrogens;
+    private BS bsAtomsForHs;
+    private Map<String, String>htBondMap;
+    private Map<String, Boolean>htGroupBonds;
+    private String[] hNames;
+    private BS bsAssigned;
+    private int baseBondIndex = 0;
+    private boolean hasCONECT;
+    private ModelSet ms;
+    private Viewer vwr;
+
+    private V3d vAB;
+    private V3d vNorm;
+    private P4d plane;
+
+    public BioModelLoader(ModelLoader modelLoader) {
+      Group.specialAtomNames = specialAtomNames;
+      ms = modelLoader.ms;
+      vwr = modelLoader.ms.vwr;
+      modelLoader.specialAtomIndexes = new int[ATOMID_MAX];
+      hasCONECT = (ms.getInfoM(JC.getBoolName(JC.GLOBAL_CONECT)) == Boolean.TRUE);
+    }
+
+    /**
+     * Dynamically add carbohydrates based on files loaded.
+     * 
+     * @param carbs
+     */
+    public /*pseudostatic*/ void addMMCifCarbohydrates(String carbs) {
+      if (carbs == null || carbs.length() == 0)
+        return;
+      String s = "";
+      for (int i = carbs.indexOf("["); i >= 0; i = carbs.indexOf('[', i + 1)) {
+        String c = carbs.substring(i, carbs.indexOf(']', i + 1) + 1);
+        if (allCarbohydrates.indexOf(c) < 0)
+          s += "," + c;
+      }
+      if (s.length() > 0) {
+        System.out.println("BioResolver carbohydrates now " + allCarbohydrates);
+        allCarbohydrates += s;
+      }
+    }
+
+    public Model getBioModel(int modelIndex,
+                             int trajectoryBaseIndex, Map<String, Object> jmolData,
+                             Properties modelProperties,
+                             Map<String, Object> modelAuxiliaryInfo) {
+         return new BioModel(ms, modelIndex, trajectoryBaseIndex,
+             jmolData, modelProperties, modelAuxiliaryInfo);
+       }
+    
+    /**
+     * Pull in all spans of helix, etc. in the file(s)
+     * 
+     * We do turn first, because sometimes a group is defined twice, and this way
+     * it gets marked as helix or sheet if it is both one of those and turn.
+     * 
+     * Jmol 14.3 - adds sequence ANNOTATION
+     * 
+     * @param ml 
+     * @param adapter
+     * @param atomSetCollection
+     */
+    public void iterateOverAllNewStructures(ModelLoader ml, JmolAdapter adapter,
+                                            Object atomSetCollection) {
+      JmolAdapterStructureIterator iterStructure = adapter
+          .getStructureIterator(atomSetCollection);
+      if (iterStructure == null)
+        return;
+      BS bs = iterStructure.getStructuredModels();
+      if (bs != null)
+        for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1))
+          ml.structuresDefinedInFile.set(ml.baseModelIndex + i);
+      while (iterStructure.hasNext())
+        if (iterStructure.getStructureType() != STR.TURN)
+          setStructure(ml, iterStructure);
+
+      // define turns LAST. (pulled by the iterator first)
+      // so that if they overlap they get overwritten:
+
+      iterStructure = adapter.getStructureIterator(atomSetCollection);
+      while (iterStructure.hasNext())
+        if (iterStructure.getStructureType() == STR.TURN)
+          setStructure(ml, iterStructure);
+    }
+
+    public Group distinguishAndPropagateGroup(Chain chain, String group3,
+                                              int seqcode, int firstAtomIndex,
+                                              int lastAtomIndex,
+                                              int[] specialAtomIndexes,
+                                              Atom[] atoms) {
+      /*
+       * called by finalizeGroupBuild()
+       * 
+       * first: build array of special atom names, for example "CA" for the alpha
+       * carbon is assigned #2 see JmolConstants.specialAtomNames[] the special
+       * atoms all have IDs based on Atom.lookupSpecialAtomID(atomName) these will
+       * be the same for each conformation
+       * 
+       * second: creates the monomers themselves based on this information thus
+       * building the byte offsets[] array for each monomer, indicating which
+       * position relative to the first atom in the group is which atom. Each
+       * monomer.offsets[i] then points to the specific atom of that type these
+       * will NOT be the same for each conformation
+       */
+
+      int mask = 0;
+
+      // clear previous specialAtomIndexes
+      for (int i = ATOMID_MAX; --i >= 0;)
+        specialAtomIndexes[i] = Integer.MIN_VALUE;
+
+      // go last to first so that FIRST confirmation is default
+      for (int i = lastAtomIndex; i >= firstAtomIndex; --i) {
+        int specialAtomID = atoms[i].atomID;
+        if (specialAtomID <= 0)
+          continue;
+        if (specialAtomID < JC.ATOMID_DISTINGUISHING_ATOM_MAX) {
+          /*
+           * save for future option -- turns out the 1jsa bug was in relation to
+           * an author using the same group number for two different groups
+           * 
+           * if ((distinguishingBits & (1 << specialAtomID) != 0) {
+           * 
+           * //bh 9/21/2006: //
+           * "if the group has two of the same, that cannot be right." // Thus,
+           * for example, two C's doth not make a protein "carbonyl C"
+           * distinguishingBits = 0; break; }
+           */
+          mask |= (1 << specialAtomID);
+        }
+        specialAtomIndexes[specialAtomID] = i;
+      }
+
+      Monomer m = null;
+      if ((mask & JC.ATOMID_PROTEIN_MASK) == JC.ATOMID_PROTEIN_MASK)
+        m = AminoMonomer.validateAndAllocate(chain, group3, seqcode,
+            firstAtomIndex, lastAtomIndex, specialAtomIndexes, atoms);
+      else if (mask == JC.ATOMID_ALPHA_ONLY_MASK)
+        m = AlphaMonomer.validateAndAllocateA(chain, group3, seqcode,
+            firstAtomIndex, lastAtomIndex, specialAtomIndexes);
+      else if (((mask & JC.ATOMID_NUCLEIC_MASK) == JC.ATOMID_NUCLEIC_MASK))
+        m = NucleicMonomer.validateAndAllocate(chain, group3, seqcode,
+            firstAtomIndex, lastAtomIndex, specialAtomIndexes);
+      else if (mask == JC.ATOMID_PHOSPHORUS_ONLY_MASK)
+        m = PhosphorusMonomer.validateAndAllocateP(chain, group3, seqcode,
+            firstAtomIndex, lastAtomIndex, specialAtomIndexes);
+      else if (checkCarbohydrateStatic(group3))
+        m = CarbohydrateMonomer.validateAndAllocate(chain, group3, seqcode,
+            firstAtomIndex, lastAtomIndex);
+      return ( m != null && m.leadAtomIndex >= 0 ? m : null);
+    }   
+    
+    public int getGroup3Count() {
+      return group3Count;
+    }
+    
+    //////////// ADDITION OF HYDROGEN ATOMS /////////////
+    // Bob Hanson and Erik Wyatt, Jmol 12.1.51, 7/1/2011
+    
+    /*
+     * for each group, as it is finished in the file reading:
+     * 
+     * 1) get and store atom/bond information for group type
+     * 2) add placeholder (deleted) hydrogen atoms to a group
+     * 
+     * in the end:
+     * 
+     * 3) set multiple bonding and charges
+     * 4) determine actual number of required hydrogen atoms
+     * 5) set hydrogen atom names, atom numbers, and positions 
+     * 6) undelete those atoms  
+     * 
+     */
+    
+    public void setHaveHsAlready(boolean b) {
+      haveHsAlready = b;
+    }
+
+    public void initializeHydrogenAddition() {
+      baseBondIndex = ms.bondCount;
+      bsAddedHydrogens = new BS();
+      bsAtomsForHs = new BS();
+      htBondMap = new Hashtable<String, String>();
+      htGroupBonds = new Hashtable<String, Boolean>();
+      hNames = new String[3];
+      vAB = new V3d();
+      vNorm = new V3d();
+      plane = new P4d();
+    }
+    
+    /**
+     * Get bonding info for double bonds and add implicit hydrogen atoms, if needed.
+     * 
+     * @param ml 
+     * @param adapter
+     * @param iGroup this group
+     * @param nH legacy quirk
+     */
+    public void addImplicitHydrogenAtoms(ModelLoader ml, JmolAdapter adapter, int iGroup, int nH) {
+      String group3 = ml.getGroup3(iGroup);
+      int nH1;
+      if (haveHsAlready && hasCONECT 
+          || group3 == null
+          || (nH1 = getStandardPdbHydrogenCount(group3)) == 0)
+        return;
+      nH = (nH1 < 0 ? -1 : nH1 + nH);
+      Object model = null;
+      int iFirst = ml.getFirstAtomIndex(iGroup);
+      int ac = ms.ac;
+      if (nH < 0) {
+        if (ac - iFirst == 1) // CA or P-only, or simple metals, also HOH, DOD
+          return;
+        model = vwr.getLigandModel(group3, "ligand_", "_data", null);
+        if (model == null)
+          return;
+        nH = adapter.getHydrogenAtomCount(model);
+        if (nH < 1)
+          return;
+      }
+      getBondInfo(adapter, group3, model);
+      ms.am[ms.at[iFirst].mi].isPdbWithMultipleBonds = true;
+      if (haveHsAlready)
+        return;
+      bsAtomsForHs.setBits(iFirst, ac);
+      bsAddedHydrogens.setBits(ac, ac + nH);
+      boolean isHetero = ms.at[iFirst].isHetero();
+      P3d xyz = P3d.new3(Double.NaN, Double.NaN, Double.NaN);
+      Atom a = ms.at[iFirst];
+      for (int i = 0; i < nH; i++)
+        ms.addAtom(a.mi, a.group, 1, "H", null, 0, a.getSeqID(), 0, xyz,
+            Double.NaN, null, 0, 0, 1, 0, null, isHetero, false, (byte) 0, null, Double.NaN)
+            .delete(null);
+    }
+
+    private static int getStandardPdbHydrogenCount(String group3) {
+      int pt = knownGroupID(group3);
+      return (pt < 0 || pt >= pdbHydrogenCount.length ? -1 : pdbHydrogenCount[pt]);
+    }
+
+    private void getBondInfo(JmolAdapter adapter, String group3, Object model) {
+      if (htGroupBonds.get(group3) != null)
+        return;
+      String[][] bondInfo = (model == null ? getPdbBondInfo(group3,
+          vwr.getBoolean(T.legacyhaddition)) : getLigandBondInfo(adapter, model, group3));
+      if (bondInfo == null)
+        return;
+      htGroupBonds.put(group3, Boolean.TRUE);    
+      for (int i = 0; i < bondInfo.length; i++) {
+        if (bondInfo[i] == null)
+          continue;
+        if (bondInfo[i][1].charAt(0) == 'H')
+          htBondMap.put(group3 + "." + bondInfo[i][0], bondInfo[i][1]);
+        else
+          htBondMap.put(group3 + ":" + bondInfo[i][0] + ":" + bondInfo[i][1],
+              bondInfo[i][2]);
+      }
+    }
+
+    private String[][] getPdbBondInfo(String group3, boolean isLegacy) {
+      if (htPdbBondInfo == null)
+        htPdbBondInfo = new Hashtable<String, String[][]>();
+      String[][] info = htPdbBondInfo.get(group3);
+      if (info != null)
+        return info;
+      int pt = knownGroupID(group3);
+      if (pt < 0 || pt > pdbBondInfo.length)
+        return null;
+      String s = pdbBondInfo[pt];
+      // unfortunately, this change is not backward compatible.
+      if (isLegacy && (pt = s.indexOf("O3'")) >= 0)
+        s = s.substring(0, pt);
+      String[] temp = PT.getTokens(s);
+      info = new String[temp.length / 2][];
+      for (int i = 0, p = 0; i < info.length; i++) {
+        String source = temp[p++];
+        String target = temp[p++];
+        // a few shortcuts here:
+        if (target.length() == 1)
+          switch (target.charAt(0)) {
+          case 'N':
+            target = "H@H2";
+            break;
+          case 'b': // CB(ARG)
+            target = "HB2@HB3";
+            break;
+          case 'B': // CB
+            target = "HB3@HB2";
+            break;
+          case 'D': // CD
+            target = "HD3@HD2";
+            break;
+          case 'g': // CG(ARG)
+            target = "HG2@HG3";
+            break;
+          case 'G': // CG
+            target = "HG3@HG2";
+            break;
+          case '2': // C2'
+            target = "H2'@H2''";
+            break;
+          case '5': // C5'
+            target = "H5''@H5'";
+            break;
+          }
+        if (target.charAt(0) != 'H' && source.compareTo(target) > 0) {
+          s = target;
+          target = source;
+          source = s;
+        }
+        info[i] = new String[] { source, target,
+            (target.startsWith("H") ? "1" : "2") };
+      }
+      htPdbBondInfo.put(group3, info);
+      return info;
+    }
+    /**
+     * reads PDB ligand CIF info and creates a bondInfo object.
+     * 
+     * @param adapter
+     * @param model
+     * @param group3
+     * @return [[atom1, atom2, order]...]
+     */
+    private String[][] getLigandBondInfo(JmolAdapter adapter, Object model,
+                                         String group3) {
+      String[][] dataIn = adapter.getBondList(model);
+      Map<String, P3d> htAtoms = new Hashtable<String, P3d>();
+      JmolAdapterAtomIterator iterAtom = adapter.getAtomIterator(model);
+      while (iterAtom.hasNext())
+        htAtoms.put(iterAtom.getAtomName(), iterAtom.getXYZ());
+      String[][] bondInfo = new String[dataIn.length * 2][];
+      int n = 0;
+      for (int i = 0; i < dataIn.length; i++) {
+        String[] b = dataIn[i];
+        if (b[0].charAt(0) != 'H')
+          bondInfo[n++] = new String[] { b[0], b[1], b[2],
+              b[1].charAt(0) == 'H' ? "0" : "1" };
+        if (b[1].charAt(0) != 'H')
+          bondInfo[n++] = new String[] { b[1], b[0], b[2],
+              b[0].charAt(0) == 'H' ? "0" : "1" };
+      }
+      Arrays.sort(bondInfo, this);
+      // now look for 
+      String[] t;
+      String name, name1, name2;
+      double d;
+      for (int i = 0; i < n;) {
+        t = bondInfo[i];
+        String a1 = t[0];
+        int nH = 0;
+        int nC = 0;
+        for (; i < n && (t = bondInfo[i])[0].equals(a1); i++) {
+          if (t[3].equals("0")) {
+            nH++;
+            continue;
+          }
+          if (t[3].equals("1"))
+            nC++;
+        }
+        int pt = i - nH - nC;
+        if (nH == 1)
+          continue;
+        switch (nC) {
+        case 1:
+          // trigonal
+          char sep = (nH == 2 ? '@' : '|');
+          if (nH == 2) {
+            // ARG H2N-CZ=NH2
+            name = bondInfo[pt][0];
+            name1 = bondInfo[pt + 2][1];
+            P3d cz = htAtoms.get(name1);
+            P3d h1 = htAtoms.get(bondInfo[pt][1]);
+            P3d h2 = htAtoms.get(bondInfo[pt + 1][1]);
+            double d1 = cz.distance(h1);
+            double d2 = cz.distance(h2);
+            d = d2 - d1;
+            bondInfo[pt][1] = (d > 0 ? bondInfo[pt][1] + "@" + bondInfo[pt + 1][1]
+                : bondInfo[pt + 1][1] + "@" + bondInfo[pt][1]);
+            bondInfo[pt + 1] = null;
+          } else {
+            for (int j = 1; j < nH; j++) {
+              bondInfo[pt][1] += sep + bondInfo[pt + j][1];
+              bondInfo[pt + j] = null;
+            }
+          }
+          continue;
+        case 2:
+          // tetrahedral
+          if (nH != 2)
+            continue;
+          name = bondInfo[pt][0];
+          name1 = bondInfo[pt + nH][1];
+          name2 = bondInfo[pt + nH + 1][1];
+          int factor = name1.compareTo(name2);
+          MeasureD.getPlaneThroughPoints(htAtoms.get(name1), htAtoms.get(name),
+              htAtoms.get(name2), vNorm, vAB, plane);
+          d = MeasureD.distanceToPlane(plane, htAtoms.get(bondInfo[pt][1]))
+              * factor;
+          bondInfo[pt][1] = (d > 0 ? bondInfo[pt][1] + "@" + bondInfo[pt + 1][1]
+              : bondInfo[pt + 1][1] + "@" + bondInfo[pt][1]);
+          bondInfo[pt + 1] = null;
+        }
+      }
+      for (int i = 0; i < n; i++) {
+        if ((t = bondInfo[i]) != null && t[1].charAt(0) != 'H'
+            && t[0].compareTo(t[1]) > 0) {
+          bondInfo[i] = null;
+          continue;
+        }
+        if (t != null)
+          Logger.info(" ligand " + group3 + ": " + bondInfo[i][0] + " - "
+              + bondInfo[i][1] + " order " + bondInfo[i][2]);
+      }
+      return bondInfo;
+    }
+    
+    @Override
+    public int compare(String[] a, String[] b) {
+      return (b == null ? (a == null ? 0 : -1) : a == null ? 1 : a[0]
+          .compareTo(b[0]) < 0 ? -1 : a[0].compareTo(b[0]) > 0 ? 1 : a[3]
+          .compareTo(b[3]) < 0 ? -1 : a[3].compareTo(b[3]) > 0 ? 1 : a[1]
+          .compareTo(b[1]) < 0 ? -1 : a[1].compareTo(b[1]) > 0 ? 1 : 0);
+    }
+    
+    public void finalizeHydrogens(ModelLoader ml, BS bsAtoms) {
+      vwr.getLigandModel(null, null, null, null);
+      finalizePdbMultipleBonds();
+      finalizePdbCharges();
+      addHydrogens(ml, bsAtoms);
+    }
+
+    /**
+     * note that istart and iend will be adjusted.
+     * 
+     * @param ml 
+     * @param iterStructure
+     */
+    private void setStructure(ModelLoader ml, JmolAdapterStructureIterator iterStructure) {
+      STR t = iterStructure.getSubstructureType();
+      String id = iterStructure.getStructureID();
+      String serID = iterStructure.getStrandID();
+      int count = iterStructure.getStrandCount();
+      int[] atomRange = iterStructure.getAtomIndices();
+      int[] modelRange = iterStructure.getModelIndices();
+      BS[] bsAll = iterStructure.getBSAll();
+      int m0, m1;
+      Model[] models = ms.am;
+      if (ml.isTrajectory) { //from PDB file
+        m0 = m1 = modelRange[0];
+      } else {
+        m0 = modelRange[0] + ml.baseModelIndex;
+        m1 = modelRange[1] + ml.baseModelIndex;
+      }
+      ml.structuresDefinedInFile.setBits(m0, m1 + 1);
+
+      BS bs;
+      Model m;
+      if (bsAll != null) {
+        for (int i = m0, t0; i <= m1; i++)
+          if ((m = models[i]) instanceof BioModel)
+            for (int j = 0; j < 5; j++)
+              if ((bs = bsAll[t0 = mytypes[j]]) != null && !bs.isEmpty())
+                ((BioModel) m).addStructureByBS(0, t0, types[j], bs);
+        return;
+      }
+
+      int startChainID = iterStructure.getStartChainID();
+      int startSequenceNumber = iterStructure.getStartSequenceNumber();
+      char startInsertionCode = iterStructure.getStartInsertionCode();
+      int endSequenceNumber = iterStructure.getEndSequenceNumber();
+      int endChainID = iterStructure.getEndChainID();
+      char endInsertionCode = iterStructure.getEndInsertionCode();
+      STR type = (t == STR.NOT ? STR.NONE : t);
+      int startSeqCode = Group.getSeqcodeFor(startSequenceNumber,
+          startInsertionCode);
+      int endSeqCode = Group.getSeqcodeFor(endSequenceNumber, endInsertionCode);
+      if (bsAssigned == null)
+        bsAssigned = new BS();
+      for (int i = m0, i0 = 0; i <= m1; i++)
+        if ((m = models[i]) instanceof BioModel)
+          ((BioModel) m).addSecondaryStructure(type, id, serID, count,
+              startChainID, startSeqCode, endChainID, endSeqCode,
+              (i0 = m.firstAtomIndex) + atomRange[0], i0 + atomRange[1],
+              bsAssigned);
+    }
+
+    public Object fixPropertyValue(BS bsAtoms, Object data, boolean toHydrogens) {
+      Atom[] atoms = ms.at;
+      // we aren't doing this anymore
+      // it was for TLS groups
+//      if (data instanceof String) {
+//        String[] sData = PT.split((String) data, "\n");
+//        String[] newData = new String[bsAtoms.cardinality()];
+//        String lastData = "";
+//        for (int pt = 0, iAtom = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+//            .nextSetBit(i + 1), iAtom++) {
+//          if (atoms[i].getElementNumber() == 1) {
+//            if (!toHydrogens)
+//              continue;
+//          } else {
+//            lastData = sData[pt++];
+//          }
+//          newData[iAtom] = lastData;
+//        }
+//        return PT.join(newData, '\n', 0);
+//      }
+      // already double data
+      double[] fData = (double[]) data;
+      double[] newData = new double[bsAtoms.cardinality()];
+      double lastData = 0;
+      for (int pt = 0, iAtom = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+          .nextSetBit(i + 1), iAtom++) {
+        if (atoms[i].getElementNumber() == 1) {
+          if (!toHydrogens)
+            continue;
+        } else {
+          lastData = fData[pt++];
+        }
+        newData[iAtom] = lastData;
+      }
+      return newData;
+    }
+
+    public short getGroupID(String g3) {
+      return getGroupIdStatic(g3);
+    }
+
+    private void addHydrogens(ModelLoader ml, BS bsAtoms) {
+      if (bsAddedHydrogens.nextSetBit(0) < 0)
+        return;
+      bsAddedMask = BSUtil.copy(bsAddedHydrogens);
+      int[] nTotal = new int[1];
+      P3d[][] pts = ms.calculateHydrogens(bsAtomsForHs, nTotal, null, AtomCollection.CALC_H_DOALL);
+      Group groupLast = null;
+      int ipt = 0;
+      Atom atom;
+      for (int i = 0; i < pts.length; i++) {
+        if (pts[i] == null || (atom = ms.at[i]) == null)
+          continue;
+        Group g = atom.group;
+        if (g != groupLast) {
+          groupLast = g;
+          ipt = g.lastAtomIndex;
+          while (bsAddedHydrogens.get(ipt))
+            ipt--;
+        }
+        String gName = atom.getGroup3(false);
+        String aName = atom.getAtomName();
+        String hName = htBondMap.get(gName + "." + aName);
+        if (hName == null)
+          continue;
+        boolean isChiral = hName.contains("@");
+        boolean isMethyl = (hName.endsWith("?") || hName.indexOf("|") >= 0);
+        int n = pts[i].length;
+        if (n == 3 && !isMethyl && hName.equals("H@H2")) {
+          hName = "H|H2|H3";
+          isMethyl = true;
+          isChiral = false;
+        }
+        if (isChiral && n == 3 || isMethyl != (n == 3)) {
+          Logger.info("Error adding H atoms to " + gName + g.getResno() + ": "
+              + pts[i].length + " atoms should not be added to " + aName);
+          continue;
+        }
+        int pt = hName.indexOf("@");
+        switch (pts[i].length) {
+        case 1:
+          if (pt > 0)
+            hName = hName.substring(0, pt);
+          setHydrogen(ml, i, ++ipt, hName, pts[i][0]);
+          break;
+        case 2:
+          String hName1,
+          hName2;
+          double d = -1;
+          Bond[] bonds = atom.bonds;
+          if (bonds != null)
+            switch (bonds.length) {
+            case 2:
+              // could be nitrogen?
+              Atom atom1 = bonds[0].getOtherAtom(atom);
+              Atom atom2 = bonds[1].getOtherAtom(atom);
+              int factor = atom1.getAtomName().compareTo(atom2.getAtomName());
+              d = MeasureD.distanceToPlane(MeasureD.getPlaneThroughPoints(atom1, atom, atom2, vNorm, vAB,
+                  plane), pts[i][0]) * factor;
+              break;
+            }
+          if (pt < 0) {
+            Logger.info("Error adding H atoms to " + gName + g.getResno()
+                + ": expected to only need 1 H but needed 2");
+            hName1 = hName2 = "H";
+          } else if (d < 0) {
+            hName2 = hName.substring(0, pt);
+            hName1 = hName.substring(pt + 1);
+          } else {
+            hName1 = hName.substring(0, pt);
+            hName2 = hName.substring(pt + 1);
+          }
+          setHydrogen(ml, i, ++ipt, hName1, pts[i][0]);
+          setHydrogen(ml, i, ++ipt, hName2, pts[i][1]);
+          break;
+        case 3:
+          int pt1 = hName.indexOf('|');
+          if (pt1 >= 0) {
+            int pt2 = hName.lastIndexOf('|');
+            hNames[0] = hName.substring(0, pt1);
+            hNames[1] = hName.substring(pt1 + 1, pt2);
+            hNames[2] = hName.substring(pt2 + 1);
+          } else {
+            hNames[0] = hName.replace('?', '1');
+            hNames[1] = hName.replace('?', '2');
+            hNames[2] = hName.replace('?', '3');
+          }
+          //          Measure.getPlaneThroughPoints(pts[i][0], pts[i][1], pts[i][2], vNorm, vAB,
+          //            vAC, plane);
+          //      d = Measure.distanceToPlane(plane, atom);
+          //    int hpt = (d < 0 ? 1 : 2);
+          setHydrogen(ml, i, ++ipt, hNames[0], pts[i][0]);
+          setHydrogen(ml, i, ++ipt, hNames[1], pts[i][2]);
+          setHydrogen(ml, i, ++ipt, hNames[2], pts[i][1]);
+          break;
+        }
+      }
+      deleteUnneededAtoms(ml);
+      ms.fixFormalCharges(bsAtoms);
+    }
+
+    /**
+     * Delete hydrogen atoms that are still in bsAddedHydrogens, 
+     * because they were not actually added.
+     * Also delete ligand hydrogen atoms from CO2- and PO3(2-)
+     * 
+     * Note that we do this AFTER all atoms have been added. That means that
+     * this operation will not mess up atom indexing
+     * 
+     * @param ml 
+     */
+    private void deleteUnneededAtoms(ModelLoader ml) {
+      BS bsBondsDeleted = new BS();
+      for (int i = bsAtomsForHs.nextSetBit(0); i >= 0; i = bsAtomsForHs
+          .nextSetBit(i + 1)) {
+        Atom atom = ms.at[i];
+        // specifically look for neutral HETATM O with a bond count of 2: 
+        if (!atom.isHetero() || atom.getElementNumber() != 8 || atom.getFormalCharge() != 0
+            || atom.getCovalentBondCount() != 2)
+          continue;
+        Bond[] bonds = atom.bonds;
+        Atom atom1 = bonds[0].getOtherAtom(atom);
+        Atom atomH = bonds[1].getOtherAtom(atom);
+        if (atom1.getElementNumber() == 1) {
+          Atom a = atom1;
+          atom1 = atomH;
+          atomH = a;
+        }
+        
+        // Does it have an H attached?
+        if (atomH.getElementNumber() != 1)
+          continue;
+        // If so, does it have an attached atom that is doubly bonded to O?
+        // so this could be RSO4H or RPO3H2 or RCO2H
+        Bond[] bonds1 = atom1.bonds;
+        for (int j = 0; j < bonds1.length; j++) {
+          if (bonds1[j].order == 2) {
+            Atom atomO = bonds1[j].getOtherAtom(atom1);
+            if (atomO.getElementNumber() == 8) {
+              bsAddedHydrogens.set(atomH.i);
+              atomH.delete(bsBondsDeleted);
+              break;
+            }
+          }
+
+        }
+      }
+      ms.deleteBonds(bsBondsDeleted, true);
+      deleteAtoms(ml, bsAddedHydrogens);
+    }
+    
+    /**
+     * called from org.jmol.modelsetbio.resolver when adding hydrogens.
+     * 
+     * @param ml 
+     * @param bsDeletedAtoms
+     */
+    private void deleteAtoms(ModelLoader ml, BS bsDeletedAtoms) {
+      // get map
+      int[] mapOldToNew = new int[ms.ac];
+      int[] mapNewToOld = new int[ms.ac - bsDeletedAtoms.cardinality()];
+      int n = ml.baseAtomIndex;
+      Model[] models = ms.am;
+      Atom[] atoms = ms.at;
+      for (int i = ml.baseAtomIndex; i < ms.ac; i++) {
+        Atom a = atoms[i];
+        if (a == null)
+          continue;
+        models[a.mi].bsAtoms.clear(i);
+        models[a.mi].bsAtomsDeleted.clear(i);
+        if (bsDeletedAtoms.get(i)) {
+          mapOldToNew[i] = n - 1;
+          models[atoms[i].mi].act--;
+        } else {
+          mapNewToOld[n] = i;
+          mapOldToNew[i] = n++;
+        }
+      }
+      ms.msInfo.put("bsDeletedAtoms", bsDeletedAtoms);
+      // adjust group pointers
+      for (int i = ml.baseGroupIndex; i < ml.groups.length; i++) {
+        Group g = ml.groups[i];
+        if (g.firstAtomIndex >= ml.baseAtomIndex) {
+          g.firstAtomIndex = mapOldToNew[g.firstAtomIndex];
+          g.lastAtomIndex = mapOldToNew[g.lastAtomIndex];
+          if (g.leadAtomIndex >= 0)
+            g.leadAtomIndex = mapOldToNew[g.leadAtomIndex];
+        }
+      }
+      // adjust atom arrays
+      ms.adjustAtomArrays(mapNewToOld, ml.baseAtomIndex, n);
+      ms.calcBoundBoxDimensions(null, 1);
+      ms.resetMolecules();
+      ms.validateBspf(false);
+      bsAddedMask = BSUtil.deleteBits(bsAddedMask, bsDeletedAtoms);
+      //System.out.println("res bsAddedMask = " + bsAddedMask);
+      for (int i = ml.baseModelIndex; i < ms.mc; i++) { 
+        fixAnnotations(i, T.domains);
+        fixAnnotations(i, T.validation);
+        fixAnnotations(i, T.dssr);
+      }
+    }
+
+    private void fixAnnotations(int modelIndex, int type) {
+      JmolAnnotationParser parser = vwr.getAnnotationParserIfPresent(type);
+      if (parser == null)
+        return;
+      String key = null;
+      switch (type) {
+      case T.dssr:
+        // note that this is the CURRENT model set, prior to merging if using load APPEND
+        vwr.ms.bioModelset.clearDSSR();
+        return;
+      case T.validation:
+        key = "validation";
+        break;
+      case T.domains:
+        key = JC.INFO_DOMAINS;
+        break;
+      }
+      Object o = ms.getInfo(modelIndex, key);
+      if (o != null) {
+        Object dbObj = ((BioModel) ms.am[modelIndex]).getCachedAnnotationMap(key, o);
+        if (dbObj != null)
+          parser.fixAtoms(modelIndex, (SV) dbObj, bsAddedMask, type, 20);
+      }
+    }
+
+    private void finalizePdbCharges() {
+      Atom[] atoms = ms.at;
+      // fix terminal N groups as +1
+      for (int i = bsAtomsForHs.nextSetBit(0); i >= 0; i = bsAtomsForHs.nextSetBit(i + 1)) {
+        Atom a = atoms[i];
+        if (a.group.getNitrogenAtom() == a && a.getCovalentBondCount() == 1)
+          a.setFormalCharge(1);
+        if ((i = bsAtomsForHs.nextClearBit(i + 1)) < 0)
+          break;
+      }
+    }
+    
+    private void finalizePdbMultipleBonds() {
+      Map<String, Boolean> htKeysUsed = new Hashtable<String, Boolean>();
+      int bondCount = ms.bondCount;
+      Bond[] bonds = ms.bo;
+      for (int i = baseBondIndex; i < bondCount; i++) {
+        if (bonds[i] == null)
+          continue;
+        Atom a1 = bonds[i].atom1;
+        Atom a2 = bonds[i].atom2;
+        Group g = a1.group;
+        if (g != a2.group)
+          continue;
+        SB key = new SB().append(g.getGroup3());
+        key.append(":");
+        String n1 = a1.getAtomName();
+        String n2 = a2.getAtomName();
+        if (n1.compareTo(n2) > 0)
+          key.append(n2).append(":").append(n1);
+        else
+          key.append(n1).append(":").append(n2);
+        String skey = key.toString();
+        String type = htBondMap.get(skey);
+        if (type == null)
+          continue;
+        htKeysUsed.put(skey, Boolean.TRUE);
+        bonds[i].setOrder(PT.parseInt(type));
+      }
+
+      for (String key : htBondMap.keySet()) {
+        if (htKeysUsed.get(key) != null)
+          continue;
+        if (key.indexOf(":") < 0) {
+          htKeysUsed.put(key, Boolean.TRUE);
+          continue;
+        }
+        String value = htBondMap.get(key);
+        Logger.info("bond " + key + " was not used; order=" + value);
+        if (htBondMap.get(key).equals("1")) {
+          htKeysUsed.put(key, Boolean.TRUE);
+          continue; // that's ok
+        }
+      }
+      Map<String, String> htKeysBad = new Hashtable<String, String>();
+      for (String key : htBondMap.keySet()) {
+        if (htKeysUsed.get(key) != null)
+          continue;
+        htKeysBad.put(key.substring(0, key.lastIndexOf(":")), htBondMap.get(key));
+      }
+      if (htKeysBad.isEmpty())
+        return;
+      for (int i = 0; i < bondCount; i++) {
+        Atom a1 = bonds[i].atom1;
+        Atom a2 = bonds[i].atom2;
+        if (a1.group == a2.group)
+          continue;
+        String value;
+        if ((value = htKeysBad.get(a1.getGroup3(false) + ":" + a1.getAtomName())) == null
+            && ((value = htKeysBad.get(a2.getGroup3(false) + ":" + a2.getAtomName())) == null))
+          continue;
+        bonds[i].setOrder(PT.parseInt(value));
+        Logger.info("assigning order " + bonds[i].order + " to bond " + bonds[i]);
+      }
+    }
+
+    private void setHydrogen(ModelLoader ml, int iTo, int iAtom, String name, P3d pt) {
+      if (!bsAddedHydrogens.get(iAtom))
+        return;
+      Atom[] atoms = ms.at;
+//      if (lastSetH == Integer.MIN_VALUE || atoms[iAtom].mi != atoms[lastSetH].mi) 
+//        maxSerial = ((int[]) ms.getInfo(atoms[lastSetH = iAtom].mi, "PDB_CONECT_firstAtom_count_max"))[2];
+      bsAddedHydrogens.clear(iAtom);
+      ms.setAtomName(iAtom, name, false);
+      atoms[iAtom].setT(pt);
+  //2023.04.08 error -- maxSerial is for groups, not atoms    ms.setAtomNumber(iAtom, ++maxSerial, false);
+      atoms[iAtom].atomSymmetry = atoms[iTo].atomSymmetry;
+      ml.undeleteAtom(iAtom);
+
+      ms.bondAtoms(atoms[iTo], atoms[iAtom], Edge.BOND_COVALENT_SINGLE, 
+          ms.getDefaultMadFromOrder(Edge.BOND_COVALENT_SINGLE), null, 0, true, false);
+    }
+
+  }
+  
+  private static void assignPDBH(String group3, String sNames) {
+    String[] names = PT.getTokens(PT.rep(sNames, "@", " "));
+    String a = null;
+    for (int i = 0, n = names.length; i < n; i++) {
+      String s = names[i];
+      if (s.charAt(0) != 'H') {
+        // just assigning attached atom
+        a = s;
+        continue;
+      }
+      // this is an H
+      s = group3 + s;
+      if (s.indexOf("?") >= 0) {
+        // CH3 groups
+        s = s.substring(0, s.length() - 1);
+        pdbAtomForH.put(s + "1", a);
+        pdbAtomForH.put(s + "2", a);
+        pdbAtomForH.put(s + "3", a);
+      } else {
+        pdbAtomForH.put(s, a);
+      }
+    }
   }
 
+  
 }
 
 

@@ -26,6 +26,7 @@ package org.jmol.modelsetbio;
 import org.jmol.c.STR;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Chain;
+import org.jmol.viewer.JC;
 
 public class CarbohydrateMonomer extends Monomer {
 
@@ -91,6 +92,11 @@ public class CarbohydrateMonomer extends Monomer {
       if (getCrossLinkGroup(i, null, null, true, false, false))
         return true;
     return false;
+  }
+
+  @Override
+  public String getGroupMenuKey() {
+    return JC.GROUP_MENU_CARBOHYDRATE;
   }
 
 }

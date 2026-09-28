@@ -104,7 +104,7 @@ public class AwtJmolPopup extends JmolPopup {
         updatePDBResidueComputedMenus();
       else if (item.equals("PDBaaResiduesComputedMenu"))
         updatePDBResidueComputedMenus();
-      else if (item.equals("PDBaaResiduesComputedMenu"))
+      else if (item.equals("PDBcarboResiduesComputedMenu"))
         updatePDBResidueComputedMenus();
       break;
     case 's':

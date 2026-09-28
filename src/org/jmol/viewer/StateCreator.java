@@ -401,7 +401,7 @@ public class StateCreator extends JmolStateCreator {
           + ";\n");
       //      if (vwr.getBoolean(T.modelkitmode))
       //      commands.append("  set modelKitMode true;\n");
-      if (vwr.getBoolean(T.mode2d)) {
+      if (vwr.is2D()) {
         commands.append("  set mode2d TRUE;\n");
       }
     }
@@ -1244,11 +1244,13 @@ public class StateCreator extends JmolStateCreator {
           continue;
         Text t = l.getLabel(i);
         String cmd = "label ";
+        boolean isPymolOffset = false;
         if (t == null) {
           cmd += PT.esc(l.formats[i]);
         } else {
           cmd += PT.esc(t.textUnformatted);
-          if (t.getPymolOffset() != null)
+          isPymolOffset = (t.getPymolOffset() != null);
+          if (isPymolOffset)
             cmd += ";set labelOffset " + Escape.eAD(t.getPymolOffset());
         }
         BSUtil.setMapBitSet(temp, i, i, cmd);
@@ -1265,8 +1267,8 @@ public class StateCreator extends JmolStateCreator {
         double sppm = (text != null ? text.scalePixelsPerMicron : 0);
         if (sppm > 0)
           BSUtil.setMapBitSet(temp2, i, i,
-              "set labelScaleReference " + (10000d / sppm));
-        if (l.offsets != null && l.offsets.length > i) {
+              "set labelScaleReference " + (10000d / sppm));        
+        if (!isPymolOffset && l.offsets != null && l.offsets.length > i) {
           int offsetFull = l.offsets[i];
           BSUtil.setMapBitSet(temp2, i, i,
               "set "

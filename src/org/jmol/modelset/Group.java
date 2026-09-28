@@ -592,4 +592,8 @@ public class Group implements Structure {
     return unitID;
   }
 
+  public String getGroupMenuKey() {
+    return JC.GROUP_MENU_OTHER;
+  }
+
 }

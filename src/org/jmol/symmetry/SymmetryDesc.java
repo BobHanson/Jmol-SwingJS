@@ -138,7 +138,7 @@ public class SymmetryDesc {
     // for reflection
   }
 
-  public SymmetryDesc set(ModelSet modelSet) {
+  SymmetryDesc set(ModelSet modelSet) {
     this.modelSet = modelSet;
     return this;
   }
@@ -166,7 +166,7 @@ public class SymmetryDesc {
    * @return Object[] or String or Object[Object[]] (nth = 0, "array")
    * 
    */
-  Object getSymopInfoForPoints(SymmetryInterface sym, int modelIndex, int symOp,
+  private Object getSymopInfoForPoints(SymmetryInterface sym, int modelIndex, int symOp,
                                P3d translation, P3d pt1, P3d pt2, String drawID,
                                String stype, double scaleFactor, int nth,
                                int options, BS bsInfo) {
@@ -488,7 +488,7 @@ public class SymmetryDesc {
     return info;
   }
 
-  public M4d getTransform(UnitCell uc, SymmetryOperation[] ops, P3d fracA,
+  M4d getTransform(UnitCell uc, SymmetryOperation[] ops, P3d fracA,
                           P3d fracB, boolean best) {
     pta02.setT(fracB);
     vtrans.setT(pta02);

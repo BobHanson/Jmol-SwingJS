@@ -37,17 +37,22 @@ class FileLoadThread extends JmolThread {
   private String key;
 
   /**
-   * JavaScript only
+   * JavaScript dynamic loading
+   * 
+   */
+  public FileLoadThread() {}
+  
+  /**
+   * JavaScript only loadFileAsync
    * 
    * @param eval
    * @param vwr
    * @param fileName
    * @param key 
    * @param cacheName 
+   * @return this
    * 
    */
-  public FileLoadThread() {}
-  
   public FileLoadThread initialize(JmolScriptEvaluator eval, Viewer vwr, String fileName, String key, String cacheName) {
     setViewer(vwr, "FileLoadThread");
     this.fileName = fileName;

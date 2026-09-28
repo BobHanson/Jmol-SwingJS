@@ -224,7 +224,7 @@ public class Viewer extends JmolViewer
   /**
    * SwingJS and Java 
    */
-  public static boolean isHighPrecision = true;
+  public final static boolean isHighPrecision = true;
 
 
   public enum ACCESS {
@@ -2660,10 +2660,11 @@ public class Viewer extends JmolViewer
       htParams.put("getHeader", Boolean.TRUE);
     if (g.pdbSequential)
       htParams.put("isSequential", Boolean.TRUE);
-    if (g.legacyJavaFloat || g.doublePrecision)
-      htParams.put("highPrecision", Boolean.TRUE);
-    if (!g.doublePrecision)
-      htParams.put("lowPrecision", Boolean.TRUE);
+// no effect in Jmol-SwingJS
+//    if (g.legacyJavaFloat || g.doublePrecision)
+//      htParams.put(JC.INFO_HIGH_PRECISION, Boolean.TRUE);
+//    if (!g.doublePrecision)
+//      htParams.put(JC.INFO_LOW_PRECISION, Boolean.TRUE);
     htParams.put("stateScriptVersionInt",
         Integer.valueOf(stateScriptVersionInt));
     if (!htParams.containsKey("filter")) {
@@ -3815,8 +3816,9 @@ public class Viewer extends JmolViewer
       lastData = null;
       if (dm != null)
         dm.clear();
-      if (!g.doublePrecision && g.legacyJavaFloat)
-        setBooleanPropertyTok("legacyjavafloat", T.legacyjavafloat, false);
+// no effect in Jmol-SwingJS
+//      if (!g.doublePrecision && g.legacyJavaFloat)
+//        setBooleanPropertyTok(JC.TOKEN_LEGACY_JAVA_FLOAT, T.legacyjavafloat, false);
       if (resetUndo) {
         if (zapModelKit)
           g.removeParam("_pngjFile");
@@ -5084,7 +5086,7 @@ public class Viewer extends JmolViewer
   }
 
   String resolveDatabaseFormat(String fileName) {
-    return (hasDatabasePrefix(fileName)
+    return JC.updateURL(hasDatabasePrefix(fileName)
         || fileName.indexOf(JC.legacyResolver) >= 0
             ? (String) setLoadFormat(false, fileName, fileName.charAt(0), false)
             : fileName);
@@ -5172,6 +5174,7 @@ public class Viewer extends JmolViewer
           }
           return name + suffix;
         }
+        // pdb only
         name = null;
         if (!isSurface && id.endsWith(".bcif")) {
           id = id.substring(0, id.indexOf(".bcif"));
@@ -5183,12 +5186,17 @@ public class Viewer extends JmolViewer
         }
         if (name != null)
           return name + suffix;
+        // not bcif or mmtf
+        
         format = g.loadFormat;
       }
       //$FALL-THROUGH$
     case '#': // ligand
-      if (format == null)
+      if (format == null) {
         format = g.pdbLoadLigandFormat;
+        if (id.startsWith("pdb_") && id.indexOf('.') < 0)
+          id += ".cif.gz";
+      }
       return JC.resolveDataBase(null, id, format) + suffix;
     case '*':
       // European Bioinformatics Institute
@@ -7146,8 +7154,8 @@ public class Viewer extends JmolViewer
       g.symmetryHermannMauguin = value;
       break;
     case T.doubleprecision:
-      value = true;
-      // not appicable to Jmol-SwingJS
+      g.doublePrecision = value = true;
+      // not applicable to Jmol-SwingJS
       break;
     case T.checkcir:
       // 14.31.40
@@ -9931,10 +9939,10 @@ public class Viewer extends JmolViewer
         parameters);
   }
 
-  public String getPdbData(int modelIndex, String type, BS bsAtoms,
+  public String getPdbData(int modelIndex, int tok, String type, BS bsAtoms,
                            Object[] parameters, OC oc, boolean getStructure) {
     // plot command
-    return getPropertyManager().getPdbData(modelIndex, type,
+    return getPropertyManager().getPdbData(modelIndex, tok, type,
         bsAtoms == null ? bsA() : bsAtoms, parameters, oc, getStructure);
   }
 
@@ -10825,6 +10833,10 @@ public class Viewer extends JmolViewer
     }
   }
 
+  /**
+   * Singleton
+   * 
+   */
   BioResolver jbr;
 
   public BioResolver getJBR() {

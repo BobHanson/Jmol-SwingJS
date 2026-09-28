@@ -23,6 +23,7 @@
  */
 package org.openscience.jmol.app.status;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Map;
@@ -316,6 +317,7 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface {
 
   @Override
   public void showUrl(String url) {
+    String msg;
     try {
       Class<?> c = Class.forName("java.awt.Desktop");
       Method getDesktop = c.getMethod("getDesktop", new Class[] {});
@@ -323,22 +325,35 @@ public class StatusListener implements JmolStatusListener, JmolSyncInterface {
       Method browse = c.getMethod("browse", new Class[] { URI.class });
       Object arguments[] = { new URI(url) };
       browse.invoke(deskTop, arguments);
+      return;
     } catch (Exception e) {
-      Logger.error(e.getMessage());
-      JmolAppConsoleInterface appConsole = (JmolAppConsoleInterface) vwr
-          .getProperty("DATA_API", "getAppConsole", null);
-      if (appConsole != null) {
-        appConsole.sendConsoleMessage(
-            "Java 6 Desktop.browse() capability unavailable. Could not open "
-                + url);
-      } else {
-        Logger.error(
-            "Java 6 Desktop.browse() capability unavailable. Could not open "
-                + url);
+      msg = e.getMessage();
+      try {
+        // MacOS might need this -- try Chrome there
+        Runtime.getRuntime()
+            .exec(new String[] { "open", "-na", "Google Chrome", "--args",
+                "--user-data-dir=/tmp/chrome_dev_test",
+                "--allow-file-access-from-files",
+                new File(url).toURI().toString() });
+        return;
+      } catch (Exception e1) {
       }
     }
+    Logger.error(msg);
+    JmolAppConsoleInterface appConsole = (JmolAppConsoleInterface) vwr
+        .getProperty("DATA_API", "getAppConsole", null);
+    if (appConsole != null) {
+      appConsole.sendConsoleMessage(
+          "Java 8 Desktop.browse() capability unavailable. Could not open "
+              + url);
+    } else {
+      Logger.error(
+          "Java 8 Desktop.browse() capability unavailable. Could not open "
+              + url);
+    }
+  
   }
-
+  
   @Override
   public Map<String, Object> getRegistryInfo() {
     return null;

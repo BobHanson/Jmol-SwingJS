@@ -639,7 +639,7 @@ abstract class OutputManager {
     String msg = (type.startsWith("PDB")
         ? vwr.getPdbAtomData(null, out, false, false)
         : type.startsWith("PLOT")
-            ? vwr.getPdbData(modelIndex, type.substring(5), null,
+            ? vwr.getPdbData(modelIndex, T.plot, type.substring(5), null,
                 plotParameters, out, true)
             : getStringData
                 ? out.append(vwr.getCurrentFileAsString("write")).toString()

@@ -737,7 +737,12 @@ private void initDraw() {
         thisMesh.modelFlags.set(indicatedModelIndex);
         indicatedModelIndex = -1;
       } else {
-        BS bsModels = vwr.getVisibleFramesBitSet();
+        BS bsModels = vwr.getVisibleFramesBitSetNoJmolData();
+        int im = vwr.am.getSplitFrameModel();
+        if (im >= 0) {
+          bsModels.clearAll();
+          bsModels.set(vwr.am.getSplitFrameModelIndex(0));
+        }
         for (int iModel = 0; iModel < modelCount; iModel++) {
           if (bsModels.get(iModel) && setPoints(iModel, -1)) {
             setPoints(iModel, nPoints);

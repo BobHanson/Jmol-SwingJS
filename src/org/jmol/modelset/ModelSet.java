@@ -685,7 +685,7 @@ public class ModelSet extends BondCollection {
       if (vConnect == null)
         continue;
       int nConnect = vConnect.size();
-      setInfo(i, "initialBondCount", Integer.valueOf(nConnect));
+      setInfo(i, JC.INFO_INITIAL_BOND_COUNT, Integer.valueOf(nConnect));
       int[] atomInfo = (int[]) getInfo(i, "PDB_CONECT_firstAtom_count_max");
       int firstAtom = atomInfo[0] + baseAtomIndex;
       int atomMax = firstAtom + atomInfo[1];
@@ -920,8 +920,8 @@ public class ModelSet extends BondCollection {
     modelNames = (String[]) AU.deleteElements(modelNames, modelIndex, 1);
     frameTitles = (String[]) AU.deleteElements(frameTitles, modelIndex, 1);
     thisStateModel = -1;
-    String[] group3Lists = (String[]) getInfoM("group3Lists");
-    int[][] group3Counts = (int[][]) getInfoM("group3Counts");
+    String[] group3Lists = (String[]) getInfoM(JC.INFO_GROUP3_LISTS);
+    int[][] group3Counts = (int[][]) getInfoM(JC.INFO_GROUP3_COUNTS);
     int ptm = modelIndex + 1;
     if (group3Lists != null && group3Lists[ptm] != null) {
       for (int i = group3Lists[ptm].length() / 6; --i >= 0;)
@@ -933,8 +933,8 @@ public class ModelSet extends BondCollection {
         }
     }
     if (group3Lists != null) {
-      msInfo.put("group3Lists", AU.deleteElements(group3Lists, modelIndex, 1));
-      msInfo.put("group3Counts",
+      msInfo.put(JC.INFO_GROUP3_LISTS, AU.deleteElements(group3Lists, modelIndex, 1));
+      msInfo.put(JC.INFO_GROUP3_COUNTS,
           AU.deleteElements(group3Counts, modelIndex, 1));
     }
 
@@ -3308,13 +3308,13 @@ public class ModelSet extends BondCollection {
       modelNumbersForAtomLabel[i] = modelNames[i] = f + "." + pt;
     }
     thisStateModel = -1;
-    String[] group3Lists = (String[]) getInfoM("group3Lists");
+    String[] group3Lists = (String[]) getInfoM(JC.INFO_GROUP3_LISTS);
     if (group3Lists != null) {
-      int[][] group3Counts = (int[][]) getInfoM("group3Counts");
+      int[][] group3Counts = (int[][]) getInfoM(JC.INFO_GROUP3_COUNTS);
       group3Lists = AU.arrayCopyS(group3Lists, newModelCount);
       group3Counts = AU.arrayCopyII(group3Counts, newModelCount);
-      msInfo.put("group3Lists", group3Lists);
-      msInfo.put("group3Counts", group3Counts);
+      msInfo.put(JC.INFO_GROUP3_LISTS, group3Lists);
+      msInfo.put(JC.INFO_GROUP3_COUNTS, group3Counts);
     }
     unitCells = (unitCells == null ? new SymmetryInterface[newModelCount]
         : (SymmetryInterface[]) AU.arrayCopyObject(unitCells, newModelCount));

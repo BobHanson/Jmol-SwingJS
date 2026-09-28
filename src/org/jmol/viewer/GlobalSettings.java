@@ -25,6 +25,7 @@ public class GlobalSettings {
   Map<String, Boolean> htBooleanParameterFlags;
   Map<String, Boolean> htPropertyFlagsRemoved;
   Map<String, SV> htUserVariables = new Hashtable<String, SV>();
+
   
 
   /*
@@ -44,7 +45,7 @@ public class GlobalSettings {
     htBooleanParameterFlags = new Hashtable<String, Boolean>();
     htPropertyFlagsRemoved = new Hashtable<String, Boolean>();
     
-    loadFormat = pdbLoadFormat = JC.databases.get("pdb");
+    loadFormat = JC.databases.get("pdb");
     pdbLoadLigandFormat = JC.databases.get("ligand");
     nmrUrlFormat = JC.databases.get("nmr");
     nmrPredictFormat = JC.databases.get("nmrdb");
@@ -306,7 +307,7 @@ public class GlobalSettings {
     setB("justifyMeasurements", justifyMeasurements);
     setB("legacyAutoBonding", legacyAutoBonding);
     setB("legacyHAddition", legacyHAddition);
-    setB("legacyJavaFloat", legacyJavaFloat);
+    setB(JC.TOKEN_LEGACY_JAVA_FLOAT, legacyJavaFloat);
     setF("loadAtomDataTolerance", loadAtomDataTolerance);
     setO("loadFormat", loadFormat);
     setO("loadLigandFormat", pdbLoadLigandFormat);
@@ -474,9 +475,10 @@ public class GlobalSettings {
   boolean forceAutoBond = false;
   boolean fractionalRelative = true;// true: {1/2 1/2 1/2} relative to current (possibly offset) unit cell 
   char inlineNewlineChar = '|'; //pseudo static
-  String loadFormat, pdbLoadFormat, pdbLoadLigandFormat,
+  String loadFormat, pdbLoadLigandFormat,
       nmrUrlFormat, nmrPredictFormat, smilesUrlFormat, nihResolverFormat,
       pubChemFormat, macroDirectory, resolverResolver;
+  public final static String oldPDBFormat = JC.databases.get("pdb");
   boolean checkCIR = false;
 
 //  String edsUrlFormat = "http://eds.bmc.uu.se/eds/dfs/%c2%c3/%file/%file.omap";
@@ -494,12 +496,12 @@ public class GlobalSettings {
   boolean zeroBasedXyzRasmol = false;
   boolean legacyAutoBonding = false;
   boolean legacyHAddition = false;
-  public boolean legacyJavaFloat = true; // for Jmol-SwingJS// double/double issue with crystallographic symmetry before Jmol 14.2.5
+  public boolean legacyJavaFloat = Viewer.isHighPrecision; // for Jmol-SwingJS// double/double issue with crystallographic symmetry before Jmol 14.2.5
   /**
    * setting doublePrecision will also toggle legacyJavaFloat to doublePrecision
    * in order to avoid any rounding 
    */
-  boolean doublePrecision = false; // set true for full double precision (JavaScript only) 
+  boolean doublePrecision = Viewer.isHighPrecision;//false; // set true for full double precision (JavaScript only) 
   boolean jmolInJSpecView = true;
 
   boolean modulateOccupancy = true;

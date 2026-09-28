@@ -41,7 +41,7 @@ import org.jmol.api.SymmetryInterface;
 import org.jmol.atomdata.RadiusData;
 import org.jmol.c.VDW;
 import org.jmol.modelsetbio.BioModel;
-import org.jmol.modelsetbio.BioResolver;
+import org.jmol.modelsetbio.BioResolver.BioModelLoader;
 import org.jmol.script.T;
 import org.jmol.symmetry.Symmetry;
 import org.jmol.util.BSUtil;
@@ -114,13 +114,10 @@ public final class ModelLoader {
     info.put("loadScript", loadScript);
     initializeInfo(adapter.getFileTypeName(asc).toLowerCase().intern(), info);
     createModelSet(adapter, asc, bsNew);
-    if (info.get("lowPrecision") != null) {
-      vwr.setBooleanPropertyTok("doublePrecision", T.doubleprecision, false);      
+    bml = null;
+    if (info.get(JC.INFO_LOW_PRECISION) != null) {
+      vwr.setBooleanPropertyTok(JC.INFO_DOUBLE_PRECISION, T.doubleprecision, false);      
     }
-    
-    if (jbr != null)
-      jbr.setLoader(null);
-    jbr = null;
     // dumpAtomSetNameDiagnostics(adapter, asc);
   }
 /*
@@ -150,7 +147,7 @@ public final class ModelLoader {
   private boolean doAddPDBHydrogens;
 
   private String fileHeader;
-  private BioResolver jbr;
+  private BioModelLoader bml;
   public Group[] groups;
   private int groupCount;
   private P3d modulationTUV;
@@ -169,8 +166,8 @@ public final class ModelLoader {
     //isMultiFile = getModelSetAuxiliaryInfoBoolean("isMultiFile"); -- no longer necessary
     ms.haveBioModels = ms.getMSInfoB(JC.getBoolName(JC.GLOBAL_ISPDB));
     if (ms.haveBioModels) {
-      jbr = vwr.getJBR().setLoader(this);
-      jbr.carbohydrates = (String) info.get("carbohydrates");
+      bml = vwr.getJBR().getBioModelLoader(this);
+      bml.addMMCifCarbohydrates((String) info.get(JC.INFO_CARBOHYDRATES));
     }
     isMutate = ms.getMSInfoB("isMutate");
     jmolData = (adapterModelCount == 0 ? (Map<String, Object>) ms.getInfoM(JC.INFO_JMOL_DATA) : null);
@@ -181,7 +178,7 @@ public final class ModelLoader {
     if (isTrajectory)
       ms.trajectory = newTrajectory(ms, steps);
     isPyMOLsession = ms.getMSInfoB("isPyMOL");
-    doAddPDBHydrogens = (jbr != null && !isTrajectory && !isPyMOLsession
+    doAddPDBHydrogens = (bml != null && !isTrajectory && !isPyMOLsession
         && !ms.getMSInfoB(JC.INFO_PDB_NO_HYDROGENS) && (ms
         .getMSInfoB(T.PDB_ADD_HYDROGENS) || vwr.getBoolean(T.pdbaddhydrogens)));
     if (info != null) {
@@ -190,10 +187,10 @@ public final class ModelLoader {
       info.remove(JC.INFO_TRAJECTORY_STEPS);
       if (isTrajectory)
         ms.vibrationSteps = (Lst<V3d[]>) info.remove(JC.INFO_VIBRATION_STEPS);
-      highPrecision = info.containsKey("highPrecision");
+      highPrecision = info.containsKey(JC.INFO_HIGH_PRECISION);
       if (highPrecision) {
         // we must RESET this, because 'ZAP' has unset it in the script
-        vwr.setBooleanProperty("legacyJavaFloat", true);
+        vwr.setBooleanProperty(JC.TOKEN_LEGACY_JAVA_FLOAT, true);
       }
     }
     htGroup1 = (Map<String, String>) ms.getInfoM("htGroup1");
@@ -203,6 +200,7 @@ public final class ModelLoader {
       modulationTUV = (mod == Boolean.TRUE ? null : (P3d) mod);
     }
     noAutoBond = ms.getMSInfoB("noAutoBond");
+    
     noH = ms.getMSInfoB("noHydrogen");
     is2D = ms.getMSInfoB("is2D");
     doMinimize = (is2D && !noH || ms.getMSInfoB("minimize3D")) && ms.getMSInfoB("doMinimize");
@@ -345,10 +343,10 @@ public final class ModelLoader {
       if (merging && !appendNew) {
         Map<String, Object> info = adapter.getAtomSetAuxiliaryInfo(
             asc, 0);
-        ms.setInfo(baseModelIndex, "initialAtomCount", info
-            .get("initialAtomCount"));
-        ms.setInfo(baseModelIndex, "initialBondCount", info
-            .get("initialBondCount"));
+        ms.setInfo(baseModelIndex, JC.INFO_INITIAL_ATOM_COUNT, info
+            .get(JC.INFO_INITIAL_ATOM_COUNT));
+        ms.setInfo(baseModelIndex, JC.INFO_INITIAL_BOND_COUNT, info
+            .get(JC.INFO_INITIAL_BOND_COUNT));
       }
       initializeUnitCellAndSymmetry();
       initializeBonding();
@@ -362,13 +360,15 @@ public final class ModelLoader {
       setupMinimization();
     }
 
-    if (doAddPDBHydrogens)
-      jbr.finalizeHydrogens();
+    if (doAddPDBHydrogens) {
+      BS bsAtoms = BSUtil.newBitSet2(baseAtomIndex, ms.ac);
+      bml.finalizeHydrogens(this, bsAtoms);
+    }
 
     if (adapter != null) {
       ms.calculatePolymers(groups, groupCount, baseGroupIndex, null);
-      if (jbr != null)
-        jbr.iterateOverAllNewStructures(adapter, asc);
+      if (bml != null)
+        bml.iterateOverAllNewStructures(this, adapter, asc);
     }
 
     
@@ -473,7 +473,7 @@ public final class ModelLoader {
         BS bs = ms.getModelAtomBitSetIncludingDeleted(i, true);
         if (doAddPDBHydrogens) {
           boolean isGroup = (groupList != null && PT.isOneOf(key,  groupList));
-          value = jbr.fixPropertyValue(bs, value, isGroup);
+          value = bml.fixPropertyValue(bs, value, isGroup);
         }
         key = "property_" + key.toLowerCase();
         Logger.info("creating " + key + " for model " + ms.getModelName(i));
@@ -513,7 +513,7 @@ public final class ModelLoader {
       ms.bo = new Bond[250 + nAtoms]; // was "2 *" -- WAY overkill.
     }
     if (doAddPDBHydrogens)
-      jbr.initializeHydrogenAddition();
+      bml.initializeHydrogenAddition();
     if (trajectoryCount > 1)
       ms.mc += trajectoryCount - 1;
     ms.am = (Model[]) AU.arrayCopyObject(ms.am, ms.mc);
@@ -529,8 +529,8 @@ public final class ModelLoader {
 
   private void mergeGroups() {
     Map<String, Object> info = modelSet0.getModelSetAuxiliaryInfo(null);
-    String[] mergeGroup3Lists = (String[]) info.get("group3Lists");
-    int[][] mergeGroup3Counts = (int[][]) info.get("group3Counts");
+    String[] mergeGroup3Lists = (String[]) info.get(JC.INFO_GROUP3_LISTS);
+    int[][] mergeGroup3Counts = (int[][]) info.get(JC.INFO_GROUP3_COUNTS);
     int nLists = (mergeGroup3Lists == null ? 0 : mergeGroup3Lists.length);
     if (mergeGroup3Lists != null) {
       for (int i = 0; i < baseModelCount; i++) {
@@ -567,11 +567,12 @@ public final class ModelLoader {
     for (int i = 0; i < adapterModelCount; ++i, ++ipt) {
       int modelNumber = adapter.getAtomSetNumber(asc, i);
       String modelName = adapter.getAtomSetName(asc, i);
-      Map<String, Object> modelAuxiliaryInfo = adapter.getAtomSetAuxiliaryInfo(
-          asc, i);
+      Map<String, Object> modelAuxiliaryInfo = adapter
+          .getAtomSetAuxiliaryInfo(asc, i);
       if (modelAuxiliaryInfo.containsKey("modelID"))
         modelAuxiliaryInfo.put("modelID0", modelAuxiliaryInfo.get("modelID"));
-      Properties modelProperties = (Properties) modelAuxiliaryInfo.get("modelProperties");
+      Properties modelProperties = (Properties) modelAuxiliaryInfo
+          .get("modelProperties");
       if (!merging || appendNew) {
         String ftype = (String) modelAuxiliaryInfo.get("fileType");
         vwr.setStringProperty("_fileType", ftype);
@@ -580,22 +581,23 @@ public final class ModelLoader {
       if (modelName == null) {
         if (jmolData != null) {
           modelName = (String) jmolData.get(JC.INFO_JMOL_DATA_HEADER);
-          modelName = (modelName.indexOf(";") > 2 ? modelName.substring(modelName
-              .indexOf(":") + 2, modelName.indexOf(";")) : null);
+          if (modelName != null) {
+            modelName = (modelName.indexOf(";") > 2 ? modelName.substring(
+                modelName.indexOf(":") + 2, modelName.indexOf(";")) : null);
+          }
         }
         if (modelName == null)
-          modelName = (appendNew ? "" + (modelNumber % 1000000): "");
+          modelName = (appendNew ? "" + (modelNumber % 1000000) : "");
       }
-      setModelNameNumberProperties(ipt, iTrajectory,
-          modelName, modelNumber, modelProperties, modelAuxiliaryInfo,
-          jmolData);
+      setModelNameNumberProperties(ipt, iTrajectory, modelName, modelNumber,
+          modelProperties, modelAuxiliaryInfo, jmolData);
       //if (ms.getInfo(ipt, "periodicOriginXyz") != null)
-        //ms.someModelsHaveSymmetry = true;
+      //ms.someModelsHaveSymmetry = true;
     }
     Model m = ms.am[appendToModelIndex == null ? baseModelIndex : ms.mc - 1];
     vwr.setSmilesString((String) ms.msInfo.get("smilesString"));
     String loadState = (String) ms.msInfo.remove("loadState");
-    SB loadScript = (SB)ms.msInfo.remove("loadScript");
+    SB loadScript = (SB) ms.msInfo.remove("loadScript");
     if (loadScript.indexOf(JC.ADD_HYDROGEN_TITLE) < 0 || !m.isModelKit) {
       String[] lines = PT.split(loadState, "\n");
       SB sb = new SB();
@@ -606,8 +608,9 @@ public final class ModelLoader {
       }
       m.loadState += m.loadScript.toString() + sb.toString();
       m.loadScript = new SB();
-      if (loadScript.indexOf("load append ") >= 0 || loadScript.indexOf("data \"append ") >= 0) {
-        loadScript.insert(0,  ";var anew = appendNew;");
+      if (loadScript.indexOf("load append ") >= 0
+          || loadScript.indexOf("data \"append ") >= 0) {
+        loadScript.insert(0, ";var anew = appendNew;");
         loadScript.append(";set appendNew anew");
       }
       m.loadScript.append("  ").appendSB(loadScript).append(";\n");
@@ -637,14 +640,14 @@ public final class ModelLoader {
     if (appendNew) {
       boolean modelIsPDB = (modelAuxiliaryInfo != null && Boolean.TRUE == modelAuxiliaryInfo
           .get(JC.getBoolName(JC.GLOBAL_ISPDB)));
-      ms.am[modelIndex] = (modelIsPDB ? jbr.getBioModel(modelIndex,
+      ms.am[modelIndex] = (modelIsPDB ? bml.getBioModel(modelIndex,
           trajectoryBaseIndex, jmolData, modelProperties, modelAuxiliaryInfo)
           : new Model().set(ms, modelIndex, trajectoryBaseIndex, jmolData,
               modelProperties, modelAuxiliaryInfo));
       ms.modelNumbers[modelIndex] = modelNumber;
       ms.modelNames[modelIndex] = modelName;
       if (modelIsPDB)
-        jbr.setGroupLists(modelIndex);
+        setGroupLists(modelIndex);
     } else {
       Object atomInfo = modelAuxiliaryInfo
           .get("PDB_CONECT_firstAtom_count_max");
@@ -673,6 +676,16 @@ public final class ModelLoader {
         || modelName.startsWith(JC.JMOL_MODEL_KIT) 
         || "Jme".equals(ms.getInfo(modelIndex, "fileType")) && is2D);
     models[modelIndex].isModelKit = isModelKit;
+  }
+
+  private void setGroupLists(int ipt) {
+    int group3Count = bml.getGroup3Count();
+      group3Lists[ipt + 1] = Group.standardGroupList;
+      group3Counts[ipt + 1] = new int[group3Count + 10];
+      if (group3Lists[0] == null) {
+        group3Lists[0] = Group.standardGroupList;
+        group3Counts[0] = new int[group3Count + 10];
+      }
   }
 
   /**
@@ -831,8 +844,8 @@ public final class ModelLoader {
         isPdbThisModel = model.isBioModel;
         iLast = modelIndex;
         addH = isPdbThisModel && doAddPDBHydrogens;
-        if (jbr != null)
-          jbr.setHaveHsAlready(false);
+        if (bml != null)
+          bml.setHaveHsAlready(false);
       }
       String group3 = iterAtom.getGroup3();
       int chainID = iterAtom.getChainID();
@@ -840,7 +853,7 @@ public final class ModelLoader {
             iterAtom.getInsertionCode(), addH, isLegacyHAddition);
       int isotope = iterAtom.getElementNumber();
       if (addH && Elements.getElementNumber(isotope) == 1)
-        jbr.setHaveHsAlready(true);
+        bml.setHaveHsAlready(true);
       String name = iterAtom.getAtomName();
       int charge = (addH ? getPdbCharge(group3, name) : iterAtom.getFormalCharge());
       Atom atom = addAtom(isPdbThisModel, iterAtom, name, isotope, siteBase, charge, group3); 
@@ -848,7 +861,7 @@ public final class ModelLoader {
         htAtomMap.put(iterAtom.getUniqueID(), atom);
     }
     if (groupCount > 0 && addH) {
-      jbr.addImplicitHydrogenAtoms(adapter, groupCount - 1,
+      bml.addImplicitHydrogenAtoms(this, adapter, groupCount - 1,
           isNewChain && !isLegacyHAddition ? 1 : 0);
     }
     iLast = -1;
@@ -889,7 +902,7 @@ public final class ModelLoader {
       return;
     @SuppressWarnings("unchecked")
     Map<String, double[]> props = (Map<String, double[]>) jmolDataProperties.get(JC.INFO_JMOL_DATA_PROPERTIES);
-    if (props.containsKey("spinZ"))
+    if (props == null || props.containsKey("spinZ"))
       return;
     BS bs = m.bsAtoms;
     int nAtoms = bs.cardinality();
@@ -933,7 +946,7 @@ public final class ModelLoader {
    * @return 0, 1, or -1
    */
   private int getPdbCharge(String group3, String name) {
-    return (group3.equals("ARG") && name.equals("NH1")
+    return (group3.equals("ARG") && name.equals("NH2")
         || group3.equals("LYS") && name.equals("NZ")
         || group3.equals("HIS") && name.equals("ND1") ? 1 
 //            : name.equals("OXT") || group3.equals("GLU") && name.equals("OE2")
@@ -1000,8 +1013,8 @@ public final class ModelLoader {
         || groupInsertionCode != currentGroupInsertionCode
         || group3i != currentGroup3) {
       if (groupCount > 0 && addH) {
-        jbr.addImplicitHydrogenAtoms(adapter, groupCount - 1, isNewChain && !isLegacyHAddition? 1 : 0);
-        jbr.setHaveHsAlready(false);
+        bml.addImplicitHydrogenAtoms(this, adapter, groupCount - 1, isNewChain && !isLegacyHAddition? 1 : 0);
+        bml.setHaveHsAlready(false);
       }
       currentGroupSequenceNumber = groupSequenceNumber;
       currentGroupInsertionCode = groupInsertionCode;
@@ -1221,10 +1234,10 @@ public final class ModelLoader {
     boolean forceAutoBond = vwr.getBoolean(T.forceautobond);
     BS bs = null;
     boolean autoBonding = false;
-    if (!noAutoBond)
+    if (!noAutoBond) {
       for (int i = baseModelIndex; i < modelCount; i++) {
         modelAtomCount = models[i].bsAtoms.cardinality();
-        int modelBondCount = ms.getInfoI(i, "initialBondCount");
+        int modelBondCount = ms.getInfoI(i, JC.INFO_INITIAL_BOND_COUNT);
 
         boolean modelIsPDB = models[i].isBioModel;
         if (modelBondCount < 0) {
@@ -1239,12 +1252,17 @@ public final class ModelLoader {
         // use ATOM, so that's a problem. Those atoms would not be excluded from
         // the
         // automatic bonding, and additional bonds might be made.
-        boolean doBond = (forceAutoBond || doAutoBond && (modelBondCount == 0
-            || modelIsPDB && jmolData == null
-                && (ms.getMSInfoB("havePDBHeaderName")
-                    || modelBondCount < modelAtomCount / 2)
-            || ms.getInfoB(i, "hasSymmetry") && !symmetryAlreadyAppliedToBonds
-                && !ms.getInfoB(i, "hasBonds")));
+        boolean doBond = (forceAutoBond 
+            || doAutoBond 
+              && (modelBondCount == 0 
+                || (modelIsPDB && jmolData == null
+                    && (modelBondCount < modelAtomCount / 2
+                        || ms.getMSInfoB(JC.INFO_PDB_HAVE_HEADER_NAME)
+                        || ms.getMSInfoB(JC.INFO_MMCIF_ALL_BONDS)))
+                || (!symmetryAlreadyAppliedToBonds && ms.getInfoB(i, JC.INFO_HAS_SYMMETRY)
+                  && !ms.getInfoB(i, JC.INFO_CIF_HAS_BONDS))
+              )
+        );
         if (!doBond)
           continue;
         autoBonding = true;
@@ -1255,6 +1273,7 @@ public final class ModelLoader {
             bs.or(models[i].bsAtoms);
         }
       }
+    }
     if (modulationOn)
       ms.setModulation(null, true, modulationTUV, false);
     if (autoBonding) {
@@ -1281,8 +1300,8 @@ public final class ModelLoader {
           firstAtomIndexes[i], (i == groupCount - 1 ? ms.ac
               : firstAtomIndexes[i + 1]) - 1);
     if (group3Lists != null) {
-      ms.msInfo.put("group3Lists", group3Lists);
-      ms.msInfo.put("group3Counts", group3Counts);
+      ms.msInfo.put(JC.INFO_GROUP3_LISTS, group3Lists);
+      ms.msInfo.put(JC.INFO_GROUP3_COUNTS, group3Counts);
       for (int i = 0; i < group3Counts.length; i++)
         if (group3Counts[i] == null)
           group3Counts[i] = new int[0];
@@ -1311,20 +1330,15 @@ public final class ModelLoader {
     if (lastAtomIndex < firstAtomIndex)
       throw new NullPointerException();
     
-    Group group = (group3 == null || jbr == null ? null : jbr
-        .distinguishAndPropagateGroup(chain, group3, seqcode, firstAtomIndex,
+    Group group = (group3 == null || bml == null ? null : bml.distinguishAndPropagateGroup(chain, group3, seqcode, firstAtomIndex,
             lastAtomIndex, specialAtomIndexes, ms.at));
-    String key;
     if (group == null) {
       group = new Group().setGroup(chain, group3, seqcode, firstAtomIndex,
           lastAtomIndex);
-      if (jbr != null)
-        group.groupID = jbr.getGroupID(group3);
-      key = "o>";
-    } else {
-      key = (group.isProtein() ? "p>" : group.isNucleic() ? "n>" : group
-          .isCarbohydrate() ? "c>" : "o>");
+      if (bml != null)
+        group.groupID = bml.getGroupID(group3);
     }
+    String key = group.getGroupMenuKey();
     if (group3 != null) {
       countGroup(ms.at[firstAtomIndex].mi, key, group3);
       if (group.isNucleic()) {
@@ -1336,7 +1350,6 @@ public final class ModelLoader {
     groups[groupIndex] = chain.addGroup(group, groupIndex);
     for (int i = lastAtomIndex + 1; --i >= firstAtomIndex;)
         ms.at[i].group = group;
-
   }
 
   private void countGroup(int modelIndex, String code, String group3) {
@@ -1638,8 +1651,9 @@ public final class ModelLoader {
   }
 
   
-  public static String createAtomDataSet(Viewer vwr, ModelSet modelSet, int tokType, Object asc,
-                                BS bsSelected) {
+  public static String createAtomDataSet(Viewer vwr, ModelSet modelSet,
+                                         int tokType, Object asc,
+                                         BS bsSelected) {
     if (asc == null)
       return null;
     // must be one of JmolConstants.LOAD_ATOM_DATA_TYPES
@@ -1656,8 +1670,7 @@ public final class ModelLoader {
         }
     int i = -1;
     int n = 0;
-    boolean loadAllData = (BSUtil.cardinalityOf(bsSelected) == vwr
-        .ms.ac);
+    boolean loadAllData = (BSUtil.cardinalityOf(bsSelected) == vwr.ms.ac);
     for (JmolAdapterAtomIterator iterAtom = adapter
         .getAtomIterator(asc); iterAtom.hasNext();) {
       P3d xyz = iterAtom.getXYZ();
@@ -1670,12 +1683,12 @@ public final class ModelLoader {
           break;
         n++;
         if (Logger.debugging)
-          Logger.debug("atomIndex = " + i + ": " + atoms[i]
-              + " --> (" + xyz.x + "," + xyz.y + "," + xyz.z);
-//        modelSet.setPrecisionCoord(i, xyz, true);
+          Logger.debug("atomIndex = " + i + ": " + atoms[i] + " --> (" + xyz.x
+              + "," + xyz.y + "," + xyz.z);
+        modelSet.setAtomCoord(i, xyz.x, xyz.y, xyz.z);
         continue;
       }
-      xyz.setT(pt);
+      pt.setT(xyz);
       BS bs = BS.newN(modelSet.ac);
       modelSet.getAtomsWithin(tolerance, pt, bs, -1);
       bs.and(bsSelected);
@@ -1685,33 +1698,36 @@ public final class ModelLoader {
           Logger.warn("createAtomDataSet: no atom found at position " + pt);
           continue;
         } else if (n > 1 && Logger.debugging) {
-          Logger.debug("createAtomDataSet: " + n + " atoms found at position "
-              + pt);
+          Logger.debug(
+              "createAtomDataSet: " + n + " atoms found at position " + pt);
         }
       }
-      switch (tokType) {
-      case T.vibxyz:
+      if (tokType == T.vibxyz) {
         V3d vib = iterAtom.getVib();
-        if (vib == null)
-          continue;
-        if (Logger.debugging)
-          Logger.debug("xyz: " + pt + " vib: " + vib);
-        modelSet.setAtomCoords(bs, T.vibxyz, vib);
-        break;
+        if (vib != null) {
+          if (Logger.debugging)
+            Logger.debug("xyz: " + pt + " vib: " + vib);
+          modelSet.setAtomCoords(bs, T.vibxyz, vib);
+        }
+        continue;
+      }
+      double d = Double.NaN;
+      switch (tokType) {
       case T.occupancy:
         // [0 to 100], default 100
-        modelSet.setAtomProperty(bs, tokType, 0, iterAtom.getOccupancy(), null, null,
-            null);
+        d = iterAtom.getOccupancy();
         break;
       case T.partialcharge:
         // anything but NaN, default NaN
-        modelSet.setAtomProperty(bs, tokType, 0, iterAtom.getPartialCharge(), null,
-            null, null);
+        d = iterAtom.getPartialCharge();
         break;
       case T.temperature:
         // anything but NaN but rounded to 0.01 precision and stored as a short (-32000 - 32000), default NaN
-        modelSet.setAtomProperty(bs, tokType, 0, iterAtom.getBfactor(), null, null, null);
+        d = iterAtom.getBfactor();
         break;
+      }
+      if (!Double.isNaN(d)) {
+        modelSet.setAtomProperty(bs, tokType, 0, d, null, null, null);
       }
     }
     //finally:

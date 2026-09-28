@@ -31,7 +31,6 @@ import java.util.Set;
 import org.jmol.api.JmolAnnotationParser;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
-import org.jmol.modelset.Group;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelsetbio.BioResolver;
 import org.jmol.script.SV;
@@ -804,8 +803,6 @@ public class AnnotationParser implements JmolAnnotationParser {
     return sb.toString();
   }
 
-  private static Map<String, String> pdbAtomForH;
-
   /**
    * Finds the standard attached heavy atom for a PDB H atom; used in EBI clash
    * validation.
@@ -815,48 +812,7 @@ public class AnnotationParser implements JmolAnnotationParser {
    * @return name of attached atom or hName
    */
   public String getAttachedAtomForPDBH(String group3, String name) {
-    if (name.charAt(0) == 'H') {
-      if (pdbAtomForH == null) {
-        pdbAtomForH = new Hashtable<String, String>();
-        assignPDBH(
-            "",
-            "N H H1 H2 H3 CB HB2 HB3 CD HD2 HD3 CG HG2 HG3 C2' H2'' H2' C5' H5'' H5' OXT HXT");
-        
-        for (int i = BioResolver.pdbBondInfo.length; --i >= 1;) {
-          assignPDBH(Group.group3Names[i], BioResolver.pdbBondInfo[i]);
-        }
-      }
-      String a = pdbAtomForH.get(name);
-      if (a == null)
-        a = pdbAtomForH.get(group3 + name);
-      if (a != null)
-        return a;
-    }
-    return name;
-  }
-
-  private void assignPDBH(String group3, String sNames) {
-    String[] names = PT.getTokens(PT.rep(sNames, "@", " "));
-    String a = null;
-    for (int i = 0, n = names.length; i < n; i++) {
-      String s = names[i];
-      if (s.charAt(0) != 'H') {
-        // just assigning attached atom
-        a = s;
-        continue;
-      }
-      // this is an H
-      s = group3 + s;
-      if (s.indexOf("?") >= 0) {
-        // CH3 groups
-        s = s.substring(0, s.length() - 1);
-        pdbAtomForH.put(s + "1", a);
-        pdbAtomForH.put(s + "2", a);
-        pdbAtomForH.put(s + "3", a);
-      } else {
-        pdbAtomForH.put(s, a);
-      }
-    }
+    return (name.charAt(0) == 'H' ? BioResolver.getPDBHAtomForH(group3, name) : name);
   }
 
   /**

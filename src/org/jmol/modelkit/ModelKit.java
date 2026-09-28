@@ -787,7 +787,7 @@ public class ModelKit {
     sym.toFractional(fa, false);
     P3d fb = P3d.newP(b);
     sym.toFractional(fb, false);
-    return sym.getTransform(fa, fb, true);
+    return sym.getTransform(fa, fb);
   }
 
   protected static String getKey(int modelIndex, char ext) {
@@ -3635,7 +3635,7 @@ public class ModelKit {
       P3d p = P3d.newP(vwr.ms.at[i]);
       P3d p0 = P3d.newP(p);
       sg.toFractional(p, false);
-      M4d m = sg.getTransform(fa, p, false);
+      M4d m = sg.getTransform(fa, p);
       if (m == null) {
         return false;
       }
@@ -3652,9 +3652,8 @@ public class ModelKit {
     for (int k = points.length; --k >= 0;) {
       fb.setT(points[k]);
       sg.toFractional(fb, false);
-      M4d m = sg.getTransform(fa, fb, false);
+      M4d m = sg.getTransform(fa, fb);
       if (m == null) {
-        //        m = sg.getTransform(fa, fb, true);
         return false;
       }
       for (int i = points.length; --i > k;) {

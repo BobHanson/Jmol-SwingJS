@@ -56,12 +56,12 @@ import javajs.util.PT;
 public class JmolDataReader extends PdbReader {
 
   
-  private Map<String, double[]> props;
   private String[] residueNames;
   private String[] atomNames;
   private boolean isSpin;
   private double spinFactor;
   private int originatingModel = -1;
+  private Map<String, double[]> props;
   private String jmolDataHeader;
   private P3d[] jmolDataScaling;
   
@@ -82,7 +82,6 @@ public class JmolDataReader extends PdbReader {
       case 0: //Jmol PDB-encoded data
         props = new Hashtable<String, double[]>();
         isSpin = (line.indexOf(": spin;") >= 0);
-        originatingModel = -1;
         int pt = line.indexOf("for model ");
         if (pt > 0)
           originatingModel = PT.parseInt(line.substring(pt + 10));
@@ -174,7 +173,7 @@ public class JmolDataReader extends PdbReader {
           unitCellOffset.scale(-1);
           getSymmetry();
           symmetry.toFractional(unitCellOffset, false);
-          unitCellOffset.scaleAdd2(-1d, minXYZ, unitCellOffset);
+          unitCellOffset.scaleAdd2(-1, minXYZ, unitCellOffset);
           symmetry.setOffsetPt(unitCellOffset);
           doApplySymmetry = true;
         }
@@ -218,13 +217,24 @@ public class JmolDataReader extends PdbReader {
   protected void finalizeSubclassReader() throws Exception {
     if (jmolDataHeader == null)
       return;
-    Map<String, Object> info = new Hashtable<>();
-    info.put(JC.INFO_JMOL_DATA_HEADER, jmolDataHeader);
-    info.put(JC.INFO_JMOL_DATA_ORIGINATING_MODEL, Integer.valueOf(originatingModel));
-    info.put(JC.INFO_JMOL_DATA_PROPERTIES, props);
-    info.put(JC.INFO_JMOL_DATA_SCALING, jmolDataScaling);
-    asc.setInfo(JC.INFO_JMOL_DATA, info);
+    setJmolDataInfo(props, jmolDataHeader, originatingModel, jmolDataScaling);
     finalizeReaderPDB();
+  }
+
+  private void setJmolDataInfo(Map<String, double[]> props,
+                               String jmolDataHeader, int originatingModel,
+                               P3d[] jmolDataScaling) {
+    Map<String, Object> info = new Hashtable<>();
+    if (props != null)
+      info.put(JC.INFO_JMOL_DATA_PROPERTIES, props);
+    if (originatingModel >= 0)
+      info.put(JC.INFO_JMOL_DATA_ORIGINATING_MODEL,
+          Integer.valueOf(originatingModel));
+    if (jmolDataScaling != null)
+      info.put(JC.INFO_JMOL_DATA_SCALING, jmolDataScaling);
+    if (jmolDataHeader != null)
+      info.put(JC.INFO_JMOL_DATA_HEADER, jmolDataHeader);
+    asc.setInfo(JC.INFO_JMOL_DATA, info);
   }
 
   public String[] getJmolDataFrameScripts(Viewer vwr, int tok,
@@ -237,6 +247,9 @@ public class JmolDataReader extends PdbReader {
     default:
       script = "frame 0.0; frame last; reset;select visible;wireframe only;";
       break;
+    case T.reciprocallattice:
+      script = "frame 0.0; frame last; reset;select visible;spacefill -0.1;";
+      break;      
     case T.property:
       vwr.setFrameTitle(modelCount - 1,
           type + " plot for model " + vwr.getModelNumberDotted(modelIndex));
@@ -289,7 +302,9 @@ public class JmolDataReader extends PdbReader {
      
   public Object[] getJmolDataFrameProperties(ScriptEval e, int tok,
                                                     int[] propToks,
-                                                    String[] props, BS bs,
+                                                    String[] props, 
+                                                    double[][] data, 
+                                                    BS bs,
                                                     P3d minXYZ, P3d maxXYZ,
                                                     String format,
                                                     boolean isPdbFormat)
@@ -298,24 +313,25 @@ public class JmolDataReader extends PdbReader {
 
     double pdbFactor = 1;
     double[] dataX = null, dataY = null, dataZ = null, data3 = null;
-    dataX = e.getBitsetPropertyFloat(bs, propToks[0] | T.selectedfloat,
+    int dataLength = (data == null ? 0 : data.length);
+    dataX = (dataLength > 0 ? data[0] : e.getBitsetPropertyFloat(bs, propToks[0] | T.selectedfloat,
         propToks[0] == T.property ? props[0] : null,
         (minXYZ == null ? Double.NaN : minXYZ.x),
-        (maxXYZ == null ? Double.NaN : maxXYZ.x));
+        (maxXYZ == null ? Double.NaN : maxXYZ.x)));
     String[] propData = new String[4];
     propData[0] = props[0] + " " + Escape.eAD(dataX);
     if (props[1] != null) {
-      dataY = e.getBitsetPropertyFloat(bs, propToks[1] | T.selectedfloat,
+      dataY = (dataLength > 1 ? data[1] : e.getBitsetPropertyFloat(bs, propToks[1] | T.selectedfloat,
           propToks[1] == T.property ? props[1] : null,
           (minXYZ == null ? Double.NaN : minXYZ.y),
-          (maxXYZ == null ? Double.NaN : maxXYZ.y));
+          (maxXYZ == null ? Double.NaN : maxXYZ.y)));
       propData[1] = props[1] + " " + Escape.eAD(dataY);
     }
     if (props[2] != null) {
-      dataZ = e.getBitsetPropertyFloat(bs, propToks[2] | T.selectedfloat,
+      dataZ = (dataLength > 2 ? data[2] : e.getBitsetPropertyFloat(bs, propToks[2] | T.selectedfloat,
           propToks[2] == T.property ? props[2] : null,
           (minXYZ == null ? Double.NaN : minXYZ.z),
-          (maxXYZ == null ? Double.NaN : maxXYZ.z));
+          (maxXYZ == null ? Double.NaN : maxXYZ.z)));
       propData[2] = props[2] + " " + Escape.eAD(dataZ);
     }
     if (props[3] != null) {
@@ -323,6 +339,8 @@ public class JmolDataReader extends PdbReader {
           propToks[3] == T.property ? props[3] : null, Double.NaN, Double.NaN);
       propData[3] = props[3] + " " + Escape.eAD(data3);
     }
+    
+    
     if (minXYZ == null)
       minXYZ = P3d.new3(getPlotMinMax(dataX, false, propToks[0]),
           getPlotMinMax(dataY, false, propToks[1]),
@@ -340,8 +358,13 @@ public class JmolDataReader extends PdbReader {
       center = new P3d();
       center.ave(maxXYZ, minXYZ);
       factors.sub2(maxXYZ, minXYZ);
-      if (tok != T.spin)
+      switch (tok) {
+      case T.spin:
+      case T.reciprocallattice:
+        break;
+      default:
         factors.set(factors.x / 200, factors.y / 200, factors.z / 200);
+      }
       if (T.tokAttr(propToks[0], T.intproperty)) {
         factors.x = 1;
         center.x = 0;
@@ -389,15 +412,15 @@ public class JmolDataReader extends PdbReader {
     case T.straightness:
       return (isMax ? 1 : -1);
     }
-    double fmax = (isMax ? -1E10d : 1E10d);
+    double fminmax = (isMax ? -1E10d : 1E10d);
     for (int i = data.length; --i >= 0;) {
       double f = data[i];
       if (Double.isNaN(f))
         continue;
-      if (isMax == (f > fmax))
-        fmax = f;
+      if (isMax == (f > fminmax))
+        fminmax = f;
     }
-    return fmax;
+    return fminmax;
   }
 
   /**

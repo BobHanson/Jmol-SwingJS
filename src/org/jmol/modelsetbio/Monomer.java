@@ -545,7 +545,7 @@ public abstract class Monomer extends Group {
 
   @Override
   public void setGroupID(String group3) {
-    groupID = BioResolver.getGroupIdFor(group3);
+    groupID = BioResolver.getGroupIdStatic(group3);
   }
   
   @Override

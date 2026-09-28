@@ -37,7 +37,7 @@ public interface JmolPropertyManager {
 
   String getPdbAtomData(BS bs, OC out, boolean asPQR, boolean doTransform, boolean allTrajectories);
 
-  String getPdbData(int modelIndex, String type, BS bsA, Object[] parameters,
+  String getPdbData(int modelIndex, int tok, String type, BS bsA, Object[] parameters,
                     OC oc, boolean addStructure);
 
   String getModelCml(BS bs, int nAtomsMax, boolean addBonds, boolean doTransform, boolean allTrajectories);

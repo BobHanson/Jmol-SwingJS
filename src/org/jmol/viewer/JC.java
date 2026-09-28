@@ -222,8 +222,7 @@ public final class JC {
       // ' at start indicates a Jmol script evaluation
       "ams",
       "'https://www.rruff.net/AMS/jsmol_search.php?'+(0+'%file'==0? 'mineral':'id')+'=%file&filetype=cif#_DOCACHE_'",
- //pre-2025.11.14     "'https://rruff.geo.arizona.edu/AMS/viewJmol.php?'+(0+'%file'==0? 'mineral':('%file'.length==7? 'amcsd':'id'))+'=%file&action=showcif#_DOCACHE_'",
-      
+      //pre-2025.11.14     "'https://rruff.geo.arizona.edu/AMS/viewJmol.php?'+(0+'%file'==0? 'mineral':('%file'.length==7? 'amcsd':'id'))+'=%file&action=showcif#_DOCACHE_'",     
       // updated 2026.04.22
       "dssr", // for sending a PDB ID to the DSSR server
       "https://jmol.x3dna-dssr.org/report.php?id=%FILE", //for debugging, add -blocks",     
@@ -246,14 +245,15 @@ public final class JC {
       "chebi",
       "https://www.ebi.ac.uk/chebi/saveStructure.do?defaultImage=true&chebiId=%file%2D%",
       "ligand", "https://files.rcsb.org/ligands/download/%FILE.cif", 
-//      "mp",
-//      "https://www.materialsproject.org/materials/mp-%FILE/cif#_DOCACHE_", // e.g. https://materialsproject.org/rest/v1/materials/mp-24972/cif 
       "nci", "https://cactus.nci.nih.gov/chemical/structure/", 
       "pdb",
-      "https://files.rcsb.org/download/%FILE.pdb", // new Jmol 14.4.4 3/2016
+      "https://files.rcsb.org/download/%FILE.pdb", 
+      "pdb12",
+      "https://files.wwpdb.org/download/%pdb12%", 
       "pdb0", "https://files.rcsb.org/download/%FILE.pdb", // used in JSmol
       "pdbe", "https://www.ebi.ac.uk/pdbe/entry-files/download/%file.cif",
       "pdbe2", "https://www.ebi.ac.uk/pdbe/static/entry/%file_updated.cif",
+      "wwpdbfull", "https://files.wwpdb.org/pub/wwpdb/pdb/data/entries/%c6%c7/pdb_%file/structures/pdb_%file.pdb.gz",
       "pubchem",
       "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d",
       "map",
@@ -261,9 +261,9 @@ public final class JC {
       "pdbemap", "https://www.ebi.ac.uk/pdbe/coordinates/files/%file.ccp4",
       "pdbemapdiff",
       "https://www.ebi.ac.uk/pdbe/coordinates/files/%file_diff.ccp4",
-      "pdbemapserver",
+      "pdbemapserver", // isosurface eds
       "https://www.ebi.ac.uk/pdbe/volume-server/x-ray/%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif",
-      "pdbemapdiffserver",
+      "pdbemapdiffserver", // isosurface edsdiff
       "https://www.ebi.ac.uk/pdbe/volume-server/x-ray/%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif&diff=1", // last bit is just mine
       //"emdbmap", "https://ftp.ebi.ac.uk/pub/databases/emdb/structures/EMD-%file/map/emd_%file.map.gz", // https did not work in Java due to certificate issues
       // was considerably slower
@@ -273,7 +273,7 @@ public final class JC {
       "https://www.ebi.ac.uk/emdb/api/search/fitted_pdbs:%file?fl=emdb_id,map_contour_level_value&wt=csv", // to get the EMDB id from the PDB id
       "emdbmapserver",
       "https://www.ebi.ac.uk/pdbe/volume-server/emd/emd-%file/box/0,0,0/0,0,0?detail=6&space=cartesian&encoding=bcif",
-      "xxxresolverResolver", "https://chemapps.stolaf.edu/resolver", 
+      "xxxresolverResolver", "https://chemapps.stolaf.edu/resolver", //
       "smiles2d",
       "https://cactus.nci.nih.gov/chemical/structure/%FILE/file?format=sdf&operator=remove_hydrogens",
       "smiles3d",
@@ -334,6 +334,80 @@ public final class JC {
 //  }
 
   final static String legacyResolver = "cactus.nci.nih.gov/chemical/structure";
+  final static String legacyRCSBURL = "files.rcsb.org/download/";
+  final static String legacyEBIURL = "www.ebi.ac.uk/pdbe/entry-files/download/";
+  final static String legacyEBI2URL = "www.ebi.ac.uk/pdbe/static/entry/";
+  final static String wwPDBURL = "https://files.wwpdb.org/download/";
+  final static String wwPDBbetaURL = "https://files-beta.wwpdb.org/pub/wwpdb/pdb/data/entries/";
+      
+      // https://files-beta.wwpdb.org/pub/wwpdb/pdb/data/entries/[2-letter-hash]/[extended-PDB-ID]/structures/
+
+  public static String updateURL(String url) {
+    return (url.indexOf("https") < 0 ? url 
+        : url.indexOf("pdbe") >= 0 ? updatePDBE4(url) 
+        : url.indexOf("rcsb") >= 0 ? updateRCSB4(url) 
+        : fixPDBBeta(url));
+  }
+  
+  private static String updatePDBE4(String url) {
+    if (url.indexOf("#nobeta") >= 0) {
+      return url;
+    }
+    int pt = after(url, legacyEBIURL);
+    if (pt < 0)
+      pt = after(url, legacyEBI2URL);
+    return (pt >= 0 ? resolveDataBase("pdb12", url.substring(pt), null) : url);
+  }
+
+  private static String updateRCSB4(String url) {
+    if (url.indexOf("#nobeta") >= 0) {
+      return url;
+    }
+    int pt = after(url, legacyRCSBURL);
+    if (pt >= 0) {
+      url = resolveDataBase("pdb12", url.substring(pt), null);
+      if (url.indexOf(".pdb") >= 0)
+        return fixPDBBeta(url);
+    }
+    return url;
+  }
+
+  private static String fixPDBBeta(String url) {
+    // https://files.wwpdb.org/download/pdb_00001crn.pdb.gz
+    if (url.indexOf("#nobeta") >= 0) {
+      return url;
+    }
+    int pt = after(url, wwPDBbetaURL);
+    if (isPdbBeta()) {
+      if (pt >= 0 || url.indexOf(".pdb") < 0)
+        return url;
+      // this would be OK except for the bug in the shortlink
+      // if that gets fixed, then we can remove this code block
+      pt = url.indexOf("pdb_");
+      String code = url.substring(pt + 4, pt + 12);
+      url = resolveDataBase("wwpdbfull", code, null);
+      url = url.replace("/files", "/files-beta");
+    } else if (pt >= 0) {
+      // keep full path for PDB files from scripts that have been created between 9/2026 and 9/2027
+      url = PT.rep(url, "-beta", "");
+      // we are not assuming here that the short path will be fixed at some point
+    }
+    System.out.println("JC.fixPDBBeta using " + url);
+    return url;
+  }
+
+  private final static int aug24_2027_sec = 1819165622; // Tue Aug 24 22:47:02 CDT 2027
+
+  private static boolean isPdbBeta() {
+    // Jmol will switch over to the standard wwpdb with PDB files on Aug 24, 2027.
+    // Until then, we use the full beta wwpdb URL
+    return (System.currentTimeMillis()/1000 < aug24_2027_sec);
+  }
+
+  private static int after(String url, String part) {
+    int pt = url.indexOf(part);
+    return (pt >= 0 ? pt + part.length() : -1);
+  }
 
   final static Map<String, String> databases = new Hashtable<String, String>();
 
@@ -348,7 +422,8 @@ public final class JC {
     }
   }
 
-  public static String resolveDataBase(String database, String id, String format) {
+  public static String resolveDataBase(String database, String id,
+                                       String format) {
     if (format == null) {
       if ((format = databases.get(database.toLowerCase())) == null)
         return null;
@@ -377,10 +452,43 @@ public final class JC {
         if (format.indexOf("%c" + i) >= 0)
           format = PT.rep(format, "%c" + i,
               id.substring(i - 1, i).toLowerCase());
+    if (format.indexOf("%pdb12%") >= 0) {
+      int pt = id.indexOf('.');
+      String code = (pt < 0 ? id : id.substring(0, pt));
+      switch (code.length()) {
+      case 4:
+        // 1crn.cif
+        // 1crn.pdb
+        // 1crn
+        id = "pdb_0000" + id;
+        break;
+      case 8:
+        // 00001crn
+        id = "pdb_" + id;
+        break;
+      }
+      if (pt < 0) {
+        id += ".cif.gz";
+      } else {
+        int pt2 = id.lastIndexOf(".cif");
+        if (pt2 > 12)
+          id = id.substring(0, pt2) + id.substring(pt2 + 4);
+        if (!id.endsWith(".gz")) {
+          id += ".gz";
+        }
+      }
+        return PT.rep(format, "%pdb12%", id.toLowerCase());
+    }
+    String suffix = "";
+    int pt = id.indexOf("#");
+    if (pt >= 0) {
+      suffix = id.substring(pt);
+      id = id.substring(0, pt);
+    }      
     return (format.indexOf("%FILE") >= 0 ? PT.rep(format, "%FILE", id)
         : format.indexOf("%file") >= 0
             ? PT.rep(format, "%file", id.toLowerCase())
-            : format + id);
+            : format + id) + suffix;
   }
 
   /**
@@ -434,7 +542,7 @@ public final class JC {
   //    return null;
   //  }
 
-  public final static String copyright = "(C) 2005-2025 Jmol Development";
+  public final static String copyright = "(C) 2005-2026 Jmol Development";
 
   public final static String version;
   public static String majorVersion;
@@ -444,49 +552,41 @@ public final class JC {
   static {
     String tmpVersion = null;
     String tmpDate = null;
-
-    //    /**
-    //     * definitions are incorporated into j2s/java/core.z.js by buildtojs.xml
-    //     * 
-    //     * @j2sNative
-    //     * 
-    //     *            tmpVersion = Jmol.___JmolVersion; tmpDate = Jmol.___JmolDate;
-    //     */
-    //    {
-    BufferedInputStream bis = null;
-    InputStream is = null;
-    try {
-      // Reading version from resource   inside jar
-      is = JC.class.getClassLoader().getResourceAsStream(
-          /** @j2sNative "core/Jmol.properties" || */
-          "org/jmol/viewer/Jmol.properties");
-      bis = new BufferedInputStream(is);
-      Properties props = new Properties();
-      props.load(bis);
-      String s = props.getProperty("Jmol.___JmolVersion", tmpVersion);
-      if (s != null && s.lastIndexOf("\"") > 0)
-        s = s.substring(0, s.lastIndexOf("\"") + 1);
-      tmpVersion = PT.trimQuotes(s);
-      tmpDate = PT.trimQuotes(props.getProperty("Jmol.___JmolDate", tmpDate));
-    } catch (Exception e) {
-      // Nothing to do
-    } finally {
-      if (bis != null) {
-        try {
-          bis.close();
-        } catch (Exception e) {
-          // Nothing to do
+    { // j2sNative block here in legacy Jmol
+      BufferedInputStream bis = null;
+      InputStream is = null;
+      try {
+        // Reading version from resource   inside jar
+        is = JC.class.getClassLoader().getResourceAsStream(
+            /** @j2sNative "core/Jmol.properties" || */
+            "org/jmol/viewer/Jmol.properties");
+        bis = new BufferedInputStream(is);
+        Properties props = new Properties();
+        props.load(bis);
+        String s = props.getProperty("Jmol.___JmolVersion", tmpVersion);
+        if (s != null && s.lastIndexOf("\"") > 0)
+          s = s.substring(0, s.lastIndexOf("\"") + 1);
+        tmpVersion = PT.trimQuotes(s);
+        tmpDate = PT.trimQuotes(props.getProperty("Jmol.___JmolDate", tmpDate));
+      } catch (Exception e) {
+        // Nothing to do
+      } finally {
+        if (bis != null) {
+          try {
+            bis.close();
+          } catch (Exception e) {
+            // Nothing to do
+          }
         }
-      }
-      if (is != null) {
-        try {
-          is.close();
-        } catch (Exception e) {
-          // Nothing to do
+        if (is != null) {
+          try {
+            is.close();
+          } catch (Exception e) {
+            // Nothing to do
+          }
         }
       }
     }
-    //    }
     if (tmpDate != null) {
       tmpDate = tmpDate.substring(7, 23);
       // NOTE : date is updated in the properties by SVN, and is in the format
@@ -496,10 +596,10 @@ public final class JC {
     }
     version = (tmpVersion != null ? tmpVersion : "(Unknown_version)");
     majorVersion = (tmpVersion != null ? tmpVersion : "(Unknown_version)");
-    date = (tmpDate != null ? tmpDate : "");
+    date = (tmpDate != null ? tmpDate : "(Unknown_date)");
     // 11.9.999 --> 1109999
     int v = -1;
-    if (tmpVersion != null)
+    if (tmpVersion != null) {
       try {
         String s = version;
         String major = "";
@@ -539,6 +639,7 @@ public final class JC {
       } catch (NumberFormatException e) {
         // We simply keep the version currently found
       }
+    }
     versionInt = v;
   }
 
@@ -1365,7 +1466,7 @@ public final class JC {
 
   private final static int LABEL_CENTERED = 0x100;
 
-  public static int LABEL_DEFAULT_OFFSET = (LABEL_DEFAULT_X_OFFSET << LABEL_FLAGX_OFFSET_SHIFT)
+  public final static int LABEL_DEFAULT_OFFSET = (LABEL_DEFAULT_X_OFFSET << LABEL_FLAGX_OFFSET_SHIFT)
       | (LABEL_DEFAULT_Y_OFFSET << LABEL_FLAGY_OFFSET_SHIFT);
 
   public final static int ECHO_TOP = 0;
@@ -1685,6 +1786,7 @@ public final class JC {
   public static final String INFO_SYMMETRY_OPERATIONS = "symmetryOperations";
   public static final String INFO_SYMOPS_TEMP = "symOpsTemp";
   public static final String INFO_SYMMETRY_INFO = "symmetryInfo";
+  public static final String INFO_SYMMETRY_RANGE = "symmetryRange";
 
   public static final String INFO_DO_NOT_ADD_HYDROGENS = "doNotAddHydrogens";
   public static final String INFO_SOURCE_STATE_SCRIPT = "isStateScript";
@@ -1717,7 +1819,7 @@ public final class JC {
   public static final String INFO_CGO_INFO = "cgoMeshInfo";
   
   public static final String INFO_PDB_NO_HYDROGENS = "pdbNoHydrogens";
-
+    
   public final static String INFO_DOMAINS = "domains";
   public static final String INFO_TITLE = "title";
   
@@ -1770,8 +1872,25 @@ public final class JC {
   public static final String CACHE_DIALOG = " DIALOG";
   public static final String ASYNC_CANCELED = "#CANCELED#";
   public static final String PROP_STATE = "state";
+  public static final String INFO_LOW_PRECISION = "lowPrecision";
+  public static final String INFO_HIGH_PRECISION = "highPrecision";
+  public static final String INFO_DOUBLE_PRECISION = "doublePrecision";
+  public static final String INFO_INITIAL_ATOM_COUNT = "initialAtomCount";  
+  public static final String INFO_INITIAL_BOND_COUNT = "initialBondCount";
+  public static final String INFO_PDB_HAVE_HEADER_NAME = "havePDBHeaderName";
+  public static final String INFO_CIF_HAS_BONDS = "CIFhasBonds";
+  public static final String INFO_HAS_SYMMETRY = "hasSymmetry";
+  public static final String INFO_MMCIF_ALL_BONDS = "mmCIFallBonds";
+  public static final String INFO_CARBOHYDRATES = "carbohydrates";
+  public static final String INFO_GROUP3_LISTS = "group3Lists";
+  public static final String INFO_GROUP3_COUNTS = "group3Counts";
+  public static final String GROUP_MENU_PROTEIN = "p>";
+  public static final String GROUP_MENU_NUCLEIC = "n>";
+  public static final String GROUP_MENU_CARBOHYDRATE = "c>";
+  public static final String GROUP_MENU_OTHER = "o>";
+  public static final String TOKEN_LEGACY_JAVA_FLOAT = "legacyJavaFloat"; // UNUSED in Jmol-SwingJS
 
-/**
+  /**
    * When UNITCELL NONE is given, clear out all space group and unit cell keys from model info.
    * 
    * @param key
