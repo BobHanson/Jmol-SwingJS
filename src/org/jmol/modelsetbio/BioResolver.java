@@ -662,6 +662,8 @@ public final class BioResolver {
         
   };
   
+  protected final static int ATOMID_MAX = specialAtomNames.length;
+
   private static Map<String, Byte> htSpecialAtoms;
 
   private final static int[] argbsAmino = {
@@ -957,8 +959,6 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
         STR.SHEET, STR.HELIX310, STR.TURN };
 
     private static int[] mytypes = {0, 2, 3, 4, 6};
-
-    private final static int ATOMID_MAX = specialAtomNames.length;
 
     private BS bsAddedMask;
     private boolean haveHsAlready;

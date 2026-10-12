@@ -346,7 +346,7 @@ public final class JC {
     return (url.indexOf("https") < 0 ? url 
         : url.indexOf("pdbe") >= 0 ? updatePDBE4(url) 
         : url.indexOf("rcsb") >= 0 ? updateRCSB4(url) 
-        : fixPDBBeta(url));
+        : fixPDBBeta(url, false));
   }
   
   private static String updatePDBE4(String url) {
@@ -367,19 +367,19 @@ public final class JC {
     if (pt >= 0) {
       url = resolveDataBase("pdb12", url.substring(pt), null);
       if (url.indexOf(".pdb") >= 0)
-        return fixPDBBeta(url);
+        return fixPDBBeta(url, true);
     }
     return url;
   }
 
-  private static String fixPDBBeta(String url) {
+  private static String fixPDBBeta(String url, boolean isRCSB) {
     // https://files.wwpdb.org/download/pdb_00001crn.pdb.gz
     if (url.indexOf("#nobeta") >= 0) {
       return url;
     }
     int pt = after(url, wwPDBbetaURL);
     if (isPdbBeta()) {
-      if (pt >= 0 || url.indexOf(".pdb") < 0)
+      if (pt >= 0 || !isRCSB)
         return url;
       // this would be OK except for the bug in the shortlink
       // if that gets fixed, then we can remove this code block
