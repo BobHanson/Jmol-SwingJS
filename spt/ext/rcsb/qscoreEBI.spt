@@ -1,0 +1,106 @@
+/*
+ * generate property_qscore for the current model
+ * from an EBI validation report
+ *
+ */
+
+function getEBIQScores() {
+  var data = getEBICIFValidation(_M.pdbID);  
+  mapEBIData(data);
+}
+
+function getEBICIFValidation(id) {
+  id = id%-9999;
+  var dir = id[2][3];
+  var url = "https://ftp.ebi.ac.uk/pub/databases/pdb/validation_reports/"+dir+"/" + id + "/" + id + "_validation.cif.gz";
+  var s = load(url);
+  return getProperty("cifinfo", "#CIF\n" + s).models[1];
+}
+
+function mapEBIData(data) {
+  var scores = data._pdbx_vrpt_model_instance_map_fitting_q_score;
+  var chains = data._pdbx_vrpt_model_instance_auth_asym_id;
+  var resnos = data._pdbx_vrpt_model_instance_auth_seq_id;
+  var n = scores.length;
+  if (chains.length != n || resnos.length != n) {
+    print "!! q_scores, chains, and resnos are not the same length !!";
+    return null;
+  }
+  chainMap = {};
+  achains = [];
+  for (var i = 1; i <= n; i++) {
+    var c = chains[i];
+    var map = chainMap[c];
+    if (!map) {
+       map = [0+resnos[i],[]];       
+       chainMap[c] = map;
+       achains.push(c);
+    }
+    map[2].push(0+scores[i]);
+  }
+  for (var i = achains.length; i > 0; i--) {
+    var c = achains[i];
+    map = chainMap[c];
+    seq1 = map[1];
+    values = map[2];
+    var a = {chain=c};
+    var resids = a.resno.all;
+    print a;
+    print "chain=" + c + " seq1=" + seq1 + " values.length=" + values.length;
+    setQ(a, resids, seq1, values, 1);
+    a.property_qscore = resids;
+  }
+
+}
+
+/*
+ * map the graphql values to Jmol atoms
+ *
+ * a      chain atomset
+ * resids array of atom sequence ids from Jmol; will be replaced with Q_score
+ * seq1   beg_seq_id from graphql search
+ * values values from graphq1 search
+ * t0     current pointer into resids
+ *
+ * return updated t0
+ */
+function setQ(a, resids, seq1, values, t0) {
+  var iv = 0;
+  var i = t0;
+  var s = seq1;
+  while (i <= resids.length) {
+    if (resids[i] == s) {
+      // found the first matching residue
+      break;
+    }
+    // NaN for any preceding residues
+    resids[i] = NaN;
+    i++;
+  }
+  for (var j = 1; j <= values.length; j++) {
+    while (i <= resids.length) {
+      if (resids[i] != s) {
+        s = resids[i];
+        break;
+      }
+      resids[i] = values[j];
+      i++;
+    }
+  }
+  return i; 
+} 
+
+
+print '
+
+Example:
+
+load =12xf.cif
+getEBIQScores()
+color {this} property_qscore
+
+'
+
+
+
+

@@ -1,12 +1,17 @@
 /*
- * make a graphql search at RCSB for the current model
+ * generate property_qscore for the current model 
+ * from a graphQL search at RCSB
  *
- * return RESULT.data.entries[1].polymer_entities[1].polymer_entity_instances
- *
- */  
-function getQ() {
-  var id = _M.pdbID;
-  var s = '{ entries(entry_ids: ["' + id + '"]) {
+ */
+function getQScoresGQL() {
+  var pdata = getQ();
+  for (var i = 1; i <= pdata.length; i++) {
+    mapQ(pdata[i]);
+  }
+}
+
+
+RCSB_GraphQL_polymer_feature_query = '{ entries(entry_ids: ["$ID"]) {
     polymer_entities {
       polymer_entity_instances {
         rcsb_polymer_entity_instance_container_identifiers {
@@ -22,12 +27,31 @@ function getQ() {
         }        
       }
     }
-  }}'
+  }
+}'
 
-  var q = {"query":s}
-  var url = "https://data.rcsb.org/graphql"
-  var x = load(url + "?POST?" + q)
-  return eval("JSON",x).data.entries[1].polymer_entities[1].polymer_entity_instances
+/*
+ * call RCSB graphQL with a query to get a RESULT
+ *
+ * return JSON-evaluated RESULT data object
+ *
+ */  
+function loadGraphQLData(s) {
+  var RESULT = load("https://data.rcsb.org/graphql" + "?POST?" +  {"query":s});
+  return eval("JSON",RESULT).data;
+}
+
+/*
+ * make a graphql search at RCSB for the current model
+ *
+ * return RESULT.data.entries[1].polymer_entities[1].polymer_entity_instances
+ *
+ */  
+function getQ() {
+  var id = _M.pdbID;
+  var q = RCSB_GraphQL_polymer_feature_query.replace("$ID", id);
+  var x = loadGraphQLData(q);
+  return x.entries[1].polymer_entities[1].polymer_entity_instances
 }
 
 /*
@@ -57,7 +81,7 @@ function setQ(a, resids, seq1, values, t0) {
   for (var j = 1; j <= values.length; j++) {
     while (i <= resids.length) {
       if (resids[i] != s) {
-        s++;
+        s = resids[i];
         break;
       }
       resids[i] = values[j];
@@ -114,32 +138,13 @@ function mapQ(instance) {
     a.property_qscore = resids;
 }
 
-/*
- * generate property_qscore from a graphQL search at RCSB
- *
- */
-function getQScores() {
-  var pdata = getQ(id);
-  for (var i = 1; i <= pdata.length; i++) {
-    mapQ(pdata[i]);
-  }
-}
-
 print '
 
 Example:
 
 load =12xf.cif
-getQScores()
-color {this} property_qscore'
-
-////////////////// here we go...
-
-/**
-
-load =12xf.cif
-getQScores()
+getQScoresGQL()
 color {this} property_qscore
 
-
+'
 
