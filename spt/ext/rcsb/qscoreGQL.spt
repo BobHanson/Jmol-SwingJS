@@ -148,3 +148,9 @@ color {this} property_qscore
 
 '
 
+/////////////////// running this on current model ////////////
+
+getQScoresGQL()
+color {this} property_qscore
+
+

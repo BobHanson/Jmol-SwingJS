@@ -4,7 +4,7 @@
  *
  */
 
-function getEBIQScores() {
+function getQScoresEBI() {
   var data = getEBICIFValidation(_M.pdbID);  
   mapEBIData(data);
 }
@@ -100,7 +100,10 @@ getEBIQScores()
 color {this} property_qscore
 
 '
+/////////////////// running this on current model ////////
 
+getQScoresEBI()
+color {this} property_qscore
 
 
 
