@@ -125,6 +125,14 @@ function getQScores() {
   }
 }
 
+print '
+
+Example:
+
+load =12xf.cif
+getQScores()
+color {this} property_qscore'
+
 ////////////////// here we go...
 
 /**
