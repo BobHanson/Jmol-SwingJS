@@ -42,11 +42,10 @@ import javajs.util.P3d;
 import javajs.util.PT;
 import javajs.util.SB;
 
-
 /**
  * 
- * mmCIF files are recognized prior to class creation. 
- * Required fields include one of:
+ * mmCIF files are recognized prior to class creation. Required fields include
+ * one of:
  * 
  *   _entry.id
  *   _database_PDB_
@@ -82,11 +81,13 @@ public class MMCifReader extends CifReader {
 
   private boolean doSetBonds;
   private boolean doSetAllBonds; // not just hetero
-  private String pubDOI, dataDOI;
+
+  private Lst<Object[]> structConnMap;
+  private String structConnList = "";
 
   private String carbohydrateGroups;
-  
-  private boolean isLigandBondBug; 
+
+  private boolean isLigandBondBug;
   // Jmol-14.3.3_2014.07.27 broke mmCIF bond reading for ligands
   // Jmol-14.3.9_2014.11.11 fixes this. 
 
@@ -101,23 +102,23 @@ public class MMCifReader extends CifReader {
     if (!filteredPrecision) {
       precision = 3;
       filteredPrecision = true;
-    }      
+    }
     isMMCIF = true;
     if (isDSSP1)
-      asc.setInfo("isDSSP1",Boolean.TRUE);      
+      asc.setInfo("isDSSP1", Boolean.TRUE);
     if (htParams.containsKey("isMutate"))
-      asc.setInfo("isMutate",Boolean.TRUE);      
+      asc.setInfo("isMutate", Boolean.TRUE);
     doSetBonds = checkFilterKey("ADDBONDS");
     doSetAllBonds = checkFilterKey("ALLBONDS");
     if (doSetAllBonds) {
-      asc.setInfo(JC.INFO_MMCIF_ALL_BONDS,Boolean.TRUE);      
+      asc.setInfo(JC.INFO_MMCIF_ALL_BONDS, Boolean.TRUE);
     }
     byChain = checkFilterKey("BYCHAIN");
     if (checkFilterKey("BIOMOLECULE")) // PDB format
       filter = PT.rep(filter, "BIOMOLECULE", "ASSEMBLY");
     isBiomolecule = checkFilterKey("ASSEMBLY");
     if (isBiomolecule) {
-      assemblyID = (getFilter("ASSEMBLY").replace('=',' ') + " 1");
+      assemblyID = (getFilter("ASSEMBLY").replace('=', ' ') + " 1");
       assemblyID = PT.split(PT.rep(assemblyID, "  ", " "), " ")[1];
       // allow for default assembly 1
       filter = filter.replace(':', ' '); // no chain selection for biomolecules
@@ -125,8 +126,8 @@ public class MMCifReader extends CifReader {
       // incompatible with building biomolecules
       dssr = null;
       validation = null;
-      domains = null;  
-    }    
+      domains = null;
+    }
     isCourseGrained = byChain || bySymop;
     if (isCourseGrained) {
       chainAtomMap = new Hashtable<String, P3d>();
@@ -136,7 +137,8 @@ public class MMCifReader extends CifReader {
     // into the Resolver that made it so that ligand files were read by 
     // CifReader and not MMCifReader. This caused CHEM_COMP_BOND records to be 
     // skipped and so in the case of pdbAddHydrogen no hydrogens added.
-    isLigandBondBug = (stateScriptVersionInt >= 140204 && stateScriptVersionInt <= 140208
+    isLigandBondBug = (stateScriptVersionInt >= 140204
+        && stateScriptVersionInt <= 140208
         || stateScriptVersionInt >= 140304 && stateScriptVersionInt <= 140308);
 
   }
@@ -146,11 +148,13 @@ public class MMCifReader extends CifReader {
     if (key0.startsWith(CAT_ASSEM_CAT) 
         || key0.startsWith(CAT_STRUCTCONN_CAT)
         || key0.startsWith(CAT_SEQUENCEDIF_CAT)
-        || key0.startsWith(CAT_STRUCTCONF_CAT)
-        || key0.startsWith(CAT_SHEET_CAT) 
-        
-//        || key0.startsWith(CAT_PDBX_NONPOLY_CAT)
-        ) {
+        || key0.startsWith(CAT_STRUCTCONF_CAT) 
+        || key0.startsWith(CAT_SHEET_CAT)
+        || key0.startsWith(CAT_CITATION_CAT)
+        || key0.startsWith(CAT_EXPTL_CAT)
+
+    //        || key0.startsWith(CAT_PDBX_NONPOLY_CAT)
+    ) {
       processSubclassLoopBlock();
     } else if (key.equals("_rna3d")) {
       addedData = (String) field;
@@ -158,8 +162,8 @@ public class MMCifReader extends CifReader {
     } else if (key.equals("_dssr")) {
       dssr = vwr.parseJSONMap(reader.readLine());
       reader.readLine(); // sometimes there is a null character here
-    }  
-    
+    }
+
     if (key0.startsWith(CAT_DATABASE2_CAT)) {
       if (key.endsWith("_pdbx_doi")) {
         setDataDOI((String) field);
@@ -170,16 +174,19 @@ public class MMCifReader extends CifReader {
       if (key.endsWith("_doi")) {
         setPubDOI((String) field);
       }
+      if (key.endsWith("_title")) {
+        setPubTitle((String) field);
+      }
     }
-        
+
     if (isBiomolecule) {
       // information read, but not compatible
       addedData = null;
       dssr = null;
-      
+
     }
   }
-  
+
   @Override
   protected boolean processSubclassLoopBlock() throws Exception {
     if (key0.startsWith(CAT_NCS_CAT))
@@ -190,6 +197,8 @@ public class MMCifReader extends CifReader {
       return processAssemblyGenBlock();
     if (key0.startsWith(CAT_SEQUENCEDIF_CAT))
       return processSequence();
+    if (key0.startsWith(CAT_EXPTL_CAT))
+      return processExperimentListBlock();
 
     if (isCourseGrained)
       return false;
@@ -198,8 +207,8 @@ public class MMCifReader extends CifReader {
       return processStructSiteBlock();
     if (key0.startsWith(CAT_CHEMCOMP_CAT))
       return processChemCompLoopBlock();
-//    if (key0.startsWith(CAT_PDBX_NONPOLY_CAT))
-//      return processNonpolyLoopBlock();
+    //    if (key0.startsWith(CAT_PDBX_NONPOLY_CAT))
+    //      return processNonpolyLoopBlock();
     if (key0.startsWith(CAT_STRUCTCONF_CAT))
       return processStructConfLoopBlock();
     if (key0.startsWith(CAT_SHEET_CAT))
@@ -231,9 +240,9 @@ public class MMCifReader extends CifReader {
   private boolean requiresSorting;
 
   /**
-   * issue here is that mmCIF assembly atoms can be in different blocks by chain:
-   * Model1:Chain1 Model2:Chain1 Model1:Chain2 Model2:Chain2 ... and so assigned
-   * to too many atom sets.
+   * issue here is that mmCIF assembly atoms can be in different blocks by
+   * chain: Model1:Chain1 Model2:Chain1 Model1:Chain2 Model2:Chain2 ... and so
+   * assigned to too many atom sets.
    * 
    */
   protected void sortAssemblyModels() {
@@ -281,12 +290,13 @@ public class MMCifReader extends CifReader {
   }
 
   String sgName0 = null;
-  
+
   private void applyBiomoleculeSymmetry() {
     if (vBiomolecules != null && vBiomolecules.size() > 0) {
       if (sgName0 == null)
         sgName0 = sgName;
-      Lst<Map<String, Object>> modelBiomolecules = updateBiomolecule(vBiomolecules);
+      Lst<Map<String, Object>> modelBiomolecules = updateBiomolecule(
+          vBiomolecules);
       asc.setCurrentModelInfo("biomolecules", modelBiomolecules);
       setBiomolecules(modelBiomolecules);
       if (thisBiomolecule != null) {
@@ -309,10 +319,9 @@ public class MMCifReader extends CifReader {
     }
   }
 
-
   private Lst<Map<String, Object>> updateBiomolecule(Lst<Map<String, Object>> vb) {
     Lst<Map<String, Object>> map = new Lst<>();
-//    BS bsModel = BSUtil.newBitSet2(asc.atomSetAtomCounts(), i1)
+    //    BS bsModel = BSUtil.newBitSet2(asc.atomSetAtomCounts(), i1)
     for (Map<String, Object> m : vb) {
       Map<String, Object> mnew = new Hashtable<>();
       mnew.putAll(m);
@@ -358,10 +367,6 @@ public class MMCifReader extends CifReader {
           setFormalCharges();
       }
     }
-    if (dataDOI != null)
-      asc.setCurrentModelInfo("dataDOI", dataDOI);
-    if (pubDOI != null)
-      asc.setCurrentModelInfo("pubDOI", pubDOI);
     if (asc.ac == 0 && !isCourseGrained)
       return false;
     if (htSites != null)
@@ -388,13 +393,13 @@ public class MMCifReader extends CifReader {
     int modelIndex = asc.iSet;
     int i = asc.getAtomSetAtomIndex(modelIndex);
     int i2 = asc.getAtomSetAtomCount(modelIndex);
-    for (;--i2 >= 0;i++) {
+    for (; --i2 >= 0; i++) {
       Atom a = asc.atoms[i];
       if (a.isHetero)
         continue;
       if ("NH2".equals(a.atomName))
         a.formalCharge = 1;
-      
+
     }
   }
 
@@ -451,7 +456,8 @@ public class MMCifReader extends CifReader {
       map = new Hashtable<Object, Integer>();
       seqid = -1;
       comp = null;
-      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms.nextSetBit(i + 1)) {
+      for (int i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
+          .nextSetBit(i + 1)) {
         Atom a = atoms[i];
         double pt = a.sequenceNumber;//(a.vib == null ? a.sequenceNumber : a.vib.x);
         if (pt != seqid) {
@@ -472,71 +478,60 @@ public class MMCifReader extends CifReader {
     appendLoadNote(asc.bondCount + " bonds added");
   }
 
-  private void processBonds(Lst<Object[]> cmap, Map<Object, Integer> map, boolean isStructConn) {
+  private void processBonds(Lst<Object[]> cmap, Map<Object, Integer> map,
+                            boolean isStructConn) {
     Integer i1, i2;
     for (int i = 0, n = cmap.size(); i < n; i++) {
       Object[] o = cmap.get(i);
       if ((i1 = map.get(o[0])) == null || (i2 = map.get(o[1])) == null)
         continue;
       if (debugging)
-        Logger.debug((isStructConn ? "_struct_conn" : "_comp_bond") + " adding bond " + i1 + " " + i2 + " order=" + o[2]);
-      asc.addNewBondWithOrder(i1.intValue(), i2.intValue(), ((Integer) o[2]).intValue());
+        Logger.debug((isStructConn ? "_struct_conn" : "_comp_bond")
+            + " adding bond " + i1 + " " + i2 + " order=" + o[2]);
+      asc.addNewBondWithOrder(i1.intValue(), i2.intValue(),
+          ((Integer) o[2]).intValue());
     }
   }
 
+  final private static byte EXPTL_ENTRY_ID = 0;
+  final private static byte EXPTL_METHOD = 1;
+
+  final private static String CAT_EXPTL_CAT = "_exptl.";
+  final protected static String CAT_EXPTL = "_exptl";
+
+  final private static String[] exptlFields = { "_exptl_entry_id",
+      "_exptl_method" };
+
   final private static byte OPER_ID = 12;
   final private static byte OPER_XYZ = 13;
-  
+
   final private static String CAT_NCS_CAT = "_struct_ncs_oper.";
   final protected static String CAT_NCS = "_struct_ncs_oper";
-  final private static String[] ncsoperFields = {
-    "*_matrix[1][1]",
-    "*_matrix[1][2]",
-    "*_matrix[1][3]",
-    "*_vector[1]",
-    "*_matrix[2][1]",
-    "*_matrix[2][2]",
-    "*_matrix[2][3]",
-    "*_vector[2]",
-    "*_matrix[3][1]",
-    "*_matrix[3][2]",
-    "*_matrix[3][3]",
-    "*_vector[3]", 
-    "*_id",
-    "*_symmetry_operation" 
-  };
+  final private static String[] ncsoperFields = { "*_matrix[1][1]",
+      "*_matrix[1][2]", "*_matrix[1][3]", "*_vector[1]", "*_matrix[2][1]",
+      "*_matrix[2][2]", "*_matrix[2][3]", "*_vector[2]", "*_matrix[3][1]",
+      "*_matrix[3][2]", "*_matrix[3][3]", "*_vector[3]", "*_id",
+      "*_symmetry_operation" };
 
   final private static String CAT_OPER_CAT = "_pdbx_struct_oper_list.";
   final protected static String CAT_OPER = "_pdbx_struct_oper_list";
-  final private static String[] operFields = {
-    "*_matrix[1][1]",
-    "*_matrix[1][2]",
-    "*_matrix[1][3]",
-    "*_vector[1]",
-    "*_matrix[2][1]",
-    "*_matrix[2][2]",
-    "*_matrix[2][3]",
-    "*_vector[2]",
-    "*_matrix[3][1]",
-    "*_matrix[3][2]",
-    "*_matrix[3][3]",
-    "*_vector[3]", 
-    "*_id",
-    "*_symmetry_operation" 
-  };
+  final private static String[] operFields = { "*_matrix[1][1]",
+      "*_matrix[1][2]", "*_matrix[1][3]", "*_vector[1]", "*_matrix[2][1]",
+      "*_matrix[2][2]", "*_matrix[2][3]", "*_vector[2]", "*_matrix[3][1]",
+      "*_matrix[3][2]", "*_matrix[3][3]", "*_vector[3]", "*_id",
+      "*_symmetry_operation" };
 
   final private static byte ASSEM_ID = 0;
   final private static byte ASSEM_OPERS = 1;
   final private static byte ASSEM_LIST = 2;
-  
+
   final private static String CAT_ASSEM_CAT = "_pdbx_struct_assembly_gen.";
   final protected static String CAT_ASSEM = "_pdbx_struct_assembly_gen";
-  
+
   final private static String[] assemblyFields = {
-    "_pdbx_struct_assembly_gen_assembly_id",
-    "_pdbx_struct_assembly_gen_oper_expression",
-    "_pdbx_struct_assembly_gen_asym_id_list" 
-  };
+      "_pdbx_struct_assembly_gen_assembly_id",
+      "_pdbx_struct_assembly_gen_oper_expression",
+      "_pdbx_struct_assembly_gen_asym_id_list" };
 
   /*
   _pdbx_struct_assembly_gen.assembly_id       1 
@@ -569,20 +564,20 @@ public class MMCifReader extends CifReader {
   4 'crystal symmetry operation' 8_666  -y+1,-x+1,-z+1 0.0000000000  -1.0000000000 0.0000000000 68.7500000000 -1.0000000000 
   0.0000000000  0.0000000000 68.7500000000 0.0000000000 0.0000000000 -1.0000000000 52.5900000000 
   # 
-
+  
    */
 
-  final private static String CAT_SEQUENCEDIF_CAT = "_struct_ref_seq_dif."; 
-  final protected static String CAT_SEQUENCEDIF = "_struct_ref_seq_dif"; 
+  final private static String CAT_SEQUENCEDIF_CAT = "_struct_ref_seq_dif.";
+  final protected static String CAT_SEQUENCEDIF = "_struct_ref_seq_dif";
   final private static byte STRUCT_REF_G3 = 0;
   final private static byte STRUCT_REF_G1 = 1;
   final private static String[] structRefFields = {
-    "_struct_ref_seq_dif_mon_id", 
-    "_struct_ref_seq_dif_db_mon_id" 
-  };
+      "_struct_ref_seq_dif_mon_id", "_struct_ref_seq_dif_db_mon_id" };
 
   /**
-   * get canonical 1-letter DNA/RNA sequence code from 3-letter code. For example, "2MG" --> "G" 
+   * get canonical 1-letter DNA/RNA sequence code from 3-letter code. For
+   * example, "2MG" --> "G"
+   * 
    * @return true
    * @throws Exception
    */
@@ -629,9 +624,9 @@ public class MMCifReader extends CifReader {
     String list = assem[ASSEM_LIST];
     String operators = assem[ASSEM_OPERS];
     String name = "biomolecule " + id;
-    Logger.info(name + " operators " + operators
-        + " ASYM_IDs " + list);
-    appendLoadNote("found " + name + " chains:" + list + "\t operations:" + operators);
+    Logger.info(name + " operators " + operators + " ASYM_IDs " + list);
+    appendLoadNote(
+        "found " + name + " chains:" + list + "\t operations:" + operators);
     if (vBiomolecules == null)
       vBiomolecules = new Lst<Map<String, Object>>();
     Map<String, Object> info = null;
@@ -646,16 +641,18 @@ public class MMCifReader extends CifReader {
       info.put("id", id);
       int iMolecule = parseIntStr(id);
       info.put("molecule",
-        iMolecule == Integer.MIN_VALUE ? id : Integer.valueOf(iMolecule));
+          iMolecule == Integer.MIN_VALUE ? id : Integer.valueOf(iMolecule));
       info.put("biomts", new Lst<M4d>());
       info.put("chains", new Lst<String>());
-      info.put("assemblies", new Lst<String>()); 
+      info.put("assemblies", new Lst<String>());
       info.put("operators", new Lst<String>());
       vBiomolecules.addLast(info);
       checkFilterAssembly(info);
     }
-    ((Lst<String>) info.get("assemblies")).addLast("$" + list.replace(',', '$'));
-    ((Lst<String>) info.get("operators")).addLast(decodeAssemblyOperators(operators));
+    ((Lst<String>) info.get("assemblies"))
+        .addLast("$" + list.replace(',', '$'));
+    ((Lst<String>) info.get("operators"))
+        .addLast(decodeAssemblyOperators(operators));
   }
 
   /**
@@ -692,9 +689,8 @@ public class MMCifReader extends CifReader {
           decodeAssemblyOperators(ops.substring(pt + 1)));
     if (ops.startsWith("(")) {
       if (ops.indexOf("-") >= 0)
-        ops = BS.unescape(
-            "({" + ops.substring(1, ops.length() - 1).replace('-', ':').replace(',', ' ') + "})")
-            .toJSON();
+        ops = BS.unescape("({" + ops.substring(1, ops.length() - 1)
+            .replace('-', ':').replace(',', ' ') + "})").toJSON();
       ops = PT.rep(ops, " ", "");
       ops = ops.substring(1, ops.length() - 1);
     }
@@ -711,8 +707,36 @@ public class MMCifReader extends CifReader {
     return sb.toString().substring(1);
   }
 
+  private boolean processExperimentListBlock() throws Exception {
+    parseLoopParametersFor(CAT_EXPTL, exptlFields);
+    while (cifParser.getData()) {
+      int count = 0;
+      String id = null;
+      String method = null;
+      int n = cifParser.getColumnCount();
+      for (int i = 0; i < n; ++i) {
+        int p = fieldProperty(i);
+        switch (p) {
+        case NONE:
+          break;
+        case EXPTL_ENTRY_ID:
+          id = (String) field;
+          break;
+        case EXPTL_METHOD:
+          method = (String) field;
+          break;
+        }
+      }
+      if (count++ == 0 && id != null && method != null) {
+        exptMethod = method;
+      }
+    }
+    return true;
+  }
+
   protected boolean processStructOperListBlock(boolean isNCS) throws Exception {
-    parseLoopParametersFor((isNCS ? CAT_NCS : CAT_OPER), isNCS ? ncsoperFields : operFields);
+    parseLoopParametersFor((isNCS ? CAT_NCS : CAT_OPER),
+        isNCS ? ncsoperFields : operFields);
     double[] m = new double[16];
     m[15] = 1;
     while (cifParser.getData()) {
@@ -737,7 +761,8 @@ public class MMCifReader extends CifReader {
         }
       }
       if (id != null && (count == 12 || xyz != null && symmetry != null)) {
-        Logger.info((isNCS ? "noncrystallographic symmetry operator " : "assembly operator ") + id + " " + xyz);
+        Logger.info((isNCS ? "noncrystallographic symmetry operator "
+            : "assembly operator ") + id + " " + xyz);
         M4d m4 = new M4d();
         if (count != 12) {
           symmetry.getRotTransArrayAndXYZ(xyz, m);
@@ -777,7 +802,7 @@ public class MMCifReader extends CifReader {
 
   final private static String CAT_CHEMCOMP_CAT = "_chem_comp.";
   final protected static String CAT_CHEMCOMP = "_chem_comp";
-  
+
   final private static String[] chemCompFields = { 
     "_chem_comp_id",
     "_chem_comp_name",
@@ -803,37 +828,38 @@ public class MMCifReader extends CifReader {
     return true;
   }
 
-//  final private static byte NONPOLY_NAME = 0;
-//  final private static byte NONPOLY_COMP_ID = 1;
-//
-//  private static final String CAT_PDBX_NONPOLY_CAT = "_pdbx_entity_nonpoly.";
-//  
-//  final private static String[] nonpolyFields = {
-//      "_pdbx_entity_nonpoly_name",
-//      "_pdbx_entity_nonpoly_comp_id", };
-//
-//
-//  /**
-//   * 
-//   * a HETERO name definition field. Maybe not all hetero? nonpoly?
-//   * 
-//   * @return true if successful; false to skip
-//   * 
-//   * @throws Exception
-//   */
-//  private boolean processNonpolyLoopBlock() throws Exception {
-//    parseLoopParameters(nonpolyFields);
-//    String groupName, hetName;
-//    while (parser.getData()) {
-//      if (isNull(groupName = getFieldString(NONPOLY_COMP_ID))
-//          || isNull(hetName = getFieldString(NONPOLY_NAME)))
-//        return false;
-//      addHetero(groupName, hetName, true);
-//    }
-//    return true;
-//  }
+  //  final private static byte NONPOLY_NAME = 0;
+  //  final private static byte NONPOLY_COMP_ID = 1;
+  //
+  //  private static final String CAT_PDBX_NONPOLY_CAT = "_pdbx_entity_nonpoly.";
+  //  
+  //  final private static String[] nonpolyFields = {
+  //      "_pdbx_entity_nonpoly_name",
+  //      "_pdbx_entity_nonpoly_comp_id", };
+  //
+  //
+  //  /**
+  //   * 
+  //   * a HETERO name definition field. Maybe not all hetero? nonpoly?
+  //   * 
+  //   * @return true if successful; false to skip
+  //   * 
+  //   * @throws Exception
+  //   */
+  //  private boolean processNonpolyLoopBlock() throws Exception {
+  //    parseLoopParameters(nonpolyFields);
+  //    String groupName, hetName;
+  //    while (parser.getData()) {
+  //      if (isNull(groupName = getFieldString(NONPOLY_COMP_ID))
+  //          || isNull(hetName = getFieldString(NONPOLY_NAME)))
+  //        return false;
+  //      addHetero(groupName, hetName, true);
+  //    }
+  //    return true;
+  //  }
 
-  protected void addHetero(String groupName, String hetName, String groupType, boolean doCheck, boolean addNote) {
+  protected void addHetero(String groupName, String hetName, String groupType,
+                           boolean doCheck, boolean addNote) {
     if (doCheck && !vwr.getJBR().isHetero(groupName))
       return;
     if (htHetero == null)
@@ -844,7 +870,7 @@ public class MMCifReader extends CifReader {
     if (addNote)
       appendLoadNote(groupName + " = " + hetName);
     if (groupType != null && groupType.indexOf("accharide") >= 0) {
-      if (carbohydrateGroups == null) 
+      if (carbohydrateGroups == null)
         carbohydrateGroups = "";
       carbohydrateGroups += "[" + groupName + "]";
     }
@@ -898,15 +924,17 @@ public class MMCifReader extends CifReader {
       return false;
     }
     while (cifParser.getData()) {
-      Structure structure = new Structure(-1, STR.HELIX, STR.HELIX, null, null, 0, null);
-      
+      Structure structure = new Structure(-1, STR.HELIX, STR.HELIX, null, null,
+          0, null);
+
       String type = getFieldString(CONF_TYPE_ID);
       if (type.startsWith("TURN"))
         structure.structureType = structure.substructureType = STR.TURN;
       else if (!type.startsWith("HELX"))
-        structure.structureType = structure.substructureType = STR.NONE; 
+        structure.structureType = structure.substructureType = STR.NONE;
       else
-        structure.substructureType = Structure.getHelixType(parseIntFieldTok(HELIX_CLASS));
+        structure.substructureType = Structure
+            .getHelixType(parseIntFieldTok(HELIX_CLASS));
       structure.strandID = getFieldString(SERIAL_NO);
       structure.structureID = getFieldString(STRUCT_ID);
 
@@ -919,7 +947,7 @@ public class MMCifReader extends CifReader {
   // sheet structure data
   ////////////////////////////////////////////////////////////////
 
-  private void addStructure(Structure structure) {    
+  private void addStructure(Structure structure) {
     structure.startChainID = vwr.getChainID(getFieldString(BEG_ASYM_ID), true);
     structure.startSequenceNumber = parseIntFieldTok(BEG_SEQ_ID);
     structure.startInsertionCode = (getFieldString(BEG_INS_CODE)).charAt(0);
@@ -929,7 +957,7 @@ public class MMCifReader extends CifReader {
     asc.addStructure(structure);
   }
 
-  protected int parseIntFieldTok(byte  tok) {
+  protected int parseIntFieldTok(byte tok) {
     return parseIntStr(getFieldString(tok));
   }
 
@@ -939,7 +967,7 @@ public class MMCifReader extends CifReader {
   final private static String CAT_SHEET_CAT = "_struct_sheet_range.";
   final protected static String CAT_SHEET = "_struct_sheet_range";
   final private static String[] structSheetRangeFields = {
-      "*_sheet_id",
+    "*_sheet_id",
       "*_beg_auth_asym_id",
       "*_beg_auth_seq_id",
       "*_pdbx_beg_pdb_ins_code",
@@ -968,8 +996,8 @@ public class MMCifReader extends CifReader {
       return false;
     }
     while (cifParser.getData())
-      addStructure(new Structure(-1, STR.SHEET, STR.SHEET, getFieldString(SHEET_ID), 
-          getFieldString(STRAND_ID), 1, null));
+      addStructure(new Structure(-1, STR.SHEET, STR.SHEET,
+          getFieldString(SHEET_ID), getFieldString(STRAND_ID), 1, null));
     return true;
   }
 
@@ -1052,7 +1080,8 @@ public class MMCifReader extends CifReader {
     BS bsAll = new BS();
     for (int i = modelBiomolecules.size(); --i >= 0;) {
       Map<String, Object> biomolecule = modelBiomolecules.get(i);
-      setBiomolecule(biomolecule, (biomolecule == thisBiomolecule ? bsAll : null));
+      setBiomolecule(biomolecule,
+          (biomolecule == thisBiomolecule ? bsAll : null));
     }
     int pt = asc.getAtomSetAtomIndex(asc.iSet);
     int n = asc.getAtomSetAtomCount(asc.iSet);
@@ -1066,12 +1095,13 @@ public class MMCifReader extends CifReader {
       }
     }
   }
-  
+
   /**
    * 
    * @param biomolecule
-   * @param bsAll if a specific biomolecule is specified using "ASSEMBLY id",
-   * this bsAll will be returned with the new set of atoms
+   * @param bsAll
+   *        if a specific biomolecule is specified using "ASSEMBLY id", this
+   *        bsAll will be returned with the new set of atoms
    * @return the total number of atoms
    */
   @SuppressWarnings("unchecked")
@@ -1152,7 +1182,7 @@ public class MMCifReader extends CifReader {
     a.setT(asum);
     a.scale(1d / c);
     a.elementSymbol = "Pt";
-    setChainID(a, id); 
+    setChainID(a, id);
     a.radius = 16;
     asc.addAtom(a);
   }
@@ -1174,23 +1204,22 @@ public class MMCifReader extends CifReader {
   ////////////////////////////////////////////////////////////////
 
   // _STRUCT_CONN is only processed in the presence of _CHEM_CONN (2015 updated cif from EBI)
-  
+
   final private static byte STRUCT_CONN_ASYM1 = 0;
-  final private static byte STRUCT_CONN_SEQ1  = 1;
+  final private static byte STRUCT_CONN_SEQ1 = 1;
   final private static byte STRUCT_CONN_COMP1 = 2;
   final private static byte STRUCT_CONN_ATOM1 = 3;
-  final private static byte STRUCT_CONN_ALT1  = 4;
+  final private static byte STRUCT_CONN_ALT1 = 4;
   final private static byte STRUCT_CONN_SYMM1 = 5;
   final private static byte STRUCT_CONN_ASYM2 = 6;
-  final private static byte STRUCT_CONN_SEQ2  = 7;
+  final private static byte STRUCT_CONN_SEQ2 = 7;
   final private static byte STRUCT_CONN_COMP2 = 8;
   final private static byte STRUCT_CONN_ATOM2 = 9;
-  final private static byte STRUCT_CONN_ALT2  = 10;
+  final private static byte STRUCT_CONN_ALT2 = 10;
   final private static byte STRUCT_CONN_SYMM2 = 11;
-  final private static byte STRUCT_CONN_TYPE  = 12;
+  final private static byte STRUCT_CONN_TYPE = 12;
   final private static byte STRUCT_CONN_ORDER = 13;
 
-  
   final private static String CAT_STRUCTCONN_CAT = "_struct_conn.";
   final protected static String CAT_STRUCTCONN = "_struct_conn";
   final private static String[] structConnFields = {
@@ -1209,23 +1238,20 @@ public class MMCifReader extends CifReader {
     "*_conn_type_id",
     "*_pdbx_value_order"
   };
-  
-//Allowed Value   Details
-//covale  covalent bond
-//covale_base   covalent modification of a nucleotide base
-//covale_phosphate  covalent modification of a nucleotide phosphate
-//covale_sugar  covalent modification of a nucleotide sugar
-//disulf  disulfide bridge
-//metalc  metal coordination
-//
-//// not used:
-//hydrog  hydrogen bond
-//mismat  mismatched base pairs
-//modres  covalent residue modification
-//saltbr  ionic interaction
 
-  private Lst<Object[]> structConnMap;
-  private String structConnList = "";
+  //Allowed Value   Details
+  //covale  covalent bond
+  //covale_base   covalent modification of a nucleotide base
+  //covale_phosphate  covalent modification of a nucleotide phosphate
+  //covale_sugar  covalent modification of a nucleotide sugar
+  //disulf  disulfide bridge
+  //metalc  metal coordination
+  //
+  //// not used:
+  //hydrog  hydrogen bond
+  //mismat  mismatched base pairs
+  //modres  covalent residue modification
+  //saltbr  ionic interaction
 
   protected boolean processStructConnLoopBlock() throws Exception {
     parseLoopParametersFor(CAT_STRUCTCONN, structConnFields);
@@ -1240,15 +1266,15 @@ public class MMCifReader extends CifReader {
         continue;
       if (htBondMap == null)
         htBondMap = new Hashtable<String, Lst<Object[]>>();
-      String key1 = "" + vwr.getChainID(getFieldString(STRUCT_CONN_ASYM1), true) 
+      String key1 = "" + vwr.getChainID(getFieldString(STRUCT_CONN_ASYM1), true)
           + getFieldString(STRUCT_CONN_COMP1)
           + parseIntFieldTok(STRUCT_CONN_SEQ1)
-          + getFieldString(STRUCT_CONN_ATOM1) 
+          + getFieldString(STRUCT_CONN_ATOM1)
           + getFieldString(STRUCT_CONN_ALT1);
-      String key2 = "" + vwr.getChainID(getFieldString(STRUCT_CONN_ASYM2), true) 
+      String key2 = "" + vwr.getChainID(getFieldString(STRUCT_CONN_ASYM2), true)
           + getFieldString(STRUCT_CONN_COMP2)
           + parseIntFieldTok(STRUCT_CONN_SEQ2)
-          + getFieldString(STRUCT_CONN_ATOM2) 
+          + getFieldString(STRUCT_CONN_ATOM2)
           + getFieldString(STRUCT_CONN_ALT2);
       int order = getBondOrder(getFieldString(STRUCT_CONN_ORDER));
       if (structConnMap == null)
@@ -1268,7 +1294,7 @@ public class MMCifReader extends CifReader {
   final private static byte CHEM_COMP_BOND_ATOM_ID_2 = 2;
   final private static byte CHEM_COMP_BOND_VALUE_ORDER = 3;
   final private static byte CHEM_COMP_BOND_AROMATIC_FLAG = 4;
-  
+
   final private static String CAT_COMPBOND_CAT = "_chem_comp_bond.";
   final protected static String CAT_COMPBOND = "_chem_comp_bond";
   final private static String[] chemCompBondFields = {
@@ -1288,8 +1314,7 @@ public class MMCifReader extends CifReader {
 
   final private static byte DB_ID = 0;
   final private static byte DB_DOI = 1;
-  
-  
+
   /**
    * Get the DOI for the data.
    * 
@@ -1316,7 +1341,7 @@ public class MMCifReader extends CifReader {
   }
 
   final private static String CAT_CITATION_CAT = "_citation.";
-  final private static String CAT_CITATION = "_citation";
+  protected final static String CAT_CITATION = "_citation";
   final private static String[] citationFields = {
     "*_id",
     "*_title",
@@ -1326,8 +1351,7 @@ public class MMCifReader extends CifReader {
   final private static byte PUB_ID = 0;
   final private static byte PUB_TITLE = 1;
   final private static byte PUB_DOI = 2;
-  
-  
+
   /**
    * Get the DOI for the publication
    * 
@@ -1339,7 +1363,7 @@ public class MMCifReader extends CifReader {
       while (cifParser.getData()) {
         if (key2col[PUB_DOI] != NONE) {
           if (getFieldString(PUB_ID).equalsIgnoreCase("PRIMARY")) {
-            getFieldString(PUB_TITLE);
+            setPubTitle(getFieldString(PUB_TITLE));
             setPubDOI(getFieldString(PUB_DOI));
           }
         }
@@ -1352,8 +1376,7 @@ public class MMCifReader extends CifReader {
 
   private void setPubDOI(String doi) {
     if (!isNull(doi)) {
-      pubDOI = doi;
-      System.out.println("pubDOI is " + pubDOI);
+      citationDOI = doi;
     }
   }
 
@@ -1377,23 +1400,24 @@ public class MMCifReader extends CifReader {
       if (isLigand) {
         asc.addNewBondWithOrderA(asc.getAtomFromName(atom1),
             asc.getAtomFromName(atom2), order);
-      } else if (haveHAtoms || doSetAllBonds || htHetero != null && htHetero.containsKey(comp)) {
+      } else if (haveHAtoms || doSetAllBonds
+          || htHetero != null && htHetero.containsKey(comp)) {
         if (htBondMap == null)
           htBondMap = new Hashtable<String, Lst<Object[]>>();
         Lst<Object[]> cmap = htBondMap.get(comp);
         if (cmap == null)
           htBondMap.put(comp, cmap = new Lst<Object[]>());
-        cmap.addLast(new Object[] { atom1, atom2,
-            Integer.valueOf(order
- //BH 2026.09.26 why this?               haveHAtoms ? order : 1
-                    ) });
+        cmap.addLast(new Object[] { atom1, atom2, Integer.valueOf(order
+            //BH 2026.09.26 why this?               haveHAtoms ? order : 1
+            ) });
       }
     }
     return true;
   }
-  
+
   @Override
-  public boolean processSubclassAtom(Atom atom, String assemblyId, String strChain) {
+  public boolean processSubclassAtom(Atom atom, String assemblyId,
+                                     String strChain) {
     if (isBiomolecule) {
       if (isCourseGrained) {
         P3d sum = chainAtomMap.get(assemblyId);
@@ -1425,27 +1449,29 @@ public class MMCifReader extends CifReader {
       if (bs == null)
         assemblyIdAtoms.put(assemblyId, bs = new BS());
       bs.set(ac);
-    }    
+    }
     return true;
   }
 
   private String modelStrings = "";
-  
+
   protected boolean done;
-  
+
   @Override
-  protected int checkPDBModelField(int modelField, int currentModelNo) throws Exception {
+  protected int checkPDBModelField(int modelField, int currentModelNo)
+      throws Exception {
     // the model field value is only used if 
     // it is indicated AFTER the file name in the load command, 
     // not if we have a MODEL keyword before the file name.
-    
+
     fieldProperty(modelField);
     int modelNo = parseIntField();
     return (modelNo == currentModelNo ? modelNo : incrementModel(modelNo));
   }
 
   protected int incrementModel(int modelNo) throws Exception {
-    boolean isAssembly = (thisDataSetName != null && thisDataSetName.indexOf("-assembly-") >= 0);
+    boolean isAssembly = (thisDataSetName != null
+        && thisDataSetName.indexOf("-assembly-") >= 0);
     if (isAssembly) {
       useFileModelNumbers = true;
       String key = "," + modelNo + ",";
@@ -1454,7 +1480,7 @@ public class MMCifReader extends CifReader {
       } else {
         modelStrings += key;
       }
-    }      
+    }
     if (iHaveDesiredModel && asc.atomSetCount > 0 && !isAssembly) {
       done = true;
       if (cifParser != null) {
@@ -1473,10 +1499,9 @@ public class MMCifReader extends CifReader {
       if (modelMap == null || asc.ac == 0)
         modelMap = new Hashtable<String, Integer>();
       modelMap.put("" + modelNo, Integer.valueOf(Math.max(0, asc.iSet)));
-      modelMap
-          .put("_" + Math.max(0, asc.iSet), Integer.valueOf(modelNo));
+      modelMap.put("_" + Math.max(0, asc.iSet), Integer.valueOf(modelNo));
     }
-  return modelNo;
+    return modelNo;
   }
 
   private void setFileIsAssembly() {
@@ -1504,7 +1529,7 @@ public class MMCifReader extends CifReader {
         asc.setInfo(JC.INFO_CARBOHYDRATES, carbohydrateGroups);
         asc.setCurrentModelInfo(JC.INFO_CARBOHYDRATES, carbohydrateGroups);
       }
-    }    
+    }
   }
 
 }

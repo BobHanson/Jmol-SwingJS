@@ -1,0 +1,137 @@
+/*
+ * make a graphql search at RCSB for the current model
+ *
+ * return RESULT.data.entries[1].polymer_entities[1].polymer_entity_instances
+ *
+ */  
+function getQ() {
+  var id = _M.pdbID;
+  var s = '{ entries(entry_ids: ["' + id + '"]) {
+    polymer_entities {
+      polymer_entity_instances {
+        rcsb_polymer_entity_instance_container_identifiers {
+          asym_id
+          auth_asym_id
+        }
+        rcsb_polymer_instance_feature {
+          type
+          feature_positions {
+            values
+            beg_seq_id
+          }
+        }        
+      }
+    }
+  }}'
+
+  var q = {"query":s}
+  var url = "https://data.rcsb.org/graphql"
+  var x = load(url + "?POST?" + q)
+  return eval("JSON",x).data.entries[1].polymer_entities[1].polymer_entity_instances
+}
+
+/*
+ * map the graphql values to Jmol atoms
+ *
+ * a      chain atomset
+ * resids array of atom sequence ids from Jmol; will be replaced with Q_score
+ * seq1   beg_seq_id from graphql search
+ * values values from graphq1 search
+ * t0     current pointer into resids
+ *
+ * return updated t0
+ */
+function setQ(a, resids, seq1, values, t0) {
+  var iv = 0;
+  var i = t0;
+  var s = seq1;
+  while (i <= resids.length) {
+    if (resids[i] == s) {
+      // found the first matching residue
+      break;
+    }
+    // NaN for any preceding residues
+    resids[i] = NaN;
+    i++;
+  }
+  for (var j = 1; j <= values.length; j++) {
+    while (i <= resids.length) {
+      if (resids[i] != s) {
+        s++;
+        break;
+      }
+      resids[i] = values[j];
+      i++;
+    }
+  }
+  return i; 
+} 
+
+/*
+ * Find the returned polymer"Q_SCORE" feature data and map it to Jmol atoms
+ * by creating an array and then setting property_qscore.
+ *
+ * Each set of values corresponds to a sequential set of residues defined 
+ * by a starting residue number. We are using auth_seq_id here. 
+ * 
+ * Maybe there is a way to just get the Q_SCORE feature and no others?
+ */
+function mapQ(instance) {
+    // each instance is for a different chain
+
+    var c = instance.rcsb_polymer_entity_instance_container_identifiers.auth_asym_id;
+    var features = instance.rcsb_polymer_instance_feature;
+    var a = {chain=c};
+    var resids = a.resno.all;
+    var positions = [];
+
+    // find Q_SCORE. It is the 43rd feature for 12xf
+
+    for (var j = features.length; j > 0; --j) {
+      if (features[j]["type"] == "Q_SCORE") {
+	positions = features[j].feature_positions; 
+	break;
+      }
+    }
+    
+    // now set these Q-score values to Jmol atoms
+    // there may be several separate consecutive sections 
+
+    var t0 = 1;
+    for (var j = 1; j <= positions.length; j++) {
+      var pos = positions[j];
+      var seq1 = pos.beg_seq_id;
+      var values = pos.values;
+      t0 = setQ(a, resids, seq1, values, t0);
+    }
+
+    // any left-over residues are ignored
+
+    while (t0 <= resids.length) {
+      resids[t0] = NaN;
+      t0++;
+    }
+    a.property_qscore = resids;
+}
+
+/*
+ * generate property_qscore from a graphQL search at RCSB
+ *
+ */
+function getQScores() {
+  var pdata = getQ(id);
+  for (var i = 1; i <= pdata.length; i++) {
+    mapQ(pdata[i]);
+  }
+}
+
+////////////////// here we go...
+
+/**
+
+load =12xf.cif
+getQScores()
+color {this} property_qscore
+
+
+

@@ -253,7 +253,7 @@ public final class JC {
       "pdb0", "https://files.rcsb.org/download/%FILE.pdb", // used in JSmol
       "pdbe", "https://www.ebi.ac.uk/pdbe/entry-files/download/%file.cif",
       "pdbe2", "https://www.ebi.ac.uk/pdbe/static/entry/%file_updated.cif",
-      "wwpdbfull", "https://files.wwpdb.org/pub/wwpdb/pdb/data/entries/%c6%c7/pdb_%file/structures/pdb_%file.pdb.gz",
+      "wwpdbfull", "https://files.wwpdb.org/pub/wwpdb/pdb/data/entries/%c6%c7/pdb_%file/structures/pdb_%file%ext.gz",
       "pubchem",
       "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/%FILE/SDF?record_type=3d",
       "map",
@@ -338,8 +338,9 @@ public final class JC {
   final static String legacyEBIURL = "www.ebi.ac.uk/pdbe/entry-files/download/";
   final static String legacyEBI2URL = "www.ebi.ac.uk/pdbe/static/entry/";
   final static String wwPDBURL = "https://files.wwpdb.org/download/";
-  final static String wwPDBbetaURL = "https://files-beta.wwpdb.org/pub/wwpdb/pdb/data/entries/";
-      
+  final static String wwPDBbetaURL = "https://files-beta.wwpdb.org/";
+  final static String wwPDBfullURL = "https://files.wwpdb.org/pub/wwpdb/pdb/data/entries/";
+  
       // https://files-beta.wwpdb.org/pub/wwpdb/pdb/data/entries/[2-letter-hash]/[extended-PDB-ID]/structures/
 
   public static String updateURL(String url) {
@@ -372,25 +373,18 @@ public final class JC {
     return url;
   }
 
-  private static String fixPDBBeta(String url, boolean isRCSB) {
+  private static String fixPDBBeta(String url, boolean isRCSBPDB) {
     // https://files.wwpdb.org/download/pdb_00001crn.pdb.gz
     if (url.indexOf("#nobeta") >= 0) {
       return url;
     }
-    int pt = after(url, wwPDBbetaURL);
+    boolean pdbBeta = url.startsWith(wwPDBbetaURL);
     if (isPdbBeta()) {
-      if (pt >= 0 || !isRCSB)
+      if (pdbBeta || !isRCSBPDB && !url.startsWith(wwPDBfullURL))
         return url;
-      // this would be OK except for the bug in the shortlink
-      // if that gets fixed, then we can remove this code block
-      pt = url.indexOf("pdb_");
-      String code = url.substring(pt + 4, pt + 12);
-      url = resolveDataBase("wwpdbfull", code, null);
       url = url.replace("/files", "/files-beta");
-    } else if (pt >= 0) {
-      // keep full path for PDB files from scripts that have been created between 9/2026 and 9/2027
+    } else if (pdbBeta) {
       url = PT.rep(url, "-beta", "");
-      // we are not assuming here that the short path will be fixed at some point
     }
     System.out.println("JC.fixPDBBeta using " + url);
     return url;
@@ -447,11 +441,19 @@ public final class JC {
       // replace RCSB format extension when a file extension is made explicit 
       format = format.substring(0, format.indexOf("%FILE"));
     }
-    if (format.indexOf("%c") >= 0)
+    if (format.indexOf("%c") >= 0) {
       for (int i = 1, n = id.length(); i <= n; i++)
         if (format.indexOf("%c" + i) >= 0)
           format = PT.rep(format, "%c" + i,
-              id.substring(i - 1, i).toLowerCase());
+              id.substring(i - 1, i).toLowerCase());     
+    }
+    if (format.indexOf("%ext") >= 0) {
+      int pt = id.indexOf(".");
+      format = PT.rep(format, "%ext", (pt < 0 ? ".cif" : id.substring(pt)));
+      if (pt >= 0) {
+        id = id.substring(0, pt);
+      }
+    }
     if (format.indexOf("%pdb12%") >= 0) {
       int pt = id.indexOf('.');
       String code = (pt < 0 ? id : id.substring(0, pt));

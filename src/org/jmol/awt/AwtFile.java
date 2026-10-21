@@ -49,8 +49,7 @@ class AwtFile extends File implements GenericFileInterface {
     }
   }
 
-  static Object getURLContents(URL url, byte[] outputBytes,
-                                          String post) {
+  static Object getURLContents(URL url, byte[] outputBytes, String post) {
     URLConnection conn = null;
     try {
       conn = url.openConnection();
@@ -60,14 +59,19 @@ class AwtFile extends File implements GenericFileInterface {
       if (outputBytes != null) {
         type = "application/octet-stream;";
       } else if (post != null) {
-        type = "application/x-www-form-urlencoded";
+        if (post.startsWith("{")) {
+          type = "application/json";
+        } else {
+          type = "application/x-www-form-urlencoded";
+        }
       }
-//      conn.setRequestProperty("User-Agent", Viewer.getJmolVersion());
+      //      conn.setRequestProperty("User-Agent", Viewer.getJmolVersion());
       if (type != null) {
         conn.setRequestProperty("Content-Type", type);
         conn.setDoOutput(true);
         if (outputBytes == null) {
-          OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+          OutputStreamWriter wr = new OutputStreamWriter(
+              conn.getOutputStream());
           wr.write(post);
           wr.flush();
         } else {

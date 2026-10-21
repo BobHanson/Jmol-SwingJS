@@ -143,6 +143,8 @@ public class BCIFReader extends MMCifReader {
    */
   private boolean isCategoryOfInterest(String catName) {
     switch (catName) {
+    case CAT_CITATION:
+    case CAT_EXPTL:
     case CAT_ENTRY:
     case CAT_ATOM_SITE:
     case CAT_ATOM_TYPE:
@@ -195,6 +197,8 @@ public class BCIFReader extends MMCifReader {
     case CAT_SHEET:
     case CAT_COMPBOND:
     case CAT_STRUCTCONN:
+    case CAT_CITATION:
+    case CAT_EXPTL:
       key0 = catName + ".";
       return processSubclassLoopBlock();
     }

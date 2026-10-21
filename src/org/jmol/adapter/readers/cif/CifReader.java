@@ -2152,7 +2152,13 @@ public class CifReader extends AtomSetCollectionReader {
     while (cifParser.getData()) {
       String title = getFieldString(CITATION_TITLE);
       if (!isNull(title))
-        appendLoadNote("TITLE: " + cifParser.toUnicode(title));
+        setPubTitle(cifParser.toUnicode(title));
+    }
+  }
+
+  protected void setPubTitle(String title) {
+    if (!isNull(title)) {
+      citationTitle = title;
     }
   }
 

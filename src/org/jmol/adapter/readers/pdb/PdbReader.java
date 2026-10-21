@@ -148,6 +148,8 @@ public class PdbReader extends AtomSetCollectionReader {
   private boolean isCourseGrained;
   private boolean isbiomol;
 
+  private boolean haveDoubleBonds;
+
   private double cryst1;
   private String fileSgName;
 
@@ -397,7 +399,7 @@ public class PdbReader extends AtomSetCollectionReader {
   Map<String, String> htGroup1;
   private int maxLength = 80;
   protected String pdbID;
-
+ 
   private String readHeader(boolean getLine) throws Exception {
     if (getLine) {
       rd();
@@ -420,7 +422,6 @@ public class PdbReader extends AtomSetCollectionReader {
         asc.setAtomSetName(pdbID);
       asc.setCurrentModelInfo("pdbID", pdbID);
     }
-
     checkUnitCellParams();
     if (!isCourseGrained)
       connectAll(maxSerial, isConnectStateBug);
@@ -555,8 +556,7 @@ public class PdbReader extends AtomSetCollectionReader {
 
   private void title() {
     if (lineLength > 10)
-      appendLoadNote(
-          line.substring(10, Math.min(maxLength, line.length())).trim());
+      citationTitle = line.substring(10, Math.min(maxLength, line.length())).trim();
   }
 
   private void compnd(boolean isSource) {
@@ -1153,8 +1153,6 @@ public class PdbReader extends AtomSetCollectionReader {
     return "Xx";
   }
 
-  private boolean haveDoubleBonds;
-
   // ancient provisions:
   // - must check for pre-2000 format with hydrogen bonds
   // - salt bridges are totally ignored
@@ -1378,8 +1376,9 @@ public class PdbReader extends AtomSetCollectionReader {
     sbConect = null;
     asc.newAtomSet();
     asc.setCurrentModelInfo("pdbID", pdbID);
-    if (asc.iSet == 0 || isTrajectory)
+    if (asc.iSet == 0 || isTrajectory) {
       asc.setAtomSetName(pdbID);
+    }
     asc.setCurrentModelInfo(JC.INFO_MODEL_NAME, name);
     checkUnitCellParams();
     if (!isCourseGrained)
@@ -1440,8 +1439,8 @@ public class PdbReader extends AtomSetCollectionReader {
   }
 
   private void expdta() {
-    if (line.toUpperCase().indexOf("NMR") >= 0)
-      asc.setInfo("isNMRdata", "true");
+    String type = line.substring(7).trim().toUpperCase();
+    exptMethod = type;
   }
 
   private void formul() {

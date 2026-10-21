@@ -25,7 +25,6 @@
 package org.jmol.adapter.smarter;
 
 import java.io.BufferedReader;
-import java.util.Hashtable;
 import java.util.Map;
 
 import org.jmol.adapter.smarter.XtalSymmetry.FileSymmetry;
@@ -269,6 +268,19 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   public boolean paramsCentroid;
   private boolean paramsPacked;
 
+  protected String exptMethod;
+  protected String citationDOI;
+  protected String citationTitle;
+  protected String dataDOI;
+
+  protected boolean isFinalized;
+
+
+  /**
+   * actual SUPERCELL keyword, not just "cell="
+   */
+  public boolean isSUPERCELL;
+
   // JmolDataReader and GenNBOReader only
   protected P3d fileScaling;
   protected P3d fileOffset;
@@ -445,14 +457,6 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     // can be customized
   }
 
-  protected boolean isFinalized;
-
-
-  /**
-   * actual SUPERCELL keyword, not just "cell="
-   */
-  public boolean isSUPERCELL;
-
   protected void finalizeReaderASCR() throws Exception {
     isFinalized = true;
     if (asc.atomSetCount > 0) {
@@ -470,6 +474,22 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
         asc.setNoAutoBond();
       Map<String, Object> info = asc.getAtomSetAuxiliaryInfo(0);
       if (info != null) {
+          if (exptMethod != null) {
+            info.put("experimentalMethod", exptMethod);
+            appendLoadNote("_M.experimentalMethod is " + exptMethod);
+          }
+          if (citationTitle != null) {
+            info.put("pubTitle", citationTitle);
+            appendLoadNote("_M.pubTitle is " + citationTitle);
+          }
+          if (citationDOI != null) {
+            info.put("pubDOI", citationDOI);
+            appendLoadNote("_M.pubDOI is " + citationDOI);
+          }
+          if (dataDOI != null) {
+            info.put("dataDOI", dataDOI);
+            appendLoadNote("_M.dataDOI is " + dataDOI);
+          }
         if (domains != null) {
           asc.setGlobalBoolean(JC.GLOBAL_DOMAINS);
           String s = ((SV) domains).getMapKeys(2, true);

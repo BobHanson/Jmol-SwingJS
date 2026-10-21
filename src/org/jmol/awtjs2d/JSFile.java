@@ -60,7 +60,11 @@ class JSFile extends File implements GenericFileInterface {
       if (outputBytes != null) {
         type = "application/octet-stream;";
       } else if (post != null) {
-        type = "application/x-www-form-urlencoded";
+        if (post.startsWith("{")) {
+          type = "application/json";
+        } else {
+          type = "application/x-www-form-urlencoded";
+        }
       }
    //   conn.setRequestProperty("User-Agent", Viewer.getJmolVersion());
       if (type != null) {

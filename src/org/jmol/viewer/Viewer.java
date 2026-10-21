@@ -5179,10 +5179,11 @@ public class Viewer extends JmolViewer
         if (!isSurface && id.endsWith(".bcif")) {
           id = id.substring(0, id.indexOf(".bcif"));
           name = JC.resolveDataBase("bcif", id.toLowerCase(), null);
-        }
-        if (id.endsWith(".mmtf")) {
+        } else if (id.endsWith(".mmtf")) {
           id = id.substring(0, id.indexOf(".mmtf"));
           name = JC.resolveDataBase("mmtf", id.toUpperCase(), null);
+        } else if (id.length() > 4 && id.indexOf('.') < 0) {
+          id += ".cif";
         }
         if (name != null)
           return name + suffix;
