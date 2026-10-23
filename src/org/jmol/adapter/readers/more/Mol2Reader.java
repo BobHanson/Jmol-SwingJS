@@ -196,7 +196,7 @@ public class Mol2Reader extends ForceFieldReader {
           chainID++;
         }
         lastSequenceNumber = atom.sequenceNumber;
-        setChainID(atom, "" + (char) chainID);
+        setChainID(atom, "" + (char) chainID, null);
       }
       if (tokens.length > 7)
         atom.group3 = tokens[7];

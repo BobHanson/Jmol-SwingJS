@@ -86,6 +86,8 @@ public class Group implements Structure {
   
   public int shapeVisibilityFlags;
 
+  public int asymID;
+  
   public Map<String, Object> dssrNT;
   public Point3fi strutPoint;
 
@@ -594,6 +596,14 @@ public class Group implements Structure {
 
   public String getGroupMenuKey() {
     return JC.GROUP_MENU_OTHER;
+  }
+
+  /**
+   * 
+   * @return actual string form of the chain identifier
+   */
+  public String getAsymIDStr() {
+      return (asymID == 0 ? chain.getIDStr() : asymID < 256 ? "" + (char) asymID : (String) chain.model.ms.vwr.getChainIDStr(asymID));
   }
 
 }

@@ -561,6 +561,7 @@ public class T {
   public final static int atomname      = strproperty | 2 | settable;
   public final static int altloc        = strproperty | 3;
   public final static int chain         = strproperty | 4 | settable;
+  public final static int asymid        = strproperty | 4;
   public final static int element       = strproperty | 5 | settable;
   public final static int group         = strproperty | 6;
   public final static int group1        = strproperty | 7;
@@ -1971,6 +1972,7 @@ public class T {
         "angle",
         "array",
         "as",
+        "asymID",
         "_a",
         "atomID",
         "_atomID",
@@ -3063,6 +3065,7 @@ public class T {
         angle,                              // "angle"
         array,                              // "array"
         as,                                 // "as"
+        asymid,                             // "asymID"
         atomid,                             // "atomID"
         -1,                                 // "_atomID"
         -1,                                 // "_a"

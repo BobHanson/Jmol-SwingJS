@@ -1577,6 +1577,7 @@ public class PropertyManager implements JmolPropertyManager {
         info.put("insertionCode", "" + insCode);
       info.put("name", ms.at[i].getAtomName());
       info.put("chain", atom.getChainIDStr());
+      info.put("asymID", atom.getAsymIDStr());
       info.put("atomID", Integer.valueOf(atom.atomID));
       info.put("groupID", Integer.valueOf(atom.group.groupID));
       if (atom.altloc != '\0')

@@ -323,7 +323,7 @@ public class MMTFReader extends MMCifReader {
         if (seqNo >= 0)
           maxSerial = Math.max(maxSerial, a.sequenceNumber = seqNo);
         a.group3 = group3;
-        setChainID(a, chainID);
+        setChainID(a, chainID, labelAsym);
         if (bf != null)
           a.bfactor = bf[iatom];
         if (altloc != null)

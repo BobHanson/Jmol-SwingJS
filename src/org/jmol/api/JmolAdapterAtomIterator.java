@@ -88,4 +88,6 @@ public interface JmolAdapterAtomIterator {
 
   int getPart();
 
+  int getAsymID();
+
 }

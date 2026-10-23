@@ -2169,8 +2169,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
     // PyMOL reader only
   }
 
-  public void setChainID(Atom atom, String label) {
+  public void setChainID(Atom atom, String label, String componentId) {
     atom.chainID = vwr.getChainID(label, true);
+    if (componentId != null && !componentId.equals(label))
+      atom.chainID |=  (vwr.getChainID(componentId, true) << 16); 
   }
 
   @Override

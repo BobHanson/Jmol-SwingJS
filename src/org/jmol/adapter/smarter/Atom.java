@@ -50,6 +50,9 @@ public class Atom extends P3d implements Cloneable {
   public double radius = Double.NaN;
   public boolean isHetero;
   public int atomSerial = Integer.MIN_VALUE;
+  /**
+   * asymID << 16 | authID
+   */
   public int chainID; // not public -- set using AtomSetCollectionReader.setChainID
   public int seqIdOrWyckoffCode; // (siteMult << 16) + wyckoff.charAt(0)
 

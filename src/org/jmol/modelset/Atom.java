@@ -1117,6 +1117,10 @@ public class Atom extends Point3fi implements Node {
     return group.chain.getIDStr();
   }
   
+  public String getAsymIDStr() {
+    return group.getAsymIDStr();
+  }
+  
   public int getSurfaceDistance100() {
     return group.chain.model.ms.getSurfaceDistance100(i);
   }
@@ -1437,6 +1441,8 @@ public class Atom extends Point3fi implements Node {
       return getAtomType();
     case T.chain:
       return getChainIDStr();
+    case T.asymid:
+      return getAsymIDStr();
     case T.chirality:
       return getCIPChirality(true);
     case T.ciprule:

@@ -2048,7 +2048,7 @@ public class CifReader extends AtomSetCollectionReader {
           strChain = authAsym;
       }
       if (strChain != null) {
-        setChainID(atom, strChain);
+        setChainID(atom, strChain, componentId);
       }
       if (maxSerial != Integer.MIN_VALUE)
         maxSerial = Math.max(maxSerial, atom.sequenceNumber);

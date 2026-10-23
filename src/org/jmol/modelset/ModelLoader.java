@@ -241,14 +241,20 @@ public final class ModelLoader {
 
   private final static int defaultGroupCount = 32;
   private Chain[] chainOf;
-
   private String[] group3Of;
+  private int[] groupAsymID;
+  
   public String getGroup3(int iGroup) {
     return (iGroup >= group3Of.length ? null : group3Of[iGroup]);
   }
 
+  public int getAsymID(int iGroup) {
+    return (iGroup >= group3Of.length ? Integer.MIN_VALUE : groupAsymID[iGroup]);
+  }
+
   private int[] seqcodes;
   private int[] firstAtomIndexes;
+  private int[] asymIDs;
 
   public int getFirstAtomIndex(int iGroup) {
     return firstAtomIndexes[iGroup];
@@ -256,7 +262,7 @@ public final class ModelLoader {
   
   private int iModel;
   private Model model;
-  private int currentChainID;
+  private int currentChainID, currentAsymID;
   private boolean isNewChain;
   private Chain currentChain;
   private int currentGroupSequenceNumber;
@@ -300,6 +306,7 @@ public final class ModelLoader {
     group3Of = new String[defaultGroupCount];
     seqcodes = new int[defaultGroupCount];
     firstAtomIndexes = new int[defaultGroupCount];
+    asymIDs = new int[defaultGroupCount];
     currentChainID = Integer.MAX_VALUE;
     currentChain = null;
     currentGroupInsertionCode = '\uFFFF';
@@ -849,7 +856,8 @@ public final class ModelLoader {
       }
       String group3 = iterAtom.getGroup3();
       int chainID = iterAtom.getChainID();
-      checkNewGroup(adapter, chainID, group3, iterAtom.getSequenceNumber(),
+      int asymID = iterAtom.getAsymID();
+      checkNewGroup(adapter, chainID, asymID, group3, iterAtom.getSequenceNumber(),
             iterAtom.getInsertionCode(), addH, isLegacyHAddition);
       int isotope = iterAtom.getElementNumber();
       if (addH && Elements.getElementNumber(isotope) == 1)
@@ -997,9 +1005,12 @@ public final class ModelLoader {
     return atom;
   }
 
-  private void checkNewGroup(JmolAdapter adapter, int chainID,
+  private void checkNewGroup(JmolAdapter adapter, int chainID, int asymID,
                              String group3, int groupSequenceNumber,
                              char groupInsertionCode, boolean addH, boolean isLegacyHAddition) {
+    if (asymID != currentAsymID) {
+      currentAsymID = asymID;
+    }
     if (chainID != currentChainID) {
       currentChainID = chainID;
       currentChain = getOrAllocateChain(model, chainID);
@@ -1024,8 +1035,10 @@ public final class ModelLoader {
         group3Of = AU.doubleLengthS(group3Of);
         seqcodes = AU.doubleLengthI(seqcodes);
         firstAtomIndexes = AU.doubleLengthI(firstAtomIndexes);
+        asymIDs = AU.doubleLengthI(asymIDs);
       }
       firstAtomIndexes[groupCount] = ms.ac;
+      asymIDs[groupCount] = currentAsymID;
       chainOf[groupCount] = currentChain;
       group3Of[groupCount] = group3;
       seqcodes[groupCount] = Group.getSeqcodeFor(groupSequenceNumber,
@@ -1298,7 +1311,7 @@ public final class ModelLoader {
     for (int i = baseGroupIndex; i < groupCount; ++i)
       distinguishAndPropagateGroup(i, chainOf[i], group3Of[i], seqcodes[i],
           firstAtomIndexes[i], (i == groupCount - 1 ? ms.ac
-              : firstAtomIndexes[i + 1]) - 1);
+              : firstAtomIndexes[i + 1]) - 1, asymIDs[i]);
     if (group3Lists != null) {
       ms.msInfo.put(JC.INFO_GROUP3_LISTS, group3Lists);
       ms.msInfo.put(JC.INFO_GROUP3_COUNTS, group3Counts);
@@ -1310,7 +1323,7 @@ public final class ModelLoader {
 
   private void distinguishAndPropagateGroup(int groupIndex, Chain chain,
                                             String group3, int seqcode,
-                                            int firstAtomIndex, int lastAtomIndex) {
+                                            int firstAtomIndex, int lastAtomIndex, int asymID) {
     /*
      * called by finalizeGroupBuild()
      * 
@@ -1335,9 +1348,11 @@ public final class ModelLoader {
     if (group == null) {
       group = new Group().setGroup(chain, group3, seqcode, firstAtomIndex,
           lastAtomIndex);
-      if (bml != null)
+      if (bml != null) {
         group.groupID = bml.getGroupID(group3);
+      }
     }
+    group.asymID = asymID;
     String key = group.getGroupMenuKey();
     if (group3 != null) {
       countGroup(ms.at[firstAtomIndex].mi, key, group3);

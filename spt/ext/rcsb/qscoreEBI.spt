@@ -1,9 +1,15 @@
+// qscoreEBI.spt
+// Bob Hanson 2026.10.21
+// not working for 7o0u
+// !! q_scores(5292), chains(5783), and resnos(5783) are not the same length !!
+
+valFile = "c:/temp/tv.cif";
+
 /*
  * generate property_qscore for the current model
  * from an EBI validation report
  *
  */
-
 function getQScoresEBI() {
   var data = getEBICIFValidation(_M.pdbID);  
   mapEBIData(data);
@@ -14,6 +20,9 @@ function getEBICIFValidation(id) {
   var dir = id[2][3];
   var url = "https://ftp.ebi.ac.uk/pub/databases/pdb/validation_reports/"+dir+"/" + id + "/" + id + "_validation.cif.gz";
   var s = load(url);
+  if (valFile) {
+    write var s @valFile;
+  }
   return getProperty("cifinfo", "#CIF\n" + s).models[1];
 }
 
@@ -23,7 +32,7 @@ function mapEBIData(data) {
   var resnos = data._pdbx_vrpt_model_instance_auth_seq_id;
   var n = scores.length;
   if (chains.length != n || resnos.length != n) {
-    print "!! q_scores, chains, and resnos are not the same length !!";
+    print "!! q_scores("+n+"), chains("+chains.length+"), and resnos("+resnos.length+") are not the same length !!";
     return null;
   }
   chainMap = {};
