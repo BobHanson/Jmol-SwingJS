@@ -53,6 +53,7 @@ import org.jmol.viewer.Viewer;
 
 import javajs.util.AU;
 import javajs.util.BS;
+import javajs.util.Lst;
 import javajs.util.MeasureD;
 import javajs.util.P3d;
 import javajs.util.P4d;
@@ -1449,28 +1450,8 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
               bsAssigned);
     }
 
-    public Object fixPropertyValue(BS bsAtoms, Object data, boolean toHydrogens) {
+    public double[] fixPropertyValue(BS bsAtoms, double[] data, boolean toHydrogens) {
       Atom[] atoms = ms.at;
-      // we aren't doing this anymore
-      // it was for TLS groups
-//      if (data instanceof String) {
-//        String[] sData = PT.split((String) data, "\n");
-//        String[] newData = new String[bsAtoms.cardinality()];
-//        String lastData = "";
-//        for (int pt = 0, iAtom = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
-//            .nextSetBit(i + 1), iAtom++) {
-//          if (atoms[i].getElementNumber() == 1) {
-//            if (!toHydrogens)
-//              continue;
-//          } else {
-//            lastData = sData[pt++];
-//          }
-//          newData[iAtom] = lastData;
-//        }
-//        return PT.join(newData, '\n', 0);
-//      }
-      // already double data
-      double[] fData = (double[]) data;
       double[] newData = new double[bsAtoms.cardinality()];
       double lastData = 0;
       for (int pt = 0, iAtom = 0, i = bsAtoms.nextSetBit(0); i >= 0; i = bsAtoms
@@ -1479,7 +1460,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
           if (!toHydrogens)
             continue;
         } else {
-          lastData = fData[pt++];
+          lastData = data[pt++];
         }
         newData[iAtom] = lastData;
       }
@@ -1836,7 +1817,95 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
     }
   }
 
-  
+  public String setLoadFormat(char type, String id, String name,
+                              String format, boolean isSurface) {
+    String ret = null;
+    int pt;
+    switch (type) {
+    default:
+    case '*':
+      pt = name.lastIndexOf("/");
+      if (name.startsWith("*dom/")) {
+        //  *dom/.../.../.../xxxx
+        id = name.substring(pt + 1);
+        format = (pt > 4 ? name.substring(5) : "mappings");
+        ret = PT.rep(JC.resolveDataBase("map", id, null), "%TYPE", format);
+      } else if (name.startsWith("*val/")) {
+        //  *val/.../.../.../xxxx
+        id = name.substring(pt + 1);
+        // 8-digit?
+        format = (pt > 4 ? name.substring(5) : "validation/outliers/all");
+        ret = PT.rep(JC.resolveDataBase("map", id, null), "%TYPE", format);
+      } else if (name.startsWith("*valq/")) {
+        //  *valq Q-score
+        id = name.substring(pt + 1);
+        ret = JC.resolveDataBase(null, id, RCSB_QSCORE_QUERY);
+      } else if (name.startsWith("*rna3d/")) {
+        //  *rna3d/.../.../.../xxxx
+        id = name.substring(pt + 1);
+        format = (pt > 6 ? name.substring(6) : "loops");
+        ret = PT.rep(JC.resolveDataBase("rna3d", id, null), "%TYPE", format);
+      } else if (name.startsWith("*dssr--")) {
+        id = name.substring(pt + 1);
+        id = JC.resolveDataBase(JC.INFO_DSSR, id, null);
+        ret = id + "%20" + PT.rep(name.substring(5, pt), " ", "%20");
+      } else if (name.startsWith("*dssr/")) {
+        id = name.substring(pt + 1);
+        ret = JC.resolveDataBase(JC.INFO_DSSR, id, null);
+      } else if (name.startsWith("*dssr1/")) {
+        id = name.substring(pt + 1);
+        ret = JC.resolveDataBase("dssr1", id, null);
+      }
+      if (ret != null)
+        return ret;
+      // these are processed in SmarterJmolAdapter
+      String pdbe = "pdbe";
+      if (id.length() == 5 && id.charAt(4) == '*') {
+        pdbe = "pdbe2";
+        id = id.substring(0, 4);
+      }
+      return JC.resolveDataBase(pdbe, id, null);
+    case '=':
+      name = null;
+      if (!isSurface && id.endsWith(".bcif")) {
+        id = id.substring(0, id.indexOf(".bcif"));
+        name = JC.resolveDataBase("bcif", id.toLowerCase(), null);
+      } else if (id.endsWith(".mmtf")) {
+        id = id.substring(0, id.indexOf(".mmtf"));
+        name = JC.resolveDataBase("mmtf", id.toUpperCase(), null);
+      } else if (id.length() > 4 && id.indexOf('.') < 0) {
+        id += ".cif";
+      }
+      if (name != null)
+        return name;
+      // not bcif or mmtf      
+      format = vwr.getPDBLoadFormat(T.loadformat);
+    //$FALL-THROUGH$
+  case '#': // ligand
+    if (format == null) {
+      format = vwr.getPDBLoadFormat(T.loadligandformat);
+      if (id.startsWith("pdb_") && id.indexOf('.') < 0)
+        id += ".cif.gz";
+    }
+    return JC.resolveDataBase(null, id, format);
+    }
+  }
+
+  private final static String RCSB_QSCORE_QUERY = 
+      "https://data.rcsb.org/graphql?POST?{\"query\":\"{entries(entry_ids: [\\\"%pdb12%\\\"]){" //
+      + "rcsb_id pdbx_vrpt_summary_em{Q_score} " //
+      + "nonpolymer_entities{nonpolymer_entity_instances{" //
+      + "  rcsb_nonpolymer_entity_instance_container_identifiers{asym_id comp_id} " // 
+      + "  rcsb_nonpolymer_instance_validation_score{Q_score}" //
+      + "}} " //
+      + "polymer_entities{polymer_entity_instances{" //
+      + "  rcsb_polymer_entity_instance_container_identifiers{asym_id}" //  
+      + "  pdbx_vrpt_summary_entity_fit_to_map{Q_score}" //
+      + "  rcsb_polymer_instance_feature(type: [\\\"Q_SCORE\\\"]){" //
+      + "    type feature_positions {beg_seq_id end_seq_id values}" //
+      + "}}" //  
+      + "}}" //
+      + "}\"}";
 }
 
 

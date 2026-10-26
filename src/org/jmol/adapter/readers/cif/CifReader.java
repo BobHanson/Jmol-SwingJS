@@ -126,7 +126,7 @@ public class CifReader extends AtomSetCollectionReader {
   protected boolean skipping;
 
   private boolean isAFLOW;
-  protected String pdbID;
+  protected String pdbID, pdbID12;
   private Lst<String> lstSpinLattices;
   private Map<String, String> mapSpinIdToUVW;
 
@@ -182,7 +182,7 @@ public class CifReader extends AtomSetCollectionReader {
 
   protected void resetGlobalsForNewData() {
     isAFLOW = false;
-    pdbID = null;
+    pdbID = pdbID12 = null;
     // general
     //    if (!ignoreFileSpaceGroupName)
     //      sgName = null;
@@ -747,8 +747,7 @@ public class CifReader extends AtomSetCollectionReader {
     int n = asc.atomSetCount;
     if (n > 1)
       asc.setCollectionName("<collection of " + n + " models>");
-    if (pdbID != null)
-      asc.setCurrentModelInfo("pdbID", pdbID);
+    super.setPDBID(pdbID, pdbID12);
     finalizeReaderASCR();
     addHeader();
     if (haveAromatic)
@@ -756,6 +755,13 @@ public class CifReader extends AtomSetCollectionReader {
     // Q: Isn't asc.xtalSymmetry already nulled?
     if (!isMMCIF && asc.xtalSymmetry != null) {
       asc.xtalSymmetry.setPartProperty();
+    }
+  }
+
+  protected void setPDBID12(String id) {
+    if (!isNull(id)) {
+      pdbID12 = id;
+      System.out.println("pdbID12 is " + pdbID12);
     }
   }
 
@@ -969,13 +975,13 @@ public class CifReader extends AtomSetCollectionReader {
       if (isMMCIF) {
         setModelPDB(true); // first model can be missed
         if (pdbID != null)
-          asc.setCurrentModelInfo("pdbID", pdbID);
+          setPDBID(pdbID, pdbID12);
       }
       newAtomSet();
       if (isMMCIF) {
         setModelPDB(true);
         if (pdbID != null)
-          asc.setCurrentModelInfo("pdbID", pdbID);
+          setPDBID(pdbID, pdbID12);
       }
     } else {
       asc.setCollectionName(thisDataSetName);
@@ -1001,7 +1007,7 @@ public class CifReader extends AtomSetCollectionReader {
       chemicalName = field = fullTrim(field);
       appendLoadNote(chemicalName);
       if (!field.equals("?"))
-        asc.setInfo("modelLoadNote", field);
+        appendLoadNote(field);
     } else if (type.equals("structuralFormula")) {
       thisStructuralFormula = field = fullTrim(field);
     } else if (type.equals("formula")) {
@@ -1746,7 +1752,7 @@ public class CifReader extends AtomSetCollectionReader {
           }
         }
       }
-      String componentId = null;
+      String asymId = null;
       String id = null;
       String authAtom = null;
       String authComp = null;
@@ -1802,7 +1808,7 @@ public class CifReader extends AtomSetCollectionReader {
           haveAuth = true;
           break;
         case LABEL_ASYM_ID:
-          componentId = field;
+          asymId = field;
           break;
         case AUTH_ASYM_ID:
           authAsym = field;
@@ -2036,7 +2042,7 @@ public class CifReader extends AtomSetCollectionReader {
       // auth_xxx are optional; label_xxx are required
       if (siteMult > 0 && wyckoff != null && wyckoff.length() > 0)
         seqIdOrWyckoffCode = ((siteMult << 16)) | wyckoff.charAt(0);
-      String strChain = componentId;
+      String strChain = asymId;
       if (haveAuth) {
         if (authAtom != null)
           atom.atomName = authAtom;
@@ -2048,11 +2054,11 @@ public class CifReader extends AtomSetCollectionReader {
           strChain = authAsym;
       }
       if (strChain != null) {
-        setChainID(atom, strChain, componentId);
+        setChainID(atom, strChain, asymId);
       }
       if (maxSerial != Integer.MIN_VALUE)
         maxSerial = Math.max(maxSerial, atom.sequenceNumber);
-      if (!addCifAtom(atom, id, componentId, strChain))
+      if (!addCifAtom(atom, id, asymId, strChain))
         continue;
       if ((id != null || wyckoff != null) && seqIdOrWyckoffCode > 0) {
         // mark as valid for return with getSeqID()

@@ -30,11 +30,6 @@ public interface JmolDataManager {
    * optional; defaults to TRUE
    */
   public final static int DATA_SAVE_IN_STATE = 4; 
-  /**
-   * optional; from ModelLoader; provides the ModelSet atomProperties Map.Entry for this
-   * item in case the array is ever expanded.
-   */
-  public final static int DATA_ATOM_PROP_ENTRY = 5;
 
   JmolDataManager set(Viewer vwr);
 

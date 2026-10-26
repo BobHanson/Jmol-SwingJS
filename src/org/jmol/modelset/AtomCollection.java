@@ -2532,6 +2532,27 @@ abstract public class AtomCollection {
     return bs;
   }
 
+  public void getAsymBits(int chainID, int seqID, String groupID, BS bsAtoms, BS bsFound, int maxGroups) {
+    bsFound.clearAll();
+    for (int n = 0, i = bsAtoms.nextSetBit(0); i >= 0 && n < maxGroups; i = bsAtoms.nextSetBit(i + 1)) {
+      Group g = at[i].group;
+//      System.out.println("AC: " + vwr.getChainIDStr(chainID) + "=" + vwr.getChainIDStr(g.asymID) +
+//      " " + n + "/" + maxGroups + " " 
+//      + at[i].getSeqID() + "=" + seqID 
+//      + " " + g.getGroup3() + "=" + groupID);
+      if (n > 0 || g.getAsymID() == chainID && (groupID == null ? at[i].getSeqID() == seqID : g.getGroup3().equals(groupID))) {
+        BS bs = new BS();
+        g.setAtomBits(bs);
+//        System.out.println("AC: " + vwr.getChainIDStr(chainID) + " " + n + "/" + maxGroups + " " + chainID + " " + g.getGroup3() + " " + bs);
+        g.setAtomBitsAndClear(bsFound, bsAtoms);
+        n++;
+      }
+    }
+    if (bsFound.cardinality() == 0) {
+      System.err.println("AtomCollection.getAsymBits: no atoms found: " + vwr.getChainIDStr(chainID) +  " " + groupID);      
+    }
+  }
+
   public int chainToUpper(int chainID) {
     return (chainID >= 97 && chainID <= 122 ? chainID - 32 
         : chainID >= 256 && chainID < 300 ? chainID - 191

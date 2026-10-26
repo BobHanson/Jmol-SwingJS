@@ -1129,13 +1129,13 @@ public class ScriptMathProcessor {
       case T.bitset:
         BS bs = (BS) x1.value;
         switch (x2.tok) {
-        case T.integer:
-          int x = x2.asInt();
-          return (addXBool(x < 0 ? false : bs.get(x)));
         case T.bitset:
           bs = BSUtil.copy(bs);
           bs.and((BS) x2.value);
           return addXBs(x1.value instanceof BondSet ? BondSet.newBS(bs) : bs);
+        case T.integer:
+          int x = x2.asInt();
+          return (addXBool(x < 0 ? false : bs.get(x)));
         }
         break;
       }

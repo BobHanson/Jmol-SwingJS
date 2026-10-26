@@ -124,9 +124,8 @@ public class MMCifReader extends CifReader {
       filter = filter.replace(':', ' '); // no chain selection for biomolecules
       bySymop = checkFilterKey("BYSYMOP");
       // incompatible with building biomolecules
-      dssr = null;
-      validation = null;
-      domains = null;
+      dssr = validation = domains = qscore = null;
+      
     }
     isCourseGrained = byChain || bySymop;
     if (isCourseGrained) {
@@ -167,6 +166,9 @@ public class MMCifReader extends CifReader {
     if (key0.startsWith(CAT_DATABASE2_CAT)) {
       if (key.endsWith("_pdbx_doi")) {
         setDataDOI((String) field);
+      }
+      if (key.endsWith("_pdbx_database_accession")) {
+        setPDBID12((String) field);
       }
     }
 
@@ -351,9 +353,12 @@ public class MMCifReader extends CifReader {
         if (addedData == null) {
           if (validation != null || dssr != null) {
             note = vs.finalizeValidations(vwr, modelMap);
-            if (dssr != null)
-              this.addJmolScript("cartoons only");
-          }
+            if (dssr == null) {
+              note = null; // handled later, in ModelLoader
+            } else {
+              addJmolScript("cartoons only");
+            }              
+          } 
         } else if (addedDataKey.equals("_rna3d")) {
           note = vs.finalizeRna3d(modelMap);
         }
@@ -462,7 +467,7 @@ public class MMCifReader extends CifReader {
         double pt = a.sequenceNumber;//(a.vib == null ? a.sequenceNumber : a.vib.x);
         if (pt != seqid) {
           seqid = pt;
-          String ckey = a.chainID + a.group3 + seqid;
+          String ckey = a.getChainID() + a.group3 + seqid;
           if (structConnList.indexOf(ckey) < 0) {
             comp = null;
             continue;
@@ -1309,11 +1314,13 @@ public class MMCifReader extends CifReader {
   final private static String CAT_DATABASE2 = "_database_2";
   final private static String[] database2Fields = {
     "*_database_id",
-    "*_pdbx_doi"
+    "*_pdbx_doi",
+    "*_pdbx_database_accession"
   };
 
   final private static byte DB_ID = 0;
   final private static byte DB_DOI = 1;
+  final private static byte DB_PDBID12 = 2;
 
   /**
    * Get the DOI for the data.
@@ -1327,6 +1334,7 @@ public class MMCifReader extends CifReader {
       if (key2col[DB_DOI] != NONE) {
         if (getFieldString(DB_ID).equals("PDB")) {
           setDataDOI(getFieldString(DB_DOI));
+          setPDBID12(getFieldString(DB_PDBID12));
         }
       }
     }
@@ -1345,7 +1353,7 @@ public class MMCifReader extends CifReader {
   final private static String[] citationFields = {
     "*_id",
     "*_title",
-    "*_pdbx_database_id_doi"
+    "*_pdbx_database_id_doi",
   };
 
   final private static byte PUB_ID = 0;
@@ -1430,8 +1438,9 @@ public class MMCifReader extends CifReader {
         return false;
       }
     } else if (byChain) {
-      if (thisChain != atom.chainID) {
-        thisChain = atom.chainID;
+      int chainID = atom.getChainID();
+      if (thisChain != chainID) {
+        thisChain = chainID;
         chainSum = chainAtomMap.get(strChain);
         if (chainSum == null) {
           chainAtomMap.put(strChain, chainSum = new P3d());

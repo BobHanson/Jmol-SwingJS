@@ -1507,7 +1507,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
         thischain = 0;
       } else {
         seqNo = atoms[i].sequenceNumber;
-        thischain = atoms[i].chainID;
+        thischain = atoms[i].getChainID();
         thisModel = atoms[i].atomSetIndex;
       }
       if (thischain != ichain || thisModel != imodel) {
@@ -1536,7 +1536,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
         Atom a = atoms[istart];
         Atom b = atoms[iend];
         int i0 = asc.getAtomSetAtomIndex(thisModel);
-        structure.set(a.chainID, a.sequenceNumber, a.insertionCode, b.chainID,
+        structure.set(a.getChainID(), a.sequenceNumber, a.insertionCode, b.getChainID(),
             b.sequenceNumber, b.insertionCode, istart - i0, iend - i0);
         asc.addStructure(structure);
       }
@@ -1658,10 +1658,10 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
       uniqueIDs[i] = getUniqueID(i);
       sequenceNumbers[i] = getSequenceNumber(i);
       radii[i] = getVDW(i);
-      if (lastAtomChain != atoms[i].chainID
+      if (lastAtomChain != atoms[i].getChainID()
           || lastAtomSet != atoms[i].atomSetIndex) {
         newChain[i] = true;
-        lastAtomChain = atoms[i].chainID;
+        lastAtomChain = atoms[i].getChainID();
         lastAtomSet = atoms[i].atomSetIndex;
       }
     }
@@ -1815,7 +1815,7 @@ public class PyMOLReader extends PdbReader {//implements PymolAtomReader {
 
   //  @Override
   public boolean compareAtoms(int iPrev, int i) {
-    return atoms[iPrev].chainID != atoms[i].chainID;
+    return atoms[iPrev].getChainID() != atoms[i].getChainID();
   }
 
 }

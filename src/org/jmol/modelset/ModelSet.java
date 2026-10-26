@@ -5041,5 +5041,16 @@ public class ModelSet extends BondCollection {
     return (bioModelset != null && bioModelset.haveDSSR ? bioModelset.getDSSRProperties(prop) : null);
   }
 
+  public int getModelIndexFromPDBId(String id) {
+    // most recent first -- from ModelLoader
+    for (int i = mc; --i >= 0;) {
+       Map<String, Object> info = getModelAuxiliaryInfo(i);
+       if (id.equalsIgnoreCase((String) info.get("pdbID"))
+           || id.equalsIgnoreCase((String) info.get("pdbID12")))
+         return i;
+    }
+    return -1;
+  }
+
 }
 

@@ -46,11 +46,6 @@ import javajs.util.SB;
  * A class for storing and retrieving user data,
  * including atom-related and color-related data.
  * 
- * Starting in Jmol 15.2.51p (precision branch), this code
- * accepts double[ ] data and preserves its integrity. 
- * 
- * The DATA_TYPE_AForD allows for either AF or AD 
- * 
  */
 
 public class DataManager implements JmolDataManager {
@@ -94,8 +89,6 @@ public class DataManager implements JmolDataManager {
       *
        * data[4] -- Boolean.TRUE == saveInState
        * 
-       * data[5] -- ModelLoader atomProperty Map.Entry for revising array data
-       * 
        * matchField = data must match atomNo in this column, >= 1
        * field = column containing the data, >= 1:
        *   0 ==> values are a simple list; clear the data
@@ -107,8 +100,6 @@ public class DataManager implements JmolDataManager {
         clear();
         return;
       }
-//System.out.println(PT.toJSON(null, data));
-//System.out.println(PT.toJSON(null, dataValues));
       type = type.toLowerCase();
       if (type.equals("element_vdw")) {
         setVDW(data);
@@ -117,42 +108,33 @@ public class DataManager implements JmolDataManager {
       int newType = getType(data);
       data[DATA_TYPE] = Integer.valueOf(newType);
       Object newVal = data[DATA_VALUE];
-      if (newType == DATA_TYPE_UNKNOWN)
+      if (newType == DATA_TYPE_UNKNOWN) {
         data[DATA_TYPE] = Integer.valueOf(newType = getTypeFor(newVal));
+      }
       if (data[DATA_SELECTION] == null || atomCount <= 0) {
         dataValues.put(type, data);
         return;
       }
-      
       // must be atom-based bit set DATA_SELECTION on arrays
-
       if (newType == DATA_TYPE_UNKNOWN) {
         Logger.error("Cannot determine data type for " + newVal);
         return;
       }
       BS bs;
+      String stringData = null;
+      String[] tokens = null;
       double[] d = null;
       double[][] dd = null;
-      String stringData = null;
       double[] dData = null;
       double[][] ddData = null;
-      String[] tokens = null;
-
       boolean createNew = (matchField != 0
           || field != Integer.MIN_VALUE && field != Integer.MAX_VALUE);
       Object[] oldData = dataValues.get(type);
       Object oldValue = (oldData == null ? null : oldData[DATA_VALUE]);
-      //int oldType = getType(oldData);
+  
       if (newType != DATA_TYPE_ADD) {
         d = (oldData == null || createNew ? new double[actualAtomCount]
             : AU.ensureLengthD(((double[]) oldValue), actualAtomCount));
-        // check for a atomProperty 
-        if (d != oldValue && type.startsWith("property_") && !type.startsWith("property_atom.")) {
-//          @SuppressWarnings("rawtypes")    
-//          Map.Entry e = (Map.Entry) data[DATA_ATOM_PROP_ENTRY];
-//          if (e != null)
-//            e.setValue(d);
-        }
       }
 
       // check to see if the data COULD be interpreted as a string of double values
@@ -179,7 +161,6 @@ public class DataManager implements JmolDataManager {
         setSelected(PT.parseDouble(stringData), bs, d);
       } else if (field == 0 || field == Integer.MAX_VALUE) {
         // just set the selected token values
-        // set f, d, or ff 
         bs = (BS) data[DATA_SELECTION];
         if (dData != null) {
           int n = dData.length;
@@ -229,26 +210,15 @@ public class DataManager implements JmolDataManager {
           && !createNew)
         bs.or((BS) (oldData[DATA_SELECTION]));
       data[DATA_SELECTION] = bs;
-      if (dd != null) {
-        data[DATA_TYPE] = Integer.valueOf(DATA_TYPE_ADD);
-        data[DATA_VALUE] = dd;
+      if (dd == null) {
+          data[DATA_TYPE] = Integer.valueOf(DATA_TYPE_AD);
+          data[DATA_VALUE] = d;
       } else {
-        data[DATA_TYPE] = Integer.valueOf(DATA_TYPE_AD);
-        data[DATA_VALUE] = d;
+          data[DATA_TYPE] = Integer.valueOf(DATA_TYPE_ADD);
+          data[DATA_VALUE] = dd;
       }
       if (type.indexOf("property_atom.") == 0) {
-        // these must be double[] only
-        int tok = T.getSettableTokFromString(type = type.substring(14));
-        if (tok == T.nada) {
-          Logger.error("Unknown atom property: " + type);
-          return;
-        }
-        int nValues = bs.cardinality();
-        double[] fValues = new double[nValues];
-        for (int n = 0, i = bs.nextSetBit(0); n < nValues; i = bs
-            .nextSetBit(i + 1))
-          fValues[n++] = d[i];
-        vwr.setAtomProperty(bs, tok, 0, 0, null, fValues, null);
+        setAtomProperty(type, bs, d);
         return;
       }
       dataValues.put(type, data);
@@ -258,11 +228,19 @@ public class DataManager implements JmolDataManager {
     }
   }
 
-  private int getTypeFor(Object newVal) {
-    return (newVal instanceof String ? DATA_TYPE_STRING
-            : AU.isAD(newVal) ? DATA_TYPE_AD
-                : AU.isADD(newVal) ? DATA_TYPE_ADD
-                    : AU.isADDD(newVal) ? DATA_TYPE_ADDD : DATA_TYPE_UNKNOWN);
+  private void setAtomProperty(String type, BS bs, double[] d) {
+    // these must be double[] only
+    int tok = T.getSettableTokFromString(type = type.substring(14));
+    if (tok == T.nada) {
+      Logger.error("Unknown atom property: " + type);
+      return;
+    }
+    int nValues = bs.cardinality();
+    double[] fValues = new double[nValues];
+    for (int n = 0, i = bs.nextSetBit(0); n < nValues; i = bs
+        .nextSetBit(i + 1))
+      fValues[n++] = d[i];
+    vwr.setAtomProperty(bs, tok, 0, 0, null, fValues, null);
   }
 
   private void setVDW(Object[] data) {
@@ -279,7 +257,13 @@ public class DataManager implements JmolDataManager {
       for (int i = vwr.userVdws.length; --i >= 0;)
         vwr.userVdwMars[i] = (int) Math.floor(vwr.userVdws[i] * 1000);
     }
-    return;
+  }
+
+  private int getTypeFor(Object newVal) {
+    return (newVal instanceof String ? DATA_TYPE_STRING
+        : AU.isAD(newVal) ? DATA_TYPE_AD
+            : AU.isADD(newVal) ? DATA_TYPE_ADD
+                : AU.isADDD(newVal) ? DATA_TYPE_ADDD : DATA_TYPE_UNKNOWN);
   }
 
   private static void fillSparseArray(double[] doubleData, BS bs, double[] f) {
@@ -367,7 +351,7 @@ public class DataManager implements JmolDataManager {
       // load array
       for (int i = 0, n = d.length, p = bsSelected.nextSetBit(0); p >= 0
           && i < n; p = bsSelected.nextSetBit(p + 1))
-       dnew[i++] = (p < d.length ? d[p] : 0);
+        dnew[i++] = (p < d.length ? d[p] : 0);
       return dnew;
     }
     return null;
@@ -416,8 +400,7 @@ public class DataManager implements JmolDataManager {
         Object[] obj = dataValues.get(name);
         // default for "save in state" is TRUE
         if (obj.length > DATA_SAVE_IN_STATE
-            && !((Boolean) obj[DATA_SAVE_IN_STATE])
-                .booleanValue())
+            && !((Boolean) obj[DATA_SAVE_IN_STATE]).booleanValue())
           continue;
         int type = getType(obj);
         haveData = true;
@@ -426,16 +409,15 @@ public class DataManager implements JmolDataManager {
           sc.getAtomicPropertyStateBufferD(sb, AtomCollection.TAINT_MAX,
               (BS) obj[DATA_SELECTION], name, (double[]) data);
           sb.append("\n");
-        } else{
+        } else {
           // should not be here -- property_xxx is always double[]
-          sb.append("\n").append(Escape.encapsulateData(name, data,
-              DATA_TYPE_UNKNOWN));//j2s issue?
+          sb.append("\n")
+              .append(Escape.encapsulateData(name, data, DATA_TYPE_UNKNOWN));//j2s issue?
         }
         continue;
       }
       int type = (name.indexOf("data2d") == 0 ? DATA_TYPE_ADD
-          : name.indexOf("data3d") == 0 ? DATA_TYPE_ADDD
-              : DATA_TYPE_UNKNOWN);
+          : name.indexOf("data3d") == 0 ? DATA_TYPE_ADDD : DATA_TYPE_UNKNOWN);
       if (type == DATA_TYPE_UNKNOWN)
         continue;
       Object[] obj = dataValues.get(name);

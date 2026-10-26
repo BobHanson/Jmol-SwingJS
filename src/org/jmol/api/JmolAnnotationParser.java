@@ -46,4 +46,6 @@ public interface JmolAnnotationParser {
 
   void setGroup1(ModelSet ms, int modelIndex);
 
+  Map<String, Object> setQScores(Viewer vwr, Map<String, Object> json);
+
 }

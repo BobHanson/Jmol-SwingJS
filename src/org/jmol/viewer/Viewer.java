@@ -2573,8 +2573,41 @@ public class Viewer extends JmolViewer
     slm.addListener(listener);
   }
 
+  /**
+   * When atomExpression is a BS, this is a request to ensure that it only
+   * includes undeleted atoms.
+   * 
+   * When atomExpression is a String, evaluate the string as an atomset expression
+   * using the current ScriptEval instance (which also includes only undeleted
+   * atoms).
+   * 
+   * @param atomExpression
+   * @return the resultant BS
+   */
+  public BS getAtomBitSet(Object atomExpression) {
+    // SMARTS searching
+    // getLigandInfo
+    // used in interaction with JSpecView
+    // used for set picking SELECT
+
+    if (atomExpression instanceof BS)
+      return slm.excludeAtoms((BS) atomExpression, false);
+    getScriptManager();
+    return getAtomBitSetEval(eval, atomExpression);
+  }
+  
+
+  /**
+   * package-private method to ensure scripting is allowed and allowing for an
+   * isolated temporary ScriptEval instance (in which case, it doesn't matter if
+   * scripting is allowed or not).
+   * 
+   * @param eval
+   * @param atomExpression
+   * @return evaluated atomset
+   */
   BS getAtomBitSetEval(JmolScriptEvaluator eval, Object atomExpression) {
-    return (allowScripting
+    return (allowScripting || eval == null
         ? getScriptManager().getAtomBitSetEval(eval, atomExpression)
         : new BS());
   }
@@ -2849,7 +2882,7 @@ public class Viewer extends JmolViewer
     if (tokType != T.nada)
       htParams.put("dataType", T.nameOf(tokType));
     if (filecat != " ")
-      htParams.put("concatenate", Boolean.TRUE);
+      htParams.put(JC.INFO_CONCATENATE, Boolean.TRUE);
     Object atomSetCollection;
     String[] saveInfo = fm.getFileInfo();
 
@@ -3042,7 +3075,7 @@ public class Viewer extends JmolViewer
           isError = (model instanceof String);
           if (fname != null && !isError)
             scriptEcho((String) getModelAdapter()
-                .getAtomSetCollectionAuxiliaryInfo(model).get("modelLoadNote"));
+                .getAtomSetCollectionAuxiliaryInfo(model).get(JC.INFO_MODEL_LOAD_NOTE));
         }
       }
     }
@@ -4479,6 +4512,16 @@ public class Viewer extends JmolViewer
     }
   }
 
+  public String getPDBLoadFormat(int tok) {
+    switch (tok) {
+    default:
+    case T.loadformat:
+      return g.loadFormat;
+    case T.loadligandformat:
+      return g.pdbLoadLigandFormat;
+    }
+  }
+  
   @Override
   public int getMeasurementCount() {
     int count = getShapePropertyAsInt(JC.SHAPE_MEASURES, "count");
@@ -5125,6 +5168,7 @@ public class Viewer extends JmolViewer
     String format = null;
     String id = name.substring(1);
     String suffix = "";
+    int pt;
     if (name.endsWith(JC.FILE_DOCACHE_)) {
       suffix= JC.FILE_DOCACHE_;
       name = name.substring(0, name.length() - suffix.length());
@@ -5149,97 +5193,37 @@ public class Viewer extends JmolViewer
       } else {
         if (id.equals("?") && (id = getDBID("PDB ID from RCSB")) == null)
           return null;
-        if (id.indexOf("/") > 0) {
-          // =xxxx/....
-          try {
-            int pt = id.indexOf("/");
-            String database = id.substring(0, pt);
-            id = id.substring(pt + 1);
-            if (database.equalsIgnoreCase("aflowlib")) {
-              int index = 1;
-              pt = id.indexOf('.');
-              if (pt >= 0) {
-                index = PT.parseInt(id.substring(pt + 1));
-                id = id.substring(0, pt);
-              }
-              if (id.indexOf("_") < 0)
-                id = (String) getSymTemp().getSpaceGroupJSON("AFLOWLIB",
-                    id, index);
+      }
+      if (id.indexOf("/") > 0) {
+        try {
+          pt = id.indexOf("/");
+          String database = id.substring(0, pt);
+          id = id.substring(pt + 1);
+          if (database.equalsIgnoreCase("aflowlib")) {
+            int index = 1;
+            pt = id.indexOf('.');
+            if (pt >= 0) {
+              index = PT.parseInt(id.substring(pt + 1));
+              id = id.substring(0, pt);
             }
-            id = JC.resolveDataBase(database, id, null);
-            if (id != null && id.startsWith("'"))
-              id = evaluateExpression(id).toString();
-            name = (id == null || id.length() == 0 ? name : id);
-          } catch (Exception e) {
+            if (id.indexOf("_") < 0)
+              id = (String) getSymTemp().getSpaceGroupJSON("AFLOWLIB",
+                  id, index);
           }
-          return name + suffix;
+          id = JC.resolveDataBase(database, id, null);
+          if (id != null && id.startsWith("'"))
+            id = evaluateExpression(id).toString();
+          name = (id == null || id.length() == 0 ? name : id);
+        } catch (Exception e) {
         }
-        // pdb only
-        name = null;
-        if (!isSurface && id.endsWith(".bcif")) {
-          id = id.substring(0, id.indexOf(".bcif"));
-          name = JC.resolveDataBase("bcif", id.toLowerCase(), null);
-        } else if (id.endsWith(".mmtf")) {
-          id = id.substring(0, id.indexOf(".mmtf"));
-          name = JC.resolveDataBase("mmtf", id.toUpperCase(), null);
-        } else if (id.length() > 4 && id.indexOf('.') < 0) {
-          id += ".cif";
-        }
-        if (name != null)
-          return name + suffix;
-        // not bcif or mmtf
-        
-        format = g.loadFormat;
+        return name;
       }
-      //$FALL-THROUGH$
-    case '#': // ligand
-      if (format == null) {
-        format = g.pdbLoadLigandFormat;
-        if (id.startsWith("pdb_") && id.indexOf('.') < 0)
-          id += ".cif.gz";
-      }
-      return JC.resolveDataBase(null, id, format) + suffix;
+      return getJBR().setLoadFormat(type, id, name, format, isSurface) + suffix;
     case '*':
       // European Bioinformatics Institute
       if (id.equals("?") && (id = getDBID("PDB ID from EBI")) == null)
         return null;
-      String ret = null;
-      int pt = name.lastIndexOf("/");
-      if (name.startsWith("*dom/")) {
-        //  *dom/.../.../.../xxxx
-        id = name.substring(pt + 1);
-        format = (pt > 4 ? name.substring(5) : "mappings");
-        ret = PT.rep(JC.resolveDataBase("map", id, null), "%TYPE", format);
-      } else if (name.startsWith("*val/")) {
-        //  *val/.../.../.../xxxx
-        id = name.substring(pt + 1);
-        format = (pt > 4 ? name.substring(5) : "validation/outliers/all");
-        ret = PT.rep(JC.resolveDataBase("map", id, null), "%TYPE", format);
-      } else if (name.startsWith("*rna3d/")) {
-        //  *rna3d/.../.../.../xxxx
-        id = name.substring(pt + 1);
-        format = (pt > 6 ? name.substring(6) : "loops");
-        ret = PT.rep(JC.resolveDataBase("rna3d", id, null), "%TYPE", format);
-      } else if (name.startsWith("*dssr--")) {
-        id = name.substring(pt + 1);
-        id = JC.resolveDataBase(JC.INFO_DSSR, id, null);
-        ret = id + "%20" + PT.rep(name.substring(5, pt), " ", "%20");
-      } else if (name.startsWith("*dssr/")) {
-        id = name.substring(pt + 1);
-        ret = JC.resolveDataBase(JC.INFO_DSSR, id, null);
-      } else if (name.startsWith("*dssr1/")) {
-        id = name.substring(pt + 1);
-        ret = JC.resolveDataBase("dssr1", id, null);
-      }
-      if (ret != null)
-        return ret + suffix;
-      // these are processed in SmarterJmolAdapter
-      String pdbe = "pdbe";
-      if (id.length() == 5 && id.charAt(4) == '*') {
-        pdbe = "pdbe2";
-        id = id.substring(0, 4);
-      }
-      return JC.resolveDataBase(pdbe, id, null) + suffix;
+      return getJBR().setLoadFormat('*', id, name, format, isSurface) + suffix;
     case ':': // PubChem
       format = g.pubChemFormat;
       if (id.equals("?") && (id = getDBID("structure from PubChem")) == null)
@@ -9197,7 +9181,7 @@ public class Viewer extends JmolViewer
   @Override
   public int getModelIndexFromId(String id) {
     // from JSpecView peak pick and model "ID"
-    return ms.getModelIndexFromId(id);
+    return ms.getModelIndexFromPDBId(id);
   }
 
   public void setSyncDriver(int mode) {
@@ -10543,18 +10527,6 @@ public class Viewer extends JmolViewer
   public SV evaluateExpressionAsVariable(Object stringOrTokens) {
     return (getScriptManager() == null ? null
         : (SV) eval.evaluateExpression(stringOrTokens, true, false));
-  }
-
-  public BS getAtomBitSet(Object atomExpression) {
-    // SMARTS searching
-    // getLigandInfo
-    // used in interaction with JSpecView
-    // used for set picking SELECT
-
-    if (atomExpression instanceof BS)
-      return slm.excludeAtoms((BS) atomExpression, false);
-    getScriptManager();
-    return getAtomBitSetEval(eval, atomExpression);
   }
 
   public ScriptContext getScriptContext(String why) {

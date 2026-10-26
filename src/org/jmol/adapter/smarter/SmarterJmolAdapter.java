@@ -232,36 +232,40 @@ public class SmarterJmolAdapter extends JmolAdapter {
     Viewer vwr = (Viewer) htParams.get("vwr"); // don't pass this on to user
     int size = names.length;
     Object reader = null;
-    if (htParams.containsKey("concatenate")) {
+    if (htParams.containsKey(JC.INFO_CONCATENATE)) {
       String s = "";
       for (int i = 0; i < size; i++) {
         String name = names[i];
-        String f = vwr.getFileAsString3(name, false, null);
-        if (i > 0 && size <= 3 && f.startsWith("{")) {
+//        System.out.println(name);
+        String fileData = vwr.getFileAsString3(name, false, null);
+//        System.out.println(fileData);
+        if (i > 0 && size <= 3 && fileData.startsWith("{")) {
           // JSON domains and validations; could have both
           // hack to determine type:
-          String type = (f.contains("version\":\"DSSR") ? "dssr" : f
-              .contains("/outliers/") ? "validation" : JC.INFO_DOMAINS);
-          Map<String, Object> x = vwr.parseJSONMap(f);
+          String type = (fileData.contains("version\":\"DSSR") ? JC.INFO_DSSR //
+              : name.contains("/outliers/") ? JC.INFO_VALIDATION //
+              : name.contains("/graphql") ? JC.INFO_QSCORE //
+              : JC.INFO_DOMAINS);
+          Map<String, Object> x = vwr.parseJSONMap(fileData);
           if (x != null)
-            htParams.put(type, (type.equals("dssr") ? x : SV.getVariableMap(x)));
+            htParams.put(type, (type.equals(JC.INFO_DSSR) || type.equals(JC.INFO_QSCORE) ? x : SV.getVariableMap(x)));
           continue;
         }
-        if (f.startsWith("java.net."))
-          System.err.println(f + " reading " + name);
+        if (fileData.startsWith("java.net."))
+          System.err.println(fileData + " reading " + name);
         if (name.indexOf("|") >= 0)
           name = PT.rep(name, "_", "/");
         if (i == 1) {
           if (name.indexOf("/rna3dhub/") >= 0) {
-            s += "\n_rna3d \n;" + f + "\n;\n";
+            s += "\n_rna3d \n;" + fileData + "\n;\n";
             continue;
           }
           if (name.indexOf("/dssr/") >= 0) {
-            s += "\n_dssr \n;" + f + "\n;\n";
+            s += "\n_dssr \n;" + fileData + "\n;\n";
             continue;
           }
         }
-        s += f;
+        s += fileData;
         if (!s.endsWith("\n"))
           s += "\n";
       }

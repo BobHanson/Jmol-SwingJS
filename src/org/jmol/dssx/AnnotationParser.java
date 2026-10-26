@@ -29,8 +29,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.jmol.api.JmolAnnotationParser;
+import org.jmol.api.JmolDataManager;
 import org.jmol.modelset.Atom;
 import org.jmol.modelset.Bond;
+import org.jmol.modelset.Group;
 import org.jmol.modelset.ModelSet;
 import org.jmol.modelsetbio.BioResolver;
 import org.jmol.script.SV;
@@ -504,7 +506,7 @@ public class AnnotationParser implements JmolAnnotationParser {
                                    String key, BS bs) {
     if (_list == null)
       return;
-    System.out.println("Checking " + name + " for " + key);
+//    System.out.println("Checking " + name + " for " + key);
     Object data = vwr.extractProperty(_list, "[" + key + "]", -1);
     Lst<SV> list = null;
     if (data instanceof Lst) {
@@ -525,7 +527,7 @@ public class AnnotationParser implements JmolAnnotationParser {
       bs.or(setAnnotationAtoms(vwr, mapping, i));
     }
   }
-
+  
   private BS setAnnotationAtoms(Viewer vwr, Map<String, SV> mapping, int i) {
     SV _atoms = mapping.get("_atoms");
     if (_atoms.tok != T.bitset) {
@@ -868,6 +870,237 @@ public class AnnotationParser implements JmolAnnotationParser {
                                 ModelSet.DataList dataList) {
   }
 
+//RCSB_graphQL_qscore_query = '{ entries(entry_ids: ["$ID"]) {
+//pdbx_vrpt_summary_em {
+//  Q_score
+//}
+//nonpolymer_entities {
+//  nonpolymer_entity_instances {
+//    rcsb_nonpolymer_entity_instance_container_identifiers {
+//      asym_id
+//      comp_id
+//    }
+//    rcsb_nonpolymer_instance_validation_score {
+//      Q_score
+//    }
+//  }
+//}
+//polymer_entities {
+//  polymer_entity_instances {
+//    rcsb_polymer_entity_instance_container_identifiers {
+//      asym_id
+//    }
+//    pdbx_vrpt_summary_entity_fit_to_map {
+//      Q_score
+//    }
+//    rcsb_polymer_instance_feature(type: ["Q_SCORE"]) {
+//      type
+//      feature_positions {
+//        beg_seq_id
+//        values
+//      }
+//    }        
+//  }
+//}
+//}
+//}'
 
+  private final static String Q_RCSB_ID_STR = "rcsb_id";
+  private final static String Q_SYMMARY_MAP = "pdbx_vrpt_summary_em"; // .Q_score
+  private final static String Q_NP_ENTITIES_LST = "nonpolymer_entities"; //[n]
+  private final static String Q_NPE_INSTANCES_LST = "nonpolymer_entity_instances"; //[n]
+  private final static String Q_NPEI_IDS_MAP = "rcsb_nonpolymer_entity_instance_container_identifiers"; //.asym_id .comp_id
+  private final static String Q_NPEI_QSCORE_MAP = "rcsb_nonpolymer_instance_validation_score"; //.Q_score
+  private final static String Q_P_ENTITIES_LST = "polymer_entities"; //[n]
+  private final static String Q_PE_INSTANCES_LST = "polymer_entity_instances"; //[n]
+  private final static String Q_PEI_IDS_MAP = "rcsb_polymer_entity_instance_container_identifiers"; //.asym_id
+  private final static String Q_PEI_QSCORE_MAP = "pdbx_vrpt_summary_entity_fit_to_map"; //.Q_score
+  private final static String Q_PEI_FEATURE_LST = "rcsb_polymer_instance_feature"; // .type, .feature_positions
+  private final static String Q_PEIF_POSITION_LST = "feature_positions"; //.beg_seq_id .end_seq_id .values
+
+  @SuppressWarnings("unchecked")
+  public Map<String, Object> getMap(Map<String, Object> map,
+                                     String key) {
+    return (Map<String, Object>) map.get(key);
+  }
+
+  @SuppressWarnings("unchecked")
+  public Lst<Object> getList(Map<String, Object> map,
+                                     String key) {
+    return (Lst<Object>) map.get(key);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Map<String, Object> getList0Map(Map<String, Object> map,
+                                          String key) {
+    return (Map<String, Object>) getList(map, key).get(0);
+  }
+  @SuppressWarnings("unchecked")
+  private Map<String, Object> getListMap(Lst<Object> list, int i) {
+    return (Map<String, Object>) list.get(i);
+  }
+
+  @Override
+  public Map<String, Object> setQScores(Viewer vwr, Map<String, Object> json) {
+    Map<String, Object> entryMap = getList0Map(getMap(json, "data"), "entries");
+    Map<String, Object> summaryMap = getList0Map(entryMap, Q_SYMMARY_MAP);
+    if (summaryMap == null)
+      return null;
+    String rcsb_ID = (String) entryMap.get(Q_RCSB_ID_STR);    
+    int modelIndex = vwr.getModelIndexFromId(rcsb_ID);
+    if (modelIndex < 0)
+      return null;
+    Map<String, Object> htSummary = new Hashtable<>();
+    htSummary.put("overall", summaryMap.get("Q_score"));
+    
+    BS modelAtoms = vwr.getModelUndeletedAtomsBitSet(modelIndex);
+    BS bsAtoms = BSUtil.copy(modelAtoms);
+    int atomCount = bsAtoms.cardinality();
+    double[] propertyValues = new double[atomCount];
+    for (int i = atomCount; --i >= 0;)
+      propertyValues[i] = Double.NaN;
+    BS bsTemp = BS.newN(atomCount);
+    // map the polymer return
+    Lst<Object> entities = getList(entryMap, Q_P_ENTITIES_LST);
+    if (entities != null) {
+      for (int j = 0; j < entities.size(); j++) {
+        Lst<Object> pdata = getList(getListMap(entities, j),
+            Q_PE_INSTANCES_LST);
+        for (int i = 0; i < pdata.size(); i++) {
+          Map<String, Object> instance = getListMap(pdata, i);
+          Map<String, Object> ids = getMap(instance, Q_PEI_IDS_MAP);
+          String asymID = (String) ids.get("asym_id");
+          htSummary.put(asymID,
+              getList0Map(instance, Q_PEI_QSCORE_MAP).get("Q_score"));
+          int chainID = vwr.getChainID(asymID, false);
+          mapPolymerQ(vwr, bsAtoms, instance, asymID, chainID, propertyValues, bsTemp);
+        }
+      }
+    }
+    
+    entities = getList(entryMap, Q_NP_ENTITIES_LST);
+    if (entities != null) {
+      for (int j = 0; j < entities.size(); j++) {
+        Lst<Object> pdata = getList(getListMap(entities, j),
+            Q_NPE_INSTANCES_LST);
+        for (int i = 0; i < pdata.size(); i++) {
+          Map<String, Object> instance = getListMap(pdata, i);
+          mapLigandQ(vwr, bsAtoms, instance, propertyValues, bsTemp);
+        }
+      }
+    }
+//    System.out.println("ms=" + ms1 + "/" + ms2 + " bsAtoms=" + bsAtoms);
+    // temporary only, for returning these
+    htSummary.put("values", propertyValues);
+    return htSummary;
+  }
+
+  private void mapPolymerQ(Viewer vwr, BS bsAtoms, Map<String, Object> instance, String chain, int chainID, double[] propertyValues, BS bsTemp) {
+    // each instance is for a different chain (asymID, as found in the file)
+    Lst<Object> features = getList(instance, Q_PEI_FEATURE_LST);
+    Lst<Object> positions = null;
+    // find Q_SCORE. It is the 43rd feature for 12xf
+    for (int j = features.size(); --j >= 0;) {
+      Map<String, Object> feature = getListMap(features, j);
+      if ("Q_SCORE".equals(feature.get("type"))) {
+        positions = getList(feature, Q_PEIF_POSITION_LST); 
+        break;
+      }
+    }
+    if (positions == null)
+      return;
+    // now set these Q-score values to Jmol atoms
+    // there may be several separate consecutive sections 
+
+    for (int j = 0; j < positions.size(); j++) {
+      Map<String, Object> pos = getListMap(positions, j);
+      Number seq0 = (Number) pos.get("beg_seq_id");
+      Lst<Object> values = getList(pos, "values");
+      //System.out.println("\n" + chain + " " + bsAtoms + " " + seq0 + " " + values.size());
+      getAtoms(vwr, bsAtoms, chain, chainID, seq0.intValue(), null, values.size(), bsTemp);
+      //System.out.println(chain + " " + bsAtoms + " " + bsTemp + "\n");
+      if (!setQ(vwr, bsTemp, values, propertyValues)) {
+        System.err.println("AnnotationParser.polymer: no atoms were found for " + chain + "." + seq0);      
+      }
+    }
+  }
+
+  /**
+   * @param vwr 
+   * @param bsAtoms 
+   * @param asymID  
+   * @param chainID 
+   * @param seqID 
+   * @param group0 
+   * @param nGroups 
+   * @param bsTemp 
+   */
+  private void getAtoms(Viewer vwr, BS bsAtoms, String asymID, int chainID, int seqID,
+                      String group0, int nGroups, BS bsTemp) {
+//    System.out.println(asymID + " " + chainID + " " + vwr.getChainID(asymID,  false) + " " + vwr.getChainIDStr(chainID));
+// this was SEVERAL times slower     
+//    String exp;
+//    boolean isLigand = (group0 != null);
+//    boolean useScript = false;
+//    long t = System.currentTimeMillis();
+//    if (useScript) {
+//      if (isLigand) {
+//        exp = "{this and asymid=\"" + asymID + "\"" + " and group=\"" + group0
+//            + "\"" + "}";
+//      } else {
+//        exp = "{this and asymid=\"" + asymID + "\" and seqID>=" + seqID + "}";
+//      }
+//      BSUtil.copy2(vwr.getAtomBitSet(exp), bsTemp);
+//    } else {
+      vwr.ms.getAsymBits(chainID, seqID, group0, bsAtoms, bsTemp, nGroups);
+//    }
+//    t = (System.currentTimeMillis() - t);
+//    if (isLigand) {
+//      ms2 += t;
+//    } else {
+//      ms1 += t;
+//    }
+  }
+
+  private void mapLigandQ(Viewer vwr, BS bsAtoms, Map<String, Object> instance, double[] propertyValues, BS bsTemp) {    
+    Map<String, Object> ids = getMap(instance, Q_NPEI_IDS_MAP);
+    String compID = (String) ids.get("comp_id");
+    String asymID = (String) ids.get("asym_id");
+    int chainID = vwr.getChainID(asymID, false);
+    Lst<Object> values = new Lst<>();
+    values.addLast(getList0Map(instance, Q_NPEI_QSCORE_MAP).get("Q_score"));
+    getAtoms(vwr, bsAtoms, asymID, chainID, -1, compID, 1, bsTemp);
+    if (!setQ(vwr, bsTemp, values, propertyValues)) {
+      System.err.println("AnnotationParser.nonpolymer: no atoms were found for " + asymID + "." + compID);      
+    }
+  }
+
+  //long ms1 = 0, ms2 = 0;
+
+  private boolean setQ(Viewer vwr, BS atomset, Lst<Object> values,
+                    double[] propertyValues) {
+    int nv = values.size();
+    // follow sequential residue number changes
+    Atom[] atoms = vwr.ms.at;
+    // values for each matching atom pushed to q
+    int i = atomset.nextSetBit(0);
+    if (i < 0)
+      return false;
+    Group glast = atoms[i].group;
+    for (int j = 0; j < nv && i >= 0; j++) {
+      double d = ((Number) values.get(j)).doubleValue();
+      // check for new residue
+      while (i >= 0) {
+        Group g = atoms[i].group;
+        if (g != glast) {
+          glast = g;
+          break;
+        }
+        propertyValues[i] = d;
+        i = atomset.nextSetBit(i + 1);
+      }
+    }
+    return true;
+  }
 
 }

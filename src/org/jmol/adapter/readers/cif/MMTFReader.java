@@ -266,7 +266,7 @@ public class MMTFReader extends MMCifReader {
           iChain = 0;
           setModelPDB(true);
           incrementModel(iModel + 1);
-          asc.setCurrentModelInfo("pdbID", pdbID);
+          setPDBID(pdbID, null);
           nAtoms0 = asc.ac;
           if (done)
             return;
@@ -355,7 +355,7 @@ public class MMTFReader extends MMCifReader {
         addMMTFBonds(bo, bi, a0, doMulti, false);
       }
     }
-    asc.setCurrentModelInfo("pdbID", pdbID);
+    setPDBID(pdbID, null);
   }
 
   private void addMMTFBonds(int[] bo, int[] bi, int a0, boolean doMulti, boolean isInter) {

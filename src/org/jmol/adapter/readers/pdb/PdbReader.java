@@ -420,7 +420,7 @@ public class PdbReader extends AtomSetCollectionReader {
     if (pdbID != null && pdbID.length() > 0) {
       if (!isMultiModel)
         asc.setAtomSetName(pdbID);
-      asc.setCurrentModelInfo("pdbID", pdbID);
+      setPDBID(pdbID, null);
     }
     checkUnitCellParams();
     if (!isCourseGrained)
@@ -937,7 +937,7 @@ public class PdbReader extends AtomSetCollectionReader {
     if (altID != ' ')
       atom.altLoc = altID;
     atom.group3 = (group3 == null ? "UNK" : group3);
-    atom.chainID = chainID;
+    atom.setChainID(chainID);
     if (biomtChainAtomCounts != null)
       biomtChainAtomCounts[chainID % 256]++;
     atom.sequenceNumber = seqNo;
@@ -1045,7 +1045,7 @@ public class PdbReader extends AtomSetCollectionReader {
         // count down until we get the desired index into the list
         String msg = " atom [" + atom.group3 + "]" + atom.sequenceNumber
             + (atom.insertionCode == '\0' ? "" : "^" + atom.insertionCode)
-            + (atom.chainID == 0 ? "" : ":" + vwr.getChainIDStr(atom.chainID))
+            + (atom.getChainID() == 0 ? "" : ":" + vwr.getChainIDStr(atom.getChainID()))
             + "." + atom.atomName + "%" + atom.altLoc + "\n";
         if (conformationIndex >= 0 && atom.altLoc != lastAltLoc) {
           lastAltLoc = atom.altLoc;
@@ -1375,7 +1375,7 @@ public class PdbReader extends AtomSetCollectionReader {
     haveMappedSerials = (thisBiomolecule != null && applySymmetry);
     sbConect = null;
     asc.newAtomSet();
-    asc.setCurrentModelInfo("pdbID", pdbID);
+    setPDBID(pdbID, null);
     if (asc.iSet == 0 || isTrajectory) {
       asc.setAtomSetName(pdbID);
     }
@@ -1921,11 +1921,13 @@ public class PdbReader extends AtomSetCollectionReader {
         // could demand a contiguous section here for each range.
         for (int iAtom = index0; iAtom < indexMax; iAtom++) {
           Atom atom = atoms[iAtom];
+          int chainID = atom.getChainID();
+          int n = atom.sequenceNumber;
           if (isSameChain
-              ? atom.sequenceNumber >= res0 && atom.sequenceNumber <= res1
-              : atom.chainID > chain0 && atom.chainID < chain1
-                  || atom.chainID == chain0 && atom.sequenceNumber >= res0
-                  || atom.chainID == chain1 && atom.sequenceNumber <= res1) {
+              ? n >= res0 && n <= res1
+              : chainID > chain0 && chainID < chain1
+                  || chainID == chain0 && n >= res0
+                  || chainID == chain1 && n <= res1) {
             data[iAtom - index0] = tlsGroupID;
             setTlsTensor(atom, group, symmetry);
           }
@@ -1949,7 +1951,7 @@ public class PdbReader extends AtomSetCollectionReader {
     Atom[] atoms = asc.atoms;
     for (int i = atom1; i < atom2; i++) {
       Atom atom = atoms[i];
-      if ((atom.chainID == chain && atom.sequenceNumber == resno) == isTrue)
+      if ((atom.getChainID() == chain && atom.sequenceNumber == resno) == isTrue)
         return i;
     }
     if (isTrue) {

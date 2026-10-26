@@ -3475,6 +3475,7 @@ public class ScriptEval extends ScriptExpr {
         if (isTranslucent)
           ++i;
         if (tokAt(i) == T.range || tokAt(i) == T.absolute) {
+          
           double min = floatParameter(++i);
           double max = floatParameter(++i);
           if (!chk)
@@ -5028,8 +5029,12 @@ public class ScriptEval extends ScriptExpr {
             || ext.startsWith("dssr--")) {
           if (filename.startsWith("="))
             filename += ".cif";
+          pt = id.indexOf(".");
+          if (pt >= 0)
+            id = id.substring(0, pt);
           filenames = (ext.equals("all")
-              ? new String[] { filename, "*dom/" + id, "*val/" + id }
+              ? new String[] { filename, "*dom/" + id, "*val/" + id, "*valq/" + id  }
+              : ext.equals("val") ? new String[] { filename, "*val/" + id, "*valq/" + id  }
               : new String[] { filename, "*" + ext + "/" + id });
           filename = "fileSet";
           loadScript = null;
@@ -5339,7 +5344,7 @@ public class ScriptEval extends ScriptExpr {
 
     String msg;
     if (scriptLevel == 0 && !isAppend && (isConcat || nFiles < 2)
-        && (msg = (String) vwr.ms.getInfoM("modelLoadNote")) != null) {
+        && (msg = (String) vwr.ms.getInfoM(JC.INFO_MODEL_LOAD_NOTE)) != null) {
       showString(msg);
     }
     Object centroid = vwr.ms.getInfoM("centroidMinMax");
@@ -8880,14 +8885,15 @@ public class ScriptEval extends ScriptExpr {
     Object colorvalue1 = null;
     BS bs = null;
     String prefix = (index == 2 && tokAt(1) == T.balls ? "ball" : "");
-    
-    boolean isIsosurface = (shapeType == JC.SHAPE_ISOSURFACE || shapeType == JC.SHAPE_CONTACT);
+
+    boolean isIsosurface = (shapeType == JC.SHAPE_ISOSURFACE
+        || shapeType == JC.SHAPE_CONTACT);
     boolean doClearBondSet = false;
     double translucentLevel = Double.MAX_VALUE;
     if (index < 0) {
       bs = atomExpressionAt(-index);
       index = iToken + 1;
-      
+
       if (isBondSet) {
         doClearBondSet = true;
         shapeType = JC.SHAPE_STICKS;
@@ -8895,7 +8901,7 @@ public class ScriptEval extends ScriptExpr {
     }
     int tok = getToken(index).tok;
     boolean isColorSelect = (tok == T.select);
-    if  (isColorSelect) {
+    if (isColorSelect) {
       tok = getToken(++index).tok;
     }
     if (isBackground)
@@ -8951,16 +8957,14 @@ public class ScriptEval extends ScriptExpr {
         translucentLevel = getTranslucentLevel(index++);
     }
     tok = 0;
-    
 
-
-    boolean isColor = (index < slen && tokAt(index) != T.on && tokAt(index) != T.off);
+    boolean isColor = (index < slen && tokAt(index) != T.on
+        && tokAt(index) != T.off);
     if (isColor) {
       int argb = 0, argb1 = 0;
       tok = getToken(index).tok;
-      if ((!isIsosurface || tokAt(index + 1) != T.to) && 
-          (isColorSelect && tok == T.none
-          || isColorParam(index))) {
+      if ((!isIsosurface || tokAt(index + 1) != T.to)
+          && (isColorSelect && tok == T.none || isColorParam(index))) {
         argb = getArgbParamOrNone(index, isColorSelect);
         colorvalue = (argb == 0 ? null : Integer.valueOf(argb));
         if (tokAt(index = iToken + 1) != T.nada && translucency == null) {
@@ -8973,8 +8977,7 @@ public class ScriptEval extends ScriptExpr {
           }
         }
         tok = tokAt(index);//getToken(index).tok;
-        if (isColorSelect && tok == T.none
-            || isColorParam(index)) {
+        if (isColorSelect && tok == T.none || isColorParam(index)) {
           argb1 = getArgbParamOrNone(index, isColorSelect);
           colorvalue1 = (argb1 == 0 ? null : Integer.valueOf(argb1));
           index = iToken + 1;
@@ -8982,7 +8985,8 @@ public class ScriptEval extends ScriptExpr {
         checkLength(index);
         if (isColorSelect) {
           if (!chk)
-            vwr.setSelectionColors((Integer) colorvalue, (Integer) colorvalue1, translucency, translucentLevel);          
+            vwr.setSelectionColors((Integer) colorvalue, (Integer) colorvalue1,
+                translucency, translucentLevel);
           return;
         }
       } else if (shapeType == JC.SHAPE_LCAOCARTOON) {
@@ -8994,9 +8998,10 @@ public class ScriptEval extends ScriptExpr {
 
         // "cpk" value would be "spacefill"
         String name = paramAsStr(index).toLowerCase();
-        boolean isByElement = (name.indexOf(ColorEncoder.BYELEMENT_PREFIX) == 0);
-        boolean isColorIndex = (isByElement || name
-            .indexOf(ColorEncoder.BYRESIDUE_PREFIX) == 0);
+        boolean isByElement = (name
+            .indexOf(ColorEncoder.BYELEMENT_PREFIX) == 0);
+        boolean isColorIndex = (isByElement
+            || name.indexOf(ColorEncoder.BYRESIDUE_PREFIX) == 0);
         PAL pal = (isColorIndex || isIsosurface ? PAL.PROPERTY
             : tok == T.spacefill ? PAL.CPK : PAL.getPalette(name));
         // color atoms "cpkScheme"
@@ -9009,8 +9014,9 @@ public class ScriptEval extends ScriptExpr {
         if (pal == PAL.PROPERTY) {
           if (isColorIndex) {
             if (!chk) {
-              data = getBitsetPropertyFloat(bsSelected, (isByElement ? T.elemno
-                  : T.groupid) | T.allfloat, null, Double.NaN, Double.NaN);
+              data = getBitsetPropertyFloat(bsSelected,
+                  (isByElement ? T.elemno : T.groupid) | T.allfloat, null,
+                  Double.NaN, Double.NaN);
             }
           } else {
             boolean isPropertyExplicit = name.equals("property");
@@ -9019,10 +9025,12 @@ public class ScriptEval extends ScriptExpr {
                 && T.tokAttr((tok = getToken(++index).tok), T.atomproperty)
                 && (tok == T.wyckoff || !T.tokAttr(tok, T.strproperty))) {
               tok = getToken(index).tok;
-              String type = (tok == T.dssr ? "property_dssr." + getToken(++index).value.toString() : tok == T.wyckoff || tok == T.vibxyz ? "color" : null);
+              String type = (tok == T.dssr
+                  ? "property_dssr." + getToken(++index).value.toString()
+                  : tok == T.wyckoff || tok == T.vibxyz ? "color" : null);
               if (!chk) {
-                data = getBitsetPropertyFloat(bsSelected, tok
-                    | T.allfloat, type, Double.NaN, Double.NaN);
+                data = getBitsetPropertyFloat(bsSelected, tok | T.allfloat,
+                    type, Double.NaN, Double.NaN);
               }
               index++;
             } else if (!isPropertyExplicit && !isIsosurface) {
@@ -9056,30 +9064,47 @@ public class ScriptEval extends ScriptExpr {
             index = iToken + 1;
           }
           if (scheme != null && !isIsosurface) {
-            setStringProperty("propertyColorScheme", (isTranslucent
-                && translucentLevel == Double.MAX_VALUE ? "translucent " : "")
-                + scheme);
-            isColorIndex = (scheme.indexOf(ColorEncoder.BYELEMENT_PREFIX) == 0 || scheme
-                .indexOf(ColorEncoder.BYRESIDUE_PREFIX) == 0);
+            setStringProperty("propertyColorScheme",
+                (isTranslucent && translucentLevel == Double.MAX_VALUE
+                    ? "translucent "
+                    : "") + scheme);
+            isColorIndex = (scheme.indexOf(ColorEncoder.BYELEMENT_PREFIX) == 0
+                || scheme.indexOf(ColorEncoder.BYRESIDUE_PREFIX) == 0);
           }
           double min = 0;
           double max = Double.MAX_VALUE;
+          double[] minMax = null;
           if (!isColorIndex
               && (tokAt(index) == T.absolute || tokAt(index) == T.range)) {
-            min = floatParameter(index + 1);
-            max = floatParameter(index + 2);
-            index += 3;
-            if (min == max && isIsosurface) {
-              double[] range = (double[]) getShapeProperty(shapeType, "dataRange");
-              if (range != null) {
-                min = range[0];
-                max = range[1];
+            if (tokAt(index + 1) == T.auto) {
+              index += 2;
+              if (!chk) {
+                minMax = JC.getPropertyAutoRange(name);
+                if (minMax != null) {
+                  min = minMax[0];
+                  max = minMax[1];
+                }
               }
-            } else if (min == max) {
-              max = Double.MAX_VALUE;
+            } else {
+              min = floatParameter(index + 1);
+              max = floatParameter(index + 2);
+              index += 3;
+              if (!chk && min == max && isIsosurface) {
+                double[] range = (double[]) getShapeProperty(shapeType,
+                    "dataRange");
+                if (range != null) {
+                  min = range[0];
+                  max = range[1];
+                }
+              } else if (min == max) {
+                max = Double.MAX_VALUE;
+              }
             }
           }
           if (isIsosurface) {
+            checkLength(index);
+            if (chk)
+              return;
           } else if (data == null) {
             if (!chk)
               vwr.setCurrentColorRange(name);
@@ -9088,14 +9113,15 @@ public class ScriptEval extends ScriptExpr {
               vwr.cm.setPropertyColorRangeData((double[]) data, bsSelected);
           }
           if (isIsosurface) {
-            checkLength(index);
-            if (chk)
-              return;
+            // not chk
             isColor = false;
-            ColorEncoder ce = (scheme == null ? (ColorEncoder) getShapeProperty(shapeType, "colorEncoder") : null);
+            ColorEncoder ce = (scheme == null
+                ? (ColorEncoder) getShapeProperty(shapeType, "colorEncoder")
+                : null);
             if (ce == null && (ce = vwr.cm.getColorEncoder(scheme)) == null)
               return;
-            ce.isTranslucent = (isTranslucent && translucentLevel == Double.MAX_VALUE);
+            ce.isTranslucent = (isTranslucent
+                && translucentLevel == Double.MAX_VALUE);
             ce.setRange(min, max, min > max);
             if (max == Double.MAX_VALUE)
               ce.hi = max;
@@ -9177,15 +9203,15 @@ public class ScriptEval extends ScriptExpr {
         vwr.ms.calcSelectedMoleculesCount();
         break;
       }
-      if (colorvalue1 != null
-          && (isIsosurface || shapeType == JC.SHAPE_CARTOON
-              || shapeType == JC.SHAPE_RIBBONS || shapeType == JC.SHAPE_POLYHEDRA))
-        setShapeProperty(shapeType, "colorPhase", new Object[] { colorvalue1,
-            colorvalue });
+      if (colorvalue1 != null && (isIsosurface || shapeType == JC.SHAPE_CARTOON
+          || shapeType == JC.SHAPE_RIBBONS || shapeType == JC.SHAPE_POLYHEDRA))
+        setShapeProperty(shapeType, "colorPhase",
+            new Object[] { colorvalue1, colorvalue });
       else if (bs == null)
         setShapeProperty(shapeType, prefix + "color", colorvalue);
       else if (prefix == "vertex")
-        setShapePropertyBs(shapeType, "vertexcolor", new Object[] { colorvalue, Double.valueOf(translucentLevel)}, bs);
+        setShapePropertyBs(shapeType, "vertexcolor",
+            new Object[] { colorvalue, Double.valueOf(translucentLevel) }, bs);
       else
         setShapePropertyBs(shapeType, prefix + "color", colorvalue, bs);
     }
@@ -9199,9 +9225,10 @@ public class ScriptEval extends ScriptExpr {
           Integer.valueOf(Edge.BOND_COVALENT_MASK));
     if (doClearBondSet)
       vwr.selectBonds(null);
-    if (shapeType == JC.SHAPE_BALLS) {      
+    if (shapeType == JC.SHAPE_BALLS) {
       vwr.shm.checkInheritedShapes();
-      vwr.sm.setStatusStructureModified(-1, -1, StatusManager.NOTIFY_MOD_ATOM_COLORED, null, 0, bs);
+      vwr.sm.setStatusStructureModified(-1, -1,
+          StatusManager.NOTIFY_MOD_ATOM_COLORED, null, 0, bs);
     }
   }
 

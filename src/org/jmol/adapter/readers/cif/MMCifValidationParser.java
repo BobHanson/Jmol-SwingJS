@@ -45,7 +45,7 @@ public class MMCifValidationParser {
     if (map != null)
       return vwr.getAnnotationParser(T.dssr).fixDSSRJSONMap(map);
 
-    mapAtomResIDs(modelMap);
+    mapAtomResIDs(modelMap, false);
 
     // Returns a Lst<Object> of property data in the form 
     // name(String), data(double[]), modelIndex (Integer), isGroup (Boolean);
@@ -62,7 +62,7 @@ public class MMCifValidationParser {
   }
 
   public String finalizeRna3d(Map<String, Integer> modelMap) {
-    mapAtomResIDs(modelMap);
+    mapAtomResIDs(modelMap, false);
     SV svMap = getRna3dMap(reader.addedData);
     
     String note = reader.vwr.getAnnotationParser(T.rna3d).catalogStructureUnits(
@@ -109,10 +109,11 @@ public class MMCifValidationParser {
 
   /**
    * Map all atom and residue unit ids to atom indexes
-   * @param modelMap 
+   * 
+   * @param modelMap
    * 
    */
-  private void mapAtomResIDs(Map<String, Integer> modelMap) {
+  private void mapAtomResIDs(Map<String, Integer> modelMap, boolean useAsymID) {
 
     // model_chainCode_resno_inscode
     // model_chainCode_resno_inscode_ATOMNAME_altcode
@@ -120,17 +121,18 @@ public class MMCifValidationParser {
 
     Atom[] atoms = reader.asc.atoms;
     resMap = new Hashtable<String, int[]>();
-    atomMap = new Hashtable<String, Integer>();
+    atomMap = (asResidues ? null : new Hashtable<String, Integer>());
     int iresLast = -1;
     int[] resLast = null;
     String smodel = "" + modelMap.get("_0");
-    for (int i = 0, model = 1, i0 = 0, n = reader.asc.getAtomSetAtomCount(0); i < n; i++) {
+    for (int i = 0, model = 1, i0 = 0, n = reader.asc
+        .getAtomSetAtomCount(0); i < n; i++) {
       Atom a = atoms[i];
       int ires = a.sequenceNumber;
-      String res = smodel + "_" + a.chainID + "_" + ires + "_"
-          + (a.insertionCode == '\0' ? "" : "" + a.insertionCode);
-      String atom = res + "_" + a.atomName.toUpperCase() + "_"
-          + (a.altLoc == '\0' ? "" : "" + Character.toLowerCase(a.altLoc));
+      int chainID = (useAsymID ? a.getAsymID() : a.getChainID());
+      String res = smodel + "_" + chainID;
+      if (!useAsymID)
+        res += "_" + ires + "_" + (a.insertionCode == '\0' ? "" : "" + a.insertionCode);
       Integer ia = Integer.valueOf(i - i0);
       if (ires != iresLast) {
         iresLast = ires;
@@ -138,7 +140,11 @@ public class MMCifValidationParser {
           resLast[1] = i - i0;
         resMap.put(res, resLast = new int[] { i - i0, n });
       }
-      atomMap.put(atom, ia);
+      if (!asResidues) {
+        String atom = res + "_" + a.atomName.toUpperCase() + "_"
+            + (a.altLoc == '\0' ? "" : "" + Character.toLowerCase(a.altLoc));
+        atomMap.put(atom, ia);
+      }
       if (i == n - 1) {
         i0 += n;
         n = reader.asc.getAtomSetAtomCount(model++);

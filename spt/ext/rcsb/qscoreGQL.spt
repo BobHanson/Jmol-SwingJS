@@ -2,7 +2,7 @@
         // Bob Hanson 2026.10.22
 
 //uncomment to save the graphQL return JSON
-//jsonFile = "t.json";
+jsonFile = "t.json";
         
         /*
          * generate property_qscore for ligands and polymers in the current model 
@@ -12,12 +12,13 @@
          * because the server puts out a set of values for a consecutive subset of residues
          * and for only the base set of chain IDs.
          *
+         * return will be a map of q_score values overall (key is "overall") and each chain (key is asym_id)
+         *
          */
         function getQScoresGQL() {
           // set all values to NaN (gray color)
           {this}.property_qscore = NaN;        
         
-          // return will be overall and chain qscores
           var ret = {};
           // run the query
           var q = RCSB_graphQL_qscore_query.replace("$ID", _M.pdbID12);
@@ -25,29 +26,34 @@
           json = loadgraphQLData(q);
         
           // overall value 
-          var qscoreOverall = json.entries[1].pdbx_vrpt_summary_em[1].Q_score;
-          ret.overall = qscoreOverall;
+          var summary = json.entries[1].pdbx_vrpt_summary_em;
+          if (summary == null)
+            return {};            
+          ret.overall = summary[1].Q_score;
             
           // map the polymer return
           var entities = json.entries[1].polymer_entities;
-          for (var j = 1; j <= entities.length; j++) {
-            var pdata = entities[j].polymer_entity_instances;
-            for (var i = 1; i <= pdata.length; i++) {
-              var instance = pdata[i];
-              var asymID = instance.rcsb_polymer_entity_instance_container_identifiers.asym_id;
-              mapPolymerQ(instance, asymID); 
-              var qscorePolymer = instance.pdbx_vrpt_summary_entity_fit_to_map[1].Q_score;  
-              ret[asymID] = qscorePolymer;
-            }
+          if (entities != null) {
+              for (var j = 1; j <= entities.length; j++) {
+                var pdata = entities[j].polymer_entity_instances;
+                for (var i = 1; i <= pdata.length; i++) {
+                  var instance = pdata[i];
+                  var asymID = instance.rcsb_polymer_entity_instance_container_identifiers.asym_id;
+                  mapPolymerQ(instance, asymID); 
+                  ret[asymID] = instance.pdbx_vrpt_summary_entity_fit_to_map[1].Q_score;  
+                }
+              }
           }
           // map the nonpolymer return
           var entities = json.entries[1].nonpolymer_entities;
-          for (var j = 1; j <= entities.length; j++) {
-            var pdata = entities[j].nonpolymer_entity_instances;
-            for (var i = 1; i <= pdata.length; i++) {
-              mapLigandQ(pdata[i]);
-            }
-          }          
+          if (entities != null) {
+              for (var j = 1; j <= entities.length; j++) {
+                var pdata = entities[j].nonpolymer_entity_instances;
+                for (var i = 1; i <= pdata.length; i++) {
+                  mapLigandQ(pdata[i]);
+                }
+              }          
+          }
           return ret;  
         }
         
@@ -74,7 +80,7 @@
                 pdbx_vrpt_summary_entity_fit_to_map {
                   Q_score
                 }
-                rcsb_polymer_instance_feature {
+                rcsb_polymer_instance_feature(type: ["Q_SCORE"]) {
                   type
                   feature_positions {
                     beg_seq_id
@@ -93,7 +99,9 @@
          *
          */  
         function loadgraphQLData(q) {
-          var RESULT = load("https://data.rcsb.org/graphql" + "?POST?" +  {"query":q});
+          var url = "https://data.rcsb.org/graphql" + "?POST?" +  {"query":q};
+          print url;
+          var RESULT = load(url);
           if (jsonFile) {
             write var RESULT @jsonFile;
           }
@@ -132,7 +140,7 @@
               var pos = positions[j];
               var seq0 = pos.beg_seq_id;
               var values = pos.values;
-              var a = {asymid=chain and resno>=seq0};
+              var a = {this and asymid=chain and resno>=seq0};
               setQ(a, values);
             }
         }
@@ -153,7 +161,7 @@
             var asym = ids.asym_id;
             var compID = ids.comp_id;
             var values = [instance.rcsb_nonpolymer_instance_validation_score[1].Q_score];
-            var a = {asymid=asym and group=compID};
+            var a = {this and asymid=asym and group=compID};
             setQ(a, values);
         }
         

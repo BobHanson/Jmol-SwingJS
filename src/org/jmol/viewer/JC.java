@@ -229,7 +229,6 @@ public final class JC {
       "dssrModel", // for sending a PDB model to the DSSR server; called in DSSR1.java
       //old "http://dssr-jmol.x3dna.org/report.php?POST?opts=--json=ebi&model="
       "https://jmol.x3dna-dssr.org/report.php?POST?&model=",
-                
       "iucr", "http://scripts.iucr.org/cgi-bin/sendcif_yard?%FILE", // e.g. wf5113sup1
       "cod",
       "http://www.crystallography.net/cod/cif/%c1/%c2%c3/%c4%c5/%FILE.cif",
@@ -469,7 +468,10 @@ public final class JC {
         id = "pdb_" + id;
         break;
       }
-      if (pt < 0) {
+      if (format.indexOf("graphql") >= 0) {
+        if (pt >= 0)
+          id = id.substring(0, pt);
+      } else if (pt < 0) {
         id += ".cif.gz";
       } else {
         int pt2 = id.lastIndexOf(".cif");
@@ -1823,8 +1825,11 @@ public final class JC {
   public static final String INFO_PDB_NO_HYDROGENS = "pdbNoHydrogens";
     
   public final static String INFO_DOMAINS = "domains";
+  public final static String INFO_VALIDATION = "validation";
+  public final static String INFO_QSCORE = "qscore";
   public static final String INFO_TITLE = "title";
-  
+  public static final String INFO_CONCATENATE = "concatenate";
+  public static final String INFO_MODEL_LOAD_NOTE = "modelLoadNote";
 
 
   /** 
@@ -1929,6 +1934,41 @@ public final class JC {
 
     }
     return null;
+  }
+
+  public static double[] getPropertyAutoRange(String key) {
+    // first number is WORST (will be red)
+    if (key.startsWith("property_"))
+      key = key.substring(9);
+    double min = 0, max = 0;
+    switch (key) {
+    case "qscore":
+      max = 1;
+      //  min = -1 // is -1 to 1 but anything under 0 is extreme
+      break;
+    case "outliers":
+      min = 100;
+      break;
+    case "clashes":
+    case "sidechains":
+    case "bond_angles": 
+    case "bond_lengths": 
+      min = 1; // sigma?
+      break;
+    case "rsrz": 
+      min = 2;
+      break;
+    case "planes":
+      min = 0.05;
+      break;
+    case "RNA_pucker": 
+    case "rama": 
+    case "types_of_outlier":
+    case "symm_clashes": 
+    default:
+      return null;
+    }
+    return new double[] { min, max };
   }
 
 }

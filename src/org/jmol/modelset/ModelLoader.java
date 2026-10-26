@@ -35,6 +35,7 @@ import org.jmol.api.Interface;
 import org.jmol.api.JmolAdapter;
 import org.jmol.api.JmolAdapterAtomIterator;
 import org.jmol.api.JmolAdapterBondIterator;
+import org.jmol.api.JmolAnnotationParser;
 import org.jmol.api.JmolDataManager;
 import org.jmol.api.JmolModulationSet;
 import org.jmol.api.SymmetryInterface;
@@ -42,6 +43,7 @@ import org.jmol.atomdata.RadiusData;
 import org.jmol.c.VDW;
 import org.jmol.modelsetbio.BioModel;
 import org.jmol.modelsetbio.BioResolver.BioModelLoader;
+import org.jmol.script.SV;
 import org.jmol.script.T;
 import org.jmol.symmetry.Symmetry;
 import org.jmol.util.BSUtil;
@@ -462,33 +464,110 @@ public final class ModelLoader {
     // assumes String line-encoded double[] or just double[] values
     int modelCount = ms.mc;
     for (int i = baseModelIndex; i < modelCount; i++) {
+      BS bs = ms.getModelAtomBitSetIncludingDeleted(i, true);
+      if (!merging && adapterModelCount == 1) {
+        Map<String, Object> qscores = (Map<String, Object>) ms.getInfo(i,
+            JC.INFO_QSCORE);
+        if (qscores != null) {
+          JmolAnnotationParser ap = vwr.getAnnotationParserIfPresent(T.val);
+          if (ap != null) {
+            Map<String, Object> htSummary = ap.setQScores(vwr, qscores);
+            if (htSummary != null) {
+              double[] values = (double[]) htSummary.remove("values");
+              if (reportScores(i, bs, "qscore", values)) {
+                ms.setInfo(i, "qscoreSummary", htSummary);
+                appendLoadNote("  _M.qscoreSummary=" + PT.toJSON(null, htSummary)
+                  + "\n  See _M.qscores for full RCSB GraphQL Q-Score report.");
+              }
+            }
+          }
+        }
+      }
       Map<String, Object> atomProperties = (Map<String, Object>) ms.getInfo(i,
           "atomProperties");
       // list of properties that are to be transfered to H atoms as well.
       if (jmolData != null)
-        addJmolDataProperties(ms.am[i], (Map<String, Object>) ms.getInfo(i, JC.INFO_JMOL_DATA));
-      String groupList = (String) ms.getInfo(i,
-          "groupPropertyList");
+        addJmolDataProperties(ms.am[i],
+            (Map<String, Object>) ms.getInfo(i, JC.INFO_JMOL_DATA));
+      String groupList = (String) ms.getInfo(i, "groupPropertyList");
       if (ms.am[i].isBioModel && ms.getInfo(i, JC.INFO_DSSR) != null)
         vwr.getAnnotationParser(T.dssr).setGroup1(ms, i);
       if (atomProperties == null)
         continue;
       for (Map.Entry<String, Object> entry : atomProperties.entrySet()) {
         String key = entry.getKey();
-        Object value = entry.getValue();
+        double[] values = (double[]) entry.getValue();
         // no deletions yet...
-        BS bs = ms.getModelAtomBitSetIncludingDeleted(i, true);
         if (doAddPDBHydrogens) {
-          boolean isGroup = (groupList != null && PT.isOneOf(key,  groupList));
-          value = bml.fixPropertyValue(bs, value, isGroup);
+          boolean isGroup = (groupList != null && PT.isOneOf(key, groupList));
+          values = bml.fixPropertyValue(bs, values, isGroup);
         }
-        key = "property_" + key.toLowerCase();
-        Logger.info("creating " + key + " for model " + ms.getModelName(i));
-        vwr.setData(key, new Object[] { key, value, bs, Integer.valueOf(JmolDataManager.DATA_TYPE_UNKNOWN), Boolean.FALSE, entry }, 
-            ms.ac, 0, 0, Integer.MAX_VALUE, 0);
+        reportScores(i, bs, key, values);
       }
+      Object validations = ms.getInfo(i, "validation");
+      if (validations != null){
+        appendLoadNote("" + ((SV)validations).getMap().get("_note").asString());          
+      }
+      // remove atomProperties from info, as it is just a duplicate and 
+      // will not respond to changes.
       ms.setInfo(i, "atomProperties", null);
     }
+  }
+
+  private boolean reportScores(int modelIndex, BS bs, String key, double[] values) {
+    double[] stats = findMinMax(values);
+    double[] minmax = JC.getPropertyAutoRange(key);
+    double min = stats[0];
+    double max = stats[1];
+    int nonzero = (int) stats[2];
+    int missing = (int) stats[3];
+    if (min == Double.MAX_VALUE)
+      return false;
+    key = "property_" + key.toLowerCase();
+    String range = (minmax == null ? "" : " range " + minmax[0] + " " + minmax[1]);
+    appendLoadNote("creating " + key + range + " for model "
+        + ms.getModelName(modelIndex) + "\n  min=" + min + " max=" + max
+        + " nonzero=" + nonzero + " missing=" + missing);
+    vwr.setData(key, new Object[] { 
+        key, values, bs, 
+        Integer.valueOf(JmolDataManager.DATA_TYPE_AD), 
+        Boolean.FALSE }, 
+        vwr.ms.ac, 0, 0, Integer.MAX_VALUE, 0);
+    return true;
+  }
+
+  private static double[] findMinMax(double[] value) {
+    double[] retStats = new double[4];
+    int missing = value.length;
+    int nonzero = 0;
+    double min = Double.MAX_VALUE;
+    double max = Double.MIN_VALUE;
+    for (int i = missing; --i >= 0;) {
+      double d = value[i];
+      if (Double.isNaN(d))
+        continue;
+      missing--;
+      if (d != 0)
+        nonzero++;
+      if (d < min) {
+        min = d;
+      } 
+      if (d > max) {
+        max = d;        
+      }
+    }
+    retStats[0] = ((int)(min * 1000))/1000d;
+    retStats[1] = ((int)(max * 1000))/1000d;
+    retStats[2] = nonzero;
+    retStats[3] = missing;
+    return retStats;
+  }
+
+  private void appendLoadNote(String info) {
+    String loadNote = (String) ms.msInfo.get(JC.INFO_MODEL_LOAD_NOTE);
+    loadNote += info + "\n";
+    ms.msInfo.put(JC.INFO_MODEL_LOAD_NOTE, loadNote);
+    Logger.info(info);
   }
 
   private Group[] mergeGroups;
@@ -1352,7 +1431,7 @@ public final class ModelLoader {
         group.groupID = bml.getGroupID(group3);
       }
     }
-    group.asymID = asymID;
+    group.setAsymID(asymID); // this I think will always be 0
     String key = group.getGroupMenuKey();
     if (group3 != null) {
       countGroup(ms.at[firstAtomIndex].mi, key, group3);

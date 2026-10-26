@@ -153,8 +153,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected String readerName;
   public Map<String, Object> htParams;
   public Lst<P3d[]> trajectorySteps;
-  public Object domains;
-  public Object validation, dssr;
+  public Object domains, validation, dssr, qscore;
 
   protected boolean isConcatenated;
   public String addedData, addedDataKey;
@@ -509,10 +508,14 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
             info.put(JC.INFO_DOMAINS, domains);
           }
         }
+        if (qscore != null && asc.atomSetCount == 1) {
+          info = asc.getAtomSetAuxiliaryInfo(0);
+          info.put(JC.INFO_QSCORE,  qscore);
+        }
         if (validation != null) {
           for (int i = asc.atomSetCount; --i >= 0;) {
             info = asc.getAtomSetAuxiliaryInfo(i);
-            info.put("validation", validation);
+            info.put(JC.INFO_VALIDATION, validation);
           }
         }
         if (dssr != null) {
@@ -538,7 +541,7 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   protected String setLoadNote() {
     String s = loadNote.toString();
     if (loadNote.length() > 0)
-      asc.setInfo("modelLoadNote", s);
+      asc.setInfo(JC.INFO_MODEL_LOAD_NOTE, s);
     return s;
   }
 
@@ -756,8 +759,9 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       // with appendNew == false and UNITCELL parameter, we assume fractional coordinates
     }
     domains = htParams.get(JC.INFO_DOMAINS);
-    validation = htParams.get("validation");
+    validation = htParams.get(JC.INFO_VALIDATION);
     dssr = htParams.get(JC.INFO_DSSR);
+    qscore = htParams.get(JC.INFO_QSCORE);
     isConcatenated = htParams.containsKey("concatenate");
   }
 
@@ -1470,8 +1474,8 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
                 .indexOf("\0" + filterAtomTypeStr) >= 0)
         && (!filterElement || atom.elementSymbol == null
             || !filterReject(f, "_", atom.elementSymbol.toUpperCase() + ";"))
-        && (!filterChain || atom.chainID == 0
-            || !filterReject(fCased, ":", "" + vwr.getChainIDStr(atom.chainID)))
+        && (!filterChain || atom.getChainID() == 0
+            || !filterReject(fCased, ":", "" + vwr.getChainIDStr(atom.getChainID())))
         && (!filterAltLoc || atom.altLoc == '\0'
             || !filterReject(f, "%", "" + atom.altLoc))
         && (!filterHetero || !allowPDBFilter
@@ -2170,9 +2174,10 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
   }
 
   public void setChainID(Atom atom, String label, String componentId) {
-    atom.chainID = vwr.getChainID(label, true);
+    int chainID = vwr.getChainID(label, true);
     if (componentId != null && !componentId.equals(label))
-      atom.chainID |=  (vwr.getChainID(componentId, true) << 16); 
+      chainID |=  (vwr.getChainID(componentId, true) << 16); 
+    atom.setChainID(chainID);
   }
 
   @Override
@@ -2204,6 +2209,16 @@ public abstract class AtomSetCollectionReader implements GenericLineReader {
       doApplySymmetry = true;
       latticeCells[0] = latticeCells[1] = latticeCells[2] = 1;
     }
+  }
+
+  public void setPDBID(String pdbID, String pdbID12) {
+    if (pdbID != null) {
+      asc.setCurrentModelInfo("pdbID", pdbID.toUpperCase());
+      if (pdbID12 == null)
+        pdbID12 = "pdb_0000" + pdbID.toLowerCase();
+    }
+    if (pdbID12 != null)
+      asc.setCurrentModelInfo("pdbID12", pdbID12);
   }
   
 }

@@ -451,6 +451,7 @@ public class FileManager implements BytePoster {
         String post = null;
         if (isURL && (iurl = name.indexOf("?POST?")) >= 0) {
           post = name.substring(iurl + 6);
+//          System.out.println(post);
           name = name.substring(0, iurl);
         }
         boolean isApplet = (appletDocumentBaseURL != null);
@@ -747,6 +748,10 @@ public class FileManager implements BytePoster {
         return "Error:" + t;
       try {
         BufferedInputStream bis = (BufferedInputStream) t;
+        if (out != null && Rdr.isGzipS(bis) && out.getFileName() != null
+            && !out.getFileName().endsWith(".gz")) {
+          bis = ZipTools.getUnzippedInputStream(bis);
+        }
         bytes = (out != null || subFileList == null || subFileList.length <= 1
             || !Rdr.isZipS(bis) && !Rdr.isPngZipStream(bis) 
              && !Rdr.isTar(bis)

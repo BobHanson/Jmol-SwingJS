@@ -758,7 +758,7 @@ public class XtalSymmetry {
     switch (particleMode) {
     case PARTICLE_CHAIN:
       for (int i = atomMax; --i >= firstAtom;) {
-        Integer id = Integer.valueOf(atoms[i].chainID);
+        Integer id = Integer.valueOf(atoms[i].getChainID());
         BS bs = ht.get(id);
         if (bs == null) {
           nChain++;
@@ -782,7 +782,7 @@ public class XtalSymmetry {
           a.add(atoms[i]);
         a.scale(1d / bs.cardinality());
         a.atomName = "Pt" + ichain;
-        a.chainID = e.getKey().intValue();
+        a.setChainID(e.getKey().intValue());
       }
       firstAtom = atomMax;
       atomMax += nChain;
@@ -816,7 +816,7 @@ public class XtalSymmetry {
     int maxChain = 0;
     for (int iAtom = firstAtom; iAtom < atomMax; iAtom++) {
       atoms[iAtom].bsSymmetry = new BS(); //TODO was set 0, but this is not necessarily true now
-      int chainID = atoms[iAtom].chainID;
+      int chainID = atoms[iAtom].getChainID();
       if (chainID > maxChain)
         maxChain = chainID;
     }
@@ -856,7 +856,7 @@ public class XtalSymmetry {
       for (int iAtom = firstAtom; iAtom < atomMax; iAtom++) {
         if (bsAtoms != null) {
           skipping = !bsAtoms.get(iAtom);
-        } else if (chains != null && (id = atoms[iAtom].chainID) != lastID) {
+        } else if (chains != null && (id = atoms[iAtom].getChainID()) != lastID) {
           skipping = (chains
               .indexOf(":" + acr.vwr.getChainIDStr(lastID = id) + ";") < 0);
         }
@@ -927,7 +927,7 @@ public class XtalSymmetry {
               : new Hashtable<Integer, int[]>());
           int[] lastKnownAtom = null;
           for (int i = atomMax, n = asc.ac; i < n; i++) {
-            int ic = atoms[i].chainID;
+            int ic = atoms[i].getChainID();
             int isym = atoms[i].bsSymmetry.nextSetBit(0);
             String ch0 = acr.vwr.getChainIDStr(ic);
             String ch = (isym == 0 ? ch0 : ch0 + sep + isym);
@@ -958,7 +958,7 @@ public class XtalSymmetry {
               }
               chainMap.put(ch, known);
             }
-            atoms[i].chainID = known.intValue();
+            atoms[i].setChainID(known.intValue());
           }
           if (asc.structureCount > 0) {
             // update structures

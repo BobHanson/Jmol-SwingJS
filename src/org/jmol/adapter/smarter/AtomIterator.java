@@ -154,12 +154,12 @@ class AtomIterator implements JmolAdapterAtomIterator {
 
   @Override
   public int getChainID() {
-    return atom.chainID & 0xFFFF;
+    return atom.getChainID();
   }
 
   @Override
   public int getAsymID() {
-    return (atom.chainID >> 16) & 0xFFFF;
+    return atom.getAsymID();
   }
 
   @Override
