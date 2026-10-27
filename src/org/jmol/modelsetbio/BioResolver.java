@@ -1902,7 +1902,7 @@ cpk on; select atomno>100; label %i; color chain; select selected & hetero; cpk 
       + "  rcsb_polymer_entity_instance_container_identifiers{asym_id}" //  
       + "  pdbx_vrpt_summary_entity_fit_to_map{Q_score}" //
       + "  rcsb_polymer_instance_feature(type: [\\\"Q_SCORE\\\"]){" //
-      + "    type feature_positions {beg_seq_id end_seq_id values}" //
+      + "    type feature_positions {beg_seq_id values}" //
       + "}}" //  
       + "}}" //
       + "}\"}";

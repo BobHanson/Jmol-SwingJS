@@ -1353,7 +1353,7 @@ public class MMCifReader extends CifReader {
   final private static String[] citationFields = {
     "*_id",
     "*_title",
-    "*_pdbx_database_id_doi",
+    "*_pdbx_database_id_doi"
   };
 
   final private static byte PUB_ID = 0;
