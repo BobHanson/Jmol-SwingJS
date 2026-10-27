@@ -563,7 +563,6 @@ public class T {
   public final static int chain         = strproperty | 4 | settable;
   public final static int asymid        = strproperty | 4;
   public final static int element       = strproperty | 5 | settable;
-  public final static int group         = strproperty | 6;
   public final static int group1        = strproperty | 7;
   public final static int sequence      = strproperty | 8;
   public final static int identify      = strproperty | 9;
@@ -747,11 +746,12 @@ public class T {
   public final static int sqrt         = 6 | 1 << 9 | mathfunc;
   public final static int file         = 7 | 1 << 9 | mathfunc | intproperty | scriptCommand;
   public final static int forcmd       = 8 | 1 << 9 | mathfunc | flowCommand;
-  public final static int ifcmd        = 9 | 1 << 9 | mathfunc | flowCommand;
-  public final static int abs          = 10 | 1 << 9 | mathfunc;
+  public final static int group        = 9 | 1 << 9 | mathfunc | mathproperty | strproperty;
+  public final static int ifcmd        = 10 | 1 << 9 | mathfunc | flowCommand;
+  public final static int abs          = 11 | 1 << 9 | mathfunc;
   public final static int javascript   = 12 /* must be even */| 1 << 9 | mathfunc | implicitStringCommand;
-  public final static int show         = 14 | 1 << 9 | mathfunc | scriptCommand;
-  public final static int tan          = 15 | 1 << 9 | mathfunc;
+  public final static int show         = 13 | 1 << 9 | mathfunc | scriptCommand;
+  public final static int tan          = 14 | 1 << 9 | mathfunc;
 
   
   // ___.xxx(a)

@@ -54,6 +54,16 @@ abstract public class JmolThread extends Thread {
   
   abstract protected void run1(int mode) throws InterruptedException;
 
+  protected boolean checkContext() {
+    // page navigation in JavaScript can result in this
+    // with an asynchronous file load call -- JP 2026.10.23
+    if (sc == null || sc.parentContext == null) {
+      stopped = true;
+      return false;
+    }
+    return true;
+  }
+  
   /**
    * JavaScript only --
    * -- scriptDelay, moveTo, spin

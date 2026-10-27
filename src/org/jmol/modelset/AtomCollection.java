@@ -3013,6 +3013,26 @@ abstract public class AtomCollection {
     }
     return groups;
   }
+    
+  /**
+   * return bs with only the first atom of a group
+   * @param bs
+   */
+  public void groupify(BS bs) {
+    BS bsg = new BS();
+    for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
+      if (isDeleted(at[i]))
+        continue;
+      Group g = at[i].group;
+      g.setAtomBitsAndClear(bsg, bs);
+      int pt = g.getLeadOrFirstAtomIndex();
+      if (isDeleted(at[pt]))
+          continue;
+      bs.set(pt);    
+      i = g.lastAtomIndex;
+    }
+  }
+
 
 
 }

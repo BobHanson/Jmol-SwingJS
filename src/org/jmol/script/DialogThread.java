@@ -131,6 +131,8 @@ class DialogThread extends JmolThread {
   void setData(String option) throws InterruptedException {
     //System.out.println("FileLoadThread async setData " + fileName);
     boolean isCanceled = option == null || option.equals(JC.ASYNC_CANCELED);
+    if (!checkContext())
+      return;
     sc.parentContext.htFileCache.put(key,
         (isCanceled ? JC.ASYNC_CANCELED : option));
     run1(FINISH);

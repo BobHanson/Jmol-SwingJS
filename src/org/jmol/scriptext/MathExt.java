@@ -221,6 +221,8 @@ public class MathExt {
     case T.split:
     case T.trim:
       return evaluateString(mp, op.intValue, args);
+    case T.group:
+      return evaluateGroup(mp, args);
     case T.point:
       return evaluatePoint(mp, args);
     case T.pointgroup:
@@ -257,6 +259,19 @@ public class MathExt {
       return evaluateWrite(mp, args);
     }
     return false;
+  }
+
+  
+  private boolean evaluateGroup(ScriptMathProcessor mp, SV[] args) throws ScriptException {
+    // {atoms}.group()
+    if (args.length > 0)
+      return false;
+    BS bsAtoms = SV.getBitSet(mp.getX(), true);
+    if (bsAtoms == null)
+      return false;
+    BS bs = BSUtil.copy(bsAtoms);
+    vwr.ms.groupify(bs);
+    return mp.addXBs(bs);
   }
 
   private boolean evaluateMatrix(ScriptMathProcessor mp, SV[] args) {

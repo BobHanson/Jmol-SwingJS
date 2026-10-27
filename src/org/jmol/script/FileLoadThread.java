@@ -118,6 +118,8 @@ class FileLoadThread extends JmolThread {
       throws InterruptedException {
     //System.out.println("FileLoadThread async setData " + fileName);
     boolean isCanceled = fileName.equals(JC.ASYNC_CANCELED);
+    if (!checkContext())
+      return;
     sc.parentContext.htFileCache.put(key, (isCanceled ? fileName
         : (cacheName = cacheName.substring(0, cacheName.lastIndexOf("_") + 1)
             + fileName)));

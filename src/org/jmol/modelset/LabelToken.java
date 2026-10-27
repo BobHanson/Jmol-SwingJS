@@ -674,9 +674,11 @@ public class LabelToken {
   private String format(double floatT, String strT, T3d ptT) {
     if (!Double.isNaN(floatT)) {
       return PT.formatD(floatT, width, precision, alignLeft, zeroPad);
-    } else if (strT != null) {
+    }
+    if (strT != null) {
       return PT.formatS(strT, width, precision, alignLeft, zeroPad);
-    } else if (ptT != null) {
+    } 
+    if (ptT != null) {
       if (width == 0 && precision == Integer.MAX_VALUE) {
         width = 6;
         precision = 2;
@@ -684,9 +686,8 @@ public class LabelToken {
       return PT.formatD(ptT.x, width, precision, false, false)
           + PT.formatD(ptT.y, width, precision, false, false)
           + PT.formatD(ptT.z, width, precision, false, false);
-    } else {
-      return text;
     }
+    return (data == null ? text : "NaN");
   }
 
 }
