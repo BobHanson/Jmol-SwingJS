@@ -128,8 +128,8 @@ class AtomIterator implements JmolAdapterAtomIterator {
 
   @Override
   public int getSeqID() {
-    return ((atom.seqIdOrWyckoffCode & (1<<31)) == (1<<31) 
-        ? atom.seqIdOrWyckoffCode &~ (1<<31) : 0);
+    int val = atom.seqIdOrWyckoffCode;
+    return (val == -1 ? -1 : (val & (1<<31)) == 0 ? 0 : atom.seqIdOrWyckoffCode &~ (1<<31));
    }
 
   @Override

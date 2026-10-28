@@ -2063,6 +2063,8 @@ public class CifReader extends AtomSetCollectionReader {
       if ((id != null || wyckoff != null) && seqIdOrWyckoffCode > 0) {
         // mark as valid for return with getSeqID()
         atom.seqIdOrWyckoffCode = seqIdOrWyckoffCode | (1 << 31);
+      } else {
+        atom.seqIdOrWyckoffCode = 0;
       }
       if (modDim > 0 && siteMult != 0) {
         atom.seqIdOrWyckoffCode |= (siteMult << 16);

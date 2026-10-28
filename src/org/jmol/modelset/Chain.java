@@ -40,7 +40,7 @@ public final class Chain implements Structure {
    * a map held in Viewer that allows retrieval of a longer string
    * 
    */
-  public int chainID;
+  public int chainID = -1;
   /**
    * chainNo is for information purposes only; retrieved by {atoms}.chainNo 
    */

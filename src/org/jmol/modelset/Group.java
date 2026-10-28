@@ -603,11 +603,13 @@ public class Group implements Structure {
    * @return actual string form of the chain identifier
    */
   public String getAsymIDStr() {
-      return (asymID == 0 ? chain.getIDStr() : asymID < 256 ? "" + (char) asymID : (String) chain.model.ms.vwr.getChainIDStr(asymID));
+    return (asymID <= 0 ? ""
+        : asymID < 256 ? "" + (char) asymID
+            : (String) chain.model.ms.vwr.getChainIDStr(asymID));
   }
 
   public int getAsymID() {
-    return (asymID == 0 ? chain.chainID : asymID);
+    return (asymID < 0 ? -1 : asymID == 0 ? chain.chainID : asymID);
   }
 
   public void setAsymID(int asymID) {

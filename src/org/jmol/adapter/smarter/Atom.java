@@ -64,18 +64,17 @@ public class Atom extends P3d implements Cloneable {
   }
   
   public int getAsymID() {
-    int val = chainID >> 16;
-    return (val == 0 ? chainID : val);
+    // will be 0 for legacy PDB
+    return chainID >> 16;
   }
   
-  public int sequenceNumber = Integer.MIN_VALUE;  
-  
-  public int seqIdOrWyckoffCode; // (siteMult << 16) + wyckoff.charAt(0)
+  public int seqIdOrWyckoffCode = -1; // (siteMult << 16) + wyckoff.charAt(0)
 
   public double bondingRadius = Double.NaN; // only for CIF oxidation state and TopoCifParser; co-opted for Biomolecule 
 
   public char altLoc = '\0';
   public String group3;
+  public int sequenceNumber = Integer.MIN_VALUE;  
   public char insertionCode = '\0';
   public double[] anisoBorU; //[6] = 1 for U, 0 for B; [7] = bFactor
   public Lst<Object> tensors;

@@ -1017,49 +1017,12 @@ public class AnnotationParser implements JmolAnnotationParser {
       Number seq0 = (Number) pos.get("beg_seq_id");
       Lst<Object> values = getList(pos, "values");
       //System.out.println("\n" + chain + " " + bsAtoms + " " + seq0 + " " + values.size());
-      getAtoms(vwr, bsAtoms, chain, chainID, seq0.intValue(), null, values.size(), bsTemp);
+      getQScoreAtoms(vwr, bsAtoms, chain, chainID, seq0.intValue(), null, values.size(), bsTemp);
       //System.out.println(chain + " " + bsAtoms + " " + bsTemp + "\n");
       if (!setQ(vwr, bsTemp, values, propertyValues)) {
         System.err.println("AnnotationParser.polymer: no atoms were found for " + chain + "." + seq0);      
       }
     }
-  }
-
-  /**
-   * @param vwr 
-   * @param bsAtoms 
-   * @param asymID  
-   * @param chainID 
-   * @param seqID 
-   * @param group0 
-   * @param nGroups 
-   * @param bsTemp 
-   */
-  private void getAtoms(Viewer vwr, BS bsAtoms, String asymID, int chainID, int seqID,
-                      String group0, int nGroups, BS bsTemp) {
-//    System.out.println(asymID + " " + chainID + " " + vwr.getChainID(asymID,  false) + " " + vwr.getChainIDStr(chainID));
-// this was SEVERAL times slower     
-//    String exp;
-//    boolean isLigand = (group0 != null);
-//    boolean useScript = false;
-//    long t = System.currentTimeMillis();
-//    if (useScript) {
-//      if (isLigand) {
-//        exp = "{this and asymid=\"" + asymID + "\"" + " and group=\"" + group0
-//            + "\"" + "}";
-//      } else {
-//        exp = "{this and asymid=\"" + asymID + "\" and seqID>=" + seqID + "}";
-//      }
-//      BSUtil.copy2(vwr.getAtomBitSet(exp), bsTemp);
-//    } else {
-      vwr.ms.getAsymBits(chainID, seqID, group0, bsAtoms, bsTemp, nGroups);
-//    }
-//    t = (System.currentTimeMillis() - t);
-//    if (isLigand) {
-//      ms2 += t;
-//    } else {
-//      ms1 += t;
-//    }
   }
 
   private void mapLigandQ(Viewer vwr, BS bsAtoms, Map<String, Object> instance, double[] propertyValues, BS bsTemp) {    
@@ -1069,9 +1032,42 @@ public class AnnotationParser implements JmolAnnotationParser {
     int chainID = vwr.getChainID(asymID, false);
     Lst<Object> values = new Lst<>();
     values.addLast(getList0Map(instance, Q_NPEI_QSCORE_MAP).get("Q_score"));
-    getAtoms(vwr, bsAtoms, asymID, chainID, -1, compID, 1, bsTemp);
+    getQScoreAtoms(vwr, bsAtoms, asymID, chainID, -1, compID, 1, bsTemp);
     if (!setQ(vwr, bsTemp, values, propertyValues)) {
       System.err.println("AnnotationParser.nonpolymer: no atoms were found for " + asymID + "." + compID);      
+    }
+  }
+
+  /**
+   * @param vwr
+   * @param bsAtoms
+   * @param asymID
+   * @param chainID
+   * @param seqID
+   * @param groupID
+   * @param maxGroups
+   * @param bsFound
+   */
+  private void getQScoreAtoms(Viewer vwr, BS bsAtoms, String asymID,
+                              int chainID, int seqID, String groupID,
+                              int maxGroups, BS bsFound) {
+    Atom[] at = vwr.ms.at;
+    bsFound.clearAll();
+    for (int n = 0, i = bsAtoms.nextSetBit(0); i >= 0
+        && n < maxGroups; i = bsAtoms.nextSetBit(i + 1)) {
+      Group g = at[i].group;
+      if (n > 0 || g.getAsymID() == chainID
+          && (groupID == null ? at[i].getSeqID() == seqID
+              : g.getGroup3().equals(groupID))) {
+        BS bs = new BS();
+        g.setAtomBits(bs);
+        g.setAtomBitsAndClear(bsFound, bsAtoms);
+        n++;
+      }
+    }
+    if (bsFound.cardinality() == 0) {
+      System.err.println("AtomCollection.getAsymBits: no atoms found: "
+          + vwr.getChainIDStr(chainID) + " " + groupID);
     }
   }
 
